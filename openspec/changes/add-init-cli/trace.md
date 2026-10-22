@@ -1,7 +1,7 @@
 # Trace: add-init-cli
 
 <!--
-このファイルは scripts/verify.mjs が読む。表の列の順番と見出し名は変えないこと。
+このファイルは loomake verify が読む。表の列の順番と見出し名は変えないこと。
 状態の値：反映済 / 確認待ち / 範囲外 / 既存仕様で充足
 REQ の採番は要件定義書の登場順（全 change で共通）。F-xxx / N-xx は要件書側の ID。
 -->

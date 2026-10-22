@@ -48,9 +48,11 @@ export const requirement = (name: string, { source = 'Source: REQ-012', scenario
 
 export const specMd = (...requirements: string[]) => ['## ADDED Requirements', '', ...(requirements.length ? requirements : [requirement('検査用の振る舞い')])].join('\n');
 
-/** プロジェクトを作って fn を実行し、終わったら消す */
+/** プロジェクトを作って fn を実行し、終わったら消す。fn が Promise を返したら、終わるのを待ってから消す */
 export function withProject<T>(files: ProjectFiles, fn: (root: string) => T): T {
   const root = mkdtempSync(join(tmpdir(), 'loomake-kit-'));
+  const cleanup = () => rmSync(root, { recursive: true, force: true });
+  let result: T;
   try {
     const write = (p: string, text: string) => {
       mkdirSync(dirname(join(root, p)), { recursive: true });
@@ -63,10 +65,14 @@ export function withProject<T>(files: ProjectFiles, fn: (root: string) => T): T 
     write(`${changeDir}/trace.md`, files.trace ?? traceMd());
     write(`${changeDir}/specs/x/spec.md`, files.spec ?? specMd());
     for (const [p, text] of Object.entries(files.files ?? {})) write(p, text);
-    return fn(root);
-  } finally {
-    rmSync(root, { recursive: true, force: true });
+    result = fn(root);
+  } catch (e) {
+    cleanup();
+    throw e;
   }
+  if (result instanceof Promise) return result.finally(cleanup) as T;
+  cleanup();
+  return result;
 }
 
 /** Vitest の json レポーターの形のレポート。tests はテストファイル（ルートからのパス）→ [名前, status] */
