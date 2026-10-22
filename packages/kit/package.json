@@ -13,7 +13,7 @@
       "default": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": ["dist", "templates"],
   "publishConfig": {
     "access": "public"
   },
