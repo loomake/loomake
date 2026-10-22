@@ -3,8 +3,7 @@
   "openspecDir": "openspec",
   "openspecValidate": "auto",
   "tests": {
-    "dirs": ["tests", "test", "server", "app", "src", "packages"],
-    "pattern": "\\.(test|spec)\\.(ts|tsx|js|mjs|cjs|vue)$"
+    "report": ".loomake/test-report.json"
   },
   "commands": {
     "lint": "pnpm lint",
