@@ -21,7 +21,7 @@ description: 顧客や社内から受け取った Markdown（.md）の要件定�
 
 読める要件書は **Markdown（.md）だけ** である。
 
-- .md の要件書は、そのまま読む。章番号・表・行番号を出典に使うので、構造を崩さずに読む
+- .md の要件書はそのまま読む。章番号・表・行番号を出典に使うので、構造を崩さずに読む
 - .docx・.xlsx・.pdf など Markdown 以外の要件書を渡されたら、**読まずに止まる**。利用者に「Markdown に変換してから渡してください」と求める。変換は利用者が行い、この Skill は変換しない
 
 要件書の中の画像（画面イメージ・業務フロー図）は内容を言葉で書き起こし、出典に「図 X」と記す。
@@ -39,7 +39,7 @@ description: 顧客や社内から受け取った Markdown（.md）の要件定�
 
 ### 3. 曖昧さを洗い出す
 
-[references/ambiguity-checklist.md](references/ambiguity-checklist.md) の全項目を、台帳の **全 REQ に** あてる。一部の REQ だけで済ませない。
+[references/ambiguity-checklist.md](references/ambiguity-checklist.md) の全項目を、台帳の全 REQ にあてる。一部の REQ だけで済ませない。
 
 見つけたものは次のどちらかで記録する。
 
@@ -75,7 +75,7 @@ description: 顧客や社内から受け取った Markdown（.md）の要件定�
 | `tasks.md` | 実装チェックリスト。最後に「テスト」「verify」のタスクを必ず入れる |
 | `trace.md` | 要件台帳・確認事項・仮定（[templates/trace.md](templates/trace.md)） |
 
-各 Requirement には、次の 3 つを必ず入れる。1 つでも欠けた Requirement は書かない。
+各 Requirement には次の 3 つを必ず入れる。1 つでも欠けた Requirement は書かない。
 
 1. `SHALL` または `MUST` を使った規範文
 2. 本文の直後に `Source: REQ-012` 行（複数なら `Source: REQ-012, REQ-013`）
@@ -101,10 +101,10 @@ node scripts/verify.mjs --change <change-id> --spec-only
 1. change 一覧（change-id と一行説明）
 2. 台帳の集計：REQ 総数 / 反映済 / 確認待ち / 範囲外 / 既存仕様で充足
 3. **ブロッキング確認事項**の一覧（顧客にそのまま送れる文面で）
-4. **未承認の仮定**の一覧（`承認` 欄が空のもの）
+4. 未承認の仮定の一覧（`承認` 欄が空のもの）
 5. 次の一手：ブロッキング確認事項が無ければ「実装に進めます」、あれば「回答待ち」
 
-ブロッキング確認事項は、顧客にそのまま送れる文面で出す。
+ブロッキング確認事項は顧客にそのまま送れる文面で出す。
 
 - 丁寧語で書き、1 件ごとに番号を振る
 - REQ ID や Q 番号だけに頼らず、要件書のどの記述についての質問かを、章と原文の引用で示す
