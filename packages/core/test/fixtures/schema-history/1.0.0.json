@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://loomake.dev/schema/verify-result.schema.json",
+  "title": "Loomake verify result",
+  "description": "verify --json が出力する結果。破壊的変更を入れるときは schemaVersion のメジャー番号を上げる（REQ-053）",
+  "type": "object",
+  "required": ["schemaVersion", "mode", "change", "ok", "results"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "description": "このスキーマの版（MAJOR.MINOR.PATCH）",
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "mode": {
+      "description": "quality = 品質コマンドだけ、spec-only = 仕様ゲート、done = 完了ゲート",
+      "enum": ["quality", "spec-only", "done"]
+    },
+    "change": {
+      "description": "検査した change-id。--change を省略したときは null",
+      "type": ["string", "null"]
+    },
+    "ok": {
+      "description": "不合格の検査が 1 つも無いとき true",
+      "type": "boolean"
+    },
+    "results": {
+      "description": "検査ごとの結果",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["check", "status", "detail"],
+        "additionalProperties": false,
+        "properties": {
+          "check": { "description": "検査の名前", "type": "string" },
+          "status": { "enum": ["pass", "fail", "warn", "skip"] },
+          "detail": { "description": "補足。無いときは空文字列", "type": "string" }
+        }
+      }
+    },
+    "coverage": {
+      "description": "完了ゲートで、要件 ID ごとのテストファイルの一覧。テストの無い要件は空の配列",
+      "type": "object",
+      "propertyNames": { "pattern": "^REQ-[0-9]{3,}$" },
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      }
+    }
+  }
+}
