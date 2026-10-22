@@ -18,7 +18,8 @@ npx loomake verify --change <id> --done           # 完了ゲート：要件ご�
 
 | 文書 | 読む人 | 中身 |
 |---|---|---|
-| [docs/usage.md](docs/usage.md) | Loomake を使う人 | 導入、1 つの change の進め方、verify と設定のリファレンス |
+| [docs/usage.md](docs/usage.md) | Loomake を使う人 | 導入、1 つの change の進め方、verify と設定のリファレンス（図つき） |
+| [docs/for-agents.md](docs/for-agents.md) | Loomake を入れたプロジェクトで働く AI エージェント | 状況ごとの手順、verify が不合格のときの直し方、終了コードと JSON |
 | [AGENTS.md](AGENTS.md) | AI エージェント・開発者 | このリポジトリで AI が従うルール |
 | [docs/flow.md](docs/flow.md) | このリポジトリを開発する人 | Loomake を Loomake で作る流れ |
 | [docs/architecture.md](docs/architecture.md) | このリポジトリを開発する人 | 全体の構成、名前、作る順番 |

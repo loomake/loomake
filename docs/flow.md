@@ -4,7 +4,7 @@ Oct 22, 2026 · @r
 
 ## 全体像
 
-この文書は、Loomake 自身をこのリポジトリで開発する流れをまとめる。Loomake を別のプロジェクトで使う手順は [usage.md](usage.md) にある。
+この文書は Loomake 自身をこのリポジトリで開発する流れをまとめる。Loomake を別のプロジェクトで使う手順は [usage.md](usage.md) にある。
 
 1 つの change は「答える → 実装を任せる → ゲートを通す → PR → archive」の順に回し、人がやるのは確認事項への回答と PR のレビューだけを目標にする。ゲートは `loomake verify` で通す。このリポジトリでは `pnpm -s verify` で実行する。
 
@@ -22,6 +22,33 @@ Oct 22, 2026 · @r
 | 仕様ゲート | 確認事項に回答し、仮定を承認する | 指摘に沿って spec.md を直す |
 | 実装 | 仕様外の質問に答える | タスクごとに実装・コミットする |
 | 完了ゲート・PR | PR をレビューしてマージする | ゲートが通るまで直す |
+
+```mermaid
+sequenceDiagram
+  actor H as 人
+  participant A as AI エージェント
+  participant V as loomake verify
+  participant G as GitHub
+
+  H->>A: 要件書を change にして
+  A-->>H: 分割案
+  H->>A: 合意
+  A-->>H: change・ブロッキング確認事項
+  H->>H: trace.md の回答・承認を埋める
+  A->>V: --spec-only
+  V-->>A: 合格
+  H->>A: tasks.md を実装して
+  loop タスクごと
+    A->>A: 実装・テスト・コミット
+  end
+  A->>V: --done
+  V-->>A: 不合格なら直して再実行
+  A->>G: PR を出す
+  G-->>H: CI（gate ジョブでも --done）
+  H->>G: レビューしてマージ
+  H->>A: archive して
+  A->>A: openspec archive
+```
 
 ## 0. 最初に 1 回だけ：準備
 
@@ -124,6 +151,13 @@ MVP は次の 5 つの change で作り、どれもマージして archive し�
 ルートは `loomake` パッケージに依存していないので、このリポジトリでは `pnpm -s verify` がビルドしてから `packages/cli/dist/cli.js verify` を実行する。
 
 ## 8. テンプレートを直すとき
+
+```mermaid
+flowchart LR
+  T["packages/kit/templates/<br>正"] -->|"npx loomake init"| U[利用者のプロジェクト<br>AGENTS.md・CLAUDE.md<br>.claude/skills/ など]
+  T -. "同じ内容に保つ<br>verify の実行方法だけ違う" .- R[このリポジトリの<br>.agents/skills/req-to-openspec/<br>AGENTS.md]
+  K[tests/kit-assets.test.ts] -. 確かめる .-> R
+```
 
 `loomake init` が配る Skill・AGENTS.md・CLAUDE.md・devcontainer.json の正は `packages/kit/templates/` にある。このリポジトリの `.agents/skills/req-to-openspec/` もテンプレートと同じ内容に保つので、Skill を直すときは両方を直す。違うのは verify の実行方法だけで、テンプレートは `npx loomake verify`、このリポジトリは `pnpm -s verify` と書く。2 つがそろっているかは `tests/kit-assets.test.ts` が確かめる。
 

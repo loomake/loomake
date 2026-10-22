@@ -1,6 +1,6 @@
 # Loomake の使い方
 
-Loomake を自分のプロジェクトに入れて、要件書から AI に実装させるまでの手順をまとめる。このリポジトリ自身を開発する手順は [flow.md](flow.md) にある。
+Loomake を自分のプロジェクトに入れて、要件書から AI に実装させるまでの手順をまとめる。AI エージェントに読ませる手順は [for-agents.md](for-agents.md)、このリポジトリ自身を開発する手順は [flow.md](flow.md) にある。
 
 ## 1. Loomake がすること
 
@@ -14,9 +14,45 @@ AI に要件書を渡して実装させると、曖昧な点が推測で埋め�
 
 1 つの change は次の順に進む。人がするのは、確認事項への回答と PR のレビューが中心になる。
 
+```mermaid
+flowchart LR
+  R[要件書<br>Markdown] --> S[change を作る<br>Skill]
+  S --> Q[確認事項に答える]
+  Q --> G1{"仕様ゲート<br>--spec-only"}
+  G1 -- 不合格 --> Q
+  G1 -- 合格 --> I[実装する]
+  I --> G2{"完了ゲート<br>--done"}
+  G2 -- 不合格 --> I
+  G2 -- 合格 --> P[PR をレビュー<br>してマージ]
+  P --> A[archive<br>仕様に取り込む]
+
+  classDef human fill:#fde68a,stroke:#b45309,color:#000
+  classDef ai fill:#bfdbfe,stroke:#1d4ed8,color:#000
+  classDef gate fill:#bbf7d0,stroke:#15803d,color:#000
+  class Q,P human
+  class S,I,A ai
+  class G1,G2 gate
 ```
-要件書（Markdown） → change を作る → 確認事項に答える → 仕様ゲート → 実装 → 完了ゲート → PR → archive
+
+黄色は人、青は AI エージェント、緑は `loomake verify` が受け持つ。
+
+### 要件からテストまでのつながり
+
+Loomake の検査は、要件書の 1 文に振った要件 ID（`REQ-012` など）を手がかりにする。同じ ID が台帳・仕様・テストの名前に入るので、どの要件をどのテストで確かめたかを機械的にたどれる。
+
+```mermaid
+flowchart LR
+  D["要件書 §3.1 2 行目<br>「ログインしていなければ<br>401 を返すこと」"] --> L["trace.md の要件台帳<br>REQ-012 ・ 反映済"]
+  L --> RQ["spec.md の Requirement<br>Source: REQ-012<br>Scenario: 未ログイン"]
+  RQ --> T["テスト<br>it('[REQ-012] 未ログインのとき<br>401 を返す')"]
+  T --> RP["テストのレポート<br>REQ-012 → 成功"]
+
+  L -. 仕様ゲートが確かめる .- RQ
+  RQ -. 完了ゲートが確かめる .- RP
 ```
+
+- 仕様ゲートは、台帳の ID と Requirement の `Source:` が対応しているか、未回答のブロッキング確認事項が無いかを確かめる
+- 完了ゲートは、仕様が参照するすべての ID に、名前にその ID を含む成功したテストがあるかを確かめる
 
 ## 2. 必要なもの
 
@@ -44,6 +80,19 @@ npx loomake init
 | `loomake.config.json` | verify の設定（[6 章](#6-設定loomakeconfigjson)） |
 | `.claude/skills/req-to-openspec/` | req-to-openspec Skill |
 
+```
+あなたのプロジェクト/
+├── AGENTS.md                         AI が従う共通ルール
+├── CLAUDE.md                         @AGENTS.md（Claude Code 用）
+├── loomake.config.json               verify の設定
+├── .claude/skills/req-to-openspec/   Skill（Claude Code 用）
+│   ├── SKILL.md
+│   ├── references/                   曖昧さのチェックリスト、OpenSpec の書式
+│   └── templates/trace.md            trace.md の雛形
+├── .agents/skills/req-to-openspec/   --codex のとき。中身は上と同じ
+└── .devcontainer/devcontainer.json   --devcontainer のとき
+```
+
 次のオプションがある。
 
 | オプション | すること |
@@ -54,6 +103,19 @@ npx loomake init
 `loomake.config.json` の品質コマンドは package.json の `packageManager`（なければロックファイル）から pnpm・npm・yarn を判定して決まる。どれも分からなければ npm になる。
 
 ### 既にファイルがあるとき
+
+```mermaid
+flowchart TD
+  F[置くファイルごとに] --> E{同じ名前の<br>ファイルがある？}
+  E -- ない --> W[作成する]
+  E -- ある --> C{内容が同じ？}
+  C -- 同じ --> K[そのまま]
+  C -- 違う --> T{確認に答えられる<br>端末か？}
+  T -- はい --> Y{差分を見て<br>上書きする？}
+  Y -- y --> O[上書きする]
+  Y -- N・Enter --> K2[そのまま]
+  T -- いいえ CI など --> X[差分を出して中止<br>何も置かない<br>終了コード 1]
+```
 
 - 同じ名前で内容の違うファイルがあると、差分を表示して「上書きしますか [y/N]」と聞く。Enter だけなら上書きしない
 - 内容が同じファイルは、聞かずにそのままにする（改行コードだけの違いは同じとみなす）
@@ -143,6 +205,20 @@ npx loomake verify --change <change-id> --done
 - `loomake.config.json` の品質コマンド（lint・typecheck・test）がすべて成功する
 - 仕様で参照されている要件 ID ごとに、名前にその ID を含むテストが 1 つ以上あり、実際に成功している。skip したテストや、実行されなかったテストは数えない
 
+要件ごとのテストは次のように判定する。
+
+```mermaid
+flowchart LR
+  C[loomake.config.json の<br>test コマンド] --> J[".loomake/test-report.json<br>テストランナーの JSON レポート"]
+  J --> N[成功したテストの名前から<br>要件 ID を取り出す]
+  S[spec.md の<br>Source: REQ-xxx] --> M{仕様が参照する ID が<br>すべてそろっている？}
+  N --> M
+  M -- はい --> OK[合格]
+  M -- いいえ --> NG[不合格<br>テストが無い要件：REQ-xxx]
+```
+
+テストのファイルの中身ではなく実行結果で判定するので、skip したテストや失敗したテスト、テストランナーが実行しなかったファイルのテストは数えない。
+
 合格したら PR を出す。
 
 ### 4.5 マージしたら archive する
@@ -211,8 +287,12 @@ PR ごとに完了ゲートを実行すると、ゲートを通っていない c
 ```yaml
 - run: npm ci
 - run: npm install -g @fission-ai/openspec
-- run: npx loomake verify --change "${{ github.head_ref }}" --done
+- run: npx loomake verify --change "$HEAD_REF" --done
+  env:
+    HEAD_REF: ${{ github.head_ref }}
 ```
+
+ブランチ名は `env` で渡し、`run` の中ではシェルの変数として参照する。`run` に `${{ github.head_ref }}` を直接書くと、ブランチ名がシェルのコマンドとして解釈され、ブランチ名に仕込まれたコマンドが CI で動くおそれがある。
 
 ブランチ名と change-id をそろえておくと、このように PR のブランチ名をそのまま渡せる。change ではないブランチ（依存の更新など）では「change の存在」で不合格になるので、`openspec/changes/<ブランチ名>/` が無いときは `--change` を付けずに実行し、品質コマンドだけを確かめる。リポジトリの設定で、このジョブを必須のチェックにする。
 
@@ -246,6 +326,27 @@ trace.md は change ごとの要件の出典と合意の記録で、verify が�
 | 仮定 | 要件書に無いことを仮に決めた内容と理由 | よければ「承認」欄を埋める |
 
 台帳の状態は `反映済`・`確認待ち`・`範囲外`・`既存仕様で充足` のどれか。`確認待ち` が残っていると、完了ゲートは不合格になる。
+
+```mermaid
+stateDiagram-v2
+  state "確認待ち" as pending
+  state "反映済" as done
+  state "範囲外" as out
+  state "既存仕様で充足" as existing
+  [*] --> pending: 曖昧で決められない
+  [*] --> done: Requirement にした
+  [*] --> out: 今回は作らない
+  [*] --> existing: いまの仕様で満たしている
+  pending --> done: 回答を仕様に反映した
+  pending --> out: 回答で範囲外になった
+```
+
+| 状態 | 仕様ゲート | 完了ゲート |
+|---|---|---|
+| 反映済 | どこかの Requirement の `Source:` にあること | テストがあること |
+| 確認待ち | 警告 | 不合格 |
+| 範囲外 | 検査しない（proposal.md の Non-goals に書く） | 検査しない |
+| 既存仕様で充足 | 検査しない | 検査しない |
 
 ## 8. よくあるつまずき
 

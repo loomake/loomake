@@ -18,20 +18,20 @@
 
 ## 2. 流れ
 
+```mermaid
+flowchart TD
+  R[要件書・仕様書<br>顧客] -->|kit: req-to-openspec Skill| C[OpenSpec change<br>proposal・specs・tasks + trace.md]
+  C -->|"kit: verify --spec-only<br>ブロッキング確認事項があれば止まる"| I[tasks を実装する<br>いまは AI エージェント]
+  I -->|"kit: verify --done<br>通るまで直す"| P[PR]
+  P -->|"kit: verify --done --json"| T[trace<br>要件台帳 × 検証結果 → 検収レポート]
+  T --> A[顧客の検収・納品]
+  RN[runner<br>実装を自動で回す] -.将来.-> I
+
+  classDef future stroke-dasharray:5 5,color:#666
+  class T,RN future
 ```
-要件書・仕様書（顧客）
-   │  kit: req-to-openspec Skill
-   ▼
-OpenSpec change（proposal / specs / tasks + trace.md）
-   │  kit: verify --spec-only（ブロッキング確認事項があれば止まる）
-   ▼
-runner: tasks を実装 → kit: verify --done が通るまで回す → PR
-   │  kit: verify --done --json
-   ▼
-trace: 要件台帳 × 検証結果 → 検収レポート
-   ▼
-顧客の検収・納品
-```
+
+点線はまだ作っていないもの（trace・runner）。いまは、実装を AI エージェントに頼み、検収レポートは人がまとめる。
 
 ## 3. 名前
 
@@ -49,6 +49,23 @@ CLI は本体パッケージ `loomake`（`packages/cli`）を 1 つ作り、各�
 ## 4. リポジトリ構成
 
 以下は将来の構成を含む。`packages/trace/` と `packages/runner/` はまだ作っていない。
+
+いまのパッケージの依存関係は次のとおり。矢印は「依存する」向き。
+
+```mermaid
+flowchart LR
+  CLI["loomake<br>CLI 本体"] --> KIT["@loomake/kit<br>verify・init<br>templates/"]
+  CLI --> CORE["@loomake/core<br>読み取り・JSON スキーマ<br>実行時依存ゼロ"]
+  KIT --> CORE
+  KIT -. "openspec validate を呼ぶ" .-> OS[OpenSpec CLI<br>外部]
+  TR["@loomake/trace"] -.将来.-> CORE
+  RU["@loomake/runner"] -.将来.-> KIT
+
+  classDef future stroke-dasharray:5 5,color:#666
+  class TR,RU future
+```
+
+`core`・`kit`・`loomake` の実行時依存はこの矢印の範囲に限る（REQ-046・REQ-047）。OpenSpec CLI は依存ではなく、別に入れたものを `verify` が呼び出す。
 
 ```
 loomake/loomake            pnpm workspaces + changesets
