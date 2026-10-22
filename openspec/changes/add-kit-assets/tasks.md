@@ -7,7 +7,7 @@
 - [x] 1.6 kit のコードと Skill に形式の変換が無いことを確かめる。いまの SKILL.md にある pandoc・pdftotext の手順は外す（REQ-059）
 
 ## 2. テスト
-- [ ] 2.1 各 Scenario に対応する構造検査のテストを書く。テスト名に [REQ-xxx] を入れる
+- [x] 2.1 各 Scenario に対応する構造検査のテストを書く。テスト名に [REQ-xxx] を入れる
 
 ## 3. 確認
 - [ ] 3.1 `node scripts/verify.mjs --change add-kit-assets --done` を通す
