@@ -10,8 +10,9 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 export function verifyArgs(branch, changesDir) {
-  // changes/archive/ は完了した change の置き場で、change ではない
-  const dir = branch && branch !== 'archive' ? join(changesDir, branch) : '';
+  // change は changes/ の直下のディレクトリだけ。changes/archive/ は完了した change の置き場で、change ではない
+  const isChangeName = /^[^/\\.][^/\\]*$/.test(branch) && branch !== 'archive';
+  const dir = isChangeName ? join(changesDir, branch) : '';
   if (dir && existsSync(dir) && statSync(dir).isDirectory()) return ['--change', branch, '--done'];
   return [];
 }

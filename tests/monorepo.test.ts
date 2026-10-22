@@ -49,6 +49,8 @@ describe('Node.js のバージョン宣言', () => {
 
 describe('CI', () => {
   const ci = read('.github/workflows/ci.yml');
+  // archive したあとも動くよう、本物の change ではなく検査用プロジェクトの changes/ を使う
+  const changes = join(root, 'tests', 'fixtures', 'verify-project', 'openspec', 'changes');
 
   it('[REQ-049] ubuntu・macos・windows の 3 つで pnpm test を実行する', () => {
     expect(ci).toMatch(/os:\s*\[ubuntu-latest, macos-latest, windows-latest\]/);
@@ -63,20 +65,24 @@ describe('CI', () => {
   });
 
   it('[REQ-010][REQ-054] ブランチ名が change-id と一致すれば --change <id> --done で検査する', () => {
-    expect(verifyArgs('setup-monorepo', join(root, 'openspec', 'changes'))).toEqual(['--change', 'setup-monorepo', '--done']);
+    expect(verifyArgs('sample', changes)).toEqual(['--change', 'sample', '--done']);
   });
 
   it('[REQ-010][REQ-054] ブランチ名が change-id と一致しなければ品質コマンドだけを実行する', () => {
-    expect(verifyArgs('fix-typo', join(root, 'openspec', 'changes'))).toEqual([]);
-    expect(verifyArgs('', join(root, 'openspec', 'changes'))).toEqual([]);
-    expect(verifyArgs('archive', join(root, 'openspec', 'changes'))).toEqual([]);
+    expect(verifyArgs('fix-typo', changes)).toEqual([]);
+    expect(verifyArgs('', changes)).toEqual([]);
+    // changes/ の直下の change だけを対象にする。archive と、/ を含む名前は change ではない
+    expect(verifyArgs('archive', changes)).toEqual([]);
+    expect(verifyArgs('sample/specs', changes)).toEqual([]);
   });
 });
 
 describe('changesets', () => {
   it('[REQ-056] .changeset/config.json があり、changeset status がエラーなく終わる', () => {
     expect(existsSync(join(root, '.changeset', 'config.json'))).toBe(true);
-    const r = run('pnpm changeset status');
+    // ローカルに main が無い checkout（fork・worktree など）では origin/main と比べる
+    const base = run('git rev-parse --verify --quiet main').status === 0 ? 'main' : 'origin/main';
+    const r = run(`pnpm changeset status --since=${base}`);
     expect(r.status, r.stdout + r.stderr).toBe(0);
   });
 });

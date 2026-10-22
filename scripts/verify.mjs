@@ -55,8 +55,12 @@ function loadConfig() {
   } catch (e) {
     usage(`loomake.config.json を読めません（${e.message}）`);
   }
+  if (typeof c !== 'object' || c === null || Array.isArray(c)) usage('loomake.config.json は JSON のオブジェクトにしてください');
   return { ...defaults, ...c, tests: { ...defaults.tests, ...(c.tests ?? {}) } };
 }
+
+// Windows の改行（CRLF）で保存した Markdown も、LF と同じに読む
+const readText = (p) => readFileSync(p, 'utf8').replace(/\r\n?/g, '\n');
 
 // ---------- 結果の記録 ----------
 const results = []; // { check, status: 'pass'|'fail'|'warn'|'skip', detail }
@@ -132,11 +136,64 @@ function walk(dir, out = []) {
   return out;
 }
 
-// テストのソースから、コメントと skip・todo 指定の呼び出し（describe.skip の中身を含む）を空白にする
+// 直前の語がこれらなら、続く / は割り算ではなく正規表現リテラルの始まり
+const REGEX_KEYWORDS = new Set(['return', 'typeof', 'instanceof', 'in', 'of', 'new', 'delete', 'void', 'throw', 'case', 'do', 'else', 'yield', 'await']);
+
+// テストのソースから、コメントと、skip・todo・条件付きの呼び出し（describe.skip の中身を含む）を空白にする
 function activeTestSource(src) {
-  // 1. コメントを空白にし、文字列の位置を記録する
+  // 1. コメントを空白にし、文字列・テンプレート・正規表現リテラルの位置を opaque に記録する
   const chars = src.split('');
-  const inString = new Array(chars.length).fill(false);
+  const opaque = new Array(chars.length).fill(false);
+  const mark = (from, to) => {
+    for (let k = from; k <= to && k < chars.length; k++) opaque[k] = true;
+  };
+  // 引用符で始まる文字列の終わりの位置を返す。テンプレートの ${…} の中も文字列として扱う
+  const stringEnd = (i) => {
+    const q = src[i];
+    let j = i + 1;
+    while (j < src.length && src[j] !== q) {
+      if (src[j] === '\\') j++;
+      else if (q === '`' && src[j] === '$' && src[j + 1] === '{') j = exprEnd(j + 2);
+      j++;
+    }
+    return j;
+  };
+  // テンプレートの ${ の次の位置から、対応する } の位置を返す
+  const exprEnd = (i) => {
+    let depth = 1;
+    let j = i;
+    for (; j < src.length; j++) {
+      const c = src[j];
+      if (c === '"' || c === "'" || c === '`') j = stringEnd(j);
+      else if (c === '{') depth++;
+      else if (c === '}' && --depth === 0) break;
+    }
+    return j;
+  };
+  // 正規表現リテラルの終わり（フラグを含む）の位置を返す。リテラルでなければ -1
+  const regexEnd = (i) => {
+    let k = i - 1;
+    while (k >= 0 && /\s/.test(chars[k])) k--;
+    if (k >= 0 && /[\w$)\]]/.test(chars[k])) {
+      let w = k;
+      while (w >= 0 && /[\w$]/.test(chars[w])) w--;
+      if (!REGEX_KEYWORDS.has(chars.slice(w + 1, k + 1).join(''))) return -1;
+    }
+    let inClass = false;
+    let j = i + 1;
+    for (; j < src.length; j++) {
+      const c = src[j];
+      if (c === '\n') return -1;
+      if (c === '\\') j++;
+      else if (c === '[') inClass = true;
+      else if (c === ']') inClass = false;
+      else if (c === '/' && !inClass) break;
+    }
+    if (j >= src.length) return -1;
+    while (/[a-z]/i.test(src[j + 1] ?? '')) j++;
+    return j;
+  };
+
   for (let i = 0; i < chars.length; i++) {
     const c = chars[i];
     if (c === '/' && chars[i + 1] === '/') {
@@ -147,27 +204,42 @@ function activeTestSource(src) {
       for (; i < stop; i++) if (chars[i] !== '\n') chars[i] = ' ';
       i--;
     } else if (c === '"' || c === "'" || c === '`') {
-      for (inString[i++] = true; i < chars.length && chars[i] !== c; i++) {
-        inString[i] = true;
-        if (chars[i] === '\\') inString[++i] = true;
+      const end = stringEnd(i);
+      mark(i, end);
+      i = end;
+    } else if (c === '/') {
+      const end = regexEnd(i);
+      if (end >= 0) {
+        mark(i, end);
+        i = end;
       }
-      inString[i] = true;
     }
   }
   const text = chars.join('');
 
-  // 2. skip・todo の呼び出しを、対応する閉じ括弧まで空白にする
+  // 2. skip・todo・skipIf・runIf の呼び出しを、続く呼び出し（.each(…)(…) など）の閉じ括弧まで空白にする。
+  //    skipIf・runIf は条件を評価できないので、要件のテストとして数えない
+  const callStart =
+    /\b(?:x(?:it|test|describe)|(?:it|test|describe|suite)(?:\.(?:only|concurrent|sequential|shuffle|fails|each|for))*\.(?:skipIf|runIf|skip|todo))\b(?:\.\w+)*/g;
   const out = text.split('');
-  for (const m of text.matchAll(/\b(?:(?:it|test|describe)\.(?:skip|todo)|x(?:it|test|describe))\s*\(/g)) {
-    if (inString[m.index]) continue;
-    let depth = 0;
-    let i = m.index;
-    for (; i < text.length; i++) {
-      if (inString[i]) continue;
-      if (text[i] === '(') depth++;
-      else if (text[i] === ')' && --depth === 0) break;
+  for (const m of text.matchAll(callStart)) {
+    if (opaque[m.index] || text[m.index - 1] === '.') continue;
+    let e = m.index + m[0].length;
+    for (;;) {
+      while (/\s/.test(text[e] ?? '')) e++;
+      if (text[e] === '(' && !opaque[e]) {
+        let depth = 0;
+        for (; e < text.length; e++) {
+          if (opaque[e]) continue;
+          if (text[e] === '(') depth++;
+          else if (text[e] === ')' && --depth === 0) break;
+        }
+        e++;
+      } else if (text[e] === '`') {
+        while (opaque[e]) e++; // it.skip.each`table`
+      } else break;
     }
-    for (let j = m.index; j <= i && j < out.length; j++) if (out[j] !== '\n') out[j] = ' ';
+    for (let j = m.index; j < e && j < out.length; j++) if (out[j] !== '\n') out[j] = ' ';
   }
   return out.join('');
 }
@@ -197,7 +269,7 @@ function checkSpec() {
 
   // trace.md
   const tracePath = join(changeDir, 'trace.md');
-  const trace = existsSync(tracePath) ? readFileSync(tracePath, 'utf8') : '';
+  const trace = existsSync(tracePath) ? readText(tracePath) : '';
   const ledger = parseTable(section(trace, '要件台帳'));
   const questions = parseTable(section(trace, '確認事項'));
   const assumptions = parseTable(section(trace, '仮定'));
@@ -229,7 +301,7 @@ function checkSpec() {
   // specs
   const specFiles = walk(join(changeDir, 'specs')).filter((f) => f.endsWith('spec.md'));
   if (specFiles.length === 0) record('差分仕様', 'fail', 'specs/<capability>/spec.md がありません');
-  const reqs = specFiles.flatMap((f) => parseSpec(readFileSync(f, 'utf8'), relative(changeDir, f)));
+  const reqs = specFiles.flatMap((f) => parseSpec(readText(f), relative(changeDir, f)));
 
   const ledgerIds = new Set(ledger.map((r) => r.ID));
   const live = reqs.filter((r) => r.op === 'ADDED' || r.op === 'MODIFIED');
@@ -265,7 +337,7 @@ function checkDone(spec) {
   // tasks.md
   const tasksPath = join(changeDir, 'tasks.md');
   if (existsSync(tasksPath)) {
-    const tasks = readFileSync(tasksPath, 'utf8').split('\n').filter((l) => /^\s*- \[[ xX]\]/.test(l));
+    const tasks = readText(tasksPath).split('\n').filter((l) => /^\s*- \[[ xX]\]/.test(l));
     const open = tasks.filter((l) => /^\s*- \[ \]/.test(l));
     record('tasks.md', open.length ? 'fail' : 'pass', open.length ? open.map((l) => l.trim()).join('\n') : `${tasks.length} 件すべて完了`);
   }
@@ -275,7 +347,7 @@ function checkDone(spec) {
   const testFiles = config.tests.dirs.flatMap((d) => walk(join(root, d))).filter((f) => re.test(f));
   const covered = new Map(); // REQ → [file]
   for (const f of testFiles) {
-    const active = activeTestSource(readFileSync(f, 'utf8'));
+    const active = activeTestSource(readText(f));
     for (const m of active.matchAll(/\[(REQ-\d{3,})\]/g)) {
       covered.set(m[1], [...(covered.get(m[1]) ?? []), relative(root, f)]);
     }

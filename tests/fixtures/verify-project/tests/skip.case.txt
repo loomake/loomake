@@ -1,0 +1,29 @@
+// verify.mjs が要件のテストとして数えるかを確かめる入力。数えるのは REQ-004・REQ-010・REQ-011 だけ
+describe.skip('skip した describe', () => {
+  it('[REQ-001] 中のテスト', () => {});
+});
+// it('[REQ-002] 行コメント', () => {});
+/* it('[REQ-002] ブロックコメント', () => {}); */
+it.skip(
+  '[REQ-003] 複数行の skip',
+  () => {},
+);
+it('[REQ-004] 有効なテスト', () => {
+  const s = 'it.skip( // ではない';
+  expect(s).toBeTruthy();
+});
+it.skip.each([1])('[REQ-005] skip.each', () => {});
+it.skipIf(true)('[REQ-006] skipIf', () => {});
+it.runIf(false)('[REQ-007] runIf', () => {});
+const q = /'/;
+// it('[REQ-008] 正規表現の引用符のあとのコメント', () => {});
+describe.skip('正規表現の閉じ括弧', () => {
+  it('x', () => expect(')').toMatch(/\)/));
+  it('[REQ-009] skip した describe の後半', () => {});
+});
+describe.skip('正規表現の開き括弧', () => {
+  const re = /\(/;
+});
+it('[REQ-010] skip した describe のあとの有効なテスト', () => {});
+it(`[REQ-011] テンプレート ${'x'}`, () => {});
+const a = 6 / 3; it.skip('[REQ-012] 割り算のあと', () => {}); const b = 2 / 1;

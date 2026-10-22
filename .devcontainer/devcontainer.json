@@ -10,10 +10,10 @@
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   // コンテナ作成後に1回実行:
-  //  1. OpenSpec と Codex CLI を pnpm でグローバルインストール
+  //  1. OpenSpec（CI と同じ版）と Codex CLI を pnpm でグローバルインストール
   //  （named volume は root 所有で作られるため、先に node ユーザーへ chown する）
   //  2. npx skills で入れたスキル（yomiyasu）を上流の最新に更新する（失敗してもコンテナの作成は止めない）
-  "postCreateCommand": "sudo chown -R node:node /home/node/.claude /home/node/.codex && pnpm add -g @fission-ai/openspec@latest @openai/codex && (npx -y skills update -p -y < /dev/null || echo 'skills update に失敗しました。あとで npx skills update -p -y を実行してください')",
+  "postCreateCommand": "sudo chown -R node:node /home/node/.claude /home/node/.codex && pnpm add -g @fission-ai/openspec@1.14.3 @openai/codex && (npx -y skills update -p -y < /dev/null || echo 'skills update に失敗しました。あとで npx skills update -p -y を実行してください')",
   // pnpm のグローバル bin を PATH に通す（ないと pnpm add -g が ERR_PNPM_GLOBAL_BIN_DIR_NOT_IN_PATH で失敗する）
   // CLAUDE_CONFIG_DIR: ~/.claude.json（ログイン状態）も ~/.claude/ 内に置かせて、volume で一緒に永続化する
   "remoteEnv": {

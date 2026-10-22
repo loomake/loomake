@@ -50,7 +50,9 @@ jobs:
       - run: node --version
       # 引数なしの CLI は使い方を表示して終了コード 2 を返す
       - run: code=0; node packages/cli/dist/cli.js || code=$?; test $code -eq 2
-      - run: node scripts/verify.mjs --change setup-monorepo --spec-only
+      # archive のあとも動くよう、検査用プロジェクトの change で動かす
+      - run: node ../../../scripts/verify.mjs --change sample --spec-only
+        working-directory: tests/fixtures/verify-project
 
   # PR ごとの完了ゲート（REQ-010, REQ-054）。ブランチ名が change-id なら --done で検査する
   gate:
