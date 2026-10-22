@@ -2,8 +2,7 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
-    "allowJs": true,
-    "types": ["node"]
+    "allowJs": true
   },
   "include": ["packages/*/src", "packages/*/test", "tests", "vitest.config.ts"]
 }

@@ -73,6 +73,7 @@ describe('CI', () => {
   it('[REQ-010][REQ-054] ブランチ名が change-id と一致しなければ品質コマンドだけを実行する', () => {
     expect(verifyArgs('fix-typo', join(root, 'openspec', 'changes'))).toEqual([]);
     expect(verifyArgs('', join(root, 'openspec', 'changes'))).toEqual([]);
+    expect(verifyArgs('archive', join(root, 'openspec', 'changes'))).toEqual([]);
   });
 });
 

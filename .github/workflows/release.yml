@@ -7,10 +7,11 @@ on:
 
 permissions:
   contents: write
-  id-token: write
 
 jobs:
   publish:
+    # main 以外のブランチからは公開しない
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,6 +21,15 @@ jobs:
           node-version: 24
           cache: pnpm
           registry-url: https://registry.npmjs.org
+      # pnpm changeset version で消化していない changeset が残っていれば止める（版を上げずに公開しないため）
+      - name: 未消化の changeset がないことを確かめる
+        run: |
+          pending=$(find .changeset -maxdepth 1 -name '*.md' ! -name README.md)
+          if [ -n "$pending" ]; then
+            echo "未消化の changeset があります。先に pnpm changeset version を実行して main に入れてください:"
+            echo "$pending"
+            exit 1
+          fi
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: pnpm changeset publish

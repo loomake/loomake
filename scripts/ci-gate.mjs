@@ -10,7 +10,8 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 export function verifyArgs(branch, changesDir) {
-  const dir = branch ? join(changesDir, branch) : '';
+  // changes/archive/ は完了した change の置き場で、change ではない
+  const dir = branch && branch !== 'archive' ? join(changesDir, branch) : '';
   if (dir && existsSync(dir) && statSync(dir).isDirectory()) return ['--change', branch, '--done'];
   return [];
 }

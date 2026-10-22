@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Loomake verify — 依存なし（Node 20+）
+// Loomake verify — 依存なし（Node 20.19+）
 //
 //   node scripts/verify.mjs                          品質チェックだけ（lint / typecheck / test）
 //   node scripts/verify.mjs --change <id> --spec-only 仕様ゲート：実装に入ってよいか
@@ -49,7 +49,12 @@ function loadConfig() {
   };
   const p = join(root, 'loomake.config.json');
   if (!existsSync(p)) return defaults;
-  const c = JSON.parse(readFileSync(p, 'utf8'));
+  let c;
+  try {
+    c = JSON.parse(readFileSync(p, 'utf8'));
+  } catch (e) {
+    usage(`loomake.config.json を読めません（${e.message}）`);
+  }
   return { ...defaults, ...c, tests: { ...defaults.tests, ...(c.tests ?? {}) } };
 }
 
@@ -74,7 +79,12 @@ function parseTable(text) {
     .map((l) => l.trim())
     .filter((l) => l.startsWith('|'));
   if (rows.length < 2) return [];
-  const cells = (row) => row.replace(/^\||\|$/g, '').split('|').map((c) => c.trim());
+  // GFM と同じく、\| はセルの区切りではなく文字の | として読む
+  const cells = (row) =>
+    row
+      .replace(/^\||(?<!\\)\|$/g, '')
+      .split(/(?<!\\)\|/)
+      .map((c) => c.trim().replace(/\\\|/g, '|'));
   const header = cells(rows[0]);
   return rows
     .slice(2) // ヘッダと区切り行を飛ばす
@@ -120,6 +130,46 @@ function walk(dir, out = []) {
     else out.push(p);
   }
   return out;
+}
+
+// テストのソースから、コメントと skip・todo 指定の呼び出し（describe.skip の中身を含む）を空白にする
+function activeTestSource(src) {
+  // 1. コメントを空白にし、文字列の位置を記録する
+  const chars = src.split('');
+  const inString = new Array(chars.length).fill(false);
+  for (let i = 0; i < chars.length; i++) {
+    const c = chars[i];
+    if (c === '/' && chars[i + 1] === '/') {
+      while (i < chars.length && chars[i] !== '\n') chars[i++] = ' ';
+    } else if (c === '/' && chars[i + 1] === '*') {
+      const end = src.indexOf('*/', i + 2);
+      const stop = end < 0 ? chars.length : end + 2;
+      for (; i < stop; i++) if (chars[i] !== '\n') chars[i] = ' ';
+      i--;
+    } else if (c === '"' || c === "'" || c === '`') {
+      for (inString[i++] = true; i < chars.length && chars[i] !== c; i++) {
+        inString[i] = true;
+        if (chars[i] === '\\') inString[++i] = true;
+      }
+      inString[i] = true;
+    }
+  }
+  const text = chars.join('');
+
+  // 2. skip・todo の呼び出しを、対応する閉じ括弧まで空白にする
+  const out = text.split('');
+  for (const m of text.matchAll(/\b(?:(?:it|test|describe)\.(?:skip|todo)|x(?:it|test|describe))\s*\(/g)) {
+    if (inString[m.index]) continue;
+    let depth = 0;
+    let i = m.index;
+    for (; i < text.length; i++) {
+      if (inString[i]) continue;
+      if (text[i] === '(') depth++;
+      else if (text[i] === ')' && --depth === 0) break;
+    }
+    for (let j = m.index; j <= i && j < out.length; j++) if (out[j] !== '\n') out[j] = ' ';
+  }
+  return out.join('');
 }
 
 // ---------- 仕様ゲート ----------
@@ -225,12 +275,7 @@ function checkDone(spec) {
   const testFiles = config.tests.dirs.flatMap((d) => walk(join(root, d))).filter((f) => re.test(f));
   const covered = new Map(); // REQ → [file]
   for (const f of testFiles) {
-    const text = readFileSync(f, 'utf8');
-    // skip されたテストは数えない
-    const active = text
-      .split('\n')
-      .filter((l) => !/\b(it|test|describe)\.(skip|todo)\s*\(|\bx(it|test|describe)\s*\(/.test(l))
-      .join('\n');
+    const active = activeTestSource(readFileSync(f, 'utf8'));
     for (const m of active.matchAll(/\[(REQ-\d{3,})\]/g)) {
       covered.set(m[1], [...(covered.get(m[1]) ?? []), relative(root, f)]);
     }
@@ -252,7 +297,7 @@ function runCommands() {
   for (const [name, cmd] of Object.entries(config.commands ?? {})) {
     if (!cmd) continue;
     if (!asJson) process.stderr.write(`… ${name}: ${cmd}\n`);
-    const r = spawnSync(cmd, { cwd: root, shell: true, encoding: 'utf8' });
+    const r = spawnSync(cmd, { cwd: root, shell: true, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
     const out = `${r.stdout ?? ''}${r.stderr ?? ''}`.trim();
     record(`command: ${name}`, r.status === 0 ? 'pass' : 'fail', r.status === 0 ? '' : out.split('\n').slice(-30).join('\n'));
   }

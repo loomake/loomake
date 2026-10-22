@@ -29,6 +29,28 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      - run: pnpm build
+
+  # 実行時の下限（engines.node >=20.19.0、REQ-048）で、ビルドした CLI と verify.mjs が動くかを確かめる。
+  # vitest・eslint・changesets は Node 22 以上を求めるので、インストールとビルドは Node 24 で行う
+  node20:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.0
+      - run: node --version
+      # 引数なしの CLI は使い方を表示して終了コード 2 を返す
+      - run: code=0; node packages/cli/dist/cli.js || code=$?; test $code -eq 2
+      - run: node scripts/verify.mjs --change setup-monorepo --spec-only
 
   # PR ごとの完了ゲート（REQ-010, REQ-054）。ブランチ名が change-id なら --done で検査する
   gate:
@@ -46,7 +68,8 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: npm install -g @fission-ai/openspec
+      # validate の結果が OpenSpec の更新で変わらないよう、版を固定する
+      - run: npm install -g @fission-ai/openspec@1.14.3
       - run: node scripts/ci-gate.mjs "$HEAD_REF"
         env:
           HEAD_REF: ${{ github.head_ref }}
