@@ -46,11 +46,11 @@ claude          # 初回だけログイン（以後はボリュームに残る�
 
 要件書は Markdown でリポジトリに置いて版管理し、Claude Code または Codex の req-to-openspec Skill で change に変換する。
 
-1. 要件定義書を Markdown でエクスポートし、`docs/requirements/mvp-v0.5.md` のように版を含む名前でコミットする（trace.md の出典と突き合わせるため）
+1. 要件定義書を Markdown でエクスポートし、`docs/requirements/mvp-v0.6.md` のように版を含む名前でコミットする（trace.md の出典と突き合わせるため）
 2. AI エージェントに次のように頼む
 
 ```
-req-to-openspec スキルで docs/requirements/mvp-v0.5.md を change にして
+req-to-openspec スキルで docs/requirements/mvp-v0.6.md を change にして
 ```
 
 3. AI が出す change の分割案を確認する

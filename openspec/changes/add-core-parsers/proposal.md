@@ -20,3 +20,4 @@ kit・trace・runner は trace.md・spec.md・tasks.md・テストファイル�
 - 影響する capability：core-parsers（新規）
 - 影響するコード：`packages/core/`
 - 前提：setup-monorepo が完了していること
+- 要件書 v0.6：Q-11 の回答に合わせて §4 F-CORE-05 を直した（REQ-015）

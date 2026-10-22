@@ -11,6 +11,7 @@ REQ の採番は要件定義書の登場順（全 change で共通）。F-xxx / 
 | 文書 | 版 | 日付 |
 |---|---|---|
 | docs/requirements/mvp-v0.1.md（Loomake MVP 要件定義書（core・kit）） | v0.1 | 2026-10-22 |
+| docs/requirements/mvp-v0.6.md（同上。F-CORE-05 をテストランナーの JSON レポートから取り出す形にした） | v0.6 | 2026-10-22 |
 
 ## 要件台帳
 
@@ -20,7 +21,7 @@ REQ の採番は要件定義書の登場順（全 change で共通）。F-xxx / 
 | REQ-012 | 要件定義書 v0.1 §4 F-CORE-02 | 機能 | 要件台帳の「状態」が 反映済・確認待ち・範囲外・既存仕様で充足 のいずれでもない行を、エラーとして報告すること | 反映済 | specs/core-parsers/spec.md |
 | REQ-013 | 要件定義書 v0.1 §4 F-CORE-03 | 機能 | spec.md から、Requirement ごとに 操作（ADDED・MODIFIED・REMOVED・RENAMED）、名前、Source の要件 ID、Scenario 数を取り出すこと | 反映済 | specs/core-parsers/spec.md |
 | REQ-014 | 要件定義書 v0.1 §4 F-CORE-04 | 機能 | tasks.md から、チェック済みと未チェックのタスクを取り出すこと | 反映済 | specs/core-parsers/spec.md |
-| REQ-015 | 要件定義書 v0.1 §4 F-CORE-05 | 機能 | テストファイルから `[REQ-xxx]` 形式の要件 ID を取り出し、skip・todo 指定のテストは数えないこと | 反映済 | specs/core-parsers/spec.md |
+| REQ-015 | 要件定義書 v0.6 §4 F-CORE-05 | 機能 | テストランナーの JSON レポートから、成功したテストの名前にある `[REQ-xxx]` 形式の要件 ID を取り出し、skip・todo のテストと失敗したテストは数えないこと | 反映済 | specs/core-parsers/spec.md |
 | REQ-016 | 要件定義書 v0.1 §4 F-CORE-06 | 機能 | verify 結果の JSON スキーマを公開し、スキーマに `schemaVersion` を含めること | 反映済 | specs/core-parsers/spec.md |
 | REQ-017 | 要件定義書 v0.1 §4 F-CORE-07 | 機能 | trace.md の空のテンプレートを生成する関数を提供すること | 反映済 | specs/core-parsers/spec.md |
 | REQ-018 | 要件定義書 v0.1 §4 F-CORE-08 | 機能 | 解析エラーには、ファイル名と行番号を含めること | 反映済 | specs/core-parsers/spec.md |

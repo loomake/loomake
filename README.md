@@ -4,7 +4,7 @@
 
 このリポジトリは pnpm workspaces のモノレポで、Loomake 自身も Loomake の流れ（要件書 → OpenSpec change → 仕様ゲート → 実装 → 完了ゲート）で作っている。全体の構成と方針は [docs/architecture.md](docs/architecture.md)、日々の進め方は [docs/flow.md](docs/flow.md) を参照。
 
-最新の要件定義書は [mvp-v0.5.md](docs/requirements/mvp-v0.5.md)。各 change の出典と合意内容は `trace.md` にある。過去の要件書は出典の記録として残している。
+最新の要件定義書は [mvp-v0.6.md](docs/requirements/mvp-v0.6.md)。各 change の出典と合意内容は `trace.md` にある。過去の要件書は出典の記録として残している。
 
 ## パッケージ
 
