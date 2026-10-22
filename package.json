@@ -12,7 +12,8 @@
     "build": "pnpm -r build",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "verify": "pnpm -r --silent build && node packages/cli/dist/cli.js verify"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",

@@ -1,11 +1,8 @@
 {
-  "$comment": "tests/verify.test.ts と CI の node20 ジョブが使う、verify.mjs の検査用プロジェクト",
+  "$comment": "tests/monorepo.test.ts（ci-gate）と CI の node20 ジョブが使う、loomake verify の検査用プロジェクト",
   "openspecValidate": false,
   "tests": {
-    "dirs": [
-      "tests"
-    ],
-    "pattern": "\\.case\\.txt$"
+    "report": ".loomake/test-report.json"
   },
   "commands": {}
 }
