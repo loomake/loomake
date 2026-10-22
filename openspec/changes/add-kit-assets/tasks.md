@@ -10,4 +10,4 @@
 - [x] 2.1 各 Scenario に対応する構造検査のテストを書く。テスト名に [REQ-xxx] を入れる
 
 ## 3. 確認
-- [ ] 3.1 `node scripts/verify.mjs --change add-kit-assets --done` を通す
+- [x] 3.1 `node scripts/verify.mjs --change add-kit-assets --done` を通す
