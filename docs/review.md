@@ -257,3 +257,37 @@ setup-monorepo のタスク 1.12 で直した。
 | 前回の P2（if の直後の正規表現） | 閉じ括弧の対の開き括弧の前が if・while・for・with なら、続く `/` を正規表現とみなす |
 
 再現ケースは tests/fixtures/verify-project/tests/skip.case.txt の REQ-017〜025。修正前の verify は REQ-017〜022 を数え、REQ-023・024 を数えなかった。修正後は、数えるべき REQ-023・024 だけを新たに数える。`node scripts/verify.mjs --change setup-monorepo --done` は exit 0（lint・typecheck・test 18件も合格）。
+
+
+## 2026-10-23 全体レビュー（コード・ドキュメント・セキュリティ）
+
+対象：現行の core・kit・CLI、テスト、CI・release、配布テンプレート、README・利用ガイド・開発手順・仕様。開始時の HEAD は 526f207、レビュー中に文書の更新が入り、最終確認時の HEAD は 93cbbda。利用者の文書編集は保全し、コードと設定は変更していない。今回は差分だけでなくリポジトリ全体を対象にした。
+
+### 指摘
+
+1. **[P1・セキュリティ／文書] CI の例がブランチ名をシェルへ直接埋め込む。** [docs/usage.md:214](usage.md#L214) の `run: npx loomake verify --change "${{ github.head_ref }}" --done` は、GitHub の式がシェルの実行前に置換される。Git が許可するブランチ名にコマンド置換を含めると、二重引用符の中でも実行される。実行されるコマンドを printf に置き換え、Git のブランチ名の検証と、一時マーカーファイルの作成を確認した。この例を PR のワークフローにコピーした利用者の CI で意図しないコマンドが動くため、実際の ci.yml と同じようにブランチ名を env に渡し、run 内では `--change "$HEAD_REF"` と参照する必要がある。現行の ci.yml 自体は env 経由になっている。
+2. **[P1・セキュリティ／コード] init がシンボリックリンクをたどり、プロジェクト外へ読み書きする。** [packages/kit/src/init/init.ts:106](../packages/kit/src/init/init.ts#L106) の existsSync はリンク先が無いと false を返し、後段の writeFileSync はリンクをたどる。そのため、AGENTS.md をプロジェクト外の未作成ファイルへのリンクにすると、確認を求めず、終了コード 0 でそのファイルを作る。既存ファイルへのリンクの場合も、承認前にその外部ファイルの内容を差分へ出すことを、合成した無害な文字列で確認した。リンク自体と親ディレクトリを検査し、読み書き先がプロジェクト外へ出る場合や、リンク先が存在しない場合は処理を止める必要がある。
+3. **[P1・コード／仕様ゲート] trace の解析エラーを捨て、未回答の確認事項を見落とす。** [packages/kit/src/verify/run.ts:111](../packages/kit/src/verify/run.ts#L111) は parseTrace の value だけを使い、errors を結果に反映しない。未回答のブロッキング確認事項を持つ trace.md は通常不合格だが、節名を `## 確認事項（未回答）` に変えるだけで、core が「確認事項の節がない」とエラーを返しているのに、verify は「未回答 0 件」で合格する。parseTrace の errors をゲートの失敗として記録する必要がある。同じく parseSpec の errors も呼び出し側で捨てられているため、併せて扱いを確認する。関連する規約：[AGENTS.md:20](../AGENTS.md#L20)「ブロッキングな確認事項が未回答なら、ここで失敗する」。
+
+### 検証結果
+
+- `pnpm lint`・`pnpm typecheck`・`pnpm test`（118 件）・`pnpm build` がすべて exit 0。
+- `pnpm audit --json` が exit 0。照合時点の既知の脆弱性は info・low・moderate・high・critical がいずれも 0 件。これだけで未知の脆弱性がないとは判断していない。
+- 一時プロジェクトの仕様ゲート：通常の未回答 trace は不合格、節名を変更した trace は core がエラーを返すにもかかわらず合格。
+- init：外部への存在しないリンク先を作ることと、既存のリンク先の内容を差分に含めることを確認。実際の秘密情報は使っていない。
+- CI の例：Git が受け付けるブランチ名で、シェルのコマンド置換により一時ファイルが作成されることを確認。GitHub Actions 上では実行していない。
+- 再現コード・結果・audit の出力は `/tmp/loomake-full-review/` に保存した。Windows 上の実行は検証していない。
+
+### 既知の問題と次の対応
+
+過去に指摘したテストソースの静的解析と dist 除外の問題は、現在は試作コード自体が廃止され、テストランナーの JSON レポートを読む実装になっている。今回、それらを現在の指摘として再掲していない。修正時は各指摘を既存仕様と照合し、必要な Scenario と回帰テストを用意する。新しい要件や仮定は今回追加していない。
+
+### 対応
+
+| 指摘 | 対応 |
+|---|---|
+| 1（CI の例のブランチ名） | docs/usage.md の例を、ブランチ名を `env` の `HEAD_REF` で渡し、`run` では `--change "$HEAD_REF"` と参照する形に直した。`${{ github.head_ref }}` を `run` に直接書かない理由も書き添えた |
+| 2（init がシンボリックリンクをたどる） | change harden-init-and-trace-check で直した。置き先（途中のディレクトリを含む）がリンクを通ってプロジェクトの外を指すときと、リンク先の無いリンクのときは、既存ファイルを読まず、差分も出さずに、何も置かずに終了コード 1 で中止する。プロジェクトの中を指すリンクは、これまでどおりたどる（仮定 A-01） |
+| 3（trace の解析エラーを捨てる） | 同じ change で直した。仕様ゲートに「trace.md の解析」「spec.md の解析」の検査を足し、core が返す解析エラーをファイル名・行番号つきで不合格にする（仮定 A-02） |
+
+回帰テストは packages/cli/test/init.test.ts と packages/kit/test/verify.test.ts に足した。修正前のコードでは新しいテストのうち 6 件が落ちることを確かめた（プロジェクトの中を指すリンクの 1 件は、修正前後とも合格する）。`pnpm -s verify --change harden-init-and-trace-check --done` は exit 0（test 125 件）。仮定 A-01・A-02 は 2026-10-23 に承認された。
