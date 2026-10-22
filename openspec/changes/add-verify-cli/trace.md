@@ -1,0 +1,53 @@
+# Trace: add-verify-cli
+
+<!--
+このファイルは scripts/verify.mjs が読む。表の列の順番と見出し名は変えないこと。
+状態の値：反映済 / 確認待ち / 範囲外 / 既存仕様で充足
+REQ の採番は要件定義書の登場順（全 change で共通）。F-xxx / N-xx は要件書側の ID。
+-->
+
+## 入力文書
+
+| 文書 | 版 | 日付 |
+|---|---|---|
+| docs/requirements/mvp-v0.1.md（Loomake MVP 要件定義書（core・kit）） | v0.1 | 2026-10-22 |
+
+## 要件台帳
+
+| ID | 出典 | 種別 | 要約（原文に忠実に） | 状態 | 反映先 |
+|---|---|---|---|---|---|
+| REQ-034 | 要件定義書 v0.1 §5.3 F-VER-01 | 機能 | `loomake verify --change <id> --spec-only` で、未回答のブロッキング確認事項があれば不合格にすること | 反映済 | specs/verify/spec.md |
+| REQ-035 | 要件定義書 v0.1 §5.3 F-VER-02 | 機能 | 仕様ゲートで、Source の無い Requirement、台帳に無い要件 ID、Scenario の無い Requirement、反映済なのに仕様に無い要件を不合格にすること | 反映済 | specs/verify/spec.md |
+| REQ-036 | 要件定義書 v0.1 §5.3 F-VER-03 | 機能 | 仕様ゲートで、未承認の仮定と確認待ちの要件を警告として表示すること | 反映済 | specs/verify/spec.md |
+| REQ-037 | 要件定義書 v0.1 §5.3 F-VER-04 | 機能 | OpenSpec CLI がある場合は `openspec validate --strict` を実行し、結果をゲートに含めること | 反映済 | specs/verify/spec.md |
+| REQ-038 | 要件定義書 v0.1 §5.3 F-VER-05 | 機能 | `--done` で、仕様ゲートに加えて、未完了タスク・確認待ちの要件・テストの無い要件を不合格にすること | 反映済 | specs/verify/spec.md |
+| REQ-039 | 要件定義書 v0.1 §5.3 F-VER-06 | 機能 | `--done` で、loomake.config.json の commands（lint・typecheck・test）を実行し、失敗を不合格にすること | 反映済 | specs/verify/spec.md |
+| REQ-040 | 要件定義書 v0.1 §5.3 F-VER-07 | 機能 | `--json` で、core のスキーマに沿った結果と、要件ごとのテストファイル一覧を出力すること | 反映済 | specs/verify/spec.md |
+| REQ-041 | 要件定義書 v0.1 §5.3 F-VER-08 | 機能 | 合格なら終了コード 0、不合格なら 1、使い方の誤りなら 2 を返すこと | 反映済 | specs/verify/spec.md |
+| REQ-042 | 要件定義書 v0.1 §5.3 F-VER-09 | 機能 | `--change` を省略した場合は、commands だけを実行すること | 反映済 | specs/verify/spec.md |
+| REQ-047 | 要件定義書 v0.1 §6 N-02 | 非機能 | `@loomake/kit` と `loomake` の実行時依存は core のみとすること | 反映済 | specs/verify/spec.md |
+| REQ-050 | 要件定義書 v0.1 §6 N-05 | 非機能 | テストファイル 1,000 個・要件 500 件の change で、commands を除く verify が 3 秒以内に終わること（暫定） | 反映済 | specs/verify/spec.md |
+| REQ-055 | 要件定義書 v0.1 §6 N-10 | 非機能 | エラーメッセージ・Skill・AGENTS.md を日本語で提供すること | 反映済 | specs/verify/spec.md |
+
+## 確認事項
+
+<!-- 回答 欄が空で ブロッキング = yes の行があると、verify の仕様ゲートは失敗する -->
+
+| ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 |
+|---|---|---|---|---|---|---|
+| Q-03 | REQ-055 | 英語のエラーメッセージと文書をいつ用意しますか（要件書 Q-03。Skill・AGENTS.md の日本語化は add-kit-assets、init のメッセージは add-init-cli でも同じ回答を使う） | MVP から両方 / MVP は日本語のみ | MVP は日本語のみ。要件 N-10 が日本語での提供を求めており、英語は後から足せる | no | |
+| Q-04 | REQ-050 | 性能目標「テストファイル 1,000 個・要件 500 件で 3 秒以内」は暫定値です（要件書 Q-04）。この change では何を合格の基準にしますか | 3 秒を合格基準にする / 計測だけして基準にしない（実案件で決める） | 3 秒を合格基準にしつつ、実案件の計測後に見直す。数値は検収に直結するため、基準にするかを先に決めたい | yes | 3 秒を合格基準にし、実案件の計測後に見直す（2026-10-22 回答） |
+| Q-05 | REQ-038 | 確認待ちの要件が残っていても、範囲を限定して完了にできる例外を設けますか（要件書 Q-05）。設けると、完了ゲートが通っても確認待ちが残る change ができます | 設けない / change 単位で除外を許す | 設けない。「確認待ちが残る間は完了にしない」という要件書の趣旨を保てる | yes | 設けない（2026-10-22 回答） |
+| Q-08 | REQ-047 | N-02 は「kit と loomake の実行時依存は core のみ」と読めますが、`loomake` を独立パッケージにすると、`init`・`verify` を呼ぶために `@loomake/kit` に依存することになり、N-02 と矛盾します（Q-01 の回答に関わります）。どう読みますか | loomake は core と kit のみに依存してよい（外部の実行時依存はゼロ）/ loomake は core だけに依存する（Q-01 で kit に同梱） | loomake は core と kit のみに依存してよい。「外部ライブラリを使わない」という意図で読むのが自然 | yes | loomake は core と kit のみに依存してよい（外部の実行時依存はゼロ）（2026-10-22 回答） |
+
+## 仮定
+
+<!-- 承認 欄が空の仮定は verify で警告になる（失敗にはしない） -->
+
+| ID | 関連 | 仮定の内容 | 理由 | 承認 |
+|---|---|---|---|---|
+| A-01 | REQ-037 | OpenSpec CLI が無いとき、`openspecValidate` が `auto` なら警告、`true` なら不合格、`false` なら実行しない | 試作の verify.mjs と loomake.config.json の既存の設定値に合わせる | 承認（2026-10-22） |
+| A-02 | REQ-039 | commands は lint・typecheck・test の順に実行し、1 つ失敗しても残りを実行する。タイムアウトは設けない。値が空のコマンドは飛ばす | 要件書に指定がない。試作の挙動に合わせる | 承認（2026-10-22） |
+| A-03 | REQ-040 | `--json` のとき標準出力には JSON のみを出し、進捗は標準エラーに出す | 機械が読む出力に他の文字を混ぜないため | 承認（2026-10-22） |
+| A-04 | REQ-034 | 「ブロッキング」列が `yes`（大文字小文字を区別しない）のものだけをブロッキングとみなす | trace.md のテンプレートの書式 | 承認（2026-10-22） |
+| A-05 | REQ-038 | テストの走査対象は `loomake.config.json` の `tests.dirs` と `tests.pattern` で決める | 既存の設定項目。setup-monorepo の A-04 で `packages` を足す | 承認（2026-10-22） |
