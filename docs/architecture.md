@@ -14,6 +14,8 @@
 
 仕様の書式は自作せず OpenSpec を使う。Loomake が担うのは、OpenSpec が持っていない「要件書からの入口」と「守らせる仕組み」と「検収の証拠」。
 
+この表は将来の構成を含む。現在のリポジトリには core・kit・CLI 本体の雛形と試作の `scripts/verify.mjs` があり、trace・runner は MVP の範囲外。MVP の範囲は [要件定義書 v0.4](requirements/mvp-v0.4.md) を参照。
+
 ## 2. 流れ
 
 ```
@@ -42,9 +44,11 @@ trace: 要件台帳 × 検証結果 → 検収レポート
 | CLI | `loomake init` / `loomake verify` / `loomake trace` / `loomake run` |
 | サイト | loomake.dev |
 
-CLI は本体パッケージ `loomake`（`packages/cli`）を 1 つ作り、各サブコマンドを束ねる（`npx loomake init` だけで始められる。setup-monorepo の Q-01 で決定）。
+CLI は本体パッケージ `loomake`（`packages/cli`）を 1 つ作り、各サブコマンドを束ねる（`npx loomake init` で導入する計画。setup-monorepo の Q-01 で決定。`init` は未実装）。
 
 ## 4. リポジトリ構成
+
+以下は将来の構成を含む。`packages/trace/` と `packages/runner/` はまだ作っていない。
 
 ```
 loomake/loomake            pnpm workspaces + changesets

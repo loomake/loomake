@@ -4,9 +4,11 @@
 
 このリポジトリは pnpm workspaces のモノレポで、Loomake 自身も Loomake の流れ（要件書 → OpenSpec change → 仕様ゲート → 実装 → 完了ゲート）で作っている。全体の構成と方針は [docs/architecture.md](docs/architecture.md)、日々の進め方は [docs/flow.md](docs/flow.md) を参照。
 
+最新の要件定義書は [mvp-v0.4.md](docs/requirements/mvp-v0.4.md)。各 change の出典と合意内容は `trace.md` にある。過去の要件書は出典の記録として残している。
+
 ## パッケージ
 
-| パッケージ | 場所 | 役割 |
+| パッケージ | 場所 | 実装予定の役割 |
 |---|---|---|
 | `@loomake/core` | `packages/core/` | trace.md・spec・verify 結果の読み書きと JSON スキーマ（実行時依存ゼロ） |
 | `@loomake/kit` | `packages/kit/` | req-to-openspec Skill・AGENTS.md・verify・init |
@@ -37,7 +39,7 @@ skills-lock.json                  npx skills で入れたスキルの出所と�
 
 ## 開発の始め方
 
-devcontainer を標準にしている。VS Code / Cursor で「コンテナーで再度開く」を実行すると、OpenSpec CLI が入る。
+開発には Node 24 の devcontainer を標準にしている。VS Code / Cursor で「コンテナーで再度開く」を実行すると、OpenSpec CLI が入る。配布物の実行環境の下限（Node 20.19）と、開発用ツールを動かす環境は異なる。
 
 ```sh
 pnpm install
@@ -55,13 +57,15 @@ node scripts/verify.mjs --change <id> --done        # 完了ゲート：タス�
 node scripts/verify.mjs --change <id> --done --json # 機械が読む用
 ```
 
+完了ゲートが実行する品質コマンドは `loomake.config.json` の lint・typecheck・test。build は別途 `pnpm build` で確認し、CI の quality ジョブでも実行する。
+
 テスト名には要件 ID を入れる（`it('[REQ-012] …', …)`）。詳しい決まりは [AGENTS.md](AGENTS.md) にある。
 
 ## CI とリリース
 
 - PR と main への push で、ubuntu・macos・windows の 3 つで lint・typecheck・test・build を実行する。Node 20.19 でも、ビルドした CLI と verify.mjs が動くかを確かめる
-- PR のブランチ名が `openspec/changes/<id>` と一致すれば、`verify --change <id> --done` も実行する
-- npm への公開は GitHub の Actions から release ワークフローを手動で実行する。事前に `pnpm changeset version` でバージョンを上げた変更を main に入れておく
+- PR のブランチ名が change-id（例：`setup-monorepo`）と一致し、`openspec/changes/<id>/` があれば、`verify --change <id> --done` も実行する。一致しない場合とブランチ名が `archive` の場合は、gate ジョブでは品質コマンドだけを実行する
+- npm への公開は GitHub の Actions から release ワークフローを手動で実行する。main を選んで実行する。事前に `pnpm changeset version` でバージョンを上げた変更を main に入れておく。未消化の changeset が残っている場合は公開を止める
 
 ## devcontainer について
 

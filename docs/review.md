@@ -2,6 +2,8 @@
 
 2026-10-22・対象コミット 0229826（行番号はこの時点のもの）
 
+以下は初回レビューとその対応記録。現在の文書を見直した結果は末尾の「ドキュメントの再レビュー」に記載する。
+
 ## コードのレビュー
 
 `pnpm lint`・`pnpm typecheck`・`pnpm test`（12 件）と `verify --change setup-monorepo --done` は通りました。一方、`pnpm build` は失敗します。重大度の高い順に挙げます。
@@ -98,3 +100,29 @@
 | ドキュメント 8 | 要件書 v0.4 で、要件書を Markdown に限った（製品としても）。読み取り用ツールは devcontainer から外し、A-07 は取り下げた。setup-monorepo の spec とテスト、add-kit-assets の spec（REQ-025・REQ-059）も合わせて直した |
 | ドキュメント 9 | setup-monorepo の spec の Scenario に `packages/cli` を足した |
 | 細かいもの | 要件書 v0.3 で、前提資料の参照先を `docs/architecture.md` に直した。flow.md の 0 章には、立ち上げ時の記録だと書き足した。verify.mjs の冒頭を「Node 20.19+」にした。仮定の並びを A-06、A-07 の順にした |
+
+
+## ドキュメントの再レビュー
+
+2026-10-22・対象コミット 66cb0da と今回の文書修正。
+
+### 修正した内容
+
+- README：最新の要件書 v0.4 へのリンクを追加し、パッケージの役割が実装予定であることを明記しました。開発環境は Node 24、配布物の実行環境の下限は Node 20.19 と区別しました。
+- README・flow：完了ゲートを実行する条件を、PR のブランチ名が change-id と一致する場合と明記しました。不一致の場合と `archive` は品質コマンドだけを実行します。flow には、必須チェックの設定を人が行うことも追記しました。
+- README：完了ゲートの品質コマンドに build が含まれないことと、release を main から実行し、未消化の changeset があれば止まることを明記しました。
+- flow：要件書の例を v0.4 に更新しました。仕様ゲートが失敗したときは、確認事項への回答を trace と差分仕様に反映する手順に直しました。5 つの change が作成済みで、setup-monorepo 以外は未実装と追記しました。
+- architecture：将来の構成を含むことと、trace・runner が MVP の範囲外であることを明記しました。`init` は未実装と追記しました。
+
+### 要件書に残る不整合
+
+1. **中：N-02 と承認済みの依存関係が一致しません。** [要件書 v0.4 の 6 章](requirements/mvp-v0.4.md#6-非機能要件)は、kit と loomake の実行時依存を core のみとしています。一方、[add-verify-cli の Q-08](../openspec/changes/add-verify-cli/trace.md#確認事項)では loomake は core と kit に依存してよいと回答済みで、[差分仕様](../openspec/changes/add-verify-cli/specs/verify/spec.md#requirement-実行時依存の範囲)にも反映されています。次の改版で N-02 にこの回答を反映することを推奨します。
+2. **中：8 章が回答済みの事項も未決と説明しています。** [要件書 v0.4 の 8 章](requirements/mvp-v0.4.md#8-未決事項)は「次の 5 件は本書の時点で決めていない」としていますが、Q-01 は [setup-monorepo の trace](../openspec/changes/setup-monorepo/trace.md#確認事項)、Q-04・Q-05 は [add-verify-cli の trace](../openspec/changes/add-verify-cli/trace.md#確認事項)で回答済みです。Q-02 は v0.4 で不要になりました。Q-03 の回答欄は空で、非ブロッキングの確認事項として残っています。次の改版で回答状況と参照先を整理することを推奨します。
+3. **低：Markdown に限定した後も「シート」が残っています。** [要件書 v0.4 の F-REQ-02](requirements/mvp-v0.4.md#52-req-to-openspec-skill)と [add-kit-assets の REQ-026](../openspec/changes/add-kit-assets/specs/req-to-openspec-skill/spec.md#requirement-台帳づくりの手順)は、出典を「文書名・章またはシートと行」としています。Markdown の出典表記をどう定めるか、要件書と差分仕様を合わせて整理することを推奨します。
+
+過去版の要件書は trace の出典なので書き換えていません。上記の指摘は要件書と change の整合性を直すための記録であり、今回、規範文や承認内容は変更していません。
+
+### 予定済みの作業と前提
+
+- [req-to-openspec の試作 Skill](../.agents/skills/req-to-openspec/SKILL.md)には Word・Excel・PDF の読み取り手順が残っています。これは Markdown だけを扱う確定済みの仕様と異なりますが、[add-kit-assets のタスク 1.2・1.6](../openspec/changes/add-kit-assets/tasks.md)で修正する予定です。最新版の製品仕様を確認するときは、試作 Skill と差分仕様を区別します。
+- ブランチ保護の設定は setup-monorepo の仮定 A-03 に従って人が行います。今回、GitHub 上の設定状態は確認していません。
