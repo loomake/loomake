@@ -184,10 +184,14 @@ describe('req-to-openspec Skill のテンプレート', () => {
     expect(isMostlyJapanese(skill)).toBe(true);
   });
 
-  it('リポジトリの .agents/skills/req-to-openspec/ はテンプレートと同じ内容である', () => {
+  it('リポジトリの .agents/skills/req-to-openspec/ は、verify の実行方法を除いてテンプレートと同じ内容である', () => {
+    // このリポジトリでは、ビルドしてから loomake verify を実行する pnpm -s verify を使う
     const repoDir = join(root, '.agents/skills/req-to-openspec');
     const rel = (dir: string) => listFiles(dir).map((f) => relative(dir, f)).sort();
     expect(rel(repoDir)).toEqual(rel(skillDir));
-    for (const f of rel(skillDir)) expect(read(join(repoDir, f)), f).toBe(read(join(skillDir, f)));
+    for (const f of rel(skillDir)) {
+      const repo = read(join(repoDir, f)).replaceAll('pnpm -s verify', 'npx loomake verify');
+      expect(repo, f).toBe(read(join(skillDir, f)));
+    }
   });
 });

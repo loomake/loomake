@@ -87,7 +87,7 @@ Source: REQ-010
 - [ ] 2.1 各 Scenario に対応するテストを書く。テスト名に [REQ-xxx] を入れる
 
 ## 3. 確認
-- [ ] 3.1 `node scripts/verify.mjs --change <change-id> --done` を通す
+- [ ] 3.1 `pnpm -s verify --change <change-id> --done` を通す
 ```
 
 ★ タスクの末尾に関係する REQ ID を書いておくと、runner（`loomake run`）がタスクとテストを結び付けやすくなる。

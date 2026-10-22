@@ -15,20 +15,20 @@
 1. 要件書・仕様書を渡されたら、`req-to-openspec` スキルで change を作る
 2. 実装に入る前に **仕様ゲート** を通す
    ```sh
-   node scripts/verify.mjs --change <change-id> --spec-only
+   npx loomake verify --change <change-id> --spec-only
    ```
    ブロッキングな確認事項が未回答なら、ここで失敗する。失敗したら実装に進まず、確認事項を人に提示する
 3. `tasks.md` の順に実装する。1タスクごとに小さくコミットし、終わったタスクは `- [x]` にする
 4. 完了したら **完了ゲート** を通す
    ```sh
-   node scripts/verify.mjs --change <change-id> --done
+   npx loomake verify --change <change-id> --done
    ```
 
 ## 3. 完了の定義（DoD）
 
 次をすべて満たすまで「完了」と報告しない。
 
-- `node scripts/verify.mjs --change <change-id> --done` が exit 0
+- `npx loomake verify --change <change-id> --done` が exit 0
 - change 内の各 Requirement に、対応するテストが 1 つ以上ある
   - テスト名に要件 ID を入れる：`it('[REQ-012] 未ログインのとき 401 を返す', ...)`
   - 1 つのテストが複数の要件を確かめる場合は `[REQ-012][REQ-013]` と並べる

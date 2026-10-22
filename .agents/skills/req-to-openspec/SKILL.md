@@ -89,7 +89,7 @@ description: 顧客や社内から受け取った Markdown（.md）の要件定�
 
 ```sh
 openspec validate <change-id> --strict
-node scripts/verify.mjs --change <change-id> --spec-only
+pnpm -s verify --change <change-id> --spec-only
 ```
 
 両方通るまで直す。ただし **ブロッキング確認事項が残っていて verify が落ちるのは正常**。その場合は直さずに報告へ進む。
