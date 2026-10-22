@@ -1,0 +1,107 @@
+---
+name: req-to-openspec
+description: 顧客や社内から受け取った要件定義書・仕様書（Word / Excel / PDF / Markdown）を読み、出典つきの OpenSpec change（proposal・specs・tasks・trace）に変換する。要件書・仕様書・RFP・機能一覧を渡されて「これを実装したい」「OpenSpec にして」と言われたときに使う。
+---
+
+# 要件書 → OpenSpec change
+
+要件書を **抜け・推測なしに** OpenSpec の change へ落とし込む。目的は「要件書のどの一文が、どの Requirement・どのテストで確かめられたか」を後から機械的に追えるようにすること。
+
+最重要ルール：**曖昧な点を推測で埋めない。** 埋めずに「確認事項」として残し、必要なら止まる。
+
+## 手順
+
+### 0. 前提を確認する
+
+- 入力ファイルと、その版・日付を把握する（ファイル名や表紙・改版履歴から）
+- `openspec/specs/` を読み、既存仕様を把握する（既存プロジェクトの改修なら必須）
+- `openspec/` が無ければ `openspec init` を案内して止まる
+
+### 1. テキストを取り出す
+
+形式ごとに、構造（章番号・表・シート名・行番号）を残したまま抽出する。
+
+| 形式 | 方法 |
+|---|---|
+| .docx | `pandoc -t gfm` で Markdown 化（見出し番号と表を保つ） |
+| .xlsx | シートごとに表として読む。**シート名と行番号を出典として必ず控える** |
+| .pdf | `pdftotext -layout`。表が崩れる場合はページ画像を目で確認 |
+| .md / .txt | そのまま |
+
+画像だけの図（画面イメージ・業務フロー図）は内容を言葉で書き起こし、出典に「図 X」と記す。
+
+### 2. 要件台帳を作る
+
+要件書の「〜すること」「〜できる」「〜しない」「〜以内」など、**要求を述べている文を 1 つずつ** 拾い、`REQ-001` から採番して台帳に載せる。
+
+- 1 行に複数の要求があれば分ける
+- 出典は「文書名 / 章・シート / 行」まで書く（例：`要件定義書 v1.2 §3.4`、`機能一覧.xlsx 画面一覧!B12`）
+- 種別を付ける：`機能` / `非機能` / `制約` / `前提` / `範囲外`
+- 書式は [templates/trace.md](templates/trace.md) に従う
+
+ここでは解釈しない。原文に忠実に要約するだけ。
+
+### 3. 曖昧さを洗い出す
+
+[references/ambiguity-checklist.md](references/ambiguity-checklist.md) を全項目あてて、各 REQ を確認する。
+
+見つけたものは次のどちらかで記録する。
+
+- **確認事項（Q-xx）**：顧客に聞かないと決められないもの。実装に影響するなら `ブロッキング = yes`
+- **仮定（A-xx）**：一般的な既定値で進めてよさそうなもの。仮定の内容を明記し、`承認` 欄は空のまま（人が埋める）
+
+既存仕様と矛盾する要求も確認事項にする。
+
+### 4. change に分割する
+
+- 1 change = **一緒にリリース・検収される単位**。要件書 1 冊を 1 change にしない
+- change-id は動詞始まりの kebab-case（例：`add-order-export`、`change-login-lockout`）
+- 分割案を人に示し、合意してから次へ進む（人がいない場合は分割理由を proposal に書いて進む）
+
+### 5. change を書き出す
+
+`openspec/changes/<change-id>/` に次を作る。書式は [references/openspec-format.md](references/openspec-format.md) を参照。
+
+| ファイル | 中身 |
+|---|---|
+| `proposal.md` | なぜ（背景）・何を変えるか・範囲外（Non-goals）・影響範囲 |
+| `specs/<capability>/spec.md` | `## ADDED / MODIFIED / REMOVED Requirements` の差分仕様 |
+| `design.md` | 技術判断が要るときだけ。選択肢と決定理由 |
+| `tasks.md` | 実装チェックリスト。最後に「テスト」「verify」のタスクを必ず入れる |
+| `trace.md` | 要件台帳・確認事項・仮定（[templates/trace.md](templates/trace.md)） |
+
+各 Requirement には必ず次を入れる。
+
+- `SHALL` / `MUST` を使った規範文
+- 本文の直後に `Source: REQ-012` 行（複数なら `Source: REQ-012, REQ-013`）
+- 最低 1 つの `#### Scenario:`（正常系）。エラー・権限・境界値の要求があればそれぞれ Scenario にする
+
+非機能要件も「測れる形」の Requirement にする（例：「一覧 API は 1,000 件で 95 パーセンタイル 500ms 以内に応答 SHALL」）。測れる形にできない場合は確認事項にする。
+
+範囲外（種別 = `範囲外`）は Requirement にせず、proposal の Non-goals に書く。
+
+### 6. 検証する
+
+```sh
+openspec validate <change-id> --strict
+node scripts/verify.mjs --change <change-id> --spec-only
+```
+
+両方通るまで直す。ただし **ブロッキング確認事項が残っていて verify が落ちるのは正常**。その場合は直さずに報告へ進む。
+
+### 7. 報告する
+
+次の形で人に返す。
+
+1. 作った change の一覧（change-id と一行説明）
+2. 台帳の集計：REQ 総数 / 反映済 / 確認待ち / 範囲外 / 既存仕様で充足
+3. **ブロッキング確認事項の一覧**（顧客にそのまま送れる文面で）
+4. 置いた仮定の一覧（承認してほしいもの）
+5. 次の一手：確認事項が無ければ「実装に進めます」、あれば「回答待ち」
+
+## やってはいけないこと
+
+- 台帳に載せずに Requirement を作る（出典の無い要件は存在しない）
+- 原文に無い機能を「あったほうが良い」で足す。提案したいなら確認事項に書く
+- 確認事項を仮定に格下げして先へ進む
+- `openspec/specs/` を直接書き換える
