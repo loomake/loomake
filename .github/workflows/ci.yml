@@ -36,6 +36,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # verify --done が実行する pnpm test の changeset status のため、ローカルに main を用意する
+      - run: git rev-parse --verify main || git branch main origin/main
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
