@@ -43,3 +43,4 @@ REQ の採番は要件定義書の登場順（全 change で共通）。F-xxx / 
 | A-02 | REQ-019 | Claude Code 向けの Skill は `.claude/skills/req-to-openspec/` に置く | 要件書に配置先の指定がない。現行リポジトリの構成に合わせる | 承認（2026-10-22） |
 | A-03 | REQ-020 | 差分は unified diff 形式で標準出力に表示し、確認は「上書きしますか [y/N]」で、既定は N（上書きしない）。内容が同じファイルは確認せず変更しない | 要件書に表示形式の指定がない。安全側の既定 | 承認（2026-10-22） |
 | A-04 | REQ-022 | `--devcontainer` が置く内容は、setup-monorepo の確定後の `.devcontainer/devcontainer.json` を元にしたテンプレートとする（Node バージョンは setup-monorepo の Q-07 の回答に従う。要件書の読み取り用ツールは、要件書 v0.4 で要件書を Markdown に限ったため入れない） | 要件書に内容の指定がない | 承認（2026-10-22） |
+| A-05 | REQ-019 | `init` が置く `loomake.config.json` には、`tests.report` の既定値 `.loomake/test-report.json` を書く。テストランナーの設定は変えず、Vitest・Jest でこのファイルに JSON レポートを書き出す設定の例を、`init` の最後に表示する | add-verify-cli の A-05 で、verify はこのファイルからテストの結果を読む。値を書いておけば、利用者は設定ファイルでレポートの場所が分かる。`init` はテストランナーを判定しないので、設定は案内にとどめる | 承認（2026-10-22） |

@@ -9,6 +9,10 @@ Source: REQ-019
 - **WHEN** 何も置かれていないディレクトリで `loomake init` を実行する
 - **THEN** `AGENTS.md`、`CLAUDE.md`、`loomake.config.json`、`.claude/skills/req-to-openspec/SKILL.md` が作られる
 
+#### Scenario: テストのレポートの出力先
+- **WHEN** 何も置かれていないディレクトリで `loomake init` を実行する
+- **THEN** `loomake.config.json` の `tests.report` が `.loomake/test-report.json` になり、Vitest と Jest でこのファイルに JSON レポートを書き出す設定の例が表示される
+
 ### Requirement: 既存ファイルの保護
 配置先に同名ファイルがある場合、`loomake init` は上書きせず、差分を表示して確認を求める SHALL。確認で承諾されない限り、既存ファイルの内容は変えない MUST。確認を受け付けられない環境（標準入力が TTY でない）で同名ファイルがある場合は、何も配置せずに中止し、終了コード 1 を返す MUST。
 
