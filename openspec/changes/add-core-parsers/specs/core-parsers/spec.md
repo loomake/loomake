@@ -13,6 +13,10 @@ Source: REQ-011
 - **WHEN** 「要件台帳」の表が無い trace.md のテキストを渡す
 - **THEN** 空の台帳が返り、エラーに「要件台帳」の表が無いことが含まれる
 
+#### Scenario: 行末が CRLF の trace.md
+- **WHEN** 行末を CRLF にした trace.md のテキストを渡す
+- **THEN** 行末が LF の同じ trace.md と同じ台帳・確認事項・仮定が返り、値の末尾に `\r` が残らない
+
 ### Requirement: 台帳の状態値の検査
 core は要件台帳の「状態」が 反映済・確認待ち・範囲外・既存仕様で充足 のいずれでもない行を、エラーとして報告する SHALL。
 
@@ -39,6 +43,10 @@ Source: REQ-013, REQ-051
 - **WHEN** ADDED・MODIFIED・REMOVED・RENAMED の見出しを持つ spec.md を渡す
 - **THEN** 各 Requirement に、属する見出しに対応する操作が付く
 
+#### Scenario: 行末が CRLF の spec.md
+- **WHEN** 行末を CRLF にした spec.md を渡す
+- **THEN** 行末が LF の同じ spec.md と同じ操作・名前・Source・Scenario 数が返る
+
 ### Requirement: タスクの読み取り
 core は tasks.md から、チェック済み（`- [x]`・`- [X]`）と未チェック（`- [ ]`）のタスクを取り出す SHALL。
 
@@ -47,6 +55,10 @@ Source: REQ-014
 #### Scenario: チェックの混在
 - **WHEN** 完了 2 件・未完了 1 件のタスクを持つ tasks.md を渡す
 - **THEN** チェック済み 2 件と未チェック 1 件が、それぞれ行番号つきで返る
+
+#### Scenario: 行末が CRLF の tasks.md
+- **WHEN** 行末を CRLF にした tasks.md を渡す
+- **THEN** 行末が LF の同じ tasks.md と同じタスクが返り、タスクの文に `\r` が残らない
 
 ### Requirement: テストが対象とする要件 ID の抽出
 core はテストファイルから `[REQ-xxx]` 形式の要件 ID を取り出し、skip・todo 指定のテストは数えない SHALL。
@@ -67,6 +79,14 @@ Source: REQ-015
 
 #### Scenario: コメントの中の要件 ID
 - **WHEN** `// it('[REQ-024] ...')` と `/* [REQ-025] */` だけを含むテストファイルを渡す
+- **THEN** 要件 ID は返らない
+
+#### Scenario: テスト名以外の文字列の中の要件 ID
+- **WHEN** `const fixture = '[REQ-026]'` と、要件 ID を名前に持たない `it('fixture', ...)` だけを含むテストファイルを渡す
+- **THEN** 要件 ID は返らない
+
+#### Scenario: 修飾子が続く skip
+- **WHEN** `describe.skip.each([1])('...', () => { it('[REQ-027] ...', ...) })` と `it.skip.each([1])('[REQ-028] %s', ...)` だけを含むテストファイルを渡す
 - **THEN** 要件 ID は返らない
 
 ### Requirement: verify 結果の JSON スキーマ
