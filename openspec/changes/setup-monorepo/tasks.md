@@ -6,7 +6,7 @@
 - [x] 1.5 `.changeset/` を設定する（REQ-056）
 - [x] 1.6 `LICENSE`（MIT）を置く（REQ-057）
 - [x] 1.7 `.github/workflows/ci.yml` を作る。3 OS で品質コマンドを実行し、PR のブランチ名が change-id のときは `verify --done` も実行する（REQ-010, REQ-049, REQ-054）
-- [ ] 1.8 `loomake.config.json` の `tests.dirs` に `packages` を追加する（AGENTS.md 4章により人の承認が必要。A-04）
+- [x] 1.8 `loomake.config.json` の `tests.dirs` に `packages` を追加する（AGENTS.md 4章により人の承認が必要。A-04）
 
 ## 2. テスト
 - [ ] 2.1 各 Scenario に対応するテストを `tests/` に書く。テスト名に [REQ-xxx] を入れる

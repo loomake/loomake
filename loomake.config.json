@@ -3,7 +3,7 @@
   "openspecDir": "openspec",
   "openspecValidate": "auto",
   "tests": {
-    "dirs": ["tests", "test", "server", "app", "src"],
+    "dirs": ["tests", "test", "server", "app", "src", "packages"],
     "pattern": "\\.(test|spec)\\.(ts|tsx|js|mjs|cjs|vue)$"
   },
   "commands": {
