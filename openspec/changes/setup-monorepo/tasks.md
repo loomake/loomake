@@ -5,7 +5,7 @@
 - [x] 1.4 `.devcontainer/devcontainer.json` に読み取り用ツール（pandoc・poppler-utils・xlsx2csv）を追加し、Node 24 のイメージと OpenSpec CLI の導入を確認する（REQ-004, REQ-061）
 - [x] 1.5 `.changeset/` を設定する（REQ-056）
 - [x] 1.6 `LICENSE`（MIT）を置く（REQ-057）
-- [ ] 1.7 `.github/workflows/ci.yml` を作る。3 OS で品質コマンドを実行し、PR のブランチ名が change-id のときは `verify --done` も実行する（REQ-010, REQ-049, REQ-054）
+- [x] 1.7 `.github/workflows/ci.yml` を作る。3 OS で品質コマンドを実行し、PR のブランチ名が change-id のときは `verify --done` も実行する（REQ-010, REQ-049, REQ-054）
 - [ ] 1.8 `loomake.config.json` の `tests.dirs` に `packages` を追加する（AGENTS.md 4章により人の承認が必要。A-04）
 
 ## 2. テスト
