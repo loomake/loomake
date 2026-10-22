@@ -19,6 +19,7 @@
     "@eslint/js": "^10.0.1",
     "@fission-ai/openspec": "1.14.3",
     "@types/node": "^26.6.5",
+    "ajv": "^8.20.0",
     "eslint": "^10.13.0",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.72.0",

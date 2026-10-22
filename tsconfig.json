@@ -2,7 +2,9 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
-    "allowJs": true
+    "allowJs": true,
+    // ビルドの前でも、ワークスペースのパッケージ（@loomake/core など）を src から型チェックする
+    "customConditions": ["@loomake/source"]
   },
   "include": ["packages/*/src", "packages/*/test", "tests", "vitest.config.ts"]
 }

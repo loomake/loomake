@@ -9,7 +9,7 @@
 - [ ] 1.8 `--json` で結果と要件ごとのテストファイル一覧を出力する（REQ-040）
 - [ ] 1.9 `--change` 省略時は commands だけを実行する（REQ-042）
 - [ ] 1.10 エラーメッセージを日本語で書く（REQ-055）
-- [ ] 1.11 kit の実行時依存を core のみ、loomake の実行時依存を core と kit のみにする（REQ-047）
+- [x] 1.11 kit の実行時依存を core のみ、loomake の実行時依存を core と kit のみにする（REQ-047）
 - [ ] 1.12 1,000 ファイル・500 要件で 3 秒以内に終わることを確かめ、遅ければ直す（REQ-050）
 - [ ] 1.13 このリポジトリの Vitest が JSON レポートを `tests.report` に書き出すようにし、`loomake.config.json` に `tests.report` を足す。設定を変えるので、先に人の承認を取る（AGENTS.md 4 章）
 
