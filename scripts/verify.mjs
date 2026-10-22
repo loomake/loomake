@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Loomake verify — 依存なし（Node 20+）
+// Loomake verify — 依存なし（Node 20.19+）
 //
 //   node scripts/verify.mjs                          品質チェックだけ（lint / typecheck / test）
 //   node scripts/verify.mjs --change <id> --spec-only 仕様ゲート：実装に入ってよいか
@@ -8,9 +8,10 @@
 // オプション：--json（結果を JSON で出力）、--skip-commands（lint/typecheck/test を実行しない）
 // 終了コード：0 = 合格 / 1 = 不合格 / 2 = 使い方の誤り
 
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { listTestFiles, loadConfig, walk } from './test-files.mjs';
 
 // ---------- 引数 ----------
 const args = process.argv.slice(2);
@@ -38,20 +39,15 @@ function usage(msg) {
 
 // ---------- 設定 ----------
 const root = process.cwd();
-const config = loadConfig();
-
-function loadConfig() {
-  const defaults = {
-    openspecDir: 'openspec',
-    openspecValidate: 'auto',
-    tests: { dirs: ['tests', 'test', 'src'], pattern: '\\.(test|spec)\\.(ts|tsx|js|mjs|cjs|vue)$' },
-    commands: {},
-  };
-  const p = join(root, 'loomake.config.json');
-  if (!existsSync(p)) return defaults;
-  const c = JSON.parse(readFileSync(p, 'utf8'));
-  return { ...defaults, ...c, tests: { ...defaults.tests, ...(c.tests ?? {}) } };
+let config;
+try {
+  config = loadConfig(root);
+} catch (e) {
+  usage(e.message);
 }
+
+// Windows の改行（CRLF）で保存した Markdown も、LF と同じに読む
+const readText = (p) => readFileSync(p, 'utf8').replace(/\r\n?/g, '\n');
 
 // ---------- 結果の記録 ----------
 const results = []; // { check, status: 'pass'|'fail'|'warn'|'skip', detail }
@@ -74,7 +70,12 @@ function parseTable(text) {
     .map((l) => l.trim())
     .filter((l) => l.startsWith('|'));
   if (rows.length < 2) return [];
-  const cells = (row) => row.replace(/^\||\|$/g, '').split('|').map((c) => c.trim());
+  // GFM と同じく、\| はセルの区切りではなく文字の | として読む
+  const cells = (row) =>
+    row
+      .replace(/^\||(?<!\\)\|$/g, '')
+      .split(/(?<!\\)\|/)
+      .map((c) => c.trim().replace(/\\\|/g, '|'));
   const header = cells(rows[0]);
   return rows
     .slice(2) // ヘッダと区切り行を飛ばす
@@ -111,15 +112,189 @@ function parseSpec(md, file) {
   return reqs;
 }
 
-function walk(dir, out = []) {
-  if (!existsSync(dir)) return out;
-  for (const name of readdirSync(dir)) {
-    if (name === 'node_modules' || name.startsWith('.')) continue;
-    const p = join(dir, name);
-    if (statSync(p).isDirectory()) walk(p, out);
-    else out.push(p);
+// 直前の語がこれらなら、続く / は割り算ではなく正規表現リテラルの始まり
+const REGEX_KEYWORDS = new Set(['return', 'typeof', 'instanceof', 'in', 'of', 'new', 'delete', 'void', 'throw', 'case', 'do', 'else', 'yield', 'await']);
+// 閉じ括弧の対の開き括弧の前がこれらなら、続く / は正規表現リテラルの始まり（if (x) /re/.test(y)）
+const CONTROL_KEYWORDS = new Set(['if', 'while', 'for', 'with']);
+
+// テストのソースから、コメントと、skip・todo・条件付きの呼び出し（describe.skip の中身を含む）を空白にする
+function activeTestSource(src) {
+  // 1. コメントを空白にし、文字列・テンプレート・正規表現リテラルの位置を opaque に記録する
+  const chars = src.split('');
+  const opaque = new Array(chars.length).fill(false);
+  const mark = (from, to) => {
+    for (let k = from; k <= to && k < chars.length; k++) opaque[k] = true;
+  };
+  // 引用符で始まる文字列の終わりの位置を返す。テンプレートの ${…} の中も文字列として扱う。
+  // ' と " の文字列は改行で終える（JSX や .vue のテキストの Don't などで、後ろの行まで文字列にしない）
+  const stringEnd = (i) => {
+    const q = src[i];
+    let j = i + 1;
+    while (j < src.length && src[j] !== q && (q === '`' || src[j] !== '\n')) {
+      if (src[j] === '\\') j++;
+      else if (q === '`' && src[j] === '$' && src[j + 1] === '{') j = exprEnd(j + 2);
+      j++;
+    }
+    return j;
+  };
+  // テンプレートの ${ の次の位置から、対応する } の位置を返す。中のコメントと正規表現リテラルは読み飛ばす
+  const exprEnd = (i) => {
+    let depth = 1;
+    let j = i;
+    for (; j < src.length; j++) {
+      const c = src[j];
+      if (c === '"' || c === "'" || c === '`') j = stringEnd(j);
+      else if (c === '/' && src[j + 1] === '/') while (j + 1 < src.length && src[j + 1] !== '\n') j++;
+      else if (c === '/' && src[j + 1] === '*') {
+        const end = src.indexOf('*/', j + 2);
+        j = end < 0 ? src.length : end + 1;
+      } else if (c === '/') {
+        const end = regexEnd(j);
+        if (end >= 0) j = end;
+      } else if (c === '{') depth++;
+      else if (c === '}' && --depth === 0) break;
+    }
+    return j;
+  };
+  // 正規表現リテラルの終わり（フラグを含む）の位置を返す。リテラルでなければ -1
+  const regexEnd = (i) => {
+    let k = i - 1;
+    while (k >= 0 && /\s/.test(chars[k])) k--;
+    // 文字列・} のあとは割り算、< のあとは JSX の閉じタグ。> のあとは => のときだけ正規表現
+    if (k >= 0 && /['"`}<]/.test(chars[k])) return -1;
+    if (k >= 0 && chars[k] === '>' && chars[k - 1] !== '=') return -1;
+    // 後置の ++・-- のあとは割り算
+    if (k >= 1 && (chars[k] === '+' || chars[k] === '-') && chars[k - 1] === chars[k]) return -1;
+    if (k >= 0 && chars[k] === ')') {
+      // 閉じ括弧のあとは割り算。ただし if (…) /re/ のような制御文の条件のあとは正規表現
+      let depth = 0;
+      let p = k;
+      for (; p >= 0; p--) {
+        if (opaque[p]) continue;
+        if (chars[p] === ')') depth++;
+        else if (chars[p] === '(' && --depth === 0) break;
+      }
+      let w = p - 1;
+      while (w >= 0 && /\s/.test(chars[w])) w--;
+      const wEnd = w;
+      while (w >= 0 && /[\w$]/.test(chars[w])) w--;
+      if (p < 0 || !CONTROL_KEYWORDS.has(chars.slice(w + 1, wEnd + 1).join(''))) return -1;
+    } else if (k >= 0 && /[\w$\]]/.test(chars[k])) {
+      let w = k;
+      while (w >= 0 && /[\w$]/.test(chars[w])) w--;
+      if (!REGEX_KEYWORDS.has(chars.slice(w + 1, k + 1).join(''))) return -1;
+    }
+    let inClass = false;
+    let j = i + 1;
+    for (; j < src.length; j++) {
+      const c = src[j];
+      if (c === '\n') return -1;
+      if (c === '\\') j++;
+      else if (c === '[') inClass = true;
+      else if (c === ']') inClass = false;
+      else if (c === '/' && !inClass) break;
+    }
+    if (j >= src.length) return -1;
+    while (/[a-z]/i.test(src[j + 1] ?? '')) j++;
+    return j;
+  };
+
+  for (let i = 0; i < chars.length; i++) {
+    const c = chars[i];
+    if (c === '/' && chars[i + 1] === '/') {
+      while (i < chars.length && chars[i] !== '\n') chars[i++] = ' ';
+    } else if (c === '/' && chars[i + 1] === '*') {
+      const end = src.indexOf('*/', i + 2);
+      const stop = end < 0 ? chars.length : end + 2;
+      for (; i < stop; i++) if (chars[i] !== '\n') chars[i] = ' ';
+      i--;
+    } else if (c === '"' || c === "'" || c === '`') {
+      const end = stringEnd(i);
+      mark(i, end);
+      i = end;
+    } else if (c === '/') {
+      const end = regexEnd(i);
+      if (end >= 0) {
+        mark(i, end);
+        i = end;
+      }
+    }
   }
-  return out;
+  const text = chars.join('');
+
+  // e の位置の開き括弧に対応する閉じ括弧の、次の位置を返す
+  const afterParen = (e) => {
+    let depth = 0;
+    for (; e < text.length; e++) {
+      if (opaque[e]) continue;
+      if (text[e] === '(') depth++;
+      else if (text[e] === ')' && --depth === 0) break;
+    }
+    return e + 1;
+  };
+  const out = text.split('');
+  const blank = (from, to) => {
+    for (let j = from; j < to && j < out.length; j++) if (out[j] !== '\n') out[j] = ' ';
+  };
+
+  // 2. skip・todo・skipIf・runIf の呼び出しを、続く呼び出し（.each(…)(…) など）の閉じ括弧まで空白にする。
+  //    skipIf・runIf は条件を評価できないので、要件のテストとして数えない
+  const callStart =
+    /\b(?:x(?:it|test|describe)|(?:it|test|describe|suite)(?:\s*\.\s*(?:only|concurrent|sequential|shuffle|fails|each|for))*\s*\.\s*(?:skipIf|runIf|skip|todo))\b(?:\s*\.\s*\w+)*/g;
+  for (const m of text.matchAll(callStart)) {
+    if (opaque[m.index] || text[m.index - 1] === '.') continue;
+    let e = m.index + m[0].length;
+    for (;;) {
+      while (/\s/.test(text[e] ?? '')) e++;
+      if (text[e] === '(' && !opaque[e]) {
+        e = afterParen(e);
+      } else if (text[e] === '`') {
+        while (opaque[e]) e++; // it.skip.each`table`
+      } else if (text[e] === '.' && /[\w$]/.test(text[e + 1] ?? '')) {
+        e++; // describe.skipIf(x).each(…)(…)
+        while (/[\w$]/.test(text[e] ?? '')) e++;
+      } else if (text[e] === '<' && !opaque[e]) {
+        // it.skip.each<Case>(…) の型引数。=> の > は数えない
+        let depth = 0;
+        let g = e;
+        for (; g < text.length; g++) {
+          if (opaque[g]) continue;
+          if (text[g] === '<') depth++;
+          else if (text[g] === '>' && text[g - 1] !== '=' && --depth === 0) break;
+        }
+        if (g >= text.length) break;
+        e = g + 1;
+      } else break;
+    }
+    blank(m.index, e);
+  }
+
+  // 3. オプションで skip・todo を指定した呼び出し（it(name, { skip: true }, fn)）と、
+  //    中で skip() を呼ぶテスト（ctx.skip()）も空白にする。ctx.skip() は条件を評価できないので数えない
+  const testCall = /\b(it|test|describe|suite)(?:\s*\.\s*(?:only|concurrent|sequential|shuffle|fails))*\s*\(/g;
+  for (const m of text.matchAll(testCall)) {
+    if (opaque[m.index] || text[m.index - 1] === '.') continue;
+    const open = m.index + m[0].length - 1;
+    const end = afterParen(open);
+    // 呼び出しの引数の一番外側（オプションのオブジェクトの直下まで）だけを見る
+    let top = '';
+    let paren = 0;
+    let brace = 0;
+    for (let j = open; j < end; j++) {
+      const c = text[j];
+      if (!opaque[j]) {
+        if (c === '(' || c === '[') paren++;
+        else if (c === ')' || c === ']') paren--;
+        else if (c === '{') brace++;
+        else if (c === '}') brace--;
+      }
+      top += !opaque[j] && paren === 1 && brace <= 1 ? c : ' ';
+    }
+    const args = text.slice(open, end).split('').map((c, j) => (opaque[open + j] ? ' ' : c)).join('');
+    const isTest = m[1] === 'it' || m[1] === 'test';
+    if (/\b(?:skip|todo)\s*:(?!\s*false\b)/.test(top) || (isTest && /(?<![\w$])skip\s*\(/.test(args))) blank(m.index, end);
+  }
+  return out.join('');
 }
 
 // ---------- 仕様ゲート ----------
@@ -147,7 +322,7 @@ function checkSpec() {
 
   // trace.md
   const tracePath = join(changeDir, 'trace.md');
-  const trace = existsSync(tracePath) ? readFileSync(tracePath, 'utf8') : '';
+  const trace = existsSync(tracePath) ? readText(tracePath) : '';
   const ledger = parseTable(section(trace, '要件台帳'));
   const questions = parseTable(section(trace, '確認事項'));
   const assumptions = parseTable(section(trace, '仮定'));
@@ -179,7 +354,7 @@ function checkSpec() {
   // specs
   const specFiles = walk(join(changeDir, 'specs')).filter((f) => f.endsWith('spec.md'));
   if (specFiles.length === 0) record('差分仕様', 'fail', 'specs/<capability>/spec.md がありません');
-  const reqs = specFiles.flatMap((f) => parseSpec(readFileSync(f, 'utf8'), relative(changeDir, f)));
+  const reqs = specFiles.flatMap((f) => parseSpec(readText(f), relative(changeDir, f)));
 
   const ledgerIds = new Set(ledger.map((r) => r.ID));
   const live = reqs.filter((r) => r.op === 'ADDED' || r.op === 'MODIFIED');
@@ -215,22 +390,16 @@ function checkDone(spec) {
   // tasks.md
   const tasksPath = join(changeDir, 'tasks.md');
   if (existsSync(tasksPath)) {
-    const tasks = readFileSync(tasksPath, 'utf8').split('\n').filter((l) => /^\s*- \[[ xX]\]/.test(l));
+    const tasks = readText(tasksPath).split('\n').filter((l) => /^\s*- \[[ xX]\]/.test(l));
     const open = tasks.filter((l) => /^\s*- \[ \]/.test(l));
     record('tasks.md', open.length ? 'fail' : 'pass', open.length ? open.map((l) => l.trim()).join('\n') : `${tasks.length} 件すべて完了`);
   }
 
   // 要件 ↔ テスト
-  const re = new RegExp(config.tests.pattern);
-  const testFiles = config.tests.dirs.flatMap((d) => walk(join(root, d))).filter((f) => re.test(f));
+  const testFiles = listTestFiles(root, config.tests);
   const covered = new Map(); // REQ → [file]
   for (const f of testFiles) {
-    const text = readFileSync(f, 'utf8');
-    // skip されたテストは数えない
-    const active = text
-      .split('\n')
-      .filter((l) => !/\b(it|test|describe)\.(skip|todo)\s*\(|\bx(it|test|describe)\s*\(/.test(l))
-      .join('\n');
+    const active = activeTestSource(readText(f));
     for (const m of active.matchAll(/\[(REQ-\d{3,})\]/g)) {
       covered.set(m[1], [...(covered.get(m[1]) ?? []), relative(root, f)]);
     }
@@ -252,7 +421,7 @@ function runCommands() {
   for (const [name, cmd] of Object.entries(config.commands ?? {})) {
     if (!cmd) continue;
     if (!asJson) process.stderr.write(`… ${name}: ${cmd}\n`);
-    const r = spawnSync(cmd, { cwd: root, shell: true, encoding: 'utf8' });
+    const r = spawnSync(cmd, { cwd: root, shell: true, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
     const out = `${r.stdout ?? ''}${r.stderr ?? ''}`.trim();
     record(`command: ${name}`, r.status === 0 ? 'pass' : 'fail', r.status === 0 ? '' : out.split('\n').slice(-30).join('\n'));
   }

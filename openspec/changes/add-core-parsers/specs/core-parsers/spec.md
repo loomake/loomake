@@ -7,11 +7,15 @@ Source: REQ-011
 
 #### Scenario: 3 つの表が読み取れる
 - **WHEN** 3 つの表を持つ trace.md のテキストを `parseTrace` に渡す
-- **THEN** 台帳・確認事項・仮定が、列名をキーにした型付きの配列として返る
+- **THEN** 台帳・確認事項・仮定が列名をキーにした型付きの配列として返る
 
 #### Scenario: 表が欠けている
 - **WHEN** 「要件台帳」の表が無い trace.md のテキストを渡す
 - **THEN** 空の台帳が返り、エラーに「要件台帳」の表が無いことが含まれる
+
+#### Scenario: 行末が CRLF の trace.md
+- **WHEN** 行末を CRLF にした trace.md のテキストを渡す
+- **THEN** 行末が LF の同じ trace.md と同じ台帳・確認事項・仮定が返り、値の末尾に `\r` が残らない
 
 ### Requirement: 台帳の状態値の検査
 core は要件台帳の「状態」が 反映済・確認待ち・範囲外・既存仕様で充足 のいずれでもない行を、エラーとして報告する SHALL。
@@ -39,6 +43,10 @@ Source: REQ-013, REQ-051
 - **WHEN** ADDED・MODIFIED・REMOVED・RENAMED の見出しを持つ spec.md を渡す
 - **THEN** 各 Requirement に、属する見出しに対応する操作が付く
 
+#### Scenario: 行末が CRLF の spec.md
+- **WHEN** 行末を CRLF にした spec.md を渡す
+- **THEN** 行末が LF の同じ spec.md と同じ操作・名前・Source・Scenario 数が返る
+
 ### Requirement: タスクの読み取り
 core は tasks.md から、チェック済み（`- [x]`・`- [X]`）と未チェック（`- [ ]`）のタスクを取り出す SHALL。
 
@@ -48,18 +56,34 @@ Source: REQ-014
 - **WHEN** 完了 2 件・未完了 1 件のタスクを持つ tasks.md を渡す
 - **THEN** チェック済み 2 件と未チェック 1 件が、それぞれ行番号つきで返る
 
+#### Scenario: 行末が CRLF の tasks.md
+- **WHEN** 行末を CRLF にした tasks.md を渡す
+- **THEN** 行末が LF の同じ tasks.md と同じタスクが返り、タスクの文に `\r` が残らない
+
 ### Requirement: テストが対象とする要件 ID の抽出
-core はテストファイルから `[REQ-xxx]` 形式の要件 ID を取り出し、skip・todo 指定のテストは数えない SHALL。
+core はテストランナーの JSON レポートから、成功したテストの名前にある `[REQ-xxx]` 形式の要件 ID を、テストファイルごとに取り出す SHALL。skip・todo のテストと、失敗したテストは数えない MUST。
 
 Source: REQ-015
 
 #### Scenario: 通常のテスト
-- **WHEN** `it('[REQ-012][REQ-013] ...', ...)` を含むテストファイルを渡す
-- **THEN** `REQ-012` と `REQ-013` が返る
+- **WHEN** `status` が `passed` で、名前が `[REQ-012][REQ-013] ...` のテストを含むレポートを渡す
+- **THEN** そのテストファイルについて `REQ-012` と `REQ-013` が返る
 
 #### Scenario: skip と todo
-- **WHEN** `it.skip('[REQ-020] ...')`・`it.todo('[REQ-021] ...')`・`xit('[REQ-022] ...')` だけを含むテストファイルを渡す
+- **WHEN** 名前に `[REQ-020]`・`[REQ-021]`・`[REQ-022]` を持つテストの `status` が、それぞれ `skipped`・`todo`・`pending` であるレポートを渡す
 - **THEN** 要件 ID は返らない
+
+#### Scenario: 失敗したテスト
+- **WHEN** 名前に `[REQ-023]` を持つテストの `status` が `failed` であるレポートを渡す
+- **THEN** 要件 ID は返らない
+
+#### Scenario: describe の名前にある要件 ID
+- **WHEN** describe の名前が `[REQ-024] ...` で、その中のテストの `status` が `passed` であるレポートを渡す
+- **THEN** そのテストファイルについて `REQ-024` が返る
+
+#### Scenario: 読めないレポート
+- **WHEN** JSON として読めないテキストを渡す
+- **THEN** 空の結果と、ファイル名を含むエラーが返る
 
 ### Requirement: verify 結果の JSON スキーマ
 core は verify 結果の JSON スキーマを公開し、スキーマに `schemaVersion` を含める SHALL。スキーマに破壊的変更を入れるときは `schemaVersion` のメジャー番号を上げる MUST。
@@ -84,7 +108,7 @@ Source: REQ-017
 - **THEN** エラーなく読み取れ、台帳・確認事項・仮定が空である
 
 ### Requirement: 解析エラーの位置情報
-core の解析エラーは、ファイル名と行番号を含む SHALL。
+core の解析エラーはファイル名と行番号を含む SHALL。
 
 Source: REQ-018
 

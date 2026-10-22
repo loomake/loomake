@@ -14,7 +14,7 @@ Source: REQ-001, REQ-002, REQ-003, REQ-060
 - **THEN** `name` が `loomake` で、`bin.loomake` が宣言されている
 
 ### Requirement: devcontainer
-リポジトリは `.devcontainer/devcontainer.json` を持ち、Node 24 のイメージを使い、コンテナ作成後に OpenSpec CLI と要件書の読み取り用ツール（pandoc・poppler-utils・xlsx2csv）をインストールする SHALL。
+リポジトリは `.devcontainer/devcontainer.json` を持ち、Node 24 のイメージを使い、コンテナ作成後に OpenSpec CLI をインストールする SHALL。
 
 Source: REQ-004, REQ-061
 
@@ -26,17 +26,13 @@ Source: REQ-004, REQ-061
 - **WHEN** `.devcontainer/devcontainer.json` の `image` を読む
 - **THEN** Node 24 系のイメージが指定されている
 
-#### Scenario: 読み取り用ツール
-- **WHEN** `.devcontainer/devcontainer.json` の `postCreateCommand` を読む
-- **THEN** `pandoc`・`poppler-utils`・`xlsx2csv` のインストールが含まれる
-
 ### Requirement: Node.js のバージョン宣言
 ルートと各パッケージの `package.json` は、`engines.node` に `>=20.19.0` を宣言する SHALL。
 
 Source: REQ-048
 
 #### Scenario: engines が宣言されている
-- **WHEN** ルート、`packages/core`、`packages/kit` の `package.json` を読む
+- **WHEN** ルート、`packages/core`、`packages/kit`、`packages/cli` の `package.json` を読む
 - **THEN** すべての `engines.node` が `>=20.19.0` である
 
 ### Requirement: 3 つの OS での CI

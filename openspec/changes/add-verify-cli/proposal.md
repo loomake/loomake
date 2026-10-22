@@ -5,6 +5,7 @@
 
 ## What Changes
 - `loomake verify --change <id> --spec-only`（仕様ゲート）と `--done`（完了ゲート）を追加する
+- テストの有無は、test コマンドが書き出したテストランナーの JSON レポートで判定する（Q-11）
 - `--json` で core のスキーマに沿った結果と、要件ごとのテストファイル一覧を出力する
 - 終了コード（合格 0・不合格 1・使い方の誤り 2）を定める
 - `--change` を省略したときは commands（lint・typecheck・test）だけを実行する
@@ -21,3 +22,4 @@
 - 影響する capability：verify（新規）
 - 影響するコード：`packages/kit/`、`packages/cli/`（`loomake`）、`scripts/verify.mjs`、`.github/workflows/ci.yml`
 - 前提：setup-monorepo・add-core-parsers が完了していること
+- 要件書 v0.5：Q-08 の回答に合わせて §6 N-02 を直した（REQ-047）

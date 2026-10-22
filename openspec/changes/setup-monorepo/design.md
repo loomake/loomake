@@ -13,4 +13,4 @@
 ## CI と verify
 
 - 試作の `node scripts/verify.mjs` で完了ゲートを実行する。`loomake verify` ができたら置き換える（add-verify-cli 以降）
-- 全 change を毎回 `--done` にかけると、未着手の change で必ず落ちる。PR のブランチ名が `openspec/changes/<id>` と一致するときだけ `--change <id> --done` を実行し、一致しないときは品質コマンドだけ実行する（A-03、F-VER-09 と同じ挙動）
+- 全 change を毎回 `--done` にかけると、未着手の change で必ず不合格になる。PR のブランチ名が `openspec/changes/<id>` と一致するときだけ `--change <id> --done` を実行し、一致しないときは品質コマンドだけ実行する（A-03、F-VER-09 と同じ挙動）

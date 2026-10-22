@@ -14,6 +14,8 @@
 
 仕様の書式は自作せず OpenSpec を使う。Loomake が担うのは、OpenSpec が持っていない「要件書からの入口」と「守らせる仕組み」と「検収の証拠」。
 
+この表は将来の構成を含む。現在のリポジトリには core・kit・CLI 本体の雛形と試作の `scripts/verify.mjs` があり、trace・runner は MVP の範囲外。MVP の範囲は [要件定義書 v0.6](requirements/mvp-v0.6.md) を参照。
+
 ## 2. 流れ
 
 ```
@@ -42,9 +44,11 @@ trace: 要件台帳 × 検証結果 → 検収レポート
 | CLI | `loomake init` / `loomake verify` / `loomake trace` / `loomake run` |
 | サイト | loomake.dev |
 
-CLI は本体パッケージ `loomake` を 1 つ作り、各サブコマンドを束ねる案を推奨（`npx loomake init` だけで始められる）。
+CLI は本体パッケージ `loomake`（`packages/cli`）を 1 つ作り、各サブコマンドを束ねる（`npx loomake init` で導入する計画。setup-monorepo の Q-01 で決定。`init` は未実装）。
 
 ## 4. リポジトリ構成
+
+以下は将来の構成を含む。`packages/trace/` と `packages/runner/` はまだ作っていない。
 
 ```
 loomake/loomake            pnpm workspaces + changesets
@@ -52,6 +56,7 @@ loomake/loomake            pnpm workspaces + changesets
 ├── packages/
 │   ├── core/              @loomake/core
 │   ├── kit/               @loomake/kit
+│   ├── cli/               loomake（CLI 本体）
 │   ├── trace/             @loomake/trace
 │   └── runner/            @loomake/runner
 └── openspec/              Loomake 自身の仕様（kit で自分を作る）
@@ -68,14 +73,14 @@ loomake/loomake            pnpm workspaces + changesets
 
 | 順 | 対象 | やること | 理由 |
 |---|---|---|---|
-| 0 | core | `verify.mjs` の解析処理を切り出し、verify 結果の JSON スキーマに `version` を付ける | 3 ツールすべてが依存するので最初に固める |
+| 0 | core | `verify.mjs` の解析処理を切り出し、verify 結果の JSON スキーマに `schemaVersion` を付ける | 3 ツールすべてが依存するので最初に固める |
 | 1 | kit | `npx loomake init` で導入可能にし、実際の要件書を 1〜2 本流して直す | ここが甘いと後ろが全部ぶれる |
 | 2 | trace | trace.md と verify JSON から検収レポートを出す | 実装が人手でも価値が出る。kit と合わせて「要件 → 実装 → 証拠」が一周する |
 | 3 | runner | Claude Code の headless 実行だけに対応し、1 つの change を PR まで持っていく MVP | 最も難しい。完了判定と証拠の出力先が先にあれば「verify が通るまで回す」に絞れる |
 
 ## 6. 開発環境
 
-devcontainer を標準にする（Node 22・pnpm・OpenSpec CLI・Claude Code・Codex・gh）。
+devcontainer を標準にする（Node 24・pnpm・OpenSpec CLI・Claude Code・Codex・gh）。
 
 - ログイン情報（`~/.claude`・`~/.codex`）は名前付きボリュームに置く
 - AI を権限確認なしで動かす場合はネットワークを許可ドメインに絞る。runner の実行環境はこの devcontainer を土台にする

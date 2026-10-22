@@ -1,0 +1,17 @@
+{
+  "name": "loomake",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Loomake の CLI（init・verify）",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "bin": {
+    "loomake": "./dist/cli.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json"
+  }
+}

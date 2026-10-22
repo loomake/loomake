@@ -1,11 +1,11 @@
 # add-core-parsers
 
 ## Why
-kit・trace・runner は、trace.md・spec.md・tasks.md・テストファイルから同じ情報を読み取る。試作の verify.mjs に埋まっている解析処理を `@loomake/core` に切り出し、契約（verify 結果の JSON スキーマ）を先に固めれば、後続のツールが同じ読み方を共有できる。出典：要件定義書 v0.1 §4・§6・§7
+kit・trace・runner は trace.md・spec.md・tasks.md・テストファイルから同じ情報を読み取る。試作の verify.mjs の中にある解析処理を `@loomake/core` に切り出し、契約（verify 結果の JSON スキーマ）を先に固めれば、後続のツールが同じ読み方を共有できる。出典：要件定義書 v0.1 §4・§6・§7
 
 ## What Changes
 - trace.md の 3 つの表（要件台帳・確認事項・仮定）を型付きで読む処理を追加する
-- spec.md の Requirement、tasks.md のタスク、テストファイルの `[REQ-xxx]` を取り出す処理を追加する
+- spec.md の Requirement、tasks.md のタスク、テストランナーの JSON レポートにある成功したテストの `[REQ-xxx]` を取り出す処理を追加する（Q-11）
 - verify 結果の JSON スキーマ（`schemaVersion` 付き）を公開する
 - trace.md の空テンプレートを生成する関数を追加する
 - 解析エラーにファイル名と行番号を含める
@@ -20,3 +20,4 @@ kit・trace・runner は、trace.md・spec.md・tasks.md・テストファイル
 - 影響する capability：core-parsers（新規）
 - 影響するコード：`packages/core/`
 - 前提：setup-monorepo が完了していること
+- 要件書 v0.6：Q-11 の回答に合わせて §4 F-CORE-05 を直した（REQ-015）

@@ -23,7 +23,7 @@ Oct 22, 2026 · @r
 
 ## 0. 最初に 1 回だけ：準備
 
-リポジトリを作り、試作キットを置いて、devcontainer の中で OpenSpec を初期化する。ここまでを最初のコミットにする。
+リポジトリを作り、試作キットを置いて、devcontainer の中で OpenSpec を初期化する。ここまでを最初のコミットにする。この節は、このリポジトリを立ち上げたときの記録である。いまの構成（`packages/cli` など）は setup-monorepo で作った。
 
 ```sh
 gh repo create loomake/loomake --public --clone
@@ -44,17 +44,17 @@ claude          # 初回だけログイン（以後はボリュームに残る�
 
 ## 1–2. 要件書を置き、change にする
 
-要件書は Markdown でリポジトリに置いて版管理し、Claude Code の req-to-openspec Skill で change に変換する。
+要件書は Markdown でリポジトリに置いて版管理し、Claude Code または Codex の req-to-openspec Skill で change に変換する。
 
-1. 要件定義書を Markdown でエクスポートし、`docs/requirements/mvp-v0.1.md` としてコミットする（trace.md の出典と突き合わせるため）
-2. Claude Code に次のように頼む
+1. 要件定義書を Markdown でエクスポートし、`docs/requirements/mvp-v0.6.md` のように版を含む名前でコミットする（trace.md の出典と突き合わせるため）
+2. AI エージェントに次のように頼む
 
 ```
-req-to-openspec スキルで docs/requirements/mvp-v0.1.md を change にして
+req-to-openspec スキルで docs/requirements/mvp-v0.6.md を change にして
 ```
 
 3. AI が出す change の分割案を確認する
-4. 作業の最後に報告されるブロッキング確認事項を確認する（要件書の未決事項 Q-01〜05 もここに入る）
+4. 作業の最後に報告されるブロッキング確認事項を確認する。要件書に未決事項があれば、回答済みかどうかを各 change の `trace.md` で確認する
 
 ## 3. 仕様ゲートを通す
 
@@ -67,7 +67,7 @@ req-to-openspec スキルで docs/requirements/mvp-v0.1.md を change にして
 node scripts/verify.mjs --change setup-monorepo --spec-only
 ```
 
-3. 不合格なら、指摘に沿って spec.md を直すよう AI に頼み、もう一度ゲートを通す
+3. 不合格なら、未回答のブロッキング確認事項に答え、回答を `trace.md` と差分仕様に反映する。Source・台帳・Scenario などの不備も直し、もう一度ゲートを通す
 
 未承認の仮定と確認待ちの要件は警告として表示されるだけで、仕様ゲートは止まらない。完了ゲートでは確認待ちの要件があると不合格になる。
 
@@ -94,31 +94,34 @@ node scripts/verify.mjs --change setup-monorepo --done
 gh pr create --fill
 ```
 
-完了ゲートは GitHub Actions にも入れ、PR ごとに自動で検査する。設定は最初の change `setup-monorepo` で作る。
+GitHub Actions の gate ジョブは、PR のブランチ名と同じ change-id のディレクトリがあるときに完了ゲートを実行する（例：ブランチ `setup-monorepo` → `openspec/changes/setup-monorepo/`）。一致しない場合とブランチ名が `archive` の場合は品質コマンドだけを実行する。設定は `setup-monorepo` で導入済み。マージを止めるための必須チェックの設定は、人が GitHub 上で行う（setup-monorepo の仮定 A-03）。
 
 ## 6. マージ後：仕様に取り込む
 
-PR をマージしたら archive し、差分仕様を `openspec/specs/`（いまの仕様）に統合する。
+PR をマージしたら archive し、差分仕様を `openspec/specs/`（いまの仕様）に統合する。archive は `openspec/specs/` と `openspec/changes/archive/` に新しいファイルを作るので、`git add -A openspec` で追加してからコミットする。
 
 ```sh
 git switch main && git pull
 openspec archive setup-monorepo
-git commit -am "archive: setup-monorepo" && git push
+git add -A openspec
+git commit -m "archive: setup-monorepo" && git push
 ```
 
 ## 7. 次の change と自作 CLI への乗り換え
 
-MVP は次の 4 つの change で進め、`add-verify-cli` が終わった時点で試作の verify.mjs を自作 CLI に置き換える。分割は AI の案を確認して確定する。
+MVP は次の 5 つの change で進め、`add-verify-cli` が終わった時点で試作の verify.mjs を自作 CLI に置き換える。この 5 分割は作成済み。`setup-monorepo` のタスクはチェック済みで、残り 4 つの change は未実装。
 
 | 順 | change | 内容 |
 | --- | --- | --- |
 | 1 | `setup-monorepo` | モノレポの雛形・devcontainer・CI（完了ゲート） |
 | 2 | `add-core-parsers` | core の解析処理と verify 結果の JSON スキーマ |
 | 3 | `add-verify-cli` | `loomake verify` |
-| 4 | `add-init-cli` | `loomake init` |
+| 4 | `add-kit-assets` | req-to-openspec Skill と AGENTS.md を kit のテンプレートとして整える |
+| 5 | `add-init-cli` | `loomake init` |
 
-乗り換え後は、作った道具で次の change を検査する。
+乗り換え後は、作った道具で次の change を検査する。ルートは `loomake` パッケージに依存していないので、ビルドしたものをリポジトリのルートで `node` から直接動かす。
 
 ```sh
-pnpm loomake verify --change add-init-cli --done
+pnpm build
+node packages/cli/dist/cli.js verify --change add-init-cli --done
 ```

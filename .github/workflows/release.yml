@@ -1,0 +1,38 @@
+# npm への公開。GitHub 上から手動で実行する（自動では公開しない）。
+# 事前に `pnpm changeset version` で版を上げた変更を main に入れておくこと。
+name: release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    # main 以外のブランチからは公開しない
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      # pnpm changeset version で消化していない changeset が残っていれば止める（版を上げずに公開しないため）
+      - name: 未消化の changeset がないことを確かめる
+        run: |
+          pending=$(find .changeset -maxdepth 1 -name '*.md' ! -name README.md)
+          if [ -n "$pending" ]; then
+            echo "未消化の changeset があります。先に pnpm changeset version を実行して main に入れてください:"
+            echo "$pending"
+            exit 1
+          fi
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm changeset publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - run: git push --follow-tags

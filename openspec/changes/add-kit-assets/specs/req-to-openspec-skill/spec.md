@@ -1,29 +1,29 @@
 ## ADDED Requirements
 
 ### Requirement: 読める要件書の形式
-Skill は、.docx・.xlsx・.pdf・.md の要件書について、形式ごとにテキストの取り出し方を定める SHALL。取り出しに使うツールは devcontainer に入っているもの（pandoc・pdftotext・xlsx2csv）とする MUST。
+Skill は Markdown（.md）の要件書を読む SHALL。Markdown 以外の形式の要件書を渡されたときは読まずに、利用者に Markdown へ変換してから渡すよう求める MUST。
 
 Source: REQ-025
 
-#### Scenario: 4 つの形式の取り出し方がある
+#### Scenario: Markdown を読む
 - **WHEN** Skill テンプレート（SKILL.md）を読む
-- **THEN** .docx・.xlsx・.pdf・.md のそれぞれに取り出し方が書かれ、.docx に pandoc、.pdf に pdftotext、.xlsx に xlsx2csv が指定されている
+- **THEN** 入力が Markdown（.md）の要件書であることが書かれている
 
-#### Scenario: 出典に必要な構造を残す
-- **WHEN** Skill テンプレートの .xlsx の取り出し方を読む
-- **THEN** シート名と行番号を出典として控えるよう指示されている
+#### Scenario: Markdown 以外を渡されたとき
+- **WHEN** Skill テンプレートを読む
+- **THEN** .docx・.xlsx・.pdf などを渡されたときは読まず、Markdown への変換を利用者に求めるよう指示されている
 
 ### Requirement: 台帳づくりの手順
-Skill は、要件書の要求文を 1 文ずつ REQ-001 から採番し、出典（文書名・章またはシートと行）つきで要件台帳に載せる手順を定める SHALL。
+Skill は要件書の要求文を 1 文ずつ REQ-001 から採番し、出典（文書名・章と行）つきで要件台帳に載せる手順を定める SHALL。
 
 Source: REQ-026
 
 #### Scenario: 採番と出典の指示がある
 - **WHEN** kit の Skill テンプレート（SKILL.md）を読む
-- **THEN** `REQ-001` からの採番、1 文ずつ載せること、出典に文書名・章またはシートと行を書くことが指示されている
+- **THEN** `REQ-001` からの採番、1 文ずつ載せること、出典に文書名・章と行を書くことが指示されている
 
 ### Requirement: 曖昧さチェックリストの適用
-Skill は、曖昧さチェックリストを全要件にあて、確認事項（Q）または仮定（A）として記録する手順を定め、チェックリスト自体を同梱する SHALL。
+Skill は曖昧さチェックリストを全要件にあて、確認事項（Q）または仮定（A）として記録する手順を定め、チェックリスト自体を同梱する SHALL。
 
 Source: REQ-027
 
@@ -32,7 +32,7 @@ Source: REQ-027
 - **THEN** 曖昧さチェックリストのファイルがあり、SKILL.md が全要件に適用して Q または A に記録するよう指示している
 
 ### Requirement: 必ずブロッキングにする分類
-Skill は、お金・個人情報・権限・データ削除・外部連携・検収数値に関わる曖昧さを、必ずブロッキングな確認事項にするよう定める SHALL。
+Skill はお金・個人情報・権限・データ削除・外部連携・検収数値に関わる曖昧さを、必ずブロッキングな確認事項にするよう定める SHALL。
 
 Source: REQ-028
 
@@ -41,7 +41,7 @@ Source: REQ-028
 - **THEN** お金・個人情報・権限・データ削除・外部連携・検収数値の 6 つが、仮定にしてはいけないものとして列挙されている
 
 ### Requirement: change への分割と分割案の提示
-Skill は、要件書をリリース・検収単位の change に分割し、分割案を人に示してから書き出すよう定める SHALL。
+Skill は要件書をリリース・検収単位の change に分割し、分割案を人に示してから書き出すよう定める SHALL。
 
 Source: REQ-029
 
@@ -59,7 +59,7 @@ Source: REQ-030
 - **THEN** 規範文・`Source:` 行・`#### Scenario:` を含む雛形があり、SKILL.md が 3 つを必須とする
 
 ### Requirement: 範囲外の扱い
-Skill は、範囲外の要件を Requirement にせず、proposal.md の Non-goals に書くよう定める SHALL。
+Skill は範囲外の要件を Requirement にせず、proposal.md の Non-goals に書くよう定める SHALL。
 
 Source: REQ-031
 
@@ -77,22 +77,26 @@ Source: REQ-032
 - **THEN** change 一覧・台帳の集計・ブロッキング確認事項・未承認の仮定の 4 項目が含まれる
 
 ### Requirement: 顧客に送れる確認事項の文面
-Skill は、ブロッキング確認事項を、顧客にそのまま送れる文面で出力するよう定める SHALL。
+Skill はブロッキング確認事項を顧客にそのまま送れる文面で出力するよう定める SHALL。
 
 Source: REQ-033
 
 #### Scenario: 文面の指示がある
 - **WHEN** Skill テンプレートを読む
-- **THEN** ブロッキング確認事項を顧客にそのまま送れる文面で出すこと、が指示されている
+- **THEN** ブロッキング確認事項を顧客にそのまま送れる文面で出すことが指示されている
 
-### Requirement: テキスト抽出をコードに持たない
-テキスト抽出（pandoc・pdftotext など）は Skill の中の AI の作業として指示し、`@loomake/kit` のコードには組み込まない SHALL。
+### Requirement: 形式の変換を持たない
+`@loomake/kit` のコードと Skill は、要件書をほかの形式から Markdown へ変換する処理や指示を持たない SHALL。変換は利用者が行う。
 
 Source: REQ-059
 
-#### Scenario: kit のコードに抽出処理が無い
+#### Scenario: kit のコードに変換処理が無い
 - **WHEN** `packages/kit/src/` を走査する
-- **THEN** `pandoc`・`pdftotext` を呼び出すコードが含まれない
+- **THEN** `pandoc`・`pdftotext`・`xlsx2csv` を呼び出すコードが含まれない
+
+#### Scenario: Skill に変換の指示が無い
+- **WHEN** Skill テンプレートを読む
+- **THEN** `pandoc`・`pdftotext`・`xlsx2csv` で要件書を変換する指示が含まれない
 
 ### Requirement: Skill の日本語提供
 Skill は日本語で提供される SHALL。
