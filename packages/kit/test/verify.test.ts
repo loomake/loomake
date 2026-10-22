@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { runVerify } from '@loomake/kit';
 import { CHANGE, ledgerRow, reportJson, requirement, specMd, traceMd, vitestCommand, withProject } from './project.js';
 
@@ -159,6 +159,25 @@ describe('完了ゲート', () => {
 
   it('[REQ-038] 実際に成功したテストの名前にある要件 ID を数える', () => {
     const r = withTests({ 'tests/a.test.ts': "describe('[REQ-012] ログイン', () => { it('成功する', () => {}); });\n" });
+    expect(check(r, '要件ごとのテスト')?.status).toBe('pass');
+    expect(r.coverage).toEqual({ 'REQ-012': ['tests/a.test.ts'] });
+  }, 30_000);
+
+  // macOS の一時ディレクトリ（/var → /private/var）のように、ルートがシンボリックリンクを通るとき。
+  // テストランナーはレポートに実パスを書くので、ルートも実パスにそろえないと相対パスがずれる
+  it('[REQ-038] ルートがシンボリックリンクを通っても、要件 ID のテストをルートからのパスで数える', () => {
+    const r = withProject(
+      { config: { openspecValidate: false, commands: { test: vitestCommand() } }, files: { 'tests/a.test.ts': "it('[REQ-012] 成功する', () => {});\n" } },
+      (root) => {
+        const link = join(mkdtempSync(join(tmpdir(), 'loomake-link-')), 'project');
+        symlinkSync(root, link, 'dir');
+        try {
+          return done(link);
+        } finally {
+          rmSync(dirname(link), { recursive: true, force: true });
+        }
+      },
+    );
     expect(check(r, '要件ごとのテスト')?.status).toBe('pass');
     expect(r.coverage).toEqual({ 'REQ-012': ['tests/a.test.ts'] });
   }, 30_000);

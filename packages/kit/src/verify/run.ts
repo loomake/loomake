@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, realpathSync, rmSync, statSync } from 'node:fs';
 import { join, relative, resolve, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import {
@@ -49,7 +49,9 @@ const toPosix = (p: string) => p.split(sep).join('/');
 
 /** verify を実行して結果を返す。設定の誤りは UsageError を投げる */
 export function runVerify(options: VerifyOptions): VerifyResult {
-  const { root, changeId, skipCommands = false, progress = () => {} } = options;
+  const { changeId, skipCommands = false, progress = () => {} } = options;
+  // テストランナーはレポートに実パスを書くので、シンボリックリンクを通るルート（macOS の /var など）も実パスにそろえる
+  const root = existsSync(options.root) ? realpathSync(options.root) : options.root;
   const config = loadConfig(root);
   const results: VerifyCheckResult[] = [];
   const record = (check: string, status: VerifyCheckResult['status'], detail = '') => results.push({ check, status, detail });
