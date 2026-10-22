@@ -17,5 +17,5 @@
 - [x] 2.1 各 Scenario に対応するテストを書く。テスト名に [REQ-xxx] を入れる
 
 ## 3. 確認
-- [ ] 3.1 `node scripts/verify.mjs --change add-verify-cli --done` を通す
+- [x] 3.1 `node scripts/verify.mjs --change add-verify-cli --done` を通す
 - [x] 3.2 `loomake verify` が試作と同じ結果を返すことを確かめたうえで、CI を `loomake verify` に切り替え、`scripts/verify.mjs` を置き換える。`scripts/` を変更するときは、先に人の確認を取る
