@@ -1,4 +1,8 @@
 #!/usr/bin/env node
-// サブコマンド（init・verify）は add-init-cli・add-verify-cli で追加する
-console.error('使い方: loomake <init | verify> [オプション]');
-process.exit(2);
+import { main } from './main.js';
+
+process.exitCode = main(process.argv.slice(2), {
+  cwd: process.cwd(),
+  stdout: (text) => console.log(text),
+  stderr: (text) => console.error(text),
+});
