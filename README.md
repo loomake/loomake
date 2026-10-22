@@ -10,12 +10,16 @@ CLAUDE.md                         AGENTS.md を読み込むだけ
 loomake.config.json               テストの場所・品質コマンド
 scripts/verify.mjs                仕様ゲート / 完了ゲート（依存なし、Node 20.19+）
 .devcontainer/devcontainer.json   開発コンテナ（Node 24・pnpm・OpenSpec・Claude Code・Codex）
-.claude/skills/req-to-openspec/   要件書 → OpenSpec change
+.agents/skills/req-to-openspec/   要件書 → OpenSpec change
   ├── SKILL.md
   ├── templates/trace.md          要件台帳・確認事項・仮定
   └── references/
       ├── ambiguity-checklist.md  曖昧さの洗い出し観点
       └── openspec-format.md      OpenSpec 書式 + Loomake 追加ルール
+.agents/skills/yomiyasu/          日本語の推敲（npx skills add nanaism/yomiyasu で導入）
+.claude/skills/req-to-openspec    → ../../.agents/skills/req-to-openspec（シンボリックリンク）
+.claude/skills/yomiyasu           → ../../.agents/skills/yomiyasu（シンボリックリンク）
+skills-lock.json                  npx skills で入れたスキルの出所とハッシュ
 docs/architecture.md              Loomake 全体の構成・役割分担・作る順番
 ```
 
@@ -25,7 +29,7 @@ docs/architecture.md              Loomake 全体の構成・役割分担・作�
 2. devcontainer を使う場合は、VS Code / Cursor で「コンテナーで再度開く」。使わない場合は `pnpm add -g @fission-ai/openspec`
 3. `openspec init`
 4. `AGENTS.md` 末尾の「プロジェクト固有の情報」と `loomake.config.json` の commands を書き換える
-5. Codex で使う場合は `.claude/skills/` を `.agents/skills/` にもコピー（または symlink）
+5. 自前のスキルは `.agents/skills/` に置き、`.claude/skills/` からシンボリックリンクを張る（Codex は `.agents/skills/`、Claude Code は `.claude/skills/` を読む）。openspec の生成するスキルは、Claude Code 用と Codex 用で中身が違うので、両方に生成されたまま置く
 
 ## 流れ
 
