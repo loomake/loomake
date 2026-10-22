@@ -182,6 +182,22 @@ describe('完了ゲート', () => {
     expect(r.coverage).toEqual({ 'REQ-012': ['tests/a.test.ts'] });
   }, 30_000);
 
+  it('[REQ-038] ルートがシンボリックリンクを通り、レポートにリンクのままのパスが書かれていても、ルートからのパスで数える', () => {
+    const r = withProject({}, (root) => {
+      const link = join(mkdtempSync(join(tmpdir(), 'loomake-link-')), 'project');
+      symlinkSync(root, link, 'dir');
+      try {
+        mkdirSync(join(link, '.loomake'), { recursive: true });
+        writeFileSync(join(link, '.loomake', 'test-report.json'), reportJson(link, { 'tests/a.test.ts': [['[REQ-012] 動く', 'passed']] }));
+        return done(link, true);
+      } finally {
+        rmSync(dirname(link), { recursive: true, force: true });
+      }
+    });
+    expect(check(r, '要件ごとのテスト')?.status).toBe('pass');
+    expect(r.coverage).toEqual({ 'REQ-012': ['tests/a.test.ts'] });
+  });
+
   it('[REQ-038] test コマンドがレポートを書き出さないと、前回のレポートが残っていても不合格', () => {
     const r = withReport({ config: { openspecValidate: false, commands: { test: 'node -e ""' } } }, (root) => done(root));
     const c = check(r, '要件ごとのテスト');

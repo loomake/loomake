@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, readdirSync, realpathSync, rmSync, statSync } from 'node:fs';
-import { join, relative, resolve, sep } from 'node:path';
+import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import {
   LEDGER_STATES,
@@ -50,12 +50,17 @@ const toPosix = (p: string) => p.split(sep).join('/');
 /** verify を実行して結果を返す。設定の誤りは UsageError を投げる */
 export function runVerify(options: VerifyOptions): VerifyResult {
   const { changeId, skipCommands = false, progress = () => {} } = options;
-  // テストランナーはレポートに実パスを書くので、シンボリックリンクを通るルート（macOS の /var など）も実パスにそろえる
-  const root = existsSync(options.root) ? realpathSync(options.root) : options.root;
+  // ルートがシンボリックリンクを通るとき（macOS の /var → /private/var など）、レポートのパスは実パスのことも、リンクのままのこともある。
+  // 実パスのルートで動かし、相対パスはどちらのルートの中にあるかで作る
+  const givenRoot = resolve(options.root);
+  const root = existsSync(givenRoot) ? realpathSync(givenRoot) : givenRoot;
   const config = loadConfig(root);
   const results: VerifyCheckResult[] = [];
   const record = (check: string, status: VerifyCheckResult['status'], detail = '') => results.push({ check, status, detail });
-  const rel = (p: string) => toPosix(relative(root, p));
+  const rel = (p: string) => {
+    const inside = [root, givenRoot].map((base) => relative(base, p)).find((r) => r !== '..' && !r.startsWith(`..${sep}`) && !isAbsolute(r));
+    return toPosix(inside ?? relative(root, p));
+  };
   const mode: VerifyMode = changeId ? (options.gate ?? 'spec-only') : 'quality';
   let coverage: Record<string, string[]> | undefined;
 
