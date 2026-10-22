@@ -9,6 +9,7 @@
 - [x] 1.8 `loomake.config.json` の `tests.dirs` に `packages` を追加する（AGENTS.md 4章により人の承認が必要。A-04）
 - [x] 1.9 要件書 v0.4 に合わせ、devcontainer から読み取り用ツール（pandoc・poppler-utils・xlsx2csv）を外す（Q-02、A-07 の取り下げ）
 - [x] 1.10 PR #1 のレビューの指摘を直す。verify の検査用プロジェクト（`tests/fixtures/verify-project/`）を置き、ci-gate のテストと node20 ジョブを archive 後も動くようにする。vitest の include を、verify が数えるテストファイルの範囲にそろえる（REQ-010, REQ-048, REQ-054）
+- [x] 1.11 /code-review の指摘を直す。verify と vitest.config.ts が、テストファイルを `scripts/test-files.mjs` の同じ規則（`dist` を除く）で選ぶようにする。verify の skip の判定で、改行をまたぐ文字列・型引数・JSX の閉じタグを正しく扱い、`loomake.config.json` の `tests`・`commands` の形を確かめる（REQ-010）
 
 ## 2. テスト
 - [x] 2.1 各 Scenario に対応するテストを `tests/` に書く。テスト名に [REQ-xxx] を入れる

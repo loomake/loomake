@@ -27,3 +27,8 @@ describe.skip('正規表現の開き括弧', () => {
 it('[REQ-010] skip した describe のあとの有効なテスト', () => {});
 it(`[REQ-011] テンプレート ${'x'}`, () => {});
 const a = 6 / 3; it.skip('[REQ-012] 割り算のあと', () => {}); const b = 2 / 1;
+const t = <p>Don't</p>;
+it.skip('[REQ-013] 迷い込んだアポストロフィの次の行の skip', () => {});
+describe.skip.each<Row>(rows)('[REQ-014] 型引数つきの skip.each', () => {});
+render(<a>x</a>); it.skip('[REQ-015] JSX の閉じタグのあとの skip', () => {}) // note
+const r = 'ab' / 2; it.skip('[REQ-016] 文字列のあとの割り算', () => {}); const s = 1 / 1;

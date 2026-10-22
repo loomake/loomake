@@ -8,9 +8,10 @@
 // オプション：--json（結果を JSON で出力）、--skip-commands（lint/typecheck/test を実行しない）
 // 終了コード：0 = 合格 / 1 = 不合格 / 2 = 使い方の誤り
 
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { listTestFiles, loadConfig, walk } from './test-files.mjs';
 
 // ---------- 引数 ----------
 const args = process.argv.slice(2);
@@ -38,25 +39,11 @@ function usage(msg) {
 
 // ---------- 設定 ----------
 const root = process.cwd();
-const config = loadConfig();
-
-function loadConfig() {
-  const defaults = {
-    openspecDir: 'openspec',
-    openspecValidate: 'auto',
-    tests: { dirs: ['tests', 'test', 'src'], pattern: '\\.(test|spec)\\.(ts|tsx|js|mjs|cjs|vue)$' },
-    commands: {},
-  };
-  const p = join(root, 'loomake.config.json');
-  if (!existsSync(p)) return defaults;
-  let c;
-  try {
-    c = JSON.parse(readFileSync(p, 'utf8'));
-  } catch (e) {
-    usage(`loomake.config.json を読めません（${e.message}）`);
-  }
-  if (typeof c !== 'object' || c === null || Array.isArray(c)) usage('loomake.config.json は JSON のオブジェクトにしてください');
-  return { ...defaults, ...c, tests: { ...defaults.tests, ...(c.tests ?? {}) } };
+let config;
+try {
+  config = loadConfig(root);
+} catch (e) {
+  usage(e.message);
 }
 
 // Windows の改行（CRLF）で保存した Markdown も、LF と同じに読む
@@ -125,17 +112,6 @@ function parseSpec(md, file) {
   return reqs;
 }
 
-function walk(dir, out = []) {
-  if (!existsSync(dir)) return out;
-  for (const name of readdirSync(dir)) {
-    if (name === 'node_modules' || name.startsWith('.')) continue;
-    const p = join(dir, name);
-    if (statSync(p).isDirectory()) walk(p, out);
-    else out.push(p);
-  }
-  return out;
-}
-
 // 直前の語がこれらなら、続く / は割り算ではなく正規表現リテラルの始まり
 const REGEX_KEYWORDS = new Set(['return', 'typeof', 'instanceof', 'in', 'of', 'new', 'delete', 'void', 'throw', 'case', 'do', 'else', 'yield', 'await']);
 
@@ -147,11 +123,12 @@ function activeTestSource(src) {
   const mark = (from, to) => {
     for (let k = from; k <= to && k < chars.length; k++) opaque[k] = true;
   };
-  // 引用符で始まる文字列の終わりの位置を返す。テンプレートの ${…} の中も文字列として扱う
+  // 引用符で始まる文字列の終わりの位置を返す。テンプレートの ${…} の中も文字列として扱う。
+  // ' と " の文字列は改行で終える（JSX や .vue のテキストの Don't などで、後ろの行まで文字列にしない）
   const stringEnd = (i) => {
     const q = src[i];
     let j = i + 1;
-    while (j < src.length && src[j] !== q) {
+    while (j < src.length && src[j] !== q && (q === '`' || src[j] !== '\n')) {
       if (src[j] === '\\') j++;
       else if (q === '`' && src[j] === '$' && src[j + 1] === '{') j = exprEnd(j + 2);
       j++;
@@ -174,6 +151,9 @@ function activeTestSource(src) {
   const regexEnd = (i) => {
     let k = i - 1;
     while (k >= 0 && /\s/.test(chars[k])) k--;
+    // 文字列・} のあとは割り算、< のあとは JSX の閉じタグ。> のあとは => のときだけ正規表現
+    if (k >= 0 && /['"`}<]/.test(chars[k])) return -1;
+    if (k >= 0 && chars[k] === '>' && chars[k - 1] !== '=') return -1;
     if (k >= 0 && /[\w$)\]]/.test(chars[k])) {
       let w = k;
       while (w >= 0 && /[\w$]/.test(chars[w])) w--;
@@ -237,6 +217,17 @@ function activeTestSource(src) {
         e++;
       } else if (text[e] === '`') {
         while (opaque[e]) e++; // it.skip.each`table`
+      } else if (text[e] === '<' && !opaque[e]) {
+        // it.skip.each<Case>(…) の型引数。=> の > は数えない
+        let depth = 0;
+        let g = e;
+        for (; g < text.length; g++) {
+          if (opaque[g]) continue;
+          if (text[g] === '<') depth++;
+          else if (text[g] === '>' && text[g - 1] !== '=' && --depth === 0) break;
+        }
+        if (g >= text.length) break;
+        e = g + 1;
       } else break;
     }
     for (let j = m.index; j < e && j < out.length; j++) if (out[j] !== '\n') out[j] = ' ';
@@ -343,8 +334,7 @@ function checkDone(spec) {
   }
 
   // 要件 ↔ テスト
-  const re = new RegExp(config.tests.pattern);
-  const testFiles = config.tests.dirs.flatMap((d) => walk(join(root, d))).filter((f) => re.test(f));
+  const testFiles = listTestFiles(root, config.tests);
   const covered = new Map(); // REQ → [file]
   for (const f of testFiles) {
     const active = activeTestSource(readText(f));

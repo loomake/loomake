@@ -28,7 +28,7 @@ describe('verify.mjs', () => {
       .map(([id]) => id);
     // 数えるものと数えないものの内訳は tests/fixtures/verify-project/tests/skip.case.txt にある
     expect(covered).toEqual(['REQ-004', 'REQ-010', 'REQ-011']);
-    expect(Object.keys(out.coverage)).toHaveLength(12);
+    expect(Object.keys(out.coverage)).toHaveLength(16);
     expect(r.status).toBe(1);
   });
 
@@ -49,15 +49,37 @@ describe('verify.mjs', () => {
       const p = join(entry.parentPath, entry.name);
       writeFileSync(p, readFileSync(p, 'utf8').replace(/\n/g, '\r\n'));
     }
-    const r = run(dir, '--change', 'sample', '--spec-only');
+    const specOnly = run(dir, '--change', 'sample', '--spec-only');
+    // tasks.md を読むのは --done だけなので、--done の結果も LF のときと比べる
+    const crlf = JSON.parse(run(dir, '--change', 'sample', '--done', '--skip-commands', '--json').stdout);
     rmSync(dir, { recursive: true, force: true });
-    expect(r.status, r.stdout).toBe(0);
+    const lf = JSON.parse(run(fixture, '--change', 'sample', '--done', '--skip-commands', '--json').stdout);
+    expect(specOnly.status, specOnly.stdout).toBe(0);
+    expect(crlf.results).toEqual(lf.results);
+    expect(crlf.results).toContainEqual({ check: 'tasks.md', status: 'pass', detail: '1 件すべて完了' });
   });
 
   it('loomake.config.json が JSON として読めないときは終了コード 2', () => {
     const r = runWithConfig('{');
     expect(r.status).toBe(2);
     expect(r.stderr).toContain('loomake.config.json を読めません');
+  });
+
+  it('loomake.config.json の tests・commands の形が正しくないときは終了コード 2', () => {
+    const cases: [string, string][] = [
+      ['{"tests":"x"}', 'tests はオブジェクト'],
+      ['{"tests":{"dirs":"tests"}}', 'tests.dirs は文字列の配列'],
+      ['{"tests":{"dirs":[1]}}', 'tests.dirs は文字列の配列'],
+      ['{"tests":{"pattern":1}}', 'tests.pattern は文字列'],
+      ['{"tests":{"pattern":"("}}', 'tests.pattern が正規表現として読めません'],
+      ['{"commands":{"test":1}}', 'commands は、値が文字列（または null）のオブジェクト'],
+      ['{"openspecDir":1}', 'openspecDir は文字列'],
+    ];
+    for (const [config, message] of cases) {
+      const r = runWithConfig(config);
+      expect(r.status, config).toBe(2);
+      expect(r.stderr, config).toContain(message);
+    }
   });
 
   it('loomake.config.json がオブジェクトでないときは終了コード 2', () => {
