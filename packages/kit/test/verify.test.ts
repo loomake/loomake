@@ -30,6 +30,29 @@ describe('ブロッキング確認事項の検査', () => {
   });
 });
 
+describe('ブロッキング確認事項の検査：解析エラー', () => {
+  it('[REQ-034] 確認事項の節名が崩れていると、未回答のブロッキング確認事項を見落とさず、trace.md の解析エラーで不合格', () => {
+    const trace = traceMd({ questions: [question('Q-01', 'yes', '')] }).replace('## 確認事項', '## 確認事項（未回答）');
+    const r = withProject({ trace }, specOnly);
+    expect(r.ok).toBe(false);
+    expect(check(r, 'trace.md の解析')).toEqual({ check: 'trace.md の解析', status: 'fail', detail: 'trace.md:1 「## 確認事項」の節がありません' });
+  });
+
+  it('[REQ-034] 差分仕様に解析エラーがあると、ファイル名と行番号を出して不合格', () => {
+    const spec = `${specMd()}\n## RENAMED Requirements\n\n- FROM: \`### Requirement: 古い名前\`\n`;
+    const r = withProject({ spec }, specOnly);
+    expect(r.ok).toBe(false);
+    expect(check(r, 'spec.md の解析')?.status).toBe('fail');
+    expect(check(r, 'spec.md の解析')?.detail).toMatch(/^specs\/x\/spec\.md:\d+ RENAMED の FROM「古い名前」に対応する TO がありません$/);
+  });
+
+  it('[REQ-034] 解析エラーが無ければ、解析の検査は合格', () => {
+    const r = withProject({}, specOnly);
+    expect(check(r, 'trace.md の解析')?.status).toBe('pass');
+    expect(check(r, 'spec.md の解析')?.status).toBe('pass');
+  });
+});
+
 describe('仕様の整合性の検査', () => {
   it('[REQ-035] Source の無い Requirement の名前を出して不合格', () => {
     const r = withProject({ spec: specMd(requirement('出所不明', { source: '' })) }, specOnly);

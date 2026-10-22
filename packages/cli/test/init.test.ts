@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, sep } from 'node:path';
 import { unifiedDiff } from '@loomake/kit';
@@ -7,8 +7,11 @@ import { main } from '../src/main.js';
 
 const template = (p: string) => readFileSync(join(import.meta.dirname, '..', '..', 'kit', 'templates', p), 'utf8');
 
+// シンボリックリンクはたどらない（リンク先は実体の側で数える）
 const listFiles = (dir: string): string[] =>
-  readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? listFiles(join(dir, e.name)) : [join(dir, e.name)]));
+  readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+    e.isSymbolicLink() ? [] : e.isDirectory() ? listFiles(join(dir, e.name)) : [join(dir, e.name)],
+  );
 
 type InitRun = {
   code: number;
@@ -21,15 +24,20 @@ type InitRun = {
 
 /**
  * 一時ディレクトリに files を置いて loomake init を実行し、実行後のファイルを読んでから消す。
- * answers を与えると確認を受け付けられる環境（TTY）とみなし、確認に順に答える。与えなければ TTY でない環境とみなす
+ * answers を与えると確認を受け付けられる環境（TTY）とみなし、確認に順に答える。与えなければ TTY でない環境とみなす。
+ * setup は files を置いたあと、実行の前に呼ぶ（シンボリックリンクを作るなど）
  */
-async function runInit(args: string[] = [], { files = {}, answers }: { files?: Record<string, string>; answers?: string[] } = {}): Promise<InitRun> {
+async function runInit(
+  args: string[] = [],
+  { files = {}, answers, setup }: { files?: Record<string, string>; answers?: string[]; setup?: (root: string) => void } = {},
+): Promise<InitRun> {
   const root = mkdtempSync(join(tmpdir(), 'loomake-init-'));
   try {
     for (const [p, text] of Object.entries(files)) {
       mkdirSync(dirname(join(root, p)), { recursive: true });
       writeFileSync(join(root, p), text);
     }
+    setup?.(root);
     const out: string[] = [];
     const prompts: string[] = [];
     const queue = [...(answers ?? [])];
@@ -129,6 +137,72 @@ describe('既存ファイルの保護', () => {
     const r = await runInit([], { files: { 'AGENTS.md': template('AGENTS.md') } });
     expect(r.code).toBe(0);
     expect(r.files['CLAUDE.md']).toBe(template('CLAUDE.md'));
+  });
+});
+
+describe('既存ファイルの保護：シンボリックリンク', () => {
+  // プロジェクトの外の場所。テストごとに作って消す
+  const withOutside = async (fn: (outside: string) => Promise<void>) => {
+    const outside = mkdtempSync(join(tmpdir(), 'loomake-outside-'));
+    try {
+      await fn(outside);
+    } finally {
+      rmSync(outside, { recursive: true, force: true });
+    }
+  };
+  const SECRET = '外のファイルの中身\n';
+
+  it('[REQ-020] AGENTS.md がプロジェクトの外のファイルを指すリンクなら、中身を表示せず、何も置かずに終了コード 1', () =>
+    withOutside(async (outside) => {
+      writeFileSync(join(outside, 'target.md'), SECRET);
+      const r = await runInit([], { answers: ['y'], setup: (root) => symlinkSync(join(outside, 'target.md'), join(root, 'AGENTS.md'), 'file') });
+      expect(r.code).toBe(1);
+      expect(r.prompts).toEqual([]);
+      expect(r.stdout).not.toContain('外のファイルの中身');
+      expect(r.stdout).toContain('AGENTS.md はシンボリックリンクを通ってプロジェクトの外を指しています');
+      expect(r.files).toEqual({});
+      expect(readFileSync(join(outside, 'target.md'), 'utf8')).toBe(SECRET);
+    }));
+
+  it('[REQ-020] .claude がプロジェクトの外のディレクトリを指すリンクなら、リンク先に何も作らず、何も置かずに終了コード 1', () =>
+    withOutside(async (outside) => {
+      const r = await runInit([], { setup: (root) => symlinkSync(outside, join(root, '.claude'), 'dir') });
+      expect(r.code).toBe(1);
+      expect(r.files).toEqual({});
+      expect(readdirSync(outside)).toEqual([]);
+    }));
+
+  it('[REQ-020] AGENTS.md がリンク先の無いリンクなら、リンク先を作らず、何も置かずに終了コード 1', () =>
+    withOutside(async (outside) => {
+      const missing = join(outside, 'missing.md');
+      const r = await runInit([], { setup: (root) => symlinkSync(missing, join(root, 'AGENTS.md'), 'file') });
+      expect(r.code).toBe(1);
+      expect(r.stdout).toContain('AGENTS.md はリンク先の無いシンボリックリンクです');
+      expect(r.files).toEqual({});
+      expect(existsSync(missing)).toBe(false);
+    }));
+
+  it('[REQ-020] .claude/skills がプロジェクトの中の .agents/skills を指すリンクなら、これまでどおりリンク先に Skill を置く', async () => {
+    const r = await runInit([], {
+      setup: (root) => {
+        mkdirSync(join(root, '.agents', 'skills'), { recursive: true });
+        mkdirSync(join(root, '.claude'));
+        symlinkSync(join(root, '.agents', 'skills'), join(root, '.claude', 'skills'), 'dir');
+      },
+    });
+    expect(r.code).toBe(0);
+    expect(r.files['.agents/skills/req-to-openspec/SKILL.md']).toBe(template('skills/req-to-openspec/SKILL.md'));
+  });
+
+  it('[REQ-020] リンク先がプロジェクトの中の .. で始まる名前のディレクトリなら、外とはみなさずに Skill を置く', async () => {
+    const r = await runInit([], {
+      setup: (root) => {
+        mkdirSync(join(root, '..claude-real'));
+        symlinkSync(join(root, '..claude-real'), join(root, '.claude'), 'dir');
+      },
+    });
+    expect(r.code).toBe(0);
+    expect(r.files['..claude-real/skills/req-to-openspec/SKILL.md']).toBe(template('skills/req-to-openspec/SKILL.md'));
   });
 });
 

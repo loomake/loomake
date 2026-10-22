@@ -8,6 +8,7 @@ import {
   parseSpec,
   parseTasks,
   parseTrace,
+  type ParseError,
   type SpecRequirement,
   type Trace,
   type VerifyCheckResult,
@@ -91,6 +92,8 @@ export function runVerify(options: VerifyOptions): VerifyResult {
 type Recorder = (check: string, status: VerifyCheckResult['status'], detail?: string) => void;
 type SpecState = { changeDir: string; trace: Trace; live: SpecRequirement[] };
 
+const formatErrors = (errors: ParseError[]) => errors.map((e) => `${e.file}:${e.line} ${e.message}`).join('\n');
+
 // ---------- 仕様ゲート ----------
 function checkSpec(root: string, config: LoomakeConfig, changeId: string, record: Recorder, rel: (p: string) => string): SpecState | null {
   const changeDir = resolve(root, config.openspecDir, 'changes', changeId);
@@ -111,6 +114,8 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   const parsed = parseTrace('trace.md', existsSync(tracePath) ? readFileSync(tracePath, 'utf8') : '');
   const trace = parsed.value;
   const { ledger, questions, assumptions } = trace;
+  // 解析できなかった trace.md では未回答の確認事項を数えられないので、エラーは不合格にする（harden-init-and-trace-check の仮定 A-02）
+  record('trace.md の解析', parsed.errors.length ? 'fail' : 'pass', formatErrors(parsed.errors));
   if (ledger.length === 0) record('要件台帳', 'fail', 'trace.md に「## 要件台帳」の表がありません');
   else record('要件台帳', 'pass', `${ledger.length} 件`);
 
@@ -137,7 +142,14 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   // specs
   const specFiles = walk(join(changeDir, 'specs')).filter((f) => f.endsWith('spec.md'));
   if (specFiles.length === 0) record('差分仕様', 'fail', 'specs/<capability>/spec.md がありません');
-  const reqs = specFiles.flatMap((f) => parseSpec(toPosix(relative(changeDir, f)), readFileSync(f, 'utf8')).value.map((r) => ({ ...r, file: toPosix(relative(changeDir, f)) })));
+  const specErrors: ParseError[] = [];
+  const reqs = specFiles.flatMap((f) => {
+    const file = toPosix(relative(changeDir, f));
+    const spec = parseSpec(file, readFileSync(f, 'utf8'));
+    specErrors.push(...spec.errors);
+    return spec.value.map((r) => ({ ...r, file }));
+  });
+  if (specFiles.length) record('spec.md の解析', specErrors.length ? 'fail' : 'pass', formatErrors(specErrors));
 
   const ledgerIds = new Set(ledger.map((r) => r.ID));
   const live = reqs.filter((r) => r.op === 'ADDED' || r.op === 'MODIFIED');

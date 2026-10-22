@@ -1,5 +1,5 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative, sep } from 'node:path';
+import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
+import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DEFAULT_TEST_REPORT } from '../verify/config.js';
 import { unifiedDiff } from './diff.js';
@@ -97,10 +97,43 @@ const REPORT_EXAMPLES = [
   `    jest --json --outputFile=${DEFAULT_TEST_REPORT}`,
 ];
 
+const isSymlink = (p: string) => {
+  try {
+    return lstatSync(p).isSymbolicLink();
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * 置き先が承諾なしに読み書きしてはいけない場所かを調べ、理由を返す（harden-init-and-trace-check の仮定 A-01）。
+ * 途中のディレクトリも含めて、リンク先の無いリンクと、リンクを通ってプロジェクトの外を指すものを拒む
+ */
+function unsafeTarget(root: string, path: string): string | null {
+  const parts = path.split('/');
+  let existing = root;
+  for (let i = 0; i < parts.length; i++) {
+    const p = join(root, ...parts.slice(0, i + 1));
+    if (existsSync(p)) existing = p;
+    else if (isSymlink(p)) return `${parts.slice(0, i + 1).join('/')} はリンク先の無いシンボリックリンクです`;
+    else break;
+  }
+  const inside = relative(realpathSync(root), realpathSync(existing));
+  if (inside === '..' || inside.startsWith(`..${sep}`) || isAbsolute(inside)) return `${path} はシンボリックリンクを通ってプロジェクトの外を指しています`;
+  return null;
+}
+
 /** AGENTS.md・CLAUDE.md・loomake.config.json・Skill を置く。終了コード（成功 0・中止 1）を返す */
 export async function runInit(options: InitOptions): Promise<number> {
   const { root, stdout } = options;
   const files = initFiles(options);
+  // プロジェクトの外を読み書きしないよう、既存ファイルを読む前に調べ、1 つでもあれば何も置かずに中止する
+  const unsafe = files.map((f) => unsafeTarget(root, f.path)).filter((r): r is string => r !== null);
+  if (unsafe.length) {
+    stdout(unsafe.join('\n'));
+    stdout('プロジェクトの外のファイルを読み書きしないよう、どのファイルも置かずに中止しました。シンボリックリンクを外すか、プロジェクトの中を指すように直してください。');
+    return 1;
+  }
   const status = files.map((f) => {
     const p = join(root, f.path);
     if (!existsSync(p)) return 'new' as const;
