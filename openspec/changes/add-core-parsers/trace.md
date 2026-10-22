@@ -51,4 +51,4 @@ REQ の採番は要件定義書の登場順（全 change で共通）。F-xxx / 
 | A-03 | REQ-012 | 台帳の状態の検査はこの関数が返すエラーとして行い、不合格にするかどうかは呼び出し側（verify）が決める | core は判定を持たず契約だけを担うため | 承認（2026-10-22） |
 | A-04 | REQ-017 | テンプレート生成関数の名前は `createTraceTemplate({ changeId })`、中身は kit の `templates/trace.md` と同じ見出し・列構成とする | 要件書に関数名の指定がない | 承認（2026-10-22） |
 | A-05 | REQ-011, REQ-013, REQ-014, REQ-015 | core のパーサはファイルを読まず、ファイル名とテキストを受け取る純粋関数とする（design.md） | core は CLI を持たず実行時依存ゼロのため | 承認（2026-10-22） |
-| A-06 | REQ-015 | テストランナーの JSON レポートは、Vitest の json レポーターの形式（Jest と同じ形式）を読む。`testResults[].assertionResults[]` の `fullName`（describe の名前を含む）から要件 ID を取り、`status` が `passed` のテストだけを数える。`failed`・`skipped`・`pending`・`todo`・`disabled` は数えない。テストファイルは `testResults[].name` で表す | Q-11 の回答で、読むレポートの形式を決める必要がある。Vitest はこのリポジトリのテストランナーで、Jest も同じ形式を出せる | |
+| A-06 | REQ-015 | テストランナーの JSON レポートは、Vitest の json レポーターの形式（Jest と同じ形式）を読む。`testResults[].assertionResults[]` の `fullName`（describe の名前を含む）から要件 ID を取り、`status` が `passed` のテストだけを数える。`failed`・`skipped`・`pending`・`todo`・`disabled` は数えない。テストファイルは `testResults[].name` で表す | Q-11 の回答で、読むレポートの形式を決める必要がある。Vitest はこのリポジトリのテストランナーで、Jest も同じ形式を出せる | 承認（2026-10-22） |
