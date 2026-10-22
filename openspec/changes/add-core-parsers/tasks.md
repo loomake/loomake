@@ -14,4 +14,4 @@
 - [x] 2.2 Loomake の追加書式（Source 行・trace.md）を含む change が `openspec validate --strict` を通ることを確かめるテストを書く（REQ-052, REQ-058）
 
 ## 3. 確認
-- [ ] 3.1 `node scripts/verify.mjs --change add-core-parsers --done` を通す
+- [x] 3.1 `node scripts/verify.mjs --change add-core-parsers --done` を通す
