@@ -9,7 +9,7 @@
 - [x] 1.8 `loomake.config.json` の `tests.dirs` に `packages` を追加する（AGENTS.md 4章により人の承認が必要。A-04）
 
 ## 2. テスト
-- [ ] 2.1 各 Scenario に対応するテストを `tests/` に書く。テスト名に [REQ-xxx] を入れる
+- [x] 2.1 各 Scenario に対応するテストを `tests/` に書く。テスト名に [REQ-xxx] を入れる
 
 ## 3. 確認
 - [ ] 3.1 `node scripts/verify.mjs --change setup-monorepo --done` を通す

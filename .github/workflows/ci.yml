@@ -15,6 +15,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # changeset status は main からの差分を見るため、ローカルに main を用意する
+      - run: git rev-parse --verify main || git branch main origin/main
+        shell: bash
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
