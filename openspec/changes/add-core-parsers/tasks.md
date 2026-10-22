@@ -1,12 +1,12 @@
 ## 1. 実装
-- [ ] 1.1 trace.md の 3 つの表を読む `parseTrace` を実装する（REQ-011）
-- [ ] 1.2 台帳の状態値の検査を実装する（REQ-012）
+- [x] 1.1 trace.md の 3 つの表を読む `parseTrace` を実装する（REQ-011）
+- [x] 1.2 台帳の状態値の検査を実装する（REQ-012）
 - [ ] 1.3 spec.md から Requirement を取り出す `parseSpec` を実装する（REQ-013, REQ-051）
 - [ ] 1.4 tasks.md から `parseTasks` を実装する（REQ-014）
 - [ ] 1.5 テストランナーの JSON レポートから、テストファイルごとに要件 ID を取り出す `extractTestRequirements` を実装する（REQ-015、Q-11、A-06）
 - [ ] 1.6 verify 結果の JSON スキーマと型を公開する（REQ-016, REQ-053）
 - [ ] 1.7 `createTraceTemplate` を実装する（REQ-017）
-- [ ] 1.8 解析エラーにファイル名と行番号を含める（REQ-018）
+- [x] 1.8 解析エラーにファイル名と行番号を含める（REQ-018）
 - [ ] 1.9 実行時依存がゼロであることを確かめる（REQ-046）
 
 ## 2. テスト
