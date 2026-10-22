@@ -5,7 +5,7 @@ kit・trace・runner は trace.md・spec.md・tasks.md・テストファイル�
 
 ## What Changes
 - trace.md の 3 つの表（要件台帳・確認事項・仮定）を型付きで読む処理を追加する
-- spec.md の Requirement、tasks.md のタスク、テストファイルの `[REQ-xxx]` を取り出す処理を追加する
+- spec.md の Requirement、tasks.md のタスク、テストランナーの JSON レポートにある成功したテストの `[REQ-xxx]` を取り出す処理を追加する（Q-11）
 - verify 結果の JSON スキーマ（`schemaVersion` 付き）を公開する
 - trace.md の空テンプレートを生成する関数を追加する
 - 解析エラーにファイル名と行番号を含める

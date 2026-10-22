@@ -5,6 +5,7 @@
 
 ## What Changes
 - `loomake verify --change <id> --spec-only`（仕様ゲート）と `--done`（完了ゲート）を追加する
+- テストの有無は、test コマンドが書き出したテストランナーの JSON レポートで判定する（Q-11）
 - `--json` で core のスキーマに沿った結果と、要件ごとのテストファイル一覧を出力する
 - 終了コード（合格 0・不合格 1・使い方の誤り 2）を定める
 - `--change` を省略したときは commands（lint・typecheck・test）だけを実行する

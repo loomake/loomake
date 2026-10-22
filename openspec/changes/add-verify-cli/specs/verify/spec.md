@@ -61,7 +61,7 @@ Source: REQ-037
 - **THEN** 警告が表示され、この検査だけでは不合格にならない
 
 ### Requirement: 完了ゲート
-`--done` は、仕様ゲートに加えて、未完了のタスク、状態が確認待ちの要件、テストの無い要件を不合格にする SHALL。テストの有無は skip・todo 指定を除いたテスト名の `[REQ-xxx]` で判定する MUST。
+`--done` は、仕様ゲートに加えて、未完了のタスク、状態が確認待ちの要件、テストの無い要件を不合格にする SHALL。テストの有無は、test コマンドが書き出したテストランナーの JSON レポートで、成功したテストの名前にある `[REQ-xxx]` で判定する MUST。
 
 Source: REQ-038
 
@@ -80,6 +80,22 @@ Source: REQ-038
 #### Scenario: skip されたテスト
 - **WHEN** REQ-012 を名前に含むテストが `it.skip` だけである change に `--done` を実行する
 - **THEN** REQ-012 はテストが無い要件として不合格になる
+
+#### Scenario: 修飾子が続く skip の中のテスト
+- **WHEN** REQ-012 を名前に含むテストが `describe.skip.each(...)` の中にだけある change に `--done` を実行する
+- **THEN** REQ-012 はテストが無い要件として不合格になる
+
+#### Scenario: テスト名以外の文字列にだけある要件 ID
+- **WHEN** REQ-012 がテストファイルの中の文字列（`const fixture = '[REQ-012]'` など）にだけあり、名前に REQ-012 を含むテストが無い change に `--done` を実行する
+- **THEN** REQ-012 はテストが無い要件として不合格になる
+
+#### Scenario: テストランナーが実行しないファイル
+- **WHEN** REQ-012 を名前に含むテストが、テストランナーの実行対象に入っていないファイルにだけある change に `--done` を実行する
+- **THEN** REQ-012 はテストが無い要件として不合格になる
+
+#### Scenario: レポートが書き出されない
+- **WHEN** 前回のレポートが `tests.report` に残っていて、今回の test コマンドがレポートを書き出さない設定で `--done` を実行する
+- **THEN** 「要件ごとのテスト」が不合格になり、レポートが無いことが詳細に含まれる
 
 ### Requirement: 品質コマンドの実行
 `--done` は、`loomake.config.json` の `commands`（lint・typecheck・test）を実行し、1 つでも失敗したら不合格にする SHALL。

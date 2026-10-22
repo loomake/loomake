@@ -61,33 +61,29 @@ Source: REQ-014
 - **THEN** 行末が LF の同じ tasks.md と同じタスクが返り、タスクの文に `\r` が残らない
 
 ### Requirement: テストが対象とする要件 ID の抽出
-core はテストファイルから `[REQ-xxx]` 形式の要件 ID を取り出し、skip・todo 指定のテストは数えない SHALL。
+core はテストランナーの JSON レポートから、成功したテストの名前にある `[REQ-xxx]` 形式の要件 ID を、テストファイルごとに取り出す SHALL。skip・todo のテストと、失敗したテストは数えない MUST。
 
 Source: REQ-015
 
 #### Scenario: 通常のテスト
-- **WHEN** `it('[REQ-012][REQ-013] ...', ...)` を含むテストファイルを渡す
-- **THEN** `REQ-012` と `REQ-013` が返る
+- **WHEN** `status` が `passed` で、名前が `[REQ-012][REQ-013] ...` のテストを含むレポートを渡す
+- **THEN** そのテストファイルについて `REQ-012` と `REQ-013` が返る
 
 #### Scenario: skip と todo
-- **WHEN** `it.skip('[REQ-020] ...')`・`it.todo('[REQ-021] ...')`・`xit('[REQ-022] ...')` だけを含むテストファイルを渡す
+- **WHEN** 名前に `[REQ-020]`・`[REQ-021]`・`[REQ-022]` を持つテストの `status` が、それぞれ `skipped`・`todo`・`pending` であるレポートを渡す
 - **THEN** 要件 ID は返らない
 
-#### Scenario: skip した describe の中のテスト
-- **WHEN** `describe.skip('...', () => { it('[REQ-023] ...', ...) })` だけを含むテストファイルを渡す
+#### Scenario: 失敗したテスト
+- **WHEN** 名前に `[REQ-023]` を持つテストの `status` が `failed` であるレポートを渡す
 - **THEN** 要件 ID は返らない
 
-#### Scenario: コメントの中の要件 ID
-- **WHEN** `// it('[REQ-024] ...')` と `/* [REQ-025] */` だけを含むテストファイルを渡す
-- **THEN** 要件 ID は返らない
+#### Scenario: describe の名前にある要件 ID
+- **WHEN** describe の名前が `[REQ-024] ...` で、その中のテストの `status` が `passed` であるレポートを渡す
+- **THEN** そのテストファイルについて `REQ-024` が返る
 
-#### Scenario: テスト名以外の文字列の中の要件 ID
-- **WHEN** `const fixture = '[REQ-026]'` と、要件 ID を名前に持たない `it('fixture', ...)` だけを含むテストファイルを渡す
-- **THEN** 要件 ID は返らない
-
-#### Scenario: 修飾子が続く skip
-- **WHEN** `describe.skip.each([1])('...', () => { it('[REQ-027] ...', ...) })` と `it.skip.each([1])('[REQ-028] %s', ...)` だけを含むテストファイルを渡す
-- **THEN** 要件 ID は返らない
+#### Scenario: 読めないレポート
+- **WHEN** JSON として読めないテキストを渡す
+- **THEN** 空の結果と、ファイル名を含むエラーが返る
 
 ### Requirement: verify 結果の JSON スキーマ
 core は verify 結果の JSON スキーマを公開し、スキーマに `schemaVersion` を含める SHALL。スキーマに破壊的変更を入れるときは `schemaVersion` のメジャー番号を上げる MUST。
