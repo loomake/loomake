@@ -126,3 +126,13 @@
 
 - [req-to-openspec の試作 Skill](../.agents/skills/req-to-openspec/SKILL.md)には Word・Excel・PDF の読み取り手順が残っています。これは Markdown だけを扱う確定済みの仕様と異なりますが、[add-kit-assets のタスク 1.2・1.6](../openspec/changes/add-kit-assets/tasks.md)で修正する予定です。最新版の製品仕様を確認するときは、試作 Skill と差分仕様を区別します。
 - ブランチ保護の設定は setup-monorepo の仮定 A-03 に従って人が行います。今回、GitHub 上の設定状態は確認していません。
+
+### 対応状況
+
+| 指摘 | 対応 |
+|---|---|
+| 要件書 1 | 要件書 v0.5 で N-02 を直し、`loomake` の実行時依存を core と kit にしました。add-verify-cli の REQ-047 の出典を v0.5 にしました |
+| 要件書 2 | v0.5 の 8 章を、回答状況と参照先の表にしました。Q-03 は未回答（非ブロッキング）のまま残しています |
+| 要件書 3 | v0.5 の F-REQ-02 と、add-kit-assets の REQ-026（台帳と差分仕様）の出典の書き方を「文書名・章と行」にしました |
+
+README・flow・architecture にある最新の要件書へのリンクも v0.5 に直しました。

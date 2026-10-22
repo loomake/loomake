@@ -14,7 +14,7 @@
 
 仕様の書式は自作せず OpenSpec を使う。Loomake が担うのは、OpenSpec が持っていない「要件書からの入口」と「守らせる仕組み」と「検収の証拠」。
 
-この表は将来の構成を含む。現在のリポジトリには core・kit・CLI 本体の雛形と試作の `scripts/verify.mjs` があり、trace・runner は MVP の範囲外。MVP の範囲は [要件定義書 v0.4](requirements/mvp-v0.4.md) を参照。
+この表は将来の構成を含む。現在のリポジトリには core・kit・CLI 本体の雛形と試作の `scripts/verify.mjs` があり、trace・runner は MVP の範囲外。MVP の範囲は [要件定義書 v0.5](requirements/mvp-v0.5.md) を参照。
 
 ## 2. 流れ
 

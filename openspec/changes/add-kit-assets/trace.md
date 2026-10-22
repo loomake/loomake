@@ -12,13 +12,14 @@ REQ の採番は要件定義書の登場順（全 change で共通）。F-xxx / 
 |---|---|---|
 | docs/requirements/mvp-v0.1.md（Loomake MVP 要件定義書（core・kit）） | v0.1 | 2026-10-22 |
 | docs/requirements/mvp-v0.4.md（同上。要件書を Markdown に限った） | v0.4 | 2026-10-22 |
+| docs/requirements/mvp-v0.5.md（同上。N-02・8 章・F-REQ-02 の出典を直した） | v0.5 | 2026-10-22 |
 
 ## 要件台帳
 
 | ID | 出典 | 種別 | 要約（原文に忠実に） | 状態 | 反映先 |
 |---|---|---|---|---|---|
 | REQ-025 | 要件定義書 v0.4 §5.2 F-REQ-01 | 機能 | Markdown（.md）の要件書を読めること | 反映済 | specs/req-to-openspec-skill/spec.md |
-| REQ-026 | 要件定義書 v0.1 §5.2 F-REQ-02 | 機能 | 要件書の要求文を 1 文ずつ REQ-001 から採番し、出典（文書名・章またはシートと行）つきで要件台帳に載せること | 反映済 | specs/req-to-openspec-skill/spec.md |
+| REQ-026 | 要件定義書 v0.5 §5.2 F-REQ-02 | 機能 | 要件書の要求文を 1 文ずつ REQ-001 から採番し、出典（文書名・章と行）つきで要件台帳に載せること | 反映済 | specs/req-to-openspec-skill/spec.md |
 | REQ-027 | 要件定義書 v0.1 §5.2 F-REQ-03 | 機能 | 曖昧さチェックリストを全要件にあて、確認事項（Q）または仮定（A）として記録すること | 反映済 | specs/req-to-openspec-skill/spec.md |
 | REQ-028 | 要件定義書 v0.1 §5.2 F-REQ-04 | 機能 | お金・個人情報・権限・データ削除・外部連携・検収数値に関わる曖昧さは、必ずブロッキングな確認事項にすること | 反映済 | specs/req-to-openspec-skill/spec.md |
 | REQ-029 | 要件定義書 v0.1 §5.2 F-REQ-05 | 機能 | 要件書をリリース・検収単位の change に分割し、分割案を人に示すこと | 反映済 | specs/req-to-openspec-skill/spec.md |

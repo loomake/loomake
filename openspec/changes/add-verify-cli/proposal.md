@@ -21,3 +21,4 @@
 - 影響する capability：verify（新規）
 - 影響するコード：`packages/kit/`、`packages/cli/`（`loomake`）、`scripts/verify.mjs`、`.github/workflows/ci.yml`
 - 前提：setup-monorepo・add-core-parsers が完了していること
+- 要件書 v0.5：Q-08 の回答に合わせて §6 N-02 を直した（REQ-047）

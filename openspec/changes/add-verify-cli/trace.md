@@ -11,6 +11,7 @@ REQ の採番は要件定義書の登場順（全 change で共通）。F-xxx / 
 | 文書 | 版 | 日付 |
 |---|---|---|
 | docs/requirements/mvp-v0.1.md（Loomake MVP 要件定義書（core・kit）） | v0.1 | 2026-10-22 |
+| docs/requirements/mvp-v0.5.md（同上。N-02・8 章・F-REQ-02 の出典を直した） | v0.5 | 2026-10-22 |
 
 ## 要件台帳
 
@@ -25,7 +26,7 @@ REQ の採番は要件定義書の登場順（全 change で共通）。F-xxx / 
 | REQ-040 | 要件定義書 v0.1 §5.3 F-VER-07 | 機能 | `--json` で、core のスキーマに沿った結果と、要件ごとのテストファイル一覧を出力すること | 反映済 | specs/verify/spec.md |
 | REQ-041 | 要件定義書 v0.1 §5.3 F-VER-08 | 機能 | 合格なら終了コード 0、不合格なら 1、使い方の誤りなら 2 を返すこと | 反映済 | specs/verify/spec.md |
 | REQ-042 | 要件定義書 v0.1 §5.3 F-VER-09 | 機能 | `--change` を省略した場合は、commands だけを実行すること | 反映済 | specs/verify/spec.md |
-| REQ-047 | 要件定義書 v0.1 §6 N-02 | 非機能 | `@loomake/kit` と `loomake` の実行時依存は core のみとすること | 反映済 | specs/verify/spec.md |
+| REQ-047 | 要件定義書 v0.5 §6 N-02 | 非機能 | `@loomake/kit` の実行時依存は core のみ、`loomake` の実行時依存は core と kit のみとすること | 反映済 | specs/verify/spec.md |
 | REQ-050 | 要件定義書 v0.1 §6 N-05 | 非機能 | テストファイル 1,000 個・要件 500 件の change で、commands を除く verify が 3 秒以内に終わること（暫定） | 反映済 | specs/verify/spec.md |
 | REQ-055 | 要件定義書 v0.1 §6 N-10 | 非機能 | エラーメッセージ・Skill・AGENTS.md を日本語で提供すること | 反映済 | specs/verify/spec.md |
 

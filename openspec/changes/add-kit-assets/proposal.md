@@ -20,3 +20,4 @@ Loomake が守らせる仕組みの中身は、要件書を出典つきで chang
 - 影響するコード：`packages/kit/templates/`（Skill・AGENTS.md・CLAUDE.md・trace.md のテンプレート）
 - 前提：setup-monorepo が完了していること。`.agents/skills/req-to-openspec/` と `AGENTS.md` の現行版が出発点（REQ-062）
 - 要件書 v0.4 で要件書を Markdown に限ったため、読み取り用ツールは devcontainer に入れない（Q-02）
+- 要件書 v0.5 で、F-REQ-02 の出典の書き方から「シート」を外した（REQ-026）
