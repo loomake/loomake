@@ -31,6 +31,7 @@ REQ の採番は要件定義書の登場順（全 change で共通）。F-xxx / 
 | ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 |
 |---|---|---|---|---|---|---|
 | Q-06 | REQ-020 | 同名ファイルがあるとき「差分を表示して確認を求める」とありますが、CI やパイプなど、確認を受け付けられない環境では何をしますか。既存ファイルの上書きに関わるため、先に決めたいです | 上書きせず、そのファイルをスキップして続行し、終了コード 0 / 上書きせず、そのファイルをスキップして続行し、終了コード 1 / 上書きせず、何も配置せずに中止し、終了コード 1 / `--yes` で強制上書きできるようにする | 上書きせず、何も配置せずに中止し、終了コード 1。一部だけ置かれた中途半端な状態を避けられる | yes | 上書きせず、何も配置せずに中止し、終了コード 1（2026-10-22 回答） |
+| Q-09 | REQ-019, REQ-021 | このリポジトリでは Skill の実体を `.agents/skills/` に置き、`.claude/skills/` からシンボリックリンクを張る形に移しました（コミット 6b54386）。一方、この change の spec と A-02 は「`.claude/skills/` に置き、`--codex` のときだけ `.agents/skills/` にも置く」です。`init` はどちらの形で配置しますか | spec のまま（`.claude/skills/` に置き、`--codex` で `.agents/skills/` にも複製）/ このリポジトリと同じ（実体を `.agents/skills/`、`.claude/skills/` はリンク。Windows ではリンクを作れない場合がある）| spec のまま。リンクは Windows（N-04）で権限が要る場合があり、複製なら OS に依らない | yes | spec のまま（`.claude/skills/` に置き、`--codex` のときは `.agents/skills/` にも複製する）。正は kit のテンプレートとし、2 か所の中身がずれたら `loomake init` の再実行で直す（2026-10-22 回答） |
 
 ## 仮定
 
@@ -41,4 +42,4 @@ REQ の採番は要件定義書の登場順（全 change で共通）。F-xxx / 
 | A-01 | REQ-024 | 判定の順は、package.json の `packageManager` フィールド、なければロックファイル（pnpm-lock.yaml・package-lock.json・yarn.lock）、どれも無ければ npm。commands の既定値は `<pm> lint`・`<pm> typecheck`・`<pm> test`（npm は `npm run lint`・`npm run typecheck`・`npm test`） | 要件書は「package.json から判定」としか書いていない。ロックファイルの利用は要件書にない追加 | 承認（2026-10-22） |
 | A-02 | REQ-019 | Claude Code 向けの Skill は `.claude/skills/req-to-openspec/` に置く | 要件書に配置先の指定がない。現行リポジトリの構成に合わせる | 承認（2026-10-22） |
 | A-03 | REQ-020 | 差分は unified diff 形式で標準出力に表示し、確認は「上書きしますか [y/N]」で、既定は N（上書きしない）。内容が同じファイルは確認せず変更しない | 要件書に表示形式の指定がない。安全側の既定 | 承認（2026-10-22） |
-| A-04 | REQ-022 | `--devcontainer` が置く内容は、setup-monorepo の確定後の `.devcontainer/devcontainer.json` を元にしたテンプレートとする（Node バージョンと追加ツールは setup-monorepo の Q-02・Q-07 の回答に従う） | 要件書に内容の指定がない | 承認（2026-10-22） |
+| A-04 | REQ-022 | `--devcontainer` が置く内容は、setup-monorepo の確定後の `.devcontainer/devcontainer.json` を元にしたテンプレートとする（Node バージョンは setup-monorepo の Q-07 の回答に従う。要件書の読み取り用ツールは、要件書 v0.4 で要件書を Markdown に限ったため入れない） | 要件書に内容の指定がない | 承認（2026-10-22） |

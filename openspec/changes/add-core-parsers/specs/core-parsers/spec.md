@@ -61,6 +61,14 @@ Source: REQ-015
 - **WHEN** `it.skip('[REQ-020] ...')`・`it.todo('[REQ-021] ...')`・`xit('[REQ-022] ...')` だけを含むテストファイルを渡す
 - **THEN** 要件 ID は返らない
 
+#### Scenario: skip した describe の中のテスト
+- **WHEN** `describe.skip('...', () => { it('[REQ-023] ...', ...) })` だけを含むテストファイルを渡す
+- **THEN** 要件 ID は返らない
+
+#### Scenario: コメントの中の要件 ID
+- **WHEN** `// it('[REQ-024] ...')` と `/* [REQ-025] */` だけを含むテストファイルを渡す
+- **THEN** 要件 ID は返らない
+
 ### Requirement: verify 結果の JSON スキーマ
 core は verify 結果の JSON スキーマを公開し、スキーマに `schemaVersion` を含める SHALL。スキーマに破壊的変更を入れるときは `schemaVersion` のメジャー番号を上げる MUST。
 

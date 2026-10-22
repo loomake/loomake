@@ -1,17 +1,17 @@
 ## ADDED Requirements
 
 ### Requirement: 読める要件書の形式
-Skill は、.docx・.xlsx・.pdf・.md の要件書について、形式ごとにテキストの取り出し方を定める SHALL。取り出しに使うツールは devcontainer に入っているもの（pandoc・pdftotext・xlsx2csv）とする MUST。
+Skill は Markdown（.md）の要件書を読む SHALL。Markdown 以外の形式の要件書を渡されたときは読まずに、利用者に Markdown へ変換してから渡すよう求める MUST。
 
 Source: REQ-025
 
-#### Scenario: 4 つの形式の取り出し方がある
+#### Scenario: Markdown を読む
 - **WHEN** Skill テンプレート（SKILL.md）を読む
-- **THEN** .docx・.xlsx・.pdf・.md のそれぞれに取り出し方が書かれ、.docx に pandoc、.pdf に pdftotext、.xlsx に xlsx2csv が指定されている
+- **THEN** 入力が Markdown（.md）の要件書であることが書かれている
 
-#### Scenario: 出典に必要な構造を残す
-- **WHEN** Skill テンプレートの .xlsx の取り出し方を読む
-- **THEN** シート名と行番号を出典として控えるよう指示されている
+#### Scenario: Markdown 以外を渡されたとき
+- **WHEN** Skill テンプレートを読む
+- **THEN** .docx・.xlsx・.pdf などを渡されたときは読まず、Markdown への変換を利用者に求めるよう指示されている
 
 ### Requirement: 台帳づくりの手順
 Skill は要件書の要求文を 1 文ずつ REQ-001 から採番し、出典（文書名・章またはシートと行）つきで要件台帳に載せる手順を定める SHALL。
@@ -85,14 +85,18 @@ Source: REQ-033
 - **WHEN** Skill テンプレートを読む
 - **THEN** ブロッキング確認事項を顧客にそのまま送れる文面で出すことが指示されている
 
-### Requirement: テキスト抽出をコードに持たない
-テキスト抽出（pandoc・pdftotext など）は、Skill の中で AI が行う作業として指示し、`@loomake/kit` のコードには組み込まない SHALL。
+### Requirement: 形式の変換を持たない
+`@loomake/kit` のコードと Skill は、要件書をほかの形式から Markdown へ変換する処理や指示を持たない SHALL。変換は利用者が行う。
 
 Source: REQ-059
 
-#### Scenario: kit のコードに抽出処理が無い
+#### Scenario: kit のコードに変換処理が無い
 - **WHEN** `packages/kit/src/` を走査する
-- **THEN** `pandoc`・`pdftotext` を呼び出すコードが含まれない
+- **THEN** `pandoc`・`pdftotext`・`xlsx2csv` を呼び出すコードが含まれない
+
+#### Scenario: Skill に変換の指示が無い
+- **WHEN** Skill テンプレートを読む
+- **THEN** `pandoc`・`pdftotext`・`xlsx2csv` で要件書を変換する指示が含まれない
 
 ### Requirement: Skill の日本語提供
 Skill は日本語で提供される SHALL。

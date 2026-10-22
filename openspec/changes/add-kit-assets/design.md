@@ -6,4 +6,4 @@ Skill と AGENTS.md は文章であり、AI の振る舞いそのものは自動
 
 ## テンプレートの置き場所
 
-`packages/kit/templates/` を配布物の正とする。add-init-cli が完了したあと、このリポジトリ自身の `AGENTS.md`・`.claude/skills/req-to-openspec/` は、`loomake init` で置いたものを使う運用に寄せる。それまでは現行のファイルを出発点にし、変更はテンプレート側にも反映する。
+`packages/kit/templates/` を配布物の正とする。add-init-cli が完了したあと、このリポジトリ自身の `AGENTS.md` と req-to-openspec Skill は、`loomake init --codex` で置いたものを使う運用に寄せる。Skill はいま、実体が `.agents/skills/req-to-openspec/` にあり、`.claude/skills/` からシンボリックリンクを張っている。init で置き直すと、両方に複製した形になる（add-init-cli の Q-09）。それまでは現行のファイルを出発点にし、変更はテンプレート側にも反映する。

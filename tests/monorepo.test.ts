@@ -39,10 +39,6 @@ describe('devcontainer', () => {
     const image = devcontainer.match(/^\s*"image":\s*"([^"]*)"/m)?.[1] ?? '';
     expect(image).toMatch(/typescript-node:(\d+-)?24(-|$)/);
   });
-
-  it('[REQ-061] 要件書の読み取り用ツール（pandoc・poppler-utils・xlsx2csv）を入れる', () => {
-    for (const tool of ['pandoc', 'poppler-utils', 'xlsx2csv']) expect(postCreate).toContain(tool);
-  });
 });
 
 describe('Node.js のバージョン宣言', () => {

@@ -5,7 +5,7 @@ Loomake MVP は core・kit・CLI を 1 人で開発し、3 つをつなぐ契約
 
 ## What Changes
 - pnpm workspaces のモノレポ雛形（`packages/core`、`packages/kit`、`packages/cli`）を作る
-- devcontainer（Node 24）を標準の開発環境とし、要件書の読み取り用ツールを入れる
+- devcontainer（Node 24）を標準の開発環境とする
 - lint・typecheck・test の実行基盤を用意し、`loomake.config.json` の commands から呼べるようにする
 - GitHub Actions で、PR ごとに完了ゲート（`verify --done`）と品質コマンドを macOS・Linux・Windows で実行する
 - changesets によるパッケージ単位のバージョン管理、MIT ライセンス、Node 20.19 以上の宣言を入れる
@@ -21,3 +21,5 @@ Loomake MVP は core・kit・CLI を 1 人で開発し、3 つをつなぐ契約
 - 影響する capability：monorepo（新規）
 - 影響するコード：`package.json`、`pnpm-workspace.yaml`、`packages/*`、`.github/workflows/`、`.changeset/`、`LICENSE`
 - 要件書 v0.2：Q-07 の回答に合わせて §7 の devcontainer を Node 24 に改訂した
+- 要件書 v0.3：Q-10 の回答に合わせて §6 N-11 に CLI 本体 `loomake` の例外を加えた
+- 要件書 v0.4：要件書を Markdown に限ったので、devcontainer から読み取り用ツールを外した（Q-02）
