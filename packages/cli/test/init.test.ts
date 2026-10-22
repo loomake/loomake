@@ -193,6 +193,17 @@ describe('既存ファイルの保護：シンボリックリンク', () => {
     expect(r.code).toBe(0);
     expect(r.files['.agents/skills/req-to-openspec/SKILL.md']).toBe(template('skills/req-to-openspec/SKILL.md'));
   });
+
+  it('[REQ-020] リンク先がプロジェクトの中の .. で始まる名前のディレクトリなら、外とはみなさずに Skill を置く', async () => {
+    const r = await runInit([], {
+      setup: (root) => {
+        mkdirSync(join(root, '..claude-real'));
+        symlinkSync(join(root, '..claude-real'), join(root, '.claude'), 'dir');
+      },
+    });
+    expect(r.code).toBe(0);
+    expect(r.files['..claude-real/skills/req-to-openspec/SKILL.md']).toBe(template('skills/req-to-openspec/SKILL.md'));
+  });
 });
 
 describe('Codex 向けの Skill 配置', () => {

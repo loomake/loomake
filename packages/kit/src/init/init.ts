@@ -119,7 +119,7 @@ function unsafeTarget(root: string, path: string): string | null {
     else break;
   }
   const inside = relative(realpathSync(root), realpathSync(existing));
-  if (inside.startsWith('..') || isAbsolute(inside)) return `${path} はシンボリックリンクを通ってプロジェクトの外を指しています`;
+  if (inside === '..' || inside.startsWith(`..${sep}`) || isAbsolute(inside)) return `${path} はシンボリックリンクを通ってプロジェクトの外を指しています`;
   return null;
 }
 
