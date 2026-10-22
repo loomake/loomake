@@ -4,6 +4,8 @@
 
 以下は初回レビューとその対応記録。現在の文書を見直した結果は末尾の「ドキュメントの再レビュー」に記載する。
 
+> この文書は、MVP を作っている途中のレビューの記録として残している。指摘の多くは試作の `scripts/verify.mjs` と `scripts/test-files.mjs` に対するもので、どちらも add-verify-cli で `loomake verify` に置き換えて消したため、リンク先はもう無い。いまの使い方は [usage.md](usage.md)、いまの仕様は `openspec/specs/` を参照。
+
 ## コードのレビュー
 
 `pnpm lint`・`pnpm typecheck`・`pnpm test`（12 件）と `verify --change setup-monorepo --done` は通りました。一方、`pnpm build` は失敗します。重大度の高い順に挙げます。

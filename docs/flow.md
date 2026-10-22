@@ -4,6 +4,8 @@ Oct 22, 2026 · @r
 
 ## 全体像
 
+この文書は、Loomake 自身をこのリポジトリで開発する流れをまとめる。Loomake を別のプロジェクトで使う手順は [usage.md](usage.md) にある。
+
 1 つの change は「答える → 実装を任せる → ゲートを通す → PR → archive」の順に回し、人がやるのは確認事項への回答と PR のレビューだけを目標にする。ゲートは `loomake verify` で通す。このリポジトリでは `pnpm -s verify` で実行する。
 
 1. 要件書を置く
@@ -98,7 +100,7 @@ GitHub Actions の gate ジョブは、PR のブランチ名と同じ change-id 
 
 ## 6. マージ後：仕様に取り込む
 
-PR をマージしたら archive し、差分仕様を `openspec/specs/`（いまの仕様）に統合する。archive は `openspec/specs/` と `openspec/changes/archive/` に新しいファイルを作るので、`git add -A openspec` で追加してからコミットする。
+PR をマージしたら archive し、差分仕様を `openspec/specs/`（いまの仕様）に統合する。archive は `openspec/specs/` と `openspec/changes/archive/` に新しいファイルを作るので、`git add -A openspec` で追加してからコミットする。新しい capability を作った change では、`openspec/specs/<capability>/spec.md` の `## Purpose` が仮の文（`TBD - …`）になるので、同じコミットで書き換える（AGENTS.md 4 章の例外）。
 
 ```sh
 git switch main && git pull
@@ -107,9 +109,9 @@ git add -A openspec
 git commit -m "archive: setup-monorepo" && git push
 ```
 
-## 7. 次の change と自作 CLI への乗り換え
+## 7. MVP の change
 
-MVP は次の 5 つの change で進め、試作の verify.mjs は、`add-verify-cli` で自作 CLI（`loomake verify`）に置き換えた。この 5 分割は作成済み。`setup-monorepo` のタスクはチェック済みで、残り 4 つの change は未実装。
+MVP は次の 5 つの change で作り、どれもマージして archive した。試作の `scripts/verify.mjs` は、`add-verify-cli` で自作 CLI（`loomake verify`）に置き換えた。
 
 | 順 | change | 内容 |
 | --- | --- | --- |
@@ -119,9 +121,10 @@ MVP は次の 5 つの change で進め、試作の verify.mjs は、`add-verify
 | 4 | `add-kit-assets` | req-to-openspec Skill と AGENTS.md を kit のテンプレートとして整える |
 | 5 | `add-init-cli` | `loomake init` |
 
-乗り換え後は、作った道具で次の change を検査する。ルートは `loomake` パッケージに依存していないので、ビルドしたものをリポジトリのルートで `node` から直接動かす。
+ルートは `loomake` パッケージに依存していないので、このリポジトリでは `pnpm -s verify` がビルドしてから `packages/cli/dist/cli.js verify` を実行する。
 
-```sh
-pnpm build
-node packages/cli/dist/cli.js verify --change add-init-cli --done
-```
+## 8. テンプレートを直すとき
+
+`loomake init` が配る Skill・AGENTS.md・CLAUDE.md・devcontainer.json の正は `packages/kit/templates/` にある。このリポジトリの `.agents/skills/req-to-openspec/` もテンプレートと同じ内容に保つので、Skill を直すときは両方を直す。違うのは verify の実行方法だけで、テンプレートは `npx loomake verify`、このリポジトリは `pnpm -s verify` と書く。2 つがそろっているかは `tests/kit-assets.test.ts` が確かめる。
+
+このリポジトリの `AGENTS.md` とテンプレートの違いは、verify の実行方法、yomiyasu で推敲する決まり（このリポジトリだけのもの）、末尾のプロジェクト固有の情報だけにする。共通の決まりを直すときは、テンプレートにも同じ直しを入れる。
