@@ -55,6 +55,8 @@
 3. 残っている確認事項・仮定
 4. 次にやること
 
+日本語の文章を書いたり直したりするときは、常に yomiyasu スキルで推敲してください（Claude Code では `yomiyasu`、Codex では `yomiyasu:yomiyasu`）。
+
 ---
 
 ## プロジェクト固有の情報
