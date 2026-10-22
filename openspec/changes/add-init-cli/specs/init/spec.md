@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: 基本ファイルの配置
-`npx loomake init` は、AGENTS.md、CLAUDE.md、loomake.config.json、req-to-openspec Skill（`.claude/skills/req-to-openspec/`）をプロジェクトに配置する SHALL。
+`npx loomake init` は AGENTS.md、CLAUDE.md、loomake.config.json、req-to-openspec Skill（`.claude/skills/req-to-openspec/`）をプロジェクトに配置する SHALL。
 
 Source: REQ-019
 

@@ -18,7 +18,7 @@ Source: REQ-034
 - **THEN** この検査は合格する
 
 ### Requirement: 仕様の整合性の検査
-仕様ゲートは、Source の無い Requirement、台帳に無い要件 ID を Source に持つ Requirement、Scenario の無い Requirement、状態が反映済なのに仕様のどの Requirement からも参照されていない要件を、不合格にする SHALL。
+仕様ゲートは Source の無い Requirement、台帳に無い要件 ID を Source に持つ Requirement、Scenario の無い Requirement、状態が反映済なのに仕様のどの Requirement からも参照されていない要件を、不合格にする SHALL。
 
 Source: REQ-035
 
@@ -39,7 +39,7 @@ Source: REQ-035
 - **THEN** REQ-007 を含めて不合格になる
 
 ### Requirement: 仕様ゲートの警告
-仕様ゲートは、承認が空の仮定と、状態が確認待ちの要件を警告として表示し、警告だけでは不合格にしない SHALL。
+仕様ゲートは承認が空の仮定と、状態が確認待ちの要件を警告として表示し、警告だけでは不合格にしない SHALL。
 
 Source: REQ-036
 
@@ -61,7 +61,7 @@ Source: REQ-037
 - **THEN** 警告が表示され、この検査だけでは不合格にならない
 
 ### Requirement: 完了ゲート
-`--done` は、仕様ゲートに加えて、未完了のタスク、状態が確認待ちの要件、テストの無い要件を不合格にする SHALL。テストの有無は、skip・todo 指定を除いたテスト名の `[REQ-xxx]` で判定する MUST。
+`--done` は、仕様ゲートに加えて、未完了のタスク、状態が確認待ちの要件、テストの無い要件を不合格にする SHALL。テストの有無は skip・todo 指定を除いたテスト名の `[REQ-xxx]` で判定する MUST。
 
 Source: REQ-038
 
@@ -113,7 +113,7 @@ verify は、合格なら終了コード 0、不合格なら 1、使い方の誤
 Source: REQ-041
 
 #### Scenario: 合格
-- **WHEN** すべての検査が合格（警告のみを含む）する
+- **WHEN** すべての検査が合格か警告である
 - **THEN** 終了コードは 0 である
 
 #### Scenario: 不合格

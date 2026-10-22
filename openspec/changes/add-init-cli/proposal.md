@@ -1,7 +1,7 @@
 # add-init-cli
 
 ## Why
-Loomake を既存のプロジェクトに入れる手間が大きいと、使われない。`npx loomake init` だけで、AGENTS.md・CLAUDE.md・設定・Skill が正しい場所に置かれ、既存ファイルは壊れないようにする。出典：要件定義書 v0.1 §5.1
+既存のプロジェクトに入れる手間が大きいと、Loomake は使われない。`npx loomake init` だけで、AGENTS.md・CLAUDE.md・設定・Skill が正しい場所に置かれ、既存ファイルは壊れないようにする。出典：要件定義書 v0.1 §5.1
 
 ## What Changes
 - `loomake init` で AGENTS.md・CLAUDE.md・loomake.config.json・req-to-openspec Skill を配置する

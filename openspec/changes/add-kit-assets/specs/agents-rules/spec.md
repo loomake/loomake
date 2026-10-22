@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: AGENTS.md の必須の節
-AGENTS.md のテンプレートは、仕様の正、作業の流れ、完了の定義、禁止事項、報告の形を定める SHALL。
+AGENTS.md のテンプレートは仕様の正、作業の流れ、完了の定義、禁止事項、報告の形を定める SHALL。
 
 Source: REQ-043
 
@@ -10,7 +10,7 @@ Source: REQ-043
 - **THEN** 仕様の正・作業の流れ・完了の定義・禁止事項・報告の形のそれぞれに対応する見出しがある
 
 ### Requirement: テストと設定を緩める変更の禁止
-AGENTS.md のテンプレートは、テストを弱める・skip する・設定を緩める変更を、人の承認なしに行うことを禁止する SHALL。
+AGENTS.md のテンプレートはテストを弱める・skip する・設定を緩める変更を、人の承認なしに行うことを禁止する SHALL。
 
 Source: REQ-044
 

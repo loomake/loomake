@@ -1,7 +1,7 @@
 # add-core-parsers
 
 ## Why
-kit・trace・runner は、trace.md・spec.md・tasks.md・テストファイルから同じ情報を読み取る。試作の verify.mjs に埋まっている解析処理を `@loomake/core` に切り出し、契約（verify 結果の JSON スキーマ）を先に固めれば、後続のツールが同じ読み方を共有できる。出典：要件定義書 v0.1 §4・§6・§7
+kit・trace・runner は trace.md・spec.md・tasks.md・テストファイルから同じ情報を読み取る。試作の verify.mjs の中にある解析処理を `@loomake/core` に切り出し、契約（verify 結果の JSON スキーマ）を先に固めれば、後続のツールが同じ読み方を共有できる。出典：要件定義書 v0.1 §4・§6・§7
 
 ## What Changes
 - trace.md の 3 つの表（要件台帳・確認事項・仮定）を型付きで読む処理を追加する

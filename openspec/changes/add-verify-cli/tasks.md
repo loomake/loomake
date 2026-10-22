@@ -4,7 +4,7 @@
 - [ ] 1.3 仕様ゲートのうち、Source・台帳・Scenario・反映済の検査を実装する（REQ-035）
 - [ ] 1.4 未承認の仮定と確認待ちの要件を警告として表示する（REQ-036）
 - [ ] 1.5 `openspec validate --strict` を実行して結果をゲートに含める（REQ-037）
-- [ ] 1.6 完了ゲート：未完了タスク・確認待ち・テストの無い要件の検査を実装する（REQ-038）
+- [ ] 1.6 完了ゲートのうち、未完了タスク・確認待ち・テストの無い要件の検査を実装する（REQ-038）
 - [ ] 1.7 `loomake.config.json` の commands を実行し、失敗を不合格にする（REQ-039）
 - [ ] 1.8 `--json` で結果と要件ごとのテストファイル一覧を出力する（REQ-040）
 - [ ] 1.9 `--change` 省略時は commands だけを実行する（REQ-042）
@@ -17,4 +17,4 @@
 
 ## 3. 確認
 - [ ] 3.1 `node scripts/verify.mjs --change add-verify-cli --done` を通す
-- [ ] 3.2 `loomake verify` が試作と同じ結果を返すことを確かめたうえで、CI を `loomake verify` に切り替え、`scripts/verify.mjs` を置き換える（`scripts/` の変更は人の確認を取る）
+- [ ] 3.2 `loomake verify` が試作と同じ結果を返すことを確かめたうえで、CI を `loomake verify` に切り替え、`scripts/verify.mjs` を置き換える。`scripts/` を変更するときは、先に人の確認を取る

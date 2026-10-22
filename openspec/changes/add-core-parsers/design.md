@@ -1,6 +1,6 @@
 # Design: add-core-parsers
 
-## API の形（仮定 A-02・A-05）
+## API の形（仮定 A-04・A-05）
 
 core は実行時依存ゼロ（REQ-046）で CLI を持たないため、ファイルを読む処理は持たない。パーサは「ファイル名とテキスト」を受け取り、結果とエラーを返す純粋関数にする。ファイルの走査は呼び出し側（kit）が行う。
 
@@ -17,7 +17,7 @@ createTraceTemplate(options: { changeId: string }): string
 
 ## 試作からの引き継ぎ
 
-`scripts/verify.mjs` の `parseTable`・`parseSpec`・テスト走査の正規表現を出発点にする（REQ-062）。試作は `RENAMED` と行番号を扱わないため、ここで補う。
+`scripts/verify.mjs` の `parseTable`・`parseSpec`・テスト走査の正規表現を出発点にする（REQ-062）。試作は `RENAMED` の見出しを操作として認識するが、FROM・TO の中身と行番号は扱わないため、ここで補う。
 
 ## スキーマ
 

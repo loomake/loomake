@@ -1,7 +1,7 @@
 # setup-monorepo
 
 ## Why
-Loomake MVP は core・kit・CLI を 1 人で開発し、3 つをつなぐ契約（trace.md の書式・verify の JSON）が頻繁に変わる。1 つの PR でまとめて直せるよう pnpm workspaces のモノレポを用意し、以降の change を CI の完了ゲートで守る土台を先に作る。出典：要件定義書 v0.1 §2・§3・§6・§7、docs/flow.md §0・§4–5
+Loomake MVP は core・kit・CLI を 1 人で開発し、3 つをつなぐ契約（trace.md の書式・verify の JSON）が頻繁に変わる。1 つの PR でまとめて直せるよう pnpm workspaces のモノレポを用意し、以降の change を CI の完了ゲートで守れるよう、CI を先に整える。出典：要件定義書 v0.1 §2・§3・§6・§7、docs/flow.md §0・§4–5
 
 ## What Changes
 - pnpm workspaces のモノレポ雛形（`packages/core`、`packages/kit`、`packages/cli`）を作る
@@ -11,8 +11,8 @@ Loomake MVP は core・kit・CLI を 1 人で開発し、3 つをつなぐ契約
 - changesets によるパッケージ単位のバージョン管理、MIT ライセンス、Node 20.19 以上の宣言を入れる
 
 ## Non-goals
-- `@loomake/trace`（検収レポート）— 次フェーズ（REQ-005）
-- `@loomake/runner`（実装の自動実行）— 次フェーズ（REQ-006）
+- `@loomake/trace`（検収レポート）は次フェーズ（REQ-005）
+- `@loomake/runner`（実装の自動実行）は次フェーズ（REQ-006）
 - CLI の `trace` と `run` サブコマンド（REQ-007）
 - 見積・工数管理、GUI、Web ダッシュボード（REQ-008）
 - OpenSpec 以外の仕様フォーマットへの対応（REQ-009）

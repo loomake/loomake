@@ -1,7 +1,7 @@
 # add-kit-assets
 
 ## Why
-Loomake が守らせる仕組みの中身は、要件書を出典つきで change に変える req-to-openspec Skill と、AI が従う AGENTS.md である。どちらも試作があるが、要件書の機能要件（F-REQ・F-AGT）を満たしているかは確かめられていない。`@loomake/kit` が配布する正式版として整え、`init` が置く内容を確定する。出典：要件定義書 v0.1 §5.2・§5.4・§6・§7
+Loomake が守らせる仕組みの中身は、要件書を出典つきで change に変える req-to-openspec Skill と、AI が従う AGENTS.md である。どちらも試作があるが、要件書の機能要件（F-REQ・F-AGT）を満たしているかは確かめられていない。この 2 つを `@loomake/kit` が配布する正式版として整え、`init` が置く内容を確定する。出典：要件定義書 v0.1 §5.2・§5.4・§6・§7
 
 ## What Changes
 - req-to-openspec Skill を、要件 F-REQ-01〜09 を満たす形に整え、`@loomake/kit` のテンプレートとして持つ
