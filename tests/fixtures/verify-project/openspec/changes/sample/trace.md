@@ -20,6 +20,15 @@
 | REQ-014 | 検査用 14 行目 | 機能 | 検査用 | 反映済 | specs/x/spec.md |
 | REQ-015 | 検査用 15 行目 | 機能 | 検査用 | 反映済 | specs/x/spec.md |
 | REQ-016 | 検査用 16 行目 | 機能 | 検査用 | 反映済 | specs/x/spec.md |
+| REQ-017 | 検査用 17 行目 | 機能 | 検査用 | 反映済 | specs/x/spec.md |
+| REQ-018 | 検査用 18 行目 | 機能 | 検査用 | 反映済 | specs/x/spec.md |
+| REQ-019 | 検査用 19 行目 | 機能 | 検査用 | 反映済 | specs/x/spec.md |
+| REQ-020 | 検査用 20 行目 | 機能 | 検査用 | 反映済 | specs/x/spec.md |
+| REQ-021 | 検査用 21 行目 | 機能 | 検査用 | 反映済 | specs/x/spec.md |
+| REQ-022 | 検査用 22 行目 | 機能 | 検査用 | 反映済 | specs/x/spec.md |
+| REQ-023 | 検査用 23 行目 | 機能 | 検査用 | 反映済 | specs/x/spec.md |
+| REQ-024 | 検査用 24 行目 | 機能 | 検査用 | 反映済 | specs/x/spec.md |
+| REQ-025 | 検査用 25 行目 | 機能 | 検査用 | 反映済 | specs/x/spec.md |
 
 ## 確認事項
 

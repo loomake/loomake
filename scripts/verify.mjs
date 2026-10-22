@@ -114,6 +114,8 @@ function parseSpec(md, file) {
 
 // 直前の語がこれらなら、続く / は割り算ではなく正規表現リテラルの始まり
 const REGEX_KEYWORDS = new Set(['return', 'typeof', 'instanceof', 'in', 'of', 'new', 'delete', 'void', 'throw', 'case', 'do', 'else', 'yield', 'await']);
+// 閉じ括弧の対の開き括弧の前がこれらなら、続く / は正規表現リテラルの始まり（if (x) /re/.test(y)）
+const CONTROL_KEYWORDS = new Set(['if', 'while', 'for', 'with']);
 
 // テストのソースから、コメントと、skip・todo・条件付きの呼び出し（describe.skip の中身を含む）を空白にする
 function activeTestSource(src) {
@@ -135,14 +137,21 @@ function activeTestSource(src) {
     }
     return j;
   };
-  // テンプレートの ${ の次の位置から、対応する } の位置を返す
+  // テンプレートの ${ の次の位置から、対応する } の位置を返す。中のコメントと正規表現リテラルは読み飛ばす
   const exprEnd = (i) => {
     let depth = 1;
     let j = i;
     for (; j < src.length; j++) {
       const c = src[j];
       if (c === '"' || c === "'" || c === '`') j = stringEnd(j);
-      else if (c === '{') depth++;
+      else if (c === '/' && src[j + 1] === '/') while (j + 1 < src.length && src[j + 1] !== '\n') j++;
+      else if (c === '/' && src[j + 1] === '*') {
+        const end = src.indexOf('*/', j + 2);
+        j = end < 0 ? src.length : end + 1;
+      } else if (c === '/') {
+        const end = regexEnd(j);
+        if (end >= 0) j = end;
+      } else if (c === '{') depth++;
       else if (c === '}' && --depth === 0) break;
     }
     return j;
@@ -154,7 +163,23 @@ function activeTestSource(src) {
     // 文字列・} のあとは割り算、< のあとは JSX の閉じタグ。> のあとは => のときだけ正規表現
     if (k >= 0 && /['"`}<]/.test(chars[k])) return -1;
     if (k >= 0 && chars[k] === '>' && chars[k - 1] !== '=') return -1;
-    if (k >= 0 && /[\w$)\]]/.test(chars[k])) {
+    // 後置の ++・-- のあとは割り算
+    if (k >= 1 && (chars[k] === '+' || chars[k] === '-') && chars[k - 1] === chars[k]) return -1;
+    if (k >= 0 && chars[k] === ')') {
+      // 閉じ括弧のあとは割り算。ただし if (…) /re/ のような制御文の条件のあとは正規表現
+      let depth = 0;
+      let p = k;
+      for (; p >= 0; p--) {
+        if (opaque[p]) continue;
+        if (chars[p] === ')') depth++;
+        else if (chars[p] === '(' && --depth === 0) break;
+      }
+      let w = p - 1;
+      while (w >= 0 && /\s/.test(chars[w])) w--;
+      const wEnd = w;
+      while (w >= 0 && /[\w$]/.test(chars[w])) w--;
+      if (p < 0 || !CONTROL_KEYWORDS.has(chars.slice(w + 1, wEnd + 1).join(''))) return -1;
+    } else if (k >= 0 && /[\w$\]]/.test(chars[k])) {
       let w = k;
       while (w >= 0 && /[\w$]/.test(chars[w])) w--;
       if (!REGEX_KEYWORDS.has(chars.slice(w + 1, k + 1).join(''))) return -1;
@@ -197,26 +222,37 @@ function activeTestSource(src) {
   }
   const text = chars.join('');
 
+  // e の位置の開き括弧に対応する閉じ括弧の、次の位置を返す
+  const afterParen = (e) => {
+    let depth = 0;
+    for (; e < text.length; e++) {
+      if (opaque[e]) continue;
+      if (text[e] === '(') depth++;
+      else if (text[e] === ')' && --depth === 0) break;
+    }
+    return e + 1;
+  };
+  const out = text.split('');
+  const blank = (from, to) => {
+    for (let j = from; j < to && j < out.length; j++) if (out[j] !== '\n') out[j] = ' ';
+  };
+
   // 2. skip・todo・skipIf・runIf の呼び出しを、続く呼び出し（.each(…)(…) など）の閉じ括弧まで空白にする。
   //    skipIf・runIf は条件を評価できないので、要件のテストとして数えない
   const callStart =
-    /\b(?:x(?:it|test|describe)|(?:it|test|describe|suite)(?:\.(?:only|concurrent|sequential|shuffle|fails|each|for))*\.(?:skipIf|runIf|skip|todo))\b(?:\.\w+)*/g;
-  const out = text.split('');
+    /\b(?:x(?:it|test|describe)|(?:it|test|describe|suite)(?:\s*\.\s*(?:only|concurrent|sequential|shuffle|fails|each|for))*\s*\.\s*(?:skipIf|runIf|skip|todo))\b(?:\s*\.\s*\w+)*/g;
   for (const m of text.matchAll(callStart)) {
     if (opaque[m.index] || text[m.index - 1] === '.') continue;
     let e = m.index + m[0].length;
     for (;;) {
       while (/\s/.test(text[e] ?? '')) e++;
       if (text[e] === '(' && !opaque[e]) {
-        let depth = 0;
-        for (; e < text.length; e++) {
-          if (opaque[e]) continue;
-          if (text[e] === '(') depth++;
-          else if (text[e] === ')' && --depth === 0) break;
-        }
-        e++;
+        e = afterParen(e);
       } else if (text[e] === '`') {
         while (opaque[e]) e++; // it.skip.each`table`
+      } else if (text[e] === '.' && /[\w$]/.test(text[e + 1] ?? '')) {
+        e++; // describe.skipIf(x).each(…)(…)
+        while (/[\w$]/.test(text[e] ?? '')) e++;
       } else if (text[e] === '<' && !opaque[e]) {
         // it.skip.each<Case>(…) の型引数。=> の > は数えない
         let depth = 0;
@@ -230,7 +266,33 @@ function activeTestSource(src) {
         e = g + 1;
       } else break;
     }
-    for (let j = m.index; j < e && j < out.length; j++) if (out[j] !== '\n') out[j] = ' ';
+    blank(m.index, e);
+  }
+
+  // 3. オプションで skip・todo を指定した呼び出し（it(name, { skip: true }, fn)）と、
+  //    中で skip() を呼ぶテスト（ctx.skip()）も空白にする。ctx.skip() は条件を評価できないので数えない
+  const testCall = /\b(it|test|describe|suite)(?:\s*\.\s*(?:only|concurrent|sequential|shuffle|fails))*\s*\(/g;
+  for (const m of text.matchAll(testCall)) {
+    if (opaque[m.index] || text[m.index - 1] === '.') continue;
+    const open = m.index + m[0].length - 1;
+    const end = afterParen(open);
+    // 呼び出しの引数の一番外側（オプションのオブジェクトの直下まで）だけを見る
+    let top = '';
+    let paren = 0;
+    let brace = 0;
+    for (let j = open; j < end; j++) {
+      const c = text[j];
+      if (!opaque[j]) {
+        if (c === '(' || c === '[') paren++;
+        else if (c === ')' || c === ']') paren--;
+        else if (c === '{') brace++;
+        else if (c === '}') brace--;
+      }
+      top += !opaque[j] && paren === 1 && brace <= 1 ? c : ' ';
+    }
+    const args = text.slice(open, end).split('').map((c, j) => (opaque[open + j] ? ' ' : c)).join('');
+    const isTest = m[1] === 'it' || m[1] === 'test';
+    if (/\b(?:skip|todo)\s*:(?!\s*false\b)/.test(top) || (isTest && /(?<![\w$])skip\s*\(/.test(args))) blank(m.index, end);
   }
   return out.join('');
 }

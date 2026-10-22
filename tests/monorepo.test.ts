@@ -80,8 +80,8 @@ describe('CI', () => {
 describe('changesets', () => {
   it('[REQ-056] .changeset/config.json があり、changeset status がエラーなく終わる', () => {
     expect(existsSync(join(root, '.changeset', 'config.json'))).toBe(true);
-    // ローカルに main が無い checkout（fork・worktree など）では origin/main と比べる
-    const base = run('git rev-parse --verify --quiet main').status === 0 ? 'main' : 'origin/main';
+    // CI と同じ基準で比べるため origin/main を優先する。ローカルの main は古いことがある。origin が無い checkout では main と比べる
+    const base = run('git rev-parse --verify --quiet origin/main').status === 0 ? 'origin/main' : 'main';
     const r = run(`pnpm changeset status --since=${base}`);
     expect(r.status, r.stdout + r.stderr).toBe(0);
   });

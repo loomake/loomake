@@ -1,4 +1,4 @@
-// verify.mjs が要件のテストとして数えるかを確かめる入力。数えるのは REQ-004・REQ-010・REQ-011 だけ
+// verify.mjs が要件のテストとして数えるかを確かめる入力。数えるのは REQ-004・REQ-010・REQ-011・REQ-023・REQ-024 だけ
 describe.skip('skip した describe', () => {
   it('[REQ-001] 中のテスト', () => {});
 });
@@ -32,3 +32,15 @@ it.skip('[REQ-013] 迷い込んだアポストロフィの次の行の skip', ()
 describe.skip.each<Row>(rows)('[REQ-014] 型引数つきの skip.each', () => {});
 render(<a>x</a>); it.skip('[REQ-015] JSX の閉じタグのあとの skip', () => {}) // note
 const r = 'ab' / 2; it.skip('[REQ-016] 文字列のあとの割り算', () => {}); const s = 1 / 1;
+it('[REQ-017] オプションの skip', { skip: true }, () => {});
+test('[REQ-018] オプションの todo', { todo: true });
+it('[REQ-019] ctx.skip を呼ぶ', (ctx) => { ctx.skip(); });
+n++ / 2; it.skip('[REQ-020] 後置の ++ のあと', () => {}); const r2 = a / b;
+describe.skipIf(true).each([1])('skip %s', () => { it('[REQ-021] skipIf のあとの each', () => {}); });
+describe
+  .skip('[REQ-022] 改行してから skip', () => {});
+describe.skip('if のあとの正規表現', () => { if (true) /\(/.test('('); });
+it('[REQ-023] if のあとの正規表現の次の有効なテスト', () => {});
+it('[REQ-024] skip: false のオプション', { skip: false }, () => {});
+const s2 = `${v.replace(/'/g, '')}`;
+it.skip('[REQ-025] テンプレートの中の正規表現のあと', () => {});

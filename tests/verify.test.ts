@@ -1,7 +1,7 @@
 // 試作の scripts/verify.mjs の回帰テスト。change の要件ではないので、テスト名に要件 ID を入れない。
 // 入力は tests/fixtures/verify-project/ に置く。このファイルに [REQ-xxx] を書くと、このリポジトリの要件テストとして数えられてしまう
 import { describe, it, expect } from 'vitest';
-import { cpSync, mkdtempSync, readdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { cpSync, mkdtempSync, readdirSync, readFileSync, renameSync, writeFileSync, rmSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -11,12 +11,25 @@ const fixture = join(import.meta.dirname, 'fixtures', 'verify-project');
 
 const run = (cwd: string, ...args: string[]) => spawnSync(process.execPath, [verify, ...args], { cwd, encoding: 'utf8' });
 
+// fixture を一時ディレクトリに写して fn を実行し、失敗しても一時ディレクトリを消す
+function withFixtureCopy<T>(fn: (dir: string) => T): T {
+  const dir = mkdtempSync(join(tmpdir(), 'loomake-verify-'));
+  try {
+    cpSync(fixture, dir, { recursive: true });
+    return fn(dir);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
 function runWithConfig(config: string) {
   const dir = mkdtempSync(join(tmpdir(), 'loomake-verify-'));
-  writeFileSync(join(dir, 'loomake.config.json'), config);
-  const r = run(dir);
-  rmSync(dir, { recursive: true, force: true });
-  return r;
+  try {
+    writeFileSync(join(dir, 'loomake.config.json'), config);
+    return run(dir);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 }
 
 describe('verify.mjs', () => {
@@ -27,8 +40,8 @@ describe('verify.mjs', () => {
       .filter(([, files]) => files.length > 0)
       .map(([id]) => id);
     // 数えるものと数えないものの内訳は tests/fixtures/verify-project/tests/skip.case.txt にある
-    expect(covered).toEqual(['REQ-004', 'REQ-010', 'REQ-011']);
-    expect(Object.keys(out.coverage)).toHaveLength(16);
+    expect(covered).toEqual(['REQ-004', 'REQ-010', 'REQ-011', 'REQ-023', 'REQ-024']);
+    expect(Object.keys(out.coverage)).toHaveLength(25);
     expect(r.status).toBe(1);
   });
 
@@ -42,21 +55,31 @@ describe('verify.mjs', () => {
   });
 
   it('CRLF で保存した trace.md・spec.md・tasks.md も読める', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'loomake-verify-'));
-    cpSync(fixture, dir, { recursive: true });
-    for (const entry of readdirSync(join(dir, 'openspec'), { recursive: true, withFileTypes: true })) {
-      if (!entry.isFile() || !entry.name.endsWith('.md')) continue;
-      const p = join(entry.parentPath, entry.name);
-      writeFileSync(p, readFileSync(p, 'utf8').replace(/\n/g, '\r\n'));
-    }
-    const specOnly = run(dir, '--change', 'sample', '--spec-only');
-    // tasks.md を読むのは --done だけなので、--done の結果も LF のときと比べる
-    const crlf = JSON.parse(run(dir, '--change', 'sample', '--done', '--skip-commands', '--json').stdout);
-    rmSync(dir, { recursive: true, force: true });
+    const [specOnly, crlf] = withFixtureCopy((dir) => {
+      for (const entry of readdirSync(join(dir, 'openspec'), { recursive: true, withFileTypes: true })) {
+        if (!entry.isFile() || !entry.name.endsWith('.md')) continue;
+        const p = join(entry.parentPath, entry.name);
+        writeFileSync(p, readFileSync(p, 'utf8').replace(/\n/g, '\r\n'));
+      }
+      // tasks.md を読むのは --done だけなので、--done の結果も LF のときと比べる
+      return [
+        run(dir, '--change', 'sample', '--spec-only'),
+        JSON.parse(run(dir, '--change', 'sample', '--done', '--skip-commands', '--json').stdout),
+      ] as const;
+    });
     const lf = JSON.parse(run(fixture, '--change', 'sample', '--done', '--skip-commands', '--json').stdout);
     expect(specOnly.status, specOnly.stdout).toBe(0);
     expect(crlf.results).toEqual(lf.results);
     expect(crlf.results).toContainEqual({ check: 'tasks.md', status: 'pass', detail: '1 件すべて完了' });
+  });
+
+  it('dist という名前の capability の spec.md も読む', () => {
+    const r = withFixtureCopy((dir) => {
+      const specs = join(dir, 'openspec', 'changes', 'sample', 'specs');
+      renameSync(join(specs, 'x'), join(specs, 'dist'));
+      return run(dir, '--change', 'sample', '--spec-only');
+    });
+    expect(r.status, r.stdout).toBe(0);
   });
 
   it('loomake.config.json が JSON として読めないときは終了コード 2', () => {
@@ -74,6 +97,7 @@ describe('verify.mjs', () => {
       ['{"tests":{"pattern":"("}}', 'tests.pattern が正規表現として読めません'],
       ['{"commands":{"test":1}}', 'commands は、値が文字列（または null）のオブジェクト'],
       ['{"openspecDir":1}', 'openspecDir は文字列'],
+      ['{"openspecValidate":"false"}', 'openspecValidate は true・false・"auto" のどれか'],
     ];
     for (const [config, message] of cases) {
       const r = runWithConfig(config);
