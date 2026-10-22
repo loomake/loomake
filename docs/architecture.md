@@ -82,7 +82,7 @@ loomake/loomake            pnpm workspaces + changesets
 - **モノレポにする理由**：3 つのツールは契約（trace.md の書式・verify の JSON）でつながっており、初期は契約が頻繁に変わる。1 つの PR でまとめて直せるようにする。1 人開発なので分けるメリットがまだない
 - npm は changesets でパッケージごとに別バージョンで出す
 - **分けるタイミング**：外部コントリビューターが付いたとき、またはリリース周期が大きくずれたとき
-- 既存の `traspec` は `git subtree add` で `packages/trace` に取り込む
+- 既存の `traspec` は取り込まない。`packages/trace` は core の契約（trace.md・verify の JSON）の上に新しく作り、traspec は参考にとどめる（2026-10-22 決定）
 - Nuxtart は Loomake とは別枠なので別リポジトリ
 - 外部依存はなるべく減らす。特に `core` は依存ゼロを保つ
 
