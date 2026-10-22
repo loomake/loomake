@@ -136,3 +136,122 @@
 | 要件書 3 | v0.5 の F-REQ-02 と、add-kit-assets の REQ-026（台帳と差分仕様）の出典の書き方を「文書名・章と行」にしました |
 
 README・flow・architecture にある最新の要件書へのリンクも v0.5 に直しました。
+
+
+## コードの再レビュー
+
+2026-10-22・対象コミット 66cb0da。実装済みの `scripts/`、パッケージの雛形、テスト、CI・release の設定を確認した。未実装の core・kit・CLI の機能は不具合として数えていない。修正コードは加えていない。
+
+### 指摘
+
+1. **[P1] テスト名以外の文字列も要件のテストとして数える。** [scripts/verify.mjs の 278 行目](../scripts/verify.mjs#L278)は、コメントと一部の skip 呼び出しを除いたソース全体から要件 ID を抽出する。例えば `const fixture = '[REQ-001]'; it('fixture', () => expect(fixture).toBeTruthy());` だけでも REQ-001 をテスト済みとする。要件 ID を名前に持つテストがなくても完了ゲートが通るため、AGENTS.md の DoD と REQ-038 の判定を満たさない。抽出対象を有効なテストの名前に限定する必要がある。
+2. **[P1] `describe.skip.each` 内のテストが除外されない。** [scripts/verify.mjs の 161 行目](../scripts/verify.mjs#L161)は、`skip`・`todo` の直後に開き括弧がある呼び出しだけを除外する。`describe.skip.each([1])('skipped %s', () => { it('[REQ-001] skipped', () => expect(true).toBe(false)); });` は残る。無関係の正常なテストを併記すると、Vitest は 1 件成功・1 件 skip で終了コード 0、verify も終了コード 0 になる。skip をテストとして数えないという既存の決まりを守るため、修飾子が連なる呼び出しも扱う必要がある。
+3. **[P1] verify の走査対象と Vitest の実行対象が一致しない。** [scripts/verify.mjs の 275 行目](../scripts/verify.mjs#L275)は `loomake.config.json` の dirs・pattern でファイルを選ぶが、[vitest.config.ts の 5 行目](../vitest.config.ts#L5)は `tests/**/*.test.ts` と `packages/*/test/**/*.test.ts` だけを実行する。例えば `packages/core/src/ignored.test.ts` に、名前が `[REQ-001]` で必ず失敗するテストを置いても実行されず、別の正常なテストだけで test コマンドは成功する。verify はその未実行ファイルを REQ-001 のテストとして数えて合格する。実行されるテストと要件対応の走査対象を一致させる必要がある。
+4. **[P2] CRLF の正常な差分仕様を解析できない。** [scripts/verify.mjs の 103〜109 行目](../scripts/verify.mjs#L103)は改行を `\n` だけで分割し、末尾の `\r` を残したまま `^### Requirement:…$` と照合する。そのため CRLF の Requirement が取り出せず、「反映済の要件が仕様にある」で不合格になる。同じ仕様を LF にすると合格し、CRLF のままでも `openspec validate c1 --strict` は成功した。Windows の改行で保存した正常な change を拒否するため、行末を正規化してから解析する必要がある。Source 行にも同じ末尾の問題がある。
+
+### 再現と検証
+
+一時ディレクトリに REQ-001 の仕様・台帳・完了済みタスクを持つ最小の change を作り、実際の verify とインストール済みの Vitest を実行した。リポジトリのテストや設定は変更していない。再現用の設定では、OpenSpec 検証と品質コマンドを切り分けるため `openspecValidate: false`、commands は test だけにした。CRLF の仕様は別途 OpenSpec の strict 検証を実行し、成功を確認した。
+
+| ケース | verify の終了コード | Vitest の結果 | 判定 |
+|---|---|---|---|
+| 対照：名前に REQ-001 を持つ通常のテスト | 0 | 2 件成功 | 正常 |
+| 要件 ID がデータ文字列にだけ存在 | 0 | 2 件成功 | 要件のテストがないのに合格 |
+| `describe.skip.each` の中にだけ要件のテストが存在 | 0 | 1 件成功・1 件 skip | skip した要件のテストを数える |
+| Vitest の対象外ファイルにだけ要件のテストが存在 | 0 | 無関係の 1 件だけ成功 | 実行していない要件のテストを数える |
+| 対照と同じ差分仕様を CRLF に変更 | 1 | 2 件成功 | 正常な仕様を誤って拒否 |
+
+既存の `node scripts/verify.mjs --change setup-monorepo --done` と `pnpm build` はどちらも exit 0。既存の回帰テストは上記のケースを含んでいない。再現スクリプトは今回の環境の `/tmp/loomake-code-review/reproduce.mjs` に保存した。
+
+### 次の対応
+
+修正時は、既存 change の仕様と照合し、必要な Scenario を追加してから、上記ケースの回帰テストを用意する。設定の変更には AGENTS.md 4 章の規約が適用される。今回、新しい仕様や仮定は加えていない。
+
+
+## 修正後のコードレビュー
+
+2026-10-22・対象コミット 0b2e45d。主に 6f9ccf1 の修正と、それ以降の承認済みの方針を確認した。コードと設定は変更していない。
+
+### 新たに確認した指摘
+
+1. **[P1] skip の呼び出しに修飾子や改行が入ると、skip したテストを数える。** [scripts/verify.mjs の 228〜240 行目](../scripts/verify.mjs#L228)は `describe.skipIf(true)` の閉じ括弧まで進むが、次の `.each` を読まずに終了する。そのため `describe.skipIf(true).each([1])('skip %s', () => { it('[REQ-001] skipped', () => expect(true).toBe(false)); });` の中の要件 ID が残る。無関係の正常なテストを併記すると、Vitest は 1 件成功・1 件 skip で終了コード 0、verify も終了コード 0 になる。また、[223 行目の正規表現](../scripts/verify.mjs#L223)は `describe` と `.skip` の間の空白や改行を扱わないため、`describe` の次の行を `.skip(...)` にした場合も同じ誤集計を再現した。通常の `describe.skip.each` は修正されているが、これらの書き方では完了ゲートが誤って合格する。
+2. **[P2] if の直後の正規表現を割り算とみなし、後続の有効なテストまで除外する。** [scripts/verify.mjs の 177〜180 行目](../scripts/verify.mjs#L177)は `/` の前が `)` の場合に正規表現ではないと判定する。`describe.skip('skipped', () => { if (true) /\(/.test('('); });` の後に、正常な `it('[REQ-001] active', ...)` を置くと、正規表現中の開き括弧を skip 呼び出しの括弧として数える。その結果、skip の終わりを見つけられず、後続の有効なテストも消してしまう。Vitest は 2 件成功で終了コード 0 だが、verify は「テストが無い要件：REQ-001」として終了コード 1 になった。
+
+### 前回の指摘の状態
+
+| 前回の指摘 | 再確認した結果 |
+|---|---|
+| テスト名以外の文字列を数える | 残っている。Q-11 と作業記録の方針に従い、add-core-parsers・add-verify-cli の JSON レポート方式への移行で対応予定。今回の新規指摘には数えていない |
+| `describe.skip.each` を除外しない | 通常の書き方では要件 ID が除外され、verify が終了コード 1 になることを確認。上記の修飾子・改行のケースは残る |
+| リポジトリの走査対象と Vitest の実行対象のずれ | 現行の vitest.config.ts をコピーした一時プロジェクトで再確認。`packages/core/src/ignored.test.ts` の失敗するテストも実行され、verify が不合格になる。利用者が独自に実行対象を変更する場合の判定は JSON レポート方式で対応予定 |
+| CRLF の仕様を拒否する | LF と CRLF の両方で対照ケースが合格し、修正を確認 |
+
+### 検証と次の対応
+
+- `node scripts/verify.mjs --change setup-monorepo --done` と `pnpm build` はどちらも exit 0。
+- 再現は Linux の一時ディレクトリで実施し、現在の Vitest 設定を使用した。リポジトリのテストや設定は変更していない。再現用の設定は commands を test だけ、OpenSpec 検証を無効にし、テスト対応の判定を切り分けた。
+- 再現スクリプトと結果は `/tmp/loomake-code-rereview/` に保存した。コードの修正時は、上記ケースを回帰テストに追加するか、既に承認済みの JSON レポート方式への移行で解消したことを確認する。
+
+
+## タスク 1.11 の修正後レビュー
+
+2026-10-22・対象コミット 8998430。共有ファイル探索処理・設定の検証・skip 判定の変更を確認した。コードと設定は変更していない。
+
+### 新たに確認した指摘
+
+1. **[P2] テスト用の dist 除外が差分仕様の探索にも適用される。** [scripts/test-files.mjs の 50 行目](../scripts/test-files.mjs#L50)で `dist` を無条件に探索対象から外しているが、[scripts/verify.mjs の 293 行目](../scripts/verify.mjs#L293)もこの `walk` を仕様ファイルの探索に使う。そのため、capability 名が `dist` の正常な `openspec/changes/c1/specs/dist/spec.md` を読めず、仕様ゲートが「specs/<capability>/spec.md がありません」と「反映済の要件が仕様にある」で不合格になる。同じ入力で OpenSpec の strict 検証と変更前の verify は終了コード 0、変更後の verify は 1 になることを確認した。ビルド出力の除外はテストファイルを選ぶ場合に限定し、仕様ファイルの探索には適用しないようにする必要がある。
+
+### 既知の指摘と修正の確認
+
+- 前回の P1（`describe.skipIf(true).each(...)` と、describe と .skip の間の改行）は未修正。今回も Vitest が 1 件成功・1 件 skip、verify が誤って合格することを確認した。
+- 前回の P2（if の直後の正規表現を誤解析し、skip 呼び出しの後の有効なテストまで除外する）も未修正。今回も Vitest が 2 件成功、verify が不合格になった。
+- テスト名以外の文字列を数える既知の問題は残る。JSON レポート方式への移行で対応する方針は変更されていない。
+- 通常の skip.each と CRLF のケースは期待どおりの結果だった。現行の共有ファイル選択処理では、以前実行されなかった `packages/core/src/ignored.test.ts` も実行され、失敗を検出した。
+- glob の記号を含むパス（`tests/[id]/`・`tests/(group)/`・`tests/{a,b}/`）でも実行漏れを疑って確認したが、どのケースも失敗するテストを実行して不合格になった。これらは指摘として残していない。
+
+### 検証と次の対応
+
+- `node scripts/verify.mjs --change setup-monorepo --done` と `pnpm build` はどちらも exit 0。
+- 再現は Linux の一時プロジェクトで、現行の vitest.config.ts と scripts/test-files.mjs をコピーして行った。再現用の品質コマンドは test だけとし、OpenSpec 検証は切り分けて実行した。リポジトリのテスト・設定は変更していない。
+- 再現スクリプトと結果は `/tmp/loomake-review-8998430/` に保存した。新規の指摘は、仕様探索とテスト探索で除外条件を分ける修正と回帰テストが必要。前回の指摘を試作で直すか JSON レポート方式への移行で解消するかは、作業記録 14 節の残件のまま。
+
+
+## /code-review（タスク 1.11 の修正後）
+
+2026-10-22・対象コミット 8998430。Claude Code の /code-review で出た10件の指摘を、重い順に記録する。上の「タスク 1.11 の修正後レビュー」と重なるものは、その旨を書いた。
+
+### 指摘
+
+1. **テストファイルのパスを、エスケープせずに Vitest の include に渡している。** [vitest.config.ts の 12 行目](../vitest.config.ts#L12)。`tests/pages/[id].test.ts` のような名前が glob の文字クラスとして読まれ、実行されないのに verify は数える、という指摘。Vitest 5.0.5 で `tests/zz/[id].test.ts` と `tests/zz/(g)/x.test.ts` を置いて確かめたところ、どちらも実行された。上の「タスク 1.11 の修正後レビュー」の確認とも合うので、再現しないものとして扱う。
+2. **dist の除外が、差分仕様の探索にも掛かる。** [scripts/test-files.mjs の 50 行目](../scripts/test-files.mjs#L50)。上の「タスク 1.11 の修正後レビュー」の指摘1と同じ。
+3. **Vitest のオプションで skip したテストを数える。** [scripts/verify.mjs の 202 行目](../scripts/verify.mjs#L202)。`it('[REQ-012] ...', { skip: true }, fn)`、`{ todo: true }`、`ctx.skip()` を呼ぶテストは、実行されないのに要件のテストとして数えられる。
+4. **テンプレートの `${...}` の中の正規表現とコメントを読めない。** [scripts/verify.mjs の 139 行目](../scripts/verify.mjs#L139)。``const s = `${v.replace(/'/g, '')}`;`` では、正規表現の中の `'` を文字列の始まりとみなし、テンプレートが閉じないまま次のバッククォートまで opaque になる。その範囲の `it.skip` を見逃す。
+5. **後置の `++`・`--` のあとの `/` を、正規表現の始まりとみなす。** [scripts/verify.mjs の 157 行目](../scripts/verify.mjs#L157)。`n++ / 2; it.skip('[REQ-021] x', () => {}); const r = a / b;` では、`it.skip` が opaque に入って見逃される。
+6. **skip の呼び出しの次の行の文まで空白にする。** [scripts/verify.mjs の 208 行目](../scripts/verify.mjs#L208)。セミコロンを書かないコードで、`it.skip(...)` の次の行が `(` やテンプレートリテラルで始まると、その文を skip の続きとみなして消す。中に有効なテストがあれば、その要件 ID を数えず、`--done` が誤って失敗する。
+7. **`openspecValidate` の値を確かめていない。** [scripts/test-files.mjs の 42 行目](../scripts/test-files.mjs#L42)。`"openspecValidate": "false"`（文字列）は検査を通り、ほかの形の誤りと違って終了コード 2 にならない。
+8. **設定ファイルがないとき、既定値のオブジェクトを複製せずに返す。** [scripts/test-files.mjs の 19 行目](../scripts/test-files.mjs#L19)。呼び出し側が返された設定を変えると、同じプロセスのあとの `loadConfig` にも変更が残る。
+9. **テストの一時ディレクトリを `try/finally` で消していない。** [tests/verify.test.ts の 14 行目](../tests/verify.test.ts#L14)。途中で例外が起きると、`loomake-verify-*` が tmpdir に残る。
+10. **changeset の比較で、古いローカルの `main` を優先する。** [tests/monorepo.test.ts の 84 行目](../tests/monorepo.test.ts#L84)。ローカルの `main` が `origin/main` より古いと、REQ-056 のテストの結果が CI と変わる。
+
+### 修正の対象
+
+指摘1は再現しないので直さない。指摘6も直さない。JavaScript は、行末にセミコロンがなく次の行が `(` やテンプレートリテラルで始まるとき、セミコロンを補わずに前の行の続きとして読む。今の verify の動きはこの仕様どおりである。指摘2〜5・7〜10と、上の「修正後のコードレビュー」の未修正の2件（skipIf のあとの each と describe と .skip のあいだの改行、if の直後の正規表現）を、setup-monorepo のタスク 1.12 として直す。テスト名以外の文字列を数える問題は、これまでどおり JSON レポート方式への移行で対応する。
+
+### 対応
+
+setup-monorepo のタスク 1.12 で直した。
+
+| 指摘 | 対応 |
+|---|---|
+| 2（dist の除外が仕様の探索に掛かる） | `walk` に、飛ばすディレクトリの名前を渡せるようにした。`dist` を飛ばすのはテストファイルを選ぶときだけ。回帰テストは、capability `dist` の spec.md を読めることを確かめる |
+| 3（オプションの skip・todo、ctx.skip()） | `{ skip: true }`・`{ todo: true }` を渡した呼び出しと、中で `skip()` を呼ぶテストを数えない。`{ skip: false }` は数える |
+| 4（テンプレートの中の正規表現） | `${...}` の中のコメントと正規表現リテラルを読み飛ばす |
+| 5（後置の `++`・`--`） | そのあとの `/` を割り算とみなす |
+| 7（`openspecValidate`） | true・false・`"auto"` 以外なら終了コード 2 |
+| 8（既定値を複製しない） | 呼ぶたびに新しい既定値のオブジェクトを作る |
+| 9（一時ディレクトリが残る） | `try/finally` で消す |
+| 10（古いローカルの `main`） | `origin/main` を優先し、ないときだけ `main` と比べる |
+| 前回の P1（skipIf のあとの each、改行してからの .skip） | 閉じ括弧のあとの `.each` なども skip の続きとして空白にする。`describe` と `.skip` のあいだの空白と改行も扱う |
+| 前回の P2（if の直後の正規表現） | 閉じ括弧の対の開き括弧の前が if・while・for・with なら、続く `/` を正規表現とみなす |
+
+再現ケースは tests/fixtures/verify-project/tests/skip.case.txt の REQ-017〜025。修正前の verify は REQ-017〜022 を数え、REQ-023・024 を数えなかった。修正後は、数えるべき REQ-023・024 だけを新たに数える。`node scripts/verify.mjs --change setup-monorepo --done` は exit 0（lint・typecheck・test 18件も合格）。
