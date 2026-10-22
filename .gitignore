@@ -1,0 +1,29 @@
+# dependencies
+node_modules/
+
+# OS
+.DS_Store
+
+# env / secrets
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# build output
+dist/
+.output/
+.nuxt/
+coverage/
+
+# editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Claude Code (個人用の設定のみ除外。skills は共有する)
+.claude/settings.local.json

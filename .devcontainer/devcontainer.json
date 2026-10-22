@@ -1,0 +1,39 @@
+{
+  // コンテナ名（VS Code の表示名）
+  "name": "loomake",
+  // ベースイメージ: Node.js 22 + TypeScript 開発環境
+  // "image": "mcr.microsoft.com/devcontainers/typescript-node:22",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:5-24-bookworm",
+  "features": {
+    // Claude Code CLI
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1": {},
+    // GitHub CLI (gh)p
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  // コンテナ作成後に1回実行:
+  //  1. OpenSpec と Codex CLI を pnpm でグローバルインストール
+  //  （named volume は root 所有で作られるため、先に node ユーザーへ chown する）
+  "postCreateCommand": "sudo chown -R node:node /home/node/.claude /home/node/.codex && pnpm add -g @fission-ai/openspec @openai/codex",
+  // pnpm のグローバル bin を PATH に通す（ないと pnpm add -g が ERR_PNPM_GLOBAL_BIN_DIR_NOT_IN_PATH で失敗する）
+  // CLAUDE_CONFIG_DIR: ~/.claude.json（ログイン状態）も ~/.claude/ 内に置かせて、volume で一緒に永続化する
+  "remoteEnv": {
+    "PNPM_HOME": "/home/node/.local/share/pnpm",
+    "PATH": "/home/node/.local/share/pnpm/bin:${containerEnv:PATH}",
+    "CLAUDE_CONFIG_DIR": "/home/node/.claude"
+  },
+  // 認証情報・設定を named volume に永続化（コンテナを再作成しても残る）
+  // remoteUser が node なので、マウント先は /root ではなく /home/node
+  "mounts": [
+    "source=loomake-claude,target=/home/node/.claude,type=volume",
+    "source=loomake-codex,target=/home/node/.codex,type=volume"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "anthropic.claude-code",
+        "openai.chatgpt",
+        "eamodio.gitlens"
+      ]
+    }
+  }
+}

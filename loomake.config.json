@@ -1,0 +1,14 @@
+{
+  "$comment": "Loomake の検証設定。AI は人の承認なしにここを緩めないこと（AGENTS.md 4章）",
+  "openspecDir": "openspec",
+  "openspecValidate": "auto",
+  "tests": {
+    "dirs": ["tests", "test", "server", "app", "src"],
+    "pattern": "\\.(test|spec)\\.(ts|tsx|js|mjs|cjs|vue)$"
+  },
+  "commands": {
+    "lint": "pnpm lint",
+    "typecheck": "pnpm typecheck",
+    "test": "pnpm test"
+  }
+}
