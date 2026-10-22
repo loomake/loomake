@@ -12,4 +12,4 @@
 - [x] 2.1 各 Scenario に対応するテストを `tests/` に書く。テスト名に [REQ-xxx] を入れる
 
 ## 3. 確認
-- [ ] 3.1 `node scripts/verify.mjs --change setup-monorepo --done` を通す
+- [x] 3.1 `node scripts/verify.mjs --change setup-monorepo --done` を通す
