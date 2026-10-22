@@ -9,7 +9,7 @@
 - [x] 1.8 `loomake.config.json` に `tests.report` の既定値を書き、テストランナーの設定例を表示する（REQ-019、A-05）
 
 ## 2. テスト
-- [ ] 2.1 各 Scenario に対応するテストを書く。テスト名に [REQ-xxx] を入れる。ファイルは一時ディレクトリに作り、実際のリポジトリを書き換えない
+- [x] 2.1 各 Scenario に対応するテストを書く。テスト名に [REQ-xxx] を入れる。ファイルは一時ディレクトリに作り、実際のリポジトリを書き換えない
 
 ## 3. 確認
 - [ ] 3.1 `node scripts/verify.mjs --change add-init-cli --done` を通す
