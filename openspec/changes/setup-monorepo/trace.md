@@ -13,6 +13,7 @@ REQ の採番は要件定義書の登場順（全 change で共通）。F-xxx / 
 | 文書 | 版 | 日付 |
 |---|---|---|
 | docs/requirements/mvp-v0.1.md（Loomake MVP 要件定義書（core・kit）） | v0.1 | 2026-10-22 |
+| docs/requirements/mvp-v0.2.md（同上。7 章の Node を 24 に改訂） | v0.2 | 2026-10-22 |
 | docs/flow.md（開発の流れ。CI の実行方法の補足） | - | 2026-10-22 |
 
 ## 要件台帳
@@ -35,7 +36,7 @@ REQ の採番は要件定義書の登場順（全 change で共通）。F-xxx / 
 | REQ-056 | 要件定義書 v0.1 §6 N-11 | 非機能 | npm の `@loomake` スコープで、changesets によりパッケージごとに公開すること | 反映済 | specs/monorepo/spec.md |
 | REQ-057 | 要件定義書 v0.1 §6 N-12 | 非機能 | MIT ライセンスで公開すること | 反映済 | specs/monorepo/spec.md |
 | REQ-060 | 要件定義書 v0.1 §7 3 項目目 | 制約 | 開発は 1 人で行い、モノレポ `loomake/loomake`（pnpm workspaces）で core・kit・CLI を管理する | 反映済 | specs/monorepo/spec.md |
-| REQ-061 | 要件定義書 v0.1 §7 4 項目目 | 制約 | 開発環境は devcontainer（Node 22）を標準とする | 反映済 | specs/monorepo/spec.md（Node は Q-07 の回答で 24） |
+| REQ-061 | 要件定義書 v0.2 §7 4 項目目 | 制約 | 開発環境は devcontainer（Node 24）を標準とする | 反映済 | specs/monorepo/spec.md（Node は Q-07 の回答で 24） |
 | REQ-062 | 要件定義書 v0.1 §7 5 項目目 | 前提 | 既存の verify.mjs と req-to-openspec Skill の試作版を出発点とする | 既存仕様で充足 | 既存：scripts/verify.mjs、.claude/skills/req-to-openspec/ |
 
 ## 確認事項
@@ -46,7 +47,7 @@ REQ の採番は要件定義書の登場順（全 change で共通）。F-xxx / 
 |---|---|---|---|---|---|---|
 | Q-01 | REQ-003 | CLI 本体 `loomake` を独立パッケージ（`packages/cli`）にしますか、`@loomake/kit` に同梱しますか（要件書 Q-01） | 独立パッケージ / kit に同梱 | 独立パッケージ。`npx loomake init` だけで始められ、architecture.md の案とも一致する | yes | 独立パッケージ（2026-10-22 回答） |
 | Q-02 | REQ-061 | devcontainer に pdftotext など .pdf・.xlsx 読み取り用のツールを入れますか（要件書 Q-02） | 入れる / 利用者の環境に任せる | 入れる。Skill が .pdf を読めることを devcontainer 内で確かめられる | yes | 入れる（2026-10-22 回答） |
-| Q-07 | REQ-061 | 現在の `.devcontainer/devcontainer.json` のイメージは Node 24 系（`typescript-node:5-24-bookworm`）ですが、要件書は Node 22 を標準としています。どちらに揃えますか | Node 22 に戻す / Node 24 のままにして要件書を直す | Node 22 に戻す。要件書の N-03（20.19 以上）の範囲内で、書かれた標準に従う | yes | Node 24 のままにする（2026-10-22 回答）。要件書 §7 の「Node 22」は改訂が必要 |
+| Q-07 | REQ-061 | 現在の `.devcontainer/devcontainer.json` のイメージは Node 24 系（`typescript-node:5-24-bookworm`）ですが、要件書は Node 22 を標準としています。どちらに揃えますか | Node 22 に戻す / Node 24 のままにして要件書を直す | Node 22 に戻す。要件書の N-03（20.19 以上）の範囲内で、書かれた標準に従う | yes | Node 24 のままにする（2026-10-22 回答）。要件書 v0.2 で §7 を改訂済み |
 
 ## 仮定
 

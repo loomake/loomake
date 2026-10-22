@@ -9,7 +9,7 @@ AGENTS.md                         共通ルールの正本（Claude Code / Codex
 CLAUDE.md                         AGENTS.md を読み込むだけ
 loomake.config.json               テストの場所・品質コマンド
 scripts/verify.mjs                仕様ゲート / 完了ゲート（依存なし、Node 20.19+）
-.devcontainer/devcontainer.json   開発コンテナ（Node 22・pnpm・OpenSpec・Claude Code・Codex）
+.devcontainer/devcontainer.json   開発コンテナ（Node 24・pnpm・OpenSpec・Claude Code・Codex）
 .claude/skills/req-to-openspec/   要件書 → OpenSpec change
   ├── SKILL.md
   ├── templates/trace.md          要件台帳・確認事項・仮定

@@ -20,4 +20,4 @@ Loomake MVP は core・kit・CLI を 1 人で開発し、3 つをつなぐ契約
 ## Impact
 - 影響する capability：monorepo（新規）
 - 影響するコード：`package.json`、`pnpm-workspace.yaml`、`packages/*`、`.github/workflows/`、`.changeset/`、`LICENSE`
-- 要件書との差：§7 は devcontainer を Node 22 としているが、Q-07 の回答で Node 24 とした。要件書の改訂が必要
+- 要件書 v0.2：Q-07 の回答に合わせて §7 の devcontainer を Node 24 に改訂した

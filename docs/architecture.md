@@ -75,7 +75,7 @@ loomake/loomake            pnpm workspaces + changesets
 
 ## 6. 開発環境
 
-devcontainer を標準にする（Node 22・pnpm・OpenSpec CLI・Claude Code・Codex・gh）。
+devcontainer を標準にする（Node 24・pnpm・OpenSpec CLI・Claude Code・Codex・gh）。
 
 - ログイン情報（`~/.claude`・`~/.codex`）は名前付きボリュームに置く
 - AI を権限確認なしで動かす場合はネットワークを許可ドメインに絞る。runner の実行環境はこの devcontainer を土台にする
