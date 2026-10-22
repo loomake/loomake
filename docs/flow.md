@@ -23,7 +23,7 @@ Oct 22, 2026 · @r
 
 ## 0. 最初に 1 回だけ：準備
 
-リポジトリを作り、試作キットを置いて、devcontainer の中で OpenSpec を初期化する。ここまでを最初のコミットにする。
+リポジトリを作り、試作キットを置いて、devcontainer の中で OpenSpec を初期化する。ここまでを最初のコミットにする。この節は、このリポジトリを立ち上げたときの記録である。いまの構成（`packages/cli` など）は setup-monorepo で作った。
 
 ```sh
 gh repo create loomake/loomake --public --clone
@@ -98,27 +98,30 @@ gh pr create --fill
 
 ## 6. マージ後：仕様に取り込む
 
-PR をマージしたら archive し、差分仕様を `openspec/specs/`（いまの仕様）に統合する。
+PR をマージしたら archive し、差分仕様を `openspec/specs/`（いまの仕様）に統合する。archive は `openspec/specs/` と `openspec/changes/archive/` に新しいファイルを作るので、`git add -A openspec` で追加してからコミットする。
 
 ```sh
 git switch main && git pull
 openspec archive setup-monorepo
-git commit -am "archive: setup-monorepo" && git push
+git add -A openspec
+git commit -m "archive: setup-monorepo" && git push
 ```
 
 ## 7. 次の change と自作 CLI への乗り換え
 
-MVP は次の 4 つの change で進め、`add-verify-cli` が終わった時点で試作の verify.mjs を自作 CLI に置き換える。分割は AI の案を確認して確定する。
+MVP は次の 5 つの change で進め、`add-verify-cli` が終わった時点で試作の verify.mjs を自作 CLI に置き換える。分割は AI の案を確認して確定する。
 
 | 順 | change | 内容 |
 | --- | --- | --- |
 | 1 | `setup-monorepo` | モノレポの雛形・devcontainer・CI（完了ゲート） |
 | 2 | `add-core-parsers` | core の解析処理と verify 結果の JSON スキーマ |
 | 3 | `add-verify-cli` | `loomake verify` |
-| 4 | `add-init-cli` | `loomake init` |
+| 4 | `add-kit-assets` | req-to-openspec Skill と AGENTS.md を kit のテンプレートとして整える |
+| 5 | `add-init-cli` | `loomake init` |
 
-乗り換え後は、作った道具で次の change を検査する。
+乗り換え後は、作った道具で次の change を検査する。ルートは `loomake` パッケージに依存していないので、ビルドしたものをリポジトリのルートで `node` から直接動かす。
 
 ```sh
-pnpm loomake verify --change add-init-cli --done
+pnpm build
+node packages/cli/dist/cli.js verify --change add-init-cli --done
 ```

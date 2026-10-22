@@ -1,55 +1,67 @@
-# Loomake kit（最小セット）
+# Loomake
 
-要件書・仕様書から AI 駆動で開発するためのスターターキット。OpenSpec の上に「要件書からの入口」と「守らせる仕組み」を足す。
+要件書・仕様書から AI 駆動で開発するためのツール群。OpenSpec の上に「要件書からの入口」と「守らせる仕組み」を足す。
 
-将来はモノレポ `loomake/loomake` の `packages/kit`（npm: `@loomake/kit`）になる。全体の構成と方針は [docs/architecture.md](docs/architecture.md) を参照。
+このリポジトリは pnpm workspaces のモノレポで、Loomake 自身も Loomake の流れ（要件書 → OpenSpec change → 仕様ゲート → 実装 → 完了ゲート）で作っている。全体の構成と方針は [docs/architecture.md](docs/architecture.md)、日々の進め方は [docs/flow.md](docs/flow.md) を参照。
+
+## パッケージ
+
+| パッケージ | 場所 | 役割 |
+|---|---|---|
+| `@loomake/core` | `packages/core/` | trace.md・spec・verify 結果の読み書きと JSON スキーマ（実行時依存ゼロ） |
+| `@loomake/kit` | `packages/kit/` | req-to-openspec Skill・AGENTS.md・verify・init |
+| `loomake` | `packages/cli/` | CLI 本体（`loomake init`・`loomake verify`） |
+
+いまはどれも雛形で、中身は進行中の change（`openspec/changes/`）で作る。CLI ができるまでは、試作の `scripts/verify.mjs` でゲートを通す。
+
+## 構成
 
 ```
 AGENTS.md                         共通ルールの正本（Claude Code / Codex 共通）
 CLAUDE.md                         AGENTS.md を読み込むだけ
 loomake.config.json               テストの場所・品質コマンド
-scripts/verify.mjs                仕様ゲート / 完了ゲート（依存なし、Node 20.19+）
+packages/                         core・kit・cli
+tests/                            リポジトリ全体のテスト（vitest）
+scripts/verify.mjs                仕様ゲート / 完了ゲートの試作（依存なし、Node 20.19+）
+scripts/ci-gate.mjs               CI 用。ブランチ名が change-id なら --done で verify を実行する
+openspec/changes/<id>/            進行中の change（proposal・specs・design・tasks・trace）
+openspec/specs/                   いまの仕様（archive のときだけ更新する）
+docs/requirements/                要件定義書（trace.md の出典）
+.github/workflows/                ci.yml（品質コマンドと完了ゲート）、release.yml（手動の npm 公開）
+.changeset/                       changesets の設定と未消化の changeset
 .devcontainer/devcontainer.json   開発コンテナ（Node 24・pnpm・OpenSpec・Claude Code・Codex）
-.agents/skills/req-to-openspec/   要件書 → OpenSpec change
-  ├── SKILL.md
-  ├── templates/trace.md          要件台帳・確認事項・仮定
-  └── references/
-      ├── ambiguity-checklist.md  曖昧さの洗い出し観点
-      └── openspec-format.md      OpenSpec 書式 + Loomake 追加ルール
-.agents/skills/yomiyasu/          日本語の推敲（npx skills add nanaism/yomiyasu で導入）
-.claude/skills/req-to-openspec    → ../../.agents/skills/req-to-openspec（シンボリックリンク）
-.claude/skills/yomiyasu           → ../../.agents/skills/yomiyasu（シンボリックリンク）
+.agents/skills/                   Skill の実体（req-to-openspec、npx skills で入れた yomiyasu）
+.claude/skills/                   Claude Code 用。自前の Skill は .agents/skills/ へのシンボリックリンク
 skills-lock.json                  npx skills で入れたスキルの出所とハッシュ
-docs/architecture.md              Loomake 全体の構成・役割分担・作る順番
 ```
 
-## 導入
+## 開発の始め方
 
-1. このフォルダの中身をプロジェクトのルートにコピー
-2. devcontainer を使う場合は、VS Code / Cursor で「コンテナーで再度開く」。使わない場合は `pnpm add -g @fission-ai/openspec`
-3. `openspec init`
-4. `AGENTS.md` 末尾の「プロジェクト固有の情報」と `loomake.config.json` の commands を書き換える
-5. 自前のスキルは `.agents/skills/` に置き、`.claude/skills/` からシンボリックリンクを張る（Codex は `.agents/skills/`、Claude Code は `.claude/skills/` を読む）。openspec の生成するスキルは、Claude Code 用と Codex 用で中身が違うので、両方に生成されたまま置く
-
-## 流れ
-
-```
-要件書 ──req-to-openspec──▶ openspec/changes/<id>/ (+ trace.md)
-                               │
-          verify --spec-only ──┤ ブロッキング確認事項が残っていたら止まる
-                               │
-                 実装（tasks.md）│ テスト名に [REQ-xxx]
-                               │
-               verify --done ──┘ tasks 完了 / 確認待ちゼロ / 全要件にテスト / lint・型・テスト
-```
+devcontainer を標準にしている。VS Code / Cursor で「コンテナーで再度開く」を実行すると、OpenSpec CLI が入る。
 
 ```sh
-node scripts/verify.mjs --change <id> --spec-only
-node scripts/verify.mjs --change <id> --done
-node scripts/verify.mjs --change <id> --done --json   # trace・runner から読む用
+pnpm install
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
 ```
 
-CLI ができたら `loomake verify --change <id> --done` に置き換わる予定。
+## ゲート
+
+```sh
+node scripts/verify.mjs --change <id> --spec-only   # 仕様ゲート：実装に入ってよいか
+node scripts/verify.mjs --change <id> --done        # 完了ゲート：タスク・要件ごとのテスト・品質コマンド
+node scripts/verify.mjs --change <id> --done --json # 機械が読む用
+```
+
+テスト名には要件 ID を入れる（`it('[REQ-012] …', …)`）。詳しい決まりは [AGENTS.md](AGENTS.md) にある。
+
+## CI とリリース
+
+- PR と main への push で、ubuntu・macos・windows の 3 つで lint・typecheck・test・build を実行する。Node 20.19 でも、ビルドした CLI と verify.mjs が動くかを確かめる
+- PR のブランチ名が `openspec/changes/<id>` と一致すれば、`verify --change <id> --done` も実行する
+- npm への公開は GitHub の Actions から release ワークフローを手動で実行する。事前に `pnpm changeset version` でバージョンを上げた変更を main に入れておく
 
 ## devcontainer について
 
