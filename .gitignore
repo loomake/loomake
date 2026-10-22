@@ -33,3 +33,4 @@ coverage/
 
 # Python のキャッシュ
 __pycache__/
+.loomake/

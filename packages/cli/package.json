@@ -13,5 +13,9 @@
   "files": ["dist"],
   "scripts": {
     "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@loomake/core": "workspace:*",
+    "@loomake/kit": "workspace:*"
   }
 }

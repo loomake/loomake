@@ -14,17 +14,16 @@
 | `@loomake/kit` | `packages/kit/` | req-to-openspec Skill・AGENTS.md・verify・init |
 | `loomake` | `packages/cli/` | CLI 本体（`loomake init`・`loomake verify`） |
 
-いまはどれも雛形で、中身は進行中の change（`openspec/changes/`）で作る。CLI ができるまでは、試作の `scripts/verify.mjs` でゲートを通す。
+中身は change（`openspec/changes/`）ごとに作る。ゲートは `loomake verify` で通す。このリポジトリでは `pnpm -s verify` が、ビルドしてから `loomake verify` を実行する。
 
 ## 構成
 
 ```
 AGENTS.md                         共通ルールの正本（Claude Code / Codex 共通）
 CLAUDE.md                         AGENTS.md を読み込むだけ
-loomake.config.json               テストの場所・品質コマンド
+loomake.config.json               テストのレポートの場所・品質コマンド
 packages/                         core・kit・cli
 tests/                            リポジトリ全体のテスト（vitest）
-scripts/verify.mjs                仕様ゲート / 完了ゲートの試作（依存なし、Node 20.19+）
 scripts/ci-gate.mjs               CI 用。ブランチ名が change-id なら --done で verify を実行する
 openspec/changes/<id>/            進行中の change（proposal・specs・design・tasks・trace）
 openspec/specs/                   いまの仕様（archive のときだけ更新する）
@@ -52,18 +51,18 @@ pnpm build
 ## ゲート
 
 ```sh
-node scripts/verify.mjs --change <id> --spec-only   # 仕様ゲート：実装に入ってよいか
-node scripts/verify.mjs --change <id> --done        # 完了ゲート：タスク・要件ごとのテスト・品質コマンド
-node scripts/verify.mjs --change <id> --done --json # 機械が読む用
+pnpm -s verify --change <id> --spec-only   # 仕様ゲート：実装に入ってよいか
+pnpm -s verify --change <id> --done        # 完了ゲート：タスク・要件ごとのテスト・品質コマンド
+pnpm -s verify --change <id> --done --json # 機械が読む用
 ```
 
-完了ゲートが実行する品質コマンドは `loomake.config.json` の lint・typecheck・test。build は別途 `pnpm build` で確認し、CI の quality ジョブでも実行する。
+完了ゲートが実行する品質コマンドは `loomake.config.json` の lint・typecheck・test。要件ごとのテストは、test コマンド（Vitest）が `.loomake/test-report.json` に書き出す JSON レポートの、成功したテストの名前で判定する。build は別途 `pnpm build` で確認し、CI の quality ジョブでも実行する。
 
 テスト名には要件 ID を入れる（`it('[REQ-012] …', …)`）。詳しい決まりは [AGENTS.md](AGENTS.md) にある。
 
 ## CI とリリース
 
-- PR と main への push で、ubuntu・macos・windows の 3 つで lint・typecheck・test・build を実行する。Node 20.19 でも、ビルドした CLI と verify.mjs が動くかを確かめる
+- PR と main への push で、ubuntu・macos・windows の 3 つで lint・typecheck・test・build を実行する。Node 20.19 でも、ビルドした CLI が動くかを確かめる
 - PR のブランチ名が change-id（例：`setup-monorepo`）と一致し、`openspec/changes/<id>/` があれば、`verify --change <id> --done` も実行する。一致しない場合とブランチ名が `archive` の場合は、gate ジョブでは品質コマンドだけを実行する
 - npm への公開は GitHub の Actions から release ワークフローを手動で実行する。main を選んで実行する。事前に `pnpm changeset version` でバージョンを上げた変更を main に入れておく。未消化の changeset が残っている場合は公開を止める
 

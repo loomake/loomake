@@ -21,6 +21,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const branch = process.argv[2] ?? '';
   const args = verifyArgs(branch, join('openspec', 'changes'));
   console.error(`ci-gate: branch=${branch || '(なし)'} → verify ${args.join(' ') || '（品質コマンドのみ）'}`);
-  const r = spawnSync(process.execPath, ['scripts/verify.mjs', ...args], { stdio: 'inherit' });
+  // loomake verify は先に pnpm build しておく（CI の gate ジョブ）
+  const r = spawnSync(process.execPath, ['packages/cli/dist/cli.js', 'verify', ...args], { stdio: 'inherit' });
   process.exit(r.status ?? 1);
 }

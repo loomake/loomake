@@ -31,7 +31,7 @@ jobs:
       - run: pnpm test
       - run: pnpm build
 
-  # 実行時の下限（engines.node >=20.19.0、REQ-048）で、ビルドした CLI と verify.mjs が動くかを確かめる。
+  # 実行時の下限（engines.node >=20.19.0、REQ-048）で、ビルドした CLI が動くかを確かめる。
   # vitest・eslint・changesets は Node 22 以上を求めるので、インストールとビルドは Node 24 で行う
   node20:
     runs-on: ubuntu-latest
@@ -51,7 +51,7 @@ jobs:
       # 引数なしの CLI は使い方を表示して終了コード 2 を返す
       - run: code=0; node packages/cli/dist/cli.js || code=$?; test $code -eq 2
       # archive のあとも動くよう、検査用プロジェクトの change で動かす
-      - run: node ../../../scripts/verify.mjs --change sample --spec-only
+      - run: node ../../../packages/cli/dist/cli.js verify --change sample --spec-only
         working-directory: tests/fixtures/verify-project
 
   # PR ごとの完了ゲート（REQ-010, REQ-054）。ブランチ名が change-id なら --done で検査する
@@ -72,6 +72,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # validate の結果が OpenSpec の更新で変わらないよう、版を固定する
       - run: npm install -g @fission-ai/openspec@1.14.3
+      - run: pnpm build
       - run: node scripts/ci-gate.mjs "$HEAD_REF"
         env:
           HEAD_REF: ${{ github.head_ref }}

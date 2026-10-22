@@ -8,11 +8,13 @@
   },
   "exports": {
     ".": {
+      "@loomake/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./schema/verify-result.schema.json": "./schema/verify-result.schema.json"
   },
-  "files": ["dist"],
+  "files": ["dist", "schema"],
   "publishConfig": {
     "access": "public"
   },

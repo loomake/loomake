@@ -4,7 +4,7 @@ Oct 22, 2026 · @r
 
 ## 全体像
 
-1 つの change は「答える → 実装を任せる → ゲートを通す → PR → archive」の順に回し、人がやるのは確認事項への回答と PR のレビューだけを目標にする。CLI（`loomake`）ができるまでは、試作の `node scripts/verify.mjs` で代用する。
+1 つの change は「答える → 実装を任せる → ゲートを通す → PR → archive」の順に回し、人がやるのは確認事項への回答と PR のレビューだけを目標にする。ゲートは `loomake verify` で通す。このリポジトリでは `pnpm -s verify` で実行する。
 
 1. 要件書を置く
 2. 要件書を OpenSpec change にする（AI）
@@ -64,7 +64,7 @@ req-to-openspec スキルで docs/requirements/mvp-v0.6.md を change にして
 2. 仕様ゲートを実行する
 
 ```sh
-node scripts/verify.mjs --change setup-monorepo --spec-only
+pnpm -s verify --change setup-monorepo --spec-only
 ```
 
 3. 不合格なら、未回答のブロッキング確認事項に答え、回答を `trace.md` と差分仕様に反映する。Source・台帳・Scenario などの不備も直し、もう一度ゲートを通す
@@ -90,7 +90,7 @@ AGENTS.md に従って、タスクごとにコミット。
 仕様に無い判断が必要になると、AI は止まって質問してくる（AGENTS.md の規則）。答えるか、仕様を直すかを選ぶ。実装が終わったら次を実行する。
 
 ```sh
-node scripts/verify.mjs --change setup-monorepo --done
+pnpm -s verify --change setup-monorepo --done
 gh pr create --fill
 ```
 
@@ -109,7 +109,7 @@ git commit -m "archive: setup-monorepo" && git push
 
 ## 7. 次の change と自作 CLI への乗り換え
 
-MVP は次の 5 つの change で進め、`add-verify-cli` が終わった時点で試作の verify.mjs を自作 CLI に置き換える。この 5 分割は作成済み。`setup-monorepo` のタスクはチェック済みで、残り 4 つの change は未実装。
+MVP は次の 5 つの change で進め、試作の verify.mjs は、`add-verify-cli` で自作 CLI（`loomake verify`）に置き換えた。この 5 分割は作成済み。`setup-monorepo` のタスクはチェック済みで、残り 4 つの change は未実装。
 
 | 順 | change | 内容 |
 | --- | --- | --- |
