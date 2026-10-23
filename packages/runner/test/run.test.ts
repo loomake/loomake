@@ -468,8 +468,8 @@ describe('依存と動作環境', () => {
     expect(Object.keys(pkg.dependencies ?? {}).sort()).toEqual(['@loomake/core', '@loomake/kit', '@loomake/trace']);
   });
 
-  it('[REQ-125] @loomake/runner の engines.node は >=20.19.0', () => {
-    expect(pkg.engines?.node).toBe('>=20.19.0');
+  it('[REQ-142] @loomake/runner の engines.node は >=22.12.0', () => {
+    expect(pkg.engines?.node).toBe('>=22.12.0');
   });
 });
 

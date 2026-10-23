@@ -56,7 +56,7 @@ flowchart LR
 
 ## 2. 必要なもの
 
-- Node.js 20.19 以上
+- Node.js 22.12 以上
 - [OpenSpec CLI](https://github.com/Fission-AI/OpenSpec)（`npm install -g @fission-ai/openspec`）
 - Skill を読める AI エージェント（Claude Code または Codex）
 - 要件書は Markdown（.md）で用意する。Word・Excel・PDF の要件書は、先に Markdown に変換しておく。Skill は Markdown 以外の要件書を読まずに、変換を求める
