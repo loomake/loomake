@@ -1,11 +1,12 @@
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, relative, resolve, sep } from 'node:path';
 import { parseSpec, parseTrace } from '@loomake/core';
 import { UsageError, assertChangeId, loadConfig } from '@loomake/kit';
 import { EVIDENCE_DIR, type Evidence } from './record.js';
+import { changedDocuments, readDocuments, type EvidenceDocument } from './documents.js';
 
 /** レポートの JSON の形の版 */
-export const REPORT_SCHEMA_VERSION = 1;
+export const REPORT_SCHEMA_VERSION = 2;
 
 export type ReportFormat = 'md' | 'json';
 
@@ -18,15 +19,17 @@ export type ReportRow = {
   requirements: string[];
   /** 証拠の記録で、その要件の合格したテストがあるファイル */
   tests: string[];
-  /** 反映済の要件だけ「合格」か「合格したテストなし」。ほかの状態では null */
-  result: '合格' | '合格したテストなし' | null;
+  /** 反映済の要件だけ「合格」か「合格したテストなし」。文書のない古い記録では「合格（仕様との対応は未確認）」。ほかの状態では null */
+  result: '合格' | '合格（仕様との対応は未確認）' | '合格したテストなし' | null;
 };
 
 export type Report = {
   schemaVersion: number;
   change: string;
-  evidence: { recordedAt: string; sha: string; committedAt: string; ok: boolean };
-  attention: { noPassingTests: string[]; pending: string[] };
+  /** documents は、検証した時点の文書を記録に保存しているか */
+  evidence: { recordedAt: string; sha: string; committedAt: string; ok: boolean; documents: boolean };
+  /** changedDocuments は、記録のあとで変わった文書のパス */
+  attention: { noPassingTests: string[]; pending: string[]; changedDocuments: string[] };
   rows: ReportRow[];
   questions: { id: string; question: string; answer: string; answeredBy: string; answeredAt: string }[];
   assumptions: { id: string; content: string; approval: string; approvedBy: string; approvedAt: string }[];
@@ -41,16 +44,6 @@ export type ReportOptions = {
 };
 
 const toPosix = (p: string) => p.split(sep).join('/');
-
-function walk(dir: string, out: string[] = []): string[] {
-  if (!existsSync(dir)) return out;
-  for (const name of readdirSync(dir).sort()) {
-    const p = join(dir, name);
-    if (statSync(p).isDirectory()) walk(p, out);
-    else out.push(p);
-  }
-  return out;
-}
 
 /** 進行中の change を先に、なければ archive の <日付>-<change-id> を探す（add-trace-report の仮定 A-05） */
 function findChange(changesDir: string, changeId: string): string | undefined {
@@ -86,23 +79,34 @@ function latestEvidence(root: string, dir: string): Evidence | undefined {
 
 const reqNumber = (id: string) => Number(id.match(/\d+/)?.[0] ?? Number.MAX_SAFE_INTEGER);
 
-/** trace.md・差分仕様・いちばん新しい証拠の記録から、レポートの中身を作る。証拠の記録がなければ undefined */
+/** 検査の範囲の説明（REQ-131） */
+export const SCOPE_NOTE = '自動検査は、要件 ID を含む成功したテストの存在を確認しています。テスト内容の妥当性と、要件を満たしているかの判断にはレビューが必要です。';
+
+/** いちばん新しい証拠の記録と、それに保存した trace.md・差分仕様から、レポートの中身を作る。証拠の記録がなければ undefined */
 export function buildReport(root: string, changeId: string): Report | undefined {
   const config = loadConfig(root);
   assertChangeId(changeId);
   const changeDir = findChange(resolve(root, config.openspecDir, 'changes'), changeId);
   if (!changeDir) throw new UsageError(`change「${changeId}」がありません（進行中にも archive にもありません）`);
 
-  const parsed = parseTrace('trace.md', readFileSync(join(changeDir, 'trace.md'), 'utf8'));
-  if (parsed.errors.length) {
-    throw new UsageError(`trace.md を読めません：${parsed.errors.map((e) => `${e.line} 行目 ${e.message}`).join('、')}`);
-  }
   const evidence = latestEvidence(root, join(root, EVIDENCE_DIR, changeId));
   if (!evidence) return undefined;
 
+  // 表は記録に保存した文書から作る。いまの文書は、記録のあとで変わったかを示すためだけに読む（REQ-070・REQ-129）。
+  // 文書のない古い記録では、いまの文書を使い、仕様との対応は未確認と示す（REQ-130）
+  const current = readDocuments(changeDir);
+  const saved = Boolean(evidence.documents);
+  const documents: EvidenceDocument[] = evidence.documents ?? current;
+  const traceDoc = documents.find((d) => d.path === 'trace.md');
+  if (!traceDoc) throw new UsageError('証拠の記録に trace.md がありません');
+  const parsed = parseTrace('trace.md', traceDoc.content);
+  if (parsed.errors.length) {
+    throw new UsageError(`trace.md を読めません：${parsed.errors.map((e) => `${e.line} 行目 ${e.message}`).join('、')}`);
+  }
+
   const requirementsOf = new Map<string, string[]>();
-  for (const f of walk(join(changeDir, 'specs')).filter((p) => p.endsWith('spec.md'))) {
-    const spec = parseSpec(toPosix(relative(changeDir, f)), readFileSync(f, 'utf8'));
+  for (const d of documents.filter((x) => x.path.startsWith('specs/'))) {
+    const spec = parseSpec(d.path, d.content);
     for (const r of spec.value) for (const id of r.sources) requirementsOf.set(id, [...(requirementsOf.get(id) ?? []), r.name]);
   }
   const coverage = evidence.verify.coverage ?? {};
@@ -119,7 +123,7 @@ export function buildReport(root: string, changeId: string): Report | undefined 
         summary: r['要約（原文に忠実に）'],
         requirements: requirementsOf.get(r.ID) ?? [],
         tests,
-        result: r['状態'] === '反映済' ? (tests.length ? '合格' : '合格したテストなし') : null,
+        result: r['状態'] === '反映済' ? (tests.length ? (saved ? '合格' : '合格（仕様との対応は未確認）') : '合格したテストなし') : null,
       };
     });
 
@@ -150,10 +154,11 @@ export function buildReport(root: string, changeId: string): Report | undefined 
   return {
     schemaVersion: REPORT_SCHEMA_VERSION,
     change: changeId,
-    evidence: { recordedAt: evidence.recordedAt, sha: evidence.sha, committedAt: evidence.committedAt, ok: evidence.verify.ok },
+    evidence: { recordedAt: evidence.recordedAt, sha: evidence.sha, committedAt: evidence.committedAt, ok: evidence.verify.ok, documents: saved },
     attention: {
       noPassingTests: rows.filter((r) => r.result === '合格したテストなし').map((r) => r.id),
       pending: rows.filter((r) => r.state === '確認待ち').map((r) => r.id),
+      changedDocuments: saved ? changedDocuments(documents, current) : [],
     },
     rows,
     questions,
@@ -170,8 +175,14 @@ const table = (head: string[], rows: string[][]) =>
 export function formatReportMarkdown(r: Report): string {
   const list = (ids: string[]) => (ids.length ? ids.join('、') : 'なし');
   const attention =
-    r.attention.noPassingTests.length || r.attention.pending.length
-      ? [`- 合格したテストのない要件：${list(r.attention.noPassingTests)}`, `- 確認待ちの要件：${list(r.attention.pending)}`].join('\n')
+    r.attention.noPassingTests.length || r.attention.pending.length || r.attention.changedDocuments.length || !r.evidence.documents
+      ? [
+          `- 合格したテストのない要件：${list(r.attention.noPassingTests)}`,
+          `- 確認待ちの要件：${list(r.attention.pending)}`,
+          ...(r.evidence.documents
+            ? [`- 記録のあとで変わった文書：${list(r.attention.changedDocuments)}`]
+            : ['- 仕様との対応：この証拠の記録は検証した時点の trace.md と差分仕様を持たない古い形式なので、いまの文書と検査結果の対応は確かめていません']),
+        ].join('\n')
       : '要注意の要件はありません。';
   return [
     `# 検収レポート：${r.change}`,
@@ -179,6 +190,10 @@ export function formatReportMarkdown(r: Report): string {
     '## 要注意の要件',
     '',
     attention,
+    '',
+    '## 検査の範囲',
+    '',
+    SCOPE_NOTE,
     '',
     '## 使った証拠',
     '',
