@@ -28,8 +28,8 @@ export type Report = {
   change: string;
   /** documents は、検証した時点の文書を記録に保存しているか */
   evidence: { recordedAt: string; sha: string; committedAt: string; ok: boolean; documents: boolean };
-  /** changedDocuments は、記録のあとで変わった文書のパス */
-  attention: { noPassingTests: string[]; pending: string[]; changedDocuments: string[] };
+  /** changedDocuments は、記録のあとで変わった文書のパス。failedChecks は、使った証拠の verify で不合格だった検査の名前 */
+  attention: { noPassingTests: string[]; pending: string[]; changedDocuments: string[]; failedChecks: string[] };
   rows: ReportRow[];
   questions: { id: string; question: string; answer: string; answeredBy: string; answeredAt: string }[];
   assumptions: { id: string; content: string; approval: string; approvedBy: string; approvedAt: string }[];
@@ -159,6 +159,8 @@ export function buildReport(root: string, changeId: string): Report | undefined 
       noPassingTests: rows.filter((r) => r.result === '合格したテストなし').map((r) => r.id),
       pending: rows.filter((r) => r.state === '確認待ち').map((r) => r.id),
       changedDocuments: saved ? changedDocuments(documents, current) : [],
+      // 要件の行には lint などの不合格が現れないので、冒頭で示す（fix-evaluation-findings の仮定 A-04）
+      failedChecks: evidence.verify.results.filter((x) => x.status === 'fail').map((x) => x.check),
     },
     rows,
     questions,
@@ -175,8 +177,9 @@ const table = (head: string[], rows: string[][]) =>
 export function formatReportMarkdown(r: Report): string {
   const list = (ids: string[]) => (ids.length ? ids.join('、') : 'なし');
   const attention =
-    r.attention.noPassingTests.length || r.attention.pending.length || r.attention.changedDocuments.length || !r.evidence.documents
+    r.attention.noPassingTests.length || r.attention.pending.length || r.attention.changedDocuments.length || !r.evidence.documents || !r.evidence.ok
       ? [
+          ...(r.evidence.ok ? [] : [`- 不合格の検査：${list(r.attention.failedChecks)}（使った証拠の検査は不合格です）`]),
           `- 合格したテストのない要件：${list(r.attention.noPassingTests)}`,
           `- 確認待ちの要件：${list(r.attention.pending)}`,
           ...(r.evidence.documents
