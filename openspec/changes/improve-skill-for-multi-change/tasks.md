@@ -8,4 +8,4 @@
 - [x] 2.1 各 Scenario に対応するテストを書く。テスト名に [REQ-xxx] を入れる
 
 ## 3. 確認
-- [ ] 3.1 `pnpm -s verify --change improve-skill-for-multi-change --done` を通す
+- [x] 3.1 `pnpm -s verify --change improve-skill-for-multi-change --done` を通す
