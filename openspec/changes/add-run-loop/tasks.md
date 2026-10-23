@@ -12,4 +12,4 @@
 - [x] 2.2 CI の Node.js 20.19 でテストを流す（REQ-125）
 
 ## 3. 確認
-- [ ] 3.1 `pnpm -s verify --change add-run-loop --done` を通す
+- [x] 3.1 `pnpm -s verify --change add-run-loop --done` を通す
