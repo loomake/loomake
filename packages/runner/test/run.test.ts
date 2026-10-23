@@ -201,6 +201,12 @@ describe('ブランチとタスク', () => {
       expect(r.stdout).toContain('`LOOMAKE-QUESTION:` で始まる行に質問を書き');
     }));
 
+  it('[REQ-098] 指示に、git でコミットしたりブランチを切り替えたりせず、コミットは loomake run が行うという決まりを含める', () =>
+    withRepo(async (repo) => {
+      const r = await run(repo, { dryRun: true });
+      expect(r.stdout).toContain('- git でコミットしたりブランチを切り替えたりせず、変更は作業ツリーに残して終える。コミットは loomake run が行う。');
+    }));
+
   it('[REQ-099] タスクを終えるたびに、変更と完了にした tasks.md を run(<change-id>): <タスク> でコミットする', () =>
     withRepo(async (repo) => {
       repo.plan(passing);
