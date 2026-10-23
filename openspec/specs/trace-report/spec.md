@@ -6,7 +6,7 @@
 ## Requirements
 
 ### Requirement: 要件ごとの検収の表
-`loomake trace report --change <id>` は、`.loomake/evidence/<change-id>/` のいちばん新しい記録を使い、その記録に保存した trace.md の要件台帳の要件ごとに、出典・状態・対応する Requirement・テストファイル・最後の検査結果を 1 行に並べた表を出力する SHALL。対応する Requirement は、その記録に保存した差分仕様で、その要件を `Source:` に持つ Requirement の名前とする SHALL。テストファイルと最後の検査結果は、同じ記録から取る SHALL。記録に文書が保存されていないときの扱いは、「古い形式の証拠の記録」に従う SHALL。change は進行中の change から探し、なければ archive から探す SHALL。change-id に `/`・`\`・`..` を含むときは、使い方の誤りとして終了コード 2 を返す SHALL。
+`loomake trace report --change <id>` は、`.loomake/evidence/<change-id>/` のいちばん新しい記録を使い、その記録に保存した trace.md の要件台帳の要件ごとに、出典・状態・対応する Requirement・テストファイル・最後の検査結果を 1 行に並べた表を出力する SHALL。対応する Requirement は、その記録に保存した差分仕様で、その要件を `Source:` に持つ Requirement の名前とする SHALL。テストファイルと最後の検査結果は、同じ記録から取る SHALL。記録に文書が保存されていないときの扱いは、「古い形式の証拠の記録」に従う SHALL。change は進行中の change から探し、なければ archive から探す SHALL。change-id が OpenSpec の change 名の形でないときと、`archive` のときは、使い方の誤りとして終了コード 2 を返す SHALL。
 
 Source: REQ-070
 
@@ -123,7 +123,7 @@ Source: REQ-083
 - **THEN** `@loomake/core` と `@loomake/kit` 以外が含まれない
 
 ### Requirement: 冒頭の要注意の一覧
-レポートの冒頭に、状態が反映済で、使った証拠の記録の中に合格したテストのない要件と、状態が確認待ちの要件を、それぞれ一覧で示す SHALL。テストがない要件と、テストが不合格だった要件は分けずに、「合格したテストのない要件」として 1 つにまとめる SHALL。どちらもないときは、ないことを示す SHALL。
+レポートの冒頭に、状態が反映済で、使った証拠の記録の中に合格したテストのない要件と、状態が確認待ちの要件を、それぞれ一覧で示す SHALL。テストがない要件と、テストが不合格だった要件は分けずに、「合格したテストのない要件」として 1 つにまとめる SHALL。使った証拠の記録の検査が不合格のときは、冒頭に、検査が不合格であることと、不合格になった検査の名前を示す SHALL。要注意の要件も不合格の検査もないときは、ないことを示す SHALL。
 
 Source: REQ-072
 
@@ -135,8 +135,12 @@ Source: REQ-072
 - **WHEN** 状態が確認待ちの REQ-072 を持つ change のレポートを作る
 - **THEN** 冒頭の「確認待ちの要件」の一覧に REQ-072 が挙がる
 
+#### Scenario: 証拠の検査が不合格
+- **WHEN** 反映済の要件すべてに合格したテストがあり、確認待ちの要件もないが、lint が不合格だった証拠の記録で change のレポートを作る
+- **THEN** 冒頭に、検査が不合格であることと「command: lint」が書かれ、要注意の要件がないとは書かれない
+
 #### Scenario: どちらもない
-- **WHEN** 反映済の要件すべてに合格したテストがあり、確認待ちの要件がない change のレポートを作る
+- **WHEN** 反映済の要件すべてに合格したテストがあり、確認待ちの要件がなく、検査が合格した証拠の記録で change のレポートを作る
 - **THEN** 冒頭に、要注意の要件がないことが書かれる
 
 ### Requirement: 確認事項の一覧
