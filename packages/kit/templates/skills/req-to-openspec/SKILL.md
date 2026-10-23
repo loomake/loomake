@@ -79,7 +79,7 @@ description: 顧客や社内から受け取った Markdown（.md）の要件定�
 | `proposal.md` | なぜ（背景）・何を変えるか・範囲外（Non-goals）・影響範囲 |
 | `specs/<capability>/spec.md` | `## ADDED / MODIFIED / REMOVED Requirements` の差分仕様 |
 | `design.md` | 技術判断が要るときだけ。選択肢と決定理由 |
-| `tasks.md` | 実装チェックリスト。最後に「テスト」「verify」のタスクを必ず入れる |
+| `tasks.md` | 実装チェックリスト。最後に「テスト」「verify」のタスクを必ず入れ、verify のタスクの行末に `<!-- loomake:gate=done -->` を付ける |
 | `trace.md` | 要件台帳・確認事項・仮定（[templates/trace.md](templates/trace.md)） |
 
 各 Requirement には次の 3 つを必ず入れる。1 つでも欠けた Requirement は書かない。

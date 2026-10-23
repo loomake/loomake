@@ -4,7 +4,7 @@ import { parseTasks, type Task, type VerifyResult } from '@loomake/core';
 import { runRecord } from '@loomake/trace';
 import { TIMED_OUT, UsageError, assertChangeId, formatVerifyResult, loadConfig, runVerify } from '@loomake/kit';
 import { DEFAULT_ALLOWED_DOMAINS, assertEngineAvailable, runClaude, type EngineResult } from './engine.js';
-import { branchExists, dirtyFiles, git, gitConfig, isIgnored } from './git.js';
+import { GitError, branchExists, dirtyFiles, git, gitConfig, isIgnored } from './git.js';
 import { APPROVAL_GUIDE, findEngineMove, findViolations, headState } from './guards.js';
 import { createPr, ghLoggedIn, prBody } from './pr.js';
 import { maskSecrets } from './mask.js';
@@ -51,9 +51,16 @@ const QUESTION = /^LOOMAKE-QUESTION:\s*(.*)$/m;
 
 const toPosix = (p: string) => p.split(sep).join('/');
 const stamp = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, 'Z').replace(/[-:]/g, '');
-const taskLabel = (t: Task) => t.text;
-// 完了ゲートを通すタスクはエンジンに渡さず、合格したときに run が完了にする（add-run-loop の仮定 A-06）
-const isGateTask = (t: Task) => /verify/.test(t.text) && /--done/.test(t.text);
+/** 完了ゲートのタスクの印（REQ-100・REQ-136）。行のどこにあってもよい（clarify-run-phases-and-task-kinds の仮定 A-02） */
+export const GATE_MARK = '<!-- loomake:gate=done -->';
+const GATE_MARK_RE = /\s*<!--\s*loomake:gate=done\s*-->\s*/g;
+// エンジンへの指示・コミットのメッセージ・記録には、印を除いた文を使う
+const taskLabel = (t: Task) => t.text.replace(GATE_MARK_RE, ' ').trim();
+const hasGateMark = (t: Task) => new RegExp(GATE_MARK_RE.source).test(t.text);
+// 印のない旧書式：本文に verify と --done を含むタスク（add-run-loop の仮定 A-06、clarify-run-phases-and-task-kinds の仮定 A-01）
+const isLegacyGateTask = (t: Task) => !hasGateMark(t) && /verify/.test(t.text) && /--done/.test(t.text);
+// 完了ゲートを通すタスクはエンジンに渡さず、合格したときに run が完了にする
+const isGateTask = (t: Task) => hasGateMark(t) || isLegacyGateTask(t);
 
 /** loomake.config.json の run の設定。既定は直し 5 回・60 分（add-run-loop の仮定 A-16） */
 function loadRunConfig(root: string): RunConfig {
@@ -166,18 +173,33 @@ type Recorder = {
 
 /** change の tasks.md を実装させ、完了ゲートが通るまで直させる。終了コード（終えた 0・止まった 1）を返す */
 export async function runRun(options: RunOptions): Promise<number> {
-  const ctx = await prepare(options);
+  // 始める前（実行の記録を作る前）の git の失敗は、使い方の誤りにする（REQ-137）
+  let ctx: RunContext | number;
+  try {
+    ctx = await prepare(options);
+  } catch (e) {
+    if (e instanceof GitError) throw new UsageError(e.message);
+    throw e;
+  }
   if (typeof ctx === 'number') return ctx;
   const rec = startRecording(ctx);
 
-  // PR の向き先は、run が change のブランチを作ったときのブランチ。git の設定に覚えて再開でも使う（add-run-pr の仮定 A-21、fix-review-findings の仮定 A-06）
-  if (!ctx.hasBranch) {
-    git(ctx.root, ctx.env, ['switch', '-q', '-c', ctx.branch]);
-    git(ctx.root, ctx.env, ['config', baseKey(ctx), ctx.startBranch]);
+  try {
+    // PR の向き先は、run が change のブランチを作ったときのブランチ。git の設定に覚えて再開でも使う（add-run-pr の仮定 A-21、fix-review-findings の仮定 A-06）
+    if (!ctx.hasBranch) {
+      git(ctx.root, ctx.env, ['switch', '-q', '-c', ctx.branch]);
+      git(ctx.root, ctx.env, ['config', baseKey(ctx), ctx.startBranch]);
+    }
+    const stop = (await runEngineTasks(ctx, rec)) ?? (await runGate(ctx, rec));
+    if (stop) return rec.finish(stop.status, stop.reason, stop.remaining);
+    return recordAndOpenPr(ctx, rec);
+  } catch (e) {
+    // 始めたあとの git と証拠の記録の失敗は、実行中の失敗として記録に残して止まる（REQ-137、clarify-run-phases-and-task-kinds の仮定 A-03）
+    if (!(e instanceof GitError) && !(e instanceof UsageError)) throw e;
+    const { engineTasks, gateTasks } = ctx;
+    const remaining = [...engineTasks, ...gateTasks].filter((t) => !rec.done.includes(taskLabel(t)));
+    return rec.finish('stopped', e.message, remaining);
   }
-  const stop = (await runEngineTasks(ctx, rec)) ?? (await runGate(ctx, rec));
-  if (stop) return rec.finish(stop.status, stop.reason, stop.remaining);
-  return recordAndOpenPr(ctx, rec);
 }
 
 const baseKey = (ctx: RunContext) => `branch.${ctx.branch}.loomake-base`;
@@ -234,6 +256,13 @@ async function prepare(options: RunOptions): Promise<RunContext | number> {
   const pending = tasks.filter((t) => !t.checked);
   const engineTasks = pending.filter((t) => !isGateTask(t));
   const gateTasks = pending.filter(isGateTask);
+  const legacy = gateTasks.filter(isLegacyGateTask);
+  if (legacy.length) {
+    stdout(
+      `完了ゲートのタスクを、タスクの文から判定しました：${legacy.map(taskLabel).join('、')}\n` +
+        `文を変えても判定が変わらないよう、tasks.md のその行の末尾に ${GATE_MARK} を付けてください。`,
+    );
+  }
 
   if (options.dryRun) {
     stdout(['エンジンに渡す予定のタスク：', ...engineTasks.map((t) => `  - [ ] ${taskLabel(t)}`)].join('\n'));
