@@ -7,4 +7,4 @@
 - [x] 2.1 各 Scenario に対応するテストを書く。テスト名に [REQ-xxx] を入れる。origin は一時ディレクトリの bare リポジトリにし、gh は偽のコマンドを使う
 
 ## 3. 確認
-- [ ] 3.1 `pnpm -s verify --change add-run-pr --done` を通す
+- [x] 3.1 `pnpm -s verify --change add-run-pr --done` を通す
