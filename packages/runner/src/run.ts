@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSy
 import { join, relative, resolve, sep } from 'node:path';
 import { parseTasks, type Task, type VerifyResult } from '@loomake/core';
 import { runRecord } from '@loomake/trace';
-import { UsageError, formatVerifyResult, loadConfig, runVerify } from '@loomake/kit';
+import { TIMED_OUT, UsageError, formatVerifyResult, loadConfig, runVerify } from '@loomake/kit';
 import { DEFAULT_ALLOWED_DOMAINS, assertEngineAvailable, runClaude, type EngineResult } from './engine.js';
 import { branchExists, dirtyFiles, git, gitConfig } from './git.js';
 import { APPROVAL_GUIDE, findViolations } from './guards.js';
@@ -298,10 +298,17 @@ export async function runRun(options: RunOptions): Promise<number> {
   for (let fixes = 0; ; fixes++) {
     if (options.signal?.aborted) return finish('interrupted', '中断されました', gateTasks);
     for (const t of gateTasks) checkTask(tasksPath, t.line);
-    lastVerify = runVerify({ root, changeId, gate: 'done', progress });
+    // 完了ゲートの品質コマンドにも、実行時間の残りを上限として渡す（REQ-105、fix-review-findings-2 の仮定 A-02）
+    const left = deadline - now().getTime();
+    if (left <= 0) {
+      restoreGateTasks();
+      return finish('stopped', '実行時間の上限に達しました', gateTasks);
+    }
+    lastVerify = runVerify({ root, changeId, gate: 'done', progress, timeoutMs: left });
     save(`${String(step).padStart(2, '0')}-verify${fixes ? `-${fixes}` : ''}.json`, `${JSON.stringify(lastVerify, null, 2)}\n`);
     if (lastVerify.ok) break;
     restoreGateTasks();
+    if (lastVerify.results.some((r) => r.detail === TIMED_OUT)) return finish('stopped', '実行時間の上限に達しました', gateTasks);
     if (fixes >= runConfig.maxFixes) return finish('stopped', `直しの回数の上限（${runConfig.maxFixes} 回）に達しました`, gateTasks);
     const { stop } = await callEngine(buildPrompt(root, changeDir, '完了ゲートに合格するように直す。', lastVerify));
     if (stop) return finish(stop.status, stop.reason, gateTasks);

@@ -28,11 +28,15 @@ export type VerifyOptions = {
   skipCommands?: boolean;
   /** 進捗の表示先。--json のときも標準出力を汚さないよう、CLI は標準エラーを渡す（仮定 A-03） */
   progress?: (message: string) => void;
+  /** 品質コマンドの実行時間の上限（ミリ秒、すべてのコマンドの合計）。上限を過ぎたコマンドは止めて不合格にする（fix-review-findings-2 の仮定 A-02） */
+  timeoutMs?: number;
 };
 
 // 試作の verify.mjs と同じく、出力の上限を 64MB にする
 const MAX_BUFFER = 64 * 1024 * 1024;
 const COMMAND_ORDER = ['lint', 'typecheck', 'test'];
+/** 実行時間の上限で止めた品質コマンドの detail */
+export const TIMED_OUT = '実行時間の上限に達したので止めました';
 
 // node_modules・ドットで始まるディレクトリは見ない
 function walk(dir: string, out: string[] = []): string[] {
@@ -66,7 +70,7 @@ export function runVerify(options: VerifyOptions): VerifyResult {
   let coverage: Record<string, string[]> | undefined;
 
   if (!changeId) {
-    runCommands(root, config, skipCommands, record, progress);
+    runCommands(root, config, skipCommands, record, progress, options.timeoutMs);
   } else {
     const spec = checkSpec(root, config, changeId, record, rel);
     if (spec && mode === 'done') {
@@ -74,7 +78,7 @@ export function runVerify(options: VerifyOptions): VerifyResult {
       // 前回のレポートで合格させないよう、commands を実行する前に消す（仮定 A-05）
       const reportPath = resolve(root, config.tests.report);
       if (!skipCommands) rmSync(reportPath, { force: true });
-      runCommands(root, config, skipCommands, record, progress);
+      runCommands(root, config, skipCommands, record, progress, options.timeoutMs);
       coverage = checkCoverage(root, config, spec.live, reportPath, record, rel);
     }
   }
@@ -283,14 +287,24 @@ function checkCoverage(
 
 // ---------- 品質コマンド ----------
 // lint・typecheck・test の順に実行し、1 つ失敗しても残りを実行する（仮定 A-02）
-function runCommands(root: string, config: LoomakeConfig, skip: boolean, record: Recorder, progress: (m: string) => void) {
+function runCommands(root: string, config: LoomakeConfig, skip: boolean, record: Recorder, progress: (m: string) => void, timeoutMs?: number) {
   if (skip) return;
+  const deadline = timeoutMs === undefined ? undefined : Date.now() + timeoutMs;
   const names = [...COMMAND_ORDER.filter((n) => n in config.commands), ...Object.keys(config.commands).filter((n) => !COMMAND_ORDER.includes(n))];
   for (const name of names) {
     const cmd = config.commands[name];
     if (!cmd) continue;
+    const left = deadline === undefined ? undefined : deadline - Date.now();
+    if (left !== undefined && left <= 0) {
+      record(`command: ${name}`, 'fail', TIMED_OUT);
+      continue;
+    }
     progress(`… ${name}: ${cmd}`);
-    const r = spawnSync(cmd, { cwd: root, shell: true, encoding: 'utf8', maxBuffer: MAX_BUFFER });
+    const r = spawnSync(cmd, { cwd: root, shell: true, encoding: 'utf8', maxBuffer: MAX_BUFFER, timeout: left });
+    if ((r.error as NodeJS.ErrnoException | undefined)?.code === 'ETIMEDOUT') {
+      record(`command: ${name}`, 'fail', TIMED_OUT);
+      continue;
+    }
     const out = `${r.stdout ?? ''}${r.stderr ?? ''}`.trim();
     record(`command: ${name}`, r.status === 0 ? 'pass' : 'fail', r.status === 0 ? '' : out.split('\n').slice(-30).join('\n'));
   }

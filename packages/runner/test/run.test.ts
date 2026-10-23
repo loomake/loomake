@@ -249,6 +249,23 @@ describe('完了ゲートと直し', () => {
       },
       { run: { timeoutMinutes: 0.02 } },
     ));
+
+  it('[REQ-105] 完了ゲートのテストが終わらないまま上限に達したら、テストを止めて止まる', () =>
+    withRepo(
+      async (repo) => {
+        repo.write('write-report.mjs', 'setInterval(() => {}, 1000);\n');
+        repo.git('commit', '-q', '-am', '終わらないテスト');
+        repo.plan([{}, {}]);
+        const start = Date.now();
+        const r = await run(repo);
+        expect(r.code).toBe(1);
+        expect(r.stdout).toContain('実行時間の上限に達しました');
+        expect(repo.calls()).toHaveLength(2);
+        expect(Date.now() - start).toBeLessThan(30_000);
+        expect(tasksMd(repo)).toContain('- [ ] 3.1');
+      },
+      { run: { timeoutMinutes: 0.1 } },
+    ));
 });
 
 describe('エンジンの選び方と権限', () => {
