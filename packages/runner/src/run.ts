@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSy
 import { join, relative, resolve, sep } from 'node:path';
 import { parseTasks, type Task, type VerifyResult } from '@loomake/core';
 import { runRecord } from '@loomake/trace';
-import { TIMED_OUT, UsageError, formatVerifyResult, loadConfig, runVerify } from '@loomake/kit';
+import { TIMED_OUT, UsageError, assertChangeId, formatVerifyResult, loadConfig, runVerify } from '@loomake/kit';
 import { DEFAULT_ALLOWED_DOMAINS, assertEngineAvailable, runClaude, type EngineResult } from './engine.js';
 import { branchExists, dirtyFiles, git, gitConfig, isIgnored } from './git.js';
 import { APPROVAL_GUIDE, findViolations } from './guards.js';
@@ -135,6 +135,7 @@ export async function runRun(options: RunOptions): Promise<number> {
   const engine = options.engine ?? 'claude-code';
   const config = loadConfig(root);
   const runConfig = loadRunConfig(root);
+  assertChangeId(changeId);
   const changeDir = resolve(root, config.openspecDir, 'changes', changeId);
   if (changeId === 'archive' || !existsSync(join(changeDir, 'tasks.md'))) {
     throw new UsageError(`change「${changeId}」がありません（${config.openspecDir}/changes/${changeId}/tasks.md）`);

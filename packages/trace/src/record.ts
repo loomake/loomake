@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import type { VerifyResult } from '@loomake/core';
-import { UsageError, loadConfig, runVerify } from '@loomake/kit';
+import { UsageError, assertChangeId, loadConfig, runVerify } from '@loomake/kit';
 
 /** 証拠の記録の形の版。report が読むので、形を変えたら上げる（add-trace-record の仮定 A-04） */
 export const EVIDENCE_SCHEMA_VERSION = 1;
@@ -49,6 +49,7 @@ export function runRecord(options: RecordOptions): number {
   const { changeId, stdout, progress = () => {}, now = () => new Date() } = options;
   const root = resolve(options.root);
   const config = loadConfig(root);
+  assertChangeId(changeId);
   const changeDir = resolve(root, config.openspecDir, 'changes', changeId);
   if (changeId === 'archive' || !existsSync(changeDir) || !statSync(changeDir).isDirectory()) {
     throw new UsageError(`change「${changeId}」がありません（${config.openspecDir}/changes/${changeId}）`);

@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, resolve, sep } from 'node:path';
 import { parseSpec, parseTrace } from '@loomake/core';
-import { UsageError, loadConfig } from '@loomake/kit';
+import { UsageError, assertChangeId, loadConfig } from '@loomake/kit';
 import { EVIDENCE_DIR, type Evidence } from './record.js';
 
 /** レポートの JSON の形の版 */
@@ -80,6 +80,7 @@ const reqNumber = (id: string) => Number(id.match(/\d+/)?.[0] ?? Number.MAX_SAFE
 /** trace.md・差分仕様・いちばん新しい証拠の記録から、レポートの中身を作る。証拠の記録がなければ undefined */
 export function buildReport(root: string, changeId: string): Report | undefined {
   const config = loadConfig(root);
+  assertChangeId(changeId);
   const changeDir = findChange(resolve(root, config.openspecDir, 'changes'), changeId);
   if (!changeDir) throw new UsageError(`change「${changeId}」がありません（進行中にも archive にもありません）`);
 

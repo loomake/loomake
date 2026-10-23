@@ -297,6 +297,14 @@ describe('エンジンの選び方と権限', () => {
       expect(r.stderr).toContain('初版で使えるのは claude-code だけです');
     }));
 
+  it('[REQ-101] change-id にパスの区切りを含めると、使い方の誤りとして終了コード 2 を返す', () =>
+    withRepo(async (repo) => {
+      const r = await cli(repo, '--change', '../c1');
+      expect(r.code).toBe(2);
+      expect(r.stderr).toContain('パスの区切り');
+      expect(repo.calls()).toEqual([]);
+    }));
+
   it('[REQ-101] claude コマンドがなければ、Claude Code を入れるよう表示して終了コード 2 を返す', () =>
     withRepo(async (repo) => {
       repo.env.PATH = dirname(process.execPath);

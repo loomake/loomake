@@ -15,7 +15,7 @@ import {
   type VerifyMode,
   type VerifyResult,
 } from '@loomake/core';
-import { loadConfig, type LoomakeConfig } from './config.js';
+import { assertChangeId, loadConfig, type LoomakeConfig } from './config.js';
 
 export type VerifyOptions = {
   /** プロジェクトのルート（loomake.config.json のあるディレクトリ） */
@@ -55,6 +55,7 @@ const toPosix = (p: string) => p.split(sep).join('/');
 /** verify を実行して結果を返す。設定の誤りは UsageError を投げる */
 export function runVerify(options: VerifyOptions): VerifyResult {
   const { changeId, skipCommands = false, progress = () => {} } = options;
+  if (changeId) assertChangeId(changeId);
   // ルートがシンボリックリンクを通るとき（macOS の /var → /private/var など）、レポートのパスは実パスのことも、リンクのままのこともある。
   // 実パスのルートで動かし、相対パスはどちらのルートの中にあるかで作る
   const givenRoot = resolve(options.root);

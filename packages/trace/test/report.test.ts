@@ -73,6 +73,14 @@ describe('要件ごとの検収の表', () => {
     });
   });
 
+  it('[REQ-070] change-id にパスの区切りを含めると、日本語で表示して終了コード 2 を返す', () =>
+    withProject({}, async (root) => {
+      const err: string[] = [];
+      const code = await main(['trace', 'report', '--change', '../c1'], { cwd: root, stdout: () => {}, stderr: (t) => err.push(t) });
+      expect(code).toBe(2);
+      expect(err.join('\n')).toContain('パスの区切り');
+    }));
+
   it('[REQ-070] 記録した日時がいちばん新しい記録を使う', () => {
     const records = [
       { recordedAt: '2026-10-23T02:00:00.000Z', sha: 'b'.repeat(40) },
