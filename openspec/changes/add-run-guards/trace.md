@@ -37,7 +37,7 @@ Q・A の番号は run 要件定義書の中で通し番号にする。RUN-xxx �
 
 | ID | 関連 | 仮定の内容 | 理由 | 承認 | 承認者 | 承認日 |
 |---|---|---|---|---|---|---|
-| A-17 | REQ-109 | テストファイルは、名前が `.test.` か `.spec.` を含むファイルと、`test/`・`tests/`・`__tests__/` の下のファイルとする。skip・todo の追加は、差分で足した行に `it.skip`・`test.skip`・`describe.skip`・`it.todo`・`test.todo`・`xit(`・`xtest(`・`xdescribe(` のどれかがあるかで見る | 要件書に、テストファイルと skip・todo の見分け方の記載がない。Vitest と Jest の書き方に合わせる | | | |
-| A-18 | REQ-110 | 設定ファイルは、loomake.config.json、`eslint.config.*`・`.eslintrc*`、`tsconfig*.json`、`vitest.config.*`・`vitest.workspace.*`・`vite.config.*`、`jest.config.*` とする。package.json は `scripts` の値が変わったときだけを対象にする | package.json は依存の追加でも変わるので、検査のコマンドにかかわる `scripts` だけを見る | | | |
-| A-19 | REQ-111 | trace.md は、`openspec/changes/` の下のすべての trace.md とする | エンジンは確認事項の回答や台帳の状態を書き換えてはいけない | | | |
-| A-20 | REQ-109〜REQ-112 | 検査は、エンジンを動かすたびに、コミットする前の作業ツリーの変更（追跡していない新しいファイルを含む）に対して行う。見つかったら、その変更をコミットせず、対象のファイルとその差分を表示して、終了コード 1 で止まる | コミットする前に止めれば、不正な変更が履歴に入らない | | | |
+| A-17 | REQ-109 | テストファイルは、名前が `.test.` か `.spec.` を含むファイルと、`test/`・`tests/`・`__tests__/` の下のファイルとする。skip・todo の追加は、差分で足した行に `it.skip`・`test.skip`・`describe.skip`・`it.todo`・`test.todo`・`xit(`・`xtest(`・`xdescribe(` のどれかがあるかで見る | 要件書に、テストファイルと skip・todo の見分け方の記載がない。Vitest と Jest の書き方に合わせる | 承認（依頼者の「おすすめで進めて」の指示による） | 依頼者 | 2026-10-23 |
+| A-18 | REQ-110 | 設定ファイルは、loomake.config.json、`eslint.config.*`・`.eslintrc*`、`tsconfig*.json`、`vitest.config.*`・`vitest.workspace.*`・`vite.config.*`、`jest.config.*` とする。package.json は `scripts` の値が変わったときだけを対象にする | package.json は依存の追加でも変わるので、検査のコマンドにかかわる `scripts` だけを見る | 承認（依頼者の「おすすめで進めて」の指示による） | 依頼者 | 2026-10-23 |
+| A-19 | REQ-111 | trace.md は、`openspec/changes/` の下のすべての trace.md とする | エンジンは確認事項の回答や台帳の状態を書き換えてはいけない | 承認（依頼者の「おすすめで進めて」の指示による） | 依頼者 | 2026-10-23 |
+| A-20 | REQ-109〜REQ-112 | 検査は、エンジンを動かすたびに、コミットする前の作業ツリーの変更（追跡していない新しいファイルを含む）に対して行う。見つかったら、その変更をコミットせず、対象のファイルとその差分を表示して、終了コード 1 で止まる | コミットする前に止めれば、不正な変更が履歴に入らない | 承認（依頼者の「おすすめで進めて」の指示による） | 依頼者 | 2026-10-23 |
