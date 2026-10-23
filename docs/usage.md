@@ -238,6 +238,23 @@ git commit -m "archive: <change-id>"
 
 差分仕様が `openspec/specs/`（いまの仕様）に取り込まれ、change は `openspec/changes/archive/` に移る。新しい capability ができたときは、`openspec/specs/<capability>/spec.md` の `## Purpose` が仮の文（`TBD - …`）になるので書き換える。それ以外で `openspec/specs/` を直接編集してはいけない。
 
+### 4.6 検収レポートを作る
+
+完了ゲートを通したコミットで `loomake trace record` を実行し、verify の結果を証拠として残す。そのあと `loomake trace report` で、顧客に渡す検収レポートを作る。
+
+```sh
+npx loomake trace record --change <change-id>
+git add .loomake/evidence && git commit -m "evidence: <change-id>"
+npx loomake trace report --change <change-id> > report.md
+```
+
+- `trace record` は `verify --done` を実行し、結果を検査したコミットの SHA・日時と合わせて `.loomake/evidence/<change-id>/` に新しいファイルとして保存する。不合格の結果も記録する。終了コードは verify と同じ
+- 作業ツリーに未コミットの変更（追跡していないファイルを含む）があると、記録しない。記録したファイルは、そのままコミットする。`.gitignore` で `.loomake/` を除外しているなら、`.loomake/evidence/` だけは除外から外す
+- `trace report` は、いちばん新しい記録と trace.md・差分仕様から、要件ごとの出典・Requirement・テスト・検査結果の表、確認事項と仮定の一覧を出す。archive したあとの change にも使える
+- 冒頭に、合格したテストのない要件と確認待ちの要件を挙げる。回答や承認があるのに回答者・回答日・承認者・承認日が空の行は、末尾で警告する
+- `--format json` で JSON を出す。省くと Markdown になる。HTML はまだ出せない
+- 同じ入力からは、毎回同じレポートになる（作った日時は入れない）
+
 ## 5. `loomake verify` のリファレンス
 
 ```
@@ -330,8 +347,8 @@ trace.md は change ごとの要件の出典と合意の記録で、verify が�
 | 表 | 中身 | 人がすること |
 |---|---|---|
 | 要件台帳 | 要件 ID・出典・種別・要約・状態・反映先 | 状態が正しいかを見る |
-| 確認事項 | 質問・選択肢・おすすめ・ブロッキングか | 「回答」欄を埋める |
-| 仮定 | 要件書に無いことを仮に決めた内容と理由 | よければ「承認」欄を埋める |
+| 確認事項 | 質問・選択肢・おすすめ・ブロッキングか | 「回答」欄と、「回答者」（名前の代わりに役割でもよい）・「回答日」（YYYY-MM-DD）を埋める |
+| 仮定 | 要件書に無いことを仮に決めた内容と理由 | よければ「承認」欄と、「承認者」・「承認日」を埋める |
 
 台帳の状態は `反映済`・`確認待ち`・`範囲外`・`既存仕様で充足` のどれか。`確認待ち` が残っていると、完了ゲートは不合格になる。
 

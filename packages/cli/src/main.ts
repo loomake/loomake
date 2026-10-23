@@ -1,4 +1,5 @@
 import { UsageError, formatVerifyResult, runInit, runVerify } from '@loomake/kit';
+import { runRecord, runReport } from '@loomake/trace';
 
 export type Io = {
   cwd: string;
@@ -10,25 +11,27 @@ export type Io = {
   prompt?: (question: string) => Promise<string>;
 };
 
-const USAGE = 'loomake <init | verify> [オプション]';
+const USAGE = 'loomake <init | verify | trace> [オプション]';
 const INIT_USAGE = 'loomake init [--codex] [--devcontainer]';
 const VERIFY_USAGE = 'loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]';
+const TRACE_USAGE = 'loomake trace record --change <id> | loomake trace report --change <id> [--format md|json]';
 const INIT_FLAGS = new Set(['--codex', '--devcontainer']);
 const VERIFY_FLAGS = new Set(['--spec-only', '--done', '--json', '--skip-commands']);
 
 /** CLI の本体。終了コード（合格 0・不合格 1・使い方の誤り 2）を返す（REQ-041） */
 export async function main(argv: string[], io: Io): Promise<number> {
   const [command, ...args] = argv;
-  if (command !== 'verify' && command !== 'init') {
+  if (command !== 'verify' && command !== 'init' && command !== 'trace') {
     io.stderr(`使い方: ${USAGE}`);
     return 2;
   }
   try {
-    return command === 'init' ? await init(args, io) : verify(args, io);
+    if (command === 'init') return await init(args, io);
+    return command === 'verify' ? verify(args, io) : trace(args, io);
   } catch (e) {
     if (!(e instanceof UsageError)) throw e;
     io.stderr(`loomake ${command}: ${e.message}`);
-    io.stderr(`使い方: ${command === 'init' ? INIT_USAGE : VERIFY_USAGE}`);
+    io.stderr(`使い方: ${{ init: INIT_USAGE, verify: VERIFY_USAGE, trace: TRACE_USAGE }[command]}`);
     return 2;
   }
 }
@@ -77,4 +80,29 @@ function verify(args: string[], io: Io): number {
   });
   io.stdout(flags.has('--json') ? JSON.stringify(result, null, 2) : `\n${formatVerifyResult(result)}`);
   return result.ok ? 0 : 1;
+}
+
+function trace(args: string[], io: Io): number {
+  const [sub, ...rest] = args;
+  if (sub !== 'record' && sub !== 'report') throw new UsageError(sub ? `知らないサブコマンドです：${sub}` : 'record か report を指定してください');
+  let changeId: string | undefined;
+  let format: string | undefined;
+  for (let i = 0; i < rest.length; i++) {
+    const a = rest[i];
+    if (a === '--change' || (a === '--format' && sub === 'report')) {
+      const value = rest[++i];
+      if (!value || value.startsWith('--')) throw new UsageError(`${a} には値を続けてください`);
+      if (a === '--change') changeId = value;
+      else format = value;
+    } else {
+      throw new UsageError(`知らないオプションです：${a}`);
+    }
+  }
+  if (!changeId) throw new UsageError('--change <id> が必要です');
+  // verify の進捗は標準エラーに出す（verify と同じ）
+  if (sub === 'record') return runRecord({ root: io.cwd, changeId, stdout: io.stdout, progress: io.stderr });
+  // 初版は Markdown と JSON だけ。省いたら Markdown（add-trace-report の仮定 A-07）
+  if (format === 'html') throw new UsageError('HTML の形式は次の版で対応します。いまは md か json を指定してください');
+  if (format !== undefined && format !== 'md' && format !== 'json') throw new UsageError(`--format は md か json にしてください：${format}`);
+  return runReport({ root: io.cwd, changeId, format: format ?? 'md', stdout: io.stdout });
 }

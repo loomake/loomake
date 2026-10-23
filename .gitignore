@@ -33,7 +33,9 @@ coverage/
 
 # Python のキャッシュ
 __pycache__/
-.loomake/
+# 証拠の記録（.loomake/evidence/）だけはコミットする（add-trace-record の確認事項 Q-02）
+.loomake/*
+!.loomake/evidence/
 
 # kit を試す試験プロジェクト（別の git リポジトリ）
 .trial/

@@ -101,17 +101,23 @@ describe('req-to-openspec Skill のテンプレート', () => {
     expect(line).toContain('利用者');
   });
 
-  it('[REQ-026] REQ-001 から 1 文ずつ採番し、出典に文書名・章と行を書く', () => {
+  it('[REQ-026] 1 文ずつ採番し、出典に文書名・章と行を書く', () => {
     const ledger = section(skill, /要件台帳を作る/);
-    expect(ledger).toContain('`REQ-001` から採番');
+    expect(ledger).toContain('採番して台帳に載せる');
     expect(ledger).toContain('文を 1 つずつ');
     expect(ledger).toContain('出典は「文書名・章と行」まで書く');
   });
 
-  it('[REQ-026] REQ・Q・A を要件書 1 冊の中で通し番号にし、change をまたいでも同じ番号を使う', () => {
+  it('[REQ-026] REQ はリポジトリにある trace.md の最大の番号の次から振り、trace.md がなければ REQ-001 から振る', () => {
     const ledger = section(skill, /要件台帳を作る/);
-    expect(ledger).toContain('REQ・Q・A の番号は、要件書 1 冊の中で通し番号にする');
-    expect(ledger).toContain('change ごとに振り直さず、同じ番号を使う');
+    expect(ledger).toContain('リポジトリにある trace.md（`openspec/changes/` の進行中と archive）に出てくる最大の REQ 番号の次から振る');
+    expect(ledger).toContain('trace.md が 1 つもなければ `REQ-001` から振る');
+  });
+
+  it('[REQ-026] Q・A は要件書 1 冊の中で通し番号にし、change をまたいでも同じ番号を使う', () => {
+    const ledger = section(skill, /要件台帳を作る/);
+    expect(ledger).toContain('Q・A の番号は、要件書 1 冊の中で通し番号にする');
+    expect(ledger).toContain('REQ・Q・A を change ごとに振り直さず、同じ番号を使う');
   });
 
   it('[REQ-027] 曖昧さチェックリストが同梱され、全要件にあてて Q か A に記録するよう指示している', () => {
