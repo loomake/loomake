@@ -8,6 +8,8 @@ import { selectChanges, verifyArgs } from '../scripts/ci-gate.mjs';
 const root = join(import.meta.dirname, '..');
 const read = (p: string) => readFileSync(join(root, p), 'utf8');
 const readJson = (p: string) => JSON.parse(read(p));
+// Windows のチェックアウトでは行末が CRLF になるので、行の正規表現で読むファイルは LF にそろえる
+const readLf = (p: string) => read(p).replace(/\r\n/g, '\n');
 const run = (cmd: string) => spawnSync(cmd, { cwd: root, shell: true, encoding: 'utf8' });
 
 const packageJsons = ['package.json', 'packages/core/package.json', 'packages/kit/package.json', 'packages/cli/package.json'];
@@ -49,7 +51,7 @@ describe('Node.js のバージョン宣言', () => {
   });
 
   it('[REQ-142] CI に、Node 22.12.0 でビルドした CLI を動かすジョブがある', () => {
-    const ci = read('.github/workflows/ci.yml');
+    const ci = readLf('.github/workflows/ci.yml');
     const job = ci.match(/^ {2}node22:\n((?: {4}.*\n|\s*\n)*)/m)?.[1] ?? '';
     const setup = job.indexOf('node-version: 22.12.0');
     expect(setup).toBeGreaterThanOrEqual(0);
@@ -241,7 +243,7 @@ describe('npm への公開の準備', () => {
   });
 
   describe('release ワークフロー', () => {
-    const release = read('.github/workflows/release.yml');
+    const release = readLf('.github/workflows/release.yml');
     const at = (s: string) => {
       const i = release.indexOf(s);
       expect(i, s).toBeGreaterThanOrEqual(0);
