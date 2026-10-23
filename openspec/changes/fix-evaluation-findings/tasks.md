@@ -6,7 +6,7 @@
 - [x] 1.5 run は gh CLI が使えるかを、エンジンを呼ぶ前に確かめる（REQ-116）
 
 ## 2. テスト
-- [ ] 2.1 各 Scenario に対応するテストを、実装の前に書いて落ちることを確かめる。テスト名に [REQ-xxx] を入れる
+- [x] 2.1 各 Scenario に対応するテストを、実装の前に書いて落ちることを確かめる。テスト名に [REQ-xxx] を入れる
 
 ## 3. 確認
-- [ ] 3.1 `pnpm -s verify --change fix-evaluation-findings --done` を通す <!-- loomake:gate=done -->
+- [x] 3.1 `pnpm -s verify --change fix-evaluation-findings --done` を通す <!-- loomake:gate=done -->
