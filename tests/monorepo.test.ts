@@ -185,3 +185,89 @@ describe('ライセンス', () => {
     for (const p of packageJsons) expect(readJson(p).license, p).toBe('MIT');
   });
 });
+
+describe('npm への公開の準備', () => {
+  const publishDirs = ['core', 'kit', 'trace', 'runner', 'cli'];
+  const repoUrl = 'https://github.com/loomake/loomake';
+
+  it('[REQ-138] 5 つのパッケージに、GitHub のリポジトリを指す repository・homepage・bugs と、description・keywords がある', () => {
+    for (const d of publishDirs) {
+      const pkg = readJson(`packages/${d}/package.json`);
+      expect(pkg.repository, d).toEqual({ type: 'git', url: `git+${repoUrl}.git`, directory: `packages/${d}` });
+      expect(pkg.homepage, d).toBe(`${repoUrl}#readme`);
+      expect(pkg.bugs?.url, d).toBe(`${repoUrl}/issues`);
+      expect(pkg.description, d).toBeTruthy();
+      expect(pkg.keywords, d).toContain('openspec');
+    }
+  });
+
+  it('[REQ-138] CLI の description は init・verify・trace・run・doctor をすべて挙げる', () => {
+    const description = readJson('packages/cli/package.json').description;
+    for (const c of ['init', 'verify', 'trace', 'run', 'doctor']) expect(description).toContain(c);
+  });
+
+  it('[REQ-139] 5 つのパッケージで、pnpm pack の tarball に README.md が入る', () => {
+    for (const d of publishDirs) {
+      const r = spawnSync('pnpm pack --dry-run --json', { cwd: join(root, 'packages', d), shell: true, encoding: 'utf8' });
+      expect(r.status, r.stderr).toBe(0);
+      const files = (JSON.parse(r.stdout) as { files: { path: string }[] }).files.map((f) => f.path);
+      expect(files, d).toContain('README.md');
+    }
+  });
+
+  it('[REQ-139] CLI の README に、npx loomake init・リポジトリへのリンク・openspec と gh の案内がある', () => {
+    const readme = read('packages/cli/README.md');
+    expect(readme).toContain('npx loomake init');
+    expect(readme).toContain(repoUrl);
+    expect(readme).toContain('`openspec`');
+    expect(readme).toContain('`gh`');
+  });
+
+  it('[REQ-139] 内部のパッケージの README に、内部用であることと 0.y.z のあいだは API が変わりうることが書いてある', () => {
+    for (const d of ['core', 'kit', 'trace', 'runner']) {
+      const readme = read(`packages/${d}/README.md`);
+      expect(readme, d).toContain('内部用');
+      expect(readme, d).toContain('`0.y.z` のあいだは、API が予告なく変わることがある');
+    }
+  });
+
+  describe('release ワークフロー', () => {
+    const release = read('.github/workflows/release.yml');
+    const at = (s: string) => {
+      const i = release.indexOf(s);
+      expect(i, s).toBeGreaterThanOrEqual(0);
+      return i;
+    };
+
+    it('[REQ-140] pnpm changeset publish の前に lint・typecheck・test を実行する', () => {
+      const publish = at('run: pnpm changeset publish');
+      for (const c of ['run: pnpm lint', 'run: pnpm typecheck', 'run: pnpm test']) expect(at(c)).toBeLessThan(publish);
+    });
+
+    it('[REQ-140] concurrency を指定し、実行中のものを取り消さない', () => {
+      expect(release).toMatch(/^concurrency:\n(?:\s+.*\n)*?\s+cancel-in-progress: false$/m);
+    });
+
+    it('[REQ-141] id-token: write を持ち、公開の前に 11.5.1 以上の npm を入れ、NPM_TOKEN があればそれも使う', () => {
+      expect(release).toMatch(/^permissions:\n(?:\s+.*\n)*?\s+id-token: write$/m);
+      const install = release.match(/run: npm install -g npm@(\d+)\.(\d+)\.(\d+)/);
+      expect(install).not.toBeNull();
+      const [major, minor, patch] = install!.slice(1).map(Number);
+      expect(major * 1e6 + minor * 1e3 + patch).toBeGreaterThanOrEqual(11 * 1e6 + 5 * 1e3 + 1);
+      expect(at('run: npm install -g npm@')).toBeLessThan(at('run: pnpm changeset publish'));
+      expect(release).toContain('NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}');
+    });
+  });
+
+  it('[REQ-141] docs/release.md に、初回を NPM_TOKEN で公開し、Trusted Publisher を登録して NPM_TOKEN を外す手順がある', () => {
+    const doc = read('docs/release.md');
+    const first = doc.indexOf('初回の公開：');
+    const next = doc.indexOf('2 回目以降の公開：');
+    expect(first).toBeGreaterThanOrEqual(0);
+    expect(next).toBeGreaterThan(first);
+    expect(doc.slice(first, next)).toContain('`NPM_TOKEN` として登録する');
+    const after = doc.slice(next);
+    expect(after).toContain('Trusted Publisher を登録する');
+    expect(after).toContain('`NPM_TOKEN` を外し');
+  });
+});
