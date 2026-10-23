@@ -22,6 +22,15 @@ public にする前に、コミットの履歴に秘密情報が入っていな�
 2. npm で `@loomake` organization を作り、公開権限を持つメンバーを決める
 3. `pnpm changeset version` を実行して版を上げ、PR を作って main に入れる。package.json を変えるので、PR 本文には `loomake-change: none` を書く。書かないと CI の gate ジョブが失敗する
 
+### release ワークフローがすること
+
+release ワークフローは、2 つのジョブで公開する。
+
+1. `check` のジョブは、未消化の changeset がないことを確かめ、ビルドと lint・typecheck・test を実行する。ビルドした `dist/` を、次のジョブに渡す。このジョブは、リポジトリを読む権限しか持たない
+2. `publish` のジョブは、`check` が合格したときだけ動く。依存パッケージのスクリプトを実行せずにインストールし（`--ignore-scripts`）、受け取った `dist/` を `pnpm changeset publish` で公開して、タグを push する。OIDC のトークンとリポジトリへの書き込みの権限は、このジョブだけが持つ
+
+ワークフローが使う action は、コミットの SHA で固定している。action の版を上げるときは、新しいタグが指すコミットの SHA に書き換え、コメントの版も直す。
+
 ### 初回の公開と、2 回目以降の認証
 
 npm の Trusted Publishing（OIDC）で公開すれば、トークンの管理が要らない。ただし、まだ存在しないパッケージには Trusted Publisher を登録できない。そこで、初回だけ `NPM_TOKEN` で公開し、そのあと OIDC に切り替える。
@@ -71,7 +80,6 @@ npm では、一度使った版の番号は、unpublish したあとも二度と
 
 ## やった方がいいこと
 
-- **公開の権限を公開のステップだけに絞る**：release ワークフローは `id-token: write` と `contents: write` をジョブ全体に持つ。そのため、`pnpm install` で依存パッケージの postinstall が動くあいだも、OIDC のトークンを取れる。依存のどれかが乗っ取られると、Trusted Publisher の権限でパッケージを公開されるおそれがある。ビルドとテストのジョブ（読み取りの権限だけ）と、公開のジョブ（`id-token: write`）を分け、ビルドしたものを公開のジョブに渡す。あわせて、`actions/checkout` などの action をコミットの SHA で固定する。release ワークフローの決まり（REQ-140・REQ-141）が変わるので、change を作ってから直す
 - **GitHub の environment で公開に承認を求める**：リポジトリを public にしたら、`npm` などの environment を作って公開のジョブに付け、承認する人を決める。Trusted Publisher にも、その environment の名前を登録する。public のリポジトリでは無料で使え、main を保護できない問題のうち、公開の部分を補える
 - **pack して動かす CI**：「pack → 新しいプロジェクトに入れる → `init`・`verify`・`doctor` を実行」をジョブにする。手で行っている確認を自動にでき、`files` の漏れ（templates・schema）を公開前に見つけられる。publint も足す
 - **型の解決を確かめる**：`@arethetypeswrong/cli` は道具のエラーで実行できず、型の解決はまだ確かめていない
