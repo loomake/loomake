@@ -1,13 +1,17 @@
 ## ADDED Requirements
 
 ### Requirement: 証拠の記録
-`loomake trace record --change <id>` は、その change に `verify --done` を実行し、結果を検査したコミットの SHA・コミットの日時・記録した日時と合わせて、`.loomake/evidence/<change-id>/` に JSON のファイルとして保存する SHALL。verify が不合格でも記録し、終了コードは verify と同じにする SHALL。
+`loomake trace record --change <id>` は、その change に `verify --done` を実行し、結果を検査したコミットの SHA・コミットの日時・記録した日時と合わせて、`.loomake/evidence/<change-id>/` に JSON のファイルとして保存する SHALL。verify が不合格でも記録し、終了コードは verify と同じにする SHALL。記録したあとは、記録のファイルを git にコミットするよう日本語で案内する SHALL。
 
 Source: REQ-066
 
 #### Scenario: 合格した結果を記録する
 - **WHEN** 完了ゲートに合格する change に、未コミットの変更のない作業ツリーで `loomake trace record --change c1` を実行する
 - **THEN** `.loomake/evidence/c1/` に JSON のファイルが 1 つ作られ、verify の結果・HEAD のコミットの SHA・コミットの日時・記録した日時が入り、終了コードは 0 である
+
+#### Scenario: コミットを案内する
+- **WHEN** `loomake trace record --change c1` で記録が保存される
+- **THEN** 保存したファイルのパスと、そのファイルを git にコミットするよう促す案内が表示される
 
 #### Scenario: 不合格の結果も記録する
 - **WHEN** 完了ゲートに不合格になる change に `loomake trace record --change c1` を実行する
@@ -64,3 +68,12 @@ Source: REQ-089
 #### Scenario: Node.js 20.19 で動く
 - **WHEN** Node.js 20.19 の環境で trace record のテストを実行する
 - **THEN** テストが合格する
+
+### Requirement: trace の実行時依存
+`@loomake/trace` の実行時依存は `@loomake/core` と `@loomake/kit` のみとする SHALL。
+
+Source: REQ-083
+
+#### Scenario: trace の依存
+- **WHEN** `packages/trace/package.json` の `dependencies` を読む
+- **THEN** `@loomake/core` と `@loomake/kit` 以外が含まれない

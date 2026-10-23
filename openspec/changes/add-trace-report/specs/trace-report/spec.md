@@ -95,3 +95,73 @@ Source: REQ-089
 #### Scenario: Node.js 20.19 で動く
 - **WHEN** Node.js 20.19 の環境で trace report のテストを実行する
 - **THEN** テストが合格する
+
+### Requirement: trace report の実行時依存
+trace report を含む `@loomake/trace` の実行時依存は `@loomake/core` と `@loomake/kit` のみとする SHALL。
+
+Source: REQ-083
+
+#### Scenario: trace の依存
+- **WHEN** `packages/trace/package.json` の `dependencies` を読む
+- **THEN** `@loomake/core` と `@loomake/kit` 以外が含まれない
+
+### Requirement: 冒頭の要注意の一覧
+レポートの冒頭に、状態が反映済で、使った証拠の記録の中に合格したテストのない要件と、状態が確認待ちの要件を、それぞれ一覧で示す SHALL。テストがない要件と、テストが不合格だった要件は分けずに、「合格したテストのない要件」として 1 つにまとめる SHALL。どちらもないときは、ないことを示す SHALL。
+
+Source: REQ-072
+
+#### Scenario: 合格したテストのない要件がある
+- **WHEN** 反映済の REQ-070 に、証拠の記録の中で合格したテストがない change のレポートを作る
+- **THEN** 冒頭の「合格したテストのない要件」の一覧に REQ-070 が挙がる
+
+#### Scenario: 確認待ちの要件がある
+- **WHEN** 状態が確認待ちの REQ-072 を持つ change のレポートを作る
+- **THEN** 冒頭の「確認待ちの要件」の一覧に REQ-072 が挙がる
+
+#### Scenario: どちらもない
+- **WHEN** 反映済の要件すべてに合格したテストがあり、確認待ちの要件がない change のレポートを作る
+- **THEN** 冒頭に、要注意の要件がないことが書かれる
+
+### Requirement: 確認事項の一覧
+レポートは、確認事項ごとに ID・質問・回答・回答者・回答日を一覧にする SHALL。
+
+Source: REQ-077
+
+#### Scenario: 確認事項が並ぶ
+- **WHEN** 回答者が「顧客 PM」、回答日が 2026-10-23 の Q-01 を持つ change のレポートを作る
+- **THEN** 確認事項の一覧に Q-01 の質問・回答・「顧客 PM」・2026-10-23 が並ぶ
+
+### Requirement: 仮定の一覧
+レポートは、仮定ごとに ID・内容・承認者・承認日を一覧にする SHALL。
+
+Source: REQ-078
+
+#### Scenario: 仮定が並ぶ
+- **WHEN** 承認者が「開発リーダー」、承認日が 2026-10-23 の A-01 を持つ change のレポートを作る
+- **THEN** 仮定の一覧に A-01 の内容・「開発リーダー」・2026-10-23 が並ぶ
+
+### Requirement: 合意の欄が空のときの警告
+回答のある確認事項で回答者か回答日が空のとき、または承認欄のある仮定で承認者か承認日が空のとき、レポートはその ID と空の欄を警告として示す SHALL。回答も承認もまだない行は、この警告の対象にしない SHALL。
+
+Source: REQ-079
+
+#### Scenario: 回答者が空
+- **WHEN** 回答はあるが回答者が空の Q-02 を持つ change のレポートを作る
+- **THEN** Q-02 の回答者が空であることが警告として示される
+
+#### Scenario: 列のない古い trace.md
+- **WHEN** 回答者・回答日の列がない trace.md で、回答のある Q-01 を持つ change のレポートを作る
+- **THEN** レポートは作られ、Q-01 の回答者と回答日が空であることが警告として示される
+
+#### Scenario: 未回答の行
+- **WHEN** 回答が空の Q-03 を持つ change のレポートを作る
+- **THEN** Q-03 は回答者・回答日の警告の対象にならない
+
+### Requirement: report の性能
+要件 500 件の change のレポートを、`loomake trace report` は 5 秒以内に出力する SHALL。
+
+Source: REQ-086
+
+#### Scenario: 大きな change
+- **WHEN** 要件 500 件と、その証拠の記録を持つ見本の change に `loomake trace report` を実行する
+- **THEN** 5 秒以内に出力が終わる
