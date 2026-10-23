@@ -19,7 +19,7 @@ Source: REQ-093
 - **THEN** 実装に進む
 
 ### Requirement: 未コミットの変更があるときは始めない
-作業ツリーに未コミットの変更（git が追跡していない新しいファイルを含み、`.gitignore` で除外したファイルを含まない）があるとき、`loomake run` は実装を始めず、変更のあるファイルを表示して終了コード 1 を返す SHALL。
+作業ツリーに未コミットの変更（git が追跡していない新しいファイルを含み、`.gitignore` で除外したファイルを含まない）があるとき、`loomake run` は実装を始めず、変更のあるファイルを表示して終了コード 1 を返す SHALL。loomake.config.json の `tests.report` のファイルが `.gitignore` で除外されていないときも、実装を始めず、`.gitignore` に足すよう表示して終了コード 1 を返す SHALL。
 
 Source: REQ-094
 
@@ -30,6 +30,10 @@ Source: REQ-094
 #### Scenario: 追跡していないファイルがある
 - **WHEN** git が追跡していない新しいファイルがある状態で `loomake run --change c1` を実行する
 - **THEN** エンジンは呼ばれず、終了コードは 1 である
+
+#### Scenario: テストのレポートを除外していない
+- **WHEN** `.loomake/test-report.json` を `.gitignore` で除外していないプロジェクトで `loomake run --change c1` を実行する
+- **THEN** `.gitignore` に足すよう表示され、エンジンは呼ばれず、終了コードは 1 である
 
 ### Requirement: 予定だけを表示する
 `--dry-run` を付けた場合、`loomake run` は仕様ゲートと未コミットの変更の確認を行ったうえで、エンジンに渡す予定のタスクの一覧と、最初のタスクの指示の全文を表示し、ブランチを作らず、エンジンを呼ばずに終了コード 0 を返す SHALL。
@@ -106,7 +110,7 @@ Source: REQ-100
 - **THEN** そのタスクはエンジンに渡されない
 
 ### Requirement: エンジンの選び方と権限
-`loomake run` は `--engine` でエンジンを選び、省いたときは `claude-code` とする SHALL。知らないエンジンの名前と、`claude` コマンドが見つからないときは、使い方の誤りとして終了コード 2 を返す SHALL。Claude Code は headless（`claude -p`、出力は JSON）で呼び、指示は標準入力で渡す SHALL。ふだんは、ファイルの読み書きと、loomake.config.json の commands の実行だけを許可する操作の一覧として渡す SHALL。
+`loomake run` は `--engine` でエンジンを選び、省いたときは `claude-code` とする SHALL。知らないエンジンの名前と、`claude` コマンドが見つからないときと、change-id に `/`・`\`・`..` を含むときは、使い方の誤りとして終了コード 2 を返す SHALL。Claude Code は headless（`claude -p`、出力は JSON）で呼び、指示は標準入力で渡す SHALL。ふだんは、ファイルの読み書きと、loomake.config.json の commands の実行だけを許可する操作の一覧として渡す SHALL。
 
 Source: REQ-101
 
@@ -121,6 +125,10 @@ Source: REQ-101
 #### Scenario: claude コマンドがない
 - **WHEN** `claude` コマンドのない環境で `loomake run --change c1` を実行する
 - **THEN** Claude Code を入れるよう表示され、終了コードは 2 である
+
+#### Scenario: パスの区切りを含む change-id
+- **WHEN** `loomake run --change ../c1` を実行する
+- **THEN** change-id にパスの区切りを含められないと表示され、終了コードは 2 である
 
 ### Requirement: 権限確認なしで動かす条件
 `--skip-permissions` を付け、かつ環境変数 `LOOMAKE_SANDBOX` が `1` のときだけ、`loomake run` は Claude Code を権限確認なしで動かす SHALL。`--skip-permissions` を付けても `LOOMAKE_SANDBOX` が `1` でないときは、通信を許可したドメインに絞った環境で `LOOMAKE_SANDBOX=1` を設定するよう、既定の許可ドメイン（npm・GitHub・エンジンの API）とともに表示し、使い方の誤りとして終了コード 2 を返す MUST。
@@ -145,13 +153,17 @@ Source: REQ-104
 - **THEN** 直しを 2 回したあとに止まり、上限に達したことが報告され、終了コードは 1 である
 
 ### Requirement: 実行時間の上限
-`loomake run` を始めてからの時間が上限に達したら、`loomake run` はエンジンのプロセスを止めて、止まる SHALL。上限の既定は 60 分とし、loomake.config.json の `run.timeoutMinutes` で変えられる SHALL。
+`loomake run` を始めてからの時間が上限に達したら、`loomake run` はエンジンのプロセスか、完了ゲートの品質コマンドのプロセスを止めて、止まる SHALL。上限の既定は 60 分とし、loomake.config.json の `run.timeoutMinutes` で変えられる SHALL。
 
 Source: REQ-105
 
 #### Scenario: 上限に達する
 - **WHEN** 実行時間の上限を短くして、終わらないエンジンで実行する
 - **THEN** エンジンのプロセスが止められ、時間の上限に達したことが報告され、終了コードは 1 である
+
+#### Scenario: 完了ゲートのあいだに上限に達する
+- **WHEN** 実行時間の上限を短くして、終わらないテストのコマンドを持つプロジェクトで実行する
+- **THEN** テストのプロセスが止められ、時間の上限に達したことが報告され、終了コードは 1 である
 
 ### Requirement: エンジンの質問で止まる
 エンジンの出力に `LOOMAKE-QUESTION:` で始まる行があれば、`loomake run` はそこで止まり、その質問を表示する SHALL。そのタスクは完了にせず、コミットもしない SHALL。
