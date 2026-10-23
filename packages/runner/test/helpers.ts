@@ -12,6 +12,8 @@ export type FakeStep = {
   /** プロジェクトのルートからのパス → 中身 */
   write?: Record<string, string>;
   delete?: string[];
+  /** write・delete のあとに実行する git のコマンドの引数（エンジン自身のコミットやブランチの切り替え） */
+  git?: string[][];
   /** 標準出力の JSON の result に入れる文 */
   output?: string;
   sleepMs?: number;
@@ -23,6 +25,7 @@ export type FakeStep = {
 const FAKE_CLAUDE = `#!/usr/bin/env node
 import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { spawnSync } from 'node:child_process';
 const args = process.argv.slice(2);
 if (args[0] === '--version') { console.log('fake'); process.exit(0); }
 const prompt = readFileSync(0, 'utf8');
@@ -34,6 +37,7 @@ const step = plan[calls] ?? {};
 if (step.sleepMs) await new Promise((r) => setTimeout(r, step.sleepMs));
 for (const [p, text] of Object.entries(step.write ?? {})) { mkdirSync(dirname(join(process.cwd(), p)), { recursive: true }); writeFileSync(join(process.cwd(), p), text); }
 for (const p of step.delete ?? []) rmSync(join(process.cwd(), p), { force: true });
+for (const a of step.git ?? []) spawnSync('git', a, { stdio: 'ignore' });
 console.log(JSON.stringify({ type: 'result', result: step.output ?? '終えました' }));
 process.exitCode = step.exitCode ?? 0;
 `;

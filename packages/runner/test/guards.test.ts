@@ -213,3 +213,76 @@ describe('止まったときの差分の表示と承認', () => {
       expect(existsSync(join(r.repo.root, 'impl.txt'))).toBe(true);
     }));
 });
+
+describe('エンジンによるコミットとブランチの切り替えの検出', () => {
+  const commit = [['add', '-A'], ['commit', '-q', '-m', 'エンジンのコミット']];
+  const moved = (r: Awaited<ReturnType<typeof runWith>>) => {
+    expect(r.code).toBe(1);
+    expect(r.stdout).toContain('エンジンが HEAD かブランチを変えました');
+    expect(r.stdout).toContain('git reset --hard ');
+    expect(readFileSync(join(r.repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [ ] 1.1');
+  };
+
+  it('[REQ-126] エンジンが自分でコミットしたら、前後の SHA を表示し、タスクを完了にせずに止まる', () =>
+    check({ git: commit }, undefined, (r) => {
+      moved(r);
+      const [after, before] = r.repo.git('log', '--format=%H', '-2').split('\n');
+      expect(r.stdout).toContain(`呼ぶ前：loomake/${CHANGE} ${before}`);
+      expect(r.stdout).toContain(`呼んだ後：loomake/${CHANGE} ${after}`);
+      // run はコミットを作らず、エンジンのコミットも取り消さない
+      expect(r.commits).toBe(2);
+      expect(r.repo.git('log', '-1', '--format=%s')).toBe('エンジンのコミット');
+    }));
+
+  it('[REQ-126] 設定を変えてコミットしたら、その差分を表示して止まる', () =>
+    check({ write: { 'loomake.config.json': '{"commands":{}}' }, git: commit }, undefined, (r) => {
+      moved(r);
+      expect(r.stdout).toContain('+{"commands":{}}');
+      expect(r.stdout).toContain('-{"openspecValidate":false');
+    }));
+
+  it('[REQ-126] エンジンが別のブランチに切り替えたら、前後のブランチ名を表示し、ブランチを戻さずに止まる', () =>
+    check({ git: [['switch', '-q', '-c', 'other']] }, undefined, (r) => {
+      moved(r);
+      expect(r.stdout).toMatch(new RegExp(`呼ぶ前：loomake/${CHANGE} `));
+      expect(r.stdout).toMatch(/呼んだ後：other /);
+      expect(r.repo.git('rev-parse', '--abbrev-ref', 'HEAD')).toBe('other');
+      expect(r.status).toContain('impl.txt');
+    }));
+
+  it('[REQ-126] コミットしてから失敗したら、HEAD が変わったことを理由に含めて止まる', () =>
+    check({ git: commit, exitCode: 1 }, undefined, (r) => {
+      moved(r);
+      expect(r.stdout).toMatch(/loomake run を止めました：エンジンが HEAD かブランチを変えました（.*）。エンジンが終了コード 1 で終わりました/);
+    }));
+
+  it('[REQ-126] 完了ゲートの直しでエンジンがコミットしたら、完了ゲートのタスクを完了にせずに止まる', async () => {
+    const repo = makeRepo();
+    try {
+      repo.plan([{}, {}, { write: { 'impl.txt': '直した\n' }, git: commit }]);
+      const out: string[] = [];
+      const code = await runRun({
+        root: repo.root,
+        changeId: CHANGE,
+        interactive: false,
+        confirm: async () => false,
+        stdout: (t) => out.push(t),
+        env: repo.env,
+        fileExists: () => false,
+      });
+      expect(code).toBe(1);
+      expect(out.join('\n')).toContain('エンジンが HEAD かブランチを変えました');
+      expect(repo.calls()).toHaveLength(3);
+      expect(readFileSync(join(repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [ ] 3.1');
+      expect(repo.git('log', '-1', '--format=%s')).toBe('エンジンのコミット');
+    } finally {
+      repo.cleanup();
+    }
+  });
+
+  it('[REQ-126] エンジンがコミットせずに終えたら、止まらずにタスクを完了にしてコミットする', () =>
+    check({}, undefined, (r) => {
+      expect(r.stdout).not.toContain('エンジンが HEAD かブランチを変えました');
+      expect(r.repo.git('log', '--format=%s', '--reverse').split('\n')).toContain(`run(${CHANGE}): 1.1 一つ目のタスク（REQ-012）`);
+    }));
+});
