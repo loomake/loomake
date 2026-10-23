@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { runRecord, type Evidence } from '@loomake/trace';
 import { main } from '../../cli/src/main.js';
 import { CHANGE, reportJson, specMd, traceMd } from '../../kit/test/project.js';
@@ -212,5 +213,53 @@ describe('オフラインでの動作と依存', () => {
   it('[REQ-089] @loomake/trace の engines.node は >=20.19.0', () => {
     const pkg = JSON.parse(readFileSync(join(import.meta.dirname, '../package.json'), 'utf8'));
     expect(pkg.engines?.node).toBe('>=20.19.0');
+  });
+});
+
+describe('検証した時点の文書の保存', () => {
+  it('[REQ-127] trace.md と差分仕様のパス・内容・SHA-256 を記録に保存する', () => {
+    const repo = makeRepo();
+    try {
+      expect(record(repo.root).code).toBe(0);
+      const e = readEvidence(repo.root, evidenceFiles(repo.root)[0]);
+      const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
+      expect(e.documents).toEqual([
+        { path: 'trace.md', sha256: sha256(traceMd()), content: traceMd() },
+        { path: 'specs/x/spec.md', sha256: sha256(specMd()), content: specMd() },
+      ]);
+    } finally {
+      repo.cleanup();
+    }
+  });
+});
+
+describe('検査のあいだの変更', () => {
+  it('[REQ-128] 品質コマンドが追跡しているファイルを書き換えたら、記録せずに終了コード 1 を返す', () => {
+    const repo = makeRepo();
+    try {
+      const script = readFileSync(join(repo.root, 'write-report.mjs'), 'utf8');
+      repo.write('write-report.mjs', `${script}writeFileSync('tracked.txt', '書き換えた\\n');\n`);
+      repo.write('tracked.txt', '元\n');
+      gitRun(repo.root, 'add', '-A');
+      gitRun(repo.root, 'commit', '-q', '-m', '追跡しているファイルを書き換えるテスト');
+      const r = record(repo.root);
+      expect(r.code).toBe(1);
+      expect(r.stdout).toContain('検査のあいだに作業ツリーのファイルが変わったので、記録しませんでした');
+      expect(r.stdout).toContain('tracked.txt');
+      expect(evidenceFiles(repo.root)).toEqual([]);
+    } finally {
+      repo.cleanup();
+    }
+  });
+
+  it('[REQ-128] 品質コマンドが .gitignore で除外したテストのレポートだけを書き出すなら、記録する', () => {
+    const repo = makeRepo();
+    try {
+      expect(record(repo.root).code).toBe(0);
+      expect(existsSync(join(repo.root, '.loomake/test-report.json'))).toBe(true);
+      expect(evidenceFiles(repo.root)).toHaveLength(1);
+    } finally {
+      repo.cleanup();
+    }
   });
 });
