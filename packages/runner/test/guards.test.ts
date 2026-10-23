@@ -97,6 +97,26 @@ describe('設定の変更の検出', () => {
       },
     ));
 
+  it('[REQ-110] 子パッケージの package.json の scripts を変えたら止まる', () =>
+    check(
+      { write: { 'packages/app/package.json': JSON.stringify({ scripts: { test: 'echo skip' } }) } },
+      (repo) => repo.write('packages/app/package.json', JSON.stringify({ scripts: { test: 'vitest run' } })),
+      (r) => {
+        stopped(r, 2);
+        expect(r.stdout).toContain('packages/app/package.json：package.json の scripts を変えました');
+      },
+    ));
+
+  it('[REQ-110] scripts のある package.json を消したら止まる', () =>
+    check(
+      { delete: ['packages/app/package.json'] },
+      (repo) => repo.write('packages/app/package.json', JSON.stringify({ scripts: { test: 'vitest run' } })),
+      (r) => {
+        stopped(r, 2);
+        expect(r.stdout).toContain('packages/app/package.json：package.json の scripts を変えました');
+      },
+    ));
+
   it('[REQ-110] package.json の dependencies だけを変えたら、止まらずにコミットする', () =>
     check(
       { write: { 'package.json': JSON.stringify({ scripts: { test: 'vitest run' }, dependencies: { a: '1.0.0' } }) } },

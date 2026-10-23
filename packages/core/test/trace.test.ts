@@ -121,6 +121,13 @@ describe('parseTrace：合意の列', () => {
     expect(value.assumptions[0]).toMatchObject({ 承認者: '開発リーダー', 承認日: '2026-10-23' });
   });
 
+  it('[REQ-011][REQ-077][REQ-078] 合意の列でない列が無いときは、表と列の名前と、ヘッダの行番号を持つエラーを返す', () => {
+    const broken = trace.replace('| ブロッキング |', '| ブロッキング? |');
+    const { errors } = parseTrace('trace.md', broken);
+    const line = broken.split('\n').findIndex((l) => l.includes('ブロッキング?')) + 1;
+    expect(errors).toEqual([{ file: 'trace.md', line, message: '「確認事項」の表に「ブロッキング」の列がありません' }]);
+  });
+
   it('[REQ-011][REQ-077][REQ-078] 合意の列のない古い trace.md もエラーなく読め、4 つの値は空', () => {
     const { value, errors } = parseTrace('trace.md', trace);
     expect(errors).toEqual([]);

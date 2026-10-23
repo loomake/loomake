@@ -15,6 +15,8 @@ export type FakeStep = {
   /** 標準出力の JSON の result に入れる文 */
   output?: string;
   sleepMs?: number;
+  /** 終了コード。省くと 0 */
+  exitCode?: number;
 };
 
 // 呼ばれた回数に応じて台本の手順を行い、引数と指示を記録する。台本が尽きたら何もしない
@@ -33,6 +35,7 @@ if (step.sleepMs) await new Promise((r) => setTimeout(r, step.sleepMs));
 for (const [p, text] of Object.entries(step.write ?? {})) { mkdirSync(dirname(join(process.cwd(), p)), { recursive: true }); writeFileSync(join(process.cwd(), p), text); }
 for (const p of step.delete ?? []) rmSync(join(process.cwd(), p), { force: true });
 console.log(JSON.stringify({ type: 'result', result: step.output ?? '終えました' }));
+process.exitCode = step.exitCode ?? 0;
 `;
 
 // gh auth status は FAKE_GH_AUTH が fail なら失敗する。gh pr create は引数と本文を記録して URL を出す

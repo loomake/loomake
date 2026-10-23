@@ -4,7 +4,7 @@ import { parseTasks, type Task, type VerifyResult } from '@loomake/core';
 import { runRecord } from '@loomake/trace';
 import { UsageError, formatVerifyResult, loadConfig, runVerify } from '@loomake/kit';
 import { DEFAULT_ALLOWED_DOMAINS, assertEngineAvailable, runClaude, type EngineResult } from './engine.js';
-import { branchExists, dirtyFiles, git } from './git.js';
+import { branchExists, dirtyFiles, git, gitConfig } from './git.js';
 import { APPROVAL_GUIDE, findViolations } from './guards.js';
 import { createPr, ghLoggedIn, prBody } from './pr.js';
 import { maskSecrets } from './mask.js';
@@ -146,15 +146,25 @@ export async function runRun(options: RunOptions): Promise<number> {
   }
   assertEngineAvailable(engine, env);
 
-  // 実行前の確認（REQ-093・REQ-094）
-  const specGate = runVerify({ root, changeId, gate: 'spec-only', progress });
-  if (!specGate.ok) {
-    stdout(`仕様ゲートに不合格なので、実装を始めませんでした。\n\n${formatVerifyResult(specGate)}`);
-    return 1;
-  }
+  // 実行前の確認（REQ-093・REQ-094）。未コミットの変更がなければ change のブランチに切り替えられる
   const dirty = dirtyFiles(root, env);
   if (dirty.length) {
     stdout(`作業ツリーに未コミットの変更があるので、実装を始めませんでした。コミットしてから、もう一度実行してください。\n${dirty.map((l) => `  ${l}`).join('\n')}`);
+    return 1;
+  }
+  // change のブランチ（REQ-096、add-run-loop の仮定 A-04）。あれば先に切り替え、そのブランチの内容で検査してタスクを読む（fix-review-findings の仮定 A-03）
+  const branch = `loomake/${changeId}`;
+  const startBranch = git(root, env, ['rev-parse', '--abbrev-ref', 'HEAD']).trim();
+  const hasBranch = branchExists(root, env, branch);
+  const switched = hasBranch && startBranch !== branch;
+  if (switched) git(root, env, ['switch', '-q', branch]);
+  const switchBack = () => {
+    if (switched) git(root, env, ['switch', '-q', startBranch]);
+  };
+  const specGate = runVerify({ root, changeId, gate: 'spec-only', progress });
+  if (!specGate.ok) {
+    switchBack();
+    stdout(`仕様ゲートに不合格なので、実装を始めませんでした。\n\n${formatVerifyResult(specGate)}`);
     return 1;
   }
 
@@ -168,6 +178,7 @@ export async function runRun(options: RunOptions): Promise<number> {
   if (options.dryRun) {
     stdout(['エンジンに渡す予定のタスク：', ...engineTasks.map((t) => `  - [ ] ${taskLabel(t)}`)].join('\n'));
     if (engineTasks[0]) stdout(`\n最初のタスクの指示：\n\n${buildPrompt(root, changeDir, `- [ ] ${taskLabel(engineTasks[0])}`)}`);
+    switchBack();
     return 0;
   }
 
@@ -175,10 +186,14 @@ export async function runRun(options: RunOptions): Promise<number> {
   if (!inContainer(env, fileExists)) {
     stdout('警告：コンテナの外で実行しようとしています。loomake run は、devcontainer か、それと同等のコンテナの中で実行してください。');
     if (!options.interactive) {
+      switchBack();
       stdout('確認を受け付けられない環境なので、止めました。');
       return 1;
     }
-    if (!(await options.confirm('続けますか [y/N] '))) return 1;
+    if (!(await options.confirm('続けますか [y/N] '))) {
+      switchBack();
+      return 1;
+    }
   }
 
   // 実行の記録。.gitignore で記録を git の追跡から外す（add-run-loop の仮定 A-24）
@@ -239,6 +254,8 @@ export async function runRun(options: RunOptions): Promise<number> {
     if (result.timedOut) return { stop: { status: 'stopped', reason: '実行時間の上限に達しました' } };
     const question = result.text.match(QUESTION);
     if (question) return { stop: { status: 'stopped', reason: `エンジンが質問しました：${question[1]}` } };
+    // 失敗したエンジンの変更は完了にしない（fix-review-findings の仮定 A-02）
+    if (result.exitCode !== 0) return { stop: { status: 'stopped', reason: `エンジンが終了コード ${result.exitCode ?? '（なし）'} で終わりました` } };
     return { result };
   };
 
@@ -251,11 +268,12 @@ export async function runRun(options: RunOptions): Promise<number> {
     return `不正な直し方を見つけました（${findings.map((f) => f.file).join('、')}）`;
   };
 
-  // change のブランチ（REQ-096、add-run-loop の仮定 A-04）
-  const branch = `loomake/${changeId}`;
-  // PR の向き先は、run を始めたときのブランチ（add-run-pr の仮定 A-21）
-  const base = git(root, env, ['rev-parse', '--abbrev-ref', 'HEAD']).trim();
-  git(root, env, branchExists(root, env, branch) ? ['switch', '-q', branch] : ['switch', '-q', '-c', branch]);
+  // PR の向き先は、run が change のブランチを作ったときのブランチ。git の設定に覚えて再開でも使う（add-run-pr の仮定 A-21、fix-review-findings の仮定 A-06）
+  const baseKey = `branch.${branch}.loomake-base`;
+  if (!hasBranch) {
+    git(root, env, ['switch', '-q', '-c', branch]);
+    git(root, env, ['config', baseKey, startBranch]);
+  }
 
   // タスクを上から 1 つずつ渡し、終えるたびにコミットする（REQ-097・REQ-099）
   for (let i = 0; i < engineTasks.length; i++) {
@@ -314,6 +332,10 @@ export async function runRun(options: RunOptions): Promise<number> {
   // 証拠を記録してから PR を作る（REQ-114〜REQ-116）。gh が使えなければ、記録の前に止まる
   if (!ghLoggedIn(root, env)) {
     return finish('stopped', '完了ゲートに合格しましたが、gh CLI がないか、ログインしていないので PR を作れません。gh auth login でログインしてください', []);
+  }
+  const base = gitConfig(root, env, baseKey) || startBranch;
+  if (base === branch) {
+    return finish('stopped', `完了ゲートに合格しましたが、PR の向き先が分かりません。git config ${baseKey} <向き先のブランチ> で設定してから、もう一度実行してください`, []);
   }
   const recorded = runRecord({ root, changeId, stdout, progress, now });
   if (recorded !== 0) return finish('stopped', '証拠の記録で完了ゲートに不合格になりました', []);

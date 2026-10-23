@@ -5,6 +5,8 @@ export const LEDGER_COLUMNS = ['ID', '出典', '種別', '要約（原文に忠�
 // 回答者・回答日・承認者・承認日は後から足した列。列の無い trace.md では空の文字列になる（add-agreement-columns の仮定 A-10）
 export const QUESTION_COLUMNS = ['ID', '関連', '質問', '選択肢', 'おすすめ', 'ブロッキング', '回答', '回答者', '回答日'] as const;
 export const ASSUMPTION_COLUMNS = ['ID', '関連', '仮定の内容', '理由', '承認', '承認者', '承認日'] as const;
+// 列が無くてもよい列。これ以外の列が無い表は解析エラーにする（fix-review-findings の仮定 A-05）
+const OPTIONAL_COLUMNS: readonly string[] = ['回答者', '回答日', '承認者', '承認日'];
 
 /** 表の行。列名をキーにした値と、行番号を持つ */
 type Row<C extends readonly string[]> = { [K in C[number]]: string } & { line: number };
@@ -48,6 +50,11 @@ export function parseTrace(file: string, text: string): ParseResult<Trace> {
     if (!table.found) {
       errors.push({ file, line: table.line, message: `「${heading}」の表がありません` });
       continue;
+    }
+    const header = table.header ?? { names: [], line: table.line };
+    const missing = columns.filter((c) => !OPTIONAL_COLUMNS.includes(c) && !header.names.includes(c));
+    if (missing.length) {
+      errors.push({ file, line: header.line, message: `「${heading}」の表に「${missing.join('」「')}」の列がありません` });
     }
     (value[key] as Row<typeof columns>[]) = table.rows.map((r) => toRow(columns, r));
   }

@@ -26,8 +26,8 @@ export function fenceMask(lines: string[]): boolean[] {
 }
 
 export type TableRow = { cells: Record<string, string>; line: number };
-/** line は見出しの行番号。found は節に表（ヘッダと区切り行）があったか */
-export type Table = { line: number; found: boolean; rows: TableRow[] };
+/** line は見出しの行番号。found は節に表（ヘッダと区切り行）があったか。header は表のヘッダの列名と行番号 */
+export type Table = { line: number; found: boolean; rows: TableRow[]; header?: { names: string[]; line: number } };
 
 /**
  * `## <heading>` の節にある最初の表を読む。見出しが無ければ null を返す。
@@ -57,5 +57,5 @@ export function readTable(lines: string[], heading: string): Table | null {
     .map(({ text, line }) => ({ values: cells(text), line }))
     .filter(({ values }) => values.some((c) => c !== ''))
     .map(({ values, line }) => ({ cells: Object.fromEntries(header.map((h, i) => [h, values[i] ?? ''])), line }));
-  return { line: start + 1, found: true, rows };
+  return { line: start + 1, found: true, rows, header: { names: header, line: tableLines[0].line } };
 }

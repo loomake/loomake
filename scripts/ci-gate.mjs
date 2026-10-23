@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // CI の完了ゲート。PR のブランチ名が openspec/changes/<id> と一致すれば --change <id> --done、
 // 一致しなければ品質コマンドだけを実行する（setup-monorepo の design.md）。
+// loomake run が作る loomake/<id> のブランチは、先頭の loomake/ を除いて比べる（fix-review-findings の仮定 A-01）
 //
 //   node scripts/ci-gate.mjs <branch>
 
@@ -9,7 +10,8 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-export function verifyArgs(branch, changesDir) {
+export function verifyArgs(ref, changesDir) {
+  const branch = ref.replace(/^loomake\//, '');
   // change は changes/ の直下のディレクトリだけ。changes/archive/ は完了した change の置き場で、change ではない
   const isChangeName = /^[^/\\.][^/\\]*$/.test(branch) && branch !== 'archive';
   const dir = isChangeName ? join(changesDir, branch) : '';
