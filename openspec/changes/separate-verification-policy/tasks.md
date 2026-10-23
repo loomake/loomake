@@ -8,5 +8,5 @@
 
 ## 2. 統合検証
 
-- [ ] 2.1 用語と責務の境界、TDD結果を記録し、changesetを追加して関連テストを通す
+- [x] 2.1 用語と責務の境界、TDD結果を記録し、changesetを追加して関連テストを通す
 - [ ] 2.2 `pnpm -s verify --change separate-verification-policy --done` を通す <!-- loomake:gate=done -->
