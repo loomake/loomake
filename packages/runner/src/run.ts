@@ -4,7 +4,7 @@ import { parseTasks, type Task, type VerifyResult } from '@loomake/core';
 import { runRecord } from '@loomake/trace';
 import { TIMED_OUT, UsageError, assertChangeId, formatVerifyResult, loadConfig, runVerify } from '@loomake/kit';
 import { DEFAULT_ALLOWED_DOMAINS, assertEngineAvailable, runClaude, type EngineResult } from './engine.js';
-import { branchExists, dirtyFiles, git, gitConfig, isIgnored } from './git.js';
+import { GitError, branchExists, dirtyFiles, git, gitConfig, isIgnored } from './git.js';
 import { APPROVAL_GUIDE, findEngineMove, findViolations, headState } from './guards.js';
 import { createPr, ghLoggedIn, prBody } from './pr.js';
 import { maskSecrets } from './mask.js';
@@ -51,9 +51,16 @@ const QUESTION = /^LOOMAKE-QUESTION:\s*(.*)$/m;
 
 const toPosix = (p: string) => p.split(sep).join('/');
 const stamp = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, 'Z').replace(/[-:]/g, '');
-const taskLabel = (t: Task) => t.text;
-// 完了ゲートを通すタスクはエンジンに渡さず、合格したときに run が完了にする（add-run-loop の仮定 A-06）
-const isGateTask = (t: Task) => /verify/.test(t.text) && /--done/.test(t.text);
+/** 完了ゲートのタスクの印（REQ-100・REQ-136）。行のどこにあってもよい（clarify-run-phases-and-task-kinds の仮定 A-02） */
+export const GATE_MARK = '<!-- loomake:gate=done -->';
+const GATE_MARK_RE = /\s*<!--\s*loomake:gate=done\s*-->\s*/g;
+// エンジンへの指示・コミットのメッセージ・記録には、印を除いた文を使う
+const taskLabel = (t: Task) => t.text.replace(GATE_MARK_RE, ' ').trim();
+const hasGateMark = (t: Task) => new RegExp(GATE_MARK_RE.source).test(t.text);
+// 印のない旧書式：本文に verify と --done を含むタスク（add-run-loop の仮定 A-06、clarify-run-phases-and-task-kinds の仮定 A-01）
+const isLegacyGateTask = (t: Task) => !hasGateMark(t) && /verify/.test(t.text) && /--done/.test(t.text);
+// 完了ゲートを通すタスクはエンジンに渡さず、合格したときに run が完了にする
+const isGateTask = (t: Task) => hasGateMark(t) || isLegacyGateTask(t);
 
 /** loomake.config.json の run の設定。既定は直し 5 回・60 分（add-run-loop の仮定 A-16） */
 function loadRunConfig(root: string): RunConfig {
@@ -128,8 +135,77 @@ function checkTask(tasksPath: string, line: number) {
   writeFileSync(tasksPath, lines.join('\n'));
 }
 
+/** 止まる理由。remaining は残ったタスク */
+type Stop = { status: RunSummary['status']; reason: string; remaining: Task[] };
+
+/** 事前の確認を終えたあとの、run の 1 回分の状態 */
+type RunContext = {
+  options: RunOptions;
+  root: string;
+  changeId: string;
+  changeDir: string;
+  env: NodeJS.ProcessEnv;
+  now: () => Date;
+  stdout: (text: string) => void;
+  progress: (text: string) => void;
+  config: ReturnType<typeof loadConfig>;
+  runConfig: RunConfig;
+  branch: string;
+  startBranch: string;
+  hasBranch: boolean;
+  tasksPath: string;
+  tasksRel: string;
+  engineTasks: Task[];
+  gateTasks: Task[];
+};
+
+/** 実行の記録。止まったときと終えたときに finish で summary.json を書く */
+type Recorder = {
+  runDir: string;
+  deadline: number;
+  done: string[];
+  lastVerify: VerifyResult | null;
+  /** エンジンを呼んだ回数。記録のファイル名の番号に使う */
+  step: number;
+  save: (name: string, text: string) => void;
+  finish: (status: RunSummary['status'], reason: string, remaining: Task[]) => number;
+};
+
 /** change の tasks.md を実装させ、完了ゲートが通るまで直させる。終了コード（終えた 0・止まった 1）を返す */
 export async function runRun(options: RunOptions): Promise<number> {
+  // 始める前（実行の記録を作る前）の git の失敗は、使い方の誤りにする（REQ-137）
+  let ctx: RunContext | number;
+  try {
+    ctx = await prepare(options);
+  } catch (e) {
+    if (e instanceof GitError) throw new UsageError(e.message);
+    throw e;
+  }
+  if (typeof ctx === 'number') return ctx;
+  const rec = startRecording(ctx);
+
+  try {
+    // PR の向き先は、run が change のブランチを作ったときのブランチ。git の設定に覚えて再開でも使う（add-run-pr の仮定 A-21、fix-review-findings の仮定 A-06）
+    if (!ctx.hasBranch) {
+      git(ctx.root, ctx.env, ['switch', '-q', '-c', ctx.branch]);
+      git(ctx.root, ctx.env, ['config', baseKey(ctx), ctx.startBranch]);
+    }
+    const stop = (await runEngineTasks(ctx, rec)) ?? (await runGate(ctx, rec));
+    if (stop) return rec.finish(stop.status, stop.reason, stop.remaining);
+    return recordAndOpenPr(ctx, rec);
+  } catch (e) {
+    // 始めたあとの git と証拠の記録の失敗は、実行中の失敗として記録に残して止まる（REQ-137、clarify-run-phases-and-task-kinds の仮定 A-03）
+    if (!(e instanceof GitError) && !(e instanceof UsageError)) throw e;
+    const { engineTasks, gateTasks } = ctx;
+    const remaining = [...engineTasks, ...gateTasks].filter((t) => !rec.done.includes(taskLabel(t)));
+    return rec.finish('stopped', e.message, remaining);
+  }
+}
+
+const baseKey = (ctx: RunContext) => `branch.${ctx.branch}.loomake-base`;
+
+/** 事前の確認（REQ-093〜REQ-096・REQ-122）。始めないときは終了コードを返す */
+async function prepare(options: RunOptions): Promise<RunContext | number> {
   const { changeId, stdout, progress = () => {}, env = process.env, fileExists = existsSync, now = () => new Date() } = options;
   const root = resolve(options.root);
   const engine = options.engine ?? 'claude-code';
@@ -180,6 +256,13 @@ export async function runRun(options: RunOptions): Promise<number> {
   const pending = tasks.filter((t) => !t.checked);
   const engineTasks = pending.filter((t) => !isGateTask(t));
   const gateTasks = pending.filter(isGateTask);
+  const legacy = gateTasks.filter(isLegacyGateTask);
+  if (legacy.length) {
+    stdout(
+      `完了ゲートのタスクを、タスクの文から判定しました：${legacy.map(taskLabel).join('、')}\n` +
+        `文を変えても判定が変わらないよう、tasks.md のその行の末尾に ${GATE_MARK} を付けてください。`,
+    );
+  }
 
   if (options.dryRun) {
     stdout(['エンジンに渡す予定のタスク：', ...engineTasks.map((t) => `  - [ ] ${taskLabel(t)}`)].join('\n'));
@@ -201,137 +284,151 @@ export async function runRun(options: RunOptions): Promise<number> {
       return 1;
     }
   }
+  return { options, root, changeId, changeDir, env, now, stdout, progress, config, runConfig, branch, startBranch, hasBranch, tasksPath, tasksRel, engineTasks, gateTasks };
+}
 
-  // 実行の記録。.gitignore で記録を git の追跡から外す（add-run-loop の仮定 A-24）
-  const startedAt = now();
+/** 実行の記録を作る。.gitignore で記録を git の追跡から外す（add-run-loop の仮定 A-24） */
+function startRecording(ctx: RunContext): Recorder {
+  const { root, changeId, stdout } = ctx;
+  const startedAt = ctx.now();
   const runsDir = join(root, RUNS_DIR);
   mkdirSync(runsDir, { recursive: true });
   if (!existsSync(join(runsDir, '.gitignore'))) writeFileSync(join(runsDir, '.gitignore'), '*\n');
   const runId = `${stamp(startedAt)}-${changeId}`;
   const runDir = join(runsDir, runId);
   mkdirSync(runDir, { recursive: true });
-  let step = 0;
-  const save = (name: string, text: string) => writeFileSync(join(runDir, name), maskSecrets(text));
-  const deadline = startedAt.getTime() + runConfig.timeoutMinutes * 60_000;
-
-  const done: string[] = [];
-  let lastVerify: VerifyResult | null = null;
-  const finish = (status: RunSummary['status'], reason: string, remaining: Task[]): number => {
-    const summary: RunSummary = {
-      change: changeId,
-      status,
-      reason,
-      doneTasks: done,
-      remainingTasks: remaining.map(taskLabel),
-      lastVerify: lastVerify && { ok: lastVerify.ok, mode: lastVerify.mode },
-    };
-    save('summary.json', `${JSON.stringify(summary, null, 2)}\n`);
-    const list = (xs: string[]) => (xs.length ? xs.map((x) => `\n  - ${x}`).join('') : 'なし');
-    stdout(
-      [
-        status === 'completed' ? `loomake run を終えました：${reason}` : `loomake run を止めました：${reason}`,
-        `終えたタスク：${list(summary.doneTasks)}`,
-        `残ったタスク：${list(summary.remainingTasks)}`,
-        `最後の検査結果：${lastVerify ? (lastVerify.ok ? '合格' : '不合格') : 'なし'}`,
-        `記録：${RUNS_DIR}/${runId}/`,
-      ].join('\n'),
-    );
-    return status === 'completed' ? 0 : 1;
+  const rec: Recorder = {
+    runDir,
+    deadline: startedAt.getTime() + ctx.runConfig.timeoutMinutes * 60_000,
+    done: [],
+    lastVerify: null,
+    step: 0,
+    save: (name, text) => writeFileSync(join(runDir, name), maskSecrets(text)),
+    finish: (status, reason, remaining) => {
+      const { lastVerify } = rec;
+      const summary: RunSummary = {
+        change: changeId,
+        status,
+        reason,
+        doneTasks: rec.done,
+        remainingTasks: remaining.map(taskLabel),
+        lastVerify: lastVerify && { ok: lastVerify.ok, mode: lastVerify.mode },
+      };
+      rec.save('summary.json', `${JSON.stringify(summary, null, 2)}\n`);
+      const list = (xs: string[]) => (xs.length ? xs.map((x) => `\n  - ${x}`).join('') : 'なし');
+      stdout(
+        [
+          status === 'completed' ? `loomake run を終えました：${reason}` : `loomake run を止めました：${reason}`,
+          `終えたタスク：${list(summary.doneTasks)}`,
+          `残ったタスク：${list(summary.remainingTasks)}`,
+          `最後の検査結果：${lastVerify ? (lastVerify.ok ? '合格' : '不合格') : 'なし'}`,
+          `記録：${RUNS_DIR}/${runId}/`,
+        ].join('\n'),
+      );
+      return status === 'completed' ? 0 : 1;
+    },
   };
+  return rec;
+}
 
-  // エンジンを 1 回動かす。止まる理由があれば、その文を返す
-  const callEngine = async (prompt: string): Promise<{ stop?: { status: RunSummary['status']; reason: string }; result?: EngineResult }> => {
-    step++;
-    const n = String(step).padStart(2, '0');
-    save(`${n}-prompt.md`, prompt);
-    const timeoutMs = deadline - now().getTime();
-    if (timeoutMs <= 0) return { stop: { status: 'stopped', reason: '実行時間の上限に達しました' } };
-    const before = headState(root, env);
-    const result = await runClaude({
-      cwd: root,
-      env,
-      prompt,
-      commands: Object.values(config.commands).filter((c): c is string => Boolean(c)),
-      skipPermissions: Boolean(options.skipPermissions),
-      timeoutMs,
-      signal: options.signal,
-    });
-    save(`${n}-output.json`, result.raw);
-    const stop = engineStop(result);
-    // エンジン自身のコミットとブランチの切り替えは不正な直し方の検出を通らないので、終わり方によらず止まる。
-    // 理由は HEAD の変化を先に書き、中断なら記録の状態は interrupted のままにする（REQ-126）
-    const moved = findEngineMove(root, env, before, branch);
-    if (moved) {
-      stdout(moved.report);
-      return { stop: { status: stop?.status ?? 'stopped', reason: stop ? `${moved.reason}。${stop.reason}` : moved.reason } };
-    }
-    return stop ? { stop } : { result };
-  };
-  const engineStop = (result: EngineResult): { status: RunSummary['status']; reason: string } | undefined => {
-    if (result.aborted) return { status: 'interrupted', reason: '中断されました' };
-    if (result.timedOut) return { status: 'stopped', reason: '実行時間の上限に達しました' };
-    const question = result.text.match(QUESTION);
-    if (question) return { status: 'stopped', reason: `エンジンが質問しました：${question[1]}` };
-    // 失敗したエンジンの変更は完了にしない（fix-review-findings の仮定 A-02）
-    if (result.exitCode !== 0) return { status: 'stopped', reason: `エンジンが終了コード ${result.exitCode ?? '（なし）'} で終わりました` };
-    return undefined;
-  };
+/** エンジンの終わり方から、止まる理由を決める */
+function engineStop(result: EngineResult): { status: RunSummary['status']; reason: string } | undefined {
+  if (result.aborted) return { status: 'interrupted', reason: '中断されました' };
+  if (result.timedOut) return { status: 'stopped', reason: '実行時間の上限に達しました' };
+  const question = result.text.match(QUESTION);
+  if (question) return { status: 'stopped', reason: `エンジンが質問しました：${question[1]}` };
+  // 失敗したエンジンの変更は完了にしない（fix-review-findings の仮定 A-02）
+  if (result.exitCode !== 0) return { status: 'stopped', reason: `エンジンが終了コード ${result.exitCode ?? '（なし）'} で終わりました` };
+  return undefined;
+}
 
-  // コミットする前に不正な直し方を探し、見つけたら変更を作業ツリーに残して止まる理由を返す（REQ-109〜REQ-112）
-  const guard = (): string | undefined => {
-    const { findings, diff } = findViolations(root, env, config.openspecDir);
-    if (!findings.length) return undefined;
-    git(root, env, ['reset', '-q']);
-    stdout(['不正な直し方を見つけました。', ...findings.map((f) => `  - ${f.file}：${f.reason}`), '', diff, APPROVAL_GUIDE].join('\n'));
-    return `不正な直し方を見つけました（${findings.map((f) => f.file).join('、')}）`;
-  };
-
-  // PR の向き先は、run が change のブランチを作ったときのブランチ。git の設定に覚えて再開でも使う（add-run-pr の仮定 A-21、fix-review-findings の仮定 A-06）
-  const baseKey = `branch.${branch}.loomake-base`;
-  if (!hasBranch) {
-    git(root, env, ['switch', '-q', '-c', branch]);
-    git(root, env, ['config', baseKey, startBranch]);
+/** エンジンを 1 回動かす。止まる理由があれば、その状態と文を返す */
+async function callEngine(ctx: RunContext, rec: Recorder, prompt: string): Promise<{ status: RunSummary['status']; reason: string } | undefined> {
+  const { root, env, options } = ctx;
+  rec.step++;
+  const n = String(rec.step).padStart(2, '0');
+  rec.save(`${n}-prompt.md`, prompt);
+  const timeoutMs = rec.deadline - ctx.now().getTime();
+  if (timeoutMs <= 0) return { status: 'stopped', reason: '実行時間の上限に達しました' };
+  const before = headState(root, env);
+  const result = await runClaude({
+    cwd: root,
+    env,
+    prompt,
+    commands: Object.values(ctx.config.commands).filter((c): c is string => Boolean(c)),
+    skipPermissions: Boolean(options.skipPermissions),
+    timeoutMs,
+    signal: options.signal,
+  });
+  rec.save(`${n}-output.json`, result.raw);
+  const stop = engineStop(result);
+  // エンジン自身のコミットとブランチの切り替えは不正な直し方の検出を通らないので、終わり方によらず止まる。
+  // 理由は HEAD の変化を先に書き、中断なら記録の状態は interrupted のままにする（REQ-126）
+  const moved = findEngineMove(root, env, before, ctx.branch);
+  if (moved) {
+    ctx.stdout(moved.report);
+    return { status: stop?.status ?? 'stopped', reason: stop ? `${moved.reason}。${stop.reason}` : moved.reason };
   }
+  return stop;
+}
 
-  // タスクを上から 1 つずつ渡し、終えるたびにコミットする（REQ-097・REQ-099）
+// コミットする前に不正な直し方を探し、見つけたら変更を作業ツリーに残して止まる理由を返す（REQ-109〜REQ-112）
+function guard(ctx: RunContext): string | undefined {
+  const { findings, diff } = findViolations(ctx.root, ctx.env, ctx.config.openspecDir);
+  if (!findings.length) return undefined;
+  git(ctx.root, ctx.env, ['reset', '-q']);
+  ctx.stdout(['不正な直し方を見つけました。', ...findings.map((f) => `  - ${f.file}：${f.reason}`), '', diff, APPROVAL_GUIDE].join('\n'));
+  return `不正な直し方を見つけました（${findings.map((f) => f.file).join('、')}）`;
+}
+
+/** タスクを上から 1 つずつ渡し、終えるたびにコミットする（REQ-097・REQ-099） */
+async function runEngineTasks(ctx: RunContext, rec: Recorder): Promise<Stop | undefined> {
+  const { root, env, changeId, engineTasks, gateTasks } = ctx;
   for (let i = 0; i < engineTasks.length; i++) {
     const task = engineTasks[i];
     const remaining = [...engineTasks.slice(i), ...gateTasks];
-    if (options.signal?.aborted) return finish('interrupted', '中断されました', remaining);
-    const { stop } = await callEngine(buildPrompt(root, changeDir, `- [ ] ${taskLabel(task)}`));
-    if (stop) return finish(stop.status, stop.reason, remaining);
-    const violation = guard();
-    if (violation) return finish('stopped', violation, remaining);
-    checkTask(tasksPath, task.line);
+    if (ctx.options.signal?.aborted) return { status: 'interrupted', reason: '中断されました', remaining };
+    const stop = await callEngine(ctx, rec, buildPrompt(root, ctx.changeDir, `- [ ] ${taskLabel(task)}`));
+    if (stop) return { ...stop, remaining };
+    const violation = guard(ctx);
+    if (violation) return { status: 'stopped', reason: violation, remaining };
+    checkTask(ctx.tasksPath, task.line);
     git(root, env, ['add', '-A']);
     git(root, env, ['commit', '-q', '-m', `run(${changeId}): ${taskLabel(task)}`]);
-    done.push(taskLabel(task));
+    rec.done.push(taskLabel(task));
   }
+  return undefined;
+}
 
-  // 完了ゲートと直し（REQ-100・REQ-104）。ゲートのタスクは検査のあいだだけ完了にし、エンジンを呼ぶ前に戻す。
-  // run 自身が変えた tasks.md を、不正な直し方として見つけないため（fix-review-findings-2 の仮定 A-01）
+/**
+ * 完了ゲートと直し（REQ-100・REQ-104）。ゲートのタスクは検査のあいだだけ完了にし、エンジンを呼ぶ前に戻す。
+ * run 自身が変えた tasks.md を、不正な直し方として見つけないため（fix-review-findings-2 の仮定 A-01）
+ */
+async function runGate(ctx: RunContext, rec: Recorder): Promise<Stop | undefined> {
+  const { root, env, changeId, gateTasks, tasksRel } = ctx;
+  const stopped = (reason: string): Stop => ({ status: 'stopped', reason, remaining: gateTasks });
   const restoreGateTasks = () => {
     if (gateTasks.length) git(root, env, ['checkout', '-q', '--', tasksRel]);
   };
   for (let fixes = 0; ; fixes++) {
-    if (options.signal?.aborted) return finish('interrupted', '中断されました', gateTasks);
-    for (const t of gateTasks) checkTask(tasksPath, t.line);
+    if (ctx.options.signal?.aborted) return { status: 'interrupted', reason: '中断されました', remaining: gateTasks };
+    for (const t of gateTasks) checkTask(ctx.tasksPath, t.line);
     // 完了ゲートの品質コマンドにも、実行時間の残りを上限として渡す（REQ-105、fix-review-findings-2 の仮定 A-02）
-    const left = deadline - now().getTime();
+    const left = rec.deadline - ctx.now().getTime();
     if (left <= 0) {
       restoreGateTasks();
-      return finish('stopped', '実行時間の上限に達しました', gateTasks);
+      return stopped('実行時間の上限に達しました');
     }
-    lastVerify = runVerify({ root, changeId, gate: 'done', progress, timeoutMs: left });
-    save(`${String(step).padStart(2, '0')}-verify${fixes ? `-${fixes}` : ''}.json`, `${JSON.stringify(lastVerify, null, 2)}\n`);
-    if (lastVerify.ok) break;
+    rec.lastVerify = runVerify({ root, changeId, gate: 'done', progress: ctx.progress, timeoutMs: left });
+    rec.save(`${String(rec.step).padStart(2, '0')}-verify${fixes ? `-${fixes}` : ''}.json`, `${JSON.stringify(rec.lastVerify, null, 2)}\n`);
+    if (rec.lastVerify.ok) break;
     restoreGateTasks();
-    if (lastVerify.results.some((r) => r.detail === TIMED_OUT)) return finish('stopped', '実行時間の上限に達しました', gateTasks);
-    if (fixes >= runConfig.maxFixes) return finish('stopped', `直しの回数の上限（${runConfig.maxFixes} 回）に達しました`, gateTasks);
-    const { stop } = await callEngine(buildPrompt(root, changeDir, '完了ゲートに合格するように直す。', lastVerify));
-    if (stop) return finish(stop.status, stop.reason, gateTasks);
-    const violation = guard();
-    if (violation) return finish('stopped', violation, gateTasks);
+    if (rec.lastVerify.results.some((r) => r.detail === TIMED_OUT)) return stopped('実行時間の上限に達しました');
+    if (fixes >= ctx.runConfig.maxFixes) return stopped(`直しの回数の上限（${ctx.runConfig.maxFixes} 回）に達しました`);
+    const stop = await callEngine(ctx, rec, buildPrompt(root, ctx.changeDir, '完了ゲートに合格するように直す。', rec.lastVerify));
+    if (stop) return { ...stop, remaining: gateTasks };
+    const violation = guard(ctx);
+    if (violation) return stopped(violation);
     git(root, env, ['add', '-A']);
     if (git(root, env, ['diff', '--cached', '--name-only']).trim()) {
       git(root, env, ['commit', '-q', '-m', `run(${changeId}): 完了ゲートの直し（${fixes + 1} 回目）`]);
@@ -340,28 +437,32 @@ export async function runRun(options: RunOptions): Promise<number> {
   if (gateTasks.length) {
     git(root, env, ['add', '--', tasksRel]);
     git(root, env, ['commit', '-q', '-m', `run(${changeId}): 完了ゲートに合格`]);
-    done.push(...gateTasks.map(taskLabel));
+    rec.done.push(...gateTasks.map(taskLabel));
   }
+  return undefined;
+}
 
-  // 証拠を記録してから PR を作る（REQ-114〜REQ-116）。gh が使えなければ、記録の前に止まる
+/** 証拠を記録してから PR を作る（REQ-114〜REQ-116）。gh が使えなければ、記録の前に止まる */
+function recordAndOpenPr(ctx: RunContext, rec: Recorder): number {
+  const { root, env, changeId, branch } = ctx;
   if (!ghLoggedIn(root, env)) {
-    return finish('stopped', '完了ゲートに合格しましたが、gh CLI がないか、ログインしていないので PR を作れません。gh auth login でログインしてください', []);
+    return rec.finish('stopped', '完了ゲートに合格しましたが、gh CLI がないか、ログインしていないので PR を作れません。gh auth login でログインしてください', []);
   }
-  const base = gitConfig(root, env, baseKey) || startBranch;
+  const base = gitConfig(root, env, baseKey(ctx)) || ctx.startBranch;
   if (base === branch) {
-    return finish('stopped', `完了ゲートに合格しましたが、PR の向き先が分かりません。git config ${baseKey} <向き先のブランチ> で設定してから、もう一度実行してください`, []);
+    return rec.finish('stopped', `完了ゲートに合格しましたが、PR の向き先が分かりません。git config ${baseKey(ctx)} <向き先のブランチ> で設定してから、もう一度実行してください`, []);
   }
-  const recorded = runRecord({ root, changeId, stdout, progress, now });
-  if (recorded !== 0) return finish('stopped', '証拠の記録で完了ゲートに不合格になりました', []);
+  const recorded = runRecord({ root, changeId, stdout: ctx.stdout, progress: ctx.progress, now: ctx.now });
+  if (recorded !== 0) return rec.finish('stopped', '証拠の記録で完了ゲートに不合格になりました', []);
   git(root, env, ['add', '--', `.loomake/evidence/${changeId}`]);
   git(root, env, ['commit', '-q', '-m', `evidence(${changeId}): 証拠を記録する`]);
   const evidence = git(root, env, ['diff', '--name-only', 'HEAD~1', 'HEAD']).trim().split('\n')[0];
-  save('pr-body.md', prBody(root, changeDir, evidence));
+  rec.save('pr-body.md', prBody(root, ctx.changeDir, evidence));
   try {
     git(root, env, ['push', '-q', '-u', 'origin', branch]);
-    const url = createPr(root, env, { base, head: branch, title: changeId, bodyFile: join(runDir, 'pr-body.md') });
-    return finish('completed', `PR を作りました：${url}`, []);
+    const url = createPr(root, env, { base, head: branch, title: changeId, bodyFile: join(rec.runDir, 'pr-body.md') });
+    return rec.finish('completed', `PR を作りました：${url}`, []);
   } catch (e) {
-    return finish('stopped', `証拠を記録してコミットしましたが、PR を作れませんでした：${(e as Error).message}`, []);
+    return rec.finish('stopped', `証拠を記録してコミットしましたが、PR を作れませんでした：${(e as Error).message}`, []);
   }
 }

@@ -88,7 +88,9 @@ Source: REQ-010
 - [ ] 2.1 各 Scenario に対応するテストを書く。テスト名に [REQ-xxx] を入れる
 
 ## 3. 確認
-- [ ] 3.1 `npx loomake verify --change <change-id> --done` を通す
+- [ ] 3.1 `npx loomake verify --change <change-id> --done` を通す <!-- loomake:gate=done -->
 ```
+
+★ 完了ゲートのタスク（`verify --done` を通すタスク）の行末には `<!-- loomake:gate=done -->` を付ける。`loomake run` はこの印のあるタスクをエンジンに渡さず、完了ゲートに合格したときに完了にする。
 
 ★ タスクの末尾に関係する REQ ID を書いておくと、runner（`loomake run`）がタスクとテストを結び付けやすくなる。

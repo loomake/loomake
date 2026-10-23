@@ -1,11 +1,13 @@
 import { spawnSync } from 'node:child_process';
-import { UsageError } from '@loomake/kit';
 
-/** git を実行して標準出力を返す。失敗したら UsageError を投げる */
+/** git の操作の失敗。run を始める前なら使い方の誤り、始めたあとなら実行中の失敗として扱う（REQ-137） */
+export class GitError extends Error {}
+
+/** git を実行して標準出力を返す。失敗したら GitError を投げる */
 export function git(root: string, env: NodeJS.ProcessEnv, args: string[]): string {
   const r = spawnSync('git', args, { cwd: root, env, encoding: 'utf8' });
   if (r.error || r.status !== 0) {
-    throw new UsageError(`git ${args.join(' ')} に失敗しました（${(r.stderr || r.error?.message || '').trim()}）`);
+    throw new GitError(`git の操作に失敗しました：git ${args.join(' ')}（${(r.stderr || r.error?.message || '').trim()}）`);
   }
   return r.stdout;
 }
