@@ -291,3 +291,29 @@ setup-monorepo のタスク 1.12 で直した。
 | 3（trace の解析エラーを捨てる） | 同じ change で直した。仕様ゲートに「trace.md の解析」「spec.md の解析」の検査を足し、core が返す解析エラーをファイル名・行番号つきで不合格にする（仮定 A-02） |
 
 回帰テストは packages/cli/test/init.test.ts と packages/kit/test/verify.test.ts に足した。修正前のコードでは新しいテストのうち 6 件が落ちることを確かめた（プロジェクトの中を指すリンクの 1 件は、修正前後とも合格する）。`pnpm -s verify --change harden-init-and-trace-check --done` は exit 0（test 125 件）。仮定 A-01・A-02 は 2026-10-23 に承認された。
+
+## 2026-10-23 試験プロジェクトでの kit の試用
+
+対象：`.trial/`（loomake とは別の git リポジトリ）に、ビルドした CLI で `loomake init` と `openspec init` をかけ、利用者が置いた `.trial/docs/requirements/kit-v1.0.md` を、init が配った req-to-openspec Skill の手順で change にした。作った change は add-kit-init・add-req-to-openspec-skill・add-kit-verify の 3 つ（`.trial` の 03e9d9c）。経過は [作業記録 2026-10-22 の 35 節](worklog/2026-10-22.md) にある。
+
+### 指摘
+
+1. **init が案内する `npx loomake verify` が動かない。** AGENTS.md・Skill・tasks.md の雛形は `npx loomake verify` を使うよう書いているが、init はプロジェクトに loomake を入れず、案内もしない。公開前の試験では npm の 404 で失敗した。公開後も、プロジェクトに入れていなければ実行のたびに最新版を取りにいき、検査に使う版が固まらない。
+2. **package.json がなくても、init は commands に `npm run lint` などを書く。** そのままでは完了ゲートの commands が必ず失敗するが、init は何も知らせない。
+3. **Skill に、フェーズが後の要件の扱いがない。** 今回は作らないが範囲外でもない要件（kit-v1.0.md のフェーズ「次」の 12 行）を、どの状態にするかが Skill から決まらない。
+4. **Skill に、複数の change に分けるときの番号の振り方がない。** REQ・Q・A を change ごとに振るか要件書で通すかと、複数の change にかかわる非機能要件の載せ方が決まらない。今回は loomake 本体の change にならい、通し番号にして、かかわる change の台帳それぞれに同じ行を載せた。
+5. **同じ Q を 2 つの change の trace.md に載せると、回答の食い違いに気づけない。** verify は change ごとに trace.md を読むので、片方だけに回答を書いても、もう片方と食い違っても報告しない。
+6. **Skill に、要件書の中の未決事項の章の扱いがない。** kit-v1.0.md §5 の KIT-Q-01〜04 を、確認事項にするかどうかが Skill から決まらない。
+
+### 対応
+
+利用者が 2026-10-23 に、次の直し方を承認した。
+
+| 指摘 | 直し方 | change |
+|---|---|---|
+| 1 | init の最後に、loomake を開発用の依存に足す案内（例：`npm i -D loomake`）を出す。package.json は書き換えない。usage.md にも同じ手順を書く | improve-init-guidance |
+| 2 | package.json がないときは、commands を既定値のまま書き、loomake.config.json の commands を書き換えるよう案内する | improve-init-guidance |
+| 3 | 状態は「範囲外」を使い、要約の末尾に「（フェーズ：〇〇）」と書き、Non-goals では後のフェーズの要件を分けて書く | improve-skill-for-multi-change |
+| 4 | REQ・Q・A は要件書 1 冊の中で通し番号にする。複数の change にかかわる要件と確認事項は、かかわる change それぞれに同じ番号・同じ行で載せる | improve-skill-for-multi-change |
+| 5 | 仕様ゲートに、進行中のほかの change の trace.md にある同じ ID の確認事項と、回答が食い違っていないかの検査を足す | add-shared-question-check |
+| 6 | 要件書の未決事項は、すべて確認事項にし、質問に要件書側の ID を書く。ブロッキングかどうかはふだんの決まりで決め、関係する要件がすべて後のフェーズならブロッキングにしない | improve-skill-for-multi-change |
