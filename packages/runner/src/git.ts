@@ -16,3 +16,7 @@ export const dirtyFiles = (root: string, env: NodeJS.ProcessEnv) =>
 
 export const branchExists = (root: string, env: NodeJS.ProcessEnv, branch: string) =>
   spawnSync('git', ['rev-parse', '--verify', '--quiet', `refs/heads/${branch}`], { cwd: root, env }).status === 0;
+
+/** git の設定の値。なければ空の文字列 */
+export const gitConfig = (root: string, env: NodeJS.ProcessEnv, key: string) =>
+  (spawnSync('git', ['config', '--get', key], { cwd: root, env, encoding: 'utf8' }).stdout ?? '').trim();

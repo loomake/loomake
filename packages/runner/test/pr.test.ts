@@ -53,6 +53,51 @@ describe('証拠を記録してから PR を作る', () => {
     }));
 });
 
+const runOnce = async (repo: Repo) => {
+  const out: string[] = [];
+  const code = await runRun({
+    root: repo.root,
+    changeId: CHANGE,
+    interactive: false,
+    confirm: async () => false,
+    stdout: (t) => out.push(t),
+    env: repo.env,
+    fileExists: () => false,
+  });
+  return { code, stdout: out.join('\n') };
+};
+
+describe('再開したときの PR の向き先', () => {
+  it('[REQ-114] 止まったあと loomake/<change-id> の上で再開しても、最初に始めたブランチに向けた PR を作る', async () => {
+    const repo = makeRepo();
+    try {
+      repo.plan([{ output: 'LOOMAKE-QUESTION: 続けますか' }, { write: { 'impl.txt': '実装\n' } }, {}]);
+      expect((await runOnce(repo)).code).toBe(1);
+      expect(repo.git('rev-parse', '--abbrev-ref', 'HEAD')).toBe('loomake/c1');
+      const r = await runOnce(repo);
+      expect(r.code, r.stdout).toBe(0);
+      expect(repo.prs()[0].args).toEqual(expect.arrayContaining(['--base', 'main', '--head', 'loomake/c1']));
+    } finally {
+      repo.cleanup();
+    }
+  });
+
+  it('[REQ-114] 人が作った loomake/<change-id> の上で始めて向き先が分からなければ、証拠を記録せずに止まる', async () => {
+    const repo = makeRepo();
+    try {
+      repo.git('switch', '-q', '-c', 'loomake/c1');
+      repo.plan([{ write: { 'impl.txt': '実装\n' } }, {}]);
+      const r = await runOnce(repo);
+      expect(r.code).toBe(1);
+      expect(r.stdout).toContain('PR の向き先が分かりません');
+      expect(existsSync(join(repo.root, '.loomake/evidence', CHANGE))).toBe(false);
+      expect(repo.prs()).toEqual([]);
+    } finally {
+      repo.cleanup();
+    }
+  });
+});
+
 describe('PR の本文', () => {
   it('[REQ-115] 本文に、proposal の Why と What Changes、完了ゲートの結果、要件ごとのテスト、証拠の記録のパスを含める', () =>
     withPassingRun((repo) => {

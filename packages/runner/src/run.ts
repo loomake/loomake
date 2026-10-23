@@ -4,7 +4,7 @@ import { parseTasks, type Task, type VerifyResult } from '@loomake/core';
 import { runRecord } from '@loomake/trace';
 import { UsageError, formatVerifyResult, loadConfig, runVerify } from '@loomake/kit';
 import { DEFAULT_ALLOWED_DOMAINS, assertEngineAvailable, runClaude, type EngineResult } from './engine.js';
-import { branchExists, dirtyFiles, git } from './git.js';
+import { branchExists, dirtyFiles, git, gitConfig } from './git.js';
 import { APPROVAL_GUIDE, findViolations } from './guards.js';
 import { createPr, ghLoggedIn, prBody } from './pr.js';
 import { maskSecrets } from './mask.js';
@@ -268,9 +268,12 @@ export async function runRun(options: RunOptions): Promise<number> {
     return `不正な直し方を見つけました（${findings.map((f) => f.file).join('、')}）`;
   };
 
-  // PR の向き先は、run を始めたときのブランチ（add-run-pr の仮定 A-21）
-  const base = startBranch;
-  if (!hasBranch) git(root, env, ['switch', '-q', '-c', branch]);
+  // PR の向き先は、run が change のブランチを作ったときのブランチ。git の設定に覚えて再開でも使う（add-run-pr の仮定 A-21、fix-review-findings の仮定 A-06）
+  const baseKey = `branch.${branch}.loomake-base`;
+  if (!hasBranch) {
+    git(root, env, ['switch', '-q', '-c', branch]);
+    git(root, env, ['config', baseKey, startBranch]);
+  }
 
   // タスクを上から 1 つずつ渡し、終えるたびにコミットする（REQ-097・REQ-099）
   for (let i = 0; i < engineTasks.length; i++) {
@@ -329,6 +332,10 @@ export async function runRun(options: RunOptions): Promise<number> {
   // 証拠を記録してから PR を作る（REQ-114〜REQ-116）。gh が使えなければ、記録の前に止まる
   if (!ghLoggedIn(root, env)) {
     return finish('stopped', '完了ゲートに合格しましたが、gh CLI がないか、ログインしていないので PR を作れません。gh auth login でログインしてください', []);
+  }
+  const base = gitConfig(root, env, baseKey) || startBranch;
+  if (base === branch) {
+    return finish('stopped', `完了ゲートに合格しましたが、PR の向き先が分かりません。git config ${baseKey} <向き先のブランチ> で設定してから、もう一度実行してください`, []);
   }
   const recorded = runRecord({ root, changeId, stdout, progress, now });
   if (recorded !== 0) return finish('stopped', '証拠の記録で完了ゲートに不合格になりました', []);
