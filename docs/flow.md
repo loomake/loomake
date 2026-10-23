@@ -123,7 +123,7 @@ pnpm -s verify --change setup-monorepo --done
 gh pr create --fill
 ```
 
-GitHub Actions の gate ジョブは、PR のブランチ名と同じ change-id のディレクトリがあるときに完了ゲートを実行する（例：ブランチ `setup-monorepo` → `openspec/changes/setup-monorepo/`）。一致しない場合とブランチ名が `archive` の場合は品質コマンドだけを実行する。設定は `setup-monorepo` で導入済み。マージを止めるための必須チェックの設定は、人が GitHub 上で行う（setup-monorepo の仮定 A-03）。
+GitHub Actions の gate ジョブは、PR のブランチ名と同じ change-id のディレクトリがあるときに完了ゲートを実行する（例：ブランチ `setup-monorepo` → `openspec/changes/setup-monorepo/`）。`loomake run` が作る `loomake/<change-id>` のブランチは、先頭の `loomake/` を除いて比べる。一致しない場合とブランチ名が `archive` の場合は品質コマンドだけを実行する。設定は `setup-monorepo` で導入済み。マージを止めるための必須チェックの設定は、人が GitHub 上で行う（setup-monorepo の仮定 A-03）。
 
 ## 6. マージ後：仕様に取り込む
 

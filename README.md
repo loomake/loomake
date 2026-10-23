@@ -96,7 +96,7 @@ skills-lock.json                  npx skills で入れたスキルの出所と�
 ### CI とリリース
 
 - PR と main への push で、ubuntu・macos・windows の 3 つで lint・typecheck・test・build を実行する。Node 20.19 でも、ビルドした CLI が動くかを確かめる
-- PR のブランチ名が change-id と一致し、`openspec/changes/<id>/` があれば、gate ジョブで `verify --change <id> --done` も実行する。一致しない場合とブランチ名が `archive` の場合は、品質コマンドだけを実行する
+- PR のブランチ名（`loomake/` で始まるときは、それを除いた名前）が change-id と一致し、`openspec/changes/<id>/` があれば、gate ジョブで `verify --change <id> --done` も実行する。一致しない場合とブランチ名が `archive` の場合は、品質コマンドだけを実行する
 - npm への公開は GitHub の Actions から release ワークフローを main で手動実行する。事前に `pnpm changeset version` でバージョンを上げた変更を main に入れておく。未消化の changeset が残っていると公開を止める。リポジトリのシークレットに `NPM_TOKEN` が要る
 
 ### devcontainer について
