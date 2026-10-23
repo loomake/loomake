@@ -22,7 +22,7 @@ npx loomake trace report --change <id>            # 検収レポートを出す
 
 ## 必要なもの
 
-- Node.js 20.19 以上
+- Node.js 22.12 以上
 - 実行時に使う外部コマンド
   - `openspec`（[OpenSpec CLI](https://github.com/Fission-AI/OpenSpec)。`npm install -g @fission-ai/openspec`）
   - `loomake run` では、`gh`（[GitHub CLI](https://cli.github.com/)）と `claude`（Claude Code）

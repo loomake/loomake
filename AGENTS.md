@@ -65,7 +65,7 @@
 
 <!-- ここから下はプロジェクトごとに書き換える -->
 
-- 技術スタック：TypeScript / Node.js（配布物は 20.19 以上、開発は 24）/ Vitest / ESLint（typescript-eslint）
+- 技術スタック：TypeScript / Node.js（配布物は 22.12 以上、開発は 24）/ Vitest / ESLint（typescript-eslint）
 - パッケージマネージャ：pnpm（workspaces）。リリースは changesets
 - 主なディレクトリ：`packages/core/` = trace.md などの読み取りと JSON スキーマ、`packages/kit/` = verify・init の本体と `templates/`（init が配るファイル）、`packages/trace/` = trace record・trace report の本体、`packages/runner/` = run の本体、`packages/cli/` = CLI 本体、`tests/` = リポジトリ全体のテスト、`docs/` = 使い方・開発の流れ・要件定義書・記録
 - コーディング規約：関数は named export。`@loomake/core` の実行時依存はゼロ、`@loomake/kit` は core だけ、`@loomake/trace` は core と kit だけ、`@loomake/runner` は core・kit・trace だけ、`loomake` は core・kit・trace・runner だけに保つ（REQ-046・REQ-047・REQ-083・REQ-123）。使い方や設定の誤りは `UsageError` を投げ、CLI が終了コード 2 で返す。利用者に見せるメッセージは日本語で書く
