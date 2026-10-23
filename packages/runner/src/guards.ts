@@ -8,6 +8,8 @@ export type GuardFinding = { file: string; reason: string };
 const isTestFile = (f: string) => /\.(test|spec)\./.test(f) || /(^|\/)(test|tests|__tests__)\//.test(f);
 // skip・todo を足した行（A-17）。it.concurrent.skip のような修飾と、条件つきの skipIf・runIf も見る（fix-review-findings-2 の仮定 A-04）
 const SKIP = /\b(it|test|describe|suite)(\.\w+)*\.(skip|todo|skipIf|runIf)\b|\bx(it|test|describe)\(/;
+// アサーションとテストの宣言の呼び出し。直前が . か英数字の呼び出し（/x/.test(s)・submit(）は含めない（guard-test-weakening の仮定 A-01）
+const TEST_LINE = /(?<![.\w])(expect|assert|it|test|describe)(\.\w+)*\s*\(/;
 // lint・型・テストの設定ファイル（A-18）
 const isConfigFile = (f: string) => {
   const name = f.split('/').pop() ?? '';
@@ -37,6 +39,7 @@ const scriptsOf = (root: string, env: NodeJS.ProcessEnv, rev: string, file: stri
 
 /**
  * エンジンの変更を index に載せ、HEAD との差分から不正な直し方を探す（REQ-109〜REQ-111、仮定 A-20）。
+ * テストファイルの削除、skip・todo の追加、HEAD にあったアサーションとテストの宣言の書き換え・削除を見る。
  * 見つけたら、その差分を返す。変更は index に載ったままなので、呼び出し側で戻すかコミットする
  */
 export function findViolations(root: string, env: NodeJS.ProcessEnv, openspecDir = 'openspec'): { findings: GuardFinding[]; diff: string } {
@@ -56,10 +59,17 @@ export function findViolations(root: string, env: NodeJS.ProcessEnv, openspecDir
     if (file.startsWith(specsDir)) findings.push({ file, reason: 'いまの仕様を変えました' });
     else if (file.startsWith(changesDir)) findings.push({ file, reason: file.endsWith('/trace.md') ? 'trace.md を変えました' : 'change の文書を変えました' });
     if (code !== 'D') {
-      const added = git(root, env, ['diff', '--cached', '-U0', '--', file])
-        .split('\n')
-        .filter((l) => l.startsWith('+') && !l.startsWith('+++'));
+      const lines = git(root, env, ['diff', '--cached', '-U0', '--', file]).split('\n');
+      const added = lines.filter((l) => l.startsWith('+') && !l.startsWith('+++'));
       for (const l of added) if (SKIP.test(l)) findings.push({ file, reason: `skip・todo を足しました：${l.slice(1).trim()}` });
+      // HEAD にあったテストファイルのアサーションとテストの宣言を、消すか書き換えたら止まる。同じ内容の行を足していれば、移しただけとみなす（REQ-109）
+      if (code === 'M' && isTestFile(file)) {
+        const kept = new Set(added.map((l) => l.slice(1).trim()));
+        for (const l of lines.filter((x) => x.startsWith('-') && !x.startsWith('---'))) {
+          const text = l.slice(1).trim();
+          if (TEST_LINE.test(text) && !kept.has(text)) findings.push({ file, reason: `アサーションかテストを消すか書き換えました：${text}` });
+        }
+      }
     }
   }
   const files = [...new Set(findings.map((f) => f.file))];

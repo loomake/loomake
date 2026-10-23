@@ -77,6 +77,69 @@ describe('テストの削除と skip・todo の検出', () => {
       expect(r.stdout).toContain(`skip・todo を足しました：${call}(`);
     }));
 
+  const withAssertions = (repo: Repo) =>
+    repo.write(
+      'tests/a.test.ts',
+      "describe('足し算', () => {\n  it('[REQ-012] a', () => {\n    expect(add(1, 2)).toBe(3);\n  });\n  it('[REQ-012] b', () => {\n    const ok = /x/.test(s);\n    expect(ok).toBe(true);\n  });\n});\n",
+    );
+
+  it('[REQ-109] HEAD にあったアサーションを書き換えたら、書き換える前の行を表示して止まる', () =>
+    check(
+      {
+        write: {
+          'tests/a.test.ts':
+            "describe('足し算', () => {\n  it('[REQ-012] a', () => {\n    expect(true).toBe(true);\n  });\n  it('[REQ-012] b', () => {\n    const ok = /x/.test(s);\n    expect(ok).toBe(true);\n  });\n});\n",
+        },
+      },
+      withAssertions,
+      (r) => {
+        stopped(r, 2);
+        expect(r.stdout).toContain('tests/a.test.ts：アサーションかテストを消すか書き換えました：expect(add(1, 2)).toBe(3);');
+        expect(r.status).toContain('tests/a.test.ts');
+      },
+    ));
+
+  it('[REQ-109] ファイルの中のテストを消したら、消した it( の行を表示して止まる', () =>
+    check(
+      { write: { 'tests/a.test.ts': "describe('足し算', () => {\n  it('[REQ-012] a', () => {\n    expect(add(1, 2)).toBe(3);\n  });\n});\n" } },
+      withAssertions,
+      (r) => {
+        stopped(r, 2);
+        expect(r.stdout).toContain("アサーションかテストを消すか書き換えました：it('[REQ-012] b', () => {");
+        expect(r.stdout).toContain('アサーションかテストを消すか書き換えました：expect(ok).toBe(true);');
+      },
+    ));
+
+  it('[REQ-109] アサーションの行の字下げを変えて別の describe へ移すだけなら、止まらずにコミットする', () =>
+    check(
+      {
+        write: {
+          'tests/a.test.ts':
+            "describe('足し算', () => {\n  it('[REQ-012] a', () => {\n    expect(add(1, 2)).toBe(3);\n  });\n});\ndescribe('別', () => {\n    it('[REQ-012] b', () => {\n        const ok = /x/.test(s);\n        expect(ok).toBe(true);\n    });\n});\n",
+        },
+      },
+      withAssertions,
+      (r) => {
+        expect(r.code).toBe(0);
+        expect(r.stdout).not.toContain('不正な直し方');
+      },
+    ));
+
+  it('[REQ-109] テストでない呼び出し（/x/.test(s)）の行を書き換えるだけなら、止まらずにコミットする', () =>
+    check(
+      {
+        write: {
+          'tests/a.test.ts':
+            "describe('足し算', () => {\n  it('[REQ-012] a', () => {\n    expect(add(1, 2)).toBe(3);\n  });\n  it('[REQ-012] b', () => {\n    const ok = /y/.test(s);\n    expect(ok).toBe(true);\n  });\n});\n",
+        },
+      },
+      withAssertions,
+      (r) => {
+        expect(r.code).toBe(0);
+        expect(r.stdout).not.toContain('不正な直し方');
+      },
+    ));
+
   it('xit( と describe.todo も skip・todo として見つける（仮定 A-17）', () =>
     check({ write: { 'tests/a.test.ts': "xit('a', () => {});\ndescribe.todo('b');\n" } }, withTest, (r) => {
       stopped(r, 2);
