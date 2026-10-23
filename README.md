@@ -5,11 +5,16 @@
 - 要件書を、出典つきの OpenSpec change に変える（req-to-openspec Skill）
 - AI が従う共通ルールを置く（AGENTS.md）
 - 未確定の要件が残る間は実装させず、全要件にテストがあることを機械的に確かめる（`loomake verify`）
+- 検査の結果を証拠として記録し、顧客に渡す検収レポートを作る（`loomake trace`）
+- tasks を AI に実装させ、完了ゲートが通るまで直させて、PR を出す（`loomake run`）
 
 ```sh
 npx loomake init                                  # AGENTS.md・設定・Skill を置く
 npx loomake verify --change <id> --spec-only      # 仕様ゲート：実装に入ってよいか
 npx loomake verify --change <id> --done           # 完了ゲート：要件ごとのテスト・品質コマンド
+npx loomake run --change <id>                     # 実装から PR までを AI に任せる
+npx loomake trace record --change <id>            # 証拠を記録する
+npx loomake trace report --change <id>            # 検収レポートを出す
 ```
 
 `loomake` はまだ npm に公開していない。
@@ -24,7 +29,7 @@ npx loomake verify --change <id> --done           # 完了ゲート：要件ご�
 | [AGENTS.md](AGENTS.md) | AI エージェント・開発者 | このリポジトリで AI が従うルール |
 | [docs/flow.md](docs/flow.md) | このリポジトリを開発する人 | Loomake を Loomake で作る流れ |
 | [docs/architecture.md](docs/architecture.md) | このリポジトリを開発する人 | 全体の構成、名前、作る順番 |
-| [docs/requirements/](docs/requirements/) | このリポジトリを開発する人 | 要件定義書。最新は [mvp-v0.7.md](docs/requirements/mvp-v0.7.md)。過去の版は trace.md の出典として残している |
+| [docs/requirements/](docs/requirements/) | このリポジトリを開発する人 | 要件定義書。core・kit は [mvp-v0.7.md](docs/requirements/mvp-v0.7.md)、trace は [trace-v0.1.md](docs/requirements/trace-v0.1.md)、run は [runner-v0.1.md](docs/requirements/runner-v0.1.md)。過去の版は trace.md の出典として残している |
 | [docs/review.md](docs/review.md)・[docs/worklog/](docs/worklog/) | このリポジトリを開発する人 | レビューと作業の記録 |
 
 ## パッケージ
@@ -33,7 +38,9 @@ npx loomake verify --change <id> --done           # 完了ゲート：要件ご�
 |---|---|---|
 | `@loomake/core` | `packages/core/` | trace.md・spec.md・tasks.md・テストレポートの読み取りと、verify 結果の JSON スキーマ（実行時依存ゼロ） |
 | `@loomake/kit` | `packages/kit/` | verify と init の本体、配布するテンプレート（Skill・AGENTS.md・CLAUDE.md・devcontainer） |
-| `loomake` | `packages/cli/` | CLI 本体（`loomake init`・`loomake verify`） |
+| `@loomake/trace` | `packages/trace/` | 証拠の記録（`trace record`）と検収レポート（`trace report`） |
+| `@loomake/runner` | `packages/runner/` | tasks を AI のエンジンに実装させ、完了ゲートが通るまで回して PR を出す（`run`） |
+| `loomake` | `packages/cli/` | CLI 本体（`loomake init`・`loomake verify`・`loomake trace`・`loomake run`） |
 
 いまの仕様は `openspec/specs/`（monorepo・core-parsers・verify・init・req-to-openspec-skill・agents-rules）にある。
 
@@ -66,6 +73,8 @@ CLAUDE.md                         AGENTS.md を読み込むだけ
 loomake.config.json               verify の設定（テストのレポートの場所・品質コマンド）
 packages/core/                    @loomake/core（schema/ に verify 結果の JSON スキーマ）
 packages/kit/                     @loomake/kit（templates/ に init が置くファイル）
+packages/trace/                   @loomake/trace（証拠の記録と検収レポート）
+packages/runner/                  @loomake/runner（loomake run）
 packages/cli/                     loomake（CLI 本体）
 tests/                            リポジトリ全体のテスト（vitest）
 scripts/ci-gate.mjs               CI 用。ブランチ名が change-id なら --done で verify を実行する
