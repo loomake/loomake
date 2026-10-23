@@ -74,6 +74,22 @@ describe('終了コード', () => {
     }
   });
 
+  it('[REQ-041] --change の値が change 名の形でなければ、openspec validate を呼ばずに日本語で表示して 2', async () => {
+    // openspecValidate が true なので、検査まで進めば openspec コマンドを呼ぶ
+    for (const id of ['c1&echo', 'C1', 'c1_x', '-c1', 'c1-', 'a--b']) {
+      const r = await withProject({ config: { openspecValidate: true, commands: {} } }, (root) => run(root, 'verify', '--change', id, '--spec-only'));
+      expect(r.code, id).toBe(2);
+      expect(r.stderr, id).toContain('英小文字・数字');
+      expect(r.stdout, id).not.toContain('openspec validate');
+    }
+  });
+
+  it('[REQ-041] archive を --change に渡すと、日本語で表示して 2', async () => {
+    const r = await withProject({}, (root) => run(root, 'verify', '--change', 'archive', '--spec-only'));
+    expect(r.code).toBe(2);
+    expect(r.stderr).toContain('archive は change-id に使えません');
+  });
+
   it('[REQ-041] loomake.config.json の形が正しくなければ 2', async () => {
     const r = await withProject({ config: { tests: { report: 1 } } }, (root) => run(root, 'verify', '--change', CHANGE, '--spec-only'));
     expect(r.code).toBe(2);

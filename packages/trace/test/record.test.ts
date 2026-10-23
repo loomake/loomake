@@ -91,6 +91,21 @@ describe('証拠の記録', () => {
     }
   });
 
+  it('[REQ-066] change-id が change 名の形でないか archive なら、何も記録せず、終了コード 2 を返す', async () => {
+    const repo = makeRepo();
+    try {
+      for (const id of ['C1', 'archive']) {
+        const err: string[] = [];
+        const code = await main(['trace', 'record', '--change', id], { cwd: repo.root, stdout: () => {}, stderr: (t) => err.push(t) });
+        expect(code, id).toBe(2);
+        expect(err.join('\n'), id).toMatch(/英小文字・数字|archive は change-id に使えません/);
+      }
+      expect(existsSync(join(repo.root, '.loomake/evidence'))).toBe(false);
+    } finally {
+      repo.cleanup();
+    }
+  });
+
   it('[REQ-066] change-id にパスの区切りを含めると、何も記録せず、日本語のエラーを出して終了コード 2 を返す', async () => {
     const repo = makeRepo();
     try {

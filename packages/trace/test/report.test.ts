@@ -84,6 +84,16 @@ describe('要件ごとの検収の表', () => {
       expect(err.join('\n')).toContain('パスの区切り');
     }));
 
+  it('[REQ-070] change-id が change 名の形でないか archive なら、日本語で表示して終了コード 2 を返す', () =>
+    withProject({}, async (root) => {
+      for (const id of ['C1', 'archive']) {
+        const err: string[] = [];
+        const code = await main(['trace', 'report', '--change', id], { cwd: root, stdout: () => {}, stderr: (t) => err.push(t) });
+        expect(code, id).toBe(2);
+        expect(err.join('\n'), id).toMatch(/英小文字・数字|archive は change-id に使えません/);
+      }
+    }));
+
   it('[REQ-070] 記録した日時がいちばん新しい記録を使う', () => {
     const records = [
       { recordedAt: '2026-10-23T02:00:00.000Z', sha: 'b'.repeat(40) },
@@ -138,6 +148,27 @@ describe('冒頭の要注意の一覧', () => {
     withProject({ trace: traceMd({ ledger: [ledgerRow('REQ-012'), ledgerRow('REQ-072', '確認待ち')] }) }, (root) => {
       expect(report(root).attention.pending).toEqual(['REQ-072']);
       expect(markdown(root).text).toContain('確認待ちの要件：REQ-072');
+    });
+  });
+
+  it('[REQ-072] 証拠の検査が不合格なら、冒頭に不合格の検査を挙げ、要注意の要件がないとは書かない', () => {
+    const verify = {
+      schemaVersion: '1.0.0' as const,
+      mode: 'done' as const,
+      change: CHANGE,
+      ok: false,
+      results: [
+        { check: 'command: lint', status: 'fail' as const, detail: 'エラー' },
+        { check: 'tasks.md', status: 'pass' as const, detail: '' },
+      ],
+      coverage: { 'REQ-012': ['tests/x.test.ts'] },
+    };
+    withProject({ evidence: [{ verify }] }, (root) => {
+      expect(report(root).attention.failedChecks).toEqual(['command: lint']);
+      const text = markdown(root).text;
+      expect(text).toContain('- 不合格の検査：command: lint');
+      expect(text.indexOf('不合格の検査')).toBeLessThan(text.indexOf('## 要件ごとの検収'));
+      expect(text).not.toContain('要注意の要件はありません。');
     });
   });
 

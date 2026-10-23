@@ -18,6 +18,13 @@ describe('parseTasks', () => {
     ]);
   });
 
+  it('[REQ-014] 箇条書きの記号が * でも + でも、タスクとして返す', () => {
+    expect(parseTasks('tasks.md', '* [ ] 1.1 一つ目\n+ [x] 1.2 二つ目\n').value).toEqual([
+      { checked: false, text: '1.1 一つ目', line: 1 },
+      { checked: true, text: '1.2 二つ目', line: 2 },
+    ]);
+  });
+
   it('[REQ-014] 行末が CRLF でも同じタスクを返し、文に \\r が残らない', () => {
     expect(parseTasks('tasks.md', tasks.replace(/\n/g, '\r\n'))).toEqual(parseTasks('tasks.md', tasks));
   });

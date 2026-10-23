@@ -42,11 +42,12 @@ console.log(JSON.stringify({ type: 'result', result: step.output ?? '終えま�
 process.exitCode = step.exitCode ?? 0;
 `;
 
-// gh auth status は FAKE_GH_AUTH が fail なら失敗する。gh pr create は引数と本文を記録して URL を出す
+// gh auth status は FAKE_GH_AUTH が fail のときと、リポジトリの 1 つ上に gh-logout があるとき（実行のあいだのログアウト）に失敗する。gh pr create は引数と本文を記録して URL を出す
 const FAKE_GH = `#!/usr/bin/env node
-import { appendFileSync, readFileSync } from 'node:fs';
+import { appendFileSync, existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 const args = process.argv.slice(2);
-if (args[0] === 'auth') process.exit(process.env.FAKE_GH_AUTH === 'fail' ? 1 : 0);
+if (args[0] === 'auth') process.exit(process.env.FAKE_GH_AUTH === 'fail' || existsSync(join(process.cwd(), '..', 'gh-logout')) ? 1 : 0);
 const i = args.indexOf('--body-file');
 appendFileSync(process.env.FAKE_GH_LOG, JSON.stringify({ args, body: readFileSync(args[i + 1], 'utf8') }) + '\\n');
 console.log('https://github.com/example/repo/pull/1');
