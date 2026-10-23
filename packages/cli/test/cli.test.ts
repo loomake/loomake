@@ -75,7 +75,7 @@ describe('終了コード', () => {
   it('[REQ-041] サブコマンドが無ければ、使い方を出して 2', async () => {
     const r = await withProject({}, (root) => run(root));
     expect(r.code).toBe(2);
-    expect(r.stderr).toContain('使い方: loomake <init | verify | trace>');
+    expect(r.stderr).toContain('使い方: loomake <init | verify | trace | run>');
   });
 });
 
@@ -93,9 +93,9 @@ describe('実行時依存の範囲', () => {
     expect(Object.keys(readJson('packages/kit/package.json').dependencies ?? {})).toEqual(['@loomake/core']);
   });
 
-  it('[REQ-047] loomake の dependencies は @loomake/core・@loomake/kit・@loomake/trace 以外を含まない', () => {
+  it('[REQ-047] loomake の dependencies は @loomake/core・@loomake/kit・@loomake/trace・@loomake/runner 以外を含まない', () => {
     const deps = Object.keys(readJson('packages/cli/package.json').dependencies ?? {});
-    expect(deps.filter((d) => !['@loomake/core', '@loomake/kit', '@loomake/trace'].includes(d))).toEqual([]);
+    expect(deps.filter((d) => !['@loomake/core', '@loomake/kit', '@loomake/trace', '@loomake/runner'].includes(d))).toEqual([]);
   });
 });
 

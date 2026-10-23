@@ -13,6 +13,7 @@ export default defineConfig({
       '@loomake/core': join(root, 'packages/core/src/index.ts'),
       '@loomake/kit': join(root, 'packages/kit/src/index.ts'),
       '@loomake/trace': join(root, 'packages/trace/src/index.ts'),
+      '@loomake/runner': join(root, 'packages/runner/src/index.ts'),
     },
   },
   test: {

@@ -17,6 +17,7 @@
   "dependencies": {
     "@loomake/core": "workspace:*",
     "@loomake/kit": "workspace:*",
-    "@loomake/trace": "workspace:*"
+    "@loomake/trace": "workspace:*",
+    "@loomake/runner": "workspace:*"
   }
 }
