@@ -202,6 +202,9 @@ importers:
       '@loomake/kit':
         specifier: workspace:*
         version: link:../kit
+      '@loomake/trace':
+        specifier: workspace:*
+        version: link:../trace
 
   packages/core: {}
 
@@ -210,6 +213,15 @@ importers:
       '@loomake/core':
         specifier: workspace:*
         version: link:../core
+
+  packages/trace:
+    dependencies:
+      '@loomake/core':
+        specifier: workspace:*
+        version: link:../core
+      '@loomake/kit':
+        specifier: workspace:*
+        version: link:../kit
 
 packages:
 
