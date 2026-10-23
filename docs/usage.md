@@ -149,8 +149,11 @@ flowchart TD
    jest --json --outputFile=.loomake/test-report.json
    ```
 
-3. `.loomake/` を `.gitignore` に入れる
+3. `.gitignore` を確かめる。`loomake init` は、テストのレポート（`.loomake/test-report.json`）の行を足す。証拠の記録（`.loomake/evidence/`）はコミットするので、`.loomake/` を丸ごと除外しない
 4. `AGENTS.md` の末尾の「プロジェクト固有の情報」を書き換える
+5. `npx loomake doctor` で、導入が済んでいるかを確かめる。設定ファイル、OpenSpec、品質コマンドの実行ファイル、`.gitignore` の除外、使う CLI（openspec・claude・gh）を調べ、問題があれば直し方を表示する。doctor はファイルを変えず、品質コマンドも実行しない。問題が 1 つでもあれば終了コードは 1
+
+`npx loomake --help` でコマンドの一覧を、`npx loomake <コマンド> --help` でそれぞれの使い方を表示する。
 
 ## 4. 1 つの change を進める
 
@@ -248,10 +251,13 @@ git add .loomake/evidence && git commit -m "evidence: <change-id>"
 npx loomake trace report --change <change-id> > report.md
 ```
 
-- `trace record` は `verify --done` を実行し、結果を検査したコミットの SHA・日時と合わせて `.loomake/evidence/<change-id>/` に新しいファイルとして保存する。不合格の結果も記録する。終了コードは verify と同じ
+- `trace record` は `verify --done` を実行し、結果を検査したコミットの SHA・日時と合わせて `.loomake/evidence/<change-id>/` に新しいファイルとして保存する。検証した時点の trace.md と差分仕様の内容・パス・SHA-256 も一緒に保存する。不合格の結果も記録する。終了コードは verify と同じ
+- 検査のあいだに HEAD・作業ツリー・trace.md や差分仕様が変わったら、どの内容を検査したか分からないので記録しない。`.gitignore` で除外したテストのレポートの書き出しは、変更とみなさない
 - 作業ツリーに未コミットの変更（追跡していないファイルを含む）があると、記録しない。記録したファイルは、そのままコミットする。`.gitignore` で `.loomake/` を除外しているなら、`.loomake/evidence/` だけは除外から外す
-- `trace report` は、いちばん新しい記録と trace.md・差分仕様から、要件ごとの出典・Requirement・テスト・検査結果の表、確認事項と仮定の一覧を出す。archive したあとの change にも使える
-- 冒頭に、合格したテストのない要件と確認待ちの要件を挙げる。回答や承認があるのに回答者・回答日・承認者・承認日が空の行は、末尾で警告する
+- `trace report` は、いちばん新しい記録に保存した trace.md・差分仕様と検査結果から、要件ごとの出典・Requirement・テスト・検査結果の表、確認事項と仮定の一覧を出す。記録のあとで文書を書き換えても、表は記録したときの内容のまま。archive したあとの change にも使える
+- 冒頭に、合格したテストのない要件、確認待ちの要件、記録のあとで変わった文書を挙げる。回答や承認があるのに回答者・回答日・承認者・承認日が空の行は、末尾で警告する
+- 文書を保存していない古い形式の記録では、いまの文書から表を作り、合格を「合格（仕様との対応は未確認）」と表示する
+- レポートには、自動検査が確かめた範囲を書く。確かめるのは、要件 ID を名前に含む成功したテストがあることまで。テストの中身が要件を満たしているかは、人がレビューで判断する
 - `--format json` で JSON を出す。省くと Markdown になる。HTML はまだ出せない
 - 同じ入力からは、毎回同じレポートになる（作った日時は入れない）
 
@@ -265,12 +271,15 @@ npx loomake run --change <change-id>
 ```
 
 - `loomake/<change-id>` のブランチで、タスクを終えるたびに `run(<change-id>): …` でコミットする。tasks.md の完了は run が付ける。完了ゲートを通すタスクはエンジンに渡さず、合格したときに完了にする
+- 完了ゲートのタスクは、行末の `<!-- loomake:gate=done -->` の印で見分ける。印がなくても、本文に `verify` と `--done` を含むタスクは完了ゲートのタスクとみなすが、印を付けるよう案内が出る
+- エンジンには、git でコミットしたりブランチを切り替えたりしないよう指示する。それでもエンジンが自分でコミットするかブランチを切り替えたら、そのタスクを完了にせずに止まり、前後の SHA とブランチ名、その間の差分、確かめる手順と戻す手順を表示する。run はエンジンのコミットを取り消さない
 - 止まったあとは、どのブランチからもう一度実行しても、`loomake/<change-id>` に切り替えてから、そのブランチの tasks.md の続きを渡す。エンジンが 0 以外の終了コードで終わったときも、そのタスクを完了にせずに止まる
 - 完了ゲートに不合格なら、内容をエンジンに渡して直させる。直しの回数（既定 5 回）か実行時間（既定 60 分）が上限に達したら止まる。上限は loomake.config.json の `run.maxFixes`・`run.timeoutMinutes` で変えられる
 - エンジンが仕様にない判断に迷ったら、`LOOMAKE-QUESTION:` の行で質問して止まる。確認事項に答えてから、もう一度実行する
 - テストの削除や skip、lint・型・テストの設定、いまの仕様、trace.md の変更を見つけたら、変更をコミットせずに残して止まる。承認するなら、差分を確かめ、tasks.md のそのタスクを完了にして自分でコミットし、もう一度実行する
 - 合格したら `loomake trace record` で証拠を記録してコミットし、ブランチを送って `gh pr create` で PR を作る。PR の向き先は、run が `loomake/<change-id>` を作ったときのブランチで、git の設定 `branch.loomake/<change-id>.loomake-base` に覚えておく。マージは人がする
 - 止まったときは、理由・終えたタスク・残ったタスク・最後の検査結果を表示する。実行の記録は `.loomake/runs/` にあり、git では追跡しない
+- 始めたあとに git の操作か証拠の記録が失敗したときも、理由を実行の記録に書いて終了コード 1 で止まる。始める前の git の失敗（git のリポジトリでないなど）は、使い方の誤りとして終了コード 2 になる
 - ふだんはファイルの読み書きと loomake.config.json の commands だけを Claude Code に許可する。権限確認なしで動かすのは、通信を npm・GitHub・エンジンの API に絞った環境で `LOOMAKE_SANDBOX=1` を設定し、`--skip-permissions` を付けたときだけ
 
 ## 5. `loomake verify` のリファレンス
@@ -399,3 +408,6 @@ stateDiagram-v2
 | 「テストが無い要件：REQ-012」 | 名前に `[REQ-012]` を含むテストが無いか、skip されているか、失敗している |
 | `openspec validate` が警告になる | OpenSpec CLI が入っていない。入れるか、`openspecValidate` を `false` にする |
 | `loomake init` が終了コード 1 で止まる | 確認に答えられない環境で、内容の違うファイルがあった。端末から実行し直す |
+| 導入が済んでいるか分からない | `npx loomake doctor` を実行する。足りない設定と直し方が表示される |
+| `loomake run` が「テストのレポート（.loomake/test-report.json）が .gitignore で除外されていない」で始まらない | `.gitignore` に `.loomake/test-report.json` の行を足してコミットする |
+| `loomake run` が「エンジンが HEAD かブランチを変えました」で止まる | エンジンが自分でコミットした。表示された差分を確かめ、受け入れるなら tasks.md のそのタスクを完了にして自分でコミットする。戻すなら、表示された `git reset --hard` で戻す。どちらも、そのあと run をもう一度実行する |
