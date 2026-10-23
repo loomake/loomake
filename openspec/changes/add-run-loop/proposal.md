@@ -5,9 +5,9 @@
 
 ## What Changes
 - `loomake run --change <id>` を追加する。最初に仕様ゲートと未コミットの変更を確かめる（REQ-093、REQ-094）。`--dry-run` で予定だけを表示する（REQ-095）
-- `loomake/<change-id>` のブランチで、未完了のタスクをエンジンに渡し、タスクごとにコミットする（REQ-096〜REQ-099。渡し方は確認待ち）
+- `loomake/<change-id>` のブランチで、未完了のタスクをエンジンに渡し、タスクごとにコミットする（REQ-096〜REQ-099。1 つずつ渡す）
 - すべてのタスクを終えたら完了ゲートを実行し、不合格なら直させる（REQ-100）
-- `--engine claude-code` で Claude Code の headless 実行を使う（REQ-101。権限確認の扱いは確認待ち）
+- `--engine claude-code` で Claude Code の headless 実行を使う（REQ-101。権限確認なしで動かすのは、利用者が宣言した絞った環境だけ、REQ-121）
 - 直しの回数・実行時間の上限、エンジンの質問で止まり、止まった理由を報告する（REQ-104〜REQ-107）
 - 実行の記録を `.loomake/runs/<実行 ID>/` に、秘密情報を隠して保存する（REQ-117、REQ-118）
 - コンテナの外では警告して確認を求める（REQ-120、REQ-122）。中断されても、終えたタスクと記録を残す（REQ-124）
@@ -20,5 +20,5 @@
 - 後のフェーズ：REQ-102（エンジンの共通のインターフェースの公開）、REQ-103（Codex）、REQ-108（`--resume`）、REQ-119（トークン数と費用の記録）
 
 ## Impact
-- 影響する capability：run（新規）
+- 影響する capability：run（新規）、verify（「実行時依存の範囲」の変更）
 - 影響するコード：run のパッケージ（新規）、CLI の run サブコマンド

@@ -46,3 +46,16 @@ Source: REQ-111
 #### Scenario: trace.md を書き換える
 - **WHEN** エンジンが change の trace.md の回答欄を書き換えて終える
 - **THEN** run は止まり、終了コードは 1 である
+
+### Requirement: 止まったときの差分の表示と承認
+不正な直し方を見つけて止まったとき、`loomake run` は見つけた理由と、対象のファイルの差分を表示する SHALL。その変更はコミットせずに作業ツリーに残し、終了コード 1 を返す SHALL。あわせて、承認するなら人が差分を確かめて、tasks.md のそのタスクを完了にしたうえで自分でコミットし、もう一度 `loomake run` を実行するよう案内する SHALL。人のコミットがない限り、run は先へ進まない SHALL。
+
+Source: REQ-112
+
+#### Scenario: 差分を表示して止まる
+- **WHEN** エンジンが loomake.config.json を書き換えて終える
+- **THEN** 理由と loomake.config.json の差分が表示され、その変更は作業ツリーに残り、コミットは増えず、承認のしかたが案内され、終了コードは 1 である
+
+#### Scenario: 承認しないで実行し直す
+- **WHEN** 止まったあと、変更をコミットしないまま `loomake run --change c1` を実行する
+- **THEN** 未コミットの変更があるので始めず、終了コードは 1 である

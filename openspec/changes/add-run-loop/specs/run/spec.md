@@ -48,6 +48,19 @@ Source: REQ-096
 - **WHEN** `loomake/c1` のブランチがすでにあるリポジトリで `loomake run --change c1` を実行する
 - **THEN** `loomake/c1` に切り替えて、その続きにコミットされる
 
+### Requirement: タスクを 1 つずつ渡す
+`loomake run` は、tasks.md の未完了のタスクを上から順に、1 回に 1 つずつエンジンに渡す SHALL。
+
+Source: REQ-097
+
+#### Scenario: 上から順に 1 つずつ
+- **WHEN** 未完了のタスク 1.1・1.2 がある change を実行する
+- **THEN** エンジンは 2 回呼ばれ、1 回目の指示には 1.1 だけが、2 回目の指示には 1.2 だけが対象のタスクとして含まれる
+
+#### Scenario: 完了済みのタスクは渡さない
+- **WHEN** 1.1 が `- [x]`、1.2 が `- [ ]` の change を実行する
+- **THEN** エンジンに渡されるのは 1.2 だけである
+
 ### Requirement: エンジンへの指示
 エンジンへの指示は、AGENTS.md の全文、対象のタスク、change の差分仕様のすべての spec.md、trace.md を含む SHALL。あわせて、tasks.md・trace.md・`openspec/specs/` を書き換えないことと、仕様にない判断が要るときは `LOOMAKE-QUESTION:` で始まる行に質問を書いて何も変えずに終えることを、決まりとして含む SHALL。
 
@@ -78,6 +91,36 @@ Source: REQ-100
 #### Scenario: 完了ゲートのタスクはエンジンに渡さない
 - **WHEN** tasks.md の最後のタスクが「`pnpm -s verify --change c1 --done` を通す」の change を実行する
 - **THEN** そのタスクはエンジンに渡されない
+
+### Requirement: エンジンの選び方と権限
+`loomake run` は `--engine` でエンジンを選び、省いたときは `claude-code` とする SHALL。知らないエンジンの名前と、`claude` コマンドが見つからないときは、使い方の誤りとして終了コード 2 を返す SHALL。Claude Code は headless（`claude -p`、出力は JSON）で呼び、指示は標準入力で渡す SHALL。ふだんは、ファイルの読み書きと、loomake.config.json の commands の実行だけを許可する操作の一覧として渡す SHALL。
+
+Source: REQ-101
+
+#### Scenario: 許可する操作の一覧を渡す
+- **WHEN** commands に `pnpm test` を持つプロジェクトで、`--skip-permissions` を付けずに実行する
+- **THEN** `claude` は `-p` と JSON の出力の指定で呼ばれ、許可する操作の一覧にファイルの読み書きと `pnpm test` が入り、権限確認を飛ばす指定は入らない
+
+#### Scenario: 知らないエンジン
+- **WHEN** `loomake run --change c1 --engine codex` を実行する
+- **THEN** 初版で使えるのは claude-code だけだと表示され、終了コードは 2 である
+
+#### Scenario: claude コマンドがない
+- **WHEN** `claude` コマンドのない環境で `loomake run --change c1` を実行する
+- **THEN** Claude Code を入れるよう表示され、終了コードは 2 である
+
+### Requirement: 権限確認なしで動かす条件
+`--skip-permissions` を付け、かつ環境変数 `LOOMAKE_SANDBOX` が `1` のときだけ、`loomake run` は Claude Code を権限確認なしで動かす SHALL。`--skip-permissions` を付けても `LOOMAKE_SANDBOX` が `1` でないときは、通信を許可したドメインに絞った環境で `LOOMAKE_SANDBOX=1` を設定するよう、既定の許可ドメイン（npm・GitHub・エンジンの API）とともに表示し、使い方の誤りとして終了コード 2 を返す MUST。
+
+Source: REQ-121
+
+#### Scenario: 絞った環境で権限確認を飛ばす
+- **WHEN** `LOOMAKE_SANDBOX=1` の環境で `loomake run --change c1 --skip-permissions` を実行する
+- **THEN** `claude` は権限確認を飛ばす指定つきで呼ばれる
+
+#### Scenario: 環境を宣言していない
+- **WHEN** `LOOMAKE_SANDBOX` を設定していない環境で `loomake run --change c1 --skip-permissions` を実行する
+- **THEN** エンジンは呼ばれず、`LOOMAKE_SANDBOX=1` と既定の許可ドメインが表示され、終了コードは 2 である
 
 ### Requirement: 直しの回数の上限
 完了ゲートの直しの回数が上限に達しても合格しないとき、`loomake run` は止まる SHALL。上限の既定は 5 回とし、loomake.config.json の `run.maxFixes` で変えられる SHALL。
@@ -116,13 +159,17 @@ Source: REQ-107
 - **THEN** 理由（エンジンの質問）・終えたタスク（1 つ目）・残ったタスク（2 つ目以降）・最後の検査結果が表示され、同じ内容が summary.json に書かれる
 
 ### Requirement: 実行の記録
-`loomake run` は、実行ごとに `.loomake/runs/<UTC の日時>-<change-id>/` を作り、エンジンへの指示・エンジンの出力・各回の検査結果を、何回目かが分かる名前のファイルで保存する SHALL。
+`loomake run` は、実行ごとに `.loomake/runs/<UTC の日時>-<change-id>/` を作り、エンジンへの指示・エンジンの出力・各回の検査結果を、何回目かが分かる名前のファイルで保存する SHALL。`.loomake/runs/` には中身が `*` だけの `.gitignore` を置き、実行の記録を git の追跡と未コミットの変更の確認から外す SHALL。
 
 Source: REQ-117
 
 #### Scenario: 記録が残る
 - **WHEN** タスクが 1 つの change を実行する
 - **THEN** 実行の記録のディレクトリに、1 回目の指示・出力・検査結果のファイルと summary.json がある
+
+#### Scenario: 記録は未コミットの変更にならない
+- **WHEN** 実行の記録を書いたあとに `git status --porcelain` を実行する
+- **THEN** `.loomake/runs/` の下のファイルは出てこない
 
 ### Requirement: 記録に秘密情報を含めない
 実行の記録には環境変数を含めない MUST。指示と出力の中の、よく知られた API キーやトークンの形（`sk-` で始まるもの、`ghp_`・`github_pat_` で始まるもの、`AKIA` で始まるものなど）に合う文字列は、`***` に置き換えてから保存する MUST。
@@ -172,3 +219,12 @@ Source: REQ-125
 #### Scenario: Node.js 20.19 で動く
 - **WHEN** Node.js 20.19 の環境で run のテストを実行する
 - **THEN** テストが合格する
+
+### Requirement: runner の実行時依存
+`@loomake/runner` の実行時依存は `@loomake/core`・`@loomake/kit`・`@loomake/trace` のみとする SHALL。エンジンの CLI と gh CLI は、実行時に外部のコマンドとして呼ぶ SHALL。
+
+Source: REQ-123
+
+#### Scenario: runner の依存
+- **WHEN** `packages/runner/package.json` の `dependencies` を読む
+- **THEN** `@loomake/core`・`@loomake/kit`・`@loomake/trace` 以外が含まれない

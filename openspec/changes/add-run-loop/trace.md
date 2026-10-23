@@ -12,22 +12,24 @@ Q・A の番号は run 要件定義書の中で通し番号にする。RUN-xxx �
 | 文書 | 版 | 日付 |
 |---|---|---|
 | docs/requirements/runner-v0.1.md（run 要件定義書） | v0.1 | 2026-10-23 |
+| docs/requirements/mvp-v0.7.md（Loomake MVP 要件定義書（core・kit）） | v0.7 | 2026-10-22 |
 
 ## 要件台帳
 
 | ID | 出典 | 種別 | 要約（原文に忠実に） | 状態 | 反映先 |
 |---|---|---|---|---|---|
+| REQ-047 | 要件定義書 v0.7 §6 N-02 | 非機能 | `@loomake/kit` の実行時依存は core のみ、`loomake` の実行時依存は core と kit のみとすること | 反映済 | specs/verify/spec.md |
 | REQ-090 | 要件定義書 v0.1 §2 表の 5 行目 | 範囲外 | 仕様を決めることと、確認事項に答えることは範囲外 | 範囲外 | proposal.md Non-goals |
 | REQ-092 | 要件定義書 v0.1 §2 表の 7 行目 | 範囲外 | 複数の change の並行実行は範囲外 | 範囲外 | proposal.md Non-goals |
 | REQ-093 | 要件定義書 v0.1 §3.1 RUN-PRE-01 | 機能 | `loomake run --change <id>` を実行したら、最初に仕様ゲートを実行し、不合格なら実装を始めずに不合格の内容を表示すること | 反映済 | specs/run/spec.md |
 | REQ-094 | 要件定義書 v0.1 §3.1 RUN-PRE-02 | 機能 | 作業ツリーに未コミットの変更があるときは、実装を始めないこと | 反映済 | specs/run/spec.md |
 | REQ-095 | 要件定義書 v0.1 §3.1 RUN-PRE-03 | 機能 | `--dry-run` で、実行する予定のタスクとエンジンへの指示を表示し、実装はしないこと | 反映済 | specs/run/spec.md |
 | REQ-096 | 要件定義書 v0.1 §3.2 RUN-LOOP-01 | 機能 | change ごとに `loomake/<change-id>` のブランチを作ること | 反映済 | specs/run/spec.md |
-| REQ-097 | 要件定義書 v0.1 §3.2 RUN-LOOP-02 | 機能 | tasks.md の未完了のタスクを、上から順に 1 つずつエンジンに渡すこと | 確認待ち | Q-03 |
+| REQ-097 | 要件定義書 v0.1 §3.2 RUN-LOOP-02 | 機能 | tasks.md の未完了のタスクを、上から順に 1 つずつエンジンに渡すこと | 反映済 | specs/run/spec.md |
 | REQ-098 | 要件定義書 v0.1 §3.2 RUN-LOOP-03 | 機能 | エンジンへの指示に、AGENTS.md、対象のタスク、関係する spec.md と trace.md を含めること | 反映済 | specs/run/spec.md |
 | REQ-099 | 要件定義書 v0.1 §3.2 RUN-LOOP-04 | 機能 | タスクを終えるたびにコミットし、tasks.md のそのタスクを完了にすること | 反映済 | specs/run/spec.md |
 | REQ-100 | 要件定義書 v0.1 §3.2 RUN-LOOP-05 | 機能 | すべてのタスクを終えたら完了ゲートを実行し、不合格なら不合格の内容をエンジンに渡して直させること | 反映済 | specs/run/spec.md |
-| REQ-101 | 要件定義書 v0.1 §3.2 RUN-LOOP-06 | 機能 | `--engine` でエンジンを選べること。初版は `claude-code` に対応する | 確認待ち | Q-05 |
+| REQ-101 | 要件定義書 v0.1 §3.2 RUN-LOOP-06 | 機能 | `--engine` でエンジンを選べること。初版は `claude-code` に対応する | 反映済 | specs/run/spec.md |
 | REQ-102 | 要件定義書 v0.1 §3.2 RUN-LOOP-07 | 範囲外 | エンジンを足すための共通のインターフェースを公開すること（フェーズ：次） | 範囲外 | proposal.md Non-goals |
 | REQ-103 | 要件定義書 v0.1 §3.2 RUN-LOOP-08 | 範囲外 | Codex に対応すること（フェーズ：次） | 範囲外 | proposal.md Non-goals |
 | REQ-104 | 要件定義書 v0.1 §3.3 RUN-STOP-01 | 機能 | 直しの回数が上限（既定 5 回）に達したら止まること | 反映済 | specs/run/spec.md |
@@ -39,9 +41,9 @@ Q・A の番号は run 要件定義書の中で通し番号にする。RUN-xxx �
 | REQ-118 | 要件定義書 v0.1 §3.6 RUN-LOG-02 | 機能 | 記録に API キーなどの秘密情報を含めないこと | 反映済 | specs/run/spec.md |
 | REQ-119 | 要件定義書 v0.1 §3.6 RUN-LOG-03 | 範囲外 | 使ったトークン数と費用を、エンジンが返す範囲で記録すること（フェーズ：次） | 範囲外 | proposal.md Non-goals |
 | REQ-120 | 要件定義書 v0.1 §4 RUN-N-01 | 非機能 | devcontainer か、それと同等のコンテナの中で動くこと | 反映済 | specs/run/spec.md |
-| REQ-121 | 要件定義書 v0.1 §4 RUN-N-02 | 非機能 | エンジンを権限確認なしで動かすときは、許可したドメインのほかへ通信できない環境でだけ実行すること | 確認待ち | Q-04, Q-05 |
+| REQ-121 | 要件定義書 v0.1 §4 RUN-N-02 | 非機能 | エンジンを権限確認なしで動かすときは、許可したドメインのほかへ通信できない環境でだけ実行すること | 反映済 | specs/run/spec.md |
 | REQ-122 | 要件定義書 v0.1 §4 RUN-N-03 | 非機能 | コンテナの外で実行しようとしたときは、警告して確認を求めること | 反映済 | specs/run/spec.md |
-| REQ-123 | 要件定義書 v0.1 §4 RUN-N-04 | 非機能 | 実行時の依存を `@loomake/core`・`@loomake/kit`・`@loomake/trace` だけにすること（エンジンの CLI と gh を除く） | 確認待ち | Q-01, Q-06 |
+| REQ-123 | 要件定義書 v0.1 §4 RUN-N-04 | 非機能 | 実行時の依存を `@loomake/core`・`@loomake/kit`・`@loomake/trace` だけにすること（エンジンの CLI と gh を除く） | 反映済 | specs/run/spec.md |
 | REQ-124 | 要件定義書 v0.1 §4 RUN-N-05 | 非機能 | 中断されたときも、終えたタスクのコミットと実行の記録を残すこと | 反映済 | specs/run/spec.md |
 | REQ-125 | 要件定義書 v0.1 §4 RUN-N-06 | 非機能 | Node.js 20.19 以上で動作すること | 反映済 | specs/run/spec.md |
 
@@ -51,12 +53,12 @@ Q・A の番号は run 要件定義書の中で通し番号にする。RUN-xxx �
 
 | ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |
 |---|---|---|---|---|---|---|---|---|
-| Q-01 | REQ-123 | パッケージ名を `@loomake/run` にしますか、`@loomake/runner` にしますか（要件書 RUN-Q-01。CLI は `loomake run`） | `@loomake/run` / `@loomake/runner` | `@loomake/runner`。docs/architecture.md の名前の表が `@loomake/runner` としており、文書と合う | yes | | | |
-| Q-02 | REQ-104, REQ-105 | 直しの回数と実行時間の上限の既定値を、要件書のとおり 5 回・60 分にしますか（要件書 RUN-Q-02）。既定値は loomake.config.json で変えられるようにします（仮定 A-16） | 5 回・60 分 / 実案件で計測して決める | 5 回・60 分で始め、実案件で計測したあとに見直す | no | | | |
-| Q-03 | REQ-097 | タスクを 1 つずつエンジンに渡しますか、change のタスクをまとめて渡しますか（要件書 RUN-Q-03）。§3.2 RUN-LOOP-02 は「1 つずつ」と書いていますが、未決事項にも挙がっています | 1 つずつ / まとめて | 1 つずつ。RUN-LOOP-04 の「タスクを終えるたびにコミット」と合い、止まったときにどこまで終えたかが分かる | yes | | | |
-| Q-04 | REQ-121 | 通信を許可するドメインの既定の一覧を、どうしますか（要件書 RUN-Q-04）。外部とのやり取りにかかわるため、仮定にせずに確かめます | npm・GitHub・エンジンの API だけ / プロジェクトごとに設定する | npm・GitHub・エンジンの API を既定にし、プロジェクトの devcontainer の設定で足せるようにする | yes | | | |
-| Q-05 | REQ-101, REQ-121 | エンジン（Claude Code）を、権限確認なしで動かしますか。権限確認ありだと、headless では編集やコマンドの実行のたびに止まります。また、run は「通信を許可したドメインに絞った環境」かどうかを自分では確かめられません | 権限確認なしで動かすのは、利用者が `--skip-permissions` を付け、かつ環境変数 `LOOMAKE_SANDBOX=1` で絞った環境だと宣言したときだけにする。ふだんは、許可する操作の一覧（ファイルの編集と、loomake.config.json の commands の実行）を Claude Code に渡して動かす / いつも権限確認なしで動かす | 1 つ目。権限確認なしの実行は、利用者がはっきり選んだときだけにする。devcontainer の通信制限のスクリプトが `LOOMAKE_SANDBOX=1` を設定する形にできる | yes | | | |
-| Q-06 | REQ-123 | `loomake run` を CLI 本体のサブコマンドにすると、CLI が run のパッケージに依存します。いまの仕様（verify「実行時依存の範囲」）は、CLI の依存を core・kit・trace に限っています。どうしますか | CLI の依存に run のパッケージを足す（既存の仕様を変える） / run を別のコマンドとして配る | CLI の依存に足す。trace と同じく「CLI は 1 つで、サブコマンドを束ねる」方針に合う | yes | | | |
+| Q-01 | REQ-123 | パッケージ名を `@loomake/run` にしますか、`@loomake/runner` にしますか（要件書 RUN-Q-01。CLI は `loomake run`） | `@loomake/run` / `@loomake/runner` | `@loomake/runner`。docs/architecture.md の名前の表が `@loomake/runner` としており、文書と合う | yes | `@loomake/runner` にする | 依頼者 | 2026-10-23 |
+| Q-02 | REQ-104, REQ-105 | 直しの回数と実行時間の上限の既定値を、要件書のとおり 5 回・60 分にしますか（要件書 RUN-Q-02）。既定値は loomake.config.json で変えられるようにします（仮定 A-16） | 5 回・60 分 / 実案件で計測して決める | 5 回・60 分で始め、実案件で計測したあとに見直す | no | 5 回・60 分で始め、実案件で計測したあとに見直す | 依頼者 | 2026-10-23 |
+| Q-03 | REQ-097 | タスクを 1 つずつエンジンに渡しますか、change のタスクをまとめて渡しますか（要件書 RUN-Q-03）。§3.2 RUN-LOOP-02 は「1 つずつ」と書いていますが、未決事項にも挙がっています | 1 つずつ / まとめて | 1 つずつ。RUN-LOOP-04 の「タスクを終えるたびにコミット」と合い、止まったときにどこまで終えたかが分かる | yes | 1 つずつ渡す | 依頼者 | 2026-10-23 |
+| Q-04 | REQ-121 | 通信を許可するドメインの既定の一覧を、どうしますか（要件書 RUN-Q-04）。外部とのやり取りにかかわるため、仮定にせずに確かめます | npm・GitHub・エンジンの API だけ / プロジェクトごとに設定する | npm・GitHub・エンジンの API を既定にし、プロジェクトの devcontainer の設定で足せるようにする | yes | npm・GitHub・エンジンの API を既定にし、プロジェクトの devcontainer の設定で足せるようにする | 依頼者 | 2026-10-23 |
+| Q-05 | REQ-101, REQ-121 | エンジン（Claude Code）を、権限確認なしで動かしますか。権限確認ありだと、headless では編集やコマンドの実行のたびに止まります。また、run は「通信を許可したドメインに絞った環境」かどうかを自分では確かめられません | 権限確認なしで動かすのは、利用者が `--skip-permissions` を付け、かつ環境変数 `LOOMAKE_SANDBOX=1` で絞った環境だと宣言したときだけにする。ふだんは、許可する操作の一覧（ファイルの編集と、loomake.config.json の commands の実行）を Claude Code に渡して動かす / いつも権限確認なしで動かす | 1 つ目。権限確認なしの実行は、利用者がはっきり選んだときだけにする。devcontainer の通信制限のスクリプトが `LOOMAKE_SANDBOX=1` を設定する形にできる | yes | 権限確認なしで動かすのは、利用者が `--skip-permissions` を付け、かつ環境変数 `LOOMAKE_SANDBOX=1` で絞った環境だと宣言したときだけにする。ふだんは、許可する操作の一覧（ファイルの編集と、loomake.config.json の commands の実行）を Claude Code に渡して動かす | 依頼者 | 2026-10-23 |
+| Q-06 | REQ-123 | `loomake run` を CLI 本体のサブコマンドにすると、CLI が run のパッケージに依存します。いまの仕様（verify「実行時依存の範囲」）は、CLI の依存を core・kit・trace に限っています。どうしますか | CLI の依存に run のパッケージを足す（既存の仕様を変える） / run を別のコマンドとして配る | CLI の依存に足す。trace と同じく「CLI は 1 つで、サブコマンドを束ねる」方針に合う | yes | CLI の依存に `@loomake/runner` を足す | 依頼者 | 2026-10-23 |
 
 ## 仮定
 
@@ -80,3 +82,4 @@ Q・A の番号は run 要件定義書の中で通し番号にする。RUN-xxx �
 | A-14 | REQ-120, REQ-122 | コンテナの中かどうかは、`/.dockerenv` か `/run/.containerenv` があるか、環境変数 `REMOTE_CONTAINERS`・`CODESPACES`・`DEVCONTAINER` のどれかが設定されているかで判断する。外なら警告して `続けますか [y/N]` と聞き、確認を受け付けられない環境では止まって終了コード 1 を返す | 要件書に判断のしかたの記載がない | | | |
 | A-15 | REQ-124 | 中断（Ctrl+C など）されたときは、その時点の記録と、中断した旨の summary.json を書いてから終わる。終えたタスクは、タスクごとにコミット済みなので残る。途中のタスクの変更は、コミットせずに作業ツリーに残す | 要件書に、途中のタスクの扱いの記載がない | | | |
 | A-16 | REQ-104, REQ-105 | 上限は loomake.config.json の `run.maxFixes`（既定 5）と `run.timeoutMinutes`（既定 60）で変えられるようにする | 要件書は「既定」と書いており、変えられることを前提にしている | | | |
+| A-24 | REQ-117 | `.loomake/runs/` に中身が `*` だけの `.gitignore` を置き、実行の記録を git の追跡と未コミットの変更の確認から外す | 記録が追跡されると、PR の前の `loomake trace record` が未コミットの変更を見つけて止まる。利用者のプロジェクトの `.gitignore` が `.loomake/` を除外しているとは限らない | | | |
