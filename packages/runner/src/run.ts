@@ -133,7 +133,7 @@ export function buildPrompt(root: string, changeDir: string, target: string, fai
 /** tasks.md の指定した行のタスクを完了にする */
 function checkTask(tasksPath: string, line: number) {
   const lines = readFileSync(tasksPath, 'utf8').split('\n');
-  lines[line - 1] = lines[line - 1].replace(/- \[ \]/, '- [x]');
+  lines[line - 1] = lines[line - 1].replace(/([-*+]) \[ \]/, '$1 [x]');
   writeFileSync(tasksPath, lines.join('\n'));
 }
 

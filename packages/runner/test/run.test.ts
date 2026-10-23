@@ -218,6 +218,16 @@ describe('ブランチとタスク', () => {
       expect(commit).toContain('openspec/changes/c1/tasks.md');
       expect(repo.git('show', `${rev}:openspec/changes/c1/tasks.md`)).toContain('- [x] 1.1 一つ目のタスク');
     }));
+
+  it('[REQ-099][REQ-014] * で書いたタスクも、終えたら * [x] にしてコミットする', () =>
+    withRepo(
+      async (repo) => {
+        repo.plan(passing);
+        await run(repo);
+        expect(repo.git('show', 'loomake/c1:openspec/changes/c1/tasks.md')).toContain('* [x] 1.1 一つ目のタスク');
+      },
+      { tasks: ['## 1. 実装', '* [ ] 1.1 一つ目のタスク（REQ-012）', '', '## 3. 確認', `* [ ] 3.1 完了ゲートを通す ${GATE_MARK}`, ''].join('\n') },
+    ));
 });
 
 describe('完了ゲートと直し', () => {

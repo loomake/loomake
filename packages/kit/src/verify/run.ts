@@ -268,7 +268,9 @@ function checkTasksAndPending(spec: SpecState, record: Recorder) {
   if (existsSync(tasksPath)) {
     const tasks = parseTasks('tasks.md', readFileSync(tasksPath, 'utf8')).value;
     const open = tasks.filter((t) => !t.checked);
-    record('tasks.md', open.length ? 'fail' : 'pass', open.length ? open.map((t) => `- [ ] ${t.text}`).join('\n') : `${tasks.length} 件すべて完了`);
+    // タスクが 0 件のときに「すべて完了」とすると、tasks.md を空にしたのと区別できない（fix-evaluation-findings の仮定 A-03）
+    if (!tasks.length) record('tasks.md', 'fail', 'タスクがありません');
+    else record('tasks.md', open.length ? 'fail' : 'pass', open.length ? open.map((t) => `- [ ] ${t.text}`).join('\n') : `${tasks.length} 件すべて完了`);
   }
 }
 
