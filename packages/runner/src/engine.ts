@@ -1,4 +1,4 @@
-import { spawn, spawnSync } from 'node:child_process';
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { UsageError } from '@loomake/kit';
 
 /** 初版で使えるエンジン（REQ-101） */
@@ -55,6 +55,12 @@ export function claudeArgs(commands: string[], skipPermissions: boolean): string
   return [...base, '--permission-mode', 'acceptEdits', '--allowedTools', ...tools];
 }
 
+/** エンジンを止める。Windows ではシェルの下で動く本体まで、プロセスの木ごと止める */
+function stop(child: ChildProcess) {
+  if (isWindows && child.pid !== undefined) spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F']);
+  else child.kill();
+}
+
 /** Claude Code を呼び、指示を標準入力で渡す。時間の上限か中断で止める */
 export function runClaude(call: EngineCall): Promise<EngineResult> {
   return new Promise((resolve) => {
@@ -70,11 +76,11 @@ export function runClaude(call: EngineCall): Promise<EngineResult> {
     child.stdout.setEncoding('utf8').on('data', (d: string) => (raw += d));
     const timer = setTimeout(() => {
       timedOut = true;
-      child.kill();
+      stop(child);
     }, Math.max(call.timeoutMs, 0));
     const onAbort = () => {
       aborted = true;
-      child.kill();
+      stop(child);
     };
     call.signal?.addEventListener('abort', onAbort, { once: true });
     child.on('error', () => {});
