@@ -196,7 +196,7 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
 }
 
 // 質問に「<change-id> の Q-xx と同じ質問」と書いた確認事項の回答を、参照先と比べる（add-shared-question-check の仮定 A-01・A-02）
-const SHARED_MARK = /([a-z0-9][a-z0-9-]*) の (Q-\d+) と同じ質問/;
+const SHARED_MARK = /([a-z0-9]+(?:-[a-z0-9]+)*) の (Q-\d+) と同じ質問/;
 
 function checkSharedQuestions(root: string, config: LoomakeConfig, changeId: string, questions: Trace['questions'], record: Recorder) {
   const changesDir = resolve(root, config.openspecDir, 'changes');

@@ -215,7 +215,7 @@ async function prepare(options: RunOptions): Promise<RunContext | number> {
   const runConfig = loadRunConfig(root);
   assertChangeId(changeId);
   const changeDir = resolve(root, config.openspecDir, 'changes', changeId);
-  if (changeId === 'archive' || !existsSync(join(changeDir, 'tasks.md'))) {
+  if (!existsSync(join(changeDir, 'tasks.md'))) {
     throw new UsageError(`change「${changeId}」がありません（${config.openspecDir}/changes/${changeId}/tasks.md）`);
   }
   if (options.skipPermissions && env.LOOMAKE_SANDBOX !== '1') {

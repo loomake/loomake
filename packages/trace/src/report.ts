@@ -48,7 +48,7 @@ const toPosix = (p: string) => p.split(sep).join('/');
 /** 進行中の change を先に、なければ archive の <日付>-<change-id> を探す（add-trace-report の仮定 A-05） */
 function findChange(changesDir: string, changeId: string): string | undefined {
   const active = join(changesDir, changeId);
-  if (changeId !== 'archive' && existsSync(join(active, 'trace.md'))) return active;
+  if (existsSync(join(active, 'trace.md'))) return active;
   const archiveDir = join(changesDir, 'archive');
   if (!existsSync(archiveDir)) return undefined;
   return readdirSync(archiveDir)

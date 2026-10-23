@@ -50,9 +50,16 @@ export function loadConfig(root: string): LoomakeConfig {
   };
 }
 
-/** change-id にパスの区切りを含めない。changes/ の外を指さないようにする（fix-review-findings-2 の仮定 A-05） */
+/** OpenSpec の change 名の形（英小文字・数字と、間に 1 つずつのハイフン）。OpenSpec 1.14 の KEBAB_ID_REGEX と同じ（fix-evaluation-findings の仮定 A-01） */
+export const CHANGE_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/**
+ * change-id を OpenSpec の change 名の形に限る。changes/ の外を指さず、Windows でシェルの記号が渡らないようにする。
+ * archive は完了した change の置き場なので、change-id に使えない（fix-evaluation-findings の仮定 A-01）
+ */
 export function assertChangeId(changeId: string): void {
-  if (/[/\\]/.test(changeId) || changeId.includes('..')) {
-    throw new UsageError(`change-id「${changeId}」には、パスの区切り（/・\\・..）を含められません`);
+  if (!CHANGE_ID.test(changeId)) {
+    throw new UsageError(`change-id「${changeId}」は、英小文字・数字と、間に 1 つずつのハイフンで書いてください（パスの区切りや大文字は使えません）`);
   }
+  if (changeId === 'archive') throw new UsageError('archive は change-id に使えません。完了した change の置き場です');
 }
