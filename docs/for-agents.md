@@ -68,7 +68,7 @@ flowchart TD
    npx loomake verify --change <change-id> --spec-only
    ```
 
-2. `tasks.md` の順に実装する。1 タスクごとにコミットし、終わったタスクは `- [x]` にする
+2. `tasks.md` の順に実装する。1 タスクごとにコミットし、終わったタスクは `- [x]` にする。ただし `loomake run` から呼ばれたときは、指示の決まりに従い、コミットもタスクの完了も run に任せる
 3. 各 Requirement にテストを書く。テスト名か `describe` の名前に要件 ID を入れる
 
    ```ts

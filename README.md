@@ -10,12 +10,15 @@
 
 ```sh
 npx loomake init                                  # AGENTS.md・設定・Skill を置く
+npx loomake doctor                                # 導入状態を調べ、足りない設定と直し方を出す
 npx loomake verify --change <id> --spec-only      # 仕様ゲート：実装に入ってよいか
 npx loomake verify --change <id> --done           # 完了ゲート：要件ごとのテスト・品質コマンド
 npx loomake run --change <id>                     # 実装から PR までを AI に任せる
 npx loomake trace record --change <id>            # 証拠を記録する
 npx loomake trace report --change <id>            # 検収レポートを出す
 ```
+
+`npx loomake --help` でコマンドの一覧を、`npx loomake <コマンド> --help` でそれぞれの使い方を表示する。
 
 `loomake` はまだ npm に公開していない。
 
@@ -77,12 +80,12 @@ packages/trace/                   @loomake/trace（証拠の記録と検収レ�
 packages/runner/                  @loomake/runner（loomake run）
 packages/cli/                     loomake（CLI 本体）
 tests/                            リポジトリ全体のテスト（vitest）
-scripts/ci-gate.mjs               CI 用。ブランチ名が change-id なら --done で verify を実行する
+scripts/ci-gate.mjs               CI 用。PR 本文・変えたファイル・ブランチ名から change を決め、--done で verify を実行する
 openspec/specs/                   いまの仕様（archive のときだけ更新する）
 openspec/changes/<id>/            進行中の change（proposal・specs・design・tasks・trace）
 openspec/changes/archive/         完了した change
 docs/                             使い方・開発の流れ・構成・要件定義書・記録
-.loomake/                         テストのレポート（git に入れない）
+.loomake/                         テストのレポートと run の記録（git に入れない）、証拠の記録 evidence/（git に入れる）
 .github/workflows/                ci.yml（品質コマンドと完了ゲート）、release.yml（手動の npm 公開）
 .changeset/                       changesets の設定と未消化の changeset
 .devcontainer/devcontainer.json   開発コンテナ（Node 24・pnpm・OpenSpec・Claude Code・Codex）
@@ -96,7 +99,9 @@ skills-lock.json                  npx skills で入れたスキルの出所と�
 ### CI とリリース
 
 - PR と main への push で、ubuntu・macos・windows の 3 つで lint・typecheck・test・build を実行する。Node 20.19 でも、ビルドした CLI が動くかを確かめる
-- PR のブランチ名（`loomake/` で始まるときは、それを除いた名前）が change-id と一致し、`openspec/changes/<id>/` があれば、gate ジョブで `verify --change <id> --done` も実行する。一致しない場合とブランチ名が `archive` の場合は、品質コマンドだけを実行する
+- gate ジョブは、対象の change ごとに `verify --change <id> --done` を実行する。対象は、PR 本文に `loomake-change: <id>` の行があればその change とし、なければ PR で変えた `openspec/changes/<id>/` の下のファイルと、ブランチ名（`loomake/` で始まるときは、それを除いた名前）から決める
+- 対象の change がなく、文書（`.md`、`docs/`・`openspec/`・`.changeset/` の下）だけを変えた PR と archive の PR は、品質コマンドだけを実行する。コードを変える PR で change がないときは、本文に `loomake-change: none` と書く。書かないと gate ジョブは失敗する
+- gate ジョブは PR 本文を実行のたびに読む。本文を書き直したら、gate ジョブを再実行する
 - npm への公開は GitHub の Actions から release ワークフローを main で手動実行する。事前に `pnpm changeset version` でバージョンを上げた変更を main に入れておく。未消化の changeset が残っていると公開を止める。リポジトリのシークレットに `NPM_TOKEN` が要る
 
 ### devcontainer について
