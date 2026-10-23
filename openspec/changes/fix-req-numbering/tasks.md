@@ -6,4 +6,4 @@
 - [x] 2.1 各 Scenario に対応するテストを書き、変わった Requirement に合わせて既存のテストを直す。テスト名に [REQ-xxx] を入れる
 
 ## 3. 確認
-- [ ] 3.1 `pnpm -s verify --change fix-req-numbering --done` を通す
+- [x] 3.1 `pnpm -s verify --change fix-req-numbering --done` を通す
