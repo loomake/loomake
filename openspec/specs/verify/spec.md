@@ -172,7 +172,7 @@ Source: REQ-055
 - **THEN** 「change の存在」検査が日本語の説明つきで不合格になる
 
 ### Requirement: 実行時依存の範囲
-`@loomake/kit` の実行時依存は `@loomake/core` のみとし、`loomake` の実行時依存は `@loomake/core` と `@loomake/kit` のみとする SHALL。
+`@loomake/kit` の実行時依存は `@loomake/core` のみとし、`loomake` の実行時依存は `@loomake/core`・`@loomake/kit`・`@loomake/trace` のみとする SHALL。
 
 Source: REQ-047
 
@@ -182,7 +182,7 @@ Source: REQ-047
 
 #### Scenario: loomake の依存
 - **WHEN** `packages/cli/package.json` の `dependencies` を読む
-- **THEN** `@loomake/core` と `@loomake/kit` 以外が含まれない
+- **THEN** `@loomake/core`・`@loomake/kit`・`@loomake/trace` 以外が含まれない
 
 ### Requirement: verify の性能
 テストファイル 1,000 個・要件 500 件の change で、commands を除く verify（`--done --skip-commands`）は 3 秒以内に終わる SHALL。この数値は暫定であり、実案件で計測したあと見直す。
