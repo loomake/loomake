@@ -31,9 +31,9 @@ jobs:
       - run: pnpm test
       - run: pnpm build
 
-  # 実行時の下限（engines.node >=20.19.0、REQ-048）で、ビルドした CLI が動くかを確かめる。
-  # vitest・eslint・changesets は Node 22 以上を求めるので、インストールとビルドは Node 24 で行う
-  node20:
+  # 実行時の下限（engines.node >=22.12.0、REQ-142）で、ビルドした CLI が動くかを確かめる。
+  # 開発用ツールの動作環境に左右されないよう、インストールとビルドは開発と同じ Node 24 で行う
+  node22:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,7 +46,7 @@ jobs:
       - run: pnpm build
       - uses: actions/setup-node@v4
         with:
-          node-version: 20.19.0
+          node-version: 22.12.0
       - run: node --version
       # 引数なしの CLI は使い方を表示して終了コード 2 を返す
       - run: code=0; node packages/cli/dist/cli.js || code=$?; test $code -eq 2
