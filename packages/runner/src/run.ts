@@ -8,6 +8,7 @@ import { GitError, branchExists, dirtyFiles, git, gitConfig, isIgnored } from '.
 import { APPROVAL_GUIDE, findEngineMove, findViolations, headState } from './guards.js';
 import { createPr, ghLoggedIn, prBody } from './pr.js';
 import { maskSecrets } from './mask.js';
+import { parseRunConfig, type RunConfig } from './config.js';
 
 export type RunOptions = {
   /** プロジェクトのルート（loomake.config.json のあるディレクトリ） */
@@ -33,8 +34,6 @@ export type RunOptions = {
   signal?: AbortSignal;
   now?: () => Date;
 };
-
-type RunConfig = { maxFixes: number; timeoutMinutes: number };
 
 /** 止まったときと終えたときに書く記録（REQ-107） */
 export type RunSummary = {
@@ -66,15 +65,7 @@ const isGateTask = (t: Task) => hasGateMark(t) || isLegacyGateTask(t);
 function loadRunConfig(root: string): RunConfig {
   const p = join(root, 'loomake.config.json');
   const raw = existsSync(p) ? (JSON.parse(readFileSync(p, 'utf8')) as { run?: Record<string, unknown> }).run : undefined;
-  const config: RunConfig = { maxFixes: 5, timeoutMinutes: 60 };
-  if (raw === undefined) return config;
-  for (const key of ['maxFixes', 'timeoutMinutes'] as const) {
-    const v = raw[key];
-    if (v === undefined) continue;
-    if (typeof v !== 'number' || !(v > 0)) throw new UsageError(`loomake.config.json の run.${key} は正の数にしてください`);
-    config[key] = v;
-  }
-  return config;
+  return parseRunConfig(raw);
 }
 
 /** コンテナの中かどうか（add-run-loop の仮定 A-14） */

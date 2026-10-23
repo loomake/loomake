@@ -560,3 +560,21 @@ writeFileSync('.loomake/once', 'yes');`));
       expect(summary(repo).status).toBe('stopped');
     }, { tasks: '- [x] implementation\n', run: { timeoutMinutes: 1 } }));
 });
+
+describe('run設定の入力境界', () => {
+  it.each([null, [], 'run', 1, { maxFixes: 1.5 }, { maxFixes: Number.MAX_SAFE_INTEGER + 1 }, { maxFixes: 0 }, { timeoutMinutes: null }])(
+    '[REQ-141] 不正なrun設定 %j を日本語の使い方エラーにする',
+    (value) => withRepo(async (repo) => {
+      repo.write('loomake.config.json', JSON.stringify({ run: value }));
+      const result = await cli(repo, '--dry-run');
+      expect(result.code).toBe(2);
+      expect(result.stderr).toContain('loomake.config.json の run');
+      expect(repo.calls()).toEqual([]);
+    }),
+  );
+
+  it('[REQ-141] 正しい整数と正の小数の時間を受け付ける', () =>
+    withRepo(async (repo) => {
+      expect((await run(repo, { dryRun: true })).code).toBe(0);
+    }, { run: { maxFixes: 2, timeoutMinutes: 0.5 } }));
+});
