@@ -14,9 +14,19 @@
     },
     "./schema/verify-result.schema.json": "./schema/verify-result.schema.json"
   },
-  "files": ["dist", "schema"],
+  "files": [
+    "dist",
+    "schema"
+  ],
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./schema/verify-result.schema.json": "./schema/verify-result.schema.json"
+    }
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json"
