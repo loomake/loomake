@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { buildReport, runReport, type Evidence, type Report } from '@loomake/trace';
+import { SCOPE_NOTE, buildReport, runReport, type Evidence, type Report } from '@loomake/trace';
 import { main } from '../../cli/src/main.js';
+import { readDocuments } from '../src/documents.js';
 import { CHANGE, ledgerRow, requirement, specMd, traceMd } from '../../kit/test/project.js';
 
 type Project = { trace?: string; spec?: string; evidence?: Partial<Evidence>[]; archived?: boolean };
@@ -32,7 +33,9 @@ function withProject<T>({ trace = traceMd(), spec = specMd(), evidence: records 
     write('loomake.config.json', '{}');
     write(`${dir}/trace.md`, trace);
     write(`${dir}/specs/x/spec.md`, spec);
-    records.forEach((r, i) => write(`.loomake/evidence/${CHANGE}/${i}.json`, JSON.stringify(evidence(r))));
+    // 記録には、書いた trace.md と差分仕様を保存しておく。r に documents: undefined を渡すと、文書のない古い形式になる
+    const documents = readDocuments(join(root, dir));
+    records.forEach((r, i) => write(`.loomake/evidence/${CHANGE}/${i}.json`, JSON.stringify(evidence({ documents, ...r }))));
     result = fn(root);
   } catch (e) {
     cleanup();
@@ -271,6 +274,58 @@ describe('report の性能と日本語', () => {
       const text = markdown(root).text;
       for (const h of ['# 検収レポート', '## 要注意の要件', '## 使った証拠', '## 要件ごとの検収', '## 確認事項', '## 仮定', '## 合意の記録の警告']) expect(text).toContain(h);
       expect(text).toContain('| ID | 出典 | 状態 | 要約 | Requirement | テスト | 最後の検査結果 |');
+    });
+  });
+});
+
+describe('記録した文書からのレポート', () => {
+  const rewrite = (root: string, path: string, fn: (text: string) => string) => {
+    const p = join(root, `openspec/changes/${CHANGE}`, path);
+    writeFileSync(p, fn(readFileSync(p, 'utf8')));
+  };
+
+  it('[REQ-070][REQ-129] 記録のあとで要約を変えても、表には記録したときの要約が載り、変わった文書として trace.md を示す', () => {
+    withProject({}, (root) => {
+      rewrite(root, 'trace.md', (t) => t.replace('| 要約 |', '| 書き換えた要約 |'));
+      const r = report(root);
+      expect(r.rows[0]).toMatchObject({ id: 'REQ-012', summary: '要約', result: '合格' });
+      expect(r.attention.changedDocuments).toEqual(['trace.md']);
+      expect(markdown(root).text).not.toContain('書き換えた要約');
+    });
+  });
+
+  it('[REQ-129] 記録のあとで差分仕様を変えたら、冒頭の「記録のあとで変わった文書」に挙げる', () => {
+    withProject({}, (root) => {
+      rewrite(root, 'specs/x/spec.md', (t) => `${t}\n`);
+      expect(report(root).attention.changedDocuments).toEqual(['specs/x/spec.md']);
+      expect(markdown(root).text).toContain('- 記録のあとで変わった文書：specs/x/spec.md');
+    });
+  });
+
+  it('[REQ-129] 文書を変えていなければ、変わった文書は挙がらない', () => {
+    withProject({}, (root) => {
+      expect(report(root).attention.changedDocuments).toEqual([]);
+      expect(markdown(root).text).toContain('要注意の要件はありません。');
+    });
+  });
+
+  it('[REQ-130] 文書のない古い形式の記録では、合格したテストのある要件を「合格（仕様との対応は未確認）」とし、冒頭に示す', () => {
+    withProject({ evidence: [{ documents: undefined }] }, (root) => {
+      const r = report(root);
+      expect(r.evidence.documents).toBe(false);
+      expect(r.rows[0].result).toBe('合格（仕様との対応は未確認）');
+      const text = markdown(root).text;
+      expect(text).toContain('| 合格（仕様との対応は未確認） |');
+      expect(text).toContain('- 仕様との対応：この証拠の記録は検証した時点の trace.md と差分仕様を持たない古い形式');
+    });
+  });
+
+  it('[REQ-131] 要件ごとの検収の表より前に、検査の範囲の説明を載せる', () => {
+    withProject({}, (root) => {
+      const text = markdown(root).text;
+      expect(SCOPE_NOTE).toBe('自動検査は、要件 ID を含む成功したテストの存在を確認しています。テスト内容の妥当性と、要件を満たしているかの判断にはレビューが必要です。');
+      expect(text.indexOf(SCOPE_NOTE)).toBeGreaterThan(-1);
+      expect(text.indexOf(SCOPE_NOTE)).toBeLessThan(text.indexOf('## 要件ごとの検収'));
     });
   });
 });
