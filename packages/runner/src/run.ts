@@ -5,7 +5,7 @@ import { runRecord } from '@loomake/trace';
 import { TIMED_OUT, UsageError, assertChangeId, formatVerifyResult, loadConfig, runVerify } from '@loomake/kit';
 import { DEFAULT_ALLOWED_DOMAINS, assertEngineAvailable, runClaude, type EngineResult } from './engine.js';
 import { branchExists, dirtyFiles, git, gitConfig, isIgnored } from './git.js';
-import { APPROVAL_GUIDE, findViolations } from './guards.js';
+import { APPROVAL_GUIDE, findEngineMove, findViolations, headState } from './guards.js';
 import { createPr, ghLoggedIn, prBody } from './pr.js';
 import { maskSecrets } from './mask.js';
 
@@ -246,6 +246,7 @@ export async function runRun(options: RunOptions): Promise<number> {
     save(`${n}-prompt.md`, prompt);
     const timeoutMs = deadline - now().getTime();
     if (timeoutMs <= 0) return { stop: { status: 'stopped', reason: '実行時間の上限に達しました' } };
+    const before = headState(root, env);
     const result = await runClaude({
       cwd: root,
       env,
@@ -256,13 +257,24 @@ export async function runRun(options: RunOptions): Promise<number> {
       signal: options.signal,
     });
     save(`${n}-output.json`, result.raw);
-    if (result.aborted) return { stop: { status: 'interrupted', reason: '中断されました' } };
-    if (result.timedOut) return { stop: { status: 'stopped', reason: '実行時間の上限に達しました' } };
+    const stop = engineStop(result);
+    // エンジン自身のコミットとブランチの切り替えは不正な直し方の検出を通らないので、終わり方によらず止まる。
+    // 理由は HEAD の変化を先に書き、中断なら記録の状態は interrupted のままにする（REQ-126）
+    const moved = findEngineMove(root, env, before, branch);
+    if (moved) {
+      stdout(moved.report);
+      return { stop: { status: stop?.status ?? 'stopped', reason: stop ? `${moved.reason}。${stop.reason}` : moved.reason } };
+    }
+    return stop ? { stop } : { result };
+  };
+  const engineStop = (result: EngineResult): { status: RunSummary['status']; reason: string } | undefined => {
+    if (result.aborted) return { status: 'interrupted', reason: '中断されました' };
+    if (result.timedOut) return { status: 'stopped', reason: '実行時間の上限に達しました' };
     const question = result.text.match(QUESTION);
-    if (question) return { stop: { status: 'stopped', reason: `エンジンが質問しました：${question[1]}` } };
+    if (question) return { status: 'stopped', reason: `エンジンが質問しました：${question[1]}` };
     // 失敗したエンジンの変更は完了にしない（fix-review-findings の仮定 A-02）
-    if (result.exitCode !== 0) return { stop: { status: 'stopped', reason: `エンジンが終了コード ${result.exitCode ?? '（なし）'} で終わりました` } };
-    return { result };
+    if (result.exitCode !== 0) return { status: 'stopped', reason: `エンジンが終了コード ${result.exitCode ?? '（なし）'} で終わりました` };
+    return undefined;
   };
 
   // コミットする前に不正な直し方を探し、見つけたら変更を作業ツリーに残して止まる理由を返す（REQ-109〜REQ-112）

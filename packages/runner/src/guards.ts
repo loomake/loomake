@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { git } from './git.js';
+import { dirtyFiles, git } from './git.js';
 
 /** 不正な直し方として見つけたもの */
 export type GuardFinding = { file: string; reason: string };
@@ -73,3 +73,42 @@ export const APPROVAL_GUIDE = [
   '承認するなら、差分を確かめたうえで tasks.md のそのタスクを完了にし、自分でコミットしてから、もう一度 loomake run を実行してください。',
   '承認しないなら、変更を元に戻してから、もう一度実行してください。',
 ].join('\n');
+
+/** HEAD のコミットの SHA とブランチ名。コミットがなければ sha は空、detached なら branch は HEAD */
+export type HeadState = { sha: string; branch: string };
+
+export const headState = (root: string, env: NodeJS.ProcessEnv): HeadState => ({
+  sha: (spawnSync('git', ['rev-parse', '--verify', '-q', 'HEAD'], { cwd: root, env, encoding: 'utf8' }).stdout ?? '').trim(),
+  branch: (spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: root, env, encoding: 'utf8' }).stdout ?? '').trim(),
+});
+
+/**
+ * エンジンが自分でコミットしたかブランチを切り替えたかを、呼ぶ前の HEAD と比べて調べる（REQ-126）。
+ * 変わっていれば、止まる理由と、人が確かめて戻すための表示を返す。run はエンジンのコミットを取り消さず、ブランチも戻さない
+ */
+export function findEngineMove(
+  root: string,
+  env: NodeJS.ProcessEnv,
+  before: HeadState,
+  changeBranch: string,
+): { reason: string; report: string } | undefined {
+  const after = headState(root, env);
+  if (after.sha === before.sha && after.branch === before.branch) return undefined;
+  const label = (s: HeadState) => `${s.branch} ${s.sha || '（コミットなし）'}`;
+  const diff = before.sha && after.sha ? git(root, env, ['diff', before.sha, after.sha]) : '';
+  const dirty = dirtyFiles(root, env);
+  const report = [
+    'エンジンが HEAD かブランチを変えました。run はエンジンのコミットを取り消さず、ブランチも戻していません。',
+    `  呼ぶ前：${label(before)}`,
+    `  呼んだ後：${label(after)}`,
+    ...(diff ? ['', diff] : []),
+    ...(dirty.length ? ['', 'コミットしていない変更：', ...dirty.map((l) => `  ${l}`)] : []),
+    '',
+    ...(before.sha && after.sha ? [`変更を確かめるには、git log --stat ${before.sha}..${after.sha} を実行してください。`] : []),
+    `受け入れるなら、${changeBranch} のブランチで差分を確かめたうえで tasks.md のそのタスクを完了にし、自分でコミットしてから、もう一度 loomake run を実行してください。`,
+    ...(before.sha
+      ? [`元に戻すなら、git switch ${changeBranch} と git reset --hard ${before.sha} を実行してから、もう一度実行してください。エンジンの変更は消えます。`]
+      : []),
+  ].join('\n');
+  return { reason: `エンジンが HEAD かブランチを変えました（${label(before)} → ${label(after)}）`, report };
+}
