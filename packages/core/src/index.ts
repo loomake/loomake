@@ -14,3 +14,5 @@ export { VERIFY_RESULT_SCHEMA_VERSION } from './verify-result.js';
 export type { VerifyMode, VerifyCheckResult, VerifyResult } from './verify-result.js';
 export { createAgreement, evaluateAgreement } from './agreement.js';
 export type { Agreement, AgreementDecision, RequirementId, LedgerState } from './agreement.js';
+export { evaluateTestCoverage } from './coverage-policy.js';
+export type { TestCoverageDecision } from './coverage-policy.js';
