@@ -4,7 +4,7 @@ import { parseTasks, type Task, type VerifyResult } from '@loomake/core';
 import { runRecord } from '@loomake/trace';
 import { TIMED_OUT, UsageError, formatVerifyResult, loadConfig, runVerify } from '@loomake/kit';
 import { DEFAULT_ALLOWED_DOMAINS, assertEngineAvailable, runClaude, type EngineResult } from './engine.js';
-import { branchExists, dirtyFiles, git, gitConfig } from './git.js';
+import { branchExists, dirtyFiles, git, gitConfig, isIgnored } from './git.js';
 import { APPROVAL_GUIDE, findViolations } from './guards.js';
 import { createPr, ghLoggedIn, prBody } from './pr.js';
 import { maskSecrets } from './mask.js';
@@ -150,6 +150,11 @@ export async function runRun(options: RunOptions): Promise<number> {
   const dirty = dirtyFiles(root, env);
   if (dirty.length) {
     stdout(`作業ツリーに未コミットの変更があるので、実装を始めませんでした。コミットしてから、もう一度実行してください。\n${dirty.map((l) => `  ${l}`).join('\n')}`);
+    return 1;
+  }
+  // テストのレポートがコミットに入ると、完了ゲートのあと作業ツリーが変わったままになる（fix-review-findings-2 の仮定 A-03）
+  if (!isIgnored(root, env, config.tests.report)) {
+    stdout(`テストのレポート（${config.tests.report}）が .gitignore で除外されていないので、実装を始めませんでした。.gitignore に足してコミットしてから、もう一度実行してください。`);
     return 1;
   }
   // change のブランチ（REQ-096、add-run-loop の仮定 A-04）。あれば先に切り替え、そのブランチの内容で検査してタスクを読む（fix-review-findings の仮定 A-03）

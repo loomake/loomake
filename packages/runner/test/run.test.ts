@@ -97,6 +97,17 @@ describe('実行前の確認', () => {
       expect(repo.calls()).toEqual([]);
     }));
 
+  it('[REQ-094] テストのレポートを .gitignore で除外していなければ、足すよう表示し、エンジンを呼ばずに終了コード 1 を返す', () =>
+    withRepo(async (repo) => {
+      repo.write('.gitignore', '');
+      repo.git('commit', '-q', '-am', '除外をやめる');
+      const r = await run(repo);
+      expect(r.code).toBe(1);
+      expect(r.stdout).toContain('.loomake/test-report.json');
+      expect(r.stdout).toContain('.gitignore に足して');
+      expect(repo.calls()).toEqual([]);
+    }));
+
   it('[REQ-095] --dry-run は、タスクの一覧と最初の指示を表示し、ブランチを作らず、エンジンを呼ばずに終了コード 0 を返す', () =>
     withRepo(async (repo) => {
       const r = await run(repo, { dryRun: true });
