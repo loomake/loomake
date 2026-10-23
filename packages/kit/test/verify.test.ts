@@ -28,6 +28,20 @@ describe('ブロッキング確認事項の検査', () => {
     const r = withProject({ trace: traceMd({ questions: [question('Q-01', 'no', '')] }) }, specOnly);
     expect(check(r, 'ブロッキング確認事項')?.status).toBe('pass');
   });
+
+  it('[REQ-034] ブロッキング列が はい で回答が空なら、ブロッキングとみなして不合格', () => {
+    const r = withProject({ trace: traceMd({ questions: [question('Q-01', 'はい', '')] }) }, specOnly);
+    expect(r.ok).toBe(false);
+    expect(check(r, 'ブロッキング確認事項')).toEqual({ check: 'ブロッキング確認事項', status: 'fail', detail: 'Q-01（REQ-012）何回ですか' });
+  });
+
+  it('[REQ-034] ブロッキング列が yes・no・はい・いいえ のどれでもなければ、ID と値を出して不合格', () => {
+    for (const value of ['要', '']) {
+      const r = withProject({ trace: traceMd({ questions: [question('Q-01', value, '5 回'), question('Q-02', 'いいえ', '')] }) }, specOnly);
+      expect(r.ok, value).toBe(false);
+      expect(check(r, 'ブロッキングの値')).toEqual({ check: 'ブロッキングの値', status: 'fail', detail: `Q-01: "${value}"` });
+    }
+  });
 });
 
 describe('ブロッキング確認事項の検査：解析エラー', () => {
@@ -182,6 +196,12 @@ describe('完了ゲート', () => {
   it('[REQ-038] 未完了のタスクがあると、その行を出して不合格', () => {
     const r = withReport({ tasks: '## 1. 実装\n- [x] 1.1 済み\n- [ ] 1.2 残り\n' }, (root) => done(root, true));
     expect(check(r, 'tasks.md')).toMatchObject({ status: 'fail', detail: '- [ ] 1.2 残り' });
+    expect(r.ok).toBe(false);
+  });
+
+  it('[REQ-038] tasks.md にタスクが 1 つも無いと、タスクが無いことを出して不合格', () => {
+    const r = withReport({ tasks: '## 1. 実装\n' }, (root) => done(root, true));
+    expect(check(r, 'tasks.md')).toMatchObject({ status: 'fail', detail: 'タスクがありません' });
     expect(r.ok).toBe(false);
   });
 

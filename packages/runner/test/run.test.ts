@@ -218,6 +218,16 @@ describe('ブランチとタスク', () => {
       expect(commit).toContain('openspec/changes/c1/tasks.md');
       expect(repo.git('show', `${rev}:openspec/changes/c1/tasks.md`)).toContain('- [x] 1.1 一つ目のタスク');
     }));
+
+  it('[REQ-099][REQ-014] * で書いたタスクも、終えたら * [x] にしてコミットする', () =>
+    withRepo(
+      async (repo) => {
+        repo.plan(passing);
+        await run(repo);
+        expect(repo.git('show', 'loomake/c1:openspec/changes/c1/tasks.md')).toContain('* [x] 1.1 一つ目のタスク');
+      },
+      { tasks: ['## 1. 実装', '* [ ] 1.1 一つ目のタスク（REQ-012）', '', '## 3. 確認', `* [ ] 3.1 完了ゲートを通す ${GATE_MARK}`, ''].join('\n') },
+    ));
 });
 
 describe('完了ゲートと直し', () => {
@@ -301,6 +311,16 @@ describe('エンジンの選び方と権限', () => {
       const r = await cli(repo, '--engine', 'codex');
       expect(r.code).toBe(2);
       expect(r.stderr).toContain('初版で使えるのは claude-code だけです');
+    }));
+
+  it('[REQ-101] change-id が change 名の形でないか archive なら、エンジンを呼ばずに終了コード 2 を返す', () =>
+    withRepo(async (repo) => {
+      for (const id of ['C1', 'archive']) {
+        const r = await cli(repo, '--change', id);
+        expect(r.code, id).toBe(2);
+        expect(r.stderr, id).toMatch(/英小文字・数字|archive は change-id に使えません/);
+      }
+      expect(repo.calls()).toEqual([]);
     }));
 
   it('[REQ-101] change-id にパスの区切りを含めると、使い方の誤りとして終了コード 2 を返す', () =>

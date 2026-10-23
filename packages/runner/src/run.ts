@@ -133,7 +133,7 @@ export function buildPrompt(root: string, changeDir: string, target: string, fai
 /** tasks.md の指定した行のタスクを完了にする */
 function checkTask(tasksPath: string, line: number) {
   const lines = readFileSync(tasksPath, 'utf8').split('\n');
-  lines[line - 1] = lines[line - 1].replace(/- \[ \]/, '- [x]');
+  lines[line - 1] = lines[line - 1].replace(/([-*+]) \[ \]/, '$1 [x]');
   writeFileSync(tasksPath, lines.join('\n'));
 }
 
@@ -215,7 +215,7 @@ async function prepare(options: RunOptions): Promise<RunContext | number> {
   const runConfig = loadRunConfig(root);
   assertChangeId(changeId);
   const changeDir = resolve(root, config.openspecDir, 'changes', changeId);
-  if (changeId === 'archive' || !existsSync(join(changeDir, 'tasks.md'))) {
+  if (!existsSync(join(changeDir, 'tasks.md'))) {
     throw new UsageError(`change「${changeId}」がありません（${config.openspecDir}/changes/${changeId}/tasks.md）`);
   }
   if (options.skipPermissions && env.LOOMAKE_SANDBOX !== '1') {
@@ -271,6 +271,13 @@ async function prepare(options: RunOptions): Promise<RunContext | number> {
     if (engineTasks[0]) stdout(`\n最初のタスクの指示：\n\n${buildPrompt(root, changeDir, `- [ ] ${taskLabel(engineTasks[0])}`)}`);
     switchBack();
     return 0;
+  }
+
+  // PR を作れない環境では、エンジンに実装させる前に止まる。証拠を記録する前の確認も残す（REQ-116、fix-evaluation-findings の仮定 A-05）
+  if (!ghLoggedIn(root, env)) {
+    switchBack();
+    stdout('gh CLI がないか、ログインしていないので、実装を始めませんでした。PR を作るために、gh auth login でログインしてください。');
+    return 1;
   }
 
   // コンテナの外では警告して確認する（REQ-122）

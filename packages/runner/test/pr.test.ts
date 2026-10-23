@@ -134,4 +134,48 @@ describe('gh CLI で PR を作る', () => {
         repo.env.FAKE_GH_AUTH = 'fail';
       },
     ));
+
+  it('[REQ-116] gh にログインしていなければ、エンジンを呼ばず、change のブランチも作らずに止まり、終了コード 1 を返す', () =>
+    withPassingRun(
+      (repo, r) => {
+        expect(r.code).toBe(1);
+        expect(r.stdout).toContain('gh auth login');
+        expect(repo.calls()).toEqual([]);
+        expect(repo.git('branch', '--list', 'loomake/c1')).toBe('');
+        expect(existsSync(join(repo.root, '.loomake/runs'))).toBe(false);
+      },
+      (repo) => {
+        repo.env.FAKE_GH_AUTH = 'fail';
+      },
+    ));
+
+  it('[REQ-116] --dry-run では gh を確かめず、予定のタスクを表示して終了コード 0 を返す', async () => {
+    const repo = makeRepo();
+    try {
+      repo.env.FAKE_GH_AUTH = 'fail';
+      const out: string[] = [];
+      const code = await runRun({ root: repo.root, changeId: CHANGE, dryRun: true, interactive: false, confirm: async () => false, stdout: (t) => out.push(t), env: repo.env });
+      expect(code).toBe(0);
+      expect(out.join('\n')).toContain('エンジンに渡す予定のタスク');
+    } finally {
+      repo.cleanup();
+    }
+  });
+
+  it('[REQ-116] 実行のあいだに gh からログアウトしたら、証拠を記録せず、ブランチも送らずに止まり、終了コード 1 を返す', async () => {
+    const repo = makeRepo();
+    try {
+      // 1 回目の呼び出しで、エンジンが実装と同時に gh-logout を作る
+      repo.plan([{ write: { 'impl.txt': '実装\n', '../gh-logout': '' } }, {}]);
+      const out: string[] = [];
+      const code = await runRun({ root: repo.root, changeId: CHANGE, interactive: false, confirm: async () => false, stdout: (t) => out.push(t), env: repo.env, fileExists: () => false });
+      expect(code).toBe(1);
+      expect(repo.calls().length).toBeGreaterThan(0);
+      expect(out.join('\n')).toContain('gh auth login');
+      expect(existsSync(join(repo.root, '.loomake/evidence'))).toBe(false);
+      expect(remoteHas(repo, 'loomake/c1')).toBe(false);
+    } finally {
+      repo.cleanup();
+    }
+  });
 });

@@ -147,8 +147,11 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   const noSource = ledger.filter((r) => !r['出典']);
   if (noSource.length) record('台帳の出典', 'fail', `出典が空：${noSource.map((r) => r.ID).join(', ')}`);
 
-  // ブロッキングな確認事項（ブロッキング列が yes のもの。仮定 A-04）
-  const openBlocking = questions.filter((q) => /^yes$/i.test(q['ブロッキング']) && !q['回答']);
+  // ブロッキング列の値は yes・no・はい・いいえ に限り、判断できない値は不合格にする（fix-evaluation-findings の仮定 A-02）
+  const badBlocking = questions.filter((q) => !BLOCKING.test(q['ブロッキング']) && !NOT_BLOCKING.test(q['ブロッキング']));
+  if (badBlocking.length) record('ブロッキングの値', 'fail', badBlocking.map((q) => `${q.ID}: "${q['ブロッキング']}"`).join(', '));
+  // ブロッキングな確認事項（ブロッキング列が yes か はい のもの。仮定 A-04）
+  const openBlocking = questions.filter((q) => BLOCKING.test(q['ブロッキング']) && !q['回答']);
   if (openBlocking.length) {
     record('ブロッキング確認事項', 'fail', openBlocking.map((q) => `${q.ID}（${q['関連']}）${q['質問']}`).join('\n'));
   } else {
@@ -195,8 +198,11 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   return { changeDir, trace, live };
 }
 
+const BLOCKING = /^(yes|はい)$/i;
+const NOT_BLOCKING = /^(no|いいえ)$/i;
+
 // 質問に「<change-id> の Q-xx と同じ質問」と書いた確認事項の回答を、参照先と比べる（add-shared-question-check の仮定 A-01・A-02）
-const SHARED_MARK = /([a-z0-9][a-z0-9-]*) の (Q-\d+) と同じ質問/;
+const SHARED_MARK = /([a-z0-9]+(?:-[a-z0-9]+)*) の (Q-\d+) と同じ質問/;
 
 function checkSharedQuestions(root: string, config: LoomakeConfig, changeId: string, questions: Trace['questions'], record: Recorder) {
   const changesDir = resolve(root, config.openspecDir, 'changes');
@@ -262,7 +268,9 @@ function checkTasksAndPending(spec: SpecState, record: Recorder) {
   if (existsSync(tasksPath)) {
     const tasks = parseTasks('tasks.md', readFileSync(tasksPath, 'utf8')).value;
     const open = tasks.filter((t) => !t.checked);
-    record('tasks.md', open.length ? 'fail' : 'pass', open.length ? open.map((t) => `- [ ] ${t.text}`).join('\n') : `${tasks.length} 件すべて完了`);
+    // タスクが 0 件のときに「すべて完了」とすると、tasks.md を空にしたのと区別できない（fix-evaluation-findings の仮定 A-03）
+    if (!tasks.length) record('tasks.md', 'fail', 'タスクがありません');
+    else record('tasks.md', open.length ? 'fail' : 'pass', open.length ? open.map((t) => `- [ ] ${t.text}`).join('\n') : `${tasks.length} 件すべて完了`);
   }
 }
 

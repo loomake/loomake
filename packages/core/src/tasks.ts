@@ -1,7 +1,7 @@
 import { fenceMask, splitLines, type ParseResult } from './parse.js';
 
 export type Task = {
-  /** `- [x]`・`- [X]` なら true、`- [ ]` なら false */
+  /** `- [x]`・`- [X]` なら true、`- [ ]` なら false。箇条書きの記号は `-`・`*`・`+` のどれでもよい */
   checked: boolean;
   /** チェックボックスのあとの文 */
   text: string;
@@ -14,7 +14,7 @@ export function parseTasks(_file: string, text: string): ParseResult<Task[]> {
   const fenced = fenceMask(lines);
   const value: Task[] = [];
   lines.forEach((line, i) => {
-    const m = !fenced[i] && line.match(/^\s*- \[([ xX])\]\s*(.*?)\s*$/);
+    const m = !fenced[i] && line.match(/^\s*[-*+] \[([ xX])\]\s*(.*?)\s*$/);
     if (m) value.push({ checked: m[1] !== ' ', text: m[2], line: i + 1 });
   });
   return { value, errors: [] };
