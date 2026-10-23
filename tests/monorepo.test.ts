@@ -154,6 +154,11 @@ describe('CI の対象の change の決め方', () => {
       expect(selectChanges({ ref: 'fix-typo', files: ['docs/usage.md', 'README.md', '.changeset/x.md'], changesDir })).toHaveProperty('qualityOnly');
     }));
 
+  it('[REQ-132] README.md と .changeset/ だけを変えた PR は、品質コマンドだけを実行する', () =>
+    withChanges((changesDir) => {
+      expect(selectChanges({ ref: 'fix-typo', files: ['README.md', '.changeset/x.md'], changesDir })).toHaveProperty('qualityOnly');
+    }));
+
   it('[REQ-132] archive の PR は、品質コマンドだけを実行する', () =>
     withChanges((changesDir) => {
       const files = ['openspec/changes/c4/tasks.md', 'openspec/changes/archive/2026-10-23-c4/tasks.md', 'openspec/specs/x/spec.md'];
@@ -168,7 +173,8 @@ describe('changesets', () => {
     const base = run('git rev-parse --verify --quiet origin/main').status === 0 ? 'origin/main' : 'main';
     const r = run(`pnpm changeset status --since=${base}`);
     expect(r.status, r.stdout + r.stderr).toBe(0);
-  });
+    // Windows では changeset status に 10 秒を超えることがある（split-ci-gate-requirement の仮定 A-01）
+  }, 60_000);
 });
 
 describe('ライセンス', () => {
