@@ -4,6 +4,7 @@ import { parseSpec, parseTrace } from '@loomake/core';
 import { UsageError, assertChangeId, loadConfig } from '@loomake/kit';
 import { EVIDENCE_DIR, type Evidence } from './record.js';
 import { changedDocuments, readDocuments, type EvidenceDocument } from './documents.js';
+import { evidenceProblem } from './evidence.js';
 
 /** レポートの JSON の形の版 */
 export const REPORT_SCHEMA_VERSION = 2;
@@ -60,20 +61,24 @@ function findChange(changesDir: string, changeId: string): string | undefined {
 }
 
 // 読めない記録があれば、どのファイルかを示して止める（fix-review-findings-2 の仮定 A-06）
-function readEvidence(root: string, file: string): Evidence {
+function readEvidence(root: string, file: string, change: string): Evidence {
+  let value: unknown;
   try {
-    return JSON.parse(readFileSync(file, 'utf8')) as Evidence;
+    value = JSON.parse(readFileSync(file, 'utf8'));
   } catch {
     throw new UsageError(`証拠の記録 ${toPosix(relative(root, file))} を JSON として読めません`);
   }
+  const problem = evidenceProblem(value, change);
+  if (problem) throw new UsageError(`証拠の記録 ${toPosix(relative(root, file))} が不正です：${problem}`);
+  return value as Evidence;
 }
 
 /** 記録した日時がいちばん新しい証拠の記録（add-trace-report の仮定 A-06） */
-function latestEvidence(root: string, dir: string): Evidence | undefined {
+function latestEvidence(root: string, dir: string, change: string): Evidence | undefined {
   if (!existsSync(dir)) return undefined;
   const all = readdirSync(dir)
     .filter((f) => f.endsWith('.json'))
-    .map((f) => readEvidence(root, join(dir, f)));
+    .map((f) => readEvidence(root, join(dir, f), change));
   return all.sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt))[0];
 }
 
@@ -89,7 +94,7 @@ export function buildReport(root: string, changeId: string): Report | undefined 
   const changeDir = findChange(resolve(root, config.openspecDir, 'changes'), changeId);
   if (!changeDir) throw new UsageError(`change「${changeId}」がありません（進行中にも archive にもありません）`);
 
-  const evidence = latestEvidence(root, join(root, EVIDENCE_DIR, changeId));
+  const evidence = latestEvidence(root, join(root, EVIDENCE_DIR, changeId), changeId);
   if (!evidence) return undefined;
 
   // 表は記録に保存した文書から作る。いまの文書は、記録のあとで変わったかを示すためだけに読む（REQ-070・REQ-129）。

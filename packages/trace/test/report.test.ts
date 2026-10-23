@@ -329,3 +329,44 @@ describe('記録した文書からのレポート', () => {
     });
   });
 });
+
+describe('証拠の実行時検証', () => {
+  const invalid: { name: string; mutate: (e: Evidence) => unknown }[] = [
+    { name: 'null', mutate: () => null },
+    { name: '配列', mutate: () => [] },
+    { name: '空のオブジェクト', mutate: () => ({}) },
+    { name: '未対応の版', mutate: (e) => ({ ...e, schemaVersion: 999 }) },
+    { name: '不正なSHAの長さ', mutate: (e) => ({ ...e, sha: 'a'.repeat(41) }) },
+    { name: 'trace文書なし', mutate: (e) => ({ ...e, documents: [] }) },
+    { name: '不正な文書の形', mutate: (e) => ({ ...e, documents: [{}] }) },
+    { name: '不正なSHA', mutate: (e) => ({ ...e, sha: 'invalid' }) },
+    { name: '不正な記録日時', mutate: (e) => ({ ...e, recordedAt: 'invalid' }) },
+    { name: '不正なコミット日時', mutate: (e) => ({ ...e, committedAt: 'invalid' }) },
+    { name: '別のchange', mutate: (e) => ({ ...e, change: 'other' }) },
+    { name: '別の検証change', mutate: (e) => ({ ...e, verify: { ...e.verify, change: 'other' } }) },
+    { name: '別の検証モード', mutate: (e) => ({ ...e, verify: { ...e.verify, mode: 'quality' } }) },
+    { name: '検証結果なし', mutate: (e) => ({ ...e, verify: null }) },
+    { name: '未対応の検証結果の版', mutate: (e) => ({ ...e, verify: { ...e.verify, schemaVersion: '999.0.0' } }) },
+    { name: '不正な検査状態', mutate: (e) => ({ ...e, verify: { ...e.verify, results: [{ check: 'test', status: 'unknown', detail: '' }] } }) },
+    { name: '不正なcoverage', mutate: (e) => ({ ...e, verify: { ...e.verify, coverage: { 'REQ-012': [3] } } }) },
+    { name: '文書の内容の不一致', mutate: (e) => ({ ...e, documents: e.documents?.map((d) => ({ ...d, content: `${d.content}changed` })) }) },
+    { name: '文書のパスの重複', mutate: (e) => ({ ...e, documents: [...(e.documents ?? []), ...(e.documents ?? [])] }) },
+  ];
+  it.each(invalid)('[REQ-142] $name はファイル名を示す日本語の使い方エラーになる', ({ mutate }) =>
+    withProject({}, async (root) => {
+      const file = join(root, '.loomake/evidence', CHANGE, '0.json');
+      const saved = JSON.parse(readFileSync(file, 'utf8')) as Evidence;
+      writeFileSync(file, JSON.stringify(mutate(saved)));
+      const result = await cli(root);
+      expect(result.code).toBe(2);
+      expect(result.stderr).toContain('.loomake/evidence/c1/0.json');
+      expect(result.stderr).toContain('証拠');
+    }),
+  );
+
+  it('[REQ-142] documentsのない既存の証拠は読み続けられる', () =>
+    withProject({ evidence: [{ documents: undefined }] }, (root) => {
+      expect(report(root).evidence.documents).toBe(false);
+      expect(report(root).rows[0].result).toBe('合格（仕様との対応は未確認）');
+    }));
+});
