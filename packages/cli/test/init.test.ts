@@ -272,6 +272,45 @@ describe('パッケージマネージャの判定', () => {
   });
 });
 
+describe('package.json がないときの案内', () => {
+  it('[REQ-024] package.json がなければ、commands を npm の既定値で書き、書き換えるよう案内する', async () => {
+    const r = await runInit();
+    expect(config(r).commands).toEqual({ lint: 'npm run lint', typecheck: 'npm run typecheck', test: 'npm test' });
+    expect(r.stdout).toContain('package.json がありません。loomake.config.json の commands');
+  });
+
+  it('[REQ-024] package.json があれば、commands の書き換えを案内しない', async () => {
+    const r = await runInit([], { files: { 'package.json': '{}' } });
+    expect(r.stdout).not.toContain('package.json がありません');
+  });
+});
+
+describe('開発用の依存の案内', () => {
+  const pkg = (body: object) => ({ 'package.json': JSON.stringify(body) });
+
+  it('[REQ-019] loomake が依存になければ、pnpm add -D loomake を案内し、package.json は変えない', async () => {
+    const files = pkg({ packageManager: 'pnpm@9.0.0' });
+    const r = await runInit([], { files });
+    expect(r.stdout).toContain('pnpm add -D loomake');
+    expect(r.files['package.json']).toBe(files['package.json']);
+  });
+
+  it('[REQ-019] npm と yarn では、それぞれ npm install -D loomake・yarn add -D loomake を案内する', async () => {
+    expect((await runInit([], { files: pkg({ packageManager: 'npm@10.0.0' }) })).stdout).toContain('npm install -D loomake');
+    expect((await runInit([], { files: pkg({ packageManager: 'yarn@4.0.0' }) })).stdout).toContain('yarn add -D loomake');
+  });
+
+  it('[REQ-019] devDependencies に loomake があれば、依存に足す案内を出さない', async () => {
+    const r = await runInit([], { files: pkg({ devDependencies: { loomake: '^0.1.0' } }) });
+    expect(r.stdout).not.toContain('-D loomake');
+  });
+
+  it('dependencies に loomake があっても、依存に足す案内を出さない（仮定 A-01）', async () => {
+    const r = await runInit([], { files: pkg({ dependencies: { loomake: '^0.1.0' } }) });
+    expect(r.stdout).not.toContain('-D loomake');
+  });
+});
+
 describe('日本語のメッセージ', () => {
   it('[REQ-055] 配置したファイルの一覧と案内を日本語で出す', async () => {
     const r = await runInit();

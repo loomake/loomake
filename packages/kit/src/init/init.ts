@@ -60,6 +60,20 @@ const COMMANDS: Record<PackageManager, Record<string, string>> = {
   yarn: { lint: 'yarn lint', typecheck: 'yarn typecheck', test: 'yarn test' },
 };
 
+const INSTALL: Record<PackageManager, string> = {
+  pnpm: 'pnpm add -D loomake',
+  npm: 'npm install -D loomake',
+  yarn: 'yarn add -D loomake',
+};
+
+/** package.json の dependencies か devDependencies に loomake があるか */
+function hasLoomake(root: string): boolean {
+  const pkg = readJson(join(root, 'package.json'));
+  if (typeof pkg !== 'object' || pkg === null) return false;
+  const { dependencies, devDependencies } = pkg as { dependencies?: unknown; devDependencies?: unknown };
+  return [dependencies, devDependencies].some((d) => typeof d === 'object' && d !== null && 'loomake' in d);
+}
+
 /** init が置く loomake.config.json の中身 */
 export function configJson(pm: PackageManager): string {
   const config = {
@@ -171,5 +185,14 @@ export async function runInit(options: InitOptions): Promise<number> {
     stdout('\nopenspec/ がありません。OpenSpec の仕様と change を置くために、openspec init を実行してください。');
   }
   stdout(`\n${REPORT_EXAMPLES.join('\n')}`);
+
+  // package.json がなければ commands は npm の既定値のままなので、書き換えを促す（improve-init-guidance の仮定 A-02）
+  if (!existsSync(join(root, 'package.json'))) {
+    stdout('\npackage.json がありません。loomake.config.json の commands（lint・typecheck・test）を、このプロジェクトで使うコマンドに書き換えてください。');
+  }
+  // 検査に使う版を固定するため、プロジェクトに入れるよう促す。package.json は書き換えない（improve-init-guidance の仮定 A-01）
+  if (!hasLoomake(root)) {
+    stdout(`\nloomake を開発用の依存に足してください。npx loomake verify は、プロジェクトに入れた版を使います。\n  ${INSTALL[detectPackageManager(root)]}`);
+  }
   return 0;
 }
