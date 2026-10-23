@@ -11,4 +11,4 @@
 ## 2. 統合検証
 
 - [x] 2.1 公開APIの変更とTDDの実行結果を文書化し、changesetを追加する。関連テストを実行する
-- [ ] 2.2 `pnpm -s verify --change harden-run-safety --done` を通す <!-- loomake:gate=done -->
+- [x] 2.2 `pnpm -s verify --change harden-run-safety --done` を通す <!-- loomake:gate=done -->
