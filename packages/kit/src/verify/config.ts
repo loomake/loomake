@@ -49,3 +49,10 @@ export function loadConfig(root: string): LoomakeConfig {
     commands: (c.commands as LoomakeConfig['commands'] | undefined) ?? {},
   };
 }
+
+/** change-id にパスの区切りを含めない。changes/ の外を指さないようにする（fix-review-findings-2 の仮定 A-05） */
+export function assertChangeId(changeId: string): void {
+  if (/[/\\]/.test(changeId) || changeId.includes('..')) {
+    throw new UsageError(`change-id「${changeId}」には、パスの区切り（/・\\・..）を含められません`);
+  }
+}

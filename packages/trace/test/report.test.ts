@@ -73,6 +73,14 @@ describe('要件ごとの検収の表', () => {
     });
   });
 
+  it('[REQ-070] change-id にパスの区切りを含めると、日本語で表示して終了コード 2 を返す', () =>
+    withProject({}, async (root) => {
+      const err: string[] = [];
+      const code = await main(['trace', 'report', '--change', '../c1'], { cwd: root, stdout: () => {}, stderr: (t) => err.push(t) });
+      expect(code).toBe(2);
+      expect(err.join('\n')).toContain('パスの区切り');
+    }));
+
   it('[REQ-070] 記録した日時がいちばん新しい記録を使う', () => {
     const records = [
       { recordedAt: '2026-10-23T02:00:00.000Z', sha: 'b'.repeat(40) },
@@ -143,6 +151,17 @@ describe('使った証拠の記載', () => {
       expect(markdown(root).text).toContain('| 2026-10-23T01:00:00.000Z | 0123456789abcdef0123456789abcdef01234567 | 2026-10-23T09:00:00+09:00 | 合格 |');
     });
   });
+});
+
+describe('読めない証拠の記録', () => {
+  it('[REQ-073] JSON として壊れた記録があれば、そのファイルを日本語で示し、スタックトレースを出さずに終了コード 2 を返す', () =>
+    withProject({}, async (root) => {
+      writeFileSync(join(root, `.loomake/evidence/${CHANGE}/broken.json`), '{ 壊れた');
+      const r = await cli(root);
+      expect(r.code).toBe(2);
+      expect(r.stderr).toContain(`証拠の記録 .loomake/evidence/${CHANGE}/broken.json を JSON として読めません`);
+      expect(r.stderr).not.toContain('    at ');
+    }));
 });
 
 describe('出力の形式', () => {

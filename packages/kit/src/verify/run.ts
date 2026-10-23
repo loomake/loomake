@@ -15,7 +15,7 @@ import {
   type VerifyMode,
   type VerifyResult,
 } from '@loomake/core';
-import { loadConfig, type LoomakeConfig } from './config.js';
+import { assertChangeId, loadConfig, type LoomakeConfig } from './config.js';
 
 export type VerifyOptions = {
   /** プロジェクトのルート（loomake.config.json のあるディレクトリ） */
@@ -28,11 +28,32 @@ export type VerifyOptions = {
   skipCommands?: boolean;
   /** 進捗の表示先。--json のときも標準出力を汚さないよう、CLI は標準エラーを渡す（仮定 A-03） */
   progress?: (message: string) => void;
+  /** 品質コマンドの実行時間の上限（ミリ秒、すべてのコマンドの合計）。上限を過ぎたコマンドは止めて不合格にする（fix-review-findings-2 の仮定 A-02） */
+  timeoutMs?: number;
 };
 
 // 試作の verify.mjs と同じく、出力の上限を 64MB にする
 const MAX_BUFFER = 64 * 1024 * 1024;
 const COMMAND_ORDER = ['lint', 'typecheck', 'test'];
+// 上限つきで品質コマンドを動かす小さなスクリプト。上限を過ぎたら、シェルだけでなくその子のプロセスまで止める。
+// spawnSync の timeout はシェルしか止めず、Windows ではテストのプロセスが残るため（fix-review-findings-2 の仮定 A-02）
+const TIMED_OUT_STATUS = 124;
+const TIMED_OUT_MARK = 'loomake: command timed out';
+const KILL_TREE_ON_TIMEOUT = `
+const { spawn, spawnSync } = require('node:child_process');
+const [ms, cmd] = process.argv.slice(1);
+const win = process.platform === 'win32';
+const child = spawn(cmd, { shell: true, stdio: 'inherit', detached: !win });
+const timer = setTimeout(() => {
+  if (win) spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore' });
+  else try { process.kill(-child.pid, 'SIGKILL'); } catch {}
+  process.stderr.write('${TIMED_OUT_MARK}\\n');
+  process.exit(${TIMED_OUT_STATUS});
+}, Number(ms));
+child.on('exit', (code) => { clearTimeout(timer); process.exit(code ?? 1); });
+`;
+/** 実行時間の上限で止めた品質コマンドの detail */
+export const TIMED_OUT = '実行時間の上限に達したので止めました';
 
 // node_modules・ドットで始まるディレクトリは見ない
 function walk(dir: string, out: string[] = []): string[] {
@@ -51,6 +72,7 @@ const toPosix = (p: string) => p.split(sep).join('/');
 /** verify を実行して結果を返す。設定の誤りは UsageError を投げる */
 export function runVerify(options: VerifyOptions): VerifyResult {
   const { changeId, skipCommands = false, progress = () => {} } = options;
+  if (changeId) assertChangeId(changeId);
   // ルートがシンボリックリンクを通るとき（macOS の /var → /private/var など）、レポートのパスは実パスのことも、リンクのままのこともある。
   // 実パスのルートで動かし、相対パスはどちらのルートの中にあるかで作る
   const givenRoot = resolve(options.root);
@@ -66,7 +88,7 @@ export function runVerify(options: VerifyOptions): VerifyResult {
   let coverage: Record<string, string[]> | undefined;
 
   if (!changeId) {
-    runCommands(root, config, skipCommands, record, progress);
+    runCommands(root, config, skipCommands, record, progress, options.timeoutMs);
   } else {
     const spec = checkSpec(root, config, changeId, record, rel);
     if (spec && mode === 'done') {
@@ -74,7 +96,7 @@ export function runVerify(options: VerifyOptions): VerifyResult {
       // 前回のレポートで合格させないよう、commands を実行する前に消す（仮定 A-05）
       const reportPath = resolve(root, config.tests.report);
       if (!skipCommands) rmSync(reportPath, { force: true });
-      runCommands(root, config, skipCommands, record, progress);
+      runCommands(root, config, skipCommands, record, progress, options.timeoutMs);
       coverage = checkCoverage(root, config, spec.live, reportPath, record, rel);
     }
   }
@@ -283,14 +305,27 @@ function checkCoverage(
 
 // ---------- 品質コマンド ----------
 // lint・typecheck・test の順に実行し、1 つ失敗しても残りを実行する（仮定 A-02）
-function runCommands(root: string, config: LoomakeConfig, skip: boolean, record: Recorder, progress: (m: string) => void) {
+function runCommands(root: string, config: LoomakeConfig, skip: boolean, record: Recorder, progress: (m: string) => void, timeoutMs?: number) {
   if (skip) return;
+  const deadline = timeoutMs === undefined ? undefined : Date.now() + timeoutMs;
   const names = [...COMMAND_ORDER.filter((n) => n in config.commands), ...Object.keys(config.commands).filter((n) => !COMMAND_ORDER.includes(n))];
   for (const name of names) {
     const cmd = config.commands[name];
     if (!cmd) continue;
+    const left = deadline === undefined ? undefined : deadline - Date.now();
+    if (left !== undefined && left <= 0) {
+      record(`command: ${name}`, 'fail', TIMED_OUT);
+      continue;
+    }
     progress(`… ${name}: ${cmd}`);
-    const r = spawnSync(cmd, { cwd: root, shell: true, encoding: 'utf8', maxBuffer: MAX_BUFFER });
+    const r =
+      left === undefined
+        ? spawnSync(cmd, { cwd: root, shell: true, encoding: 'utf8', maxBuffer: MAX_BUFFER })
+        : spawnSync(process.execPath, ['-e', KILL_TREE_ON_TIMEOUT, String(left), cmd], { cwd: root, encoding: 'utf8', maxBuffer: MAX_BUFFER });
+    if (left !== undefined && r.status === TIMED_OUT_STATUS && (r.stderr ?? '').includes(TIMED_OUT_MARK)) {
+      record(`command: ${name}`, 'fail', TIMED_OUT);
+      continue;
+    }
     const out = `${r.stdout ?? ''}${r.stderr ?? ''}`.trim();
     record(`command: ${name}`, r.status === 0 ? 'pass' : 'fail', r.status === 0 ? '' : out.split('\n').slice(-30).join('\n'));
   }

@@ -66,6 +66,14 @@ describe('終了コード', () => {
     expect(r.stderr).toContain('使い方: loomake verify');
   });
 
+  it('[REQ-041] --change の値にパスの区切りを含めると、日本語で表示して 2', async () => {
+    for (const id of ['../../packages', 'a/b', 'a\\b']) {
+      const r = await withProject({}, (root) => run(root, 'verify', '--change', id, '--spec-only'));
+      expect(r.code, id).toBe(2);
+      expect(r.stderr).toContain('パスの区切り');
+    }
+  });
+
   it('[REQ-041] loomake.config.json の形が正しくなければ 2', async () => {
     const r = await withProject({ config: { tests: { report: 1 } } }, (root) => run(root, 'verify', '--change', CHANGE, '--spec-only'));
     expect(r.code).toBe(2);

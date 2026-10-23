@@ -90,6 +90,19 @@ describe('証拠の記録', () => {
     }
   });
 
+  it('[REQ-066] change-id にパスの区切りを含めると、何も記録せず、日本語のエラーを出して終了コード 2 を返す', async () => {
+    const repo = makeRepo();
+    try {
+      const err: string[] = [];
+      const code = await main(['trace', 'record', '--change', '../../packages'], { cwd: repo.root, stdout: () => {}, stderr: (t) => err.push(t) });
+      expect(code).toBe(2);
+      expect(err.join('\n')).toContain('パスの区切り');
+      expect(existsSync(join(repo.root, '.loomake/evidence'))).toBe(false);
+    } finally {
+      repo.cleanup();
+    }
+  });
+
   it('[REQ-066] 存在しない change では何も記録せず、日本語のエラーを出して終了コード 2 を返す', async () => {
     const repo = makeRepo();
     try {

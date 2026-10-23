@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { runRun } from '@loomake/runner';
+import { findViolations, runRun } from '@loomake/runner';
 import { CHANGE, makeRepo, type FakeStep, type Repo } from './helpers.js';
 
 // git・node・verify のコマンドを何度も起動するので、Windows では 1 件に 10 秒を超えることがある
@@ -69,6 +69,12 @@ describe('テストの削除と skip・todo の検出', () => {
     check({ write: { 'tests/b.test.ts': "it('[REQ-012] もう一つ', () => {});\n" } }, withTest, (r) => {
       expect(r.code).toBe(0);
       expect(r.stdout).not.toContain('不正な直し方');
+    }));
+
+  it.each(['it.skipIf(true)', 'describe.skipIf(true)', 'it.runIf(false)', 'it.concurrent.skip'])('[REQ-109] テストファイルに %s の行を足したら止まる', (call) =>
+    check({ write: { 'tests/a.test.ts': `${call}('[REQ-012] 確かめる', () => {});\n` } }, withTest, (r) => {
+      stopped(r, 2);
+      expect(r.stdout).toContain(`skip・todo を足しました：${call}(`);
     }));
 
   it('xit( と describe.todo も skip・todo として見つける（仮定 A-17）', () =>
@@ -144,6 +150,37 @@ describe('仕様と trace.md の変更の検出', () => {
       stopped(r, 1);
       expect(r.stdout).toContain(`openspec/changes/${CHANGE}/trace.md：trace.md を変えました`);
     }));
+
+  it('[REQ-111] tasks.md から未完了のタスクの行を消したら止まる', () =>
+    check({ write: { [`openspec/changes/${CHANGE}/tasks.md`]: '## 1. 実装\n- [ ] 1.1 一つ目のタスク（REQ-012）\n' } }, undefined, (r) => {
+      stopped(r, 1);
+      expect(r.stdout).toContain(`openspec/changes/${CHANGE}/tasks.md：change の文書を変えました`);
+    }));
+
+  it('[REQ-111] 差分仕様から Requirement を消したら止まる', () =>
+    check({ write: { [`openspec/changes/${CHANGE}/specs/x/spec.md`]: '## ADDED Requirements\n' } }, undefined, (r) => {
+      stopped(r, 1);
+      expect(r.stdout).toContain(`openspec/changes/${CHANGE}/specs/x/spec.md：change の文書を変えました`);
+    }));
+
+  it('[REQ-111] openspecDir を変えたプロジェクトでは、その下の仕様と change の文書の変更を見つける', () => {
+    const repo = makeRepo();
+    try {
+      repo.write('spec/specs/x/spec.md', '# 仕様\n');
+      repo.write('spec/changes/c1/trace.md', '# trace\n');
+      repo.git('add', '-A');
+      repo.git('commit', '-q', '-m', '準備');
+      repo.write('spec/specs/x/spec.md', '# 書き換えた\n');
+      repo.write('spec/changes/c1/trace.md', '# 書き換えた\n');
+      const { findings } = findViolations(repo.root, repo.env, 'spec');
+      expect(findings).toEqual([
+        { file: 'spec/changes/c1/trace.md', reason: 'trace.md を変えました' },
+        { file: 'spec/specs/x/spec.md', reason: 'いまの仕様を変えました' },
+      ]);
+    } finally {
+      repo.cleanup();
+    }
+  });
 });
 
 describe('止まったときの差分の表示と承認', () => {
