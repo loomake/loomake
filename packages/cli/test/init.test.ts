@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, sep } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { unifiedDiff } from '@loomake/kit';
 import { main } from '../src/main.js';
 
@@ -341,5 +342,44 @@ describe('差分の表示', () => {
   it('内容が同じなら空文字を返し、改行コードの違いは差分にしない', () => {
     expect(unifiedDiff('x.md', 'a\nb\n', 'a\nb\n')).toBe('');
     expect(unifiedDiff('x.md', 'a\r\nb\r\n', 'a\nb\n')).toBe('');
+  });
+});
+
+describe('Git の除外設定', () => {
+  it('[REQ-133] .gitignore がなければ作り、テストのレポートの行を入れて、結果に表示する', async () => {
+    const r = await runInit();
+    expect(r.files['.gitignore']).toBe('.loomake/test-report.json\n');
+    expect(r.stdout).toContain('作成：.gitignore（.loomake/test-report.json）');
+  });
+
+  it('[REQ-133] 既存の .gitignore は行を残したまま、末尾にテストのレポートの行を足す', async () => {
+    const r = await runInit([], { files: { '.gitignore': 'node_modules/' } });
+    expect(r.files['.gitignore']).toBe('node_modules/\n.loomake/test-report.json\n');
+    expect(r.stdout).toContain('追記：.gitignore（.loomake/test-report.json）');
+  });
+
+  it('[REQ-133] すでに同じ行があれば、.gitignore を変えない', async () => {
+    const r = await runInit([], { files: { '.gitignore': 'dist/\n/.loomake/test-report.json\n' } });
+    expect(r.files['.gitignore']).toBe('dist/\n/.loomake/test-report.json\n');
+    expect(r.stdout).toContain('変更なし：.gitignore');
+  });
+
+  it('[REQ-133] git のリポジトリで init したあと、証拠の記録は除外されず、テストのレポートは除外される', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'loomake-init-'));
+    try {
+      spawnSync('git', ['init', '-q'], { cwd: root });
+      expect(await main(['init'], { cwd: root, stdout: () => {}, stderr: () => {} })).toBe(0);
+      const ignored = (p: string) => spawnSync('git', ['check-ignore', '-q', '--', p], { cwd: root }).status === 0;
+      expect(ignored('.loomake/evidence/c1/x.json')).toBe(false);
+      expect(ignored('.loomake/test-report.json')).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('[REQ-133] 中止したときは .gitignore も作らない', async () => {
+    const r = await runInit([], { files: { 'AGENTS.md': '# 自分の AGENTS.md\n' } });
+    expect(r.code).toBe(1);
+    expect(r.files['.gitignore']).toBeUndefined();
   });
 });
