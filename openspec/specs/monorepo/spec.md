@@ -50,12 +50,7 @@ Source: REQ-049
 - **THEN** ジョブのマトリクスに ubuntu-latest・macos-latest・windows-latest が含まれる
 
 ### Requirement: プルリクエストごとの完了ゲート
-CI はプルリクエストごとに完了ゲートを実行し、不合格のときジョブを失敗させる SHALL。対象の change は次の順に決める MUST。
-
-1. PR 本文に `loomake-change: <id>` の行があれば、その change とする。`,` で区切って複数を書ける。`loomake-change: none` なら、change のない PR とする
-2. 明示がなければ、PR で変えたファイルのうち `openspec/changes/<id>/` の下にあるもの（`archive` を除き、いまディレクトリがあるもの）の change と、PR のブランチ名、またはブランチ名から先頭の `loomake/` を除いた名前と一致する `openspec/changes/<id>` の change を合わせたものとする
-
-対象の change があれば、それぞれに `--change <id> --done` で実行し、1 つでも不合格ならジョブを失敗させる MUST。明示した change のディレクトリがないときは、ジョブを失敗させる MUST。対象がなく、`loomake-change: none` の明示があるか、PR で変えたファイルが文書（`.md` のファイル、`docs/`・`openspec/`・`.changeset/` の下のファイル）だけのときは、品質コマンドだけを実行する MUST。対象がなく、文書のほかのファイルを変えているときは、`loomake-change:` の行を書くよう日本語で案内し、ジョブを失敗させる MUST。
+CI はプルリクエストごとに完了ゲートを実行し、不合格のときジョブを失敗させる SHALL。対象の change は「完了ゲートの対象の決め方」に従って決め、対象の change ごとに `--change <id> --done` で実行し、1 つでも不合格ならジョブを失敗させる MUST。対象の change がないときは、「対象の change がない PR の扱い」に従う MUST。
 
 Source: REQ-010, REQ-054, REQ-132
 
@@ -112,3 +107,34 @@ Source: REQ-057
 #### Scenario: ライセンスが MIT である
 - **WHEN** `LICENSE` とルート・各パッケージの `package.json` を読む
 - **THEN** `LICENSE` が MIT ライセンス本文であり、すべての `license` が `MIT` である
+
+### Requirement: 完了ゲートの対象の決め方
+CI の完了ゲートは、対象の change を次の順に決める MUST。
+
+1. PR 本文に `loomake-change: <id>` の行があれば、その change とする。`,` で区切って複数を書ける。`loomake-change: none` なら、change のない PR とする
+2. 明示がなければ、PR で変えたファイルのうち `openspec/changes/<id>/` の下にあるもの（`archive` を除き、いまディレクトリがあるもの）の change と、PR のブランチ名、またはブランチ名から先頭の `loomake/` を除いた名前と一致する `openspec/changes/<id>` の change を合わせたものとする
+
+明示した change のディレクトリがないときは、ジョブを失敗させる MUST。
+
+Source: REQ-132
+
+#### Scenario: 明示を優先する
+- **WHEN** `openspec/changes/c1` と `openspec/changes/c2` があり、ブランチ名 `c2` で、`openspec/changes/c2/tasks.md` を変え、本文に `loomake-change: c1` の行がある PR で CI が動く
+- **THEN** `verify --change c1 --done` だけが実行される
+
+#### Scenario: 変えたファイルとブランチ名を合わせる
+- **WHEN** `openspec/changes/c1` と `openspec/changes/c2` があり、ブランチ名 `c2` で、本文に明示がなく、`openspec/changes/c1/tasks.md` を変えた PR で CI が動く
+- **THEN** `verify --change c1 --done` と `verify --change c2 --done` が実行される
+
+### Requirement: 対象の change がない PR の扱い
+対象の change がなく、`loomake-change: none` の明示があるか、PR で変えたファイルが文書（`.md` のファイル、`docs/`・`openspec/`・`.changeset/` の下のファイル）だけのときは、CI は品質コマンドだけを実行する MUST。対象の change がなく、文書のほかのファイルを変えているときは、`loomake-change:` の行を書くよう日本語で案内し、ジョブを失敗させる MUST。
+
+Source: REQ-132
+
+#### Scenario: changeset と README だけの PR
+- **WHEN** ブランチ名 `fix-typo` で、本文に明示がなく、`README.md` と `.changeset/x.md` だけを変えた PR で CI が動く
+- **THEN** `--change` なしで品質コマンドだけが実行される
+
+#### Scenario: 文書とコードを変えた PR
+- **WHEN** ブランチ名 `fix-typo` で、本文に明示がなく、`docs/usage.md` と `packages/a.ts` を変えた PR で CI が動く
+- **THEN** `loomake-change:` の行を書くよう案内が表示され、ジョブが失敗する
