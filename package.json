@@ -2,7 +2,7 @@
   "name": "loomake-monorepo",
   "private": true,
   "type": "module",
-  "description": "Loomake のモノレポ（@loomake/core・@loomake/kit・@loomake/trace・loomake）",
+  "description": "Loomake のモノレポ（@loomake/core・@loomake/kit・@loomake/trace・@loomake/runner・loomake）",
   "license": "MIT",
   "packageManager": "pnpm@12.10.1",
   "engines": {

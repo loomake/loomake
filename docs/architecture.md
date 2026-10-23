@@ -14,7 +14,7 @@
 
 仕様の書式は自作せず OpenSpec を使う。Loomake が担うのは、OpenSpec が持っていない「要件書からの入口」と「守らせる仕組み」と「検収の証拠」。
 
-この表は将来の構成を含む。現在のリポジトリには core・kit・trace・CLI 本体（`loomake init`・`loomake verify`・`loomake trace`）があり、runner はまだない。使い方は [usage.md](usage.md) を参照。MVP の範囲は [要件定義書 v0.7](requirements/mvp-v0.7.md) を参照。
+この表は将来の構成を含む。現在のリポジトリには core・kit・trace・runner・CLI 本体（`loomake init`・`loomake verify`・`loomake trace`・`loomake run`）がある。使い方は [usage.md](usage.md) を参照。MVP の範囲は [要件定義書 v0.7](requirements/mvp-v0.7.md) を参照。
 
 ## 2. 流れ
 
@@ -25,13 +25,11 @@ flowchart TD
   I -->|"kit: verify --done<br>通るまで直す"| P[PR]
   P -->|"kit: verify --done --json"| T[trace<br>要件台帳 × 検証結果 → 検収レポート]
   T --> A[顧客の検収・納品]
-  RN[runner<br>実装を自動で回す] -.将来.-> I
+  RN[runner<br>実装を自動で回す] --> I
 
-  classDef future stroke-dasharray:5 5,color:#666
-  class RN future
 ```
 
-点線はまだ作っていないもの（runner）。いまは、実装を AI エージェントに頼む。検収レポートは `loomake trace report` で作る。
+実装は `loomake run` で AI に任せるか、AI エージェントに直接頼む。検収レポートは `loomake trace report` で作る。
 
 ## 3. 名前
 
@@ -44,7 +42,7 @@ flowchart TD
 | CLI | `loomake init` / `loomake verify` / `loomake trace` / `loomake run` |
 | サイト | loomake.dev |
 
-CLI は本体パッケージ `loomake`（`packages/cli`）を 1 つ作り、各サブコマンドを束ねる（setup-monorepo の Q-01 で決定）。いまあるのは `init`・`verify`・`trace` で、`run` はまだない。
+CLI は本体パッケージ `loomake`（`packages/cli`）を 1 つ作り、各サブコマンドを束ねる（setup-monorepo の Q-01 で決定）。いまあるのは `init`・`verify`・`trace`・`run`。
 
 ## 4. リポジトリ構成
 
@@ -58,14 +56,17 @@ flowchart LR
   CLI --> CORE["@loomake/core<br>読み取り・JSON スキーマ<br>実行時依存ゼロ"]
   KIT --> CORE
   KIT -. "openspec validate を呼ぶ" .-> OS[OpenSpec CLI<br>外部]
-  TR["@loomake/trace"] -.将来.-> CORE
-  RU["@loomake/runner"] -.将来.-> KIT
-
-  classDef future stroke-dasharray:5 5,color:#666
-  class TR,RU future
+  CLI --> TR["@loomake/trace<br>record・report"]
+  CLI --> RU["@loomake/runner<br>run"]
+  TR --> KIT
+  TR --> CORE
+  RU --> TR
+  RU --> KIT
+  RU --> CORE
+  RU -. "claude・gh を呼ぶ" .-> EX[Claude Code・gh CLI<br>外部]
 ```
 
-`core`・`kit`・`loomake` の実行時依存はこの矢印の範囲に限る（REQ-046・REQ-047）。OpenSpec CLI は依存ではなく、別に入れたものを `verify` が呼び出す。
+各パッケージの実行時依存はこの矢印の範囲に限る（REQ-046・REQ-047・REQ-083・REQ-123）。OpenSpec CLI・Claude Code・gh CLI は依存ではなく、別に入れたものを `verify` と `run` が呼び出す。
 
 ```
 loomake/loomake            pnpm workspaces + changesets
@@ -93,7 +94,7 @@ loomake/loomake            pnpm workspaces + changesets
 | 0 | core | `verify.mjs` の解析処理を切り出し、verify 結果の JSON スキーマに `schemaVersion` を付ける | 3 ツールすべてが依存するので最初に固める | 済み（add-core-parsers） |
 | 1 | kit | `npx loomake init` で導入可能にし、実際の要件書を 1〜2 本流して直す | ここが甘いと後ろが全部ぶれる | 済み。init は add-init-cli。試験プロジェクトで kit-v1.0.md を流し、見つけた問題を 3 つの change で直した（2026-10-23） |
 | 2 | trace | trace.md と verify JSON から検収レポートを出す | 実装が人手でも価値が出る。kit と合わせて「要件 → 実装 → 証拠」が一周する | 初版は済み（add-trace-record・add-trace-report、2026-10-23）。HTML の出力とリリース単位の集約は次のフェーズ |
-| 3 | runner | Claude Code の headless 実行だけに対応し、1 つの change を PR まで持っていく MVP | 最も難しい。完了判定と証拠の出力先が先にあれば「verify が通るまで回す」に絞れる | 要件書（docs/requirements/runner-v0.1.md）待ち |
+| 3 | runner | Claude Code の headless 実行だけに対応し、1 つの change を PR まで持っていく MVP | 最も難しい。完了判定と証拠の出力先が先にあれば「verify が通るまで回す」に絞れる | 初版は済み（add-run-loop・add-run-guards・add-run-pr、2026-10-23）。`--resume`、Codex、エンジンの共通のインターフェースは次のフェーズ |
 
 ## 6. 開発環境
 

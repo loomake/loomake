@@ -1,4 +1,5 @@
 import { UsageError, formatVerifyResult, runInit, runVerify } from '@loomake/kit';
+import { runRun } from '@loomake/runner';
 import { runRecord, runReport } from '@loomake/trace';
 
 export type Io = {
@@ -9,11 +10,15 @@ export type Io = {
   interactive?: boolean;
   /** 質問を出して、入力された答えを返す */
   prompt?: (question: string) => Promise<string>;
+  /** 中断の合図。loomake run に渡す */
+  signal?: AbortSignal;
 };
 
-const USAGE = 'loomake <init | verify | trace> [オプション]';
+const USAGE = 'loomake <init | verify | trace | run> [オプション]';
 const INIT_USAGE = 'loomake init [--codex] [--devcontainer]';
 const VERIFY_USAGE = 'loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]';
+const RUN_USAGE = 'loomake run --change <id> [--engine claude-code] [--dry-run] [--skip-permissions]';
+const RUN_FLAGS = new Set(['--dry-run', '--skip-permissions']);
 const TRACE_USAGE = 'loomake trace record --change <id> | loomake trace report --change <id> [--format md|json]';
 const INIT_FLAGS = new Set(['--codex', '--devcontainer']);
 const VERIFY_FLAGS = new Set(['--spec-only', '--done', '--json', '--skip-commands']);
@@ -21,17 +26,18 @@ const VERIFY_FLAGS = new Set(['--spec-only', '--done', '--json', '--skip-command
 /** CLI の本体。終了コード（合格 0・不合格 1・使い方の誤り 2）を返す（REQ-041） */
 export async function main(argv: string[], io: Io): Promise<number> {
   const [command, ...args] = argv;
-  if (command !== 'verify' && command !== 'init' && command !== 'trace') {
+  if (command !== 'verify' && command !== 'init' && command !== 'trace' && command !== 'run') {
     io.stderr(`使い方: ${USAGE}`);
     return 2;
   }
   try {
     if (command === 'init') return await init(args, io);
+    if (command === 'run') return await run(args, io);
     return command === 'verify' ? verify(args, io) : trace(args, io);
   } catch (e) {
     if (!(e instanceof UsageError)) throw e;
     io.stderr(`loomake ${command}: ${e.message}`);
-    io.stderr(`使い方: ${{ init: INIT_USAGE, verify: VERIFY_USAGE, trace: TRACE_USAGE }[command]}`);
+    io.stderr(`使い方: ${{ init: INIT_USAGE, verify: VERIFY_USAGE, trace: TRACE_USAGE, run: RUN_USAGE }[command]}`);
     return 2;
   }
 }
@@ -105,4 +111,37 @@ function trace(args: string[], io: Io): number {
   if (format === 'html') throw new UsageError('HTML の形式は次の版で対応します。いまは md か json を指定してください');
   if (format !== undefined && format !== 'md' && format !== 'json') throw new UsageError(`--format は md か json にしてください：${format}`);
   return runReport({ root: io.cwd, changeId, format: format ?? 'md', stdout: io.stdout });
+}
+
+function run(args: string[], io: Io): Promise<number> {
+  let changeId: string | undefined;
+  let engine: string | undefined;
+  const flags = new Set<string>();
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (a === '--change' || a === '--engine') {
+      const value = args[++i];
+      if (!value || value.startsWith('--')) throw new UsageError(`${a} には値を続けてください`);
+      if (a === '--change') changeId = value;
+      else engine = value;
+    } else if (RUN_FLAGS.has(a)) {
+      flags.add(a);
+    } else {
+      throw new UsageError(`知らないオプションです：${a}`);
+    }
+  }
+  if (!changeId) throw new UsageError('--change <id> が必要です');
+  const { prompt } = io;
+  return runRun({
+    root: io.cwd,
+    changeId,
+    engine,
+    dryRun: flags.has('--dry-run'),
+    skipPermissions: flags.has('--skip-permissions'),
+    interactive: Boolean(io.interactive && prompt),
+    confirm: async (question) => /^y(es)?$/i.test(((await prompt?.(question)) ?? '').trim()),
+    stdout: io.stdout,
+    progress: io.stderr,
+    signal: io.signal,
+  });
 }
