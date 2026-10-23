@@ -43,8 +43,17 @@ describe('devcontainer', () => {
 });
 
 describe('Node.js のバージョン宣言', () => {
-  it('[REQ-048] ルートと各パッケージの engines.node が >=20.19.0', () => {
-    for (const p of packageJsons) expect(readJson(p).engines?.node, p).toBe('>=20.19.0');
+  it('[REQ-142] ルートと 5 つのパッケージの engines.node が >=22.12.0', () => {
+    const all = ['package.json', ...['core', 'kit', 'trace', 'runner', 'cli'].map((d) => `packages/${d}/package.json`)];
+    for (const p of all) expect(readJson(p).engines?.node, p).toBe('>=22.12.0');
+  });
+
+  it('[REQ-142] CI に、Node 22.12.0 でビルドした CLI を動かすジョブがある', () => {
+    const ci = read('.github/workflows/ci.yml');
+    const job = ci.match(/^  node22:\n((?:    .*\n|\s*\n)*)/m)?.[1] ?? '';
+    const setup = job.indexOf('node-version: 22.12.0');
+    expect(setup).toBeGreaterThanOrEqual(0);
+    expect(job.indexOf('packages/cli/dist/cli.js', setup)).toBeGreaterThan(setup);
   });
 });
 

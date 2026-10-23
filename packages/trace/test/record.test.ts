@@ -210,9 +210,9 @@ describe('オフラインでの動作と依存', () => {
     expect(Object.keys(pkg.dependencies ?? {}).sort()).toEqual(['@loomake/core', '@loomake/kit']);
   });
 
-  it('[REQ-089] @loomake/trace の engines.node は >=20.19.0', () => {
+  it('[REQ-142] @loomake/trace の engines.node は >=22.12.0', () => {
     const pkg = JSON.parse(readFileSync(join(import.meta.dirname, '../package.json'), 'utf8'));
-    expect(pkg.engines?.node).toBe('>=20.19.0');
+    expect(pkg.engines?.node).toBe('>=22.12.0');
   });
 });
 
