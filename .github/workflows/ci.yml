@@ -54,10 +54,14 @@ jobs:
       - run: node ../../../packages/cli/dist/cli.js verify --change sample --spec-only
         working-directory: tests/fixtures/verify-project
 
-  # PR ごとの完了ゲート（REQ-010, REQ-054）。ブランチ名が change-id なら --done で検査する
+  # PR ごとの完了ゲート（REQ-010, REQ-054, REQ-132）。PR 本文・変えたファイル・ブランチ名から決めた change を --done で検査する
   gate:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    # ci-gate が gh で PR 本文を読む
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -76,3 +80,6 @@ jobs:
       - run: node scripts/ci-gate.mjs "$HEAD_REF"
         env:
           HEAD_REF: ${{ github.head_ref }}
+          BASE_REF: ${{ github.base_ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}
