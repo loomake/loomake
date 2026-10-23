@@ -601,3 +601,31 @@ describe('出力予算による停止', () => {
       expect(result.stderr).toContain('run.maxOutputBytes');
     }));
 });
+
+describe('runnerの表示の保護', () => {
+  const token = 'ghp_' + 'x'.repeat(24);
+
+  it('[REQ-154] 質問と停止理由を表示する前に置換する', () =>
+    withRepo(async (repo) => {
+      repo.plan([{ output: `LOOMAKE-QUESTION: ${token} を確認してください` }]);
+      const result = await run(repo);
+      expect(result.code).toBe(1);
+      expect(result.stdout).not.toContain(token);
+      expect(result.stdout).toContain('***');
+      expect(summary(repo).reason).not.toContain(token);
+    }));
+
+  it('[REQ-154] 品質コマンドの進捗を転送する前に置換する', () =>
+    withRepo(async (repo) => {
+      const config = JSON.parse(readFileSync(join(repo.root, 'loomake.config.json'), 'utf8'));
+      config.commands.test += ` ${token}`;
+      repo.write('loomake.config.json', JSON.stringify(config));
+      repo.git('add', '-A');
+      repo.git('commit', '-qm', 'synthetic marker');
+      repo.plan(passing);
+      const progress: string[] = [];
+      expect((await run(repo, { progress: (text) => progress.push(text) })).code).toBe(0);
+      expect(progress.join('\n')).not.toContain(token);
+      expect(progress.join('\n')).toContain('***');
+    }));
+});

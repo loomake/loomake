@@ -53,3 +53,13 @@ describe('エンジンの出力予算', () => {
     expect(failed.result.outputLimitExceeded).toBe(false);
   });
 });
+
+describe('エンジンのstderrの保護', () => {
+  it('[REQ-153] チャンクをまたぐトークンを転送前に置換する', async () => {
+    const token = 'ghp_' + 'x'.repeat(24);
+    const source = `process.stderr.write(${JSON.stringify('before ' + token.slice(0, 10))}); setTimeout(() => process.stderr.write(${JSON.stringify(token.slice(10) + ' after\n')}), 20);`;
+    const { stderr } = await invoke(source);
+    expect(stderr).toBe('before *** after\n');
+    expect(stderr).not.toContain(token);
+  });
+});

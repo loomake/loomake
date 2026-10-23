@@ -166,6 +166,13 @@ type Recorder = {
 
 /** change の tasks.md を実装させ、完了ゲートが通るまで直させる。終了コード（終えた 0・止まった 1）を返す */
 export async function runRun(options: RunOptions): Promise<number> {
+  const stdout = options.stdout;
+  const progress = options.progress;
+  options = {
+    ...options,
+    stdout: (text) => stdout(maskSecrets(text)),
+    progress: progress && ((text) => progress(maskSecrets(text))),
+  };
   // 始める前（実行の記録を作る前）の git の失敗は、使い方の誤りにする（REQ-137）
   let ctx: RunContext | number;
   try {

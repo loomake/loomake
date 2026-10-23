@@ -2,6 +2,7 @@ import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { UsageError } from '@loomake/kit';
 import { StringDecoder } from 'node:string_decoder';
 import { DEFAULT_MAX_OUTPUT_BYTES } from './config.js';
+import { createDiagnosticRedactor } from './mask.js';
 
 /** 初版で使えるエンジン（REQ-101） */
 export { DEFAULT_MAX_OUTPUT_BYTES } from './config.js';
@@ -113,8 +114,9 @@ export function runClaude(call: EngineCall): Promise<EngineResult> {
         stopping ??= stop(child);
       }
     };
+    const diagnostics = createDiagnosticRedactor(call.onStderr ?? ((text) => { process.stderr.write(text); }));
     child.stdout.setEncoding('utf8').on('data', (data: string) => accept(data, (text) => { raw += text; }));
-    child.stderr.setEncoding('utf8').on('data', (data: string) => accept(data, call.onStderr ?? ((text) => { process.stderr.write(text); })));
+    child.stderr.setEncoding('utf8').on('data', (data: string) => accept(data, diagnostics.write));
     const timer = setTimeout(() => {
       timedOut = true;
       stopping ??= stop(child);
@@ -130,6 +132,7 @@ export function runClaude(call: EngineCall): Promise<EngineResult> {
       clearTimeout(timer);
       call.signal?.removeEventListener('abort', onAbort);
       await stopping;
+      diagnostics.end();
       let text = raw;
       try {
         const json = JSON.parse(raw) as { result?: unknown };
