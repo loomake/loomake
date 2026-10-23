@@ -1,10 +1,12 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve, sep } from 'node:path';
 import { parseTasks, type Task, type VerifyResult } from '@loomake/core';
+import { runRecord } from '@loomake/trace';
 import { UsageError, formatVerifyResult, loadConfig, runVerify } from '@loomake/kit';
 import { DEFAULT_ALLOWED_DOMAINS, assertEngineAvailable, runClaude, type EngineResult } from './engine.js';
 import { branchExists, dirtyFiles, git } from './git.js';
 import { APPROVAL_GUIDE, findViolations } from './guards.js';
+import { createPr, ghLoggedIn, prBody } from './pr.js';
 import { maskSecrets } from './mask.js';
 
 export type RunOptions = {
@@ -251,6 +253,8 @@ export async function runRun(options: RunOptions): Promise<number> {
 
   // change のブランチ（REQ-096、add-run-loop の仮定 A-04）
   const branch = `loomake/${changeId}`;
+  // PR の向き先は、run を始めたときのブランチ（add-run-pr の仮定 A-21）
+  const base = git(root, env, ['rev-parse', '--abbrev-ref', 'HEAD']).trim();
   git(root, env, branchExists(root, env, branch) ? ['switch', '-q', branch] : ['switch', '-q', '-c', branch]);
 
   // タスクを上から 1 つずつ渡し、終えるたびにコミットする（REQ-097・REQ-099）
@@ -306,5 +310,22 @@ export async function runRun(options: RunOptions): Promise<number> {
     git(root, env, ['commit', '-q', '-m', `run(${changeId}): 完了ゲートに合格`]);
     done.push(...gateTasks.map(taskLabel));
   }
-  return finish('completed', '完了ゲートに合格しました', []);
+
+  // 証拠を記録してから PR を作る（REQ-114〜REQ-116）。gh が使えなければ、記録の前に止まる
+  if (!ghLoggedIn(root, env)) {
+    return finish('stopped', '完了ゲートに合格しましたが、gh CLI がないか、ログインしていないので PR を作れません。gh auth login でログインしてください', []);
+  }
+  const recorded = runRecord({ root, changeId, stdout, progress, now });
+  if (recorded !== 0) return finish('stopped', '証拠の記録で完了ゲートに不合格になりました', []);
+  git(root, env, ['add', '--', `.loomake/evidence/${changeId}`]);
+  git(root, env, ['commit', '-q', '-m', `evidence(${changeId}): 証拠を記録する`]);
+  const evidence = git(root, env, ['diff', '--name-only', 'HEAD~1', 'HEAD']).trim().split('\n')[0];
+  save('pr-body.md', prBody(root, changeDir, evidence));
+  try {
+    git(root, env, ['push', '-q', '-u', 'origin', branch]);
+    const url = createPr(root, env, { base, head: branch, title: changeId, bodyFile: join(runDir, 'pr-body.md') });
+    return finish('completed', `PR を作りました：${url}`, []);
+  } catch (e) {
+    return finish('stopped', `証拠を記録してコミットしましたが、PR を作れませんでした：${(e as Error).message}`, []);
+  }
 }

@@ -255,6 +255,23 @@ npx loomake trace report --change <change-id> > report.md
 - `--format json` で JSON を出す。省くと Markdown になる。HTML はまだ出せない
 - 同じ入力からは、毎回同じレポートになる（作った日時は入れない）
 
+### 4.7 実装から PR までを AI に任せる
+
+`loomake run` は、仕様ゲートを通った change のタスクを Claude Code に 1 つずつ実装させ、完了ゲートが通るまで直させてから、証拠を記録して PR を出す。devcontainer の中で、未コミットの変更がない状態で実行する。`claude` と `gh` のコマンドが要る。
+
+```sh
+npx loomake run --change <change-id> --dry-run   # 渡すタスクと指示を確かめる
+npx loomake run --change <change-id>
+```
+
+- `loomake/<change-id>` のブランチで、タスクを終えるたびに `run(<change-id>): …` でコミットする。tasks.md の完了は run が付ける。完了ゲートを通すタスクはエンジンに渡さず、合格したときに完了にする
+- 完了ゲートに不合格なら、内容をエンジンに渡して直させる。直しの回数（既定 5 回）か実行時間（既定 60 分）が上限に達したら止まる。上限は loomake.config.json の `run.maxFixes`・`run.timeoutMinutes` で変えられる
+- エンジンが仕様にない判断に迷ったら、`LOOMAKE-QUESTION:` の行で質問して止まる。確認事項に答えてから、もう一度実行する
+- テストの削除や skip、lint・型・テストの設定、いまの仕様、trace.md の変更を見つけたら、変更をコミットせずに残して止まる。承認するなら、差分を確かめ、tasks.md のそのタスクを完了にして自分でコミットし、もう一度実行する
+- 合格したら `loomake trace record` で証拠を記録してコミットし、ブランチを送って `gh pr create` で PR を作る。マージは人がする
+- 止まったときは、理由・終えたタスク・残ったタスク・最後の検査結果を表示する。実行の記録は `.loomake/runs/` にあり、git では追跡しない
+- ふだんはファイルの読み書きと loomake.config.json の commands だけを Claude Code に許可する。権限確認なしで動かすのは、通信を npm・GitHub・エンジンの API に絞った環境で `LOOMAKE_SANDBOX=1` を設定し、`--skip-permissions` を付けたときだけ
+
 ## 5. `loomake verify` のリファレンス
 
 ```

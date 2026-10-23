@@ -113,7 +113,7 @@ describe('ブランチとタスク', () => {
       repo.plan(passing);
       await run(repo);
       expect(repo.git('merge-base', 'main', 'loomake/c1')).toBe(head);
-      expect(log(repo)[0]).toMatch(/^run\(c1\)/);
+      expect(log(repo)).toContain('run(c1): 1.1 一つ目のタスク（REQ-012）');
     }));
 
   it('[REQ-096] loomake/<change-id> があれば、切り替えてその続きにコミットする', () =>
@@ -163,11 +163,12 @@ describe('ブランチとタスク', () => {
     withRepo(async (repo) => {
       repo.plan(passing);
       await run(repo);
-      const commit = repo.git('log', '--format=%s', '--name-only', '-1', 'loomake/c1~2');
+      const rev = repo.git('log', '--format=%H', '--grep', '^run(c1): 1.1', 'loomake/c1');
+      const commit = repo.git('log', '--format=%s', '--name-only', '-1', rev);
       expect(commit.split('\n')[0]).toBe('run(c1): 1.1 一つ目のタスク（REQ-012）');
       expect(commit).toContain('impl.txt');
       expect(commit).toContain('openspec/changes/c1/tasks.md');
-      expect(repo.git('show', 'loomake/c1~2:openspec/changes/c1/tasks.md')).toContain('- [x] 1.1 一つ目のタスク');
+      expect(repo.git('show', `${rev}:openspec/changes/c1/tasks.md`)).toContain('- [x] 1.1 一つ目のタスク');
     }));
 });
 
@@ -180,7 +181,8 @@ describe('完了ゲートと直し', () => {
       const fix = repo.calls()[2].prompt;
       expect(fix).toContain('## 完了ゲートの不合格の内容');
       expect(fix).toContain('テストが無い要件：REQ-012');
-      expect(log(repo).slice(0, 2)).toEqual(['run(c1): 完了ゲートに合格', 'run(c1): 完了ゲートの直し（1 回目）']);
+      const messages = log(repo);
+      expect(messages.indexOf('run(c1): 完了ゲートに合格')).toBe(messages.indexOf('run(c1): 完了ゲートの直し（1 回目）') - 1);
       expect(tasksMd(repo)).toContain('- [x] 3.1');
     }));
 

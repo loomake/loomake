@@ -35,6 +35,16 @@ for (const p of step.delete ?? []) rmSync(join(process.cwd(), p), { force: true 
 console.log(JSON.stringify({ type: 'result', result: step.output ?? '終えました' }));
 `;
 
+// gh auth status は FAKE_GH_AUTH が fail なら失敗する。gh pr create は引数と本文を記録して URL を出す
+const FAKE_GH = `#!/usr/bin/env node
+import { appendFileSync, readFileSync } from 'node:fs';
+const args = process.argv.slice(2);
+if (args[0] === 'auth') process.exit(process.env.FAKE_GH_AUTH === 'fail' ? 1 : 0);
+const i = args.indexOf('--body-file');
+appendFileSync(process.env.FAKE_GH_LOG, JSON.stringify({ args, body: readFileSync(args[i + 1], 'utf8') }) + '\\n');
+console.log('https://github.com/example/repo/pull/1');
+`;
+
 const TASKS = ['## 1. 実装', '- [ ] 1.1 一つ目のタスク（REQ-012）', '- [ ] 1.2 二つ目のタスク', '', '## 3. 確認', '- [ ] 3.1 `pnpm -s verify --change c1 --done` を通す', ''].join('\n');
 
 export type Repo = {
@@ -45,6 +55,9 @@ export type Repo = {
   plan: (steps: FakeStep[]) => void;
   /** 偽の claude が呼ばれた記録 */
   calls: () => { args: string[]; prompt: string }[];
+  /** 偽の gh pr create が呼ばれた記録 */
+  prs: () => { args: string[]; body: string }[];
+  base: string;
   git: (...args: string[]) => string;
   cleanup: () => void;
 };
@@ -62,11 +75,15 @@ export function makeRepo({ trace = traceMd(), tasks = TASKS, run }: { trace?: st
   writeFileSync(join(bin, 'claude'), FAKE_CLAUDE);
   chmodSync(join(bin, 'claude'), 0o755);
   writeFileSync(join(bin, 'claude.cmd'), '@node "%~dp0claude" %*\r\n');
+  writeFileSync(join(bin, 'gh'), FAKE_GH);
+  chmodSync(join(bin, 'gh'), 0o755);
+  writeFileSync(join(bin, 'gh.cmd'), '@node "%~dp0gh" %*\r\n');
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     PATH: `${bin}${delimiter}${process.env.PATH ?? ''}`,
     FAKE_LOG: join(base, 'calls.jsonl'),
     FAKE_PLAN: join(base, 'plan.json'),
+    FAKE_GH_LOG: join(base, 'gh.jsonl'),
     GIT_AUTHOR_NAME: 'loomake-test',
     GIT_AUTHOR_EMAIL: 'test@example.com',
     GIT_COMMITTER_NAME: 'loomake-test',
@@ -99,6 +116,9 @@ export function makeRepo({ trace = traceMd(), tasks = TASKS, run }: { trace?: st
   gitRun('init', '-q', '-b', 'main');
   gitRun('add', '-A');
   gitRun('commit', '-q', '-m', 'init');
+  // origin は一時ディレクトリの bare リポジトリ
+  spawnSync('git', ['init', '-q', '--bare', join(base, 'origin.git')], { env });
+  gitRun('remote', 'add', 'origin', join(base, 'origin.git'));
   return {
     root,
     env,
@@ -111,6 +131,14 @@ export function makeRepo({ trace = traceMd(), tasks = TASKS, run }: { trace?: st
             .filter(Boolean)
             .map((l) => JSON.parse(l))
         : [],
+    prs: () =>
+      existsSync(env.FAKE_GH_LOG!)
+        ? readFileSync(env.FAKE_GH_LOG!, 'utf8')
+            .split('\n')
+            .filter(Boolean)
+            .map((l) => JSON.parse(l))
+        : [],
+    base,
     git: gitRun,
     cleanup: () => rmSync(base, { recursive: true, force: true }),
   };
