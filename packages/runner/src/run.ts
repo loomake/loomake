@@ -327,6 +327,7 @@ function startRecording(ctx: RunContext): Recorder {
 /** エンジンの終わり方から、止まる理由を決める */
 function engineStop(result: EngineResult): { status: RunSummary['status']; reason: string } | undefined {
   if (result.aborted) return { status: 'interrupted', reason: '中断されました' };
+  if (result.outputLimitExceeded) return { status: 'stopped', reason: 'エンジンの出力が上限に達しました' };
   if (result.timedOut) return { status: 'stopped', reason: '実行時間の上限に達しました' };
   const question = result.text.match(QUESTION);
   if (question) return { status: 'stopped', reason: `エンジンが質問しました：${question[1]}` };
@@ -352,6 +353,7 @@ async function callEngine(ctx: RunContext, rec: Recorder, prompt: string): Promi
     skipPermissions: Boolean(options.skipPermissions),
     timeoutMs,
     signal: options.signal,
+    maxOutputBytes: ctx.runConfig.maxOutputBytes,
   });
   rec.save(`${n}-output.json`, result.raw);
   const stop = engineStop(result);

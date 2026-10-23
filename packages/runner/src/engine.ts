@@ -1,9 +1,10 @@
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { UsageError } from '@loomake/kit';
 import { StringDecoder } from 'node:string_decoder';
+import { DEFAULT_MAX_OUTPUT_BYTES } from './config.js';
 
 /** 初版で使えるエンジン（REQ-101） */
-export const DEFAULT_MAX_OUTPUT_BYTES = 64 * 1024 * 1024;
+export { DEFAULT_MAX_OUTPUT_BYTES } from './config.js';
 
 export const ENGINES = ['claude-code'] as const;
 export type EngineName = (typeof ENGINES)[number];

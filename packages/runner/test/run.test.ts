@@ -578,3 +578,26 @@ describe('run設定の入力境界', () => {
       expect((await run(repo, { dryRun: true })).code).toBe(0);
     }, { run: { maxFixes: 2, timeoutMinutes: 0.5 } }));
 });
+
+describe('出力予算による停止', () => {
+  it('[REQ-152] 大きな出力で停止し、タスクと変更を未完了のまま残す', () =>
+    withRepo(async (repo) => {
+      repo.plan([{ write: { 'impl.txt': '途中' }, output: 'x'.repeat(200) }]);
+      const result = await run(repo);
+      expect(result.code).toBe(1);
+      expect(result.stdout).toContain('出力が上限');
+      expect(tasksMd(repo)).toContain('- [ ] 1.1');
+      expect(log(repo)).toEqual(['init']);
+      expect(repo.prs()).toEqual([]);
+      expect(summary(repo).reason).toContain('出力が上限');
+      expect(Buffer.byteLength(readFileSync(join(runDir(repo), '01-output.json'), 'utf8'))).toBeLessThanOrEqual(64);
+    }, { run: { maxOutputBytes: 64 } }));
+
+  it.each([0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1])('[REQ-152] 不正な出力上限 %j を設定エラーにする', (maxOutputBytes) =>
+    withRepo(async (repo) => {
+      repo.write('loomake.config.json', JSON.stringify({ run: { maxOutputBytes } }));
+      const result = await cli(repo, '--dry-run');
+      expect(result.code).toBe(2);
+      expect(result.stderr).toContain('run.maxOutputBytes');
+    }));
+});
