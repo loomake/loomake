@@ -7,7 +7,7 @@
 - [x] 1.6 PR の向き先を git config に覚え、再開のときに使う（REQ-114）
 
 ## 2. テスト
-- [ ] 2.1 各 Scenario に対応するテストを書く。テスト名に [REQ-xxx] を入れる
+- [x] 2.1 各 Scenario に対応するテストを書く。テスト名に [REQ-xxx] を入れる
 
 ## 3. 確認
-- [ ] 3.1 `pnpm -s verify --change fix-review-findings --done` を通す
+- [x] 3.1 `pnpm -s verify --change fix-review-findings --done` を通す
