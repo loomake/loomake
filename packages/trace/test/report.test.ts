@@ -1,0 +1,257 @@
+import { describe, it, expect } from 'vitest';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { buildReport, runReport, type Evidence, type Report } from '@loomake/trace';
+import { main } from '../../cli/src/main.js';
+import { CHANGE, ledgerRow, requirement, specMd, traceMd } from '../../kit/test/project.js';
+
+type Project = { trace?: string; spec?: string; evidence?: Partial<Evidence>[]; archived?: boolean };
+
+const evidence = (e: Partial<Evidence> = {}): Evidence => ({
+  schemaVersion: 1,
+  change: CHANGE,
+  sha: '0123456789abcdef0123456789abcdef01234567',
+  committedAt: '2026-10-23T09:00:00+09:00',
+  recordedAt: '2026-10-23T01:00:00.000Z',
+  verify: { schemaVersion: '1.0.0', mode: 'done', change: CHANGE, ok: true, results: [], coverage: { 'REQ-012': ['tests/x.test.ts'] } },
+  ...e,
+});
+
+/** 一時ディレクトリに change と証拠の記録を置いて fn を実行し、終わったら消す。fn が Promise を返したら、終わるのを待つ */
+function withProject<T>({ trace = traceMd(), spec = specMd(), evidence: records = [{}], archived = false }: Project, fn: (root: string) => T): T {
+  const root = mkdtempSync(join(tmpdir(), 'loomake-report-'));
+  const cleanup = () => rmSync(root, { recursive: true, force: true });
+  let result: T;
+  try {
+    const write = (p: string, text: string) => {
+      mkdirSync(dirname(join(root, p)), { recursive: true });
+      writeFileSync(join(root, p), text);
+    };
+    const dir = archived ? `openspec/changes/archive/2026-10-23-${CHANGE}` : `openspec/changes/${CHANGE}`;
+    write('loomake.config.json', '{}');
+    write(`${dir}/trace.md`, trace);
+    write(`${dir}/specs/x/spec.md`, spec);
+    records.forEach((r, i) => write(`.loomake/evidence/${CHANGE}/${i}.json`, JSON.stringify(evidence(r))));
+    result = fn(root);
+  } catch (e) {
+    cleanup();
+    throw e;
+  }
+  // fn が Promise を返したら、終わるのを待ってから消す
+  if (result instanceof Promise) return result.finally(cleanup) as T;
+  cleanup();
+  return result;
+}
+
+const report = (root: string) => buildReport(root, CHANGE) as Report;
+const markdown = (root: string, format: 'md' | 'json' = 'md') => {
+  const out: string[] = [];
+  const code = runReport({ root, changeId: CHANGE, format, stdout: (t) => out.push(t) });
+  return { code, text: out.join('\n') };
+};
+const cli = async (root: string, ...args: string[]) => {
+  const out: string[] = [];
+  const err: string[] = [];
+  const code = await main(['trace', 'report', '--change', CHANGE, ...args], { cwd: root, stdout: (t) => out.push(t), stderr: (t) => err.push(t) });
+  return { code, stdout: out.join('\n'), stderr: err.join('\n') };
+};
+
+// 回答者・回答日・承認者・承認日の列を持つ trace.md
+const agreementTrace = (question: string, assumption: string) =>
+  traceMd({ assumptions: [assumption] })
+    .replace('| ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 |\n|---|---|---|---|---|---|---|', `| ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |\n|---|---|---|---|---|---|---|---|---|\n${question}`)
+    .replace('| ID | 関連 | 仮定の内容 | 理由 | 承認 |\n|---|---|---|---|---|', '| ID | 関連 | 仮定の内容 | 理由 | 承認 | 承認者 | 承認日 |\n|---|---|---|---|---|---|---|');
+
+describe('要件ごとの検収の表', () => {
+  it('[REQ-070] 要件ごとに、出典・状態・対応する Requirement・テストファイル・最後の検査結果を並べる', () => {
+    withProject({ spec: specMd(requirement('表の出力')) }, (root) => {
+      expect(report(root).rows).toEqual([
+        { id: 'REQ-012', source: '要件書 §1', state: '反映済', summary: '要約', requirements: ['表の出力'], tests: ['tests/x.test.ts'], result: '合格' },
+      ]);
+      expect(markdown(root).text).toContain('| REQ-012 | 要件書 §1 | 反映済 | 要約 | 表の出力 | tests/x.test.ts | 合格 |');
+    });
+  });
+
+  it('[REQ-070] 記録した日時がいちばん新しい記録を使う', () => {
+    const records = [
+      { recordedAt: '2026-10-23T02:00:00.000Z', sha: 'b'.repeat(40) },
+      { recordedAt: '2026-10-23T01:00:00.000Z', sha: 'a'.repeat(40) },
+    ];
+    withProject({ evidence: records }, (root) => {
+      expect(report(root).evidence.sha).toBe('b'.repeat(40));
+    });
+  });
+
+  it('[REQ-070] archive した change でも、archive の trace.md と差分仕様からレポートを作る', () => {
+    withProject({ archived: true, spec: specMd(requirement('表の出力')) }, (root) => {
+      expect(report(root).rows[0].requirements).toEqual(['表の出力']);
+    });
+  });
+
+  it('[REQ-070] 証拠の記録がなければ、trace record を先に実行するよう案内し、終了コード 1 を返す', () => {
+    withProject({ evidence: [] }, (root) => {
+      const r = markdown(root);
+      expect(r.code).toBe(1);
+      expect(r.text).toContain(`loomake trace record --change ${CHANGE}`);
+    });
+  });
+});
+
+describe('範囲外と既存仕様で充足の要件', () => {
+  it('[REQ-071] 範囲外と既存仕様で充足の要件も、状態を付けて表に含める', () => {
+    const trace = traceMd({ ledger: [ledgerRow('REQ-012'), ledgerRow('REQ-075', '範囲外'), ledgerRow('REQ-090', '既存仕様で充足')] });
+    withProject({ trace }, (root) => {
+      const rows = report(root).rows;
+      expect(rows.map((r) => [r.id, r.state, r.result])).toEqual([
+        ['REQ-012', '反映済', '合格'],
+        ['REQ-075', '範囲外', null],
+        ['REQ-090', '既存仕様で充足', null],
+      ]);
+      expect(markdown(root).text).toMatch(/^\| REQ-075 \| 要件書 §1 \| 範囲外 \|/m);
+    });
+  });
+});
+
+describe('冒頭の要注意の一覧', () => {
+  it('[REQ-072] 反映済で合格したテストのない要件を、冒頭の一覧に挙げる', () => {
+    const trace = traceMd({ ledger: [ledgerRow('REQ-012'), ledgerRow('REQ-070')] });
+    withProject({ trace, spec: specMd(requirement('a'), requirement('b', { source: 'Source: REQ-070' })) }, (root) => {
+      expect(report(root).attention.noPassingTests).toEqual(['REQ-070']);
+      const text = markdown(root).text;
+      expect(text.indexOf('合格したテストのない要件：REQ-070')).toBeLessThan(text.indexOf('## 要件ごとの検収'));
+    });
+  });
+
+  it('[REQ-072] 確認待ちの要件を、冒頭の一覧に挙げる', () => {
+    withProject({ trace: traceMd({ ledger: [ledgerRow('REQ-012'), ledgerRow('REQ-072', '確認待ち')] }) }, (root) => {
+      expect(report(root).attention.pending).toEqual(['REQ-072']);
+      expect(markdown(root).text).toContain('確認待ちの要件：REQ-072');
+    });
+  });
+
+  it('[REQ-072] どちらもなければ、要注意の要件がないと書く', () => {
+    withProject({}, (root) => {
+      expect(markdown(root).text).toContain('要注意の要件はありません。');
+    });
+  });
+});
+
+describe('使った証拠の記載', () => {
+  it('[REQ-073] 使った記録の、記録した日時・SHA・コミットの日時を載せる', () => {
+    withProject({}, (root) => {
+      expect(markdown(root).text).toContain('| 2026-10-23T01:00:00.000Z | 0123456789abcdef0123456789abcdef01234567 | 2026-10-23T09:00:00+09:00 | 合格 |');
+    });
+  });
+});
+
+describe('出力の形式', () => {
+  it('[REQ-074] --format md で Markdown を出し、終了コード 0 を返す', async () => {
+    await withProject({}, async (root) => {
+      const r = await cli(root, '--format', 'md');
+      expect(r.code).toBe(0);
+      expect(r.stdout).toMatch(/^# 検収レポート：c1$/m);
+    });
+  });
+
+  it('[REQ-074] --format json で、要件ごとの行と使った証拠を含む JSON を出す', async () => {
+    await withProject({}, async (root) => {
+      const r = await cli(root, '--format', 'json');
+      const json = JSON.parse(r.stdout);
+      expect(json.rows[0].id).toBe('REQ-012');
+      expect(json.evidence.sha).toBe('0123456789abcdef0123456789abcdef01234567');
+    });
+  });
+
+  it('[REQ-074] --format html は、次の版で対応する旨を出して終了コード 2 を返す', async () => {
+    await withProject({}, async (root) => {
+      const r = await cli(root, '--format', 'html');
+      expect(r.code).toBe(2);
+      expect(r.stderr).toContain('HTML の形式は次の版で対応します');
+    });
+  });
+
+  it('--format を省くと Markdown を出す（仮定 A-07）', async () => {
+    await withProject({}, async (root) => {
+      expect((await cli(root)).stdout).toMatch(/^# 検収レポート：c1$/m);
+    });
+  });
+});
+
+describe('確認事項と仮定の一覧', () => {
+  const question = '| Q-01 | REQ-012 | 何回ですか | 3 / 5 | 5 | yes | 5 回 | 顧客 PM | 2026-10-23 |';
+  const assumption = '| A-01 | REQ-012 | 8 文字以上 | 記載なし | 承認 | 開発リーダー | 2026-10-23 |';
+
+  it('[REQ-077] 確認事項ごとに、ID・質問・回答・回答者・回答日を並べる', () => {
+    withProject({ trace: agreementTrace(question, assumption) }, (root) => {
+      expect(report(root).questions).toEqual([{ id: 'Q-01', question: '何回ですか', answer: '5 回', answeredBy: '顧客 PM', answeredAt: '2026-10-23' }]);
+      expect(markdown(root).text).toContain('| Q-01 | 何回ですか | 5 回 | 顧客 PM | 2026-10-23 |');
+    });
+  });
+
+  it('[REQ-078] 仮定ごとに、ID・内容・承認者・承認日を並べる', () => {
+    withProject({ trace: agreementTrace(question, assumption) }, (root) => {
+      expect(report(root).assumptions).toEqual([{ id: 'A-01', content: '8 文字以上', approval: '承認', approvedBy: '開発リーダー', approvedAt: '2026-10-23' }]);
+      expect(markdown(root).text).toContain('| A-01 | 8 文字以上 | 承認 | 開発リーダー | 2026-10-23 |');
+    });
+  });
+});
+
+describe('合意の欄が空のときの警告', () => {
+  it('[REQ-079] 回答はあるが回答者が空の確認事項を警告する', () => {
+    const trace = agreementTrace('| Q-02 | REQ-012 | 何回ですか | 3 / 5 | 5 | yes | 5 回 |  | 2026-10-23 |', '| A-01 | REQ-012 | 内容 | 理由 |  |  |  |');
+    withProject({ trace }, (root) => {
+      expect(report(root).warnings).toEqual(['Q-02：回答者が空です']);
+      expect(markdown(root).text).toContain('- Q-02：回答者が空です');
+    });
+  });
+
+  it('[REQ-079] 列のない古い trace.md でもレポートを作り、回答のある確認事項の回答者と回答日が空だと警告する', () => {
+    const trace = traceMd({ questions: ['| Q-01 | REQ-012 | 何回ですか | 3 / 5 | 5 | yes | 5 回 |'], assumptions: ['| A-01 | REQ-012 | 内容 | 理由 | 承認（2026-10-23） |'] });
+    withProject({ trace }, (root) => {
+      expect(report(root).warnings).toEqual(['Q-01：回答者が空です', 'Q-01：回答日が空です', 'A-01：承認者が空です', 'A-01：承認日が空です']);
+    });
+  });
+
+  it('[REQ-079] 回答が空の確認事項と承認が空の仮定は、警告の対象にしない', () => {
+    const trace = traceMd({ questions: ['| Q-03 | REQ-012 | 何回ですか | 3 / 5 | 5 | yes | |'], assumptions: ['| A-02 | REQ-012 | 内容 | 理由 | |'] });
+    withProject({ trace }, (root) => {
+      expect(report(root).warnings).toEqual([]);
+    });
+  });
+});
+
+describe('同じ入力からは同じレポート', () => {
+  it('[REQ-085] 入力を変えずに 2 回出力すると、1 文字も違わない', async () => {
+    const trace = traceMd({ ledger: [ledgerRow('REQ-070'), ledgerRow('REQ-012'), ledgerRow('REQ-071', '範囲外')] });
+    await withProject({ trace }, async (root) => {
+      const first = markdown(root).text;
+      await new Promise((r) => setTimeout(r, 1100));
+      expect(markdown(root).text).toBe(first);
+      expect(report(root).rows.map((r) => r.id)).toEqual(['REQ-012', 'REQ-070', 'REQ-071']);
+    });
+  });
+});
+
+describe('report の性能と日本語', () => {
+  it('[REQ-086] 要件 500 件の change のレポートを 5 秒以内に出す', () => {
+    const ids = Array.from({ length: 500 }, (_, i) => `REQ-${String(i + 1).padStart(3, '0')}`);
+    const trace = traceMd({ ledger: ids.map((id) => ledgerRow(id)) });
+    const spec = specMd(...ids.map((id) => requirement(`振る舞い ${id}`, { source: `Source: ${id}` })));
+    const coverage = Object.fromEntries(ids.map((id) => [id, [`tests/${id}.test.ts`]]));
+    withProject({ trace, spec, evidence: [{ verify: { schemaVersion: '1.0.0', mode: 'done', change: CHANGE, ok: true, results: [], coverage } }] }, (root) => {
+      const start = performance.now();
+      const r = markdown(root);
+      expect(r.code).toBe(0);
+      expect(performance.now() - start).toBeLessThan(5000);
+    });
+  });
+
+  it('[REQ-088] レポートの見出しと表の列名は日本語', () => {
+    withProject({}, (root) => {
+      const text = markdown(root).text;
+      for (const h of ['# 検収レポート', '## 要注意の要件', '## 使った証拠', '## 要件ごとの検収', '## 確認事項', '## 仮定', '## 合意の記録の警告']) expect(text).toContain(h);
+      expect(text).toContain('| ID | 出典 | 状態 | 要約 | Requirement | テスト | 最後の検査結果 |');
+    });
+  });
+});
