@@ -131,6 +131,34 @@ describe('ブランチとタスク', () => {
       expect(log(repo)).toContain('前の実行のコミット');
     }));
 
+  it('[REQ-096] 別のブランチから再開したら、loomake/<change-id> の tasks.md で完了済みのタスクを渡さない', () =>
+    withRepo(async (repo) => {
+      repo.git('switch', '-q', '-c', 'loomake/c1');
+      repo.write('impl.txt', '実装\n');
+      repo.write('openspec/changes/c1/tasks.md', tasksMd(repo).replace('- [ ] 1.1', '- [x] 1.1'));
+      repo.git('add', '-A');
+      repo.git('commit', '-q', '-m', 'run(c1): 1.1 一つ目のタスク（REQ-012）');
+      repo.git('switch', '-q', 'main');
+      repo.plan([{}]);
+      const r = await run(repo);
+      expect(r.code, r.stdout).toBe(0);
+      expect(repo.calls()).toHaveLength(1);
+      expect(repo.calls()[0].prompt.split('## 対象\n\n')[1].split('\n')[0]).toBe('- [ ] 1.2 二つ目のタスク');
+    }));
+
+  it('[REQ-096] loomake/<change-id> があるときの --dry-run は、そのブランチのタスクを表示し、元のブランチに戻る', () =>
+    withRepo(async (repo) => {
+      repo.git('switch', '-q', '-c', 'loomake/c1');
+      repo.write('openspec/changes/c1/tasks.md', tasksMd(repo).replace('- [ ] 1.1', '- [x] 1.1'));
+      repo.git('commit', '-q', '-am', '1.1 を終えた');
+      repo.git('switch', '-q', 'main');
+      const r = await run(repo, { dryRun: true });
+      expect(r.code).toBe(0);
+      expect(r.stdout).not.toContain('- [ ] 1.1');
+      expect(r.stdout).toContain('- [ ] 1.2 二つ目のタスク');
+      expect(repo.git('rev-parse', '--abbrev-ref', 'HEAD')).toBe('main');
+    }));
+
   it('[REQ-097] 未完了のタスクを上から順に、1 回に 1 つずつ渡す', () =>
     withRepo(async (repo) => {
       repo.plan(passing);

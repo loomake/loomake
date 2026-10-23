@@ -146,15 +146,25 @@ export async function runRun(options: RunOptions): Promise<number> {
   }
   assertEngineAvailable(engine, env);
 
-  // 実行前の確認（REQ-093・REQ-094）
-  const specGate = runVerify({ root, changeId, gate: 'spec-only', progress });
-  if (!specGate.ok) {
-    stdout(`仕様ゲートに不合格なので、実装を始めませんでした。\n\n${formatVerifyResult(specGate)}`);
-    return 1;
-  }
+  // 実行前の確認（REQ-093・REQ-094）。未コミットの変更がなければ change のブランチに切り替えられる
   const dirty = dirtyFiles(root, env);
   if (dirty.length) {
     stdout(`作業ツリーに未コミットの変更があるので、実装を始めませんでした。コミットしてから、もう一度実行してください。\n${dirty.map((l) => `  ${l}`).join('\n')}`);
+    return 1;
+  }
+  // change のブランチ（REQ-096、add-run-loop の仮定 A-04）。あれば先に切り替え、そのブランチの内容で検査してタスクを読む（fix-review-findings の仮定 A-03）
+  const branch = `loomake/${changeId}`;
+  const startBranch = git(root, env, ['rev-parse', '--abbrev-ref', 'HEAD']).trim();
+  const hasBranch = branchExists(root, env, branch);
+  const switched = hasBranch && startBranch !== branch;
+  if (switched) git(root, env, ['switch', '-q', branch]);
+  const switchBack = () => {
+    if (switched) git(root, env, ['switch', '-q', startBranch]);
+  };
+  const specGate = runVerify({ root, changeId, gate: 'spec-only', progress });
+  if (!specGate.ok) {
+    switchBack();
+    stdout(`仕様ゲートに不合格なので、実装を始めませんでした。\n\n${formatVerifyResult(specGate)}`);
     return 1;
   }
 
@@ -168,6 +178,7 @@ export async function runRun(options: RunOptions): Promise<number> {
   if (options.dryRun) {
     stdout(['エンジンに渡す予定のタスク：', ...engineTasks.map((t) => `  - [ ] ${taskLabel(t)}`)].join('\n'));
     if (engineTasks[0]) stdout(`\n最初のタスクの指示：\n\n${buildPrompt(root, changeDir, `- [ ] ${taskLabel(engineTasks[0])}`)}`);
+    switchBack();
     return 0;
   }
 
@@ -175,10 +186,14 @@ export async function runRun(options: RunOptions): Promise<number> {
   if (!inContainer(env, fileExists)) {
     stdout('警告：コンテナの外で実行しようとしています。loomake run は、devcontainer か、それと同等のコンテナの中で実行してください。');
     if (!options.interactive) {
+      switchBack();
       stdout('確認を受け付けられない環境なので、止めました。');
       return 1;
     }
-    if (!(await options.confirm('続けますか [y/N] '))) return 1;
+    if (!(await options.confirm('続けますか [y/N] '))) {
+      switchBack();
+      return 1;
+    }
   }
 
   // 実行の記録。.gitignore で記録を git の追跡から外す（add-run-loop の仮定 A-24）
@@ -253,11 +268,9 @@ export async function runRun(options: RunOptions): Promise<number> {
     return `不正な直し方を見つけました（${findings.map((f) => f.file).join('、')}）`;
   };
 
-  // change のブランチ（REQ-096、add-run-loop の仮定 A-04）
-  const branch = `loomake/${changeId}`;
   // PR の向き先は、run を始めたときのブランチ（add-run-pr の仮定 A-21）
-  const base = git(root, env, ['rev-parse', '--abbrev-ref', 'HEAD']).trim();
-  git(root, env, branchExists(root, env, branch) ? ['switch', '-q', branch] : ['switch', '-q', '-c', branch]);
+  const base = startBranch;
+  if (!hasBranch) git(root, env, ['switch', '-q', '-c', branch]);
 
   // タスクを上から 1 つずつ渡し、終えるたびにコミットする（REQ-097・REQ-099）
   for (let i = 0; i < engineTasks.length; i++) {
