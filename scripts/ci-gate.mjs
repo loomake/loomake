@@ -37,6 +37,8 @@ const isDocument = (f) => f.endsWith('.md') || /^(docs|openspec|\.changeset)\//.
 /**
  * 対象の change を決める。明示があれば明示だけを、なければ変えたファイルとブランチ名から決めた change を合わせて使う（仮定 A-02）。
  * 返すのは { changes }・{ qualityOnly: 理由 }・{ error: 理由 } のどれか
+ * @param {{ ref?: string; body?: string; files?: string[]; changesDir: string; changesPrefix?: string }} options
+ * @returns {{ changes: string[]; qualityOnly?: undefined; error?: undefined } | { qualityOnly: string; changes?: undefined; error?: undefined } | { error: string; changes?: undefined; qualityOnly?: undefined }}
  */
 export function selectChanges({ ref = '', body = '', files = [], changesDir, changesPrefix = 'openspec/changes/' }) {
   const declared = declaredChanges(body);
