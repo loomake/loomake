@@ -258,13 +258,52 @@ describe('npm への公開の準備', () => {
     });
 
     it('[REQ-141] id-token: write を持ち、公開の前に 11.5.1 以上の npm を入れ、NPM_TOKEN があればそれも使う', () => {
-      expect(release).toMatch(/^permissions:\n(?:\s+.*\n)*?\s+id-token: write$/m);
+      expect(release).toMatch(/^ *permissions:\n(?:\s+.*\n)*?\s+id-token: write$/m);
       const install = release.match(/run: npm install -g npm@(\d+)\.(\d+)\.(\d+)/);
       expect(install).not.toBeNull();
       const [major, minor, patch] = install!.slice(1).map(Number);
       expect(major * 1e6 + minor * 1e3 + patch).toBeGreaterThanOrEqual(11 * 1e6 + 5 * 1e3 + 1);
       expect(at('run: npm install -g npm@')).toBeLessThan(at('run: pnpm changeset publish'));
       expect(release).toContain('NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}');
+    });
+
+    // jobs: の下を、ジョブの名前ごとの本文に分ける
+    const jobs = new Map<string, string>();
+    for (const part of release.slice(release.indexOf('\njobs:\n')).split(/^ {2}(?=[\w-]+:$)/m).slice(1)) {
+      jobs.set(part.slice(0, part.indexOf(':')), part);
+    }
+    const jobRunning = (command: string) => {
+      const found = [...jobs].filter(([, body]) => body.includes(`run: ${command}`));
+      expect(found, command).toHaveLength(1);
+      return found[0]!;
+    };
+
+    it('[REQ-143] ワークフロー全体の権限は contents: read だけで、書き込みの権限は公開のジョブだけが持つ', () => {
+      expect(release).toMatch(/^permissions:\n {2}contents: read\n(?! )/m);
+      const [publish] = jobRunning('pnpm changeset publish');
+      expect(jobs.size).toBeGreaterThanOrEqual(2);
+      for (const [name, body] of jobs) {
+        const has = (p: string) => new RegExp(`^ {6}${p}$`, 'm').test(body);
+        expect(has('id-token: write'), name).toBe(name === publish);
+        expect(has('contents: write'), name).toBe(name === publish);
+      }
+    });
+
+    it('[REQ-143] 公開のジョブは品質のジョブのあとに動き、スクリプトを実行せずにインストールし、ビルドせずにビルドの結果を受け取る', () => {
+      const [, publish] = jobRunning('pnpm changeset publish');
+      const [check, checkBody] = jobRunning('pnpm test');
+      for (const c of ['pnpm lint', 'pnpm typecheck']) expect(jobRunning(c)[0]).toBe(check);
+      expect(publish).toMatch(new RegExp(`^ {4}needs: \\[?${check}\\]?$`, 'm'));
+      expect(publish).toContain('run: pnpm install --frozen-lockfile --ignore-scripts');
+      expect(publish).not.toContain('run: pnpm build');
+      expect(checkBody).toContain('uses: actions/upload-artifact@');
+      expect(publish).toContain('uses: actions/download-artifact@');
+    });
+
+    it('[REQ-143] action をすべてコミットの SHA で指定する', () => {
+      const uses = [...release.matchAll(/uses: (\S+)/g)].map((m) => m[1]!);
+      expect(uses.length).toBeGreaterThan(0);
+      for (const u of uses) expect(u).toMatch(/@[0-9a-f]{40}$/);
     });
   });
 

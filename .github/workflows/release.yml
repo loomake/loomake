@@ -7,35 +7,32 @@ name: release
 on:
   workflow_dispatch:
 
+# 書き込みの権限は publish のジョブだけに持たせる。依存パッケージのスクリプトやビルドが動く check のジョブには渡さない（REQ-143）
 permissions:
-  contents: write
-  # Trusted Publishing で、npm が OIDC のトークンを受け取るため
-  id-token: write
+  contents: read
 
 # 公開を重ねて走らせない。実行中のものは取り消さず、終わるまで待つ（REQ-140）
 concurrency:
   group: release
   cancel-in-progress: false
 
+# action はコミットの SHA で固定する。コメントは固定したときの版（REQ-143）
 jobs:
-  publish:
+  check:
     # main 以外のブランチからは公開しない
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
       # pnpm test の changeset status は main からの差分を見るため、ローカルに main を用意する
       - run: git rev-parse --verify main || git branch main origin/main
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
           cache: pnpm
-          registry-url: https://registry.npmjs.org
-      # Trusted Publishing には npm 11.5.1 以上が要る。Node に同梱の npm は版が変わるので固定する
-      - run: npm install -g npm@11.19.0
       # pnpm changeset version で消化していない changeset が残っていれば止める（版を上げずに公開しないため）
       - name: 未消化の changeset がないことを確かめる
         run: |
@@ -51,6 +48,46 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      # publish のジョブはビルドしないので、ビルドの結果を渡す
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dist
+          path: packages/*/dist
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    needs: check
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      # changeset publish が作るタグを push するため
+      contents: write
+      # Trusted Publishing で、npm が OIDC のトークンを受け取るため
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      # Trusted Publishing には npm 11.5.1 以上が要る。Node に同梱の npm は版が変わるので固定する
+      - run: npm install -g npm@11.19.0
+      # このジョブは OIDC のトークンを取れるので、依存パッケージのスクリプトを動かさない
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: dist
+          path: packages
+      - name: ビルドの結果がそろっていることを確かめる
+        run: |
+          for f in core/dist/index.js kit/dist/index.js trace/dist/index.js runner/dist/index.js cli/dist/cli.js; do
+            test -f "packages/$f" || { echo "packages/$f がありません"; exit 1; }
+          done
       # NPM_TOKEN がなければ、npm は OIDC で認証する。provenance は、公開リポジトリから OIDC で公開したときに npm が付ける
       - run: pnpm changeset publish
         env:
