@@ -11,3 +11,7 @@
 ## 1.3 verifyへの接続
 
 範囲外の不正IDを通す現行実装で回帰テスト1件が失敗した。verifyへモデルの整合性検査と純粋な判定を接続し、モデルと対応判定の10件、verifyの38件の計48件が成功した。既存のブロッキング質問・仮定・確認待ち・テスト対応の期待値は変更していない。
+
+## 完了ゲート
+
+`pnpm -s verify --change separate-verification-policy --done`はexit 0。lint・型検査・357件のテストと全REQの対応が成功した。既存のパーサの型とverify JSONの版は維持した。
