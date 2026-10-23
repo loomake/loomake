@@ -7,5 +7,5 @@
 
 ## 2. 統合検証
 
-- [ ] 2.1 出力予算とTDD結果を記録し、changesetを追加して関連テストを通す
+- [x] 2.1 出力予算とTDD結果を記録し、changesetを追加して関連テストを通す
 - [ ] 2.2 `pnpm -s verify --change bound-engine-output --done` を通す <!-- loomake:gate=done -->
