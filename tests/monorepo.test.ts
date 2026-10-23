@@ -68,6 +68,12 @@ describe('CI', () => {
     expect(verifyArgs('sample', changes)).toEqual(['--change', 'sample', '--done']);
   });
 
+  it('[REQ-010][REQ-054] run のブランチ名 loomake/<id> からも change-id を取り出す', () => {
+    expect(verifyArgs('loomake/sample', changes)).toEqual(['--change', 'sample', '--done']);
+    expect(verifyArgs('loomake/fix-typo', changes)).toEqual([]);
+    expect(verifyArgs('loomake/archive', changes)).toEqual([]);
+  });
+
   it('[REQ-010][REQ-054] ブランチ名が change-id と一致しなければ品質コマンドだけを実行する', () => {
     expect(verifyArgs('fix-typo', changes)).toEqual([]);
     expect(verifyArgs('', changes)).toEqual([]);

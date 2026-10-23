@@ -1,5 +1,5 @@
 ## 1. 実装
-- [ ] 1.1 ci-gate で `loomake/<change-id>` のブランチ名から change-id を取り出す（REQ-010）
+- [x] 1.1 ci-gate で `loomake/<change-id>` のブランチ名から change-id を取り出す（REQ-010）
 - [ ] 1.2 エンジンが 0 以外の終了コードで終わったら、タスクを完了にせずに止まる（REQ-099）
 - [ ] 1.3 既存の `loomake/<change-id>` に切り替えてから、仕様ゲートとタスクの読み取りを行う（REQ-096）
 - [ ] 1.4 すべての package.json の `scripts` の変更を検出する（REQ-110）
