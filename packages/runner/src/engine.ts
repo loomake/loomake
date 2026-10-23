@@ -1,7 +1,10 @@
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { UsageError } from '@loomake/kit';
+import { StringDecoder } from 'node:string_decoder';
 
 /** 初版で使えるエンジン（REQ-101） */
+export const DEFAULT_MAX_OUTPUT_BYTES = 64 * 1024 * 1024;
+
 export const ENGINES = ['claude-code'] as const;
 export type EngineName = (typeof ENGINES)[number];
 
@@ -18,6 +21,8 @@ export type EngineResult = {
   timedOut: boolean;
   /** 中断で止めたか */
   aborted: boolean;
+  /** 出力が予算を超えて停止したか。 */
+  outputLimitExceeded?: boolean;
 };
 
 export type EngineCall = {
@@ -29,6 +34,9 @@ export type EngineCall = {
   skipPermissions: boolean;
   timeoutMs: number;
   signal?: AbortSignal;
+  maxOutputBytes?: number;
+  /** stderrの転送先。省略するとprocess.stderrへ転送する。 */
+  onStderr?: (text: string) => void;
 };
 
 const isWindows = process.platform === 'win32';
@@ -74,6 +82,8 @@ function stop(child: ChildProcess): Promise<void> {
 
 /** Claude Code を呼び、指示を標準入力で渡す。時間の上限か中断で止める */
 export function runClaude(call: EngineCall): Promise<EngineResult> {
+  const maxOutputBytes = call.maxOutputBytes ?? DEFAULT_MAX_OUTPUT_BYTES;
+  if (!Number.isSafeInteger(maxOutputBytes) || maxOutputBytes <= 0) throw new UsageError('エンジンの出力上限は正の安全な整数にしてください');
   if (call.signal?.aborted) return Promise.resolve({ text: '', raw: '', exitCode: null, timedOut: false, aborted: true });
   return new Promise((resolve) => {
     const child = spawn('claude', claudeArgs(call.commands, call.skipPermissions).map(quote), {
@@ -81,13 +91,29 @@ export function runClaude(call: EngineCall): Promise<EngineResult> {
       env: call.env,
       shell: isWindows,
       detached: !isWindows,
-      stdio: ['pipe', 'pipe', 'inherit'],
+      stdio: ['pipe', 'pipe', 'pipe'],
     });
     let raw = '';
     let timedOut = false;
     let aborted = false;
     let stopping: Promise<void> | undefined;
-    child.stdout.setEncoding('utf8').on('data', (d: string) => (raw += d));
+    let outputBytes = 0;
+    let outputLimitExceeded = false;
+    const accept = (data: string, sink: (text: string) => void) => {
+      if (outputLimitExceeded) return;
+      const bytes = Buffer.from(data, 'utf8');
+      const left = maxOutputBytes - outputBytes;
+      const retained = bytes.subarray(0, left);
+      outputBytes += retained.length;
+      const text = new StringDecoder('utf8').write(retained);
+      if (text) sink(text);
+      if (bytes.length > left) {
+        outputLimitExceeded = true;
+        stopping ??= stop(child);
+      }
+    };
+    child.stdout.setEncoding('utf8').on('data', (data: string) => accept(data, (text) => { raw += text; }));
+    child.stderr.setEncoding('utf8').on('data', (data: string) => accept(data, call.onStderr ?? ((text) => { process.stderr.write(text); })));
     const timer = setTimeout(() => {
       timedOut = true;
       stopping ??= stop(child);
@@ -110,7 +136,7 @@ export function runClaude(call: EngineCall): Promise<EngineResult> {
       } catch {
         // JSON でなければ標準出力をそのまま使う
       }
-      resolve({ text, raw, exitCode: code, timedOut, aborted });
+      resolve({ text, raw, exitCode: code, timedOut, aborted, outputLimitExceeded });
     });
     child.stdin.on('error', () => {});
     child.stdin.end(call.prompt);
