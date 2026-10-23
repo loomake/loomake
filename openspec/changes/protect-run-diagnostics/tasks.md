@@ -7,5 +7,5 @@
 
 ## 2. 統合検証
 
-- [ ] 2.1 保護の範囲とTDD結果を記録し、changesetを追加して関連テストを通す
+- [x] 2.1 保護の範囲とTDD結果を記録し、changesetを追加して関連テストを通す
 - [ ] 2.2 `pnpm -s verify --change protect-run-diagnostics --done` を通す <!-- loomake:gate=done -->
