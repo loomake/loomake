@@ -273,6 +273,13 @@ async function prepare(options: RunOptions): Promise<RunContext | number> {
     return 0;
   }
 
+  // PR を作れない環境では、エンジンに実装させる前に止まる。証拠を記録する前の確認も残す（REQ-116、fix-evaluation-findings の仮定 A-05）
+  if (!ghLoggedIn(root, env)) {
+    switchBack();
+    stdout('gh CLI がないか、ログインしていないので、実装を始めませんでした。PR を作るために、gh auth login でログインしてください。');
+    return 1;
+  }
+
   // コンテナの外では警告して確認する（REQ-122）
   if (!inContainer(env, fileExists)) {
     stdout('警告：コンテナの外で実行しようとしています。loomake run は、devcontainer か、それと同等のコンテナの中で実行してください。');
