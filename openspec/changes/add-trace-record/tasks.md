@@ -10,4 +10,4 @@
 - [x] 2.2 CI の Node.js 20.19 でテストを流す（REQ-089）
 
 ## 3. 確認
-- [ ] 3.1 `pnpm -s verify --change add-trace-record --done` を通す
+- [x] 3.1 `pnpm -s verify --change add-trace-record --done` を通す
