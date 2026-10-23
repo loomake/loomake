@@ -22,8 +22,11 @@ const isConfigFile = (f: string) => {
 // いまの仕様と trace.md（A-19）
 const isSpecOrTrace = (f: string) => f.startsWith('openspec/specs/') || (f.startsWith('openspec/changes/') && f.endsWith('/trace.md'));
 
-const scriptsOf = (root: string, env: NodeJS.ProcessEnv, rev: string): string => {
-  const r = spawnSync('git', ['show', `${rev}:package.json`], { cwd: root, env, encoding: 'utf8' });
+// どの階層の package.json でも scripts を比べる（fix-review-findings の仮定 A-04）
+const isPackageJson = (f: string) => f.split('/').pop() === 'package.json';
+
+const scriptsOf = (root: string, env: NodeJS.ProcessEnv, rev: string, file: string): string => {
+  const r = spawnSync('git', ['show', `${rev}:${file}`], { cwd: root, env, encoding: 'utf8' });
   if (r.status !== 0) return '{}';
   try {
     return JSON.stringify((JSON.parse(r.stdout) as { scripts?: unknown }).scripts ?? {});
@@ -44,7 +47,7 @@ export function findViolations(root: string, env: NodeJS.ProcessEnv): { findings
     const [code, file] = line.split('\t');
     if (code === 'D' && isTestFile(file)) findings.push({ file, reason: 'テストファイルを消しました' });
     if (isConfigFile(file)) findings.push({ file, reason: '設定ファイルを変えました' });
-    if (file === 'package.json' && scriptsOf(root, env, 'HEAD') !== scriptsOf(root, env, '')) {
+    if (isPackageJson(file) && scriptsOf(root, env, 'HEAD', file) !== scriptsOf(root, env, '', file)) {
       findings.push({ file, reason: 'package.json の scripts を変えました' });
     }
     if (isSpecOrTrace(file)) findings.push({ file, reason: file.startsWith('openspec/specs/') ? 'いまの仕様を変えました' : 'trace.md を変えました' });
