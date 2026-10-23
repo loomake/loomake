@@ -6,8 +6,8 @@ export type GuardFinding = { file: string; reason: string };
 
 // テストファイル（add-run-guards の仮定 A-17）
 const isTestFile = (f: string) => /\.(test|spec)\./.test(f) || /(^|\/)(test|tests|__tests__)\//.test(f);
-// skip・todo を足した行（A-17）
-const SKIP = /\b(it|test|describe)\.(skip|todo)\b|\bx(it|test|describe)\(/;
+// skip・todo を足した行（A-17）。it.concurrent.skip のような修飾と、条件つきの skipIf・runIf も見る（fix-review-findings-2 の仮定 A-04）
+const SKIP = /\b(it|test|describe|suite)(\.\w+)*\.(skip|todo|skipIf|runIf)\b|\bx(it|test|describe)\(/;
 // lint・型・テストの設定ファイル（A-18）
 const isConfigFile = (f: string) => {
   const name = f.split('/').pop() ?? '';

@@ -71,6 +71,12 @@ describe('テストの削除と skip・todo の検出', () => {
       expect(r.stdout).not.toContain('不正な直し方');
     }));
 
+  it.each(['it.skipIf(true)', 'describe.skipIf(true)', 'it.runIf(false)', 'it.concurrent.skip'])('[REQ-109] テストファイルに %s の行を足したら止まる', (call) =>
+    check({ write: { 'tests/a.test.ts': `${call}('[REQ-012] 確かめる', () => {});\n` } }, withTest, (r) => {
+      stopped(r, 2);
+      expect(r.stdout).toContain(`skip・todo を足しました：${call}(`);
+    }));
+
   it('xit( と describe.todo も skip・todo として見つける（仮定 A-17）', () =>
     check({ write: { 'tests/a.test.ts': "xit('a', () => {});\ndescribe.todo('b');\n" } }, withTest, (r) => {
       stopped(r, 2);
