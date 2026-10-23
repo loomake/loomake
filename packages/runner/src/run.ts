@@ -239,6 +239,8 @@ export async function runRun(options: RunOptions): Promise<number> {
     if (result.timedOut) return { stop: { status: 'stopped', reason: '実行時間の上限に達しました' } };
     const question = result.text.match(QUESTION);
     if (question) return { stop: { status: 'stopped', reason: `エンジンが質問しました：${question[1]}` } };
+    // 失敗したエンジンの変更は完了にしない（fix-review-findings の仮定 A-02）
+    if (result.exitCode !== 0) return { stop: { status: 'stopped', reason: `エンジンが終了コード ${result.exitCode ?? '（なし）'} で終わりました` } };
     return { result };
   };
 

@@ -278,6 +278,17 @@ describe('止まる条件と報告', () => {
       expect(log(repo)).toEqual(['init']);
     }));
 
+  it('[REQ-099] エンジンが 0 以外の終了コードで終わったら、タスクを完了にせず、コミットもせずに止まる', () =>
+    withRepo(async (repo) => {
+      repo.plan([{ write: { 'impl.txt': '途中\n' }, exitCode: 1 }]);
+      const r = await run(repo);
+      expect(r.code).toBe(1);
+      expect(r.stdout).toContain('エンジンが終了コード 1 で終わりました');
+      expect(tasksMd(repo)).toContain('- [ ] 1.1');
+      expect(log(repo)).toEqual(['init']);
+      expect(summary(repo).status).toBe('stopped');
+    }));
+
   it('[REQ-107] 止まったら、理由・終えたタスク・残ったタスク・最後の検査結果を表示し、summary.json にも書く', () =>
     withRepo(async (repo) => {
       repo.plan([{ write: { 'impl.txt': '実装\n' } }, { output: 'LOOMAKE-QUESTION: 二つ目で迷いました' }]);
