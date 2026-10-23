@@ -8,7 +8,7 @@
 - [x] 1.7 AGENTS.md のプロジェクト固有の情報を直す
 
 ## 2. テスト
-- [ ] 2.1 各 Scenario に対応するテストを書く。テスト名に [REQ-xxx] を入れる
+- [x] 2.1 各 Scenario に対応するテストを書く。テスト名に [REQ-xxx] を入れる
 
 ## 3. 確認
-- [ ] 3.1 `pnpm -s verify --change fix-review-findings-2 --done` を通す
+- [x] 3.1 `pnpm -s verify --change fix-review-findings-2 --done` を通す
