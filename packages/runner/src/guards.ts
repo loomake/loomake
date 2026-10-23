@@ -45,9 +45,10 @@ export function findViolations(root: string, env: NodeJS.ProcessEnv, openspecDir
   const changesDir = `${prefix}changes/`;
   git(root, env, ['add', '-A']);
   const findings: GuardFinding[] = [];
-  const status = git(root, env, ['diff', '--cached', '--name-status', '--no-renames']).split('\n').filter(Boolean);
-  for (const line of status) {
-    const [code, file] = line.split('\t');
+  const status = git(root, env, ['diff', '--cached', '--name-status', '--no-renames', '-z']).split('\0');
+  for (let i = 0; i + 1 < status.length; i += 2) {
+    const code = status[i];
+    const file = status[i + 1];
     if (code === 'D' && isTestFile(file)) findings.push({ file, reason: 'テストファイルを消しました' });
     if (isConfigFile(file)) findings.push({ file, reason: '設定ファイルを変えました' });
     if (isPackageJson(file) && scriptsOf(root, env, 'HEAD', file) !== scriptsOf(root, env, '', file)) {
