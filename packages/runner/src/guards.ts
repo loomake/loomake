@@ -19,8 +19,8 @@ const isConfigFile = (f: string) => {
     /^(vitest\.config|vitest\.workspace|vite\.config|jest\.config)\./.test(name)
   );
 };
-// いまの仕様と trace.md（A-19）
-const isSpecOrTrace = (f: string) => f.startsWith('openspec/specs/') || (f.startsWith('openspec/changes/') && f.endsWith('/trace.md'));
+// いまの仕様と change の文書（A-19、fix-review-findings-2 の仮定 A-01）。openspecDir は loomake.config.json の値
+const openspecPrefix = (dir: string) => `${dir.replace(/\\/g, '/').replace(/^\.\//, '').replace(/\/+$/, '')}/`;
 
 // どの階層の package.json でも scripts を比べる（fix-review-findings の仮定 A-04）
 const isPackageJson = (f: string) => f.split('/').pop() === 'package.json';
@@ -39,7 +39,10 @@ const scriptsOf = (root: string, env: NodeJS.ProcessEnv, rev: string, file: stri
  * エンジンの変更を index に載せ、HEAD との差分から不正な直し方を探す（REQ-109〜REQ-111、仮定 A-20）。
  * 見つけたら、その差分を返す。変更は index に載ったままなので、呼び出し側で戻すかコミットする
  */
-export function findViolations(root: string, env: NodeJS.ProcessEnv): { findings: GuardFinding[]; diff: string } {
+export function findViolations(root: string, env: NodeJS.ProcessEnv, openspecDir = 'openspec'): { findings: GuardFinding[]; diff: string } {
+  const prefix = openspecPrefix(openspecDir);
+  const specsDir = `${prefix}specs/`;
+  const changesDir = `${prefix}changes/`;
   git(root, env, ['add', '-A']);
   const findings: GuardFinding[] = [];
   const status = git(root, env, ['diff', '--cached', '--name-status', '--no-renames']).split('\n').filter(Boolean);
@@ -50,7 +53,8 @@ export function findViolations(root: string, env: NodeJS.ProcessEnv): { findings
     if (isPackageJson(file) && scriptsOf(root, env, 'HEAD', file) !== scriptsOf(root, env, '', file)) {
       findings.push({ file, reason: 'package.json の scripts を変えました' });
     }
-    if (isSpecOrTrace(file)) findings.push({ file, reason: file.startsWith('openspec/specs/') ? 'いまの仕様を変えました' : 'trace.md を変えました' });
+    if (file.startsWith(specsDir)) findings.push({ file, reason: 'いまの仕様を変えました' });
+    else if (file.startsWith(changesDir)) findings.push({ file, reason: file.endsWith('/trace.md') ? 'trace.md を変えました' : 'change の文書を変えました' });
     if (code !== 'D') {
       const added = git(root, env, ['diff', '--cached', '-U0', '--', file])
         .split('\n')

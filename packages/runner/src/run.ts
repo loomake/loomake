@@ -261,7 +261,7 @@ export async function runRun(options: RunOptions): Promise<number> {
 
   // コミットする前に不正な直し方を探し、見つけたら変更を作業ツリーに残して止まる理由を返す（REQ-109〜REQ-112）
   const guard = (): string | undefined => {
-    const { findings, diff } = findViolations(root, env);
+    const { findings, diff } = findViolations(root, env, config.openspecDir);
     if (!findings.length) return undefined;
     git(root, env, ['reset', '-q']);
     stdout(['不正な直し方を見つけました。', ...findings.map((f) => `  - ${f.file}：${f.reason}`), '', diff, APPROVAL_GUIDE].join('\n'));
@@ -290,35 +290,24 @@ export async function runRun(options: RunOptions): Promise<number> {
     done.push(taskLabel(task));
   }
 
-  // 完了ゲートと直し（REQ-100・REQ-104）。ゲートのタスクは先に完了にして検査し、直しのコミットには含めない
-  for (const t of gateTasks) checkTask(tasksPath, t.line);
+  // 完了ゲートと直し（REQ-100・REQ-104）。ゲートのタスクは検査のあいだだけ完了にし、エンジンを呼ぶ前に戻す。
+  // run 自身が変えた tasks.md を、不正な直し方として見つけないため（fix-review-findings-2 の仮定 A-01）
   const restoreGateTasks = () => {
     if (gateTasks.length) git(root, env, ['checkout', '-q', '--', tasksRel]);
   };
   for (let fixes = 0; ; fixes++) {
-    if (options.signal?.aborted) {
-      restoreGateTasks();
-      return finish('interrupted', '中断されました', gateTasks);
-    }
+    if (options.signal?.aborted) return finish('interrupted', '中断されました', gateTasks);
+    for (const t of gateTasks) checkTask(tasksPath, t.line);
     lastVerify = runVerify({ root, changeId, gate: 'done', progress });
     save(`${String(step).padStart(2, '0')}-verify${fixes ? `-${fixes}` : ''}.json`, `${JSON.stringify(lastVerify, null, 2)}\n`);
     if (lastVerify.ok) break;
-    if (fixes >= runConfig.maxFixes) {
-      restoreGateTasks();
-      return finish('stopped', `直しの回数の上限（${runConfig.maxFixes} 回）に達しました`, gateTasks);
-    }
+    restoreGateTasks();
+    if (fixes >= runConfig.maxFixes) return finish('stopped', `直しの回数の上限（${runConfig.maxFixes} 回）に達しました`, gateTasks);
     const { stop } = await callEngine(buildPrompt(root, changeDir, '完了ゲートに合格するように直す。', lastVerify));
-    if (stop) {
-      restoreGateTasks();
-      return finish(stop.status, stop.reason, gateTasks);
-    }
+    if (stop) return finish(stop.status, stop.reason, gateTasks);
     const violation = guard();
-    if (violation) {
-      restoreGateTasks();
-      return finish('stopped', violation, gateTasks);
-    }
+    if (violation) return finish('stopped', violation, gateTasks);
     git(root, env, ['add', '-A']);
-    if (gateTasks.length) git(root, env, ['reset', '-q', '--', tasksRel]);
     if (git(root, env, ['diff', '--cached', '--name-only']).trim()) {
       git(root, env, ['commit', '-q', '-m', `run(${changeId}): 完了ゲートの直し（${fixes + 1} 回目）`]);
     }
