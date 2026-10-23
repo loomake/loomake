@@ -15,3 +15,7 @@
 続けて、確認するNodeで`node scripts/package-smoke.mjs check <同じディレクトリ>`を実行する。公開API、スキーマ、インストールしたbin、help、version、init、doctor、verify、証拠の記録とレポートを確認する。Node20ではcheckだけを動かす。
 
 ローカルの成功は、別OS・別NodeのCI成功を意味しない。公開ワークフローは同じコミットを検査するが、npmへの公開権限や実際の認証は別に確認する。
+
+## 完了ゲート
+
+`pnpm -s verify --change verify-package-artifacts --done`はexit 0。lint・型検査・346件のテスト・全REQの対応を確認した。現在のホストで配布物の統合テストが成功した。CIの別OS・別Nodeでの実行とnpm公開は未実施。
