@@ -7,3 +7,5 @@ export { formatVerifyResult } from './verify/format.js';
 export { runInit, initFiles, configJson, detectPackageManager } from './init/init.js';
 export type { InitOptions, InitFile, PackageManager } from './init/init.js';
 export { unifiedDiff } from './init/diff.js';
+export { runDoctor, diagnose } from './doctor/doctor.js';
+export type { DoctorCheck, DoctorLevel, DoctorOptions } from './doctor/doctor.js';

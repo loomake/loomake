@@ -83,7 +83,7 @@ describe('終了コード', () => {
   it('[REQ-041] サブコマンドが無ければ、使い方を出して 2', async () => {
     const r = await withProject({}, (root) => run(root));
     expect(r.code).toBe(2);
-    expect(r.stderr).toContain('使い方: loomake <init | verify | trace | run>');
+    expect(r.stderr).toContain('使い方: loomake <init | verify | trace | run | doctor>');
   });
 });
 
@@ -123,4 +123,37 @@ describe('verify の性能', () => {
     expect(r.code, r.stdout).toBe(0);
     expect(r.ms).toBeLessThan(3000);
   }, 30_000);
+});
+
+describe('ヘルプと版', () => {
+  it('[REQ-135] loomake --help と -h は、サブコマンドの一覧と説明を標準出力に出し、終了コード 0 を返す', async () => {
+    for (const flag of ['--help', '-h']) {
+      const r = await run(repo, flag);
+      expect(r.code).toBe(0);
+      for (const name of ['init', 'verify', 'trace', 'run', 'doctor']) expect(r.stdout).toMatch(new RegExp(`^  ${name} +\\S`, 'm'));
+    }
+  });
+
+  it('[REQ-135] loomake verify --help は verify の使い方だけを出し、検査を実行せずに終了コード 0 を返す', async () => {
+    const r = await run(repo, 'verify', '--change', 'nothing', '--done', '--help');
+    expect(r.code).toBe(0);
+    expect(r.stdout).toBe('使い方: loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]');
+    expect(r.stderr).toBe('');
+  });
+
+  it('[REQ-135] init・trace・run も -h で使い方を出す', async () => {
+    for (const cmd of ['init', 'trace', 'run']) {
+      const r = await run(repo, cmd, '-h');
+      expect(r.code).toBe(0);
+      expect(r.stdout).toContain(`使い方: loomake ${cmd}`);
+    }
+  });
+
+  it('[REQ-135] loomake --version と -v は、package.json の version を出して終了コード 0 を返す', async () => {
+    for (const flag of ['--version', '-v']) {
+      const r = await run(repo, flag);
+      expect(r.code).toBe(0);
+      expect(r.stdout).toBe(readJson('packages/cli/package.json').version);
+    }
+  });
 });

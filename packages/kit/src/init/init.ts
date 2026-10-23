@@ -111,6 +111,22 @@ const REPORT_EXAMPLES = [
   `    jest --json --outputFile=${DEFAULT_TEST_REPORT}`,
 ];
 
+/**
+ * .gitignore に path の行を足し、init の結果に出す 1 行を返す（REQ-133）。
+ * 既存の行は変えない。前後の空白と先頭の / を除いて同じ行があれば足さない（improve-project-onboarding の仮定 A-02）
+ */
+function ensureIgnored(root: string, path: string): string {
+  const p = join(root, '.gitignore');
+  if (!existsSync(p)) {
+    writeFileSync(p, `${path}\n`);
+    return `作成：.gitignore（${path}）`;
+  }
+  const text = readFileSync(p, 'utf8');
+  if (text.split(/\r?\n/).some((l) => l.trim().replace(/^\//, '') === path)) return '変更なし：.gitignore';
+  writeFileSync(p, `${text}${text === '' || text.endsWith('\n') ? '' : '\n'}${path}\n`);
+  return `追記：.gitignore（${path}）`;
+}
+
 const isSymlink = (p: string) => {
   try {
     return lstatSync(p).isSymbolicLink();
@@ -142,7 +158,7 @@ export async function runInit(options: InitOptions): Promise<number> {
   const { root, stdout } = options;
   const files = initFiles(options);
   // プロジェクトの外を読み書きしないよう、既存ファイルを読む前に調べ、1 つでもあれば何も置かずに中止する
-  const unsafe = files.map((f) => unsafeTarget(root, f.path)).filter((r): r is string => r !== null);
+  const unsafe = [...files.map((f) => f.path), '.gitignore'].map((p) => unsafeTarget(root, p)).filter((r): r is string => r !== null);
   if (unsafe.length) {
     stdout(unsafe.join('\n'));
     stdout('プロジェクトの外のファイルを読み書きしないよう、どのファイルも置かずに中止しました。シンボリックリンクを外すか、プロジェクトの中を指すように直してください。');
@@ -179,6 +195,11 @@ export async function runInit(options: InitOptions): Promise<number> {
     writeFileSync(p, f.content);
     lines.push(`  ${status[i] === 'new' ? '作成' : '上書き'}：${f.path}`);
   });
+  // テストのレポートを git の追跡から外す。証拠の置き場（.loomake/evidence/）はコミットするので除外しない（REQ-133）。
+  // 実行ログの置き場は、loomake run が自分で除外する（improve-project-onboarding の仮定 A-01）
+  const config = readJson(join(root, 'loomake.config.json')) as { tests?: { report?: unknown } } | undefined;
+  const report = typeof config?.tests?.report === 'string' ? config.tests.report.replace(/^\.\//, '') : DEFAULT_TEST_REPORT;
+  lines.push(`  ${ensureIgnored(root, report)}`);
   stdout(['', 'loomake init の結果:', ...lines].join('\n'));
 
   if (!existsSync(join(root, 'openspec'))) {

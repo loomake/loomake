@@ -1,4 +1,5 @@
-import { UsageError, formatVerifyResult, runInit, runVerify } from '@loomake/kit';
+import { readFileSync } from 'node:fs';
+import { UsageError, formatVerifyResult, runDoctor, runInit, runVerify } from '@loomake/kit';
 import { runRun } from '@loomake/runner';
 import { runRecord, runReport } from '@loomake/trace';
 
@@ -14,32 +15,78 @@ export type Io = {
   signal?: AbortSignal;
 };
 
-const USAGE = 'loomake <init | verify | trace | run> [オプション]';
+const USAGE = 'loomake <init | verify | trace | run | doctor> [オプション]';
 const INIT_USAGE = 'loomake init [--codex] [--devcontainer]';
 const VERIFY_USAGE = 'loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]';
 const RUN_USAGE = 'loomake run --change <id> [--engine claude-code] [--dry-run] [--skip-permissions]';
 const RUN_FLAGS = new Set(['--dry-run', '--skip-permissions']);
 const TRACE_USAGE = 'loomake trace record --change <id> | loomake trace report --change <id> [--format md|json]';
+const DOCTOR_USAGE = 'loomake doctor';
 const INIT_FLAGS = new Set(['--codex', '--devcontainer']);
+const COMMANDS = ['init', 'verify', 'trace', 'run', 'doctor'] as const;
+type Command = (typeof COMMANDS)[number];
+const COMMAND_USAGE: Record<Command, string> = { init: INIT_USAGE, verify: VERIFY_USAGE, trace: TRACE_USAGE, run: RUN_USAGE, doctor: DOCTOR_USAGE };
+
+// 全体のヘルプ（REQ-135）
+const HELP = [
+  `使い方: ${USAGE}`,
+  '',
+  'コマンド:',
+  '  init     AGENTS.md・CLAUDE.md・loomake.config.json・Skill をプロジェクトに置く',
+  '  verify   仕様ゲートと完了ゲートで、仕様・確認事項・テストを検査する',
+  '  trace    証拠を記録し（record）、検収レポートを出す（report）',
+  '  run      change のタスクをエンジンに 1 つずつ実装させ、完了ゲートを通して PR を作る',
+  '  doctor   導入状態を調べ、足りない設定と直し方を表示する',
+  '',
+  'オプション:',
+  '  -h, --help     使い方を表示する',
+  '  -v, --version  版を表示する',
+  '',
+  '各コマンドの使い方は、loomake <コマンド> --help で表示します。',
+].join('\n');
+
+const isHelp = (a: string | undefined) => a === '--help' || a === '-h';
+// src/ からも dist/ からも、loomake の package.json は 1 つ上にある
+const version = () => (JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }).version;
 const VERIFY_FLAGS = new Set(['--spec-only', '--done', '--json', '--skip-commands']);
 
 /** CLI の本体。終了コード（合格 0・不合格 1・使い方の誤り 2）を返す（REQ-041） */
 export async function main(argv: string[], io: Io): Promise<number> {
   const [command, ...args] = argv;
-  if (command !== 'verify' && command !== 'init' && command !== 'trace' && command !== 'run') {
+  if (isHelp(command)) {
+    io.stdout(HELP);
+    return 0;
+  }
+  if (command === '--version' || command === '-v') {
+    io.stdout(version());
+    return 0;
+  }
+  if (!COMMANDS.includes(command as Command)) {
     io.stderr(`使い方: ${USAGE}`);
     return 2;
   }
+  const cmd = command as Command;
+  // サブコマンドの --help は、ほかの処理をせずに使い方だけを出す（REQ-135）
+  if (args.some(isHelp)) {
+    io.stdout(`使い方: ${COMMAND_USAGE[cmd]}`);
+    return 0;
+  }
   try {
-    if (command === 'init') return await init(args, io);
-    if (command === 'run') return await run(args, io);
-    return command === 'verify' ? verify(args, io) : trace(args, io);
+    if (cmd === 'init') return await init(args, io);
+    if (cmd === 'run') return await run(args, io);
+    if (cmd === 'doctor') return doctor(args, io);
+    return cmd === 'verify' ? verify(args, io) : trace(args, io);
   } catch (e) {
     if (!(e instanceof UsageError)) throw e;
-    io.stderr(`loomake ${command}: ${e.message}`);
-    io.stderr(`使い方: ${{ init: INIT_USAGE, verify: VERIFY_USAGE, trace: TRACE_USAGE, run: RUN_USAGE }[command]}`);
+    io.stderr(`loomake ${cmd}: ${e.message}`);
+    io.stderr(`使い方: ${COMMAND_USAGE[cmd]}`);
     return 2;
   }
+}
+
+function doctor(args: string[], io: Io): number {
+  for (const a of args) throw new UsageError(`知らないオプションです：${a}`);
+  return runDoctor({ root: io.cwd, stdout: io.stdout });
 }
 
 function init(args: string[], io: Io): Promise<number> {
