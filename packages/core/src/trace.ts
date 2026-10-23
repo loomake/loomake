@@ -2,8 +2,9 @@ import { readTable, splitLines, type ParseError, type ParseResult, type TableRow
 
 // 表の列名。trace.md の列名をそのままキーにする
 export const LEDGER_COLUMNS = ['ID', '出典', '種別', '要約（原文に忠実に）', '状態', '反映先'] as const;
-export const QUESTION_COLUMNS = ['ID', '関連', '質問', '選択肢', 'おすすめ', 'ブロッキング', '回答'] as const;
-export const ASSUMPTION_COLUMNS = ['ID', '関連', '仮定の内容', '理由', '承認'] as const;
+// 回答者・回答日・承認者・承認日は後から足した列。列の無い trace.md では空の文字列になる（add-agreement-columns の仮定 A-10）
+export const QUESTION_COLUMNS = ['ID', '関連', '質問', '選択肢', 'おすすめ', 'ブロッキング', '回答', '回答者', '回答日'] as const;
+export const ASSUMPTION_COLUMNS = ['ID', '関連', '仮定の内容', '理由', '承認', '承認者', '承認日'] as const;
 
 /** 表の行。列名をキーにした値と、行番号を持つ */
 type Row<C extends readonly string[]> = { [K in C[number]]: string } & { line: number };

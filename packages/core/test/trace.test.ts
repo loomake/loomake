@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import { createTraceTemplate, parseTrace } from '../src/index.js';
 
@@ -55,10 +57,10 @@ describe('parseTrace', () => {
       { ID: 'REQ-002', 出典: '要件書 §2', 種別: '機能', '要約（原文に忠実に）': '未定の要件', 状態: '確認待ち', 反映先: 'Q-01', line: 8 },
     ]);
     expect(value.questions).toEqual([
-      { ID: 'Q-01', 関連: 'REQ-002', 質問: '何回ですか', 選択肢: '3 / 5', おすすめ: '5', ブロッキング: 'yes', 回答: '', line: 16 },
+      { ID: 'Q-01', 関連: 'REQ-002', 質問: '何回ですか', 選択肢: '3 / 5', おすすめ: '5', ブロッキング: 'yes', 回答: '', 回答者: '', 回答日: '', line: 16 },
     ]);
     expect(value.assumptions).toEqual([
-      { ID: 'A-01', 関連: 'REQ-001', 仮定の内容: '8 文字以上', 理由: '記載なし', 承認: '承認（2026-10-22）', line: 22 },
+      { ID: 'A-01', 関連: 'REQ-001', 仮定の内容: '8 文字以上', 理由: '記載なし', 承認: '承認（2026-10-22）', 承認者: '', 承認日: '', line: 22 },
     ]);
   });
 
@@ -105,10 +107,40 @@ describe('parseTrace', () => {
   });
 });
 
+describe('parseTrace：合意の列', () => {
+  const withAgreement = trace
+    .replace('| ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 |\n|---|---|---|---|---|---|---|', '| ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |\n|---|---|---|---|---|---|---|---|---|')
+    .replace('| ID | 関連 | 仮定の内容 | 理由 | 承認 |\n|---|---|---|---|---|', '| ID | 関連 | 仮定の内容 | 理由 | 承認 | 承認者 | 承認日 |\n|---|---|---|---|---|---|---|')
+    .replace('| yes | |', '| yes | 5 回 | 顧客 PM | 2026-10-23 |')
+    .replace('| 承認（2026-10-22） |', '| 承認（2026-10-22） | 開発リーダー | 2026-10-23 |');
+
+  it('[REQ-011][REQ-077][REQ-078] 確認事項の回答者・回答日と、仮定の承認者・承認日を読む', () => {
+    const { value, errors } = parseTrace('trace.md', withAgreement);
+    expect(errors).toEqual([]);
+    expect(value.questions[0]).toMatchObject({ 回答: '5 回', 回答者: '顧客 PM', 回答日: '2026-10-23' });
+    expect(value.assumptions[0]).toMatchObject({ 承認者: '開発リーダー', 承認日: '2026-10-23' });
+  });
+
+  it('[REQ-011][REQ-077][REQ-078] 合意の列のない古い trace.md もエラーなく読め、4 つの値は空', () => {
+    const { value, errors } = parseTrace('trace.md', trace);
+    expect(errors).toEqual([]);
+    expect(value.questions[0]).toMatchObject({ 回答者: '', 回答日: '' });
+    expect(value.assumptions[0]).toMatchObject({ 承認者: '', 承認日: '' });
+  });
+});
+
 describe('createTraceTemplate', () => {
   it('[REQ-017] 生成したテンプレートはエラーなく読め、3 つの表が空', () => {
     const text = createTraceTemplate({ changeId: 'add-x' });
     expect(text).toMatch(/^# Trace: add-x\n/);
     expect(parseTrace('trace.md', text)).toEqual({ value: { ledger: [], questions: [], assumptions: [] }, errors: [] });
+  });
+
+  it('[REQ-017][REQ-077][REQ-078] テンプレートと kit の trace.md の雛形は、確認事項に回答者・回答日、仮定に承認者・承認日の列を末尾に持つ', () => {
+    const kit = readFileSync(join(import.meta.dirname, '../../kit/templates/skills/req-to-openspec/templates/trace.md'), 'utf8');
+    for (const text of [createTraceTemplate({ changeId: 'add-x' }), kit]) {
+      expect(text).toMatch(/^\| ID \| 関連 \| 質問 \| .* \| 回答 \| 回答者 \| 回答日 \|$/m);
+      expect(text).toMatch(/^\| ID \| 関連 \| 仮定の内容 \| .* \| 承認 \| 承認者 \| 承認日 \|$/m);
+    }
   });
 });
