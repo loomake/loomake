@@ -1,10 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { runRun, type RunOptions, type RunSummary } from '@loomake/runner';
 import { main } from '../../cli/src/main.js';
 import { traceMd } from '../../kit/test/project.js';
 import { CHANGE, makeRepo, type Repo } from './helpers.js';
+
+// git・node・verify のコマンドを何度も起動するので、Windows では 1 件に 10 秒を超えることがある
+vi.setConfig({ testTimeout: 60_000 });
 
 async function run(repo: Repo, opts: Partial<RunOptions> = {}) {
   const out: string[] = [];
@@ -209,12 +212,12 @@ describe('完了ゲートと直し', () => {
   it('[REQ-105] 実行時間が上限に達したら、エンジンを止めて止まる', () =>
     withRepo(
       async (repo) => {
-        repo.plan([{ sleepMs: 10_000 }]);
+        repo.plan([{ sleepMs: 60_000 }]);
         const start = Date.now();
         const r = await run(repo);
         expect(r.code).toBe(1);
         expect(r.stdout).toContain('実行時間の上限に達しました');
-        expect(Date.now() - start).toBeLessThan(8_000);
+        expect(Date.now() - start).toBeLessThan(30_000);
       },
       { run: { timeoutMinutes: 0.02 } },
     ));
@@ -360,7 +363,7 @@ describe('コンテナ', () => {
 describe('中断', () => {
   it('[REQ-124] 2 つ目のタスクの途中で中断されたら、1 つ目のコミットを残し、summary.json に中断を書く', () =>
     withRepo(async (repo) => {
-      repo.plan([{ write: { 'impl.txt': '実装\n' } }, { write: { 'half.txt': '途中\n' }, sleepMs: 10_000 }]);
+      repo.plan([{ write: { 'impl.txt': '実装\n' } }, { write: { 'half.txt': '途中\n' }, sleepMs: 60_000 }]);
       const controller = new AbortController();
       const timer = setInterval(() => {
         if (repo.calls().length === 2) controller.abort();

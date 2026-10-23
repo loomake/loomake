@@ -1,9 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { runRun } from '@loomake/runner';
 import { CHANGE, makeRepo, type Repo } from './helpers.js';
+
+// git・node・verify のコマンドを何度も起動するので、Windows では 1 件に 10 秒を超えることがある
+vi.setConfig({ testTimeout: 60_000 });
 
 async function withPassingRun(fn: (repo: Repo, r: { code: number; stdout: string }) => void, setup?: (repo: Repo) => void) {
   const repo = makeRepo();

@@ -1,8 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { runRun } from '@loomake/runner';
 import { CHANGE, makeRepo, type FakeStep, type Repo } from './helpers.js';
+
+// git・node・verify のコマンドを何度も起動するので、Windows では 1 件に 10 秒を超えることがある
+vi.setConfig({ testTimeout: 60_000 });
 
 /** 1 つ目のタスクで steps を行わせ、run の結果と、そのあとのコミットの数を返す */
 async function runWith(step: FakeStep, setup?: (repo: Repo) => void) {
