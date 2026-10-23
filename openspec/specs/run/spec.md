@@ -97,7 +97,7 @@ Source: REQ-099
 - **THEN** 1.1 は `- [ ]` のままで、コミットは増えず、run は終了コード 1 で止まる
 
 ### Requirement: 完了ゲートと直し
-すべてのタスクを終えたら、`loomake run` は完了ゲート（`verify --done` と同じ検査）を実行する SHALL。不合格なら、不合格の内容をエンジンに渡して直させ、直しを `run(<change-id>): 完了ゲートの直し（N 回目）` でコミットしてから、もう一度完了ゲートを実行する SHALL。本文に `verify` と `--done` を含むタスクはエンジンに渡さず、完了ゲートに合格したときに run が完了にする SHALL。
+すべてのタスクを終えたら、`loomake run` は完了ゲート（`verify --done` と同じ検査）を実行する SHALL。不合格なら、不合格の内容をエンジンに渡して直させ、直しを `run(<change-id>): 完了ゲートの直し（N 回目）` でコミットしてから、もう一度完了ゲートを実行する SHALL。完了ゲートのタスクはエンジンに渡さず、完了ゲートに合格したときに run が完了にする SHALL。完了ゲートのタスクは、行に `<!-- loomake:gate=done -->` の印があるタスクとする SHALL。印のないタスクでも、本文に `verify` と `--done` を含むものは旧書式の完了ゲートのタスクとみなし、印を付けるよう案内を表示する SHALL。エンジンへの指示とコミットのメッセージには、印を除いたタスクの文を使う SHALL。
 
 Source: REQ-100
 
@@ -108,6 +108,18 @@ Source: REQ-100
 #### Scenario: 完了ゲートのタスクはエンジンに渡さない
 - **WHEN** tasks.md の最後のタスクが「`pnpm -s verify --change c1 --done` を通す」の change を実行する
 - **THEN** そのタスクはエンジンに渡されない
+
+#### Scenario: 印のあるタスク
+- **WHEN** tasks.md の最後のタスクが「品質の確認を通す <!-- loomake:gate=done -->」の change を実行する
+- **THEN** そのタスクはエンジンに渡されず、完了ゲートに合格したときに `- [x]` になる
+
+#### Scenario: 旧書式のタスク
+- **WHEN** 印がなく、本文が「`pnpm -s verify --change c1 --done` を通す」のタスクを持つ change を実行する
+- **THEN** そのタスクはエンジンに渡されず、行に `<!-- loomake:gate=done -->` を付けるよう案内が表示される
+
+#### Scenario: 印は指示とメッセージに含めない
+- **WHEN** 印のある完了ゲートのタスクを持つ change で、完了ゲートに不合格のまま直しの回数の上限に達して止まる
+- **THEN** 残ったタスクの表示と summary.json の完了ゲートのタスクに `<!-- loomake:gate=done -->` が含まれない
 
 ### Requirement: エンジンの選び方と権限
 `loomake run` は `--engine` でエンジンを選び、省いたときは `claude-code` とする SHALL。知らないエンジンの名前と、`claude` コマンドが見つからないときと、change-id に `/`・`\`・`..` を含むときは、使い方の誤りとして終了コード 2 を返す SHALL。Claude Code は headless（`claude -p`、出力は JSON）で呼び、指示は標準入力で渡す SHALL。ふだんは、ファイルの読み書きと、loomake.config.json の commands の実行だけを許可する操作の一覧として渡す SHALL。
@@ -253,3 +265,16 @@ Source: REQ-123
 #### Scenario: runner の依存
 - **WHEN** `packages/runner/package.json` の `dependencies` を読む
 - **THEN** `@loomake/core`・`@loomake/kit`・`@loomake/trace` 以外が含まれない
+
+### Requirement: 実行中の失敗
+`loomake run` を始める前（実行の記録を作る前）の git の失敗は、使い方の誤りとして終了コード 2 を返す SHALL。実行の記録を作ったあとに git の操作か証拠の記録が失敗したときは、`git の操作に失敗しました` などの理由と、終えたタスク・残ったタスクを表示して `summary.json` に書き、終了コード 1 で止まる SHALL。
+
+Source: REQ-137
+
+#### Scenario: 実行中に git のコミットが失敗する
+- **WHEN** 1 つ目のタスクを終えたあと、コミットが git のフックで失敗する
+- **THEN** run は止まり、理由に git の操作に失敗したことが含まれ、残ったタスクに 1 つ目のタスクがあり、summary.json に同じ内容が書かれ、終了コードは 1 である
+
+#### Scenario: 始める前の git の失敗
+- **WHEN** git のリポジトリでないディレクトリで `loomake run --change c1` を実行する
+- **THEN** 実行の記録は作られず、終了コードは 2 である
