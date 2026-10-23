@@ -1,5 +1,7 @@
 # npm への公開。GitHub 上から手動で実行する（自動では公開しない）。
 # 事前に `pnpm changeset version` で版を上げた変更を main に入れておくこと。
+# 認証は npm の Trusted Publishing（OIDC）を使う。初回はパッケージが npm になく Trusted Publishing を設定できないため、
+# secrets.NPM_TOKEN を登録して実行する。手順は docs/release.md にある（REQ-141）
 name: release
 
 on:
@@ -7,6 +9,13 @@ on:
 
 permissions:
   contents: write
+  # Trusted Publishing で、npm が OIDC のトークンを受け取るため
+  id-token: write
+
+# 公開を重ねて走らせない。実行中のものは取り消さず、終わるまで待つ（REQ-140）
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
   publish:
@@ -15,12 +24,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # pnpm test の changeset status は main からの差分を見るため、ローカルに main を用意する
+      - run: git rev-parse --verify main || git branch main origin/main
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: pnpm
           registry-url: https://registry.npmjs.org
+      # Trusted Publishing には npm 11.5.1 以上が要る。Node に同梱の npm は版が変わるので固定する
+      - run: npm install -g npm@11.19.0
       # pnpm changeset version で消化していない changeset が残っていれば止める（版を上げずに公開しないため）
       - name: 未消化の changeset がないことを確かめる
         run: |
@@ -32,6 +47,11 @@ jobs:
           fi
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      # 品質コマンドが通らない状態では公開しない（REQ-140）
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      # NPM_TOKEN がなければ、npm は OIDC で認証する。provenance は、公開リポジトリから OIDC で公開したときに npm が付ける
       - run: pnpm changeset publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
