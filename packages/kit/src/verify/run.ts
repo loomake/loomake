@@ -35,6 +35,23 @@ export type VerifyOptions = {
 // 試作の verify.mjs と同じく、出力の上限を 64MB にする
 const MAX_BUFFER = 64 * 1024 * 1024;
 const COMMAND_ORDER = ['lint', 'typecheck', 'test'];
+// 上限つきで品質コマンドを動かす小さなスクリプト。上限を過ぎたら、シェルだけでなくその子のプロセスまで止める。
+// spawnSync の timeout はシェルしか止めず、Windows ではテストのプロセスが残るため（fix-review-findings-2 の仮定 A-02）
+const TIMED_OUT_STATUS = 124;
+const TIMED_OUT_MARK = 'loomake: command timed out';
+const KILL_TREE_ON_TIMEOUT = `
+const { spawn, spawnSync } = require('node:child_process');
+const [ms, cmd] = process.argv.slice(1);
+const win = process.platform === 'win32';
+const child = spawn(cmd, { shell: true, stdio: 'inherit', detached: !win });
+const timer = setTimeout(() => {
+  if (win) spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore' });
+  else try { process.kill(-child.pid, 'SIGKILL'); } catch {}
+  process.stderr.write('${TIMED_OUT_MARK}\\n');
+  process.exit(${TIMED_OUT_STATUS});
+}, Number(ms));
+child.on('exit', (code) => { clearTimeout(timer); process.exit(code ?? 1); });
+`;
 /** 実行時間の上限で止めた品質コマンドの detail */
 export const TIMED_OUT = '実行時間の上限に達したので止めました';
 
@@ -301,8 +318,11 @@ function runCommands(root: string, config: LoomakeConfig, skip: boolean, record:
       continue;
     }
     progress(`… ${name}: ${cmd}`);
-    const r = spawnSync(cmd, { cwd: root, shell: true, encoding: 'utf8', maxBuffer: MAX_BUFFER, timeout: left });
-    if ((r.error as NodeJS.ErrnoException | undefined)?.code === 'ETIMEDOUT') {
+    const r =
+      left === undefined
+        ? spawnSync(cmd, { cwd: root, shell: true, encoding: 'utf8', maxBuffer: MAX_BUFFER })
+        : spawnSync(process.execPath, ['-e', KILL_TREE_ON_TIMEOUT, String(left), cmd], { cwd: root, encoding: 'utf8', maxBuffer: MAX_BUFFER });
+    if (left !== undefined && r.status === TIMED_OUT_STATUS && (r.stderr ?? '').includes(TIMED_OUT_MARK)) {
       record(`command: ${name}`, 'fail', TIMED_OUT);
       continue;
     }
