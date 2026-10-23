@@ -2,7 +2,17 @@
   "name": "loomake",
   "version": "0.0.0",
   "type": "module",
-  "description": "Loomake の CLI（init・verify）",
+  "description": "要件書から AI 駆動で開発するための CLI（init・verify・trace・run・doctor）。OpenSpec の上に、要件の出典の追跡と、AI に守らせる検査を足す",
+  "keywords": ["openspec", "ai-agent", "requirements-traceability", "spec-driven-development", "claude-code"],
+  "homepage": "https://github.com/loomake/loomake#readme",
+  "bugs": {
+    "url": "https://github.com/loomake/loomake/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/loomake/loomake.git",
+    "directory": "packages/cli"
+  },
   "license": "MIT",
   "engines": {
     "node": ">=20.19.0"

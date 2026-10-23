@@ -2,6 +2,17 @@
   "name": "@loomake/trace",
   "version": "0.0.0",
   "type": "module",
+  "description": "Loomake の内部用パッケージ。証拠の記録（trace record）と検収レポート（trace report）",
+  "keywords": ["openspec", "ai-agent", "requirements-traceability", "spec-driven-development", "claude-code"],
+  "homepage": "https://github.com/loomake/loomake#readme",
+  "bugs": {
+    "url": "https://github.com/loomake/loomake/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/loomake/loomake.git",
+    "directory": "packages/trace"
+  },
   "license": "MIT",
   "engines": {
     "node": ">=20.19.0"

@@ -2,6 +2,17 @@
   "name": "@loomake/runner",
   "version": "0.0.0",
   "type": "module",
+  "description": "Loomake の内部用パッケージ。change のタスクを AI に実装させ、完了ゲートを通して PR を作る（run）",
+  "keywords": ["openspec", "ai-agent", "requirements-traceability", "spec-driven-development", "claude-code"],
+  "homepage": "https://github.com/loomake/loomake#readme",
+  "bugs": {
+    "url": "https://github.com/loomake/loomake/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/loomake/loomake.git",
+    "directory": "packages/runner"
+  },
   "license": "MIT",
   "engines": {
     "node": ">=20.19.0"
