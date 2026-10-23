@@ -53,6 +53,61 @@ describe('ブロッキング確認事項の検査：解析エラー', () => {
   });
 });
 
+describe('同じ確認事項の回答の照合', () => {
+  const NAME = '同じ確認事項の回答';
+  // CHANGE（c1）の Q-01 は、change a の Q-01 と同じ質問とする
+  const shared = (answer: string, mark = '（a の Q-01 と同じ質問）') =>
+    traceMd({ questions: [`| Q-01 | REQ-012 | 何回ですか${mark} | 3 / 5 | 5 | yes | ${answer} |`] });
+  const other = (answer: string) => traceMd({ questions: [question('Q-01', 'yes', answer)] });
+
+  it('[REQ-034] 参照先の change と回答が同じなら合格', () => {
+    const r = withProject({ trace: shared('5 回'), files: { 'openspec/changes/a/trace.md': other('5 回') } }, specOnly);
+    expect(check(r, NAME)).toEqual({ check: NAME, status: 'pass', detail: '1 件が参照先と一致' });
+    expect(r.ok).toBe(true);
+  });
+
+  it('[REQ-034] 参照先の change と回答が違えば、両方の回答を出して不合格', () => {
+    const r = withProject({ trace: shared('5 回'), files: { 'openspec/changes/a/trace.md': other('3 回') } }, specOnly);
+    expect(check(r, NAME)).toEqual({
+      check: NAME,
+      status: 'fail',
+      detail: 'Q-01：回答が a の Q-01 と違います（c1：「5 回」、a：「3 回」）',
+    });
+    expect(r.ok).toBe(false);
+  });
+
+  it('[REQ-034] 片方だけ回答があれば不合格', () => {
+    const r = withProject({ trace: shared(''), files: { 'openspec/changes/a/trace.md': other('5 回') } }, specOnly);
+    expect(check(r, NAME)?.status).toBe('fail');
+  });
+
+  it('[REQ-034] 参照先が archive にあれば、archive の trace.md と比べる', () => {
+    const r = withProject({ trace: shared('5 回'), files: { 'openspec/changes/archive/2026-10-01-a/trace.md': other('5 回') } }, specOnly);
+    expect(check(r, NAME)?.status).toBe('pass');
+  });
+
+  it('[REQ-034] 参照先の change が進行中にも archive にもなければ、change-id を出して不合格', () => {
+    const r = withProject({ trace: shared('5 回') }, specOnly);
+    expect(check(r, NAME)).toEqual({ check: NAME, status: 'fail', detail: 'Q-01：参照先の change a が見つかりません' });
+  });
+
+  it('[REQ-034] 印が無ければ、同じ ID の確認事項の回答が違っても不合格にしない', () => {
+    const r = withProject({ trace: shared('5 回', ''), files: { 'openspec/changes/a/trace.md': other('3 回') } }, specOnly);
+    expect(check(r, NAME)).toEqual({ check: NAME, status: 'pass', detail: 'ほかの change と同じ確認事項なし' });
+  });
+
+  it('参照先の trace.md に同じ ID の確認事項が無ければ不合格（仮定 A-02）', () => {
+    const r = withProject({ trace: shared('5 回'), files: { 'openspec/changes/a/trace.md': traceMd() } }, specOnly);
+    expect(check(r, NAME)).toEqual({ check: NAME, status: 'fail', detail: 'Q-01：a の trace.md に Q-01 がありません' });
+  });
+
+  it('括弧の中にほかの語があっても印とみなし、前後の空白の違いは同じ回答とみなす（仮定 A-01）', () => {
+    const trace = shared('5 回', '（要件書 Q-03。a の Q-01 と同じ質問）');
+    const r = withProject({ trace, files: { 'openspec/changes/a/trace.md': other('  5 回 ') } }, specOnly);
+    expect(check(r, NAME)?.status).toBe('pass');
+  });
+});
+
 describe('仕様の整合性の検査', () => {
   it('[REQ-035] Source の無い Requirement の名前を出して不合格', () => {
     const r = withProject({ spec: specMd(requirement('出所不明', { source: '' })) }, specOnly);

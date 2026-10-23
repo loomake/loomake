@@ -133,6 +133,8 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
     record('ブロッキング確認事項', 'pass', `未回答 0 件（全 ${questions.length} 件）`);
   }
 
+  checkSharedQuestions(root, config, changeId, questions, record);
+
   const unapproved = assumptions.filter((a) => !a['承認']);
   if (unapproved.length) record('仮定の承認', 'warn', `未承認：${unapproved.map((a) => `${a.ID} ${a['仮定の内容']}`).join(' / ')}`);
 
@@ -169,6 +171,45 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   record('反映済の要件が仕様にある', orphan.length ? 'fail' : 'pass', orphan.map((r) => r.ID).join(', '));
 
   return { changeDir, trace, live };
+}
+
+// 質問に「<change-id> の Q-xx と同じ質問」と書いた確認事項の回答を、参照先と比べる（add-shared-question-check の仮定 A-01・A-02）
+const SHARED_MARK = /([a-z0-9][a-z0-9-]*) の (Q-\d+) と同じ質問/;
+
+function checkSharedQuestions(root: string, config: LoomakeConfig, changeId: string, questions: Trace['questions'], record: Recorder) {
+  const changesDir = resolve(root, config.openspecDir, 'changes');
+  const archiveDir = join(changesDir, 'archive');
+  // 進行中の change を先に、なければ archive の <日付>-<change-id> を探す
+  const findTrace = (id: string) => {
+    const active = join(changesDir, id, 'trace.md');
+    if (id !== 'archive' && existsSync(active)) return active;
+    const archived = existsSync(archiveDir)
+      ? readdirSync(archiveDir).filter((d) => d.replace(/^\d{4}-\d{2}-\d{2}-/, '') === id).sort().reverse()
+      : [];
+    return archived.map((d) => join(archiveDir, d, 'trace.md')).find((p) => existsSync(p));
+  };
+  const answer = (q: { 回答: string }) => q['回答'].trim();
+  const problems: string[] = [];
+  let shared = 0;
+  for (const q of questions) {
+    const m = q['質問'].match(SHARED_MARK);
+    if (!m) continue;
+    const [, otherId, otherQ] = m;
+    if (otherId === changeId) continue;
+    shared++;
+    const path = findTrace(otherId);
+    if (!path) {
+      problems.push(`${q.ID}：参照先の change ${otherId} が見つかりません`);
+      continue;
+    }
+    const other = parseTrace('trace.md', readFileSync(path, 'utf8')).value.questions.find((o) => o.ID === otherQ);
+    if (!other) problems.push(`${q.ID}：${otherId} の trace.md に ${otherQ} がありません`);
+    else if (answer(other) !== answer(q)) {
+      problems.push(`${q.ID}：回答が ${otherId} の ${otherQ} と違います（${changeId}：「${answer(q)}」、${otherId}：「${answer(other)}」）`);
+    }
+  }
+  if (problems.length) record('同じ確認事項の回答', 'fail', problems.join('\n'));
+  else record('同じ確認事項の回答', 'pass', shared ? `${shared} 件が参照先と一致` : 'ほかの change と同じ確認事項なし');
 }
 
 // openspec validate（REQ-037）。CLI が無いときの扱いは仮定 A-01

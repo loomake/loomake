@@ -262,6 +262,7 @@ loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]
 | `openspec validate --strict` | ✓ | ✓ |
 | 要件台帳（台帳の出典、状態値） | ✓ | ✓ |
 | ブロッキング確認事項に回答がある | ✓ | ✓ |
+| 同じ確認事項の回答が、参照先の change と同じ（質問に「<change-id> の Q-xx と同じ質問」とあるもの） | ✓ | ✓ |
 | 差分仕様、Requirement の Source、Source が台帳にある、Scenario がある | ✓ | ✓ |
 | 反映済の要件が仕様にある | ✓ | ✓ |
 | 仮定の承認、確認待ちの要件 | 警告 | 警告 |
