@@ -50,7 +50,7 @@ describe('Node.js のバージョン宣言', () => {
 
   it('[REQ-142] CI に、Node 22.12.0 でビルドした CLI を動かすジョブがある', () => {
     const ci = read('.github/workflows/ci.yml');
-    const job = ci.match(/^  node22:\n((?:    .*\n|\s*\n)*)/m)?.[1] ?? '';
+    const job = ci.match(/^ {2}node22:\n((?: {4}.*\n|\s*\n)*)/m)?.[1] ?? '';
     const setup = job.indexOf('node-version: 22.12.0');
     expect(setup).toBeGreaterThanOrEqual(0);
     expect(job.indexOf('packages/cli/dist/cli.js', setup)).toBeGreaterThan(setup);
