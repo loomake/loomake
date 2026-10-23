@@ -5,7 +5,7 @@
 - [x] 1.4 run を始めたあとの git の失敗と証拠の記録の失敗を、記録に残して終了コード 1 で止める（REQ-137）
 
 ## 2. テスト
-- [ ] 2.1 各 Scenario に対応するテストを書く。テスト名に [REQ-xxx] を入れる
+- [x] 2.1 各 Scenario に対応するテストを書く。テスト名に [REQ-xxx] を入れる
 
 ## 3. 確認
 - [ ] 3.1 `pnpm -s verify --change clarify-run-phases-and-task-kinds --done` を通す <!-- loomake:gate=done -->

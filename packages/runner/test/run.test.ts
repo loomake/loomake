@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { chmodSync, existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { runRun, type RunOptions, type RunSummary } from '@loomake/runner';
+import { GATE_MARK, runRun, type RunOptions, type RunSummary } from '@loomake/runner';
 import { main } from '../../cli/src/main.js';
 import { traceMd } from '../../kit/test/project.js';
 import { CHANGE, makeRepo, type Repo } from './helpers.js';
@@ -465,4 +465,70 @@ describe('依存と動作環境', () => {
   it('[REQ-125] @loomake/runner の engines.node は >=20.19.0', () => {
     expect(pkg.engines?.node).toBe('>=20.19.0');
   });
+});
+
+describe('完了ゲートのタスクの印', () => {
+  const marked = ['## 1. 実装', '- [ ] 1.1 一つ目のタスク（REQ-012）', '', '## 3. 確認', `- [ ] 3.1 品質の確認を通す ${GATE_MARK}`, ''].join('\n');
+
+  it('[REQ-100][REQ-136] 印のあるタスクは、文に verify と --done がなくてもエンジンに渡さず、合格したときに完了にする', () =>
+    withRepo(
+      async (repo) => {
+        repo.plan([{ write: { 'impl.txt': '実装\n' } }]);
+        const r = await run(repo);
+        expect(r.code).toBe(0);
+        expect(repo.calls()).toHaveLength(1);
+        expect(repo.calls()[0].prompt).not.toContain('品質の確認');
+        expect(tasksMd(repo)).toContain(`- [x] 3.1 品質の確認を通す ${GATE_MARK}`);
+        expect(r.stdout).not.toContain('タスクの文から判定しました');
+      },
+      { tasks: marked },
+    ));
+
+  it('[REQ-100] 印のない旧書式のタスクもエンジンに渡さず、印を付けるよう案内する', () =>
+    withRepo(async (repo) => {
+      repo.plan(passing);
+      const r = await run(repo);
+      expect(r.code).toBe(0);
+      for (const c of repo.calls()) expect(c.prompt).not.toContain('3.1');
+      expect(r.stdout).toContain('完了ゲートのタスクを、タスクの文から判定しました：3.1 `pnpm -s verify --change c1 --done` を通す');
+      expect(r.stdout).toContain(`行の末尾に ${GATE_MARK} を付けてください`);
+    }));
+
+  it('[REQ-100] 残ったタスクの表示と summary.json には、印を含めない', () =>
+    withRepo(
+      async (repo) => {
+        const r = await run(repo);
+        expect(r.code).toBe(1);
+        expect(r.stdout).toContain('直しの回数の上限（1 回）に達しました');
+        expect(r.stdout).toContain('残ったタスク：\n  - 3.1 品質の確認を通す\n');
+        expect(summary(repo).remainingTasks).toEqual(['3.1 品質の確認を通す']);
+        expect(r.stdout).not.toContain('loomake:gate');
+      },
+      { tasks: marked, run: { maxFixes: 1 } },
+    ));
+});
+
+describe('実行中の失敗', () => {
+  it('[REQ-137] 始めたあとにコミットが git のフックで失敗したら、理由と残ったタスクを記録に書き、終了コード 1 で止まる', () =>
+    withRepo(async (repo) => {
+      const hook = join(repo.root, '.git', 'hooks', 'pre-commit');
+      writeFileSync(hook, '#!/bin/sh\necho "フックで止めました" >&2\nexit 1\n');
+      chmodSync(hook, 0o755);
+      repo.plan(passing);
+      const r = await run(repo);
+      expect(r.code).toBe(1);
+      expect(r.stdout).toContain('loomake run を止めました：git の操作に失敗しました：git commit');
+      expect(summary(repo)).toMatchObject({ status: 'stopped', doneTasks: [] });
+      expect(summary(repo).reason).toContain('フックで止めました');
+      expect(summary(repo).remainingTasks[0]).toBe('1.1 一つ目のタスク（REQ-012）');
+    }));
+
+  it('[REQ-137] git のリポジトリでなければ、実行の記録を作らずに使い方の誤り（終了コード 2）にする', () =>
+    withRepo(async (repo) => {
+      rmSync(join(repo.root, '.git'), { recursive: true, force: true });
+      const r = await cli(repo);
+      expect(r.code).toBe(2);
+      expect(r.stderr).toContain('git の操作に失敗しました');
+      expect(existsSync(join(repo.root, '.loomake/runs'))).toBe(false);
+    }));
 });

@@ -228,3 +228,11 @@ describe('req-to-openspec Skill のテンプレート', () => {
     }
   });
 });
+
+describe('完了ゲートのタスクの印', () => {
+  it('[REQ-136] Skill の tasks.md の雛形で、完了ゲートのタスクの行末に印があり、SKILL.md が印を付けるよう指示している', () => {
+    const format = read(join(skillDir, 'references/openspec-format.md'));
+    expect(format).toContain('- [ ] 3.1 `npx loomake verify --change <change-id> --done` を通す <!-- loomake:gate=done -->');
+    expect(read(join(skillDir, 'SKILL.md'))).toContain('verify のタスクの行末に `<!-- loomake:gate=done -->` を付ける');
+  });
+});
