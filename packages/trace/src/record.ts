@@ -32,6 +32,10 @@ export type RecordOptions = {
   progress?: (text: string) => void;
   /** 記録した日時。テストで時刻を決めるために渡す */
   now?: () => Date;
+  /** 自動実装から渡す品質コマンドの残り時間。省略時は従来どおり上限なし。 */
+  timeoutMs?: number;
+  /** 今回の検証結果を呼び出し側へ通知する。 */
+  onVerify?: (result: VerifyResult) => void;
 };
 
 export const EVIDENCE_DIR = '.loomake/evidence';
@@ -71,7 +75,8 @@ export function runRecord(options: RecordOptions): number {
 
   const documents = readDocuments(changeDir);
 
-  const result = runVerify({ root, changeId, gate: 'done', progress });
+  const result = runVerify({ root, changeId, gate: 'done', progress, timeoutMs: options.timeoutMs });
+  options.onVerify?.(result);
   // 検査のあいだに HEAD・作業ツリー・文書が変わったら、どの内容を検査したか分からないので記録しない（REQ-128）。
   // .gitignore で除外したテストのレポートなどは、変更とみなさない（bind-evidence-to-spec-snapshot の仮定 A-02）
   const changed = [

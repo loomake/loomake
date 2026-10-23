@@ -454,8 +454,16 @@ function recordAndOpenPr(ctx: RunContext, rec: Recorder): number {
   if (base === branch) {
     return rec.finish('stopped', `完了ゲートに合格しましたが、PR の向き先が分かりません。git config ${baseKey(ctx)} <向き先のブランチ> で設定してから、もう一度実行してください`, []);
   }
-  const recorded = runRecord({ root, changeId, stdout: ctx.stdout, progress: ctx.progress, now: ctx.now });
-  if (recorded !== 0) return rec.finish('stopped', '証拠の記録で完了ゲートに不合格になりました', []);
+  const left = rec.deadline - ctx.now().getTime();
+  if (left <= 0) return rec.finish('stopped', '実行時間の上限に達しました', []);
+  const recorded = runRecord({
+    root, changeId, stdout: ctx.stdout, progress: ctx.progress, now: ctx.now, timeoutMs: left,
+    onVerify: (result) => { rec.lastVerify = result; },
+  });
+  if (recorded !== 0) {
+    const timedOut = rec.lastVerify?.results.some((r) => r.detail === TIMED_OUT);
+    return rec.finish('stopped', timedOut ? '実行時間の上限に達しました' : '証拠の記録で完了ゲートに不合格になりました', []);
+  }
   git(root, env, ['add', '--', `.loomake/evidence/${changeId}`]);
   git(root, env, ['commit', '-q', '-m', `evidence(${changeId}): 証拠を記録する`]);
   const evidence = git(root, env, ['diff', '--name-only', 'HEAD~1', 'HEAD']).trim().split('\n')[0];

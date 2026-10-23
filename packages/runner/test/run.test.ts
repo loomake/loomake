@@ -538,3 +538,25 @@ describe('実行中の失敗', () => {
       expect(existsSync(join(repo.root, '.loomake/runs'))).toBe(false);
     }));
 });
+
+
+describe('証拠記録の再検証の期限', () => {
+  it('[REQ-140] 二度目の品質コマンドも残り時間で止め、PRを作らない', () =>
+    withRepo(async (repo) => {
+      repo.write('impl.txt', 'ready');
+      repo.write('.gitignore', '.loomake/test-report.json\n.loomake/once\n');
+      const script = readFileSync(join(repo.root, 'write-report.mjs'), 'utf8');
+      repo.write('write-report.mjs', script.replace("mkdirSync('.loomake', { recursive: true });", `mkdirSync('.loomake', { recursive: true });
+if (existsSync('.loomake/once')) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 3000);
+writeFileSync('.loomake/once', 'yes');`));
+      repo.git('add', '-A');
+      repo.git('commit', '-qm', 'record-timeout');
+      const started = Date.now();
+      let checks = 0;
+      const result = await run(repo, { now: () => new Date(started + (checks++ < 2 ? 0 : 59_000)) });
+      expect(result.code).toBe(1);
+      expect(result.stdout).toContain('実行時間の上限');
+      expect(repo.prs()).toEqual([]);
+      expect(summary(repo).status).toBe('stopped');
+    }, { tasks: '- [x] implementation\n', run: { timeoutMinutes: 1 } }));
+});
