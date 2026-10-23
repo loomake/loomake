@@ -55,38 +55,54 @@ export function claudeArgs(commands: string[], skipPermissions: boolean): string
   return [...base, '--permission-mode', 'acceptEdits', '--allowedTools', ...tools];
 }
 
-/** エンジンを止める。Windows ではシェルの下で動く本体まで、プロセスの木ごと止める */
-function stop(child: ChildProcess) {
-  if (isWindows && child.pid !== undefined) spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F']);
-  else child.kill();
+/** エンジンと子孫を停止し、POSIXでは猶予後にグループ全体を強制終了する。 */
+function stop(child: ChildProcess): Promise<void> {
+  if (isWindows && child.pid !== undefined) {
+    spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F']);
+    return Promise.resolve();
+  }
+  const killGroup = (signal: NodeJS.Signals) => {
+    try {
+      if (child.pid !== undefined) process.kill(-child.pid, signal);
+    } catch {
+      // すでに終了したプロセスグループは停止済みとして扱う。
+    }
+  };
+  killGroup('SIGTERM');
+  return new Promise((resolve) => setTimeout(() => { killGroup('SIGKILL'); resolve(); }, 250));
 }
 
 /** Claude Code を呼び、指示を標準入力で渡す。時間の上限か中断で止める */
 export function runClaude(call: EngineCall): Promise<EngineResult> {
+  if (call.signal?.aborted) return Promise.resolve({ text: '', raw: '', exitCode: null, timedOut: false, aborted: true });
   return new Promise((resolve) => {
     const child = spawn('claude', claudeArgs(call.commands, call.skipPermissions).map(quote), {
       cwd: call.cwd,
       env: call.env,
       shell: isWindows,
+      detached: !isWindows,
       stdio: ['pipe', 'pipe', 'inherit'],
     });
     let raw = '';
     let timedOut = false;
     let aborted = false;
+    let stopping: Promise<void> | undefined;
     child.stdout.setEncoding('utf8').on('data', (d: string) => (raw += d));
     const timer = setTimeout(() => {
       timedOut = true;
-      stop(child);
+      stopping ??= stop(child);
     }, Math.max(call.timeoutMs, 0));
     const onAbort = () => {
       aborted = true;
-      stop(child);
+      stopping ??= stop(child);
     };
     call.signal?.addEventListener('abort', onAbort, { once: true });
     child.on('error', () => {});
-    child.on('close', (code) => {
+    if (call.signal?.aborted) onAbort();
+    child.on('close', async (code) => {
       clearTimeout(timer);
       call.signal?.removeEventListener('abort', onAbort);
+      await stopping;
       let text = raw;
       try {
         const json = JSON.parse(raw) as { result?: unknown };
