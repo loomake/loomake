@@ -101,6 +101,13 @@ npx loomake init
 | `--devcontainer` | `.devcontainer/devcontainer.json`（Node 24・Claude Code・OpenSpec CLI）を置く |
 
 `loomake.config.json` の品質コマンドは package.json の `packageManager`（なければロックファイル）から pnpm・npm・yarn を判定して決まる。どれも分からなければ npm になる。
+package.json がないときは npm の既定値で書かれ、init の最後に、このプロジェクトのコマンドへ書き換えるよう案内が出る。
+
+最後に、loomake をプロジェクトの開発用の依存に足す。AGENTS.md と Skill が使う `npx loomake verify` は、プロジェクトに入れた版を使う。入れていないと実行のたびに最新版を取りにいき、検査に使う版が固まらない。package.json の依存に loomake がなければ、init の最後に同じ案内が出る。
+
+```sh
+pnpm add -D loomake      # npm なら npm install -D loomake、yarn なら yarn add -D loomake
+```
 
 ### 既にファイルがあるとき
 
@@ -255,6 +262,7 @@ loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]
 | `openspec validate --strict` | ✓ | ✓ |
 | 要件台帳（台帳の出典、状態値） | ✓ | ✓ |
 | ブロッキング確認事項に回答がある | ✓ | ✓ |
+| 同じ確認事項の回答が、参照先の change と同じ（質問に「<change-id> の Q-xx と同じ質問」とあるもの） | ✓ | ✓ |
 | 差分仕様、Requirement の Source、Source が台帳にある、Scenario がある | ✓ | ✓ |
 | 反映済の要件が仕様にある | ✓ | ✓ |
 | 仮定の承認、確認待ちの要件 | 警告 | 警告 |

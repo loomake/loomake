@@ -108,6 +108,12 @@ describe('req-to-openspec Skill のテンプレート', () => {
     expect(ledger).toContain('出典は「文書名・章と行」まで書く');
   });
 
+  it('[REQ-026] REQ・Q・A を要件書 1 冊の中で通し番号にし、change をまたいでも同じ番号を使う', () => {
+    const ledger = section(skill, /要件台帳を作る/);
+    expect(ledger).toContain('REQ・Q・A の番号は、要件書 1 冊の中で通し番号にする');
+    expect(ledger).toContain('change ごとに振り直さず、同じ番号を使う');
+  });
+
   it('[REQ-027] 曖昧さチェックリストが同梱され、全要件にあてて Q か A に記録するよう指示している', () => {
     expect(existsSync(join(skillDir, 'references/ambiguity-checklist.md'))).toBe(true);
     const step = section(skill, /曖昧さを洗い出す/);
@@ -115,6 +121,13 @@ describe('req-to-openspec Skill のテンプレート', () => {
     expect(step).toContain('全 REQ にあてる');
     expect(step).toContain('確認事項（Q-xx）');
     expect(step).toContain('仮定（A-xx）');
+  });
+
+  it('[REQ-027] 要件書の未決事項をすべて確認事項にし、後のフェーズだけにかかわるものはブロッキングにしない', () => {
+    const step = section(skill, /曖昧さを洗い出す/);
+    expect(step).toContain('未決事項の章や表があるときは、その項目をすべて確認事項にし');
+    expect(step).toContain('質問に要件書側の ID');
+    expect(step).toContain('関係する要件がすべて後のフェーズなら、ブロッキングにしない');
   });
 
   it('[REQ-028] お金・個人情報・権限・データ削除・外部連携・検収数値を、仮定にしてはいけないものとして列挙している', () => {
@@ -139,6 +152,12 @@ describe('req-to-openspec Skill のテンプレート', () => {
     expect(step).toContain('人に示し、合意を取る');
   });
 
+  it('[REQ-029] 複数の change にかかわる要件と確認事項を、それぞれの trace.md に同じ番号・同じ内容で載せる', () => {
+    const step = section(skill, /change に分割する/);
+    expect(step).toContain('かかわる change それぞれの trace.md に、同じ番号・同じ内容の行で載せる');
+    expect(step).toMatch(/の Q-01 と同じ質問/);
+  });
+
   it('[REQ-030] 書式の参照ファイルに規範文・Source: 行・Scenario の雛形があり、SKILL.md が 3 つを必須とする', () => {
     const req = section(format, /specs\/<capability>\/spec\.md/);
     expect(req).toMatch(/^### Requirement: /m);
@@ -155,6 +174,14 @@ describe('req-to-openspec Skill のテンプレート', () => {
 
   it('[REQ-031] 範囲外の要件は Requirement にせず proposal.md の Non-goals に書く', () => {
     expect(skill).toMatch(/範囲外.*の要件は Requirement にせず、proposal\.md の Non-goals に書く/);
+  });
+
+  it('[REQ-031] 後のフェーズの要件を範囲外にし、要約に（フェーズ：〇〇）と書き、Non-goals で分けて書く', () => {
+    const ledger = section(skill, /要件台帳を作る/);
+    expect(ledger).toContain('後のフェーズで作る要件');
+    expect(ledger).toContain('種別と状態を `範囲外` にし、要約の末尾に「（フェーズ：〇〇）」と書く');
+    expect(section(skill, /change を書き出す/)).toContain('後のフェーズの要件は、Non-goals の中で、それ以外の範囲外の要件と分けて書く');
+    expect(section(format, /proposal\.md/)).toMatch(/^- 後のフェーズで作るもの/m);
   });
 
   it('[REQ-032] 報告の節に change 一覧・台帳の集計・ブロッキング確認事項・未承認の仮定がある', () => {

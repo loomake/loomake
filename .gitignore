@@ -34,3 +34,6 @@ coverage/
 # Python のキャッシュ
 __pycache__/
 .loomake/
+
+# kit を試す試験プロジェクト（別の git リポジトリ）
+.trial/

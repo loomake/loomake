@@ -28,6 +28,7 @@ openspec/changes/<change-id>/
 
 ## Non-goals
 - 範囲外とされたもの（REQ-003：SSO 連携）
+- 後のフェーズで作るもの（REQ-004：CSV 出力。フェーズ：2）
 
 ## Impact
 - 影響する capability：auth
