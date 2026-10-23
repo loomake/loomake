@@ -1,32 +1,8 @@
-# npm 公開前の確認結果
+# npm への公開
 
-2026-10-23 時点のブランチ `prepare-npm-publish-2`（`4c22f3b`）で確かめた結果をまとめる。このブランチには公開の準備のための change `prepare-npm-publish`（REQ-138〜REQ-141）と `require-node-22`（REQ-142）が入っている。main にはまだ入っていない。
+5 つのパッケージ（`loomake`・`@loomake/core`・`@loomake/kit`・`@loomake/trace`・`@loomake/runner`）を npm に公開する手順をまとめる。公開の前に確かめた結果は、作業の記録（`docs/worklog/`）に残す。
 
-## 確かめたこと
-
-- 5 つのパッケージをビルドして `pnpm pack` した。どの tarball にも `README.md`・`LICENSE`・`dist/` が入り、core には `schema/`、kit には `templates/` も入る。`workspace:*` は具体的な版に置き換わる
-- publint は 5 つとも「All good」
-- git だけを初期化した新しいプロジェクトに 5 つの tarball を入れて動かした
-  - `loomake --version`・`init`・`verify --help`・`trace --help` は終了コード 0
-  - `doctor` は openspec/ がないことを問題として示し、終了コード 1。`run --dry-run --change x` は change がないことを示し、終了コード 2。どちらも想定どおり
-  - Node 22.12.0 でも、`--version` と `doctor` が動いた
-- 両方の change の完了ゲート（`pnpm -s verify --change <id> --done`）は合格。`pnpm -s test` は 312 件すべて合格
-- GitHub のリポジトリ `loomake/loomake` は PRIVATE。release ワークフローが使う secret の `NPM_TOKEN` は、まだ登録されていない。private のため、main のブランチ保護も設定できない（GitHub の無料プランでは使えない）
-- npm で `loomake`・`loom-make`・`loomakes` は 404 が返る。似た名前の `lomake` は既にある
-- `@arethetypeswrong/cli` は道具のエラーで実行できず、型の解決は確かめていない
-
-## 対応済みのこと
-
-前回の確認で挙げた項目は、次のように対応した。
-
-- package.json の `repository`・`homepage`・`bugs`・`description`・`keywords`（REQ-138）
-- 5 つのパッケージの README。`loomake` には使い方と外部コマンド（`openspec`・`gh`・`claude`）、`--skip-permissions` の注意を書いた。内部用の 4 つには、版が `0.y.z` のあいだは API が予告なく変わりうることを書いた（REQ-139）
-- release ワークフローは公開の前に lint・typecheck・test を実行し、同時には 1 つしか動かない（REQ-140）
-- release ワークフローは `id-token: write` を持ち、npm を 11.19.0 に固定して入れる。`NPM_TOKEN` でも OIDC でも公開できる（REQ-141）
-- `engines.node` を `>=22.12.0` に上げ、CI の `node20` ジョブを `node22` ジョブにした（REQ-142）
-- 未消化の changeset を、初版の 1 つ（`.changeset/initial-release.md`）にまとめた。5 つとも 0.1.0 になる。版をそろえる `fixed` は使わず、REQ-056 のとおりパッケージごとに独立した版のままにした
-
-## 判断が要ること
+## 公開の前に決めること
 
 ### リポジトリを公開前に public にするか
 
@@ -52,7 +28,11 @@ npm の Trusted Publishing（OIDC）で公開すれば、トークンの管理�
 
 初回の公開：
 
-1. 公開の権限がある有効期限の短いトークンを作り、GitHub の secrets に `NPM_TOKEN` として登録する
+1. 公開の権限がある有効期限の短いトークンを作り、GitHub の secrets に `NPM_TOKEN` として登録する。トークンは次の条件で作る
+   - 種類は granular access token にする
+   - まだない 5 つのパッケージを作れるよう、対象を「すべてのパッケージ」にし、読み書きの権限を付ける。パッケージを選ぶ形では、まだない `loomake` を選べない
+   - ワークフローから使うので、公開のときに 2FA を求めない設定にする
+   - トークンの有効期限の上限や 2FA の扱いは変わることがあるので、作るときに npm の文書で確かめる
 2. GitHub 上から release ワークフローを main で実行する。手元からは公開しない。品質コマンドと、公開するコミットの確認を通らないため
 3. `loomake` の名前が拒否されたら、ワークフローは途中で失敗する。npm は既にある名前と似すぎた名前を拒むことがあり、`lomake` があるためその可能性は残る。拒否されたら名前を決め直す
 
@@ -61,22 +41,43 @@ npm の Trusted Publishing（OIDC）で公開すれば、トークンの管理�
 1. npm で 5 つのパッケージそれぞれに Trusted Publisher を登録する（リポジトリ `loomake/loomake`、ワークフロー `release.yml`）
 2. GitHub の secrets から `NPM_TOKEN` を外し、npm でもトークンを無効にする。secret がなければ `NODE_AUTH_TOKEN` は空になり、npm は OIDC で認証する
 3. 次の公開で、OIDC で公開できたかを確かめる。`changeset publish` は pnpm のワークスペースでは `pnpm publish` を呼ぶが、pnpm（12.10.1）が OIDC での公開に対応しているかは未確認。できなければ change を作り、公開の方法を `npm publish` に替える
+4. OIDC で公開できたら、npm で 5 つのパッケージそれぞれの Publishing access を「Require two-factor authentication and disallow tokens」にする。トークンが漏れても、そのトークンでは公開できなくなる。Trusted Publishing での公開は、この設定でも続けられる
 
 Trusted Publishing には npm 11.5.1 以上と Node 22.14.0 以上が要る。release ワークフローは Node 24 を使い、npm を 11.19.0 に固定して入れるので、条件を満たす。
 
 参考：[Changesets の公開手順](https://github.com/changesets/changesets/blob/main/site/guide/versioning-and-publishing.md)、[npm Trusted Publishers](https://docs.npmjs.com/trusted-publishers/)
 
+### 公開が途中で失敗したとき
+
+`changeset publish` は 5 つのパッケージを順に公開する。途中で失敗すると、一部のパッケージだけが npm に載る。そのあとの `git push --follow-tags` も実行されないので、公開できたパッケージのタグは GitHub に残らない。
+
+1. 失敗の原因を直してから、release ワークフローをもう一度実行する。`changeset publish` は、同じ版が npm にあるパッケージを飛ばし、残りだけを公開する
+2. 1 回目に公開したパッケージのタグがないときは、main で `pnpm changeset tag` を実行してタグを作り、`git push --follow-tags` で push する
+
+### 壊れた版を公開したとき
+
+npm では、一度使った版の番号は、unpublish したあとも二度と使えない。unpublish にも期限などの条件がある。そのため、壊れた版は unpublish しない。
+
+1. `npm deprecate <パッケージ>@<版> "<理由>"` で、その版を使わないよう示す
+2. 直した版を、changeset を足した patch の版として公開する
+
 ### 公開のあとに確かめること
 
+- 5 つのパッケージがすべて npm にあり、`npm view <パッケージ> dist-tags` の `latest` が公開した版になっている
 - 新しいプロジェクトで `npx loomake@latest --version` と `npx loomake init` が動く
+- Node 22.12 でも `npx loomake@<公開した版> --version` が動く
 - npm のページに README が出て、リンクが開ける
 - 2 回目以降は、npm のページに provenance が出る（リポジトリが public のとき）
 
 ## やった方がいいこと
 
-- **pack して動かす CI**：「pack → 新しいプロジェクトに入れる → `init`・`verify`・`doctor` を実行」をジョブにする。今回手で行った確認を自動にでき、`files` の漏れ（templates・schema）を公開前に見つけられる。publint も足す
+- **公開の権限を公開のステップだけに絞る**：release ワークフローは `id-token: write` と `contents: write` をジョブ全体に持つ。そのため、`pnpm install` で依存パッケージの postinstall が動くあいだも、OIDC のトークンを取れる。依存のどれかが乗っ取られると、Trusted Publisher の権限でパッケージを公開されるおそれがある。ビルドとテストのジョブ（読み取りの権限だけ）と、公開のジョブ（`id-token: write`）を分け、ビルドしたものを公開のジョブに渡す。あわせて、`actions/checkout` などの action をコミットの SHA で固定する。release ワークフローの決まり（REQ-140・REQ-141）が変わるので、change を作ってから直す
+- **GitHub の environment で公開に承認を求める**：リポジトリを public にしたら、`npm` などの environment を作って公開のジョブに付け、承認する人を決める。Trusted Publisher にも、その environment の名前を登録する。public のリポジトリでは無料で使え、main を保護できない問題のうち、公開の部分を補える
+- **pack して動かす CI**：「pack → 新しいプロジェクトに入れる → `init`・`verify`・`doctor` を実行」をジョブにする。手で行っている確認を自動にでき、`files` の漏れ（templates・schema）を公開前に見つけられる。publint も足す
+- **型の解決を確かめる**：`@arethetypeswrong/cli` は道具のエラーで実行できず、型の解決はまだ確かめていない
 - **`@loomake/source` 条件**：各パッケージの `exports` にあるこの条件は、tarball に入っていない `./src/index.ts` を指す。利用者がこの条件を有効にしなければ影響はないが、公開する package.json から外す方法を検討する
 - **ビルド前に `dist/` を消す**：ソースを消したとき、古い `dist/` のファイルが手元のビルドに残る。release ワークフローはまっさらな状態でビルドするので、公開物には影響しない
 - **`SECURITY.md`**：脆弱性の報告先を決めておく
 - **古いブランチの片づけ**：古い main がもとのブランチ `prepare-npm-publish` は、`prepare-npm-publish-2` に置き換えた。ほかのセッションのワークツリーで使われているので、そのセッションの作業が終わってから消す
+- **任意**：GitHub の Releases のページを作る。CHANGELOG はパッケージに入るが、Releases のページはできない。`changesets/action` を使うか、タグから Release を作るステップを足す
 - **任意**：`declarationMap` と `sourceMap` を出すと、利用者が型定義から元のコードへ飛べる
