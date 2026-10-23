@@ -2,6 +2,18 @@
 
 2026-10-23 時点の HEAD（`85c21a0`）で確かめた結果をまとめる。2026-10-23 の初回調査と 2026-10-24 の再レビューで分かったことも、この文書に取り込んだ。
 
+## 対応の状況
+
+下の 1〜7 のうち、リポジトリの中でできることは次の change とコミットで対応した。
+
+- 1〜3：change `prepare-npm-publish`（REQ-138〜REQ-141）。メタデータ・README・release ワークフローの品質コマンドと `concurrency`
+- 4：release ワークフローは `NPM_TOKEN` と OIDC の両方で公開できる（REQ-141）。npm 上の作業と公開は、まだしていない
+- 5：23 個の changeset を、初版の 1 つ（`.changeset/initial-release.md`）にまとめた。版をそろえる `fixed` は使わず、パッケージごとに独立した版のままにした
+- 6：内部用の 4 つの README に、内部用であることと、`0.y.z` のあいだは API が予告なく変わりうることを書いた。公開する package.json の `@loomake/source` 条件は、まだ残っている
+- 7：change `require-node-22`（REQ-142）。`engines.node` を `>=22.12.0` にし、CI の `node20` ジョブを `node22` ジョブにした
+
+残っているのは、npm の organization の用意と初回の公開（4）、リポジトリを public にするかの判断（4 の最後）、「やった方がいいこと」の各項目である。
+
 ## 確かめたこと
 
 - 5 つのパッケージをビルドして `pnpm pack` し、git だけを初期化した新しいプロジェクトに入れた。`loomake --version`・`--help`・`init`・`verify`・`doctor`・`run --help` は期待どおりに動いた
