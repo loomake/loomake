@@ -4,6 +4,7 @@ import { parseTasks, type Task, type VerifyResult } from '@loomake/core';
 import { UsageError, formatVerifyResult, loadConfig, runVerify } from '@loomake/kit';
 import { DEFAULT_ALLOWED_DOMAINS, assertEngineAvailable, runClaude, type EngineResult } from './engine.js';
 import { branchExists, dirtyFiles, git } from './git.js';
+import { APPROVAL_GUIDE, findViolations } from './guards.js';
 import { maskSecrets } from './mask.js';
 
 export type RunOptions = {
@@ -239,6 +240,15 @@ export async function runRun(options: RunOptions): Promise<number> {
     return { result };
   };
 
+  // コミットする前に不正な直し方を探し、見つけたら変更を作業ツリーに残して止まる理由を返す（REQ-109〜REQ-112）
+  const guard = (): string | undefined => {
+    const { findings, diff } = findViolations(root, env);
+    if (!findings.length) return undefined;
+    git(root, env, ['reset', '-q']);
+    stdout(['不正な直し方を見つけました。', ...findings.map((f) => `  - ${f.file}：${f.reason}`), '', diff, APPROVAL_GUIDE].join('\n'));
+    return `不正な直し方を見つけました（${findings.map((f) => f.file).join('、')}）`;
+  };
+
   // change のブランチ（REQ-096、add-run-loop の仮定 A-04）
   const branch = `loomake/${changeId}`;
   git(root, env, branchExists(root, env, branch) ? ['switch', '-q', branch] : ['switch', '-q', '-c', branch]);
@@ -250,6 +260,8 @@ export async function runRun(options: RunOptions): Promise<number> {
     if (options.signal?.aborted) return finish('interrupted', '中断されました', remaining);
     const { stop } = await callEngine(buildPrompt(root, changeDir, `- [ ] ${taskLabel(task)}`));
     if (stop) return finish(stop.status, stop.reason, remaining);
+    const violation = guard();
+    if (violation) return finish('stopped', violation, remaining);
     checkTask(tasksPath, task.line);
     git(root, env, ['add', '-A']);
     git(root, env, ['commit', '-q', '-m', `run(${changeId}): ${taskLabel(task)}`]);
@@ -277,6 +289,11 @@ export async function runRun(options: RunOptions): Promise<number> {
     if (stop) {
       restoreGateTasks();
       return finish(stop.status, stop.reason, gateTasks);
+    }
+    const violation = guard();
+    if (violation) {
+      restoreGateTasks();
+      return finish('stopped', violation, gateTasks);
     }
     git(root, env, ['add', '-A']);
     if (gateTasks.length) git(root, env, ['reset', '-q', '--', tasksRel]);

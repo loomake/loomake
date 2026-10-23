@@ -4,3 +4,5 @@ export type { RunOptions, RunSummary } from './run.js';
 export { ENGINES, DEFAULT_ALLOWED_DOMAINS, claudeArgs } from './engine.js';
 export type { EngineName } from './engine.js';
 export { maskSecrets } from './mask.js';
+export { findViolations } from './guards.js';
+export type { GuardFinding } from './guards.js';
