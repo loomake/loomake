@@ -107,6 +107,8 @@ export function buildPrompt(root: string, changeDir: string, target: string, fai
     '',
     '- tasks.md・trace.md・openspec/specs/ を書き換えない。タスクの完了は loomake run が付ける',
     '- 仕様にない判断が要るときは、`LOOMAKE-QUESTION:` で始まる行に質問を書き、何も変えずに終える',
+    // AGENTS.md の「タスクごとにコミット」より優先する。エンジンのコミットを見つけると run は止まる（REQ-098・REQ-126）
+    '- git でコミットしたりブランチを切り替えたりせず、変更は作業ツリーに残して終える。コミットは loomake run が行う。AGENTS.md にコミットの指示があっても、この決まりを優先する',
     '',
     '## 対象',
     '',
