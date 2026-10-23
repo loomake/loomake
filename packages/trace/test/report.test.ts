@@ -153,6 +153,17 @@ describe('使った証拠の記載', () => {
   });
 });
 
+describe('読めない証拠の記録', () => {
+  it('[REQ-073] JSON として壊れた記録があれば、そのファイルを日本語で示し、スタックトレースを出さずに終了コード 2 を返す', () =>
+    withProject({}, async (root) => {
+      writeFileSync(join(root, `.loomake/evidence/${CHANGE}/broken.json`), '{ 壊れた');
+      const r = await cli(root);
+      expect(r.code).toBe(2);
+      expect(r.stderr).toContain(`証拠の記録 .loomake/evidence/${CHANGE}/broken.json を JSON として読めません`);
+      expect(r.stderr).not.toContain('    at ');
+    }));
+});
+
 describe('出力の形式', () => {
   it('[REQ-074] --format md で Markdown を出し、終了コード 0 を返す', async () => {
     await withProject({}, async (root) => {

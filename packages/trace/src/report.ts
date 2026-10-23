@@ -66,12 +66,21 @@ function findChange(changesDir: string, changeId: string): string | undefined {
     .find((d) => existsSync(join(d, 'trace.md')));
 }
 
+// 読めない記録があれば、どのファイルかを示して止める（fix-review-findings-2 の仮定 A-06）
+function readEvidence(root: string, file: string): Evidence {
+  try {
+    return JSON.parse(readFileSync(file, 'utf8')) as Evidence;
+  } catch {
+    throw new UsageError(`証拠の記録 ${toPosix(relative(root, file))} を JSON として読めません`);
+  }
+}
+
 /** 記録した日時がいちばん新しい証拠の記録（add-trace-report の仮定 A-06） */
-function latestEvidence(dir: string): Evidence | undefined {
+function latestEvidence(root: string, dir: string): Evidence | undefined {
   if (!existsSync(dir)) return undefined;
   const all = readdirSync(dir)
     .filter((f) => f.endsWith('.json'))
-    .map((f) => JSON.parse(readFileSync(join(dir, f), 'utf8')) as Evidence);
+    .map((f) => readEvidence(root, join(dir, f)));
   return all.sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt))[0];
 }
 
@@ -88,7 +97,7 @@ export function buildReport(root: string, changeId: string): Report | undefined 
   if (parsed.errors.length) {
     throw new UsageError(`trace.md を読めません：${parsed.errors.map((e) => `${e.line} 行目 ${e.message}`).join('、')}`);
   }
-  const evidence = latestEvidence(join(root, EVIDENCE_DIR, changeId));
+  const evidence = latestEvidence(root, join(root, EVIDENCE_DIR, changeId));
   if (!evidence) return undefined;
 
   const requirementsOf = new Map<string, string[]>();
