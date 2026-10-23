@@ -323,3 +323,12 @@ describe('日本語のメッセージ', () => {
     });
   });
 });
+
+describe('要件モデルの整合性', () => {
+  it('[REQ-150] 範囲外の要件でも不正なIDを台帳に通さない', () => {
+    const result = withProject({ trace: traceMd({ ledger: [ledgerRow('REQ-012'), ledgerRow('REQ-12', '範囲外')] }) }, specOnly);
+    expect(result.ok).toBe(false);
+    expect(check(result, '要件モデルの整合性')?.status).toBe('fail');
+    expect(check(result, '要件モデルの整合性')?.detail).toContain('REQ-12');
+  });
+});

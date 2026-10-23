@@ -4,10 +4,14 @@ import { spawnSync } from 'node:child_process';
 import {
   LEDGER_STATES,
   VERIFY_RESULT_SCHEMA_VERSION,
+  createAgreement,
+  evaluateAgreement,
+  evaluateTestCoverage,
   extractTestRequirements,
   parseSpec,
   parseTasks,
   parseTrace,
+  type AgreementDecision,
   type ParseError,
   type SpecRequirement,
   type Trace,
@@ -112,7 +116,7 @@ export function runVerify(options: VerifyOptions): VerifyResult {
 }
 
 type Recorder = (check: string, status: VerifyCheckResult['status'], detail?: string) => void;
-type SpecState = { changeDir: string; trace: Trace; live: SpecRequirement[] };
+type SpecState = { changeDir: string; trace: Trace; live: SpecRequirement[]; decision: AgreementDecision };
 
 const formatErrors = (errors: ParseError[]) => errors.map((e) => `${e.file}:${e.line} ${e.message}`).join('\n');
 
@@ -136,6 +140,9 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   const parsed = parseTrace('trace.md', existsSync(tracePath) ? readFileSync(tracePath, 'utf8') : '');
   const trace = parsed.value;
   const { ledger, questions, assumptions } = trace;
+  const model = createAgreement('trace.md', trace);
+  const decision = evaluateAgreement(model.value);
+  record('要件モデルの整合性', model.errors.length ? 'fail' : 'pass', formatErrors(model.errors));
   // 解析できなかった trace.md では未回答の確認事項を数えられないので、エラーは不合格にする（harden-init-and-trace-check の仮定 A-02）
   record('trace.md の解析', parsed.errors.length ? 'fail' : 'pass', formatErrors(parsed.errors));
   if (ledger.length === 0) record('要件台帳', 'fail', 'trace.md に「## 要件台帳」の表がありません');
@@ -144,11 +151,11 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   const badState = ledger.filter((r) => !(LEDGER_STATES as readonly string[]).includes(r['状態']));
   if (badState.length) record('台帳の状態値', 'fail', badState.map((r) => `${r.ID}: "${r['状態']}"`).join(', '));
 
-  const noSource = ledger.filter((r) => !r['出典']);
+  const noSource = ledger.filter((r) => decision.missingSources.some((id) => id === r.ID));
   if (noSource.length) record('台帳の出典', 'fail', `出典が空：${noSource.map((r) => r.ID).join(', ')}`);
 
   // ブロッキングな確認事項（ブロッキング列が yes のもの。仮定 A-04）
-  const openBlocking = questions.filter((q) => /^yes$/i.test(q['ブロッキング']) && !q['回答']);
+  const openBlocking = questions.filter((q) => decision.blockingQuestions.includes(q.ID));
   if (openBlocking.length) {
     record('ブロッキング確認事項', 'fail', openBlocking.map((q) => `${q.ID}（${q['関連']}）${q['質問']}`).join('\n'));
   } else {
@@ -157,10 +164,10 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
 
   checkSharedQuestions(root, config, changeId, questions, record);
 
-  const unapproved = assumptions.filter((a) => !a['承認']);
+  const unapproved = assumptions.filter((a) => decision.unapprovedAssumptions.includes(a.ID));
   if (unapproved.length) record('仮定の承認', 'warn', `未承認：${unapproved.map((a) => `${a.ID} ${a['仮定の内容']}`).join(' / ')}`);
 
-  const pending = ledger.filter((r) => r['状態'] === '確認待ち');
+  const pending = ledger.filter((r) => decision.pendingRequirements.some((id) => id === r.ID));
   if (pending.length) record('確認待ちの要件', 'warn', pending.map((r) => r.ID).join(', '));
 
   // specs
@@ -192,7 +199,7 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   const orphan = ledger.filter((r) => r['状態'] === '反映済' && !referenced.has(r.ID));
   record('反映済の要件が仕様にある', orphan.length ? 'fail' : 'pass', orphan.map((r) => r.ID).join(', '));
 
-  return { changeDir, trace, live };
+  return { changeDir, trace, live, decision };
 }
 
 // 質問に「<change-id> の Q-xx と同じ質問」と書いた確認事項の回答を、参照先と比べる（add-shared-question-check の仮定 A-01・A-02）
@@ -255,7 +262,7 @@ function checkOpenspecValidate(root: string, config: LoomakeConfig, changeId: st
 // ---------- 完了ゲート ----------
 function checkTasksAndPending(spec: SpecState, record: Recorder) {
   // 完了時に確認待ちの要件が残っていてはいけない
-  const pending = spec.trace.ledger.filter((r) => r['状態'] === '確認待ち');
+  const pending = spec.trace.ledger.filter((r) => spec.decision.pendingRequirements.some((id) => id === r.ID));
   record('確認待ちが残っていない', pending.length ? 'fail' : 'pass', pending.map((r) => r.ID).join(', '));
 
   const tasksPath = join(spec.changeDir, 'tasks.md');
@@ -276,7 +283,7 @@ function checkCoverage(
   rel: (p: string) => string,
 ): Record<string, string[]> {
   const needed = [...new Set(live.flatMap((r) => r.sources))].sort();
-  const covered = new Map<string, string[]>();
+  let coverage = evaluateTestCoverage(needed, {});
   if (!existsSync(reportPath)) {
     record(
       '要件ごとのテスト',
@@ -285,11 +292,8 @@ function checkCoverage(
     );
   } else {
     const { value, errors } = extractTestRequirements(config.tests.report, readFileSync(reportPath, 'utf8'));
-    for (const [file, ids] of Object.entries(value)) {
-      const name = rel(resolve(root, file));
-      for (const id of ids) covered.set(id, [...(covered.get(id) ?? []), name]);
-    }
-    const missing = needed.filter((id) => !covered.has(id));
+    coverage = evaluateTestCoverage(needed, Object.fromEntries(Object.entries(value).map(([file, ids]) => [rel(resolve(root, file)), ids])));
+    const missing = coverage.missing;
     if (errors.length) {
       record('要件ごとのテスト', 'fail', errors.map((e) => `${e.file}:${e.line} ${e.message}`).join('\n'));
     } else {
@@ -300,7 +304,7 @@ function checkCoverage(
       );
     }
   }
-  return Object.fromEntries(needed.map((id) => [id, (covered.get(id) ?? []).sort()]));
+  return coverage.coverage;
 }
 
 // ---------- 品質コマンド ----------
