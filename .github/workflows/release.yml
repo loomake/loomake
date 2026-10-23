@@ -15,6 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: git rev-parse --verify main || git branch main origin/main
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -31,7 +34,12 @@ jobs:
             exit 1
           fi
       - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
       - run: pnpm build
+      - run: node scripts/package-smoke.mjs prepare "$RUNNER_TEMP/loomake-package"
+      - run: node scripts/package-smoke.mjs check "$RUNNER_TEMP/loomake-package"
       - run: pnpm changeset publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

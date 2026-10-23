@@ -5,6 +5,9 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   # 3 つの OS で品質コマンドを実行する（REQ-049）
   quality:
@@ -30,6 +33,10 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - run: node scripts/package-smoke.mjs prepare "$RUNNER_TEMP/loomake-package"
+        shell: bash
+      - run: node scripts/package-smoke.mjs check "$RUNNER_TEMP/loomake-package"
+        shell: bash
 
   # 実行時の下限（engines.node >=20.19.0、REQ-048）で、ビルドした CLI が動くかを確かめる。
   # vitest・eslint・changesets は Node 22 以上を求めるので、インストールとビルドは Node 24 で行う
@@ -44,6 +51,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      - run: node scripts/package-smoke.mjs prepare "$RUNNER_TEMP/loomake-package"
+        shell: bash
       - uses: actions/setup-node@v4
         with:
           node-version: 20.19.0
@@ -53,6 +62,8 @@ jobs:
       # archive のあとも動くよう、検査用プロジェクトの change で動かす
       - run: node ../../../packages/cli/dist/cli.js verify --change sample --spec-only
         working-directory: tests/fixtures/verify-project
+      - run: node scripts/package-smoke.mjs check "$RUNNER_TEMP/loomake-package"
+        shell: bash
 
   # PR ごとの完了ゲート（REQ-010, REQ-054, REQ-132）。PR 本文・変えたファイル・ブランチ名から決めた change を --done で検査する
   gate:

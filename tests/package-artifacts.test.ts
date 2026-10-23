@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 const root = join(import.meta.dirname, '..');
-const base = mkdtempSync(join(tmpdir(), 'loomake-artifacts-'));
+const base = mkdtempSync(join(tmpdir(), 'loomake artifacts '));
 const target = join(base, 'prepared');
 const run = (mode: string) => spawnSync(process.execPath, ['scripts/package-smoke.mjs', mode, target], { cwd: root, encoding: 'utf8' });
 afterAll(() => rmSync(base, { recursive: true, force: true }));

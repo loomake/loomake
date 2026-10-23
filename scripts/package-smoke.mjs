@@ -13,8 +13,8 @@ const quote = (value) => win ? `"${value.replace(/"/g, '""')}"` : value;
 const json = (file) => JSON.parse(readFileSync(file, 'utf8'));
 
 function run(command, args, cwd, expected = 0) {
-  const shell = win && (command === 'pnpm' || command === 'npm');
-  const result = spawnSync(command, shell ? args.map(quote) : args, { cwd, encoding: 'utf8', shell, env: { ...process.env, OPENSPEC_TELEMETRY: '0' } });
+  const shell = win && (command === 'pnpm' || command === 'npm' || command.endsWith('.cmd'));
+  const result = spawnSync(shell ? quote(command) : command, shell ? args.map(quote) : args, { cwd, encoding: 'utf8', shell, env: { ...process.env, OPENSPEC_TELEMETRY: '0' } });
   assert.equal(result.status, expected, `${command} ${args.join(' ')}\n${result.stdout ?? ''}${result.stderr ?? ''}${result.error?.message ?? ''}`);
   return result.stdout;
 }
@@ -67,6 +67,9 @@ export async function check(target) {
   assert.equal(json(require.resolve('@loomake/core/schema/verify-result.schema.json')).properties.schemaVersion.const, core.VERIFY_RESULT_SCHEMA_VERSION);
   const cli = join(consumer, 'node_modules/loomake/dist/cli.js');
   const command = (...args) => run(process.execPath, [cli, ...args], consumer);
+  const installedBin = join(consumer, 'node_modules/.bin', win ? 'loomake.cmd' : 'loomake');
+  assert.ok(existsSync(installedBin), 'CLIのbinがインストールされていません');
+  run(installedBin, ['--version'], consumer);
   command('--help');
   assert.equal(command('--version').trim(), json(join(consumer, 'node_modules/loomake/package.json')).version);
   run(process.execPath, [cli], consumer, 2);
