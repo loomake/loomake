@@ -19,3 +19,9 @@
 - [x] 4.1 run・init・変更検出・PR連携のScenarioとassertionを読み、対応と未確認の理由を記録する
 - [x] 4.2 対応表を現在の仕様・試験ソースと照合する
 - [x] 4.3 `pnpm -s verify --change audit-scenario-evidence --done` を通し、実行結果と残る不足を記録する <!-- loomake:gate=done -->
+
+## 5. 未確認の停止条件
+
+- [x] 5.1 未追跡ファイルの表示とカスタムopenspecDirでのrun全体の停止を試験する
+- [x] 5.2 実際のCLIへSIGINTを送り、コミット・未完了の変更・記録を確認する
+- [x] 5.3 対応表を更新し、`pnpm -s verify --change audit-scenario-evidence --done` を通す <!-- loomake:gate=done -->

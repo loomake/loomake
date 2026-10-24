@@ -1,0 +1,37 @@
+{
+  "requirement": "REQ-124",
+  "ok": true,
+  "node": "v24.21.0",
+  "platform": "linux",
+  "signal": "SIGINT",
+  "exit": {
+    "code": 1,
+    "signal": null
+  },
+  "summary": {
+    "change": "sample",
+    "status": "interrupted",
+    "reason": "中断されました",
+    "doneTasks": [
+      "1.1 最初の変更"
+    ],
+    "remainingTasks": [
+      "1.2 途中の変更",
+      "2.1 品質を確認する"
+    ],
+    "lastVerify": null
+  },
+  "initial": "c9528bb4f9eb6567063137fc62781740045d743b",
+  "head": "10f02dca154cf7cdaeffed93a9ca12b025697af4",
+  "partial": "unfinished\n",
+  "scope": "Linux上の配布物と代替エンジン。実際のSIGINTをCLIへ送り、停止・記録・変更保持を確認した。",
+  "snapshotCommit": "4882fe6",
+  "scriptSha256": "63a3229cc95292161578c09f545f83f9875abf5e8bf3f3c61c22ad85d930e04e",
+  "packages": {
+    "loomake-kit-0.0.0.tgz": "d0602f779876e0a4976bfd20801b1fbb75d2198002a5a772160bdbd5d7d6e5fd",
+    "loomake-runner-0.0.0.tgz": "acff454a84f650e7567650b34b4801dbaf64f363590231d36280c08120eb2651",
+    "loomake-trace-0.0.0.tgz": "e5fe6e0b3b61652a9eecfd4ed084917d7dd65d75d6e4e046400d765fcf6e9382",
+    "loomake-core-0.0.0.tgz": "bc5cb4346199bbccd7e4f9d14db84451def19b4847719c64ecf17e3329ec7b5f",
+    "loomake-0.0.0.tgz": "8d69a11703a8b5e8484332b1cf5c5c1be81014c9c8c11e33ad40338191d9ce3b"
+  }
+}

@@ -1,8 +1,8 @@
 # Scenarioと試験の対応
 
-検証時点：`9cb4f2f`の独立した作業コピーに対応表を反映した状態。後続の変更はこの結果に含めない。
+検証時点：4882fe6の独立した作業コピーに216e00dの試験変更と対応表・タスクを反映した状態。後続の変更は含めない。
 
-確認済み 221、置換 2、未確認 159、無効 0 / 全382件
+確認済み 224、置換 2、未確認 162、無効 0 / 全388件
 
 REQ-IDの一致は候補です。対応理由はレビュー上の判断で、試験内容の十分さや外部環境の成功を自動で保証しません。
 
@@ -68,6 +68,12 @@ REQ-IDの一致は候補です。対応理由はレビュー上の判断で、�
 | [openspec/changes/exercise-ai-user-journeys/specs/quality-journeys/spec.md:12](../../openspec/changes/exercise-ai-user-journeys/specs/quality-journeys/spec.md#L12) | AIによる初回導入のシナリオ / 初めて導入する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
 | [openspec/changes/exercise-ai-user-journeys/specs/quality-journeys/spec.md:21](../../openspec/changes/exercise-ai-user-journeys/specs/quality-journeys/spec.md#L21) | AIによる通常操作のシナリオ / 既存プロジェクトを使う | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
 | [openspec/changes/exercise-ai-user-journeys/specs/quality-journeys/spec.md:30](../../openspec/changes/exercise-ai-user-journeys/specs/quality-journeys/spec.md#L30) | AIによる失敗からの復旧のシナリオ / 原因を直して再実行する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/changes/guard-git-internals/specs/run-guards/spec.md:8](../../openspec/changes/guard-git-internals/specs/run-guards/spec.md#L8) | git の設定とフックの変更の検出 / エンジンがフックを足す | unreviewed | 進行中の別の変更で追加されたScenario。条件と試験の対応は未確認。<br>候補 3 件 |
+| [openspec/changes/guard-git-internals/specs/run-guards/spec.md:12](../../openspec/changes/guard-git-internals/specs/run-guards/spec.md#L12) | git の設定とフックの変更の検出 / エンジンが git の設定を変える | unreviewed | 進行中の別の変更で追加されたScenario。条件と試験の対応は未確認。<br>候補 3 件 |
+| [openspec/changes/guard-git-internals/specs/run-guards/spec.md:16](../../openspec/changes/guard-git-internals/specs/run-guards/spec.md#L16) | git の設定とフックの変更の検出 / 前からあるフック | unreviewed | 進行中の別の変更で追加されたScenario。条件と試験の対応は未確認。<br>候補 3 件 |
+| [openspec/changes/guard-git-internals/specs/run/spec.md:8](../../openspec/changes/guard-git-internals/specs/run/spec.md#L8) | 置換する秘密情報の形 / 新しい形のトークン | unreviewed | 進行中の別の変更で追加されたScenario。条件と試験の対応は未確認。<br>候補 13 件 |
+| [openspec/changes/guard-git-internals/specs/run/spec.md:12](../../openspec/changes/guard-git-internals/specs/run/spec.md#L12) | 置換する秘密情報の形 / 秘密鍵のブロック | unreviewed | 進行中の別の変更で追加されたScenario。条件と試験の対応は未確認。<br>候補 13 件 |
+| [openspec/changes/guard-git-internals/specs/run/spec.md:16](../../openspec/changes/guard-git-internals/specs/run/spec.md#L16) | 置換する秘密情報の形 / Bearer トークン | unreviewed | 進行中の別の変更で追加されたScenario。条件と試験の対応は未確認。<br>候補 13 件 |
 | [openspec/changes/harden-release-workflow/specs/release-integrity/spec.md:12](../../openspec/changes/harden-release-workflow/specs/release-integrity/spec.md#L12) | 外部Actionsの不変参照 / ワークフローを検査する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
 | [openspec/changes/harden-release-workflow/specs/release-integrity/spec.md:21](../../openspec/changes/harden-release-workflow/specs/release-integrity/spec.md#L21) | CIと公開の資格情報の制限 / 品質コマンドを実行する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
 | [openspec/changes/harden-release-workflow/specs/release-integrity/spec.md:30](../../openspec/changes/harden-release-workflow/specs/release-integrity/spec.md#L30) | 配布元とprovenanceの設定 / 配布物を検査する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 7 件 |
@@ -246,7 +252,7 @@ REQ-IDの一致は候補です。対応理由はレビュー上の判断で、�
 | [openspec/specs/run-guards/spec.md:59](../../openspec/specs/run-guards/spec.md#L59) | 仕様と trace.md の変更の検出 / trace.md を書き換える | reviewed | 代替エンジンで回答を変更し、停止・対象パス・コミット数をassertする。<br>packages/runner/test/guards.test.ts: 仕様と trace.md の変更の検出 [REQ-111] change の trace.md を書き換えたら止まる |
 | [openspec/specs/run-guards/spec.md:63](../../openspec/specs/run-guards/spec.md#L63) | 仕様と trace.md の変更の検出 / tasks.md を書き換える | reviewed | 代替エンジンで未完了行を消し、停止・対象パス・コミット数をassertする。<br>packages/runner/test/guards.test.ts: 仕様と trace.md の変更の検出 [REQ-111] tasks.md から未完了のタスクの行を消したら止まる |
 | [openspec/specs/run-guards/spec.md:67](../../openspec/specs/run-guards/spec.md#L67) | 仕様と trace.md の変更の検出 / 差分仕様を書き換える | reviewed | 代替エンジンでRequirementを消し、停止・対象パス・コミット数をassertする。<br>packages/runner/test/guards.test.ts: 仕様と trace.md の変更の検出 [REQ-111] 差分仕様から Requirement を消したら止まる |
-| [openspec/specs/run-guards/spec.md:71](../../openspec/specs/run-guards/spec.md#L71) | 仕様と trace.md の変更の検出 / openspecDir を変えたプロジェクト | unreviewed | 変更検出関数のパス一覧は比較しているが、カスタムopenspecDirでのrun全体の停止・終了コード1の試験は未確認。<br>候補 6 件 |
+| [openspec/specs/run-guards/spec.md:71](../../openspec/specs/run-guards/spec.md#L71) | 仕様と trace.md の変更の検出 / openspecDir を変えたプロジェクト | reviewed | openspecDirをspecにし、代替エンジンがspec/specs/x/spec.mdを変更する。run全体の終了コード1・対象名・HEAD不変・未コミット変更の保持・タスク未完了をassertする。<br>packages/runner/test/run-conditions.test.ts: 開始拒否とカスタムの仕様ディレクトリ [REQ-111] openspecDirがspecでもrun全体が仕様変更で停止し、変更とタスクを未コミットのまま残す |
 | [openspec/specs/run-guards/spec.md:75](../../openspec/specs/run-guards/spec.md#L75) | 仕様と trace.md の変更の検出 / 完了ゲートの直しのあいだ | reviewed | 不合格の品質コマンドをコードの変更だけで直し、終了コード0・修正コミットの順序・完了ゲートのチェックを比較する。エンジンは代替プロセスである。<br>packages/runner/test/run.test.ts: 完了ゲートと直し [REQ-100][REQ-111] 不合格なら内容をエンジンに渡して直させ、直しをコミットし、合格したら完了ゲートのタスクを完了にする。run が完了にしたタスクは不正な直し方とみなさない |
 | [openspec/specs/run-guards/spec.md:84](../../openspec/specs/run-guards/spec.md#L84) | 止まったときの差分の表示と承認 / 差分を表示して止まる | reviewed | 停止理由・差分・承認手順・終了コード1を確認し、変更内容とGit indexが空であることをassertする。<br>packages/runner/test/guards.test.ts: 止まったときの差分の表示と承認 [REQ-112] 理由と差分を表示し、変更を作業ツリーに残し、承認のしかたを案内して終了コード 1 を返す |
 | [openspec/specs/run-guards/spec.md:88](../../openspec/specs/run-guards/spec.md#L88) | 止まったときの差分の表示と承認 / 承認しないで実行し直す | reviewed | 停止後に未コミットのまま再実行し、終了コード1・開始拒否の理由・変更内容が残ることをassertする。<br>packages/runner/test/guards.test.ts: 止まったときの差分の表示と承認 [REQ-112] 承認せずにもう一度実行すると、未コミットの変更があるので始めない |
@@ -266,7 +272,7 @@ REQ-IDの一致は候補です。対応理由はレビュー上の判断で、�
 | [openspec/specs/run/spec.md:13](../../openspec/specs/run/spec.md#L13) | 仕様ゲートの確認 / 仕様ゲートに不合格 | reviewed | 未回答の質問を与え、終了コード1・質問ID・ブランチを作らないこととエンジン呼出なしをassertする。<br>packages/runner/test/run.test.ts: 実行前の確認 [REQ-093] 仕様ゲートに不合格なら、内容を表示し、ブランチを作らず、エンジンを呼ばずに終了コード 1 を返す |
 | [openspec/specs/run/spec.md:17](../../openspec/specs/run/spec.md#L17) | 仕様ゲートの確認 / 仕様ゲートに合格 | reviewed | 合格する入力で、代替エンジンの呼出と最終終了コード0をassertする。<br>packages/runner/test/run.test.ts: 実行前の確認 [REQ-093] 仕様ゲートに合格すれば、実装に進む |
 | [openspec/specs/run/spec.md:26](../../openspec/specs/run/spec.md#L26) | 未コミットの変更があるときは始めない / 変更したファイルがある | reviewed | 追跡ファイルを変更し、終了コード1・対象名・代替エンジン呼出なしをassertする。<br>packages/runner/test/run.test.ts: 実行前の確認 [REQ-094] コミット済みのファイルを書き換えていたら、ファイル名を出し、エンジンを呼ばずに終了コード 1 を返す |
-| [openspec/specs/run/spec.md:30](../../openspec/specs/run/spec.md#L30) | 未コミットの変更があるときは始めない / 追跡していないファイルがある | unreviewed | 未追跡ファイルがあると開始を拒否してエンジンを呼ばない試験はあるが、Scenarioが要求するファイル名の表示のassertionがない。<br>候補 3 件 |
+| [openspec/specs/run/spec.md:30](../../openspec/specs/run/spec.md#L30) | 未コミットの変更があるときは始めない / 追跡していないファイルがある | reviewed | 未追跡ファイルを作り、終了コード1・対象名の表示・ブランチ作成なし・HEAD不変・代替エンジン呼出なしをassertする。<br>packages/runner/test/run-conditions.test.ts: 開始拒否とカスタムの仕様ディレクトリ [REQ-094] 未追跡のファイル名を表示し、ブランチとコミットを作らずエンジンを呼ばない |
 | [openspec/specs/run/spec.md:34](../../openspec/specs/run/spec.md#L34) | 未コミットの変更があるときは始めない / テストのレポートを除外していない | reviewed | レポートの除外を消し、終了コード1・対象パス・除外を足す案内・エンジン呼出なしをassertする。<br>packages/runner/test/run.test.ts: 実行前の確認 [REQ-094] テストのレポートを .gitignore で除外していなければ、足すよう表示し、エンジンを呼ばずに終了コード 1 を返す |
 | [openspec/specs/run/spec.md:43](../../openspec/specs/run/spec.md#L43) | 予定だけを表示する / --dry-run | reviewed | CLIでdry-runを実行し、タスクと指示・終了コード0・ブランチ作成なし・代替エンジン呼出なしをassertする。<br>packages/runner/test/run.test.ts: 実行前の確認 [REQ-095] --dry-run は、タスクの一覧と最初の指示を表示し、ブランチを作らず、エンジンを呼ばずに終了コード 0 を返す |
 | [openspec/specs/run/spec.md:52](../../openspec/specs/run/spec.md#L52) | change のブランチ / ブランチがない | reviewed | 実際のGitで、開始HEADと作成したブランチのmerge-baseの一致、タスクコミットの存在を比較する。<br>packages/runner/test/run.test.ts: ブランチとタスク [REQ-096] loomake/&lt;change-id&gt; がなければ、いまの HEAD から作ってコミットする |
@@ -300,7 +306,7 @@ REQ-IDの一致は候補です。対応理由はレビュー上の判断で、�
 | [openspec/specs/run/spec.md:229](../../openspec/specs/run/spec.md#L229) | コンテナの中での実行 / devcontainer の中 | reviewed | 他のコンテナ判定条件を外し、REMOTE_CONTAINERSだけを設定して警告なし・終了コード0をassertする。<br>packages/runner/test/run.test.ts: コンテナ [REQ-120] REMOTE_CONTAINERS が設定されていれば、コンテナの中とみなして警告しない |
 | [openspec/specs/run/spec.md:238](../../openspec/specs/run/spec.md#L238) | コンテナの外での確認 / 端末で断る | reviewed | コンテナ判定を外して拒否の応答を注入し、確認文・終了コード1・代替エンジン呼出なしをassertする。<br>packages/runner/test/run.test.ts: コンテナ [REQ-122] コンテナの外で確認に断ると、エンジンを呼ばずに終了コード 1 を返す |
 | [openspec/specs/run/spec.md:242](../../openspec/specs/run/spec.md#L242) | コンテナの外での確認 / 確認できない環境 | reviewed | コンテナ判定を外した非対話実行で、警告・終了コード1・代替エンジン呼出なしをassertする。<br>packages/runner/test/run.test.ts: コンテナ [REQ-122] コンテナの外で確認を受け付けられなければ、警告して終了コード 1 を返す |
-| [openspec/specs/run/spec.md:251](../../openspec/specs/run/spec.md#L251) | 中断されたときの記録 / 2 つ目のタスクの途中で中断する | unreviewed | AbortControllerによる中断で先行コミットと未完了状態を確認する試験はあるが、Scenarioの条件である実プロセスへのSIGINT送信は未確認。<br>候補 1 件 |
+| [openspec/specs/run/spec.md:251](../../openspec/specs/run/spec.md#L251) | 中断されたときの記録 / 2 つ目のタスクの途中で中断する | reviewed | Linux上でインストールした配布物のCLIを起動し、2つ目の代替エンジンが書いた後にSIGINTを送る。スクリプトが終了コード1・先行コミット1件・変更保持・中断summary・タスク未完了・エンジン終了をassertし、試験も保存した結果を比較する。Windowsの中断動作は確認していない。<br>tests/package-artifacts.test.ts: 実際に配るパッケージ [REQ-124] POSIXの配布物を実際のSIGINTで中断する。Windowsでは検証対象外を明示する |
 | [openspec/specs/run/spec.md:260](../../openspec/specs/run/spec.md#L260) | 動作環境 / Node.js 20.19 で動く | unreviewed | enginesの宣言は比較しているが、下限Node 20.19でrunを実行した結果は未確認。<br>候補 1 件 |
 | [openspec/specs/run/spec.md:269](../../openspec/specs/run/spec.md#L269) | runner の実行時依存 / runner の依存 | reviewed | runnerのdependenciesのキーがcore・kit・traceだけであることを比較する。<br>packages/runner/test/run.test.ts: 依存と動作環境 [REQ-123] @loomake/runner の dependencies は core・kit・trace だけ |
 | [openspec/specs/run/spec.md:278](../../openspec/specs/run/spec.md#L278) | 実行中の失敗 / 実行中に git のコミットが失敗する | reviewed | 失敗する実際のpre-commitフックで、終了コード1・理由とstderr・停止したsummary・完了なしと残りのタスクをassertする。<br>packages/runner/test/run.test.ts: 実行中の失敗 [REQ-137] 始めたあとにコミットが git のフックで失敗したら、理由と残ったタスクを記録に書き、終了コード 1 で止まる |

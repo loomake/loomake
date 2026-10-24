@@ -45,4 +45,4 @@ node scripts/scenario-audit.mjs .loomake/quality/scenario-audit-other docs/quali
 
 未確認には、試験が存在するか内容をまだ精査していないものが含まれる。すべてを不具合と断定せず、条件と結果の不足を調べる。Linux上の静的検査を、別OS・実エンジン・実際のGitHub接続の成功の根拠として使わない。
 
-初回は360件を一覧化し、試験内容を読んだ44件と置換2件を記録した。継続レビューでverifyとtraceの対応など83件を追加し、現在は確認済み127件・置換2件・未確認231件である。未確認が残るため監査の終了コードは1で、全Scenarioの検証や全評価90点の達成とは報告しない。
+直近の件数と検証時点は[対応表](quality/scenario-audit.md)と[実行結果](../openspec/changes/audit-scenario-evidence/results.json)を参照する。独立したコピーで検証した場合は、そのコミットと追加したファイルのハッシュを記録する。後続の変更を、そのコピーの成功結果から合格扱いにしない。未確認が残る間は、全Scenarioの検証や全評価90点の達成とは報告しない。
