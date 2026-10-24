@@ -9,3 +9,5 @@ export type { InitOptions, InitFile, PackageManager } from './init/init.js';
 export { unifiedDiff } from './init/diff.js';
 export { runDoctor, diagnose } from './doctor/doctor.js';
 export type { DoctorCheck, DoctorLevel, DoctorOptions } from './doctor/doctor.js';
+export { createInputReader, DOCUMENT_LIMITS, JSON_LIMITS } from './input.js';
+export type { InputLimits, InputEntry, InputReader } from './input.js';

@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-/** 使い方や設定の誤り。CLI は終了コード 2 で終える（REQ-041） */
-export class UsageError extends Error {}
+import { UsageError } from '../errors.js';
+export { UsageError } from '../errors.js';
 
 export type LoomakeConfig = {
   openspecDir: string;
