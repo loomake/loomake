@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import { RuntimeFailure, UsageError, runVerify } from '@loomake/kit';
 import { main } from '../../cli/src/main.js';
-import { withProcessBudget } from '../../kit/src/process.js';
+import { withProcessBudget } from '../../kit/src/runtime/process.js';
 import { runRecord } from '@loomake/trace';
 import { runRun } from '@loomake/runner';
 import { makeRepo, CHANGE, type Repo } from './helpers.js';

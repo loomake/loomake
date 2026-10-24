@@ -8,7 +8,7 @@ import { once } from 'node:events';
 import { publishEvidence } from '../src/publication.js';
 
 const source = join(import.meta.dirname, '../src/publication.ts');
-const errors = pathToFileURL(join(import.meta.dirname, '../../kit/src/errors.ts')).href;
+const errors = pathToFileURL(join(import.meta.dirname, '../../kit/src/runtime/errors.ts')).href;
 const content = '{"ok":true}\n';
 
 describe('証拠公開中の実プロセスの強制終了', () => {

@@ -1,7 +1,7 @@
 import { accessSync, constants, existsSync, statSync } from 'node:fs';
 import { delimiter, isAbsolute, join, resolve } from 'node:path';
-import { createInputReader } from '../input.js';
-import { runExternal, withProcessBudget } from '../process.js';
+import { createInputReader } from '../runtime/input.js';
+import { runExternal, withProcessBudget } from '../runtime/process.js';
 import { classifyCommand } from './command.js';
 import { DEFAULT_TEST_REPORT, RuntimeFailure, UsageError, loadConfig, type LoomakeConfig } from '../verify/config.js';
 

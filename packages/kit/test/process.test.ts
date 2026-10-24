@@ -2,8 +2,8 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { ProcessLimitError, runExternal, withProcessBudget } from '../src/process.js';
-import { RuntimeFailure, UsageError } from '../src/errors.js';
+import { ProcessLimitError, runExternal, withProcessBudget } from '../src/runtime/process.js';
+import { RuntimeFailure, UsageError } from '../src/runtime/errors.js';
 
 const call = (code: string, options: Parameters<typeof runExternal>[2] = {}) => runExternal(process.execPath, ['-e', code], options);
 function alive(pid: number) {

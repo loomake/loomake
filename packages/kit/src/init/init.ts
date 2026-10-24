@@ -3,7 +3,7 @@ import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DEFAULT_TEST_REPORT } from '../verify/config.js';
 import { unifiedDiff } from './diff.js';
-import { toPosix } from '../change-files.js';
+import { toPosix } from '../runtime/change-files.js';
 
 // kit の templates/。src/init/ から読んでも dist/init/ から読んでも 2 つ上にある
 const TEMPLATES = fileURLToPath(new URL('../../templates/', import.meta.url));
