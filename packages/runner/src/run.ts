@@ -61,13 +61,16 @@ const isLegacyGateTask = (t: Task) => !hasGateMark(t) && /verify/.test(t.text) &
 // 完了ゲートを通すタスクはエンジンに渡さず、合格したときに run が完了にする
 const isGateTask = (t: Task) => hasGateMark(t) || isLegacyGateTask(t);
 
+/** loomake.config.json の run の下で読むキー。verify と doctor の知っているキー（KNOWN_CONFIG_KEYS.run）にも入れる */
+export const RUN_CONFIG_KEYS = ['maxFixes', 'timeoutMinutes'] as const;
+
 /** loomake.config.json の run の設定。既定は直し 5 回・60 分（add-run-loop の仮定 A-16） */
 function loadRunConfig(root: string): RunConfig {
   const p = join(root, 'loomake.config.json');
   const raw = existsSync(p) ? (JSON.parse(readFileSync(p, 'utf8')) as { run?: Record<string, unknown> }).run : undefined;
   const config: RunConfig = { maxFixes: 5, timeoutMinutes: 60 };
   if (raw === undefined) return config;
-  for (const key of ['maxFixes', 'timeoutMinutes'] as const) {
+  for (const key of RUN_CONFIG_KEYS) {
     const v = raw[key];
     if (v === undefined) continue;
     if (typeof v !== 'number' || !(v > 0)) throw new UsageError(`loomake.config.json の run.${key} は正の数にしてください`);

@@ -79,6 +79,8 @@ export function runVerify(options: VerifyOptions): VerifyResult {
     return toPosix(inside ?? relative(root, p));
   };
   const mode: VerifyMode = changeId ? (options.gate ?? 'spec-only') : 'quality';
+  // 知らないキーは、打ち間違いに気づけるよう警告にする。新しい版の設定でも止まらないよう、不合格にはしない（REQ-039）
+  if (config.unknownKeys.length) record('loomake.config.json', 'warn', `知らないキー：${config.unknownKeys.join('、')}（打ち間違いなら直してください）`);
   let coverage: Record<string, string[]> | undefined;
 
   if (!changeId) {
