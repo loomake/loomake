@@ -30,6 +30,8 @@ npx loomake trace report --change <id>            # 検収レポートを出す
 | [docs/positioning.md](docs/positioning.md) | Loomake を使う人・導入を検討する人 | OpenSpec・AI エージェント・テストランナー・CI との分担と、開発の流れの中での位置付け |
 | [docs/for-agents.md](docs/for-agents.md) | Loomake を入れたプロジェクトで働く AI エージェント | 状況ごとの手順、verify が不合格のときの直し方、終了コードと JSON |
 | [AGENTS.md](AGENTS.md) | AI エージェント・開発者 | このリポジトリで AI が従うルール |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | このリポジトリに貢献する人 | 開発の環境、change の作り方、PR の出し方 |
+| [SECURITY.md](SECURITY.md) | 脆弱性を見つけた人 | 脆弱性の報告のしかたと、`loomake run` を使うときの注意 |
 | [docs/flow.md](docs/flow.md) | このリポジトリを開発する人 | Loomake を Loomake で作る流れ |
 | [docs/architecture.md](docs/architecture.md) | このリポジトリを開発する人 | 全体の構成、名前、作る順番 |
 | [docs/requirements/](docs/requirements/) | このリポジトリを開発する人 | 要件定義書。core・kit は [mvp-v0.7.md](docs/requirements/mvp-v0.7.md)、trace は [trace-v0.1.md](docs/requirements/trace-v0.1.md)、run は [runner-v0.1.md](docs/requirements/runner-v0.1.md)。過去の版は trace.md の出典として残している |
