@@ -25,6 +25,8 @@ CLIと利用者向けのメッセージ・規約は日本語を対象とする�
 
 証拠の保存は、同じディレクトリに一時ファイルを作り、完全に書いた後にハードリンクで上書きせず公開する。trace recordとrunの証拠保存には、ハードリンクを作れる保存先が必要である。対応しない場合は停止する。保存失敗と強制終了の確認は[run-recovery.md](run-recovery.md)を参照する。
 
+実行記録は既定で1回128MiB、履歴全体512MiBまでとする。既存履歴が多い環境では、開始前に止まる場合がある。設定と整理の方法は[resources.md](resources.md)を参照する。通常のsummary.jsonの契約は維持する。summaryを予約容量へ保存できない場合に使うstop.jsonは、schemaVersion 1・kind run-stopの別形式であり、summaryとして解釈しない。
+
 ## 変更を公開する判断
 
 利用者に影響する変更にはchangesetと移行の説明を付ける。現在の0.xでは、破壊的変更はminorの変更として扱い、単にpatchへ含めない。JSONの互換性を壊す場合はschemaVersionの変更と旧形式への対応範囲を明記する。
