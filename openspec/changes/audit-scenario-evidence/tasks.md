@@ -7,3 +7,9 @@
 
 - [x] 2.1 更新手順・限界・TDDと監査結果を記録し、既存の製品契約を維持する
 - [x] 2.2 `pnpm -s verify --change audit-scenario-evidence --done` を通す <!-- loomake:gate=done -->
+
+## 3. 継続レビュー
+
+- [x] 3.1 verifyとtraceのScenarioの条件・assertionを読み、対応と未確認の理由を記録する
+- [x] 3.2 既存仕様に対して不足した検証を、期待値を維持して追加する
+- [ ] 3.3 対応表と結果を更新し、`pnpm -s verify --change audit-scenario-evidence --done` を通す <!-- loomake:gate=done -->

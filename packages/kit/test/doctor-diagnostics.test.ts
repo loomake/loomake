@@ -70,6 +70,15 @@ describe('Gitの診断の境界', () => {
     const result = processes.withProcessBudget({ timeoutMs: 1 }, () => { const start = Date.now(); while (Date.now() - start < 5) { /* 先に期限を使い切る。 */ } return run(root, bin); });
     expect(result.code).toBe(1); expect(result.text).toContain('実行時間の上限'); expect(result.text).not.toContain('git が見つかりません'); expect(result.text).not.toContain('レポート（.loomake/test-report.json）が .gitignore で除外されていません');
   }));
+  it('[REQ-187] 実際にGit設定が壊れた場合は除外状態を断定しない', () => fixture((root, bin) => {
+    writeFileSync(join(root, '.git/config'), '[broken\n');
+    const result = run(root, bin);
+    expect(result.code).toBe(1);
+    expect(result.text).toContain('git の状態を確認できません');
+    expect(result.text).not.toContain('git が見つかりません');
+    expect(result.text).not.toContain('除外されていません');
+    expect(result.text).toContain('git status');
+  }));
   it('[REQ-187] check-ignoreの異常終了を未除外と解釈しない', () => fixture((root, bin) => {
     const original = processes.runExternal;
     const spy = vi.spyOn(processes, 'runExternal').mockImplementation((command, args, options) => args[0] === 'check-ignore' ? original(process.execPath, ['-e', 'process.exit(128)'], options) : original(command, args, options));

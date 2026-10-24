@@ -114,7 +114,12 @@ describe('verify の性能', () => {
     const spec = ['## ADDED Requirements', '', ...ids.map((id) => requirement(`振る舞い ${id}`, { source: `Source: ${id}` }))].join('\n');
     const r = await withProject({ trace, spec, config: { openspecValidate: 'auto', commands: {} } }, async (root) => {
       const tests: Record<string, [string, string][]> = {};
-      for (let f = 0; f < 1000; f++) tests[`tests/t${f}.test.ts`] = [[`[${ids[f % 500]}] テスト ${f}`, 'passed']];
+      mkdirSync(join(root, 'tests'));
+      for (let f = 0; f < 1000; f++) {
+        const name = `tests/t${f}.test.ts`;
+        tests[name] = [[`[${ids[f % 500]}] テスト ${f}`, 'passed']];
+        writeFileSync(join(root, name), `it('[${ids[f % 500]}] テスト ${f}', () => {});\n`);
+      }
       writeReport(root, tests);
       const start = performance.now();
       const result = await run(root, 'verify', '--change', CHANGE, '--done', '--skip-commands', '--json');

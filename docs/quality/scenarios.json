@@ -259,7 +259,7 @@
         {
           "file": "packages/kit/test/doctor-diagnostics.test.ts",
           "contains": "のscript欠落を検出する",
-          "sha256": "48773c7da0d51d9e44e843ca2e810b9ba5112067a2334244a501305253da5019"
+          "sha256": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0"
         }
       ]
     },
@@ -275,7 +275,7 @@
         {
           "file": "packages/kit/test/doctor-diagnostics.test.ts",
           "contains": "実行せず変更せず、存在と未確認の範囲を分ける",
-          "sha256": "48773c7da0d51d9e44e843ca2e810b9ba5112067a2334244a501305253da5019"
+          "sha256": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0"
         }
       ]
     },
@@ -291,7 +291,7 @@
         {
           "file": "packages/kit/test/doctor-diagnostics.test.ts",
           "contains": "は未確認の注意とし、不存在と断定しない",
-          "sha256": "48773c7da0d51d9e44e843ca2e810b9ba5112067a2334244a501305253da5019"
+          "sha256": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0"
         }
       ]
     },
@@ -307,7 +307,7 @@
         {
           "file": "packages/kit/test/doctor-diagnostics.test.ts",
           "contains": "yarn ",
-          "sha256": "48773c7da0d51d9e44e843ca2e810b9ba5112067a2334244a501305253da5019"
+          "sha256": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0"
         }
       ]
     },
@@ -323,7 +323,7 @@
         {
           "file": "packages/kit/test/doctor-diagnostics.test.ts",
           "contains": "実行できないファイルを合格にしない",
-          "sha256": "48773c7da0d51d9e44e843ca2e810b9ba5112067a2334244a501305253da5019"
+          "sha256": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0"
         }
       ]
     },
@@ -339,7 +339,7 @@
         {
           "file": "packages/kit/test/doctor-diagnostics.test.ts",
           "contains": "AGENTS.mdとopenspecの種類を確認する",
-          "sha256": "48773c7da0d51d9e44e843ca2e810b9ba5112067a2334244a501305253da5019"
+          "sha256": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0"
         }
       ]
     },
@@ -355,15 +355,25 @@
         {
           "file": "packages/kit/test/doctor-diagnostics.test.ts",
           "contains": "共有期限の終了をGit不存在と混同しない",
-          "sha256": "48773c7da0d51d9e44e843ca2e810b9ba5112067a2334244a501305253da5019"
+          "sha256": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0"
         }
       ]
     },
     {
       "id": "SCN-5b75af5a0c71ea2e9c76",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "747f1a63f9bbc35643eb446a7b47aa1595f9d70781d4402fe808ae96fc6ba830",
-      "reason": "check-ignoreの異常終了の注入は試験済みだが、壊れたGit設定そのものを与えるScenarioの対応は未確認。"
+      "reason": "実際の.git/configを壊したfixtureで、終了コード1・Git状態の確認失敗・git statusの案内を確認し、Git不存在や未除外と誤案内しないことをassertする。",
+      "sources": [
+        "REQ-187"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/doctor-diagnostics.test.ts",
+          "contains": "実際にGit設定が壊れた場合は除外状態を断定しない",
+          "sha256": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0"
+        }
+      ]
     },
     {
       "id": "SCN-c90ad29dcb12c5497396",
@@ -2112,519 +2122,1344 @@
     },
     {
       "id": "SCN-97209a578509c311cdb2",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "fd2a015f182b302a79fb17acbba92bdb9c4801a7278eab49508ed4adacba5da6",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "実際のGitと品質コマンドで記録し、終了コード0、日時とSHAを含むファイル名、記録JSONの版・change・時刻・Git日時・検証結果をassertする。",
+      "sources": [
+        "REQ-066"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/record.test.ts",
+          "contains": "完了ゲートに合格した結果を、SHA・コミットの日時",
+          "sha256": "c2bb3939cea0fdf9786b20c2a4fd2dfa500c1904c71183d648fc7c2b626379d4"
+        }
+      ]
     },
     {
       "id": "SCN-ad119243436a630dfbe3",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "9eed33a951f73007ed6cc1d2e537df27aece576abe832508804ae4d985a7c5d9",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "記録後のパスとコミットするよう促す日本語の案内をstdoutでassertする。",
+      "sources": [
+        "REQ-066"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/record.test.ts",
+          "contains": "記録したファイルのパスと、git にコミットするよう促す案内",
+          "sha256": "c2bb3939cea0fdf9786b20c2a4fd2dfa500c1904c71183d648fc7c2b626379d4"
+        }
+      ]
     },
     {
       "id": "SCN-a7fc8c59a1736ef2df7a",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "ffcf6ba83e23a4f89b761950d25550bba234950c72f75ff24675c83deac15344",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "合格試験のないレポートを品質コマンドで生成し、終了コード1でも証拠1件とverify.ok falseをassertする。",
+      "sources": [
+        "REQ-066"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/record.test.ts",
+          "contains": "完了ゲートに不合格でも結果を記録し",
+          "sha256": "c2bb3939cea0fdf9786b20c2a4fd2dfa500c1904c71183d648fc7c2b626379d4"
+        }
+      ]
     },
     {
       "id": "SCN-6b4e0fc82423fab18f04",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "031d3e80ea05928e528f52f60042ee0b05f4c96e3dea6c432623fd96af63282d",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "CLIへ存在しないchangeを渡し、終了コード2と日本語の理由、証拠ディレクトリを作らないことをassertする。",
+      "sources": [
+        "REQ-066"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/record.test.ts",
+          "contains": "存在しない change では何も記録せず",
+          "sha256": "c2bb3939cea0fdf9786b20c2a4fd2dfa500c1904c71183d648fc7c2b626379d4"
+        }
+      ]
     },
     {
       "id": "SCN-73e139c267a588ccbac2",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "7fd9c206ec2720d02515a3a65227b7c5cd68826960b238e0a54274db96dc3dc5",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "CLIへ親参照を含むIDを渡し、終了コード2とパス区切りの案内、証拠を作らないことをassertする。",
+      "sources": [
+        "REQ-066"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/record.test.ts",
+          "contains": "change-id にパスの区切りを含めると、何も記録せず",
+          "sha256": "c2bb3939cea0fdf9786b20c2a4fd2dfa500c1904c71183d648fc7c2b626379d4"
+        }
+      ]
     },
     {
       "id": "SCN-514255a944e556b0a291",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "ad6089cb26c1e5595c0d4b96593ba35f4aace88b0c08cc89ecc6319620b4cc1c",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "追跡するproposalを変更し、終了コード1と未コミットの案内・ファイル名、証拠が空であることをassertする。",
+      "sources": [
+        "REQ-067"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/record.test.ts",
+          "contains": "コミット済みのファイルを書き換えていたら、ファイル名を出して記録せず",
+          "sha256": "c2bb3939cea0fdf9786b20c2a4fd2dfa500c1904c71183d648fc7c2b626379d4"
+        }
+      ]
     },
     {
       "id": "SCN-bc1cd4bf22ab14931952",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "4c0a938825c2f9abeeaf3dc2abe127e7ff3606135c6e352f54df405f2a0123be",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "未追跡new.txtを作成し、終了コード1、ファイル名と証拠が空であることをassertする。",
+      "sources": [
+        "REQ-067"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/record.test.ts",
+          "contains": "git が追跡していない新しいファイルがあれば",
+          "sha256": "c2bb3939cea0fdf9786b20c2a4fd2dfa500c1904c71183d648fc7c2b626379d4"
+        }
+      ]
     },
     {
       "id": "SCN-00626e84d4dc2c99e719",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "e88ce499b13a4f479ef182628e164ed0ae25dc13a31e0c971e7efb1ab8878610",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "除外するlogだけを作成し、終了コード0と証拠1件をassertする。",
+      "sources": [
+        "REQ-067"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/record.test.ts",
+          "contains": ".gitignore で除外したファイルだけが変わっていれば",
+          "sha256": "c2bb3939cea0fdf9786b20c2a4fd2dfa500c1904c71183d648fc7c2b626379d4"
+        }
+      ]
     },
     {
       "id": "SCN-450588627ce55b4b0df9",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "5e9f9d0443ee5e873122377bef2a893dd91d19f51a945eac9543a71d6635de5f",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "最初の記録をコミットし、時刻を変えて再記録して、ファイル2件と最初の内容の一致をassertする。",
+      "sources": [
+        "REQ-068"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/record.test.ts",
+          "contains": "2 回記録すると、ファイルが 2 つになり",
+          "sha256": "c2bb3939cea0fdf9786b20c2a4fd2dfa500c1904c71183d648fc7c2b626379d4"
+        }
+      ]
     },
     {
       "id": "SCN-929d778ba87ce6d2f046",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "d16c3defb70e773f9acec749e62e02a63ace89da552de4594c333071adf1506e",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "同名の既存ファイルを用意し、終了コード1と既存の案内、内容が不変であることをassertする。",
+      "sources": [
+        "REQ-068"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/record.test.ts",
+          "contains": "同じ名前の記録がすでにあれば、書き換えずに",
+          "sha256": "c2bb3939cea0fdf9786b20c2a4fd2dfa500c1904c71183d648fc7c2b626379d4"
+        }
+      ]
     },
     {
       "id": "SCN-7becee6258eb49ff7efa",
       "status": "unreviewed",
       "scenarioSha256": "e77e3b10f83b130e8ab4c6a3177507925c193dbdd8facd2ba8197af8ce449d9c",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "ネットワーク関連import・fetchの静的検査と通常のローカル実行はあるが、接続不能の環境での実行は未確認。"
     },
     {
       "id": "SCN-fae2b8b93f59b5ad7abf",
       "status": "unreviewed",
       "scenarioSha256": "f003e1f803559f401624e084395317830d082e7fe7463e811e2e451042eb6578",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "engines宣言の検査だけでは下限Nodeでの実行成功を示さない。このホストの実行はNode 24であり、20.19の結果は未確認。"
     },
     {
       "id": "SCN-d116692eed9ee3f29f8a",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "b2512ac7c97a009c9d71438c50dc81629a61a29f7afc4876f8f86c418bf68c4e",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "traceのdependenciesのキーがcoreとkitの2つだけであることを比較する。",
+      "sources": [
+        "REQ-083"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/record.test.ts",
+          "contains": "@loomake/trace の dependencies は",
+          "sha256": "c2bb3939cea0fdf9786b20c2a4fd2dfa500c1904c71183d648fc7c2b626379d4"
+        }
+      ]
     },
     {
       "id": "SCN-698476b2e9f8e82a8305",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "0d2257b56fa168b3bce0ebd722d19b4b3f92e3dfd501814505790f252958ec39",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "記録を読み、traceと差分仕様のそれぞれのpath・SHA256・contentを実際の入力と比較する。",
+      "sources": [
+        "REQ-127"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/record.test.ts",
+          "contains": "trace.md と差分仕様のパス・内容・SHA-256 を",
+          "sha256": "c2bb3939cea0fdf9786b20c2a4fd2dfa500c1904c71183d648fc7c2b626379d4"
+        }
+      ]
     },
     {
       "id": "SCN-701da81e06785da93043",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "0c4a3f95956d7e52823987229bfd9448d1bbdf80b184ed323a39b6ea1a42d1d0",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "品質コマンドがtracked.txtを変更する状態で実行し、終了コード1、理由とファイル名、証拠を残さないことをassertする。",
+      "sources": [
+        "REQ-128"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/record.test.ts",
+          "contains": "品質コマンドが追跡しているファイルを書き換えたら",
+          "sha256": "c2bb3939cea0fdf9786b20c2a4fd2dfa500c1904c71183d648fc7c2b626379d4"
+        }
+      ]
     },
     {
       "id": "SCN-b7ca10912f322f432159",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "fc76577a13004f9bbf413cc8f2c3a2861d0b354cb36352a815c9ec18aea6f6e0",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "品質コマンドが除外したJSONだけを生成し、終了コード0、生成したレポートの存在と証拠1件をassertする。",
+      "sources": [
+        "REQ-128"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/record.test.ts",
+          "contains": "品質コマンドが .gitignore で除外したテストのレポートだけを",
+          "sha256": "c2bb3939cea0fdf9786b20c2a4fd2dfa500c1904c71183d648fc7c2b626379d4"
+        }
+      ]
     },
     {
       "id": "SCN-d305dcdef92686e490ed",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "6d220a7611a431653367f65df527245475399fe6924acb5446717c60ada159fb",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "同等のREQ-012の入力で、出典・状態・要約・Requirement・試験・結果の行全体とMarkdownの表を比較する。",
+      "sources": [
+        "REQ-070"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "要件ごとに、出典・状態・対応する Requirement",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-21a1dc64ae669c5e17a9",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "0c82262a877a06c551f424e24ab91cfab17318d18569c34d63fcd6c0406b2337",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "古い不合格と新しい合格を異なる試験一覧で保存し、新しいSHA・全体結果・試験一覧・要件の結果・注意一覧をassertする。",
+      "sources": [
+        "REQ-070"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "新しい記録からテストファイルと結果を取り、古い記録の値を混ぜない",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-6a31ad676ae78c172c55",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "10309427aacefba1cdf1134a4840df1378051dd2038bc0a9520f1c21143cc349",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "archiveだけに置いたchangeと文書の証拠でレポートが作られ、そのRequirementが行に現れることをassertする。",
+      "sources": [
+        "REQ-070"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "archive した change でも、archive の trace.md と差分仕様から",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-da7cda8ed9988b629804",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "0e76e105b12d1291a99fc128df5b9f13be31778e0e98923a8da58d05f82e3245",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "証拠のない入力で終了コード1と対象changeに対するtrace recordの案内をassertする。",
+      "sources": [
+        "REQ-070"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "証拠の記録がなければ、trace record を先に実行するよう",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-9f665713c21c7312691b",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "0dd802a34cd610811b7173b36222f04a34d0f8662bb34a6227439d6dca0dcac3",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "CLIへ親参照のIDを渡し、終了コード2とパス区切りの日本語の理由をassertする。",
+      "sources": [
+        "REQ-070"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "change-id にパスの区切りを含めると、日本語で表示して",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-990042ab06d5cec624b1",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "d9c8858579356a2b795807ef8d9876197c9422ead77859fc08c73e32f183e226",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "証拠作成後のtrace要約を変更し、行は元の要約・合格を保ち、changedDocumentsにtraceを含み、新しい要約を出さないことをassertする。",
+      "sources": [
+        "REQ-070"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "記録のあとで要約を変えても、表には記録したときの要約が載り",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-595bc3a27f4cb872e4ab",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "0378b179e0895d889cefb1cea4fbe231a0c81bf9eecab18759fd5c974ae8550e",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "範囲外と既存仕様で充足を含む台帳で、それぞれのID・状態・結果nullと範囲外のMarkdown行をassertする。",
+      "sources": [
+        "REQ-071"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "範囲外と既存仕様で充足の要件も、状態を付けて表に含める",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-5fbdd67cf1f0d15de3b6",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "4d6106bf57ed48d70fbd08e676d21c25cee3e98b1faab3d40dfdb562dcc3584e",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "既存仕様で充足の要件のIDと状態が行に残り、反映済の合格と区別した結果nullになることを比較する。",
+      "sources": [
+        "REQ-071"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "範囲外と既存仕様で充足の要件も、状態を付けて表に含める",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-a03a7b3ae0d44a6d41c6",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "0558c8a0a1e2a5127e250d2051efd480391a985f053954e6fdd732960a4d96d5",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "記録した日時・検査SHA・コミット日時・合格を含む証拠情報のMarkdown行を比較する。",
+      "sources": [
+        "REQ-073"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "使った記録の、記録した日時・SHA・コミットの日時を載せる",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-510086866140fa0817eb",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "5e63595a855895459c9087145c10f748daacd9c353b8fae1bf67678cef45e36d",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "壊れたJSONを追加してCLIで実行し、終了コード2と証拠のパス・日本語の理由、スタック非表示をassertする。",
+      "sources": [
+        "REQ-073"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "JSON として壊れた記録があれば、そのファイルを日本語で示し",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-3d6b99e302f285ab4982",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "37d2f197ed3ed2f579bf73b217274eeb956dc3b3f70a0a0b8669d084138473de",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "CLIのmd指定で終了コード0と日本語の見出しを確認し、同じ出力経路のMarkdownの表の実際の行もassertする。",
+      "sources": [
+        "REQ-074"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "--format md で Markdown を出し",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        },
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "要件ごとに、出典・状態・対応する Requirement",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-5709e54feab84da2ae6d",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "6043b3f9e8878e75ad231a6d8a0e8cd07e43e01e39601b2666a6c421fe5fcc9b",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "CLIのjson指定のstdoutを解析し、rowsの要件IDとevidenceのSHAをassertする。",
+      "sources": [
+        "REQ-074"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "--format json で、要件ごとの行と使った証拠を含む JSON",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-60ac1705ea8d9d739700",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "8870589ef74f7edadaee0233380308dce3fc934d1e2535e32daaec47baa88db3",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "CLIのhtml指定で終了コード2と次の版の日本語の案内をassertする。",
+      "sources": [
+        "REQ-074"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "--format html は、次の版で対応する旨を出して",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-0553ac34f59a1af76570",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "e4940aed450c84381be49d42776cb55ba5e178a37bca923ea7a14d5fc7096be8",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "1.1秒空けて同じ入力のMarkdown全体が一致し、要件IDがソートされることもassertする。",
+      "sources": [
+        "REQ-085"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "入力を変えずに 2 回出力すると、1 文字も違わない",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-5475fccf91630747c15e",
       "status": "unreviewed",
       "scenarioSha256": "ccaddd1598270a491b5ba308e89b9a48eddb93d2671eb3444f46d9813dc24589",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "ネットワーク関連import・fetchの静的検査はあるが、接続不能の環境でreportを実行した結果は未確認。"
     },
     {
       "id": "SCN-1038977605831c5c0ed5",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "6f7ed0d1b8393e23688f11c5d6accd7abd55b110f21fe7e25926a18c639d708a",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "全7見出しと表の列名の日本語を実際のMarkdownでassertする。",
+      "sources": [
+        "REQ-088"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "レポートの見出しと表の列名は日本語",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-fa361b08b4790cff678f",
       "status": "unreviewed",
       "scenarioSha256": "6ebde898b715374337b1fc59777d65398b894cb6bc0f1b5cf6a799a9396c0787",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "engines宣言とCI設定の存在から、下限Nodeの実行成功を推測しない。20.19での実行結果は未確認。"
     },
     {
       "id": "SCN-3d7455f45bf52d2cfa6a",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "921a7ab27f0a2c1fdf606ebac50e3eba19ada2aaceedef225089ddeb887cca2a",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "reportを含む同じtraceパッケージのdependenciesがcoreとkitだけであることを比較する。",
+      "sources": [
+        "REQ-083"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/record.test.ts",
+          "contains": "@loomake/trace の dependencies は",
+          "sha256": "c2bb3939cea0fdf9786b20c2a4fd2dfa500c1904c71183d648fc7c2b626379d4"
+        }
+      ]
     },
     {
       "id": "SCN-7449d308e912d8d7c67f",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "7787f694e95c519655e0f1a01b68fd2ebb6966295c8b758622b589dbd153240c",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "合格試験のない要件を追加し、注意のID配列と、注意が要件表より先に出ることをassertする。",
+      "sources": [
+        "REQ-072"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "反映済で合格したテストのない要件を、冒頭の一覧に挙げる",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-34554a55080e94b1652f",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "ca16bef62608521914a361d8bd0b3cf9fe4d1ad3ae17e39cf2109cea65490edb",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "確認待ちREQ-072を追加し、注意のpending配列とMarkdownの案内をassertする。",
+      "sources": [
+        "REQ-072"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "確認待ちの要件を、冒頭の一覧に挙げる",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-b6da1328873c0bf7f1bb",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "d4b06f3d786a464015072fad73f30ec7feb9b8b6068ac1e3d894820b06804eb1",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "通常の合格入力で要注意なしの文言をassertする。",
+      "sources": [
+        "REQ-072"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "どちらもなければ、要注意の要件がないと書く",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-db7d38fb9c4206f9fb81",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "8dbc6bd541bcad383ec072d1d78b183233353e329486bdc03b462d929ad4f72d",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "回答済みの合意を与え、questionsの全項目とMarkdownの行を比較する。",
+      "sources": [
+        "REQ-077"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "確認事項ごとに、ID・質問・回答・回答者・回答日を並べる",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-0f5e9f8c7a3198d586aa",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "d6c7d75817c39740f5b601b9c91f061772456009538c067aa1563a8672fd86be",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "承認済みの仮定を与え、assumptionsの承認・承認者・日付とMarkdownの行を比較する。",
+      "sources": [
+        "REQ-078"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "仮定ごとに、ID・内容・承認者・承認日を並べる",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-6147447e73941b8eb580",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "99a61abf8a2620a0c5a2a4d17658ca6649dee1e5e222cb827b99c202c6b4fb68",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "回答者のみが空の質問で、warningsがその1件だけでMarkdownにも出ることをassertする。",
+      "sources": [
+        "REQ-079"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "回答はあるが回答者が空の確認事項を警告する",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-c2012903ec3e0e84112e",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "72a762cce822d89dc48ee39790899e2a29c7494cabd9064eb3377db83d9cab0d",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "合意の列のない旧入力で、回答者・回答日・承認者・承認日の4警告を比較する。",
+      "sources": [
+        "REQ-079"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "列のない古い trace.md でもレポートを作り",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-34e70e3d8a4dbf5cc45f",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "78b2d66976fc2c67f50bf8f8f34746b8b65ab9971e4216ef643376499c80835a",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "回答と承認自体が空の入力でwarningsが空となることをassertする。",
+      "sources": [
+        "REQ-079"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "回答が空の確認事項と承認が空の仮定は、警告の対象にしない",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-57a5bf1abb12246babb3",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "7dcaf1bed051e55aa95ba9bd3fe132fc9350da2356307a1c05e53af9191c5f91",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "500要件の文書とcoverageを用意し、Markdown生成が終了コード0で5秒未満であることをassertする。現在のLinuxホストの結果である。",
+      "sources": [
+        "REQ-086"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "要件 500 件の change のレポートを 5 秒以内に出す",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-4022dac40f2e371a1b4b",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "ad592141c89101a77ffc8a9a4a7aa89bcd8509ecc83adfae5f10a296b1bde895",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "証拠作成後に仕様へ改行を加え、変更文書の配列とMarkdownの注意をassertする。",
+      "sources": [
+        "REQ-129"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "記録のあとで差分仕様を変えたら、冒頭の",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-24f94d3138eea3e6a811",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "d9eea73d3b0f47b038834f80a2071af2957d99ff61cd455ff621617536d0cf40",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "入力文書を変えず、changedDocumentsが空で要注意なしとなることをassertする。",
+      "sources": [
+        "REQ-129"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "文書を変えていなければ、変わった文書は挙がらない",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-ec9f2a7f5998adc15d70",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "78619f351938204a4e70539436116241b6e20ad16aee563eeb491027d580c905",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "documentsなしの証拠で、documents false、行の合格表示が仕様との対応未確認となり、Markdownにも説明が出ることをassertする。",
+      "sources": [
+        "REQ-130"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "文書のない古い形式の記録では、合格したテストのある要件を",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-fc8d3b636e2393b5bd4d",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "6bd9ef4d5450440c2257743a745cba84fed19a0aeaafbd27437cbcf925b86ac5",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "検査の範囲の説明全文と、要件表より前に出る位置をassertする。",
+      "sources": [
+        "REQ-131"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "要件ごとの検収の表より前に、検査の範囲の説明を載せる",
+          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+        }
+      ]
     },
     {
       "id": "SCN-a683dcb21df0301392bb",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "cad0a4cb42905198fda8760450b950126f8396fd70c202dd806ff062f2de205a",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "未回答yesの質問を与え、全体不合格とID・関連要件・質問を含むfail結果を比較する。",
+      "sources": [
+        "REQ-034"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "未回答のブロッキング確認事項があると、ID・関連・質問を出して不合格",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-fe5d3df53cb11ce82318",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "7e12406d92d6e388d609bc333d1c0d14aec0289c71c0607f96ac82179c63a496",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "回答のあるYESの質問でブロッキング検査passと全体okをassertする。",
+      "sources": [
+        "REQ-034"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "ブロッキングの確認事項がすべて回答済みなら合格",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-76a8fcab68935032456a",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "00091922439705444a0377c78125274484c666784c0d3b1e8659741580fae7c4",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "noで回答が空の質問で、ブロッキング検査がpassになることをassertする。",
+      "sources": [
+        "REQ-034"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "ブロッキングでない確認事項は、回答が空でも合格",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-58db2a5b20e64df27bbd",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "01416ca8da7751210b8a546fd267f353787dd9d58edecdf6c5dfcced0c73acc5",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "未回答の質問を残して節名を壊し、全体不合格とファイル・行番号を含む解析エラーを比較する。",
+      "sources": [
+        "REQ-034"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "確認事項の節名が崩れていると、未回答のブロッキング確認事項を見落とさず",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-ee397428777b5cca2a47",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "53c5a51969273d8fe63977a74356315112d6ee9364117ce7655e3ca7c295001e",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "FROMだけのRENAMEDを追加し、全体不合格と仕様ファイル・行番号・対応TOなしの理由をassertする。",
+      "sources": [
+        "REQ-034"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "差分仕様に解析エラーがあると、ファイル名と行番号を出して不合格",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-747a556efa58b92a124c",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "e46c5dae66ad46fce8d6a6bd1811f6bcb403921db404731ae876fcb2c00fb963",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "SourceなしのRequirementを与え、名前と仕様パスを含むSourceのfail結果をassertする。",
+      "sources": [
+        "REQ-035"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "Source の無い Requirement の名前を出して不合格",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-81b13a47e663f662b33e",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "dcf292a7fc9d8167d2255f82bf459332e103c7fdcc2a0ecf78709e75ad612d86",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "SourceへREQ-999を追加し、Requirement名とIDを含むfail結果をassertする。",
+      "sources": [
+        "REQ-035"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "台帳に無い要件 ID を Source に持つと",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-b19ccdc7f88dee23eccb",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "a462c883269a691c67bb182bc0aa62c0d405fa45b69449319f7617ed21c74923",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "ScenarioなしのRequirementで、名前を含むfail結果をassertする。",
+      "sources": [
+        "REQ-035"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "Scenario の無い Requirement の名前を出して不合格",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-156324cb65b8f02b6700",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "c4edf4c17d1c2348409134809f419725c88390aa1a5c158a2de1107c8e8c35e9",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "台帳へ反映済REQ-007を追加し、どの仕様も参照しないIDのfail結果をassertする。",
+      "sources": [
+        "REQ-035"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "反映済なのにどの Requirement からも参照されない要件を出して不合格",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-b5d6867657c962d57b96",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "1e68f2269b70bff26196e581f2f737a7e0456b895517ab6b6eba6bc97d7d92eb",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "未承認仮定と確認待ち要件で2種類のwarn結果、全体okをassertする。",
+      "sources": [
+        "REQ-036"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "未承認の仮定と確認待ちの要件は警告になり",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-e8776676918179dadbc3",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "68faf1424996f3ad66aa8c86dda7f7dc00c6a46ccc033a6262fe882068985c75",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "SHALL/MUSTなしの仕様で実際のOpenSpecを実行し、failとその出力の規範語をassertする。現在のCLI版の結果である。",
+      "sources": [
+        "REQ-037"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "openspec validate --strict が失敗すると、出力を詳細に入れて不合格",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-b764c3e3f7a7c4c96151",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "eb576b55f7e808bd736ad88894bd87857dc88a2d64331307427173eac95d3e9a",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "空のPATHでauto設定を診断し、warn・不存在の案内と全体okをassertする。",
+      "sources": [
+        "REQ-037"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "OpenSpec CLI が見つからず openspecValidate が auto",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-9e65a8432c29f86920ae",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "57b79819bc2fc276da80a9e7e7daf3c083be9222c0b863332026de5c3e3d24a5",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "未完了行を含むtasksと合格レポートを与え、行を含むfailと全体不合格をassertする。",
+      "sources": [
+        "REQ-038"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "未完了のタスクがあると、その行を出して不合格",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-30b0f6ef82bfe18ef654",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "8f3cbdf9289255370abd046640d72c8a5043c380b0cf89016c838a7b2661dc5a",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "確認待ちREQ-002を含む台帳で、IDを含む完了ゲートfailをassertする。",
+      "sources": [
+        "REQ-038"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "確認待ちの要件が残ると、その ID を出して不合格",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-45bbdde43acbf378e195",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "674c1acbddbbe6aa47eda0c70ac34ff0a55fb684f49acdf524a5123f0f6f35fc",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "別IDだけを持つレポートで、必要なREQ-012が不足するfail結果をassertする。",
+      "sources": [
+        "REQ-038"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "仕様で参照される要件を名前に含むテストが無いと不合格",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-73bc3d9a8a0e8df01ed9",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "8a3f26c75efeea59894aa96a41c16beabd5412bd7b56c18436012dd6f308434f",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "実際の一時VitestでskipのIDだけを置き、要件不足のfailをassertする。",
+      "sources": [
+        "REQ-038"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "it.skip のテストだけなら、テストが無い要件として不合格",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-63b5f58957bf020ee441",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "7504a416aeec494412930955d78f3a8fa21ea280520c83911bfc220b4c481a6c",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "実際の一時Vitestでskip.each配下だけにIDを置き、要件不足のfailをassertする。",
+      "sources": [
+        "REQ-038"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "describe.skip.each の中にだけあるテストは数えない",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-7e6beb1649d29350cda4",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "be7270f6e8a409915e66f45a09ba737692fa9f4eabe236a5a7fb6843ce5f1181",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "IDをfixtureの文字列にだけ置いたVitestを実行し、成功した別名の試験では要件不足になることをassertする。",
+      "sources": [
+        "REQ-038"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "テスト名以外の文字列にだけある要件 ID は数えない",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-6009b643d46c218a3f7a",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "0a2c9372e7d399f6e9d08734916b823a0314b46049e3cf26052f89fce77ba5bf",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "case.tsだけに必要IDを置き、実際のVitestが実行する別ファイルでそのIDが数えられないことをassertする。",
+      "sources": [
+        "REQ-038"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "テストランナーが実行しないファイルのテストは数えない",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-596e2f22fede4e17bba5",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "a10198187715b87f29a6ea8bbb5c522cbd78372564451d90a0671db5776c4fda",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "前回の合格レポートを置き、レポートを書かないコマンドの実行後に、レポート不存在のfailをassertする。",
+      "sources": [
+        "REQ-038"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "test コマンドがレポートを書き出さないと",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-d950082723d948b1ce5c",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "c0c5a1eb9d203a3e55f4283f9d7dea6d8b83ffef52d2978ed39cb3d6342cdf6e",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "標準出力後にexit 1の品質コマンドを実行し、その出力のfailと全体不合格をassertする。",
+      "sources": [
+        "REQ-039"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "コマンドが失敗すると、出力の末尾を詳細に入れて不合格",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-a65f7ba71586a5cd5987",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "cf547f4fb6d284916360428717c51f1e3683a27bb2656967311a3f26bad0f407",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "lint・typecheck・testをexit 0で実行し、順に3つのcommand結果がpassであることを比較する。",
+      "sources": [
+        "REQ-039"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "3 つのコマンドがすべて成功すると",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-c14e76ddd4c813653713",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "8d78f8201b445b53760bfe13b69f0ec1445a2a6c21ea5411374c0a6bcdfb578f",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "CLIのstdoutをJSONとして解析し、coreのスキーマでAjv検証が成功し、進捗はstderrへ出ることをassertする。",
+      "sources": [
+        "REQ-040"
+      ],
+      "tests": [
+        {
+          "file": "packages/cli/test/cli.test.ts",
+          "contains": "--json の標準出力は JSON だけで",
+          "sha256": "af8e785775d2e0aa180e9322dd37c5df04eea3e4c50de769f9bf6ffa94cc6ea1"
+        }
+      ]
     },
     {
       "id": "SCN-5e7b5a451616c4f5e499",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "5b15c229560835d3e1775590b6aafc5251fcdeb1ad003acb02f42ec12bde4ac8",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "既存レポートのREQ-012とファイルに対し、CLI JSONのcoverageが同じ対応になることを比較する。",
+      "sources": [
+        "REQ-040"
+      ],
+      "tests": [
+        {
+          "file": "packages/cli/test/cli.test.ts",
+          "contains": "要件ごとのテストファイルの一覧を出す",
+          "sha256": "af8e785775d2e0aa180e9322dd37c5df04eea3e4c50de769f9bf6ffa94cc6ea1"
+        }
+      ]
     },
     {
       "id": "SCN-414dd75021b0a3fd4e5c",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "1f1e48b5a707e5260fbd946cfe2b16457a370ed3803ebc74b71872b3e51e84a6",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "未承認仮定のwarnがある入力で終了コード0と合格の表示をassertする。",
+      "sources": [
+        "REQ-041"
+      ],
+      "tests": [
+        {
+          "file": "packages/cli/test/cli.test.ts",
+          "contains": "すべて合格か警告なら 0",
+          "sha256": "af8e785775d2e0aa180e9322dd37c5df04eea3e4c50de769f9bf6ffa94cc6ea1"
+        }
+      ]
     },
     {
       "id": "SCN-373041d8715147071068",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "3d45e7e3d7e4e66d2257ee9f520daf8364cf71d4fb3fcaaffcf69b2a7562bb92",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "反映済の未参照IDを与え、終了コード1と不合格件数の表示をassertする。",
+      "sources": [
+        "REQ-041"
+      ],
+      "tests": [
+        {
+          "file": "packages/cli/test/cli.test.ts",
+          "contains": "1 つ以上の検査が不合格なら 1",
+          "sha256": "af8e785775d2e0aa180e9322dd37c5df04eea3e4c50de769f9bf6ffa94cc6ea1"
+        }
+      ]
     },
     {
       "id": "SCN-9380f85a23d00c442a6e",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "fb9a111156778a3badab203748e4e62c389a8e89cb8bca3b0dead40615ffcf86",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "changeなしのspec-onlyで終了コード2、日本語の理由と使い方をassertする。",
+      "sources": [
+        "REQ-041"
+      ],
+      "tests": [
+        {
+          "file": "packages/cli/test/cli.test.ts",
+          "contains": "--change を付けずに --spec-only を指定すると",
+          "sha256": "af8e785775d2e0aa180e9322dd37c5df04eea3e4c50de769f9bf6ffa94cc6ea1"
+        }
+      ]
     },
     {
       "id": "SCN-65953e5426fce883ba49",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "5d7c580009df4370a4a9d076750d4ca48ff0bb446225502f8a103b7b4515dc16",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "親参照・slash・backslashを含む各IDで終了コード2とパス区切りの案内をassertする。",
+      "sources": [
+        "REQ-041"
+      ],
+      "tests": [
+        {
+          "file": "packages/cli/test/cli.test.ts",
+          "contains": "--change の値にパスの区切りを含めると",
+          "sha256": "af8e785775d2e0aa180e9322dd37c5df04eea3e4c50de769f9bf6ffa94cc6ea1"
+        }
+      ]
     },
     {
       "id": "SCN-0580d4faf39eeccb215b",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "b6bf8b4daebe716f56abf074922dc7926b0efd91b98dbdb253447892c003ec9e",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "change指定なしでmode quality、change null、commandのみの結果をassertする。",
+      "sources": [
+        "REQ-042"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "change を省略すると commands だけを実行し",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-3ce3ca96bf8bde5aa9d6",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "c0aaeba02345a036c298f7b2c491925ab6fc8c10ff510fca526f894b17141a99",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "存在しないchangeで日本語の不合格理由と次の確認の案内を比較する。",
+      "sources": [
+        "REQ-055"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "存在しない change-id では、change の存在が日本語の説明つきで不合格",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-129c1a409ad4cdd46ce6",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "bfc0cfb36b49df771c50f4505bc984af7cb34174dcb31c24e91fcfc53cc0fd52",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "kitのdependenciesのキーがcoreだけであることを比較する。",
+      "sources": [
+        "REQ-047"
+      ],
+      "tests": [
+        {
+          "file": "packages/cli/test/cli.test.ts",
+          "contains": "kit の dependencies は @loomake/core だけ",
+          "sha256": "af8e785775d2e0aa180e9322dd37c5df04eea3e4c50de769f9bf6ffa94cc6ea1"
+        }
+      ]
     },
     {
       "id": "SCN-38961b7ee7aa96aad6f6",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "0fc6dd543ded3083f2568ca7040843c07c1b926b916920a80170246fc7118ee3",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "CLIのdependenciesに許可された4パッケージ以外のキーがないことを比較する。",
+      "sources": [
+        "REQ-047"
+      ],
+      "tests": [
+        {
+          "file": "packages/cli/test/cli.test.ts",
+          "contains": "loomake の dependencies は @loomake/core・@loomake/kit・@loomake/trace・@loomake/runner 以外を含まない",
+          "sha256": "af8e785775d2e0aa180e9322dd37c5df04eea3e4c50de769f9bf6ffa94cc6ea1"
+        }
+      ]
     },
     {
       "id": "SCN-f9f8eb6c78a2fa7479ef",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "fb82d2509a479e9a370ffab0079bb3785b0749b0f941ad4cdb4f6b470cb137c0",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "500要件・1000個の実ファイルと同じ件数のレポートを用意し、準備を除いたskip-commandsのCLI検査が合格し3秒未満であることをassertする。現在のLinuxホストの結果である。",
+      "sources": [
+        "REQ-050"
+      ],
+      "tests": [
+        {
+          "file": "packages/cli/test/cli.test.ts",
+          "contains": "要件 500 件・テストファイル 1,000 個の",
+          "sha256": "af8e785775d2e0aa180e9322dd37c5df04eea3e4c50de769f9bf6ffa94cc6ea1"
+        }
+      ]
     },
     {
       "id": "SCN-03ed0cddc2757b3ce11d",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "3fe9df3973d2b29051cd01c84087bb80e2b100b8477d895953d51af17e48ee20",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "別changeを参照する同じ回答で、一致件数のpassと全体okをassertする。",
+      "sources": [
+        "REQ-034"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "参照先の change と回答が同じなら合格",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-d704beb36bb7a1c172c7",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "6e2197b4c417b320076730074b899a2cb2e1a7ac6c684a40aabac881a891ee9c",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "2つの回答を変え、両方の値・change名を含むfailと全体不合格をassertする。",
+      "sources": [
+        "REQ-034"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "参照先の change と回答が違えば、両方の回答を出して不合格",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-aaac522d975b17610fe8",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "168c15bba15cdab52db9e4e7d7c748c4090c056a3013f2699f1ee394894e4e42",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "参照先だけに回答のある入力で同じ質問のfailをassertする。",
+      "sources": [
+        "REQ-034"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "片方だけ回答があれば不合格",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-81a73d00b1322a606efa",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "5d4b3fbdfc337cf5b17ce1d2fa26a41b2c05f87513a28392658e860ca9ceb08a",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "参照先をarchiveだけに配置し、一致する回答でpassとなることをassertする。",
+      "sources": [
+        "REQ-034"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "参照先が archive にあれば、archive の trace.md と比べる",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-0672fddf057e29e2cb7d",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "b52744a17285e682d4d250de41e23b54ee75799b8e519841331557958e749afa",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "参照先を置かず、change名を含む不存在のfail結果を比較する。",
+      "sources": [
+        "REQ-034"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "参照先の change が進行中にも archive にもなければ",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     },
     {
       "id": "SCN-a23003081c05132c0efe",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "52715e14f04f313bcbac1204cb8722865763c1a69e0a1d172b12edf5df1df9f3",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "同じ質問の印なしで回答を変え、一致照合の対象なしのpassとなることを比較する。",
+      "sources": [
+        "REQ-034"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "印が無ければ、同じ ID の確認事項の回答が違っても不合格にしない",
+          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+        }
+      ]
     }
   ]
 }

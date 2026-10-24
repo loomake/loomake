@@ -94,6 +94,19 @@ describe('要件ごとの検収の表', () => {
     });
   });
 
+  it('[REQ-070] 新しい記録からテストファイルと結果を取り、古い記録の値を混ぜない', () => {
+    const old = evidence({ recordedAt: '2026-10-23T01:00:00.000Z', sha: 'a'.repeat(40) });
+    old.verify = { ...old.verify, ok: false, coverage: { 'REQ-012': [] } };
+    const latest = evidence({ recordedAt: '2026-10-23T02:00:00.000Z', sha: 'b'.repeat(40) });
+    latest.verify = { ...latest.verify, ok: true, coverage: { 'REQ-012': ['tests/latest.test.ts'] } };
+    withProject({ evidence: [old, latest] }, (root) => {
+      const result = report(root);
+      expect(result.evidence).toMatchObject({ sha: 'b'.repeat(40), ok: true });
+      expect(result.rows[0]).toMatchObject({ tests: ['tests/latest.test.ts'], result: '合格' });
+      expect(result.attention.noPassingTests).toEqual([]);
+    });
+  });
+
   it('[REQ-070] archive した change でも、archive の trace.md と差分仕様からレポートを作る', () => {
     withProject({ archived: true, spec: specMd(requirement('表の出力')) }, (root) => {
       expect(report(root).rows[0].requirements).toEqual(['表の出力']);
