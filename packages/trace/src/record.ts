@@ -5,8 +5,9 @@ import type { VerifyResult } from '@loomake/core';
 import { UsageError, assertChangeId, loadConfig, runVerify } from '@loomake/kit';
 import { changedDocuments, readDocuments, type EvidenceDocument } from './documents.js';
 
-/** 証拠の記録の形の版。report が読むので、形を変えたら上げる（add-trace-record の仮定 A-04） */
-export const EVIDENCE_SCHEMA_VERSION = 1;
+import { EVIDENCE_SCHEMA_VERSION } from './schema.js';
+import { serializeEvidence } from './serialization.js';
+export { EVIDENCE_SCHEMA_VERSION } from './schema.js';
 
 /** `.loomake/evidence/<change-id>/` に置く 1 回分の記録 */
 export type Evidence = {
@@ -101,12 +102,13 @@ export function runRecord(options: RecordOptions): number {
     documents,
   };
 
+  const json = serializeEvidence(evidence);
   const dir = join(root, EVIDENCE_DIR, changeId);
   const rel = `${EVIDENCE_DIR}/${changeId}/${stamp(recordedAt)}-${sha.slice(0, 12)}.json`;
   mkdirSync(dir, { recursive: true });
   // 既存の記録は書き換えない（REQ-068）。同じ名前があれば書かずに止める
   try {
-    writeFileSync(join(root, rel), `${JSON.stringify(evidence, null, 2)}\n`, { flag: 'wx' });
+    writeFileSync(join(root, rel), json, { flag: 'wx' });
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code !== 'EEXIST') throw e;
     stdout(`${rel} がすでにあるので、記録しませんでした。記録は書き換えません。`);

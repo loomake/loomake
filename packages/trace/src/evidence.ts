@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { VERIFY_RESULT_SCHEMA_VERSION } from '@loomake/core';
-import { EVIDENCE_SCHEMA_VERSION } from './record.js';
+import { EVIDENCE_SCHEMA_VERSION } from './schema.js';
 
 const object = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const date = (v: unknown) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v) && Number.isFinite(Date.parse(v));
