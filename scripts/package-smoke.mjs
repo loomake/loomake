@@ -64,6 +64,12 @@ export function prepare(target) {
 export async function check(target) {
   const consumer = join(target, 'consumer');
   const require = createRequire(join(consumer, 'package.json'));
+  for (const name of packages) {
+    const base = join(consumer, 'node_modules', name === 'cli' ? 'loomake' : `@loomake/${name}`);
+    const manifest = json(join(base, 'package.json'));
+    assert.deepEqual(manifest.repository, { type: 'git', url: 'git+https://github.com/loomake/loomake.git', directory: `packages/${name}` }, 'repositoryの出典が一致しません');
+    assert.equal(manifest.publishConfig?.provenance, true, 'provenanceの設定がありません');
+  }
   for (const name of packages.filter((name) => name !== 'cli')) {
     const base = join(consumer, 'node_modules/@loomake', name);
     const manifest = json(join(base, 'package.json'));

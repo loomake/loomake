@@ -7,3 +7,7 @@ Actionsの参照、既定権限とcheckoutの資格情報、公開とタグ送�
 公式リポジトリのv4参照をGitHubコネクタで取得し、action-pins.jsonに完全なSHAとURLを記録した。remote.originのホストとパスを資格情報を表示せず確認した。接続したコネクタからloomake/loomakeのメタデータは404となったため、公開リポジトリの可視性や非公開報告機能が有効とは判断していない。
 
 provenanceはnpmの公式文書で、必要なrepository情報・OIDC権限・第三者の公開ツールで使う環境変数を確認した。ローカルのpnpm publish --helpにもprovenanceの指定があることを確認した。これらは実際のnpm公開やattestationの成功を示す結果ではない。
+
+## 1.2 配布物の出典
+
+package-smokeの検査に、独立したプロジェクトへ導入した5パッケージのrepository・directory・provenanceの一致を追加した。CLIの配布元を違う値へ変えた場合に検査が失敗することも確認した。元の値へ戻して、既存のテンプレート欠損の期待値も維持した。関連13件が成功した。5パッケージのメタデータ変更にchangesetを追加した。

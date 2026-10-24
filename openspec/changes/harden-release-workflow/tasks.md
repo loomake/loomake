@@ -3,7 +3,7 @@
 ## 1. 公開経路の保護
 
 - [x] 1.1 Actionsの固定・資格情報の範囲・出典とprovenanceのテストでRedを確認し、ワークフローとメタデータを実装してGreenにする（REQ-167・REQ-168・REQ-169）
-- [ ] 1.2 配布物の出典とprovenanceを検査し、結果とTDD・changesetを記録する
+- [x] 1.2 配布物の出典とprovenanceを検査し、結果とTDD・changesetを記録する
 
 ## 2. OSS向けの文書と統合検証
 

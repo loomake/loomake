@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, it } from 'vitest';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -11,7 +11,7 @@ const run = (mode: string) => spawnSync(process.execPath, ['scripts/package-smok
 afterAll(() => rmSync(base, { recursive: true, force: true }));
 
 describe('実際に配るパッケージ', () => {
-  it('[REQ-143][REQ-146] packした5パッケージだけで主要コマンドと公開APIを使える', () => {
+  it('[REQ-143][REQ-146][REQ-169] packした5パッケージだけで主要コマンドと公開APIを使える', () => {
     const prepared = run('prepare');
     expect(prepared.status, prepared.stdout + prepared.stderr).toBe(0);
     const checked = run('check');
@@ -21,6 +21,15 @@ describe('実際に配るパッケージ', () => {
       const manifest = JSON.parse(readFileSync(join(target, 'consumer/node_modules/@loomake', name, 'package.json'), 'utf8'));
       expect(JSON.stringify(manifest.exports)).not.toContain('@loomake/source');
     }
+    const manifestPath = join(target, 'consumer/node_modules/loomake/package.json');
+    const originalManifest = readFileSync(manifestPath, 'utf8');
+    const wrongSource = JSON.parse(originalManifest);
+    wrongSource.repository.url = 'git+https://github.com/example/other.git';
+    writeFileSync(manifestPath, JSON.stringify(wrongSource));
+    const wrong = run('check');
+    expect(wrong.status).not.toBe(0);
+    expect(wrong.stderr).toContain('repository');
+    writeFileSync(manifestPath, originalManifest);
     // テンプレートが欠けた配布物を成功扱いにしないことも確認する。
     rmSync(join(target, 'consumer/node_modules/@loomake/kit/templates/AGENTS.md'));
     const broken = run('check');
