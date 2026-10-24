@@ -1,6 +1,6 @@
 import { existsSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { runExternal } from '@loomake/kit';
 import type { VerifyResult } from '@loomake/core';
 import { UsageError, assertChangeId, loadConfig, runVerify } from '@loomake/kit';
 import { changedDocuments, readDocuments, type EvidenceDocument } from './documents.js';
@@ -43,7 +43,7 @@ export type RecordOptions = {
 export const EVIDENCE_DIR = '.loomake/evidence';
 
 function git(root: string, args: string[]): string {
-  const r = spawnSync('git', args, { cwd: root, encoding: 'utf8' });
+  const r = runExternal('git', args, { cwd: root });
   if (r.error || r.status !== 0) {
     throw new UsageError(`git ${args.join(' ')} に失敗しました。git のリポジトリの中で実行してください（${(r.stderr || r.error?.message || '').trim()}）`);
   }

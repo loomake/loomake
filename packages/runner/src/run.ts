@@ -2,7 +2,7 @@ import { existsSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve, sep } from 'node:path';
 import { parseTasks, type Task, type VerifyResult } from '@loomake/core';
 import { runRecord } from '@loomake/trace';
-import { TIMED_OUT, UsageError, assertChangeId, formatVerifyResult, loadConfig, runVerify, createInputReader, DOCUMENT_LIMITS } from '@loomake/kit';
+import { remainingProcessTime, withProcessBudget, TIMED_OUT, UsageError, assertChangeId, formatVerifyResult, loadConfig, runVerify, createInputReader, DOCUMENT_LIMITS } from '@loomake/kit';
 import { DEFAULT_ALLOWED_DOMAINS, assertEngineAvailable, runClaude, type EngineResult } from './engine.js';
 import { GitError, branchExists, dirtyFiles, git, gitConfig, isIgnored } from './git.js';
 import { APPROVAL_GUIDE, findEngineMove, findViolations, headState } from './guards.js';
@@ -165,6 +165,11 @@ type Recorder = {
 
 /** change の tasks.md を実装させ、完了ゲートが通るまで直させる。終了コード（終えた 0・止まった 1）を返す */
 export async function runRun(options: RunOptions): Promise<number> {
+  const config = loadRunConfig(resolve(options.root));
+  return withProcessBudget({ timeoutMs: config.timeoutMinutes * 60_000 }, () => runWithinBudget(options));
+}
+
+async function runWithinBudget(options: RunOptions): Promise<number> {
   const stdout = options.stdout;
   const progress = options.progress;
   options = {
@@ -374,7 +379,7 @@ async function callEngine(ctx: RunContext, rec: Recorder, prompt: string): Promi
   rec.step++;
   const n = String(rec.step).padStart(2, '0');
   rec.save(`${n}-prompt.md`, prompt);
-  const timeoutMs = rec.deadline - ctx.now().getTime();
+  const timeoutMs = Math.min(rec.deadline - ctx.now().getTime(), remainingProcessTime() ?? Infinity);
   if (timeoutMs <= 0) return { status: 'stopped', reason: '実行時間の上限に達しました' };
   const before = headState(root, env);
   const result = await runClaude({
@@ -383,7 +388,7 @@ async function callEngine(ctx: RunContext, rec: Recorder, prompt: string): Promi
     prompt,
     commands: Object.values(ctx.config.commands).filter((c): c is string => Boolean(c)),
     skipPermissions: Boolean(options.skipPermissions),
-    timeoutMs,
+    timeoutMs: Math.min(timeoutMs, remainingProcessTime() ?? Infinity),
     signal: options.signal,
     maxOutputBytes: ctx.runConfig.maxOutputBytes,
   });
@@ -434,27 +439,33 @@ async function runEngineTasks(ctx: RunContext, rec: Recorder): Promise<Stop | un
 async function runGate(ctx: RunContext, rec: Recorder): Promise<Stop | undefined> {
   const { root, env, changeId, gateTasks, tasksRel } = ctx;
   const stopped = (reason: string): Stop => ({ status: 'stopped', reason, remaining: gateTasks });
-  const restoreGateTasks = () => {
-    if (gateTasks.length) git(root, env, ['checkout', '-q', '--', tasksRel]);
-  };
   for (let fixes = 0; ; fixes++) {
     if (ctx.options.signal?.aborted) return { status: 'interrupted', reason: '中断されました', remaining: gateTasks };
+    const left = Math.min(rec.deadline - ctx.now().getTime(), remainingProcessTime() ?? Infinity);
+    if (left <= 0) return stopped('実行時間の上限に達しました');
+    const originalTasks = createInputReader().read(ctx.tasksPath);
     for (const t of gateTasks) checkTask(ctx.tasksPath, t.line);
-    // 完了ゲートの品質コマンドにも、実行時間の残りを上限として渡す（REQ-105、fix-review-findings-2 の仮定 A-02）
-    const left = rec.deadline - ctx.now().getTime();
-    if (left <= 0) {
-      restoreGateTasks();
-      return stopped('実行時間の上限に達しました');
+    const markedTasks = createInputReader().read(ctx.tasksPath);
+    const restore = () => {
+      if (!gateTasks.length) return;
+      if (createInputReader().read(ctx.tasksPath) !== markedTasks) throw new UsageError('検証のあいだにtasks.mdが変わりました。一時的な完了印を自動で戻せません。変更を上書きしていません。差分を確認してください。');
+      writeFileSync(ctx.tasksPath, originalTasks);
+    };
+    let beforeVerify;
+    try {
+      beforeVerify = headState(root, env);
+      rec.lastVerify = runVerify({ root, changeId, gate: 'done', progress: ctx.progress, timeoutMs: left });
+    } catch (error) {
+      restore();
+      throw error;
     }
-    const beforeVerify = headState(root, env);
-    rec.lastVerify = runVerify({ root, changeId, gate: 'done', progress: ctx.progress, timeoutMs: left });
+    restore();
     rec.save(`${String(rec.step).padStart(2, '0')}-verify${fixes ? `-${fixes}` : ''}.json`, `${JSON.stringify(rec.lastVerify, null, 2)}\n`);
     const afterVerify = headState(root, env);
     if (beforeVerify.sha !== afterVerify.sha || beforeVerify.branch !== afterVerify.branch) {
       return stopped('検証のあいだにHEADかブランチが変わりました。変更を取り消していません。Gitの状態を確認してから、もう一度実行してください。');
     }
     if (rec.lastVerify.ok) break;
-    restoreGateTasks();
     if (rec.lastVerify.results.some((r) => r.detail === TIMED_OUT)) return stopped('実行時間の上限に達しました');
     if (fixes >= ctx.runConfig.maxFixes) return stopped(`直しの回数の上限（${ctx.runConfig.maxFixes} 回）に達しました`);
     const stop = await callEngine(ctx, rec, buildPrompt(root, ctx.changeDir, '完了ゲートに合格するように直す。', rec.lastVerify));
@@ -467,6 +478,7 @@ async function runGate(ctx: RunContext, rec: Recorder): Promise<Stop | undefined
     }
   }
   if (gateTasks.length) {
+    for (const t of gateTasks) checkTask(ctx.tasksPath, t.line);
     git(root, env, ['add', '--', tasksRel]);
     git(root, env, ['commit', '-q', '-m', `run(${changeId}): 完了ゲートに合格`]);
     rec.done.push(...gateTasks.map(taskLabel));
@@ -484,7 +496,7 @@ function recordAndOpenPr(ctx: RunContext, rec: Recorder): number {
   if (base === branch) {
     return rec.finish('stopped', `完了ゲートに合格しましたが、PR の向き先が分かりません。git config ${baseKey(ctx)} <向き先のブランチ> で設定してから、もう一度実行してください`, []);
   }
-  const left = rec.deadline - ctx.now().getTime();
+  const left = Math.min(rec.deadline - ctx.now().getTime(), remainingProcessTime() ?? Infinity);
   if (left <= 0) return rec.finish('stopped', '実行時間の上限に達しました', []);
   let evidence = reusableEvidence(root, env, changeId, ctx.changeDir);
   if (!evidence) {

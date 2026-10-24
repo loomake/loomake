@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { runExternal } from '@loomake/kit';
 import { createInputReader, JSON_LIMITS } from '@loomake/kit';
 import type { Evidence } from '@loomake/trace';
 
@@ -8,7 +8,7 @@ const quote = (a: string) => (isWindows ? `"${a.replace(/"/g, '""')}"` : a);
 
 /** gh CLI があり、ログインしているか（REQ-116、add-run-pr の仮定 A-23） */
 export function ghLoggedIn(root: string, env: NodeJS.ProcessEnv): boolean {
-  const r = spawnSync('gh', ['auth', 'status'], { cwd: root, env, encoding: 'utf8', shell: isWindows });
+  const r = runExternal('gh', ['auth', 'status'], { cwd: root, env, shell: isWindows });
   return !r.error && r.status === 0;
 }
 
@@ -65,7 +65,7 @@ function requestUrl(value: unknown): string {
 /** 同じリポジトリの同じ向き先のopen PRだけを、一意な場合に返す。 */
 export function findOpenPr(root: string, env: NodeJS.ProcessEnv, pr: { base: string; head: string }): string | undefined {
   const args = ['pr', 'list', '--base', pr.base, '--head', pr.head, '--state', 'open', '--limit', '2', '--json', 'url,baseRefName,headRefName,isCrossRepository'];
-  const result = spawnSync('gh', args.map(quote), { cwd: root, env, encoding: 'utf8', shell: isWindows });
+  const result = runExternal('gh', args.map(quote), { cwd: root, env, shell: isWindows });
   if (result.error || result.status !== 0) throw new Error(`既存PRの検索に失敗しました（${(result.stderr || result.error?.message || '').trim()}）`);
   let rows: unknown;
   try { rows = JSON.parse(result.stdout); } catch { throw new Error('既存PRの検索結果を読み取れません'); }
@@ -79,7 +79,7 @@ export function findOpenPr(root: string, env: NodeJS.ProcessEnv, pr: { base: str
 /** gh pr create で PR を作り、URL を返す（REQ-116） */
 export function createPr(root: string, env: NodeJS.ProcessEnv, pr: { base: string; head: string; title: string; bodyFile: string }): string {
   const args = ['pr', 'create', '--base', pr.base, '--head', pr.head, '--title', pr.title, '--body-file', pr.bodyFile];
-  const r = spawnSync('gh', args.map(quote), { cwd: root, env, encoding: 'utf8', shell: isWindows });
+  const r = runExternal('gh', args.map(quote), { cwd: root, env, shell: isWindows });
   if (r.error || r.status !== 0) throw new Error(`gh pr create に失敗しました（${(r.stderr || r.error?.message || '').trim()}）`);
   return requestUrl(r.stdout.trim());
 }

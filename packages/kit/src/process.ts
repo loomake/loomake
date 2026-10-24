@@ -6,7 +6,7 @@ import { UsageError } from './errors.js';
 
 export const EXTERNAL_TIMEOUT_MS = 30_000;
 export const EXTERNAL_OUTPUT_BYTES = 64 * 1024 * 1024;
-type Budget = { deadline: number; maxOperationMs: number };
+type Budget = { deadline: number; maxOperationMs: number; state: { interrupted: boolean } };
 const budgets = new AsyncLocalStorage<Budget>();
 export type ProcessBudget = { timeoutMs: number; maxOperationMs?: number };
 
@@ -19,7 +19,11 @@ export function withProcessBudget<T>(options: ProcessBudget, action: () => T): T
   const outer = budgets.getStore();
   const maxOperationMs = Math.min(options.maxOperationMs ?? EXTERNAL_TIMEOUT_MS, outer?.maxOperationMs ?? Infinity);
   positive(maxOperationMs);
-  return budgets.run({ deadline: Math.min(performance.now() + options.timeoutMs, outer?.deadline ?? Infinity), maxOperationMs }, action);
+  return budgets.run({ deadline: Math.min(performance.now() + options.timeoutMs, outer?.deadline ?? Infinity), maxOperationMs, state: outer?.state ?? { interrupted: false } }, action);
+}
+export function remainingProcessTime(): number | undefined {
+  const budget = budgets.getStore();
+  return budget && Math.max(0, budget.deadline - performance.now());
 }
 export function hasProcessBudget(): boolean { return budgets.getStore() !== undefined; }
 
@@ -99,6 +103,7 @@ function utf8Prefix(text: string, bytes: number): string {
 /** 引数を配列のまま渡し、期限・合計出力と子グループを監視する。 */
 export function runExternal(command: string, args: readonly string[], options: ExternalOptions = {}): ExternalResult {
   const budget = budgets.getStore();
+  if (budget?.state.interrupted) throw new ProcessLimitError('interrupted', command);
   const timeout = Math.min(options.timeoutMs ?? (options.qualityCommand ? Infinity : EXTERNAL_TIMEOUT_MS), options.qualityCommand ? Infinity : budget?.maxOperationMs ?? EXTERNAL_TIMEOUT_MS, budget ? budget.deadline - performance.now() : Infinity);
   if (timeout <= 0) throw new ProcessLimitError('timeout', command);
   positive(timeout);
@@ -114,7 +119,10 @@ export function runExternal(command: string, args: readonly string[], options: E
   let outcome: Outcome;
   try { outcome = JSON.parse(result.output[3]?.toString('utf8') ?? ''); }
   catch { throw new UsageError(`外部操作の監視結果を読み取れません：${command}`); }
-  if (outcome.kind) throw new ProcessLimitError(outcome.kind, command, stdout, stderr);
+  if (outcome.kind) {
+    if (outcome.kind === 'interrupted' && budget) budget.state.interrupted = true;
+    throw new ProcessLimitError(outcome.kind, command, stdout, stderr);
+  }
   const error = outcome.error && Object.assign(new Error(outcome.error.message), { code: outcome.error.code });
   return { status: outcome.status, signal: outcome.signal, stdout, stderr, ...(error ? { error } : {}) };
 }

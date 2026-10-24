@@ -61,6 +61,14 @@ describe('同期外部操作の監視', () => {
       withProcessBudget({ timeoutMs: 5000 }, async () => { await new Promise((r) => setTimeout(r, 130)); expect(call('console.log("ok")').stdout).toBe('ok\n'); }),
     ]);
   });
+  it('[REQ-181][REQ-182] 中断後に同じ共有予算で別の操作を始めない', () => fixture((dir) => {
+    const file = join(dir, 'after');
+    withProcessBudget({ timeoutMs: 3000 }, () => {
+      expect(() => call("process.kill(process.ppid,'SIGINT');setInterval(()=>{},100)")).toThrow('中断');
+      expect(() => call(`require('node:fs').writeFileSync(${JSON.stringify(file)},'x')`)).toThrow('中断');
+      expect(existsSync(file)).toBe(false);
+    });
+  }));
   it('[REQ-181] 親が先に終わっても出力を握る子孫を残さない', () => fixture((dir) => {
     const file = join(dir, 'pid');
     const leaf = `require('node:fs').writeFileSync(${JSON.stringify(file)},String(process.pid));setInterval(()=>{},100)`;

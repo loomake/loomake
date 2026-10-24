@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { runExternal } from '@loomake/kit';
 import { dirtyFiles, git } from './git.js';
 
 /** 不正な直し方として見つけたもの */
@@ -26,7 +26,7 @@ const openspecPrefix = (dir: string) => `${dir.replace(/\\/g, '/').replace(/^\.\
 const isPackageJson = (f: string) => f.split('/').pop() === 'package.json';
 
 const scriptsOf = (root: string, env: NodeJS.ProcessEnv, rev: string, file: string): string => {
-  const r = spawnSync('git', ['show', `${rev}:${file}`], { cwd: root, env, encoding: 'utf8' });
+  const r = runExternal('git', ['show', `${rev}:${file}`], { cwd: root, env });
   if (r.status !== 0) return '{}';
   try {
     return JSON.stringify((JSON.parse(r.stdout) as { scripts?: unknown }).scripts ?? {});
@@ -79,8 +79,8 @@ export const APPROVAL_GUIDE = [
 export type HeadState = { sha: string; branch: string };
 
 export const headState = (root: string, env: NodeJS.ProcessEnv): HeadState => ({
-  sha: (spawnSync('git', ['rev-parse', '--verify', '-q', 'HEAD'], { cwd: root, env, encoding: 'utf8' }).stdout ?? '').trim(),
-  branch: (spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: root, env, encoding: 'utf8' }).stdout ?? '').trim(),
+  sha: (runExternal('git', ['rev-parse', '--verify', '-q', 'HEAD'], { cwd: root, env }).stdout ?? '').trim(),
+  branch: (runExternal('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: root, env }).stdout ?? '').trim(),
 });
 
 /**

@@ -1,5 +1,5 @@
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
-import { UsageError } from '@loomake/kit';
+import { UsageError, runExternal } from '@loomake/kit';
 import { StringDecoder } from 'node:string_decoder';
 import { DEFAULT_MAX_OUTPUT_BYTES } from './config.js';
 import { createDiagnosticRedactor } from './mask.js';
@@ -50,7 +50,7 @@ export function assertEngineAvailable(engine: string, env: NodeJS.ProcessEnv): a
   if (!(ENGINES as readonly string[]).includes(engine)) {
     throw new UsageError(`知らないエンジンです：${engine}。初版で使えるのは ${ENGINES.join('・')} だけです`);
   }
-  const r = spawnSync('claude', ['--version'], { env, encoding: 'utf8', shell: isWindows });
+  const r = runExternal('claude', ['--version'], { env, shell: isWindows });
   if (r.error || r.status !== 0) {
     throw new UsageError('claude コマンドが見つかりません。Claude Code を入れてから実行してください（npm install -g @anthropic-ai/claude-code）');
   }
@@ -68,7 +68,7 @@ export function claudeArgs(commands: string[], skipPermissions: boolean): string
 /** エンジンと子孫を停止し、POSIXでは猶予後にグループ全体を強制終了する。 */
 function stop(child: ChildProcess): Promise<void> {
   if (isWindows && child.pid !== undefined) {
-    spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F']);
+    spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { timeout: 1000, killSignal: 'SIGKILL', stdio: 'ignore' });
     return Promise.resolve();
   }
   const killGroup = (signal: NodeJS.Signals) => {
