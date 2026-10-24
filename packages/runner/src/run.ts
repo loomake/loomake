@@ -67,6 +67,8 @@ const isGateTask = (t: Task) => hasGateMark(t) || isLegacyGateTask(t);
 
 /** loomake.config.json の run の設定。既定は直し 5 回・60 分（add-run-loop の仮定 A-16） */
 function loadRunConfig(root: string): RunConfig {
+  // JSON として読めない設定は、verify と同じ日本語の設定エラーにする（REQ-193）
+  loadConfig(root);
   const p = join(root, 'loomake.config.json');
   const raw = existsSync(p) ? (JSON.parse(createInputReader().read(p)) as { run?: Record<string, unknown> }).run : undefined;
   return parseRunConfig(raw);

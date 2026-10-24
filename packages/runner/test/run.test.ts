@@ -669,3 +669,16 @@ describe('実行の排他と記録', () => {
       expect(reasons.join('\n')).toContain('second stop');
     }));
 });
+
+describe('壊れた設定ファイル', () => {
+  it('[REQ-193] loomake.config.json を JSON として読めなければ、エンジンを呼ばず、記録も作らずに終了コード 2 を返す', () =>
+    withRepo(async (repo) => {
+      writeFileSync(join(repo.root, 'loomake.config.json'), '{bad');
+      const r = await cli(repo);
+      expect(r.code).toBe(2);
+      expect(r.stderr).toContain('loomake.config.json を読めません');
+      expect(r.stderr).not.toContain('SyntaxError');
+      expect(repo.calls()).toEqual([]);
+      expect(existsSync(join(repo.root, '.loomake/runs'))).toBe(false);
+    }));
+});
