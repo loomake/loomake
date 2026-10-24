@@ -11,6 +11,7 @@ import { taskLabel } from './run/tasks.js';
 import type { RunContext, RunOptions } from './run/types.js';
 
 export type { RunOptions, RunSummary } from './run/types.js';
+export { RUN_CONFIG_KEYS } from './config.js';
 export { RUNS_DIR } from './run/types.js';
 export { GATE_MARK } from './run/tasks.js';
 export { buildPrompt } from './run/prompt.js';

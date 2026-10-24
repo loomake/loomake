@@ -5,6 +5,7 @@ const { spawn, spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 
 const [command, args, shell, ms, limit] = JSON.parse(process.argv[2]);
+process.title = 'loomake: command supervisor';
 const win = process.platform === 'win32';
 let child, timer, grace;
 let count = 0;

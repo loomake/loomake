@@ -6,7 +6,7 @@
 ## Requirements
 
 ### Requirement: ブロッキング確認事項の検査
-`loomake verify --change <id> --spec-only` は、trace.md にブロッキング = yes で回答が空の確認事項があるとき、不合格にする SHALL。trace.md または差分仕様に解析エラー（節や表が無いなど）があるときも、そのファイル名・行番号・内容を出して不合格にする MUST。
+`loomake verify --change <id> --spec-only` は、trace.md にブロッキングで回答が空の確認事項があるとき、不合格にする SHALL。ブロッキング列の値は yes・no・はい・いいえ のどれか（英字の大文字と小文字は区別しない）とし、yes と はい をブロッキングとみなす SHALL。それ以外の値（空を含む）の確認事項があるときは、その ID と値を出して不合格にする SHALL。trace.md または差分仕様に解析エラー（節や表が無いなど）があるときも、そのファイル名・行番号・内容を出して不合格にする MUST。
 
 Source: REQ-034
 
@@ -19,7 +19,7 @@ Source: REQ-034
 - **THEN** この検査は合格する
 
 #### Scenario: ブロッキングでない確認事項
-- **WHEN** ブロッキングが yes でなく回答が空の確認事項だけを持つ change に `--spec-only` を実行する
+- **WHEN** ブロッキングが no で回答が空の確認事項だけを持つ change に `--spec-only` を実行する
 - **THEN** この検査は合格する
 
 #### Scenario: 確認事項の節名が崩れている
@@ -29,6 +29,14 @@ Source: REQ-034
 #### Scenario: 差分仕様の解析エラー
 - **WHEN** RENAMED の FROM に対応する TO が無い spec.md を持つ change に `--spec-only` を実行する
 - **THEN** その spec.md のファイル名と行番号を出して不合格になる
+
+#### Scenario: ブロッキング列が はい
+- **WHEN** ブロッキング = はい で回答が空の Q-01 を持つ change に `--spec-only` を実行する
+- **THEN** 不合格となり、Q-01 の ID・関連する要件・質問が出力され、終了コードは 1 である
+
+#### Scenario: ブロッキング列の値が使えない
+- **WHEN** ブロッキング = 要 の Q-01 を持つ change に `--spec-only` を実行する
+- **THEN** Q-01 と値「要」を出して不合格になり、終了コードは 1 である
 
 ### Requirement: 仕様の整合性の検査
 仕様ゲートは Source の無い Requirement、台帳に無い要件 ID を Source に持つ Requirement、Scenario の無い Requirement、状態が反映済なのに仕様のどの Requirement からも参照されていない要件を、不合格にする SHALL。
@@ -74,13 +82,17 @@ Source: REQ-037
 - **THEN** 警告が表示され、この検査だけでは不合格にならない
 
 ### Requirement: 完了ゲート
-`--done` は、仕様ゲートに加えて、未完了のタスク、状態が確認待ちの要件、テストの無い要件を不合格にする SHALL。テストの有無は、test コマンドが書き出したテストランナーの JSON レポートで、成功したテストの名前にある `[REQ-xxx]` で判定する MUST。
+`--done` は、仕様ゲートに加えて、未完了のタスク、状態が確認待ちの要件、テストの無い要件を不合格にする SHALL。tasks.md にタスクが 1 つも無いときも不合格にする SHALL。テストの有無は、test コマンドが書き出したテストランナーの JSON レポートで、成功したテストの名前にある `[REQ-xxx]` で判定する MUST。
 
 Source: REQ-038
 
 #### Scenario: 未完了タスクがある
 - **WHEN** `- [ ]` のタスクが残る change に `--done` を実行する
 - **THEN** 未完了タスクの行を含めて不合格になる
+
+#### Scenario: タスクが無い
+- **WHEN** タスクが 1 つも無い tasks.md を持つ change に `--done` を実行する
+- **THEN** タスクが無いことを含めて不合格になる
 
 #### Scenario: 確認待ちが残っている
 - **WHEN** 台帳に状態が確認待ちの要件が残る change に `--done` を実行する
@@ -111,7 +123,7 @@ Source: REQ-038
 - **THEN** 「要件ごとのテスト」が不合格になり、レポートが無いことが詳細に含まれる
 
 ### Requirement: 品質コマンドの実行
-`--done` は、`loomake.config.json` の `commands`（lint・typecheck・test）を実行し、1 つでも失敗したら不合格にする SHALL。
+`--done` は、`loomake.config.json` の `commands`（lint・typecheck・test）を実行し、1 つでも失敗したら不合格にする SHALL。verify は、どのモードでも、loomake.config.json に知らないキーがあれば、そのキーを警告として表示する SHALL。知らないキーがあっても不合格にはしない SHALL。
 
 Source: REQ-039
 
@@ -122,6 +134,10 @@ Source: REQ-039
 #### Scenario: すべて成功する
 - **WHEN** 3 つのコマンドがすべて終了コード 0 で終わる設定で `--done` を実行する
 - **THEN** 3 つの `command:` 検査がすべて合格する
+
+#### Scenario: 知らないキーがある
+- **WHEN** loomake.config.json に `comands` のキーがあるプロジェクトで `loomake verify` を実行する
+- **THEN** 「loomake.config.json」の検査が警告になり、`comands` が表示され、ほかに不合格がなければ終了コードは 0 である
 
 ### Requirement: JSON 出力
 `--json` を指定すると、verify は core のスキーマに沿った結果と、要件ごとのテストファイル一覧を JSON で標準出力に出す SHALL。
@@ -137,7 +153,7 @@ Source: REQ-040
 - **THEN** 出力の要件ごとの一覧で REQ-012 に `tests/a.test.ts` が含まれる
 
 ### Requirement: 終了コード
-verify は、合格なら終了コード 0、不合格なら 1、使い方の誤りなら 2 を返す SHALL。`--change` の値に `/`・`\`・`..` を含むときは、使い方の誤りとする SHALL。
+verify は、合格なら終了コード 0、不合格なら 1、使い方の誤りなら 2 を返す SHALL。`--change` の値が OpenSpec の change 名の形（英小文字・数字と、間に 1 つずつのハイフン）でないとき（`/`・`\`・`..` を含むときを含む）と、`archive` のときは、使い方の誤りとする SHALL。
 
 Source: REQ-041
 
@@ -156,6 +172,14 @@ Source: REQ-041
 #### Scenario: パスの区切りを含む change-id
 - **WHEN** `loomake verify --change ../../packages --spec-only` を実行する
 - **THEN** change-id にパスの区切りを含められないと日本語で表示され、終了コードは 2 である
+
+#### Scenario: change 名の形でない change-id
+- **WHEN** `loomake verify --change 'c1&echo' --spec-only` を実行する
+- **THEN** change-id の形が正しくないと日本語で表示され、`openspec validate` は呼ばれず、終了コードは 2 である
+
+#### Scenario: archive を change-id にする
+- **WHEN** `loomake verify --change archive --spec-only` を実行する
+- **THEN** archive は change-id に使えないと日本語で表示され、終了コードは 2 である
 
 ### Requirement: change の省略
 `--change` を省略した場合、verify は commands だけを実行する SHALL。

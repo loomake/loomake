@@ -72,12 +72,12 @@ node scripts/run-sigint-smoke.mjs .loomake/quality/sigint-check-01
 
 ## 下限Nodeと通信拒否下で配布物を使う
 
-開発用Node 24で配布物をprepareし、確認するNodeの実行ファイルを指定してチェックする。Nodeの実行ファイルを取得する場合は、公式の配布物とチェックサムを照合する。以下はLinuxで、Node 20.19.0のbinディレクトリが`/tmp/loomake-runtime-20.19.0/bin`にある場合の例である。
+開発用Node 24で配布物をprepareし、確認するNodeの実行ファイルを指定してチェックする。Nodeの実行ファイルを取得する場合は、公式の配布物とチェックサムを照合する。以下はLinuxで、Node 22.12.0のbinディレクトリが`/tmp/loomake-runtime-22.12.0/bin`にある場合の例である。
 
 ```sh
 mkdir -p .loomake/quality
-node scripts/package-smoke.mjs prepare .loomake/quality/runtime20-check-01
-PATH="/tmp/loomake-runtime-20.19.0/bin:$PATH" python3 scripts/deny-network.py /tmp/loomake-runtime-20.19.0/bin/node scripts/runtime-compatibility.mjs .loomake/quality/runtime20-check-01 .loomake/quality/runtime20-results-01 20.19.0
+node scripts/package-smoke.mjs prepare .loomake/quality/runtime22-check-01
+PATH="/tmp/loomake-runtime-22.12.0/bin:$PATH" python3 scripts/deny-network.py /tmp/loomake-runtime-22.12.0/bin/node scripts/runtime-compatibility.mjs .loomake/quality/runtime22-check-01 .loomake/quality/runtime22-results-01 22.12.0
 ```
 
 PythonのラッパーはLinux ARM64・x86_64を対象にし、子プロセスだけにno_new_privsとseccompの通信拒否を継承させる。通信を試みてEPERMになることを確認してから、主要コマンドとtrace、runのSIGINT試験を実行する。フィルターを設定できない場合や対照実験が成立しない場合は失敗する。単に通信モジュールを使わないという静的検査では代用しない。今回実際に確認したCPUはARM64で、x86_64のCI成功は未確認である。

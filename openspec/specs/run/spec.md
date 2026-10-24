@@ -126,7 +126,7 @@ Source: REQ-100
 - **THEN** 残ったタスクの表示と summary.json の完了ゲートのタスクに `<!-- loomake:gate=done -->` が含まれない
 
 ### Requirement: エンジンの選び方と権限
-`loomake run` は `--engine` でエンジンを選び、省いたときは `claude-code` とする SHALL。知らないエンジンの名前と、`claude` コマンドが見つからないときと、change-id に `/`・`\`・`..` を含むときは、使い方の誤りとして終了コード 2 を返す SHALL。Claude Code は headless（`claude -p`、出力は JSON）で呼び、指示は標準入力で渡す SHALL。ふだんは、ファイルの読み書きと、loomake.config.json の commands の実行だけを許可する操作の一覧として渡す SHALL。
+`loomake run` は `--engine` でエンジンを選び、省いたときは `claude-code` とする SHALL。知らないエンジンの名前と、`claude` コマンドが見つからないときと、change-id が OpenSpec の change 名の形でないときと、`archive` のときは、使い方の誤りとして終了コード 2 を返す SHALL。Claude Code は headless（`claude -p`、出力は JSON）で呼び、指示は標準入力で渡す SHALL。ふだんは、ファイルの読み書きと、loomake.config.json の commands の実行だけを許可する操作の一覧として渡す SHALL。
 
 Source: REQ-101
 
@@ -244,13 +244,17 @@ Source: REQ-122
 - **THEN** 警告が表示され、エンジンは呼ばれず、終了コードは 1 である
 
 ### Requirement: 中断されたときの記録
-中断（SIGINT など）されたとき、`loomake run` はその時点の記録と、中断した旨の summary.json を書いてから終わる SHALL。終えたタスクのコミットは残し、途中のタスクの変更はコミットせずに作業ツリーに残す SHALL。
+中断（SIGINT など）されたとき、`loomake run` はその時点の記録と、中断した旨の summary.json を書いてから終わる SHALL。終えたタスクのコミットは残し、途中のタスクの変更はコミットせずに作業ツリーに残す SHALL。完了ゲートの品質コマンドの実行中に中断されたときは、そのコマンドを子のプロセスまで止めて中断で止めたと記録し、残りの品質コマンドもエンジンも動かさずに終わる SHALL。
 
 Source: REQ-124
 
 #### Scenario: 2 つ目のタスクの途中で中断する
 - **WHEN** 1 つ目のタスクを終えたあと、2 つ目のタスクのエンジンの実行中に SIGINT を受ける
 - **THEN** 1 つ目のタスクのコミットが残り、summary.json に中断したことが書かれ、2 つ目のタスクは未完了のまま残る
+
+#### Scenario: 完了ゲートの品質コマンドの途中で中断する
+- **WHEN** 完了ゲートの test コマンドの実行中に、run のプロセスグループが SIGINT を受ける
+- **THEN** test コマンドとその子のプロセスは止まり、test の検査は中断で止めたと記録され、エンジンは呼ばれず、summary.json に中断したことが書かれ、終了コードは 1 である
 
 ### Requirement: 動作環境
 `loomake run` は、Node.js 20.19 以上で動作する SHALL。

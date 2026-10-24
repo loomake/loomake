@@ -31,6 +31,8 @@ npx loomake trace report --change <id>            # 検収レポートを出す
 | [docs/positioning.md](docs/positioning.md) | Loomake を使う人・導入を検討する人 | 一般的な開発の流れ（要件定義から運用まで）の中での、Loomake・OpenSpec・AI エージェント・テストランナー・CI の受け持ち |
 | [docs/for-agents.md](docs/for-agents.md) | Loomake を入れたプロジェクトで働く AI エージェント | 状況ごとの手順、verify が不合格のときの直し方、終了コードと JSON |
 | [AGENTS.md](AGENTS.md) | AI エージェント・開発者 | このリポジトリで AI が従うルール |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | このリポジトリに貢献する人 | 開発の環境、change の作り方、PR の出し方 |
+| [SECURITY.md](SECURITY.md) | 脆弱性を見つけた人 | 脆弱性の報告のしかたと、`loomake run` を使うときの注意 |
 | [docs/flow.md](docs/flow.md) | このリポジトリを開発する人 | Loomake を Loomake で作る流れ |
 | [docs/architecture.md](docs/architecture.md) | このリポジトリを開発する人 | 全体の構成、名前、作る順番 |
 | [docs/requirements/](docs/requirements/) | このリポジトリを開発する人 | 要件定義書。core・kit は [mvp-v0.7.md](docs/requirements/mvp-v0.7.md)、trace は [trace-v0.1.md](docs/requirements/trace-v0.1.md)、run は [runner-v0.1.md](docs/requirements/runner-v0.1.md)。過去の版は trace.md の出典として残している |
@@ -50,7 +52,7 @@ npx loomake trace report --change <id>            # 検収レポートを出す
 
 ## 開発
 
-開発には Node 24 の devcontainer を標準にしている。VS Code / Cursor で「コンテナーで再度開く」を実行すると、OpenSpec CLI が入る。配布物が動く Node の下限は 20.19 で、開発用ツールを動かす環境とは異なる。
+開発には Node 24 の devcontainer を標準にしている。VS Code / Cursor で「コンテナーで再度開く」を実行すると、OpenSpec CLI が入る。配布物が動く Node の下限は 22.12 で、開発用ツールを動かす環境とは異なる。
 
 ```sh
 pnpm install
@@ -99,10 +101,11 @@ skills-lock.json                  npx skills で入れたスキルの出所と�
 
 ### CI とリリース
 
-- PR と main への push で、ubuntu・macos・windows の 3 つで lint・typecheck・test・build を実行する。Node 20.19 でも、ビルドした CLI が動くかを確かめる
+- PR と main への push で、ubuntu・macos・windows の 3 つで lint・typecheck・test・build を実行する。Node 22.12 でも、ビルドした CLI が動くかを確かめる
 - gate ジョブは、対象の change ごとに `verify --change <id> --done` を実行する。対象は、PR 本文に `loomake-change: <id>` の行があればその change とし、なければ PR で変えた `openspec/changes/<id>/` の下のファイルと、ブランチ名（`loomake/` で始まるときは、それを除いた名前）から決める
 - 対象の change がなく、文書（`.md`、`docs/`・`openspec/`・`.changeset/` の下）だけを変えた PR と archive の PR は、品質コマンドだけを実行する。コードを変える PR で change がないときは、本文に `loomake-change: none` と書く。書かないと gate ジョブは失敗する
 - gate ジョブは PR 本文を実行のたびに読む。本文を書き直したら、gate ジョブを再実行する
+- archive で反映したあとの仕様の誤りは、change ごとの完了ゲートでは見つからない。そのため gate ジョブは、PR の種類によらず、いまの仕様（`openspec/specs/`）に `openspec validate --specs --strict` も実行する
 - npm への公開は GitHub の Actions から release ワークフローを main で手動実行する。事前に `pnpm changeset version` でバージョンを上げた変更を main に入れておく。未消化の changeset が残っていると公開を止める。リポジトリのシークレットに `NPM_TOKEN` が要る
 
 ### devcontainer について

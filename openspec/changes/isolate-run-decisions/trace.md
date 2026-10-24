@@ -17,3 +17,7 @@
 
 | ID | 関連 | 仮定の内容 | 理由 | 承認 |
 |---|---|---|---|---|
+
+## PR #47のmain取り込みの出典
+
+利用者の「解消して」に基づき、mainで完了したstop-gate-on-interrupt、fix-evaluation-findings、guard-test-weakening、validate-evidence-recordsなどの仕様と試験を統合する。REQ-205の観測値に品質コマンドの中断を含め、mainのREQ-124の停止状態を保持する。Node下限と公開準備はmainのrequire-node-22とprepare-npm-publishの変更を取り込み、古いNode20の実行記録は当時の結果として扱う。

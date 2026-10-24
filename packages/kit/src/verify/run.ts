@@ -22,6 +22,7 @@ import {
 } from '@loomake/core';
 import { assertChangeId, loadConfig, type LoomakeConfig } from './config.js';
 import { createInputReader, JSON_LIMITS, type InputReader } from '../input.js';
+import { findChangeDir, specFiles, toPosix } from '../change-files.js';
 
 export type VerifyOptions = {
   /** プロジェクトのルート（loomake.config.json のあるディレクトリ） */
@@ -43,8 +44,8 @@ const MAX_BUFFER = 64 * 1024 * 1024;
 const COMMAND_ORDER = ['lint', 'typecheck', 'test'];
 /** 実行時間の上限で止めた品質コマンドの detail */
 export const TIMED_OUT = '実行時間の上限に達したので止めました';
+export const INTERRUPTED = '中断されたので止めました';
 
-const toPosix = (p: string) => p.split(sep).join('/');
 
 /** verify を実行して結果を返す。設定の誤りは UsageError を投げる */
 export function runVerify(options: VerifyOptions): VerifyResult {
@@ -62,6 +63,8 @@ export function runVerify(options: VerifyOptions): VerifyResult {
     return toPosix(inside ?? relative(root, p));
   };
   const mode: VerifyMode = changeId ? (options.gate ?? 'spec-only') : 'quality';
+  // 知らないキーは、打ち間違いに気づけるよう警告にする。新しい版の設定でも止まらないよう、不合格にはしない（REQ-039）
+  if (config.unknownKeys.length) record('loomake.config.json', 'warn', `知らないキー：${config.unknownKeys.join('、')}（打ち間違いなら直してください）`);
   let coverage: Record<string, string[]> | undefined;
 
   if (!changeId) {
@@ -127,7 +130,9 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   const noSource = ledger.filter((r) => decision.missingSources.some((id) => id === r.ID));
   if (noSource.length) record('台帳の出典', 'fail', `出典が空：${noSource.map((r) => r.ID).join(', ')}`);
 
-  // ブロッキングな確認事項（ブロッキング列が yes のもの）
+  const badBlocking = questions.filter((q) => !BLOCKING.test(q['ブロッキング']) && !NOT_BLOCKING.test(q['ブロッキング']));
+  if (badBlocking.length) record('ブロッキングの値', 'fail', badBlocking.map((q) => `${q.ID}: "${q['ブロッキング']}"`).join(', '));
+  // ブロッキングな確認事項（yesまたははい）
   const openBlocking = questions.filter((q) => decision.blockingQuestions.includes(q.ID));
   if (openBlocking.length) {
     record('ブロッキング確認事項', 'fail', openBlocking.map((q) => `${q.ID}（${q['関連']}）${q['質問']}`).join('\n'));
@@ -144,16 +149,16 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   if (pending.length) record('確認待ちの要件', 'warn', pending.map((r) => r.ID).join(', '));
 
   // specs
-  const specFiles = reader.walk(join(changeDir, 'specs'), { skipIgnored: true }).filter((f) => f.endsWith('spec.md'));
-  if (specFiles.length === 0) record('差分仕様', 'fail', 'specs/<capability>/spec.md がありません');
+  const specs = specFiles(changeDir, reader);
+  if (specs.length === 0) record('差分仕様', 'fail', 'specs/<capability>/spec.md がありません');
   const specErrors: ParseError[] = [];
-  const reqs = specFiles.flatMap((f) => {
+  const reqs = specs.flatMap((f) => {
     const file = toPosix(relative(changeDir, f));
     const spec = parseSpec(file, reader.read(f));
     specErrors.push(...spec.errors);
     return spec.value.map((r) => ({ ...r, file }));
   });
-  if (specFiles.length) record('spec.md の解析', specErrors.length ? 'fail' : 'pass', formatErrors(specErrors));
+  if (specs.length) record('spec.md の解析', specErrors.length ? 'fail' : 'pass', formatErrors(specErrors));
 
   const ledgerIds = new Set(ledger.map((r) => r.ID));
   const live = reqs.filter((r) => r.op === 'ADDED' || r.op === 'MODIFIED');
@@ -176,20 +181,17 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   return { reader, changeDir, trace, live, decision };
 }
 
-// 質問に「<change-id> の Q-xx と同じ質問」と書いた確認事項の回答を、参照先と比べる
-const SHARED_MARK = /([a-z0-9][a-z0-9-]*) の (Q-\d+) と同じ質問/;
+const BLOCKING = /^(yes|はい)$/i;
+const NOT_BLOCKING = /^(no|いいえ)$/i;
+
+// 質問に「<change-id> の Q-xx と同じ質問」と書いた確認事項の回答を、参照先と比べる（add-shared-question-check の仮定 A-01・A-02）
+const SHARED_MARK = /([a-z0-9]+(?:-[a-z0-9]+)*) の (Q-\d+) と同じ質問/;
 
 function checkSharedQuestions(root: string, config: LoomakeConfig, changeId: string, questions: Trace['questions'], record: Recorder, reader: InputReader) {
   const changesDir = resolve(root, config.openspecDir, 'changes');
-  const archiveDir = join(changesDir, 'archive');
-  // 進行中の change を先に、なければ archive の <日付>-<change-id> を探す
   const findTrace = (id: string) => {
-    const active = join(changesDir, id, 'trace.md');
-    if (id !== 'archive' && existsSync(active)) return active;
-    const archived = existsSync(archiveDir)
-      ? reader.entries(archiveDir).filter((entry) => entry.kind === 'directory').map((entry) => entry.name).filter((d) => d.replace(/^\d{4}-\d{2}-\d{2}-/, '') === id).sort().reverse()
-      : [];
-    return archived.map((d) => join(archiveDir, d, 'trace.md')).find((p) => existsSync(p));
+    const dir = findChangeDir(changesDir, id, 'trace.md', reader);
+    return dir && join(dir, 'trace.md');
   };
   const answer = (q: { 回答: string }) => q['回答'].trim();
   const problems: string[] = [];
@@ -247,7 +249,9 @@ function checkTasksAndPending(spec: SpecState, record: Recorder) {
   if (existsSync(tasksPath)) {
     const tasks = parseTasks('tasks.md', spec.reader.read(tasksPath)).value;
     const open = tasks.filter((t) => !t.checked);
-    record('tasks.md', open.length ? 'fail' : 'pass', open.length ? open.map((t) => `- [ ] ${t.text}`).join('\n') : `${tasks.length} 件すべて完了`);
+    // タスクが 0 件のときに「すべて完了」とすると、tasks.md を空にしたのと区別できない（fix-evaluation-findings の仮定 A-03）
+    if (!tasks.length) record('tasks.md', 'fail', 'タスクがありません');
+    else record('tasks.md', open.length ? 'fail' : 'pass', open.length ? open.map((t) => `- [ ] ${t.text}`).join('\n') : `${tasks.length} 件すべて完了`);
   }
 }
 
@@ -311,7 +315,9 @@ function runCommands(root: string, config: LoomakeConfig, skip: boolean, record:
         : runExternal(cmd, [], { cwd: root, shell: true, timeoutMs: left, qualityCommand: true, maxBuffer: MAX_BUFFER });
     } catch (error) {
       if (!(error instanceof ProcessLimitError)) throw error;
-      record(`command: ${name}`, 'fail', error.kind === 'timeout' ? TIMED_OUT : error.message);
+      record(`command: ${name}`, 'fail', error.kind === 'timeout' ? TIMED_OUT : error.kind === 'interrupted' ? INTERRUPTED : error.message);
+      // 共有予算では後続の外部操作も起動せず拒否し、各項目に未実行の理由を残す。
+      if (error.kind === 'interrupted' && !hasProcessBudget()) return;
       continue;
     }
     const out = `${r.stdout ?? ''}${r.stderr ?? ''}`.trim();

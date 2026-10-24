@@ -2,9 +2,8 @@ import { join } from 'node:path';
 import { runExternal } from '@loomake/kit';
 import { createInputReader, JSON_LIMITS } from '@loomake/kit';
 import type { Evidence } from '@loomake/trace';
+import { isWindows, quote } from './shell.js';
 
-const isWindows = process.platform === 'win32';
-const quote = (a: string) => (isWindows ? `"${a.replace(/"/g, '""')}"` : a);
 
 /** gh CLI があり、ログインしているか（REQ-116） */
 export function ghLoggedIn(root: string, env: NodeJS.ProcessEnv): boolean {

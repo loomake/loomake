@@ -42,6 +42,16 @@ if (!existsSync('first.txt')) {
 }
 `);
 chmodSync(claude, 0o755);
+// 事前の認証確認だけを許可し、中断までにPR操作へ進んでいないことを記録する。
+const gh = join(bin, 'gh');
+const ghLog = join(resultDir, 'gh-calls.jsonl');
+writeFileSync(gh, `#!/usr/bin/env node
+import { appendFileSync } from 'node:fs';
+const args = process.argv.slice(2);
+appendFileSync(${JSON.stringify(ghLog)}, JSON.stringify(args) + '\\n');
+process.exit(args.length === 2 && args[0] === 'auth' && args[1] === 'status' ? 0 : 97);
+`);
+chmodSync(gh, 0o755);
 env.PATH = `${bin}${delimiter}${env.PATH ?? ''}`;
 const child = spawn(process.execPath, [join(consumer, 'node_modules/loomake/dist/cli.js'), 'run', '--change', 'sample'], { cwd: consumer, env, stdio: ['ignore', 'pipe', 'pipe'] });
 let output = ''; let stderr = ''; let enginePid;
@@ -74,7 +84,9 @@ try {
   assert.deepEqual(summary.doneTasks, ['1.1 最初の変更']);
   assert.deepEqual(summary.remainingTasks, ['1.2 途中の変更', '2.1 品質を確認する']);
   assert.throws(() => process.kill(enginePid, 0), { code: 'ESRCH' });
-  writeFileSync(join(resultDir, 'results.json'), JSON.stringify({ requirement: 'REQ-124', ok: true, node: process.version, platform: process.platform, signal: 'SIGINT', exit: result, summary, initial, head: git('rev-parse', 'HEAD'), partial: readFileSync(join(consumer, 'partial.txt'), 'utf8') }, null, 2) + '\n');
+  const githubCalls = readFileSync(ghLog, 'utf8').trim().split('\n').map((line) => JSON.parse(line));
+  assert.deepEqual(githubCalls, [['auth', 'status']]);
+  writeFileSync(join(resultDir, 'results.json'), JSON.stringify({ githubCalls, requirement: 'REQ-124', ok: true, node: process.version, platform: process.platform, signal: 'SIGINT', exit: result, summary, initial, head: git('rev-parse', 'HEAD'), partial: readFileSync(join(consumer, 'partial.txt'), 'utf8') }, null, 2) + '\n');
   console.log('SIGINT後の記録・先行コミット・途中の変更を確認しました');
 } finally {
   if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');

@@ -4,6 +4,7 @@ import { join, relative, resolve } from 'node:path';
 import { parseTasks } from '@loomake/core';
 import { UsageError, assertChangeId, formatVerifyResult, loadConfig, runVerify, createInputReader } from '@loomake/kit';
 import { DEFAULT_ALLOWED_DOMAINS, assertEngineAvailable } from '../engine.js';
+import { ghLoggedIn } from '../pr.js';
 import { branchExists, dirtyFiles, git, isIgnored } from '../git.js';
 import { parseRunConfig, type RunConfig } from '../config.js';
 import { checkLogHistory } from '../logs.js';
@@ -96,6 +97,13 @@ export async function prepare(options: RunOptions): Promise<RunContext | number>
     if (engineTasks[0]) stdout(`\n最初のタスクの指示：\n\n${buildPrompt(root, changeDir, `- [ ] ${taskLabel(engineTasks[0])}`)}`);
     switchBack();
     return 0;
+  }
+
+  // PRを作れない環境では、エンジンや実装ブランチを作る前に止まる（REQ-116）。
+  if (!ghLoggedIn(root, env)) {
+    switchBack();
+    stdout('gh CLI がないか、ログインしていないので、実装を始めませんでした。PR を作るために、gh auth login でログインしてください。');
+    return 1;
   }
 
   // コンテナの外では警告して確認する（REQ-122）

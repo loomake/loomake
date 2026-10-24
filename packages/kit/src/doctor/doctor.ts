@@ -57,6 +57,9 @@ function diagnoseProject(root: string, path: string): DoctorCheck[] {
     try {
       config = loadConfig(root);
       ok('loomake.config.json を読めます');
+      if (config.unknownKeys.length) {
+        warn(`loomake.config.json に知らないキーがあります：${config.unknownKeys.join('、')}`, 'キーの名前の打ち間違いを直すか、要らないキーなら消してください');
+      }
     } catch (e) {
       if (!(e instanceof UsageError)) throw e;
       error(`loomake.config.json を読めません：${e.message}`, 'loomake.config.json を直してください');

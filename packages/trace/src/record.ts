@@ -60,7 +60,7 @@ export function runRecord(options: RecordOptions): number {
   const config = loadConfig(root);
   assertChangeId(changeId);
   const changeDir = resolve(root, config.openspecDir, 'changes', changeId);
-  if (changeId === 'archive' || !existsSync(changeDir) || !statSync(changeDir).isDirectory()) {
+  if (!existsSync(changeDir) || !statSync(changeDir).isDirectory()) {
     throw new UsageError(`change「${changeId}」がありません（${config.openspecDir}/changes/${changeId}）`);
   }
 

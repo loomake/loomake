@@ -8,3 +8,9 @@
 ## 2. 統合検証
 - [x] 2.1 用語と責務、TDDの結果、changesetを更新する
 - [x] 2.2 `pnpm -s verify --change isolate-run-decisions --done` を通す <!-- loomake:gate=done -->
+
+## 3. PR #47のmain取り込み
+
+- [x] 3.1 mainの中断・change-id・設定警告・テスト書き換え検出・証拠の失敗表示を、既存の保護と統合する
+- [x] 3.2 中断の優先順位の直接試験と両側の既存試験を通す
+- [x] 3.3 完了ゲートと配布物を再検証し、PRの競合状態を確認する <!-- loomake:gate=done -->

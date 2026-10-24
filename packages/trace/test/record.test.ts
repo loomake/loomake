@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -7,6 +7,9 @@ import { createHash } from 'node:crypto';
 import { runRecord, type Evidence } from '@loomake/trace';
 import { main } from '../../cli/src/main.js';
 import { CHANGE, reportJson, specMd, traceMd } from '../../kit/test/project.js';
+
+// git・node・verify のコマンドを何度も起動するので、Windows では 1 件に 5 秒を超えることがある（runner のテストと同じ上限にする）
+vi.setConfig({ testTimeout: 60_000 });
 
 const gitRun = (root: string, ...args: string[]) => {
   const r = spawnSync('git', ['-c', 'user.name=loomake-test', '-c', 'user.email=test@example.com', ...args], { cwd: root, encoding: 'utf8' });
@@ -86,6 +89,21 @@ describe('証拠の記録', () => {
       const files = evidenceFiles(repo.root);
       expect(files).toHaveLength(1);
       expect(readEvidence(repo.root, files[0]).verify.ok).toBe(false);
+    } finally {
+      repo.cleanup();
+    }
+  });
+
+  it('[REQ-066] change-id が change 名の形でないか archive なら、何も記録せず、終了コード 2 を返す', async () => {
+    const repo = makeRepo();
+    try {
+      for (const id of ['C1', 'archive']) {
+        const err: string[] = [];
+        const code = await main(['trace', 'record', '--change', id], { cwd: repo.root, stdout: () => {}, stderr: (t) => err.push(t) });
+        expect(code, id).toBe(2);
+        expect(err.join('\n'), id).toMatch(/英小文字・数字|archive は change-id に使えません/);
+      }
+      expect(existsSync(join(repo.root, '.loomake/evidence'))).toBe(false);
     } finally {
       repo.cleanup();
     }
@@ -210,9 +228,9 @@ describe('オフラインでの動作と依存', () => {
     expect(Object.keys(pkg.dependencies ?? {}).sort()).toEqual(['@loomake/core', '@loomake/kit']);
   });
 
-  it('[REQ-089] @loomake/trace の engines.node は >=20.19.0', () => {
+  it('[REQ-142] @loomake/trace の engines.node は >=22.12.0', () => {
     const pkg = JSON.parse(readFileSync(join(import.meta.dirname, '../package.json'), 'utf8'));
-    expect(pkg.engines?.node).toBe('>=20.19.0');
+    expect(pkg.engines?.node).toBe('>=22.12.0');
   });
 });
 

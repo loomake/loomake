@@ -9,8 +9,8 @@ export type EngineObservation = Readonly<{
   internalsReason?: string;
 }>;
 export type EngineDecision = { kind: 'continue' } | { kind: 'stop'; status: 'stopped' | 'interrupted'; reason: string };
-export type GateObservation = Readonly<{ stateChanged: boolean; ok: boolean; timedOut: boolean; fixes: number; maxFixes: number }>;
-export type GateDecision = { kind: 'passed' | 'repair' } | { kind: 'stop'; reason: string };
+export type GateObservation = Readonly<{ stateChanged: boolean; ok: boolean; interrupted?: boolean; timedOut: boolean; fixes: number; maxFixes: number }>;
+export type GateDecision = { kind: 'passed' | 'repair' } | { kind: 'stop' | 'interrupted'; reason: string };
 
 /** 変更の理由を先に示し、中断の状態は保持する（REQ-204）。 */
 export function decideAfterEngine(value: EngineObservation): EngineDecision {
@@ -32,6 +32,7 @@ export function decideAfterEngine(value: EngineObservation): EngineDecision {
 export function decideAfterGate(value: GateObservation): GateDecision {
   if (value.stateChanged) return { kind: 'stop', reason: '検証のあいだにHEADかブランチが変わりました。変更を取り消していません。Gitの状態を確認してから、もう一度実行してください。' };
   if (value.ok) return { kind: 'passed' };
+  if (value.interrupted) return { kind: 'interrupted', reason: '中断されました' };
   if (value.timedOut) return { kind: 'stop', reason: '実行時間の上限に達しました' };
   if (value.fixes >= value.maxFixes) return { kind: 'stop', reason: `直しの回数の上限（${value.maxFixes} 回）に達しました` };
   return { kind: 'repair' };

@@ -9,6 +9,8 @@ import { selectChanges, verifyArgs } from '../scripts/ci-gate.mjs';
 const root = join(import.meta.dirname, '..');
 const read = (p: string) => readFileSync(join(root, p), 'utf8');
 const readJson = (p: string) => JSON.parse(read(p));
+// Windows のチェックアウトでは行末が CRLF になるので、行の正規表現で読むファイルは LF にそろえる
+const readLf = (p: string) => read(p).replace(/\r\n/g, '\n');
 const run = (cmd: string) => spawnSync(cmd, { cwd: root, shell: true, encoding: 'utf8' });
 
 const packageJsons = ['package.json', 'packages/core/package.json', 'packages/kit/package.json', 'packages/cli/package.json'];
@@ -44,8 +46,17 @@ describe('devcontainer', () => {
 });
 
 describe('Node.js のバージョン宣言', () => {
-  it('[REQ-048] ルートと各パッケージの engines.node が >=20.19.0', () => {
-    for (const p of packageJsons) expect(readJson(p).engines?.node, p).toBe('>=20.19.0');
+  it('[REQ-142] ルートと 5 つのパッケージの engines.node が >=22.12.0', () => {
+    const all = ['package.json', ...['core', 'kit', 'trace', 'runner', 'cli'].map((d) => `packages/${d}/package.json`)];
+    for (const p of all) expect(readJson(p).engines?.node, p).toBe('>=22.12.0');
+  });
+
+  it('[REQ-142] CI に、Node 22.12.0 でビルドした CLI を動かすジョブがある', () => {
+    const ci = readLf('.github/workflows/ci.yml');
+    const job = ci.match(/^ {2}node22:\n((?: {4}.*\n|\s*\n)*)/m)?.[1] ?? '';
+    const setup = job.indexOf('node-version: 22.12.0');
+    expect(setup).toBeGreaterThanOrEqual(0);
+    expect(job.indexOf('packages/cli/dist/cli.js', setup)).toBeGreaterThan(setup);
   });
 });
 
@@ -64,6 +75,13 @@ describe('CI', () => {
     expect(ci).toMatch(/if: github\.event_name == 'pull_request'/);
     expect(ci).toContain('node scripts/ci-gate.mjs "$HEAD_REF"');
     expect(ci).toContain('${{ github.head_ref }}');
+  });
+
+  it('[REQ-010] PR ごとに、change の完了ゲートより前に、いまの仕様を openspec validate --specs --strict で検証する', () => {
+    const gate = ci.slice(ci.indexOf('\n  gate:'));
+    const validate = gate.indexOf('- run: openspec validate --specs --strict');
+    expect(validate).toBeGreaterThan(gate.indexOf('npm install -g @fission-ai/openspec@'));
+    expect(validate).toBeLessThan(gate.indexOf('node scripts/ci-gate.mjs'));
   });
 
   it('[REQ-010][REQ-054] ブランチ名が change-id と一致すれば --change <id> --done で検査する', () => {
@@ -212,5 +230,130 @@ describe('ライセンス', () => {
     expect(license).toMatch(/^MIT License/);
     expect(license).toContain('Permission is hereby granted, free of charge');
     for (const p of packageJsons) expect(readJson(p).license, p).toBe('MIT');
+  });
+});
+
+describe('npm への公開の準備', () => {
+  const publishDirs = ['core', 'kit', 'trace', 'runner', 'cli'];
+  const repoUrl = 'https://github.com/loomake/loomake';
+
+  it('[REQ-138] 5 つのパッケージに、GitHub のリポジトリを指す repository・homepage・bugs と、description・keywords がある', () => {
+    for (const d of publishDirs) {
+      const pkg = readJson(`packages/${d}/package.json`);
+      expect(pkg.repository, d).toEqual({ type: 'git', url: `git+${repoUrl}.git`, directory: `packages/${d}` });
+      expect(pkg.homepage, d).toBe(`${repoUrl}#readme`);
+      expect(pkg.bugs?.url, d).toBe(`${repoUrl}/issues`);
+      expect(pkg.description, d).toBeTruthy();
+      expect(pkg.keywords, d).toContain('openspec');
+    }
+  });
+
+  it('[REQ-138] CLI の description は init・verify・trace・run・doctor をすべて挙げる', () => {
+    const description = readJson('packages/cli/package.json').description;
+    for (const c of ['init', 'verify', 'trace', 'run', 'doctor']) expect(description).toContain(c);
+  });
+
+  it('[REQ-139] 5 つのパッケージで、pnpm pack の tarball に README.md が入る', () => {
+    for (const d of publishDirs) {
+      const r = spawnSync('pnpm pack --dry-run --json', { cwd: join(root, 'packages', d), shell: true, encoding: 'utf8' });
+      expect(r.status, r.stderr).toBe(0);
+      const files = (JSON.parse(r.stdout) as { files: { path: string }[] }).files.map((f) => f.path);
+      expect(files, d).toContain('README.md');
+    }
+  });
+
+  it('[REQ-139] CLI の README に、npx loomake init・リポジトリへのリンク・openspec と gh の案内がある', () => {
+    const readme = read('packages/cli/README.md');
+    expect(readme).toContain('npx loomake init');
+    expect(readme).toContain(repoUrl);
+    expect(readme).toContain('`openspec`');
+    expect(readme).toContain('`gh`');
+  });
+
+  it('[REQ-139] 内部のパッケージの README に、内部用であることと 0.y.z のあいだは API が変わりうることが書いてある', () => {
+    for (const d of ['core', 'kit', 'trace', 'runner']) {
+      const readme = read(`packages/${d}/README.md`);
+      expect(readme, d).toContain('内部用');
+      expect(readme, d).toContain('`0.y.z` のあいだは、API が予告なく変わることがある');
+    }
+  });
+
+  describe('release ワークフロー', () => {
+    const release = readLf('.github/workflows/release.yml');
+    const at = (s: string) => {
+      const i = release.indexOf(s);
+      expect(i, s).toBeGreaterThanOrEqual(0);
+      return i;
+    };
+
+    it('[REQ-140] pnpm changeset publish の前に lint・typecheck・test を実行する', () => {
+      const publish = at('run: pnpm changeset publish');
+      for (const c of ['run: pnpm lint', 'run: pnpm typecheck', 'run: pnpm test']) expect(at(c)).toBeLessThan(publish);
+    });
+
+    it('[REQ-140] concurrency を指定し、実行中のものを取り消さない', () => {
+      expect(release).toMatch(/^concurrency:\n(?:\s+.*\n)*?\s+cancel-in-progress: false$/m);
+    });
+
+    it('[REQ-141] id-token: write を持ち、公開の前に 11.5.1 以上の npm を入れ、NPM_TOKEN があればそれも使う', () => {
+      expect(release).toMatch(/^ *permissions:\n(?:\s+.*\n)*?\s+id-token: write$/m);
+      const install = release.match(/run: npm install -g npm@(\d+)\.(\d+)\.(\d+)/);
+      expect(install).not.toBeNull();
+      const [major, minor, patch] = install!.slice(1).map(Number);
+      expect(major * 1e6 + minor * 1e3 + patch).toBeGreaterThanOrEqual(11 * 1e6 + 5 * 1e3 + 1);
+      expect(at('run: npm install -g npm@')).toBeLessThan(at('run: pnpm changeset publish'));
+      expect(release).toContain('NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}');
+    });
+
+    // jobs: の下を、ジョブの名前ごとの本文に分ける
+    const jobs = new Map<string, string>();
+    for (const part of release.slice(release.indexOf('\njobs:\n')).split(/^ {2}(?=[\w-]+:$)/m).slice(1)) {
+      jobs.set(part.slice(0, part.indexOf(':')), part);
+    }
+    const jobRunning = (command: string) => {
+      const found = [...jobs].filter(([, body]) => body.includes(`run: ${command}`));
+      expect(found, command).toHaveLength(1);
+      return found[0]!;
+    };
+
+    it('[REQ-143] ワークフロー全体の権限は contents: read だけで、書き込みの権限は公開のジョブだけが持つ', () => {
+      expect(release).toMatch(/^permissions:\n {2}contents: read\n(?! )/m);
+      const [publish] = jobRunning('pnpm changeset publish');
+      expect(jobs.size).toBeGreaterThanOrEqual(2);
+      for (const [name, body] of jobs) {
+        const has = (p: string) => new RegExp(`^ {6}${p}$`, 'm').test(body);
+        expect(has('id-token: write'), name).toBe(name === publish);
+        expect(has('contents: write'), name).toBe(name === publish);
+      }
+    });
+
+    it('[REQ-143] 公開のジョブは品質のジョブのあとに動き、スクリプトを実行せずにインストールし、ビルドせずにビルドの結果を受け取る', () => {
+      const [, publish] = jobRunning('pnpm changeset publish');
+      const [check, checkBody] = jobRunning('pnpm test');
+      for (const c of ['pnpm lint', 'pnpm typecheck']) expect(jobRunning(c)[0]).toBe(check);
+      expect(publish).toMatch(new RegExp(`^ {4}needs: \\[?${check}\\]?$`, 'm'));
+      expect(publish).toContain('run: pnpm install --frozen-lockfile --ignore-scripts');
+      expect(publish).not.toContain('run: pnpm build');
+      expect(checkBody).toContain('uses: actions/upload-artifact@');
+      expect(publish).toContain('uses: actions/download-artifact@');
+    });
+
+    it('[REQ-143] action をすべてコミットの SHA で指定する', () => {
+      const uses = [...release.matchAll(/uses: (\S+)/g)].map((m) => m[1]!);
+      expect(uses.length).toBeGreaterThan(0);
+      for (const u of uses) expect(u).toMatch(/@[0-9a-f]{40}$/);
+    });
+  });
+
+  it('[REQ-141] docs/release.md に、初回を NPM_TOKEN で公開し、Trusted Publisher を登録して NPM_TOKEN を外す手順がある', () => {
+    const doc = read('docs/release.md');
+    const first = doc.indexOf('初回の公開：');
+    const next = doc.indexOf('2 回目以降の公開：');
+    expect(first).toBeGreaterThanOrEqual(0);
+    expect(next).toBeGreaterThan(first);
+    expect(doc.slice(first, next)).toContain('`NPM_TOKEN` として登録する');
+    const after = doc.slice(next);
+    expect(after).toContain('Trusted Publisher を登録する');
+    expect(after).toContain('`NPM_TOKEN` を外し');
   });
 });

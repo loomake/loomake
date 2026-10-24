@@ -71,12 +71,30 @@ describe('runから外部操作までの期限', () => {
       expect(repo.git('log', '-1', '--format=%s')).not.toContain('完了ゲートに合格');
     } finally { repo.cleanup(); }
   });
+  it('[REQ-116][REQ-182] 事前の認証確認が期限切れなら実装も記録も始めない', async () => {
+    const repo = makeRepo();
+    try {
+      const before = repo.git('rev-parse', 'HEAD');
+      shim(repo, 'gh', "args[0]==='auth'");
+      const error = await budget(() => run(repo)).catch((value: unknown) => value);
+      expect(error).toBeInstanceOf(RuntimeFailure);
+      expect(error).not.toBeInstanceOf(UsageError);
+      expect(String(error)).toContain('実行時間の上限');
+      expect(existsSync(join(repo.base, 'stalled'))).toBe(true);
+      expect(repo.calls()).toEqual([]);
+      expect(repo.git('rev-parse', 'HEAD')).toBe(before);
+      expect(repo.git('branch', '--list', 'loomake/c1')).toBe('');
+      expect(existsSync(join(repo.root, '.loomake/runs'))).toBe(false);
+      expect(repo.prs()).toEqual([]);
+    } finally { repo.cleanup(); }
+  });
+  // authは事前確認を通した後、実装の完了後に行う公開前の確認だけを止める。
   it.each(['push', 'auth', 'list', 'create'] as const)('[REQ-182] %sの期限後に先へ進まず、再実行で重複させない', async (stage) => {
     const repo = makeRepo();
     try {
       repo.plan([{ write: { 'impl.txt': '実装' } }, {}]);
       const command = stage === 'push' ? 'git' : 'gh';
-      const condition = stage === 'push' ? "args[0]==='push'" : stage === 'auth' ? "args[0]==='auth'" : `args[0]==='pr' && args[1]===${JSON.stringify(stage)}`;
+      const condition = stage === 'push' ? "args[0]==='push'" : stage === 'auth' ? "args[0]==='auth' && fs.existsSync('impl.txt')" : `args[0]==='pr' && args[1]===${JSON.stringify(stage)}`;
       shim(repo, command, condition, stage === 'create');
       const result = await budget(() => run(repo));
       expect(result.code, result.stdout).toBe(1);

@@ -2,7 +2,7 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { runRecord } from '@loomake/trace';
-import { remainingProcessTime, TIMED_OUT, UsageError, runVerify, createInputReader } from '@loomake/kit';
+import { remainingProcessTime, INTERRUPTED, TIMED_OUT, UsageError, runVerify, createInputReader } from '@loomake/kit';
 import { runClaude } from '../engine.js';
 import { git, gitConfig } from '../git.js';
 import { APPROVAL_GUIDE, findEngineMove, findInternalsChange, findViolations, gitInternals, headState } from '../guards.js';
@@ -101,14 +101,19 @@ export async function runGate(ctx: RunContext, rec: Recorder): Promise<Stop | un
     }
     restore();
     rec.save(`${String(rec.step).padStart(2, '0')}-verify${fixes ? `-${fixes}` : ''}.json`, `${JSON.stringify(rec.lastVerify, null, 2)}\n`);
-    const afterVerify = headState(root, env);
-    const decision = decideAfterGate({
-      stateChanged: beforeVerify.sha !== afterVerify.sha || beforeVerify.branch !== afterVerify.branch,
+    // 中断後は共有予算が閉じる。Gitを追加で呼ぶ前に、観測済みの中断を処理する。
+    const observed = {
       ok: rec.lastVerify.ok,
+      interrupted: rec.lastVerify.results.some((r) => r.detail === INTERRUPTED),
       timedOut: rec.lastVerify.results.some((r) => r.detail === TIMED_OUT),
       fixes, maxFixes: ctx.runConfig.maxFixes,
-    });
+    };
+    const beforeGit = decideAfterGate({ ...observed, stateChanged: false });
+    if (beforeGit.kind === 'interrupted') return { status: 'interrupted', reason: beforeGit.reason, remaining: gateTasks };
+    const afterVerify = headState(root, env);
+    const decision = decideAfterGate({ ...observed, stateChanged: beforeVerify.sha !== afterVerify.sha || beforeVerify.branch !== afterVerify.branch });
     if (decision.kind === 'stop') return stopped(decision.reason);
+    if (decision.kind === 'interrupted') return { status: 'interrupted', reason: decision.reason, remaining: gateTasks };
     if (decision.kind === 'passed') break;
     const stop = await callEngine(ctx, rec, buildPrompt(root, ctx.changeDir, '完了ゲートに合格するように直す。', rec.lastVerify));
     if (stop) return { ...stop, remaining: gateTasks };

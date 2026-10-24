@@ -4,6 +4,8 @@ import { StringDecoder } from 'node:string_decoder';
 import { DEFAULT_MAX_OUTPUT_BYTES } from './config.js';
 import { createDiagnosticRedactor } from './mask.js';
 
+import { isWindows, quote } from './shell.js';
+
 /** 初版で使えるエンジン（REQ-101） */
 export { DEFAULT_MAX_OUTPUT_BYTES } from './config.js';
 
@@ -41,9 +43,6 @@ export type EngineCall = {
   onStderr?: (text: string) => void;
 };
 
-const isWindows = process.platform === 'win32';
-// Windows では npm で入れた claude は claude.cmd なので、シェル経由で呼ぶ。引数は二重引用符で囲む
-const quote = (a: string) => (isWindows ? `"${a.replace(/"/g, '""')}"` : a);
 
 /** claude コマンドがあるかを確かめ、なければ UsageError を投げる */
 export function assertEngineAvailable(engine: string, env: NodeJS.ProcessEnv): asserts engine is EngineName {

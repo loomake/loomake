@@ -1,18 +1,17 @@
 // エンジンへの指示の組み立て
 import { existsSync } from 'node:fs';
-import { join, relative, sep } from 'node:path';
+import { join, relative } from 'node:path';
 import { type VerifyResult } from '@loomake/core';
-import { UsageError, formatVerifyResult, createInputReader, DOCUMENT_LIMITS } from '@loomake/kit';
+import { UsageError, formatVerifyResult, createInputReader, DOCUMENT_LIMITS, specFiles, toPosix } from '@loomake/kit';
 
 
-export const toPosix = (p: string) => p.split(sep).join('/');
+export { toPosix } from '@loomake/kit';
 
 /** エンジンへの指示（REQ-098） */
 export function buildPrompt(root: string, changeDir: string, target: string, failure?: VerifyResult): string {
   const reader = createInputReader();
   const read = (p: string) => (existsSync(p) ? reader.read(p) : '');
-  const specs = reader.walk(join(changeDir, 'specs'))
-    .filter((f) => f.endsWith('spec.md'))
+  const specs = specFiles(changeDir, reader)
     .map((f) => `### ${toPosix(relative(changeDir, f))}\n\n${read(f)}`);
   const prompt = [
     '# loomake run の指示',

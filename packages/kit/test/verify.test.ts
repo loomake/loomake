@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { formatVerifyResult, runVerify } from '@loomake/kit';
-import { CHANGE, ledgerRow, reportJson, requirement, specMd, traceMd, vitestCommand, withProject } from './project.js';
+import { formatVerifyResult, INTERRUPTED, runVerify } from '@loomake/kit';
+import { CHANGE, INTERRUPT_SCRIPT, alive, ledgerRow, reportJson, requirement, specMd, traceMd, vitestCommand, withProject } from './project.js';
 
 const specOnly = (root: string) => runVerify({ root, changeId: CHANGE, gate: 'spec-only' });
 const done = (root: string, skipCommands = false) => runVerify({ root, changeId: CHANGE, gate: 'done', skipCommands });
@@ -27,6 +27,20 @@ describe('ブロッキング確認事項の検査', () => {
   it('[REQ-034] ブロッキングでない確認事項は、回答が空でも合格', () => {
     const r = withProject({ trace: traceMd({ questions: [question('Q-01', 'no', '')] }) }, specOnly);
     expect(check(r, 'ブロッキング確認事項')?.status).toBe('pass');
+  });
+
+  it('[REQ-034] ブロッキング列が はい で回答が空なら、ブロッキングとみなして不合格', () => {
+    const r = withProject({ trace: traceMd({ questions: [question('Q-01', 'はい', '')] }) }, specOnly);
+    expect(r.ok).toBe(false);
+    expect(check(r, 'ブロッキング確認事項')).toEqual({ check: 'ブロッキング確認事項', status: 'fail', detail: 'Q-01（REQ-012）何回ですか' });
+  });
+
+  it('[REQ-034] ブロッキング列が yes・no・はい・いいえ のどれでもなければ、ID と値を出して不合格', () => {
+    for (const value of ['要', '']) {
+      const r = withProject({ trace: traceMd({ questions: [question('Q-01', value, '5 回'), question('Q-02', 'いいえ', '')] }) }, specOnly);
+      expect(r.ok, value).toBe(false);
+      expect(check(r, 'ブロッキングの値')).toEqual({ check: 'ブロッキングの値', status: 'fail', detail: `Q-01: "${value}"` });
+    }
   });
 });
 
@@ -185,6 +199,12 @@ describe('完了ゲート', () => {
     expect(r.ok).toBe(false);
   });
 
+  it('[REQ-038] tasks.md にタスクが 1 つも無いと、タスクが無いことを出して不合格', () => {
+    const r = withReport({ tasks: '## 1. 実装\n' }, (root) => done(root, true));
+    expect(check(r, 'tasks.md')).toMatchObject({ status: 'fail', detail: 'タスクがありません' });
+    expect(r.ok).toBe(false);
+  });
+
   it('[REQ-038] 確認待ちの要件が残ると、その ID を出して不合格', () => {
     const trace = traceMd({ ledger: [ledgerRow('REQ-012'), ledgerRow('REQ-002', '確認待ち')] });
     const r = withReport({ trace }, (root) => done(root, true));
@@ -292,6 +312,25 @@ describe('品質コマンドの実行', () => {
     expect(r.ok).toBe(false);
   });
 
+  it('[REQ-039] loomake.config.json に知らないキーがあれば、そのキーを警告にし、不合格にはしない', () => {
+    const config = { openspecValidate: false, comands: { test: 'node -e "process.exit(1)"' }, tests: { report: '.loomake/test-report.json', reprot: 'x' }, run: { maxFix: 1 }, commands: {} };
+    for (const r of withProject({ config }, (root) => [runVerify({ root }), specOnly(root)])) {
+      expect(check(r, 'loomake.config.json')).toEqual({ check: 'loomake.config.json', status: 'warn', detail: '知らないキー：comands、tests.reprot、run.maxFix（打ち間違いなら直してください）' });
+      expect(r.ok).toBe(true);
+    }
+  });
+
+  it('[REQ-039] 継承したプロパティと同じ名前のキー（toString・__proto__）も、例外を出さずに知らないキーとして示す', () => {
+    const files = { 'loomake.config.json': '{ "openspecValidate": false, "toString": { "x": 1 }, "__proto__": { "y": 1 }, "commands": {} }' };
+    const r = withProject({ files }, (root) => runVerify({ root }));
+    expect(check(r, 'loomake.config.json')?.detail).toBe('知らないキー：toString、__proto__（打ち間違いなら直してください）');
+  });
+
+  it('[REQ-039] 知らないキーがなければ、loomake.config.json の検査は出さない', () => {
+    const r = withProject({ config: { $comment: 'x', openspecValidate: false, commands: { e2e: 'node -e ""' }, run: { maxFixes: 1, timeoutMinutes: 5, maxOutputBytes: 1, maxLogBytes: 1, maxHistoryBytes: 1 } } }, (root) => runVerify({ root }));
+    expect(check(r, 'loomake.config.json')).toBeUndefined();
+  });
+
   it('[REQ-039] 3 つのコマンドがすべて成功すると、command: の検査はすべて合格', () => {
     const ok = 'node -e ""';
     const r = withProject({ config: { openspecValidate: false, commands: { test: ok, lint: ok, typecheck: ok } } }, (root) => done(root));
@@ -301,6 +340,23 @@ describe('品質コマンドの実行', () => {
       { check: 'command: typecheck', status: 'pass', detail: '' },
       { check: 'command: test', status: 'pass', detail: '' },
     ]);
+  });
+});
+
+describe('中断されたときの品質コマンド', () => {
+  // Windows では品質コマンドを別のプロセスグループにしないので、Ctrl-C がコマンドに届く。SIGINT をまねる手段もない（stop-gate-on-interrupt の仮定 A-02）
+  it.runIf(process.platform !== 'win32')('[REQ-124] 時間の上限つきの品質コマンドの途中で中断されたら、子のプロセスまで止め、中断で止めたと記録し、残りのコマンドを実行しない', () => {
+    const config = { openspecValidate: false, commands: { test: 'node interrupt.cjs', after: 'node -e "require(\'fs\').writeFileSync(\'after.txt\', \'\')"' } };
+    withProject({ config, files: { 'interrupt.cjs': INTERRUPT_SCRIPT } }, (root) => {
+      const start = Date.now();
+      const r = runVerify({ root, timeoutMs: 60_000 });
+      expect(Date.now() - start).toBeLessThan(10_000);
+      expect(check(r, 'command: test')).toEqual({ check: 'command: test', status: 'fail', detail: INTERRUPTED });
+      expect(check(r, 'command: after')).toBeUndefined();
+      const pids: number[] = JSON.parse(readFileSync(join(root, 'pids.json'), 'utf8'));
+      expect(pids.filter(alive)).toEqual([]);
+      expect(existsSync(join(root, 'after.txt'))).toBe(false);
+    });
   });
 });
 

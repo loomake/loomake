@@ -4,10 +4,10 @@
 
 | 対象 | 宣言・CIの対象 | 今回のローカル確認 |
 |---|---|---|
-| 配布物 | package.jsonのenginesはNode.js 20.19以上 | Linux ARM64のNode.js 24と20.19.0でtarballから主要コマンドを確認 |
+| 配布物 | package.jsonのenginesはNode.js 22.12以上 | Linux ARM64のNode.js 24と22.12.0でtarballから主要コマンドを確認 |
 | 開発 | Node.js 24、package.jsonのpackageManagerにあるpnpm | 同じ環境で型・lint・テスト・ビルドを確認 |
 | OS | GitHub ActionsのLinux・macOS・Windows | 現在のLinuxホストで確認。別OSのCI成功は未確認 |
-| Node下限 | Node.js 20.19.0で配布物を確認するCIジョブ | 公式の20.19.0をチェックサムと照合し、Linux ARM64で配布物とrunの中断を確認 |
+| Node下限 | Node.js 22.12.0で配布物を確認するCIジョブと、Node20の追加試験 | 公式の22.12.0をチェックサムと照合し、Linux ARM64の通信拒否下で配布物とrunの中断を確認 |
 | runのエンジン | claude-code | 代替コマンドで接続を試験。実エンジンの検証とは区別 |
 | テストレポート | Vitest・Jest形式のJSON | fixtureと実際のVitestの結果を検査 |
 
@@ -52,3 +52,5 @@ doctorは単純なnpm・pnpmのscriptの存在、POSIXの実行権限、導入�
 スキーマの版は、現行の検査へ破壊的変更を実際に渡して確認する。1.0.0の履歴に対し、ルート・配列要素の必須プロパティを削除・改名した場合と、minor・majorの変更を与える8ケースを試験した。[結果](../openspec/changes/audit-scenario-evidence/schema-contract-results.json)に拒否・許可の成否と元ファイルのハッシュを保存した。enumや型の変更を含む、JSON Schema全体の互換性検査は残っている。
 
 公開型は、配布されたd.tsだけで4ライブラリの利用例を厳密にコンパイルした。配布物の型を壊した場合のTS2322と復元後の成功も[記録](../openspec/changes/audit-scenario-evidence/public-types-results.json)へ残した。利用例は主な型と署名を選んだもので、全公開APIの棚卸しは続ける。ワークスペースでのsource条件と、配布物からsource条件が除かれることも別の試験で確認する。
+
+PR #47でmainを取り込んだ後は、mainのrequire-node-22に従い、配布物の宣言する下限を22.12へ揃えた。上のNode20の測定は過去の実行結果として残す。現在の下限での確認結果は、[PRの統合記録](../openspec/changes/isolate-run-decisions/merge-results.json)を参照する。

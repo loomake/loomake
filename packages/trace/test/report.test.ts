@@ -84,6 +84,16 @@ describe('要件ごとの検収の表', () => {
       expect(err.join('\n')).toContain('パスの区切り');
     }));
 
+  it('[REQ-070] change-id が change 名の形でないか archive なら、日本語で表示して終了コード 2 を返す', () =>
+    withProject({}, async (root) => {
+      for (const id of ['C1', 'archive']) {
+        const err: string[] = [];
+        const code = await main(['trace', 'report', '--change', id], { cwd: root, stdout: () => {}, stderr: (t) => err.push(t) });
+        expect(code, id).toBe(2);
+        expect(err.join('\n'), id).toMatch(/英小文字・数字|archive は change-id に使えません/);
+      }
+    }));
+
   it('[REQ-070] 記録した日時がいちばん新しい記録を使う', () => {
     const records = [
       { recordedAt: '2026-10-23T02:00:00.000Z', sha: 'b'.repeat(40) },
@@ -154,6 +164,27 @@ describe('冒頭の要注意の一覧', () => {
     });
   });
 
+  it('[REQ-072] 証拠の検査が不合格なら、冒頭に不合格の検査を挙げ、要注意の要件がないとは書かない', () => {
+    const verify = {
+      schemaVersion: '1.0.0' as const,
+      mode: 'done' as const,
+      change: CHANGE,
+      ok: false,
+      results: [
+        { check: 'command: lint', status: 'fail' as const, detail: 'エラー' },
+        { check: 'tasks.md', status: 'pass' as const, detail: '' },
+      ],
+      coverage: { 'REQ-012': ['tests/x.test.ts'] },
+    };
+    withProject({ evidence: [{ verify }] }, (root) => {
+      expect(report(root).attention.failedChecks).toEqual(['command: lint']);
+      const text = markdown(root).text;
+      expect(text).toContain('- 不合格の検査：command: lint');
+      expect(text.indexOf('不合格の検査')).toBeLessThan(text.indexOf('## 要件ごとの検収'));
+      expect(text).not.toContain('要注意の要件はありません。');
+    });
+  });
+
   it('[REQ-072] どちらもなければ、要注意の要件がないと書く', () => {
     withProject({}, (root) => {
       expect(markdown(root).text).toContain('要注意の要件はありません。');
@@ -177,6 +208,43 @@ describe('読めない証拠の記録', () => {
       expect(r.code).toBe(2);
       expect(r.stderr).toContain(`証拠の記録 .loomake/evidence/${CHANGE}/broken.json を JSON として読めません`);
       expect(r.stderr).not.toContain('    at ');
+    }));
+
+  const file = `.loomake/evidence/${CHANGE}/0.json`;
+
+  it('[REQ-073] schemaVersion が読める版でない記録があれば、そのファイルと版を日本語で示し、終了コード 2 を返す', () =>
+    withProject({ evidence: [{ schemaVersion: 2 }] }, async (root) => {
+      const r = await cli(root);
+      expect(r.code).toBe(2);
+      expect(r.stderr).toContain(`証拠の記録 ${file} は、この版の loomake では読めない形式です（schemaVersion 2。読めるのは 1）`);
+    }));
+
+  it('[REQ-073] verify.results のない記録があれば、そのファイルと欄を日本語で示し、スタックトレースを出さずに終了コード 2 を返す', () =>
+    withProject({ evidence: [{ verify: { ok: true } as unknown as Evidence['verify'] }] }, async (root) => {
+      const r = await cli(root);
+      expect(r.code).toBe(2);
+      expect(r.stderr).toContain(`証拠の記録 ${file} の verify.results の形が違います`);
+      expect(r.stderr).not.toContain('    at ');
+    }));
+
+  it('[REQ-073] sha や日時の形が違う記録も、その欄を示して終了コード 2 を返す', () =>
+    withProject({ evidence: [{ sha: 'abc' }, { recordedAt: '昨日' }] }, async (root) => {
+      const r = await cli(root);
+      expect(r.code).toBe(2);
+      expect(r.stderr).toMatch(/の (sha|recordedAt) の形が違います/);
+    }));
+
+  it('[REQ-073] change がほかの change の記録があれば、そのファイルを日本語で示し、終了コード 2 を返す', () =>
+    withProject({ evidence: [{ change: 'c2' }] }, async (root) => {
+      const r = await cli(root);
+      expect(r.code).toBe(2);
+      expect(r.stderr).toContain(`証拠の記録 ${file} は、ほかの change（c2）の記録です`);
+    }));
+
+  it('欄を足しただけの記録は読める（validate-evidence-records の仮定 A-01）', () =>
+    withProject({ evidence: [{ extra: 'x' } as Partial<Evidence>] }, async (root) => {
+      const r = await cli(root);
+      expect(r.code).toBe(0);
     }));
 });
 

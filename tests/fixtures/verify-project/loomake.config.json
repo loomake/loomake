@@ -1,5 +1,5 @@
 {
-  "$comment": "tests/monorepo.test.ts（ci-gate）と CI の node20 ジョブが使う、loomake verify の検査用プロジェクト",
+  "$comment": "tests/monorepo.test.ts（ci-gate）と CI の node22 ジョブが使う、loomake verify の検査用プロジェクト",
   "openspecValidate": false,
   "tests": {
     "report": ".loomake/test-report.json"

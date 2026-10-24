@@ -4,7 +4,7 @@ Loomake を初めて使う人向けに、導入から 1 つの change を終え�
 
 ## 用意するもの
 
-- Node.js 20.19 以上
+- Node.js 22.12 以上
 - OpenSpec CLI：`npm install -g @fission-ai/openspec`
 - Claude Code または Codex
 - Markdown（.md）の要件書。Word・Excel・PDF は先に Markdown に変換する

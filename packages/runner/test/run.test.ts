@@ -1,9 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
 import { chmodSync, existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { GATE_MARK, runRun, type RunOptions, type RunSummary } from '@loomake/runner';
+import { GATE_MARK, RUN_CONFIG_KEYS, runRun, type RunOptions, type RunSummary } from '@loomake/runner';
+import { KNOWN_CONFIG_KEYS } from '@loomake/kit';
 import { main } from '../../cli/src/main.js';
-import { traceMd } from '../../kit/test/project.js';
+import { INTERRUPT_SCRIPT, alive, traceMd } from '../../kit/test/project.js';
 import { CHANGE, makeRepo, type Repo } from './helpers.js';
 
 // git・node・verify のコマンドを何度も起動するので、Windows では 1 件に 10 秒を超えることがある
@@ -59,6 +60,13 @@ async function withRepo(fn: (repo: Repo) => Promise<void>, init?: Parameters<typ
     repo.cleanup();
   }
 }
+
+describe('run の設定のキー', () => {
+  // kit は runner に依存できないので、知っているキーの一覧がずれていないかをここで確かめる（warn-unknown-config-keys の仮定 A-01）
+  it('[REQ-039] run が読む設定のキーは、すべて verify と doctor が知っているキーに入っている', () => {
+    expect(KNOWN_CONFIG_KEYS.run).toEqual(expect.arrayContaining([...RUN_CONFIG_KEYS]));
+  });
+});
 
 describe('実行前の確認', () => {
   it('[REQ-093] 仕様ゲートに不合格なら、内容を表示し、ブランチを作らず、エンジンを呼ばずに終了コード 1 を返す', () =>
@@ -218,6 +226,16 @@ describe('ブランチとタスク', () => {
       expect(commit).toContain('openspec/changes/c1/tasks.md');
       expect(repo.git('show', `${rev}:openspec/changes/c1/tasks.md`)).toContain('- [x] 1.1 一つ目のタスク');
     }));
+
+  it('[REQ-099][REQ-014] * で書いたタスクも、終えたら * [x] にしてコミットする', () =>
+    withRepo(
+      async (repo) => {
+        repo.plan(passing);
+        await run(repo);
+        expect(repo.git('show', 'loomake/c1:openspec/changes/c1/tasks.md')).toContain('* [x] 1.1 一つ目のタスク');
+      },
+      { tasks: ['## 1. 実装', '* [ ] 1.1 一つ目のタスク（REQ-012）', '', '## 3. 確認', `* [ ] 3.1 完了ゲートを通す ${GATE_MARK}`, ''].join('\n') },
+    ));
 });
 
 describe('完了ゲートと直し', () => {
@@ -301,6 +319,16 @@ describe('エンジンの選び方と権限', () => {
       const r = await cli(repo, '--engine', 'codex');
       expect(r.code).toBe(2);
       expect(r.stderr).toContain('初版で使えるのは claude-code だけです');
+    }));
+
+  it('[REQ-101] change-id が change 名の形でないか archive なら、エンジンを呼ばずに終了コード 2 を返す', () =>
+    withRepo(async (repo) => {
+      for (const id of ['C1', 'archive']) {
+        const r = await cli(repo, '--change', id);
+        expect(r.code, id).toBe(2);
+        expect(r.stderr, id).toMatch(/英小文字・数字|archive は change-id に使えません/);
+      }
+      expect(repo.calls()).toEqual([]);
     }));
 
   it('[REQ-101] change-id にパスの区切りを含めると、使い方の誤りとして終了コード 2 を返す', () =>
@@ -459,6 +487,26 @@ describe('中断', () => {
       expect(summary(repo)).toMatchObject({ status: 'interrupted', doneTasks: ['1.1 一つ目のタスク（REQ-012）'] });
       expect(tasksMd(repo)).toContain('- [ ] 1.2');
     }));
+
+  // Windows では品質コマンドを別のプロセスグループにしないので、Ctrl-C がコマンドに届く。SIGINT をまねる手段もない（stop-gate-on-interrupt の仮定 A-02）
+  it.runIf(process.platform !== 'win32')('[REQ-124] 完了ゲートの品質コマンドの途中で中断されたら、コマンドを止め、エンジンを呼ばずに summary.json に中断を書く', () =>
+    withRepo(async (repo) => {
+      repo.write('interrupt.cjs', INTERRUPT_SCRIPT);
+      repo.write('loomake.config.json', JSON.stringify({ openspecValidate: false, commands: { test: 'node interrupt.cjs' } }));
+      repo.write('.gitignore', '.loomake/test-report.json\npids.json\nfinished.txt\n');
+      repo.git('add', '-A');
+      repo.git('commit', '-q', '-m', '中断する test コマンド');
+      repo.plan([{ write: { 'impl.txt': '実装\n' } }, {}]);
+      const start = Date.now();
+      const r = await run(repo);
+      expect(Date.now() - start).toBeLessThan(30_000);
+      expect(r.code).toBe(1);
+      // エンジンを呼んだのは 2 つのタスクだけで、完了ゲートの直しでは呼ばない
+      expect(repo.calls()).toHaveLength(2);
+      expect(summary(repo)).toMatchObject({ status: 'interrupted', reason: '中断されました', remainingTasks: ['3.1 `pnpm -s verify --change c1 --done` を通す'] });
+      const pids: number[] = JSON.parse(readFileSync(join(repo.root, 'pids.json'), 'utf8'));
+      expect(pids.filter(alive)).toEqual([]);
+    }));
 });
 
 describe('依存と動作環境', () => {
@@ -468,8 +516,8 @@ describe('依存と動作環境', () => {
     expect(Object.keys(pkg.dependencies ?? {}).sort()).toEqual(['@loomake/core', '@loomake/kit', '@loomake/trace']);
   });
 
-  it('[REQ-125] @loomake/runner の engines.node は >=20.19.0', () => {
-    expect(pkg.engines?.node).toBe('>=20.19.0');
+  it('[REQ-142] @loomake/runner の engines.node は >=22.12.0', () => {
+    expect(pkg.engines?.node).toBe('>=22.12.0');
   });
 });
 

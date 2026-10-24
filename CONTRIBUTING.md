@@ -34,6 +34,8 @@ PRには、変更する問題と結果の動作、対象change、実行したゲ
 
 既存テストの削除・skip・期待値の変更、品質設定の緩和は承認なしに行わない。テストが要件に合っていないと思う場合も、実装へ合わせて書き換える前に、仕様と変更理由を示す。日本語の文書はyomiyasuで推敲する。
 
+PR本文には対象を `loomake-change: <change-id>` の行で明示する。対象がなければ `loomake-change: none` と書く。CIはUbuntu・macOS・Windowsで検査する。
+
 ## コードの境界
 
 関数はnamed exportにする。設定や使い方の誤りはUsageErrorとし、CLIは終了コード2を返す。利用者へのメッセージは日本語にする。coreの実行時依存はゼロ、kitはcoreのみ、traceはcoreとkit、runnerはcore・kit・trace、CLIはこの4パッケージだけに依存する。

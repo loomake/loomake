@@ -86,3 +86,26 @@ describe('仮定を承認する', () => {
     });
   });
 });
+
+it('[REQ-135][REQ-202][REQ-203] traceのヘルプに4操作を案内し文書を変えない', async () => {
+  await withProject({ trace: fullTrace() }, async (root) => {
+    const before = read(root);
+    const result = await run(root, 'trace', '--help');
+    expect(result.code).toBe(0);
+    for (const name of ['record', 'report', 'answer', 'approve']) expect(result.stdout).toContain(`loomake trace ${name}`);
+    expect(result.stderr).toBe('');
+    expect(read(root)).toBe(before);
+  });
+});
+it.each(['answer', 'approve'])('[REQ-135][REQ-202][REQ-203] %sのヘルプで用途と記録する人を案内する', async (name) => {
+  await withProject({ trace: fullTrace() }, async (root) => {
+    const before = read(root);
+    const result = await run(root, 'trace', name, '--help');
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain(`使い方: loomake trace ${name}`);
+    expect(result.stdout).toContain('--by <');
+    expect(result.stdout).toContain(name === 'answer' ? '確認事項' : '仮定');
+    expect(result.stderr).toBe('');
+    expect(read(root)).toBe(before);
+  });
+});

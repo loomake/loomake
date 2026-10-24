@@ -128,6 +128,17 @@ describe('診断する項目', () => {
     expect(r.code).toBe(0);
   });
 
+  it('[REQ-134] loomake.config.json に知らないキーがあれば注意として表示し、ほかが整っていれば終了コード 0 を返す', async () => {
+    const r = await doctor({
+      setup: (root) => {
+        const config = JSON.parse(readFileSync(join(root, 'loomake.config.json'), 'utf8'));
+        write(root, 'loomake.config.json', JSON.stringify({ ...config, tests: { ...config.tests, reprot: 'x' }, extra: 1 }));
+      },
+    });
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain('⚠ loomake.config.json に知らないキーがあります：tests.reprot、extra');
+  });
+
   it('[REQ-134] claude と gh がなければ注意として表示し、ほかが整っていれば終了コード 0 を返す', async () => {
     const r = await doctor({ bin: ['pnpm', 'openspec'] });
     expect(r.code).toBe(0);

@@ -18,6 +18,6 @@ export const isGateTask = (t: Task) => hasGateMark(t) || isLegacyGateTask(t);
 /** tasks.md の指定した行のタスクを完了にする */
 export function checkTask(tasksPath: string, line: number) {
   const lines = createInputReader().read(tasksPath).split('\n');
-  lines[line - 1] = lines[line - 1].replace(/- \[ \]/, '- [x]');
+  lines[line - 1] = lines[line - 1].replace(/([-*+]) \[ \]/, '$1 [x]');
   writeFileSync(tasksPath, lines.join('\n'));
 }

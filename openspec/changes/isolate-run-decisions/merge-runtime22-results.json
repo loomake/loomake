@@ -1,0 +1,38 @@
+{
+  "node": "v22.12.0",
+  "platform": "linux",
+  "arch": "arm64",
+  "executable": "/tmp/loomake-merge-node22.dXIPiE/node-v22.12.0-linux-arm64/bin/node",
+  "checks": [
+    {
+      "name": "通信拒否の対照実験",
+      "ok": true,
+      "result": "EPERM"
+    },
+    {
+      "name": "[REQ-144][REQ-089] 指定したNodeの配布物で主要コマンドと公開APIを検証する",
+      "ok": true
+    },
+    {
+      "name": "[REQ-084] 通信拒否の下でtrace recordが保存されtrace reportの全25行を出力する",
+      "ok": true
+    },
+    {
+      "name": "[REQ-125][REQ-124] 指定したNodeの配布物でrunのタスクコミットとSIGINT後の変更保持を検証する",
+      "ok": true
+    }
+  ],
+  "inputs": {
+    "script": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d",
+    "networkFilter": "42fa3f64936456659ee1a6e0adac0dd366026c106d28ac4e7a67113442f1059f",
+    "packageSmoke": "71aa378a372bde276c091afe2ce079b1e0b34029e13742fb8dec5cd199c63339",
+    "sigintSmoke": "53ccc8e135f82ad8236266886bf323ad2e9cf5d861dd5a1782e5dc776101bc42",
+    "tarballs": {
+      "loomake-0.0.0.tgz": "b278bc8ed5bcdfea14a060d497701a9a7cc7f80d007a4288bc4ca1954ffcb8ed",
+      "loomake-core-0.0.0.tgz": "6afde79a22edf70d2d414703dd507e6a69da4e35220bcb0a25d8f5ef001dc843",
+      "loomake-kit-0.0.0.tgz": "97a53447f15462bffbdb92234ae42edd5985cdb4b2735f12fa2bd7ef2628f2c3",
+      "loomake-runner-0.0.0.tgz": "298383324e3588c3b9ee655e95e9c75838971463ab2cd13d91e5fe8111e80cc3",
+      "loomake-trace-0.0.0.tgz": "bb2663437f40d3fba662db54fdfceeb148e0bab910a549314924c6a8697765a2"
+    }
+  }
+}

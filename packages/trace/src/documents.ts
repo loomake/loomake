@@ -1,17 +1,16 @@
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
-import { join, relative, sep } from 'node:path';
-import { createInputReader } from '@loomake/kit';
+import { join, relative } from 'node:path';
+import { createInputReader, specFiles, toPosix } from '@loomake/kit';
 
 /** 証拠に保存する文書の 1 つ。path は change のディレクトリからの / 区切りのパス */
 export type EvidenceDocument = { path: string; sha256: string; content: string };
 
-const toPosix = (p: string) => p.split(sep).join('/');
 
 /** change の trace.md と差分仕様を読む。レポートが読むのはこの 2 種類だけ（REQ-127） */
 export function readDocuments(changeDir: string): EvidenceDocument[] {
   const reader = createInputReader();
-  const files = [join(changeDir, 'trace.md'), ...reader.walk(join(changeDir, 'specs')).filter((p) => p.endsWith('spec.md'))].filter((p) => existsSync(p));
+  const files = [join(changeDir, 'trace.md'), ...specFiles(changeDir, reader)].filter((p) => existsSync(p));
   return files.map((f) => {
     const content = reader.read(f);
     return { path: toPosix(relative(changeDir, f)), sha256: createHash('sha256').update(content).digest('hex'), content };

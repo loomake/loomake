@@ -37,7 +37,7 @@ export function createAgreement(file: string, trace: Trace): ParseResult<Agreeme
   return {
     value: {
       requirements,
-      questions: trace.questions.map((q) => ({ id: q.ID, blocking: /^yes$/i.test(q['ブロッキング']), answer: q['回答'] })),
+      questions: trace.questions.map((q) => ({ id: q.ID, blocking: /^yes$/i.test(q['ブロッキング']) || q['ブロッキング'] === 'はい', answer: q['回答'] })),
       assumptions: trace.assumptions.map((a) => ({ id: a.ID, approval: a['承認'] })),
     },
     errors,

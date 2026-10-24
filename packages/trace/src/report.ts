@@ -1,8 +1,7 @@
-import { existsSync } from 'node:fs';
-import { join, relative, resolve, sep } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import { parseSpec, parseTrace } from '@loomake/core';
-import { UsageError, assertChangeId, loadConfig, createInputReader, JSON_LIMITS, type InputReader } from '@loomake/kit';
-import { EVIDENCE_DIR, type Evidence } from './record.js';
+import { UsageError, assertChangeId, loadConfig, findChangeDir, toPosix, createInputReader, JSON_LIMITS, type InputReader } from '@loomake/kit';
+import { EVIDENCE_DIR, EVIDENCE_SCHEMA_VERSION, type Evidence } from './record.js';
 import { changedDocuments, readDocuments, type EvidenceDocument } from './documents.js';
 import { evidenceProblem } from './evidence.js';
 
@@ -30,7 +29,7 @@ export type Report = {
   /** documents は、検証した時点の文書を記録に保存しているか */
   evidence: { recordedAt: string; sha: string; committedAt: string; ok: boolean; documents: boolean };
   /** changedDocuments は、記録のあとで変わった文書のパス */
-  attention: { noPassingTests: string[]; pending: string[]; changedDocuments: string[] };
+  attention: { noPassingTests: string[]; pending: string[]; changedDocuments: string[]; failedChecks: string[] };
   rows: ReportRow[];
   questions: { id: string; question: string; answer: string; answeredBy: string; answeredAt: string }[];
   assumptions: { id: string; content: string; approval: string; approvedBy: string; approvedAt: string }[];
@@ -44,20 +43,27 @@ export type ReportOptions = {
   stdout: (text: string) => void;
 };
 
-const toPosix = (p: string) => p.split(sep).join('/');
 
-/** 進行中の change を先に、なければ archive の <日付>-<change-id> を探す */
-function findChange(changesDir: string, changeId: string, reader: InputReader): string | undefined {
-  const active = join(changesDir, changeId);
-  if (changeId !== 'archive' && existsSync(join(active, 'trace.md'))) return active;
-  const archiveDir = join(changesDir, 'archive');
-  if (!existsSync(archiveDir)) return undefined;
-  return reader.entries(archiveDir).filter((entry) => entry.kind === 'directory').map((entry) => entry.name)
-    .filter((d) => d.replace(/^\d{4}-\d{2}-\d{2}-/, '') === changeId)
-    .sort()
-    .reverse()
-    .map((d) => join(archiveDir, d))
-    .find((d) => existsSync(join(d, 'trace.md')));
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
+const isString = (v: unknown): v is string => typeof v === 'string';
+const isDate = (v: unknown) => isString(v) && !Number.isNaN(Date.parse(v));
+const isArrayOf = (v: unknown, item: (x: unknown) => boolean) => Array.isArray(v) && v.every(item);
+
+/** レポートと PR 本文が使う欄の形が違えば、その欄の名前を返す（validate-evidence-records の仮定 A-01） */
+function wrongField(e: Record<string, unknown>): string | undefined {
+  const verify = isObject(e.verify) ? e.verify : undefined;
+  const checks: [string, boolean][] = [
+    ['change', isString(e.change)],
+    ['sha', isString(e.sha) && /^[0-9a-f]{40}$/.test(e.sha)],
+    ['committedAt', isDate(e.committedAt)],
+    ['recordedAt', isDate(e.recordedAt)],
+    ['verify', verify !== undefined],
+    ['verify.ok', typeof verify?.ok === 'boolean'],
+    ['verify.results', isArrayOf(verify?.results, (r) => isObject(r) && isString(r.check) && isString(r.status))],
+    ['verify.coverage', verify?.coverage === undefined || (isObject(verify.coverage) && Object.values(verify.coverage).every((f) => isArrayOf(f, isString)))],
+    ['documents', e.documents === undefined || isArrayOf(e.documents, (d) => isObject(d) && isString(d.path) && isString(d.sha256) && isString(d.content))],
+  ];
+  return checks.find(([, ok]) => !ok)?.[0];
 }
 
 // 読めない記録があれば、どのファイルかを示して止める
@@ -70,7 +76,15 @@ function readEvidence(root: string, file: string, change: string, reader: InputR
     throw new UsageError(`証拠の記録 ${toPosix(relative(root, file))} を JSON として読めません`);
   }
   const problem = evidenceProblem(value, change);
-  if (problem) throw new UsageError(`証拠の記録 ${toPosix(relative(root, file))} が不正です：${problem}`);
+  if (problem) {
+    const name = `証拠の記録 ${toPosix(relative(root, file))}`;
+    if (!isObject(value)) throw new UsageError(`${name} は JSON のオブジェクトではありません`);
+    if (value.schemaVersion !== EVIDENCE_SCHEMA_VERSION) throw new UsageError(`${name} は、この版の loomake では読めない形式です（schemaVersion ${JSON.stringify(value.schemaVersion)}。読めるのは ${EVIDENCE_SCHEMA_VERSION}）`);
+    const field = wrongField(value);
+    if (field) throw new UsageError(`${name} の ${field} の形が違います`);
+    if (value.change !== change) throw new UsageError(`${name} は、ほかの change（${String(value.change)}）の記録です`);
+    throw new UsageError(`${name} が不正です：${problem}`);
+  }
   return value as Evidence;
 }
 
@@ -95,7 +109,7 @@ export function buildReport(root: string, changeId: string): Report | undefined 
   const reader = createInputReader(JSON_LIMITS);
   const config = loadConfig(root);
   assertChangeId(changeId);
-  const changeDir = findChange(resolve(root, config.openspecDir, 'changes'), changeId, reader);
+  const changeDir = findChangeDir(resolve(root, config.openspecDir, 'changes'), changeId, 'trace.md', reader);
   if (!changeDir) throw new UsageError(`change「${changeId}」がありません（進行中にも archive にもありません）`);
 
   const evidence = latestEvidence(root, join(root, EVIDENCE_DIR, changeId), changeId, reader);
@@ -168,6 +182,7 @@ export function buildReport(root: string, changeId: string): Report | undefined 
       noPassingTests: rows.filter((r) => r.result === '合格したテストなし').map((r) => r.id),
       pending: rows.filter((r) => r.state === '確認待ち').map((r) => r.id),
       changedDocuments: saved ? changedDocuments(documents, current) : [],
+      failedChecks: evidence.verify.results.filter((r) => r.status === 'fail').map((r) => r.check),
     },
     rows,
     questions,
@@ -184,8 +199,9 @@ const table = (head: string[], rows: string[][]) =>
 export function formatReportMarkdown(r: Report): string {
   const list = (ids: string[]) => (ids.length ? ids.join('、') : 'なし');
   const attention =
-    r.attention.noPassingTests.length || r.attention.pending.length || r.attention.changedDocuments.length || !r.evidence.documents
+    r.attention.noPassingTests.length || r.attention.pending.length || r.attention.changedDocuments.length || !r.evidence.documents || !r.evidence.ok
       ? [
+          ...(r.evidence.ok ? [] : [`- 不合格の検査：${list(r.attention.failedChecks)}（使った証拠の検査は不合格です）`]),
           `- 合格したテストのない要件：${list(r.attention.noPassingTests)}`,
           `- 確認待ちの要件：${list(r.attention.pending)}`,
           ...(r.evidence.documents

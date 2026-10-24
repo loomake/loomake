@@ -51,3 +51,11 @@ it('[REQ-206] 観測値を変えず同じ判断を繰り返し返す', () => {
   expect([decideAfterEngine(engineInput), decideAfterGate(gateInput)]).toEqual(first);
   expect(JSON.stringify([engineInput, gateInput])).toBe(before);
 });
+
+it.each([
+  ['不合格の中断は期限と回数より優先する', { ok: false, timedOut: true, fixes: 2 }, { kind: 'interrupted', reason: '中断されました' }],
+  ['検証中の状態変更を中断より先に確認する', { stateChanged: true }, { kind: 'stop', reason: '検証のあいだにHEADかブランチが変わりました。変更を取り消していません。Gitの状態を確認してから、もう一度実行してください。' }],
+  ['状態が変わらない合格は中断の記録より優先する', { ok: true }, { kind: 'passed' }],
+] as const)('[REQ-205][REQ-124] %s', (_name, patch, expected) => {
+  expect(decideAfterGate(Object.freeze({ ...gate, interrupted: true, ...patch }))).toEqual(expected);
+});

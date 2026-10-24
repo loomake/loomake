@@ -48,8 +48,9 @@ process.exitCode = step.exitCode ?? 0;
 // PRの検索・作成と、作成前後の失敗を再現する。prs()は作成の記録だけを返す。
 const FAKE_GH = `#!/usr/bin/env node
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 const args = process.argv.slice(2);
-if (args[0] === 'auth') process.exit(process.env.FAKE_GH_AUTH === 'fail' ? 1 : 0);
+if (args[0] === 'auth') process.exit(process.env.FAKE_GH_AUTH === 'fail' || existsSync(join(process.cwd(), '..', 'gh-logout')) ? 1 : 0);
 if (args[0] === 'pr' && args[1] === 'list') {
   appendFileSync(process.env.FAKE_GH_LOOKUP_LOG, JSON.stringify(args) + '\\n');
   if (process.env.FAKE_GH_LOOKUP === 'fail') { console.error('検索できません'); process.exit(1); }
