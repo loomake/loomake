@@ -48,7 +48,7 @@ Source: REQ-071
 - **THEN** 表にその要件の行があり、状態に「既存仕様で充足」と書かれている
 
 ### Requirement: 使った証拠の記載
-レポートは、使った証拠の記録の、記録した日時・検査したコミットの SHA・コミットの日時を記載する SHALL。証拠の記録に JSON として読めないファイルがあるときは、そのファイルのパスを日本語で示し、使い方の誤りとして終了コード 2 を返す SHALL。
+レポートは、使った証拠の記録の、記録した日時・検査したコミットの SHA・コミットの日時を記載する SHALL。証拠の記録に、JSON として読めないファイルと、`schemaVersion` が読める版でないか、レポートが使う欄の形が違うか、`change` が change-id と違うファイルがあるときは、そのファイルのパスを日本語で示し、使い方の誤りとして終了コード 2 を返す SHALL。
 
 Source: REQ-073
 
@@ -59,6 +59,18 @@ Source: REQ-073
 #### Scenario: 読めない記録がある
 - **WHEN** `.loomake/evidence/c1/` に JSON として壊れたファイルがある change に `loomake trace report --change c1` を実行する
 - **THEN** そのファイルのパスと、読めないことが日本語で表示され、スタックトレースは出ず、終了コードは 2 である
+
+#### Scenario: 読めない版の記録がある
+- **WHEN** `.loomake/evidence/c1/` に `schemaVersion` が 2 の記録がある change に `loomake trace report --change c1` を実行する
+- **THEN** そのファイルのパスと、読める版でないことが日本語で表示され、終了コードは 2 である
+
+#### Scenario: 形の違う記録がある
+- **WHEN** `.loomake/evidence/c1/` に `verify.results` のない記録がある change に `loomake trace report --change c1` を実行する
+- **THEN** そのファイルのパスと、`verify.results` の形が違うことが日本語で表示され、スタックトレースは出ず、終了コードは 2 である
+
+#### Scenario: ほかの change の記録がある
+- **WHEN** `.loomake/evidence/c1/` に `change` が c2 の記録がある change に `loomake trace report --change c1` を実行する
+- **THEN** そのファイルのパスと、ほかの change の記録であることが日本語で表示され、終了コードは 2 である
 
 ### Requirement: 出力の形式
 `loomake trace report` は、`--format md` で Markdown を、`--format json` で JSON を標準出力に出す SHALL。`--format` を省いたときは Markdown にする SHALL。`--format html` を指定したときは、HTML は次の版で対応する旨を日本語で表示し、終了コード 2 を返す SHALL。
