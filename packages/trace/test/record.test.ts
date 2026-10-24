@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -7,6 +7,9 @@ import { createHash } from 'node:crypto';
 import { runRecord, type Evidence } from '@loomake/trace';
 import { main } from '../../cli/src/main.js';
 import { CHANGE, reportJson, specMd, traceMd } from '../../kit/test/project.js';
+
+// git・node・verify のコマンドを何度も起動するので、Windows では 1 件に 5 秒を超えることがある（runner のテストと同じ上限にする）
+vi.setConfig({ testTimeout: 60_000 });
 
 const gitRun = (root: string, ...args: string[]) => {
   const r = spawnSync('git', ['-c', 'user.name=loomake-test', '-c', 'user.email=test@example.com', ...args], { cwd: root, encoding: 'utf8' });
