@@ -18,7 +18,8 @@ function inlineTargets(text: string): string[] {
   const targets: string[] = [];
   for (let start = text.indexOf(']('); start >= 0; start = text.indexOf('](', start + 2)) {
     let i = start + 2;
-    while (text[i] === ' ' || text[i] === '\t') i++;
+    // CommonMark では、( と先のあいだに改行を含む空白を置ける
+    while (i < text.length && /\s/.test(text[i])) i++;
     if (text[i] === '<') {
       const end = text.indexOf('>', i);
       if (end > i && !text.slice(i, end).includes('\n')) targets.push(text.slice(i + 1, end));
@@ -60,6 +61,8 @@ describe('文書のリンクの取り出し', () => {
     ['括弧を含む先', '[説明](missing(v2).md)', 'missing(v2).md'],
     ['括弧を含む先とタイトル', '[説明](missing(v2).md "タイトル")', 'missing(v2).md'],
     ['エスケープした括弧', '[説明](missing\\(v2.md)', 'missing(v2.md'],
+    ['改行で始まる先', '[説明](\nmissing.md\n)'],
+    ['改行で始まる先とタイトル', '[説明](\n  missing.md\n  "タイトル"\n)'],
   ])('%s のリンクの先を取り出す', (_name, markdown, target = 'missing.md') => {
     expect(relativeLinks(markdown)).toEqual([target]);
   });
