@@ -184,7 +184,7 @@ describe('ヘルプと版', () => {
     expect(record.stdout).not.toContain('--format');
     const report = await run(repo, 'trace', 'report', '-h');
     expect(report.stdout.split('\n')[0]).toBe('使い方: loomake trace report --change <id> [--format md|json]');
-    expect(report.stdout).toMatch(/^  --format md\|json +\S/m);
+    expect(report.stdout).toMatch(/^ {2}--format md\|json +\S/m);
   });
 
   it('[REQ-135] init・run・doctor の使い方にも、説明とオプションの説明を載せる', async () => {
