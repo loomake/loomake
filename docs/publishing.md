@@ -4,7 +4,7 @@
 
 ## 公開前の条件
 
-changesetで対象パッケージの版を更新し、その変更をmainへ入れる。未消化のchangesetが残ると公開ワークフローは止まる。公開するコミットの版・配布内容・CI結果を確認してから、mainを対象にreleaseを手動実行する。
+changesetで対象パッケージの版を更新し、その変更をmainへ入れる。未消化のchangesetが残ると公開ワークフローは止まる。版を上げるPRはchangesetを消化するので`changeset status`は失敗するが、変えたファイルがpackage.jsonの版・CHANGELOG.md・消化したchangesetだけなら、公開準備の検査（REQ-056）は合格する。公開するコミットの版・配布内容・CI結果を確認してから、mainを対象にreleaseを手動実行する。
 
 同じチェックアウトで、lockfileを固定した導入、lint・型検査・テスト・ビルド、tarballの作成と独立したプロジェクトからの検査を行う。検査が失敗した場合は公開しない。配布物の検査は出典とprovenanceの設定、exports、スキーマ、binと主要コマンドを含む。
 
@@ -28,7 +28,7 @@ checkoutは資格情報を保存しない。npm公開の認証情報は`pnpm cha
 
 ## Actionsと依存の更新
 
-外部Actionsは完全なコミットSHAに固定する。今回確認した参照元は[.github/action-pins.json](../.github/action-pins.json)に記録した。固定は更新を不要にする仕組みではない。
+外部Actionsは完全なコミットSHAに固定する。`github/codeql-action/init`のようにサブパスを持つ参照も同じで、記録とはリポジトリとSHAで照合する。今回確認した参照元は[.github/action-pins.json](../.github/action-pins.json)に記録した。固定は更新を不要にする仕組みではない。
 
 更新時は公式リポジトリの参照先と完全なSHA、変更内容とセキュリティ上の修正、Nodeやrunnerの要件を確認する。ワークフローと参照元の記録を同時に変更し、品質と対象OS・Nodeの配布物検査を通す。既定権限、checkoutの資格情報、公開とタグ送信の認証範囲もレビューする。
 

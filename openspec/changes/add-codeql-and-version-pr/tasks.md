@@ -11,5 +11,5 @@
 
 ## 3. 統合検証
 
-- [ ] 3.1 docs（release-integrity の説明と release.md の手順）と changeset を更新し、TDD の結果を tdd.md に記録する
-- [ ] 3.2 `pnpm -s verify --change add-codeql-and-version-pr --done` を通す <!-- loomake:gate=done -->
+- [x] 3.1 docs（release-integrity の説明と release.md の手順）と changeset を更新し、TDD の結果を tdd.md に記録する
+- [x] 3.2 `pnpm -s verify --change add-codeql-and-version-pr --done` を通す <!-- loomake:gate=done -->
