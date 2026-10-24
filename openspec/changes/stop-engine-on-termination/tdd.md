@@ -7,3 +7,7 @@
 ## 2.1 文書
 
 testing.md と run-recovery.md に、SIGTERM・SIGHUP の扱いと検査の動かし方を書いた。changeset を足した。
+
+## 完了ゲート
+
+最初の実行は、changeset をコミットしていなかったことによる REQ-056 の失敗と、負荷平均 22 のときの時間切れ 10 件で不合格だった。changeset をコミットして再実行し、`pnpm -s verify --change stop-engine-on-termination --done` は exit 0（891 件）だった。
