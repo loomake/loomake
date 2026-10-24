@@ -58,6 +58,11 @@ describe('公開経路の供給網と資格情報', () => {
     expect(release.slice(tags)).toContain('git push --follow-tags');
   });
 
+  it.each(['core', 'kit', 'trace', 'runner', 'cli'])('[REQ-169] %sのpackage.jsonはrepositoryを1つだけ持つ', (name) => {
+    const text = readFileSync(join(root, 'packages', name, 'package.json'), 'utf8');
+    expect(text.match(/^ {2}"repository":/gm)).toHaveLength(1);
+  });
+
   it.each(['core', 'kit', 'trace', 'runner', 'cli'])('[REQ-169] %sの公開元とディレクトリを明示しprovenanceを要求する', (name) => {
     const manifest = JSON.parse(readFileSync(join(root, 'packages', name, 'package.json'), 'utf8'));
     expect(manifest.repository).toEqual({ type: 'git', url: 'git+https://github.com/loomake/loomake.git', directory: `packages/${name}` });

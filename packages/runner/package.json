@@ -44,10 +44,5 @@
     "@loomake/core": "workspace:*",
     "@loomake/kit": "workspace:*",
     "@loomake/trace": "workspace:*"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/loomake/loomake.git",
-    "directory": "packages/runner"
   }
 }

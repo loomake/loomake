@@ -42,10 +42,5 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/loomake/loomake.git",
-    "directory": "packages/core"
   }
 }

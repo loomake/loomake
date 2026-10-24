@@ -44,10 +44,5 @@
   },
   "dependencies": {
     "@loomake/core": "workspace:*"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/loomake/loomake.git",
-    "directory": "packages/kit"
   }
 }
