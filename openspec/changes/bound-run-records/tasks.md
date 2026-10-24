@@ -8,4 +8,4 @@
 ## 2. 統合検証
 
 - [x] 2.1 予算と対象外の範囲、停止情報と復旧手順・TDD・changesetを記録する
-- [ ] 2.2 `pnpm -s verify --change bound-run-records --done` を通す <!-- loomake:gate=done -->
+- [x] 2.2 `pnpm -s verify --change bound-run-records --done` を通す <!-- loomake:gate=done -->
