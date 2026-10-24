@@ -12,12 +12,31 @@ const run = (mode: string) => spawnSync(process.execPath, ['scripts/package-smok
 afterAll(() => rmSync(base, { recursive: true, force: true }));
 
 describe('実際に配るパッケージ', () => {
-  it('[REQ-143][REQ-146][REQ-169] packした5パッケージだけで主要コマンドと公開APIを使える', () => {
+  it('[REQ-057][REQ-138][REQ-139][REQ-143][REQ-146][REQ-169] packした5パッケージだけで主要コマンドと公開APIを使える', () => {
     const prepared = run('prepare');
     expect(prepared.status, prepared.stdout + prepared.stderr).toBe(0);
     const checked = run('check');
     expect(checked.status, checked.stdout + checked.stderr).toBe(0);
     expect(checked.stdout).toContain('配布物の検証に合格');
+    for (const name of ['core', 'kit', 'trace', 'runner', 'cli']) {
+      const installed = join(target, 'consumer/node_modules', name === 'cli' ? 'loomake' : `@loomake/${name}`);
+      const manifest = JSON.parse(readFileSync(join(installed, 'package.json'), 'utf8'));
+      expect(manifest.license, name).toBe('MIT');
+      expect(manifest.homepage, name).toBe('https://github.com/loomake/loomake#readme');
+      expect(manifest.bugs?.url, name).toBe('https://github.com/loomake/loomake/issues');
+      expect(manifest.description, name).toEqual(expect.any(String));
+      expect(manifest.description.trim(), name).not.toBe('');
+      expect(manifest.keywords, name).toContain('openspec');
+      const readme = readFileSync(join(installed, 'README.md'), 'utf8');
+      expect(readme, name).toBe(readFileSync(join(root, 'packages', name, 'README.md'), 'utf8'));
+      if (name === 'cli') {
+        for (const text of ['npx loomake init', 'https://github.com/loomake/loomake', 'openspec', 'gh']) expect(readme).toContain(text);
+        for (const command of ['init', 'verify', 'trace', 'run', 'doctor']) expect(manifest.description).toContain(command);
+      } else {
+        expect(readme, name).toContain('内部用');
+        expect(readme, name).toContain('`0.y.z` のあいだは、API が予告なく変わることがある');
+      }
+    }
     for (const name of ['core', 'kit', 'trace', 'runner']) {
       const manifest = JSON.parse(readFileSync(join(target, 'consumer/node_modules/@loomake', name, 'package.json'), 'utf8'));
       expect(JSON.stringify(manifest.exports)).not.toContain('@loomake/source');
