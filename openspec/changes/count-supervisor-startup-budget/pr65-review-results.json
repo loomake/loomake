@@ -146,6 +146,15 @@
       "passed": 989,
       "failed": 0,
       "pending": 0
+    },
+    {
+      "file": ".loomake/quality/pr65-integration/startup-two-cpu-final-node24.json",
+      "sha256": "21fb7f66210068caacd01dda3752cb9eb76b143087eafb7e38cf454bdf362e7b",
+      "scope": "Final startup change completion gate, taskset-c6,7 Node24; code/tests unchanged since preceding successful safety gate",
+      "exit": 0,
+      "passed": 989,
+      "failed": 0,
+      "pending": 0
     }
   ],
   "initialControl": "A requested duration only1ms above timer limit fell below the limit during actual supervisor startup and2cases passed; it did not reproduce the defect. Repro uses limit+60000ms, then2and3failures were observed.",
@@ -241,5 +250,27 @@
     "target": "loomake/loomake audit-quality-after-merge PR65",
     "requiredFinalAction": "Ask explicit approval for the final frozen commit and PR body."
   },
-  "finalStartupGate": "Pending final local verification after preparing metadata/tasks. No final pass claimed."
+  "finalStartupGate": {
+    "exit": 0,
+    "passed": 989,
+    "failed": 0,
+    "pending": 0,
+    "cpuAffinity": "6,7",
+    "qualityConfigurationRelaxed": false,
+    "all8TasksChecked": true,
+    "publicationSent": false
+  },
+  "audit": {
+    "counts": {
+      "total": 476,
+      "reviewed": 193,
+      "superseded": 0,
+      "unreviewed": 45,
+      "invalid": 238
+    },
+    "issues": 0,
+    "exit": 1,
+    "input": ".loomake/quality/pr65-integration/current-executions.json",
+    "scope": "Failed8CPU/1CPU/Node22 profiles retained together with successful2CPU profile. Final identical-source successful gate not duplicated in audit input."
+  }
 }

@@ -1353,7 +1353,7 @@ mainの7627fe3を1129959で統合し、期限処理をpackages/kit/src/runtime/p
 
 統合後の関連56件は成功した。Node22.12.0の関連110件は104件成功・6件失敗で、短い期限と起動合図などの失敗が残る。通常の8CPU条件では989件中988件成功・1件失敗だった。段階ログから、createの試験が目的のgh操作に到達せず、git config branch.loomake/c1.loomake-base mainの500ms期限で止まったことを確認した。監視役が入った時点では約443ms残り、終了時点では期限後約474msだった。遅延の原因をOS・I/O・負荷のいずれかに確定していない。
 
-1CPUの全体実行も988件成功・1件失敗だった。終了要求を無視し出力を共有する子が、戻った直後のPID観測でrunningになったケースで、原因は未確定である。2CPU条件のclose-engine-and-hook-safety-gaps完了ゲートはexit 0、989件・lint・型・OpenSpec・要件対応が成功した。いずれも設定・既存の期待値を維持しており、条件の異なる成功で失敗を取り消していない。count-supervisor-startup-budgetの最終ゲートは、ローカルの記録とタスクを揃えたあとに確認する。
+1CPUの全体実行も988件成功・1件失敗だった。終了要求を無視し出力を共有する子が、戻った直後のPID観測でrunningになったケースで、原因は未確定である。2CPU条件のclose-engine-and-hook-safety-gaps完了ゲートはexit 0、989件・lint・型・OpenSpec・要件対応が成功した。いずれも設定・既存の期待値を維持しており、条件の異なる成功で失敗を取り消していない。count-supervisor-startup-budgetの最終ゲートも2CPU条件でexit 0、989件・lint・型・OpenSpec・要件対応が成功し、8タスクの完了を確認した。両ゲートの間で製品コード・テスト・品質設定は変更していない。
 
 mainのarchiveに合わせ、58件の旧Scenario IDを現行の対応索引から外した。元の対応は統合前コミット9e9f703と退避したJSONに残り、既存の実行記録JSONは削除していない。現在の監査は476件中、確認済み193件・置換0件・未確認45件・無効238件でexit 1、索引の未知参照は0件である。mainで仕様・ID・テストソースが変わり、古い根拠の再照合が必要なことを示す。無効238件を製品のテスト失敗238件と解釈しない。保存方針の変更は今回行わず、今回の追加の実行結果は[要約](../openspec/changes/count-supervisor-startup-budget/pr65-review-results.json)に記録した。生のレポートは.loomake/quality/pr65-integration/に保持する。今回、点数の再評価は行っていない。
 
