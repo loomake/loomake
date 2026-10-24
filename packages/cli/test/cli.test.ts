@@ -59,7 +59,7 @@ describe('終了コード', () => {
     expect(r.stdout).toContain('不合格（1 件）');
   });
 
-  it('[REQ-041][REQ-055] --change を付けずに --spec-only を指定すると、日本語の使い方を出して 2', async () => {
+  it('[REQ-041][REQ-055][REQ-192] --change を付けずに --spec-only を指定すると、日本語の使い方を出して 2', async () => {
     const r = await withProject({}, (root) => run(root, 'verify', '--spec-only'));
     expect(r.code).toBe(2);
     expect(r.stderr).toContain('--spec-only・--done には --change <id> が必要です');

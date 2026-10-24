@@ -51,8 +51,13 @@ process.exitCode = step.exitCode ?? 0;
 const FAKE_GH = `#!/usr/bin/env node
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
 const args = process.argv.slice(2);
-if (args[0] === 'auth') process.exit(process.env.FAKE_GH_AUTH === 'fail' || existsSync(join(process.cwd(), '..', 'gh-logout')) ? 1 : 0);
+if (args[0] === 'auth') {
+  const status = process.env.FAKE_GH_AUTH === 'fail' || existsSync(join(process.cwd(), '..', 'gh-logout')) ? 1 : 0;
+  if (process.env.FAKE_GH_AUTH_LOG) appendFileSync(process.env.FAKE_GH_AUTH_LOG, JSON.stringify({ args, status }) + '\\n');
+  process.exit(status);
+}
 if (args[0] === 'pr' && args[1] === 'list') {
   appendFileSync(process.env.FAKE_GH_LOOKUP_LOG, JSON.stringify(args) + '\\n');
   if (process.env.FAKE_GH_LOOKUP === 'fail') { console.error('検索できません'); process.exit(1); }
@@ -60,7 +65,20 @@ if (args[0] === 'pr' && args[1] === 'list') {
   process.exit(0);
 }
 const i = args.indexOf('--body-file');
-appendFileSync(process.env.FAKE_GH_LOG, JSON.stringify({ args, body: readFileSync(args[i + 1], 'utf8') }) + '\\n');
+let snapshot;
+if (process.env.FAKE_GH_SNAPSHOT === '1') {
+  const git = (...args) => {
+    const result = spawnSync('git', args, { encoding: 'utf8' });
+    if (result.status !== 0) throw new Error(result.stderr || 'Git snapshot failed');
+    return result.stdout.trim();
+  };
+  snapshot = {
+    head: git('rev-parse', 'HEAD'),
+    files: git('show', '--name-only', '--format=', 'HEAD').split('\\n'),
+    remoteHead: git('ls-remote', 'origin', 'refs/heads/' + args[args.indexOf('--head') + 1]).split('\\t')[0],
+  };
+}
+appendFileSync(process.env.FAKE_GH_LOG, JSON.stringify({ args, body: readFileSync(args[i + 1], 'utf8'), snapshot }) + '\\n');
 if (process.env.FAKE_GH_CREATE === 'before') { console.error('作成前に失敗'); process.exit(1); }
 const url = 'https://github.com/example/repo/pull/1';
 writeFileSync(process.env.FAKE_GH_STATE, JSON.stringify([{ url, baseRefName: args[args.indexOf('--base') + 1], headRefName: args[args.indexOf('--head') + 1], isCrossRepository: false }]));
@@ -79,7 +97,7 @@ export type Repo = {
   /** 偽の claude が呼ばれた記録 */
   calls: () => { args: string[]; prompt: string }[];
   /** 偽の gh pr create が呼ばれた記録 */
-  prs: () => { args: string[]; body: string }[];
+  prs: () => { args: string[]; body: string; snapshot?: { head: string; files: string[]; remoteHead: string } }[];
   base: string;
   git: (...args: string[]) => string;
   cleanup: () => void;

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { runRun } from '@loomake/runner';
@@ -50,7 +50,12 @@ describe('証拠を記録してから PR を作る', () => {
       const files = repo.git('show', '--name-only', '--format=', 'loomake/c1').split('\n');
       expect(files[0]).toMatch(/^\.loomake\/evidence\/c1\/\d{8}T\d{6}Z-[0-9a-f]{12}\.json$/);
       expect(repo.git('rev-parse', 'loomake/c1')).toBe(spawnSync('git', ['--git-dir', join(repo.base, 'origin.git'), 'rev-parse', 'loomake/c1'], { encoding: 'utf8' }).stdout.trim());
-    }));
+      const { snapshot } = repo.prs()[0];
+      expect(snapshot).toBeDefined();
+      expect(snapshot!.head).toBe(repo.git('rev-parse', 'loomake/c1'));
+      expect(snapshot!.files).toContain(files[0]);
+      expect(snapshot!.remoteHead).toBe(snapshot!.head);
+    }, (repo) => { repo.env.FAKE_GH_SNAPSHOT = '1'; }));
 });
 
 const runOnce = async (repo: Repo) => {
@@ -119,6 +124,9 @@ describe('gh CLI で PR を作る', () => {
       expect(pr.args.slice(0, 2)).toEqual(['pr', 'create']);
       expect(pr.args).toContain('--body-file');
       expect(pr.body).toContain('## Why');
+      expect(pr.args).toEqual(['pr', 'create', '--base', 'main', '--head', 'loomake/c1', '--title', 'c1', '--body-file', pr.args[9]]);
+      expect(pr.args[9]).toMatch(/(?:^|[/\\])pr-body\.md$/);
+      expect(readFileSync(pr.args[9], 'utf8')).toBe(pr.body);
     }));
 
   it('[REQ-116] gh にログインしていなければ、証拠を記録せず、ブランチも送らずに止まり、終了コード 1 を返す', () =>
@@ -153,10 +161,14 @@ describe('gh CLI で PR を作る', () => {
     const repo = makeRepo();
     try {
       repo.env.FAKE_GH_AUTH = 'fail';
+      const authLog = join(repo.base, 'gh-auth.jsonl');
+      repo.env.FAKE_GH_AUTH_LOG = authLog;
       const out: string[] = [];
       const code = await runRun({ root: repo.root, changeId: CHANGE, dryRun: true, interactive: false, confirm: async () => false, stdout: (t) => out.push(t), env: repo.env });
       expect(code).toBe(0);
       expect(out.join('\n')).toContain('エンジンに渡す予定のタスク');
+      expect(existsSync(authLog)).toBe(false);
+      expect(repo.calls()).toEqual([]);
     } finally {
       repo.cleanup();
     }
@@ -165,12 +177,19 @@ describe('gh CLI で PR を作る', () => {
   it('[REQ-116] 実行のあいだに gh からログアウトしたら、証拠を記録せず、ブランチも送らずに止まり、終了コード 1 を返す', async () => {
     const repo = makeRepo();
     try {
+      const authLog = join(repo.base, 'gh-auth.jsonl');
+      repo.env.FAKE_GH_AUTH_LOG = authLog;
       // 1 回目の呼び出しで、エンジンが実装と同時に gh-logout を作る
       repo.plan([{ write: { 'impl.txt': '実装\n', '../gh-logout': '' } }, {}]);
       const out: string[] = [];
       const code = await runRun({ root: repo.root, changeId: CHANGE, interactive: false, confirm: async () => false, stdout: (t) => out.push(t), env: repo.env, fileExists: () => false });
       expect(code).toBe(1);
       expect(repo.calls().length).toBeGreaterThan(0);
+      expect(readFileSync(authLog, 'utf8').trim().split('\n').map((line) => JSON.parse(line))).toEqual([
+        { args: ['auth', 'status'], status: 0 },
+        { args: ['auth', 'status'], status: 1 },
+      ]);
+      expect(out.join('\n')).toContain('最後の検査結果：合格');
       expect(out.join('\n')).toContain('gh auth login');
       expect(existsSync(join(repo.root, '.loomake/evidence'))).toBe(false);
       expect(remoteHas(repo, 'loomake/c1')).toBe(false);
