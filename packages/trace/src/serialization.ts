@@ -8,7 +8,11 @@ export function serializeEvidence(evidence: Evidence, maxBytes = JSON_LIMITS.max
   const problem = evidenceProblem(evidence, evidence.change);
   if (problem) throw new UsageError(`生成した証拠の形式が不正です：${problem}`);
   let json: string;
-  try { json = JSON.stringify(evidence, null, 2) + '\n'; }
+  try {
+    const value = JSON.stringify(evidence, null, 2);
+    if (typeof value !== 'string') throw new Error('JSON文字列がありません');
+    json = value + '\n';
+  }
   catch (error) { throw new UsageError('証拠をJSONに変換できません。検証結果と文書の内容を確認してください。', { cause: error }); }
   const bytes = Buffer.byteLength(json, 'utf8');
   if (bytes > maxBytes) throw new UsageError(`生成する証拠の上限は${maxBytes}バイトです（${bytes}バイト）。検証結果と文書の内容を確認してください。記録していません。`);

@@ -43,6 +43,12 @@ describe('保存する証拠の形式とサイズ', () => {
     expect(() => serializeEvidence(input)).toThrow(UsageError);
   });
 
+  it('[REQ-174] JSON文字列を返さない変換もUsageErrorにする', () => {
+    const input = value() as Evidence & { toJSON?: () => undefined };
+    input.toJSON = () => undefined;
+    expect(() => serializeEvidence(input)).toThrow(UsageError);
+  });
+
   it('[REQ-174] JSONに変換できない値もUsageErrorにする', () => {
     const input = value() as Evidence & { self?: unknown };
     input.self = input;
