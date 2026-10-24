@@ -286,5 +286,20 @@
       "reportSha256": "c4ebe7676baa319f32cf980531b65d6846e4214361ade925ce7040d5a2a68189",
       "passed": 33
     }
+  },
+  "github": {
+    "pr": "https://github.com/loomake/loomake/pull/47",
+    "verifiedHead": "3d77c6b26e6082c0f8ec879976f3c0f5f6dfef4d",
+    "mergeable": "MERGEABLE",
+    "ciStarted": false,
+    "ciRun": "https://github.com/loomake/loomake/actions/runs/40074204616",
+    "ciReason": "GitHub annotation: recent account payments failed or spending limit needs increasing. All seven jobs had no steps. User confirmed the GitHub limit."
+  },
+  "currentSpecs": {
+    "command": "pnpm exec openspec validate --specs --strict",
+    "passed": 22,
+    "failed": 0,
+    "exitCode": 0,
+    "logSha256": "c68b8b38ac6881541c42aae8dee17e93dc7793b38640157194c71a1da22e72e7"
   }
 }
