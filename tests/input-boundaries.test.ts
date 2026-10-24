@@ -102,3 +102,20 @@ describe('コマンドの入力予算', () => {
     expect(() => runReport({ root, changeId: 'c1', stdout: () => {} })).toThrow(/合計.*134217728/);
   }), 30_000);
 });
+
+describe('組み立てた指示の全体予算', () => {
+  it('[REQ-173] 指示全体の上限ちょうどは受け付ける', () => withProject({}, (root) => {
+    const change = changeOf(root);
+    const baseBytes = Buffer.byteLength(buildPrompt(root, change, ''));
+    const prompt = buildPrompt(root, change, 'x'.repeat(16 * 1024 * 1024 - baseBytes));
+    expect(Buffer.byteLength(prompt)).toBe(16 * 1024 * 1024);
+  }));
+
+  it('[REQ-173] 対象の文字列が上限を超えたらエンジンへ渡さない', () => withProject({}, (root) => {
+    expect(() => buildPrompt(root, changeOf(root), 'あ'.repeat(6 * 1024 * 1024))).toThrow(/指示.*16777216/);
+  }));
+
+  it('[REQ-173] 検証の失敗情報による指示の超過も止める', () => withProject({}, (root) => {
+    expect(() => buildPrompt(root, changeOf(root), 'task', { schemaVersion: '1.0.0', mode: 'done', change: 'c1', ok: false, results: [{ check: 'test', status: 'fail', detail: 'x'.repeat(16 * 1024 * 1024) }] })).toThrow(/指示.*16777216/);
+  }));
+});

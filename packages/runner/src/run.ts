@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve, sep } from 'node:path';
 import { parseTasks, type Task, type VerifyResult } from '@loomake/core';
 import { runRecord } from '@loomake/trace';
-import { TIMED_OUT, UsageError, assertChangeId, formatVerifyResult, loadConfig, runVerify, createInputReader } from '@loomake/kit';
+import { TIMED_OUT, UsageError, assertChangeId, formatVerifyResult, loadConfig, runVerify, createInputReader, DOCUMENT_LIMITS } from '@loomake/kit';
 import { DEFAULT_ALLOWED_DOMAINS, assertEngineAvailable, runClaude, type EngineResult } from './engine.js';
 import { GitError, branchExists, dirtyFiles, git, gitConfig, isIgnored } from './git.js';
 import { APPROVAL_GUIDE, findEngineMove, findViolations, headState } from './guards.js';
@@ -82,7 +82,7 @@ export function buildPrompt(root: string, changeDir: string, target: string, fai
   const specs = reader.walk(join(changeDir, 'specs'))
     .filter((f) => f.endsWith('spec.md'))
     .map((f) => `### ${toPosix(relative(changeDir, f))}\n\n${read(f)}`);
-  return [
+  const prompt = [
     '# loomake run の指示',
     '',
     'Loomake の規約で開発しています。次の「対象」だけを実装してください。',
@@ -112,6 +112,8 @@ export function buildPrompt(root: string, changeDir: string, target: string, fai
     read(join(changeDir, 'trace.md')),
     '',
   ].join('\n');
+  if (Buffer.byteLength(prompt, 'utf8') > DOCUMENT_LIMITS.maxTotalBytes) throw new UsageError(`エンジンへの指示の上限は${DOCUMENT_LIMITS.maxTotalBytes}バイトです。文書と検証の出力を確認してください。`);
+  return prompt;
 }
 
 /** tasks.md の指定した行のタスクを完了にする */
