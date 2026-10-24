@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { createInputReader } from '../input.js';
 
 import { UsageError } from '../errors.js';
-export { UsageError } from '../errors.js';
+export { RuntimeFailure, UsageError } from '../errors.js';
 
 export type LoomakeConfig = {
   openspecDir: string;

@@ -3,7 +3,7 @@ import { delimiter, isAbsolute, join, resolve } from 'node:path';
 import { createInputReader } from '../input.js';
 import { runExternal, withProcessBudget } from '../process.js';
 import { classifyCommand } from './command.js';
-import { DEFAULT_TEST_REPORT, UsageError, loadConfig, type LoomakeConfig } from '../verify/config.js';
+import { DEFAULT_TEST_REPORT, RuntimeFailure, UsageError, loadConfig, type LoomakeConfig } from '../verify/config.js';
 
 export type DoctorLevel = 'ok' | 'warn' | 'error';
 
@@ -135,7 +135,7 @@ function diagnoseProject(root: string, path: string): DoctorCheck[] {
       else error('証拠の記録（.loomake/evidence/）が .gitignore で除外されていて、コミットできません', '.gitignore で .loomake/ を除外しているなら、.loomake/* と !.loomake/evidence/ の 2 行に分けてください');
     }
   } catch (cause) {
-    if (!(cause instanceof UsageError)) throw cause;
+    if (!(cause instanceof UsageError) && !(cause instanceof RuntimeFailure)) throw cause;
     error(`git の状態を確認できません：${cause.message}`, 'このディレクトリで git status を実行し、設定・権限と停止理由を確認してください');
   }
 

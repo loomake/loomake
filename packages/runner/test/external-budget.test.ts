@@ -2,7 +2,8 @@ import { chmodSync, existsSync, readFileSync, readdirSync, writeFileSync } from 
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
-import { UsageError, runVerify } from '@loomake/kit';
+import { RuntimeFailure, UsageError, runVerify } from '@loomake/kit';
+import { main } from '../../cli/src/main.js';
 import { withProcessBudget } from '../../kit/src/process.js';
 import { runRecord } from '@loomake/trace';
 import { runRun } from '@loomake/runner';
@@ -33,7 +34,10 @@ describe('runから外部操作までの期限', () => {
     const repo = makeRepo();
     try {
       const before = repo.git('rev-parse', 'HEAD'); shim(repo, 'git', "args.includes('--absolute-git-dir')");
-      await expect(budget(() => run(repo))).rejects.toThrow(UsageError);
+      // 開始前の制限エラーは実行時の失敗（close-cli-gaps で使い方の誤りから変更）
+      const error = await budget(() => run(repo)).catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(RuntimeFailure);
+      expect(error).not.toBeInstanceOf(UsageError);
       expect(existsSync(join(repo.base, 'stalled'))).toBe(true);
       expect(repo.git('rev-parse', 'HEAD')).toBe(before);
       expect(repo.calls()).toEqual([]);
@@ -134,5 +138,27 @@ describe('verifyとtraceの期限', () => {
       const result = withProcessBudget({ timeoutMs: 500 }, () => runVerify({ root: repo.root }));
       expect(result.results.find((r) => r.check === 'command: test')).toMatchObject({ status: 'fail', detail: expect.stringContaining('実行時間の上限') });
     } finally { repo.cleanup(); }
+  });
+});
+
+describe('実行時の失敗の終了コード', () => {
+  it('[REQ-192][REQ-182] run の準備中に git が時間の上限で止まると、使い方を出さずに終了コード 3 を返す', async () => {
+    const repo = makeRepo({ run: { timeoutMinutes: 0.02 } });
+    const saved = { ...process.env };
+    try {
+      shim(repo, 'git', "args.includes('--absolute-git-dir')");
+      Object.assign(process.env, repo.env);
+      const out: string[] = [];
+      const err: string[] = [];
+      const code = await main(['run', '--change', CHANGE], { cwd: repo.root, stdout: (t) => out.push(t), stderr: (t) => err.push(t) });
+      expect(code).toBe(3);
+      expect(err.join('\n')).toContain('loomake run: 外部操作を止めました');
+      expect(err.join('\n')).not.toContain('使い方:');
+      expect(existsSync(join(repo.root, '.loomake/runs'))).toBe(false);
+    } finally {
+      for (const k of Object.keys(process.env)) if (!(k in saved)) delete process.env[k];
+      Object.assign(process.env, saved);
+      repo.cleanup();
+    }
   });
 });

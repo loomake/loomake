@@ -2,7 +2,7 @@ import { existsSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve, sep } from 'node:path';
 import { parseTasks, type Task, type VerifyResult } from '@loomake/core';
 import { runRecord } from '@loomake/trace';
-import { remainingProcessTime, withProcessBudget, TIMED_OUT, UsageError, assertChangeId, formatVerifyResult, loadConfig, runVerify, createInputReader, DOCUMENT_LIMITS } from '@loomake/kit';
+import { remainingProcessTime, withProcessBudget, TIMED_OUT, RuntimeFailure, UsageError, assertChangeId, formatVerifyResult, loadConfig, runVerify, createInputReader, DOCUMENT_LIMITS } from '@loomake/kit';
 import { DEFAULT_ALLOWED_DOMAINS, assertEngineAvailable, runClaude, type EngineResult } from './engine.js';
 import { GitError, branchExists, dirtyFiles, git, gitConfig, isIgnored } from './git.js';
 import { APPROVAL_GUIDE, findEngineMove, findViolations, headState } from './guards.js';
@@ -215,7 +215,7 @@ async function runLocked(options: RunOptions): Promise<number> {
     return recordAndOpenPr(ctx, rec);
   } catch (e) {
     // 始めたあとの git と証拠の記録の失敗は、実行中の失敗として記録に残して止まる（REQ-137、clarify-run-phases-and-task-kinds の仮定 A-03）
-    if (!(e instanceof GitError) && !(e instanceof UsageError)) throw e;
+    if (!(e instanceof GitError) && !(e instanceof UsageError) && !(e instanceof RuntimeFailure)) throw e;
     const { engineTasks, gateTasks } = ctx;
     const remaining = [...engineTasks, ...gateTasks].filter((t) => !rec.done.includes(taskLabel(t)));
     return rec.finish('stopped', e.message, remaining);

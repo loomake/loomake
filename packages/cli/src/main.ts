@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { UsageError, formatVerifyResult, runDoctor, runInit, runVerify } from '@loomake/kit';
+import { RuntimeFailure, UsageError, formatVerifyResult, runDoctor, runInit, runVerify } from '@loomake/kit';
 import { runRun } from '@loomake/runner';
 import { runRecord, runReport } from '@loomake/trace';
 
@@ -50,7 +50,7 @@ const isHelp = (a: string | undefined) => a === '--help' || a === '-h';
 const version = () => (JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }).version;
 const VERIFY_FLAGS = new Set(['--spec-only', '--done', '--json', '--skip-commands']);
 
-/** CLI の本体。終了コード（合格 0・不合格 1・使い方の誤り 2）を返す（REQ-041） */
+/** CLI の本体。終了コード（合格 0・不合格 1・使い方の誤り 2・実行時の失敗 3）を返す（REQ-041・REQ-192） */
 export async function main(argv: string[], io: Io): Promise<number> {
   const [command, ...args] = argv;
   if (isHelp(command)) {
@@ -77,6 +77,11 @@ export async function main(argv: string[], io: Io): Promise<number> {
     if (cmd === 'doctor') return doctor(args, io);
     return cmd === 'verify' ? verify(args, io) : trace(args, io);
   } catch (e) {
+    // 実行時の失敗は使い方を表示せず、終了コード 3 で使い方の誤りと区別する（REQ-192）
+    if (e instanceof RuntimeFailure) {
+      io.stderr(`loomake ${cmd}: ${e.message}`);
+      return 3;
+    }
     if (!(e instanceof UsageError)) throw e;
     io.stderr(`loomake ${cmd}: ${e.message}`);
     io.stderr(`使い方: ${COMMAND_USAGE[cmd]}`);

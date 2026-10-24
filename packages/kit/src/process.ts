@@ -2,7 +2,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { spawnSync } from 'node:child_process';
 import { performance } from 'node:perf_hooks';
 import { StringDecoder } from 'node:string_decoder';
-import { UsageError } from './errors.js';
+import { RuntimeFailure, UsageError } from './errors.js';
 
 export const EXTERNAL_TIMEOUT_MS = 30_000;
 export const EXTERNAL_OUTPUT_BYTES = 64 * 1024 * 1024;
@@ -28,7 +28,7 @@ export function remainingProcessTime(): number | undefined {
 export function hasProcessBudget(): boolean { return budgets.getStore() !== undefined; }
 
 export type ProcessLimitKind = 'timeout' | 'output' | 'interrupted';
-export class ProcessLimitError extends UsageError {
+export class ProcessLimitError extends RuntimeFailure {
   constructor(readonly kind: ProcessLimitKind, command: string, readonly stdout = '', readonly stderr = '') {
     super(`外部操作を止めました：${command}（${kind === 'timeout' ? '実行時間の上限に達しました' : kind === 'output' ? '出力の上限に達しました' : '中断されました'}）`);
   }

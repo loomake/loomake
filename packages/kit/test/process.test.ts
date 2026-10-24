@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ProcessLimitError, runExternal, withProcessBudget } from '../src/process.js';
+import { RuntimeFailure, UsageError } from '../src/errors.js';
 
 const call = (code: string, options: Parameters<typeof runExternal>[2] = {}) => runExternal(process.execPath, ['-e', code], options);
 function alive(pid: number) {
@@ -85,4 +86,12 @@ describe('同期外部操作の監視', () => {
     catch (error) { expect(error).toBeInstanceOf(ProcessLimitError); expect((error as ProcessLimitError).kind).toBe('interrupted'); }
     expect(alive(Number(readFileSync(file, 'utf8')))).toBe(false);
   }));
+});
+
+describe('実行時の失敗の型', () => {
+  it('[REQ-192][REQ-180] 制限による停止は実行時の失敗で、使い方の誤りと区別する', () => {
+    const error = new ProcessLimitError('timeout', 'git');
+    expect(error).toBeInstanceOf(RuntimeFailure);
+    expect(error).not.toBeInstanceOf(UsageError);
+  });
 });
