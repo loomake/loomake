@@ -102,6 +102,7 @@ skills-lock.json                  npx skills で入れたスキルの出所と�
 - gate ジョブは、対象の change ごとに `verify --change <id> --done` を実行する。対象は、PR 本文に `loomake-change: <id>` の行があればその change とし、なければ PR で変えた `openspec/changes/<id>/` の下のファイルと、ブランチ名（`loomake/` で始まるときは、それを除いた名前）から決める
 - 対象の change がなく、文書（`.md`、`docs/`・`openspec/`・`.changeset/` の下）だけを変えた PR と archive の PR は、品質コマンドだけを実行する。コードを変える PR で change がないときは、本文に `loomake-change: none` と書く。書かないと gate ジョブは失敗する
 - gate ジョブは PR 本文を実行のたびに読む。本文を書き直したら、gate ジョブを再実行する
+- archive で反映したあとの仕様の誤りは、change ごとの完了ゲートでは見つからない。そのため gate ジョブは、PR の種類によらず、いまの仕様（`openspec/specs/`）に `openspec validate --specs --strict` も実行する
 - npm への公開は GitHub の Actions から release ワークフローを main で手動実行する。事前に `pnpm changeset version` でバージョンを上げた変更を main に入れておく。未消化の changeset が残っていると公開を止める。リポジトリのシークレットに `NPM_TOKEN` が要る
 
 ### devcontainer について
