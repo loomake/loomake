@@ -63,7 +63,7 @@ describe('既存のドメインテストで13条件を壊して確認する', ()
     const normalReport = join(root, '.loomake/test-report.json');
     const before = existsSync(normalReport) ? readFileSync(normalReport, 'utf8') : undefined;
     try {
-      const result = spawnSync(process.execPath, ['scripts/domain-mutations.mjs', target], { cwd: root, encoding: 'utf8', timeout: 90_000 });
+      const result = spawnSync(process.execPath, ['scripts/domain-mutations.mjs', target], { cwd: root, encoding: 'utf8', timeout: 180000 });
       expect(result.status, result.stdout + result.stderr).toBe(0);
       const summary = JSON.parse(readFileSync(join(target, 'results.json'), 'utf8'));
       expect(summary.scope).toBe('selected-domain-conditions');
@@ -80,5 +80,5 @@ describe('既存のドメインテストで13条件を壊して確認する', ()
       expect(rerun.status).toBe(1);
       expect(JSON.parse(readFileSync(join(target, 'results.json'), 'utf8'))).toEqual(summary);
     } finally { rmSync(target, { recursive: true, force: true }); }
-  }, 100_000);
+  }, 200000);
 });

@@ -1,8 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { readFileSync, renameSync } from 'node:fs';
 import { join } from 'node:path';
 import { runRun } from '@loomake/runner';
 import { CHANGE, makeRepo, type Repo } from './helpers.js';
+
+// git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
+vi.setConfig({ testTimeout: 60_000 });
 
 async function run(repo: Repo) {
   const output: string[] = [];

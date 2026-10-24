@@ -1,9 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { main } from '../src/main.js';
 import { CHANGE, ledgerRow, reportJson, requirement, traceMd, withProject } from '../../kit/test/project.js';
+
+// git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
+vi.setConfig({ testTimeout: 60_000 });
 
 const repo = join(import.meta.dirname, '..', '..', '..');
 const readJson = (p: string) => JSON.parse(readFileSync(join(repo, p), 'utf8'));

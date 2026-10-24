@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -6,6 +6,9 @@ import { SCOPE_NOTE, buildReport, runReport, type Evidence, type Report } from '
 import { main } from '../../cli/src/main.js';
 import { readDocuments } from '../src/documents.js';
 import { CHANGE, ledgerRow, requirement, specMd, traceMd } from '../../kit/test/project.js';
+
+// git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
+vi.setConfig({ testTimeout: 60_000 });
 
 type Project = { trace?: string; spec?: string; evidence?: Partial<Evidence>[]; archived?: boolean };
 

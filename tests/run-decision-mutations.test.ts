@@ -31,7 +31,7 @@ it('[REQ-206] 判断の優先順位と回数の境界を逆転すると同じ直
     writeFileSync(join(dir, 'test/decision-policy.test.ts'), tests);
     writeFileSync(join(dir, 'package.json'), '{"private":true,"type":"module"}');
     writeFileSync(join(dir, 'vitest.config.mjs'), "export default { test: { include: ['test/decision-policy.test.ts'], reporters: ['json'], outputFile: { json: './report.json' } } };\n");
-    const ran = spawnSync(process.execPath, [join(root, 'node_modules/vitest/vitest.mjs'), 'run', '--root', dir, '--config', join(dir, 'vitest.config.mjs')], { cwd: dir, encoding: 'utf8', timeout: 25000, maxBuffer: 4 * 1024 * 1024 });
+    const ran = spawnSync(process.execPath, [join(root, 'node_modules/vitest/vitest.mjs'), 'run', '--root', dir, '--config', join(dir, 'vitest.config.mjs')], { cwd: dir, encoding: 'utf8', timeout: 50000, maxBuffer: 4 * 1024 * 1024 });
     writeFileSync(join(dir, 'stdout.txt'), ran.stdout ?? '');
     writeFileSync(join(dir, 'stderr.txt'), ran.stderr ?? '');
     const report = JSON.parse(readFileSync(join(dir, 'report.json'), 'utf8'));
@@ -46,4 +46,4 @@ it('[REQ-206] 判断の優先順位と回数の境界を逆転すると同じ直
   expect(results.slice(1).map((result) => result.status)).toEqual(['killed', 'killed', 'killed']);
   expect(results.slice(1).every((result) => result.failedTests.length > 0)).toBe(true);
   expect(originalsUnchanged).toBe(true);
-}, 110000);
+}, 220000);

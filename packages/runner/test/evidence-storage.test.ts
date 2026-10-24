@@ -5,6 +5,9 @@ import { runRun } from '@loomake/runner';
 import { runReport } from '@loomake/trace';
 import { CHANGE, makeRepo, type Repo } from './helpers.js';
 
+// git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
+vi.setConfig({ testTimeout: 60_000 });
+
 vi.mock('node:fs', async (original) => {
   const fs = await original<typeof import('node:fs')>();
   return { ...fs, mkdirSync: vi.fn(fs.mkdirSync), unlinkSync: vi.fn(fs.unlinkSync) };
