@@ -72,7 +72,7 @@ describe.runIf(process.platform !== 'win32')('POSIXエンジンの正常終了�
     { name: '標準入出力を共有しない子', ignoreTerm: false, inheritOutput: false },
     { name: 'SIGTERMを無視し標準入出力を共有しない子', ignoreTerm: true, inheritOutput: false },
     { name: 'SIGTERMを無視し出力を共有する子', ignoreTerm: true, inheritOutput: true },
-  ])('[REQ-207] 戻る前に$nameを停止し、遅延書き込みを防ぐ', async ({ ignoreTerm, inheritOutput }) => {
+  ])('[REQ-207] 戻る前に $name を停止し、遅延書き込みを防ぐ', async ({ ignoreTerm, inheritOutput }) => {
     await withEngine(parentSource(ignoreTerm, inheritOutput), async (root, result) => {
       expect(readFileSync(join(root, 'child.ready'), 'utf8')).toBe('ready');
       const pid = Number(readFileSync(join(root, 'child.pid'), 'utf8'));

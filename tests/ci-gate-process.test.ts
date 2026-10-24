@@ -119,7 +119,7 @@ describe('実際のCIゲートの子プロセスの契約', () => {
     });
   });
 
-  it.each([{ files: ['packages/a.ts'] }, { files: ['docs/usage.md', 'packages/a.ts'] }])('[REQ-010][REQ-132] 対象未指定のコードファイル$filesがあればverifyを呼ぶ前に止まる', ({ files }) => {
+  it.each([{ files: ['packages/a.ts'] }, { files: ['docs/usage.md', 'packages/a.ts'] }])('[REQ-010][REQ-132] 対象未指定のコードファイル $files があればverifyを呼ぶ前に止まる', ({ files }) => {
     withProject(({ commitFiles, run }) => {
       commitFiles(files);
       const result = run('fix-typo');
@@ -129,7 +129,7 @@ describe('実際のCIゲートの子プロセスの契約', () => {
     });
   });
 
-  it.each([{ files: ['docs/usage.md'] }, { files: ['README.md', '.changeset/x.md'] }])('[REQ-010][REQ-132] 文書ファイル$filesの変更では品質コマンドだけを呼ぶ', ({ files }) => {
+  it.each([{ files: ['docs/usage.md'] }, { files: ['README.md', '.changeset/x.md'] }])('[REQ-010][REQ-132] 文書ファイル $files の変更では品質コマンドだけを呼ぶ', ({ files }) => {
     withProject(({ commitFiles, run }) => {
       commitFiles(files);
       const result = run('fix-typo');
