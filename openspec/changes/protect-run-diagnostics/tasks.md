@@ -9,3 +9,9 @@
 
 - [x] 2.1 保護の範囲とTDD結果を記録し、changesetを追加して関連テストを通す
 - [x] 2.2 `pnpm -s verify --change protect-run-diagnostics --done` を通す <!-- loomake:gate=done -->
+
+## 3. 追加された既知形式の診断保護
+
+- [x] 3.1 Bearerと秘密鍵ブロックの回帰でRedを確認し、有限の状態で転送前の置換を修正する（REQ-153）
+- [ ] 3.2 実stderrと配布物のメモリ試験で保護を確認し、通常の診断を保つ
+- [ ] 3.3 実行結果と文書・changesetを更新し、`pnpm -s verify --change protect-run-diagnostics --done` を通す <!-- loomake:gate=done -->

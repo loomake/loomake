@@ -11,6 +11,27 @@ const tokens = {
 };
 
 describe('置換する秘密情報の形', () => {
+  it('[REQ-199] JSON文字列の改行に続く既知形式を値として置換する', () => {
+    const payload = Object.values(tokens).join('\n') + '\nAuthorization: Bearer\n' + 'Z'.repeat(24);
+    const saved = JSON.parse(maskSecrets(JSON.stringify({ payload })));
+    for (const token of [...Object.values(tokens), 'Z'.repeat(24)]) expect(saved.payload).not.toContain(token);
+    expect(saved.payload).toContain('Authorization: Bearer\n***');
+  });
+
+  it('[REQ-199] JSONのUnicodeエスケープを含むトークンも値として置換する', () => {
+    const json = '{"token":"\\u0067hp_' + 'x'.repeat(24) + '"}';
+    expect(JSON.parse(maskSecrets(json)).token).toBe('***');
+  });
+  it('[REQ-199] APIトークンが隣接しても秘密鍵のBEGINを壊さず本文全体を置換する', () => {
+    const key = '-----BEGIN PRIVATE KEY-----\nFAKE_PRIVATE_BODY\n-----END PRIVATE KEY-----';
+    expect(maskSecrets('sk-' + 'x'.repeat(24) + key)).toBe('******');
+  });
+
+  it('[REQ-199] 別形式に見えるヘッダでも秘密鍵のブロック全体を先に置換する', () => {
+    const kind = 'AKIA' + 'X'.repeat(16) + ' PRIVATE KEY';
+    const key = `-----BEGIN ${kind}-----\nFAKE_PRIVATE_BODY\n-----END ${kind}-----`;
+    expect(maskSecrets(key)).toBe('***');
+  });
   it.each(Object.entries(tokens))('[REQ-199] %s のトークンを置き換える', (_name, token) => {
     expect(maskSecrets(`前 ${token} 後`)).toBe('前 *** 後');
   });
