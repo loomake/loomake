@@ -10,8 +10,11 @@
     "packages/kit/src/process.ts": "d4eff1c95ab21dd86b56417e784b002a936f3583e87596f0335eaf5c6a598402",
     "packages/cli/src/main.ts": "0cee15364056591791f9acd27d87d1bd79c1201cb6fe14703cc78e26666e9dec",
     "packages/kit/dist/doctor/doctor.js": "3cbdc5a3258bc8ed4a717c4f60ab32439c523e173ac03b1c5293dbb8aa99b39c",
+    "packages/kit/dist/doctor/command.js": "29a9331eabe450a9780b6139041705f77c7b843f4e9f776e2e12c73b853c451b",
+    "packages/kit/dist/process.js": "8bc373b33cb5e314488876911c26dc873974274f1a1165ee46fba21d200553b9",
+    "packages/cli/dist/main.js": "ac6f0af1d52e4f9e1633bb02a7fc4fb1cc00c39c646cc7c909717f273c3e9610",
     "packages/cli/dist/cli.js": "bc8e428ea9823c7c61ee983520f87083128c0d3c333bcc92357c999060593a85",
-    "openspec/changes/clarify-doctor-diagnostics/doctor-journeys.mjs": "076b635ca1d33e541fc480d3b3a97a25927f8a5a9cfb7b06652808db390a2ea5"
+    "openspec/changes/clarify-doctor-diagnostics/doctor-journeys.mjs": "eade0e96a84036a9bfcf247536d6a18c615daac67bd157ec40e84f9f8827ffed"
   },
   "scenarios": [
     {
@@ -57,7 +60,7 @@
           "stderr": ""
         }
       ],
-      "durationMs": 254
+      "durationMs": 263
     },
     {
       "id": "unsupported-shell",
@@ -102,7 +105,7 @@
           "stderr": ""
         }
       ],
-      "durationMs": 253
+      "durationMs": 257
     },
     {
       "id": "invalid-manifest",
@@ -147,7 +150,7 @@
           "stderr": ""
         }
       ],
-      "durationMs": 252
+      "durationMs": 256
     }
   ]
 }

@@ -14,7 +14,7 @@ const snapshot = (dir) => {
 };
 function runJourneys(target) {
   mkdirSync(target);
-  const sources = ['packages/kit/src/doctor/doctor.ts', 'packages/kit/src/doctor/command.ts', 'packages/kit/src/process.ts', 'packages/cli/src/main.ts', 'packages/kit/dist/doctor/doctor.js', 'packages/cli/dist/cli.js', 'openspec/changes/clarify-doctor-diagnostics/doctor-journeys.mjs'];
+  const sources = ['packages/kit/src/doctor/doctor.ts', 'packages/kit/src/doctor/command.ts', 'packages/kit/src/process.ts', 'packages/cli/src/main.ts', 'packages/kit/dist/doctor/doctor.js', 'packages/kit/dist/doctor/command.js', 'packages/kit/dist/process.js', 'packages/cli/dist/main.js', 'packages/cli/dist/cli.js', 'openspec/changes/clarify-doctor-diagnostics/doctor-journeys.mjs'];
   const report = { schemaVersion: 1, kind: 'ai-authored-scenarios', artifact: 'built-workspace-cli', humanParticipants: 0, externalGitHub: false, sourceSha256: Object.fromEntries(sources.map((file) => [file, hash(file)])), scenarios: [] };
   try {
     for (const id of ['missing-script', 'unsupported-shell', 'invalid-manifest']) {
