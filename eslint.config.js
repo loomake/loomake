@@ -10,6 +10,8 @@ export default tseslint.config(
     files: ['packages/*/src/**/*.ts'],
     extends: [...tseslint.configs.recommendedTypeChecked],
     languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname } },
+    // 利用者に見せる日本語のメッセージは 1 つの文字列のまま読めるよう、文字列とコメントは数えない
+    rules: { 'max-len': ['error', { code: 160, ignoreStrings: true, ignoreTemplateLiterals: true, ignoreComments: true, ignoreRegExpLiterals: true, ignoreUrls: true }] },
   },
   {
     files: ['packages/*/test/**/*.ts', 'tests/**/*.ts'],

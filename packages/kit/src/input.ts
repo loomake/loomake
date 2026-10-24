@@ -3,7 +3,12 @@ import { join } from 'node:path';
 import { UsageError } from './errors.js';
 
 export type InputLimits = { maxFileBytes: number; maxTotalBytes: number; maxEntries: number; maxDepth: number };
-export const DOCUMENT_LIMITS: Readonly<InputLimits> = Object.freeze({ maxFileBytes: 1024 * 1024, maxTotalBytes: 16 * 1024 * 1024, maxEntries: 4096, maxDepth: 32 });
+export const DOCUMENT_LIMITS: Readonly<InputLimits> = Object.freeze({
+  maxFileBytes: 1024 * 1024,
+  maxTotalBytes: 16 * 1024 * 1024,
+  maxEntries: 4096,
+  maxDepth: 32,
+});
 export const JSON_LIMITS: Readonly<InputLimits> = Object.freeze({ ...DOCUMENT_LIMITS, maxFileBytes: 64 * 1024 * 1024, maxTotalBytes: 128 * 1024 * 1024 });
 export type InputEntry = { name: string; kind: 'file' | 'directory' };
 export type InputReader = {

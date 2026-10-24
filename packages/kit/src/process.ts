@@ -19,7 +19,8 @@ export function withProcessBudget<T>(options: ProcessBudget, action: () => T): T
   const outer = budgets.getStore();
   const maxOperationMs = Math.min(options.maxOperationMs ?? EXTERNAL_TIMEOUT_MS, outer?.maxOperationMs ?? Infinity);
   positive(maxOperationMs);
-  return budgets.run({ deadline: Math.min(performance.now() + options.timeoutMs, outer?.deadline ?? Infinity), maxOperationMs, state: outer?.state ?? { interrupted: false } }, action);
+  const deadline = Math.min(performance.now() + options.timeoutMs, outer?.deadline ?? Infinity);
+  return budgets.run({ deadline, maxOperationMs, state: outer?.state ?? { interrupted: false } }, action);
 }
 export function remainingProcessTime(): number | undefined {
   const budget = budgets.getStore();
@@ -105,7 +106,10 @@ function utf8Prefix(text: string, bytes: number): string {
 export function runExternal(command: string, args: readonly string[], options: ExternalOptions = {}): ExternalResult {
   const budget = budgets.getStore();
   if (budget?.state.interrupted) throw new ProcessLimitError('interrupted', command);
-  const timeout = Math.min(options.timeoutMs ?? (options.qualityCommand ? Infinity : EXTERNAL_TIMEOUT_MS), options.qualityCommand ? Infinity : budget?.maxOperationMs ?? EXTERNAL_TIMEOUT_MS, budget ? budget.deadline - performance.now() : Infinity);
+  // 品質コマンドは 1 操作の上限を使わず、明示した残り時間と共有予算だけで止める
+  const requested = options.timeoutMs ?? (options.qualityCommand ? Infinity : EXTERNAL_TIMEOUT_MS);
+  const perOperation = options.qualityCommand ? Infinity : budget?.maxOperationMs ?? EXTERNAL_TIMEOUT_MS;
+  const timeout = Math.min(requested, perOperation, budget ? budget.deadline - performance.now() : Infinity);
   if (timeout <= 0) throw new ProcessLimitError('timeout', command);
   positive(timeout);
   const maxBuffer = options.maxBuffer ?? EXTERNAL_OUTPUT_BYTES;

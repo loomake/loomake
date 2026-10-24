@@ -7,7 +7,13 @@ export type RunConfig = { maxFixes: number; timeoutMinutes: number; maxOutputByt
 
 /** runの設定を検証する。ファイルや環境を読まず、未知の入力を確定した設定へ変換する。 */
 export function parseRunConfig(raw: unknown): RunConfig {
-  const config: RunConfig = { maxFixes: 5, timeoutMinutes: 60, maxOutputBytes: DEFAULT_MAX_OUTPUT_BYTES, maxLogBytes: DEFAULT_MAX_LOG_BYTES, maxHistoryBytes: DEFAULT_MAX_HISTORY_BYTES };
+  const config: RunConfig = {
+    maxFixes: 5,
+    timeoutMinutes: 60,
+    maxOutputBytes: DEFAULT_MAX_OUTPUT_BYTES,
+    maxLogBytes: DEFAULT_MAX_LOG_BYTES,
+    maxHistoryBytes: DEFAULT_MAX_HISTORY_BYTES,
+  };
   if (raw === undefined) return config;
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
     throw new UsageError('loomake.config.json の run はオブジェクトにしてください');

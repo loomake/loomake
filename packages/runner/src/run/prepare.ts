@@ -111,5 +111,8 @@ export async function prepare(options: RunOptions): Promise<RunContext | number>
       return 1;
     }
   }
-  return { options, root, changeId, changeDir, env, now, stdout, progress, config, runConfig, branch, startBranch, hasBranch, tasksPath, tasksRel, engineTasks, gateTasks };
+  return {
+    options, root, changeId, changeDir, env, now, stdout, progress, config, runConfig,
+    branch, startBranch, hasBranch, tasksPath, tasksRel, engineTasks, gateTasks,
+  };
 }

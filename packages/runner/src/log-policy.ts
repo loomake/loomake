@@ -4,7 +4,12 @@ export const DEFAULT_MAX_HISTORY_BYTES = 512 * 1024 * 1024;
 export const SUMMARY_RESERVE_BYTES = 64 * 1024;
 export type LogLimits = { maxRunBytes: number; maxHistoryBytes: number; summaryBytes: number; maxEntries: number };
 export type LogUsage = { runBytes: number; historyBytes: number; entries: number };
-export const DEFAULT_LOG_LIMITS: Readonly<LogLimits> = Object.freeze({ maxRunBytes: DEFAULT_MAX_LOG_BYTES, maxHistoryBytes: DEFAULT_MAX_HISTORY_BYTES, summaryBytes: SUMMARY_RESERVE_BYTES, maxEntries: DOCUMENT_LIMITS.maxEntries });
+export const DEFAULT_LOG_LIMITS: Readonly<LogLimits> = Object.freeze({
+  maxRunBytes: DEFAULT_MAX_LOG_BYTES,
+  maxHistoryBytes: DEFAULT_MAX_HISTORY_BYTES,
+  summaryBytes: SUMMARY_RESERVE_BYTES,
+  maxEntries: DOCUMENT_LIMITS.maxEntries,
+});
 export class LogQuotaError extends UsageError {}
 export function validateLogLimits(limits: LogLimits) {
   if (Object.values(limits).some((value) => !Number.isSafeInteger(value) || value <= 0) || limits.maxRunBytes <= limits.summaryBytes || limits.maxHistoryBytes <= limits.summaryBytes) throw new UsageError('実行記録の予算は、停止情報の予約より大きい安全な整数にしてください');
