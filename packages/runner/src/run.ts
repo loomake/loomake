@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve, sep } from 'node:path';
 import { parseTasks, type Task, type VerifyResult } from '@loomake/core';
 import { runRecord } from '@loomake/trace';
@@ -11,6 +11,8 @@ import { maskSecrets } from './mask.js';
 import { reusableEvidence } from './reuse.js';
 import { acquireRunLock, RunBusyError } from './lock.js';
 import { parseRunConfig, type RunConfig } from './config.js';
+import { checkLogHistory, createLogStore } from './logs.js';
+import { DEFAULT_LOG_LIMITS, LogQuotaError } from './log-policy.js';
 
 export type RunOptions = {
   /** プロジェクトのルート（loomake.config.json のあるディレクトリ） */
@@ -69,6 +71,8 @@ function loadRunConfig(root: string): RunConfig {
   const raw = existsSync(p) ? (JSON.parse(createInputReader().read(p)) as { run?: Record<string, unknown> }).run : undefined;
   return parseRunConfig(raw);
 }
+
+const logLimits = (config: RunConfig) => ({ ...DEFAULT_LOG_LIMITS, maxRunBytes: config.maxLogBytes, maxHistoryBytes: config.maxHistoryBytes });
 
 /** コンテナの中かどうか（add-run-loop の仮定 A-14） */
 export function inContainer(env: NodeJS.ProcessEnv, fileExists: (p: string) => boolean): boolean {
@@ -222,6 +226,7 @@ async function prepare(options: RunOptions): Promise<RunContext | number> {
   const engine = options.engine ?? 'claude-code';
   const config = loadConfig(root);
   const runConfig = loadRunConfig(root);
+  if (!options.dryRun) checkLogHistory(root, logLimits(runConfig));
   assertChangeId(changeId);
   const changeDir = resolve(root, config.openspecDir, 'changes', changeId);
   if (changeId === 'archive' || !existsSync(join(changeDir, 'tasks.md'))) {
@@ -302,27 +307,15 @@ async function prepare(options: RunOptions): Promise<RunContext | number> {
 function startRecording(ctx: RunContext): Recorder {
   const { root, changeId, stdout } = ctx;
   const startedAt = ctx.now();
-  const runsDir = join(root, RUNS_DIR);
-  mkdirSync(runsDir, { recursive: true });
-  if (!existsSync(join(runsDir, '.gitignore'))) writeFileSync(join(runsDir, '.gitignore'), '*\n');
-  const baseId = `${stamp(startedAt)}-${changeId}`;
-  let runId = baseId;
-  let runDir: string;
-  for (let suffix = 2; ; suffix++) {
-    runDir = join(runsDir, runId);
-    try { mkdirSync(runDir); break; }
-    catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
-      runId = `${baseId}-${suffix}`;
-    }
-  }
+  const store = createLogStore(root, `${stamp(startedAt)}-${changeId}`, logLimits(ctx.runConfig));
+  const { runDir, runId } = store;
   const rec: Recorder = {
     runDir,
     deadline: startedAt.getTime() + ctx.runConfig.timeoutMinutes * 60_000,
     done: [],
     lastVerify: null,
     step: 0,
-    save: (name, text) => writeFileSync(join(runDir, name), maskSecrets(text)),
+    save: store.save,
     finish: (status, reason, remaining) => {
       const { lastVerify } = rec;
       const summary: RunSummary = {
@@ -333,18 +326,31 @@ function startRecording(ctx: RunContext): Recorder {
         remainingTasks: remaining.map(taskLabel),
         lastVerify: lastVerify && { ok: lastVerify.ok, mode: lastVerify.mode },
       };
-      rec.save('summary.json', `${JSON.stringify(summary, null, 2)}\n`);
+      let recordingError: string | undefined;
+      let saved: 'summary.json' | 'stop.json' | undefined = 'summary.json';
+      const short = (text: string) => maskSecrets(text).slice(0, 2048);
+      try { store.finish('summary.json', `${JSON.stringify(summary, null, 2)}\n`); }
+      catch (error) {
+        recordingError = short((error as Error).message);
+        saved = undefined;
+        if (error instanceof LogQuotaError) {
+          const stop = { schemaVersion: 1, kind: 'run-stop', change: changeId, operationStatus: status, reason: short(reason), recordingError, doneTaskCount: summary.doneTasks.length, remainingTaskCount: summary.remainingTasks.length, lastVerify: summary.lastVerify };
+          try { store.finish('stop.json', JSON.stringify(stop, null, 2) + '\n'); saved = 'stop.json'; }
+          catch (failed) { recordingError += `。${short((failed as Error).message)}`; }
+        }
+      }
       const list = (xs: string[]) => (xs.length ? xs.map((x) => `\n  - ${x}`).join('') : 'なし');
       stdout(
         [
-          status === 'completed' ? `loomake run を終えました：${reason}` : `loomake run を止めました：${reason}`,
-          `終えたタスク：${list(summary.doneTasks)}`,
-          `残ったタスク：${list(summary.remainingTasks)}`,
+          status === 'completed' && !recordingError ? `loomake run を終えました：${reason}` : `loomake run を止めました：${recordingError ? short(reason) : reason}`,
+          `終えたタスク：${recordingError ? `${summary.doneTasks.length} 件（一覧は tasks.md を確認してください）` : list(summary.doneTasks)}`,
+          `残ったタスク：${recordingError ? `${summary.remainingTasks.length} 件（一覧は tasks.md を確認してください）` : list(summary.remainingTasks)}`,
           `最後の検査結果：${lastVerify ? (lastVerify.ok ? '合格' : '不合格') : 'なし'}`,
-          `記録：${RUNS_DIR}/${runId}/`,
+          ...(recordingError ? [`記録を保存できません：${recordingError}`] : []),
+          saved === 'summary.json' ? `記録：${RUNS_DIR}/${runId}/` : saved === 'stop.json' ? `停止情報：${RUNS_DIR}/${runId}/stop.json` : `保存先を確認してください：${RUNS_DIR}/${runId}/`,
         ].join('\n'),
       );
-      return status === 'completed' ? 0 : 1;
+      return status === 'completed' && !recordingError ? 0 : 1;
     },
   };
   return rec;
