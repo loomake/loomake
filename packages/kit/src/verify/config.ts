@@ -1,5 +1,6 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { createInputReader } from '../input.js';
 
 import { UsageError } from '../errors.js';
 export { UsageError } from '../errors.js';
@@ -27,7 +28,7 @@ export function loadConfig(root: string): LoomakeConfig {
   if (!existsSync(p)) return base;
   let c: unknown;
   try {
-    c = JSON.parse(readFileSync(p, 'utf8'));
+    c = JSON.parse(createInputReader().read(p));
   } catch (e) {
     throw new UsageError(`loomake.config.json を読めません（${(e as Error).message}）`, { cause: e });
   }

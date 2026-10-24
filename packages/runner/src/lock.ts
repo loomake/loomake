@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
-import { lstatSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { lstatSync, unlinkSync, writeFileSync } from 'node:fs';
 import { hostname } from 'node:os';
 import { join } from 'node:path';
-import { UsageError } from '@loomake/kit';
+import { UsageError, createInputReader } from '@loomake/kit';
 import { git } from './git.js';
 
 type Owner = { pid: number; host: string; token: string };
@@ -12,7 +12,7 @@ export class RunBusyError extends Error {}
 function ownerOf(file: string): Owner | undefined {
   try {
     if (!lstatSync(file).isFile()) return undefined;
-    const value: unknown = JSON.parse(readFileSync(file, 'utf8'));
+    const value: unknown = JSON.parse(createInputReader().read(file));
     if (typeof value !== 'object' || value === null) return undefined;
     const row = value as Record<string, unknown>;
     if (typeof row.pid !== 'number' || !Number.isInteger(row.pid) || row.pid <= 0 || row.pid > 2_147_483_647 || typeof row.host !== 'string' || !row.host || typeof row.token !== 'string' || !row.token) return undefined;

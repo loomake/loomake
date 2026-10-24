@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync, realpathSync, rmSync, statSync } from 'node:fs';
+import { existsSync, realpathSync, rmSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import {
@@ -20,6 +20,7 @@ import {
   type VerifyResult,
 } from '@loomake/core';
 import { assertChangeId, loadConfig, type LoomakeConfig } from './config.js';
+import { createInputReader, JSON_LIMITS, type InputReader } from '../input.js';
 
 export type VerifyOptions = {
   /** プロジェクトのルート（loomake.config.json のあるディレクトリ） */
@@ -58,18 +59,6 @@ child.on('exit', (code) => { clearTimeout(timer); process.exit(code ?? 1); });
 `;
 /** 実行時間の上限で止めた品質コマンドの detail */
 export const TIMED_OUT = '実行時間の上限に達したので止めました';
-
-// node_modules・ドットで始まるディレクトリは見ない
-function walk(dir: string, out: string[] = []): string[] {
-  if (!existsSync(dir)) return out;
-  for (const name of readdirSync(dir)) {
-    if (name === 'node_modules' || name.startsWith('.')) continue;
-    const p = join(dir, name);
-    if (statSync(p).isDirectory()) walk(p, out);
-    else out.push(p);
-  }
-  return out;
-}
 
 const toPosix = (p: string) => p.split(sep).join('/');
 
@@ -116,12 +105,13 @@ export function runVerify(options: VerifyOptions): VerifyResult {
 }
 
 type Recorder = (check: string, status: VerifyCheckResult['status'], detail?: string) => void;
-type SpecState = { changeDir: string; trace: Trace; live: SpecRequirement[]; decision: AgreementDecision };
+type SpecState = { reader: InputReader; changeDir: string; trace: Trace; live: SpecRequirement[]; decision: AgreementDecision };
 
 const formatErrors = (errors: ParseError[]) => errors.map((e) => `${e.file}:${e.line} ${e.message}`).join('\n');
 
 // ---------- 仕様ゲート ----------
 function checkSpec(root: string, config: LoomakeConfig, changeId: string, record: Recorder, rel: (p: string) => string): SpecState | null {
+  const reader = createInputReader();
   const changeDir = resolve(root, config.openspecDir, 'changes', changeId);
   if (!existsSync(changeDir) || !statSync(changeDir).isDirectory()) {
     record('change の存在', 'fail', `${rel(changeDir)} がありません。change-id を確かめてください`);
@@ -133,11 +123,10 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
     record(`${f} の存在`, existsSync(join(changeDir, f)) ? 'pass' : 'fail', existsSync(join(changeDir, f)) ? '' : `${f} がありません`);
   }
 
-  checkOpenspecValidate(root, config, changeId, record);
 
   // trace.md
   const tracePath = join(changeDir, 'trace.md');
-  const parsed = parseTrace('trace.md', existsSync(tracePath) ? readFileSync(tracePath, 'utf8') : '');
+  const parsed = parseTrace('trace.md', existsSync(tracePath) ? reader.read(tracePath) : '');
   const trace = parsed.value;
   const { ledger, questions, assumptions } = trace;
   const model = createAgreement('trace.md', trace);
@@ -162,7 +151,7 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
     record('ブロッキング確認事項', 'pass', `未回答 0 件（全 ${questions.length} 件）`);
   }
 
-  checkSharedQuestions(root, config, changeId, questions, record);
+  checkSharedQuestions(root, config, changeId, questions, record, reader);
 
   const unapproved = assumptions.filter((a) => decision.unapprovedAssumptions.includes(a.ID));
   if (unapproved.length) record('仮定の承認', 'warn', `未承認：${unapproved.map((a) => `${a.ID} ${a['仮定の内容']}`).join(' / ')}`);
@@ -171,12 +160,12 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   if (pending.length) record('確認待ちの要件', 'warn', pending.map((r) => r.ID).join(', '));
 
   // specs
-  const specFiles = walk(join(changeDir, 'specs')).filter((f) => f.endsWith('spec.md'));
+  const specFiles = reader.walk(join(changeDir, 'specs'), { skipIgnored: true }).filter((f) => f.endsWith('spec.md'));
   if (specFiles.length === 0) record('差分仕様', 'fail', 'specs/<capability>/spec.md がありません');
   const specErrors: ParseError[] = [];
   const reqs = specFiles.flatMap((f) => {
     const file = toPosix(relative(changeDir, f));
-    const spec = parseSpec(file, readFileSync(f, 'utf8'));
+    const spec = parseSpec(file, reader.read(f));
     specErrors.push(...spec.errors);
     return spec.value.map((r) => ({ ...r, file }));
   });
@@ -199,13 +188,14 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   const orphan = ledger.filter((r) => r['状態'] === '反映済' && !referenced.has(r.ID));
   record('反映済の要件が仕様にある', orphan.length ? 'fail' : 'pass', orphan.map((r) => r.ID).join(', '));
 
-  return { changeDir, trace, live, decision };
+  checkOpenspecValidate(root, config, changeId, record);
+  return { reader, changeDir, trace, live, decision };
 }
 
 // 質問に「<change-id> の Q-xx と同じ質問」と書いた確認事項の回答を、参照先と比べる（add-shared-question-check の仮定 A-01・A-02）
 const SHARED_MARK = /([a-z0-9][a-z0-9-]*) の (Q-\d+) と同じ質問/;
 
-function checkSharedQuestions(root: string, config: LoomakeConfig, changeId: string, questions: Trace['questions'], record: Recorder) {
+function checkSharedQuestions(root: string, config: LoomakeConfig, changeId: string, questions: Trace['questions'], record: Recorder, reader: InputReader) {
   const changesDir = resolve(root, config.openspecDir, 'changes');
   const archiveDir = join(changesDir, 'archive');
   // 進行中の change を先に、なければ archive の <日付>-<change-id> を探す
@@ -213,7 +203,7 @@ function checkSharedQuestions(root: string, config: LoomakeConfig, changeId: str
     const active = join(changesDir, id, 'trace.md');
     if (id !== 'archive' && existsSync(active)) return active;
     const archived = existsSync(archiveDir)
-      ? readdirSync(archiveDir).filter((d) => d.replace(/^\d{4}-\d{2}-\d{2}-/, '') === id).sort().reverse()
+      ? reader.entries(archiveDir).filter((entry) => entry.kind === 'directory').map((entry) => entry.name).filter((d) => d.replace(/^\d{4}-\d{2}-\d{2}-/, '') === id).sort().reverse()
       : [];
     return archived.map((d) => join(archiveDir, d, 'trace.md')).find((p) => existsSync(p));
   };
@@ -231,7 +221,7 @@ function checkSharedQuestions(root: string, config: LoomakeConfig, changeId: str
       problems.push(`${q.ID}：参照先の change ${otherId} が見つかりません`);
       continue;
     }
-    const other = parseTrace('trace.md', readFileSync(path, 'utf8')).value.questions.find((o) => o.ID === otherQ);
+    const other = parseTrace('trace.md', reader.read(path)).value.questions.find((o) => o.ID === otherQ);
     if (!other) problems.push(`${q.ID}：${otherId} の trace.md に ${otherQ} がありません`);
     else if (answer(other) !== answer(q)) {
       problems.push(`${q.ID}：回答が ${otherId} の ${otherQ} と違います（${changeId}：「${answer(q)}」、${otherId}：「${answer(other)}」）`);
@@ -267,7 +257,7 @@ function checkTasksAndPending(spec: SpecState, record: Recorder) {
 
   const tasksPath = join(spec.changeDir, 'tasks.md');
   if (existsSync(tasksPath)) {
-    const tasks = parseTasks('tasks.md', readFileSync(tasksPath, 'utf8')).value;
+    const tasks = parseTasks('tasks.md', spec.reader.read(tasksPath)).value;
     const open = tasks.filter((t) => !t.checked);
     record('tasks.md', open.length ? 'fail' : 'pass', open.length ? open.map((t) => `- [ ] ${t.text}`).join('\n') : `${tasks.length} 件すべて完了`);
   }
@@ -291,7 +281,7 @@ function checkCoverage(
       `テストのレポート（${config.tests.report}）がありません。test コマンドが、テストランナーの JSON レポートをこのファイルに書き出すよう設定してください`,
     );
   } else {
-    const { value, errors } = extractTestRequirements(config.tests.report, readFileSync(reportPath, 'utf8'));
+    const { value, errors } = extractTestRequirements(config.tests.report, createInputReader(JSON_LIMITS).read(reportPath));
     coverage = evaluateTestCoverage(needed, Object.fromEntries(Object.entries(value).map(([file, ids]) => [rel(resolve(root, file)), ids])));
     const missing = coverage.missing;
     if (errors.length) {

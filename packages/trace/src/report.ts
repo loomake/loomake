@@ -1,7 +1,7 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join, relative, resolve, sep } from 'node:path';
 import { parseSpec, parseTrace } from '@loomake/core';
-import { UsageError, assertChangeId, loadConfig } from '@loomake/kit';
+import { UsageError, assertChangeId, loadConfig, createInputReader, JSON_LIMITS, type InputReader } from '@loomake/kit';
 import { EVIDENCE_DIR, type Evidence } from './record.js';
 import { changedDocuments, readDocuments, type EvidenceDocument } from './documents.js';
 import { evidenceProblem } from './evidence.js';
@@ -47,12 +47,12 @@ export type ReportOptions = {
 const toPosix = (p: string) => p.split(sep).join('/');
 
 /** 進行中の change を先に、なければ archive の <日付>-<change-id> を探す（add-trace-report の仮定 A-05） */
-function findChange(changesDir: string, changeId: string): string | undefined {
+function findChange(changesDir: string, changeId: string, reader: InputReader): string | undefined {
   const active = join(changesDir, changeId);
   if (changeId !== 'archive' && existsSync(join(active, 'trace.md'))) return active;
   const archiveDir = join(changesDir, 'archive');
   if (!existsSync(archiveDir)) return undefined;
-  return readdirSync(archiveDir)
+  return reader.entries(archiveDir).filter((entry) => entry.kind === 'directory').map((entry) => entry.name)
     .filter((d) => d.replace(/^\d{4}-\d{2}-\d{2}-/, '') === changeId)
     .sort()
     .reverse()
@@ -61,11 +61,12 @@ function findChange(changesDir: string, changeId: string): string | undefined {
 }
 
 // 読めない記録があれば、どのファイルかを示して止める（fix-review-findings-2 の仮定 A-06）
-function readEvidence(root: string, file: string, change: string): Evidence {
+function readEvidence(root: string, file: string, change: string, reader: InputReader): Evidence {
   let value: unknown;
   try {
-    value = JSON.parse(readFileSync(file, 'utf8'));
-  } catch {
+    value = JSON.parse(reader.read(file));
+  } catch (error) {
+    if (error instanceof UsageError) throw error;
     throw new UsageError(`証拠の記録 ${toPosix(relative(root, file))} を JSON として読めません`);
   }
   const problem = evidenceProblem(value, change);
@@ -74,12 +75,14 @@ function readEvidence(root: string, file: string, change: string): Evidence {
 }
 
 /** 記録した日時がいちばん新しい証拠の記録（add-trace-report の仮定 A-06） */
-function latestEvidence(root: string, dir: string, change: string): Evidence | undefined {
-  if (!existsSync(dir)) return undefined;
-  const all = readdirSync(dir)
-    .filter((f) => f.endsWith('.json'))
-    .map((f) => readEvidence(root, join(dir, f), change));
-  return all.sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt))[0];
+function latestEvidence(root: string, dir: string, change: string, reader: InputReader): Evidence | undefined {
+  let latest: Evidence | undefined;
+  for (const entry of reader.entries(dir)) {
+    if (entry.kind !== 'file' || !entry.name.endsWith('.json')) continue;
+    const evidence = readEvidence(root, join(dir, entry.name), change, reader);
+    if (!latest || Date.parse(evidence.recordedAt) > Date.parse(latest.recordedAt)) latest = evidence;
+  }
+  return latest;
 }
 
 const reqNumber = (id: string) => Number(id.match(/\d+/)?.[0] ?? Number.MAX_SAFE_INTEGER);
@@ -89,12 +92,13 @@ export const SCOPE_NOTE = '自動検査は、要件 ID を含む成功したテ�
 
 /** いちばん新しい証拠の記録と、それに保存した trace.md・差分仕様から、レポートの中身を作る。証拠の記録がなければ undefined */
 export function buildReport(root: string, changeId: string): Report | undefined {
+  const reader = createInputReader(JSON_LIMITS);
   const config = loadConfig(root);
   assertChangeId(changeId);
-  const changeDir = findChange(resolve(root, config.openspecDir, 'changes'), changeId);
+  const changeDir = findChange(resolve(root, config.openspecDir, 'changes'), changeId, reader);
   if (!changeDir) throw new UsageError(`change「${changeId}」がありません（進行中にも archive にもありません）`);
 
-  const evidence = latestEvidence(root, join(root, EVIDENCE_DIR, changeId), changeId);
+  const evidence = latestEvidence(root, join(root, EVIDENCE_DIR, changeId), changeId, reader);
   if (!evidence) return undefined;
 
   // 表は記録に保存した文書から作る。いまの文書は、記録のあとで変わったかを示すためだけに読む（REQ-070・REQ-129）。

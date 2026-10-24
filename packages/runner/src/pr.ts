@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { createInputReader, JSON_LIMITS } from '@loomake/kit';
 import type { Evidence } from '@loomake/trace';
 
 const isWindows = process.platform === 'win32';
@@ -20,8 +20,8 @@ function section(md: string, heading: string): string {
 
 /** PR の本文（REQ-115、add-run-pr の仮定 A-22） */
 export function prBody(root: string, changeDir: string, evidencePath: string): string {
-  const proposal = readFileSync(join(changeDir, 'proposal.md'), 'utf8');
-  const evidence = JSON.parse(readFileSync(join(root, evidencePath), 'utf8')) as Evidence;
+  const proposal = createInputReader().read(join(changeDir, 'proposal.md'));
+  const evidence = JSON.parse(createInputReader(JSON_LIMITS).read(join(root, evidencePath))) as Evidence;
   const coverage = evidence.verify.coverage ?? {};
   const cell = (s: string) => s.replace(/\|/g, '\\|');
   return [

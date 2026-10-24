@@ -1,6 +1,5 @@
-import { lstatSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { UsageError } from '@loomake/kit';
+import { UsageError, createInputReader, JSON_LIMITS } from '@loomake/kit';
 import { changedDocuments, evidenceProblem, readDocuments, type Evidence } from '@loomake/trace';
 import { dirtyFiles, git } from './git.js';
 
@@ -17,9 +16,11 @@ export function reusableEvidence(root: string, env: NodeJS.ProcessEnv, change: s
   const stop = (reason: string): never => { throw new UsageError(`直前の証拠を再利用できません：${file}（${reason}）。証拠とコミットを確認してください。`); };
   let value: unknown;
   try {
-    if (!lstatSync(join(root, file)).isFile()) return stop('通常のファイルではありません');
-    value = JSON.parse(readFileSync(join(root, file), 'utf8'));
-  } catch { return stop('JSONファイルを読み取れません'); }
+    value = JSON.parse(createInputReader(JSON_LIMITS).read(join(root, file)));
+  } catch (error) {
+    if (error instanceof UsageError) throw error;
+    return stop('JSONファイルを読み取れません');
+  }
   const problem = evidenceProblem(value, change);
   if (problem) return stop(problem);
   const evidence = value as Evidence;

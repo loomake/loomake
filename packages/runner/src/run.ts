@@ -1,8 +1,8 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve, sep } from 'node:path';
 import { parseTasks, type Task, type VerifyResult } from '@loomake/core';
 import { runRecord } from '@loomake/trace';
-import { TIMED_OUT, UsageError, assertChangeId, formatVerifyResult, loadConfig, runVerify } from '@loomake/kit';
+import { TIMED_OUT, UsageError, assertChangeId, formatVerifyResult, loadConfig, runVerify, createInputReader } from '@loomake/kit';
 import { DEFAULT_ALLOWED_DOMAINS, assertEngineAvailable, runClaude, type EngineResult } from './engine.js';
 import { GitError, branchExists, dirtyFiles, git, gitConfig, isIgnored } from './git.js';
 import { APPROVAL_GUIDE, findEngineMove, findViolations, headState } from './guards.js';
@@ -66,7 +66,7 @@ const isGateTask = (t: Task) => hasGateMark(t) || isLegacyGateTask(t);
 /** loomake.config.json の run の設定。既定は直し 5 回・60 分（add-run-loop の仮定 A-16） */
 function loadRunConfig(root: string): RunConfig {
   const p = join(root, 'loomake.config.json');
-  const raw = existsSync(p) ? (JSON.parse(readFileSync(p, 'utf8')) as { run?: Record<string, unknown> }).run : undefined;
+  const raw = existsSync(p) ? (JSON.parse(createInputReader().read(p)) as { run?: Record<string, unknown> }).run : undefined;
   return parseRunConfig(raw);
 }
 
@@ -75,20 +75,11 @@ export function inContainer(env: NodeJS.ProcessEnv, fileExists: (p: string) => b
   return fileExists('/.dockerenv') || fileExists('/run/.containerenv') || ['REMOTE_CONTAINERS', 'CODESPACES', 'DEVCONTAINER'].some((k) => env[k]);
 }
 
-function walk(dir: string, out: string[] = []): string[] {
-  if (!existsSync(dir)) return out;
-  for (const name of readdirSync(dir).sort()) {
-    const p = join(dir, name);
-    if (statSync(p).isDirectory()) walk(p, out);
-    else out.push(p);
-  }
-  return out;
-}
-
 /** エンジンへの指示（REQ-098、add-run-loop の仮定 A-05） */
 export function buildPrompt(root: string, changeDir: string, target: string, failure?: VerifyResult): string {
-  const read = (p: string) => (existsSync(p) ? readFileSync(p, 'utf8') : '');
-  const specs = walk(join(changeDir, 'specs'))
+  const reader = createInputReader();
+  const read = (p: string) => (existsSync(p) ? reader.read(p) : '');
+  const specs = reader.walk(join(changeDir, 'specs'))
     .filter((f) => f.endsWith('spec.md'))
     .map((f) => `### ${toPosix(relative(changeDir, f))}\n\n${read(f)}`);
   return [
@@ -125,7 +116,7 @@ export function buildPrompt(root: string, changeDir: string, target: string, fai
 
 /** tasks.md の指定した行のタスクを完了にする */
 function checkTask(tasksPath: string, line: number) {
-  const lines = readFileSync(tasksPath, 'utf8').split('\n');
+  const lines = createInputReader().read(tasksPath).split('\n');
   lines[line - 1] = lines[line - 1].replace(/- \[ \]/, '- [x]');
   writeFileSync(tasksPath, lines.join('\n'));
 }
@@ -270,7 +261,7 @@ async function prepare(options: RunOptions): Promise<RunContext | number> {
 
   const tasksPath = join(changeDir, 'tasks.md');
   const tasksRel = toPosix(relative(root, tasksPath));
-  const tasks = parseTasks('tasks.md', readFileSync(tasksPath, 'utf8')).value;
+  const tasks = parseTasks('tasks.md', createInputReader().read(tasksPath)).value;
   const pending = tasks.filter((t) => !t.checked);
   const engineTasks = pending.filter((t) => !isGateTask(t));
   const gateTasks = pending.filter(isGateTask);
