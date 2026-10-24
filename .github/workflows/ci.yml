@@ -76,6 +76,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # validate の結果が OpenSpec の更新で変わらないよう、版を固定する
       - run: npm install -g @fission-ai/openspec@1.14.3
+      # archive で反映したあとの仕様は、change ごとの完了ゲートでは検査されない（REQ-010）
+      - run: openspec validate --specs --strict
       - run: pnpm build
       - run: node scripts/ci-gate.mjs "$HEAD_REF"
         env:

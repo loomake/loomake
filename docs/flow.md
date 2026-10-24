@@ -123,7 +123,7 @@ pnpm -s verify --change setup-monorepo --done
 gh pr create --fill
 ```
 
-GitHub Actions の gate ジョブは、対象の change ごとに完了ゲートを実行する。対象は、PR 本文に `loomake-change: <id>` の行があればその change とし、なければ PR で変えた `openspec/changes/<id>/` の下のファイルと、ブランチ名から決める（例：ブランチ `setup-monorepo` → `openspec/changes/setup-monorepo/`）。`loomake run` が作る `loomake/<change-id>` のブランチは、先頭の `loomake/` を除いて比べる。対象の change がなく、文書だけを変えた PR と archive の PR は、品質コマンドだけを実行する。コードを変える PR で change がないときは、本文に `loomake-change: none` と書く。本文を書き直したら、gate ジョブを再実行する。設定は `setup-monorepo` で導入済み。マージを止めるための必須チェックの設定は、人が GitHub 上で行う（setup-monorepo の仮定 A-03）。
+GitHub Actions の gate ジョブは、対象の change ごとに完了ゲートを実行する。対象は、PR 本文に `loomake-change: <id>` の行があればその change とし、なければ PR で変えた `openspec/changes/<id>/` の下のファイルと、ブランチ名から決める（例：ブランチ `setup-monorepo` → `openspec/changes/setup-monorepo/`）。`loomake run` が作る `loomake/<change-id>` のブランチは、先頭の `loomake/` を除いて比べる。対象の change がなく、文書だけを変えた PR と archive の PR は、品質コマンドだけを実行する。コードを変える PR で change がないときは、本文に `loomake-change: none` と書く。本文を書き直したら、gate ジョブを再実行する。gate ジョブは、PR の種類によらず、いまの仕様に `openspec validate --specs --strict` も実行する。設定は `setup-monorepo` で導入済み。マージを止めるための必須チェックの設定は、人が GitHub 上で行う（setup-monorepo の仮定 A-03）。
 
 ## 6. マージ後：仕様に取り込む
 

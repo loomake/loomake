@@ -76,6 +76,13 @@ describe('CI', () => {
     expect(ci).toContain('${{ github.head_ref }}');
   });
 
+  it('[REQ-010] PR ごとに、change の完了ゲートより前に、いまの仕様を openspec validate --specs --strict で検証する', () => {
+    const gate = ci.slice(ci.indexOf('\n  gate:'));
+    const validate = gate.indexOf('- run: openspec validate --specs --strict');
+    expect(validate).toBeGreaterThan(gate.indexOf('npm install -g @fission-ai/openspec@'));
+    expect(validate).toBeLessThan(gate.indexOf('node scripts/ci-gate.mjs'));
+  });
+
   it('[REQ-010][REQ-054] ブランチ名が change-id と一致すれば --change <id> --done で検査する', () => {
     expect(verifyArgs('sample', changes)).toEqual(['--change', 'sample', '--done']);
   });
