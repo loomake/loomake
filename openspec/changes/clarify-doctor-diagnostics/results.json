@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "kind": "ai-authored-scenarios",
+  "artifact": "built-workspace-cli",
+  "humanParticipants": 0,
+  "externalGitHub": false,
+  "sourceSha256": {
+    "packages/kit/src/doctor/doctor.ts": "226b84825b4007c1ae135809ac0a8c2821963eb48910ef31c834b177d6677cf5",
+    "packages/kit/src/doctor/command.ts": "087b5e2351a2c93204661876892b0319bcd86863ec805f7af8e0e8c79bfc8ee5",
+    "packages/kit/src/process.ts": "d4eff1c95ab21dd86b56417e784b002a936f3583e87596f0335eaf5c6a598402",
+    "packages/cli/src/main.ts": "0cee15364056591791f9acd27d87d1bd79c1201cb6fe14703cc78e26666e9dec",
+    "packages/kit/dist/doctor/doctor.js": "3cbdc5a3258bc8ed4a717c4f60ab32439c523e173ac03b1c5293dbb8aa99b39c",
+    "packages/cli/dist/cli.js": "bc8e428ea9823c7c61ee983520f87083128c0d3c333bcc92357c999060593a85",
+    "openspec/changes/clarify-doctor-diagnostics/doctor-journeys.mjs": "076b635ca1d33e541fc480d3b3a97a25927f8a5a9cfb7b06652808db390a2ea5"
+  },
+  "scenarios": [
+    {
+      "id": "missing-script",
+      "status": "passed",
+      "steps": [
+        {
+          "args": [
+            "doctor",
+            "--help"
+          ],
+          "expectedExitCode": 0,
+          "exitCode": 0,
+          "stdout": "使い方: loomake doctor\n",
+          "stderr": ""
+        },
+        {
+          "args": [
+            "init",
+            "--codex"
+          ],
+          "expectedExitCode": 0,
+          "exitCode": 0,
+          "stdout": "\nloomake init の結果:\n  作成：AGENTS.md\n  作成：CLAUDE.md\n  作成：loomake.config.json\n  作成：.claude/skills/req-to-openspec/SKILL.md\n  作成：.claude/skills/req-to-openspec/references/ambiguity-checklist.md\n  作成：.claude/skills/req-to-openspec/references/openspec-format.md\n  作成：.claude/skills/req-to-openspec/templates/trace.md\n  作成：.agents/skills/req-to-openspec/SKILL.md\n  作成：.agents/skills/req-to-openspec/references/ambiguity-checklist.md\n  作成：.agents/skills/req-to-openspec/references/openspec-format.md\n  作成：.agents/skills/req-to-openspec/templates/trace.md\n  作成：.gitignore（.loomake/test-report.json）\n\nopenspec/ がありません。OpenSpec の仕様と change を置くために、openspec init を実行してください。\n\nテストランナーが、テストの結果を JSON で .loomake/test-report.json に書き出すよう設定してください。loomake verify はこのファイルで要件ごとのテストを確かめます。\n  Vitest（vitest.config.ts）:\n    test: { reporters: ['default', 'json'], outputFile: { json: '.loomake/test-report.json' } }\n  Jest（package.json の test スクリプト）:\n    jest --json --outputFile=.loomake/test-report.json\n\nloomake を開発用の依存に足してください。npx loomake verify は、プロジェクトに入れた版を使います。\n  pnpm add -D loomake\n",
+          "stderr": ""
+        },
+        {
+          "args": [
+            "doctor"
+          ],
+          "expectedExitCode": 1,
+          "exitCode": 1,
+          "stdout": "loomake doctor\n\n✔ loomake.config.json を読めます\n✔ AGENTS.md があります\n✔ openspec/ があります\n✔ lint のコマンド（pnpm lint）の pnpm が見つかります\n✔ lint の package.json の scripts.lint を確認しました（存在の確認のみ）\n✔ typecheck のコマンド（pnpm typecheck）の pnpm が見つかります\n✔ typecheck の package.json の scripts.typecheck を確認しました（存在の確認のみ）\n✔ test のコマンド（pnpm test）の pnpm が見つかります\n✖ test の package.json の scripts.test に空でない文字列がありません\n  → package.json の scripts.test と commands.test を確認してください\n✔ テストのレポート（.loomake/test-report.json）は .gitignore で除外されています\n✔ 証拠の記録（.loomake/evidence/）をコミットできます\n✔ openspec コマンドが見つかります\n✔ claude コマンドが見つかります\n✔ gh コマンドが見つかります\n\n問題 1 件、注意 0 件\n\n確認範囲：導入パス・実行ファイル・単純なscriptの存在・Gitの除外設定\n未確認：品質コマンドの成功・レポート生成・認証・ネットワーク接続\n",
+          "stderr": ""
+        },
+        {
+          "args": [
+            "doctor"
+          ],
+          "expectedExitCode": 0,
+          "exitCode": 0,
+          "stdout": "loomake doctor\n\n✔ loomake.config.json を読めます\n✔ AGENTS.md があります\n✔ openspec/ があります\n✔ lint のコマンド（pnpm lint）の pnpm が見つかります\n✔ lint の package.json の scripts.lint を確認しました（存在の確認のみ）\n✔ typecheck のコマンド（pnpm typecheck）の pnpm が見つかります\n✔ typecheck の package.json の scripts.typecheck を確認しました（存在の確認のみ）\n✔ test のコマンド（pnpm test）の pnpm が見つかります\n✔ test の package.json の scripts.test を確認しました（存在の確認のみ）\n✔ テストのレポート（.loomake/test-report.json）は .gitignore で除外されています\n✔ 証拠の記録（.loomake/evidence/）をコミットできます\n✔ openspec コマンドが見つかります\n✔ claude コマンドが見つかります\n✔ gh コマンドが見つかります\n\n問題 0 件、注意 0 件\n\n確認範囲：導入パス・実行ファイル・単純なscriptの存在・Gitの除外設定\n未確認：品質コマンドの成功・レポート生成・認証・ネットワーク接続\n",
+          "stderr": ""
+        }
+      ],
+      "durationMs": 254
+    },
+    {
+      "id": "unsupported-shell",
+      "status": "passed",
+      "steps": [
+        {
+          "args": [
+            "doctor",
+            "--help"
+          ],
+          "expectedExitCode": 0,
+          "exitCode": 0,
+          "stdout": "使い方: loomake doctor\n",
+          "stderr": ""
+        },
+        {
+          "args": [
+            "init",
+            "--codex"
+          ],
+          "expectedExitCode": 0,
+          "exitCode": 0,
+          "stdout": "\nloomake init の結果:\n  作成：AGENTS.md\n  作成：CLAUDE.md\n  作成：loomake.config.json\n  作成：.claude/skills/req-to-openspec/SKILL.md\n  作成：.claude/skills/req-to-openspec/references/ambiguity-checklist.md\n  作成：.claude/skills/req-to-openspec/references/openspec-format.md\n  作成：.claude/skills/req-to-openspec/templates/trace.md\n  作成：.agents/skills/req-to-openspec/SKILL.md\n  作成：.agents/skills/req-to-openspec/references/ambiguity-checklist.md\n  作成：.agents/skills/req-to-openspec/references/openspec-format.md\n  作成：.agents/skills/req-to-openspec/templates/trace.md\n  作成：.gitignore（.loomake/test-report.json）\n\nopenspec/ がありません。OpenSpec の仕様と change を置くために、openspec init を実行してください。\n\nテストランナーが、テストの結果を JSON で .loomake/test-report.json に書き出すよう設定してください。loomake verify はこのファイルで要件ごとのテストを確かめます。\n  Vitest（vitest.config.ts）:\n    test: { reporters: ['default', 'json'], outputFile: { json: '.loomake/test-report.json' } }\n  Jest（package.json の test スクリプト）:\n    jest --json --outputFile=.loomake/test-report.json\n\nloomake を開発用の依存に足してください。npx loomake verify は、プロジェクトに入れた版を使います。\n  pnpm add -D loomake\n",
+          "stderr": ""
+        },
+        {
+          "args": [
+            "doctor"
+          ],
+          "expectedExitCode": 0,
+          "exitCode": 0,
+          "stdout": "loomake doctor\n\n✔ loomake.config.json を読めます\n✔ AGENTS.md があります\n✔ openspec/ があります\n✔ lint のコマンド（pnpm lint）の pnpm が見つかります\n✔ lint の package.json の scripts.lint を確認しました（存在の確認のみ）\n✔ typecheck のコマンド（pnpm typecheck）の pnpm が見つかります\n✔ typecheck の package.json の scripts.typecheck を確認しました（存在の確認のみ）\n⚠ test のコマンドの静的診断は未確認です：実行ファイルを特定できないコマンド\n  → commands.test と実際に使う環境を確認してください。doctor はこのコマンドを実行しません\n✔ テストのレポート（.loomake/test-report.json）は .gitignore で除外されています\n✔ 証拠の記録（.loomake/evidence/）をコミットできます\n✔ openspec コマンドが見つかります\n✔ claude コマンドが見つかります\n✔ gh コマンドが見つかります\n\n問題 0 件、注意 1 件\n\n確認範囲：導入パス・実行ファイル・単純なscriptの存在・Gitの除外設定\n未確認：品質コマンドの成功・レポート生成・認証・ネットワーク接続\n",
+          "stderr": ""
+        },
+        {
+          "args": [
+            "doctor"
+          ],
+          "expectedExitCode": 0,
+          "exitCode": 0,
+          "stdout": "loomake doctor\n\n✔ loomake.config.json を読めます\n✔ AGENTS.md があります\n✔ openspec/ があります\n✔ lint のコマンド（pnpm lint）の pnpm が見つかります\n✔ lint の package.json の scripts.lint を確認しました（存在の確認のみ）\n✔ typecheck のコマンド（pnpm typecheck）の pnpm が見つかります\n✔ typecheck の package.json の scripts.typecheck を確認しました（存在の確認のみ）\n✔ test のコマンド（pnpm test）の pnpm が見つかります\n✔ test の package.json の scripts.test を確認しました（存在の確認のみ）\n✔ テストのレポート（.loomake/test-report.json）は .gitignore で除外されています\n✔ 証拠の記録（.loomake/evidence/）をコミットできます\n✔ openspec コマンドが見つかります\n✔ claude コマンドが見つかります\n✔ gh コマンドが見つかります\n\n問題 0 件、注意 0 件\n\n確認範囲：導入パス・実行ファイル・単純なscriptの存在・Gitの除外設定\n未確認：品質コマンドの成功・レポート生成・認証・ネットワーク接続\n",
+          "stderr": ""
+        }
+      ],
+      "durationMs": 253
+    },
+    {
+      "id": "invalid-manifest",
+      "status": "passed",
+      "steps": [
+        {
+          "args": [
+            "doctor",
+            "--help"
+          ],
+          "expectedExitCode": 0,
+          "exitCode": 0,
+          "stdout": "使い方: loomake doctor\n",
+          "stderr": ""
+        },
+        {
+          "args": [
+            "init",
+            "--codex"
+          ],
+          "expectedExitCode": 0,
+          "exitCode": 0,
+          "stdout": "\nloomake init の結果:\n  作成：AGENTS.md\n  作成：CLAUDE.md\n  作成：loomake.config.json\n  作成：.claude/skills/req-to-openspec/SKILL.md\n  作成：.claude/skills/req-to-openspec/references/ambiguity-checklist.md\n  作成：.claude/skills/req-to-openspec/references/openspec-format.md\n  作成：.claude/skills/req-to-openspec/templates/trace.md\n  作成：.agents/skills/req-to-openspec/SKILL.md\n  作成：.agents/skills/req-to-openspec/references/ambiguity-checklist.md\n  作成：.agents/skills/req-to-openspec/references/openspec-format.md\n  作成：.agents/skills/req-to-openspec/templates/trace.md\n  作成：.gitignore（.loomake/test-report.json）\n\nopenspec/ がありません。OpenSpec の仕様と change を置くために、openspec init を実行してください。\n\nテストランナーが、テストの結果を JSON で .loomake/test-report.json に書き出すよう設定してください。loomake verify はこのファイルで要件ごとのテストを確かめます。\n  Vitest（vitest.config.ts）:\n    test: { reporters: ['default', 'json'], outputFile: { json: '.loomake/test-report.json' } }\n  Jest（package.json の test スクリプト）:\n    jest --json --outputFile=.loomake/test-report.json\n\nloomake を開発用の依存に足してください。npx loomake verify は、プロジェクトに入れた版を使います。\n  pnpm add -D loomake\n",
+          "stderr": ""
+        },
+        {
+          "args": [
+            "doctor"
+          ],
+          "expectedExitCode": 1,
+          "exitCode": 1,
+          "stdout": "loomake doctor\n\n✔ loomake.config.json を読めます\n✔ AGENTS.md があります\n✔ openspec/ があります\n✔ lint のコマンド（pnpm lint）の pnpm が見つかります\n✖ package.json を確認できません：package.json のJSON形式が不正です\n  → package.json の形式・容量・読み取り権限を確認してください\n✔ typecheck のコマンド（pnpm typecheck）の pnpm が見つかります\n✔ test のコマンド（pnpm test）の pnpm が見つかります\n✔ テストのレポート（.loomake/test-report.json）は .gitignore で除外されています\n✔ 証拠の記録（.loomake/evidence/）をコミットできます\n✔ openspec コマンドが見つかります\n✔ claude コマンドが見つかります\n✔ gh コマンドが見つかります\n\n問題 1 件、注意 0 件\n\n確認範囲：導入パス・実行ファイル・単純なscriptの存在・Gitの除外設定\n未確認：品質コマンドの成功・レポート生成・認証・ネットワーク接続\n",
+          "stderr": ""
+        },
+        {
+          "args": [
+            "doctor"
+          ],
+          "expectedExitCode": 0,
+          "exitCode": 0,
+          "stdout": "loomake doctor\n\n✔ loomake.config.json を読めます\n✔ AGENTS.md があります\n✔ openspec/ があります\n✔ lint のコマンド（pnpm lint）の pnpm が見つかります\n✔ lint の package.json の scripts.lint を確認しました（存在の確認のみ）\n✔ typecheck のコマンド（pnpm typecheck）の pnpm が見つかります\n✔ typecheck の package.json の scripts.typecheck を確認しました（存在の確認のみ）\n✔ test のコマンド（pnpm test）の pnpm が見つかります\n✔ test の package.json の scripts.test を確認しました（存在の確認のみ）\n✔ テストのレポート（.loomake/test-report.json）は .gitignore で除外されています\n✔ 証拠の記録（.loomake/evidence/）をコミットできます\n✔ openspec コマンドが見つかります\n✔ claude コマンドが見つかります\n✔ gh コマンドが見つかります\n\n問題 0 件、注意 0 件\n\n確認範囲：導入パス・実行ファイル・単純なscriptの存在・Gitの除外設定\n未確認：品質コマンドの成功・レポート生成・認証・ネットワーク接続\n",
+          "stderr": ""
+        }
+      ],
+      "durationMs": 252
+    }
+  ]
+}

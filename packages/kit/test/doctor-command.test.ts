@@ -17,7 +17,7 @@ describe('doctorの純粋なコマンド分類', () => {
     expect(classifyCommand('"/tools with space/node" x')).toEqual({ kind: 'direct', executable: '/tools with space/node' });
     expect(classifyCommand('"C:\\Program Files\\nodejs\\node.exe" x', true)).toEqual({ kind: 'direct', executable: 'C:\\Program Files\\nodejs\\node.exe' });
   });
-  it.each(['CI=1 pnpm test', 'pnpm test && echo ok', 'npm test > result', 'npm test | tee result', '$(tool) test', '"$TOOL" test', 'pnpm --filter app test', 'npm run test --workspace app', 'pnpm run "/^test/"', 'npm run', 'yarn --cwd app test', 'node "unterminated', 'node x\nnode y', 'node x;node y'])('[REQ-185] %sの対象を推測しない', (command) => {
+  it.each(['CI=1 pnpm test', 'pnpm test && echo ok', 'npm test > result', 'npm test | tee result', '$(tool) test', '"$TOOL" test', 'pnpm --filter app test', 'npm run test --workspace app', 'pnpm run "/^test/"', 'npm run', 'yarn --cwd app test', 'node "unterminated', 'node x\nnode y', 'node x;node y', 'npm run env', 'yarn run-script test'])('[REQ-185] %sの対象を推測しない', (command) => {
     expect(classifyCommand(command)).toMatchObject({ kind: 'unsupported', reason: expect.any(String) });
   });
   it('[REQ-185] Windowsでは単一引用符をshellの引用として推測しない', () => {

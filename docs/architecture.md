@@ -139,4 +139,4 @@ kitのrunExternalが、Git・gh・OpenSpec検証と期限つきの品質コマ�
 
 共有期限と中断状態はAsyncLocalStorageに置き、別の非同期実行へ漏らさない。ネストでは外側の期限を延ばさない。通常の非ゼロ終了は各呼び出し側が解釈し、制限停止はUsageErrorの派生型で区別する。coreにプロセスや時計を持ち込まず、実行時依存の方向も維持する。
 
-期限を使う操作の範囲と、単独verifyの品質コマンド・doctorなどの例外は[resources.md](resources.md)を参照する。共有期限はOSの隔離や、ファイルI/Oを含むすべての処理を中断する仕組みではない。
+期限を使う操作の範囲と、単独verifyの品質コマンドの例外は[resources.md](resources.md)を参照する。共有期限はOSの隔離や、ファイルI/Oを含むすべての処理を中断する仕組みではない。

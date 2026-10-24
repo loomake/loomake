@@ -24,3 +24,5 @@
 
 - pnpm run: https://pnpm.io/cli/run — runとscriptの短縮形、オプションとworkspaceの違い
 - Yarn run: https://yarnpkg.com/cli/run — script、依存のバイナリ、workspaceの解決
+
+- npm run-script: https://docs.npmjs.com/cli/v10/commands/npm-run-script/ — scriptの呼び出し、引数とenvの組み込み処理

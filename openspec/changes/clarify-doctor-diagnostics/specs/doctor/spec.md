@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: 品質scriptの静的な確認
-単純なnpm run・run-scriptとnpm test、pnpm run・run-scriptとpnpm test・lint・typecheckの呼び出しは、ルートのpackage.jsonを予算つきで読み、scriptsに対象の空でない文字列があるか確認する SHALL。ない場合やpackage.jsonの形が不正な場合は問題とし、対象と直し方を示す SHALL。scriptの本文は実行しない MUST。scriptがある場合も、本文の成功や引数の正しさを保証しない SHALL。runの後のscript名は通常の英数字・ハイフン・アンダースコア・ドット・コロンに限り、正規表現の指定やオプションで対象が変わる呼び出しは未対応として扱う SHALL。
+単純なnpm run・run-scriptとnpm test、pnpm run・run-scriptとpnpm test・lint・typecheckの呼び出しは、ルートのpackage.jsonを予算つきで読み、scriptsに対象の空でない文字列があるか確認する SHALL。ない場合やpackage.jsonの形が不正な場合は問題とし、対象と直し方を示す SHALL。scriptの本文は実行しない MUST。scriptがある場合も、本文の成功や引数の正しさを保証しない SHALL。runの後のscript名は通常の英数字・ハイフン・アンダースコア・ドット・コロンに限り、正規表現の指定やオプションで対象が変わる呼び出しは未対応として扱う SHALL。npm run envの組み込み処理とYarnのrun-script表記も、scriptを推測せず未対応とする SHALL。
 
 Source: REQ-184
 

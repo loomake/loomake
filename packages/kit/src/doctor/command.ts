@@ -32,6 +32,7 @@ export function classifyCommand(command: string, windows = false): CommandPlan {
   if (!executable || executable.includes('=') || executable.endsWith('\\')) return unsupported('実行ファイルを特定できないコマンド');
   if (!['npm', 'pnpm', 'yarn'].includes(executable)) return { kind: 'direct', executable };
   const manager = executable as 'npm' | 'pnpm' | 'yarn';
+  if ((manager === 'npm' && ['run', 'run-script'].includes(action) && tail[0] === 'env') || (manager === 'yarn' && action === 'run-script')) return unsupported('組み込み処理や別のscriptとして解釈される呼び出し');
   const explicit = action === 'run' || action === 'run-script';
   const script = explicit ? tail[0] : action;
   const rest = explicit ? tail.slice(1) : tail;

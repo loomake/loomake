@@ -5,5 +5,5 @@
 
 ## 2. 導入と復旧
 
-- [ ] 2.1 AI作成のCLI操作試験、文書・互換性・TDDとchangesetを記録する
+- [x] 2.1 AI作成のCLI操作試験、文書・互換性・TDDとchangesetを記録する
 - [ ] 2.2 `pnpm -s verify --change clarify-doctor-diagnostics --done` を通す <!-- loomake:gate=done -->
