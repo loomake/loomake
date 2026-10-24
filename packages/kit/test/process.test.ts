@@ -95,3 +95,16 @@ describe('実行時の失敗の型', () => {
     expect(error).not.toBeInstanceOf(UsageError);
   });
 });
+
+describe('1 操作の期限を使わない外部操作', () => {
+  it('[REQ-182] untilDeadline の操作は 1 操作の期限を超えても止めず、共有の期限で止める', () => {
+    const wait = (ms: number) => ['-e', `setTimeout(()=>{},${ms})`];
+    withProcessBudget({ timeoutMs: 5_000, maxOperationMs: 200 }, () => {
+      expect(runExternal(process.execPath, wait(600), { untilDeadline: true }).status).toBe(0);
+      expect(() => runExternal(process.execPath, wait(600))).toThrow(ProcessLimitError);
+    });
+    withProcessBudget({ timeoutMs: 300, maxOperationMs: 200 }, () => {
+      expect(() => runExternal(process.execPath, wait(2_000), { untilDeadline: true })).toThrow(ProcessLimitError);
+    });
+  });
+});

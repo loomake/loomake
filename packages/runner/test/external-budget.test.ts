@@ -10,14 +10,14 @@ import { runRun } from '@loomake/runner';
 import { makeRepo, CHANGE, type Repo } from './helpers.js';
 
 const realGit = spawnSync('which', ['git'], { encoding: 'utf8' }).stdout.trim();
-function shim(repo: Repo, command: string, when: string, finishFirst = false) {
+function shim(repo: Repo, command: string, when: string, finishFirst = false, stallMs = 3000) {
   const bin = join(repo.base, 'bin');
   const original = command === 'git' ? realGit : join(bin, `${command}-original`);
   if (command !== 'git') { writeFileSync(original, readFileSync(join(bin, command))); chmodSync(original, 0o755); }
   const script = `#!/usr/bin/env node
 const fs=require('node:fs');const cp=require('node:child_process');const args=process.argv.slice(2);
 function forward(){return cp.spawnSync(${JSON.stringify(original)},args,{stdio:'inherit'}).status??1;}
-if(${when}) {${finishFirst ? 'forward();' : ''} fs.writeFileSync(${JSON.stringify(join(repo.base, 'stalled'))},'yes');process.on('SIGTERM',()=>{});setTimeout(()=>process.exit(0),3000);} else process.exit(forward());
+if(${when}) {${finishFirst ? 'forward();' : ''} fs.writeFileSync(${JSON.stringify(join(repo.base, 'stalled'))},'yes');process.on('SIGTERM',()=>{});setTimeout(()=>process.exit(0),${stallMs});} else process.exit(forward());
 `;
   writeFileSync(join(bin, command), script); chmodSync(join(bin, command), 0o755);
 }
@@ -95,8 +95,11 @@ describe('runから外部操作までの期限', () => {
       repo.plan([{ write: { 'impl.txt': '実装' } }, {}]);
       const command = stage === 'push' ? 'git' : 'gh';
       const condition = stage === 'push' ? "args[0]==='push'" : stage === 'auth' ? "args[0]==='auth' && fs.existsSync('impl.txt')" : `args[0]==='pr' && args[1]===${JSON.stringify(stage)}`;
-      shim(repo, command, condition, stage === 'create');
-      const result = await budget(() => run(repo));
+      // push と PR の作成は 1 操作の期限では止めず、run の残り時間で止める（relax-commit-push-budget）。
+      // そこで、この 2 つは run 全体の予算より長く止め、全体の期限で止まることを確かめる
+      const untilDeadline = stage === 'push' || stage === 'create';
+      shim(repo, command, condition, stage === 'create', untilDeadline ? 30_000 : 3000);
+      const result = await (untilDeadline ? withProcessBudget({ timeoutMs: 8_000, maxOperationMs: 500 }, () => run(repo)) : budget(() => run(repo)));
       expect(result.code, result.stdout).toBe(1);
       expect(result.stdout).toContain('実行時間の上限');
       expect(summary(repo).status).toBe('stopped');
@@ -114,7 +117,7 @@ describe('runから外部操作までの期限', () => {
       expect(readdirSync(evidenceDir)).toHaveLength(1);
       expect(repo.calls()).toHaveLength(2);
     } finally { repo.cleanup(); }
-  });
+  }, 30_000);
 });
 
 describe('verifyとtraceの期限', () => {
@@ -179,4 +182,22 @@ describe('実行時の失敗の終了コード', () => {
       repo.cleanup();
     }
   });
+});
+
+describe('フックを動かす git の操作の期限', () => {
+  it('[REQ-182] 1 操作の期限より遅い pre-commit・pre-push のフックがあっても、run の残り時間の中でコミット・push・PR の作成まで進む', async () => {
+    const repo = makeRepo();
+    try {
+      for (const name of ['pre-commit', 'pre-push']) {
+        const hook = join(repo.root, '.git', 'hooks', name);
+        writeFileSync(hook, '#!/bin/sh\nsleep 1\n');
+        chmodSync(hook, 0o755);
+      }
+      repo.plan([{ write: { 'impl.txt': '実装\n' } }, {}]);
+      const r = await budget(() => run(repo));
+      expect(r.code, r.stdout).toBe(0);
+      expect(summary(repo)).toMatchObject({ status: 'completed', remainingTasks: [] });
+      expect(repo.prs()).toHaveLength(1);
+    } finally { repo.cleanup(); }
+  }, 60_000);
 });

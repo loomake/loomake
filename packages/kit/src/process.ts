@@ -43,6 +43,8 @@ export type ExternalOptions = {
   maxBuffer?: number;
   /** 品質コマンドは操作単位の30秒でなく、明示した残り時間を使う。 */
   qualityCommand?: boolean;
+  /** フックを動かす git の操作や PR の作成のように、1 操作の期限ではなく明示した残り時間と共有予算だけで止める（REQ-182） */
+  untilDeadline?: boolean;
 };
 export type ExternalResult = { status: number | null; signal: NodeJS.Signals | null; stdout: string; stderr: string; error?: NodeJS.ErrnoException };
 type Outcome = { status: number | null; signal: NodeJS.Signals | null; kind?: ProcessLimitKind; error?: { message: string; code?: string } };
@@ -59,8 +61,9 @@ export function runExternal(command: string, args: readonly string[], options: E
   const budget = budgets.getStore();
   if (budget?.state.interrupted) throw new ProcessLimitError('interrupted', command);
   // 品質コマンドは 1 操作の上限を使わず、明示した残り時間と共有予算だけで止める
-  const requested = options.timeoutMs ?? (options.qualityCommand ? Infinity : EXTERNAL_TIMEOUT_MS);
-  const perOperation = options.qualityCommand ? Infinity : budget?.maxOperationMs ?? EXTERNAL_TIMEOUT_MS;
+  const unbounded = options.qualityCommand || options.untilDeadline;
+  const requested = options.timeoutMs ?? (unbounded ? Infinity : EXTERNAL_TIMEOUT_MS);
+  const perOperation = unbounded ? Infinity : budget?.maxOperationMs ?? EXTERNAL_TIMEOUT_MS;
   const timeout = Math.min(requested, perOperation, budget ? budget.deadline - performance.now() : Infinity);
   if (timeout <= 0) throw new ProcessLimitError('timeout', command);
   positive(timeout);

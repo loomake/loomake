@@ -4,8 +4,11 @@ import { runExternal } from '@loomake/kit';
 export class GitError extends Error {}
 
 /** git を実行して標準出力を返す。失敗したら GitError を投げる */
+// フックを動かす操作は、1 操作の期限ではなく run の残り時間で止める（REQ-182）
+const RUNS_HOOKS = new Set(['commit', 'push']);
+
 export function git(root: string, env: NodeJS.ProcessEnv, args: string[]): string {
-  const r = runExternal('git', args, { cwd: root, env });
+  const r = runExternal('git', args, { cwd: root, env, untilDeadline: RUNS_HOOKS.has(args[0]) });
   if (r.error || r.status !== 0) {
     throw new GitError(`git の操作に失敗しました：git ${args.join(' ')}（${(r.stderr || r.error?.message || '').trim()}）`);
   }

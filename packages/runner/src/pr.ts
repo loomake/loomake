@@ -78,7 +78,8 @@ export function findOpenPr(root: string, env: NodeJS.ProcessEnv, pr: { base: str
 /** gh pr create で PR を作り、URL を返す（REQ-116） */
 export function createPr(root: string, env: NodeJS.ProcessEnv, pr: { base: string; head: string; title: string; bodyFile: string }): string {
   const args = ['pr', 'create', '--base', pr.base, '--head', pr.head, '--title', pr.title, '--body-file', pr.bodyFile];
-  const r = runExternal('gh', args.map(quote), { cwd: root, env, shell: isWindows });
+  // PR の作成は push と同じく、1 操作の期限ではなく run の残り時間で止める（REQ-182）
+  const r = runExternal('gh', args.map(quote), { cwd: root, env, shell: isWindows, untilDeadline: true });
   if (r.error || r.status !== 0) throw new Error(`gh pr create に失敗しました（${(r.stderr || r.error?.message || '').trim()}）`);
   return requestUrl(r.stdout.trim());
 }
