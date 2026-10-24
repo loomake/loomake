@@ -847,14 +847,14 @@ Scenarioと試験の対応を確認するリポジトリ用の監査を追加し
 | 未確認 | 314 |
 | 無効な根拠・参照のエラー | 0 |
 
-監査自身の26件は、未実装、古いコード例のハッシュ、HTMLの表示の失敗から修正した。最終の完了ゲートはexit 0、全636件、型・lint・OpenSpec・要件対応が成功した。一方、その全体レポートを使ったScenario監査は、未確認が残るためexit 1だった。[対応表](quality/scenario-audit.md)、[レビューの記録](quality/scenarios.json)、[手順と限界](scenario-audit.md)、[実行結果と入力ハッシュ](../openspec/changes/audit-scenario-evidence/results.json)、[TDD記録](../openspec/changes/audit-scenario-evidence/tdd.md)に根拠を残した。
+監査自身の26件は、未実装、古いコード例のハッシュ、HTMLの表示の失敗から修正した。最終の完了ゲートはexit 0、全636件、型・lint・OpenSpec・要件対応が成功した。一方、その全体レポートを使ったScenario監査は、未確認が残るためexit 1だった。[対応表](quality/scenario-audit.md)、[レビューの記録](quality/scenarios.json)、[手順と限界](scenario-audit.md)、[実行結果と入力ハッシュ](../openspec/changes/archive/2026-10-24-audit-scenario-evidence/results.json)、[TDD記録](../openspec/changes/archive/2026-10-24-audit-scenario-evidence/tdd.md)に根拠を残した。
 
 全15項目の暫定点は前節のままとする。テスト89点は、全体の成功と一部の内容レビューだけでは90点へ上げない。保守性89点も、残る対応と文書の同期を確認するまで維持する。全項目90点は未達であり、次は未確認のScenarioを順に読み、実際に試験が不足する条件を補う。入力ハッシュと対応表の整合性の検査を、試験内容の十分さや別OS・実接続の成功の保証として扱わない。
 
 
 ## 2026-10-24 Scenario対応の継続レビュー：verifyとtrace
 
-検証ゲート、証拠の記録、検収レポートについて、Scenarioの条件・結果と試験の準備・assertionを読んだ。既存の対応へ83件を追加し、内容をレビューして根拠が有効なScenarioは127件、置換2件、未確認231件となった。対応を無効にする古いハッシュや、未知・重複の参照は0件である。[現在の対応表](quality/scenario-audit.md)と[入力と実行結果](../openspec/changes/audit-scenario-evidence/results.json)を更新した。
+検証ゲート、証拠の記録、検収レポートについて、Scenarioの条件・結果と試験の準備・assertionを読んだ。既存の対応へ83件を追加し、内容をレビューして根拠が有効なScenarioは127件、置換2件、未確認231件となった。対応を無効にする古いハッシュや、未知・重複の参照は0件である。[現在の対応表](quality/scenario-audit.md)と[入力と実行結果](../openspec/changes/archive/2026-10-24-audit-scenario-evidence/results.json)を更新した。
 
 確認不足だった2件を補った。新しい証拠のSHAだけでなく、テストファイルと要件の結果も新しい記録から取ることを、異なる結果を持つ新旧の証拠で試験する。doctorには実際に壊れたGit設定を渡し、Git不存在や未除外と誤案内せず、診断できなかったことを説明する試験を追加した。性能試験はJSON上の1000件だけでなく、1000個の実ファイルを置く形へ補った。既存の期待値と3秒の上限は維持した。
 
@@ -869,7 +869,7 @@ Scenarioと試験の対応を確認するリポジトリ用の監査を追加し
 
 init、run、変更検出、PR連携のScenarioと試験のassertionを読み、対応を94件追加した。通常のテスト追加と依存だけの変更について、終了コードに加えて、HEADの変更内容とタスクコミットを直接比較するよう2件の試験を補った。既存の期待値と品質設定は維持し、変更検出の27件が成功した。
 
-独立した作業コピーの完了ゲートはexit 0、全657件・型・lint・OpenSpec・要件対応が成功した。その時点では37文書382件中、確認済み221件・置換2件・未確認159件・無効0件だった。未確認が残るためScenario監査はexit 1である。[対応表](quality/scenario-audit.md)と[結果](../openspec/changes/audit-scenario-evidence/results.json)に検証時点を残した。
+独立した作業コピーの完了ゲートはexit 0、全657件・型・lint・OpenSpec・要件対応が成功した。その時点では37文書382件中、確認済み221件・置換2件・未確認159件・無効0件だった。未確認が残るためScenario監査はexit 1である。[対応表](quality/scenario-audit.md)と[結果](../openspec/changes/archive/2026-10-24-audit-scenario-evidence/results.json)に検証時点を残した。
 
 通常の作業ディレクトリで行った初回ゲートは、657件中1件が通常レポートの不変比較で失敗した。同時に別の検証も動いており、レポートが削除・再生成されていた。初回のログを保存し、設定や期待値を変えずに独立したコピーで再検証した。さらに検証中には後続の変更も進んだため、その変更の成功まで今回の結果から推測しない。
 
@@ -882,7 +882,7 @@ init、run、変更検出、PR連携のScenarioと試験のassertionを読み、
 
 SIGINTは、packしてインストールしたCLIのプロセスへ実際に送った。2つ目の代替エンジンが途中のファイルを書いた後に中断し、先行コミットが1件残り、途中の変更はコミットされず、summaryが中断状態となり、タスクが未完了で残ることをassertする。エンジンが終了したことも確認する。この検証を配布物の自動試験へ組み込み、Linux・Node 24で成功した。Windowsでは対象外の表示の確認だけで、中断動作の成功は主張しない。
 
-独立した作業コピーの最終完了ゲートはexit 0、全676件・型・lint・OpenSpec・要件対応が成功した。初回の検証スクリプトの項目名の誤りと、試験ヘルパーの必須引数不足による型検査の失敗も記録へ残した。既存の期待値と品質設定は維持した。[個別検証の結果](../openspec/changes/audit-scenario-evidence/sigint-results.json)と[全体の結果](../openspec/changes/audit-scenario-evidence/results.json)を参照する。
+独立した作業コピーの最終完了ゲートはexit 0、全676件・型・lint・OpenSpec・要件対応が成功した。初回の検証スクリプトの項目名の誤りと、試験ヘルパーの必須引数不足による型検査の失敗も記録へ残した。既存の期待値と品質設定は維持した。[個別検証の結果](../openspec/changes/archive/2026-10-24-audit-scenario-evidence/sigint-results.json)と[全体の結果](../openspec/changes/archive/2026-10-24-audit-scenario-evidence/results.json)を参照する。
 
 その時点の監査は全388件中、確認済み224件・置換2件・未確認162件・無効0件だった。前回から別の変更で対象が6件増え、今回3件の不足を補った。未確認が残るため監査はexit 1である。後続の変更を含む現在の作業ツリー全体の合格を示す結果ではない。
 
@@ -895,7 +895,7 @@ SIGINTは、packしてインストールしたCLIのプロセスへ実際に送�
 
 子プロセスの通信とio_uringのシステムコールをLinux seccompで拒否した。同じNode20のローカル接続が、制限なしではECONNREFUSED、制限下ではEPERMになることを確認し、同じ制限を継承したCLIでtraceが成功した。静的検査だけでは不足していた実行根拠を補った。
 
-通常の配布物テストとNode20のCIにも同じ検証経路を追加した。既存の検査は維持した。最終の完了ゲートはexit 0で、Node24の全677件・型・lint・OpenSpec・要件対応が成功した。これと別に、Node20の実行確認4件が成功した。検証コピーと現在のコード・テスト・設定・CIの151ファイルが一致することも確認した。別OSとx86_64のCI実行成功は未確認である。[実行結果](../openspec/changes/audit-scenario-evidence/runtime20-results.json)と[照合結果](../openspec/changes/audit-scenario-evidence/results.json)に入力ハッシュと範囲を保存した。
+通常の配布物テストとNode20のCIにも同じ検証経路を追加した。既存の検査は維持した。最終の完了ゲートはexit 0で、Node24の全677件・型・lint・OpenSpec・要件対応が成功した。これと別に、Node20の実行確認4件が成功した。検証コピーと現在のコード・テスト・設定・CIの151ファイルが一致することも確認した。別OSとx86_64のCI実行成功は未確認である。[実行結果](../openspec/changes/archive/2026-10-24-audit-scenario-evidence/runtime20-results.json)と[照合結果](../openspec/changes/archive/2026-10-24-audit-scenario-evidence/results.json)に入力ハッシュと範囲を保存した。
 
 Scenarioは確認済み230件・置換2件・未確認156件・無効0件である。監査は未確認があるためexit 1だった。Node20の結果には、配布物用の実行チェックを使っており、開発用Vitest全体をNode20で実行した結果ではない。
 
@@ -910,7 +910,7 @@ Scenarioは確認済み230件・置換2件・未確認156件・無効0件であ�
 
 スキーマの履歴を比べる試験に加え、その試験が壊したスキーマを実際に拒否するかを確認した。検査コードを変更せず、一時コピーでルート・配列要素の必須プロパティを削除・改名する。minor更新だけでは拒否され、major更新を伴う変更は許可される8ケースが成功した。検査の起動エラーを検出として数えず、元ファイルの不変性も確認する。
 
-公開型は、packした4ライブラリを利用するTypeScriptのfixtureを厳密にコンパイルした。配布されたVerifyResult.okの宣言をbooleanからstringに変えた対照はTS2322となり、復元すると再び成功した。ワークスペース用のsource条件を使わず、配布物のd.tsを読んでいることを、この対照でも確認できる。開発側のsource条件は、Nodeの実際のresolveで4ライブラリのsrcを指すことを確認した。[スキーマの記録](../openspec/changes/audit-scenario-evidence/schema-contract-results.json)と[公開型の記録](../openspec/changes/audit-scenario-evidence/public-types-results.json)に範囲と結果を残した。
+公開型は、packした4ライブラリを利用するTypeScriptのfixtureを厳密にコンパイルした。配布されたVerifyResult.okの宣言をbooleanからstringに変えた対照はTS2322となり、復元すると再び成功した。ワークスペース用のsource条件を使わず、配布物のd.tsを読んでいることを、この対照でも確認できる。開発側のsource条件は、Nodeの実際のresolveで4ライブラリのsrcを指すことを確認した。[スキーマの記録](../openspec/changes/archive/2026-10-24-audit-scenario-evidence/schema-contract-results.json)と[公開型の記録](../openspec/changes/archive/2026-10-24-audit-scenario-evidence/public-types-results.json)に範囲と結果を残した。
 
 最終の完了ゲートはexit 0で、全680件・型・lint・OpenSpec・要件対応が成功した。別実行のNode20確認4件も、新しい配布物で再実行して成功した。最初のゲートでは、利用側fixtureが通常の型検査に含まれてimportを解決できなかった。fixtureをテストデータに移し、専用のstrictコンパイルを維持して解消した。既存の検査設定と期待値は緩めていない。
 
@@ -929,7 +929,7 @@ Scenarioは確認済み230件・置換2件・未確認156件・無効0件であ�
 
 全分割位置と1文字ずつの転送、実際のエンジンstderrと保存されたJSONを確認した。32MiBのold-space制限で64MiBの診断を処理し、通常の出力に戻る試験は、実ソースと配布物の両方で成功した。stdout・stderrの上限超過では、終了要求を無視する実際のエンジンと子の停止も確認した。Gitフックの試験では、runのコミットで既存フックが動いたことのassertionを補った。
 
-protect-run-diagnostics・guard-git-internals・audit-scenario-evidenceの完了ゲートは、8bc0dedの隔離コピーでいずれもexit 0、全725件が成功した。追加の検出機能を含む228b1c9でもaudit-scenario-evidenceの完了ゲートはexit 0で、全728件・型・lint・OpenSpec・要件対応が成功した。同じコピーで作り直した配布物は、Node20.19.0・Linux ARM64の通信拒否下でも4件が成功した。[診断の実行記録](../openspec/changes/protect-run-diagnostics/diagnostic-results.json)と[監査の記録](../openspec/changes/audit-scenario-evidence/results.json)に範囲と入力ハッシュを保存した。
+protect-run-diagnostics・guard-git-internals・audit-scenario-evidenceの完了ゲートは、8bc0dedの隔離コピーでいずれもexit 0、全725件が成功した。追加の検出機能を含む228b1c9でもaudit-scenario-evidenceの完了ゲートはexit 0で、全728件・型・lint・OpenSpec・要件対応が成功した。同じコピーで作り直した配布物は、Node20.19.0・Linux ARM64の通信拒否下でも4件が成功した。[診断の実行記録](../openspec/changes/archive/2026-10-24-protect-run-diagnostics/diagnostic-results.json)と[監査の記録](../openspec/changes/archive/2026-10-24-audit-scenario-evidence/results.json)に範囲と入力ハッシュを保存した。
 
 仕様のarchiveによる整理と追加変更も含む検証対象390件のうち、確認済み253件・未確認137件・無効0件となった。今回20件の内容を確認した。未確認が残るため監査はexit 1である。コード等164ファイルを比べると、検証開始後に更新されたguards.tsだけがコピーと異なった。その後続修正と未コミットの文書まで全体検証済みとは扱わない。
 
@@ -964,7 +964,7 @@ isolate-run-decisionsで、エンジン終了後と完了ゲート後の判断�
 
 直接試験24件のうち20件が仮実装で失敗してから実装した。中断、作業状態の変更、修正回数の境界の3条件をコピーで壊し、同じ直接試験のassertionで検出した。入力の不変性も確認した。既存の合意・テスト対応のモデルと、証拠の形式検証に加え、自動実装の主要な判断もI/Oから分離して直接検査できるようになった。これを根拠に、ドメイン駆動設計を89点から90点へ見直した。
 
-036acf3の隔離コピーで、isolate-run-decisionsとaudit-scenario-evidenceの完了ゲートはいずれもexit 0。全764件・型・lint・OpenSpec・要件対応が成功した。同じコピーの配布物は、Node20.19.0・Linux ARM64の通信拒否下でも4件が成功した。現在のコード・テスト・設定・CIの171ファイルがコピーと一致した。未コミットの文書とスキルの変更は、全体検証の対象外である。[実行判断の結果](../openspec/changes/isolate-run-decisions/results.json)、[逆転した条件の検出結果](../openspec/changes/isolate-run-decisions/mutation-results.json)、[対応監査](../openspec/changes/audit-scenario-evidence/results.json)に根拠を保存した。
+036acf3の隔離コピーで、isolate-run-decisionsとaudit-scenario-evidenceの完了ゲートはいずれもexit 0。全764件・型・lint・OpenSpec・要件対応が成功した。同じコピーの配布物は、Node20.19.0・Linux ARM64の通信拒否下でも4件が成功した。現在のコード・テスト・設定・CIの171ファイルがコピーと一致した。未コミットの文書とスキルの変更は、全体検証の対象外である。[実行判断の結果](../openspec/changes/archive/2026-10-24-isolate-run-decisions/results.json)、[逆転した条件の検出結果](../openspec/changes/archive/2026-10-24-isolate-run-decisions/mutation-results.json)、[対応監査](../openspec/changes/archive/2026-10-24-audit-scenario-evidence/results.json)に根拠を保存した。
 
 今回、実行判断・既存のドメイン変異試験・テスト弱体化検出の16シナリオを照合した。archiveと別の追加変更も含む全401件は、確認済み269件・未確認132件・無効0件である。未確認が残るため監査はexit 1。件数の増減だけでテストの点数は上げない。
 
@@ -995,6 +995,6 @@ isolate-run-decisionsで、エンジン終了後と完了ゲート後の判断�
 
 mainのc8cd4d8と、18ファイルの競合を解消して統合した。事前認証・品質コマンドの中断・設定キーの警告・テスト書き換え検出・証拠の不合格表示を、PR側の資源制限と実行判断に接続した。公開の検証と書き込み権限を持つ処理を別ジョブにし、配布物の検査とSHA固定も維持した。
 
-統合後の完了ゲートは全827件・lint・型・OpenSpec・要件対応が成功した。配布物の宣言する下限はmainに合わせてNode22.12とし、公式アーカイブをチェックサムと照合したLinux ARM64版で、通信拒否下の確認4件も成功した。根拠は[統合記録](../openspec/changes/isolate-run-decisions/merge-results.json)に保存した。
+統合後の完了ゲートは全827件・lint・型・OpenSpec・要件対応が成功した。配布物の宣言する下限はmainに合わせてNode22.12とし、公式アーカイブをチェックサムと照合したLinux ARM64版で、通信拒否下の確認4件も成功した。根拠は[統合記録](../openspec/changes/archive/2026-10-24-isolate-run-decisions/merge-results.json)に保存した。
 
 点数とScenarioの確認件数は、前節までのレビュー時点の評価として残す。統合後のScenarioを再照合した結果や、別OSの実行成功として扱わない。品質改善ループの一時停止は維持し、今回の作業はPRの競合解消を対象とした。
