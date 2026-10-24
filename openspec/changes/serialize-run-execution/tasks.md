@@ -8,4 +8,4 @@
 ## 2. 統合検証
 
 - [x] 2.1 回復の手順と限界、TDD結果を記録し、changesetを追加して関連テストを通す
-- [ ] 2.2 `pnpm -s verify --change serialize-run-execution --done` を通す <!-- loomake:gate=done -->
+- [x] 2.2 `pnpm -s verify --change serialize-run-execution --done` を通す <!-- loomake:gate=done -->
