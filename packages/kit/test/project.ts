@@ -91,3 +91,32 @@ const vitestBin = join(dirname(require.resolve('vitest/package.json')), 'vitest.
 /** 一時プロジェクトで、Vitest を実行して JSON レポートを書き出す test コマンド。テストファイルは import なしで it・describe を使える */
 export const vitestCommand = (report = '.loomake/test-report.json') =>
   `node ${JSON.stringify(vitestBin)} run --globals --reporter=json --outputFile=${report}`;
+
+/**
+ * 端末の Ctrl-C をまねる品質コマンドのスクリプト。親をたどって時間の上限の見張り役を見つけて SIGINT を送り、
+ * 自分と子のプロセスの番号を pids.json に書いてから眠る。Windows 以外で使う（ps で親をたどる）
+ */
+export const INTERRUPT_SCRIPT = `
+const { execFileSync, spawn } = require('node:child_process');
+const { writeFileSync } = require('node:fs');
+let pid = process.ppid;
+for (let i = 0; i < 5 && pid > 1; i++) {
+  const [ppid, ...command] = execFileSync('ps', ['-ww', '-o', 'ppid=,command=', '-p', String(pid)], { encoding: 'utf8' }).trim().split(/\\s+/);
+  if (command.join(' ').includes('loomake: command')) break;
+  pid = Number(ppid);
+}
+const child = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)'], { stdio: 'ignore' });
+writeFileSync('pids.json', JSON.stringify([process.pid, child.pid]));
+process.kill(pid, 'SIGINT');
+setTimeout(() => writeFileSync('finished.txt', ''), 15000);
+`;
+
+/** プロセスが動いているか */
+export const alive = (pid: number) => {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+};

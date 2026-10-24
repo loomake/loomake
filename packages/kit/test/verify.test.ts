@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { runVerify } from '@loomake/kit';
-import { CHANGE, ledgerRow, reportJson, requirement, specMd, traceMd, vitestCommand, withProject } from './project.js';
+import { INTERRUPTED, runVerify } from '@loomake/kit';
+import { CHANGE, INTERRUPT_SCRIPT, alive, ledgerRow, reportJson, requirement, specMd, traceMd, vitestCommand, withProject } from './project.js';
 
 const specOnly = (root: string) => runVerify({ root, changeId: CHANGE, gate: 'spec-only' });
 const done = (root: string, skipCommands = false) => runVerify({ root, changeId: CHANGE, gate: 'done', skipCommands });
@@ -321,6 +321,23 @@ describe('品質コマンドの実行', () => {
       { check: 'command: typecheck', status: 'pass', detail: '' },
       { check: 'command: test', status: 'pass', detail: '' },
     ]);
+  });
+});
+
+describe('中断されたときの品質コマンド', () => {
+  // Windows では品質コマンドを別のプロセスグループにしないので、Ctrl-C がコマンドに届く。SIGINT をまねる手段もない（stop-gate-on-interrupt の仮定 A-02）
+  it.runIf(process.platform !== 'win32')('[REQ-124] 時間の上限つきの品質コマンドの途中で中断されたら、子のプロセスまで止め、中断で止めたと記録し、残りのコマンドを実行しない', () => {
+    const config = { openspecValidate: false, commands: { test: 'node interrupt.cjs', after: 'node -e "require(\'fs\').writeFileSync(\'after.txt\', \'\')"' } };
+    withProject({ config, files: { 'interrupt.cjs': INTERRUPT_SCRIPT } }, (root) => {
+      const start = Date.now();
+      const r = runVerify({ root, timeoutMs: 60_000 });
+      expect(Date.now() - start).toBeLessThan(10_000);
+      expect(check(r, 'command: test')).toEqual({ check: 'command: test', status: 'fail', detail: INTERRUPTED });
+      expect(check(r, 'command: after')).toBeUndefined();
+      const pids: number[] = JSON.parse(readFileSync(join(root, 'pids.json'), 'utf8'));
+      expect(pids.filter(alive)).toEqual([]);
+      expect(existsSync(join(root, 'after.txt'))).toBe(false);
+    });
   });
 });
 
