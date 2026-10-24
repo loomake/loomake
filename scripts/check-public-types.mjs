@@ -13,7 +13,7 @@ assert.equal(JSON.parse(readFileSync(join(consumer, 'package.json'), 'utf8')).na
 mkdirSync(output);
 const scratch = mkdtempSync(join(consumer, '.public-types-'));
 try {
-  writeFileSync(join(scratch, 'consumer.ts'), readFileSync(join(root, 'tests/fixtures/public-api/consumer.ts')));
+  writeFileSync(join(scratch, 'consumer.ts'), readFileSync(join(root, 'tests/fixtures/public-api/consumer.ts.txt')));
   writeFileSync(join(scratch, 'tsconfig.json'), JSON.stringify({ compilerOptions: { target: 'ES2022', module: 'NodeNext', moduleResolution: 'NodeNext', strict: true, noEmit: true, skipLibCheck: false, types: ['node'], typeRoots: [join(root, 'node_modules/@types')], customConditions: [] }, files: ['consumer.ts'] }));
   const result = spawnSync(process.execPath, [join(root, 'node_modules/typescript/bin/tsc'), '-p', join(scratch, 'tsconfig.json'), '--pretty', 'false'], { encoding: 'utf8', timeout: 30000, maxBuffer: 1024 * 1024 });
   writeFileSync(join(output, 'stdout.txt'), result.stdout ?? ''); writeFileSync(join(output, 'stderr.txt'), result.stderr ?? '');
