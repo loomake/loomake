@@ -630,15 +630,50 @@
     },
     {
       "id": "SCN-1a4983fcb68003d08259",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "7ddfcfa4767c7ba917869574568794e0a1aeee4d8b92a6a25a91fbbede4ad2cb",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-138"
+      ],
+      "reason": "core.quotepath=trueの検出試験で日本語・空白を含むファイル名を完全一致で確認する。追加のrun全体試験で表示のパス・終了コード1・1回だけの起動・HEADと未完了タスク・空index・変更/削除の残存をassertする。Linuxではタブ・改行も同じ経路で試験する。",
+      "tests": [
+        {
+          "file": "packages/runner/test/safety-paths.test.ts",
+          "contains": "の仕様変更とテスト削除を検出する",
+          "sha256": "e976ee7e1e4c985ae0566df7cf7d177bb254e35053a8410018fd4794a1ce4673"
+        },
+        {
+          "file": "packages/runner/test/guard-path-integration.test.ts",
+          "contains": "の違反でrun全体が停止し",
+          "sha256": "e31d591ad04ece3601b546325c2f627d6ecf467a1675e415eac23220bc594ec4"
+        }
+      ]
     },
     {
       "id": "SCN-deb79271522834b5c0ca",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "02d3c744f09a980ac94a90388bae2379b23c5497048b4d07ceb0aedfd31d50d5",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-138"
+      ],
+      "reason": "タブと改行を含む各名前で、検出結果のfileが分断されず仕様変更・テスト削除・skip行と一致することをassertする。統合試験では正しい対象パスと理由を表示し、コミットを作らず変更を残すことも確認した。今回Linux分岐のみを実行した。",
+      "tests": [
+        {
+          "file": "packages/runner/test/safety-paths.test.ts",
+          "contains": "の仕様変更とテスト削除を検出する",
+          "sha256": "e976ee7e1e4c985ae0566df7cf7d177bb254e35053a8410018fd4794a1ce4673"
+        },
+        {
+          "file": "packages/runner/test/safety-paths.test.ts",
+          "contains": "のテストへのskip追加を検出する",
+          "sha256": "e976ee7e1e4c985ae0566df7cf7d177bb254e35053a8410018fd4794a1ce4673"
+        },
+        {
+          "file": "packages/runner/test/guard-path-integration.test.ts",
+          "contains": "の違反でrun全体が停止し",
+          "sha256": "e31d591ad04ece3601b546325c2f627d6ecf467a1675e415eac23220bc594ec4"
+        }
+      ]
     },
     {
       "id": "SCN-6d9261c3408f3ab5cc30",
@@ -2647,12 +2682,12 @@
       "sources": [
         "REQ-109"
       ],
-      "reason": "代替エンジンで既存テストを削除し、終了コード1・理由・パス・未コミットの削除・コミット数をassertする。",
+      "reason": "実Gitの準備済みテストを偽エンジンが削除し、runの終了コード1・削除のパスと理由・コミット数不変・作業ツリーに削除が残ることをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストファイルを消したら、削除を表示し",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -2663,12 +2698,12 @@
       "sources": [
         "REQ-109"
       ],
-      "reason": "代替エンジンでskipを追加し、終了コード1と追加した行の表示・コミット数をassertする。",
+      "reason": "既存テストをit.skipへ変更し、終了コード1・コミット数不変・追加した具体的な行の表示をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストファイルに it.skip の行を足したら",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -2679,27 +2714,27 @@
       "sources": [
         "REQ-109"
       ],
-      "reason": "skipIf・runIf・concurrent.skipの各行を追加し、それぞれ終了コード1・行の表示・コミット数をassertする。",
+      "reason": "4種類の条件付き・修飾付きskipを実プロセスで動く偽エンジンで追加し、全ケースでrunの終了コード1・コミット数不変・対象行の表示をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
-          "contains": "テストファイルに it.skipIf(true) の行を足したら止まる",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "contains": "テストファイルに it.skipIf(true)",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         },
         {
           "file": "packages/runner/test/guards.test.ts",
-          "contains": "テストファイルに describe.skipIf(true) の行を足したら止まる",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "contains": "テストファイルに describe.skipIf(true)",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         },
         {
           "file": "packages/runner/test/guards.test.ts",
-          "contains": "テストファイルに it.runIf(false) の行を足したら止まる",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "contains": "テストファイルに it.runIf(false)",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         },
         {
           "file": "packages/runner/test/guards.test.ts",
-          "contains": "テストファイルに it.concurrent.skip の行を足したら止まる",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "contains": "テストファイルに it.concurrent.skip",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -2710,12 +2745,12 @@
       "sources": [
         "REQ-109"
       ],
-      "reason": "通常のテスト追加で終了コード0と検出なしを確認し、HEADにある追加テストの全文と、そのファイルを追加したタスクコミットのメッセージを比較する。",
+      "reason": "通常のitを別ファイルへ追加し、終了コード0・ガード表示なし・HEAD内の新テスト内容・当該パスのコミット名をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "ふつうのテストを足しただけなら",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -2726,12 +2761,12 @@
       "sources": [
         "REQ-110"
       ],
-      "reason": "代替エンジンで設定を変更し、終了コード1・変更理由・diffのヘッダ・コミット数をassertする。",
+      "reason": "エンジンが設定を変更し、終了コード1・コミット数不変・設定変更の理由とdiffヘッダをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
-          "contains": "loomake.config.json を変えたら、差分を表示",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "contains": "loomake.config.json を変えたら、差分を表示して止まる",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -2742,12 +2777,12 @@
       "sources": [
         "REQ-110"
       ],
-      "reason": "代替エンジンでルートのscriptsを変更し、停止と設定変更の理由・コミット数をassertする。",
+      "reason": "test scriptをvitest runからecho skipへ変更し、終了コード1・コミット数不変・scripts変更の理由をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "package.json の scripts を変えたら止まる",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -2758,12 +2793,12 @@
       "sources": [
         "REQ-110"
       ],
-      "reason": "子パッケージのscriptsを変更し、停止・対象パス・コミット数をassertする。",
+      "reason": "packages/appのtest scriptを変更し、終了コード1・コミット数不変・ネストしたパスとscripts変更の理由をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
-          "contains": "子パッケージの package.json の scripts を変えたら",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "contains": "子パッケージの package.json の scripts を変えたら止まる",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -2774,12 +2809,12 @@
       "sources": [
         "REQ-110"
       ],
-      "reason": "dependenciesだけの変更で終了コード0を確認し、HEADのJSON全体と、そのファイルを変更したタスクコミットのメッセージを比較する。",
+      "reason": "scriptsを維持してdependenciesだけを追加し、終了コード0・HEAD内のJSON全体・該当パスのコミット名をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "package.json の dependencies だけを変えたら",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -2790,12 +2825,12 @@
       "sources": [
         "REQ-111"
       ],
-      "reason": "代替エンジンで現行仕様を変更し、停止・対象パス・コミット数をassertする。",
+      "reason": "主仕様をエンジンが変更し、終了コード1・コミット数不変・主仕様パスと変更の理由をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "openspec/specs/ の下を書き換えたら止まる",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -2806,12 +2841,12 @@
       "sources": [
         "REQ-111"
       ],
-      "reason": "代替エンジンで回答を変更し、停止・対象パス・コミット数をassertする。",
+      "reason": "changeのtrace文書をエンジンが変更し、終了コード1・コミット数不変・traceのパスと理由をassertする。fixtureは回答欄だけでなく文書全体の置換で同じパスの保護を試験する。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "change の trace.md を書き換えたら止まる",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -2822,12 +2857,12 @@
       "sources": [
         "REQ-111"
       ],
-      "reason": "代替エンジンで未完了行を消し、停止・対象パス・コミット数をassertする。",
+      "reason": "未完了タスクの一部を消す書き換えで、終了コード1・コミット数不変・tasks.mdとchange文書変更の理由をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
-          "contains": "tasks.md から未完了のタスクの行を消したら",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "contains": "tasks.md から未完了のタスクの行を消したら止まる",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -2838,12 +2873,12 @@
       "sources": [
         "REQ-111"
       ],
-      "reason": "代替エンジンでRequirementを消し、停止・対象パス・コミット数をassertする。",
+      "reason": "差分仕様をADDED見出しだけへ変え、終了コード1・コミット数不変・差分仕様パスと理由をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
-          "contains": "差分仕様から Requirement を消したら",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "contains": "差分仕様から Requirement を消したら止まる",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -2854,7 +2889,7 @@
       "sources": [
         "REQ-111"
       ],
-      "reason": "openspecDirをspecにし、代替エンジンがspec/specs/x/spec.mdを変更する。run全体の終了コード1・対象名・HEAD不変・未コミット変更の保持・タスク未完了をassertする。",
+      "reason": "設定とchangeをspecへ移した実Gitでエンジンが主仕様を変更し、run終了コード1・パスと理由・1回だけの起動・HEAD不変・変更の残存・タスク未完了をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run-conditions.test.ts",
@@ -2870,12 +2905,12 @@
       "sources": [
         "REQ-111"
       ],
-      "reason": "不合格の品質コマンドをコードの変更だけで直し、終了コード0・修正コミットの順序・完了ゲートのチェックを比較する。エンジンは代替プロセスである。",
+      "reason": "2タスク後の不合格でimpl.txtだけを直す見本を動かし、終了コード0・修正指示内の不合格理由・修正と完了ゲートのコミット順序・完了タスクをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "[REQ-100][REQ-111]",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "contains": "不合格なら内容をエンジンに渡して直させ、直しをコミットし",
+          "sha256": "cfe8546b1a4b43e21e9307933e23f4500039b7db3d03a1f1372de2f0e5abab80"
         }
       ]
     },
@@ -2886,12 +2921,12 @@
       "sources": [
         "REQ-112"
       ],
-      "reason": "停止理由・差分・承認手順・終了コード1を確認し、変更内容とGit indexが空であることをassertする。",
+      "reason": "設定変更で終了コード1・コミット数不変、元の設定の削除diff、承認案内、変更した設定とimplの残存、空のindex、設定内容の保持をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "理由と差分を表示し、変更を作業ツリーに残し",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -2902,12 +2937,12 @@
       "sources": [
         "REQ-112"
       ],
-      "reason": "停止後に未コミットのまま再実行し、終了コード1・開始拒否の理由・変更内容が残ることをassertする。",
+      "reason": "ガード停止後の同じ作業ツリーへ再度runを呼び、終了コード1・未コミット変更の理由・実装ファイルの残存をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "承認せずにもう一度実行すると",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -2918,12 +2953,12 @@
       "sources": [
         "REQ-126"
       ],
-      "reason": "代替エンジンが実際のGitへコミットし、前後SHA・終了コード1・未完了タスク・エンジンのコミットだけが残ることをassertする。",
+      "reason": "エンジンがadd/commitし、終了コード1・タスク未完了・前後の実SHAとブランチ・復旧案内・コミットが初期とエンジンの2件だけであることをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
-          "contains": "エンジンが自分でコミットしたら",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "contains": "エンジンが自分でコミットしたら、前後の SHA を表示し",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -2934,12 +2969,12 @@
       "sources": [
         "REQ-126"
       ],
-      "reason": "設定を変更してコミットする代替エンジンで、終了コード1と前後の設定の差分をassertする。",
+      "reason": "エンジンが設定を変更してコミットした後、終了コード1・HEAD変更の理由・未完了タスク・設定の変更前後diffをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
-          "contains": "設定を変えてコミットしたら",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "contains": "設定を変えてコミットしたら、その差分を表示して止まる",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -2950,12 +2985,12 @@
       "sources": [
         "REQ-126"
       ],
-      "reason": "実際にブランチを切り替え、前後のブランチ名・終了コード1・切り替え後のブランチと未コミット変更の保持をassertする。",
+      "reason": "別ブランチotherへ切り替える見本で、終了コード1・前後のブランチ表示・現在もotherであること・変更と未完了タスクの残存をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "エンジンが別のブランチに切り替えたら",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -2966,12 +3001,12 @@
       "sources": [
         "REQ-126"
       ],
-      "reason": "代替エンジンがコミット後にexit 1で終了し、HEAD変更と失敗の理由、終了コード1、未完了タスクをassertする。",
+      "reason": "エンジンがcommit後exit1となり、run終了コード1・未完了タスク・HEAD変更とエンジン失敗の両理由をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
-          "contains": "コミットしてから失敗したら",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "contains": "コミットしてから失敗したら、HEAD が変わったことを",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -2982,12 +3017,12 @@
       "sources": [
         "REQ-126"
       ],
-      "reason": "修正の代替エンジンがコミットし、終了コード1・HEAD変更の理由・完了ゲート未完了・エンジンのコミットの保持をassertする。",
+      "reason": "通常2タスクの後の修正でエンジンがコミットし、終了コード1・3回起動・完了ゲートタスク未完了・最新コミットがエンジン作成であることをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "完了ゲートの直しでエンジンがコミットしたら",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -2998,12 +3033,12 @@
       "sources": [
         "REQ-126"
       ],
-      "reason": "ファイルだけ変更する代替エンジンで、HEAD変更の検出がなく、runのタスクコミットがGit履歴にあることをassertする。",
+      "reason": "エンジンがファイルだけを変更する正常経路で、HEAD変更警告がなく、runによるタスク1.1のコミットが履歴にあることをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "エンジンがコミットせずに終えたら",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -5455,15 +5490,15 @@
       "id": "SCN-aae92504e0e72d747a61",
       "status": "reviewed",
       "scenarioSha256": "e0ff12f10b19a69e67ce38d95bbb09aecc30c8b2ce675984c56f7d26fd5c18b0",
-      "reason": "フック追加後にコミット・フック実行をせず停止し、変更と未完了タスクを保持することをassertする。",
       "sources": [
         "REQ-198"
       ],
+      "reason": "実行可能pre-commitをエンジンが追加し、終了コード1・Git設定変更理由・コミット数不変・タスク未完了・フックマーカーなし・フック自体の残存をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
-          "contains": "[REQ-198] エンジンがフック",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "contains": "エンジンがフックを足したら",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -5471,15 +5506,15 @@
       "id": "SCN-d1582a614bc92e9f5b87",
       "status": "reviewed",
       "scenarioSha256": "d48943e8f0475334e2bff912966e8d829e62e5d0b94a3fa630862ccf83e21127",
-      "reason": "git設定変更後にコミットせず停止し、変更されたcore.hooksPathを保持することをassertする。",
       "sources": [
         "REQ-198"
       ],
+      "reason": "core.hooksPathをエンジンが変更し、終了コード1・理由・コミット数不変・タスク未完了・変更値が残ることをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
-          "contains": "[REQ-198] エンジンが git",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "contains": "エンジンが git の設定を変えたら",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -5487,15 +5522,15 @@
       "id": "SCN-f3c4fabea0ca19897c0e",
       "status": "reviewed",
       "scenarioSha256": "9df4637fd70b70d732454dc992c59bad3c265cb5f7035554068cd81a0cc2011b",
-      "reason": "runが完了し、既存フックの記録行数がセットアップ時より増えることをassertする。",
       "sources": [
         "REQ-198"
       ],
+      "reason": "事前にpost-commitを設定し、エンジンは変更しない経路でガード理由なし・タスク完了・複数回のフック実行マーカーをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/guards.test.ts",
-          "contains": "[REQ-198] run の前",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "contains": "run の前からあるフックは",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     },
@@ -5692,51 +5727,24 @@
     },
     {
       "id": "SCN-87b304fc0911532a0b69",
-      "status": "reviewed",
+      "status": "superseded",
       "scenarioSha256": "186f3ee90b19f128abdd0bc39b06f944aeaab8142192bc1a82bd6bf5186a1889",
-      "reason": "既存テストのassertion行を消す実際のエンジン変更で、終了コード1、コミット不増、未完了タスクと理由をassertする。",
-      "sources": [
-        "REQ-201"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/guards.test.ts",
-          "contains": "[REQ-201] 既存のテスト",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
-        }
-      ]
+      "replacement": "SCN-83f9b26580280ca6219a",
+      "reason": "assertionの数え方からimportとコメントを除く後続の差分仕様へ置き換えた。置換先の条件と現在の試験を今回読み直した。"
     },
     {
       "id": "SCN-48f6a4fd26b21b19b555",
-      "status": "reviewed",
+      "status": "superseded",
       "scenarioSha256": "d5b450ea94916b8a316dfb1bb672519d7d3eb7cce0fec2c0ab8de94df32cbd31",
-      "reason": "実際のエンジンがexpect(true).toBe(true)へ変えたときに、理由とファイルを表示し、コミットしないことをassertする。",
-      "sources": [
-        "REQ-201"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/guards.test.ts",
-          "contains": "[REQ-201] 必ず通る検査",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
-        }
-      ]
+      "replacement": "SCN-14aafad9db2f8528741e",
+      "reason": "assertionの数え方からimportとコメントを除く後続の差分仕様へ置き換えた。置換先の条件と現在の試験を今回読み直した。"
     },
     {
       "id": "SCN-f7b1249c3270b37a9782",
-      "status": "reviewed",
+      "status": "superseded",
       "scenarioSha256": "c36aae93f2dc63145ec94f071f38365a44a27c2792f673f37825590448fcd895",
-      "reason": "assertionを足すだけの実際のエンジン変更を止めず、タスクを完了にすることをassertする。",
-      "sources": [
-        "REQ-201"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/guards.test.ts",
-          "contains": "[REQ-201] テストを足す",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
-        }
-      ]
+      "replacement": "SCN-2385d9f8ede89a87b766",
+      "reason": "assertionの数え方からimportとコメントを除く後続の差分仕様へ置き換えた。置換先の条件と現在の試験を今回読み直した。"
     },
     {
       "id": "SCN-896157c166b6c8ff573a",
@@ -6246,6 +6254,166 @@
           "file": "packages/cli/test/cli.test.ts",
           "contains": "archive を --change に渡すと",
           "sha256": "0f36c01b0c8947a0cfab325b0a3f72149826b3cfcdd7828eb3ce8424b93ef2b2"
+        }
+      ]
+    },
+    {
+      "id": "SCN-27009e62b0fe48e8263a",
+      "status": "reviewed",
+      "scenarioSha256": "e63a48762cb82186865064c39dd4e6a05f05c8abb4fd88c33898230c0fa42f15",
+      "sources": [
+        "REQ-109"
+      ],
+      "reason": "既存expect(add...)を同値リテラル検査へ置き換え、終了コード1・コミット数不変・書き換え前の行とパス・変更の残存をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "HEAD にあったアサーションを書き換えたら",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-30d245b33bb4ffea73c3",
+      "status": "reviewed",
+      "scenarioSha256": "4796b9b3f7152fcae1d4b114902d31975b1a3a60309867240e63e707b20a7488",
+      "sources": [
+        "REQ-109"
+      ],
+      "reason": "2つのitのうち後者を削除し、終了コード1・コミット数不変・消したit宣言とassertionの表示をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "ファイルの中のテストを消したら",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-1bbdf89f51a91c7bfcae",
+      "status": "reviewed",
+      "scenarioSha256": "87dbd7bbd6fe452c465e24e56b2bab3bafedb003bdc1e8af38235059403c6df0",
+      "sources": [
+        "REQ-109"
+      ],
+      "reason": "同じassertionを保持したまま別describeへ移し、終了コード0・ガード警告なし・該当テストファイルのrunタスクコミットをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "アサーションの行の字下げを変えて別の describe へ移すだけなら",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-8c40080f362b078e241b",
+      "status": "reviewed",
+      "scenarioSha256": "56418a820f2c2f20863daac15c692b3e2d3c8ed5b0a90f097c51ac3d99bc010c",
+      "sources": [
+        "REQ-109"
+      ],
+      "reason": "正規表現の.testだけを変え、終了コード0・ガード警告なし・該当テストファイルのrunタスクコミットをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "テストでない呼び出し（/x/.test(s)）の行を書き換えるだけなら",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-83f9b26580280ca6219a",
+      "status": "reviewed",
+      "scenarioSha256": "6e57f302628d63330fc5d22a6e8c16ae7d09d578aa52a453d4207ef450d1d970",
+      "sources": [
+        "REQ-201"
+      ],
+      "reason": "2つのexpectのうち1行を削除し、終了コード1・コミット数不変・対象パスと検査を減らした理由をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "既存のテストから検査の行を消したら、コミットせずに止まる",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-14aafad9db2f8528741e",
+      "status": "reviewed",
+      "scenarioSha256": "e1b58c2e6f105dc48f7c8484196a6b8c60a64299f1456f66c308d5327d1d3b6d",
+      "sources": [
+        "REQ-201"
+      ],
+      "reason": "expect(add...)をexpect(true).toBe(true)へ変更し、終了コード1・コミット数不変・対象パスと追加した具体的な必ず通る検査の理由をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "必ず通る検査に書き換えたら、コミットせずに止まる",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-2385d9f8ede89a87b766",
+      "status": "reviewed",
+      "scenarioSha256": "b0e5c1f4378e19ee36ff6a8c69f8e4d3d71fd368d073163f07ad073d8f0bde94",
+      "sources": [
+        "REQ-201"
+      ],
+      "reason": "既存2つのexpectを保持して3つ目を追加し、ガード理由なし・タスク完了と該当パスのrunタスクコミットをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "テストを足すだけなら止まらない",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-ec87b34ce52aa57dc136",
+      "status": "reviewed",
+      "scenarioSha256": "b4ae8e4bdbfa8d33ecf1af3f9ef4ac762352e30cb120aa53c9c9197936832b4c",
+      "sources": [
+        "REQ-201"
+      ],
+      "reason": "使わないassertのimportとコメントだけを削除し、検査削減の理由なし・タスク完了・当該テストのrunタスクコミットをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "import とコメントの assert を消しても",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-52be373321d37ec739e7",
+      "status": "reviewed",
+      "scenarioSha256": "f185ed00a38cde634b4823d8c056463c3a2c3056beeb97e2305861c434cea564",
+      "sources": [
+        "REQ-204"
+      ],
+      "reason": "include.path先の除外済みファイルへcore.fsmonitorを追加し、終了コード1・Git設定変更理由・タスク未完了をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "include の先の設定に core.fsmonitor を書いたら",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-304ace63925cbbdc677b",
+      "status": "reviewed",
+      "scenarioSha256": "3d75ec1c1b5c90b5e39d65bbd4f1550db6e848509fde4652632edf34221483dc",
+      "sources": [
+        "REQ-204"
+      ],
+      "reason": "run前から壊れたpre-commitシンボリックリンクを置き、Git設定変更理由なし・タスク完了・runタスクコミットをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "リンク先のないフックがあっても",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
         }
       ]
     }
