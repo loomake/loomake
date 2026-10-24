@@ -34,7 +34,7 @@ async function doctor({ bin = ['pnpm', 'openspec', 'claude', 'gh'], init = true,
   try {
     spawnSync('git', ['init', '-q'], { cwd: root });
     if (init) {
-      writeFileSync(join(root, 'package.json'), JSON.stringify({ packageManager: 'pnpm@9.0.0', devDependencies: { loomake: '*' } }));
+      writeFileSync(join(root, 'package.json'), JSON.stringify({ packageManager: 'pnpm@9.0.0', devDependencies: { loomake: '*' }, scripts: { lint: 'fixture-lint', typecheck: 'fixture-typecheck', test: 'fixture-test' } }));
       await main(['init'], { cwd: root, stdout: () => {}, stderr: () => {} });
       mkdirSync(join(root, 'openspec'));
     }
@@ -118,7 +118,11 @@ describe('診断する項目', () => {
     const r = await doctor({
       bin: ['openspec', 'claude', 'gh'],
       setup: (root) => {
-        for (const n of ['pnpm']) write(root, `node_modules/.bin/${win ? `${n}.cmd` : n}`, '');
+        for (const n of ['pnpm']) {
+          const file = `node_modules/.bin/${win ? `${n}.cmd` : n}`;
+          write(root, file, '');
+          chmodSync(join(root, file), 0o755);
+        }
       },
     });
     expect(r.code).toBe(0);

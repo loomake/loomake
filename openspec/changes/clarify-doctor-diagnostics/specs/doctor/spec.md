@@ -51,3 +51,18 @@ Source: REQ-187
 #### Scenario: Gitの設定が不正
 - **WHEN** Git操作が設定エラーなどで通常の判定を返せない
 - **THEN** 除外状態を断定せず、Git状態を確認するよう案内する
+
+## MODIFIED Requirements
+
+### Requirement: 導入状態の診断
+`loomake doctor` は、プロジェクトの導入状態を項目ごとに調べ、合格・注意・問題のどれかを表示する SHALL。注意と問題には、直し方を日本語で表示する SHALL。問題が 1 つでもあれば終了コード 1、なければ 0 を返す SHALL。doctor はファイルを変更せず、品質コマンドも実行せず、ネットワークに接続しない MUST。
+
+Source: REQ-134
+
+#### Scenario: すべて整っている
+- **WHEN** initを実行し、gitのリポジトリで、品質コマンドの実行ファイルと対象scriptがあり、openspec・claude・ghのコマンドもあるプロジェクトでdoctorを実行する
+- **THEN** すべての項目が合格と表示され、終了コードは0で、診断した範囲と未確認の内容も表示する
+
+#### Scenario: 何も変更しない
+- **WHEN** doctorを実行する
+- **THEN** プロジェクトのファイルは追加も変更もされない
