@@ -654,27 +654,92 @@
     },
     {
       "id": "SCN-beb21adb67ca645626eb",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "cd9a018dedc02d27c74c8a650a206c86bef29f13547ca7be405fd4210790548b",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "null・空オブジェクト・verify=null・不正日時の各証拠を与え、TypeErrorによる試験失敗ではなく、CLIの終了コード2と対象ファイル・証拠を示す日本語が返ることをassertする。",
+      "sources": [
+        "REQ-142"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "[REQ-142] null は",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+        },
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "[REQ-142] 空のオブジェクト は",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+        },
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "[REQ-142] 検証結果なし は",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+        },
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "[REQ-142] 不正な記録日時 は",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+        }
+      ]
     },
     {
       "id": "SCN-065c1700b0b29aff69a9",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "95def6f924b80e39f6ab6743d190f61bfa6b3b21c5d95776ee7cc24f2f8455cc",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "証拠のchangeとverify.changeをそれぞれ別のchangeへ変え、CLIの終了コード2と対象証拠ファイルを示すことをassertする。",
+      "sources": [
+        "REQ-142"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "[REQ-142] 別のchange は",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+        },
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "[REQ-142] 別の検証change は",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+        }
+      ]
     },
     {
       "id": "SCN-04aedf583b9a13d00732",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "4e39f85b5859a6f2c0e338bd1280c5d4dd09c8a5293b9ab7592de7551c3716a1",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "documentsのcontentだけを変えてsha256を変えない証拠を与え、CLIの終了コード2と対象ファイルを示すことをassertする。",
+      "sources": [
+        "REQ-142"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "[REQ-142] 文書の内容の不一致 は",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+        }
+      ]
     },
     {
       "id": "SCN-f2a2529eea6fe93baea2",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "d2c4dd2fe216c3a293133215920ef9fc520381d4a736bc79d8b8f51315f3f2f9",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "documentsを持たない証拠が読め、仕様との対応は未確認という行とMarkdownの注意を保持することをassertする。",
+      "sources": [
+        "REQ-142"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "[REQ-142] documentsのない既存の証拠は読み続けられる",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+        },
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "[REQ-130] 文書のない古い形式の記録では",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+        }
+      ]
     },
     {
       "id": "SCN-ed1b549d1ab8b0382764",
@@ -3925,96 +3990,101 @@
     {
       "id": "SCN-d305dcdef92686e490ed",
       "status": "reviewed",
-      "scenarioSha256": "6d220a7611a431653367f65df527245475399fe6924acb5446717c60ada159fb",
-      "reason": "同等のREQ-012の入力で、出典・状態・要約・Requirement・試験・結果の行全体とMarkdownの表を比較する。",
+      "scenarioSha256": "439e2b7066d1ca84d46f1b4bbb0fa012698496f2e2c9ec2218faa0319aab7b41",
+      "reason": "仕様例と同じREQ-070・表の出力・tests/report.test.tsを持つ文書と証拠を作り、出典・状態・要約・Requirement名・テスト・合格の全列を構造化行とMarkdown行で完全一致でassertする。",
       "sources": [
         "REQ-070"
       ],
       "tests": [
         {
           "file": "packages/trace/test/report.test.ts",
-          "contains": "要件ごとに、出典・状態・対応する Requirement",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "contains": "仕様例のREQ-070とtests/report.test.tsの全列",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
     {
       "id": "SCN-21a1dc64ae669c5e17a9",
       "status": "reviewed",
-      "scenarioSha256": "0c82262a877a06c551f424e24ab91cfab17318d18569c34d63fcd6c0406b2337",
-      "reason": "古い不合格と新しい合格を異なる試験一覧で保存し、新しいSHA・全体結果・試験一覧・要件の結果・注意一覧をassertする。",
+      "scenarioSha256": "901b6124fe59f313d7a7a777c548c11db0b40ab83fa6741052a59bcb44d5a957",
+      "reason": "日時の異なる2証拠を与え、新しいSHAと合格結果、tests/latest.test.tsが選ばれ、古い不合格や空のcoverageが混ざらないことをassertする。",
       "sources": [
         "REQ-070"
       ],
       "tests": [
         {
           "file": "packages/trace/test/report.test.ts",
-          "contains": "新しい記録からテストファイルと結果を取り、古い記録の値を混ぜない",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "contains": "新しい記録からテストファイルと結果を取り",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+        },
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "記録した日時がいちばん新しい記録を使う",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
     {
       "id": "SCN-6a31ad676ae78c172c55",
       "status": "reviewed",
-      "scenarioSha256": "10309427aacefba1cdf1134a4840df1378051dd2038bc0a9520f1c21143cc349",
-      "reason": "archiveだけに置いたchangeと文書の証拠でレポートが作られ、そのRequirementが行に現れることをassertする。",
+      "scenarioSha256": "7ebb595f6652b316d531fe4122b5585b1ff516c76733f8ac1d9a0e0e0fb03fc3",
+      "reason": "進行中ディレクトリを作らずarchive/2026-10-23-c1だけを作り、保存した文書の表の出力というRequirement名がレポート行に出ることをassertする。",
       "sources": [
         "REQ-070"
       ],
       "tests": [
         {
           "file": "packages/trace/test/report.test.ts",
-          "contains": "archive した change でも、archive の trace.md と差分仕様から",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "contains": "archive した change でも",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
     {
       "id": "SCN-da7cda8ed9988b629804",
       "status": "reviewed",
-      "scenarioSha256": "0e76e105b12d1291a99fc128df5b9f13be31778e0e98923a8da58d05f82e3245",
-      "reason": "証拠のない入力で終了コード1と対象changeに対するtrace recordの案内をassertする。",
+      "scenarioSha256": "d60b59d9dfe7c22970be0156f51fd65aab0f0b5a3d9d4fe6e1c8d03c5310d6ed",
+      "reason": "証拠を空にした入力でrunReportの終了コード1と、先に実行するloomake trace record --change c1の案内をassertする。",
       "sources": [
         "REQ-070"
       ],
       "tests": [
         {
           "file": "packages/trace/test/report.test.ts",
-          "contains": "証拠の記録がなければ、trace record を先に実行するよう",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "contains": "証拠の記録がなければ",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
     {
       "id": "SCN-9f665713c21c7312691b",
       "status": "reviewed",
-      "scenarioSha256": "0dd802a34cd610811b7173b36222f04a34d0f8662bb34a6227439d6dca0dcac3",
-      "reason": "CLIへ親参照のIDを渡し、終了コード2とパス区切りの日本語の理由をassertする。",
+      "scenarioSha256": "6db380f0d699ab43d1d9ab4d486e5ff5b65cdfaef0b571b347e405aff52e7dfd",
+      "reason": "CLIへ../c1を渡し、終了コード2とパスの区切りを含めないよう求める日本語をassertする。",
       "sources": [
         "REQ-070"
       ],
       "tests": [
         {
           "file": "packages/trace/test/report.test.ts",
-          "contains": "change-id にパスの区切りを含めると、日本語で表示して",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "contains": "change-id にパスの区切りを含めると",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
     {
       "id": "SCN-990042ab06d5cec624b1",
       "status": "reviewed",
-      "scenarioSha256": "d9c8858579356a2b795807ef8d9876197c9422ead77859fc08c73e32f183e226",
-      "reason": "証拠作成後のtrace要約を変更し、行は元の要約・合格を保ち、changedDocumentsにtraceを含み、新しい要約を出さないことをassertする。",
+      "scenarioSha256": "e808c857187708d4f2c3c7856a00238f33afa9a8293fdc363cb1be50ae6c3603",
+      "reason": "REQ-070の保存した要約を持つ証拠を用意した後で作業ツリーの要約を変更し、全列が元の行のまま、changedDocumentsがtrace.mdだけ、変更後の要約がMarkdownに出ないことをassertする。",
       "sources": [
         "REQ-070"
       ],
       "tests": [
         {
           "file": "packages/trace/test/report.test.ts",
-          "contains": "記録のあとで要約を変えても、表には記録したときの要約が載り",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "contains": "仕様例のREQ-070とtests/report.test.tsの全列",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
@@ -4022,15 +4092,15 @@
       "id": "SCN-595bc3a27f4cb872e4ab",
       "status": "reviewed",
       "scenarioSha256": "0378b179e0895d889cefb1cea4fbe231a0c81bf9eecab18759fd5c974ae8550e",
-      "reason": "範囲外と既存仕様で充足を含む台帳で、それぞれのID・状態・結果nullと範囲外のMarkdown行をassertする。",
+      "reason": "REQ-075を範囲外とした台帳で、行のID・状態・結果nullとMarkdownの範囲外の行をassertする。",
       "sources": [
         "REQ-071"
       ],
       "tests": [
         {
           "file": "packages/trace/test/report.test.ts",
-          "contains": "範囲外と既存仕様で充足の要件も、状態を付けて表に含める",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "contains": "範囲外と既存仕様で充足の要件も",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
@@ -4038,47 +4108,47 @@
       "id": "SCN-5fbdd67cf1f0d15de3b6",
       "status": "reviewed",
       "scenarioSha256": "4d6106bf57ed48d70fbd08e676d21c25cee3e98b1faab3d40dfdb562dcc3584e",
-      "reason": "既存仕様で充足の要件のIDと状態が行に残り、反映済の合格と区別した結果nullになることを比較する。",
+      "reason": "REQ-090を既存仕様で充足とした台帳で、構造化レポートの行にID・状態が残り、反映済の合格と区別した結果nullになることをassertする。",
       "sources": [
         "REQ-071"
       ],
       "tests": [
         {
           "file": "packages/trace/test/report.test.ts",
-          "contains": "範囲外と既存仕様で充足の要件も、状態を付けて表に含める",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "contains": "範囲外と既存仕様で充足の要件も",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
     {
       "id": "SCN-a03a7b3ae0d44a6d41c6",
       "status": "reviewed",
-      "scenarioSha256": "0558c8a0a1e2a5127e250d2051efd480391a985f053954e6fdd732960a4d96d5",
-      "reason": "記録した日時・検査SHA・コミット日時・合格を含む証拠情報のMarkdown行を比較する。",
+      "scenarioSha256": "dc3ae1918ca3b94dcf8047f848cbe133f2f6cc04bab5bc182ffe63724adf4b63",
+      "reason": "Markdownの使った証拠の行に、recordedAt・40桁のSHA・committedAtと合格が並ぶことをassertする。",
       "sources": [
         "REQ-073"
       ],
       "tests": [
         {
           "file": "packages/trace/test/report.test.ts",
-          "contains": "使った記録の、記録した日時・SHA・コミットの日時を載せる",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "contains": "使った記録の、記録した日時",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
     {
       "id": "SCN-510086866140fa0817eb",
       "status": "reviewed",
-      "scenarioSha256": "5e63595a855895459c9087145c10f748daacd9c353b8fae1bf67678cef45e36d",
-      "reason": "壊れたJSONを追加してCLIで実行し、終了コード2と証拠のパス・日本語の理由、スタック非表示をassertする。",
+      "scenarioSha256": "62ecd37ad9ec68699592dcc39a695f8cd899a1acf009f0a98e0b6c10d61264f7",
+      "reason": "壊れたJSONファイルを証拠ディレクトリへ追加し、CLIの終了コード2・対象パスを含む日本語と、スタックトレースの不在をassertする。",
       "sources": [
         "REQ-073"
       ],
       "tests": [
         {
           "file": "packages/trace/test/report.test.ts",
-          "contains": "JSON として壊れた記録があれば、そのファイルを日本語で示し",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "contains": "JSON として壊れた記録があれば",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
@@ -4086,7 +4156,7 @@
       "id": "SCN-3d6b99e302f285ab4982",
       "status": "reviewed",
       "scenarioSha256": "37d2f197ed3ed2f579bf73b217274eeb956dc3b3f70a0a0b8669d084138473de",
-      "reason": "CLIのmd指定で終了コード0と日本語の見出しを確認し、同じ出力経路のMarkdownの表の実際の行もassertする。",
+      "reason": "CLIのmd指定で終了コード0と検収レポートの見出しをassertし、同じMarkdown出力経路で仕様例の全列を持つ実際の表の行もassertする。",
       "sources": [
         "REQ-074"
       ],
@@ -4094,12 +4164,12 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "--format md で Markdown を出し",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         },
         {
           "file": "packages/trace/test/report.test.ts",
-          "contains": "要件ごとに、出典・状態・対応する Requirement",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "contains": "仕様例のREQ-070とtests/report.test.tsの全列",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
@@ -4107,7 +4177,7 @@
       "id": "SCN-5709e54feab84da2ae6d",
       "status": "reviewed",
       "scenarioSha256": "6043b3f9e8878e75ad231a6d8a0e8cd07e43e01e39601b2666a6c421fe5fcc9b",
-      "reason": "CLIのjson指定のstdoutを解析し、rowsの要件IDとevidenceのSHAをassertする。",
+      "reason": "CLIのjson指定の標準出力をJSONとして解析し、rowsの要件IDとevidenceのSHAをassertする。",
       "sources": [
         "REQ-074"
       ],
@@ -4115,7 +4185,7 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "--format json で、要件ごとの行と使った証拠を含む JSON",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
@@ -4123,7 +4193,7 @@
       "id": "SCN-60ac1705ea8d9d739700",
       "status": "reviewed",
       "scenarioSha256": "8870589ef74f7edadaee0233380308dce3fc934d1e2535e32daaec47baa88db3",
-      "reason": "CLIのhtml指定で終了コード2と次の版の日本語の案内をassertする。",
+      "reason": "CLIのhtml指定で終了コード2とHTMLは次の版で対応するという日本語の案内をassertする。",
       "sources": [
         "REQ-074"
       ],
@@ -4131,7 +4201,7 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "--format html は、次の版で対応する旨を出して",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
@@ -4139,7 +4209,7 @@
       "id": "SCN-0553ac34f59a1af76570",
       "status": "reviewed",
       "scenarioSha256": "e4940aed450c84381be49d42776cb55ba5e178a37bca923ea7a14d5fc7096be8",
-      "reason": "1.1秒空けて同じ入力のMarkdown全体が一致し、要件IDがソートされることもassertする。",
+      "reason": "同じ入力で1.1秒空けて2回出力したMarkdown全体が一致し、要件の行が番号順に整列することをassertする。",
       "sources": [
         "REQ-085"
       ],
@@ -4147,7 +4217,7 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "入力を変えずに 2 回出力すると、1 文字も違わない",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
@@ -4155,15 +4225,15 @@
       "id": "SCN-5475fccf91630747c15e",
       "status": "reviewed",
       "scenarioSha256": "ccaddd1598270a491b5ba308e89b9a48eddb93d2671eb3444f46d9813dc24589",
+      "reason": "実際の配布物を準備し、無制限の対照ではECONNREFUSEDで不合格、seccompでsocket生成をEPERMにした実行では4チェックが成功することをassertする。runtime-compatibilityの中身も読み、通信拒否下でtrace reportの実CLIが25行すべて合格となることを確認した。現在のNode24・Linuxでの結果であり、下限Nodeや他OSの成功とは扱わない。",
       "sources": [
         "REQ-084"
       ],
-      "reason": "Linux seccompの通信拒否を継承したNode20で、対照のsocketがEPERMになることを確認した。同じ制限下でtrace recordの保存とtrace reportのJSON・全25行の合格をassertする。実行ファイルと入力ハッシュはruntime20-results.jsonに保存した。",
       "tests": [
         {
-          "file": "scripts/runtime-compatibility.mjs",
-          "contains": "通信拒否の下でtrace recordが保存されtrace reportの全25行を出力する",
-          "sha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
+          "file": "tests/package-artifacts.test.ts",
+          "contains": "[REQ-084] Linuxで通信を拒否して配布物を使う",
+          "sha256": "a3907250e116ce3846509dda89ba0a99846fce40dcce890ce27bab37e746e083"
         }
       ]
     },
@@ -4171,7 +4241,7 @@
       "id": "SCN-1038977605831c5c0ed5",
       "status": "reviewed",
       "scenarioSha256": "6f7ed0d1b8393e23688f11c5d6accd7abd55b110f21fe7e25926a18c639d708a",
-      "reason": "全7見出しと表の列名の日本語を実際のMarkdownでassertする。",
+      "reason": "Markdownの主要な日本語の見出し7つと、出典・状態・要約・最後の検査結果などを含む表の列名の行をassertする。",
       "sources": [
         "REQ-088"
       ],
@@ -4179,7 +4249,7 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "レポートの見出しと表の列名は日本語",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
@@ -4203,39 +4273,39 @@
       "id": "SCN-3d7455f45bf52d2cfa6a",
       "status": "reviewed",
       "scenarioSha256": "921a7ab27f0a2c1fdf606ebac50e3eba19ada2aaceedef225089ddeb887cca2a",
-      "reason": "reportを含む同じtraceパッケージのdependenciesがcoreとkitだけであることを比較する。",
+      "reason": "trace recordとreportが属する同じ@loomake/traceのpackage.jsonを読み、dependenciesのキーがcoreとkitの2つに完全一致することをassertする。",
       "sources": [
         "REQ-083"
       ],
       "tests": [
         {
           "file": "packages/trace/test/record.test.ts",
-          "contains": "@loomake/trace の dependencies は",
-          "sha256": "c2bb3939cea0fdf9786b20c2a4fd2dfa500c1904c71183d648fc7c2b626379d4"
+          "contains": "[REQ-083] @loomake/trace の dependencies",
+          "sha256": "f213a2bae90142f668480de40dd07063b8614513d2a49a3e8669bbe80dd86901"
         }
       ]
     },
     {
       "id": "SCN-7449d308e912d8d7c67f",
       "status": "reviewed",
-      "scenarioSha256": "7787f694e95c519655e0f1a01b68fd2ebb6966295c8b758622b589dbd153240c",
-      "reason": "合格試験のない要件を追加し、注意のID配列と、注意が要件表より先に出ることをassertする。",
+      "scenarioSha256": "f2a78cb07d315f0f45d76fc2965337ecb6dbf048638216dae063aa6626acf363",
+      "reason": "REQ-070に合格したテストがない証拠でnoPassingTestsがREQ-070だけとなり、Markdownの注意が要件表より前に出ることをassertする。",
       "sources": [
         "REQ-072"
       ],
       "tests": [
         {
           "file": "packages/trace/test/report.test.ts",
-          "contains": "反映済で合格したテストのない要件を、冒頭の一覧に挙げる",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "contains": "反映済で合格したテストのない要件を",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
     {
       "id": "SCN-34554a55080e94b1652f",
       "status": "reviewed",
-      "scenarioSha256": "ca16bef62608521914a361d8bd0b3cf9fe4d1ad3ae17e39cf2109cea65490edb",
-      "reason": "確認待ちREQ-072を追加し、注意のpending配列とMarkdownの案内をassertする。",
+      "scenarioSha256": "83d9308f840530b082173b2f5852a47aa91eb1dfac61988adde78f72507161b6",
+      "reason": "REQ-072を確認待ちとした台帳でpendingの配列とMarkdownの確認待ちの案内をassertする。",
       "sources": [
         "REQ-072"
       ],
@@ -4243,15 +4313,15 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "確認待ちの要件を、冒頭の一覧に挙げる",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
     {
       "id": "SCN-b6da1328873c0bf7f1bb",
       "status": "reviewed",
-      "scenarioSha256": "d4b06f3d786a464015072fad73f30ec7feb9b8b6068ac1e3d894820b06804eb1",
-      "reason": "通常の合格入力で要注意なしの文言をassertする。",
+      "scenarioSha256": "3a459fdf5949c92e0d509afd02fc26a59a0ee77c44069d2df6b0e8c124ca62dd",
+      "reason": "反映済に合格したテストがあり確認待ちがない正常な証拠で、要注意の要件はありませんと表示することをassertする。",
       "sources": [
         "REQ-072"
       ],
@@ -4259,7 +4329,7 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "どちらもなければ、要注意の要件がないと書く",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
@@ -4267,7 +4337,7 @@
       "id": "SCN-db7d38fb9c4206f9fb81",
       "status": "reviewed",
       "scenarioSha256": "8dbc6bd541bcad383ec072d1d78b183233353e329486bdc03b462d929ad4f72d",
-      "reason": "回答済みの合意を与え、questionsの全項目とMarkdownの行を比較する。",
+      "reason": "回答済みのQ-01を与え、ID・質問・回答・顧客PM・回答日を構造化レポートとMarkdownの行で完全一致でassertする。",
       "sources": [
         "REQ-077"
       ],
@@ -4275,7 +4345,7 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "確認事項ごとに、ID・質問・回答・回答者・回答日を並べる",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
@@ -4283,7 +4353,7 @@
       "id": "SCN-0f5e9f8c7a3198d586aa",
       "status": "reviewed",
       "scenarioSha256": "d6c7d75817c39740f5b601b9c91f061772456009538c067aa1563a8672fd86be",
-      "reason": "承認済みの仮定を与え、assumptionsの承認・承認者・日付とMarkdownの行を比較する。",
+      "reason": "承認済みのA-01を与え、ID・内容・承認・開発リーダー・承認日を構造化レポートとMarkdownの行で完全一致でassertする。",
       "sources": [
         "REQ-078"
       ],
@@ -4291,7 +4361,7 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "仮定ごとに、ID・内容・承認者・承認日を並べる",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
@@ -4299,7 +4369,7 @@
       "id": "SCN-6147447e73941b8eb580",
       "status": "reviewed",
       "scenarioSha256": "99a61abf8a2620a0c5a2a4d17658ca6649dee1e5e222cb827b99c202c6b4fb68",
-      "reason": "回答者のみが空の質問で、warningsがその1件だけでMarkdownにも出ることをassertする。",
+      "reason": "回答者だけを空にしたQ-02で、警告がQ-02の回答者不足1件だけとなり、Markdownにも出ることをassertする。",
       "sources": [
         "REQ-079"
       ],
@@ -4307,7 +4377,7 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "回答はあるが回答者が空の確認事項を警告する",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
@@ -4315,7 +4385,7 @@
       "id": "SCN-c2012903ec3e0e84112e",
       "status": "reviewed",
       "scenarioSha256": "72a762cce822d89dc48ee39790899e2a29c7494cabd9064eb3377db83d9cab0d",
-      "reason": "合意の列のない旧入力で、回答者・回答日・承認者・承認日の4警告を比較する。",
+      "reason": "旧形式の列がないtrace.mdに回答と承認を持つ行を置き、回答者・回答日・承認者・承認日の4警告を完全一致でassertする。",
       "sources": [
         "REQ-079"
       ],
@@ -4323,7 +4393,7 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "列のない古い trace.md でもレポートを作り",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
@@ -4331,7 +4401,7 @@
       "id": "SCN-34e70e3d8a4dbf5cc45f",
       "status": "reviewed",
       "scenarioSha256": "78b2d66976fc2c67f50bf8f8f34746b8b65ab9971e4216ef643376499c80835a",
-      "reason": "回答と承認自体が空の入力でwarningsが空となることをassertする。",
+      "reason": "回答が空のQ-03と承認が空のA-02を与え、合意の欄の警告が空であることをassertする。",
       "sources": [
         "REQ-079"
       ],
@@ -4339,7 +4409,7 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "回答が空の確認事項と承認が空の仮定は、警告の対象にしない",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
@@ -4347,7 +4417,7 @@
       "id": "SCN-57a5bf1abb12246babb3",
       "status": "reviewed",
       "scenarioSha256": "7dcaf1bed051e55aa95ba9bd3fe132fc9350da2356307a1c05e53af9191c5f91",
-      "reason": "500要件の文書とcoverageを用意し、Markdown生成が終了コード0で5秒未満であることをassertする。現在のLinuxホストの結果である。",
+      "reason": "500要件の仕様・台帳・coverageを用意し、runReportのMarkdown出力が終了コード0かつ準備を除いて5秒未満になることをassertする。別CLIプロセスの起動はこの試験に含まれない。",
       "sources": [
         "REQ-086"
       ],
@@ -4355,7 +4425,7 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "要件 500 件の change のレポートを 5 秒以内に出す",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
@@ -4363,7 +4433,7 @@
       "id": "SCN-4022dac40f2e371a1b4b",
       "status": "reviewed",
       "scenarioSha256": "ad592141c89101a77ffc8a9a4a7aa89bcd8509ecc83adfae5f10a296b1bde895",
-      "reason": "証拠作成後に仕様へ改行を加え、変更文書の配列とMarkdownの注意をassertする。",
+      "reason": "証拠を保存した後でspecs/x/spec.mdへ改行を追加し、changedDocumentsとMarkdownの要注意にそのパスだけが出ることをassertする。",
       "sources": [
         "REQ-129"
       ],
@@ -4371,7 +4441,7 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "記録のあとで差分仕様を変えたら、冒頭の",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
@@ -4379,7 +4449,7 @@
       "id": "SCN-24f94d3138eea3e6a811",
       "status": "reviewed",
       "scenarioSha256": "d9eea73d3b0f47b038834f80a2071af2957d99ff61cd455ff621617536d0cf40",
-      "reason": "入力文書を変えず、changedDocumentsが空で要注意なしとなることをassertする。",
+      "reason": "保存後の文書を変えない入力でchangedDocumentsが空となり、要注意の要件がないことを表示することをassertする。",
       "sources": [
         "REQ-129"
       ],
@@ -4387,7 +4457,7 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "文書を変えていなければ、変わった文書は挙がらない",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
@@ -4395,7 +4465,7 @@
       "id": "SCN-ec9f2a7f5998adc15d70",
       "status": "reviewed",
       "scenarioSha256": "78619f351938204a4e70539436116241b6e20ad16aee563eeb491027d580c905",
-      "reason": "documentsなしの証拠で、documents false、行の合格表示が仕様との対応未確認となり、Markdownにも説明が出ることをassertする。",
+      "reason": "documentsのない既存証拠を読み、文書なしの印、行の合格は仕様との対応未確認という表示、Markdownの注意をassertする。",
       "sources": [
         "REQ-130"
       ],
@@ -4403,7 +4473,7 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "文書のない古い形式の記録では、合格したテストのある要件を",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
@@ -4411,7 +4481,7 @@
       "id": "SCN-fc8d3b636e2393b5bd4d",
       "status": "reviewed",
       "scenarioSha256": "6bd9ef4d5450440c2257743a745cba84fed19a0aeaafbd27437cbcf925b86ac5",
-      "reason": "検査の範囲の説明全文と、要件表より前に出る位置をassertする。",
+      "reason": "仕様で定めた説明文の全文と、Markdownでその説明が実際に現れ、要件表より前に置かれることをassertする。",
       "sources": [
         "REQ-131"
       ],
@@ -4419,7 +4489,7 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "要件ごとの検収の表より前に、検査の範囲の説明を載せる",
-          "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     },
@@ -5790,6 +5860,70 @@
           "file": "packages/runner/test/run.test.ts",
           "contains": "[REQ-124] 完了ゲートの品質コマンドの途中で中断されたら",
           "sha256": "cfe8546b1a4b43e21e9307933e23f4500039b7db3d03a1f1372de2f0e5abab80"
+        }
+      ]
+    },
+    {
+      "id": "SCN-80742524d1b0274914dc",
+      "status": "reviewed",
+      "scenarioSha256": "265473372b59e88e16c6623292c5f08892fc10663a8b356310027a708de81741",
+      "reason": "schemaVersion=2の証拠を与え、終了コード2・対象ファイル・読めるのは1という日本語をassertする。",
+      "sources": [
+        "REQ-073"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "schemaVersion が読める版でない記録があれば",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+        }
+      ]
+    },
+    {
+      "id": "SCN-ae975a39c3ac93759c01",
+      "status": "reviewed",
+      "scenarioSha256": "74fc1534078efa0fdca500cbeb46e211c748c131c7ed73fd0230aed6c3220088",
+      "reason": "verify.resultsのない証拠を与え、終了コード2・対象パス・verify.resultsの形が違うという日本語とスタックトレースの不在をassertする。",
+      "sources": [
+        "REQ-073"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "verify.results のない記録があれば",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+        }
+      ]
+    },
+    {
+      "id": "SCN-1a6244a6046fd4972f34",
+      "status": "reviewed",
+      "scenarioSha256": "808ecb4919394fed7e65673dec5cc35b1697a7c48f28439cb63f629c1bea9c48",
+      "reason": "証拠のchangeをc2へ変え、c1のCLIでは終了コード2と、対象パス・別change名を含む日本語が出ることをassertする。",
+      "sources": [
+        "REQ-073"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "change がほかの change の記録があれば",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+        }
+      ]
+    },
+    {
+      "id": "SCN-891b8690239995656268",
+      "status": "reviewed",
+      "scenarioSha256": "570f2d0867ead2052dd93c249a79d28bdb934089187a2e5fb9c163caa5d5bec3",
+      "reason": "全要件のcoverageはあるがlint不合格の証拠を与え、failedChecksがcommand: lintだけ、注意が要件表より前、要注意なしの表示がないことをassertする。",
+      "sources": [
+        "REQ-072"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/report.test.ts",
+          "contains": "証拠の検査が不合格なら、冒頭に不合格の検査を挙げ",
+          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
         }
       ]
     }
