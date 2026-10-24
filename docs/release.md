@@ -85,7 +85,7 @@ npm では、一度使った版の番号は、unpublish したあとも二度と
 - **型の解決を確かめる**：`@arethetypeswrong/cli` は道具のエラーで実行できず、型の解決はまだ確かめていない
 - **`@loomake/source` 条件**：各パッケージの `exports` にあるこの条件は、tarball に入っていない `./src/index.ts` を指す。利用者がこの条件を有効にしなければ影響はないが、公開する package.json から外す方法を検討する
 - **ビルド前に `dist/` を消す**：ソースを消したとき、古い `dist/` のファイルが手元のビルドに残る。release ワークフローはまっさらな状態でビルドするので、公開物には影響しない
-- **`SECURITY.md`**：脆弱性の報告先を決めておく
+- **非公開の脆弱性の報告を有効にする**：リポジトリを public にしたら、Settings の「Code security」で private vulnerability reporting を有効にする。[SECURITY.md](../SECURITY.md) は、この方法で報告を受け付けると書いている
 - **古いブランチの片づけ**：古い main がもとのブランチ `prepare-npm-publish` は、`prepare-npm-publish-2` に置き換えた。ほかのセッションのワークツリーで使われているので、そのセッションの作業が終わってから消す
 - **任意**：GitHub の Releases のページを作る。CHANGELOG はパッケージに入るが、Releases のページはできない。`changesets/action` を使うか、タグから Release を作るステップを足す
 - **任意**：`declarationMap` と `sourceMap` を出すと、利用者が型定義から元のコードへ飛べる
