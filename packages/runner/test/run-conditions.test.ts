@@ -6,7 +6,7 @@ import { CHANGE, makeRepo, type Repo } from './helpers.js';
 
 async function run(repo: Repo) {
   const output: string[] = [];
-  const code = await runRun({ root: repo.root, changeId: CHANGE, env: repo.env, interactive: false, stdout: (text) => output.push(text), fileExists: () => false });
+  const code = await runRun({ root: repo.root, changeId: CHANGE, env: repo.env, interactive: false, confirm: async () => false, stdout: (text) => output.push(text), fileExists: () => false });
   return { code, output: output.join('\n') };
 }
 
@@ -31,8 +31,9 @@ describe('開始拒否とカスタムの仕様ディレクトリ', () => {
       renameSync(join(repo.root, 'openspec'), join(repo.root, 'spec'));
       const config = JSON.parse(readFileSync(join(repo.root, 'loomake.config.json'), 'utf8'));
       repo.write('loomake.config.json', JSON.stringify({ ...config, openspecDir: 'spec' }));
-      const path = `spec/changes/${CHANGE}/specs/x/spec.md`;
-      const original = readFileSync(join(repo.root, path), 'utf8');
+      const path = 'spec/specs/x/spec.md';
+      const original = readFileSync(join(repo.root, `spec/changes/${CHANGE}/specs/x/spec.md`), 'utf8');
+      repo.write(path, original);
       repo.git('add', '-A');
       repo.git('commit', '-qm', 'カスタムの仕様ディレクトリ');
       const before = repo.git('rev-parse', 'HEAD');

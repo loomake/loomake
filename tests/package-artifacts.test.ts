@@ -36,4 +36,16 @@ describe('実際に配るパッケージ', () => {
     expect(broken.status).not.toBe(0);
     expect(broken.stderr).toContain('AGENTS.md');
   }, 60_000);
+
+  it('[REQ-124] POSIXの配布物を実際のSIGINTで中断する。Windowsでは検証対象外を明示する', () => {
+    const checked = spawnSync(process.execPath, ['scripts/run-sigint-smoke.mjs', target], { cwd: root, encoding: 'utf8', timeout: 30000 });
+    if (process.platform === 'win32') {
+      expect(checked.status).toBe(1);
+      expect(checked.stderr).toContain('この検証はPOSIXのSIGINTを対象にしています');
+    } else {
+      expect(checked.status, checked.stdout + checked.stderr).toBe(0);
+      const result = JSON.parse(readFileSync(join(target, 'sigint-results/results.json'), 'utf8'));
+      expect(result).toMatchObject({ requirement: 'REQ-124', ok: true, platform: process.platform, signal: 'SIGINT', exit: { code: 1, signal: null }, summary: { status: 'interrupted', doneTasks: ['1.1 最初の変更'], remainingTasks: ['1.2 途中の変更', '2.1 品質を確認する'] }, partial: 'unfinished\n' });
+    }
+  }, 35000);
 });
