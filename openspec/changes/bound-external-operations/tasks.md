@@ -5,5 +5,5 @@
 
 ## 2. 統合検証
 
-- [ ] 2.1 資源・復旧・互換性・TDDとchangesetを記録する
+- [x] 2.1 資源・復旧・互換性・TDDとchangesetを記録する
 - [ ] 2.2 `pnpm -s verify --change bound-external-operations --done` を通す <!-- loomake:gate=done -->

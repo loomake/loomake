@@ -27,6 +27,8 @@ CLIと利用者向けのメッセージ・規約は日本語を対象とする�
 
 実行記録は既定で1回128MiB、履歴全体512MiBまでとする。既存履歴が多い環境では、開始前に止まる場合がある。設定と整理の方法は[resources.md](resources.md)を参照する。通常のsummary.jsonの契約は維持する。summaryを予約容量へ保存できない場合に使うstop.jsonは、schemaVersion 1・kind run-stopの別形式であり、summaryとして解釈しない。
 
+Git・gh・エンジンの存在確認・OpenSpec検証には1操作30秒の上限を追加した。以前は終了を待ち続けていた遅い操作も停止する。runでは準備と証拠・PR公開も全体の残り時間に含める。通常の非ゼロ終了とCLI不存在の判定、JSONの版は維持する。期限を指定しない単独verifyの品質コマンドには上限を追加しない。変更の範囲は[resources.md](resources.md)、遠隔操作の結果が不明な場合は[run-recovery.md](run-recovery.md)を参照する。
+
 ## 変更を公開する判断
 
 利用者に影響する変更にはchangesetと移行の説明を付ける。現在の0.xでは、破壊的変更はminorの変更として扱い、単にpatchへ含めない。JSONの互換性を壊す場合はschemaVersionの変更と旧形式への対応範囲を明記する。

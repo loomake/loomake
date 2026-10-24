@@ -67,8 +67,18 @@ node openspec/changes/bound-input-resources/benchmark.mjs .loomake/quality/input
 
 結果とソースのハッシュは[results.json](../openspec/changes/bound-input-resources/results.json)に記録する。この測定はCLI全体、ネットワークファイルシステム、別OS、顧客の全規模での性能を示すものではない。
 
+## 外部操作の時間と出力
+
+runはロック取得前から単調増加する実時間で全体の予算を数え、準備、Git、エンジン、OpenSpec検証、品質コマンド、証拠記録、ghへ残り時間を渡す。既定は60分で、`run.timeoutMinutes`を使う。Git・gh・エンジンの存在確認・OpenSpec検証は、1操作30秒と残り時間の短い方で止める。品質コマンドは30秒の操作上限を使わず、従来の合計残り時間を使う。
+
+単独のverifyでもOpenSpec検証は30秒まで、trace recordのGitも1操作30秒までとする。期限を指定しない単独verifyの品質コマンドは、従来どおり期限を設けない。この操作上限を緩めるCLI設定はない。kitの共有予算APIでは、コールバック内の期限をさらに短くできる。別の実行へ状態を漏らさず、ネストで外側の期限を延ばさない。
+
+共通境界を使う操作はstdoutとstderrの合計を64MiBまでに制限する。時間切れ・出力超過・中断は、通常の非ゼロ終了や実行ファイルの不存在と区別する。POSIXでは別グループを作り、停止時にSIGTERMを送り、250ms後にSIGKILLする。親が先に終わった場合も残ったグループを片付ける。Windowsではtaskkillで子孫の停止を試み、taskkill自体は1秒までに制限する。
+
+期限は操作を始めてよいかの判定と監視に使う。停止の猶予、監視役の起動、OSの応答などの時間を含めて、指定した時刻ちょうどに終了する保証ではない。プロセスグループから離脱したプロセスの隔離は実行環境で行う。doctorなど共通境界へ未接続の操作には、この制限を適用しない。
+
 ## 別に管理する資源
 
-エンジンのstdoutとstderrは既定64MiBまでで、run.maxOutputBytesで指定する。runには時間の上限もある。一方、エンジンが直接書くファイル、ファイルシステム全体の容量、Gitとghを含むすべての外部操作の期限、initなど対象外の入力経路は、引き続き改善対象である。
+エンジンのstdoutとstderrは既定64MiBまでで、run.maxOutputBytesで指定する。runには上記の共有期限もある。エンジンが直接書くファイル、ファイルシステム全体の容量、doctorなど未接続の操作、initなど対象外の入力経路は、引き続き改善対象である。
 
 現在の保護範囲は[security.md](security.md)、中断と再試行は[run-recovery.md](run-recovery.md)、最新の評価と残る項目は[review.md](review.md)を参照する。
