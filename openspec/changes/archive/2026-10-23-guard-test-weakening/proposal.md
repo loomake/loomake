@@ -13,5 +13,5 @@
 - テストファイルの外にある、テストの補助ファイル（fixtures など）の変更の検出
 
 ## Impact
-- 影響する capability：run-guards（Requirement の変更）
+- 影響する capability：run-guards（REQ-109 を出典とする Requirement の追加）
 - 影響するコード：`packages/runner/src/guards.ts`
