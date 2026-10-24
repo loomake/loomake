@@ -1,0 +1,76 @@
+{
+  "review": "PR65 findings1-3",
+  "upstream": "7627fe354f943fa3d2ba3d6723205bc69ef4f23a",
+  "mergeCommit": "1129959",
+  "specGateExit": 0,
+  "implementation": "runtime/process.ts retained by main merge, SUPERVISOR uses ../../supervisor/supervisor.cjs. Startup test and CLI verify-boundaries import migrated. Supervisor rechecks the absolute deadline and rearms bounded timer chunks.",
+  "tests": [
+    {
+      "file": ".loomake/quality/pr65-integration/long-deadline-one-ms-control.json",
+      "sha256": "d7832a25388a32d2d554c70a9ca337984b77833a50ad3b3673fd5605cf734aea",
+      "passed": 2,
+      "failed": 0,
+      "pending": 0,
+      "failures": []
+    },
+    {
+      "file": ".loomake/quality/pr65-integration/long-deadline-red.json",
+      "sha256": "946293953d257acb531feaf42a95388df52296d3af1497e98cbe745c3957de53",
+      "passed": 0,
+      "failed": 2,
+      "pending": 0,
+      "failures": [
+        {
+          "name": "タイマーの上限を超える有限の期限 [REQ-180][REQ-182] qualityCommandで上限を超える残り時間を短縮せず、通常の結果を保つ",
+          "message": "Error: 外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）"
+        },
+        {
+          "name": "タイマーの上限を超える有限の期限 [REQ-180][REQ-182] untilDeadlineで上限を超える残り時間を短縮せず、通常の結果を保つ",
+          "message": "Error: 外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）"
+        }
+      ]
+    },
+    {
+      "file": ".loomake/quality/pr65-integration/long-deadline-red-with-rearm.json",
+      "sha256": "e26e0723dd1d63c9b372570a8906fcd76b08b50c154f5fd32da3cc129d02df90",
+      "passed": 0,
+      "failed": 3,
+      "pending": 0,
+      "failures": [
+        {
+          "name": "タイマーの上限を超える有限の期限 [REQ-180][REQ-182] qualityCommandで上限を超える残り時間を短縮せず、通常の結果を保つ",
+          "message": "Error: 外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）"
+        },
+        {
+          "name": "タイマーの上限を超える有限の期限 [REQ-180][REQ-182] untilDeadlineで上限を超える残り時間を短縮せず、通常の結果を保つ",
+          "message": "Error: 外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）"
+        },
+        {
+          "name": "タイマーの上限を超える有限の期限 [REQ-180][REQ-182] 分割した待機が期限前に発火しても、残り時間を確認して待ち直す",
+          "message": "Error: 外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）"
+        }
+      ]
+    },
+    {
+      "file": ".loomake/quality/pr65-integration/focused-node24.json",
+      "sha256": "25e7c95f7e34f14db0e77b0c61f1e47ef4d765156cb6cf6d4d38a2794aa12471",
+      "passed": 56,
+      "failed": 0,
+      "pending": 0,
+      "failures": []
+    }
+  ],
+  "initialControl": "A requested duration only1ms above timer limit fell below the limit during actual supervisor startup and2cases passed; it did not reproduce the defect. Repro uses limit+60000ms, then2and3failures were observed.",
+  "rearmTest": "Only supervisor timer is forced to wake twice before expiry. Actual target runs normally. Requires3bounded wait requests, expected output/status and no warning. Not a24-day wall-clock execution.",
+  "translationAssertionsUnchanged": {
+    "packages/kit/test/process-startup.test.ts": 18,
+    "packages/runner/test/engine-normal-exit.test.ts": 13,
+    "packages/runner/test/process-diagnostics.ts": 0,
+    "tests/ci-gate-process.test.ts": 27,
+    "packages/trace/test/publication-crash.test.ts": 9,
+    "packages/runner/test/scenario-timeout-evidence.test.ts": 31,
+    "packages/runner/test/guards-special-files.test.ts": 38
+  },
+  "upstreamContract": "Input-budget conflict adopts already merged bound-report-evidence-reading Q01 behavior and tests; PID assertions preserved in engine-safety; upstream approved60s test timeout retained. No new config relaxation introduced here.",
+  "evidencePolicy": "Existing raw records preserved and relocated by upstream archive; new raw reports remain under .loomake/quality, this summary records hashes/counts."
+}

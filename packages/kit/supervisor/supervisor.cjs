@@ -63,6 +63,16 @@ function stop(kind) {
   }, 250);
 }
 
+function watchDeadline() {
+  if (stopping || ended) return;
+  const remaining = remainingMs();
+  if (remaining <= 0) {
+    stop('timeout');
+    return;
+  }
+  timer = setTimeout(watchDeadline, Math.min(remaining, 2_147_483_647));
+}
+
 process.on('SIGINT', () => stop('interrupted'));
 process.on('SIGTERM', () => stop('interrupted'));
 
@@ -100,7 +110,7 @@ try {
     child.on('exit', () => {
       if (!stopping) grace = setTimeout(finish, 250);
     });
-    timer = setTimeout(() => stop('timeout'), Math.max(0, remainingMs()));
+    watchDeadline();
   }
 } catch (error) {
   outcome.error = { message: error.message, code: error.code };
