@@ -132,6 +132,21 @@ describe('要件ごとの検収の表', () => {
   });
 });
 
+it('[REQ-070][REQ-129] 仕様例のREQ-070とtests/report.test.tsの全列を対応させ、後から変えた要約を採用しない', () => {
+  const trace = traceMd({ ledger: [ledgerRow('REQ-070')] });
+  const spec = specMd(requirement('表の出力', { source: 'Source: REQ-070' }));
+  const verify: Evidence['verify'] = { schemaVersion: '1.0.0', mode: 'done', change: CHANGE, ok: true, results: [], coverage: { 'REQ-070': ['tests/report.test.ts'] } };
+  withProject({ trace, spec, evidence: [{ verify }] }, (root) => {
+    const expected = { id: 'REQ-070', source: '要件書 §1', state: '反映済', summary: '要約', requirements: ['表の出力'], tests: ['tests/report.test.ts'], result: '合格' };
+    expect(report(root).rows).toEqual([expected]);
+    expect(markdown(root).text).toContain('| REQ-070 | 要件書 §1 | 反映済 | 要約 | 表の出力 | tests/report.test.ts | 合格 |');
+    writeFileSync(join(root, `openspec/changes/${CHANGE}/trace.md`), trace.replace('| 要約 |', '| 後で変えた要約 |'));
+    expect(report(root).rows).toEqual([expected]);
+    expect(report(root).attention.changedDocuments).toEqual(['trace.md']);
+    expect(markdown(root).text).not.toContain('後で変えた要約');
+  });
+});
+
 describe('範囲外と既存仕様で充足の要件', () => {
   it('[REQ-071] 範囲外と既存仕様で充足の要件も、状態を付けて表に含める', () => {
     const trace = traceMd({ ledger: [ledgerRow('REQ-012'), ledgerRow('REQ-075', '範囲外'), ledgerRow('REQ-090', '既存仕様で充足')] });
