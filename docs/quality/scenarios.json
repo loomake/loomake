@@ -263,7 +263,7 @@
       "id": "SCN-6b66a7b015d80d054c75",
       "status": "reviewed",
       "scenarioSha256": "236726f1b0c41e1049cb5d0a4f57b4c5ea7437b44ca79d4a64b76c974437997d",
-      "reason": "runとhistoryの両方で合計超過を発生させ、完了済みコミットと途中の変更、保存上限と停止summaryをassertする。",
+      "reason": "runとhistoryの両方で合計超過を発生させ、完了済みコミットと途中の変更、出力を追加保存しないことと停止summaryをassertする。",
       "sources": [
         "REQ-178"
       ],
@@ -2142,7 +2142,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストファイルを消したら、削除を表示し",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
@@ -2158,7 +2158,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストファイルに it.skip の行を足したら",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
@@ -2174,22 +2174,22 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストファイルに it.skipIf(true) の行を足したら止まる",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         },
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストファイルに describe.skipIf(true) の行を足したら止まる",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         },
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストファイルに it.runIf(false) の行を足したら止まる",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         },
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストファイルに it.concurrent.skip の行を足したら止まる",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
@@ -2205,7 +2205,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "ふつうのテストを足しただけなら",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
@@ -2221,7 +2221,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "loomake.config.json を変えたら、差分を表示",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
@@ -2237,7 +2237,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "package.json の scripts を変えたら止まる",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
@@ -2253,7 +2253,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "子パッケージの package.json の scripts を変えたら",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
@@ -2269,7 +2269,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "package.json の dependencies だけを変えたら",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
@@ -2285,7 +2285,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "openspec/specs/ の下を書き換えたら止まる",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
@@ -2301,7 +2301,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "change の trace.md を書き換えたら止まる",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
@@ -2317,7 +2317,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "tasks.md から未完了のタスクの行を消したら",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
@@ -2333,7 +2333,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "差分仕様から Requirement を消したら",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
@@ -2381,7 +2381,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "理由と差分を表示し、変更を作業ツリーに残し",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
@@ -2397,7 +2397,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "承認せずにもう一度実行すると",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
@@ -2413,7 +2413,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "エンジンが自分でコミットしたら",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
@@ -2429,7 +2429,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "設定を変えてコミットしたら",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
@@ -2445,7 +2445,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "エンジンが別のブランチに切り替えたら",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
@@ -2461,7 +2461,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "コミットしてから失敗したら",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
@@ -2477,7 +2477,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "完了ゲートの直しでエンジンがコミットしたら",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
@@ -2493,7 +2493,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "エンジンがコミットせずに終えたら",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
@@ -4786,7 +4786,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "[REQ-198] エンジンがフック",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
@@ -4802,7 +4802,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "[REQ-198] エンジンが git",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
@@ -4818,7 +4818,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "[REQ-198] run の前",
-          "sha256": "b7cb2c188b1c636d1096db20593cb1f23c187640e38e23e4f6b1bb731462a899"
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
         }
       ]
     },
