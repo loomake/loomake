@@ -328,3 +328,25 @@ describe('git の設定とフックの変更の検出', () => {
       expect(readFileSync(join(r.repo.base, 'post-commit.log'), 'utf8').trim().split('\n').length).toBeGreaterThan(1);
     }));
 });
+
+describe('テストの検査を弱める変更の検出', () => {
+  const withAdd = (repo: Repo) => repo.write('tests/add.test.ts', "it('[REQ-012] 足す', () => {\n  expect(add(1, 2)).toBe(3);\n  expect(add(2, 2)).toBe(4);\n});\n");
+
+  it('[REQ-201] 既存のテストから検査の行を消したら、コミットせずに止まる', () =>
+    check({ write: { 'tests/add.test.ts': "it('[REQ-012] 足す', () => {\n  expect(add(1, 2)).toBe(3);\n});\n" } }, withAdd, (r) => {
+      stopped(r, 2);
+      expect(r.stdout).toContain('tests/add.test.ts：テストの検査を減らしました');
+    }));
+
+  it('[REQ-201] 必ず通る検査に書き換えたら、コミットせずに止まる', () =>
+    check({ write: { 'tests/add.test.ts': "it('[REQ-012] 足す', () => {\n  expect(true).toBe(true);\n  expect(add(2, 2)).toBe(4);\n});\n" } }, withAdd, (r) => {
+      stopped(r, 2);
+      expect(r.stdout).toContain('tests/add.test.ts：必ず通る検査を足しました：expect(true).toBe(true);');
+    }));
+
+  it('[REQ-201] テストを足すだけなら止まらない', () =>
+    check({ write: { 'tests/add.test.ts': "it('[REQ-012] 足す', () => {\n  expect(add(1, 2)).toBe(3);\n  expect(add(2, 2)).toBe(4);\n  expect(add(0, 0)).toBe(0);\n});\n" } }, withAdd, (r) => {
+      expect(r.stdout).not.toContain('不正な直し方を見つけました');
+      expect(readFileSync(join(r.repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [x] 1.1');
+    }));
+});

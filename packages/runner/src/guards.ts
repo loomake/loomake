@@ -11,6 +11,13 @@ export type GuardFinding = { file: string; reason: string };
 const isTestFile = (f: string) => /\.(test|spec)\./.test(f) || /(^|\/)(test|tests|__tests__)\//.test(f);
 // skip・todo を足した行（A-17）。it.concurrent.skip のような修飾と、条件つきの skipIf・runIf も見る
 const SKIP = /\b(it|test|describe|suite)(\.\w+)*\.(skip|todo|skipIf|runIf)\b|\bx(it|test|describe)\(/;
+// 検査の行と、同じリテラルどうしを比べる必ず通る検査（REQ-201）
+const ASSERTION = /\bexpect\(|\bassert\b/;
+const LITERAL = String.raw`(true|false|null|undefined|-?\d+(?:\.\d+)?|'[^']*'|"[^"]*")`;
+const TRIVIAL = new RegExp(
+  String.raw`\bexpect\(\s*${LITERAL}\s*\)\s*\.(?:toBe|toEqual|toStrictEqual)\(\s*\1\s*\)` +
+    String.raw`|\bassert(?:\.\w+)?\(\s*${LITERAL}\s*,\s*\2\s*\)|\bassert(?:\.ok)?\(\s*true\s*\)`,
+);
 // lint・型・テストの設定ファイル（A-18）
 const isConfigFile = (f: string) => {
   const name = f.split('/').pop() ?? '';
@@ -60,10 +67,15 @@ export function findViolations(root: string, env: NodeJS.ProcessEnv, openspecDir
     if (file.startsWith(specsDir)) findings.push({ file, reason: 'いまの仕様を変えました' });
     else if (file.startsWith(changesDir)) findings.push({ file, reason: file.endsWith('/trace.md') ? 'trace.md を変えました' : 'change の文書を変えました' });
     if (code !== 'D') {
-      const added = git(root, env, ['diff', '--cached', '-U0', '--', file])
-        .split('\n')
-        .filter((l) => l.startsWith('+') && !l.startsWith('+++'));
+      const lines = git(root, env, ['diff', '--cached', '-U0', '--', file]).split('\n');
+      const added = lines.filter((l) => l.startsWith('+') && !l.startsWith('+++'));
       for (const l of added) if (SKIP.test(l)) findings.push({ file, reason: `skip・todo を足しました：${l.slice(1).trim()}` });
+      if (isTestFile(file)) {
+        for (const l of added) if (TRIVIAL.test(l)) findings.push({ file, reason: `必ず通る検査を足しました：${l.slice(1).trim()}` });
+        const removed = lines.filter((l) => l.startsWith('-') && !l.startsWith('---'));
+        const count = (xs: string[]) => xs.filter((l) => ASSERTION.test(l)).length;
+        if (code === 'M' && count(removed) > count(added)) findings.push({ file, reason: 'テストの検査を減らしました' });
+      }
     }
   }
   const files = [...new Set(findings.map((f) => f.file))];
