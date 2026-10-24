@@ -65,19 +65,22 @@ export function claudeArgs(commands: string[], skipPermissions: boolean): string
 }
 
 /** エンジンと子孫を停止し、POSIXでは猶予後にグループ全体を強制終了する。 */
-function stop(child: ChildProcess): Promise<void> {
+function stop(child: ChildProcess, skipMissingGroup = false): Promise<void> {
   if (isWindows && child.pid !== undefined) {
     spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { timeout: 1000, killSignal: 'SIGKILL', stdio: 'ignore' });
     return Promise.resolve();
   }
   const killGroup = (signal: NodeJS.Signals) => {
     try {
-      if (child.pid !== undefined) process.kill(-child.pid, signal);
-    } catch {
-      // すでに終了したプロセスグループは停止済みとして扱う。
+      if (child.pid === undefined) return false;
+      process.kill(-child.pid, signal);
+      return true;
+    } catch (error) {
+      return (error as NodeJS.ErrnoException).code !== 'ESRCH';
     }
   };
-  killGroup('SIGTERM');
+  const groupPresent = killGroup('SIGTERM');
+  if (skipMissingGroup && !groupPresent) return Promise.resolve();
   return new Promise((resolve) => setTimeout(() => { killGroup('SIGKILL'); resolve(); }, 250));
 }
 
@@ -125,11 +128,19 @@ export function runClaude(call: EngineCall): Promise<EngineResult> {
       stopping ??= stop(child);
     };
     call.signal?.addEventListener('abort', onAbort, { once: true });
+    const finishMonitoring = () => {
+      clearTimeout(timer);
+      call.signal?.removeEventListener('abort', onAbort);
+    };
+    child.once('exit', () => {
+      if (isWindows) return;
+      finishMonitoring();
+      stopping ??= stop(child, true);
+    });
     child.on('error', () => {});
     if (call.signal?.aborted) onAbort();
     child.on('close', (code) => void (async () => {
-      clearTimeout(timer);
-      call.signal?.removeEventListener('abort', onAbort);
+      finishMonitoring();
       await stopping;
       diagnostics.end();
       let text = raw;

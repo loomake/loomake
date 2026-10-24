@@ -1,0 +1,223 @@
+{
+  "change": "close-engine-and-hook-safety-gaps",
+  "tasks": [
+    "2.1",
+    "2.2"
+  ],
+  "scope": "REQ-207 POSIX engine exit cleanup; parent integrates docs REQ-209 and commits",
+  "environment": {
+    "node": "v24.21.0",
+    "platform": "Linux ARM64"
+  },
+  "specGate": {
+    "exit": 0,
+    "log": "/tmp/quality-close-safety-spec.log",
+    "confirmedBy": "parent"
+  },
+  "red": {
+    "file": ".loomake/quality/close-engine-red.json",
+    "sha256": "be03c2ed1ea0865ab5b3d4db9221ccf03cf469ee7e4bad60636675d4e8cfc45a",
+    "passed": 2,
+    "failed": 3,
+    "pending": 0,
+    "tests": [
+      {
+        "fullName": "Normal POSIX engine exit cleanup [REQ-207] stops independent stdio child before returning and prevents delayed writes",
+        "status": "failed",
+        "durationMs": 6555.990378000002,
+        "failureMessages": [
+          "AssertionError: expected [ 'missing', 'zombie' ] to include 'running'\n    at Proxy.<anonymous> (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:2093:15)\n    at Proxy.<anonymous> (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:1958:14)\n    at Proxy.methodWrapper (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/chai@6.3.0/node_modules/chai/index.js:1737:25)\n    at /tmp/loomake-quality-after-merge/packages/runner/test/engine-normal-exit.test.ts:83:37\n    at withEngine (/tmp/loomake-quality-after-merge/packages/runner/test/engine-normal-exit.test.ts:28:5)\n    at /tmp/loomake-quality-after-merge/packages/runner/test/engine-normal-exit.test.ts:74:5\n    at async file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2801:20"
+        ]
+      },
+      {
+        "fullName": "Normal POSIX engine exit cleanup [REQ-207] stops SIGTERM-ignoring independent stdio child before returning and prevents delayed writes",
+        "status": "failed",
+        "durationMs": 1532.6780430000072,
+        "failureMessages": [
+          "AssertionError: expected [ 'missing', 'zombie' ] to include 'running'\n    at Proxy.<anonymous> (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:2093:15)\n    at Proxy.<anonymous> (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:1958:14)\n    at Proxy.methodWrapper (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/chai@6.3.0/node_modules/chai/index.js:1737:25)\n    at /tmp/loomake-quality-after-merge/packages/runner/test/engine-normal-exit.test.ts:83:37\n    at withEngine (/tmp/loomake-quality-after-merge/packages/runner/test/engine-normal-exit.test.ts:28:5)\n    at /tmp/loomake-quality-after-merge/packages/runner/test/engine-normal-exit.test.ts:74:5\n    at async file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2801:20"
+        ]
+      },
+      {
+        "fullName": "Normal POSIX engine exit cleanup [REQ-207] stops SIGTERM-ignoring inherited output child before returning and prevents delayed writes",
+        "status": "failed",
+        "durationMs": 3369.930250000005,
+        "failureMessages": [
+          "AssertionError: expected true to be false // Object.is equality\n    at /tmp/loomake-quality-after-merge/packages/runner/test/engine-normal-exit.test.ts:84:30\n    at withEngine (/tmp/loomake-quality-after-merge/packages/runner/test/engine-normal-exit.test.ts:28:5)\n    at /tmp/loomake-quality-after-merge/packages/runner/test/engine-normal-exit.test.ts:74:5\n    at async file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2801:20"
+        ]
+      },
+      {
+        "fullName": "Normal POSIX engine exit cleanup [REQ-207] preserves normal JSON output and exit zero without stop flags",
+        "status": "passed",
+        "durationMs": 79.8736249999929,
+        "failureMessages": []
+      },
+      {
+        "fullName": "Normal POSIX engine exit cleanup [REQ-207] preserves nonzero exit code and raw output without stop flags",
+        "status": "passed",
+        "durationMs": 81.04262500000186,
+        "failureMessages": []
+      }
+    ]
+  },
+  "green": {
+    "file": ".loomake/quality/close-engine-green.json",
+    "sha256": "172577f5ec9ad72999e1655b126d97255aac95c51012144523c552eb6c3b0a32",
+    "passed": 17,
+    "failed": 0,
+    "pending": 0,
+    "tests": [
+      {
+        "fullName": "Normal POSIX engine exit cleanup [REQ-207] stops independent stdio child before returning and prevents delayed writes",
+        "status": "passed",
+        "durationMs": 1383.118376,
+        "failureMessages": []
+      },
+      {
+        "fullName": "Normal POSIX engine exit cleanup [REQ-207] stops SIGTERM-ignoring independent stdio child before returning and prevents delayed writes",
+        "status": "passed",
+        "durationMs": 1380.5155420000003,
+        "failureMessages": []
+      },
+      {
+        "fullName": "Normal POSIX engine exit cleanup [REQ-207] stops SIGTERM-ignoring inherited output child before returning and prevents delayed writes",
+        "status": "passed",
+        "durationMs": 1383.9287509999995,
+        "failureMessages": []
+      },
+      {
+        "fullName": "Normal POSIX engine exit cleanup [REQ-207] preserves normal JSON output and exit zero without stop flags",
+        "status": "passed",
+        "durationMs": 12.676457999999911,
+        "failureMessages": []
+      },
+      {
+        "fullName": "Normal POSIX engine exit cleanup [REQ-207] preserves nonzero exit code and raw output without stop flags",
+        "status": "passed",
+        "durationMs": 12.356165999999575,
+        "failureMessages": []
+      },
+      {
+        "fullName": "\u30a8\u30f3\u30b8\u30f3\u306e\u505c\u6b62 [REQ-139] \u51fa\u529b\u3092\u7d99\u627f\u3057\u305f\u5b50\u3082\u6642\u9593\u5207\u308c\u3067\u505c\u6b62\u3059\u308b",
+        "status": "passed",
+        "durationMs": 757.198,
+        "failureMessages": []
+      },
+      {
+        "fullName": "\u30a8\u30f3\u30b8\u30f3\u306e\u505c\u6b62 [REQ-139] \u7d42\u4e86\u8981\u6c42\u3092\u7121\u8996\u3059\u308b\u30a8\u30f3\u30b8\u30f3\u3082\u5f37\u5236\u7d42\u4e86\u3059\u308b",
+        "status": "passed",
+        "durationMs": 755.452834,
+        "failureMessages": []
+      },
+      {
+        "fullName": "\u30a8\u30f3\u30b8\u30f3\u306e\u505c\u6b62 [REQ-139] \u8d77\u52d5\u524d\u306b\u4e2d\u65ad\u6e08\u307f\u306a\u3089\u30a8\u30f3\u30b8\u30f3\u3092\u8d77\u52d5\u3057\u306a\u3044",
+        "status": "passed",
+        "durationMs": 0.4031250000000455,
+        "failureMessages": []
+      },
+      {
+        "fullName": "\u30a8\u30f3\u30b8\u30f3\u306e\u51fa\u529b\u4e88\u7b97 [REQ-151] \u6210\u529f\u306e\u7d42\u4e86\u30b3\u30fc\u30c9\u3067\u3082\u4e0a\u9650\u3092\u8d85\u3048\u305fstdout\u3092\u5236\u9650\u3059\u308b",
+        "status": "passed",
+        "durationMs": 268.83716699999997,
+        "failureMessages": []
+      },
+      {
+        "fullName": "\u30a8\u30f3\u30b8\u30f3\u306e\u51fa\u529b\u4e88\u7b97 [REQ-151] stdout\u3068stderr\u306e\u5408\u8a08\u3092\u5236\u9650\u3059\u308b",
+        "status": "passed",
+        "durationMs": 263.71062500000005,
+        "failureMessages": []
+      },
+      {
+        "fullName": "\u30a8\u30f3\u30b8\u30f3\u306e\u51fa\u529b\u4e88\u7b97 [REQ-151] UTF-8\u306e\u9014\u4e2d\u3067\u5207\u308c\u308b\u6587\u5b57\u3092\u4fdd\u6301\u3057\u306a\u3044",
+        "status": "passed",
+        "durationMs": 261.723083,
+        "failureMessages": []
+      },
+      {
+        "fullName": "\u30a8\u30f3\u30b8\u30f3\u306e\u51fa\u529b\u4e88\u7b97 [REQ-151] \u4e0a\u9650\u3061\u3087\u3046\u3069\u3068\u901a\u5e38\u306e\u5931\u6557\u306f\u5f93\u6765\u3069\u304a\u308a\u8fd4\u3059",
+        "status": "passed",
+        "durationMs": 26.187790999999947,
+        "failureMessages": []
+      },
+      {
+        "fullName": "\u30a8\u30f3\u30b8\u30f3\u306estderr\u306e\u4fdd\u8b77 [REQ-153] \u5b9f\u969b\u306estderr\u306e Bearer \u3092\u5206\u5272\u3057\u3066\u3082\u8ee2\u9001\u524d\u306b\u7f6e\u63db\u3059\u308b",
+        "status": "passed",
+        "durationMs": 34.62699999999995,
+        "failureMessages": []
+      },
+      {
+        "fullName": "\u30a8\u30f3\u30b8\u30f3\u306estderr\u306e\u4fdd\u8b77 [REQ-153] \u5b9f\u969b\u306estderr\u306e \u79d8\u5bc6\u9375 \u3092\u5206\u5272\u3057\u3066\u3082\u8ee2\u9001\u524d\u306b\u7f6e\u63db\u3059\u308b",
+        "status": "passed",
+        "durationMs": 34.12145899999996,
+        "failureMessages": []
+      },
+      {
+        "fullName": "\u30a8\u30f3\u30b8\u30f3\u306estderr\u306e\u4fdd\u8b77 [REQ-153] \u30c1\u30e3\u30f3\u30af\u3092\u307e\u305f\u3050\u30c8\u30fc\u30af\u30f3\u3092\u8ee2\u9001\u524d\u306b\u7f6e\u63db\u3059\u308b",
+        "status": "passed",
+        "durationMs": 33.74679200000003,
+        "failureMessages": []
+      },
+      {
+        "fullName": "[REQ-151] stdout\u306e\u4e0a\u9650\u8d85\u904e\u3067\u30a8\u30f3\u30b8\u30f3\u3068\u7d42\u4e86\u8981\u6c42\u3092\u7121\u8996\u3059\u308b\u5b50\u3092\u505c\u6b62\u3059\u308b",
+        "status": "passed",
+        "durationMs": 276.958001,
+        "failureMessages": []
+      },
+      {
+        "fullName": "[REQ-151] stderr\u306e\u4e0a\u9650\u8d85\u904e\u3067\u30a8\u30f3\u30b8\u30f3\u3068\u7d42\u4e86\u8981\u6c42\u3092\u7121\u8996\u3059\u308b\u5b50\u3092\u505c\u6b62\u3059\u308b",
+        "status": "passed",
+        "durationMs": 282.812,
+        "failureMessages": []
+      }
+    ]
+  },
+  "commands": {
+    "red": "pnpm exec vitest run packages/runner/test/engine-normal-exit.test.ts --reporter=json --outputFile=.loomake/quality/close-engine-red.json",
+    "green": "pnpm exec vitest run packages/runner/test/engine-normal-exit.test.ts packages/runner/test/engine-safety.test.ts packages/runner/test/output-budget.test.ts packages/runner/test/output-processes.test.ts --maxWorkers=1 --reporter=json --outputFile=.loomake/quality/close-engine-green.json",
+    "lint": "pnpm exec eslint packages/runner/src/engine.ts packages/runner/test/engine-normal-exit.test.ts"
+  },
+  "sourceHashes": {
+    "packages/runner/src/engine.ts": "632bad54d83f7447d3440e37fcdea3f7ec096d043612a94d9f0d607a36c7a841",
+    "packages/runner/test/engine-normal-exit.test.ts": "ee6406a65283916d2f60849ae0392dedd9457f20d71f37c45c3e43eb1b121118",
+    "packages/runner/test/engine-safety.test.ts": "c81de480ab541307036c963d9722124f617e75111f91245e408d386a2fd28980",
+    "packages/runner/test/output-budget.test.ts": "91e585da4ed7785f163c4be3828c85ca5e5e0704865d72439da2e8f3d85e14e0",
+    "packages/runner/test/output-processes.test.ts": "ba1bbba51f418c940a3b40b55501411289b3628d1c4fc5d04e73503ed56d15ec",
+    "openspec/changes/close-engine-and-hook-safety-gaps/design.md": "cb142570ce00ca33ee612e85b4c7cbb8cf58526c56a43634e78d96e36d7fa7c2",
+    "openspec/changes/close-engine-and-hook-safety-gaps/specs/run/spec.md": "32cede6ade5451a296e8eba62257a1a7f7f99c19ebe00264ddf9f95356539184"
+  },
+  "lint": {
+    "exit": 0
+  },
+  "diffCheck": {
+    "exit": 0
+  },
+  "fixture": {
+    "sameGroup": true,
+    "detached": false,
+    "childReadyWrittenAfterSIGTERMHandler": true,
+    "markerDelayMs": 900,
+    "postReturnObservationMs": 1100,
+    "callTimeoutMs": 2000,
+    "cases": [
+      "independent stdio graceful child",
+      "independent stdio SIGTERM-ignoring child",
+      "inherited output SIGTERM-ignoring child",
+      "normal JSON and code0 control",
+      "raw text and code1 control"
+    ],
+    "cleanup": "Capture child state at runClaude return and delayed marker before finally. Then kill only the owned still-running child and remove the owned directory. Cleanup was extracted into a helper after Red for no-unsafe-finally lint; all assertions unchanged."
+  },
+  "implementation": [
+    "POSIX exit event clears local timeout and abort monitoring, starts shared group stop promise; close awaits it.",
+    "Normal cleanup skips grace only when SIGTERM reports ESRCH; other signal errors retain grace.",
+    "Explicit timeout/abort/output-limit stops retain existing250ms grace.",
+    "Original engine code/raw/text and stop flags preserved.",
+    "Windows existing explicit taskkill behavior unchanged."
+  ],
+  "limitations": [
+    "Windows new POSIX-only tests are runIf-excluded and must be reported pending, not executed success.",
+    "Linux zombie state counts as stopped, not OS reaping completed.",
+    "Different sessions/process groups are outside the guarantee.",
+    "No real Claude/GitHub or other-OS result is inferred.",
+    "No full gate/Node22 full suite or all15 score claim is made by this focused report."
+  ]
+}
