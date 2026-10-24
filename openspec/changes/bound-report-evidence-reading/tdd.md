@@ -32,3 +32,5 @@ resources.md に trace report の読み方を書き、changeset を足した。
 - readHead が、ファイルの大きさによらず要求した上限で合計の予算を見積もっていたことが指摘された。要求した上限とファイルの大きさの小さいほうで見積もる形に直し、テストを足した（直す前に失敗）
 
 入力・report・入力の上限の 99 件が成功した。
+
+3 回目のレビュー対応のあと、#58・#59・#61〜#64 を含む main に載せ直して `pnpm -s verify --change bound-report-evidence-reading --done` を実行し、exit 0（918 件）だった。
