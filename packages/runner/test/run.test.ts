@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { chmodSync, existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { GATE_MARK, runRun, type RunOptions, type RunSummary } from '@loomake/runner';
+import { GATE_MARK, RUN_CONFIG_KEYS, runRun, type RunOptions, type RunSummary } from '@loomake/runner';
+import { KNOWN_CONFIG_KEYS } from '@loomake/kit';
 import { main } from '../../cli/src/main.js';
 import { INTERRUPT_SCRIPT, alive, traceMd } from '../../kit/test/project.js';
 import { CHANGE, makeRepo, type Repo } from './helpers.js';
@@ -59,6 +60,13 @@ async function withRepo(fn: (repo: Repo) => Promise<void>, init?: Parameters<typ
     repo.cleanup();
   }
 }
+
+describe('run の設定のキー', () => {
+  // kit は runner に依存できないので、知っているキーの一覧がずれていないかをここで確かめる（warn-unknown-config-keys の仮定 A-01）
+  it('[REQ-039] run が読む設定のキーは、すべて verify と doctor が知っているキーに入っている', () => {
+    expect(KNOWN_CONFIG_KEYS.run).toEqual(expect.arrayContaining([...RUN_CONFIG_KEYS]));
+  });
+});
 
 describe('実行前の確認', () => {
   it('[REQ-093] 仕様ゲートに不合格なら、内容を表示し、ブランチを作らず、エンジンを呼ばずに終了コード 1 を返す', () =>

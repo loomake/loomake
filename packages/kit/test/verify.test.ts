@@ -320,8 +320,14 @@ describe('品質コマンドの実行', () => {
     }
   });
 
+  it('[REQ-039] 継承したプロパティと同じ名前のキー（toString・__proto__）も、例外を出さずに知らないキーとして示す', () => {
+    const files = { 'loomake.config.json': '{ "openspecValidate": false, "toString": { "x": 1 }, "__proto__": { "y": 1 }, "commands": {} }' };
+    const r = withProject({ files }, (root) => runVerify({ root }));
+    expect(check(r, 'loomake.config.json')?.detail).toBe('知らないキー：toString、__proto__（打ち間違いなら直してください）');
+  });
+
   it('[REQ-039] 知らないキーがなければ、loomake.config.json の検査は出さない', () => {
-    const r = withProject({ config: { $comment: 'x', openspecValidate: false, commands: { e2e: 'node -e ""' }, run: { maxFixes: 1, timeoutMinutes: 5 } } }, (root) => runVerify({ root }));
+    const r = withProject({ config: { $comment: 'x', openspecValidate: false, commands: { e2e: 'node -e ""' }, run: { maxFixes: 1, timeoutMinutes: 5, maxOutputBytes: 1, maxLogBytes: 1, maxHistoryBytes: 1 } } }, (root) => runVerify({ root }));
     expect(check(r, 'loomake.config.json')).toBeUndefined();
   });
 
