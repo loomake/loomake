@@ -35,11 +35,6 @@
       "loomake-trace-0.0.0.tgz": "c847ad33a8ba50d4c1a0efb8272ae459427afa1a153744f489a3e1cafa5b63f2"
     }
   },
-  "snapshotCommit": "1c69d1f",
-  "patchCommits": [
-    "f08592a",
-    "b529675"
-  ],
   "officialRuntime": {
     "version": "20.19.0",
     "archive": "node-v20.19.0-linux-arm64.tar.xz",
@@ -51,5 +46,10 @@
     "node": "v20.19.0",
     "result": "ECONNREFUSED"
   },
-  "scope": "Linux ARM64上の配布物と代替エンジン。他OS・実Claude Code・GitHubの成功は未確認。"
+  "scope": "Linux ARM64上の配布物と代替エンジン。他OS・実Claude Code・GitHubの成功は未確認。",
+  "snapshotCommit": "34563b2",
+  "patchCommits": [
+    "a3478cc",
+    "225a6c8"
+  ]
 }

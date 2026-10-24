@@ -1,0 +1,113 @@
+{
+  "scope": "required-property-version-gate",
+  "node": "v24.21.0",
+  "trials": [
+    {
+      "id": "baseline",
+      "kind": "unchanged",
+      "expected": "passed",
+      "status": "passed",
+      "exitCode": 0,
+      "failedTests": [],
+      "schemaSha256": "287c902ad970ed39075e4dbc615bcd8c99d19aed4495b567436889f901b47af9"
+    },
+    {
+      "id": "remove-root",
+      "kind": "remove",
+      "expected": "rejected",
+      "status": "rejected",
+      "exitCode": 1,
+      "failedTests": [
+        "verify 結果の JSON スキーマ [REQ-053] 必須プロパティを削除・改名したら、schemaVersion のメジャー番号が前の版より大きい"
+      ],
+      "schemaSha256": "90e64c28b503b072acad11aba40da89cd9a383a221bf855e4a30f11936dbc266"
+    },
+    {
+      "id": "rename-root",
+      "kind": "rename",
+      "expected": "rejected",
+      "status": "rejected",
+      "exitCode": 1,
+      "failedTests": [
+        "verify 結果の JSON スキーマ [REQ-053] 必須プロパティを削除・改名したら、schemaVersion のメジャー番号が前の版より大きい"
+      ],
+      "schemaSha256": "5ce4c3082db2202b8f8fcbd5259b86075454c2770596f4f843d3879221c276e5"
+    },
+    {
+      "id": "remove-item",
+      "kind": "remove-item",
+      "expected": "rejected",
+      "status": "rejected",
+      "exitCode": 1,
+      "failedTests": [
+        "verify 結果の JSON スキーマ [REQ-053] 必須プロパティを削除・改名したら、schemaVersion のメジャー番号が前の版より大きい"
+      ],
+      "schemaSha256": "9b97d67081cc3abd66243fc7ac350f67212185e6002f0c93ba39247ebb03bc38"
+    },
+    {
+      "id": "rename-item",
+      "kind": "rename-item",
+      "expected": "rejected",
+      "status": "rejected",
+      "exitCode": 1,
+      "failedTests": [
+        "verify 結果の JSON スキーマ [REQ-053] 必須プロパティを削除・改名したら、schemaVersion のメジャー番号が前の版より大きい"
+      ],
+      "schemaSha256": "0e3de024514e63c41202c46e2b0d2ff131ecf424f7edbf9d6eda6962c9729b94"
+    },
+    {
+      "id": "minor-removal",
+      "kind": "remove",
+      "version": "1.1.0",
+      "expected": "rejected",
+      "status": "rejected",
+      "exitCode": 1,
+      "failedTests": [
+        "verify 結果の JSON スキーマ [REQ-053] 必須プロパティを削除・改名したら、schemaVersion のメジャー番号が前の版より大きい"
+      ],
+      "schemaSha256": "bae00dc32af2d74115ff9eaedf7780bf70079da044f348374b8ff64b1b1c26b4"
+    },
+    {
+      "id": "major-removal",
+      "kind": "remove",
+      "version": "2.0.0",
+      "expected": "passed",
+      "status": "passed",
+      "exitCode": 0,
+      "failedTests": [],
+      "schemaSha256": "b2f3ee31198ad63c39bb61f9e2ddbef111cdef198d0b1ef5a085c8a5b88c3b73"
+    },
+    {
+      "id": "major-rename",
+      "kind": "rename-item",
+      "version": "2.0.0",
+      "expected": "passed",
+      "status": "passed",
+      "exitCode": 0,
+      "failedTests": [],
+      "schemaSha256": "6659b5cf34f3f04134b7d1cb7e5fcb085191288431f4971442b90c4639dd258c"
+    }
+  ],
+  "sources": [
+    {
+      "file": "packages/core/schema/verify-result.schema.json",
+      "sha256": "bd73807efc4989c56b6f122233a4796f4c83cad8dc1261f07e20be96e7bfaa0a"
+    },
+    {
+      "file": "packages/core/src/verify-result.ts",
+      "sha256": "c84a6075a0cc909e2aa519d3bfd9af8ae772eb53f127d6634f62cffe77e02ea3"
+    },
+    {
+      "file": "packages/core/test/schema.test.ts",
+      "sha256": "ee3ee3a0d181d9e98ff8aecc6fa70b2197748f938b4265e5ed2c1048ffad2891"
+    },
+    {
+      "file": "packages/core/test/fixtures/schema-history/1.0.0.json",
+      "sha256": "bd73807efc4989c56b6f122233a4796f4c83cad8dc1261f07e20be96e7bfaa0a"
+    }
+  ],
+  "ok": true,
+  "originalsUnchanged": true,
+  "scriptSha256": "6ce2bfedd9ff28dac7253bea7bba5d1748682bc91903f797a4d23a2b306e4d74",
+  "classifierSha256": "7da9590d062435b05b7d820f1850c3376d585374290fc348bc5ab4a3ade03e08"
+}

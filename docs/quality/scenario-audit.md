@@ -1,8 +1,8 @@
 # Scenarioと試験の対応
 
-検証時点：1c69d1fにf08592a・b529675と対応表・タスクを反映したコピー。Node24の全体試験と、Linux ARM64のNode20.19.0による別実行4件を照合した。
+検証時点：34563b2にa3478cc・225a6c8と対応表・タスクを反映したコピー。Node24の全体試験と、Linux ARM64のNode20.19.0による別実行4件を照合した。
 
-確認済み 230、置換 2、未確認 156、無効 0 / 全388件
+確認済み 233、置換 2、未確認 153、無効 0 / 全388件
 
 REQ-IDの一致は候補です。対応理由はレビュー上の判断で、試験内容の十分さや外部環境の成功を自動で保証しません。
 
@@ -128,10 +128,10 @@ REQ-IDの一致は候補です。対応理由はレビュー上の判断で、�
 | [openspec/changes/verify-domain-mutations/specs/domain-mutation-check/spec.md:25](../../openspec/changes/verify-domain-mutations/specs/domain-mutation-check/spec.md#L25) | 検出と試験エラーの区別 / 試験自体が成立しない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 15 件 |
 | [openspec/changes/verify-domain-mutations/specs/domain-mutation-check/spec.md:34](../../openspec/changes/verify-domain-mutations/specs/domain-mutation-check/spec.md#L34) | 再現可能な結果と保存先の保護 / 結果を確認する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
 | [openspec/changes/verify-domain-mutations/specs/domain-mutation-check/spec.md:38](../../openspec/changes/verify-domain-mutations/specs/domain-mutation-check/spec.md#L38) | 再現可能な結果と保存先の保護 / 既存の試験先を指定する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
-| [openspec/changes/verify-package-artifacts/specs/monorepo/spec.md:8](../../openspec/changes/verify-package-artifacts/specs/monorepo/spec.md#L8) | 配布物からの主要コマンドの検証 / 配布物を検証する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/changes/verify-package-artifacts/specs/monorepo/spec.md:8](../../openspec/changes/verify-package-artifacts/specs/monorepo/spec.md#L8) | 配布物からの主要コマンドの検証 / 配布物を検証する | reviewed | 5パッケージをpackして別のconsumerへ導入し、公開API・スキーマ・help・version・init・doctor・verify両ゲート・traceの保存と25行のreportをcheckのassertionで比較する。正しい配布物は成功し、出典の不一致とテンプレート欠落で失敗する対照も比較する。<br>tests/package-artifacts.test.ts: 実際に配るパッケージ [REQ-143][REQ-146][REQ-169] packした5パッケージだけで主要コマンドと公開APIを使える |
 | [openspec/changes/verify-package-artifacts/specs/monorepo/spec.md:17](../../openspec/changes/verify-package-artifacts/specs/monorepo/spec.md#L17) | 対応環境での配布物の検証 / Node下限で検査する | reviewed | Node24でビルド・pack・専用fixtureへの導入を行い、公式Node20.19.0で公開APIと主要コマンドをassertした。Node20側は開発ツールを実行しない。CI設定の存在と、今回のLinux ARM64での実行成功を区別する。<br>scripts/runtime-compatibility.mjs: [REQ-144][REQ-089] 指定したNodeの配布物で主要コマンドと公開APIを検証する |
 | [openspec/changes/verify-package-artifacts/specs/monorepo/spec.md:26](../../openspec/changes/verify-package-artifacts/specs/monorepo/spec.md#L26) | 公開対象コミットの品質ゲート / 検査に失敗する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
-| [openspec/changes/verify-package-artifacts/specs/monorepo/spec.md:35](../../openspec/changes/verify-package-artifacts/specs/monorepo/spec.md#L35) | 公開するexportsの参照先 / 公開物と開発環境を分ける | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/changes/verify-package-artifacts/specs/monorepo/spec.md:35](../../openspec/changes/verify-package-artifacts/specs/monorepo/spec.md#L35) | 公開するexportsの参照先 / 公開物と開発環境を分ける | reviewed | 開発側はNodeの実際のresolveで4ライブラリのsrcを比較する。配布物ではsource条件を含まないexportsと同梱参照先を検査し、利用側のTypeScriptをコンパイルする。配布したokの宣言を壊すとTS2322、復元すると成功する対照もassertする。<br>tests/public-source-exports.test.ts: [REQ-146] ワークスペースのsource条件は4ライブラリのsrcを実際に解決する<br>tests/package-artifacts.test.ts: 実際に配るパッケージ [REQ-143][REQ-146][REQ-169] packした5パッケージだけで主要コマンドと公開APIを使える<br>tests/package-artifacts.test.ts: 実際に配るパッケージ [REQ-146] 配布物の公開型を使い、型の破壊的変更を利用側のコンパイルで検出する |
 | [openspec/specs/agents-rules/spec.md:13](../../openspec/specs/agents-rules/spec.md#L13) | AGENTS.md の必須の節 / 5 つの節がある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
 | [openspec/specs/agents-rules/spec.md:22](../../openspec/specs/agents-rules/spec.md#L22) | テストと設定を緩める変更の禁止 / 禁止事項が明記されている | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
 | [openspec/specs/agents-rules/spec.md:31](../../openspec/specs/agents-rules/spec.md#L31) | プロジェクト固有の欄 / 末尾に固有欄がある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
@@ -158,7 +158,7 @@ REQ-IDの一致は候補です。対応理由はレビュー上の判断で、�
 | [openspec/specs/core-parsers/spec.md:97](../../openspec/specs/core-parsers/spec.md#L97) | テストが対象とする要件 ID の抽出 / describe の名前にある要件 ID | reviewed | suite名を含むfullNameのIDがファイル別に抽出されることをassertする。<br>packages/core/test/test-report.test.ts: extractTestRequirements [REQ-015] describe の名前にある要件 ID も数える |
 | [openspec/specs/core-parsers/spec.md:101](../../openspec/specs/core-parsers/spec.md#L101) | テストが対象とする要件 ID の抽出 / 読めないレポート | reviewed | 壊れたJSONで空の抽出結果とエラー1件、fileと有効な行番号をassertする。<br>packages/core/test/test-report.test.ts: extractTestRequirements [REQ-015][REQ-018] JSON として読めないときは、空の結果とファイル名つきのエラーを返す |
 | [openspec/specs/core-parsers/spec.md:110](../../openspec/specs/core-parsers/spec.md#L110) | verify 結果の JSON スキーマ / スキーマが公開されている | reviewed | 公開exportsと同梱するschema、schemaVersionの必須属性と型の版の一致をassertする。<br>packages/core/test/schema.test.ts: verify 結果の JSON スキーマ [REQ-016] schemaVersion を必須プロパティとして定義し、型の版と一致する<br>packages/core/test/schema.test.ts: verify 結果の JSON スキーマ [REQ-016] @loomake/core からスキーマを読める |
-| [openspec/specs/core-parsers/spec.md:114](../../openspec/specs/core-parsers/spec.md#L114) | verify 結果の JSON スキーマ / 破壊的変更でメジャー番号が上がる | unreviewed | 履歴とのrequired比較はあるが、削除したスキーマを実際に拒否する回帰・mutationの検査をさらに確認する。現時点では未確認とする。<br>候補 4 件 |
+| [openspec/specs/core-parsers/spec.md:114](../../openspec/specs/core-parsers/spec.md#L114) | verify 結果の JSON スキーマ / 破壊的変更でメジャー番号が上がる | reviewed | 既存のschema.test.tsをそのままコピーして実行し、ルートと配列要素の削除・改名、minorだけの変更がREQ-053のassertionで失敗し、major更新を伴う変更は全試験が成功することを8ケースで確認する。元ファイルの不変と同名の実行結果も比較する。対象は必須プロパティと版の契約である。<br>tests/schema-compatibility.test.ts: [REQ-053] 実際のスキーマ検査が削除・改名・minorだけの変更を拒否し、majorの変更を許可する |
 | [openspec/specs/core-parsers/spec.md:123](../../openspec/specs/core-parsers/spec.md#L123) | trace.md のテンプレート生成 / 生成したテンプレートを読める | reviewed | 生成結果をparseTraceへ渡し、台帳・質問・仮定が空でerrorsも空という全体を比較する。<br>packages/core/test/trace.test.ts: createTraceTemplate [REQ-017] 生成したテンプレートはエラーなく読め、3 つの表が空 |
 | [openspec/specs/core-parsers/spec.md:127](../../openspec/specs/core-parsers/spec.md#L127) | trace.md のテンプレート生成 / テンプレートに合意の列がある | reviewed | 生成結果とkitの雛形の双方で、質問と仮定のヘッダ末尾の合意列を正規表現でassertする。<br>packages/core/test/trace.test.ts: createTraceTemplate [REQ-017][REQ-077][REQ-078] テンプレートと kit の trace.md の雛形は、確認事項に回答者・回答日、仮定に承認者・承認日の列を末尾に持つ |
 | [openspec/specs/core-parsers/spec.md:136](../../openspec/specs/core-parsers/spec.md#L136) | 解析エラーの位置情報 / 位置情報つきのエラー | reviewed | 状態値が不正な台帳3行目に対し、fileと実際の行番号7をassertする。<br>packages/core/test/trace.test.ts: parseTrace [REQ-018] エラーは、渡したファイル名と、不正な行の行番号を持つ |

@@ -1,0 +1,38 @@
+$ pnpm -r --silent build && node packages/cli/dist/cli.js verify --change audit-scenario-evidence --done
+… lint: pnpm lint
+… typecheck: pnpm typecheck
+… test: pnpm test
+
+Loomake verify  mode=done  change=audit-scenario-evidence
+
+✔ change の存在
+✔ proposal.md の存在
+✔ tasks.md の存在
+✔ trace.md の存在
+✔ 要件モデルの整合性
+✔ trace.md の解析
+✔ 要件台帳
+✔ ブロッキング確認事項
+✔ 同じ確認事項の回答
+✔ spec.md の解析
+✔ Requirement の Source
+✔ Source が台帳にある
+✔ Scenario の有無
+✔ 反映済の要件が仕様にある
+✔ openspec validate
+✔ 確認待ちが残っていない
+✔ tasks.md
+✔ command: lint
+✖ command: typecheck
+    tests/fixtures/public-api/consumer.ts(4,8): error TS2307: Cannot find module '@loomake/core' or its corresponding type declarations.
+    tests/fixtures/public-api/consumer.ts(5,79): error TS2307: Cannot find module '@loomake/kit' or its corresponding type declarations.
+    tests/fixtures/public-api/consumer.ts(6,104): error TS2307: Cannot find module '@loomake/trace' or its corresponding type declarations.
+    tests/fixtures/public-api/consumer.ts(7,71): error TS2307: Cannot find module '@loomake/runner' or its corresponding type declarations.
+    tests/fixtures/public-api/consumer.ts(11,37): error TS2344: Type 'false' does not satisfy the constraint 'true'.
+    $ tsc --noEmit
+    [ELIFECYCLE] Command failed with exit code 2.
+✔ command: test
+✔ 要件ごとのテスト
+
+不合格（1 件）
+[ELIFECYCLE] Command failed with exit code 1.

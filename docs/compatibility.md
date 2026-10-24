@@ -46,3 +46,9 @@ doctorは単純なnpm・pnpmのscriptの存在、POSIXの実行権限、導入�
 この検証ではLinuxのseccompを子プロセスへ継承し、通信システムコールをEPERMで拒否した。通常のローカル接続がECONNREFUSEDとなる対照と、制限下の接続がEPERMとなる対照を確認している。同じ制限下でtrace recordとreportが成功した。Linuxのネットワーク名前空間を作成する権限はなかったため、この方法を使った。
 
 結果と実行ファイル・検証スクリプト・配布物のハッシュは[検証記録](../openspec/changes/audit-scenario-evidence/runtime20-results.json)に保存した。手順は[testing.md](testing.md)に記載した。これはLinux ARM64での実行結果であり、別OSのCI成功や、実際のClaude Code・GitHub接続の成功を示す結果ではない。
+
+## スキーマと公開型の確認範囲
+
+スキーマの版は、現行の検査へ破壊的変更を実際に渡して確認する。1.0.0の履歴に対し、ルート・配列要素の必須プロパティを削除・改名した場合と、minor・majorの変更を与える8ケースを試験した。[結果](../openspec/changes/audit-scenario-evidence/schema-contract-results.json)に拒否・許可の成否と元ファイルのハッシュを保存した。enumや型の変更を含む、JSON Schema全体の互換性検査は残っている。
+
+公開型は、配布されたd.tsだけで4ライブラリの利用例を厳密にコンパイルした。配布物の型を壊した場合のTS2322と復元後の成功も[記録](../openspec/changes/audit-scenario-evidence/public-types-results.json)へ残した。利用例は主な型と署名を選んだもので、全公開APIの棚卸しは続ける。ワークスペースでのsource条件と、配布物からsource条件が除かれることも別の試験で確認する。

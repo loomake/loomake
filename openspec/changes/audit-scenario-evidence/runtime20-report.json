@@ -2,7 +2,7 @@
   "success": true,
   "testResults": [
     {
-      "name": "/tmp/loomake-scenario-round5/scripts/runtime-compatibility.mjs",
+      "name": "/tmp/loomake-scenario-round6/scripts/runtime-compatibility.mjs",
       "assertionResults": [
         {
           "fullName": "通信拒否の対照実験",

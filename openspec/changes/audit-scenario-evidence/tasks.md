@@ -36,4 +36,4 @@
 
 - [x] 7.1 スキーマの削除・改名・版変更を一時コピーで試し、既存の検査が拒否・許可する結果を確認する
 - [x] 7.2 配布物の型を利用するTypeScriptのfixtureをコンパイルし、型を壊す対照も確認する
-- [ ] 7.3 対応表・結果・手順を更新し、`pnpm -s verify --change audit-scenario-evidence --done` を通す <!-- loomake:gate=done -->
+- [x] 7.3 対応表・結果・手順を更新し、`pnpm -s verify --change audit-scenario-evidence --done` を通す <!-- loomake:gate=done -->

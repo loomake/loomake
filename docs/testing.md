@@ -85,3 +85,24 @@ PythonのラッパーはLinux ARM64・x86_64を対象にし、子プロセスだ
 結果は新しい保存先のresults.jsonとreport.jsonに残る。Nodeの版、通信拒否の対照、検査の成否、スクリプトと配布物のハッシュを記録する。既存のprepare済みfixtureは、通常のcheckやSIGINT試験で変更されるため、別の検証には新しいfixtureと保存先を使う。
 
 Linuxの配布物テストには、制限なしではこのチェックが成功しない対照と、制限下で成功するケースを含めている。他OSでは対象外であることの確認だけで、通信拒否下の動作が確認できたとは扱わない。Node 20のCIにも専用のfixtureと同じ検証を追加しているが、設定の存在とCIでの実行成功は区別する。
+
+## スキーマの版と配布物の公開型
+
+スキーマの契約は、現行の`packages/core/test/schema.test.ts`を一時コピーで実行して確認する。必須プロパティの削除・改名を、ルートと配列の要素で試す。minor番号だけを変えた削除は拒否され、major番号を変えた削除・改名は許可されることを、実際の検査結果で比較する。試験用の2.0.0はコピー上の値である。
+
+```sh
+node scripts/schema-contract-check.mjs .loomake/quality/schema-contract-01
+```
+
+検証先は新しいディレクトリを指定する。8ケースのreport.json・標準出力とエラー・候補スキーマと、全体のresults.jsonを残す。読み込み失敗や時間切れを、破壊的変更の検出として数えない。対象は現在の1.0.0の履歴と必須プロパティの契約で、enumや型の変更など、JSON Schema全体の互換性の棚卸しは残っている。
+
+公開型は、packしてインストールした4ライブラリを利用するfixtureをコンパイルする。開発用Nodeと、このリポジトリのTypeScript・Nodeの型定義を使う。結果には両方の版を記録する。
+
+```sh
+node scripts/package-smoke.mjs prepare .loomake/quality/public-types-01
+node scripts/check-public-types.mjs .loomake/quality/public-types-01 .loomake/quality/public-types-results-01
+```
+
+`tests/fixtures/public-api/consumer.ts.txt`を利用側のconsumer.tsへコピーし、NodeNext・strict・noEmit・skipLibCheckなしで検査する。ワークスペース用のsource条件は使わない。fixtureには、パーサ、verify、証拠、report、runの主な型と呼び出しの例を含める。
+
+配布物の回帰試験では、`VerifyResult.ok`の宣言をbooleanからstringに変えるとTS2322になり、元へ戻すと再び成功することも確認する。別の試験では、開発側のsource条件が4ライブラリのsrcを実際に解決することを確認する。選んだ型と署名を保護するfixtureとして維持し、全exportの棚卸しも続ける。

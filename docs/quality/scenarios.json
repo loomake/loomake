@@ -715,9 +715,19 @@
     },
     {
       "id": "SCN-6738f39da2f67e0d8678",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "43c38839ee44aa43a5f67d548d03e59f1c8ecc5d5bc343df1d1e221885cf89d4",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-143"
+      ],
+      "reason": "5パッケージをpackして別のconsumerへ導入し、公開API・スキーマ・help・version・init・doctor・verify両ゲート・traceの保存と25行のreportをcheckのassertionで比較する。正しい配布物は成功し、出典の不一致とテンプレート欠落で失敗する対照も比較する。",
+      "tests": [
+        {
+          "file": "tests/package-artifacts.test.ts",
+          "contains": "packした5パッケージだけで主要コマンドと公開APIを使える",
+          "sha256": "8e74c0bea2c50db99293dc4193bc24b164c359d2db44e29fa3ff2859abbb7be8"
+        }
+      ]
     },
     {
       "id": "SCN-1724eb7440708bc07d16",
@@ -743,9 +753,29 @@
     },
     {
       "id": "SCN-5995ffd344b282145b5b",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "96d6151a4d22651edc1f47911d363e5fdb96dba4187659087149c549185ff578",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-146"
+      ],
+      "reason": "開発側はNodeの実際のresolveで4ライブラリのsrcを比較する。配布物ではsource条件を含まないexportsと同梱参照先を検査し、利用側のTypeScriptをコンパイルする。配布したokの宣言を壊すとTS2322、復元すると成功する対照もassertする。",
+      "tests": [
+        {
+          "file": "tests/public-source-exports.test.ts",
+          "contains": "ワークスペースのsource条件は4ライブラリのsrcを実際に解決する",
+          "sha256": "3668c02f7537b0e4abbfdd8a0c2e3daa2b36f62b2cdb56079fe83658ae5b2e77"
+        },
+        {
+          "file": "tests/package-artifacts.test.ts",
+          "contains": "packした5パッケージだけで主要コマンドと公開APIを使える",
+          "sha256": "8e74c0bea2c50db99293dc4193bc24b164c359d2db44e29fa3ff2859abbb7be8"
+        },
+        {
+          "file": "tests/package-artifacts.test.ts",
+          "contains": "配布物の公開型を使い、型の破壊的変更を利用側のコンパイルで検出する",
+          "sha256": "8e74c0bea2c50db99293dc4193bc24b164c359d2db44e29fa3ff2859abbb7be8"
+        }
+      ]
     },
     {
       "id": "SCN-d64c0ef8e6dedb6d34d8",
@@ -1109,9 +1139,19 @@
     },
     {
       "id": "SCN-fc6bf78522c427af6179",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "54f27ec563775199e2cbd1bcd215fd55beb5d704dcc473a3d9b0f3192faa8e37",
-      "reason": "履歴とのrequired比較はあるが、削除したスキーマを実際に拒否する回帰・mutationの検査をさらに確認する。現時点では未確認とする。"
+      "sources": [
+        "REQ-053"
+      ],
+      "reason": "既存のschema.test.tsをそのままコピーして実行し、ルートと配列要素の削除・改名、minorだけの変更がREQ-053のassertionで失敗し、major更新を伴う変更は全試験が成功することを8ケースで確認する。元ファイルの不変と同名の実行結果も比較する。対象は必須プロパティと版の契約である。",
+      "tests": [
+        {
+          "file": "tests/schema-compatibility.test.ts",
+          "contains": "実際のスキーマ検査が削除・改名・minorだけの変更を拒否し",
+          "sha256": "bdb7f3bb6d55a56df0ce3d1f0fa0c31a6a4bb3dcd670c1ba18c7a31d4ec6e0da"
+        }
+      ]
     },
     {
       "id": "SCN-6deba132ce8af409887a",
@@ -3057,7 +3097,7 @@
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "POSIXの配布物を実際のSIGINTで中断する",
-          "sha256": "fe9b9074fc84d9038c02d7d43770faf024a02104786a357f07a14da001750816"
+          "sha256": "8e74c0bea2c50db99293dc4193bc24b164c359d2db44e29fa3ff2859abbb7be8"
         }
       ]
     },

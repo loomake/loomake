@@ -4,17 +4,17 @@
   "ok": false,
   "counts": {
     "total": 388,
-    "reviewed": 230,
+    "reviewed": 233,
     "superseded": 2,
-    "unreviewed": 156,
+    "unreviewed": 153,
     "invalid": 0
   },
   "issues": [],
   "exitCode": 1,
   "specFiles": 39,
   "testRun": {
-    "total": 677,
-    "passed": 677,
+    "total": 680,
+    "passed": 680,
     "failed": 0
   },
   "additionalRuntimeChecks": {
@@ -148,23 +148,48 @@
       "scope": "io_uringも拒否した最終結果",
       "settingsChanged": false,
       "testReportSha256": "8fd9eb8a3b4a8b0c6c706217248d431ea341a6abe3bd60fac2df64b7845932ae"
+    },
+    {
+      "exitCode": 1,
+      "total": 679,
+      "passed": 679,
+      "failed": 0,
+      "typecheck": "利用側fixtureが通常のワークスペース型検査に含まれ、配布物のimportを解決できなかった",
+      "logFile": "openspec/changes/audit-scenario-evidence/round6-first-gate.txt",
+      "logSha256": "b7a06178e138255302c3181f23bd20823411f232cc1694a9980a8c56bff4fc24"
+    },
+    {
+      "exitCode": 0,
+      "total": 679,
+      "passed": 679,
+      "failed": 0,
+      "fix": "fixtureをテストデータとして保存し、専用のstrictコンパイルを維持した",
+      "settingsChanged": false
+    },
+    {
+      "exitCode": 0,
+      "total": 680,
+      "passed": 680,
+      "failed": 0,
+      "scope": "workspaceの実際のsource解決も含む最終結果",
+      "settingsChanged": false,
+      "testReportSha256": "52fcbf176fbd14cc441fb36c3c861ad3373d723af987d23f2f13c43df5a91246"
     }
   ],
   "snapshot": {
-    "baseCommit": "1c69d1f",
+    "baseCommit": "34563b2",
     "patchCommits": [
-      "f08592a",
-      "b529675"
+      "a3478cc",
+      "225a6c8"
     ],
-    "isolation": "detached Git worktree",
+    "isolation": "fresh detached Git worktree",
     "copiedTrackingFiles": [
       "docs/quality/scenarios.json",
       "openspec/changes/audit-scenario-evidence/tasks.md"
     ],
-    "comparedCurrentCodeFiles": 151,
+    "comparedCurrentCodeFiles": 156,
     "currentCodeMatches": true,
-    "changedCodeFiles": [],
-    "note": "Node20は配布物の検査だけに使い、開発用の全体テストと型・lintはNode24で実行した。未実行のOSとCIの成功は主張しない。"
+    "changedCodeFiles": []
   },
   "inputs": {
     "specs": {
@@ -214,10 +239,12 @@
       "tests/input-boundaries.test.ts": "89a368ec8c39e79bd883da212b897401371958751a3dba23ddc136ec71861829",
       "tests/kit-assets.test.ts": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40",
       "tests/monorepo.test.ts": "d98089ca14bfcca1de2deef3e2b2a134dac4fb3b61c882e2404b14c7d98f7d56",
-      "tests/package-artifacts.test.ts": "fe9b9074fc84d9038c02d7d43770faf024a02104786a357f07a14da001750816",
+      "tests/package-artifacts.test.ts": "8e74c0bea2c50db99293dc4193bc24b164c359d2db44e29fa3ff2859abbb7be8",
       "tests/package-workflows.test.ts": "c82be3653a952f37c8e5ad976fe0d00aa2028fef9d3ef16eca6a75e8450622bf",
+      "tests/public-source-exports.test.ts": "3668c02f7537b0e4abbfdd8a0c2e3daa2b36f62b2cdb56079fe83658ae5b2e77",
       "tests/release-security.test.ts": "062a1d920f8e435ed82850379e18c63e28af431c5aa2d03865a20a3a8914b75e",
       "tests/scenario-audit.test.ts": "0081fbabce3363fc49dece2bc2cd3fcf7e710bab573d3241d7c49cd9d683b19f",
+      "tests/schema-compatibility.test.ts": "bdb7f3bb6d55a56df0ce3d1f0fa0c31a6a4bb3dcd670c1ba18c7a31d4ec6e0da",
       "packages/cli/test/arguments.test.ts": "ecd21aa5a6c4f22075208b5c7299722d25198cfe42e95be9ff2af0a0eed9f381",
       "packages/cli/test/cli.test.ts": "af8e785775d2e0aa180e9322dd37c5df04eea3e4c50de769f9bf6ffa94cc6ea1",
       "packages/cli/test/doctor.test.ts": "c9fe91afe6e727773eff514d7e8c92b6037ecd6a504236a4732addca73b03f19",
@@ -230,11 +257,6 @@
       "packages/core/test/tasks.test.ts": "6208610676ee0a0335603847d61d26281ba29e23421ec3db4b38b23cea45be5a",
       "packages/core/test/test-report.test.ts": "c7153a95adba3abf1d612e07134454d17aa93ece23874ffc140db2d5136859f1",
       "packages/core/test/trace.test.ts": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40",
-      "packages/kit/test/doctor-command.test.ts": "a0e75f4a867c6a7c85dd0959a9737cb2fe4ad50f8d4dd84dfe9e9ab41b1ea0e6",
-      "packages/kit/test/doctor-diagnostics.test.ts": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0",
-      "packages/kit/test/input.test.ts": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985",
-      "packages/kit/test/process.test.ts": "ac53e9c06cdbdabcc611a457f0437074f42a784eadb8580fdc605ff29266828c",
-      "packages/kit/test/verify.test.ts": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c",
       "packages/runner/test/diagnostic-redactor.test.ts": "82f934a3f6a9d4e4fea20f7137f465651f3d716c3697e0333cf97e787eaa28ef",
       "packages/runner/test/engine-safety.test.ts": "7c75c2f45e35c3daf7c65fb9551eb924a0b3d7e34656a71cd0cc3ae486711317",
       "packages/runner/test/evidence-storage.test.ts": "16cd666b698613e965a0c1547e97b68a56431b2f576b7f9e45caf7954adbeebb",
@@ -251,6 +273,11 @@
       "packages/runner/test/run-conditions.test.ts": "ad3ecc2391eef40a16199597cc0e4feb6958c38fdfc9f8e3bdcabbe310b34511",
       "packages/runner/test/run.test.ts": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa",
       "packages/runner/test/safety-paths.test.ts": "e976ee7e1e4c985ae0566df7cf7d177bb254e35053a8410018fd4794a1ce4673",
+      "packages/kit/test/doctor-command.test.ts": "a0e75f4a867c6a7c85dd0959a9737cb2fe4ad50f8d4dd84dfe9e9ab41b1ea0e6",
+      "packages/kit/test/doctor-diagnostics.test.ts": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0",
+      "packages/kit/test/input.test.ts": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985",
+      "packages/kit/test/process.test.ts": "ac53e9c06cdbdabcc611a457f0437074f42a784eadb8580fdc605ff29266828c",
+      "packages/kit/test/verify.test.ts": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c",
       "packages/trace/test/publication-crash.test.ts": "870d3f491fbb77433bcb8ddd9a76b2ea22e9185ee7a7665f5894798b3f2142c0",
       "packages/trace/test/publication.test.ts": "63231c8f68bbbe7901a3c28a437135b7aaebc689a66752682eb0a2422be710f9",
       "packages/trace/test/record-size.test.ts": "db71a3294f7e3688bc76c9adbb527a0526a41c76304da1b8f350375514ec87e1",
@@ -259,27 +286,35 @@
       "packages/trace/test/serialization.test.ts": "6cf85e33ea1af754e0245fc4259f994504be7310ea55c96abc971e81ebd5c247",
       "scripts/runtime-compatibility.mjs": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
     },
-    "testReportSha256": "3258424f473b6512f79afb2d9409fe31464a29aedc5cbd242d5d69242102bf14",
-    "reviewSha256": "d3245124d2baba0f50790802ad50e6e1b62a77f06a97bd25ad100f7c94001376",
+    "testReportSha256": "cce272588eaa1977a940ce81978b526cf24a49332598063fe7631f0658888c16",
+    "reviewSha256": "7d9bdeaab666505d20edc0ec1f690f0e8181f392f6088a31e344664ae1d701b3",
     "scriptSha256": "279e59e68ac4104a3bbb69289eaf02972596ca4db0a1351d04fb0b2ed2a33a39"
   },
   "runtimeEvidence": {
     "resultsFile": "openspec/changes/audit-scenario-evidence/runtime20-results.json",
-    "resultsSha256": "8db54fb9d28be476e7814897691719c6497d814e63ac9813c0988f8e253bdcc4",
+    "resultsSha256": "f8ca2c4441c63d13bdb7fa6a0780c87d6fb83ec83a6e8c3f910563725af27ba4",
     "reportFile": "openspec/changes/audit-scenario-evidence/runtime20-report.json",
-    "reportSha256": "4b79d9dea24cd8d46668d5c0d1bf824adf0399194be261c1e76e97b8d33eb184",
-    "combinedReportSha256": "3258424f473b6512f79afb2d9409fe31464a29aedc5cbd242d5d69242102bf14",
+    "reportSha256": "6a492efb83d6fb7e6c313aa5c476032c7de9ce455564b4e3704be4a00a9fe320",
+    "combinedReportSha256": "cce272588eaa1977a940ce81978b526cf24a49332598063fe7631f0658888c16",
     "reports": [
       {
         "scope": "full-vitest-node24",
-        "sha256": "8fd9eb8a3b4a8b0c6c706217248d431ea341a6abe3bd60fac2df64b7845932ae",
-        "tests": 677
+        "sha256": "52fcbf176fbd14cc441fb36c3c861ad3373d723af987d23f2f13c43df5a91246",
+        "tests": 680
       },
       {
         "scope": "runtime-node20-denied-network",
-        "sha256": "4b79d9dea24cd8d46668d5c0d1bf824adf0399194be261c1e76e97b8d33eb184",
+        "sha256": "6a492efb83d6fb7e6c313aa5c476032c7de9ce455564b4e3704be4a00a9fe320",
         "checks": 4
       }
     ]
+  },
+  "contractEvidence": {
+    "schema-contract-results.json": "14ae2e2fff8186386e579ab7ef2dc4977a096c20cfa87475951af8435fda4c58",
+    "public-types-results.json": "e415e8a02717fa86885b680b4926176ea70400e68e57609469430ed2bcf61f99"
+  },
+  "workspaceIsolation": {
+    "forceCheckout": "auto-review rejected because it could discard uncommitted changes",
+    "resolution": "既存のコピーを変更せず、新しい独立コピーで検証した。承認待ちの作業はない。"
   }
 }
