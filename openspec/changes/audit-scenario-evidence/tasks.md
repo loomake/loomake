@@ -31,3 +31,9 @@
 - [x] 6.1 公式のNode 20.19.0と配布物で実行する検証経路を用意する
 - [x] 6.2 通信拒否の対照実験を行い、同じ制限下でtraceとCLIの動作を確認する
 - [x] 6.3 実行結果・対応表・評価を更新し、`pnpm -s verify --change audit-scenario-evidence --done` を通す <!-- loomake:gate=done -->
+
+## 7. スキーマと配布物の型の契約
+
+- [x] 7.1 スキーマの削除・改名・版変更を一時コピーで試し、既存の検査が拒否・許可する結果を確認する
+- [ ] 7.2 配布物の型を利用するTypeScriptのfixtureをコンパイルし、型を壊す対照も確認する
+- [ ] 7.3 対応表・結果・手順を更新し、`pnpm -s verify --change audit-scenario-evidence --done` を通す <!-- loomake:gate=done -->
