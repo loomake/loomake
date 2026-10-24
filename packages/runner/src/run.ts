@@ -447,8 +447,13 @@ async function runGate(ctx: RunContext, rec: Recorder): Promise<Stop | undefined
       restoreGateTasks();
       return stopped('実行時間の上限に達しました');
     }
+    const beforeVerify = headState(root, env);
     rec.lastVerify = runVerify({ root, changeId, gate: 'done', progress: ctx.progress, timeoutMs: left });
     rec.save(`${String(rec.step).padStart(2, '0')}-verify${fixes ? `-${fixes}` : ''}.json`, `${JSON.stringify(rec.lastVerify, null, 2)}\n`);
+    const afterVerify = headState(root, env);
+    if (beforeVerify.sha !== afterVerify.sha || beforeVerify.branch !== afterVerify.branch) {
+      return stopped('検証のあいだにHEADかブランチが変わりました。変更を取り消していません。Gitの状態を確認してから、もう一度実行してください。');
+    }
     if (rec.lastVerify.ok) break;
     restoreGateTasks();
     if (rec.lastVerify.results.some((r) => r.detail === TIMED_OUT)) return stopped('実行時間の上限に達しました');
