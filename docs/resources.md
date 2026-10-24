@@ -69,7 +69,7 @@ node openspec/changes/archive/2026-10-24-bound-input-resources/benchmark.mjs .lo
 
 ## 外部操作の時間と出力
 
-runはロック取得前から単調増加する実時間で全体の予算を数え、準備、Git、エンジン、OpenSpec検証、品質コマンド、証拠記録、ghへ残り時間を渡す。既定は60分で、`run.timeoutMinutes`を使う。Git・gh・エンジンの存在確認・OpenSpec検証は、1操作30秒と残り時間の短い方で止める。品質コマンドは30秒の操作上限を使わず、従来の合計残り時間を使う。
+runはロック取得前から単調増加する実時間で全体の予算を数え、準備、Git、エンジン、OpenSpec検証、品質コマンド、証拠記録、ghへ残り時間を渡す。既定は60分で、`run.timeoutMinutes`を使う。Git・gh・エンジンの存在確認・OpenSpec検証は、1操作30秒と残り時間の短い方で止める。品質コマンドと、フックを動かすgit commit・git push、gh pr createは30秒の操作上限を使わず、合計の残り時間を使う。30秒を超えるpre-commit・pre-pushのフックがあっても、runの全体の期限までは待つ。
 
 単独のverifyでもOpenSpec検証は30秒まで、trace recordのGitも1操作30秒までとする。期限を指定しない単独verifyの品質コマンドは、従来どおり期限を設けない。この操作上限を緩めるCLI設定はない。kitの共有予算APIでは、コールバック内の期限をさらに短くできる。別の実行へ状態を漏らさず、ネストで外側の期限を延ばさない。
 
