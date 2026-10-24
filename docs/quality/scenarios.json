@@ -163,7 +163,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "大きな出力で停止し、タスクと変更を未完了のまま残す",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -179,7 +179,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "不正な出力上限",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -736,7 +736,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "不正なrun設定",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -752,7 +752,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "不正なrun設定",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -768,12 +768,12 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "正しい整数と正の小数の時間を受け付ける",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         },
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "--dry-run は、タスクの一覧と最初の指示を表示し",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -926,7 +926,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "質問と停止理由を表示する前に置換する",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -942,7 +942,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "品質コマンドの進捗を転送する前に置換する",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -1059,45 +1059,135 @@
     },
     {
       "id": "SCN-520afb964a4265f49d56",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "772bbe5fcab3fe99f0da5bb4caa7ef0395a1e121beb79870df29f9fbe9564f87",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-164"
+      ],
+      "reason": "ローカルbare originのpush失敗、見本ghの作成前・作成後の失敗から再試行し、正常終了とHEAD・証拠数・証拠全文の不変、エンジン2回のまま、必要な作成回数を確認する。今回の品質ゲートを不合格にすると進めない別試験も併用する。実際のGitHub接続の成功ではない。",
+      "tests": [
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "contains": "作成の",
+          "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "contains": "push失敗後に同じ証拠を再利用して送信する",
+          "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "contains": "今回の検証に不合格なら過去の証拠を代用しない",
+          "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+        }
+      ]
     },
     {
       "id": "SCN-798ef6eec89c203fa332",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "ec97daaa9fbfed5fc0d3fa42ace52abb125b06aaea1d9beb229fa07e1f6fd989",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-164"
+      ],
+      "reason": "json・SHA・change・全体不合格・結果のfail・内容ハッシュ・文書snapshot・旧形式の8候補を証拠だけのコミットへ入れ、再試行を終了1で停止させる。理由の表示、HEAD、証拠全文と数、PR作成呼び出し数の不変をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "contains": "の証拠は消さず増やさず停止する",
+          "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+        }
+      ]
     },
     {
       "id": "SCN-a80f45fe68c7186b0f58",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "697b3e9342a457555613eeadd280ae428eae0038542961a7d8911a68ffb4ccae",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-164"
+      ],
+      "reason": "証拠コミットの後でimplを変更してコミットし、再試行成功・証拠2個・新しい証拠の対象SHAが変更後のコミットであること・古い証拠全文の不変を確認する。",
+      "tests": [
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "contains": "証拠の後に実装を変えたら新しい対象SHAの証拠を作る",
+          "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+        }
+      ]
     },
     {
       "id": "SCN-1009fcbe6e97219df063",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "8583768795ee6a09def702211d5c08a7e79f23909cf5178ccb2920284f09c1bd",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-165"
+      ],
+      "reason": "見本ghがPRを作ってから失敗する入力の再試行で、終了0・既存PRの案内・同じHEADと証拠全文・作成呼び出し1回を確認する。完了後の再実行でも作成が増えず検索だけが2回となる試験を併用する。実GitHubの応答喪失試験ではない。",
+      "tests": [
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "contains": "作成のafterで失敗した後も同じ証拠とコミットを使う",
+          "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "contains": "完了後も再実行で証拠・コミット・PRを増やさない",
+          "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+        }
+      ]
     },
     {
       "id": "SCN-c377da1a340269f308e2",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "ecbf4c50aac52c98bb633ac9eff46de3396f12b12c78d450818a20db594c1537",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-165"
+      ],
+      "reason": "検索エラー・壊れたJSON・配列以外・不正scheme・資格情報付きURL・別head・別リポジトリ・複数候補の8入力で、終了1・PR作成なし・証拠1個を確認する。検索は見本ghであり、実GitHubの状態ではない。",
+      "tests": [
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "contains": "検索結果",
+          "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+        }
+      ]
     },
     {
       "id": "SCN-251479fc1e751b7f836a",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "d17579ee7e35ac1cd711d0500aa6c1a42c4514556ea40ecada1c68879b708c97",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-166"
+      ],
+      "reason": "初回の証拠と作成失敗を用意し、再試行の品質コマンドが不合格レポートを作る条件で、終了1・HEADと証拠数の不変・検索とPR作成が増えないことを確認する。実Gitを呼ぶ関数のspyで初回pushを確認して履歴を消し、再試行にはpushがないこともassertする。不合格でもpushする変異を検出した。",
+      "tests": [
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "contains": "今回の検証に不合格なら過去の証拠を代用しない",
+          "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+        }
+      ]
     },
     {
       "id": "SCN-b23b3f5de51d0e388763",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "74f880394def561d9109432c04bfc134d1682ac1c9a0fc9717714162fa18ee9b",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-166"
+      ],
+      "reason": "再試行の品質コマンドがHEAD・ブランチ・作業ファイルを変える3条件で、終了1と理由を確認し、HEADを元へ戻さず、変更したブランチやファイルを保つことをassertする。初回pushの正の対照を取ったspyで、再試行にはpushがなく、検索・作成と証拠も増えないことを確認する。",
+      "tests": [
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "contains": "を変えたら取り消さず外部操作を止める",
+          "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "contains": "検証が作業ファイルを変えたら、その変更を残して停止する",
+          "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+        }
+      ]
     },
     {
       "id": "SCN-f1bd6844fa2431e8bec9",
@@ -1170,33 +1260,103 @@
     },
     {
       "id": "SCN-bbacd660ae842db0a35f",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "619f23bdbfde6375b8da091197c4fac6021f51d19843b4db0f96d6a5818f424a",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-158"
+      ],
+      "reason": "見本エンジンの起動を待って別のdry-runを実行し、終了1・ロックの理由・起動1回・HEADとtasksの不変を確認する。最初の実行ディレクトリの全ファイル名と内容も前後で一致することをassertし、先の記録を変更しないことを確認する。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "二重起動は先の実行を変更せず",
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+        }
+      ]
     },
     {
       "id": "SCN-1ff43e7d569fd71e555e",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "63a79ecaa0b999309bb1070cff57bdeef935fe473c7cf25401717f34ae69d753",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-158"
+      ],
+      "reason": "エンジンを中断して終了を待ち、ロック不在と次のdry-run終了0を確認する。中断時のfixtureは未コミットの変更を残さない。通常の未コミット変更を拒否する別試験も併用し、ロックの二重取得と解放後の再取得も直接試験する。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "二重起動は先の実行を変更せず",
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+        },
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "コミット済みのファイルを書き換えていたら",
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+        },
+        {
+          "file": "packages/runner/test/lock.test.ts",
+          "contains": "二重取得を拒否し、解放後は再取得できる",
+          "sha256": "fee9a0104269281a51692c0c81d265504aa3bcbc74f8b663cf8a357f5502165c"
+        }
+      ]
     },
     {
       "id": "SCN-a789a80f2fc0149cd5e4",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "b300a251fb4d9ab9d0236a76040483bcc49051d1fdc5cd1d60344f45f131f16c",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-159"
+      ],
+      "reason": "同じホストの終了済み所有者からの回復と回復用ロックの除去を直接試験する。実際の子プロセスがロックを書いた後、生存中の取得拒否、SIGKILL後のexit待ち、取得と解放も確認する。別の回復処理がある間は元のロックを保つ試験を併用する。",
+      "tests": [
+        {
+          "file": "packages/runner/test/lock.test.ts",
+          "contains": "同じホストの終了済み所有者から回復する",
+          "sha256": "fee9a0104269281a51692c0c81d265504aa3bcbc74f8b663cf8a357f5502165c"
+        },
+        {
+          "file": "packages/runner/test/lock.test.ts",
+          "contains": "強制終了した実プロセスのロックを回復する",
+          "sha256": "fee9a0104269281a51692c0c81d265504aa3bcbc74f8b663cf8a357f5502165c"
+        },
+        {
+          "file": "packages/runner/test/lock.test.ts",
+          "contains": "回復処理が重なったときは元のロックを削除しない",
+          "sha256": "fee9a0104269281a51692c0c81d265504aa3bcbc74f8b663cf8a357f5502165c"
+        }
+      ]
     },
     {
       "id": "SCN-bcc1361db7f3a8a93c09",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "e83552c24ea485beb4cb0e4bba0e5d67516be46d878f7f6852c7dfbf6dc995d3",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-159"
+      ],
+      "reason": "壊れたJSONと別ホストの所有者の2入力で取得を拒否し、元のロック全文、HEAD、追跡済み・未追跡ファイルを含むclean状態を保つことをassertする。所有者の終了確認と再実行を案内する日本語も確認する。",
+      "tests": [
+        {
+          "file": "packages/runner/test/lock.test.ts",
+          "contains": "不明か別ホストのロック",
+          "sha256": "fee9a0104269281a51692c0c81d265504aa3bcbc74f8b663cf8a357f5502165c"
+        }
+      ]
     },
     {
       "id": "SCN-ab9c8621bac94bca4228",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "008e831fd4424025336394d1bf15f39ff3ddb62a7dc2e200185a9ac5b412dc3a",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-160"
+      ],
+      "reason": "同じDateをnowへ渡して質問の異なるrunを2回行い、ディレクトリが2個、両summaryの理由と両01-output.jsonのresultが別々に残ることをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "同じ秒に再実行しても両方の理由とログを残す",
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+        }
+      ]
     },
     {
       "id": "SCN-9ce815ac193f126dc124",
@@ -3143,7 +3303,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "不合格なら内容をエンジンに渡して直させ、直しをコミットし",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3379,7 +3539,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "仕様ゲートに不合格なら、内容を表示し",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3395,7 +3555,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "仕様ゲートに合格すれば、実装に進む",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3411,7 +3571,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "コミット済みのファイルを書き換えていたら、ファイル名を出し",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3443,7 +3603,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "テストのレポートを .gitignore で除外していなければ",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3459,7 +3619,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "--dry-run は、タスクの一覧と最初の指示を表示し",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3475,7 +3635,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "loomake/<change-id> がなければ、いまの HEAD から作ってコミットする",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3491,7 +3651,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "loomake/<change-id> があれば",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3507,7 +3667,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "別のブランチから再開したら、loomake/<change-id> の tasks.md で",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3523,12 +3683,12 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "未完了のタスクを上から順に、1 回に 1 つずつ渡す",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         },
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "完了ゲートのタスクはエンジンに渡さない",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3544,7 +3704,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "[REQ-097] 完了済みのタスクは渡さない",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3560,7 +3720,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "指示に、AGENTS.md・タスク・差分仕様・trace.md",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3576,7 +3736,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "指示に、git でコミットしたりブランチを切り替えたりせず",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3592,7 +3752,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "タスクを終えるたびに、変更と完了にした tasks.md を",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3608,7 +3768,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "エンジンが 0 以外の終了コードで終わったら",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3624,7 +3784,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "不合格なら内容をエンジンに渡して直させ、直しをコミットし",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3640,7 +3800,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "完了ゲートのタスクはエンジンに渡さない",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3656,7 +3816,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "印のあるタスクは、文に verify と --done がなくても",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3672,7 +3832,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "印のない旧書式のタスクもエンジンに渡さず",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3688,7 +3848,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "残ったタスクの表示と summary.json には、印を含めない",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3704,7 +3864,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "ふだんは -p と JSON の出力で呼び",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3720,7 +3880,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "知らないエンジンでは、使い方の誤りとして",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3736,7 +3896,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "claude コマンドがなければ、Claude Code を入れるよう",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3752,7 +3912,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "change-id にパスの区切りを含めると、使い方の誤りとして",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3768,7 +3928,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "LOOMAKE_SANDBOX=1 で --skip-permissions を付ければ",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3784,7 +3944,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "LOOMAKE_SANDBOX=1 でなければ、--skip-permissions を断り",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3800,39 +3960,39 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "直しの回数が上限に達したら止まり",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
     {
       "id": "SCN-95364dbf8675120e8f4b",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "986ac7e204b3023f46466c2153c7412e919c4023f815e400a5ee6ff7da4439a6",
       "sources": [
         "REQ-105"
       ],
-      "reason": "時間切れの終了コード・理由・経過時間などは確認するが、この試験では子PIDの消滅をassertしない。Scenarioの実プロセス停止の確認を補うまで未確認にする。",
+      "reason": "実行中の見本エンジン自身がPIDを書いてから待機する。短い既存の期限でrunが終了1となり、時間上限の理由と従来の経過時間を確認した後、PIDファイルの存在・正の整数・そのPIDが生存しないことをassertする。試験自身の後片付けはassertion後のfinallyで行う。プロセスが起動しなかった場合は成功としない。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "実行時間が上限に達したら、エンジンを止めて",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
     {
       "id": "SCN-8b478bee2ca2d91a265f",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "4483ec28f66006a4a33bd773cb93cb026181312e893427605e372a3b10c99dbd",
       "sources": [
         "REQ-105"
       ],
-      "reason": "時間切れの終了コード・理由・経過時間などは確認するが、この試験では子PIDの消滅をassertしない。Scenarioの実プロセス停止の確認を補うまで未確認にする。",
+      "reason": "実際の品質コマンドがPIDを書いて待機し、既存の期限で停止する入力で、終了1・理由・エンジン起動2回・経過時間・ゲート未完了を維持した。PIDの存在と有効な整数、runが戻った時点のプロセス消滅もassertし、その後に試験自身の後片付けを行う。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "完了ゲートのテストが終わらないまま上限に達したら",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3848,7 +4008,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "エンジンが LOOMAKE-QUESTION: を出したら",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3864,7 +4024,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "止まったら、理由・終えたタスク・残ったタスク",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3880,7 +4040,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "1つのタスクと完了ゲートの記録を同じ実行に保存する",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3896,7 +4056,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "実行の記録は、git の未コミットの変更に出てこない",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3912,7 +4072,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "出力の中のトークンを *** に置き換えて保存し",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3928,7 +4088,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "REMOTE_CONTAINERS が設定されていれば",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3944,7 +4104,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "コンテナの外で確認に断ると",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3960,7 +4120,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "コンテナの外で確認を受け付けられなければ",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -3999,7 +4159,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "@loomake/runner の dependencies は core・kit・trace だけ",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -4015,7 +4175,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "始めたあとにコミットが git のフックで失敗したら",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -4031,7 +4191,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "git のリポジトリでなければ、実行の記録を作らず",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -5595,9 +5755,19 @@
     },
     {
       "id": "SCN-41989316d0079c9e056f",
-      "status": "unreviewed",
-      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
-      "scenarioSha256": "222db3d16da66c56fc06d9a506ddfd4cd1038b57bcd4103c07cb5d707e4b86f7"
+      "status": "reviewed",
+      "scenarioSha256": "222db3d16da66c56fc06d9a506ddfd4cd1038b57bcd4103c07cb5d707e4b86f7",
+      "sources": [
+        "REQ-193"
+      ],
+      "reason": "設定を壊れたJSONへ書き換えてCLI mainを呼び、終了2・設定ファイルを示す日本語・SyntaxErrorの露出なし・エンジン起動なし・実行記録なしを確認する。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "loomake.config.json を JSON として読めなければ",
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+        }
+      ]
     },
     {
       "id": "SCN-51eb282bf8e261c6ff67",
@@ -5803,7 +5973,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "追加された既知形式と隣接する秘密鍵を実際の出力記録",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -5819,7 +5989,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "追加された既知形式と隣接する秘密鍵を実際の出力記録",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -5835,7 +6005,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "追加された既知形式と隣接する秘密鍵を実際の出力記録",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -6364,7 +6534,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "[REQ-124] 完了ゲートの品質コマンドの途中で中断されたら",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         }
       ]
     },
@@ -6895,7 +7065,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "完了ゲートの品質コマンドの途中で中断されたら",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         },
         {
           "file": "packages/kit/test/verify.test.ts",
@@ -6916,7 +7086,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "[REQ-142] @loomake/runner の engines.node",
-          "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
         },
         {
           "file": "scripts/runtime-compatibility.mjs",
