@@ -1,0 +1,1439 @@
+{
+  "change": "close-engine-and-hook-safety-gaps",
+  "tasks": [
+    "3.1",
+    "3.2"
+  ],
+  "platform": "linux",
+  "arch": "arm64",
+  "node": "v24.21.0",
+  "red": {
+    "report": ".loomake/quality/close-hooks-red.json",
+    "sha256": "7633b2ee9b09f767cc69e5530269cc08fe79e94ea5fd9c727cef617e09636f86",
+    "sourceHashes": {
+      "packages/runner/src/guards.ts": "ffcbe694322c23bb8c04fbc7bab4e9e5a267d0a6bae532b0fa5c5f2d5206fc15",
+      "packages/runner/test/guards-special-files.test.ts": "92f5d15a2985c21f3afb3a224857b7aedc57bdcd22c6ab9608fbc8580a7cbccb"
+    },
+    "result": {
+      "numTotalTestSuites": 2,
+      "numPassedTestSuites": 0,
+      "numFailedTestSuites": 2,
+      "numPendingTestSuites": 0,
+      "numTotalTests": 8,
+      "numPassedTests": 4,
+      "numFailedTests": 4,
+      "numPendingTests": 0,
+      "numTodoTests": 0,
+      "snapshot": {
+        "added": 0,
+        "failure": false,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesRemovedList": [],
+        "filesUnmatched": 0,
+        "filesUpdated": 0,
+        "matched": 0,
+        "total": 0,
+        "unchecked": 0,
+        "uncheckedKeysByFile": [],
+        "unmatched": 0,
+        "updated": 0,
+        "didUpdate": false
+      },
+      "startTime": 1792874798459,
+      "success": false,
+      "testResults": [
+        {
+          "assertionResults": [
+            {
+              "ancestorTitles": [
+                "フック内の特殊ファイルの実プロセス検査"
+              ],
+              "fullName": "フック内の特殊ファイルの実プロセス検査 [REQ-208] 通常ファイルのスナップショットは外側の期限内に返る",
+              "status": "passed",
+              "title": "[REQ-208] 通常ファイルのスナップショットは外側の期限内に返る",
+              "duration": 342.9598329999999,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "フック内の特殊ファイルの実プロセス検査"
+              ],
+              "fullName": "フック内の特殊ファイルの実プロセス検査 [REQ-208] 書き手のないFIFOを開かず対象を示すUsageErrorで拒否する",
+              "status": "failed",
+              "title": "[REQ-208] 書き手のないFIFOを開かず対象を示すUsageErrorで拒否する",
+              "duration": 3109.838501000001,
+              "failureMessages": [
+                "AssertionError: expected Error: spawnSync /usr/local/bin/node ETIM… { …(5) } to be undefined\n    at probe (/tmp/loomake-quality-after-merge/packages/runner/test/guards-special-files.test.ts:36:39)\n    at /tmp/loomake-quality-after-merge/packages/runner/test/guards-special-files.test.ts:72:22\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1632:35\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2801:26\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3338:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3333:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)"
+              ],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "フック内の特殊ファイルの実プロセス検査"
+              ],
+              "fullName": "フック内の特殊ファイルの実プロセス検査 [REQ-208] Unixソケットを内容の読み取り前にUsageErrorで拒否する",
+              "status": "failed",
+              "title": "[REQ-208] Unixソケットを内容の読み取り前にUsageErrorで拒否する",
+              "duration": 508.81479200000103,
+              "failureMessages": [
+                "AssertionError: expected { kind: 'rejected', …(2) } to match object { kind: 'rejected', usageError: true }\n(1 matching property omitted from actual)\n    at Proxy.<anonymous> (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:2066:10)\n    at Proxy.<anonymous> (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/index.aTZaPVhf.js:1958:14)\n    at Proxy.methodWrapper (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/chai@6.3.0/node_modules/chai/index.js:1737:25)\n    at /tmp/loomake-quality-after-merge/packages/runner/test/guards-special-files.test.ts:88:22\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2801:20"
+              ],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "フック内の特殊ファイルの実プロセス検査"
+              ],
+              "fullName": "フック内の特殊ファイルの実プロセス検査 [REQ-208] beforeのFIFOで通常runを止め、タスク・変更・コミットを保つ",
+              "status": "failed",
+              "title": "[REQ-208] beforeのFIFOで通常runを止め、タスク・変更・コミットを保つ",
+              "duration": 10119.208503999998,
+              "failureMessages": [
+                "AssertionError: expected Error: spawnSync /usr/local/bin/node ETIM… { …(5) } to be undefined\n    at probe (/tmp/loomake-quality-after-merge/packages/runner/test/guards-special-files.test.ts:36:39)\n    at /tmp/loomake-quality-after-merge/packages/runner/test/guards-special-files.test.ts:109:22\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2886:64\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1632:35\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2801:26\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3338:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3333:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)"
+              ],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "フック内の特殊ファイルの実プロセス検査"
+              ],
+              "fullName": "フック内の特殊ファイルの実プロセス検査 [REQ-208] engineのFIFOで通常runを止め、タスク・変更・コミットを保つ",
+              "status": "failed",
+              "title": "[REQ-208] engineのFIFOで通常runを止め、タスク・変更・コミットを保つ",
+              "duration": 10328.805589,
+              "failureMessages": [
+                "AssertionError: expected Error: spawnSync /usr/local/bin/node ETIM… { …(5) } to be undefined\n    at probe (/tmp/loomake-quality-after-merge/packages/runner/test/guards-special-files.test.ts:36:39)\n    at /tmp/loomake-quality-after-merge/packages/runner/test/guards-special-files.test.ts:109:22\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2886:64\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1632:35\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2801:26\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3338:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3333:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)"
+              ],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "フック内の特殊ファイルの実プロセス検査"
+              ],
+              "fullName": "フック内の特殊ファイルの実プロセス検査 [REQ-208][REQ-204] regularの既存フックを保ち、通常runでタスクをコミットする",
+              "status": "passed",
+              "title": "[REQ-208][REQ-204] regularの既存フックを保ち、通常runでタスクをコミットする",
+              "duration": 1061.0238759999993,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "フック内の特殊ファイルの実プロセス検査"
+              ],
+              "fullName": "フック内の特殊ファイルの実プロセス検査 [REQ-208][REQ-204] danglingの既存フックを保ち、通常runでタスクをコミットする",
+              "status": "passed",
+              "title": "[REQ-208][REQ-204] danglingの既存フックを保ち、通常runでタスクをコミットする",
+              "duration": 1038.6738750000004,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "フック内の特殊ファイルの実プロセス検査"
+              ],
+              "fullName": "フック内の特殊ファイルの実プロセス検査 [REQ-208][REQ-204] directoryの既存フックを保ち、通常runでタスクをコミットする",
+              "status": "passed",
+              "title": "[REQ-208][REQ-204] directoryの既存フックを保ち、通常runでタスクをコミットする",
+              "duration": 1026.869166999997,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            }
+          ],
+          "startTime": 1792874804947,
+          "endTime": 1792874832484.8691,
+          "status": "failed",
+          "message": "",
+          "name": "/tmp/loomake-quality-after-merge/packages/runner/test/guards-special-files.test.ts"
+        }
+      ]
+    },
+    "classification": "Four controls passed; FIFO snapshot and two true-run paths timed out under external supervisor, socket raised unclassified fs error. External timeouts are failures, not product refusals."
+  },
+  "green": {
+    "file": ".loomake/quality/close-hooks-green.json",
+    "sha256": "743ff0f88fc7aad3a8b811ffdf2b4a5feff3f36ed2d1073825395a0cb1837cee",
+    "passed": 8,
+    "failed": 0,
+    "pending": 0,
+    "result": {
+      "numTotalTestSuites": 2,
+      "numPassedTestSuites": 2,
+      "numFailedTestSuites": 0,
+      "numPendingTestSuites": 0,
+      "numTotalTests": 8,
+      "numPassedTests": 8,
+      "numFailedTests": 0,
+      "numPendingTests": 0,
+      "numTodoTests": 0,
+      "snapshot": {
+        "added": 0,
+        "failure": false,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesRemovedList": [],
+        "filesUnmatched": 0,
+        "filesUpdated": 0,
+        "matched": 0,
+        "total": 0,
+        "unchecked": 0,
+        "uncheckedKeysByFile": [],
+        "unmatched": 0,
+        "updated": 0,
+        "didUpdate": false
+      },
+      "startTime": 1792874870923,
+      "success": true,
+      "testResults": [
+        {
+          "assertionResults": [
+            {
+              "ancestorTitles": [
+                "フック内の特殊ファイルの実プロセス検査"
+              ],
+              "fullName": "フック内の特殊ファイルの実プロセス検査 [REQ-208] 通常ファイルのスナップショットは外側の期限内に返る",
+              "status": "passed",
+              "title": "[REQ-208] 通常ファイルのスナップショットは外側の期限内に返る",
+              "duration": 189.055083,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "フック内の特殊ファイルの実プロセス検査"
+              ],
+              "fullName": "フック内の特殊ファイルの実プロセス検査 [REQ-208] 書き手のないFIFOを開かず対象を示すUsageErrorで拒否する",
+              "status": "passed",
+              "title": "[REQ-208] 書き手のないFIFOを開かず対象を示すUsageErrorで拒否する",
+              "duration": 127.12495800000005,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "フック内の特殊ファイルの実プロセス検査"
+              ],
+              "fullName": "フック内の特殊ファイルの実プロセス検査 [REQ-208] Unixソケットを内容の読み取り前にUsageErrorで拒否する",
+              "status": "passed",
+              "title": "[REQ-208] Unixソケットを内容の読み取り前にUsageErrorで拒否する",
+              "duration": 122.96633400000007,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "フック内の特殊ファイルの実プロセス検査"
+              ],
+              "fullName": "フック内の特殊ファイルの実プロセス検査 [REQ-208] beforeのFIFOで通常runを止め、タスク・変更・コミットを保つ",
+              "status": "passed",
+              "title": "[REQ-208] beforeのFIFOで通常runを止め、タスク・変更・コミットを保つ",
+              "duration": 327.88929200000007,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "フック内の特殊ファイルの実プロセス検査"
+              ],
+              "fullName": "フック内の特殊ファイルの実プロセス検査 [REQ-208] engineのFIFOで通常runを止め、タスク・変更・コミットを保つ",
+              "status": "passed",
+              "title": "[REQ-208] engineのFIFOで通常runを止め、タスク・変更・コミットを保つ",
+              "duration": 378.3821250000001,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "フック内の特殊ファイルの実プロセス検査"
+              ],
+              "fullName": "フック内の特殊ファイルの実プロセス検査 [REQ-208][REQ-204] regularの既存フックを保ち、通常runでタスクをコミットする",
+              "status": "passed",
+              "title": "[REQ-208][REQ-204] regularの既存フックを保ち、通常runでタスクをコミットする",
+              "duration": 1098.684834,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "フック内の特殊ファイルの実プロセス検査"
+              ],
+              "fullName": "フック内の特殊ファイルの実プロセス検査 [REQ-208][REQ-204] danglingの既存フックを保ち、通常runでタスクをコミットする",
+              "status": "passed",
+              "title": "[REQ-208][REQ-204] danglingの既存フックを保ち、通常runでタスクをコミットする",
+              "duration": 1129.956209,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "フック内の特殊ファイルの実プロセス検査"
+              ],
+              "fullName": "フック内の特殊ファイルの実プロセス検査 [REQ-208][REQ-204] directoryの既存フックを保ち、通常runでタスクをコミットする",
+              "status": "passed",
+              "title": "[REQ-208][REQ-204] directoryの既存フックを保ち、通常runでタスクをコミットする",
+              "duration": 1116.0210420000003,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            }
+          ],
+          "startTime": 1792874871148,
+          "endTime": 1792874875638.021,
+          "status": "passed",
+          "message": "",
+          "name": "/tmp/loomake-quality-after-merge/packages/runner/test/guards-special-files.test.ts"
+        }
+      ]
+    }
+  },
+  "existingInitial": {
+    "file": ".loomake/quality/close-hooks-existing-green.json",
+    "sha256": "1ad96624b0de6f723f463b97a3ea21256ffbae967132f7f943836ddaae5734c0",
+    "passed": 39,
+    "failed": 1,
+    "pending": 0,
+    "result": {
+      "numTotalTestSuites": 10,
+      "numPassedTestSuites": 8,
+      "numFailedTestSuites": 2,
+      "numPendingTestSuites": 0,
+      "numTotalTests": 40,
+      "numPassedTests": 39,
+      "numFailedTests": 1,
+      "numPendingTests": 0,
+      "numTodoTests": 0,
+      "snapshot": {
+        "added": 0,
+        "failure": false,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesRemovedList": [],
+        "filesUnmatched": 0,
+        "filesUpdated": 0,
+        "matched": 0,
+        "total": 0,
+        "unchecked": 0,
+        "uncheckedKeysByFile": [],
+        "unmatched": 0,
+        "updated": 0,
+        "didUpdate": false
+      },
+      "startTime": 1792874890400,
+      "success": false,
+      "testResults": [
+        {
+          "assertionResults": [
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 [REQ-109] テストファイルを消したら、削除を表示し、コミットせずに止まる",
+              "status": "passed",
+              "title": "[REQ-109] テストファイルを消したら、削除を表示し、コミットせずに止まる",
+              "duration": 442.239916,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 [REQ-109] テストファイルに it.skip の行を足したら、その行を表示して止まる",
+              "status": "passed",
+              "title": "[REQ-109] テストファイルに it.skip の行を足したら、その行を表示して止まる",
+              "duration": 424.13545799999997,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 [REQ-109] ふつうのテストを足しただけなら、止まらずにコミットする",
+              "status": "passed",
+              "title": "[REQ-109] ふつうのテストを足しただけなら、止まらずにコミットする",
+              "duration": 1092.2933340000002,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 [REQ-109] テストファイルに it.skipIf(true) の行を足したら止まる",
+              "status": "passed",
+              "title": "[REQ-109] テストファイルに it.skipIf(true) の行を足したら止まる",
+              "duration": 11433.469754000002,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 [REQ-109] テストファイルに describe.skipIf(true) の行を足したら止まる",
+              "status": "passed",
+              "title": "[REQ-109] テストファイルに describe.skipIf(true) の行を足したら止まる",
+              "duration": 509.39087499999914,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 [REQ-109] テストファイルに it.runIf(false) の行を足したら止まる",
+              "status": "passed",
+              "title": "[REQ-109] テストファイルに it.runIf(false) の行を足したら止まる",
+              "duration": 1632.2838339999998,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 [REQ-109] テストファイルに it.concurrent.skip の行を足したら止まる",
+              "status": "passed",
+              "title": "[REQ-109] テストファイルに it.concurrent.skip の行を足したら止まる",
+              "duration": 705.5608339999981,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 [REQ-109] HEAD にあったアサーションを書き換えたら、書き換える前の行を表示して止まる",
+              "status": "passed",
+              "title": "[REQ-109] HEAD にあったアサーションを書き換えたら、書き換える前の行を表示して止まる",
+              "duration": 610.5806669999984,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 [REQ-109] ファイルの中のテストを消したら、消した it( の行を表示して止まる",
+              "status": "passed",
+              "title": "[REQ-109] ファイルの中のテストを消したら、消した it( の行を表示して止まる",
+              "duration": 1774.7424170000013,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 [REQ-109] アサーションの行の字下げを変えて別の describe へ移すだけなら、止まらずにコミットする",
+              "status": "failed",
+              "title": "[REQ-109] アサーションの行の字下げを変えて別の describe へ移すだけなら、止まらずにコミットする",
+              "duration": 64441.15432100001,
+              "failureMessages": [
+                "Error: Test timed out in 60000ms.\nIf this is a long-running test, pass a timeout value as the last argument or configure it globally with \"testTimeout\".\n    at task (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2700:43)\n    at Object.<anonymous> (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2717:16)\n    at Object.<anonymous> (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2486:28)\n    at chain (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1870:14)\n    at /tmp/loomake-quality-after-merge/packages/runner/test/guards.test.ts:115:3\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2781:52\n    at runWithSuite (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3267:8)\n    at Object.collect (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2781:22)\n    at Object.collect (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2786:51)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+              ],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 [REQ-109] テストでない呼び出し（/x/.test(s)）の行を書き換えるだけなら、止まらずにコミットする",
+              "status": "passed",
+              "title": "[REQ-109] テストでない呼び出し（/x/.test(s)）の行を書き換えるだけなら、止まらずにコミットする",
+              "duration": 1252.2380430000048,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 xit( と describe.todo も skip・todo として見つける（仮定 A-17）",
+              "status": "passed",
+              "title": "xit( と describe.todo も skip・todo として見つける（仮定 A-17）",
+              "duration": 498.1990839999926,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "設定の変更の検出"
+              ],
+              "fullName": "設定の変更の検出 [REQ-110] loomake.config.json を変えたら、差分を表示して止まる",
+              "status": "passed",
+              "title": "[REQ-110] loomake.config.json を変えたら、差分を表示して止まる",
+              "duration": 453.4846249999973,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "設定の変更の検出"
+              ],
+              "fullName": "設定の変更の検出 [REQ-110] package.json の scripts を変えたら止まる",
+              "status": "passed",
+              "title": "[REQ-110] package.json の scripts を変えたら止まる",
+              "duration": 486.8536250000034,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "設定の変更の検出"
+              ],
+              "fullName": "設定の変更の検出 [REQ-110] 子パッケージの package.json の scripts を変えたら止まる",
+              "status": "passed",
+              "title": "[REQ-110] 子パッケージの package.json の scripts を変えたら止まる",
+              "duration": 567.1968340000021,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "設定の変更の検出"
+              ],
+              "fullName": "設定の変更の検出 [REQ-110] scripts のある package.json を消したら止まる",
+              "status": "passed",
+              "title": "[REQ-110] scripts のある package.json を消したら止まる",
+              "duration": 571.5308749999967,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "設定の変更の検出"
+              ],
+              "fullName": "設定の変更の検出 [REQ-110] package.json の dependencies だけを変えたら、止まらずにコミットする",
+              "status": "passed",
+              "title": "[REQ-110] package.json の dependencies だけを変えたら、止まらずにコミットする",
+              "duration": 1466.8108340000035,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "設定の変更の検出"
+              ],
+              "fullName": "設定の変更の検出 tsconfig と vitest.config も設定ファイルとして見つける（仮定 A-18）",
+              "status": "passed",
+              "title": "tsconfig と vitest.config も設定ファイルとして見つける（仮定 A-18）",
+              "duration": 460.28916699999536,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "仕様と trace.md の変更の検出"
+              ],
+              "fullName": "仕様と trace.md の変更の検出 [REQ-111] openspec/specs/ の下を書き換えたら止まる",
+              "status": "passed",
+              "title": "[REQ-111] openspec/specs/ の下を書き換えたら止まる",
+              "duration": 451.2771250000078,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "仕様と trace.md の変更の検出"
+              ],
+              "fullName": "仕様と trace.md の変更の検出 [REQ-111] change の trace.md を書き換えたら止まる",
+              "status": "passed",
+              "title": "[REQ-111] change の trace.md を書き換えたら止まる",
+              "duration": 428.8233760000003,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "仕様と trace.md の変更の検出"
+              ],
+              "fullName": "仕様と trace.md の変更の検出 [REQ-111] tasks.md から未完了のタスクの行を消したら止まる",
+              "status": "passed",
+              "title": "[REQ-111] tasks.md から未完了のタスクの行を消したら止まる",
+              "duration": 384.1252499999973,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "仕様と trace.md の変更の検出"
+              ],
+              "fullName": "仕様と trace.md の変更の検出 [REQ-111] 差分仕様から Requirement を消したら止まる",
+              "status": "passed",
+              "title": "[REQ-111] 差分仕様から Requirement を消したら止まる",
+              "duration": 398.5511259999912,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "仕様と trace.md の変更の検出"
+              ],
+              "fullName": "仕様と trace.md の変更の検出 [REQ-111] openspecDir を変えたプロジェクトでは、その下の仕様と change の文書の変更を見つける",
+              "status": "passed",
+              "title": "[REQ-111] openspecDir を変えたプロジェクトでは、その下の仕様と change の文書の変更を見つける",
+              "duration": 86.66874999999709,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "止まったときの差分の表示と承認"
+              ],
+              "fullName": "止まったときの差分の表示と承認 [REQ-112] 理由と差分を表示し、変更を作業ツリーに残し、承認のしかたを案内して終了コード 1 を返す",
+              "status": "passed",
+              "title": "[REQ-112] 理由と差分を表示し、変更を作業ツリーに残し、承認のしかたを案内して終了コード 1 を返す",
+              "duration": 432.9976670000033,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "止まったときの差分の表示と承認"
+              ],
+              "fullName": "止まったときの差分の表示と承認 [REQ-112] 承認せずにもう一度実行すると、未コミットの変更があるので始めない",
+              "status": "passed",
+              "title": "[REQ-112] 承認せずにもう一度実行すると、未コミットの変更があるので始めない",
+              "duration": 450.39458300000115,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "エンジンによるコミットとブランチの切り替えの検出"
+              ],
+              "fullName": "エンジンによるコミットとブランチの切り替えの検出 [REQ-126] エンジンが自分でコミットしたら、前後の SHA を表示し、タスクを完了にせずに止まる",
+              "status": "passed",
+              "title": "[REQ-126] エンジンが自分でコミットしたら、前後の SHA を表示し、タスクを完了にせずに止まる",
+              "duration": 337.47645800000464,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "エンジンによるコミットとブランチの切り替えの検出"
+              ],
+              "fullName": "エンジンによるコミットとブランチの切り替えの検出 [REQ-126] 設定を変えてコミットしたら、その差分を表示して止まる",
+              "status": "passed",
+              "title": "[REQ-126] 設定を変えてコミットしたら、その差分を表示して止まる",
+              "duration": 349.368083999987,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "エンジンによるコミットとブランチの切り替えの検出"
+              ],
+              "fullName": "エンジンによるコミットとブランチの切り替えの検出 [REQ-126] エンジンが別のブランチに切り替えたら、前後のブランチ名を表示し、ブランチを戻さずに止まる",
+              "status": "passed",
+              "title": "[REQ-126] エンジンが別のブランチに切り替えたら、前後のブランチ名を表示し、ブランチを戻さずに止まる",
+              "duration": 310.40954199999396,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "エンジンによるコミットとブランチの切り替えの検出"
+              ],
+              "fullName": "エンジンによるコミットとブランチの切り替えの検出 [REQ-126] コミットしてから失敗したら、HEAD が変わったことを理由に含めて止まる",
+              "status": "passed",
+              "title": "[REQ-126] コミットしてから失敗したら、HEAD が変わったことを理由に含めて止まる",
+              "duration": 584.1396669999958,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "エンジンによるコミットとブランチの切り替えの検出"
+              ],
+              "fullName": "エンジンによるコミットとブランチの切り替えの検出 [REQ-126] 完了ゲートの直しでエンジンがコミットしたら、完了ゲートのタスクを完了にせずに止まる",
+              "status": "passed",
+              "title": "[REQ-126] 完了ゲートの直しでエンジンがコミットしたら、完了ゲートのタスクを完了にせずに止まる",
+              "duration": 939.4196260000026,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "エンジンによるコミットとブランチの切り替えの検出"
+              ],
+              "fullName": "エンジンによるコミットとブランチの切り替えの検出 [REQ-126] エンジンがコミットせずに終えたら、止まらずにタスクを完了にしてコミットする",
+              "status": "passed",
+              "title": "[REQ-126] エンジンがコミットせずに終えたら、止まらずにタスクを完了にしてコミットする",
+              "duration": 1042.5200429999968,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "git の設定とフックの変更の検出"
+              ],
+              "fullName": "git の設定とフックの変更の検出 [REQ-198] エンジンがフックを足したら、コミットせず、フックを実行せずに止まる",
+              "status": "passed",
+              "title": "[REQ-198] エンジンがフックを足したら、コミットせず、フックを実行せずに止まる",
+              "duration": 301.35233400001016,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "git の設定とフックの変更の検出"
+              ],
+              "fullName": "git の設定とフックの変更の検出 [REQ-198] エンジンが git の設定を変えたら、コミットせずに止まる",
+              "status": "passed",
+              "title": "[REQ-198] エンジンが git の設定を変えたら、コミットせずに止まる",
+              "duration": 298.00954099999217,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "git の設定とフックの変更の検出"
+              ],
+              "fullName": "git の設定とフックの変更の検出 [REQ-198] run の前からあるフックは、run のコミットで動く",
+              "status": "passed",
+              "title": "[REQ-198] run の前からあるフックは、run のコミットで動く",
+              "duration": 1005.7982929999998,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの検査を弱める変更の検出"
+              ],
+              "fullName": "テストの検査を弱める変更の検出 [REQ-201] 既存のテストから検査の行を消したら、コミットせずに止まる",
+              "status": "passed",
+              "title": "[REQ-201] 既存のテストから検査の行を消したら、コミットせずに止まる",
+              "duration": 381.75470800000767,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの検査を弱める変更の検出"
+              ],
+              "fullName": "テストの検査を弱める変更の検出 [REQ-201] 必ず通る検査に書き換えたら、コミットせずに止まる",
+              "status": "passed",
+              "title": "[REQ-201] 必ず通る検査に書き換えたら、コミットせずに止まる",
+              "duration": 382.86266699999396,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの検査を弱める変更の検出"
+              ],
+              "fullName": "テストの検査を弱める変更の検出 [REQ-201] テストを足すだけなら止まらない",
+              "status": "passed",
+              "title": "[REQ-201] テストを足すだけなら止まらない",
+              "duration": 1358.705249999999,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "git の設定の比較の範囲"
+              ],
+              "fullName": "git の設定の比較の範囲 [REQ-204] include の先の設定に core.fsmonitor を書いたら、コミットせずに止まる",
+              "status": "passed",
+              "title": "[REQ-204] include の先の設定に core.fsmonitor を書いたら、コミットせずに止まる",
+              "duration": 341.82808300000033,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "git の設定の比較の範囲"
+              ],
+              "fullName": "git の設定の比較の範囲 [REQ-204] リンク先のないフックがあっても、落ちずにタスクを完了にする",
+              "status": "passed",
+              "title": "[REQ-204] リンク先のないフックがあっても、落ちずにタスクを完了にする",
+              "duration": 1016.1047930000059,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "検査の行の数え方"
+              ],
+              "fullName": "検査の行の数え方 [REQ-201] import とコメントの assert を消しても、テストの検査を減らしたとはみなさない",
+              "status": "passed",
+              "title": "[REQ-201] import とコメントの assert を消しても、テストの検査を減らしたとはみなさない",
+              "duration": 1110.2410419999942,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            }
+          ],
+          "startTime": 1792874890620,
+          "endTime": 1792874991841.241,
+          "status": "failed",
+          "message": "",
+          "name": "/tmp/loomake-quality-after-merge/packages/runner/test/guards.test.ts"
+        }
+      ]
+    }
+  },
+  "existingTimeoutRecheck": {
+    "file": ".loomake/quality/close-hooks-existing-timeout-recheck.json",
+    "sha256": "aeed9662ecdee9ce46b2bc24fac6c8c71b932ae3a3ba0233584c64bd090b6a27",
+    "passed": 1,
+    "failed": 0,
+    "pending": 39,
+    "result": {
+      "numTotalTestSuites": 10,
+      "numPassedTestSuites": 10,
+      "numFailedTestSuites": 0,
+      "numPendingTestSuites": 0,
+      "numTotalTests": 40,
+      "numPassedTests": 1,
+      "numFailedTests": 0,
+      "numPendingTests": 39,
+      "numTodoTests": 0,
+      "snapshot": {
+        "added": 0,
+        "failure": false,
+        "filesAdded": 0,
+        "filesRemoved": 0,
+        "filesRemovedList": [],
+        "filesUnmatched": 0,
+        "filesUpdated": 0,
+        "matched": 0,
+        "total": 0,
+        "unchecked": 0,
+        "uncheckedKeysByFile": [],
+        "unmatched": 0,
+        "updated": 0,
+        "didUpdate": false
+      },
+      "startTime": 1792875018260,
+      "success": true,
+      "testResults": [
+        {
+          "assertionResults": [
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 [REQ-109] テストファイルを消したら、削除を表示し、コミットせずに止まる",
+              "status": "skipped",
+              "title": "[REQ-109] テストファイルを消したら、削除を表示し、コミットせずに止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 [REQ-109] テストファイルに it.skip の行を足したら、その行を表示して止まる",
+              "status": "skipped",
+              "title": "[REQ-109] テストファイルに it.skip の行を足したら、その行を表示して止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 [REQ-109] ふつうのテストを足しただけなら、止まらずにコミットする",
+              "status": "skipped",
+              "title": "[REQ-109] ふつうのテストを足しただけなら、止まらずにコミットする",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 [REQ-109] テストファイルに it.skipIf(true) の行を足したら止まる",
+              "status": "skipped",
+              "title": "[REQ-109] テストファイルに it.skipIf(true) の行を足したら止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 [REQ-109] テストファイルに describe.skipIf(true) の行を足したら止まる",
+              "status": "skipped",
+              "title": "[REQ-109] テストファイルに describe.skipIf(true) の行を足したら止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 [REQ-109] テストファイルに it.runIf(false) の行を足したら止まる",
+              "status": "skipped",
+              "title": "[REQ-109] テストファイルに it.runIf(false) の行を足したら止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 [REQ-109] テストファイルに it.concurrent.skip の行を足したら止まる",
+              "status": "skipped",
+              "title": "[REQ-109] テストファイルに it.concurrent.skip の行を足したら止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 [REQ-109] HEAD にあったアサーションを書き換えたら、書き換える前の行を表示して止まる",
+              "status": "skipped",
+              "title": "[REQ-109] HEAD にあったアサーションを書き換えたら、書き換える前の行を表示して止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 [REQ-109] ファイルの中のテストを消したら、消した it( の行を表示して止まる",
+              "status": "skipped",
+              "title": "[REQ-109] ファイルの中のテストを消したら、消した it( の行を表示して止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 [REQ-109] アサーションの行の字下げを変えて別の describe へ移すだけなら、止まらずにコミットする",
+              "status": "passed",
+              "title": "[REQ-109] アサーションの行の字下げを変えて別の describe へ移すだけなら、止まらずにコミットする",
+              "duration": 953.772417,
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 [REQ-109] テストでない呼び出し（/x/.test(s)）の行を書き換えるだけなら、止まらずにコミットする",
+              "status": "skipped",
+              "title": "[REQ-109] テストでない呼び出し（/x/.test(s)）の行を書き換えるだけなら、止まらずにコミットする",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの削除と skip・todo の検出"
+              ],
+              "fullName": "テストの削除と skip・todo の検出 xit( と describe.todo も skip・todo として見つける（仮定 A-17）",
+              "status": "skipped",
+              "title": "xit( と describe.todo も skip・todo として見つける（仮定 A-17）",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "設定の変更の検出"
+              ],
+              "fullName": "設定の変更の検出 [REQ-110] loomake.config.json を変えたら、差分を表示して止まる",
+              "status": "skipped",
+              "title": "[REQ-110] loomake.config.json を変えたら、差分を表示して止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "設定の変更の検出"
+              ],
+              "fullName": "設定の変更の検出 [REQ-110] package.json の scripts を変えたら止まる",
+              "status": "skipped",
+              "title": "[REQ-110] package.json の scripts を変えたら止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "設定の変更の検出"
+              ],
+              "fullName": "設定の変更の検出 [REQ-110] 子パッケージの package.json の scripts を変えたら止まる",
+              "status": "skipped",
+              "title": "[REQ-110] 子パッケージの package.json の scripts を変えたら止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "設定の変更の検出"
+              ],
+              "fullName": "設定の変更の検出 [REQ-110] scripts のある package.json を消したら止まる",
+              "status": "skipped",
+              "title": "[REQ-110] scripts のある package.json を消したら止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "設定の変更の検出"
+              ],
+              "fullName": "設定の変更の検出 [REQ-110] package.json の dependencies だけを変えたら、止まらずにコミットする",
+              "status": "skipped",
+              "title": "[REQ-110] package.json の dependencies だけを変えたら、止まらずにコミットする",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "設定の変更の検出"
+              ],
+              "fullName": "設定の変更の検出 tsconfig と vitest.config も設定ファイルとして見つける（仮定 A-18）",
+              "status": "skipped",
+              "title": "tsconfig と vitest.config も設定ファイルとして見つける（仮定 A-18）",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "仕様と trace.md の変更の検出"
+              ],
+              "fullName": "仕様と trace.md の変更の検出 [REQ-111] openspec/specs/ の下を書き換えたら止まる",
+              "status": "skipped",
+              "title": "[REQ-111] openspec/specs/ の下を書き換えたら止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "仕様と trace.md の変更の検出"
+              ],
+              "fullName": "仕様と trace.md の変更の検出 [REQ-111] change の trace.md を書き換えたら止まる",
+              "status": "skipped",
+              "title": "[REQ-111] change の trace.md を書き換えたら止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "仕様と trace.md の変更の検出"
+              ],
+              "fullName": "仕様と trace.md の変更の検出 [REQ-111] tasks.md から未完了のタスクの行を消したら止まる",
+              "status": "skipped",
+              "title": "[REQ-111] tasks.md から未完了のタスクの行を消したら止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "仕様と trace.md の変更の検出"
+              ],
+              "fullName": "仕様と trace.md の変更の検出 [REQ-111] 差分仕様から Requirement を消したら止まる",
+              "status": "skipped",
+              "title": "[REQ-111] 差分仕様から Requirement を消したら止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "仕様と trace.md の変更の検出"
+              ],
+              "fullName": "仕様と trace.md の変更の検出 [REQ-111] openspecDir を変えたプロジェクトでは、その下の仕様と change の文書の変更を見つける",
+              "status": "skipped",
+              "title": "[REQ-111] openspecDir を変えたプロジェクトでは、その下の仕様と change の文書の変更を見つける",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "止まったときの差分の表示と承認"
+              ],
+              "fullName": "止まったときの差分の表示と承認 [REQ-112] 理由と差分を表示し、変更を作業ツリーに残し、承認のしかたを案内して終了コード 1 を返す",
+              "status": "skipped",
+              "title": "[REQ-112] 理由と差分を表示し、変更を作業ツリーに残し、承認のしかたを案内して終了コード 1 を返す",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "止まったときの差分の表示と承認"
+              ],
+              "fullName": "止まったときの差分の表示と承認 [REQ-112] 承認せずにもう一度実行すると、未コミットの変更があるので始めない",
+              "status": "skipped",
+              "title": "[REQ-112] 承認せずにもう一度実行すると、未コミットの変更があるので始めない",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "エンジンによるコミットとブランチの切り替えの検出"
+              ],
+              "fullName": "エンジンによるコミットとブランチの切り替えの検出 [REQ-126] エンジンが自分でコミットしたら、前後の SHA を表示し、タスクを完了にせずに止まる",
+              "status": "skipped",
+              "title": "[REQ-126] エンジンが自分でコミットしたら、前後の SHA を表示し、タスクを完了にせずに止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "エンジンによるコミットとブランチの切り替えの検出"
+              ],
+              "fullName": "エンジンによるコミットとブランチの切り替えの検出 [REQ-126] 設定を変えてコミットしたら、その差分を表示して止まる",
+              "status": "skipped",
+              "title": "[REQ-126] 設定を変えてコミットしたら、その差分を表示して止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "エンジンによるコミットとブランチの切り替えの検出"
+              ],
+              "fullName": "エンジンによるコミットとブランチの切り替えの検出 [REQ-126] エンジンが別のブランチに切り替えたら、前後のブランチ名を表示し、ブランチを戻さずに止まる",
+              "status": "skipped",
+              "title": "[REQ-126] エンジンが別のブランチに切り替えたら、前後のブランチ名を表示し、ブランチを戻さずに止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "エンジンによるコミットとブランチの切り替えの検出"
+              ],
+              "fullName": "エンジンによるコミットとブランチの切り替えの検出 [REQ-126] コミットしてから失敗したら、HEAD が変わったことを理由に含めて止まる",
+              "status": "skipped",
+              "title": "[REQ-126] コミットしてから失敗したら、HEAD が変わったことを理由に含めて止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "エンジンによるコミットとブランチの切り替えの検出"
+              ],
+              "fullName": "エンジンによるコミットとブランチの切り替えの検出 [REQ-126] 完了ゲートの直しでエンジンがコミットしたら、完了ゲートのタスクを完了にせずに止まる",
+              "status": "skipped",
+              "title": "[REQ-126] 完了ゲートの直しでエンジンがコミットしたら、完了ゲートのタスクを完了にせずに止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "エンジンによるコミットとブランチの切り替えの検出"
+              ],
+              "fullName": "エンジンによるコミットとブランチの切り替えの検出 [REQ-126] エンジンがコミットせずに終えたら、止まらずにタスクを完了にしてコミットする",
+              "status": "skipped",
+              "title": "[REQ-126] エンジンがコミットせずに終えたら、止まらずにタスクを完了にしてコミットする",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "git の設定とフックの変更の検出"
+              ],
+              "fullName": "git の設定とフックの変更の検出 [REQ-198] エンジンがフックを足したら、コミットせず、フックを実行せずに止まる",
+              "status": "skipped",
+              "title": "[REQ-198] エンジンがフックを足したら、コミットせず、フックを実行せずに止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "git の設定とフックの変更の検出"
+              ],
+              "fullName": "git の設定とフックの変更の検出 [REQ-198] エンジンが git の設定を変えたら、コミットせずに止まる",
+              "status": "skipped",
+              "title": "[REQ-198] エンジンが git の設定を変えたら、コミットせずに止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "git の設定とフックの変更の検出"
+              ],
+              "fullName": "git の設定とフックの変更の検出 [REQ-198] run の前からあるフックは、run のコミットで動く",
+              "status": "skipped",
+              "title": "[REQ-198] run の前からあるフックは、run のコミットで動く",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの検査を弱める変更の検出"
+              ],
+              "fullName": "テストの検査を弱める変更の検出 [REQ-201] 既存のテストから検査の行を消したら、コミットせずに止まる",
+              "status": "skipped",
+              "title": "[REQ-201] 既存のテストから検査の行を消したら、コミットせずに止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの検査を弱める変更の検出"
+              ],
+              "fullName": "テストの検査を弱める変更の検出 [REQ-201] 必ず通る検査に書き換えたら、コミットせずに止まる",
+              "status": "skipped",
+              "title": "[REQ-201] 必ず通る検査に書き換えたら、コミットせずに止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "テストの検査を弱める変更の検出"
+              ],
+              "fullName": "テストの検査を弱める変更の検出 [REQ-201] テストを足すだけなら止まらない",
+              "status": "skipped",
+              "title": "[REQ-201] テストを足すだけなら止まらない",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "git の設定の比較の範囲"
+              ],
+              "fullName": "git の設定の比較の範囲 [REQ-204] include の先の設定に core.fsmonitor を書いたら、コミットせずに止まる",
+              "status": "skipped",
+              "title": "[REQ-204] include の先の設定に core.fsmonitor を書いたら、コミットせずに止まる",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "git の設定の比較の範囲"
+              ],
+              "fullName": "git の設定の比較の範囲 [REQ-204] リンク先のないフックがあっても、落ちずにタスクを完了にする",
+              "status": "skipped",
+              "title": "[REQ-204] リンク先のないフックがあっても、落ちずにタスクを完了にする",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            },
+            {
+              "ancestorTitles": [
+                "検査の行の数え方"
+              ],
+              "fullName": "検査の行の数え方 [REQ-201] import とコメントの assert を消しても、テストの検査を減らしたとはみなさない",
+              "status": "skipped",
+              "title": "[REQ-201] import とコメントの assert を消しても、テストの検査を減らしたとはみなさない",
+              "failureMessages": [],
+              "meta": {},
+              "tags": [],
+              "benchmarks": []
+            }
+          ],
+          "startTime": 1792875018372,
+          "endTime": 1792875019325.7725,
+          "status": "passed",
+          "message": "",
+          "name": "/tmp/loomake-quality-after-merge/packages/runner/test/guards.test.ts"
+        }
+      ]
+    }
+  },
+  "currentSourceHashes": {
+    "packages/runner/src/guards.ts": "ae57a8c414226cad4595791c48cbf91483692b89e2c3239164deb83378b4dd83",
+    "packages/runner/test/guards-special-files.test.ts": "db5e7718a21045379a799508b11178a170f4d5ffb24b6459067e570b59963cff"
+  },
+  "eslint": {
+    "files": [
+      "packages/runner/src/guards.ts",
+      "packages/runner/test/guards-special-files.test.ts"
+    ],
+    "exitCode": 0
+  },
+  "scope": "Actual current runner sources transpiled with existing TypeScript dev dependency to temporary ESM modules. Actual local Git and named pipes/Unix sockets; fake engine and gh. Core/kit/trace public dist dependencies. No repo build, no GitHub/Claude connection, Linux ARM64 only.",
+  "controls": [
+    "Regular-file snapshot passed",
+    "Existing ordinary executable post-commit hook ran and run completed task commits",
+    "Dangling symlink preserved with successful task commits",
+    "Directory symlink to directory containing unreadable writerless FIFO preserved without following it"
+  ],
+  "failures": "Initial existing guard file had 39 pass and one unchanged 60s test timeout. The isolated case subsequently passed under the same expectations and deadline; cause not established. Initial failure preserved, not counted as successful full-file gate.",
+  "cleanup": "Every test fixture is removed in finally; timed-out supervised child receives SIGKILL. Red timeouts are not product success."
+}
