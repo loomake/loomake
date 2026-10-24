@@ -8,7 +8,7 @@ Issue #50。`loomake trace report` は、いちばん新しい証拠を選ぶた
 
 ## What Changes
 
-- 確認事項 Q-01 の回答に従って、trace report の証拠の読み方を変える
+- trace report は、ファイル名の日時がいちばん新しい証拠だけを読んで検証する（確認事項 Q-01 の回答 A）
 
 ## Capabilities
 

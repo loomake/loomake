@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { SCOPE_NOTE, buildReport, runReport, type Evidence, type Report } from '@loomake/trace';
@@ -69,6 +69,10 @@ const agreementTrace = (question: string, assumption: string) =>
     .replace('| ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 |\n|---|---|---|---|---|---|---|', `| ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |\n|---|---|---|---|---|---|---|---|---|\n${question}`)
     .replace('| ID | 関連 | 仮定の内容 | 理由 | 承認 |\n|---|---|---|---|---|', '| ID | 関連 | 仮定の内容 | 理由 | 承認 | 承認者 | 承認日 |\n|---|---|---|---|---|---|---|');
 
+// 実際の証拠のファイル名は、記録した日時と SHA から作る。最新はファイル名の日時で決める（REQ-209）
+const renameEvidence = (root: string, names: string[]) =>
+  names.forEach((name, i) => renameSync(join(root, `.loomake/evidence/${CHANGE}/${i}.json`), join(root, `.loomake/evidence/${CHANGE}/${name}`)));
+
 describe('要件ごとの検収の表', () => {
   it('[REQ-070] 要件ごとに、出典・状態・対応する Requirement・テストファイル・最後の検査結果を並べる', () => {
     withProject({ spec: specMd(requirement('表の出力')) }, (root) => {
@@ -97,12 +101,13 @@ describe('要件ごとの検収の表', () => {
       }
     }));
 
-  it('[REQ-070] 記録した日時がいちばん新しい記録を使う', () => {
+  it('[REQ-070][REQ-209] 記録した日時がいちばん新しい記録を使う', () => {
     const records = [
       { recordedAt: '2026-10-23T02:00:00.000Z', sha: 'b'.repeat(40) },
       { recordedAt: '2026-10-23T01:00:00.000Z', sha: 'a'.repeat(40) },
     ];
     withProject({ evidence: records }, (root) => {
+      renameEvidence(root, ['20261023T020000Z-bbbbbbbbbbbb.json', '20261023T010000Z-aaaaaaaaaaaa.json']);
       expect(report(root).evidence.sha).toBe('b'.repeat(40));
     });
   });
@@ -242,6 +247,22 @@ describe('読めない証拠の記録', () => {
       const r = await cli(root);
       expect(r.code).toBe(2);
       expect(r.stderr).toContain(`証拠の記録 ${file} は、ほかの change（c2）の記録です`);
+    }));
+
+  it('[REQ-209] 古い証拠が壊れていても、ファイル名の日時が最新の証拠だけを読んでレポートを出す', () =>
+    withProject({}, async (root) => {
+      renameEvidence(root, ['20261024T010000Z-0123456789ab.json']);
+      writeFileSync(join(root, `.loomake/evidence/${CHANGE}/20261023T000000Z-000000000000.json`), '{ 壊れた');
+      const r = await cli(root);
+      expect(r.code, r.stderr).toBe(0);
+    }));
+
+  it('[REQ-209] ファイル名の日時が最新の証拠が壊れていれば、そのファイルを示して終了コード 2 を返す', () =>
+    withProject({}, async (root) => {
+      writeFileSync(join(root, `.loomake/evidence/${CHANGE}/99991231T235959Z-ffffffffffff.json`), '{ 壊れた');
+      const r = await cli(root);
+      expect(r.code).toBe(2);
+      expect(r.stderr).toContain(`証拠の記録 .loomake/evidence/${CHANGE}/99991231T235959Z-ffffffffffff.json を JSON として読めません`);
     }));
 
   it('欄を足しただけの記録は読める（validate-evidence-records の仮定 A-01）', () =>

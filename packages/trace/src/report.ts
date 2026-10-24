@@ -88,15 +88,17 @@ function readEvidence(root: string, file: string, change: string, reader: InputR
   return value as Evidence;
 }
 
-/** 記録した日時がいちばん新しい証拠の記録 */
+/**
+ * ファイル名の日時（YYYYMMDDTHHMMSSZ。辞書順で時刻順になる）がいちばん新しい証拠の記録（REQ-209）。
+ * レポートに使うものだけを読んで検証し、ほかの証拠は読まない。読む量が証拠の数に比例しない
+ */
 function latestEvidence(root: string, dir: string, change: string, reader: InputReader): Evidence | undefined {
-  let latest: Evidence | undefined;
+  let latest: string | undefined;
   for (const entry of reader.entries(dir)) {
     if (entry.kind !== 'file' || !entry.name.endsWith('.json')) continue;
-    const evidence = readEvidence(root, join(dir, entry.name), change, reader);
-    if (!latest || Date.parse(evidence.recordedAt) > Date.parse(latest.recordedAt)) latest = evidence;
+    if (latest === undefined || entry.name > latest) latest = entry.name;
   }
-  return latest;
+  return latest === undefined ? undefined : readEvidence(root, join(dir, latest), change, reader);
 }
 
 const reqNumber = (id: string) => Number(id.match(/\d+/)?.[0] ?? Number.MAX_SAFE_INTEGER);

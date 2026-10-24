@@ -91,7 +91,8 @@ describe('コマンドの入力予算', () => {
     expect(() => runReport({ root, changeId: 'c1', stdout: () => {} })).toThrow(/上限.*67108864/);
   }));
 
-  it('[REQ-172] 個別には64MiB以内でも証拠の合計が128MiBを超えたら止める', () => withProject({}, (root) => {
+  // bound-report-evidence-reading で、合計 128MiB を超えたら止める動作から変えた（Q-01 の回答 A）
+  it('[REQ-171][REQ-209] 古い証拠の合計が128MiBを超えても、ファイル名の日時が最新の証拠だけを読んでレポートを出す', () => withProject({}, (root) => {
     const dir = join(root, '.loomake/evidence/c1'); mkdirSync(dir, { recursive: true });
     const value = { schemaVersion: 1, change: 'c1', sha: 'a'.repeat(40), recordedAt: '2026-10-24T00:00:00Z', committedAt: '2026-10-24T00:00:00Z', verify: { schemaVersion: '1.0.0', change: 'c1', mode: 'done', ok: true, results: [], coverage: {} } };
     const whitespace = Buffer.alloc(45 * 1024 * 1024, ' ');
@@ -99,7 +100,9 @@ describe('コマンドの入力予算', () => {
       const file = join(dir, `${name}.json`);
       writeFileSync(file, JSON.stringify(value)); appendFileSync(file, whitespace);
     }
-    expect(() => runReport({ root, changeId: 'c1', stdout: () => {} })).toThrow(/合計.*134217728/);
+    const out: string[] = [];
+    expect(runReport({ root, changeId: 'c1', stdout: (t) => out.push(t) })).toBe(0);
+    expect(out.join('\n')).toContain('# 検収レポート：c1');
   }), 30_000);
 });
 
