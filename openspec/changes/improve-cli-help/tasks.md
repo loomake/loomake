@@ -3,7 +3,7 @@
 - [x] 1.2 `--change=<id>` の形を受け付け、知らないコマンドの名前を挙げて知らないと表示する（REQ-041）
 
 ## 2. テスト
-- [ ] 2.1 各 Scenario に対応するテストを、実装の前に書いて落ちることを確かめる。テスト名に [REQ-xxx] を入れる
+- [x] 2.1 各 Scenario に対応するテストを、実装の前に書いて落ちることを確かめる。テスト名に [REQ-xxx] を入れる
 
 ## 3. 確認
-- [ ] 3.1 `pnpm -s verify --change improve-cli-help --done` を通す <!-- loomake:gate=done -->
+- [x] 3.1 `pnpm -s verify --change improve-cli-help --done` を通す <!-- loomake:gate=done -->
