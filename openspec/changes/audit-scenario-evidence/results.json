@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "kind": "scenario-evidence-audit",
   "ok": false,
+  "exitCode": 1,
   "counts": {
     "total": 360,
     "reviewed": 44,
@@ -12,8 +13,9 @@
   "issues": [],
   "specFiles": 32,
   "testRun": {
-    "total": 635,
-    "passed": 635
+    "total": 636,
+    "passed": 636,
+    "failed": 0
   },
   "inputs": {
     "specs": {
@@ -63,6 +65,14 @@
       "packages/cli/test/cli.test.ts": "24f19bbf72470ffaae43fe8e8612a0f88a72208bdfbbcc65fac49fdad9639af5",
       "packages/cli/test/doctor.test.ts": "c9fe91afe6e727773eff514d7e8c92b6037ecd6a504236a4732addca73b03f19",
       "packages/cli/test/init.test.ts": "fad9d1e9ba361a5971760e4e0e45804df275146662e92be9a632820d301e8c03",
+      "packages/core/test/agreement.test.ts": "0e6e08ffc5b0dd863f0d80664a78fae0a7e7dc7122fd3688228626880dc31aa4",
+      "packages/core/test/coverage-policy.test.ts": "61add31ac1281ad2949cfda26529bfe7ec102b34fb8c06bf2d5d40c90ee32bb8",
+      "packages/core/test/package.test.ts": "6c32b72bc19cd187c4337ae78ff9c2b42f39e5ff40ef0156175a8845d0e84fb4",
+      "packages/core/test/schema.test.ts": "ee3ee3a0d181d9e98ff8aecc6fa70b2197748f938b4265e5ed2c1048ffad2891",
+      "packages/core/test/spec.test.ts": "542fe6ec2963ca726db1b6948e8bbe27f5bc9694cca87b437e4d9f63f6f8c9c3",
+      "packages/core/test/tasks.test.ts": "6208610676ee0a0335603847d61d26281ba29e23421ec3db4b38b23cea45be5a",
+      "packages/core/test/test-report.test.ts": "c7153a95adba3abf1d612e07134454d17aa93ece23874ffc140db2d5136859f1",
+      "packages/core/test/trace.test.ts": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40",
       "packages/kit/test/doctor-command.test.ts": "a0e75f4a867c6a7c85dd0959a9737cb2fe4ad50f8d4dd84dfe9e9ab41b1ea0e6",
       "packages/kit/test/doctor-diagnostics.test.ts": "48773c7da0d51d9e44e843ca2e810b9ba5112067a2334244a501305253da5019",
       "packages/kit/test/input.test.ts": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985",
@@ -82,14 +92,6 @@
       "packages/runner/test/publication-retry.test.ts": "49db35ee3960986e16dabe788943d2490d57f5d0b121531227f9ad148ed844bf",
       "packages/runner/test/run.test.ts": "1db0a951fb2cdc5129f0155142e859bbdd9a652ff476d6a69f77b5eb57982f46",
       "packages/runner/test/safety-paths.test.ts": "e976ee7e1e4c985ae0566df7cf7d177bb254e35053a8410018fd4794a1ce4673",
-      "packages/core/test/agreement.test.ts": "0e6e08ffc5b0dd863f0d80664a78fae0a7e7dc7122fd3688228626880dc31aa4",
-      "packages/core/test/coverage-policy.test.ts": "61add31ac1281ad2949cfda26529bfe7ec102b34fb8c06bf2d5d40c90ee32bb8",
-      "packages/core/test/package.test.ts": "6c32b72bc19cd187c4337ae78ff9c2b42f39e5ff40ef0156175a8845d0e84fb4",
-      "packages/core/test/schema.test.ts": "ee3ee3a0d181d9e98ff8aecc6fa70b2197748f938b4265e5ed2c1048ffad2891",
-      "packages/core/test/spec.test.ts": "542fe6ec2963ca726db1b6948e8bbe27f5bc9694cca87b437e4d9f63f6f8c9c3",
-      "packages/core/test/tasks.test.ts": "6208610676ee0a0335603847d61d26281ba29e23421ec3db4b38b23cea45be5a",
-      "packages/core/test/test-report.test.ts": "c7153a95adba3abf1d612e07134454d17aa93ece23874ffc140db2d5136859f1",
-      "packages/core/test/trace.test.ts": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40",
       "packages/trace/test/publication-crash.test.ts": "870d3f491fbb77433bcb8ddd9a76b2ea22e9185ee7a7665f5894798b3f2142c0",
       "packages/trace/test/publication.test.ts": "63231c8f68bbbe7901a3c28a437135b7aaebc689a66752682eb0a2422be710f9",
       "packages/trace/test/record-size.test.ts": "db71a3294f7e3688bc76c9adbb527a0526a41c76304da1b8f350375514ec87e1",
@@ -97,8 +99,8 @@
       "packages/trace/test/report.test.ts": "e1e29cedb248fd72798fddff589c54e9c2898df4f2ac5bb0e3f8fa69b50bea25",
       "packages/trace/test/serialization.test.ts": "6cf85e33ea1af754e0245fc4259f994504be7310ea55c96abc971e81ebd5c247"
     },
-    "testReportSha256": "678563128c9977decd71cd89a8fb5e5fdf093e0f791a7fd010b09426bf8020bc",
+    "testReportSha256": "d44f5a35af18d235577f15c534a40e2faf4e0d909850268fce4205c111ce2445",
     "reviewSha256": "101977af74c4b51cc82cf6b2d8c826c823442675c199d5a8fac3250bd0a56eae",
-    "scriptSha256": "4fb4694108cf0f29dd94e412d7c40b6ea1307fb126c45aa1c1148db54d996c62"
+    "scriptSha256": "279e59e68ac4104a3bbb69289eaf02972596ca4db0a1351d04fb0b2ed2a33a39"
   }
 }

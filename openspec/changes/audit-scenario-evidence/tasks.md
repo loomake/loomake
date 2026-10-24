@@ -6,4 +6,4 @@
 ## 2. 統合検証
 
 - [x] 2.1 更新手順・限界・TDDと監査結果を記録し、既存の製品契約を維持する
-- [ ] 2.2 `pnpm -s verify --change audit-scenario-evidence --done` を通す <!-- loomake:gate=done -->
+- [x] 2.2 `pnpm -s verify --change audit-scenario-evidence --done` を通す <!-- loomake:gate=done -->
