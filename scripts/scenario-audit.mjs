@@ -20,11 +20,16 @@ export function inventoryScenarios(file, text) {
   required(!fence, `コードブロックが閉じていません：${file}`);
   const rows = []; const ids = new Set();
   const headings = lines.flatMap((line, i) => !masked[i] && /^#{1,3} /.test(line) ? [i] : []);
+  const scenarioHeadings = lines.flatMap((line, i) => !masked[i] && /^#### Scenario:/.test(line) ? [i] : []);
+  let cursor = 0;
   for (const [index, start] of headings.entries()) {
     const heading = lines[start].match(/^### Requirement:\s*(.+?)\s*$/);
     if (!heading) continue;
     const end = headings[index + 1] ?? lines.length;
-    const starts = lines.flatMap((line, i) => i > start && i < end && !masked[i] && /^#### Scenario:/.test(line) ? [i] : []);
+    while (cursor < scenarioHeadings.length && scenarioHeadings[cursor] <= start) cursor++;
+    const first = cursor;
+    while (cursor < scenarioHeadings.length && scenarioHeadings[cursor] < end) cursor++;
+    const starts = scenarioHeadings.slice(first, cursor);
     required(starts.length > 0, `Scenarioがありません：${file}:${start + 1}`);
     const prefix = lines.slice(start, starts[0]);
     const contract = prefix.join('\n').trim();
@@ -39,7 +44,7 @@ export function inventoryScenarios(file, text) {
       rows.push({ id, file, requirement: heading[1], scenario: name, sources, line: line + 1, sha256: sha256(contract + '\n' + body), body });
     }
   }
-  required(rows.length === lines.filter((line, i) => !masked[i] && /^#### Scenario:/.test(line)).length, `Requirementに属さないScenarioがあります：${file}`);
+  required(rows.length === scenarioHeadings.length, `Requirementに属さないScenarioがあります：${file}`);
   required(rows.length > 0, `Scenarioを読み取れません：${file}`);
   return rows;
 }
@@ -102,10 +107,10 @@ export function auditScenarios(scenarios, reviews, executions, testSources) {
 }
 
 export function renderAudit(report, prefix = '') {
-  const cell = (text) => String(text).replace(/\|/g, '\\|').replace(/\n/g, '<br>');
+  const cell = (text) => String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\|/g, '\\|').replace(/\n/g, '<br>');
   return ['# Scenarioと試験の対応', '', `確認済み ${report.counts.reviewed}、置換 ${report.counts.superseded}、未確認 ${report.counts.unreviewed}、無効 ${report.counts.invalid} / 全${report.counts.total}件`, '',
     'REQ-IDの一致は候補です。対応理由はレビュー上の判断で、試験内容の十分さや外部環境の成功を自動で保証しません。', '',
-    ...report.issues.map((issue) => `- ${issue}`), '', '| 仕様の場所 | Requirement / Scenario | 状態 | 理由と対応試験 |', '|---|---|---|---|',
+    ...report.issues.map((issue) => `- ${cell(issue)}`), '', '| 仕様の場所 | Requirement / Scenario | 状態 | 理由と対応試験 |', '|---|---|---|---|',
     ...report.rows.map((row) => `| [${cell(row.file)}:${row.line}](${prefix}${row.file}#L${row.line}) | ${cell(row.requirement)} / ${cell(row.scenario)} | ${row.status} | ${cell(row.reason)}<br>${row.tests.length ? row.tests.map((test) => cell(test.file + ': ' + test.fullName)).join('<br>') : `候補 ${row.candidates.length} 件`} |`), '',
   ].join('\n');
 }

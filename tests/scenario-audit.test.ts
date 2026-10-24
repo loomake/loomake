@@ -46,6 +46,11 @@ describe('試験との対応の根拠', () => {
 
 describe('不足と置換の表示', () => {
   it('[REQ-190] 未確認と行番号・理由をMarkdownへ残す', () => { const result = audit(); const markdown = renderAudit(result); expect(markdown).toContain('unreviewed'); expect(markdown).toContain('spec.md:4'); expect(markdown).toContain('振る舞い'); expect(markdown).toContain('条件'); expect(result.counts.unreviewed).toBe(1); });
+  it('[REQ-190] 文書内のHTMLを実行可能な形で埋め込まない', () => {
+    const list = inventoryScenarios('file', spec('<img src=x onerror=alert(1)>'));
+    const markdown = renderAudit(auditScenarios(list, [], [], {}));
+    expect(markdown).not.toContain('<img'); expect(markdown).toContain('&lt;img');
+  });
   it('[REQ-190] 重複と未知の参照を報告する', () => { const result = audit([review(), review(), { ...review(), id: 'unknown' }]); expect(result.ok).toBe(false); expect(result.issues.length).toBeGreaterThanOrEqual(2); });
   it('[REQ-190] 確認済みへの置換だけを認める', () => {
     const other = inventoryScenarios('other', spec())[0]; const replacement = { ...review(), id: other.id, scenarioSha256: other.sha256 };

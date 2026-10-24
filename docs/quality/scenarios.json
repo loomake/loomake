@@ -1,0 +1,2630 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "codex-self-review",
+  "reviews": [
+    {
+      "id": "SCN-b9ad949e3299a59455c1",
+      "status": "reviewed",
+      "scenarioSha256": "a00fd7ead4cd1713b8fe7ba0c5caa1c469a1a51668fb4b60a163d0616723a2e9",
+      "reason": "同名の2Requirementとコード例内の見出しを入力し、2件だけで別IDになることをassertする。",
+      "sources": [
+        "REQ-188"
+      ],
+      "tests": [
+        {
+          "file": "tests/scenario-audit.test.ts",
+          "contains": "別Requirementの同名を分け、コード例を数えない",
+          "sha256": "0081fbabce3363fc49dece2bc2cd3fcf7e710bab573d3241d7c49cd9d683b19f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-d941fcf41715eadf0a76",
+      "status": "reviewed",
+      "scenarioSha256": "f59f2e7c0039ad4c96afe22abd53f58361db817ef69e9783d3c412adff0e7b69",
+      "reason": "行移動でIDと内容ハッシュを保ち、規則本文・コード例の変更でハッシュが変わることをassertする。",
+      "sources": [
+        "REQ-188"
+      ],
+      "tests": [
+        {
+          "file": "tests/scenario-audit.test.ts",
+          "contains": "行の移動は同一性を保ち、規則の変更はハッシュを変える",
+          "sha256": "0081fbabce3363fc49dece2bc2cd3fcf7e710bab573d3241d7c49cd9d683b19f"
+        },
+        {
+          "file": "tests/scenario-audit.test.ts",
+          "contains": "規則のコード例の変更も検出し",
+          "sha256": "0081fbabce3363fc49dece2bc2cd3fcf7e710bab573d3241d7c49cd9d683b19f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-eb3da5b1cccad45d57fe",
+      "status": "reviewed",
+      "scenarioSha256": "174d1f09b5f0570144489900059148ed2682823bc913a578db0226201b35e349",
+      "reason": "成功したREQ一致の実行だけを与え、候補1件と未確認、全体不合格をassertする。",
+      "sources": [
+        "REQ-189"
+      ],
+      "tests": [
+        {
+          "file": "tests/scenario-audit.test.ts",
+          "contains": "IDの一致だけでは候補で、確認済みにしない",
+          "sha256": "0081fbabce3363fc49dece2bc2cd3fcf7e710bab573d3241d7c49cd9d683b19f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-8b77c0f75e25932873c8",
+      "status": "reviewed",
+      "scenarioSha256": "ba852478dff5570418d62d8f107a7ed4ba3e65dc9741aa28824f5dd1c3c0e415",
+      "reason": "選択に一致する成功とfailed/pending/todo/skippedを混在させ、いずれも無効となることをassertする。",
+      "sources": [
+        "REQ-189"
+      ],
+      "tests": [
+        {
+          "file": "tests/scenario-audit.test.ts",
+          "contains": "を成功した一部だけで覆い隠さない",
+          "sha256": "0081fbabce3363fc49dece2bc2cd3fcf7e710bab573d3241d7c49cd9d683b19f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-ed5b38391ab233547e66",
+      "status": "reviewed",
+      "scenarioSha256": "c85ab992b8fced8cd5ac880ce152f0ab02609cfd97ce1c41c437009b532714f3",
+      "reason": "未レビューの行を与え、集計とMarkdownの状態・行番号・名前が残ることをassertする。",
+      "sources": [
+        "REQ-190"
+      ],
+      "tests": [
+        {
+          "file": "tests/scenario-audit.test.ts",
+          "contains": "未確認と行番号・理由をMarkdownへ残す",
+          "sha256": "0081fbabce3363fc49dece2bc2cd3fcf7e710bab573d3241d7c49cd9d683b19f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-1a6e2ebad641ee0e82bf",
+      "status": "reviewed",
+      "scenarioSha256": "b72d1d982e77e325b81d889cc4894f9120b5f6cf2b173f65a84f8a8ae0671e38",
+      "reason": "自分自身と存在しないIDを置換先にし、無効となることをassertする。",
+      "sources": [
+        "REQ-190"
+      ],
+      "tests": [
+        {
+          "file": "tests/scenario-audit.test.ts",
+          "contains": "循環と存在しない置換を拒否する",
+          "sha256": "0081fbabce3363fc49dece2bc2cd3fcf7e710bab573d3241d7c49cd9d683b19f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-2959626051f89b27301b",
+      "status": "unreviewed",
+      "scenarioSha256": "bfe7c04591feff08e1ba5971f8082e752bd1d275381a449ca7a52f44815ab637",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-40476763e5aa063e3233",
+      "status": "unreviewed",
+      "scenarioSha256": "62d84125c9aebf0b2f8ccaac94908b2cf8d78f0fe858d478ef70289f01aa2a57",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-47ee8e66abd0500eda5e",
+      "status": "unreviewed",
+      "scenarioSha256": "619d62292205d74159ac5c551a3e24c051d720b1712bc3dbf3604df94416776d",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-111255c066417aa71cb1",
+      "status": "unreviewed",
+      "scenarioSha256": "a09d1d06b2dd990e988ed9a0d5d54b10e0973668ff86d661bb5b0336ee6f8449",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-a2c399c780304444712b",
+      "status": "unreviewed",
+      "scenarioSha256": "f47966ccb7aa5ba114a7dbde071321649eccdc36433849c3c3f5dbee057505d6",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-2d80bd5e2802786b98c4",
+      "status": "unreviewed",
+      "scenarioSha256": "4871348fa35ab55d33f9b8d6f157da570edda366eb705d28ff7bb92a9d4c4fab",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-456f4449714415e78b5e",
+      "status": "unreviewed",
+      "scenarioSha256": "eb215c4d5252be4809bc14455b2e2954bf27c1dfaf736bdf7eec63403e14fc0a",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-3404a0e76e1b8e36a5da",
+      "status": "unreviewed",
+      "scenarioSha256": "3e40198365add1b9dc6ff548453f56534a7c936542050d516a8742553ac538a3",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-a0b5d3660b271845f5b4",
+      "status": "unreviewed",
+      "scenarioSha256": "699388f613b6116ca2a50d3ccd51b6426066e996bb5af5d3c65926fa1d8494dd",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-4a195e5157d912eca1c3",
+      "status": "unreviewed",
+      "scenarioSha256": "d79b91688be7a553212f8598ed35502d48fb54720b65a358122b912adc879d5e",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-3a63b734bcb7ca5f10c1",
+      "status": "unreviewed",
+      "scenarioSha256": "84a6ff4b9fd0356d190c8e184b8576e1e4f91d4f6912d30650e56f88127bf816",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-abe4f0bdfacb9ae5ab03",
+      "status": "unreviewed",
+      "scenarioSha256": "9c1d7368b0009b1a87ac0b577bbae1adaf25818cc1ea305adf9fa66822567cb3",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-9029d9a610f917ed3d20",
+      "status": "unreviewed",
+      "scenarioSha256": "c196e62664e361f24115c2e0ad2aee573566de5c67cf3de505a76e2e7556a156",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-659ea5ea57ece47b4bac",
+      "status": "unreviewed",
+      "scenarioSha256": "969a3d3a40b5c10526b036e7da748cdc84ba9d78ee201cf35080a0b500437864",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-3eb110b68bb4c3de48c0",
+      "status": "unreviewed",
+      "scenarioSha256": "29264b95a36e0aad881f088cabdd0cae16b4e4d6ec1e2e66be06ec6959537fc6",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-8bb8dc95a6bd70984f00",
+      "status": "unreviewed",
+      "scenarioSha256": "c3a19b2477440dbe764a094e32021c10b0111078ba09ae1a622396511e1775e2",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-d1d4477fee3845611d74",
+      "status": "unreviewed",
+      "scenarioSha256": "c6fa40b9710c9cdd41c3c5dade1981d34d57982a3538f14964220382bf4f80a5",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-4cb211424f1400081c2b",
+      "status": "unreviewed",
+      "scenarioSha256": "8e39d5c36df187dda1a09ec03f13e2ed0ad74ddd0c97e5bc8dfe9d03cc23b38e",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-a32270f800bf0dc6aca9",
+      "status": "unreviewed",
+      "scenarioSha256": "ce2de649955f72cd5bf2734e2c42c419b54b2916bbab742114425e4a134a1159",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-41680e8986bdc2981dd6",
+      "status": "unreviewed",
+      "scenarioSha256": "5b032b5ceccf6c322da97a6267c6d42b4ad4d2436de0cae1b2f888237128f734",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-21673018071096227184",
+      "status": "unreviewed",
+      "scenarioSha256": "4c62a10e2c6000a724ba36ae0a2b567b7daa879288f998b36c875e6593e7b589",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-7b46c404c2e9cc56ab32",
+      "status": "unreviewed",
+      "scenarioSha256": "236726f1b0c41e1049cb5d0a4f57b4c5ea7437b44ca79d4a64b76c974437997d",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-9586e812ec681fc3f9ea",
+      "status": "unreviewed",
+      "scenarioSha256": "e6e137d75e09c1a5ede14586fbf908c452e969f694d42bc6b12c86db0b5598a6",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-879565dad5bf67559f6d",
+      "status": "unreviewed",
+      "scenarioSha256": "12f56c014ff6c36d50974463d94819fbe66d587ea91729812ec2d41096877046",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-510a31ed1c24490bb9af",
+      "status": "reviewed",
+      "scenarioSha256": "cd0f61dab92de41e5ade0b31be470d20fb07b3c19c2bb3653f3f5752aa3c9be2",
+      "reason": "npm/pnpmの4形でtest scriptを欠くmanifestを与え、終了コード1とscripts.testの案内をassertする。",
+      "sources": [
+        "REQ-184"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/doctor-diagnostics.test.ts",
+          "contains": "のscript欠落を検出する",
+          "sha256": "48773c7da0d51d9e44e843ca2e810b9ba5112067a2334244a501305253da5019"
+        }
+      ]
+    },
+    {
+      "id": "SCN-89b88ecb2955d30d77d3",
+      "status": "reviewed",
+      "scenarioSha256": "c386f83926d8e2928b7c4cf8c93e480c37c539e67d397523ddbef998aa3bf9fb",
+      "reason": "有効なscriptの確認、未確認の範囲、実行印が作られずファイル内容も不変であることをassertする。",
+      "sources": [
+        "REQ-184"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/doctor-diagnostics.test.ts",
+          "contains": "実行せず変更せず、存在と未確認の範囲を分ける",
+          "sha256": "48773c7da0d51d9e44e843ca2e810b9ba5112067a2334244a501305253da5019"
+        }
+      ]
+    },
+    {
+      "id": "SCN-fe7fa852a4d3c8e143a4",
+      "status": "reviewed",
+      "scenarioSha256": "c16d12ee9f9b011d68149b0d2167d79b30460cd16ccf57d1736c0abee72bbc2d",
+      "reason": "代入・連結・filterを含む各入力で注意と未確認が表示され、実行ファイル不存在の問題と断定しないことをassertする。",
+      "sources": [
+        "REQ-185"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/doctor-diagnostics.test.ts",
+          "contains": "は未確認の注意とし、不存在と断定しない",
+          "sha256": "48773c7da0d51d9e44e843ca2e810b9ba5112067a2334244a501305253da5019"
+        }
+      ]
+    },
+    {
+      "id": "SCN-6127f36537961b6ddb28",
+      "status": "reviewed",
+      "scenarioSha256": "fbc3c4efe7ccdbb857728dd3bae997cd33971706e3acf660ca16fe4f78e5ffbc",
+      "reason": "Yarnの2形でscriptのないmanifestを与え、終了コード0、未確認の注意と問題にしないことをassertする。",
+      "sources": [
+        "REQ-185"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/doctor-diagnostics.test.ts",
+          "contains": "yarn ",
+          "sha256": "48773c7da0d51d9e44e843ca2e810b9ba5112067a2334244a501305253da5019"
+        }
+      ]
+    },
+    {
+      "id": "SCN-c4d8d4164cbd2145aade",
+      "status": "reviewed",
+      "scenarioSha256": "cf620b4d95514262510455b5383774526aa29055a78b4c5ec80b77870fc00ac1",
+      "reason": "現在のPOSIXではchmod644の通常ファイルを候補にし、実行ファイルが見つからない問題と終了コード1をassertする。",
+      "sources": [
+        "REQ-186"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/doctor-diagnostics.test.ts",
+          "contains": "実行できないファイルを合格にしない",
+          "sha256": "48773c7da0d51d9e44e843ca2e810b9ba5112067a2334244a501305253da5019"
+        }
+      ]
+    },
+    {
+      "id": "SCN-f42c69e1981c35152dbb",
+      "status": "reviewed",
+      "scenarioSha256": "96c79880005014af4a1b955fc6070c9fff098b5836691a7ecad788869f1355f0",
+      "reason": "AGENTS.mdをディレクトリ、openspecをファイルにして両方の問題と終了コード1をassertする。",
+      "sources": [
+        "REQ-186"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/doctor-diagnostics.test.ts",
+          "contains": "AGENTS.mdとopenspecの種類を確認する",
+          "sha256": "48773c7da0d51d9e44e843ca2e810b9ba5112067a2334244a501305253da5019"
+        }
+      ]
+    },
+    {
+      "id": "SCN-805aaa78aa52f5db2217",
+      "status": "reviewed",
+      "scenarioSha256": "b6bd5ec22e2e589869961858628ca14bc5b9feaa2451a668588c7fa388cfc069",
+      "reason": "短い共有予算を先に使い切り、終了コード1と期限の理由、Git不存在や未除外という誤案内がないことをassertする。",
+      "sources": [
+        "REQ-187"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/doctor-diagnostics.test.ts",
+          "contains": "共有期限の終了をGit不存在と混同しない",
+          "sha256": "48773c7da0d51d9e44e843ca2e810b9ba5112067a2334244a501305253da5019"
+        }
+      ]
+    },
+    {
+      "id": "SCN-5b75af5a0c71ea2e9c76",
+      "status": "unreviewed",
+      "scenarioSha256": "747f1a63f9bbc35643eb446a7b47aa1595f9d70781d4402fe808ae96fc6ba830",
+      "reason": "check-ignoreの異常終了の注入は試験済みだが、壊れたGit設定そのものを与えるScenarioの対応は未確認。"
+    },
+    {
+      "id": "SCN-c90ad29dcb12c5497396",
+      "status": "reviewed",
+      "scenarioSha256": "fe746e1f2572fc7c25910063c9b524244cd001bbe8c72b2b5c8bc57dfd0e95d8",
+      "reason": "scriptも設定したfixtureで全項目の合格、問題・注意0件、終了コード0をassertする。",
+      "sources": [
+        "REQ-134"
+      ],
+      "tests": [
+        {
+          "file": "packages/cli/test/doctor.test.ts",
+          "contains": "すべて整っていれば、すべての項目を合格と表示し",
+          "sha256": "c9fe91afe6e727773eff514d7e8c92b6037ecd6a504236a4732addca73b03f19"
+        }
+      ]
+    },
+    {
+      "id": "SCN-4779eec0904d7f5d14ac",
+      "status": "reviewed",
+      "scenarioSha256": "153c08b7d9cda8097f6ffc13664189f8a6e83cc05bf94c40e47e1c325fd31f30",
+      "reason": "未導入と導入済みの双方で、実行前後の全ファイル内容を比較する。",
+      "sources": [
+        "REQ-134"
+      ],
+      "tests": [
+        {
+          "file": "packages/cli/test/doctor.test.ts",
+          "contains": "doctor はプロジェクトのファイルを追加も変更もしない",
+          "sha256": "c9fe91afe6e727773eff514d7e8c92b6037ecd6a504236a4732addca73b03f19"
+        }
+      ]
+    },
+    {
+      "id": "SCN-fd4253990bf719e011e7",
+      "status": "unreviewed",
+      "scenarioSha256": "3b05e3ff772d4f9d49b22a3ed810c8f7904599e4f0db8ce8c60f9949b8f7acda",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-fabc89a07ccf21ed0168",
+      "status": "unreviewed",
+      "scenarioSha256": "acb1c33d4f35f5dd1c91a8ea241847b3f46863d445adcf37d3c081de23c77750",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-6cf5ed67dd2ccebd10d9",
+      "status": "unreviewed",
+      "scenarioSha256": "3f709b41a58122a7d7e5f47dffd54c7ac3917df9193c7a9915cb0d89c8098f5e",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-86c1b527853336bad9c4",
+      "status": "unreviewed",
+      "scenarioSha256": "4aa45a93b36eb858ef8895fa03ceb6681cbcf14a242d5402f8b87e5635fe9e87",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-c3098e42cb508fcf5086",
+      "status": "unreviewed",
+      "scenarioSha256": "41f1a3b3f87427137ed702222e7661c1a34bd507342f642b2093afff81e7e75c",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-5e6deb249e3b90e68de2",
+      "status": "unreviewed",
+      "scenarioSha256": "65b6ea0dbb0a3149a2e54a94e9fb59b2f2210c411d20002259e63d94a994df0c",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-c255cfe0806f60d0cde5",
+      "status": "unreviewed",
+      "scenarioSha256": "7ddfcfa4767c7ba917869574568794e0a1aeee4d8b92a6a25a91fbbede4ad2cb",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-19bab6d45c5402d80cb1",
+      "status": "unreviewed",
+      "scenarioSha256": "02d3c744f09a980ac94a90388bae2379b23c5497048b4d07ceb0aedfd31d50d5",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-e2b9cf9dff61671ba6a9",
+      "status": "unreviewed",
+      "scenarioSha256": "82d7d74c4949136f704f853d4e1495ccef4c0e5009ae7fb83a6ec4b0e8dbc6a3",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-3d0db1620ec108f325f1",
+      "status": "unreviewed",
+      "scenarioSha256": "0f756f3010a9ac77c3c50c7dfb0460d1d9e1e81e54bf92fef15810ead92cd255",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-2b7a8be70979e6fb7eb8",
+      "status": "unreviewed",
+      "scenarioSha256": "4ae41d331f69c7979723444e6be36a1a77903a410d6c605fdfd8d48235aa472e",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-36af328491d09c554e32",
+      "status": "unreviewed",
+      "scenarioSha256": "126c81affb5c6bbaaf168f48b2bcbe24cf3f6ea98f9d7ab758605156e8489256",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-fd219fcd0f2a2c5ed673",
+      "status": "unreviewed",
+      "scenarioSha256": "7027d6ef698c3cd68fe59128c74be976bd96705d4b36a9a3ff03e1141b6a1e1a",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-30760d89d02d2ff89b73",
+      "status": "unreviewed",
+      "scenarioSha256": "7788148c02522b3341c41b3138009639ddd8a242881fd24d0ebb6325d1592319",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-dca10abd11c3dd994935",
+      "status": "unreviewed",
+      "scenarioSha256": "e19b1c98e8c4b0f41a7436e8204e375d912f03c1ae5df0c7a92f257e9d15de6b",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-5c874f8d7128ced7c67a",
+      "status": "unreviewed",
+      "scenarioSha256": "cd9a018dedc02d27c74c8a650a206c86bef29f13547ca7be405fd4210790548b",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-81192c19b3362380f476",
+      "status": "unreviewed",
+      "scenarioSha256": "95def6f924b80e39f6ab6743d190f61bfa6b3b21c5d95776ee7cc24f2f8455cc",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-908483e50dc0ea7e6f22",
+      "status": "unreviewed",
+      "scenarioSha256": "4e39f85b5859a6f2c0e338bd1280c5d4dd09c8a5293b9ab7592de7551c3716a1",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-f401917e0261910baaa2",
+      "status": "unreviewed",
+      "scenarioSha256": "d2c4dd2fe216c3a293133215920ef9fc520381d4a736bc79d8b8f51315f3f2f9",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-ed1b549d1ab8b0382764",
+      "status": "unreviewed",
+      "scenarioSha256": "217a2a455d3b5999e0b5f4cb4400b236ac145bc725f668c3da0448722ff8c64b",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-6737b90ac5861dc5891d",
+      "status": "unreviewed",
+      "scenarioSha256": "5df9c156a712cbe936dabcd58119f58a5ccdbdd3889dde7170338894bd10f688",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-1ea3b6d673f99f00dfab",
+      "status": "unreviewed",
+      "scenarioSha256": "9bf15243354bc63cc9e4f24f1ebbc33800515c8cdfbf2449823fa3b78a8ff61d",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-892744352cbcc21e08c8",
+      "status": "unreviewed",
+      "scenarioSha256": "1735286c473463bfaa4b8ecb6a21e160d0b0324d1587e245a34d79952c30800f",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-58988ff67e04a22a6e90",
+      "status": "unreviewed",
+      "scenarioSha256": "ef619e845ff9749c39b3608577f5260562fb5d400016acb98ab39310bc5d3ea9",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-c9ce4a85788909f472f4",
+      "status": "unreviewed",
+      "scenarioSha256": "f7ece0a83297619e0cdb0ca507f451864bd3ae45b712c436f0dfd86773522f1d",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-513032481b631363cda2",
+      "status": "unreviewed",
+      "scenarioSha256": "233ecb69425b68b8dbef691bc5c64783d92cdbedd270e7bb859c164bf5c227ae",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-7e0b1c9ffb45811d9329",
+      "status": "unreviewed",
+      "scenarioSha256": "24dc070645461bc63d213b2204c8fcf4728b7a97c7189672228252b2f11a3797",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-d7862eb26fa793c022c9",
+      "status": "unreviewed",
+      "scenarioSha256": "654dba85394750fc9e4e9b4119ba3bb0b69c8f6292dc92b963657d77e2dad114",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-17b15cb4e06c62a656b8",
+      "status": "unreviewed",
+      "scenarioSha256": "678ee5f62b35b41be39a3517e9f50bcf5f8944318124c6bda24e9535ed15121d",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-c555a9892d9737e6bd98",
+      "status": "unreviewed",
+      "scenarioSha256": "1266a71a94808aacaf67cc16c378d367764246f2b99c9fed1926a0f565eefe9b",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-91049753930eb5fb85cc",
+      "status": "unreviewed",
+      "scenarioSha256": "772bbe5fcab3fe99f0da5bb4caa7ef0395a1e121beb79870df29f9fbe9564f87",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-b8e4b74fc13a3cbf6aaa",
+      "status": "unreviewed",
+      "scenarioSha256": "ec97daaa9fbfed5fc0d3fa42ace52abb125b06aaea1d9beb229fa07e1f6fd989",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-a51abdef9f8b98277deb",
+      "status": "unreviewed",
+      "scenarioSha256": "697b3e9342a457555613eeadd280ae428eae0038542961a7d8911a68ffb4ccae",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-c74580642cd65620ffda",
+      "status": "unreviewed",
+      "scenarioSha256": "8583768795ee6a09def702211d5c08a7e79f23909cf5178ccb2920284f09c1bd",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-c6368e1afa08ac2f650c",
+      "status": "unreviewed",
+      "scenarioSha256": "ecbf4c50aac52c98bb633ac9eff46de3396f12b12c78d450818a20db594c1537",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-24a5537df3d74422d5cd",
+      "status": "unreviewed",
+      "scenarioSha256": "d17579ee7e35ac1cd711d0500aa6c1a42c4514556ea40ecada1c68879b708c97",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-4c4657f14afed5adeb47",
+      "status": "unreviewed",
+      "scenarioSha256": "74f880394def561d9109432c04bfc134d1682ac1c9a0fc9717714162fa18ee9b",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-b6cbb803e54dd442ed67",
+      "status": "unreviewed",
+      "scenarioSha256": "8618c49f4a696497ead4d95e24dd5fd9b38259a82c3b1b9f7cab00b6c6d3c1b2",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-2ccfb7be79c7851ce7a1",
+      "status": "unreviewed",
+      "scenarioSha256": "9c6d46b8aabd19d9daece27cad8266ca31a12194ff8d5b7fe6baab5c1c381279",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-724d654f30498e2a158a",
+      "status": "unreviewed",
+      "scenarioSha256": "6d1205ad7eef97d9a9c7a915c02afe60a8ccd0ba737fead3d95d85e30f681d64",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-63fb38e4cbab2a4b03d4",
+      "status": "unreviewed",
+      "scenarioSha256": "c964c85a6c6a52ce6c9178c7d5c27e32e81773b002b60bc02ba63f2286692145",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-076438c1cbe62fbaf00f",
+      "status": "unreviewed",
+      "scenarioSha256": "619f23bdbfde6375b8da091197c4fac6021f51d19843b4db0f96d6a5818f424a",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-18892b5384eabef5e9eb",
+      "status": "unreviewed",
+      "scenarioSha256": "63a79ecaa0b999309bb1070cff57bdeef935fe473c7cf25401717f34ae69d753",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-98b2eeddd99377e6c237",
+      "status": "unreviewed",
+      "scenarioSha256": "b300a251fb4d9ab9d0236a76040483bcc49051d1fdc5cd1d60344f45f131f16c",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-eef0394178ffbac603c6",
+      "status": "unreviewed",
+      "scenarioSha256": "e83552c24ea485beb4cb0e4bba0e5d67516be46d878f7f6852c7dfbf6dc995d3",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-efc90f9777e12dfdb18c",
+      "status": "unreviewed",
+      "scenarioSha256": "008e831fd4424025336394d1bf15f39ff3ddb62a7dc2e200185a9ac5b412dc3a",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-38b6e1a0906189298ccb",
+      "status": "unreviewed",
+      "scenarioSha256": "f9cc63980ec7cde2f263314a5d2fec10f5fa1d0e66d922c8f5de716b8c09ef34",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-e56567419b03a58770d8",
+      "status": "unreviewed",
+      "scenarioSha256": "1707fedd5f61324ecdd7ad365e1618a64614535b0285ae7756af336092625cb9",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-80b739085617e908051b",
+      "status": "unreviewed",
+      "scenarioSha256": "5763421747b00de8656b1e8cb47d531d72e268ead48bcee8998b1f7f784197b8",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-d95248f9ca5e1491c03f",
+      "status": "unreviewed",
+      "scenarioSha256": "01a0057253b49e31104de6840736e0c486e7cc5c205e51b22b0caeeb6a3d46c3",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-b256d3369b5507a18adb",
+      "status": "unreviewed",
+      "scenarioSha256": "01622c61ddff4886d0dece48b8700f54112430bce2f8094ce0359ec8d0d13d36",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-6738f39da2f67e0d8678",
+      "status": "unreviewed",
+      "scenarioSha256": "43c38839ee44aa43a5f67d548d03e59f1c8ecc5d5bc343df1d1e221885cf89d4",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-1724eb7440708bc07d16",
+      "status": "unreviewed",
+      "scenarioSha256": "195d8613452d1aa79e2d24d3e5a6c4891fe3df049b75cd0cbae1ed57d7df1c47",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-ec1d8f618f871244e405",
+      "status": "unreviewed",
+      "scenarioSha256": "311db241ac2f427848c01e684f59b70886ad499f617f9bebd60d777251fb3b62",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-5995ffd344b282145b5b",
+      "status": "unreviewed",
+      "scenarioSha256": "96d6151a4d22651edc1f47911d363e5fdb96dba4187659087149c549185ff578",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-d64c0ef8e6dedb6d34d8",
+      "status": "unreviewed",
+      "scenarioSha256": "12af324b55cce7d322743b8863f08a02d9cde2928002218752ec063a96d6cbc5",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-15d072505c660adbe903",
+      "status": "unreviewed",
+      "scenarioSha256": "983978e75fd264a8cac2673fb42c7ace7136b9bc873694e4d43e185c7e5e7838",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-287bf4d09c40dd69cd30",
+      "status": "unreviewed",
+      "scenarioSha256": "4e3c01333d854b0986ac6bc0f8bd647996da8a86df91e4a6b9c83b8154e35f18",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-449c60eb6c6fb2af385e",
+      "status": "unreviewed",
+      "scenarioSha256": "ddd73f39efed0f307ba5468cccc3880057457e901f1241afc1626f4e80b9a56e",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-f8b67f815d9edd62df5f",
+      "status": "unreviewed",
+      "scenarioSha256": "ea7a691024600b72d20f9aaf7d42bdb518c31edf2224305b8d68a7717286fa32",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-3c5eee6c0bc35a7662d4",
+      "status": "unreviewed",
+      "scenarioSha256": "d1e61369be0c6b14a23f1510c71555c540a3e8f39d1fa32b33a2a2b5b93aabcf",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-e45d3b8f791e7de52b0f",
+      "status": "unreviewed",
+      "scenarioSha256": "2bd6c1aee94f24c827504f160b1119c58acc12611b968c5800548cda7da7b9e2",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-ff5c7dca3ce1f951e869",
+      "status": "reviewed",
+      "scenarioSha256": "02e3b0ca18cdf9747d6728604fc1137c0e09a3012bf93368d1a5fb50e6c41213",
+      "reason": "台帳・質問・仮定の配列の各値とerrorsが空であることを比較する。このScenarioは表の読み取りを対象とする。",
+      "sources": [
+        "REQ-011"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/trace.test.ts",
+          "contains": "3 つの表を、列名をキーにした配列として返す",
+          "sha256": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40"
+        }
+      ]
+    },
+    {
+      "id": "SCN-18691587c961488c9028",
+      "status": "reviewed",
+      "scenarioSha256": "83b2ba2beeb3a0dc4e0ad55c8ad56ad0bc966d8c3e479c15fcfd60e05be25ed6",
+      "reason": "要件台帳の節を除いた入力から、空の台帳と表名を含むエラー1件をassertする。",
+      "sources": [
+        "REQ-011"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/trace.test.ts",
+          "contains": "要件台帳の表が無いときは、空の台帳と、表が無いことのエラーを返す",
+          "sha256": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40"
+        }
+      ]
+    },
+    {
+      "id": "SCN-3ee9bc42d386708a61af",
+      "status": "reviewed",
+      "scenarioSha256": "137be1b69a6c32daa6a8f63a7494dce3aeb00b38f47cad84bbd665976a06493a",
+      "reason": "同じ入力をLFとCRLFで解析し結果全体の一致と値にCRがないことをassertする。",
+      "sources": [
+        "REQ-011"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/trace.test.ts",
+          "contains": "行末が CRLF でも LF と同じ結果を返し",
+          "sha256": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40"
+        }
+      ]
+    },
+    {
+      "id": "SCN-a007476c8dfc5b1cdd35",
+      "status": "reviewed",
+      "scenarioSha256": "3a9aa0a218fd70ae4f84f9eb78c1a4fafdc019879c1bee9324bd6d9a07a3fb38",
+      "reason": "合意列を追加した入力で回答者・回答日・承認者・承認日の実値と解析エラーなしをassertする。",
+      "sources": [
+        "REQ-011",
+        "REQ-077",
+        "REQ-078"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/trace.test.ts",
+          "contains": "確認事項の回答者・回答日と、仮定の承認者・承認日を読む",
+          "sha256": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40"
+        }
+      ]
+    },
+    {
+      "id": "SCN-3119b9dfb7cfd8787271",
+      "status": "reviewed",
+      "scenarioSha256": "00870b7b753c8b680bf75a59afc221be3e0b85a9d396441359550c6c7d9cc215",
+      "reason": "旧列構成で4つの合意値が空でerrorsが空となることをassertする。",
+      "sources": [
+        "REQ-011",
+        "REQ-077",
+        "REQ-078"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/trace.test.ts",
+          "contains": "合意の列のない古い trace.md もエラーなく読め",
+          "sha256": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40"
+        }
+      ]
+    },
+    {
+      "id": "SCN-b4608b0affb7474e7346",
+      "status": "reviewed",
+      "scenarioSha256": "6ee602d95230d73d14e8a1f4a5afc4d770d11045b1b49eb26978d84288e6396d",
+      "reason": "ブロッキング列を改名し、列名・表名・ヘッダ行番号が一致するエラーをassertする。",
+      "sources": [
+        "REQ-011",
+        "REQ-077",
+        "REQ-078"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/trace.test.ts",
+          "contains": "合意の列でない列が無いときは、表と列の名前",
+          "sha256": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40"
+        }
+      ]
+    },
+    {
+      "id": "SCN-e11acfbd78c93e90b76d",
+      "status": "reviewed",
+      "scenarioSha256": "ef98b406bc38e4a2f20f2ba4d87736f14bc5d42fa4769fef9bf133fcccaaf329",
+      "reason": "対応中の状態値を与え、1件のエラーに行のREQ-IDと値が含まれることをassertする。",
+      "sources": [
+        "REQ-012"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/trace.test.ts",
+          "contains": "決まった値でない状態を、ID と値つきのエラーにする",
+          "sha256": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40"
+        }
+      ]
+    },
+    {
+      "id": "SCN-5c7db4ee160e0b0b1c72",
+      "status": "reviewed",
+      "scenarioSha256": "f7f3838b8af6ae62ad32cc6a7f811164f19f24c5b594e19d2f9a8136b46953eb",
+      "reason": "4つすべての状態で台帳4行とerrorsが空であることをassertする。",
+      "sources": [
+        "REQ-012"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/trace.test.ts",
+          "contains": "4 つの状態値だけなら、状態値のエラーは無い",
+          "sha256": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40"
+        }
+      ]
+    },
+    {
+      "id": "SCN-5a62b8eba7d58bb69c2a",
+      "status": "reviewed",
+      "scenarioSha256": "1b0a1f5c0d375c13640474a6d16b41d38d3a18c51236a3c0d3123101592c2df1",
+      "reason": "ADDEDの名前・Source配列・Scenario数2・行番号とerrorsが空であることを比較する。",
+      "sources": [
+        "REQ-013",
+        "REQ-051"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/spec.test.ts",
+          "contains": "ADDED の Requirement の操作・名前・Source・Scenario 数を返す",
+          "sha256": "542fe6ec2963ca726db1b6948e8bbe27f5bc9694cca87b437e4d9f63f6f8c9c3"
+        }
+      ]
+    },
+    {
+      "id": "SCN-5744acfed3a82b521649",
+      "status": "reviewed",
+      "scenarioSha256": "a42fc433c9d893402dc6674e3951e5ff077bc302f7a3e4ffb4f05f0d7b02303b",
+      "reason": "4操作と名前の組、MODIFIEDのSource、RENAMEDのfromと行番号を比較する。",
+      "sources": [
+        "REQ-013",
+        "REQ-051"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/spec.test.ts",
+          "contains": "4 つの操作の見出しに対応する操作が付く",
+          "sha256": "542fe6ec2963ca726db1b6948e8bbe27f5bc9694cca87b437e4d9f63f6f8c9c3"
+        }
+      ]
+    },
+    {
+      "id": "SCN-1b953fd5347798cf42c9",
+      "status": "reviewed",
+      "scenarioSha256": "563ebb33c40a11f5db58950ee295edd451405f5c6d19f439a448e5c4e8fa4f49",
+      "reason": "ADDED等の同じ仕様をLFとCRLFで解析し、結果全体を比較する。",
+      "sources": [
+        "REQ-013",
+        "REQ-051"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/spec.test.ts",
+          "contains": "行末が CRLF でも LF と同じ結果を返す",
+          "sha256": "542fe6ec2963ca726db1b6948e8bbe27f5bc9694cca87b437e4d9f63f6f8c9c3"
+        }
+      ]
+    },
+    {
+      "id": "SCN-27a6d1d34a98589846cd",
+      "status": "reviewed",
+      "scenarioSha256": "96a2e277ee59594370131c536d9dd142c504a68057ee262f5b03e6e3ed347377",
+      "reason": "小文字x・未チェック・大文字Xの各状態、タスク本文と行番号を比較する。",
+      "sources": [
+        "REQ-014"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/tasks.test.ts",
+          "contains": "チェック済みと未チェックのタスクを、行番号つきで返す",
+          "sha256": "6208610676ee0a0335603847d61d26281ba29e23421ec3db4b38b23cea45be5a"
+        }
+      ]
+    },
+    {
+      "id": "SCN-3ff5e29c8d8565fb5374",
+      "status": "reviewed",
+      "scenarioSha256": "3bea053cff88b396e2af4abace9cfab97da543d1e07f0b6467655e16968d2d75",
+      "reason": "LFとCRLFのチェックが混在する入力の結果全体を比較する。",
+      "sources": [
+        "REQ-014"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/tasks.test.ts",
+          "contains": "行末が CRLF でも同じタスクを返し",
+          "sha256": "6208610676ee0a0335603847d61d26281ba29e23421ec3db4b38b23cea45be5a"
+        }
+      ]
+    },
+    {
+      "id": "SCN-b70d4a10ad75686c633f",
+      "status": "reviewed",
+      "scenarioSha256": "e6bef9097caf488684ae7bf5c92d417aab985c7de986cdedad6b42ef016d8401",
+      "reason": "passedの名前から2つのIDをファイル別に抽出し、errorsが空であることをassertする。",
+      "sources": [
+        "REQ-015"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/test-report.test.ts",
+          "contains": "成功したテストの名前にある要件 ID を",
+          "sha256": "c7153a95adba3abf1d612e07134454d17aa93ece23874ffc140db2d5136859f1"
+        }
+      ]
+    },
+    {
+      "id": "SCN-996fed6fe68c4b0cf379",
+      "status": "reviewed",
+      "scenarioSha256": "fb972bfcc2768072c52c4f830bc660e2f06688109196e95d8686da27c61f79b2",
+      "reason": "skipped・todo・pendingそれぞれにIDを付けた入力で抽出結果が空となることをassertする。",
+      "sources": [
+        "REQ-015"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/test-report.test.ts",
+          "contains": "skip・todo・pending のテストは数えない",
+          "sha256": "c7153a95adba3abf1d612e07134454d17aa93ece23874ffc140db2d5136859f1"
+        }
+      ]
+    },
+    {
+      "id": "SCN-8008fb4cb347ce0881bd",
+      "status": "reviewed",
+      "scenarioSha256": "dbf0fe00bbd5f57834b554e76c6c74a3f164bde23306de42dadaf2ff9f29de62",
+      "reason": "failedのIDが抽出結果へ含まれないことをassertする。",
+      "sources": [
+        "REQ-015"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/test-report.test.ts",
+          "contains": "失敗したテストは数えない",
+          "sha256": "c7153a95adba3abf1d612e07134454d17aa93ece23874ffc140db2d5136859f1"
+        }
+      ]
+    },
+    {
+      "id": "SCN-adc238181ecbe98bd894",
+      "status": "reviewed",
+      "scenarioSha256": "9b6ef2d9bc2a4f21dbf60185eae9920af5c53a54cf6c2c35d82af6943fbd65d7",
+      "reason": "suite名を含むfullNameのIDがファイル別に抽出されることをassertする。",
+      "sources": [
+        "REQ-015"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/test-report.test.ts",
+          "contains": "describe の名前にある要件 ID も数える",
+          "sha256": "c7153a95adba3abf1d612e07134454d17aa93ece23874ffc140db2d5136859f1"
+        }
+      ]
+    },
+    {
+      "id": "SCN-c2ba3bcd4f203047c549",
+      "status": "reviewed",
+      "scenarioSha256": "6d5e2e8a73d5371134adefe9688d33d545c1a40e9c7ac13cb827f47d4e1fcd31",
+      "reason": "壊れたJSONで空の抽出結果とエラー1件、fileと有効な行番号をassertする。",
+      "sources": [
+        "REQ-015"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/test-report.test.ts",
+          "contains": "JSON として読めないときは、空の結果とファイル名つきのエラーを返す",
+          "sha256": "c7153a95adba3abf1d612e07134454d17aa93ece23874ffc140db2d5136859f1"
+        }
+      ]
+    },
+    {
+      "id": "SCN-8edef3d6e6e33b14e387",
+      "status": "reviewed",
+      "scenarioSha256": "cec149987a1818cbf68cecc31d34bde8cc7bbb7c16a998a8341b7b8f28c12378",
+      "reason": "公開exportsと同梱するschema、schemaVersionの必須属性と型の版の一致をassertする。",
+      "sources": [
+        "REQ-016"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/schema.test.ts",
+          "contains": "schemaVersion を必須プロパティとして定義し",
+          "sha256": "ee3ee3a0d181d9e98ff8aecc6fa70b2197748f938b4265e5ed2c1048ffad2891"
+        },
+        {
+          "file": "packages/core/test/schema.test.ts",
+          "contains": "@loomake/core からスキーマを読める",
+          "sha256": "ee3ee3a0d181d9e98ff8aecc6fa70b2197748f938b4265e5ed2c1048ffad2891"
+        }
+      ]
+    },
+    {
+      "id": "SCN-fc6bf78522c427af6179",
+      "status": "unreviewed",
+      "scenarioSha256": "54f27ec563775199e2cbd1bcd215fd55beb5d704dcc473a3d9b0f3192faa8e37",
+      "reason": "履歴とのrequired比較はあるが、削除したスキーマを実際に拒否する回帰・mutationの検査をさらに確認する。現時点では未確認とする。"
+    },
+    {
+      "id": "SCN-6deba132ce8af409887a",
+      "status": "reviewed",
+      "scenarioSha256": "72bded6e8d20f47d4d6d1b414f8141df74820767cadd12c6b765b73ee7ba5ff8",
+      "reason": "生成結果をparseTraceへ渡し、台帳・質問・仮定が空でerrorsも空という全体を比較する。",
+      "sources": [
+        "REQ-017"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/trace.test.ts",
+          "contains": "生成したテンプレートはエラーなく読め、3 つの表が空",
+          "sha256": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40"
+        }
+      ]
+    },
+    {
+      "id": "SCN-a3c512f62e161d19105f",
+      "status": "reviewed",
+      "scenarioSha256": "1294efa22cb637b099e5188428002c8d844eb4cd2b8a84f9120de40acd2b95a8",
+      "reason": "生成結果とkitの雛形の双方で、質問と仮定のヘッダ末尾の合意列を正規表現でassertする。",
+      "sources": [
+        "REQ-017",
+        "REQ-077",
+        "REQ-078"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/trace.test.ts",
+          "contains": "テンプレートと kit の trace.md の雛形は",
+          "sha256": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40"
+        }
+      ]
+    },
+    {
+      "id": "SCN-1fd993be801f4fa622aa",
+      "status": "reviewed",
+      "scenarioSha256": "63b33294b9bf82b30c39ed41465f84fbfdbe6e5abbd677d7c2f1229f92247a40",
+      "reason": "状態値が不正な台帳3行目に対し、fileと実際の行番号7をassertする。",
+      "sources": [
+        "REQ-018"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/trace.test.ts",
+          "contains": "エラーは、渡したファイル名と、不正な行の行番号を持つ",
+          "sha256": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40"
+        }
+      ]
+    },
+    {
+      "id": "SCN-f9797c510a56149bfd76",
+      "status": "reviewed",
+      "scenarioSha256": "4e47b401e77865d1ce7fb602cbb8875c50de67ad716569167780f5649c11b36d",
+      "reason": "coreのpackage.jsonのdependenciesのキーが空であることをassertする。",
+      "sources": [
+        "REQ-046"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/package.test.ts",
+          "contains": "dependencies を持たない",
+          "sha256": "6c32b72bc19cd187c4337ae78ff9c2b42f39e5ff40ef0156175a8845d0e84fb4"
+        }
+      ]
+    },
+    {
+      "id": "SCN-59cd71015c5e0c1dd2e1",
+      "status": "reviewed",
+      "scenarioSha256": "585abcb63153dd73340632d25680d3f64f8a5986b33f7eab2d4f5d8562af81fa",
+      "reason": "Sourceとtraceを持つfixtureで実際のOpenSpec validateを実行し、終了コード0をassertする。現在のLinux環境の結果である。",
+      "sources": [
+        "REQ-052",
+        "REQ-058"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/package.test.ts",
+          "contains": "Source 行と trace.md を含む change が openspec validate --strict を通る",
+          "sha256": "6c32b72bc19cd187c4337ae78ff9c2b42f39e5ff40ef0156175a8845d0e84fb4"
+        }
+      ]
+    },
+    {
+      "id": "SCN-eee682415ffb663b2b46",
+      "status": "superseded",
+      "scenarioSha256": "29faf169b657c6aa3ee77c7b949581fccbb17401ae21a436ae366aeba586810c",
+      "reason": "clarify-doctor-diagnosticsが同じRequirementの導入条件と診断範囲を補足した。変更後のScenarioへ対応する。",
+      "replacement": "SCN-c90ad29dcb12c5497396"
+    },
+    {
+      "id": "SCN-c7a5e9657736a0c2f52f",
+      "status": "superseded",
+      "scenarioSha256": "48d9b4f99e7f1f8e0779a9d3c026789bdba5cfe307bad5947489b96abb7395c3",
+      "reason": "clarify-doctor-diagnosticsが同じRequirementの導入条件と診断範囲を補足した。変更後のScenarioへ対応する。",
+      "replacement": "SCN-4779eec0904d7f5d14ac"
+    },
+    {
+      "id": "SCN-738960823e4b4fae1194",
+      "status": "reviewed",
+      "scenarioSha256": "08c579fcf472b303e034d0aededcd52cb8531c14cceed1811b9750cd6f293d9b",
+      "reason": "設定ファイルのないfixtureで終了コード1、ファイル名とinitの案内をassertする。",
+      "sources": [
+        "REQ-134"
+      ],
+      "tests": [
+        {
+          "file": "packages/cli/test/doctor.test.ts",
+          "contains": "loomake.config.json がなければ、loomake init を案内して",
+          "sha256": "c9fe91afe6e727773eff514d7e8c92b6037ecd6a504236a4732addca73b03f19"
+        }
+      ]
+    },
+    {
+      "id": "SCN-c494449e555d666340f1",
+      "status": "reviewed",
+      "scenarioSha256": "d035aa774f84a0002e9ff0f9ef9c0c184c7abac92a604e0355f9d51708f48282",
+      "reason": "除外行を削ったfixtureで終了コード1、対象のパスと追加する行をassertする。",
+      "sources": [
+        "REQ-134"
+      ],
+      "tests": [
+        {
+          "file": "packages/cli/test/doctor.test.ts",
+          "contains": "テストのレポートが除外されていなければ、足す行を案内して",
+          "sha256": "c9fe91afe6e727773eff514d7e8c92b6037ecd6a504236a4732addca73b03f19"
+        }
+      ]
+    },
+    {
+      "id": "SCN-16a53218bdba4fe1d887",
+      "status": "reviewed",
+      "scenarioSha256": "b2eb84a93ea2161864a6901fd6cf27aa320cfad42e892270837cdb432a60f90a",
+      "reason": "証拠まで除外するfixtureで終了コード1と証拠の問題、除外を分ける案内をassertする。",
+      "sources": [
+        "REQ-134"
+      ],
+      "tests": [
+        {
+          "file": "packages/cli/test/doctor.test.ts",
+          "contains": ".loomake/ を除外していれば、証拠の記録をコミットできない",
+          "sha256": "c9fe91afe6e727773eff514d7e8c92b6037ecd6a504236a4732addca73b03f19"
+        }
+      ]
+    },
+    {
+      "id": "SCN-05bcc96d38da4e6aad66",
+      "status": "reviewed",
+      "scenarioSha256": "5e3e73fc9f27710973e413c374d76a6d124973d449610475b0e048afd7895504",
+      "reason": "存在しないコマンドを設定し、終了コード1とその実行ファイル名をassertする。",
+      "sources": [
+        "REQ-134"
+      ],
+      "tests": [
+        {
+          "file": "packages/cli/test/doctor.test.ts",
+          "contains": "品質コマンドの実行ファイルが見つからなければ、終了コード 1 を返す",
+          "sha256": "c9fe91afe6e727773eff514d7e8c92b6037ecd6a504236a4732addca73b03f19"
+        }
+      ]
+    },
+    {
+      "id": "SCN-52ec0ba0a9322ee77dec",
+      "status": "reviewed",
+      "scenarioSha256": "d0c9d6db7b95aab677da60a0dd2b8d6967b9bbba5f56f4a4c3eceb9d59370ff9",
+      "reason": "claudeとghのないPATHで両方の注意、注意2件・問題0件と終了コード0をassertする。",
+      "sources": [
+        "REQ-134"
+      ],
+      "tests": [
+        {
+          "file": "packages/cli/test/doctor.test.ts",
+          "contains": "claude と gh がなければ注意として表示し",
+          "sha256": "c9fe91afe6e727773eff514d7e8c92b6037ecd6a504236a4732addca73b03f19"
+        }
+      ]
+    },
+    {
+      "id": "SCN-82ef1513a31553d7c3cb",
+      "status": "unreviewed",
+      "scenarioSha256": "058cbbd33c61634c62989063a67c25c58af30c7c3ed977d61d3b6a839be55b80",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-d033c82bead72420f188",
+      "status": "unreviewed",
+      "scenarioSha256": "768e9d743dc74a554f78409104b32e21348587b0091054aae5e9ab841e1a073b",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-2ef622a1f742e98d6c2c",
+      "status": "unreviewed",
+      "scenarioSha256": "1a89e564e505d6076556c54556d6264672abce43baf4be05bab2943c81708895",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-2f9014e547d395836211",
+      "status": "unreviewed",
+      "scenarioSha256": "cd7d72dff1e05e90445790c33e849ec5afab23fffc26098fc95e3e17626feb42",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-71bb2811a007080bdfaa",
+      "status": "unreviewed",
+      "scenarioSha256": "056cf362fb63175df2463b1204072ad2c24d9e78fefc83d7a71effa276639a58",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-cc21ead52d5fed20fcee",
+      "status": "unreviewed",
+      "scenarioSha256": "fa775a570da86703b9050ebc6190c2b103209be63eac270a92d15512f9ca7e5a",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-5f1b1a2bf17ea73f6469",
+      "status": "unreviewed",
+      "scenarioSha256": "a81deb276326c920e840b62bda72e49dd8737173c7d47970d1fd4cd368189d97",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-e86ff8e59d7b39e76d2a",
+      "status": "unreviewed",
+      "scenarioSha256": "c634591b2dc5557a97479260f98d419e96ce9af48c613c3e8b0862bae0a0ef6f",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-a55b3ea2ba2c759cff45",
+      "status": "unreviewed",
+      "scenarioSha256": "bcb6fe59aad6cd39b2f9ae68da6fa6667e1a4e221a169be871c358d175e726d3",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-96dd2aaa1681ee164551",
+      "status": "unreviewed",
+      "scenarioSha256": "cc31573ec3c7207fab53708735446c4a3c6c4543ef7d256d66670effc2a93c75",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-6c8f327cfa66c91fc050",
+      "status": "unreviewed",
+      "scenarioSha256": "936a430a6823993c5d2c45b615c50a140af9615f88fa649da83a1af9f6933382",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-196ea85bedfe9daa2251",
+      "status": "unreviewed",
+      "scenarioSha256": "81aeb91a6cd3ae37ff78c09786a9a06f8668449651530731a85b70fd73051854",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-bceb94ec5bdb61497386",
+      "status": "unreviewed",
+      "scenarioSha256": "cad32f8d012bf7b83089b13e5277e36562b39d4eb165063794caade3deb93a5e",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-19bcf37b54180a7f4b27",
+      "status": "unreviewed",
+      "scenarioSha256": "771f8d96ed085757f2f361647f515d5e2ae8045aad3923a4c23064bcaeaa394e",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-ac527ac8901f065101a2",
+      "status": "unreviewed",
+      "scenarioSha256": "fe70120373cccfd5963f852fccac21abe4a0640f23f89c4b98d2738f6e51c81f",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-4caeb58c28204dd906c5",
+      "status": "unreviewed",
+      "scenarioSha256": "9eea41b33892c4970f82364271ecf75564562d843dd4a31a01b7c0f6fb138386",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-8907e700a6e381eba82c",
+      "status": "unreviewed",
+      "scenarioSha256": "8dad24759b504561440a955c759afa0cd845cf5533bdbb8b0906ff9eff767e77",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-7d47b94cd4a78f7b54c6",
+      "status": "unreviewed",
+      "scenarioSha256": "cfdb430dc239880a9ab7feda057defbf9f0abdf4b0f55ec04de7bebd9a823f3d",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-826c6bc273e9afef7b41",
+      "status": "unreviewed",
+      "scenarioSha256": "ba6f13e4d6eafdec70e32dce3be0eeb300d156afff82d2ded7a4dff62550f0e7",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-ca974078bb6e751e6411",
+      "status": "unreviewed",
+      "scenarioSha256": "f16318ea3a602226e915da812d3a9d98d3d93ac42d1ba2567d97560fec4b4ee9",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-e6df5b9e0055b8e42fb7",
+      "status": "unreviewed",
+      "scenarioSha256": "c0b6b6eaffe0a51aacc93d2d1434fa4d01ed66da65ccec30e6905d4d3d79dc7e",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-fa25fb5a2717fa7b0ef8",
+      "status": "unreviewed",
+      "scenarioSha256": "6cfc02f0bf1f0a0c3407dbac33e3ee2d6b94136a716cef2010dc5233568aa415",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-2c17a498b35d2cfa77d5",
+      "status": "unreviewed",
+      "scenarioSha256": "5609d6c21a18c6c0d8ea5aaaab5cd8ead7a0ba327b2175e9a9935f359181cd4b",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-94f430b5a3a7eb37bf58",
+      "status": "unreviewed",
+      "scenarioSha256": "71f69d3f204ae242fd51ab6ab6df2d51d928b6bb89b5b46bbaa3c4a8d989c8a5",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-0cece1c17a779f95ec90",
+      "status": "unreviewed",
+      "scenarioSha256": "e92d0a0bbf5859a066e9c41954c8c9f589568409b3fd74ce4d399f71bd3aa380",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-8384660de1e60a9bf901",
+      "status": "unreviewed",
+      "scenarioSha256": "648bbc4b5f6a309265e6f0518c4718cfea60c138a6708fa3bf81fe7090cd33fe",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-477ad69b2958f45308ed",
+      "status": "unreviewed",
+      "scenarioSha256": "f3a76d57a4c094062527bd917592dc8eb07a540624712aeab13599357bc43255",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-08bea6aa0df4fb8a510a",
+      "status": "unreviewed",
+      "scenarioSha256": "8acd624af47c19b1d3ade30a1f9862cb2bf881c89f59eb224676cc532c4fa027",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-720649fc9388d9e6db45",
+      "status": "unreviewed",
+      "scenarioSha256": "a60521c02cc2350faa6ef6e3230968abf546991ea4a07b36bbc37bc27a807e95",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-fe8277fbddefb8219246",
+      "status": "unreviewed",
+      "scenarioSha256": "9ea74af80a9422ea87c12e9d63223583e77f0dccb21fa0a23411d4ea65c66753",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-410c52e711f8dd131904",
+      "status": "unreviewed",
+      "scenarioSha256": "86210802c4168a5003364edca880d6fdfe5d057a7d779a7d43f1fc3c96d8a726",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-5a16e42923e6ae95f549",
+      "status": "unreviewed",
+      "scenarioSha256": "637a34d6f1753eb425b689571e0850fb8e7ac257969bce06caae198d01703c24",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-52a7b7629b2c8a2d7dff",
+      "status": "unreviewed",
+      "scenarioSha256": "1cd88a9c34bbdb1dee247db4484ce1429aaba6e420e5ffa4e20d5ba55988a7bb",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-4f6502862cd00e397701",
+      "status": "unreviewed",
+      "scenarioSha256": "408fe2a62ed6258c4c95fc983de040209390ddd681608c347e39dced3a9cdce7",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-4a7b5a2f65584f2c1953",
+      "status": "unreviewed",
+      "scenarioSha256": "b8d234c14dec090f614eb424aaeab85b00fd3c25aa70a022676bbc9fb6094e71",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-2de79bea8dc151ce2619",
+      "status": "unreviewed",
+      "scenarioSha256": "d989659642ada6aab9ccd104ec9c40eecfe287b3c3f1335b8f048c7060330780",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-b2dd3632f502375407d8",
+      "status": "unreviewed",
+      "scenarioSha256": "1543e505c0f01cce76065af01f6550eddfae8f5db0febb2f8d2f40950cde5366",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-9fe1ea244089a3ac1a50",
+      "status": "unreviewed",
+      "scenarioSha256": "703178aee1ae34d4aa3cc51f4f3a1ff4257c83d3a774d262b4222a786b4e3b30",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-91e88c4d1b6cb5cd0110",
+      "status": "unreviewed",
+      "scenarioSha256": "71293405f7b011696da3c27e1ff845b67e960d415fd13fbd211bf7393c690c52",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-76f138277acbd8c119e5",
+      "status": "unreviewed",
+      "scenarioSha256": "0ddac7f57a9b30e392566da272070af3b7e7439cb8a1e3e58954f4b1607bef88",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-c60fb252775bc70a4752",
+      "status": "unreviewed",
+      "scenarioSha256": "c29c3ca11cdaedc23af167c488cd95ecd2d3326c3400df4d30ba3d65af428aa2",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-317c8a9fda25d0088f65",
+      "status": "unreviewed",
+      "scenarioSha256": "9c3c6b41ca701c0edb85aef9af63daab8724df4f85ea982776c32be56612f88a",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-d31a4872ae040eb68a4e",
+      "status": "unreviewed",
+      "scenarioSha256": "1ab76f65b1ae9c4761a8cc835a0b3a3830564542f109c833caa20dbf54f03af3",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-711b5333ddc017bf8f8a",
+      "status": "unreviewed",
+      "scenarioSha256": "edaf6b52112b1b63495aa2ceac671d68e9ed0e5edf1c3a63f898e08bc788791a",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-92a3ac86378cabd507ba",
+      "status": "unreviewed",
+      "scenarioSha256": "7e51bdb1ac5fe79a82b32f82e5b533ada2ac40804a259121736c4fd45abe1b40",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-6ea8fcfc023e39f6709b",
+      "status": "unreviewed",
+      "scenarioSha256": "19dd9257cd4bc4d1f2440e7d95243cd8b9c04bff8356f9066a0141b44103dd32",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-149eab9b65181496a38e",
+      "status": "unreviewed",
+      "scenarioSha256": "87df447744acde0596df8d5e12095743dc78ec97c0b3bb4098cf638eaae1f024",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-366e01b502420cbcda61",
+      "status": "unreviewed",
+      "scenarioSha256": "8e437ceb7be7459c03352a63eb01b5d3aee70cd842d6d7b277dafe7c1d437aeb",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-2f7149cce94ed98f34a7",
+      "status": "unreviewed",
+      "scenarioSha256": "cd8f10cba9ead3192b929b6a9e175124be7b1c33f4eb59feb28066e381a883ae",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-abcce1ac255f52f2ec1d",
+      "status": "unreviewed",
+      "scenarioSha256": "1926e40726a1d5c51241905a2c4e2e09bc7668629b68b6e470f9dd4e2726dd84",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-fe9c40f541338cb13a45",
+      "status": "unreviewed",
+      "scenarioSha256": "a2ca05b26346c0ac0452230a409c0086ccab733320e55e2e0a6a53cefc836759",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-9039d72704b7f94442f9",
+      "status": "unreviewed",
+      "scenarioSha256": "dab1a9a37c61dee3420322ff91a1b82f471974407b7309559940f1884a819cda",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-d02b79ab7fc006972460",
+      "status": "unreviewed",
+      "scenarioSha256": "830431b1d9cca92210e03dace1e6e0785011355287643d19158b44464ff478b5",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-a4a924730b38b80d05cb",
+      "status": "unreviewed",
+      "scenarioSha256": "af9c22ca5862a6c06c3c14af4e1dd66b133856d9de2632691f9b82b6ab4ea242",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-455695437dcc3a035b07",
+      "status": "unreviewed",
+      "scenarioSha256": "ba2c48e80fbdac5e3533f1449780a34feef01c29232b498090c693e4ce6125e7",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-9fd3702dc7f2530d74e8",
+      "status": "unreviewed",
+      "scenarioSha256": "0fbc52cdfa5f1720a11243c5484d61bf0ad4e8dd2d7db5b4a39bd7b86adcf6b1",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-318ff276f491f33907d6",
+      "status": "unreviewed",
+      "scenarioSha256": "fb933f0497a5817638bceccaaca37a9e784536a1bbf78b6c31110bbc2319fc89",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-6da3e34efb5c09b4a3ca",
+      "status": "unreviewed",
+      "scenarioSha256": "ddefa11e1a838890148fa751a82a04d27e651012d106419169c00cc6ca4b03fa",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-db13885e68906873a021",
+      "status": "unreviewed",
+      "scenarioSha256": "0cc9778ffde1beb0bdbca9e962e0adaa639a05dda97f01e7474e027a7e1a55ef",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-719c8683f9e86204a1ec",
+      "status": "unreviewed",
+      "scenarioSha256": "6ca0536eb972cd064fddef7edfb09f6d7e989b766bfc3b9f3ae2394c92239dbf",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-700ce3ac1f058955b5de",
+      "status": "unreviewed",
+      "scenarioSha256": "8ccc6435304c997c8ed7ee2b50c73331e3584668de1a50a0e9c64d1e2e2915d4",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-b33d1b742daa51fa8c95",
+      "status": "unreviewed",
+      "scenarioSha256": "57e95a06fb70e0b75cdd5c3986f7b2d735abbc293029f7d1c34cbd69ce2d0574",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-26b98fefb7d3cdc21077",
+      "status": "unreviewed",
+      "scenarioSha256": "2d0c69db3135cf277a517e68e453b216e6b77170d861927d6fbbcac110260fbe",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-d658935459f8aea3954e",
+      "status": "unreviewed",
+      "scenarioSha256": "8d45cfd3bbba89b8573eb6d2ff1513d28fbdc746887598744dfe2d8fcd43d59f",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-1429d9807ac856ec8552",
+      "status": "unreviewed",
+      "scenarioSha256": "2ac46aede76280d55cab102a4a79aed9fe58272528ebddebd88f2c0a8d30a4ba",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-7bbede48d14b68405c94",
+      "status": "unreviewed",
+      "scenarioSha256": "9ee8ddf8122b6b16d88fc99c5ef95cc2c4d793d069afb40b6fc8c81acfe6166c",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-03b268db459458b16c36",
+      "status": "unreviewed",
+      "scenarioSha256": "00b5921e8fcfc081fb63d9465210a2fda5eb4cbf35f4e7eb494d9d6fe383b101",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-c9d5d3580bf2db529c08",
+      "status": "unreviewed",
+      "scenarioSha256": "06ae34228fc01c254fba046d01e1e360f7120714d3f3412c0c780ca9cfb24774",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-0c9a8c1de5d86a559154",
+      "status": "unreviewed",
+      "scenarioSha256": "a87d8729c33e2d095a74de3c8dacc6adeabf51a0695054c6b91b50f5fd18113e",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-b971a4fec1f96305e8c4",
+      "status": "unreviewed",
+      "scenarioSha256": "1c5f4e6cb8c438222b824ac567e385fce6db4a61cf13b1e3e6ab1d9bfe694558",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-d43376039a94b0d78f28",
+      "status": "unreviewed",
+      "scenarioSha256": "19915385635fd64322cfa37caadab7bbc0352be3084a6a8c54ed9f6be94f97e2",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-0744a121d7ea44b63966",
+      "status": "unreviewed",
+      "scenarioSha256": "08d1e561b2d7d07516cadec3afbe7c3fca80f3e6e2605b2c2ad9601a1df5aa0d",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-f34b0a151ecae418e564",
+      "status": "unreviewed",
+      "scenarioSha256": "e915adf446bfcc63accb62f85d93fdab0fa90a4b74e700961ee1b66fa9d861b1",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-b0edd8a078f51a7222ac",
+      "status": "unreviewed",
+      "scenarioSha256": "5a072721b6f3104cf7b8dd97a0ff3394c6e18636006136468753f8280bc8a6a7",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-7202fa8faafe2e5ceef4",
+      "status": "unreviewed",
+      "scenarioSha256": "61521657a69866f4835707d3057cab1b52ea8c7d9567d0301ef3eb0782d05f21",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-87b6b5e603caaa3c9353",
+      "status": "unreviewed",
+      "scenarioSha256": "a379824cf4a1b7c0e8ba7db580f2c48521ad4db435e5e7a2f12be8a01c34b512",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-e6f39a79470cc30d46ce",
+      "status": "unreviewed",
+      "scenarioSha256": "79c04d9953198e2ecfe3ab8dddd4df08e9d125fe9edf2b47bcaea3a515558369",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-8ad79ac2c15ec7805e16",
+      "status": "unreviewed",
+      "scenarioSha256": "b2a50d51b275cc109005503eb7b0bbf88356f3cbb76fa0e0a153f903b7137e59",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-e1d0acaffac5e1c1a78c",
+      "status": "unreviewed",
+      "scenarioSha256": "878713a1ef90c62f4c2f338557a8c0cc557a9e84b6f0f123c3d8f97225a5dda4",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-2b685b9a963e1cbd5253",
+      "status": "unreviewed",
+      "scenarioSha256": "402ff571b0a37f9a59df549ce1f40f6186460fa08a0ee1906f3334b9afa4ed84",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-072e8e78d3270e999bdb",
+      "status": "unreviewed",
+      "scenarioSha256": "acb4bf87d2c4fd01cede37fc23701dd3c35e71e31eb2b0c6663785390acdbb92",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-b975f4e003ed75203a51",
+      "status": "unreviewed",
+      "scenarioSha256": "828b2c385340ee04796e922a8fd5a3f814498c881fbff36213fd80517aa17f92",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-389715434728b4a680d6",
+      "status": "unreviewed",
+      "scenarioSha256": "72dbb8403959b5e5cabdc593ee094669ab3bcdb4434089821f43d641ac07905c",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-527b0af89101fb9fa4c3",
+      "status": "unreviewed",
+      "scenarioSha256": "925edb89e2da31308321b651cf6852e72d0f0271464c6ed4cffc0364421b2855",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-234e6735b172fa7ee4a4",
+      "status": "unreviewed",
+      "scenarioSha256": "820f7a7e577dce5ba9d8e3327e7b813e881ef2777b163cd7b60a3ea2fa5dcd72",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-546e28ce360c0bc9bbd3",
+      "status": "unreviewed",
+      "scenarioSha256": "b66169eaed7e864c544b2f50302c6cfdeae6fc3eafec8cbfe03a3d0dc08fd168",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-833d79ca648d946de286",
+      "status": "unreviewed",
+      "scenarioSha256": "64d6d6e30bc512d8ed91e6f26d2e3f056d0cd5c06a20369e98a0cdd5005f506b",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-334e2cf3bfbb45ba0fde",
+      "status": "unreviewed",
+      "scenarioSha256": "77f1328b187fb080dcc069e9f9e66f28a0dfefc7713b108d28d3f9d3f84a49ac",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-726d08d792f1a1deac70",
+      "status": "unreviewed",
+      "scenarioSha256": "82dcb4533f24313c3411e6db7c0d3719b1ffa350082e82dfdffa4a6d266cfe76",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-ca7bacfed8bc1e6d64c1",
+      "status": "unreviewed",
+      "scenarioSha256": "5ae2abec353711cef9782e7e38e57a092dfe80a3dbe01943fc72124cd7ad5249",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-fb72c121b9de7a0ecdff",
+      "status": "unreviewed",
+      "scenarioSha256": "bf7836cfb6d34ef0858e8cef3e1c72f299cf09d78f3bbe14f22eb77cac9326f4",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-9822abca70074dd781d0",
+      "status": "unreviewed",
+      "scenarioSha256": "15bd57f1c8739d81beb2adb1f40a11111c399a31c9fbb7e1ec3ca1fb725ff075",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-71d6bd155f46759898db",
+      "status": "unreviewed",
+      "scenarioSha256": "3c35acc753ce4ee21190e4206798caa122496db38e758ec97714ef5fdb137d72",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-a38b1d680601fc12350d",
+      "status": "unreviewed",
+      "scenarioSha256": "77a188e2d596b863c4aade78f2bd6e45fb0910b6e97058999cd0ad43998dc9b3",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-2f2f1d4be78302090856",
+      "status": "unreviewed",
+      "scenarioSha256": "fa01006c45ef719a79a1c3108a10396ab4dd69e539f9c5860930e5045856af3c",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-b727235a87e44d5a8748",
+      "status": "unreviewed",
+      "scenarioSha256": "9714c7ce6d75d26a2475848b2fb4ffd8ddfbd64d5357aa5d115374f7034c4d7a",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-ba54a6e5abb22784fe66",
+      "status": "unreviewed",
+      "scenarioSha256": "625991e553030e02de3fce1178b9ad8b1b7fee403d40f7754f6def51d9ee26dc",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-584a9aab9c83b5990a97",
+      "status": "unreviewed",
+      "scenarioSha256": "9ac8dfb4f000c8f3178084b493e2c120d90ef7cd8b7300e2eb95a60e5b1c7cd4",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-31e695f52b68e90b3884",
+      "status": "unreviewed",
+      "scenarioSha256": "1b7bbe40a038e77575aac97538b7f53cfe84e06a4291b597930c9a8a2edb7d2b",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-7fc7f896bcbc95c7bcbe",
+      "status": "unreviewed",
+      "scenarioSha256": "ef077f345358e0d45899a2ecd29bd056d09939410b864f75533114bf80de26f9",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-040411844d04d47a69d7",
+      "status": "unreviewed",
+      "scenarioSha256": "85c630305ff89e1cdaa90146942fa10b219793475392b128eaa24a71e0f2e1f9",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-1af4647d6e775d611d6f",
+      "status": "unreviewed",
+      "scenarioSha256": "932db8872ce7e690546624ec487ad41a6f7699b50808b2508b2141ef2a8d3cd5",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-f194cfc196951a1a0e20",
+      "status": "unreviewed",
+      "scenarioSha256": "0316ee9ac9d488abaef9d246a26ff2d0c07cad919acd44475b207e7202dd79fc",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-073f111396ff5135f4c4",
+      "status": "unreviewed",
+      "scenarioSha256": "5646d78bf04757c96dd237ff0065a9792a58413c24c047f4ab1df294824655d0",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-7cf3584a1b4c00cd1111",
+      "status": "unreviewed",
+      "scenarioSha256": "61e77de6782b22919e38de90c967added0121ed1db535f71aed6b2262d8f92f7",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-6c9ccd51227cf9411aa7",
+      "status": "unreviewed",
+      "scenarioSha256": "45d754d01aed82189a1e1b1d68656c1533e949d6fb11d0177be8df0a6b678f31",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-3389feb69c931facb80a",
+      "status": "unreviewed",
+      "scenarioSha256": "562673f0e6b3bd67d3d4de72367bf6e8b6a1a11eaecdc15e18df99676fe2535a",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-db895f8f48d2514fcb0d",
+      "status": "unreviewed",
+      "scenarioSha256": "c1ca35e94a4857553c5b592a0ae2d864bf249ad7a07a9cd196a820c7363b277c",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-87baafcb6a7505de3f9e",
+      "status": "unreviewed",
+      "scenarioSha256": "c106be17006a02cea33af1eaee97f7718215ac06b86aafa54dab3f76e02d58f2",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-7d91543595e04356266d",
+      "status": "unreviewed",
+      "scenarioSha256": "d4535c10b27ea095e5b17b125dda149629e6dfb6720216533c1157786060b146",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-2b043e7f8f9e05e08a26",
+      "status": "unreviewed",
+      "scenarioSha256": "b1218481c6166bcdb78bfd51600e1775eac57638697d3e236230240e0ea0a401",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-f9315c7fbdb72df9b4ae",
+      "status": "unreviewed",
+      "scenarioSha256": "ae80b1c6cb5f9f6dfb125eab6a0bd81406bb5f36b1629df727071aac9f8b3d53",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-134eab2689aeae75762b",
+      "status": "unreviewed",
+      "scenarioSha256": "681dd9532f08c0fb0b8c8cb0659ef2ca8facf00112ed1f7fac8e14a367999894",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-26243f1a65c5a0117c34",
+      "status": "unreviewed",
+      "scenarioSha256": "9f7d467fffcc29425b65c77304dcb8e1b9a4cf30ae676f7bd7b45237503776ef",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-4ba30adb659f40b75511",
+      "status": "unreviewed",
+      "scenarioSha256": "2782d07d0f58cfda738988c07104b129547d8d95c612d182a12e94b9f72617da",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-942c7f2fc346c9bf72cb",
+      "status": "unreviewed",
+      "scenarioSha256": "de9fddac9b3c601f38ce54c248907310acdc5c97426f70208ce55861b584e11a",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-afc355e9cc38a423e972",
+      "status": "unreviewed",
+      "scenarioSha256": "440e05666aeceba507ec71398b346c0438d56288704e3dd254c4496b464a9614",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-5026fbdf7790b44ec704",
+      "status": "unreviewed",
+      "scenarioSha256": "ed44c17cce39d0cf6e51d39f59a8e60b3e67ac03c0b5c41707a57b3d8ba43a46",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-a83b88ba3bb1f0a50ab9",
+      "status": "unreviewed",
+      "scenarioSha256": "c6e9342914d74f6a3a1651f81b766a5b8e81e4f2efc700fdb2104952d516b433",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-05f2e4e28c0b069eb5f8",
+      "status": "unreviewed",
+      "scenarioSha256": "086418661b740a9dec3e9e58cd7dea42857ee34496dd69bac65d3a6b05e19c26",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-6d4ed375d23ba4e50bc5",
+      "status": "unreviewed",
+      "scenarioSha256": "3edde8ff472bf3b22bb65223ebf03931ce8c8e16a8ac919f3626c534ccf9f479",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-fed4aa4653d4bc92458a",
+      "status": "unreviewed",
+      "scenarioSha256": "a9fa11496edc46f9c3d0b9b94c416d65341562970b63f2fc48e797e79574886f",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-55341193709b0ce803a8",
+      "status": "unreviewed",
+      "scenarioSha256": "24a3f74234127779c71e96929f028af0eb1e5e3ec25173be66c0f861b07458cf",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-feb4efeceb5e6dd69613",
+      "status": "unreviewed",
+      "scenarioSha256": "da0515beaf309394b4c276b802963d1ca9d9062ceaa00f0622971019cd71e1ea",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-08afaf0f460e42bc6b7b",
+      "status": "unreviewed",
+      "scenarioSha256": "eb1a80ec6faa283a3def6c0f829e5bd58bf967e1eb2b979a9a2206b8fd862fa6",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-95364dbf8675120e8f4b",
+      "status": "unreviewed",
+      "scenarioSha256": "986ac7e204b3023f46466c2153c7412e919c4023f815e400a5ee6ff7da4439a6",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-8b478bee2ca2d91a265f",
+      "status": "unreviewed",
+      "scenarioSha256": "4483ec28f66006a4a33bd773cb93cb026181312e893427605e372a3b10c99dbd",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-85f3dce4e0c46617a5e6",
+      "status": "unreviewed",
+      "scenarioSha256": "cb62538d38a1e94da2c7e6d938a6f51585f8259441f3e697c77ad70b731385b5",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-64cd31bba8ccd7b0ead3",
+      "status": "unreviewed",
+      "scenarioSha256": "02266a88665f9019bbab6da0ead3a1fd446a463ffce76a36795b2432b30b15d6",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-a01d149d46c06b28e3cf",
+      "status": "unreviewed",
+      "scenarioSha256": "3d873eff26d2ea5ab43b051645a476e060b957850efe47f7819644b8d0c68b2c",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-24bd6ec3cf7d9f7d9663",
+      "status": "unreviewed",
+      "scenarioSha256": "b5441445d3718d05d6074caf6b932c3bd6b00b8664668520f19bab7355b202b8",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-85552ec2cba4ac0779af",
+      "status": "unreviewed",
+      "scenarioSha256": "22d058048dec1a311cc49ebc63e58519601aec58d6fe63e3ee446cad51bb7b94",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-54cad318b27e4ccc19c1",
+      "status": "unreviewed",
+      "scenarioSha256": "231c4e6263c6ab602c4dea59ddc69e03ad017613c4458c84df09e56e8cc3965b",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-16b0c50ea595012b7915",
+      "status": "unreviewed",
+      "scenarioSha256": "5ce9e6f588713b26a002d3ded9e29cbc8272da04bf6dd1af70d4150821b5436a",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-e8acb3e5bc1f7943f55e",
+      "status": "unreviewed",
+      "scenarioSha256": "98eb381dc940cbf0861e67135e6328168ea2fc469e7b9fdd060e8964b1306935",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-b8a94e9282accc719f33",
+      "status": "unreviewed",
+      "scenarioSha256": "9ed77eb1b66c48e82957fed7712adf84e6ca45163970fff202cef764fd37c28b",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-96f96fc165511da2bbd3",
+      "status": "unreviewed",
+      "scenarioSha256": "7ab730200fd20b7331bcdab52d609372200b80d90206455dbde68bcb976d76a9",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-da3119a636cd83d22349",
+      "status": "unreviewed",
+      "scenarioSha256": "edfc3b0e3597db7ea45a9893717678fa1be947490c90f56e7e9d567408e885a8",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-caa27649de182b45efbc",
+      "status": "unreviewed",
+      "scenarioSha256": "6d5b3ff4bbf1ae3223f5ce15b2b7dac75732103731946ffcc67a03f80e53ef36",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-bc15b835091f83aee80e",
+      "status": "unreviewed",
+      "scenarioSha256": "fb1c0cf127d4ac46dfab897ece0d4e7e06ca70bd5a91f4b847564dc4c7f3b6bf",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-97209a578509c311cdb2",
+      "status": "unreviewed",
+      "scenarioSha256": "fd2a015f182b302a79fb17acbba92bdb9c4801a7278eab49508ed4adacba5da6",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-ad119243436a630dfbe3",
+      "status": "unreviewed",
+      "scenarioSha256": "9eed33a951f73007ed6cc1d2e537df27aece576abe832508804ae4d985a7c5d9",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-a7fc8c59a1736ef2df7a",
+      "status": "unreviewed",
+      "scenarioSha256": "ffcf6ba83e23a4f89b761950d25550bba234950c72f75ff24675c83deac15344",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-6b4e0fc82423fab18f04",
+      "status": "unreviewed",
+      "scenarioSha256": "031d3e80ea05928e528f52f60042ee0b05f4c96e3dea6c432623fd96af63282d",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-73e139c267a588ccbac2",
+      "status": "unreviewed",
+      "scenarioSha256": "7fd9c206ec2720d02515a3a65227b7c5cd68826960b238e0a54274db96dc3dc5",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-514255a944e556b0a291",
+      "status": "unreviewed",
+      "scenarioSha256": "ad6089cb26c1e5595c0d4b96593ba35f4aace88b0c08cc89ecc6319620b4cc1c",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-bc1cd4bf22ab14931952",
+      "status": "unreviewed",
+      "scenarioSha256": "4c0a938825c2f9abeeaf3dc2abe127e7ff3606135c6e352f54df405f2a0123be",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-00626e84d4dc2c99e719",
+      "status": "unreviewed",
+      "scenarioSha256": "e88ce499b13a4f479ef182628e164ed0ae25dc13a31e0c971e7efb1ab8878610",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-450588627ce55b4b0df9",
+      "status": "unreviewed",
+      "scenarioSha256": "5e9f9d0443ee5e873122377bef2a893dd91d19f51a945eac9543a71d6635de5f",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-929d778ba87ce6d2f046",
+      "status": "unreviewed",
+      "scenarioSha256": "d16c3defb70e773f9acec749e62e02a63ace89da552de4594c333071adf1506e",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-7becee6258eb49ff7efa",
+      "status": "unreviewed",
+      "scenarioSha256": "e77e3b10f83b130e8ab4c6a3177507925c193dbdd8facd2ba8197af8ce449d9c",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-fae2b8b93f59b5ad7abf",
+      "status": "unreviewed",
+      "scenarioSha256": "f003e1f803559f401624e084395317830d082e7fe7463e811e2e451042eb6578",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-d116692eed9ee3f29f8a",
+      "status": "unreviewed",
+      "scenarioSha256": "b2512ac7c97a009c9d71438c50dc81629a61a29f7afc4876f8f86c418bf68c4e",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-698476b2e9f8e82a8305",
+      "status": "unreviewed",
+      "scenarioSha256": "0d2257b56fa168b3bce0ebd722d19b4b3f92e3dfd501814505790f252958ec39",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-701da81e06785da93043",
+      "status": "unreviewed",
+      "scenarioSha256": "0c4a3f95956d7e52823987229bfd9448d1bbdf80b184ed323a39b6ea1a42d1d0",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-b7ca10912f322f432159",
+      "status": "unreviewed",
+      "scenarioSha256": "fc76577a13004f9bbf413cc8f2c3a2861d0b354cb36352a815c9ec18aea6f6e0",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-d305dcdef92686e490ed",
+      "status": "unreviewed",
+      "scenarioSha256": "6d220a7611a431653367f65df527245475399fe6924acb5446717c60ada159fb",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-21a1dc64ae669c5e17a9",
+      "status": "unreviewed",
+      "scenarioSha256": "0c82262a877a06c551f424e24ab91cfab17318d18569c34d63fcd6c0406b2337",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-6a31ad676ae78c172c55",
+      "status": "unreviewed",
+      "scenarioSha256": "10309427aacefba1cdf1134a4840df1378051dd2038bc0a9520f1c21143cc349",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-da7cda8ed9988b629804",
+      "status": "unreviewed",
+      "scenarioSha256": "0e76e105b12d1291a99fc128df5b9f13be31778e0e98923a8da58d05f82e3245",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-9f665713c21c7312691b",
+      "status": "unreviewed",
+      "scenarioSha256": "0dd802a34cd610811b7173b36222f04a34d0f8662bb34a6227439d6dca0dcac3",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-990042ab06d5cec624b1",
+      "status": "unreviewed",
+      "scenarioSha256": "d9c8858579356a2b795807ef8d9876197c9422ead77859fc08c73e32f183e226",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-595bc3a27f4cb872e4ab",
+      "status": "unreviewed",
+      "scenarioSha256": "0378b179e0895d889cefb1cea4fbe231a0c81bf9eecab18759fd5c974ae8550e",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-5fbdd67cf1f0d15de3b6",
+      "status": "unreviewed",
+      "scenarioSha256": "4d6106bf57ed48d70fbd08e676d21c25cee3e98b1faab3d40dfdb562dcc3584e",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-a03a7b3ae0d44a6d41c6",
+      "status": "unreviewed",
+      "scenarioSha256": "0558c8a0a1e2a5127e250d2051efd480391a985f053954e6fdd732960a4d96d5",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-510086866140fa0817eb",
+      "status": "unreviewed",
+      "scenarioSha256": "5e63595a855895459c9087145c10f748daacd9c353b8fae1bf67678cef45e36d",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-3d6b99e302f285ab4982",
+      "status": "unreviewed",
+      "scenarioSha256": "37d2f197ed3ed2f579bf73b217274eeb956dc3b3f70a0a0b8669d084138473de",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-5709e54feab84da2ae6d",
+      "status": "unreviewed",
+      "scenarioSha256": "6043b3f9e8878e75ad231a6d8a0e8cd07e43e01e39601b2666a6c421fe5fcc9b",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-60ac1705ea8d9d739700",
+      "status": "unreviewed",
+      "scenarioSha256": "8870589ef74f7edadaee0233380308dce3fc934d1e2535e32daaec47baa88db3",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-0553ac34f59a1af76570",
+      "status": "unreviewed",
+      "scenarioSha256": "e4940aed450c84381be49d42776cb55ba5e178a37bca923ea7a14d5fc7096be8",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-5475fccf91630747c15e",
+      "status": "unreviewed",
+      "scenarioSha256": "ccaddd1598270a491b5ba308e89b9a48eddb93d2671eb3444f46d9813dc24589",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-1038977605831c5c0ed5",
+      "status": "unreviewed",
+      "scenarioSha256": "6f7ed0d1b8393e23688f11c5d6accd7abd55b110f21fe7e25926a18c639d708a",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-fa361b08b4790cff678f",
+      "status": "unreviewed",
+      "scenarioSha256": "6ebde898b715374337b1fc59777d65398b894cb6bc0f1b5cf6a799a9396c0787",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-3d7455f45bf52d2cfa6a",
+      "status": "unreviewed",
+      "scenarioSha256": "921a7ab27f0a2c1fdf606ebac50e3eba19ada2aaceedef225089ddeb887cca2a",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-7449d308e912d8d7c67f",
+      "status": "unreviewed",
+      "scenarioSha256": "7787f694e95c519655e0f1a01b68fd2ebb6966295c8b758622b589dbd153240c",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-34554a55080e94b1652f",
+      "status": "unreviewed",
+      "scenarioSha256": "ca16bef62608521914a361d8bd0b3cf9fe4d1ad3ae17e39cf2109cea65490edb",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-b6da1328873c0bf7f1bb",
+      "status": "unreviewed",
+      "scenarioSha256": "d4b06f3d786a464015072fad73f30ec7feb9b8b6068ac1e3d894820b06804eb1",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-db7d38fb9c4206f9fb81",
+      "status": "unreviewed",
+      "scenarioSha256": "8dbc6bd541bcad383ec072d1d78b183233353e329486bdc03b462d929ad4f72d",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-0f5e9f8c7a3198d586aa",
+      "status": "unreviewed",
+      "scenarioSha256": "d6c7d75817c39740f5b601b9c91f061772456009538c067aa1563a8672fd86be",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-6147447e73941b8eb580",
+      "status": "unreviewed",
+      "scenarioSha256": "99a61abf8a2620a0c5a2a4d17658ca6649dee1e5e222cb827b99c202c6b4fb68",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-c2012903ec3e0e84112e",
+      "status": "unreviewed",
+      "scenarioSha256": "72a762cce822d89dc48ee39790899e2a29c7494cabd9064eb3377db83d9cab0d",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-34e70e3d8a4dbf5cc45f",
+      "status": "unreviewed",
+      "scenarioSha256": "78b2d66976fc2c67f50bf8f8f34746b8b65ab9971e4216ef643376499c80835a",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-57a5bf1abb12246babb3",
+      "status": "unreviewed",
+      "scenarioSha256": "7dcaf1bed051e55aa95ba9bd3fe132fc9350da2356307a1c05e53af9191c5f91",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-4022dac40f2e371a1b4b",
+      "status": "unreviewed",
+      "scenarioSha256": "ad592141c89101a77ffc8a9a4a7aa89bcd8509ecc83adfae5f10a296b1bde895",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-24f94d3138eea3e6a811",
+      "status": "unreviewed",
+      "scenarioSha256": "d9eea73d3b0f47b038834f80a2071af2957d99ff61cd455ff621617536d0cf40",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-ec9f2a7f5998adc15d70",
+      "status": "unreviewed",
+      "scenarioSha256": "78619f351938204a4e70539436116241b6e20ad16aee563eeb491027d580c905",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-fc8d3b636e2393b5bd4d",
+      "status": "unreviewed",
+      "scenarioSha256": "6bd9ef4d5450440c2257743a745cba84fed19a0aeaafbd27437cbcf925b86ac5",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-a683dcb21df0301392bb",
+      "status": "unreviewed",
+      "scenarioSha256": "cad0a4cb42905198fda8760450b950126f8396fd70c202dd806ff062f2de205a",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-fe5d3df53cb11ce82318",
+      "status": "unreviewed",
+      "scenarioSha256": "7e12406d92d6e388d609bc333d1c0d14aec0289c71c0607f96ac82179c63a496",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-76a8fcab68935032456a",
+      "status": "unreviewed",
+      "scenarioSha256": "00091922439705444a0377c78125274484c666784c0d3b1e8659741580fae7c4",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-58db2a5b20e64df27bbd",
+      "status": "unreviewed",
+      "scenarioSha256": "01416ca8da7751210b8a546fd267f353787dd9d58edecdf6c5dfcced0c73acc5",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-ee397428777b5cca2a47",
+      "status": "unreviewed",
+      "scenarioSha256": "53c5a51969273d8fe63977a74356315112d6ee9364117ce7655e3ca7c295001e",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-747a556efa58b92a124c",
+      "status": "unreviewed",
+      "scenarioSha256": "e46c5dae66ad46fce8d6a6bd1811f6bcb403921db404731ae876fcb2c00fb963",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-81b13a47e663f662b33e",
+      "status": "unreviewed",
+      "scenarioSha256": "dcf292a7fc9d8167d2255f82bf459332e103c7fdcc2a0ecf78709e75ad612d86",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-b19ccdc7f88dee23eccb",
+      "status": "unreviewed",
+      "scenarioSha256": "a462c883269a691c67bb182bc0aa62c0d405fa45b69449319f7617ed21c74923",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-156324cb65b8f02b6700",
+      "status": "unreviewed",
+      "scenarioSha256": "c4edf4c17d1c2348409134809f419725c88390aa1a5c158a2de1107c8e8c35e9",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-b5d6867657c962d57b96",
+      "status": "unreviewed",
+      "scenarioSha256": "1e68f2269b70bff26196e581f2f737a7e0456b895517ab6b6eba6bc97d7d92eb",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-e8776676918179dadbc3",
+      "status": "unreviewed",
+      "scenarioSha256": "68faf1424996f3ad66aa8c86dda7f7dc00c6a46ccc033a6262fe882068985c75",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-b764c3e3f7a7c4c96151",
+      "status": "unreviewed",
+      "scenarioSha256": "eb576b55f7e808bd736ad88894bd87857dc88a2d64331307427173eac95d3e9a",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-9e65a8432c29f86920ae",
+      "status": "unreviewed",
+      "scenarioSha256": "57b79819bc2fc276da80a9e7e7daf3c083be9222c0b863332026de5c3e3d24a5",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-30b0f6ef82bfe18ef654",
+      "status": "unreviewed",
+      "scenarioSha256": "8f3cbdf9289255370abd046640d72c8a5043c380b0cf89016c838a7b2661dc5a",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-45bbdde43acbf378e195",
+      "status": "unreviewed",
+      "scenarioSha256": "674c1acbddbbe6aa47eda0c70ac34ff0a55fb684f49acdf524a5123f0f6f35fc",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-73bc3d9a8a0e8df01ed9",
+      "status": "unreviewed",
+      "scenarioSha256": "8a3f26c75efeea59894aa96a41c16beabd5412bd7b56c18436012dd6f308434f",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-63b5f58957bf020ee441",
+      "status": "unreviewed",
+      "scenarioSha256": "7504a416aeec494412930955d78f3a8fa21ea280520c83911bfc220b4c481a6c",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-7e6beb1649d29350cda4",
+      "status": "unreviewed",
+      "scenarioSha256": "be7270f6e8a409915e66f45a09ba737692fa9f4eabe236a5a7fb6843ce5f1181",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-6009b643d46c218a3f7a",
+      "status": "unreviewed",
+      "scenarioSha256": "0a2c9372e7d399f6e9d08734916b823a0314b46049e3cf26052f89fce77ba5bf",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-596e2f22fede4e17bba5",
+      "status": "unreviewed",
+      "scenarioSha256": "a10198187715b87f29a6ea8bbb5c522cbd78372564451d90a0671db5776c4fda",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-d950082723d948b1ce5c",
+      "status": "unreviewed",
+      "scenarioSha256": "c0c5a1eb9d203a3e55f4283f9d7dea6d8b83ffef52d2978ed39cb3d6342cdf6e",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-a65f7ba71586a5cd5987",
+      "status": "unreviewed",
+      "scenarioSha256": "cf547f4fb6d284916360428717c51f1e3683a27bb2656967311a3f26bad0f407",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-c14e76ddd4c813653713",
+      "status": "unreviewed",
+      "scenarioSha256": "8d78f8201b445b53760bfe13b69f0ec1445a2a6c21ea5411374c0a6bcdfb578f",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-5e7b5a451616c4f5e499",
+      "status": "unreviewed",
+      "scenarioSha256": "5b15c229560835d3e1775590b6aafc5251fcdeb1ad003acb02f42ec12bde4ac8",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-414dd75021b0a3fd4e5c",
+      "status": "unreviewed",
+      "scenarioSha256": "1f1e48b5a707e5260fbd946cfe2b16457a370ed3803ebc74b71872b3e51e84a6",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-373041d8715147071068",
+      "status": "unreviewed",
+      "scenarioSha256": "3d45e7e3d7e4e66d2257ee9f520daf8364cf71d4fb3fcaaffcf69b2a7562bb92",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-9380f85a23d00c442a6e",
+      "status": "unreviewed",
+      "scenarioSha256": "fb9a111156778a3badab203748e4e62c389a8e89cb8bca3b0dead40615ffcf86",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-65953e5426fce883ba49",
+      "status": "unreviewed",
+      "scenarioSha256": "5d7c580009df4370a4a9d076750d4ca48ff0bb446225502f8a103b7b4515dc16",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-0580d4faf39eeccb215b",
+      "status": "unreviewed",
+      "scenarioSha256": "b6bf8b4daebe716f56abf074922dc7926b0efd91b98dbdb253447892c003ec9e",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-3ce3ca96bf8bde5aa9d6",
+      "status": "unreviewed",
+      "scenarioSha256": "c0aaeba02345a036c298f7b2c491925ab6fc8c10ff510fca526f894b17141a99",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-129c1a409ad4cdd46ce6",
+      "status": "unreviewed",
+      "scenarioSha256": "bfc0cfb36b49df771c50f4505bc984af7cb34174dcb31c24e91fcfc53cc0fd52",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-38961b7ee7aa96aad6f6",
+      "status": "unreviewed",
+      "scenarioSha256": "0fc6dd543ded3083f2568ca7040843c07c1b926b916920a80170246fc7118ee3",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-f9f8eb6c78a2fa7479ef",
+      "status": "unreviewed",
+      "scenarioSha256": "fb82d2509a479e9a370ffab0079bb3785b0749b0f941ad4cdb4f6b470cb137c0",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-03ed0cddc2757b3ce11d",
+      "status": "unreviewed",
+      "scenarioSha256": "3fe9df3973d2b29051cd01c84087bb80e2b100b8477d895953d51af17e48ee20",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-d704beb36bb7a1c172c7",
+      "status": "unreviewed",
+      "scenarioSha256": "6e2197b4c417b320076730074b899a2cb2e1a7ac6c684a40aabac881a891ee9c",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-aaac522d975b17610fe8",
+      "status": "unreviewed",
+      "scenarioSha256": "168c15bba15cdab52db9e4e7d7c748c4090c056a3013f2699f1ee394894e4e42",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-81a73d00b1322a606efa",
+      "status": "unreviewed",
+      "scenarioSha256": "5d4b3fbdfc337cf5b17ce1d2fa26a41b2c05f87513a28392658e860ca9ceb08a",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-0672fddf057e29e2cb7d",
+      "status": "unreviewed",
+      "scenarioSha256": "b52744a17285e682d4d250de41e23b54ee75799b8e519841331557958e749afa",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-a23003081c05132c0efe",
+      "status": "unreviewed",
+      "scenarioSha256": "52715e14f04f313bcbac1204cb8722865763c1a69e0a1d172b12edf5df1df9f3",
+      "reason": "対応候補のassertionの内容は未精査"
+    }
+  ]
+}
