@@ -48,7 +48,7 @@ npx loomake trace report --change <id>            # 検収レポートを出す
 | `@loomake/runner` | `packages/runner/` | tasks を AI のエンジンに実装させ、完了ゲートが通るまで回して PR を出す（`run`） |
 | `loomake` | `packages/cli/` | CLI 本体（`loomake init`・`loomake verify`・`loomake trace`・`loomake run`） |
 
-いまの仕様は `openspec/specs/`（monorepo・core-parsers・verify・init・req-to-openspec-skill・agents-rules）にある。
+いまの仕様は `openspec/specs/` に、capability ごとのディレクトリで置いている（22 個。`ls openspec/specs` で一覧できる）。CLI の操作は cli・verify・init・doctor・trace-record・trace-report・trace-agreement、run は run・run-guards・run-pr、資源の上限は bounded-input・external-process-budget・run-record-budget にある。
 
 ## 開発
 
