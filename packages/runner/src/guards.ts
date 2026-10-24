@@ -139,9 +139,9 @@ const filesUnder = (dir: string): string[] =>
 export type GitInternals = { config: string; hooks: string; digest: string };
 
 /** git の設定ファイルの中身と、フックのディレクトリのファイルの相対パスと中身から、比べるための SHA-256 を作る */
-export function gitInternals(root: string, env: NodeJS.ProcessEnv): GitInternals {
-  const config = gitPath(root, env, 'config');
-  const hooks = gitPath(root, env, 'hooks');
+export function gitInternals(root: string, env: NodeJS.ProcessEnv, places?: { config: string; hooks: string }): GitInternals {
+  const config = places?.config ?? gitPath(root, env, 'config');
+  const hooks = places?.hooks ?? gitPath(root, env, 'hooks');
   const hash = createHash('sha256');
   hash.update(existsSync(config) ? readFileSync(config) : '');
   if (existsSync(hooks) && statSync(hooks).isDirectory()) {
@@ -155,9 +155,10 @@ export function gitInternals(root: string, env: NodeJS.ProcessEnv): GitInternals
  * run は書き換えを戻さず、このあとの git add・git commit も実行しない
  */
 export function findInternalsChange(root: string, env: NodeJS.ProcessEnv, before: GitInternals): { reason: string; report: string } | undefined {
-  const after = gitInternals(root, env);
+  // 呼ぶ前と同じ場所を読む。core.hooksPath を変えれば設定ファイルの中身が変わるので、場所を求め直さなくても見つかる
+  const after = gitInternals(root, env, before);
   if (after.digest === before.digest) return undefined;
-  const places = [...new Set([before.config, after.config, before.hooks, after.hooks])].map((p) => `  ${p}`);
+  const places = [before.config, before.hooks].map((p) => `  ${p}`);
   return {
     reason: 'エンジンが git の設定かフックを変えました',
     report: [
