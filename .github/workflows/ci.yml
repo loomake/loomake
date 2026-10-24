@@ -59,6 +59,8 @@ jobs:
       - run: pnpm build
       - run: node scripts/package-smoke.mjs prepare "$RUNNER_TEMP/loomake-package"
         shell: bash
+      - run: node scripts/package-smoke.mjs prepare "$RUNNER_TEMP/loomake-offline"
+        shell: bash
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 20.19.0
@@ -69,6 +71,8 @@ jobs:
       - run: node ../../../packages/cli/dist/cli.js verify --change sample --spec-only
         working-directory: tests/fixtures/verify-project
       - run: node scripts/package-smoke.mjs check "$RUNNER_TEMP/loomake-package"
+        shell: bash
+      - run: python3 scripts/deny-network.py node scripts/runtime-compatibility.mjs "$RUNNER_TEMP/loomake-offline" "$RUNNER_TEMP/loomake-runtime-results" 20.19.0
         shell: bash
 
   # PR ごとの完了ゲート（REQ-010, REQ-054, REQ-132）。PR 本文・変えたファイル・ブランチ名から決めた change を --done で検査する

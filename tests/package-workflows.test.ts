@@ -18,6 +18,12 @@ describe('配布物のCIと公開前ゲート', () => {
     expect(prepare).toBeGreaterThan(0);
     expect(switchNode).toBeGreaterThan(prepare);
     expect(check).toBeGreaterThan(switchNode);
+    const offlinePrepare = runtime.indexOf('package-smoke.mjs prepare "$RUNNER_TEMP/loomake-offline"');
+    const offlineCheck = runtime.indexOf('deny-network.py node scripts/runtime-compatibility.mjs');
+    expect(offlinePrepare).toBeGreaterThan(prepare);
+    expect(offlinePrepare).toBeLessThan(switchNode);
+    expect(offlineCheck).toBeGreaterThan(check);
+    expect(runtime.slice(offlineCheck)).toContain('20.19.0');
     expect(quality + runtime).not.toContain('continue-on-error: true');
   });
 

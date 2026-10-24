@@ -48,4 +48,28 @@ describe('実際に配るパッケージ', () => {
       expect(result).toMatchObject({ requirement: 'REQ-124', ok: true, platform: process.platform, signal: 'SIGINT', exit: { code: 1, signal: null }, summary: { status: 'interrupted', doneTasks: ['1.1 最初の変更'], remainingTasks: ['1.2 途中の変更', '2.1 品質を確認する'] }, partial: 'unfinished\n' });
     }
   }, 35000);
+
+  it('[REQ-084] Linuxで通信を拒否して配布物を使う。他OSでは検証対象外を明示する', () => {
+    const offlineTarget = join(base, 'offline');
+    const args = ['scripts/runtime-compatibility.mjs', offlineTarget];
+    if (process.platform !== 'linux') {
+      const unsupported = spawnSync(process.execPath, [...args, join(base, 'unsupported'), process.versions.node], { cwd: root, encoding: 'utf8', timeout: 5000 });
+      expect(unsupported.status).toBe(1);
+      expect(unsupported.stderr).toContain('この通信拒否の検証はLinuxを対象にしています');
+      return;
+    }
+    const prepared = spawnSync(process.execPath, ['scripts/package-smoke.mjs', 'prepare', offlineTarget], { cwd: root, encoding: 'utf8', timeout: 30000 });
+    expect(prepared.status, prepared.stdout + prepared.stderr).toBe(0);
+    const unrestricted = spawnSync(process.execPath, [...args, join(base, 'unrestricted'), process.versions.node], { cwd: root, encoding: 'utf8', timeout: 10000 });
+    expect(unrestricted.status).toBe(1);
+    expect(unrestricted.stderr).toContain('ECONNREFUSED');
+    const output = join(base, 'runtime-results');
+    const checked = spawnSync('python3', ['scripts/deny-network.py', process.execPath, ...args, output, process.versions.node], { cwd: root, encoding: 'utf8', timeout: 35000 });
+    expect(checked.status, checked.stdout + checked.stderr).toBe(0);
+    const result = JSON.parse(readFileSync(join(output, 'results.json'), 'utf8'));
+    expect(result.node).toBe(process.version);
+    expect(result.checks).toHaveLength(4);
+    expect(result.checks.every((entry: { ok: boolean }) => entry.ok)).toBe(true);
+    expect(result.checks[0].result).toBe('EPERM');
+  }, 80000);
 });
