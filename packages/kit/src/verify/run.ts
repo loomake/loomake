@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync, realpathSync, rmSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, realpathSync, rmSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import {
@@ -16,6 +16,7 @@ import {
   type VerifyResult,
 } from '@loomake/core';
 import { assertChangeId, loadConfig, type LoomakeConfig } from './config.js';
+import { findChangeDir, specFiles, toPosix } from '../change-files.js';
 
 export type VerifyOptions = {
   /** プロジェクトのルート（loomake.config.json のあるディレクトリ） */
@@ -54,20 +55,6 @@ child.on('exit', (code) => { clearTimeout(timer); process.exit(code ?? 1); });
 `;
 /** 実行時間の上限で止めた品質コマンドの detail */
 export const TIMED_OUT = '実行時間の上限に達したので止めました';
-
-// node_modules・ドットで始まるディレクトリは見ない
-function walk(dir: string, out: string[] = []): string[] {
-  if (!existsSync(dir)) return out;
-  for (const name of readdirSync(dir)) {
-    if (name === 'node_modules' || name.startsWith('.')) continue;
-    const p = join(dir, name);
-    if (statSync(p).isDirectory()) walk(p, out);
-    else out.push(p);
-  }
-  return out;
-}
-
-const toPosix = (p: string) => p.split(sep).join('/');
 
 /** verify を実行して結果を返す。設定の誤りは UsageError を投げる */
 export function runVerify(options: VerifyOptions): VerifyResult {
@@ -167,16 +154,16 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   if (pending.length) record('確認待ちの要件', 'warn', pending.map((r) => r.ID).join(', '));
 
   // specs
-  const specFiles = walk(join(changeDir, 'specs')).filter((f) => f.endsWith('spec.md'));
-  if (specFiles.length === 0) record('差分仕様', 'fail', 'specs/<capability>/spec.md がありません');
+  const specs = specFiles(changeDir);
+  if (specs.length === 0) record('差分仕様', 'fail', 'specs/<capability>/spec.md がありません');
   const specErrors: ParseError[] = [];
-  const reqs = specFiles.flatMap((f) => {
+  const reqs = specs.flatMap((f) => {
     const file = toPosix(relative(changeDir, f));
     const spec = parseSpec(file, readFileSync(f, 'utf8'));
     specErrors.push(...spec.errors);
     return spec.value.map((r) => ({ ...r, file }));
   });
-  if (specFiles.length) record('spec.md の解析', specErrors.length ? 'fail' : 'pass', formatErrors(specErrors));
+  if (specs.length) record('spec.md の解析', specErrors.length ? 'fail' : 'pass', formatErrors(specErrors));
 
   const ledgerIds = new Set(ledger.map((r) => r.ID));
   const live = reqs.filter((r) => r.op === 'ADDED' || r.op === 'MODIFIED');
@@ -206,15 +193,10 @@ const SHARED_MARK = /([a-z0-9]+(?:-[a-z0-9]+)*) の (Q-\d+) と同じ質問/;
 
 function checkSharedQuestions(root: string, config: LoomakeConfig, changeId: string, questions: Trace['questions'], record: Recorder) {
   const changesDir = resolve(root, config.openspecDir, 'changes');
-  const archiveDir = join(changesDir, 'archive');
   // 進行中の change を先に、なければ archive の <日付>-<change-id> を探す
   const findTrace = (id: string) => {
-    const active = join(changesDir, id, 'trace.md');
-    if (id !== 'archive' && existsSync(active)) return active;
-    const archived = existsSync(archiveDir)
-      ? readdirSync(archiveDir).filter((d) => d.replace(/^\d{4}-\d{2}-\d{2}-/, '') === id).sort().reverse()
-      : [];
-    return archived.map((d) => join(archiveDir, d, 'trace.md')).find((p) => existsSync(p));
+    const dir = findChangeDir(changesDir, id);
+    return dir && join(dir, 'trace.md');
   };
   const answer = (q: { 回答: string }) => q['回答'].trim();
   const problems: string[] = [];
