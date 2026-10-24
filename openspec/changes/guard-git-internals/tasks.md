@@ -7,5 +7,5 @@
 
 ## 2. 統合検証
 
-- [ ] 2.1 docs（security）と changeset を更新し、TDD の結果を tdd.md に記録する
-- [ ] 2.2 `pnpm -s verify --change guard-git-internals --done` を通す <!-- loomake:gate=done -->
+- [x] 2.1 docs（security）と changeset を更新し、TDD の結果を tdd.md に記録する
+- [x] 2.2 `pnpm -s verify --change guard-git-internals --done` を通す <!-- loomake:gate=done -->
