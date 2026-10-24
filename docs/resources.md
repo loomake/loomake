@@ -79,6 +79,6 @@ runはロック取得前から単調増加する実時間で全体の予算を�
 
 ## 別に管理する資源
 
-エンジンのstdoutとstderrは既定64MiBまでで、run.maxOutputBytesで指定する。runには上記の共有期限もある。エンジンが直接書くファイル、ファイルシステム全体の容量、initなど対象外の入力経路は、引き続き改善対象である。
+エンジンのstdoutとstderrは既定16MiBまでで、run.maxOutputBytesで指定する。既定の16MiBは、完了ゲートの1回と直しの5回の出力（96MiB）が、1回の実行の記録の上限（128MiB）に収まる量である。上限を上げるときは、run.maxLogBytesも合わせて上げる。runには上記の共有期限もある。エンジンが直接書くファイル、ファイルシステム全体の容量、initなど対象外の入力経路は、引き続き改善対象である。
 
 現在の保護範囲は[security.md](security.md)、中断と再試行は[run-recovery.md](run-recovery.md)、最新の評価と残る項目は[review.md](review.md)を参照する。
