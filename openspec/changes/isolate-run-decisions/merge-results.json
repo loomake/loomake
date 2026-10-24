@@ -275,14 +275,16 @@
   },
   "helpRegression": {
     "red": {
-      "tests": 14,
+      "tests": 9,
       "failed": 3,
-      "reportSha256": "88093cfa93897027ace621f09512f75928b64103f551d91667795a10197bb975"
+      "reportSha256": "88093cfa93897027ace621f09512f75928b64103f551d91667795a10197bb975",
+      "passed": 6
     },
     "green": {
       "tests": 33,
       "failed": 0,
-      "reportSha256": "c4ebe7676baa319f32cf980531b65d6846e4214361ade925ce7040d5a2a68189"
+      "reportSha256": "c4ebe7676baa319f32cf980531b65d6846e4214361ade925ce7040d5a2a68189",
+      "passed": 33
     }
   }
 }
