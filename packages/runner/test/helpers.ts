@@ -42,14 +42,24 @@ console.log(JSON.stringify({ type: 'result', result: step.output ?? '終えま�
 process.exitCode = step.exitCode ?? 0;
 `;
 
-// gh auth status は FAKE_GH_AUTH が fail なら失敗する。gh pr create は引数と本文を記録して URL を出す
+// PRの検索・作成と、作成前後の失敗を再現する。prs()は作成の記録だけを返す。
 const FAKE_GH = `#!/usr/bin/env node
-import { appendFileSync, readFileSync } from 'node:fs';
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 const args = process.argv.slice(2);
 if (args[0] === 'auth') process.exit(process.env.FAKE_GH_AUTH === 'fail' ? 1 : 0);
+if (args[0] === 'pr' && args[1] === 'list') {
+  appendFileSync(process.env.FAKE_GH_LOOKUP_LOG, JSON.stringify(args) + '\\n');
+  if (process.env.FAKE_GH_LOOKUP === 'fail') { console.error('検索できません'); process.exit(1); }
+  console.log(process.env.FAKE_GH_RESULT ?? (existsSync(process.env.FAKE_GH_STATE) ? readFileSync(process.env.FAKE_GH_STATE, 'utf8') : '[]'));
+  process.exit(0);
+}
 const i = args.indexOf('--body-file');
 appendFileSync(process.env.FAKE_GH_LOG, JSON.stringify({ args, body: readFileSync(args[i + 1], 'utf8') }) + '\\n');
-console.log('https://github.com/example/repo/pull/1');
+if (process.env.FAKE_GH_CREATE === 'before') { console.error('作成前に失敗'); process.exit(1); }
+const url = 'https://github.com/example/repo/pull/1';
+writeFileSync(process.env.FAKE_GH_STATE, JSON.stringify([{ url, baseRefName: args[args.indexOf('--base') + 1], headRefName: args[args.indexOf('--head') + 1], isCrossRepository: false }]));
+if (process.env.FAKE_GH_CREATE === 'after') { console.error('作成後に応答を失いました'); process.exit(1); }
+console.log(url);
 `;
 
 const TASKS = ['## 1. 実装', '- [ ] 1.1 一つ目のタスク（REQ-012）', '- [ ] 1.2 二つ目のタスク', '', '## 3. 確認', '- [ ] 3.1 `pnpm -s verify --change c1 --done` を通す', ''].join('\n');
@@ -91,6 +101,8 @@ export function makeRepo({ trace = traceMd(), tasks = TASKS, run }: { trace?: st
     FAKE_LOG: join(base, 'calls.jsonl'),
     FAKE_PLAN: join(base, 'plan.json'),
     FAKE_GH_LOG: join(base, 'gh.jsonl'),
+    FAKE_GH_LOOKUP_LOG: join(base, 'gh-lookup.jsonl'),
+    FAKE_GH_STATE: join(base, 'gh-state.json'),
     GIT_AUTHOR_NAME: 'loomake-test',
     GIT_AUTHOR_EMAIL: 'test@example.com',
     GIT_COMMITTER_NAME: 'loomake-test',

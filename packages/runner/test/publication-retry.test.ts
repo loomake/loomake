@@ -1,0 +1,125 @@
+import { describe, expect, it, vi } from 'vitest';
+import { createHash } from 'node:crypto';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { runRun } from '@loomake/runner';
+import { CHANGE, makeRepo, type Repo } from './helpers.js';
+
+vi.setConfig({ testTimeout: 60_000 });
+
+async function run(repo: Repo) {
+  const out: string[] = [];
+  const code = await runRun({ root: repo.root, changeId: CHANGE, interactive: false, confirm: async () => false, stdout: (text) => out.push(text), env: repo.env, fileExists: () => false });
+  return { code, stdout: out.join('\n') };
+}
+async function withRepo(action: (repo: Repo) => Promise<void>) {
+  const repo = makeRepo({ run: { maxFixes: 1 } });
+  try {
+    repo.plan([{ write: { 'impl.txt': '実装\n' } }, {}]);
+    await action(repo);
+  } finally { repo.cleanup(); }
+}
+const files = (repo: Repo) => readdirSync(join(repo.root, '.loomake/evidence', CHANGE));
+const evidence = (repo: Repo) => `.loomake/evidence/${CHANGE}/${files(repo)[0]}`;
+const lookupCount = (repo: Repo) => readFileSync(repo.env.FAKE_GH_LOOKUP_LOG!, 'utf8').trim().split('\n').length;
+const row = { url: 'https://github.com/example/repo/pull/1', baseRefName: 'main', headRefName: 'loomake/c1', isCrossRepository: false };
+
+describe('証拠とPRの再試行', () => {
+  it.each(['before', 'after'])('[REQ-164][REQ-165] 作成の%sで失敗した後も同じ証拠とコミットを使う', (failure) => withRepo(async (repo) => {
+    repo.env.FAKE_GH_CREATE = failure;
+    expect((await run(repo)).code).toBe(1);
+    const head = repo.git('rev-parse', 'HEAD');
+    const saved = readFileSync(join(repo.root, evidence(repo)), 'utf8');
+    delete repo.env.FAKE_GH_CREATE;
+    const second = await run(repo);
+    expect(second.code, second.stdout).toBe(0);
+    expect(repo.git('rev-parse', 'HEAD')).toBe(head);
+    expect(files(repo)).toHaveLength(1);
+    expect(readFileSync(join(repo.root, evidence(repo)), 'utf8')).toBe(saved);
+    expect(repo.calls()).toHaveLength(2);
+    expect(repo.prs()).toHaveLength(failure === 'after' ? 1 : 2);
+    if (failure === 'after') expect(second.stdout).toContain('既存のPR');
+  }));
+
+  it('[REQ-164] push失敗後に同じ証拠を再利用して送信する', () => withRepo(async (repo) => {
+    repo.git('remote', 'set-url', '--push', 'origin', join(repo.base, 'missing.git'));
+    expect((await run(repo)).code).toBe(1);
+    const head = repo.git('rev-parse', 'HEAD');
+    expect(repo.prs()).toEqual([]);
+    repo.git('remote', 'set-url', '--push', 'origin', join(repo.base, 'origin.git'));
+    const retry = await run(repo);
+    expect(retry.code, retry.stdout).toBe(0);
+    expect(repo.git('rev-parse', 'HEAD')).toBe(head);
+    expect(files(repo)).toHaveLength(1);
+  }));
+
+  it('[REQ-164][REQ-165] 完了後も再実行で証拠・コミット・PRを増やさない', () => withRepo(async (repo) => {
+    expect((await run(repo)).code).toBe(0);
+    const head = repo.git('rev-parse', 'HEAD');
+    const retry = await run(repo);
+    expect(retry.code, retry.stdout).toBe(0);
+    expect(retry.stdout).toContain('既存のPR');
+    expect(repo.git('rev-parse', 'HEAD')).toBe(head);
+    expect(files(repo)).toHaveLength(1);
+    expect(repo.prs()).toHaveLength(1);
+    expect(lookupCount(repo)).toBe(2);
+  }));
+
+  it('[REQ-164] 証拠の後に実装を変えたら新しい対象SHAの証拠を作る', () => withRepo(async (repo) => {
+    repo.env.FAKE_GH_CREATE = 'before';
+    expect((await run(repo)).code).toBe(1);
+    const old = evidence(repo);
+    const oldContent = readFileSync(join(repo.root, old), 'utf8');
+    repo.write('impl.txt', '変更した実装\n');
+    repo.git('add', 'impl.txt'); repo.git('commit', '-q', '-m', 'change implementation');
+    const changed = repo.git('rev-parse', 'HEAD');
+    delete repo.env.FAKE_GH_CREATE;
+    expect((await run(repo)).code).toBe(0);
+    expect(files(repo)).toHaveLength(2);
+    const latest = files(repo).find((name) => !old.endsWith(name))!;
+    expect(JSON.parse(readFileSync(join(repo.root, '.loomake/evidence', CHANGE, latest), 'utf8')).sha).toBe(changed);
+    expect(readFileSync(join(repo.root, old), 'utf8')).toBe(oldContent);
+  }));
+});
+
+describe('不正な証拠候補を保護する', () => {
+  it.each(['json', 'sha', 'change', 'failed', 'fail-result', 'hash', 'snapshot', 'legacy'])('[REQ-164] %sの証拠は消さず増やさず停止する', (kind) => withRepo(async (repo) => {
+    repo.env.FAKE_GH_CREATE = 'before';
+    expect((await run(repo)).code).toBe(1);
+    const path = evidence(repo);
+    const value = JSON.parse(readFileSync(join(repo.root, path), 'utf8'));
+    if (kind === 'sha') value.sha = '0'.repeat(40);
+    if (kind === 'change') value.change = 'other';
+    if (kind === 'failed') value.verify.ok = false;
+    if (kind === 'fail-result') value.verify.results[0].status = 'fail';
+    if (kind === 'hash') value.documents[0].sha256 = '0'.repeat(64);
+    if (kind === 'snapshot') {
+      value.documents[0].content += '\n違う文書\n';
+      value.documents[0].sha256 = createHash('sha256').update(value.documents[0].content).digest('hex');
+    }
+    if (kind === 'legacy') delete value.documents;
+    const content = kind === 'json' ? 'broken json' : JSON.stringify(value);
+    repo.write(path, content);
+    repo.git('add', path); repo.git('commit', '--amend', '--no-edit', '-q');
+    const head = repo.git('rev-parse', 'HEAD');
+    delete repo.env.FAKE_GH_CREATE;
+    const retry = await run(repo);
+    expect(retry.code, retry.stdout).toBe(1);
+    expect(retry.stdout).toContain('証拠');
+    expect(repo.git('rev-parse', 'HEAD')).toBe(head);
+    expect(readFileSync(join(repo.root, path), 'utf8')).toBe(content);
+    expect(files(repo)).toHaveLength(1);
+    expect(repo.prs()).toHaveLength(1);
+  }));
+});
+
+describe('検索を確認できないときは新規作成しない', () => {
+  it.each(['fail', 'broken', '{}', JSON.stringify([{ ...row, url: 'javascript:bad' }]), JSON.stringify([{ ...row, url: 'https://user:password@example.com/a/pull/1' }]), JSON.stringify([{ ...row, headRefName: 'other' }]), JSON.stringify([{ ...row, isCrossRepository: true }]), JSON.stringify([row, row])])('[REQ-165] 検索結果 %s で停止して証拠を残す', (value) => withRepo(async (repo) => {
+    if (value === 'fail') repo.env.FAKE_GH_LOOKUP = 'fail';
+    else repo.env.FAKE_GH_RESULT = value;
+    const result = await run(repo);
+    expect(result.code, result.stdout).toBe(1);
+    expect(repo.prs()).toEqual([]);
+    expect(files(repo)).toHaveLength(1);
+  }));
+});

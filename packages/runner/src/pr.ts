@@ -54,10 +54,32 @@ export function prBody(root: string, changeDir: string, evidencePath: string): s
   ].join('\n');
 }
 
+function requestUrl(value: unknown): string {
+  if (typeof value !== 'string' || value.trim() !== value) throw new Error('PRのURLが不正です');
+  let url: URL;
+  try { url = new URL(value); } catch { throw new Error('PRのURLが不正です'); }
+  if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash || !/^\/[^/]+\/[^/]+\/pull\/[1-9]\d*$/.test(url.pathname)) throw new Error('PRのURLが不正です');
+  return url.href;
+}
+
+/** 同じリポジトリの同じ向き先のopen PRだけを、一意な場合に返す。 */
+export function findOpenPr(root: string, env: NodeJS.ProcessEnv, pr: { base: string; head: string }): string | undefined {
+  const args = ['pr', 'list', '--base', pr.base, '--head', pr.head, '--state', 'open', '--limit', '2', '--json', 'url,baseRefName,headRefName,isCrossRepository'];
+  const result = spawnSync('gh', args.map(quote), { cwd: root, env, encoding: 'utf8', shell: isWindows });
+  if (result.error || result.status !== 0) throw new Error(`既存PRの検索に失敗しました（${(result.stderr || result.error?.message || '').trim()}）`);
+  let rows: unknown;
+  try { rows = JSON.parse(result.stdout); } catch { throw new Error('既存PRの検索結果を読み取れません'); }
+  if (!Array.isArray(rows) || rows.length > 1) throw new Error('既存PRの検索結果が一意に決まりません');
+  if (rows.length === 0) return undefined;
+  const row: unknown = rows[0];
+  if (typeof row !== 'object' || row === null || !('baseRefName' in row) || row.baseRefName !== pr.base || !('headRefName' in row) || row.headRefName !== pr.head || !('isCrossRepository' in row) || row.isCrossRepository !== false || !('url' in row)) throw new Error('既存PRのリポジトリかブランチが一致しません');
+  return requestUrl(row.url);
+}
+
 /** gh pr create で PR を作り、URL を返す（REQ-116） */
 export function createPr(root: string, env: NodeJS.ProcessEnv, pr: { base: string; head: string; title: string; bodyFile: string }): string {
   const args = ['pr', 'create', '--base', pr.base, '--head', pr.head, '--title', pr.title, '--body-file', pr.bodyFile];
   const r = spawnSync('gh', args.map(quote), { cwd: root, env, encoding: 'utf8', shell: isWindows });
   if (r.error || r.status !== 0) throw new Error(`gh pr create に失敗しました（${(r.stderr || r.error?.message || '').trim()}）`);
-  return r.stdout.trim();
+  return requestUrl(r.stdout.trim());
 }

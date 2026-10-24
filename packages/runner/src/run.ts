@@ -6,8 +6,9 @@ import { TIMED_OUT, UsageError, assertChangeId, formatVerifyResult, loadConfig, 
 import { DEFAULT_ALLOWED_DOMAINS, assertEngineAvailable, runClaude, type EngineResult } from './engine.js';
 import { GitError, branchExists, dirtyFiles, git, gitConfig, isIgnored } from './git.js';
 import { APPROVAL_GUIDE, findEngineMove, findViolations, headState } from './guards.js';
-import { createPr, ghLoggedIn, prBody } from './pr.js';
+import { createPr, findOpenPr, ghLoggedIn, prBody } from './pr.js';
 import { maskSecrets } from './mask.js';
+import { reusableEvidence } from './reuse.js';
 import { acquireRunLock, RunBusyError } from './lock.js';
 import { parseRunConfig, type RunConfig } from './config.js';
 
@@ -481,20 +482,25 @@ function recordAndOpenPr(ctx: RunContext, rec: Recorder): number {
   }
   const left = rec.deadline - ctx.now().getTime();
   if (left <= 0) return rec.finish('stopped', '実行時間の上限に達しました', []);
-  const recorded = runRecord({
-    root, changeId, stdout: ctx.stdout, progress: ctx.progress, now: ctx.now, timeoutMs: left,
-    onVerify: (result) => { rec.lastVerify = result; },
-  });
-  if (recorded !== 0) {
-    const timedOut = rec.lastVerify?.results.some((r) => r.detail === TIMED_OUT);
-    return rec.finish('stopped', timedOut ? '実行時間の上限に達しました' : '証拠の記録で完了ゲートに不合格になりました', []);
+  let evidence = reusableEvidence(root, env, changeId, ctx.changeDir);
+  if (!evidence) {
+    const recorded = runRecord({
+      root, changeId, stdout: ctx.stdout, progress: ctx.progress, now: ctx.now, timeoutMs: left,
+      onVerify: (result) => { rec.lastVerify = result; },
+    });
+    if (recorded !== 0) {
+      const timedOut = rec.lastVerify?.results.some((r) => r.detail === TIMED_OUT);
+      return rec.finish('stopped', timedOut ? '実行時間の上限に達しました' : '証拠の記録で完了ゲートに不合格になりました', []);
+    }
+    git(root, env, ['add', '--', `.loomake/evidence/${changeId}`]);
+    git(root, env, ['commit', '-q', '-m', `evidence(${changeId}): 証拠を記録する`]);
+    evidence = git(root, env, ['diff', '--name-only', '-z', 'HEAD~1', 'HEAD']).split('\0').filter(Boolean)[0];
   }
-  git(root, env, ['add', '--', `.loomake/evidence/${changeId}`]);
-  git(root, env, ['commit', '-q', '-m', `evidence(${changeId}): 証拠を記録する`]);
-  const evidence = git(root, env, ['diff', '--name-only', 'HEAD~1', 'HEAD']).trim().split('\n')[0];
   rec.save('pr-body.md', prBody(root, ctx.changeDir, evidence));
   try {
     git(root, env, ['push', '-q', '-u', 'origin', branch]);
+    const existing = findOpenPr(root, env, { base, head: branch });
+    if (existing) return rec.finish('completed', `既存のPRを確認しました：${existing}`, []);
     const url = createPr(root, env, { base, head: branch, title: changeId, bodyFile: join(rec.runDir, 'pr-body.md') });
     return rec.finish('completed', `PR を作りました：${url}`, []);
   } catch (e) {
