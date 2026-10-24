@@ -11,7 +11,7 @@ const runnerSource = join(import.meta.dirname, '../src');
 const packages = join(import.meta.dirname, '../..');
 const compilerOptions = { module: ModuleKind.ESNext, target: ScriptTarget.ES2022 };
 
-// Read the current runner sources, including guards.ts, rather than a previously built runner.
+// guards.tsを含む現在のrunnerのソースを読み込む。
 type ProbeKind = 'snapshot' | 'run';
 function executableRunner(base: string, kind: ProbeKind): string {
   const output = join(base, 'runner-probe');
@@ -59,7 +59,7 @@ const targetReason = (value: { code: number; output: string[] }, file: string) =
   expect(value.output.join('\n')).toMatch(/特殊ファイル|通常のファイル/);
 };
 
-// FIFO and Unix sockets are real POSIX filesystem objects, not evidence of Windows execution.
+// 実際のPOSIXのFIFOとUnixソケットを使う。Windowsでの動作を示す試験ではない。
 describe.runIf(process.platform !== 'win32')('フック内の特殊ファイルの実プロセス検査', () => {
   it('[REQ-208] 通常ファイルのスナップショットは外側の期限内に返る', () => {
     const repo = makeRepo();

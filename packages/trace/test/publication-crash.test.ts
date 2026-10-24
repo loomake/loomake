@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -7,10 +7,13 @@ import { once } from 'node:events';
 import { ModuleKind, ScriptTarget, transpileModule } from 'typescript';
 import { publishEvidence } from '../src/publication.js';
 
+// git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
+vi.setConfig({ testTimeout: 60_000 });
+
 const source = join(import.meta.dirname, '../src/publication.ts');
 const compilerOptions = { module: ModuleKind.ESNext, target: ScriptTarget.ES2022 };
 const errors = 'data:text/javascript;base64,' + Buffer.from(transpileModule(
-  readFileSync(join(import.meta.dirname, '../../kit/src/errors.ts'), 'utf8'), { compilerOptions },
+  readFileSync(join(import.meta.dirname, '../../kit/src/runtime/errors.ts'), 'utf8'), { compilerOptions },
 ).outputText).toString('base64');
 const executableSource = transpileModule(
   readFileSync(source, 'utf8').replace("'@loomake/kit'", JSON.stringify(errors)), { compilerOptions },
@@ -21,7 +24,7 @@ describe('証拠公開中の実プロセスの強制終了', () => {
   it.each(['during-write', 'before-publish', 'after-publish'])('[REQ-175][REQ-176] %sで終了しても最終JSONを保ち、所有者終了後の片付けから再開できる', async (phase) => {
     const root = mkdtempSync(join(tmpdir(), 'loomake-publication-crash-'));
     const file = join(root, 'evidence.json');
-    // Compile the actual sources and pause only at native filesystem boundaries.
+    // 実際のソースを変換し、ネイティブのファイル操作の境界でだけ待機させる。
     const script = `
       import fs from 'node:fs';
       import { syncBuiltinESMExports } from 'node:module';

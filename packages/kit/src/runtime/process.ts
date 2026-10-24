@@ -49,9 +49,9 @@ export type ExternalOptions = {
 export type ExternalResult = { status: number | null; signal: NodeJS.Signals | null; stdout: string; stderr: string; error?: NodeJS.ErrnoException };
 type Outcome = { status: number | null; signal: NodeJS.Signals | null; kind?: ProcessLimitKind; error?: { message: string; code?: string } };
 
-// 監視役（supervisor/supervisor.cjs）。src/ から読んでも dist/ から読んでも 1 つ上にある。
+// 監視役（supervisor/supervisor.cjs）。src/runtime/ から読んでも dist/runtime/ から読んでも 2 つ上にある。
 // 対象の出力と制御情報を別のpipに流し、コマンド自身の出力を結果の形式と解釈しない。
-const SUPERVISOR = fileURLToPath(new URL('../supervisor/supervisor.cjs', import.meta.url));
+const SUPERVISOR = fileURLToPath(new URL('../../supervisor/supervisor.cjs', import.meta.url));
 
 function utf8Prefix(text: string, bytes: number): string {
   return new StringDecoder('utf8').write(Buffer.from(text).subarray(0, bytes));

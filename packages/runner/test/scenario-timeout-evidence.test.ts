@@ -108,8 +108,8 @@ function unpublished(repo: Repo) {
   expect(readFileSync(join(repo.root, 'impl.txt'), 'utf8')).toBe('preserved implementation\n');
 }
 
-describe('Scenario evidence for quality-command timeouts', () => {
-  it('[REQ-182] restores temporary gate marks after shared expiry without launching later Git', async () => {
+describe('品質コマンドの時間切れの直接検証', () => {
+  it('[REQ-182] 共有期限後にGitを起動せず、一時的なゲート完了印を戻す', async () => {
     const repo = makeRepo({ tasks: task });
     try {
       const head = prepare(repo, 1);
@@ -131,7 +131,7 @@ describe('Scenario evidence for quality-command timeouts', () => {
     }
   }, 20_000);
 
-  it('[REQ-140] stops the second verification after a proven first pass and records timeout', async () => {
+  it('[REQ-140] 初回の検証成功を確認した後、2回目を停止して時間切れを記録する', async () => {
     const repo = makeRepo({ tasks: task });
     try {
       const head = prepare(repo, 2);

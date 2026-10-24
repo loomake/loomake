@@ -4,9 +4,9 @@
 
 | ID | 出典 | 種別 | 要約（原文に忠実に） | 状態 | 反映先 |
 |---|---|---|---|---|---|
-| REQ-207 | 本会話のセキュリティ再レビュー後の仕様先行と修正の承認、../audit-scenario-evidence/security-followup-proposal.mdの確認した事実1・推奨する変更範囲 | 非機能 | 正常終了したPOSIXエンジンと同じプロセスグループの子を停止し、後処理を待ってから戻る | 反映済 | specs/run/spec.md |
-| REQ-208 | 同承認、../audit-scenario-evidence/security-followup-proposal.mdの確認した事実2・推奨する変更範囲 | 非機能 | フック内の特殊ファイルを開く前に拒否し、日本語で対象と理由を示してコミット前に止める | 反映済 | specs/run-guards/spec.md |
-| REQ-209 | 同承認、../audit-scenario-evidence/security-followup-proposal.mdの確認した事実3・推奨する変更範囲、REQ-204のリンク契約 | 制約 | リンク先をたどらない比較を保ち、リンク先のコードとプロセス停止の保護範囲を文書に明記する | 反映済 | specs/run-guards/spec.md |
+| REQ-207 | 本会話のセキュリティ再レビュー後の仕様先行と修正の承認、../archive/2026-10-24-audit-scenario-evidence/security-followup-proposal.mdの確認した事実1・推奨する変更範囲 | 非機能 | 正常終了したPOSIXエンジンと同じプロセスグループの子を停止し、後処理を待ってから戻る | 反映済 | specs/run/spec.md |
+| REQ-208 | 同承認、../archive/2026-10-24-audit-scenario-evidence/security-followup-proposal.mdの確認した事実2・推奨する変更範囲 | 非機能 | フック内の特殊ファイルを開く前に拒否し、日本語で対象と理由を示してコミット前に止める | 反映済 | specs/run-guards/spec.md |
+| REQ-209 | 同承認、../archive/2026-10-24-audit-scenario-evidence/security-followup-proposal.mdの確認した事実3・推奨する変更範囲、REQ-204のリンク契約 | 制約 | リンク先をたどらない比較を保ち、リンク先のコードとプロセス停止の保護範囲を文書に明記する | 反映済 | specs/run-guards/spec.md |
 
 ## 確認事項
 

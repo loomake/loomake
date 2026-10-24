@@ -7,10 +7,18 @@ export class GitError extends Error {}
 // フックを動かす操作は、1 操作の期限ではなく run の残り時間で止める（REQ-182）
 const RUNS_HOOKS = new Set(['commit', 'push']);
 
+// 端末での入力が要る認証や署名で失敗したときの、git・ssh・gpg のエラーの文言（REQ-211）
+const NEEDS_PROMPT = /could not read (Username|Password)|terminal prompts disabled|Permission denied \(publickey|passphrase|gpg failed to sign|failed to sign the data/i;
+export const PROMPT_GUIDE =
+  'run は git を端末なしで動かすので、端末での入力ができません。ssh-agent に鍵を登録するか、credential helper（gh auth setup-git など）や gpg-agent を設定して、入力なしで push・commit できるようにしてから、もう一度実行してください';
+
 export function git(root: string, env: NodeJS.ProcessEnv, args: string[]): string {
-  const r = runExternal('git', args, { cwd: root, env, untilDeadline: RUNS_HOOKS.has(args[0]) });
+  // 端末での入力を求めず、すぐ失敗させる（REQ-211）
+  const r = runExternal('git', args, { cwd: root, env: { ...env, GIT_TERMINAL_PROMPT: '0' }, untilDeadline: RUNS_HOOKS.has(args[0]) });
   if (r.error || r.status !== 0) {
-    throw new GitError(`git の操作に失敗しました：git ${args.join(' ')}（${(r.stderr || r.error?.message || '').trim()}）`);
+    const detail = (r.stderr || r.error?.message || '').trim();
+    const guide = RUNS_HOOKS.has(args[0]) && NEEDS_PROMPT.test(detail) ? `。${PROMPT_GUIDE}` : '';
+    throw new GitError(`git の操作に失敗しました：git ${args.join(' ')}（${detail}）${guide}`);
   }
   return r.stdout;
 }

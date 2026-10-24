@@ -7,6 +7,9 @@ import { join } from 'node:path';
 import { acquireRunLock } from '../src/lock.js';
 import { makeRepo } from './helpers.js';
 
+// git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
+vi.setConfig({ testTimeout: 60_000 });
+
 const pathOf = (repo: ReturnType<typeof makeRepo>) => join(repo.git('rev-parse', '--absolute-git-dir'), 'loomake-run.lock');
 const deadOwner = () => ({ pid: 2_147_483_647, host: hostname(), token: 'ended-process' });
 

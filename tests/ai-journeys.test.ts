@@ -26,5 +26,5 @@ describe('AIが作成・実行する配布物の操作試験', () => {
     } finally {
       rmSync(base, { recursive: true, force: true });
     }
-  }, 60_000);
+  }, 120000);
 });

@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vitest';
 import { main } from '../src/main.js';
-import * as processes from '../../kit/src/process.js';
+import * as processes from '../../kit/src/runtime/process.js';
 import { withProject } from '../../kit/test/project.js';
 
 it('[REQ-041] 不正なchange-idはOpenSpecを含む外部操作を呼ばずに終了コード2を返す', async () => {

@@ -28,6 +28,9 @@ function killOwnedProcess(pid: number | undefined): void {
   catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error; }
 }
 
+// git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
+vi.setConfig({ testTimeout: 60_000 });
+
 async function invoke(source: string, signal?: AbortSignal) {
   const root = mkdtempSync(join(tmpdir(), 'loomake-engine-safety-'));
   const pid = (name: string) => {

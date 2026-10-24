@@ -116,15 +116,6 @@ Source: REQ-088
 - **WHEN** `loomake trace report --change c1` を実行する
 - **THEN** レポートの見出しと表の列名は日本語である
 
-### Requirement: 動作環境
-`loomake trace report` は、Node.js 20.19 以上で動作する SHALL。
-
-Source: REQ-089
-
-#### Scenario: Node.js 20.19 で動く
-- **WHEN** Node.js 20.19 の環境で trace report のテストを実行する
-- **THEN** テストが合格する
-
 ### Requirement: trace report の実行時依存
 trace report を含む `@loomake/trace` の実行時依存は `@loomake/core` と `@loomake/kit` のみとする SHALL。
 
@@ -250,3 +241,12 @@ Source: REQ-142
 #### Scenario: 古い証拠
 - **WHEN** documentsのない既存の正しい証拠を読む
 - **THEN** 従来どおり仕様との対応は未確認と表示する
+
+### Requirement: Node.js の下限
+`loomake trace report` は、Node.js 22.12 以上で動作する SHALL。
+
+Source: REQ-142
+
+#### Scenario: Node.js 22.12 で動く
+- **WHEN** Node.js 22.12 の環境で trace report のテストを実行する
+- **THEN** テストが合格する

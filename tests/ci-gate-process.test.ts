@@ -65,8 +65,8 @@ process.exit(JSON.parse(process.env.CI_STATUSES)[id] ?? 0);
 
 const done = (id: string) => ['verify', '--change', id, '--done'];
 
-describe('Actual CI gate subprocess contract', () => {
-  it.each(['setup-monorepo', 'loomake/c1'])('[REQ-010][REQ-054][REQ-132] branch %s invokes the exact completion gate and propagates failure', (branch) => {
+describe('実際のCIゲートの子プロセスの契約', () => {
+  it.each(['setup-monorepo', 'loomake/c1'])('[REQ-010][REQ-054][REQ-132] ブランチ%sで指定どおりの完了ゲートを呼び、失敗を伝える', (branch) => {
     withProject(({ run }) => {
       const id = branch.replace(/^loomake\//, '');
       const result = run(branch, '', { [id]: 9 });
@@ -75,7 +75,7 @@ describe('Actual CI gate subprocess contract', () => {
     });
   });
 
-  it('[REQ-010][REQ-132] explicit multiple changes invoke both completion gates', () => {
+  it('[REQ-010][REQ-132] 複数のchangeの明示で両方の完了ゲートを呼ぶ', () => {
     withProject(({ commitFiles, run }) => {
       commitFiles(['packages/a.ts']);
       const result = run('fix-typo', 'loomake-change: c1, c2');
@@ -84,7 +84,7 @@ describe('Actual CI gate subprocess contract', () => {
     });
   });
 
-  it('[REQ-010][REQ-132] failure in the first change still checks the second and fails overall', () => {
+  it('[REQ-010][REQ-132] 最初のchangeが失敗しても次を検査し、全体を不合格にする', () => {
     withProject(({ run }) => {
       const result = run('fix-typo', 'loomake-change: c1, c2', { c1: 7 });
       expect(result.calls).toEqual([done('c1'), done('c2')]);
@@ -92,7 +92,7 @@ describe('Actual CI gate subprocess contract', () => {
     });
   });
 
-  it('[REQ-010][REQ-132] absent explicit change fails in Japanese before invoking verify', () => {
+  it('[REQ-010][REQ-132] 明示したchangeがなければverifyを呼ぶ前に日本語で止まる', () => {
     withProject(({ run }) => {
       const result = run('fix-typo', 'loomake-change: nothing');
       expect(result.status).toBe(1);
@@ -101,7 +101,7 @@ describe('Actual CI gate subprocess contract', () => {
     });
   });
 
-  it('[REQ-010][REQ-132] explicit none invokes only quality despite code changes', () => {
+  it('[REQ-010][REQ-132] noneの明示があればコードの変更でも品質コマンドだけを呼ぶ', () => {
     withProject(({ commitFiles, run }) => {
       commitFiles(['packages/a.ts']);
       const result = run('fix-typo', 'loomake-change: none');
@@ -110,7 +110,7 @@ describe('Actual CI gate subprocess contract', () => {
     });
   });
 
-  it('[REQ-010][REQ-132] changed change files select the completion gate', () => {
+  it('[REQ-010][REQ-132] 変更したchangeのファイルから完了ゲートを選ぶ', () => {
     withProject(({ commitFiles, run }) => {
       commitFiles(['openspec/changes/c1/tasks.md', 'packages/a.ts']);
       const result = run('feature-x');
@@ -119,7 +119,7 @@ describe('Actual CI gate subprocess contract', () => {
     });
   });
 
-  it.each([{ files: ['packages/a.ts'] }, { files: ['docs/usage.md', 'packages/a.ts'] }])('[REQ-010][REQ-132] unassigned code files $files fail before invoking verify', ({ files }) => {
+  it.each([{ files: ['packages/a.ts'] }, { files: ['docs/usage.md', 'packages/a.ts'] }])('[REQ-010][REQ-132] 対象未指定のコードファイル$filesがあればverifyを呼ぶ前に止まる', ({ files }) => {
     withProject(({ commitFiles, run }) => {
       commitFiles(files);
       const result = run('fix-typo');
@@ -129,7 +129,7 @@ describe('Actual CI gate subprocess contract', () => {
     });
   });
 
-  it.each([{ files: ['docs/usage.md'] }, { files: ['README.md', '.changeset/x.md'] }])('[REQ-010][REQ-132] documentation files $files invoke quality only', ({ files }) => {
+  it.each([{ files: ['docs/usage.md'] }, { files: ['README.md', '.changeset/x.md'] }])('[REQ-010][REQ-132] 文書ファイル$filesの変更では品質コマンドだけを呼ぶ', ({ files }) => {
     withProject(({ commitFiles, run }) => {
       commitFiles(files);
       const result = run('fix-typo');
@@ -138,7 +138,7 @@ describe('Actual CI gate subprocess contract', () => {
     });
   });
 
-  it('[REQ-010][REQ-132] archive deletion and archive/spec additions invoke quality only', () => {
+  it('[REQ-010][REQ-132] archive時の削除とarchive・specの追加では品質コマンドだけを呼ぶ', () => {
     withProject(({ dir, commitFiles, run }) => {
       rmSync(join(dir, 'openspec', 'changes', 'c1'), { recursive: true });
       commitFiles(['openspec/changes/archive/2026-10-24-c1/tasks.md', 'openspec/specs/x/spec.md']);
@@ -148,7 +148,7 @@ describe('Actual CI gate subprocess contract', () => {
     });
   });
 
-  it('[REQ-132] explicit selection overrides changed files and branch selection', () => {
+  it('[REQ-132] 明示した選択を変更ファイルとブランチの選択より優先する', () => {
     withProject(({ commitFiles, run }) => {
       commitFiles(['openspec/changes/c2/tasks.md']);
       const result = run('c2', 'loomake-change: c1');
@@ -157,7 +157,7 @@ describe('Actual CI gate subprocess contract', () => {
     });
   });
 
-  it('[REQ-132] changed files and branch selection invoke both gates', () => {
+  it('[REQ-132] 変更ファイルとブランチの選択を合わせて両方のゲートを呼ぶ', () => {
     withProject(({ commitFiles, run }) => {
       commitFiles(['openspec/changes/c1/tasks.md']);
       const result = run('c2');
@@ -166,7 +166,7 @@ describe('Actual CI gate subprocess contract', () => {
     });
   });
 
-  it('[REQ-010][REQ-132] quality-only failure propagates its nonzero status', () => {
+  it('[REQ-010][REQ-132] 品質コマンドだけの検査でも非ゼロ終了を伝える', () => {
     withProject(({ commitFiles, run }) => {
       commitFiles(['README.md']);
       const result = run('fix-typo', '', { quality: 7 });

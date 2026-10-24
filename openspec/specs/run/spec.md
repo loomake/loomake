@@ -256,15 +256,6 @@ Source: REQ-124
 - **WHEN** 完了ゲートの test コマンドの実行中に、run のプロセスグループが SIGINT を受ける
 - **THEN** test コマンドとその子のプロセスは止まり、test の検査は中断で止めたと記録され、エンジンは呼ばれず、summary.json に中断したことが書かれ、終了コードは 1 である
 
-### Requirement: 動作環境
-`loomake run` は、Node.js 20.19 以上で動作する SHALL。
-
-Source: REQ-125
-
-#### Scenario: Node.js 20.19 で動く
-- **WHEN** Node.js 20.19 の環境で run のテストを実行する
-- **THEN** テストが合格する
-
 ### Requirement: runner の実行時依存
 `@loomake/runner` の実行時依存は `@loomake/core`・`@loomake/kit`・`@loomake/trace` のみとする SHALL。エンジンの CLI と gh CLI は、実行時に外部のコマンドとして呼ぶ SHALL。
 
@@ -446,3 +437,59 @@ Source: REQ-193
 #### Scenario: JSON が壊れている
 - **WHEN** `loomake.config.json` の中身が `{bad` のプロジェクトで `loomake run --change c1` を実行する
 - **THEN** 標準エラーに `loomake.config.json を読めません` が含まれ、スタックトレースは出ず、実行の記録は作られず、終了コードは 2 である
+
+### Requirement: Node.js の下限
+`loomake run` は、Node.js 22.12 以上で動作する SHALL。
+
+Source: REQ-142
+
+#### Scenario: Node.js 22.12 で動く
+- **WHEN** Node.js 22.12 の環境で run のテストを実行する
+- **THEN** テストが合格する
+
+### Requirement: エンジンの診断ストリームの保護
+エンジンのstderrに含まれる、既存の保存ログで置換する既知のトークン形式を、転送前に置換する SHALL。チャンクの分割位置に依存せず、終了時の末尾も処理する SHALL。未確定なASCII単語の保持は4096文字までとし、これを超える単語は省略して保持を増やさない SHALL。通常の短い診断は維持する SHALL。
+
+Source: REQ-153
+
+#### Scenario: チャンクの境界にあるトークン
+- **WHEN** 既知のトークンを複数のチャンクに分けてstderrへ出す
+- **THEN** 転送先にトークン全体を出さず、置換して転送する
+
+#### Scenario: 改行のない末尾
+- **WHEN** 既知のトークンを改行なしで出して終了する
+- **THEN** 末尾も置換してから転送する
+
+#### Scenario: 区切りのない長い単語
+- **WHEN** 4096文字を超えるASCII単語を出し続ける
+- **THEN** 保持量を増やし続けず、その単語を省略し、次の通常の診断を転送できる
+
+### Requirement: runnerの表示境界の保護
+runnerが表示する質問・停止理由・差分・進捗に含まれる、既存の保存ログで置換する既知のトークン形式を、表示前に置換する SHALL。保存するsummaryの保護と、通常の表示は維持する SHALL。
+
+Source: REQ-154
+
+#### Scenario: 質問にトークンが含まれる
+- **WHEN** エンジンの質問に既知のトークン形式が含まれる
+- **THEN** 質問と停止理由の表示とsummaryではトークンを置換する
+
+#### Scenario: 進捗にトークンが含まれる
+- **WHEN** 品質コマンドの進捗に既知のトークン形式が含まれる
+- **THEN** 転送先へ置換した進捗を出す
+
+### Requirement: 置換する秘密情報の形
+REQ-118 の置換は、`sk-`・`ghp_` などの形に加えて、次の形の文字列も `***` に置き換える MUST。npm のトークン（`npm_` に 36 文字）、Slack のトークン（`xoxb-` などで始まるもの）、GitLab のトークン（`glpat-` で始まるもの）、Google の API キー（`AIza` に 35 文字）、JWT（`eyJ` で始まる 3 つの部分を `.` でつないだもの）、秘密鍵のブロック（`-----BEGIN … PRIVATE KEY-----` から `-----END … PRIVATE KEY-----` まで）、`Bearer` に続くトークン。`Bearer` は残し、続くトークンだけを置き換える MUST。
+
+Source: REQ-199
+
+#### Scenario: 新しい形のトークン
+- **WHEN** エンジンの出力に npm・Slack・GitLab・Google のトークンと JWT が含まれる
+- **THEN** 保存した出力では、それぞれが `***` に置き換わっている
+
+#### Scenario: 秘密鍵のブロック
+- **WHEN** エンジンの出力に複数行の秘密鍵のブロックが含まれる
+- **THEN** 保存した出力では、BEGIN から END までが `***` に置き換わっている
+
+#### Scenario: Bearer トークン
+- **WHEN** エンジンの出力に `Authorization: Bearer` に続くトークンが含まれる
+- **THEN** 保存した出力では `Authorization: Bearer ***` になっている

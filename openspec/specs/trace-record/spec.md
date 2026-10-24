@@ -69,15 +69,6 @@ Source: REQ-084
 - **WHEN** ネットワークに接続できない状態で `loomake trace record --change c1` を実行する
 - **THEN** 記録が保存される
 
-### Requirement: 動作環境
-`loomake trace record` は、Node.js 20.19 以上で動作する SHALL。
-
-Source: REQ-089
-
-#### Scenario: Node.js 20.19 で動く
-- **WHEN** Node.js 20.19 の環境で trace record のテストを実行する
-- **THEN** テストが合格する
-
 ### Requirement: trace の実行時依存
 `@loomake/trace` の実行時依存は `@loomake/core` と `@loomake/kit` のみとする SHALL。
 
@@ -108,3 +99,12 @@ Source: REQ-128
 #### Scenario: 除外したファイルだけが変わる
 - **WHEN** 品質コマンドが、`.gitignore` で除外したテストのレポートだけを書き出す change に `loomake trace record --change c1` を実行する
 - **THEN** 記録される
+
+### Requirement: Node.js の下限
+`loomake trace record` は、Node.js 22.12 以上で動作する SHALL。
+
+Source: REQ-142
+
+#### Scenario: Node.js 22.12 で動く
+- **WHEN** Node.js 22.12 の環境で trace record のテストを実行する
+- **THEN** テストが合格する

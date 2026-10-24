@@ -120,7 +120,8 @@ describe('コマンドの入力予算', () => {
     expect(output).toEqual([]);
   }));
 
-  it('[REQ-172] 個別には64MiB以内でも証拠の合計が128MiBを超えたら止める', () => withProject({}, (root) => {
+  // bound-report-evidence-reading で、合計 128MiB を超えたら止める動作から変えた（Q-01 の回答 A）
+  it('[REQ-171][REQ-209] 古い証拠の合計が128MiBを超えても、ファイル名の日時が最新の証拠だけを読んでレポートを出す', () => withProject({}, (root) => {
     const dir = join(root, '.loomake/evidence/c1'); mkdirSync(dir, { recursive: true });
     const value = { schemaVersion: 1, change: 'c1', sha: 'a'.repeat(40), recordedAt: '2026-10-24T00:00:00Z', committedAt: '2026-10-24T00:00:00Z', verify: { schemaVersion: '1.0.0', change: 'c1', mode: 'done', ok: true, results: [], coverage: {} } };
     const whitespace = Buffer.alloc(45 * 1024 * 1024, ' ');
@@ -128,16 +129,23 @@ describe('コマンドの入力予算', () => {
       const file = join(dir, `${name}.json`);
       writeFileSync(file, JSON.stringify(value)); appendFileSync(file, whitespace);
     }
-    const output: string[] = [];
-    const report = () => {
-      try { return runReport({ root, changeId: 'c1', stdout: (text) => output.push(text) }); }
-      catch (error) {
-        expect(['a', 'b', 'c'].some((name) => String(error).includes(join(dir, `${name}.json`)))).toBe(true);
-        throw error;
-      }
-    };
-    expect(report).toThrow(/合計.*134217728/);
-    expect(output).toEqual([]);
+    const out: string[] = [];
+    expect(runReport({ root, changeId: 'c1', stdout: (t) => out.push(t) })).toBe(0);
+    expect(out.join('\n')).toContain('# 検収レポート：c1');
+  }), 30_000);
+
+  it('[REQ-171][REQ-209] 同じ秒の証拠の合計が128MiBを超えても、先頭だけを比べて最新の証拠を選び、レポートを出す', () => withProject({}, (root) => {
+    const dir = join(root, '.loomake/evidence/c1'); mkdirSync(dir, { recursive: true });
+    const value = (ms: string, ok: boolean) => ({ schemaVersion: 1, change: 'c1', sha: 'a'.repeat(40), recordedAt: `2026-10-24T00:00:00.${ms}Z`, committedAt: '2026-10-24T00:00:00Z', verify: { schemaVersion: '1.0.0', change: 'c1', mode: 'done', ok, results: [], coverage: {} } });
+    const whitespace = Buffer.alloc(45 * 1024 * 1024, ' ');
+    // 同じ秒の 3 件。ミリ秒がいちばん新しい .900Z だけが不合格
+    for (const [name, ms, ok] of [['20261024T000000Z-aaaaaaaaaaaa', '900', false], ['20261024T000000Z-bbbbbbbbbbbb', '100', true], ['20261024T000000Z-cccccccccccc', '500', true]] as const) {
+      const file = join(dir, `${name}.json`);
+      writeFileSync(file, JSON.stringify(value(ms, ok), null, 2)); appendFileSync(file, whitespace);
+    }
+    const out: string[] = [];
+    expect(runReport({ root, changeId: 'c1', format: 'json', stdout: (t) => out.push(t) })).toBe(0);
+    expect(JSON.parse(out.join('')).evidence).toMatchObject({ recordedAt: '2026-10-24T00:00:00.900Z', ok: false });
   }), 30_000);
 });
 

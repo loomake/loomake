@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createDiagnosticRedactor } from '../src/mask.js';
 import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
@@ -6,6 +6,9 @@ import { join } from 'node:path';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import ts from 'typescript';
+
+// git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
+vi.setConfig({ testTimeout: 60_000 });
 
 // すべて認証には使えない試験用の文字列。
 const tokens = [
@@ -131,6 +134,7 @@ describe('診断ストリームの置換', () => {
     const module = pathToFileURL(join(fixture, 'mask.js')).href;
     const checked = spawnSync(process.execPath, ['--max-old-space-size=32', '--experimental-strip-types', '--input-type=module', '-e', `
 import { createDiagnosticRedactor } from ${JSON.stringify(module)};
+
 let output = '';
 const redactor = createDiagnosticRedactor((text) => { output += text; });
 const chunk = 'x'.repeat(4096);

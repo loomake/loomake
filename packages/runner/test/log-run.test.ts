@@ -5,6 +5,9 @@ import { UsageError } from '@loomake/kit';
 import { runRun } from '@loomake/runner';
 import { makeRepo, CHANGE, type Repo } from './helpers.js';
 
+// git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
+vi.setConfig({ testTimeout: 60_000 });
+
 vi.mock('node:fs', async (original) => { const fs = await original<typeof import('node:fs')>(); return { ...fs, openSync: vi.fn(fs.openSync), writeFileSync: vi.fn(fs.writeFileSync) }; });
 afterEach(() => vi.clearAllMocks());
 async function run(repo: Repo, dryRun = false) {

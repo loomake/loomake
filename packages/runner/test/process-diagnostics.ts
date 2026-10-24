@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 
-/** Optional local diagnostics; never records the inherited environment. */
+/** 任意のローカル診断。引き継いだ環境変数の値は記録しない。 */
 export function attachProcessDiagnostics(base: string, env: NodeJS.ProcessEnv) {
   const directory = process.env.LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR;
   if (!directory) return;

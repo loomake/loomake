@@ -1,7 +1,8 @@
 import { UsageError } from '@loomake/kit';
 import { DEFAULT_MAX_LOG_BYTES, DEFAULT_MAX_HISTORY_BYTES, SUMMARY_RESERVE_BYTES } from './log-policy.js';
 
-export const DEFAULT_MAX_OUTPUT_BYTES = 64 * 1024 * 1024;
+// 完了ゲートの 1 回と直し 5 回の 6 回分（96MiB）が、記録の上限（128MiB）に収まる量（REQ-151・REQ-210）
+export const DEFAULT_MAX_OUTPUT_BYTES = 16 * 1024 * 1024;
 
 export const RUN_CONFIG_KEYS = ['maxFixes', 'timeoutMinutes', 'maxOutputBytes', 'maxLogBytes', 'maxHistoryBytes'] as const;
 

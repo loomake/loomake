@@ -1,9 +1,9 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { createInputReader } from '../input.js';
+import { createInputReader } from '../runtime/input.js';
 
-import { UsageError } from '../errors.js';
-export { RuntimeFailure, UsageError } from '../errors.js';
+import { UsageError } from '../runtime/errors.js';
+export { RuntimeFailure, UsageError } from '../runtime/errors.js';
 
 export type LoomakeConfig = {
   openspecDir: string;

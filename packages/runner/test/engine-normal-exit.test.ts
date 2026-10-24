@@ -66,13 +66,13 @@ function expectNormal(result: EngineResult, exitCode: number, raw: string, text:
   expect(result.outputLimitExceeded).toBe(false);
 }
 
-// The added guarantee is POSIX-only; unsupported platforms must report these as skipped.
-describe.runIf(process.platform !== 'win32')('Normal POSIX engine exit cleanup', () => {
+// 今回追加する保証はPOSIXに限り、対応しない環境ではskipとして報告する。
+describe.runIf(process.platform !== 'win32')('POSIXエンジンの正常終了後の後処理', () => {
   it.each([
-    { name: 'independent stdio child', ignoreTerm: false, inheritOutput: false },
-    { name: 'SIGTERM-ignoring independent stdio child', ignoreTerm: true, inheritOutput: false },
-    { name: 'SIGTERM-ignoring inherited output child', ignoreTerm: true, inheritOutput: true },
-  ])('[REQ-207] stops $name before returning and prevents delayed writes', async ({ ignoreTerm, inheritOutput }) => {
+    { name: '標準入出力を共有しない子', ignoreTerm: false, inheritOutput: false },
+    { name: 'SIGTERMを無視し標準入出力を共有しない子', ignoreTerm: true, inheritOutput: false },
+    { name: 'SIGTERMを無視し出力を共有する子', ignoreTerm: true, inheritOutput: true },
+  ])('[REQ-207] 戻る前に$nameを停止し、遅延書き込みを防ぐ', async ({ ignoreTerm, inheritOutput }) => {
     await withEngine(parentSource(ignoreTerm, inheritOutput), async (root, result) => {
       expect(readFileSync(join(root, 'child.ready'), 'utf8')).toBe('ready');
       const pid = Number(readFileSync(join(root, 'child.pid'), 'utf8'));
@@ -90,13 +90,13 @@ describe.runIf(process.platform !== 'win32')('Normal POSIX engine exit cleanup',
     });
   });
 
-  it('[REQ-207] preserves normal JSON output and exit zero without stop flags', async () => {
+  it('[REQ-207] 通常のJSON出力と終了コード0を保ち、停止フラグを付けない', async () => {
     await withEngine("process.stdout.write('{\"result\":\"control\"}', () => process.exit(0));", async (_root, result) => {
       expectNormal(result, 0, '{"result":"control"}', 'control');
     });
   });
 
-  it('[REQ-207] preserves nonzero exit code and raw output without stop flags', async () => {
+  it('[REQ-207] 非ゼロの終了コードと生の出力を保ち、停止フラグを付けない', async () => {
     await withEngine("process.stdout.write('plain failure', () => process.exit(1));", async (_root, result) => {
       expectNormal(result, 1, 'plain failure', 'plain failure');
     });

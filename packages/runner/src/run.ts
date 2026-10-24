@@ -66,7 +66,7 @@ async function runLocked(options: RunOptions): Promise<number> {
     }
     const stop = (await runEngineTasks(ctx, rec)) ?? (await runGate(ctx, rec));
     if (stop) return rec.finish(stop.status, stop.reason, stop.remaining);
-    return recordAndOpenPr(ctx, rec);
+    return await recordAndOpenPr(ctx, rec);
   } catch (e) {
     // 始めたあとの git と証拠の記録の失敗は、実行中の失敗として記録に残して止まる（REQ-137）
     if (!(e instanceof GitError) && !(e instanceof UsageError) && !(e instanceof RuntimeFailure)) throw e;

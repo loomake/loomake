@@ -4,7 +4,10 @@ import { join, relative } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { describe, expect, it, vi } from 'vitest';
 import { runDoctor } from '../src/doctor/doctor.js';
-import * as processes from '../src/process.js';
+import * as processes from '../src/runtime/process.js';
+
+// git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
+vi.setConfig({ testTimeout: 60_000 });
 const windows = process.platform === 'win32';
 
 function fixture(action: (root: string, bin: string) => void) {

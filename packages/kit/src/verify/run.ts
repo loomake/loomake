@@ -1,7 +1,7 @@
 import { existsSync, realpathSync, rmSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { hasProcessBudget, ProcessLimitError, runExternal } from '../process.js';
+import { hasProcessBudget, ProcessLimitError, runExternal } from '../runtime/process.js';
 import {
   LEDGER_STATES,
   VERIFY_RESULT_SCHEMA_VERSION,
@@ -21,8 +21,8 @@ import {
   type VerifyResult,
 } from '@loomake/core';
 import { assertChangeId, loadConfig, type LoomakeConfig } from './config.js';
-import { createInputReader, JSON_LIMITS, type InputReader } from '../input.js';
-import { findChangeDir, specFiles, toPosix } from '../change-files.js';
+import { createInputReader, JSON_LIMITS, type InputReader } from '../runtime/input.js';
+import { findChangeDir, specFiles, toPosix } from '../runtime/change-files.js';
 
 export type VerifyOptions = {
   /** プロジェクトのルート（loomake.config.json のあるディレクトリ） */

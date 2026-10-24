@@ -2,9 +2,10 @@
 import { createInterface } from 'node:readline/promises';
 import { main } from './main.js';
 
-// loomake run は SIGINT で記録を書いてから止まる（REQ-124）。ほかのサブコマンドでは、ふだんどおり止まる
+// loomake run は SIGINT・SIGTERM・SIGHUP で、エンジンを止めて記録を書いてから止まる（REQ-124・REQ-208）。
+// ほかのサブコマンドでは、ふだんどおり止まる
 const controller = new AbortController();
-if (process.argv[2] === 'run') process.on('SIGINT', () => controller.abort());
+if (process.argv[2] === 'run') for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP'] as const) process.on(signal, () => controller.abort());
 
 process.exitCode = await main(process.argv.slice(2), {
   signal: controller.signal,

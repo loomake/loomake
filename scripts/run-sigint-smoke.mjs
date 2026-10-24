@@ -1,6 +1,6 @@
-// package-smokeで準備した専用fixtureの配布物へ、POSIXのSIGINTを実際に送る。
+// package-smokeで準備した専用fixtureの配布物へ、POSIXの中断の信号（既定はSIGINT。SIGTERM・SIGHUPも選べる）を実際に送る。
 import assert from 'node:assert/strict';
-import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { delimiter, join, resolve } from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -8,9 +8,15 @@ import { setTimeout as delay } from 'node:timers/promises';
 const target = resolve(process.argv[2] ?? '');
 assert.ok(process.argv[2], 'package-smokeで準備した専用の検証先を指定してください');
 assert.notEqual(process.platform, 'win32', 'この検証はPOSIXのSIGINTを対象にしています');
-const consumer = join(target, 'consumer');
+const signal = process.argv[3] ?? 'SIGINT';
+assert.ok(['SIGINT', 'SIGTERM', 'SIGHUP'].includes(signal), `信号は SIGINT・SIGTERM・SIGHUP のどれかにしてください：${signal}`);
+const name = signal.toLowerCase();
+// SIGINT は準備した利用側のプロジェクトで、ほかの信号はその複製で動かす。同じプロジェクトで続けると、前の run のブランチを再開するため
+const prepared = join(target, 'consumer');
+const consumer = signal === 'SIGINT' ? prepared : join(target, `consumer-${name}`);
+if (consumer !== prepared) cpSync(prepared, consumer, { recursive: true, verbatimSymlinks: true });
 assert.equal(JSON.parse(readFileSync(join(consumer, 'package.json'), 'utf8')).name, 'loomake-smoke-consumer');
-const resultDir = join(target, 'sigint-results');
+const resultDir = join(target, `${name}-results`);
 mkdirSync(resultDir); // 再実行で前の証拠を上書きしない。
 const env = { ...process.env, DEVCONTAINER: '1', GIT_AUTHOR_NAME: 'loomake-smoke', GIT_AUTHOR_EMAIL: 'smoke@example.invalid', GIT_COMMITTER_NAME: 'loomake-smoke', GIT_COMMITTER_EMAIL: 'smoke@example.invalid' };
 const git = (...args) => {
@@ -18,11 +24,20 @@ const git = (...args) => {
   assert.equal(r.status, 0, r.stderr);
   return r.stdout.trim();
 };
+// 複製は、ほかの信号の検査で作られたものを除き、準備した直後の状態に戻す
+if (consumer !== prepared) {
+  const branch = spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: consumer, env, encoding: 'utf8' }).stdout.trim();
+  if (branch.startsWith('loomake/')) spawnSync('git', ['checkout', '-qf', '-'], { cwd: consumer, env });
+  spawnSync('git', ['remote', 'remove', 'origin'], { cwd: consumer, env });
+  for (const ref of git('for-each-ref', '--format=%(refname:short)', 'refs/heads/loomake/').split('\n').filter(Boolean)) git('branch', '-D', ref);
+  git('reset', '-q', '--hard', git('log', '-1', '--all', '--format=%H', '--grep=^smoke fixture$'));
+  git('clean', '-qfd');
+}
 const tasks = join(consumer, 'openspec/changes/sample/tasks.md');
 writeFileSync(tasks, '## 1. 実装\n- [ ] 1.1 最初の変更\n- [ ] 1.2 途中の変更\n\n## 2. 確認\n- [ ] 2.1 品質を確認する <!-- loomake:gate=done -->\n');
-git('add', '-A'); git('commit', '-qm', 'SIGINT fixture');
+git('add', '-A'); git('commit', '-qm', `${signal} fixture`);
 const initial = git('rev-parse', 'HEAD');
-const origin = join(target, 'sigint-origin.git');
+const origin = join(target, `${name}-origin.git`);
 assert.equal(spawnSync('git', ['init', '--bare', '-q', origin], { timeout: 5000 }).status, 0);
 git('remote', 'add', 'origin', origin);
 const bin = join(resultDir, 'bin'); mkdirSync(bin);
@@ -67,8 +82,8 @@ try {
     exited.then((result) => { throw new Error(`信号を送る前にCLIが終了しました：${JSON.stringify(result)}\n${output}\n${stderr}`); }),
   ]);
   enginePid = JSON.parse(readFileSync(ready, 'utf8')).pid;
-  assert.equal(child.kill('SIGINT'), true);
-  const result = await Promise.race([exited, delay(10000, undefined, { ref: false }).then(() => { throw new Error('SIGINT後の終了が時間切れになりました'); })]);
+  assert.equal(child.kill(signal), true);
+  const result = await Promise.race([exited, delay(10000, undefined, { ref: false }).then(() => { throw new Error(`${signal}後の終了が時間切れになりました`); })]);
   assert.deepEqual(result, { code: 1, signal: null });
   assert.equal(git('rev-list', '--count', `${initial}..HEAD`), '1');
   assert.equal(git('log', '-1', '--format=%s'), 'run(sample): 1.1 最初の変更');
@@ -86,8 +101,8 @@ try {
   assert.throws(() => process.kill(enginePid, 0), { code: 'ESRCH' });
   const githubCalls = readFileSync(ghLog, 'utf8').trim().split('\n').map((line) => JSON.parse(line));
   assert.deepEqual(githubCalls, [['auth', 'status']]);
-  writeFileSync(join(resultDir, 'results.json'), JSON.stringify({ githubCalls, requirement: 'REQ-124', ok: true, node: process.version, platform: process.platform, signal: 'SIGINT', exit: result, summary, initial, head: git('rev-parse', 'HEAD'), partial: readFileSync(join(consumer, 'partial.txt'), 'utf8') }, null, 2) + '\n');
-  console.log('SIGINT後の記録・先行コミット・途中の変更を確認しました');
+  writeFileSync(join(resultDir, 'results.json'), JSON.stringify({ githubCalls, requirement: signal === 'SIGINT' ? 'REQ-124' : 'REQ-208', ok: true, node: process.version, platform: process.platform, signal, exit: result, summary, initial, head: git('rev-parse', 'HEAD'), partial: readFileSync(join(consumer, 'partial.txt'), 'utf8') }, null, 2) + '\n');
+  console.log(`${signal}後の記録・先行コミット・途中の変更を確認しました`);
 } finally {
   if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
   if (enginePid) { try { process.kill(-enginePid, 'SIGKILL'); } catch (error) { if (error.code !== 'ESRCH') { console.error(error); process.exitCode = 1; } } }

@@ -2,7 +2,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { ProcessLimitError, runExternal, withProcessBudget } from '../src/process.js';
+import { ProcessLimitError, runExternal, withProcessBudget } from '../src/runtime/process.js';
 
 function running(pid: number): boolean {
   try {
@@ -34,7 +34,7 @@ function fixture(delay: number, action: (value: { dir: string; env: NodeJS.Proce
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ${delay});
     fs.appendFileSync(${JSON.stringify(boot)}, 'finished\\n');
   }`);
-  // Delay only the actual supervisor; the target keeps the same environment.
+  // 実際の監視役だけを遅らせ、対象へ渡す環境は保つ。
   const env = { ...process.env, NODE_OPTIONS: `--require=${JSON.stringify(preload)}` };
   try { action({ dir, env, target, boot }); }
   finally {
@@ -45,8 +45,8 @@ function fixture(delay: number, action: (value: { dir: string; env: NodeJS.Proce
 
 const startedTarget = (target: string, tail: string) => `require('node:fs').writeFileSync(${JSON.stringify(target)}, String(process.pid));${tail}`;
 
-describe('supervisor startup consumes the external operation budget', () => {
-  it('[REQ-180][REQ-183] preserves an ordinary result after supervisor startup', () => fixture(50, ({ dir, env, target, boot }) => {
+describe('監視役の起動時間と外部操作の予算', () => {
+  it('[REQ-180][REQ-183] 監視役の起動後も通常の結果を保つ', () => fixture(50, ({ dir, env, target, boot }) => {
     const result = runExternal(process.execPath, ['-e', startedTarget(target, 'console.log("out");console.error("err");process.exit(7)')], { cwd: dir, env, timeoutMs: 3000 });
     expect(readFileSync(boot, 'utf8')).toBe('started\nfinished\n');
     expect(existsSync(target)).toBe(true);
@@ -54,7 +54,7 @@ describe('supervisor startup consumes the external operation budget', () => {
     expect(result.error).toBeUndefined();
   }));
 
-  it.each(['operation', 'shared'] as const)('[REQ-180][REQ-182] refuses to start the target when %s time expires during boot', (kind) => fixture(600, ({ dir, env, target, boot }) => {
+  it.each(['operation', 'shared'] as const)('[REQ-180][REQ-182] 監視役の起動中に%sの期限を過ぎたら対象を起動しない', (kind) => fixture(600, ({ dir, env, target, boot }) => {
     const call = () => runExternal(process.execPath, ['-e', startedTarget(target, '')], { cwd: dir, env, ...(kind === 'operation' ? { timeoutMs: 150 } : {}) });
     let error: unknown;
     try { if (kind === 'shared') withProcessBudget({ timeoutMs: 150 }, call); else call(); }
@@ -65,7 +65,7 @@ describe('supervisor startup consumes the external operation budget', () => {
     expect(existsSync(target)).toBe(false);
   }));
 
-  it('[REQ-180][REQ-181][REQ-182] uses only the remaining shared time and stops a started target', () => fixture(1000, ({ dir, env, target, boot }) => {
+  it('[REQ-180][REQ-181][REQ-182] 共有予算の残り時間だけを使い、起動した対象を停止する', () => fixture(1000, ({ dir, env, target, boot }) => {
     let error: unknown;
     try {
       withProcessBudget({ timeoutMs: 4000, maxOperationMs: 100 }, () => runExternal(process.execPath, ['-e', startedTarget(target, 'process.on("SIGTERM",()=>{});setTimeout(()=>process.exit(0),3500)')], { cwd: dir, env, untilDeadline: true }));
@@ -79,7 +79,7 @@ describe('supervisor startup consumes the external operation budget', () => {
     expect(running(pid)).toBe(false);
   }), 10_000);
 
-  it('[REQ-180][REQ-182] does not subtract setup time twice from a shared deadline', () => fixture(0, ({ dir, env, target, boot }) => {
+  it('[REQ-180][REQ-182] 共有期限から準備の経過時間を二度引かない', () => fixture(0, ({ dir, env, target, boot }) => {
     const result = withProcessBudget({ timeoutMs: 5000 }, () => runExternal(process.execPath, ['-e', startedTarget(target, 'setTimeout(()=>process.exit(7),2000)')], {
       cwd: dir, env, untilDeadline: true,
       get timeoutMs() {
