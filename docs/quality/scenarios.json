@@ -612,9 +612,19 @@
     },
     {
       "id": "SCN-2024b0d1da6a2a63c5d9",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "7e01fb82b5f09428158a3c866df7de12e093036e634730b63023f337eb7063df",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-167"
+      ],
+      "reason": "各workflowのusesをaction-pins.jsonのリポジトリと完全SHAへ照合する。上流参照元は保存済みの確認記録を読むもので、今回新たな上流API照合やCI成功は行っていない。",
+      "tests": [
+        {
+          "file": "tests/release-security.test.ts",
+          "contains": "の外部Actionsは確認済みの完全なSHAに固定する",
+          "sha256": "52b011dbbe528eab5c4576aca08bff0b296b07e0c1d1ef5533a523d85a08dda9"
+        }
+      ]
     },
     {
       "id": "SCN-7f9f444d54dc7bf66cdc",
@@ -624,9 +634,24 @@
     },
     {
       "id": "SCN-efe6551523a0ffba7399",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "65b6ea0dbb0a3149a2e54a94e9fb59b2f2210c411d20002259e63d94a994df0c",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-169"
+      ],
+      "reason": "元manifestと実tarball導入後の全5パッケージでrepositoryとdirectory、provenance設定をassertする。公開とattestationの成功ではない。",
+      "tests": [
+        {
+          "file": "tests/package-artifacts.test.ts",
+          "contains": "packした5パッケージだけで主要コマンドと公開APIを使える",
+          "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
+        },
+        {
+          "file": "tests/release-security.test.ts",
+          "contains": "の公開元とディレクトリを明示しprovenanceを要求する",
+          "sha256": "52b011dbbe528eab5c4576aca08bff0b296b07e0c1d1ef5533a523d85a08dda9"
+        }
+      ]
     },
     {
       "id": "SCN-1a4983fcb68003d08259",
@@ -1115,12 +1140,12 @@
       "sources": [
         "REQ-143"
       ],
-      "reason": "5パッケージをpackして別のconsumerへ導入し、公開API・スキーマ・help・version・init・doctor・verify両ゲート・traceの保存と25行のreportをcheckのassertionで比較する。正しい配布物は成功し、出典の不一致とテンプレート欠落で失敗する対照も比較する。",
+      "reason": "5パッケージをpackし独立consumerへオフライン導入し、主要コマンド・公開API・スキーマをpackage-smokeで検証する。公開物にsource条件がなく、出典の改変とテンプレート欠落の対照が失敗することもassertする。",
       "tests": [
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "packした5パッケージだけで主要コマンドと公開APIを使える",
-          "sha256": "a3907250e116ce3846509dda89ba0a99846fce40dcce890ce27bab37e746e083"
+          "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
         }
       ]
     },
@@ -1153,22 +1178,22 @@
       "sources": [
         "REQ-146"
       ],
-      "reason": "開発側はNodeの実際のresolveで4ライブラリのsrcを比較する。配布物ではsource条件を含まないexportsと同梱参照先を検査し、利用側のTypeScriptをコンパイルする。配布したokの宣言を壊すとTS2322、復元すると成功する対照もassertする。",
+      "reason": "4ライブラリの開発source条件が実際にsrc/index.tsへ解決することを確認する。公開物はsource条件なしで実在するexports先を使い、公開型のconsumerコンパイルが成功、ok型をbooleanからstringへ壊すとTS2322、復元後成功をassertする。",
       "tests": [
-        {
-          "file": "tests/public-source-exports.test.ts",
-          "contains": "ワークスペースのsource条件は4ライブラリのsrcを実際に解決する",
-          "sha256": "3668c02f7537b0e4abbfdd8a0c2e3daa2b36f62b2cdb56079fe83658ae5b2e77"
-        },
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "packした5パッケージだけで主要コマンドと公開APIを使える",
-          "sha256": "a3907250e116ce3846509dda89ba0a99846fce40dcce890ce27bab37e746e083"
+          "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
         },
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "配布物の公開型を使い、型の破壊的変更を利用側のコンパイルで検出する",
-          "sha256": "a3907250e116ce3846509dda89ba0a99846fce40dcce890ce27bab37e746e083"
+          "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
+        },
+        {
+          "file": "tests/public-source-exports.test.ts",
+          "contains": "ワークスペースのsource条件は4ライブラリのsrcを実際に解決する",
+          "sha256": "3668c02f7537b0e4abbfdd8a0c2e3daa2b36f62b2cdb56079fe83658ae5b2e77"
         }
       ]
     },
@@ -2247,39 +2272,93 @@
     },
     {
       "id": "SCN-fe8277fbddefb8219246",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "9ea74af80a9422ea87c12e9d63223583e77f0dccb21fa0a23411d4ea65c66753",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-003",
+        "REQ-060"
+      ],
+      "reason": "workspaceのpackages/*定義を確認し、実際にpnpm -r ls --depth -1 --jsonを実行する。終了コード0とcore/kit/loomakeが含まれることをassertする。",
+      "tests": [
+        {
+          "file": "tests/monorepo.test.ts",
+          "contains": "pnpm workspaces で core・kit・loomake の 3 つが認識される",
+          "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+        }
+      ]
     },
     {
       "id": "SCN-410c52e711f8dd131904",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "86210802c4168a5003364edca880d6fdfe5d057a7d779a7d43f1fc3c96d8a726",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-003"
+      ],
+      "reason": "CLIのpackage.jsonを読み、name=loomakeと非空bin.loomakeをassertする。",
+      "tests": [
+        {
+          "file": "tests/monorepo.test.ts",
+          "contains": "CLI のパッケージ名は loomake で",
+          "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+        }
+      ]
     },
     {
       "id": "SCN-5a16e42923e6ae95f549",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "637a34d6f1753eb425b689571e0850fb8e7ac257969bce06caae198d01703c24",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-004"
+      ],
+      "reason": "devcontainer.jsonから抽出したpostCreateCommandにOpenSpecのパッケージ名があることをassertする。コンテナ作成の実行結果ではない。",
+      "tests": [
+        {
+          "file": "tests/monorepo.test.ts",
+          "contains": "postCreateCommand で OpenSpec CLI を入れる",
+          "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+        }
+      ]
     },
     {
       "id": "SCN-52a7b7629b2c8a2d7dff",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "1cd88a9c34bbdb1dee247db4484ce1429aaba6e420e5ffa4e20d5ba55988a7bb",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-061"
+      ],
+      "reason": "devcontainer.jsonのimageがtypescript-nodeのNode24系指定であることをassertする。コンテナの起動成功は主張しない。",
+      "tests": [
+        {
+          "file": "tests/monorepo.test.ts",
+          "contains": "Node 24 系のイメージを使う",
+          "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+        }
+      ]
     },
     {
       "id": "SCN-4f6502862cd00e397701",
-      "status": "unreviewed",
+      "status": "superseded",
       "scenarioSha256": "408fe2a62ed6258c4c95fc983de040209390ddd681608c347e39dced3a9cdce7",
-      "reason": "対応候補のassertionの内容は未精査"
+      "replacement": "SCN-ab468be9128795302438",
+      "reason": "Node20.19の版宣言はrequire-node-22の全5パッケージ>=22.12.0へ変更された。宣言の置換のみで、古いNode20実行Scenarioを合格扱いにはしない。"
     },
     {
       "id": "SCN-4a7b5a2f65584f2c1953",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "b8d234c14dec090f614eb424aaeab85b00fd3c25aa70a022676bbc9fb6094e71",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-049"
+      ],
+      "reason": "ci.ymlの3OSマトリクス・runs-onのmatrix.osとpnpm testの記述をassertする。このScenarioはワークフローを読む条件であり、3OS実行成功の根拠ではない。",
+      "tests": [
+        {
+          "file": "tests/monorepo.test.ts",
+          "contains": "ubuntu・macos・windows の 3 つで pnpm test を実行する",
+          "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+        }
+      ]
     },
     {
       "id": "SCN-2de79bea8dc151ce2619",
@@ -2337,15 +2416,40 @@
     },
     {
       "id": "SCN-92a3ac86378cabd507ba",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "ff50d5f513886a42da40f7de703cb2f9e391aa6bca5c22dd15fc366dec7e9cfc",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-056"
+      ],
+      "reason": "設定ファイルを確認し、実際のchangeset statusをorigin/main基準で実行する。失敗時は版変更だけか別の判定へ進む試験で、今回の864件全体ゲートでは成功した。",
+      "tests": [
+        {
+          "file": "tests/monorepo.test.ts",
+          "contains": ".changeset/config.json があり、changeset status がエラーなく終わる",
+          "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+        }
+      ]
     },
     {
       "id": "SCN-6ea8fcfc023e39f6709b",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "19dd9257cd4bc4d1f2440e7d95243cd8b9c04bff8356f9066a0141b44103dd32",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-057"
+      ],
+      "reason": "root LICENSEのMIT表題と許諾文、ルートと従来3パッケージのlicenseを読み、加えて実tarballから導入した全5パッケージのlicense=MITをassertする。",
+      "tests": [
+        {
+          "file": "tests/monorepo.test.ts",
+          "contains": "LICENSE が MIT で、すべての package.json の license が MIT",
+          "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+        },
+        {
+          "file": "tests/package-artifacts.test.ts",
+          "contains": "packした5パッケージだけで主要コマンドと公開APIを使える",
+          "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
+        }
+      ]
     },
     {
       "id": "SCN-149eab9b65181496a38e",
@@ -3729,16 +3833,16 @@
     {
       "id": "SCN-b8a94e9282accc719f33",
       "status": "reviewed",
-      "scenarioSha256": "9ed77eb1b66c48e82957fed7712adf84e6ca45163970fff202cef764fd37c28b",
+      "scenarioSha256": "d048d19590ce82aa8734adaf19295ab8478f1319ec45c7d9181631488dfb48b9",
       "sources": [
         "REQ-124"
       ],
-      "reason": "Linux上でインストールした配布物のCLIを起動し、2つ目の代替エンジンが書いた後にSIGINTを送る。スクリプトが終了コード1・先行コミット1件・変更保持・中断summary・タスク未完了・エンジン終了をassertし、試験も保存した結果を比較する。Windowsの中断動作は確認していない。",
+      "reason": "実CLIへSIGINTを送り、終了コード1、先行タスクの実コミット1件、途中ファイルの残存、完了/未完了タスク、interruptedの記録、エンジン子の消滅とPR操作なしをrun-sigint-smokeのassertionで確認する。実エンジンとGitHubではない。",
       "tests": [
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "POSIXの配布物を実際のSIGINTで中断する",
-          "sha256": "a3907250e116ce3846509dda89ba0a99846fce40dcce890ce27bab37e746e083"
+          "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
         }
       ]
     },
@@ -3983,12 +4087,12 @@
       "sources": [
         "REQ-084"
       ],
-      "reason": "配布物をprepareし、通信制限なしでEPERMを要求する対照がECONNREFUSEDで失敗すること、socketを拒否した実行が成功すること、結果4件すべて合格であることをassertする。呼ばれるruntime-compatibilityはtrace recordの証拠作成を確認し、同じ配布物でレポート25行が合格となることもassertする。Linux ARM64上の実行に限る。",
+      "reason": "通信制限なしの対照がECONNREFUSEDで失敗し、seccomp下ではEPERMを確認して配布物4チェックが成功することをassertする。runtime helperはtrace recordの保存とreport25行の合格を確認する。Linux分岐の実行だけを根拠にする。",
       "tests": [
         {
           "file": "tests/package-artifacts.test.ts",
-          "contains": "[REQ-084] Linuxで通信を拒否して配布物を使う",
-          "sha256": "a3907250e116ce3846509dda89ba0a99846fce40dcce890ce27bab37e746e083"
+          "contains": "Linuxで通信を拒否して配布物を使う",
+          "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
         }
       ]
     },
@@ -4320,15 +4424,15 @@
       "id": "SCN-5475fccf91630747c15e",
       "status": "reviewed",
       "scenarioSha256": "ccaddd1598270a491b5ba308e89b9a48eddb93d2671eb3444f46d9813dc24589",
-      "reason": "実際の配布物を準備し、無制限の対照ではECONNREFUSEDで不合格、seccompでsocket生成をEPERMにした実行では4チェックが成功することをassertする。runtime-compatibilityの中身も読み、通信拒否下でtrace reportの実CLIが25行すべて合格となることを確認した。現在のNode24・Linuxでの結果であり、下限Nodeや他OSの成功とは扱わない。",
       "sources": [
         "REQ-084"
       ],
+      "reason": "通信制限なしの対照がECONNREFUSEDで失敗し、seccomp下ではEPERMを確認して配布物4チェックが成功することをassertする。runtime helperはtrace recordの保存とreport25行の合格を確認する。Linux分岐の実行だけを根拠にする。",
       "tests": [
         {
           "file": "tests/package-artifacts.test.ts",
-          "contains": "[REQ-084] Linuxで通信を拒否して配布物を使う",
-          "sha256": "a3907250e116ce3846509dda89ba0a99846fce40dcce890ce27bab37e746e083"
+          "contains": "Linuxで通信を拒否して配布物を使う",
+          "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
         }
       ]
     },
@@ -5748,27 +5852,72 @@
     },
     {
       "id": "SCN-896157c166b6c8ff573a",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "0f17bc00575f808e6f839e307cc61172297e6dfeeb9d0f1db76a66e0915d3a8d",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-056"
+      ],
+      "reason": "packageのversion変更、追加CHANGELOG、削除された消化済changesetの差分を与え、versionOnlyProblem=nullをassertする。実際の公開は行わない。",
+      "tests": [
+        {
+          "file": "tests/monorepo.test.ts",
+          "contains": "version・CHANGELOG・消化した changeset だけの変更は合格にする",
+          "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+        }
+      ]
     },
     {
       "id": "SCN-2a023efc151f0067b5fb",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "07bcb4a01e91057bffc8a0e7b253374473771f387b664b55bb0351bccd88ce0a",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-056"
+      ],
+      "reason": "version変更へscripts変更を混ぜ、対象packageパスを含む問題が返ることをassertする。",
+      "tests": [
+        {
+          "file": "tests/monorepo.test.ts",
+          "contains": "version のほかに scripts も変えた変更は不合格にする",
+          "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+        }
+      ]
     },
     {
       "id": "SCN-db94a4def5926c7d1553",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "c9491925d1085d05072e523f8f02ce12c81dc3f3db432d2e680508e96418ed8e",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-167"
+      ],
+      "reason": "CodeQLのinit/analyzeサブパスと完全SHAは合格し、短縮SHA・タグ・別リポジトリ・別SHAは不合格となることをassertする。",
+      "tests": [
+        {
+          "file": "tests/release-security.test.ts",
+          "contains": "サブパスを持つ参照も、リポジトリと完全な SHA で記録と照合する",
+          "sha256": "52b011dbbe528eab5c4576aca08bff0b296b07e0c1d1ef5533a523d85a08dda9"
+        }
+      ]
     },
     {
       "id": "SCN-563595f07921a4a180c2",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "633a6ee52bedbea4f6ac806d71f2fa7013a3c9df574a274322e3ed95fe198aa9",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-200"
+      ],
+      "reason": "codeql.ymlのPR/main/schedule・javascript-typescript・既定read・security-eventsだけのwrite・checkout資格情報非保存をassertする。CodeQL解析ジョブの実行成功ではない。",
+      "tests": [
+        {
+          "file": "tests/release-security.test.ts",
+          "contains": "CodeQL のワークフローは PR・main・定期実行で JavaScript と TypeScript を解析し",
+          "sha256": "52b011dbbe528eab5c4576aca08bff0b296b07e0c1d1ef5533a523d85a08dda9"
+        },
+        {
+          "file": "tests/release-security.test.ts",
+          "contains": "の既定権限はreadでcheckoutに資格情報を保存しない",
+          "sha256": "52b011dbbe528eab5c4576aca08bff0b296b07e0c1d1ef5533a523d85a08dda9"
+        }
+      ]
     },
     {
       "id": "SCN-468dd0a0c65faccb82a5",
@@ -5937,14 +6086,14 @@
       "id": "SCN-ab468be9128795302438",
       "status": "reviewed",
       "scenarioSha256": "7c36d3d64c53db8afebc283aed7be4140a9ccdcc4fdec74da260aa4f58a4e10c",
-      "reason": "ルートと5パッケージのpackage.jsonを読み、6つすべてのengines.nodeが>=22.12.0であることをassertする。",
       "sources": [
         "REQ-142"
       ],
+      "reason": "ルートと全5パッケージの実manifestを読み、engines.nodeが>=22.12.0と一致することをassertする。ランタイム実行成功とは区別する。",
       "tests": [
         {
           "file": "tests/monorepo.test.ts",
-          "contains": "[REQ-142] ルートと 5 つのパッケージ",
+          "contains": "ルートと 5 つのパッケージの engines.node が >=22.12.0",
           "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
         }
       ]
@@ -5953,14 +6102,14 @@
       "id": "SCN-bb5486ea3546651a9885",
       "status": "reviewed",
       "scenarioSha256": "b2a03ed62db14463b052c5784f31e7259244459117eb913da84dd273708f0c37",
-      "reason": "ci.ymlのnode22ジョブを選び、node-version:22.12.0の指定と、その後にpackages/cli/dist/cli.jsが現れることをassertする。ワークフローの記述だけの検証であり、GitHub上の実行成功とは区別する。",
       "sources": [
         "REQ-142"
       ],
+      "reason": "ci.ymlのnode22ジョブを読み、Node22.12.0、pnpm build、CLIのversionとhelpの実行記述をassertする。GitHubでの実行成功ではない。",
       "tests": [
         {
           "file": "tests/monorepo.test.ts",
-          "contains": "[REQ-142] CI に、Node 22.12.0",
+          "contains": "CI に、Node 22.12.0 でビルドした CLI を動かすジョブがある",
           "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
         }
       ]
@@ -6414,6 +6563,170 @@
           "file": "packages/runner/test/guards.test.ts",
           "contains": "リンク先のないフックがあっても",
           "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-96bba88238eb2e66b774",
+      "status": "reviewed",
+      "scenarioSha256": "13f52903f37bcf3bce30910d2cc9e88720cda70d0d18539f9d9159379fde6467",
+      "sources": [
+        "REQ-138"
+      ],
+      "reason": "元のmanifestのrepository/type/url/directory・homepage・bugs・description・keywordsを確認し、導入済み全5パッケージでもrepository/provenanceに加えhomepage/bugs/非空description/openspecキーワードが残ることをassertする。",
+      "tests": [
+        {
+          "file": "tests/monorepo.test.ts",
+          "contains": "5 つのパッケージに、GitHub のリポジトリを指す",
+          "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+        },
+        {
+          "file": "tests/package-artifacts.test.ts",
+          "contains": "packした5パッケージだけで主要コマンドと公開APIを使える",
+          "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
+        }
+      ]
+    },
+    {
+      "id": "SCN-9dd31ba93f03f60b6b53",
+      "status": "reviewed",
+      "scenarioSha256": "1a768aeef5db02a29c0c7c4326902d15440fd630d293a688748f92c31748bc1d",
+      "sources": [
+        "REQ-138"
+      ],
+      "reason": "元と導入後のCLI manifestのdescriptionに5サブコマンドが含まれることをassertする。",
+      "tests": [
+        {
+          "file": "tests/monorepo.test.ts",
+          "contains": "CLI の description は init・verify・trace・run・doctor",
+          "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+        },
+        {
+          "file": "tests/package-artifacts.test.ts",
+          "contains": "packした5パッケージだけで主要コマンドと公開APIを使える",
+          "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
+        }
+      ]
+    },
+    {
+      "id": "SCN-97553bd6fbb08293e97f",
+      "status": "reviewed",
+      "scenarioSha256": "f8cdd37b8cc0fcd3aca84d9c8b245e26f8aed5a6b254e4fbb7bc93ed995682cb",
+      "sources": [
+        "REQ-139"
+      ],
+      "reason": "実際に5つをpackしてオフライン導入した各パッケージのREADME.mdを読み、元のREADME全文と完全一致することをassertする。dry-runのファイル一覧だけを根拠にしない。",
+      "tests": [
+        {
+          "file": "tests/package-artifacts.test.ts",
+          "contains": "packした5パッケージだけで主要コマンドと公開APIを使える",
+          "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
+        }
+      ]
+    },
+    {
+      "id": "SCN-828a4108f7d8560dabf3",
+      "status": "reviewed",
+      "scenarioSha256": "39540c36bf77cadcfd99e2874879e1dc9aa92eb617589bde39c7e5ce4252015e",
+      "sources": [
+        "REQ-139"
+      ],
+      "reason": "元と導入後のCLI READMEにnpx loomake init・リポジトリURL・openspec・ghが含まれることをassertする。",
+      "tests": [
+        {
+          "file": "tests/monorepo.test.ts",
+          "contains": "CLI の README に、npx loomake init",
+          "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+        },
+        {
+          "file": "tests/package-artifacts.test.ts",
+          "contains": "packした5パッケージだけで主要コマンドと公開APIを使える",
+          "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
+        }
+      ]
+    },
+    {
+      "id": "SCN-a301f9298fd3b73568a7",
+      "status": "reviewed",
+      "scenarioSha256": "24ee28963f009388cea5e9db3d7e5056ea3bdd0040fa6aadbbf817df2a2e438d",
+      "sources": [
+        "REQ-139"
+      ],
+      "reason": "導入後のcore/kit/trace/runner READMEが元の全文と一致し、内部用と0.y.zのAPI変更方針を含むことをassertする。",
+      "tests": [
+        {
+          "file": "tests/monorepo.test.ts",
+          "contains": "内部のパッケージの README に、内部用",
+          "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+        },
+        {
+          "file": "tests/package-artifacts.test.ts",
+          "contains": "packした5パッケージだけで主要コマンドと公開APIを使える",
+          "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
+        }
+      ]
+    },
+    {
+      "id": "SCN-38e3134e0dce00709e86",
+      "status": "reviewed",
+      "scenarioSha256": "37bda3f890408bb53f88bd99adb7687e0d09cd93d087b522c7a9d11bc8a1594f",
+      "sources": [
+        "REQ-140"
+      ],
+      "reason": "release.ymlを読み、lint/typecheck/testとpublishの記述が存在し前者が先にあることをassertする。今回のScenarioは読む条件で、失敗時の実CIや実公開の成功ではない。",
+      "tests": [
+        {
+          "file": "tests/monorepo.test.ts",
+          "contains": "pnpm changeset publish の前に lint・typecheck・test を実行する",
+          "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+        }
+      ]
+    },
+    {
+      "id": "SCN-78a7f58fd87760c85835",
+      "status": "reviewed",
+      "scenarioSha256": "cc49464b65a1c2f4a7933200b68c78f054a9849144ba33167dd37e6d99981bdf",
+      "sources": [
+        "REQ-140"
+      ],
+      "reason": "release.ymlのconcurrency指定とcancel-in-progress:falseをassertする。GitHubでの待ち合わせの実行試験ではない。",
+      "tests": [
+        {
+          "file": "tests/monorepo.test.ts",
+          "contains": "concurrency を指定し、実行中のものを取り消さない",
+          "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+        }
+      ]
+    },
+    {
+      "id": "SCN-9097fae62e2b08e5a04d",
+      "status": "reviewed",
+      "scenarioSha256": "737d072174ce3679384a99f256c7f36be550be1a94f4ca7211a542ff226fbafc",
+      "sources": [
+        "REQ-141"
+      ],
+      "reason": "release.ymlのid-token:write、npm固定版の数値比較、npm導入とpublishの記述順序、NPM_TOKENの注入設定をassertする。認証の成功を主張しない。",
+      "tests": [
+        {
+          "file": "tests/monorepo.test.ts",
+          "contains": "id-token: write を持ち、公開の前に 11.5.1 以上の npm を入れ",
+          "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+        }
+      ]
+    },
+    {
+      "id": "SCN-4909acac9444ef13221a",
+      "status": "reviewed",
+      "scenarioSha256": "780fa52eeb7f5423461d79f8b1aaeb1724a3d857e9c3bc85204bbc683c079858",
+      "sources": [
+        "REQ-141"
+      ],
+      "reason": "初回と2回目以降の節の順序、初回NPM_TOKEN登録、次回Trusted Publisher登録とNPM_TOKEN除去の文書をassertする。実際の権限設定と公開は未確認。",
+      "tests": [
+        {
+          "file": "tests/monorepo.test.ts",
+          "contains": "docs/release.md に、初回を NPM_TOKEN で公開し",
+          "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
         }
       ]
     }
