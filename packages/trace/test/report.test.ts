@@ -196,6 +196,43 @@ describe('読めない証拠の記録', () => {
       expect(r.stderr).toContain(`証拠の記録 .loomake/evidence/${CHANGE}/broken.json を JSON として読めません`);
       expect(r.stderr).not.toContain('    at ');
     }));
+
+  const file = `.loomake/evidence/${CHANGE}/0.json`;
+
+  it('[REQ-073] schemaVersion が読める版でない記録があれば、そのファイルと版を日本語で示し、終了コード 2 を返す', () =>
+    withProject({ evidence: [{ schemaVersion: 2 }] }, async (root) => {
+      const r = await cli(root);
+      expect(r.code).toBe(2);
+      expect(r.stderr).toContain(`証拠の記録 ${file} は、この版の loomake では読めない形式です（schemaVersion 2。読めるのは 1）`);
+    }));
+
+  it('[REQ-073] verify.results のない記録があれば、そのファイルと欄を日本語で示し、スタックトレースを出さずに終了コード 2 を返す', () =>
+    withProject({ evidence: [{ verify: { ok: true } as unknown as Evidence['verify'] }] }, async (root) => {
+      const r = await cli(root);
+      expect(r.code).toBe(2);
+      expect(r.stderr).toContain(`証拠の記録 ${file} の verify.results の形が違います`);
+      expect(r.stderr).not.toContain('    at ');
+    }));
+
+  it('[REQ-073] sha や日時の形が違う記録も、その欄を示して終了コード 2 を返す', () =>
+    withProject({ evidence: [{ sha: 'abc' }, { recordedAt: '昨日' }] }, async (root) => {
+      const r = await cli(root);
+      expect(r.code).toBe(2);
+      expect(r.stderr).toMatch(/の (sha|recordedAt) の形が違います/);
+    }));
+
+  it('[REQ-073] change がほかの change の記録があれば、そのファイルを日本語で示し、終了コード 2 を返す', () =>
+    withProject({ evidence: [{ change: 'c2' }] }, async (root) => {
+      const r = await cli(root);
+      expect(r.code).toBe(2);
+      expect(r.stderr).toContain(`証拠の記録 ${file} は、ほかの change（c2）の記録です`);
+    }));
+
+  it('欄を足しただけの記録は読める（validate-evidence-records の仮定 A-01）', () =>
+    withProject({ evidence: [{ extra: 'x' } as Partial<Evidence>] }, async (root) => {
+      const r = await cli(root);
+      expect(r.code).toBe(0);
+    }));
 });
 
 describe('出力の形式', () => {
