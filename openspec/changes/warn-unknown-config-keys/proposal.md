@@ -13,5 +13,5 @@
 - `commands` の下のキーを確かめること（品質コマンドの名前は利用者が決める）
 
 ## Impact
-- 影響する capability：verify・doctor（Requirement の変更）
+- 影響する capability：verify（Requirement の変更）・doctor（Requirement の追加）
 - 影響するコード：`packages/kit/src/verify/config.ts`・`run.ts`、`packages/kit/src/doctor/doctor.ts`
