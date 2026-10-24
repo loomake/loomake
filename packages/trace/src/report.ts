@@ -92,9 +92,14 @@ function readEvidence(root: string, file: string, change: string, reader: InputR
 const STAMPED = /^(\d{8}T\d{6}Z)-/;
 const timeKey = (name: string) => STAMPED.exec(name)?.[1] ?? name;
 
+// 同じ秒の候補を比べるために読む、証拠の先頭の量。記録した日時（recordedAt）は先頭の数行にある
+const HEAD_BYTES = 4096;
+const RECORDED_AT = /"recordedAt"\s*:\s*"([^"\\]*)"/;
+
 /**
- * いちばん新しい証拠の記録（REQ-209）。ファイル名の日時（秒まで。辞書順で時刻順になる）がいちばん新しい秒の証拠だけを読む。
- * 同じ秒に複数あれば、それらの記録した日時（ミリ秒）で選ぶ。読む量が証拠の数に比例しない
+ * いちばん新しい証拠の記録（REQ-209）。ファイル名の日時（秒まで。辞書順で時刻順になる）がいちばん新しい秒の証拠を候補にする。
+ * 候補が複数あれば、それぞれの先頭だけを読んで記録した日時（ミリ秒）を比べ、選んだ 1 つだけを全部読んで検証する。
+ * 読む量は、候補の先頭と選んだ証拠の分に収まる
  */
 function latestEvidence(root: string, dir: string, change: string, reader: InputReader): Evidence | undefined {
   let newest: string[] = [];
@@ -105,12 +110,17 @@ function latestEvidence(root: string, dir: string, change: string, reader: Input
     if (current === undefined || key > current) newest = [entry.name];
     else if (key === current) newest.push(entry.name);
   }
-  let latest: Evidence | undefined;
-  for (const name of newest.sort()) {
-    const evidence = readEvidence(root, join(dir, name), change, reader);
-    if (!latest || Date.parse(evidence.recordedAt) > Date.parse(latest.recordedAt)) latest = evidence;
+  if (!newest.length) return undefined;
+  let chosen = newest.sort()[newest.length - 1];
+  if (newest.length > 1) {
+    // 先頭に記録した日時が読めない候補は、比べられないので選ばない。どれも読めなければ、名前の順で最後のものを使う
+    let best = Number.NEGATIVE_INFINITY;
+    for (const name of newest) {
+      const time = Date.parse(RECORDED_AT.exec(reader.readHead(join(dir, name), HEAD_BYTES))?.[1] ?? '');
+      if (!Number.isNaN(time) && time > best) { best = time; chosen = name; }
+    }
   }
-  return latest;
+  return readEvidence(root, join(dir, chosen), change, reader);
 }
 
 const reqNumber = (id: string) => Number(id.match(/\d+/)?.[0] ?? Number.MAX_SAFE_INTEGER);
