@@ -1,6 +1,6 @@
 // prepareは開発用Node、checkは配布物の対応Nodeで実行する。
 import assert from 'node:assert/strict';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -19,6 +19,18 @@ function run(command, args, cwd, expected = 0) {
   return result.stdout;
 }
 
+/** 試験用のファイルを読み書きして複製し、コピー先や元の権限の共有を避ける。 */
+export function copyFixture(source, target) {
+  mkdirSync(target, { recursive: true });
+  for (const entry of readdirSync(source, { withFileTypes: true })) {
+    const from = join(source, entry.name);
+    const to = join(target, entry.name);
+    if (entry.isDirectory()) copyFixture(from, to);
+    else if (entry.isFile()) writeFileSync(to, readFileSync(from));
+    else throw new Error(`試験用データに通常のファイルでない項目があります：${entry.name}`);
+  }
+}
+
 /** 既存のディレクトリを上書きせず、配布物と独立した利用先を準備する。 */
 export function prepare(target) {
   mkdirSync(target);
@@ -33,7 +45,7 @@ export function prepare(target) {
   writeFileSync(join(consumer, 'package.json'), '{"name":"loomake-smoke-consumer","private":true,"type":"module"}\n');
   run('npm', ['install', '--offline', '--ignore-scripts', '--no-audit', '--no-fund', ...files.map((file) => join(tarballs, file))], consumer);
   const fixture = join(root, 'tests/fixtures/verify-project/openspec/changes/sample');
-  cpSync(fixture, join(consumer, 'openspec/changes/sample'), { recursive: true });
+  copyFixture(fixture, join(consumer, 'openspec/changes/sample'));
   writeFileSync(join(consumer, 'AGENTS.md'), '# Package smoke\n');
   writeFileSync(join(consumer, '.gitignore'), 'node_modules/\n.loomake/test-report.json\n');
   writeFileSync(join(consumer, 'loomake.config.json'), JSON.stringify({ openspecValidate: false, commands: { test: 'node test-command.mjs' } }));

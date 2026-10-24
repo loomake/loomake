@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "kind": "ai-authored-scenarios",
+  "humanParticipants": 0,
+  "externalGitHub": false,
+  "scriptSha256": "f66d5d96a68f1b4b0c40d09e06e03e7f63960f6da92a8708b70f8f8b6a6e6330",
+  "scenarios": [
+    {
+      "id": "first-use",
+      "title": "初回導入と再実行",
+      "status": "passed",
+      "steps": 11,
+      "expectedFailures": 0,
+      "allExitCodesMatched": true,
+      "durationMs": 414
+    },
+    {
+      "id": "daily-use",
+      "title": "既存ファイルの保護と証拠の出力",
+      "status": "passed",
+      "steps": 15,
+      "expectedFailures": 1,
+      "allExitCodesMatched": true,
+      "durationMs": 519
+    },
+    {
+      "id": "recovery",
+      "title": "原因の確認と修正後の再実行",
+      "status": "passed",
+      "steps": 16,
+      "expectedFailures": 3,
+      "allExitCodesMatched": true,
+      "durationMs": 578
+    }
+  ]
+}

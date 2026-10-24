@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 describe('AIが作成・実行する配布物の操作試験', () => {
-  it('[REQ-155][REQ-156][REQ-157] 導入・通常操作・失敗と復旧を実行し、操作結果を記録する', () => {
-    const base = mkdtempSync(join(tmpdir(), 'loomake journeys '));
+  it.each([tmpdir(), join(import.meta.dirname, '../.loomake/quality')])('[REQ-155][REQ-156][REQ-157] %s で導入・通常操作・失敗と復旧を実行し、操作結果を記録する', (parent) => {
+    mkdirSync(parent, { recursive: true });
+    const base = mkdtempSync(join(parent, 'loomake journeys '));
     const target = join(base, 'trial');
     try {
       const result = spawnSync(process.execPath, ['scripts/ai-journeys.mjs', target], { cwd: join(import.meta.dirname, '..'), encoding: 'utf8' });

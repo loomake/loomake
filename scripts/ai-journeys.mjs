@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
-import { cpSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { prepare } from './package-smoke.mjs';
+import { copyFixture, prepare } from './package-smoke.mjs';
 
 const win = process.platform === 'win32';
 const quote = (text) => `"${text.replace(/"/g, '""')}"`;
@@ -40,7 +40,7 @@ export function runJourneys(target) {
       return { project, run };
     };
     const configure = (current, project) => {
-      cpSync(join(artifacts, 'consumer/openspec'), join(project, 'openspec'), { recursive: true });
+      copyFixture(join(artifacts, 'consumer/openspec'), join(project, 'openspec'));
       writeFileSync(join(project, 'loomake.config.json'), JSON.stringify({ openspecValidate: false, commands: { lint: 'node --check test-command.mjs', test: 'node test-command.mjs' } }));
       writeFileSync(join(project, '.gitignore'), 'node_modules/\n.loomake/*\n!.loomake/evidence/\n');
       const assertions = Array.from({ length: 25 }, (_, index) => ({ fullName: `[REQ-${String(index + 1).padStart(3, '0')}] fixture`, status: 'passed' }));
