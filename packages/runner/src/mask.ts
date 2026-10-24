@@ -35,7 +35,27 @@ export function maskSecrets(text: string): string {
       else if (text[end] === '"') break;
       else end++;
     }
-    if (end >= text.length) break;
+    if (end >= text.length) {
+      const tail = text.slice(start);
+      // 出力上限で切れたJSON文字列も、末尾の不完全なエスケープを除いて扱う。
+      for (let trim = 0; trim <= Math.min(6, tail.length - 1); trim++) {
+        try {
+          const value: unknown = JSON.parse(tail.slice(0, tail.length - trim) + '"');
+          if (typeof value === 'string') {
+            const output: string[] = [];
+            const redactor = createDiagnosticRedactor((part) => output.push(part));
+            redactor.write(value); redactor.end();
+            const masked = output.join('');
+            if (masked !== value) {
+              parts.push(text.slice(copied, start), JSON.stringify(masked).slice(0, -1), tail.slice(tail.length - trim));
+              copied = text.length;
+            }
+          }
+          break;
+        } catch { /* 末尾の途中のエスケープだけを最大6文字まで切り分ける。 */ }
+      }
+      break;
+    }
     try {
       const value: unknown = JSON.parse(text.slice(start, end + 1));
       if (typeof value === 'string') {

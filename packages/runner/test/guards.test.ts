@@ -325,5 +325,6 @@ describe('git の設定とフックの変更の検出', () => {
       expect(r.stdout).not.toContain('エンジンが git の設定かフックを変えました');
       expect(readFileSync(join(r.repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [x] 1.1');
       expect(existsSync(join(r.repo.base, 'post-commit.log'))).toBe(true);
+      expect(readFileSync(join(r.repo.base, 'post-commit.log'), 'utf8').trim().split('\n').length).toBeGreaterThan(1);
     }));
 });

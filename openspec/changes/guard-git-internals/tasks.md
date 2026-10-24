@@ -13,4 +13,4 @@
 ## 3. 形式が隣接する保存ログ
 
 - [x] 3.1 APIトークンに秘密鍵ブロックが隣接する回帰でRedを確認し、ブロックを先に置換し、JSONの値も保護してGreenにする（REQ-199）
-- [ ] 3.2 結果を記録し、`pnpm -s verify --change guard-git-internals --done` を通す <!-- loomake:gate=done -->
+- [x] 3.2 結果を記録し、`pnpm -s verify --change guard-git-internals --done` を通す <!-- loomake:gate=done -->

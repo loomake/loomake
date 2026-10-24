@@ -11,6 +11,14 @@ const tokens = {
 };
 
 describe('置換する秘密情報の形', () => {
+  it('[REQ-199] JSONの終端が切れても改行に続く既知形式を置換する', () => {
+    const token = 'ghp_' + 'x'.repeat(24);
+    const raw = JSON.stringify({ message: 'before\n' + token + ' tail' }).slice(0, -3);
+    const saved = maskSecrets(raw);
+    expect(saved).not.toContain(token);
+    expect(saved).toContain('***');
+    expect(Buffer.byteLength(saved)).toBeLessThanOrEqual(Buffer.byteLength(raw));
+  });
   it('[REQ-199] JSON文字列の改行に続く既知形式を値として置換する', () => {
     const payload = Object.values(tokens).join('\n') + '\nAuthorization: Bearer\n' + 'Z'.repeat(24);
     const saved = JSON.parse(maskSecrets(JSON.stringify({ payload })));

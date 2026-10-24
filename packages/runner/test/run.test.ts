@@ -580,6 +580,17 @@ describe('run設定の入力境界', () => {
 });
 
 describe('出力予算による停止', () => {
+  it('[REQ-152][REQ-199] JSON出力が上限で切れても改行の後のトークンを記録へ残さない', () =>
+    withRepo(async (repo) => {
+      const token = 'ghp_' + 'x'.repeat(24);
+      repo.plan([{ output: 'before\n' + token + ' after ' + 'x'.repeat(200) }]);
+      const result = await run(repo);
+      expect(result.code).toBe(1);
+      const saved = readFileSync(join(runDir(repo), '01-output.json'), 'utf8');
+      expect(saved).not.toContain(token);
+      expect(saved).toContain('***');
+      expect(Buffer.byteLength(saved)).toBeLessThanOrEqual(80);
+    }, { run: { maxOutputBytes: 80 } }));
   it('[REQ-152] 大きな出力で停止し、タスクと変更を未完了のまま残す', () =>
     withRepo(async (repo) => {
       repo.plan([{ write: { 'impl.txt': '途中' }, output: 'x'.repeat(200) }]);

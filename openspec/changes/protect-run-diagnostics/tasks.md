@@ -14,4 +14,4 @@
 
 - [x] 3.1 Bearerと秘密鍵ブロックの回帰でRedを確認し、有限の状態で転送前の置換を修正する（REQ-153）
 - [x] 3.2 実stderrと配布物のメモリ試験で保護を確認し、通常の診断を保つ
-- [ ] 3.3 実行結果と文書・changesetを更新し、`pnpm -s verify --change protect-run-diagnostics --done` を通す <!-- loomake:gate=done -->
+- [x] 3.3 実行結果と文書・changesetを更新し、`pnpm -s verify --change protect-run-diagnostics --done` を通す <!-- loomake:gate=done -->
