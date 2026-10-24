@@ -948,39 +948,114 @@
     },
     {
       "id": "SCN-066d833f947acffa8f65",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "f7ece0a83297619e0cdb0ca507f451864bd3ae45b712c436f0dfd86773522f1d",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "64MiBを超えるdetailを実際にrunRecordへ渡し、上限67108864を含むエラー、証拠ディレクトリ不作成、Gitのcleanをassertする。",
+      "sources": [
+        "REQ-174"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/record-size.test.ts",
+          "contains": "64MiBを超える生成結果は証拠ファイルを作らず止まる",
+          "sha256": "db71a3294f7e3688bc76c9adbb527a0526a41c76304da1b8f350375514ec87e1"
+        }
+      ]
     },
     {
       "id": "SCN-72716d75364a34956804",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "233ecb69425b68b8dbef691bc5c64783d92cdbedd270e7bb859c164bf5c227ae",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "マルチバイトを含む証拠を整形して末尾LFを加えた全体のUTF-8バイト数で、ちょうどの上限の全文一致と1バイト不足の拒否をassertする。文字数よりバイト数が大きいことと、文字数を上限にした拒否も確認する。小さい上限を引数へ渡した境界検査であり64MiBちょうどの巨大fixtureではない。",
+      "sources": [
+        "REQ-174"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/serialization.test.ts",
+          "contains": "整形と改行を含むUTF-8の上限ちょうどを認める",
+          "sha256": "6cf85e33ea1af754e0245fc4259f994504be7310ea55c96abc971e81ebd5c247"
+        }
+      ]
     },
     {
       "id": "SCN-d1639cbf892160615c24",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "24dc070645461bc63d213b2204c8fcf4728b7a97c7189672228252b2f11a3797",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "ネイティブfsで一部を書いた後にENOSPCを投げる場合とfsyncのEIOで、UsageError・最終名なし・一時名なしをassertする。強制終了3位置の試験は別の障害種別の補助根拠として、所有者終了と完全なJSON・再公開・片付けを確認する。",
+      "sources": [
+        "REQ-175"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/publication.test.ts",
+          "contains": "部分書き込みで失敗しても最終名を作らず一時ファイルを片付ける",
+          "sha256": "63231c8f68bbbe7901a3c28a437135b7aaebc689a66752682eb0a2422be710f9"
+        },
+        {
+          "file": "packages/trace/test/publication.test.ts",
+          "contains": "同期が失敗したら公開しない",
+          "sha256": "63231c8f68bbbe7901a3c28a437135b7aaebc689a66752682eb0a2422be710f9"
+        },
+        {
+          "file": "packages/trace/test/publication-crash.test.ts",
+          "contains": "で終了しても最終JSONを保ち、所有者終了後の片付けから再開できる",
+          "sha256": "1fbdfb9d6afcd7fa07e83f9ca987593e50da39128cd4a6e354286326e9f9e5d6"
+        }
+      ]
     },
     {
       "id": "SCN-afc055af1421fb3e65c9",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "654dba85394750fc9e4e9b4119ba3bb0b69c8f6292dc92b963657d77e2dad114",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "実際の既存最終名へreplacementを公開し、false・既存の全文不変・ディレクトリが最終名1個だけであることをassertする。",
+      "sources": [
+        "REQ-175"
+      ],
+      "tests": [
+        {
+          "file": "packages/trace/test/publication.test.ts",
+          "contains": "既存の最終ファイルは上書きしない",
+          "sha256": "63231c8f68bbbe7901a3c28a437135b7aaebc689a66752682eb0a2422be710f9"
+        }
+      ]
     },
     {
       "id": "SCN-0b01f85b82ec0e403307",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "678ee5f62b35b41be39a3517e9f50bcf5f8944318124c6bda24e9535ed15121d",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "実Gitと試験用エンジン・ghのrunで保存先mkdirだけをEACCESにし、終了1・stopped・対象パス付き理由・エンジン呼び出し2回・PRなし・保存先なし・証拠コミットなしをassertする。GitHub実接続の根拠にはしない。",
+      "sources": [
+        "REQ-176"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/evidence-storage.test.ts",
+          "contains": "保存先の作成失敗を停止記録に残し、復旧後は実装を繰り返さず完了する",
+          "sha256": "16cd666b698613e965a0c1547e97b68a56431b2f576b7f9e45caf7954adbeebb"
+        }
+      ]
     },
     {
       "id": "SCN-57eafa7aee7fe64cb507",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "1266a71a94808aacaf67cc16c378d367764246f2b99c9fed1926a0f565eefe9b",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "同じ保存失敗fixtureからmkdirを復旧して再実行し、終了0・エンジン呼び出し2回のまま・PR1個・証拠1個・コミットが1個だけ増加・Git cleanをassertする。公開後の片付け失敗では一時名を確認後に削除して証拠コミットから再開し、HEADと証拠全文の不変もassertする。",
+      "sources": [
+        "REQ-176"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/evidence-storage.test.ts",
+          "contains": "保存先の作成失敗を停止記録に残し、復旧後は実装を繰り返さず完了する",
+          "sha256": "16cd666b698613e965a0c1547e97b68a56431b2f576b7f9e45caf7954adbeebb"
+        },
+        {
+          "file": "packages/runner/test/evidence-storage.test.ts",
+          "contains": "公開後の片付け失敗は確認・一時名の削除・証拠のコミットから復旧できる",
+          "sha256": "16cd666b698613e965a0c1547e97b68a56431b2f576b7f9e45caf7954adbeebb"
+        }
+      ]
     },
     {
       "id": "SCN-520afb964a4265f49d56",
@@ -6754,6 +6829,62 @@
           "sha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
         }
       ]
+    },
+    {
+      "id": "SCN-39e078f298db6ed803cc",
+      "status": "reviewed",
+      "scenarioSha256": "c6082e18db5c235aea75ce6436d2315a2444a4b7cfc54c65209e706dcdf2cea5",
+      "sources": [
+        "REQ-142"
+      ],
+      "reason": "公式アーカイブと照合したNode22.12.0を使い、子のnodeも同じ版のPATHで全864件を順次実行し、traceの証拠公開中の実プロセス強制終了3件を含め全件成功した。静的な宣言だけの成功とせず、環境別レポートと、製品ソースとスクリプトの同一性を確認した以前の配布物でのtrace保存・25行の結果を組み合わせる。Node24の全体成功とは別の実行であり、他OSの成功を含まない。",
+      "tests": [
+        {
+          "file": "packages/trace/test/record.test.ts",
+          "contains": "[REQ-142] @loomake/trace の engines.node",
+          "sha256": "b3c144c80403227209fd76fae5ef61da7fb396ec52c8b8eaee1d0788a246ab2e"
+        },
+        {
+          "file": "scripts/runtime-compatibility.mjs",
+          "contains": "[REQ-084] 通信拒否の下でtrace recordが保存されtrace reportの全25行を出力する",
+          "sha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
+        }
+      ]
+    },
+    {
+      "id": "SCN-fae2b8b93f59b5ad7abf",
+      "status": "superseded",
+      "scenarioSha256": "f003e1f803559f401624e084395317830d082e7fe7463e811e2e451042eb6578",
+      "replacement": "SCN-39e078f298db6ed803cc",
+      "reason": "require-node-22の削除と追加に従い、確認したNode22.12の動作環境へ置換する。Node20の実行成功を主張しない。"
+    },
+    {
+      "id": "SCN-157d86c29a978635463a",
+      "status": "reviewed",
+      "scenarioSha256": "2a7b44d29b0794c48a9ab65635aa4c9ce430ff2175660bd646a71f56590c68de",
+      "sources": [
+        "REQ-142"
+      ],
+      "reason": "公式アーカイブと照合したNode22.12.0を使い、子のnodeも同じ版のPATHで全864件を順次実行し、traceの証拠公開中の実プロセス強制終了3件を含め全件成功した。静的な宣言だけの成功とせず、環境別レポートと、製品ソースとスクリプトの同一性を確認した以前の配布物でのtrace保存・25行の結果を組み合わせる。Node24の全体成功とは別の実行であり、他OSの成功を含まない。",
+      "tests": [
+        {
+          "file": "packages/trace/test/record.test.ts",
+          "contains": "[REQ-142] @loomake/trace の engines.node",
+          "sha256": "b3c144c80403227209fd76fae5ef61da7fb396ec52c8b8eaee1d0788a246ab2e"
+        },
+        {
+          "file": "scripts/runtime-compatibility.mjs",
+          "contains": "[REQ-084] 通信拒否の下でtrace recordが保存されtrace reportの全25行を出力する",
+          "sha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
+        }
+      ]
+    },
+    {
+      "id": "SCN-fa361b08b4790cff678f",
+      "status": "superseded",
+      "scenarioSha256": "6ebde898b715374337b1fc59777d65398b894cb6bc0f1b5cf6a799a9396c0787",
+      "replacement": "SCN-157d86c29a978635463a",
+      "reason": "require-node-22の削除と追加に従い、確認したNode22.12の動作環境へ置換する。Node20の実行成功を主張しない。"
     }
   ]
 }
