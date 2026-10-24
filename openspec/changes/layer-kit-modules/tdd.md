@@ -11,3 +11,7 @@ architecture.md に kit と runner の中の分け方を書き、依存の図の
 ## 完了ゲート
 
 `pnpm -s verify --change layer-kit-modules --done` は exit 0。lint・型検査・842 件のテストと全 REQ の対応が成功した。
+
+## レビューの指摘への対応
+
+PR #56 のレビューで、import の検査が単一引用符の `from '...'` の形しか拾わず、二重引用符や副作用の import で runtime/ から verify/ への依存を足しても通ることが指摘された。検査を TypeScript の構文解析（`ts.preProcessFile`）で import を取り出す形に直し、二重引用符・副作用の import・export from・動的な import・型だけの import と、機能どうしの import を見つける回帰テストを 6 件足した。runtime/errors.ts に `import "../verify/run.js";` を足すと検査が失敗し、戻すと 10 件すべてが成功することを確かめた。
