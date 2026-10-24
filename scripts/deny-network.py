@@ -16,6 +16,8 @@ def main():
     if platform.machine() not in architectures:
         raise SystemExit("このCPUの通信拒否フィルターは未対応です")
     arch, denied = architectures[platform.machine()]
+    # io_uring経由で非同期の通信操作を作らない。番号は対象の2ABIで共通。
+    denied = denied + [425, 426, 427]
 
     class Filter(ctypes.Structure):
         _fields_ = [("code", ctypes.c_ushort), ("jt", ctypes.c_ubyte),
