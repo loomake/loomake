@@ -16,5 +16,5 @@
 
 ## 4. 統合した結果の確認
 
-- [ ] 4.1 Node22.12で関係する回帰と全体のテストを実行し、Node24の結果と分けて保存する。実行環境・失敗・未確認OS・実接続の範囲を記録し、`docs/review.md`と作業記録を実証した結果だけで更新する。
-- [ ] 4.2 通常設定の`pnpm -s verify --change close-engine-and-hook-safety-gaps --done`を通し、全Requirementの対応テストと全タスクの完了を確認する。上限・設定・既存の期待値を緩めて通さない。 <!-- loomake:gate=done -->
+- [x] 4.1 Node22.12で関係する回帰と全体のテストを実行し、Node24の結果と分けて保存する。実行環境・失敗・未確認OS・実接続の範囲を記録し、`docs/review.md`と作業記録を実証した結果だけで更新する。
+- [x] 4.2 通常設定の`pnpm -s verify --change close-engine-and-hook-safety-gaps --done`を通し、全Requirementの対応テストと全タスクの完了を確認する。上限・設定・既存の期待値を緩めて通さない。 <!-- loomake:gate=done -->

@@ -7539,6 +7539,176 @@
           "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
         }
       ]
+    },
+    {
+      "id": "SCN-3d101ef009f250c6715d",
+      "status": "reviewed",
+      "scenarioSha256": "80d9e91db2879c6bf61027df895bb28067c3cceb21dfaacfa546ddd0bc03ac95",
+      "reason": "子の起動とPIDを確認し、runClaudeが戻った時点の停止状態と、戻ってから1100ms後も遅延ファイルがないことを、試験自身の回収前にassertする。",
+      "sources": [
+        "REQ-207"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/engine-normal-exit.test.ts",
+          "contains": "stops independent stdio child before returning and prevents delayed writes",
+          "sha256": "ee6406a65283916d2f60849ae0392dedd9457f20d71f37c45c3e43eb1b121118"
+        }
+      ]
+    },
+    {
+      "id": "SCN-8358fc7b806a6535e67c",
+      "status": "reviewed",
+      "scenarioSha256": "019dabba35c3566a34e6b6fe79c967af5340b4c48593da06b3878bec5c7b5575",
+      "reason": "SIGTERMの受信後も終了しない子を、標準出力を共有しない場合と継承する場合で起動し、戻り時点の停止と遅延書き込みなし、親の出力と終了コード・フラグの保持をassertする。",
+      "sources": [
+        "REQ-207"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/engine-normal-exit.test.ts",
+          "contains": "stops SIGTERM-ignoring independent stdio child before returning and prevents delayed writes",
+          "sha256": "ee6406a65283916d2f60849ae0392dedd9457f20d71f37c45c3e43eb1b121118"
+        },
+        {
+          "file": "packages/runner/test/engine-normal-exit.test.ts",
+          "contains": "stops SIGTERM-ignoring inherited output child before returning and prevents delayed writes",
+          "sha256": "ee6406a65283916d2f60849ae0392dedd9457f20d71f37c45c3e43eb1b121118"
+        }
+      ]
+    },
+    {
+      "id": "SCN-3bcbdb8b364248c8e339",
+      "status": "reviewed",
+      "scenarioSha256": "7503b8f02a947f1484c403bf515744f9382428f97fa19639b964256f4962ebe4",
+      "reason": "通常のJSON出力と終了コード0、本文と元の出力、時間切れ・中断・出力上限の各falseをassertする。",
+      "sources": [
+        "REQ-207"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/engine-normal-exit.test.ts",
+          "contains": "preserves normal JSON output and exit zero without stop flags",
+          "sha256": "ee6406a65283916d2f60849ae0392dedd9457f20d71f37c45c3e43eb1b121118"
+        }
+      ]
+    },
+    {
+      "id": "SCN-37b984cc19ddf98050a7",
+      "status": "reviewed",
+      "scenarioSha256": "ea5b40938cebc86adff43d3755202f516930771f228d76a8d1c3750ef0ab0690",
+      "reason": "非ゼロ終了と通常出力を渡し、終了コード1と出力を保ち、中断や時間切れ・出力上限にしないことをassertする。",
+      "sources": [
+        "REQ-207"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/engine-normal-exit.test.ts",
+          "contains": "preserves nonzero exit code and raw output without stop flags",
+          "sha256": "ee6406a65283916d2f60849ae0392dedd9457f20d71f37c45c3e43eb1b121118"
+        }
+      ]
+    },
+    {
+      "id": "SCN-48fa54c475053559866d",
+      "status": "reviewed",
+      "scenarioSha256": "efcfcad984cc22ce3fa357cd84bcafbe1fa8469ea8d2554072a4a47d098b89c5",
+      "reason": "外側の期限付き子で実runnerソースの通常runを呼び、FIFOを読まずcode1と日本語の対象・理由を返すこと、エンジン0回、HEADとタスク全文の不変、FIFOの保持、停止summaryと公開なしをassertする。",
+      "sources": [
+        "REQ-208"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/guards-special-files.test.ts",
+          "contains": "beforeのFIFOで通常runを止め、タスク・変更・コミットを保つ",
+          "sha256": "db5e7718a21045379a799508b11178a170f4d5ffb24b6459067e570b59963cff"
+        }
+      ]
+    },
+    {
+      "id": "SCN-a50812f9bbd1a9644d7b",
+      "status": "reviewed",
+      "scenarioSha256": "a64e8e088f17635f88f8479afdae0969f4d4b334bcbd65710946dd99ee77a0fa",
+      "reason": "試験用エンジンが実装とFIFOを作る通常runで、code1と日本語の対象・理由、エンジン1回、HEADとタスク全文の不変、実装とFIFOの保持、停止summaryと公開なしをassertする。",
+      "sources": [
+        "REQ-208"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/guards-special-files.test.ts",
+          "contains": "engineのFIFOで通常runを止め、タスク・変更・コミットを保つ",
+          "sha256": "db5e7718a21045379a799508b11178a170f4d5ffb24b6459067e570b59963cff"
+        }
+      ]
+    },
+    {
+      "id": "SCN-9260680e9f0b8bbedc6a",
+      "status": "reviewed",
+      "scenarioSha256": "8b725cf3957d51f00ba77590eab0e96c89d74a8852fbcb5584b17d6b59731cc2",
+      "reason": "実post-commitフックを配置し、通常runの成功、タスク完了と実装コミット、フックが作る記録をassertする。",
+      "sources": [
+        "REQ-208"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/guards-special-files.test.ts",
+          "contains": "regularの既存フックを保ち、通常runでタスクをコミットする",
+          "sha256": "db5e7718a21045379a799508b11178a170f4d5ffb24b6459067e570b59963cff"
+        }
+      ]
+    },
+    {
+      "id": "SCN-12e8e4d8bf0a2b723971",
+      "status": "reviewed",
+      "scenarioSha256": "fcab9138ddcabf9de712ee75e09cb688b51032421391e5fa07047f4cc4b4a5a4",
+      "reason": "リンク先のないリンクと、FIFOを含むディレクトリへのリンクで通常runを呼び、リンク先を読まず成功し、実装とタスクをコミットしてリンクを保つことをassertする。",
+      "sources": [
+        "REQ-208"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/guards-special-files.test.ts",
+          "contains": "danglingの既存フックを保ち、通常runでタスクをコミットする",
+          "sha256": "db5e7718a21045379a799508b11178a170f4d5ffb24b6459067e570b59963cff"
+        },
+        {
+          "file": "packages/runner/test/guards-special-files.test.ts",
+          "contains": "directoryの既存フックを保ち、通常runでタスクをコミットする",
+          "sha256": "db5e7718a21045379a799508b11178a170f4d5ffb24b6459067e570b59963cff"
+        }
+      ]
+    },
+    {
+      "id": "SCN-eb61406b2494318de7ad",
+      "status": "reviewed",
+      "scenarioSha256": "0f443f7d69ab434219cc0a7b1fddf1bb7e210a1286b0ba303171c23d0b323503",
+      "reason": "セキュリティ文書を読み、リンク先と呼び出すコードの検査対象外、利用者の権限、内容と依存先を信頼して確認することを明記した文をassertする。",
+      "sources": [
+        "REQ-209"
+      ],
+      "tests": [
+        {
+          "file": "tests/security-boundaries-docs.test.ts",
+          "contains": "フックのリンク先と呼び出すコード、実行する権限を明記する",
+          "sha256": "f3db0357b9913eee2ee5893e859d2cfcd774eddc3f57c69ff2397ff43f866c12"
+        }
+      ]
+    },
+    {
+      "id": "SCN-0ddb05fe47bc05cd0687",
+      "status": "reviewed",
+      "scenarioSha256": "9c90564078af2d2d24f0a5477063ca47b23b69b4b2067d4f9f4a9f9d540f932e",
+      "reason": "文書に同じPOSIXグループを対象とすること、別セッションへ離脱した子とWindowsの同等保証を含めないこと、未実行環境や実接続の成功を主張しないことをassertする。",
+      "sources": [
+        "REQ-209"
+      ],
+      "tests": [
+        {
+          "file": "tests/security-boundaries-docs.test.ts",
+          "contains": "同じPOSIXグループと離脱した子、Windowsの保証範囲を明記する",
+          "sha256": "f3db0357b9913eee2ee5893e859d2cfcd774eddc3f57c69ff2397ff43f866c12"
+        }
+      ]
     }
   ]
 }
