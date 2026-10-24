@@ -8,4 +8,4 @@
 ## 2. 統合検証
 
 - [x] 2.1 復旧手順と限界・TDD結果・changesetを記録し、型・lint・関連テストを通す
-- [ ] 2.2 `pnpm -s verify --change resume-pr-publication --done` を通す <!-- loomake:gate=done -->
+- [x] 2.2 `pnpm -s verify --change resume-pr-publication --done` を通す <!-- loomake:gate=done -->
