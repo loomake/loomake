@@ -43,3 +43,9 @@
 - [x] 8.1 出力・診断・記録予算のScenarioとassertionを読み、対応と不足を整理する
 - [x] 8.2 stdout・stderrの上限超過で実際のエンジンと子が停止する試験を補う
 - [x] 8.3 対応表と結果を更新し、`pnpm -s verify --change audit-scenario-evidence --done` を通す <!-- loomake:gate=done -->
+
+## 9. 実行判断と重要条件の直接試験
+
+- [x] 9.1 実行判断、既存のドメイン変異試験、テストの弱体化検出のScenarioとassertionを照合する
+- [x] 9.2 archive後の対応を照合し、実行結果と評価を更新する
+- [x] 9.3 `pnpm -s verify --change audit-scenario-evidence --done` を通す <!-- loomake:gate=done -->

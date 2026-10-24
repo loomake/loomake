@@ -488,7 +488,7 @@
     {
       "id": "SCN-2024b0d1da6a2a63c5d9",
       "status": "unreviewed",
-      "scenarioSha256": "4aa45a93b36eb858ef8895fa03ceb6681cbcf14a242d5402f8b87e5635fe9e87",
+      "scenarioSha256": "7e01fb82b5f09428158a3c866df7de12e093036e634730b63023f337eb7063df",
       "reason": "対応候補のassertionの内容は未精査"
     },
     {
@@ -795,33 +795,83 @@
     },
     {
       "id": "SCN-9ce815ac193f126dc124",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "f9cc63980ec7cde2f263314a5d2fec10f5fa1d0e66d922c8f5de716b8c09ef34",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "既存の10件で元の実装が成功し、13条件すべてでassertion失敗を検出し、ソースと通常レポートを変更しないことをassertする。",
+      "sources": [
+        "REQ-161"
+      ],
+      "tests": [
+        {
+          "file": "tests/domain-mutations.test.ts",
+          "contains": "正常な実装と13条件を実行",
+          "sha256": "2b753f35a5ce2e4372d760077ca03f77e50004ea50e5a650bb9cffe1aa16a15b"
+        }
+      ]
     },
     {
       "id": "SCN-80143bd2b3f67b9e5d87",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "1707fedd5f61324ecdd7ad365e1618a64614535b0285ae7756af336092625cb9",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "同じテストが成功した変更をsurvived、assertion失敗をkilledと明示的に区別する。",
+      "sources": [
+        "REQ-162"
+      ],
+      "tests": [
+        {
+          "file": "tests/domain-mutations.test.ts",
+          "contains": "同じテストのassertion失敗だけ",
+          "sha256": "2b753f35a5ce2e4372d760077ca03f77e50004ea50e5a650bb9cffe1aa16a15b"
+        }
+      ]
     },
     {
       "id": "SCN-08012f5420ea72d30cc4",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "5763421747b00de8656b1e8cb47d531d72e268ead48bcee8998b1f7f784197b8",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "欠損レポート、TypeError、timeout、未実行、不整合な集計、テスト名の追加・欠落・重複をerrorとしてassertする。",
+      "sources": [
+        "REQ-162"
+      ],
+      "tests": [
+        {
+          "file": "tests/domain-mutations.test.ts",
+          "contains": "[REQ-162]",
+          "sha256": "2b753f35a5ce2e4372d760077ca03f77e50004ea50e5a650bb9cffe1aa16a15b"
+        }
+      ]
     },
     {
       "id": "SCN-edcd3c67ad2d5ee9c004",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "01a0057253b49e31104de6840736e0c486e7cc5c205e51b22b0caeeb6a3d46c3",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "結果JSONのbaselineと13条件、失敗テスト名と各ソースのハッシュ、originalsUnchangedをassertする。",
+      "sources": [
+        "REQ-163"
+      ],
+      "tests": [
+        {
+          "file": "tests/domain-mutations.test.ts",
+          "contains": "正常な実装と13条件を実行",
+          "sha256": "2b753f35a5ce2e4372d760077ca03f77e50004ea50e5a650bb9cffe1aa16a15b"
+        }
+      ]
     },
     {
       "id": "SCN-6025a0f0aa8a9d99237c",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "01622c61ddff4886d0dece48b8700f54112430bce2f8094ce0359ec8d0d13d36",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "同じ保存先の再実行を終了コード1とし、保存済みの結果JSONが変わらないことをassertする。",
+      "sources": [
+        "REQ-163"
+      ],
+      "tests": [
+        {
+          "file": "tests/domain-mutations.test.ts",
+          "contains": "正常な実装と13条件を実行",
+          "sha256": "2b753f35a5ce2e4372d760077ca03f77e50004ea50e5a650bb9cffe1aa16a15b"
+        }
+      ]
     },
     {
       "id": "SCN-d054bbf6e511f5d0ecd4",
@@ -1983,7 +2033,7 @@
     {
       "id": "SCN-92a3ac86378cabd507ba",
       "status": "unreviewed",
-      "scenarioSha256": "7e51bdb1ac5fe79a82b32f82e5b533ada2ac40804a259121736c4fd45abe1b40",
+      "scenarioSha256": "ff50d5f513886a42da40f7de703cb2f9e391aa6bca5c22dd15fc366dec7e9cfc",
       "reason": "対応候補のassertionの内容は未精査"
     },
     {
@@ -4869,6 +4919,236 @@
           "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
         }
       ]
+    },
+    {
+      "id": "SCN-8ac1e728bd931358b1b9",
+      "status": "reviewed",
+      "scenarioSha256": "67f2596cfcda595e808308791351f9f9c4f499d565dec85f5fc2074320a2006e",
+      "reason": "中断・出力・期限・質問・終了コードが重なる観測値を与え、既存の優先順位と理由を直接assertする。",
+      "sources": [
+        "REQ-204"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/decision-policy.test.ts",
+          "contains": "[REQ-204]",
+          "sha256": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b"
+        }
+      ]
+    },
+    {
+      "id": "SCN-c4fc61a3a8f5f2456a94",
+      "status": "reviewed",
+      "scenarioSha256": "20afe90f6229cf933d7209257c8389254a8e684bc5ec27f49c1b682903550cd5",
+      "reason": "HEADとGit内部の変更理由が重なるケース、失敗・中断との重なりで、先に示す理由と中断状態をassertする。",
+      "sources": [
+        "REQ-204"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/decision-policy.test.ts",
+          "contains": "[REQ-204]",
+          "sha256": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b"
+        }
+      ]
+    },
+    {
+      "id": "SCN-6a8388a02ac4197ecdba",
+      "status": "reviewed",
+      "scenarioSha256": "a7a46910d175bae1d786fbdc00d1956367d927fa926124893a252c69aa8fdf9a",
+      "reason": "正常終了だけの観測値に対してcontinueをassertする。",
+      "sources": [
+        "REQ-204"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/decision-policy.test.ts",
+          "contains": "[REQ-204] 正常終了",
+          "sha256": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b"
+        }
+      ]
+    },
+    {
+      "id": "SCN-557f8f5102b9a3f758dc",
+      "status": "reviewed",
+      "scenarioSha256": "bf607833c8a30f24306aa31e6804ef50fc614d62e49a030f931d4d0a2fe64739",
+      "reason": "合格や期限超過と検証中の状態変更が重なっても、状態変更の理由で停止することをassertする。",
+      "sources": [
+        "REQ-205"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/decision-policy.test.ts",
+          "contains": "[REQ-205] 状態変更",
+          "sha256": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b"
+        }
+      ]
+    },
+    {
+      "id": "SCN-e7a89e26ef4e607b045a",
+      "status": "reviewed",
+      "scenarioSha256": "2a0624efac012e670b4377b9bc8d0adf5b826707218082ef3250940f173ed659",
+      "reason": "修正回数が直前・一致・超過の場合と上限0を試し、期限と重なる場合の優先順位もassertする。",
+      "sources": [
+        "REQ-205"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/decision-policy.test.ts",
+          "contains": "[REQ-205]",
+          "sha256": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b"
+        }
+      ]
+    },
+    {
+      "id": "SCN-a984b61249c6f8f16938",
+      "status": "reviewed",
+      "scenarioSha256": "2e914a20169dc359484207494898c937ef1a12301a59db3782e8da70246df95a",
+      "reason": "状態が変わらず合格した場合は、回数と期限の記録があってもpassedをassertする。",
+      "sources": [
+        "REQ-205"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/decision-policy.test.ts",
+          "contains": "[REQ-205] 合格は回数",
+          "sha256": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b"
+        }
+      ]
+    },
+    {
+      "id": "SCN-11b4cd5f7312edc22c4a",
+      "status": "reviewed",
+      "scenarioSha256": "d6a86dc22eaec9aaed3ce10b15b33f0159d032c068650e4aa365ca66171e9448",
+      "reason": "freezeした同じ観測値の繰り返しで同じ結果を返し、入力のJSON表現が変わらないことをassertする。",
+      "sources": [
+        "REQ-206"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/decision-policy.test.ts",
+          "contains": "[REQ-206]",
+          "sha256": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b"
+        }
+      ]
+    },
+    {
+      "id": "SCN-0658634ca07c8ffa116b",
+      "status": "reviewed",
+      "scenarioSha256": "717270a92bb1edc5735b4f47dbfc9485caf881dacaab5b5e5bf6084463ffc634",
+      "reason": "同じ24件の直接試験を成功させ、中断・状態変更・修正回数の3条件の変更を同じ試験のassertionで検出し、元ファイルの不変性をassertする。",
+      "sources": [
+        "REQ-206"
+      ],
+      "tests": [
+        {
+          "file": "tests/run-decision-mutations.test.ts",
+          "contains": "[REQ-206]",
+          "sha256": "8a3fec58f6e7d8367606054eef907f1ec90ea1128860ee8a9b5dd22f6735f154"
+        }
+      ]
+    },
+    {
+      "id": "SCN-87b304fc0911532a0b69",
+      "status": "reviewed",
+      "scenarioSha256": "186f3ee90b19f128abdd0bc39b06f944aeaab8142192bc1a82bd6bf5186a1889",
+      "reason": "既存テストのassertion行を消す実際のエンジン変更で、終了コード1、コミット不増、未完了タスクと理由をassertする。",
+      "sources": [
+        "REQ-201"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "[REQ-201] 既存のテスト",
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+        }
+      ]
+    },
+    {
+      "id": "SCN-48f6a4fd26b21b19b555",
+      "status": "reviewed",
+      "scenarioSha256": "d5b450ea94916b8a316dfb1bb672519d7d3eb7cce0fec2c0ab8de94df32cbd31",
+      "reason": "実際のエンジンがexpect(true).toBe(true)へ変えたときに、理由とファイルを表示し、コミットしないことをassertする。",
+      "sources": [
+        "REQ-201"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "[REQ-201] 必ず通る検査",
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+        }
+      ]
+    },
+    {
+      "id": "SCN-f7b1249c3270b37a9782",
+      "status": "reviewed",
+      "scenarioSha256": "c36aae93f2dc63145ec94f071f38365a44a27c2792f673f37825590448fcd895",
+      "reason": "assertionを足すだけの実際のエンジン変更を止めず、タスクを完了にすることをassertする。",
+      "sources": [
+        "REQ-201"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "[REQ-201] テストを足す",
+          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+        }
+      ]
+    },
+    {
+      "id": "SCN-896157c166b6c8ff573a",
+      "status": "unreviewed",
+      "scenarioSha256": "0f17bc00575f808e6f839e307cc61172297e6dfeeb9d0f1db76a66e0915d3a8d",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-2a023efc151f0067b5fb",
+      "status": "unreviewed",
+      "scenarioSha256": "07bcb4a01e91057bffc8a0e7b253374473771f387b664b55bb0351bccd88ce0a",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-db94a4def5926c7d1553",
+      "status": "unreviewed",
+      "scenarioSha256": "c9491925d1085d05072e523f8f02ce12c81dc3f3db432d2e680508e96418ed8e",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-563595f07921a4a180c2",
+      "status": "unreviewed",
+      "scenarioSha256": "633a6ee52bedbea4f6ac806d71f2fa7013a3c9df574a274322e3ed95fe198aa9",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-468dd0a0c65faccb82a5",
+      "status": "unreviewed",
+      "scenarioSha256": "3330c3bb7c051c0c26683dac9e1c1c6bd0fd5d7d46ad46435a8b405db14a589f",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-879576b891dd1b98c99d",
+      "status": "unreviewed",
+      "scenarioSha256": "f932a1090c7c01190af890998244c036657e4b5e2b89cc134bd336d5e90fabfb",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-d0bd3332acecbc0909f7",
+      "status": "unreviewed",
+      "scenarioSha256": "a5cd4d35e2f5e88f33411aa43edfe545ae941cbefc5d861b20e43919b10c1029",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-2c06bf9dc9cae42f137a",
+      "status": "unreviewed",
+      "scenarioSha256": "38fb98fc71c7b32a19d5a650fed09c58d869945c1280b946e51da9ddd09ba558",
+      "reason": "対応候補のassertionの内容は未精査"
+    },
+    {
+      "id": "SCN-88adbacf54f7c398d8ef",
+      "status": "unreviewed",
+      "scenarioSha256": "25bb5bd1fa0395bfa7ceab237604c6903f8077b976109501a70078b22365004a",
+      "reason": "対応候補のassertionの内容は未精査"
     }
   ]
 }

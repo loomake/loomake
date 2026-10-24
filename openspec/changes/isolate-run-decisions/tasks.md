@@ -7,4 +7,4 @@
 
 ## 2. 統合検証
 - [x] 2.1 用語と責務、TDDの結果、changesetを更新する
-- [ ] 2.2 `pnpm -s verify --change isolate-run-decisions --done` を通す <!-- loomake:gate=done -->
+- [x] 2.2 `pnpm -s verify --change isolate-run-decisions --done` を通す <!-- loomake:gate=done -->
