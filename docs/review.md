@@ -1338,3 +1338,5 @@ Node22.12.0の関連81件は77件成功・4件失敗だった。pushの試験は
 7件の対応を追加し、観測の追加でソースハッシュが変わった既存41件の対応も再照合した。現在のNode24全体成功とNode22の失敗を含む監査は、469件中、確認済み448件・置換5件・未確認7件・無効9件でexit 1。kitの製品コードが変わったため、過去のNode22配布物の成功を今回の根拠として持ち越していない。このため無効には配布物の再実行待ちも含む。[環境別レポート](../openspec/changes/count-supervisor-startup-budget/executions.json)・[統合結果](../openspec/changes/count-supervisor-startup-budget/integration-results.json)・[対応のレビュー](../openspec/changes/count-supervisor-startup-budget/scenario-review-results.json)・[段階ごとの診断](../openspec/changes/audit-scenario-evidence/parallel-diagnostics-results.json)に記録した。
 
 実40秒のフック、CIの失敗時の公開停止と認証情報の動的な確認、別OS・実接続・公開後の証明は残る。REQ-144の配布物CIにはNode20.19.0が残り、承認済みのREQ-142のNode22.12.0への変更との仕様整理も必要である。今回は区切りでコミット・PRを作成する依頼に合わせ、新たな改善には着手しない。全15項目の点数は据え置き、90点以上は6／15項目である。
+
+PRの準備時に取得したmainは`7627fe3`で、このブランチと分岐した後に50コミット進んでいた。作業ツリーを変えないmerge-treeの確認では、archiveに伴う記録ファイルの移動、対応表、既存試験に競合がある。今回の906件成功と評価はmainを統合する前の作業ブランチの結果であり、最新mainへ統合した結果ではない。区切りの依頼に合わせて検証済みの状態を保存し、競合とNode22の失敗を明記したドラフトPRにする。mainとの統合と再検証は残る。

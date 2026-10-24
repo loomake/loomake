@@ -55,5 +55,15 @@
     "performanceAndResources": 89,
     "incidentRecovery": 90
   },
-  "milestone": "User requested stop at next natural checkpoint, commit and create PR; no new improvements started after that instruction."
+  "milestone": "User requested stop at next natural checkpoint, commit and create PR; no new improvements started after that instruction.",
+  "publicationPreparation": {
+    "main": "7627fe3",
+    "branchHead": "487f27f50f122cfaf83fa308dbc69ca75438b2ba",
+    "mainOnlyCommits": 50,
+    "branchOnlyCommits": 43,
+    "mergePreview": "git merge-tree --write-tree --name-only HEAD origin/main",
+    "conflicts": true,
+    "integrationPerformed": false,
+    "scope": "User requested a checkpoint and PR; preserve the verified branch without starting a broad integration of50 upstream commits. DraftPR explicitly discloses conflict and pre-integration verification."
+  }
 }
