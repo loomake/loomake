@@ -25,3 +25,9 @@
 - [x] 5.1 未追跡ファイルの表示とカスタムopenspecDirでのrun全体の停止を試験する
 - [x] 5.2 実際のCLIへSIGINTを送り、コミット・未完了の変更・記録を確認する
 - [x] 5.3 対応表を更新し、`pnpm -s verify --change audit-scenario-evidence --done` を通す <!-- loomake:gate=done -->
+
+## 6. 下限Nodeとオフライン
+
+- [x] 6.1 公式のNode 20.19.0と配布物で実行する検証経路を用意する
+- [x] 6.2 通信拒否の対照実験を行い、同じ制限下でtraceとCLIの動作を確認する
+- [x] 6.3 実行結果・対応表・評価を更新し、`pnpm -s verify --change audit-scenario-evidence --done` を通す <!-- loomake:gate=done -->

@@ -4,10 +4,10 @@
 
 | 対象 | 宣言・CIの対象 | 今回のローカル確認 |
 |---|---|---|
-| 配布物 | package.jsonのenginesはNode.js 20.19以上 | Node.js 24でtarballから主要コマンドを確認 |
+| 配布物 | package.jsonのenginesはNode.js 20.19以上 | Linux ARM64のNode.js 24と20.19.0でtarballから主要コマンドを確認 |
 | 開発 | Node.js 24、package.jsonのpackageManagerにあるpnpm | 同じ環境で型・lint・テスト・ビルドを確認 |
 | OS | GitHub ActionsのLinux・macOS・Windows | 現在のLinuxホストで確認。別OSのCI成功は未確認 |
-| Node下限 | Node.js 20.19.0で配布物を確認するCIジョブ | 今回のホストで下限Nodeを実行した結果ではない |
+| Node下限 | Node.js 20.19.0で配布物を確認するCIジョブ | 公式の20.19.0をチェックサムと照合し、Linux ARM64で配布物とrunの中断を確認 |
 | runのエンジン | claude-code | 代替コマンドで接続を試験。実エンジンの検証とは区別 |
 | テストレポート | Vitest・Jest形式のJSON | fixtureと実際のVitestの結果を検査 |
 
@@ -38,3 +38,11 @@ doctorは単純なnpm・pnpmのscriptの存在、POSIXの実行権限、導入�
 古い形式を維持する判断にはfixtureを使う。対応を外す場合は、出典・差分仕様・移行手順・テストを同じ変更に含める。すべての古い版を永久に維持する方針ではない。現在はnpm公開前で、修正対象はmainとする。
 
 具体的な検証手順は[testing.md](testing.md)、報告は[SUPPORT.md](../SUPPORT.md)、公開時の確認は[publishing.md](publishing.md)を参照する。
+
+## 下限Nodeと通信拒否下の確認
+
+2026-10-24に、Node 24で準備した5パッケージを、公式のNode 20.19.0で実行した。Linux ARM64版のアーカイブを[公式のチェックサム](https://nodejs.org/dist/v20.19.0/SHASUMS256.txt)と照合した。主要コマンド・公開API・証拠の保存とレポートの25行、runのタスクコミットとSIGINT後の変更保持を確認した。
+
+この検証ではLinuxのseccompを子プロセスへ継承し、通信システムコールをEPERMで拒否した。通常のローカル接続がECONNREFUSEDとなる対照と、制限下の接続がEPERMとなる対照を確認している。同じ制限下でtrace recordとreportが成功した。Linuxのネットワーク名前空間を作成する権限はなかったため、この方法を使った。
+
+結果と実行ファイル・検証スクリプト・配布物のハッシュは[検証記録](../openspec/changes/audit-scenario-evidence/runtime20-results.json)に保存した。手順は[testing.md](testing.md)に記載した。これはLinux ARM64での実行結果であり、別OSのCI成功や、実際のClaude Code・GitHub接続の成功を示す結果ではない。

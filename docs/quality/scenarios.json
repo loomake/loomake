@@ -721,9 +721,19 @@
     },
     {
       "id": "SCN-1724eb7440708bc07d16",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "195d8613452d1aa79e2d24d3e5a6c4891fe3df049b75cd0cbae1ed57d7df1c47",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-144"
+      ],
+      "reason": "Node24でビルド・pack・専用fixtureへの導入を行い、公式Node20.19.0で公開APIと主要コマンドをassertした。Node20側は開発ツールを実行しない。CI設定の存在と、今回のLinux ARM64での実行成功を区別する。",
+      "tests": [
+        {
+          "file": "scripts/runtime-compatibility.mjs",
+          "contains": "指定したNodeの配布物で主要コマンドと公開APIを検証する",
+          "sha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
+        }
+      ]
     },
     {
       "id": "SCN-ec1d8f618f871244e405",
@@ -3047,15 +3057,25 @@
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "POSIXの配布物を実際のSIGINTで中断する",
-          "sha256": "03bd3b95c268593e43cf39a5ed24c6c0bb8b86ed054a1999aa44ca47ab1a7147"
+          "sha256": "fe9b9074fc84d9038c02d7d43770faf024a02104786a357f07a14da001750816"
         }
       ]
     },
     {
       "id": "SCN-96f96fc165511da2bbd3",
-      "status": "unreviewed",
-      "reason": "enginesの宣言は比較しているが、下限Node 20.19でrunを実行した結果は未確認。",
-      "scenarioSha256": "7ab730200fd20b7331bcdab52d609372200b80d90206455dbde68bcb976d76a9"
+      "status": "reviewed",
+      "scenarioSha256": "7ab730200fd20b7331bcdab52d609372200b80d90206455dbde68bcb976d76a9",
+      "sources": [
+        "REQ-125"
+      ],
+      "reason": "Node20.19.0とそのPATHで配布物CLIを起動し、タスクコミット・途中のファイル保持・実際のSIGINT・中断summary・エンジン終了をassertする。保存結果のNode版も親プロセスと一致することを比較する。Linux ARM64と代替エンジンの結果である。",
+      "tests": [
+        {
+          "file": "scripts/runtime-compatibility.mjs",
+          "contains": "指定したNodeの配布物でrunのタスクコミットとSIGINT後の変更保持を検証する",
+          "sha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
+        }
+      ]
     },
     {
       "id": "SCN-da3119a636cd83d22349",
@@ -3267,15 +3287,35 @@
     },
     {
       "id": "SCN-7becee6258eb49ff7efa",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "e77e3b10f83b130e8ab4c6a3177507925c193dbdd8facd2ba8197af8ce449d9c",
-      "reason": "ネットワーク関連import・fetchの静的検査と通常のローカル実行はあるが、接続不能の環境での実行は未確認。"
+      "sources": [
+        "REQ-084"
+      ],
+      "reason": "Linux seccompの通信拒否を継承したNode20で、対照のsocketがEPERMになることを確認した。同じ制限下でtrace recordの保存とtrace reportのJSON・全25行の合格をassertする。実行ファイルと入力ハッシュはruntime20-results.jsonに保存した。",
+      "tests": [
+        {
+          "file": "scripts/runtime-compatibility.mjs",
+          "contains": "通信拒否の下でtrace recordが保存されtrace reportの全25行を出力する",
+          "sha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
+        }
+      ]
     },
     {
       "id": "SCN-fae2b8b93f59b5ad7abf",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "f003e1f803559f401624e084395317830d082e7fe7463e811e2e451042eb6578",
-      "reason": "engines宣言の検査だけでは下限Nodeでの実行成功を示さない。このホストの実行はNode 24であり、20.19の結果は未確認。"
+      "sources": [
+        "REQ-089"
+      ],
+      "reason": "公式チェックサムを照合したNode 20.19.0で、Node24がpackした配布物を実行した。checkのassertionで記録の保存とレポート25行を確認した。Linux ARM64の結果で、開発用Vitest全体をNode20で実行した結果ではない。",
+      "tests": [
+        {
+          "file": "scripts/runtime-compatibility.mjs",
+          "contains": "指定したNodeの配布物で主要コマンドと公開APIを検証する",
+          "sha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
+        }
+      ]
     },
     {
       "id": "SCN-d116692eed9ee3f29f8a",
@@ -3572,9 +3612,19 @@
     },
     {
       "id": "SCN-5475fccf91630747c15e",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "ccaddd1598270a491b5ba308e89b9a48eddb93d2671eb3444f46d9813dc24589",
-      "reason": "ネットワーク関連import・fetchの静的検査はあるが、接続不能の環境でreportを実行した結果は未確認。"
+      "sources": [
+        "REQ-084"
+      ],
+      "reason": "Linux seccompの通信拒否を継承したNode20で、対照のsocketがEPERMになることを確認した。同じ制限下でtrace recordの保存とtrace reportのJSON・全25行の合格をassertする。実行ファイルと入力ハッシュはruntime20-results.jsonに保存した。",
+      "tests": [
+        {
+          "file": "scripts/runtime-compatibility.mjs",
+          "contains": "通信拒否の下でtrace recordが保存されtrace reportの全25行を出力する",
+          "sha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
+        }
+      ]
     },
     {
       "id": "SCN-1038977605831c5c0ed5",
@@ -3594,9 +3644,19 @@
     },
     {
       "id": "SCN-fa361b08b4790cff678f",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "6ebde898b715374337b1fc59777d65398b894cb6bc0f1b5cf6a799a9396c0787",
-      "reason": "engines宣言とCI設定の存在から、下限Nodeの実行成功を推測しない。20.19での実行結果は未確認。"
+      "sources": [
+        "REQ-089"
+      ],
+      "reason": "公式チェックサムを照合したNode 20.19.0で、Node24がpackした配布物を実行した。checkのassertionで記録の保存とレポート25行を確認した。Linux ARM64の結果で、開発用Vitest全体をNode20で実行した結果ではない。",
+      "tests": [
+        {
+          "file": "scripts/runtime-compatibility.mjs",
+          "contains": "指定したNodeの配布物で主要コマンドと公開APIを検証する",
+          "sha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
+        }
+      ]
     },
     {
       "id": "SCN-3d7455f45bf52d2cfa6a",

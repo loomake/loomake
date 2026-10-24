@@ -4,18 +4,25 @@
   "ok": false,
   "counts": {
     "total": 388,
-    "reviewed": 224,
+    "reviewed": 230,
     "superseded": 2,
-    "unreviewed": 162,
+    "unreviewed": 156,
     "invalid": 0
   },
   "issues": [],
   "exitCode": 1,
   "specFiles": 39,
   "testRun": {
-    "total": 676,
-    "passed": 676,
+    "total": 677,
+    "passed": 677,
     "failed": 0
+  },
+  "additionalRuntimeChecks": {
+    "total": 4,
+    "passed": 4,
+    "node": "v20.19.0",
+    "platform": "linux",
+    "arch": "arm64"
   },
   "gateAttempts": [
     {
@@ -123,19 +130,41 @@
       "scope": "SIGINTの自動試験を追加した最終結果",
       "settingsChanged": false,
       "testReportSha256": "b43e00b999a15bbd2736d545a51fbdc0f32f5094d36bc64fece632c6a36b091c"
+    },
+    {
+      "exitCode": 0,
+      "total": 677,
+      "passed": 677,
+      "failed": 0,
+      "scope": "io_uringの拒否追加前",
+      "settingsChanged": false,
+      "testReportSha256": "574d32513268abc721a860692d0e6b3660437e25b0dd5cd9d816d0a33dae2fe9"
+    },
+    {
+      "exitCode": 0,
+      "total": 677,
+      "passed": 677,
+      "failed": 0,
+      "scope": "io_uringも拒否した最終結果",
+      "settingsChanged": false,
+      "testReportSha256": "8fd9eb8a3b4a8b0c6c706217248d431ea341a6abe3bd60fac2df64b7845932ae"
     }
   ],
   "snapshot": {
-    "baseCommit": "4882fe6",
-    "patchCommit": "216e00d",
-    "isolation": "detached Git worktree",
-    "copiedFiles": [
-      "docs/quality/scenarios.json",
-      "openspec/changes/audit-scenario-evidence/tasks.md",
-      "packages/runner/test/run-conditions.test.ts",
-      "tests/package-artifacts.test.ts"
+    "baseCommit": "1c69d1f",
+    "patchCommits": [
+      "f08592a",
+      "b529675"
     ],
-    "note": "後続のリファクタリング・設定変更を含む現在の作業ツリー全体の合格を主張しない。検証対象のハッシュはinputsに保存した。"
+    "isolation": "detached Git worktree",
+    "copiedTrackingFiles": [
+      "docs/quality/scenarios.json",
+      "openspec/changes/audit-scenario-evidence/tasks.md"
+    ],
+    "comparedCurrentCodeFiles": 151,
+    "currentCodeMatches": true,
+    "changedCodeFiles": [],
+    "note": "Node20は配布物の検査だけに使い、開発用の全体テストと型・lintはNode24で実行した。未実行のOSとCIの成功は主張しない。"
   },
   "inputs": {
     "specs": {
@@ -185,8 +214,8 @@
       "tests/input-boundaries.test.ts": "89a368ec8c39e79bd883da212b897401371958751a3dba23ddc136ec71861829",
       "tests/kit-assets.test.ts": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40",
       "tests/monorepo.test.ts": "d98089ca14bfcca1de2deef3e2b2a134dac4fb3b61c882e2404b14c7d98f7d56",
-      "tests/package-artifacts.test.ts": "03bd3b95c268593e43cf39a5ed24c6c0bb8b86ed054a1999aa44ca47ab1a7147",
-      "tests/package-workflows.test.ts": "70a50c999af6bcf1b0546d5ebc28983730c4219c85aa6d34264623114335954d",
+      "tests/package-artifacts.test.ts": "fe9b9074fc84d9038c02d7d43770faf024a02104786a357f07a14da001750816",
+      "tests/package-workflows.test.ts": "c82be3653a952f37c8e5ad976fe0d00aa2028fef9d3ef16eca6a75e8450622bf",
       "tests/release-security.test.ts": "062a1d920f8e435ed82850379e18c63e28af431c5aa2d03865a20a3a8914b75e",
       "tests/scenario-audit.test.ts": "0081fbabce3363fc49dece2bc2cd3fcf7e710bab573d3241d7c49cd9d683b19f",
       "packages/cli/test/arguments.test.ts": "ecd21aa5a6c4f22075208b5c7299722d25198cfe42e95be9ff2af0a0eed9f381",
@@ -201,6 +230,11 @@
       "packages/core/test/tasks.test.ts": "6208610676ee0a0335603847d61d26281ba29e23421ec3db4b38b23cea45be5a",
       "packages/core/test/test-report.test.ts": "c7153a95adba3abf1d612e07134454d17aa93ece23874ffc140db2d5136859f1",
       "packages/core/test/trace.test.ts": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40",
+      "packages/kit/test/doctor-command.test.ts": "a0e75f4a867c6a7c85dd0959a9737cb2fe4ad50f8d4dd84dfe9e9ab41b1ea0e6",
+      "packages/kit/test/doctor-diagnostics.test.ts": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0",
+      "packages/kit/test/input.test.ts": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985",
+      "packages/kit/test/process.test.ts": "ac53e9c06cdbdabcc611a457f0437074f42a784eadb8580fdc605ff29266828c",
+      "packages/kit/test/verify.test.ts": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c",
       "packages/runner/test/diagnostic-redactor.test.ts": "82f934a3f6a9d4e4fea20f7137f465651f3d716c3697e0333cf97e787eaa28ef",
       "packages/runner/test/engine-safety.test.ts": "7c75c2f45e35c3daf7c65fb9551eb924a0b3d7e34656a71cd0cc3ae486711317",
       "packages/runner/test/evidence-storage.test.ts": "16cd666b698613e965a0c1547e97b68a56431b2f576b7f9e45caf7954adbeebb",
@@ -223,23 +257,29 @@
       "packages/trace/test/record.test.ts": "c2bb3939cea0fdf9786b20c2a4fd2dfa500c1904c71183d648fc7c2b626379d4",
       "packages/trace/test/report.test.ts": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176",
       "packages/trace/test/serialization.test.ts": "6cf85e33ea1af754e0245fc4259f994504be7310ea55c96abc971e81ebd5c247",
-      "packages/kit/test/doctor-command.test.ts": "a0e75f4a867c6a7c85dd0959a9737cb2fe4ad50f8d4dd84dfe9e9ab41b1ea0e6",
-      "packages/kit/test/doctor-diagnostics.test.ts": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0",
-      "packages/kit/test/input.test.ts": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985",
-      "packages/kit/test/process.test.ts": "ac53e9c06cdbdabcc611a457f0437074f42a784eadb8580fdc605ff29266828c",
-      "packages/kit/test/verify.test.ts": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
+      "scripts/runtime-compatibility.mjs": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
     },
-    "testReportSha256": "b43e00b999a15bbd2736d545a51fbdc0f32f5094d36bc64fece632c6a36b091c",
-    "reviewSha256": "e20632899accc3717a2df8bb06a0fd70c51b5a83f1c27047cdd103a8cb49926a",
+    "testReportSha256": "3258424f473b6512f79afb2d9409fe31464a29aedc5cbd242d5d69242102bf14",
+    "reviewSha256": "d3245124d2baba0f50790802ad50e6e1b62a77f06a97bd25ad100f7c94001376",
     "scriptSha256": "279e59e68ac4104a3bbb69289eaf02972596ca4db0a1351d04fb0b2ed2a33a39"
   },
-  "sigintSmoke": {
-    "file": "openspec/changes/audit-scenario-evidence/sigint-results.json",
-    "sha256": "f00138773ca29bdc699c9ee604f336e98380bf49bdff0099a824a9541693080a",
-    "platform": "linux",
-    "node": "v24.21.0",
-    "ok": true,
-    "scope": "配布物CLIと代替エンジン。Windowsの中断は未確認。",
-    "harnessFix": "最初のスクリプトで誤った項目名done/remainingを参照した。定義されたdoneTasks/remainingTasksへ修正し、新しいfixtureで再実行した。"
+  "runtimeEvidence": {
+    "resultsFile": "openspec/changes/audit-scenario-evidence/runtime20-results.json",
+    "resultsSha256": "8db54fb9d28be476e7814897691719c6497d814e63ac9813c0988f8e253bdcc4",
+    "reportFile": "openspec/changes/audit-scenario-evidence/runtime20-report.json",
+    "reportSha256": "4b79d9dea24cd8d46668d5c0d1bf824adf0399194be261c1e76e97b8d33eb184",
+    "combinedReportSha256": "3258424f473b6512f79afb2d9409fe31464a29aedc5cbd242d5d69242102bf14",
+    "reports": [
+      {
+        "scope": "full-vitest-node24",
+        "sha256": "8fd9eb8a3b4a8b0c6c706217248d431ea341a6abe3bd60fac2df64b7845932ae",
+        "tests": 677
+      },
+      {
+        "scope": "runtime-node20-denied-network",
+        "sha256": "4b79d9dea24cd8d46668d5c0d1bf824adf0399194be261c1e76e97b8d33eb184",
+        "checks": 4
+      }
+    ]
   }
 }
