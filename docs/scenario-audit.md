@@ -22,7 +22,7 @@ node scripts/scenario-audit.mjs .loomake/quality/scenario-audit-new
 node scripts/scenario-audit.mjs .loomake/quality/scenario-audit-other docs/quality/scenarios.json .loomake/test-report.json
 ```
 
-出力はaudit.jsonとaudit.mdで、全件数・状態・仕様の場所・理由・対応試験を含む。JSONには候補と入力ハッシュも残す。[現在の一覧](quality/scenario-audit.md)は、この出力から作る。実行結果は[results.json](../openspec/changes/audit-scenario-evidence/results.json)を参照する。
+出力はaudit.jsonとaudit.mdで、全件数・状態・仕様の場所・理由・対応試験を含む。JSONには候補と入力ハッシュも残す。[現在の一覧](quality/scenario-audit.md)は、この出力から作る。実行結果は[results.json](../openspec/changes/archive/2026-10-24-audit-scenario-evidence/results.json)を参照する。
 
 ## レビューを記録する
 
@@ -45,10 +45,10 @@ node scripts/scenario-audit.mjs .loomake/quality/scenario-audit-other docs/quali
 
 未確認には、試験が存在するか内容をまだ精査していないものが含まれる。すべてを不具合と断定せず、条件と結果の不足を調べる。Linux上の静的検査を、別OS・実エンジン・実際のGitHub接続の成功の根拠として使わない。
 
-直近の件数と検証時点は[対応表](quality/scenario-audit.md)と[実行結果](../openspec/changes/audit-scenario-evidence/results.json)を参照する。独立したコピーで検証した場合は、そのコミットと追加したファイルのハッシュを記録する。後続の変更を、そのコピーの成功結果から合格扱いにしない。未確認が残る間は、全Scenarioの検証や全評価90点の達成とは報告しない。
+直近の件数と検証時点は[対応表](quality/scenario-audit.md)と[実行結果](../openspec/changes/archive/2026-10-24-audit-scenario-evidence/results.json)を参照する。独立したコピーで検証した場合は、そのコミットと追加したファイルのハッシュを記録する。後続の変更を、そのコピーの成功結果から合格扱いにしない。未確認が残る間は、全Scenarioの検証や全評価90点の達成とは報告しない。
 
 ## 別のNodeで実行した確認を加える
 
 `runtime-compatibility.mjs`は、実際に成功したチェックをreport.jsonのtestResultsへ出す。Node下限とオフラインの確認を通常の全体レポートへ合わせる場合は、両方のtestResultsを残し、元のレポートのハッシュと実行範囲も保存する。通常のVitestの件数と、別環境の4チェックは区別する。失敗・skipを除外したり、同じテスト名の成功だけを採用したりしない。
 
-照合前には、runtimeの結果にあるスクリプト・通信拒否フィルター・配布物のハッシュを確認する。レポートのパスは実行した作業コピーの中を指す必要がある。Nodeの宣言や候補のREQ-IDだけで、別環境での成功を補わない。今回のNode20の根拠は[実行結果](../openspec/changes/audit-scenario-evidence/runtime20-results.json)に保存した。
+照合前には、runtimeの結果にあるスクリプト・通信拒否フィルター・配布物のハッシュを確認する。レポートのパスは実行した作業コピーの中を指す必要がある。Nodeの宣言や候補のREQ-IDだけで、別環境での成功を補わない。今回のNode20の根拠は[実行結果](../openspec/changes/archive/2026-10-24-audit-scenario-evidence/runtime20-results.json)に保存した。

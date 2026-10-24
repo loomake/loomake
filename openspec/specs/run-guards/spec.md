@@ -132,7 +132,7 @@ Source: REQ-138
 - **THEN** パスを分断せずに違反を検出する
 
 ### Requirement: テストの検査を弱める変更の検出
-エンジンの変更をコミットする前に、HEAD にあるテストファイルの差分で、消した行のうち検査の行（`expect(` か `assert` を含む行）の数が、足した行のうち検査の行の数より多いときは、不正な直し方として、そのファイルと理由を表示し、コミットせずに終了コード 1 で止まる SHALL。テストファイルに、同じリテラルどうしを比べる検査（`expect(true).toBe(true)`・`expect(1).toEqual(1)`・`assert.equal('a', 'a')` など）を足したときも、同じく止まる SHALL。止まったときの扱いは REQ-109〜REQ-112 と同じとする SHALL。
+エンジンの変更をコミットする前に、HEAD にあるテストファイルの差分で、消した行のうち検査の行（コメントと import・require の行を除き、`expect(`・`assert(`・`assert.<名前>(` を呼ぶ行）の数が、足した行のうち検査の行の数より多いときは、不正な直し方として、そのファイルと理由を表示し、コミットせずに終了コード 1 で止まる SHALL。テストファイルに、同じリテラルどうしを比べる検査（`expect(true).toBe(true)`・`expect(1).toEqual(1)`・`assert.equal('a', 'a')` など）を足したときも、同じく止まる SHALL。止まったときの扱いは REQ-109〜REQ-112 と同じとする SHALL。
 
 Source: REQ-201
 
@@ -147,6 +147,10 @@ Source: REQ-201
 #### Scenario: テストを足す
 - **WHEN** エンジンが既存のテストファイルに `expect` を含むテストを足す
 - **THEN** run は止まらずにコミットする
+
+#### Scenario: import とコメントを消す
+- **WHEN** エンジンが既存のテストファイルから、使っていない `import { assert } from 'vitest'` の行と、`assert` を含むコメントの行を消す
+- **THEN** run はテストの検査を減らしたとはみなさず、コミットする
 
 ### Requirement: アサーションとテストの宣言の書き換えの検出
 エンジンを動かすたびに、`loomake run` は、HEAD にあったテストファイルから、アサーション（`expect`・`assert` の呼び出し）かテストの宣言（`it`・`test`・`describe` の呼び出し）を含む行を消すか書き換えたかを調べ、見つけたらその行を表示し、変更をコミットせずに止まる SHALL。消した行と同じ内容（前後の空白を除く）の行を同じファイルに足しているときは、行を移しただけとみなして止まらない SHALL。テストファイルは「テストの削除と skip・todo の検出」と同じとする SHALL。
@@ -168,3 +172,33 @@ Source: REQ-109
 #### Scenario: テストでない呼び出しの行を書き換える
 - **WHEN** エンジンが tests/a.test.ts の `const ok = /x/.test(s);` の行を書き換えて終える
 - **THEN** run は止まらずにコミットする
+
+### Requirement: git の設定とフックの変更の検出
+`loomake run` は、エンジンを呼ぶ前後で、git の設定ファイル（`git rev-parse --git-path config`）の中身と、フックのディレクトリ（`git rev-parse --git-path hooks`。`core.hooksPath` を反映する）にあるファイルの相対パスと中身を比べる SHALL。変わっていたら、`git add`・`git commit` を実行せず、タスクを完了にせずに、エンジンが git の設定かフックを変えたことと確かめる場所を表示して、終了コード 1 で止まる SHALL。run は書き換えを戻さない SHALL。run を始める前からあるフックは、これまでどおり run のコミットで動く SHALL。
+
+Source: REQ-198
+
+#### Scenario: エンジンがフックを足す
+- **WHEN** エンジンが `.git/hooks/pre-commit` を書く
+- **THEN** run はコミットせず、そのフックを実行せず、タスクは未完了のまま、エンジンが git の設定かフックを変えたことを表示して終了コード 1 で止まる
+
+#### Scenario: エンジンが git の設定を変える
+- **WHEN** エンジンが `git config core.hooksPath` を設定する
+- **THEN** run はコミットせず、エンジンが git の設定かフックを変えたことを表示して終了コード 1 で止まる
+
+#### Scenario: 前からあるフック
+- **WHEN** run を始める前から `.git/hooks/post-commit` があり、エンジンはフックも設定も変えない
+- **THEN** run はタスクを完了にしてコミットし、そのフックが動く
+
+### Requirement: git の設定の比較の範囲
+REQ-198 の比較では、リポジトリの設定ファイルだけでなく、git が実際に使う設定（`git config --list --show-origin` の出力。include・includeIf の先、利用者全体とシステム全体の設定、worktree の設定を含む）を、エンジンを呼ぶ前後で比べる SHALL。フックのディレクトリのシンボリックリンクは、リンク先をたどらずにリンクの文字列を比べ、リンク先がないリンクやディレクトリを指すリンクがあっても、run はエラーで落ちずに続ける SHALL。
+
+Source: REQ-204
+
+#### Scenario: include の先の設定を変える
+- **WHEN** リポジトリの設定が `include.path` で別のファイルを読み、エンジンがそのファイルに `core.fsmonitor` を書く
+- **THEN** run はコミットせず、エンジンが git の設定かフックを変えたことを表示して終了コード 1 で止まる
+
+#### Scenario: リンク先のないフック
+- **WHEN** run を始める前から、フックのディレクトリにリンク先のないシンボリックリンクがある
+- **THEN** run はスタックトレースで落ちずに、タスクを完了にしてコミットする

@@ -3,7 +3,7 @@
   "reviewer": "codex-self-review",
   "reviews": [
     {
-      "id": "SCN-b9ad949e3299a59455c1",
+      "id": "SCN-b3fb02612f1c7ff7df3b",
       "status": "reviewed",
       "scenarioSha256": "a00fd7ead4cd1713b8fe7ba0c5caa1c469a1a51668fb4b60a163d0616723a2e9",
       "reason": "同名の2Requirementとコード例内の見出しを入力し、2件だけで別IDになることをassertする。",
@@ -19,7 +19,7 @@
       ]
     },
     {
-      "id": "SCN-d941fcf41715eadf0a76",
+      "id": "SCN-d2c18a6b959b093b1374",
       "status": "reviewed",
       "scenarioSha256": "f59f2e7c0039ad4c96afe22abd53f58361db817ef69e9783d3c412adff0e7b69",
       "reason": "行移動でIDと内容ハッシュを保ち、規則本文・コード例の変更でハッシュが変わることをassertする。",
@@ -40,7 +40,7 @@
       ]
     },
     {
-      "id": "SCN-eb3da5b1cccad45d57fe",
+      "id": "SCN-9446942971418102520e",
       "status": "reviewed",
       "scenarioSha256": "174d1f09b5f0570144489900059148ed2682823bc913a578db0226201b35e349",
       "reason": "成功したREQ一致の実行だけを与え、候補1件と未確認、全体不合格をassertする。",
@@ -56,7 +56,7 @@
       ]
     },
     {
-      "id": "SCN-8b77c0f75e25932873c8",
+      "id": "SCN-0ed1e9ecdd4dd9982db1",
       "status": "reviewed",
       "scenarioSha256": "ba852478dff5570418d62d8f107a7ed4ba3e65dc9741aa28824f5dd1c3c0e415",
       "reason": "選択に一致する成功とfailed/pending/todo/skippedを混在させ、いずれも無効となることをassertする。",
@@ -72,7 +72,7 @@
       ]
     },
     {
-      "id": "SCN-ed5b38391ab233547e66",
+      "id": "SCN-50cb7a15f43e93bb5146",
       "status": "reviewed",
       "scenarioSha256": "c85ab992b8fced8cd5ac880ce152f0ab02609cfd97ce1c41c437009b532714f3",
       "reason": "未レビューの行を与え、集計とMarkdownの状態・行番号・名前が残ることをassertする。",
@@ -88,7 +88,7 @@
       ]
     },
     {
-      "id": "SCN-1a6e2ebad641ee0e82bf",
+      "id": "SCN-82566e61841cac69dc3c",
       "status": "reviewed",
       "scenarioSha256": "b72d1d982e77e325b81d889cc4894f9120b5f6cf2b173f65a84f8a8ae0671e38",
       "reason": "自分自身と存在しないIDを置換先にし、無効となることをassertする。",
@@ -582,7 +582,7 @@
       "reason": "対応候補のassertionの内容は未精査"
     },
     {
-      "id": "SCN-ed1b549d1ab8b0382764",
+      "id": "SCN-50e5281abe4101dbe951",
       "status": "reviewed",
       "scenarioSha256": "217a2a455d3b5999e0b5f4cb4400b236ac145bc725f668c3da0448722ff8c64b",
       "reason": "全既知形式・Bearer・秘密鍵とJSONの区切りで全分割位置と1文字ずつの転送をassertする。実stderrの転送も別の統合試験で確認する。",
@@ -598,7 +598,7 @@
       ]
     },
     {
-      "id": "SCN-6737b90ac5861dc5891d",
+      "id": "SCN-022a50a371bb72ab477e",
       "status": "reviewed",
       "scenarioSha256": "5df9c156a712cbe936dabcd58119f58a5ccdbdd3889dde7170338894bd10f688",
       "reason": "改行のない末尾、既知接頭辞、未完の秘密鍵ブロックを終了時に置換し、通常の短い診断を維持することをassertする。",
@@ -614,7 +614,7 @@
       ]
     },
     {
-      "id": "SCN-1ea3b6d673f99f00dfab",
+      "id": "SCN-e34ef22fd3950a3e6ff5",
       "status": "reviewed",
       "scenarioSha256": "9bf15243354bc63cc9e4f24f1ebbc33800515c8cdfbf2449823fa3b78a8ff61d",
       "reason": "4096・4097文字の境界と長い単語の後の通常出力をassertし、32MiBのold-space制限で64MiBの入力を処理する。",
@@ -630,7 +630,7 @@
       ]
     },
     {
-      "id": "SCN-892744352cbcc21e08c8",
+      "id": "SCN-345386298ee81626bc3a",
       "status": "reviewed",
       "scenarioSha256": "1735286c473463bfaa4b8ecb6a21e160d0b0324d1587e245a34d79952c30800f",
       "reason": "実際のrunの質問・停止理由・summaryにトークンが残らず、置換の印があることをassertする。",
@@ -646,7 +646,7 @@
       ]
     },
     {
-      "id": "SCN-58988ff67e04a22a6e90",
+      "id": "SCN-121a1d9508858ac4b9d2",
       "status": "reviewed",
       "scenarioSha256": "ef619e845ff9749c39b3608577f5260562fb5d400016acb98ab39310bc5d3ea9",
       "reason": "品質コマンドの出力にトークンを含め、progressコールバックへの転送前に置換されることをassertする。",
@@ -3248,22 +3248,6 @@
       ]
     },
     {
-      "id": "SCN-96f96fc165511da2bbd3",
-      "status": "reviewed",
-      "scenarioSha256": "7ab730200fd20b7331bcdab52d609372200b80d90206455dbde68bcb976d76a9",
-      "sources": [
-        "REQ-125"
-      ],
-      "reason": "Node20.19.0とそのPATHで配布物CLIを起動し、タスクコミット・途中のファイル保持・実際のSIGINT・中断summary・エンジン終了をassertする。保存結果のNode版も親プロセスと一致することを比較する。Linux ARM64と代替エンジンの結果である。",
-      "tests": [
-        {
-          "file": "scripts/runtime-compatibility.mjs",
-          "contains": "指定したNodeの配布物でrunのタスクコミットとSIGINT後の変更保持を検証する",
-          "sha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
-        }
-      ]
-    },
-    {
       "id": "SCN-da3119a636cd83d22349",
       "status": "reviewed",
       "scenarioSha256": "edfc3b0e3597db7ea45a9893717678fa1be947490c90f56e7e9d567408e885a8",
@@ -3483,22 +3467,6 @@
         {
           "file": "scripts/runtime-compatibility.mjs",
           "contains": "通信拒否の下でtrace recordが保存されtrace reportの全25行を出力する",
-          "sha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
-        }
-      ]
-    },
-    {
-      "id": "SCN-fae2b8b93f59b5ad7abf",
-      "status": "reviewed",
-      "scenarioSha256": "f003e1f803559f401624e084395317830d082e7fe7463e811e2e451042eb6578",
-      "sources": [
-        "REQ-089"
-      ],
-      "reason": "公式チェックサムを照合したNode 20.19.0で、Node24がpackした配布物を実行した。checkのassertionで記録の保存とレポート25行を確認した。Linux ARM64の結果で、開発用Vitest全体をNode20で実行した結果ではない。",
-      "tests": [
-        {
-          "file": "scripts/runtime-compatibility.mjs",
-          "contains": "指定したNodeの配布物で主要コマンドと公開APIを検証する",
           "sha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
         }
       ]
@@ -3825,22 +3793,6 @@
           "file": "packages/trace/test/report.test.ts",
           "contains": "レポートの見出しと表の列名は日本語",
           "sha256": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176"
-        }
-      ]
-    },
-    {
-      "id": "SCN-fa361b08b4790cff678f",
-      "status": "reviewed",
-      "scenarioSha256": "6ebde898b715374337b1fc59777d65398b894cb6bc0f1b5cf6a799a9396c0787",
-      "sources": [
-        "REQ-089"
-      ],
-      "reason": "公式チェックサムを照合したNode 20.19.0で、Node24がpackした配布物を実行した。checkのassertionで記録の保存とレポート25行を確認した。Linux ARM64の結果で、開発用Vitest全体をNode20で実行した結果ではない。",
-      "tests": [
-        {
-          "file": "scripts/runtime-compatibility.mjs",
-          "contains": "指定したNodeの配布物で主要コマンドと公開APIを検証する",
-          "sha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
         }
       ]
     },
@@ -4825,7 +4777,7 @@
       "scenarioSha256": "27b652c1950a5863a965da89a98332099d497f0ddb28420b3dc37756b7034047"
     },
     {
-      "id": "SCN-aae92504e0e72d747a61",
+      "id": "SCN-a6056e5bd3d983e4b88c",
       "status": "reviewed",
       "scenarioSha256": "e0ff12f10b19a69e67ce38d95bbb09aecc30c8b2ce675984c56f7d26fd5c18b0",
       "reason": "フック追加後にコミット・フック実行をせず停止し、変更と未完了タスクを保持することをassertする。",
@@ -4841,7 +4793,7 @@
       ]
     },
     {
-      "id": "SCN-d1582a614bc92e9f5b87",
+      "id": "SCN-d7d39c17d7835e8a7f11",
       "status": "reviewed",
       "scenarioSha256": "d48943e8f0475334e2bff912966e8d829e62e5d0b94a3fa630862ccf83e21127",
       "reason": "git設定変更後にコミットせず停止し、変更されたcore.hooksPathを保持することをassertする。",
@@ -4857,7 +4809,7 @@
       ]
     },
     {
-      "id": "SCN-f3c4fabea0ca19897c0e",
+      "id": "SCN-e2b0fd1feb136c74346c",
       "status": "reviewed",
       "scenarioSha256": "9df4637fd70b70d732454dc992c59bad3c265cb5f7035554068cd81a0cc2011b",
       "reason": "runが完了し、既存フックの記録行数がセットアップ時より増えることをassertする。",
@@ -4873,7 +4825,7 @@
       ]
     },
     {
-      "id": "SCN-c2e7acd2880c5793b7f3",
+      "id": "SCN-54d30493dc29c2dcf99b",
       "status": "reviewed",
       "scenarioSha256": "e921ce75697fea92d22f6f3ca1ec238cb4af3cf639bc4e0b90730aaee5058ca3",
       "reason": "実際のエンジン出力を保存し、各既知形式のトークンが残らずJSONの構文と通常の値を保つことをassertする。",
@@ -4889,7 +4841,7 @@
       ]
     },
     {
-      "id": "SCN-0b185b4ee72312e4c812",
+      "id": "SCN-1bc3f20524f50ea48acf",
       "status": "reviewed",
       "scenarioSha256": "f8cd9a2637a301894809d15fad239e86f87adb07bcabac0c6ef3f48a376ce663",
       "reason": "エンジン出力の秘密鍵ブロックと隣接するAPIトークンが保存先へ残らず、JSONを復号できることをassertする。",
@@ -4905,7 +4857,7 @@
       ]
     },
     {
-      "id": "SCN-d475063ec1b7175faeb6",
+      "id": "SCN-f1029ccdcc4b5cd2f1dd",
       "status": "reviewed",
       "scenarioSha256": "faf78958888d342dc16f9dc780179596537671548c01abfc9e5607b2d19937c6",
       "reason": "エンジン出力のBearerトークンと改行の後の各形式が保存先へ残らないことをassertする。",
@@ -4921,7 +4873,7 @@
       ]
     },
     {
-      "id": "SCN-8ac1e728bd931358b1b9",
+      "id": "SCN-549bb99bee93d251ec71",
       "status": "reviewed",
       "scenarioSha256": "67f2596cfcda595e808308791351f9f9c4f499d565dec85f5fc2074320a2006e",
       "reason": "中断・出力・期限・質問・終了コードが重なる観測値を与え、既存の優先順位と理由を直接assertする。",
@@ -4937,7 +4889,7 @@
       ]
     },
     {
-      "id": "SCN-c4fc61a3a8f5f2456a94",
+      "id": "SCN-adf87eaf15ff68af2bfa",
       "status": "reviewed",
       "scenarioSha256": "20afe90f6229cf933d7209257c8389254a8e684bc5ec27f49c1b682903550cd5",
       "reason": "HEADとGit内部の変更理由が重なるケース、失敗・中断との重なりで、先に示す理由と中断状態をassertする。",
@@ -4953,7 +4905,7 @@
       ]
     },
     {
-      "id": "SCN-6a8388a02ac4197ecdba",
+      "id": "SCN-43ebe89976ab629a4cc5",
       "status": "reviewed",
       "scenarioSha256": "a7a46910d175bae1d786fbdc00d1956367d927fa926124893a252c69aa8fdf9a",
       "reason": "正常終了だけの観測値に対してcontinueをassertする。",
@@ -4969,7 +4921,7 @@
       ]
     },
     {
-      "id": "SCN-557f8f5102b9a3f758dc",
+      "id": "SCN-248da42702f5e3845934",
       "status": "reviewed",
       "scenarioSha256": "bf607833c8a30f24306aa31e6804ef50fc614d62e49a030f931d4d0a2fe64739",
       "reason": "合格や期限超過と検証中の状態変更が重なっても、状態変更の理由で停止することをassertする。",
@@ -4985,7 +4937,7 @@
       ]
     },
     {
-      "id": "SCN-e7a89e26ef4e607b045a",
+      "id": "SCN-49a0bbaa0c78a779a507",
       "status": "reviewed",
       "scenarioSha256": "2a0624efac012e670b4377b9bc8d0adf5b826707218082ef3250940f173ed659",
       "reason": "修正回数が直前・一致・超過の場合と上限0を試し、期限と重なる場合の優先順位もassertする。",
@@ -5001,7 +4953,7 @@
       ]
     },
     {
-      "id": "SCN-a984b61249c6f8f16938",
+      "id": "SCN-7aaf0324d092f7f29813",
       "status": "reviewed",
       "scenarioSha256": "2e914a20169dc359484207494898c937ef1a12301a59db3782e8da70246df95a",
       "reason": "状態が変わらず合格した場合は、回数と期限の記録があってもpassedをassertする。",
@@ -5017,7 +4969,7 @@
       ]
     },
     {
-      "id": "SCN-11b4cd5f7312edc22c4a",
+      "id": "SCN-294443d7903c137ac1a7",
       "status": "reviewed",
       "scenarioSha256": "d6a86dc22eaec9aaed3ce10b15b33f0159d032c068650e4aa365ca66171e9448",
       "reason": "freezeした同じ観測値の繰り返しで同じ結果を返し、入力のJSON表現が変わらないことをassertする。",
@@ -5033,7 +4985,7 @@
       ]
     },
     {
-      "id": "SCN-0658634ca07c8ffa116b",
+      "id": "SCN-0f648dc6b00fbe51378e",
       "status": "reviewed",
       "scenarioSha256": "717270a92bb1edc5735b4f47dbfc9485caf881dacaab5b5e5bf6084463ffc634",
       "reason": "同じ24件の直接試験を成功させ、中断・状態変更・修正回数の3条件の変更を同じ試験のassertionで検出し、元ファイルの不変性をassertする。",
