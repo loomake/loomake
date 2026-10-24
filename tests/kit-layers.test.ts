@@ -17,13 +17,13 @@ export function importsOf(file: string, text: string): string[] {
   );
 }
 
-// REQ-207 の決まりに反する import。layer は runtime か機能のディレクトリ名
+// REQ-207 の決まりに反する import。layer は runtime か機能のディレクトリ名。
+// 外部のパッケージは @loomake/core だけを認める。@loomake/kit（自分の公開の入口）を経由すると、別の機能への依存を隠せるため
 export function forbiddenImports(file: string, text: string): string[] {
   const layer = relative(src, file).split(/[\\/]/)[0];
   return importsOf(file, text).filter((spec) => {
-    if (spec.startsWith('node:')) return false;
-    if (layer === 'runtime') return !(spec === '@loomake/core' || spec.startsWith('runtime/'));
-    if (spec.startsWith('@loomake/')) return false;
+    if (spec.startsWith('node:') || spec === '@loomake/core') return false;
+    if (layer === 'runtime') return !spec.startsWith('runtime/');
     return !(spec.startsWith(`${layer}/`) || spec.startsWith('runtime/') || spec === 'verify/config.ts');
   });
 }
@@ -51,6 +51,15 @@ describe('kit の中の依存の向き', () => {
     ['型だけの import', "import type { VerifyOptions } from '../verify/run.js';"],
   ])('[REQ-207] runtime/ から機能への %s を見つける', (_name, line) => {
     expect(forbiddenImports(join(src, 'runtime', 'process.ts'), `${line}\n`)).toEqual(['verify/run.ts']);
+  });
+
+  it.each([
+    ['runtime', "import { runVerify } from '@loomake/kit';"],
+    ['init', "import { runVerify } from '@loomake/kit';"],
+    ['doctor', 'export { runInit } from "@loomake/kit";'],
+    ['verify', "import { runRecord } from '@loomake/trace';"],
+  ])('[REQ-207] %s/ から公開の入口やほかのパッケージを経由する依存を見つける', (layer, line) => {
+    expect(forbiddenImports(join(src, layer, 'x.ts'), `${line}\n`)).toHaveLength(1);
   });
 
   it('[REQ-207] 機能から別の機能への import を見つけ、設定の読み込みは認める', () => {
