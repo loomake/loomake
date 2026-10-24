@@ -72,4 +72,22 @@ describe('実際に配るパッケージ', () => {
     expect(result.checks.every((entry: { ok: boolean }) => entry.ok)).toBe(true);
     expect(result.checks[0].result).toBe('EPERM');
   }, 80000);
+
+  it('[REQ-146] 配布物の公開型を使い、型の破壊的変更を利用側のコンパイルで検出する', () => {
+    const types = (name: string) => spawnSync(process.execPath, ['scripts/check-public-types.mjs', target, join(base, name)], { cwd: root, encoding: 'utf8', timeout: 35000 });
+    const healthy = types('types-healthy');
+    expect(healthy.status, healthy.stdout + healthy.stderr).toBe(0);
+    const declaration = join(target, 'consumer/node_modules/@loomake/core/dist/verify-result.d.ts');
+    const original = readFileSync(declaration, 'utf8');
+    try {
+      expect(original.split('ok: boolean')).toHaveLength(2);
+      writeFileSync(declaration, original.replace('ok: boolean', 'ok: string'));
+      const broken = types('types-broken');
+      expect(broken.status).toBe(1);
+      expect(broken.stdout).toContain('error TS2322');
+      expect(broken.stdout).toContain("Type 'boolean' is not assignable to type 'string'");
+    } finally { writeFileSync(declaration, original); }
+    const restored = types('types-restored');
+    expect(restored.status, restored.stdout + restored.stderr).toBe(0);
+  }, 110000);
 });
