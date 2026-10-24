@@ -1,0 +1,43 @@
+{
+  "sourceCommit": "97e61ba2a71a3e9789a182474dd1d6949be6a49e",
+  "scope": "main after PR #53; validation only; no implementation changes",
+  "specGate": {
+    "command": "pnpm -s verify --change audit-scenario-evidence --spec-only",
+    "exitCode": 0,
+    "logSha256": "30f76d05efaa822fee2041fb12136c5d12a785410ef17a4b910ba42fde512260"
+  },
+  "doneGate": {
+    "command": "pnpm -s verify --change audit-scenario-evidence --done",
+    "exitCode": 0,
+    "logSha256": "5d83d4c05b95f981bd01514e9f95b911c7f916d54c70566811c13e3c89ceaa91",
+    "tests": {
+      "numTotalTests": 838,
+      "numPassedTests": 838,
+      "numFailedTests": 0,
+      "numPendingTests": 0,
+      "success": true
+    },
+    "testReportSha256": "4eb09f575a466b4c891821882c786b3c18e3796c4f9205a38731f4001c0bf637"
+  },
+  "scenarioAudit": {
+    "exitCode": 1,
+    "error": "Scenarioの監査に失敗しました：Scenarioがありません：openspec/changes/require-node-22/specs/run/spec.md:3",
+    "reproduction": {
+      "current": {
+        "error": "Scenarioがありません：openspec/changes/require-node-22/specs/run/spec.md:3"
+      },
+      "removedOnly": {
+        "error": "Scenarioがありません：openspec/changes/require-node-22/specs/run/spec.md:3"
+      },
+      "addedOnly": {
+        "scenarios": [
+          "Node.js 22.12 で動く"
+        ]
+      }
+    },
+    "scriptSha256": "279e59e68ac4104a3bbb69289eaf02972596ca4db0a1351d04fb0b2ed2a33a39",
+    "inputSha256": "83a41bcc311daf5905fac7761d31ba200338c2dc6ed441c1a6c905016c9e7bbd",
+    "countsAvailable": false
+  },
+  "scoresReassessed": false
+}
