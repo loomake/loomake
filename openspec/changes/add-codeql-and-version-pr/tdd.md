@@ -7,3 +7,7 @@
 ## 1.2 CodeQL のワークフロー
 
 CodeQL のワークフローの起動条件・解析する言語・権限・SHA の固定を求めるテストを足し、ワークフローがないので失敗することを確かめた。codeql.yml と github/codeql-action の v4 のコミットの記録を足して、release-security とワークフローの 16 件が成功した。
+
+## 2.1 版を上げる PR
+
+版の上げ下げだけの変更・scripts も変えた変更・ほかのファイルの変更・version の変わらない変更を見分けるテストを足し、判定の関数がないので失敗することを確かめた。scripts/changeset-check.mjs に判定を足し、REQ-056 のテストは `changeset status` が失敗したときだけこの判定で合否を決めるようにして、monorepo の 27 件が成功した。一時的な worktree で `pnpm changeset version` をかけた状態を HEAD と比べ、49 ファイルの差分が版の上げ下げだけと判定されることも確かめた。

@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:f
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
+import { diffSince, versionOnlyProblem } from '../scripts/changeset-check.mjs';
 import { selectChanges, verifyArgs } from '../scripts/ci-gate.mjs';
 
 const root = join(import.meta.dirname, '..');
@@ -172,9 +173,37 @@ describe('changesets', () => {
     // CI と同じ基準で比べるため origin/main を優先する。ローカルの main は古いことがある。origin が無い checkout では main と比べる
     const base = run('git rev-parse --verify --quiet origin/main').status === 0 ? 'origin/main' : 'main';
     const r = run(`pnpm changeset status --since=${base}`);
-    expect(r.status, r.stdout + r.stderr).toBe(0);
+    // pnpm changeset version で版を上げるだけの PR は、changeset がなくても通す
+    if (r.status !== 0) expect(versionOnlyProblem(diffSince(root, base)), r.stdout + r.stderr).toBeNull();
     // Windows では changeset status に 10 秒を超えることがある（split-ci-gate-requirement の仮定 A-01）
   }, 60_000);
+});
+
+describe('版を上げるだけの変更', () => {
+  const pkg = (version: string, extra: object = {}) => JSON.stringify({ name: '@loomake/kit', version, dependencies: { '@loomake/core': 'workspace:*' }, ...extra });
+
+  it('[REQ-056] version・CHANGELOG・消化した changeset だけの変更は合格にする', () => {
+    expect(versionOnlyProblem([
+      { file: 'packages/kit/package.json', status: 'M', before: pkg('0.0.0'), after: pkg('0.1.0') },
+      { file: 'packages/kit/CHANGELOG.md', status: 'A' },
+      { file: '.changeset/close-cli-gaps.md', status: 'D' },
+    ])).toBeNull();
+  });
+
+  it('[REQ-056] version のほかに scripts も変えた変更は不合格にする', () => {
+    expect(versionOnlyProblem([
+      { file: 'packages/kit/package.json', status: 'M', before: pkg('0.0.0'), after: pkg('0.1.0', { scripts: { build: 'x' } }) },
+    ])).toContain('packages/kit/package.json');
+  });
+
+  it('[REQ-056] ほかのファイルの変更と、config.json の削除は不合格にする', () => {
+    expect(versionOnlyProblem([{ file: 'packages/kit/src/index.ts', status: 'M' }])).toContain('packages/kit/src/index.ts');
+    expect(versionOnlyProblem([{ file: '.changeset/config.json', status: 'D' }])).toContain('.changeset/config.json');
+  });
+
+  it('[REQ-056] version が変わっていなければ、版を上げる変更とみなさない', () => {
+    expect(versionOnlyProblem([{ file: '.changeset/x.md', status: 'D' }])).not.toBeNull();
+  });
 });
 
 describe('ライセンス', () => {
