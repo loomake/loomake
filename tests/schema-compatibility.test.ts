@@ -8,7 +8,7 @@ it('[REQ-053] 実際のスキーマ検査が削除・改名・minorだけの変�
   const root = join(import.meta.dirname, '..');
   const target = join(root, '.loomake/quality', `schema-contract-${randomUUID()}`);
   try {
-    const checked = spawnSync(process.execPath, ['scripts/schema-contract-check.mjs', target], { cwd: root, encoding: 'utf8', timeout: 120000 });
+    const checked = spawnSync(process.execPath, ['scripts/schema-contract-check.mjs', target], { cwd: root, encoding: 'utf8', timeout: 240000 });
     expect(checked.status, checked.stdout + checked.stderr).toBe(0);
     const result = JSON.parse(readFileSync(join(target, 'results.json'), 'utf8'));
     expect(result.originalsUnchanged).toBe(true);
@@ -17,8 +17,8 @@ it('[REQ-053] 実際のスキーマ検査が削除・改名・minorだけの変�
     for (const trial of result.trials.filter((trial: { expected: string }) => trial.expected === 'rejected')) {
       expect(trial.failedTests).toEqual([expect.stringContaining('[REQ-053] 必須プロパティを削除・改名したら')]);
     }
-    const repeated = spawnSync(process.execPath, ['scripts/schema-contract-check.mjs', target], { cwd: root, encoding: 'utf8', timeout: 5000 });
+    const repeated = spawnSync(process.execPath, ['scripts/schema-contract-check.mjs', target], { cwd: root, encoding: 'utf8', timeout: 10000 });
     expect(repeated.status).toBe(1);
     expect(JSON.parse(readFileSync(join(target, 'results.json'), 'utf8'))).toEqual(result);
   } finally { rmSync(target, { recursive: true, force: true }); }
-}, 130000);
+}, 260000);

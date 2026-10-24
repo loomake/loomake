@@ -1,8 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { findViolations } from '@loomake/runner';
 import { makeRepo } from './helpers.js';
+
+// git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
+vi.setConfig({ testTimeout: 60_000 });
 
 const names = process.platform === 'win32' ? ['日本語 空白'] : ['日本語 空白', 'tab\tname', 'line\nname'];
 

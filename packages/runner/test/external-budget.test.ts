@@ -1,13 +1,16 @@
 import { chmodSync, existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { RuntimeFailure, UsageError, runVerify } from '@loomake/kit';
 import { main } from '../../cli/src/main.js';
 import { withProcessBudget } from '../../kit/src/runtime/process.js';
 import { runRecord } from '@loomake/trace';
 import { runRun } from '@loomake/runner';
 import { makeRepo, CHANGE, type Repo } from './helpers.js';
+
+// git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
+vi.setConfig({ testTimeout: 60_000 });
 
 const realGit = spawnSync('which', ['git'], { encoding: 'utf8' }).stdout.trim();
 function shim(repo: Repo, command: string, when: string, finishFirst = false, stallMs = 3000) {

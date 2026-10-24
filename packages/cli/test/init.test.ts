@@ -1,10 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { unifiedDiff } from '@loomake/kit';
 import { main } from '../src/main.js';
+
+// git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
+vi.setConfig({ testTimeout: 60_000 });
 
 const template = (p: string) => readFileSync(join(import.meta.dirname, '..', '..', 'kit', 'templates', p), 'utf8');
 

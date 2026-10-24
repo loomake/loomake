@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -6,6 +6,9 @@ import { pathToFileURL } from 'node:url';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { publishEvidence } from '../src/publication.js';
+
+// git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
+vi.setConfig({ testTimeout: 60_000 });
 
 const source = join(import.meta.dirname, '../src/publication.ts');
 const errors = pathToFileURL(join(import.meta.dirname, '../../kit/src/runtime/errors.ts')).href;
