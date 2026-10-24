@@ -1,0 +1,42 @@
+{
+  "checkedOn": "2026-10-24",
+  "method": "GitHub connector fetch_commit at ref v4。github/codeql-action は gh api repos/github/codeql-action/commits/v4（2026-10-24）。upload-artifact・download-artifactはgh apiでmainの参照SHAを照合（2026-10-24）。artifact Actionsはv4の現行コミットを追加照合。",
+  "actions": [
+    {
+      "repository": "actions/checkout",
+      "ref": "v4",
+      "sha": "11d5960a326750d5838078e36cf38b85af677262",
+      "url": "https://github.com/actions/checkout/commit/11d5960a326750d5838078e36cf38b85af677262"
+    },
+    {
+      "repository": "actions/setup-node",
+      "ref": "v4",
+      "sha": "49933ea5288caeca8642d1e84afbd3f7d6820020",
+      "url": "https://github.com/actions/setup-node/commit/49933ea5288caeca8642d1e84afbd3f7d6820020"
+    },
+    {
+      "repository": "pnpm/action-setup",
+      "ref": "v4",
+      "sha": "b906affcce14559ad1aafd4ab0e942779e9f58b1",
+      "url": "https://github.com/pnpm/action-setup/commit/b906affcce14559ad1aafd4ab0e942779e9f58b1"
+    },
+    {
+      "repository": "github/codeql-action",
+      "ref": "v4",
+      "sha": "9b3254085494b55a0f7c4c2b3d2d52cc712ce370",
+      "url": "https://github.com/github/codeql-action/commit/9b3254085494b55a0f7c4c2b3d2d52cc712ce370"
+    },
+    {
+      "repository": "actions/upload-artifact",
+      "ref": "v4",
+      "sha": "ea165f8d65b6e75b540449e92b4886f43607fa02",
+      "url": "https://github.com/actions/upload-artifact/commit/ea165f8d65b6e75b540449e92b4886f43607fa02"
+    },
+    {
+      "repository": "actions/download-artifact",
+      "ref": "v4",
+      "sha": "d3f86a106a0bac45b974a628896c90dbdf5c8093",
+      "url": "https://github.com/actions/download-artifact/commit/d3f86a106a0bac45b974a628896c90dbdf5c8093"
+    }
+  ]
+}

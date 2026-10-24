@@ -1,4 +1,4 @@
-// trace.md の空のテンプレート（REQ-017）。見出しと列は kit の templates/trace.md と同じにする（trace.md の仮定 A-04）
+// trace.md の空のテンプレート（REQ-017）。見出しと列は kit の templates/trace.md と同じにする
 
 export function createTraceTemplate(options: { changeId: string }): string {
   return `# Trace: ${options.changeId}

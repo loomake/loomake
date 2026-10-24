@@ -20,7 +20,7 @@ public にする前に、コミットの履歴に秘密情報が入っていな�
 
 1. ブランチ `prepare-npm-publish-2` の PR を作って main に入れる。PR 本文には `loomake-change: prepare-npm-publish, require-node-22` を書く
 2. npm で `@loomake` organization を作り、公開権限を持つメンバーを決める
-3. `pnpm changeset version` を実行して版を上げ、PR を作って main に入れる。package.json を変えるので、PR 本文には `loomake-change: none` を書く。書かないと CI の gate ジョブが失敗する
+3. `pnpm changeset version` を実行して版を上げ、PR を作って main に入れる。package.json を変えるので、PR 本文には `loomake-change: none` を書く。書かないと CI の gate ジョブが失敗する。changeset を消化するので `changeset status` は失敗するが、変えたファイルが版の上げ下げだけなら、品質ジョブの REQ-056 の検査は合格する
 
 ### release ワークフローがすること
 
@@ -85,7 +85,7 @@ npm では、一度使った版の番号は、unpublish したあとも二度と
 - **型の解決を確かめる**：`@arethetypeswrong/cli` は道具のエラーで実行できず、型の解決はまだ確かめていない
 - **`@loomake/source` 条件**：各パッケージの `exports` にあるこの条件は、tarball に入っていない `./src/index.ts` を指す。利用者がこの条件を有効にしなければ影響はないが、公開する package.json から外す方法を検討する
 - **ビルド前に `dist/` を消す**：ソースを消したとき、古い `dist/` のファイルが手元のビルドに残る。release ワークフローはまっさらな状態でビルドするので、公開物には影響しない
-- **非公開の脆弱性の報告を有効にする**：リポジトリを public にしたら、Settings の「Code security」で private vulnerability reporting を有効にする。[SECURITY.md](../SECURITY.md) は、この方法で報告を受け付けると書いている
+- **`SECURITY.md`**：脆弱性の報告先を決めておく
 - **古いブランチの片づけ**：古い main がもとのブランチ `prepare-npm-publish` は、`prepare-npm-publish-2` に置き換えた。ほかのセッションのワークツリーで使われているので、そのセッションの作業が終わってから消す
 - **任意**：GitHub の Releases のページを作る。CHANGELOG はパッケージに入るが、Releases のページはできない。`changesets/action` を使うか、タグから Release を作るステップを足す
 - **任意**：`declarationMap` と `sourceMap` を出すと、利用者が型定義から元のコードへ飛べる

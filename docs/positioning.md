@@ -1,6 +1,6 @@
 # Loomake の位置付け
 
-最終更新：2026-10-22
+最終更新：2026-10-23
 
 Loomake を、OpenSpec・AI エージェント（Claude Code・Codex）・テストランナー・CI と組み合わせて使うときに、どの道具が何を受け持つかをまとめる。手順は [usage.md](usage.md)、パッケージの構成は [architecture.md](architecture.md) にある。
 
@@ -9,15 +9,89 @@ Loomake を、OpenSpec・AI エージェント（Claude Code・Codex）・テス
 | 道具 | 受け持つこと | Loomake との関係 |
 |---|---|---|
 | OpenSpec | **何を作るか**：仕様の書式・change の置き場・検証（`openspec validate`）・仕様への取り込み（`openspec archive`） | 土台。Loomake は書式を自作せず、その上に足す |
-| Loomake | **どう作らせ、どう確かめるか**：要件書からの入口、AI が従うルール、仕様ゲートと完了ゲート | この文書で扱う道具 |
-| AI エージェント（Claude Code・Codex） | **作る**：change を書き、実装し、ゲートが通るまで直す | Loomake が置いた Skill とルールを読んで動く。Loomake はエージェントを起動しない |
+| Loomake | **どう作らせ、どう確かめるか**：要件書からの入口、AI が従うルール、仕様ゲートと完了ゲート、証拠の記録と検収レポート、実装から PR までの自動実行 | この文書で扱う道具 |
+| AI エージェント（Claude Code・Codex） | **作る**：change を書き、実装し、ゲートが通るまで直す | Loomake が置いた Skill とルールを読んで動く。ふだんは人が依頼して動かす。`loomake run` を使うときは、Loomake が Claude Code を起動する |
 | テストランナー（Vitest・Jest など） | テストを実行し、結果を JSON に書き出す | 完了ゲートがその JSON を読み、要件ごとのテストを確かめる |
 | CI（GitHub Actions など） | PR ごとに品質コマンドと完了ゲートを実行し、不合格ならマージを止める | `loomake verify --done` を呼ぶだけ。CI の設定は利用者が書く |
 | 人 | 分割案への合意、確認事項への回答、仮定の承認、PR のレビュー | Loomake は、人が判断すべき点を確認事項として切り出す |
 
 Loomake は仕様の書式でも、AI エージェントでも、テストランナーでもない。それらのあいだに入り、「推測で埋めさせない」「全要件にテストがあることを確かめる」という 2 つの約束を守らせる。
 
-## 2. 開発の流れの中での位置
+## 2. 一般的な開発の流れの中での位置
+
+要件定義から運用までの一般的な流れに、各道具が受け持つ範囲を重ねると次のようになる。Loomake が関わるのは、Markdown の要件書を受け取ってから、検収レポートを出すまでである。要件書を書く段階と、リリース・運用の段階には関わらない。
+
+```mermaid
+flowchart TB
+  subgraph S1["1. 要件定義"]
+    direction LR
+    s1h["人・顧客<br>要件書を Markdown で書く"]
+  end
+  subgraph S2["2. 仕様化・設計"]
+    direction LR
+    s2a["Claude Code<br>要件書を change にする"]
+    s2l["Loomake<br>req-to-openspec Skill"]
+    s2o["OpenSpec<br>proposal・specs・<br>design・tasks"]
+    s2h["人<br>確認事項に答え、<br>仮定を承認する"]
+    s2g{{"Loomake<br>仕様ゲート"}}
+  end
+  subgraph S3["3. 実装"]
+    direction LR
+    s3a["Claude Code<br>tasks を順に実装する"]
+    s3l["Loomake<br>AGENTS.md のルール<br>loomake run"]
+  end
+  subgraph S4["4. テスト"]
+    direction LR
+    s4t["テストランナー<br>テストを実行する"]
+    s4g{{"Loomake<br>完了ゲート"}}
+  end
+  subgraph S5["5. レビュー・マージ"]
+    direction LR
+    s5c["CI<br>PR ごとに完了ゲート"]
+    s5h["人<br>レビューしてマージする"]
+  end
+  subgraph S6["6. 仕様への取り込み"]
+    direction LR
+    s6o["OpenSpec<br>openspec archive"]
+  end
+  subgraph S7["7. 検収"]
+    direction LR
+    s7l["Loomake<br>証拠の記録と<br>検収レポート"]
+    s7h["人・顧客<br>レポートで検収する"]
+  end
+  subgraph S8["8. リリース・運用"]
+    direction LR
+    s8x["プロジェクトの<br>いまの道具"]
+  end
+
+  S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8
+
+  classDef human fill:#fde68a,stroke:#b45309,color:#000
+  classDef agent fill:#bfdbfe,stroke:#1d4ed8,color:#000
+  classDef openspec fill:#e9d5ff,stroke:#7e22ce,color:#000
+  classDef loomake fill:#bbf7d0,stroke:#15803d,color:#000
+  classDef other fill:#e5e7eb,stroke:#4b5563,color:#000
+  class s1h,s2h,s5h,s7h human
+  class s2a,s3a agent
+  class s2o,s6o openspec
+  class s2l,s2g,s3l,s4g,s7l loomake
+  class s4t,s5c,s8x other
+```
+
+黄色は人、青は AI エージェント、紫は OpenSpec、緑は Loomake が受け持つ。灰色は、テストランナー・CI と、プロジェクトがいま使っている道具である。
+
+| 段階 | 一般的にすること | 人 | Claude Code・Codex | OpenSpec | Loomake | テストランナー・CI |
+|---|---|---|---|---|---|---|
+| 1. 要件定義 | 何を作るかを顧客と決め、要件書にする | 要件書を書く。Word・Excel・PDF なら Markdown に変換する | — | — | 関わらない | — |
+| 2. 仕様化・設計 | 要件を仕様に落とし、曖昧な点を確かめ、作業に分ける | 分割案に合意し、確認事項に答え、仮定を承認する | Skill の手順で change を書く | 仕様の書式と change の置き場。書式を検証する | req-to-openspec Skill で要件に ID と出典を付け、曖昧な点を確認事項にする。仕様ゲートで、未回答の確認事項がないかを確かめる | — |
+| 3. 実装 | 仕様どおりにコードを書く | 仕様にない判断を聞かれたら答える | tasks.md を順に実装し、タスクごとにコミットする | — | AGENTS.md で、推測で埋めない、テストを弱めないといったルールを示す。`loomake run` を使うと、Claude Code を起動して実装させる | — |
+| 4. テスト | テストを書いて実行する | — | テスト名に要件 ID を入れてテストを書く | — | 完了ゲートで品質コマンドを実行し、すべての要件に成功したテストがあるかを確かめる | テストを実行し、結果を JSON に書き出す |
+| 5. レビュー・マージ | PR を出し、レビューしてマージする | PR をレビューしてマージする | PR を出す | — | `loomake run` なら PR を作るところまで受け持つ | CI が PR ごとに完了ゲートを実行し、不合格ならマージを止める |
+| 6. 仕様への取り込み | 決まった仕様を、いまの仕様として残す | archive を頼む | `openspec archive` を実行する | 差分仕様を `openspec/specs/` に取り込む | 関わらない | — |
+| 7. 検収 | 要件どおりにできたかを顧客が確かめる | 検収レポートを顧客に渡す | — | — | `trace record` で検査結果を証拠として残し、`trace report` で要件ごとの出典・テスト・結果の表を出す | — |
+| 8. リリース・運用 | 配布・デプロイし、運用する | プロジェクトのいまの手順で行う | — | — | 関わらない | — |
+
+## 3. 1 つの change の中での動き
 
 1 つの change が進むあいだに、どの段階でどの道具が動くかを示す。縦の列が道具ごとのレーンで、上から下へ時間の順に進む。
 
@@ -53,6 +127,7 @@ sequenceDiagram
 
   rect rgba(128, 128, 128, 0.12)
     Note over H,G: 実装と完了ゲート
+    Note over A,L: loomake run を使うときは、Loomake が Claude Code を起動し、<br>完了ゲートが通るまでこの段階を回して PR まで出す
     loop タスクごと
       A->>A: 実装・テスト・コミット
     end
@@ -71,6 +146,14 @@ sequenceDiagram
     H->>A: archive して
     A->>O: openspec archive
   end
+
+  rect rgba(128, 128, 128, 0.12)
+    Note over H,G: 検収
+    H->>L: trace record（完了ゲートを通したコミットで）
+    L->>L: verify --done を実行し、結果を証拠として記録する
+    H->>L: trace report
+    L-->>H: 検収レポート
+  end
 ```
 
 | 段階 | 人 | AI エージェント | Loomake | OpenSpec | テストランナー・CI |
@@ -81,10 +164,11 @@ sequenceDiagram
 | 実装 | 仕様外の質問に答える | tasks.md を順に実装し、タスクごとにコミットする | AGENTS.md が禁止事項と完了の定義を決める | — | テストを実行する |
 | 完了ゲート・PR | PR をレビューしてマージする | ゲートが通るまで直し、PR を出す | 品質コマンドを実行し、要件ごとのテストと tasks.md を確かめる | — | CI が PR ごとに `verify --done` を実行する |
 | 仕様に取り込む | archive を頼む | `openspec archive` を実行する | 関わらない | 差分仕様を `openspec/specs/` に統合する | — |
+| 検収 | 検収レポートを顧客に渡す | — | `trace record` で verify の結果を証拠として記録し、`trace report` で検収レポートを出す | — | — |
 
-## 3. OpenSpec との分担
+## 4. OpenSpec との分担
 
-### 3.1 Loomake が使うもの・足すもの
+### 4.1 Loomake が使うもの・足すもの
 
 | 項目 | OpenSpec | Loomake |
 |---|---|---|
@@ -99,7 +183,7 @@ sequenceDiagram
 
 `openspec/specs/` を直接書き換えないという AGENTS.md の決まりは、OpenSpec の「仕様は change を通して変え、archive で反映する」という考え方を、AI に守らせるためのものである。
 
-### 3.2 OpenSpec の Skill（`/opsx:*`）との使い分け
+### 4.2 OpenSpec の Skill（`/opsx:*`）との使い分け
 
 `openspec init` で Claude Code や Codex を選ぶと、OpenSpec 自身の Skill とコマンド（`/opsx:propose`・`/opsx:apply`・`/opsx:archive` など）も入る。Loomake と一緒に使うときは、次の点に気をつける。
 
@@ -112,9 +196,9 @@ sequenceDiagram
 
 要件書のない小さな変更を `/opsx:propose` で作る場合も、ゲートを通すには trace.md を足し、各 Requirement に `Source:` を書く必要がある。
 
-## 4. AI エージェントとの分担
+## 5. AI エージェントとの分担
 
-Loomake は AI エージェントを起動も制御もしない。エージェントが読むファイルを置き、エージェントの成果をゲートで確かめるだけである。
+ふだんの Loomake は AI エージェントを起動しない。エージェントが読むファイルを置き、エージェントの成果をゲートで確かめる。エージェントを起動するのは、`loomake run` を使うときだけである。
 
 | Loomake が置くもの | Claude Code | Codex |
 |---|---|---|
@@ -127,26 +211,26 @@ Loomake は AI エージェントを起動も制御もしない。エージェ�
 1. AGENTS.md：AI に守るよう求める。テストを弱めない、曖昧なら止まる、設定を緩めない、など。守るかどうかは AI しだい
 2. verify：守ったかを機械的に確かめる。AI が「完了」と言っても、ゲートが不合格なら完了ではない
 
-実装を自動で回す `@loomake/runner`（verify が通るまでエージェントを動かす）は、MVP の範囲外で、まだ作っていない。いまは人がエージェントに依頼文を渡して実装させる。
+`loomake run`（`@loomake/runner`）は、tasks を Claude Code に 1 つずつ実装させ、完了ゲートが通るまで直させてから、証拠を記録して PR を出す。エンジンはいまのところ Claude Code だけで、Codex には対応していない。PR のマージは人がする。run を使わないときは、人がエージェントに依頼文を渡して実装させる。手順は [usage.md](usage.md) の 4.7 にある。
 
-## 5. テストランナー・CI との分担
+## 6. テストランナー・CI との分担
 
 - Loomake はテストを書かず、テストランナーも持たない。完了ゲートは設定 `commands` の品質コマンド（lint・typecheck・test）を実行し、テストランナーが書き出した JSON レポート（既定は `.loomake/test-report.json`）を読む
 - 要件とテストは、テストの名前に入れた要件 ID（`[REQ-012]` など）だけでつながる。成功したテストだけを数え、skip・todo と失敗したテストは数えない
 - CI では `loomake verify --change <id> --done` を実行する。結果は終了コード（0 合格、1 不合格、2 使い方の誤り）で分かり、`--json` を付ければ JSON でも出せる。マージを止める必須チェックの設定は、利用者が GitHub 上で行う
 
-## 6. Loomake がしないこと
+## 7. Loomake がしないこと
 
 | しないこと | 代わりに使うもの |
 |---|---|
 | 独自の仕様書式を作る | OpenSpec |
 | Markdown 以外の要件書（Word・Excel・PDF）を読む | 先に Markdown へ変換する |
-| AI エージェントを起動して実装を回す | 人が依頼する（将来は `@loomake/runner`） |
+| 自分でコードを書く | AI エージェント。`loomake run` も、Claude Code を起動して実装させるだけ |
+| PR をマージする | 人。`loomake run` は PR を作るところまで |
 | テストを実行するランナーになる | Vitest・Jest など |
-| 検収レポートを作る | いまは人がまとめる（将来は `@loomake/trace`） |
 | 見積・工数管理、GUI、Web ダッシュボード | 範囲外 |
 
-## 7. このリポジトリだけで使う道具
+## 8. このリポジトリだけで使う道具
 
 次は Loomake 自身を開発するために使っているもので、`loomake init` は利用者のプロジェクトに置かない。
 

@@ -1,0 +1,25 @@
+# TDD実行記録
+
+## 1.1 公開経路の保護
+
+Actionsの参照、既定権限とcheckoutの資格情報、公開とタグ送信の認証範囲、5パッケージの出典とprovenanceの10件を先に追加した。修正前は10件すべてが失敗した。修正後は追加10件と既存の公開ゲート2件の計12件が成功した。既存の期待値は変更していない。
+
+公式リポジトリのv4参照をGitHubコネクタで取得し、action-pins.jsonに完全なSHAとURLを記録した。remote.originのホストとパスを資格情報を表示せず確認した。接続したコネクタからloomake/loomakeのメタデータは404となったため、公開リポジトリの可視性や非公開報告機能が有効とは判断していない。
+
+provenanceはnpmの公式文書で、必要なrepository情報・OIDC権限・第三者の公開ツールで使う環境変数を確認した。ローカルのpnpm publish --helpにもprovenanceの指定があることを確認した。これらは実際のnpm公開やattestationの成功を示す結果ではない。
+
+## 1.2 配布物の出典
+
+package-smokeの検査に、独立したプロジェクトへ導入した5パッケージのrepository・directory・provenanceの一致を追加した。CLIの配布元を違う値へ変えた場合に検査が失敗することも確認した。元の値へ戻して、既存のテンプレート欠損の期待値も維持した。関連13件が成功した。5パッケージのメタデータ変更にchangesetを追加した。
+
+## 2.1 OSS向けの文書
+
+SECURITY.md・CONTRIBUTING.md・SUPPORT.mdと、docsのsecurity・compatibility・publishingを追加した。信頼したコマンドの実行、環境変数の引き継ぎ、宣言と実際の隔離の違い、診断の保護範囲、未完了の資源制限を実装と照合した。既存のschemaVersionと旧証拠の互換性も確認した。新規文書の相対リンクとyomiyasuの照合が成功した。
+
+非公開の脆弱性報告機能、リポジトリの可視性、registryの公開元検証は未確認として記載した。取得したActionsの記録は.github/action-pins.jsonを現行の参照先とし、changeにも取得時の記録を残す。回帰試験がchangeのarchive後も動くよう、現行の記録を読む。
+
+初回のlintでは、回帰テストの正規表現に連続した空白があるとして3件の指摘を受けた。空白の数を量指定子で表す形へ直し、品質設定と判定の意味は変えていない。
+
+## 完了ゲート
+
+`pnpm -s verify --change harden-release-workflow --done`はexit 0。全440件のテスト、型検査、lintと全REQの対応が成功した。別OSのCI実行、実際の公開、registryのattestationの検証、非公開報告機能の設定変更は行っていない。

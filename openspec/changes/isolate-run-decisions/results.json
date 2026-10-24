@@ -1,0 +1,59 @@
+{
+  "snapshot": "036acf3",
+  "requirements": [
+    "REQ-204",
+    "REQ-205",
+    "REQ-206"
+  ],
+  "red": {
+    "report": ".loomake/quality/run-policy-red.json",
+    "sha256": "0af22f06ab0af3f1273c9a4de9c7f652af438eaa2b2e687e02ad28a67ec957fd",
+    "tests": 24,
+    "failed": 20,
+    "passed": 4,
+    "requirementIdRenumbering": {
+      "REQ-202": "REQ-204",
+      "REQ-203": "REQ-205",
+      "REQ-204": "REQ-206"
+    },
+    "scope": "The first Red preceded requirement renumbering. Expectations were preserved."
+  },
+  "green": {
+    "total": 764,
+    "passed": 764,
+    "failed": 0,
+    "pending": 0
+  },
+  "gateRuns": [
+    {
+      "change": "isolate-run-decisions",
+      "snapshotCommit": "036acf3",
+      "exitCode": 0,
+      "tests": 764,
+      "logSha256": "1ee7d6689068fa88e23dc8ed567ae7dcd987efd6c9369beba0e0218e6acd577f"
+    },
+    {
+      "change": "audit-scenario-evidence",
+      "snapshotCommit": "036acf3",
+      "exitCode": 0,
+      "tests": 764,
+      "logSha256": "5d83d4c05b95f981bd01514e9f95b911c7f916d54c70566811c13e3c89ceaa91"
+    }
+  ],
+  "runtimeChecks": {
+    "total": 4,
+    "passed": 4,
+    "node": "v20.19.0",
+    "platform": "linux",
+    "arch": "arm64"
+  },
+  "mutationResultsSha256": "770f2e91b331a27015788e591c844520a5393e774e533de89f7dbad39a11d6f5",
+  "inputs": {
+    "packages/runner/src/run/decision-policy.ts": "1be7e538795c0a83510c7ef836387992ca6d1fb92bb3c5a0a3e4865c0fbb3f99",
+    "packages/runner/src/run/phases.ts": "18fd19056a17cfcdae4a00ce121ac7e88f0bb887f1848633e905b7cdf3f1b53d",
+    "packages/runner/test/decision-policy.test.ts": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b",
+    "tests/run-decision-mutations.test.ts": "8a3fec58f6e7d8367606054eef907f1ec90ea1128860ee8a9b5dd22f6735f154"
+  },
+  "publicContract": "No public exports, JSON Schema, runtime dependencies, or configuration changes in this refactor.",
+  "scope": "Selected run decisions are pure; orchestration and side effects remain in phases.ts."
+}

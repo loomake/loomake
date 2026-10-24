@@ -1,6 +1,6 @@
 # Loomake の使い方
 
-Loomake を自分のプロジェクトに入れて、要件書から AI に実装させるまでの手順をまとめる。AI エージェントに読ませる手順は [for-agents.md](for-agents.md)、このリポジトリ自身を開発する手順は [flow.md](flow.md) にある。
+Loomake を自分のプロジェクトに入れて、要件書から AI に実装させるまでの手順をまとめる。1 ページの要約は [quickstart.md](quickstart.md) にある。AI エージェントに読ませる手順は [for-agents.md](for-agents.md)、このリポジトリ自身を開発する手順は [flow.md](flow.md) にある。
 
 ## 1. Loomake がすること
 
@@ -133,7 +133,7 @@ flowchart TD
 ### 導入のあとにすること
 
 1. `openspec/` が無ければ `openspec init` を実行する（init が案内する）
-2. テストランナーが結果を JSON で `.loomake/test-report.json` に書き出すよう設定する。verify はこのファイルで、要件ごとのテストを確かめる
+2. テストランナーが結果を JSON で `.loomake/test-report.json` に書き出すよう設定する。verify はこのファイルで、要件ごとのテストを確かめる。init は、依存に vitest か jest があれば、そのテストランナーの設定例だけを表示する
 
    Vitest では `vitest.config.ts` に書く。
 
@@ -149,9 +149,10 @@ flowchart TD
    jest --json --outputFile=.loomake/test-report.json
    ```
 
-3. `.gitignore` を確かめる。`loomake init` は、テストのレポート（`.loomake/test-report.json`）の行を足す。証拠の記録（`.loomake/evidence/`）はコミットするので、`.loomake/` を丸ごと除外しない
-4. `AGENTS.md` の末尾の「プロジェクト固有の情報」を書き換える
-5. `npx loomake doctor` で、導入が済んでいるかを確かめる。設定ファイル、OpenSpec、品質コマンドの実行ファイル、`.gitignore` の除外、使う CLI（openspec・claude・gh）を調べ、問題があれば直し方を表示する。doctor はファイルを変えず、品質コマンドも実行しない。問題が 1 つでもあれば終了コードは 1
+3. `loomake.config.json` の `commands` を確かめる。package.json に `scripts` があるとき、init は lint・typecheck・test のうち実在する script のコマンドだけを書き、書かなかった名前を案内する。script を足したら、commands にも書く
+4. `.gitignore` を確かめる。`loomake init` は、テストのレポート（`.loomake/test-report.json`）の行を足す。証拠の記録（`.loomake/evidence/`）はコミットするので、`.loomake/` を丸ごと除外しない
+5. `AGENTS.md` の末尾の「プロジェクト固有の情報」を書き換える
+6. `npx loomake doctor` で、導入が済んでいるかを確かめる。設定ファイル、OpenSpec、品質コマンドの実行ファイル、`.gitignore` の除外、使う CLI（openspec・claude・gh）を調べ、問題があれば直し方を表示する。doctor はファイルを変えず、品質コマンドも実行しない。問題が 1 つでもあれば終了コードは 1。単純なnpm・pnpmのscriptの存在と実行権限も確認する。未対応の構文、Yarnの解決先、レポート生成・認証などの未確認の範囲と復旧方法は[doctor.md](doctor.md)を参照する
 
 `npx loomake --help` でコマンドの一覧を、`npx loomake <コマンド> --help` でそれぞれの使い方を表示する。
 
@@ -279,8 +280,17 @@ npx loomake run --change <change-id>
 - テストの削除や skip、すでにあるアサーションとテストの書き換え・削除、lint・型・テストの設定、いまの仕様、trace.md の変更を見つけたら、変更をコミットせずに残して止まる。承認するなら、差分を確かめ、tasks.md のそのタスクを完了にして自分でコミットし、もう一度実行する
 - 合格したら `loomake trace record` で証拠を記録してコミットし、ブランチを送って `gh pr create` で PR を作る。PR の向き先は、run が `loomake/<change-id>` を作ったときのブランチで、git の設定 `branch.loomake/<change-id>.loomake-base` に覚えておく。マージは人がする
 - 止まったときは、理由・終えたタスク・残ったタスク・最後の検査結果を表示する。実行の記録は `.loomake/runs/` にあり、git では追跡しない
-- 始めたあとに git の操作か証拠の記録が失敗したときも、理由を実行の記録に書いて終了コード 1 で止まる。始める前の git の失敗（git のリポジトリでないなど）は、使い方の誤りとして終了コード 2 になる
+- 始めたあとに git の操作か証拠の記録が失敗したときも、理由を実行の記録に書いて終了コード 1 で止まる。始める前の git の失敗（git のリポジトリでないなど）は、使い方の誤りとして終了コード 2 になる。始める前に外部操作が時間・出力の上限か中断で止まったときは、実行時の失敗として終了コード 3 になる
 - ふだんはファイルの読み書きと loomake.config.json の commands だけを Claude Code に許可する。権限確認なしで動かすのは、通信を npm・GitHub・エンジンの API に絞った環境で `LOOMAKE_SANDBOX=1` を設定し、`--skip-permissions` を付けたときだけ
+
+### 確認事項の回答と仮定の承認を書く
+
+trace.md の表を直接編集する代わりに、コマンドで書ける。回答・承認と一緒に、回答者・承認者と日付（省くとその日）も書く。すでに回答や承認がある行は上書きしない。直すときは trace.md を編集する。
+
+```sh
+npx loomake trace answer --change <id> --question Q-01 --answer "5 回" --by 顧客担当
+npx loomake trace approve --change <id> --assumption A-01 --by PM
+```
 
 ## 5. `loomake verify` のリファレンス
 
@@ -294,9 +304,11 @@ loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]
 | `--change <id> --done` | 完了ゲート |
 | （`--change` なし） | 品質コマンドだけを実行する |
 | `--json` | 結果を JSON で標準出力に出す。進捗は標準エラーに出る |
-| `--skip-commands` | 品質コマンドを実行しない。前に書き出したテストのレポートで判定する |
+| `--skip-commands` | 品質コマンドを実行しない。前に書き出したテストのレポートで判定する。結果には状態 `skip` の「品質コマンド」の項目が入り、最後の行に「品質コマンドを実行していません」と出る。完了の確認には使わない |
 
-終了コードは、すべて合格か警告なら 0、1 つでも不合格なら 1、使い方や設定の誤りなら 2。
+値をとるオプションは、`--change <id>` と `--change=<id>` のどちらでも書ける。知らないオプションには、近い候補（「もしかして：--change」）を示す。
+
+終了コードは、すべて合格か警告なら 0、1 つでも不合格なら 1、使い方や設定の誤りなら 2、外部操作（OpenSpec CLI・git など）が時間・出力の上限か中断で止まったときは 3。
 
 ### 検査の一覧
 

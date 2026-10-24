@@ -1,0 +1,97 @@
+{
+  "scope": "selected-run-decisions",
+  "environment": {
+    "node": "v24.21.0",
+    "platform": "linux",
+    "arch": "arm64"
+  },
+  "source": {
+    "path": "packages/runner/src/run/decision-policy.ts",
+    "sha256": "1be7e538795c0a83510c7ef836387992ca6d1fb92bb3c5a0a3e4865c0fbb3f99"
+  },
+  "tests": {
+    "path": "packages/runner/test/decision-policy.test.ts",
+    "sha256": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b",
+    "names": [
+      "エンジンの観測値から次の段階を決める [REQ-204] 正常終了",
+      "エンジンの観測値から次の段階を決める [REQ-204] 中断がすべてに優先",
+      "エンジンの観測値から次の段階を決める [REQ-204] 出力上限が期限に優先",
+      "エンジンの観測値から次の段階を決める [REQ-204] 期限が質問に優先",
+      "エンジンの観測値から次の段階を決める [REQ-204] 質問が終了コードに優先",
+      "エンジンの観測値から次の段階を決める [REQ-204] 最初の質問を使う",
+      "エンジンの観測値から次の段階を決める [REQ-204] 行頭でない印は質問にしない",
+      "エンジンの観測値から次の段階を決める [REQ-204] 非ゼロ終了",
+      "エンジンの観測値から次の段階を決める [REQ-204] 不明な終了コード",
+      "エンジンの観測値から次の段階を決める [REQ-204] HEAD変更だけでも停止",
+      "エンジンの観測値から次の段階を決める [REQ-204] Git内部変更だけでも停止",
+      "エンジンの観測値から次の段階を決める [REQ-204] HEAD変更を内部変更より先にする",
+      "エンジンの観測値から次の段階を決める [REQ-204] HEAD変更でも中断状態を保つ",
+      "エンジンの観測値から次の段階を決める [REQ-204] Git内部変更でも中断状態を保つ",
+      "完了ゲートの観測値から次の段階を決める [REQ-205] 上限の直前は修正",
+      "完了ゲートの観測値から次の段階を決める [REQ-205] 上限と一致したら停止",
+      "完了ゲートの観測値から次の段階を決める [REQ-205] 上限超過でも停止",
+      "完了ゲートの観測値から次の段階を決める [REQ-205] 上限0では修正しない",
+      "完了ゲートの観測値から次の段階を決める [REQ-205] 期限は回数より優先",
+      "完了ゲートの観測値から次の段階を決める [REQ-205] 状態変更は合格より優先",
+      "完了ゲートの観測値から次の段階を決める [REQ-205] 状態変更は期限より優先",
+      "完了ゲートの観測値から次の段階を決める [REQ-205] 通常の合格",
+      "完了ゲートの観測値から次の段階を決める [REQ-205] 合格は回数と期限の記録より優先",
+      "[REQ-206] 観測値を変えず同じ判断を繰り返し返す"
+    ]
+  },
+  "mutations": [
+    {
+      "id": "interrupt",
+      "before": "if (value.aborted)",
+      "after": "if (value.aborted && !value.outputLimitExceeded)"
+    },
+    {
+      "id": "work-state",
+      "before": "if (value.stateChanged)",
+      "after": "if (value.stateChanged && !value.ok)"
+    },
+    {
+      "id": "fix-limit",
+      "before": "value.fixes >= value.maxFixes",
+      "after": "value.fixes > value.maxFixes"
+    }
+  ],
+  "results": [
+    {
+      "id": "baseline",
+      "status": "survived",
+      "failedTests": [],
+      "sourceSha256": "1be7e538795c0a83510c7ef836387992ca6d1fb92bb3c5a0a3e4865c0fbb3f99",
+      "exitCode": 0
+    },
+    {
+      "id": "interrupt",
+      "status": "killed",
+      "failedTests": [
+        "エンジンの観測値から次の段階を決める [REQ-204] 中断がすべてに優先"
+      ],
+      "sourceSha256": "1c76291f6801a9944a464dbab89c0177d686a939b619de81bd3cac5d4c15edcd",
+      "exitCode": 1
+    },
+    {
+      "id": "work-state",
+      "status": "killed",
+      "failedTests": [
+        "完了ゲートの観測値から次の段階を決める [REQ-205] 状態変更は合格より優先"
+      ],
+      "sourceSha256": "d54b815e58d2cd033a29ca17a59c85b449c6245442a83537d2d254105dab8170",
+      "exitCode": 1
+    },
+    {
+      "id": "fix-limit",
+      "status": "killed",
+      "failedTests": [
+        "完了ゲートの観測値から次の段階を決める [REQ-205] 上限と一致したら停止",
+        "完了ゲートの観測値から次の段階を決める [REQ-205] 上限0では修正しない"
+      ],
+      "sourceSha256": "871d057f5941de784dc667171e714a3d65a0f11d2870e4e0bb9fa6fd27cd937c",
+      "exitCode": 1
+    }
+  ],
+  "originalsUnchanged": true
+}

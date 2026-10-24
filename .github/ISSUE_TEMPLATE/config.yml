@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 使い方の質問
+    url: https://github.com/loomake/loomake/blob/main/SUPPORT.md
+    about: 質問と設定の相談は SUPPORT.md を参照する
+  - name: 脆弱性の報告
+    url: https://github.com/loomake/loomake/blob/main/SECURITY.md
+    about: 脆弱性は公開の Issue にせず、SECURITY.md の手順で報告する

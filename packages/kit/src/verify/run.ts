@@ -1,13 +1,18 @@
-import { existsSync, readFileSync, realpathSync, rmSync, statSync } from 'node:fs';
+import { existsSync, realpathSync, rmSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { hasProcessBudget, ProcessLimitError, runExternal } from '../process.js';
 import {
   LEDGER_STATES,
   VERIFY_RESULT_SCHEMA_VERSION,
+  createAgreement,
+  evaluateAgreement,
+  evaluateTestCoverage,
   extractTestRequirements,
   parseSpec,
   parseTasks,
   parseTrace,
+  type AgreementDecision,
   type ParseError,
   type SpecRequirement,
   type Trace,
@@ -16,6 +21,7 @@ import {
   type VerifyResult,
 } from '@loomake/core';
 import { assertChangeId, loadConfig, type LoomakeConfig } from './config.js';
+import { createInputReader, JSON_LIMITS, type InputReader } from '../input.js';
 import { findChangeDir, specFiles, toPosix } from '../change-files.js';
 
 export type VerifyOptions = {
@@ -25,43 +31,21 @@ export type VerifyOptions = {
   changeId?: string;
   /** --spec-only なら 'spec-only'、--done なら 'done'。changeId を省略したときは使わない */
   gate?: 'spec-only' | 'done';
-  /** commands を実行しない。完了ゲートでは、すでにあるテストのレポートを読む（add-verify-cli の仮定 A-06） */
+  /** commands を実行しない。完了ゲートでは、すでにあるテストのレポートを読む */
   skipCommands?: boolean;
-  /** 進捗の表示先。--json のときも標準出力を汚さないよう、CLI は標準エラーを渡す（仮定 A-03） */
+  /** 進捗の表示先。--json のときも標準出力を汚さないよう、CLI は標準エラーを渡す */
   progress?: (message: string) => void;
-  /** 品質コマンドの実行時間の上限（ミリ秒、すべてのコマンドの合計）。上限を過ぎたコマンドは止めて不合格にする（fix-review-findings-2 の仮定 A-02） */
+  /** 品質コマンドの実行時間の上限（ミリ秒、すべてのコマンドの合計）。上限を過ぎたコマンドは止めて不合格にする */
   timeoutMs?: number;
 };
 
 // 試作の verify.mjs と同じく、出力の上限を 64MB にする
 const MAX_BUFFER = 64 * 1024 * 1024;
 const COMMAND_ORDER = ['lint', 'typecheck', 'test'];
-// 上限つきで品質コマンドを動かす小さなスクリプト。上限を過ぎたら、シェルだけでなくその子のプロセスまで止める。
-// spawnSync の timeout はシェルしか止めず、Windows ではテストのプロセスが残るため（fix-review-findings-2 の仮定 A-02）
-const TIMED_OUT_STATUS = 124;
-const TIMED_OUT_MARK = 'loomake: command timed out';
-// 中断（SIGINT・SIGTERM）で止めたときの終了コードと印。コマンドは別のプロセスグループで動くので、Ctrl-C は見張り役にしか届かない（stop-gate-on-interrupt の仮定 A-01）
-const INTERRUPTED_STATUS = 130;
-const INTERRUPTED_MARK = 'loomake: command interrupted';
-const KILL_TREE_ON_TIMEOUT = `
-const { spawn, spawnSync } = require('node:child_process');
-const [ms, cmd] = process.argv.slice(1);
-const win = process.platform === 'win32';
-const child = spawn(cmd, { shell: true, stdio: 'inherit', detached: !win });
-const stop = (mark, status) => {
-  if (win) spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore' });
-  else try { process.kill(-child.pid, 'SIGKILL'); } catch {}
-  process.stderr.write(mark + '\\n');
-  process.exit(status);
-};
-const timer = setTimeout(() => stop('${TIMED_OUT_MARK}', ${TIMED_OUT_STATUS}), Number(ms));
-for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => stop('${INTERRUPTED_MARK}', ${INTERRUPTED_STATUS}));
-child.on('exit', (code) => { clearTimeout(timer); process.exit(code ?? 1); });
-`;
 /** 実行時間の上限で止めた品質コマンドの detail */
 export const TIMED_OUT = '実行時間の上限に達したので止めました';
-/** 中断で止めた品質コマンドの detail */
 export const INTERRUPTED = '中断されたので止めました';
+
 
 /** verify を実行して結果を返す。設定の誤りは UsageError を投げる */
 export function runVerify(options: VerifyOptions): VerifyResult {
@@ -89,7 +73,7 @@ export function runVerify(options: VerifyOptions): VerifyResult {
     const spec = checkSpec(root, config, changeId, record, rel);
     if (spec && mode === 'done') {
       checkTasksAndPending(spec, record);
-      // 前回のレポートで合格させないよう、commands を実行する前に消す（仮定 A-05）
+      // 前回のレポートで合格させないよう、commands を実行する前に消す
       const reportPath = resolve(root, config.tests.report);
       if (!skipCommands) rmSync(reportPath, { force: true });
       runCommands(root, config, skipCommands, record, progress, options.timeoutMs);
@@ -108,12 +92,13 @@ export function runVerify(options: VerifyOptions): VerifyResult {
 }
 
 type Recorder = (check: string, status: VerifyCheckResult['status'], detail?: string) => void;
-type SpecState = { changeDir: string; trace: Trace; live: SpecRequirement[] };
+type SpecState = { reader: InputReader; changeDir: string; trace: Trace; live: SpecRequirement[]; decision: AgreementDecision };
 
 const formatErrors = (errors: ParseError[]) => errors.map((e) => `${e.file}:${e.line} ${e.message}`).join('\n');
 
 // ---------- 仕様ゲート ----------
 function checkSpec(root: string, config: LoomakeConfig, changeId: string, record: Recorder, rel: (p: string) => string): SpecState | null {
+  const reader = createInputReader();
   const changeDir = resolve(root, config.openspecDir, 'changes', changeId);
   if (!existsSync(changeDir) || !statSync(changeDir).isDirectory()) {
     record('change の存在', 'fail', `${rel(changeDir)} がありません。change-id を確かめてください`);
@@ -125,14 +110,16 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
     record(`${f} の存在`, existsSync(join(changeDir, f)) ? 'pass' : 'fail', existsSync(join(changeDir, f)) ? '' : `${f} がありません`);
   }
 
-  checkOpenspecValidate(root, config, changeId, record);
 
   // trace.md
   const tracePath = join(changeDir, 'trace.md');
-  const parsed = parseTrace('trace.md', existsSync(tracePath) ? readFileSync(tracePath, 'utf8') : '');
+  const parsed = parseTrace('trace.md', existsSync(tracePath) ? reader.read(tracePath) : '');
   const trace = parsed.value;
   const { ledger, questions, assumptions } = trace;
-  // 解析できなかった trace.md では未回答の確認事項を数えられないので、エラーは不合格にする（harden-init-and-trace-check の仮定 A-02）
+  const model = createAgreement('trace.md', trace);
+  const decision = evaluateAgreement(model.value);
+  record('要件モデルの整合性', model.errors.length ? 'fail' : 'pass', formatErrors(model.errors));
+  // 解析できなかった trace.md では未回答の確認事項を数えられないので、エラーは不合格にする
   record('trace.md の解析', parsed.errors.length ? 'fail' : 'pass', formatErrors(parsed.errors));
   if (ledger.length === 0) record('要件台帳', 'fail', 'trace.md に「## 要件台帳」の表がありません');
   else record('要件台帳', 'pass', `${ledger.length} 件`);
@@ -140,35 +127,34 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   const badState = ledger.filter((r) => !(LEDGER_STATES as readonly string[]).includes(r['状態']));
   if (badState.length) record('台帳の状態値', 'fail', badState.map((r) => `${r.ID}: "${r['状態']}"`).join(', '));
 
-  const noSource = ledger.filter((r) => !r['出典']);
+  const noSource = ledger.filter((r) => decision.missingSources.some((id) => id === r.ID));
   if (noSource.length) record('台帳の出典', 'fail', `出典が空：${noSource.map((r) => r.ID).join(', ')}`);
 
-  // ブロッキング列の値は yes・no・はい・いいえ に限り、判断できない値は不合格にする（fix-evaluation-findings の仮定 A-02）
   const badBlocking = questions.filter((q) => !BLOCKING.test(q['ブロッキング']) && !NOT_BLOCKING.test(q['ブロッキング']));
   if (badBlocking.length) record('ブロッキングの値', 'fail', badBlocking.map((q) => `${q.ID}: "${q['ブロッキング']}"`).join(', '));
-  // ブロッキングな確認事項（ブロッキング列が yes か はい のもの。仮定 A-04）
-  const openBlocking = questions.filter((q) => BLOCKING.test(q['ブロッキング']) && !q['回答']);
+  // ブロッキングな確認事項（yesまたははい）
+  const openBlocking = questions.filter((q) => decision.blockingQuestions.includes(q.ID));
   if (openBlocking.length) {
     record('ブロッキング確認事項', 'fail', openBlocking.map((q) => `${q.ID}（${q['関連']}）${q['質問']}`).join('\n'));
   } else {
     record('ブロッキング確認事項', 'pass', `未回答 0 件（全 ${questions.length} 件）`);
   }
 
-  checkSharedQuestions(root, config, changeId, questions, record);
+  checkSharedQuestions(root, config, changeId, questions, record, reader);
 
-  const unapproved = assumptions.filter((a) => !a['承認']);
+  const unapproved = assumptions.filter((a) => decision.unapprovedAssumptions.includes(a.ID));
   if (unapproved.length) record('仮定の承認', 'warn', `未承認：${unapproved.map((a) => `${a.ID} ${a['仮定の内容']}`).join(' / ')}`);
 
-  const pending = ledger.filter((r) => r['状態'] === '確認待ち');
+  const pending = ledger.filter((r) => decision.pendingRequirements.some((id) => id === r.ID));
   if (pending.length) record('確認待ちの要件', 'warn', pending.map((r) => r.ID).join(', '));
 
   // specs
-  const specs = specFiles(changeDir);
+  const specs = specFiles(changeDir, reader);
   if (specs.length === 0) record('差分仕様', 'fail', 'specs/<capability>/spec.md がありません');
   const specErrors: ParseError[] = [];
   const reqs = specs.flatMap((f) => {
     const file = toPosix(relative(changeDir, f));
-    const spec = parseSpec(file, readFileSync(f, 'utf8'));
+    const spec = parseSpec(file, reader.read(f));
     specErrors.push(...spec.errors);
     return spec.value.map((r) => ({ ...r, file }));
   });
@@ -191,7 +177,8 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   const orphan = ledger.filter((r) => r['状態'] === '反映済' && !referenced.has(r.ID));
   record('反映済の要件が仕様にある', orphan.length ? 'fail' : 'pass', orphan.map((r) => r.ID).join(', '));
 
-  return { changeDir, trace, live };
+  checkOpenspecValidate(root, config, changeId, record);
+  return { reader, changeDir, trace, live, decision };
 }
 
 const BLOCKING = /^(yes|はい)$/i;
@@ -200,11 +187,10 @@ const NOT_BLOCKING = /^(no|いいえ)$/i;
 // 質問に「<change-id> の Q-xx と同じ質問」と書いた確認事項の回答を、参照先と比べる（add-shared-question-check の仮定 A-01・A-02）
 const SHARED_MARK = /([a-z0-9]+(?:-[a-z0-9]+)*) の (Q-\d+) と同じ質問/;
 
-function checkSharedQuestions(root: string, config: LoomakeConfig, changeId: string, questions: Trace['questions'], record: Recorder) {
+function checkSharedQuestions(root: string, config: LoomakeConfig, changeId: string, questions: Trace['questions'], record: Recorder, reader: InputReader) {
   const changesDir = resolve(root, config.openspecDir, 'changes');
-  // 進行中の change を先に、なければ archive の <日付>-<change-id> を探す
   const findTrace = (id: string) => {
-    const dir = findChangeDir(changesDir, id);
+    const dir = findChangeDir(changesDir, id, 'trace.md', reader);
     return dir && join(dir, 'trace.md');
   };
   const answer = (q: { 回答: string }) => q['回答'].trim();
@@ -221,7 +207,7 @@ function checkSharedQuestions(root: string, config: LoomakeConfig, changeId: str
       problems.push(`${q.ID}：参照先の change ${otherId} が見つかりません`);
       continue;
     }
-    const other = parseTrace('trace.md', readFileSync(path, 'utf8')).value.questions.find((o) => o.ID === otherQ);
+    const other = parseTrace('trace.md', reader.read(path)).value.questions.find((o) => o.ID === otherQ);
     if (!other) problems.push(`${q.ID}：${otherId} の trace.md に ${otherQ} がありません`);
     else if (answer(other) !== answer(q)) {
       problems.push(`${q.ID}：回答が ${otherId} の ${otherQ} と違います（${changeId}：「${answer(q)}」、${otherId}：「${answer(other)}」）`);
@@ -231,17 +217,21 @@ function checkSharedQuestions(root: string, config: LoomakeConfig, changeId: str
   else record('同じ確認事項の回答', 'pass', shared ? `${shared} 件が参照先と一致` : 'ほかの change と同じ確認事項なし');
 }
 
-// openspec validate（REQ-037）。CLI が無いときの扱いは仮定 A-01
+// openspec validate（REQ-037）。CLI が無いときは、openspecValidate が auto なら警告、true なら不合格にする
 function checkOpenspecValidate(root: string, config: LoomakeConfig, changeId: string, record: Recorder) {
   if (config.openspecValidate === false) return;
-  const r = spawnSync('openspec', ['validate', changeId, '--strict'], {
+  let r;
+  try { r = runExternal('openspec', ['validate', changeId, '--strict'], {
     cwd: root,
-    encoding: 'utf8',
     shell: process.platform === 'win32',
     maxBuffer: MAX_BUFFER,
-  });
+  }); } catch (error) {
+    if (!(error instanceof ProcessLimitError)) throw error;
+    record('openspec validate', 'fail', error.message);
+    return;
+  }
   // Windows では shell 経由で起動するので、CLI が無いと ENOENT ではなくシェルが終了コード 1 を返す
-  const missing = (r.error as NodeJS.ErrnoException | undefined)?.code === 'ENOENT' || (process.platform === 'win32' && /is not recognized|認識されていません/.test(r.stderr ?? ''));
+  const missing = r.error?.code === 'ENOENT' || (process.platform === 'win32' && /is not recognized|認識されていません/.test(r.stderr ?? ''));
   if (missing) {
     record('openspec validate', config.openspecValidate === 'auto' ? 'warn' : 'fail', 'OpenSpec CLI が見つかりません（npm install -g @fission-ai/openspec）');
   } else {
@@ -252,12 +242,12 @@ function checkOpenspecValidate(root: string, config: LoomakeConfig, changeId: st
 // ---------- 完了ゲート ----------
 function checkTasksAndPending(spec: SpecState, record: Recorder) {
   // 完了時に確認待ちの要件が残っていてはいけない
-  const pending = spec.trace.ledger.filter((r) => r['状態'] === '確認待ち');
+  const pending = spec.trace.ledger.filter((r) => spec.decision.pendingRequirements.some((id) => id === r.ID));
   record('確認待ちが残っていない', pending.length ? 'fail' : 'pass', pending.map((r) => r.ID).join(', '));
 
   const tasksPath = join(spec.changeDir, 'tasks.md');
   if (existsSync(tasksPath)) {
-    const tasks = parseTasks('tasks.md', readFileSync(tasksPath, 'utf8')).value;
+    const tasks = parseTasks('tasks.md', spec.reader.read(tasksPath)).value;
     const open = tasks.filter((t) => !t.checked);
     // タスクが 0 件のときに「すべて完了」とすると、tasks.md を空にしたのと区別できない（fix-evaluation-findings の仮定 A-03）
     if (!tasks.length) record('tasks.md', 'fail', 'タスクがありません');
@@ -275,7 +265,7 @@ function checkCoverage(
   rel: (p: string) => string,
 ): Record<string, string[]> {
   const needed = [...new Set(live.flatMap((r) => r.sources))].sort();
-  const covered = new Map<string, string[]>();
+  let coverage = evaluateTestCoverage(needed, {});
   if (!existsSync(reportPath)) {
     record(
       '要件ごとのテスト',
@@ -283,12 +273,9 @@ function checkCoverage(
       `テストのレポート（${config.tests.report}）がありません。test コマンドが、テストランナーの JSON レポートをこのファイルに書き出すよう設定してください`,
     );
   } else {
-    const { value, errors } = extractTestRequirements(config.tests.report, readFileSync(reportPath, 'utf8'));
-    for (const [file, ids] of Object.entries(value)) {
-      const name = rel(resolve(root, file));
-      for (const id of ids) covered.set(id, [...(covered.get(id) ?? []), name]);
-    }
-    const missing = needed.filter((id) => !covered.has(id));
+    const { value, errors } = extractTestRequirements(config.tests.report, createInputReader(JSON_LIMITS).read(reportPath));
+    coverage = evaluateTestCoverage(needed, Object.fromEntries(Object.entries(value).map(([file, ids]) => [rel(resolve(root, file)), ids])));
+    const missing = coverage.missing;
     if (errors.length) {
       record('要件ごとのテスト', 'fail', errors.map((e) => `${e.file}:${e.line} ${e.message}`).join('\n'));
     } else {
@@ -299,13 +286,17 @@ function checkCoverage(
       );
     }
   }
-  return Object.fromEntries(needed.map((id) => [id, (covered.get(id) ?? []).sort()]));
+  return coverage.coverage;
 }
 
 // ---------- 品質コマンド ----------
-// lint・typecheck・test の順に実行し、1 つ失敗しても残りを実行する（仮定 A-02）
+// lint・typecheck・test の順に実行し、1 つ失敗しても残りを実行する
+/** --skip-commands で省いたときの項目の detail */
+export const COMMANDS_SKIPPED = '--skip-commands で実行していません。テストの判定には前回のテストのレポートを使いました。完了の確認には --skip-commands を付けずに実行してください';
+
 function runCommands(root: string, config: LoomakeConfig, skip: boolean, record: Recorder, progress: (m: string) => void, timeoutMs?: number) {
-  if (skip) return;
+  // 省いたことを結果に残し、前回のレポートでの合格を、品質コマンドを実行した合格と見分けられるようにする（REQ-191）
+  if (skip) return record('品質コマンド', 'skip', COMMANDS_SKIPPED);
   const deadline = timeoutMs === undefined ? undefined : Date.now() + timeoutMs;
   const names = [...COMMAND_ORDER.filter((n) => n in config.commands), ...Object.keys(config.commands).filter((n) => !COMMAND_ORDER.includes(n))];
   for (const name of names) {
@@ -317,18 +308,17 @@ function runCommands(root: string, config: LoomakeConfig, skip: boolean, record:
       continue;
     }
     progress(`… ${name}: ${cmd}`);
-    const r =
-      left === undefined
+    let r;
+    try {
+      r = left === undefined && !hasProcessBudget()
         ? spawnSync(cmd, { cwd: root, shell: true, encoding: 'utf8', maxBuffer: MAX_BUFFER })
-        : spawnSync(process.execPath, ['-e', KILL_TREE_ON_TIMEOUT, String(left), cmd], { cwd: root, encoding: 'utf8', maxBuffer: MAX_BUFFER });
-    if (left !== undefined && r.status === TIMED_OUT_STATUS && (r.stderr ?? '').includes(TIMED_OUT_MARK)) {
-      record(`command: ${name}`, 'fail', TIMED_OUT);
+        : runExternal(cmd, [], { cwd: root, shell: true, timeoutMs: left, qualityCommand: true, maxBuffer: MAX_BUFFER });
+    } catch (error) {
+      if (!(error instanceof ProcessLimitError)) throw error;
+      record(`command: ${name}`, 'fail', error.kind === 'timeout' ? TIMED_OUT : error.kind === 'interrupted' ? INTERRUPTED : error.message);
+      // 共有予算では後続の外部操作も起動せず拒否し、各項目に未実行の理由を残す。
+      if (error.kind === 'interrupted' && !hasProcessBudget()) return;
       continue;
-    }
-    // 中断されたら、残りのコマンドは実行しない（REQ-124）
-    if (left !== undefined && r.status === INTERRUPTED_STATUS && (r.stderr ?? '').includes(INTERRUPTED_MARK)) {
-      record(`command: ${name}`, 'fail', INTERRUPTED);
-      return;
     }
     const out = `${r.stdout ?? ''}${r.stderr ?? ''}`.trim();
     record(`command: ${name}`, r.status === 0 ? 'pass' : 'fail', r.status === 0 ? '' : out.split('\n').slice(-30).join('\n'));

@@ -24,9 +24,20 @@
       "default": "./dist/index.js"
     }
   },
-  "files": ["dist", "templates"],
+  "files": [
+    "dist",
+    "supervisor",
+    "templates"
+  ],
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "provenance": true
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json"

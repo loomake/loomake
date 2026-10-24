@@ -43,7 +43,7 @@ const readJson = (p: string): unknown => {
   }
 };
 
-/** package.json の packageManager、なければロックファイルで判定し、どれも無ければ npm（add-init-cli の仮定 A-01） */
+/** package.json の packageManager、なければロックファイルで判定し、どれも無ければ npm */
 export function detectPackageManager(root: string): PackageManager {
   const pkg = readJson(join(root, 'package.json'));
   const field = typeof pkg === 'object' && pkg !== null ? (pkg as { packageManager?: unknown }).packageManager : undefined;
@@ -74,15 +74,39 @@ function hasLoomake(root: string): boolean {
   return [dependencies, devDependencies].some((d) => typeof d === 'object' && d !== null && 'loomake' in d);
 }
 
-/** init が置く loomake.config.json の中身 */
-export function configJson(pm: PackageManager): string {
+type Manifest = { scripts?: unknown; dependencies?: unknown; devDependencies?: unknown };
+const manifest = (root: string): Manifest | undefined => {
+  const pkg = readJson(join(root, 'package.json'));
+  return typeof pkg === 'object' && pkg !== null && !Array.isArray(pkg) ? pkg : undefined;
+};
+
+/**
+ * commands に書く品質コマンドの名前（REQ-196）。package.json に scripts があれば、空でない script がある名前だけ。
+ * scripts がなければ有無を判断できないので、3 つとも書く
+ */
+export function availableCommands(root: string): string[] {
+  const scripts = manifest(root)?.scripts;
+  const names = Object.keys(COMMANDS.npm);
+  if (typeof scripts !== 'object' || scripts === null || Array.isArray(scripts)) return names;
+  return names.filter((n) => typeof (scripts as Record<string, unknown>)[n] === 'string' && (scripts as Record<string, string>)[n].trim() !== '');
+}
+
+/** 依存にあるテストランナー（REQ-197） */
+function testRunners(root: string): { vitest: boolean; jest: boolean } {
+  const pkg = manifest(root);
+  const has = (name: string) => [pkg?.dependencies, pkg?.devDependencies].some((d) => typeof d === 'object' && d !== null && name in d);
+  return { vitest: has('vitest'), jest: has('jest') };
+}
+
+/** init が置く loomake.config.json の中身。names を省くと 3 つのコマンドを書く */
+export function configJson(pm: PackageManager, names: readonly string[] = Object.keys(COMMANDS[pm])): string {
   const config = {
     $comment: 'Loomake の検証設定。AI は人の承認なしにここを緩めないこと（AGENTS.md 4章）',
     openspecDir: 'openspec',
     openspecValidate: 'auto',
-    // verify はテストランナーがこのファイルに書き出した JSON レポートを読む（add-init-cli の仮定 A-05）
+    // verify はテストランナーがこのファイルに書き出した JSON レポートを読む
     tests: { report: DEFAULT_TEST_REPORT },
-    commands: COMMANDS[pm],
+    commands: Object.fromEntries(Object.entries(COMMANDS[pm]).filter(([n]) => names.includes(n))),
   };
   return `${JSON.stringify(config, null, 2)}\n`;
 }
@@ -96,24 +120,27 @@ export function initFiles(options: Pick<InitOptions, 'root' | 'codex' | 'devcont
   return [
     { path: 'AGENTS.md', content: template('AGENTS.md') },
     { path: 'CLAUDE.md', content: template('CLAUDE.md') },
-    { path: 'loomake.config.json', content: configJson(detectPackageManager(options.root)) },
+    { path: 'loomake.config.json', content: configJson(detectPackageManager(options.root), availableCommands(options.root)) },
     ...skill('.claude/skills'),
     ...(options.codex ? skill('.agents/skills') : []),
     ...(options.devcontainer ? [{ path: '.devcontainer/devcontainer.json', content: template('devcontainer/devcontainer.json') }] : []),
   ];
 }
 
-const REPORT_EXAMPLES = [
-  `テストランナーが、テストの結果を JSON で ${DEFAULT_TEST_REPORT} に書き出すよう設定してください。loomake verify はこのファイルで要件ごとのテストを確かめます。`,
-  '  Vitest（vitest.config.ts）:',
-  `    test: { reporters: ['default', 'json'], outputFile: { json: '${DEFAULT_TEST_REPORT}' } }`,
-  '  Jest（package.json の test スクリプト）:',
-  `    jest --json --outputFile=${DEFAULT_TEST_REPORT}`,
-];
+/** テストのレポートの設定例。使っているテストランナーが分かれば、その例だけにする（REQ-197） */
+function reportExamples(root: string): string[] {
+  const { vitest, jest } = testRunners(root);
+  const both = vitest === jest;
+  return [
+    `テストランナーが、テストの結果を JSON で ${DEFAULT_TEST_REPORT} に書き出すよう設定してください。loomake verify はこのファイルで要件ごとのテストを確かめます。`,
+    ...(both || vitest ? ['  Vitest（vitest.config.ts）:', `    test: { reporters: ['default', 'json'], outputFile: { json: '${DEFAULT_TEST_REPORT}' } }`] : []),
+    ...(both || jest ? ['  Jest（package.json の test スクリプト）:', `    jest --json --outputFile=${DEFAULT_TEST_REPORT}`] : []),
+  ];
+}
 
 /**
  * .gitignore に path の行を足し、init の結果に出す 1 行を返す（REQ-133）。
- * 既存の行は変えない。前後の空白と先頭の / を除いて同じ行があれば足さない（improve-project-onboarding の仮定 A-02）
+ * 既存の行は変えない。前後の空白と先頭の / を除いて同じ行があれば足さない
  */
 function ensureIgnored(root: string, path: string): string {
   const p = join(root, '.gitignore');
@@ -136,7 +163,7 @@ const isSymlink = (p: string) => {
 };
 
 /**
- * 置き先が承諾なしに読み書きしてはいけない場所かを調べ、理由を返す（harden-init-and-trace-check の仮定 A-01）。
+ * 置き先が承諾なしに読み書きしてはいけない場所かを調べ、理由を返す。
  * 途中のディレクトリも含めて、リンク先の無いリンクと、リンクを通ってプロジェクトの外を指すものを拒む
  */
 function unsafeTarget(root: string, path: string): string | null {
@@ -196,7 +223,7 @@ export async function runInit(options: InitOptions): Promise<number> {
     lines.push(`  ${status[i] === 'new' ? '作成' : '上書き'}：${f.path}`);
   });
   // テストのレポートを git の追跡から外す。証拠の置き場（.loomake/evidence/）はコミットするので除外しない（REQ-133）。
-  // 実行ログの置き場は、loomake run が自分で除外する（improve-project-onboarding の仮定 A-01）
+  // 実行ログの置き場は、loomake run が自分で除外する
   const config = readJson(join(root, 'loomake.config.json')) as { tests?: { report?: unknown } } | undefined;
   const report = typeof config?.tests?.report === 'string' ? config.tests.report.replace(/^\.\//, '') : DEFAULT_TEST_REPORT;
   lines.push(`  ${ensureIgnored(root, report)}`);
@@ -205,13 +232,21 @@ export async function runInit(options: InitOptions): Promise<number> {
   if (!existsSync(join(root, 'openspec'))) {
     stdout('\nopenspec/ がありません。OpenSpec の仕様と change を置くために、openspec init を実行してください。');
   }
-  stdout(`\n${REPORT_EXAMPLES.join('\n')}`);
+  stdout(`\n${reportExamples(root).join('\n')}`);
 
-  // package.json がなければ commands は npm の既定値のままなので、書き換えを促す（improve-init-guidance の仮定 A-02）
+  // scripts にない品質コマンドは commands に書かなかったので、足すときの手順を示す（REQ-196）
+  const available = availableCommands(root);
+  const missing = Object.keys(COMMANDS.npm).filter((n) => !available.includes(n));
+  const wroteConfig = lines.some((l) => /^ {2}(作成|上書き)：loomake\.config\.json$/.test(l));
+  if (missing.length && wroteConfig) {
+    stdout(`\npackage.json の scripts に ${missing.join('・')} がないので、loomake.config.json の commands に書きませんでした。script を足したら、commands にも書いてください。`);
+  }
+
+  // package.json がなければ commands は npm の既定値のままなので、書き換えを促す
   if (!existsSync(join(root, 'package.json'))) {
     stdout('\npackage.json がありません。loomake.config.json の commands（lint・typecheck・test）を、このプロジェクトで使うコマンドに書き換えてください。');
   }
-  // 検査に使う版を固定するため、プロジェクトに入れるよう促す。package.json は書き換えない（improve-init-guidance の仮定 A-01）
+  // 検査に使う版を固定するため、プロジェクトに入れるよう促す。package.json は書き換えない
   if (!hasLoomake(root)) {
     stdout(`\nloomake を開発用の依存に足してください。npx loomake verify は、プロジェクトに入れた版を使います。\n  ${INSTALL[detectPackageManager(root)]}`);
   }

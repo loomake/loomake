@@ -1,0 +1,125 @@
+{
+  "snapshot": "228b1c9",
+  "semanticRedRuns": [
+    {
+      "report": ".loomake/quality/diagnostic-extended-red.json",
+      "sha256": "82f639aa1bf7a36dbc0cd3b1304ce8d0f8d35911bf2048386af0e644db341c5a",
+      "tests": 14,
+      "failed": 3,
+      "failureNames": [
+        "診断ストリームの置換 [REQ-153] undefined",
+        "診断ストリームの置換 [REQ-153] undefined",
+        "診断ストリームの置換 [REQ-153] undefined"
+      ]
+    },
+    {
+      "report": ".loomake/quality/mask-order-red.json",
+      "sha256": "696b64ee20bcbd1dc5a9cd25d50601801973911924bdab55af8e5152b264d1a3",
+      "tests": 15,
+      "failed": 2,
+      "failureNames": [
+        "置換する秘密情報の形 [REQ-199] APIトークンが隣接しても秘密鍵のBEGINを壊さず本文全体を置換する",
+        "置換する秘密情報の形 [REQ-199] 別形式に見えるヘッダでも秘密鍵のブロック全体を先に置換する"
+      ]
+    },
+    {
+      "report": ".loomake/quality/mask-json-red.json",
+      "sha256": "c812380d0b99428c26bd211ec61cf68e713f0b06484933cca92aace261416b92",
+      "tests": 17,
+      "failed": 2,
+      "failureNames": [
+        "置換する秘密情報の形 [REQ-199] JSON文字列の改行に続く既知形式を値として置換する",
+        "置換する秘密情報の形 [REQ-199] JSONのUnicodeエスケープを含むトークンも値として置換する"
+      ]
+    },
+    {
+      "report": ".loomake/quality/diagnostic-json-red.json",
+      "sha256": "89973423a999a275a8e1d20f427cf743d11f62da28dd1d2a77e153c8cf0dea82",
+      "tests": 33,
+      "failed": 3,
+      "failureNames": [
+        "診断ストリームの置換 [REQ-153] JSONの区切り \"\\n\" の後のトークンも全チャンク境界で保護する",
+        "診断ストリームの置換 [REQ-153] JSONの区切り \"\\r\" の後のトークンも全チャンク境界で保護する",
+        "診断ストリームの置換 [REQ-153] JSONの区切り \"\\t\" の後のトークンも全チャンク境界で保護する"
+      ]
+    },
+    {
+      "report": ".loomake/quality/mask-truncated-red.json",
+      "sha256": "7ed3d2866a4523b0a23b3cd6b6e2202aaded8b5e1322c7398ea71cdc43b9c849",
+      "tests": 18,
+      "failed": 1,
+      "failureNames": [
+        "置換する秘密情報の形 [REQ-199] JSONの終端が切れても改行に続く既知形式を置換する"
+      ]
+    }
+  ],
+  "green": {
+    "total": 728,
+    "passed": 728,
+    "failed": 0,
+    "pending": 0
+  },
+  "gateRuns": [
+    {
+      "change": "protect-run-diagnostics",
+      "snapshotCommit": "8bc0ded",
+      "exitCode": 0,
+      "tests": 725,
+      "logSha256": "6594e3018efba17100a9d2a712cb78c01e653212bc6f2ab0b1063f74daead21b"
+    },
+    {
+      "change": "guard-git-internals",
+      "snapshotCommit": "8bc0ded",
+      "exitCode": 0,
+      "tests": 725,
+      "logSha256": "0f3567b105d9ae1fc2878e889ff74b340d564a33c7130d65909944b7321e0b3b"
+    },
+    {
+      "change": "audit-scenario-evidence",
+      "snapshotCommit": "8bc0ded",
+      "exitCode": 0,
+      "tests": 725,
+      "logSha256": "5d83d4c05b95f981bd01514e9f95b911c7f916d54c70566811c13e3c89ceaa91"
+    },
+    {
+      "change": "audit-scenario-evidence",
+      "snapshotCommit": "228b1c9",
+      "exitCode": 0,
+      "tests": 728,
+      "logSha256": "5d83d4c05b95f981bd01514e9f95b911c7f916d54c70566811c13e3c89ceaa91"
+    }
+  ],
+  "runtimeChecks": {
+    "total": 4,
+    "passed": 4,
+    "node": "v20.19.0",
+    "platform": "linux",
+    "arch": "arm64"
+  },
+  "testSourceSha256": {
+    "tests/package-artifacts.test.ts": "a3907250e116ce3846509dda89ba0a99846fce40dcce890ce27bab37e746e083",
+    "packages/runner/test/diagnostic-redactor.test.ts": "bc1d89cd9d21bc9079f3626cd0c06eb26f9e7036483b6c3f5c09b2d0414704d4",
+    "packages/runner/test/engine-safety.test.ts": "7c75c2f45e35c3daf7c65fb9551eb924a0b3d7e34656a71cd0cc3ae486711317",
+    "packages/runner/test/evidence-storage.test.ts": "16cd666b698613e965a0c1547e97b68a56431b2f576b7f9e45caf7954adbeebb",
+    "packages/runner/test/external-budget.test.ts": "0e80c4fc576e2649e768bdf1e232034a706be837286f1d1f2df5a924862ae44f",
+    "packages/runner/test/guards.test.ts": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c",
+    "packages/runner/test/lock.test.ts": "503815aa9b69654f8966ccbbf591d44f5cc12b36c2610d66fb566783884b9d0b",
+    "packages/runner/test/log-config.test.ts": "8f76ad8d7938289e28b1c534473c27bdaed047603e8da7873b5d7fa242f326ea",
+    "packages/runner/test/log-run.test.ts": "8739b25d089dc16b12339bdb8cd0c63f3915848449ed0cf7d20666aafc39c000",
+    "packages/runner/test/logs.test.ts": "fc4f44af93ac4374860bce08583d0884c14adb9d73814ec372cafe70ea6bf9e5",
+    "packages/runner/test/mask.test.ts": "c021eebe799ff8c5762683db208f7b9adb6bdb0f35fe2be7f6e13200832910ec",
+    "packages/runner/test/output-budget.test.ts": "91e585da4ed7785f163c4be3828c85ca5e5e0704865d72439da2e8f3d85e14e0",
+    "packages/runner/test/output-processes.test.ts": "ba1bbba51f418c940a3b40b55501411289b3628d1c4fc5d04e73503ed56d15ec",
+    "packages/runner/test/pr.test.ts": "4de5a8a318f034232c6422f24691a7203487f95058c793daee9b66c1ddba22d3",
+    "packages/runner/test/publication-retry.test.ts": "49db35ee3960986e16dabe788943d2490d57f5d0b121531227f9ad148ed844bf",
+    "packages/runner/test/run-conditions.test.ts": "ad3ecc2391eef40a16199597cc0e4feb6958c38fdfc9f8e3bdcabbe310b34511",
+    "packages/runner/test/run.test.ts": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb",
+    "packages/runner/test/safety-paths.test.ts": "e976ee7e1e4c985ae0566df7cf7d177bb254e35053a8410018fd4794a1ce4673"
+  },
+  "testRemovalReview": {
+    "decision": "rejected",
+    "reason": "Removing the failing memory test before a replacement was established could weaken coverage.",
+    "resolution": "Retained the original test and assertions, repaired its loader for both actual source modules, and added a separate packed-artifact test."
+  },
+  "nonSemanticFailure": "The original source memory test could not load the new .js helper; this was a loader error, not a semantic Red. One combined run also exhausted the REQ-105 preparation budget; its isolated rerun and all later full gates passed."
+}

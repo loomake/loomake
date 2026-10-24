@@ -1,0 +1,151 @@
+{
+  "scope": "input-reading-on-this-host",
+  "node": "v24.21.0",
+  "platform": "linux",
+  "arch": "arm64",
+  "peakIncludesFixtureSetup": true,
+  "sources": [
+    {
+      "file": "packages/kit/src/input.ts",
+      "sha256": "419c0f7b38efbcda20738264ffdc99ffbcf0616e7c4ccc1e6fa814123a577c0c"
+    },
+    {
+      "file": "packages/trace/src/documents.ts",
+      "sha256": "d68579ba075763a1df63d50937c09d30dd365f10f034a5eef6cc73bc7eda40ec"
+    },
+    {
+      "file": "packages/trace/src/report.ts",
+      "sha256": "061f83b50febd147ccc7995b79defcb638458644be47d395c5fa656286a1538f"
+    },
+    {
+      "file": "packages/runner/src/run.ts",
+      "sha256": "037fda16aaef1373dad1426a58162a8c07abc19082af27fb2ff76e51dee46260"
+    }
+  ],
+  "rows": [
+    {
+      "profile": "small",
+      "bytes": 262152,
+      "status": "read",
+      "durationMs": 3.41,
+      "peakRssBytes": 62533632,
+      "expected": "read",
+      "budget": {
+        "durationMs": 1000,
+        "peakRssBytes": 268435456
+      },
+      "withinBudget": true
+    },
+    {
+      "profile": "medium",
+      "bytes": 8388616,
+      "status": "read",
+      "durationMs": 9.83,
+      "peakRssBytes": 82669568,
+      "expected": "read",
+      "budget": {
+        "durationMs": 1000,
+        "peakRssBytes": 268435456
+      },
+      "withinBudget": true
+    },
+    {
+      "profile": "boundary",
+      "bytes": 16777216,
+      "status": "read",
+      "durationMs": 14.92,
+      "peakRssBytes": 126050304,
+      "expected": "read",
+      "budget": {
+        "durationMs": 1000,
+        "peakRssBytes": 268435456
+      },
+      "withinBudget": true
+    },
+    {
+      "profile": "file-limit",
+      "bytes": 1048585,
+      "status": "rejected",
+      "reason": "入力を読み取れません：ファイルの上限は1048576バイトです（<fixture>/specs/c0/spec.md）",
+      "durationMs": 0.59,
+      "peakRssBytes": 55484416,
+      "expected": "rejected",
+      "budget": {
+        "durationMs": 1000,
+        "peakRssBytes": 268435456
+      },
+      "withinBudget": true
+    },
+    {
+      "profile": "total-limit",
+      "bytes": 17825800,
+      "status": "rejected",
+      "reason": "入力を読み取れません：読み取り合計の上限は16777216バイトです（<fixture>/specs/c8/spec.md）",
+      "durationMs": 14.05,
+      "peakRssBytes": 121700352,
+      "expected": "rejected",
+      "budget": {
+        "durationMs": 1000,
+        "peakRssBytes": 268435456
+      },
+      "withinBudget": true
+    },
+    {
+      "profile": "depth-limit",
+      "bytes": 8,
+      "status": "rejected",
+      "reason": "入力を読み取れません：探索の深さの上限は32です（<fixture>/specs/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d）",
+      "durationMs": 0.85,
+      "peakRssBytes": 54059008,
+      "expected": "rejected",
+      "budget": {
+        "durationMs": 1000,
+        "peakRssBytes": 268435456
+      },
+      "withinBudget": true
+    },
+    {
+      "profile": "entry-limit",
+      "bytes": 8,
+      "status": "rejected",
+      "reason": "入力を読み取れません：探索項目の上限は4096です（<fixture>/specs）",
+      "durationMs": 7.15,
+      "peakRssBytes": 60944384,
+      "expected": "rejected",
+      "budget": {
+        "durationMs": 1000,
+        "peakRssBytes": 268435456
+      },
+      "withinBudget": true
+    },
+    {
+      "profile": "json-total-limit",
+      "bytes": 141558525,
+      "status": "rejected",
+      "reason": "入力を読み取れません：読み取り合計の上限は134217728バイトです（<fixture>/.loomake/evidence/c1/c.json）",
+      "durationMs": 91.21,
+      "peakRssBytes": 385466368,
+      "expected": "rejected",
+      "budget": {
+        "durationMs": 3000,
+        "peakRssBytes": 536870912
+      },
+      "withinBudget": true
+    },
+    {
+      "profile": "prompt-limit",
+      "bytes": 1048584,
+      "status": "rejected",
+      "reason": "エンジンへの指示の上限は16777216バイトです。文書と検証の出力を確認してください。",
+      "durationMs": 23.34,
+      "peakRssBytes": 143474688,
+      "expected": "rejected",
+      "budget": {
+        "durationMs": 1000,
+        "peakRssBytes": 268435456
+      },
+      "withinBudget": true
+    }
+  ],
+  "ok": true
+}

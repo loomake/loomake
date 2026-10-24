@@ -3,7 +3,7 @@ import type { ParseResult } from './parse.js';
 /** テストファイル → そのファイルの成功したテストの名前にある要件 ID（重複なし・昇順） */
 export type TestRequirements = Record<string, string[]>;
 
-// Vitest の json レポーター（Jest と同じ形式）のうち、読む部分だけ（trace.md の仮定 A-06）
+// Vitest の json レポーター（Jest と同じ形式）のうち、読む部分だけ
 type Report = {
   testResults: { name: string; assertionResults: { fullName: string; status: string }[] }[];
 };

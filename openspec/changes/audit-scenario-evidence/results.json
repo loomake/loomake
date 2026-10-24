@@ -1,0 +1,207 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario-evidence-audit",
+  "ok": false,
+  "counts": {
+    "total": 401,
+    "reviewed": 269,
+    "superseded": 0,
+    "unreviewed": 132,
+    "invalid": 0
+  },
+  "issues": [],
+  "exitCode": 1,
+  "specFiles": 27,
+  "testRun": {
+    "total": 764,
+    "passed": 764,
+    "failed": 0,
+    "pending": 0
+  },
+  "additionalRuntimeChecks": {
+    "total": 4,
+    "passed": 4,
+    "node": "v20.19.0",
+    "platform": "linux",
+    "arch": "arm64"
+  },
+  "gateRuns": [
+    {
+      "change": "isolate-run-decisions",
+      "snapshotCommit": "036acf3",
+      "exitCode": 0,
+      "tests": 764,
+      "logSha256": "1ee7d6689068fa88e23dc8ed567ae7dcd987efd6c9369beba0e0218e6acd577f"
+    },
+    {
+      "change": "audit-scenario-evidence",
+      "snapshotCommit": "036acf3",
+      "exitCode": 0,
+      "tests": 764,
+      "logSha256": "5d83d4c05b95f981bd01514e9f95b911c7f916d54c70566811c13e3c89ceaa91"
+    }
+  ],
+  "snapshot": {
+    "baseCommit": "036acf3",
+    "isolation": "fresh detached Git worktree",
+    "comparedCurrentCodeFiles": 171,
+    "currentCodeMatches": true,
+    "changedCodeFiles": [],
+    "comparisonHead": "036acf3eac67b2cd12505adc1c304fda577ff3e3",
+    "scope": "The gate and inventory cover the recorded snapshot. Dirty documentation and skill edits are outside this claim."
+  },
+  "inputs": {
+    "specs": {
+      "openspec/changes/audit-scenario-evidence/specs/scenario-evidence-audit/spec.md": "c59f98414dfffbe716abcd90103d39734358897c11c24e224245a36d03078ad3",
+      "openspec/changes/guard-git-internals/specs/run-guards/spec.md": "ae2d682dbbc3e120f891cf008012aa8828af8980ef7e5f7e99a45ef1ea756a3c",
+      "openspec/changes/guard-git-internals/specs/run/spec.md": "66ba42fd385ae84698354fa2a2304f1e601d1ee919fc93c6d62dff2e7ffec3d2",
+      "openspec/changes/isolate-run-decisions/specs/run-decision-policy/spec.md": "74508111eaca406b4206b1fd88599f875999a037d326a2bcf5a855ceb303cbb8",
+      "openspec/changes/protect-run-diagnostics/specs/run/spec.md": "d3fd4964728b04faf968037f00c6034ede145f3c5502a5cc7832d61b6a24015e",
+      "openspec/specs/agents-rules/spec.md": "8315a9b5b7668679a1f843120b0d9f150388b822ecf42807bd2e42188081bc5e",
+      "openspec/specs/bounded-input/spec.md": "2db14275dd45eca3387c9c7c618141341b418b4a035d94f878a31e26af88e7b8",
+      "openspec/specs/cli/spec.md": "a4eb03813fee07d2e122d69e7d34520867ffc3bea905ba978f598cde9e29e4ae",
+      "openspec/specs/core-parsers/spec.md": "4144bb3fda3107310fdc9c0cf6bda2a32a05f6bb97b0160526743015542eb34a",
+      "openspec/specs/doctor/spec.md": "63ff81d84fbf750168404388d23def8c871a9175565106d1ad94c9e8b6c475b9",
+      "openspec/specs/domain-mutation-check/spec.md": "6be475fb141c6397905911d539c425d6a95cd6be6985ff74eae239de70acc107",
+      "openspec/specs/evidence-publication/spec.md": "c900f0584fb4acb64ea07985624411359c18bc2fbf3e1494f8d610651998f042",
+      "openspec/specs/external-process-budget/spec.md": "4ac77e340a576c37d7fccc035f045bc1dc549e55dda4d4f5ef1a5c53ff61c7e4",
+      "openspec/specs/init/spec.md": "5f81b6565baf25c80ccca94cdfbfff01777b796ccf8382f0f45fb3cc9b26c098",
+      "openspec/specs/monorepo/spec.md": "a8870590c7c4fdefdd01f5986c7c52cfe87fb5a198acf1c9a9fb3f9ca059f687",
+      "openspec/specs/quality-journeys/spec.md": "61d9276aa545cdbd991dba104cb3da4d184e963ec3a395e962927f5229596178",
+      "openspec/specs/release-integrity/spec.md": "32f45cde5e4ac85df67ebeb6c24f52cbd59d166fed0fa4ddd5456fa72e1a3420",
+      "openspec/specs/req-to-openspec-skill/spec.md": "7299503a7ac4f0b61403e89e303ec5058bd3fd9cfa44583b49a1734a50d21a13",
+      "openspec/specs/run-guards/spec.md": "564970853d7b81ea473dac87db07a8b401ed23eafcb3ec964bdb204b658b6268",
+      "openspec/specs/run-pr/spec.md": "b8041c13d0ef5f242d11ff55d278a48348b0a1f20f7b5e493666ab76469b6743",
+      "openspec/specs/run-record-budget/spec.md": "976bcdc4c2985bcf8d43900e71d51d4394eaa17511e3a77073ad4227a30d0620",
+      "openspec/specs/run/spec.md": "e3bd644fa2ca9e6d4a000b7e4ae6847c1f82ff35ff033869ccaa40ccb44dd70e",
+      "openspec/specs/trace-agreement/spec.md": "3b44cff0873c91ea855a14e8742dbd4c6e08e59ed70fd7bea162757c726e31dc",
+      "openspec/specs/trace-record/spec.md": "1cea1c3f8b268cd9a900d38ec7a792993deb42e6b5b6d25936fad5f83c13fdfc",
+      "openspec/specs/trace-report/spec.md": "4e4e3337fe0fbba4cf946111187f2d51c863e6831f3523ccecaa761761d7d548",
+      "openspec/specs/verification-policy/spec.md": "3adba9533cfd13ad34cad39f2d79e02cf3da225bfcd2e11869dc24cea16e7eb2",
+      "openspec/specs/verify/spec.md": "5f6a0bc0584ed5320664274fbdb7fcf5bb7ed91938ee980d3a0b9672f7fbfd5d"
+    },
+    "testSources": {
+      "tests/ai-journeys.test.ts": "5d1934a2891224bd9ade78232509f9f529e8e6c36c3bf115843bb56e9a3f11f2",
+      "tests/domain-mutations.test.ts": "2b753f35a5ce2e4372d760077ca03f77e50004ea50e5a650bb9cffe1aa16a15b",
+      "tests/input-boundaries.test.ts": "89a368ec8c39e79bd883da212b897401371958751a3dba23ddc136ec71861829",
+      "tests/kit-assets.test.ts": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40",
+      "tests/monorepo.test.ts": "667c6ec373c3128e1f0353a49aed8366768c2eda105bc7f2c2bcd2ba9b060087",
+      "tests/package-artifacts.test.ts": "a3907250e116ce3846509dda89ba0a99846fce40dcce890ce27bab37e746e083",
+      "tests/package-workflows.test.ts": "c82be3653a952f37c8e5ad976fe0d00aa2028fef9d3ef16eca6a75e8450622bf",
+      "tests/public-source-exports.test.ts": "3668c02f7537b0e4abbfdd8a0c2e3daa2b36f62b2cdb56079fe83658ae5b2e77",
+      "tests/release-security.test.ts": "4e0bb399670ada63ce0c6db49f33bbf3042a92d42686e17b33e3a03a05e61b51",
+      "tests/run-decision-mutations.test.ts": "8a3fec58f6e7d8367606054eef907f1ec90ea1128860ee8a9b5dd22f6735f154",
+      "tests/scenario-audit.test.ts": "0081fbabce3363fc49dece2bc2cd3fcf7e710bab573d3241d7c49cd9d683b19f",
+      "tests/schema-compatibility.test.ts": "bdb7f3bb6d55a56df0ce3d1f0fa0c31a6a4bb3dcd670c1ba18c7a31d4ec6e0da",
+      "packages/cli/test/arguments.test.ts": "ecd21aa5a6c4f22075208b5c7299722d25198cfe42e95be9ff2af0a0eed9f381",
+      "packages/cli/test/cli.test.ts": "af8e785775d2e0aa180e9322dd37c5df04eea3e4c50de769f9bf6ffa94cc6ea1",
+      "packages/cli/test/doctor.test.ts": "c9fe91afe6e727773eff514d7e8c92b6037ecd6a504236a4732addca73b03f19",
+      "packages/cli/test/init.test.ts": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e",
+      "packages/cli/test/trace-agreement.test.ts": "5073d0fe1b55faecec1295c617a5127df8223485f7bf5d499d72fff070ff2fcf",
+      "packages/core/test/agreement.test.ts": "0e6e08ffc5b0dd863f0d80664a78fae0a7e7dc7122fd3688228626880dc31aa4",
+      "packages/core/test/coverage-policy.test.ts": "61add31ac1281ad2949cfda26529bfe7ec102b34fb8c06bf2d5d40c90ee32bb8",
+      "packages/core/test/package.test.ts": "6c32b72bc19cd187c4337ae78ff9c2b42f39e5ff40ef0156175a8845d0e84fb4",
+      "packages/core/test/schema.test.ts": "ee3ee3a0d181d9e98ff8aecc6fa70b2197748f938b4265e5ed2c1048ffad2891",
+      "packages/core/test/spec.test.ts": "542fe6ec2963ca726db1b6948e8bbe27f5bc9694cca87b437e4d9f63f6f8c9c3",
+      "packages/core/test/tasks.test.ts": "6208610676ee0a0335603847d61d26281ba29e23421ec3db4b38b23cea45be5a",
+      "packages/core/test/test-report.test.ts": "c7153a95adba3abf1d612e07134454d17aa93ece23874ffc140db2d5136859f1",
+      "packages/core/test/trace-edit.test.ts": "db99961acc8021a96ae61c6d5e78f76fda0e8383a25958bdf00e975f7e00d98d",
+      "packages/core/test/trace.test.ts": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40",
+      "packages/kit/test/doctor-command.test.ts": "a0e75f4a867c6a7c85dd0959a9737cb2fe4ad50f8d4dd84dfe9e9ab41b1ea0e6",
+      "packages/kit/test/doctor-diagnostics.test.ts": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0",
+      "packages/kit/test/input.test.ts": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985",
+      "packages/kit/test/process.test.ts": "ac53e9c06cdbdabcc611a457f0437074f42a784eadb8580fdc605ff29266828c",
+      "packages/kit/test/verify.test.ts": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c",
+      "packages/runner/test/decision-policy.test.ts": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b",
+      "packages/runner/test/diagnostic-redactor.test.ts": "bc1d89cd9d21bc9079f3626cd0c06eb26f9e7036483b6c3f5c09b2d0414704d4",
+      "packages/runner/test/engine-safety.test.ts": "7c75c2f45e35c3daf7c65fb9551eb924a0b3d7e34656a71cd0cc3ae486711317",
+      "packages/runner/test/evidence-storage.test.ts": "16cd666b698613e965a0c1547e97b68a56431b2f576b7f9e45caf7954adbeebb",
+      "packages/runner/test/external-budget.test.ts": "0e80c4fc576e2649e768bdf1e232034a706be837286f1d1f2df5a924862ae44f",
+      "packages/runner/test/guards.test.ts": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c",
+      "packages/runner/test/lock.test.ts": "503815aa9b69654f8966ccbbf591d44f5cc12b36c2610d66fb566783884b9d0b",
+      "packages/runner/test/log-config.test.ts": "8f76ad8d7938289e28b1c534473c27bdaed047603e8da7873b5d7fa242f326ea",
+      "packages/runner/test/log-run.test.ts": "8739b25d089dc16b12339bdb8cd0c63f3915848449ed0cf7d20666aafc39c000",
+      "packages/runner/test/logs.test.ts": "fc4f44af93ac4374860bce08583d0884c14adb9d73814ec372cafe70ea6bf9e5",
+      "packages/runner/test/mask.test.ts": "c021eebe799ff8c5762683db208f7b9adb6bdb0f35fe2be7f6e13200832910ec",
+      "packages/runner/test/output-budget.test.ts": "91e585da4ed7785f163c4be3828c85ca5e5e0704865d72439da2e8f3d85e14e0",
+      "packages/runner/test/output-processes.test.ts": "ba1bbba51f418c940a3b40b55501411289b3628d1c4fc5d04e73503ed56d15ec",
+      "packages/runner/test/pr.test.ts": "4de5a8a318f034232c6422f24691a7203487f95058c793daee9b66c1ddba22d3",
+      "packages/runner/test/publication-retry.test.ts": "49db35ee3960986e16dabe788943d2490d57f5d0b121531227f9ad148ed844bf",
+      "packages/runner/test/run-conditions.test.ts": "ad3ecc2391eef40a16199597cc0e4feb6958c38fdfc9f8e3bdcabbe310b34511",
+      "packages/runner/test/run.test.ts": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb",
+      "packages/runner/test/safety-paths.test.ts": "e976ee7e1e4c985ae0566df7cf7d177bb254e35053a8410018fd4794a1ce4673",
+      "packages/trace/test/publication-crash.test.ts": "870d3f491fbb77433bcb8ddd9a76b2ea22e9185ee7a7665f5894798b3f2142c0",
+      "packages/trace/test/publication.test.ts": "63231c8f68bbbe7901a3c28a437135b7aaebc689a66752682eb0a2422be710f9",
+      "packages/trace/test/record-size.test.ts": "db71a3294f7e3688bc76c9adbb527a0526a41c76304da1b8f350375514ec87e1",
+      "packages/trace/test/record.test.ts": "c2bb3939cea0fdf9786b20c2a4fd2dfa500c1904c71183d648fc7c2b626379d4",
+      "packages/trace/test/report.test.ts": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176",
+      "packages/trace/test/serialization.test.ts": "6cf85e33ea1af754e0245fc4259f994504be7310ea55c96abc971e81ebd5c247",
+      "scripts/runtime-compatibility.mjs": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
+    },
+    "testReportSha256": "266c481b64008d17bf8988a0742a9afe4524e8a41f6006263aa6359298384908",
+    "reviewSha256": "e9891c23c71ab83d5e312bc1228d014953dd939232568800e664720ab956b489",
+    "scriptSha256": "279e59e68ac4104a3bbb69289eaf02972596ca4db0a1351d04fb0b2ed2a33a39"
+  },
+  "runtimeEvidence": {
+    "resultsFile": "openspec/changes/audit-scenario-evidence/runtime20-results.json",
+    "resultsSha256": "d9fc6c26eb2647f98b2d66b71d384d71778c0963464412dfcff4670aa0402549",
+    "reportFile": "openspec/changes/audit-scenario-evidence/runtime20-report.json",
+    "reportSha256": "90120b1d8067ba422dcfeea8af2366fb679c3fa0ec5c170526e0210cce398695",
+    "combinedReportSha256": "266c481b64008d17bf8988a0742a9afe4524e8a41f6006263aa6359298384908",
+    "fullReportSha256": "80b13e5ef139223bfa4038ef51183c2b5cf73c13529215d8c1be6f90fef9c9e9"
+  },
+  "previousSnapshot": {
+    "counts": {
+      "total": 390,
+      "reviewed": 253,
+      "superseded": 0,
+      "unreviewed": 137,
+      "invalid": 0
+    },
+    "snapshot": {
+      "baseCommit": "228b1c9",
+      "isolation": "fresh detached Git worktree",
+      "comparedCurrentCodeFiles": 164,
+      "currentCodeMatches": false,
+      "changedCodeFiles": [
+        "packages/runner/src/guards.ts"
+      ],
+      "comparisonHead": "f15d9271767843fa0f1ee9119aee63b549cf6833",
+      "scope": "The gate and inventory cover the recorded snapshot. Later guards.ts changes and dirty documentation are not certified by this result."
+    },
+    "gateRuns": [
+      {
+        "change": "protect-run-diagnostics",
+        "snapshotCommit": "8bc0ded",
+        "exitCode": 0,
+        "tests": 725,
+        "logSha256": "6594e3018efba17100a9d2a712cb78c01e653212bc6f2ab0b1063f74daead21b"
+      },
+      {
+        "change": "guard-git-internals",
+        "snapshotCommit": "8bc0ded",
+        "exitCode": 0,
+        "tests": 725,
+        "logSha256": "0f3567b105d9ae1fc2878e889ff74b340d564a33c7130d65909944b7321e0b3b"
+      },
+      {
+        "change": "audit-scenario-evidence",
+        "snapshotCommit": "8bc0ded",
+        "exitCode": 0,
+        "tests": 725,
+        "logSha256": "5d83d4c05b95f981bd01514e9f95b911c7f916d54c70566811c13e3c89ceaa91"
+      },
+      {
+        "change": "audit-scenario-evidence",
+        "snapshotCommit": "228b1c9",
+        "exitCode": 0,
+        "tests": 728,
+        "logSha256": "5d83d4c05b95f981bd01514e9f95b911c7f916d54c70566811c13e3c89ceaa91"
+      }
+    ]
+  },
+  "limitations": [
+    "132 scenarios remain unreviewed.",
+    "No real Claude Code or GitHub connection, other operating systems, or independent security audit is claimed."
+  ]
+}

@@ -1,0 +1,7 @@
+初回ゲートの失敗箇所の抜粋。通常レポートの全文を含む差分は省略する。
+
+     Test Files  1 failed | 45 passed (46)
+          Tests  1 failed | 656 passed (657)
+     FAIL  tests/domain-mutations.test.ts > 既存のドメインテストで13条件を壊して確認する > [REQ-161][REQ-162][REQ-163] 正常な実装と13条件を実行し、元ファイルと通常のレポートを変更しない
+    AssertionError: expected '{"numTotalTestSuites":15,"numPassedTe…' to be '{"numTotalTestSuites":53,"numPassedTe…' // Object.is equality
+         78|       expect(existsSync(normalReport) ? readFileSync(normalReport, 'ut…

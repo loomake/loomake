@@ -1,7 +1,7 @@
 # npm への公開。GitHub 上から手動で実行する（自動では公開しない）。
 # 事前に `pnpm changeset version` で版を上げた変更を main に入れておくこと。
 # 認証は npm の Trusted Publishing（OIDC）を使う。初回はパッケージが npm になく Trusted Publishing を設定できないため、
-# secrets.NPM_TOKEN を登録して実行する。手順は docs/release.md にある（REQ-141）
+# 初回の認証設定は docs/release.md の手順に従う（REQ-141）
 name: release
 
 on:
@@ -25,10 +25,11 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
+          persist-credentials: false
           fetch-depth: 0
       # pnpm test の changeset status は main からの差分を見るため、ローカルに main を用意する
       - run: git rev-parse --verify main || git branch main origin/main
-      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
@@ -43,13 +44,15 @@ jobs:
             exit 1
           fi
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
       # 品質コマンドが通らない状態では公開しない（REQ-140）
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      - run: pnpm build
+      - run: node scripts/package-smoke.mjs prepare "$RUNNER_TEMP/loomake-package"
+      - run: node scripts/package-smoke.mjs check "$RUNNER_TEMP/loomake-package"
       # publish のジョブはビルドしないので、ビルドの結果を渡す
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: dist
           path: packages/*/dist
@@ -61,15 +64,14 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
-      # changeset publish が作るタグを push するため
       contents: write
-      # Trusted Publishing で、npm が OIDC のトークンを受け取るため
       id-token: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
+          persist-credentials: false
           fetch-depth: 0
-      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
@@ -79,7 +81,7 @@ jobs:
       - run: npm install -g npm@11.19.0
       # このジョブは OIDC のトークンを取れるので、依存パッケージのスクリプトを動かさない
       - run: pnpm install --frozen-lockfile --ignore-scripts
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: dist
           path: packages
@@ -92,4 +94,9 @@ jobs:
       - run: pnpm changeset publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - run: git push --follow-tags
+          NPM_CONFIG_PROVENANCE: 'true'
+      - run: |
+          gh auth setup-git
+          git push --follow-tags
+        env:
+          GH_TOKEN: ${{ github.token }}

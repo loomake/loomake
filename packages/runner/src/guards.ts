@@ -1,13 +1,26 @@
-import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { existsSync, lstatSync, readFileSync, readdirSync, readlinkSync, statSync } from 'node:fs';
+import { join, relative, resolve } from 'node:path';
+import { runExternal } from '@loomake/kit';
 import { dirtyFiles, git } from './git.js';
 
 /** 不正な直し方として見つけたもの */
 export type GuardFinding = { file: string; reason: string };
 
-// テストファイル（add-run-guards の仮定 A-17）
+// テストファイル
 const isTestFile = (f: string) => /\.(test|spec)\./.test(f) || /(^|\/)(test|tests|__tests__)\//.test(f);
-// skip・todo を足した行（A-17）。it.concurrent.skip のような修飾と、条件つきの skipIf・runIf も見る（fix-review-findings-2 の仮定 A-04）
+// skip・todo を足した行（A-17）。it.concurrent.skip のような修飾と、条件つきの skipIf・runIf も見る
 const SKIP = /\b(it|test|describe|suite)(\.\w+)*\.(skip|todo|skipIf|runIf)\b|\bx(it|test|describe)\(/;
+// 検査の行と、同じリテラルどうしを比べる必ず通る検査（REQ-201）
+const ASSERTION = /\bexpect\(|\bassert(?:\.\w+)?\(/;
+// コメントと import・require の行は、検査の行として数えない（REQ-201）
+const NOT_ASSERTION = /^[+-]\s*(?:\/\/|\/\*|\*|import\b|(?:const|let|var)\b.*\brequire\()/;
+const LITERAL = String.raw`(true|false|null|undefined|-?\d+(?:\.\d+)?|'[^']*'|"[^"]*")`;
+const TRIVIAL = new RegExp(
+  String.raw`\bexpect\(\s*${LITERAL}\s*\)\s*\.(?:toBe|toEqual|toStrictEqual)\(\s*\1\s*\)` +
+    String.raw`|\bassert(?:\.\w+)?\(\s*${LITERAL}\s*,\s*\2\s*\)|\bassert(?:\.ok)?\(\s*true\s*\)`,
+);
+
 // アサーションとテストの宣言の呼び出し。直前が . か英数字の呼び出し（/x/.test(s)・submit(）は含めない（guard-test-weakening の仮定 A-01）
 const TEST_LINE = /(?<![.\w])(expect|assert|it|test|describe)(\.\w+)*\s*\(/;
 // lint・型・テストの設定ファイル（A-18）
@@ -21,14 +34,14 @@ const isConfigFile = (f: string) => {
     /^(vitest\.config|vitest\.workspace|vite\.config|jest\.config)\./.test(name)
   );
 };
-// いまの仕様と change の文書（A-19、fix-review-findings-2 の仮定 A-01）。openspecDir は loomake.config.json の値
+// いまの仕様と change の文書（A-19）。openspecDir は loomake.config.json の値
 const openspecPrefix = (dir: string) => `${dir.replace(/\\/g, '/').replace(/^\.\//, '').replace(/\/+$/, '')}/`;
 
-// どの階層の package.json でも scripts を比べる（fix-review-findings の仮定 A-04）
+// どの階層の package.json でも scripts を比べる
 const isPackageJson = (f: string) => f.split('/').pop() === 'package.json';
 
 const scriptsOf = (root: string, env: NodeJS.ProcessEnv, rev: string, file: string): string => {
-  const r = spawnSync('git', ['show', `${rev}:${file}`], { cwd: root, env, encoding: 'utf8' });
+  const r = runExternal('git', ['show', `${rev}:${file}`], { cwd: root, env });
   if (r.status !== 0) return '{}';
   try {
     return JSON.stringify((JSON.parse(r.stdout) as { scripts?: unknown }).scripts ?? {});
@@ -48,9 +61,10 @@ export function findViolations(root: string, env: NodeJS.ProcessEnv, openspecDir
   const changesDir = `${prefix}changes/`;
   git(root, env, ['add', '-A']);
   const findings: GuardFinding[] = [];
-  const status = git(root, env, ['diff', '--cached', '--name-status', '--no-renames']).split('\n').filter(Boolean);
-  for (const line of status) {
-    const [code, file] = line.split('\t');
+  const status = git(root, env, ['diff', '--cached', '--name-status', '--no-renames', '-z']).split('\0');
+  for (let i = 0; i + 1 < status.length; i += 2) {
+    const code = status[i];
+    const file = status[i + 1];
     if (code === 'D' && isTestFile(file)) findings.push({ file, reason: 'テストファイルを消しました' });
     if (isConfigFile(file)) findings.push({ file, reason: '設定ファイルを変えました' });
     if (isPackageJson(file) && scriptsOf(root, env, 'HEAD', file) !== scriptsOf(root, env, '', file)) {
@@ -62,6 +76,12 @@ export function findViolations(root: string, env: NodeJS.ProcessEnv, openspecDir
       const lines = git(root, env, ['diff', '--cached', '-U0', '--', file]).split('\n');
       const added = lines.filter((l) => l.startsWith('+') && !l.startsWith('+++'));
       for (const l of added) if (SKIP.test(l)) findings.push({ file, reason: `skip・todo を足しました：${l.slice(1).trim()}` });
+      if (isTestFile(file)) {
+        for (const l of added) if (TRIVIAL.test(l)) findings.push({ file, reason: `必ず通る検査を足しました：${l.slice(1).trim()}` });
+        const removed = lines.filter((l) => l.startsWith('-') && !l.startsWith('---'));
+        const count = (xs: string[]) => xs.filter((l) => ASSERTION.test(l) && !NOT_ASSERTION.test(l)).length;
+        if (code === 'M' && count(removed) > count(added)) findings.push({ file, reason: 'テストの検査を減らしました' });
+      }
       // HEAD にあったテストファイルのアサーションとテストの宣言を、消すか書き換えたら止まる。同じ内容の行を足していれば、移しただけとみなす（REQ-109）
       if (code === 'M' && isTestFile(file)) {
         const kept = new Set(added.map((l) => l.slice(1).trim()));
@@ -77,7 +97,7 @@ export function findViolations(root: string, env: NodeJS.ProcessEnv, openspecDir
   return { findings, diff };
 }
 
-/** 止まったときに、人が承認するための手順（add-run-guards の確認事項 Q-07） */
+/** 止まったときに、人が承認するための手順 */
 export const APPROVAL_GUIDE = [
   '変更はコミットせずに作業ツリーに残しました。',
   '承認するなら、差分を確かめたうえで tasks.md のそのタスクを完了にし、自分でコミットしてから、もう一度 loomake run を実行してください。',
@@ -88,8 +108,8 @@ export const APPROVAL_GUIDE = [
 export type HeadState = { sha: string; branch: string };
 
 export const headState = (root: string, env: NodeJS.ProcessEnv): HeadState => ({
-  sha: (spawnSync('git', ['rev-parse', '--verify', '-q', 'HEAD'], { cwd: root, env, encoding: 'utf8' }).stdout ?? '').trim(),
-  branch: (spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: root, env, encoding: 'utf8' }).stdout ?? '').trim(),
+  sha: (runExternal('git', ['rev-parse', '--verify', '-q', 'HEAD'], { cwd: root, env }).stdout ?? '').trim(),
+  branch: (runExternal('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: root, env }).stdout ?? '').trim(),
 });
 
 /**
@@ -121,4 +141,56 @@ export function findEngineMove(
       : []),
   ].join('\n');
   return { reason: `エンジンが HEAD かブランチを変えました（${label(before)} → ${label(after)}）`, report };
+}
+
+/** git の設定ファイルとフックのディレクトリの場所。`--git-path hooks` は core.hooksPath を反映する */
+const gitPath = (root: string, env: NodeJS.ProcessEnv, name: string) => resolve(root, git(root, env, ['rev-parse', '--git-path', name]).trim());
+
+// シンボリックリンクはたどらない（REQ-204）。リンク先のないリンクでも落ちない
+const filesUnder = (dir: string): string[] =>
+  readdirSync(dir, { withFileTypes: true })
+    .flatMap((e) => (e.isDirectory() && !e.isSymbolicLink() ? filesUnder(join(dir, e.name)) : [join(dir, e.name)]))
+    .sort();
+
+const entryDigest = (file: string) => {
+  const stat = lstatSync(file);
+  if (stat.isSymbolicLink()) return `link:${readlinkSync(file)}`;
+  return `${String(stat.mode & 0o111)}:${createHash('sha256').update(readFileSync(file)).digest('hex')}`;
+};
+
+/** git の設定とフックの状態。エンジンを呼ぶ前後で比べる（REQ-198） */
+export type GitInternals = { config: string; hooks: string; digest: string };
+
+/** git の設定ファイルの中身と、フックのディレクトリのファイルの相対パスと中身から、比べるための SHA-256 を作る */
+export function gitInternals(root: string, env: NodeJS.ProcessEnv, places?: { config: string; hooks: string }): GitInternals {
+  const config = places?.config ?? gitPath(root, env, 'config');
+  const hooks = places?.hooks ?? gitPath(root, env, 'hooks');
+  const hash = createHash('sha256');
+  hash.update(existsSync(config) ? readFileSync(config) : '');
+  // include の先・利用者全体・システム全体・worktree の設定も含めて、git が実際に使う設定を比べる（REQ-204）
+  hash.update('\0config\0').update(runExternal('git', ['config', '--list', '--show-origin', '-z'], { cwd: root, env }).stdout);
+  if (existsSync(hooks) && statSync(hooks).isDirectory()) {
+    for (const file of filesUnder(hooks)) hash.update(`\0${relative(hooks, file)}\0${entryDigest(file)}`);
+  }
+  return { config, hooks, digest: hash.digest('hex') };
+}
+
+/**
+ * エンジンが git の設定かフックを変えたかを調べる（REQ-198）。変えていれば、止まる理由と確かめる場所を返す。
+ * run は書き換えを戻さず、このあとの git add・git commit も実行しない
+ */
+export function findInternalsChange(root: string, env: NodeJS.ProcessEnv, before: GitInternals): { reason: string; report: string } | undefined {
+  // 呼ぶ前と同じ場所を読む。core.hooksPath を変えれば設定ファイルの中身が変わるので、場所を求め直さなくても見つかる
+  const after = gitInternals(root, env, before);
+  if (after.digest === before.digest) return undefined;
+  const places = [before.config, before.hooks].map((p) => `  ${p}`);
+  return {
+    reason: 'エンジンが git の設定かフックを変えました',
+    report: [
+      'エンジンが git の設定かフックを変えました。run はフックや設定のコマンドを実行しないよう、git add・git commit をせずに止まります。書き換えは戻していません。',
+      '確かめる場所：',
+      ...places,
+      '意図した変更でなければ元に戻し、変更は作業ツリーに残っているので差分を確かめてから、もう一度 loomake run を実行してください。',
+    ].join('\n'),
+  };
 }

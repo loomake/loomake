@@ -1,9 +1,9 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { parseSpec, parseTrace } from '@loomake/core';
-import { UsageError, assertChangeId, findChangeDir, loadConfig, toPosix } from '@loomake/kit';
+import { UsageError, assertChangeId, loadConfig, findChangeDir, toPosix, createInputReader, JSON_LIMITS, type InputReader } from '@loomake/kit';
 import { EVIDENCE_DIR, EVIDENCE_SCHEMA_VERSION, type Evidence } from './record.js';
 import { changedDocuments, readDocuments, type EvidenceDocument } from './documents.js';
+import { evidenceProblem } from './evidence.js';
 
 /** レポートの JSON の形の版 */
 export const REPORT_SCHEMA_VERSION = 2;
@@ -28,7 +28,7 @@ export type Report = {
   change: string;
   /** documents は、検証した時点の文書を記録に保存しているか */
   evidence: { recordedAt: string; sha: string; committedAt: string; ok: boolean; documents: boolean };
-  /** changedDocuments は、記録のあとで変わった文書のパス。failedChecks は、使った証拠の verify で不合格だった検査の名前 */
+  /** changedDocuments は、記録のあとで変わった文書のパス */
   attention: { noPassingTests: string[]; pending: string[]; changedDocuments: string[]; failedChecks: string[] };
   rows: ReportRow[];
   questions: { id: string; question: string; answer: string; answeredBy: string; answeredAt: string }[];
@@ -66,33 +66,37 @@ function wrongField(e: Record<string, unknown>): string | undefined {
   return checks.find(([, ok]) => !ok)?.[0];
 }
 
-// 読めない記録があれば、どのファイルかを示して止める（fix-review-findings-2 の仮定 A-06）。
-// 版・形・change が違う記録も、読み違えたままレポートを作らないよう止める（REQ-073、validate-evidence-records の仮定 A-01）
-function readEvidence(root: string, file: string, changeId: string): Evidence {
-  const name = `証拠の記録 ${toPosix(relative(root, file))}`;
-  let e: unknown;
+// 読めない記録があれば、どのファイルかを示して止める
+function readEvidence(root: string, file: string, change: string, reader: InputReader): Evidence {
+  let value: unknown;
   try {
-    e = JSON.parse(readFileSync(file, 'utf8'));
-  } catch {
-    throw new UsageError(`${name} を JSON として読めません`);
+    value = JSON.parse(reader.read(file));
+  } catch (error) {
+    if (error instanceof UsageError) throw error;
+    throw new UsageError(`証拠の記録 ${toPosix(relative(root, file))} を JSON として読めません`);
   }
-  if (!isObject(e)) throw new UsageError(`${name} は JSON のオブジェクトではありません`);
-  if (e.schemaVersion !== EVIDENCE_SCHEMA_VERSION) {
-    throw new UsageError(`${name} は、この版の loomake では読めない形式です（schemaVersion ${JSON.stringify(e.schemaVersion)}。読めるのは ${EVIDENCE_SCHEMA_VERSION}）`);
+  const problem = evidenceProblem(value, change);
+  if (problem) {
+    const name = `証拠の記録 ${toPosix(relative(root, file))}`;
+    if (!isObject(value)) throw new UsageError(`${name} は JSON のオブジェクトではありません`);
+    if (value.schemaVersion !== EVIDENCE_SCHEMA_VERSION) throw new UsageError(`${name} は、この版の loomake では読めない形式です（schemaVersion ${JSON.stringify(value.schemaVersion)}。読めるのは ${EVIDENCE_SCHEMA_VERSION}）`);
+    const field = wrongField(value);
+    if (field) throw new UsageError(`${name} の ${field} の形が違います`);
+    if (value.change !== change) throw new UsageError(`${name} は、ほかの change（${String(value.change)}）の記録です`);
+    throw new UsageError(`${name} が不正です：${problem}`);
   }
-  const field = wrongField(e);
-  if (field) throw new UsageError(`${name} の ${field} の形が違います`);
-  if (e.change !== changeId) throw new UsageError(`${name} は、ほかの change（${String(e.change)}）の記録です`);
-  return e as Evidence;
+  return value as Evidence;
 }
 
-/** 記録した日時がいちばん新しい証拠の記録（add-trace-report の仮定 A-06） */
-function latestEvidence(root: string, dir: string, changeId: string): Evidence | undefined {
-  if (!existsSync(dir)) return undefined;
-  const all = readdirSync(dir)
-    .filter((f) => f.endsWith('.json'))
-    .map((f) => readEvidence(root, join(dir, f), changeId));
-  return all.sort((a, b) => Date.parse(b.recordedAt) - Date.parse(a.recordedAt))[0];
+/** 記録した日時がいちばん新しい証拠の記録 */
+function latestEvidence(root: string, dir: string, change: string, reader: InputReader): Evidence | undefined {
+  let latest: Evidence | undefined;
+  for (const entry of reader.entries(dir)) {
+    if (entry.kind !== 'file' || !entry.name.endsWith('.json')) continue;
+    const evidence = readEvidence(root, join(dir, entry.name), change, reader);
+    if (!latest || Date.parse(evidence.recordedAt) > Date.parse(latest.recordedAt)) latest = evidence;
+  }
+  return latest;
 }
 
 const reqNumber = (id: string) => Number(id.match(/\d+/)?.[0] ?? Number.MAX_SAFE_INTEGER);
@@ -102,13 +106,13 @@ export const SCOPE_NOTE = '自動検査は、要件 ID を含む成功したテ�
 
 /** いちばん新しい証拠の記録と、それに保存した trace.md・差分仕様から、レポートの中身を作る。証拠の記録がなければ undefined */
 export function buildReport(root: string, changeId: string): Report | undefined {
+  const reader = createInputReader(JSON_LIMITS);
   const config = loadConfig(root);
   assertChangeId(changeId);
-  // 進行中の change を先に、なければ archive の <日付>-<change-id> を探す（add-trace-report の仮定 A-05）
-  const changeDir = findChangeDir(resolve(root, config.openspecDir, 'changes'), changeId);
+  const changeDir = findChangeDir(resolve(root, config.openspecDir, 'changes'), changeId, 'trace.md', reader);
   if (!changeDir) throw new UsageError(`change「${changeId}」がありません（進行中にも archive にもありません）`);
 
-  const evidence = latestEvidence(root, join(root, EVIDENCE_DIR, changeId), changeId);
+  const evidence = latestEvidence(root, join(root, EVIDENCE_DIR, changeId), changeId, reader);
   if (!evidence) return undefined;
 
   // 表は記録に保存した文書から作る。いまの文書は、記録のあとで変わったかを示すためだけに読む（REQ-070・REQ-129）。
@@ -178,8 +182,7 @@ export function buildReport(root: string, changeId: string): Report | undefined 
       noPassingTests: rows.filter((r) => r.result === '合格したテストなし').map((r) => r.id),
       pending: rows.filter((r) => r.state === '確認待ち').map((r) => r.id),
       changedDocuments: saved ? changedDocuments(documents, current) : [],
-      // 要件の行には lint などの不合格が現れないので、冒頭で示す（fix-evaluation-findings の仮定 A-04）
-      failedChecks: evidence.verify.results.filter((x) => x.status === 'fail').map((x) => x.check),
+      failedChecks: evidence.verify.results.filter((r) => r.status === 'fail').map((r) => r.check),
     },
     rows,
     questions,
@@ -192,7 +195,7 @@ const cell = (s: string) => (s === '' ? '' : s.replace(/\|/g, '\\|'));
 const table = (head: string[], rows: string[][]) =>
   [`| ${head.join(' | ')} |`, `|${head.map(() => '---').join('|')}|`, ...rows.map((r) => `| ${r.map(cell).join(' | ')} |`)].join('\n');
 
-/** レポートを Markdown にする。作った日時は入れない（REQ-085、仮定 A-08） */
+/** レポートを Markdown にする。作った日時は入れない（REQ-085） */
 export function formatReportMarkdown(r: Report): string {
   const list = (ids: string[]) => (ids.length ? ids.join('、') : 'なし');
   const attention =

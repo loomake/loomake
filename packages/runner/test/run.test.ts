@@ -586,3 +586,177 @@ describe('実行中の失敗', () => {
       expect(existsSync(join(repo.root, '.loomake/runs'))).toBe(false);
     }));
 });
+
+
+describe('証拠記録の再検証の期限', () => {
+  it('[REQ-140] 二度目の品質コマンドも残り時間で止め、PRを作らない', () =>
+    withRepo(async (repo) => {
+      repo.write('impl.txt', 'ready');
+      repo.write('.gitignore', '.loomake/test-report.json\n.loomake/once\n');
+      const script = readFileSync(join(repo.root, 'write-report.mjs'), 'utf8');
+      repo.write('write-report.mjs', script.replace("mkdirSync('.loomake', { recursive: true });", `mkdirSync('.loomake', { recursive: true });
+if (existsSync('.loomake/once')) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 3000);
+writeFileSync('.loomake/once', 'yes');`));
+      repo.git('add', '-A');
+      repo.git('commit', '-qm', 'record-timeout');
+      const started = Date.now();
+      let checks = 0;
+      const result = await run(repo, { now: () => new Date(started + (checks++ < 2 ? 0 : 59_000)) });
+      expect(result.code).toBe(1);
+      expect(result.stdout).toContain('実行時間の上限');
+      expect(repo.prs()).toEqual([]);
+      expect(summary(repo).status).toBe('stopped');
+    }, { tasks: '- [x] implementation\n', run: { timeoutMinutes: 1 } }));
+});
+
+describe('run設定の入力境界', () => {
+  it.each([null, [], 'run', 1, { maxFixes: 1.5 }, { maxFixes: Number.MAX_SAFE_INTEGER + 1 }, { maxFixes: 0 }, { timeoutMinutes: null }])(
+    '[REQ-141] 不正なrun設定 %j を日本語の使い方エラーにする',
+    (value) => withRepo(async (repo) => {
+      repo.write('loomake.config.json', JSON.stringify({ run: value }));
+      const result = await cli(repo, '--dry-run');
+      expect(result.code).toBe(2);
+      expect(result.stderr).toContain('loomake.config.json の run');
+      expect(repo.calls()).toEqual([]);
+    }),
+  );
+
+  it('[REQ-141] 正しい整数と正の小数の時間を受け付ける', () =>
+    withRepo(async (repo) => {
+      expect((await run(repo, { dryRun: true })).code).toBe(0);
+    }, { run: { maxFixes: 2, timeoutMinutes: 0.5 } }));
+});
+
+describe('出力予算による停止', () => {
+  it('[REQ-152][REQ-199] JSON出力が上限で切れても改行の後のトークンを記録へ残さない', () =>
+    withRepo(async (repo) => {
+      const token = 'ghp_' + 'x'.repeat(24);
+      repo.plan([{ output: 'before\n' + token + ' after ' + 'x'.repeat(200) }]);
+      const result = await run(repo);
+      expect(result.code).toBe(1);
+      const saved = readFileSync(join(runDir(repo), '01-output.json'), 'utf8');
+      expect(saved).not.toContain(token);
+      expect(saved).toContain('***');
+      expect(Buffer.byteLength(saved)).toBeLessThanOrEqual(80);
+    }, { run: { maxOutputBytes: 80 } }));
+  it('[REQ-152] 大きな出力で停止し、タスクと変更を未完了のまま残す', () =>
+    withRepo(async (repo) => {
+      repo.plan([{ write: { 'impl.txt': '途中' }, output: 'x'.repeat(200) }]);
+      const result = await run(repo);
+      expect(result.code).toBe(1);
+      expect(result.stdout).toContain('出力が上限');
+      expect(tasksMd(repo)).toContain('- [ ] 1.1');
+      expect(log(repo)).toEqual(['init']);
+      expect(repo.prs()).toEqual([]);
+      expect(summary(repo).reason).toContain('出力が上限');
+      expect(Buffer.byteLength(readFileSync(join(runDir(repo), '01-output.json'), 'utf8'))).toBeLessThanOrEqual(64);
+    }, { run: { maxOutputBytes: 64 } }));
+
+  it.each([0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1])('[REQ-152] 不正な出力上限 %j を設定エラーにする', (maxOutputBytes) =>
+    withRepo(async (repo) => {
+      repo.write('loomake.config.json', JSON.stringify({ run: { maxOutputBytes } }));
+      const result = await cli(repo);
+      expect(result.code).toBe(2);
+      expect(result.stderr).toContain('run.maxOutputBytes');
+      expect(repo.calls()).toEqual([]);
+    }));
+});
+
+describe('runnerの表示の保護', () => {
+  const token = 'ghp_' + 'x'.repeat(24);
+
+  it('[REQ-199] 追加された既知形式と隣接する秘密鍵を実際の出力記録で置換する', () =>
+    withRepo(async (repo) => {
+      const values = [
+        'npm_' + 'x'.repeat(36), 'xoxb-' + 'x'.repeat(24), 'glpat-' + 'x'.repeat(24),
+        'AIza' + 'X'.repeat(35), 'eyJ' + 'x'.repeat(12) + '.' + 'y'.repeat(12) + '.' + 'z'.repeat(12),
+        'Z'.repeat(24),
+      ];
+      const key = '-----BEGIN PRIVATE KEY-----\nFAKE_PRIVATE_BODY\n-----END PRIVATE KEY-----';
+      const text = values.slice(0, 5).join('\n') + '\nAuthorization: Bearer ' + values[5] + '\nsk-' + 'x'.repeat(24) + key;
+      repo.plan([{ write: { 'impl.txt': 'ready' }, output: text }, {}]);
+      expect((await run(repo)).code).toBe(0);
+      const output = readFileSync(join(runDir(repo), '01-output.json'), 'utf8');
+      for (const value of [...values, 'FAKE_PRIVATE_BODY', '-----BEGIN PRIVATE KEY-----']) expect(output).not.toContain(value);
+      expect(JSON.parse(output).result).toContain('Authorization: Bearer ***');
+      expect(output).toContain('***');
+    }));
+
+  it('[REQ-154] 質問と停止理由を表示する前に置換する', () =>
+    withRepo(async (repo) => {
+      repo.plan([{ output: `LOOMAKE-QUESTION: ${token} を確認してください` }]);
+      const result = await run(repo);
+      expect(result.code).toBe(1);
+      expect(result.stdout).not.toContain(token);
+      expect(result.stdout).toContain('***');
+      expect(summary(repo).reason).not.toContain(token);
+      expect(summary(repo).reason).toContain('***');
+    }));
+
+  it('[REQ-154] 品質コマンドの進捗を転送する前に置換する', () =>
+    withRepo(async (repo) => {
+      const config = JSON.parse(readFileSync(join(repo.root, 'loomake.config.json'), 'utf8'));
+      config.commands.test += ` ${token}`;
+      repo.write('loomake.config.json', JSON.stringify(config));
+      repo.git('add', '-A');
+      repo.git('commit', '-qm', 'synthetic marker');
+      repo.plan(passing);
+      const progress: string[] = [];
+      expect((await run(repo, { progress: (text) => progress.push(text) })).code).toBe(0);
+      expect(progress.join('\n')).not.toContain(token);
+      expect(progress.join('\n')).toContain('***');
+    }));
+});
+
+
+describe('実行の排他と記録', () => {
+  it('[REQ-158] 二重起動は先の実行を変更せず、中断後はロックを解放する', () =>
+    withRepo(async (repo) => {
+      repo.plan([{ sleepMs: 10_000 }]);
+      const controller = new AbortController();
+      const first = run(repo, { signal: controller.signal });
+      try {
+        await vi.waitFor(() => expect(repo.calls()).toHaveLength(1));
+        const head = repo.git('rev-parse', 'HEAD');
+        const tasks = tasksMd(repo);
+        const second = await run(repo, { dryRun: true });
+        expect(second.code).toBe(1);
+        expect(second.stdout).toContain('同じ作業ツリーの実行ロック');
+        expect(repo.calls()).toHaveLength(1);
+        expect(repo.git('rev-parse', 'HEAD')).toBe(head);
+        expect(tasksMd(repo)).toBe(tasks);
+      } finally {
+        controller.abort();
+        await first;
+      }
+      expect(existsSync(join(repo.root, '.git/loomake-run.lock'))).toBe(false);
+      expect((await run(repo, { dryRun: true })).code).toBe(0);
+    }));
+
+  it('[REQ-160] 同じ秒に再実行しても両方の理由とログを残す', () =>
+    withRepo(async (repo) => {
+      repo.plan([{ output: 'LOOMAKE-QUESTION: first stop' }, { output: 'LOOMAKE-QUESTION: second stop' }]);
+      const now = () => new Date('2026-10-24T12:00:00Z');
+      expect((await run(repo, { now })).code).toBe(1);
+      expect((await run(repo, { now })).code).toBe(1);
+      const base = join(repo.root, '.loomake/runs');
+      const dirs = readdirSync(base).filter((name) => name !== '.gitignore');
+      expect(dirs).toHaveLength(2);
+      const reasons = dirs.map((dir) => (JSON.parse(readFileSync(join(base, dir, 'summary.json'), 'utf8')) as RunSummary).reason);
+      expect(reasons.join('\n')).toContain('first stop');
+      expect(reasons.join('\n')).toContain('second stop');
+    }));
+});
+
+describe('壊れた設定ファイル', () => {
+  it('[REQ-193] loomake.config.json を JSON として読めなければ、エンジンを呼ばず、記録も作らずに終了コード 2 を返す', () =>
+    withRepo(async (repo) => {
+      writeFileSync(join(repo.root, 'loomake.config.json'), '{bad');
+      const r = await cli(repo);
+      expect(r.code).toBe(2);
+      expect(r.stderr).toContain('loomake.config.json を読めません');
+      expect(r.stderr).not.toContain('SyntaxError');
+      expect(repo.calls()).toEqual([]);
+      expect(existsSync(join(repo.root, '.loomake/runs'))).toBe(false);
+    }));
+});

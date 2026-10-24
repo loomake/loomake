@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { existsSync, readFileSync } from 'node:fs';
+import { chmodSync, existsSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { findViolations, runRun } from '@loomake/runner';
 import { CHANGE, makeRepo, type FakeStep, type Repo } from './helpers.js';
@@ -69,6 +69,8 @@ describe('テストの削除と skip・todo の検出', () => {
     check({ write: { 'tests/b.test.ts': "it('[REQ-012] もう一つ', () => {});\n" } }, withTest, (r) => {
       expect(r.code).toBe(0);
       expect(r.stdout).not.toContain('不正な直し方');
+      expect(r.repo.git('show', 'HEAD:tests/b.test.ts')).toBe("it('[REQ-012] もう一つ', () => {});");
+      expect(r.repo.git('log', '--format=%s', '--', 'tests/b.test.ts')).toBe('run(c1): 1.1 一つ目のタスク（REQ-012）');
     }));
 
   it.each(['it.skipIf(true)', 'describe.skipIf(true)', 'it.runIf(false)', 'it.concurrent.skip'])('[REQ-109] テストファイルに %s の行を足したら止まる', (call) =>
@@ -190,7 +192,11 @@ describe('設定の変更の検出', () => {
     check(
       { write: { 'package.json': JSON.stringify({ scripts: { test: 'vitest run' }, dependencies: { a: '1.0.0' } }) } },
       (repo) => repo.write('package.json', JSON.stringify({ scripts: { test: 'vitest run' } })),
-      (r) => expect(r.code).toBe(0),
+      (r) => {
+        expect(r.code).toBe(0);
+        expect(JSON.parse(r.repo.git('show', 'HEAD:package.json'))).toEqual({ scripts: { test: 'vitest run' }, dependencies: { a: '1.0.0' } });
+        expect(r.repo.git('log', '-1', '--format=%s', '--', 'package.json')).toBe('run(c1): 1.1 一つ目のタスク（REQ-012）');
+      },
     ));
 
   it('tsconfig と vitest.config も設定ファイルとして見つける（仮定 A-18）', () =>
@@ -347,5 +353,94 @@ describe('エンジンによるコミットとブランチの切り替えの検�
     check({}, undefined, (r) => {
       expect(r.stdout).not.toContain('エンジンが HEAD かブランチを変えました');
       expect(r.repo.git('log', '--format=%s', '--reverse').split('\n')).toContain(`run(${CHANGE}): 1.1 一つ目のタスク（REQ-012）`);
+    }));
+});
+
+describe('git の設定とフックの変更の検出', () => {
+  const stopped = (r: Awaited<ReturnType<typeof runWith>>) => {
+    expect(r.code).toBe(1);
+    expect(r.stdout).toContain('エンジンが git の設定かフックを変えました');
+    expect(r.commits).toBe(1);
+    expect(readFileSync(join(r.repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [ ] 1.1');
+  };
+
+  it('[REQ-198] エンジンがフックを足したら、コミットせず、フックを実行せずに止まる', () =>
+    check({ write: { '.git/hooks/pre-commit': `#!/bin/sh\necho ran > hook-ran.txt\n` }, chmod: ['.git/hooks/pre-commit'] }, undefined, (r) => {
+      stopped(r);
+      expect(existsSync(join(r.repo.root, 'hook-ran.txt'))).toBe(false);
+      // run は書き換えを戻さない
+      expect(existsSync(join(r.repo.root, '.git/hooks/pre-commit'))).toBe(true);
+    }));
+
+  it('[REQ-198] エンジンが git の設定を変えたら、コミットせずに止まる', () =>
+    check({ git: [['config', 'core.hooksPath', 'my-hooks']] }, undefined, (r) => {
+      stopped(r);
+      expect(r.repo.git('config', '--get', 'core.hooksPath')).toBe('my-hooks');
+    }));
+
+  it('[REQ-198] run の前からあるフックは、run のコミットで動く', () =>
+    check({}, (repo) => {
+      const hook = join(repo.root, '.git/hooks/post-commit');
+      writeFileSync(hook, `#!/bin/sh\necho ran >> "${join(repo.base, 'post-commit.log')}"\n`);
+      chmodSync(hook, 0o755);
+      repo.write('setup.txt', '準備\n');
+    }, (r) => {
+      expect(r.stdout).not.toContain('エンジンが git の設定かフックを変えました');
+      expect(readFileSync(join(r.repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [x] 1.1');
+      expect(existsSync(join(r.repo.base, 'post-commit.log'))).toBe(true);
+      expect(readFileSync(join(r.repo.base, 'post-commit.log'), 'utf8').trim().split('\n').length).toBeGreaterThan(1);
+    }));
+});
+
+describe('テストの検査を弱める変更の検出', () => {
+  const withAdd = (repo: Repo) => repo.write('tests/add.test.ts', "it('[REQ-012] 足す', () => {\n  expect(add(1, 2)).toBe(3);\n  expect(add(2, 2)).toBe(4);\n});\n");
+
+  it('[REQ-201] 既存のテストから検査の行を消したら、コミットせずに止まる', () =>
+    check({ write: { 'tests/add.test.ts': "it('[REQ-012] 足す', () => {\n  expect(add(1, 2)).toBe(3);\n});\n" } }, withAdd, (r) => {
+      stopped(r, 2);
+      expect(r.stdout).toContain('tests/add.test.ts：テストの検査を減らしました');
+    }));
+
+  it('[REQ-201] 必ず通る検査に書き換えたら、コミットせずに止まる', () =>
+    check({ write: { 'tests/add.test.ts': "it('[REQ-012] 足す', () => {\n  expect(true).toBe(true);\n  expect(add(2, 2)).toBe(4);\n});\n" } }, withAdd, (r) => {
+      stopped(r, 2);
+      expect(r.stdout).toContain('tests/add.test.ts：必ず通る検査を足しました：expect(true).toBe(true);');
+    }));
+
+  it('[REQ-201] テストを足すだけなら止まらない', () =>
+    check({ write: { 'tests/add.test.ts': "it('[REQ-012] 足す', () => {\n  expect(add(1, 2)).toBe(3);\n  expect(add(2, 2)).toBe(4);\n  expect(add(0, 0)).toBe(0);\n});\n" } }, withAdd, (r) => {
+      expect(r.stdout).not.toContain('不正な直し方を見つけました');
+      expect(readFileSync(join(r.repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [x] 1.1');
+    }));
+});
+
+describe('git の設定の比較の範囲', () => {
+  it('[REQ-204] include の先の設定に core.fsmonitor を書いたら、コミットせずに止まる', () =>
+    check({ write: { 'local.gitconfig': '[core]\n\tfsmonitor = echo injected\n' } }, (repo) => {
+      repo.git('config', 'include.path', '../local.gitconfig');
+      writeFileSync(join(repo.root, 'local.gitconfig'), '');
+      writeFileSync(join(repo.root, '.gitignore'), `${readFileSync(join(repo.root, '.gitignore'), 'utf8')}local.gitconfig\n`);
+    }, (r) => {
+      expect(r.code).toBe(1);
+      expect(r.stdout).toContain('エンジンが git の設定かフックを変えました');
+      expect(readFileSync(join(r.repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [ ] 1.1');
+    }));
+
+  it('[REQ-204] リンク先のないフックがあっても、落ちずにタスクを完了にする', () =>
+    check({}, (repo) => {
+      symlinkSync(join(repo.base, 'missing-hook'), join(repo.root, '.git/hooks/pre-commit'));
+      repo.write('setup.txt', '準備\n');
+    }, (r) => {
+      expect(r.stdout).not.toContain('エンジンが git の設定かフックを変えました');
+      expect(readFileSync(join(r.repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [x] 1.1');
+    }));
+});
+
+describe('検査の行の数え方', () => {
+  it('[REQ-201] import とコメントの assert を消しても、テストの検査を減らしたとはみなさない', () =>
+    check({ write: { 'tests/add.test.ts': "it('[REQ-012] 足す', () => {\n  expect(add(1, 2)).toBe(3);\n});\n" } }, (repo) =>
+      repo.write('tests/add.test.ts', "import { assert } from 'vitest';\n// assert は使わない\nit('[REQ-012] 足す', () => {\n  expect(add(1, 2)).toBe(3);\n});\n"), (r) => {
+      expect(r.stdout).not.toContain('テストの検査を減らしました');
+      expect(readFileSync(join(r.repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [x] 1.1');
     }));
 });

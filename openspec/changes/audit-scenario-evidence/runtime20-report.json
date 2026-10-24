@@ -1,0 +1,26 @@
+{
+  "success": true,
+  "testResults": [
+    {
+      "name": "/tmp/loomake-scenario-round9/scripts/runtime-compatibility.mjs",
+      "assertionResults": [
+        {
+          "fullName": "通信拒否の対照実験",
+          "status": "passed"
+        },
+        {
+          "fullName": "[REQ-144][REQ-089] 指定したNodeの配布物で主要コマンドと公開APIを検証する",
+          "status": "passed"
+        },
+        {
+          "fullName": "[REQ-084] 通信拒否の下でtrace recordが保存されtrace reportの全25行を出力する",
+          "status": "passed"
+        },
+        {
+          "fullName": "[REQ-125][REQ-124] 指定したNodeの配布物でrunのタスクコミットとSIGINT後の変更保持を検証する",
+          "status": "passed"
+        }
+      ]
+    }
+  ]
+}

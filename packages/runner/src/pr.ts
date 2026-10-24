@@ -1,13 +1,13 @@
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { runExternal } from '@loomake/kit';
+import { createInputReader, JSON_LIMITS } from '@loomake/kit';
 import type { Evidence } from '@loomake/trace';
 import { isWindows, quote } from './shell.js';
 
 
-/** gh CLI があり、ログインしているか（REQ-116、add-run-pr の仮定 A-23） */
+/** gh CLI があり、ログインしているか（REQ-116） */
 export function ghLoggedIn(root: string, env: NodeJS.ProcessEnv): boolean {
-  const r = spawnSync('gh', ['auth', 'status'], { cwd: root, env, encoding: 'utf8', shell: isWindows });
+  const r = runExternal('gh', ['auth', 'status'], { cwd: root, env, shell: isWindows });
   return !r.error && r.status === 0;
 }
 
@@ -17,10 +17,10 @@ function section(md: string, heading: string): string {
   return m ? m[1].trim() : '';
 }
 
-/** PR の本文（REQ-115、add-run-pr の仮定 A-22） */
+/** PR の本文（REQ-115） */
 export function prBody(root: string, changeDir: string, evidencePath: string): string {
-  const proposal = readFileSync(join(changeDir, 'proposal.md'), 'utf8');
-  const evidence = JSON.parse(readFileSync(join(root, evidencePath), 'utf8')) as Evidence;
+  const proposal = createInputReader().read(join(changeDir, 'proposal.md'));
+  const evidence = JSON.parse(createInputReader(JSON_LIMITS).read(join(root, evidencePath))) as Evidence;
   const coverage = evidence.verify.coverage ?? {};
   const cell = (s: string) => s.replace(/\|/g, '\\|');
   return [
@@ -53,10 +53,33 @@ export function prBody(root: string, changeDir: string, evidencePath: string): s
   ].join('\n');
 }
 
+function requestUrl(value: unknown): string {
+  if (typeof value !== 'string' || value.trim() !== value) throw new Error('PRのURLが不正です');
+  let url: URL;
+  try { url = new URL(value); } catch { throw new Error('PRのURLが不正です'); }
+  if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash || !/^\/[^/]+\/[^/]+\/pull\/[1-9]\d*$/.test(url.pathname)) throw new Error('PRのURLが不正です');
+  return url.href;
+}
+
+/** 同じリポジトリの同じ向き先のopen PRだけを、一意な場合に返す。 */
+export function findOpenPr(root: string, env: NodeJS.ProcessEnv, pr: { base: string; head: string }): string | undefined {
+  const args = ['pr', 'list', '--base', pr.base, '--head', pr.head, '--state', 'open', '--limit', '2', '--json', 'url,baseRefName,headRefName,isCrossRepository'];
+  const result = runExternal('gh', args.map(quote), { cwd: root, env, shell: isWindows });
+  if (result.error || result.status !== 0) throw new Error(`既存PRの検索に失敗しました（${(result.stderr || result.error?.message || '').trim()}）`);
+  let rows: unknown;
+  try { rows = JSON.parse(result.stdout); } catch { throw new Error('既存PRの検索結果を読み取れません'); }
+  if (!Array.isArray(rows) || rows.length > 1) throw new Error('既存PRの検索結果が一意に決まりません');
+  if (rows.length === 0) return undefined;
+  const row: unknown = rows[0];
+  if (typeof row !== 'object' || row === null || !('baseRefName' in row) || row.baseRefName !== pr.base || !('headRefName' in row) || row.headRefName !== pr.head || !('isCrossRepository' in row) || row.isCrossRepository !== false || !('url' in row)) throw new Error('既存PRのリポジトリかブランチが一致しません');
+  return requestUrl(row.url);
+}
+
 /** gh pr create で PR を作り、URL を返す（REQ-116） */
 export function createPr(root: string, env: NodeJS.ProcessEnv, pr: { base: string; head: string; title: string; bodyFile: string }): string {
   const args = ['pr', 'create', '--base', pr.base, '--head', pr.head, '--title', pr.title, '--body-file', pr.bodyFile];
-  const r = spawnSync('gh', args.map(quote), { cwd: root, env, encoding: 'utf8', shell: isWindows });
+  // PR の作成は push と同じく、1 操作の期限ではなく run の残り時間で止める（REQ-182）
+  const r = runExternal('gh', args.map(quote), { cwd: root, env, shell: isWindows, untilDeadline: true });
   if (r.error || r.status !== 0) throw new Error(`gh pr create に失敗しました（${(r.stderr || r.error?.message || '').trim()}）`);
-  return r.stdout.trim();
+  return requestUrl(r.stdout.trim());
 }

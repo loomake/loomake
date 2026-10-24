@@ -1,15 +1,16 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { createInputReader } from '../input.js';
 
-/** 使い方や設定の誤り。CLI は終了コード 2 で終える（REQ-041） */
-export class UsageError extends Error {}
+import { UsageError } from '../errors.js';
+export { RuntimeFailure, UsageError } from '../errors.js';
 
 export type LoomakeConfig = {
   openspecDir: string;
-  /** OpenSpec CLI が無いとき、auto なら警告、true なら不合格、false なら validate を実行しない（add-verify-cli の仮定 A-01） */
+  /** OpenSpec CLI が無いとき、auto なら警告、true なら不合格、false なら validate を実行しない */
   openspecValidate: boolean | 'auto';
   tests: {
-    /** test コマンドが書き出すテストランナーの JSON レポート（add-verify-cli の仮定 A-05） */
+    /** test コマンドが書き出すテストランナーの JSON レポート */
     report: string;
   };
   /** lint・typecheck・test などの品質コマンド。値が空か null のコマンドは実行しない */
@@ -50,7 +51,7 @@ export function loadConfig(root: string): LoomakeConfig {
   if (!existsSync(p)) return base;
   let c: unknown;
   try {
-    c = JSON.parse(readFileSync(p, 'utf8'));
+    c = JSON.parse(createInputReader().read(p));
   } catch (e) {
     throw new UsageError(`loomake.config.json を読めません（${(e as Error).message}）`, { cause: e });
   }
@@ -66,7 +67,7 @@ export function loadConfig(root: string): LoomakeConfig {
     throw new UsageError('loomake.config.json の commands は、値が文字列（または null）のオブジェクトにしてください');
   }
   return {
-    openspecDir: (c.openspecDir as string | undefined) ?? base.openspecDir,
+    openspecDir: c.openspecDir ?? base.openspecDir,
     openspecValidate: (c.openspecValidate as LoomakeConfig['openspecValidate'] | undefined) ?? base.openspecValidate,
     tests: { report },
     commands: (c.commands as LoomakeConfig['commands'] | undefined) ?? {},

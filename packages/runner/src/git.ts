@@ -1,28 +1,31 @@
-import { spawnSync } from 'node:child_process';
+import { runExternal } from '@loomake/kit';
 
 /** git の操作の失敗。run を始める前なら使い方の誤り、始めたあとなら実行中の失敗として扱う（REQ-137） */
 export class GitError extends Error {}
 
 /** git を実行して標準出力を返す。失敗したら GitError を投げる */
+// フックを動かす操作は、1 操作の期限ではなく run の残り時間で止める（REQ-182）
+const RUNS_HOOKS = new Set(['commit', 'push']);
+
 export function git(root: string, env: NodeJS.ProcessEnv, args: string[]): string {
-  const r = spawnSync('git', args, { cwd: root, env, encoding: 'utf8' });
+  const r = runExternal('git', args, { cwd: root, env, untilDeadline: RUNS_HOOKS.has(args[0]) });
   if (r.error || r.status !== 0) {
     throw new GitError(`git の操作に失敗しました：git ${args.join(' ')}（${(r.stderr || r.error?.message || '').trim()}）`);
   }
   return r.stdout;
 }
 
-/** 未コミットの変更。追跡していないファイルを含み、.gitignore で除外したものは含めない（add-run-loop の仮定 A-02） */
+/** 未コミットの変更。追跡していないファイルを含み、.gitignore で除外したものは含めない */
 export const dirtyFiles = (root: string, env: NodeJS.ProcessEnv) =>
   git(root, env, ['status', '--porcelain', '--untracked-files=all']).split('\n').filter(Boolean);
 
 export const branchExists = (root: string, env: NodeJS.ProcessEnv, branch: string) =>
-  spawnSync('git', ['rev-parse', '--verify', '--quiet', `refs/heads/${branch}`], { cwd: root, env }).status === 0;
+  runExternal('git', ['rev-parse', '--verify', '--quiet', `refs/heads/${branch}`], { cwd: root, env }).status === 0;
 
 /** git の設定の値。なければ空の文字列 */
 export const gitConfig = (root: string, env: NodeJS.ProcessEnv, key: string) =>
-  (spawnSync('git', ['config', '--get', key], { cwd: root, env, encoding: 'utf8' }).stdout ?? '').trim();
+  (runExternal('git', ['config', '--get', key], { cwd: root, env }).stdout ?? '').trim();
 
 /** .gitignore で除外されているか。追跡しているファイルは除外されていないとみなす */
 export const isIgnored = (root: string, env: NodeJS.ProcessEnv, path: string) =>
-  spawnSync('git', ['check-ignore', '-q', '--', path], { cwd: root, env }).status === 0;
+  runExternal('git', ['check-ignore', '-q', '--', path], { cwd: root, env }).status === 0;

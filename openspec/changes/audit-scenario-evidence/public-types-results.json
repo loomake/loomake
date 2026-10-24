@@ -1,0 +1,46 @@
+{
+  "scope": "selected-public-api-types",
+  "node": "v24.21.0",
+  "healthy": {
+    "status": 0,
+    "result": {
+      "ok": true,
+      "exitCode": 0,
+      "compiler": "6.0.3",
+      "nodeTypes": "26.6.5",
+      "scope": "selected-public-api-types",
+      "sourceConditions": false
+    },
+    "diagnostics": "配布物の公開型を使う利用側のコンパイルに合格しました\n"
+  },
+  "broken": {
+    "status": 1,
+    "result": {
+      "ok": false,
+      "exitCode": 2,
+      "compiler": "6.0.3",
+      "nodeTypes": "26.6.5",
+      "scope": "selected-public-api-types",
+      "sourceConditions": false
+    },
+    "diagnostics": ".loomake/quality/api-contract-evidence/consumer/.public-types-5XJaP0/consumer.ts(21,117): error TS2322: Type 'boolean' is not assignable to type 'string'.\n.loomake/quality/api-contract-evidence/consumer/.public-types-5XJaP0/consumer.ts(22,9): error TS2322: Type 'string' is not assignable to type 'boolean'.\n"
+  },
+  "restored": {
+    "status": 0,
+    "result": {
+      "ok": true,
+      "exitCode": 0,
+      "compiler": "6.0.3",
+      "nodeTypes": "26.6.5",
+      "scope": "selected-public-api-types",
+      "sourceConditions": false
+    },
+    "diagnostics": "配布物の公開型を使う利用側のコンパイルに合格しました\n"
+  },
+  "declarationRestored": true,
+  "inputs": {
+    "fixtureSha256": "eb02f6f31a9bfde99b657b43abceec866e5756d93619f3b38345b4f5c9a6b831",
+    "scriptSha256": "8cb6a5928184f693b55d0593737de0c8c2cbe4060f964f3906478c1e8d2e4d66",
+    "declarationSha256": "407f31304a9daad4a389e21d99b72d1fe8735bdfc02b4accede23a52484be478"
+  }
+}

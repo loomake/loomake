@@ -20,7 +20,9 @@
   "bin": {
     "loomake": "./dist/cli.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json"
   },
@@ -29,5 +31,8 @@
     "@loomake/kit": "workspace:*",
     "@loomake/trace": "workspace:*",
     "@loomake/runner": "workspace:*"
+  },
+  "publishConfig": {
+    "provenance": true
   }
 }

@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "verify": "pnpm -r --silent build && node packages/cli/dist/cli.js verify"
   },
   "devDependencies": {
@@ -20,6 +21,7 @@
     "@eslint/js": "^10.0.1",
     "@fission-ai/openspec": "1.14.3",
     "@types/node": "^26.6.5",
+    "@vitest/coverage-v8": "5.0.5",
     "ajv": "^8.20.0",
     "eslint": "^10.13.0",
     "typescript": "~6.0.3",

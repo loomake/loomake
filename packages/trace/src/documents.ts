@@ -1,16 +1,18 @@
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { specFiles, toPosix } from '@loomake/kit';
+import { createInputReader, specFiles, toPosix } from '@loomake/kit';
 
 /** 証拠に保存する文書の 1 つ。path は change のディレクトリからの / 区切りのパス */
 export type EvidenceDocument = { path: string; sha256: string; content: string };
 
-/** change の trace.md と差分仕様を読む。レポートが読むのはこの 2 種類だけ（REQ-127、bind-evidence-to-spec-snapshot の仮定 A-01） */
+
+/** change の trace.md と差分仕様を読む。レポートが読むのはこの 2 種類だけ（REQ-127） */
 export function readDocuments(changeDir: string): EvidenceDocument[] {
-  const files = [join(changeDir, 'trace.md'), ...specFiles(changeDir)].filter((p) => existsSync(p));
+  const reader = createInputReader();
+  const files = [join(changeDir, 'trace.md'), ...specFiles(changeDir, reader)].filter((p) => existsSync(p));
   return files.map((f) => {
-    const content = readFileSync(f, 'utf8');
+    const content = reader.read(f);
     return { path: toPosix(relative(changeDir, f)), sha256: createHash('sha256').update(content).digest('hex'), content };
   });
 }

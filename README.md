@@ -20,14 +20,15 @@ npx loomake trace report --change <id>            # 検収レポートを出す
 
 `npx loomake --help` でコマンドの一覧を、`npx loomake <コマンド> --help` でそれぞれの使い方を表示する。
 
-`loomake` はまだ npm に公開していない。
+`loomake` はまだ npm に公開していない。英語の概要は [README.en.md](README.en.md) にある。
 
 ## ドキュメント
 
 | 文書 | 読む人 | 中身 |
 |---|---|---|
+| [docs/quickstart.md](docs/quickstart.md) | 初めて Loomake を使う人 | 導入から 1 つの change を終えるまでと、ほかの道具との連携を 1 ページにまとめたもの |
 | [docs/usage.md](docs/usage.md) | Loomake を使う人 | 導入、1 つの change の進め方、verify と設定のリファレンス（図つき） |
-| [docs/positioning.md](docs/positioning.md) | Loomake を使う人・導入を検討する人 | OpenSpec・AI エージェント・テストランナー・CI との分担と、開発の流れの中での位置付け |
+| [docs/positioning.md](docs/positioning.md) | Loomake を使う人・導入を検討する人 | 一般的な開発の流れ（要件定義から運用まで）の中での、Loomake・OpenSpec・AI エージェント・テストランナー・CI の受け持ち |
 | [docs/for-agents.md](docs/for-agents.md) | Loomake を入れたプロジェクトで働く AI エージェント | 状況ごとの手順、verify が不合格のときの直し方、終了コードと JSON |
 | [AGENTS.md](AGENTS.md) | AI エージェント・開発者 | このリポジトリで AI が従うルール |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | このリポジトリに貢献する人 | 開発の環境、change の作り方、PR の出し方 |
