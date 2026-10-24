@@ -3,7 +3,7 @@ import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { runRecord } from '@loomake/trace';
 import { remainingProcessTime, TIMED_OUT, UsageError, runVerify, createInputReader } from '@loomake/kit';
-import { runClaude, type EngineResult } from '../engine.js';
+import { runClaude } from '../engine.js';
 import { git, gitConfig } from '../git.js';
 import { APPROVAL_GUIDE, findEngineMove, findInternalsChange, findViolations, gitInternals, headState } from '../guards.js';
 import { createPr, findOpenPr, ghLoggedIn, prBody } from '../pr.js';
@@ -11,21 +11,8 @@ import { reusableEvidence } from '../reuse.js';
 import { baseKey } from './prepare.js';
 import { buildPrompt } from './prompt.js';
 import { checkTask, taskLabel } from './tasks.js';
+import { decideAfterEngine, decideAfterGate } from './decision-policy.js';
 import type { Recorder, RunContext, RunSummary, Stop } from './types.js';
-
-const QUESTION = /^LOOMAKE-QUESTION:\s*(.*)$/m;
-
-/** エンジンの終わり方から、止まる理由を決める */
-function engineStop(result: EngineResult): { status: RunSummary['status']; reason: string } | undefined {
-  if (result.aborted) return { status: 'interrupted', reason: '中断されました' };
-  if (result.outputLimitExceeded) return { status: 'stopped', reason: 'エンジンの出力が上限に達しました' };
-  if (result.timedOut) return { status: 'stopped', reason: '実行時間の上限に達しました' };
-  const question = result.text.match(QUESTION);
-  if (question) return { status: 'stopped', reason: `エンジンが質問しました：${question[1]}` };
-  // 失敗したエンジンの変更は完了にしない
-  if (result.exitCode !== 0) return { status: 'stopped', reason: `エンジンが終了コード ${result.exitCode ?? '（なし）'} で終わりました` };
-  return undefined;
-}
 
 /** エンジンを 1 回動かす。止まる理由があれば、その状態と文を返す */
 async function callEngine(ctx: RunContext, rec: Recorder, prompt: string): Promise<{ status: RunSummary['status']; reason: string } | undefined> {
@@ -48,21 +35,13 @@ async function callEngine(ctx: RunContext, rec: Recorder, prompt: string): Promi
     maxOutputBytes: ctx.runConfig.maxOutputBytes,
   });
   rec.save(`${n}-output.json`, result.raw);
-  const stop = engineStop(result);
-  // エンジン自身のコミットとブランチの切り替えは不正な直し方の検出を通らないので、終わり方によらず止まる。
-  // 理由は HEAD の変化を先に書き、中断なら記録の状態は interrupted のままにする（REQ-126）
+  // HEAD変更を見つけた場合は、Git内部を追加で読まない。
   const moved = findEngineMove(root, env, before, ctx.branch);
-  if (moved) {
-    ctx.stdout(moved.report);
-    return { status: stop?.status ?? 'stopped', reason: stop ? `${moved.reason}。${stop.reason}` : moved.reason };
-  }
-  // エンジンが書いたフックや filter を、run の git add・git commit で動かさない（REQ-198）
-  const changed = findInternalsChange(root, env, internals);
-  if (changed) {
-    ctx.stdout(changed.report);
-    return { status: stop?.status ?? 'stopped', reason: stop ? `${changed.reason}。${stop.reason}` : changed.reason };
-  }
-  return stop;
+  const changed = moved ? undefined : findInternalsChange(root, env, internals);
+  if (moved) ctx.stdout(moved.report);
+  else if (changed) ctx.stdout(changed.report);
+  const decision = decideAfterEngine({ ...result, movementReason: moved?.reason, internalsReason: changed?.reason });
+  return decision.kind === 'stop' ? { status: decision.status, reason: decision.reason } : undefined;
 }
 
 // コミットする前に不正な直し方を探し、見つけたら変更を作業ツリーに残して止まる理由を返す（REQ-109〜REQ-112）
@@ -123,12 +102,14 @@ export async function runGate(ctx: RunContext, rec: Recorder): Promise<Stop | un
     restore();
     rec.save(`${String(rec.step).padStart(2, '0')}-verify${fixes ? `-${fixes}` : ''}.json`, `${JSON.stringify(rec.lastVerify, null, 2)}\n`);
     const afterVerify = headState(root, env);
-    if (beforeVerify.sha !== afterVerify.sha || beforeVerify.branch !== afterVerify.branch) {
-      return stopped('検証のあいだにHEADかブランチが変わりました。変更を取り消していません。Gitの状態を確認してから、もう一度実行してください。');
-    }
-    if (rec.lastVerify.ok) break;
-    if (rec.lastVerify.results.some((r) => r.detail === TIMED_OUT)) return stopped('実行時間の上限に達しました');
-    if (fixes >= ctx.runConfig.maxFixes) return stopped(`直しの回数の上限（${ctx.runConfig.maxFixes} 回）に達しました`);
+    const decision = decideAfterGate({
+      stateChanged: beforeVerify.sha !== afterVerify.sha || beforeVerify.branch !== afterVerify.branch,
+      ok: rec.lastVerify.ok,
+      timedOut: rec.lastVerify.results.some((r) => r.detail === TIMED_OUT),
+      fixes, maxFixes: ctx.runConfig.maxFixes,
+    });
+    if (decision.kind === 'stop') return stopped(decision.reason);
+    if (decision.kind === 'passed') break;
     const stop = await callEngine(ctx, rec, buildPrompt(root, ctx.changeDir, '完了ゲートに合格するように直す。', rec.lastVerify));
     if (stop) return { ...stop, remaining: gateTasks };
     const violation = guard(ctx);
