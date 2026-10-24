@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 
 const root = join(import.meta.dirname, '..');
 const base = mkdtempSync(join(tmpdir(), 'loomake artifacts '));
@@ -90,4 +91,21 @@ describe('実際に配るパッケージ', () => {
     const restored = types('types-restored');
     expect(restored.status, restored.stdout + restored.stderr).toBe(0);
   }, 110000);
+
+  it('[REQ-153] 配布物の診断はold spaceを32MiBに制限して64MiBの単語を処理し通常の出力へ戻る', () => {
+    const module = pathToFileURL(join(target, 'consumer/node_modules/@loomake/runner/dist/mask.js')).href;
+    const checked = spawnSync(process.execPath, ['--max-old-space-size=32', '--input-type=module', '-e', `
+import { createDiagnosticRedactor } from ${JSON.stringify(module)};
+let output = '';
+const redactor = createDiagnosticRedactor((text) => { output += text; });
+const chunk = 'x'.repeat(4096);
+for (let i = 0; i < 16384; i++) redactor.write(chunk);
+redactor.write(' next 日本語\\n'); redactor.end();
+console.log(JSON.stringify({ output, heapUsed: process.memoryUsage().heapUsed }));
+`], { encoding: 'utf8', timeout: 15000, maxBuffer: 1024 * 1024 });
+    expect(checked.status, checked.stdout + checked.stderr).toBe(0);
+    const result = JSON.parse(checked.stdout);
+    expect(result.output).toBe('*** next 日本語\n');
+    expect(result.heapUsed).toBeLessThan(32 * 1024 * 1024);
+  }, 18000);
 });

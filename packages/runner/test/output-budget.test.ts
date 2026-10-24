@@ -55,6 +55,16 @@ describe('エンジンの出力予算', () => {
 });
 
 describe('エンジンのstderrの保護', () => {
+  it.each([
+    { label: 'Bearer', token: 'Bearer ' + 'Z'.repeat(24), expected: 'before Bearer *** after\n' },
+    { label: '秘密鍵', token: '-----BEGIN PRIVATE KEY-----\nFAKE_PRIVATE_BODY\n-----END PRIVATE KEY-----', expected: 'before *** after\n' },
+  ])('[REQ-153] 実際のstderrの $label を分割しても転送前に置換する', async ({ token, expected }) => {
+    const at = Math.floor(token.length / 2);
+    const source = `process.stderr.write(${JSON.stringify('before ' + token.slice(0, at))}); setTimeout(() => process.stderr.write(${JSON.stringify(token.slice(at) + ' after\n')}), 20);`;
+    const { stderr, result } = await invoke(source, 4096);
+    expect(stderr).toBe(expected);
+    expect(result.outputLimitExceeded).toBe(false);
+  });
   it('[REQ-153] チャンクをまたぐトークンを転送前に置換する', async () => {
     const token = 'ghp_' + 'x'.repeat(24);
     const source = `process.stderr.write(${JSON.stringify('before ' + token.slice(0, 10))}); setTimeout(() => process.stderr.write(${JSON.stringify(token.slice(10) + ' after\n')}), 20);`;
