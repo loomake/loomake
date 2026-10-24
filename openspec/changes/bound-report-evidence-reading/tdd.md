@@ -9,3 +9,7 @@
 ## 2.1 文書
 
 resources.md に trace report の読み方を書き、changeset を足した。
+
+## 完了ゲート
+
+`pnpm -s verify --change bound-report-evidence-reading --done` は exit 0。lint・型検査・891 件のテストと全 REQ の対応が成功した。
