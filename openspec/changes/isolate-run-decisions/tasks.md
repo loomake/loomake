@@ -6,5 +6,5 @@
 - [x] 1.3 入力の不変性と逆転した規則の検出、既存の統合試験を確認する（REQ-206）
 
 ## 2. 統合検証
-- [ ] 2.1 用語と責務、TDDの結果、changesetを更新する
+- [x] 2.1 用語と責務、TDDの結果、changesetを更新する
 - [ ] 2.2 `pnpm -s verify --change isolate-run-decisions --done` を通す <!-- loomake:gate=done -->
