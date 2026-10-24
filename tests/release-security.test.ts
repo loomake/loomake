@@ -21,8 +21,8 @@ describe('公開経路の供給網と資格情報', () => {
 
   it.each(workflows)('[REQ-168] %sの既定権限はreadでcheckoutに資格情報を保存しない', (file) => {
     const workflow = read(file);
-    expect(workflow).toMatch(/^permissions:\n  contents: read\n/m);
-    const checkouts = [...workflow.matchAll(/- uses: actions\/checkout@[^\n]+\n([\s\S]*?)(?=\n      - |$)/g)];
+    expect(workflow).toMatch(/^permissions:\n {2}contents: read\n/m);
+    const checkouts = [...workflow.matchAll(/- uses: actions\/checkout@[^\n]+\n([\s\S]*?)(?=\n {6}- |$)/g)];
     expect(checkouts.length).toBeGreaterThan(0);
     for (const checkout of checkouts) expect(checkout[1]).toContain('persist-credentials: false');
     if (file !== 'release.yml') expect(workflow).not.toMatch(/^\s+(contents|id-token): write$/m);
@@ -32,7 +32,7 @@ describe('公開経路の供給網と資格情報', () => {
     const release = read('release.yml');
     expect(release).toContain("if: github.ref == 'refs/heads/main'");
     expect(release).toContain('workflow_dispatch:');
-    expect(release).toMatch(/publish:\n(?:.*\n)*?    permissions:\n      contents: write\n      id-token: write\n/);
+    expect(release).toMatch(/publish:\n(?:.*\n)*? {4}permissions:\n {6}contents: write\n {6}id-token: write\n/);
     const qualityEnd = release.indexOf('package-smoke.mjs check');
     const publish = release.indexOf('run: pnpm changeset publish');
     const auth = release.indexOf('NODE_AUTH_TOKEN:');

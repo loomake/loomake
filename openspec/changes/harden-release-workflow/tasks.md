@@ -8,4 +8,4 @@
 ## 2. OSS向けの文書と統合検証
 
 - [x] 2.1 貢献・脆弱性報告・サポート・互換性・脅威モデル・依存更新と公開元確認の手順を整え、実装と照合する
-- [ ] 2.2 `pnpm -s verify --change harden-release-workflow --done` を通す <!-- loomake:gate=done -->
+- [x] 2.2 `pnpm -s verify --change harden-release-workflow --done` を通す <!-- loomake:gate=done -->
