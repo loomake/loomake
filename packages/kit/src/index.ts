@@ -1,7 +1,7 @@
 // @loomake/kit：要件書の取り込み・共通ルール・検証ゲート
 export { runVerify, INTERRUPTED, TIMED_OUT } from './verify/run.js';
 export type { VerifyOptions } from './verify/run.js';
-export { CHANGE_ID, assertChangeId, loadConfig, UsageError, DEFAULT_TEST_REPORT } from './verify/config.js';
+export { CHANGE_ID, KNOWN_CONFIG_KEYS, assertChangeId, loadConfig, UsageError, DEFAULT_TEST_REPORT } from './verify/config.js';
 export type { LoomakeConfig } from './verify/config.js';
 export { formatVerifyResult } from './verify/format.js';
 export { findChangeDir, specFiles, toPosix } from './change-files.js';

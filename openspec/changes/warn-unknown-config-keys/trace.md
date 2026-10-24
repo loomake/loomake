@@ -35,4 +35,4 @@ A の番号はこの change の中の通し番号にする。
 
 | ID | 関連 | 仮定の内容 | 理由 | 承認 | 承認者 | 承認日 |
 |---|---|---|---|---|---|---|
-| A-01 | REQ-039, REQ-134 | 知っているキーは、一番上の `$comment`・`openspecDir`・`openspecValidate`・`tests`・`commands`・`run`、`tests` の下の `report`、`run` の下の `maxFixes`・`timeoutMinutes` とする。`commands` の下は確かめない。知らないキーは `tests.reprot` のようにドットでつないで示す。verify では、どのモードでも「loomake.config.json」の検査を警告にし、不合格にはしない | 打ち間違いに気づけるようにする。不合格にすると、新しい版の設定を古い版で読んだときに止まる | 承認（依頼者の「CI 無視して進めて」の指示による） | 依頼者 | 2026-10-24 |
+| A-01 | REQ-039, REQ-134 | 知っているキーは、一番上の `$comment`・`openspecDir`・`openspecValidate`・`tests`・`commands`・`run`、`tests` の下の `report`、`run` の下の `maxFixes`・`timeoutMinutes`・`maxOutputBytes`・`maxLogBytes`・`maxHistoryBytes` とする。`run` の下の一覧は、run が読むキー（`RUN_CONFIG_KEYS`）がすべて入っていることを runner のテストで確かめる。キーは自分のプロパティだけを知っているとみなす（`toString` のような継承したプロパティの名前も、知らないキーにする）。`commands` の下は確かめない。知らないキーは `tests.reprot` のようにドットでつないで示す。verify では、どのモードでも「loomake.config.json」の検査を警告にし、不合格にはしない | 打ち間違いに気づけるようにする。不合格にすると、新しい版の設定を古い版で読んだときに止まる | 承認（依頼者の「CI 無視して進めて」の指示による） | 依頼者 | 2026-10-24 |

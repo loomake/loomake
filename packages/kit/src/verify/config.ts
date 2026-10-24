@@ -22,20 +22,24 @@ export const DEFAULT_TEST_REPORT = '.loomake/test-report.json';
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 
-// 知っているキー。値が配列のキーは、その下のキーも確かめる。commands の下は利用者が名前を決めるので確かめない（warn-unknown-config-keys の仮定 A-01）
-const KNOWN_KEYS: Record<string, readonly string[] | null> = {
+/**
+ * 知っているキー。値が配列のキーは、その下のキーも確かめる。commands の下は利用者が名前を決めるので確かめない。
+ * run の下は runner が読むキーで、runner のテストがこの一覧とずれていないかを確かめる（warn-unknown-config-keys の仮定 A-01）
+ */
+export const KNOWN_CONFIG_KEYS: Readonly<Record<string, readonly string[] | null>> = {
   $comment: null,
   openspecDir: null,
   openspecValidate: null,
   tests: ['report'],
   commands: null,
-  run: ['maxFixes', 'timeoutMinutes'],
+  run: ['maxFixes', 'timeoutMinutes', 'maxOutputBytes', 'maxLogBytes', 'maxHistoryBytes'],
 };
 
 const unknownKeys = (c: Record<string, unknown>): string[] =>
   Object.entries(c).flatMap(([key, value]) => {
-    if (!(key in KNOWN_KEYS)) return [key];
-    const known = KNOWN_KEYS[key];
+    // toString のような、継承したプロパティと同じ名前のキーを知っているキーとみなさない
+    if (!Object.hasOwn(KNOWN_CONFIG_KEYS, key)) return [key];
+    const known = KNOWN_CONFIG_KEYS[key];
     return known && isObject(value) ? Object.keys(value).filter((k) => !known.includes(k)).map((k) => `${key}.${k}`) : [];
   });
 
