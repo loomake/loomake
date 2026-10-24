@@ -50,7 +50,7 @@ Source: REQ-049
 - **THEN** ジョブのマトリクスに ubuntu-latest・macos-latest・windows-latest が含まれる
 
 ### Requirement: プルリクエストごとの完了ゲート
-CI はプルリクエストごとに完了ゲートを実行し、不合格のときジョブを失敗させる SHALL。対象の change は「完了ゲートの対象の決め方」に従って決め、対象の change ごとに `--change <id> --done` で実行し、1 つでも不合格ならジョブを失敗させる MUST。対象の change がないときは、「対象の change がない PR の扱い」に従う MUST。
+CI はプルリクエストごとに完了ゲートを実行し、不合格のときジョブを失敗させる SHALL。対象の change は「完了ゲートの対象の決め方」に従って決め、対象の change ごとに `--change <id> --done` で実行し、1 つでも不合格ならジョブを失敗させる MUST。対象の change がないときは、「対象の change がない PR の扱い」に従う MUST。あわせて、PR の種類によらず、いまの仕様（`openspec/specs/`）に `openspec validate --specs --strict` を実行し、失敗したらジョブを失敗させる SHALL。
 
 Source: REQ-010, REQ-054, REQ-132
 
@@ -89,6 +89,10 @@ Source: REQ-010, REQ-054, REQ-132
 #### Scenario: archive の PR
 - **WHEN** ブランチ名 `archive-c1` で、`openspec/changes/c1/` の削除と、`openspec/changes/archive/2026-10-23-c1/` と `openspec/specs/` の追加と変更だけの PR で CI が動く
 - **THEN** `--change` なしで品質コマンドだけが実行される
+
+#### Scenario: いまの仕様の検証
+- **WHEN** archive で反映した Requirement の本文が長すぎて、`openspec validate --specs --strict` が失敗する PR で CI が動く
+- **THEN** gate ジョブが失敗する
 
 ### Requirement: changesets による公開準備
 リポジトリは changesets を設定し、パッケージごとに独立したバージョンで公開できる状態にする SHALL。
