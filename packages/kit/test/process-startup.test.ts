@@ -78,4 +78,18 @@ describe('supervisor startup consumes the external operation budget', () => {
     expect((error as ProcessLimitError).kind).toBe('timeout');
     expect(running(pid)).toBe(false);
   }), 10_000);
+
+  it('[REQ-180][REQ-182] does not subtract setup time twice from a shared deadline', () => fixture(0, ({ dir, env, target, boot }) => {
+    const result = withProcessBudget({ timeoutMs: 5000 }, () => runExternal(process.execPath, ['-e', startedTarget(target, 'setTimeout(()=>process.exit(7),2000)')], {
+      cwd: dir, env, untilDeadline: true,
+      get timeoutMs() {
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2000);
+        return undefined;
+      },
+    }));
+    expect(readFileSync(boot, 'utf8')).toBe('started\nfinished\n');
+    expect(existsSync(target)).toBe(true);
+    expect(result.status).toBe(7);
+    expect(result.error).toBeUndefined();
+  }), 10_000);
 });
