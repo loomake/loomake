@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { runRun } from '@loomake/runner';
 import { CHANGE, makeRepo } from './helpers.js';
@@ -10,12 +10,14 @@ vi.setConfig({ testTimeout: 60_000 });
  * 品質コマンドは同期的に動くので、そのあいだに届いた信号の処理は、イベントループに戻るまで実行されない。
  * when に一致する進捗が出た時点で setImmediate で中断を予約し、この遅れをまねる
  */
-async function abortDuring(when: (text: string, count: number) => boolean) {
+async function abortDuring(when: (text: string, count: number) => boolean, lookup = false) {
   const repo = makeRepo();
   try {
     repo.plan([{ write: { 'impl.txt': '実装\n' } }, {}]);
     const controller = new AbortController();
     let count = 0;
+    // lookup のときは、偽の gh が PR を検索した記録を見て中断を予約する。検索は同期的に動くので、記録を見られるのは検索のあと
+    const watcher = lookup ? setInterval(() => { if (existsSync(repo.env.FAKE_GH_LOOKUP_LOG!)) controller.abort(); }, 1) : undefined;
     const out: string[] = [];
     const code = await runRun({
       root: repo.root, changeId: CHANGE, interactive: false, confirm: async () => false, env: repo.env, fileExists: () => false,
@@ -23,6 +25,7 @@ async function abortDuring(when: (text: string, count: number) => boolean) {
       progress: (t) => { if (t.startsWith('… test') && when(t, ++count)) setImmediate(() => controller.abort()); },
       signal: controller.signal,
     });
+    clearInterval(watcher);
     const runs = join(repo.root, '.loomake/runs');
     const [run] = readdirSync(runs).filter((n) => n !== '.gitignore');
     const summary = JSON.parse(readFileSync(join(runs, run, 'summary.json'), 'utf8'));
@@ -48,5 +51,12 @@ describe('同期の処理のあいだに届いた中断', () => {
     expect(r.summary.status).toBe('interrupted');
     expect(r.prs).toHaveLength(0);
     expect(r.pushed).toBe('');
+  });
+
+  it('[REQ-208] 既存の PR の検索のあいだに届いた中断で、PR を作らない', async () => {
+    const r = await abortDuring(() => false, true);
+    expect(r.code).toBe(1);
+    expect(r.summary.status).toBe('interrupted');
+    expect(r.prs).toHaveLength(0);
   });
 });

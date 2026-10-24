@@ -182,6 +182,9 @@ export async function recordAndOpenPr(ctx: RunContext, rec: Recorder): Promise<n
     if (beforePr !== undefined) return beforePr;
     const existing = findOpenPr(root, env, { base, head: branch });
     if (existing) return rec.finish('completed', `既存のPRを確認しました：${existing}`, []);
+    // 既存の PR の検索も同期的に動くので、そのあいだに届いた中断を、PR を作る前に確かめる
+    const beforeCreate = await stopIfInterrupted();
+    if (beforeCreate !== undefined) return beforeCreate;
     const url = createPr(root, env, { base, head: branch, title: changeId, bodyFile: join(rec.runDir, 'pr-body.md') });
     return rec.finish('completed', `PR を作りました：${url}`, []);
   } catch (e) {
