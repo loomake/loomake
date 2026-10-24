@@ -406,15 +406,15 @@
       "id": "SCN-c67eafd3dfacb1fd9aaf",
       "status": "reviewed",
       "scenarioSha256": "cd0f61dab92de41e5ade0b31be470d20fb07b3c19c2bb3653f3f5752aa3c9be2",
-      "reason": "npm/pnpmの4形でtest scriptを欠くmanifestを与え、終了コード1とscripts.testの案内をassertする。",
       "sources": [
         "REQ-184"
       ],
+      "reason": "npm test/run test・pnpm test/run testの4呼び出しでtestを持たないmanifestを用意し、終了コード1とscripts.test・空でない文字列を求める案内をassertする。",
       "tests": [
         {
           "file": "packages/kit/test/doctor-diagnostics.test.ts",
           "contains": "のscript欠落を検出する",
-          "sha256": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0"
+          "sha256": "f30c2b3670db786adda6047b18c348b5ac6abe38a54f6a406ef367960893f985"
         }
       ]
     },
@@ -422,15 +422,15 @@
       "id": "SCN-8071bfcce9a520f84618",
       "status": "reviewed",
       "scenarioSha256": "c386f83926d8e2928b7c4cf8c93e480c37c539e67d397523ddbef998aa3bf9fb",
-      "reason": "有効なscriptの確認、未確認の範囲、実行印が作られずファイル内容も不変であることをassertする。",
       "sources": [
         "REQ-184"
       ],
+      "reason": "非空test scriptにファイルを書く本文を置き、終了コード0とscripts.testを確認した表示、マーカーなし、全ファイル一覧と内容の不変をassertする。",
       "tests": [
         {
           "file": "packages/kit/test/doctor-diagnostics.test.ts",
           "contains": "実行せず変更せず、存在と未確認の範囲を分ける",
-          "sha256": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0"
+          "sha256": "f30c2b3670db786adda6047b18c348b5ac6abe38a54f6a406ef367960893f985"
         }
       ]
     },
@@ -438,15 +438,25 @@
       "id": "SCN-40d3bdb16bbc377c53be",
       "status": "reviewed",
       "scenarioSha256": "c16d12ee9f9b011d68149b0d2167d79b30460cd16ccf57d1736c0abee72bbc2d",
-      "reason": "代入・連結・filterを含む各入力で注意と未確認が表示され、実行ファイル不存在の問題と断定しないことをassertする。",
       "sources": [
         "REQ-185"
       ],
+      "reason": "環境変数代入・連結・対象選択オプションで、終了コード0・注意と未確認の表示、test不存在の問題を出さないことをassertする。",
       "tests": [
         {
           "file": "packages/kit/test/doctor-diagnostics.test.ts",
-          "contains": "は未確認の注意とし、不存在と断定しない",
-          "sha256": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0"
+          "contains": "CI=1 pnpm testは未確認",
+          "sha256": "f30c2b3670db786adda6047b18c348b5ac6abe38a54f6a406ef367960893f985"
+        },
+        {
+          "file": "packages/kit/test/doctor-diagnostics.test.ts",
+          "contains": "pnpm test && echo okは未確認",
+          "sha256": "f30c2b3670db786adda6047b18c348b5ac6abe38a54f6a406ef367960893f985"
+        },
+        {
+          "file": "packages/kit/test/doctor-diagnostics.test.ts",
+          "contains": "pnpm --filter app testは未確認",
+          "sha256": "f30c2b3670db786adda6047b18c348b5ac6abe38a54f6a406ef367960893f985"
         }
       ]
     },
@@ -454,15 +464,20 @@
       "id": "SCN-5b4607b0f39d9af31224",
       "status": "reviewed",
       "scenarioSha256": "fbc3c4efe7ccdbb857728dd3bae997cd33971706e3acf660ca16fe4f78e5ffbc",
-      "reason": "Yarnの2形でscriptのないmanifestを与え、終了コード0、未確認の注意と問題にしないことをassertする。",
       "sources": [
         "REQ-185"
       ],
+      "reason": "testのないmanifestでyarn test/run testを診断し、終了コード0、注意と未確認、test不存在の問題でないことをassertする。",
       "tests": [
         {
           "file": "packages/kit/test/doctor-diagnostics.test.ts",
-          "contains": "yarn ",
-          "sha256": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0"
+          "contains": "yarn testは未確認",
+          "sha256": "f30c2b3670db786adda6047b18c348b5ac6abe38a54f6a406ef367960893f985"
+        },
+        {
+          "file": "packages/kit/test/doctor-diagnostics.test.ts",
+          "contains": "yarn run testは未確認",
+          "sha256": "f30c2b3670db786adda6047b18c348b5ac6abe38a54f6a406ef367960893f985"
         }
       ]
     },
@@ -470,15 +485,15 @@
       "id": "SCN-6b644826e6f8152d96e2",
       "status": "reviewed",
       "scenarioSha256": "cf620b4d95514262510455b5383774526aa29055a78b4c5ec80b77870fc00ac1",
-      "reason": "現在のPOSIXではchmod644の通常ファイルを候補にし、実行ファイルが見つからない問題と終了コード1をassertする。",
       "sources": [
         "REQ-186"
       ],
+      "reason": "Linuxでは0644の通常ファイル、Windows向け分岐では同名ディレクトリを候補にし、終了コード1とnotexecが見つからない旨をassertする。今回実行したのはLinux分岐のみ。",
       "tests": [
         {
           "file": "packages/kit/test/doctor-diagnostics.test.ts",
           "contains": "実行できないファイルを合格にしない",
-          "sha256": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0"
+          "sha256": "f30c2b3670db786adda6047b18c348b5ac6abe38a54f6a406ef367960893f985"
         }
       ]
     },
@@ -486,15 +501,15 @@
       "id": "SCN-76965280bee06788603a",
       "status": "reviewed",
       "scenarioSha256": "96c79880005014af4a1b955fc6070c9fff098b5836691a7ecad788869f1355f0",
-      "reason": "AGENTS.mdをディレクトリ、openspecをファイルにして両方の問題と終了コード1をassertする。",
       "sources": [
         "REQ-186"
       ],
+      "reason": "AGENTS.mdをディレクトリ、openspecを通常ファイルにして、終了コード1と各対象を正しい種類にする案内をassertする。",
       "tests": [
         {
           "file": "packages/kit/test/doctor-diagnostics.test.ts",
           "contains": "AGENTS.mdとopenspecの種類を確認する",
-          "sha256": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0"
+          "sha256": "f30c2b3670db786adda6047b18c348b5ac6abe38a54f6a406ef367960893f985"
         }
       ]
     },
@@ -502,15 +517,15 @@
       "id": "SCN-e824cd516cd0c6fee02c",
       "status": "reviewed",
       "scenarioSha256": "b6bd5ec22e2e589869961858628ca14bc5b9feaa2451a668588c7fa388cfc069",
-      "reason": "短い共有予算を先に使い切り、終了コード1と期限の理由、Git不存在や未除外という誤案内がないことをassertする。",
       "sources": [
         "REQ-187"
       ],
+      "reason": "外側の共有予算を使い切ってからdoctorを呼び、終了コード1・時間上限・git statusの確認案内をassertする。runExternalの呼び出し列が最初のgit --versionの1件だけで、rev-parseとcheck-ignoreへ進まないことを完全一致でassertする。",
       "tests": [
         {
           "file": "packages/kit/test/doctor-diagnostics.test.ts",
           "contains": "共有期限の終了をGit不存在と混同しない",
-          "sha256": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0"
+          "sha256": "f30c2b3670db786adda6047b18c348b5ac6abe38a54f6a406ef367960893f985"
         }
       ]
     },
@@ -518,15 +533,20 @@
       "id": "SCN-fa0b626a94c2216072ae",
       "status": "reviewed",
       "scenarioSha256": "747f1a63f9bbc35643eb446a7b47aa1595f9d70781d4402fe808ae96fc6ba830",
-      "reason": "実際の.git/configを壊したfixtureで、終了コード1・Git状態の確認失敗・git statusの案内を確認し、Git不存在や未除外と誤案内しないことをassertする。",
       "sources": [
         "REQ-187"
       ],
+      "reason": "実Gitのconfigを壊し、終了コード1、状態未確認とgit statusの案内、Git不存在や未除外と断定しないことをassertする。別試験ではcheck-ignoreだけをexit128にし、同じく未除外と解釈しないことを確認する。",
       "tests": [
         {
           "file": "packages/kit/test/doctor-diagnostics.test.ts",
           "contains": "実際にGit設定が壊れた場合は除外状態を断定しない",
-          "sha256": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0"
+          "sha256": "f30c2b3670db786adda6047b18c348b5ac6abe38a54f6a406ef367960893f985"
+        },
+        {
+          "file": "packages/kit/test/doctor-diagnostics.test.ts",
+          "contains": "check-ignoreの異常終了を未除外と解釈しない",
+          "sha256": "f30c2b3670db786adda6047b18c348b5ac6abe38a54f6a406ef367960893f985"
         }
       ]
     },
@@ -534,15 +554,20 @@
       "id": "SCN-eee682415ffb663b2b46",
       "status": "reviewed",
       "scenarioSha256": "fe746e1f2572fc7c25910063c9b524244cd001bbe8c72b2b5c8bc57dfd0e95d8",
-      "reason": "scriptも設定したfixtureで全項目の合格、問題・注意0件、終了コード0をassertする。",
       "sources": [
         "REQ-134"
       ],
+      "reason": "実Git・init・品質script・CLI名の通常ファイルを用意し、終了コード0、問題0/注意0、失敗や注意の記号なし、pnpmの存在をassertする。静的診断の成功と品質実行・認証・ネットワークの未確認の表示も別試験でassertする。",
       "tests": [
         {
           "file": "packages/cli/test/doctor.test.ts",
-          "contains": "すべて整っていれば、すべての項目を合格と表示し",
-          "sha256": "c9fe91afe6e727773eff514d7e8c92b6037ecd6a504236a4732addca73b03f19"
+          "contains": "すべて整っていれば、すべての項目を合格",
+          "sha256": "b71041f6ee0b7de94ae34a91269839ceadfc0886f92dd4d0ffa52558a4e16b4d"
+        },
+        {
+          "file": "packages/kit/test/doctor-diagnostics.test.ts",
+          "contains": "実行せず変更せず、存在と未確認の範囲を分ける",
+          "sha256": "f30c2b3670db786adda6047b18c348b5ac6abe38a54f6a406ef367960893f985"
         }
       ]
     },
@@ -550,15 +575,20 @@
       "id": "SCN-c7a5e9657736a0c2f52f",
       "status": "reviewed",
       "scenarioSha256": "153c08b7d9cda8097f6ffc13664189f8a6e83cc05bf94c40e47e1c325fd31f30",
-      "reason": "未導入と導入済みの双方で、実行前後の全ファイル内容を比較する。",
       "sources": [
         "REQ-134"
       ],
+      "reason": "初期化前と正常プロジェクトの両方で、.git以外の全ファイル一覧と内容を実行前後で比較する。品質scriptに書き込みを仕込み、そのマーカーが作られないこともassertする。Git内部の不変性やネットワーク遮断の実験ではない。",
       "tests": [
         {
           "file": "packages/cli/test/doctor.test.ts",
           "contains": "doctor はプロジェクトのファイルを追加も変更もしない",
-          "sha256": "c9fe91afe6e727773eff514d7e8c92b6037ecd6a504236a4732addca73b03f19"
+          "sha256": "b71041f6ee0b7de94ae34a91269839ceadfc0886f92dd4d0ffa52558a4e16b4d"
+        },
+        {
+          "file": "packages/kit/test/doctor-diagnostics.test.ts",
+          "contains": "実行せず変更せず、存在と未確認の範囲を分ける",
+          "sha256": "f30c2b3670db786adda6047b18c348b5ac6abe38a54f6a406ef367960893f985"
         }
       ]
     },
@@ -1630,15 +1660,15 @@
       "id": "SCN-738960823e4b4fae1194",
       "status": "reviewed",
       "scenarioSha256": "08c579fcf472b303e034d0aededcd52cb8531c14cceed1811b9750cd6f293d9b",
-      "reason": "設定ファイルのないfixtureで終了コード1、ファイル名とinitの案内をassertする。",
       "sources": [
         "REQ-134"
       ],
+      "reason": "未初期化の実Gitプロジェクトで終了コード1、設定ファイルがない旨、loomake initを実行する案内をassertする。",
       "tests": [
         {
           "file": "packages/cli/test/doctor.test.ts",
-          "contains": "loomake.config.json がなければ、loomake init を案内して",
-          "sha256": "c9fe91afe6e727773eff514d7e8c92b6037ecd6a504236a4732addca73b03f19"
+          "contains": "loomake.config.json がなければ",
+          "sha256": "b71041f6ee0b7de94ae34a91269839ceadfc0886f92dd4d0ffa52558a4e16b4d"
         }
       ]
     },
@@ -1646,15 +1676,15 @@
       "id": "SCN-c494449e555d666340f1",
       "status": "reviewed",
       "scenarioSha256": "d035aa774f84a0002e9ff0f9ef9c0c184c7abac92a604e0355f9d51708f48282",
-      "reason": "除外行を削ったfixtureで終了コード1、対象のパスと追加する行をassertする。",
       "sources": [
         "REQ-134"
       ],
+      "reason": "gitignoreにnode_modulesだけを置き、終了コード1、テストレポートが未除外の問題、追加すべき具体的な行をassertする。",
       "tests": [
         {
           "file": "packages/cli/test/doctor.test.ts",
-          "contains": "テストのレポートが除外されていなければ、足す行を案内して",
-          "sha256": "c9fe91afe6e727773eff514d7e8c92b6037ecd6a504236a4732addca73b03f19"
+          "contains": "テストのレポートが除外されていなければ",
+          "sha256": "b71041f6ee0b7de94ae34a91269839ceadfc0886f92dd4d0ffa52558a4e16b4d"
         }
       ]
     },
@@ -1662,15 +1692,15 @@
       "id": "SCN-16a53218bdba4fe1d887",
       "status": "reviewed",
       "scenarioSha256": "b2eb84a93ea2161864a6901fd6cf27aa320cfad42e892270837cdb432a60f90a",
-      "reason": "証拠まで除外するfixtureで終了コード1と証拠の問題、除外を分ける案内をassertする。",
       "sources": [
         "REQ-134"
       ],
+      "reason": "gitignoreで.loomake/全体を除外し、終了コード1、証拠をコミットできない問題、!.loomake/evidence/の直し方をassertする。",
       "tests": [
         {
           "file": "packages/cli/test/doctor.test.ts",
-          "contains": ".loomake/ を除外していれば、証拠の記録をコミットできない",
-          "sha256": "c9fe91afe6e727773eff514d7e8c92b6037ecd6a504236a4732addca73b03f19"
+          "contains": ".loomake/ を除外していれば",
+          "sha256": "b71041f6ee0b7de94ae34a91269839ceadfc0886f92dd4d0ffa52558a4e16b4d"
         }
       ]
     },
@@ -1678,15 +1708,15 @@
       "id": "SCN-05bcc96d38da4e6aad66",
       "status": "reviewed",
       "scenarioSha256": "5e3e73fc9f27710973e413c374d76a6d124973d449610475b0e048afd7895504",
-      "reason": "存在しないコマンドを設定し、終了コード1とその実行ファイル名をassertする。",
       "sources": [
         "REQ-134"
       ],
+      "reason": "testをnothing-command runへ設定し、終了コード1とそのコマンド・実行ファイル名がない問題表示をassertする。",
       "tests": [
         {
           "file": "packages/cli/test/doctor.test.ts",
-          "contains": "品質コマンドの実行ファイルが見つからなければ、終了コード 1 を返す",
-          "sha256": "c9fe91afe6e727773eff514d7e8c92b6037ecd6a504236a4732addca73b03f19"
+          "contains": "品質コマンドの実行ファイルが見つからなければ",
+          "sha256": "b71041f6ee0b7de94ae34a91269839ceadfc0886f92dd4d0ffa52558a4e16b4d"
         }
       ]
     },
@@ -1694,15 +1724,15 @@
       "id": "SCN-52ec0ba0a9322ee77dec",
       "status": "reviewed",
       "scenarioSha256": "d0c9d6db7b95aab677da60a0dd2b8d6967b9bbba5f56f4a4c3eceb9d59370ff9",
-      "reason": "claudeとghのないPATHで両方の注意、注意2件・問題0件と終了コード0をassertする。",
       "sources": [
         "REQ-134"
       ],
+      "reason": "binにpnpmとopenspecのみを準備し、claudeとgh各警告、問題0/注意2、終了コード0をassertする。",
       "tests": [
         {
           "file": "packages/cli/test/doctor.test.ts",
           "contains": "claude と gh がなければ注意として表示し",
-          "sha256": "c9fe91afe6e727773eff514d7e8c92b6037ecd6a504236a4732addca73b03f19"
+          "sha256": "b71041f6ee0b7de94ae34a91269839ceadfc0886f92dd4d0ffa52558a4e16b4d"
         }
       ]
     },
@@ -5674,33 +5704,118 @@
     },
     {
       "id": "SCN-468dd0a0c65faccb82a5",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "3330c3bb7c051c0c26683dac9e1c1c6bd0fd5d7d46ad46435a8b405db14a589f",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-202"
+      ],
+      "reason": "CLIから仕様例のQ-01に5 回・顧客担当・2026-10-24を書き、行と終了コード0をassertする。別のQ-02を持つ文書では対象行だけを置換した全文との一致、LF/CRLFの保持、区切り文字のエスケープ、仕様ゲート案内をassertする。既存のcore試験でも対象外の全行の保持を確認する。",
+      "tests": [
+        {
+          "file": "packages/cli/test/trace-agreement.test.ts",
+          "contains": "回答・回答者・回答日を書き、仕様ゲートが通る",
+          "sha256": "003cf20521ab1362372f1ce93cbbc046ea71a9bfcfd4b401b652509aadab9636"
+        },
+        {
+          "file": "packages/cli/test/trace-agreement.test.ts",
+          "contains": "対象外の全行を保ち、区切り文字をエスケープする",
+          "sha256": "003cf20521ab1362372f1ce93cbbc046ea71a9bfcfd4b401b652509aadab9636"
+        },
+        {
+          "file": "packages/core/test/trace-edit.test.ts",
+          "contains": "ID の行の列に値を書き、ほかの行は変えない",
+          "sha256": "db99961acc8021a96ae61c6d5e78f76fda0e8383a25958bdf00e975f7e00d98d"
+        }
+      ]
     },
     {
       "id": "SCN-879576b891dd1b98c99d",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "f932a1090c7c01190af890998244c036657e4b5e2b89cc134bd336d5e90fabfb",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-202"
+      ],
+      "reason": "既存回答3 回と元の回答を持つ文書にCLIから再回答し、終了コード2・既存値の日本語・ファイル全文の不変をassertする。追加の共通試験は承認済み行でも同じ拒否と不変をassertする。",
+      "tests": [
+        {
+          "file": "packages/cli/test/trace-agreement.test.ts",
+          "contains": "すでに回答があれば、変えずに終了コード",
+          "sha256": "003cf20521ab1362372f1ce93cbbc046ea71a9bfcfd4b401b652509aadab9636"
+        },
+        {
+          "file": "packages/cli/test/trace-agreement.test.ts",
+          "contains": "不正入力はファイルを一切変えない",
+          "sha256": "003cf20521ab1362372f1ce93cbbc046ea71a9bfcfd4b401b652509aadab9636"
+        }
+      ]
     },
     {
       "id": "SCN-d0bd3332acecbc0909f7",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "a5cd4d35e2f5e88f33411aa43edfe545ae941cbefc5d861b20e43919b10c1029",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-202"
+      ],
+      "reason": "Q-09とQ-99がない文書にCLIから書き込み、終了コード2とファイル全文不変をassertする。追加試験では不存在の日本語も確認し、承認側A-99にも同じ検証を行う。",
+      "tests": [
+        {
+          "file": "packages/cli/test/trace-agreement.test.ts",
+          "contains": "ID がない・日付の形が違う",
+          "sha256": "003cf20521ab1362372f1ce93cbbc046ea71a9bfcfd4b401b652509aadab9636"
+        },
+        {
+          "file": "packages/cli/test/trace-agreement.test.ts",
+          "contains": "不正入力はファイルを一切変えない",
+          "sha256": "003cf20521ab1362372f1ce93cbbc046ea71a9bfcfd4b401b652509aadab9636"
+        }
+      ]
     },
     {
       "id": "SCN-2c06bf9dc9cae42f137a",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "38fb98fc71c7b32a19d5a650fed09c58d869945c1280b946e51da9ddd09ba558",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-202"
+      ],
+      "reason": "回答者・回答日を持たない表へ回答を書き、終了コード0・回答行・両列がない旨の日本語をassertする。",
+      "tests": [
+        {
+          "file": "packages/cli/test/trace-agreement.test.ts",
+          "contains": "回答者・回答日の列がない古い表では",
+          "sha256": "003cf20521ab1362372f1ce93cbbc046ea71a9bfcfd4b401b652509aadab9636"
+        }
+      ]
     },
     {
       "id": "SCN-88adbacf54f7c398d8ef",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "25bb5bd1fa0395bfa7ceab237604c6903f8077b976109501a70078b22365004a",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-203"
+      ],
+      "reason": "A-01に承認・PM・指定日付を書き、前後の仕様ゲートで未承認警告の消滅をassertする。追加試験で対象行以外の全文と改行保持、区切り文字、実在する閏日、不正日付・改行・不存在・上書きの拒否、旧表の不足列案内をassertする。",
+      "tests": [
+        {
+          "file": "packages/cli/test/trace-agreement.test.ts",
+          "contains": "承認・承認者・承認日を書き、未承認の警告が消える",
+          "sha256": "003cf20521ab1362372f1ce93cbbc046ea71a9bfcfd4b401b652509aadab9636"
+        },
+        {
+          "file": "packages/cli/test/trace-agreement.test.ts",
+          "contains": "対象外の全行を保ち、区切り文字をエスケープする",
+          "sha256": "003cf20521ab1362372f1ce93cbbc046ea71a9bfcfd4b401b652509aadab9636"
+        },
+        {
+          "file": "packages/cli/test/trace-agreement.test.ts",
+          "contains": "不正入力はファイルを一切変えない",
+          "sha256": "003cf20521ab1362372f1ce93cbbc046ea71a9bfcfd4b401b652509aadab9636"
+        },
+        {
+          "file": "packages/cli/test/trace-agreement.test.ts",
+          "contains": "古い仮定の表では承認だけを書き",
+          "sha256": "003cf20521ab1362372f1ce93cbbc046ea71a9bfcfd4b401b652509aadab9636"
+        }
+      ]
     },
     {
       "id": "SCN-a2dda7c2b73cba290dcd",
@@ -5944,6 +6059,22 @@
           "file": "packages/trace/test/report.test.ts",
           "contains": "証拠の検査が不合格なら、冒頭に不合格の検査を挙げ",
           "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+        }
+      ]
+    },
+    {
+      "id": "SCN-f6d62339506e7542e5f6",
+      "status": "reviewed",
+      "scenarioSha256": "746c7ad8fd28796662bcf41af9297b05ea038f8a93110c9969f0bb9acc50d8c8",
+      "sources": [
+        "REQ-134"
+      ],
+      "reason": "tests.reprotとextraを追加した設定で、具体的な未知キーの警告と終了コード0をassertする。",
+      "tests": [
+        {
+          "file": "packages/cli/test/doctor.test.ts",
+          "contains": "loomake.config.json に知らないキーがあれば注意",
+          "sha256": "b71041f6ee0b7de94ae34a91269839ceadfc0886f92dd4d0ffa52558a4e16b4d"
         }
       ]
     }
