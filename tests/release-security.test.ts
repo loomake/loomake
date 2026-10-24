@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { actionReferenceProblem } from '../scripts/action-pins.mjs';
 
 const root = join(import.meta.dirname, '..');
 const workflowRoot = join(root, '.github/workflows');
@@ -12,11 +13,18 @@ describe('公開経路の供給網と資格情報', () => {
     const pins = JSON.parse(readFileSync(join(root, '.github/action-pins.json'), 'utf8'));
     const references = [...read(file).matchAll(/^\s*- uses:\s*(\S+)/gm)].map((match) => match[1]);
     expect(references.length).toBeGreaterThan(0);
-    for (const reference of references) {
-      expect(reference).toMatch(/^[\w-]+\/[\w-]+@[a-f0-9]{40}$/);
-      const [repository, sha] = reference.split('@');
-      expect(pins.actions).toContainEqual(expect.objectContaining({ repository, sha, ref: 'v4' }));
-    }
+    for (const reference of references) expect(actionReferenceProblem(reference, pins.actions), reference).toBeNull();
+  });
+
+  it('[REQ-167] サブパスを持つ参照も、リポジトリと完全な SHA で記録と照合する', () => {
+    const sha = 'a'.repeat(40);
+    const pins = [{ repository: 'github/codeql-action', ref: 'v4', sha }];
+    expect(actionReferenceProblem(`github/codeql-action/init@${sha}`, pins)).toBeNull();
+    expect(actionReferenceProblem(`github/codeql-action/analyze@${sha}`, pins)).toBeNull();
+    expect(actionReferenceProblem(`github/codeql-action/init@${sha.slice(0, 7)}`, pins)).not.toBeNull();
+    expect(actionReferenceProblem('github/codeql-action/init@v4', pins)).not.toBeNull();
+    expect(actionReferenceProblem(`github/other/init@${sha}`, pins)).not.toBeNull();
+    expect(actionReferenceProblem(`github/codeql-action@${'b'.repeat(40)}`, pins)).not.toBeNull();
   });
 
   it.each(workflows)('[REQ-168] %sの既定権限はreadでcheckoutに資格情報を保存しない', (file) => {
