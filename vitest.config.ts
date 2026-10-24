@@ -26,8 +26,8 @@ export default defineConfig({
       include: ['packages/*/src/**/*.ts'],
       reporter: ['text-summary', 'json-summary'],
       reportsDirectory: '.loomake/coverage',
-      // 2026-10-24 の値（文 94.6%・分岐 88.5%・関数 96.5%・行 97.9%）より少し下に置き、下がったら CI で止める
-      thresholds: { statements: 93, branches: 87, functions: 95, lines: 96 },
+      // 2026-10-24 の値（文 95.3%・分岐 90.2%・関数 96.9%・行 98.1%）より少し下に置き、下がったら CI で止める
+      thresholds: { statements: 94, branches: 89, functions: 96, lines: 97 },
     },
   },
 });
