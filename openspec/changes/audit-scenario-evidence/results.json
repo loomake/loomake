@@ -5,18 +5,66 @@
   "exitCode": 1,
   "counts": {
     "total": 360,
-    "reviewed": 44,
+    "reviewed": 127,
     "superseded": 2,
-    "unreviewed": 314,
+    "unreviewed": 231,
     "invalid": 0
   },
   "issues": [],
   "specFiles": 32,
   "testRun": {
-    "total": 636,
-    "passed": 636,
+    "total": 638,
+    "passed": 638,
     "failed": 0
   },
+  "gateAttempts": [
+    {
+      "exitCode": 1,
+      "total": 638,
+      "passed": 633,
+      "failed": 5,
+      "testReportSha256": "1f3d2d3043b20f138890a545faf9425e0c2fb5b7325479a422f76bac55146cb4",
+      "failures": [
+        {
+          "file": "tests/input-boundaries.test.ts",
+          "test": "コマンドの入力予算 [REQ-172] 過大なtasksではrunを始めずGitとエンジンを変更しない",
+          "reason": "Error: Test timed out in 5000ms.",
+          "durationMs": 11409.665130000001
+        },
+        {
+          "file": "packages/runner/test/lock.test.ts",
+          "test": "実プロセスとworktree [REQ-158] 別のGit worktreeのロックは独立して取得する",
+          "reason": "Error: Test timed out in 5000ms.",
+          "durationMs": 10844.84263
+        },
+        {
+          "file": "packages/runner/test/safety-paths.test.ts",
+          "test": "Gitの表示形式から独立したパスの検査 [REQ-138] \"tab\\tname\" のテストへのskip追加を検出する",
+          "reason": "Error: Test timed out in 5000ms.",
+          "durationMs": 11004.691963000001
+        },
+        {
+          "file": "packages/core/test/package.test.ts",
+          "test": "OpenSpec 書式との互換 [REQ-052][REQ-058] Source 行と trace.md を含む change が openspec validate --strict を通る",
+          "reason": "Error: Test timed out in 5000ms.",
+          "durationMs": 12454.322381
+        },
+        {
+          "file": "packages/trace/test/record-size.test.ts",
+          "test": "生成した証拠と読み取り側の整合性 [REQ-174] 形式が壊れた生成結果も保存しない",
+          "reason": "Error: Test timed out in 5000ms.",
+          "durationMs": 11107.312880000001
+        }
+      ]
+    },
+    {
+      "exitCode": 0,
+      "total": 638,
+      "passed": 638,
+      "failed": 0,
+      "settingsChanged": false
+    }
+  ],
   "inputs": {
     "specs": {
       "openspec/changes/audit-scenario-evidence/specs/scenario-evidence-audit/spec.md": "c59f98414dfffbe716abcd90103d39734358897c11c24e224245a36d03078ad3",
@@ -62,7 +110,7 @@
       "tests/package-workflows.test.ts": "70a50c999af6bcf1b0546d5ebc28983730c4219c85aa6d34264623114335954d",
       "tests/release-security.test.ts": "062a1d920f8e435ed82850379e18c63e28af431c5aa2d03865a20a3a8914b75e",
       "tests/scenario-audit.test.ts": "0081fbabce3363fc49dece2bc2cd3fcf7e710bab573d3241d7c49cd9d683b19f",
-      "packages/cli/test/cli.test.ts": "24f19bbf72470ffaae43fe8e8612a0f88a72208bdfbbcc65fac49fdad9639af5",
+      "packages/cli/test/cli.test.ts": "af8e785775d2e0aa180e9322dd37c5df04eea3e4c50de769f9bf6ffa94cc6ea1",
       "packages/cli/test/doctor.test.ts": "c9fe91afe6e727773eff514d7e8c92b6037ecd6a504236a4732addca73b03f19",
       "packages/cli/test/init.test.ts": "fad9d1e9ba361a5971760e4e0e45804df275146662e92be9a632820d301e8c03",
       "packages/core/test/agreement.test.ts": "0e6e08ffc5b0dd863f0d80664a78fae0a7e7dc7122fd3688228626880dc31aa4",
@@ -73,11 +121,6 @@
       "packages/core/test/tasks.test.ts": "6208610676ee0a0335603847d61d26281ba29e23421ec3db4b38b23cea45be5a",
       "packages/core/test/test-report.test.ts": "c7153a95adba3abf1d612e07134454d17aa93ece23874ffc140db2d5136859f1",
       "packages/core/test/trace.test.ts": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40",
-      "packages/kit/test/doctor-command.test.ts": "a0e75f4a867c6a7c85dd0959a9737cb2fe4ad50f8d4dd84dfe9e9ab41b1ea0e6",
-      "packages/kit/test/doctor-diagnostics.test.ts": "48773c7da0d51d9e44e843ca2e810b9ba5112067a2334244a501305253da5019",
-      "packages/kit/test/input.test.ts": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985",
-      "packages/kit/test/process.test.ts": "cbbf856ea0f6e612ae2e66ce2c5af8791e73e1766b5d21829c6024cca5130d75",
-      "packages/kit/test/verify.test.ts": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75",
       "packages/runner/test/diagnostic-redactor.test.ts": "82f934a3f6a9d4e4fea20f7137f465651f3d716c3697e0333cf97e787eaa28ef",
       "packages/runner/test/engine-safety.test.ts": "7c75c2f45e35c3daf7c65fb9551eb924a0b3d7e34656a71cd0cc3ae486711317",
       "packages/runner/test/evidence-storage.test.ts": "16cd666b698613e965a0c1547e97b68a56431b2f576b7f9e45caf7954adbeebb",
@@ -92,15 +135,20 @@
       "packages/runner/test/publication-retry.test.ts": "49db35ee3960986e16dabe788943d2490d57f5d0b121531227f9ad148ed844bf",
       "packages/runner/test/run.test.ts": "1db0a951fb2cdc5129f0155142e859bbdd9a652ff476d6a69f77b5eb57982f46",
       "packages/runner/test/safety-paths.test.ts": "e976ee7e1e4c985ae0566df7cf7d177bb254e35053a8410018fd4794a1ce4673",
+      "packages/kit/test/doctor-command.test.ts": "a0e75f4a867c6a7c85dd0959a9737cb2fe4ad50f8d4dd84dfe9e9ab41b1ea0e6",
+      "packages/kit/test/doctor-diagnostics.test.ts": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0",
+      "packages/kit/test/input.test.ts": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985",
+      "packages/kit/test/process.test.ts": "cbbf856ea0f6e612ae2e66ce2c5af8791e73e1766b5d21829c6024cca5130d75",
+      "packages/kit/test/verify.test.ts": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75",
       "packages/trace/test/publication-crash.test.ts": "870d3f491fbb77433bcb8ddd9a76b2ea22e9185ee7a7665f5894798b3f2142c0",
       "packages/trace/test/publication.test.ts": "63231c8f68bbbe7901a3c28a437135b7aaebc689a66752682eb0a2422be710f9",
       "packages/trace/test/record-size.test.ts": "db71a3294f7e3688bc76c9adbb527a0526a41c76304da1b8f350375514ec87e1",
       "packages/trace/test/record.test.ts": "c2bb3939cea0fdf9786b20c2a4fd2dfa500c1904c71183d648fc7c2b626379d4",
-      "packages/trace/test/report.test.ts": "e1e29cedb248fd72798fddff589c54e9c2898df4f2ac5bb0e3f8fa69b50bea25",
+      "packages/trace/test/report.test.ts": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176",
       "packages/trace/test/serialization.test.ts": "6cf85e33ea1af754e0245fc4259f994504be7310ea55c96abc971e81ebd5c247"
     },
-    "testReportSha256": "d44f5a35af18d235577f15c534a40e2faf4e0d909850268fce4205c111ce2445",
-    "reviewSha256": "101977af74c4b51cc82cf6b2d8c826c823442675c199d5a8fac3250bd0a56eae",
+    "testReportSha256": "7e78bd7e8456f940430f430f1138ab309f29e9fa35359ce197a1b8ac52548bff",
+    "reviewSha256": "2946c09737c360f06e3f9868628c0d081192276e4042c852b4ab0339eb984eef",
     "scriptSha256": "279e59e68ac4104a3bbb69289eaf02972596ca4db0a1351d04fb0b2ed2a33a39"
   }
 }
