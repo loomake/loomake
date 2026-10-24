@@ -11,3 +11,9 @@ provenanceはnpmの公式文書で、必要なrepository情報・OIDC権限・�
 ## 1.2 配布物の出典
 
 package-smokeの検査に、独立したプロジェクトへ導入した5パッケージのrepository・directory・provenanceの一致を追加した。CLIの配布元を違う値へ変えた場合に検査が失敗することも確認した。元の値へ戻して、既存のテンプレート欠損の期待値も維持した。関連13件が成功した。5パッケージのメタデータ変更にchangesetを追加した。
+
+## 2.1 OSS向けの文書
+
+SECURITY.md・CONTRIBUTING.md・SUPPORT.mdと、docsのsecurity・compatibility・publishingを追加した。信頼したコマンドの実行、環境変数の引き継ぎ、宣言と実際の隔離の違い、診断の保護範囲、未完了の資源制限を実装と照合した。既存のschemaVersionと旧証拠の互換性も確認した。新規文書の相対リンクとyomiyasuの照合が成功した。
+
+非公開の脆弱性報告機能、リポジトリの可視性、registryの公開元検証は未確認として記載した。取得したActionsの記録は.github/action-pins.jsonを現行の参照先とし、changeにも取得時の記録を残す。回帰試験がchangeのarchive後も動くよう、現行の記録を読む。

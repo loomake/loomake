@@ -9,7 +9,7 @@ const read = (file: string) => readFileSync(join(workflowRoot, file), 'utf8');
 
 describe('公開経路の供給網と資格情報', () => {
   it.each(workflows)('[REQ-167] %sの外部Actionsは確認済みの完全なSHAに固定する', (file) => {
-    const pins = JSON.parse(readFileSync(join(root, 'openspec/changes/harden-release-workflow/action-pins.json'), 'utf8'));
+    const pins = JSON.parse(readFileSync(join(root, '.github/action-pins.json'), 'utf8'));
     const references = [...read(file).matchAll(/^\s*- uses:\s*(\S+)/gm)].map((match) => match[1]);
     expect(references.length).toBeGreaterThan(0);
     for (const reference of references) {

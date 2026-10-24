@@ -10,7 +10,7 @@ CIはcontents readを既定とするが、公開ワークフローは全体がco
 
 ## Decisions
 
-- GitHubコネクタで公式リポジトリのv4参照を取得し、完全なSHAとURLをaction-pins.jsonへ保存する。固定によって更新が不要になるわけではなく、依存更新の手順を文書化する。
+- GitHubコネクタで公式リポジトリのv4参照を取得し、完全なSHAとURLを.github/action-pins.jsonへ保存し、changeにも取得時の記録を残す。固定によって更新が不要になるわけではなく、依存更新の手順を文書化する。
 - すべてのcheckoutにpersist-credentials falseを指定する。releaseの既定はreadにし、公開ジョブだけにcontents writeとid-token writeを付ける。ジョブ単位の権限はそのジョブ全体に及ぶが、npmとGit送信の資格情報は対応するステップだけへ渡す。
 - タグ送信ステップでだけGH_TOKENを渡し、gh auth setup-gitを設定してから既存のgit push --follow-tagsを行う。品質コマンドやpublishへGitの資格情報を保存しない。
 - パッケージにrepositoryのtype・url・directoryとpublishConfig.provenance trueを追加する。公開ステップにもNPM_CONFIG_PROVENANCE trueを渡し、token認証を維持する。配布物の検査でメタデータを確認する。
