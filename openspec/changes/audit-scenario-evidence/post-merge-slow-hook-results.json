@@ -1,0 +1,27 @@
+{
+  "status": "passed",
+  "sourceCommit": "6312137",
+  "platform": "linux",
+  "arch": "arm64",
+  "node": "v24.21.0",
+  "operationLimitMs": 30000,
+  "sharedBudgetMs": 90000,
+  "hookElapsedMs": 40043,
+  "totalElapsedMs": 40959.16506000001,
+  "runExitCode": 0,
+  "summaryStatus": "completed",
+  "remainingTasks": [],
+  "prs": 1,
+  "scope": "Compiled local runner, real Git and a one-time 40-second pre-commit hook; fake engine and fake gh; Linux only",
+  "probeSha256": "ac3e0c1d72bf0bf5d7cd33ea0c7bdee85f8895e0196f354439a4473ad99fe759",
+  "inputs": {
+    "packages/runner/test/helpers.ts": "0d047e0b0a98d49c6ae46ebec5dc1bed36d4a3c9c5a0dd876c1191bddc1ad233",
+    "packages/kit/test/project.ts": "4cc9634bc96658d37cec871ecd161f8293563de7dffba2568f5c2163fc26f3ea",
+    ".loomake/quality/edge-probes/helpers.mjs": "8ddb6e8c7a580a1fd245cf0093d381ec29d453d5ad4824d3e510a5629fd4cf80",
+    ".loomake/quality/edge-probes/project.mjs": "db7c3980560611981ceabc23358a30f65d2c9e70d65598974691c23e72f7bd87",
+    "packages/kit/dist/process.js": "4528cda1a8a3c385994dd77ee69a001da4254e3fb62ec74c5ca4a29d8b55166b",
+    "packages/runner/dist/run.js": "ffbed2dfe5dc524f5ab444aa1d8e6cbfdd9f660bf8749fb34cc71239dfd1ee79"
+  },
+  "probeSource": "import assert from 'node:assert/strict';import {writeFileSync,readFileSync,chmodSync,readdirSync,existsSync} from 'node:fs';import {join,resolve} from 'node:path';import {createHash} from 'node:crypto';\nimport {makeRepo,CHANGE} from './helpers.mjs';import {runRun} from '../../../packages/runner/dist/index.js';import {withProcessBudget} from '../../../packages/kit/dist/process.js';\nconst repo=makeRepo();const start=performance.now();let result;\ntry{\n const marker=join(repo.base,'slow-hook-start'),done=join(repo.base,'slow-hook-end');\n const hook=join(repo.root,'.git/hooks/pre-commit');\n const code=`const fs=require('node:fs');fs.writeFileSync(${JSON.stringify(marker)},String(Date.now()));setTimeout(()=>fs.writeFileSync(${JSON.stringify(done)},String(Date.now())),40000)`;\n const quoted=\"'\"+code.replaceAll(\"'\",\"'\\\\''\")+\"'\";\n writeFileSync(hook,`#!/bin/sh\\nif [ ! -e '${marker}' ]; then\\n  '${process.execPath}' -e ${quoted}\\nfi\\n`);chmodSync(hook,0o755);\n repo.plan([{write:{'impl.txt':'implementation\\n'}},{}]);const out=[];\n const status=await withProcessBudget({timeoutMs:90000,maxOperationMs:30000},()=>runRun({root:repo.root,changeId:CHANGE,interactive:false,confirm:async()=>false,stdout:t=>out.push(t),env:repo.env,fileExists:()=>false}));\n assert.equal(status,0,out.join('\\n'));assert(existsSync(done));const hookMs=Number(readFileSync(done,'utf8'))-Number(readFileSync(marker,'utf8'));assert(hookMs>=40000);\n const runs=join(repo.root,'.loomake/runs');const run=readdirSync(runs).filter(x=>x!=='.gitignore').sort().at(-1);const summary=JSON.parse(readFileSync(join(runs,run,'summary.json'),'utf8'));assert.equal(summary.status,'completed');assert.deepEqual(summary.remainingTasks,[]);assert.equal(repo.prs().length,1);\n result={status:'passed',sourceCommit:'6312137',platform:process.platform,arch:process.arch,node:process.version,operationLimitMs:30000,sharedBudgetMs:90000,hookElapsedMs:hookMs,totalElapsedMs:performance.now()-start,runExitCode:status,summaryStatus:summary.status,remainingTasks:summary.remainingTasks,prs:repo.prs().length,scope:'Compiled local runner, real Git and a one-time 40-second pre-commit hook; fake engine and fake gh; Linux only',probeSha256:createHash('sha256').update(readFileSync(new URL(import.meta.url))).digest('hex')};\n}catch(error){result={status:'failed',error:String(error),elapsedMs:performance.now()-start};process.exitCode=1;}finally{repo.cleanup();}\nwriteFileSync(resolve('.loomake/quality/edge-probes/slow-hook-results.json'),JSON.stringify(result,null,2)+'\\n');console.log(JSON.stringify(result));\n",
+  "limits": "One Linux ARM64 run. Uses a fake engine and fake gh. Not proof of real Claude Code, GitHub, other OSes, or general performance."
+}

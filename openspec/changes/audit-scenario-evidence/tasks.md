@@ -49,3 +49,9 @@
 - [x] 9.1 実行判断、既存のドメイン変異試験、テストの弱体化検出のScenarioとassertionを照合する
 - [x] 9.2 archive後の対応を照合し、実行結果と評価を更新する
 - [x] 9.3 `pnpm -s verify --change audit-scenario-evidence --done` を通す <!-- loomake:gate=done -->
+
+## 10. 削除指示を含む差分仕様の監査
+
+- [ ] 10.1 削除と追加・変更の混在、削除指示のみ、通常要件のScenario欠落を回帰テストにし、修正前の失敗を確認する（REQ-188）
+- [ ] 10.2 削除指示を一覧の対象外にし、通常要件の検査と既存のID・内容ハッシュを維持する（REQ-188）
+- [ ] 10.3 対応表を再照合し、全体監査の結果と不足を記録して `pnpm -s verify --change audit-scenario-evidence --done` を通す <!-- loomake:gate=done -->
