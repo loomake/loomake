@@ -509,6 +509,6 @@ function recordAndOpenPr(ctx: RunContext, rec: Recorder): number {
     const url = createPr(root, env, { base, head: branch, title: changeId, bodyFile: join(rec.runDir, 'pr-body.md') });
     return rec.finish('completed', `PR を作りました：${url}`, []);
   } catch (e) {
-    return rec.finish('stopped', `証拠を記録してコミットしましたが、PR を作れませんでした：${(e as Error).message}`, []);
+    return rec.finish('stopped', `証拠のコミットを保っていますが、PRの公開を完了できませんでした：${(e as Error).message}`, []);
   }
 }
