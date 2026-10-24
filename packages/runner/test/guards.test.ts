@@ -46,9 +46,9 @@ async function check(step: FakeStep, setup: ((repo: Repo) => void) | undefined, 
 
 const withTest = (repo: Repo) => repo.write('tests/a.test.ts', "it('[REQ-012] 確かめる', () => {});\n");
 const stopped = (r: Awaited<ReturnType<typeof runWith>>, base: number) => {
-  expect(r.code).toBe(1);
-  expect(r.stdout).toContain('不正な直し方を見つけました');
-  expect(r.commits).toBe(base);
+  expect(r.code, r.stdout).toBe(1);
+  expect(r.stdout, r.stdout).toContain('不正な直し方を見つけました');
+  expect(r.commits, r.stdout).toBe(base);
 };
 
 describe('テストの削除と skip・todo の検出', () => {

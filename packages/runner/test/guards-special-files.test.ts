@@ -12,15 +12,19 @@ const packages = join(import.meta.dirname, '../..');
 const compilerOptions = { module: ModuleKind.ESNext, target: ScriptTarget.ES2022 };
 
 // Read the current runner sources, including guards.ts, rather than a previously built runner.
-function executableRunner(base: string): string {
+type ProbeKind = 'snapshot' | 'run';
+function executableRunner(base: string, kind: ProbeKind): string {
   const output = join(base, 'runner-probe');
   mkdirSync(output);
   writeFileSync(join(output, 'package.json'), '{"type":"module"}');
   const compile = (source: string, target: string) => {
     mkdirSync(target, { recursive: true });
     for (const entry of readdirSync(source, { withFileTypes: true })) {
-      if (entry.isDirectory()) { compile(join(source, entry.name), join(target, entry.name)); continue; }
-      if (!entry.name.endsWith('.ts')) continue;
+      if (entry.isDirectory()) {
+        if (kind === 'run') compile(join(source, entry.name), join(target, entry.name));
+        continue;
+      }
+      if (!entry.name.endsWith('.ts') || (kind === 'snapshot' && !['guards.ts', 'git.ts'].includes(entry.name))) continue;
       const content = readFileSync(join(source, entry.name), 'utf8').replace(/(['"])@loomake\/(core|kit|trace)\1/g, (_match, _quote: string, name: string) => JSON.stringify(pathToFileURL(join(packages, name, 'dist/index.js')).href));
       writeFileSync(join(target, entry.name.replace(/\.ts$/, '.js')), transpileModule(content, { compilerOptions }).outputText);
     }
@@ -29,10 +33,13 @@ function executableRunner(base: string): string {
   return output;
 }
 
-function probe(repo: Repo, modules: string, action: string, timeout: number) {
-  const script = `import { writeSync } from 'node:fs';\nimport { gitInternals } from ${JSON.stringify(pathToFileURL(join(modules, 'guards.js')).href)};\nimport { runRun } from ${JSON.stringify(pathToFileURL(join(modules, 'run.js')).href)};\nimport { UsageError } from ${JSON.stringify(pathToFileURL(join(packages, 'kit/dist/index.js')).href)};\nwriteSync(1, 'probe-started\\n');\n${action}`;
+function probe(repo: Repo, modules: string, kind: ProbeKind, action: string, timeout: number) {
+  const imports = kind === 'snapshot'
+    ? `const { gitInternals } = await import(${JSON.stringify(pathToFileURL(join(modules, 'guards.js')).href)});`
+    : `const { runRun } = await import(${JSON.stringify(pathToFileURL(join(modules, 'run.js')).href)});`;
+  const script = `import { writeSync } from 'node:fs';\nconst started = performance.now();\nconst phase = (name) => writeSync(2, JSON.stringify({ phase: name, elapsedMs: performance.now() - started }) + '\\n');\nphase('child-started');\n${imports}\nconst { UsageError } = await import(${JSON.stringify(pathToFileURL(join(packages, 'kit/dist/index.js')).href)});\nphase('imports-ready');\nwriteSync(1, 'probe-started\\n');\nphase(${JSON.stringify(kind + '-started')});\n${action}\nphase(${JSON.stringify(kind + '-finished')});`;
   const result = spawnSync(process.execPath, ['--input-type=module', '-e', script], { cwd: repo.root, env: repo.env, encoding: 'utf8', timeout, killSignal: 'SIGKILL', maxBuffer: 1024 * 1024 });
-  expect(result.stdout).toContain('probe-started\n');
+  expect(result.stdout, result.stderr).toContain('probe-started\n');
   expect(result.error, result.stderr).toBeUndefined();
   expect(result.signal, result.stderr).toBeNull();
   expect(result.status, result.stderr).toBe(0);
@@ -58,7 +65,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル�
     const repo = makeRepo();
     try {
       repo.write('.git/hooks/probe-entry', 'ordinary hook\n');
-      const result = probe(repo, executableRunner(repo.base), snapshotAction, 3000);
+      const result = probe(repo, executableRunner(repo.base, 'snapshot'), 'snapshot', snapshotAction, 3000);
       expect(result.kind).toBe('snapshot');
       expect(result.snapshot.digest).toMatch(/^[a-f0-9]{64}$/);
     } finally { repo.cleanup(); }
@@ -69,7 +76,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル�
     try {
       const file = join(repo.root, '.git/hooks/probe-entry');
       fifo(file);
-      const result = probe(repo, executableRunner(repo.base), snapshotAction, 3000);
+      const result = probe(repo, executableRunner(repo.base, 'snapshot'), 'snapshot', snapshotAction, 3000);
       expect(result).toMatchObject({ kind: 'rejected', usageError: true });
       expect(result.message).toContain(file);
       expect(result.message).toMatch(/特殊ファイル|通常のファイル/);
@@ -84,7 +91,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル�
       const file = join(repo.root, '.git/hooks/probe-entry');
       await new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(file, resolve); });
       expect(lstatSync(file).isSocket()).toBe(true);
-      const result = probe(repo, executableRunner(repo.base), snapshotAction, 3000);
+      const result = probe(repo, executableRunner(repo.base, 'snapshot'), 'snapshot', snapshotAction, 3000);
       expect(result).toMatchObject({ kind: 'rejected', usageError: true });
       expect(result.message).toContain(file);
       expect(result.message).toMatch(/特殊ファイル|通常のファイル/);
@@ -106,7 +113,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル�
       }
       const head = repo.git('rev-parse', 'HEAD');
       const tasks = readFileSync(join(repo.root, 'openspec/changes/c1/tasks.md'), 'utf8');
-      const result = probe(repo, executableRunner(repo.base), runAction, 10_000);
+      const result = probe(repo, executableRunner(repo.base, 'run'), 'run', runAction, 10_000);
       targetReason(result, file);
       expect(repo.calls()).toHaveLength(stage === 'before' ? 0 : 1);
       expect(repo.git('rev-parse', 'HEAD')).toBe(head);
@@ -136,7 +143,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル�
         symlinkSync(target, hook);
       }
       repo.plan([{ write: { 'impl.txt': 'implementation\n' } }, {}]);
-      const result = probe(repo, executableRunner(repo.base), runAction, 10_000);
+      const result = probe(repo, executableRunner(repo.base, 'run'), 'run', runAction, 10_000);
       expect(result.code, result.output.join('\n')).toBe(0);
       expect(result.output.join('\n')).not.toContain('特殊ファイル');
       expect(readFileSync(join(repo.root, 'openspec/changes/c1/tasks.md'), 'utf8')).not.toContain('- [ ]');

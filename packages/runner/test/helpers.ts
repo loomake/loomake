@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { delimiter, dirname, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { reportJson, specMd, traceMd } from '../../kit/test/project.js';
+import { attachProcessDiagnostics } from './process-diagnostics.js';
 
 export const CHANGE = 'c1';
 
@@ -134,6 +135,7 @@ export function makeRepo({ trace = traceMd(), tasks = TASKS, run }: { trace?: st
     DEVCONTAINER: '1',
     LOOMAKE_SANDBOX: undefined,
   };
+  attachProcessDiagnostics(base, env);
   writeFileSync(env.FAKE_PLAN!, '[]');
   const write = (p: string, text: string) => {
     mkdirSync(dirname(join(root, p)), { recursive: true });
