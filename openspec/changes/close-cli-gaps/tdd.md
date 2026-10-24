@@ -15,3 +15,11 @@
 ## 2.1・2.2 CLI の引数
 
 `--change=<id>`・`--format=json`・空の値と、サブコマンドとオプションの打ち間違いのテストを足し、現行の実装で 5 件が失敗することを確かめた（REQ-191 の JSON のテストは 1.1 の実装で成功した）。2 つのタスクは同じ引数の解析を書き直すので、1 回の変更で行った。引数の解析を `args.ts` にまとめ、`--name=value` と編集距離 2 以下の候補を扱うようにして、全テストが成功した。
+
+## 3.1 文書
+
+for-agents.md の終了コードの表に 3 と `--skip-commands` の説明を足し、compatibility.md と run-recovery.md の終了コードの記述を変えた。利用者が編集中の usage.md・positioning.md・quickstart.md は変えていない。
+
+## 完了ゲート
+
+`pnpm -s verify --change close-cli-gaps --done` は exit 0。lint・型検査・650 件のテストと全 REQ の対応が成功した。

@@ -13,5 +13,5 @@
 
 ## 3. 統合検証
 
-- [ ] 3.1 docs（usage・for-agents）と changeset を更新し、TDD の結果を tdd.md に記録する
-- [ ] 3.2 `pnpm -s verify --change close-cli-gaps --done` を通す <!-- loomake:gate=done -->
+- [x] 3.1 docs（usage・for-agents）と changeset を更新し、TDD の結果を tdd.md に記録する
+- [x] 3.2 `pnpm -s verify --change close-cli-gaps --done` を通す <!-- loomake:gate=done -->
