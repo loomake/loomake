@@ -596,14 +596,32 @@ describe('出力予算による停止', () => {
   it.each([0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1])('[REQ-152] 不正な出力上限 %j を設定エラーにする', (maxOutputBytes) =>
     withRepo(async (repo) => {
       repo.write('loomake.config.json', JSON.stringify({ run: { maxOutputBytes } }));
-      const result = await cli(repo, '--dry-run');
+      const result = await cli(repo);
       expect(result.code).toBe(2);
       expect(result.stderr).toContain('run.maxOutputBytes');
+      expect(repo.calls()).toEqual([]);
     }));
 });
 
 describe('runnerの表示の保護', () => {
   const token = 'ghp_' + 'x'.repeat(24);
+
+  it('[REQ-199] 追加された既知形式と隣接する秘密鍵を実際の出力記録で置換する', () =>
+    withRepo(async (repo) => {
+      const values = [
+        'npm_' + 'x'.repeat(36), 'xoxb-' + 'x'.repeat(24), 'glpat-' + 'x'.repeat(24),
+        'AIza' + 'X'.repeat(35), 'eyJ' + 'x'.repeat(12) + '.' + 'y'.repeat(12) + '.' + 'z'.repeat(12),
+        'Z'.repeat(24),
+      ];
+      const key = '-----BEGIN PRIVATE KEY-----\nFAKE_PRIVATE_BODY\n-----END PRIVATE KEY-----';
+      const text = values.slice(0, 5).join('\n') + '\nAuthorization: Bearer ' + values[5] + '\nsk-' + 'x'.repeat(24) + key;
+      repo.plan([{ write: { 'impl.txt': 'ready' }, output: text }, {}]);
+      expect((await run(repo)).code).toBe(0);
+      const output = readFileSync(join(runDir(repo), '01-output.json'), 'utf8');
+      for (const value of [...values, 'FAKE_PRIVATE_BODY', '-----BEGIN PRIVATE KEY-----']) expect(output).not.toContain(value);
+      expect(JSON.parse(output).result).toContain('Authorization: Bearer ***');
+      expect(output).toContain('***');
+    }));
 
   it('[REQ-154] 質問と停止理由を表示する前に置換する', () =>
     withRepo(async (repo) => {
@@ -613,6 +631,7 @@ describe('runnerの表示の保護', () => {
       expect(result.stdout).not.toContain(token);
       expect(result.stdout).toContain('***');
       expect(summary(repo).reason).not.toContain(token);
+      expect(summary(repo).reason).toContain('***');
     }));
 
   it('[REQ-154] 品質コマンドの進捗を転送する前に置換する', () =>

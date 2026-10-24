@@ -21,8 +21,13 @@ describe('runの記録予算', () => {
     try {
       oldHistory(repo); repo.plan([{ output: 'LOOMAKE-QUESTION: stop' }]);
       const before = repo.git('rev-parse', 'HEAD');
-      await expect(run(repo)).rejects.toThrow(UsageError);
+      const tasks = readFileSync(join(repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8');
+      const attempt = run(repo);
+      await expect(attempt).rejects.toThrow(UsageError);
+      await expect(attempt).rejects.toThrow('69632バイト');
+      await expect(attempt).rejects.toThrow(join(repo.root, '.loomake/runs'));
       expect(repo.git('rev-parse', 'HEAD')).toBe(before);
+      expect(readFileSync(join(repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toBe(tasks);
       expect(repo.git('branch', '--show-current')).toBe('main');
       expect(repo.calls()).toEqual([]);
       expect(readdirSync(join(repo.root, '.loomake/runs'))).toEqual(['.gitignore', 'old.log']);
@@ -68,6 +73,8 @@ describe('runの記録予算', () => {
       const stop = JSON.parse(readFileSync(join(dir, 'stop.json'), 'utf8'));
       expect(stop).toMatchObject({ schemaVersion: 1, change: CHANGE, operationStatus: 'stopped', doneTaskCount: 0, remainingTaskCount: 3 });
       expect(stop.recordingError).toContain('予約');
+      expect(stop.reason).toContain('あ'.repeat(30));
+      expect(stop.lastVerify).toBeNull();
       expect(Buffer.byteLength(readFileSync(join(dir, 'stop.json'), 'utf8'))).toBeLessThanOrEqual(65536);
       expect(Buffer.byteLength(result.stdout)).toBeLessThan(20000);
       expect(repo.prs()).toEqual([]);
