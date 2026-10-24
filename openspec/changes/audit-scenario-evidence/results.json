@@ -3,18 +3,18 @@
   "kind": "scenario-evidence-audit",
   "ok": false,
   "counts": {
-    "total": 390,
-    "reviewed": 253,
+    "total": 401,
+    "reviewed": 269,
     "superseded": 0,
-    "unreviewed": 137,
+    "unreviewed": 132,
     "invalid": 0
   },
   "issues": [],
   "exitCode": 1,
-  "specFiles": 28,
+  "specFiles": 27,
   "testRun": {
-    "total": 728,
-    "passed": 728,
+    "total": 764,
+    "passed": 764,
     "failed": 0,
     "pending": 0
   },
@@ -27,53 +27,35 @@
   },
   "gateRuns": [
     {
-      "change": "protect-run-diagnostics",
-      "snapshotCommit": "8bc0ded",
+      "change": "isolate-run-decisions",
+      "snapshotCommit": "036acf3",
       "exitCode": 0,
-      "tests": 725,
-      "logSha256": "6594e3018efba17100a9d2a712cb78c01e653212bc6f2ab0b1063f74daead21b"
-    },
-    {
-      "change": "guard-git-internals",
-      "snapshotCommit": "8bc0ded",
-      "exitCode": 0,
-      "tests": 725,
-      "logSha256": "0f3567b105d9ae1fc2878e889ff74b340d564a33c7130d65909944b7321e0b3b"
+      "tests": 764,
+      "logSha256": "1ee7d6689068fa88e23dc8ed567ae7dcd987efd6c9369beba0e0218e6acd577f"
     },
     {
       "change": "audit-scenario-evidence",
-      "snapshotCommit": "8bc0ded",
+      "snapshotCommit": "036acf3",
       "exitCode": 0,
-      "tests": 725,
-      "logSha256": "5d83d4c05b95f981bd01514e9f95b911c7f916d54c70566811c13e3c89ceaa91"
-    },
-    {
-      "change": "audit-scenario-evidence",
-      "snapshotCommit": "228b1c9",
-      "exitCode": 0,
-      "tests": 728,
+      "tests": 764,
       "logSha256": "5d83d4c05b95f981bd01514e9f95b911c7f916d54c70566811c13e3c89ceaa91"
     }
   ],
   "snapshot": {
-    "baseCommit": "228b1c9",
+    "baseCommit": "036acf3",
     "isolation": "fresh detached Git worktree",
-    "comparedCurrentCodeFiles": 164,
-    "currentCodeMatches": false,
-    "changedCodeFiles": [
-      "packages/runner/src/guards.ts"
-    ],
-    "comparisonHead": "f15d9271767843fa0f1ee9119aee63b549cf6833",
-    "scope": "The gate and inventory cover the recorded snapshot. Later guards.ts changes and dirty documentation are not certified by this result."
+    "comparedCurrentCodeFiles": 171,
+    "currentCodeMatches": true,
+    "changedCodeFiles": [],
+    "comparisonHead": "036acf3eac67b2cd12505adc1c304fda577ff3e3",
+    "scope": "The gate and inventory cover the recorded snapshot. Dirty documentation and skill edits are outside this claim."
   },
   "inputs": {
     "specs": {
-      "openspec/changes/add-codeql-and-version-pr/specs/monorepo/spec.md": "18ae9b9492ca06a8e4cb6f9c836870bb3011dade7e3d109099ffca3fc8a0f21f",
-      "openspec/changes/add-codeql-and-version-pr/specs/release-integrity/spec.md": "aca9e0ad612cb4caf053faedcba6b4d2b2db28e732674409e4fec34630f60ac6",
       "openspec/changes/audit-scenario-evidence/specs/scenario-evidence-audit/spec.md": "c59f98414dfffbe716abcd90103d39734358897c11c24e224245a36d03078ad3",
-      "openspec/changes/guard-assertion-weakening/specs/run-guards/spec.md": "23581c72b793fae5fd8a1e5319d991c6b4071bf1725e4c992a0668c61c8cc269",
       "openspec/changes/guard-git-internals/specs/run-guards/spec.md": "ae2d682dbbc3e120f891cf008012aa8828af8980ef7e5f7e99a45ef1ea756a3c",
       "openspec/changes/guard-git-internals/specs/run/spec.md": "66ba42fd385ae84698354fa2a2304f1e601d1ee919fc93c6d62dff2e7ffec3d2",
+      "openspec/changes/isolate-run-decisions/specs/run-decision-policy/spec.md": "74508111eaca406b4206b1fd88599f875999a037d326a2bcf5a855ceb303cbb8",
       "openspec/changes/protect-run-diagnostics/specs/run/spec.md": "d3fd4964728b04faf968037f00c6034ede145f3c5502a5cc7832d61b6a24015e",
       "openspec/specs/agents-rules/spec.md": "8315a9b5b7668679a1f843120b0d9f150388b822ecf42807bd2e42188081bc5e",
       "openspec/specs/bounded-input/spec.md": "2db14275dd45eca3387c9c7c618141341b418b4a035d94f878a31e26af88e7b8",
@@ -84,14 +66,15 @@
       "openspec/specs/evidence-publication/spec.md": "c900f0584fb4acb64ea07985624411359c18bc2fbf3e1494f8d610651998f042",
       "openspec/specs/external-process-budget/spec.md": "4ac77e340a576c37d7fccc035f045bc1dc549e55dda4d4f5ef1a5c53ff61c7e4",
       "openspec/specs/init/spec.md": "5f81b6565baf25c80ccca94cdfbfff01777b796ccf8382f0f45fb3cc9b26c098",
-      "openspec/specs/monorepo/spec.md": "a30702d199301e99eb4b2c16871bef99e68f10f5ed64b62e7464ac346c81e23c",
+      "openspec/specs/monorepo/spec.md": "a8870590c7c4fdefdd01f5986c7c52cfe87fb5a198acf1c9a9fb3f9ca059f687",
       "openspec/specs/quality-journeys/spec.md": "61d9276aa545cdbd991dba104cb3da4d184e963ec3a395e962927f5229596178",
-      "openspec/specs/release-integrity/spec.md": "3b6e3326ba70ad143a799e3d4f3a3d81c009b78927b0e7ef4e7b2b75926ad30c",
+      "openspec/specs/release-integrity/spec.md": "32f45cde5e4ac85df67ebeb6c24f52cbd59d166fed0fa4ddd5456fa72e1a3420",
       "openspec/specs/req-to-openspec-skill/spec.md": "7299503a7ac4f0b61403e89e303ec5058bd3fd9cfa44583b49a1734a50d21a13",
-      "openspec/specs/run-guards/spec.md": "97c1f13d98955eed190bdf1177f6b4f807b655c9419afaed0728d3404b71a0a3",
+      "openspec/specs/run-guards/spec.md": "564970853d7b81ea473dac87db07a8b401ed23eafcb3ec964bdb204b658b6268",
       "openspec/specs/run-pr/spec.md": "b8041c13d0ef5f242d11ff55d278a48348b0a1f20f7b5e493666ab76469b6743",
       "openspec/specs/run-record-budget/spec.md": "976bcdc4c2985bcf8d43900e71d51d4394eaa17511e3a77073ad4227a30d0620",
       "openspec/specs/run/spec.md": "e3bd644fa2ca9e6d4a000b7e4ae6847c1f82ff35ff033869ccaa40ccb44dd70e",
+      "openspec/specs/trace-agreement/spec.md": "3b44cff0873c91ea855a14e8742dbd4c6e08e59ed70fd7bea162757c726e31dc",
       "openspec/specs/trace-record/spec.md": "1cea1c3f8b268cd9a900d38ec7a792993deb42e6b5b6d25936fad5f83c13fdfc",
       "openspec/specs/trace-report/spec.md": "4e4e3337fe0fbba4cf946111187f2d51c863e6831f3523ccecaa761761d7d548",
       "openspec/specs/verification-policy/spec.md": "3adba9533cfd13ad34cad39f2d79e02cf3da225bfcd2e11869dc24cea16e7eb2",
@@ -107,12 +90,14 @@
       "tests/package-workflows.test.ts": "c82be3653a952f37c8e5ad976fe0d00aa2028fef9d3ef16eca6a75e8450622bf",
       "tests/public-source-exports.test.ts": "3668c02f7537b0e4abbfdd8a0c2e3daa2b36f62b2cdb56079fe83658ae5b2e77",
       "tests/release-security.test.ts": "4e0bb399670ada63ce0c6db49f33bbf3042a92d42686e17b33e3a03a05e61b51",
+      "tests/run-decision-mutations.test.ts": "8a3fec58f6e7d8367606054eef907f1ec90ea1128860ee8a9b5dd22f6735f154",
       "tests/scenario-audit.test.ts": "0081fbabce3363fc49dece2bc2cd3fcf7e710bab573d3241d7c49cd9d683b19f",
       "tests/schema-compatibility.test.ts": "bdb7f3bb6d55a56df0ce3d1f0fa0c31a6a4bb3dcd670c1ba18c7a31d4ec6e0da",
       "packages/cli/test/arguments.test.ts": "ecd21aa5a6c4f22075208b5c7299722d25198cfe42e95be9ff2af0a0eed9f381",
       "packages/cli/test/cli.test.ts": "af8e785775d2e0aa180e9322dd37c5df04eea3e4c50de769f9bf6ffa94cc6ea1",
       "packages/cli/test/doctor.test.ts": "c9fe91afe6e727773eff514d7e8c92b6037ecd6a504236a4732addca73b03f19",
       "packages/cli/test/init.test.ts": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e",
+      "packages/cli/test/trace-agreement.test.ts": "5073d0fe1b55faecec1295c617a5127df8223485f7bf5d499d72fff070ff2fcf",
       "packages/core/test/agreement.test.ts": "0e6e08ffc5b0dd863f0d80664a78fae0a7e7dc7122fd3688228626880dc31aa4",
       "packages/core/test/coverage-policy.test.ts": "61add31ac1281ad2949cfda26529bfe7ec102b34fb8c06bf2d5d40c90ee32bb8",
       "packages/core/test/package.test.ts": "6c32b72bc19cd187c4337ae78ff9c2b42f39e5ff40ef0156175a8845d0e84fb4",
@@ -120,12 +105,14 @@
       "packages/core/test/spec.test.ts": "542fe6ec2963ca726db1b6948e8bbe27f5bc9694cca87b437e4d9f63f6f8c9c3",
       "packages/core/test/tasks.test.ts": "6208610676ee0a0335603847d61d26281ba29e23421ec3db4b38b23cea45be5a",
       "packages/core/test/test-report.test.ts": "c7153a95adba3abf1d612e07134454d17aa93ece23874ffc140db2d5136859f1",
+      "packages/core/test/trace-edit.test.ts": "db99961acc8021a96ae61c6d5e78f76fda0e8383a25958bdf00e975f7e00d98d",
       "packages/core/test/trace.test.ts": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40",
       "packages/kit/test/doctor-command.test.ts": "a0e75f4a867c6a7c85dd0959a9737cb2fe4ad50f8d4dd84dfe9e9ab41b1ea0e6",
       "packages/kit/test/doctor-diagnostics.test.ts": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0",
       "packages/kit/test/input.test.ts": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985",
       "packages/kit/test/process.test.ts": "ac53e9c06cdbdabcc611a457f0437074f42a784eadb8580fdc605ff29266828c",
       "packages/kit/test/verify.test.ts": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c",
+      "packages/runner/test/decision-policy.test.ts": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b",
       "packages/runner/test/diagnostic-redactor.test.ts": "bc1d89cd9d21bc9079f3626cd0c06eb26f9e7036483b6c3f5c09b2d0414704d4",
       "packages/runner/test/engine-safety.test.ts": "7c75c2f45e35c3daf7c65fb9551eb924a0b3d7e34656a71cd0cc3ae486711317",
       "packages/runner/test/evidence-storage.test.ts": "16cd666b698613e965a0c1547e97b68a56431b2f576b7f9e45caf7954adbeebb",
@@ -151,196 +138,70 @@
       "packages/trace/test/serialization.test.ts": "6cf85e33ea1af754e0245fc4259f994504be7310ea55c96abc971e81ebd5c247",
       "scripts/runtime-compatibility.mjs": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
     },
-    "testReportSha256": "498c0effff6793af2b8b0ff3922fe7da74fcf8e67981e4845fe1d90cb2391b2c",
-    "reviewSha256": "dc58ed143c0f8b0ff66469e33b111052305092a30c59b1335a199cce5df6a37c",
+    "testReportSha256": "266c481b64008d17bf8988a0742a9afe4524e8a41f6006263aa6359298384908",
+    "reviewSha256": "e9891c23c71ab83d5e312bc1228d014953dd939232568800e664720ab956b489",
     "scriptSha256": "279e59e68ac4104a3bbb69289eaf02972596ca4db0a1351d04fb0b2ed2a33a39"
   },
   "runtimeEvidence": {
     "resultsFile": "openspec/changes/audit-scenario-evidence/runtime20-results.json",
-    "resultsSha256": "492846763c8f4b2c6ec460673f95acb3a3bdc026b228d837138b4bcae3dfd979",
+    "resultsSha256": "d9fc6c26eb2647f98b2d66b71d384d71778c0963464412dfcff4670aa0402549",
     "reportFile": "openspec/changes/audit-scenario-evidence/runtime20-report.json",
-    "reportSha256": "fc1795866651e36225963b1d0d7bc50d90936f8bc6a033c40ce7f6969521f71c",
-    "combinedReportSha256": "498c0effff6793af2b8b0ff3922fe7da74fcf8e67981e4845fe1d90cb2391b2c",
-    "fullReportSha256": "0a2ef6457a57a7b1cd94d498a3cf1b2c4963fdc3280326454407fc7067962e04"
+    "reportSha256": "90120b1d8067ba422dcfeea8af2366fb679c3fa0ec5c170526e0210cce398695",
+    "combinedReportSha256": "266c481b64008d17bf8988a0742a9afe4524e8a41f6006263aa6359298384908",
+    "fullReportSha256": "80b13e5ef139223bfa4038ef51183c2b5cf73c13529215d8c1be6f90fef9c9e9"
   },
   "previousSnapshot": {
     "counts": {
-      "total": 388,
-      "reviewed": 233,
-      "superseded": 2,
-      "unreviewed": 153,
+      "total": 390,
+      "reviewed": 253,
+      "superseded": 0,
+      "unreviewed": 137,
       "invalid": 0
     },
     "snapshot": {
-      "baseCommit": "34563b2",
-      "patchCommits": [
-        "a3478cc",
-        "225a6c8"
-      ],
+      "baseCommit": "228b1c9",
       "isolation": "fresh detached Git worktree",
-      "copiedTrackingFiles": [
-        "docs/quality/scenarios.json",
-        "openspec/changes/audit-scenario-evidence/tasks.md"
+      "comparedCurrentCodeFiles": 164,
+      "currentCodeMatches": false,
+      "changedCodeFiles": [
+        "packages/runner/src/guards.ts"
       ],
-      "comparedCurrentCodeFiles": 156,
-      "currentCodeMatches": true,
-      "changedCodeFiles": []
+      "comparisonHead": "f15d9271767843fa0f1ee9119aee63b549cf6833",
+      "scope": "The gate and inventory cover the recorded snapshot. Later guards.ts changes and dirty documentation are not certified by this result."
     },
-    "gateAttempts": [
+    "gateRuns": [
       {
-        "exitCode": 1,
-        "total": 638,
-        "passed": 633,
-        "failed": 5,
-        "testReportSha256": "1f3d2d3043b20f138890a545faf9425e0c2fb5b7325479a422f76bac55146cb4",
-        "failures": [
-          {
-            "file": "tests/input-boundaries.test.ts",
-            "test": "コマンドの入力予算 [REQ-172] 過大なtasksではrunを始めずGitとエンジンを変更しない",
-            "reason": "Error: Test timed out in 5000ms.",
-            "durationMs": 11409.665130000001
-          },
-          {
-            "file": "packages/runner/test/lock.test.ts",
-            "test": "実プロセスとworktree [REQ-158] 別のGit worktreeのロックは独立して取得する",
-            "reason": "Error: Test timed out in 5000ms.",
-            "durationMs": 10844.84263
-          },
-          {
-            "file": "packages/runner/test/safety-paths.test.ts",
-            "test": "Gitの表示形式から独立したパスの検査 [REQ-138] \"tab\\tname\" のテストへのskip追加を検出する",
-            "reason": "Error: Test timed out in 5000ms.",
-            "durationMs": 11004.691963000001
-          },
-          {
-            "file": "packages/core/test/package.test.ts",
-            "test": "OpenSpec 書式との互換 [REQ-052][REQ-058] Source 行と trace.md を含む change が openspec validate --strict を通る",
-            "reason": "Error: Test timed out in 5000ms.",
-            "durationMs": 12454.322381
-          },
-          {
-            "file": "packages/trace/test/record-size.test.ts",
-            "test": "生成した証拠と読み取り側の整合性 [REQ-174] 形式が壊れた生成結果も保存しない",
-            "reason": "Error: Test timed out in 5000ms.",
-            "durationMs": 11107.312880000001
-          }
-        ]
-      },
-      {
+        "change": "protect-run-diagnostics",
+        "snapshotCommit": "8bc0ded",
         "exitCode": 0,
-        "total": 638,
-        "passed": 638,
-        "failed": 0,
-        "settingsChanged": false
+        "tests": 725,
+        "logSha256": "6594e3018efba17100a9d2a712cb78c01e653212bc6f2ab0b1063f74daead21b"
       },
       {
-        "exitCode": 1,
-        "total": 657,
-        "passed": 656,
-        "failed": 1,
-        "testReportAvailable": false,
-        "logSha256": "25f3e5195d786e92f4513769f67c701838a71fafa11c99bf7f4a11a56f342658",
-        "failures": [
-          {
-            "file": "tests/domain-mutations.test.ts",
-            "test": "[REQ-161][REQ-162][REQ-163] 正常な実装と13条件を実行し、元ファイルと通常のレポートを変更しない",
-            "reason": "通常のレポートの内容が途中で変わった。同時に別の検証が動作し、失敗後にはレポートが削除されていた。"
-          }
-        ],
-        "failureExcerpt": {
-          "file": "openspec/changes/audit-scenario-evidence/round3-failed-gate.txt",
-          "sha256": "0992b36cf9224f7e5725392f7de0b74420fcb606b7f1c14434a69c464359cd5e"
-        }
-      },
-      {
+        "change": "guard-git-internals",
+        "snapshotCommit": "8bc0ded",
         "exitCode": 0,
-        "total": 657,
-        "passed": 657,
-        "failed": 0,
-        "settingsChanged": false,
-        "isolation": "detached Git worktree with offline installation",
-        "snapshotCommit": "9cb4f2f",
-        "trackingFilesCopied": [
-          "docs/quality/scenarios.json",
-          "openspec/changes/audit-scenario-evidence/tasks.md",
-          "openspec/changes/audit-scenario-evidence/tdd.md"
-        ],
-        "testReportSha256": "d21b010bcd7811092cc64d6911b3d7f4ae40b821b9ffebc40c00671c4ab14561"
+        "tests": 725,
+        "logSha256": "0f3567b105d9ae1fc2878e889ff74b340d564a33c7130d65909944b7321e0b3b"
       },
       {
-        "exitCode": 1,
-        "total": 675,
-        "passed": 675,
-        "failed": 0,
-        "typecheck": "新しい試験のRunOptionsに必須のconfirm指定がなかった",
-        "logFile": "openspec/changes/audit-scenario-evidence/round4-first-gate.txt",
-        "logSha256": "3d2ed6773b4be9e017c7562ae4d6447b2abd35ac16154eae36760dfb678424b6"
-      },
-      {
+        "change": "audit-scenario-evidence",
+        "snapshotCommit": "8bc0ded",
         "exitCode": 0,
-        "total": 675,
-        "passed": 675,
-        "failed": 0,
-        "fix": "試験ヘルパーへconfirmを指定し、カスタムディレクトリの対象をScenarioと同じ現行仕様パスにした",
-        "settingsChanged": false
+        "tests": 725,
+        "logSha256": "5d83d4c05b95f981bd01514e9f95b911c7f916d54c70566811c13e3c89ceaa91"
       },
       {
+        "change": "audit-scenario-evidence",
+        "snapshotCommit": "228b1c9",
         "exitCode": 0,
-        "total": 676,
-        "passed": 676,
-        "failed": 0,
-        "scope": "SIGINTの自動試験を追加した最終結果",
-        "settingsChanged": false,
-        "testReportSha256": "b43e00b999a15bbd2736d545a51fbdc0f32f5094d36bc64fece632c6a36b091c"
-      },
-      {
-        "exitCode": 0,
-        "total": 677,
-        "passed": 677,
-        "failed": 0,
-        "scope": "io_uringの拒否追加前",
-        "settingsChanged": false,
-        "testReportSha256": "574d32513268abc721a860692d0e6b3660437e25b0dd5cd9d816d0a33dae2fe9"
-      },
-      {
-        "exitCode": 0,
-        "total": 677,
-        "passed": 677,
-        "failed": 0,
-        "scope": "io_uringも拒否した最終結果",
-        "settingsChanged": false,
-        "testReportSha256": "8fd9eb8a3b4a8b0c6c706217248d431ea341a6abe3bd60fac2df64b7845932ae"
-      },
-      {
-        "exitCode": 1,
-        "total": 679,
-        "passed": 679,
-        "failed": 0,
-        "typecheck": "利用側fixtureが通常のワークスペース型検査に含まれ、配布物のimportを解決できなかった",
-        "logFile": "openspec/changes/audit-scenario-evidence/round6-first-gate.txt",
-        "logSha256": "b7a06178e138255302c3181f23bd20823411f232cc1694a9980a8c56bff4fc24"
-      },
-      {
-        "exitCode": 0,
-        "total": 679,
-        "passed": 679,
-        "failed": 0,
-        "fix": "fixtureをテストデータとして保存し、専用のstrictコンパイルを維持した",
-        "settingsChanged": false
-      },
-      {
-        "exitCode": 0,
-        "total": 680,
-        "passed": 680,
-        "failed": 0,
-        "scope": "workspaceの実際のsource解決も含む最終結果",
-        "settingsChanged": false,
-        "testReportSha256": "52fcbf176fbd14cc441fb36c3c861ad3373d723af987d23f2f13c43df5a91246"
+        "tests": 728,
+        "logSha256": "5d83d4c05b95f981bd01514e9f95b911c7f916d54c70566811c13e3c89ceaa91"
       }
     ]
   },
   "limitations": [
-    "137 scenarios remain unreviewed.",
+    "132 scenarios remain unreviewed.",
     "No real Claude Code or GitHub connection, other operating systems, or independent security audit is claimed."
   ]
 }

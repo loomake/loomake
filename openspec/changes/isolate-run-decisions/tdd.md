@@ -11,3 +11,7 @@
 ## 保護する契約
 
 公開API、設定、JSON Schema、理由の文面と終了コードを維持する。エンジン、Git、時計、ファイルを読む処理は呼び出し側に残す。判定結果は実行固有の内部モデルとし、coreの実行時依存ゼロとパッケージの依存方向を維持する。
+
+## 完了ゲート
+
+036acf3の隔離コピーで、isolate-run-decisionsとaudit-scenario-evidenceの完了ゲートはいずれもexit 0、全764件・型・lint・OpenSpec・要件対応が成功した。同じコピーの配布物をNode20.19.0・Linux ARM64の通信拒否下で動かす4件も成功した。現在のコード等171ファイルが一致することを確認した。入力ハッシュと範囲はresults.json、選んだ3条件の検出結果はmutation-results.jsonに保存した。

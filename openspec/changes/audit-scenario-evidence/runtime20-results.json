@@ -28,11 +28,11 @@
     "packageSmoke": "71aa378a372bde276c091afe2ce079b1e0b34029e13742fb8dec5cd199c63339",
     "sigintSmoke": "63a3229cc95292161578c09f545f83f9875abf5e8bf3f3c61c22ad85d930e04e",
     "tarballs": {
-      "loomake-0.0.0.tgz": "8d69a11703a8b5e8484332b1cf5c5c1be81014c9c8c11e33ad40338191d9ce3b",
-      "loomake-core-0.0.0.tgz": "0057d6ef42365fd32b6020d4bb4a130561bd4b9f5e4b86e707beb7b79efc11ed",
+      "loomake-0.0.0.tgz": "f29022691cb2d0869d734fb3b72d45042431b833083d6c6b2a8d0a5e965b6733",
+      "loomake-core-0.0.0.tgz": "bfe72a8634daab1704f625fc2f36f55112fd023793efa578427021ab18196620",
       "loomake-kit-0.0.0.tgz": "3d96962fc66b5929018e90ac288f75a643707beb87b5c17aef8937ef59095ea6",
-      "loomake-runner-0.0.0.tgz": "10e36f33c5e90d1991472d7e9a8ed96e52180b7617bae2d4a18eff2cc6c1124d",
-      "loomake-trace-0.0.0.tgz": "c847ad33a8ba50d4c1a0efb8272ae459427afa1a153744f489a3e1cafa5b63f2"
+      "loomake-runner-0.0.0.tgz": "9b1969909ab99275217a8fc6c079517c492ea8b038570abef6774f205d7f8666",
+      "loomake-trace-0.0.0.tgz": "9a147fd09aeb2d117b49fdd273954b0986719b9e3e5a31dbee840681040a7323"
     }
   }
 }
