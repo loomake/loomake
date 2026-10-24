@@ -40,6 +40,6 @@
 
 ## 8. 資源制限と診断の対応
 
-- [ ] 8.1 出力・診断・記録予算のScenarioとassertionを読み、対応と不足を整理する
+- [x] 8.1 出力・診断・記録予算のScenarioとassertionを読み、対応と不足を整理する
 - [x] 8.2 stdout・stderrの上限超過で実際のエンジンと子が停止する試験を補う
-- [ ] 8.3 対応表と結果を更新し、`pnpm -s verify --change audit-scenario-evidence --done` を通す <!-- loomake:gate=done -->
+- [x] 8.3 対応表と結果を更新し、`pnpm -s verify --change audit-scenario-evidence --done` を通す <!-- loomake:gate=done -->
