@@ -69,6 +69,8 @@ describe('テストの削除と skip・todo の検出', () => {
     check({ write: { 'tests/b.test.ts': "it('[REQ-012] もう一つ', () => {});\n" } }, withTest, (r) => {
       expect(r.code).toBe(0);
       expect(r.stdout).not.toContain('不正な直し方');
+      expect(r.repo.git('show', 'HEAD:tests/b.test.ts')).toBe("it('[REQ-012] もう一つ', () => {});");
+      expect(r.repo.git('log', '--format=%s', '--', 'tests/b.test.ts')).toBe('run(c1): 1.1 一つ目のタスク（REQ-012）');
     }));
 
   it.each(['it.skipIf(true)', 'describe.skipIf(true)', 'it.runIf(false)', 'it.concurrent.skip'])('[REQ-109] テストファイルに %s の行を足したら止まる', (call) =>
@@ -127,7 +129,11 @@ describe('設定の変更の検出', () => {
     check(
       { write: { 'package.json': JSON.stringify({ scripts: { test: 'vitest run' }, dependencies: { a: '1.0.0' } }) } },
       (repo) => repo.write('package.json', JSON.stringify({ scripts: { test: 'vitest run' } })),
-      (r) => expect(r.code).toBe(0),
+      (r) => {
+        expect(r.code).toBe(0);
+        expect(JSON.parse(r.repo.git('show', 'HEAD:package.json'))).toEqual({ scripts: { test: 'vitest run' }, dependencies: { a: '1.0.0' } });
+        expect(r.repo.git('log', '-1', '--format=%s', '--', 'package.json')).toBe('run(c1): 1.1 一つ目のタスク（REQ-012）');
+      },
     ));
 
   it('tsconfig と vitest.config も設定ファイルとして見つける（仮定 A-18）', () =>
