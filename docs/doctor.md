@@ -41,7 +41,7 @@ Gitの診断全体は30秒までとし、外側に短い共有予算があれば
 
 ```sh
 pnpm build
-node openspec/changes/clarify-doctor-diagnostics/doctor-journeys.mjs .loomake/quality/doctor-trial-new
+node openspec/changes/archive/2026-10-24-clarify-doctor-diagnostics/doctor-journeys.mjs .loomake/quality/doctor-trial-new
 ```
 
-script欠落、未対応のコマンド、壊れたpackage.jsonの3シナリオを、ビルドしたCLIで診断・修正・再確認する。結果、出力、終了コード、ソースと配布用コードのハッシュをresults.jsonへ記録する。[今回の結果](../openspec/changes/clarify-doctor-diagnostics/results.json)はAI作成の試験で、人の利用者や独立した評価者は含まない。別OSや認証・実際のGitHub接続を確認した結果でもない。
+script欠落、未対応のコマンド、壊れたpackage.jsonの3シナリオを、ビルドしたCLIで診断・修正・再確認する。結果、出力、終了コード、ソースと配布用コードのハッシュをresults.jsonへ記録する。[今回の結果](../openspec/changes/archive/2026-10-24-clarify-doctor-diagnostics/results.json)はAI作成の試験で、人の利用者や独立した評価者は含まない。別OSや認証・実際のGitHub接続を確認した結果でもない。

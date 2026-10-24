@@ -5,7 +5,7 @@ import { join, relative, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const root = fileURLToPath(new URL('../../../', import.meta.url));
+const root = fileURLToPath(new URL('../../../../', import.meta.url));
 const cli = join(root, 'packages/cli/dist/cli.js');
 const hash = (file) => createHash('sha256').update(readFileSync(join(root, file))).digest('hex');
 const snapshot = (dir) => {

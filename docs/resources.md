@@ -54,18 +54,18 @@ runが`.loomake/runs/`へ保存する記録には、次の上限を設ける。
 
 ## 測定の範囲
 
-[benchmark.mjs](../openspec/changes/bound-input-resources/benchmark.mjs)は、リポジトリのルートから次で実行する。保存先は新しいファイル名にする。
+[benchmark.mjs](../openspec/changes/archive/2026-10-24-bound-input-resources/benchmark.mjs)は、リポジトリのルートから次で実行する。保存先は新しいファイル名にする。
 
 ```sh
 pnpm build
-node openspec/changes/bound-input-resources/benchmark.mjs .loomake/quality/input-benchmark.json
+node openspec/changes/archive/2026-10-24-bound-input-resources/benchmark.mjs .loomake/quality/input-benchmark.json
 ```
 
 小規模・中規模・上限ちょうど、ファイル・合計・深さ・項目数・証拠JSON・指示全体の超過を、別々のプロセスで測る。事前に置く測定上の予算は、通常の入力処理が1秒・ピークRSS256MiB、証拠JSONの合計超過が3秒・512MiBである。これらはこの測定の目安で、製品がRSSを強制する設定ではない。
 
 時間は入力処理の開始から受理・拒否までとする。ピークRSSはモジュールの読み込みとfixture作成も含むプロセス全体の値である。ファイル作成後の読み取りなので、キャッシュのあるこのホストでの結果として扱う。bytesは対象ファイルの内容量で、指示の試験では別に16MiBの失敗情報を加える。
 
-結果とソースのハッシュは[results.json](../openspec/changes/bound-input-resources/results.json)に記録する。この測定はCLI全体、ネットワークファイルシステム、別OS、顧客の全規模での性能を示すものではない。
+結果とソースのハッシュは[results.json](../openspec/changes/archive/2026-10-24-bound-input-resources/results.json)に記録する。この測定はCLI全体、ネットワークファイルシステム、別OS、顧客の全規模での性能を示すものではない。
 
 ## 外部操作の時間と出力
 
