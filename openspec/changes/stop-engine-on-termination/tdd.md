@@ -21,3 +21,5 @@ testing.md と run-recovery.md に、SIGTERM・SIGHUP の扱いと検査の動�
 ## 2 回目のレビューの指摘への対応
 
 既存の PR の検索（findOpenPr）も同期的に動くのに、そのあとに中断を確かめていなかったので、検索中の SIGTERM で PR を作って終了コード 0 になることが指摘された。偽の gh が PR を検索した記録を、確認点でイベントループに戻ったときに見て中断を予約するテストを足し、直す前は PR を作ることを確かめた。検索のあと、PR を作る前にも確認点を足して、3 件が成功した。
+
+2 回目のレビュー対応のあとの `pnpm -s verify --change stop-engine-on-termination --done` は exit 0（894 件）だった。ビルドした CLI に、既存の PR の検索中に SIGTERM を送っても、PR を作らずに中断として止まることも確かめた。
