@@ -113,7 +113,7 @@ function diagnoseProject(root: string, path: string): DoctorCheck[] {
       if (plan.kind !== 'script') continue;
       const entries = scripts();
       if (!entries) {
-        if (!reportedManifestError) error(manifestError!, 'package.json の形式・容量・読み取り権限を確認してください');
+        if (!reportedManifestError) error(manifestError ?? 'package.json を読めません', 'package.json の形式・容量・読み取り権限を確認してください');
         reportedManifestError = true;
         continue;
       }

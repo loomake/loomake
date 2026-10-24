@@ -73,8 +73,10 @@ export function runExternal(command: string, args: readonly string[], options: E
     cwd: options.cwd, env: options.env, stdio: ['ignore', 'pipe', 'pipe', 'pipe'], maxBuffer: Math.max(maxBuffer, 64 * 1024),
   });
   // 不正なUTF-8の置換で文字列のバイト数が増えても、公開する文字列の合計は予算以内にする。
-  const stdout = utf8Prefix(result.stdout?.toString('utf8') ?? '', maxBuffer);
-  const stderr = utf8Prefix(result.stderr?.toString('utf8') ?? '', maxBuffer - Buffer.byteLength(stdout));
+  // 起動に失敗すると、型に反して stdout・stderr が null になる
+  const output = result as { stdout: Buffer | null; stderr: Buffer | null };
+  const stdout = utf8Prefix(output.stdout?.toString('utf8') ?? '', maxBuffer);
+  const stderr = utf8Prefix(output.stderr?.toString('utf8') ?? '', maxBuffer - Buffer.byteLength(stdout));
   if (result.error) return { status: null, signal: result.signal, stdout, stderr, error: result.error };
   let outcome: Outcome;
   try { outcome = JSON.parse(result.output[3]?.toString('utf8') ?? '') as Outcome; }

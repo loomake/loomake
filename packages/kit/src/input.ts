@@ -2,6 +2,9 @@ import { closeSync, constants, fstatSync, lstatSync, openSync, opendirSync, read
 import { join } from 'node:path';
 import { UsageError } from './errors.js';
 
+// Windows には O_NOFOLLOW・O_NONBLOCK がない。型は number だが、実行時は undefined になる
+const optionalFlag = (name: 'O_NOFOLLOW' | 'O_NONBLOCK'): number => (constants as Partial<Record<string, number>>)[name] ?? 0;
+
 export type InputLimits = { maxFileBytes: number; maxTotalBytes: number; maxEntries: number; maxDepth: number };
 export const DOCUMENT_LIMITS: Readonly<InputLimits> = Object.freeze({
   maxFileBytes: 1024 * 1024,
@@ -41,7 +44,7 @@ export function createInputReader(overrides: Partial<InputLimits> = {}): InputRe
       };
       try {
         regular(file, lstatSync(file));
-        fd = openSync(file, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0));
+        fd = openSync(file, constants.O_RDONLY | optionalFlag('O_NOFOLLOW') | optionalFlag('O_NONBLOCK'));
         const stats = fstatSync(fd);
         regular(file, stats);
         budget(stats.size);
