@@ -1282,177 +1282,467 @@
     },
     {
       "id": "SCN-82ef1513a31553d7c3cb",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "058cbbd33c61634c62989063a67c25c58af30c7c3ed977d61d3b6a839be55b80",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-019"
+      ],
+      "reason": "空の一時ディレクトリでCLIを実行し、配置ファイルの一覧とテンプレートの内容を比較する。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "空のプロジェクトで AGENTS.md",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-d033c82bead72420f188",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "768e9d743dc74a554f78409104b32e21348587b0091054aae5e9ab841e1a073b",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-019"
+      ],
+      "reason": "配置した設定のtests.reportと、Vitest・JestのJSON出力の案内をassertする。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "loomake.config.json の tests.report が",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-2ef622a1f742e98d6c2c",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "1a89e564e505d6076556c54556d6264672abce43baf4be05bab2943c81708895",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-019"
+      ],
+      "reason": "依存のないpnpmプロジェクトで、追加コマンドの表示とpackage.jsonが不変であることをassertする。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "loomake が依存になければ、pnpm add",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-2f9014e547d395836211",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "cd7d72dff1e05e90445790c33e849ec5afab23fffc26098fc95e3e17626feb42",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-019"
+      ],
+      "reason": "npmとyarnの入力それぞれで、対応する追加コマンドの表示を比較する。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "npm と yarn では、それぞれ",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-71bb2811a007080bdfaa",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "056cf362fb63175df2463b1204072ad2c24d9e78fefc83d7a71effa276639a58",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-019"
+      ],
+      "reason": "開発用の依存にloomakeがある入力で、追加コマンドを表示しないことをassertする。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "devDependencies に loomake があれば",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-cc21ead52d5fed20fcee",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "fa775a570da86703b9050ebc6190c2b103209be63eac270a92d15512f9ca7e5a",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-020"
+      ],
+      "reason": "確認を拒否する応答を与え、確認文・差分・元のファイルの内容とskipの表示をassertする。端末入力は注入した応答である。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "内容の異なる AGENTS.md があり、確認で拒否",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-5f1b1a2bf17ea73f6469",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "a81deb276326c920e840b62bda72e49dd8737173c7d47970d1fd4cd368189d97",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-020"
+      ],
+      "reason": "承諾の応答を与え、既存ファイルがテンプレートの内容に置き換わることを比較する。端末入力は注入した応答である。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "内容の異なる AGENTS.md があり、確認で承諾",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-e86ff8e59d7b39e76d2a",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "c634591b2dc5557a97479260f98d419e96ce9af48c613c3e8b0862bae0a0ef6f",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-020"
+      ],
+      "reason": "非TTYの入力で、終了コード1・差分と、配置先の一覧・既存内容が変わらないことを比較する。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "標準入力が TTY でないとき、内容の異なる",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-a55b3ea2ba2c759cff45",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "bcb6fe59aad6cd39b2f9ae68da6fa6667e1a4e221a169be871c358d175e726d3",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-020"
+      ],
+      "reason": "同じ内容を置き、確認が呼ばれず、内容が保持されることと変更なしの表示をassertする。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "テンプレートと同じ内容の AGENTS.md があれば",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-96dd2aaa1681ee164551",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "cc31573ec3c7207fab53708735446c4a3c6c4543ef7d256d66670effc2a93c75",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-020"
+      ],
+      "reason": "実際の外部ファイルへのリンクを作り、終了コード1・外部内容の非表示・配置なし・外部内容の保持をassertする。Linuxでの結果である。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "AGENTS.md がプロジェクトの外のファイルを指すリンクなら",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-6c8f327cfa66c91fc050",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "936a430a6823993c5d2c45b615c50a140af9615f88fa649da83a1af9f6933382",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-020"
+      ],
+      "reason": "実際の外部ディレクトリへのリンクを作り、終了コード1と内外の配置先にファイルがないことをassertする。Linuxでの結果である。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": ".claude がプロジェクトの外のディレクトリを指すリンクなら",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-196ea85bedfe9daa2251",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "81aeb91a6cd3ae37ff78c09786a9a06f8668449651530731a85b70fd73051854",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-020"
+      ],
+      "reason": "リンク先が存在しないリンクを作り、終了コード1、配置なし、リンク先が作られないことをassertする。Linuxでの結果である。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "AGENTS.md がリンク先の無いリンクなら",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-bceb94ec5bdb61497386",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "cad32f8d012bf7b83089b13e5277e36562b39d4eb165063794caade3deb93a5e",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-020"
+      ],
+      "reason": "プロジェクト内へのリンクを作り、終了コード0と、リンク先に配置したSkillの内容を比較する。Linuxでの結果である。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": ".claude/skills がプロジェクトの中の .agents/skills を指すリンクなら",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-19bcf37b54180a7f4b27",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "771f8d96ed085757f2f361647f515d5e2ae8045aad3923a4c23064bcaeaa394e",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-021"
+      ],
+      "reason": "codex指定で両方のSkillの内容がテンプレートと一致することを比較する。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "--codex を指定すると、.claude/skills/",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-ac527ac8901f065101a2",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "fe70120373cccfd5963f852fccac21abe4a0640f23f89c4b98d2738f6e51c81f",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-021"
+      ],
+      "reason": "指定なしでagents側のファイルが作られないことをassertする。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "--codex を指定しなければ",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-4caeb58c28204dd906c5",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "9eea41b33892c4970f82364271ecf75564562d843dd4a31a01b7c0f6fb138386",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-022"
+      ],
+      "reason": "指定ありでdevcontainerの内容をテンプレートと比較し、Nodeイメージなどの設定も確認する。実際のコンテナ起動の試験ではない。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "--devcontainer を指定すると",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-8907e700a6e381eba82c",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "8dad24759b504561440a955c759afa0cd845cf5533bdbb8b0906ff9eff767e77",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-022"
+      ],
+      "reason": "指定なしでdevcontainer側のファイルが作られないことをassertする。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "--devcontainer を指定しなければ",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-7d47b94cd4a78f7b54c6",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "cfdb430dc239880a9ab7feda057defbf9f0abdf4b0f55ec04de7bebd9a823f3d",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-023"
+      ],
+      "reason": "openspecのない入力で初期化コマンドの案内をassertする。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "openspec/ が無ければ",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-826c6bc273e9afef7b41",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "ba6f13e4d6eafdec70e32dce3be0eeb300d156afff82d2ded7a4dff62550f0e7",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-023"
+      ],
+      "reason": "既存のopenspecを置き、初期化コマンドの案内が出ないことをassertする。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "openspec/ があれば",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-ca974078bb6e751e6411",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "f16318ea3a602226e915da812d3a9d98d3d93ac42d1ba2567d97560fec4b4ee9",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-024"
+      ],
+      "reason": "pnpmのpackageManagerを与え、生成したcommandsの3つの値を比較する。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "packageManager が pnpm@9.0.0 なら",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-e6df5b9e0055b8e42fb7",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "c0b6b6eaffe0a51aacc93d2d1434fa4d01ed66da65ccec30e6905d4d3d79dc7e",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-024"
+      ],
+      "reason": "npmのpackageManagerを与え、生成したcommandsの3つの値を比較する。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "packageManager が npm@10.0.0 なら",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-fa25fb5a2717fa7b0ef8",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "6cfc02f0bf1f0a0c3407dbac33e3ee2d6b94136a716cef2010dc5233568aa415",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-024"
+      ],
+      "reason": "yarnのpackageManagerを与え、生成したcommandsの3つの値を比較する。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "packageManager が yarn@4.0.0 なら",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-2c17a498b35d2cfa77d5",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "5609d6c21a18c6c0d8ea5aaaab5cd8ead7a0ba327b2175e9a9935f359181cd4b",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-024"
+      ],
+      "reason": "package.jsonなしでnpmの既定値と、commandsを書き換える案内を比較する。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "package.json がなければ、commands を npm",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-94f430b5a3a7eb37bf58",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "71f69d3f204ae242fd51ab6ab6df2d51d928b6bb89b5b46bbaa3c4a8d989c8a5",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-024"
+      ],
+      "reason": "package.jsonありでcommandsを書き換える案内が出ないことをassertする。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "package.json があれば、commands の書き換え",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-0cece1c17a779f95ec90",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "e92d0a0bbf5859a066e9c41954c8c9f589568409b3fd74ce4d399f71bd3aa380",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-055"
+      ],
+      "reason": "配置一覧と次の作業を示す日本語の文言をstdoutでassertする。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "配置したファイルの一覧と案内を日本語で出す",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-8384660de1e60a9bf901",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "648bbc4b5f6a309265e6f0518c4718cfea60c138a6708fa3bf81fe7090cd33fe",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-133"
+      ],
+      "reason": "除外設定なしで作成し、ファイルの内容と作成の表示を比較する。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": ".gitignore がなければ作り",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-477ad69b2958f45308ed",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "f3a76d57a4c094062527bd917592dc8eb07a540624712aeab13599357bc43255",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-133"
+      ],
+      "reason": "既存行を含むgitignoreに対し、元の行を残した追加後の全文を比較する。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "既存の .gitignore は行を残したまま",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-08bea6aa0df4fb8a510a",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "8acd624af47c19b1d3ade30a1f9862cb2bf881c89f59eb224676cc532c4fa027",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-133"
+      ],
+      "reason": "除外済みの入力でファイルの全文が変わらないことを比較する。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "すでに同じ行があれば、.gitignore を変えない",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-720649fc9388d9e6db45",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "a60521c02cc2350faa6ef6e3230968abf546991ea4a07b36bbc37bc27a807e95",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-133"
+      ],
+      "reason": "実際のGitリポジトリでinitし、check-ignoreにより証拠が除外されずレポートが除外されることをassertする。",
+      "tests": [
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "git のリポジトリで init したあと",
+          "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+        }
+      ]
     },
     {
       "id": "SCN-fe8277fbddefb8219246",
@@ -1696,429 +1986,1094 @@
     },
     {
       "id": "SCN-b971a4fec1f96305e8c4",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "1c5f4e6cb8c438222b824ac567e385fce6db4a61cf13b1e3e6ab1d9bfe694558",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-109"
+      ],
+      "reason": "代替エンジンで既存テストを削除し、終了コード1・理由・パス・未コミットの削除・コミット数をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "テストファイルを消したら、削除を表示し",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        }
+      ]
     },
     {
       "id": "SCN-d43376039a94b0d78f28",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "19915385635fd64322cfa37caadab7bbc0352be3084a6a8c54ed9f6be94f97e2",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-109"
+      ],
+      "reason": "代替エンジンでskipを追加し、終了コード1と追加した行の表示・コミット数をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "テストファイルに it.skip の行を足したら",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        }
+      ]
     },
     {
       "id": "SCN-0744a121d7ea44b63966",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "08d1e561b2d7d07516cadec3afbe7c3fca80f3e6e2605b2c2ad9601a1df5aa0d",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-109"
+      ],
+      "reason": "skipIf・runIf・concurrent.skipの各行を追加し、それぞれ終了コード1・行の表示・コミット数をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "テストファイルに it.skipIf(true) の行を足したら止まる",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "テストファイルに describe.skipIf(true) の行を足したら止まる",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "テストファイルに it.runIf(false) の行を足したら止まる",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "テストファイルに it.concurrent.skip の行を足したら止まる",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        }
+      ]
     },
     {
       "id": "SCN-f34b0a151ecae418e564",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "e915adf446bfcc63accb62f85d93fdab0fa90a4b74e700961ee1b66fa9d861b1",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-109"
+      ],
+      "reason": "通常のテスト追加で終了コード0と検出なしを確認し、HEADにある追加テストの全文と、そのファイルを追加したタスクコミットのメッセージを比較する。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "ふつうのテストを足しただけなら",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        }
+      ]
     },
     {
       "id": "SCN-b0edd8a078f51a7222ac",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "5a072721b6f3104cf7b8dd97a0ff3394c6e18636006136468753f8280bc8a6a7",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-110"
+      ],
+      "reason": "代替エンジンで設定を変更し、終了コード1・変更理由・diffのヘッダ・コミット数をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "loomake.config.json を変えたら、差分を表示",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        }
+      ]
     },
     {
       "id": "SCN-7202fa8faafe2e5ceef4",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "61521657a69866f4835707d3057cab1b52ea8c7d9567d0301ef3eb0782d05f21",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-110"
+      ],
+      "reason": "代替エンジンでルートのscriptsを変更し、停止と設定変更の理由・コミット数をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "package.json の scripts を変えたら止まる",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        }
+      ]
     },
     {
       "id": "SCN-87b6b5e603caaa3c9353",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "a379824cf4a1b7c0e8ba7db580f2c48521ad4db435e5e7a2f12be8a01c34b512",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-110"
+      ],
+      "reason": "子パッケージのscriptsを変更し、停止・対象パス・コミット数をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "子パッケージの package.json の scripts を変えたら",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        }
+      ]
     },
     {
       "id": "SCN-e6f39a79470cc30d46ce",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "79c04d9953198e2ecfe3ab8dddd4df08e9d125fe9edf2b47bcaea3a515558369",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-110"
+      ],
+      "reason": "dependenciesだけの変更で終了コード0を確認し、HEADのJSON全体と、そのファイルを変更したタスクコミットのメッセージを比較する。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "package.json の dependencies だけを変えたら",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        }
+      ]
     },
     {
       "id": "SCN-8ad79ac2c15ec7805e16",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "b2a50d51b275cc109005503eb7b0bbf88356f3cbb76fa0e0a153f903b7137e59",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-111"
+      ],
+      "reason": "代替エンジンで現行仕様を変更し、停止・対象パス・コミット数をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "openspec/specs/ の下を書き換えたら止まる",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        }
+      ]
     },
     {
       "id": "SCN-e1d0acaffac5e1c1a78c",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "878713a1ef90c62f4c2f338557a8c0cc557a9e84b6f0f123c3d8f97225a5dda4",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-111"
+      ],
+      "reason": "代替エンジンで回答を変更し、停止・対象パス・コミット数をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "change の trace.md を書き換えたら止まる",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        }
+      ]
     },
     {
       "id": "SCN-2b685b9a963e1cbd5253",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "402ff571b0a37f9a59df549ce1f40f6186460fa08a0ee1906f3334b9afa4ed84",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-111"
+      ],
+      "reason": "代替エンジンで未完了行を消し、停止・対象パス・コミット数をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "tasks.md から未完了のタスクの行を消したら",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        }
+      ]
     },
     {
       "id": "SCN-072e8e78d3270e999bdb",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "acb4bf87d2c4fd01cede37fc23701dd3c35e71e31eb2b0c6663785390acdbb92",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-111"
+      ],
+      "reason": "代替エンジンでRequirementを消し、停止・対象パス・コミット数をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "差分仕様から Requirement を消したら",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        }
+      ]
     },
     {
       "id": "SCN-b975f4e003ed75203a51",
       "status": "unreviewed",
-      "scenarioSha256": "828b2c385340ee04796e922a8fd5a3f814498c881fbff36213fd80517aa17f92",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "変更検出関数のパス一覧は比較しているが、カスタムopenspecDirでのrun全体の停止・終了コード1の試験は未確認。",
+      "scenarioSha256": "828b2c385340ee04796e922a8fd5a3f814498c881fbff36213fd80517aa17f92"
     },
     {
       "id": "SCN-389715434728b4a680d6",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "72dbb8403959b5e5cabdc593ee094669ab3bcdb4434089821f43d641ac07905c",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-111"
+      ],
+      "reason": "不合格の品質コマンドをコードの変更だけで直し、終了コード0・修正コミットの順序・完了ゲートのチェックを比較する。エンジンは代替プロセスである。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "[REQ-100][REQ-111]",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-527b0af89101fb9fa4c3",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "925edb89e2da31308321b651cf6852e72d0f0271464c6ed4cffc0364421b2855",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-112"
+      ],
+      "reason": "停止理由・差分・承認手順・終了コード1を確認し、変更内容とGit indexが空であることをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "理由と差分を表示し、変更を作業ツリーに残し",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        }
+      ]
     },
     {
       "id": "SCN-234e6735b172fa7ee4a4",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "820f7a7e577dce5ba9d8e3327e7b813e881ef2777b163cd7b60a3ea2fa5dcd72",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-112"
+      ],
+      "reason": "停止後に未コミットのまま再実行し、終了コード1・開始拒否の理由・変更内容が残ることをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "承認せずにもう一度実行すると",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        }
+      ]
     },
     {
       "id": "SCN-546e28ce360c0bc9bbd3",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "b66169eaed7e864c544b2f50302c6cfdeae6fc3eafec8cbfe03a3d0dc08fd168",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-126"
+      ],
+      "reason": "代替エンジンが実際のGitへコミットし、前後SHA・終了コード1・未完了タスク・エンジンのコミットだけが残ることをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "エンジンが自分でコミットしたら",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        }
+      ]
     },
     {
       "id": "SCN-833d79ca648d946de286",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "64d6d6e30bc512d8ed91e6f26d2e3f056d0cd5c06a20369e98a0cdd5005f506b",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-126"
+      ],
+      "reason": "設定を変更してコミットする代替エンジンで、終了コード1と前後の設定の差分をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "設定を変えてコミットしたら",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        }
+      ]
     },
     {
       "id": "SCN-334e2cf3bfbb45ba0fde",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "77f1328b187fb080dcc069e9f9e66f28a0dfefc7713b108d28d3f9d3f84a49ac",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-126"
+      ],
+      "reason": "実際にブランチを切り替え、前後のブランチ名・終了コード1・切り替え後のブランチと未コミット変更の保持をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "エンジンが別のブランチに切り替えたら",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        }
+      ]
     },
     {
       "id": "SCN-726d08d792f1a1deac70",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "82dcb4533f24313c3411e6db7c0d3719b1ffa350082e82dfdffa4a6d266cfe76",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-126"
+      ],
+      "reason": "代替エンジンがコミット後にexit 1で終了し、HEAD変更と失敗の理由、終了コード1、未完了タスクをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "コミットしてから失敗したら",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        }
+      ]
     },
     {
       "id": "SCN-ca7bacfed8bc1e6d64c1",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "5ae2abec353711cef9782e7e38e57a092dfe80a3dbe01943fc72124cd7ad5249",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-126"
+      ],
+      "reason": "修正の代替エンジンがコミットし、終了コード1・HEAD変更の理由・完了ゲート未完了・エンジンのコミットの保持をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "完了ゲートの直しでエンジンがコミットしたら",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        }
+      ]
     },
     {
       "id": "SCN-fb72c121b9de7a0ecdff",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "bf7836cfb6d34ef0858e8cef3e1c72f299cf09d78f3bbe14f22eb77cac9326f4",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-126"
+      ],
+      "reason": "ファイルだけ変更する代替エンジンで、HEAD変更の検出がなく、runのタスクコミットがGit履歴にあることをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "エンジンがコミットせずに終えたら",
+          "sha256": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec"
+        }
+      ]
     },
     {
       "id": "SCN-9822abca70074dd781d0",
       "status": "unreviewed",
-      "scenarioSha256": "15bd57f1c8739d81beb2adb1f40a11111c399a31c9fbb7e1ec3ca1fb725ff075",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "実際のGitとローカルbareのorigin、代替ghによる引数・本文の試験はあるが、Scenarioが要求するGitHub上でのPR作成は未確認。利用できる専用リポジトリはない。",
+      "scenarioSha256": "15bd57f1c8739d81beb2adb1f40a11111c399a31c9fbb7e1ec3ca1fb725ff075"
     },
     {
       "id": "SCN-71d6bd155f46759898db",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "3c35acc753ce4ee21190e4206798caa122496db38e758ec97714ef5fdb137d72",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-114"
+      ],
+      "reason": "実際のGitとローカルbareのoriginで、最後のコミットに証拠が入り、送信先とSHAが一致することをassertする。ghは代替コマンドで、実際のGitHubのPRは対象外である。",
+      "tests": [
+        {
+          "file": "packages/runner/test/pr.test.ts",
+          "contains": "PR を作る時点で、ブランチの最後のコミットに",
+          "sha256": "4de5a8a318f034232c6422f24691a7203487f95058c793daee9b66c1ddba22d3"
+        }
+      ]
     },
     {
       "id": "SCN-a38b1d680601fc12350d",
       "status": "unreviewed",
-      "scenarioSha256": "77a188e2d596b863c4aade78f2bd6e45fb0910b6e97058999cd0ad43998dc9b3",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "実際のGitとローカルbareのorigin、代替ghによる引数・本文の試験はあるが、Scenarioが要求するGitHub上でのPR作成は未確認。利用できる専用リポジトリはない。",
+      "scenarioSha256": "77a188e2d596b863c4aade78f2bd6e45fb0910b6e97058999cd0ad43998dc9b3"
     },
     {
       "id": "SCN-2f2f1d4be78302090856",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "fa01006c45ef719a79a1c3108a10396ab4dd69e539f9c5860930e5045856af3c",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-114"
+      ],
+      "reason": "向き先を記録していない実装ブランチで、終了コード1・理由・証拠なし・代替ghへのPR作成要求なしをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/pr.test.ts",
+          "contains": "人が作った loomake/<change-id> の上で始めて",
+          "sha256": "4de5a8a318f034232c6422f24691a7203487f95058c793daee9b66c1ddba22d3"
+        }
+      ]
     },
     {
       "id": "SCN-b727235a87e44d5a8748",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "9714c7ce6d75d26a2475848b2fb4ffd8ddfbd64d5357aa5d115374f7034c4d7a",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-115"
+      ],
+      "reason": "代替ghが受信した本文に、理由・変更・ゲート結果・要件とテスト・証拠パスが順に含まれることをassertする。GitHub上の表示は未検証である。",
+      "tests": [
+        {
+          "file": "packages/runner/test/pr.test.ts",
+          "contains": "本文に、proposal の Why と What Changes",
+          "sha256": "4de5a8a318f034232c6422f24691a7203487f95058c793daee9b66c1ddba22d3"
+        }
+      ]
     },
     {
       "id": "SCN-ba54a6e5abb22784fe66",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "625991e553030e02de3fce1178b9ad8b1b7fee403d40f7754f6def51d9ee26dc",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-116"
+      ],
+      "reason": "代替ghの受信引数にpr create・タイトル・向き先・本文ファイルがあり、受け取った本文にも内容があることをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/pr.test.ts",
+          "contains": "gh pr create に、タイトル・本文・向き先",
+          "sha256": "4de5a8a318f034232c6422f24691a7203487f95058c793daee9b66c1ddba22d3"
+        }
+      ]
     },
     {
       "id": "SCN-584a9aab9c83b5990a97",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "9ac8dfb4f000c8f3178084b493e2c120d90ef7cd8b7300e2eb95a60e5b1c7cd4",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-116"
+      ],
+      "reason": "代替ghのauth失敗で、終了コード1・ログインの案内・証拠なし・ローカルoriginへの送信なし・PR作成要求なしをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/pr.test.ts",
+          "contains": "gh にログインしていなければ",
+          "sha256": "4de5a8a318f034232c6422f24691a7203487f95058c793daee9b66c1ddba22d3"
+        }
+      ]
     },
     {
       "id": "SCN-31e695f52b68e90b3884",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "1b7bbe40a038e77575aac97538b7f53cfe84e06a4291b597930c9a8a2edb7d2b",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-093"
+      ],
+      "reason": "未回答の質問を与え、終了コード1・質問ID・ブランチを作らないこととエンジン呼出なしをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "仕様ゲートに不合格なら",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-7fc7f896bcbc95c7bcbe",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "ef077f345358e0d45899a2ecd29bd056d09939410b864f75533114bf80de26f9",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-093"
+      ],
+      "reason": "合格する入力で、代替エンジンの呼出と最終終了コード0をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "仕様ゲートに合格すれば",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-040411844d04d47a69d7",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "85c630305ff89e1cdaa90146942fa10b219793475392b128eaa24a71e0f2e1f9",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-094"
+      ],
+      "reason": "追跡ファイルを変更し、終了コード1・対象名・代替エンジン呼出なしをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "コミット済みのファイルを書き換えていたら",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-1af4647d6e775d611d6f",
       "status": "unreviewed",
-      "scenarioSha256": "932db8872ce7e690546624ec487ad41a6f7699b50808b2508b2141ef2a8d3cd5",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "未追跡ファイルがあると開始を拒否してエンジンを呼ばない試験はあるが、Scenarioが要求するファイル名の表示のassertionがない。",
+      "scenarioSha256": "932db8872ce7e690546624ec487ad41a6f7699b50808b2508b2141ef2a8d3cd5"
     },
     {
       "id": "SCN-f194cfc196951a1a0e20",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "0316ee9ac9d488abaef9d246a26ff2d0c07cad919acd44475b207e7202dd79fc",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-094"
+      ],
+      "reason": "レポートの除外を消し、終了コード1・対象パス・除外を足す案内・エンジン呼出なしをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "テストのレポートを .gitignore で除外していなければ",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-073f111396ff5135f4c4",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "5646d78bf04757c96dd237ff0065a9792a58413c24c047f4ab1df294824655d0",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-095"
+      ],
+      "reason": "CLIでdry-runを実行し、タスクと指示・終了コード0・ブランチ作成なし・代替エンジン呼出なしをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "--dry-run は、タスクの一覧と最初の指示を表示し",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-7cf3584a1b4c00cd1111",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "61e77de6782b22919e38de90c967added0121ed1db535f71aed6b2262d8f92f7",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-096"
+      ],
+      "reason": "実際のGitで、開始HEADと作成したブランチのmerge-baseの一致、タスクコミットの存在を比較する。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "loomake/<change-id> がなければ",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-6c9ccd51227cf9411aa7",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "45d754d01aed82189a1e1b1d68656c1533e949d6fb11d0177be8df0a6b678f31",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-096"
+      ],
+      "reason": "既存の実装ブランチへコミットしてから別ブランチで再開し、実装ブランチの履歴に以前のコミットが残ることをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "loomake/<change-id> があれば",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-3389feb69c931facb80a",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "562673f0e6b3bd67d3d4de72367bf6e8b6a1a11eaecdc15e18df99676fe2535a",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-096"
+      ],
+      "reason": "実装ブランチだけでタスクを完了にし、別ブランチから再開して、未完了タスクだけが代替エンジンへ渡ることをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "別のブランチから再開したら、loomake/<change-id> の tasks.md",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-db895f8f48d2514fcb0d",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "c1ca35e94a4857553c5b592a0ae2d864bf249ad7a07a9cd196a820c7363b277c",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-097"
+      ],
+      "reason": "代替エンジンが受信した1回目・2回目の指示の対象行をそれぞれ比較する。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "未完了のタスクを上から順に、1 回に 1 つずつ渡す",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-87baafcb6a7505de3f9e",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "c106be17006a02cea33af1eaee97f7718215ac06b86aafa54dab3f76e02d58f2",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-097"
+      ],
+      "reason": "最初のタスクをチェック済みにした入力で、呼出が1回で対象が次のタスクとなることをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "完了済みのタスクは渡さない",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-7d91543595e04356266d",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "d4535c10b27ea095e5b17b125dda149629e6dfb6720216533c1157786060b146",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-098"
+      ],
+      "reason": "dry-runの指示に、入力した文書と対象タスク、変更禁止と確認事項の決まりが含まれることをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "指示に、AGENTS.md・タスク・差分仕様・trace.md",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-2b043e7f8f9e05e08a26",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "b1218481c6166bcdb78bfd51600e1775eac57638697d3e236230240e0ea0a401",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-098"
+      ],
+      "reason": "dry-runの指示に、エンジンによるGit操作の禁止とrunがコミットする旨を含む文をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "指示に、git でコミットしたりブランチを切り替えたりせず",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-f9315c7fbdb72df9b4ae",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "ae80b1c6cb5f9f6dfb125eab6a0bd81406bb5f36b1629df727071aac9f8b3d53",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-099"
+      ],
+      "reason": "実際のGitコミットのメッセージとファイル一覧、コミット内のtasks.mdのチェック状態を比較する。エンジンは代替プロセスである。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "タスクを終えるたびに、変更と完了にした tasks.md",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-134eab2689aeae75762b",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "681dd9532f08c0fb0b8c8cb0659ef2ca8facf00112ed1f7fac8e14a367999894",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-099"
+      ],
+      "reason": "exit 1の代替エンジンで、終了コード1・タスク未完了・初期コミットだけの履歴・停止の要約をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "エンジンが 0 以外の終了コードで終わったら",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-26243f1a65c5a0117c34",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "9f7d467fffcc29425b65c77304dcb8e1b9a4cf30ae676f7bd7b45237503776ef",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-100"
+      ],
+      "reason": "不合格の内容を修正の指示へ渡すこと、実際の修正コミットと完了ゲートの順序、ゲートのチェック状態、終了コード0をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "[REQ-100][REQ-111]",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-4ba30adb659f40b75511",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "2782d07d0f58cfda738988c07104b129547d8d95c612d182a12e94b9f72617da",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-100"
+      ],
+      "reason": "代替エンジンへの呼出回数と、どの指示にもゲートのタスクが対象として渡らないことをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "完了ゲートのタスクはエンジンに渡さない",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-942c7f2fc346c9bf72cb",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "de9fddac9b3c601f38ce54c248907310acdc5c97426f70208ce55861b584e11a",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-100"
+      ],
+      "reason": "印のあるタスクを対象に渡さず、合格後のチェック、印の保持、旧書式警告なしをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "印のあるタスクは、文に verify と --done がなくても",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-afc355e9cc38a423e972",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "440e05666aeceba507ec71398b346c0438d56288704e3dd254c4496b464a9614",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-100"
+      ],
+      "reason": "旧書式のタスクが対象の指示に入らないことと、印を付ける案内をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "印のない旧書式のタスクもエンジンに渡さず",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-5026fbdf7790b44ec704",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "ed44c17cce39d0cf6e51d39f59a8e60b3e67ac03c0b5c41707a57b3d8ba43a46",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-100"
+      ],
+      "reason": "修正上限で停止したときの、残ったタスクの表示とsummaryのタスク本文から印が除かれることを比較する。ScenarioのTHENが対象である。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "残ったタスクの表示と summary.json には",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-a83b88ba3bb1f0a50ab9",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "c6e9342914d74f6a3a1651f81b766a5b8e81e4f2efc700fdb2104952d516b433",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-101"
+      ],
+      "reason": "代替claudeの受信引数にheadless・JSON・ファイル操作・品質コマンドがあり、権限確認を飛ばす指定がないことをassertする。実際のClaude Codeによる権限制御は未検証である。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "ふだんは -p と JSON の出力で呼び",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-05f2e4e28c0b069eb5f8",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "086418661b740a9dec3e9e58cd7dea42857ee34496dd69bac65d3a6b05e19c26",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-101"
+      ],
+      "reason": "未対応のエンジン名で終了コード2と日本語の案内をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "知らないエンジンでは、使い方の誤りとして",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-6d4ed375d23ba4e50bc5",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "3edde8ff472bf3b22bb65223ebf03931ce8c8e16a8ac919f3626c534ccf9f479",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-101"
+      ],
+      "reason": "claudeのないPATHでCLIを実行し、終了コード2とインストールの案内をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "claude コマンドがなければ",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-fed4aa4653d4bc92458a",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "a9fa11496edc46f9c3d0b9b94c416d65341562970b63f2fc48e797e79574886f",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-101"
+      ],
+      "reason": "親参照を含むIDで終了コード2とパス区切りの案内、代替エンジン呼出なしをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "change-id にパスの区切りを含めると",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-55341193709b0ce803a8",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "24a3f74234127779c71e96929f028af0eb1e5e3ec25173be66c0f861b07458cf",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-121"
+      ],
+      "reason": "環境宣言とフラグが揃うと代替claudeの引数に権限確認を飛ばす指定が含まれることをassertする。環境自体の通信制限を証明する試験ではない。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "LOOMAKE_SANDBOX=1 で --skip-permissions を付ければ",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-feb4efeceb5e6dd69613",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "da0515beaf309394b4c276b802963d1ca9d9062ceaa00f0622971019cd71e1ea",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-121"
+      ],
+      "reason": "環境宣言なしで終了コード2、環境変数と許可ドメインの案内、代替エンジン呼出なしをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "LOOMAKE_SANDBOX=1 でなければ",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-08afaf0f460e42bc6b7b",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "eb1a80ec6faa283a3def6c0f829e5bd58bf967e1eb2b979a9a2206b8fd862fa6",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-104"
+      ],
+      "reason": "修正回数2で失敗を続け、呼出回数4・停止理由・終了コード1・ゲート未完了をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "直しの回数が上限に達したら止まり",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-95364dbf8675120e8f4b",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "986ac7e204b3023f46466c2153c7412e919c4023f815e400a5ee6ff7da4439a6",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-105"
+      ],
+      "reason": "長時間待つ代替エンジンに短い期限を設定し、終了コード1・時間上限の理由・経過時間をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "実行時間が上限に達したら、エンジンを止めて",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-8b478bee2ca2d91a265f",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "4483ec28f66006a4a33bd773cb93cb026181312e893427605e372a3b10c99dbd",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-105"
+      ],
+      "reason": "終了しない品質コマンドで期限に達し、終了コード1・時間上限の理由・呼出回数・経過時間・ゲート未完了をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "完了ゲートのテストが終わらないまま上限に達したら",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-85f3dce4e0c46617a5e6",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "cb62538d38a1e94da2c7e6d938a6f51585f8259441f3e697c77ad70b731385b5",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-106"
+      ],
+      "reason": "質問を出す代替エンジンで、質問表示・終了コード1・タスク未完了・初期コミットだけの履歴をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "エンジンが LOOMAKE-QUESTION: を出したら",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-64cd31bba8ccd7b0ead3",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "02266a88665f9019bbab6da0ead3a1fd446a463ffce76a36795b2432b30b15d6",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-107"
+      ],
+      "reason": "2つ目で質問する代替エンジンで、stdoutの理由・完了タスク・検査なしと、summaryの停止状態・完了と残りのタスク・検査nullをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "止まったら、理由・終えたタスク・残ったタスク",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-a01d149d46c06b28e3cf",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "3d873eff26d2ea5ab43b051645a476e060b957850efe47f7819644b8d0c68b2c",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-117"
+      ],
+      "reason": "実行後のディレクトリ名と、回数付きの指示・出力・検査結果・summaryのファイル名をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "指示・出力・検査結果と summary.json を",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-24bd6ec3cf7d9f7d9663",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "b5441445d3718d05d6074caf6b932c3bd6b00b8664668520f19bab7355b202b8",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-117"
+      ],
+      "reason": "除外ファイルの存在と実際のgit statusの空の出力をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "実行の記録は、git の未コミットの変更に出てこない",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-85552ec2cba4ac0779af",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "22d058048dec1a311cc49ebc63e58519601aec58d6fe63e3ee446cad51bb7b94",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-118"
+      ],
+      "reason": "合成トークンを代替エンジンが出力し、保存した全テキストに元の値と環境変数の値がなく、伏字があることをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "出力の中のトークンを *** に置き換えて保存し",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-54cad318b27e4ccc19c1",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "231c4e6263c6ab602c4dea59ddc69e03ad017613c4458c84df09e56e8cc3965b",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-120"
+      ],
+      "reason": "他のコンテナ判定条件を外し、REMOTE_CONTAINERSだけを設定して警告なし・終了コード0をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "REMOTE_CONTAINERS が設定されていれば",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-16b0c50ea595012b7915",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "5ce9e6f588713b26a002d3ded9e29cbc8272da04bf6dd1af70d4150821b5436a",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-122"
+      ],
+      "reason": "コンテナ判定を外して拒否の応答を注入し、確認文・終了コード1・代替エンジン呼出なしをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "コンテナの外で確認に断ると",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-e8acb3e5bc1f7943f55e",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "98eb381dc940cbf0861e67135e6328168ea2fc469e7b9fdd060e8964b1306935",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-122"
+      ],
+      "reason": "コンテナ判定を外した非対話実行で、警告・終了コード1・代替エンジン呼出なしをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "コンテナの外で確認を受け付けられなければ",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-b8a94e9282accc719f33",
       "status": "unreviewed",
-      "scenarioSha256": "9ed77eb1b66c48e82957fed7712adf84e6ca45163970fff202cef764fd37c28b",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "AbortControllerによる中断で先行コミットと未完了状態を確認する試験はあるが、Scenarioの条件である実プロセスへのSIGINT送信は未確認。",
+      "scenarioSha256": "9ed77eb1b66c48e82957fed7712adf84e6ca45163970fff202cef764fd37c28b"
     },
     {
       "id": "SCN-96f96fc165511da2bbd3",
       "status": "unreviewed",
-      "scenarioSha256": "7ab730200fd20b7331bcdab52d609372200b80d90206455dbde68bcb976d76a9",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "enginesの宣言は比較しているが、下限Node 20.19でrunを実行した結果は未確認。",
+      "scenarioSha256": "7ab730200fd20b7331bcdab52d609372200b80d90206455dbde68bcb976d76a9"
     },
     {
       "id": "SCN-da3119a636cd83d22349",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "edfc3b0e3597db7ea45a9893717678fa1be947490c90f56e7e9d567408e885a8",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-123"
+      ],
+      "reason": "runnerのdependenciesのキーがcore・kit・traceだけであることを比較する。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "@loomake/runner の dependencies は",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-caa27649de182b45efbc",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "6d5b3ff4bbf1ae3223f5ce15b2b7dac75732103731946ffcc67a03f80e53ef36",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-137"
+      ],
+      "reason": "失敗する実際のpre-commitフックで、終了コード1・理由とstderr・停止したsummary・完了なしと残りのタスクをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "始めたあとにコミットが git のフックで失敗したら",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-bc15b835091f83aee80e",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "fb1c0cf127d4ac46dfab897ece0d4e7e06ca70bd5a91f4b847564dc4c7f3b6bf",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-137"
+      ],
+      "reason": "Git管理を削除して実行し、終了コード2・日本語の理由・実行記録のディレクトリがないことをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "git のリポジトリでなければ",
+          "sha256": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa"
+        }
+      ]
     },
     {
       "id": "SCN-97209a578509c311cdb2",
@@ -2849,7 +3804,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "未回答のブロッキング確認事項があると、ID・関連・質問を出して不合格",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -2865,7 +3820,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "ブロッキングの確認事項がすべて回答済みなら合格",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -2881,7 +3836,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "ブロッキングでない確認事項は、回答が空でも合格",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -2897,7 +3852,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "確認事項の節名が崩れていると、未回答のブロッキング確認事項を見落とさず",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -2913,7 +3868,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "差分仕様に解析エラーがあると、ファイル名と行番号を出して不合格",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -2929,7 +3884,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "Source の無い Requirement の名前を出して不合格",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -2945,7 +3900,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "台帳に無い要件 ID を Source に持つと",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -2961,7 +3916,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "Scenario の無い Requirement の名前を出して不合格",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -2977,7 +3932,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "反映済なのにどの Requirement からも参照されない要件を出して不合格",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -2993,7 +3948,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "未承認の仮定と確認待ちの要件は警告になり",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -3009,7 +3964,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "openspec validate --strict が失敗すると、出力を詳細に入れて不合格",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -3025,7 +3980,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "OpenSpec CLI が見つからず openspecValidate が auto",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -3041,7 +3996,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "未完了のタスクがあると、その行を出して不合格",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -3057,7 +4012,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "確認待ちの要件が残ると、その ID を出して不合格",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -3073,7 +4028,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "仕様で参照される要件を名前に含むテストが無いと不合格",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -3089,7 +4044,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "it.skip のテストだけなら、テストが無い要件として不合格",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -3105,7 +4060,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "describe.skip.each の中にだけあるテストは数えない",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -3121,7 +4076,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "テスト名以外の文字列にだけある要件 ID は数えない",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -3137,7 +4092,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "テストランナーが実行しないファイルのテストは数えない",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -3153,7 +4108,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "test コマンドがレポートを書き出さないと",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -3169,7 +4124,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "コマンドが失敗すると、出力の末尾を詳細に入れて不合格",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -3185,7 +4140,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "3 つのコマンドがすべて成功すると",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -3297,7 +4252,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "change を省略すると commands だけを実行し",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -3313,7 +4268,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "存在しない change-id では、change の存在が日本語の説明つきで不合格",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -3377,7 +4332,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "参照先の change と回答が同じなら合格",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -3393,7 +4348,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "参照先の change と回答が違えば、両方の回答を出して不合格",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -3409,7 +4364,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "片方だけ回答があれば不合格",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -3425,7 +4380,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "参照先が archive にあれば、archive の trace.md と比べる",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -3441,7 +4396,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "参照先の change が進行中にも archive にもなければ",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
     },
@@ -3457,9 +4412,141 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "印が無ければ、同じ ID の確認事項の回答が違っても不合格にしない",
-          "sha256": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75"
+          "sha256": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c"
         }
       ]
+    },
+    {
+      "id": "SCN-69de880d1b96261ddd1f",
+      "status": "unreviewed",
+      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
+      "scenarioSha256": "0d023e8314058b73e308a321f3d2331f72d7e8bdad5ef04b4d01c8b1f751fe80"
+    },
+    {
+      "id": "SCN-3de93a167396be14dfc0",
+      "status": "unreviewed",
+      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
+      "scenarioSha256": "1688620f54da24f2277a269f6ba906ce381121c4b97767da4c537957786780b0"
+    },
+    {
+      "id": "SCN-5c8b32669ae829353c95",
+      "status": "unreviewed",
+      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
+      "scenarioSha256": "56c40344d53daf02fc7c81163a047f0e25cd6f5c734bb053af512dbaa65c564d"
+    },
+    {
+      "id": "SCN-aabec7d6d3ceafbff750",
+      "status": "unreviewed",
+      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
+      "scenarioSha256": "5023b468c7510ab682b38cda8e626c308530a1f2aa397611fa5204982e05e954"
+    },
+    {
+      "id": "SCN-6517ae22822816e63d7b",
+      "status": "unreviewed",
+      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
+      "scenarioSha256": "327d58544fdc1c79503947d54cfae5076a42ba8bb49e1aaded25f5caf466d2d0"
+    },
+    {
+      "id": "SCN-8131275fd46bca2e4d3f",
+      "status": "unreviewed",
+      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
+      "scenarioSha256": "576e030d6ccb2d3360bda4f14fcb7f3fb192d1102342e4f896f83ced14352565"
+    },
+    {
+      "id": "SCN-c7e47f5f824ef0d64877",
+      "status": "unreviewed",
+      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
+      "scenarioSha256": "810238e6702c5d6daaab61255b5069058221e4be6250d6d572c645f3716bb468"
+    },
+    {
+      "id": "SCN-6c15a4f6b88cb9e89aea",
+      "status": "unreviewed",
+      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
+      "scenarioSha256": "09d03a0ffa7f48de84f3ba6787deb4f71d0b497263a2d715ffe1d597c853dad2"
+    },
+    {
+      "id": "SCN-970b22c9eaf0821f767a",
+      "status": "unreviewed",
+      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
+      "scenarioSha256": "f628b434c42cf10d8b725813624c1af60db52203fc6e77f25c895a68a061e0b8"
+    },
+    {
+      "id": "SCN-4d7a91fa82fd555e8258",
+      "status": "unreviewed",
+      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
+      "scenarioSha256": "3c6d596b0f999e4f304093eb4caafdf12dfff093f6748f794f986f15ef1cbd3e"
+    },
+    {
+      "id": "SCN-c31d61ded5393a071453",
+      "status": "unreviewed",
+      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
+      "scenarioSha256": "2cbc0be109d261ce6dae599b455281001b3e5b86b98fe5de974e9c92d39f0ed0"
+    },
+    {
+      "id": "SCN-184cae042a93814da714",
+      "status": "unreviewed",
+      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
+      "scenarioSha256": "06c2a9fe4bbdbc705cea34b749ca9e03e277418a8b7f58a23c4db8dd1d6f45c2"
+    },
+    {
+      "id": "SCN-112c14a0db7e8d93cda5",
+      "status": "unreviewed",
+      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
+      "scenarioSha256": "222db3d16da66c56fc06d9a506ddfd4cd1038b57bcd4103c07cb5d707e4b86f7"
+    },
+    {
+      "id": "SCN-ba22b71a82bebd0efdd9",
+      "status": "unreviewed",
+      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
+      "scenarioSha256": "2c033b91f80f290b83937c0dc1dbd97e273f37039fd06adf0c8559008be7be6b"
+    },
+    {
+      "id": "SCN-31b5522126ce527bb44d",
+      "status": "unreviewed",
+      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
+      "scenarioSha256": "303042d4fd537af5b66b637462fdba6ff8673cb74a17f77d9777d0cda96ae1d2"
+    },
+    {
+      "id": "SCN-d3b4de583d83c8907a76",
+      "status": "unreviewed",
+      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
+      "scenarioSha256": "f8e5d89eba6718c3115c2a4788ebafab4ab38c57abfc3a275f58eb8772e1f54f"
+    },
+    {
+      "id": "SCN-bbcbb25dea5657c631b5",
+      "status": "unreviewed",
+      "reason": "進行中の変更で追加されたScenario。条件と試験の対応は未確認。",
+      "scenarioSha256": "608163ca04a73a4ad24dd3e1d5287bccfbdb1c6f90a4223f8dcbc0155284ba5f"
+    },
+    {
+      "id": "SCN-00a3219d1aa00068aa4d",
+      "status": "unreviewed",
+      "reason": "進行中の変更で追加されたScenario。条件と試験の対応は未確認。",
+      "scenarioSha256": "17e22e2d1c7079193df3f8b555f70a1dc90d8fafe93708917f127599ae938626"
+    },
+    {
+      "id": "SCN-2701e4aed8a62841841f",
+      "status": "unreviewed",
+      "reason": "進行中の変更で追加されたScenario。条件と試験の対応は未確認。",
+      "scenarioSha256": "04c9e7994f2a5eaa835f8c4d163a036daee8d5bfe8de72a74ac04ec7871e2154"
+    },
+    {
+      "id": "SCN-9206197f1b636c5e6e3a",
+      "status": "unreviewed",
+      "reason": "進行中の変更で追加されたScenario。条件と試験の対応は未確認。",
+      "scenarioSha256": "b2cad40b37970c5fe8137bb7f96acb87f1891369ee2998730cf495883bc9407b"
+    },
+    {
+      "id": "SCN-2edd38a025a64195cdd9",
+      "status": "unreviewed",
+      "reason": "進行中の変更で追加されたScenario。条件と試験の対応は未確認。",
+      "scenarioSha256": "2245e57b9864b571fdcb4f6e847ecdde9bd2377c4df9481de1f8195d84ff308d"
+    },
+    {
+      "id": "SCN-086a4cccab519de44234",
+      "status": "unreviewed",
+      "reason": "進行中の変更で追加されたScenario。条件と試験の対応は未確認。",
+      "scenarioSha256": "27b652c1950a5863a965da89a98332099d497f0ddb28420b3dc37756b7034047"
     }
   ]
 }

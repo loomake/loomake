@@ -2,19 +2,19 @@
   "schemaVersion": 1,
   "kind": "scenario-evidence-audit",
   "ok": false,
-  "exitCode": 1,
   "counts": {
-    "total": 360,
-    "reviewed": 127,
+    "total": 382,
+    "reviewed": 221,
     "superseded": 2,
-    "unreviewed": 231,
+    "unreviewed": 159,
     "invalid": 0
   },
   "issues": [],
-  "specFiles": 32,
+  "exitCode": 1,
+  "specFiles": 37,
   "testRun": {
-    "total": 638,
-    "passed": 638,
+    "total": 657,
+    "passed": 657,
     "failed": 0
   },
   "gateAttempts": [
@@ -63,8 +63,50 @@
       "passed": 638,
       "failed": 0,
       "settingsChanged": false
+    },
+    {
+      "exitCode": 1,
+      "total": 657,
+      "passed": 656,
+      "failed": 1,
+      "testReportAvailable": false,
+      "logSha256": "25f3e5195d786e92f4513769f67c701838a71fafa11c99bf7f4a11a56f342658",
+      "failures": [
+        {
+          "file": "tests/domain-mutations.test.ts",
+          "test": "[REQ-161][REQ-162][REQ-163] 正常な実装と13条件を実行し、元ファイルと通常のレポートを変更しない",
+          "reason": "通常のレポートの内容が途中で変わった。同時に別の検証が動作し、失敗後にはレポートが削除されていた。"
+        }
+      ],
+      "failureExcerpt": {
+        "file": "openspec/changes/audit-scenario-evidence/round3-failed-gate.txt",
+        "sha256": "0992b36cf9224f7e5725392f7de0b74420fcb606b7f1c14434a69c464359cd5e"
+      }
+    },
+    {
+      "exitCode": 0,
+      "total": 657,
+      "passed": 657,
+      "failed": 0,
+      "settingsChanged": false,
+      "isolation": "detached Git worktree with offline installation",
+      "snapshotCommit": "9cb4f2f",
+      "trackingFilesCopied": [
+        "docs/quality/scenarios.json",
+        "openspec/changes/audit-scenario-evidence/tasks.md",
+        "openspec/changes/audit-scenario-evidence/tdd.md"
+      ],
+      "testReportSha256": "d21b010bcd7811092cc64d6911b3d7f4ae40b821b9ffebc40c00671c4ab14561"
     }
   ],
+  "snapshot": {
+    "commit": "9cb4f2f",
+    "sourceHashesMatchCurrent": false,
+    "changedSinceValidation": [
+      "packages/runner/test/guards.test.ts"
+    ],
+    "note": "検証中に別のchangeの実装が進んだため、この結果は独立した作業コピーの検証時点に限る。未検証の後続変更を合格扱いにしない。"
+  },
   "inputs": {
     "specs": {
       "openspec/changes/audit-scenario-evidence/specs/scenario-evidence-audit/spec.md": "c59f98414dfffbe716abcd90103d39734358897c11c24e224245a36d03078ad3",
@@ -73,11 +115,16 @@
       "openspec/changes/bound-input-resources/specs/bounded-input/spec.md": "4b47779a30e6769ff9c5375519bc12b27db95e59889aca4bcc2c0e00fe65dfb1",
       "openspec/changes/bound-run-records/specs/run-record-budget/spec.md": "ee16500f4e011afdd133891cb10bfd585cf302002f005e4eb8a08a7d742fa6df",
       "openspec/changes/clarify-doctor-diagnostics/specs/doctor/spec.md": "7d37d6700d5300406df20de3501bb6ebf09aaed36f4f4f0bdb1183d53fdedcfb",
+      "openspec/changes/close-cli-gaps/specs/cli/spec.md": "d3a25999510d6c3dd860420a125415554b0bae5d6cb31b03f768bd45abb6384d",
+      "openspec/changes/close-cli-gaps/specs/external-process-budget/spec.md": "655282240ff13b2fb9e75160757fec147f75e4a140a676011feb98d9c1aa542c",
+      "openspec/changes/close-cli-gaps/specs/run/spec.md": "2e66b86b6410a0f2878deba74e3eefc1f623ac8916c2adf29cd7dd2afa896bf2",
+      "openspec/changes/close-cli-gaps/specs/verify/spec.md": "e5d6f6739dccc5c84fb6915ac2537ed8552190432ec39fabf451227a148c0641",
       "openspec/changes/exercise-ai-user-journeys/specs/quality-journeys/spec.md": "4e83d4620a5c2cf7038d109be13419bfd0ce0305bf14d873c5dab09bffd68104",
       "openspec/changes/harden-release-workflow/specs/release-integrity/spec.md": "34a66768cfae40e71a715223234e74301456ecb88661b53fb6de45f7c88f96de",
       "openspec/changes/harden-run-safety/specs/run-guards/spec.md": "5225b4e5327d71203ed56d61a5ac5926a94a97d5c8b075997780552bbc09845b",
       "openspec/changes/harden-run-safety/specs/run/spec.md": "0c4a189ecba230cd1a4b857f6cf83a51dcc4dd50acf258c1eace42b3f2791c7c",
       "openspec/changes/harden-run-safety/specs/trace-report/spec.md": "d28b79f65b4853a75a8afb988b938cfafb1235a513a023f56c4fd5205480fd5d",
+      "openspec/changes/improve-init-scripts/specs/init/spec.md": "dacbb187739b29518d7a512c8a740cc27fed0d34ca4774aac6b9f0505a944020",
       "openspec/changes/protect-run-diagnostics/specs/run/spec.md": "d3fd4964728b04faf968037f00c6034ede145f3c5502a5cc7832d61b6a24015e",
       "openspec/changes/publish-evidence-atomically/specs/evidence-publication/spec.md": "e771570c81511913e01b703e7aa46e3727db2c6d5a11bf853c298252de448756",
       "openspec/changes/resume-pr-publication/specs/run/spec.md": "b16b903c1bf8a55ed1689bd7db8241618ed841dd2ba4c5e977d48bc649e9b1b6",
@@ -110,9 +157,10 @@
       "tests/package-workflows.test.ts": "70a50c999af6bcf1b0546d5ebc28983730c4219c85aa6d34264623114335954d",
       "tests/release-security.test.ts": "062a1d920f8e435ed82850379e18c63e28af431c5aa2d03865a20a3a8914b75e",
       "tests/scenario-audit.test.ts": "0081fbabce3363fc49dece2bc2cd3fcf7e710bab573d3241d7c49cd9d683b19f",
+      "packages/cli/test/arguments.test.ts": "ecd21aa5a6c4f22075208b5c7299722d25198cfe42e95be9ff2af0a0eed9f381",
       "packages/cli/test/cli.test.ts": "af8e785775d2e0aa180e9322dd37c5df04eea3e4c50de769f9bf6ffa94cc6ea1",
       "packages/cli/test/doctor.test.ts": "c9fe91afe6e727773eff514d7e8c92b6037ecd6a504236a4732addca73b03f19",
-      "packages/cli/test/init.test.ts": "fad9d1e9ba361a5971760e4e0e45804df275146662e92be9a632820d301e8c03",
+      "packages/cli/test/init.test.ts": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e",
       "packages/core/test/agreement.test.ts": "0e6e08ffc5b0dd863f0d80664a78fae0a7e7dc7122fd3688228626880dc31aa4",
       "packages/core/test/coverage-policy.test.ts": "61add31ac1281ad2949cfda26529bfe7ec102b34fb8c06bf2d5d40c90ee32bb8",
       "packages/core/test/package.test.ts": "6c32b72bc19cd187c4337ae78ff9c2b42f39e5ff40ef0156175a8845d0e84fb4",
@@ -121,11 +169,16 @@
       "packages/core/test/tasks.test.ts": "6208610676ee0a0335603847d61d26281ba29e23421ec3db4b38b23cea45be5a",
       "packages/core/test/test-report.test.ts": "c7153a95adba3abf1d612e07134454d17aa93ece23874ffc140db2d5136859f1",
       "packages/core/test/trace.test.ts": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40",
+      "packages/kit/test/doctor-command.test.ts": "a0e75f4a867c6a7c85dd0959a9737cb2fe4ad50f8d4dd84dfe9e9ab41b1ea0e6",
+      "packages/kit/test/doctor-diagnostics.test.ts": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0",
+      "packages/kit/test/input.test.ts": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985",
+      "packages/kit/test/process.test.ts": "ac53e9c06cdbdabcc611a457f0437074f42a784eadb8580fdc605ff29266828c",
+      "packages/kit/test/verify.test.ts": "7485e47cbf8dea5f27ade05191f47cd9efc4ad69b9a868fd7d92b31807c7d97c",
       "packages/runner/test/diagnostic-redactor.test.ts": "82f934a3f6a9d4e4fea20f7137f465651f3d716c3697e0333cf97e787eaa28ef",
       "packages/runner/test/engine-safety.test.ts": "7c75c2f45e35c3daf7c65fb9551eb924a0b3d7e34656a71cd0cc3ae486711317",
       "packages/runner/test/evidence-storage.test.ts": "16cd666b698613e965a0c1547e97b68a56431b2f576b7f9e45caf7954adbeebb",
-      "packages/runner/test/external-budget.test.ts": "a166524879b7c20bf233d0c20bb8d35fa3536b2caa5dc261157db3f781383fcc",
-      "packages/runner/test/guards.test.ts": "d970de0fd227df97dea8f0701bdaec16ded75e8e9651cc1d680ab8e506343eb2",
+      "packages/runner/test/external-budget.test.ts": "0e80c4fc576e2649e768bdf1e232034a706be837286f1d1f2df5a924862ae44f",
+      "packages/runner/test/guards.test.ts": "fcfe6dd5f37d867ce1ba34a959c0c55796a17906b3be2086d706c840788ec5ec",
       "packages/runner/test/lock.test.ts": "503815aa9b69654f8966ccbbf591d44f5cc12b36c2610d66fb566783884b9d0b",
       "packages/runner/test/log-config.test.ts": "8f76ad8d7938289e28b1c534473c27bdaed047603e8da7873b5d7fa242f326ea",
       "packages/runner/test/log-run.test.ts": "85e33c0eda2c372c5f614c490da8052b1539b6d94ad6cf0d9a24bffd01effc85",
@@ -133,13 +186,8 @@
       "packages/runner/test/output-budget.test.ts": "3413310e3dc3beaf1c5fc50245d54b4346b0ef1330a1ae3a6f255f394729590e",
       "packages/runner/test/pr.test.ts": "4de5a8a318f034232c6422f24691a7203487f95058c793daee9b66c1ddba22d3",
       "packages/runner/test/publication-retry.test.ts": "49db35ee3960986e16dabe788943d2490d57f5d0b121531227f9ad148ed844bf",
-      "packages/runner/test/run.test.ts": "1db0a951fb2cdc5129f0155142e859bbdd9a652ff476d6a69f77b5eb57982f46",
+      "packages/runner/test/run.test.ts": "d18951c5027e33dab91e95e697ab0c716d2dc14a93f5cf963193a29b4fa7e2fa",
       "packages/runner/test/safety-paths.test.ts": "e976ee7e1e4c985ae0566df7cf7d177bb254e35053a8410018fd4794a1ce4673",
-      "packages/kit/test/doctor-command.test.ts": "a0e75f4a867c6a7c85dd0959a9737cb2fe4ad50f8d4dd84dfe9e9ab41b1ea0e6",
-      "packages/kit/test/doctor-diagnostics.test.ts": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0",
-      "packages/kit/test/input.test.ts": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985",
-      "packages/kit/test/process.test.ts": "cbbf856ea0f6e612ae2e66ce2c5af8791e73e1766b5d21829c6024cca5130d75",
-      "packages/kit/test/verify.test.ts": "bf201dbfe9e3fe2a62e4dbd85241ca7d5ff9035a6d757de3fc164c85b625df75",
       "packages/trace/test/publication-crash.test.ts": "870d3f491fbb77433bcb8ddd9a76b2ea22e9185ee7a7665f5894798b3f2142c0",
       "packages/trace/test/publication.test.ts": "63231c8f68bbbe7901a3c28a437135b7aaebc689a66752682eb0a2422be710f9",
       "packages/trace/test/record-size.test.ts": "db71a3294f7e3688bc76c9adbb527a0526a41c76304da1b8f350375514ec87e1",
@@ -147,8 +195,8 @@
       "packages/trace/test/report.test.ts": "161342e73d8fd7b55e92fab475401aad4905c85eb2da9d6abd5031e98439b176",
       "packages/trace/test/serialization.test.ts": "6cf85e33ea1af754e0245fc4259f994504be7310ea55c96abc971e81ebd5c247"
     },
-    "testReportSha256": "7e78bd7e8456f940430f430f1138ab309f29e9fa35359ce197a1b8ac52548bff",
-    "reviewSha256": "2946c09737c360f06e3f9868628c0d081192276e4042c852b4ab0339eb984eef",
+    "testReportSha256": "d21b010bcd7811092cc64d6911b3d7f4ae40b821b9ffebc40c00671c4ab14561",
+    "reviewSha256": "0e6eede37fb4fdee0e0179512ff2a8d1a7f2d09b3b8d7377920b0d70f441cf85",
     "scriptSha256": "279e59e68ac4104a3bbb69289eaf02972596ca4db0a1351d04fb0b2ed2a33a39"
   }
 }
