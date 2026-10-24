@@ -108,3 +108,39 @@ describe('入力のバイト予算とファイル型', () => {
     expect(() => createInputReader(limits)).toThrow(UsageError);
   });
 });
+
+describe('ファイルの先頭の読み取り', () => {
+  it('[REQ-171] 先頭の指定したバイトまでを読み、読んだ分だけを合計に数える', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'loomake-head-'));
+    try {
+      const file = join(dir, 'a.json');
+      writeFileSync(file, 'x'.repeat(100));
+      const reader = createInputReader({ maxTotalBytes: 25 });
+      expect(reader.readHead(file, 10)).toBe('x'.repeat(10));
+      expect(reader.readHead(file, 10)).toBe('x'.repeat(10));
+      expect(() => reader.readHead(file, 10)).toThrow(/読み取り合計の上限は25バイト/);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+
+  it('[REQ-171] 要求した上限よりファイルが小さければ、ファイルの大きさで合計を見積もる', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'loomake-head-'));
+    try {
+      const file = join(dir, 'a.json');
+      writeFileSync(file, 'abc');
+      const reader = createInputReader({ maxTotalBytes: 10 });
+      expect(reader.read(file)).toBe('abc');
+      expect(reader.readHead(file, 100)).toBe('abc');
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+
+  it('[REQ-171] 途中で切れた複数バイト文字は捨て、シンボリックリンクは読まない', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'loomake-head-'));
+    try {
+      const file = join(dir, 'a.json');
+      writeFileSync(file, 'ああ');
+      expect(createInputReader().readHead(file, 4)).toBe('あ');
+      symlinkSync(file, join(dir, 'link.json'));
+      expect(() => createInputReader().readHead(join(dir, 'link.json'), 4)).toThrow(/シンボリックリンク/);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+});

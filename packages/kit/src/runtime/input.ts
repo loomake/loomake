@@ -1,3 +1,4 @@
+import { StringDecoder } from 'node:string_decoder';
 import { closeSync, constants, fstatSync, lstatSync, openSync, opendirSync, readSync } from 'node:fs';
 import { join } from 'node:path';
 import { UsageError } from './errors.js';
@@ -16,6 +17,8 @@ export const JSON_LIMITS: Readonly<InputLimits> = Object.freeze({ ...DOCUMENT_LI
 export type InputEntry = { name: string; kind: 'file' | 'directory' };
 export type InputReader = {
   read: (file: string) => string;
+  /** ファイルの先頭の maxBytes バイトまでを読む。読んだ分だけを合計に数える。安全の確認は read と同じ */
+  readHead: (file: string, maxBytes: number) => string;
   entries: (dir: string, options?: { skipIgnored?: boolean }) => InputEntry[];
   walk: (dir: string, options?: { skipIgnored?: boolean }) => string[];
 };
@@ -59,6 +62,32 @@ export function createInputReader(overrides: Partial<InputLimits> = {}): InputRe
         }
         bytes += size;
         return Buffer.concat(chunks, size).toString('utf8');
+      } catch (error) {
+        if (error instanceof UsageError) throw error;
+        return fail(file, (error as Error).message);
+      } finally { if (fd !== undefined) closeSync(fd); }
+    },
+    readHead(file, maxBytes) {
+      if (!Number.isSafeInteger(maxBytes) || maxBytes <= 0) throw new UsageError('先頭の読み取りの上限は正の安全な整数にしてください');
+      let fd: number | undefined;
+      try {
+        regular(file, lstatSync(file));
+        fd = openSync(file, constants.O_RDONLY | optionalFlag('O_NOFOLLOW') | optionalFlag('O_NONBLOCK'));
+        const stats = fstatSync(fd);
+        regular(file, stats);
+        // 読む量は、要求した上限とファイルの大きさの小さいほう。合計の予算も、この量で見積もる
+        const wanted = Math.min(maxBytes, limits.maxFileBytes, stats.size);
+        if (bytes + wanted > limits.maxTotalBytes) fail(file, `読み取り合計の上限は${limits.maxTotalBytes}バイトです`);
+        const buffer = Buffer.alloc(wanted);
+        let size = 0;
+        while (size < wanted) {
+          const length = readSync(fd, buffer, size, wanted - size, null);
+          if (length === 0) break;
+          size += length;
+        }
+        bytes += size;
+        // 途中で切れた複数バイト文字は捨てる
+        return new StringDecoder('utf8').write(buffer.subarray(0, size));
       } catch (error) {
         if (error instanceof UsageError) throw error;
         return fail(file, (error as Error).message);
