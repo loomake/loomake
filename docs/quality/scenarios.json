@@ -227,7 +227,7 @@
         {
           "file": "packages/runner/test/external-budget.test.ts",
           "contains": "[REQ-183] OpenSpec検証の時間切れ",
-          "sha256": "2526e2b8662dc95fc98b9c20260119778f5ad2eb3ec187b9f1b232a24b3736ac"
+          "sha256": "9ff1ca9d8c01b717f525ce4ddc388b560016d891fbea4b4764a8ac6b29353563"
         }
       ]
     },
@@ -805,9 +805,19 @@
     },
     {
       "id": "SCN-cea3f577e0cebbad9bd1",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "126c81affb5c6bbaaf168f48b2bcbe24cf3f6ea98f9d7ab758605156e8489256",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "初回検証の保存記録の成功、2回目の品質コマンドの起動合図と実PID、戻り時のPID停止、timeoutのsummary、完了したゲートのコミット保持、PRなしをassertする。",
+      "sources": [
+        "REQ-140"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/scenario-timeout-evidence.test.ts",
+          "contains": "stops the second verification",
+          "sha256": "e23c6eb833a60aa72310463b06c1906ebfd8590ffff96f954f556e41d8590beb"
+        }
+      ]
     },
     {
       "id": "SCN-01fe716500962c3a6b43",
@@ -3358,7 +3368,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストファイルを消したら、削除を表示し",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -3374,7 +3384,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストファイルに it.skip の行を足したら",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -3390,22 +3400,22 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストファイルに it.skipIf(true)",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         },
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストファイルに describe.skipIf(true)",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         },
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストファイルに it.runIf(false)",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         },
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストファイルに it.concurrent.skip",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -3421,7 +3431,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "ふつうのテストを足しただけなら",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -3437,7 +3447,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "loomake.config.json を変えたら、差分を表示して止まる",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -3453,7 +3463,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "package.json の scripts を変えたら止まる",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -3469,7 +3479,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "子パッケージの package.json の scripts を変えたら止まる",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -3485,7 +3495,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "package.json の dependencies だけを変えたら",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -3501,7 +3511,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "openspec/specs/ の下を書き換えたら止まる",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -3517,7 +3527,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "change の trace.md を書き換えたら止まる",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -3533,7 +3543,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "tasks.md から未完了のタスクの行を消したら止まる",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -3549,7 +3559,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "差分仕様から Requirement を消したら止まる",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -3597,7 +3607,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "理由と差分を表示し、変更を作業ツリーに残し",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -3613,7 +3623,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "承認せずにもう一度実行すると",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -3629,7 +3639,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "エンジンが自分でコミットしたら、前後の SHA を表示し",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -3645,7 +3655,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "設定を変えてコミットしたら、その差分を表示して止まる",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -3661,7 +3671,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "エンジンが別のブランチに切り替えたら",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -3677,7 +3687,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "コミットしてから失敗したら、HEAD が変わったことを",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -3693,7 +3703,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "完了ゲートの直しでエンジンがコミットしたら",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -3709,7 +3719,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "エンジンがコミットせずに終えたら",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -5884,7 +5894,7 @@
         {
           "file": "packages/runner/test/external-budget.test.ts",
           "contains": "[REQ-192][REQ-182] run の準備中に git",
-          "sha256": "2526e2b8662dc95fc98b9c20260119778f5ad2eb3ec187b9f1b232a24b3736ac"
+          "sha256": "9ff1ca9d8c01b717f525ce4ddc388b560016d891fbea4b4764a8ac6b29353563"
         }
       ]
     },
@@ -6042,9 +6052,19 @@
     },
     {
       "id": "SCN-8fe96410ddc145f6b382",
-      "status": "unreviewed",
-      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
-      "scenarioSha256": "06c2a9fe4bbdbc705cea34b749ca9e03e277418a8b7f58a23c4db8dd1d6f45c2"
+      "status": "reviewed",
+      "scenarioSha256": "06c2a9fe4bbdbc705cea34b749ca9e03e277418a8b7f58a23c4db8dd1d6f45c2",
+      "reason": "実品質プロセスが一時的なゲート完了印を読んだ合図とPIDを確認し、共有予算後の停止、タスク全文の復元、実装とHEAD、公開なしをassertする。実supervisor経由のGit起動を透過観測し、品質コマンド開始前の起動を正の対照に、開始後にGitが起動していないことも確認する。",
+      "sources": [
+        "REQ-182"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/scenario-timeout-evidence.test.ts",
+          "contains": "restores temporary gate marks",
+          "sha256": "e23c6eb833a60aa72310463b06c1906ebfd8590ffff96f954f556e41d8590beb"
+        }
+      ]
     },
     {
       "id": "SCN-41989316d0079c9e056f",
@@ -6218,7 +6238,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "エンジンがフックを足したら",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -6234,7 +6254,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "エンジンが git の設定を変えたら",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -6250,7 +6270,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "run の前からあるフックは",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -6790,7 +6810,7 @@
         {
           "file": "packages/runner/test/external-budget.test.ts",
           "contains": "[REQ-182] ロック取得のGitが止まったら",
-          "sha256": "2526e2b8662dc95fc98b9c20260119778f5ad2eb3ec187b9f1b232a24b3736ac"
+          "sha256": "9ff1ca9d8c01b717f525ce4ddc388b560016d891fbea4b4764a8ac6b29353563"
         }
       ]
     },
@@ -6806,7 +6826,7 @@
         {
           "file": "packages/runner/test/external-budget.test.ts",
           "contains": "[REQ-182] pushの期限後に",
-          "sha256": "2526e2b8662dc95fc98b9c20260119778f5ad2eb3ec187b9f1b232a24b3736ac"
+          "sha256": "9ff1ca9d8c01b717f525ce4ddc388b560016d891fbea4b4764a8ac6b29353563"
         }
       ]
     },
@@ -7034,7 +7054,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "HEAD にあったアサーションを書き換えたら",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -7050,7 +7070,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "ファイルの中のテストを消したら",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -7066,7 +7086,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "アサーションの行の字下げを変えて別の describe へ移すだけなら",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -7082,7 +7102,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストでない呼び出し（/x/.test(s)）の行を書き換えるだけなら",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -7098,7 +7118,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "既存のテストから検査の行を消したら、コミットせずに止まる",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -7114,7 +7134,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "必ず通る検査に書き換えたら、コミットせずに止まる",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -7130,7 +7150,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストを足すだけなら止まらない",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -7146,7 +7166,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "import とコメントの assert を消しても",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -7162,7 +7182,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "include の先の設定に core.fsmonitor を書いたら",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -7178,7 +7198,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "リンク先のないフックがあっても",
-          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
         }
       ]
     },
@@ -7621,7 +7641,7 @@
         {
           "file": "packages/runner/test/guards-special-files.test.ts",
           "contains": "beforeのFIFOで通常runを止め、タスク・変更・コミットを保つ",
-          "sha256": "db5e7718a21045379a799508b11178a170f4d5ffb24b6459067e570b59963cff"
+          "sha256": "6b96b9459e2c95e10303d0dd35d70262282090b608c4049e12570c7d439625a9"
         }
       ]
     },
@@ -7637,7 +7657,7 @@
         {
           "file": "packages/runner/test/guards-special-files.test.ts",
           "contains": "engineのFIFOで通常runを止め、タスク・変更・コミットを保つ",
-          "sha256": "db5e7718a21045379a799508b11178a170f4d5ffb24b6459067e570b59963cff"
+          "sha256": "6b96b9459e2c95e10303d0dd35d70262282090b608c4049e12570c7d439625a9"
         }
       ]
     },
@@ -7653,7 +7673,7 @@
         {
           "file": "packages/runner/test/guards-special-files.test.ts",
           "contains": "regularの既存フックを保ち、通常runでタスクをコミットする",
-          "sha256": "db5e7718a21045379a799508b11178a170f4d5ffb24b6459067e570b59963cff"
+          "sha256": "6b96b9459e2c95e10303d0dd35d70262282090b608c4049e12570c7d439625a9"
         }
       ]
     },
@@ -7669,12 +7689,12 @@
         {
           "file": "packages/runner/test/guards-special-files.test.ts",
           "contains": "danglingの既存フックを保ち、通常runでタスクをコミットする",
-          "sha256": "db5e7718a21045379a799508b11178a170f4d5ffb24b6459067e570b59963cff"
+          "sha256": "6b96b9459e2c95e10303d0dd35d70262282090b608c4049e12570c7d439625a9"
         },
         {
           "file": "packages/runner/test/guards-special-files.test.ts",
           "contains": "directoryの既存フックを保ち、通常runでタスクをコミットする",
-          "sha256": "db5e7718a21045379a799508b11178a170f4d5ffb24b6459067e570b59963cff"
+          "sha256": "6b96b9459e2c95e10303d0dd35d70262282090b608c4049e12570c7d439625a9"
         }
       ]
     },
@@ -7707,6 +7727,96 @@
           "file": "tests/security-boundaries-docs.test.ts",
           "contains": "同じPOSIXグループと離脱した子、Windowsの保証範囲を明記する",
           "sha256": "f3db0357b9913eee2ee5893e859d2cfcd774eddc3f57c69ff2397ff43f866c12"
+        }
+      ]
+    },
+    {
+      "id": "SCN-c2631512ffaa58cd1e68",
+      "status": "reviewed",
+      "scenarioSha256": "7807a4cd3991c4a7e95fa2eab0c52ecd672e4a38ea74018430510792b7def2b5",
+      "reason": "共有する残り時間を使い切った後の操作を拒否し、対象の起動ファイルが作られないことをassertする。",
+      "sources": [
+        "REQ-180"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/process.test.ts",
+          "contains": "操作間で残り時間を共有し、期限後は起動しない",
+          "sha256": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca"
+        }
+      ]
+    },
+    {
+      "id": "SCN-a460b002994de8b20cd5",
+      "status": "reviewed",
+      "scenarioSha256": "662081dd661fe5868b4160cf0ca095b54d4e1b8a52cb8dff5a3bef563d7786b8",
+      "reason": "実コマンドの期限と出力超過を分けて発生させ、制限の型・理由と返すバイト数の上限をassertする。",
+      "sources": [
+        "REQ-180"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/process.test.ts",
+          "contains": "終わらない子を期限で止める",
+          "sha256": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca"
+        },
+        {
+          "file": "packages/kit/test/process.test.ts",
+          "contains": "合計出力をバイト数で制限し理由を区別する",
+          "sha256": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca"
+        }
+      ]
+    },
+    {
+      "id": "SCN-1c3764be0bbba0ef3d3c",
+      "status": "reviewed",
+      "scenarioSha256": "f833b69a5622bd8c561b2ae4c4236480df7899aa56fe1f1e11f46cc4a618f9da",
+      "reason": "監視役だけの実起動遅延とその完了合図を確認し、操作期限と共有期限の両方でtimeoutになり、対象が起動ファイルを作らないことをassertする。",
+      "sources": [
+        "REQ-180"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/process-startup.test.ts",
+          "contains": "time expires during boot",
+          "sha256": "7da99b3683718c202336206a55e77e07aee5f78020c292fe26e3fa28b8555dd3"
+        }
+      ]
+    },
+    {
+      "id": "SCN-7dc829f37dffb14f33cc",
+      "status": "reviewed",
+      "scenarioSha256": "3913cebf5d66ee13f00e024702ac9da4b34b2060d5805d51c406924ac714d6f4",
+      "reason": "監視役の起動時間を引いた共有予算で実PIDの対象が停止することと、途中の時間を二度引いて早く止めない対照をassertする。untilDeadlineは短い操作期限を超え、共有予算だけを使う。",
+      "sources": [
+        "REQ-180"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/process-startup.test.ts",
+          "contains": "uses only the remaining shared time",
+          "sha256": "7da99b3683718c202336206a55e77e07aee5f78020c292fe26e3fa28b8555dd3"
+        },
+        {
+          "file": "packages/kit/test/process-startup.test.ts",
+          "contains": "does not subtract setup time twice",
+          "sha256": "7da99b3683718c202336206a55e77e07aee5f78020c292fe26e3fa28b8555dd3"
+        }
+      ]
+    },
+    {
+      "id": "SCN-9fe8421dc4a4ad0058c5",
+      "status": "reviewed",
+      "scenarioSha256": "52f33c3191890d46e47c7efaf99f9862823a2cc78ef96f6ce3967b6a83c7f3b7",
+      "reason": "実品質プロセスが一時的なゲート完了印を読んだ合図とPIDを確認し、共有予算後の停止、タスク全文の復元、実装とHEAD、公開なしをassertする。実supervisor経由のGit起動を透過観測し、品質コマンド開始前の起動を正の対照に、開始後にGitが起動していないことも確認する。",
+      "sources": [
+        "REQ-182"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/scenario-timeout-evidence.test.ts",
+          "contains": "restores temporary gate marks",
+          "sha256": "e23c6eb833a60aa72310463b06c1906ebfd8590ffff96f954f556e41d8590beb"
         }
       ]
     }
