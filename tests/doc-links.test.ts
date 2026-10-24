@@ -10,15 +10,40 @@ const documents = [
   ...readdirSync(join(root, 'docs/quality')).filter((f) => f.endsWith('.md')).map((f) => `docs/quality/${f}`),
 ];
 
-// コードブロックを除いた本文の、相対パスのリンク
-const relativeLinks = (file: string) =>
-  [...readFileSync(join(root, file), 'utf8').replace(/```[\s\S]*?```/g, '').matchAll(/\]\(([^)\s]+)\)/g)]
-    .map(([, url]) => url)
-    .filter((url) => !/^(https?:|mailto:|#)/.test(url));
+// インラインのリンクと画像：[説明](先 "タイトル")。先は <...> で囲んでもよい。タイトルは "..."・'...'・(...) のどれか
+const INLINE = /!?\[[^\]]*\]\(\s*(<[^>]*>|[^\s)]+)(?:\s+(?:"[^"]*"|'[^']*'|\([^)]*\)))?\s*\)/g;
+// 参照の形のリンクの定義：[名前]: 先 "タイトル"
+const DEFINITION = /^ {0,3}\[[^\]]+\]:\s*(<[^>]*>|\S+)/gm;
+
+/** コードブロックとインラインのコードを除いた本文の、相対パスのリンクの先 */
+export function relativeLinks(markdown: string): string[] {
+  const text = markdown.replace(/^(```|~~~)[\s\S]*?^\1/gm, '').replace(/`[^`\n]*`/g, '');
+  return [...text.matchAll(INLINE), ...text.matchAll(DEFINITION)]
+    .map(([, target]) => target.replace(/^<|>$/g, ''))
+    .filter((url) => url !== '' && !/^([a-z][a-z0-9+.-]*:|#)/i.test(url));
+}
+
+describe('文書のリンクの取り出し', () => {
+  it.each([
+    ['タイトルつき', '[説明](missing.md "タイトル")'],
+    ["単一引用符のタイトル", "[説明](missing.md 'タイトル')"],
+    ['括弧のタイトル', '[説明](missing.md (タイトル))'],
+    ['山かっこ', '[説明](<missing.md>)'],
+    ['画像', '![図](missing.md)'],
+    ['参照の形', '[説明][ref]\n\n[ref]: missing.md "タイトル"'],
+  ])('%s のリンクの先を取り出す', (_name, markdown) => {
+    expect(relativeLinks(markdown)).toEqual(['missing.md']);
+  });
+
+  it('外部の URL・ページ内のリンク・コードの中は取り出さない', () => {
+    expect(relativeLinks('[a](https://example.com) [b](#節) [c](mailto:x@example.com) `[d](missing.md)`\n\n```md\n[e](missing.md)\n```\n')).toEqual([]);
+  });
+});
 
 describe('文書のリンク', () => {
   it.each(documents)('%s の相対パスのリンクは、リポジトリにあるファイルを指す', (file) => {
-    const broken = relativeLinks(file).filter((url) => !existsSync(resolve(root, dirname(file), decodeURI(url.split('#')[0]))));
+    const links = relativeLinks(readFileSync(join(root, file), 'utf8'));
+    const broken = links.filter((url) => !existsSync(resolve(root, dirname(file), decodeURI(url.split('#')[0]))));
     expect(broken).toEqual([]);
   });
 });
