@@ -10,6 +10,7 @@ export function formatVerifyResult(result: VerifyResult): string {
     lines.push(`${ICON[r.status]} ${r.check}`);
     if (r.detail && r.status !== 'pass') lines.push(r.detail.replace(/^/gm, '    '));
   }
-  lines.push('', failed === 0 ? '合格' : `不合格（${failed} 件）`);
+  const skipped = result.results.some((r) => r.check === '品質コマンド' && r.status === 'skip');
+  lines.push('', `${failed === 0 ? '合格' : `不合格（${failed} 件）`}${skipped ? '（品質コマンドを実行していません）' : ''}`);
   return lines.join('\n');
 }

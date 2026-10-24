@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { runVerify } from '@loomake/kit';
+import { formatVerifyResult, runVerify } from '@loomake/kit';
 import { CHANGE, ledgerRow, reportJson, requirement, specMd, traceMd, vitestCommand, withProject } from './project.js';
 
 const specOnly = (root: string) => runVerify({ root, changeId: CHANGE, gate: 'spec-only' });
@@ -330,5 +330,29 @@ describe('要件モデルの整合性', () => {
     expect(result.ok).toBe(false);
     expect(check(result, '要件モデルの整合性')?.status).toBe('fail');
     expect(check(result, '要件モデルの整合性')?.detail).toContain('REQ-12');
+  });
+});
+
+describe('品質コマンドを省いたことの表示', () => {
+  const withReport = <T>(fn: (root: string) => T) =>
+    withProject({ config: { commands: { test: 'node -e "process.exit(1)"' } } }, (root) => {
+      mkdirSync(join(root, '.loomake'), { recursive: true });
+      writeFileSync(join(root, '.loomake', 'test-report.json'), reportJson(root, { 'tests/a.test.ts': [['[REQ-012] 動く', 'passed']] }));
+      return fn(root);
+    });
+
+  it('[REQ-191] --skip-commands の完了ゲートは、品質コマンドの skip の項目と最後の行で省いたことを示す', () => {
+    const r = withReport((root) => done(root, true));
+    expect(check(r, '品質コマンド')).toMatchObject({ status: 'skip' });
+    expect(check(r, '品質コマンド')?.detail).toContain('前回のテストのレポート');
+    expect(check(r, '品質コマンド')?.detail).toContain('--skip-commands を付けずに');
+    expect(r.ok).toBe(true);
+    expect(formatVerifyResult(r).split('\n').at(-1)).toContain('品質コマンドを実行していません');
+  });
+
+  it('[REQ-191] 品質コマンドを実行するときは、skip の項目を加えない', () => {
+    const r = withReport((root) => done(root));
+    expect(check(r, '品質コマンド')).toBeUndefined();
+    expect(formatVerifyResult(r).split('\n').at(-1)).not.toContain('品質コマンドを実行していません');
   });
 });

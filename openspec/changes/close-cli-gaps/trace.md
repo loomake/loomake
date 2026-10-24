@@ -9,6 +9,8 @@
 | REQ-193 | 2026-10-24 の品質評価の動作の指摘 | 機能 | run も壊れた設定ファイルを設定エラーにする | 反映済 | specs/run/spec.md |
 | REQ-194 | 2026-10-24 の品質評価の使いやすさの指摘 | 機能 | `--name=value` の形を受け付ける | 反映済 | specs/cli/spec.md |
 | REQ-195 | 2026-10-24 の品質評価の使いやすさの指摘 | 機能 | 打ち間違いに近い候補を示す | 反映済 | specs/cli/spec.md |
+| REQ-180 | bound-external-operations の REQ-180、確認事項 Q-01 の回答 | 非機能 | 外部操作の制限による停止を、使い方の誤りと区別する（変更） | 反映済 | specs/external-process-budget/spec.md |
+| REQ-182 | bound-external-operations の REQ-182、確認事項 Q-01 の回答 | 非機能 | run を始める前の制限エラーを実行時の失敗にする（変更） | 反映済 | specs/external-process-budget/spec.md |
 
 ## 確認事項
 

@@ -2,7 +2,7 @@
 
 ## 1. verify とエラーの型
 
-- [ ] 1.1 `--skip-commands` の項目と表示のテストで Red を確かめ、verify に「品質コマンド」の skip の項目を足して Green にする（REQ-191）
+- [x] 1.1 `--skip-commands` の項目と表示のテストで Red を確かめ、verify に「品質コマンド」の skip の項目を足して Green にする（REQ-191）
 - [ ] 1.2 外部操作の上限で止まったときの終了コードのテストで Red を確かめ、`RuntimeFailure` を足して CLI で終了コード 3 にする（REQ-192）
 - [ ] 1.3 壊れた設定ファイルでの run のテストで Red を確かめ、run の設定の読み込みを UsageError にする（REQ-193）
 

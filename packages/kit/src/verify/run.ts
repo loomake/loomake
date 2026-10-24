@@ -287,8 +287,12 @@ function checkCoverage(
 
 // ---------- 品質コマンド ----------
 // lint・typecheck・test の順に実行し、1 つ失敗しても残りを実行する（仮定 A-02）
+/** --skip-commands で省いたときの項目の detail */
+export const COMMANDS_SKIPPED = '--skip-commands で実行していません。テストの判定には前回のテストのレポートを使いました。完了の確認には --skip-commands を付けずに実行してください';
+
 function runCommands(root: string, config: LoomakeConfig, skip: boolean, record: Recorder, progress: (m: string) => void, timeoutMs?: number) {
-  if (skip) return;
+  // 省いたことを結果に残し、前回のレポートでの合格を、品質コマンドを実行した合格と見分けられるようにする（REQ-191）
+  if (skip) return record('品質コマンド', 'skip', COMMANDS_SKIPPED);
   const deadline = timeoutMs === undefined ? undefined : Date.now() + timeoutMs;
   const names = [...COMMAND_ORDER.filter((n) => n in config.commands), ...Object.keys(config.commands).filter((n) => !COMMAND_ORDER.includes(n))];
   for (const name of names) {

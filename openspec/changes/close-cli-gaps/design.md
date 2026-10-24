@@ -21,6 +21,8 @@ run を始めたあとの失敗は、これまでどおり記録に残して終�
 - 候補は、編集距離が 2 以下で最も近い 1 つを示す
 - 引数の解析は `node:util` の `parseArgs` を使わず、既存の解析に `=` の分割を足す。サブコマンドごとの日本語のエラーを保つため
 
+- `external-process-budget` は bound-external-operations で足す capability なので、archive は bound-external-operations を先に行う。この change の MODIFIED は、その archive のあとでないと反映できない
+
 ## Risks / Trade-offs
 
 終了コード 3 は新しい値なので、終了コード 2 を前提にした利用者のスクリプトは変わる。docs と CHANGELOG に書く。

@@ -28,6 +28,7 @@
 - `verify`: 品質コマンドを省いたことの表示。
 - `cli`: 実行時の失敗の終了コード、`--name=value` の形、打ち間違いの候補。
 - `run`: 壊れた設定ファイルの扱い。
+- `external-process-budget`: 制限による停止を、使い方の誤りではなく実行時の失敗として扱う（bound-external-operations の REQ-180・REQ-182 を変える）。
 
 ## Impact
 
