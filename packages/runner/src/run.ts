@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { parseTasks, type Task, type VerifyResult } from '@loomake/core';
 import { runRecord } from '@loomake/trace';
-import { TIMED_OUT, UsageError, assertChangeId, formatVerifyResult, loadConfig, runVerify, specFiles, toPosix } from '@loomake/kit';
+import { INTERRUPTED, TIMED_OUT, UsageError, assertChangeId, formatVerifyResult, loadConfig, runVerify, specFiles, toPosix } from '@loomake/kit';
 import { DEFAULT_ALLOWED_DOMAINS, assertEngineAvailable, runClaude, type EngineResult } from './engine.js';
 import { GitError, branchExists, dirtyFiles, git, gitConfig, isIgnored } from './git.js';
 import { APPROVAL_GUIDE, findEngineMove, findViolations, headState } from './guards.js';
@@ -419,6 +419,8 @@ async function runGate(ctx: RunContext, rec: Recorder): Promise<Stop | undefined
     rec.save(`${String(rec.step).padStart(2, '0')}-verify${fixes ? `-${fixes}` : ''}.json`, `${JSON.stringify(rec.lastVerify, null, 2)}\n`);
     if (rec.lastVerify.ok) break;
     restoreGateTasks();
+    // 品質コマンドが中断で止まったら、直しのエンジンを呼ばずに終わる（REQ-124）
+    if (rec.lastVerify.results.some((r) => r.detail === INTERRUPTED)) return { status: 'interrupted', reason: '中断されました', remaining: gateTasks };
     if (rec.lastVerify.results.some((r) => r.detail === TIMED_OUT)) return stopped('実行時間の上限に達しました');
     if (fixes >= ctx.runConfig.maxFixes) return stopped(`直しの回数の上限（${ctx.runConfig.maxFixes} 回）に達しました`);
     const stop = await callEngine(ctx, rec, buildPrompt(root, ctx.changeDir, '完了ゲートに合格するように直す。', rec.lastVerify));

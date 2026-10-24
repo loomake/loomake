@@ -40,21 +40,28 @@ const COMMAND_ORDER = ['lint', 'typecheck', 'test'];
 // spawnSync の timeout はシェルしか止めず、Windows ではテストのプロセスが残るため（fix-review-findings-2 の仮定 A-02）
 const TIMED_OUT_STATUS = 124;
 const TIMED_OUT_MARK = 'loomake: command timed out';
+// 中断（SIGINT・SIGTERM）で止めたときの終了コードと印。コマンドは別のプロセスグループで動くので、Ctrl-C は見張り役にしか届かない（stop-gate-on-interrupt の仮定 A-01）
+const INTERRUPTED_STATUS = 130;
+const INTERRUPTED_MARK = 'loomake: command interrupted';
 const KILL_TREE_ON_TIMEOUT = `
 const { spawn, spawnSync } = require('node:child_process');
 const [ms, cmd] = process.argv.slice(1);
 const win = process.platform === 'win32';
 const child = spawn(cmd, { shell: true, stdio: 'inherit', detached: !win });
-const timer = setTimeout(() => {
+const stop = (mark, status) => {
   if (win) spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore' });
   else try { process.kill(-child.pid, 'SIGKILL'); } catch {}
-  process.stderr.write('${TIMED_OUT_MARK}\\n');
-  process.exit(${TIMED_OUT_STATUS});
-}, Number(ms));
+  process.stderr.write(mark + '\\n');
+  process.exit(status);
+};
+const timer = setTimeout(() => stop('${TIMED_OUT_MARK}', ${TIMED_OUT_STATUS}), Number(ms));
+for (const signal of ['SIGINT', 'SIGTERM']) process.on(signal, () => stop('${INTERRUPTED_MARK}', ${INTERRUPTED_STATUS}));
 child.on('exit', (code) => { clearTimeout(timer); process.exit(code ?? 1); });
 `;
 /** 実行時間の上限で止めた品質コマンドの detail */
 export const TIMED_OUT = '実行時間の上限に達したので止めました';
+/** 中断で止めた品質コマンドの detail */
+export const INTERRUPTED = '中断されたので止めました';
 
 /** verify を実行して結果を返す。設定の誤りは UsageError を投げる */
 export function runVerify(options: VerifyOptions): VerifyResult {
@@ -315,6 +322,11 @@ function runCommands(root: string, config: LoomakeConfig, skip: boolean, record:
     if (left !== undefined && r.status === TIMED_OUT_STATUS && (r.stderr ?? '').includes(TIMED_OUT_MARK)) {
       record(`command: ${name}`, 'fail', TIMED_OUT);
       continue;
+    }
+    // 中断されたら、残りのコマンドは実行しない（REQ-124）
+    if (left !== undefined && r.status === INTERRUPTED_STATUS && (r.stderr ?? '').includes(INTERRUPTED_MARK)) {
+      record(`command: ${name}`, 'fail', INTERRUPTED);
+      return;
     }
     const out = `${r.stdout ?? ''}${r.stderr ?? ''}`.trim();
     record(`command: ${name}`, r.status === 0 ? 'pass' : 'fail', r.status === 0 ? '' : out.split('\n').slice(-30).join('\n'));

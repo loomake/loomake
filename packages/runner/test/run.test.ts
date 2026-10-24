@@ -3,7 +3,7 @@ import { chmodSync, existsSync, readFileSync, readdirSync, rmSync, writeFileSync
 import { dirname, join } from 'node:path';
 import { GATE_MARK, runRun, type RunOptions, type RunSummary } from '@loomake/runner';
 import { main } from '../../cli/src/main.js';
-import { traceMd } from '../../kit/test/project.js';
+import { INTERRUPT_SCRIPT, alive, traceMd } from '../../kit/test/project.js';
 import { CHANGE, makeRepo, type Repo } from './helpers.js';
 
 // git・node・verify のコマンドを何度も起動するので、Windows では 1 件に 10 秒を超えることがある
@@ -478,6 +478,26 @@ describe('中断', () => {
       expect(log(repo)[0]).toBe('run(c1): 1.1 一つ目のタスク（REQ-012）');
       expect(summary(repo)).toMatchObject({ status: 'interrupted', doneTasks: ['1.1 一つ目のタスク（REQ-012）'] });
       expect(tasksMd(repo)).toContain('- [ ] 1.2');
+    }));
+
+  // Windows では品質コマンドを別のプロセスグループにしないので、Ctrl-C がコマンドに届く。SIGINT をまねる手段もない（stop-gate-on-interrupt の仮定 A-02）
+  it.runIf(process.platform !== 'win32')('[REQ-124] 完了ゲートの品質コマンドの途中で中断されたら、コマンドを止め、エンジンを呼ばずに summary.json に中断を書く', () =>
+    withRepo(async (repo) => {
+      repo.write('interrupt.cjs', INTERRUPT_SCRIPT);
+      repo.write('loomake.config.json', JSON.stringify({ openspecValidate: false, commands: { test: 'node interrupt.cjs' } }));
+      repo.write('.gitignore', '.loomake/test-report.json\npids.json\nfinished.txt\n');
+      repo.git('add', '-A');
+      repo.git('commit', '-q', '-m', '中断する test コマンド');
+      repo.plan([{ write: { 'impl.txt': '実装\n' } }, {}]);
+      const start = Date.now();
+      const r = await run(repo);
+      expect(Date.now() - start).toBeLessThan(30_000);
+      expect(r.code).toBe(1);
+      // エンジンを呼んだのは 2 つのタスクだけで、完了ゲートの直しでは呼ばない
+      expect(repo.calls()).toHaveLength(2);
+      expect(summary(repo)).toMatchObject({ status: 'interrupted', reason: '中断されました', remainingTasks: ['3.1 `pnpm -s verify --change c1 --done` を通す'] });
+      const pids: number[] = JSON.parse(readFileSync(join(repo.root, 'pids.json'), 'utf8'));
+      expect(pids.filter(alive)).toEqual([]);
     }));
 });
 
