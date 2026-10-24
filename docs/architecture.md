@@ -52,7 +52,7 @@ CLI は本体パッケージ `loomake`（`packages/cli`）を 1 つ作り、各�
 
 ```mermaid
 flowchart LR
-  CLI["loomake<br>CLI 本体"] --> KIT["@loomake/kit<br>verify・init<br>templates/"]
+  CLI["loomake<br>CLI 本体"] --> KIT["@loomake/kit<br>verify・init・doctor<br>runtime/・templates/"]
   CLI --> CORE["@loomake/core<br>読み取り・JSON スキーマ<br>実行時依存ゼロ"]
   KIT --> CORE
   KIT -. "openspec validate を呼ぶ" .-> OS[OpenSpec CLI<br>外部]
@@ -67,6 +67,8 @@ flowchart LR
 ```
 
 各パッケージの実行時依存はこの矢印の範囲に限る（REQ-046・REQ-047・REQ-083・REQ-123）。OpenSpec CLI・Claude Code・gh CLI は依存ではなく、別に入れたものを `verify` と `run` が呼び出す。
+
+kit の中は、実行の基盤と機能に分けている（REQ-207）。`src/runtime/` には外部プロセスの監視・入力の上限・エラーの型・change のファイルの扱いを置き、機能を import しない。機能（`src/verify/`・`src/init/`・`src/doctor/`）は、自分のディレクトリ・`runtime/`・設定の読み込み（`verify/config.ts`）だけを import する。この向きは `tests/kit-layers.test.ts` が確かめる。runner も同じく、入口の `run.ts` と、段階ごとの処理（`src/run/`）、判断の規則（`src/run/decision-policy.ts`）に分けている。
 
 ```
 loomake/loomake            pnpm workspaces + changesets

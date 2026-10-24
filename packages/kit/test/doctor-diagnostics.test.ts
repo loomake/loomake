@@ -4,7 +4,7 @@ import { join, relative } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { describe, expect, it, vi } from 'vitest';
 import { runDoctor } from '../src/doctor/doctor.js';
-import * as processes from '../src/process.js';
+import * as processes from '../src/runtime/process.js';
 const windows = process.platform === 'win32';
 
 function fixture(action: (root: string, bin: string) => void) {
