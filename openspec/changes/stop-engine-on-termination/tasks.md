@@ -2,7 +2,7 @@
 
 ## 1. 信号
 
-- [ ] 1.1 SIGTERM・SIGHUP の smoke 検査で Red を確かめ、CLI でこの 2 つも中断として扱う（REQ-208）
+- [x] 1.1 SIGTERM・SIGHUP の smoke 検査で Red を確かめ、CLI でこの 2 つも中断として扱う（REQ-208）
 
 ## 2. 統合検証
 
