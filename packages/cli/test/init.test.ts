@@ -383,3 +383,52 @@ describe('Git の除外設定', () => {
     expect(r.files['.gitignore']).toBeUndefined();
   });
 });
+
+describe('実在する script に合わせた commands', () => {
+  const pkg = (scripts: Record<string, string>) => ({ 'package.json': JSON.stringify({ packageManager: 'pnpm@9.0.0', scripts }) });
+
+  it('[REQ-196] scripts に test だけがあれば、commands は test だけで、書かなかった名前を案内する', async () => {
+    const r = await runInit([], { files: pkg({ test: 'vitest run' }) });
+    expect(config(r).commands).toEqual({ test: 'pnpm test' });
+    expect(r.stdout).toContain('lint・typecheck');
+    expect(r.stdout).toContain('commands にも書いてください');
+  });
+
+  it('[REQ-196] scripts にすべてあれば、commands は 3 つで、案内しない', async () => {
+    const r = await runInit([], { files: pkg({ lint: 'eslint .', typecheck: 'tsc', test: 'vitest run' }) });
+    expect(config(r).commands).toEqual({ lint: 'pnpm lint', typecheck: 'pnpm typecheck', test: 'pnpm test' });
+    expect(r.stdout).not.toContain('commands にも書いてください');
+  });
+
+  it('[REQ-196] 空の script は、ないものとして扱う', async () => {
+    const r = await runInit([], { files: pkg({ lint: '', test: 'vitest run' }) });
+    expect(config(r).commands).toEqual({ test: 'pnpm test' });
+  });
+
+  it('[REQ-196] scripts がなければ、これまでどおり 3 つを書く', async () => {
+    const r = await runInit([], { files: { 'package.json': JSON.stringify({ packageManager: 'pnpm@9.0.0' }) } });
+    expect(config(r).commands).toEqual({ lint: 'pnpm lint', typecheck: 'pnpm typecheck', test: 'pnpm test' });
+  });
+});
+
+describe('使っているテストランナーの設定例', () => {
+  const deps = (devDependencies: Record<string, string>) => ({ 'package.json': JSON.stringify({ devDependencies }) });
+
+  it('[REQ-197] vitest を使っていれば、Vitest の設定例だけを表示する', async () => {
+    const r = await runInit([], { files: deps({ vitest: '^3.0.0' }) });
+    expect(r.stdout).toContain('Vitest（vitest.config.ts）');
+    expect(r.stdout).not.toContain('Jest（package.json の test スクリプト）');
+  });
+
+  it('[REQ-197] jest を使っていれば、Jest の設定例だけを表示する', async () => {
+    const r = await runInit([], { files: deps({ jest: '^29.0.0' }) });
+    expect(r.stdout).toContain('Jest（package.json の test スクリプト）');
+    expect(r.stdout).not.toContain('Vitest（vitest.config.ts）');
+  });
+
+  it('[REQ-197] どちらも使っていなければ、両方を表示する', async () => {
+    const r = await runInit();
+    expect(r.stdout).toContain('Vitest（vitest.config.ts）');
+    expect(r.stdout).toContain('Jest（package.json の test スクリプト）');
+  });
+});
