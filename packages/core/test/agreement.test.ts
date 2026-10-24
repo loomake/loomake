@@ -33,6 +33,7 @@ describe('要件と合意のモデル', () => {
     input.ledger[0]['状態'] = '未定';
     const result = createAgreement('trace.md', input);
     expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toMatchObject({ file: 'trace.md', line: 7 });
     expect(result.value.requirements).toEqual([]);
   });
 

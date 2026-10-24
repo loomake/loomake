@@ -144,10 +144,20 @@ describe('ブランチとタスク', () => {
       repo.write('earlier.txt', '前の実行\n');
       repo.git('add', '-A');
       repo.git('commit', '-q', '-m', '前の実行のコミット');
+      const previous = repo.git('rev-parse', 'HEAD');
       repo.git('switch', '-q', 'main');
+      const mainHead = repo.git('rev-parse', 'HEAD');
       repo.plan(passing);
-      await run(repo);
+      const result = await run(repo);
+      expect(result.code, result.stdout).toBe(0);
       expect(log(repo)).toContain('前の実行のコミット');
+      expect(repo.git('branch', '--show-current')).toBe('loomake/c1');
+      const implementation = repo.git('log', '--format=%H', '--grep', '^run(c1): 1.1', 'HEAD');
+      expect(implementation).toMatch(/^[a-f0-9]{40}$/);
+      expect(repo.git('rev-parse', `${implementation}^`)).toBe(previous);
+      expect(repo.git('show', `${implementation}:earlier.txt`)).toBe('前の実行');
+      expect(repo.git('show', `${implementation}:impl.txt`)).toBe('実装');
+      expect(repo.git('rev-parse', 'main')).toBe(mainHead);
     }));
 
   it('[REQ-096] 別のブランチから再開したら、loomake/<change-id> の tasks.md で完了済みのタスクを渡さない', () =>
@@ -200,7 +210,22 @@ describe('ブランチとタスク', () => {
 
   it('[REQ-098] 指示に、AGENTS.md・タスク・差分仕様・trace.md・2 つの決まりを含める', () =>
     withRepo(async (repo) => {
+      const read = (path: string) => readFileSync(join(repo.root, path), 'utf8');
+      const documents = {
+        'AGENTS.md': read('AGENTS.md') + '\n## appendix\n\nKeep the complete instructions.\n',
+        'openspec/changes/c1/specs/x/spec.md': read('openspec/changes/c1/specs/x/spec.md'),
+        'openspec/changes/c1/specs/nested/y/spec.md': read('openspec/changes/c1/specs/x/spec.md').replace('検査用の振る舞い', '別の検査用の振る舞い'),
+        'openspec/changes/c1/trace.md': read('openspec/changes/c1/trace.md') + '\n## appendix\n\nKeep the requirement sources.\n',
+      };
+      for (const [path, text] of Object.entries(documents)) repo.write(path, text);
+      repo.git('add', '-A');
+      repo.git('commit', '-qm', 'complete prompt fixture');
       const r = await run(repo, { dryRun: true });
+      expect(r.code, r.stdout).toBe(0);
+      for (const text of Object.values(documents)) expect(r.stdout).toContain(text);
+      expect(r.stdout).toContain('### specs/nested/y/spec.md');
+      expect(r.stdout).toContain('## 対象\n\n- [ ] 1.1 一つ目のタスク（REQ-012）');
+      expect(repo.calls()).toEqual([]);
       expect(r.stdout).toContain('テスト用の共通ルール。');
       expect(r.stdout).toContain('### specs/x/spec.md');
       expect(r.stdout).toContain('### Requirement: 検査用の振る舞い');
@@ -397,6 +422,8 @@ describe('止まる条件と報告', () => {
       expect(r.stdout).toContain('loomake run を止めました：エンジンが質問しました：二つ目で迷いました');
       expect(r.stdout).toContain('終えたタスク：\n  - 1.1 一つ目のタスク（REQ-012）');
       expect(r.stdout).toContain('最後の検査結果：なし');
+      expect(r.code).toBe(1);
+      expect(r.stdout).toContain('残ったタスク：\n  - 1.2 二つ目のタスク\n  - 3.1 `pnpm -s verify --change c1 --done` を通す');
       expect(summary(repo)).toMatchObject({
         status: 'stopped',
         doneTasks: ['1.1 一つ目のタスク（REQ-012）'],
@@ -407,6 +434,20 @@ describe('止まる条件と報告', () => {
 });
 
 describe('実行の記録', () => {
+  it('[REQ-117] 1つのタスクと完了ゲートの記録を同じ実行に保存する', () =>
+    withRepo(async (repo) => {
+      repo.plan([passing[0]]);
+      const result = await run(repo);
+      expect(result.code, result.stdout).toBe(0);
+      expect(repo.calls()).toHaveLength(1);
+      const dir = runDir(repo);
+      expect(readdirSync(dir)).toEqual(expect.arrayContaining(['01-output.json', '01-prompt.md', '01-verify.json', 'summary.json']));
+      expect(readFileSync(join(dir, '01-prompt.md'), 'utf8')).toBe(repo.calls()[0].prompt);
+      expect(JSON.parse(readFileSync(join(dir, '01-output.json'), 'utf8')).result).toBe('終えました');
+      expect(JSON.parse(readFileSync(join(dir, '01-verify.json'), 'utf8')).ok).toBe(true);
+      expect(summary(repo).status).toBe('completed');
+    }, { tasks: '- [ ] 1.1 一つ目のタスク（REQ-012）\n- [ ] 3.1 品質確認 <!-- loomake:gate=done -->\n' }));
+
   it('[REQ-117] 指示・出力・検査結果と summary.json を、何回目かが分かる名前で保存する', () =>
     withRepo(async (repo) => {
       repo.plan(passing);
@@ -682,6 +723,7 @@ describe('runnerの表示の保護', () => {
       const output = readFileSync(join(runDir(repo), '01-output.json'), 'utf8');
       for (const value of [...values, 'FAKE_PRIVATE_BODY', '-----BEGIN PRIVATE KEY-----']) expect(output).not.toContain(value);
       expect(JSON.parse(output).result).toContain('Authorization: Bearer ***');
+      expect(JSON.parse(output).result).toBe('***\n***\n***\n***\n***\nAuthorization: Bearer ***\n******');
       expect(output).toContain('***');
     }));
 
