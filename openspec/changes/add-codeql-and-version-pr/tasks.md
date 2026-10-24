@@ -3,7 +3,7 @@
 ## 1. 外部 Actions と CodeQL
 
 - [x] 1.1 サブパスつきの参照のテストで Red を確かめ、REQ-167 の検査をリポジトリと SHA で照合する形にする（REQ-167）
-- [ ] 1.2 CodeQL のワークフローのテストで Red を確かめ、codeql.yml と Action の記録を足す（REQ-200）
+- [x] 1.2 CodeQL のワークフローのテストで Red を確かめ、codeql.yml と Action の記録を足す（REQ-200）
 
 ## 2. 版を上げる PR
 

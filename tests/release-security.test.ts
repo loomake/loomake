@@ -64,3 +64,17 @@ describe('公開経路の供給網と資格情報', () => {
     expect(manifest.publishConfig.provenance).toBe(true);
   });
 });
+
+describe('コードの静的解析', () => {
+  it('[REQ-200] CodeQL のワークフローは PR・main・定期実行で JavaScript と TypeScript を解析し、書き込みは解析のジョブの security-events だけ', () => {
+    const workflow = read('codeql.yml');
+    expect(workflow).toMatch(/^ {2}pull_request:/m);
+    expect(workflow).toMatch(/^ {2}push:\n {4}branches: \[main\]/m);
+    expect(workflow).toMatch(/^ {2}schedule:/m);
+    expect(workflow).toContain('languages: javascript-typescript');
+    expect(workflow).toMatch(/^permissions:\n {2}contents: read\n/m);
+    expect([...workflow.matchAll(/^\s+([\w-]+): write$/gm)].map((m) => m[1])).toEqual(['security-events']);
+    expect(workflow).toMatch(/- uses: github\/codeql-action\/init@[a-f0-9]{40}/);
+    expect(workflow).toMatch(/- uses: github\/codeql-action\/analyze@[a-f0-9]{40}/);
+  });
+});

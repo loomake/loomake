@@ -1,6 +1,6 @@
 {
   "checkedOn": "2026-10-24",
-  "method": "GitHub connector fetch_commit at ref v4",
+  "method": "GitHub connector fetch_commit at ref v4。github/codeql-action は gh api repos/github/codeql-action/commits/v4（2026-10-24）",
   "actions": [
     {
       "repository": "actions/checkout",
@@ -19,6 +19,12 @@
       "ref": "v4",
       "sha": "b906affcce14559ad1aafd4ab0e942779e9f58b1",
       "url": "https://github.com/pnpm/action-setup/commit/b906affcce14559ad1aafd4ab0e942779e9f58b1"
+    },
+    {
+      "repository": "github/codeql-action",
+      "ref": "v4",
+      "sha": "9b3254085494b55a0f7c4c2b3d2d52cc712ce370",
+      "url": "https://github.com/github/codeql-action/commit/9b3254085494b55a0f7c4c2b3d2d52cc712ce370"
     }
   ]
 }
