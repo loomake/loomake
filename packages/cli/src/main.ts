@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { RuntimeFailure, UsageError, formatVerifyResult, runDoctor, runInit, runVerify } from '@loomake/kit';
 import { runRun } from '@loomake/runner';
-import { runRecord, runReport } from '@loomake/trace';
+import { runAgreement, runRecord, runReport } from '@loomake/trace';
 import { didYouMean, parseOptions } from './args.js';
 
 export type Io = {
@@ -20,7 +20,12 @@ const USAGE = 'loomake <init | verify | trace | run | doctor> [オプション]'
 const INIT_USAGE = 'loomake init [--codex] [--devcontainer]';
 const VERIFY_USAGE = 'loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]';
 const RUN_USAGE = 'loomake run --change <id> [--engine claude-code] [--dry-run] [--skip-permissions]';
-const TRACE_USAGE = 'loomake trace record --change <id> | loomake trace report --change <id> [--format md|json]';
+const TRACE_USAGE = [
+  'loomake trace record --change <id>',
+  '       loomake trace report --change <id> [--format md|json]',
+  '       loomake trace answer --change <id> --question <Q-ID> --answer <回答> --by <回答者> [--date YYYY-MM-DD]',
+  '       loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]',
+].join('\n');
 const DOCTOR_USAGE = 'loomake doctor';
 const COMMANDS = ['init', 'verify', 'trace', 'run', 'doctor'] as const;
 type Command = (typeof COMMANDS)[number];
@@ -33,7 +38,7 @@ const HELP = [
   'コマンド:',
   '  init     AGENTS.md・CLAUDE.md・loomake.config.json・Skill をプロジェクトに置く',
   '  verify   仕様ゲートと完了ゲートで、仕様・確認事項・テストを検査する',
-  '  trace    証拠を記録し（record）、検収レポートを出す（report）',
+  '  trace    証拠を記録し（record）、検収レポートを出す（report）。確認事項の回答（answer）と仮定の承認（approve）を書く',
   '  run      change のタスクをエンジンに 1 つずつ実装させ、完了ゲートを通して PR を作る',
   '  doctor   導入状態を調べ、足りない設定と直し方を表示する',
   '',
@@ -131,8 +136,10 @@ function verify(args: string[], io: Io): number {
 
 function trace(args: string[], io: Io): number {
   const [sub, ...rest] = args;
+  const subs = ['record', 'report', 'answer', 'approve'];
+  if (sub === 'answer' || sub === 'approve') return agreement(sub, rest, io);
   if (sub !== 'record' && sub !== 'report') {
-    throw new UsageError(sub ? `知らないサブコマンドです：${sub}${didYouMean(sub, ['record', 'report'])}` : 'record か report を指定してください');
+    throw new UsageError(sub ? `知らないサブコマンドです：${sub}${didYouMean(sub, subs)}` : 'record・report・answer・approve のどれかを指定してください');
   }
   const { values } = parseOptions(rest, { values: sub === 'report' ? ['--change', '--format'] : ['--change'] });
   const changeId = values.get('--change');
@@ -144,6 +151,16 @@ function trace(args: string[], io: Io): number {
   if (format === 'html') throw new UsageError('HTML の形式は次の版で対応します。いまは md か json を指定してください');
   if (format !== undefined && format !== 'md' && format !== 'json') throw new UsageError(`--format は md か json にしてください：${format}`);
   return runReport({ root: io.cwd, changeId, format: format ?? 'md', stdout: io.stdout });
+}
+
+// 確認事項の回答と仮定の承認を trace.md に書く（REQ-202・REQ-203）
+function agreement(kind: 'answer' | 'approve', args: string[], io: Io): number {
+  const target = kind === 'answer' ? '--question' : '--assumption';
+  const { values } = parseOptions(args, { values: ['--change', target, '--by', '--date', ...(kind === 'answer' ? ['--answer'] : [])] });
+  const changeId = values.get('--change');
+  const id = values.get(target);
+  if (!changeId || !id) throw new UsageError(`--change <id> と ${target} <ID> が必要です`);
+  return runAgreement({ root: io.cwd, changeId, kind, id, answer: values.get('--answer'), by: values.get('--by'), date: values.get('--date'), stdout: io.stdout });
 }
 
 function run(args: string[], io: Io): Promise<number> {

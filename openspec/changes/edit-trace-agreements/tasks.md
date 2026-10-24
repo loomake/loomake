@@ -6,8 +6,8 @@
 
 ## 2. コマンド
 
-- [ ] 2.1 `trace answer` のテストで Red を確かめ、trace と CLI に足す（REQ-202）
-- [ ] 2.2 `trace approve` のテストで Red を確かめ、trace と CLI に足す（REQ-203）
+- [x] 2.1 `trace answer` のテストで Red を確かめ、trace と CLI に足す（REQ-202）
+- [x] 2.2 `trace approve` のテストで Red を確かめ、trace と CLI に足す（REQ-203）
 
 ## 3. 統合検証
 
