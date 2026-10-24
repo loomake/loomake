@@ -11,7 +11,8 @@ process.exitCode = await main(process.argv.slice(2), {
   cwd: process.cwd(),
   stdout: (text) => console.log(text),
   stderr: (text) => console.error(text),
-  interactive: Boolean(process.stdin.isTTY),
+  // 型は boolean だが、端末でないときは undefined になる
+  interactive: (process.stdin.isTTY as boolean | undefined) === true,
   prompt: async (question) => {
     const rl = createInterface({ input: process.stdin, output: process.stdout });
     try {
