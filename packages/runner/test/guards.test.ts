@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { existsSync, readFileSync } from 'node:fs';
+import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { findViolations, runRun } from '@loomake/runner';
 import { CHANGE, makeRepo, type FakeStep, type Repo } from './helpers.js';
@@ -290,5 +290,40 @@ describe('エンジンによるコミットとブランチの切り替えの検�
     check({}, undefined, (r) => {
       expect(r.stdout).not.toContain('エンジンが HEAD かブランチを変えました');
       expect(r.repo.git('log', '--format=%s', '--reverse').split('\n')).toContain(`run(${CHANGE}): 1.1 一つ目のタスク（REQ-012）`);
+    }));
+});
+
+describe('git の設定とフックの変更の検出', () => {
+  const stopped = (r: Awaited<ReturnType<typeof runWith>>) => {
+    expect(r.code).toBe(1);
+    expect(r.stdout).toContain('エンジンが git の設定かフックを変えました');
+    expect(r.commits).toBe(1);
+    expect(readFileSync(join(r.repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [ ] 1.1');
+  };
+
+  it('[REQ-198] エンジンがフックを足したら、コミットせず、フックを実行せずに止まる', () =>
+    check({ write: { '.git/hooks/pre-commit': `#!/bin/sh\necho ran > hook-ran.txt\n` }, chmod: ['.git/hooks/pre-commit'] }, undefined, (r) => {
+      stopped(r);
+      expect(existsSync(join(r.repo.root, 'hook-ran.txt'))).toBe(false);
+      // run は書き換えを戻さない
+      expect(existsSync(join(r.repo.root, '.git/hooks/pre-commit'))).toBe(true);
+    }));
+
+  it('[REQ-198] エンジンが git の設定を変えたら、コミットせずに止まる', () =>
+    check({ git: [['config', 'core.hooksPath', 'my-hooks']] }, undefined, (r) => {
+      stopped(r);
+      expect(r.repo.git('config', '--get', 'core.hooksPath')).toBe('my-hooks');
+    }));
+
+  it('[REQ-198] run の前からあるフックは、run のコミットで動く', () =>
+    check({}, (repo) => {
+      const hook = join(repo.root, '.git/hooks/post-commit');
+      writeFileSync(hook, `#!/bin/sh\necho ran >> "${join(repo.base, 'post-commit.log')}"\n`);
+      chmodSync(hook, 0o755);
+      repo.write('setup.txt', '準備\n');
+    }, (r) => {
+      expect(r.stdout).not.toContain('エンジンが git の設定かフックを変えました');
+      expect(readFileSync(join(r.repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [x] 1.1');
+      expect(existsSync(join(r.repo.base, 'post-commit.log'))).toBe(true);
     }));
 });

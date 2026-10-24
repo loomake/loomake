@@ -1,3 +1,6 @@
+import { createHash } from 'node:crypto';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { join, relative, resolve } from 'node:path';
 import { runExternal } from '@loomake/kit';
 import { dirtyFiles, git } from './git.js';
 
@@ -112,4 +115,44 @@ export function findEngineMove(
       : []),
   ].join('\n');
   return { reason: `エンジンが HEAD かブランチを変えました（${label(before)} → ${label(after)}）`, report };
+}
+
+/** git の設定ファイルとフックのディレクトリの場所。`--git-path hooks` は core.hooksPath を反映する */
+const gitPath = (root: string, env: NodeJS.ProcessEnv, name: string) => resolve(root, git(root, env, ['rev-parse', '--git-path', name]).trim());
+
+const filesUnder = (dir: string): string[] =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? filesUnder(join(dir, e.name)) : [join(dir, e.name)])).sort();
+
+/** git の設定とフックの状態。エンジンを呼ぶ前後で比べる（REQ-198） */
+export type GitInternals = { config: string; hooks: string; digest: string };
+
+/** git の設定ファイルの中身と、フックのディレクトリのファイルの相対パスと中身から、比べるための SHA-256 を作る */
+export function gitInternals(root: string, env: NodeJS.ProcessEnv): GitInternals {
+  const config = gitPath(root, env, 'config');
+  const hooks = gitPath(root, env, 'hooks');
+  const hash = createHash('sha256');
+  hash.update(existsSync(config) ? readFileSync(config) : '');
+  if (existsSync(hooks) && statSync(hooks).isDirectory()) {
+    for (const file of filesUnder(hooks)) hash.update(`\0${relative(hooks, file)}\0`).update(readFileSync(file)).update(String(statSync(file).mode & 0o111));
+  }
+  return { config, hooks, digest: hash.digest('hex') };
+}
+
+/**
+ * エンジンが git の設定かフックを変えたかを調べる（REQ-198）。変えていれば、止まる理由と確かめる場所を返す。
+ * run は書き換えを戻さず、このあとの git add・git commit も実行しない
+ */
+export function findInternalsChange(root: string, env: NodeJS.ProcessEnv, before: GitInternals): { reason: string; report: string } | undefined {
+  const after = gitInternals(root, env);
+  if (after.digest === before.digest) return undefined;
+  const places = [...new Set([before.config, after.config, before.hooks, after.hooks])].map((p) => `  ${p}`);
+  return {
+    reason: 'エンジンが git の設定かフックを変えました',
+    report: [
+      'エンジンが git の設定かフックを変えました。run はフックや設定のコマンドを実行しないよう、git add・git commit をせずに止まります。書き換えは戻していません。',
+      '確かめる場所：',
+      ...places,
+      '意図した変更でなければ元に戻し、変更は作業ツリーに残っているので差分を確かめてから、もう一度 loomake run を実行してください。',
+    ].join('\n'),
+  };
 }

@@ -5,7 +5,7 @@ import { runRecord } from '@loomake/trace';
 import { remainingProcessTime, withProcessBudget, TIMED_OUT, RuntimeFailure, UsageError, assertChangeId, formatVerifyResult, loadConfig, runVerify, createInputReader, DOCUMENT_LIMITS } from '@loomake/kit';
 import { DEFAULT_ALLOWED_DOMAINS, assertEngineAvailable, runClaude, type EngineResult } from './engine.js';
 import { GitError, branchExists, dirtyFiles, git, gitConfig, isIgnored } from './git.js';
-import { APPROVAL_GUIDE, findEngineMove, findViolations, headState } from './guards.js';
+import { APPROVAL_GUIDE, findEngineMove, findInternalsChange, findViolations, gitInternals, headState } from './guards.js';
 import { createPr, findOpenPr, ghLoggedIn, prBody } from './pr.js';
 import { maskSecrets } from './mask.js';
 import { reusableEvidence } from './reuse.js';
@@ -384,6 +384,7 @@ async function callEngine(ctx: RunContext, rec: Recorder, prompt: string): Promi
   const timeoutMs = Math.min(rec.deadline - ctx.now().getTime(), remainingProcessTime() ?? Infinity);
   if (timeoutMs <= 0) return { status: 'stopped', reason: '実行時間の上限に達しました' };
   const before = headState(root, env);
+  const internals = gitInternals(root, env);
   const result = await runClaude({
     cwd: root,
     env,
@@ -402,6 +403,12 @@ async function callEngine(ctx: RunContext, rec: Recorder, prompt: string): Promi
   if (moved) {
     ctx.stdout(moved.report);
     return { status: stop?.status ?? 'stopped', reason: stop ? `${moved.reason}。${stop.reason}` : moved.reason };
+  }
+  // エンジンが書いたフックや filter を、run の git add・git commit で動かさない（REQ-198）
+  const changed = findInternalsChange(root, env, internals);
+  if (changed) {
+    ctx.stdout(changed.report);
+    return { status: stop?.status ?? 'stopped', reason: stop ? `${changed.reason}。${stop.reason}` : changed.reason };
   }
   return stop;
 }

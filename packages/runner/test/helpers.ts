@@ -12,6 +12,8 @@ export type FakeStep = {
   /** プロジェクトのルートからのパス → 中身 */
   write?: Record<string, string>;
   delete?: string[];
+  /** write のあとに実行権限を付けるパス（フックの書き換えの再現） */
+  chmod?: string[];
   /** write・delete のあとに実行する git のコマンドの引数（エンジン自身のコミットやブランチの切り替え） */
   git?: string[][];
   /** 標準出力の JSON の result に入れる文 */
@@ -23,7 +25,7 @@ export type FakeStep = {
 
 // 呼ばれた回数に応じて台本の手順を行い、引数と指示を記録する。台本が尽きたら何もしない
 const FAKE_CLAUDE = `#!/usr/bin/env node
-import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 const args = process.argv.slice(2);
@@ -36,6 +38,7 @@ const plan = JSON.parse(readFileSync(process.env.FAKE_PLAN, 'utf8'));
 const step = plan[calls] ?? {};
 if (step.sleepMs) await new Promise((r) => setTimeout(r, step.sleepMs));
 for (const [p, text] of Object.entries(step.write ?? {})) { mkdirSync(dirname(join(process.cwd(), p)), { recursive: true }); writeFileSync(join(process.cwd(), p), text); }
+for (const p of step.chmod ?? []) chmodSync(join(process.cwd(), p), 0o755);
 for (const p of step.delete ?? []) rmSync(join(process.cwd(), p), { force: true });
 for (const a of step.git ?? []) spawnSync('git', a, { stdio: 'ignore' });
 console.log(JSON.stringify({ type: 'result', result: step.output ?? '終えました' }));
