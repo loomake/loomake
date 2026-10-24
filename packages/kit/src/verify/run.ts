@@ -30,11 +30,11 @@ export type VerifyOptions = {
   changeId?: string;
   /** --spec-only なら 'spec-only'、--done なら 'done'。changeId を省略したときは使わない */
   gate?: 'spec-only' | 'done';
-  /** commands を実行しない。完了ゲートでは、すでにあるテストのレポートを読む（add-verify-cli の仮定 A-06） */
+  /** commands を実行しない。完了ゲートでは、すでにあるテストのレポートを読む */
   skipCommands?: boolean;
-  /** 進捗の表示先。--json のときも標準出力を汚さないよう、CLI は標準エラーを渡す（仮定 A-03） */
+  /** 進捗の表示先。--json のときも標準出力を汚さないよう、CLI は標準エラーを渡す */
   progress?: (message: string) => void;
-  /** 品質コマンドの実行時間の上限（ミリ秒、すべてのコマンドの合計）。上限を過ぎたコマンドは止めて不合格にする（fix-review-findings-2 の仮定 A-02） */
+  /** 品質コマンドの実行時間の上限（ミリ秒、すべてのコマンドの合計）。上限を過ぎたコマンドは止めて不合格にする */
   timeoutMs?: number;
 };
 
@@ -70,7 +70,7 @@ export function runVerify(options: VerifyOptions): VerifyResult {
     const spec = checkSpec(root, config, changeId, record, rel);
     if (spec && mode === 'done') {
       checkTasksAndPending(spec, record);
-      // 前回のレポートで合格させないよう、commands を実行する前に消す（仮定 A-05）
+      // 前回のレポートで合格させないよう、commands を実行する前に消す
       const reportPath = resolve(root, config.tests.report);
       if (!skipCommands) rmSync(reportPath, { force: true });
       runCommands(root, config, skipCommands, record, progress, options.timeoutMs);
@@ -116,7 +116,7 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   const model = createAgreement('trace.md', trace);
   const decision = evaluateAgreement(model.value);
   record('要件モデルの整合性', model.errors.length ? 'fail' : 'pass', formatErrors(model.errors));
-  // 解析できなかった trace.md では未回答の確認事項を数えられないので、エラーは不合格にする（harden-init-and-trace-check の仮定 A-02）
+  // 解析できなかった trace.md では未回答の確認事項を数えられないので、エラーは不合格にする
   record('trace.md の解析', parsed.errors.length ? 'fail' : 'pass', formatErrors(parsed.errors));
   if (ledger.length === 0) record('要件台帳', 'fail', 'trace.md に「## 要件台帳」の表がありません');
   else record('要件台帳', 'pass', `${ledger.length} 件`);
@@ -127,7 +127,7 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   const noSource = ledger.filter((r) => decision.missingSources.some((id) => id === r.ID));
   if (noSource.length) record('台帳の出典', 'fail', `出典が空：${noSource.map((r) => r.ID).join(', ')}`);
 
-  // ブロッキングな確認事項（ブロッキング列が yes のもの。仮定 A-04）
+  // ブロッキングな確認事項（ブロッキング列が yes のもの）
   const openBlocking = questions.filter((q) => decision.blockingQuestions.includes(q.ID));
   if (openBlocking.length) {
     record('ブロッキング確認事項', 'fail', openBlocking.map((q) => `${q.ID}（${q['関連']}）${q['質問']}`).join('\n'));
@@ -176,7 +176,7 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   return { reader, changeDir, trace, live, decision };
 }
 
-// 質問に「<change-id> の Q-xx と同じ質問」と書いた確認事項の回答を、参照先と比べる（add-shared-question-check の仮定 A-01・A-02）
+// 質問に「<change-id> の Q-xx と同じ質問」と書いた確認事項の回答を、参照先と比べる
 const SHARED_MARK = /([a-z0-9][a-z0-9-]*) の (Q-\d+) と同じ質問/;
 
 function checkSharedQuestions(root: string, config: LoomakeConfig, changeId: string, questions: Trace['questions'], record: Recorder, reader: InputReader) {
@@ -215,7 +215,7 @@ function checkSharedQuestions(root: string, config: LoomakeConfig, changeId: str
   else record('同じ確認事項の回答', 'pass', shared ? `${shared} 件が参照先と一致` : 'ほかの change と同じ確認事項なし');
 }
 
-// openspec validate（REQ-037）。CLI が無いときの扱いは仮定 A-01
+// openspec validate（REQ-037）。CLI が無いときは、openspecValidate が auto なら警告、true なら不合格にする
 function checkOpenspecValidate(root: string, config: LoomakeConfig, changeId: string, record: Recorder) {
   if (config.openspecValidate === false) return;
   let r;
@@ -286,7 +286,7 @@ function checkCoverage(
 }
 
 // ---------- 品質コマンド ----------
-// lint・typecheck・test の順に実行し、1 つ失敗しても残りを実行する（仮定 A-02）
+// lint・typecheck・test の順に実行し、1 つ失敗しても残りを実行する
 /** --skip-commands で省いたときの項目の detail */
 export const COMMANDS_SKIPPED = '--skip-commands で実行していません。テストの判定には前回のテストのレポートを使いました。完了の確認には --skip-commands を付けずに実行してください';
 

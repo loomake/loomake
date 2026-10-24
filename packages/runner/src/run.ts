@@ -18,7 +18,7 @@ export type RunOptions = {
   /** プロジェクトのルート（loomake.config.json のあるディレクトリ） */
   root: string;
   changeId: string;
-  /** 省くと claude-code（add-run-loop の仮定 A-08） */
+  /** 省くと claude-code */
   engine?: string;
   dryRun?: boolean;
   /** 権限確認なしで動かす。LOOMAKE_SANDBOX=1 のときだけ使える（REQ-121） */
@@ -54,18 +54,18 @@ const QUESTION = /^LOOMAKE-QUESTION:\s*(.*)$/m;
 
 const toPosix = (p: string) => p.split(sep).join('/');
 const stamp = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, 'Z').replace(/[-:]/g, '');
-/** 完了ゲートのタスクの印（REQ-100・REQ-136）。行のどこにあってもよい（clarify-run-phases-and-task-kinds の仮定 A-02） */
+/** 完了ゲートのタスクの印（REQ-100・REQ-136）。行のどこにあってもよい */
 export const GATE_MARK = '<!-- loomake:gate=done -->';
 const GATE_MARK_RE = /\s*<!--\s*loomake:gate=done\s*-->\s*/g;
 // エンジンへの指示・コミットのメッセージ・記録には、印を除いた文を使う
 const taskLabel = (t: Task) => t.text.replace(GATE_MARK_RE, ' ').trim();
 const hasGateMark = (t: Task) => new RegExp(GATE_MARK_RE.source).test(t.text);
-// 印のない旧書式：本文に verify と --done を含むタスク（add-run-loop の仮定 A-06、clarify-run-phases-and-task-kinds の仮定 A-01）
+// 印のない旧書式：本文に verify と --done を含むタスク
 const isLegacyGateTask = (t: Task) => !hasGateMark(t) && /verify/.test(t.text) && /--done/.test(t.text);
 // 完了ゲートを通すタスクはエンジンに渡さず、合格したときに run が完了にする
 const isGateTask = (t: Task) => hasGateMark(t) || isLegacyGateTask(t);
 
-/** loomake.config.json の run の設定。既定は直し 5 回・60 分（add-run-loop の仮定 A-16） */
+/** loomake.config.json の run の設定。既定は直し 5 回・60 分 */
 function loadRunConfig(root: string): RunConfig {
   // JSON として読めない設定は、verify と同じ日本語の設定エラーにする（REQ-193）
   loadConfig(root);
@@ -76,12 +76,12 @@ function loadRunConfig(root: string): RunConfig {
 
 const logLimits = (config: RunConfig) => ({ ...DEFAULT_LOG_LIMITS, maxRunBytes: config.maxLogBytes, maxHistoryBytes: config.maxHistoryBytes });
 
-/** コンテナの中かどうか（add-run-loop の仮定 A-14） */
+/** コンテナの中かどうか */
 export function inContainer(env: NodeJS.ProcessEnv, fileExists: (p: string) => boolean): boolean {
   return fileExists('/.dockerenv') || fileExists('/run/.containerenv') || ['REMOTE_CONTAINERS', 'CODESPACES', 'DEVCONTAINER'].some((k) => env[k]);
 }
 
-/** エンジンへの指示（REQ-098、add-run-loop の仮定 A-05） */
+/** エンジンへの指示（REQ-098） */
 export function buildPrompt(root: string, changeDir: string, target: string, failure?: VerifyResult): string {
   const reader = createInputReader();
   const read = (p: string) => (existsSync(p) ? reader.read(p) : '');
@@ -207,7 +207,7 @@ async function runLocked(options: RunOptions): Promise<number> {
   const rec = startRecording(ctx);
 
   try {
-    // PR の向き先は、run が change のブランチを作ったときのブランチ。git の設定に覚えて再開でも使う（add-run-pr の仮定 A-21、fix-review-findings の仮定 A-06）
+    // PR の向き先は、run が change のブランチを作ったときのブランチ。git の設定に覚えて再開でも使う
     if (!ctx.hasBranch) {
       git(ctx.root, ctx.env, ['switch', '-q', '-c', ctx.branch]);
       git(ctx.root, ctx.env, ['config', baseKey(ctx), ctx.startBranch]);
@@ -216,7 +216,7 @@ async function runLocked(options: RunOptions): Promise<number> {
     if (stop) return rec.finish(stop.status, stop.reason, stop.remaining);
     return recordAndOpenPr(ctx, rec);
   } catch (e) {
-    // 始めたあとの git と証拠の記録の失敗は、実行中の失敗として記録に残して止まる（REQ-137、clarify-run-phases-and-task-kinds の仮定 A-03）
+    // 始めたあとの git と証拠の記録の失敗は、実行中の失敗として記録に残して止まる（REQ-137）
     if (!(e instanceof GitError) && !(e instanceof UsageError) && !(e instanceof RuntimeFailure)) throw e;
     const { engineTasks, gateTasks } = ctx;
     const remaining = [...engineTasks, ...gateTasks].filter((t) => !rec.done.includes(taskLabel(t)));
@@ -252,12 +252,12 @@ async function prepare(options: RunOptions): Promise<RunContext | number> {
     stdout(`作業ツリーに未コミットの変更があるので、実装を始めませんでした。コミットしてから、もう一度実行してください。\n${dirty.map((l) => `  ${l}`).join('\n')}`);
     return 1;
   }
-  // テストのレポートがコミットに入ると、完了ゲートのあと作業ツリーが変わったままになる（fix-review-findings-2 の仮定 A-03）
+  // テストのレポートがコミットに入ると、完了ゲートのあと作業ツリーが変わったままになる
   if (!isIgnored(root, env, config.tests.report)) {
     stdout(`テストのレポート（${config.tests.report}）が .gitignore で除外されていないので、実装を始めませんでした。.gitignore に足してコミットしてから、もう一度実行してください。`);
     return 1;
   }
-  // change のブランチ（REQ-096、add-run-loop の仮定 A-04）。あれば先に切り替え、そのブランチの内容で検査してタスクを読む（fix-review-findings の仮定 A-03）
+  // change のブランチ（REQ-096）。あれば先に切り替え、そのブランチの内容で検査してタスクを読む
   const branch = `loomake/${changeId}`;
   const startBranch = git(root, env, ['rev-parse', '--abbrev-ref', 'HEAD']).trim();
   const hasBranch = branchExists(root, env, branch);
@@ -310,7 +310,7 @@ async function prepare(options: RunOptions): Promise<RunContext | number> {
   return { options, root, changeId, changeDir, env, now, stdout, progress, config, runConfig, branch, startBranch, hasBranch, tasksPath, tasksRel, engineTasks, gateTasks };
 }
 
-/** 実行の記録を作る。.gitignore で記録を git の追跡から外す（add-run-loop の仮定 A-24） */
+/** 実行の記録を作る。.gitignore で記録を git の追跡から外す */
 function startRecording(ctx: RunContext): Recorder {
   const { root, changeId, stdout } = ctx;
   const startedAt = ctx.now();
@@ -370,7 +370,7 @@ function engineStop(result: EngineResult): { status: RunSummary['status']; reaso
   if (result.timedOut) return { status: 'stopped', reason: '実行時間の上限に達しました' };
   const question = result.text.match(QUESTION);
   if (question) return { status: 'stopped', reason: `エンジンが質問しました：${question[1]}` };
-  // 失敗したエンジンの変更は完了にしない（fix-review-findings の仮定 A-02）
+  // 失敗したエンジンの変更は完了にしない
   if (result.exitCode !== 0) return { status: 'stopped', reason: `エンジンが終了コード ${result.exitCode ?? '（なし）'} で終わりました` };
   return undefined;
 }
@@ -443,7 +443,7 @@ async function runEngineTasks(ctx: RunContext, rec: Recorder): Promise<Stop | un
 
 /**
  * 完了ゲートと直し（REQ-100・REQ-104）。ゲートのタスクは検査のあいだだけ完了にし、エンジンを呼ぶ前に戻す。
- * run 自身が変えた tasks.md を、不正な直し方として見つけないため（fix-review-findings-2 の仮定 A-01）
+ * run 自身が変えた tasks.md を、不正な直し方として見つけないため
  */
 async function runGate(ctx: RunContext, rec: Recorder): Promise<Stop | undefined> {
   const { root, env, changeId, gateTasks, tasksRel } = ctx;

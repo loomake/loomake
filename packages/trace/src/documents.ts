@@ -8,7 +8,7 @@ export type EvidenceDocument = { path: string; sha256: string; content: string }
 
 const toPosix = (p: string) => p.split(sep).join('/');
 
-/** change の trace.md と差分仕様を読む。レポートが読むのはこの 2 種類だけ（REQ-127、bind-evidence-to-spec-snapshot の仮定 A-01） */
+/** change の trace.md と差分仕様を読む。レポートが読むのはこの 2 種類だけ（REQ-127） */
 export function readDocuments(changeDir: string): EvidenceDocument[] {
   const reader = createInputReader();
   const files = [join(changeDir, 'trace.md'), ...reader.walk(join(changeDir, 'specs')).filter((p) => p.endsWith('spec.md'))].filter((p) => existsSync(p));

@@ -12,7 +12,7 @@ export function git(root: string, env: NodeJS.ProcessEnv, args: string[]): strin
   return r.stdout;
 }
 
-/** 未コミットの変更。追跡していないファイルを含み、.gitignore で除外したものは含めない（add-run-loop の仮定 A-02） */
+/** 未コミットの変更。追跡していないファイルを含み、.gitignore で除外したものは含めない */
 export const dirtyFiles = (root: string, env: NodeJS.ProcessEnv) =>
   git(root, env, ['status', '--porcelain', '--untracked-files=all']).split('\n').filter(Boolean);
 

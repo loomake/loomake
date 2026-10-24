@@ -50,7 +50,7 @@ function git(root: string, args: string[]): string {
   return r.stdout;
 }
 
-/** 記録のファイル名の日時の部分：YYYYMMDDTHHMMSSZ（add-trace-record の仮定 A-03） */
+/** 記録のファイル名の日時の部分：YYYYMMDDTHHMMSSZ */
 const stamp = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, 'Z').replace(/[-:]/g, '');
 
 /** verify --done を実行し、結果を証拠として記録する。終了コード（合格 0・不合格や中止 1）を返す（REQ-066） */
@@ -64,7 +64,7 @@ export function runRecord(options: RecordOptions): number {
     throw new UsageError(`change「${changeId}」がありません（${config.openspecDir}/changes/${changeId}）`);
   }
 
-  // 追跡していないファイルも含め、.gitignore で除外したものは含めない（REQ-067、仮定 A-02）
+  // 追跡していないファイルも含め、.gitignore で除外したものは含めない（REQ-067）
   const dirtyFiles = () => git(root, ['status', '--porcelain', '--untracked-files=all']).split('\n').filter(Boolean);
   const dirty = dirtyFiles();
   if (dirty.length) {
@@ -80,7 +80,7 @@ export function runRecord(options: RecordOptions): number {
   const result = runVerify({ root, changeId, gate: 'done', progress, timeoutMs: options.timeoutMs });
   options.onVerify?.(result);
   // 検査のあいだに HEAD・作業ツリー・文書が変わったら、どの内容を検査したか分からないので記録しない（REQ-128）。
-  // .gitignore で除外したテストのレポートなどは、変更とみなさない（bind-evidence-to-spec-snapshot の仮定 A-02）
+  // .gitignore で除外したテストのレポートなどは、変更とみなさない
   const changed = [
     git(root, ['rev-parse', 'HEAD']).trim() !== sha && 'HEAD のコミット',
     dirtyFiles().length > 0 && '作業ツリーのファイル',

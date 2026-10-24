@@ -43,7 +43,7 @@ const readJson = (p: string): unknown => {
   }
 };
 
-/** package.json の packageManager、なければロックファイルで判定し、どれも無ければ npm（add-init-cli の仮定 A-01） */
+/** package.json の packageManager、なければロックファイルで判定し、どれも無ければ npm */
 export function detectPackageManager(root: string): PackageManager {
   const pkg = readJson(join(root, 'package.json'));
   const field = typeof pkg === 'object' && pkg !== null ? (pkg as { packageManager?: unknown }).packageManager : undefined;
@@ -104,7 +104,7 @@ export function configJson(pm: PackageManager, names: readonly string[] = Object
     $comment: 'Loomake の検証設定。AI は人の承認なしにここを緩めないこと（AGENTS.md 4章）',
     openspecDir: 'openspec',
     openspecValidate: 'auto',
-    // verify はテストランナーがこのファイルに書き出した JSON レポートを読む（add-init-cli の仮定 A-05）
+    // verify はテストランナーがこのファイルに書き出した JSON レポートを読む
     tests: { report: DEFAULT_TEST_REPORT },
     commands: Object.fromEntries(Object.entries(COMMANDS[pm]).filter(([n]) => names.includes(n))),
   };
@@ -140,7 +140,7 @@ function reportExamples(root: string): string[] {
 
 /**
  * .gitignore に path の行を足し、init の結果に出す 1 行を返す（REQ-133）。
- * 既存の行は変えない。前後の空白と先頭の / を除いて同じ行があれば足さない（improve-project-onboarding の仮定 A-02）
+ * 既存の行は変えない。前後の空白と先頭の / を除いて同じ行があれば足さない
  */
 function ensureIgnored(root: string, path: string): string {
   const p = join(root, '.gitignore');
@@ -163,7 +163,7 @@ const isSymlink = (p: string) => {
 };
 
 /**
- * 置き先が承諾なしに読み書きしてはいけない場所かを調べ、理由を返す（harden-init-and-trace-check の仮定 A-01）。
+ * 置き先が承諾なしに読み書きしてはいけない場所かを調べ、理由を返す。
  * 途中のディレクトリも含めて、リンク先の無いリンクと、リンクを通ってプロジェクトの外を指すものを拒む
  */
 function unsafeTarget(root: string, path: string): string | null {
@@ -223,7 +223,7 @@ export async function runInit(options: InitOptions): Promise<number> {
     lines.push(`  ${status[i] === 'new' ? '作成' : '上書き'}：${f.path}`);
   });
   // テストのレポートを git の追跡から外す。証拠の置き場（.loomake/evidence/）はコミットするので除外しない（REQ-133）。
-  // 実行ログの置き場は、loomake run が自分で除外する（improve-project-onboarding の仮定 A-01）
+  // 実行ログの置き場は、loomake run が自分で除外する
   const config = readJson(join(root, 'loomake.config.json')) as { tests?: { report?: unknown } } | undefined;
   const report = typeof config?.tests?.report === 'string' ? config.tests.report.replace(/^\.\//, '') : DEFAULT_TEST_REPORT;
   lines.push(`  ${ensureIgnored(root, report)}`);
@@ -242,11 +242,11 @@ export async function runInit(options: InitOptions): Promise<number> {
     stdout(`\npackage.json の scripts に ${missing.join('・')} がないので、loomake.config.json の commands に書きませんでした。script を足したら、commands にも書いてください。`);
   }
 
-  // package.json がなければ commands は npm の既定値のままなので、書き換えを促す（improve-init-guidance の仮定 A-02）
+  // package.json がなければ commands は npm の既定値のままなので、書き換えを促す
   if (!existsSync(join(root, 'package.json'))) {
     stdout('\npackage.json がありません。loomake.config.json の commands（lint・typecheck・test）を、このプロジェクトで使うコマンドに書き換えてください。');
   }
-  // 検査に使う版を固定するため、プロジェクトに入れるよう促す。package.json は書き換えない（improve-init-guidance の仮定 A-01）
+  // 検査に使う版を固定するため、プロジェクトに入れるよう促す。package.json は書き換えない
   if (!hasLoomake(root)) {
     stdout(`\nloomake を開発用の依存に足してください。npx loomake verify は、プロジェクトに入れた版を使います。\n  ${INSTALL[detectPackageManager(root)]}`);
   }

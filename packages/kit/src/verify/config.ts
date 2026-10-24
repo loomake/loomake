@@ -7,10 +7,10 @@ export { RuntimeFailure, UsageError } from '../errors.js';
 
 export type LoomakeConfig = {
   openspecDir: string;
-  /** OpenSpec CLI が無いとき、auto なら警告、true なら不合格、false なら validate を実行しない（add-verify-cli の仮定 A-01） */
+  /** OpenSpec CLI が無いとき、auto なら警告、true なら不合格、false なら validate を実行しない */
   openspecValidate: boolean | 'auto';
   tests: {
-    /** test コマンドが書き出すテストランナーの JSON レポート（add-verify-cli の仮定 A-05） */
+    /** test コマンドが書き出すテストランナーの JSON レポート */
     report: string;
   };
   /** lint・typecheck・test などの品質コマンド。値が空か null のコマンドは実行しない */
@@ -51,7 +51,7 @@ export function loadConfig(root: string): LoomakeConfig {
   };
 }
 
-/** change-id にパスの区切りを含めない。changes/ の外を指さないようにする（fix-review-findings-2 の仮定 A-05） */
+/** change-id にパスの区切りを含めない。changes/ の外を指さないようにする */
 export function assertChangeId(changeId: string): void {
   if (/[/\\]/.test(changeId) || changeId.includes('..')) {
     throw new UsageError(`change-id「${changeId}」には、パスの区切り（/・\\・..）を含められません`);

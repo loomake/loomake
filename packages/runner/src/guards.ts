@@ -7,9 +7,9 @@ import { dirtyFiles, git } from './git.js';
 /** 不正な直し方として見つけたもの */
 export type GuardFinding = { file: string; reason: string };
 
-// テストファイル（add-run-guards の仮定 A-17）
+// テストファイル
 const isTestFile = (f: string) => /\.(test|spec)\./.test(f) || /(^|\/)(test|tests|__tests__)\//.test(f);
-// skip・todo を足した行（A-17）。it.concurrent.skip のような修飾と、条件つきの skipIf・runIf も見る（fix-review-findings-2 の仮定 A-04）
+// skip・todo を足した行（A-17）。it.concurrent.skip のような修飾と、条件つきの skipIf・runIf も見る
 const SKIP = /\b(it|test|describe|suite)(\.\w+)*\.(skip|todo|skipIf|runIf)\b|\bx(it|test|describe)\(/;
 // lint・型・テストの設定ファイル（A-18）
 const isConfigFile = (f: string) => {
@@ -22,10 +22,10 @@ const isConfigFile = (f: string) => {
     /^(vitest\.config|vitest\.workspace|vite\.config|jest\.config)\./.test(name)
   );
 };
-// いまの仕様と change の文書（A-19、fix-review-findings-2 の仮定 A-01）。openspecDir は loomake.config.json の値
+// いまの仕様と change の文書（A-19）。openspecDir は loomake.config.json の値
 const openspecPrefix = (dir: string) => `${dir.replace(/\\/g, '/').replace(/^\.\//, '').replace(/\/+$/, '')}/`;
 
-// どの階層の package.json でも scripts を比べる（fix-review-findings の仮定 A-04）
+// どの階層の package.json でも scripts を比べる
 const isPackageJson = (f: string) => f.split('/').pop() === 'package.json';
 
 const scriptsOf = (root: string, env: NodeJS.ProcessEnv, rev: string, file: string): string => {
@@ -39,7 +39,7 @@ const scriptsOf = (root: string, env: NodeJS.ProcessEnv, rev: string, file: stri
 };
 
 /**
- * エンジンの変更を index に載せ、HEAD との差分から不正な直し方を探す（REQ-109〜REQ-111、仮定 A-20）。
+ * エンジンの変更を index に載せ、HEAD との差分から不正な直し方を探す（REQ-109〜REQ-111）。
  * 見つけたら、その差分を返す。変更は index に載ったままなので、呼び出し側で戻すかコミットする
  */
 export function findViolations(root: string, env: NodeJS.ProcessEnv, openspecDir = 'openspec'): { findings: GuardFinding[]; diff: string } {
@@ -71,7 +71,7 @@ export function findViolations(root: string, env: NodeJS.ProcessEnv, openspecDir
   return { findings, diff };
 }
 
-/** 止まったときに、人が承認するための手順（add-run-guards の確認事項 Q-07） */
+/** 止まったときに、人が承認するための手順 */
 export const APPROVAL_GUIDE = [
   '変更はコミットせずに作業ツリーに残しました。',
   '承認するなら、差分を確かめたうえで tasks.md のそのタスクを完了にし、自分でコミットしてから、もう一度 loomake run を実行してください。',

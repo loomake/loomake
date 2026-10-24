@@ -5,7 +5,7 @@ export type ParseError = { file: string; line: number; message: string };
 
 export type ParseResult<T> = { value: T; errors: ParseError[] };
 
-/** 要件 ID の形式（`REQ-` と 3 桁以上の数字。trace.md の仮定 A-01） */
+/** 要件 ID の形式（`REQ-` と 3 桁以上の数字） */
 export const REQ_ID = /REQ-\d{3,}/g;
 
 /** 行末の CRLF・CR を LF にそろえて、行に分ける */

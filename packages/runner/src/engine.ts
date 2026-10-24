@@ -10,7 +10,7 @@ export { DEFAULT_MAX_OUTPUT_BYTES } from './config.js';
 export const ENGINES = ['claude-code'] as const;
 export type EngineName = (typeof ENGINES)[number];
 
-/** 権限確認なしで動かすときに、通信を許可しておくドメインの既定（add-run-loop の確認事項 Q-04） */
+/** 権限確認なしで動かすときに、通信を許可しておくドメインの既定 */
 export const DEFAULT_ALLOWED_DOMAINS = ['registry.npmjs.org', 'github.com', 'api.github.com', 'objects.githubusercontent.com', 'api.anthropic.com'];
 
 export type EngineResult = {
@@ -60,7 +60,7 @@ export function assertEngineAvailable(engine: string, env: NodeJS.ProcessEnv): a
 export function claudeArgs(commands: string[], skipPermissions: boolean): string[] {
   const base = ['-p', '--output-format', 'json'];
   if (skipPermissions) return [...base, '--dangerously-skip-permissions'];
-  // ふだんは、ファイルの読み書きと commands の実行だけを許可する（add-run-loop の確認事項 Q-05）
+  // ふだんは、ファイルの読み書きと commands の実行だけを許可する
   const tools = ['Read', 'Edit', 'Write', 'Glob', 'Grep', ...commands.map((c) => `Bash(${c}:*)`)];
   return [...base, '--permission-mode', 'acceptEdits', '--allowedTools', ...tools];
 }

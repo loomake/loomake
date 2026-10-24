@@ -46,7 +46,7 @@ export type ReportOptions = {
 
 const toPosix = (p: string) => p.split(sep).join('/');
 
-/** 進行中の change を先に、なければ archive の <日付>-<change-id> を探す（add-trace-report の仮定 A-05） */
+/** 進行中の change を先に、なければ archive の <日付>-<change-id> を探す */
 function findChange(changesDir: string, changeId: string, reader: InputReader): string | undefined {
   const active = join(changesDir, changeId);
   if (changeId !== 'archive' && existsSync(join(active, 'trace.md'))) return active;
@@ -60,7 +60,7 @@ function findChange(changesDir: string, changeId: string, reader: InputReader): 
     .find((d) => existsSync(join(d, 'trace.md')));
 }
 
-// 読めない記録があれば、どのファイルかを示して止める（fix-review-findings-2 の仮定 A-06）
+// 読めない記録があれば、どのファイルかを示して止める
 function readEvidence(root: string, file: string, change: string, reader: InputReader): Evidence {
   let value: unknown;
   try {
@@ -74,7 +74,7 @@ function readEvidence(root: string, file: string, change: string, reader: InputR
   return value as Evidence;
 }
 
-/** 記録した日時がいちばん新しい証拠の記録（add-trace-report の仮定 A-06） */
+/** 記録した日時がいちばん新しい証拠の記録 */
 function latestEvidence(root: string, dir: string, change: string, reader: InputReader): Evidence | undefined {
   let latest: Evidence | undefined;
   for (const entry of reader.entries(dir)) {
@@ -180,7 +180,7 @@ const cell = (s: string) => (s === '' ? '' : s.replace(/\|/g, '\\|'));
 const table = (head: string[], rows: string[][]) =>
   [`| ${head.join(' | ')} |`, `|${head.map(() => '---').join('|')}|`, ...rows.map((r) => `| ${r.map(cell).join(' | ')} |`)].join('\n');
 
-/** レポートを Markdown にする。作った日時は入れない（REQ-085、仮定 A-08） */
+/** レポートを Markdown にする。作った日時は入れない（REQ-085） */
 export function formatReportMarkdown(r: Report): string {
   const list = (ids: string[]) => (ids.length ? ids.join('、') : 'なし');
   const attention =

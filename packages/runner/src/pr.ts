@@ -6,7 +6,7 @@ import type { Evidence } from '@loomake/trace';
 const isWindows = process.platform === 'win32';
 const quote = (a: string) => (isWindows ? `"${a.replace(/"/g, '""')}"` : a);
 
-/** gh CLI があり、ログインしているか（REQ-116、add-run-pr の仮定 A-23） */
+/** gh CLI があり、ログインしているか（REQ-116） */
 export function ghLoggedIn(root: string, env: NodeJS.ProcessEnv): boolean {
   const r = runExternal('gh', ['auth', 'status'], { cwd: root, env, shell: isWindows });
   return !r.error && r.status === 0;
@@ -18,7 +18,7 @@ function section(md: string, heading: string): string {
   return m ? m[1].trim() : '';
 }
 
-/** PR の本文（REQ-115、add-run-pr の仮定 A-22） */
+/** PR の本文（REQ-115） */
 export function prBody(root: string, changeDir: string, evidencePath: string): string {
   const proposal = createInputReader().read(join(changeDir, 'proposal.md'));
   const evidence = JSON.parse(createInputReader(JSON_LIMITS).read(join(root, evidencePath))) as Evidence;
