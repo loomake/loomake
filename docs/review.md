@@ -998,3 +998,11 @@ mainのc8cd4d8と、18ファイルの競合を解消して統合した。事前�
 統合後の完了ゲートは全827件・lint・型・OpenSpec・要件対応が成功した。配布物の宣言する下限はmainに合わせてNode22.12とし、公式アーカイブをチェックサムと照合したLinux ARM64版で、通信拒否下の確認4件も成功した。根拠は[統合記録](../openspec/changes/isolate-run-decisions/merge-results.json)に保存した。
 
 点数とScenarioの確認件数は、前節までのレビュー時点の評価として残す。統合後のScenarioを再照合した結果や、別OSの実行成功として扱わない。品質改善ループの一時停止は維持し、今回の作業はPRの競合解消を対象とした。
+
+## 継続レビュー：マージ後のテンプレートとCLIの対応
+
+97e61baの実装を対象に、AGENTS.mdと要件変換スキルの23シナリオ、CLIとNode22の版宣言の13シナリオを精査した。テスト名のREQ-IDだけでなく、入力の準備とassertionを読み、全838件が成功した同じ作業コピーのレポートと照合した。36件の対応をscenarios.jsonへ記録した。31件は以前の表で未確認、5件は後続変更で追加されたScenarioである。根拠は[テンプレートの確認結果](../openspec/changes/audit-scenario-evidence/post-merge-template-review-results.json)と[CLIの確認結果](../openspec/changes/audit-scenario-evidence/post-merge-cli-review-results.json)に保存した。
+
+CLIの使い方の誤りについては、既存試験が終了コード2と日本語をassertしていても、対応するSourceのREQ-192が試験名になかったため、確認済みにしなかった。外部操作の期限によるCLI失敗も未確認に残した。Node22のCIジョブについて確認したのは記述であり、GitHub上での実行成功ではない。
+
+全体のScenario監査は、正常なREMOVED Requirementsの解析で停止している。ここで示した36件は部分的な照合結果であり、以前の401件から単純に差し引いた件数や、マージ後の全体件数は示さない。全15項目の点数は据え置く。削除の節を扱う仕様への追記案は確認待ちであり、実装はまだ変更していない。
