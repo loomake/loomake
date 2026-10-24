@@ -40,6 +40,12 @@ describe('値をとるオプションの書き方', () => {
     expect(r.stderr).not.toContain('知らないオプション');
   });
 
+  it('[REQ-194] 等号の形では、-- で始まる値もそのまま値として渡す', async () => {
+    const r = await withProject({}, (root) => run(root, 'verify', '--change=--x', '--spec-only'));
+    expect(r.stderr).not.toContain('値を続けてください');
+    expect(r.stderr).toContain('change-id「--x」');
+  });
+
   it('[REQ-194] --change= のように値が空なら、値を続けるよう示して終了コード 2', async () => {
     const r = await withProject({}, (root) => run(root, 'verify', '--change=', '--spec-only'));
     expect(r.code).toBe(2);

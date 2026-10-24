@@ -30,7 +30,6 @@ const COMMANDS = ['init', 'verify', 'trace', 'run', 'doctor'] as const;
 type Command = (typeof COMMANDS)[number];
 const COMMAND_USAGE: Record<Command, string> = { init: INIT_USAGE, verify: VERIFY_USAGE, trace: TRACE_USAGE, run: RUN_USAGE, doctor: DOCTOR_USAGE };
 // 値を取るオプション。--change=<id> の形も受け付ける（REQ-041、improve-cli-help の仮定 A-01）
-const VALUE_OPTIONS = ['--change', '--engine', '--format'];
 
 // 端末での幅。全角の文字は 2 桁と数え、オプションの説明の桁をそろえる
 const width = (s: string) => [...s].reduce((n, c) => n + (c.charCodeAt(0) > 0xff ? 2 : 1), 0);
@@ -104,11 +103,8 @@ const version = () => (JSON.parse(readFileSync(new URL('../package.json', import
 
 /** CLI の本体。終了コード（合格 0・不合格 1・使い方の誤り 2・実行時の失敗 3）を返す（REQ-041・REQ-192） */
 export async function main(argv: string[], io: Io): Promise<number> {
-  const [command, ...given] = argv;
-  const args = given.flatMap((a) => {
-    const m = a.match(/^(--[a-z-]+)=([\s\S]*)$/);
-    return m && VALUE_OPTIONS.includes(m[1]) ? [m[1], m[2]] : [a];
-  });
+  // --name=value の形は、サブコマンドごとの parseOptions が扱う（REQ-194）
+  const [command, ...args] = argv;
   if (isHelp(command)) {
     io.stdout(HELP);
     return 0;
