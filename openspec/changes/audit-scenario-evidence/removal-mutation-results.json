@@ -1,0 +1,64 @@
+{
+  "sourceCommit": "846aa35",
+  "cases": [
+    {
+      "id": "control",
+      "exitCode": 0,
+      "total": 36,
+      "passed": 36,
+      "failed": 0,
+      "failures": [],
+      "before": null,
+      "after": null
+    },
+    {
+      "id": "M-REMOVED",
+      "exitCode": 1,
+      "total": 36,
+      "passed": 32,
+      "failed": 4,
+      "failures": [
+        "削除指示を含む差分仕様 [REQ-188] 削除とADDEDの混在では有効なScenarioのIDと内容ハッシュを保つ",
+        "削除指示を含む差分仕様 [REQ-188] 削除とMODIFIEDの混在では有効なScenarioのIDと内容ハッシュを保つ",
+        "削除指示を含む差分仕様 [REQ-188] 削除指示だけの文書は空の一覧を返す",
+        "削除指示を含む差分仕様 [REQ-188] 削除指示に残った古いScenarioを一覧に含めない"
+      ],
+      "before": "removedSection = /^## REMOVED Requirements\\s*$/.test(lines[start]);",
+      "after": "removedSection = false;"
+    },
+    {
+      "id": "M-NORMAL",
+      "exitCode": 1,
+      "total": 36,
+      "passed": 33,
+      "failed": 3,
+      "failures": [
+        "削除指示を含む差分仕様 [REQ-188] Requirementsの通常要件にScenarioがなければ拒否する",
+        "削除指示を含む差分仕様 [REQ-188] ADDED Requirementsの通常要件にScenarioがなければ拒否する",
+        "削除指示を含む差分仕様 [REQ-188] MODIFIED Requirementsの通常要件にScenarioがなければ拒否する"
+      ],
+      "before": "if (removedSection) {",
+      "after": "if (removedSection || starts.length === 0) {"
+    },
+    {
+      "id": "M-EMPTY",
+      "exitCode": 1,
+      "total": 36,
+      "passed": 34,
+      "failed": 2,
+      "failures": [
+        "削除指示を含む差分仕様 [REQ-188] 要件も削除指示もない文書を有効な削除と混同しない #0",
+        "削除指示を含む差分仕様 [REQ-188] 要件も削除指示もない文書を有効な削除と混同しない #1"
+      ],
+      "before": "required(rows.length > 0 || removedRequirements > 0,",
+      "after": "required(true,"
+    }
+  ],
+  "directory": "/tmp/loomake-removal-mutations-w3p4rjfg",
+  "originalSourceUnchanged": true,
+  "testSourceUnchanged": true,
+  "inputs": {
+    "scriptSha256": "3955fe0ffc31ab037de9ea656ce8114e3df62cb61a333c2cd20d804279081cab",
+    "testSha256": "4b9d89bde6b3c19867fba52f6e74c69968f001226a7328233e8b491b24dcd4fd"
+  }
+}

@@ -5,7 +5,7 @@
     {
       "id": "SCN-b9ad949e3299a59455c1",
       "status": "reviewed",
-      "scenarioSha256": "a00fd7ead4cd1713b8fe7ba0c5caa1c469a1a51668fb4b60a163d0616723a2e9",
+      "scenarioSha256": "50ec0a1bce0775095c3538b1fc399b682a3a8dbf2c5d2d4ab7be2c82f7fc719a",
       "reason": "同名の2Requirementとコード例内の見出しを入力し、2件だけで別IDになることをassertする。",
       "sources": [
         "REQ-188"
@@ -14,14 +14,14 @@
         {
           "file": "tests/scenario-audit.test.ts",
           "contains": "別Requirementの同名を分け、コード例を数えない",
-          "sha256": "0081fbabce3363fc49dece2bc2cd3fcf7e710bab573d3241d7c49cd9d683b19f"
+          "sha256": "4b9d89bde6b3c19867fba52f6e74c69968f001226a7328233e8b491b24dcd4fd"
         }
       ]
     },
     {
       "id": "SCN-d941fcf41715eadf0a76",
       "status": "reviewed",
-      "scenarioSha256": "f59f2e7c0039ad4c96afe22abd53f58361db817ef69e9783d3c412adff0e7b69",
+      "scenarioSha256": "387c824afcf3c3dfe02c0fdb218a881af48f2d07aab27f2d50de6d00aaf16a40",
       "reason": "行移動でIDと内容ハッシュを保ち、規則本文・コード例の変更でハッシュが変わることをassertする。",
       "sources": [
         "REQ-188"
@@ -30,12 +30,12 @@
         {
           "file": "tests/scenario-audit.test.ts",
           "contains": "行の移動は同一性を保ち、規則の変更はハッシュを変える",
-          "sha256": "0081fbabce3363fc49dece2bc2cd3fcf7e710bab573d3241d7c49cd9d683b19f"
+          "sha256": "4b9d89bde6b3c19867fba52f6e74c69968f001226a7328233e8b491b24dcd4fd"
         },
         {
           "file": "tests/scenario-audit.test.ts",
           "contains": "規則のコード例の変更も検出し",
-          "sha256": "0081fbabce3363fc49dece2bc2cd3fcf7e710bab573d3241d7c49cd9d683b19f"
+          "sha256": "4b9d89bde6b3c19867fba52f6e74c69968f001226a7328233e8b491b24dcd4fd"
         }
       ]
     },
@@ -51,7 +51,7 @@
         {
           "file": "tests/scenario-audit.test.ts",
           "contains": "IDの一致だけでは候補で、確認済みにしない",
-          "sha256": "0081fbabce3363fc49dece2bc2cd3fcf7e710bab573d3241d7c49cd9d683b19f"
+          "sha256": "4b9d89bde6b3c19867fba52f6e74c69968f001226a7328233e8b491b24dcd4fd"
         }
       ]
     },
@@ -67,7 +67,7 @@
         {
           "file": "tests/scenario-audit.test.ts",
           "contains": "を成功した一部だけで覆い隠さない",
-          "sha256": "0081fbabce3363fc49dece2bc2cd3fcf7e710bab573d3241d7c49cd9d683b19f"
+          "sha256": "4b9d89bde6b3c19867fba52f6e74c69968f001226a7328233e8b491b24dcd4fd"
         }
       ]
     },
@@ -83,7 +83,7 @@
         {
           "file": "tests/scenario-audit.test.ts",
           "contains": "未確認と行番号・理由をMarkdownへ残す",
-          "sha256": "0081fbabce3363fc49dece2bc2cd3fcf7e710bab573d3241d7c49cd9d683b19f"
+          "sha256": "4b9d89bde6b3c19867fba52f6e74c69968f001226a7328233e8b491b24dcd4fd"
         }
       ]
     },
@@ -99,7 +99,7 @@
         {
           "file": "tests/scenario-audit.test.ts",
           "contains": "循環と存在しない置換を拒否する",
-          "sha256": "0081fbabce3363fc49dece2bc2cd3fcf7e710bab573d3241d7c49cd9d683b19f"
+          "sha256": "4b9d89bde6b3c19867fba52f6e74c69968f001226a7328233e8b491b24dcd4fd"
         }
       ]
     },
@@ -185,45 +185,125 @@
     },
     {
       "id": "SCN-3353a549975d76d62bd9",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "3e40198365add1b9dc6ff548453f56534a7c936542050d516a8742553ac538a3",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "親が出力を継承する子を起動して先に終了する実プロセスを作り、親のstatus=0、子の死亡、3秒以内の復帰をassertする。Linuxの結果でありWindowsの実行成功とは扱わない。",
+      "sources": [
+        "REQ-181"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/process.test.ts",
+          "contains": "[REQ-181] 親が先に終わっても",
+          "sha256": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca"
+        }
+      ]
     },
     {
       "id": "SCN-244a2cddce75cc51b209",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "699388f613b6116ca2a50d3ccd51b6426066e996bb5af5d3c65926fa1d8494dd",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "子から実際に監視役へSIGINTを送り、ProcessLimitErrorのkind=interruptedと、SIGTERMを無視する子の死亡をassertする。Linuxでの信号検証である。",
+      "sources": [
+        "REQ-181"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/process.test.ts",
+          "contains": "[REQ-181] 監視役へのSIGINT",
+          "sha256": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca"
+        }
+      ]
     },
     {
       "id": "SCN-cbc7f7b5874ad10a9d1f",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "c196e62664e361f24115c2e0ad2aee573566de5c67cf3de505a76e2e7556a156",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "3秒眠る代替openspecを500msの操作期限で止め、verify.ok=false、openspec validateのstatus=failと時間上限の詳細をassertする。不在による警告で成功とは扱わない。",
+      "sources": [
+        "REQ-183"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/external-budget.test.ts",
+          "contains": "[REQ-183] OpenSpec検証の時間切れ",
+          "sha256": "2526e2b8662dc95fc98b9c20260119778f5ad2eb3ec187b9f1b232a24b3736ac"
+        }
+      ]
     },
     {
       "id": "SCN-7751d2d9b41fc069c9d2",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "969a3d3a40b5c10526b036e7da748cdc84ba9d78ee201cf35080a0b500437864",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "探索先へ親を指す実際のリンクを作り、リンク名backを示す例外をassertする。specsの循環でもverify・trace・promptが同じUsageErrorで止まることをassertする。Sourceの対応はREQ-170の直接試験で確認する。",
+      "sources": [
+        "REQ-170"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/input.test.ts",
+          "contains": "[REQ-170] 親へ戻るリンクをたどらない",
+          "sha256": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985"
+        },
+        {
+          "file": "tests/input-boundaries.test.ts",
+          "contains": "[REQ-172] specsの循環リンク",
+          "sha256": "89a368ec8c39e79bd883da212b897401371958751a3dba23ddc136ec71861829"
+        }
+      ]
     },
     {
       "id": "SCN-77c14e4c47cd71acf968",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "29264b95a36e0aad881f088cabdd0cae16b4e4d6ec1e2e66be06ec6959537fc6",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "項目数を2に縮めた境界で2項目を受け付け3項目を拒否し、深さ1では拒否・2では受理することをassertする。上限を含む日本語の例外も照合する。既定4096項目を実際に列挙した結果ではない。",
+      "sources": [
+        "REQ-170"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/input.test.ts",
+          "contains": "[REQ-170] 項目数の上限ちょうど",
+          "sha256": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985"
+        },
+        {
+          "file": "packages/kit/test/input.test.ts",
+          "contains": "[REQ-170] 深さの上限を超える",
+          "sha256": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985"
+        }
+      ]
     },
     {
       "id": "SCN-5e003f73a8c2a62143cb",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "c3a19b2477440dbe764a094e32021c10b0111078ba09ae1a622396511e1775e2",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "日本語あいの2文字を6バイトの上限ちょうどで読み取り、5バイトの上限では拒否することをassertする。",
+      "sources": [
+        "REQ-171"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/input.test.ts",
+          "contains": "[REQ-171] UTF-8のバイト数で境界",
+          "sha256": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985"
+        }
+      ]
     },
     {
       "id": "SCN-65f51c8eec943aac88bf",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "c6fa40b9710c9cdd41c3c5dade1981d34d57982a3538f14964220382bf4f80a5",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "4バイトと5バイトの2ファイルを同じreaderで読み、8バイトの合計上限で2つ目を拒否して合計と上限を示すことをassertする。",
+      "sources": [
+        "REQ-171"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/input.test.ts",
+          "contains": "[REQ-171] 各ファイルが小さくても",
+          "sha256": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985"
+        }
+      ]
     },
     {
       "id": "SCN-1e3dd10fac4b0851f971",
@@ -233,9 +313,24 @@
     },
     {
       "id": "SCN-bef2a7c042d8803de34c",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "ce2de649955f72cd5bf2734e2c42c419b54b2916bbab742114425e4a134a1159",
-      "reason": "対応候補のassertionの内容は未精査"
+      "reason": "64MiBを超える疎な証拠と、各45MiBで合計128MiBを超える3つの証拠を与え、runReportがそれぞれ個別・合計上限の例外で止まり、合格レポートを返さないことをassertする。",
+      "sources": [
+        "REQ-172"
+      ],
+      "tests": [
+        {
+          "file": "tests/input-boundaries.test.ts",
+          "contains": "[REQ-172] JSONの証拠も64MiB",
+          "sha256": "89a368ec8c39e79bd883da212b897401371958751a3dba23ddc136ec71861829"
+        },
+        {
+          "file": "tests/input-boundaries.test.ts",
+          "contains": "[REQ-172] 個別には64MiB以内でも証拠の合計",
+          "sha256": "89a368ec8c39e79bd883da212b897401371958751a3dba23ddc136ec71861829"
+        }
+      ]
     },
     {
       "id": "SCN-762eea79c2bdc036757f",
@@ -4954,9 +5049,19 @@
     },
     {
       "id": "SCN-64857130727489dfb863",
-      "status": "unreviewed",
-      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
-      "scenarioSha256": "0d023e8314058b73e308a321f3d2331f72d7e8bdad5ef04b4d01c8b1f751fe80"
+      "status": "reviewed",
+      "scenarioSha256": "0d023e8314058b73e308a321f3d2331f72d7e8bdad5ef04b4d01c8b1f751fe80",
+      "reason": "CLIのrunの準備中に実際のGit操作を期限で止め、終了コード3、loomake runの日本語の停止理由、使い方を表示しないこと、記録が作られないことをassertする。",
+      "sources": [
+        "REQ-192"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/external-budget.test.ts",
+          "contains": "[REQ-192][REQ-182] run の準備中に git",
+          "sha256": "2526e2b8662dc95fc98b9c20260119778f5ad2eb3ec187b9f1b232a24b3736ac"
+        }
+      ]
     },
     {
       "id": "SCN-d8fc5de06e1bf65834fb",
@@ -5051,27 +5156,54 @@
     },
     {
       "id": "SCN-4624fc6a8d7d0780a0ce",
-      "status": "unreviewed",
-      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
-      "scenarioSha256": "09d03a0ffa7f48de84f3ba6787deb4f71d0b497263a2d715ffe1d597c853dad2"
+      "status": "reviewed",
+      "scenarioSha256": "09d03a0ffa7f48de84f3ba6787deb4f71d0b497263a2d715ffe1d597c853dad2",
+      "reason": "共有350ms予算で操作間の時間を累積し、期限後にファイルを作るコマンドを呼んでも起動せず、開始マーカーが存在しないことをassertする。新しい予算外の操作は成功する。",
+      "sources": [
+        "REQ-180"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/process.test.ts",
+          "contains": "[REQ-180][REQ-182] 操作間で残り時間を共有",
+          "sha256": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca"
+        }
+      ]
     },
     {
       "id": "SCN-b20eb1125b7c0b730194",
-      "status": "unreviewed",
-      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
-      "scenarioSha256": "f628b434c42cf10d8b725813624c1af60db52203fc6e77f25c895a68a061e0b8"
+      "status": "reviewed",
+      "scenarioSha256": "f628b434c42cf10d8b725813624c1af60db52203fc6e77f25c895a68a061e0b8",
+      "reason": "SIGTERMを無視する実プロセスを200ms期限で止め、3秒以内にProcessLimitErrorとなることをassertする。多バイトstdoutとstderrの合計出力ではkind=outputと返す合計4096バイト以内をassertする。",
+      "sources": [
+        "REQ-180"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/process.test.ts",
+          "contains": "[REQ-180][REQ-181] 終わらない子を期限",
+          "sha256": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca"
+        },
+        {
+          "file": "packages/kit/test/process.test.ts",
+          "contains": "[REQ-180] 合計出力をバイト数",
+          "sha256": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca"
+        }
+      ]
     },
     {
       "id": "SCN-ad5cf50a9bb3641f5884",
-      "status": "unreviewed",
-      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
-      "scenarioSha256": "3c6d596b0f999e4f304093eb4caafdf12dfff093f6748f794f986f15ef1cbd3e"
+      "status": "superseded",
+      "scenarioSha256": "3c6d596b0f999e4f304093eb4caafdf12dfff093f6748f794f986f15ef1cbd3e",
+      "reason": "relax-commit-push-budgetで1操作の期限の例外を変更した。変更後の共有予算の規則と同じ停止条件を、明示した差分仕様のScenarioで確認する。",
+      "replacement": "SCN-913c922eba379cbde67e"
     },
     {
       "id": "SCN-418897b6484b2b6e8eff",
-      "status": "unreviewed",
-      "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。",
-      "scenarioSha256": "2cbc0be109d261ce6dae599b455281001b3e5b86b98fe5de974e9c92d39f0ed0"
+      "status": "superseded",
+      "scenarioSha256": "2cbc0be109d261ce6dae599b455281001b3e5b86b98fe5de974e9c92d39f0ed0",
+      "reason": "relax-commit-push-budgetで1操作の期限の例外を変更した。変更後の共有予算の規則と同じ停止条件を、明示した差分仕様のScenarioで確認する。",
+      "replacement": "SCN-d145be14bb46d8431d90"
     },
     {
       "id": "SCN-8fe96410ddc145f6b382",
@@ -5542,6 +5674,86 @@
           "file": "tests/monorepo.test.ts",
           "contains": "[REQ-142] CI に、Node 22.12.0",
           "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+        }
+      ]
+    },
+    {
+      "id": "SCN-4a8af4574dcf5fe9f778",
+      "status": "reviewed",
+      "scenarioSha256": "dc12b29a6b7b41ca5fdc630c70adddd8457d59817aa624d5065e5e484c75d01a",
+      "reason": "REMOVEDとADDED・MODIFIEDを前後両方の順序で入力し、有効なScenarioが1件だけで、ID・内容ハッシュ・Sourceが削除指示のない対照と一致することをassertする。",
+      "sources": [
+        "REQ-188"
+      ],
+      "tests": [
+        {
+          "file": "tests/scenario-audit.test.ts",
+          "contains": "削除と",
+          "sha256": "4b9d89bde6b3c19867fba52f6e74c69968f001226a7328233e8b491b24dcd4fd"
+        }
+      ]
+    },
+    {
+      "id": "SCN-daff42a2ec486c46899f",
+      "status": "reviewed",
+      "scenarioSha256": "0bf399a3910d39e2576d99990f58b5247940b4b4c6494840d1461409cbbf16a7",
+      "reason": "Reason・Migration・Sourceを持つ削除指示だけを入力し、例外ではなく空配列を返すことをassertする。",
+      "sources": [
+        "REQ-188"
+      ],
+      "tests": [
+        {
+          "file": "tests/scenario-audit.test.ts",
+          "contains": "削除指示だけの文書",
+          "sha256": "4b9d89bde6b3c19867fba52f6e74c69968f001226a7328233e8b491b24dcd4fd"
+        }
+      ]
+    },
+    {
+      "id": "SCN-85e7d3ab4d79fd576fe1",
+      "status": "reviewed",
+      "scenarioSha256": "e09ea4b8bbd0484a5f98306bcd5bb6bb85e52fa867a09224e14df892486c26b2",
+      "reason": "通常仕様・ADDED・MODIFIEDの3形式でScenarioのない要件を入力し、いずれもScenario欠落の例外をassertする。",
+      "sources": [
+        "REQ-188"
+      ],
+      "tests": [
+        {
+          "file": "tests/scenario-audit.test.ts",
+          "contains": "の通常要件にScenarioがなければ",
+          "sha256": "4b9d89bde6b3c19867fba52f6e74c69968f001226a7328233e8b491b24dcd4fd"
+        }
+      ]
+    },
+    {
+      "id": "SCN-d145be14bb46d8431d90",
+      "status": "reviewed",
+      "scenarioSha256": "96b1d12fe51b905d80bc18007b9d24b8d0e1dd24a082303deb396e37a1c0fa68",
+      "reason": "ロック取得のGitを代替コマンドで停止させ、RuntimeFailureでありUsageErrorではないこと、実際に停止地点へ到達したこと、HEAD不変・エンジン呼出なし・実行記録なしをassertする。",
+      "sources": [
+        "REQ-182"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/external-budget.test.ts",
+          "contains": "[REQ-182] ロック取得のGitが止まったら",
+          "sha256": "2526e2b8662dc95fc98b9c20260119778f5ad2eb3ec187b9f1b232a24b3736ac"
+        }
+      ]
+    },
+    {
+      "id": "SCN-913c922eba379cbde67e",
+      "status": "reviewed",
+      "scenarioSha256": "59feb6134dbf85e418141def230ec70fab40b99f2628e38677cf1d3dd3775d6e",
+      "reason": "実装後のpushを30秒眠らせ、共有8秒予算で終了コード1・停止summary・実装と証拠の保持・PR検索未実行をassertする。通常の再実行が同じ証拠を再利用しPR1件となることもassertする。",
+      "sources": [
+        "REQ-182"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/external-budget.test.ts",
+          "contains": "[REQ-182] pushの期限後に",
+          "sha256": "2526e2b8662dc95fc98b9c20260119778f5ad2eb3ec187b9f1b232a24b3736ac"
         }
       ]
     }
