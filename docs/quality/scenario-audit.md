@@ -1,0 +1,369 @@
+# Scenarioと試験の対応
+
+確認済み 44、置換 2、未確認 314、無効 0 / 全360件
+
+REQ-IDの一致は候補です。対応理由はレビュー上の判断で、試験内容の十分さや外部環境の成功を自動で保証しません。
+
+
+| 仕様の場所 | Requirement / Scenario | 状態 | 理由と対応試験 |
+|---|---|---|---|
+| [openspec/changes/audit-scenario-evidence/specs/scenario-evidence-audit/spec.md:12](../../openspec/changes/audit-scenario-evidence/specs/scenario-evidence-audit/spec.md#L12) | Scenarioの一覧と同一性 / 同名とコードブロック | reviewed | 同名の2Requirementとコード例内の見出しを入力し、2件だけで別IDになることをassertする。<br>tests/scenario-audit.test.ts: Scenarioの同一性 [REQ-188] 別Requirementの同名を分け、コード例を数えない |
+| [openspec/changes/audit-scenario-evidence/specs/scenario-evidence-audit/spec.md:16](../../openspec/changes/audit-scenario-evidence/specs/scenario-evidence-audit/spec.md#L16) | Scenarioの一覧と同一性 / 内容が変わる | reviewed | 行移動でIDと内容ハッシュを保ち、規則本文・コード例の変更でハッシュが変わることをassertする。<br>tests/scenario-audit.test.ts: Scenarioの同一性 [REQ-188] 行の移動は同一性を保ち、規則の変更はハッシュを変える<br>tests/scenario-audit.test.ts: Scenarioの同一性 [REQ-188] 規則のコード例の変更も検出し、例のSourceを混同しない |
+| [openspec/changes/audit-scenario-evidence/specs/scenario-evidence-audit/spec.md:25](../../openspec/changes/audit-scenario-evidence/specs/scenario-evidence-audit/spec.md#L25) | 対応のレビューと成功の根拠 / IDだけがある | reviewed | 成功したREQ一致の実行だけを与え、候補1件と未確認、全体不合格をassertする。<br>tests/scenario-audit.test.ts: 試験との対応の根拠 [REQ-189] IDの一致だけでは候補で、確認済みにしない |
+| [openspec/changes/audit-scenario-evidence/specs/scenario-evidence-audit/spec.md:29](../../openspec/changes/audit-scenario-evidence/specs/scenario-evidence-audit/spec.md#L29) | 対応のレビューと成功の根拠 / 選んだ試験に失敗や未実行がある | reviewed | 選択に一致する成功とfailed/pending/todo/skippedを混在させ、いずれも無効となることをassertする。<br>tests/scenario-audit.test.ts: 試験との対応の根拠 [REQ-189] failedを成功した一部だけで覆い隠さない<br>tests/scenario-audit.test.ts: 試験との対応の根拠 [REQ-189] pendingを成功した一部だけで覆い隠さない<br>tests/scenario-audit.test.ts: 試験との対応の根拠 [REQ-189] todoを成功した一部だけで覆い隠さない<br>tests/scenario-audit.test.ts: 試験との対応の根拠 [REQ-189] skippedを成功した一部だけで覆い隠さない |
+| [openspec/changes/audit-scenario-evidence/specs/scenario-evidence-audit/spec.md:38](../../openspec/changes/audit-scenario-evidence/specs/scenario-evidence-audit/spec.md#L38) | 不足と更新の報告 / 未確認が残る | reviewed | 未レビューの行を与え、集計とMarkdownの状態・行番号・名前が残ることをassertする。<br>tests/scenario-audit.test.ts: 不足と置換の表示 [REQ-190] 未確認と行番号・理由をMarkdownへ残す |
+| [openspec/changes/audit-scenario-evidence/specs/scenario-evidence-audit/spec.md:42](../../openspec/changes/audit-scenario-evidence/specs/scenario-evidence-audit/spec.md#L42) | 不足と更新の報告 / 置き換えが循環する | reviewed | 自分自身と存在しないIDを置換先にし、無効となることをassertする。<br>tests/scenario-audit.test.ts: 不足と置換の表示 [REQ-190] 循環と存在しない置換を拒否する |
+| [openspec/changes/bound-engine-output/specs/run/spec.md:8](../../openspec/changes/bound-engine-output/specs/run/spec.md#L8) | エンジンの出力予算 / 標準出力が上限を超える | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/changes/bound-engine-output/specs/run/spec.md:12](../../openspec/changes/bound-engine-output/specs/run/spec.md#L12) | エンジンの出力予算 / 標準エラーが上限を超える | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/changes/bound-engine-output/specs/run/spec.md:16](../../openspec/changes/bound-engine-output/specs/run/spec.md#L16) | エンジンの出力予算 / 複数バイト文字の途中 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/changes/bound-engine-output/specs/run/spec.md:25](../../openspec/changes/bound-engine-output/specs/run/spec.md#L25) | 出力予算の設定と停止結果 / 設定した上限で停止する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/changes/bound-engine-output/specs/run/spec.md:29](../../openspec/changes/bound-engine-output/specs/run/spec.md#L29) | 出力予算の設定と停止結果 / 不正な設定 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/changes/bound-external-operations/specs/external-process-budget/spec.md:12](../../openspec/changes/bound-external-operations/specs/external-process-budget/spec.md#L12) | 期限と出力を監視する外部操作 / 残り時間を使い切った | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/changes/bound-external-operations/specs/external-process-budget/spec.md:16](../../openspec/changes/bound-external-operations/specs/external-process-budget/spec.md#L16) | 期限と出力を監視する外部操作 / 子が終わらないか出力が多すぎる | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/changes/bound-external-operations/specs/external-process-budget/spec.md:25](../../openspec/changes/bound-external-operations/specs/external-process-budget/spec.md#L25) | 監視対象の子プロセスの停止 / 親が先に終了する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/changes/bound-external-operations/specs/external-process-budget/spec.md:29](../../openspec/changes/bound-external-operations/specs/external-process-budget/spec.md#L29) | 監視対象の子プロセスの停止 / 監視中に中断する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/changes/bound-external-operations/specs/external-process-budget/spec.md:38](../../openspec/changes/bound-external-operations/specs/external-process-budget/spec.md#L38) | runから証拠とPRまでの共有予算 / pushが終わらない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 10 件 |
+| [openspec/changes/bound-external-operations/specs/external-process-budget/spec.md:42](../../openspec/changes/bound-external-operations/specs/external-process-budget/spec.md#L42) | runから証拠とPRまでの共有予算 / 準備中のGitが終わらない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 10 件 |
+| [openspec/changes/bound-external-operations/specs/external-process-budget/spec.md:47](../../openspec/changes/bound-external-operations/specs/external-process-budget/spec.md#L47) | runから証拠とPRまでの共有予算 / 品質コマンドの期限で止まる | unreviewed | 対応候補のassertionの内容は未精査<br>候補 10 件 |
+| [openspec/changes/bound-external-operations/specs/external-process-budget/spec.md:56](../../openspec/changes/bound-external-operations/specs/external-process-budget/spec.md#L56) | verifyとtraceの接続と互換性 / OpenSpecの検証が終わらない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 7 件 |
+| [openspec/changes/bound-input-resources/specs/bounded-input/spec.md:12](../../openspec/changes/bound-input-resources/specs/bounded-input/spec.md#L12) | 上限のあるディレクトリ探索 / 循環した探索先 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/changes/bound-input-resources/specs/bounded-input/spec.md:16](../../openspec/changes/bound-input-resources/specs/bounded-input/spec.md#L16) | 上限のあるディレクトリ探索 / 項目数と深さの境界 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/changes/bound-input-resources/specs/bounded-input/spec.md:25](../../openspec/changes/bound-input-resources/specs/bounded-input/spec.md#L25) | 上限のあるファイル読み取り / 文字数とバイト数が異なる | unreviewed | 対応候補のassertionの内容は未精査<br>候補 11 件 |
+| [openspec/changes/bound-input-resources/specs/bounded-input/spec.md:29](../../openspec/changes/bound-input-resources/specs/bounded-input/spec.md#L29) | 上限のあるファイル読み取り / 複数ファイルの合計が超える | unreviewed | 対応候補のassertionの内容は未精査<br>候補 11 件 |
+| [openspec/changes/bound-input-resources/specs/bounded-input/spec.md:38](../../openspec/changes/bound-input-resources/specs/bounded-input/spec.md#L38) | verify・trace・runの共通の入力境界 / 過大な文書で実行する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 14 件 |
+| [openspec/changes/bound-input-resources/specs/bounded-input/spec.md:42](../../openspec/changes/bound-input-resources/specs/bounded-input/spec.md#L42) | verify・trace・runの共通の入力境界 / 過大な証拠を報告する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 14 件 |
+| [openspec/changes/bound-input-resources/specs/bounded-input/spec.md:52](../../openspec/changes/bound-input-resources/specs/bounded-input/spec.md#L52) | エンジンへ渡す指示全体の上限 / 失敗情報で指示が過大になる | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/changes/bound-run-records/specs/run-record-budget/spec.md:12](../../openspec/changes/bound-run-records/specs/run-record-budget/spec.md#L12) | 記録の設定と開始前の履歴確認 / 履歴が予算を超える | unreviewed | 対応候補のassertionの内容は未精査<br>候補 18 件 |
+| [openspec/changes/bound-run-records/specs/run-record-budget/spec.md:21](../../openspec/changes/bound-run-records/specs/run-record-budget/spec.md#L21) | 管理する記録の合計量と保護 / エンジン出力の保存で合計を超える | unreviewed | 対応候補のassertionの内容は未精査<br>候補 10 件 |
+| [openspec/changes/bound-run-records/specs/run-record-budget/spec.md:30](../../openspec/changes/bound-run-records/specs/run-record-budget/spec.md#L30) | 予約した停止情報と保存不可の説明 / summaryが大きすぎる | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/changes/bound-run-records/specs/run-record-budget/spec.md:34](../../openspec/changes/bound-run-records/specs/run-record-budget/spec.md#L34) | 予約した停止情報と保存不可の説明 / 保存先が使えない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/changes/clarify-doctor-diagnostics/specs/doctor/spec.md:8](../../openspec/changes/clarify-doctor-diagnostics/specs/doctor/spec.md#L8) | 品質scriptの静的な確認 / scriptがない | reviewed | npm/pnpmの4形でtest scriptを欠くmanifestを与え、終了コード1とscripts.testの案内をassertする。<br>packages/kit/test/doctor-diagnostics.test.ts: 品質コマンドと診断範囲 [REQ-184] npm testのscript欠落を検出する<br>packages/kit/test/doctor-diagnostics.test.ts: 品質コマンドと診断範囲 [REQ-184] npm run testのscript欠落を検出する<br>packages/kit/test/doctor-diagnostics.test.ts: 品質コマンドと診断範囲 [REQ-184] pnpm testのscript欠落を検出する<br>packages/kit/test/doctor-diagnostics.test.ts: 品質コマンドと診断範囲 [REQ-184] pnpm run testのscript欠落を検出する |
+| [openspec/changes/clarify-doctor-diagnostics/specs/doctor/spec.md:12](../../openspec/changes/clarify-doctor-diagnostics/specs/doctor/spec.md#L12) | 品質scriptの静的な確認 / scriptの本文がある | reviewed | 有効なscriptの確認、未確認の範囲、実行印が作られずファイル内容も不変であることをassertする。<br>packages/kit/test/doctor-diagnostics.test.ts: 品質コマンドと診断範囲 [REQ-184][REQ-185] 実行せず変更せず、存在と未確認の範囲を分ける |
+| [openspec/changes/clarify-doctor-diagnostics/specs/doctor/spec.md:21](../../openspec/changes/clarify-doctor-diagnostics/specs/doctor/spec.md#L21) | 解釈範囲と未確認の表示 / シェルで組み立てるコマンド | reviewed | 代入・連結・filterを含む各入力で注意と未確認が表示され、実行ファイル不存在の問題と断定しないことをassertする。<br>packages/kit/test/doctor-diagnostics.test.ts: 品質コマンドと診断範囲 [REQ-185] CI=1 pnpm testは未確認の注意とし、不存在と断定しない<br>packages/kit/test/doctor-diagnostics.test.ts: 品質コマンドと診断範囲 [REQ-185] pnpm test &amp;&amp; echo okは未確認の注意とし、不存在と断定しない<br>packages/kit/test/doctor-diagnostics.test.ts: 品質コマンドと診断範囲 [REQ-185] pnpm --filter app testは未確認の注意とし、不存在と断定しない<br>packages/kit/test/doctor-diagnostics.test.ts: 品質コマンドと診断範囲 [REQ-185] yarn testは未確認の注意とし、不存在と断定しない<br>packages/kit/test/doctor-diagnostics.test.ts: 品質コマンドと診断範囲 [REQ-185] yarn run testは未確認の注意とし、不存在と断定しない |
+| [openspec/changes/clarify-doctor-diagnostics/specs/doctor/spec.md:25](../../openspec/changes/clarify-doctor-diagnostics/specs/doctor/spec.md#L25) | 解釈範囲と未確認の表示 / Yarnのscriptがない | reviewed | Yarnの2形でscriptのないmanifestを与え、終了コード0、未確認の注意と問題にしないことをassertする。<br>packages/kit/test/doctor-diagnostics.test.ts: 品質コマンドと診断範囲 [REQ-185] yarn testは未確認の注意とし、不存在と断定しない<br>packages/kit/test/doctor-diagnostics.test.ts: 品質コマンドと診断範囲 [REQ-185] yarn run testは未確認の注意とし、不存在と断定しない |
+| [openspec/changes/clarify-doctor-diagnostics/specs/doctor/spec.md:34](../../openspec/changes/clarify-doctor-diagnostics/specs/doctor/spec.md#L34) | 実行ファイルと導入パスの種類 / 名前だけの実行ファイル | reviewed | 現在のPOSIXではchmod644の通常ファイルを候補にし、実行ファイルが見つからない問題と終了コード1をassertする。<br>packages/kit/test/doctor-diagnostics.test.ts: 品質コマンドと診断範囲 [REQ-186] 実行できないファイルを合格にしない |
+| [openspec/changes/clarify-doctor-diagnostics/specs/doctor/spec.md:38](../../openspec/changes/clarify-doctor-diagnostics/specs/doctor/spec.md#L38) | 実行ファイルと導入パスの種類 / 導入先の種類が違う | reviewed | AGENTS.mdをディレクトリ、openspecをファイルにして両方の問題と終了コード1をassertする。<br>packages/kit/test/doctor-diagnostics.test.ts: 品質コマンドと診断範囲 [REQ-186] AGENTS.mdとopenspecの種類を確認する |
+| [openspec/changes/clarify-doctor-diagnostics/specs/doctor/spec.md:47](../../openspec/changes/clarify-doctor-diagnostics/specs/doctor/spec.md#L47) | Git診断の期限と結果 / 共有予算が切れる | reviewed | 短い共有予算を先に使い切り、終了コード1と期限の理由、Git不存在や未除外という誤案内がないことをassertする。<br>packages/kit/test/doctor-diagnostics.test.ts: Gitの診断の境界 [REQ-187] 共有期限の終了をGit不存在と混同しない |
+| [openspec/changes/clarify-doctor-diagnostics/specs/doctor/spec.md:51](../../openspec/changes/clarify-doctor-diagnostics/specs/doctor/spec.md#L51) | Git診断の期限と結果 / Gitの設定が不正 | unreviewed | check-ignoreの異常終了の注入は試験済みだが、壊れたGit設定そのものを与えるScenarioの対応は未確認。<br>候補 2 件 |
+| [openspec/changes/clarify-doctor-diagnostics/specs/doctor/spec.md:62](../../openspec/changes/clarify-doctor-diagnostics/specs/doctor/spec.md#L62) | 導入状態の診断 / すべて整っている | reviewed | scriptも設定したfixtureで全項目の合格、問題・注意0件、終了コード0をassertする。<br>packages/cli/test/doctor.test.ts: 導入状態の診断 [REQ-134] すべて整っていれば、すべての項目を合格と表示し、終了コード 0 を返す |
+| [openspec/changes/clarify-doctor-diagnostics/specs/doctor/spec.md:66](../../openspec/changes/clarify-doctor-diagnostics/specs/doctor/spec.md#L66) | 導入状態の診断 / 何も変更しない | reviewed | 未導入と導入済みの双方で、実行前後の全ファイル内容を比較する。<br>packages/cli/test/doctor.test.ts: 導入状態の診断 [REQ-134] doctor はプロジェクトのファイルを追加も変更もしない |
+| [openspec/changes/exercise-ai-user-journeys/specs/quality-journeys/spec.md:12](../../openspec/changes/exercise-ai-user-journeys/specs/quality-journeys/spec.md#L12) | AIによる初回導入のシナリオ / 初めて導入する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/changes/exercise-ai-user-journeys/specs/quality-journeys/spec.md:21](../../openspec/changes/exercise-ai-user-journeys/specs/quality-journeys/spec.md#L21) | AIによる通常操作のシナリオ / 既存プロジェクトを使う | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/changes/exercise-ai-user-journeys/specs/quality-journeys/spec.md:30](../../openspec/changes/exercise-ai-user-journeys/specs/quality-journeys/spec.md#L30) | AIによる失敗からの復旧のシナリオ / 原因を直して再実行する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/changes/harden-release-workflow/specs/release-integrity/spec.md:12](../../openspec/changes/harden-release-workflow/specs/release-integrity/spec.md#L12) | 外部Actionsの不変参照 / ワークフローを検査する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/changes/harden-release-workflow/specs/release-integrity/spec.md:21](../../openspec/changes/harden-release-workflow/specs/release-integrity/spec.md#L21) | CIと公開の資格情報の制限 / 品質コマンドを実行する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/changes/harden-release-workflow/specs/release-integrity/spec.md:30](../../openspec/changes/harden-release-workflow/specs/release-integrity/spec.md#L30) | 配布元とprovenanceの設定 / 配布物を検査する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 7 件 |
+| [openspec/changes/harden-run-safety/specs/run-guards/spec.md:8](../../openspec/changes/harden-run-safety/specs/run-guards/spec.md#L8) | 特殊文字を含むパスのガード / 日本語の仕様とテスト | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/changes/harden-run-safety/specs/run-guards/spec.md:12](../../openspec/changes/harden-run-safety/specs/run-guards/spec.md#L12) | 特殊文字を含むパスのガード / 区切り文字を含むパス | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/changes/harden-run-safety/specs/run/spec.md:8](../../openspec/changes/harden-run-safety/specs/run/spec.md#L8) | エンジンの子プロセスの停止 / 子が出力先を保持する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/changes/harden-run-safety/specs/run/spec.md:12](../../openspec/changes/harden-run-safety/specs/run/spec.md#L12) | エンジンの子プロセスの停止 / 終了要求を無視する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/changes/harden-run-safety/specs/run/spec.md:16](../../openspec/changes/harden-run-safety/specs/run/spec.md#L16) | エンジンの子プロセスの停止 / 中断済み | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/changes/harden-run-safety/specs/run/spec.md:25](../../openspec/changes/harden-run-safety/specs/run/spec.md#L25) | 証拠記録の再検証の時間制限 / 二度目の検査が停止しない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/changes/harden-run-safety/specs/run/spec.md:34](../../openspec/changes/harden-run-safety/specs/run/spec.md#L34) | run設定の形の検証 / 不正な形 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 9 件 |
+| [openspec/changes/harden-run-safety/specs/run/spec.md:38](../../openspec/changes/harden-run-safety/specs/run/spec.md#L38) | run設定の形の検証 / 不正な数値 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 9 件 |
+| [openspec/changes/harden-run-safety/specs/run/spec.md:42](../../openspec/changes/harden-run-safety/specs/run/spec.md#L42) | run設定の形の検証 / 既定値と正しい設定 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 9 件 |
+| [openspec/changes/harden-run-safety/specs/trace-report/spec.md:8](../../openspec/changes/harden-run-safety/specs/trace-report/spec.md#L8) | 証拠の実行時検証 / 構文が正しい不正データ | unreviewed | 対応候補のassertionの内容は未精査<br>候補 20 件 |
+| [openspec/changes/harden-run-safety/specs/trace-report/spec.md:12](../../openspec/changes/harden-run-safety/specs/trace-report/spec.md#L12) | 証拠の実行時検証 / 対象が違う | unreviewed | 対応候補のassertionの内容は未精査<br>候補 20 件 |
+| [openspec/changes/harden-run-safety/specs/trace-report/spec.md:16](../../openspec/changes/harden-run-safety/specs/trace-report/spec.md#L16) | 証拠の実行時検証 / 内容の不一致 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 20 件 |
+| [openspec/changes/harden-run-safety/specs/trace-report/spec.md:20](../../openspec/changes/harden-run-safety/specs/trace-report/spec.md#L20) | 証拠の実行時検証 / 古い証拠 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 20 件 |
+| [openspec/changes/protect-run-diagnostics/specs/run/spec.md:8](../../openspec/changes/protect-run-diagnostics/specs/run/spec.md#L8) | エンジンの診断ストリームの保護 / チャンクの境界にあるトークン | unreviewed | 対応候補のassertionの内容は未精査<br>候補 9 件 |
+| [openspec/changes/protect-run-diagnostics/specs/run/spec.md:12](../../openspec/changes/protect-run-diagnostics/specs/run/spec.md#L12) | エンジンの診断ストリームの保護 / 改行のない末尾 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 9 件 |
+| [openspec/changes/protect-run-diagnostics/specs/run/spec.md:16](../../openspec/changes/protect-run-diagnostics/specs/run/spec.md#L16) | エンジンの診断ストリームの保護 / 区切りのない長い単語 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 9 件 |
+| [openspec/changes/protect-run-diagnostics/specs/run/spec.md:25](../../openspec/changes/protect-run-diagnostics/specs/run/spec.md#L25) | runnerの表示境界の保護 / 質問にトークンが含まれる | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/changes/protect-run-diagnostics/specs/run/spec.md:29](../../openspec/changes/protect-run-diagnostics/specs/run/spec.md#L29) | runnerの表示境界の保護 / 進捗にトークンが含まれる | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/changes/publish-evidence-atomically/specs/evidence-publication/spec.md:12](../../openspec/changes/publish-evidence-atomically/specs/evidence-publication/spec.md#L12) | 保存前の証拠の整合性とサイズ / 生成する証拠が過大になる | unreviewed | 対応候補のassertionの内容は未精査<br>候補 16 件 |
+| [openspec/changes/publish-evidence-atomically/specs/evidence-publication/spec.md:16](../../openspec/changes/publish-evidence-atomically/specs/evidence-publication/spec.md#L16) | 保存前の証拠の整合性とサイズ / UTF-8と整形の境界 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 16 件 |
+| [openspec/changes/publish-evidence-atomically/specs/evidence-publication/spec.md:25](../../openspec/changes/publish-evidence-atomically/specs/evidence-publication/spec.md#L25) | 上書きしない原子的な証拠公開 / 書き込みが途中で失敗する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 10 件 |
+| [openspec/changes/publish-evidence-atomically/specs/evidence-publication/spec.md:29](../../openspec/changes/publish-evidence-atomically/specs/evidence-publication/spec.md#L29) | 上書きしない原子的な証拠公開 / 同じ名前の証拠がある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 10 件 |
+| [openspec/changes/publish-evidence-atomically/specs/evidence-publication/spec.md:38](../../openspec/changes/publish-evidence-atomically/specs/evidence-publication/spec.md#L38) | 保存失敗の説明と再実行 / runの保存先が使えない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 7 件 |
+| [openspec/changes/publish-evidence-atomically/specs/evidence-publication/spec.md:42](../../openspec/changes/publish-evidence-atomically/specs/evidence-publication/spec.md#L42) | 保存失敗の説明と再実行 / 保存先を復旧する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 7 件 |
+| [openspec/changes/resume-pr-publication/specs/run/spec.md:8](../../openspec/changes/resume-pr-publication/specs/run/spec.md#L8) | 検証済み証拠の安全な再利用 / pushやPR作成の失敗後に再実行する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 13 件 |
+| [openspec/changes/resume-pr-publication/specs/run/spec.md:12](../../openspec/changes/resume-pr-publication/specs/run/spec.md#L12) | 検証済み証拠の安全な再利用 / 不正な証拠が直前にある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 13 件 |
+| [openspec/changes/resume-pr-publication/specs/run/spec.md:16](../../openspec/changes/resume-pr-publication/specs/run/spec.md#L16) | 検証済み証拠の安全な再利用 / 証拠の後で実装を変更した | unreviewed | 対応候補のassertionの内容は未精査<br>候補 13 件 |
+| [openspec/changes/resume-pr-publication/specs/run/spec.md:25](../../openspec/changes/resume-pr-publication/specs/run/spec.md#L25) | 既存PRを確認した上での再試行 / 作成の応答だけが失われた | unreviewed | 対応候補のassertionの内容は未精査<br>候補 11 件 |
+| [openspec/changes/resume-pr-publication/specs/run/spec.md:29](../../openspec/changes/resume-pr-publication/specs/run/spec.md#L29) | 既存PRを確認した上での再試行 / PR検索の結果を判断できない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 11 件 |
+| [openspec/changes/resume-pr-publication/specs/run/spec.md:38](../../openspec/changes/resume-pr-publication/specs/run/spec.md#L38) | 再試行の検証と作業状態の保護 / 再試行で検証が不合格になる | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/changes/resume-pr-publication/specs/run/spec.md:42](../../openspec/changes/resume-pr-publication/specs/run/spec.md#L42) | 再試行の検証と作業状態の保護 / 検証が作業状態を変更する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/changes/separate-verification-policy/specs/verification-policy/spec.md:12](../../openspec/changes/separate-verification-policy/specs/verification-policy/spec.md#L12) | 要件と合意のモデルへの変換 / 不正なIDや状態 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/changes/separate-verification-policy/specs/verification-policy/spec.md:21](../../openspec/changes/separate-verification-policy/specs/verification-policy/spec.md#L21) | 合意に基づく検証判定 / 回答済みと非ブロッキング | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/changes/separate-verification-policy/specs/verification-policy/spec.md:30](../../openspec/changes/separate-verification-policy/specs/verification-policy/spec.md#L30) | 成功したテストと要件の対応判定 / 重複と不足 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/changes/separate-verification-policy/specs/verify/spec.md:8](../../openspec/changes/separate-verification-policy/specs/verify/spec.md#L8) | 要件モデルの検証結果を使う / 不正な要件ID | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/changes/serialize-run-execution/specs/run/spec.md:8](../../openspec/changes/serialize-run-execution/specs/run/spec.md#L8) | 作業ツリー単位の実行排他 / 実行中に二重起動する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/changes/serialize-run-execution/specs/run/spec.md:12](../../openspec/changes/serialize-run-execution/specs/run/spec.md#L12) | 作業ツリー単位の実行排他 / 中断して再実行する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/changes/serialize-run-execution/specs/run/spec.md:21](../../openspec/changes/serialize-run-execution/specs/run/spec.md#L21) | 終了済みプロセスのロック回復 / 終了済みの所有者 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/changes/serialize-run-execution/specs/run/spec.md:25](../../openspec/changes/serialize-run-execution/specs/run/spec.md#L25) | 終了済みプロセスのロック回復 / 所有者を判断できない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/changes/serialize-run-execution/specs/run/spec.md:34](../../openspec/changes/serialize-run-execution/specs/run/spec.md#L34) | 実行記録の一意性 / 同じ秒の再実行 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/changes/verify-domain-mutations/specs/domain-mutation-check/spec.md:12](../../openspec/changes/verify-domain-mutations/specs/domain-mutation-check/spec.md#L12) | ドメイン判定の選択式mutation試験 / 元の実装と変更を比較する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/changes/verify-domain-mutations/specs/domain-mutation-check/spec.md:21](../../openspec/changes/verify-domain-mutations/specs/domain-mutation-check/spec.md#L21) | 検出と試験エラーの区別 / 変更が検出されない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 15 件 |
+| [openspec/changes/verify-domain-mutations/specs/domain-mutation-check/spec.md:25](../../openspec/changes/verify-domain-mutations/specs/domain-mutation-check/spec.md#L25) | 検出と試験エラーの区別 / 試験自体が成立しない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 15 件 |
+| [openspec/changes/verify-domain-mutations/specs/domain-mutation-check/spec.md:34](../../openspec/changes/verify-domain-mutations/specs/domain-mutation-check/spec.md#L34) | 再現可能な結果と保存先の保護 / 結果を確認する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/changes/verify-domain-mutations/specs/domain-mutation-check/spec.md:38](../../openspec/changes/verify-domain-mutations/specs/domain-mutation-check/spec.md#L38) | 再現可能な結果と保存先の保護 / 既存の試験先を指定する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/changes/verify-package-artifacts/specs/monorepo/spec.md:8](../../openspec/changes/verify-package-artifacts/specs/monorepo/spec.md#L8) | 配布物からの主要コマンドの検証 / 配布物を検証する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/changes/verify-package-artifacts/specs/monorepo/spec.md:17](../../openspec/changes/verify-package-artifacts/specs/monorepo/spec.md#L17) | 対応環境での配布物の検証 / Node下限で検査する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/changes/verify-package-artifacts/specs/monorepo/spec.md:26](../../openspec/changes/verify-package-artifacts/specs/monorepo/spec.md#L26) | 公開対象コミットの品質ゲート / 検査に失敗する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/changes/verify-package-artifacts/specs/monorepo/spec.md:35](../../openspec/changes/verify-package-artifacts/specs/monorepo/spec.md#L35) | 公開するexportsの参照先 / 公開物と開発環境を分ける | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/agents-rules/spec.md:13](../../openspec/specs/agents-rules/spec.md#L13) | AGENTS.md の必須の節 / 5 つの節がある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/agents-rules/spec.md:22](../../openspec/specs/agents-rules/spec.md#L22) | テストと設定を緩める変更の禁止 / 禁止事項が明記されている | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/agents-rules/spec.md:31](../../openspec/specs/agents-rules/spec.md#L31) | プロジェクト固有の欄 / 末尾に固有欄がある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/agents-rules/spec.md:40](../../openspec/specs/agents-rules/spec.md#L40) | AGENTS.md の日本語提供 / 日本語で書かれている | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/cli/spec.md:13](../../openspec/specs/cli/spec.md#L13) | ヘルプと版 / 全体のヘルプ | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/specs/cli/spec.md:17](../../openspec/specs/cli/spec.md#L17) | ヘルプと版 / サブコマンドのヘルプ | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/specs/cli/spec.md:21](../../openspec/specs/cli/spec.md#L21) | ヘルプと版 / 版 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/specs/core-parsers/spec.md:13](../../openspec/specs/core-parsers/spec.md#L13) | trace.md の 3 つの表の読み取り / 3 つの表が読み取れる | reviewed | 台帳・質問・仮定の配列の各値とerrorsが空であることを比較する。このScenarioは表の読み取りを対象とする。<br>packages/core/test/trace.test.ts: parseTrace [REQ-011] 3 つの表を、列名をキーにした配列として返す |
+| [openspec/specs/core-parsers/spec.md:17](../../openspec/specs/core-parsers/spec.md#L17) | trace.md の 3 つの表の読み取り / 表が欠けている | reviewed | 要件台帳の節を除いた入力から、空の台帳と表名を含むエラー1件をassertする。<br>packages/core/test/trace.test.ts: parseTrace [REQ-011] 要件台帳の表が無いときは、空の台帳と、表が無いことのエラーを返す |
+| [openspec/specs/core-parsers/spec.md:21](../../openspec/specs/core-parsers/spec.md#L21) | trace.md の 3 つの表の読み取り / 行末が CRLF の trace.md | reviewed | 同じ入力をLFとCRLFで解析し結果全体の一致と値にCRがないことをassertする。<br>packages/core/test/trace.test.ts: parseTrace [REQ-011] 行末が CRLF でも LF と同じ結果を返し、値の末尾に \r が残らない |
+| [openspec/specs/core-parsers/spec.md:25](../../openspec/specs/core-parsers/spec.md#L25) | trace.md の 3 つの表の読み取り / 合意の列を読む | reviewed | 合意列を追加した入力で回答者・回答日・承認者・承認日の実値と解析エラーなしをassertする。<br>packages/core/test/trace.test.ts: parseTrace：合意の列 [REQ-011][REQ-077][REQ-078] 確認事項の回答者・回答日と、仮定の承認者・承認日を読む |
+| [openspec/specs/core-parsers/spec.md:29](../../openspec/specs/core-parsers/spec.md#L29) | trace.md の 3 つの表の読み取り / 合意の列のない古い trace.md | reviewed | 旧列構成で4つの合意値が空でerrorsが空となることをassertする。<br>packages/core/test/trace.test.ts: parseTrace：合意の列 [REQ-011][REQ-077][REQ-078] 合意の列のない古い trace.md もエラーなく読め、4 つの値は空 |
+| [openspec/specs/core-parsers/spec.md:33](../../openspec/specs/core-parsers/spec.md#L33) | trace.md の 3 つの表の読み取り / 必須の列がない | reviewed | ブロッキング列を改名し、列名・表名・ヘッダ行番号が一致するエラーをassertする。<br>packages/core/test/trace.test.ts: parseTrace：合意の列 [REQ-011][REQ-077][REQ-078] 合意の列でない列が無いときは、表と列の名前と、ヘッダの行番号を持つエラーを返す |
+| [openspec/specs/core-parsers/spec.md:42](../../openspec/specs/core-parsers/spec.md#L42) | 台帳の状態値の検査 / 不正な状態値 | reviewed | 対応中の状態値を与え、1件のエラーに行のREQ-IDと値が含まれることをassertする。<br>packages/core/test/trace.test.ts: parseTrace [REQ-012] 決まった値でない状態を、ID と値つきのエラーにする |
+| [openspec/specs/core-parsers/spec.md:46](../../openspec/specs/core-parsers/spec.md#L46) | 台帳の状態値の検査 / 4 つの状態値 | reviewed | 4つすべての状態で台帳4行とerrorsが空であることをassertする。<br>packages/core/test/trace.test.ts: parseTrace [REQ-012] 4 つの状態値だけなら、状態値のエラーは無い |
+| [openspec/specs/core-parsers/spec.md:55](../../openspec/specs/core-parsers/spec.md#L55) | 差分仕様の読み取り / ADDED の Requirement | reviewed | ADDEDの名前・Source配列・Scenario数2・行番号とerrorsが空であることを比較する。<br>packages/core/test/spec.test.ts: parseSpec [REQ-013][REQ-051] ADDED の Requirement の操作・名前・Source・Scenario 数を返す |
+| [openspec/specs/core-parsers/spec.md:59](../../openspec/specs/core-parsers/spec.md#L59) | 差分仕様の読み取り / 4 つの操作 | reviewed | 4操作と名前の組、MODIFIEDのSource、RENAMEDのfromと行番号を比較する。<br>packages/core/test/spec.test.ts: parseSpec [REQ-013][REQ-051] 4 つの操作の見出しに対応する操作が付く |
+| [openspec/specs/core-parsers/spec.md:63](../../openspec/specs/core-parsers/spec.md#L63) | 差分仕様の読み取り / 行末が CRLF の spec.md | reviewed | ADDED等の同じ仕様をLFとCRLFで解析し、結果全体を比較する。<br>packages/core/test/spec.test.ts: parseSpec [REQ-013][REQ-051] 行末が CRLF でも LF と同じ結果を返す |
+| [openspec/specs/core-parsers/spec.md:72](../../openspec/specs/core-parsers/spec.md#L72) | タスクの読み取り / チェックの混在 | reviewed | 小文字x・未チェック・大文字Xの各状態、タスク本文と行番号を比較する。<br>packages/core/test/tasks.test.ts: parseTasks [REQ-014] チェック済みと未チェックのタスクを、行番号つきで返す |
+| [openspec/specs/core-parsers/spec.md:76](../../openspec/specs/core-parsers/spec.md#L76) | タスクの読み取り / 行末が CRLF の tasks.md | reviewed | LFとCRLFのチェックが混在する入力の結果全体を比較する。<br>packages/core/test/tasks.test.ts: parseTasks [REQ-014] 行末が CRLF でも同じタスクを返し、文に \r が残らない |
+| [openspec/specs/core-parsers/spec.md:85](../../openspec/specs/core-parsers/spec.md#L85) | テストが対象とする要件 ID の抽出 / 通常のテスト | reviewed | passedの名前から2つのIDをファイル別に抽出し、errorsが空であることをassertする。<br>packages/core/test/test-report.test.ts: extractTestRequirements [REQ-015] 成功したテストの名前にある要件 ID を、テストファイルごとに返す |
+| [openspec/specs/core-parsers/spec.md:89](../../openspec/specs/core-parsers/spec.md#L89) | テストが対象とする要件 ID の抽出 / skip と todo | reviewed | skipped・todo・pendingそれぞれにIDを付けた入力で抽出結果が空となることをassertする。<br>packages/core/test/test-report.test.ts: extractTestRequirements [REQ-015] skip・todo・pending のテストは数えない |
+| [openspec/specs/core-parsers/spec.md:93](../../openspec/specs/core-parsers/spec.md#L93) | テストが対象とする要件 ID の抽出 / 失敗したテスト | reviewed | failedのIDが抽出結果へ含まれないことをassertする。<br>packages/core/test/test-report.test.ts: extractTestRequirements [REQ-015] 失敗したテストは数えない |
+| [openspec/specs/core-parsers/spec.md:97](../../openspec/specs/core-parsers/spec.md#L97) | テストが対象とする要件 ID の抽出 / describe の名前にある要件 ID | reviewed | suite名を含むfullNameのIDがファイル別に抽出されることをassertする。<br>packages/core/test/test-report.test.ts: extractTestRequirements [REQ-015] describe の名前にある要件 ID も数える |
+| [openspec/specs/core-parsers/spec.md:101](../../openspec/specs/core-parsers/spec.md#L101) | テストが対象とする要件 ID の抽出 / 読めないレポート | reviewed | 壊れたJSONで空の抽出結果とエラー1件、fileと有効な行番号をassertする。<br>packages/core/test/test-report.test.ts: extractTestRequirements [REQ-015][REQ-018] JSON として読めないときは、空の結果とファイル名つきのエラーを返す |
+| [openspec/specs/core-parsers/spec.md:110](../../openspec/specs/core-parsers/spec.md#L110) | verify 結果の JSON スキーマ / スキーマが公開されている | reviewed | 公開exportsと同梱するschema、schemaVersionの必須属性と型の版の一致をassertする。<br>packages/core/test/schema.test.ts: verify 結果の JSON スキーマ [REQ-016] schemaVersion を必須プロパティとして定義し、型の版と一致する<br>packages/core/test/schema.test.ts: verify 結果の JSON スキーマ [REQ-016] @loomake/core からスキーマを読める |
+| [openspec/specs/core-parsers/spec.md:114](../../openspec/specs/core-parsers/spec.md#L114) | verify 結果の JSON スキーマ / 破壊的変更でメジャー番号が上がる | unreviewed | 履歴とのrequired比較はあるが、削除したスキーマを実際に拒否する回帰・mutationの検査をさらに確認する。現時点では未確認とする。<br>候補 4 件 |
+| [openspec/specs/core-parsers/spec.md:123](../../openspec/specs/core-parsers/spec.md#L123) | trace.md のテンプレート生成 / 生成したテンプレートを読める | reviewed | 生成結果をparseTraceへ渡し、台帳・質問・仮定が空でerrorsも空という全体を比較する。<br>packages/core/test/trace.test.ts: createTraceTemplate [REQ-017] 生成したテンプレートはエラーなく読め、3 つの表が空 |
+| [openspec/specs/core-parsers/spec.md:127](../../openspec/specs/core-parsers/spec.md#L127) | trace.md のテンプレート生成 / テンプレートに合意の列がある | reviewed | 生成結果とkitの雛形の双方で、質問と仮定のヘッダ末尾の合意列を正規表現でassertする。<br>packages/core/test/trace.test.ts: createTraceTemplate [REQ-017][REQ-077][REQ-078] テンプレートと kit の trace.md の雛形は、確認事項に回答者・回答日、仮定に承認者・承認日の列を末尾に持つ |
+| [openspec/specs/core-parsers/spec.md:136](../../openspec/specs/core-parsers/spec.md#L136) | 解析エラーの位置情報 / 位置情報つきのエラー | reviewed | 状態値が不正な台帳3行目に対し、fileと実際の行番号7をassertする。<br>packages/core/test/trace.test.ts: parseTrace [REQ-018] エラーは、渡したファイル名と、不正な行の行番号を持つ |
+| [openspec/specs/core-parsers/spec.md:145](../../openspec/specs/core-parsers/spec.md#L145) | 実行時依存ゼロ / dependencies が空 | reviewed | coreのpackage.jsonのdependenciesのキーが空であることをassertする。<br>packages/core/test/package.test.ts: @loomake/core のパッケージ [REQ-046] dependencies を持たない |
+| [openspec/specs/core-parsers/spec.md:154](../../openspec/specs/core-parsers/spec.md#L154) | OpenSpec 書式との互換 / 追加書式を含む change の検証 | reviewed | Sourceとtraceを持つfixtureで実際のOpenSpec validateを実行し、終了コード0をassertする。現在のLinux環境の結果である。<br>packages/core/test/package.test.ts: OpenSpec 書式との互換 [REQ-052][REQ-058] Source 行と trace.md を含む change が openspec validate --strict を通る |
+| [openspec/specs/doctor/spec.md:13](../../openspec/specs/doctor/spec.md#L13) | 導入状態の診断 / すべて整っている | superseded | clarify-doctor-diagnosticsが同じRequirementの導入条件と診断範囲を補足した。変更後のScenarioへ対応する。<br>packages/cli/test/doctor.test.ts: 導入状態の診断 [REQ-134] すべて整っていれば、すべての項目を合格と表示し、終了コード 0 を返す |
+| [openspec/specs/doctor/spec.md:17](../../openspec/specs/doctor/spec.md#L17) | 導入状態の診断 / 何も変更しない | superseded | clarify-doctor-diagnosticsが同じRequirementの導入条件と診断範囲を補足した。変更後のScenarioへ対応する。<br>packages/cli/test/doctor.test.ts: 導入状態の診断 [REQ-134] doctor はプロジェクトのファイルを追加も変更もしない |
+| [openspec/specs/doctor/spec.md:37](../../openspec/specs/doctor/spec.md#L37) | 診断する項目 / 設定ファイルがない | reviewed | 設定ファイルのないfixtureで終了コード1、ファイル名とinitの案内をassertする。<br>packages/cli/test/doctor.test.ts: 診断する項目 [REQ-134] loomake.config.json がなければ、loomake init を案内して終了コード 1 を返す |
+| [openspec/specs/doctor/spec.md:41](../../openspec/specs/doctor/spec.md#L41) | 診断する項目 / テストのレポートを除外していない | reviewed | 除外行を削ったfixtureで終了コード1、対象のパスと追加する行をassertする。<br>packages/cli/test/doctor.test.ts: 診断する項目 [REQ-134] テストのレポートが除外されていなければ、足す行を案内して終了コード 1 を返す |
+| [openspec/specs/doctor/spec.md:45](../../openspec/specs/doctor/spec.md#L45) | 診断する項目 / 証拠の記録を除外している | reviewed | 証拠まで除外するfixtureで終了コード1と証拠の問題、除外を分ける案内をassertする。<br>packages/cli/test/doctor.test.ts: 診断する項目 [REQ-134] .loomake/ を除外していれば、証拠の記録をコミットできないことと直し方を表示して終了コード 1 を返す |
+| [openspec/specs/doctor/spec.md:49](../../openspec/specs/doctor/spec.md#L49) | 診断する項目 / 品質コマンドの実行ファイルがない | reviewed | 存在しないコマンドを設定し、終了コード1とその実行ファイル名をassertする。<br>packages/cli/test/doctor.test.ts: 診断する項目 [REQ-134] 品質コマンドの実行ファイルが見つからなければ、終了コード 1 を返す |
+| [openspec/specs/doctor/spec.md:53](../../openspec/specs/doctor/spec.md#L53) | 診断する項目 / run に使う CLI がない | reviewed | claudeとghのないPATHで両方の注意、注意2件・問題0件と終了コード0をassertする。<br>packages/cli/test/doctor.test.ts: 診断する項目 [REQ-134] claude と gh がなければ注意として表示し、ほかが整っていれば終了コード 0 を返す |
+| [openspec/specs/init/spec.md:13](../../openspec/specs/init/spec.md#L13) | 基本ファイルの配置 / 空のプロジェクトで実行する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/init/spec.md:17](../../openspec/specs/init/spec.md#L17) | 基本ファイルの配置 / テストのレポートの出力先 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/init/spec.md:21](../../openspec/specs/init/spec.md#L21) | 基本ファイルの配置 / loomake が依存にない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/init/spec.md:25](../../openspec/specs/init/spec.md#L25) | 基本ファイルの配置 / npm と yarn の案内 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/init/spec.md:29](../../openspec/specs/init/spec.md#L29) | 基本ファイルの配置 / loomake が依存にある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/init/spec.md:38](../../openspec/specs/init/spec.md#L38) | 既存ファイルの保護 / 同名ファイルがあり、断る | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/init/spec.md:42](../../openspec/specs/init/spec.md#L42) | 既存ファイルの保護 / 同名ファイルがあり、承諾する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/init/spec.md:46](../../openspec/specs/init/spec.md#L46) | 既存ファイルの保護 / 確認できない環境 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/init/spec.md:50](../../openspec/specs/init/spec.md#L50) | 既存ファイルの保護 / 内容が同じ | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/init/spec.md:54](../../openspec/specs/init/spec.md#L54) | 既存ファイルの保護 / プロジェクトの外を指すリンク | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/init/spec.md:58](../../openspec/specs/init/spec.md#L58) | 既存ファイルの保護 / プロジェクトの外を指すディレクトリのリンク | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/init/spec.md:62](../../openspec/specs/init/spec.md#L62) | 既存ファイルの保護 / リンク先の無いリンク | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/init/spec.md:66](../../openspec/specs/init/spec.md#L66) | 既存ファイルの保護 / プロジェクトの中を指すリンク | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/init/spec.md:75](../../openspec/specs/init/spec.md#L75) | Codex 向けの Skill 配置 / --codex を指定する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/init/spec.md:79](../../openspec/specs/init/spec.md#L79) | Codex 向けの Skill 配置 / --codex を指定しない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/init/spec.md:88](../../openspec/specs/init/spec.md#L88) | devcontainer の配置 / --devcontainer を指定する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/init/spec.md:92](../../openspec/specs/init/spec.md#L92) | devcontainer の配置 / --devcontainer を指定しない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/init/spec.md:101](../../openspec/specs/init/spec.md#L101) | OpenSpec 初期化の案内 / openspec/ が無い | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/init/spec.md:105](../../openspec/specs/init/spec.md#L105) | OpenSpec 初期化の案内 / openspec/ がある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/init/spec.md:114](../../openspec/specs/init/spec.md#L114) | パッケージマネージャの判定 / pnpm のプロジェクト | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/init/spec.md:118](../../openspec/specs/init/spec.md#L118) | パッケージマネージャの判定 / npm のプロジェクト | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/init/spec.md:122](../../openspec/specs/init/spec.md#L122) | パッケージマネージャの判定 / yarn のプロジェクト | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/init/spec.md:126](../../openspec/specs/init/spec.md#L126) | パッケージマネージャの判定 / package.json がない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/init/spec.md:130](../../openspec/specs/init/spec.md#L130) | パッケージマネージャの判定 / package.json がある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/init/spec.md:139](../../openspec/specs/init/spec.md#L139) | 日本語のメッセージ / 日本語の出力 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/init/spec.md:148](../../openspec/specs/init/spec.md#L148) | Git の除外設定 / .gitignore がない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/init/spec.md:152](../../openspec/specs/init/spec.md#L152) | Git の除外設定 / 既存の .gitignore に足す | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/init/spec.md:156](../../openspec/specs/init/spec.md#L156) | Git の除外設定 / すでに除外している | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/init/spec.md:160](../../openspec/specs/init/spec.md#L160) | Git の除外設定 / 証拠はコミットできる | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/monorepo/spec.md:13](../../openspec/specs/monorepo/spec.md#L13) | モノレポのパッケージ構成 / 3 つのパッケージが認識される | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/monorepo/spec.md:17](../../openspec/specs/monorepo/spec.md#L17) | モノレポのパッケージ構成 / CLI のコマンド名 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/monorepo/spec.md:26](../../openspec/specs/monorepo/spec.md#L26) | devcontainer / devcontainer の定義がある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/monorepo/spec.md:30](../../openspec/specs/monorepo/spec.md#L30) | devcontainer / Node 24 のイメージ | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/monorepo/spec.md:39](../../openspec/specs/monorepo/spec.md#L39) | Node.js のバージョン宣言 / engines が宣言されている | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/monorepo/spec.md:48](../../openspec/specs/monorepo/spec.md#L48) | 3 つの OS での CI / ワークフローが 3 OS を指定している | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/monorepo/spec.md:57](../../openspec/specs/monorepo/spec.md#L57) | プルリクエストごとの完了ゲート / ブランチ名が change-id と一致する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 15 件 |
+| [openspec/specs/monorepo/spec.md:61](../../openspec/specs/monorepo/spec.md#L61) | プルリクエストごとの完了ゲート / run のブランチ名 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 15 件 |
+| [openspec/specs/monorepo/spec.md:65](../../openspec/specs/monorepo/spec.md#L65) | プルリクエストごとの完了ゲート / PR 本文で明示する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 15 件 |
+| [openspec/specs/monorepo/spec.md:69](../../openspec/specs/monorepo/spec.md#L69) | プルリクエストごとの完了ゲート / 明示した change がない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 15 件 |
+| [openspec/specs/monorepo/spec.md:73](../../openspec/specs/monorepo/spec.md#L73) | プルリクエストごとの完了ゲート / change のない PR だと明示する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 15 件 |
+| [openspec/specs/monorepo/spec.md:77](../../openspec/specs/monorepo/spec.md#L77) | プルリクエストごとの完了ゲート / 変えたファイルから決める | unreviewed | 対応候補のassertionの内容は未精査<br>候補 15 件 |
+| [openspec/specs/monorepo/spec.md:81](../../openspec/specs/monorepo/spec.md#L81) | プルリクエストごとの完了ゲート / コードを変えて対象を特定できない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 15 件 |
+| [openspec/specs/monorepo/spec.md:85](../../openspec/specs/monorepo/spec.md#L85) | プルリクエストごとの完了ゲート / ブランチ名が change-id と一致しない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 15 件 |
+| [openspec/specs/monorepo/spec.md:89](../../openspec/specs/monorepo/spec.md#L89) | プルリクエストごとの完了ゲート / archive の PR | unreviewed | 対応候補のassertionの内容は未精査<br>候補 15 件 |
+| [openspec/specs/monorepo/spec.md:98](../../openspec/specs/monorepo/spec.md#L98) | changesets による公開準備 / changesets が設定されている | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/monorepo/spec.md:107](../../openspec/specs/monorepo/spec.md#L107) | MIT ライセンス / ライセンスが MIT である | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/monorepo/spec.md:121](../../openspec/specs/monorepo/spec.md#L121) | 完了ゲートの対象の決め方 / 明示を優先する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 11 件 |
+| [openspec/specs/monorepo/spec.md:125](../../openspec/specs/monorepo/spec.md#L125) | 完了ゲートの対象の決め方 / 変えたファイルとブランチ名を合わせる | unreviewed | 対応候補のassertionの内容は未精査<br>候補 11 件 |
+| [openspec/specs/monorepo/spec.md:134](../../openspec/specs/monorepo/spec.md#L134) | 対象の change がない PR の扱い / changeset と README だけの PR | unreviewed | 対応候補のassertionの内容は未精査<br>候補 11 件 |
+| [openspec/specs/monorepo/spec.md:138](../../openspec/specs/monorepo/spec.md#L138) | 対象の change がない PR の扱い / 文書とコードを変えた PR | unreviewed | 対応候補のassertionの内容は未精査<br>候補 11 件 |
+| [openspec/specs/req-to-openspec-skill/spec.md:13](../../openspec/specs/req-to-openspec-skill/spec.md#L13) | 読める要件書の形式 / Markdown を読む | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/req-to-openspec-skill/spec.md:17](../../openspec/specs/req-to-openspec-skill/spec.md#L17) | 読める要件書の形式 / Markdown 以外を渡されたとき | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/req-to-openspec-skill/spec.md:26](../../openspec/specs/req-to-openspec-skill/spec.md#L26) | 台帳づくりの手順 / 採番と出典の指示がある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/specs/req-to-openspec-skill/spec.md:30](../../openspec/specs/req-to-openspec-skill/spec.md#L30) | 台帳づくりの手順 / 既存の番号の次から振る指示がある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/specs/req-to-openspec-skill/spec.md:34](../../openspec/specs/req-to-openspec-skill/spec.md#L34) | 台帳づくりの手順 / 通し番号の指示がある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/specs/req-to-openspec-skill/spec.md:43](../../openspec/specs/req-to-openspec-skill/spec.md#L43) | 曖昧さチェックリストの適用 / チェックリストが同梱されている | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/req-to-openspec-skill/spec.md:47](../../openspec/specs/req-to-openspec-skill/spec.md#L47) | 曖昧さチェックリストの適用 / 未決事項の指示がある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/req-to-openspec-skill/spec.md:56](../../openspec/specs/req-to-openspec-skill/spec.md#L56) | 必ずブロッキングにする分類 / 6 つの分類が列挙されている | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/req-to-openspec-skill/spec.md:65](../../openspec/specs/req-to-openspec-skill/spec.md#L65) | change への分割と分割案の提示 / 分割の指示がある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/req-to-openspec-skill/spec.md:69](../../openspec/specs/req-to-openspec-skill/spec.md#L69) | change への分割と分割案の提示 / 複数の change にかかわる行の指示がある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/req-to-openspec-skill/spec.md:78](../../openspec/specs/req-to-openspec-skill/spec.md#L78) | Requirement の書式 / 書式の指示と雛形がある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/req-to-openspec-skill/spec.md:87](../../openspec/specs/req-to-openspec-skill/spec.md#L87) | 範囲外の扱い / Non-goals への指示 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/req-to-openspec-skill/spec.md:91](../../openspec/specs/req-to-openspec-skill/spec.md#L91) | 範囲外の扱い / 後のフェーズの要件の指示 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/req-to-openspec-skill/spec.md:100](../../openspec/specs/req-to-openspec-skill/spec.md#L100) | 作業完了時の報告 / 報告の 4 項目 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/req-to-openspec-skill/spec.md:109](../../openspec/specs/req-to-openspec-skill/spec.md#L109) | 顧客に送れる確認事項の文面 / 文面の指示がある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/req-to-openspec-skill/spec.md:118](../../openspec/specs/req-to-openspec-skill/spec.md#L118) | 形式の変換を持たない / kit のコードに変換処理が無い | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/req-to-openspec-skill/spec.md:122](../../openspec/specs/req-to-openspec-skill/spec.md#L122) | 形式の変換を持たない / Skill に変換の指示が無い | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/req-to-openspec-skill/spec.md:131](../../openspec/specs/req-to-openspec-skill/spec.md#L131) | Skill の日本語提供 / 日本語で書かれている | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/req-to-openspec-skill/spec.md:140](../../openspec/specs/req-to-openspec-skill/spec.md#L140) | 完了ゲートのタスクの印 / 雛形に印がある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/run-guards/spec.md:13](../../openspec/specs/run-guards/spec.md#L13) | テストの削除と skip・todo の検出 / テストファイルを消す | unreviewed | 対応候補のassertionの内容は未精査<br>候補 7 件 |
+| [openspec/specs/run-guards/spec.md:17](../../openspec/specs/run-guards/spec.md#L17) | テストの削除と skip・todo の検出 / skip を足す | unreviewed | 対応候補のassertionの内容は未精査<br>候補 7 件 |
+| [openspec/specs/run-guards/spec.md:21](../../openspec/specs/run-guards/spec.md#L21) | テストの削除と skip・todo の検出 / 条件つきの skip を足す | unreviewed | 対応候補のassertionの内容は未精査<br>候補 7 件 |
+| [openspec/specs/run-guards/spec.md:25](../../openspec/specs/run-guards/spec.md#L25) | テストの削除と skip・todo の検出 / ふつうのテストを足す | unreviewed | 対応候補のassertionの内容は未精査<br>候補 7 件 |
+| [openspec/specs/run-guards/spec.md:34](../../openspec/specs/run-guards/spec.md#L34) | 設定の変更の検出 / loomake.config.json を変える | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/run-guards/spec.md:38](../../openspec/specs/run-guards/spec.md#L38) | 設定の変更の検出 / package.json の scripts を変える | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/run-guards/spec.md:42](../../openspec/specs/run-guards/spec.md#L42) | 設定の変更の検出 / 子パッケージの package.json の scripts を変える | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/run-guards/spec.md:46](../../openspec/specs/run-guards/spec.md#L46) | 設定の変更の検出 / package.json の依存だけを変える | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/run-guards/spec.md:55](../../openspec/specs/run-guards/spec.md#L55) | 仕様と trace.md の変更の検出 / いまの仕様を書き換える | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/run-guards/spec.md:59](../../openspec/specs/run-guards/spec.md#L59) | 仕様と trace.md の変更の検出 / trace.md を書き換える | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/run-guards/spec.md:63](../../openspec/specs/run-guards/spec.md#L63) | 仕様と trace.md の変更の検出 / tasks.md を書き換える | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/run-guards/spec.md:67](../../openspec/specs/run-guards/spec.md#L67) | 仕様と trace.md の変更の検出 / 差分仕様を書き換える | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/run-guards/spec.md:71](../../openspec/specs/run-guards/spec.md#L71) | 仕様と trace.md の変更の検出 / openspecDir を変えたプロジェクト | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/run-guards/spec.md:75](../../openspec/specs/run-guards/spec.md#L75) | 仕様と trace.md の変更の検出 / 完了ゲートの直しのあいだ | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/run-guards/spec.md:84](../../openspec/specs/run-guards/spec.md#L84) | 止まったときの差分の表示と承認 / 差分を表示して止まる | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/run-guards/spec.md:88](../../openspec/specs/run-guards/spec.md#L88) | 止まったときの差分の表示と承認 / 承認しないで実行し直す | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/run-guards/spec.md:97](../../openspec/specs/run-guards/spec.md#L97) | エンジンによるコミットとブランチの切り替えの検出 / エンジンが自分でコミットする | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/run-guards/spec.md:101](../../openspec/specs/run-guards/spec.md#L101) | エンジンによるコミットとブランチの切り替えの検出 / 設定を変えてコミットする | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/run-guards/spec.md:105](../../openspec/specs/run-guards/spec.md#L105) | エンジンによるコミットとブランチの切り替えの検出 / エンジンがブランチを切り替える | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/run-guards/spec.md:109](../../openspec/specs/run-guards/spec.md#L109) | エンジンによるコミットとブランチの切り替えの検出 / コミットしてから失敗する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/run-guards/spec.md:113](../../openspec/specs/run-guards/spec.md#L113) | エンジンによるコミットとブランチの切り替えの検出 / 完了ゲートの直しでコミットする | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/run-guards/spec.md:117](../../openspec/specs/run-guards/spec.md#L117) | エンジンによるコミットとブランチの切り替えの検出 / コミットしないエンジン | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/run-pr/spec.md:13](../../openspec/specs/run-pr/spec.md#L13) | 証拠を記録してから PR を作る / 合格して PR まで進む | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/specs/run-pr/spec.md:17](../../openspec/specs/run-pr/spec.md#L17) | 証拠を記録してから PR を作る / 記録が PR より先 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/specs/run-pr/spec.md:21](../../openspec/specs/run-pr/spec.md#L21) | 証拠を記録してから PR を作る / 実装ブランチの上で再開する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/specs/run-pr/spec.md:25](../../openspec/specs/run-pr/spec.md#L25) | 証拠を記録してから PR を作る / 向き先が分からない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/specs/run-pr/spec.md:34](../../openspec/specs/run-pr/spec.md#L34) | PR の本文 / 本文の中身 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/run-pr/spec.md:43](../../openspec/specs/run-pr/spec.md#L43) | gh CLI で PR を作る / gh で作る | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/run-pr/spec.md:47](../../openspec/specs/run-pr/spec.md#L47) | gh CLI で PR を作る / gh にログインしていない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/run/spec.md:13](../../openspec/specs/run/spec.md#L13) | 仕様ゲートの確認 / 仕様ゲートに不合格 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/run/spec.md:17](../../openspec/specs/run/spec.md#L17) | 仕様ゲートの確認 / 仕様ゲートに合格 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/run/spec.md:26](../../openspec/specs/run/spec.md#L26) | 未コミットの変更があるときは始めない / 変更したファイルがある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/specs/run/spec.md:30](../../openspec/specs/run/spec.md#L30) | 未コミットの変更があるときは始めない / 追跡していないファイルがある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/specs/run/spec.md:34](../../openspec/specs/run/spec.md#L34) | 未コミットの変更があるときは始めない / テストのレポートを除外していない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/specs/run/spec.md:43](../../openspec/specs/run/spec.md#L43) | 予定だけを表示する / --dry-run | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/run/spec.md:52](../../openspec/specs/run/spec.md#L52) | change のブランチ / ブランチがない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/specs/run/spec.md:56](../../openspec/specs/run/spec.md#L56) | change のブランチ / ブランチがある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/specs/run/spec.md:60](../../openspec/specs/run/spec.md#L60) | change のブランチ / 別のブランチから再開する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/specs/run/spec.md:69](../../openspec/specs/run/spec.md#L69) | タスクを 1 つずつ渡す / 上から順に 1 つずつ | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/run/spec.md:73](../../openspec/specs/run/spec.md#L73) | タスクを 1 つずつ渡す / 完了済みのタスクは渡さない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/run/spec.md:82](../../openspec/specs/run/spec.md#L82) | エンジンへの指示 / 指示の中身 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/run/spec.md:86](../../openspec/specs/run/spec.md#L86) | エンジンへの指示 / コミットしない決まり | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/run/spec.md:95](../../openspec/specs/run/spec.md#L95) | タスクごとのコミット / タスクを終える | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/run/spec.md:99](../../openspec/specs/run/spec.md#L99) | タスクごとのコミット / エンジンが失敗する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/run/spec.md:108](../../openspec/specs/run/spec.md#L108) | 完了ゲートと直し / 直して合格する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/run/spec.md:112](../../openspec/specs/run/spec.md#L112) | 完了ゲートと直し / 完了ゲートのタスクはエンジンに渡さない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/run/spec.md:116](../../openspec/specs/run/spec.md#L116) | 完了ゲートと直し / 印のあるタスク | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/run/spec.md:120](../../openspec/specs/run/spec.md#L120) | 完了ゲートと直し / 旧書式のタスク | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/run/spec.md:124](../../openspec/specs/run/spec.md#L124) | 完了ゲートと直し / 印は指示とメッセージに含めない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/run/spec.md:133](../../openspec/specs/run/spec.md#L133) | エンジンの選び方と権限 / 許可する操作の一覧を渡す | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/specs/run/spec.md:137](../../openspec/specs/run/spec.md#L137) | エンジンの選び方と権限 / 知らないエンジン | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/specs/run/spec.md:141](../../openspec/specs/run/spec.md#L141) | エンジンの選び方と権限 / claude コマンドがない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/specs/run/spec.md:145](../../openspec/specs/run/spec.md#L145) | エンジンの選び方と権限 / パスの区切りを含む change-id | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/specs/run/spec.md:154](../../openspec/specs/run/spec.md#L154) | 権限確認なしで動かす条件 / 絞った環境で権限確認を飛ばす | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/run/spec.md:158](../../openspec/specs/run/spec.md#L158) | 権限確認なしで動かす条件 / 環境を宣言していない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/run/spec.md:167](../../openspec/specs/run/spec.md#L167) | 直しの回数の上限 / 上限に達する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/run/spec.md:176](../../openspec/specs/run/spec.md#L176) | 実行時間の上限 / 上限に達する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/run/spec.md:180](../../openspec/specs/run/spec.md#L180) | 実行時間の上限 / 完了ゲートのあいだに上限に達する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/run/spec.md:189](../../openspec/specs/run/spec.md#L189) | エンジンの質問で止まる / エンジンが質問する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/run/spec.md:198](../../openspec/specs/run/spec.md#L198) | 止まったときの報告 / 止まった理由を報告する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/run/spec.md:207](../../openspec/specs/run/spec.md#L207) | 実行の記録 / 記録が残る | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/run/spec.md:211](../../openspec/specs/run/spec.md#L211) | 実行の記録 / 記録は未コミットの変更にならない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/run/spec.md:220](../../openspec/specs/run/spec.md#L220) | 記録に秘密情報を含めない / 出力にトークンが含まれる | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/run/spec.md:229](../../openspec/specs/run/spec.md#L229) | コンテナの中での実行 / devcontainer の中 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/run/spec.md:238](../../openspec/specs/run/spec.md#L238) | コンテナの外での確認 / 端末で断る | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/run/spec.md:242](../../openspec/specs/run/spec.md#L242) | コンテナの外での確認 / 確認できない環境 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/run/spec.md:251](../../openspec/specs/run/spec.md#L251) | 中断されたときの記録 / 2 つ目のタスクの途中で中断する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/run/spec.md:260](../../openspec/specs/run/spec.md#L260) | 動作環境 / Node.js 20.19 で動く | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/run/spec.md:269](../../openspec/specs/run/spec.md#L269) | runner の実行時依存 / runner の依存 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/run/spec.md:278](../../openspec/specs/run/spec.md#L278) | 実行中の失敗 / 実行中に git のコミットが失敗する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/run/spec.md:282](../../openspec/specs/run/spec.md#L282) | 実行中の失敗 / 始める前の git の失敗 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/trace-record/spec.md:13](../../openspec/specs/trace-record/spec.md#L13) | 証拠の記録 / 合格した結果を記録する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/trace-record/spec.md:17](../../openspec/specs/trace-record/spec.md#L17) | 証拠の記録 / コミットを案内する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/trace-record/spec.md:21](../../openspec/specs/trace-record/spec.md#L21) | 証拠の記録 / 不合格の結果も記録する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/trace-record/spec.md:25](../../openspec/specs/trace-record/spec.md#L25) | 証拠の記録 / 存在しない change | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/trace-record/spec.md:29](../../openspec/specs/trace-record/spec.md#L29) | 証拠の記録 / パスの区切りを含む change-id | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/trace-record/spec.md:38](../../openspec/specs/trace-record/spec.md#L38) | 未コミットの変更があるときは記録しない / 変更したファイルがある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/specs/trace-record/spec.md:42](../../openspec/specs/trace-record/spec.md#L42) | 未コミットの変更があるときは記録しない / 追跡していないファイルがある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/specs/trace-record/spec.md:46](../../openspec/specs/trace-record/spec.md#L46) | 未コミットの変更があるときは記録しない / 除外したファイルだけがある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/specs/trace-record/spec.md:55](../../openspec/specs/trace-record/spec.md#L55) | 記録を書き換えない / 2 回記録する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/trace-record/spec.md:59](../../openspec/specs/trace-record/spec.md#L59) | 記録を書き換えない / 同じ名前のファイルがある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/trace-record/spec.md:68](../../openspec/specs/trace-record/spec.md#L68) | オフラインでの動作 / ネットワークがない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/trace-record/spec.md:77](../../openspec/specs/trace-record/spec.md#L77) | 動作環境 / Node.js 20.19 で動く | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/trace-record/spec.md:86](../../openspec/specs/trace-record/spec.md#L86) | trace の実行時依存 / trace の依存 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/trace-record/spec.md:95](../../openspec/specs/trace-record/spec.md#L95) | 検証した時点の文書の保存 / 文書を保存する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/trace-record/spec.md:104](../../openspec/specs/trace-record/spec.md#L104) | 検査のあいだの変更 / 検査のあいだにファイルが変わる | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/trace-record/spec.md:108](../../openspec/specs/trace-record/spec.md#L108) | 検査のあいだの変更 / 除外したファイルだけが変わる | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/trace-report/spec.md:13](../../openspec/specs/trace-report/spec.md#L13) | 要件ごとの検収の表 / 要件の行が並ぶ | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/trace-report/spec.md:17](../../openspec/specs/trace-report/spec.md#L17) | 要件ごとの検収の表 / いちばん新しい記録を使う | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/trace-report/spec.md:21](../../openspec/specs/trace-report/spec.md#L21) | 要件ごとの検収の表 / archive した change | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/trace-report/spec.md:25](../../openspec/specs/trace-report/spec.md#L25) | 要件ごとの検収の表 / 証拠の記録がない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/trace-report/spec.md:29](../../openspec/specs/trace-report/spec.md#L29) | 要件ごとの検収の表 / パスの区切りを含む change-id | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/trace-report/spec.md:33](../../openspec/specs/trace-report/spec.md#L33) | 要件ごとの検収の表 / 記録のあとで要約を変える | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/trace-report/spec.md:42](../../openspec/specs/trace-report/spec.md#L42) | 範囲外と既存仕様で充足の要件 / 範囲外の要件 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/trace-report/spec.md:46](../../openspec/specs/trace-report/spec.md#L46) | 範囲外と既存仕様で充足の要件 / 既存仕様で充足の要件 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/trace-report/spec.md:55](../../openspec/specs/trace-report/spec.md#L55) | 使った証拠の記載 / 記録の情報が載る | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/trace-report/spec.md:59](../../openspec/specs/trace-report/spec.md#L59) | 使った証拠の記載 / 読めない記録がある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/trace-report/spec.md:68](../../openspec/specs/trace-report/spec.md#L68) | 出力の形式 / Markdown で出す | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/specs/trace-report/spec.md:72](../../openspec/specs/trace-report/spec.md#L72) | 出力の形式 / JSON で出す | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/specs/trace-report/spec.md:76](../../openspec/specs/trace-report/spec.md#L76) | 出力の形式 / HTML はまだ出せない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/specs/trace-report/spec.md:85](../../openspec/specs/trace-report/spec.md#L85) | 同じ入力からは同じレポート / 2 回出力する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/trace-report/spec.md:94](../../openspec/specs/trace-report/spec.md#L94) | オフラインでの動作 / ネットワークがない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/trace-report/spec.md:103](../../openspec/specs/trace-report/spec.md#L103) | 日本語のレポート / 見出しが日本語 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/trace-report/spec.md:112](../../openspec/specs/trace-report/spec.md#L112) | 動作環境 / Node.js 20.19 で動く | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/trace-report/spec.md:121](../../openspec/specs/trace-report/spec.md#L121) | trace report の実行時依存 / trace の依存 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/trace-report/spec.md:130](../../openspec/specs/trace-report/spec.md#L130) | 冒頭の要注意の一覧 / 合格したテストのない要件がある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/specs/trace-report/spec.md:134](../../openspec/specs/trace-report/spec.md#L134) | 冒頭の要注意の一覧 / 確認待ちの要件がある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/specs/trace-report/spec.md:138](../../openspec/specs/trace-report/spec.md#L138) | 冒頭の要注意の一覧 / どちらもない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/specs/trace-report/spec.md:147](../../openspec/specs/trace-report/spec.md#L147) | 確認事項の一覧 / 確認事項が並ぶ | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/trace-report/spec.md:156](../../openspec/specs/trace-report/spec.md#L156) | 仮定の一覧 / 仮定が並ぶ | unreviewed | 対応候補のassertionの内容は未精査<br>候補 5 件 |
+| [openspec/specs/trace-report/spec.md:165](../../openspec/specs/trace-report/spec.md#L165) | 合意の欄が空のときの警告 / 回答者が空 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/specs/trace-report/spec.md:169](../../openspec/specs/trace-report/spec.md#L169) | 合意の欄が空のときの警告 / 列のない古い trace.md | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/specs/trace-report/spec.md:173](../../openspec/specs/trace-report/spec.md#L173) | 合意の欄が空のときの警告 / 未回答の行 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/specs/trace-report/spec.md:182](../../openspec/specs/trace-report/spec.md#L182) | report の性能 / 大きな change | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/trace-report/spec.md:191](../../openspec/specs/trace-report/spec.md#L191) | 記録のあとで変わった文書 / 差分仕様が変わっている | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/specs/trace-report/spec.md:195](../../openspec/specs/trace-report/spec.md#L195) | 記録のあとで変わった文書 / 文書が変わっていない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 3 件 |
+| [openspec/specs/trace-report/spec.md:204](../../openspec/specs/trace-report/spec.md#L204) | 古い形式の証拠の記録 / 文書のない記録を使う | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/trace-report/spec.md:213](../../openspec/specs/trace-report/spec.md#L213) | 検査の範囲の説明 / 説明が載る | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/verify/spec.md:13](../../openspec/specs/verify/spec.md#L13) | ブロッキング確認事項の検査 / 未回答のブロッキング確認事項がある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/verify/spec.md:17](../../openspec/specs/verify/spec.md#L17) | ブロッキング確認事項の検査 / すべて回答済み | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/verify/spec.md:21](../../openspec/specs/verify/spec.md#L21) | ブロッキング確認事項の検査 / ブロッキングでない確認事項 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/verify/spec.md:25](../../openspec/specs/verify/spec.md#L25) | ブロッキング確認事項の検査 / 確認事項の節名が崩れている | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/verify/spec.md:29](../../openspec/specs/verify/spec.md#L29) | ブロッキング確認事項の検査 / 差分仕様の解析エラー | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/verify/spec.md:38](../../openspec/specs/verify/spec.md#L38) | 仕様の整合性の検査 / Source が無い | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/specs/verify/spec.md:42](../../openspec/specs/verify/spec.md#L42) | 仕様の整合性の検査 / 台帳に無い要件 ID | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/specs/verify/spec.md:46](../../openspec/specs/verify/spec.md#L46) | 仕様の整合性の検査 / Scenario が無い | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/specs/verify/spec.md:50](../../openspec/specs/verify/spec.md#L50) | 仕様の整合性の検査 / 反映済なのに仕様に無い | unreviewed | 対応候補のassertionの内容は未精査<br>候補 4 件 |
+| [openspec/specs/verify/spec.md:59](../../openspec/specs/verify/spec.md#L59) | 仕様ゲートの警告 / 警告のみ | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/verify/spec.md:68](../../openspec/specs/verify/spec.md#L68) | openspec validate の実行 / validate が失敗する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/verify/spec.md:72](../../openspec/specs/verify/spec.md#L72) | openspec validate の実行 / OpenSpec CLI が無い | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/verify/spec.md:81](../../openspec/specs/verify/spec.md#L81) | 完了ゲート / 未完了タスクがある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/verify/spec.md:85](../../openspec/specs/verify/spec.md#L85) | 完了ゲート / 確認待ちが残っている | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/verify/spec.md:89](../../openspec/specs/verify/spec.md#L89) | 完了ゲート / テストの無い要件 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/verify/spec.md:93](../../openspec/specs/verify/spec.md#L93) | 完了ゲート / skip されたテスト | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/verify/spec.md:97](../../openspec/specs/verify/spec.md#L97) | 完了ゲート / 修飾子が続く skip の中のテスト | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/verify/spec.md:101](../../openspec/specs/verify/spec.md#L101) | 完了ゲート / テスト名以外の文字列にだけある要件 ID | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/verify/spec.md:105](../../openspec/specs/verify/spec.md#L105) | 完了ゲート / テストランナーが実行しないファイル | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/verify/spec.md:109](../../openspec/specs/verify/spec.md#L109) | 完了ゲート / レポートが書き出されない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/verify/spec.md:118](../../openspec/specs/verify/spec.md#L118) | 品質コマンドの実行 / コマンドが失敗する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/verify/spec.md:122](../../openspec/specs/verify/spec.md#L122) | 品質コマンドの実行 / すべて成功する | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/verify/spec.md:131](../../openspec/specs/verify/spec.md#L131) | JSON 出力 / スキーマに沿った出力 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/verify/spec.md:135](../../openspec/specs/verify/spec.md#L135) | JSON 出力 / 要件ごとのテストファイル | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/verify/spec.md:144](../../openspec/specs/verify/spec.md#L144) | 終了コード / 合格 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/verify/spec.md:148](../../openspec/specs/verify/spec.md#L148) | 終了コード / 不合格 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/verify/spec.md:152](../../openspec/specs/verify/spec.md#L152) | 終了コード / 使い方の誤り | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/verify/spec.md:156](../../openspec/specs/verify/spec.md#L156) | 終了コード / パスの区切りを含む change-id | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/verify/spec.md:165](../../openspec/specs/verify/spec.md#L165) | change の省略 / commands のみ | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/verify/spec.md:174](../../openspec/specs/verify/spec.md#L174) | 日本語のメッセージ / 日本語の出力 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 6 件 |
+| [openspec/specs/verify/spec.md:183](../../openspec/specs/verify/spec.md#L183) | 実行時依存の範囲 / kit の依存 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/verify/spec.md:187](../../openspec/specs/verify/spec.md#L187) | 実行時依存の範囲 / loomake の依存 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 2 件 |
+| [openspec/specs/verify/spec.md:196](../../openspec/specs/verify/spec.md#L196) | verify の性能 / 1,000 ファイル・500 要件 | unreviewed | 対応候補のassertionの内容は未精査<br>候補 1 件 |
+| [openspec/specs/verify/spec.md:205](../../openspec/specs/verify/spec.md#L205) | 同じ確認事項の回答の照合 / 回答が同じ | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/verify/spec.md:209](../../openspec/specs/verify/spec.md#L209) | 同じ確認事項の回答の照合 / 回答が違う | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/verify/spec.md:213](../../openspec/specs/verify/spec.md#L213) | 同じ確認事項の回答の照合 / 片方だけ回答がある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/verify/spec.md:217](../../openspec/specs/verify/spec.md#L217) | 同じ確認事項の回答の照合 / 参照先が archive にある | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/verify/spec.md:221](../../openspec/specs/verify/spec.md#L221) | 同じ確認事項の回答の照合 / 参照先が見つからない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |
+| [openspec/specs/verify/spec.md:225](../../openspec/specs/verify/spec.md#L225) | 同じ確認事項の回答の照合 / 印がない | unreviewed | 対応候補のassertionの内容は未精査<br>候補 12 件 |

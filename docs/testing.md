@@ -52,3 +52,6 @@ results.jsonには条件の変更内容、元と変更後のハッシュ、失�
 
 
 doctorの静的診断とAI作成の復旧試験は[doctor.md](doctor.md)を参照する。scriptの存在と実行成功、AI作成の操作試験と人による利用者試験を分けて記録する。
+
+
+Scenarioごとの対応は[scenario-audit.md](scenario-audit.md)の手順で確認する。IDの一致を候補とし、対応するassertionの内容を確認した記録と実行結果を分けて残す。

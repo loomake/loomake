@@ -140,6 +140,7 @@ export async function auditRepository(root, output, reviewFile = 'docs/quality/s
   const sources = Object.fromEntries([...new Set(executions.map((test) => test.file))].map((file) => [file, read(file)]));
   const result = auditScenarios(inventory, review.reviews, executions, sources);
   result.inputs = { specs: Object.fromEntries(files.map((file) => [relative(root, file).split('\\').join('/'), sha256(reader.read(file))])), testSources: Object.fromEntries(Object.entries(sources).map(([file, text]) => [file, sha256(text)])), testReportSha256: sha256(reportText), reviewSha256: reviewText ? sha256(reviewText) : null, scriptSha256: sha256(read('scripts/scenario-audit.mjs')) };
+  mkdirSync(dirname(output), { recursive: true });
   mkdirSync(output);
   writeFileSync(join(output, 'audit.json'), JSON.stringify(result, null, 2) + '\n');
   writeFileSync(join(output, 'audit.md'), renderAudit(result, relative(output, root).split('\\').join('/') + '/'));
