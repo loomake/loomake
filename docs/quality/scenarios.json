@@ -155,15 +155,15 @@
       "id": "SCN-ad79a2d6248e8966fe48",
       "status": "reviewed",
       "scenarioSha256": "a09d1d06b2dd990e988ed9a0d5d54b10e0973668ff86d661bb5b0336ee6f8449",
-      "reason": "実際のrunで上限超過を発生させ、停止理由・終了コード・保存量と未完了のタスク・変更の保持をassertする。",
       "sources": [
         "REQ-152"
       ],
+      "reason": "64バイト上限を超える見本エンジンで、終了コード1・出力上限の理由・タスク未完了・initだけの履歴・PRなし・保存出力も64バイト以下をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "大きな出力で停止し",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "contains": "大きな出力で停止し、タスクと変更を未完了のまま残す",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -171,15 +171,15 @@
       "id": "SCN-c6fbdb01e2976cfcc237",
       "status": "reviewed",
       "scenarioSha256": "f47966ccb7aa5ba114a7dbde071321649eccdc36433849c3c3f5dbee057505d6",
-      "reason": "不正な上限値で通常のrunを呼び、終了コード2とメッセージ、エンジン未実行をassertする。",
       "sources": [
         "REQ-152"
       ],
+      "reason": "0・負数・小数・安全な整数外の上限設定で、CLI終了コード2・run.maxOutputBytesを示す理由・エンジン未起動をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "[REQ-152] 不正な",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "contains": "不正な出力上限",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -726,21 +726,56 @@
     },
     {
       "id": "SCN-01fe716500962c3a6b43",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "7027d6ef698c3cd68fe59128c74be976bd96705d4b36a9a3ff03e1141b6a1e1a",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-141"
+      ],
+      "reason": "null・配列・文字列・数値を含む各設定でCLI終了コード2・runを示す日本語・エンジン未起動をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "不正なrun設定",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
+        }
+      ]
     },
     {
       "id": "SCN-2e59c52571a3b814c8b0",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "7788148c02522b3341c41b3138009639ddd8a242881fd24d0ebb6325d1592319",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-141"
+      ],
+      "reason": "小数・安全な整数外・0のmaxFixes、nullのtimeoutMinutesを含む不正設定で、終了コード2・日本語・エンジン未起動をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "不正なrun設定",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
+        }
+      ]
     },
     {
       "id": "SCN-44af177ca94216a650d0",
-      "status": "unreviewed",
+      "status": "reviewed",
       "scenarioSha256": "e19b1c98e8c4b0f41a7436e8204e375d912f03c1ae5df0c7a92f257e9d15de6b",
-      "reason": "対応候補のassertionの内容は未精査"
+      "sources": [
+        "REQ-141"
+      ],
+      "reason": "指定した整数maxFixesと小数timeoutMinutesのdry-run成功を確認する。省略したrun設定のdry-runも終了コード0をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "正しい整数と正の小数の時間を受け付ける",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
+        },
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "--dry-run は、タスクの一覧と最初の指示を表示し",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
+        }
+      ]
     },
     {
       "id": "SCN-beb21adb67ca645626eb",
@@ -883,15 +918,15 @@
       "id": "SCN-892744352cbcc21e08c8",
       "status": "reviewed",
       "scenarioSha256": "1735286c473463bfaa4b8ecb6a21e160d0b0324d1587e245a34d79952c30800f",
-      "reason": "実際のrunの質問・停止理由・summaryにトークンが残らず、置換の印があることをassertする。",
       "sources": [
         "REQ-154"
       ],
+      "reason": "人工トークンを含む質問で停止し、終了コード1・標準出力とsummaryの両方にトークンなしと置換マーカーありをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "[REQ-154] 質問",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "contains": "質問と停止理由を表示する前に置換する",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -899,15 +934,15 @@
       "id": "SCN-58988ff67e04a22a6e90",
       "status": "reviewed",
       "scenarioSha256": "ef619e845ff9749c39b3608577f5260562fb5d400016acb98ab39310bc5d3ea9",
-      "reason": "品質コマンドの出力にトークンを含め、progressコールバックへの転送前に置換されることをassertする。",
       "sources": [
         "REQ-154"
       ],
+      "reason": "品質コマンドの引数へ人工トークンを入れ、正常runと進捗先でのトークン不在・置換マーカーをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "[REQ-154] 品質コマンド",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "contains": "品質コマンドの進捗を転送する前に置換する",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -1146,22 +1181,6 @@
           "file": "tests/package-artifacts.test.ts",
           "contains": "packした5パッケージだけで主要コマンドと公開APIを使える",
           "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
-        }
-      ]
-    },
-    {
-      "id": "SCN-bf2080219544eaef1205",
-      "status": "reviewed",
-      "scenarioSha256": "195d8613452d1aa79e2d24d3e5a6c4891fe3df049b75cd0cbae1ed57d7df1c47",
-      "sources": [
-        "REQ-144"
-      ],
-      "reason": "Node24でビルド・pack・専用fixtureへの導入を行い、公式Node20.19.0で公開APIと主要コマンドをassertした。Node20側は開発ツールを実行しない。CI設定の存在と、今回のLinux ARM64での実行成功を区別する。",
-      "tests": [
-        {
-          "file": "scripts/runtime-compatibility.mjs",
-          "contains": "指定したNodeの配布物で主要コマンドと公開APIを検証する",
-          "sha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
         }
       ]
     },
@@ -3009,12 +3028,12 @@
       "sources": [
         "REQ-111"
       ],
-      "reason": "2タスク後の不合格でimpl.txtだけを直す見本を動かし、終了コード0・修正指示内の不合格理由・修正と完了ゲートのコミット順序・完了タスクをassertする。",
+      "reason": "製品の変更はimpl.txtだけの修正台本で、終了コード0・不合格理由を渡す指示・修正と完了ゲートのコミット順・ゲートタスクの完了をassertし、run自身のtasks変更で止まらないことを確認する。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "不合格なら内容をエンジンに渡して直させ、直しをコミットし",
-          "sha256": "cfe8546b1a4b43e21e9307933e23f4500039b7db3d03a1f1372de2f0e5abab80"
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3245,12 +3264,12 @@
       "sources": [
         "REQ-093"
       ],
-      "reason": "未回答の質問を与え、終了コード1・質問ID・ブランチを作らないこととエンジン呼出なしをassertする。",
+      "reason": "未回答ブロッキングQ-01でrun終了コード1・仕様ゲート不合格とQ-01の表示・ブランチなし・エンジン未起動をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "仕様ゲートに不合格なら",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "contains": "仕様ゲートに不合格なら、内容を表示し",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3261,12 +3280,12 @@
       "sources": [
         "REQ-093"
       ],
-      "reason": "合格する入力で、代替エンジンの呼出と最終終了コード0をassertする。",
+      "reason": "合格するfixtureで終了コード0とエンジンの起動ありをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "仕様ゲートに合格すれば",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "contains": "仕様ゲートに合格すれば、実装に進む",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3277,12 +3296,12 @@
       "sources": [
         "REQ-094"
       ],
-      "reason": "追跡ファイルを変更し、終了コード1・対象名・代替エンジン呼出なしをassertする。",
+      "reason": "追跡済みAGENTS.mdを変更し、終了コード1・パスの表示・エンジン未起動をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "コミット済みのファイルを書き換えていたら",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "contains": "コミット済みのファイルを書き換えていたら、ファイル名を出し",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3293,11 +3312,11 @@
       "sources": [
         "REQ-094"
       ],
-      "reason": "未追跡ファイルを作り、終了コード1・対象名の表示・ブランチ作成なし・HEAD不変・代替エンジン呼出なしをassertする。",
+      "reason": "未追跡ファイルを作り、終了コード1・ファイル名・エンジン未起動・ブランチなし・HEAD不変をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run-conditions.test.ts",
-          "contains": "未追跡のファイル名を表示し",
+          "contains": "未追跡のファイル名を表示し、ブランチとコミットを作らず",
           "sha256": "ad3ecc2391eef40a16199597cc0e4feb6958c38fdfc9f8e3bdcabbe310b34511"
         }
       ]
@@ -3309,12 +3328,12 @@
       "sources": [
         "REQ-094"
       ],
-      "reason": "レポートの除外を消し、終了コード1・対象パス・除外を足す案内・エンジン呼出なしをassertする。",
+      "reason": "gitignoreの除外を消してコミットし、終了コード1・レポートのパスと追加案内・エンジン未起動をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "テストのレポートを .gitignore で除外していなければ",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3325,12 +3344,12 @@
       "sources": [
         "REQ-095"
       ],
-      "reason": "CLIでdry-runを実行し、タスクと指示・終了コード0・ブランチ作成なし・代替エンジン呼出なしをassertする。",
+      "reason": "未完了2タスクの番号と本文、指示の見出し、終了コード0、ブランチとエンジンなしをassertする。指示本文の個別契約は別Scenarioとして扱う。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "--dry-run は、タスクの一覧と最初の指示を表示し",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3341,12 +3360,12 @@
       "sources": [
         "REQ-096"
       ],
-      "reason": "実際のGitで、開始HEADと作成したブランチのmerge-baseの一致、タスクコミットの存在を比較する。",
+      "reason": "初期HEADを保存し、run後のmainとloomake/c1のmerge-baseがそのSHAで、タスクコミットがloomake/c1にあることをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "loomake/<change-id> がなければ",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "contains": "loomake/<change-id> がなければ、いまの HEAD から作ってコミットする",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3373,12 +3392,12 @@
       "sources": [
         "REQ-096"
       ],
-      "reason": "実装ブランチだけでタスクを完了にし、別ブランチから再開して、未完了タスクだけが代替エンジンへ渡ることをassertする。",
+      "reason": "実装ブランチで1.1を完了にしてからmainへ戻し、run終了コード0・起動1回・対象行が1.2であることをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "別のブランチから再開したら、loomake/<change-id> の tasks.md",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "contains": "別のブランチから再開したら、loomake/<change-id> の tasks.md で",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3389,12 +3408,17 @@
       "sources": [
         "REQ-097"
       ],
-      "reason": "代替エンジンが受信した1回目・2回目の指示の対象行をそれぞれ比較する。",
+      "reason": "同じpassing台本で最初と次の対象行が1.1と1.2に完全一致することを確認する。同じfixtureの完了ゲート除外試験で起動が2回だけであることもassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "未完了のタスクを上から順に、1 回に 1 つずつ渡す",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
+        },
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "完了ゲートのタスクはエンジンに渡さない",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3405,12 +3429,12 @@
       "sources": [
         "REQ-097"
       ],
-      "reason": "最初のタスクをチェック済みにした入力で、呼出が1回で対象が次のタスクとなることをassertする。",
+      "reason": "1.1完了・1.2未完了のtasksで起動が1回、その指示に1.2があることをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "完了済みのタスクは渡さない",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "contains": "[REQ-097] 完了済みのタスクは渡さない",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3437,12 +3461,12 @@
       "sources": [
         "REQ-098"
       ],
-      "reason": "dry-runの指示に、エンジンによるGit操作の禁止とrunがコミットする旨を含む文をassertする。",
+      "reason": "dry-runの指示へコミットとブランチ変更の禁止・作業ツリーへ残すこと・runがコミットするという文が全文であることをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "指示に、git でコミットしたりブランチを切り替えたりせず",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3453,12 +3477,12 @@
       "sources": [
         "REQ-099"
       ],
-      "reason": "実際のGitコミットのメッセージとファイル一覧、コミット内のtasks.mdのチェック状態を比較する。エンジンは代替プロセスである。",
+      "reason": "実Gitのタスク1.1のコミットを取り出し、コミット名・impl.txtとtasks.mdの同梱・そのコミット内の1.1完了をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "タスクを終えるたびに、変更と完了にした tasks.md",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "contains": "タスクを終えるたびに、変更と完了にした tasks.md を",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3469,12 +3493,12 @@
       "sources": [
         "REQ-099"
       ],
-      "reason": "exit 1の代替エンジンで、終了コード1・タスク未完了・初期コミットだけの履歴・停止の要約をassertする。",
+      "reason": "エンジンが変更後にexit1となり、run終了コード1・失敗理由・タスク未完了・履歴がinitだけ・summary stoppedをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "エンジンが 0 以外の終了コードで終わったら",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3485,12 +3509,12 @@
       "sources": [
         "REQ-100"
       ],
-      "reason": "不合格の内容を修正の指示へ渡すこと、実際の修正コミットと完了ゲートの順序、ゲートのチェック状態、終了コード0をassertする。",
+      "reason": "2通常タスク後に不合格を起こし修正でimplを作る台本で、終了コード0・修正指示の不合格理由・修正とゲートのコミット順・ゲートタスク完了をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "[REQ-100][REQ-111]",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "contains": "不合格なら内容をエンジンに渡して直させ、直しをコミットし",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3501,12 +3525,12 @@
       "sources": [
         "REQ-100"
       ],
-      "reason": "代替エンジンへの呼出回数と、どの指示にもゲートのタスクが対象として渡らないことをassertする。",
+      "reason": "旧形式のverify/doneタスクを持つfixtureで、起動2回だけ、全指示に3.1がないことをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "完了ゲートのタスクはエンジンに渡さない",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3517,12 +3541,12 @@
       "sources": [
         "REQ-100"
       ],
-      "reason": "印のあるタスクを対象に渡さず、合格後のチェック、印の保持、旧書式警告なしをassertする。",
+      "reason": "印つきの品質確認タスクで、終了コード0・起動1回・指示に品質確認なし・印を残したタスク完了と旧形式警告なしをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "印のあるタスクは、文に verify と --done がなくても",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3533,12 +3557,12 @@
       "sources": [
         "REQ-100"
       ],
-      "reason": "旧書式のタスクが対象の指示に入らないことと、印を付ける案内をassertする。",
+      "reason": "旧形式タスクをエンジンへ渡さず、終了コード0と判定理由・印の追加案内をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "印のない旧書式のタスクもエンジンに渡さず",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3549,76 +3573,76 @@
       "sources": [
         "REQ-100"
       ],
-      "reason": "修正上限で停止したときの、残ったタスクの表示とsummaryのタスク本文から印が除かれることを比較する。ScenarioのTHENが対象である。",
+      "reason": "maxFixes=1で止まる印つきゲートfixtureで、終了コード1・修正回数上限・残タスク表示とsummary配列から印が除かれていることをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "残ったタスクの表示と summary.json には",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "contains": "残ったタスクの表示と summary.json には、印を含めない",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
     {
       "id": "SCN-a83b88ba3bb1f0a50ab9",
       "status": "reviewed",
-      "scenarioSha256": "c6e9342914d74f6a3a1651f81b766a5b8e81e4f2efc700fdb2104952d516b433",
+      "scenarioSha256": "0a97a072b7a2a04a41a52ae40521520213ef71a06f39b76df64ab462d6bd4cab",
       "sources": [
         "REQ-101"
       ],
-      "reason": "代替claudeの受信引数にheadless・JSON・ファイル操作・品質コマンドがあり、権限確認を飛ばす指定がないことをassertする。実際のClaude Codeによる権限制御は未検証である。",
+      "reason": "見本のclaudeが記録したargvの先頭-p/output-format/json、Read/Edit/Writeと設定のtestコマンド、権限確認スキップ指定なしをassertする。fixtureはpnpmでなくnode write-report.mjsをcommandsに使い、設定されたコマンドを反映する同じ規則を検証する。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "ふだんは -p と JSON の出力で呼び",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
     {
       "id": "SCN-05f2e4e28c0b069eb5f8",
       "status": "reviewed",
-      "scenarioSha256": "086418661b740a9dec3e9e58cd7dea42857ee34496dd69bac65d3a6b05e19c26",
+      "scenarioSha256": "75768a3c7d0c13476cc112cea0e798a7f89b7c78f1ebbdd188cb0ce44e709f47",
       "sources": [
         "REQ-101"
       ],
-      "reason": "未対応のエンジン名で終了コード2と日本語の案内をassertする。",
+      "reason": "CLIでcodexを指定し、終了コード2と初版はclaude-codeだけの案内をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "知らないエンジンでは、使い方の誤りとして",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
     {
       "id": "SCN-6d4ed375d23ba4e50bc5",
       "status": "reviewed",
-      "scenarioSha256": "3edde8ff472bf3b22bb65223ebf03931ce8c8e16a8ac919f3626c534ccf9f479",
+      "scenarioSha256": "a92529dd2e12bac3cf4f1edc98f0d947bce8e6e02b4009ccedf4c5b3f3a00098",
       "sources": [
         "REQ-101"
       ],
-      "reason": "claudeのないPATHでCLIを実行し、終了コード2とインストールの案内をassertする。",
+      "reason": "Git自身のexec-pathだけをPATHにし、Gitの存在を確認した上でCLIを呼ぶ。終了コード2とClaude未導入の日本語をassertする。Node22で旧fixtureはGit不在で失敗し、修正後はこの期待値のまま成功した。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "claude コマンドがなければ",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "contains": "claude コマンドがなければ、Claude Code を入れるよう",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
     {
       "id": "SCN-fed4aa4653d4bc92458a",
       "status": "reviewed",
-      "scenarioSha256": "a9fa11496edc46f9c3d0b9b94c416d65341562970b63f2fc48e797e79574886f",
+      "scenarioSha256": "2beb0af51ebe24821bb9dad56b4cddbdf6900bd798b3cd484ca91ad3708ac297",
       "sources": [
         "REQ-101"
       ],
-      "reason": "親参照を含むIDで終了コード2とパス区切りの案内、代替エンジン呼出なしをassertする。",
+      "reason": "../c1をCLIへ渡し、終了コード2・パス区切りの理由・エンジン未起動をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "change-id にパスの区切りを含めると",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "contains": "change-id にパスの区切りを含めると、使い方の誤りとして",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3629,12 +3653,12 @@
       "sources": [
         "REQ-121"
       ],
-      "reason": "環境宣言とフラグが揃うと代替claudeの引数に権限確認を飛ばす指定が含まれることをassertする。環境自体の通信制限を証明する試験ではない。",
+      "reason": "LOOMAKE_SANDBOX=1かつskipPermissionsで見本エンジンを呼び、argvにdangerously-skip-permissionsがあることをassertする。実際の通信制限の有効性をこの試験だけでは保証しない。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "LOOMAKE_SANDBOX=1 で --skip-permissions を付ければ",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3645,12 +3669,12 @@
       "sources": [
         "REQ-121"
       ],
-      "reason": "環境宣言なしで終了コード2、環境変数と許可ドメインの案内、代替エンジン呼出なしをassertする。",
+      "reason": "環境宣言なしのCLIで終了コード2・LOOMAKE_SANDBOX=1とnpmドメインの案内・エンジン未起動をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "LOOMAKE_SANDBOX=1 でなければ",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "contains": "LOOMAKE_SANDBOX=1 でなければ、--skip-permissions を断り",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3661,12 +3685,12 @@
       "sources": [
         "REQ-104"
       ],
-      "reason": "修正回数2で失敗を続け、呼出回数4・停止理由・終了コード1・ゲート未完了をassertする。",
+      "reason": "maxFixes=2の不合格fixtureで、終了コード1・2回の上限理由・通常2回と修正2回の計4回の起動・ゲートタスク未完了をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "直しの回数が上限に達したら止まり",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3709,12 +3733,12 @@
       "sources": [
         "REQ-106"
       ],
-      "reason": "質問を出す代替エンジンで、質問表示・終了コード1・タスク未完了・初期コミットだけの履歴をassertする。",
+      "reason": "出力内の質問で停止し、終了コード1・質問内容・タスク未完了・コミット履歴がinitだけをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "エンジンが LOOMAKE-QUESTION: を出したら",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3725,12 +3749,12 @@
       "sources": [
         "REQ-107"
       ],
-      "reason": "2つ目で質問する代替エンジンで、stdoutの理由・完了タスク・検査なしと、summaryの停止状態・完了と残りのタスク・検査nullをassertする。",
+      "reason": "2タスク目の質問で、表示の理由・完了タスク・最後の検査なしと、summary内のstopped・完了/未完了タスク・lastVerify=nullをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "止まったら、理由・終えたタスク・残ったタスク",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "contains": "止まったら、理由・終えたタスク・残ったタスク・最後の検査結果を表示し",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3757,12 +3781,12 @@
       "sources": [
         "REQ-117"
       ],
-      "reason": "除外ファイルの存在と実際のgit statusの空の出力をassertする。",
+      "reason": "正常run後にruns/.gitignoreがあり、git status --porcelain --untracked-files=allが空であることをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "実行の記録は、git の未コミットの変更に出てこない",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3773,12 +3797,12 @@
       "sources": [
         "REQ-118"
       ],
-      "reason": "合成トークンを代替エンジンが出力し、保存した全テキストに元の値と環境変数の値がなく、伏字があることをassertする。",
+      "reason": "人工のghp形式と環境変数を与え、全保存ファイルに原文トークンと環境変数の値がなく、置換された文があることをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "出力の中のトークンを *** に置き換えて保存し",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3789,12 +3813,12 @@
       "sources": [
         "REQ-120"
       ],
-      "reason": "他のコンテナ判定条件を外し、REMOTE_CONTAINERSだけを設定して警告なし・終了コード0をassertする。",
+      "reason": "ほかのコンテナ環境宣言を消してREMOTE_CONTAINERSだけを設定し、警告なし・終了コード0をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "REMOTE_CONTAINERS が設定されていれば",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3805,12 +3829,12 @@
       "sources": [
         "REQ-122"
       ],
-      "reason": "コンテナ判定を外して拒否の応答を注入し、確認文・終了コード1・代替エンジン呼出なしをassertする。",
+      "reason": "外部環境の対話可能な入口でconfirm=falseを返し、確認文の完全一致・警告・終了コード1・エンジン未起動をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "コンテナの外で確認に断ると",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3821,12 +3845,12 @@
       "sources": [
         "REQ-122"
       ],
-      "reason": "コンテナ判定を外した非対話実行で、警告・終了コード1・代替エンジン呼出なしをassertする。",
+      "reason": "外部環境の非対話入口で、終了コード1・警告・エンジン未起動をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "コンテナの外で確認を受け付けられなければ",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3848,19 +3872,10 @@
     },
     {
       "id": "SCN-96f96fc165511da2bbd3",
-      "status": "reviewed",
+      "status": "superseded",
       "scenarioSha256": "7ab730200fd20b7331bcdab52d609372200b80d90206455dbde68bcb976d76a9",
-      "sources": [
-        "REQ-125"
-      ],
-      "reason": "Node20.19.0とそのPATHで配布物CLIを起動し、タスクコミット・途中のファイル保持・実際のSIGINT・中断summary・エンジン終了をassertする。保存結果のNode版も親プロセスと一致することを比較する。Linux ARM64と代替エンジンの結果である。",
-      "tests": [
-        {
-          "file": "scripts/runtime-compatibility.mjs",
-          "contains": "指定したNodeの配布物でrunのタスクコミットとSIGINT後の変更保持を検証する",
-          "sha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
-        }
-      ]
+      "replacement": "SCN-6e08a5af384d12764e7a",
+      "reason": "require-node-22の削除と追加の規則に従い、runの動作環境をNode22.12へ置換する。今回確認したのはNode22でありNode20の成功ではない。"
     },
     {
       "id": "SCN-da3119a636cd83d22349",
@@ -3869,12 +3884,12 @@
       "sources": [
         "REQ-123"
       ],
-      "reason": "runnerのdependenciesのキーがcore・kit・traceだけであることを比較する。",
+      "reason": "実manifestのdependenciesがcore/kit/traceの3件だけと完全一致することをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "@loomake/runner の dependencies は",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "contains": "@loomake/runner の dependencies は core・kit・trace だけ",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3885,12 +3900,12 @@
       "sources": [
         "REQ-137"
       ],
-      "reason": "失敗する実際のpre-commitフックで、終了コード1・理由とstderr・停止したsummary・完了なしと残りのタスクをassertする。",
+      "reason": "事前のpre-commitをexit1にして実Gitのコミットを失敗させ、run終了コード1・Git失敗の表示・summary stoppedとフックの理由・未完了の先頭タスクをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "始めたあとにコミットが git のフックで失敗したら",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -3901,12 +3916,12 @@
       "sources": [
         "REQ-137"
       ],
-      "reason": "Git管理を削除して実行し、終了コード2・日本語の理由・実行記録のディレクトリがないことをassertする。",
+      "reason": "Gitディレクトリを除去し、CLI終了コード2・Git失敗の日本語・実行記録なしをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "git のリポジトリでなければ",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "contains": "git のリポジトリでなければ、実行の記録を作らず",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -4093,22 +4108,6 @@
           "file": "tests/package-artifacts.test.ts",
           "contains": "Linuxで通信を拒否して配布物を使う",
           "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
-        }
-      ]
-    },
-    {
-      "id": "SCN-fae2b8b93f59b5ad7abf",
-      "status": "reviewed",
-      "scenarioSha256": "f003e1f803559f401624e084395317830d082e7fe7463e811e2e451042eb6578",
-      "sources": [
-        "REQ-089"
-      ],
-      "reason": "公式チェックサムを照合したNode 20.19.0で、Node24がpackした配布物を実行した。checkのassertionで記録の保存とレポート25行を確認した。Linux ARM64の結果で、開発用Vitest全体をNode20で実行した結果ではない。",
-      "tests": [
-        {
-          "file": "scripts/runtime-compatibility.mjs",
-          "contains": "指定したNodeの配布物で主要コマンドと公開APIを検証する",
-          "sha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
         }
       ]
     },
@@ -4449,22 +4448,6 @@
           "file": "packages/trace/test/report.test.ts",
           "contains": "レポートの見出しと表の列名は日本語",
           "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
-        }
-      ]
-    },
-    {
-      "id": "SCN-fa361b08b4790cff678f",
-      "status": "reviewed",
-      "scenarioSha256": "6ebde898b715374337b1fc59777d65398b894cb6bc0f1b5cf6a799a9396c0787",
-      "sources": [
-        "REQ-089"
-      ],
-      "reason": "公式チェックサムを照合したNode 20.19.0で、Node24がpackした配布物を実行した。checkのassertionで記録の保存とレポート25行を確認した。Linux ARM64の結果で、開発用Vitest全体をNode20で実行した結果ではない。",
-      "tests": [
-        {
-          "file": "scripts/runtime-compatibility.mjs",
-          "contains": "指定したNodeの配布物で主要コマンドと公開APIを検証する",
-          "sha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
         }
       ]
     },
@@ -6198,7 +6181,7 @@
       "id": "SCN-c3facf5eb6cfd3513701",
       "status": "reviewed",
       "scenarioSha256": "61a84bf880d2a50081a9268682ce5d8cd8efe1359e6af2cd657cf57e021ce918",
-      "reason": "直接試験で不合格の中断はinterruptedとなり、状態変更と合格が中断に優先することをassertする。実プロセスによる完了ゲート中断の統合試験では、エンジン呼出が2タスク分だけで再修正されず、summaryが中断となり子が残らないことをassertする。Linuxでの結果である。",
+      "reason": "直接試験で不合格の中断はinterruptedとなり、状態変更と合格が中断に優先することをassertする。実プロセスによる完了ゲート中断の統合試験では、エンジン呼出が2タスク分だけで再修正されず、summaryが中断となり子が残らないことをassertする。Linuxでの結果である。 今回もrun側の中断・起動2回・子PID消滅のassertionを読み直した。",
       "sources": [
         "REQ-205"
       ],
@@ -6211,7 +6194,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "[REQ-124] 完了ゲートの品質コマンドの途中で中断されたら",
-          "sha256": "cfe8546b1a4b43e21e9307933e23f4500039b7db3d03a1f1372de2f0e5abab80"
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
         }
       ]
     },
@@ -6727,6 +6710,48 @@
           "file": "tests/monorepo.test.ts",
           "contains": "docs/release.md に、初回を NPM_TOKEN で公開し",
           "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+        }
+      ]
+    },
+    {
+      "id": "SCN-dfe3b55434f2f141ca13",
+      "status": "reviewed",
+      "scenarioSha256": "330f03824a7281878d49106152cab632d08032db75fbb1af153ff3619702cc52",
+      "sources": [
+        "REQ-124"
+      ],
+      "reason": "実際のSIGINTを品質コマンドの監視役へ送り、run終了コード1・通常タスクの2回だけの起動・interruptedのsummary・保存した子PIDが生存しないことをassertする。verify側の試験では中断したcommand:testの詳細と後続コマンド未実行も確認する。POSIX分岐の結果だけを根拠にする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "完了ゲートの品質コマンドの途中で中断されたら",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
+        },
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "時間の上限つきの品質コマンドの途中で中断されたら",
+          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-6e08a5af384d12764e7a",
+      "status": "reviewed",
+      "scenarioSha256": "323c7e2c8ec05aa08ffb4d1d0068a4d5b12a630e591472574b3d1a51c777b3cf",
+      "sources": [
+        "REQ-142"
+      ],
+      "reason": "確認した公式Node22.12.0でrunner全試験300件が成功し、子のnodeも同じ版になるPATHを指定した。静的なengines宣言だけを実行の根拠にせず、以前のNode22配布物のrun/SIGINT実行も組み合わせる。配布物の結果を引き継ぐ条件として製品src・manifest・templates・supervisor・ロックファイル等が同一でruntime scriptのハッシュも一致することを確認した。別々の環境のレポートを明示して集約しており、Node24の864件をNode22の全体成功とは扱わない。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "[REQ-142] @loomake/runner の engines.node",
+          "sha256": "fbe5888959daa58d9c788d7e56086e5543a79250527c9dfad73c877af86859d2"
+        },
+        {
+          "file": "scripts/runtime-compatibility.mjs",
+          "contains": "[REQ-125][REQ-124] 指定したNodeの配布物でrun",
+          "sha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
         }
       ]
     }
