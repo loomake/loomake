@@ -56,9 +56,9 @@ doctorの静的診断とAI作成の復旧試験は[doctor.md](doctor.md)を参�
 
 Scenarioごとの対応は[scenario-audit.md](scenario-audit.md)の手順で確認する。IDの一致を候補とし、対応するassertionの内容を確認した記録と実行結果を分けて残す。
 
-## 配布物のCLIへSIGINTを送る
+## 配布物のCLIへ中断の信号を送る
 
-`tests/package-artifacts.test.ts`は、POSIX環境で配布物のCLIに実際のSIGINTを送り、先行コミット・途中の変更・中断の記録を確認する。エンジンは試験用の代替コマンドを使う。Windowsでは、この信号試験が対象外であることを確認するだけで、中断動作を検証したとは扱わない。
+`tests/package-artifacts.test.ts`は、POSIX環境で配布物のCLIに実際のSIGINT・SIGTERM・SIGHUPを送り、先行コミット・途中の変更・中断の記録と、エンジンのプロセスが残らないことを確認する。SIGTERM・SIGHUPは、準備した利用側のプロジェクトの複製で動かす。`node scripts/run-sigint-smoke.mjs <検証先> SIGTERM`のように、2つ目の引数で信号を選べる。エンジンは試験用の代替コマンドを使う。Windowsでは、この信号試験が対象外であることを確認するだけで、中断動作を検証したとは扱わない。
 
 POSIXで記録を残して個別に試す場合は、開発用Nodeとpnpm・npm・Gitがある環境で、まだ存在しない検証先を指定する。prepareは配布物をビルド・packし、専用のfixtureへインストールする。次のチェックはそのfixtureのタスクを書き換え、コミットしてからCLIを起動する。
 
