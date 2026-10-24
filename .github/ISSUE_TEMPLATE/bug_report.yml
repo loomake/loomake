@@ -1,0 +1,25 @@
+name: 不具合の報告
+description: Loomake の動作が文書や仕様と違うときに使う。脆弱性は SECURITY.md の手順で非公開に報告する
+labels: [bug]
+body:
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現の手順
+      description: 実行したコマンドと、使った change の最小の例。秘密情報と顧客の文書は書かない
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待した動作と実際の動作
+      description: 実際の出力と終了コードを貼る
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 版と環境
+      description: loomake --version、OS、Node.js の版
+    validations:
+      required: true

@@ -1,0 +1,11 @@
+# 依存の更新の PR を毎週作る。Actions は .github/action-pins.json で SHA を確かめてから手で上げるので、ここでは扱わない
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      development:
+        dependency-type: development

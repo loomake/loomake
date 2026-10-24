@@ -1,0 +1,16 @@
+name: 機能の提案
+description: 新しい振る舞いや、変えたい振る舞いを提案する
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 困っていること
+      description: いまの動作で何ができないか、どんな場面で困るか
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 提案する振る舞い
+      description: コマンドの使い方と結果の例。仕様（openspec/specs/）のどこを変えるかが分かれば書く
