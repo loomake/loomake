@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { findViolations, runRun } from '@loomake/runner';
 import { CHANGE, makeRepo, type FakeStep, type Repo } from './helpers.js';
@@ -410,6 +410,37 @@ describe('テストの検査を弱める変更の検出', () => {
   it('[REQ-201] テストを足すだけなら止まらない', () =>
     check({ write: { 'tests/add.test.ts': "it('[REQ-012] 足す', () => {\n  expect(add(1, 2)).toBe(3);\n  expect(add(2, 2)).toBe(4);\n  expect(add(0, 0)).toBe(0);\n});\n" } }, withAdd, (r) => {
       expect(r.stdout).not.toContain('不正な直し方を見つけました');
+      expect(readFileSync(join(r.repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [x] 1.1');
+    }));
+});
+
+describe('git の設定の比較の範囲', () => {
+  it('[REQ-204] include の先の設定に core.fsmonitor を書いたら、コミットせずに止まる', () =>
+    check({ write: { 'local.gitconfig': '[core]\n\tfsmonitor = echo injected\n' } }, (repo) => {
+      repo.git('config', 'include.path', '../local.gitconfig');
+      writeFileSync(join(repo.root, 'local.gitconfig'), '');
+      writeFileSync(join(repo.root, '.gitignore'), `${readFileSync(join(repo.root, '.gitignore'), 'utf8')}local.gitconfig\n`);
+    }, (r) => {
+      expect(r.code).toBe(1);
+      expect(r.stdout).toContain('エンジンが git の設定かフックを変えました');
+      expect(readFileSync(join(r.repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [ ] 1.1');
+    }));
+
+  it('[REQ-204] リンク先のないフックがあっても、落ちずにタスクを完了にする', () =>
+    check({}, (repo) => {
+      symlinkSync(join(repo.base, 'missing-hook'), join(repo.root, '.git/hooks/pre-commit'));
+      repo.write('setup.txt', '準備\n');
+    }, (r) => {
+      expect(r.stdout).not.toContain('エンジンが git の設定かフックを変えました');
+      expect(readFileSync(join(r.repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [x] 1.1');
+    }));
+});
+
+describe('検査の行の数え方', () => {
+  it('[REQ-201] import とコメントの assert を消しても、テストの検査を減らしたとはみなさない', () =>
+    check({ write: { 'tests/add.test.ts': "it('[REQ-012] 足す', () => {\n  expect(add(1, 2)).toBe(3);\n});\n" } }, (repo) =>
+      repo.write('tests/add.test.ts', "import { assert } from 'vitest';\n// assert は使わない\nit('[REQ-012] 足す', () => {\n  expect(add(1, 2)).toBe(3);\n});\n"), (r) => {
+      expect(r.stdout).not.toContain('テストの検査を減らしました');
       expect(readFileSync(join(r.repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [x] 1.1');
     }));
 });

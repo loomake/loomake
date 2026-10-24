@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, lstatSync, readFileSync, readdirSync, readlinkSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { runExternal } from '@loomake/kit';
 import { dirtyFiles, git } from './git.js';
@@ -12,7 +12,9 @@ const isTestFile = (f: string) => /\.(test|spec)\./.test(f) || /(^|\/)(test|test
 // skip・todo を足した行（A-17）。it.concurrent.skip のような修飾と、条件つきの skipIf・runIf も見る
 const SKIP = /\b(it|test|describe|suite)(\.\w+)*\.(skip|todo|skipIf|runIf)\b|\bx(it|test|describe)\(/;
 // 検査の行と、同じリテラルどうしを比べる必ず通る検査（REQ-201）
-const ASSERTION = /\bexpect\(|\bassert\b/;
+const ASSERTION = /\bexpect\(|\bassert(?:\.\w+)?\(/;
+// コメントと import・require の行は、検査の行として数えない（REQ-201）
+const NOT_ASSERTION = /^[+-]\s*(?:\/\/|\/\*|\*|import\b|(?:const|let|var)\b.*\brequire\()/;
 const LITERAL = String.raw`(true|false|null|undefined|-?\d+(?:\.\d+)?|'[^']*'|"[^"]*")`;
 const TRIVIAL = new RegExp(
   String.raw`\bexpect\(\s*${LITERAL}\s*\)\s*\.(?:toBe|toEqual|toStrictEqual)\(\s*\1\s*\)` +
@@ -77,7 +79,7 @@ export function findViolations(root: string, env: NodeJS.ProcessEnv, openspecDir
       if (isTestFile(file)) {
         for (const l of added) if (TRIVIAL.test(l)) findings.push({ file, reason: `必ず通る検査を足しました：${l.slice(1).trim()}` });
         const removed = lines.filter((l) => l.startsWith('-') && !l.startsWith('---'));
-        const count = (xs: string[]) => xs.filter((l) => ASSERTION.test(l)).length;
+        const count = (xs: string[]) => xs.filter((l) => ASSERTION.test(l) && !NOT_ASSERTION.test(l)).length;
         if (code === 'M' && count(removed) > count(added)) findings.push({ file, reason: 'テストの検査を減らしました' });
       }
       // HEAD にあったテストファイルのアサーションとテストの宣言を、消すか書き換えたら止まる。同じ内容の行を足していれば、移しただけとみなす（REQ-109）
@@ -144,8 +146,17 @@ export function findEngineMove(
 /** git の設定ファイルとフックのディレクトリの場所。`--git-path hooks` は core.hooksPath を反映する */
 const gitPath = (root: string, env: NodeJS.ProcessEnv, name: string) => resolve(root, git(root, env, ['rev-parse', '--git-path', name]).trim());
 
+// シンボリックリンクはたどらない（REQ-204）。リンク先のないリンクでも落ちない
 const filesUnder = (dir: string): string[] =>
-  readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? filesUnder(join(dir, e.name)) : [join(dir, e.name)])).sort();
+  readdirSync(dir, { withFileTypes: true })
+    .flatMap((e) => (e.isDirectory() && !e.isSymbolicLink() ? filesUnder(join(dir, e.name)) : [join(dir, e.name)]))
+    .sort();
+
+const entryDigest = (file: string) => {
+  const stat = lstatSync(file);
+  if (stat.isSymbolicLink()) return `link:${readlinkSync(file)}`;
+  return `${String(stat.mode & 0o111)}:${createHash('sha256').update(readFileSync(file)).digest('hex')}`;
+};
 
 /** git の設定とフックの状態。エンジンを呼ぶ前後で比べる（REQ-198） */
 export type GitInternals = { config: string; hooks: string; digest: string };
@@ -156,8 +167,10 @@ export function gitInternals(root: string, env: NodeJS.ProcessEnv, places?: { co
   const hooks = places?.hooks ?? gitPath(root, env, 'hooks');
   const hash = createHash('sha256');
   hash.update(existsSync(config) ? readFileSync(config) : '');
+  // include の先・利用者全体・システム全体・worktree の設定も含めて、git が実際に使う設定を比べる（REQ-204）
+  hash.update('\0config\0').update(runExternal('git', ['config', '--list', '--show-origin', '-z'], { cwd: root, env }).stdout);
   if (existsSync(hooks) && statSync(hooks).isDirectory()) {
-    for (const file of filesUnder(hooks)) hash.update(`\0${relative(hooks, file)}\0`).update(readFileSync(file)).update(String(statSync(file).mode & 0o111));
+    for (const file of filesUnder(hooks)) hash.update(`\0${relative(hooks, file)}\0${entryDigest(file)}`);
   }
   return { config, hooks, digest: hash.digest('hex') };
 }
