@@ -122,6 +122,17 @@ describe('ファイルの先頭の読み取り', () => {
     } finally { rmSync(dir, { recursive: true, force: true }); }
   });
 
+  it('[REQ-171] 要求した上限よりファイルが小さければ、ファイルの大きさで合計を見積もる', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'loomake-head-'));
+    try {
+      const file = join(dir, 'a.json');
+      writeFileSync(file, 'abc');
+      const reader = createInputReader({ maxTotalBytes: 10 });
+      expect(reader.read(file)).toBe('abc');
+      expect(reader.readHead(file, 100)).toBe('abc');
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+
   it('[REQ-171] 途中で切れた複数バイト文字は捨て、シンボリックリンクは読まない', () => {
     const dir = mkdtempSync(join(tmpdir(), 'loomake-head-'));
     try {

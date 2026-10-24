@@ -92,14 +92,51 @@ function readEvidence(root: string, file: string, change: string, reader: InputR
 const STAMPED = /^(\d{8}T\d{6}Z)-/;
 const timeKey = (name: string) => STAMPED.exec(name)?.[1] ?? name;
 
-// 同じ秒の候補を比べるために読む、証拠の先頭の量。記録した日時（recordedAt）は先頭の数行にある
+// 同じ秒の候補を比べるために読む、証拠の先頭の量。loomake が書く証拠では、記録した日時（recordedAt）は先頭の数行にある
 const HEAD_BYTES = 4096;
-const RECORDED_AT = /"recordedAt"\s*:\s*"([^"\\]*)"/;
+
+/**
+ * JSON のオブジェクトの最上位の項目 key の文字列の値を、text（ファイルの先頭）から探す。
+ * 入れ子の項目と文字列の中は見ない。text の中で見つからなければ undefined
+ */
+export function topLevelString(text: string, key: string): string | undefined {
+  let depth = 0;
+  let i = 0;
+  // 文字列を読み、閉じる引用符の次の位置と値を返す。text の途中で切れていれば undefined
+  const readString = (start: number): [number, string] | undefined => {
+    let j = start + 1;
+    while (j < text.length && text[j] !== '"') j += text[j] === '\\' ? 2 : 1;
+    if (j >= text.length) return undefined;
+    try { return [j + 1, JSON.parse(text.slice(start, j + 1)) as string]; } catch { return undefined; }
+  };
+  const skipSpace = (j: number) => { while (j < text.length && /\s/.test(text[j])) j++; return j; };
+  while (i < text.length) {
+    const c = text[i];
+    if (c === '"') {
+      const read = readString(i);
+      if (!read) return undefined;
+      const [next, value] = read;
+      i = next;
+      if (depth === 1 && value === key) {
+        let j = skipSpace(i);
+        if (text[j] !== ':') continue;
+        j = skipSpace(j + 1);
+        if (text[j] !== '"') return undefined;
+        return readString(j)?.[1];
+      }
+      continue;
+    }
+    if (c === '{' || c === '[') depth++;
+    else if (c === '}' || c === ']') depth--;
+    i++;
+  }
+  return undefined;
+}
 
 /**
  * いちばん新しい証拠の記録（REQ-209）。ファイル名の日時（秒まで。辞書順で時刻順になる）がいちばん新しい秒の証拠を候補にする。
- * 候補が複数あれば、それぞれの先頭だけを読んで記録した日時（ミリ秒）を比べ、選んだ 1 つだけを全部読んで検証する。
- * 読む量は、候補の先頭と選んだ証拠の分に収まる
+ * 候補が複数あれば、それぞれの先頭だけを読んで、最上位の記録した日時（ミリ秒）を比べる。先頭で見つからない候補は全部読んで比べ、
+ * 捨てない。選んだ証拠だけを全部読んで検証する。読み取りはすべて同じ予算で数え、超えたら古い証拠に戻らずに止まる
  */
 function latestEvidence(root: string, dir: string, change: string, reader: InputReader): Evidence | undefined {
   let newest: string[] = [];
@@ -111,16 +148,22 @@ function latestEvidence(root: string, dir: string, change: string, reader: Input
     else if (key === current) newest.push(entry.name);
   }
   if (!newest.length) return undefined;
-  let chosen = newest.sort()[newest.length - 1];
-  if (newest.length > 1) {
-    // 先頭に記録した日時が読めない候補は、比べられないので選ばない。どれも読めなければ、名前の順で最後のものを使う
-    let best = Number.NEGATIVE_INFINITY;
-    for (const name of newest) {
-      const time = Date.parse(RECORDED_AT.exec(reader.readHead(join(dir, name), HEAD_BYTES))?.[1] ?? '');
-      if (!Number.isNaN(time) && time > best) { best = time; chosen = name; }
+  newest.sort();
+  if (newest.length === 1) return readEvidence(root, join(dir, newest[0]), change, reader);
+  let best: { name: string; time: number; evidence?: Evidence } | undefined;
+  for (const name of newest) {
+    const head = topLevelString(reader.readHead(join(dir, name), HEAD_BYTES), 'recordedAt');
+    let time = head === undefined ? Number.NaN : Date.parse(head);
+    let evidence: Evidence | undefined;
+    if (Number.isNaN(time)) {
+      // 先頭で比べられない候補は、全部読んで検証してから比べる
+      evidence = readEvidence(root, join(dir, name), change, reader);
+      time = Date.parse(evidence.recordedAt);
     }
+    if (!best || time >= best.time) best = { name, time, evidence };
   }
-  return readEvidence(root, join(dir, chosen), change, reader);
+  if (!best) return undefined;
+  return best.evidence ?? readEvidence(root, join(dir, best.name), change, reader);
 }
 
 const reqNumber = (id: string) => Number(id.match(/\d+/)?.[0] ?? Number.MAX_SAFE_INTEGER);

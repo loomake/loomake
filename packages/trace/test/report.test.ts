@@ -69,6 +69,12 @@ const agreementTrace = (question: string, assumption: string) =>
     .replace('| ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 |\n|---|---|---|---|---|---|---|', `| ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |\n|---|---|---|---|---|---|---|---|---|\n${question}`)
     .replace('| ID | 関連 | 仮定の内容 | 理由 | 承認 |\n|---|---|---|---|---|', '| ID | 関連 | 仮定の内容 | 理由 | 承認 | 承認者 | 承認日 |\n|---|---|---|---|---|---|---|');
 
+// 証拠の i 番目のファイルの先頭に、項目を足して書き直す（JSON の項目の順を変える）
+const prependField = (root: string, i: number, field: Record<string, unknown>) => {
+  const file = join(root, `.loomake/evidence/${CHANGE}/${i}.json`);
+  writeFileSync(file, JSON.stringify({ ...field, ...JSON.parse(readFileSync(file, 'utf8')) }, null, 2));
+};
+
 // 実際の証拠のファイル名は、記録した日時と SHA から作る。最新はファイル名の日時で決める（REQ-209）
 const renameEvidence = (root: string, names: string[]) =>
   names.forEach((name, i) => renameSync(join(root, `.loomake/evidence/${CHANGE}/${i}.json`), join(root, `.loomake/evidence/${CHANGE}/${name}`)));
@@ -118,6 +124,29 @@ describe('要件ごとの検収の表', () => {
     const older = evidence({ recordedAt: '2026-10-23T02:00:00.100Z', sha: 'b'.repeat(40) });
     withProject({ evidence: [newer, older] }, (root) => {
       // SHA の辞書順では古いほうが後ろに来る名前にする
+      renameEvidence(root, ['20261023T020000Z-aaaaaaaaaaaa.json', '20261023T020000Z-bbbbbbbbbbbb.json']);
+      expect(report(root).evidence).toMatchObject({ sha: 'a'.repeat(40), ok: false });
+    });
+  });
+
+  it('[REQ-209] 同じ秒の新しい証拠で、記録した日時が先頭の 4KiB より後ろにあっても、その証拠を使う', () => {
+    const newer = evidence({ recordedAt: '2026-10-23T02:00:00.900Z', sha: 'a'.repeat(40) });
+    newer.verify = { ...newer.verify, ok: false };
+    const older = evidence({ recordedAt: '2026-10-23T02:00:00.100Z', sha: 'b'.repeat(40) });
+    withProject({ evidence: [newer, older] }, (root) => {
+      prependField(root, 0, { padding: 'x'.repeat(5000) });
+      renameEvidence(root, ['20261023T020000Z-aaaaaaaaaaaa.json', '20261023T020000Z-bbbbbbbbbbbb.json']);
+      expect(report(root).evidence).toMatchObject({ sha: 'a'.repeat(40), ok: false });
+    });
+  });
+
+  it('[REQ-209] 入れ子の項目の recordedAt を、証拠の記録した日時と取り違えない', () => {
+    // 古い証拠の先頭に、新しい日時を持つ入れ子の項目を置く
+    const older = evidence({ recordedAt: '2026-10-23T02:00:00.100Z', sha: 'b'.repeat(40) });
+    const newer = evidence({ recordedAt: '2026-10-23T02:00:00.900Z', sha: 'a'.repeat(40) });
+    newer.verify = { ...newer.verify, ok: false };
+    withProject({ evidence: [newer, older] }, (root) => {
+      prependField(root, 1, { meta: { recordedAt: '2099-01-01T00:00:00.000Z' } });
       renameEvidence(root, ['20261023T020000Z-aaaaaaaaaaaa.json', '20261023T020000Z-bbbbbbbbbbbb.json']);
       expect(report(root).evidence).toMatchObject({ sha: 'a'.repeat(40), ok: false });
     });

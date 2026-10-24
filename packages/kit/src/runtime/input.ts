@@ -73,8 +73,10 @@ export function createInputReader(overrides: Partial<InputLimits> = {}): InputRe
       try {
         regular(file, lstatSync(file));
         fd = openSync(file, constants.O_RDONLY | optionalFlag('O_NOFOLLOW') | optionalFlag('O_NONBLOCK'));
-        regular(file, fstatSync(fd));
-        const wanted = Math.min(maxBytes, limits.maxFileBytes);
+        const stats = fstatSync(fd);
+        regular(file, stats);
+        // 読む量は、要求した上限とファイルの大きさの小さいほう。合計の予算も、この量で見積もる
+        const wanted = Math.min(maxBytes, limits.maxFileBytes, stats.size);
         if (bytes + wanted > limits.maxTotalBytes) fail(file, `読み取り合計の上限は${limits.maxTotalBytes}バイトです`);
         const buffer = Buffer.alloc(wanted);
         let size = 0;
