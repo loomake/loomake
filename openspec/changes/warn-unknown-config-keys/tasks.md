@@ -1,5 +1,5 @@
 ## 1. 実装
-- [ ] 1.1 loomake.config.json の知らないキーを、verify では警告、doctor では注意として表示する（REQ-039・REQ-134）
+- [x] 1.1 loomake.config.json の知らないキーを、verify では警告、doctor では注意として表示する（REQ-039・REQ-134）
 
 ## 2. テスト
 - [ ] 2.1 各 Scenario に対応するテストを、実装の前に書いて落ちることを確かめる。テスト名に [REQ-xxx] を入れる
