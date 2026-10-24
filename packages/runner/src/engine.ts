@@ -1,5 +1,6 @@
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { UsageError } from '@loomake/kit';
+import { isWindows, quote } from './shell.js';
 
 /** 初版で使えるエンジン（REQ-101） */
 export const ENGINES = ['claude-code'] as const;
@@ -31,9 +32,6 @@ export type EngineCall = {
   signal?: AbortSignal;
 };
 
-const isWindows = process.platform === 'win32';
-// Windows では npm で入れた claude は claude.cmd なので、シェル経由で呼ぶ。引数は二重引用符で囲む
-const quote = (a: string) => (isWindows ? `"${a.replace(/"/g, '""')}"` : a);
 
 /** claude コマンドがあるかを確かめ、なければ UsageError を投げる */
 export function assertEngineAvailable(engine: string, env: NodeJS.ProcessEnv): asserts engine is EngineName {

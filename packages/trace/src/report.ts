@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { join, relative, resolve, sep } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import { parseSpec, parseTrace } from '@loomake/core';
-import { UsageError, assertChangeId, loadConfig } from '@loomake/kit';
+import { UsageError, assertChangeId, findChangeDir, loadConfig, toPosix } from '@loomake/kit';
 import { EVIDENCE_DIR, type Evidence } from './record.js';
 import { changedDocuments, readDocuments, type EvidenceDocument } from './documents.js';
 
@@ -43,21 +43,6 @@ export type ReportOptions = {
   stdout: (text: string) => void;
 };
 
-const toPosix = (p: string) => p.split(sep).join('/');
-
-/** 進行中の change を先に、なければ archive の <日付>-<change-id> を探す（add-trace-report の仮定 A-05） */
-function findChange(changesDir: string, changeId: string): string | undefined {
-  const active = join(changesDir, changeId);
-  if (existsSync(join(active, 'trace.md'))) return active;
-  const archiveDir = join(changesDir, 'archive');
-  if (!existsSync(archiveDir)) return undefined;
-  return readdirSync(archiveDir)
-    .filter((d) => d.replace(/^\d{4}-\d{2}-\d{2}-/, '') === changeId)
-    .sort()
-    .reverse()
-    .map((d) => join(archiveDir, d))
-    .find((d) => existsSync(join(d, 'trace.md')));
-}
 
 // 読めない記録があれば、どのファイルかを示して止める（fix-review-findings-2 の仮定 A-06）
 function readEvidence(root: string, file: string): Evidence {
@@ -86,7 +71,8 @@ export const SCOPE_NOTE = '自動検査は、要件 ID を含む成功したテ�
 export function buildReport(root: string, changeId: string): Report | undefined {
   const config = loadConfig(root);
   assertChangeId(changeId);
-  const changeDir = findChange(resolve(root, config.openspecDir, 'changes'), changeId);
+  // 進行中の change を先に、なければ archive の <日付>-<change-id> を探す（add-trace-report の仮定 A-05）
+  const changeDir = findChangeDir(resolve(root, config.openspecDir, 'changes'), changeId);
   if (!changeDir) throw new UsageError(`change「${changeId}」がありません（進行中にも archive にもありません）`);
 
   const evidence = latestEvidence(root, join(root, EVIDENCE_DIR, changeId));
