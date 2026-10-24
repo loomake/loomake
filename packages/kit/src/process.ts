@@ -2,6 +2,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { spawnSync } from 'node:child_process';
 import { performance } from 'node:perf_hooks';
 import { StringDecoder } from 'node:string_decoder';
+import { fileURLToPath } from 'node:url';
 import { RuntimeFailure, UsageError } from './errors.js';
 
 export const EXTERNAL_TIMEOUT_MS = 30_000;
@@ -46,58 +47,9 @@ export type ExternalOptions = {
 export type ExternalResult = { status: number | null; signal: NodeJS.Signals | null; stdout: string; stderr: string; error?: NodeJS.ErrnoException };
 type Outcome = { status: number | null; signal: NodeJS.Signals | null; kind?: ProcessLimitKind; error?: { message: string; code?: string } };
 
-// 監視対象の出力と制御情報を別のpipeに流し、コマンド自身の出力を結果の形式と解釈しない。
-const SUPERVISOR = String.raw`
-const {spawn,spawnSync}=require('node:child_process');
-const fs=require('node:fs');
-const [command,args,shell,ms,limit]=JSON.parse(process.argv[1]);
-const win=process.platform==='win32';
-let child, timer, grace, count=0, stopping=false, ended=false, exited=false;
-let outcome={status:null,signal:null};
-function kill(signal) {
-  if (!child || !child.pid) return;
-  if (win) { spawnSync('taskkill',['/pid',String(child.pid),'/T','/F'],{stdio:'ignore',timeout:1000,killSignal:'SIGKILL'}); }
-  else { try {process.kill(-child.pid,signal);} catch {} }
-}
-function finish() {
-  if(ended) return;
-  ended=true; clearTimeout(timer); clearTimeout(grace);
-  let pending=2;
-  const flushed=()=>{if(--pending===0){fs.writeSync(3,JSON.stringify(outcome));process.exit(0);}};
-  process.stdout.end(flushed);process.stderr.end(flushed);
-}
-function stop(kind) {
-  if(stopping || ended) return;
-  stopping=true; outcome.kind=kind; clearTimeout(timer);
-  kill('SIGTERM');
-  // SIGKILLのあと、子の終了を最大1秒待ってから結果を返し、止めた子が残ったまま返さない。
-  grace=setTimeout(()=>{kill('SIGKILL');if(exited||!child){finish();return;}child.once('exit',finish);setTimeout(finish,1000);},250);
-}
-process.on('SIGINT',()=>stop('interrupted'));
-process.on('SIGTERM',()=>stop('interrupted'));
-try {
-  child=spawn(command,args,{shell,stdio:['ignore','pipe','pipe'],detached:!win});
-  const forward=(target,data)=>{
-    if(stopping) return;
-    const room=Math.max(0,limit-count);
-    const part=data.subarray(0,room);
-    if(part.length) target.write(part);
-    count+=data.length;
-    if(count>limit) stop('output');
-  };
-  child.stdout.on('data',data=>forward(process.stdout,data));
-  child.stderr.on('data',data=>forward(process.stderr,data));
-  child.on('error',error=>{outcome.error={message:error.message,code:error.code};finish();});
-  child.on('exit',(status,signal)=>{
-    exited=true;outcome.status=status;outcome.signal=signal;
-    if(!stopping) {kill('SIGKILL');}
-  });
-  child.on('close',()=>{if(!stopping) finish();});
-  // closeが来なくても、通常終了後のグループを片付けて待機を終える。
-  child.on('exit',()=>{if(!stopping) grace=setTimeout(finish,250);});
-  timer=setTimeout(()=>stop('timeout'),ms);
-} catch(error) {outcome.error={message:error.message,code:error.code};finish();}
-`;
+// 監視役（supervisor/supervisor.cjs）。src/ から読んでも dist/ から読んでも 1 つ上にある。
+// 対象の出力と制御情報を別のpipに流し、コマンド自身の出力を結果の形式と解釈しない。
+const SUPERVISOR = fileURLToPath(new URL('../supervisor/supervisor.cjs', import.meta.url));
 
 function utf8Prefix(text: string, bytes: number): string {
   return new StringDecoder('utf8').write(Buffer.from(text).subarray(0, bytes));
@@ -114,7 +66,7 @@ export function runExternal(command: string, args: readonly string[], options: E
   positive(timeout);
   const maxBuffer = options.maxBuffer ?? EXTERNAL_OUTPUT_BYTES;
   if (!Number.isSafeInteger(maxBuffer) || maxBuffer <= 0) throw new UsageError('外部操作の出力予算は正の安全な整数にしてください');
-  const result = spawnSync(process.execPath, ['-e', SUPERVISOR, JSON.stringify([command, args, options.shell ?? false, Math.ceil(timeout), maxBuffer])], {
+  const result = spawnSync(process.execPath, [SUPERVISOR, JSON.stringify([command, args, options.shell ?? false, Math.ceil(timeout), maxBuffer])], {
     cwd: options.cwd, env: options.env, stdio: ['ignore', 'pipe', 'pipe', 'pipe'], maxBuffer: Math.max(maxBuffer, 64 * 1024),
   });
   // 不正なUTF-8の置換で文字列のバイト数が増えても、公開する文字列の合計は予算以内にする。

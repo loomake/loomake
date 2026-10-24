@@ -23,6 +23,11 @@ export default tseslint.config(
     },
   },
   {
+    files: ['packages/kit/supervisor/*.cjs'],
+    languageOptions: { sourceType: 'commonjs', globals: { require: 'readonly', process: 'readonly', setTimeout: 'readonly', clearTimeout: 'readonly' } },
+    rules: { '@typescript-eslint/no-require-imports': 'off' },
+  },
+  {
     files: ['**/*.{js,mjs}'],
     languageOptions: { globals: { process: 'readonly', console: 'readonly' } },
   },
