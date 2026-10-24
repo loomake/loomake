@@ -2,6 +2,8 @@
 // パーサはファイルを読まず、ファイル名とテキストを受け取って結果とエラーを返す
 export type { ParseError, ParseResult } from './parse.js';
 export { parseTrace, LEDGER_STATES } from './trace.js';
+export { setTraceCells } from './trace-edit.js';
+export type { EditableTable, TraceEditResult } from './trace-edit.js';
 export type { Trace, LedgerRow, QuestionRow, AssumptionRow } from './trace.js';
 export { parseSpec } from './spec.js';
 export type { SpecOperation, SpecRequirement } from './spec.js';
