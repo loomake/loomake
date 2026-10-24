@@ -1,0 +1,294 @@
+{
+  "scope": "selected-domain-conditions",
+  "environment": {
+    "node": "v24.21.0",
+    "platform": "linux",
+    "arch": "arm64"
+  },
+  "scriptSha256": "7da9590d062435b05b7d820f1850c3376d585374290fc348bc5ab4a3ade03e08",
+  "sources": [
+    {
+      "path": "packages/core/src/agreement.ts",
+      "sha256": "ee809c0b0d9ccc03026e453202e6a01ec07eedcfeece0c0a9ccf73ec72f4e4d0"
+    },
+    {
+      "path": "packages/core/src/coverage-policy.ts",
+      "sha256": "62bd5b3d00b671b59f5be1ea770900fcf45402ebaa4b22748eda076e3359745b"
+    },
+    {
+      "path": "packages/core/src/index.ts",
+      "sha256": "4531e9cf7a7a45c0311a66e9892843bcd8ea968c3543413da92cb8534ee3ad2b"
+    },
+    {
+      "path": "packages/core/src/parse.ts",
+      "sha256": "e6b70cec25da43352a696cc9d17354f9ea7c28f71292c1ab6ca7ee4d3069d66e"
+    },
+    {
+      "path": "packages/core/src/spec.ts",
+      "sha256": "3ad805921112c5e265764767fc2447e2f6c80f1ba1bd912e8586e872ca8545c4"
+    },
+    {
+      "path": "packages/core/src/tasks.ts",
+      "sha256": "a2af8ff73ce88100f2f7ea654949f7cd70d7c92e5f2ba3e9969e13679304b743"
+    },
+    {
+      "path": "packages/core/src/template.ts",
+      "sha256": "234b494ffa48c00633870019cecad655bb2570009c757a0a4712e8b376c812c9"
+    },
+    {
+      "path": "packages/core/src/test-report.ts",
+      "sha256": "110d9002c1e54721ff01e0bcc13e27a7d171f813e1d3b503d9ec4a989f089c52"
+    },
+    {
+      "path": "packages/core/src/trace.ts",
+      "sha256": "e6f6f0e9d6157a36af3dd2535b854d7ff933cd005f22bfdebf8f25b2fc9dacc6"
+    },
+    {
+      "path": "packages/core/src/verify-result.ts",
+      "sha256": "12c9ab958104facfe9ab531bb0f7863f1d7ee98344f424e38187cde78d5df268"
+    },
+    {
+      "path": "packages/core/test/agreement.test.ts",
+      "sha256": "0e6e08ffc5b0dd863f0d80664a78fae0a7e7dc7122fd3688228626880dc31aa4"
+    },
+    {
+      "path": "packages/core/test/coverage-policy.test.ts",
+      "sha256": "61add31ac1281ad2949cfda26529bfe7ec102b34fb8c06bf2d5d40c90ee32bb8"
+    }
+  ],
+  "baseline": {
+    "status": "passed",
+    "tests": [
+      "要件と合意のモデル [REQ-147] DTOの列名から独立したモデルへ変換し、入力を変更しない",
+      "要件と合意のモデル [REQ-147] 不正なID \"REQ-12\" はファイルと行を示す",
+      "要件と合意のモデル [REQ-147] 不正なID \"REQ-012x\" はファイルと行を示す",
+      "要件と合意のモデル [REQ-147] 不正なID \"\" はファイルと行を示す",
+      "要件と合意のモデル [REQ-147] 不正な状態をモデルへ通さない",
+      "要件と合意のモデル [REQ-148] 未回答のブロッキング質問だけを停止条件にする",
+      "要件と合意のモデル [REQ-148] 確認待ち・出典不足・未承認と、承認済みを区別する",
+      "成功テストと必要な要件の対応 [REQ-149] 重複を除いて昇順にし、不足した要件にも空の配列を返す",
+      "成功テストと必要な要件の対応 [REQ-149] 全要件が満たされれば不足を返さない",
+      "成功テストと必要な要件の対応 [REQ-149] 必要な要件がなければ空の対応を返す"
+    ],
+    "exitCode": 0,
+    "durationMs": 328
+  },
+  "mutations": [
+    {
+      "id": "M01",
+      "file": "agreement.ts",
+      "label": "要件IDの桁数",
+      "before": "/^REQ-\\d{3,}$/",
+      "after": "/^REQ-\\d{2,}$/",
+      "exitCode": 1,
+      "signal": null,
+      "durationMs": 321,
+      "beforeSha256": "ee809c0b0d9ccc03026e453202e6a01ec07eedcfeece0c0a9ccf73ec72f4e4d0",
+      "afterSha256": "f5c746a06233f831f959c7e6aba85f1ee6f7a29b30f0b7ffbcbb1360636470f3",
+      "status": "killed",
+      "failedTests": [
+        "要件と合意のモデル [REQ-147] 不正なID \"REQ-12\" はファイルと行を示す"
+      ]
+    },
+    {
+      "id": "M02",
+      "file": "agreement.ts",
+      "label": "要件IDの終端",
+      "before": "/^REQ-\\d{3,}$/",
+      "after": "/^REQ-\\d{3,}/",
+      "exitCode": 1,
+      "signal": null,
+      "durationMs": 330,
+      "beforeSha256": "ee809c0b0d9ccc03026e453202e6a01ec07eedcfeece0c0a9ccf73ec72f4e4d0",
+      "afterSha256": "00e6dd5fe43d4adb8e72dafd3bfc8ba58ff527d384349399ed276f07dc46a811",
+      "status": "killed",
+      "failedTests": [
+        "要件と合意のモデル [REQ-147] 不正なID \"REQ-012x\" はファイルと行を示す"
+      ]
+    },
+    {
+      "id": "M03",
+      "file": "agreement.ts",
+      "label": "状態の検証",
+      "before": "!(LEDGER_STATES as readonly string[]).includes(row['状態'])",
+      "after": "false",
+      "exitCode": 1,
+      "signal": null,
+      "durationMs": 313,
+      "beforeSha256": "ee809c0b0d9ccc03026e453202e6a01ec07eedcfeece0c0a9ccf73ec72f4e4d0",
+      "afterSha256": "ff74df048d84e811e5da2ec7e86fd70b062fdadb2f8b2216b1ee9e1978338e4f",
+      "status": "killed",
+      "failedTests": [
+        "要件と合意のモデル [REQ-147] 不正な状態をモデルへ通さない"
+      ]
+    },
+    {
+      "id": "M04",
+      "file": "agreement.ts",
+      "label": "ブロッキング値の大文字小文字",
+      "before": "/^yes$/i",
+      "after": "/^yes$/",
+      "exitCode": 1,
+      "signal": null,
+      "durationMs": 311,
+      "beforeSha256": "ee809c0b0d9ccc03026e453202e6a01ec07eedcfeece0c0a9ccf73ec72f4e4d0",
+      "afterSha256": "c4bef5bc927cd1953da6afa3df1dc168594cc99bedea76ac4e83e59d0044d69b",
+      "status": "killed",
+      "failedTests": [
+        "要件と合意のモデル [REQ-147] DTOの列名から独立したモデルへ変換し、入力を変更しない",
+        "要件と合意のモデル [REQ-148] 未回答のブロッキング質問だけを停止条件にする"
+      ]
+    },
+    {
+      "id": "M05",
+      "file": "agreement.ts",
+      "label": "ブロッキング条件",
+      "before": "q.blocking && !q.answer",
+      "after": "!q.answer",
+      "exitCode": 1,
+      "signal": null,
+      "durationMs": 318,
+      "beforeSha256": "ee809c0b0d9ccc03026e453202e6a01ec07eedcfeece0c0a9ccf73ec72f4e4d0",
+      "afterSha256": "b269601a30e72f2114354b2d94f3c38163924c3a761eb688b7a10aab9caa803a",
+      "status": "killed",
+      "failedTests": [
+        "要件と合意のモデル [REQ-148] 未回答のブロッキング質問だけを停止条件にする"
+      ]
+    },
+    {
+      "id": "M06",
+      "file": "agreement.ts",
+      "label": "回答の有無",
+      "before": "q.blocking && !q.answer",
+      "after": "q.blocking && q.answer",
+      "exitCode": 1,
+      "signal": null,
+      "durationMs": 306,
+      "beforeSha256": "ee809c0b0d9ccc03026e453202e6a01ec07eedcfeece0c0a9ccf73ec72f4e4d0",
+      "afterSha256": "c4db62a48913a3079fccd81e3a4be5379adfba75cc90622a9b9b6044faead598",
+      "status": "killed",
+      "failedTests": [
+        "要件と合意のモデル [REQ-148] 未回答のブロッキング質問だけを停止条件にする"
+      ]
+    },
+    {
+      "id": "M07",
+      "file": "agreement.ts",
+      "label": "確認待ち",
+      "before": "r.state === '確認待ち'",
+      "after": "r.state !== '確認待ち'",
+      "exitCode": 1,
+      "signal": null,
+      "durationMs": 308,
+      "beforeSha256": "ee809c0b0d9ccc03026e453202e6a01ec07eedcfeece0c0a9ccf73ec72f4e4d0",
+      "afterSha256": "e446438c9a3d008e60fa9bb9163582ce5ba84aa335fc171f916c1c32233deee7",
+      "status": "killed",
+      "failedTests": [
+        "要件と合意のモデル [REQ-148] 未回答のブロッキング質問だけを停止条件にする",
+        "要件と合意のモデル [REQ-148] 確認待ち・出典不足・未承認と、承認済みを区別する"
+      ]
+    },
+    {
+      "id": "M08",
+      "file": "agreement.ts",
+      "label": "承認",
+      "before": "!a.approval",
+      "after": "a.approval",
+      "exitCode": 1,
+      "signal": null,
+      "durationMs": 312,
+      "beforeSha256": "ee809c0b0d9ccc03026e453202e6a01ec07eedcfeece0c0a9ccf73ec72f4e4d0",
+      "afterSha256": "28741df5c80e3611dbc81c5b1ae5920857e6a5c5f2396bdfa6bb7292bd102ca8",
+      "status": "killed",
+      "failedTests": [
+        "要件と合意のモデル [REQ-148] 未回答のブロッキング質問だけを停止条件にする",
+        "要件と合意のモデル [REQ-148] 確認待ち・出典不足・未承認と、承認済みを区別する"
+      ]
+    },
+    {
+      "id": "M09",
+      "file": "agreement.ts",
+      "label": "出典",
+      "before": "!r.source",
+      "after": "r.source",
+      "exitCode": 1,
+      "signal": null,
+      "durationMs": 317,
+      "beforeSha256": "ee809c0b0d9ccc03026e453202e6a01ec07eedcfeece0c0a9ccf73ec72f4e4d0",
+      "afterSha256": "a58b6b9a70092d7dfa1d6040a756b2692de0add1051a05265292de7a4aa79c1b",
+      "status": "killed",
+      "failedTests": [
+        "要件と合意のモデル [REQ-148] 未回答のブロッキング質問だけを停止条件にする",
+        "要件と合意のモデル [REQ-148] 確認待ち・出典不足・未承認と、承認済みを区別する"
+      ]
+    },
+    {
+      "id": "M10",
+      "file": "coverage-policy.ts",
+      "label": "テスト不足",
+      "before": "coverage[id].length === 0",
+      "after": "coverage[id].length > 0",
+      "exitCode": 1,
+      "signal": null,
+      "durationMs": 310,
+      "beforeSha256": "62bd5b3d00b671b59f5be1ea770900fcf45402ebaa4b22748eda076e3359745b",
+      "afterSha256": "8103e6753472af9b2412d2b1bf5ee2187b4efa750a4330e3888add73ac57789a",
+      "status": "killed",
+      "failedTests": [
+        "成功テストと必要な要件の対応 [REQ-149] 重複を除いて昇順にし、不足した要件にも空の配列を返す",
+        "成功テストと必要な要件の対応 [REQ-149] 全要件が満たされれば不足を返さない"
+      ]
+    },
+    {
+      "id": "M11",
+      "file": "coverage-policy.ts",
+      "label": "ファイル順序",
+      "before": "[...files.get(id)!].sort()",
+      "after": "[...files.get(id)!]",
+      "exitCode": 1,
+      "signal": null,
+      "durationMs": 312,
+      "beforeSha256": "62bd5b3d00b671b59f5be1ea770900fcf45402ebaa4b22748eda076e3359745b",
+      "afterSha256": "055e1a9545a3716caa5f0d240cabecb70c04984974f8af8b4ce748b1e367a099",
+      "status": "killed",
+      "failedTests": [
+        "成功テストと必要な要件の対応 [REQ-149] 重複を除いて昇順にし、不足した要件にも空の配列を返す"
+      ]
+    },
+    {
+      "id": "M12",
+      "file": "coverage-policy.ts",
+      "label": "対応ファイル",
+      "before": "files.get(id)?.add(file)",
+      "after": "files.get(id)?.add(id)",
+      "exitCode": 1,
+      "signal": null,
+      "durationMs": 308,
+      "beforeSha256": "62bd5b3d00b671b59f5be1ea770900fcf45402ebaa4b22748eda076e3359745b",
+      "afterSha256": "33bdf629f6151b0898ac6c4eb5df5ac764626527c480384b117ae04931d8fcda",
+      "status": "killed",
+      "failedTests": [
+        "成功テストと必要な要件の対応 [REQ-149] 重複を除いて昇順にし、不足した要件にも空の配列を返す",
+        "成功テストと必要な要件の対応 [REQ-149] 全要件が満たされれば不足を返さない"
+      ]
+    },
+    {
+      "id": "M13",
+      "file": "coverage-policy.ts",
+      "label": "必要IDの重複",
+      "before": "[...new Set(needed)].sort()",
+      "after": "[...needed].sort()",
+      "exitCode": 1,
+      "signal": null,
+      "durationMs": 303,
+      "beforeSha256": "62bd5b3d00b671b59f5be1ea770900fcf45402ebaa4b22748eda076e3359745b",
+      "afterSha256": "af98a6f19ad0c31c315fc5066f2f0062e5a9366b611c9cf453b0c37de8dd43f5",
+      "status": "killed",
+      "failedTests": [
+        "成功テストと必要な要件の対応 [REQ-149] 重複を除いて昇順にし、不足した要件にも空の配列を返す"
+      ]
+    }
+  ],
+  "originalsUnchanged": true,
+  "ok": true
+}
