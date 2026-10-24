@@ -33,6 +33,9 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      # カバレッジは閾値（vitest.config.ts）を下回ったら失敗する。1 つの OS で測れば足りる
+      - if: matrix.os == 'ubuntu-latest'
+        run: pnpm test:coverage
       - run: pnpm build
       - run: node scripts/package-smoke.mjs prepare "$RUNNER_TEMP/loomake-package"
         shell: bash

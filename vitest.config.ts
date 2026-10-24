@@ -20,5 +20,14 @@ export default defineConfig({
     include: ['tests/**/*.test.ts', 'packages/*/test/**/*.test.ts'],
     reporters: ['default', 'json'],
     outputFile: { json: report },
+    // pnpm test:coverage で測る。配布するコードだけを対象にする
+    coverage: {
+      provider: 'v8',
+      include: ['packages/*/src/**/*.ts'],
+      reporter: ['text-summary', 'json-summary'],
+      reportsDirectory: '.loomake/coverage',
+      // 2026-10-24 の値（文 94.6%・分岐 88.5%・関数 96.5%・行 97.9%）より少し下に置き、下がったら CI で止める
+      thresholds: { statements: 93, branches: 87, functions: 95, lines: 96 },
+    },
   },
 });
