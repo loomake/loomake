@@ -312,6 +312,19 @@ describe('品質コマンドの実行', () => {
     expect(r.ok).toBe(false);
   });
 
+  it('[REQ-039] loomake.config.json に知らないキーがあれば、そのキーを警告にし、不合格にはしない', () => {
+    const config = { openspecValidate: false, comands: { test: 'node -e "process.exit(1)"' }, tests: { report: '.loomake/test-report.json', reprot: 'x' }, run: { maxFix: 1 }, commands: {} };
+    for (const r of withProject({ config }, (root) => [runVerify({ root }), specOnly(root)])) {
+      expect(check(r, 'loomake.config.json')).toEqual({ check: 'loomake.config.json', status: 'warn', detail: '知らないキー：comands、tests.reprot、run.maxFix（打ち間違いなら直してください）' });
+      expect(r.ok).toBe(true);
+    }
+  });
+
+  it('[REQ-039] 知らないキーがなければ、loomake.config.json の検査は出さない', () => {
+    const r = withProject({ config: { $comment: 'x', openspecValidate: false, commands: { e2e: 'node -e ""' }, run: { maxFixes: 1, timeoutMinutes: 5 } } }, (root) => runVerify({ root }));
+    expect(check(r, 'loomake.config.json')).toBeUndefined();
+  });
+
   it('[REQ-039] 3 つのコマンドがすべて成功すると、command: の検査はすべて合格', () => {
     const ok = 'node -e ""';
     const r = withProject({ config: { openspecValidate: false, commands: { test: ok, lint: ok, typecheck: ok } } }, (root) => done(root));
