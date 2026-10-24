@@ -112,6 +112,17 @@ describe('要件ごとの検収の表', () => {
     });
   });
 
+  it('[REQ-209] 同じ秒に記録した証拠が複数あれば、記録した日時（ミリ秒）がいちばん新しいものを使う', () => {
+    const newer = evidence({ recordedAt: '2026-10-23T02:00:00.900Z', sha: 'a'.repeat(40) });
+    newer.verify = { ...newer.verify, ok: false };
+    const older = evidence({ recordedAt: '2026-10-23T02:00:00.100Z', sha: 'b'.repeat(40) });
+    withProject({ evidence: [newer, older] }, (root) => {
+      // SHA の辞書順では古いほうが後ろに来る名前にする
+      renameEvidence(root, ['20261023T020000Z-aaaaaaaaaaaa.json', '20261023T020000Z-bbbbbbbbbbbb.json']);
+      expect(report(root).evidence).toMatchObject({ sha: 'a'.repeat(40), ok: false });
+    });
+  });
+
   it('[REQ-070] 新しい記録からテストファイルと結果を取り、古い記録の値を混ぜない', () => {
     const old = evidence({ recordedAt: '2026-10-23T01:00:00.000Z', sha: 'a'.repeat(40) });
     old.verify = { ...old.verify, ok: false, coverage: { 'REQ-012': [] } };

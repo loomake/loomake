@@ -88,17 +88,29 @@ function readEvidence(root: string, file: string, change: string, reader: InputR
   return value as Evidence;
 }
 
+// 証拠のファイル名の日時の部分。日時の形でない名前は、名前全体を日時の代わりに使う
+const STAMPED = /^(\d{8}T\d{6}Z)-/;
+const timeKey = (name: string) => STAMPED.exec(name)?.[1] ?? name;
+
 /**
- * ファイル名の日時（YYYYMMDDTHHMMSSZ。辞書順で時刻順になる）がいちばん新しい証拠の記録（REQ-209）。
- * レポートに使うものだけを読んで検証し、ほかの証拠は読まない。読む量が証拠の数に比例しない
+ * いちばん新しい証拠の記録（REQ-209）。ファイル名の日時（秒まで。辞書順で時刻順になる）がいちばん新しい秒の証拠だけを読む。
+ * 同じ秒に複数あれば、それらの記録した日時（ミリ秒）で選ぶ。読む量が証拠の数に比例しない
  */
 function latestEvidence(root: string, dir: string, change: string, reader: InputReader): Evidence | undefined {
-  let latest: string | undefined;
+  let newest: string[] = [];
   for (const entry of reader.entries(dir)) {
     if (entry.kind !== 'file' || !entry.name.endsWith('.json')) continue;
-    if (latest === undefined || entry.name > latest) latest = entry.name;
+    const key = timeKey(entry.name);
+    const current = newest.length ? timeKey(newest[0]) : undefined;
+    if (current === undefined || key > current) newest = [entry.name];
+    else if (key === current) newest.push(entry.name);
   }
-  return latest === undefined ? undefined : readEvidence(root, join(dir, latest), change, reader);
+  let latest: Evidence | undefined;
+  for (const name of newest.sort()) {
+    const evidence = readEvidence(root, join(dir, name), change, reader);
+    if (!latest || Date.parse(evidence.recordedAt) > Date.parse(latest.recordedAt)) latest = evidence;
+  }
+  return latest;
 }
 
 const reqNumber = (id: string) => Number(id.match(/\d+/)?.[0] ?? Number.MAX_SAFE_INTEGER);
