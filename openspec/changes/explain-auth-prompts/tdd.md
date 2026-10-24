@@ -7,3 +7,7 @@ pre-push のフックで、git が HTTPS の認証の入力で失敗したとき
 ## 2.1 文書
 
 run-recovery.md に、認証や署名の入力で失敗したときの直し方を書き、changeset を足した。
+
+## 完了ゲート
+
+`pnpm -s verify --change explain-auth-prompts --done` は exit 0。lint・型検査・891 件のテストと全 REQ の対応が成功した。
