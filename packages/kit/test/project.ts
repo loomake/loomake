@@ -100,11 +100,14 @@ export const INTERRUPT_SCRIPT = `
 const { execFileSync, spawn } = require('node:child_process');
 const { writeFileSync } = require('node:fs');
 let pid = process.ppid;
-for (let i = 0; i < 5 && pid > 1; i++) {
+let found = false;
+for (let i = 0; i < 5 && pid > 1 && !found; i++) {
   const [ppid, ...command] = execFileSync('ps', ['-ww', '-o', 'ppid=,command=', '-p', String(pid)], { encoding: 'utf8' }).trim().split(/\\s+/);
-  if (command.join(' ').includes('loomake: command')) break;
-  pid = Number(ppid);
+  found = command.join(' ').includes('loomake: command');
+  if (!found) pid = Number(ppid);
 }
+// 見張り役が見つからなければ、ほかのプロセスに SIGINT を送らずに失敗する
+if (!found) throw new Error('時間の上限の見張り役が見つかりません');
 const child = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)'], { stdio: 'ignore' });
 writeFileSync('pids.json', JSON.stringify([process.pid, child.pid]));
 process.kill(pid, 'SIGINT');
