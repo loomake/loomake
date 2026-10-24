@@ -38,8 +38,13 @@ describe('作業ツリーの実行ロック', () => {
     const repo = makeRepo();
     try {
       writeFileSync(pathOf(repo), text);
+      const head = repo.git('rev-parse', 'HEAD');
       expect(() => acquireRunLock(repo.root, repo.env)).toThrow('ロック');
+      expect(() => acquireRunLock(repo.root, repo.env)).toThrow('終了したことを確認できた場合だけ');
+      expect(() => acquireRunLock(repo.root, repo.env)).toThrow('もう一度実行してください');
       expect(readFileSync(pathOf(repo), 'utf8')).toBe(text);
+      expect(repo.git('rev-parse', 'HEAD')).toBe(head);
+      expect(repo.git('status', '--porcelain', '--untracked-files=all')).toBe('');
     } finally { repo.cleanup(); }
   });
 

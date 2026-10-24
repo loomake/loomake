@@ -52,6 +52,22 @@ const log = (repo: Repo) => repo.git('log', '--format=%s', 'loomake/c1').split('
 // 1.1 で impl.txt を書くと、完了ゲートに合格する
 const passing = [{ write: { 'impl.txt': '実装\n' } }, {}];
 
+function assertStoppedProcess(pidFile: string) {
+  expect(existsSync(pidFile)).toBe(true);
+  const pid = Number(readFileSync(pidFile, 'utf8'));
+  expect(Number.isSafeInteger(pid) && pid > 0).toBe(true);
+  expect(alive(pid)).toBe(false);
+}
+
+function cleanupTestProcess(pidFile: string) {
+  if (!existsSync(pidFile)) return;
+  const pid = Number(readFileSync(pidFile, 'utf8'));
+  if (!Number.isSafeInteger(pid) || pid <= 0 || !alive(pid)) return;
+  try { process.kill(pid, 'SIGKILL'); }
+  catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error; }
+}
+
+
 async function withRepo(fn: (repo: Repo) => Promise<void>, init?: Parameters<typeof makeRepo>[0]) {
   const repo = makeRepo(init);
   try {
@@ -300,12 +316,16 @@ describe('完了ゲートと直し', () => {
   it('[REQ-105] 実行時間が上限に達したら、エンジンを止めて止まる', () =>
     withRepo(
       async (repo) => {
-        repo.plan([{ sleepMs: 60_000 }]);
+        const pidFile = join(repo.base, 'engine.pid');
+        repo.plan([{ sleepMs: 60_000, pidFile }]);
         const start = Date.now();
-        const r = await run(repo);
-        expect(r.code).toBe(1);
-        expect(r.stdout).toContain('実行時間の上限に達しました');
-        expect(Date.now() - start).toBeLessThan(30_000);
+        try {
+          const r = await run(repo);
+          expect(r.code).toBe(1);
+          expect(r.stdout).toContain('実行時間の上限に達しました');
+          expect(Date.now() - start).toBeLessThan(30_000);
+          assertStoppedProcess(pidFile);
+        } finally { cleanupTestProcess(pidFile); }
       },
       { run: { timeoutMinutes: 0.02 } },
     ));
@@ -313,16 +333,20 @@ describe('完了ゲートと直し', () => {
   it('[REQ-105] 完了ゲートのテストが終わらないまま上限に達したら、テストを止めて止まる', () =>
     withRepo(
       async (repo) => {
-        repo.write('write-report.mjs', 'setInterval(() => {}, 1000);\n');
+        const pidFile = join(repo.base, 'quality.pid');
+        repo.write('write-report.mjs', `import { writeFileSync } from 'node:fs';\nwriteFileSync(${JSON.stringify(pidFile)}, String(process.pid));\nsetInterval(() => {}, 1000);\n`);
         repo.git('commit', '-q', '-am', '終わらないテスト');
         repo.plan([{}, {}]);
         const start = Date.now();
-        const r = await run(repo);
-        expect(r.code).toBe(1);
-        expect(r.stdout).toContain('実行時間の上限に達しました');
-        expect(repo.calls()).toHaveLength(2);
-        expect(Date.now() - start).toBeLessThan(30_000);
-        expect(tasksMd(repo)).toContain('- [ ] 3.1');
+        try {
+          const r = await run(repo);
+          expect(r.code).toBe(1);
+          expect(r.stdout).toContain('実行時間の上限に達しました');
+          expect(repo.calls()).toHaveLength(2);
+          expect(Date.now() - start).toBeLessThan(30_000);
+          expect(tasksMd(repo)).toContain('- [ ] 3.1');
+          assertStoppedProcess(pidFile);
+        } finally { cleanupTestProcess(pidFile); }
       },
       { run: { timeoutMinutes: 0.1 } },
     ));
@@ -764,12 +788,15 @@ describe('実行の排他と記録', () => {
         await vi.waitFor(() => expect(repo.calls()).toHaveLength(1));
         const head = repo.git('rev-parse', 'HEAD');
         const tasks = tasksMd(repo);
+        const dir = runDir(repo);
+        const saved = readdirSync(dir).sort().map((name) => [name, readFileSync(join(dir, name), 'utf8')]);
         const second = await run(repo, { dryRun: true });
         expect(second.code).toBe(1);
         expect(second.stdout).toContain('同じ作業ツリーの実行ロック');
         expect(repo.calls()).toHaveLength(1);
         expect(repo.git('rev-parse', 'HEAD')).toBe(head);
         expect(tasksMd(repo)).toBe(tasks);
+        expect(readdirSync(dir).sort().map((name) => [name, readFileSync(join(dir, name), 'utf8')])).toEqual(saved);
       } finally {
         controller.abort();
         await first;
@@ -790,6 +817,8 @@ describe('実行の排他と記録', () => {
       const reasons = dirs.map((dir) => (JSON.parse(readFileSync(join(base, dir, 'summary.json'), 'utf8')) as RunSummary).reason);
       expect(reasons.join('\n')).toContain('first stop');
       expect(reasons.join('\n')).toContain('second stop');
+      const outputs = dirs.map((dir) => JSON.parse(readFileSync(join(base, dir, '01-output.json'), 'utf8')).result as string).sort();
+      expect(outputs).toEqual(['LOOMAKE-QUESTION: first stop', 'LOOMAKE-QUESTION: second stop']);
     }));
 });
 

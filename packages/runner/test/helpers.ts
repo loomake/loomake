@@ -19,6 +19,7 @@ export type FakeStep = {
   /** 標準出力の JSON の result に入れる文 */
   output?: string;
   sleepMs?: number;
+  pidFile?: string;
   /** 終了コード。省くと 0 */
   exitCode?: number;
 };
@@ -36,6 +37,7 @@ const calls = existsSync(log) ? readFileSync(log, 'utf8').split('\\n').filter(Bo
 appendFileSync(log, JSON.stringify({ args, prompt }) + '\\n');
 const plan = JSON.parse(readFileSync(process.env.FAKE_PLAN, 'utf8'));
 const step = plan[calls] ?? {};
+if (step.pidFile) writeFileSync(step.pidFile, String(process.pid));
 if (step.sleepMs) await new Promise((r) => setTimeout(r, step.sleepMs));
 for (const [p, text] of Object.entries(step.write ?? {})) { mkdirSync(dirname(join(process.cwd(), p)), { recursive: true }); writeFileSync(join(process.cwd(), p), text); }
 for (const p of step.chmod ?? []) chmodSync(join(process.cwd(), p), 0o755);
