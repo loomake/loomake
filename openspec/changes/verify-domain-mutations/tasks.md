@@ -7,5 +7,5 @@
 
 ## 2. 統合検証
 
-- [ ] 2.1 型・lintと関連テストを確認する
-- [ ] 2.2 `pnpm -s verify --change verify-domain-mutations --done` を通す <!-- loomake:gate=done -->
+- [x] 2.1 型・lintと関連テストを確認する
+- [x] 2.2 `pnpm -s verify --change verify-domain-mutations --done` を通す <!-- loomake:gate=done -->

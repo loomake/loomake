@@ -11,3 +11,7 @@
 ## 1.2 保持した結果
 
 `.loomake/quality/domain-mutations-20261024/results.json`に完全な結果を保持し、同じ内容をこのchangeのresults.jsonにも保存した。元の実装は10テストが成功し、13条件はすべてkilledとなった。元の12ファイルのハッシュは開始時と終了時で一致した。対象条件と実行方法、エラーの扱い、全体の検出率ではないという限界をdocs/testing.mdへ記載した。
+
+## 完了ゲート
+
+型検査とlintは成功した。`pnpm -s verify --change verify-domain-mutations --done`はexit 0で、全405件のテストと全REQの対応が成功した。内側の正常実装と13条件の試行は別プロセスの試験であり、405件へ重複して加算していない。
