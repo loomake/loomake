@@ -76,6 +76,15 @@ export async function runEngineTasks(ctx: RunContext, rec: Recorder): Promise<St
  * 完了ゲートと直し（REQ-100・REQ-104）。ゲートのタスクは検査のあいだだけ完了にし、エンジンを呼ぶ前に戻す。
  * run 自身が変えた tasks.md を、不正な直し方として見つけないため
  */
+/**
+ * 品質コマンドや git は同期的に動くので、そのあいだに届いた信号の処理は、イベントループに戻るまで実行されない（REQ-208）。
+ * 同期の処理のあとでイベントループにいったん戻り、届いていた中断を確かめる
+ */
+async function interrupted(ctx: RunContext): Promise<boolean> {
+  await new Promise((resolve) => setImmediate(resolve));
+  return ctx.options.signal?.aborted === true;
+}
+
 export async function runGate(ctx: RunContext, rec: Recorder): Promise<Stop | undefined> {
   const { root, env, changeId, gateTasks, tasksRel } = ctx;
   const stopped = (reason: string): Stop => ({ status: 'stopped', reason, remaining: gateTasks });
@@ -101,6 +110,7 @@ export async function runGate(ctx: RunContext, rec: Recorder): Promise<Stop | un
     }
     restore();
     rec.save(`${String(rec.step).padStart(2, '0')}-verify${fixes ? `-${fixes}` : ''}.json`, `${JSON.stringify(rec.lastVerify, null, 2)}\n`);
+    if (await interrupted(ctx)) return { status: 'interrupted', reason: '中断されました', remaining: gateTasks };
     // 中断後は共有予算が閉じる。Gitを追加で呼ぶ前に、観測済みの中断を処理する。
     const observed = {
       ok: rec.lastVerify.ok,
@@ -134,8 +144,12 @@ export async function runGate(ctx: RunContext, rec: Recorder): Promise<Stop | un
 }
 
 /** 証拠を記録してから PR を作る（REQ-114〜REQ-116）。gh が使えなければ、記録の前に止まる */
-export function recordAndOpenPr(ctx: RunContext, rec: Recorder): number {
+export async function recordAndOpenPr(ctx: RunContext, rec: Recorder): Promise<number> {
   const { root, env, changeId, branch } = ctx;
+  // 中断が届いていたら、証拠の記録・push・PR の作成に進まない。証拠はコミットしてから止まるので、再実行で使える（REQ-208）
+  const stopIfInterrupted = async () => ((await interrupted(ctx)) ? rec.finish('interrupted', '中断されました', []) : undefined);
+  const first = await stopIfInterrupted();
+  if (first !== undefined) return first;
   if (!ghLoggedIn(root, env)) {
     return rec.finish('stopped', '完了ゲートに合格しましたが、gh CLI がないか、ログインしていないので PR を作れません。gh auth login でログインしてください', []);
   }
@@ -160,10 +174,17 @@ export function recordAndOpenPr(ctx: RunContext, rec: Recorder): number {
     evidence = git(root, env, ['diff', '--name-only', '-z', 'HEAD~1', 'HEAD']).split('\0').filter(Boolean)[0];
   }
   rec.save('pr-body.md', prBody(root, ctx.changeDir, evidence));
+  const beforePush = await stopIfInterrupted();
+  if (beforePush !== undefined) return beforePush;
   try {
     git(root, env, ['push', '-q', '-u', 'origin', branch]);
+    const beforePr = await stopIfInterrupted();
+    if (beforePr !== undefined) return beforePr;
     const existing = findOpenPr(root, env, { base, head: branch });
     if (existing) return rec.finish('completed', `既存のPRを確認しました：${existing}`, []);
+    // 既存の PR の検索も同期的に動くので、そのあいだに届いた中断を、PR を作る前に確かめる
+    const beforeCreate = await stopIfInterrupted();
+    if (beforeCreate !== undefined) return beforeCreate;
     const url = createPr(root, env, { base, head: branch, title: changeId, bodyFile: join(rec.runDir, 'pr-body.md') });
     return rec.finish('completed', `PR を作りました：${url}`, []);
   } catch (e) {

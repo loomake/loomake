@@ -50,6 +50,14 @@ describe('実際に配るパッケージ', () => {
     }
   }, 35000);
 
+  it.each(['SIGTERM', 'SIGHUP'])('[REQ-208] POSIXの配布物を実際の%sで中断し、エンジンを残さない', (signal) => {
+    if (process.platform === 'win32') return;
+    const checked = spawnSync(process.execPath, ['scripts/run-sigint-smoke.mjs', target, signal], { cwd: root, encoding: 'utf8', timeout: 30000 });
+    expect(checked.status, checked.stdout + checked.stderr).toBe(0);
+    const result = JSON.parse(readFileSync(join(target, `${signal.toLowerCase()}-results/results.json`), 'utf8'));
+    expect(result).toMatchObject({ requirement: 'REQ-208', ok: true, signal, exit: { code: 1, signal: null }, summary: { status: 'interrupted', doneTasks: ['1.1 最初の変更'], remainingTasks: ['1.2 途中の変更', '2.1 品質を確認する'] }, partial: 'unfinished\n' });
+  }, 35000);
+
   it('[REQ-084] Linuxで通信を拒否して配布物を使う。他OSでは検証対象外を明示する', () => {
     const offlineTarget = join(base, 'offline');
     const args = ['scripts/runtime-compatibility.mjs', offlineTarget];
