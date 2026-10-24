@@ -7,4 +7,4 @@
 ## 2. 統合検証
 
 - [x] 2.1 AI試験の結果と不足を記録し、空のchangesetを追加して関連テストを通す
-- [ ] 2.2 `pnpm -s verify --change exercise-ai-user-journeys --done` を通す <!-- loomake:gate=done -->
+- [x] 2.2 `pnpm -s verify --change exercise-ai-user-journeys --done` を通す <!-- loomake:gate=done -->
