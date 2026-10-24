@@ -90,6 +90,25 @@ describe('終了コード', () => {
     expect(r.stderr).toContain('archive は change-id に使えません');
   });
 
+  it('[REQ-041] --change=<id> の形を、--change <id> と同じに扱う', async () => {
+    const r = await withProject({}, async (root) => [await run(root, 'verify', `--change=${CHANGE}`, '--spec-only', '--json'), await run(root, 'verify', '--change', CHANGE, '--spec-only', '--json')]);
+    expect(r[0].code).toBe(0);
+    expect(JSON.parse(r[0].stdout)).toEqual(JSON.parse(r[1].stdout));
+  });
+
+  it('[REQ-041] 値を取らないオプションの = の形は、知らないオプションにする（improve-cli-help の仮定 A-01）', async () => {
+    const r = await withProject({}, (root) => run(root, 'verify', '--change', CHANGE, '--done=yes'));
+    expect(r.code).toBe(2);
+    expect(r.stderr).toContain('知らないオプションです：--done=yes');
+  });
+
+  it('[REQ-041] 知らないコマンドを指定すると、その名前を挙げて知らないと表示し、2 を返す', async () => {
+    const r = await run(repo, 'foo');
+    expect(r.code).toBe(2);
+    expect(r.stderr).toContain('知らないコマンドです：foo');
+    expect(r.stderr).toContain('使い方: loomake');
+  });
+
   it('[REQ-041] loomake.config.json の形が正しくなければ 2', async () => {
     const r = await withProject({ config: { tests: { report: 1 } } }, (root) => run(root, 'verify', '--change', CHANGE, '--spec-only'));
     expect(r.code).toBe(2);
@@ -150,11 +169,43 @@ describe('ヘルプと版', () => {
     }
   });
 
-  it('[REQ-135] loomake verify --help は verify の使い方だけを出し、検査を実行せずに終了コード 0 を返す', async () => {
+  it('[REQ-135] loomake verify --help は verify の使い方と各オプションの説明を出し、検査を実行せずに終了コード 0 を返す', async () => {
     const r = await run(repo, 'verify', '--change', 'nothing', '--done', '--help');
     expect(r.code).toBe(0);
-    expect(r.stdout).toBe('使い方: loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]');
+    expect(r.stdout.split('\n')[0]).toBe('使い方: loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]');
+    for (const option of ['--change <id>', '--spec-only', '--done', '--json', '--skip-commands']) expect(r.stdout).toMatch(new RegExp(`^  ${option.replace(/[<>]/g, '.')} +\\S`, 'm'));
     expect(r.stderr).toBe('');
+  });
+
+  it('[REQ-135] trace record --help と trace report --help は、それぞれの使い方を出す', async () => {
+    const record = await run(repo, 'trace', 'record', '--help');
+    expect(record.code).toBe(0);
+    expect(record.stdout.split('\n')[0]).toBe('使い方: loomake trace record --change <id>');
+    expect(record.stdout).not.toContain('--format');
+    const report = await run(repo, 'trace', 'report', '-h');
+    expect(report.stdout.split('\n')[0]).toBe('使い方: loomake trace report --change <id> [--format md|json]');
+    expect(report.stdout).toMatch(/^ {2}--format md\|json +\S/m);
+  });
+
+  it('[REQ-135] trace のあとが record・report 以外（constructor・toString など）なら、trace 全体の使い方を出す', async () => {
+    const whole = await run(repo, 'trace', '--help');
+    for (const sub of ['constructor', 'toString', 'nothing']) {
+      const r = await run(repo, 'trace', sub, '--help');
+      expect(r.code, sub).toBe(0);
+      expect(r.stdout, sub).toBe(whole.stdout);
+      expect(r.stdout, sub).not.toContain('[Function');
+    }
+  });
+
+  it('[REQ-135] init・run・doctor の使い方にも、説明とオプションの説明を載せる', async () => {
+    const options: Record<string, string[]> = { init: ['--codex', '--devcontainer'], run: ['--change <id>', '--engine <名前>', '--dry-run', '--skip-permissions'], doctor: [] };
+    for (const [cmd, opts] of Object.entries(options)) {
+      const r = await run(repo, cmd, '--help');
+      const lines = r.stdout.split('\n');
+      expect(lines[0]).toContain(`使い方: loomake ${cmd}`);
+      expect(lines[1]).toMatch(/\S/);
+      for (const o of opts) expect(r.stdout, cmd).toMatch(new RegExp(`^  ${o.replace(/[<>]/g, '.')} +\\S`, 'm'));
+    }
   });
 
   it('[REQ-135] init・trace・run も -h で使い方を出す', async () => {
