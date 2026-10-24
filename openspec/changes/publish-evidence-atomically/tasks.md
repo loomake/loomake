@@ -7,5 +7,5 @@
 
 ## 2. 統合検証
 
-- [ ] 2.1 復旧手順と保証範囲・TDD・changesetを記録し、関連テスト・型・lintを通す
+- [x] 2.1 復旧手順と保証範囲・TDD・changesetを記録し、関連テスト・型・lintを通す
 - [ ] 2.2 `pnpm -s verify --change publish-evidence-atomically --done` を通す <!-- loomake:gate=done -->
