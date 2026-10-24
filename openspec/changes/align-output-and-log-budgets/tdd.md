@@ -7,3 +7,7 @@
 ## 2.1 文書
 
 resources.md の既定値と、上限を上げるときの注意を直した。changeset を足した。
+
+## 完了ゲート
+
+`pnpm -s verify --change align-output-and-log-budgets --done` は exit 0。lint・型検査・890 件のテストと全 REQ の対応が成功した。
