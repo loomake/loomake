@@ -22,7 +22,7 @@ export const DOMAIN_MUTATIONS = [
   { id: 'M08', file: agreement, label: '承認', before: '!a.approval', after: 'a.approval' },
   { id: 'M09', file: agreement, label: '出典', before: '!r.source', after: 'r.source' },
   { id: 'M10', file: coverage, label: 'テスト不足', before: 'coverage[id].length === 0', after: 'coverage[id].length > 0' },
-  { id: 'M11', file: coverage, label: 'ファイル順序', before: '[...files.get(id)!].sort()', after: '[...files.get(id)!]' },
+  { id: 'M11', file: coverage, label: 'ファイル順序', before: '[...(files.get(id) ?? [])].sort()', after: '[...(files.get(id) ?? [])]' },
   { id: 'M12', file: coverage, label: '対応ファイル', before: 'files.get(id)?.add(file)', after: 'files.get(id)?.add(id)' },
   { id: 'M13', file: coverage, label: '必要IDの重複', before: '[...new Set(needed)].sort()', after: '[...needed].sort()' },
 ];

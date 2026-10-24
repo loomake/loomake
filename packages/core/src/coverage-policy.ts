@@ -7,6 +7,6 @@ export function evaluateTestCoverage(needed: readonly string[], tests: Readonly<
   for (const [file, covered] of Object.entries(tests)) {
     for (const id of covered) files.get(id)?.add(file);
   }
-  const coverage = Object.fromEntries(ids.map((id) => [id, [...files.get(id)!].sort()]));
+  const coverage = Object.fromEntries(ids.map((id) => [id, [...(files.get(id) ?? [])].sort()]));
   return { coverage, missing: ids.filter((id) => coverage[id].length === 0) };
 }

@@ -24,7 +24,7 @@ export const branchExists = (root: string, env: NodeJS.ProcessEnv, branch: strin
 
 /** git の設定の値。なければ空の文字列 */
 export const gitConfig = (root: string, env: NodeJS.ProcessEnv, key: string) =>
-  (runExternal('git', ['config', '--get', key], { cwd: root, env }).stdout ?? '').trim();
+  runExternal('git', ['config', '--get', key], { cwd: root, env }).stdout.trim();
 
 /** .gitignore で除外されているか。追跡しているファイルは除外されていないとみなす */
 export const isIgnored = (root: string, env: NodeJS.ProcessEnv, path: string) =>

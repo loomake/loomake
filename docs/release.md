@@ -6,7 +6,7 @@
 
 ### リポジトリを公開前に public にするか
 
-change `prepare-npm-publish` の確認事項 Q-01 で、まだ答えがない。おすすめは public にすること。private のままだと、次の問題が残る。
+change `prepare-npm-publish` の確認事項 Q-01 に、「完成したら、npm に公開する前に public にする」と回答があった（2026-10-24）。private のままだと、次の問題が残るためである。
 
 - npm のページにある README・`homepage`・`bugs` のリンクを、利用者が開けない
 - OIDC で公開しても provenance が付かない
@@ -19,7 +19,7 @@ public にする前に、コミットの履歴に秘密情報が入っていな�
 ### 準備
 
 1. ブランチ `prepare-npm-publish-2` の PR を作って main に入れる。PR 本文には `loomake-change: prepare-npm-publish, require-node-22` を書く
-2. npm で `@loomake` organization を作り、公開権限を持つメンバーを決める
+2. npm で `@loomake` organization を作り、公開権限を持つメンバーを決める。organization は作成済み（2026-10-24 に npm のレジストリで確かめた）。公開権限を持つメンバーは、npm のサイトで確かめる
 3. `pnpm changeset version` を実行して版を上げ、PR を作って main に入れる。package.json を変えるので、PR 本文には `loomake-change: none` を書く。書かないと CI の gate ジョブが失敗する。changeset を消化するので `changeset status` は失敗するが、変えたファイルが版の上げ下げだけなら、品質ジョブの REQ-056 の検査は合格する
 
 ### release ワークフローがすること

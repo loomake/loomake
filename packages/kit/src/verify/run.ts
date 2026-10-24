@@ -231,11 +231,11 @@ function checkOpenspecValidate(root: string, config: LoomakeConfig, changeId: st
     return;
   }
   // Windows では shell 経由で起動するので、CLI が無いと ENOENT ではなくシェルが終了コード 1 を返す
-  const missing = r.error?.code === 'ENOENT' || (process.platform === 'win32' && /is not recognized|認識されていません/.test(r.stderr ?? ''));
+  const missing = r.error?.code === 'ENOENT' || (process.platform === 'win32' && /is not recognized|認識されていません/.test(r.stderr));
   if (missing) {
     record('openspec validate', config.openspecValidate === 'auto' ? 'warn' : 'fail', 'OpenSpec CLI が見つかりません（npm install -g @fission-ai/openspec）');
   } else {
-    record('openspec validate', r.status === 0 ? 'pass' : 'fail', r.status === 0 ? '' : `${r.stdout ?? ''}${r.stderr ?? ''}`.trim().slice(0, 2000));
+    record('openspec validate', r.status === 0 ? 'pass' : 'fail', r.status === 0 ? '' : `${r.stdout}${r.stderr}`.trim().slice(0, 2000));
   }
 }
 
@@ -296,7 +296,10 @@ export const COMMANDS_SKIPPED = '--skip-commands で実行していません。�
 
 function runCommands(root: string, config: LoomakeConfig, skip: boolean, record: Recorder, progress: (m: string) => void, timeoutMs?: number) {
   // 省いたことを結果に残し、前回のレポートでの合格を、品質コマンドを実行した合格と見分けられるようにする（REQ-191）
-  if (skip) return record('品質コマンド', 'skip', COMMANDS_SKIPPED);
+  if (skip) {
+    record('品質コマンド', 'skip', COMMANDS_SKIPPED);
+    return;
+  }
   const deadline = timeoutMs === undefined ? undefined : Date.now() + timeoutMs;
   const names = [...COMMAND_ORDER.filter((n) => n in config.commands), ...Object.keys(config.commands).filter((n) => !COMMAND_ORDER.includes(n))];
   for (const name of names) {
@@ -320,7 +323,8 @@ function runCommands(root: string, config: LoomakeConfig, skip: boolean, record:
       if (error.kind === 'interrupted' && !hasProcessBudget()) return;
       continue;
     }
-    const out = `${r.stdout ?? ''}${r.stderr ?? ''}`.trim();
+    // spawnSync は起動に失敗すると、型に反して stdout・stderr が null になる
+    const out = `${(r.stdout as string | null) ?? ''}${(r.stderr as string | null) ?? ''}`.trim();
     record(`command: ${name}`, r.status === 0 ? 'pass' : 'fail', r.status === 0 ? '' : out.split('\n').slice(-30).join('\n'));
   }
 }

@@ -32,7 +32,11 @@ const COMMAND_USAGE: Record<Command, string> = { init: INIT_USAGE, verify: VERIF
 // 値を取るオプション。--change=<id> の形も受け付ける（REQ-041、improve-cli-help の仮定 A-01）
 
 // 端末での幅。全角の文字は 2 桁と数え、オプションの説明の桁をそろえる
-const width = (s: string) => [...s].reduce((n, c) => n + (c.charCodeAt(0) > 0xff ? 2 : 1), 0);
+const width = (s: string) => {
+  let n = 0;
+  for (const c of s) n += c.charCodeAt(0) > 0xff ? 2 : 1;
+  return n;
+};
 
 /** サブコマンドのヘルプ：使い方の行・説明・各オプションの説明（REQ-135） */
 const help = (usage: string, description: string, options: [string, string][] = []) =>

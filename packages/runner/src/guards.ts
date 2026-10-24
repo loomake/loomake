@@ -108,8 +108,8 @@ export const APPROVAL_GUIDE = [
 export type HeadState = { sha: string; branch: string };
 
 export const headState = (root: string, env: NodeJS.ProcessEnv): HeadState => ({
-  sha: (runExternal('git', ['rev-parse', '--verify', '-q', 'HEAD'], { cwd: root, env }).stdout ?? '').trim(),
-  branch: (runExternal('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: root, env }).stdout ?? '').trim(),
+  sha: runExternal('git', ['rev-parse', '--verify', '-q', 'HEAD'], { cwd: root, env }).stdout.trim(),
+  branch: runExternal('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: root, env }).stdout.trim(),
 });
 
 /**

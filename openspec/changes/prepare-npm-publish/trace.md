@@ -28,7 +28,7 @@ A の番号はこの change の中の通し番号にする。
 
 | ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |
 |---|---|---|---|---|---|---|---|---|
-| Q-01 | REQ-138, REQ-139, REQ-141 | GitHub のリポジトリ `loomake/loomake` はいま private。npm に公開する前に public にするか | A: 公開前に public にする / B: private のまま公開する | A。README と `homepage` のリンクは private だと npm の利用者が開けない。provenance も公開リポジトリでないと付かない | no | | | |
+| Q-01 | REQ-138, REQ-139, REQ-141 | GitHub のリポジトリ `loomake/loomake` はいま private。npm に公開する前に public にするか | A: 公開前に public にする / B: private のまま公開する | A。README と `homepage` のリンクは private だと npm の利用者が開けない。provenance も公開リポジトリでないと付かない | no | A：完成したら、npm に公開する前に public にする | 利用者 | 2026-10-24 |
 
 ## 仮定
 
