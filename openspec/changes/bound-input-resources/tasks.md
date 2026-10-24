@@ -9,5 +9,5 @@
 
 ## 2. 文書と統合検証
 
-- [ ] 2.1 入力予算と対象外の範囲、測定・TDD結果とchangesetを記録し、関連テスト・型・lintを通す
+- [x] 2.1 入力予算と対象外の範囲、測定・TDD結果とchangesetを記録し、関連テスト・型・lintを通す
 - [ ] 2.2 `pnpm -s verify --change bound-input-resources --done` を通す <!-- loomake:gate=done -->
