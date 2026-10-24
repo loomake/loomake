@@ -1,6 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { hostname } from 'node:os';
+import { spawn } from 'node:child_process';
+import { once } from 'node:events';
 import { join } from 'node:path';
 import { acquireRunLock } from '../src/lock.js';
 import { makeRepo } from './helpers.js';
@@ -63,6 +65,46 @@ describe('作業ツリーの実行ロック', () => {
       writeFileSync(pathOf(repo), replacement);
       release();
       expect(readFileSync(pathOf(repo), 'utf8')).toBe(replacement);
+    } finally { repo.cleanup(); }
+  });
+});
+
+
+describe('実プロセスとworktree', () => {
+  it('[REQ-159] 強制終了した実プロセスのロックを回復する', async () => {
+    const repo = makeRepo();
+    const child = spawn(process.execPath, ['-e', `
+      const { writeFileSync } = require('node:fs');
+      const { hostname } = require('node:os');
+      writeFileSync(process.argv[1], JSON.stringify({ pid: process.pid, host: hostname(), token: 'child-owner' }));
+      setInterval(() => {}, 1000);
+    `, pathOf(repo)], { stdio: 'ignore' });
+    const exited = once(child, 'exit');
+    try {
+      await vi.waitFor(() => expect(existsSync(pathOf(repo))).toBe(true));
+      expect(() => acquireRunLock(repo.root, repo.env)).toThrow('同じ作業ツリー');
+      child.kill('SIGKILL');
+      await exited;
+      const release = acquireRunLock(repo.root, repo.env);
+      expect(JSON.parse(readFileSync(pathOf(repo), 'utf8')).pid).toBe(process.pid);
+      release();
+      expect(existsSync(pathOf(repo))).toBe(false);
+    } finally {
+      if (child.exitCode === null && child.signalCode === null) { child.kill('SIGKILL'); await exited; }
+      repo.cleanup();
+    }
+  });
+
+  it('[REQ-158] 別のGit worktreeのロックは独立して取得する', () => {
+    const repo = makeRepo();
+    try {
+      const other = join(repo.root, '..', 'other-worktree');
+      repo.git('worktree', 'add', '--detach', other, 'HEAD');
+      const release = acquireRunLock(repo.root, repo.env);
+      const releaseOther = acquireRunLock(other, repo.env);
+      releaseOther();
+      expect(existsSync(pathOf(repo))).toBe(true);
+      release();
     } finally { repo.cleanup(); }
   });
 });

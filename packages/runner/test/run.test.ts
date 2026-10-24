@@ -629,3 +629,43 @@ describe('runnerの表示の保護', () => {
       expect(progress.join('\n')).toContain('***');
     }));
 });
+
+
+describe('実行の排他と記録', () => {
+  it('[REQ-158] 二重起動は先の実行を変更せず、中断後はロックを解放する', () =>
+    withRepo(async (repo) => {
+      repo.plan([{ sleepMs: 10_000 }]);
+      const controller = new AbortController();
+      const first = run(repo, { signal: controller.signal });
+      try {
+        await vi.waitFor(() => expect(repo.calls()).toHaveLength(1));
+        const head = repo.git('rev-parse', 'HEAD');
+        const tasks = tasksMd(repo);
+        const second = await run(repo, { dryRun: true });
+        expect(second.code).toBe(1);
+        expect(second.stdout).toContain('同じ作業ツリーの実行ロック');
+        expect(repo.calls()).toHaveLength(1);
+        expect(repo.git('rev-parse', 'HEAD')).toBe(head);
+        expect(tasksMd(repo)).toBe(tasks);
+      } finally {
+        controller.abort();
+        await first;
+      }
+      expect(existsSync(join(repo.root, '.git/loomake-run.lock'))).toBe(false);
+      expect((await run(repo, { dryRun: true })).code).toBe(0);
+    }));
+
+  it('[REQ-160] 同じ秒に再実行しても両方の理由とログを残す', () =>
+    withRepo(async (repo) => {
+      repo.plan([{ output: 'LOOMAKE-QUESTION: first stop' }, { output: 'LOOMAKE-QUESTION: second stop' }]);
+      const now = () => new Date('2026-10-24T12:00:00Z');
+      expect((await run(repo, { now })).code).toBe(1);
+      expect((await run(repo, { now })).code).toBe(1);
+      const base = join(repo.root, '.loomake/runs');
+      const dirs = readdirSync(base).filter((name) => name !== '.gitignore');
+      expect(dirs).toHaveLength(2);
+      const reasons = dirs.map((dir) => (JSON.parse(readFileSync(join(base, dir, 'summary.json'), 'utf8')) as RunSummary).reason);
+      expect(reasons.join('\n')).toContain('first stop');
+      expect(reasons.join('\n')).toContain('second stop');
+    }));
+});

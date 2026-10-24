@@ -8,6 +8,7 @@ import { GitError, branchExists, dirtyFiles, git, gitConfig, isIgnored } from '.
 import { APPROVAL_GUIDE, findEngineMove, findViolations, headState } from './guards.js';
 import { createPr, ghLoggedIn, prBody } from './pr.js';
 import { maskSecrets } from './mask.js';
+import { acquireRunLock, RunBusyError } from './lock.js';
 import { parseRunConfig, type RunConfig } from './config.js';
 
 export type RunOptions = {
@@ -173,6 +174,22 @@ export async function runRun(options: RunOptions): Promise<number> {
     stdout: (text) => stdout(maskSecrets(text)),
     progress: progress && ((text) => progress(maskSecrets(text))),
   };
+  let release: () => void;
+  try {
+    release = acquireRunLock(resolve(options.root), options.env ?? process.env);
+  } catch (error) {
+    if (error instanceof RunBusyError) {
+      options.stdout(error.message);
+      return 1;
+    }
+    if (error instanceof GitError) throw new UsageError(error.message);
+    throw error;
+  }
+  try { return await runLocked(options); }
+  finally { release(); }
+}
+
+async function runLocked(options: RunOptions): Promise<number> {
   // 始める前（実行の記録を作る前）の git の失敗は、使い方の誤りにする（REQ-137）
   let ctx: RunContext | number;
   try {
@@ -294,9 +311,17 @@ function startRecording(ctx: RunContext): Recorder {
   const runsDir = join(root, RUNS_DIR);
   mkdirSync(runsDir, { recursive: true });
   if (!existsSync(join(runsDir, '.gitignore'))) writeFileSync(join(runsDir, '.gitignore'), '*\n');
-  const runId = `${stamp(startedAt)}-${changeId}`;
-  const runDir = join(runsDir, runId);
-  mkdirSync(runDir, { recursive: true });
+  const baseId = `${stamp(startedAt)}-${changeId}`;
+  let runId = baseId;
+  let runDir: string;
+  for (let suffix = 2; ; suffix++) {
+    runDir = join(runsDir, runId);
+    try { mkdirSync(runDir); break; }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+      runId = `${baseId}-${suffix}`;
+    }
+  }
   const rec: Recorder = {
     runDir,
     deadline: startedAt.getTime() + ctx.runConfig.timeoutMinutes * 60_000,
