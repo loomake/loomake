@@ -117,7 +117,8 @@ export async function main(argv: string[], io: Io): Promise<number> {
   const cmd = command as Command;
   // サブコマンドの --help は、ほかの処理をせずに使い方だけを出す。trace は record と report を分ける（REQ-135）
   if (args.some(isHelp)) {
-    const sub = cmd === 'trace' ? { record: TRACE_RECORD_HELP, report: TRACE_REPORT_HELP }[args[0] as 'record' | 'report'] : undefined;
+    // オブジェクトの添字で引くと constructor のような継承したプロパティを拾うので、名前を 1 つずつ比べる
+    const sub = cmd !== 'trace' ? undefined : args[0] === 'record' ? TRACE_RECORD_HELP : args[0] === 'report' ? TRACE_REPORT_HELP : undefined;
     io.stdout(sub ?? COMMAND_HELP[cmd]);
     return 0;
   }
