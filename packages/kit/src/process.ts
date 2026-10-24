@@ -51,7 +51,7 @@ const {spawn,spawnSync}=require('node:child_process');
 const fs=require('node:fs');
 const [command,args,shell,ms,limit]=JSON.parse(process.argv[1]);
 const win=process.platform==='win32';
-let child, timer, grace, count=0, stopping=false, ended=false;
+let child, timer, grace, count=0, stopping=false, ended=false, exited=false;
 let outcome={status:null,signal:null};
 function kill(signal) {
   if (!child || !child.pid) return;
@@ -69,7 +69,8 @@ function stop(kind) {
   if(stopping || ended) return;
   stopping=true; outcome.kind=kind; clearTimeout(timer);
   kill('SIGTERM');
-  grace=setTimeout(()=>{kill('SIGKILL');finish();},250);
+  // SIGKILLのあと、子の終了を最大1秒待ってから結果を返し、止めた子が残ったまま返さない。
+  grace=setTimeout(()=>{kill('SIGKILL');if(exited||!child){finish();return;}child.once('exit',finish);setTimeout(finish,1000);},250);
 }
 process.on('SIGINT',()=>stop('interrupted'));
 process.on('SIGTERM',()=>stop('interrupted'));
@@ -87,7 +88,7 @@ try {
   child.stderr.on('data',data=>forward(process.stderr,data));
   child.on('error',error=>{outcome.error={message:error.message,code:error.code};finish();});
   child.on('exit',(status,signal)=>{
-    outcome.status=status;outcome.signal=signal;
+    exited=true;outcome.status=status;outcome.signal=signal;
     if(!stopping) {kill('SIGKILL');}
   });
   child.on('close',()=>{if(!stopping) finish();});
