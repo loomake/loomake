@@ -31,25 +31,8 @@
       "loomake-0.0.0.tgz": "8d69a11703a8b5e8484332b1cf5c5c1be81014c9c8c11e33ad40338191d9ce3b",
       "loomake-core-0.0.0.tgz": "0057d6ef42365fd32b6020d4bb4a130561bd4b9f5e4b86e707beb7b79efc11ed",
       "loomake-kit-0.0.0.tgz": "3d96962fc66b5929018e90ac288f75a643707beb87b5c17aef8937ef59095ea6",
-      "loomake-runner-0.0.0.tgz": "c50483d902439d9100afb8217bab3e32053d59ee6775d56a9334a3b08e114920",
+      "loomake-runner-0.0.0.tgz": "10e36f33c5e90d1991472d7e9a8ed96e52180b7617bae2d4a18eff2cc6c1124d",
       "loomake-trace-0.0.0.tgz": "c847ad33a8ba50d4c1a0efb8272ae459427afa1a153744f489a3e1cafa5b63f2"
     }
-  },
-  "officialRuntime": {
-    "version": "20.19.0",
-    "archive": "node-v20.19.0-linux-arm64.tar.xz",
-    "sha256": "dbe339e55eb393955a213e6b872066880bb9feceaa494f4d44c7aac205ec2ab9",
-    "checksumSource": "https://nodejs.org/dist/v20.19.0/SHASUMS256.txt",
-    "binarySha256": "008791c3a43222766efe546bc12a56d456703f2f5b2d54863ffaf9dc8dd17079"
-  },
-  "controlOutsideFilter": {
-    "node": "v20.19.0",
-    "result": "ECONNREFUSED"
-  },
-  "scope": "Linux ARM64上の配布物と代替エンジン。他OS・実Claude Code・GitHubの成功は未確認。",
-  "snapshotCommit": "34563b2",
-  "patchCommits": [
-    "a3478cc",
-    "225a6c8"
-  ]
+  }
 }
