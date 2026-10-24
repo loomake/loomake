@@ -6,7 +6,7 @@ PR #47 のレビューで、run の中の git commit・git push・gh pr create �
 
 ## What Changes
 
-- 確認事項 Q-01 の回答に従って、フックを動かす git の操作と PR の作成の期限を決める（おすすめは、1 操作の期限ではなく run の残り時間を使うこと）
+- git commit・git push・gh pr create は、1 操作の期限（既定 30 秒）ではなく、run の残り時間で止める（確認事項 Q-01 の回答）
 
 ## Capabilities
 
