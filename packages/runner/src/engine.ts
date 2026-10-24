@@ -128,7 +128,7 @@ export function runClaude(call: EngineCall): Promise<EngineResult> {
     call.signal?.addEventListener('abort', onAbort, { once: true });
     child.on('error', () => {});
     if (call.signal?.aborted) onAbort();
-    child.on('close', async (code) => {
+    child.on('close', (code) => void (async () => {
       clearTimeout(timer);
       call.signal?.removeEventListener('abort', onAbort);
       await stopping;
@@ -141,7 +141,7 @@ export function runClaude(call: EngineCall): Promise<EngineResult> {
         // JSON でなければ標準出力をそのまま使う
       }
       resolve({ text, raw, exitCode: code, timedOut, aborted, outputLimitExceeded });
-    });
+    })());
     child.stdin.on('error', () => {});
     child.stdin.end(call.prompt);
   });

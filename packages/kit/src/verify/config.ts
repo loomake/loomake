@@ -44,7 +44,7 @@ export function loadConfig(root: string): LoomakeConfig {
     throw new UsageError('loomake.config.json の commands は、値が文字列（または null）のオブジェクトにしてください');
   }
   return {
-    openspecDir: (c.openspecDir as string | undefined) ?? base.openspecDir,
+    openspecDir: c.openspecDir ?? base.openspecDir,
     openspecValidate: (c.openspecValidate as LoomakeConfig['openspecValidate'] | undefined) ?? base.openspecValidate,
     tests: { report },
     commands: (c.commands as LoomakeConfig['commands'] | undefined) ?? {},

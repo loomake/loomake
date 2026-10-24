@@ -77,7 +77,7 @@ function hasLoomake(root: string): boolean {
 type Manifest = { scripts?: unknown; dependencies?: unknown; devDependencies?: unknown };
 const manifest = (root: string): Manifest | undefined => {
   const pkg = readJson(join(root, 'package.json'));
-  return typeof pkg === 'object' && pkg !== null && !Array.isArray(pkg) ? (pkg as Manifest) : undefined;
+  return typeof pkg === 'object' && pkg !== null && !Array.isArray(pkg) ? pkg : undefined;
 };
 
 /**

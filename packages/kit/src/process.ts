@@ -118,7 +118,7 @@ export function runExternal(command: string, args: readonly string[], options: E
   const stderr = utf8Prefix(result.stderr?.toString('utf8') ?? '', maxBuffer - Buffer.byteLength(stdout));
   if (result.error) return { status: null, signal: result.signal, stdout, stderr, error: result.error };
   let outcome: Outcome;
-  try { outcome = JSON.parse(result.output[3]?.toString('utf8') ?? ''); }
+  try { outcome = JSON.parse(result.output[3]?.toString('utf8') ?? '') as Outcome; }
   catch { throw new UsageError(`外部操作の監視結果を読み取れません：${command}`); }
   if (outcome.kind) {
     if (outcome.kind === 'interrupted' && budget) budget.state.interrupted = true;

@@ -322,7 +322,7 @@ function startRecording(ctx: RunContext): Recorder {
     done: [],
     lastVerify: null,
     step: 0,
-    save: store.save,
+    save: (name, text) => store.save(name, text),
     finish: (status, reason, remaining) => {
       const { lastVerify } = rec;
       const summary: RunSummary = {
