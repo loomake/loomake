@@ -10,16 +10,42 @@ const documents = [
   ...readdirSync(join(root, 'docs/quality')).filter((f) => f.endsWith('.md')).map((f) => `docs/quality/${f}`),
 ];
 
-// インラインのリンクと画像：[説明](先 "タイトル")。先は <...> で囲んでもよい。タイトルは "..."・'...'・(...) のどれか
-const INLINE = /!?\[[^\]]*\]\(\s*(<[^>]*>|[^\s)]+)(?:\s+(?:"[^"]*"|'[^']*'|\([^)]*\)))?\s*\)/g;
+/**
+ * インラインのリンクと画像 [説明](先 "タイトル") の先を、`](` のあとから読む。
+ * 先は <...> で囲むか、空白を含まず括弧の対応がとれた文字列（docs/guide(v2).md など）。\ でエスケープした文字はそのまま読む
+ */
+function inlineTargets(text: string): string[] {
+  const targets: string[] = [];
+  for (let start = text.indexOf(']('); start >= 0; start = text.indexOf('](', start + 2)) {
+    let i = start + 2;
+    while (text[i] === ' ' || text[i] === '\t') i++;
+    if (text[i] === '<') {
+      const end = text.indexOf('>', i);
+      if (end > i && !text.slice(i, end).includes('\n')) targets.push(text.slice(i + 1, end));
+      continue;
+    }
+    let depth = 0;
+    let target = '';
+    for (; i < text.length; i++) {
+      const c = text[i];
+      if (c === '\\' && i + 1 < text.length) target += text[++i];
+      else if (c === '(') { depth++; target += c; }
+      else if (c === ')') { if (depth === 0) break; depth--; target += c; }
+      else if (/\s/.test(c)) break;
+      else target += c;
+    }
+    targets.push(target);
+  }
+  return targets;
+}
+
 // 参照の形のリンクの定義：[名前]: 先 "タイトル"
 const DEFINITION = /^ {0,3}\[[^\]]+\]:\s*(<[^>]*>|\S+)/gm;
 
 /** コードブロックとインラインのコードを除いた本文の、相対パスのリンクの先 */
 export function relativeLinks(markdown: string): string[] {
   const text = markdown.replace(/^(```|~~~)[\s\S]*?^\1/gm, '').replace(/`[^`\n]*`/g, '');
-  return [...text.matchAll(INLINE), ...text.matchAll(DEFINITION)]
-    .map(([, target]) => target.replace(/^<|>$/g, ''))
+  return [...inlineTargets(text), ...[...text.matchAll(DEFINITION)].map(([, target]) => target.replace(/^<|>$/g, ''))]
     .filter((url) => url !== '' && !/^([a-z][a-z0-9+.-]*:|#)/i.test(url));
 }
 
@@ -31,8 +57,11 @@ describe('文書のリンクの取り出し', () => {
     ['山かっこ', '[説明](<missing.md>)'],
     ['画像', '![図](missing.md)'],
     ['参照の形', '[説明][ref]\n\n[ref]: missing.md "タイトル"'],
-  ])('%s のリンクの先を取り出す', (_name, markdown) => {
-    expect(relativeLinks(markdown)).toEqual(['missing.md']);
+    ['括弧を含む先', '[説明](missing(v2).md)', 'missing(v2).md'],
+    ['括弧を含む先とタイトル', '[説明](missing(v2).md "タイトル")', 'missing(v2).md'],
+    ['エスケープした括弧', '[説明](missing\\(v2.md)', 'missing(v2.md'],
+  ])('%s のリンクの先を取り出す', (_name, markdown, target = 'missing.md') => {
+    expect(relativeLinks(markdown)).toEqual([target]);
   });
 
   it('外部の URL・ページ内のリンク・コードの中は取り出さない', () => {
