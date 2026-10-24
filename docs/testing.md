@@ -14,7 +14,7 @@ node scripts/package-smoke.mjs check /tmp/loomake-package-trial
 node scripts/ai-journeys.mjs /tmp/loomake-ai-journeys
 ```
 
-いずれも新規の保存先を指定する。配布物の試験は公開API・スキーマ・bin・主要コマンドを確認する。AIによる操作試験は初回導入、通常の操作、意図した失敗からの復旧を行い、journeys.jsonに操作・終了コード・所要時間を残す。これはAIが作成して実行するシナリオで、人の利用者による評価や実エンジン・GitHubへの接続試験ではない。
+いずれも新規の保存先を指定する。配布物の試験は公開API・スキーマ・bin・主要コマンドを確認する。AIによる操作試験は初回導入、通常の操作、意図した失敗からの復旧を行い、journeys.jsonに操作・終了コード・所要時間を残す。これはAIが作成して実行するシナリオで、人の利用者による評価や実エンジン・GitHubへの接続試験ではない。実際のClaude Codeで`loomake run`を動かした試用の結果は[real-engine-trials.md](quality/real-engine-trials.md)にある。
 
 ## ドメイン判定のmutation試験
 
