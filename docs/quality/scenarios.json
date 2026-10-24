@@ -4779,15 +4779,15 @@
       "id": "SCN-c14e76ddd4c813653713",
       "status": "reviewed",
       "scenarioSha256": "8d78f8201b445b53760bfe13b69f0ec1445a2a6c21ea5411374c0a6bcdfb578f",
-      "reason": "CLIのstdoutをJSONとして解析し、coreのスキーマでAjv検証が成功し、進捗はstderrへ出ることをassertする。",
+      "reason": "CLIの標準出力全体をJSONとして解析し、schemaVersionが1.0.0でcoreのAjvスキーマに適合し、品質コマンドの進捗は標準エラーへ出ることをassertする。",
       "sources": [
         "REQ-040"
       ],
       "tests": [
         {
           "file": "packages/cli/test/cli.test.ts",
-          "contains": "--json の標準出力は JSON だけで",
-          "sha256": "af8e785775d2e0aa180e9322dd37c5df04eea3e4c50de769f9bf6ffa94cc6ea1"
+          "contains": "[REQ-040] --json の標準出力は JSON だけで",
+          "sha256": "0f36c01b0c8947a0cfab325b0a3f72149826b3cfcdd7828eb3ce8424b93ef2b2"
         }
       ]
     },
@@ -4795,15 +4795,15 @@
       "id": "SCN-5e7b5a451616c4f5e499",
       "status": "reviewed",
       "scenarioSha256": "5b15c229560835d3e1775590b6aafc5251fcdeb1ad003acb02f42ec12bde4ac8",
-      "reason": "既存レポートのREQ-012とファイルに対し、CLI JSONのcoverageが同じ対応になることを比較する。",
+      "reason": "REQ-012を含む成功結果をtests/a.test.tsのレポートとして与え、--done --jsonのcoverageがその対応と完全一致することをassertする。品質コマンドの再実行はskipであり、前のレポートの照合である。",
       "sources": [
         "REQ-040"
       ],
       "tests": [
         {
           "file": "packages/cli/test/cli.test.ts",
-          "contains": "要件ごとのテストファイルの一覧を出す",
-          "sha256": "af8e785775d2e0aa180e9322dd37c5df04eea3e4c50de769f9bf6ffa94cc6ea1"
+          "contains": "[REQ-040] 要件ごとのテストファイルの一覧",
+          "sha256": "0f36c01b0c8947a0cfab325b0a3f72149826b3cfcdd7828eb3ce8424b93ef2b2"
         }
       ]
     },
@@ -4907,15 +4907,15 @@
       "id": "SCN-129c1a409ad4cdd46ce6",
       "status": "reviewed",
       "scenarioSha256": "bfc0cfb36b49df771c50f4505bc984af7cb34174dcb31c24e91fcfc53cc0fd52",
-      "reason": "kitのdependenciesのキーがcoreだけであることを比較する。",
+      "reason": "kitのpackage.jsonのdependenciesのキーが@loomake/coreだけであることを完全一致でassertする。",
       "sources": [
         "REQ-047"
       ],
       "tests": [
         {
           "file": "packages/cli/test/cli.test.ts",
-          "contains": "kit の dependencies は @loomake/core だけ",
-          "sha256": "af8e785775d2e0aa180e9322dd37c5df04eea3e4c50de769f9bf6ffa94cc6ea1"
+          "contains": "[REQ-047] kit の dependencies",
+          "sha256": "0f36c01b0c8947a0cfab325b0a3f72149826b3cfcdd7828eb3ce8424b93ef2b2"
         }
       ]
     },
@@ -4923,15 +4923,15 @@
       "id": "SCN-38961b7ee7aa96aad6f6",
       "status": "reviewed",
       "scenarioSha256": "0fc6dd543ded3083f2568ca7040843c07c1b926b916920a80170246fc7118ee3",
-      "reason": "CLIのdependenciesに許可された4パッケージ以外のキーがないことを比較する。",
+      "reason": "CLIのdependenciesにcore・kit・trace・runner以外のキーがないことをassertする。",
       "sources": [
         "REQ-047"
       ],
       "tests": [
         {
           "file": "packages/cli/test/cli.test.ts",
-          "contains": "loomake の dependencies は @loomake/core・@loomake/kit・@loomake/trace・@loomake/runner 以外を含まない",
-          "sha256": "af8e785775d2e0aa180e9322dd37c5df04eea3e4c50de769f9bf6ffa94cc6ea1"
+          "contains": "[REQ-047] loomake の dependencies",
+          "sha256": "0f36c01b0c8947a0cfab325b0a3f72149826b3cfcdd7828eb3ce8424b93ef2b2"
         }
       ]
     },
@@ -4939,15 +4939,15 @@
       "id": "SCN-f9f8eb6c78a2fa7479ef",
       "status": "reviewed",
       "scenarioSha256": "fb82d2509a479e9a370ffab0079bb3785b0749b0f941ad4cdb4f6b470cb137c0",
-      "reason": "500要件・1000個の実ファイルと同じ件数のレポートを用意し、準備を除いたskip-commandsのCLI検査が合格し3秒未満であることをassertする。現在のLinuxホストの結果である。",
+      "reason": "500要件の仕様・台帳、1000個の実ファイルと対応する成功レポートを作り、準備を除いたmain経由の--done --skip-commandsが終了コード0かつ3秒未満であることをassertする。別プロセスの起動時間はこの試験に含まれない。",
       "sources": [
         "REQ-050"
       ],
       "tests": [
         {
           "file": "packages/cli/test/cli.test.ts",
-          "contains": "要件 500 件・テストファイル 1,000 個の",
-          "sha256": "af8e785775d2e0aa180e9322dd37c5df04eea3e4c50de769f9bf6ffa94cc6ea1"
+          "contains": "[REQ-050] 要件 500 件・テストファイル 1,000 個",
+          "sha256": "0f36c01b0c8947a0cfab325b0a3f72149826b3cfcdd7828eb3ce8424b93ef2b2"
         }
       ]
     },
@@ -5371,7 +5371,7 @@
       "id": "SCN-8ac1e728bd931358b1b9",
       "status": "reviewed",
       "scenarioSha256": "67f2596cfcda595e808308791351f9f9c4f499d565dec85f5fc2074320a2006e",
-      "reason": "中断・出力・期限・質問・終了コードが重なる観測値を与え、既存の優先順位と理由を直接assertする。",
+      "reason": "中断・出力上限・期限・質問・非ゼロ終了が重なる観測値を直接与え、全14ケースでkind・状態・理由を完全一致でassertする。中断を優先してinterruptedを保持する。",
       "sources": [
         "REQ-204"
       ],
@@ -5379,7 +5379,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-204]",
-          "sha256": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b"
+          "sha256": "000c9763c5b9e05f706579261d1f4a14a5bd5d442cb34015ae008532a79ba561"
         }
       ]
     },
@@ -5387,7 +5387,7 @@
       "id": "SCN-c4fc61a3a8f5f2456a94",
       "status": "reviewed",
       "scenarioSha256": "20afe90f6229cf933d7209257c8389254a8e684bc5ec27f49c1b682903550cd5",
-      "reason": "HEADとGit内部の変更理由が重なるケース、失敗・中断との重なりで、先に示す理由と中断状態をassertする。",
+      "reason": "HEADとGit内部の変更が重なる入力でHEADの理由を先に選び、非ゼロ終了の理由を併記すること、各変更と中断の重なりでinterruptedの状態を保つことをassertする。",
       "sources": [
         "REQ-204"
       ],
@@ -5395,7 +5395,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-204]",
-          "sha256": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b"
+          "sha256": "000c9763c5b9e05f706579261d1f4a14a5bd5d442cb34015ae008532a79ba561"
         }
       ]
     },
@@ -5403,7 +5403,7 @@
       "id": "SCN-6a8388a02ac4197ecdba",
       "status": "reviewed",
       "scenarioSha256": "a7a46910d175bae1d786fbdc00d1956367d927fa926124893a252c69aa8fdf9a",
-      "reason": "正常終了だけの観測値に対してcontinueをassertする。",
+      "reason": "変更理由・質問・制限超過がなく終了コード0の入力で、continueだけを返すことをassertする。",
       "sources": [
         "REQ-204"
       ],
@@ -5411,55 +5411,70 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-204] 正常終了",
-          "sha256": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b"
+          "sha256": "000c9763c5b9e05f706579261d1f4a14a5bd5d442cb34015ae008532a79ba561"
         }
       ]
     },
     {
       "id": "SCN-557f8f5102b9a3f758dc",
       "status": "reviewed",
-      "scenarioSha256": "bf607833c8a30f24306aa31e6804ef50fc614d62e49a030f931d4d0a2fe64739",
-      "reason": "合格や期限超過と検証中の状態変更が重なっても、状態変更の理由で停止することをassertする。",
+      "scenarioSha256": "3bd7425f12d67b7a52d2efd2c4e1dda0608f8774cf1e6887c589e03923bc4861",
+      "reason": "合格と状態変更、中断と状態変更を重ねた直接試験で、いずれもstopとGit状態を確認する同じ理由を返すことをassertする。",
       "sources": [
         "REQ-205"
       ],
       "tests": [
         {
           "file": "packages/runner/test/decision-policy.test.ts",
-          "contains": "[REQ-205] 状態変更",
-          "sha256": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b"
+          "contains": "[REQ-205] 状態変更は合格より優先",
+          "sha256": "000c9763c5b9e05f706579261d1f4a14a5bd5d442cb34015ae008532a79ba561"
+        },
+        {
+          "file": "packages/runner/test/decision-policy.test.ts",
+          "contains": "[REQ-205][REQ-124] 検証中の状態変更",
+          "sha256": "000c9763c5b9e05f706579261d1f4a14a5bd5d442cb34015ae008532a79ba561"
         }
       ]
     },
     {
       "id": "SCN-e7a89e26ef4e607b045a",
       "status": "reviewed",
-      "scenarioSha256": "2a0624efac012e670b4377b9bc8d0adf5b826707218082ef3250940f173ed659",
-      "reason": "修正回数が直前・一致・超過の場合と上限0を試し、期限と重なる場合の優先順位もassertする。",
+      "scenarioSha256": "4adfb8f57089511c384c5c692caf465be0ebda4eb2f04b8a75d583f5b0da7439",
+      "reason": "上限直前・一致・超過・上限0の4入力で再修正と停止の境界をassertし、期限超過と回数上限が重なった入力では時間上限の理由を優先することをassertする。",
       "sources": [
         "REQ-205"
       ],
       "tests": [
         {
           "file": "packages/runner/test/decision-policy.test.ts",
-          "contains": "[REQ-205]",
-          "sha256": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b"
+          "contains": "[REQ-205] 上限",
+          "sha256": "000c9763c5b9e05f706579261d1f4a14a5bd5d442cb34015ae008532a79ba561"
+        },
+        {
+          "file": "packages/runner/test/decision-policy.test.ts",
+          "contains": "[REQ-205] 期限は回数より優先",
+          "sha256": "000c9763c5b9e05f706579261d1f4a14a5bd5d442cb34015ae008532a79ba561"
         }
       ]
     },
     {
       "id": "SCN-a984b61249c6f8f16938",
       "status": "reviewed",
-      "scenarioSha256": "2e914a20169dc359484207494898c937ef1a12301a59db3782e8da70246df95a",
-      "reason": "状態が変わらず合格した場合は、回数と期限の記録があってもpassedをassertする。",
+      "scenarioSha256": "2b56629518f652cb1cafef2ea80766fb84638a396d2330b99c3c53d708bd6cfd",
+      "reason": "作業状態が不変で合格した入力では、回数上限と期限超過、または中断の記録があってもpassedとなることをassertする。",
       "sources": [
         "REQ-205"
       ],
       "tests": [
         {
           "file": "packages/runner/test/decision-policy.test.ts",
-          "contains": "[REQ-205] 合格は回数",
-          "sha256": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b"
+          "contains": "[REQ-205] 合格は回数と期限",
+          "sha256": "000c9763c5b9e05f706579261d1f4a14a5bd5d442cb34015ae008532a79ba561"
+        },
+        {
+          "file": "packages/runner/test/decision-policy.test.ts",
+          "contains": "[REQ-205][REQ-124] 状態が変わらない合格",
+          "sha256": "000c9763c5b9e05f706579261d1f4a14a5bd5d442cb34015ae008532a79ba561"
         }
       ]
     },
@@ -5467,7 +5482,7 @@
       "id": "SCN-11b4cd5f7312edc22c4a",
       "status": "reviewed",
       "scenarioSha256": "d6a86dc22eaec9aaed3ce10b15b33f0159d032c068650e4aa365ca66171e9448",
-      "reason": "freezeした同じ観測値の繰り返しで同じ結果を返し、入力のJSON表現が変わらないことをassertする。",
+      "reason": "freezeしたエンジン・ゲートの観測値を繰り返し渡して同じ結果を得ることと、入力のJSON表現が変わらないことをassertする。実装も読み、I/Oや時計を読まず渡された値で判断することを確認した。",
       "sources": [
         "REQ-206"
       ],
@@ -5475,7 +5490,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-206]",
-          "sha256": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b"
+          "sha256": "000c9763c5b9e05f706579261d1f4a14a5bd5d442cb34015ae008532a79ba561"
         }
       ]
     },
@@ -5483,15 +5498,15 @@
       "id": "SCN-0658634ca07c8ffa116b",
       "status": "reviewed",
       "scenarioSha256": "717270a92bb1edc5735b4f47dbfc9485caf881dacaab5b5e5bf6084463ffc634",
-      "reason": "同じ24件の直接試験を成功させ、中断・状態変更・修正回数の3条件の変更を同じ試験のassertionで検出し、元ファイルの不変性をassertする。",
+      "reason": "同じ27件の直接試験を一時コピーで実行し、対照は成功、中断優先・状態変更優先・修正回数の境界をそれぞれ逆転した3変異はassertionで検出されることをassertする。試験名・件数・失敗形式の照合と元ファイルの不変性も確認する。",
       "sources": [
         "REQ-206"
       ],
       "tests": [
         {
           "file": "tests/run-decision-mutations.test.ts",
-          "contains": "[REQ-206]",
-          "sha256": "8a3fec58f6e7d8367606054eef907f1ec90ea1128860ee8a9b5dd22f6735f154"
+          "contains": "[REQ-206] 判断の優先順位",
+          "sha256": "bdf056d8986a4abcb1afcf6e26c803801a81c1d75cec063f3880886644b4653c"
         }
       ]
     },
@@ -5754,6 +5769,27 @@
           "file": "packages/runner/test/external-budget.test.ts",
           "contains": "[REQ-182] pushの期限後に",
           "sha256": "2526e2b8662dc95fc98b9c20260119778f5ad2eb3ec187b9f1b232a24b3736ac"
+        }
+      ]
+    },
+    {
+      "id": "SCN-c3facf5eb6cfd3513701",
+      "status": "reviewed",
+      "scenarioSha256": "61a84bf880d2a50081a9268682ce5d8cd8efe1359e6af2cd657cf57e021ce918",
+      "reason": "直接試験で不合格の中断はinterruptedとなり、状態変更と合格が中断に優先することをassertする。実プロセスによる完了ゲート中断の統合試験では、エンジン呼出が2タスク分だけで再修正されず、summaryが中断となり子が残らないことをassertする。Linuxでの結果である。",
+      "sources": [
+        "REQ-205"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/decision-policy.test.ts",
+          "contains": "[REQ-205][REQ-124]",
+          "sha256": "000c9763c5b9e05f706579261d1f4a14a5bd5d442cb34015ae008532a79ba561"
+        },
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "[REQ-124] 完了ゲートの品質コマンドの途中で中断されたら",
+          "sha256": "cfe8546b1a4b43e21e9307933e23f4500039b7db3d03a1f1372de2f0e5abab80"
         }
       ]
     }
