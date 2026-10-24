@@ -26,9 +26,15 @@
         "default": "./dist/index.js"
       },
       "./schema/verify-result.schema.json": "./schema/verify-result.schema.json"
-    }
+    },
+    "provenance": true
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/loomake/loomake.git",
+    "directory": "packages/core"
   }
 }

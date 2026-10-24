@@ -24,12 +24,18 @@
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
       }
-    }
+    },
+    "provenance": true
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
     "@loomake/core": "workspace:*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/loomake/loomake.git",
+    "directory": "packages/kit"
   }
 }
