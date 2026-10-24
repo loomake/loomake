@@ -187,6 +187,16 @@ describe('ヘルプと版', () => {
     expect(report.stdout).toMatch(/^ {2}--format md\|json +\S/m);
   });
 
+  it('[REQ-135] trace のあとが record・report 以外（constructor・toString など）なら、trace 全体の使い方を出す', async () => {
+    const whole = await run(repo, 'trace', '--help');
+    for (const sub of ['constructor', 'toString', 'nothing']) {
+      const r = await run(repo, 'trace', sub, '--help');
+      expect(r.code, sub).toBe(0);
+      expect(r.stdout, sub).toBe(whole.stdout);
+      expect(r.stdout, sub).not.toContain('[Function');
+    }
+  });
+
   it('[REQ-135] init・run・doctor の使い方にも、説明とオプションの説明を載せる', async () => {
     const options: Record<string, string[]> = { init: ['--codex', '--devcontainer'], run: ['--change <id>', '--engine <名前>', '--dry-run', '--skip-permissions'], doctor: [] };
     for (const [cmd, opts] of Object.entries(options)) {
