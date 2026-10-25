@@ -14,3 +14,4 @@ Loomake 自身の開発で決めたことのうち、続けて守る例外と重
 | 番号 | 題 | 状態 |
 |---|---|---|
 | [0001](0001-versioning-with-changesets.md) | パッケージの版管理に changesets を使う | 採用 |
+| [0002](0002-breaking-changes-in-0x.md) | `0.x` の間は破壊的変更を minor で出す | 採用 |
