@@ -80,6 +80,15 @@ describe.runIf(process.platform !== 'win32')('POSIXエンジンの正常終了�
     });
   });
 
+  it('[REQ-207] 戻った時点でSIGTERMを無視する子は終了途中ではなく、消滅かゾンビになっている', async () => {
+    await withEngine(parentSource(true, false), async (root, result) => {
+      const pid = Number(readFileSync(join(root, 'child.pid'), 'utf8'));
+      // 強制終了を送っただけで戻ると、子はまだ終了処理の途中で見える。後処理を待った実装では消滅かゾンビになっている
+      expect(['missing', 'zombie']).toContain(processState(pid));
+      expectNormal(result, 0, '{"result":"normal result"}', 'normal result');
+    });
+  });
+
   it('[REQ-207] 通常のJSON出力と終了コード0を保ち、停止フラグを付けない', async () => {
     await withEngine("process.stdout.write('{\"result\":\"control\"}', () => process.exit(0));", async (_root, result) => {
       expectNormal(result, 0, '{"result":"control"}', 'control');

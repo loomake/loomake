@@ -3,6 +3,7 @@ import { UsageError, runExternal } from '@loomake/kit';
 import { StringDecoder } from 'node:string_decoder';
 import { DEFAULT_MAX_OUTPUT_BYTES } from './config.js';
 import { createDiagnosticRedactor } from './mask.js';
+import { waitForGroupExit } from './process-group.js';
 
 import { isWindows, quote } from './shell.js';
 
@@ -64,7 +65,10 @@ export function claudeArgs(commands: string[], skipPermissions: boolean): string
   return [...base, '--permission-mode', 'acceptEdits', '--allowedTools', ...tools];
 }
 
-/** エンジンと子孫を停止し、POSIXでは猶予後にグループ全体を強制終了する。 */
+/**
+ * エンジンと子孫を停止する。POSIXでは猶予後にグループ全体を強制終了し、メンバーが動作していなくなるのを待ってから戻る（REQ-207）。
+ * 自分の子は exit で回収し、孫はゾンビか消滅を「動作していない」とみなすので、init が回収しない環境でも待ち続けない
+ */
 function stop(child: ChildProcess, skipMissingGroup = false): Promise<void> {
   if (isWindows && child.pid !== undefined) {
     spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { timeout: 1000, killSignal: 'SIGKILL', stdio: 'ignore' });
@@ -81,7 +85,11 @@ function stop(child: ChildProcess, skipMissingGroup = false): Promise<void> {
   };
   const groupPresent = killGroup('SIGTERM');
   if (skipMissingGroup && !groupPresent) return Promise.resolve();
-  return new Promise((resolve) => setTimeout(() => { killGroup('SIGKILL'); resolve(); }, 250));
+  return new Promise((resolve) => setTimeout(() => {
+    killGroup('SIGKILL');
+    if (child.pid === undefined) { resolve(); return; }
+    void waitForGroupExit(child.pid).then(() => { resolve(); });
+  }, 250));
 }
 
 /** Claude Code を呼び、指示を標準入力で渡す。時間の上限か中断で止める */
