@@ -3,8 +3,6 @@ title: Loomake ドキュメント
 description: Loomake を導入して日常的に使うための文書の入口
 ---
 
-# Loomake ドキュメント
-
 Loomake を導入してから日常的に使うまでの文書をまとめる。このフォルダの文書は [loomake.dev/docs](https://loomake.dev/docs) にも同じ内容で載る。
 
 ## はじめに
