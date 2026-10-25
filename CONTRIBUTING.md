@@ -36,6 +36,12 @@ PRには、変更する問題と結果の動作、対象change、実行したゲ
 
 PR本文には対象を `loomake-change: <change-id>` の行で明示する。対象がなければ `loomake-change: none` と書く。CIはUbuntu・macOS・Windowsで検査する。
 
+## 版と互換性
+
+パッケージの版はchangesetsで管理し、パッケージごとに独立して上げる。利用者に影響する変更にはchangesetを足し、文書や開発用ツールだけの変更には空のchangesetを足す。決めた理由は[ADR 0001](docs/adr/0001-versioning-with-changesets.md)にある。
+
+`0.x`の間は、破壊的変更をminor、それ以外をpatchで公開し、破壊的変更には移行の方法を添える。パッケージの版と形式の版は独立させ、verifyのJSONを壊すときはschemaVersionのmajorを上げる。決めた理由は[ADR 0002](docs/adr/0002-breaking-changes-in-0x.md)にある。設計の判断は[docs/adr/](docs/adr/README.md)に残す。
+
 ## コードの境界
 
 関数はnamed exportにする。設定や使い方の誤りはUsageErrorとし、CLIは終了コード2を返す。利用者へのメッセージは日本語にする。coreの実行時依存はゼロ、kitはcoreのみ、traceはcoreとkit、runnerはcore・kit・trace、CLIはこの4パッケージだけに依存する。
