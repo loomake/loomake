@@ -4,29 +4,13 @@ import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { spawn } from 'node:child_process';
 import { runClaude } from '../src/engine.js';
+import { killOwnedProcess, processState } from './process-state.js';
 
 vi.mock('node:child_process', async (original) => {
   const actual = await original<typeof import('node:child_process')>();
   return { ...actual, spawn: vi.fn(actual.spawn) };
 });
 beforeEach(() => { vi.mocked(spawn).mockClear(); });
-
-function processState(pid: number | undefined): 'not-started' | 'missing' | 'zombie' | 'running' {
-  if (pid === undefined) return 'not-started';
-  try { process.kill(pid, 0); }
-  catch (error) { if ((error as NodeJS.ErrnoException).code === 'ESRCH') return 'missing'; throw error; }
-  if (process.platform === 'linux') {
-    try { if (/\) Z /.test(readFileSync(`/proc/${pid}/stat`, 'utf8'))) return 'zombie'; }
-    catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') return 'missing'; throw error; }
-  }
-  return 'running';
-}
-
-function killOwnedProcess(pid: number | undefined): void {
-  if (processState(pid) !== 'running') return;
-  try { process.kill(pid!, 'SIGKILL'); }
-  catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error; }
-}
 
 // git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
 vi.setConfig({ testTimeout: 60_000 });
@@ -79,7 +63,8 @@ setTimeout(() => {}, 2500);`);
     expect(enginePid).toBeGreaterThan(0);
     expect(childPid).toBeGreaterThan(0);
     expect(engineState).toBe('missing');
-    expect(['missing', 'zombie']).toContain(childState);
+    // 戻った時点で子は消滅・ゾンビ・終了途中のいずれかで、利用者のコードを実行できない状態にある
+    expect(['missing', 'zombie', 'exiting']).toContain(childState);
   });
 
   it('[REQ-139] 終了要求を無視するエンジンも強制終了する', async () => {

@@ -3,24 +3,13 @@ import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { runClaude, type EngineResult } from '../src/engine.js';
+import { killOwnedProcess, processState } from './process-state.js';
 
-function state(pid: number): 'missing' | 'zombie' | 'running' {
-  try { process.kill(pid, 0); }
-  catch (error) { if ((error as NodeJS.ErrnoException).code === 'ESRCH') return 'missing'; throw error; }
-  if (process.platform === 'linux') {
-    try { if (/\) Z /.test(readFileSync(`/proc/${pid}/stat`, 'utf8'))) return 'zombie'; }
-    catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') return 'missing'; throw error; }
-  }
-  return 'running';
-}
-
-function killOwnedChild(root: string): void {
+function ownedChild(root: string): number | undefined {
   const file = join(root, 'child.pid');
-  if (!existsSync(file)) return;
+  if (!existsSync(file)) return undefined;
   const pid = Number(readFileSync(file, 'utf8'));
-  if (!Number.isSafeInteger(pid) || pid <= 0 || state(pid) !== 'running') return;
-  try { process.kill(pid, 'SIGKILL'); }
-  catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error; }
+  return Number.isSafeInteger(pid) && pid > 0 ? pid : undefined;
 }
 
 async function withEngine(source: string, check: (root: string, result: EngineResult, elapsed: number) => Promise<void>) {
@@ -36,7 +25,7 @@ async function withEngine(source: string, check: (root: string, result: EngineRe
     });
     await check(root, result, Date.now() - started);
   } finally {
-    killOwnedChild(root);
+    killOwnedProcess(ownedChild(root));
     rmSync(root, { recursive: true, force: true });
   }
 }
@@ -78,11 +67,12 @@ describe.runIf(process.platform !== 'win32')('POSIXエンジンの正常終了�
       const pid = Number(readFileSync(join(root, 'child.pid'), 'utf8'));
       expect(Number.isSafeInteger(pid)).toBe(true);
       expect(pid).toBeGreaterThan(0);
-      const stateAtReturn = state(pid);
+      const stateAtReturn = processState(pid);
       const markerAtReturn = existsSync(join(root, 'delayed-marker'));
       await new Promise((resolve) => setTimeout(resolve, 1100));
       const markerAfterReturn = existsSync(join(root, 'delayed-marker'));
-      expect(['missing', 'zombie']).toContain(stateAtReturn);
+      // 戻った時点で子は消滅・ゾンビ・終了途中のいずれかで、利用者のコードを実行できない状態にある
+      expect(['missing', 'zombie', 'exiting']).toContain(stateAtReturn);
       expect(markerAtReturn).toBe(false);
       expect(markerAfterReturn).toBe(false);
       expect(readFileSync(join(root, 'term-received'), 'utf8')).toBe('yes');
