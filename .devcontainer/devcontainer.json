@@ -32,7 +32,8 @@
       "extensions": [
         "anthropic.claude-code",
         "openai.chatgpt",
-        "eamodio.gitlens"
+        "eamodio.gitlens",
+        "GitHub.vscode-pull-request-github"
       ]
     }
   }
