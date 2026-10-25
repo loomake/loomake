@@ -2,6 +2,8 @@
 
 要件書・仕様書から AI 駆動で開発するためのツール群。[OpenSpec](https://github.com/Fission-AI/OpenSpec) の上に「要件書からの入口」と「守らせる仕組み」を足す。
 
+Loomake は、品質駆動開発のツール群として、自社プロダクトと OSS（Loomake 自身を含む）の開発に使う方向に進めている。構想や Issue から仕様を起こし、4 値（PASS / FAIL / INSUFFICIENT_EVIDENCE / NOT_APPLICABLE）の判定が通るまで実装を回し、リリースの根拠をリリース記録に残し、使われた結果を次の仕様に戻す。向かう先の全体像は [docs/overview.md](docs/overview.md)、設計の正本は [要件定義](docs/requirements/loomake-v0.11.md) と [アーキテクチャ](docs/architecture.md) にある。この README に書いた使い方は、いま動く機能のもの。`docs/` の一部と trace のレポートには、受託向けだった時期の用語（要件書、検収、顧客）が残っていて、順に置き換えている。
+
 - 要件書を、出典つきの OpenSpec change に変える（req-to-openspec Skill）
 - AI が従う共通ルールを置く（AGENTS.md）
 - 未確定の要件が残る間は実装させず、全要件にテストがあることを機械的に確かめる（`loomake verify`）
@@ -35,7 +37,10 @@ npx loomake trace report --change <id>            # 検収レポートを出す
 | [SECURITY.md](SECURITY.md) | 脆弱性を見つけた人 | 脆弱性の報告のしかたと、`loomake run` を使うときの注意 |
 | [docs/flow.md](docs/flow.md) | このリポジトリを開発する人 | Loomake を Loomake で作る流れ |
 | [docs/architecture.md](docs/architecture.md) | このリポジトリを開発する人 | 全体の構成、名前、作る順番 |
-| [docs/requirements/](docs/requirements/) | このリポジトリを開発する人 | 要件定義書。core・kit は [mvp-v0.7.md](docs/requirements/mvp-v0.7.md)、trace は [trace-v0.1.md](docs/requirements/trace-v0.1.md)、run は [runner-v0.1.md](docs/requirements/runner-v0.1.md)。過去の版は trace.md の出典として残している |
+| [docs/overview.md](docs/overview.md) | Loomake を使う人・導入を検討する人 | 向かう先の全体像。品質駆動開発としての位置付け、4 値判定、証跡の 3 層、自動化のレベル、段階計画 |
+| [docs/requirements/](docs/requirements/) | このリポジトリを開発する人 | 要件定義書。現在の正本は [loomake-v0.11.md](docs/requirements/loomake-v0.11.md)。これまでの正本（core・kit は [mvp-v0.7.md](docs/requirements/mvp-v0.7.md)、trace は [trace-v0.1.md](docs/requirements/trace-v0.1.md)、run は [runner-v0.1.md](docs/requirements/runner-v0.1.md)）は trace.md の出典として残している |
+| [docs/wbs.md](docs/wbs.md)・[docs/requirements-matrix.md](docs/requirements-matrix.md) | このリポジトリを開発する人 | 完成までの WBS と、要件 ID と作業 ID の対応表 |
+| [docs/notes/](docs/notes/) | このリポジトリを開発する人 | 参考資料。SDD ツールの比較、要件モデルの試行、要求・要件のまとめ方 |
 | [docs/review.md](docs/review.md)・[docs/worklog/](docs/worklog/) | このリポジトリを開発する人 | レビューと作業の記録 |
 
 ## パッケージ
