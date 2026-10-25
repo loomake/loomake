@@ -1,7 +1,7 @@
 # monorepo Specification
 
 ## Purpose
-Loomake の core・kit・CLI を、1 つの pnpm workspaces のモノレポで開発するための構成を定める。開発環境（devcontainer）、Node.js のバージョン、3 つの OS での CI とプルリクエストごとの完了ゲート、changesets による公開の準備、ライセンスを含む。
+Loomake の core・kit・trace・runner・CLI を、1 つの pnpm workspaces のモノレポで開発するための構成を定める。開発環境（devcontainer）、Node.js のバージョン、3 つの OS での CI とプルリクエストごとの完了ゲート、changesets による公開の準備、ライセンスを含む。
 
 ## Requirements
 
