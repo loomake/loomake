@@ -48,7 +48,7 @@ npm の Trusted Publishing（OIDC）で公開すれば、トークンの管理�
 2 回目以降の公開：
 
 1. npm で 5 つのパッケージそれぞれに Trusted Publisher を登録する（リポジトリ `loomake/loomake`、ワークフロー `release.yml`）
-2. GitHub の secrets から `NPM_TOKEN` を外し、npm でもトークンを無効にする。secret がなければ `NODE_AUTH_TOKEN` は空になり、npm は OIDC で認証する
+2. GitHub の secrets から `NPM_TOKEN` を外し、npm でもトークンを無効にする。secret がなければ、公開ステップの `NODE_AUTH_TOKEN` は空になる。この構成で OIDC を使って公開できるかは、次の公開で確認する
 3. 次の公開で、OIDC で公開できたかを確かめる。`changeset publish` は pnpm のワークスペースでは `pnpm publish` を呼ぶが、pnpm（12.10.1）が OIDC での公開に対応しているかは未確認。できなければ change を作り、公開の方法を `npm publish` に替える
 4. OIDC で公開できたら、npm で 5 つのパッケージそれぞれの Publishing access を「Require two-factor authentication and disallow tokens」にする。トークンが漏れても、そのトークンでは公開できなくなる。Trusted Publishing での公開は、この設定でも続けられる
 

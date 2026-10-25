@@ -1,0 +1,38 @@
+{
+  "stage": "intermediate peer-review regression",
+  "passed": 0,
+  "failed": 1,
+  "pendingBySelector": 4,
+  "report": ".loomake/quality/parallel-diagnostics/startup-clock-pair-red.json",
+  "reportSha256": "b5151ee321089ac9b7f46c04d95c5aff7a9250d3274e9479359fcea9ffa754e0",
+  "results": [
+    {
+      "name": "supervisor startup consumes the external operation budget [REQ-180][REQ-183] preserves an ordinary result after supervisor startup",
+      "status": "skipped",
+      "failureMessages": []
+    },
+    {
+      "name": "supervisor startup consumes the external operation budget [REQ-180][REQ-182] refuses to start the target when operation time expires during boot",
+      "status": "skipped",
+      "failureMessages": []
+    },
+    {
+      "name": "supervisor startup consumes the external operation budget [REQ-180][REQ-182] refuses to start the target when shared time expires during boot",
+      "status": "skipped",
+      "failureMessages": []
+    },
+    {
+      "name": "supervisor startup consumes the external operation budget [REQ-180][REQ-181][REQ-182] uses only the remaining shared time and stops a started target",
+      "status": "skipped",
+      "failureMessages": []
+    },
+    {
+      "name": "supervisor startup consumes the external operation budget [REQ-180][REQ-182] does not subtract setup time twice from a shared deadline",
+      "status": "failed",
+      "failureMessages": [
+        "Error: 外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）\n    at runExternal (/tmp/loomake-quality-after-merge/packages/kit/src/process.ts:87:11)\n    at /tmp/loomake-quality-after-merge/packages/kit/test/process-startup.test.ts:83:65\n    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:65:14)\n    at withProcessBudget (/tmp/loomake-quality-after-merge/packages/kit/src/process.ts:24:18)\n    at /tmp/loomake-quality-after-merge/packages/kit/test/process-startup.test.ts:83:20\n    at fixture (/tmp/loomake-quality-after-merge/packages/kit/test/process-startup.test.ts:39:9)\n    at /tmp/loomake-quality-after-merge/packages/kit/test/process-startup.test.ts:82:92\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1632:35\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2801:26\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3338:20"
+      ]
+    }
+  ],
+  "review": "Entry hrtime plus later-sampled remaining duration could subtract time twice. Controlled timeoutMs getter consumed2s in a5s shared scope, target required2s; intermediate fix timed out early. The production fix now uses the same OS monotonic clock for budget deadlines and sends an absolute deadline. No original failure attributed to this."
+}

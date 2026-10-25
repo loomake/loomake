@@ -1,0 +1,2159 @@
+{
+  "scope": "Diagnostic-only instrumentation of external-budget.test.ts, no product or configuration changes.",
+  "source": {
+    "file": "packages/runner/test/external-budget.test.ts",
+    "sha256": "ff84fe40e55a58101cdf708bb9411e44ddc0f7951a843247a08221b03404fc81"
+  },
+  "specGate": {
+    "exit": 0,
+    "log": "/tmp/quality-parallel-diagnostics-spec.log"
+  },
+  "preserved": [
+    "All pre-existing test names, assertions and expected values.",
+    "500ms operation cap,8000ms create shared budget,20000ms helper shared budget,30000ms stage test limit,5000ms default limit."
+  ],
+  "strengthened": [
+    "Create stage asserts that its actual stall marker was reached."
+  ],
+  "diagnostics": {
+    "logByteCap": 65536,
+    "assertionContextByteCap": 65536,
+    "argvMaxCount": 12,
+    "argvMaxCharactersEach": 160,
+    "optionalExclusiveOutputEnv": "LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_FILE",
+    "events": [
+      "fixture-ready",
+      "run-start",
+      "shim-start",
+      "forward-start",
+      "forward-end",
+      "shim-end",
+      "stall-start",
+      "run-end"
+    ]
+  },
+  "results": [
+    {
+      "file": ".loomake/quality/parallel-diagnostics/create-budget.json",
+      "sha256": "e5635996d440a1aed8f8c7441e384332cb226d3d6776385d3002fad4bbed5907",
+      "passed": 1,
+      "failed": 0,
+      "pending": 13,
+      "selected": [
+        {
+          "fullName": "runから外部操作までの期限 [REQ-182] createの期限後に先へ進まず、再実行で重複させない",
+          "status": "passed",
+          "duration": 8646.574629,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/lock-budget.json",
+      "sha256": "0d3be6139876f5b572723954e8225b41d80016b268d54f7af6e56c07fb35abc0",
+      "passed": 1,
+      "failed": 0,
+      "pending": 13,
+      "selected": [
+        {
+          "fullName": "runから外部操作までの期限 [REQ-182] ロック取得のGitが止まったら変更と記録を作らない",
+          "status": "passed",
+          "duration": 795.572625,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/create-budget-v2.json",
+      "sha256": "42b886f3750dd0643c45e2d2b0a787b7c40514c61a2c4a1609201a936905262d",
+      "passed": 1,
+      "failed": 0,
+      "pending": 13,
+      "selected": [
+        {
+          "fullName": "runから外部操作までの期限 [REQ-182] createの期限後に先へ進まず、再実行で重複させない",
+          "status": "passed",
+          "duration": 8602.174004,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/lock-budget-v2.json",
+      "sha256": "764ae6ed8575394eec2938ea0774313053a38961dde48f3d4a5d90e4a9c1aa51",
+      "passed": 1,
+      "failed": 0,
+      "pending": 13,
+      "selected": [
+        {
+          "fullName": "runから外部操作までの期限 [REQ-182] ロック取得のGitが止まったら変更と記録を作らない",
+          "status": "passed",
+          "duration": 799.943834,
+          "failureMessages": []
+        }
+      ]
+    }
+  ],
+  "contexts": [
+    {
+      "file": ".loomake/quality/parallel-diagnostics/create-context.json",
+      "sha256": "bdc93acf4fb58cc9e14c2576eeef330475c937cd7d76a79f0cc881d88479c351",
+      "context": {
+        "stage": "create",
+        "code": 1,
+        "elapsedMs": 8278,
+        "stdout": "完了ゲートのタスクを、タスクの文から判定しました：3.1 `pnpm -s verify --change c1 --done` を通す\n文を変えても判定が変わらないよう、tasks.md のその行の末尾に <!-- loomake:gate=done --> を付けてください。\nverify の結果（合格）を記録しました：.loomake/evidence/c1/20261024T213508Z-b7f44a1b23fa.json\nこのファイルを git にコミットしてください：git add .loomake/evidence/c1/20261024T213508Z-b7f44a1b23fa.json && git commit\nloomake run を止めました：証拠のコミットを保っていますが、PRの公開を完了できませんでした：外部操作を止めました：gh（実行時間の上限に達しました）\n終えたタスク：\n  - 1.1 一つ目のタスク（REQ-012）\n  - 1.2 二つ目のタスク\n  - 3.1 `pnpm -s verify --change c1 --done` を通す\n残ったタスク：なし\n最後の検査結果：合格\n記録：.loomake/runs/20261024T213507Z-c1/",
+        "stalled": true,
+        "events": [
+          {
+            "event": "fixture-ready",
+            "at": 1792877707700,
+            "elapsedMs": 9,
+            "stage": "create"
+          },
+          {
+            "event": "run-start",
+            "at": 1792877707700,
+            "stage": "create"
+          },
+          {
+            "event": "shim-start",
+            "at": 1792877707833,
+            "pid": 30723,
+            "command": "gh",
+            "args": [
+              "auth",
+              "status"
+            ]
+          },
+          {
+            "event": "forward-start",
+            "at": 1792877707833,
+            "pid": 30723,
+            "command": "gh",
+            "args": [
+              "auth",
+              "status"
+            ]
+          },
+          {
+            "event": "forward-end",
+            "at": 1792877707847,
+            "pid": 30723,
+            "command": "gh",
+            "args": [
+              "auth",
+              "status"
+            ],
+            "status": 0,
+            "signal": null
+          },
+          {
+            "event": "shim-end",
+            "at": 1792877707847,
+            "pid": 30723,
+            "command": "gh",
+            "args": [
+              "auth",
+              "status"
+            ],
+            "code": 0
+          },
+          {
+            "event": "shim-start",
+            "at": 1792877708412,
+            "pid": 31068,
+            "command": "gh",
+            "args": [
+              "auth",
+              "status"
+            ]
+          },
+          {
+            "event": "forward-start",
+            "at": 1792877708412,
+            "pid": 31068,
+            "command": "gh",
+            "args": [
+              "auth",
+              "status"
+            ]
+          },
+          {
+            "event": "forward-end",
+            "at": 1792877708426,
+            "pid": 31068,
+            "command": "gh",
+            "args": [
+              "auth",
+              "status"
+            ],
+            "status": 0,
+            "signal": null
+          },
+          {
+            "event": "shim-end",
+            "at": 1792877708426,
+            "pid": 31068,
+            "command": "gh",
+            "args": [
+              "auth",
+              "status"
+            ],
+            "code": 0
+          },
+          {
+            "event": "shim-start",
+            "at": 1792877708678,
+            "pid": 31223,
+            "command": "gh",
+            "args": [
+              "pr",
+              "list",
+              "--base",
+              "main",
+              "--head",
+              "loomake/c1",
+              "--state",
+              "open",
+              "--limit",
+              "2",
+              "--json",
+              "url,baseRefName,headRefName,isCrossRepository"
+            ]
+          },
+          {
+            "event": "forward-start",
+            "at": 1792877708678,
+            "pid": 31223,
+            "command": "gh",
+            "args": [
+              "pr",
+              "list",
+              "--base",
+              "main",
+              "--head",
+              "loomake/c1",
+              "--state",
+              "open",
+              "--limit",
+              "2",
+              "--json",
+              "url,baseRefName,headRefName,isCrossRepository"
+            ]
+          },
+          {
+            "event": "forward-end",
+            "at": 1792877708692,
+            "pid": 31223,
+            "command": "gh",
+            "args": [
+              "pr",
+              "list",
+              "--base",
+              "main",
+              "--head",
+              "loomake/c1",
+              "--state",
+              "open",
+              "--limit",
+              "2",
+              "--json",
+              "url,baseRefName,headRefName,isCrossRepository"
+            ],
+            "status": 0,
+            "signal": null
+          },
+          {
+            "event": "shim-end",
+            "at": 1792877708692,
+            "pid": 31223,
+            "command": "gh",
+            "args": [
+              "pr",
+              "list",
+              "--base",
+              "main",
+              "--head",
+              "loomake/c1",
+              "--state",
+              "open",
+              "--limit",
+              "2",
+              "--json",
+              "url,baseRefName,headRefName,isCrossRepository"
+            ],
+            "code": 0
+          },
+          {
+            "event": "shim-start",
+            "at": 1792877708716,
+            "pid": 31244,
+            "command": "gh",
+            "args": [
+              "pr",
+              "create",
+              "--base",
+              "main",
+              "--head",
+              "loomake/c1",
+              "--title",
+              "c1",
+              "--body-file",
+              "/tmp/loomake-run-EIBEA2/repo/.loomake/runs/20261024T213507Z-c1/pr-body.md"
+            ]
+          },
+          {
+            "event": "forward-start",
+            "at": 1792877708716,
+            "pid": 31244,
+            "command": "gh",
+            "args": [
+              "pr",
+              "create",
+              "--base",
+              "main",
+              "--head",
+              "loomake/c1",
+              "--title",
+              "c1",
+              "--body-file",
+              "/tmp/loomake-run-EIBEA2/repo/.loomake/runs/20261024T213507Z-c1/pr-body.md"
+            ]
+          },
+          {
+            "event": "forward-end",
+            "at": 1792877708729,
+            "pid": 31244,
+            "command": "gh",
+            "args": [
+              "pr",
+              "create",
+              "--base",
+              "main",
+              "--head",
+              "loomake/c1",
+              "--title",
+              "c1",
+              "--body-file",
+              "/tmp/loomake-run-EIBEA2/repo/.loomake/runs/20261024T213507Z-c1/pr-body.md"
+            ],
+            "status": 0,
+            "signal": null
+          },
+          {
+            "event": "stall-start",
+            "at": 1792877708729,
+            "pid": 31244,
+            "command": "gh",
+            "args": [
+              "pr",
+              "create",
+              "--base",
+              "main",
+              "--head",
+              "loomake/c1",
+              "--title",
+              "c1",
+              "--body-file",
+              "/tmp/loomake-run-EIBEA2/repo/.loomake/runs/20261024T213507Z-c1/pr-body.md"
+            ]
+          },
+          {
+            "event": "run-end",
+            "at": 1792877715969,
+            "stage": "create",
+            "code": 1,
+            "elapsedMs": 8278
+          }
+        ]
+      }
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/lock-context.json",
+      "sha256": "a2bfe71aec413780981efd34807673dd7b0a20307417387f0df10fdd9f427113",
+      "context": {
+        "error": "Error: 外部操作を止めました：git（実行時間の上限に達しました）",
+        "elapsedMs": 784,
+        "stalled": true,
+        "events": [
+          {
+            "event": "fixture-ready",
+            "at": 1792877723222,
+            "elapsedMs": 10
+          },
+          {
+            "event": "run-start",
+            "at": 1792877723223
+          },
+          {
+            "event": "shim-start",
+            "at": 1792877723252,
+            "pid": 31737,
+            "command": "git",
+            "args": [
+              "rev-parse",
+              "--absolute-git-dir"
+            ]
+          },
+          {
+            "event": "stall-start",
+            "at": 1792877723253,
+            "pid": 31737,
+            "command": "git",
+            "args": [
+              "rev-parse",
+              "--absolute-git-dir"
+            ]
+          },
+          {
+            "event": "run-end",
+            "at": 1792877723996,
+            "elapsedMs": 784
+          }
+        ]
+      }
+    }
+  ],
+  "lintExit": 0,
+  "diffCheckExit": 0,
+  "commands": [
+    "LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_FILE=<owned create-context.json> pnpm exec vitest run packages/runner/test/external-budget.test.ts -t createの期限後 --maxWorkers=1 --reporter=json --outputFile=.loomake/quality/parallel-diagnostics/create-budget-v2.json",
+    "LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_FILE=<owned lock-context.json> pnpm exec vitest run packages/runner/test/external-budget.test.ts -t ロック取得のGitが止まったら --maxWorkers=1 --reporter=json --outputFile=.loomake/quality/parallel-diagnostics/lock-budget-v2.json"
+  ],
+  "interpretation": [
+    "The serial create run positively reached create, forwarded it successfully, then stalled; observed run elapsed8278ms including fixture9ms. Existing duplicate prevention retry assertions also passed.",
+    "The serial lock run positively reached git rev-parse --absolute-git-dir, stalled, and returned RuntimeFailure; elapsed784ms including fixture10ms.",
+    "First successful JSON-only runs discarded console output; v2 uses explicit exclusive diagnostic file output and retains phase traces.",
+    "13 pending results in each report are target-selection exclusions, not full-suite coverage.",
+    "The previous parallel failure was not reproduced. Its exact failed operation and cause remain unconfirmed; passing serial runs do not prove host load causality.",
+    "No supervisor preload, product timing fix, full suite or build performed."
+  ],
+  "laterChanges": {
+    "persistentDirectory": "LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR optionally retains fixture phase logs after cleanup; test-only Node preload records supervisor entry/exit and remaining budget without environment values. Default unset behavior unchanged.",
+    "guardDiagnostics": "Original code/stdout/commit expectations preserved; full stdout is now supplied as assertion context.",
+    "specialFileProbe": "Snapshot compiles/imports only actual guards/git source, run cases keep actual runner source; four bounded stderr phase timestamps;3s/10s deadlines unchanged.",
+    "newScenarioTests": "2 real shared6s quality timeout tests positively prove temporary gate marks/restoration and first-pass then second-check timeout, positive PID death before cleanup and no later Git launch/publication."
+  },
+  "additionalRuns": [
+    {
+      "file": ".loomake/quality/parallel-diagnostics/hooks-and-timeouts.json",
+      "sha256": "a49b5b7617200a02c50c33d481b7409bab7bac461297eca1cbfb9310ea805e87",
+      "passed": 10,
+      "failed": 0,
+      "pendingBySelector": 0,
+      "selected": [
+        {
+          "file": "packages/runner/test/guards-special-files.test.ts",
+          "name": "フック内の特殊ファイルの実プロセス検査 [REQ-208] 通常ファイルのスナップショットは外側の期限内に返る",
+          "status": "passed"
+        },
+        {
+          "file": "packages/runner/test/guards-special-files.test.ts",
+          "name": "フック内の特殊ファイルの実プロセス検査 [REQ-208] 書き手のないFIFOを開かず対象を示すUsageErrorで拒否する",
+          "status": "passed"
+        },
+        {
+          "file": "packages/runner/test/guards-special-files.test.ts",
+          "name": "フック内の特殊ファイルの実プロセス検査 [REQ-208] Unixソケットを内容の読み取り前にUsageErrorで拒否する",
+          "status": "passed"
+        },
+        {
+          "file": "packages/runner/test/guards-special-files.test.ts",
+          "name": "フック内の特殊ファイルの実プロセス検査 [REQ-208] beforeのFIFOで通常runを止め、タスク・変更・コミットを保つ",
+          "status": "passed"
+        },
+        {
+          "file": "packages/runner/test/guards-special-files.test.ts",
+          "name": "フック内の特殊ファイルの実プロセス検査 [REQ-208] engineのFIFOで通常runを止め、タスク・変更・コミットを保つ",
+          "status": "passed"
+        },
+        {
+          "file": "packages/runner/test/guards-special-files.test.ts",
+          "name": "フック内の特殊ファイルの実プロセス検査 [REQ-208][REQ-204] regularの既存フックを保ち、通常runでタスクをコミットする",
+          "status": "passed"
+        },
+        {
+          "file": "packages/runner/test/guards-special-files.test.ts",
+          "name": "フック内の特殊ファイルの実プロセス検査 [REQ-208][REQ-204] danglingの既存フックを保ち、通常runでタスクをコミットする",
+          "status": "passed"
+        },
+        {
+          "file": "packages/runner/test/guards-special-files.test.ts",
+          "name": "フック内の特殊ファイルの実プロセス検査 [REQ-208][REQ-204] directoryの既存フックを保ち、通常runでタスクをコミットする",
+          "status": "passed"
+        },
+        {
+          "file": "packages/runner/test/scenario-timeout-evidence.test.ts",
+          "name": "Scenario evidence for quality-command timeouts [REQ-182] restores temporary gate marks after shared expiry without launching later Git",
+          "status": "passed"
+        },
+        {
+          "file": "packages/runner/test/scenario-timeout-evidence.test.ts",
+          "name": "Scenario evidence for quality-command timeouts [REQ-140] stops the second verification after a proven first pass and records timeout",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node22-phase-probe.json",
+      "sha256": "74e83b82585bfb569e1f5ec3a9196d6a17dafee8cd56a91b65a1fd39a4234603",
+      "passed": 4,
+      "failed": 0,
+      "pendingBySelector": 50,
+      "selected": [
+        {
+          "file": "packages/runner/test/external-budget.test.ts",
+          "name": "runから外部操作までの期限 [REQ-182] ロック取得のGitが止まったら変更と記録を作らない",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/external-budget.test.ts",
+          "name": "runから外部操作までの期限 [REQ-182] 準備で使った時間を含めてエンジンの期限を制限する",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/external-budget.test.ts",
+          "name": "runから外部操作までの期限 [REQ-182] 検証がtasks.mdを変えたら上書きせず停止する",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/external-budget.test.ts",
+          "name": "runから外部操作までの期限 [REQ-116][REQ-182] 事前の認証確認が期限切れなら実装も記録も始めない",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/external-budget.test.ts",
+          "name": "runから外部操作までの期限 [REQ-182] pushの期限後に先へ進まず、再実行で重複させない",
+          "status": "passed"
+        },
+        {
+          "file": "packages/runner/test/external-budget.test.ts",
+          "name": "runから外部操作までの期限 [REQ-182] authの期限後に先へ進まず、再実行で重複させない",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/external-budget.test.ts",
+          "name": "runから外部操作までの期限 [REQ-182] listの期限後に先へ進まず、再実行で重複させない",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/external-budget.test.ts",
+          "name": "runから外部操作までの期限 [REQ-182] createの期限後に先へ進まず、再実行で重複させない",
+          "status": "passed"
+        },
+        {
+          "file": "packages/runner/test/external-budget.test.ts",
+          "name": "verifyとtraceの期限 [REQ-183] traceのGitも共有予算で止める",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/external-budget.test.ts",
+          "name": "verifyとtraceの期限 [REQ-183] OpenSpec検証の時間切れをCLI不存在と区別する",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/external-budget.test.ts",
+          "name": "verifyとtraceの期限 [REQ-183] 品質コマンドの中断後に次のコマンドを実行しない",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/external-budget.test.ts",
+          "name": "verifyとtraceの期限 [REQ-183] 明示したtimeoutMsがなくても共有期限で品質コマンドを止める",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/external-budget.test.ts",
+          "name": "実行時の失敗の終了コード [REQ-192][REQ-182] run の準備中に git が時間の上限で止まると、使い方を出さずに終了コード 3 を返す",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/external-budget.test.ts",
+          "name": "フックを動かす git の操作の期限 [REQ-182] 1 操作の期限より遅い pre-commit・pre-push のフックがあっても、run の残り時間の中でコミット・push・PR の作成まで進む",
+          "status": "passed"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "テストの削除と skip・todo の検出 [REQ-109] テストファイルを消したら、削除を表示し、コミットせずに止まる",
+          "status": "passed"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "テストの削除と skip・todo の検出 [REQ-109] テストファイルに it.skip の行を足したら、その行を表示して止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "テストの削除と skip・todo の検出 [REQ-109] ふつうのテストを足しただけなら、止まらずにコミットする",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "テストの削除と skip・todo の検出 [REQ-109] テストファイルに it.skipIf(true) の行を足したら止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "テストの削除と skip・todo の検出 [REQ-109] テストファイルに describe.skipIf(true) の行を足したら止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "テストの削除と skip・todo の検出 [REQ-109] テストファイルに it.runIf(false) の行を足したら止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "テストの削除と skip・todo の検出 [REQ-109] テストファイルに it.concurrent.skip の行を足したら止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "テストの削除と skip・todo の検出 [REQ-109] HEAD にあったアサーションを書き換えたら、書き換える前の行を表示して止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "テストの削除と skip・todo の検出 [REQ-109] ファイルの中のテストを消したら、消した it( の行を表示して止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "テストの削除と skip・todo の検出 [REQ-109] アサーションの行の字下げを変えて別の describe へ移すだけなら、止まらずにコミットする",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "テストの削除と skip・todo の検出 [REQ-109] テストでない呼び出し（/x/.test(s)）の行を書き換えるだけなら、止まらずにコミットする",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "テストの削除と skip・todo の検出 xit( と describe.todo も skip・todo として見つける（仮定 A-17）",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "設定の変更の検出 [REQ-110] loomake.config.json を変えたら、差分を表示して止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "設定の変更の検出 [REQ-110] package.json の scripts を変えたら止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "設定の変更の検出 [REQ-110] 子パッケージの package.json の scripts を変えたら止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "設定の変更の検出 [REQ-110] scripts のある package.json を消したら止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "設定の変更の検出 [REQ-110] package.json の dependencies だけを変えたら、止まらずにコミットする",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "設定の変更の検出 tsconfig と vitest.config も設定ファイルとして見つける（仮定 A-18）",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "仕様と trace.md の変更の検出 [REQ-111] openspec/specs/ の下を書き換えたら止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "仕様と trace.md の変更の検出 [REQ-111] change の trace.md を書き換えたら止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "仕様と trace.md の変更の検出 [REQ-111] tasks.md から未完了のタスクの行を消したら止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "仕様と trace.md の変更の検出 [REQ-111] 差分仕様から Requirement を消したら止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "仕様と trace.md の変更の検出 [REQ-111] openspecDir を変えたプロジェクトでは、その下の仕様と change の文書の変更を見つける",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "止まったときの差分の表示と承認 [REQ-112] 理由と差分を表示し、変更を作業ツリーに残し、承認のしかたを案内して終了コード 1 を返す",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "止まったときの差分の表示と承認 [REQ-112] 承認せずにもう一度実行すると、未コミットの変更があるので始めない",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "エンジンによるコミットとブランチの切り替えの検出 [REQ-126] エンジンが自分でコミットしたら、前後の SHA を表示し、タスクを完了にせずに止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "エンジンによるコミットとブランチの切り替えの検出 [REQ-126] 設定を変えてコミットしたら、その差分を表示して止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "エンジンによるコミットとブランチの切り替えの検出 [REQ-126] エンジンが別のブランチに切り替えたら、前後のブランチ名を表示し、ブランチを戻さずに止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "エンジンによるコミットとブランチの切り替えの検出 [REQ-126] コミットしてから失敗したら、HEAD が変わったことを理由に含めて止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "エンジンによるコミットとブランチの切り替えの検出 [REQ-126] 完了ゲートの直しでエンジンがコミットしたら、完了ゲートのタスクを完了にせずに止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "エンジンによるコミットとブランチの切り替えの検出 [REQ-126] エンジンがコミットせずに終えたら、止まらずにタスクを完了にしてコミットする",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "git の設定とフックの変更の検出 [REQ-198] エンジンがフックを足したら、コミットせず、フックを実行せずに止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "git の設定とフックの変更の検出 [REQ-198] エンジンが git の設定を変えたら、コミットせずに止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "git の設定とフックの変更の検出 [REQ-198] run の前からあるフックは、run のコミットで動く",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "テストの検査を弱める変更の検出 [REQ-201] 既存のテストから検査の行を消したら、コミットせずに止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "テストの検査を弱める変更の検出 [REQ-201] 必ず通る検査に書き換えたら、コミットせずに止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "テストの検査を弱める変更の検出 [REQ-201] テストを足すだけなら止まらない",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "git の設定の比較の範囲 [REQ-204] include の先の設定に core.fsmonitor を書いたら、コミットせずに止まる",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "git の設定の比較の範囲 [REQ-204] リンク先のないフックがあっても、落ちずにタスクを完了にする",
+          "status": "skipped"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "name": "検査の行の数え方 [REQ-201] import とコメントの assert を消しても、テストの検査を減らしたとはみなさない",
+          "status": "skipped"
+        }
+      ]
+    }
+  ],
+  "sourceHashes": {
+    "packages/runner/test/external-budget.test.ts": "9ff1ca9d8c01b717f525ce4ddc388b560016d891fbea4b4764a8ac6b29353563",
+    "packages/runner/test/guards-special-files.test.ts": "6b96b9459e2c95e10303d0dd35d70262282090b608c4049e12570c7d439625a9",
+    "packages/runner/test/guards.test.ts": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c",
+    "packages/runner/test/helpers.ts": "bb96dd2dfb8b01857dc411504109bc1f43a2672931460e31bde9e0401b7d1e29",
+    "packages/runner/test/process-diagnostics.ts": "56e8d9504c74784d0f2ad144840c3033bbfdba972717454b68ba4ab96712f8ac",
+    "packages/runner/test/scenario-timeout-evidence.test.ts": "e23c6eb833a60aa72310463b06c1906ebfd8590ffff96f954f556e41d8590beb"
+  },
+  "diagnosticDiff": "diff --git a/packages/runner/test/external-budget.test.ts b/packages/runner/test/external-budget.test.ts\nindex 084011a..526a718 100644\n--- a/packages/runner/test/external-budget.test.ts\n+++ b/packages/runner/test/external-budget.test.ts\n@@ -1,5 +1,5 @@\n-import { chmodSync, existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';\n-import { join } from 'node:path';\n+import { appendFileSync, chmodSync, existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';\n+import { basename, join } from 'node:path';\n import { spawnSync } from 'node:child_process';\n import { describe, expect, it } from 'vitest';\n import { RuntimeFailure, UsageError, runVerify } from '@loomake/kit';\n@@ -10,14 +10,35 @@ import { runRun } from '@loomake/runner';\n import { makeRepo, CHANGE, type Repo } from './helpers.js';\n \n const realGit = spawnSync('which', ['git'], { encoding: 'utf8' }).stdout.trim();\n+const DIAGNOSTIC_BYTES = 64 * 1024;\n+const diagnosticFile = (repo: Repo) => process.env.LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR\n+  ? join(process.env.LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR, `${basename(repo.base)}.jsonl`)\n+  : join(repo.base, 'budget-events.jsonl');\n+function diagnosticEvent(repo: Repo, event: string, details: object = {}): void {\n+  const file = diagnosticFile(repo);\n+  const used = existsSync(file) ? statSync(file).size : 0;\n+  if (used >= DIAGNOSTIC_BYTES) return;\n+  appendFileSync(file, Buffer.from(JSON.stringify({ event, at: Date.now(), ...details }) + '\\n').subarray(0, DIAGNOSTIC_BYTES - used));\n+}\n+function diagnosticContext(repo: Repo, details: object): string {\n+  const file = diagnosticFile(repo);\n+  const value = JSON.stringify({ ...details, stalled: existsSync(join(repo.base, 'stalled')), events: existsSync(file) ? readFileSync(file, 'utf8') : '' });\n+  const context = Buffer.from(value).subarray(0, DIAGNOSTIC_BYTES).toString('utf8');\n+  const output = process.env.LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_FILE;\n+  if (output) writeFileSync(output, context, { flag: 'wx' });\n+  return context;\n+}\n function shim(repo: Repo, command: string, when: string, finishFirst = false, stallMs = 3000) {\n   const bin = join(repo.base, 'bin');\n   const original = command === 'git' ? realGit : join(bin, `${command}-original`);\n   if (command !== 'git') { writeFileSync(original, readFileSync(join(bin, command))); chmodSync(original, 0o755); }\n   const script = `#!/usr/bin/env node\n const fs=require('node:fs');const cp=require('node:child_process');const args=process.argv.slice(2);\n-function forward(){return cp.spawnSync(${JSON.stringify(original)},args,{stdio:'inherit'}).status??1;}\n-if(${when}) {${finishFirst ? 'forward();' : ''} fs.writeFileSync(${JSON.stringify(join(repo.base, 'stalled'))},'yes');process.on('SIGTERM',()=>{});setTimeout(()=>process.exit(0),${stallMs});} else process.exit(forward());\n+function event(name,details={}){const file=${JSON.stringify(diagnosticFile(repo))};const used=fs.existsSync(file)?fs.statSync(file).size:0;if(used>=${DIAGNOSTIC_BYTES})return;fs.appendFileSync(file,Buffer.from(JSON.stringify({event:name,at:Date.now(),pid:process.pid,command:${JSON.stringify(command)},args:args.slice(0,12).map(arg=>arg.slice(0,160)),...details})+'\\\\n').subarray(0,${DIAGNOSTIC_BYTES}-used));}\n+event('shim-start');\n+process.on('exit',code=>event('shim-end',{code}));\n+function forward(){event('forward-start');const result=cp.spawnSync(${JSON.stringify(original)},args,{stdio:'inherit'});event('forward-end',{status:result.status,signal:result.signal,error:result.error?.code});return result.status??1;}\n+if(${when}) {${finishFirst ? 'forward();' : ''} event('stall-start');fs.writeFileSync(${JSON.stringify(join(repo.base, 'stalled'))},'yes');process.on('SIGTERM',()=>{});setTimeout(()=>process.exit(0),${stallMs});} else process.exit(forward());\n `;\n   writeFileSync(join(bin, command), script); chmodSync(join(bin, command), 0o755);\n }\n@@ -31,14 +52,19 @@ const summary = (repo: Repo) => { const dir = join(repo.root, '.loomake/runs');\n \n describe('runから外部操作までの期限', () => {\n   it('[REQ-182] ロック取得のGitが止まったら変更と記録を作らない', async () => {\n+    const started = Date.now();\n     const repo = makeRepo();\n+    diagnosticEvent(repo, 'fixture-ready', { elapsedMs: Date.now() - started });\n     try {\n       const before = repo.git('rev-parse', 'HEAD'); shim(repo, 'git', \"args.includes('--absolute-git-dir')\");\n       // 開始前の制限エラーは実行時の失敗（close-cli-gaps で使い方の誤りから変更）\n+      diagnosticEvent(repo, 'run-start');\n       const error = await budget(() => run(repo)).catch((e: unknown) => e);\n-      expect(error).toBeInstanceOf(RuntimeFailure);\n-      expect(error).not.toBeInstanceOf(UsageError);\n-      expect(existsSync(join(repo.base, 'stalled'))).toBe(true);\n+      diagnosticEvent(repo, 'run-end', { elapsedMs: Date.now() - started });\n+      const context = diagnosticContext(repo, { error: String(error), elapsedMs: Date.now() - started });\n+      expect(error, context).toBeInstanceOf(RuntimeFailure);\n+      expect(error, context).not.toBeInstanceOf(UsageError);\n+      expect(existsSync(join(repo.base, 'stalled')), context).toBe(true);\n       expect(repo.git('rev-parse', 'HEAD')).toBe(before);\n       expect(repo.calls()).toEqual([]);\n       expect(existsSync(join(repo.root, '.loomake/runs'))).toBe(false);\n@@ -90,7 +116,9 @@ describe('runから外部操作までの期限', () => {\n   });\n   // authは事前確認を通した後、実装の完了後に行う公開前の確認だけを止める。\n   it.each(['push', 'auth', 'list', 'create'] as const)('[REQ-182] %sの期限後に先へ進まず、再実行で重複させない', async (stage) => {\n+    const started = Date.now();\n     const repo = makeRepo();\n+    diagnosticEvent(repo, 'fixture-ready', { elapsedMs: Date.now() - started, stage });\n     try {\n       repo.plan([{ write: { 'impl.txt': '実装' } }, {}]);\n       const command = stage === 'push' ? 'git' : 'gh';\n@@ -99,12 +127,16 @@ describe('runから外部操作までの期限', () => {\n       // そこで、この 2 つは run 全体の予算より長く止め、全体の期限で止まることを確かめる\n       const untilDeadline = stage === 'push' || stage === 'create';\n       shim(repo, command, condition, stage === 'create', untilDeadline ? 30_000 : 3000);\n+      diagnosticEvent(repo, 'run-start', { stage });\n       const result = await (untilDeadline ? withProcessBudget({ timeoutMs: 8_000, maxOperationMs: 500 }, () => run(repo)) : budget(() => run(repo)));\n-      expect(result.code, result.stdout).toBe(1);\n-      expect(result.stdout).toContain('実行時間の上限');\n-      expect(summary(repo).status).toBe('stopped');\n+      diagnosticEvent(repo, 'run-end', { stage, code: result.code, elapsedMs: Date.now() - started });\n+      const context = diagnosticContext(repo, { stage, code: result.code, elapsedMs: Date.now() - started, stdout: result.stdout });\n+      expect(result.code, context).toBe(1);\n+      expect(result.stdout, context).toContain('実行時間の上限');\n+      expect(summary(repo).status, context).toBe('stopped');\n+      if (stage === 'create') expect(existsSync(join(repo.base, 'stalled')), context).toBe(true);\n       expect(readFileSync(join(repo.root, 'impl.txt'), 'utf8')).toBe('実装');\n-      expect(repo.prs()).toHaveLength(stage === 'create' ? 1 : 0);\n+      expect(repo.prs(), context).toHaveLength(stage === 'create' ? 1 : 0);\n       const evidenceDir = join(repo.root, '.loomake/evidence', CHANGE);\n       if (stage !== 'auth') expect(readdirSync(evidenceDir)).toHaveLength(1);\n       if (stage === 'push') expect(existsSync(repo.env.FAKE_GH_LOOKUP_LOG!)).toBe(false);\ndiff --git a/packages/runner/test/guards-special-files.test.ts b/packages/runner/test/guards-special-files.test.ts\nindex c3b3cac..6336f88 100644\n--- a/packages/runner/test/guards-special-files.test.ts\n+++ b/packages/runner/test/guards-special-files.test.ts\n@@ -12,15 +12,19 @@ const packages = join(import.meta.dirname, '../..');\n const compilerOptions = { module: ModuleKind.ESNext, target: ScriptTarget.ES2022 };\n \n // Read the current runner sources, including guards.ts, rather than a previously built runner.\n-function executableRunner(base: string): string {\n+type ProbeKind = 'snapshot' | 'run';\n+function executableRunner(base: string, kind: ProbeKind): string {\n   const output = join(base, 'runner-probe');\n   mkdirSync(output);\n   writeFileSync(join(output, 'package.json'), '{\"type\":\"module\"}');\n   const compile = (source: string, target: string) => {\n     mkdirSync(target, { recursive: true });\n     for (const entry of readdirSync(source, { withFileTypes: true })) {\n-      if (entry.isDirectory()) { compile(join(source, entry.name), join(target, entry.name)); continue; }\n-      if (!entry.name.endsWith('.ts')) continue;\n+      if (entry.isDirectory()) {\n+        if (kind === 'run') compile(join(source, entry.name), join(target, entry.name));\n+        continue;\n+      }\n+      if (!entry.name.endsWith('.ts') || (kind === 'snapshot' && !['guards.ts', 'git.ts'].includes(entry.name))) continue;\n       const content = readFileSync(join(source, entry.name), 'utf8').replace(/(['\"])@loomake\\/(core|kit|trace)\\1/g, (_match, _quote: string, name: string) => JSON.stringify(pathToFileURL(join(packages, name, 'dist/index.js')).href));\n       writeFileSync(join(target, entry.name.replace(/\\.ts$/, '.js')), transpileModule(content, { compilerOptions }).outputText);\n     }\n@@ -29,10 +33,13 @@ function executableRunner(base: string): string {\n   return output;\n }\n \n-function probe(repo: Repo, modules: string, action: string, timeout: number) {\n-  const script = `import { writeSync } from 'node:fs';\\nimport { gitInternals } from ${JSON.stringify(pathToFileURL(join(modules, 'guards.js')).href)};\\nimport { runRun } from ${JSON.stringify(pathToFileURL(join(modules, 'run.js')).href)};\\nimport { UsageError } from ${JSON.stringify(pathToFileURL(join(packages, 'kit/dist/index.js')).href)};\\nwriteSync(1, 'probe-started\\\\n');\\n${action}`;\n+function probe(repo: Repo, modules: string, kind: ProbeKind, action: string, timeout: number) {\n+  const imports = kind === 'snapshot'\n+    ? `const { gitInternals } = await import(${JSON.stringify(pathToFileURL(join(modules, 'guards.js')).href)});`\n+    : `const { runRun } = await import(${JSON.stringify(pathToFileURL(join(modules, 'run.js')).href)});`;\n+  const script = `import { writeSync } from 'node:fs';\\nconst started = performance.now();\\nconst phase = (name) => writeSync(2, JSON.stringify({ phase: name, elapsedMs: performance.now() - started }) + '\\\\n');\\nphase('child-started');\\n${imports}\\nconst { UsageError } = await import(${JSON.stringify(pathToFileURL(join(packages, 'kit/dist/index.js')).href)});\\nphase('imports-ready');\\nwriteSync(1, 'probe-started\\\\n');\\nphase(${JSON.stringify(kind + '-started')});\\n${action}\\nphase(${JSON.stringify(kind + '-finished')});`;\n   const result = spawnSync(process.execPath, ['--input-type=module', '-e', script], { cwd: repo.root, env: repo.env, encoding: 'utf8', timeout, killSignal: 'SIGKILL', maxBuffer: 1024 * 1024 });\n-  expect(result.stdout).toContain('probe-started\\n');\n+  expect(result.stdout, result.stderr).toContain('probe-started\\n');\n   expect(result.error, result.stderr).toBeUndefined();\n   expect(result.signal, result.stderr).toBeNull();\n   expect(result.status, result.stderr).toBe(0);\n@@ -58,7 +65,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル\n     const repo = makeRepo();\n     try {\n       repo.write('.git/hooks/probe-entry', 'ordinary hook\\n');\n-      const result = probe(repo, executableRunner(repo.base), snapshotAction, 3000);\n+      const result = probe(repo, executableRunner(repo.base, 'snapshot'), 'snapshot', snapshotAction, 3000);\n       expect(result.kind).toBe('snapshot');\n       expect(result.snapshot.digest).toMatch(/^[a-f0-9]{64}$/);\n     } finally { repo.cleanup(); }\n@@ -69,7 +76,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル\n     try {\n       const file = join(repo.root, '.git/hooks/probe-entry');\n       fifo(file);\n-      const result = probe(repo, executableRunner(repo.base), snapshotAction, 3000);\n+      const result = probe(repo, executableRunner(repo.base, 'snapshot'), 'snapshot', snapshotAction, 3000);\n       expect(result).toMatchObject({ kind: 'rejected', usageError: true });\n       expect(result.message).toContain(file);\n       expect(result.message).toMatch(/特殊ファイル|通常のファイル/);\n@@ -84,7 +91,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル\n       const file = join(repo.root, '.git/hooks/probe-entry');\n       await new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(file, resolve); });\n       expect(lstatSync(file).isSocket()).toBe(true);\n-      const result = probe(repo, executableRunner(repo.base), snapshotAction, 3000);\n+      const result = probe(repo, executableRunner(repo.base, 'snapshot'), 'snapshot', snapshotAction, 3000);\n       expect(result).toMatchObject({ kind: 'rejected', usageError: true });\n       expect(result.message).toContain(file);\n       expect(result.message).toMatch(/特殊ファイル|通常のファイル/);\n@@ -106,7 +113,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル\n       }\n       const head = repo.git('rev-parse', 'HEAD');\n       const tasks = readFileSync(join(repo.root, 'openspec/changes/c1/tasks.md'), 'utf8');\n-      const result = probe(repo, executableRunner(repo.base), runAction, 10_000);\n+      const result = probe(repo, executableRunner(repo.base, 'run'), 'run', runAction, 10_000);\n       targetReason(result, file);\n       expect(repo.calls()).toHaveLength(stage === 'before' ? 0 : 1);\n       expect(repo.git('rev-parse', 'HEAD')).toBe(head);\n@@ -136,7 +143,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル\n         symlinkSync(target, hook);\n       }\n       repo.plan([{ write: { 'impl.txt': 'implementation\\n' } }, {}]);\n-      const result = probe(repo, executableRunner(repo.base), runAction, 10_000);\n+      const result = probe(repo, executableRunner(repo.base, 'run'), 'run', runAction, 10_000);\n       expect(result.code, result.output.join('\\n')).toBe(0);\n       expect(result.output.join('\\n')).not.toContain('特殊ファイル');\n       expect(readFileSync(join(repo.root, 'openspec/changes/c1/tasks.md'), 'utf8')).not.toContain('- [ ]');\ndiff --git a/packages/runner/test/guards.test.ts b/packages/runner/test/guards.test.ts\nindex dadcfd5..129eda9 100644\n--- a/packages/runner/test/guards.test.ts\n+++ b/packages/runner/test/guards.test.ts\n@@ -46,9 +46,9 @@ async function check(step: FakeStep, setup: ((repo: Repo) => void) | undefined,\n \n const withTest = (repo: Repo) => repo.write('tests/a.test.ts', \"it('[REQ-012] 確かめる', () => {});\\n\");\n const stopped = (r: Awaited<ReturnType<typeof runWith>>, base: number) => {\n-  expect(r.code).toBe(1);\n-  expect(r.stdout).toContain('不正な直し方を見つけました');\n-  expect(r.commits).toBe(base);\n+  expect(r.code, r.stdout).toBe(1);\n+  expect(r.stdout, r.stdout).toContain('不正な直し方を見つけました');\n+  expect(r.commits, r.stdout).toBe(base);\n };\n \n describe('テストの削除と skip・todo の検出', () => {\ndiff --git a/packages/runner/test/helpers.ts b/packages/runner/test/helpers.ts\nindex c5f02fd..97e3b7e 100644\n--- a/packages/runner/test/helpers.ts\n+++ b/packages/runner/test/helpers.ts\n@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';\n import { delimiter, dirname, join } from 'node:path';\n import { spawnSync } from 'node:child_process';\n import { reportJson, specMd, traceMd } from '../../kit/test/project.js';\n+import { attachProcessDiagnostics } from './process-diagnostics.js';\n \n export const CHANGE = 'c1';\n \n@@ -134,6 +135,7 @@ export function makeRepo({ trace = traceMd(), tasks = TASKS, run }: { trace?: st\n     DEVCONTAINER: '1',\n     LOOMAKE_SANDBOX: undefined,\n   };\n+  attachProcessDiagnostics(base, env);\n   writeFileSync(env.FAKE_PLAN!, '[]');\n   const write = (p: string, text: string) => {\n     mkdirSync(dirname(join(root, p)), { recursive: true });\n",
+  "phaseFileSummary": [
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node22-phases/loomake-run-4wUhOE.processes.jsonl",
+      "sha256": "3ed220836ec2fd7fc40e1bd81bc51409bea99fac8f4b432aab3dcc20ac7195a8",
+      "bytes": 15939,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node22-phases/loomake-run-9wtwNj.jsonl",
+      "sha256": "535a6adaefc0e0ae00b99f99fde713ce1448b9da3ced4453b2e2e9719ede3e09",
+      "bytes": 2910,
+      "entries": 19,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node22-phases/loomake-run-9wtwNj.processes.jsonl",
+      "sha256": "889906405088292a3d628efc60e7eef00e1f004de93c43c689ae06bea45cfad1",
+      "bytes": 21537,
+      "entries": 138,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node22-phases/loomake-run-Ae0czS.processes.jsonl",
+      "sha256": "939f38d9ed3d51ce0cb0230598a66f2437e26266879edd4c437522c0261138d1",
+      "bytes": 6824,
+      "entries": 44,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node22-phases/loomake-run-SlJoZA.jsonl",
+      "sha256": "892cfd7a40136e69c2835d2cd1842a9cbfbc5a86be8126ce5fe2a25ba170ae0e",
+      "bytes": 23263,
+      "entries": 185,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node22-phases/loomake-run-SlJoZA.processes.jsonl",
+      "sha256": "406d911f37138fe6d23f5dd35984dd57a8d74996595d22d14d99aa3e12e34db5",
+      "bytes": 21254,
+      "entries": 136,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-0E0LX6.processes.jsonl",
+      "sha256": "5b7caaa3680d8059fb40534f239d7c1742784577f4e559c874bf7e4b2a85f190",
+      "bytes": 4369,
+      "entries": 28,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-0sv3G3.jsonl",
+      "sha256": "be231c613aa0f2c27a249b42bf655d66a309f53c902b82368de2fcae86a9b816",
+      "bytes": 189,
+      "entries": 2,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-0sv3G3.processes.jsonl",
+      "sha256": "a746d401645a1c69010047a5dd332d8cdf5cf47915b80a05160d9ccfc82ebca9",
+      "bytes": 2192,
+      "entries": 14,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-0yJWjn.processes.jsonl",
+      "sha256": "0c176f91d20661574e3440057fbb043ae9961c999c478d833a61b170c31f306a",
+      "bytes": 923,
+      "entries": 6,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-12Q14z.processes.jsonl",
+      "sha256": "4e3c11597e77ca66360ae7e9beaf66c761ff84429cb9c0846a50285d444da306",
+      "bytes": 20971,
+      "entries": 134,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-1LT6lM.processes.jsonl",
+      "sha256": "3aa223b863866c8f994769aaafc69de9bf64eaaf8d6f801506ffc45b94f59e19",
+      "bytes": 16823,
+      "entries": 108,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-1RbFbt.processes.jsonl",
+      "sha256": "ea33e0e42f4f69bac1cb3971e1692006096b1d3ee81d5da8ff0d684cb9101371",
+      "bytes": 6865,
+      "entries": 44,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-1WirjS.processes.jsonl",
+      "sha256": "f853b588c069de26b53eef30c8e6e6ee02fa92253c3409b240156f7d76cf0ac1",
+      "bytes": 616,
+      "entries": 4,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-2pa5cf.processes.jsonl",
+      "sha256": "257792615e373c856db156155dbcc6f24c8ca8e675b773af7305182f9fcd2918",
+      "bytes": 6878,
+      "entries": 44,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-3A7apH.processes.jsonl",
+      "sha256": "47391a4dbd1decd3b72e2bd6664c26dd804077f177eadf72708b7487c988f99b",
+      "bytes": 5300,
+      "entries": 34,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-4kP9QT.processes.jsonl",
+      "sha256": "e533433f9c3999eab0b73c50d85e69eedd4e2a9dd402a4876633da7c7e7890c2",
+      "bytes": 7088,
+      "entries": 46,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-4ohh84.processes.jsonl",
+      "sha256": "48b6582064041c95c616372c1f74b6fcf176869ad9ff3a64315fb54ade9348ff",
+      "bytes": 7148,
+      "entries": 46,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-5r6SjZ.processes.jsonl",
+      "sha256": "f81d8ee6a33642ef79762e79c3b4e06e3954e4acfd5c697529593a1aad96210b",
+      "bytes": 1234,
+      "entries": 8,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-6P2ZyZ.processes.jsonl",
+      "sha256": "5ce4674f7e8f2e6e57f8e4728fb3297c69eaa11fc8f49299e96decc0feb21b74",
+      "bytes": 21853,
+      "entries": 140,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-6muKSk.processes.jsonl",
+      "sha256": "c2fb12c7e79aa43eabb2d5730117157860107fed0395c591c681105b4441c233",
+      "bytes": 5664,
+      "entries": 36,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-7BINGl.processes.jsonl",
+      "sha256": "45804753b9393804d8293733709be94c4888b5a43e51bb4ad2e5fbb05232c610",
+      "bytes": 15959,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-81IA5U.processes.jsonl",
+      "sha256": "d36c4c4971d0d14865f41ffa7041cf1276f8296a6023ab4c929aedf61e0ab6a0",
+      "bytes": 21359,
+      "entries": 138,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-8gIfD1.processes.jsonl",
+      "sha256": "4cae99441e230b19a9565282262e88962c1375f136c3fd2604f970630933c41d",
+      "bytes": 6863,
+      "entries": 44,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-9ItjgL.processes.jsonl",
+      "sha256": "3d2afdd8247f9b1c01fd83c3b25157886b9ef91899dccf54bb277a3dd9abdaea",
+      "bytes": 4399,
+      "entries": 28,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-9SMlU7.processes.jsonl",
+      "sha256": "f57fd4ac1c8c0f1098c78d039e8b02055ae7d9067abab259f504b5f80e6c7e14",
+      "bytes": 7130,
+      "entries": 46,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-9b1bU6.processes.jsonl",
+      "sha256": "ea1d97892271378020e31189ac19a12620e036b361b556253b8c4d89a90c9213",
+      "bytes": 2183,
+      "entries": 14,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-9sVdVb.processes.jsonl",
+      "sha256": "f22b01b8b25ea03d01648241ae79b6088faa94fa62db98b7bb57d5d59a6d0e0c",
+      "bytes": 928,
+      "entries": 6,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-ARpctt.processes.jsonl",
+      "sha256": "73c5daa881b33ddc204722f62175aaacf7841fc4d164dda4fb5b318340140b8a",
+      "bytes": 7147,
+      "entries": 46,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-AXFlKr.processes.jsonl",
+      "sha256": "3f61eeb5d13682e6815fdae8787219779c445d63d2bb391dfc58cc8fb6125905",
+      "bytes": 7135,
+      "entries": 46,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-AbI3nS.processes.jsonl",
+      "sha256": "58fdab56f19acc02cff261a7048ca71c1bc7903768fcff1332454bfb1c60728c",
+      "bytes": 20336,
+      "entries": 130,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-BOZvye.processes.jsonl",
+      "sha256": "4cbfd23c9bf625cf448cafc3c6e3f7dbd0e2a02833b1991df0f60b105f76f085",
+      "bytes": 15856,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-BzsO2R.processes.jsonl",
+      "sha256": "fcd4bb9147852e9d4a57499f27ff770ca2dc8fb736587afac530f17e725e3436",
+      "bytes": 15954,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-CcOM5x.processes.jsonl",
+      "sha256": "84668acfe8feac547ea3a39ae9d890f44d57a922c3f75223ff06e40ecf805753",
+      "bytes": 306,
+      "entries": 2,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-CogY9N.processes.jsonl",
+      "sha256": "15b42bba68592ae2aafac080adec38125dca83aac487ad6bcc1d343c81d3d0da",
+      "bytes": 7124,
+      "entries": 46,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-CvjERY.processes.jsonl",
+      "sha256": "3c0160b94a4fbbcdfa1f0f96d87e03e298569c5e05524980d5ec7655714d758f",
+      "bytes": 5302,
+      "entries": 34,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-D07Io8.jsonl",
+      "sha256": "acb683d72184e251ad0e43278bfd1d37de7c732e464c0195027c09dc91483030",
+      "bytes": 23264,
+      "entries": 185,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-D07Io8.processes.jsonl",
+      "sha256": "1ecd28f7efd331d1b76fc8dc2081e6d28aecfccab9db44b70fd1d7ca2cfaf17e",
+      "bytes": 21235,
+      "entries": 136,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-D3GPP4.processes.jsonl",
+      "sha256": "cf846bc842c4c6311d368d8a5838f8e87d571cccf38fefb95d212070326d6e99",
+      "bytes": 615,
+      "entries": 4,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-DKaWmf.processes.jsonl",
+      "sha256": "2ff213a92c4e02ca4cdf049c84e74ee896aa8682db23dac6f3d0e42a334862d9",
+      "bytes": 9370,
+      "entries": 60,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-DYzprj.processes.jsonl",
+      "sha256": "7a0526412a549d78e9ad4b920ccee35167236fafe4a2f2a9a8d608de7729db0b",
+      "bytes": 2506,
+      "entries": 16,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-EyQb9E.processes.jsonl",
+      "sha256": "27743a8d9e4dead11a076f3fb62c07d4e655a49f53483785233b93a3d8e8ca67",
+      "bytes": 3449,
+      "entries": 22,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-FGaGcp.processes.jsonl",
+      "sha256": "ccd63e47fa3586630a176b659588bd7cd2ba0c1e7673db5dafcc65e0e55c0002",
+      "bytes": 10810,
+      "entries": 70,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-FNtYxT.processes.jsonl",
+      "sha256": "b1e7518f948196ee7025345ed8521ce4edf2d52c203ee2a191234204111969fb",
+      "bytes": 15964,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-FiN0r5.processes.jsonl",
+      "sha256": "4858404f787baef7721fc458383e8ec5ae4502ca0f0fba9b0900e20fe6c29482",
+      "bytes": 1239,
+      "entries": 8,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-G00RKi.processes.jsonl",
+      "sha256": "54cf1a7a6b412610d0c4e9b5757143346c7e27fe3e2a8a7dad58cc206568cbf4",
+      "bytes": 19389,
+      "entries": 124,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-G5DLaZ.processes.jsonl",
+      "sha256": "f458ee83a3a4437c164ab18fb5cd50b1fbbb784160c6ded8fc292e14876183e5",
+      "bytes": 7126,
+      "entries": 46,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-GNmORI.processes.jsonl",
+      "sha256": "a3b3c9cfe5dd92a8982a62ee66a34c91cff294afb21be6b9e57687088bbbf26d",
+      "bytes": 1929,
+      "entries": 12,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-GwIRKc.processes.jsonl",
+      "sha256": "0291dad16a898efb9121ebcb13b1ffa17e322d45c0f46b4f223fc5623183c67d",
+      "bytes": 5338,
+      "entries": 34,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-IAeULV.processes.jsonl",
+      "sha256": "4a53fc6350ecafb4e5b45ac0bb91a2a560eb423fc10b49c2842e954f16510348",
+      "bytes": 20977,
+      "entries": 134,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-IJg5fW.processes.jsonl",
+      "sha256": "bf2a18b959e2a1d02d926c0b3ed0c3bb9cde85fca349eb2edf61c49ad99820da",
+      "bytes": 1926,
+      "entries": 12,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-IJyxJN.processes.jsonl",
+      "sha256": "c03d9183e9b1bb5d87ad49489a1d29084c5685ec73c020ebbf91bbddcbef98fe",
+      "bytes": 15953,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-IQDLti.processes.jsonl",
+      "sha256": "ef0745c9ad01aa9e348d5b8efb7ad97cc36546aa218497c36f3230d4b2a955a6",
+      "bytes": 15648,
+      "entries": 100,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-Ii5L45.processes.jsonl",
+      "sha256": "beee16ef01e58dc14c97146969e3e04f12e2e3ceff7cc1a3cde1fcd15033cea9",
+      "bytes": 15968,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-IqT9qo.processes.jsonl",
+      "sha256": "c06e51b1bd3b3bfafda87e918cbbd034e7acfac67caa983d0c64156f94f601e6",
+      "bytes": 307,
+      "entries": 2,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-JbnXoA.processes.jsonl",
+      "sha256": "ec89aa03fedd0c9e3651a14c546755a022efece6e93ae7c587a3701a06aef26f",
+      "bytes": 578,
+      "entries": 4,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-KrZgns.processes.jsonl",
+      "sha256": "360d179c65f295a3c62836731478c68285995a243673d1b93513311b6e3a15de",
+      "bytes": 15959,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-L26omy.processes.jsonl",
+      "sha256": "641540ec6429c4fd41dd17b7b10207c358f8dc7b9e59487d6baa27390fbc4dae",
+      "bytes": 7131,
+      "entries": 46,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-LWvxr6.processes.jsonl",
+      "sha256": "2a96e2964edcca437ae144649229ce142e205caf9bef9095fb2fb7244d01305c",
+      "bytes": 4078,
+      "entries": 26,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-Ld4nPo.processes.jsonl",
+      "sha256": "28e6339ab363e2d726e0987ffcf8734a6e0086a58a394c337eff11f50798da15",
+      "bytes": 1261,
+      "entries": 8,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-Lwln4f.processes.jsonl",
+      "sha256": "9e692387f927bbe7c0ac752234a5b3e6c1391796b2ff263c987959d7962b6db9",
+      "bytes": 20975,
+      "entries": 134,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-LyzlAM.processes.jsonl",
+      "sha256": "50096f92d75bf354311d5c242822d4ef82e46b4a8c7b731757d31bfe363ad0bb",
+      "bytes": 7163,
+      "entries": 46,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-M62pSP.processes.jsonl",
+      "sha256": "4cec3ea6792036a032d88d1cdc356b8423555ef492e9f6ad5b760502cb5fd150",
+      "bytes": 1924,
+      "entries": 12,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-MQ6Jmw.processes.jsonl",
+      "sha256": "97986b36e6e7e39c166e63f55d8e886f9ba55457c88f8f80731aed0321226bb3",
+      "bytes": 1535,
+      "entries": 10,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-MTswCq.processes.jsonl",
+      "sha256": "63f67458ea1d610e8e38146c3012dbf9bc9e659902a2f2bd7d1d8620d3a6f673",
+      "bytes": 20823,
+      "entries": 134,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-N20QuW.processes.jsonl",
+      "sha256": "5d1a9a9384f836196034a9cb8129076201e9f342fec8d732ef296c5dea4e57c2",
+      "bytes": 12244,
+      "entries": 78,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-NKvGoE.processes.jsonl",
+      "sha256": "6960a5c7a633d3d6d5dd03eb445e4d147f890c2419d01876f814767bf90bdb33",
+      "bytes": 4395,
+      "entries": 28,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-NMBAcf.processes.jsonl",
+      "sha256": "39f880f12a03e8cecb5bcfd0a1ed88700a9d3fd24b1175998d39e9596db0b368",
+      "bytes": 912,
+      "entries": 6,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-O8ddZc.processes.jsonl",
+      "sha256": "b30ff698e96bbbdd45c602ede8c560f713a04d9010e30bf7b681066197c6cbcd",
+      "bytes": 20850,
+      "entries": 134,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-ODXFdM.processes.jsonl",
+      "sha256": "0b709d7fe1a07594bfbab86e034e6507f7de11f40266c5f4513051b5d493beca",
+      "bytes": 15962,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-Omj0m6.processes.jsonl",
+      "sha256": "85d7c47c1756f17274899b521d8e83fba2d408bd0899a74b1cb8ebe82c689f70",
+      "bytes": 8437,
+      "entries": 54,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-OxezkN.processes.jsonl",
+      "sha256": "5e7f02deccd4522a8c8300e2156b193da7f14401ce0e5e985dd99f2e0e0c6f0e",
+      "bytes": 5334,
+      "entries": 34,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-PPFRba.processes.jsonl",
+      "sha256": "ab3ef4ccad0fec6257ac9e2649c796a31f90a63ef734f6357fefe5b3c09d7b20",
+      "bytes": 19993,
+      "entries": 128,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-QCWbar.jsonl",
+      "sha256": "5dffeb76a67104afb1e238f62bbc84195d1a76da37aca3d9161a59bb15dea5a5",
+      "bytes": 812,
+      "entries": 9,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-QCWbar.processes.jsonl",
+      "sha256": "7f5d513a3c0f2a7536a40faab750e114e5411a233f4e5efda91936382bc734ff",
+      "bytes": 19646,
+      "entries": 126,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-QCwcdr.processes.jsonl",
+      "sha256": "d7ce72168aa1c06766305e5648ec0b36ac90f3f25fe7d8e16b7065995bfe9004",
+      "bytes": 5733,
+      "entries": 36,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-Rh70pH.processes.jsonl",
+      "sha256": "b0fb4f46c64ba8e21d82819142a5b4ba337670479b34e5d2a65d1a096f976b9e",
+      "bytes": 922,
+      "entries": 6,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-RmDRKu.processes.jsonl",
+      "sha256": "3ab5592537e04c1482d6397edc756e22b17dee833107788d0bbfa646fe70ecd8",
+      "bytes": 20841,
+      "entries": 134,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-SJORxx.processes.jsonl",
+      "sha256": "46a01aa97bc52e03770969f0d3b6172608d7ea4a0dc84f0657af29346d9f8ae0",
+      "bytes": 20979,
+      "entries": 134,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-SPBDOV.processes.jsonl",
+      "sha256": "a2da8678909f89951c4016029901f00ed1b6c4d3100b8ed5345a466efcf39824",
+      "bytes": 16248,
+      "entries": 104,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-Sl8hZb.processes.jsonl",
+      "sha256": "b5384e7b84689b0575f98937a59e2558aba913fd249d9ed34b2b4f6d7b5c30f7",
+      "bytes": 18054,
+      "entries": 116,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-SwSvBJ.processes.jsonl",
+      "sha256": "15bd5699f043d0dc258504addff89bca894a06e43841090078652aeff8f4fec0",
+      "bytes": 15956,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-TJMm0Y.processes.jsonl",
+      "sha256": "1e165f93f480e8abf912b14d7ad97034951a9b2663ab281005bbb893c7546cd8",
+      "bytes": 9377,
+      "entries": 60,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-TZOah2.processes.jsonl",
+      "sha256": "3bfc34899c179506cdc6a45330bcfbc2058fbcabd41ab32c623d5d963b6eb2e6",
+      "bytes": 308,
+      "entries": 2,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-UCwF3S.processes.jsonl",
+      "sha256": "59ff82a6999475c1da48f677c50f7bf58e90a0495b53a5775b7a1fb1d6cdd753",
+      "bytes": 12215,
+      "entries": 78,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-UHy7cU.processes.jsonl",
+      "sha256": "c066a8a0c40347161173ad46fadb81ae8f3636d532eef38443456668832211a0",
+      "bytes": 2197,
+      "entries": 14,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-Ul4Rcv.processes.jsonl",
+      "sha256": "4f80c596564df28311b9df992da803c866fb1d7752c65a31cf0e9196a074d5ff",
+      "bytes": 2187,
+      "entries": 14,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-V0EynK.processes.jsonl",
+      "sha256": "34da775c81b9bc7560e45aec1ccc9f69f1b787edc31861395521943b5e195f8e",
+      "bytes": 5332,
+      "entries": 34,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-V1mB00.processes.jsonl",
+      "sha256": "4349a5eae352af4130bcf6140ed5f9ab87e3a3eb15d265b1b3776fee5e00c9d7",
+      "bytes": 16254,
+      "entries": 104,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-VTVDki.processes.jsonl",
+      "sha256": "c77f083999e01afac6e45cce691988ff423f0bc348768ad71edbfbbf48b08536",
+      "bytes": 1922,
+      "entries": 12,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-Ve6yuK.processes.jsonl",
+      "sha256": "b4cc956ecb1288734c4708b4e8cfcda75cd74d53e73f509489cc9bd4ebb3fab5",
+      "bytes": 915,
+      "entries": 6,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-VtMBSo.processes.jsonl",
+      "sha256": "9e4fb3c24b26d023c8a8393fb8387cb69be517c1701fa79be40e9f64da6ee6ee",
+      "bytes": 15653,
+      "entries": 100,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-WhuvgV.jsonl",
+      "sha256": "0bb690cf70e351195a1a73a8c65cdf5442e6478454715c00be24a42c0c555659",
+      "bytes": 1468,
+      "entries": 13,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-WhuvgV.processes.jsonl",
+      "sha256": "193dc082fab96923e0e17e9ffbe349a6c37015c5f3e6439afd66c4601ac8f653",
+      "bytes": 21534,
+      "entries": 138,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-WuAQB6.processes.jsonl",
+      "sha256": "d3a8f4933d544b8bcb282bf5cc1ae302151867747e184db89a464bf9a4e094af",
+      "bytes": 8431,
+      "entries": 54,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-XGG6a3.processes.jsonl",
+      "sha256": "1192e341dbcf0d69ec9ce46bcb67040a575a4bbf6aae1a685c24931b0bbd2c52",
+      "bytes": 15847,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-XRaQ2m.processes.jsonl",
+      "sha256": "80451ecaf0974ed7e1061e025ef79b4cd885099c65ad8dbf5a1c2543d237c3da",
+      "bytes": 12250,
+      "entries": 78,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-XUKVOI.processes.jsonl",
+      "sha256": "0381ddb0159fdc2f04dfb3ef2d31b6628e08108d0aa89642df0ba6db4cd62114",
+      "bytes": 922,
+      "entries": 6,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-XpKxc6.processes.jsonl",
+      "sha256": "6e9eeeefdc0658a3976ebe2c65abd9833566754cd328e145a7c4bd1f9e354fd5",
+      "bytes": 1255,
+      "entries": 8,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-YAKbNc.jsonl",
+      "sha256": "9d1f69606940b5e5870a72aebab863b3bace6f6c577fa8028a9bb7d5ac695d23",
+      "bytes": 251,
+      "entries": 2,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-YWUTDM.processes.jsonl",
+      "sha256": "73ed3c87b3a50ae02e304f42868f81b1e58c6d834014a858547a725eb55119c2",
+      "bytes": 616,
+      "entries": 4,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-Yi2Yzm.processes.jsonl",
+      "sha256": "53a4c94962cdcb0bef79e922c716b15a4c1f6fe480edebcc206580ae9f4d1296",
+      "bytes": 15956,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-YlWWfi.processes.jsonl",
+      "sha256": "eb44743b9ef6e5c6e2c46ee7672a6e8be8cfdcbb2a12ddacbe258ebaa3228126",
+      "bytes": 6841,
+      "entries": 44,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-ZJRAXM.processes.jsonl",
+      "sha256": "74bf4bf0ddc4a58acb29c96d81f94fa3744cfb4c85c5adbb3de4460865dadec7",
+      "bytes": 930,
+      "entries": 6,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-ZL0jqP.jsonl",
+      "sha256": "9323a7a3e5ce8407add00875e333d49d0bb7da7b6b803a9b6ea533757be79575",
+      "bytes": 2911,
+      "entries": 19,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-ZL0jqP.processes.jsonl",
+      "sha256": "53091f3aafbb469c16a3870f7ffd50d23d46870b1d3ae5c2b47a1860d0e1d9fc",
+      "bytes": 21519,
+      "entries": 138,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-ZobuLk.processes.jsonl",
+      "sha256": "4f39e45ac259ad45e8beb06ad21e5517694d47ba5fc4215863ddae55ab524ede",
+      "bytes": 6824,
+      "entries": 44,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-aA9gB1.processes.jsonl",
+      "sha256": "11e7b0dbff4b6af56840ab2c65742581a0aedb5be891211f59b52679d1a2add7",
+      "bytes": 6316,
+      "entries": 40,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-aBEgx4.processes.jsonl",
+      "sha256": "b3a937580b797b21fdabc237da656fbc5cfbea4148dee3034d0796f5d0fd889e",
+      "bytes": 1276,
+      "entries": 8,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-aDo4IY.processes.jsonl",
+      "sha256": "d129376f75af73f496ae0d772252b18f396d23ce739af8fb81e871cfc3292eb5",
+      "bytes": 7127,
+      "entries": 46,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-aZDOiy.processes.jsonl",
+      "sha256": "a63115ca739374e348967a187956541783cfea8ad21b0498393f3c9f5a6f7db7",
+      "bytes": 1920,
+      "entries": 12,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-b9nDIg.processes.jsonl",
+      "sha256": "9051743094a87bfe6b746658463e32793e9b12d58f29249bd505ae922e469466",
+      "bytes": 16249,
+      "entries": 104,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-bD6K8u.processes.jsonl",
+      "sha256": "2ffd45e36c879133e52e27708afc1b693ae8755d4325c44bb447e7b8db7824aa",
+      "bytes": 18038,
+      "entries": 116,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-ba6PDM.processes.jsonl",
+      "sha256": "ea9c7d55e7bcf8c78509f50681334670934119ff8a2d3e9da7be251cd894c8cb",
+      "bytes": 21564,
+      "entries": 138,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-bcfGt1.processes.jsonl",
+      "sha256": "ee538d9a4633bb8cbe542d07c461fea2520eacdccfeb3dffcb25043aaa1315f6",
+      "bytes": 7138,
+      "entries": 46,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-cFq1o1.processes.jsonl",
+      "sha256": "1d649d8d9cc441c7dfc5a8d20bb6bae3b6a0d6a3a21d87b8acac9801669554df",
+      "bytes": 7123,
+      "entries": 46,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-cNIWOl.processes.jsonl",
+      "sha256": "d5f0f7029e95379140b018a2506ff09bc4bfd1cc442a87deab990a38b7d2e770",
+      "bytes": 14385,
+      "entries": 92,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-cRXs2j.processes.jsonl",
+      "sha256": "b935bb2898b6f37a8d77f286dd798ac7f5ef46c6353c345b55b0e0ef242127a2",
+      "bytes": 7133,
+      "entries": 46,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-ccn5zH.processes.jsonl",
+      "sha256": "155674fc7aa56f07ea4b0f4cf477c112add1149fb2340fb8c75392984a07dcc6",
+      "bytes": 7132,
+      "entries": 46,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-dTSB0d.jsonl",
+      "sha256": "22fb89a83a3d7a7b95f5ed8da36c28f5e1f8f8066d97333e314d3a786a9a5d8c",
+      "bytes": 225,
+      "entries": 2,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-dTSB0d.processes.jsonl",
+      "sha256": "f36ecc6a55456e338116bea58e517fabcc3c4150953676b783505154bc934854",
+      "bytes": 308,
+      "entries": 2,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-dbbMOi.processes.jsonl",
+      "sha256": "ea24e7a066d8e7467b185157b304984ba3669c132beda8cd6d0aeb03b805af5f",
+      "bytes": 1929,
+      "entries": 12,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-dcwmvr.processes.jsonl",
+      "sha256": "541ca353f6f18aa6ffd54f6b9d76b54e5bacd0ec9d3f0216ef0bd482aa9a8d1e",
+      "bytes": 10924,
+      "entries": 70,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-eBGVJY.processes.jsonl",
+      "sha256": "d0a555450c8b3c5632f4490baae87627d18a9fdf7c35f7d84fb9465213120677",
+      "bytes": 7119,
+      "entries": 46,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-eJRWLV.processes.jsonl",
+      "sha256": "76e63bfc4406a07b69d72a60737512290a9d98c339bc41ed97e0dce0111d7237",
+      "bytes": 8050,
+      "entries": 52,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-fdg81f.processes.jsonl",
+      "sha256": "f0a8347db22646bf8084827019501cfd0479deb1a471e2932f2ffa4bae6f47cc",
+      "bytes": 11202,
+      "entries": 72,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-ff0n7c.processes.jsonl",
+      "sha256": "50b7d7c67f5a169530e3c528538d85c6d2d5eebaf4e6ca26568da5d4138b6e10",
+      "bytes": 15956,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-gUjwtw.processes.jsonl",
+      "sha256": "6e654131f77250a01f0659c82243abb46d5b211e5f9899f87e3f64a699d5e14b",
+      "bytes": 15658,
+      "entries": 100,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-ga76MU.processes.jsonl",
+      "sha256": "118eae6af05132967dd39118c675997495f763b3ebf2875cb795bcc1e7f0d760",
+      "bytes": 12242,
+      "entries": 78,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-gqMzpK.processes.jsonl",
+      "sha256": "00bc326c35c225cfefd0df5a34087e2db8c3c1e701e58ea89deaaf0e7570594d",
+      "bytes": 20646,
+      "entries": 132,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-h1DWnn.processes.jsonl",
+      "sha256": "643050c75dbba4577fc31772547b2f5f630263860716d9e254a0f5b81248efeb",
+      "bytes": 15648,
+      "entries": 100,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-h26f2m.processes.jsonl",
+      "sha256": "40f8d0b3f81b73e0cc77861b40b15525cf996411ff84a9ba1cf1f7f3b1ce885a",
+      "bytes": 307,
+      "entries": 2,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-i78CD4.processes.jsonl",
+      "sha256": "4855c223f09a730991660b27ff2ce0c28d334feb840c8f8df54b93e6f7368213",
+      "bytes": 1259,
+      "entries": 8,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-iXusRe.processes.jsonl",
+      "sha256": "2d4bcf7ec50919b33acfcfe0e01a8e6146e0f2db8049f5a361d9dae4f40ebec8",
+      "bytes": 307,
+      "entries": 2,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-jtvShA.processes.jsonl",
+      "sha256": "7e8d2a2720e602b7e8a08c69ce8296b01875b27d91512d7b02849e3bd077adb9",
+      "bytes": 914,
+      "entries": 6,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-k41Bmf.processes.jsonl",
+      "sha256": "61cfbf09af0bdcb9d2f0f062427de7a983125cfad7e976b4fa68b5ad6c5a99cf",
+      "bytes": 15963,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-k9yno6.processes.jsonl",
+      "sha256": "2c938e5cda8df2252fdd6028fed4c5276c49bcb8ecd08d53c5f55a9b13b9dd72",
+      "bytes": 15948,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-kTqEZ0.processes.jsonl",
+      "sha256": "c9a8c7a0fa67a9361621f4f35d3b3dc61693b48749954ae90fcb3f5c8ebe4285",
+      "bytes": 307,
+      "entries": 2,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-kgurXR.processes.jsonl",
+      "sha256": "9db8394e541146d77d6562bdd8220ecbc27b864965a95aca43c2281dfe48c5e4",
+      "bytes": 15665,
+      "entries": 100,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-kqot3Z.processes.jsonl",
+      "sha256": "54b331795938b7c2424b99d6fe4df758703567a933b71961c1b300e6179068b7",
+      "bytes": 19391,
+      "entries": 124,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-kuvuy5.processes.jsonl",
+      "sha256": "acf3edd5cb18617fe6c6894aafa6724f8b0dd3a4582aa8d11874f9e99d7c37d5",
+      "bytes": 15654,
+      "entries": 100,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-l0mU2l.processes.jsonl",
+      "sha256": "d4a7f94cb551b3c297ddfbadc9f78fa05d2a4f71be4298e9e744de0682d2edeb",
+      "bytes": 1926,
+      "entries": 12,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-lQ9UNv.processes.jsonl",
+      "sha256": "57e84716811e47d66b72822500a644c577ce451557b45e003892e0f1d87b3d00",
+      "bytes": 1915,
+      "entries": 12,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-ldoh2C.processes.jsonl",
+      "sha256": "fd80ce3e2a68364064e70676955cc801a9283b61e6751d036e7a436e9675f848",
+      "bytes": 5327,
+      "entries": 34,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-mgl5he.processes.jsonl",
+      "sha256": "de3fb15066f69619eab0d6ec99cef0d7fe5c72a386f4d3ae836e550bbc7a939f",
+      "bytes": 11564,
+      "entries": 74,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-mjaSkq.processes.jsonl",
+      "sha256": "f59079ce68e9ed24b0cf2e657248789dde7f59dfa05704108a177e6654a82892",
+      "bytes": 5712,
+      "entries": 36,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-mwA0ee.processes.jsonl",
+      "sha256": "67258fa1c50b156611097bd18e0f1a319bde919b0abba184d6ada671a9ad1026",
+      "bytes": 1259,
+      "entries": 8,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-nKdhjM.processes.jsonl",
+      "sha256": "1c8767d73e23995deea23dddad219635f4b0a24fce11063d6c30e738e7950bb4",
+      "bytes": 5344,
+      "entries": 34,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-nLqAvt.processes.jsonl",
+      "sha256": "0c9327e5cd32892c31c03479d45f4bd27654cee722a9813c0a6c7357fad51e05",
+      "bytes": 2196,
+      "entries": 14,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-nlHUrL.processes.jsonl",
+      "sha256": "c7c2a721f884705d4c65a9d1c60b77a3284e30181400265bdacc1001b051c7ef",
+      "bytes": 7571,
+      "entries": 48,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-o2cMXp.processes.jsonl",
+      "sha256": "4add59adc39d8eb15011a87a3b7b6cf8817945ee76a16888777fec7799ed8d16",
+      "bytes": 15951,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-o4NRVF.processes.jsonl",
+      "sha256": "3a57ff9517f1fa4cf6506c204bf91037a17e802ee96bf95d82ea269cd7f93b1d",
+      "bytes": 15850,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-oYqOb2.processes.jsonl",
+      "sha256": "b7a220c25d5d0e6a3ac963279680514a82ab819db58b6c7098971160997e9af7",
+      "bytes": 6872,
+      "entries": 44,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-p11Rsg.processes.jsonl",
+      "sha256": "8981c2ea84f7fe0db784704af90487119046017c57dfa6d4559af5fca853fd9b",
+      "bytes": 7172,
+      "entries": 46,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-pOKHSE.processes.jsonl",
+      "sha256": "483ad2dbf8baa8fbf794d147e93b6b9aec766645ca9b125c8e146cf7bcba45f2",
+      "bytes": 15650,
+      "entries": 100,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-pQEFz6.processes.jsonl",
+      "sha256": "79d9788abcc1303d7532ebcfe6e5a2901185f0dacf11b170d288d37d6a741785",
+      "bytes": 21259,
+      "entries": 136,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-qRrU3B.processes.jsonl",
+      "sha256": "35c0b720204b05cfac8b8c02be9c14ce1dbfcd3c65eb072c3e8e464efb2b6bfb",
+      "bytes": 16253,
+      "entries": 104,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-qhYHOw.processes.jsonl",
+      "sha256": "2f1e516451be4313c3e6c7fa2d78558cdfa6d10b259240e31599019d06e010a6",
+      "bytes": 15855,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-qwmVCq.processes.jsonl",
+      "sha256": "132ef5ee9c05effa99f724459d61e9311c7379af7af156e8a185f1c83766d84b",
+      "bytes": 15966,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-r3jZiZ.processes.jsonl",
+      "sha256": "2a836f0b97a9cb5b2e4989ab4c738810b871dc3312aa50ea7c98e9b3a1378af5",
+      "bytes": 5301,
+      "entries": 34,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-rgkHQo.processes.jsonl",
+      "sha256": "3a670bb43b0a988b577d8ee586d866f19b5a1d4f66cb25d8436bfc43843d1815",
+      "bytes": 15957,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-rkDSPa.processes.jsonl",
+      "sha256": "0cf50baf898b8baa198b00042fd6e14ae4ab6e367c55c7172442cb0e8dd05d7b",
+      "bytes": 7423,
+      "entries": 48,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-rmemSU.processes.jsonl",
+      "sha256": "5e5cd3b9c66febd80a0ac3aaa2da02fb9a715f59f84296f1c27995385dad13d3",
+      "bytes": 613,
+      "entries": 4,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-romj8d.processes.jsonl",
+      "sha256": "02209f4e589dd8b0b981a4ca1b776aff1a428523e357ada0e27bf15de2e87bd4",
+      "bytes": 12366,
+      "entries": 80,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-rvmrOn.processes.jsonl",
+      "sha256": "d609a05265b45c7c7048eb45552fdf7456f9bbae14e84f5dd80b2bdbc6f4b196",
+      "bytes": 7482,
+      "entries": 48,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-sIaIBW.processes.jsonl",
+      "sha256": "43f84805e80446b3615d0733b5929e22d2b0afe0b3b05d2d6387710bba123bb8",
+      "bytes": 20837,
+      "entries": 134,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-sVJ24R.processes.jsonl",
+      "sha256": "4db0a2b0f3406a32574f66fe39af6004dc2de15d987e8d9e97330b8004027803",
+      "bytes": 21241,
+      "entries": 136,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-sbIWAO.processes.jsonl",
+      "sha256": "ea8c0ab85da00dfbd1e6da524c0e57f71a21265efee7b2be1be579ed8635403f",
+      "bytes": 5743,
+      "entries": 36,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-sfW9ra.processes.jsonl",
+      "sha256": "b2f4f7779944294f9ada2ec922c5a74bc5e2c3e42fd6e6a2211dc60d0066f15a",
+      "bytes": 15952,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-tYNKWy.processes.jsonl",
+      "sha256": "c0af95f6f9c3f496c6bfc42ba0f218468c6a4a7cadcba042a3ca7debd953a6e6",
+      "bytes": 12701,
+      "entries": 82,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-ujo40B.processes.jsonl",
+      "sha256": "ea13f1e0f97565c0e0479ccde9f044c17ef4bb32044f18bd990cbd6786c05d85",
+      "bytes": 18044,
+      "entries": 116,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-v03hq9.processes.jsonl",
+      "sha256": "c338d57dcb62b50a4c994f7e3ff7435910ca500be3861d6661fe79f2a406dd92",
+      "bytes": 4382,
+      "entries": 28,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-vBTxTS.processes.jsonl",
+      "sha256": "53b1308595602e5e79fcba3b648461ba3692b40c599e866417f11a474037d418",
+      "bytes": 927,
+      "entries": 6,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-vP1IsK.processes.jsonl",
+      "sha256": "1471d26ec48209ea8a39ffa4e9efeb4f3f547e8b29357b05af37dde792dbdca7",
+      "bytes": 1924,
+      "entries": 12,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-vPGyan.processes.jsonl",
+      "sha256": "6b1373e80d153809a77ef1e5b016dec1bb6f3690434aebf9b67a7adfa576b949",
+      "bytes": 15664,
+      "entries": 100,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-vzXzI2.processes.jsonl",
+      "sha256": "35a89eaaf3abebf2a6f8fd6126189e043fad9405fc6856e8903c3a8cdccddc16",
+      "bytes": 20970,
+      "entries": 134,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-vzjIWh.processes.jsonl",
+      "sha256": "22f070c171fd07dcb49027f407baf8075c80125a40f3cdf9317133ccbe3fb1e6",
+      "bytes": 1927,
+      "entries": 12,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-vzzNdL.processes.jsonl",
+      "sha256": "794c6662e0c8df5412f4af56a6a261131950a8271b506331aa80b25290d58162",
+      "bytes": 15938,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-w5HKlp.processes.jsonl",
+      "sha256": "1e2a59d25b20b95980f44a8dc95e86e309621932d37adf2a67386c00aaea968c",
+      "bytes": 15599,
+      "entries": 100,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-w8szVy.processes.jsonl",
+      "sha256": "cf3454096fa40f44c47159e091f6f70e94a2c305928ef1be73b9882c732cbcdc",
+      "bytes": 307,
+      "entries": 2,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-wKhJkP.processes.jsonl",
+      "sha256": "fa71048c62bafc1d01325d960a5f72d1662fd59ff26dec117a227984ad5717bf",
+      "bytes": 15948,
+      "entries": 102,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-wQTxIa.processes.jsonl",
+      "sha256": "ba29e20c62eaa6eb505dc29c47b17b129f0ddc5db82520cc7efa4b5e716f6904",
+      "bytes": 16255,
+      "entries": 104,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-wo9SG9.processes.jsonl",
+      "sha256": "feafa7ef42a319127baa17b8090856b9142653c08939aad9f438713765aa3ce5",
+      "bytes": 12726,
+      "entries": 82,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-x8EDi4.processes.jsonl",
+      "sha256": "55275350d66e5a1a6908ba71ad0762947c067524565056b94346e4e03a84dd41",
+      "bytes": 1925,
+      "entries": 12,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-xNn5Rq.processes.jsonl",
+      "sha256": "4423ecbdb7613af83c75aafcb7c8e8d3709ce45fe35b69d02c32d6f68ef65b3a",
+      "bytes": 7703,
+      "entries": 50,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-xOaPB1.processes.jsonl",
+      "sha256": "b9cd8aa75fa921dfcad3fcab94d60bbbb8eb69567a7cd9035a50bf9fb071b750",
+      "bytes": 21564,
+      "entries": 138,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-xUbnoT.processes.jsonl",
+      "sha256": "a672cd1ea9c54dfad3a901f0b5d94f171499c6b8e085af610bfe9add5aba4a19",
+      "bytes": 5739,
+      "entries": 36,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-xyz7sc.processes.jsonl",
+      "sha256": "8a3afb2cf47a3a6851619a22204b8a82b7847f67cef4ac7a0f5cabc1e341e504",
+      "bytes": 22847,
+      "entries": 146,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-z22pXv.processes.jsonl",
+      "sha256": "169caf727cf8ba947ae600fbde2e812997bf8a5103909dd55d3fb3f2e4581108",
+      "bytes": 7782,
+      "entries": 50,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-z8LdfR.processes.jsonl",
+      "sha256": "6c8af1c3202787e8aaaf23251c827470c4dc46c6c2d8221cb647820c333e42cf",
+      "bytes": 5335,
+      "entries": 34,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-zHeEcD.processes.jsonl",
+      "sha256": "ccd4de109fc8c39709e405e8b208dc96127205e5b44009d92a3038aea4c0abe9",
+      "bytes": 24313,
+      "entries": 156,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-zQEsQ0.jsonl",
+      "sha256": "1f75585ef22ba9371d746ee5affd3677ca10b2eb03b332a3de99942e946762e0",
+      "bytes": 809,
+      "entries": 9,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-zQEsQ0.processes.jsonl",
+      "sha256": "8e1fb69228a32f0cf231054c55e8d4171399fe734cc267b4b7849197eaa97cd4",
+      "bytes": 308,
+      "entries": 2,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-zjygvR.processes.jsonl",
+      "sha256": "0bc5546afd07ee11b9a5386ac80f9084ca5c6fae8d9ae9f2530ff00693ccb180",
+      "bytes": 5332,
+      "entries": 34,
+      "expiredAtSupervisorEntry": []
+    },
+    {
+      "file": ".loomake/quality/parallel-diagnostics/node24-full-phases/loomake-run-zlywux.processes.jsonl",
+      "sha256": "07824bef9eac886eaf03cfe06978100691b88c20724fccac4bf774bbc5d23564",
+      "bytes": 10033,
+      "entries": 64,
+      "expiredAtSupervisorEntry": []
+    }
+  ],
+  "limitations": [
+    "Targeted retries passed but do not prove cause or successful Node22 whole suite.",
+    "Past104957ms guard case ended with Git timeout; which Git operation or startup stage caused it was not captured then. Current logs distinguish supervisor entry from target shim entry for future failures.",
+    "No claim of fixing every parallel timing failure."
+  ]
+}

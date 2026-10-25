@@ -1,5 +1,5 @@
-import { chmodSync, existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { appendFileSync, chmodSync, existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { basename, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { describe, expect, it, vi } from 'vitest';
 import { RuntimeFailure, UsageError, runVerify } from '@loomake/kit';
@@ -13,14 +13,35 @@ import { makeRepo, CHANGE, type Repo } from './helpers.js';
 vi.setConfig({ testTimeout: 60_000 });
 
 const realGit = spawnSync('which', ['git'], { encoding: 'utf8' }).stdout.trim();
+const DIAGNOSTIC_BYTES = 64 * 1024;
+const diagnosticFile = (repo: Repo) => process.env.LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR
+  ? join(process.env.LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR, `${basename(repo.base)}.jsonl`)
+  : join(repo.base, 'budget-events.jsonl');
+function diagnosticEvent(repo: Repo, event: string, details: object = {}): void {
+  const file = diagnosticFile(repo);
+  const used = existsSync(file) ? statSync(file).size : 0;
+  if (used >= DIAGNOSTIC_BYTES) return;
+  appendFileSync(file, Buffer.from(JSON.stringify({ event, at: Date.now(), ...details }) + '\n').subarray(0, DIAGNOSTIC_BYTES - used));
+}
+function diagnosticContext(repo: Repo, details: object): string {
+  const file = diagnosticFile(repo);
+  const value = JSON.stringify({ ...details, stalled: existsSync(join(repo.base, 'stalled')), events: existsSync(file) ? readFileSync(file, 'utf8') : '' });
+  const context = Buffer.from(value).subarray(0, DIAGNOSTIC_BYTES).toString('utf8');
+  const output = process.env.LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_FILE;
+  if (output) writeFileSync(output, context, { flag: 'wx' });
+  return context;
+}
 function shim(repo: Repo, command: string, when: string, finishFirst = false, stallMs = 3000) {
   const bin = join(repo.base, 'bin');
   const original = command === 'git' ? realGit : join(bin, `${command}-original`);
   if (command !== 'git') { writeFileSync(original, readFileSync(join(bin, command))); chmodSync(original, 0o755); }
   const script = `#!/usr/bin/env node
 const fs=require('node:fs');const cp=require('node:child_process');const args=process.argv.slice(2);
-function forward(){return cp.spawnSync(${JSON.stringify(original)},args,{stdio:'inherit'}).status??1;}
-if(${when}) {${finishFirst ? 'forward();' : ''} fs.writeFileSync(${JSON.stringify(join(repo.base, 'stalled'))},'yes');process.on('SIGTERM',()=>{});setTimeout(()=>process.exit(0),${stallMs});} else process.exit(forward());
+function event(name,details={}){const file=${JSON.stringify(diagnosticFile(repo))};const used=fs.existsSync(file)?fs.statSync(file).size:0;if(used>=${DIAGNOSTIC_BYTES})return;fs.appendFileSync(file,Buffer.from(JSON.stringify({event:name,at:Date.now(),pid:process.pid,command:${JSON.stringify(command)},args:args.slice(0,12).map(arg=>arg.slice(0,160)),...details})+'\\n').subarray(0,${DIAGNOSTIC_BYTES}-used));}
+event('shim-start');
+process.on('exit',code=>event('shim-end',{code}));
+function forward(){event('forward-start');const result=cp.spawnSync(${JSON.stringify(original)},args,{stdio:'inherit'});event('forward-end',{status:result.status,signal:result.signal,error:result.error?.code});return result.status??1;}
+if(${when}) {${finishFirst ? 'forward();' : ''} event('stall-start');fs.writeFileSync(${JSON.stringify(join(repo.base, 'stalled'))},'yes');process.on('SIGTERM',()=>{});setTimeout(()=>process.exit(0),${stallMs});} else process.exit(forward());
 `;
   writeFileSync(join(bin, command), script); chmodSync(join(bin, command), 0o755);
 }
@@ -34,14 +55,19 @@ const summary = (repo: Repo) => { const dir = join(repo.root, '.loomake/runs'); 
 
 describe('runから外部操作までの期限', () => {
   it('[REQ-182] ロック取得のGitが止まったら変更と記録を作らない', async () => {
+    const started = Date.now();
     const repo = makeRepo();
+    diagnosticEvent(repo, 'fixture-ready', { elapsedMs: Date.now() - started });
     try {
       const before = repo.git('rev-parse', 'HEAD'); shim(repo, 'git', "args.includes('--absolute-git-dir')");
       // 開始前の制限エラーは実行時の失敗（close-cli-gaps で使い方の誤りから変更）
+      diagnosticEvent(repo, 'run-start');
       const error = await budget(() => run(repo)).catch((e: unknown) => e);
-      expect(error).toBeInstanceOf(RuntimeFailure);
-      expect(error).not.toBeInstanceOf(UsageError);
-      expect(existsSync(join(repo.base, 'stalled'))).toBe(true);
+      diagnosticEvent(repo, 'run-end', { elapsedMs: Date.now() - started });
+      const context = diagnosticContext(repo, { error: String(error), elapsedMs: Date.now() - started });
+      expect(error, context).toBeInstanceOf(RuntimeFailure);
+      expect(error, context).not.toBeInstanceOf(UsageError);
+      expect(existsSync(join(repo.base, 'stalled')), context).toBe(true);
       expect(repo.git('rev-parse', 'HEAD')).toBe(before);
       expect(repo.calls()).toEqual([]);
       expect(existsSync(join(repo.root, '.loomake/runs'))).toBe(false);
@@ -93,7 +119,9 @@ describe('runから外部操作までの期限', () => {
   });
   // authは事前確認を通した後、実装の完了後に行う公開前の確認だけを止める。
   it.each(['push', 'auth', 'list', 'create'] as const)('[REQ-182] %sの期限後に先へ進まず、再実行で重複させない', async (stage) => {
+    const started = Date.now();
     const repo = makeRepo();
+    diagnosticEvent(repo, 'fixture-ready', { elapsedMs: Date.now() - started, stage });
     try {
       repo.plan([{ write: { 'impl.txt': '実装' } }, {}]);
       const command = stage === 'push' ? 'git' : 'gh';
@@ -102,6 +130,7 @@ describe('runから外部操作までの期限', () => {
       // そこで、この 2 つは run 全体の予算より長く止め、全体の期限で止まることを確かめる
       const untilDeadline = stage === 'push' || stage === 'create';
       shim(repo, command, condition, stage === 'create', untilDeadline ? 30_000 : 3000);
+      diagnosticEvent(repo, 'run-start', { stage });
       // untilDeadline の 2 つは、止まる手前の通常の git・gh が負荷で遅れても 1 操作の期限に当たらないよう余裕を持たせ、
       // 止まったのが共有の期限であることは所要時間の下限で確かめる。
       // 共有の期限は、負荷の高い CI でも証拠の記録（verify を含む）が終わって push・create の停止に届く長さにする。
@@ -110,14 +139,16 @@ describe('runから外部操作までの期限', () => {
       const runStarted = Date.now();
       const result = await (untilDeadline ? withProcessBudget({ timeoutMs: SHARED_DEADLINE_MS, maxOperationMs: 5_000 }, () => run(repo)) : budget(() => run(repo)));
       const runElapsed = Date.now() - runStarted;
-      expect(result.code, result.stdout).toBe(1);
-      if (untilDeadline) expect(runElapsed, result.stdout).toBeGreaterThanOrEqual(SHARED_DEADLINE_MS - 500);
-      expect(result.stdout).toContain('実行時間の上限');
-      expect(summary(repo).status).toBe('stopped');
+      diagnosticEvent(repo, 'run-end', { stage, code: result.code, elapsedMs: Date.now() - started });
+      const context = diagnosticContext(repo, { stage, code: result.code, elapsedMs: Date.now() - started, stdout: result.stdout });
+      expect(result.code, context).toBe(1);
+      if (untilDeadline) expect(runElapsed, context).toBeGreaterThanOrEqual(SHARED_DEADLINE_MS - 500);
+      expect(result.stdout, context).toContain('実行時間の上限');
+      expect(summary(repo).status, context).toBe('stopped');
       // 止まったのが確かめたい段階（push・create の停止）であることを、停止の印で確かめる
-      if (untilDeadline) expect(existsSync(join(repo.base, 'stalled')), result.stdout).toBe(true);
+      if (untilDeadline) expect(existsSync(join(repo.base, 'stalled')), context).toBe(true);
       expect(readFileSync(join(repo.root, 'impl.txt'), 'utf8')).toBe('実装');
-      expect(repo.prs()).toHaveLength(stage === 'create' ? 1 : 0);
+      expect(repo.prs(), context).toHaveLength(stage === 'create' ? 1 : 0);
       const evidenceDir = join(repo.root, '.loomake/evidence', CHANGE);
       if (stage !== 'auth') expect(readdirSync(evidenceDir)).toHaveLength(1);
       if (stage === 'push') expect(existsSync(repo.env.FAKE_GH_LOOKUP_LOG!)).toBe(false);

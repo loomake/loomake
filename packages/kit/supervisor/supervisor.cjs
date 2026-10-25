@@ -4,7 +4,8 @@
 const { spawn, spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 
-const [command, args, shell, ms, limit] = JSON.parse(process.argv[2]);
+const [command, args, shell, deadline, limit] = JSON.parse(process.argv[2]);
+const remainingMs = () => deadline - Number(process.hrtime.bigint()) / 1_000_000;
 process.title = 'loomake: command supervisor';
 const win = process.platform === 'win32';
 let child, timer, grace;
@@ -62,40 +63,55 @@ function stop(kind) {
   }, 250);
 }
 
+function watchDeadline() {
+  if (stopping || ended) return;
+  const remaining = remainingMs();
+  if (remaining <= 0) {
+    stop('timeout');
+    return;
+  }
+  timer = setTimeout(watchDeadline, Math.min(remaining, 2_147_483_647));
+}
+
 process.on('SIGINT', () => stop('interrupted'));
 process.on('SIGTERM', () => stop('interrupted'));
 
 try {
-  child = spawn(command, args, { shell, stdio: ['ignore', 'pipe', 'pipe'], detached: !win });
-  // 合計の上限までだけを流し、超えたら止める
-  const forward = (target, data) => {
-    if (stopping) return;
-    const room = Math.max(0, limit - count);
-    const part = data.subarray(0, room);
-    if (part.length) target.write(part);
-    count += data.length;
-    if (count > limit) stop('output');
-  };
-  child.stdout.on('data', (data) => forward(process.stdout, data));
-  child.stderr.on('data', (data) => forward(process.stderr, data));
-  child.on('error', (error) => {
-    outcome.error = { message: error.message, code: error.code };
+  if (remainingMs() <= 0) {
+    outcome.kind = 'timeout';
     finish();
-  });
-  child.on('exit', (status, signal) => {
-    exited = true;
-    outcome.status = status;
-    outcome.signal = signal;
-    if (!stopping) kill('SIGKILL');
-  });
-  child.on('close', () => {
-    if (!stopping) finish();
-  });
-  // close が来なくても、通常終了後のグループを片付けて待機を終える
-  child.on('exit', () => {
-    if (!stopping) grace = setTimeout(finish, 250);
-  });
-  timer = setTimeout(() => stop('timeout'), ms);
+  } else {
+    child = spawn(command, args, { shell, stdio: ['ignore', 'pipe', 'pipe'], detached: !win });
+    // 合計の上限までだけを流し、超えたら止める
+    const forward = (target, data) => {
+      if (stopping) return;
+      const room = Math.max(0, limit - count);
+      const part = data.subarray(0, room);
+      if (part.length) target.write(part);
+      count += data.length;
+      if (count > limit) stop('output');
+    };
+    child.stdout.on('data', (data) => forward(process.stdout, data));
+    child.stderr.on('data', (data) => forward(process.stderr, data));
+    child.on('error', (error) => {
+      outcome.error = { message: error.message, code: error.code };
+      finish();
+    });
+    child.on('exit', (status, signal) => {
+      exited = true;
+      outcome.status = status;
+      outcome.signal = signal;
+      if (!stopping) kill('SIGKILL');
+    });
+    child.on('close', () => {
+      if (!stopping) finish();
+    });
+    // close が来なくても、通常終了後のグループを片付けて待機を終える
+    child.on('exit', () => {
+      if (!stopping) grace = setTimeout(finish, 250);
+    });
+    watchDeadline();
+  }
 } catch (error) {
   outcome.error = { message: error.message, code: error.code };
   finish();

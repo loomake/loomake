@@ -46,9 +46,9 @@ async function check(step: FakeStep, setup: ((repo: Repo) => void) | undefined, 
 
 const withTest = (repo: Repo) => repo.write('tests/a.test.ts', "it('[REQ-012] 確かめる', () => {});\n");
 const stopped = (r: Awaited<ReturnType<typeof runWith>>, base: number) => {
-  expect(r.code).toBe(1);
-  expect(r.stdout).toContain('不正な直し方を見つけました');
-  expect(r.commits).toBe(base);
+  expect(r.code, r.stdout).toBe(1);
+  expect(r.stdout, r.stdout).toContain('不正な直し方を見つけました');
+  expect(r.commits, r.stdout).toBe(base);
 };
 
 describe('テストの削除と skip・todo の検出', () => {
@@ -124,6 +124,7 @@ describe('テストの削除と skip・todo の検出', () => {
       (r) => {
         expect(r.code).toBe(0);
         expect(r.stdout).not.toContain('不正な直し方');
+        expect(r.repo.git('log', '--format=%s', '--', 'tests/a.test.ts')).toContain('run(c1): 1.1 一つ目のタスク（REQ-012）');
       },
     ));
 
@@ -139,6 +140,7 @@ describe('テストの削除と skip・todo の検出', () => {
       (r) => {
         expect(r.code).toBe(0);
         expect(r.stdout).not.toContain('不正な直し方');
+        expect(r.repo.git('log', '--format=%s', '--', 'tests/a.test.ts')).toContain('run(c1): 1.1 一つ目のタスク（REQ-012）');
       },
     ));
 
@@ -411,6 +413,7 @@ describe('テストの検査を弱める変更の検出', () => {
     check({ write: { 'tests/add.test.ts': "it('[REQ-012] 足す', () => {\n  expect(add(1, 2)).toBe(3);\n  expect(add(2, 2)).toBe(4);\n  expect(add(0, 0)).toBe(0);\n});\n" } }, withAdd, (r) => {
       expect(r.stdout).not.toContain('不正な直し方を見つけました');
       expect(readFileSync(join(r.repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [x] 1.1');
+      expect(r.repo.git('log', '--format=%s', '--', 'tests/add.test.ts')).toContain('run(c1): 1.1 一つ目のタスク（REQ-012）');
     }));
 });
 
@@ -433,6 +436,7 @@ describe('git の設定の比較の範囲', () => {
     }, (r) => {
       expect(r.stdout).not.toContain('エンジンが git の設定かフックを変えました');
       expect(readFileSync(join(r.repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [x] 1.1');
+      expect(r.repo.git('log', '--format=%s')).toContain('run(c1): 1.1 一つ目のタスク（REQ-012）');
     }));
 });
 
@@ -442,5 +446,6 @@ describe('検査の行の数え方', () => {
       repo.write('tests/add.test.ts', "import { assert } from 'vitest';\n// assert は使わない\nit('[REQ-012] 足す', () => {\n  expect(add(1, 2)).toBe(3);\n});\n"), (r) => {
       expect(r.stdout).not.toContain('テストの検査を減らしました');
       expect(readFileSync(join(r.repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [x] 1.1');
+      expect(r.repo.git('log', '--format=%s', '--', 'tests/add.test.ts')).toContain('run(c1): 1.1 一つ目のタスク（REQ-012）');
     }));
 });

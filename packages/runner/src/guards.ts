@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, lstatSync, readFileSync, readdirSync, readlinkSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
-import { runExternal } from '@loomake/kit';
+import { runExternal, UsageError } from '@loomake/kit';
 import { dirtyFiles, git } from './git.js';
 
 /** 不正な直し方として見つけたもの */
@@ -155,6 +155,7 @@ const filesUnder = (dir: string): string[] =>
 const entryDigest = (file: string) => {
   const stat = lstatSync(file);
   if (stat.isSymbolicLink()) return `link:${readlinkSync(file)}`;
+  if (!stat.isFile()) throw new UsageError(`Gitフック内の特殊ファイルは読み取れません。通常のファイルかシンボリックリンクにしてください：${file}`);
   return `${String(stat.mode & 0o111)}:${createHash('sha256').update(readFileSync(file)).digest('hex')}`;
 };
 

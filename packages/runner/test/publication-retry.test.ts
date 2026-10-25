@@ -1,9 +1,25 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { runRun } from '@loomake/runner';
 import { CHANGE, makeRepo, type Repo } from './helpers.js';
+import { git } from '../src/git.js';
+
+vi.mock('../src/git.js', async (original) => {
+  const actual = await original<typeof import('../src/git.js')>();
+  return { ...actual, git: vi.fn(actual.git) };
+});
+beforeEach(() => { vi.mocked(git).mockClear(); });
+
+function beginRetryPushCheck() {
+  expect(vi.mocked(git).mock.calls.some(([, , args]) => args[0] === 'push')).toBe(true);
+  vi.mocked(git).mockClear();
+}
+function expectNoPush() {
+  expect(vi.mocked(git).mock.calls.filter(([, , args]) => args[0] === 'push')).toEqual([]);
+}
+
 
 vi.setConfig({ testTimeout: 60_000 });
 
@@ -140,10 +156,12 @@ describe('再試行の再検証と状態保護', () => {
     const head = repo.git('rev-parse', 'HEAD');
     const lookups = lookupCount(repo);
     repo.write('.loomake/quality-switch', 'fail');
+    beginRetryPushCheck();
     delete repo.env.FAKE_GH_CREATE;
     expect((await run(repo)).code).toBe(1);
     expect(repo.git('rev-parse', 'HEAD')).toBe(head);
     expect(lookupCount(repo)).toBe(lookups);
+    expectNoPush();
     expect(repo.prs()).toHaveLength(1);
     expect(files(repo)).toHaveLength(1);
   }));
@@ -151,17 +169,22 @@ describe('再試行の再検証と状態保護', () => {
   it.each([
     ['HEAD', "spawnSync('git', ['update-ref', 'HEAD', 'HEAD^']);"],
     ['ブランチ', "spawnSync('git', ['switch', '-q', '-c', 'changed-by-quality']);"],
-  ])('[REQ-166] 検証が%sを変えたら取り消さず外部操作を止める', (_label, command) => withRepo(async (repo) => {
+  ])('[REQ-166] 検証が%sを変えたら取り消さず外部操作を止める', (label, command) => withRepo(async (repo) => {
     qualitySwitch(repo, command);
     repo.env.FAKE_GH_CREATE = 'before';
     expect((await run(repo)).code).toBe(1);
     const lookups = lookupCount(repo);
+    const head = repo.git('rev-parse', 'HEAD');
     repo.write('.loomake/quality-switch', 'move');
+    beginRetryPushCheck();
     delete repo.env.FAKE_GH_CREATE;
     const retry = await run(repo);
     expect(retry.code, retry.stdout).toBe(1);
     expect(retry.stdout).toContain('検証のあいだにHEADかブランチ');
+    if (label === 'HEAD') expect(repo.git('rev-parse', 'HEAD')).toBe(repo.git('rev-parse', `${head}^`));
+    else expect(repo.git('branch', '--show-current')).toBe('changed-by-quality');
     expect(lookupCount(repo)).toBe(lookups);
+    expectNoPush();
     expect(repo.prs()).toHaveLength(1);
     expect(files(repo)).toHaveLength(1);
   }));
@@ -173,6 +196,7 @@ describe('再試行の再検証と状態保護', () => {
     const head = repo.git('rev-parse', 'HEAD');
     const lookups = lookupCount(repo);
     repo.write('.loomake/quality-switch', 'dirty');
+    beginRetryPushCheck();
     delete repo.env.FAKE_GH_CREATE;
     const retry = await run(repo);
     expect(retry.code, retry.stdout).toBe(1);
@@ -180,6 +204,7 @@ describe('再試行の再検証と状態保護', () => {
     expect(readFileSync(join(repo.root, 'impl.txt'), 'utf8')).toBe('検証が残した変更');
     expect(repo.git('rev-parse', 'HEAD')).toBe(head);
     expect(lookupCount(repo)).toBe(lookups);
+    expectNoPush();
     expect(repo.prs()).toHaveLength(1);
     expect(files(repo)).toHaveLength(1);
   }));

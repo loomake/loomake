@@ -1,0 +1,2702 @@
+{
+  "scope": "audit-scenario-evidence tasks 3.1–3.3 and 4.1–4.3: parallel local contract review integration",
+  "baseCommit": "d872d9b09b126ac12c6129e23b8e62120e302250",
+  "priorEvidence": {
+    "file": "openspec/changes/audit-scenario-evidence/stop-retry-review-results.json",
+    "sha256": "bed871cb3b9f52636faf95acb1d2281c6a9827a69fcfd87110fe45e2735485bf",
+    "doneGate": {
+      "exit": 0,
+      "passed": 865,
+      "failed": 0,
+      "pending": 0,
+      "sha256": "a8b57716849acb0469d33f5742d11a95a1290e550c08b912182550ca21062927",
+      "failures": [],
+      "node": "v24.21.0",
+      "log": "$ pnpm -r --silent build && node packages/cli/dist/cli.js verify --change audit-scenario-evidence --done\n… lint: pnpm lint\n… typecheck: pnpm typecheck\n… test: pnpm test\n\nLoomake verify  mode=done  change=audit-scenario-evidence\n\n✔ change の存在\n✔ proposal.md の存在\n✔ tasks.md の存在\n✔ trace.md の存在\n✔ 要件モデルの整合性\n✔ trace.md の解析\n✔ 要件台帳\n✔ ブロッキング確認事項\n✔ 同じ確認事項の回答\n✔ spec.md の解析\n✔ Requirement の Source\n✔ Source が台帳にある\n✔ Scenario の有無\n✔ 反映済の要件が仕様にある\n✔ openspec validate\n✔ 確認待ちが残っていない\n✔ tasks.md\n✔ command: lint\n✔ command: typecheck\n✔ command: test\n✔ 要件ごとのテスト\n\n合格\n"
+    },
+    "node22Full": {
+      "exit": 0,
+      "passed": 865,
+      "failed": 0,
+      "pending": 0,
+      "sha256": "011680f06074f48c00103bbd21e5c2930d803aa5331a0e2d228b01fe8c6a5afa",
+      "failures": [],
+      "node": "v22.12.0",
+      "binarySha256": "f220994a9cd62983cdf538dc638dbc29c7e600fecd3c79828a4bd81ab34e19bf",
+      "os": "Linux ARM64",
+      "command": "PATH=<verified Node22 bin>:$PATH node node_modules/vitest/vitest.mjs run --maxWorkers=1 --reporter=json --outputFile=.loomake/quality/stop-retry-node22-full-report.json",
+      "note": "Separate full execution, not the ordinary done gate or a different OS. Child node commands also use Node22."
+    },
+    "note": "Historical results only; not evidence that current changes passed."
+  },
+  "sourceTreeHashes": {
+    "loomake.config.json": "c49e93abdc2bf770e1852d14f4daf84c127ca2163bfd82c59516b2818eb9e1e8",
+    "openspec/changes/archive/2026-10-24-bound-input-resources/benchmark.mjs": "dd0c089edf3e2aad5b467c671529e1d597adbc54eb728e3a033921721c79fb71",
+    "openspec/changes/archive/2026-10-24-clarify-doctor-diagnostics/doctor-journeys.mjs": "a99476416b6144d9feb66744ebf5961a83bdf671b93edbae1ed878353024a5db",
+    "package.json": "6aafb592a137269afec45b6cf39a7e846a45953355403d8edc7923437c9b5756",
+    "packages/cli/package.json": "bc4abd3ca5bc03d2a19b5ee77e673aa3e930929e331aa5d3a61c82e9200cb80f",
+    "packages/cli/src/args.ts": "f71103a6c4a0cb6c9d574c504206a5b668afaf1690c3bc9b31aa4662e4add5fd",
+    "packages/cli/src/cli.ts": "59e06148b18e47eaa303c03abe167e9ac60384cf3dce9ae056377b0d59e4c178",
+    "packages/cli/src/main.ts": "9f86303e3dcdea2177959128a55c763945cdc3f6c14f05ca0c15ce11bccca429",
+    "packages/cli/test/arguments.test.ts": "ce0333abbadeb77021844db854f55d9e628c12b99f0f8705ea071ede067ece5a",
+    "packages/cli/test/cli.test.ts": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102",
+    "packages/cli/test/doctor.test.ts": "b71041f6ee0b7de94ae34a91269839ceadfc0886f92dd4d0ffa52558a4e16b4d",
+    "packages/cli/test/init.test.ts": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e",
+    "packages/cli/test/trace-agreement.test.ts": "003cf20521ab1362372f1ce93cbbc046ea71a9bfcfd4b401b652509aadab9636",
+    "packages/cli/test/verify-boundaries.test.ts": "453d06454e94c6850d239e713c1258885a0a6e642f5f312aee48eb1fd5436a12",
+    "packages/core/package.json": "81c84806e91aca1877b02c39f16f686de2f42bee11707c9f2fd8f07c8b45f3b2",
+    "packages/core/src/agreement.ts": "164b1b42a791b49cde621f5f086db413d31607e30a39d96548d347c33226d0e4",
+    "packages/core/src/coverage-policy.ts": "d07af060fa82c6fdc8eaae28b33899c731983280e386c978f1f285e81216f6a6",
+    "packages/core/src/index.ts": "520f47fb24eab46b3feaf9b9a9a8eb187fc0b3862c7567b67ad42936edf8e459",
+    "packages/core/src/parse.ts": "c15b99494176ef9b9c3aa22a19a31eb1ea59b2804f9028b93b2df061a6269540",
+    "packages/core/src/spec.ts": "3ad805921112c5e265764767fc2447e2f6c80f1ba1bd912e8586e872ca8545c4",
+    "packages/core/src/tasks.ts": "94608cf43fdd951246000ef3d4896241b705cafe91b9ae5ae8cff18dcaab424e",
+    "packages/core/src/template.ts": "bef7bc8471190711f330c1ae964b92b8500c56513cf3facde1327c2c13f45fe8",
+    "packages/core/src/test-report.ts": "cf633399a106609de03b06227a7cf32d2afe83d767f3899c20fa93c8c5eb070d",
+    "packages/core/src/trace-edit.ts": "0e774842592293684e85dde8861b1d0668ac4458cdf88d8f689b8aecadb7d431",
+    "packages/core/src/trace.ts": "513f18beec408f26096b22f401559b96c5b8dde5e9efa7d7f0b46adf5ccc5b4d",
+    "packages/core/src/verify-result.ts": "c84a6075a0cc909e2aa519d3bfd9af8ae772eb53f127d6634f62cffe77e02ea3",
+    "packages/core/test/agreement.test.ts": "68e212efdfe32dce2a259b982260a1cc26e7a78551886f8628e05cd1604acbbf",
+    "packages/core/test/coverage-policy.test.ts": "61add31ac1281ad2949cfda26529bfe7ec102b34fb8c06bf2d5d40c90ee32bb8",
+    "packages/core/test/package.test.ts": "6c32b72bc19cd187c4337ae78ff9c2b42f39e5ff40ef0156175a8845d0e84fb4",
+    "packages/core/test/schema.test.ts": "ee3ee3a0d181d9e98ff8aecc6fa70b2197748f938b4265e5ed2c1048ffad2891",
+    "packages/core/test/spec.test.ts": "542fe6ec2963ca726db1b6948e8bbe27f5bc9694cca87b437e4d9f63f6f8c9c3",
+    "packages/core/test/tasks.test.ts": "d317048c05efd6bef9126b9f8a848de40e6202c278bfdff32535bf129439ec2c",
+    "packages/core/test/test-report.test.ts": "c7153a95adba3abf1d612e07134454d17aa93ece23874ffc140db2d5136859f1",
+    "packages/core/test/trace-edit.test.ts": "db99961acc8021a96ae61c6d5e78f76fda0e8383a25958bdf00e975f7e00d98d",
+    "packages/core/test/trace.test.ts": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40",
+    "packages/kit/package.json": "fa9fb1d3c56fb5b7872a46762f803cd0e1a4c0e4cde7cb1dd399e5d92e9e8993",
+    "packages/kit/src/change-files.ts": "7e699339ccc4afa9c3cf6092805923b28301dde5db0c7f3064defbc3a6c59e08",
+    "packages/kit/src/doctor/command.ts": "087b5e2351a2c93204661876892b0319bcd86863ec805f7af8e0e8c79bfc8ee5",
+    "packages/kit/src/doctor/doctor.ts": "ecc38103fa466e370275e52cee5f7e30020a20c27802fceafe8c77c30b4960e5",
+    "packages/kit/src/errors.ts": "5b6ae777bac8827d6edc7f5a0d31e735d9eb60460dcff06ec76d225f0c90e667",
+    "packages/kit/src/index.ts": "3581be26c41d5638c54595a754db8c85ee55820c0c8119d37d98451605ea476a",
+    "packages/kit/src/init/diff.ts": "e64a268db25dfaae9fc8b6dcb879aae8b475b68922582e5186fdd81314299ddb",
+    "packages/kit/src/init/init.ts": "64793b65de5ac0b7ccd82594346d285dc42d09170d7f418d62e74616c0395696",
+    "packages/kit/src/input.ts": "d0a7c8ca16dec8d5c8bcb5383661b4b409240fca6ef8ddfcf6ae884557a294e6",
+    "packages/kit/src/process.ts": "bbddfac452bff8a06565923e98d1f27f1bfc41fe668f235baa46847ff128d233",
+    "packages/kit/src/verify/config.ts": "db2f2b43744c431e97f25b59fbb1494de2a0243d3d4dac79f2ec7c7494eb8b50",
+    "packages/kit/src/verify/format.ts": "a8025779f131b3982662985c9d7ff808cb3ec13c1a38687a6b92171abaf0f896",
+    "packages/kit/src/verify/run.ts": "4bbfc011eb3cf9c0ff9097eedc0f6f4b570c709d2990d29b5dc98e306de02fda",
+    "packages/kit/test/change-files.test.ts": "1964cfcdae7c9ad29aad34668efc4e33606c63dadf9798e7249ce1407b2bbc31",
+    "packages/kit/test/doctor-command.test.ts": "a0e75f4a867c6a7c85dd0959a9737cb2fe4ad50f8d4dd84dfe9e9ab41b1ea0e6",
+    "packages/kit/test/doctor-diagnostics.test.ts": "f30c2b3670db786adda6047b18c348b5ac6abe38a54f6a406ef367960893f985",
+    "packages/kit/test/input.test.ts": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985",
+    "packages/kit/test/process.test.ts": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca",
+    "packages/kit/test/project.ts": "4cc9634bc96658d37cec871ecd161f8293563de7dffba2568f5c2163fc26f3ea",
+    "packages/kit/test/verify.test.ts": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f",
+    "packages/runner/package.json": "723cbd810515e25a61f2b82b23076c17d36ec95da89e6189e63283a443b1a1fa",
+    "packages/runner/src/config.ts": "95f941eab26b7b5de8e8ce779882e229218276d8e400ab2100433620e544b0c8",
+    "packages/runner/src/engine.ts": "1ed24c9dc1d0728d1453096a47ad4d4f2c433fb05743e81fe4f3907e437d0d71",
+    "packages/runner/src/git.ts": "29d164cf63b2f15be3127a16d6c58f7198e5b6a6bc7c94bded9c745f99a112a9",
+    "packages/runner/src/guards.ts": "ffcbe694322c23bb8c04fbc7bab4e9e5a267d0a6bae532b0fa5c5f2d5206fc15",
+    "packages/runner/src/index.ts": "73d1bfde6536bf043efaa2675059e78c34991284a15e25d08733df6ddc2a7e48",
+    "packages/runner/src/lock.ts": "9cc13c0adea1e30bc42ec0fc6dee7f4bc0d91972c18db0c275a63e0a21728a79",
+    "packages/runner/src/log-policy.ts": "2e96f7bcc3c7bc561bbe6de268c7968fcfe058d832dad1df874999bdf51dba4d",
+    "packages/runner/src/logs.ts": "e24dbe51a027a1f05a96aee14c5012eb4f0c8713eea9cdcc00d35fa0233a38aa",
+    "packages/runner/src/mask.ts": "d78908593e541d771b0f7b23312d7a03e7dfef8096dde6d5c3f16d4b470431a9",
+    "packages/runner/src/pr.ts": "69a2820f7c34baba6a3a8296a43420d93cf1e325697e7c74559ded9b01f676f0",
+    "packages/runner/src/private-key-stream.ts": "3735bc3746adf19444e9d740f97fe726008946043f1a2025928b0dea55170e5f",
+    "packages/runner/src/reuse.ts": "0b783e7b000f05b9077b15365520d8abf79214bafb510855a0426a15fd9cf3cd",
+    "packages/runner/src/run.ts": "7cfb5055e76ad5cdd50c8d36da6f35d6fb2d7938f617c70cb9ae7de52644d40f",
+    "packages/runner/src/run/decision-policy.ts": "d2a1c296142f8fb5290612537d81aad8bce7b81b35cc5d778df5d4cfe70d7996",
+    "packages/runner/src/run/phases.ts": "cc23a91f5cbfa52cd50caf75f8db9c88cb695805fa8225e44c26c8104f5abd69",
+    "packages/runner/src/run/prepare.ts": "5033e83ab343bb087586711ccbed8b29891c7a4ea709caec1ec57bf884a7e2f7",
+    "packages/runner/src/run/prompt.ts": "80734d492dbb99f9b01f01354aeb3b43cf56f8b1baf6330cc90c6cf661e8d098",
+    "packages/runner/src/run/recorder.ts": "5a721a7db0c263ac1ba83b155a9ab581470393703cd69d23bfddb213f5b7fa30",
+    "packages/runner/src/run/tasks.ts": "2d7ebbb322a3d2cb488d01ed63d44b6aac9d5cb247ab05901ac8bbf4b1db2116",
+    "packages/runner/src/run/types.ts": "bb96c08d0717411d23fce5b423bb559939034265e39bbe267c04d0e90b04380f",
+    "packages/runner/src/shell.ts": "78c82f36a7bb598abdb013d53f9b36283d643d4f991fb3fba6f5c531f8ae01f4",
+    "packages/runner/test/decision-policy.test.ts": "000c9763c5b9e05f706579261d1f4a14a5bd5d442cb34015ae008532a79ba561",
+    "packages/runner/test/diagnostic-redactor.test.ts": "bc1d89cd9d21bc9079f3626cd0c06eb26f9e7036483b6c3f5c09b2d0414704d4",
+    "packages/runner/test/engine-safety.test.ts": "c81de480ab541307036c963d9722124f617e75111f91245e408d386a2fd28980",
+    "packages/runner/test/evidence-storage.test.ts": "16cd666b698613e965a0c1547e97b68a56431b2f576b7f9e45caf7954adbeebb",
+    "packages/runner/test/external-budget.test.ts": "2526e2b8662dc95fc98b9c20260119778f5ad2eb3ec187b9f1b232a24b3736ac",
+    "packages/runner/test/guard-path-integration.test.ts": "e31d591ad04ece3601b546325c2f627d6ecf467a1675e415eac23220bc594ec4",
+    "packages/runner/test/guards.test.ts": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f",
+    "packages/runner/test/helpers.ts": "19ca3e4921025f965cb9263c0a38753fe9dcd4510bfe3ce586d8c5ae5f0c3792",
+    "packages/runner/test/lock.test.ts": "fee9a0104269281a51692c0c81d265504aa3bcbc74f8b663cf8a357f5502165c",
+    "packages/runner/test/log-config.test.ts": "8f76ad8d7938289e28b1c534473c27bdaed047603e8da7873b5d7fa242f326ea",
+    "packages/runner/test/log-run.test.ts": "8739b25d089dc16b12339bdb8cd0c63f3915848449ed0cf7d20666aafc39c000",
+    "packages/runner/test/logs.test.ts": "fc4f44af93ac4374860bce08583d0884c14adb9d73814ec372cafe70ea6bf9e5",
+    "packages/runner/test/mask.test.ts": "c021eebe799ff8c5762683db208f7b9adb6bdb0f35fe2be7f6e13200832910ec",
+    "packages/runner/test/output-budget.test.ts": "91e585da4ed7785f163c4be3828c85ca5e5e0704865d72439da2e8f3d85e14e0",
+    "packages/runner/test/output-processes.test.ts": "ba1bbba51f418c940a3b40b55501411289b3628d1c4fc5d04e73503ed56d15ec",
+    "packages/runner/test/pr.test.ts": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860",
+    "packages/runner/test/publication-retry.test.ts": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506",
+    "packages/runner/test/run-conditions.test.ts": "ad3ecc2391eef40a16199597cc0e4feb6958c38fdfc9f8e3bdcabbe310b34511",
+    "packages/runner/test/run.test.ts": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5",
+    "packages/runner/test/safety-paths.test.ts": "e976ee7e1e4c985ae0566df7cf7d177bb254e35053a8410018fd4794a1ce4673",
+    "packages/trace/package.json": "4cb75f30f9b31e69659806acbd62154f8f2daae242b3c97645e16d472126d9b4",
+    "packages/trace/src/agreement.ts": "c4416dfff93b364a30967b29e414d70cf5856fb37402e81709db9c8be144fc9f",
+    "packages/trace/src/documents.ts": "bf3a706182983035de398c400cbb38459a5d4b375a5fa26277ab0ad1dacf7e9d",
+    "packages/trace/src/evidence.ts": "eec5e7692d76c368c2016b4e306305c5638e2e041982b934101b35813d4eaab5",
+    "packages/trace/src/index.ts": "8988e47627bfbce1e4871b3c48fc8c22f47b6c64d2ed686b4713238b75d4d177",
+    "packages/trace/src/publication.ts": "edcc55c7a8d88d817aa6631f778ff00964bfb0743520f7c9d3638af5740b3d09",
+    "packages/trace/src/record.ts": "102b1c8b330b2663db18c83ac5e24dbde5b909ee74ace4a9bd44d1cc5d59300b",
+    "packages/trace/src/report.ts": "7d32a1396e3518721a61270fdbd07637af4f56ff40e09c9e2604d9dae2f603a8",
+    "packages/trace/src/schema.ts": "5b189229aac70326bb8f06068de0b0a86f90069bed56206ab416c6f11a24027a",
+    "packages/trace/src/serialization.ts": "00c7f06a1c74e36932f92849031edb0805150b11455925106b472752c7595883",
+    "packages/trace/test/publication-crash.test.ts": "1fbdfb9d6afcd7fa07e83f9ca987593e50da39128cd4a6e354286326e9f9e5d6",
+    "packages/trace/test/publication.test.ts": "63231c8f68bbbe7901a3c28a437135b7aaebc689a66752682eb0a2422be710f9",
+    "packages/trace/test/record-size.test.ts": "db71a3294f7e3688bc76c9adbb527a0526a41c76304da1b8f350375514ec87e1",
+    "packages/trace/test/record.test.ts": "b3c144c80403227209fd76fae5ef61da7fb396ec52c8b8eaee1d0788a246ab2e",
+    "packages/trace/test/report.test.ts": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e",
+    "packages/trace/test/serialization.test.ts": "6cf85e33ea1af754e0245fc4259f994504be7310ea55c96abc971e81ebd5c247",
+    "pnpm-lock.yaml": "b181097be6f180fbb92203248121c339a5936dbf4ff0a756b3c625713681f21a",
+    "scripts/action-pins.mjs": "d3c8888814827bd61d105263ac4dbdb616abcb5bef1be1c72dcf587273838671",
+    "scripts/ai-journeys.mjs": "f66d5d96a68f1b4b0c40d09e06e03e7f63960f6da92a8708b70f8f8b6a6e6330",
+    "scripts/changeset-check.mjs": "340a21f2e1e874e840ed2bc75dae403b30d4dbc6addfb395446c0452d41198d9",
+    "scripts/check-public-types.mjs": "8cb6a5928184f693b55d0593737de0c8c2cbe4060f964f3906478c1e8d2e4d66",
+    "scripts/ci-gate.mjs": "cb72c929c5425241897f8bdabebb98819079078b103ab433a9b77c1855be60cd",
+    "scripts/domain-mutations.mjs": "4e9b632a1fdaf738b4e6a691ac36c92782193ba86119fa58e039cf680cc6fe1c",
+    "scripts/package-smoke.mjs": "71aa378a372bde276c091afe2ce079b1e0b34029e13742fb8dec5cd199c63339",
+    "scripts/run-sigint-smoke.mjs": "53ccc8e135f82ad8236266886bf323ad2e9cf5d861dd5a1782e5dc776101bc42",
+    "scripts/runtime-compatibility.mjs": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d",
+    "scripts/scenario-audit.mjs": "3955fe0ffc31ab037de9ea656ce8114e3df62cb61a333c2cd20d804279081cab",
+    "scripts/schema-contract-check.mjs": "6ce2bfedd9ff28dac7253bea7bba5d1748682bc91903f797a4d23a2b306e4d74",
+    "tests/ai-journeys.test.ts": "5d1934a2891224bd9ade78232509f9f529e8e6c36c3bf115843bb56e9a3f11f2",
+    "tests/domain-mutations.test.ts": "2b753f35a5ce2e4372d760077ca03f77e50004ea50e5a650bb9cffe1aa16a15b",
+    "tests/input-boundaries.test.ts": "f70946322ef3cbcf47b80b16ac5d6d40f1ce58c2bebddd2d8d2e0cc98ada3930",
+    "tests/kit-assets.test.ts": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40",
+    "tests/monorepo.test.ts": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6",
+    "tests/package-artifacts.test.ts": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a",
+    "tests/package-workflows.test.ts": "c82be3653a952f37c8e5ad976fe0d00aa2028fef9d3ef16eca6a75e8450622bf",
+    "tests/public-source-exports.test.ts": "3668c02f7537b0e4abbfdd8a0c2e3daa2b36f62b2cdb56079fe83658ae5b2e77",
+    "tests/release-security.test.ts": "52b011dbbe528eab5c4576aca08bff0b296b07e0c1d1ef5533a523d85a08dda9",
+    "tests/run-decision-mutations.test.ts": "bdf056d8986a4abcb1afcf6e26c803801a81c1d75cec063f3880886644b4653c",
+    "tests/scenario-audit.test.ts": "4b9d89bde6b3c19867fba52f6e74c69968f001226a7328233e8b491b24dcd4fd",
+    "tests/schema-compatibility.test.ts": "bdb7f3bb6d55a56df0ce3d1f0fa0c31a6a4bb3dcd670c1ba18c7a31d4ec6e0da",
+    "tsconfig.base.json": "0745f7962af6eef29100d4e05231237cfb00dcc1a8867d046f189e74117c19cf",
+    "vitest.config.ts": "b54d1dd51a54cda1410dd75048ab66492b902f98ef808b6c3a895528e38252f0",
+    "tests/ci-gate-process.test.ts": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+  },
+  "productionChanged": false,
+  "qualitySettingsChanged": false,
+  "parallelReview": {
+    "schemaVersion": 1,
+    "scope": "Integration preparation only; no current full gate or remote CI success inferred.",
+    "newReviewCount": 32,
+    "semanticallyRevalidatedCount": 26,
+    "entries": [
+      {
+        "id": "SCN-2de79bea8dc151ce2619",
+        "status": "reviewed",
+        "scenarioSha256": "87923f4357998f508371901962f462b1a4d3557fb4d6e4758c872dee5d738188",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。setup-monorepoに対するverify --change setup-monorepo --doneと、CLIの失敗をgateの終了コード1へ伝えることを確認する。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
+        "sources": [
+          "REQ-010",
+          "REQ-054",
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "branch setup-monorepo invokes the exact completion gate and propagates failure",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          },
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "PR ごとに完了ゲートを実行する",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-b2dd3632f502375407d8",
+        "status": "reviewed",
+        "scenarioSha256": "11c2cf98ed8b66065e4fe2991aaba1015dc00711631b1b2c7c12eae5998f7cad",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。loomake/c1からc1を選び、verify --change c1 --doneを実行する。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
+        "sources": [
+          "REQ-010",
+          "REQ-054",
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "branch loomake/c1 invokes the exact completion gate and propagates failure",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          },
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "PR ごとに完了ゲートを実行する",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-9fe1ea244089a3ac1a50",
+        "status": "reviewed",
+        "scenarioSha256": "3cd2b9881db8bc1a592df4fa73343da2b35f60242a41d1e97e2c86af356f84b4",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。コード変更を含むPR本文のc1,c2に対し、それぞれの完了ゲートを実行する。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
+        "sources": [
+          "REQ-010",
+          "REQ-054",
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "explicit multiple changes invoke both completion gates",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          },
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "PR ごとに完了ゲートを実行する",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-91e88c4d1b6cb5cd0110",
+        "status": "reviewed",
+        "scenarioSha256": "b612ff388e10773db9b778d28b42e31f111dd446d08c006eed41a5295649a6f0",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。nothingがない場合の日本語、終了コード1、verifyを呼ばないことを確認する。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
+        "sources": [
+          "REQ-010",
+          "REQ-054",
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "absent explicit change fails in Japanese before invoking verify",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          },
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "PR ごとに完了ゲートを実行する",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-76f138277acbd8c119e5",
+        "status": "reviewed",
+        "scenarioSha256": "89e600aba360921b438fb958b11c2b5666c306b4f2efe9b55a3c37ecc20b9aac",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。packages/a.tsを実際にコミットし、noneの指定でverifyだけを呼ぶことを確認する。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
+        "sources": [
+          "REQ-010",
+          "REQ-054",
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "explicit none invokes only quality despite code changes",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          },
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "PR ごとに完了ゲートを実行する",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-c60fb252775bc70a4752",
+        "status": "reviewed",
+        "scenarioSha256": "8e173d1046181323d34d5f1f13aa6ee0ff1b916bcd5c742f6957e10b8ec519bc",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。実際のGit差分にc1/tasks.mdとpackages/a.tsがあるとき、c1の完了ゲートだけを呼ぶ。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
+        "sources": [
+          "REQ-010",
+          "REQ-054",
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "changed change files select the completion gate",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          },
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "PR ごとに完了ゲートを実行する",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-317c8a9fda25d0088f65",
+        "status": "reviewed",
+        "scenarioSha256": "61d6e218e37b4bb1bd9b9de918b7b8105aae8e23d37ef9c62f9ae94b4d18660b",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。コード変更だけで対象がない場合の日本語案内、終了コード1、verifyを呼ばないことを確認する。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
+        "sources": [
+          "REQ-010",
+          "REQ-054",
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "unassigned code files [ 'packages/a.ts' ] fail before invoking verify",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          },
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "PR ごとに完了ゲートを実行する",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-d31a4872ae040eb68a4e",
+        "status": "reviewed",
+        "scenarioSha256": "e57173a186be84ff3746c8576e8e5104cd3590b301b59e9da9cca51f0de459ec",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。docs/usage.mdだけを変更したfix-typoではverifyだけを呼ぶ。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
+        "sources": [
+          "REQ-010",
+          "REQ-054",
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "documentation files [ 'docs/usage.md' ] invoke quality only",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          },
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "PR ごとに完了ゲートを実行する",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-711b5333ddc017bf8f8a",
+        "status": "reviewed",
+        "scenarioSha256": "feb21eb733a07e2ba5c0b8774d25516efc16706bb9d57a437c79240f7b90082c",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。c1を削除しarchiveとspecを追加したGit差分でverifyだけを呼ぶ。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
+        "sources": [
+          "REQ-010",
+          "REQ-054",
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "archive deletion and archive/spec additions invoke quality only",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          },
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "PR ごとに完了ゲートを実行する",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-149eab9b65181496a38e",
+        "status": "reviewed",
+        "scenarioSha256": "87df447744acde0596df8d5e12095743dc78ec97c0b3bb4098cf638eaae1f024",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。c2ブランチとc2の変更があっても、本文のc1の完了ゲートだけを呼ぶ。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。",
+        "sources": [
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "explicit selection overrides changed files and branch selection",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          }
+        ]
+      },
+      {
+        "id": "SCN-366e01b502420cbcda61",
+        "status": "reviewed",
+        "scenarioSha256": "8e437ceb7be7459c03352a63eb01b5d3aee70cd842d6d7b277dafe7c1d437aeb",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。c1の変更とc2のブランチから両方の完了ゲートを呼ぶ。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。",
+        "sources": [
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "changed files and branch selection invoke both gates",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          }
+        ]
+      },
+      {
+        "id": "SCN-2f7149cce94ed98f34a7",
+        "status": "reviewed",
+        "scenarioSha256": "cd8f10cba9ead3192b929b6a9e175124be7b1c33f4eb59feb28066e381a883ae",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。READMEとchangesetだけの実際のGit差分でverifyだけを呼ぶ。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。",
+        "sources": [
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "documentation files [ 'README.md', '.changeset/x.md' ] invoke quality only",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          }
+        ]
+      },
+      {
+        "id": "SCN-abcce1ac255f52f2ec1d",
+        "status": "reviewed",
+        "scenarioSha256": "1926e40726a1d5c51241905a2c4e2e09bc7668629b68b6e470f9dd4e2726dd84",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。文書とコードの実際のGit差分で対象がない場合、日本語案内と終了コード1を返してverifyを呼ばない。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。",
+        "sources": [
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "unassigned code files [ 'docs/usage.md', 'packages/a.ts' ] fail before invoking verify",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          }
+        ]
+      },
+      {
+        "id": "SCN-8afa7165a685a9d49d57",
+        "status": "reviewed",
+        "scenarioSha256": "038828036dffc2058cb8f149f62d69f9dde9c1efb6f1c1a68be04992ac8bd47a",
+        "reason": "release.ymlを読み、全体の権限がcontents readだけであること、複数ジョブがあること、publishを実行するジョブだけがcontents writeとid-token writeを持つことをassertする。Scenarioは設定を読む条件であり、GitHubでの実行成功を示さない。",
+        "sources": [
+          "REQ-143"
+        ],
+        "tests": [
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "ワークフロー全体の権限は contents: read だけで、書き込みの権限は公開のジョブだけが持つ",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-b2b4ab0eaeec3b0d4dd8",
+        "status": "reviewed",
+        "scenarioSha256": "68d9e64f57f684a4d70cd0265fd2bf18c72f834df75f8ac6a3aafdb1eeec03f4",
+        "reason": "release.ymlを読み、lint・typecheck・testが同じ品質ジョブにあること、publishのneedsがそのジョブを指すこと、ignore-scripts付きinstall、publishでbuildしないこと、品質ジョブのuploadと公開ジョブのdownloadをassertする。実際のジョブ実行や成果物転送の成功は未確認。",
+        "sources": [
+          "REQ-143"
+        ],
+        "tests": [
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "公開のジョブは品質のジョブのあとに動き、スクリプトを実行せずにインストールし、ビルドせずにビルドの結果を受け取る",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-40011d05f5ad74b3e9fd",
+        "status": "reviewed",
+        "scenarioSha256": "0f30a1599c753093483fdcb45d582a91bb4ec8739425d4d1f5e7831ee770e7a1",
+        "reason": "release.ymlの全uses参照を抽出し、1件以上あることと全参照の末尾が40桁の16進数SHAであることをassertする。上流コミットの確認や実行成功はこの試験の範囲に含めない。",
+        "sources": [
+          "REQ-143"
+        ],
+        "tests": [
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "action をすべてコミットの SHA で指定する",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-2f2f1d4be78302090856",
+        "status": "reviewed",
+        "scenarioSha256": "fa01006c45ef719a79a1c3108a10396ab4dd69e539f9c5860930e5045856af3c",
+        "sources": [
+          "REQ-114"
+        ],
+        "reason": "人が作った実装ブランチでrunを始め、終了コード1、向き先不明のメッセージ、証拠ディレクトリ未作成、PR未作成を確かめる。実際のGitと代替ghを使うローカルの停止契約で、GitHubへの接続を要しない。",
+        "tests": [
+          {
+            "file": "packages/runner/test/pr.test.ts",
+            "contains": "人が作った loomake/<change-id> の上で始めて向き先が分からなければ、証拠を記録せずに止まる",
+            "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          }
+        ]
+      },
+      {
+        "id": "SCN-b727235a87e44d5a8748",
+        "status": "reviewed",
+        "scenarioSha256": "9714c7ce6d75d26a2475848b2fb4ffd8ddfbd64d5357aa5d115374f7034c4d7a",
+        "sources": [
+          "REQ-115"
+        ],
+        "reason": "代替ghがbody-fileから読み取った本文について、Whyとその内容、What Changesとその内容、完了ゲートの合格表示、REQ-012とtests/x.test.tsの行、証拠のパスを順番に確かめる。GitHub上での表示やPR作成の成功はこの対応に含めない。",
+        "tests": [
+          {
+            "file": "packages/runner/test/pr.test.ts",
+            "contains": "本文に、proposal の Why と What Changes、完了ゲートの結果、要件ごとのテスト、証拠の記録のパスを含める",
+            "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          }
+        ]
+      },
+      {
+        "id": "SCN-584a9aab9c83b5990a97",
+        "status": "reviewed",
+        "scenarioSha256": "d64d78404987f527df4a1d40ac336703cd5a22bb84510bac0202082a2abce480",
+        "sources": [
+          "REQ-116"
+        ],
+        "reason": "代替ghのauth失敗を入力し、終了コード1とログイン案内、エンジン呼び出しなし、実装ブランチなし、実行記録なしを確かめる。別の同条件テストで証拠記録なし、originへの送信なし、PR未作成も確かめる。",
+        "tests": [
+          {
+            "file": "packages/runner/test/pr.test.ts",
+            "contains": "gh にログインしていなければ、エンジンを呼ばず、change のブランチも作らずに止まり、終了コード 1 を返す",
+            "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          },
+          {
+            "file": "packages/runner/test/pr.test.ts",
+            "contains": "gh にログインしていなければ、証拠を記録せず、ブランチも送らずに止まり、終了コード 1 を返す",
+            "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          }
+        ]
+      },
+      {
+        "id": "SCN-71d6bd155f46759898db",
+        "status": "reviewed",
+        "scenarioSha256": "3c35acc753ce4ee21190e4206798caa122496db38e758ec97714ef5fdb137d72",
+        "sources": [
+          "REQ-114"
+        ],
+        "reason": "代替ghがpr createを受けた時点で、実際のGitのHEAD、HEADコミットのファイル一覧、ローカルbare originのブランチ先端を保存する。その時点で証拠ファイルが最後のコミットに含まれ、HEADとoriginの先端が一致し、そのHEADがrun終了後とも一致することを確かめる。GitHub上の作成成功は含めない。",
+        "tests": [
+          {
+            "file": "packages/runner/test/pr.test.ts",
+            "contains": "PR を作る時点で、ブランチの最後のコミットに証拠の記録が入っている",
+            "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          }
+        ]
+      },
+      {
+        "id": "SCN-ba54a6e5abb22784fe66",
+        "status": "reviewed",
+        "scenarioSha256": "3ac7256ef936c3b9604bf9dd80aa836db7560c467c3b12b69fdf7039e60e772f",
+        "sources": [
+          "REQ-116"
+        ],
+        "reason": "代替ghの受け取った引数全体を、pr create、base main、head loomake/c1、title c1、body-fileの順で確かめる。body-fileの名前がpr-body.mdで、実際に読める内容と渡された本文が等しいことも確かめる。GitHubへの実接続は含めない。",
+        "tests": [
+          {
+            "file": "packages/runner/test/pr.test.ts",
+            "contains": "gh pr create に、タイトル・本文・向き先のブランチを渡す",
+            "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          }
+        ]
+      },
+      {
+        "id": "SCN-5e6058f60a4328ccbe5a",
+        "status": "reviewed",
+        "scenarioSha256": "da18e50af45b353b82ed11c4e6bd849d468d57ac94ef6ddb7c23665a71927c74",
+        "sources": [
+          "REQ-116"
+        ],
+        "reason": "代替ghのauth失敗を設定したdry-runで、終了コード0とタスク予定表示に加え、authの呼び出し記録が存在せず、エンジン呼び出しもないことを確かめる。gh認証の成否を無視して予定表示するだけの回帰を区別する。",
+        "tests": [
+          {
+            "file": "packages/runner/test/pr.test.ts",
+            "contains": "--dry-run では gh を確かめず、予定のタスクを表示して終了コード 0 を返す",
+            "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          }
+        ]
+      },
+      {
+        "id": "SCN-1427bef7cdde9b1e461c",
+        "status": "reviewed",
+        "scenarioSha256": "25f617e2ef0bf5a8f6ac8515f7c4ed7875a1bcffc8d7a62a646ea22b0f7f0eb8",
+        "sources": [
+          "REQ-116"
+        ],
+        "reason": "代替ghのauth statusを開始時に成功、エンジン実行後に失敗させ、その順序と引数を記録して確かめる。最後の検査結果の合格、ログイン案内、終了コード1、エンジン実行あり、証拠ディレクトリ未作成、ローカルbare originへの未送信を確かめる。",
+        "tests": [
+          {
+            "file": "packages/runner/test/pr.test.ts",
+            "contains": "実行のあいだに gh からログアウトしたら、証拠を記録せず、ブランチも送らずに止まり、終了コード 1 を返す",
+            "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          }
+        ]
+      },
+      {
+        "id": "SCN-b069ac8eb86974e09610",
+        "status": "reviewed",
+        "scenarioSha256": "3b05e3ff772d4f9d49b22a3ed810c8f7904599e4f0db8ce8c60f9949b8f7acda",
+        "reason": "新規プロジェクトへ配布物をオフライン導入し、initを2回実行する。AGENTS.md・設定・gitignore・変換スキルが再実行で変わらないこと、doctor・仕様ゲート・完了ゲートが成功することをスクリプト内でassertする。各操作の期待した終了コードと実際の終了コードを記録し、外側のテストでも全操作の一致をassertする。AIの操作試験であり、人による試験ではない。",
+        "sources": [
+          "REQ-155"
+        ],
+        "tests": [
+          {
+            "file": "tests/ai-journeys.test.ts",
+            "contains": "で導入・通常操作・失敗と復旧を実行し、操作結果を記録する",
+            "sha256": "5d1934a2891224bd9ade78232509f9f529e8e6c36c3bf115843bb56e9a3f11f2"
+          }
+        ]
+      },
+      {
+        "id": "SCN-7107f4ee5e1cda8ea041",
+        "status": "reviewed",
+        "scenarioSha256": "acb1c33d4f35f5dd1c91a8ea241847b3f46863d445adcf37d3c081de23c77750",
+        "reason": "既存AGENTS.mdを持つプロジェクトで非対話initの終了コード1と確認できない旨の表示、既存内容の不変をassertする。help・doctor・完了ゲート・trace record・reportを実行し、レポート25行がすべて合格であることをassertする。記録するテスト結果は試験用データであり、外部GitHubへの接続は含まない。",
+        "sources": [
+          "REQ-156"
+        ],
+        "tests": [
+          {
+            "file": "tests/ai-journeys.test.ts",
+            "contains": "で導入・通常操作・失敗と復旧を実行し、操作結果を記録する",
+            "sha256": "5d1934a2891224bd9ade78232509f9f529e8e6c36c3bf115843bb56e9a3f11f2"
+          }
+        ]
+      },
+      {
+        "id": "SCN-9ef6471f7091bfcf2953",
+        "status": "reviewed",
+        "scenarioSha256": "3f709b41a58122a7d7e5f47dffd54c7ac3917df9193c7a9915cb0d89c8098f5e",
+        "reason": "未回答Q-01、成功テスト対応のないレポート、未コミットの変更を順に用意し、終了コード1とそれぞれの原因表示をassertする。回答・レポート・コミットを修正した後の再実行の成功と、最後の証拠レポートのok=trueをassertする。人による利用者試験としては扱わない。",
+        "sources": [
+          "REQ-157"
+        ],
+        "tests": [
+          {
+            "file": "tests/ai-journeys.test.ts",
+            "contains": "で導入・通常操作・失敗と復旧を実行し、操作結果を記録する",
+            "sha256": "5d1934a2891224bd9ade78232509f9f529e8e6c36c3bf115843bb56e9a3f11f2"
+          }
+        ]
+      },
+      {
+        "id": "SCN-1e3dd10fac4b0851f971",
+        "status": "reviewed",
+        "scenarioSha256": "8e39d5c36df187dda1a09ec03f13e2ed0ad74ddd0c97e5bc8dfe9d03cc23b38e",
+        "reason": "通常runでtrace・tasks・specsを各1MiB超にし、上限と対象を示すUsageError、HEADとブランチの不変、エンジン呼出なし、記録・証拠・PR・リモート参照なしをassertする。verify単体でも各文書の上限拒否をassertする。",
+        "sources": [
+          "REQ-172"
+        ],
+        "tests": [
+          {
+            "file": "tests/input-boundaries.test.ts",
+            "contains": "通常runでも過大な",
+            "sha256": "f70946322ef3cbcf47b80b16ac5d6d40f1ce58c2bebddd2d8d2e0cc98ada3930"
+          },
+          {
+            "file": "tests/input-boundaries.test.ts",
+            "contains": "verifyの",
+            "sha256": "f70946322ef3cbcf47b80b16ac5d6d40f1ce58c2bebddd2d8d2e0cc98ada3930"
+          }
+        ]
+      },
+      {
+        "id": "SCN-762eea79c2bdc036757f",
+        "status": "reviewed",
+        "scenarioSha256": "5b032b5ceccf6c322da97a6267c6d42b4ad4d2436de0cae1b2f888237128f734",
+        "reason": "全入力文書が個別上限以内のゲートだけの通常runで、品質コマンドから16MiBの失敗情報を出す。記録した失敗情報の内容を照合し、指示16777216バイトの上限による停止、エンジン呼出なし、タスクの復元、HEAD不変、証拠・PR・リモート参照なしをassertする。",
+        "sources": [
+          "REQ-173"
+        ],
+        "tests": [
+          {
+            "file": "tests/input-boundaries.test.ts",
+            "contains": "通常runで巨大な検証失敗を指示へ加える前に止まり、エンジンを起動しない",
+            "sha256": "f70946322ef3cbcf47b80b16ac5d6d40f1ce58c2bebddd2d8d2e0cc98ada3930"
+          }
+        ]
+      },
+      {
+        "id": "SCN-d8fc5de06e1bf65834fb",
+        "status": "reviewed",
+        "scenarioSha256": "1688620f54da24f2277a269f6ba906ce381121c4b97767da4c537957786780b0",
+        "reason": "verify --spec-onlyを--changeなしで呼び、終了コード2、必要な--change指定と日本語の使い方をassertする。既存の期待値を保ち、SourceのREQ-192をテスト名に追加した。",
+        "sources": [
+          "REQ-192"
+        ],
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "--change を付けずに --spec-only を指定すると、日本語の使い方を出して 2",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-6d9261c3408f3ab5cc30",
+        "status": "reviewed",
+        "scenarioSha256": "82d7d74c4949136f704f853d4e1495ccef4c0e5009ae7fb83a6ec4b0e8dbc6a3",
+        "reason": "期限500msと経過1800ms未満の既存条件に加え、実際に起動した親子のPIDを取得し、runClaudeから戻った時点の親の消滅と子の停止（消滅またはLinuxのzombie）をassertする。状態は試験自身のfinallyによる後片付け前に採取する。zombieは停止の根拠であり、OSによる回収の完了を保証しない。",
+        "sources": [
+          "REQ-139"
+        ],
+        "tests": [
+          {
+            "file": "packages/runner/test/engine-safety.test.ts",
+            "contains": "出力を継承した子も時間切れで停止する",
+            "sha256": "c81de480ab541307036c963d9722124f617e75111f91245e408d386a2fd28980"
+          }
+        ]
+      },
+      {
+        "id": "SCN-906b5b5318a37ff92d7e",
+        "status": "reviewed",
+        "scenarioSha256": "0f756f3010a9ac77c3c50c7dfb0460d1d9e1e81e54bf92fef15810ead92cd255",
+        "reason": "SIGTERMの受信だけを記録して終了しないエンジンを起動し、POSIXでは受信記録、正のPID、戻った時点の親の消滅、非ゼロ終了と既存の期限・経過時間をassertする。起動spyの1回を正の対照として確認する。",
+        "sources": [
+          "REQ-139"
+        ],
+        "tests": [
+          {
+            "file": "packages/runner/test/engine-safety.test.ts",
+            "contains": "終了要求を無視するエンジンも強制終了する",
+            "sha256": "c81de480ab541307036c963d9722124f617e75111f91245e408d386a2fd28980"
+          }
+        ]
+      },
+      {
+        "id": "SCN-14294fb5529df1995cfe",
+        "status": "reviewed",
+        "scenarioSha256": "4ae41d331f69c7979723444e6be36a1a77903a410d6c605fdfd8d48235aa472e",
+        "reason": "AbortSignal.abortを起動前に渡し、aborted=true、開始ファイルなし、PID未作成、spawn呼出0回をassertする。同じspyを使う他の2試験ではspawn1回を確認し、観測器が無効なため0となる場合を除く。",
+        "sources": [
+          "REQ-139"
+        ],
+        "tests": [
+          {
+            "file": "packages/runner/test/engine-safety.test.ts",
+            "contains": "起動前に中断済みならエンジンを起動しない",
+            "sha256": "c81de480ab541307036c963d9722124f617e75111f91245e408d386a2fd28980"
+          }
+        ]
+      }
+    ],
+    "revalidatedEntries": [
+      {
+        "id": "SCN-7751d2d9b41fc069c9d2",
+        "status": "reviewed",
+        "scenarioSha256": "969a3d3a40b5c10526b036e7da748cdc84ba9d78ee201cf35080a0b500437864",
+        "reason": "探索先へ親を指す実際のリンクを作り、リンク名backを示す例外をassertする。specsの循環でもverify・trace・promptが同じUsageErrorで止まることをassertする。Sourceの対応はREQ-170の直接試験で確認する。",
+        "sources": [
+          "REQ-170"
+        ],
+        "tests": [
+          {
+            "file": "packages/kit/test/input.test.ts",
+            "contains": "[REQ-170] 親へ戻るリンクをたどらない",
+            "sha256": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985"
+          },
+          {
+            "file": "tests/input-boundaries.test.ts",
+            "contains": "[REQ-172] specsの循環リンク",
+            "sha256": "f70946322ef3cbcf47b80b16ac5d6d40f1ce58c2bebddd2d8d2e0cc98ada3930"
+          }
+        ]
+      },
+      {
+        "id": "SCN-bef2a7c042d8803de34c",
+        "status": "reviewed",
+        "scenarioSha256": "ce2de649955f72cd5bf2734e2c42c419b54b2916bbab742114425e4a134a1159",
+        "reason": "64MiBを超える疎な証拠と、各45MiBで合計128MiBを超える3つの証拠を与え、runReportがそれぞれ個別・合計上限の例外で止まり、合格レポートを返さないことをassertする。",
+        "sources": [
+          "REQ-172"
+        ],
+        "tests": [
+          {
+            "file": "tests/input-boundaries.test.ts",
+            "contains": "[REQ-172] JSONの証拠も64MiB",
+            "sha256": "f70946322ef3cbcf47b80b16ac5d6d40f1ce58c2bebddd2d8d2e0cc98ada3930"
+          },
+          {
+            "file": "tests/input-boundaries.test.ts",
+            "contains": "[REQ-172] 個別には64MiB以内でも証拠の合計",
+            "sha256": "f70946322ef3cbcf47b80b16ac5d6d40f1ce58c2bebddd2d8d2e0cc98ada3930"
+          }
+        ]
+      },
+      {
+        "id": "SCN-f8b67f815d9edd62df5f",
+        "status": "reviewed",
+        "scenarioSha256": "fc1bc2588ba42196be89184b68396e21a05b10c1197462729f78d5c428c44ce5",
+        "reason": "--helpと-hをmainへ渡し、終了コード0と5つのサブコマンドの名前・空でない説明が標準出力へ出ることをassertする。",
+        "sources": [
+          "REQ-135"
+        ],
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "[REQ-135] loomake --help と -h",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-3c5eee6c0bc35a7662d4",
+        "status": "reviewed",
+        "scenarioSha256": "1fcec7cd2fa689e43559272a1b151b8af1597b28503b6e51d5b7c8c5521ee997",
+        "reason": "存在しないchangeと--doneを付けたverify --helpを実行し、終了コード0、正確な使い方、全5オプションの説明、標準エラーが空であることをassertする。",
+        "sources": [
+          "REQ-135"
+        ],
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "[REQ-135] loomake verify --help",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-e45d3b8f791e7de52b0f",
+        "status": "reviewed",
+        "scenarioSha256": "eaae3cc42d6075ecd7a1b0d47c1308f2a11929d3c4b7112611c63da3b2b1e261",
+        "reason": "--versionと-vを実行し、終了コード0とCLIのpackage.jsonのversionに等しい標準出力をassertする。",
+        "sources": [
+          "REQ-135"
+        ],
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "[REQ-135] loomake --version と -v",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-a683dcb21df0301392bb",
+        "status": "reviewed",
+        "scenarioSha256": "e396af14336205cd56e1a143ce717eb16b98b62df10650b38b03ee6973d677d6",
+        "sources": [
+          "REQ-034"
+        ],
+        "reason": "yesで未回答のQ-01を用意し、ok=falseとID・関連REQ・質問を含む失敗項目を完全一致でassertする。CLIで不合格を終了コード1へ変換する試験と組み合わせる。",
+        "tests": [
+          {
+            "file": "packages/kit/test/verify.test.ts",
+            "contains": "未回答のブロッキング確認事項があると、ID・関連・質問",
+            "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          },
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "1 つ以上の検査が不合格なら 1",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-b5d6867657c962d57b96",
+        "status": "reviewed",
+        "scenarioSha256": "1e68f2269b70bff26196e581f2f737a7e0456b895517ab6b6eba6bc97d7d92eb",
+        "sources": [
+          "REQ-036"
+        ],
+        "reason": "未承認A-01と確認待ちREQ-002を与え、両者のwarn詳細とok=trueをassertする。CLIでは仮定警告を含むゲートの終了コード0と合格表示をassertする。",
+        "tests": [
+          {
+            "file": "packages/kit/test/verify.test.ts",
+            "contains": "未承認の仮定と確認待ちの要件は警告になり",
+            "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          },
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "すべて合格か警告なら 0",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-c14e76ddd4c813653713",
+        "status": "reviewed",
+        "scenarioSha256": "8d78f8201b445b53760bfe13b69f0ec1445a2a6c21ea5411374c0a6bcdfb578f",
+        "sources": [
+          "REQ-040"
+        ],
+        "reason": "進捗と出力を持つコマンドで--done --jsonを実行し、標準出力全体のJSON.parse・schemaVersion・Ajv2020でのcoreスキーマ検証をassertする。進捗はstderrにあることも確認する。",
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "--json の標準出力は JSON だけで",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-5e7b5a451616c4f5e499",
+        "status": "reviewed",
+        "scenarioSha256": "5b15c229560835d3e1775590b6aafc5251fcdeb1ad003acb02f42ec12bde4ac8",
+        "sources": [
+          "REQ-040"
+        ],
+        "reason": "REQ-012の成功をtests/a.test.tsに持つレポートでJSONを出し、coverageがその1件の対応と完全一致することをassertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "要件ごとのテストファイルの一覧を出す",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-414dd75021b0a3fd4e5c",
+        "status": "reviewed",
+        "scenarioSha256": "898dfd30bcd8f83182dc67ddb32627c44bd7535971d6c0bf7f124fd6a8f1fa25",
+        "sources": [
+          "REQ-041"
+        ],
+        "reason": "未承認仮定の警告を含むCLI仕様ゲートで終了コード0と合格表示をassertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "すべて合格か警告なら 0",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-373041d8715147071068",
+        "status": "reviewed",
+        "scenarioSha256": "f759566bdea5eed4c85bae4d85e01fef670b1337e563f3425ce8c1666ff5dbf3",
+        "sources": [
+          "REQ-041"
+        ],
+        "reason": "仕様から参照されない反映済REQ-007でCLI仕様ゲートを実行し、終了コード1と不合格1件の表示をassertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "1 つ以上の検査が不合格なら 1",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-9380f85a23d00c442a6e",
+        "status": "reviewed",
+        "scenarioSha256": "26e79e68ec71978e93c8dc66855fcd2e8f25ae00e32d0cb2ad7d8dd250bb900e",
+        "sources": [
+          "REQ-041"
+        ],
+        "reason": "CLIへverify --spec-onlyだけを渡し、終了コード2・必要な--change指定と日本語の使い方をassertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "--change を付けずに --spec-only を指定すると",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-65953e5426fce883ba49",
+        "status": "reviewed",
+        "scenarioSha256": "a6f09782c317860f09ecb980fb5dcafeafbfbfc91e6ebc65c9aa3981f207ee20",
+        "sources": [
+          "REQ-041"
+        ],
+        "reason": "../../packages・a/b・a\\bを各CLIへ渡し、終了コード2とパスの区切りの日本語をassertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "--change の値にパスの区切りを含めると",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-0580d4faf39eeccb215b",
+        "status": "reviewed",
+        "scenarioSha256": "b6bf8b4daebe716f56abf074922dc7926b0efd91b98dbdb253447892c003ec9e",
+        "sources": [
+          "REQ-042"
+        ],
+        "reason": "changeを省いたAPIとCLIの両方でmode=quality、コマンド項目だけであることを完全一致でassertする。APIではchange=nullも確認する。",
+        "tests": [
+          {
+            "file": "packages/kit/test/verify.test.ts",
+            "contains": "change を省略すると commands だけを実行し",
+            "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          },
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "loomake verify を引数なしで実行すると",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-129c1a409ad4cdd46ce6",
+        "status": "reviewed",
+        "scenarioSha256": "bfc0cfb36b49df771c50f4505bc984af7cb34174dcb31c24e91fcfc53cc0fd52",
+        "sources": [
+          "REQ-047"
+        ],
+        "reason": "実際のkit package.jsonのdependenciesキーがcoreだけという配列に完全一致することをassertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "kit の dependencies は @loomake/core だけ",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-38961b7ee7aa96aad6f6",
+        "status": "reviewed",
+        "scenarioSha256": "0fc6dd543ded3083f2568ca7040843c07c1b926b916920a80170246fc7118ee3",
+        "sources": [
+          "REQ-047"
+        ],
+        "reason": "実際のCLI package.jsonのdependenciesにcore/kit/trace/runner以外のキーがないことをassertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "loomake の dependencies は @loomake/core・@loomake/kit",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-f9f8eb6c78a2fa7479ef",
+        "status": "reviewed",
+        "scenarioSha256": "fb82d2509a479e9a370ffab0079bb3785b0749b0f941ad4cdb4f6b470cb137c0",
+        "sources": [
+          "REQ-050"
+        ],
+        "reason": "500要件と1000個のテストファイル、対応する成功レポートを準備し、準備後のCLI mainによるdone/skip実行が終了コード0かつ3秒未満となることをassertする。テスト1000個を実行した測定ではない。別プロセスのCLI全体の測定はcli-scale-results.jsonに別記した。",
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "要件 500 件・テストファイル 1,000 個の --done",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-d704beb36bb7a1c172c7",
+        "status": "reviewed",
+        "scenarioSha256": "6e2197b4c417b320076730074b899a2cb2e1a7ac6c684a40aabac881a891ee9c",
+        "sources": [
+          "REQ-034"
+        ],
+        "reason": "c1=5 回とa=3 回を与え、Q-01と双方の回答があるfail詳細・ok=falseをassertする。CLIの不合格終了コード変換と組み合わせる。",
+        "tests": [
+          {
+            "file": "packages/kit/test/verify.test.ts",
+            "contains": "参照先の change と回答が違えば、両方の回答を出して不合格",
+            "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          },
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "1 つ以上の検査が不合格なら 1",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-cd7aa203d3fa5f737e59",
+        "status": "reviewed",
+        "scenarioSha256": "56c40344d53daf02fc7c81163a047f0e25cd6f5c734bb053af512dbaa65c564d",
+        "reason": "同じ正常なchangeへ等号・空白の2形式で--spec-onlyを実行し、194の試験でコードと表示の一致、041の試験で終了コード0とJSON結果の一致をassertする。",
+        "sources": [
+          "REQ-194"
+        ],
+        "tests": [
+          {
+            "file": "packages/cli/test/arguments.test.ts",
+            "contains": "[REQ-194] --change=<id> は",
+            "sha256": "ce0333abbadeb77021844db854f55d9e628c12b99f0f8705ea071ede067ece5a"
+          },
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "[REQ-041] --change=<id> の形を",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-a2dda7c2b73cba290dcd",
+        "status": "reviewed",
+        "scenarioSha256": "7b6865ce435d574ce47045c63428f120e2d43f233e41c88625c1f4c0a83f2a7e",
+        "reason": "trace record --helpの終了コード0と専用の使い方をassertし、report専用の--formatが出ないことをassertする。report -hの使い方も別にassertする。",
+        "sources": [
+          "REQ-135"
+        ],
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "[REQ-135] trace record --help と trace report",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-0ff8b12a10a748d24dbb",
+        "status": "reviewed",
+        "scenarioSha256": "159ae1426a01339351b8757557cbff13aa0328c983f3c323ed7fa688e361c188",
+        "reason": "同じchangeへ--change=<id>と--change <id>を渡し、仕様ゲートの終了コード0と両形式のJSON結果の一致をassertする。",
+        "sources": [
+          "REQ-041"
+        ],
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "[REQ-041] --change=<id> の形を",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-ef434705863eb9513f3f",
+        "status": "reviewed",
+        "scenarioSha256": "d68f6924cf44eca2f0854aad7c557205b47d6f0385b289b15dab73ecc4ad6dec",
+        "reason": "仕様と同じfooを実行し、終了コード2、「知らないコマンドです：foo」と使い方が標準エラーに出ることをassertする。",
+        "sources": [
+          "REQ-041"
+        ],
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "[REQ-041] 知らないコマンドを指定すると",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-802757bb89c24f8ead97",
+        "status": "reviewed",
+        "scenarioSha256": "873e7a0c80d928de1ac640c9171c6f68fbb188c732fd2b7ca4f8e60a59e10f39",
+        "sources": [
+          "REQ-034"
+        ],
+        "reason": "はいで未回答のQ-01を与え、ok=falseとID・関連REQ・質問を含む失敗項目を完全一致でassertする。CLIの不合格終了コード変換も別試験で確認する。",
+        "tests": [
+          {
+            "file": "packages/kit/test/verify.test.ts",
+            "contains": "ブロッキング列が はい で回答が空なら",
+            "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          },
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "1 つ以上の検査が不合格なら 1",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-717c8e34025bc8e21c27",
+        "status": "reviewed",
+        "scenarioSha256": "0643b237df4a8b1b30e90f2df75a9be0016cd2e311f705be35ca639200762384",
+        "sources": [
+          "REQ-034"
+        ],
+        "reason": "要と空の値をそれぞれ与え、回答済みでもok=false、Q-01と実際の値を含む失敗項目を完全一致でassertする。CLIの不合格終了コード変換も確認する。",
+        "tests": [
+          {
+            "file": "packages/kit/test/verify.test.ts",
+            "contains": "ブロッキング列が yes・no・はい・いいえ のどれでもなければ",
+            "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          },
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "1 つ以上の検査が不合格なら 1",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-53a774d48e47b96217ed",
+        "status": "reviewed",
+        "scenarioSha256": "0faf116f63f24ed1d7ce8a12178d1188d30bfd7f8ce96a0d3467dec8ec99b7a4",
+        "sources": [
+          "REQ-041"
+        ],
+        "reason": "c1&echoを含む6つの不正名を渡し、終了コード2・日本語の形の説明・標準出力なしをassertする。追加試験はrunExternalを監視し、OpenSpecを含む外部操作を1件も呼ばないことを直接assertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "--change の値が change 名の形でなければ",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          },
+          {
+            "file": "packages/cli/test/verify-boundaries.test.ts",
+            "contains": "不正なchange-idはOpenSpecを含む外部操作を呼ばずに",
+            "sha256": "453d06454e94c6850d239e713c1258885a0a6e642f5f312aee48eb1fd5436a12"
+          }
+        ]
+      },
+      {
+        "id": "SCN-f05f4d854b4312330adf",
+        "status": "reviewed",
+        "scenarioSha256": "657cf0fab02294664601a38fb1e0adba66127d420398e96cfd2033c54a7a2b0c",
+        "sources": [
+          "REQ-041"
+        ],
+        "reason": "CLIにarchiveを渡し、終了コード2とarchiveは使えない旨の日本語をassertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "archive を --change に渡すと",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      }
+    ],
+    "checkedIds": [
+      "SCN-2de79bea8dc151ce2619",
+      "SCN-b2dd3632f502375407d8",
+      "SCN-9fe1ea244089a3ac1a50",
+      "SCN-91e88c4d1b6cb5cd0110",
+      "SCN-76f138277acbd8c119e5",
+      "SCN-c60fb252775bc70a4752",
+      "SCN-317c8a9fda25d0088f65",
+      "SCN-d31a4872ae040eb68a4e",
+      "SCN-711b5333ddc017bf8f8a",
+      "SCN-149eab9b65181496a38e",
+      "SCN-366e01b502420cbcda61",
+      "SCN-2f7149cce94ed98f34a7",
+      "SCN-abcce1ac255f52f2ec1d",
+      "SCN-8afa7165a685a9d49d57",
+      "SCN-b2b4ab0eaeec3b0d4dd8",
+      "SCN-40011d05f5ad74b3e9fd",
+      "SCN-2f2f1d4be78302090856",
+      "SCN-b727235a87e44d5a8748",
+      "SCN-584a9aab9c83b5990a97",
+      "SCN-71d6bd155f46759898db",
+      "SCN-ba54a6e5abb22784fe66",
+      "SCN-5e6058f60a4328ccbe5a",
+      "SCN-1427bef7cdde9b1e461c",
+      "SCN-b069ac8eb86974e09610",
+      "SCN-7107f4ee5e1cda8ea041",
+      "SCN-9ef6471f7091bfcf2953",
+      "SCN-1e3dd10fac4b0851f971",
+      "SCN-762eea79c2bdc036757f",
+      "SCN-d8fc5de06e1bf65834fb",
+      "SCN-6d9261c3408f3ab5cc30",
+      "SCN-906b5b5318a37ff92d7e",
+      "SCN-14294fb5529df1995cfe",
+      "SCN-7751d2d9b41fc069c9d2",
+      "SCN-bef2a7c042d8803de34c",
+      "SCN-f8b67f815d9edd62df5f",
+      "SCN-3c5eee6c0bc35a7662d4",
+      "SCN-e45d3b8f791e7de52b0f",
+      "SCN-a683dcb21df0301392bb",
+      "SCN-b5d6867657c962d57b96",
+      "SCN-c14e76ddd4c813653713",
+      "SCN-5e7b5a451616c4f5e499",
+      "SCN-414dd75021b0a3fd4e5c",
+      "SCN-373041d8715147071068",
+      "SCN-9380f85a23d00c442a6e",
+      "SCN-65953e5426fce883ba49",
+      "SCN-0580d4faf39eeccb215b",
+      "SCN-129c1a409ad4cdd46ce6",
+      "SCN-38961b7ee7aa96aad6f6",
+      "SCN-f9f8eb6c78a2fa7479ef",
+      "SCN-d704beb36bb7a1c172c7",
+      "SCN-cd7aa203d3fa5f737e59",
+      "SCN-a2dda7c2b73cba290dcd",
+      "SCN-0ff8b12a10a748d24dbb",
+      "SCN-ef434705863eb9513f3f",
+      "SCN-802757bb89c24f8ead97",
+      "SCN-717c8e34025bc8e21c27",
+      "SCN-53a774d48e47b96217ed",
+      "SCN-f05f4d854b4312330adf"
+    ],
+    "sourceEvidence": [
+      {
+        "file": "/tmp/quality-ci-process-review.json",
+        "sha256": "aa7e38de399c9d88b348a2f721c7100d8ae6db89283ab89c4ed13075dd5eb294"
+      },
+      {
+        "file": "/tmp/quality-ci-contract-review.json",
+        "sha256": "87b10b2fe7a9b6730d01c9c0587900c294201083d580e246a003f267fb261954"
+      },
+      {
+        "file": "/tmp/quality-pr-contract-review.json",
+        "sha256": "89c93986d624ef9d5c52c8fef213da2183a8d4ecd5b22cfc71cf77709a2ae922"
+      },
+      {
+        "file": "/tmp/quality-input-journeys-integration.json",
+        "sha256": "5c38ce8241d4540bf300652c6cc6876cad3546d1fe00ee38cbcd2336aa6e1bd0"
+      },
+      {
+        "file": "/tmp/quality-input-existing-revalidated.json",
+        "sha256": "979186d85a580026a3844c2e44a01a42438fe9723836ee2da914b970c4fa086f"
+      },
+      {
+        "file": "/tmp/quality-engine-review-entries.json",
+        "sha256": "c92711dd443234afc9000915ff3154f7ebe6ff428f14fc199d2372fa33c4ddb3"
+      }
+    ],
+    "baseEvidence": {
+      "file": "openspec/changes/audit-scenario-evidence/stop-retry-review-results.json",
+      "sha256": "bed871cb3b9f52636faf95acb1d2281c6a9827a69fcfd87110fe45e2735485bf"
+    },
+    "limitations": [
+      "Mappings attest to inspected local assertions and current hashes. Passing executions must still be supplied by the parent gate/audit.",
+      "Real GitHub CI, release credentials during command execution, strict-validate workflow stop, publication/attestation, and other operating systems remain unverified."
+    ],
+    "pending": [
+      {
+        "id": "SCN-9fe8421dc4a4ad0058c5",
+        "file": "openspec/changes/relax-commit-push-budget/specs/external-process-budget/spec.md",
+        "scenario": "品質コマンドの期限で止まる",
+        "scenarioSha256": "52f33c3191890d46e47c7efaf99f9862823a2cc78ef96f6ce3967b6a83c7f3b7",
+        "reason": "単独verifyの時間切れ、証拠記録時の2度目の品質コマンドの期限は試験するが、完了ゲートの一時的なタスク印の復元と、期限後にGitを必要としない条件を同時にはassertしていない。",
+        "tests": [
+          {
+            "file": "packages/runner/test/external-budget.test.ts",
+            "contains": "明示したtimeoutMsがなくても共有期限で品質コマンドを止める",
+            "sha256": "2526e2b8662dc95fc98b9c20260119778f5ad2eb3ec187b9f1b232a24b3736ac"
+          },
+          {
+            "file": "packages/runner/test/run.test.ts",
+            "contains": "二度目の品質コマンドも残り時間で止め、PRを作らない",
+            "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          }
+        ],
+        "next": "ゲート用の未完了タスクを持つrunで、品質処理中に一時印を観測して予算を使い切る。印の復元、実装保持、停止記録、期限後の外部操作未実行をassertする。"
+      },
+      {
+        "id": "SCN-4ccc81f62b268b7fa6d7",
+        "file": "openspec/changes/relax-commit-push-budget/specs/external-process-budget/spec.md",
+        "scenario": "遅い pre-commit フック",
+        "scenarioSha256": "259c8443dd9e2fa87cd5304136eb7ccc8acb87d6377de6d73d4e84f451969989",
+        "reason": "現行統合試験は1秒フックを500msの操作期限と比較し、完了とPR1件をassertする。仕様の40秒という条件は旧コミット6312137での実測40043msにだけ対応する。以降にprocess・Gitなどが変更されており、現在の40秒試験が成功したとは言えない。",
+        "tests": [
+          {
+            "file": "packages/runner/test/external-budget.test.ts",
+            "contains": "1 操作の期限より遅い pre-commit・pre-push",
+            "sha256": "2526e2b8662dc95fc98b9c20260119778f5ad2eb3ec187b9f1b232a24b3736ac"
+          }
+        ],
+        "next": "現行ソースで実際に40秒フックを実行し、30秒の操作期限で止まらず共有期限内に完了する証拠を取り直す。"
+      }
+    ]
+  },
+  "review": {
+    "entries": [
+      {
+        "id": "SCN-2de79bea8dc151ce2619",
+        "status": "reviewed",
+        "scenarioSha256": "87923f4357998f508371901962f462b1a4d3557fb4d6e4758c872dee5d738188",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。setup-monorepoに対するverify --change setup-monorepo --doneと、CLIの失敗をgateの終了コード1へ伝えることを確認する。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
+        "sources": [
+          "REQ-010",
+          "REQ-054",
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "branch setup-monorepo invokes the exact completion gate and propagates failure",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          },
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "PR ごとに完了ゲートを実行する",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-b2dd3632f502375407d8",
+        "status": "reviewed",
+        "scenarioSha256": "11c2cf98ed8b66065e4fe2991aaba1015dc00711631b1b2c7c12eae5998f7cad",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。loomake/c1からc1を選び、verify --change c1 --doneを実行する。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
+        "sources": [
+          "REQ-010",
+          "REQ-054",
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "branch loomake/c1 invokes the exact completion gate and propagates failure",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          },
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "PR ごとに完了ゲートを実行する",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-9fe1ea244089a3ac1a50",
+        "status": "reviewed",
+        "scenarioSha256": "3cd2b9881db8bc1a592df4fa73343da2b35f60242a41d1e97e2c86af356f84b4",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。コード変更を含むPR本文のc1,c2に対し、それぞれの完了ゲートを実行する。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
+        "sources": [
+          "REQ-010",
+          "REQ-054",
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "explicit multiple changes invoke both completion gates",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          },
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "PR ごとに完了ゲートを実行する",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-91e88c4d1b6cb5cd0110",
+        "status": "reviewed",
+        "scenarioSha256": "b612ff388e10773db9b778d28b42e31f111dd446d08c006eed41a5295649a6f0",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。nothingがない場合の日本語、終了コード1、verifyを呼ばないことを確認する。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
+        "sources": [
+          "REQ-010",
+          "REQ-054",
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "absent explicit change fails in Japanese before invoking verify",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          },
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "PR ごとに完了ゲートを実行する",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-76f138277acbd8c119e5",
+        "status": "reviewed",
+        "scenarioSha256": "89e600aba360921b438fb958b11c2b5666c306b4f2efe9b55a3c37ecc20b9aac",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。packages/a.tsを実際にコミットし、noneの指定でverifyだけを呼ぶことを確認する。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
+        "sources": [
+          "REQ-010",
+          "REQ-054",
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "explicit none invokes only quality despite code changes",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          },
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "PR ごとに完了ゲートを実行する",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-c60fb252775bc70a4752",
+        "status": "reviewed",
+        "scenarioSha256": "8e173d1046181323d34d5f1f13aa6ee0ff1b916bcd5c742f6957e10b8ec519bc",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。実際のGit差分にc1/tasks.mdとpackages/a.tsがあるとき、c1の完了ゲートだけを呼ぶ。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
+        "sources": [
+          "REQ-010",
+          "REQ-054",
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "changed change files select the completion gate",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          },
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "PR ごとに完了ゲートを実行する",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-317c8a9fda25d0088f65",
+        "status": "reviewed",
+        "scenarioSha256": "61d6e218e37b4bb1bd9b9de918b7b8105aae8e23d37ef9c62f9ae94b4d18660b",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。コード変更だけで対象がない場合の日本語案内、終了コード1、verifyを呼ばないことを確認する。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
+        "sources": [
+          "REQ-010",
+          "REQ-054",
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "unassigned code files [ 'packages/a.ts' ] fail before invoking verify",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          },
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "PR ごとに完了ゲートを実行する",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-d31a4872ae040eb68a4e",
+        "status": "reviewed",
+        "scenarioSha256": "e57173a186be84ff3746c8576e8e5104cd3590b301b59e9da9cca51f0de459ec",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。docs/usage.mdだけを変更したfix-typoではverifyだけを呼ぶ。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
+        "sources": [
+          "REQ-010",
+          "REQ-054",
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "documentation files [ 'docs/usage.md' ] invoke quality only",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          },
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "PR ごとに完了ゲートを実行する",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-711b5333ddc017bf8f8a",
+        "status": "reviewed",
+        "scenarioSha256": "feb21eb733a07e2ba5c0b8774d25516efc16706bb9d57a437c79240f7b90082c",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。c1を削除しarchiveとspecを追加したGit差分でverifyだけを呼ぶ。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
+        "sources": [
+          "REQ-010",
+          "REQ-054",
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "archive deletion and archive/spec additions invoke quality only",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          },
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "PR ごとに完了ゲートを実行する",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-149eab9b65181496a38e",
+        "status": "reviewed",
+        "scenarioSha256": "87df447744acde0596df8d5e12095743dc78ec97c0b3bb4098cf638eaae1f024",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。c2ブランチとc2の変更があっても、本文のc1の完了ゲートだけを呼ぶ。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。",
+        "sources": [
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "explicit selection overrides changed files and branch selection",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          }
+        ]
+      },
+      {
+        "id": "SCN-366e01b502420cbcda61",
+        "status": "reviewed",
+        "scenarioSha256": "8e437ceb7be7459c03352a63eb01b5d3aee70cd842d6d7b277dafe7c1d437aeb",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。c1の変更とc2のブランチから両方の完了ゲートを呼ぶ。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。",
+        "sources": [
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "changed files and branch selection invoke both gates",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          }
+        ]
+      },
+      {
+        "id": "SCN-2f7149cce94ed98f34a7",
+        "status": "reviewed",
+        "scenarioSha256": "cd8f10cba9ead3192b929b6a9e175124be7b1c33f4eb59feb28066e381a883ae",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。READMEとchangesetだけの実際のGit差分でverifyだけを呼ぶ。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。",
+        "sources": [
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "documentation files [ 'README.md', '.changeset/x.md' ] invoke quality only",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          }
+        ]
+      },
+      {
+        "id": "SCN-abcce1ac255f52f2ec1d",
+        "status": "reviewed",
+        "scenarioSha256": "1926e40726a1d5c51241905a2c4e2e09bc7668629b68b6e470f9dd4e2726dd84",
+        "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。文書とコードの実際のGit差分で対象がない場合、日本語案内と終了コード1を返してverifyを呼ばない。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。",
+        "sources": [
+          "REQ-132"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "unassigned code files [ 'docs/usage.md', 'packages/a.ts' ] fail before invoking verify",
+            "sha256": "4d33f7a2b7c7f3e4e93fb0695ca844238fdb50c1f70e6443b542309f2d786adc"
+          }
+        ]
+      },
+      {
+        "id": "SCN-8afa7165a685a9d49d57",
+        "status": "reviewed",
+        "scenarioSha256": "038828036dffc2058cb8f149f62d69f9dde9c1efb6f1c1a68be04992ac8bd47a",
+        "reason": "release.ymlを読み、全体の権限がcontents readだけであること、複数ジョブがあること、publishを実行するジョブだけがcontents writeとid-token writeを持つことをassertする。Scenarioは設定を読む条件であり、GitHubでの実行成功を示さない。",
+        "sources": [
+          "REQ-143"
+        ],
+        "tests": [
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "ワークフロー全体の権限は contents: read だけで、書き込みの権限は公開のジョブだけが持つ",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-b2b4ab0eaeec3b0d4dd8",
+        "status": "reviewed",
+        "scenarioSha256": "68d9e64f57f684a4d70cd0265fd2bf18c72f834df75f8ac6a3aafdb1eeec03f4",
+        "reason": "release.ymlを読み、lint・typecheck・testが同じ品質ジョブにあること、publishのneedsがそのジョブを指すこと、ignore-scripts付きinstall、publishでbuildしないこと、品質ジョブのuploadと公開ジョブのdownloadをassertする。実際のジョブ実行や成果物転送の成功は未確認。",
+        "sources": [
+          "REQ-143"
+        ],
+        "tests": [
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "公開のジョブは品質のジョブのあとに動き、スクリプトを実行せずにインストールし、ビルドせずにビルドの結果を受け取る",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-40011d05f5ad74b3e9fd",
+        "status": "reviewed",
+        "scenarioSha256": "0f30a1599c753093483fdcb45d582a91bb4ec8739425d4d1f5e7831ee770e7a1",
+        "reason": "release.ymlの全uses参照を抽出し、1件以上あることと全参照の末尾が40桁の16進数SHAであることをassertする。上流コミットの確認や実行成功はこの試験の範囲に含めない。",
+        "sources": [
+          "REQ-143"
+        ],
+        "tests": [
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "action をすべてコミットの SHA で指定する",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      },
+      {
+        "id": "SCN-2f2f1d4be78302090856",
+        "status": "reviewed",
+        "scenarioSha256": "fa01006c45ef719a79a1c3108a10396ab4dd69e539f9c5860930e5045856af3c",
+        "sources": [
+          "REQ-114"
+        ],
+        "reason": "人が作った実装ブランチでrunを始め、終了コード1、向き先不明のメッセージ、証拠ディレクトリ未作成、PR未作成を確かめる。実際のGitと代替ghを使うローカルの停止契約で、GitHubへの接続を要しない。",
+        "tests": [
+          {
+            "file": "packages/runner/test/pr.test.ts",
+            "contains": "人が作った loomake/<change-id> の上で始めて向き先が分からなければ、証拠を記録せずに止まる",
+            "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          }
+        ]
+      },
+      {
+        "id": "SCN-b727235a87e44d5a8748",
+        "status": "reviewed",
+        "scenarioSha256": "9714c7ce6d75d26a2475848b2fb4ffd8ddfbd64d5357aa5d115374f7034c4d7a",
+        "sources": [
+          "REQ-115"
+        ],
+        "reason": "代替ghがbody-fileから読み取った本文について、Whyとその内容、What Changesとその内容、完了ゲートの合格表示、REQ-012とtests/x.test.tsの行、証拠のパスを順番に確かめる。GitHub上での表示やPR作成の成功はこの対応に含めない。",
+        "tests": [
+          {
+            "file": "packages/runner/test/pr.test.ts",
+            "contains": "本文に、proposal の Why と What Changes、完了ゲートの結果、要件ごとのテスト、証拠の記録のパスを含める",
+            "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          }
+        ]
+      },
+      {
+        "id": "SCN-584a9aab9c83b5990a97",
+        "status": "reviewed",
+        "scenarioSha256": "d64d78404987f527df4a1d40ac336703cd5a22bb84510bac0202082a2abce480",
+        "sources": [
+          "REQ-116"
+        ],
+        "reason": "代替ghのauth失敗を入力し、終了コード1とログイン案内、エンジン呼び出しなし、実装ブランチなし、実行記録なしを確かめる。別の同条件テストで証拠記録なし、originへの送信なし、PR未作成も確かめる。",
+        "tests": [
+          {
+            "file": "packages/runner/test/pr.test.ts",
+            "contains": "gh にログインしていなければ、エンジンを呼ばず、change のブランチも作らずに止まり、終了コード 1 を返す",
+            "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          },
+          {
+            "file": "packages/runner/test/pr.test.ts",
+            "contains": "gh にログインしていなければ、証拠を記録せず、ブランチも送らずに止まり、終了コード 1 を返す",
+            "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          }
+        ]
+      },
+      {
+        "id": "SCN-71d6bd155f46759898db",
+        "status": "reviewed",
+        "scenarioSha256": "3c35acc753ce4ee21190e4206798caa122496db38e758ec97714ef5fdb137d72",
+        "sources": [
+          "REQ-114"
+        ],
+        "reason": "代替ghがpr createを受けた時点で、実際のGitのHEAD、HEADコミットのファイル一覧、ローカルbare originのブランチ先端を保存する。その時点で証拠ファイルが最後のコミットに含まれ、HEADとoriginの先端が一致し、そのHEADがrun終了後とも一致することを確かめる。GitHub上の作成成功は含めない。",
+        "tests": [
+          {
+            "file": "packages/runner/test/pr.test.ts",
+            "contains": "PR を作る時点で、ブランチの最後のコミットに証拠の記録が入っている",
+            "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          }
+        ]
+      },
+      {
+        "id": "SCN-ba54a6e5abb22784fe66",
+        "status": "reviewed",
+        "scenarioSha256": "3ac7256ef936c3b9604bf9dd80aa836db7560c467c3b12b69fdf7039e60e772f",
+        "sources": [
+          "REQ-116"
+        ],
+        "reason": "代替ghの受け取った引数全体を、pr create、base main、head loomake/c1、title c1、body-fileの順で確かめる。body-fileの名前がpr-body.mdで、実際に読める内容と渡された本文が等しいことも確かめる。GitHubへの実接続は含めない。",
+        "tests": [
+          {
+            "file": "packages/runner/test/pr.test.ts",
+            "contains": "gh pr create に、タイトル・本文・向き先のブランチを渡す",
+            "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          }
+        ]
+      },
+      {
+        "id": "SCN-5e6058f60a4328ccbe5a",
+        "status": "reviewed",
+        "scenarioSha256": "da18e50af45b353b82ed11c4e6bd849d468d57ac94ef6ddb7c23665a71927c74",
+        "sources": [
+          "REQ-116"
+        ],
+        "reason": "代替ghのauth失敗を設定したdry-runで、終了コード0とタスク予定表示に加え、authの呼び出し記録が存在せず、エンジン呼び出しもないことを確かめる。gh認証の成否を無視して予定表示するだけの回帰を区別する。",
+        "tests": [
+          {
+            "file": "packages/runner/test/pr.test.ts",
+            "contains": "--dry-run では gh を確かめず、予定のタスクを表示して終了コード 0 を返す",
+            "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          }
+        ]
+      },
+      {
+        "id": "SCN-1427bef7cdde9b1e461c",
+        "status": "reviewed",
+        "scenarioSha256": "25f617e2ef0bf5a8f6ac8515f7c4ed7875a1bcffc8d7a62a646ea22b0f7f0eb8",
+        "sources": [
+          "REQ-116"
+        ],
+        "reason": "代替ghのauth statusを開始時に成功、エンジン実行後に失敗させ、その順序と引数を記録して確かめる。最後の検査結果の合格、ログイン案内、終了コード1、エンジン実行あり、証拠ディレクトリ未作成、ローカルbare originへの未送信を確かめる。",
+        "tests": [
+          {
+            "file": "packages/runner/test/pr.test.ts",
+            "contains": "実行のあいだに gh からログアウトしたら、証拠を記録せず、ブランチも送らずに止まり、終了コード 1 を返す",
+            "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          }
+        ]
+      },
+      {
+        "id": "SCN-b069ac8eb86974e09610",
+        "status": "reviewed",
+        "scenarioSha256": "3b05e3ff772d4f9d49b22a3ed810c8f7904599e4f0db8ce8c60f9949b8f7acda",
+        "reason": "新規プロジェクトへ配布物をオフライン導入し、initを2回実行する。AGENTS.md・設定・gitignore・変換スキルが再実行で変わらないこと、doctor・仕様ゲート・完了ゲートが成功することをスクリプト内でassertする。各操作の期待した終了コードと実際の終了コードを記録し、外側のテストでも全操作の一致をassertする。AIの操作試験であり、人による試験ではない。",
+        "sources": [
+          "REQ-155"
+        ],
+        "tests": [
+          {
+            "file": "tests/ai-journeys.test.ts",
+            "contains": "で導入・通常操作・失敗と復旧を実行し、操作結果を記録する",
+            "sha256": "5d1934a2891224bd9ade78232509f9f529e8e6c36c3bf115843bb56e9a3f11f2"
+          }
+        ]
+      },
+      {
+        "id": "SCN-7107f4ee5e1cda8ea041",
+        "status": "reviewed",
+        "scenarioSha256": "acb1c33d4f35f5dd1c91a8ea241847b3f46863d445adcf37d3c081de23c77750",
+        "reason": "既存AGENTS.mdを持つプロジェクトで非対話initの終了コード1と確認できない旨の表示、既存内容の不変をassertする。help・doctor・完了ゲート・trace record・reportを実行し、レポート25行がすべて合格であることをassertする。記録するテスト結果は試験用データであり、外部GitHubへの接続は含まない。",
+        "sources": [
+          "REQ-156"
+        ],
+        "tests": [
+          {
+            "file": "tests/ai-journeys.test.ts",
+            "contains": "で導入・通常操作・失敗と復旧を実行し、操作結果を記録する",
+            "sha256": "5d1934a2891224bd9ade78232509f9f529e8e6c36c3bf115843bb56e9a3f11f2"
+          }
+        ]
+      },
+      {
+        "id": "SCN-9ef6471f7091bfcf2953",
+        "status": "reviewed",
+        "scenarioSha256": "3f709b41a58122a7d7e5f47dffd54c7ac3917df9193c7a9915cb0d89c8098f5e",
+        "reason": "未回答Q-01、成功テスト対応のないレポート、未コミットの変更を順に用意し、終了コード1とそれぞれの原因表示をassertする。回答・レポート・コミットを修正した後の再実行の成功と、最後の証拠レポートのok=trueをassertする。人による利用者試験としては扱わない。",
+        "sources": [
+          "REQ-157"
+        ],
+        "tests": [
+          {
+            "file": "tests/ai-journeys.test.ts",
+            "contains": "で導入・通常操作・失敗と復旧を実行し、操作結果を記録する",
+            "sha256": "5d1934a2891224bd9ade78232509f9f529e8e6c36c3bf115843bb56e9a3f11f2"
+          }
+        ]
+      },
+      {
+        "id": "SCN-1e3dd10fac4b0851f971",
+        "status": "reviewed",
+        "scenarioSha256": "8e39d5c36df187dda1a09ec03f13e2ed0ad74ddd0c97e5bc8dfe9d03cc23b38e",
+        "reason": "通常runでtrace・tasks・specsを各1MiB超にし、上限と対象を示すUsageError、HEADとブランチの不変、エンジン呼出なし、記録・証拠・PR・リモート参照なしをassertする。verify単体でも各文書の上限拒否をassertする。",
+        "sources": [
+          "REQ-172"
+        ],
+        "tests": [
+          {
+            "file": "tests/input-boundaries.test.ts",
+            "contains": "通常runでも過大な",
+            "sha256": "f70946322ef3cbcf47b80b16ac5d6d40f1ce58c2bebddd2d8d2e0cc98ada3930"
+          },
+          {
+            "file": "tests/input-boundaries.test.ts",
+            "contains": "verifyの",
+            "sha256": "f70946322ef3cbcf47b80b16ac5d6d40f1ce58c2bebddd2d8d2e0cc98ada3930"
+          }
+        ]
+      },
+      {
+        "id": "SCN-762eea79c2bdc036757f",
+        "status": "reviewed",
+        "scenarioSha256": "5b032b5ceccf6c322da97a6267c6d42b4ad4d2436de0cae1b2f888237128f734",
+        "reason": "全入力文書が個別上限以内のゲートだけの通常runで、品質コマンドから16MiBの失敗情報を出す。記録した失敗情報の内容を照合し、指示16777216バイトの上限による停止、エンジン呼出なし、タスクの復元、HEAD不変、証拠・PR・リモート参照なしをassertする。",
+        "sources": [
+          "REQ-173"
+        ],
+        "tests": [
+          {
+            "file": "tests/input-boundaries.test.ts",
+            "contains": "通常runで巨大な検証失敗を指示へ加える前に止まり、エンジンを起動しない",
+            "sha256": "f70946322ef3cbcf47b80b16ac5d6d40f1ce58c2bebddd2d8d2e0cc98ada3930"
+          }
+        ]
+      },
+      {
+        "id": "SCN-d8fc5de06e1bf65834fb",
+        "status": "reviewed",
+        "scenarioSha256": "1688620f54da24f2277a269f6ba906ce381121c4b97767da4c537957786780b0",
+        "reason": "verify --spec-onlyを--changeなしで呼び、終了コード2、必要な--change指定と日本語の使い方をassertする。既存の期待値を保ち、SourceのREQ-192をテスト名に追加した。",
+        "sources": [
+          "REQ-192"
+        ],
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "--change を付けずに --spec-only を指定すると、日本語の使い方を出して 2",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-6d9261c3408f3ab5cc30",
+        "status": "reviewed",
+        "scenarioSha256": "82d7d74c4949136f704f853d4e1495ccef4c0e5009ae7fb83a6ec4b0e8dbc6a3",
+        "reason": "期限500msと経過1800ms未満の既存条件に加え、実際に起動した親子のPIDを取得し、runClaudeから戻った時点の親の消滅と子の停止（消滅またはLinuxのzombie）をassertする。状態は試験自身のfinallyによる後片付け前に採取する。zombieは停止の根拠であり、OSによる回収の完了を保証しない。",
+        "sources": [
+          "REQ-139"
+        ],
+        "tests": [
+          {
+            "file": "packages/runner/test/engine-safety.test.ts",
+            "contains": "出力を継承した子も時間切れで停止する",
+            "sha256": "c81de480ab541307036c963d9722124f617e75111f91245e408d386a2fd28980"
+          }
+        ]
+      },
+      {
+        "id": "SCN-906b5b5318a37ff92d7e",
+        "status": "reviewed",
+        "scenarioSha256": "0f756f3010a9ac77c3c50c7dfb0460d1d9e1e81e54bf92fef15810ead92cd255",
+        "reason": "SIGTERMの受信だけを記録して終了しないエンジンを起動し、POSIXでは受信記録、正のPID、戻った時点の親の消滅、非ゼロ終了と既存の期限・経過時間をassertする。起動spyの1回を正の対照として確認する。",
+        "sources": [
+          "REQ-139"
+        ],
+        "tests": [
+          {
+            "file": "packages/runner/test/engine-safety.test.ts",
+            "contains": "終了要求を無視するエンジンも強制終了する",
+            "sha256": "c81de480ab541307036c963d9722124f617e75111f91245e408d386a2fd28980"
+          }
+        ]
+      },
+      {
+        "id": "SCN-14294fb5529df1995cfe",
+        "status": "reviewed",
+        "scenarioSha256": "4ae41d331f69c7979723444e6be36a1a77903a410d6c605fdfd8d48235aa472e",
+        "reason": "AbortSignal.abortを起動前に渡し、aborted=true、開始ファイルなし、PID未作成、spawn呼出0回をassertする。同じspyを使う他の2試験ではspawn1回を確認し、観測器が無効なため0となる場合を除く。",
+        "sources": [
+          "REQ-139"
+        ],
+        "tests": [
+          {
+            "file": "packages/runner/test/engine-safety.test.ts",
+            "contains": "起動前に中断済みならエンジンを起動しない",
+            "sha256": "c81de480ab541307036c963d9722124f617e75111f91245e408d386a2fd28980"
+          }
+        ]
+      },
+      {
+        "id": "SCN-7751d2d9b41fc069c9d2",
+        "status": "reviewed",
+        "scenarioSha256": "969a3d3a40b5c10526b036e7da748cdc84ba9d78ee201cf35080a0b500437864",
+        "reason": "探索先へ親を指す実際のリンクを作り、リンク名backを示す例外をassertする。specsの循環でもverify・trace・promptが同じUsageErrorで止まることをassertする。Sourceの対応はREQ-170の直接試験で確認する。",
+        "sources": [
+          "REQ-170"
+        ],
+        "tests": [
+          {
+            "file": "packages/kit/test/input.test.ts",
+            "contains": "[REQ-170] 親へ戻るリンクをたどらない",
+            "sha256": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985"
+          },
+          {
+            "file": "tests/input-boundaries.test.ts",
+            "contains": "[REQ-172] specsの循環リンク",
+            "sha256": "f70946322ef3cbcf47b80b16ac5d6d40f1ce58c2bebddd2d8d2e0cc98ada3930"
+          }
+        ]
+      },
+      {
+        "id": "SCN-bef2a7c042d8803de34c",
+        "status": "reviewed",
+        "scenarioSha256": "ce2de649955f72cd5bf2734e2c42c419b54b2916bbab742114425e4a134a1159",
+        "reason": "64MiBを超える疎な証拠と、各45MiBで合計128MiBを超える3つの証拠を与え、runReportがそれぞれ個別・合計上限の例外で止まり、合格レポートを返さないことをassertする。",
+        "sources": [
+          "REQ-172"
+        ],
+        "tests": [
+          {
+            "file": "tests/input-boundaries.test.ts",
+            "contains": "[REQ-172] JSONの証拠も64MiB",
+            "sha256": "f70946322ef3cbcf47b80b16ac5d6d40f1ce58c2bebddd2d8d2e0cc98ada3930"
+          },
+          {
+            "file": "tests/input-boundaries.test.ts",
+            "contains": "[REQ-172] 個別には64MiB以内でも証拠の合計",
+            "sha256": "f70946322ef3cbcf47b80b16ac5d6d40f1ce58c2bebddd2d8d2e0cc98ada3930"
+          }
+        ]
+      },
+      {
+        "id": "SCN-f8b67f815d9edd62df5f",
+        "status": "reviewed",
+        "scenarioSha256": "fc1bc2588ba42196be89184b68396e21a05b10c1197462729f78d5c428c44ce5",
+        "reason": "--helpと-hをmainへ渡し、終了コード0と5つのサブコマンドの名前・空でない説明が標準出力へ出ることをassertする。",
+        "sources": [
+          "REQ-135"
+        ],
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "[REQ-135] loomake --help と -h",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-3c5eee6c0bc35a7662d4",
+        "status": "reviewed",
+        "scenarioSha256": "1fcec7cd2fa689e43559272a1b151b8af1597b28503b6e51d5b7c8c5521ee997",
+        "reason": "存在しないchangeと--doneを付けたverify --helpを実行し、終了コード0、正確な使い方、全5オプションの説明、標準エラーが空であることをassertする。",
+        "sources": [
+          "REQ-135"
+        ],
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "[REQ-135] loomake verify --help",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-e45d3b8f791e7de52b0f",
+        "status": "reviewed",
+        "scenarioSha256": "eaae3cc42d6075ecd7a1b0d47c1308f2a11929d3c4b7112611c63da3b2b1e261",
+        "reason": "--versionと-vを実行し、終了コード0とCLIのpackage.jsonのversionに等しい標準出力をassertする。",
+        "sources": [
+          "REQ-135"
+        ],
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "[REQ-135] loomake --version と -v",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-a683dcb21df0301392bb",
+        "status": "reviewed",
+        "scenarioSha256": "e396af14336205cd56e1a143ce717eb16b98b62df10650b38b03ee6973d677d6",
+        "sources": [
+          "REQ-034"
+        ],
+        "reason": "yesで未回答のQ-01を用意し、ok=falseとID・関連REQ・質問を含む失敗項目を完全一致でassertする。CLIで不合格を終了コード1へ変換する試験と組み合わせる。",
+        "tests": [
+          {
+            "file": "packages/kit/test/verify.test.ts",
+            "contains": "未回答のブロッキング確認事項があると、ID・関連・質問",
+            "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          },
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "1 つ以上の検査が不合格なら 1",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-b5d6867657c962d57b96",
+        "status": "reviewed",
+        "scenarioSha256": "1e68f2269b70bff26196e581f2f737a7e0456b895517ab6b6eba6bc97d7d92eb",
+        "sources": [
+          "REQ-036"
+        ],
+        "reason": "未承認A-01と確認待ちREQ-002を与え、両者のwarn詳細とok=trueをassertする。CLIでは仮定警告を含むゲートの終了コード0と合格表示をassertする。",
+        "tests": [
+          {
+            "file": "packages/kit/test/verify.test.ts",
+            "contains": "未承認の仮定と確認待ちの要件は警告になり",
+            "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          },
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "すべて合格か警告なら 0",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-c14e76ddd4c813653713",
+        "status": "reviewed",
+        "scenarioSha256": "8d78f8201b445b53760bfe13b69f0ec1445a2a6c21ea5411374c0a6bcdfb578f",
+        "sources": [
+          "REQ-040"
+        ],
+        "reason": "進捗と出力を持つコマンドで--done --jsonを実行し、標準出力全体のJSON.parse・schemaVersion・Ajv2020でのcoreスキーマ検証をassertする。進捗はstderrにあることも確認する。",
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "--json の標準出力は JSON だけで",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-5e7b5a451616c4f5e499",
+        "status": "reviewed",
+        "scenarioSha256": "5b15c229560835d3e1775590b6aafc5251fcdeb1ad003acb02f42ec12bde4ac8",
+        "sources": [
+          "REQ-040"
+        ],
+        "reason": "REQ-012の成功をtests/a.test.tsに持つレポートでJSONを出し、coverageがその1件の対応と完全一致することをassertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "要件ごとのテストファイルの一覧を出す",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-414dd75021b0a3fd4e5c",
+        "status": "reviewed",
+        "scenarioSha256": "898dfd30bcd8f83182dc67ddb32627c44bd7535971d6c0bf7f124fd6a8f1fa25",
+        "sources": [
+          "REQ-041"
+        ],
+        "reason": "未承認仮定の警告を含むCLI仕様ゲートで終了コード0と合格表示をassertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "すべて合格か警告なら 0",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-373041d8715147071068",
+        "status": "reviewed",
+        "scenarioSha256": "f759566bdea5eed4c85bae4d85e01fef670b1337e563f3425ce8c1666ff5dbf3",
+        "sources": [
+          "REQ-041"
+        ],
+        "reason": "仕様から参照されない反映済REQ-007でCLI仕様ゲートを実行し、終了コード1と不合格1件の表示をassertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "1 つ以上の検査が不合格なら 1",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-9380f85a23d00c442a6e",
+        "status": "reviewed",
+        "scenarioSha256": "26e79e68ec71978e93c8dc66855fcd2e8f25ae00e32d0cb2ad7d8dd250bb900e",
+        "sources": [
+          "REQ-041"
+        ],
+        "reason": "CLIへverify --spec-onlyだけを渡し、終了コード2・必要な--change指定と日本語の使い方をassertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "--change を付けずに --spec-only を指定すると",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-65953e5426fce883ba49",
+        "status": "reviewed",
+        "scenarioSha256": "a6f09782c317860f09ecb980fb5dcafeafbfbfc91e6ebc65c9aa3981f207ee20",
+        "sources": [
+          "REQ-041"
+        ],
+        "reason": "../../packages・a/b・a\\bを各CLIへ渡し、終了コード2とパスの区切りの日本語をassertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "--change の値にパスの区切りを含めると",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-0580d4faf39eeccb215b",
+        "status": "reviewed",
+        "scenarioSha256": "b6bf8b4daebe716f56abf074922dc7926b0efd91b98dbdb253447892c003ec9e",
+        "sources": [
+          "REQ-042"
+        ],
+        "reason": "changeを省いたAPIとCLIの両方でmode=quality、コマンド項目だけであることを完全一致でassertする。APIではchange=nullも確認する。",
+        "tests": [
+          {
+            "file": "packages/kit/test/verify.test.ts",
+            "contains": "change を省略すると commands だけを実行し",
+            "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          },
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "loomake verify を引数なしで実行すると",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-129c1a409ad4cdd46ce6",
+        "status": "reviewed",
+        "scenarioSha256": "bfc0cfb36b49df771c50f4505bc984af7cb34174dcb31c24e91fcfc53cc0fd52",
+        "sources": [
+          "REQ-047"
+        ],
+        "reason": "実際のkit package.jsonのdependenciesキーがcoreだけという配列に完全一致することをassertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "kit の dependencies は @loomake/core だけ",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-38961b7ee7aa96aad6f6",
+        "status": "reviewed",
+        "scenarioSha256": "0fc6dd543ded3083f2568ca7040843c07c1b926b916920a80170246fc7118ee3",
+        "sources": [
+          "REQ-047"
+        ],
+        "reason": "実際のCLI package.jsonのdependenciesにcore/kit/trace/runner以外のキーがないことをassertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "loomake の dependencies は @loomake/core・@loomake/kit",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-f9f8eb6c78a2fa7479ef",
+        "status": "reviewed",
+        "scenarioSha256": "fb82d2509a479e9a370ffab0079bb3785b0749b0f941ad4cdb4f6b470cb137c0",
+        "sources": [
+          "REQ-050"
+        ],
+        "reason": "500要件と1000個のテストファイル、対応する成功レポートを準備し、準備後のCLI mainによるdone/skip実行が終了コード0かつ3秒未満となることをassertする。テスト1000個を実行した測定ではない。別プロセスのCLI全体の測定はcli-scale-results.jsonに別記した。",
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "要件 500 件・テストファイル 1,000 個の --done",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-d704beb36bb7a1c172c7",
+        "status": "reviewed",
+        "scenarioSha256": "6e2197b4c417b320076730074b899a2cb2e1a7ac6c684a40aabac881a891ee9c",
+        "sources": [
+          "REQ-034"
+        ],
+        "reason": "c1=5 回とa=3 回を与え、Q-01と双方の回答があるfail詳細・ok=falseをassertする。CLIの不合格終了コード変換と組み合わせる。",
+        "tests": [
+          {
+            "file": "packages/kit/test/verify.test.ts",
+            "contains": "参照先の change と回答が違えば、両方の回答を出して不合格",
+            "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          },
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "1 つ以上の検査が不合格なら 1",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-cd7aa203d3fa5f737e59",
+        "status": "reviewed",
+        "scenarioSha256": "56c40344d53daf02fc7c81163a047f0e25cd6f5c734bb053af512dbaa65c564d",
+        "reason": "同じ正常なchangeへ等号・空白の2形式で--spec-onlyを実行し、194の試験でコードと表示の一致、041の試験で終了コード0とJSON結果の一致をassertする。",
+        "sources": [
+          "REQ-194"
+        ],
+        "tests": [
+          {
+            "file": "packages/cli/test/arguments.test.ts",
+            "contains": "[REQ-194] --change=<id> は",
+            "sha256": "ce0333abbadeb77021844db854f55d9e628c12b99f0f8705ea071ede067ece5a"
+          },
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "[REQ-041] --change=<id> の形を",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-a2dda7c2b73cba290dcd",
+        "status": "reviewed",
+        "scenarioSha256": "7b6865ce435d574ce47045c63428f120e2d43f233e41c88625c1f4c0a83f2a7e",
+        "reason": "trace record --helpの終了コード0と専用の使い方をassertし、report専用の--formatが出ないことをassertする。report -hの使い方も別にassertする。",
+        "sources": [
+          "REQ-135"
+        ],
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "[REQ-135] trace record --help と trace report",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-0ff8b12a10a748d24dbb",
+        "status": "reviewed",
+        "scenarioSha256": "159ae1426a01339351b8757557cbff13aa0328c983f3c323ed7fa688e361c188",
+        "reason": "同じchangeへ--change=<id>と--change <id>を渡し、仕様ゲートの終了コード0と両形式のJSON結果の一致をassertする。",
+        "sources": [
+          "REQ-041"
+        ],
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "[REQ-041] --change=<id> の形を",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-ef434705863eb9513f3f",
+        "status": "reviewed",
+        "scenarioSha256": "d68f6924cf44eca2f0854aad7c557205b47d6f0385b289b15dab73ecc4ad6dec",
+        "reason": "仕様と同じfooを実行し、終了コード2、「知らないコマンドです：foo」と使い方が標準エラーに出ることをassertする。",
+        "sources": [
+          "REQ-041"
+        ],
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "[REQ-041] 知らないコマンドを指定すると",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-802757bb89c24f8ead97",
+        "status": "reviewed",
+        "scenarioSha256": "873e7a0c80d928de1ac640c9171c6f68fbb188c732fd2b7ca4f8e60a59e10f39",
+        "sources": [
+          "REQ-034"
+        ],
+        "reason": "はいで未回答のQ-01を与え、ok=falseとID・関連REQ・質問を含む失敗項目を完全一致でassertする。CLIの不合格終了コード変換も別試験で確認する。",
+        "tests": [
+          {
+            "file": "packages/kit/test/verify.test.ts",
+            "contains": "ブロッキング列が はい で回答が空なら",
+            "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          },
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "1 つ以上の検査が不合格なら 1",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-717c8e34025bc8e21c27",
+        "status": "reviewed",
+        "scenarioSha256": "0643b237df4a8b1b30e90f2df75a9be0016cd2e311f705be35ca639200762384",
+        "sources": [
+          "REQ-034"
+        ],
+        "reason": "要と空の値をそれぞれ与え、回答済みでもok=false、Q-01と実際の値を含む失敗項目を完全一致でassertする。CLIの不合格終了コード変換も確認する。",
+        "tests": [
+          {
+            "file": "packages/kit/test/verify.test.ts",
+            "contains": "ブロッキング列が yes・no・はい・いいえ のどれでもなければ",
+            "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          },
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "1 つ以上の検査が不合格なら 1",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      },
+      {
+        "id": "SCN-53a774d48e47b96217ed",
+        "status": "reviewed",
+        "scenarioSha256": "0faf116f63f24ed1d7ce8a12178d1188d30bfd7f8ce96a0d3467dec8ec99b7a4",
+        "sources": [
+          "REQ-041"
+        ],
+        "reason": "c1&echoを含む6つの不正名を渡し、終了コード2・日本語の形の説明・標準出力なしをassertする。追加試験はrunExternalを監視し、OpenSpecを含む外部操作を1件も呼ばないことを直接assertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "--change の値が change 名の形でなければ",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          },
+          {
+            "file": "packages/cli/test/verify-boundaries.test.ts",
+            "contains": "不正なchange-idはOpenSpecを含む外部操作を呼ばずに",
+            "sha256": "453d06454e94c6850d239e713c1258885a0a6e642f5f312aee48eb1fd5436a12"
+          }
+        ]
+      },
+      {
+        "id": "SCN-f05f4d854b4312330adf",
+        "status": "reviewed",
+        "scenarioSha256": "657cf0fab02294664601a38fb1e0adba66127d420398e96cfd2033c54a7a2b0c",
+        "sources": [
+          "REQ-041"
+        ],
+        "reason": "CLIにarchiveを渡し、終了コード2とarchiveは使えない旨の日本語をassertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/cli.test.ts",
+            "contains": "archive を --change に渡すと",
+            "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
+          }
+        ]
+      }
+    ],
+    "auditStatus": "exit1",
+    "counts": {
+      "total": 455,
+      "reviewed": 430,
+      "superseded": 9,
+      "unreviewed": 10,
+      "invalid": 6
+    },
+    "auditSha256": "add8373efd417fd65da0e92acd031674729d042601e229d8fa9730583d5d0075",
+    "remaining": [
+      {
+        "id": "SCN-9fe8421dc4a4ad0058c5",
+        "file": "openspec/changes/relax-commit-push-budget/specs/external-process-budget/spec.md",
+        "scenario": "品質コマンドの期限で止まる",
+        "status": "unreviewed",
+        "reason": "対応の内容をレビューしていません"
+      },
+      {
+        "id": "SCN-4ccc81f62b268b7fa6d7",
+        "file": "openspec/changes/relax-commit-push-budget/specs/external-process-budget/spec.md",
+        "scenario": "遅い pre-commit フック",
+        "status": "unreviewed",
+        "reason": "対応の内容をレビューしていません"
+      },
+      {
+        "id": "SCN-8fe96410ddc145f6b382",
+        "file": "openspec/specs/external-process-budget/spec.md",
+        "scenario": "品質コマンドの期限で止まる",
+        "status": "unreviewed",
+        "reason": "別の進行中のchangeで追加されたScenario。今回のレビュー対象外のため、条件と試験の対応を未確認として残す。"
+      },
+      {
+        "id": "SCN-655f5379d5efd0776615",
+        "file": "openspec/specs/monorepo/spec.md",
+        "scenario": "いまの仕様の検証",
+        "status": "unreviewed",
+        "reason": "対応の内容をレビューしていません"
+      },
+      {
+        "id": "SCN-bf2080219544eaef1205",
+        "file": "openspec/specs/monorepo/spec.md",
+        "scenario": "Node下限で検査する",
+        "status": "unreviewed",
+        "reason": "対応の内容をレビューしていません"
+      },
+      {
+        "id": "SCN-ba93b05041bc568cc7d7",
+        "file": "openspec/specs/monorepo/spec.md",
+        "scenario": "検査に失敗する",
+        "status": "unreviewed",
+        "reason": "対応候補のassertionの内容は未精査"
+      },
+      {
+        "id": "SCN-232e41d6b34829afe26a",
+        "file": "openspec/specs/monorepo/spec.md",
+        "scenario": "公開物と開発環境を分ける",
+        "status": "invalid",
+        "reason": "選んだ試験に失敗または未実行があります"
+      },
+      {
+        "id": "SCN-b069ac8eb86974e09610",
+        "file": "openspec/specs/quality-journeys/spec.md",
+        "scenario": "初めて導入する",
+        "status": "invalid",
+        "reason": "選んだ試験に失敗または未実行があります"
+      },
+      {
+        "id": "SCN-7107f4ee5e1cda8ea041",
+        "file": "openspec/specs/quality-journeys/spec.md",
+        "scenario": "既存プロジェクトを使う",
+        "status": "invalid",
+        "reason": "選んだ試験に失敗または未実行があります"
+      },
+      {
+        "id": "SCN-9ef6471f7091bfcf2953",
+        "file": "openspec/specs/quality-journeys/spec.md",
+        "scenario": "原因を直して再実行する",
+        "status": "invalid",
+        "reason": "選んだ試験に失敗または未実行があります"
+      },
+      {
+        "id": "SCN-7f9f444d54dc7bf66cdc",
+        "file": "openspec/specs/release-integrity/spec.md",
+        "scenario": "品質コマンドを実行する",
+        "status": "unreviewed",
+        "reason": "対応候補のassertionの内容は未精査"
+      },
+      {
+        "id": "SCN-9822abca70074dd781d0",
+        "file": "openspec/specs/run-pr/spec.md",
+        "scenario": "合格して PR まで進む",
+        "status": "unreviewed",
+        "reason": "実際のGitとローカルbareのorigin、代替ghによる引数・本文の試験はあるが、Scenarioが要求するGitHub上でのPR作成は未確認。利用できる専用リポジトリはない。"
+      },
+      {
+        "id": "SCN-a38b1d680601fc12350d",
+        "file": "openspec/specs/run-pr/spec.md",
+        "scenario": "実装ブランチの上で再開する",
+        "status": "unreviewed",
+        "reason": "実際のGitとローカルbareのorigin、代替ghによる引数・本文の試験はあるが、Scenarioが要求するGitHub上でのPR作成は未確認。利用できる専用リポジトリはない。"
+      },
+      {
+        "id": "SCN-cea3f577e0cebbad9bd1",
+        "file": "openspec/specs/run/spec.md",
+        "scenario": "二度目の検査が停止しない",
+        "status": "unreviewed",
+        "reason": "対応候補のassertionの内容は未精査"
+      },
+      {
+        "id": "SCN-7becee6258eb49ff7efa",
+        "file": "openspec/specs/trace-record/spec.md",
+        "scenario": "ネットワークがない",
+        "status": "invalid",
+        "reason": "選んだ試験に失敗または未実行があります"
+      },
+      {
+        "id": "SCN-5475fccf91630747c15e",
+        "file": "openspec/specs/trace-report/spec.md",
+        "scenario": "ネットワークがない",
+        "status": "invalid",
+        "reason": "選んだ試験に失敗または未実行があります"
+      }
+    ]
+  },
+  "focusedReports": {
+    "ci": {
+      "file": ".loomake/quality/ci-process-report.json",
+      "sha256": "0c49139dd0dc42b4e4bdf13c4f65385a198b0108a068be6b94058fb3e8943dd9",
+      "results": {
+        "passed": 15,
+        "failed": 0,
+        "pending": 0
+      }
+    },
+    "pr": {
+      "command": "pnpm exec vitest run packages/runner/test/pr.test.ts --reporter=json --outputFile=.loomake/quality/pr-invocation-report.json",
+      "passed": 10,
+      "failed": 0,
+      "pending": 0,
+      "exitCode": 0,
+      "report": ".loomake/quality/pr-invocation-report.json",
+      "reportSha256": "ae50e52fd6115176705eaa6e84e345df3cd9a174d7c9f321b40a9a9ccef41615",
+      "log": "/tmp/quality-pr-invocation.log"
+    },
+    "inputJourneys": [
+      {
+        "file": ".loomake/quality/input-journeys-focused-report.json",
+        "sha256": "13399e2fa40142b0f75170d4aa8a4e1df6d09f0cd33942c931d82d0f7d31ac1d",
+        "passed": 43,
+        "failed": 2,
+        "pending": 0,
+        "failures": [
+          {
+            "file": "tests/input-boundaries.test.ts",
+            "fullName": "コマンドの入力予算 [REQ-172] 過大なtasksではrunを始めずGitとエンジンを変更しない",
+            "duration": 26269.08147,
+            "failureMessages": [
+              "Error: Test timed out in 5000ms.\nIf this is a long-running test, pass a timeout value as the last argument or configure it globally with \"testTimeout\".\n    at task (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2700:43)\n    at Object.<anonymous> (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2717:16)\n    at Object.<anonymous> (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2486:28)\n    at chain (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1870:14)\n    at /tmp/loomake-quality-after-merge/tests/input-boundaries.test.ts:68:3\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2781:52\n    at runWithSuite (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3267:8)\n    at Object.collect (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2781:22)\n    at Object.collect (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2786:51)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+            ]
+          },
+          {
+            "file": "tests/input-boundaries.test.ts",
+            "fullName": "コマンドの入力予算 [REQ-172] 通常runでも過大なtrace.mdを開始前に拒否し、エンジンと公開を始めない",
+            "duration": 14328.883007,
+            "failureMessages": [
+              "Error: Test timed out in 5000ms.\nIf this is a long-running test, pass a timeout value as the last argument or configure it globally with \"testTimeout\".\n    at task (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2700:43)\n    at Object.<anonymous> (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2717:16)\n    at Object.<anonymous> (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2486:28)\n    at Object.chain (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1870:14)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2886:11\n    at Array.forEach (<anonymous>)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2882:10\n    at /tmp/loomake-quality-after-merge/tests/input-boundaries.test.ts:82:55\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2781:52\n    at runWithSuite (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3267:8)"
+            ]
+          }
+        ]
+      },
+      {
+        "file": ".loomake/quality/input-journeys-timeout-recheck.json",
+        "sha256": "4dbddcb904cb8b1aabc77c923b0eabf5f20a05550921856f0509f271e580c24d",
+        "passed": 2,
+        "failed": 0,
+        "pending": 19,
+        "failures": []
+      },
+      {
+        "file": ".loomake/quality/input-evidence-target-report.json",
+        "sha256": "e39d0acdbd3a0c763295bbbc6ef8e749b70540955e26cb7f9b660b297a8c0f04",
+        "passed": 2,
+        "failed": 0,
+        "pending": 19,
+        "failures": []
+      }
+    ]
+  },
+  "doneGate": {
+    "exit": 0,
+    "passed": 884,
+    "failed": 0,
+    "pending": 0,
+    "reportSha256": "fa0aa3aaa23e61ca910b7a28bad34ab18fd62f61069631bfcb86bfb1af2f0a0f",
+    "logSha256": "5d83d4c05b95f981bd01514e9f95b911c7f916d54c70566811c13e3c89ceaa91",
+    "node": "v24.21.0",
+    "command": "pnpm -s verify --change audit-scenario-evidence --done"
+  },
+  "assessment": {
+    "all15Scores": "Security 89 to85 and performance/resource limits89 to87 due newly reproduced unresolved gaps; other13 unchanged",
+    "atLeast90": 6,
+    "totalAspects": 15
+  },
+  "mappingCorrection": "Seven CI scenarios selected Source REQ-054 but the subprocess titles only name REQ-010/132. Added the existing REQ-054 workflow-to-ci-gate connection assertion as complementary evidence to all nine REQ-054 CI mappings, including the two already labelled branch tests; no tests or expectations changed.",
+  "specGate": {
+    "exit": 0,
+    "logSha256": "30f76d05efaa822fee2041fb12136c5d12a785410ef17a4b910ba42fde512260"
+  },
+  "initialDoneGate": {
+    "exit": 1,
+    "testPassed": true,
+    "reason": "no-unsafe-finally lint error in added cleanup catch; extracted helper, same cleanup and assertions",
+    "logSha256": "5e112ac89ad636cf49c9a9cb93034e583ddfb7e0e8da327f3e2731bde70dc3bf"
+  },
+  "node22Full": {
+    "exit": 1,
+    "passed": 881,
+    "failed": 3,
+    "pending": 0,
+    "reportSha256": "0ba42327df448c3c3d74bc7ff093d19af60c15afb71ad2e420a6586b00be5d50",
+    "node": "v22.12.0",
+    "binarySha256": "f220994a9cd62983cdf538dc638dbc29c7e600fecd3c79828a4bd81ab34e19bf",
+    "command": "PATH=<verified Node22 bin>:$PATH node node_modules/vitest/vitest.mjs run --maxWorkers=1 --reporter=json --outputFile=.loomake/quality/parallel-contracts-node22-full-report.json",
+    "failures": [
+      {
+        "file": "tests/ai-journeys.test.ts",
+        "fullName": "AIが作成・実行する配布物の操作試験 [REQ-155][REQ-156][REQ-157] /tmp/loomake-quality-after-merge/.loomake/quality で導入・通常操作・失敗と復旧を実行し、操作結果を記録する",
+        "status": "failed",
+        "duration": 71756.1092,
+        "failureMessages": [
+          "Error: Test timed out in 60000ms.\nIf this is a long-running test, pass a timeout value as the last argument or configure it globally with \"testTimeout\".\n    at task (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2700:43)\n    at Object.<anonymous> (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2717:16)\n    at Object.<anonymous> (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2486:28)\n    at Object.chain (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1870:14)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2886:11\n    at Array.forEach (<anonymous>)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2882:10\n    at /tmp/loomake-quality-after-merge/tests/ai-journeys.test.ts:8:72\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2781:52\n    at runWithSuite (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3267:8)"
+        ]
+      },
+      {
+        "file": "tests/package-artifacts.test.ts",
+        "fullName": "実際に配るパッケージ [REQ-084] Linuxで通信を拒否して配布物を使う。他OSでは検証対象外を明示する",
+        "status": "failed",
+        "duration": 38619.113226,
+        "failureMessages": [
+          "AssertionError: expected null to be +0 // Object.is equality\n    at /tmp/loomake-quality-after-merge/tests/package-artifacts.test.ts:82:64\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1632:35\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2801:26\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3338:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3333:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3904:64"
+        ]
+      },
+      {
+        "file": "tests/package-artifacts.test.ts",
+        "fullName": "実際に配るパッケージ [REQ-146] 配布物の公開型を使い、型の破壊的変更を利用側のコンパイルで検出する",
+        "status": "failed",
+        "duration": 30246.317597,
+        "failureMessages": [
+          "AssertionError: expected 1 to be +0 // Object.is equality\n    at /tmp/loomake-quality-after-merge/tests/package-artifacts.test.ts:99:61\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1632:35\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2801:26\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3338:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3333:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3904:64"
+        ]
+      }
+    ]
+  },
+  "priorPackedNode22": {
+    "sourceEvidence": {
+      "id": "node22-packed-prior",
+      "node": "22.12.0",
+      "scope": "prior packed offline 4 checks, carried forward after production-source and runtime-script identity checks",
+      "sourceCommit": "ebe7923ca68c05395ab6709a48db786009e2aea3",
+      "resultSha256": "c24f9aef33cc93f6724e2298e75a440cf83c06f74a5a15f0eb7d8f53827c70c8"
+    },
+    "productionSourceDiff": "",
+    "runtimeScriptSha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d",
+    "note": "Historical conditional reference, not rerun"
+  },
+  "executionSourceCommit": "60d543e",
+  "environment": "Linux ARM64; actual Git, fake engine/GH; no actual Claude/GitHub/other OS",
+  "node22PackageRecheck": {
+    "exit": 0,
+    "passed": 7,
+    "failed": 0,
+    "pending": 0,
+    "reportSha256": "e8dc5e0d9bcfa79d3fbaba4b99ad1017d6e7e04b567feadc9e8c47bd75496617",
+    "note": "Same two files and original deadlines, no source/config changes; this is a focused recheck, not a second successful full Node22 run."
+  },
+  "securityReview": {
+    "file": "openspec/changes/audit-scenario-evidence/independent-security-review-results.json",
+    "sha256": "f40ef5091caaeecb8ef5e32056e10e71c22d2463fbccc1c72ef03b48954952a4",
+    "remediation": "Approved scope; new change being planned, not fixed in this evidence snapshot."
+  }
+}

@@ -27,6 +27,41 @@ describe('Scenarioの同一性', () => {
   it.each([spec() + spec(), spec().replace('Source: REQ-012', ''), spec() + '\n```', '#### Scenario: 先にある\n' + spec()])('[REQ-188] 不明な同一性や構造を拒否する #%#', (text) => { expect(() => inventoryScenarios('file', text)).toThrow(); });
 });
 
+const removed = '## REMOVED Requirements\n\n### Requirement: 廃止する振る舞い\n**Reason**: 新しい振る舞いに置き換える\n**Migration**: 追加した要件へ移行する\nSource: REQ-012\n';
+
+describe('削除指示を含む差分仕様', () => {
+  it.each(['ADDED', 'MODIFIED'])('[REQ-188] 削除と%sの混在では有効なScenarioのIDと内容ハッシュを保つ', (operation) => {
+    const active = `## ${operation} Requirements\n\n${spec()}`;
+    const [expected] = inventoryScenarios('file', active);
+    for (const text of [removed + '\n' + active, active + '\n' + removed]) {
+      const result = inventoryScenarios('file', text);
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({ id: expected.id, sha256: expected.sha256, scenario: '条件', sources: ['REQ-012'] });
+    }
+  });
+  it('[REQ-188] 削除指示だけの文書は空の一覧を返す', () => {
+    expect(inventoryScenarios('file', removed)).toEqual([]);
+  });
+  it('[REQ-188] 削除指示に残った古いScenarioを一覧に含めない', () => {
+    const text = removed + '#### Scenario: 古い条件\n- **WHEN** 古い条件\n- **THEN** 古い結果\n\n## ADDED Requirements\n' + spec();
+    const result = inventoryScenarios('file', text);
+    expect(result.map((row) => row.scenario)).toEqual(['条件']);
+  });
+  it.each(['Requirements', 'ADDED Requirements', 'MODIFIED Requirements'])('[REQ-188] %sの通常要件にScenarioがなければ拒否する', (heading) => {
+    const text = `## ${heading}\n\n### Requirement: 不足\n規則を守る SHALL。\nSource: REQ-012\n`;
+    expect(() => inventoryScenarios('file', text)).toThrow('Scenarioがありません');
+  });
+  it('[REQ-188] コード例のREMOVED見出しを実際の節と混同しない', () => {
+    const text = '## ADDED Requirements\n\n```md\n' + removed + '```\n\n' + spec();
+    const [before] = inventoryScenarios('file', '## ADDED Requirements\n' + spec());
+    const [after] = inventoryScenarios('file', text);
+    expect(after).toMatchObject({ id: before.id, sha256: before.sha256 });
+  });
+  it.each(['', '## REMOVED Requirements\n'])('[REQ-188] 要件も削除指示もない文書を有効な削除と混同しない #%#', (text) => {
+    expect(() => inventoryScenarios('file', text)).toThrow('Scenarioを読み取れません');
+  });
+});
+
 describe('試験との対応の根拠', () => {
   it('[REQ-189] IDの一致だけでは候補で、確認済みにしない', () => { const result = audit(); expect(result.ok).toBe(false); expect(result.rows[0].status).toBe('unreviewed'); expect(result.rows[0].candidates).toHaveLength(1); });
   it('[REQ-189] 対応理由と内容・試験のハッシュと成功結果を認める', () => { const result = audit([review()]); expect(result.ok).toBe(true); expect(result.rows[0].status).toBe('reviewed'); expect(result.rows[0].tests).toHaveLength(1); });

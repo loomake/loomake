@@ -1,0 +1,344 @@
+{
+  "scope": "Current packed artifacts under Node22.12.0, Linux ARM64 with socket denial; separate diagnostic execution of development tests",
+  "sourceCommit": "ebe7923ca68c05395ab6709a48db786009e2aea3",
+  "nodeArchive": {
+    "name": "node-v22.12.0-linux-arm64.tar.xz",
+    "sha256": "8cfd5a8b9afae5a2e0bd86b0148ca31d2589c0ea669c2d0b11c132e35d90ed68",
+    "savedOfficialSHASUMS256Sha256": "4d4dc7ec5755c7b034127c9f13ba83efe9869d2aa11c173d901a551da0f4649f",
+    "binarySha256": "f220994a9cd62983cdf538dc638dbc29c7e600fecd3c79828a4bd81ab34e19bf",
+    "archiveAndExtractedBinaryMatch": true
+  },
+  "packedRuntime": {
+    "node": "v22.12.0",
+    "platform": "linux",
+    "arch": "arm64",
+    "executable": "/tmp/loomake-merge-node22.dXIPiE/node-v22.12.0-linux-arm64/bin/node",
+    "checks": [
+      {
+        "name": "通信拒否の対照実験",
+        "ok": true,
+        "result": "EPERM"
+      },
+      {
+        "name": "[REQ-144][REQ-089] 指定したNodeの配布物で主要コマンドと公開APIを検証する",
+        "ok": true
+      },
+      {
+        "name": "[REQ-084] 通信拒否の下でtrace recordが保存されtrace reportの全25行を出力する",
+        "ok": true
+      },
+      {
+        "name": "[REQ-125][REQ-124] 指定したNodeの配布物でrunのタスクコミットとSIGINT後の変更保持を検証する",
+        "ok": true
+      }
+    ],
+    "inputs": {
+      "script": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d",
+      "networkFilter": "42fa3f64936456659ee1a6e0adac0dd366026c106d28ac4e7a67113442f1059f",
+      "packageSmoke": "71aa378a372bde276c091afe2ce079b1e0b34029e13742fb8dec5cd199c63339",
+      "sigintSmoke": "53ccc8e135f82ad8236266886bf323ad2e9cf5d861dd5a1782e5dc776101bc42",
+      "tarballs": {
+        "loomake-0.0.0.tgz": "04056fdb7204834b75902a8fa2ad27dc3285f6d7109135617f87217f016bbaa6",
+        "loomake-core-0.0.0.tgz": "83bcdb17b9b410bb5a6dcc8339622e985bccaacaeb2dc47bf374b828659a1496",
+        "loomake-kit-0.0.0.tgz": "41450a56d7d484bc1ac0e7279da38ea5c6196cebc22a5b3d71d67c7b4cec9013",
+        "loomake-runner-0.0.0.tgz": "3433c175bbe7568cd4c4781af6307835cde2581ed1a8f8752c44a74c2d706e8d",
+        "loomake-trace-0.0.0.tgz": "bb2663437f40d3fba662db54fdfceeb148e0bab910a549314924c6a8697765a2"
+      }
+    }
+  },
+  "runtimeReport": {
+    "success": true,
+    "testResults": [
+      {
+        "name": "/tmp/loomake-quality-after-merge/scripts/runtime-compatibility.mjs",
+        "assertionResults": [
+          {
+            "fullName": "通信拒否の対照実験",
+            "status": "passed"
+          },
+          {
+            "fullName": "[REQ-144][REQ-089] 指定したNodeの配布物で主要コマンドと公開APIを検証する",
+            "status": "passed"
+          },
+          {
+            "fullName": "[REQ-084] 通信拒否の下でtrace recordが保存されtrace reportの全25行を出力する",
+            "status": "passed"
+          },
+          {
+            "fullName": "[REQ-125][REQ-124] 指定したNodeの配布物でrunのタスクコミットとSIGINT後の変更保持を検証する",
+            "status": "passed"
+          }
+        ]
+      }
+    ]
+  },
+  "sigint": {
+    "githubCalls": [
+      [
+        "auth",
+        "status"
+      ]
+    ],
+    "requirement": "REQ-124",
+    "ok": true,
+    "node": "v22.12.0",
+    "platform": "linux",
+    "signal": "SIGINT",
+    "exit": {
+      "code": 1,
+      "signal": null
+    },
+    "summary": {
+      "change": "sample",
+      "status": "interrupted",
+      "reason": "中断されました",
+      "doneTasks": [
+        "1.1 最初の変更"
+      ],
+      "remainingTasks": [
+        "1.2 途中の変更",
+        "2.1 品質を確認する"
+      ],
+      "lastVerify": null
+    },
+    "initial": "5a88bb7987752b0d0c29f766ffe3880ee27158fb",
+    "head": "9a03996afe2a90f0b495b6cfc811b3b82bc65ad8",
+    "partial": "unfinished\n"
+  },
+  "pathPolicy": "Prepend verified Node22 bin for shebangs and shell node commands; retain inherited Git and other tools. Fake Claude and gh only. No real external repository or engine.",
+  "developmentDiagnostic": {
+    "node": "22.12.0",
+    "childShellNode": "Inherited PATH (development Node24); not a uniform Node22 test run",
+    "passed": 845,
+    "failed": 4,
+    "pending": 0,
+    "reportSha256": "e853f75704d53e16bacbd68b189d191c7e939e5e3f5803625caedf9ea8aeca3f",
+    "failures": [
+      {
+        "file": "packages/runner/test/run.test.ts",
+        "fullName": "エンジンの選び方と権限 [REQ-101] claude コマンドがなければ、Claude Code を入れるよう表示して終了コード 2 を返す",
+        "failureMessages": [
+          "AssertionError: expected 'loomake run: git の操作に失敗しました：git rev-p…' to contain 'claude コマンドが見つかりません'\n    at /tmp/loomake-quality-after-merge/packages/runner/test/run.test.ts:347:24\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at withRepo (/tmp/loomake-quality-after-merge/packages/runner/test/run.test.ts:58:5)\n    at async file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2801:20"
+        ]
+      },
+      {
+        "file": "packages/trace/test/publication-crash.test.ts",
+        "fullName": "証拠公開中の実プロセスの強制終了 [REQ-175][REQ-176] during-writeで終了しても最終JSONを保ち、所有者終了後の片付けから再開できる",
+        "failureMessages": [
+          "Error: 待機点より前に終了しました：file:///tmp/loomake-quality-after-merge/[eval1]:3\n      import { stripTypeScriptTypes, syncBuiltinESMExports } from 'node:module';\n               ^^^^^^^^^^^^^^^^^^^^\nSyntaxError: The requested module 'node:module' does not provide an export named 'stripTypeScriptTypes'\n    at ModuleJob._instantiate (node:internal/modules/esm/module_job:180:21)\n    at async ModuleJob.run (node:internal/modules/esm/module_job:263:5)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:217:26)\n    at async ModuleLoader.eval (node:internal/modules/esm/loader:213:20)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:116:5)\n\nNode.js v22.12.0\n\n    at /tmp/loomake-quality-after-merge/packages/trace/test/publication-crash.test.ts:55:35\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at /tmp/loomake-quality-after-merge/packages/trace/test/publication-crash.test.ts:53:7\n    at async file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2801:20"
+        ]
+      },
+      {
+        "file": "packages/trace/test/publication-crash.test.ts",
+        "fullName": "証拠公開中の実プロセスの強制終了 [REQ-175][REQ-176] before-publishで終了しても最終JSONを保ち、所有者終了後の片付けから再開できる",
+        "failureMessages": [
+          "Error: 待機点より前に終了しました：file:///tmp/loomake-quality-after-merge/[eval1]:3\n      import { stripTypeScriptTypes, syncBuiltinESMExports } from 'node:module';\n               ^^^^^^^^^^^^^^^^^^^^\nSyntaxError: The requested module 'node:module' does not provide an export named 'stripTypeScriptTypes'\n    at ModuleJob._instantiate (node:internal/modules/esm/module_job:180:21)\n    at async ModuleJob.run (node:internal/modules/esm/module_job:263:5)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:217:26)\n    at async ModuleLoader.eval (node:internal/modules/esm/loader:213:20)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:116:5)\n\nNode.js v22.12.0\n\n    at /tmp/loomake-quality-after-merge/packages/trace/test/publication-crash.test.ts:55:35\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at /tmp/loomake-quality-after-merge/packages/trace/test/publication-crash.test.ts:53:7\n    at async file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2801:20"
+        ]
+      },
+      {
+        "file": "packages/trace/test/publication-crash.test.ts",
+        "fullName": "証拠公開中の実プロセスの強制終了 [REQ-175][REQ-176] after-publishで終了しても最終JSONを保ち、所有者終了後の片付けから再開できる",
+        "failureMessages": [
+          "Error: 待機点より前に終了しました：file:///tmp/loomake-quality-after-merge/[eval1]:3\n      import { stripTypeScriptTypes, syncBuiltinESMExports } from 'node:module';\n               ^^^^^^^^^^^^^^^^^^^^\nSyntaxError: The requested module 'node:module' does not provide an export named 'stripTypeScriptTypes'\n    at ModuleJob._instantiate (node:internal/modules/esm/module_job:180:21)\n    at async ModuleJob.run (node:internal/modules/esm/module_job:263:5)\n    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:217:26)\n    at async ModuleLoader.eval (node:internal/modules/esm/loader:213:20)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:116:5)\n\nNode.js v22.12.0\n\n    at /tmp/loomake-quality-after-merge/packages/trace/test/publication-crash.test.ts:55:35\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at /tmp/loomake-quality-after-merge/packages/trace/test/publication-crash.test.ts:53:7\n    at async file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2801:20"
+        ]
+      }
+    ],
+    "analysis": "Three crash probes import stripTypeScriptTypes, unavailable in Node22.12; one missing-claude fixture restricts PATH to Node bin and cannot find git. No assertion or config changed. This diagnostic is not a successful completion gate."
+  },
+  "priorNode24Gate": {
+    "sourceCommit": "80dfb652520d86ebedddc2bab317d1e1ebf09677",
+    "doneGate": {
+      "exitCode": 0,
+      "logSha256": "5d83d4c05b95f981bd01514e9f95b911c7f916d54c70566811c13e3c89ceaa91",
+      "testReportSha256": "1cf4b9104d32f96c738dd3322f5ddb0d0c8bc0d0bab802336e254db3a974e131",
+      "tests": {
+        "numTotalTests": 849,
+        "numPassedTests": 849,
+        "numFailedTests": 0,
+        "numPendingTests": 0,
+        "success": true
+      }
+    },
+    "reportSha256": "1cf4b9104d32f96c738dd3322f5ddb0d0c8bc0d0bab802336e254db3a974e131",
+    "sourceTreeHashesRevalidated": {
+      ".changeset/audit-report-example.md": "b73b4c7f423ee5ee793f5303ae2d163e24a3515e32f51bcdc3ca7d2c04b23642",
+      "eslint.config.js": "323f6404e0b7c57c1dcbeecacc7a5f3fec4a3118730f04fe88ab85912c5e3b11",
+      "loomake.config.json": "c49e93abdc2bf770e1852d14f4daf84c127ca2163bfd82c59516b2818eb9e1e8",
+      "packages/cli/README.md": "02a886d65401c79afa2e031d0bd64dfaf40be19b00d406f261f75f1c382be417",
+      "packages/cli/package.json": "bc4abd3ca5bc03d2a19b5ee77e673aa3e930929e331aa5d3a61c82e9200cb80f",
+      "packages/cli/src/args.ts": "f71103a6c4a0cb6c9d574c504206a5b668afaf1690c3bc9b31aa4662e4add5fd",
+      "packages/cli/src/cli.ts": "59e06148b18e47eaa303c03abe167e9ac60384cf3dce9ae056377b0d59e4c178",
+      "packages/cli/src/main.ts": "9f86303e3dcdea2177959128a55c763945cdc3f6c14f05ca0c15ce11bccca429",
+      "packages/cli/test/arguments.test.ts": "ce0333abbadeb77021844db854f55d9e628c12b99f0f8705ea071ede067ece5a",
+      "packages/cli/test/cli.test.ts": "0f36c01b0c8947a0cfab325b0a3f72149826b3cfcdd7828eb3ce8424b93ef2b2",
+      "packages/cli/test/doctor.test.ts": "b71041f6ee0b7de94ae34a91269839ceadfc0886f92dd4d0ffa52558a4e16b4d",
+      "packages/cli/test/init.test.ts": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e",
+      "packages/cli/test/trace-agreement.test.ts": "3ecfde8d4c077ac74d46e886ac889c4e72fa6408271f4d87a5686ebef899333a",
+      "packages/cli/tsconfig.build.json": "9222ec437c1c4b8378784ebceca444214102b64598ff2d611cb4f362d576990d",
+      "packages/core/README.md": "c55da70cf81fe8b858b68588bdb3e77703d3da242e2afd1114824506eafc58c5",
+      "packages/core/package.json": "81c84806e91aca1877b02c39f16f686de2f42bee11707c9f2fd8f07c8b45f3b2",
+      "packages/core/schema/verify-result.schema.json": "bd73807efc4989c56b6f122233a4796f4c83cad8dc1261f07e20be96e7bfaa0a",
+      "packages/core/src/agreement.ts": "164b1b42a791b49cde621f5f086db413d31607e30a39d96548d347c33226d0e4",
+      "packages/core/src/coverage-policy.ts": "d07af060fa82c6fdc8eaae28b33899c731983280e386c978f1f285e81216f6a6",
+      "packages/core/src/index.ts": "520f47fb24eab46b3feaf9b9a9a8eb187fc0b3862c7567b67ad42936edf8e459",
+      "packages/core/src/parse.ts": "c15b99494176ef9b9c3aa22a19a31eb1ea59b2804f9028b93b2df061a6269540",
+      "packages/core/src/spec.ts": "3ad805921112c5e265764767fc2447e2f6c80f1ba1bd912e8586e872ca8545c4",
+      "packages/core/src/tasks.ts": "94608cf43fdd951246000ef3d4896241b705cafe91b9ae5ae8cff18dcaab424e",
+      "packages/core/src/template.ts": "bef7bc8471190711f330c1ae964b92b8500c56513cf3facde1327c2c13f45fe8",
+      "packages/core/src/test-report.ts": "cf633399a106609de03b06227a7cf32d2afe83d767f3899c20fa93c8c5eb070d",
+      "packages/core/src/trace-edit.ts": "0e774842592293684e85dde8861b1d0668ac4458cdf88d8f689b8aecadb7d431",
+      "packages/core/src/trace.ts": "513f18beec408f26096b22f401559b96c5b8dde5e9efa7d7f0b46adf5ccc5b4d",
+      "packages/core/src/verify-result.ts": "c84a6075a0cc909e2aa519d3bfd9af8ae772eb53f127d6634f62cffe77e02ea3",
+      "packages/core/test/agreement.test.ts": "0e6e08ffc5b0dd863f0d80664a78fae0a7e7dc7122fd3688228626880dc31aa4",
+      "packages/core/test/coverage-policy.test.ts": "61add31ac1281ad2949cfda26529bfe7ec102b34fb8c06bf2d5d40c90ee32bb8",
+      "packages/core/test/fixtures/openspec-project/openspec/changes/add-x/proposal.md": "1eadbc394911ec9b305f6307f0d391331c82d51ee09f53357529fa0c1b0ce687",
+      "packages/core/test/fixtures/openspec-project/openspec/changes/add-x/specs/x/spec.md": "3ec76d5d7f7df6aedfecdfb7ea5ccf5cef63baaa378864216a49dc5c886170dd",
+      "packages/core/test/fixtures/openspec-project/openspec/changes/add-x/tasks.md": "d08444985d3258116f208c663f8fece8f0467ab39b50b7764d46c77dd88d5a5a",
+      "packages/core/test/fixtures/openspec-project/openspec/changes/add-x/trace.md": "8d1e195eaf9d879d90ea9a66d4822c520d23101c84c84e2236daa6e874731a87",
+      "packages/core/test/fixtures/schema-history/1.0.0.json": "bd73807efc4989c56b6f122233a4796f4c83cad8dc1261f07e20be96e7bfaa0a",
+      "packages/core/test/package.test.ts": "6c32b72bc19cd187c4337ae78ff9c2b42f39e5ff40ef0156175a8845d0e84fb4",
+      "packages/core/test/schema.test.ts": "ee3ee3a0d181d9e98ff8aecc6fa70b2197748f938b4265e5ed2c1048ffad2891",
+      "packages/core/test/spec.test.ts": "542fe6ec2963ca726db1b6948e8bbe27f5bc9694cca87b437e4d9f63f6f8c9c3",
+      "packages/core/test/tasks.test.ts": "d317048c05efd6bef9126b9f8a848de40e6202c278bfdff32535bf129439ec2c",
+      "packages/core/test/test-report.test.ts": "c7153a95adba3abf1d612e07134454d17aa93ece23874ffc140db2d5136859f1",
+      "packages/core/test/trace-edit.test.ts": "db99961acc8021a96ae61c6d5e78f76fda0e8383a25958bdf00e975f7e00d98d",
+      "packages/core/test/trace.test.ts": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40",
+      "packages/core/tsconfig.build.json": "9222ec437c1c4b8378784ebceca444214102b64598ff2d611cb4f362d576990d",
+      "packages/kit/README.md": "3f5f731d45ba9e08e51f6c24854a3ca9e3038ddba36b3aff1be02f56f5751e95",
+      "packages/kit/package.json": "fa9fb1d3c56fb5b7872a46762f803cd0e1a4c0e4cde7cb1dd399e5d92e9e8993",
+      "packages/kit/src/change-files.ts": "7e699339ccc4afa9c3cf6092805923b28301dde5db0c7f3064defbc3a6c59e08",
+      "packages/kit/src/doctor/command.ts": "087b5e2351a2c93204661876892b0319bcd86863ec805f7af8e0e8c79bfc8ee5",
+      "packages/kit/src/doctor/doctor.ts": "ecc38103fa466e370275e52cee5f7e30020a20c27802fceafe8c77c30b4960e5",
+      "packages/kit/src/errors.ts": "5b6ae777bac8827d6edc7f5a0d31e735d9eb60460dcff06ec76d225f0c90e667",
+      "packages/kit/src/index.ts": "3581be26c41d5638c54595a754db8c85ee55820c0c8119d37d98451605ea476a",
+      "packages/kit/src/init/diff.ts": "e64a268db25dfaae9fc8b6dcb879aae8b475b68922582e5186fdd81314299ddb",
+      "packages/kit/src/init/init.ts": "64793b65de5ac0b7ccd82594346d285dc42d09170d7f418d62e74616c0395696",
+      "packages/kit/src/input.ts": "d0a7c8ca16dec8d5c8bcb5383661b4b409240fca6ef8ddfcf6ae884557a294e6",
+      "packages/kit/src/process.ts": "bbddfac452bff8a06565923e98d1f27f1bfc41fe668f235baa46847ff128d233",
+      "packages/kit/src/verify/config.ts": "db2f2b43744c431e97f25b59fbb1494de2a0243d3d4dac79f2ec7c7494eb8b50",
+      "packages/kit/src/verify/format.ts": "a8025779f131b3982662985c9d7ff808cb3ec13c1a38687a6b92171abaf0f896",
+      "packages/kit/src/verify/run.ts": "4bbfc011eb3cf9c0ff9097eedc0f6f4b570c709d2990d29b5dc98e306de02fda",
+      "packages/kit/supervisor/supervisor.cjs": "3a9259dba50639647da6a9d492cac490e6fa82efafd7a2b50bdbb85b2e6aef3f",
+      "packages/kit/templates/AGENTS.md": "2943886170962393fe3393d2af8379429dc51d07dd6750a63f1586a444803f2d",
+      "packages/kit/templates/CLAUDE.md": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49",
+      "packages/kit/templates/devcontainer/devcontainer.json": "1695d82e0e1933c94c328624ecdaba7a71a19f32020c68389983e820e3545d25",
+      "packages/kit/templates/skills/req-to-openspec/SKILL.md": "a2ed8a418f53a6b014d2a8512286987adc6efddd47827671c6ad78fc6538a92b",
+      "packages/kit/templates/skills/req-to-openspec/references/ambiguity-checklist.md": "8303ea51db50ef8975d2d9b0d7cd3c30493960caafab7f21542843a6cd0fc8bd",
+      "packages/kit/templates/skills/req-to-openspec/references/openspec-format.md": "43f0c462936ff610b7ac4d5e206a78f98b796879787578d584c22bcc977e2daf",
+      "packages/kit/templates/skills/req-to-openspec/templates/trace.md": "f2bdc164aeddffe9d5374223ffddb3cec49f5f643a23608eaf815eebea10e0f8",
+      "packages/kit/test/change-files.test.ts": "1964cfcdae7c9ad29aad34668efc4e33606c63dadf9798e7249ce1407b2bbc31",
+      "packages/kit/test/doctor-command.test.ts": "a0e75f4a867c6a7c85dd0959a9737cb2fe4ad50f8d4dd84dfe9e9ab41b1ea0e6",
+      "packages/kit/test/doctor-diagnostics.test.ts": "a364a693bb075e9837bfde47cb9bd48a53f2d2b3d26540827169c4a3c3cf9fd0",
+      "packages/kit/test/input.test.ts": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985",
+      "packages/kit/test/process.test.ts": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca",
+      "packages/kit/test/project.ts": "4cc9634bc96658d37cec871ecd161f8293563de7dffba2568f5c2163fc26f3ea",
+      "packages/kit/test/verify.test.ts": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f",
+      "packages/kit/tsconfig.build.json": "9222ec437c1c4b8378784ebceca444214102b64598ff2d611cb4f362d576990d",
+      "packages/runner/README.md": "cc6e61216ebd1bb499749b98bc146234d5216572418008d49b29d5271e900468",
+      "packages/runner/package.json": "723cbd810515e25a61f2b82b23076c17d36ec95da89e6189e63283a443b1a1fa",
+      "packages/runner/src/config.ts": "95f941eab26b7b5de8e8ce779882e229218276d8e400ab2100433620e544b0c8",
+      "packages/runner/src/engine.ts": "1ed24c9dc1d0728d1453096a47ad4d4f2c433fb05743e81fe4f3907e437d0d71",
+      "packages/runner/src/git.ts": "29d164cf63b2f15be3127a16d6c58f7198e5b6a6bc7c94bded9c745f99a112a9",
+      "packages/runner/src/guards.ts": "ffcbe694322c23bb8c04fbc7bab4e9e5a267d0a6bae532b0fa5c5f2d5206fc15",
+      "packages/runner/src/index.ts": "73d1bfde6536bf043efaa2675059e78c34991284a15e25d08733df6ddc2a7e48",
+      "packages/runner/src/lock.ts": "9cc13c0adea1e30bc42ec0fc6dee7f4bc0d91972c18db0c275a63e0a21728a79",
+      "packages/runner/src/log-policy.ts": "2e96f7bcc3c7bc561bbe6de268c7968fcfe058d832dad1df874999bdf51dba4d",
+      "packages/runner/src/logs.ts": "e24dbe51a027a1f05a96aee14c5012eb4f0c8713eea9cdcc00d35fa0233a38aa",
+      "packages/runner/src/mask.ts": "d78908593e541d771b0f7b23312d7a03e7dfef8096dde6d5c3f16d4b470431a9",
+      "packages/runner/src/pr.ts": "69a2820f7c34baba6a3a8296a43420d93cf1e325697e7c74559ded9b01f676f0",
+      "packages/runner/src/private-key-stream.ts": "3735bc3746adf19444e9d740f97fe726008946043f1a2025928b0dea55170e5f",
+      "packages/runner/src/reuse.ts": "0b783e7b000f05b9077b15365520d8abf79214bafb510855a0426a15fd9cf3cd",
+      "packages/runner/src/run.ts": "7cfb5055e76ad5cdd50c8d36da6f35d6fb2d7938f617c70cb9ae7de52644d40f",
+      "packages/runner/src/run/decision-policy.ts": "d2a1c296142f8fb5290612537d81aad8bce7b81b35cc5d778df5d4cfe70d7996",
+      "packages/runner/src/run/phases.ts": "cc23a91f5cbfa52cd50caf75f8db9c88cb695805fa8225e44c26c8104f5abd69",
+      "packages/runner/src/run/prepare.ts": "5033e83ab343bb087586711ccbed8b29891c7a4ea709caec1ec57bf884a7e2f7",
+      "packages/runner/src/run/prompt.ts": "80734d492dbb99f9b01f01354aeb3b43cf56f8b1baf6330cc90c6cf661e8d098",
+      "packages/runner/src/run/recorder.ts": "5a721a7db0c263ac1ba83b155a9ab581470393703cd69d23bfddb213f5b7fa30",
+      "packages/runner/src/run/tasks.ts": "2d7ebbb322a3d2cb488d01ed63d44b6aac9d5cb247ab05901ac8bbf4b1db2116",
+      "packages/runner/src/run/types.ts": "bb96c08d0717411d23fce5b423bb559939034265e39bbe267c04d0e90b04380f",
+      "packages/runner/src/shell.ts": "78c82f36a7bb598abdb013d53f9b36283d643d4f991fb3fba6f5c531f8ae01f4",
+      "packages/runner/test/decision-policy.test.ts": "000c9763c5b9e05f706579261d1f4a14a5bd5d442cb34015ae008532a79ba561",
+      "packages/runner/test/diagnostic-redactor.test.ts": "bc1d89cd9d21bc9079f3626cd0c06eb26f9e7036483b6c3f5c09b2d0414704d4",
+      "packages/runner/test/engine-safety.test.ts": "7c75c2f45e35c3daf7c65fb9551eb924a0b3d7e34656a71cd0cc3ae486711317",
+      "packages/runner/test/evidence-storage.test.ts": "16cd666b698613e965a0c1547e97b68a56431b2f576b7f9e45caf7954adbeebb",
+      "packages/runner/test/external-budget.test.ts": "2526e2b8662dc95fc98b9c20260119778f5ad2eb3ec187b9f1b232a24b3736ac",
+      "packages/runner/test/guards.test.ts": "ae326bd6e51eca78e25e105f08a237cb33cf8e9dc7e29328b7be41b4ce443ee6",
+      "packages/runner/test/helpers.ts": "0d047e0b0a98d49c6ae46ebec5dc1bed36d4a3c9c5a0dd876c1191bddc1ad233",
+      "packages/runner/test/lock.test.ts": "503815aa9b69654f8966ccbbf591d44f5cc12b36c2610d66fb566783884b9d0b",
+      "packages/runner/test/log-config.test.ts": "8f76ad8d7938289e28b1c534473c27bdaed047603e8da7873b5d7fa242f326ea",
+      "packages/runner/test/log-run.test.ts": "8739b25d089dc16b12339bdb8cd0c63f3915848449ed0cf7d20666aafc39c000",
+      "packages/runner/test/logs.test.ts": "fc4f44af93ac4374860bce08583d0884c14adb9d73814ec372cafe70ea6bf9e5",
+      "packages/runner/test/mask.test.ts": "c021eebe799ff8c5762683db208f7b9adb6bdb0f35fe2be7f6e13200832910ec",
+      "packages/runner/test/output-budget.test.ts": "91e585da4ed7785f163c4be3828c85ca5e5e0704865d72439da2e8f3d85e14e0",
+      "packages/runner/test/output-processes.test.ts": "ba1bbba51f418c940a3b40b55501411289b3628d1c4fc5d04e73503ed56d15ec",
+      "packages/runner/test/pr.test.ts": "5c5caa14a32f1536bab7115107c0509a4591fe8afc5387d2048e0ae4b4121e30",
+      "packages/runner/test/publication-retry.test.ts": "49db35ee3960986e16dabe788943d2490d57f5d0b121531227f9ad148ed844bf",
+      "packages/runner/test/run-conditions.test.ts": "ad3ecc2391eef40a16199597cc0e4feb6958c38fdfc9f8e3bdcabbe310b34511",
+      "packages/runner/test/run.test.ts": "cfe8546b1a4b43e21e9307933e23f4500039b7db3d03a1f1372de2f0e5abab80",
+      "packages/runner/test/safety-paths.test.ts": "e976ee7e1e4c985ae0566df7cf7d177bb254e35053a8410018fd4794a1ce4673",
+      "packages/runner/tsconfig.build.json": "9222ec437c1c4b8378784ebceca444214102b64598ff2d611cb4f362d576990d",
+      "packages/trace/README.md": "52f2668b5ea528b50d7112e200e9833fc2f4c604a27284ebce72122706423412",
+      "packages/trace/package.json": "4cb75f30f9b31e69659806acbd62154f8f2daae242b3c97645e16d472126d9b4",
+      "packages/trace/src/agreement.ts": "c4416dfff93b364a30967b29e414d70cf5856fb37402e81709db9c8be144fc9f",
+      "packages/trace/src/documents.ts": "bf3a706182983035de398c400cbb38459a5d4b375a5fa26277ab0ad1dacf7e9d",
+      "packages/trace/src/evidence.ts": "eec5e7692d76c368c2016b4e306305c5638e2e041982b934101b35813d4eaab5",
+      "packages/trace/src/index.ts": "8988e47627bfbce1e4871b3c48fc8c22f47b6c64d2ed686b4713238b75d4d177",
+      "packages/trace/src/publication.ts": "edcc55c7a8d88d817aa6631f778ff00964bfb0743520f7c9d3638af5740b3d09",
+      "packages/trace/src/record.ts": "102b1c8b330b2663db18c83ac5e24dbde5b909ee74ace4a9bd44d1cc5d59300b",
+      "packages/trace/src/report.ts": "7d32a1396e3518721a61270fdbd07637af4f56ff40e09c9e2604d9dae2f603a8",
+      "packages/trace/src/schema.ts": "5b189229aac70326bb8f06068de0b0a86f90069bed56206ab416c6f11a24027a",
+      "packages/trace/src/serialization.ts": "00c7f06a1c74e36932f92849031edb0805150b11455925106b472752c7595883",
+      "packages/trace/test/publication-crash.test.ts": "870d3f491fbb77433bcb8ddd9a76b2ea22e9185ee7a7665f5894798b3f2142c0",
+      "packages/trace/test/publication.test.ts": "63231c8f68bbbe7901a3c28a437135b7aaebc689a66752682eb0a2422be710f9",
+      "packages/trace/test/record-size.test.ts": "db71a3294f7e3688bc76c9adbb527a0526a41c76304da1b8f350375514ec87e1",
+      "packages/trace/test/record.test.ts": "f213a2bae90142f668480de40dd07063b8614513d2a49a3e8669bbe80dd86901",
+      "packages/trace/test/report.test.ts": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e",
+      "packages/trace/test/serialization.test.ts": "6cf85e33ea1af754e0245fc4259f994504be7310ea55c96abc971e81ebd5c247",
+      "packages/trace/tsconfig.build.json": "9222ec437c1c4b8378784ebceca444214102b64598ff2d611cb4f362d576990d",
+      "pnpm-lock.yaml": "b181097be6f180fbb92203248121c339a5936dbf4ff0a756b3c625713681f21a",
+      "scripts/action-pins.mjs": "d3c8888814827bd61d105263ac4dbdb616abcb5bef1be1c72dcf587273838671",
+      "scripts/ai-journeys.mjs": "f66d5d96a68f1b4b0c40d09e06e03e7f63960f6da92a8708b70f8f8b6a6e6330",
+      "scripts/changeset-check.mjs": "340a21f2e1e874e840ed2bc75dae403b30d4dbc6addfb395446c0452d41198d9",
+      "scripts/check-public-types.mjs": "8cb6a5928184f693b55d0593737de0c8c2cbe4060f964f3906478c1e8d2e4d66",
+      "scripts/ci-gate.mjs": "cb72c929c5425241897f8bdabebb98819079078b103ab433a9b77c1855be60cd",
+      "scripts/deny-network.py": "42fa3f64936456659ee1a6e0adac0dd366026c106d28ac4e7a67113442f1059f",
+      "scripts/domain-mutations.mjs": "4e9b632a1fdaf738b4e6a691ac36c92782193ba86119fa58e039cf680cc6fe1c",
+      "scripts/package-smoke.mjs": "71aa378a372bde276c091afe2ce079b1e0b34029e13742fb8dec5cd199c63339",
+      "scripts/run-sigint-smoke.mjs": "53ccc8e135f82ad8236266886bf323ad2e9cf5d861dd5a1782e5dc776101bc42",
+      "scripts/runtime-compatibility.mjs": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d",
+      "scripts/scenario-audit.mjs": "3955fe0ffc31ab037de9ea656ce8114e3df62cb61a333c2cd20d804279081cab",
+      "scripts/schema-contract-check.mjs": "6ce2bfedd9ff28dac7253bea7bba5d1748682bc91903f797a4d23a2b306e4d74",
+      "tests/ai-journeys.test.ts": "5d1934a2891224bd9ade78232509f9f529e8e6c36c3bf115843bb56e9a3f11f2",
+      "tests/domain-mutations.test.ts": "2b753f35a5ce2e4372d760077ca03f77e50004ea50e5a650bb9cffe1aa16a15b",
+      "tests/fixtures/public-api/consumer.ts.txt": "eb02f6f31a9bfde99b657b43abceec866e5756d93619f3b38345b4f5c9a6b831",
+      "tests/fixtures/verify-project/loomake.config.json": "200eac6fec1c43d22204b57b4d54f78a6498b39469b319a2c0de844d1d2662e2",
+      "tests/fixtures/verify-project/openspec/changes/archive/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tests/fixtures/verify-project/openspec/changes/sample/proposal.md": "361441a1807b8596fecc4f7067d4768d078f5e39be2a97cacf51cc9b2cec8475",
+      "tests/fixtures/verify-project/openspec/changes/sample/specs/x/spec.md": "0e4df7f50bf7a31d8e3f1a5fc1cd8c00b13ee7609a2335e486e20873f6afb001",
+      "tests/fixtures/verify-project/openspec/changes/sample/tasks.md": "d08444985d3258116f208c663f8fece8f0467ab39b50b7764d46c77dd88d5a5a",
+      "tests/fixtures/verify-project/openspec/changes/sample/trace.md": "3a6d3259e385f8f8ddd0cfa7daed9400c0cd4fdb12dd003b466bae8a389de61a",
+      "tests/input-boundaries.test.ts": "89a368ec8c39e79bd883da212b897401371958751a3dba23ddc136ec71861829",
+      "tests/kit-assets.test.ts": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40",
+      "tests/monorepo.test.ts": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6",
+      "tests/package-artifacts.test.ts": "a3907250e116ce3846509dda89ba0a99846fce40dcce890ce27bab37e746e083",
+      "tests/package-workflows.test.ts": "c82be3653a952f37c8e5ad976fe0d00aa2028fef9d3ef16eca6a75e8450622bf",
+      "tests/public-source-exports.test.ts": "3668c02f7537b0e4abbfdd8a0c2e3daa2b36f62b2cdb56079fe83658ae5b2e77",
+      "tests/release-security.test.ts": "52b011dbbe528eab5c4576aca08bff0b296b07e0c1d1ef5533a523d85a08dda9",
+      "tests/run-decision-mutations.test.ts": "bdf056d8986a4abcb1afcf6e26c803801a81c1d75cec063f3880886644b4653c",
+      "tests/scenario-audit.test.ts": "4b9d89bde6b3c19867fba52f6e74c69968f001226a7328233e8b491b24dcd4fd",
+      "tests/schema-compatibility.test.ts": "bdb7f3bb6d55a56df0ce3d1f0fa0c31a6a4bb3dcd670c1ba18c7a31d4ec6e0da",
+      "tsconfig.json": "535e1ed91d8ed0c30d5542d60c124fb957f5d8e663ce36da860a141689e6a886",
+      "vitest.config.ts": "b54d1dd51a54cda1410dd75048ab66492b902f98ef808b6c3a895528e38252f0"
+    },
+    "changedInputs": []
+  },
+  "assessment": {
+    "scoresChanged": false,
+    "reason": "Packed lower-runtime checks succeeded; development diagnostic failed. Other OS, actual engine/GitHub, all supported API and legacy compatibility remain unverified. No scenarios reclassified based on partial success."
+  },
+  "commands": [
+    "node scripts/package-smoke.mjs prepare <new-target>",
+    "PATH=<verified-node22-bin>:$PATH python3 scripts/deny-network.py <verified-node22-bin>/node scripts/runtime-compatibility.mjs <new-target> <new-output> 22.12.0",
+    "<verified-node22-bin>/node node_modules/vitest/vitest.mjs run --reporter=json --outputFile=<diagnostic-report>"
+  ]
+}

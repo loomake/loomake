@@ -1,0 +1,976 @@
+{
+  "scope": "31 main guard scenarios and 9 active delta scenarios; 3 explicitly superseded",
+  "counts": {
+    "total": 40,
+    "reviewed": 37,
+    "superseded": 3,
+    "unreviewed": 0,
+    "invalid": 0
+  },
+  "reviews": [
+    {
+      "id": "SCN-b971a4fec1f96305e8c4",
+      "status": "reviewed",
+      "scenarioSha256": "1c5f4e6cb8c438222b824ac567e385fce6db4a61cf13b1e3e6ab1d9bfe694558",
+      "sources": [
+        "REQ-109"
+      ],
+      "reason": "実Gitの準備済みテストを偽エンジンが削除し、runの終了コード1・削除のパスと理由・コミット数不変・作業ツリーに削除が残ることをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "テストファイルを消したら、削除を表示し",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-d43376039a94b0d78f28",
+      "status": "reviewed",
+      "scenarioSha256": "19915385635fd64322cfa37caadab7bbc0352be3084a6a8c54ed9f6be94f97e2",
+      "sources": [
+        "REQ-109"
+      ],
+      "reason": "既存テストをit.skipへ変更し、終了コード1・コミット数不変・追加した具体的な行の表示をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "テストファイルに it.skip の行を足したら",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-0744a121d7ea44b63966",
+      "status": "reviewed",
+      "scenarioSha256": "08d1e561b2d7d07516cadec3afbe7c3fca80f3e6e2605b2c2ad9601a1df5aa0d",
+      "sources": [
+        "REQ-109"
+      ],
+      "reason": "4種類の条件付き・修飾付きskipを実プロセスで動く偽エンジンで追加し、全ケースでrunの終了コード1・コミット数不変・対象行の表示をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "テストファイルに it.skipIf(true)",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "テストファイルに describe.skipIf(true)",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "テストファイルに it.runIf(false)",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        },
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "テストファイルに it.concurrent.skip",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-f34b0a151ecae418e564",
+      "status": "reviewed",
+      "scenarioSha256": "e915adf446bfcc63accb62f85d93fdab0fa90a4b74e700961ee1b66fa9d861b1",
+      "sources": [
+        "REQ-109"
+      ],
+      "reason": "通常のitを別ファイルへ追加し、終了コード0・ガード表示なし・HEAD内の新テスト内容・当該パスのコミット名をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "ふつうのテストを足しただけなら",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-b0edd8a078f51a7222ac",
+      "status": "reviewed",
+      "scenarioSha256": "5a072721b6f3104cf7b8dd97a0ff3394c6e18636006136468753f8280bc8a6a7",
+      "sources": [
+        "REQ-110"
+      ],
+      "reason": "エンジンが設定を変更し、終了コード1・コミット数不変・設定変更の理由とdiffヘッダをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "loomake.config.json を変えたら、差分を表示して止まる",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-7202fa8faafe2e5ceef4",
+      "status": "reviewed",
+      "scenarioSha256": "61521657a69866f4835707d3057cab1b52ea8c7d9567d0301ef3eb0782d05f21",
+      "sources": [
+        "REQ-110"
+      ],
+      "reason": "test scriptをvitest runからecho skipへ変更し、終了コード1・コミット数不変・scripts変更の理由をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "package.json の scripts を変えたら止まる",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-87b6b5e603caaa3c9353",
+      "status": "reviewed",
+      "scenarioSha256": "a379824cf4a1b7c0e8ba7db580f2c48521ad4db435e5e7a2f12be8a01c34b512",
+      "sources": [
+        "REQ-110"
+      ],
+      "reason": "packages/appのtest scriptを変更し、終了コード1・コミット数不変・ネストしたパスとscripts変更の理由をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "子パッケージの package.json の scripts を変えたら止まる",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-e6f39a79470cc30d46ce",
+      "status": "reviewed",
+      "scenarioSha256": "79c04d9953198e2ecfe3ab8dddd4df08e9d125fe9edf2b47bcaea3a515558369",
+      "sources": [
+        "REQ-110"
+      ],
+      "reason": "scriptsを維持してdependenciesだけを追加し、終了コード0・HEAD内のJSON全体・該当パスのコミット名をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "package.json の dependencies だけを変えたら",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-8ad79ac2c15ec7805e16",
+      "status": "reviewed",
+      "scenarioSha256": "b2a50d51b275cc109005503eb7b0bbf88356f3cbb76fa0e0a153f903b7137e59",
+      "sources": [
+        "REQ-111"
+      ],
+      "reason": "主仕様をエンジンが変更し、終了コード1・コミット数不変・主仕様パスと変更の理由をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "openspec/specs/ の下を書き換えたら止まる",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-e1d0acaffac5e1c1a78c",
+      "status": "reviewed",
+      "scenarioSha256": "878713a1ef90c62f4c2f338557a8c0cc557a9e84b6f0f123c3d8f97225a5dda4",
+      "sources": [
+        "REQ-111"
+      ],
+      "reason": "changeのtrace文書をエンジンが変更し、終了コード1・コミット数不変・traceのパスと理由をassertする。fixtureは回答欄だけでなく文書全体の置換で同じパスの保護を試験する。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "change の trace.md を書き換えたら止まる",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-2b685b9a963e1cbd5253",
+      "status": "reviewed",
+      "scenarioSha256": "402ff571b0a37f9a59df549ce1f40f6186460fa08a0ee1906f3334b9afa4ed84",
+      "sources": [
+        "REQ-111"
+      ],
+      "reason": "未完了タスクの一部を消す書き換えで、終了コード1・コミット数不変・tasks.mdとchange文書変更の理由をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "tasks.md から未完了のタスクの行を消したら止まる",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-072e8e78d3270e999bdb",
+      "status": "reviewed",
+      "scenarioSha256": "acb4bf87d2c4fd01cede37fc23701dd3c35e71e31eb2b0c6663785390acdbb92",
+      "sources": [
+        "REQ-111"
+      ],
+      "reason": "差分仕様をADDED見出しだけへ変え、終了コード1・コミット数不変・差分仕様パスと理由をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "差分仕様から Requirement を消したら止まる",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-b975f4e003ed75203a51",
+      "status": "reviewed",
+      "scenarioSha256": "828b2c385340ee04796e922a8fd5a3f814498c881fbff36213fd80517aa17f92",
+      "sources": [
+        "REQ-111"
+      ],
+      "reason": "設定とchangeをspecへ移した実Gitでエンジンが主仕様を変更し、run終了コード1・パスと理由・1回だけの起動・HEAD不変・変更の残存・タスク未完了をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run-conditions.test.ts",
+          "contains": "openspecDirがspecでもrun全体が仕様変更で停止し",
+          "sha256": "ad3ecc2391eef40a16199597cc0e4feb6958c38fdfc9f8e3bdcabbe310b34511"
+        }
+      ]
+    },
+    {
+      "id": "SCN-389715434728b4a680d6",
+      "status": "reviewed",
+      "scenarioSha256": "72dbb8403959b5e5cabdc593ee094669ab3bcdb4434089821f43d641ac07905c",
+      "sources": [
+        "REQ-111"
+      ],
+      "reason": "2タスク後の不合格でimpl.txtだけを直す見本を動かし、終了コード0・修正指示内の不合格理由・修正と完了ゲートのコミット順序・完了タスクをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "不合格なら内容をエンジンに渡して直させ、直しをコミットし",
+          "sha256": "cfe8546b1a4b43e21e9307933e23f4500039b7db3d03a1f1372de2f0e5abab80"
+        }
+      ]
+    },
+    {
+      "id": "SCN-527b0af89101fb9fa4c3",
+      "status": "reviewed",
+      "scenarioSha256": "925edb89e2da31308321b651cf6852e72d0f0271464c6ed4cffc0364421b2855",
+      "sources": [
+        "REQ-112"
+      ],
+      "reason": "設定変更で終了コード1・コミット数不変、元の設定の削除diff、承認案内、変更した設定とimplの残存、空のindex、設定内容の保持をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "理由と差分を表示し、変更を作業ツリーに残し",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-234e6735b172fa7ee4a4",
+      "status": "reviewed",
+      "scenarioSha256": "820f7a7e577dce5ba9d8e3327e7b813e881ef2777b163cd7b60a3ea2fa5dcd72",
+      "sources": [
+        "REQ-112"
+      ],
+      "reason": "ガード停止後の同じ作業ツリーへ再度runを呼び、終了コード1・未コミット変更の理由・実装ファイルの残存をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "承認せずにもう一度実行すると",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-546e28ce360c0bc9bbd3",
+      "status": "reviewed",
+      "scenarioSha256": "b66169eaed7e864c544b2f50302c6cfdeae6fc3eafec8cbfe03a3d0dc08fd168",
+      "sources": [
+        "REQ-126"
+      ],
+      "reason": "エンジンがadd/commitし、終了コード1・タスク未完了・前後の実SHAとブランチ・復旧案内・コミットが初期とエンジンの2件だけであることをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "エンジンが自分でコミットしたら、前後の SHA を表示し",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-833d79ca648d946de286",
+      "status": "reviewed",
+      "scenarioSha256": "64d6d6e30bc512d8ed91e6f26d2e3f056d0cd5c06a20369e98a0cdd5005f506b",
+      "sources": [
+        "REQ-126"
+      ],
+      "reason": "エンジンが設定を変更してコミットした後、終了コード1・HEAD変更の理由・未完了タスク・設定の変更前後diffをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "設定を変えてコミットしたら、その差分を表示して止まる",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-334e2cf3bfbb45ba0fde",
+      "status": "reviewed",
+      "scenarioSha256": "77f1328b187fb080dcc069e9f9e66f28a0dfefc7713b108d28d3f9d3f84a49ac",
+      "sources": [
+        "REQ-126"
+      ],
+      "reason": "別ブランチotherへ切り替える見本で、終了コード1・前後のブランチ表示・現在もotherであること・変更と未完了タスクの残存をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "エンジンが別のブランチに切り替えたら",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-726d08d792f1a1deac70",
+      "status": "reviewed",
+      "scenarioSha256": "82dcb4533f24313c3411e6db7c0d3719b1ffa350082e82dfdffa4a6d266cfe76",
+      "sources": [
+        "REQ-126"
+      ],
+      "reason": "エンジンがcommit後exit1となり、run終了コード1・未完了タスク・HEAD変更とエンジン失敗の両理由をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "コミットしてから失敗したら、HEAD が変わったことを",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-ca7bacfed8bc1e6d64c1",
+      "status": "reviewed",
+      "scenarioSha256": "5ae2abec353711cef9782e7e38e57a092dfe80a3dbe01943fc72124cd7ad5249",
+      "sources": [
+        "REQ-126"
+      ],
+      "reason": "通常2タスクの後の修正でエンジンがコミットし、終了コード1・3回起動・完了ゲートタスク未完了・最新コミットがエンジン作成であることをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "完了ゲートの直しでエンジンがコミットしたら",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-fb72c121b9de7a0ecdff",
+      "status": "reviewed",
+      "scenarioSha256": "bf7836cfb6d34ef0858e8cef3e1c72f299cf09d78f3bbe14f22eb77cac9326f4",
+      "sources": [
+        "REQ-126"
+      ],
+      "reason": "エンジンがファイルだけを変更する正常経路で、HEAD変更警告がなく、runによるタスク1.1のコミットが履歴にあることをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "エンジンがコミットせずに終えたら",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-1a4983fcb68003d08259",
+      "status": "reviewed",
+      "scenarioSha256": "7ddfcfa4767c7ba917869574568794e0a1aeee4d8b92a6a25a91fbbede4ad2cb",
+      "sources": [
+        "REQ-138"
+      ],
+      "reason": "core.quotepath=trueの検出試験で日本語・空白を含むファイル名を完全一致で確認する。追加のrun全体試験で表示のパス・終了コード1・1回だけの起動・HEADと未完了タスク・空index・変更/削除の残存をassertする。Linuxではタブ・改行も同じ経路で試験する。",
+      "tests": [
+        {
+          "file": "packages/runner/test/safety-paths.test.ts",
+          "contains": "の仕様変更とテスト削除を検出する",
+          "sha256": "e976ee7e1e4c985ae0566df7cf7d177bb254e35053a8410018fd4794a1ce4673"
+        },
+        {
+          "file": "packages/runner/test/guard-path-integration.test.ts",
+          "contains": "の違反でrun全体が停止し",
+          "sha256": "e31d591ad04ece3601b546325c2f627d6ecf467a1675e415eac23220bc594ec4"
+        }
+      ]
+    },
+    {
+      "id": "SCN-deb79271522834b5c0ca",
+      "status": "reviewed",
+      "scenarioSha256": "02d3c744f09a980ac94a90388bae2379b23c5497048b4d07ceb0aedfd31d50d5",
+      "sources": [
+        "REQ-138"
+      ],
+      "reason": "タブと改行を含む各名前で、検出結果のfileが分断されず仕様変更・テスト削除・skip行と一致することをassertする。統合試験では正しい対象パスと理由を表示し、コミットを作らず変更を残すことも確認した。今回Linux分岐のみを実行した。",
+      "tests": [
+        {
+          "file": "packages/runner/test/safety-paths.test.ts",
+          "contains": "の仕様変更とテスト削除を検出する",
+          "sha256": "e976ee7e1e4c985ae0566df7cf7d177bb254e35053a8410018fd4794a1ce4673"
+        },
+        {
+          "file": "packages/runner/test/safety-paths.test.ts",
+          "contains": "のテストへのskip追加を検出する",
+          "sha256": "e976ee7e1e4c985ae0566df7cf7d177bb254e35053a8410018fd4794a1ce4673"
+        },
+        {
+          "file": "packages/runner/test/guard-path-integration.test.ts",
+          "contains": "の違反でrun全体が停止し",
+          "sha256": "e31d591ad04ece3601b546325c2f627d6ecf467a1675e415eac23220bc594ec4"
+        }
+      ]
+    },
+    {
+      "id": "SCN-27009e62b0fe48e8263a",
+      "status": "reviewed",
+      "scenarioSha256": "e63a48762cb82186865064c39dd4e6a05f05c8abb4fd88c33898230c0fa42f15",
+      "sources": [
+        "REQ-109"
+      ],
+      "reason": "既存expect(add...)を同値リテラル検査へ置き換え、終了コード1・コミット数不変・書き換え前の行とパス・変更の残存をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "HEAD にあったアサーションを書き換えたら",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-30d245b33bb4ffea73c3",
+      "status": "reviewed",
+      "scenarioSha256": "4796b9b3f7152fcae1d4b114902d31975b1a3a60309867240e63e707b20a7488",
+      "sources": [
+        "REQ-109"
+      ],
+      "reason": "2つのitのうち後者を削除し、終了コード1・コミット数不変・消したit宣言とassertionの表示をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "ファイルの中のテストを消したら",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-1bbdf89f51a91c7bfcae",
+      "status": "reviewed",
+      "scenarioSha256": "87dbd7bbd6fe452c465e24e56b2bab3bafedb003bdc1e8af38235059403c6df0",
+      "sources": [
+        "REQ-109"
+      ],
+      "reason": "同じassertionを保持したまま別describeへ移し、終了コード0・ガード警告なし・該当テストファイルのrunタスクコミットをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "アサーションの行の字下げを変えて別の describe へ移すだけなら",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-8c40080f362b078e241b",
+      "status": "reviewed",
+      "scenarioSha256": "56418a820f2c2f20863daac15c692b3e2d3c8ed5b0a90f097c51ac3d99bc010c",
+      "sources": [
+        "REQ-109"
+      ],
+      "reason": "正規表現の.testだけを変え、終了コード0・ガード警告なし・該当テストファイルのrunタスクコミットをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "テストでない呼び出し（/x/.test(s)）の行を書き換えるだけなら",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-83f9b26580280ca6219a",
+      "status": "reviewed",
+      "scenarioSha256": "6e57f302628d63330fc5d22a6e8c16ae7d09d578aa52a453d4207ef450d1d970",
+      "sources": [
+        "REQ-201"
+      ],
+      "reason": "2つのexpectのうち1行を削除し、終了コード1・コミット数不変・対象パスと検査を減らした理由をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "既存のテストから検査の行を消したら、コミットせずに止まる",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-14aafad9db2f8528741e",
+      "status": "reviewed",
+      "scenarioSha256": "e1b58c2e6f105dc48f7c8484196a6b8c60a64299f1456f66c308d5327d1d3b6d",
+      "sources": [
+        "REQ-201"
+      ],
+      "reason": "expect(add...)をexpect(true).toBe(true)へ変更し、終了コード1・コミット数不変・対象パスと追加した具体的な必ず通る検査の理由をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "必ず通る検査に書き換えたら、コミットせずに止まる",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-2385d9f8ede89a87b766",
+      "status": "reviewed",
+      "scenarioSha256": "b0e5c1f4378e19ee36ff6a8c69f8e4d3d71fd368d073163f07ad073d8f0bde94",
+      "sources": [
+        "REQ-201"
+      ],
+      "reason": "既存2つのexpectを保持して3つ目を追加し、ガード理由なし・タスク完了と該当パスのrunタスクコミットをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "テストを足すだけなら止まらない",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-ec87b34ce52aa57dc136",
+      "status": "reviewed",
+      "scenarioSha256": "b4ae8e4bdbfa8d33ecf1af3f9ef4ac762352e30cb120aa53c9c9197936832b4c",
+      "sources": [
+        "REQ-201"
+      ],
+      "reason": "使わないassertのimportとコメントだけを削除し、検査削減の理由なし・タスク完了・当該テストのrunタスクコミットをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "import とコメントの assert を消しても",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-52be373321d37ec739e7",
+      "status": "reviewed",
+      "scenarioSha256": "f185ed00a38cde634b4823d8c056463c3a2c3056beeb97e2305861c434cea564",
+      "sources": [
+        "REQ-204"
+      ],
+      "reason": "include.path先の除外済みファイルへcore.fsmonitorを追加し、終了コード1・Git設定変更理由・タスク未完了をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "include の先の設定に core.fsmonitor を書いたら",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-304ace63925cbbdc677b",
+      "status": "reviewed",
+      "scenarioSha256": "3d75ec1c1b5c90b5e39d65bbd4f1550db6e848509fde4652632edf34221483dc",
+      "sources": [
+        "REQ-204"
+      ],
+      "reason": "run前から壊れたpre-commitシンボリックリンクを置き、Git設定変更理由なし・タスク完了・runタスクコミットをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "リンク先のないフックがあっても",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-87b304fc0911532a0b69",
+      "status": "superseded",
+      "scenarioSha256": "186f3ee90b19f128abdd0bc39b06f944aeaab8142192bc1a82bd6bf5186a1889",
+      "replacement": "SCN-83f9b26580280ca6219a",
+      "reason": "assertionの数え方からimportとコメントを除く後続の差分仕様へ置き換えた。置換先の条件と現在の試験を今回読み直した。"
+    },
+    {
+      "id": "SCN-48f6a4fd26b21b19b555",
+      "status": "superseded",
+      "scenarioSha256": "d5b450ea94916b8a316dfb1bb672519d7d3eb7cce0fec2c0ab8de94df32cbd31",
+      "replacement": "SCN-14aafad9db2f8528741e",
+      "reason": "assertionの数え方からimportとコメントを除く後続の差分仕様へ置き換えた。置換先の条件と現在の試験を今回読み直した。"
+    },
+    {
+      "id": "SCN-f7b1249c3270b37a9782",
+      "status": "superseded",
+      "scenarioSha256": "c36aae93f2dc63145ec94f071f38365a44a27c2792f673f37825590448fcd895",
+      "replacement": "SCN-2385d9f8ede89a87b766",
+      "reason": "assertionの数え方からimportとコメントを除く後続の差分仕様へ置き換えた。置換先の条件と現在の試験を今回読み直した。"
+    },
+    {
+      "id": "SCN-aae92504e0e72d747a61",
+      "status": "reviewed",
+      "scenarioSha256": "e0ff12f10b19a69e67ce38d95bbb09aecc30c8b2ce675984c56f7d26fd5c18b0",
+      "sources": [
+        "REQ-198"
+      ],
+      "reason": "実行可能pre-commitをエンジンが追加し、終了コード1・Git設定変更理由・コミット数不変・タスク未完了・フックマーカーなし・フック自体の残存をassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "エンジンがフックを足したら",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-d1582a614bc92e9f5b87",
+      "status": "reviewed",
+      "scenarioSha256": "d48943e8f0475334e2bff912966e8d829e62e5d0b94a3fa630862ccf83e21127",
+      "sources": [
+        "REQ-198"
+      ],
+      "reason": "core.hooksPathをエンジンが変更し、終了コード1・理由・コミット数不変・タスク未完了・変更値が残ることをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "エンジンが git の設定を変えたら",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-f3c4fabea0ca19897c0e",
+      "status": "reviewed",
+      "scenarioSha256": "9df4637fd70b70d732454dc992c59bad3c265cb5f7035554068cd81a0cc2011b",
+      "sources": [
+        "REQ-198"
+      ],
+      "reason": "事前にpost-commitを設定し、エンジンは変更しない経路でガード理由なし・タスク完了・複数回のフック実行マーカーをassertする。",
+      "tests": [
+        {
+          "file": "packages/runner/test/guards.test.ts",
+          "contains": "run の前からあるフックは",
+          "sha256": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f"
+        }
+      ]
+    }
+  ],
+  "inputs": {
+    "specs": {
+      "openspec/specs/run-guards/spec.md": "c4dd0a864b82671e3fd35b10124d08f67889fa90abd8bf4ee893b868aaedadb6",
+      "openspec/changes/fix-guard-review-findings/specs/run-guards/spec.md": "debb43c72c79f65f7c1112a1be845b29b3d5e4801a26cf4adab20727d4f572cc",
+      "openspec/changes/guard-git-internals/specs/run-guards/spec.md": "ae2d682dbbc3e120f891cf008012aa8828af8980ef7e5f7e99a45ef1ea756a3c"
+    },
+    "testSources": {
+      "packages/runner/test/guards.test.ts": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f",
+      "packages/runner/test/run-conditions.test.ts": "ad3ecc2391eef40a16199597cc0e4feb6958c38fdfc9f8e3bdcabbe310b34511",
+      "packages/runner/test/run.test.ts": "cfe8546b1a4b43e21e9307933e23f4500039b7db3d03a1f1372de2f0e5abab80",
+      "packages/runner/test/safety-paths.test.ts": "e976ee7e1e4c985ae0566df7cf7d177bb254e35053a8410018fd4794a1ce4673",
+      "packages/runner/test/guard-path-integration.test.ts": "e31d591ad04ece3601b546325c2f627d6ecf467a1675e415eac23220bc594ec4"
+    },
+    "testReportSha256": "f91431dee3c28ac8b48ffba9b5087d1a769cba22639519181584934efc9ecda2"
+  },
+  "audit": {
+    "total": 455,
+    "reviewed": 297,
+    "superseded": 5,
+    "unreviewed": 86,
+    "invalid": 67
+  },
+  "sourceCommit": "e4936616a1d603258648e49fef88dc55c1253bc3",
+  "sourceTreeHashes": {
+    ".changeset/audit-report-example.md": "b73b4c7f423ee5ee793f5303ae2d163e24a3515e32f51bcdc3ca7d2c04b23642",
+    "eslint.config.js": "323f6404e0b7c57c1dcbeecacc7a5f3fec4a3118730f04fe88ab85912c5e3b11",
+    "loomake.config.json": "c49e93abdc2bf770e1852d14f4daf84c127ca2163bfd82c59516b2818eb9e1e8",
+    "packages/cli/README.md": "02a886d65401c79afa2e031d0bd64dfaf40be19b00d406f261f75f1c382be417",
+    "packages/cli/package.json": "bc4abd3ca5bc03d2a19b5ee77e673aa3e930929e331aa5d3a61c82e9200cb80f",
+    "packages/cli/src/args.ts": "f71103a6c4a0cb6c9d574c504206a5b668afaf1690c3bc9b31aa4662e4add5fd",
+    "packages/cli/src/cli.ts": "59e06148b18e47eaa303c03abe167e9ac60384cf3dce9ae056377b0d59e4c178",
+    "packages/cli/src/main.ts": "9f86303e3dcdea2177959128a55c763945cdc3f6c14f05ca0c15ce11bccca429",
+    "packages/cli/test/arguments.test.ts": "ce0333abbadeb77021844db854f55d9e628c12b99f0f8705ea071ede067ece5a",
+    "packages/cli/test/cli.test.ts": "0f36c01b0c8947a0cfab325b0a3f72149826b3cfcdd7828eb3ce8424b93ef2b2",
+    "packages/cli/test/doctor.test.ts": "b71041f6ee0b7de94ae34a91269839ceadfc0886f92dd4d0ffa52558a4e16b4d",
+    "packages/cli/test/init.test.ts": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e",
+    "packages/cli/test/trace-agreement.test.ts": "003cf20521ab1362372f1ce93cbbc046ea71a9bfcfd4b401b652509aadab9636",
+    "packages/cli/tsconfig.build.json": "9222ec437c1c4b8378784ebceca444214102b64598ff2d611cb4f362d576990d",
+    "packages/core/README.md": "c55da70cf81fe8b858b68588bdb3e77703d3da242e2afd1114824506eafc58c5",
+    "packages/core/package.json": "81c84806e91aca1877b02c39f16f686de2f42bee11707c9f2fd8f07c8b45f3b2",
+    "packages/core/schema/verify-result.schema.json": "bd73807efc4989c56b6f122233a4796f4c83cad8dc1261f07e20be96e7bfaa0a",
+    "packages/core/src/agreement.ts": "164b1b42a791b49cde621f5f086db413d31607e30a39d96548d347c33226d0e4",
+    "packages/core/src/coverage-policy.ts": "d07af060fa82c6fdc8eaae28b33899c731983280e386c978f1f285e81216f6a6",
+    "packages/core/src/index.ts": "520f47fb24eab46b3feaf9b9a9a8eb187fc0b3862c7567b67ad42936edf8e459",
+    "packages/core/src/parse.ts": "c15b99494176ef9b9c3aa22a19a31eb1ea59b2804f9028b93b2df061a6269540",
+    "packages/core/src/spec.ts": "3ad805921112c5e265764767fc2447e2f6c80f1ba1bd912e8586e872ca8545c4",
+    "packages/core/src/tasks.ts": "94608cf43fdd951246000ef3d4896241b705cafe91b9ae5ae8cff18dcaab424e",
+    "packages/core/src/template.ts": "bef7bc8471190711f330c1ae964b92b8500c56513cf3facde1327c2c13f45fe8",
+    "packages/core/src/test-report.ts": "cf633399a106609de03b06227a7cf32d2afe83d767f3899c20fa93c8c5eb070d",
+    "packages/core/src/trace-edit.ts": "0e774842592293684e85dde8861b1d0668ac4458cdf88d8f689b8aecadb7d431",
+    "packages/core/src/trace.ts": "513f18beec408f26096b22f401559b96c5b8dde5e9efa7d7f0b46adf5ccc5b4d",
+    "packages/core/src/verify-result.ts": "c84a6075a0cc909e2aa519d3bfd9af8ae772eb53f127d6634f62cffe77e02ea3",
+    "packages/core/test/agreement.test.ts": "0e6e08ffc5b0dd863f0d80664a78fae0a7e7dc7122fd3688228626880dc31aa4",
+    "packages/core/test/coverage-policy.test.ts": "61add31ac1281ad2949cfda26529bfe7ec102b34fb8c06bf2d5d40c90ee32bb8",
+    "packages/core/test/fixtures/openspec-project/openspec/changes/add-x/proposal.md": "1eadbc394911ec9b305f6307f0d391331c82d51ee09f53357529fa0c1b0ce687",
+    "packages/core/test/fixtures/openspec-project/openspec/changes/add-x/specs/x/spec.md": "3ec76d5d7f7df6aedfecdfb7ea5ccf5cef63baaa378864216a49dc5c886170dd",
+    "packages/core/test/fixtures/openspec-project/openspec/changes/add-x/tasks.md": "d08444985d3258116f208c663f8fece8f0467ab39b50b7764d46c77dd88d5a5a",
+    "packages/core/test/fixtures/openspec-project/openspec/changes/add-x/trace.md": "8d1e195eaf9d879d90ea9a66d4822c520d23101c84c84e2236daa6e874731a87",
+    "packages/core/test/fixtures/schema-history/1.0.0.json": "bd73807efc4989c56b6f122233a4796f4c83cad8dc1261f07e20be96e7bfaa0a",
+    "packages/core/test/package.test.ts": "6c32b72bc19cd187c4337ae78ff9c2b42f39e5ff40ef0156175a8845d0e84fb4",
+    "packages/core/test/schema.test.ts": "ee3ee3a0d181d9e98ff8aecc6fa70b2197748f938b4265e5ed2c1048ffad2891",
+    "packages/core/test/spec.test.ts": "542fe6ec2963ca726db1b6948e8bbe27f5bc9694cca87b437e4d9f63f6f8c9c3",
+    "packages/core/test/tasks.test.ts": "d317048c05efd6bef9126b9f8a848de40e6202c278bfdff32535bf129439ec2c",
+    "packages/core/test/test-report.test.ts": "c7153a95adba3abf1d612e07134454d17aa93ece23874ffc140db2d5136859f1",
+    "packages/core/test/trace-edit.test.ts": "db99961acc8021a96ae61c6d5e78f76fda0e8383a25958bdf00e975f7e00d98d",
+    "packages/core/test/trace.test.ts": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40",
+    "packages/core/tsconfig.build.json": "9222ec437c1c4b8378784ebceca444214102b64598ff2d611cb4f362d576990d",
+    "packages/kit/README.md": "3f5f731d45ba9e08e51f6c24854a3ca9e3038ddba36b3aff1be02f56f5751e95",
+    "packages/kit/package.json": "fa9fb1d3c56fb5b7872a46762f803cd0e1a4c0e4cde7cb1dd399e5d92e9e8993",
+    "packages/kit/src/change-files.ts": "7e699339ccc4afa9c3cf6092805923b28301dde5db0c7f3064defbc3a6c59e08",
+    "packages/kit/src/doctor/command.ts": "087b5e2351a2c93204661876892b0319bcd86863ec805f7af8e0e8c79bfc8ee5",
+    "packages/kit/src/doctor/doctor.ts": "ecc38103fa466e370275e52cee5f7e30020a20c27802fceafe8c77c30b4960e5",
+    "packages/kit/src/errors.ts": "5b6ae777bac8827d6edc7f5a0d31e735d9eb60460dcff06ec76d225f0c90e667",
+    "packages/kit/src/index.ts": "3581be26c41d5638c54595a754db8c85ee55820c0c8119d37d98451605ea476a",
+    "packages/kit/src/init/diff.ts": "e64a268db25dfaae9fc8b6dcb879aae8b475b68922582e5186fdd81314299ddb",
+    "packages/kit/src/init/init.ts": "64793b65de5ac0b7ccd82594346d285dc42d09170d7f418d62e74616c0395696",
+    "packages/kit/src/input.ts": "d0a7c8ca16dec8d5c8bcb5383661b4b409240fca6ef8ddfcf6ae884557a294e6",
+    "packages/kit/src/process.ts": "bbddfac452bff8a06565923e98d1f27f1bfc41fe668f235baa46847ff128d233",
+    "packages/kit/src/verify/config.ts": "db2f2b43744c431e97f25b59fbb1494de2a0243d3d4dac79f2ec7c7494eb8b50",
+    "packages/kit/src/verify/format.ts": "a8025779f131b3982662985c9d7ff808cb3ec13c1a38687a6b92171abaf0f896",
+    "packages/kit/src/verify/run.ts": "4bbfc011eb3cf9c0ff9097eedc0f6f4b570c709d2990d29b5dc98e306de02fda",
+    "packages/kit/supervisor/supervisor.cjs": "3a9259dba50639647da6a9d492cac490e6fa82efafd7a2b50bdbb85b2e6aef3f",
+    "packages/kit/templates/AGENTS.md": "2943886170962393fe3393d2af8379429dc51d07dd6750a63f1586a444803f2d",
+    "packages/kit/templates/CLAUDE.md": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49",
+    "packages/kit/templates/devcontainer/devcontainer.json": "1695d82e0e1933c94c328624ecdaba7a71a19f32020c68389983e820e3545d25",
+    "packages/kit/templates/skills/req-to-openspec/SKILL.md": "a2ed8a418f53a6b014d2a8512286987adc6efddd47827671c6ad78fc6538a92b",
+    "packages/kit/templates/skills/req-to-openspec/references/ambiguity-checklist.md": "8303ea51db50ef8975d2d9b0d7cd3c30493960caafab7f21542843a6cd0fc8bd",
+    "packages/kit/templates/skills/req-to-openspec/references/openspec-format.md": "43f0c462936ff610b7ac4d5e206a78f98b796879787578d584c22bcc977e2daf",
+    "packages/kit/templates/skills/req-to-openspec/templates/trace.md": "f2bdc164aeddffe9d5374223ffddb3cec49f5f643a23608eaf815eebea10e0f8",
+    "packages/kit/test/change-files.test.ts": "1964cfcdae7c9ad29aad34668efc4e33606c63dadf9798e7249ce1407b2bbc31",
+    "packages/kit/test/doctor-command.test.ts": "a0e75f4a867c6a7c85dd0959a9737cb2fe4ad50f8d4dd84dfe9e9ab41b1ea0e6",
+    "packages/kit/test/doctor-diagnostics.test.ts": "f30c2b3670db786adda6047b18c348b5ac6abe38a54f6a406ef367960893f985",
+    "packages/kit/test/input.test.ts": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985",
+    "packages/kit/test/process.test.ts": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca",
+    "packages/kit/test/project.ts": "4cc9634bc96658d37cec871ecd161f8293563de7dffba2568f5c2163fc26f3ea",
+    "packages/kit/test/verify.test.ts": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f",
+    "packages/kit/tsconfig.build.json": "9222ec437c1c4b8378784ebceca444214102b64598ff2d611cb4f362d576990d",
+    "packages/runner/README.md": "cc6e61216ebd1bb499749b98bc146234d5216572418008d49b29d5271e900468",
+    "packages/runner/package.json": "723cbd810515e25a61f2b82b23076c17d36ec95da89e6189e63283a443b1a1fa",
+    "packages/runner/src/config.ts": "95f941eab26b7b5de8e8ce779882e229218276d8e400ab2100433620e544b0c8",
+    "packages/runner/src/engine.ts": "1ed24c9dc1d0728d1453096a47ad4d4f2c433fb05743e81fe4f3907e437d0d71",
+    "packages/runner/src/git.ts": "29d164cf63b2f15be3127a16d6c58f7198e5b6a6bc7c94bded9c745f99a112a9",
+    "packages/runner/src/guards.ts": "ffcbe694322c23bb8c04fbc7bab4e9e5a267d0a6bae532b0fa5c5f2d5206fc15",
+    "packages/runner/src/index.ts": "73d1bfde6536bf043efaa2675059e78c34991284a15e25d08733df6ddc2a7e48",
+    "packages/runner/src/lock.ts": "9cc13c0adea1e30bc42ec0fc6dee7f4bc0d91972c18db0c275a63e0a21728a79",
+    "packages/runner/src/log-policy.ts": "2e96f7bcc3c7bc561bbe6de268c7968fcfe058d832dad1df874999bdf51dba4d",
+    "packages/runner/src/logs.ts": "e24dbe51a027a1f05a96aee14c5012eb4f0c8713eea9cdcc00d35fa0233a38aa",
+    "packages/runner/src/mask.ts": "d78908593e541d771b0f7b23312d7a03e7dfef8096dde6d5c3f16d4b470431a9",
+    "packages/runner/src/pr.ts": "69a2820f7c34baba6a3a8296a43420d93cf1e325697e7c74559ded9b01f676f0",
+    "packages/runner/src/private-key-stream.ts": "3735bc3746adf19444e9d740f97fe726008946043f1a2025928b0dea55170e5f",
+    "packages/runner/src/reuse.ts": "0b783e7b000f05b9077b15365520d8abf79214bafb510855a0426a15fd9cf3cd",
+    "packages/runner/src/run.ts": "7cfb5055e76ad5cdd50c8d36da6f35d6fb2d7938f617c70cb9ae7de52644d40f",
+    "packages/runner/src/run/decision-policy.ts": "d2a1c296142f8fb5290612537d81aad8bce7b81b35cc5d778df5d4cfe70d7996",
+    "packages/runner/src/run/phases.ts": "cc23a91f5cbfa52cd50caf75f8db9c88cb695805fa8225e44c26c8104f5abd69",
+    "packages/runner/src/run/prepare.ts": "5033e83ab343bb087586711ccbed8b29891c7a4ea709caec1ec57bf884a7e2f7",
+    "packages/runner/src/run/prompt.ts": "80734d492dbb99f9b01f01354aeb3b43cf56f8b1baf6330cc90c6cf661e8d098",
+    "packages/runner/src/run/recorder.ts": "5a721a7db0c263ac1ba83b155a9ab581470393703cd69d23bfddb213f5b7fa30",
+    "packages/runner/src/run/tasks.ts": "2d7ebbb322a3d2cb488d01ed63d44b6aac9d5cb247ab05901ac8bbf4b1db2116",
+    "packages/runner/src/run/types.ts": "bb96c08d0717411d23fce5b423bb559939034265e39bbe267c04d0e90b04380f",
+    "packages/runner/src/shell.ts": "78c82f36a7bb598abdb013d53f9b36283d643d4f991fb3fba6f5c531f8ae01f4",
+    "packages/runner/test/decision-policy.test.ts": "000c9763c5b9e05f706579261d1f4a14a5bd5d442cb34015ae008532a79ba561",
+    "packages/runner/test/diagnostic-redactor.test.ts": "bc1d89cd9d21bc9079f3626cd0c06eb26f9e7036483b6c3f5c09b2d0414704d4",
+    "packages/runner/test/engine-safety.test.ts": "7c75c2f45e35c3daf7c65fb9551eb924a0b3d7e34656a71cd0cc3ae486711317",
+    "packages/runner/test/evidence-storage.test.ts": "16cd666b698613e965a0c1547e97b68a56431b2f576b7f9e45caf7954adbeebb",
+    "packages/runner/test/external-budget.test.ts": "2526e2b8662dc95fc98b9c20260119778f5ad2eb3ec187b9f1b232a24b3736ac",
+    "packages/runner/test/guards.test.ts": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f",
+    "packages/runner/test/helpers.ts": "0d047e0b0a98d49c6ae46ebec5dc1bed36d4a3c9c5a0dd876c1191bddc1ad233",
+    "packages/runner/test/lock.test.ts": "503815aa9b69654f8966ccbbf591d44f5cc12b36c2610d66fb566783884b9d0b",
+    "packages/runner/test/log-config.test.ts": "8f76ad8d7938289e28b1c534473c27bdaed047603e8da7873b5d7fa242f326ea",
+    "packages/runner/test/log-run.test.ts": "8739b25d089dc16b12339bdb8cd0c63f3915848449ed0cf7d20666aafc39c000",
+    "packages/runner/test/logs.test.ts": "fc4f44af93ac4374860bce08583d0884c14adb9d73814ec372cafe70ea6bf9e5",
+    "packages/runner/test/mask.test.ts": "c021eebe799ff8c5762683db208f7b9adb6bdb0f35fe2be7f6e13200832910ec",
+    "packages/runner/test/output-budget.test.ts": "91e585da4ed7785f163c4be3828c85ca5e5e0704865d72439da2e8f3d85e14e0",
+    "packages/runner/test/output-processes.test.ts": "ba1bbba51f418c940a3b40b55501411289b3628d1c4fc5d04e73503ed56d15ec",
+    "packages/runner/test/pr.test.ts": "5c5caa14a32f1536bab7115107c0509a4591fe8afc5387d2048e0ae4b4121e30",
+    "packages/runner/test/publication-retry.test.ts": "49db35ee3960986e16dabe788943d2490d57f5d0b121531227f9ad148ed844bf",
+    "packages/runner/test/run-conditions.test.ts": "ad3ecc2391eef40a16199597cc0e4feb6958c38fdfc9f8e3bdcabbe310b34511",
+    "packages/runner/test/run.test.ts": "cfe8546b1a4b43e21e9307933e23f4500039b7db3d03a1f1372de2f0e5abab80",
+    "packages/runner/test/safety-paths.test.ts": "e976ee7e1e4c985ae0566df7cf7d177bb254e35053a8410018fd4794a1ce4673",
+    "packages/runner/tsconfig.build.json": "9222ec437c1c4b8378784ebceca444214102b64598ff2d611cb4f362d576990d",
+    "packages/trace/README.md": "52f2668b5ea528b50d7112e200e9833fc2f4c604a27284ebce72122706423412",
+    "packages/trace/package.json": "4cb75f30f9b31e69659806acbd62154f8f2daae242b3c97645e16d472126d9b4",
+    "packages/trace/src/agreement.ts": "c4416dfff93b364a30967b29e414d70cf5856fb37402e81709db9c8be144fc9f",
+    "packages/trace/src/documents.ts": "bf3a706182983035de398c400cbb38459a5d4b375a5fa26277ab0ad1dacf7e9d",
+    "packages/trace/src/evidence.ts": "eec5e7692d76c368c2016b4e306305c5638e2e041982b934101b35813d4eaab5",
+    "packages/trace/src/index.ts": "8988e47627bfbce1e4871b3c48fc8c22f47b6c64d2ed686b4713238b75d4d177",
+    "packages/trace/src/publication.ts": "edcc55c7a8d88d817aa6631f778ff00964bfb0743520f7c9d3638af5740b3d09",
+    "packages/trace/src/record.ts": "102b1c8b330b2663db18c83ac5e24dbde5b909ee74ace4a9bd44d1cc5d59300b",
+    "packages/trace/src/report.ts": "7d32a1396e3518721a61270fdbd07637af4f56ff40e09c9e2604d9dae2f603a8",
+    "packages/trace/src/schema.ts": "5b189229aac70326bb8f06068de0b0a86f90069bed56206ab416c6f11a24027a",
+    "packages/trace/src/serialization.ts": "00c7f06a1c74e36932f92849031edb0805150b11455925106b472752c7595883",
+    "packages/trace/test/publication-crash.test.ts": "870d3f491fbb77433bcb8ddd9a76b2ea22e9185ee7a7665f5894798b3f2142c0",
+    "packages/trace/test/publication.test.ts": "63231c8f68bbbe7901a3c28a437135b7aaebc689a66752682eb0a2422be710f9",
+    "packages/trace/test/record-size.test.ts": "db71a3294f7e3688bc76c9adbb527a0526a41c76304da1b8f350375514ec87e1",
+    "packages/trace/test/record.test.ts": "b3c144c80403227209fd76fae5ef61da7fb396ec52c8b8eaee1d0788a246ab2e",
+    "packages/trace/test/report.test.ts": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e",
+    "packages/trace/test/serialization.test.ts": "6cf85e33ea1af754e0245fc4259f994504be7310ea55c96abc971e81ebd5c247",
+    "packages/trace/tsconfig.build.json": "9222ec437c1c4b8378784ebceca444214102b64598ff2d611cb4f362d576990d",
+    "pnpm-lock.yaml": "b181097be6f180fbb92203248121c339a5936dbf4ff0a756b3c625713681f21a",
+    "scripts/action-pins.mjs": "d3c8888814827bd61d105263ac4dbdb616abcb5bef1be1c72dcf587273838671",
+    "scripts/ai-journeys.mjs": "f66d5d96a68f1b4b0c40d09e06e03e7f63960f6da92a8708b70f8f8b6a6e6330",
+    "scripts/changeset-check.mjs": "340a21f2e1e874e840ed2bc75dae403b30d4dbc6addfb395446c0452d41198d9",
+    "scripts/check-public-types.mjs": "8cb6a5928184f693b55d0593737de0c8c2cbe4060f964f3906478c1e8d2e4d66",
+    "scripts/ci-gate.mjs": "cb72c929c5425241897f8bdabebb98819079078b103ab433a9b77c1855be60cd",
+    "scripts/deny-network.py": "42fa3f64936456659ee1a6e0adac0dd366026c106d28ac4e7a67113442f1059f",
+    "scripts/domain-mutations.mjs": "4e9b632a1fdaf738b4e6a691ac36c92782193ba86119fa58e039cf680cc6fe1c",
+    "scripts/package-smoke.mjs": "71aa378a372bde276c091afe2ce079b1e0b34029e13742fb8dec5cd199c63339",
+    "scripts/run-sigint-smoke.mjs": "53ccc8e135f82ad8236266886bf323ad2e9cf5d861dd5a1782e5dc776101bc42",
+    "scripts/runtime-compatibility.mjs": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d",
+    "scripts/scenario-audit.mjs": "3955fe0ffc31ab037de9ea656ce8114e3df62cb61a333c2cd20d804279081cab",
+    "scripts/schema-contract-check.mjs": "6ce2bfedd9ff28dac7253bea7bba5d1748682bc91903f797a4d23a2b306e4d74",
+    "tests/ai-journeys.test.ts": "5d1934a2891224bd9ade78232509f9f529e8e6c36c3bf115843bb56e9a3f11f2",
+    "tests/domain-mutations.test.ts": "2b753f35a5ce2e4372d760077ca03f77e50004ea50e5a650bb9cffe1aa16a15b",
+    "tests/fixtures/public-api/consumer.ts.txt": "eb02f6f31a9bfde99b657b43abceec866e5756d93619f3b38345b4f5c9a6b831",
+    "tests/fixtures/verify-project/loomake.config.json": "200eac6fec1c43d22204b57b4d54f78a6498b39469b319a2c0de844d1d2662e2",
+    "tests/fixtures/verify-project/openspec/changes/archive/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "tests/fixtures/verify-project/openspec/changes/sample/proposal.md": "361441a1807b8596fecc4f7067d4768d078f5e39be2a97cacf51cc9b2cec8475",
+    "tests/fixtures/verify-project/openspec/changes/sample/specs/x/spec.md": "0e4df7f50bf7a31d8e3f1a5fc1cd8c00b13ee7609a2335e486e20873f6afb001",
+    "tests/fixtures/verify-project/openspec/changes/sample/tasks.md": "d08444985d3258116f208c663f8fece8f0467ab39b50b7764d46c77dd88d5a5a",
+    "tests/fixtures/verify-project/openspec/changes/sample/trace.md": "3a6d3259e385f8f8ddd0cfa7daed9400c0cd4fdb12dd003b466bae8a389de61a",
+    "tests/input-boundaries.test.ts": "89a368ec8c39e79bd883da212b897401371958751a3dba23ddc136ec71861829",
+    "tests/kit-assets.test.ts": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40",
+    "tests/monorepo.test.ts": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6",
+    "tests/package-artifacts.test.ts": "a3907250e116ce3846509dda89ba0a99846fce40dcce890ce27bab37e746e083",
+    "tests/package-workflows.test.ts": "c82be3653a952f37c8e5ad976fe0d00aa2028fef9d3ef16eca6a75e8450622bf",
+    "tests/public-source-exports.test.ts": "3668c02f7537b0e4abbfdd8a0c2e3daa2b36f62b2cdb56079fe83658ae5b2e77",
+    "tests/release-security.test.ts": "52b011dbbe528eab5c4576aca08bff0b296b07e0c1d1ef5533a523d85a08dda9",
+    "tests/run-decision-mutations.test.ts": "bdf056d8986a4abcb1afcf6e26c803801a81c1d75cec063f3880886644b4653c",
+    "tests/scenario-audit.test.ts": "4b9d89bde6b3c19867fba52f6e74c69968f001226a7328233e8b491b24dcd4fd",
+    "tests/schema-compatibility.test.ts": "bdb7f3bb6d55a56df0ce3d1f0fa0c31a6a4bb3dcd670c1ba18c7a31d4ec6e0da",
+    "tsconfig.json": "535e1ed91d8ed0c30d5542d60c124fb957f5d8e663ce36da860a141689e6a886",
+    "vitest.config.ts": "b54d1dd51a54cda1410dd75048ab66492b902f98ef808b6c3a895528e38252f0",
+    "packages/cli/test/verify-boundaries.test.ts": "453d06454e94c6850d239e713c1258885a0a6e642f5f312aee48eb1fd5436a12",
+    "packages/runner/test/guard-path-integration.test.ts": "e31d591ad04ece3601b546325c2f627d6ecf467a1675e415eac23220bc594ec4"
+  },
+  "specGate": {
+    "exit": 0,
+    "log": "$ pnpm -r --silent build && node packages/cli/dist/cli.js verify --change audit-scenario-evidence --spec-only\n\nLoomake verify  mode=spec-only  change=audit-scenario-evidence\n\n✔ change の存在\n✔ proposal.md の存在\n✔ tasks.md の存在\n✔ trace.md の存在\n✔ 要件モデルの整合性\n✔ trace.md の解析\n✔ 要件台帳\n✔ ブロッキング確認事項\n✔ 同じ確認事項の回答\n✔ spec.md の解析\n✔ Requirement の Source\n✔ Source が台帳にある\n✔ Scenario の有無\n✔ 反映済の要件が仕様にある\n✔ openspec validate\n\n合格\n"
+  },
+  "doneGate": {
+    "exit": 0,
+    "passed": 864,
+    "failed": 0,
+    "pending": 0,
+    "reportSha256": "f91431dee3c28ac8b48ffba9b5087d1a769cba22639519181584934efc9ecda2",
+    "log": "$ pnpm -r --silent build && node packages/cli/dist/cli.js verify --change audit-scenario-evidence --done\n… lint: pnpm lint\n… typecheck: pnpm typecheck\n… test: pnpm test\n\nLoomake verify  mode=done  change=audit-scenario-evidence\n\n✔ change の存在\n✔ proposal.md の存在\n✔ tasks.md の存在\n✔ trace.md の存在\n✔ 要件モデルの整合性\n✔ trace.md の解析\n✔ 要件台帳\n✔ ブロッキング確認事項\n✔ 同じ確認事項の回答\n✔ spec.md の解析\n✔ Requirement の Source\n✔ Source が台帳にある\n✔ Scenario の有無\n✔ 反映済の要件が仕様にある\n✔ openspec validate\n✔ 確認待ちが残っていない\n✔ tasks.md\n✔ command: lint\n✔ command: typecheck\n✔ command: test\n✔ 要件ごとのテスト\n\n合格\n"
+  },
+  "focused": {
+    "passed": 51,
+    "failed": 0,
+    "reportSha256": "5951eff4fddc48c3036a8804a57287f32018ef62774ae567291873f31441757a",
+    "scope": "Before strengthening five existing successful guard assertions; later doneGate includes all changes"
+  },
+  "auditExit": 1,
+  "auditInputs": {
+    "specs": {
+      "openspec/changes/audit-scenario-evidence/specs/scenario-evidence-audit/spec.md": "8e9b6cde88c1367a3c78ca4c3864c97f4eafe832b64b5c309c480a3e969c8eb5",
+      "openspec/changes/fix-guard-review-findings/specs/run-guards/spec.md": "debb43c72c79f65f7c1112a1be845b29b3d5e4801a26cf4adab20727d4f572cc",
+      "openspec/changes/guard-git-internals/specs/run-guards/spec.md": "ae2d682dbbc3e120f891cf008012aa8828af8980ef7e5f7e99a45ef1ea756a3c",
+      "openspec/changes/guard-git-internals/specs/run/spec.md": "66ba42fd385ae84698354fa2a2304f1e601d1ee919fc93c6d62dff2e7ffec3d2",
+      "openspec/changes/isolate-release-permissions/specs/monorepo/spec.md": "337cad1794b1f4919faa3d2cbffdc5e7a0f54c892182b2e5df11df966a2b3af3",
+      "openspec/changes/isolate-run-decisions/specs/run-decision-policy/spec.md": "5eb1217d3c40b9fdd3dc67991664cca7fb9b63973718b804a246059eef8b407e",
+      "openspec/changes/prepare-npm-publish/specs/monorepo/spec.md": "6777481dcd4055e9029755615da2659cd0211e94190aa6df9c52788ba317c0b4",
+      "openspec/changes/protect-run-diagnostics/specs/run/spec.md": "d3fd4964728b04faf968037f00c6034ede145f3c5502a5cc7832d61b6a24015e",
+      "openspec/changes/relax-commit-push-budget/specs/external-process-budget/spec.md": "a0391648bd6e83f81af152aae23aa609a38420dc40ac28a66deae4df2924da0d",
+      "openspec/changes/require-node-22/specs/monorepo/spec.md": "a71c60341abed633cb5a4fd651720230117ce8f53c7eedb404d8bea4984cfec3",
+      "openspec/changes/require-node-22/specs/run/spec.md": "83a41bcc311daf5905fac7761d31ba200338c2dc6ed441c1a6c905016c9e7bbd",
+      "openspec/changes/require-node-22/specs/trace-record/spec.md": "6b9a228700ecf74dea0fa16402da3c2cc63e7ee0716bd1275ba1e1825ce0b613",
+      "openspec/changes/require-node-22/specs/trace-report/spec.md": "7866fb841f6ccfef00aafe6c876362684f5dfe76d13e2b8d05a671b2e925c586",
+      "openspec/specs/agents-rules/spec.md": "8315a9b5b7668679a1f843120b0d9f150388b822ecf42807bd2e42188081bc5e",
+      "openspec/specs/bounded-input/spec.md": "2db14275dd45eca3387c9c7c618141341b418b4a035d94f878a31e26af88e7b8",
+      "openspec/specs/cli/spec.md": "efd2c40edc6e8cc54b40097e64ff735cc36f3f6a3f05743ec0d1da5159e05875",
+      "openspec/specs/core-parsers/spec.md": "8355b91847d9c9f1dbd9db2f0bc9b4d64605967e671d703b9031404bb7caff8a",
+      "openspec/specs/doctor/spec.md": "49c0ceab823b5859569f9a0865cc6058e03b541a2def98c0bdede016488ba36e",
+      "openspec/specs/domain-mutation-check/spec.md": "6be475fb141c6397905911d539c425d6a95cd6be6985ff74eae239de70acc107",
+      "openspec/specs/evidence-publication/spec.md": "c900f0584fb4acb64ea07985624411359c18bc2fbf3e1494f8d610651998f042",
+      "openspec/specs/external-process-budget/spec.md": "4ac77e340a576c37d7fccc035f045bc1dc549e55dda4d4f5ef1a5c53ff61c7e4",
+      "openspec/specs/init/spec.md": "5f81b6565baf25c80ccca94cdfbfff01777b796ccf8382f0f45fb3cc9b26c098",
+      "openspec/specs/monorepo/spec.md": "9bf3100d8def016ea6a4c8214dda0149e47036beff7028db17b5c98004069dfc",
+      "openspec/specs/quality-journeys/spec.md": "61d9276aa545cdbd991dba104cb3da4d184e963ec3a395e962927f5229596178",
+      "openspec/specs/release-integrity/spec.md": "32f45cde5e4ac85df67ebeb6c24f52cbd59d166fed0fa4ddd5456fa72e1a3420",
+      "openspec/specs/req-to-openspec-skill/spec.md": "7299503a7ac4f0b61403e89e303ec5058bd3fd9cfa44583b49a1734a50d21a13",
+      "openspec/specs/run-guards/spec.md": "c4dd0a864b82671e3fd35b10124d08f67889fa90abd8bf4ee893b868aaedadb6",
+      "openspec/specs/run-pr/spec.md": "afb123cad0b88b4a77339f692372d2ed65d31a4dc776030d36e5bafc7b6d1812",
+      "openspec/specs/run-record-budget/spec.md": "976bcdc4c2985bcf8d43900e71d51d4394eaa17511e3a77073ad4227a30d0620",
+      "openspec/specs/run/spec.md": "713585d18620e958a187a6a98728ee73c6c4c0aa32c627be616e5a2996a287d9",
+      "openspec/specs/trace-agreement/spec.md": "3b44cff0873c91ea855a14e8742dbd4c6e08e59ed70fd7bea162757c726e31dc",
+      "openspec/specs/trace-record/spec.md": "5eb2664fd79a0bff00ece1de6e4462d75e27ace3905537446b67660e99f2ab95",
+      "openspec/specs/trace-report/spec.md": "36593387034d984400333dc5371f88079b2a4e18108d54cca380aa9b20de909d",
+      "openspec/specs/verification-policy/spec.md": "3adba9533cfd13ad34cad39f2d79e02cf3da225bfcd2e11869dc24cea16e7eb2",
+      "openspec/specs/verify/spec.md": "93bda125d67ea5fed42212a909ce4abaf5b561792e3a9d3c8f1fc9048bd83aa7"
+    },
+    "testSources": {
+      "tests/ai-journeys.test.ts": "5d1934a2891224bd9ade78232509f9f529e8e6c36c3bf115843bb56e9a3f11f2",
+      "tests/domain-mutations.test.ts": "2b753f35a5ce2e4372d760077ca03f77e50004ea50e5a650bb9cffe1aa16a15b",
+      "tests/input-boundaries.test.ts": "89a368ec8c39e79bd883da212b897401371958751a3dba23ddc136ec71861829",
+      "tests/kit-assets.test.ts": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40",
+      "tests/monorepo.test.ts": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6",
+      "tests/package-artifacts.test.ts": "a3907250e116ce3846509dda89ba0a99846fce40dcce890ce27bab37e746e083",
+      "tests/package-workflows.test.ts": "c82be3653a952f37c8e5ad976fe0d00aa2028fef9d3ef16eca6a75e8450622bf",
+      "tests/public-source-exports.test.ts": "3668c02f7537b0e4abbfdd8a0c2e3daa2b36f62b2cdb56079fe83658ae5b2e77",
+      "tests/release-security.test.ts": "52b011dbbe528eab5c4576aca08bff0b296b07e0c1d1ef5533a523d85a08dda9",
+      "tests/run-decision-mutations.test.ts": "bdf056d8986a4abcb1afcf6e26c803801a81c1d75cec063f3880886644b4653c",
+      "tests/scenario-audit.test.ts": "4b9d89bde6b3c19867fba52f6e74c69968f001226a7328233e8b491b24dcd4fd",
+      "tests/schema-compatibility.test.ts": "bdb7f3bb6d55a56df0ce3d1f0fa0c31a6a4bb3dcd670c1ba18c7a31d4ec6e0da",
+      "packages/cli/test/arguments.test.ts": "ce0333abbadeb77021844db854f55d9e628c12b99f0f8705ea071ede067ece5a",
+      "packages/cli/test/cli.test.ts": "0f36c01b0c8947a0cfab325b0a3f72149826b3cfcdd7828eb3ce8424b93ef2b2",
+      "packages/cli/test/doctor.test.ts": "b71041f6ee0b7de94ae34a91269839ceadfc0886f92dd4d0ffa52558a4e16b4d",
+      "packages/cli/test/init.test.ts": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e",
+      "packages/cli/test/trace-agreement.test.ts": "003cf20521ab1362372f1ce93cbbc046ea71a9bfcfd4b401b652509aadab9636",
+      "packages/cli/test/verify-boundaries.test.ts": "453d06454e94c6850d239e713c1258885a0a6e642f5f312aee48eb1fd5436a12",
+      "packages/core/test/agreement.test.ts": "0e6e08ffc5b0dd863f0d80664a78fae0a7e7dc7122fd3688228626880dc31aa4",
+      "packages/core/test/coverage-policy.test.ts": "61add31ac1281ad2949cfda26529bfe7ec102b34fb8c06bf2d5d40c90ee32bb8",
+      "packages/core/test/package.test.ts": "6c32b72bc19cd187c4337ae78ff9c2b42f39e5ff40ef0156175a8845d0e84fb4",
+      "packages/core/test/schema.test.ts": "ee3ee3a0d181d9e98ff8aecc6fa70b2197748f938b4265e5ed2c1048ffad2891",
+      "packages/core/test/spec.test.ts": "542fe6ec2963ca726db1b6948e8bbe27f5bc9694cca87b437e4d9f63f6f8c9c3",
+      "packages/core/test/tasks.test.ts": "d317048c05efd6bef9126b9f8a848de40e6202c278bfdff32535bf129439ec2c",
+      "packages/core/test/test-report.test.ts": "c7153a95adba3abf1d612e07134454d17aa93ece23874ffc140db2d5136859f1",
+      "packages/core/test/trace-edit.test.ts": "db99961acc8021a96ae61c6d5e78f76fda0e8383a25958bdf00e975f7e00d98d",
+      "packages/core/test/trace.test.ts": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40",
+      "packages/kit/test/change-files.test.ts": "1964cfcdae7c9ad29aad34668efc4e33606c63dadf9798e7249ce1407b2bbc31",
+      "packages/kit/test/doctor-command.test.ts": "a0e75f4a867c6a7c85dd0959a9737cb2fe4ad50f8d4dd84dfe9e9ab41b1ea0e6",
+      "packages/kit/test/doctor-diagnostics.test.ts": "f30c2b3670db786adda6047b18c348b5ac6abe38a54f6a406ef367960893f985",
+      "packages/kit/test/input.test.ts": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985",
+      "packages/kit/test/process.test.ts": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca",
+      "packages/kit/test/verify.test.ts": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f",
+      "packages/runner/test/decision-policy.test.ts": "000c9763c5b9e05f706579261d1f4a14a5bd5d442cb34015ae008532a79ba561",
+      "packages/runner/test/diagnostic-redactor.test.ts": "bc1d89cd9d21bc9079f3626cd0c06eb26f9e7036483b6c3f5c09b2d0414704d4",
+      "packages/runner/test/engine-safety.test.ts": "7c75c2f45e35c3daf7c65fb9551eb924a0b3d7e34656a71cd0cc3ae486711317",
+      "packages/runner/test/evidence-storage.test.ts": "16cd666b698613e965a0c1547e97b68a56431b2f576b7f9e45caf7954adbeebb",
+      "packages/runner/test/external-budget.test.ts": "2526e2b8662dc95fc98b9c20260119778f5ad2eb3ec187b9f1b232a24b3736ac",
+      "packages/runner/test/guard-path-integration.test.ts": "e31d591ad04ece3601b546325c2f627d6ecf467a1675e415eac23220bc594ec4",
+      "packages/runner/test/guards.test.ts": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f",
+      "packages/runner/test/lock.test.ts": "503815aa9b69654f8966ccbbf591d44f5cc12b36c2610d66fb566783884b9d0b",
+      "packages/runner/test/log-config.test.ts": "8f76ad8d7938289e28b1c534473c27bdaed047603e8da7873b5d7fa242f326ea",
+      "packages/runner/test/log-run.test.ts": "8739b25d089dc16b12339bdb8cd0c63f3915848449ed0cf7d20666aafc39c000",
+      "packages/runner/test/logs.test.ts": "fc4f44af93ac4374860bce08583d0884c14adb9d73814ec372cafe70ea6bf9e5",
+      "packages/runner/test/mask.test.ts": "c021eebe799ff8c5762683db208f7b9adb6bdb0f35fe2be7f6e13200832910ec",
+      "packages/runner/test/output-budget.test.ts": "91e585da4ed7785f163c4be3828c85ca5e5e0704865d72439da2e8f3d85e14e0",
+      "packages/runner/test/output-processes.test.ts": "ba1bbba51f418c940a3b40b55501411289b3628d1c4fc5d04e73503ed56d15ec",
+      "packages/runner/test/pr.test.ts": "5c5caa14a32f1536bab7115107c0509a4591fe8afc5387d2048e0ae4b4121e30",
+      "packages/runner/test/publication-retry.test.ts": "49db35ee3960986e16dabe788943d2490d57f5d0b121531227f9ad148ed844bf",
+      "packages/runner/test/run-conditions.test.ts": "ad3ecc2391eef40a16199597cc0e4feb6958c38fdfc9f8e3bdcabbe310b34511",
+      "packages/runner/test/run.test.ts": "cfe8546b1a4b43e21e9307933e23f4500039b7db3d03a1f1372de2f0e5abab80",
+      "packages/runner/test/safety-paths.test.ts": "e976ee7e1e4c985ae0566df7cf7d177bb254e35053a8410018fd4794a1ce4673",
+      "packages/trace/test/publication-crash.test.ts": "870d3f491fbb77433bcb8ddd9a76b2ea22e9185ee7a7665f5894798b3f2142c0",
+      "packages/trace/test/publication.test.ts": "63231c8f68bbbe7901a3c28a437135b7aaebc689a66752682eb0a2422be710f9",
+      "packages/trace/test/record-size.test.ts": "db71a3294f7e3688bc76c9adbb527a0526a41c76304da1b8f350375514ec87e1",
+      "packages/trace/test/record.test.ts": "b3c144c80403227209fd76fae5ef61da7fb396ec52c8b8eaee1d0788a246ab2e",
+      "packages/trace/test/report.test.ts": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e",
+      "packages/trace/test/serialization.test.ts": "6cf85e33ea1af754e0245fc4259f994504be7310ea55c96abc971e81ebd5c247"
+    },
+    "testReportSha256": "f91431dee3c28ac8b48ffba9b5087d1a769cba22639519181584934efc9ecda2",
+    "reviewSha256": "0bea7cbcabd2fccabd9edee0a54fc2aaa22cdcc5936c1c4de0759840fcdc84e4",
+    "scriptSha256": "3955fe0ffc31ab037de9ea656ce8114e3df62cb61a333c2cd20d804279081cab"
+  },
+  "limits": [
+    "Real Git and spawned fixture engine/gh only; no real Claude or remote GitHub operations. Node24/Linux ARM64 only.",
+    "New integration checks passed initially. Existing assertions were strengthened without runtime changes or product Red/Green claim.",
+    "The spec snapshot replacement test checks protection of the same trace path via whole-file replacement; it does not claim the test fixture edits only one answer cell."
+  ]
+}
