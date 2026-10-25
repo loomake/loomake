@@ -51,10 +51,10 @@ results.jsonには条件の変更内容、元と変更後のハッシュ、失�
 この検査は手で選んだ13条件だけを対象にする。全コードのmutation score、全Scenarioの網羅、安全性の保証を示す結果ではない。新しい重要な条件は、仕様とテストの対応をレビューしてから追加する。
 
 
-doctorの静的診断とAI作成の復旧試験は[doctor.md](doctor.md)を参照する。scriptの存在と実行成功、AI作成の操作試験と人による利用者試験を分けて記録する。
+doctorの静的診断とAI作成の復旧試験は[doctor.md](guide/2.guides/2.doctor.md)を参照する。scriptの存在と実行成功、AI作成の操作試験と人による利用者試験を分けて記録する。
 
 
-Scenarioごとの対応は[scenario-audit.md](scenario-audit.md)の手順で確認する。IDの一致を候補とし、対応するassertionの内容を確認した記録と実行結果を分けて残す。
+Scenarioごとの対応は[scenario-audit.md](guide/2.guides/4.scenario-audit.md)の手順で確認する。IDの一致を候補とし、対応するassertionの内容を確認した記録と実行結果を分けて残す。
 
 ## 配布物のCLIへ中断の信号を送る
 
