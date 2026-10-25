@@ -6,7 +6,7 @@
 
 - **現在の仕様**：`openspec/specs/` — いまシステムが満たしているべき振る舞い
 - **進行中の変更**：`openspec/changes/<change-id>/` — proposal / specs（差分）/ design / tasks / trace
-- **要件の出典**：各 change の `trace.md` — 顧客の要件書のどこから来たか、確認事項、仮定
+- **要件の出典**：各 change の `trace.md` — 要件書のどこから来たか、確認事項、仮定
 
 仕様に書かれていない振る舞いは実装しない。必要だと気づいたら、実装を止めて change の specs を更新する提案をする。
 
