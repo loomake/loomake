@@ -169,8 +169,9 @@ describe('runから外部操作までの期限', () => {
       const untilDeadline = stage === 'push' || stage === 'create';
       // 共有の期限は、負荷の高い CI でも証拠の記録（verify を含む）が終わって push・create の停止に届き、そこから 1 操作の期限より長く待てる長さにする。
       // 短いと、証拠の記録の中で期限に当たって同じ「実行時間の上限」で止まり、確かめたい停止に届かない。
-      // Windows は外部操作の起動が遅く、偽の git を通すと node の起動も増えるので、長くする（windows-fake-clis）
-      const SHARED_DEADLINE_MS = process.platform === 'win32' ? 40_000 : 12_000;
+      // 止まった印から 1 操作の期限（5 秒）より長く待てるよう、macOS の CI で push に届いた時刻（約 7.4 秒）に余裕を足して 20 秒にする。
+      // Windows は外部操作の起動が遅く、偽の git を通すと node の起動も増えるので、さらに長くする（windows-fake-clis）
+      const SHARED_DEADLINE_MS = process.platform === 'win32' ? 40_000 : 20_000;
       const UNTIL_DEADLINE_OPERATION_MS = 5_000;
       // auth・list は 1 操作の期限で止める。止まる手前の通常の git・gh が負荷で 500ms を超えると、狙った段階の前で止まる
       // （macOS の CI で、印の検査が見つけた）。そこで 1 操作の期限を 2 秒にし、止まった印から期限 + 猶予のうちに止まることを確かめる
@@ -211,7 +212,7 @@ describe('runから外部操作までの期限', () => {
       expect(readdirSync(evidenceDir)).toHaveLength(1);
       expect(repo.calls()).toHaveLength(2);
     } finally { repo.cleanup(); }
-  }, process.platform === 'win32' ? 120_000 : 45_000);
+  }, process.platform === 'win32' ? 120_000 : 60_000);
 });
 
 describe('verifyとtraceの期限', () => {
