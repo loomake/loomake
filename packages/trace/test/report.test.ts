@@ -422,12 +422,14 @@ describe('report の性能と日本語', () => {
     });
   });
 
-  it('[REQ-070] レポートの題はリリースレポート、要件ごとの表の見出しは要件ごとの結果で、検収の語は出ない', () => {
-    withProject({}, (root) => {
+  it('[REQ-070] 題と見出しの固定文言に検収の語はなく、要約の検収は原文のまま載る', () => {
+    const row = '| REQ-012 | 要件書 §1 | 機能 | 検収数値を確かめる | 反映済 | specs/x/spec.md |';
+    withProject({ trace: traceMd({ ledger: [row] }) }, (root) => {
       const text = markdown(root).text;
       expect(text).toMatch(/^# リリースレポート：c1$/m);
       expect(text).toMatch(/^## 要件ごとの結果$/m);
-      expect(text).not.toContain('検収');
+      for (const heading of text.split('\n').filter((l) => l.startsWith('#'))) expect(heading).not.toContain('検収');
+      expect(text).toContain('| REQ-012 | 要件書 §1 | 反映済 | 検収数値を確かめる |');
     });
   });
 });

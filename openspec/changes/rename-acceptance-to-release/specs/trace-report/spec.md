@@ -6,7 +6,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: 要件ごとの結果の表
-`loomake trace report --change <id>` は、`.loomake/evidence/<change-id>/` のいちばん新しい記録を使い、その記録に保存した trace.md の要件台帳の要件ごとに、出典・状態・対応する Requirement・テストファイル・最後の検査結果を 1 行に並べた表を、リリースレポートとして出力する SHALL。Markdown のレポートの題は「リリースレポート」、要件ごとの表の見出しは「要件ごとの結果」とする SHALL。対応する Requirement は、その記録に保存した差分仕様で、その要件を `Source:` に持つ Requirement の名前とする SHALL。テストファイルと最後の検査結果は、同じ記録から取る SHALL。記録に文書が保存されていないときの扱いは、「古い形式の証拠の記録」に従う SHALL。change は進行中の change から探し、なければ archive から探す SHALL。change-id が OpenSpec の change 名の形でないときと、`archive` のときは、使い方の誤りとして終了コード 2 を返す SHALL。
+`loomake trace report --change <id>` は、`.loomake/evidence/<change-id>/` のいちばん新しい記録を使い、その記録に保存した trace.md の要件台帳の要件ごとに、出典・状態・対応する Requirement・テストファイル・最後の検査結果を 1 行に並べた表を、リリースレポートとして出力する SHALL。Markdown のレポートの題は「リリースレポート」、要件ごとの表の見出しは「要件ごとの結果」とし、題と見出しの固定文言に「検収」の語を使わない SHALL。証拠に保存した要約・質問・回答・仮定の原文は置き換えずに載せる SHALL。対応する Requirement は、その記録に保存した差分仕様で、その要件を `Source:` に持つ Requirement の名前とする SHALL。テストファイルと最後の検査結果は、同じ記録から取る SHALL。記録に文書が保存されていないときの扱いは、「古い形式の証拠の記録」に従う SHALL。change は進行中の change から探し、なければ archive から探す SHALL。change-id が OpenSpec の change 名の形でないときと、`archive` のときは、使い方の誤りとして終了コード 2 を返す SHALL。
 
 Source: REQ-070
 
@@ -15,8 +15,8 @@ Source: REQ-070
 - **THEN** 表に REQ-070 の行があり、出典・状態・「表の出力」・tests/report.test.ts・最後の検査結果が並ぶ
 
 #### Scenario: レポートの題と表の見出し
-- **WHEN** `loomake trace report --change c1` を Markdown で実行する
-- **THEN** 題が「リリースレポート：c1」、要件ごとの表の見出しが「要件ごとの結果」で、「検収」の語はレポートに出ない
+- **WHEN** 要約に「検収」の語を含む要件を持つ change に `loomake trace report --change c1` を Markdown で実行する
+- **THEN** 題が「リリースレポート：c1」、要件ごとの表の見出しが「要件ごとの結果」で、題と見出しの固定文言に「検収」の語はなく、要約の「検収」は原文のまま表に載る
 
 #### Scenario: いちばん新しい記録を使う
 - **WHEN** 記録した日時の違う記録が 2 つある change に `loomake trace report` を実行する
