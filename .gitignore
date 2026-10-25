@@ -1,5 +1,7 @@
 # dependencies
 node_modules/
+# pnpm のストア（devcontainer では作業ディレクトリに作られる）
+.pnpm-store/
 
 # OS
 .DS_Store
@@ -39,6 +41,3 @@ __pycache__/
 
 # kit を試す試験プロジェクト（別の git リポジトリ）
 .trial/
-
-# pnpm のストア（リポジトリの中にできることがある）
-.pnpm-store/
