@@ -28,7 +28,7 @@
 
 ## 5. 確認事項が決まったあとの反映
 
-- [ ] 5.1 Q-02 の回答に合わせて、`docs/wbs.md` の W0-2、`docs/overview.md`、`docs/architecture.md` の 6 章・8 章、要件定義 8 章の記述をそろえる。要件定義を先に直す（WBS の冒頭の決まり）
+- [x] 5.1 Q-02 の回答に合わせて、`docs/wbs.md` の W0-2、`docs/overview.md`、`docs/architecture.md` の 6 章・8 章、要件定義 8 章の記述をそろえる。要件定義を先に直す（WBS の冒頭の決まり）
 - [ ] 5.2 Q-01 の回答に合わせて、`docs/wbs.md` の W0-3・W1-1、AGENTS.md の「プロジェクト固有の情報」の依存の記述をそろえる
 - [ ] 5.3 回答によって REQ-046 などの仕様を変える必要があれば、別の change として起こす。この change では仕様を変えない
 - [ ] 5.4 `docs/requirements-matrix.md` の W0-6・W0-7 の行と、要件定義 11 章の O15 に結果を書く

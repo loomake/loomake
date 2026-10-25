@@ -1,6 +1,6 @@
 # Loomake アーキテクチャ
 
-最終更新：2026-10-25（v2.5.3：9 章のテスト保護の例外を削除し、生成アプリにも 7.5・FR-19 の既定を適用。保護対象パスの初期設定の表、保護しない範囲、認証の集約、構成の検証手順（最小テンプレート → 保護パスの確定 → 手動の公開・復旧 → runner 接続）を追加。v2.5.2：9 章の契約プラン（公開検証の開始時点で Vercel Pro と Supabase Pro）と `protected_paths` の初期設定（テンプレート作成時に実在するパスへ確定）を決めた。v2.5.1：9 章の未選定だった保存先と配置先を Supabase と Vercel に決め、テンプレートの配置、公開手順（候補を作る → 確認する → 公開する）、復旧の範囲、資格情報の分離、未確定の項目（契約プラン、保護パス）を書いた。v2.5：9 章「受入シナリオで使う生成アプリの構成」を追加。要件定義 10 章の段階横断の受入シナリオ（A23）で使うテンプレート・保存先・配置先の制約を 1 種類に固定し、管理画面の技術構成とは別項目にした。6 章の管理画面の行と 7 章の順 3・順 5 に 9 章への参照を追加。v2.4.2：付録 A に OpenSpec の採用方針の行（読み取り・正規化は core、操作は kit・trace、検証方法をレビューと運用確認の 2 つに分け、再検討条件を明示）。要件定義 O17・O18 と相互参照。v2.4.1：7 章の順 5 で計測の準備と eval への自動取り込みを分けた。v2.4：要件定義 v0.10 に対応。対象を自社プロダクトと OSS に変更し、入口・出口の用語（Issue・構想メモ、リリース記録・リリースレポート、`role: release`）を揃えた。受託の差分は要件定義の付録 B。v2.3.2：0.5 に `decision` とローカル完了による終了コード 0 を併記。付録 A に既知の禁止フィールドの検査。v2.3.1：付録 A の 0.5 行に runner の停止とローカル要約の試験を追加。v2.3：要件定義 v0.9 に対応。0.5 の終了コードと実行状態ごとの構造、2 章のローカル検証の範囲、付録 A の 0.5 行。v2.2：レビュー反映。依存表を runner・trace → kit に修正、Draft PR と CI 検証の順序、段階計画は要件定義 10 章を正本に、実行状態と品質判定の二軸、spawn と証跡収集の所有者を kit に、権限の分離、案件側に置くもの、SDK 禁止の範囲、subtree は候補に。v2.1：付録 A の 0.3 の行に、分析用の派生物と履歴の同時追記の検証を追加。6 章の保存・出力に派生物の位置付けを追記。0.3 に正本と派生物の図、4 章に依存と判定の線の図を追加。要件定義 v0.7 に対応）
+最終更新：2026-10-26（v2.5.4：Loomake 自身の開発の技術スタックをリポジトリに合わせた（ADR 0004）。5 章の構成図を pnpm workspaces にし、版管理を changesets に決めた（ADR 0001）。6 章のパッケージ管理・テスト・lint・整形を pnpm workspaces・Vitest・ESLint に直し、版管理の行を足した。8 章の devcontainer の道具を実際の構成に合わせた。v2.5.3：9 章のテスト保護の例外を削除し、生成アプリにも 7.5・FR-19 の既定を適用。保護対象パスの初期設定の表、保護しない範囲、認証の集約、構成の検証手順（最小テンプレート → 保護パスの確定 → 手動の公開・復旧 → runner 接続）を追加。v2.5.2：9 章の契約プラン（公開検証の開始時点で Vercel Pro と Supabase Pro）と `protected_paths` の初期設定（テンプレート作成時に実在するパスへ確定）を決めた。v2.5.1：9 章の未選定だった保存先と配置先を Supabase と Vercel に決め、テンプレートの配置、公開手順（候補を作る → 確認する → 公開する）、復旧の範囲、資格情報の分離、未確定の項目（契約プラン、保護パス）を書いた。v2.5：9 章「受入シナリオで使う生成アプリの構成」を追加。要件定義 10 章の段階横断の受入シナリオ（A23）で使うテンプレート・保存先・配置先の制約を 1 種類に固定し、管理画面の技術構成とは別項目にした。6 章の管理画面の行と 7 章の順 3・順 5 に 9 章への参照を追加。v2.4.2：付録 A に OpenSpec の採用方針の行（読み取り・正規化は core、操作は kit・trace、検証方法をレビューと運用確認の 2 つに分け、再検討条件を明示）。要件定義 O17・O18 と相互参照。v2.4.1：7 章の順 5 で計測の準備と eval への自動取り込みを分けた。v2.4：要件定義 v0.10 に対応。対象を自社プロダクトと OSS に変更し、入口・出口の用語（Issue・構想メモ、リリース記録・リリースレポート、`role: release`）を揃えた。受託の差分は要件定義の付録 B。v2.3.2：0.5 に `decision` とローカル完了による終了コード 0 を併記。付録 A に既知の禁止フィールドの検査。v2.3.1：付録 A の 0.5 行に runner の停止とローカル要約の試験を追加。v2.3：要件定義 v0.9 に対応。0.5 の終了コードと実行状態ごとの構造、2 章のローカル検証の範囲、付録 A の 0.5 行。v2.2：レビュー反映。依存表を runner・trace → kit に修正、Draft PR と CI 検証の順序、段階計画は要件定義 10 章を正本に、実行状態と品質判定の二軸、spawn と証跡収集の所有者を kit に、権限の分離、案件側に置くもの、SDK 禁止の範囲、subtree は候補に。v2.1：付録 A の 0.3 の行に、分析用の派生物と履歴の同時追記の検証を追加。6 章の保存・出力に派生物の位置付けを追記。0.3 に正本と派生物の図、4 章に依存と判定の線の図を追加。要件定義 v0.7 に対応）
 関連：`docs/requirements/loomake-v0.11.md`（目的・要件・仕様）
 正本：`loomake/loomake` の `docs/architecture.md`（2026-10-25 にコミット ecbe7fc で取り込み。以後はこのファイルが正本。それ以前の `docs/architecture.md`（2026-10-24、受託向け）はこのコミットで置き換えた）
 
@@ -226,7 +226,7 @@ CLI は本体パッケージ `loomake` を 1 つ作り、各サブコマンド�
 ## 5. リポジトリ構成
 
 ```
-loomake/loomake            npm workspaces
+loomake/loomake            pnpm workspaces
 ├── .devcontainer/
 ├── .github/workflows/     run / gate / evaluate / propose を reusable workflow として公開
 ├── packages/
@@ -243,7 +243,7 @@ loomake/loomake            npm workspaces
 案件側には設定（`quality.yaml`）・仕様（`openspec/`）・共通ルール（CLAUDE.md・AGENTS.md）・証跡（`.loomake/evidence/`）・レポート（`reports/quality/`）と、4 ジョブを呼ぶ薄いワークフロー（`uses: loomake/loomake/.github/workflows/<job>.yml@v1`）を置く。Loomake の実行ロジックとジョブ本体は複製しない（要件定義 NFR-10）。
 
 - **モノレポにする理由**：3 つのツールは契約（trace.md の書式・verify の JSON・quality.yaml）でつながっており、初期は契約が頻繁に変わる。1 つの PR でまとめて直せるようにする。1 人開発なので分けるメリットがまだない
-- パッケージの版管理は changesets か `npm version` を段階 1 で決める
+- パッケージの版管理は changesets を使い、パッケージごとに独立して版を上げる（`docs/adr/0001-versioning-with-changesets.md`）。`0.x` の間の版の上げ方は `docs/adr/0002-breaking-changes-in-0x.md` にある
 - **分けるタイミング**：外部コントリビューターが付いたとき、またはリリース周期が大きくずれたとき
 - 既存の `traspec` は、契約と再利用範囲を確認したうえで（要件定義 O09）、`git subtree add` で `packages/trace` に取り込むことを候補にする
 - Nuxtart は Loomake とは別枠なので別リポジトリ
@@ -255,14 +255,15 @@ loomake/loomake            npm workspaces
 |---|---|---|---|
 | 言語・実行 | TypeScript strict、Node.js LTS（24）。開発中は型ストリップで TS を直接実行 | 方針 | |
 | ビルド | `tsc` のみ、ESM のみ。`.d.ts` を出す | 方針 | バンドラを持たない |
-| パッケージ管理 | npm workspaces | 方針 | 標準で足りる |
+| パッケージ管理 | pnpm workspaces | 方針 | 既存の仕様（monorepo）と CI がこれで動いている（`docs/adr/0004-keep-development-stack.md`） |
+| 版管理 | changesets | 方針 | 版の上げ方を変更と同じ PR に残せる（`docs/adr/0001-versioning-with-changesets.md`） |
 | 入力検証 | Zod に統一し、型も導出。外部向けには JSON Schema を書き出す | 方針 | スキーマ・型・検証を 1 か所に |
 | 設定ファイル | quality.yaml を `yaml` で解析 | 方針 | Node に標準パーサがない |
 | CLI | 標準 `parseArgs` と小さなコマンド表、`console` | 方針 | フレームワークとロガーを入れない |
 | 外部コマンド | 標準 `spawn` を薄く包んだ共通関数。`gh`、`claude`、`codex`、Biome、Playwright | 方針 | ライブラリとして取り込まない |
 | HTTP | 標準 `fetch` | 方針 | |
-| テスト | `node:test`、`node:assert/strict`、`--experimental-test-coverage` | 方針 | 依存ゼロ |
-| lint・整形 | Biome（dev のみ） | 提案 | |
+| テスト | Vitest（dev のみ） | 方針 | Loomake が読むテストレポートの形式（Vitest・Jest 形式の JSON）でもある（`docs/adr/0004-keep-development-stack.md`） |
+| lint・整形 | ESLint（typescript-eslint の型情報つきの規則。dev のみ） | 方針 | いまの検査の内容を保つ（`docs/adr/0004-keep-development-stack.md`） |
 | 保存・出力 | JSON、JSONL、Markdown。仕様・設定は Git 管理のファイルが正本、記録は保存先と保持期間を別に定める（0.3）。過去の履歴は gzip 圧縮して長期保管先へ移し、索引を Git に残す（要件定義 7.9）。DB は必要になるまで足さない。分析用の SQLite・Parquet は正本から再生成する派生物として Git 管理外に置き、検証・リリース判断では必須にしない | 方針 | 圧縮は `node:zlib` で足りる。分析は DuckDB などの外部ツールに任せ、取り込まない |
 | 自動実行 | GitHub Actions の reusable workflow。独自の実行基盤は作らない | 方針 | |
 | GitHub 操作 | `gh`。認証は GitHub App のトークン。エージェント実行と、最終判定・マージ・リリース承認を担う処理で App と権限を分ける | 方針 | Octokit を入れない。エージェントには、必須チェックの結果・保護ルール・リリース承認記録を変更できる資格情報も、判定を承認済みにできる資格情報も渡さない |
@@ -291,7 +292,7 @@ loomake/loomake            npm workspaces
 
 ## 8. 開発環境
 
-devcontainer を標準にする（Node 24・npm・OpenSpec CLI・Claude Code・Codex・gh・Biome）。
+devcontainer を標準にする（Node 24・pnpm・OpenSpec CLI・Claude Code・Codex・gh）。
 
 - ログイン情報（`~/.claude`・`~/.codex`）は名前付きボリュームに置く
 - runner の実行環境はこの devcontainer を土台にし、ネットワークは許可ドメインに絞る（要件定義 FR-15。権限確認の有無にかかわらず必須）。人が対話で使う devcontainer でも、権限確認なしで AI を動かすときは同じ制限をかける

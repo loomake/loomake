@@ -1,8 +1,8 @@
 # Loomake の全体像（向かう先）
 
-最終更新：2026-10-25
+最終更新：2026-10-26
 
-この文書は、Loomake がこれから向かう先をまとめたもの。いま動く機能と使い方は [README](../README.md) と [usage.md](usage.md) にある。ここに書いた流れとコマンドには、まだ実装していないものが含まれる。正本は [要件定義 v0.11](requirements/loomake-v0.11.md) と [アーキテクチャ v2.5.3](architecture.md) で、着手の順は [WBS](wbs.md)、要件と作業の対応は [要件対応表](requirements-matrix.md) にある。
+この文書は、Loomake がこれから向かう先をまとめたもの。いま動く機能と使い方は [README](../README.md) と [usage.md](usage.md) にある。ここに書いた流れとコマンドには、まだ実装していないものが含まれる。正本は [要件定義 v0.11](requirements/loomake-v0.11.md) と [アーキテクチャ v2.5.4](architecture.md) で、着手の順は [WBS](wbs.md)、要件と作業の対応は [要件対応表](requirements-matrix.md) にある。
 
 **品質駆動開発のツール群。** 構想や Issue から仕様を起こし、完了ゲート（verify）が通るまで AI に実装を回し、リリースの根拠を残し、使われた結果を次の仕様に戻す。
 
@@ -196,7 +196,7 @@ loomake trace propose            # 未達から改善案の PR
 
 TypeScript strict、Node.js LTS、ESM のみ、`tsc` のみ。実行基盤は GitHub Actions の reusable workflow。保存は JSON・JSONL・Markdown で、Git が正本。
 
-アーキテクチャ 6 章はパッケージ管理を npm workspaces、テストを `node:test`、lint を Biome としているが、いまのリポジトリは pnpm・Vitest・ESLint・Changesets で動いている。どちらに揃えるかはまだ決めていない。決めるまでは、リポジトリの構成（README の「開発」）に従う。
+Loomake 自身の開発には、pnpm workspaces・Vitest・ESLint・changesets を使う。2026-10-26 に、文書をリポジトリの構成に合わせると決めた（[ADR 0004](adr/0004-keep-development-stack.md)）。これらは開発時の道具で、配布物の実行時依存とは分けて扱う。
 
 ## 名前
 
