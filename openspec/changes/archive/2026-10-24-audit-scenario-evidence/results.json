@@ -28,26 +28,26 @@
   "gateRuns": [
     {
       "change": "isolate-run-decisions",
-      "snapshotCommit": "036acf3",
+      "snapshotCommit": "f142892",
       "exitCode": 0,
       "tests": 764,
       "logSha256": "1ee7d6689068fa88e23dc8ed567ae7dcd987efd6c9369beba0e0218e6acd577f"
     },
     {
       "change": "audit-scenario-evidence",
-      "snapshotCommit": "036acf3",
+      "snapshotCommit": "f142892",
       "exitCode": 0,
       "tests": 764,
       "logSha256": "5d83d4c05b95f981bd01514e9f95b911c7f916d54c70566811c13e3c89ceaa91"
     }
   ],
   "snapshot": {
-    "baseCommit": "036acf3",
+    "baseCommit": "f142892",
     "isolation": "fresh detached Git worktree",
     "comparedCurrentCodeFiles": 171,
     "currentCodeMatches": true,
     "changedCodeFiles": [],
-    "comparisonHead": "036acf3eac67b2cd12505adc1c304fda577ff3e3",
+    "comparisonHead": "f1428924ba2b07cd3c5ad728b1f37691c4549617",
     "scope": "The gate and inventory cover the recorded snapshot. Dirty documentation and skill edits are outside this claim."
   },
   "inputs": {
@@ -159,41 +159,41 @@
       "invalid": 0
     },
     "snapshot": {
-      "baseCommit": "228b1c9",
+      "baseCommit": "983f9fa",
       "isolation": "fresh detached Git worktree",
       "comparedCurrentCodeFiles": 164,
       "currentCodeMatches": false,
       "changedCodeFiles": [
         "packages/runner/src/guards.ts"
       ],
-      "comparisonHead": "f15d9271767843fa0f1ee9119aee63b549cf6833",
+      "comparisonHead": "16164dca35de2c9596144ee6b2a5583b5866b447",
       "scope": "The gate and inventory cover the recorded snapshot. Later guards.ts changes and dirty documentation are not certified by this result."
     },
     "gateRuns": [
       {
         "change": "protect-run-diagnostics",
-        "snapshotCommit": "8bc0ded",
+        "snapshotCommit": "402a94b",
         "exitCode": 0,
         "tests": 725,
         "logSha256": "6594e3018efba17100a9d2a712cb78c01e653212bc6f2ab0b1063f74daead21b"
       },
       {
         "change": "guard-git-internals",
-        "snapshotCommit": "8bc0ded",
+        "snapshotCommit": "402a94b",
         "exitCode": 0,
         "tests": 725,
         "logSha256": "0f3567b105d9ae1fc2878e889ff74b340d564a33c7130d65909944b7321e0b3b"
       },
       {
         "change": "audit-scenario-evidence",
-        "snapshotCommit": "8bc0ded",
+        "snapshotCommit": "402a94b",
         "exitCode": 0,
         "tests": 725,
         "logSha256": "5d83d4c05b95f981bd01514e9f95b911c7f916d54c70566811c13e3c89ceaa91"
       },
       {
         "change": "audit-scenario-evidence",
-        "snapshotCommit": "228b1c9",
+        "snapshotCommit": "983f9fa",
         "exitCode": 0,
         "tests": 728,
         "logSha256": "5d83d4c05b95f981bd01514e9f95b911c7f916d54c70566811c13e3c89ceaa91"

@@ -25,7 +25,7 @@
   "head": "10f02dca154cf7cdaeffed93a9ca12b025697af4",
   "partial": "unfinished\n",
   "scope": "Linux上の配布物と代替エンジン。実際のSIGINTをCLIへ送り、停止・記録・変更保持を確認した。",
-  "snapshotCommit": "4882fe6",
+  "snapshotCommit": "49204e0",
   "scriptSha256": "63a3229cc95292161578c09f545f83f9875abf5e8bf3f3c61c22ad85d930e04e",
   "packages": {
     "loomake-kit-0.0.0.tgz": "d0602f779876e0a4976bfd20801b1fbb75d2198002a5a772160bdbd5d7d6e5fd",

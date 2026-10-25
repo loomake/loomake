@@ -2,7 +2,7 @@
 
 最終更新：2026-10-25（v0.2 レビュー反映。未割り当て 5 件を WBS v1.3 に割り当て、残件を「未割り当て」「割り当て済み・判断待ち」「初回完成の対象外」に分けた。段階をまたぐ要件の検証欄に段階ごとの確認範囲を書いた。v0.1 初版。要件定義 v0.11.1 の FR・NFR 全件と、ID のない必須事項（7 章の仕様、10 章の段階横断シナリオ、アーキテクチャの必須ルール）を WBS v1.2.1 に結び付けた。対応先のない項目と初回完成の対象外を 2 章に挙げる）
 関連：`docs/wbs.md`（WBS ID の定義）、`docs/requirements/loomake-v0.11.md`、`docs/architecture.md`
-正本：`loomake/loomake` の `docs/requirements-matrix.md`（2026-10-25 にコミット a4e0889 で取り込み。以後はこのファイルが正本）
+正本：`loomake/loomake` の `docs/requirements-matrix.md`（2026-10-25 にコミット ecbe7fc で取り込み。以後はこのファイルが正本）
 
 固定した正本
 | 文書 | 版 | 最終更新 | SHA-256 |
