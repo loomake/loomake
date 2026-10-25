@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { spawn, type ChildProcess } from 'node:child_process';
 import { once } from 'node:events';
-import { activeGroupMembers, waitForGroupExit } from '../src/process-group.js';
+import { GROUP_EXIT_TIMEOUT_MS, activeGroupMembers, waitForGroupExit } from '../src/process-group.js';
 
 /** 独立したプロセスグループで動く子を起動し、起動の合図を待つ */
 async function groupLeader(source: string): Promise<ChildProcess> {
@@ -58,6 +58,10 @@ Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0);`);
     expect(await waitForGroupExit(child.pid!, { timeoutMs: 100 })).toBe(false);
     expect(Date.now() - started).toBeLessThan(1000);
     expect(activeGroupMembers(child.pid!)).toEqual([child.pid]);
+  });
+
+  it('[REQ-207] 待機の上限の既定値は、仕様どおり 1000ms である', () => {
+    expect(GROUP_EXIT_TIMEOUT_MS).toBe(1000);
   });
 
   it('[REQ-207] 存在しないグループの待機はすぐに戻る', async () => {
