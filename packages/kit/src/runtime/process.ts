@@ -31,8 +31,12 @@ export function hasProcessBudget(): boolean { return budgets.getStore() !== unde
 
 export type ProcessLimitKind = 'timeout' | 'output' | 'interrupted';
 export class ProcessLimitError extends RuntimeFailure {
-  constructor(readonly kind: ProcessLimitKind, command: string, readonly stdout = '', readonly stderr = '') {
-    super(`外部操作を止めました：${command}（${kind === 'timeout' ? '実行時間の上限に達しました' : kind === 'output' ? '出力の上限に達しました' : '中断されました'}）`);
+  /**
+   * reason は、監視役が結果を書かずに終わったときなど、利用者の中断と区別する理由（REQ-250）。利用者の中断と期限・出力の上限では持たない
+   */
+  constructor(readonly kind: ProcessLimitKind, command: string, readonly stdout = '', readonly stderr = '', readonly reason?: string) {
+    const label = kind === 'timeout' ? '実行時間の上限に達しました' : kind === 'output' ? '出力の上限に達しました' : '中断されました';
+    super(`外部操作を止めました：${command}（${reason ? `${label}：${reason}` : label}）`);
   }
 }
 export type ExternalOptions = {
@@ -52,6 +56,48 @@ type Outcome = { status: number | null; signal: NodeJS.Signals | null; kind?: Pr
 // 監視役（supervisor/supervisor.cjs）。src/runtime/ から読んでも dist/runtime/ から読んでも 2 つ上にある。
 // 対象の出力と制御情報を別のpipに流し、コマンド自身の出力を結果の形式と解釈しない。
 const SUPERVISOR = fileURLToPath(new URL('../../supervisor/supervisor.cjs', import.meta.url));
+
+/** 監視役が fd 3 に書いた、対象の PID の行と結果。解釈できない行があれば invalid にする */
+function readReport(text: string): { pid?: number; outcome?: Outcome; invalid: boolean } {
+  let pid: number | undefined;
+  let outcome: Outcome | undefined;
+  let invalid = false;
+  for (const line of text.split('\n')) {
+    if (!line) continue;
+    let value: unknown;
+    try { value = JSON.parse(line); } catch { invalid = true; continue; }
+    if (value === null || typeof value !== 'object' || Array.isArray(value)) invalid = true;
+    else if ('status' in value) outcome = value as Outcome;
+    else if ('pid' in value && Number.isSafeInteger(value.pid) && (value.pid as number) > 0) pid = value.pid as number;
+    else invalid = true;
+  }
+  return { pid, outcome, invalid };
+}
+
+const pause = (ms: number) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+/** POSIX で、プロセスグループが消えるまで最大 ms ミリ秒待つ。消えたら true */
+function groupGone(pid: number, ms: number): boolean {
+  const until = monotonicMs() + ms;
+  for (;;) {
+    try { process.kill(-pid, 0); } catch { return true; }
+    if (monotonicMs() >= until) return false;
+    pause(10);
+  }
+}
+/**
+ * 監視役が結果を書かずに終わったときに、監視役から先に受け取った PID で対象の子孫を止める（REQ-181・REQ-250）。
+ * 監視役と同じく、POSIX はグループへ SIGTERM を送って 250ms 後に SIGKILL し、Windows は taskkill を 1 秒までに制限する
+ */
+function stopTree(pid: number): void {
+  if (process.platform === 'win32') {
+    spawnSync('taskkill', ['/pid', String(pid), '/T', '/F'], { stdio: 'ignore', timeout: 1000, killSignal: 'SIGKILL', windowsHide: true });
+    return;
+  }
+  try { process.kill(-pid, 'SIGTERM'); } catch { return; }
+  if (groupGone(pid, 250)) return;
+  try { process.kill(-pid, 'SIGKILL'); } catch { return; }
+  groupGone(pid, 1000);
+}
 
 function utf8Prefix(text: string, bytes: number): string {
   return new StringDecoder('utf8').write(Buffer.from(text).subarray(0, bytes));
@@ -75,13 +121,24 @@ export function runExternal(command: string, args: readonly string[], options: E
   });
   // 不正なUTF-8の置換で文字列のバイト数が増えても、公開する文字列の合計は予算以内にする。
   // 起動に失敗すると、型に反して stdout・stderr が null になる
-  const output = result as { stdout: Buffer | null; stderr: Buffer | null };
+  const output = result as { stdout: Buffer | null; stderr: Buffer | null; output: (Buffer | null)[] | null };
   const stdout = utf8Prefix(output.stdout?.toString('utf8') ?? '', maxBuffer);
   const stderr = utf8Prefix(output.stderr?.toString('utf8') ?? '', maxBuffer - Buffer.byteLength(stdout));
-  if (result.error) return { status: null, signal: result.signal, stdout, stderr, error: result.error };
-  let outcome: Outcome;
-  try { outcome = JSON.parse(result.output[3]?.toString('utf8') ?? '') as Outcome; }
-  catch { throw new UsageError(`外部操作の監視結果を読み取れません：${command}`); }
+  const report = readReport(output.output?.[3]?.toString('utf8') ?? '');
+  if (result.error) {
+    if (report.pid !== undefined && !report.outcome) stopTree(report.pid);
+    return { status: null, signal: result.signal, stdout, stderr, error: result.error };
+  }
+  const outcome = report.outcome;
+  if (!outcome) {
+    // 外からの強制終了（Windows の process.kill(pid, 'SIGINT') など）や異常終了で、監視役が結果を書かなかった。
+    // 残った子孫を止め、使い方の誤りではなく理由を含む中断として返し、同じ共有予算の後続の操作を止める（REQ-250）
+    if (report.pid !== undefined) stopTree(report.pid);
+    if (budget) budget.state.interrupted = true;
+    const ended = result.signal ? `シグナル ${result.signal}` : `終了コード ${String(result.status)}`;
+    const reason = report.invalid ? `監視役の結果を解釈できません（${ended}）` : `監視役が結果を書かずに終了しました（${ended}）`;
+    throw new ProcessLimitError('interrupted', command, stdout, stderr, reason);
+  }
   if (outcome.kind) {
     if (outcome.kind === 'interrupted' && budget) budget.state.interrupted = true;
     throw new ProcessLimitError(outcome.kind, command, stdout, stderr);

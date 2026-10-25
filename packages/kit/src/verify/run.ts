@@ -318,7 +318,7 @@ function runCommands(root: string, config: LoomakeConfig, skip: boolean, record:
         : runExternal(cmd, [], { cwd: root, shell: true, timeoutMs: left, qualityCommand: true, maxBuffer: MAX_BUFFER });
     } catch (error) {
       if (!(error instanceof ProcessLimitError)) throw error;
-      record(`command: ${name}`, 'fail', error.kind === 'timeout' ? TIMED_OUT : error.kind === 'interrupted' ? INTERRUPTED : error.message);
+      record(`command: ${name}`, 'fail', error.kind === 'timeout' ? TIMED_OUT : error.kind === 'interrupted' ? (error.reason ? `${INTERRUPTED}（${error.reason}）` : INTERRUPTED) : error.message);
       // 共有予算では後続の外部操作も起動せず拒否し、各項目に未実行の理由を残す。
       if (error.kind === 'interrupted' && !hasProcessBudget()) return;
       continue;
