@@ -132,8 +132,10 @@ describe('runから外部操作までの期限', () => {
       shim(repo, command, condition, stage === 'create', untilDeadline ? 30_000 : 3000);
       diagnosticEvent(repo, 'run-start', { stage });
       // untilDeadline の 2 つは、止まる手前の通常の git・gh が負荷で遅れても 1 操作の期限に当たらないよう余裕を持たせ、
-      // 止まったのが共有の期限であることは所要時間の下限で確かめる
-      const SHARED_DEADLINE_MS = 8_000;
+      // 止まったのが共有の期限であることは所要時間の下限で確かめる。
+      // 共有の期限は、負荷の高い CI でも証拠の記録（verify を含む）が終わって push・create の停止に届く長さにする。
+      // 短いと、証拠の記録の中で期限に当たって同じ「実行時間の上限」で止まり、確かめたい停止に届かない
+      const SHARED_DEADLINE_MS = 12_000;
       const runStarted = Date.now();
       const result = await (untilDeadline ? withProcessBudget({ timeoutMs: SHARED_DEADLINE_MS, maxOperationMs: 5_000 }, () => run(repo)) : budget(() => run(repo)));
       const runElapsed = Date.now() - runStarted;
@@ -143,7 +145,8 @@ describe('runから外部操作までの期限', () => {
       if (untilDeadline) expect(runElapsed, context).toBeGreaterThanOrEqual(SHARED_DEADLINE_MS - 500);
       expect(result.stdout, context).toContain('実行時間の上限');
       expect(summary(repo).status, context).toBe('stopped');
-      if (stage === 'create') expect(existsSync(join(repo.base, 'stalled')), context).toBe(true);
+      // 止まったのが確かめたい段階（push・create の停止）であることを、停止の印で確かめる
+      if (untilDeadline) expect(existsSync(join(repo.base, 'stalled')), context).toBe(true);
       expect(readFileSync(join(repo.root, 'impl.txt'), 'utf8')).toBe('実装');
       expect(repo.prs(), context).toHaveLength(stage === 'create' ? 1 : 0);
       const evidenceDir = join(repo.root, '.loomake/evidence', CHANGE);
@@ -158,7 +161,7 @@ describe('runから外部操作までの期限', () => {
       expect(readdirSync(evidenceDir)).toHaveLength(1);
       expect(repo.calls()).toHaveLength(2);
     } finally { repo.cleanup(); }
-  }, 30_000);
+  }, 45_000);
 });
 
 describe('verifyとtraceの期限', () => {
