@@ -14,4 +14,4 @@
 ## 3. 確認
 
 - [x] 3.1 changeset（配布するパッケージは変えない）と作業記録を足す
-- [ ] 3.2 `pnpm -s verify --change fix-windows-test-assumptions --done` を通す <!-- loomake:gate=done -->
+- [x] 3.2 `pnpm -s verify --change fix-windows-test-assumptions --done` を通す <!-- loomake:gate=done -->
