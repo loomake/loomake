@@ -48,12 +48,12 @@ npx loomake trace report --change <id>            # リリースレポートを�
 | パッケージ | 場所 | 役割 |
 |---|---|---|
 | `@loomake/core` | `packages/core/` | trace.md・spec.md・tasks.md・テストレポートの読み取りと、verify 結果の JSON スキーマ（実行時依存ゼロ） |
-| `@loomake/kit` | `packages/kit/` | verify と init の本体、配布するテンプレート（Skill・AGENTS.md・CLAUDE.md・devcontainer） |
+| `@loomake/kit` | `packages/kit/` | verify・init・doctor の本体、配布するテンプレート（Skill・AGENTS.md・CLAUDE.md・devcontainer） |
 | `@loomake/trace` | `packages/trace/` | 証拠の記録（`trace record`）とリリースレポート（`trace report`） |
 | `@loomake/runner` | `packages/runner/` | tasks を AI のエンジンに実装させ、完了ゲートが通るまで回して PR を出す（`run`） |
-| `loomake` | `packages/cli/` | CLI 本体（`loomake init`・`loomake verify`・`loomake trace`・`loomake run`） |
+| `loomake` | `packages/cli/` | CLI 本体（`loomake init`・`loomake verify`・`loomake trace`・`loomake run`・`loomake doctor`） |
 
-いまの仕様は `openspec/specs/` に、capability ごとのディレクトリで置いている（22 個。`ls openspec/specs` で一覧できる）。CLI の操作は cli・verify・init・doctor・trace-record・trace-report・trace-agreement、run は run・run-guards・run-pr、資源の上限は bounded-input・external-process-budget・run-record-budget にある。
+いまの仕様は `openspec/specs/` に、capability ごとのディレクトリで置いている（24 個。`ls openspec/specs` で一覧できる）。CLI の操作は cli・verify・init・doctor・trace-record・trace-report・trace-agreement、run は run・run-guards・run-pr・run-decision-policy、資源の上限は bounded-input・external-process-budget・run-record-budget にある。証拠の書き出しは evidence-publication、テストが誤りを見つけるかの確かめ方は domain-mutation-check と scenario-evidence-audit にある。
 
 ## 開発
 
@@ -111,7 +111,7 @@ skills-lock.json                  npx skills で入れたスキルの出所と�
 - 対象の change がなく、文書（`.md`、`docs/`・`openspec/`・`.changeset/` の下）だけを変えた PR と archive の PR は、品質コマンドだけを実行する。コードを変える PR で change がないときは、本文に `loomake-change: none` と書く。書かないと gate ジョブは失敗する
 - gate ジョブは PR 本文を実行のたびに読む。本文を書き直したら、gate ジョブを再実行する
 - archive で反映したあとの仕様の誤りは、change ごとの完了ゲートでは見つからない。そのため gate ジョブは、PR の種類によらず、いまの仕様（`openspec/specs/`）に `openspec validate --specs --strict` も実行する
-- npm への公開は GitHub の Actions から release ワークフローを main で手動実行する。事前に `pnpm changeset version` でバージョンを上げた変更を main に入れておく。未消化の changeset が残っていると公開を止める。リポジトリのシークレットに `NPM_TOKEN` が要る
+- npm への公開は GitHub の Actions から release ワークフローを main で手動実行する。事前に `pnpm changeset version` でバージョンを上げた変更を main に入れておく。未消化の changeset が残っていると公開を止める。初回だけリポジトリのシークレットの `NPM_TOKEN` で公開し、そのあと npm の Trusted Publishing（OIDC）に切り替える（[docs/release.md](docs/release.md)）
 
 ### devcontainer について
 
