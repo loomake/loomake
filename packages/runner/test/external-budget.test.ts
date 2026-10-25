@@ -6,7 +6,7 @@ import { main } from '../../cli/src/main.js';
 import { withProcessBudget } from '../../kit/src/runtime/process.js';
 import { runRecord } from '@loomake/trace';
 import { runRun } from '@loomake/runner';
-import { makeRepo, CHANGE, fakeCli, stallOf, type FakeCli, type Repo } from './helpers.js';
+import { makeRepo, CHANGE, fakeCli, stallOf, type FakeCli, type FakeCliEvent, type Repo } from './helpers.js';
 
 // git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
 vi.setConfig({ testTimeout: 60_000 });
@@ -36,6 +36,18 @@ function expectStalled(cli: FakeCli, match: (args: string[]) => boolean, context
   expect(stall, context).toBeDefined();
   return stall!;
 }
+// 期限から止まるまでの猶予（windows-fake-clis の仮定 A-03）。監視役の SIGTERM から SIGKILL までの 250ms、子の終了を待つ最大 1 秒、
+// Windows の taskkill の最大 1 秒と、親へ戻るまでの分
+const STOP_GRACE_MS = 3000;
+// 1 操作の期限で止める試験で、偽の CLI が止まる時間。期限に猶予を足した時間より長くし、偽の CLI が自分で終わったのではなく止められたと分かるようにする
+const STALL_MS = 10_000;
+// Date.now() と監視役の単調時計の丸めの差
+const CLOCK_SLACK_MS = 50;
+const OPERATION_MS = 500;
+// 止まった印から止まるまでが、期限に猶予を足した時間より短いことを確かめる（REQ-240）
+function expectStoppedSoon(stall: FakeCliEvent, endedAt: number, limitMs: number, context: string) {
+  expect(endedAt - stall.at, context).toBeLessThan(limitMs + STOP_GRACE_MS);
+}
 const isLockGit = (args: string[]) => args[0] === 'rev-parse' && args.includes('--absolute-git-dir');
 // process.env から外部操作を起動する trace・verify のために、偽の CLI の PATH と NODE_OPTIONS を移す
 function useRepoEnv(repo: Repo): () => void {
@@ -49,7 +61,7 @@ async function run(repo: Repo) {
   const code = await runRun({ root: repo.root, changeId: CHANGE, interactive: false, confirm: async () => false, stdout: (text) => out.push(text), env: repo.env, fileExists: () => false });
   return { code, stdout: out.join('\n') };
 }
-const budget = <T>(action: () => T) => withProcessBudget({ timeoutMs: 20_000, maxOperationMs: 500 }, action);
+const budget = <T>(action: () => T) => withProcessBudget({ timeoutMs: 20_000, maxOperationMs: OPERATION_MS }, action);
 const summary = (repo: Repo) => { const dir = join(repo.root, '.loomake/runs'); const run = readdirSync(dir).filter((s) => s !== '.gitignore').sort().at(-1)!; return JSON.parse(readFileSync(join(dir, run, 'summary.json'), 'utf8')); };
 
 describe('runから外部操作までの期限', () => {
@@ -58,13 +70,18 @@ describe('runから外部操作までの期限', () => {
     const repo = makeRepo();
     diagnosticEvent(repo, 'fixture-ready', { elapsedMs: Date.now() - started });
     try {
-      const before = repo.git('rev-parse', 'HEAD'); const cli = fakeCli(repo, 'git', { when: "args.includes('--absolute-git-dir')", stallMs: 3000 });
+      const before = repo.git('rev-parse', 'HEAD'); const cli = fakeCli(repo, 'git', { when: "args.includes('--absolute-git-dir')", stallMs: STALL_MS });
       // 開始前の制限エラーは実行時の失敗（close-cli-gaps で使い方の誤りから変更）
       diagnosticEvent(repo, 'run-start');
+      const runStarted = Date.now();
       const error = await budget(() => run(repo)).catch((e: unknown) => e);
+      const endedAt = Date.now();
       diagnosticEvent(repo, 'run-end', { elapsedMs: Date.now() - started });
       const context = diagnosticContext(repo, { error: String(error), elapsedMs: Date.now() - started }, cli);
-      expectStalled(cli, isLockGit, context);
+      const stall = expectStalled(cli, isLockGit, context);
+      // 1 操作の期限まで待ち、期限に猶予を足した時間のうちに止まった
+      expect(endedAt - runStarted, context).toBeGreaterThanOrEqual(OPERATION_MS - CLOCK_SLACK_MS);
+      expectStoppedSoon(stall, endedAt, OPERATION_MS, context);
       expect(error, context).toBeInstanceOf(RuntimeFailure);
       expect(error, context).not.toBeInstanceOf(UsageError);
       expect(existsSync(join(repo.base, 'stalled')), context).toBe(true);
@@ -74,14 +91,32 @@ describe('runから外部操作までの期限', () => {
     } finally { repo.cleanup(); }
   });
   it('[REQ-182][REQ-240] 準備で使った時間を含めてエンジンの期限を制限する', async () => {
+    // 準備の gh auth status を PREP_DELAY_MS だけ遅らせ、エンジンに予算を最初から与え直すと上限を超えるようにする。
+    // 予算は、Windows の遅い準備（約 1.4 秒）と遅らせた分を足してもエンジンを呼べる長さにする。
+    // 猶予は元の試験（予算 1200ms・上限 2500ms）と同じ 1300ms にし、遅らせる時間をそれより長くする
+    const BUDGET_MS = 8000;
+    const PREP_DELAY_MS = 2000;
+    const ENGINE_GRACE_MS = 1300;
     const repo = makeRepo();
     try {
-      repo.plan([{ sleepMs: 3000, write: { 'late.txt': '遅い変更' } }]);
+      repo.plan([{ sleepMs: 30_000, write: { 'late.txt': '遅い変更' } }]);
+      const cli = fakeCli(repo, 'gh', { when: "args[0]==='auth'", delayMs: PREP_DELAY_MS });
       const start = Date.now();
-      const result = await withProcessBudget({ timeoutMs: 1200 }, () => run(repo));
-      expect(result.code).toBe(1);
-      expect(result.stdout).toContain('実行時間の上限');
-      expect(Date.now() - start).toBeLessThan(2500);
+      const result = await withProcessBudget({ timeoutMs: BUDGET_MS }, () => run(repo));
+      const elapsed = Date.now() - start;
+      const context = diagnosticContext(repo, { elapsed, stdout: result.stdout }, cli);
+      // 準備を遅らせ、転送が成功し、エンジンまで届いた
+      const events = cli.events();
+      const delayed = events.findIndex((e) => e.event === 'delay-start' && e.args[0] === 'auth');
+      expect(delayed, context).toBeGreaterThanOrEqual(0);
+      expect(events.slice(delayed).find((e) => e.event === 'forward-end'), context).toMatchObject({ status: 0 });
+      expect(events.filter((e) => e.event === 'forward-end' && e.error), context).toEqual([]);
+      expect(repo.calls(), context).toHaveLength(1);
+      expect(result.code, context).toBe(1);
+      expect(result.stdout, context).toContain('実行時間の上限');
+      // 予算まで待ち、予算に猶予を足した時間のうちに止まった。準備の分を予算から引いていなければ、PREP_DELAY_MS の分だけ上限を超える
+      expect(elapsed, context).toBeGreaterThanOrEqual(BUDGET_MS - CLOCK_SLACK_MS);
+      expect(elapsed, context).toBeLessThan(BUDGET_MS + ENGINE_GRACE_MS);
       expect(existsSync(join(repo.root, 'late.txt'))).toBe(false);
       expect(repo.prs()).toEqual([]);
     } finally { repo.cleanup(); }
@@ -104,10 +139,11 @@ describe('runから外部操作までの期限', () => {
     const repo = makeRepo();
     try {
       const before = repo.git('rev-parse', 'HEAD');
-      const cli = fakeCli(repo, 'gh', { when: "args[0]==='auth'", stallMs: 3000 });
+      const cli = fakeCli(repo, 'gh', { when: "args[0]==='auth'", stallMs: STALL_MS });
       const error = await budget(() => run(repo)).catch((value: unknown) => value);
+      const endedAt = Date.now();
       const context = diagnosticContext(repo, { error: String(error) }, cli);
-      expectStalled(cli, (args) => args[0] === 'auth', context);
+      expectStoppedSoon(expectStalled(cli, (args) => args[0] === 'auth', context), endedAt, OPERATION_MS, context);
       expect(error).toBeInstanceOf(RuntimeFailure);
       expect(error).not.toBeInstanceOf(UsageError);
       expect(String(error)).toContain('実行時間の上限');
@@ -131,22 +167,30 @@ describe('runから外部操作までの期限', () => {
       // push と PR の作成は 1 操作の期限では止めず、run の残り時間で止める（relax-commit-push-budget）。
       // そこで、この 2 つは run 全体の予算より長く止め、全体の期限で止まることを確かめる
       const untilDeadline = stage === 'push' || stage === 'create';
-      const cli = fakeCli(repo, command, { when: condition, forwardFirst: stage === 'create', stallMs: untilDeadline ? 30_000 : 3000 });
+      // 共有の期限は、負荷の高い CI でも証拠の記録（verify を含む）が終わって push・create の停止に届き、そこから 1 操作の期限より長く待てる長さにする。
+      // 短いと、証拠の記録の中で期限に当たって同じ「実行時間の上限」で止まり、確かめたい停止に届かない。
+      // Windows は外部操作の起動が遅く、偽の git を通すと node の起動も増えるので、長くする（windows-fake-clis）
+      const SHARED_DEADLINE_MS = process.platform === 'win32' ? 40_000 : 12_000;
+      const UNTIL_DEADLINE_OPERATION_MS = 5_000;
+      const cli = fakeCli(repo, command, { when: condition, forwardFirst: stage === 'create', stallMs: untilDeadline ? SHARED_DEADLINE_MS + 30_000 : STALL_MS });
       diagnosticEvent(repo, 'run-start', { stage });
       // untilDeadline の 2 つは、止まる手前の通常の git・gh が負荷で遅れても 1 操作の期限に当たらないよう余裕を持たせ、
       // 止まったのが共有の期限であることは所要時間の下限で確かめる。
-      // 共有の期限は、負荷の高い CI でも証拠の記録（verify を含む）が終わって push・create の停止に届く長さにする。
-      // 短いと、証拠の記録の中で期限に当たって同じ「実行時間の上限」で止まり、確かめたい停止に届かない
-      const SHARED_DEADLINE_MS = 12_000;
       const runStarted = Date.now();
-      const result = await (untilDeadline ? withProcessBudget({ timeoutMs: SHARED_DEADLINE_MS, maxOperationMs: 5_000 }, () => run(repo)) : budget(() => run(repo)));
-      const runElapsed = Date.now() - runStarted;
+      const result = await (untilDeadline ? withProcessBudget({ timeoutMs: SHARED_DEADLINE_MS, maxOperationMs: UNTIL_DEADLINE_OPERATION_MS }, () => run(repo)) : budget(() => run(repo)));
+      const endedAt = Date.now();
+      const runElapsed = endedAt - runStarted;
       diagnosticEvent(repo, 'run-end', { stage, code: result.code, elapsedMs: Date.now() - started });
       const context = diagnosticContext(repo, { stage, code: result.code, elapsedMs: Date.now() - started, stdout: result.stdout }, cli);
       // 期限の検査の前に、狙った段階（push・2 回目の auth・PR の検索・作成）で止まったことを確かめる
-      expectStalled(cli, (args) => (stage === 'push' ? args[0] === 'push' : stage === 'auth' ? args[0] === 'auth' : args[0] === 'pr' && args[1] === stage), context);
+      const stall = expectStalled(cli, (args) => (stage === 'push' ? args[0] === 'push' : stage === 'auth' ? args[0] === 'auth' : args[0] === 'pr' && args[1] === stage), context);
       expect(result.code, context).toBe(1);
-      if (untilDeadline) expect(runElapsed, context).toBeGreaterThanOrEqual(SHARED_DEADLINE_MS - 500);
+      if (untilDeadline) {
+        // 1 操作の期限より長く待ち、共有の期限まで待って、共有の期限に猶予を足した時間のうちに止まった
+        expect(endedAt - stall.at, context).toBeGreaterThan(UNTIL_DEADLINE_OPERATION_MS);
+        expect(runElapsed, context).toBeGreaterThanOrEqual(SHARED_DEADLINE_MS - 500);
+        expect(runElapsed, context).toBeLessThan(SHARED_DEADLINE_MS + STOP_GRACE_MS);
+      } else expectStoppedSoon(stall, endedAt, OPERATION_MS, context);
       expect(result.stdout, context).toContain('実行時間の上限');
       expect(summary(repo).status, context).toBe('stopped');
       // 止まったのが確かめたい段階（push・create の停止）であることを、停止の印で確かめる
@@ -164,31 +208,33 @@ describe('runから外部操作までの期限', () => {
       expect(readdirSync(evidenceDir)).toHaveLength(1);
       expect(repo.calls()).toHaveLength(2);
     } finally { repo.cleanup(); }
-  }, 45_000);
+  }, process.platform === 'win32' ? 120_000 : 45_000);
 });
 
 describe('verifyとtraceの期限', () => {
   it('[REQ-183][REQ-240] traceのGitも共有予算で止める', () => {
     const repo = makeRepo();
-    const cli = fakeCli(repo, 'git', { when: "args[0]==='status'", stallMs: 3000 });
+    const cli = fakeCli(repo, 'git', { when: "args[0]==='status'", stallMs: STALL_MS });
     const restoreEnv = useRepoEnv(repo);
     try {
       const error = (() => { try { budget(() => runRecord({ root: repo.root, changeId: CHANGE, stdout: () => {} })); } catch (e) { return e; } })();
+      const endedAt = Date.now();
       const context = diagnosticContext(repo, { error: String(error) }, cli);
-      expectStalled(cli, (args) => args[0] === 'status', context);
+      expectStoppedSoon(expectStalled(cli, (args) => args[0] === 'status', context), endedAt, OPERATION_MS, context);
       expect(() => { throw error; }).toThrow('実行時間の上限');
       expect(existsSync(join(repo.root, '.loomake/evidence'))).toBe(false);
     } finally { restoreEnv(); repo.cleanup(); }
   });
   it('[REQ-183][REQ-240] OpenSpec検証の時間切れをCLI不存在と区別する', () => {
     const repo = makeRepo();
-    const cli = fakeCli(repo, 'openspec', { when: 'true', stallMs: 3000 });
+    const cli = fakeCli(repo, 'openspec', { when: 'true', stallMs: STALL_MS });
     const restoreEnv = useRepoEnv(repo);
     try {
       repo.write('loomake.config.json', JSON.stringify({ openspecValidate: 'auto', commands: {} }));
       const result = budget(() => runVerify({ root: repo.root, changeId: CHANGE, gate: 'spec-only' }));
+      const endedAt = Date.now();
       const context = diagnosticContext(repo, { results: result.results }, cli);
-      expectStalled(cli, (args) => args[0] === 'validate', context);
+      expectStoppedSoon(expectStalled(cli, (args) => args[0] === 'validate', context), endedAt, OPERATION_MS, context);
       expect(result.ok).toBe(false);
       expect(result.results.find((r) => r.check === 'openspec validate')).toMatchObject({ status: 'fail', detail: expect.stringContaining('実行時間の上限') });
     } finally { restoreEnv(); repo.cleanup(); }
@@ -218,16 +264,22 @@ describe('verifyとtraceの期限', () => {
 
 describe('実行時の失敗の終了コード', () => {
   it('[REQ-192][REQ-182][REQ-240] run の準備中に git が時間の上限で止まると、使い方を出さずに終了コード 3 を返す', async () => {
-    const repo = makeRepo({ run: { timeoutMinutes: 0.02 } });
+    const RUN_TIMEOUT_MS = 1200;
+    const repo = makeRepo({ run: { timeoutMinutes: RUN_TIMEOUT_MS / 60_000 } });
     const saved = { ...process.env };
     try {
-      const cli = fakeCli(repo, 'git', { when: "args.includes('--absolute-git-dir')", stallMs: 3000 });
+      const cli = fakeCli(repo, 'git', { when: "args.includes('--absolute-git-dir')", stallMs: STALL_MS });
       Object.assign(process.env, repo.env);
       const out: string[] = [];
       const err: string[] = [];
+      const runStarted = Date.now();
       const code = await main(['run', '--change', CHANGE], { cwd: repo.root, stdout: (t) => out.push(t), stderr: (t) => err.push(t) });
+      const endedAt = Date.now();
       const context = diagnosticContext(repo, { code, stderr: err.join('\n') }, cli);
-      expectStalled(cli, isLockGit, context);
+      const stall = expectStalled(cli, isLockGit, context);
+      // run の期限（timeoutMinutes 0.02 = 1200ms）まで待ち、期限に猶予を足した時間のうちに止まった
+      expect(endedAt - runStarted, context).toBeGreaterThanOrEqual(RUN_TIMEOUT_MS - CLOCK_SLACK_MS);
+      expectStoppedSoon(stall, endedAt, RUN_TIMEOUT_MS, context);
       expect(code).toBe(3);
       expect(err.join('\n')).toContain('loomake run: 外部操作を止めました');
       expect(err.join('\n')).not.toContain('使い方:');
