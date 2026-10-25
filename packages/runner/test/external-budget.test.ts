@@ -203,6 +203,14 @@ function alive(pid: number) {
   } catch { return false; }
 }
 
+/** コマンドラインに word を含む、生きているプロセスの一覧（後片付けに失敗したときの手がかり） */
+function leftovers(word: string): string {
+  const listing = process.platform === 'win32'
+    ? spawnSync('powershell', ['-NoProfile', '-NonInteractive', '-Command', PS_LIST], { encoding: 'utf8', windowsHide: true }).stdout
+    : spawnSync('ps', ['-axo', 'pid=,ppid=,command='], { encoding: 'utf8' }).stdout;
+  return (listing ?? '').split(/\r?\n/).filter((line) => line.includes(word) && !line.includes('powershell')).join('\n') || 'なし';
+}
+
 describe('verifyとtraceの期限', () => {
   it('[REQ-183] traceのGitも共有予算で止める', () => {
     const repo = makeRepo(); const oldPath = process.env.PATH;
@@ -224,6 +232,7 @@ describe('verifyとtraceの期限', () => {
   });
   it('[REQ-183][REQ-250] 品質コマンドの中断後に次のコマンドを実行しない', () => {
     const repo = makeRepo();
+    let failure: unknown;
     try {
       // shell の親ではなく監視役へ送る。POSIX の exec は cmd.exe にないので、祖先をたどって監視役を見つけ、送った先を記録する。
       // Windows で別のプロセスから送る SIGINT は監視役の強制終了になり、結果を書かずに終わった監視役の扱い（REQ-250）を通る
@@ -238,7 +247,14 @@ describe('verifyとtraceの期限', () => {
       expect(existsSync(join(repo.root, 'after'))).toBe(false);
       // SIGINT を送った品質コマンド自身も、止めてから返す（REQ-181・REQ-250）
       expect(alive(sent.self!), JSON.stringify(sent)).toBe(false);
-    } finally { repo.cleanup(); }
+    } catch (error) {
+      failure = error;
+      throw error;
+    } finally {
+      // 後片付けの失敗で、先の検査の失敗を隠さない。残ったプロセスがあれば一緒に示す
+      try { repo.cleanup(); }
+      catch (error) { throw new Error(`後片付けに失敗しました：${String(error)}\n先の失敗：${String(failure)}\n残ったプロセス：${leftovers('send-sigint')}`); }
+    }
   });
   it('[REQ-183] 明示したtimeoutMsがなくても共有期限で品質コマンドを止める', () => {
     const repo = makeRepo();
