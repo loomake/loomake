@@ -5,4 +5,4 @@
 - [x] 2.1 tests/package-workflows.test.ts に [REQ-144] のテストがあり、合格することを確かめる。テストの名前と期待値は変えない（REQ-144）
 
 ## 3. 確認
-- [ ] 3.1 `pnpm -s verify --change align-ci-node-floor-wording --done` を通す <!-- loomake:gate=done -->
+- [x] 3.1 `pnpm -s verify --change align-ci-node-floor-wording --done` を通す <!-- loomake:gate=done -->
