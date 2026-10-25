@@ -74,7 +74,7 @@ it('[REQ-012] 未ログインのとき 401 を返す', ...);
 it('[REQ-012][REQ-013] 1 つのテストで複数の要件を確かめる', ...);
 ```
 
-## 4. 検収レポートを作る
+## 4. リリースレポートを作る
 
 完了ゲートを通したコミットで実行する。
 
@@ -159,7 +159,7 @@ GitHub Actions ではたとえば次のように書く。ブランチ名は `env
 | `loomake verify` | 品質コマンドだけを実行する |
 | `loomake run --change <id>` | 実装から PR までを AI に任せる |
 | `loomake trace record --change <id>` | verify の結果を証拠として記録する |
-| `loomake trace report --change <id>` | 検収レポートを出す（`--format json` で JSON） |
+| `loomake trace report --change <id>` | リリースレポートを出す（`--format json` で JSON） |
 
 終了コードは合格（警告を含む）なら 0、不合格なら 1、使い方や設定の誤りなら 2、外部操作が時間・出力の上限か中断で止まったときは 3。
 

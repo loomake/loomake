@@ -49,7 +49,7 @@ const help = (usage: string, description: string, options: [string, string][] = 
 const TRACE_RECORD_HELP = help(TRACE_RECORD_USAGE, 'verify --done を実行し、結果をコミットの SHA と合わせて .loomake/evidence/<change-id>/ に記録する。未コミットの変更があれば記録しない。', [
   ['--change <id>', '記録する change'],
 ]);
-const TRACE_REPORT_HELP = help(TRACE_REPORT_USAGE, 'いちばん新しい証拠の記録から、要件ごとの検収レポートを標準出力に出す。', [
+const TRACE_REPORT_HELP = help(TRACE_REPORT_USAGE, 'いちばん新しい証拠の記録から、要件ごとのリリースレポートを標準出力に出す。', [
   ['--change <id>', 'レポートを作る change（進行中になければ archive から探す）'],
   ['--format md|json', '出力の形式。省くと md'],
 ]);
@@ -90,7 +90,7 @@ const HELP = [
   'コマンド:',
   '  init     AGENTS.md・CLAUDE.md・loomake.config.json・Skill をプロジェクトに置く',
   '  verify   仕様ゲートと完了ゲートで、仕様・確認事項・テストを検査する',
-  '  trace    証拠を記録し（record）、検収レポートを出す（report）。確認事項の回答（answer）と仮定の承認（approve）を書く',
+  '  trace    証拠を記録し（record）、リリースレポートを出す（report）。確認事項の回答（answer）と仮定の承認（approve）を書く',
   '  run      change のタスクをエンジンに 1 つずつ実装させ、完了ゲートを通して PR を作る',
   '  doctor   導入状態を調べ、足りない設定と直し方を表示する',
   '',

@@ -60,7 +60,7 @@ export function runAgreement(options: AgreementOptions): number {
 
   stdout(`trace.md の ${id} に${spec.label}を書きました：${answer}（${by}、${date}）`);
   if (result.missingColumns.length) {
-    stdout(`表に${result.missingColumns.join('・')}の列がないので、${spec.label}だけを書きました。列を足すと、検収レポートに${spec.person}と日付が載ります。`);
+    stdout(`表に${result.missingColumns.join('・')}の列がないので、${spec.label}だけを書きました。列を足すと、リリースレポートに${spec.person}と日付が載ります。`);
   }
   stdout(`loomake verify --change ${changeId} --spec-only で確かめてください。`);
   return 0;
