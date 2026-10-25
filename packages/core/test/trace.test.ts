@@ -111,13 +111,13 @@ describe('parseTrace：合意の列', () => {
   const withAgreement = trace
     .replace('| ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 |\n|---|---|---|---|---|---|---|', '| ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |\n|---|---|---|---|---|---|---|---|---|')
     .replace('| ID | 関連 | 仮定の内容 | 理由 | 承認 |\n|---|---|---|---|---|', '| ID | 関連 | 仮定の内容 | 理由 | 承認 | 承認者 | 承認日 |\n|---|---|---|---|---|---|---|')
-    .replace('| yes | |', '| yes | 5 回 | 顧客 PM | 2026-10-23 |')
+    .replace('| yes | |', '| yes | 5 回 | プロダクト責任者 | 2026-10-23 |')
     .replace('| 承認（2026-10-22） |', '| 承認（2026-10-22） | 開発リーダー | 2026-10-23 |');
 
   it('[REQ-011][REQ-077][REQ-078] 確認事項の回答者・回答日と、仮定の承認者・承認日を読む', () => {
     const { value, errors } = parseTrace('trace.md', withAgreement);
     expect(errors).toEqual([]);
-    expect(value.questions[0]).toMatchObject({ 回答: '5 回', 回答者: '顧客 PM', 回答日: '2026-10-23' });
+    expect(value.questions[0]).toMatchObject({ 回答: '5 回', 回答者: 'プロダクト責任者', 回答日: '2026-10-23' });
     expect(value.assumptions[0]).toMatchObject({ 承認者: '開発リーダー', 承認日: '2026-10-23' });
   });
 

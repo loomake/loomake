@@ -277,7 +277,7 @@ export function formatReportMarkdown(r: Report): string {
         ].join('\n')
       : '要注意の要件はありません。';
   return [
-    `# 検収レポート：${r.change}`,
+    `# リリースレポート：${r.change}`,
     '',
     '## 要注意の要件',
     '',
@@ -291,7 +291,7 @@ export function formatReportMarkdown(r: Report): string {
     '',
     table(['記録した日時', 'コミット', 'コミットの日時', '検査の結果'], [[r.evidence.recordedAt, r.evidence.sha, r.evidence.committedAt, r.evidence.ok ? '合格' : '不合格']]),
     '',
-    '## 要件ごとの検収',
+    '## 要件ごとの結果',
     '',
     table(
       ['ID', '出典', '状態', '要約', 'Requirement', 'テスト', '最後の検査結果'],
@@ -313,7 +313,7 @@ export function formatReportMarkdown(r: Report): string {
   ].join('\n');
 }
 
-/** 検収レポートを出力する。終了コード（出力した 0・証拠の記録がない 1）を返す */
+/** リリースレポートを出力する。終了コード（出力した 0・証拠の記録がない 1）を返す */
 export function runReport(options: ReportOptions): number {
   const { changeId, stdout, format = 'md' } = options;
   const report = buildReport(resolve(options.root), changeId);

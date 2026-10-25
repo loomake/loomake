@@ -242,9 +242,9 @@ git commit -m "archive: <change-id>"
 
 差分仕様が `openspec/specs/`（いまの仕様）に取り込まれ、change は `openspec/changes/archive/` に移る。新しい capability ができたときは、`openspec/specs/<capability>/spec.md` の `## Purpose` が仮の文（`TBD - …`）になるので書き換える。それ以外で `openspec/specs/` を直接編集してはいけない。
 
-### 4.6 検収レポートを作る
+### 4.6 リリースレポートを作る
 
-完了ゲートを通したコミットで `loomake trace record` を実行し、verify の結果を証拠として残す。そのあと `loomake trace report` で、要件ごとの検査結果をまとめた検収レポートを作る。「検収レポート」はいまの呼び名で、リリース記録とリリースレポートに置き換える予定（[overview.md](overview.md)）。
+完了ゲートを通したコミットで `loomake trace record` を実行し、verify の結果を証拠として残す。そのあと `loomake trace report` で、要件ごとの検査結果をまとめたリリースレポートを作る。
 
 ```sh
 npx loomake trace record --change <change-id>

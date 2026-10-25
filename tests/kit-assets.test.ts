@@ -136,7 +136,7 @@ describe('req-to-openspec Skill のテンプレート', () => {
     expect(step).toContain('関係する要件がすべて後のフェーズなら、ブロッキングにしない');
   });
 
-  it('[REQ-028] お金・個人情報・権限・データ削除・外部連携・検収数値を、仮定にしてはいけないものとして列挙している', () => {
+  it('[REQ-028] お金・個人情報・権限・データ削除・外部連携・受け入れの数値を、仮定にしてはいけないものとして列挙している', () => {
     const step = section(skill, /曖昧さを洗い出す/);
     expect(step).toContain('仮定にしてはいけない');
     expect(step).toContain('必ずブロッキングな確認事項');
@@ -147,13 +147,13 @@ describe('req-to-openspec Skill のテンプレート', () => {
       '権限',
       'データ削除',
       '外部連携',
-      '検収数値',
+      '受け入れの数値',
     ]);
   });
 
-  it('[REQ-029] 1 change をリリース・検収の単位とし、分割案を人に示して合意を取る', () => {
+  it('[REQ-029] 1 change をリリースの単位とし、分割案を人に示して合意を取る', () => {
     const step = section(skill, /change に分割する/);
-    expect(step).toContain('リリース・検収される単位');
+    expect(step).toContain('リリースされる単位');
     expect(step).toContain('分割案');
     expect(step).toContain('人に示し、合意を取る');
   });
@@ -197,8 +197,8 @@ describe('req-to-openspec Skill のテンプレート', () => {
     }
   });
 
-  it('[REQ-033] ブロッキング確認事項を顧客にそのまま送れる文面で出すよう指示している', () => {
-    expect(section(skill, /報告する/)).toMatch(/^ブロッキング確認事項は顧客にそのまま送れる文面で出す。/m);
+  it('[REQ-033] ブロッキング確認事項を要件を出した人にそのまま送れる文面で出すよう指示している', () => {
+    expect(section(skill, /報告する/)).toMatch(/^ブロッキング確認事項は要件を出した人にそのまま送れる文面で出す。/m);
   });
 
   it('[REQ-059] kit のコードに pandoc・pdftotext・xlsx2csv を呼び出す処理が無い', () => {
