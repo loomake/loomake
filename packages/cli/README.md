@@ -4,7 +4,7 @@
 
 - 要件書を出典つきの OpenSpec change に変える Skill と、AI が従う共通ルール（AGENTS.md）を置く（`loomake init`）
 - 未確定の要件が残るあいだは実装に進ませず、すべての要件にテストがあることを確かめる（`loomake verify`）
-- 検査の結果を証拠として記録し、顧客に渡す検収レポートを作る（`loomake trace`）
+- 検査の結果を証拠として記録し、要件ごとの検査結果をまとめた検収レポートを作る（`loomake trace`）
 - change のタスクを AI に実装させ、完了ゲートが通るまで直させて、PR を作る（`loomake run`）
 - 導入の状態を調べ、足りない設定と直し方を表示する（`loomake doctor`）
 

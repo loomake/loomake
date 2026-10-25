@@ -169,14 +169,14 @@ req-to-openspec スキルで docs/requirements/order-v1.0.md を change にし�
 Skill は次の順に進める。
 
 1. 要求を述べている文を 1 文ずつ `REQ-001` から採番し、出典（文書名・章と行）つきで要件台帳に載せる
-2. 曖昧さのチェックリストを全要件にあて、確認事項（Q）か仮定（A）として記録する。お金・個人情報・権限・データ削除・外部連携・検収数値に関わる曖昧さは、仮定にせず、必ずブロッキングな確認事項にする
-3. change の分割案（リリース・検収の単位）を示す。**人が合意するまで書き出さない**
+2. 曖昧さのチェックリストを全要件にあて、確認事項（Q）か仮定（A）として記録する。お金・個人情報・権限・データ削除・外部連携・受け入れの数値に関わる曖昧さは、仮定にせず、必ずブロッキングな確認事項にする
+3. change の分割案（リリースの単位）を示す。**人が合意するまで書き出さない**
 4. `openspec/changes/<change-id>/` に proposal.md・specs・tasks.md・trace.md を書く
-5. change 一覧、台帳の集計、ブロッキング確認事項、未承認の仮定を報告する。ブロッキング確認事項は顧客にそのまま送れる文面で出る
+5. change 一覧、台帳の集計、ブロッキング確認事項、未承認の仮定を報告する。ブロッキング確認事項は要件を出した人にそのまま送れる文面で出る
 
 ### 4.2 確認事項に答え、仕様ゲートを通す
 
-`trace.md` を開き、確認事項の「回答」欄と、仮定の「承認」欄を埋める。顧客に聞くものは、Skill が出した文面を送って回答をもらう。
+`trace.md` を開き、確認事項の「回答」欄と、仮定の「承認」欄を埋める。要件を出した人に聞くものは、Skill が出した文面を送って回答をもらう。
 
 ```sh
 npx loomake verify --change <change-id> --spec-only
@@ -244,7 +244,7 @@ git commit -m "archive: <change-id>"
 
 ### 4.6 検収レポートを作る
 
-完了ゲートを通したコミットで `loomake trace record` を実行し、verify の結果を証拠として残す。そのあと `loomake trace report` で、顧客に渡す検収レポートを作る。
+完了ゲートを通したコミットで `loomake trace record` を実行し、verify の結果を証拠として残す。そのあと `loomake trace report` で、要件ごとの検査結果をまとめた検収レポートを作る。「検収レポート」はいまの呼び名で、リリース記録とリリースレポートに置き換える予定（[overview.md](overview.md)）。
 
 ```sh
 npx loomake trace record --change <change-id>
@@ -288,7 +288,7 @@ npx loomake run --change <change-id>
 trace.md の表を直接編集する代わりに、コマンドで書ける。回答・承認と一緒に、回答者・承認者と日付（省くとその日）も書く。すでに回答や承認がある行は上書きしない。直すときは trace.md を編集する。
 
 ```sh
-npx loomake trace answer --change <id> --question Q-01 --answer "5 回" --by 顧客担当
+npx loomake trace answer --change <id> --question Q-01 --answer "5 回" --by 担当者
 npx loomake trace approve --change <id> --assumption A-01 --by PM
 ```
 

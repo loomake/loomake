@@ -1,5 +1,5 @@
 {
-  "snapshot": "228b1c9",
+  "snapshot": "983f9fa",
   "semanticRedRuns": [
     {
       "report": ".loomake/quality/diagnostic-extended-red.json",
@@ -62,28 +62,28 @@
   "gateRuns": [
     {
       "change": "protect-run-diagnostics",
-      "snapshotCommit": "8bc0ded",
+      "snapshotCommit": "402a94b",
       "exitCode": 0,
       "tests": 725,
       "logSha256": "6594e3018efba17100a9d2a712cb78c01e653212bc6f2ab0b1063f74daead21b"
     },
     {
       "change": "guard-git-internals",
-      "snapshotCommit": "8bc0ded",
+      "snapshotCommit": "402a94b",
       "exitCode": 0,
       "tests": 725,
       "logSha256": "0f3567b105d9ae1fc2878e889ff74b340d564a33c7130d65909944b7321e0b3b"
     },
     {
       "change": "audit-scenario-evidence",
-      "snapshotCommit": "8bc0ded",
+      "snapshotCommit": "402a94b",
       "exitCode": 0,
       "tests": 725,
       "logSha256": "5d83d4c05b95f981bd01514e9f95b911c7f916d54c70566811c13e3c89ceaa91"
     },
     {
       "change": "audit-scenario-evidence",
-      "snapshotCommit": "228b1c9",
+      "snapshotCommit": "983f9fa",
       "exitCode": 0,
       "tests": 728,
       "logSha256": "5d83d4c05b95f981bd01514e9f95b911c7f916d54c70566811c13e3c89ceaa91"

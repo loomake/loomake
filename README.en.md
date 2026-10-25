@@ -7,7 +7,7 @@ Loomake is a toolkit for AI-driven development that starts from requirement docu
 - Turn a requirements document into an OpenSpec change with sources for every requirement (the `req-to-openspec` skill)
 - Give AI agents one set of rules to follow (`AGENTS.md`)
 - Refuse to start implementation while blocking questions are unanswered, and check that every requirement has a passing test (`loomake verify`)
-- Record the results as evidence and produce an acceptance report for the customer (`loomake trace`)
+- Record the results as evidence and produce an acceptance report that lists the result for every requirement (`loomake trace`)
 - Let an AI engine implement the tasks, fix them until the done gate passes, and open a pull request (`loomake run`)
 
 > **Status:** not yet published to npm. CLI messages and most documents are in Japanese.
