@@ -1,6 +1,6 @@
 # WBS の GitHub Issues 移行仕様
 
-版：v0.4（2026-10-26。再実行で Issue の手修正を上書きしない規則を足し、W0-6 を partial に直した。v0.3 移行元を WBS v1.4 に変更し、Issue type「Stage」を作らないことにした。v0.2 初期状態の棚卸しの結果を反映。v0.1 初版）
+版：v0.5（2026-10-26。移行時の現状に書く残件を WBS v1.4 の契約に合わせることにした。v0.4 再実行で Issue の手修正を上書きしない規則を足し、W0-6 を partial に直した。v0.3 移行元を WBS v1.4 に変更し、Issue type「Stage」を作らないことにした。v0.2 初期状態の棚卸しの結果を反映。v0.1 初版）
 対象：`loomake/loomake` の `docs/wbs.md` v1.4（v1.3.1 と実装の整合を取って改訂する版）
 関連：`docs/wbs.md`、`docs/wbs/initial-status.yaml`、`docs/requirements-matrix.md`、`docs/requirements/loomake-v0.11.md`
 
@@ -187,7 +187,7 @@ Runner が作業を取るのは、次のすべてを満たすときに限る。
 
 ### 6.1 前提作業
 
-1. 初期状態の棚卸し：各作業項目の完了条件と既存の実装・仕様・change を突き合わせ、`docs/wbs/initial-status.yaml` に判定と根拠を書く。判定は done・partial・none の 3 つで、done は Done（`completed` で閉じる）、partial と none は Backlog で移す。partial を In Progress にしないのは、In Progress を「いま誰かが作業中」の意味に保つためである。partial の Issue には本文の「移行時の現状」に、関連する実装と足りないものを書く。2026-10-26 の調査案では done 2 件、partial 26 件、none 21 件だった。
+1. 初期状態の棚卸し：各作業項目の完了条件と既存の実装・仕様・change を突き合わせ、`docs/wbs/initial-status.yaml` に判定と根拠を書く。判定は done・partial・none の 3 つで、done は Done（`completed` で閉じる）、partial と none は Backlog で移す。partial を In Progress にしないのは、In Progress を「いま誰かが作業中」の意味に保つためである。partial の Issue には本文の「移行時の現状」に、関連する実装と足りないものを書く。足りないもの（`missing`）は、WBS v1.4 で採用した契約に照らして書く。調査時点の食い違いの所見（`wbs_mismatch`）は記録として残すが、Issue 本文には転記しない。2026-10-26 の調査案では done 2 件、partial 26 件、none 21 件だった。
 2. WBS 本文の不一致の修正：W0-2 と W0-3 は npm workspaces・node:test・Biome を前提に書かれているが、リポジトリは pnpm・Vitest・ESLint を使っている。移行前に WBS 側を実態に合わせるか、構成を変える作業として残すかを決める。
 3. 組織の設定：Issue fields に WBS ID・Stage・Change を追加する。
 

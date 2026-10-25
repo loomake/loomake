@@ -11,6 +11,9 @@
 #   partial を In Progress にしないのは、In Progress を「いま誰かが作業中」の意味に保つため。
 #   partial の Issue には本文の「移行時の現状」に evidence と missing を書く
 #
+# missing は WBS v1.4 で採用した契約に照らした残件で書く（v1.4 の 0 章の決定 J01〜J08）。
+# wbs_mismatch は調査時点（v1.3.1）の所見で、v1.4 で解消したものも記録として残す。Issue 本文には転記しない
+#
 # 集計: done 2 / partial 26 / none 21（合計 49）
 - id: W0-1
   assessment: partial
@@ -110,7 +113,7 @@
   - 'packages/core/test/schema.test.ts, fixtures/schema-history/1.0.0.json : verify-result の互換性テスト'
   - 'tests/schema-compatibility.test.ts : 必須プロパティの削除・改名を拒否（REQ-053）'
   - 'packages/cli/src/main.ts : 終了コードは 0（合格）・1（不合格）・2（使い方の誤り）・3（実行時の失敗、REQ-192）'
-  missing: 7.3 の構造（ci・local の completed・partial、aborted）、7.3 の終了コードの意味（2 は decision.required、3 は aborted）と優先順、decision、禁止フィールド、未知フィールドの許容
+  missing: 7.3 の構造（ci・local の completed・partial、aborted）、WBS v1.4 で決めた終了コードの契約（2 は使い方・設定の誤り、3 は実行時の失敗、要判断は 1 と decision）と優先順、change が確定しない場合の null、decision、禁止フィールド、未知フィールドの許容、schemaVersion 2.0.0 と 1.0.0 の証拠の読み取り
   wbs_mismatch: 現行の verify JSON は旧形式（schemaVersion・mode・ok・results）で、7.3 の契約とは別物
 - id: W1-3
   assessment: partial
