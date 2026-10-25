@@ -90,7 +90,10 @@ function gone(target: number, ms: number): boolean {
  */
 function stopTree(pid: number): void {
   if (process.platform === 'win32') {
-    spawnSync('taskkill', ['/pid', String(pid), '/T', '/F'], { stdio: 'ignore', timeout: 1000, killSignal: 'SIGKILL', windowsHide: true });
+    const t0 = monotonicMs();
+    const probe = spawnSync('taskkill', ['/pid', String(pid), '/T', '/F'], { encoding: 'utf8', timeout: 10000, killSignal: 'SIGKILL', windowsHide: true });
+    const list = spawnSync('powershell', ['-NoProfile', '-Command', 'Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like "*send-sigint*" } | ForEach-Object { "{0} {1} {2}" -f $_.ProcessId, $_.ParentProcessId, $_.CommandLine }'], { encoding: 'utf8', windowsHide: true });
+    process.stderr.write(`PROBE taskkill pid=${pid} ms=${Math.round(monotonicMs() - t0)} status=${String(probe.status)} signal=${String(probe.signal)} error=${String(probe.error)} out=${JSON.stringify(probe.stdout)} err=${JSON.stringify(probe.stderr)} left=${JSON.stringify(list.stdout)}\n`);
     // taskkill が返っても、止めたプロセスの終了は少し遅れることがあるので、消えるまで最大 1 秒待つ
     gone(pid, 1000);
     return;
