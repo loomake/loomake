@@ -7111,7 +7111,7 @@
       "scenarioSha256": "efcfcad984cc22ce3fa357cd84bcafbe1fa8469ea8d2554072a4a47d098b89c5",
       "reason": "外側の期限付き子で実runnerソースの通常runを呼び、FIFOを読まずcode1と日本語の対象・理由を返すこと、エンジン0回、HEADとタスク全文の不変、FIFOの保持、停止summaryと公開なしをassertする。",
       "sources": [
-        "REQ-208"
+        "REQ-224"
       ],
       "tests": [
         {
@@ -7127,7 +7127,7 @@
       "scenarioSha256": "a64e8e088f17635f88f8479afdae0969f4d4b334bcbd65710946dd99ee77a0fa",
       "reason": "試験用エンジンが実装とFIFOを作る通常runで、code1と日本語の対象・理由、エンジン1回、HEADとタスク全文の不変、実装とFIFOの保持、停止summaryと公開なしをassertする。",
       "sources": [
-        "REQ-208"
+        "REQ-224"
       ],
       "tests": [
         {
@@ -7143,7 +7143,7 @@
       "scenarioSha256": "8b725cf3957d51f00ba77590eab0e96c89d74a8852fbcb5584b17d6b59731cc2",
       "reason": "実post-commitフックを配置し、通常runの成功、タスク完了と実装コミット、フックが作る記録をassertする。",
       "sources": [
-        "REQ-208"
+        "REQ-224"
       ],
       "tests": [
         {
@@ -7159,7 +7159,7 @@
       "scenarioSha256": "fcab9138ddcabf9de712ee75e09cb688b51032421391e5fa07047f4cc4b4a5a4",
       "reason": "リンク先のないリンクと、FIFOを含むディレクトリへのリンクで通常runを呼び、リンク先を読まず成功し、実装とタスクをコミットしてリンクを保つことをassertする。",
       "sources": [
-        "REQ-208"
+        "REQ-224"
       ],
       "tests": [
         {
@@ -7180,7 +7180,7 @@
       "scenarioSha256": "0f443f7d69ab434219cc0a7b1fddf1bb7e210a1286b0ba303171c23d0b323503",
       "reason": "セキュリティ文書を読み、リンク先と呼び出すコードの検査対象外、利用者の権限、内容と依存先を信頼して確認することを明記した文をassertする。",
       "sources": [
-        "REQ-209"
+        "REQ-225"
       ],
       "tests": [
         {
@@ -7196,7 +7196,7 @@
       "scenarioSha256": "9c90564078af2d2d24f0a5477063ca47b23b69b4b2067d4f9f4a9f9d540f932e",
       "reason": "文書に同じPOSIXグループを対象とすること、別セッションへ離脱した子とWindowsの同等保証を含めないこと、未実行環境や実接続の成功を主張しないことをassertする。",
       "sources": [
-        "REQ-209"
+        "REQ-225"
       ],
       "tests": [
         {
