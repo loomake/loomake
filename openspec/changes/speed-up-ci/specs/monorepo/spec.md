@@ -21,3 +21,7 @@ Source: REQ-215
 #### Scenario: PR の古い実行を取り消す
 - **WHEN** `.github/workflows/ci.yml` を読む
 - **THEN** ワークフローの `concurrency` の group に PR の番号が入り、`cancel-in-progress` は `github.event_name == 'pull_request'` のときだけ true になる
+
+#### Scenario: main への push の実行は取り消さない
+- **WHEN** `.github/workflows/ci.yml` を読み、main への push で続けて動く実行の `concurrency` の group を求める
+- **THEN** group には `github.run_id` が入り、実行ごとに分かれる。`cancel-in-progress` は false になる。待機中の実行が、同じ group の次の push の実行に置き換えられて取り消されることはない

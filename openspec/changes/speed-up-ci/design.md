@@ -10,7 +10,7 @@ quality ジョブは 3 つの OS で、lint・typecheck・`pnpm test`・build・
 - macOS と Windows では、マトリクスの `shard`（`1/2`・`2/2`）で 2 つのジョブに分け、それぞれ `pnpm test --shard=<shard>` を実行する。2 つのシャードを合わせると、すべてのテストを 1 回ずつ実行する。シャードの数を 2 にしたのは、1 つのシャードが約 4〜5 分になり、ubuntu のジョブとほぼ同じ時間で終わるからである（仮定 A-01）
 - マトリクスは、`os: [ubuntu-latest, macos-latest, windows-latest]` と `shard: ['1/2', '2/2']` の組み合わせから ubuntu を除き、`include` で ubuntu を 1 つだけ足す。ジョブ名は `quality (macos-latest, 1/2)`・`quality (ubuntu-latest)` のようになる。`fail-fast: false` は変えない
 - lint・typecheck・build・配布物の検査は、どのジョブでも実行する。どれも 10 秒ほどで終わるので、分けても速くならない
-- ワークフローの `concurrency` の group は `ci-<PR の番号。なければ ref>` にし、`cancel-in-progress` は `pull_request` のときだけ true にする。main への push の実行は取り消さない
+- ワークフローの `concurrency` の group は `ci-<イベント名>-<PR の番号。なければ実行の ID（github.run_id）>` にし、`cancel-in-progress` は `pull_request` のときだけ true にする。main への push は実行ごとに group を分ける。GitHub の仕様では、同じ group の中で待機している実行は、`cancel-in-progress` が false でも、次の実行に置き換えられて取り消されるためである。イベント名を入れるのは、PR の番号と実行の ID が同じ値になっても group が重ならないようにするためである
 
 ## verify のテストのレポートへの影響
 
