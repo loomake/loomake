@@ -1,0 +1,1447 @@
+{
+  "scope": "audit-scenario-evidence tasks 3.1–3.3 and 4.1–4.3, assertion coverage and scenario mapping only",
+  "baseCommit": "aa64b1e1e6098e92e0e6c27ea7a18a63b7a9e2d6",
+  "sourceTreeHashes": {
+    "loomake.config.json": "c49e93abdc2bf770e1852d14f4daf84c127ca2163bfd82c59516b2818eb9e1e8",
+    "openspec/changes/archive/2026-10-24-bound-input-resources/benchmark.mjs": "dd0c089edf3e2aad5b467c671529e1d597adbc54eb728e3a033921721c79fb71",
+    "openspec/changes/archive/2026-10-24-clarify-doctor-diagnostics/doctor-journeys.mjs": "a99476416b6144d9feb66744ebf5961a83bdf671b93edbae1ed878353024a5db",
+    "package.json": "6aafb592a137269afec45b6cf39a7e846a45953355403d8edc7923437c9b5756",
+    "packages/cli/package.json": "bc4abd3ca5bc03d2a19b5ee77e673aa3e930929e331aa5d3a61c82e9200cb80f",
+    "packages/cli/src/args.ts": "f71103a6c4a0cb6c9d574c504206a5b668afaf1690c3bc9b31aa4662e4add5fd",
+    "packages/cli/src/cli.ts": "59e06148b18e47eaa303c03abe167e9ac60384cf3dce9ae056377b0d59e4c178",
+    "packages/cli/src/main.ts": "9f86303e3dcdea2177959128a55c763945cdc3f6c14f05ca0c15ce11bccca429",
+    "packages/cli/test/arguments.test.ts": "ce0333abbadeb77021844db854f55d9e628c12b99f0f8705ea071ede067ece5a",
+    "packages/cli/test/cli.test.ts": "0f36c01b0c8947a0cfab325b0a3f72149826b3cfcdd7828eb3ce8424b93ef2b2",
+    "packages/cli/test/doctor.test.ts": "b71041f6ee0b7de94ae34a91269839ceadfc0886f92dd4d0ffa52558a4e16b4d",
+    "packages/cli/test/init.test.ts": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e",
+    "packages/cli/test/trace-agreement.test.ts": "003cf20521ab1362372f1ce93cbbc046ea71a9bfcfd4b401b652509aadab9636",
+    "packages/cli/test/verify-boundaries.test.ts": "453d06454e94c6850d239e713c1258885a0a6e642f5f312aee48eb1fd5436a12",
+    "packages/core/package.json": "81c84806e91aca1877b02c39f16f686de2f42bee11707c9f2fd8f07c8b45f3b2",
+    "packages/core/src/agreement.ts": "164b1b42a791b49cde621f5f086db413d31607e30a39d96548d347c33226d0e4",
+    "packages/core/src/coverage-policy.ts": "d07af060fa82c6fdc8eaae28b33899c731983280e386c978f1f285e81216f6a6",
+    "packages/core/src/index.ts": "520f47fb24eab46b3feaf9b9a9a8eb187fc0b3862c7567b67ad42936edf8e459",
+    "packages/core/src/parse.ts": "c15b99494176ef9b9c3aa22a19a31eb1ea59b2804f9028b93b2df061a6269540",
+    "packages/core/src/spec.ts": "3ad805921112c5e265764767fc2447e2f6c80f1ba1bd912e8586e872ca8545c4",
+    "packages/core/src/tasks.ts": "94608cf43fdd951246000ef3d4896241b705cafe91b9ae5ae8cff18dcaab424e",
+    "packages/core/src/template.ts": "bef7bc8471190711f330c1ae964b92b8500c56513cf3facde1327c2c13f45fe8",
+    "packages/core/src/test-report.ts": "cf633399a106609de03b06227a7cf32d2afe83d767f3899c20fa93c8c5eb070d",
+    "packages/core/src/trace-edit.ts": "0e774842592293684e85dde8861b1d0668ac4458cdf88d8f689b8aecadb7d431",
+    "packages/core/src/trace.ts": "513f18beec408f26096b22f401559b96c5b8dde5e9efa7d7f0b46adf5ccc5b4d",
+    "packages/core/src/verify-result.ts": "c84a6075a0cc909e2aa519d3bfd9af8ae772eb53f127d6634f62cffe77e02ea3",
+    "packages/core/test/agreement.test.ts": "68e212efdfe32dce2a259b982260a1cc26e7a78551886f8628e05cd1604acbbf",
+    "packages/core/test/coverage-policy.test.ts": "61add31ac1281ad2949cfda26529bfe7ec102b34fb8c06bf2d5d40c90ee32bb8",
+    "packages/core/test/package.test.ts": "6c32b72bc19cd187c4337ae78ff9c2b42f39e5ff40ef0156175a8845d0e84fb4",
+    "packages/core/test/schema.test.ts": "ee3ee3a0d181d9e98ff8aecc6fa70b2197748f938b4265e5ed2c1048ffad2891",
+    "packages/core/test/spec.test.ts": "542fe6ec2963ca726db1b6948e8bbe27f5bc9694cca87b437e4d9f63f6f8c9c3",
+    "packages/core/test/tasks.test.ts": "d317048c05efd6bef9126b9f8a848de40e6202c278bfdff32535bf129439ec2c",
+    "packages/core/test/test-report.test.ts": "c7153a95adba3abf1d612e07134454d17aa93ece23874ffc140db2d5136859f1",
+    "packages/core/test/trace-edit.test.ts": "db99961acc8021a96ae61c6d5e78f76fda0e8383a25958bdf00e975f7e00d98d",
+    "packages/core/test/trace.test.ts": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40",
+    "packages/kit/package.json": "fa9fb1d3c56fb5b7872a46762f803cd0e1a4c0e4cde7cb1dd399e5d92e9e8993",
+    "packages/kit/src/change-files.ts": "7e699339ccc4afa9c3cf6092805923b28301dde5db0c7f3064defbc3a6c59e08",
+    "packages/kit/src/doctor/command.ts": "087b5e2351a2c93204661876892b0319bcd86863ec805f7af8e0e8c79bfc8ee5",
+    "packages/kit/src/doctor/doctor.ts": "ecc38103fa466e370275e52cee5f7e30020a20c27802fceafe8c77c30b4960e5",
+    "packages/kit/src/errors.ts": "5b6ae777bac8827d6edc7f5a0d31e735d9eb60460dcff06ec76d225f0c90e667",
+    "packages/kit/src/index.ts": "3581be26c41d5638c54595a754db8c85ee55820c0c8119d37d98451605ea476a",
+    "packages/kit/src/init/diff.ts": "e64a268db25dfaae9fc8b6dcb879aae8b475b68922582e5186fdd81314299ddb",
+    "packages/kit/src/init/init.ts": "64793b65de5ac0b7ccd82594346d285dc42d09170d7f418d62e74616c0395696",
+    "packages/kit/src/input.ts": "d0a7c8ca16dec8d5c8bcb5383661b4b409240fca6ef8ddfcf6ae884557a294e6",
+    "packages/kit/src/process.ts": "bbddfac452bff8a06565923e98d1f27f1bfc41fe668f235baa46847ff128d233",
+    "packages/kit/src/verify/config.ts": "db2f2b43744c431e97f25b59fbb1494de2a0243d3d4dac79f2ec7c7494eb8b50",
+    "packages/kit/src/verify/format.ts": "a8025779f131b3982662985c9d7ff808cb3ec13c1a38687a6b92171abaf0f896",
+    "packages/kit/src/verify/run.ts": "4bbfc011eb3cf9c0ff9097eedc0f6f4b570c709d2990d29b5dc98e306de02fda",
+    "packages/kit/test/change-files.test.ts": "1964cfcdae7c9ad29aad34668efc4e33606c63dadf9798e7249ce1407b2bbc31",
+    "packages/kit/test/doctor-command.test.ts": "a0e75f4a867c6a7c85dd0959a9737cb2fe4ad50f8d4dd84dfe9e9ab41b1ea0e6",
+    "packages/kit/test/doctor-diagnostics.test.ts": "f30c2b3670db786adda6047b18c348b5ac6abe38a54f6a406ef367960893f985",
+    "packages/kit/test/input.test.ts": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985",
+    "packages/kit/test/process.test.ts": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca",
+    "packages/kit/test/project.ts": "4cc9634bc96658d37cec871ecd161f8293563de7dffba2568f5c2163fc26f3ea",
+    "packages/kit/test/verify.test.ts": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f",
+    "packages/runner/package.json": "723cbd810515e25a61f2b82b23076c17d36ec95da89e6189e63283a443b1a1fa",
+    "packages/runner/src/config.ts": "95f941eab26b7b5de8e8ce779882e229218276d8e400ab2100433620e544b0c8",
+    "packages/runner/src/engine.ts": "1ed24c9dc1d0728d1453096a47ad4d4f2c433fb05743e81fe4f3907e437d0d71",
+    "packages/runner/src/git.ts": "29d164cf63b2f15be3127a16d6c58f7198e5b6a6bc7c94bded9c745f99a112a9",
+    "packages/runner/src/guards.ts": "ffcbe694322c23bb8c04fbc7bab4e9e5a267d0a6bae532b0fa5c5f2d5206fc15",
+    "packages/runner/src/index.ts": "73d1bfde6536bf043efaa2675059e78c34991284a15e25d08733df6ddc2a7e48",
+    "packages/runner/src/lock.ts": "9cc13c0adea1e30bc42ec0fc6dee7f4bc0d91972c18db0c275a63e0a21728a79",
+    "packages/runner/src/log-policy.ts": "2e96f7bcc3c7bc561bbe6de268c7968fcfe058d832dad1df874999bdf51dba4d",
+    "packages/runner/src/logs.ts": "e24dbe51a027a1f05a96aee14c5012eb4f0c8713eea9cdcc00d35fa0233a38aa",
+    "packages/runner/src/mask.ts": "d78908593e541d771b0f7b23312d7a03e7dfef8096dde6d5c3f16d4b470431a9",
+    "packages/runner/src/pr.ts": "69a2820f7c34baba6a3a8296a43420d93cf1e325697e7c74559ded9b01f676f0",
+    "packages/runner/src/private-key-stream.ts": "3735bc3746adf19444e9d740f97fe726008946043f1a2025928b0dea55170e5f",
+    "packages/runner/src/reuse.ts": "0b783e7b000f05b9077b15365520d8abf79214bafb510855a0426a15fd9cf3cd",
+    "packages/runner/src/run.ts": "7cfb5055e76ad5cdd50c8d36da6f35d6fb2d7938f617c70cb9ae7de52644d40f",
+    "packages/runner/src/run/decision-policy.ts": "d2a1c296142f8fb5290612537d81aad8bce7b81b35cc5d778df5d4cfe70d7996",
+    "packages/runner/src/run/phases.ts": "cc23a91f5cbfa52cd50caf75f8db9c88cb695805fa8225e44c26c8104f5abd69",
+    "packages/runner/src/run/prepare.ts": "5033e83ab343bb087586711ccbed8b29891c7a4ea709caec1ec57bf884a7e2f7",
+    "packages/runner/src/run/prompt.ts": "80734d492dbb99f9b01f01354aeb3b43cf56f8b1baf6330cc90c6cf661e8d098",
+    "packages/runner/src/run/recorder.ts": "5a721a7db0c263ac1ba83b155a9ab581470393703cd69d23bfddb213f5b7fa30",
+    "packages/runner/src/run/tasks.ts": "2d7ebbb322a3d2cb488d01ed63d44b6aac9d5cb247ab05901ac8bbf4b1db2116",
+    "packages/runner/src/run/types.ts": "bb96c08d0717411d23fce5b423bb559939034265e39bbe267c04d0e90b04380f",
+    "packages/runner/src/shell.ts": "78c82f36a7bb598abdb013d53f9b36283d643d4f991fb3fba6f5c531f8ae01f4",
+    "packages/runner/test/decision-policy.test.ts": "000c9763c5b9e05f706579261d1f4a14a5bd5d442cb34015ae008532a79ba561",
+    "packages/runner/test/diagnostic-redactor.test.ts": "bc1d89cd9d21bc9079f3626cd0c06eb26f9e7036483b6c3f5c09b2d0414704d4",
+    "packages/runner/test/engine-safety.test.ts": "7c75c2f45e35c3daf7c65fb9551eb924a0b3d7e34656a71cd0cc3ae486711317",
+    "packages/runner/test/evidence-storage.test.ts": "16cd666b698613e965a0c1547e97b68a56431b2f576b7f9e45caf7954adbeebb",
+    "packages/runner/test/external-budget.test.ts": "2526e2b8662dc95fc98b9c20260119778f5ad2eb3ec187b9f1b232a24b3736ac",
+    "packages/runner/test/guard-path-integration.test.ts": "e31d591ad04ece3601b546325c2f627d6ecf467a1675e415eac23220bc594ec4",
+    "packages/runner/test/guards.test.ts": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f",
+    "packages/runner/test/helpers.ts": "0d047e0b0a98d49c6ae46ebec5dc1bed36d4a3c9c5a0dd876c1191bddc1ad233",
+    "packages/runner/test/lock.test.ts": "503815aa9b69654f8966ccbbf591d44f5cc12b36c2610d66fb566783884b9d0b",
+    "packages/runner/test/log-config.test.ts": "8f76ad8d7938289e28b1c534473c27bdaed047603e8da7873b5d7fa242f326ea",
+    "packages/runner/test/log-run.test.ts": "8739b25d089dc16b12339bdb8cd0c63f3915848449ed0cf7d20666aafc39c000",
+    "packages/runner/test/logs.test.ts": "fc4f44af93ac4374860bce08583d0884c14adb9d73814ec372cafe70ea6bf9e5",
+    "packages/runner/test/mask.test.ts": "c021eebe799ff8c5762683db208f7b9adb6bdb0f35fe2be7f6e13200832910ec",
+    "packages/runner/test/output-budget.test.ts": "91e585da4ed7785f163c4be3828c85ca5e5e0704865d72439da2e8f3d85e14e0",
+    "packages/runner/test/output-processes.test.ts": "ba1bbba51f418c940a3b40b55501411289b3628d1c4fc5d04e73503ed56d15ec",
+    "packages/runner/test/pr.test.ts": "5c5caa14a32f1536bab7115107c0509a4591fe8afc5387d2048e0ae4b4121e30",
+    "packages/runner/test/publication-retry.test.ts": "49db35ee3960986e16dabe788943d2490d57f5d0b121531227f9ad148ed844bf",
+    "packages/runner/test/run-conditions.test.ts": "ad3ecc2391eef40a16199597cc0e4feb6958c38fdfc9f8e3bdcabbe310b34511",
+    "packages/runner/test/run.test.ts": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f",
+    "packages/runner/test/safety-paths.test.ts": "e976ee7e1e4c985ae0566df7cf7d177bb254e35053a8410018fd4794a1ce4673",
+    "packages/trace/package.json": "4cb75f30f9b31e69659806acbd62154f8f2daae242b3c97645e16d472126d9b4",
+    "packages/trace/src/agreement.ts": "c4416dfff93b364a30967b29e414d70cf5856fb37402e81709db9c8be144fc9f",
+    "packages/trace/src/documents.ts": "bf3a706182983035de398c400cbb38459a5d4b375a5fa26277ab0ad1dacf7e9d",
+    "packages/trace/src/evidence.ts": "eec5e7692d76c368c2016b4e306305c5638e2e041982b934101b35813d4eaab5",
+    "packages/trace/src/index.ts": "8988e47627bfbce1e4871b3c48fc8c22f47b6c64d2ed686b4713238b75d4d177",
+    "packages/trace/src/publication.ts": "edcc55c7a8d88d817aa6631f778ff00964bfb0743520f7c9d3638af5740b3d09",
+    "packages/trace/src/record.ts": "102b1c8b330b2663db18c83ac5e24dbde5b909ee74ace4a9bd44d1cc5d59300b",
+    "packages/trace/src/report.ts": "7d32a1396e3518721a61270fdbd07637af4f56ff40e09c9e2604d9dae2f603a8",
+    "packages/trace/src/schema.ts": "5b189229aac70326bb8f06068de0b0a86f90069bed56206ab416c6f11a24027a",
+    "packages/trace/src/serialization.ts": "00c7f06a1c74e36932f92849031edb0805150b11455925106b472752c7595883",
+    "packages/trace/test/publication-crash.test.ts": "1fbdfb9d6afcd7fa07e83f9ca987593e50da39128cd4a6e354286326e9f9e5d6",
+    "packages/trace/test/publication.test.ts": "63231c8f68bbbe7901a3c28a437135b7aaebc689a66752682eb0a2422be710f9",
+    "packages/trace/test/record-size.test.ts": "db71a3294f7e3688bc76c9adbb527a0526a41c76304da1b8f350375514ec87e1",
+    "packages/trace/test/record.test.ts": "b3c144c80403227209fd76fae5ef61da7fb396ec52c8b8eaee1d0788a246ab2e",
+    "packages/trace/test/report.test.ts": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e",
+    "packages/trace/test/serialization.test.ts": "6cf85e33ea1af754e0245fc4259f994504be7310ea55c96abc971e81ebd5c247",
+    "pnpm-lock.yaml": "b181097be6f180fbb92203248121c339a5936dbf4ff0a756b3c625713681f21a",
+    "scripts/action-pins.mjs": "d3c8888814827bd61d105263ac4dbdb616abcb5bef1be1c72dcf587273838671",
+    "scripts/ai-journeys.mjs": "f66d5d96a68f1b4b0c40d09e06e03e7f63960f6da92a8708b70f8f8b6a6e6330",
+    "scripts/changeset-check.mjs": "340a21f2e1e874e840ed2bc75dae403b30d4dbc6addfb395446c0452d41198d9",
+    "scripts/check-public-types.mjs": "8cb6a5928184f693b55d0593737de0c8c2cbe4060f964f3906478c1e8d2e4d66",
+    "scripts/ci-gate.mjs": "cb72c929c5425241897f8bdabebb98819079078b103ab433a9b77c1855be60cd",
+    "scripts/domain-mutations.mjs": "4e9b632a1fdaf738b4e6a691ac36c92782193ba86119fa58e039cf680cc6fe1c",
+    "scripts/package-smoke.mjs": "71aa378a372bde276c091afe2ce079b1e0b34029e13742fb8dec5cd199c63339",
+    "scripts/run-sigint-smoke.mjs": "53ccc8e135f82ad8236266886bf323ad2e9cf5d861dd5a1782e5dc776101bc42",
+    "scripts/runtime-compatibility.mjs": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d",
+    "scripts/scenario-audit.mjs": "3955fe0ffc31ab037de9ea656ce8114e3df62cb61a333c2cd20d804279081cab",
+    "scripts/schema-contract-check.mjs": "6ce2bfedd9ff28dac7253bea7bba5d1748682bc91903f797a4d23a2b306e4d74",
+    "tests/ai-journeys.test.ts": "5d1934a2891224bd9ade78232509f9f529e8e6c36c3bf115843bb56e9a3f11f2",
+    "tests/domain-mutations.test.ts": "2b753f35a5ce2e4372d760077ca03f77e50004ea50e5a650bb9cffe1aa16a15b",
+    "tests/input-boundaries.test.ts": "89a368ec8c39e79bd883da212b897401371958751a3dba23ddc136ec71861829",
+    "tests/kit-assets.test.ts": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40",
+    "tests/monorepo.test.ts": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6",
+    "tests/package-artifacts.test.ts": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a",
+    "tests/package-workflows.test.ts": "c82be3653a952f37c8e5ad976fe0d00aa2028fef9d3ef16eca6a75e8450622bf",
+    "tests/public-source-exports.test.ts": "3668c02f7537b0e4abbfdd8a0c2e3daa2b36f62b2cdb56079fe83658ae5b2e77",
+    "tests/release-security.test.ts": "52b011dbbe528eab5c4576aca08bff0b296b07e0c1d1ef5533a523d85a08dda9",
+    "tests/run-decision-mutations.test.ts": "bdf056d8986a4abcb1afcf6e26c803801a81c1d75cec063f3880886644b4653c",
+    "tests/scenario-audit.test.ts": "4b9d89bde6b3c19867fba52f6e74c69968f001226a7328233e8b491b24dcd4fd",
+    "tests/schema-compatibility.test.ts": "bdb7f3bb6d55a56df0ce3d1f0fa0c31a6a4bb3dcd670c1ba18c7a31d4ec6e0da",
+    "tsconfig.base.json": "0745f7962af6eef29100d4e05231237cfb00dcc1a8867d046f189e74117c19cf",
+    "vitest.config.ts": "b54d1dd51a54cda1410dd75048ab66492b902f98ef808b6c3a895528e38252f0"
+  },
+  "changes": {
+    "existingTestsStrengthened": [
+      "REQ-096 existing branch new commit and ancestry",
+      "REQ-098 complete AGENTS/trace and multiple nested specs",
+      "REQ-107 remaining tasks stdout and exit",
+      "REQ-199 exact per-secret replacement result",
+      "REQ-147 invalid-state error file and line"
+    ],
+    "newTests": [
+      "REQ-117 single task run log content and validation result"
+    ],
+    "productionChanged": false,
+    "qualitySettingsChanged": false
+  },
+  "draftCorrection": {
+    "initialReport": {
+      "passed": 3,
+      "failed": 1,
+      "pending": 66,
+      "sha256": "bcdc1af46f0f095fe3d4ff81f329bfc1a1bff35c1260609bcfe29b654f24395b",
+      "failures": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "test": "実行の記録 [REQ-117] 1つのタスクと完了ゲートの記録を同じ実行に保存する",
+          "messages": [
+            "AssertionError: expected [ '01-output.json', …(4) ] to deeply equal [ '01-output.json', …(3) ]\n    at withRepo.tasks (/tmp/loomake-quality-after-merge/packages/runner/test/run.test.ts:444:39)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at withRepo (/tmp/loomake-quality-after-merge/packages/runner/test/run.test.ts:58:5)\n    at async file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2801:20"
+          ]
+        }
+      ]
+    },
+    "cause": "The newly authored test incorrectly forbade extra metadata files and assumed passed instead of the public completed status. This is a test authoring error, not a product regression Red.",
+    "automaticApprovalRejected": true,
+    "userApproval": {
+      "source": "User reply to request_user_input_async call_77e1789a169c4602820c119599f03c3d, question 0",
+      "answer": "この2点の修正を承認する",
+      "scope": "Only new draft: exact four-file list -> presence of required four files; passed -> completed. No existing test weakening."
+    },
+    "afterApproval": {
+      "passed": 70,
+      "failed": 0,
+      "pending": 0,
+      "sha256": "42ff51293b8d923ce438c090fea9a929dde4b839414b07aab5ade44df5743545",
+      "failures": []
+    }
+  },
+  "focused": {
+    "modelAndInit": {
+      "passed": 60,
+      "failed": 0,
+      "pending": 0,
+      "sha256": "95f4ae610f3006efd7cbb8b8394668276da65359966848b7f55700c064df4d68",
+      "failures": []
+    },
+    "replacement": {
+      "passed": 1,
+      "failed": 0,
+      "pending": 69,
+      "sha256": "5a13e91c774dd4aea92a41b98026ff0181dff59a2e1ac97abb4d563c3032c349",
+      "failures": []
+    }
+  },
+  "mutations": {
+    "scope": "Isolated production-source mutations with focused diagnostic selections; the unresolved draft recording test is not selected. No original repository source/test/config was changed by the mutation experiment.",
+    "temporaryRoot": "/tmp/loomake-run-contract-mutants-014mb7xj",
+    "results": [
+      {
+        "mutation": "agents-tail",
+        "file": "packages/runner/src/run/prompt.ts",
+        "exit": 1,
+        "passed": 0,
+        "failed": 1,
+        "pending": 69,
+        "failures": [
+          {
+            "test": "ブランチとタスク [REQ-098] 指示に、AGENTS.md・タスク・差分仕様・trace.md・2 つの決まりを含める",
+            "messages": [
+              "AssertionError: expected '完了ゲートのタスクを、タスクの文から判定しました：3.1 `pnpm -s…' to contain '# AGENTS.md\\n\\nテスト用の共通ルール。\\n\\n## appe…'\n    at /tmp/loomake-run-contract-mutants-014mb7xj/packages/runner/test/run.test.ts:225:69\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at withRepo (/tmp/loomake-run-contract-mutants-014mb7xj/packages/runner/test/run.test.ts:58:5)\n    at async file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2801:20"
+            ]
+          }
+        ]
+      },
+      {
+        "mutation": "second-spec",
+        "file": "packages/runner/src/run/prompt.ts",
+        "exit": 1,
+        "passed": 0,
+        "failed": 1,
+        "pending": 69,
+        "failures": [
+          {
+            "test": "ブランチとタスク [REQ-098] 指示に、AGENTS.md・タスク・差分仕様・trace.md・2 つの決まりを含める",
+            "messages": [
+              "AssertionError: expected '完了ゲートのタスクを、タスクの文から判定しました：3.1 `pnpm -s…' to contain '## ADDED Requirements\\n\\n### Requirem…'\n    at /tmp/loomake-run-contract-mutants-014mb7xj/packages/runner/test/run.test.ts:225:69\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at withRepo (/tmp/loomake-run-contract-mutants-014mb7xj/packages/runner/test/run.test.ts:58:5)\n    at async file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2801:20"
+            ]
+          }
+        ]
+      },
+      {
+        "mutation": "trace-tail",
+        "file": "packages/runner/src/run/prompt.ts",
+        "exit": 1,
+        "passed": 0,
+        "failed": 1,
+        "pending": 69,
+        "failures": [
+          {
+            "test": "ブランチとタスク [REQ-098] 指示に、AGENTS.md・タスク・差分仕様・trace.md・2 つの決まりを含める",
+            "messages": [
+              "AssertionError: expected '完了ゲートのタスクを、タスクの文から判定しました：3.1 `pnpm -s…' to contain '# Trace: c1\\n\\n## 要件台帳\\n\\n| ID | 出典 |…'\n    at /tmp/loomake-run-contract-mutants-014mb7xj/packages/runner/test/run.test.ts:225:69\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at withRepo (/tmp/loomake-run-contract-mutants-014mb7xj/packages/runner/test/run.test.ts:58:5)\n    at async file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2801:20"
+            ]
+          }
+        ]
+      },
+      {
+        "mutation": "existing-branch-no-work",
+        "file": "packages/runner/src/run.ts",
+        "exit": 1,
+        "passed": 0,
+        "failed": 1,
+        "pending": 69,
+        "failures": [
+          {
+            "test": "ブランチとタスク [REQ-096] loomake/<change-id> があれば、切り替えてその続きにコミットする",
+            "messages": [
+              "AssertionError: expected '' to match /^[a-f0-9]{40}$/\n    at /tmp/loomake-run-contract-mutants-014mb7xj/packages/runner/test/run.test.ts:156:30\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at withRepo (/tmp/loomake-run-contract-mutants-014mb7xj/packages/runner/test/run.test.ts:58:5)\n    at async file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2801:20"
+            ]
+          }
+        ]
+      },
+      {
+        "mutation": "remaining-display",
+        "file": "packages/runner/src/run/recorder.ts",
+        "exit": 1,
+        "passed": 0,
+        "failed": 1,
+        "pending": 69,
+        "failures": [
+          {
+            "test": "止まる条件と報告 [REQ-107] 止まったら、理由・終えたタスク・残ったタスク・最後の検査結果を表示し、summary.json にも書く",
+            "messages": [
+              "AssertionError: expected '完了ゲートのタスクを、タスクの文から判定しました：3.1 `pnpm -s…' to contain '残ったタスク：\\n  - 1.2 二つ目のタスク\\n  - 3.1 `pn…'\n    at /tmp/loomake-run-contract-mutants-014mb7xj/packages/runner/test/run.test.ts:426:24\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at withRepo (/tmp/loomake-run-contract-mutants-014mb7xj/packages/runner/test/run.test.ts:58:5)\n    at async file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2801:20"
+            ]
+          }
+        ]
+      },
+      {
+        "mutation": "delete-instead-of-mask",
+        "file": "packages/runner/src/mask.ts",
+        "exit": 1,
+        "passed": 0,
+        "failed": 1,
+        "pending": 69,
+        "failures": [
+          {
+            "test": "runnerの表示の保護 [REQ-199] 追加された既知形式と隣接する秘密鍵を実際の出力記録で置換する",
+            "messages": [
+              "AssertionError: expected '\\n\\n\\n\\n\\nAuthorization: Bearer ***\\n' to be '***\\n***\\n***\\n***\\n***\\nAuthorizatio…' // Object.is equality\n    at /tmp/loomake-run-contract-mutants-014mb7xj/packages/runner/test/run.test.ts:726:41\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at withRepo (/tmp/loomake-run-contract-mutants-014mb7xj/packages/runner/test/run.test.ts:58:5)\n    at async file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2801:20"
+            ]
+          }
+        ]
+      }
+    ],
+    "originalSourceUnchanged": true,
+    "testSourceSha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+  },
+  "processBudgetDiagnostic": {
+    "scope": "Diagnostic only; actual compiled runExternal/withProcessBudget with the existing test timing constants. Artificial simultaneous process workers, not a Vitest run or an external performance guarantee.",
+    "script": "import { withProcessBudget, runExternal } from '/tmp/loomake-quality-after-merge/packages/kit/dist/index.js';\nimport { existsSync, mkdtempSync, rmSync } from 'node:fs';\nimport { tmpdir } from 'node:os';\nimport { join } from 'node:path';\nconst root=mkdtempSync(join(tmpdir(),'loomake-budget-sample-')),file=join(root,'started');\nconst result={budgetMs:350,sleepMs:180,operations:[]};\nconst call=code=>runExternal(process.execPath,['-e',code]);\ntry {\n withProcessBudget({timeoutMs:350},()=>{\n  for(const [name,code] of [['first','setTimeout(()=>{},180)'],['second','setTimeout(()=>{},180)'],['afterDeadline',`require('node:fs').writeFileSync(${JSON.stringify(file)},'x')`]]){\n   const start=performance.now();try {const r=call(code);result.operations.push({name,status:r.status,elapsedMs:performance.now()-start});}\n   catch(error){result.operations.push({name,kind:error.kind,message:error.message,elapsedMs:performance.now()-start});}\n  }\n });\n result.startedAfterDeadline=existsSync(file);console.log(JSON.stringify(result));\n} finally {rmSync(root,{recursive:true,force:true});}\n",
+    "scriptSha256": "c7b3d54a7f5b85fa9d8bd91d9459acac3243b174699ad2c210ff990b99ac6093",
+    "results": [
+      {
+        "workers": 1,
+        "samples": [
+          {
+            "sample": 0,
+            "processElapsedMs": 645.5725419800729,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 211.105792
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 415.494375
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.016624999999976353
+              }
+            ],
+            "startedAfterDeadline": false
+          },
+          {
+            "sample": 1,
+            "processElapsedMs": 665.6355829909444,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 211.861083
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 427.112292
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.027625000000057298
+              }
+            ],
+            "startedAfterDeadline": false
+          },
+          {
+            "sample": 2,
+            "processElapsedMs": 657.4759590439498,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 216.684291
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 409.209792
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.032958000000007814
+              }
+            ],
+            "startedAfterDeadline": false
+          }
+        ]
+      },
+      {
+        "workers": 7,
+        "samples": [
+          {
+            "sample": 0,
+            "processElapsedMs": 674.1475010057911,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 221.218542
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 405.86370800000003
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.044709000000011656
+              }
+            ],
+            "startedAfterDeadline": false
+          },
+          {
+            "sample": 1,
+            "processElapsedMs": 674.5574169326574,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 217.9
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 415.87129200000004
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.027791999999976724
+              }
+            ],
+            "startedAfterDeadline": false
+          },
+          {
+            "sample": 2,
+            "processElapsedMs": 670.0820829719305,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 225.921792
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 404.574917
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.04437499999994543
+              }
+            ],
+            "startedAfterDeadline": false
+          },
+          {
+            "sample": 3,
+            "processElapsedMs": 671.7160420957953,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 218.073417
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 408.12700000000007
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.04766600000004928
+              }
+            ],
+            "startedAfterDeadline": false
+          },
+          {
+            "sample": 4,
+            "processElapsedMs": 674.6904168976471,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 218.63850000000002
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 419.166376
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.03304199999990942
+              }
+            ],
+            "startedAfterDeadline": false
+          },
+          {
+            "sample": 5,
+            "processElapsedMs": 670.3197919996455,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 222.472791
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 407.893333
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.03566699999998946
+              }
+            ],
+            "startedAfterDeadline": false
+          },
+          {
+            "sample": 6,
+            "processElapsedMs": 674.4187918957323,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 221.329125
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 413.026167
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.04016699999999673
+              }
+            ],
+            "startedAfterDeadline": false
+          },
+          {
+            "sample": 7,
+            "processElapsedMs": 671.5297920163721,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 224.115791
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 409.98020799999995
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.03879099999994651
+              }
+            ],
+            "startedAfterDeadline": false
+          },
+          {
+            "sample": 8,
+            "processElapsedMs": 670.4201670363545,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 219.081
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 410.01458299999996
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.038457999999991443
+              }
+            ],
+            "startedAfterDeadline": false
+          },
+          {
+            "sample": 9,
+            "processElapsedMs": 673.1203749077395,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 217.843958
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 409.21820799999995
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.03150000000005093
+              }
+            ],
+            "startedAfterDeadline": false
+          },
+          {
+            "sample": 10,
+            "processElapsedMs": 669.1278760554269,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 219.631167
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 411.2772080000001
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.03241600000001199
+              }
+            ],
+            "startedAfterDeadline": false
+          },
+          {
+            "sample": 11,
+            "processElapsedMs": 669.9362919898704,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 217.972208
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 412.467458
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.027749999999969077
+              }
+            ],
+            "startedAfterDeadline": false
+          },
+          {
+            "sample": 12,
+            "processElapsedMs": 668.075583060272,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 220.815875
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 411.101084
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.03141599999992195
+              }
+            ],
+            "startedAfterDeadline": false
+          },
+          {
+            "sample": 13,
+            "processElapsedMs": 666.4405839983374,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 215.27445799999998
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 411.061375
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.02699999999992997
+              }
+            ],
+            "startedAfterDeadline": false
+          },
+          {
+            "sample": 14,
+            "processElapsedMs": 669.378126040101,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 226.74958400000003
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 407.291875
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.0404159999999365
+              }
+            ],
+            "startedAfterDeadline": false
+          },
+          {
+            "sample": 15,
+            "processElapsedMs": 667.9894169792533,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 223.524167
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 408.627583
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.0324999999999136
+              }
+            ],
+            "startedAfterDeadline": false
+          },
+          {
+            "sample": 16,
+            "processElapsedMs": 667.5771250156686,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 219.416083
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 411.117792
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.0424999999999045
+              }
+            ],
+            "startedAfterDeadline": false
+          },
+          {
+            "sample": 17,
+            "processElapsedMs": 666.2254170514643,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 225.991333
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 405.127417
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.04095800000004601
+              }
+            ],
+            "startedAfterDeadline": false
+          },
+          {
+            "sample": 18,
+            "processElapsedMs": 666.234791977331,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 218.99770800000002
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 413.80754199999996
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.035082999999985987
+              }
+            ],
+            "startedAfterDeadline": false
+          },
+          {
+            "sample": 19,
+            "processElapsedMs": 664.8676260374486,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 225.869792
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 405.47024999999996
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.03683399999999892
+              }
+            ],
+            "startedAfterDeadline": false
+          },
+          {
+            "sample": 20,
+            "processElapsedMs": 671.5489169582725,
+            "budgetMs": 350,
+            "sleepMs": 180,
+            "operations": [
+              {
+                "name": "first",
+                "status": 0,
+                "elapsedMs": 218.996291
+              },
+              {
+                "name": "second",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 420.74762499999997
+              },
+              {
+                "name": "afterDeadline",
+                "kind": "timeout",
+                "message": "外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）",
+                "elapsedMs": 0.02949999999998454
+              }
+            ],
+            "startedAfterDeadline": false
+          }
+        ]
+      }
+    ]
+  },
+  "failureAnalysis": "The previously observed intermittent failures were not reproduced by the 24 startup/budget samples. No claim that worker parallelism is the sole cause; original deadlines and configuration are unchanged.",
+  "specGate": {
+    "exit": 0,
+    "log": "$ pnpm -r --silent build && node packages/cli/dist/cli.js verify --change audit-scenario-evidence --spec-only\n\nLoomake verify  mode=spec-only  change=audit-scenario-evidence\n\n✔ change の存在\n✔ proposal.md の存在\n✔ tasks.md の存在\n✔ trace.md の存在\n✔ 要件モデルの整合性\n✔ trace.md の解析\n✔ 要件台帳\n✔ ブロッキング確認事項\n✔ 同じ確認事項の回答\n✔ spec.md の解析\n✔ Requirement の Source\n✔ Source が台帳にある\n✔ Scenario の有無\n✔ 反映済の要件が仕様にある\n✔ openspec validate\n\n合格\n"
+  },
+  "doneGate": {
+    "exit": 0,
+    "passed": 865,
+    "failed": 0,
+    "pending": 0,
+    "sha256": "a959b94d69b0eca9b6a548e1cec50c1beefaa776e7db22a0b216e60b010f72bb",
+    "failures": [],
+    "node": "v24.21.0",
+    "log": "$ pnpm -r --silent build && node packages/cli/dist/cli.js verify --change audit-scenario-evidence --done\n… lint: pnpm lint\n… typecheck: pnpm typecheck\n… test: pnpm test\n\nLoomake verify  mode=done  change=audit-scenario-evidence\n\n✔ change の存在\n✔ proposal.md の存在\n✔ tasks.md の存在\n✔ trace.md の存在\n✔ 要件モデルの整合性\n✔ trace.md の解析\n✔ 要件台帳\n✔ ブロッキング確認事項\n✔ 同じ確認事項の回答\n✔ spec.md の解析\n✔ Requirement の Source\n✔ Source が台帳にある\n✔ Scenario の有無\n✔ 反映済の要件が仕様にある\n✔ openspec validate\n✔ 確認待ちが残っていない\n✔ tasks.md\n✔ command: lint\n✔ command: typecheck\n✔ command: test\n✔ 要件ごとのテスト\n\n合格\n"
+  },
+  "node22Full": {
+    "exit": 0,
+    "passed": 865,
+    "failed": 0,
+    "pending": 0,
+    "sha256": "504ff96f4e103ae82dda1377d0c55478b008f8c2855ceba6455a081c6d1942ea",
+    "failures": [],
+    "node": "v22.12.0",
+    "binarySha256": "f220994a9cd62983cdf538dc638dbc29c7e600fecd3c79828a4bd81ab34e19bf",
+    "os": "Linux ARM64",
+    "command": "PATH=<verified Node22 bin>:$PATH node node_modules/vitest/vitest.mjs run --maxWorkers=1 --reporter=json --outputFile=.loomake/quality/run-contracts-node22-full-report.json",
+    "note": "Separate full execution, not the ordinary Node24 done gate or other OS verification."
+  },
+  "priorPackedNode22": {
+    "sourceCommit": "ebe7923ca68c05395ab6709a48db786009e2aea3",
+    "sourceEvidenceSha256": "c24f9aef33cc93f6724e2298e75a440cf83c06f74a5a15f0eb7d8f53827c70c8",
+    "productionSourceDiff": "",
+    "runtimeScriptSha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d",
+    "note": "Previous actual packed checks carried forward after identity checks, not newly executed."
+  },
+  "review": {
+    "entries": [
+      {
+        "id": "SCN-27a6d1d34a98589846cd",
+        "status": "reviewed",
+        "scenarioSha256": "6d62b244fa42d7d68f51d409ea1485fa0983e00fb07e936f3eae0a50df560d7e",
+        "sources": [
+          "REQ-014"
+        ],
+        "reason": "小文字x・未チェック・大文字Xを混ぜた入力を解析し、チェック状態・本文・行番号を配列の全文一致で確認する。",
+        "tests": [
+          {
+            "file": "packages/core/test/tasks.test.ts",
+            "contains": "チェック済みと未チェックのタスクを、行番号つきで返す",
+            "sha256": "d317048c05efd6bef9126b9f8a848de40e6202c278bfdff32535bf129439ec2c"
+          }
+        ]
+      },
+      {
+        "id": "SCN-3ff5e29c8d8565fb5374",
+        "status": "reviewed",
+        "scenarioSha256": "8e5172807887f1faede506b2da89b523d23ff698d5a3765fbd61eaa6f70dd321",
+        "sources": [
+          "REQ-014"
+        ],
+        "reason": "同じ3タスクの全LFをCRLFへ変えた入力について、解析結果全体がLF入力と同一で、本文にもCRが残らないことを確認する。",
+        "tests": [
+          {
+            "file": "packages/core/test/tasks.test.ts",
+            "contains": "行末が CRLF でも同じタスクを返し",
+            "sha256": "d317048c05efd6bef9126b9f8a848de40e6202c278bfdff32535bf129439ec2c"
+          }
+        ]
+      },
+      {
+        "id": "SCN-440dd9808513c41cd75a",
+        "status": "reviewed",
+        "scenarioSha256": "dfc6c584920e5d86e2be841765de925593d37b911a374ad25bc51168815dc6a1",
+        "sources": [
+          "REQ-014"
+        ],
+        "reason": "*の未完了と+の完了を同じ入力へ渡し、チェック状態・本文・行番号を配列の全文一致で確認する。",
+        "tests": [
+          {
+            "file": "packages/core/test/tasks.test.ts",
+            "contains": "箇条書きの記号が * でも + でも",
+            "sha256": "d317048c05efd6bef9126b9f8a848de40e6202c278bfdff32535bf129439ec2c"
+          }
+        ]
+      },
+      {
+        "id": "SCN-f1bd6844fa2431e8bec9",
+        "status": "reviewed",
+        "scenarioSha256": "8618c49f4a696497ead4d95e24dd5fd9b38259a82c3b1b9f7cab00b6c6d3c1b2",
+        "sources": [
+          "REQ-147"
+        ],
+        "reason": "3種類の不正IDでファイルと7行目のエラーを確認し、不正な状態でも1件のエラーと同じファイル・行、要件モデルへの不混入を確認する。状態の位置情報のassertionを追加し、既存の件数とモデルの期待値は維持した。",
+        "tests": [
+          {
+            "file": "packages/core/test/agreement.test.ts",
+            "contains": "不正なID",
+            "sha256": "68e212efdfe32dce2a259b982260a1cc26e7a78551886f8628e05cd1604acbbf"
+          },
+          {
+            "file": "packages/core/test/agreement.test.ts",
+            "contains": "不正な状態をモデルへ通さない",
+            "sha256": "68e212efdfe32dce2a259b982260a1cc26e7a78551886f8628e05cd1604acbbf"
+          }
+        ]
+      },
+      {
+        "id": "SCN-235cf33a91b3bc64bd8e",
+        "status": "reviewed",
+        "scenarioSha256": "9c6d46b8aabd19d9daece27cad8266ca31a12194ff8d5b7fe6baab5c1c381279",
+        "sources": [
+          "REQ-148"
+        ],
+        "reason": "YES・no・回答済みyesの3質問を含むモデルで、未回答YESのQ-01だけが停止条件となり、未承認A-01を含む結果全体と入力の不変性をassertする。",
+        "tests": [
+          {
+            "file": "packages/core/test/agreement.test.ts",
+            "contains": "未回答のブロッキング質問だけを停止条件にする",
+            "sha256": "68e212efdfe32dce2a259b982260a1cc26e7a78551886f8628e05cd1604acbbf"
+          }
+        ]
+      },
+      {
+        "id": "SCN-b032f8d7214e4e772a48",
+        "status": "reviewed",
+        "scenarioSha256": "6d1205ad7eef97d9a9c7a915c02afe60a8ccd0ba737fead3d95d85e30f681d64",
+        "sources": [
+          "REQ-149"
+        ],
+        "reason": "要件IDとテスト内IDの重複、2ファイル、不要なREQ-999、不足2件を入力し、昇順・一意の対応、空配列、不足一覧を全文一致で確認する。structuredCloneした入力も不変である。",
+        "tests": [
+          {
+            "file": "packages/core/test/coverage-policy.test.ts",
+            "contains": "重複を除いて昇順にし、不足した要件にも空の配列を返す",
+            "sha256": "61add31ac1281ad2949cfda26529bfe7ec102b34fb8c06bf2d5d40c90ee32bb8"
+          }
+        ]
+      },
+      {
+        "id": "SCN-c6db28235989cc7ccb5d",
+        "status": "reviewed",
+        "scenarioSha256": "608163ca04a73a4ad24dd3e1d5287bccfbdb1c6f90a4223f8dcbc0155284ba5f",
+        "sources": [
+          "REQ-196"
+        ],
+        "reason": "testだけのscriptsを持つ一時プロジェクトでCLI mainのinitを実行し、生成commandsがtestだけの完全一致、日本語のlint・typecheckとcommands追加案内をassertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/init.test.ts",
+            "contains": "scripts に test だけがあれば",
+            "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+          }
+        ]
+      },
+      {
+        "id": "SCN-ebd3dc40540d15df945c",
+        "status": "reviewed",
+        "scenarioSha256": "17e22e2d1c7079193df3f8b555f70a1dc90d8fafe93708917f127599ae938626",
+        "sources": [
+          "REQ-196"
+        ],
+        "reason": "lint・typecheck・testを持つ一時プロジェクトで、生成commandsの3件全文一致と不足の案内がないことをassertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/init.test.ts",
+            "contains": "scripts にすべてあれば",
+            "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+          }
+        ]
+      },
+      {
+        "id": "SCN-9b159ff9fc24b0eb2645",
+        "status": "reviewed",
+        "scenarioSha256": "04c9e7994f2a5eaa835f8c4d163a036daee8d5bfe8de72a74ac04ec7871e2154",
+        "sources": [
+          "REQ-196"
+        ],
+        "reason": "scriptsキーのないpackage.jsonを使ってinitし、lint・typecheck・testの3件を生成することをcommandsの全文一致で確認する。",
+        "tests": [
+          {
+            "file": "packages/cli/test/init.test.ts",
+            "contains": "scripts がなければ、これまでどおり 3 つを書く",
+            "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+          }
+        ]
+      },
+      {
+        "id": "SCN-b12e77767439c7796095",
+        "status": "reviewed",
+        "scenarioSha256": "b2cad40b37970c5fe8137bb7f96acb87f1891369ee2998730cf495883bc9407b",
+        "sources": [
+          "REQ-197"
+        ],
+        "reason": "devDependenciesにVitestだけを持つ入力で、Vitest設定例が表示されJest設定例は表示されないことを両方assertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/init.test.ts",
+            "contains": "vitest を使っていれば",
+            "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+          }
+        ]
+      },
+      {
+        "id": "SCN-b72b58b2357dd105c1ec",
+        "status": "reviewed",
+        "scenarioSha256": "2245e57b9864b571fdcb4f6e847ecdde9bd2377c4df9481de1f8195d84ff308d",
+        "sources": [
+          "REQ-197"
+        ],
+        "reason": "devDependenciesにJestだけを持つ入力で、Jest設定例が表示されVitest設定例は表示されないことを両方assertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/init.test.ts",
+            "contains": "jest を使っていれば",
+            "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+          }
+        ]
+      },
+      {
+        "id": "SCN-878cc441d94d72e3cb16",
+        "status": "reviewed",
+        "scenarioSha256": "27b652c1950a5863a965da89a98332099d497f0ddb28420b3dc37756b7034047",
+        "sources": [
+          "REQ-197"
+        ],
+        "reason": "package.jsonのない空の一時プロジェクトでinitし、VitestとJestの両設定例が出ることをassertする。",
+        "tests": [
+          {
+            "file": "packages/cli/test/init.test.ts",
+            "contains": "どちらも使っていなければ",
+            "sha256": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e"
+          }
+        ]
+      },
+      {
+        "id": "SCN-6c9ccd51227cf9411aa7",
+        "status": "reviewed",
+        "scenarioSha256": "45d754d01aed82189a1e1b1d68656c1533e949d6fb11d0177be8df0a6b678f31",
+        "sources": [
+          "REQ-096"
+        ],
+        "reason": "既存実装ブランチにコミットしてmainへ戻ってから実行し、終了0・実装ブランチへの切り替え・新しい1.1コミットの親が以前のHEADであることを確認する。その新コミットの過去ファイルと実装ファイルの内容、mainのHEAD不変もassertする。既存ブランチで何もせず戻る変異は失敗する。",
+        "tests": [
+          {
+            "file": "packages/runner/test/run.test.ts",
+            "contains": "loomake/<change-id> があれば",
+            "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          }
+        ]
+      },
+      {
+        "id": "SCN-7d91543595e04356266d",
+        "status": "reviewed",
+        "scenarioSha256": "d4535c10b27ea095e5b17b125dda149629e6dfb6720216533c1157786060b146",
+        "sources": [
+          "REQ-098"
+        ],
+        "reason": "AGENTSとtraceに末尾の段落を加え、異なる階層のspec.mdを2つ用意してコミットしてからdry-runする。4文書の全文、対象行、各spec見出し、変更禁止と質問の決まり、終了0・エンジン未起動を確認する。AGENTSの末尾削除、2つ目の仕様の欠落、traceの見出しだけ残す3変異を検出した。",
+        "tests": [
+          {
+            "file": "packages/runner/test/run.test.ts",
+            "contains": "指示に、AGENTS.md・タスク・差分仕様・trace.md",
+            "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          }
+        ]
+      },
+      {
+        "id": "SCN-64cd31bba8ccd7b0ead3",
+        "status": "reviewed",
+        "scenarioSha256": "02266a88665f9019bbab6da0ead3a1fd446a463ffce76a36795b2432b30b15d6",
+        "sources": [
+          "REQ-107"
+        ],
+        "reason": "2つ目のタスクが質問して止まる入力で、理由・完了タスク・残タスク一覧・最後の検査なしをstdoutで確認する。summaryの状態・両タスク配列・lastVerify=nullと終了1もassertする。残タスクの表示だけを消す変異を検出した。",
+        "tests": [
+          {
+            "file": "packages/runner/test/run.test.ts",
+            "contains": "止まったら、理由・終えたタスク・残ったタスク",
+            "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          }
+        ]
+      },
+      {
+        "id": "SCN-a01d149d46c06b28e3cf",
+        "status": "reviewed",
+        "scenarioSha256": "3d873eff26d2ea5ab43b051645a476e060b957850efe47f7819644b8d0c68b2c",
+        "sources": [
+          "REQ-117"
+        ],
+        "reason": "通常タスク1つと印付き完了ゲートのfixtureを正常終了まで実行し、エンジン呼び出しが1回、同じ実行ディレクトリに01の指示・出力・検査とsummaryがあることを確認する。保存した指示の全文、出力結果、検証okとsummary completedもassertする。追加メタデータを禁止する仕様ではないため、新規テストの初稿にあった厳密な4ファイル限定とpassedの仮置きはユーザーの明示承認後に訂正した。",
+        "tests": [
+          {
+            "file": "packages/runner/test/run.test.ts",
+            "contains": "1つのタスクと完了ゲートの記録を同じ実行に保存する",
+            "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          }
+        ]
+      },
+      {
+        "id": "SCN-c2e7acd2880c5793b7f3",
+        "status": "reviewed",
+        "scenarioSha256": "e921ce75697fea92d22f6f3ca1ec238cb4af3cf639bc4e0b90730aaee5058ca3",
+        "sources": [
+          "REQ-199"
+        ],
+        "reason": "人工のnpm・Slack・GitLab・Google・JWT・Bearer・隣接したAPIキーと複数行秘密鍵を見本エンジンへ出力させる。正常runの保存JSONに各原文が残らないことに加え、変換後のresult全文が各***とBearerの保持を含む期待値に完全一致することを確認する。",
+        "tests": [
+          {
+            "file": "packages/runner/test/run.test.ts",
+            "contains": "追加された既知形式と隣接する秘密鍵を実際の出力記録",
+            "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          }
+        ]
+      },
+      {
+        "id": "SCN-0b185b4ee72312e4c812",
+        "status": "reviewed",
+        "scenarioSha256": "f8cd9a2637a301894809d15fad239e86f87adb07bcabac0c6ef3f48a376ce663",
+        "sources": [
+          "REQ-199"
+        ],
+        "reason": "人工のnpm・Slack・GitLab・Google・JWT・Bearer・隣接したAPIキーと複数行秘密鍵を見本エンジンへ出力させる。正常runの保存JSONに各原文が残らないことに加え、変換後のresult全文が各***とBearerの保持を含む期待値に完全一致することを確認する。",
+        "tests": [
+          {
+            "file": "packages/runner/test/run.test.ts",
+            "contains": "追加された既知形式と隣接する秘密鍵を実際の出力記録",
+            "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          }
+        ]
+      },
+      {
+        "id": "SCN-d475063ec1b7175faeb6",
+        "status": "reviewed",
+        "scenarioSha256": "faf78958888d342dc16f9dc780179596537671548c01abfc9e5607b2d19937c6",
+        "sources": [
+          "REQ-199"
+        ],
+        "reason": "人工のnpm・Slack・GitLab・Google・JWT・Bearer・隣接したAPIキーと複数行秘密鍵を見本エンジンへ出力させる。正常runの保存JSONに各原文が残らないことに加え、変換後のresult全文が各***とBearerの保持を含む期待値に完全一致することを確認する。",
+        "tests": [
+          {
+            "file": "packages/runner/test/run.test.ts",
+            "contains": "追加された既知形式と隣接する秘密鍵を実際の出力記録",
+            "sha256": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f"
+          }
+        ]
+      }
+    ],
+    "withdrawnInsufficientTimeoutAssertions": [
+      "SCN-95364dbf8675120e8f4b",
+      "SCN-8b478bee2ca2d91a265f"
+    ],
+    "counts": {
+      "total": 455,
+      "reviewed": 389,
+      "superseded": 9,
+      "unreviewed": 43,
+      "invalid": 14
+    },
+    "inputs": {
+      "specs": {
+        "openspec/changes/audit-scenario-evidence/specs/scenario-evidence-audit/spec.md": "8e9b6cde88c1367a3c78ca4c3864c97f4eafe832b64b5c309c480a3e969c8eb5",
+        "openspec/changes/fix-guard-review-findings/specs/run-guards/spec.md": "debb43c72c79f65f7c1112a1be845b29b3d5e4801a26cf4adab20727d4f572cc",
+        "openspec/changes/guard-git-internals/specs/run-guards/spec.md": "ae2d682dbbc3e120f891cf008012aa8828af8980ef7e5f7e99a45ef1ea756a3c",
+        "openspec/changes/guard-git-internals/specs/run/spec.md": "66ba42fd385ae84698354fa2a2304f1e601d1ee919fc93c6d62dff2e7ffec3d2",
+        "openspec/changes/isolate-release-permissions/specs/monorepo/spec.md": "337cad1794b1f4919faa3d2cbffdc5e7a0f54c892182b2e5df11df966a2b3af3",
+        "openspec/changes/isolate-run-decisions/specs/run-decision-policy/spec.md": "5eb1217d3c40b9fdd3dc67991664cca7fb9b63973718b804a246059eef8b407e",
+        "openspec/changes/prepare-npm-publish/specs/monorepo/spec.md": "6777481dcd4055e9029755615da2659cd0211e94190aa6df9c52788ba317c0b4",
+        "openspec/changes/protect-run-diagnostics/specs/run/spec.md": "d3fd4964728b04faf968037f00c6034ede145f3c5502a5cc7832d61b6a24015e",
+        "openspec/changes/relax-commit-push-budget/specs/external-process-budget/spec.md": "a0391648bd6e83f81af152aae23aa609a38420dc40ac28a66deae4df2924da0d",
+        "openspec/changes/require-node-22/specs/monorepo/spec.md": "a71c60341abed633cb5a4fd651720230117ce8f53c7eedb404d8bea4984cfec3",
+        "openspec/changes/require-node-22/specs/run/spec.md": "83a41bcc311daf5905fac7761d31ba200338c2dc6ed441c1a6c905016c9e7bbd",
+        "openspec/changes/require-node-22/specs/trace-record/spec.md": "6b9a228700ecf74dea0fa16402da3c2cc63e7ee0716bd1275ba1e1825ce0b613",
+        "openspec/changes/require-node-22/specs/trace-report/spec.md": "7866fb841f6ccfef00aafe6c876362684f5dfe76d13e2b8d05a671b2e925c586",
+        "openspec/specs/agents-rules/spec.md": "8315a9b5b7668679a1f843120b0d9f150388b822ecf42807bd2e42188081bc5e",
+        "openspec/specs/bounded-input/spec.md": "2db14275dd45eca3387c9c7c618141341b418b4a035d94f878a31e26af88e7b8",
+        "openspec/specs/cli/spec.md": "efd2c40edc6e8cc54b40097e64ff735cc36f3f6a3f05743ec0d1da5159e05875",
+        "openspec/specs/core-parsers/spec.md": "8355b91847d9c9f1dbd9db2f0bc9b4d64605967e671d703b9031404bb7caff8a",
+        "openspec/specs/doctor/spec.md": "49c0ceab823b5859569f9a0865cc6058e03b541a2def98c0bdede016488ba36e",
+        "openspec/specs/domain-mutation-check/spec.md": "6be475fb141c6397905911d539c425d6a95cd6be6985ff74eae239de70acc107",
+        "openspec/specs/evidence-publication/spec.md": "c900f0584fb4acb64ea07985624411359c18bc2fbf3e1494f8d610651998f042",
+        "openspec/specs/external-process-budget/spec.md": "4ac77e340a576c37d7fccc035f045bc1dc549e55dda4d4f5ef1a5c53ff61c7e4",
+        "openspec/specs/init/spec.md": "5f81b6565baf25c80ccca94cdfbfff01777b796ccf8382f0f45fb3cc9b26c098",
+        "openspec/specs/monorepo/spec.md": "9bf3100d8def016ea6a4c8214dda0149e47036beff7028db17b5c98004069dfc",
+        "openspec/specs/quality-journeys/spec.md": "61d9276aa545cdbd991dba104cb3da4d184e963ec3a395e962927f5229596178",
+        "openspec/specs/release-integrity/spec.md": "32f45cde5e4ac85df67ebeb6c24f52cbd59d166fed0fa4ddd5456fa72e1a3420",
+        "openspec/specs/req-to-openspec-skill/spec.md": "7299503a7ac4f0b61403e89e303ec5058bd3fd9cfa44583b49a1734a50d21a13",
+        "openspec/specs/run-guards/spec.md": "c4dd0a864b82671e3fd35b10124d08f67889fa90abd8bf4ee893b868aaedadb6",
+        "openspec/specs/run-pr/spec.md": "afb123cad0b88b4a77339f692372d2ed65d31a4dc776030d36e5bafc7b6d1812",
+        "openspec/specs/run-record-budget/spec.md": "976bcdc4c2985bcf8d43900e71d51d4394eaa17511e3a77073ad4227a30d0620",
+        "openspec/specs/run/spec.md": "713585d18620e958a187a6a98728ee73c6c4c0aa32c627be616e5a2996a287d9",
+        "openspec/specs/trace-agreement/spec.md": "3b44cff0873c91ea855a14e8742dbd4c6e08e59ed70fd7bea162757c726e31dc",
+        "openspec/specs/trace-record/spec.md": "5eb2664fd79a0bff00ece1de6e4462d75e27ace3905537446b67660e99f2ab95",
+        "openspec/specs/trace-report/spec.md": "36593387034d984400333dc5371f88079b2a4e18108d54cca380aa9b20de909d",
+        "openspec/specs/verification-policy/spec.md": "3adba9533cfd13ad34cad39f2d79e02cf3da225bfcd2e11869dc24cea16e7eb2",
+        "openspec/specs/verify/spec.md": "93bda125d67ea5fed42212a909ce4abaf5b561792e3a9d3c8f1fc9048bd83aa7"
+      },
+      "testSources": {
+        "tests/ai-journeys.test.ts": "5d1934a2891224bd9ade78232509f9f529e8e6c36c3bf115843bb56e9a3f11f2",
+        "tests/domain-mutations.test.ts": "2b753f35a5ce2e4372d760077ca03f77e50004ea50e5a650bb9cffe1aa16a15b",
+        "tests/input-boundaries.test.ts": "89a368ec8c39e79bd883da212b897401371958751a3dba23ddc136ec71861829",
+        "tests/kit-assets.test.ts": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40",
+        "tests/monorepo.test.ts": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6",
+        "tests/package-artifacts.test.ts": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a",
+        "tests/package-workflows.test.ts": "c82be3653a952f37c8e5ad976fe0d00aa2028fef9d3ef16eca6a75e8450622bf",
+        "tests/public-source-exports.test.ts": "3668c02f7537b0e4abbfdd8a0c2e3daa2b36f62b2cdb56079fe83658ae5b2e77",
+        "tests/release-security.test.ts": "52b011dbbe528eab5c4576aca08bff0b296b07e0c1d1ef5533a523d85a08dda9",
+        "tests/run-decision-mutations.test.ts": "bdf056d8986a4abcb1afcf6e26c803801a81c1d75cec063f3880886644b4653c",
+        "tests/scenario-audit.test.ts": "4b9d89bde6b3c19867fba52f6e74c69968f001226a7328233e8b491b24dcd4fd",
+        "tests/schema-compatibility.test.ts": "bdb7f3bb6d55a56df0ce3d1f0fa0c31a6a4bb3dcd670c1ba18c7a31d4ec6e0da",
+        "packages/cli/test/arguments.test.ts": "ce0333abbadeb77021844db854f55d9e628c12b99f0f8705ea071ede067ece5a",
+        "packages/cli/test/cli.test.ts": "0f36c01b0c8947a0cfab325b0a3f72149826b3cfcdd7828eb3ce8424b93ef2b2",
+        "packages/cli/test/doctor.test.ts": "b71041f6ee0b7de94ae34a91269839ceadfc0886f92dd4d0ffa52558a4e16b4d",
+        "packages/cli/test/init.test.ts": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e",
+        "packages/cli/test/trace-agreement.test.ts": "003cf20521ab1362372f1ce93cbbc046ea71a9bfcfd4b401b652509aadab9636",
+        "packages/cli/test/verify-boundaries.test.ts": "453d06454e94c6850d239e713c1258885a0a6e642f5f312aee48eb1fd5436a12",
+        "packages/kit/test/change-files.test.ts": "1964cfcdae7c9ad29aad34668efc4e33606c63dadf9798e7249ce1407b2bbc31",
+        "packages/kit/test/doctor-command.test.ts": "a0e75f4a867c6a7c85dd0959a9737cb2fe4ad50f8d4dd84dfe9e9ab41b1ea0e6",
+        "packages/kit/test/doctor-diagnostics.test.ts": "f30c2b3670db786adda6047b18c348b5ac6abe38a54f6a406ef367960893f985",
+        "packages/kit/test/input.test.ts": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985",
+        "packages/kit/test/process.test.ts": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca",
+        "packages/kit/test/verify.test.ts": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f",
+        "packages/runner/test/decision-policy.test.ts": "000c9763c5b9e05f706579261d1f4a14a5bd5d442cb34015ae008532a79ba561",
+        "packages/runner/test/diagnostic-redactor.test.ts": "bc1d89cd9d21bc9079f3626cd0c06eb26f9e7036483b6c3f5c09b2d0414704d4",
+        "packages/runner/test/engine-safety.test.ts": "7c75c2f45e35c3daf7c65fb9551eb924a0b3d7e34656a71cd0cc3ae486711317",
+        "packages/runner/test/evidence-storage.test.ts": "16cd666b698613e965a0c1547e97b68a56431b2f576b7f9e45caf7954adbeebb",
+        "packages/runner/test/external-budget.test.ts": "2526e2b8662dc95fc98b9c20260119778f5ad2eb3ec187b9f1b232a24b3736ac",
+        "packages/runner/test/guard-path-integration.test.ts": "e31d591ad04ece3601b546325c2f627d6ecf467a1675e415eac23220bc594ec4",
+        "packages/runner/test/guards.test.ts": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f",
+        "packages/runner/test/lock.test.ts": "503815aa9b69654f8966ccbbf591d44f5cc12b36c2610d66fb566783884b9d0b",
+        "packages/runner/test/log-config.test.ts": "8f76ad8d7938289e28b1c534473c27bdaed047603e8da7873b5d7fa242f326ea",
+        "packages/runner/test/log-run.test.ts": "8739b25d089dc16b12339bdb8cd0c63f3915848449ed0cf7d20666aafc39c000",
+        "packages/runner/test/logs.test.ts": "fc4f44af93ac4374860bce08583d0884c14adb9d73814ec372cafe70ea6bf9e5",
+        "packages/runner/test/mask.test.ts": "c021eebe799ff8c5762683db208f7b9adb6bdb0f35fe2be7f6e13200832910ec",
+        "packages/runner/test/output-budget.test.ts": "91e585da4ed7785f163c4be3828c85ca5e5e0704865d72439da2e8f3d85e14e0",
+        "packages/runner/test/output-processes.test.ts": "ba1bbba51f418c940a3b40b55501411289b3628d1c4fc5d04e73503ed56d15ec",
+        "packages/runner/test/pr.test.ts": "5c5caa14a32f1536bab7115107c0509a4591fe8afc5387d2048e0ae4b4121e30",
+        "packages/runner/test/publication-retry.test.ts": "49db35ee3960986e16dabe788943d2490d57f5d0b121531227f9ad148ed844bf",
+        "packages/runner/test/run-conditions.test.ts": "ad3ecc2391eef40a16199597cc0e4feb6958c38fdfc9f8e3bdcabbe310b34511",
+        "packages/runner/test/run.test.ts": "83e49d92da0626e0d28031b46b25030377041c33900f61b7237ca25137b1ce3f",
+        "packages/runner/test/safety-paths.test.ts": "e976ee7e1e4c985ae0566df7cf7d177bb254e35053a8410018fd4794a1ce4673",
+        "packages/trace/test/publication-crash.test.ts": "1fbdfb9d6afcd7fa07e83f9ca987593e50da39128cd4a6e354286326e9f9e5d6",
+        "packages/trace/test/publication.test.ts": "63231c8f68bbbe7901a3c28a437135b7aaebc689a66752682eb0a2422be710f9",
+        "packages/trace/test/record-size.test.ts": "db71a3294f7e3688bc76c9adbb527a0526a41c76304da1b8f350375514ec87e1",
+        "packages/trace/test/record.test.ts": "b3c144c80403227209fd76fae5ef61da7fb396ec52c8b8eaee1d0788a246ab2e",
+        "packages/trace/test/report.test.ts": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e",
+        "packages/trace/test/serialization.test.ts": "6cf85e33ea1af754e0245fc4259f994504be7310ea55c96abc971e81ebd5c247",
+        "packages/core/test/agreement.test.ts": "68e212efdfe32dce2a259b982260a1cc26e7a78551886f8628e05cd1604acbbf",
+        "packages/core/test/coverage-policy.test.ts": "61add31ac1281ad2949cfda26529bfe7ec102b34fb8c06bf2d5d40c90ee32bb8",
+        "packages/core/test/package.test.ts": "6c32b72bc19cd187c4337ae78ff9c2b42f39e5ff40ef0156175a8845d0e84fb4",
+        "packages/core/test/schema.test.ts": "ee3ee3a0d181d9e98ff8aecc6fa70b2197748f938b4265e5ed2c1048ffad2891",
+        "packages/core/test/spec.test.ts": "542fe6ec2963ca726db1b6948e8bbe27f5bc9694cca87b437e4d9f63f6f8c9c3",
+        "packages/core/test/tasks.test.ts": "d317048c05efd6bef9126b9f8a848de40e6202c278bfdff32535bf129439ec2c",
+        "packages/core/test/test-report.test.ts": "c7153a95adba3abf1d612e07134454d17aa93ece23874ffc140db2d5136859f1",
+        "packages/core/test/trace-edit.test.ts": "db99961acc8021a96ae61c6d5e78f76fda0e8383a25958bdf00e975f7e00d98d",
+        "packages/core/test/trace.test.ts": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40",
+        "scripts/runtime-compatibility.mjs": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
+      },
+      "testReportSha256": "5f3aa362cf93f9417d4f257b23ba5e57d9ad32bcc4aadb8ce418d8cbc10cb23d",
+      "reviewSha256": "01d7ccc58d2a8c7c2ad3cda205e98223eb670858cb05dd543f5a5c5aaa4e10ca",
+      "scriptSha256": "3955fe0ffc31ab037de9ea656ce8114e3df62cb61a333c2cd20d804279081cab"
+    },
+    "environments": [
+      {
+        "id": "node24-full",
+        "node": "24.21.0",
+        "scope": "ordinary done gate",
+        "passed": 865,
+        "reportSha256": "a959b94d69b0eca9b6a548e1cec50c1beefaa776e7db22a0b216e60b010f72bb"
+      },
+      {
+        "id": "node22-full",
+        "node": "22.12.0",
+        "scope": "full repository, child PATH on Node22, maxWorkers=1",
+        "passed": 865,
+        "reportSha256": "504ff96f4e103ae82dda1377d0c55478b008f8c2855ceba6455a081c6d1942ea"
+      },
+      {
+        "id": "node22-packed-prior",
+        "node": "22.12.0",
+        "scope": "prior packed offline 4 checks, carried forward after production-source and runtime-script identity checks",
+        "sourceCommit": "ebe7923ca68c05395ab6709a48db786009e2aea3",
+        "resultSha256": "c24f9aef33cc93f6724e2298e75a440cf83c06f74a5a15f0eb7d8f53827c70c8"
+      }
+    ],
+    "reportFile": "openspec/changes/audit-scenario-evidence/contracts-executions.json",
+    "reportSha256": "5f3aa362cf93f9417d4f257b23ba5e57d9ad32bcc4aadb8ce418d8cbc10cb23d"
+  },
+  "assessment": {
+    "all15Scores": "unchanged",
+    "compatibility": 88,
+    "test": 89,
+    "security": 89,
+    "atLeast90": 6,
+    "totalAspects": 15,
+    "remaining": "43 unreviewed/14 invalid scenarios, process termination assertions, intermittent timing failure causes, other OS, real engine/GitHub and release verification."
+  }
+}

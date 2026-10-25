@@ -3,6 +3,7 @@ import { UsageError, runExternal } from '@loomake/kit';
 import { StringDecoder } from 'node:string_decoder';
 import { DEFAULT_MAX_OUTPUT_BYTES } from './config.js';
 import { createDiagnosticRedactor } from './mask.js';
+import { waitForGroupExit } from './process-group.js';
 
 import { isWindows, quote } from './shell.js';
 
@@ -64,21 +65,31 @@ export function claudeArgs(commands: string[], skipPermissions: boolean): string
   return [...base, '--permission-mode', 'acceptEdits', '--allowedTools', ...tools];
 }
 
-/** エンジンと子孫を停止し、POSIXでは猶予後にグループ全体を強制終了する。 */
-function stop(child: ChildProcess): Promise<void> {
+/**
+ * エンジンと子孫を停止する。POSIXでは猶予後にグループ全体を強制終了し、メンバーが動作していなくなるのを待ってから戻る（REQ-212）。
+ * 自分の子は exit で回収し、孫はゾンビか消滅を「動作していない」とみなすので、init が回収しない環境でも待ち続けない
+ */
+function stop(child: ChildProcess, skipMissingGroup = false): Promise<void> {
   if (isWindows && child.pid !== undefined) {
     spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { timeout: 1000, killSignal: 'SIGKILL', stdio: 'ignore' });
     return Promise.resolve();
   }
   const killGroup = (signal: NodeJS.Signals) => {
     try {
-      if (child.pid !== undefined) process.kill(-child.pid, signal);
-    } catch {
-      // すでに終了したプロセスグループは停止済みとして扱う。
+      if (child.pid === undefined) return false;
+      process.kill(-child.pid, signal);
+      return true;
+    } catch (error) {
+      return (error as NodeJS.ErrnoException).code !== 'ESRCH';
     }
   };
-  killGroup('SIGTERM');
-  return new Promise((resolve) => setTimeout(() => { killGroup('SIGKILL'); resolve(); }, 250));
+  const groupPresent = killGroup('SIGTERM');
+  if (skipMissingGroup && !groupPresent) return Promise.resolve();
+  return new Promise((resolve) => setTimeout(() => {
+    killGroup('SIGKILL');
+    if (child.pid === undefined) { resolve(); return; }
+    void waitForGroupExit(child.pid).then(() => { resolve(); });
+  }, 250));
 }
 
 /** Claude Code を呼び、指示を標準入力で渡す。時間の上限か中断で止める */
@@ -125,11 +136,19 @@ export function runClaude(call: EngineCall): Promise<EngineResult> {
       stopping ??= stop(child);
     };
     call.signal?.addEventListener('abort', onAbort, { once: true });
+    const finishMonitoring = () => {
+      clearTimeout(timer);
+      call.signal?.removeEventListener('abort', onAbort);
+    };
+    child.once('exit', () => {
+      if (isWindows) return;
+      finishMonitoring();
+      stopping ??= stop(child, true);
+    });
     child.on('error', () => {});
     if (call.signal?.aborted) onAbort();
     child.on('close', (code) => void (async () => {
-      clearTimeout(timer);
-      call.signal?.removeEventListener('abort', onAbort);
+      finishMonitoring();
       await stopping;
       diagnostics.end();
       let text = raw;

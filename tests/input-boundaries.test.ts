@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { appendFileSync, existsSync, mkdirSync, readFileSync, symlinkSync, truncateSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, symlinkSync, truncateSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadConfig, runVerify, UsageError } from '../packages/kit/src/index.js';
 import { readDocuments, runReport } from '../packages/trace/src/index.js';
@@ -79,6 +79,29 @@ describe('コマンドの入力予算', () => {
     } finally { repo.cleanup(); }
   });
 
+  it.each(['trace.md', 'tasks.md', 'specs/x/spec.md'])('[REQ-172] 通常runでも過大な%sを開始前に拒否し、エンジンと公開を始めない', async (name) => {
+    const repo = makeRepo();
+    try {
+      const relative = `openspec/changes/${CHANGE}/${name}`;
+      repo.write(relative, readFileSync(join(repo.root, relative), 'utf8') + tooLarge);
+      repo.git('add', relative); repo.git('commit', '-qm', 'oversized document');
+      const before = repo.git('rev-parse', 'HEAD');
+      const branches = repo.git('branch', '--list');
+      const error = await runRun({ root: repo.root, changeId: CHANGE, interactive: false, confirm: async () => false, stdout: () => {}, env: repo.env, fileExists: () => false }).catch((value: unknown) => value);
+      expect(error).toBeInstanceOf(UsageError);
+      expect(String(error)).toContain('1048576');
+      expect(String(error)).toContain(join(repo.root, relative));
+      expect(repo.git('rev-parse', 'HEAD')).toBe(before);
+      expect(repo.git('branch', '--list')).toBe(branches);
+      expect(repo.calls()).toEqual([]);
+      expect(repo.prs()).toEqual([]);
+      expect(existsSync(repo.env.FAKE_GH_LOOKUP_LOG!)).toBe(false);
+      expect(existsSync(join(repo.root, '.loomake/runs'))).toBe(false);
+      expect(existsSync(join(repo.root, '.loomake/evidence'))).toBe(false);
+      expect(repo.git('ls-remote', 'origin')).toBe('');
+    } finally { repo.cleanup(); }
+  });
+
   it('[REQ-172] JSONのテストレポートは64MiBを超えたら解析しない', () => withProject({}, (root) => {
     mkdirSync(join(root, '.loomake'));
     sparse(join(root, '.loomake/test-report.json'), 64 * 1024 * 1024 + 1);
@@ -88,7 +111,13 @@ describe('コマンドの入力予算', () => {
   it('[REQ-172] JSONの証拠も64MiBを超えたら報告しない', () => withProject({}, (root) => {
     const dir = join(root, '.loomake/evidence/c1'); mkdirSync(dir, { recursive: true });
     sparse(join(dir, 'large.json'), 64 * 1024 * 1024 + 1);
-    expect(() => runReport({ root, changeId: 'c1', stdout: () => {} })).toThrow(/上限.*67108864/);
+    const output: string[] = [];
+    const report = () => {
+      try { return runReport({ root, changeId: 'c1', stdout: (text) => output.push(text) }); }
+      catch (error) { expect(String(error)).toContain(join(dir, 'large.json')); throw error; }
+    };
+    expect(report).toThrow(/上限.*67108864/);
+    expect(output).toEqual([]);
   }));
 
   // bound-report-evidence-reading で、合計 128MiB を超えたら止める動作から変えた（Q-01 の回答 A）
@@ -135,4 +164,37 @@ describe('組み立てた指示の全体予算', () => {
   it('[REQ-173] 検証の失敗情報による指示の超過も止める', () => withProject({}, (root) => {
     expect(() => buildPrompt(root, changeOf(root), 'task', { schemaVersion: '1.0.0', mode: 'done', change: 'c1', ok: false, results: [{ check: 'test', status: 'fail', detail: 'x'.repeat(16 * 1024 * 1024) }] })).toThrow(/指示.*16777216/);
   }));
+  it('[REQ-173] 通常runで巨大な検証失敗を指示へ加える前に止まり、エンジンを起動しない', async () => {
+    const tasks = '- [ ] 完了ゲート（REQ-012） <!-- loomake:gate=done -->\n';
+    const repo = makeRepo({ tasks });
+    try {
+      const failureBytes = 16 * 1024 * 1024;
+      repo.write('write-report.mjs', `process.stdout.write('x'.repeat(${failureBytes}), () => { process.exitCode = 1; });\n`);
+      repo.git('add', 'write-report.mjs'); repo.git('commit', '-qm', 'large verification diagnostic');
+      const before = repo.git('rev-parse', 'HEAD');
+      for (const file of ['AGENTS.md', 'proposal.md', 'tasks.md', 'trace.md', 'specs/x/spec.md']) {
+        const path = file === 'AGENTS.md' ? join(repo.root, file) : join(repo.root, 'openspec/changes', CHANGE, file);
+        expect(statSync(path).size).toBeLessThanOrEqual(1024 * 1024);
+      }
+      const output: string[] = [];
+      const code = await runRun({ root: repo.root, changeId: CHANGE, interactive: false, confirm: async () => false, stdout: (text) => output.push(text), env: repo.env, fileExists: () => false });
+      expect(code).toBe(1);
+      expect(output.join('\n')).toContain('エンジンへの指示の上限は16777216バイト');
+      const runs = join(repo.root, '.loomake/runs');
+      const directories = readdirSync(runs).filter((name) => name !== '.gitignore');
+      expect(directories).toHaveLength(1);
+      const run = join(runs, directories[0]);
+      const verify = JSON.parse(readFileSync(join(run, '00-verify.json'), 'utf8'));
+      expect(verify.results.find((result: { check: string }) => result.check === 'command: test')).toMatchObject({ status: 'fail', detail: 'x'.repeat(failureBytes) });
+      expect(JSON.parse(readFileSync(join(run, 'summary.json'), 'utf8'))).toMatchObject({ status: 'stopped', doneTasks: [], remainingTasks: ['完了ゲート（REQ-012）'], reason: expect.stringContaining('指示の上限は16777216バイト') });
+      expect(readFileSync(join(repo.root, 'openspec/changes', CHANGE, 'tasks.md'), 'utf8')).toBe(tasks);
+      expect(repo.git('rev-parse', 'HEAD')).toBe(before);
+      expect(repo.calls()).toEqual([]);
+      expect(repo.prs()).toEqual([]);
+      expect(existsSync(repo.env.FAKE_GH_LOOKUP_LOG!)).toBe(false);
+      expect(existsSync(join(repo.root, '.loomake/evidence'))).toBe(false);
+      expect(repo.git('ls-remote', 'origin')).toBe('');
+    } finally { repo.cleanup(); }
+  });
+
 });

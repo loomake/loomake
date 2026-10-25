@@ -1,0 +1,276 @@
+{
+  "review": "PR65 findings1-3",
+  "upstream": "7627fe354f943fa3d2ba3d6723205bc69ef4f23a",
+  "mergeCommit": "1129959",
+  "specGateExit": 0,
+  "implementation": "runtime/process.ts retained by main merge, SUPERVISOR uses ../../supervisor/supervisor.cjs. Startup test and CLI verify-boundaries import migrated. Supervisor rechecks the absolute deadline and rearms bounded timer chunks.",
+  "tests": [
+    {
+      "file": ".loomake/quality/pr65-integration/long-deadline-one-ms-control.json",
+      "sha256": "d7832a25388a32d2d554c70a9ca337984b77833a50ad3b3673fd5605cf734aea",
+      "passed": 2,
+      "failed": 0,
+      "pending": 0,
+      "failures": []
+    },
+    {
+      "file": ".loomake/quality/pr65-integration/long-deadline-red.json",
+      "sha256": "946293953d257acb531feaf42a95388df52296d3af1497e98cbe745c3957de53",
+      "passed": 0,
+      "failed": 2,
+      "pending": 0,
+      "failures": [
+        {
+          "name": "タイマーの上限を超える有限の期限 [REQ-180][REQ-182] qualityCommandで上限を超える残り時間を短縮せず、通常の結果を保つ",
+          "message": "Error: 外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）"
+        },
+        {
+          "name": "タイマーの上限を超える有限の期限 [REQ-180][REQ-182] untilDeadlineで上限を超える残り時間を短縮せず、通常の結果を保つ",
+          "message": "Error: 外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）"
+        }
+      ]
+    },
+    {
+      "file": ".loomake/quality/pr65-integration/long-deadline-red-with-rearm.json",
+      "sha256": "e26e0723dd1d63c9b372570a8906fcd76b08b50c154f5fd32da3cc129d02df90",
+      "passed": 0,
+      "failed": 3,
+      "pending": 0,
+      "failures": [
+        {
+          "name": "タイマーの上限を超える有限の期限 [REQ-180][REQ-182] qualityCommandで上限を超える残り時間を短縮せず、通常の結果を保つ",
+          "message": "Error: 外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）"
+        },
+        {
+          "name": "タイマーの上限を超える有限の期限 [REQ-180][REQ-182] untilDeadlineで上限を超える残り時間を短縮せず、通常の結果を保つ",
+          "message": "Error: 外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）"
+        },
+        {
+          "name": "タイマーの上限を超える有限の期限 [REQ-180][REQ-182] 分割した待機が期限前に発火しても、残り時間を確認して待ち直す",
+          "message": "Error: 外部操作を止めました：/usr/local/bin/node（実行時間の上限に達しました）"
+        }
+      ]
+    },
+    {
+      "file": ".loomake/quality/pr65-integration/focused-node24.json",
+      "sha256": "25e7c95f7e34f14db0e77b0c61f1e47ef4d765156cb6cf6d4d38a2794aa12471",
+      "passed": 56,
+      "failed": 0,
+      "pending": 0,
+      "failures": []
+    },
+    {
+      "file": ".loomake/quality/pr65-integration/focused-node22.json",
+      "sha256": "5cd4c391d8eba7d57651ef6814e9f37d89488d3546a5dff8211a9d858c6e2210",
+      "scope": "Node22 current related110; not a full repository pass",
+      "passed": 104,
+      "failed": 6,
+      "pending": 0,
+      "failures": [
+        {
+          "name": "エンジンの停止 [REQ-139] 終了要求を無視するエンジンも強制終了する",
+          "durationMs": 1769.546335,
+          "message": "TypeError: actual value must be number or bigint, received \"undefined\""
+        },
+        {
+          "name": "フックを動かす git の操作の期限 [REQ-182] 1 操作の期限より遅い pre-commit・pre-push のフックがあっても、run の残り時間の中でコミット・push・PR の作成まで進む",
+          "durationMs": 1582.236917000002,
+          "message": "Error: 外部操作を止めました：claude（実行時間の上限に達しました）"
+        },
+        {
+          "name": "フック内の特殊ファイルの実プロセス検査 [REQ-208] 通常ファイルのスナップショットは外側の期限内に返る",
+          "durationMs": 7653.784837,
+          "message": "Error: Test timed out in 5000ms."
+        },
+        {
+          "name": "フック内の特殊ファイルの実プロセス検査 [REQ-208] 書き手のないFIFOを開かず対象を示すUsageErrorで拒否する",
+          "durationMs": 16498.665007,
+          "message": "AssertionError: expected '' to contain 'probe-started\\n'"
+        },
+        {
+          "name": "フック内の特殊ファイルの実プロセス検査 [REQ-208] Unixソケットを内容の読み取り前にUsageErrorで拒否する",
+          "durationMs": 60717.970651999996,
+          "message": "AssertionError: expected '' to contain 'probe-started\\n'"
+        },
+        {
+          "name": "フック内の特殊ファイルの実プロセス検査 [REQ-208] beforeのFIFOで通常runを止め、タスク・変更・コミットを保つ",
+          "durationMs": 41730.386186,
+          "message": "AssertionError: {\"phase\":\"child-started\",\"elapsedMs\":0.020125000000007276}"
+        }
+      ]
+    },
+    {
+      "file": ".loomake/quality/pr65-integration/first-full-node24.json",
+      "sha256": "407d2ded9ed0eb2c477d85113edb045c076c1b7303ee30d54d4cab0722d05440",
+      "scope": "Default8CPU completion attempt; tests988passed1failed plus task4.4unchecked",
+      "passed": 988,
+      "failed": 1,
+      "pending": 0,
+      "failures": [
+        {
+          "name": "runから外部操作までの期限 [REQ-182] createの期限後に先へ進まず、再実行で重複させない",
+          "durationMs": 1425.201041999997,
+          "message": "AssertionError: {\"stage\":\"create\",\"code\":1,\"elapsedMs\":1417,\"stdout\":\"完了ゲートのタスクを、タスクの文から判定しました：3.1 `pnpm -s verify --change c1 --done` を通す\\n文を変えても判定が変わらないよう、tasks.md のその行の末尾に <!-- loomake:gate=done --> を付けてください。\\nloomake run を止めました：外部操作を止めました：git（実行時間の上限に達しました）\\n終えたタスク：なし\\n残ったタスク：\\n  - 1.1 一つ目のタスク（REQ-012）\\n  - 1.2 二つ目のタスク\\n  - 3.1 `pnpm -s verify --change c1 --done` を通す\\n最後の検査結果：なし\\n記録：.loomake/runs/20261024T223459Z-c1/\",\"stalled\":false,\"events\":\"{\\\"event\\\":\\\"fixture-ready\\\",\\\"at\\\":1792881299311,\\\"elapsedMs\\\":8,\\\"stage\\\":\\\"create\\\"}\\n{\\\"event\\\":\\\"run-start\\\",\\\"at\\\":1792881299311,\\\"stage\\\":\\\"create\\\"}\\n{\\\"event\\\":\\\"shim-start\\\",\\\"at\\\":1792881299589,\\\"pid\\\":99027,\\\"command\\\":\\\"gh\\\",\\\"args\\\":[\\\"auth\\\",\\\"status\\\"]}\\n{\\\"event\\\":\\\"forward-start\\\",\\\"at\\\":1792881299589,\\\"pid\\\":99027,\\\"command\\\":\\\"gh\\\",\\\"args\\\":[\\\"auth\\\",\\\"status\\\"]}\\n{\\\"event\\\":\\\"forward-end\\\",\\\"at\\\":1792881299628,\\\"pid\\\":99027,\\\"command\\\":\\\"gh\\\",\\\"args\\\":[\\\"auth\\\",\\\"status\\\"],\\\"status\\\":0,\\\"signal\\\":null}\\n{\\\"event\\\":\\\"shim-end\\\",\\\"at\\\":1792881299628,\\\"pid\\\":99027,\\\"command\\\":\\\"gh\\\",\\\"args\\\":[\\\"auth\\\",\\\"status\\\"],\\\"code\\\":0}\\n{\\\"event\\\":\\\"run-end\\\",\\\"at\\\":1792881300720,\\\"stage\\\":\\\"create\\\",\\\"code\\\":1,\\\"elapsedMs\\\":1417}\\n\"}: expected false to be true // Object.is equality"
+        }
+      ]
+    },
+    {
+      "file": ".loomake/quality/pr65-integration/safety-one-cpu-node24.json",
+      "sha256": "7ac6d761988cba3c7b017805ee2b443f92f90a353e38082db5597427c27a281f",
+      "scope": "OneCPU completion attempt; tests988passed1failed",
+      "passed": 988,
+      "failed": 1,
+      "pending": 0,
+      "failures": [
+        {
+          "name": "POSIXエンジンの正常終了後の後処理 [REQ-207] 戻る前にundefined、遅延書き込みを防ぐ",
+          "durationMs": 1415.2395420000003,
+          "message": "AssertionError: expected [ 'missing', 'zombie' ] to include 'running'"
+        }
+      ]
+    },
+    {
+      "file": ".loomake/quality/pr65-integration/labels-focused.json",
+      "sha256": "e885635e91767e43a484374956b72cfce6de645e8ca5d0499a4b05e67e46f2c2",
+      "scope": "After parameter-title delimiter correction; actual assertions unchanged",
+      "passed": 20,
+      "failed": 0,
+      "pending": 0,
+      "failures": []
+    },
+    {
+      "file": ".loomake/quality/pr65-integration/safety-two-cpu-node24.json",
+      "sha256": "9008402ad95068a39b25ad3c1b3247970b29ba4be84745930493ee8fea45ebd6",
+      "scope": "taskset-c6,7, Node24, safety change completion gate; default config/expectations/deadlines retained, no opt-in phase preload",
+      "exit": 0,
+      "passed": 989,
+      "failed": 0,
+      "pending": 0
+    },
+    {
+      "file": ".loomake/quality/pr65-integration/startup-two-cpu-final-node24.json",
+      "sha256": "21fb7f66210068caacd01dda3752cb9eb76b143087eafb7e38cf454bdf362e7b",
+      "scope": "Final startup change completion gate, taskset-c6,7 Node24; code/tests unchanged since preceding successful safety gate",
+      "exit": 0,
+      "passed": 989,
+      "failed": 0,
+      "pending": 0
+    }
+  ],
+  "initialControl": "A requested duration only1ms above timer limit fell below the limit during actual supervisor startup and2cases passed; it did not reproduce the defect. Repro uses limit+60000ms, then2and3failures were observed.",
+  "rearmTest": "Only supervisor timer is forced to wake twice before expiry. Actual target runs normally. Requires3bounded wait requests, expected output/status and no warning. Not a24-day wall-clock execution.",
+  "translationAssertionsUnchanged": {
+    "packages/kit/test/process-startup.test.ts": 18,
+    "packages/runner/test/engine-normal-exit.test.ts": 13,
+    "packages/runner/test/process-diagnostics.ts": 0,
+    "tests/ci-gate-process.test.ts": 27,
+    "packages/trace/test/publication-crash.test.ts": 9,
+    "packages/runner/test/scenario-timeout-evidence.test.ts": 31,
+    "packages/runner/test/guards-special-files.test.ts": 38
+  },
+  "upstreamContract": "Input-budget conflict adopts already merged bound-report-evidence-reading Q01 behavior and tests; PID assertions preserved in engine-safety; upstream approved60s test timeout retained. No new config relaxation introduced here.",
+  "evidencePolicy": "Existing raw records preserved and relocated by upstream archive; new raw reports remain under .loomake/quality, this summary records hashes/counts.",
+  "manifestMigration": {
+    "removedFromActiveIndex": [
+      "SCN-b9ad949e3299a59455c1",
+      "SCN-d941fcf41715eadf0a76",
+      "SCN-eb3da5b1cccad45d57fe",
+      "SCN-8b77c0f75e25932873c8",
+      "SCN-ed5b38391ab233547e66",
+      "SCN-1a6e2ebad641ee0e82bf",
+      "SCN-ed1b549d1ab8b0382764",
+      "SCN-6737b90ac5861dc5891d",
+      "SCN-1ea3b6d673f99f00dfab",
+      "SCN-892744352cbcc21e08c8",
+      "SCN-58988ff67e04a22a6e90",
+      "SCN-96f96fc165511da2bbd3",
+      "SCN-aae92504e0e72d747a61",
+      "SCN-d1582a614bc92e9f5b87",
+      "SCN-f3c4fabea0ca19897c0e",
+      "SCN-c2e7acd2880c5793b7f3",
+      "SCN-0b185b4ee72312e4c812",
+      "SCN-d475063ec1b7175faeb6",
+      "SCN-8ac1e728bd931358b1b9",
+      "SCN-c4fc61a3a8f5f2456a94",
+      "SCN-6a8388a02ac4197ecdba",
+      "SCN-557f8f5102b9a3f758dc",
+      "SCN-e7a89e26ef4e607b045a",
+      "SCN-a984b61249c6f8f16938",
+      "SCN-11b4cd5f7312edc22c4a",
+      "SCN-0658634ca07c8ffa116b",
+      "SCN-ab468be9128795302438",
+      "SCN-bb5486ea3546651a9885",
+      "SCN-4a8af4574dcf5fe9f778",
+      "SCN-daff42a2ec486c46899f",
+      "SCN-85e7d3ab4d79fd576fe1",
+      "SCN-d145be14bb46d8431d90",
+      "SCN-913c922eba379cbde67e",
+      "SCN-c3facf5eb6cfd3513701",
+      "SCN-83f9b26580280ca6219a",
+      "SCN-14aafad9db2f8528741e",
+      "SCN-2385d9f8ede89a87b766",
+      "SCN-ec87b34ce52aa57dc136",
+      "SCN-52be373321d37ec739e7",
+      "SCN-304ace63925cbbdc677b",
+      "SCN-96bba88238eb2e66b774",
+      "SCN-9dd31ba93f03f60b6b53",
+      "SCN-97553bd6fbb08293e97f",
+      "SCN-828a4108f7d8560dabf3",
+      "SCN-a301f9298fd3b73568a7",
+      "SCN-38e3134e0dce00709e86",
+      "SCN-78a7f58fd87760c85835",
+      "SCN-9097fae62e2b08e5a04d",
+      "SCN-4909acac9444ef13221a",
+      "SCN-6e08a5af384d12764e7a",
+      "SCN-39e078f298db6ed803cc",
+      "SCN-fae2b8b93f59b5ad7abf",
+      "SCN-157d86c29a978635463a",
+      "SCN-fa361b08b4790cff678f",
+      "SCN-8afa7165a685a9d49d57",
+      "SCN-b2b4ab0eaeec3b0d4dd8",
+      "SCN-40011d05f5ad74b3e9fd",
+      "SCN-9fe8421dc4a4ad0058c5"
+    ],
+    "updatedIdentityFromUpstream": [],
+    "reason": "main archived the formerly active changes. Active manifest now indexes only current inventory; old entries remain in git checkpoint9e9f703 and reviews-before-main.json. All execution-evidence JSON files are preserved. Selection depends on current Scenario identity, never test success. Stale source hashes remain invalid until separately reviewed."
+  },
+  "observedDefaultFailure": {
+    "operation": "git config branch.loomake/c1.loomake-base main",
+    "supervisorEntryRemainingMs": 443.3168340921402,
+    "supervisorExitRemainingMs": -473.5902090072632,
+    "intendedCreateStallReached": false,
+    "scope": "Actual phase identified; scheduling/IO cause not established."
+  },
+  "oneCpuFailure": "Inherited-output SIGTERM-ignoring child was observed running immediately on return before test cleanup; delayed-marker assertion had not run yet. Cause not established; expectations unchanged.",
+  "titleCorrection": "Japanese characters directly after $name/$files were parsed as part of the property key and produced undefined. Added spaces;20targeted tests passed and names no longer contain undefined.",
+  "publication": {
+    "status": "blocked-by-automatic-approval-review",
+    "sent": false,
+    "reason": "Post-review updated payload lacks explicit egress authorization; no push or PR edit was executed. Local implementation and verification continue.",
+    "target": "loomake/loomake audit-quality-after-merge PR65",
+    "requiredFinalAction": "Ask explicit approval for the final frozen commit and PR body."
+  },
+  "finalStartupGate": {
+    "exit": 0,
+    "passed": 989,
+    "failed": 0,
+    "pending": 0,
+    "cpuAffinity": "6,7",
+    "qualityConfigurationRelaxed": false,
+    "all8TasksChecked": true,
+    "publicationSent": false
+  },
+  "audit": {
+    "counts": {
+      "total": 476,
+      "reviewed": 193,
+      "superseded": 0,
+      "unreviewed": 45,
+      "invalid": 238
+    },
+    "issues": 0,
+    "exit": 1,
+    "input": ".loomake/quality/pr65-integration/current-executions.json",
+    "scope": "Failed8CPU/1CPU/Node22 profiles retained together with successful2CPU profile. Final identical-source successful gate not duplicated in audit input."
+  }
+}

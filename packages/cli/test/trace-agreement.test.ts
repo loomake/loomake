@@ -112,3 +112,57 @@ it.each(['answer', 'approve'])('[REQ-135][REQ-202][REQ-203] %sのヘルプで用
     expect(read(root)).toBe(before);
   });
 });
+
+describe('合意の書き込みの境界', () => {
+  it.each([
+    ['answer', '\n'], ['answer', '\r\n'], ['approve', '\n'], ['approve', '\r\n'],
+  ])('[REQ-202][REQ-203] %sは改行コード%jと対象外の全行を保ち、区切り文字をエスケープする', async (kind, eol) => {
+    const original = fullTrace().replace(
+      '| Q-01 |', '| Q-02 | REQ-012 | 別の質問 | a / b | a | no | b | 別担当 | 2026-10-01 |\n| Q-01 |',
+    ).replace(/\n/g, eol);
+    await withProject({ trace: original }, async (root) => {
+      const before = read(root);
+      const args = kind === 'answer' ? ['--question', 'Q-01', '--answer', '3|5'] : ['--assumption', 'A-01'];
+      const r = await run(root, 'trace', kind, '--change', CHANGE, ...args, '--by', 'PM|顧客', '--date', '2024-02-29');
+      expect(r.code, r.stderr).toBe(0);
+      const oldRow = kind === 'answer'
+        ? '| Q-01 | REQ-012 | 何回ですか | 3 / 5 | 5 | yes |  | | |'
+        : '| A-01 | REQ-012 | 8 文字以上 | 一般的 |  | | |';
+      const newRow = kind === 'answer'
+        ? '| Q-01 | REQ-012 | 何回ですか | 3 / 5 | 5 | yes | 3\\|5 | PM\\|顧客 | 2024-02-29 |'
+        : '| A-01 | REQ-012 | 8 文字以上 | 一般的 | 承認 | PM\\|顧客 | 2024-02-29 |';
+      expect(before).toContain(oldRow);
+      expect(read(root)).toBe(before.replace(oldRow, newRow));
+      expect(r.stdout).toContain(kind === 'answer' ? 'Q-01' : 'A-01');
+      expect(r.stdout).toContain('--spec-only');
+    });
+  });
+
+  it.each(['answer', 'approve'])('[REQ-202][REQ-203] %sの不正入力はファイルを一切変えない', async (kind) => {
+    for (const problem of ['date', 'newline', 'missing', 'filled'] as const) {
+      const trace = fullTrace(problem === 'filled' && kind === 'answer' ? '元の回答' : '', problem === 'filled' && kind === 'approve' ? '承認' : '');
+      await withProject({ trace }, async (root) => {
+        const before = read(root);
+        const args = kind === 'answer'
+          ? ['--question', problem === 'missing' ? 'Q-99' : 'Q-01', '--answer', '5 回']
+          : ['--assumption', problem === 'missing' ? 'A-99' : 'A-01'];
+        const r = await run(root, 'trace', kind, '--change', CHANGE, ...args,
+          '--by', problem === 'newline' ? '担当\n別人' : '担当', '--date', problem === 'date' ? '2026-02-29' : '2026-10-24');
+        expect(r.code, `${kind}:${problem}`).toBe(2);
+        expect(r.stderr, problem).toContain({ date: '実在する日', newline: '改行', missing: 'の行がありません', filled: 'すでに値があります' }[problem]);
+        expect(read(root), problem).toBe(before);
+      });
+    }
+  });
+
+  it('[REQ-203] 古い仮定の表では承認だけを書き、列の不足と仕様ゲートを案内する', async () => {
+    await withProject({ trace: traceMd({ assumptions: ['| A-01 | REQ-012 | 仮定 | 理由 | |'] }) }, async (root) => {
+      const before = read(root);
+      const r = await run(root, 'trace', 'approve', '--change', CHANGE, '--assumption', 'A-01', '--by', 'PM', '--date', '2026-10-24');
+      expect(r.code, r.stderr).toBe(0);
+      expect(read(root)).toBe(before.replace('| A-01 | REQ-012 | 仮定 | 理由 | |', '| A-01 | REQ-012 | 仮定 | 理由 | 承認 |'));
+      expect(r.stdout).toContain('承認者・承認日の列がない');
+      expect(r.stdout).toContain('--spec-only');
+    });
+  });
+});

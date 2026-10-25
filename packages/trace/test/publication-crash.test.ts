@@ -2,27 +2,33 @@ import { describe, expect, it, vi } from 'vitest';
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
+import { ModuleKind, ScriptTarget, transpileModule } from 'typescript';
 import { publishEvidence } from '../src/publication.js';
 
 // git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
 vi.setConfig({ testTimeout: 60_000 });
 
 const source = join(import.meta.dirname, '../src/publication.ts');
-const errors = pathToFileURL(join(import.meta.dirname, '../../kit/src/runtime/errors.ts')).href;
+const compilerOptions = { module: ModuleKind.ESNext, target: ScriptTarget.ES2022 };
+const errors = 'data:text/javascript;base64,' + Buffer.from(transpileModule(
+  readFileSync(join(import.meta.dirname, '../../kit/src/runtime/errors.ts'), 'utf8'), { compilerOptions },
+).outputText).toString('base64');
+const executableSource = transpileModule(
+  readFileSync(source, 'utf8').replace("'@loomake/kit'", JSON.stringify(errors)), { compilerOptions },
+).outputText;
 const content = '{"ok":true}\n';
 
 describe('証拠公開中の実プロセスの強制終了', () => {
   it.each(['during-write', 'before-publish', 'after-publish'])('[REQ-175][REQ-176] %sで終了しても最終JSONを保ち、所有者終了後の片付けから再開できる', async (phase) => {
     const root = mkdtempSync(join(tmpdir(), 'loomake-publication-crash-'));
     const file = join(root, 'evidence.json');
-    // 実際のソースをNodeの型除去で実行し、ネイティブ操作の境界だけで待機させる。
+    // 実際のソースを変換し、ネイティブのファイル操作の境界でだけ待機させる。
     const script = `
       import fs from 'node:fs';
-      import { stripTypeScriptTypes, syncBuiltinESMExports } from 'node:module';
-      const source = stripTypeScriptTypes(fs.readFileSync(${JSON.stringify(source)}, 'utf8')).replace("'@loomake/kit'", JSON.stringify(${JSON.stringify(errors)}));
+      import { syncBuiltinESMExports } from 'node:module';
+      const source = ${JSON.stringify(executableSource)};
       const nativeOpen = fs.openSync;
       const nativeWrite = fs.writeFileSync;
       const nativeLink = fs.linkSync;
