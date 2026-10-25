@@ -13,8 +13,11 @@ const quote = (value) => win ? `"${value.replace(/"/g, '""')}"` : value;
 const json = (file) => JSON.parse(readFileSync(file, 'utf8'));
 
 function run(command, args, cwd, expected = 0) {
-  const shell = win && (command === 'pnpm' || command === 'npm' || command.endsWith('.cmd'));
-  const result = spawnSync(shell ? quote(command) : command, shell ? args.map(quote) : args, { cwd, encoding: 'utf8', shell, env: { ...process.env, OPENSPEC_TELEMETRY: '0' } });
+  // PATH から探す固定の名前を引用符で囲むと、pnpm.CMD の %~dp0 がバッチの場所にならない。
+  // 空白を含みうる実行パス（.cmd の絶対パス）と引数は囲む
+  const bare = command === 'pnpm' || command === 'npm';
+  const shell = win && (bare || command.endsWith('.cmd'));
+  const result = spawnSync(shell && !bare ? quote(command) : command, shell ? args.map(quote) : args, { cwd, encoding: 'utf8', shell, env: { ...process.env, OPENSPEC_TELEMETRY: '0' } });
   assert.equal(result.status, expected, `${command} ${args.join(' ')}\n${result.stdout ?? ''}${result.stderr ?? ''}${result.error?.message ?? ''}`);
   return result.stdout;
 }

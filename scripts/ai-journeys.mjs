@@ -23,8 +23,10 @@ export function runJourneys(target) {
     };
     const execute = (current, command, args, cwd, expectedExitCode = 0) => {
       const started = Date.now();
-      const shell = win && (command === 'npm' || command.endsWith('.cmd'));
-      const result = spawnSync(shell ? quote(command) : command, shell ? args.map(quote) : args, { cwd, shell, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 });
+      // PATH から探す固定の名前 npm は囲まない。空白を含みうる実行パス（.cmd の絶対パス）と引数は囲む
+      const bare = command === 'npm';
+      const shell = win && (bare || command.endsWith('.cmd'));
+      const result = spawnSync(shell && !bare ? quote(command) : command, shell ? args.map(quote) : args, { cwd, shell, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 });
       const step = { command, args, expectedExitCode, exitCode: result.status, stdout: result.stdout ?? '', stderr: result.stderr ?? '', durationMs: Date.now() - started };
       current.steps.push(step);
       assert.equal(result.status, expectedExitCode, `${current.id}: ${command} ${args.join(' ')}\n${step.stdout}${step.stderr}${result.error?.message ?? ''}`);
