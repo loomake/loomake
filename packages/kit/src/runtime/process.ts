@@ -75,11 +75,11 @@ function readReport(text: string): { pid?: number; outcome?: Outcome; invalid: b
 }
 
 const pause = (ms: number) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
-/** POSIX で、プロセスグループが消えるまで最大 ms ミリ秒待つ。消えたら true */
-function groupGone(pid: number, ms: number): boolean {
+/** target（POSIX はプロセスグループの -pid、Windows はプロセスの pid）が消えるまで最大 ms ミリ秒待つ。消えたら true */
+function gone(target: number, ms: number): boolean {
   const until = monotonicMs() + ms;
   for (;;) {
-    try { process.kill(-pid, 0); } catch { return true; }
+    try { process.kill(target, 0); } catch { return true; }
     if (monotonicMs() >= until) return false;
     pause(10);
   }
@@ -91,12 +91,14 @@ function groupGone(pid: number, ms: number): boolean {
 function stopTree(pid: number): void {
   if (process.platform === 'win32') {
     spawnSync('taskkill', ['/pid', String(pid), '/T', '/F'], { stdio: 'ignore', timeout: 1000, killSignal: 'SIGKILL', windowsHide: true });
+    // taskkill が返っても、止めたプロセスの終了は少し遅れることがあるので、消えるまで最大 1 秒待つ
+    gone(pid, 1000);
     return;
   }
   try { process.kill(-pid, 'SIGTERM'); } catch { return; }
-  if (groupGone(pid, 250)) return;
+  if (gone(-pid, 250)) return;
   try { process.kill(-pid, 'SIGKILL'); } catch { return; }
-  groupGone(pid, 1000);
+  gone(-pid, 1000);
 }
 
 function utf8Prefix(text: string, bytes: number): string {

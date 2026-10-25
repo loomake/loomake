@@ -182,7 +182,7 @@ let pid = process.ppid;
 let found;
 for (let i = 0; i < 10 && table.has(pid); i++) {
   const entry = table.get(pid);
-  if (/[\\\\/]supervisor\\.cjs|^loomake: command supervisor/.test(entry.command)) { found = { pid, command: entry.command }; break; }
+  if (/[\\\\/]supervisor\\.cjs|^loomake: command supervisor/.test(entry.command)) { found = { pid, command: entry.command, self: process.pid }; break; }
   pid = entry.ppid;
 }
 if (found) {
@@ -194,6 +194,14 @@ if (found) {
   process.exit(1);
 }
 `;
+
+function alive(pid: number) {
+  try {
+    process.kill(pid, 0);
+    if (process.platform === 'linux' && /\) Z /.test(readFileSync(`/proc/${pid}/stat`, 'utf8'))) return false;
+    return true;
+  } catch { return false; }
+}
 
 describe('verifyとtraceの期限', () => {
   it('[REQ-183] traceのGitも共有予算で止める', () => {
@@ -223,11 +231,13 @@ describe('verifyとtraceの期限', () => {
       repo.write('loomake.config.json', JSON.stringify({ openspecValidate: false, commands: { lint: 'node send-sigint.cjs', test: `node -e "require('node:fs').writeFileSync('after','x')"` } }));
       // 祖先の一覧を Windows の PowerShell で読むと数秒かかるので、期限は中断より十分長くする。期限で止まると「中断」を含まず、この試験は落ちる
       const result = withProcessBudget({ timeoutMs: 30_000 }, () => runVerify({ root: repo.root }));
-      const sent = JSON.parse(readFileSync(join(repo.root, 'interrupted.json'), 'utf8')) as { pid?: number; command?: string; error?: string };
+      const sent = JSON.parse(readFileSync(join(repo.root, 'interrupted.json'), 'utf8')) as { pid?: number; command?: string; self?: number; error?: string };
       expect(sent).toMatchObject({ command: expect.stringMatching(/[\\/]supervisor\.cjs|^loomake: command supervisor/) });
       expect(result.results.find((r) => r.check === 'command: lint')).toMatchObject({ status: 'fail', detail: expect.stringContaining('中断') });
       expect(result.results.find((r) => r.check === 'command: test')).toMatchObject({ status: 'fail', detail: expect.stringContaining('中断') });
       expect(existsSync(join(repo.root, 'after'))).toBe(false);
+      // SIGINT を送った品質コマンド自身も、止めてから返す（REQ-181・REQ-250）
+      expect(alive(sent.self!), JSON.stringify(sent)).toBe(false);
     } finally { repo.cleanup(); }
   });
   it('[REQ-183] 明示したtimeoutMsがなくても共有期限で品質コマンドを止める', () => {
