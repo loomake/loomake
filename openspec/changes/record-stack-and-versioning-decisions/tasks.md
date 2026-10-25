@@ -31,7 +31,7 @@
 - [x] 5.1 Q-02 の回答に合わせて、`docs/wbs.md` の W0-2、`docs/overview.md`、`docs/architecture.md` の 6 章・8 章、要件定義 8 章の記述をそろえる。要件定義を先に直す（WBS の冒頭の決まり）
 - [x] 5.2 Q-01 の回答に合わせて、`docs/wbs.md` の W0-3・W1-1、AGENTS.md の「プロジェクト固有の情報」の依存の記述をそろえる。W0-3・W1-1 はすでに core の `zod` と kit の `yaml` を前提にしていて、直す所はなかった。AGENTS.md の依存の記述は、いまの仕様の REQ-046・REQ-047 を根拠にしているので、仕様と同時に 5.3 の change で直す
 - [x] 5.3 回答によって REQ-046 などの仕様を変える必要があれば、別の change として起こす。この change では仕様を変えない。REQ-046・REQ-047 を変える次の change の名前（`allow-zod-and-yaml-runtime-deps`）と範囲を design.md に書いた。change そのものは C-001 の実装の前に作る
-- [ ] 5.4 `docs/requirements-matrix.md` の W0-6・W0-7 の行と、要件定義 11 章の O15 に結果を書く
+- [x] 5.4 `docs/requirements-matrix.md` の W0-6・W0-7 の行と、要件定義 11 章の O15 に結果を書く
 
 ## 6. テストと verify
 
