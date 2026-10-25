@@ -21,7 +21,7 @@ describe.runIf(process.platform !== 'win32')('同じプロセスグループの�
   });
 
   // Linux では /proc と ps の両方の経路を試す。ps の先頭文字の意味は macOS でも同じだが、macOS 自体では実行していない
-  it.each(platforms)('[REQ-207] %s の判定は、動作中の子を数え、強制終了して回収したあとは数えない', async (platform) => {
+  it.each(platforms)('[REQ-212] %s の判定は、動作中の子を数え、強制終了して回収したあとは数えない', async (platform) => {
     const child = await groupLeader(idle);
     children.push(child);
     expect(activeGroupMembers(child.pid!, platform)).toEqual([child.pid]);
@@ -30,7 +30,7 @@ describe.runIf(process.platform !== 'win32')('同じプロセスグループの�
     expect(activeGroupMembers(child.pid!, platform)).toEqual([]);
   });
 
-  it.each(platforms)('[REQ-207] %s の判定は、回収されていないゾンビを動作中と数えない', async (platform) => {
+  it.each(platforms)('[REQ-212] %s の判定は、回収されていないゾンビを動作中と数えない', async (platform) => {
     // 子は孫を起動したあと SIGCHLD を処理できないので、終わった孫はゾンビのまま同じグループに残る
     const child = await groupLeader(`const grandchild = require('node:child_process').spawn(process.execPath, ['-e', 'setTimeout(() => process.exit(0), 200)']);
 process.stdout.write('ready');
@@ -40,7 +40,7 @@ Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0);`);
     expect(activeGroupMembers(child.pid!, platform)).toEqual([child.pid]);
   });
 
-  it('[REQ-207] 待機は、動作中のメンバーが終了するまで戻らず、戻った時点でメンバーは動作していない', async () => {
+  it('[REQ-212] 待機は、動作中のメンバーが終了するまで戻らず、戻った時点でメンバーは動作していない', async () => {
     const child = await groupLeader(idle);
     children.push(child);
     setTimeout(() => child.kill('SIGKILL'), 150);
@@ -51,7 +51,7 @@ Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0);`);
     expect(activeGroupMembers(child.pid!)).toEqual([]);
   });
 
-  it('[REQ-207] 待機は、上限までにメンバーが終了しなければ false を返して戻る', async () => {
+  it('[REQ-212] 待機は、上限までにメンバーが終了しなければ false を返して戻る', async () => {
     const child = await groupLeader(idle);
     children.push(child);
     const started = Date.now();
@@ -60,11 +60,11 @@ Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0);`);
     expect(activeGroupMembers(child.pid!)).toEqual([child.pid]);
   });
 
-  it('[REQ-207] 待機の上限の既定値は、仕様どおり 1000ms である', () => {
+  it('[REQ-212] 待機の上限の既定値は、仕様どおり 1000ms である', () => {
     expect(GROUP_EXIT_TIMEOUT_MS).toBe(1000);
   });
 
-  it('[REQ-207] 存在しないグループの待機はすぐに戻る', async () => {
+  it('[REQ-212] 存在しないグループの待機はすぐに戻る', async () => {
     const child = spawn(process.execPath, ['-e', 'process.exit(0)'], { stdio: 'ignore', detached: true });
     await once(child, 'exit');
     expect(await waitForGroupExit(child.pid!, { timeoutMs: 1000 })).toBe(true);

@@ -66,7 +66,7 @@ export function claudeArgs(commands: string[], skipPermissions: boolean): string
 }
 
 /**
- * エンジンと子孫を停止する。POSIXでは猶予後にグループ全体を強制終了し、メンバーが動作していなくなるのを待ってから戻る（REQ-207）。
+ * エンジンと子孫を停止する。POSIXでは猶予後にグループ全体を強制終了し、メンバーが動作していなくなるのを待ってから戻る（REQ-212）。
  * 自分の子は exit で回収し、孫はゾンビか消滅を「動作していない」とみなすので、init が回収しない環境でも待ち続けない
  */
 function stop(child: ChildProcess, skipMissingGroup = false): Promise<void> {

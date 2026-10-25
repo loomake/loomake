@@ -5,7 +5,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 export const GROUP_EXIT_TIMEOUT_MS = 1000;
 
 /**
- * 同じプロセスグループで、まだ終了処理を終えていないメンバーの PID を返す（REQ-207）。
+ * 同じプロセスグループで、まだ終了処理を終えていないメンバーの PID を返す（REQ-212）。
  * ゾンビは利用者のコードを実行できず、親が回収するまで残るだけなので数えない。
  * Linux は /proc を読み、ほかの POSIX は ps の stat を見る。どちらも読めなければ、グループへのシグナル 0 で存否だけを見る
  */

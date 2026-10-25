@@ -34,20 +34,20 @@ describe.runIf(process.platform !== 'win32')('試験用の子プロセスの状�
     }
   });
 
-  it('[REQ-207] ps の経路は、回収されていないゾンビを zombie と判定する', async () => {
+  it('[REQ-212] ps の経路は、回収されていないゾンビを zombie と判定する', async () => {
     const { holder, zombie } = await zombieHolder();
     children.push(holder);
     expect(withPlatform('darwin', () => processState(zombie))).toBe('zombie');
     expect(processState(zombie)).toBe('zombie');
   });
 
-  it('[REQ-207] ps の経路は、終了して回収済みの PID を missing と判定する', async () => {
+  it('[REQ-212] ps の経路は、終了して回収済みの PID を missing と判定する', async () => {
     const child = spawn(process.execPath, ['-e', 'process.exit(0)'], { stdio: 'ignore' });
     await once(child, 'exit');
     expect(withPlatform('darwin', () => processState(child.pid))).toBe('missing');
   });
 
-  it('[REQ-207] ps の経路は、動作中のプロセスを running と判定する', () => {
+  it('[REQ-212] ps の経路は、動作中のプロセスを running と判定する', () => {
     expect(withPlatform('darwin', () => processState(process.pid))).toBe('running');
     expect(processState(undefined)).toBe('not-started');
   });

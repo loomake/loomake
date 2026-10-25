@@ -4,7 +4,7 @@
 
 | ID | 出典 | 種別 | 要約（原文に忠実に） | 状態 | 反映先 |
 |---|---|---|---|---|---|
-| REQ-207 | 本会話のセキュリティ再レビュー後の仕様先行と修正の承認、../archive/2026-10-24-audit-scenario-evidence/security-followup-proposal.mdの確認した事実1・推奨する変更範囲 | 非機能 | 正常終了したPOSIXエンジンと同じプロセスグループの子を停止し、後処理を待ってから戻る | 反映済 | specs/run/spec.md |
+| REQ-212 | 本会話のセキュリティ再レビュー後の仕様先行と修正の承認、../archive/2026-10-24-audit-scenario-evidence/security-followup-proposal.mdの確認した事実1・推奨する変更範囲 | 非機能 | 正常終了したPOSIXエンジンと同じプロセスグループの子を停止し、後処理を待ってから戻る | 反映済 | specs/run/spec.md |
 | REQ-208 | 同承認、../archive/2026-10-24-audit-scenario-evidence/security-followup-proposal.mdの確認した事実2・推奨する変更範囲 | 非機能 | フック内の特殊ファイルを開く前に拒否し、日本語で対象と理由を示してコミット前に止める | 反映済 | specs/run-guards/spec.md |
 | REQ-209 | 同承認、../archive/2026-10-24-audit-scenario-evidence/security-followup-proposal.mdの確認した事実3・推奨する変更範囲、REQ-204のリンク契約 | 制約 | リンク先をたどらない比較を保ち、リンク先のコードとプロセス停止の保護範囲を文書に明記する | 反映済 | specs/run-guards/spec.md |
 
@@ -17,11 +17,11 @@
 
 | ID | 関連 | 仮定の内容 | 理由 | 承認 |
 |---|---|---|---|---|
-| A-01 | REQ-207 | SIGKILLのあとに同じプロセスグループの終了を待つ上限は1000msとする | 実装の既定値（`GROUP_EXIT_TIMEOUT_MS`）から採った。カーネル内で待ち続ける子でrun全体を止めないための上限で、利用者が2026-10-25に承認した | 承認済（2026-10-25） |
+| A-01 | REQ-212 | SIGKILLのあとに同じプロセスグループの終了を待つ上限は1000msとする | 実装の既定値（`GROUP_EXIT_TIMEOUT_MS`）から採った。カーネル内で待ち続ける子でrun全体を止めないための上限で、利用者が2026-10-25に承認した | 承認済（2026-10-25） |
 
 ## 決定と範囲
 
-新しいREQUIREMENTのIDは、既存の要件台帳の最大REQ-206に続くREQ-207〜REQ-209を使う。既存の別changeで重複しているREQ-204は今回付け替えない。フックのリンク契約はfix-guard-review-findingsのREQ-204を指し、run-decision-policyの判断分離を指すものではない。
+新しいREQUIREMENTのIDは、作成時点の要件台帳の最大REQ-206に続くREQ-207〜REQ-209を使った。その後、先にmainへ入ったlayer-kit-modulesがkitの依存方向にREQ-207を使っていたため、2026-10-25にこのchangeのREQ-207を未使用のREQ-212へ振り直した。tests/kit-layers.test.tsのREQ-207はkit側の要件で、変えていない。既存の別changeで重複しているREQ-204は今回付け替えない。フックのリンク契約はfix-guard-review-findingsのREQ-204を指し、run-decision-policyの判断分離を指すものではない。
 
 POSIXでは同じプロセスグループを停止する。別のセッションへ離脱した子の追跡と、Windowsでの通常終了後の子の停止の保証は今回追加しない。Windowsの明示停止時の既存taskkillは維持する。親の終了時点から後処理を始め、既存の結果と中断・時間切れ・出力上限を保つ方針はdesign.mdに記載した。
 

@@ -7042,7 +7042,7 @@
       "scenarioSha256": "80d9e91db2879c6bf61027df895bb28067c3cceb21dfaacfa546ddd0bc03ac95",
       "reason": "子の起動とPIDを確認し、runClaudeが戻った時点の停止状態と、戻ってから1100ms後も遅延ファイルがないことを、試験自身の回収前にassertする。",
       "sources": [
-        "REQ-207"
+        "REQ-212"
       ],
       "tests": [
         {
@@ -7058,7 +7058,7 @@
       "scenarioSha256": "019dabba35c3566a34e6b6fe79c967af5340b4c48593da06b3878bec5c7b5575",
       "reason": "SIGTERMの受信後も終了しない子を、標準出力を共有しない場合と継承する場合で起動し、戻り時点の停止と遅延書き込みなし、親の出力と終了コード・フラグの保持をassertする。",
       "sources": [
-        "REQ-207"
+        "REQ-212"
       ],
       "tests": [
         {
@@ -7079,7 +7079,7 @@
       "scenarioSha256": "7503b8f02a947f1484c403bf515744f9382428f97fa19639b964256f4962ebe4",
       "reason": "通常のJSON出力と終了コード0、本文と元の出力、時間切れ・中断・出力上限の各falseをassertする。",
       "sources": [
-        "REQ-207"
+        "REQ-212"
       ],
       "tests": [
         {
@@ -7095,7 +7095,7 @@
       "scenarioSha256": "ea5b40938cebc86adff43d3755202f516930771f228d76a8d1c3750ef0ab0690",
       "reason": "非ゼロ終了と通常出力を渡し、終了コード1と出力を保ち、中断や時間切れ・出力上限にしないことをassertする。",
       "sources": [
-        "REQ-207"
+        "REQ-212"
       ],
       "tests": [
         {

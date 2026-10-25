@@ -61,7 +61,7 @@ describe.runIf(process.platform !== 'win32')('POSIXエンジンの正常終了�
     { name: '標準入出力を共有しない子', ignoreTerm: false, inheritOutput: false },
     { name: 'SIGTERMを無視し標準入出力を共有しない子', ignoreTerm: true, inheritOutput: false },
     { name: 'SIGTERMを無視し出力を共有する子', ignoreTerm: true, inheritOutput: true },
-  ])('[REQ-207] 戻る前に $name を停止し、遅延書き込みを防ぐ', async ({ ignoreTerm, inheritOutput }) => {
+  ])('[REQ-212] 戻る前に $name を停止し、遅延書き込みを防ぐ', async ({ ignoreTerm, inheritOutput }) => {
     await withEngine(parentSource(ignoreTerm, inheritOutput), async (root, result) => {
       expect(readFileSync(join(root, 'child.ready'), 'utf8')).toBe('ready');
       const pid = Number(readFileSync(join(root, 'child.pid'), 'utf8'));
@@ -80,7 +80,7 @@ describe.runIf(process.platform !== 'win32')('POSIXエンジンの正常終了�
     });
   });
 
-  it('[REQ-207] 戻った時点でSIGTERMを無視する子は終了途中ではなく、消滅かゾンビになっている', async () => {
+  it('[REQ-212] 戻った時点でSIGTERMを無視する子は終了途中ではなく、消滅かゾンビになっている', async () => {
     await withEngine(parentSource(true, false), async (root, result) => {
       const pid = Number(readFileSync(join(root, 'child.pid'), 'utf8'));
       // 強制終了を送っただけで戻ると、子はまだ終了処理の途中で見える。後処理を待った実装では消滅かゾンビになっている
@@ -89,13 +89,13 @@ describe.runIf(process.platform !== 'win32')('POSIXエンジンの正常終了�
     });
   });
 
-  it('[REQ-207] 通常のJSON出力と終了コード0を保ち、停止フラグを付けない', async () => {
+  it('[REQ-212] 通常のJSON出力と終了コード0を保ち、停止フラグを付けない', async () => {
     await withEngine("process.stdout.write('{\"result\":\"control\"}', () => process.exit(0));", async (_root, result) => {
       expectNormal(result, 0, '{"result":"control"}', 'control');
     });
   });
 
-  it('[REQ-207] 非ゼロの終了コードと生の出力を保ち、停止フラグを付けない', async () => {
+  it('[REQ-212] 非ゼロの終了コードと生の出力を保ち、停止フラグを付けない', async () => {
     await withEngine("process.stdout.write('plain failure', () => process.exit(1));", async (_root, result) => {
       expectNormal(result, 1, 'plain failure', 'plain failure');
     });
