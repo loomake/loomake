@@ -22,4 +22,21 @@ C-001（WBS 5 章）は core のスキーマ（W1-1）・契約テスト（W1-2�
 
 ## Risks
 
-- 別の担当がマージ済みの change の archive と ID の振り直しを並行して進めている。この change は REQ-214 から番号を振った。振り直しで番号が重なったら、この change の番号を合わせて直す
+- 別の担当がマージ済みの change の archive と ID の振り直しを並行して進めている。番号が重なったら、この change の番号を合わせて直す
+
+## 要件 ID の振り直し（2026-10-26）
+
+この change は最初 REQ-214〜223 を使っていた。PR #11（change `speed-up-ci`）が REQ-214・REQ-215 を、PR #13（マージ済みの change の archive）が REQ-224・REQ-225 を使っているため、開いているすべての PR のブランチと `origin/main` で使われていない REQ-226〜235 に振り直した。要約は trace.md の要件台帳のとおりで、中身は変えていない。
+
+| 旧 ID | 新 ID | 要約 |
+|---|---|---|
+| REQ-214 | REQ-226 | 版管理の方式（changesets か `npm version`）を決める |
+| REQ-215 | REQ-227 | `0.x` の互換性の方針を決める |
+| REQ-216 | REQ-228 | 成果物は ADR。方式が決まり、CONTRIBUTING.md に書かれる |
+| REQ-217 | REQ-229 | 開発効率の手書きの記録様式を決める |
+| REQ-218 | REQ-230 | C-001 の着手前に事前見積もりを記録し、あとで書き換えない |
+| REQ-219 | REQ-231 | core の契約を Zod スキーマで定義する（実行時の依存は core の zod と kit の yaml に限る） |
+| REQ-220 | REQ-232 | パッケージ管理・テスト・lint の技術スタック（npm workspaces・`node:test`・Biome） |
+| REQ-221 | REQ-233 | `0.x` の間の形式の互換性（要件定義 7.3） |
+| REQ-222 | REQ-234 | 原則への例外と重要な設計変更を ADR に残す |
+| REQ-223 | REQ-235 | 開発効率の集計（W1-9。範囲外） |
