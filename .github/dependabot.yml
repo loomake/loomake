@@ -9,3 +9,7 @@ updates:
     groups:
       development:
         dependency-type: development
+    # typescript-eslint が TS 7 に対応するまで、typescript のメジャー更新は扱わない（PR #1）
+    ignore:
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
