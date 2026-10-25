@@ -6,7 +6,7 @@ WBS（`docs/wbs.md` v1.3.1）の W0-6（版管理の方式と `0.x` の互換性
 
 C-001 を始める前に、決まっていないことが 2 つある。1 つは core の契約を Zod で書くかどうかである。WBS の W1-1 と要件定義 v0.11.1 の NFR-01・NFR-02 は Zod を前提にしている。一方、いまの仕様（REQ-046）は `@loomake/core` の実行時依存をゼロと定めている。もう 1 つは技術スタックである。要件定義 8 章・アーキテクチャ 6 章・WBS の W0-2・`docs/overview.md` は npm workspaces・`node:test`・Biome と書いているが、リポジトリは pnpm・Vitest・ESLint で動いている。
 
-どちらも利用者が判断することなので、この change では決めない。確認事項として選択肢とおすすめを示し、仕様ゲートで止める。
+どちらも利用者が判断することなので、確認事項として選択肢とおすすめを示し、仕様ゲートで止めた。利用者は 2026-10-26 に 3 件とも A と回答した（trace.md の Q-01〜Q-03、design.md の Decisions）。
 
 ## What Changes
 
@@ -34,6 +34,6 @@ C-001 を始める前に、決まっていないことが 2 つある。1 つは
 
 ## Impact
 
-- 文書：CONTRIBUTING.md、ADR（置き場はタスク 1.1 で決める）、`docs/wbs.md`、`docs/overview.md`、`docs/architecture.md`、`docs/requirements/loomake-v0.11.md`
+- 文書：CONTRIBUTING.md、ADR（`docs/adr/`）、開発効率の記録（`docs/effort/`）、`docs/wbs.md`、`docs/overview.md`、`docs/architecture.md`、`docs/requirements/loomake-v0.11.md`、`docs/requirements-matrix.md`
 - コード：配布するパッケージは変えない。差分仕様を確かめるテストを `tests/` に足す
 - 差分仕様について：CONTRIBUTING.md には「文書だけの修正で新しい製品の振る舞いがない場合は、そのためだけに製品の Requirement を作らない」とある。一方、verify は `specs/` のない change を失敗にする（`packages/kit/src/verify/run.ts` の「差分仕様」の検査）。archive 済みの change 63 件にも、`specs/` のないものはない。この change の Requirement は、`monorepo` の「MIT ライセンス」や「changesets による公開準備」と同じく、製品の振る舞いではなくリポジトリの決まりとして書いた

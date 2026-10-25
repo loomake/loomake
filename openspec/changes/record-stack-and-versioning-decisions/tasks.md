@@ -37,4 +37,4 @@
 
 - [x] 6.1 REQ-227・REQ-228・REQ-229・REQ-230・REQ-234 を確かめるテストを `tests/` に書く。テスト名に要件 ID を入れる
 - [x] 6.2 空の changeset を足し、公開対象がないことを示す
-- [ ] 6.3 `pnpm -s verify --change record-stack-and-versioning-decisions --done` を通す <!-- loomake:gate=done -->
+- [x] 6.3 `pnpm -s verify --change record-stack-and-versioning-decisions --done` を通す <!-- loomake:gate=done -->
