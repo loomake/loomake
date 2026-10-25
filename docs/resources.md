@@ -65,7 +65,7 @@ node openspec/changes/archive/2026-10-24-bound-input-resources/benchmark.mjs .lo
 
 時間は入力処理の開始から受理・拒否までとする。ピークRSSはモジュールの読み込みとfixture作成も含むプロセス全体の値である。ファイル作成後の読み取りなので、キャッシュのあるこのホストでの結果として扱う。bytesは対象ファイルの内容量で、指示の試験では別に16MiBの失敗情報を加える。
 
-結果とソースのハッシュは[results.json](../openspec/changes/archive/2026-10-24-bound-input-resources/results.json)に記録する。この測定はCLI全体、ネットワークファイルシステム、別OS、顧客の全規模での性能を示すものではない。
+結果とソースのハッシュは[results.json](../openspec/changes/archive/2026-10-24-bound-input-resources/results.json)に記録する。この測定はCLI全体、ネットワークファイルシステム、別OS、利用者の全規模での性能を示すものではない。
 
 ## 外部操作の時間と出力
 

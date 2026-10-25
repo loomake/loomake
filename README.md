@@ -2,12 +2,12 @@
 
 要件書・仕様書から AI 駆動で開発するためのツール群。[OpenSpec](https://github.com/Fission-AI/OpenSpec) の上に「要件書からの入口」と「守らせる仕組み」を足す。
 
-Loomake は、品質駆動開発のツール群として、自社プロダクトと OSS（Loomake 自身を含む）の開発に使う方向に進めている。構想や Issue から仕様を起こし、4 値（PASS / FAIL / INSUFFICIENT_EVIDENCE / NOT_APPLICABLE）の判定が通るまで実装を回し、リリースの根拠をリリース記録に残し、使われた結果を次の仕様に戻す。向かう先の全体像は [docs/overview.md](docs/overview.md)、設計の正本は [要件定義](docs/requirements/loomake-v0.11.md) と [アーキテクチャ](docs/architecture.md) にある。この README に書いた使い方は、いま動く機能のもの。`docs/` の一部と trace のレポートには、受託向けだった時期の用語（要件書、検収、顧客）が残っていて、順に置き換えている。
+Loomake は、品質駆動開発のツール群として、自社プロダクトと OSS（Loomake 自身を含む）の開発に使う方向に進めている。構想や Issue から仕様を起こし、4 値（PASS / FAIL / INSUFFICIENT_EVIDENCE / NOT_APPLICABLE）の判定が通るまで実装を回し、リリースの根拠をリリース記録に残し、使われた結果を次の仕様に戻す。向かう先の全体像は [docs/overview.md](docs/overview.md)、設計の正本は [要件定義](docs/requirements/loomake-v0.11.md) と [アーキテクチャ](docs/architecture.md) にある。この README に書いた使い方は、いま動く機能のもの。`trace report` が出す「検収レポート」と、仕様・コード・配布テンプレートの一部には、受託向けだった時期の用語が残っていて、リリース記録とリリースレポートへの置き換えを change として進めている。
 
 - 要件書を、出典つきの OpenSpec change に変える（req-to-openspec Skill）
 - AI が従う共通ルールを置く（AGENTS.md）
 - 未確定の要件が残る間は実装させず、全要件にテストがあることを機械的に確かめる（`loomake verify`）
-- 検査の結果を証拠として記録し、顧客に渡す検収レポートを作る（`loomake trace`）
+- 検査の結果を証拠として記録し、要件ごとの検査結果をまとめた検収レポートを作る（`loomake trace`）
 - tasks を AI に実装させ、完了ゲートが通るまで直させて、PR を出す（`loomake run`）
 
 ```sh
