@@ -8,4 +8,4 @@
 - [x] 2.1 各 Scenario に対応するテストの期待値を新しい文面に合わせる。テスト名に [REQ-xxx] を入れる
 
 ## 3. 確認
-- [ ] 3.1 `pnpm -s verify --change rename-acceptance-to-release --done` を通す <!-- loomake:gate=done -->
+- [x] 3.1 `pnpm -s verify --change rename-acceptance-to-release --done` を通す <!-- loomake:gate=done -->
