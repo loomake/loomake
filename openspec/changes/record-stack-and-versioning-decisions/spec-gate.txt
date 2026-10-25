@@ -1,0 +1,28 @@
+$ pnpm -r --silent build && node packages/cli/dist/cli.js verify --change record-stack-and-versioning-decisions --spec-only
+
+Loomake verify  mode=spec-only  change=record-stack-and-versioning-decisions
+
+✔ change の存在
+✔ proposal.md の存在
+✔ tasks.md の存在
+✔ trace.md の存在
+✔ 要件モデルの整合性
+✔ trace.md の解析
+✔ 要件台帳
+✖ ブロッキング確認事項
+    Q-01（REQ-219, REQ-046）core の契約（trace.md・spec・tasks・quality.yaml・verify JSON のスキーマ）を Zod で書きますか。WBS の W1-1 と要件定義 v0.11.1 の NFR-01（「実行時の依存は `@loomake/core` の `zod` と `@loomake/kit` の `yaml` に限る」）・NFR-02（「契約は Zod スキーマで定義し、型を導出し、重複定義しない」）は Zod を前提にしています。一方、いまの仕様の REQ-046（「`@loomake/core` は実行時の外部依存をゼロにすること」。出典は要件定義書 v0.1 N-01）と AGENTS.md は、core の実行時依存をゼロと定めています。決まらないと、C-001 の W1-1 の作り方と事前見積もりが決まりません
+    Q-02（REQ-220）開発の技術スタックを、リポジトリと文書のどちらにそろえますか。要件定義 v0.11.1 の 8 章、アーキテクチャ v2.5.3 の 6 章、WBS の W0-2、`docs/overview.md` は「npm workspaces、`node:test`、Biome」と書いています。実際のリポジトリは pnpm workspaces・Vitest・ESLint（typescript-eslint）・changesets で動いています。`docs/overview.md` にも「どちらに揃えるかはまだ決めていない」とあります。決まらないと、C-001 のテストと lint の書き方、事前見積もり、文書の直し方が決まりません
+    Q-03（REQ-215, REQ-221, REQ-053）`0.x` の間、マイナー版で破壊的変更を許しますか。`docs/compatibility.md` の「変更を公開する判断」には「現在の 0.x では、破壊的変更は minor の変更として扱い、単に patch へ含めない」とあります。ただし、これを決めた ADR はありません。関係する決まりが 2 つあります。いまの仕様の REQ-053 は「verify の JSON スキーマに破壊的変更を入れるときは `schemaVersion` のメジャー番号を上げる」と定めています。要件定義 7.3 は「`0.x` の間はフィールドの追加は版を上げずに行い、削除・意味の変更・判定値の追加・終了コードの変更は `version` を上げて移行方法を添える」としています。7.3 の「`0.x`」がパッケージの版と形式の版のどちらを指すかは、本文からは読み取れません。決まらないと、W0-6 の ADR と CONTRIBUTING.md の記述を書けません
+✔ 同じ確認事項の回答
+! 確認待ちの要件
+    REQ-215, REQ-219, REQ-220, REQ-221
+✔ spec.md の解析
+✔ Requirement の Source
+✔ Source が台帳にある
+✔ Scenario の有無
+✔ 反映済の要件が仕様にある
+✔ openspec validate
+
+不合格（1 件）
+[ELIFECYCLE] Command failed with exit code 1.
+exit=1
