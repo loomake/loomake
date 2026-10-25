@@ -249,12 +249,11 @@ describe('verifyとtraceの期限', () => {
       expect(alive(sent.self!), JSON.stringify(sent)).toBe(false);
     } catch (error) {
       failure = error;
-      throw error;
-    } finally {
-      // 後片付けの失敗で、先の検査の失敗を隠さない。残ったプロセスがあれば一緒に示す
-      try { repo.cleanup(); }
-      catch (error) { throw new Error(`後片付けに失敗しました：${String(error)}\n先の失敗：${String(failure)}\n残ったプロセス：${leftovers('send-sigint')}`); }
     }
+    // 後片付けの失敗で、先の検査の失敗を隠さない。残ったプロセスがあれば一緒に示す
+    try { repo.cleanup(); }
+    catch (error) { throw new Error(`後片付けに失敗しました：${String(error)}\n先の失敗：${String(failure)}\n残ったプロセス：${leftovers('send-sigint')}`, { cause: error }); }
+    if (failure !== undefined) throw failure as Error;
   });
   it('[REQ-183] 明示したtimeoutMsがなくても共有期限で品質コマンドを止める', () => {
     const repo = makeRepo();
