@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
-import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { chmodSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -10,6 +11,20 @@ import { CHANGE, makeRepo, type Repo } from './helpers.js';
 const runnerSource = join(import.meta.dirname, '../src');
 const packages = join(import.meta.dirname, '../..');
 const compilerOptions = { module: ModuleKind.ESNext, target: ScriptTarget.ES2022 };
+const DEPENDENCIES = ['core', 'kit', 'trace'] as const;
+
+// 子プロセスは vitest の alias を使えないので、依存パッケージも dist ではなく src から変換して読む（CI は build の前に test を動かす）。
+let dependencies: string | undefined;
+const dependencyIndex = (name: string) => pathToFileURL(join(dependencies!, name, 'src/index.js')).href;
+const rewriteWorkspaceImports = (content: string) => content.replace(/(['"])@loomake\/(core|kit|trace)\1/g, (_match, _quote: string, name: string) => JSON.stringify(dependencyIndex(name)));
+function compileTree(source: string, target: string, accept: (name: string, directory: boolean) => boolean) {
+  mkdirSync(target, { recursive: true });
+  for (const entry of readdirSync(source, { withFileTypes: true })) {
+    if (!accept(entry.name, entry.isDirectory())) continue;
+    if (entry.isDirectory()) { compileTree(join(source, entry.name), join(target, entry.name), accept); continue; }
+    writeFileSync(join(target, entry.name.replace(/\.ts$/, '.js')), transpileModule(rewriteWorkspaceImports(readFileSync(join(source, entry.name), 'utf8')), { compilerOptions }).outputText);
+  }
+}
 
 // guards.tsを含む現在のrunnerのソースを読み込む。
 type ProbeKind = 'snapshot' | 'run';
@@ -17,19 +32,7 @@ function executableRunner(base: string, kind: ProbeKind): string {
   const output = join(base, 'runner-probe');
   mkdirSync(output);
   writeFileSync(join(output, 'package.json'), '{"type":"module"}');
-  const compile = (source: string, target: string) => {
-    mkdirSync(target, { recursive: true });
-    for (const entry of readdirSync(source, { withFileTypes: true })) {
-      if (entry.isDirectory()) {
-        if (kind === 'run') compile(join(source, entry.name), join(target, entry.name));
-        continue;
-      }
-      if (!entry.name.endsWith('.ts') || (kind === 'snapshot' && !['guards.ts', 'git.ts'].includes(entry.name))) continue;
-      const content = readFileSync(join(source, entry.name), 'utf8').replace(/(['"])@loomake\/(core|kit|trace)\1/g, (_match, _quote: string, name: string) => JSON.stringify(pathToFileURL(join(packages, name, 'dist/index.js')).href));
-      writeFileSync(join(target, entry.name.replace(/\.ts$/, '.js')), transpileModule(content, { compilerOptions }).outputText);
-    }
-  };
-  compile(runnerSource, output);
+  compileTree(runnerSource, output, (name, directory) => directory ? kind === 'run' : name.endsWith('.ts') && (kind === 'run' || ['guards.ts', 'git.ts'].includes(name)));
   return output;
 }
 
@@ -37,7 +40,7 @@ function probe(repo: Repo, modules: string, kind: ProbeKind, action: string, tim
   const imports = kind === 'snapshot'
     ? `const { gitInternals } = await import(${JSON.stringify(pathToFileURL(join(modules, 'guards.js')).href)});`
     : `const { runRun } = await import(${JSON.stringify(pathToFileURL(join(modules, 'run.js')).href)});`;
-  const script = `import { writeSync } from 'node:fs';\nconst started = performance.now();\nconst phase = (name) => writeSync(2, JSON.stringify({ phase: name, elapsedMs: performance.now() - started }) + '\\n');\nphase('child-started');\n${imports}\nconst { UsageError } = await import(${JSON.stringify(pathToFileURL(join(packages, 'kit/dist/index.js')).href)});\nphase('imports-ready');\nwriteSync(1, 'probe-started\\n');\nphase(${JSON.stringify(kind + '-started')});\n${action}\nphase(${JSON.stringify(kind + '-finished')});`;
+  const script = `import { writeSync } from 'node:fs';\nconst started = performance.now();\nconst phase = (name) => writeSync(2, JSON.stringify({ phase: name, elapsedMs: performance.now() - started }) + '\\n');\nphase('child-started');\n${imports}\nconst { UsageError } = await import(${JSON.stringify(dependencyIndex('kit'))});\nphase('imports-ready');\nwriteSync(1, 'probe-started\\n');\nphase(${JSON.stringify(kind + '-started')});\n${action}\nphase(${JSON.stringify(kind + '-finished')});`;
   const result = spawnSync(process.execPath, ['--input-type=module', '-e', script], { cwd: repo.root, env: repo.env, encoding: 'utf8', timeout, killSignal: 'SIGKILL', maxBuffer: 1024 * 1024 });
   expect(result.stdout, result.stderr).toContain('probe-started\n');
   expect(result.error, result.stderr).toBeUndefined();
@@ -61,6 +64,20 @@ const targetReason = (value: { code: number; output: string[] }, file: string) =
 
 // 実際のPOSIXのFIFOとUnixソケットを使う。Windowsでの動作を示す試験ではない。
 describe.runIf(process.platform !== 'win32')('フック内の特殊ファイルの実プロセス検査', () => {
+  beforeAll(() => {
+    dependencies = mkdtempSync(join(tmpdir(), 'loomake-probe-deps-'));
+    writeFileSync(join(dependencies, 'package.json'), '{"type":"module"}');
+    for (const name of DEPENDENCIES) {
+      compileTree(join(packages, name, 'src'), join(dependencies, name, 'src'), (entry, directory) => directory || entry.endsWith('.ts'));
+      // kit は src/ の 2 つ上にある supervisor/ と templates/ を実行時に読む
+      for (const asset of ['supervisor', 'templates']) {
+        const from = join(packages, name, asset);
+        if (existsSync(from)) cpSync(from, join(dependencies, name, asset), { recursive: true });
+      }
+    }
+  });
+  afterAll(() => { if (dependencies) rmSync(dependencies, { recursive: true, force: true }); });
+
   it('[REQ-208] 通常ファイルのスナップショットは外側の期限内に返る', () => {
     const repo = makeRepo();
     try {
