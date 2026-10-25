@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
@@ -16,7 +16,8 @@ function alive(pid: number) {
     return true;
   } catch { return false; }
 }
-function fixture(action: (dir: string) => void) { const dir = mkdtempSync(join(tmpdir(), 'loomake-process ')); try { action(dir); } finally { rmSync(dir, { recursive: true, force: true }); } }
+// macOS の tmpdir は /var → /private/var のシンボリックリンクなので、子プロセスの cwd と比べられるよう実パスにする
+function fixture(action: (dir: string) => void) { const dir = realpathSync(mkdtempSync(join(tmpdir(), 'loomake-process '))); try { action(dir); } finally { rmSync(dir, { recursive: true, force: true }); } }
 
 describe('同期外部操作の監視', () => {
   it('[REQ-180][REQ-183] 引数・cwd・環境・通常の終了とstdout/stderrを維持する', () => fixture((dir) => {
