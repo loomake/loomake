@@ -7,7 +7,7 @@ Loomake is a toolkit for AI-driven development that starts from requirement docu
 - Turn a requirements document into an OpenSpec change with sources for every requirement (the `req-to-openspec` skill)
 - Give AI agents one set of rules to follow (`AGENTS.md`)
 - Refuse to start implementation while blocking questions are unanswered, and check that every requirement has a passing test (`loomake verify`)
-- Record the results as evidence and produce an acceptance report that lists the result for every requirement (`loomake trace`)
+- Record the results as evidence and produce a release report that lists the result for every requirement (`loomake trace`)
 - Let an AI engine implement the tasks, fix them until the done gate passes, and open a pull request (`loomake run`)
 
 > **Status:** not yet published to npm. CLI messages and most documents are in Japanese.
@@ -21,7 +21,7 @@ npx loomake verify --change <id> --spec-only      # spec gate: may implementatio
 npx loomake verify --change <id> --done           # done gate: tests per requirement and quality commands
 npx loomake run --change <id>                     # let the AI engine implement the change and open a PR
 npx loomake trace record --change <id>            # record evidence
-npx loomake trace report --change <id>            # produce the acceptance report
+npx loomake trace report --change <id>            # produce the release report
 ```
 
 Options that take a value accept both `--change <id>` and `--change=<id>`. Run `npx loomake --help` or `npx loomake <command> --help` for details.
@@ -53,7 +53,7 @@ A requirement counts as tested when a **passing** test has its ID in the name, f
 |---|---|
 | `@loomake/core` | Parsers for trace.md, spec.md, tasks.md and test reports, and the JSON schema of the verify result (no runtime dependencies) |
 | `@loomake/kit` | `verify`, `init` and `doctor`, and the templates that `init` places |
-| `@loomake/trace` | Evidence records and acceptance reports |
+| `@loomake/trace` | Evidence records and release reports |
 | `@loomake/runner` | `loomake run` |
 | `loomake` | The CLI |
 

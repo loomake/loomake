@@ -131,7 +131,7 @@ describe('コマンドの入力予算', () => {
     }
     const out: string[] = [];
     expect(runReport({ root, changeId: 'c1', stdout: (t) => out.push(t) })).toBe(0);
-    expect(out.join('\n')).toContain('# 検収レポート：c1');
+    expect(out.join('\n')).toContain('# リリースレポート：c1');
   }), 30_000);
 
   it('[REQ-171][REQ-209] 同じ秒の証拠の合計が128MiBを超えても、先頭だけを比べて最新の証拠を選び、レポートを出す', () => withProject({}, (root) => {

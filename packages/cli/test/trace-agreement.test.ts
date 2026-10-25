@@ -30,9 +30,9 @@ describe('確認事項の回答を書く', () => {
   it('[REQ-202] 回答・回答者・回答日を書き、仕様ゲートが通るようになる', async () => {
     await withProject({ trace: fullTrace() }, async (root) => {
       expect((await run(root, 'verify', '--change', CHANGE, '--spec-only')).code).toBe(1);
-      const r = await run(root, 'trace', 'answer', '--change', CHANGE, '--question', 'Q-01', '--answer', '5 回', '--by', '顧客担当', '--date', '2026-10-24');
+      const r = await run(root, 'trace', 'answer', '--change', CHANGE, '--question', 'Q-01', '--answer', '5 回', '--by', '担当者', '--date', '2026-10-24');
       expect(r.code, r.stderr).toBe(0);
-      expect(read(root)).toContain('| Q-01 | REQ-012 | 何回ですか | 3 / 5 | 5 | yes | 5 回 | 顧客担当 | 2026-10-24 |');
+      expect(read(root)).toContain('| Q-01 | REQ-012 | 何回ですか | 3 / 5 | 5 | yes | 5 回 | 担当者 | 2026-10-24 |');
       expect(r.stdout).toContain('--spec-only');
       expect((await run(root, 'verify', '--change', CHANGE, '--spec-only')).code).toBe(0);
     });
@@ -40,10 +40,10 @@ describe('確認事項の回答を書く', () => {
 
   it('[REQ-202] 日付を省くと、その日の日付を書く', async () => {
     await withProject({ trace: fullTrace() }, async (root) => {
-      await run(root, 'trace', 'answer', '--change', CHANGE, '--question', 'Q-01', '--answer', '5 回', '--by', '顧客担当');
+      await run(root, 'trace', 'answer', '--change', CHANGE, '--question', 'Q-01', '--answer', '5 回', '--by', '担当者');
       const d = new Date();
       const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      expect(read(root)).toContain(`| 5 回 | 顧客担当 | ${today} |`);
+      expect(read(root)).toContain(`| 5 回 | 担当者 | ${today} |`);
     });
   });
 
