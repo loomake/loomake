@@ -1,8 +1,8 @@
 {
   "kind": "pr47-merge-verification",
   "parents": {
-    "branch": "ea78d57bdbf27095a9cd7dc3955adcd833a504b1",
-    "main": "c8cd4d8cdf4dbd969106b27e87568c54ccc33d9f"
+    "branch": "f0bcdf5ee3bc2875c4a0b4fbf826e410fef893d4",
+    "main": "3e3f16299d594f244eac43d251ed4e67686b698b"
   },
   "conflictFiles": 18,
   "gate": {
@@ -289,7 +289,7 @@
   },
   "github": {
     "pr": "https://github.com/loomake/loomake/pull/47",
-    "verifiedHead": "3d77c6b26e6082c0f8ec879976f3c0f5f6dfef4d",
+    "verifiedHead": "30c08b74c2c70e3ce0f0c12e854028a3c0460bcc",
     "mergeable": "MERGEABLE",
     "ciStarted": false,
     "ciRun": "https://github.com/loomake/loomake/actions/runs/40074204616",

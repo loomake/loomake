@@ -1,5 +1,5 @@
 {
-  "snapshot": "036acf3",
+  "snapshot": "f142892",
   "requirements": [
     "REQ-204",
     "REQ-205",
@@ -27,14 +27,14 @@
   "gateRuns": [
     {
       "change": "isolate-run-decisions",
-      "snapshotCommit": "036acf3",
+      "snapshotCommit": "f142892",
       "exitCode": 0,
       "tests": 764,
       "logSha256": "1ee7d6689068fa88e23dc8ed567ae7dcd987efd6c9369beba0e0218e6acd577f"
     },
     {
       "change": "audit-scenario-evidence",
-      "snapshotCommit": "036acf3",
+      "snapshotCommit": "f142892",
       "exitCode": 0,
       "tests": 764,
       "logSha256": "5d83d4c05b95f981bd01514e9f95b911c7f916d54c70566811c13e3c89ceaa91"
