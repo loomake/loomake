@@ -4,7 +4,7 @@
 
 以下は初回レビューとその対応記録。現在の文書を見直した結果は末尾の「ドキュメントの再レビュー」に記載する。
 
-> この文書は、MVP を作っている途中のレビューの記録として残している。指摘の多くは試作の `scripts/verify.mjs` と `scripts/test-files.mjs` に対するもので、どちらも add-verify-cli で `loomake verify` に置き換えて消したため、リンク先はもう無い。いまの使い方は [usage.md](guide/1.getting-started/2.usage.md)、いまの仕様は `openspec/specs/` を参照。
+> この文書は、MVP を作っている途中のレビューの記録として残している。指摘の多くは試作の `scripts/verify.mjs` と `scripts/test-files.mjs` に対するもので、どちらも add-verify-cli で `loomake verify` に置き換えて消したため、リンク先はもう無い。いまの使い方は [usage.md](usage.md)、いまの仕様は `openspec/specs/` を参照。
 
 ## コードのレビュー
 
@@ -265,7 +265,7 @@ setup-monorepo のタスク 1.12 で直した。
 
 ### 指摘
 
-1. **[P1・セキュリティ／文書] CI の例がブランチ名をシェルへ直接埋め込む。** [docs/usage.md:214](guide/1.getting-started/2.usage.md#L214) の `run: npx loomake verify --change "${{ github.head_ref }}" --done` は、GitHub の式がシェルの実行前に置換される。Git が許可するブランチ名にコマンド置換を含めると、二重引用符の中でも実行される。実行されるコマンドを printf に置き換え、Git のブランチ名の検証と、一時マーカーファイルの作成を確認した。この例を PR のワークフローにコピーした利用者の CI で意図しないコマンドが動くため、実際の ci.yml と同じようにブランチ名を env に渡し、run 内では `--change "$HEAD_REF"` と参照する必要がある。現行の ci.yml 自体は env 経由になっている。
+1. **[P1・セキュリティ／文書] CI の例がブランチ名をシェルへ直接埋め込む。** [docs/usage.md:214](usage.md#L214) の `run: npx loomake verify --change "${{ github.head_ref }}" --done` は、GitHub の式がシェルの実行前に置換される。Git が許可するブランチ名にコマンド置換を含めると、二重引用符の中でも実行される。実行されるコマンドを printf に置き換え、Git のブランチ名の検証と、一時マーカーファイルの作成を確認した。この例を PR のワークフローにコピーした利用者の CI で意図しないコマンドが動くため、実際の ci.yml と同じようにブランチ名を env に渡し、run 内では `--change "$HEAD_REF"` と参照する必要がある。現行の ci.yml 自体は env 経由になっている。
 2. **[P1・セキュリティ／コード] init がシンボリックリンクをたどり、プロジェクト外へ読み書きする。** [packages/kit/src/init/init.ts:106](../packages/kit/src/init/init.ts#L106) の existsSync はリンク先が無いと false を返し、後段の writeFileSync はリンクをたどる。そのため、AGENTS.md をプロジェクト外の未作成ファイルへのリンクにすると、確認を求めず、終了コード 0 でそのファイルを作る。既存ファイルへのリンクの場合も、承認前にその外部ファイルの内容を差分へ出すことを、合成した無害な文字列で確認した。リンク自体と親ディレクトリを検査し、読み書き先がプロジェクト外へ出る場合や、リンク先が存在しない場合は処理を止める必要がある。
 3. **[P1・コード／仕様ゲート] trace の解析エラーを捨て、未回答の確認事項を見落とす。** [packages/kit/src/verify/run.ts:111](../packages/kit/src/verify/run.ts#L111) は parseTrace の value だけを使い、errors を結果に反映しない。未回答のブロッキング確認事項を持つ trace.md は通常不合格だが、節名を `## 確認事項（未回答）` に変えるだけで、core が「確認事項の節がない」とエラーを返しているのに、verify は「未回答 0 件」で合格する。parseTrace の errors をゲートの失敗として記録する必要がある。同じく parseSpec の errors も呼び出し側で捨てられているため、併せて扱いを確認する。関連する規約：[AGENTS.md:20](../AGENTS.md#L20)「ブロッキングな確認事項が未回答なら、ここで失敗する」。
 
@@ -571,7 +571,7 @@ AIが作成して実行したシナリオであり、人の利用者や独立し
 
 同じGit作業ツリーのrunを排他し、dry-runを含む二重起動を開始前に止める。通常終了・中断・例外では自分の所有トークンのロックだけを解放する。同じホストの終了済み所有者は回復し、不明・別ホスト・生存中・回復処理中の場合は削除せず確認手順を表示する。同秒の再実行も別のディレクトリへ記録する。
 
-二重起動とログ上書きは修正前の2件の失敗で再現した。実プロセスを強制終了した後の回復、別のGit worktreeでの独立した取得も確認した。関連70件が成功し、完了ゲートはexit 0、全389件が成功した。初回ゲートの未チェックタスクによる失敗と再実行も[TDD記録](../openspec/changes/archive/2026-10-24-serialize-run-execution/tdd.md)に記載した。復旧の手順と対象外の環境は[run-recovery.md](guide/2.guides/3.run-recovery.md)を参照する。
+二重起動とログ上書きは修正前の2件の失敗で再現した。実プロセスを強制終了した後の回復、別のGit worktreeでの独立した取得も確認した。関連70件が成功し、完了ゲートはexit 0、全389件が成功した。初回ゲートの未チェックタスクによる失敗と再実行も[TDD記録](../openspec/changes/archive/2026-10-24-serialize-run-execution/tdd.md)に記載した。復旧の手順と対象外の環境は[run-recovery.md](run-recovery.md)を参照する。
 
 ### 改善途中の再採点
 
@@ -619,7 +619,7 @@ pushやPR作成が失敗した後の再実行で、今回の完了ゲートを�
 
 push後は同じリポジトリとbase/headのopen PRを検索する。作成後の応答を失った場合も、再実行で既存PRを見つければ新規作成しない。検索の失敗、不正な結果、複数の候補では作成へ進まない。品質コマンドがHEAD・ブランチ・作業ファイルを変更した場合も、状態を保ったまま停止する。
 
-修正前に追加21件のうち20件の失敗を確認した。検証中の状態変更についても4件を追加し、HEADとブランチの2件の失敗を確認して修正した。関連94件が成功し、完了ゲートはexit 0、全430件が成功した。詳細は[TDD記録](../openspec/changes/archive/2026-10-24-resume-pr-publication/tdd.md)、操作の手順は[run-recovery.md](guide/2.guides/3.run-recovery.md)にある。
+修正前に追加21件のうち20件の失敗を確認した。検証中の状態変更についても4件を追加し、HEADとブランチの2件の失敗を確認して修正した。関連94件が成功し、完了ゲートはexit 0、全430件が成功した。詳細は[TDD記録](../openspec/changes/archive/2026-10-24-resume-pr-publication/tdd.md)、操作の手順は[run-recovery.md](run-recovery.md)にある。
 
 ローカルGitのbareリポジトリと代替ghでの試験結果であり、実際のGitHubで認証・通信・権限・障害復旧を確認した結果ではない。
 
@@ -652,7 +652,7 @@ CIと公開の外部Actionsを、公式リポジトリのv4参照から取得し
 
 5パッケージにrepositoryと各ディレクトリ、provenanceの設定を追加した。公開ステップもprovenanceを要求し、独立したプロジェクトへ導入した配布物の同じメタデータを確認する。出典が違う配布物は検査で拒否する。npmの前提と設定は[公式文書](https://docs.npmjs.com/generating-provenance-statements/)で確認したが、実際の公開とattestationの検証は未実施である。
 
-[CONTRIBUTING.md](../CONTRIBUTING.md)、[SECURITY.md](../SECURITY.md)、[SUPPORT.md](../SUPPORT.md)、[信頼境界](guide/3.reference/3.security.md)、[互換性](guide/3.reference/1.compatibility.md)、[公開の手順](publishing.md)を追加した。秘密情報の引き継ぎ、外部隔離への依存、診断の保護範囲、残る資源制限を実装と照合した。連絡先やSLA、未検証の保護を作っていない。非公開の脆弱性報告機能とリポジトリの可視性は、接続したコネクタでは確認できなかった。
+[CONTRIBUTING.md](../CONTRIBUTING.md)、[SECURITY.md](../SECURITY.md)、[SUPPORT.md](../SUPPORT.md)、[信頼境界](security.md)、[互換性](compatibility.md)、[公開の手順](publishing.md)を追加した。秘密情報の引き継ぎ、外部隔離への依存、診断の保護範囲、残る資源制限を実装と照合した。連絡先やSLA、未検証の保護を作っていない。非公開の脆弱性報告機能とリポジトリの可視性は、接続したコネクタでは確認できなかった。
 
 追加10件が修正前に失敗し、修正後は既存2件を含めて成功した。配布物を含む関連13件も成功した。初回lintの正規表現の表記3件を直した後、完了ゲートはexit 0、全440件と型・lint・全REQの対応が成功した。詳細は[TDD記録](../openspec/changes/archive/2026-10-24-harden-release-workflow/tdd.md)にある。
 
@@ -675,7 +675,7 @@ kitに共通readerを追加し、verify・trace・runの重複する探索と読
 
 共通reader16件、統合12件、除外リンク1件、指示超過2件の失敗を修正前に確認し、境界や互換性の追加も含めて検証した。関連284件、最終の入力34件が成功し、完了ゲートはexit 0、全474件と型・lint・OpenSpec・全REQの対応が成功した。詳細は[TDD記録](../openspec/changes/archive/2026-10-24-bound-input-resources/tdd.md)にある。
 
-9条件を独立したプロセスで測り、想定した受理・拒否と事前の測定予算をすべて満たした。結果は[results.json](../openspec/changes/archive/2026-10-24-bound-input-resources/results.json)、再現手順と互換性への影響は[resources.md](guide/3.reference/2.resources.md)を参照する。以前は読めた過大入力も拒否するため、changesetは対象4パッケージのminorとした。
+9条件を独立したプロセスで測り、想定した受理・拒否と事前の測定予算をすべて満たした。結果は[results.json](../openspec/changes/archive/2026-10-24-bound-input-resources/results.json)、再現手順と互換性への影響は[resources.md](resources.md)を参照する。以前は読めた過大入力も拒否するため、changesetは対象4パッケージのminorとした。
 
 | 条件 | 入力処理の時間 | プロセスのピークRSS | 結果 |
 |---|---:|---:|---|
@@ -705,7 +705,7 @@ kitに共通readerを追加し、verify・trace・runの重複する探索と読
 
 公開後の片付け失敗では、完全な証拠をtrace reportでも確認し、一時名の削除・証拠のコミット・再検証から、証拠・実装・PRを重複させず完了することを試験した。さらに実際のwriterソースを別プロセスで実行し、書き込み途中・公開直前・公開直後にSIGKILLした。最終名が存在しない状態か、完全な最終JSONだけが残り、所有者の終了後に自分の一時名を片付けて再実行できた。
 
-最終の完了ゲートはexit 0。全504件、型・lint・OpenSpecと全REQの対応が成功した。詳細は[TDD記録](../openspec/changes/archive/2026-10-24-publish-evidence-atomically/tdd.md)、実行した復旧手順と残る一時ファイルの扱いは[run-recovery.md](guide/2.guides/3.run-recovery.md)にある。保存先に必要なハードリンクは[互換性](guide/3.reference/1.compatibility.md)へ記載し、対象3パッケージのminor changesetとした。
+最終の完了ゲートはexit 0。全504件、型・lint・OpenSpecと全REQの対応が成功した。詳細は[TDD記録](../openspec/changes/archive/2026-10-24-publish-evidence-atomically/tdd.md)、実行した復旧手順と残る一時ファイルの扱いは[run-recovery.md](run-recovery.md)にある。保存先に必要なハードリンクは[互換性](compatibility.md)へ記載し、対象3パッケージのminor changesetとした。
 
 ### 現時点の暫定点
 
@@ -738,7 +738,7 @@ kitに共通readerを追加し、verify・trace・runの重複する探索と読
 
 通常のsummary.jsonの契約を維持し、summary自体が予約に収まらなければ、件数と短い理由を持つ別形式のstop.jsonを保存する。実際のI/O失敗後には書き込みを続けず、停止情報も保存できない場合はコンソールへ保存不可を明示する。実ディスク領域の事前確保や、外部プロセスの書き込みの制限は行わない。
 
-設定とstoreの25件、runへの統合の修正前4件の失敗を確認してから実装した。履歴の途中超過も含めて追加31件、runner関連184件が成功した。最終の完了ゲートはexit 0、全535件と型・lint・OpenSpec・要件対応が成功した。[TDD記録](../openspec/changes/archive/2026-10-24-bound-run-records/tdd.md)、[資源予算](guide/3.reference/2.resources.md)、[復旧手順](guide/2.guides/3.run-recovery.md)に詳細を記載した。
+設定とstoreの25件、runへの統合の修正前4件の失敗を確認してから実装した。履歴の途中超過も含めて追加31件、runner関連184件が成功した。最終の完了ゲートはexit 0、全535件と型・lint・OpenSpec・要件対応が成功した。[TDD記録](../openspec/changes/archive/2026-10-24-bound-run-records/tdd.md)、[資源予算](resources.md)、[復旧手順](run-recovery.md)に詳細を記載した。
 
 ### 現時点の暫定点
 
@@ -771,7 +771,7 @@ kitへ同期外部操作の監視を集約し、runnerのGit・gh・エンジン
 
 接続の8件は修正前にすべて失敗し、接続後に成功した。追加の失敗から、準備で使った時間のエンジンへの反映と、中断後の操作の拒否も修正した。既存の時間切れ試験では、一時的なタスクの完了印をGitで戻せない不具合を再現した。期待値を維持し、仕様を補足して、外部操作なしで自分の印だけを戻すようにした。検証中にtasks.mdが変わった場合は上書きせず停止する。
 
-pushとghの認証・検索・作成を止め、作成後に応答が失われた場合も再実行した。既存の証拠とPRの確認を通り、実装・証拠・PRを重複させずに完了した。共通境界10件、接続11件、既存run62件が成功し、最終の完了ゲートはexit 0。全556件と型・lint・OpenSpec・要件対応が成功した。詳細は[TDD記録](../openspec/changes/archive/2026-10-24-bound-external-operations/tdd.md)、対象範囲は[resources.md](guide/3.reference/2.resources.md)、再試行は[run-recovery.md](guide/2.guides/3.run-recovery.md)に記載した。
+pushとghの認証・検索・作成を止め、作成後に応答が失われた場合も再実行した。既存の証拠とPRの確認を通り、実装・証拠・PRを重複させずに完了した。共通境界10件、接続11件、既存run62件が成功し、最終の完了ゲートはexit 0。全556件と型・lint・OpenSpec・要件対応が成功した。詳細は[TDD記録](../openspec/changes/archive/2026-10-24-bound-external-operations/tdd.md)、対象範囲は[resources.md](resources.md)、再試行は[run-recovery.md](run-recovery.md)に記載した。
 
 ### 現時点の暫定点
 
@@ -802,7 +802,7 @@ doctorの品質コマンドの分類をI/Oから分離し、単純なnpm・pnpm�
 
 シェル構文や対象を変えるオプションは推測せず、未確認の注意として次に確認する場所を表示する。Yarnには別の解決経路があるため、ルートにscriptがないだけでは問題と断定しない。npm run envなどの組み込み処理も誤認しない。出力末尾へ、静的な確認範囲と、品質コマンドの成功・レポート生成・認証・ネットワーク接続が未確認であることを表示した。
 
-Gitの診断も共通境界へ接続し、診断全体30秒と外側の短い共有期限を守る。制限や異常終了をGit不存在や単なる未除外と混同しない。品質コマンド・認証確認・ネットワーク接続は起動せず、診断前後でファイルが変わらないことも確認した。変更と移行は[doctor.md](guide/2.guides/2.doctor.md)、共通境界は[architecture.md](architecture.md)に記載した。
+Gitの診断も共通境界へ接続し、診断全体30秒と外側の短い共有期限を守る。制限や異常終了をGit不存在や単なる未除外と混同しない。品質コマンド・認証確認・ネットワーク接続は起動せず、診断前後でファイルが変わらないことも確認した。変更と移行は[doctor.md](doctor.md)、共通境界は[architecture.md](architecture.md)に記載した。
 
 分類の30件を未実装の失敗から実装し、診断の22件も失敗から修正した。公式の呼び出し規則との照合で見つけた2件も、失敗を確認してから直した。既存CLI試験の期待値は維持し、健康なfixtureに品質scriptと実行権限を追加した。最終の関連65件と完了ゲートが成功し、全610件、型・lint・OpenSpec・要件対応も成功した。詳細は[TDD記録](../openspec/changes/archive/2026-10-24-clarify-doctor-diagnostics/tdd.md)にある。
 
@@ -847,7 +847,7 @@ Scenarioと試験の対応を確認するリポジトリ用の監査を追加し
 | 未確認 | 314 |
 | 無効な根拠・参照のエラー | 0 |
 
-監査自身の26件は、未実装、古いコード例のハッシュ、HTMLの表示の失敗から修正した。最終の完了ゲートはexit 0、全636件、型・lint・OpenSpec・要件対応が成功した。一方、その全体レポートを使ったScenario監査は、未確認が残るためexit 1だった。[対応表](quality/scenario-audit.md)、[レビューの記録](quality/scenarios.json)、[手順と限界](guide/2.guides/4.scenario-audit.md)、[実行結果と入力ハッシュ](../openspec/changes/archive/2026-10-24-audit-scenario-evidence/results.json)、[TDD記録](../openspec/changes/archive/2026-10-24-audit-scenario-evidence/tdd.md)に根拠を残した。
+監査自身の26件は、未実装、古いコード例のハッシュ、HTMLの表示の失敗から修正した。最終の完了ゲートはexit 0、全636件、型・lint・OpenSpec・要件対応が成功した。一方、その全体レポートを使ったScenario監査は、未確認が残るためexit 1だった。[対応表](quality/scenario-audit.md)、[レビューの記録](quality/scenarios.json)、[手順と限界](scenario-audit.md)、[実行結果と入力ハッシュ](../openspec/changes/archive/2026-10-24-audit-scenario-evidence/results.json)、[TDD記録](../openspec/changes/archive/2026-10-24-audit-scenario-evidence/tdd.md)に根拠を残した。
 
 全15項目の暫定点は前節のままとする。テスト89点は、全体の成功と一部の内容レビューだけでは90点へ上げない。保守性89点も、残る対応と文書の同期を確認するまで維持する。全項目90点は未達であり、次は未確認のScenarioを順に読み、実際に試験が不足する条件を補う。入力ハッシュと対応表の整合性の検査を、試験内容の十分さや別OS・実接続の成功の保証として扱わない。
 
