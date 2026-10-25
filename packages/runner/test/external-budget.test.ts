@@ -172,12 +172,15 @@ describe('runから外部操作までの期限', () => {
       // Windows は外部操作の起動が遅く、偽の git を通すと node の起動も増えるので、長くする（windows-fake-clis）
       const SHARED_DEADLINE_MS = process.platform === 'win32' ? 40_000 : 12_000;
       const UNTIL_DEADLINE_OPERATION_MS = 5_000;
+      // auth・list は 1 操作の期限で止める。止まる手前の通常の git・gh が負荷で 500ms を超えると、狙った段階の前で止まる
+      // （macOS の CI で、印の検査が見つけた）。そこで 1 操作の期限を 2 秒にし、止まった印から期限 + 猶予のうちに止まることを確かめる
+      const STAGE_OPERATION_MS = 2_000;
       const cli = fakeCli(repo, command, { when: condition, forwardFirst: stage === 'create', stallMs: untilDeadline ? SHARED_DEADLINE_MS + 30_000 : STALL_MS });
       diagnosticEvent(repo, 'run-start', { stage });
       // untilDeadline の 2 つは、止まる手前の通常の git・gh が負荷で遅れても 1 操作の期限に当たらないよう余裕を持たせ、
       // 止まったのが共有の期限であることは所要時間の下限で確かめる。
       const runStarted = Date.now();
-      const result = await (untilDeadline ? withProcessBudget({ timeoutMs: SHARED_DEADLINE_MS, maxOperationMs: UNTIL_DEADLINE_OPERATION_MS }, () => run(repo)) : budget(() => run(repo)));
+      const result = await withProcessBudget(untilDeadline ? { timeoutMs: SHARED_DEADLINE_MS, maxOperationMs: UNTIL_DEADLINE_OPERATION_MS } : { timeoutMs: 20_000, maxOperationMs: STAGE_OPERATION_MS }, () => run(repo));
       const endedAt = Date.now();
       const runElapsed = endedAt - runStarted;
       diagnosticEvent(repo, 'run-end', { stage, code: result.code, elapsedMs: Date.now() - started });
@@ -190,7 +193,7 @@ describe('runから外部操作までの期限', () => {
         expect(endedAt - stall.at, context).toBeGreaterThan(UNTIL_DEADLINE_OPERATION_MS);
         expect(runElapsed, context).toBeGreaterThanOrEqual(SHARED_DEADLINE_MS - 500);
         expect(runElapsed, context).toBeLessThan(SHARED_DEADLINE_MS + STOP_GRACE_MS);
-      } else expectStoppedSoon(stall, endedAt, OPERATION_MS, context);
+      } else expectStoppedSoon(stall, endedAt, STAGE_OPERATION_MS, context);
       expect(result.stdout, context).toContain('実行時間の上限');
       expect(summary(repo).status, context).toBe('stopped');
       // 止まったのが確かめたい段階（push・create の停止）であることを、停止の印で確かめる
