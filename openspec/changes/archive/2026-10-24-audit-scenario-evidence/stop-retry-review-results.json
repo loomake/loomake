@@ -1,0 +1,857 @@
+{
+  "scope": "audit-scenario-evidence tasks 3.1–3.3 and 4.1–4.3: actual PID exit, lock state, retry push and retained-state assertions",
+  "baseCommit": "2a518df38d937ee3099c025ec4a96e388e6939ec",
+  "sourceTreeHashes": {
+    "loomake.config.json": "c49e93abdc2bf770e1852d14f4daf84c127ca2163bfd82c59516b2818eb9e1e8",
+    "openspec/changes/archive/2026-10-24-bound-input-resources/benchmark.mjs": "dd0c089edf3e2aad5b467c671529e1d597adbc54eb728e3a033921721c79fb71",
+    "openspec/changes/archive/2026-10-24-clarify-doctor-diagnostics/doctor-journeys.mjs": "a99476416b6144d9feb66744ebf5961a83bdf671b93edbae1ed878353024a5db",
+    "package.json": "6aafb592a137269afec45b6cf39a7e846a45953355403d8edc7923437c9b5756",
+    "packages/cli/package.json": "bc4abd3ca5bc03d2a19b5ee77e673aa3e930929e331aa5d3a61c82e9200cb80f",
+    "packages/cli/src/args.ts": "f71103a6c4a0cb6c9d574c504206a5b668afaf1690c3bc9b31aa4662e4add5fd",
+    "packages/cli/src/cli.ts": "59e06148b18e47eaa303c03abe167e9ac60384cf3dce9ae056377b0d59e4c178",
+    "packages/cli/src/main.ts": "9f86303e3dcdea2177959128a55c763945cdc3f6c14f05ca0c15ce11bccca429",
+    "packages/cli/test/arguments.test.ts": "ce0333abbadeb77021844db854f55d9e628c12b99f0f8705ea071ede067ece5a",
+    "packages/cli/test/cli.test.ts": "0f36c01b0c8947a0cfab325b0a3f72149826b3cfcdd7828eb3ce8424b93ef2b2",
+    "packages/cli/test/doctor.test.ts": "b71041f6ee0b7de94ae34a91269839ceadfc0886f92dd4d0ffa52558a4e16b4d",
+    "packages/cli/test/init.test.ts": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e",
+    "packages/cli/test/trace-agreement.test.ts": "003cf20521ab1362372f1ce93cbbc046ea71a9bfcfd4b401b652509aadab9636",
+    "packages/cli/test/verify-boundaries.test.ts": "453d06454e94c6850d239e713c1258885a0a6e642f5f312aee48eb1fd5436a12",
+    "packages/core/package.json": "81c84806e91aca1877b02c39f16f686de2f42bee11707c9f2fd8f07c8b45f3b2",
+    "packages/core/src/agreement.ts": "164b1b42a791b49cde621f5f086db413d31607e30a39d96548d347c33226d0e4",
+    "packages/core/src/coverage-policy.ts": "d07af060fa82c6fdc8eaae28b33899c731983280e386c978f1f285e81216f6a6",
+    "packages/core/src/index.ts": "520f47fb24eab46b3feaf9b9a9a8eb187fc0b3862c7567b67ad42936edf8e459",
+    "packages/core/src/parse.ts": "c15b99494176ef9b9c3aa22a19a31eb1ea59b2804f9028b93b2df061a6269540",
+    "packages/core/src/spec.ts": "3ad805921112c5e265764767fc2447e2f6c80f1ba1bd912e8586e872ca8545c4",
+    "packages/core/src/tasks.ts": "94608cf43fdd951246000ef3d4896241b705cafe91b9ae5ae8cff18dcaab424e",
+    "packages/core/src/template.ts": "bef7bc8471190711f330c1ae964b92b8500c56513cf3facde1327c2c13f45fe8",
+    "packages/core/src/test-report.ts": "cf633399a106609de03b06227a7cf32d2afe83d767f3899c20fa93c8c5eb070d",
+    "packages/core/src/trace-edit.ts": "0e774842592293684e85dde8861b1d0668ac4458cdf88d8f689b8aecadb7d431",
+    "packages/core/src/trace.ts": "513f18beec408f26096b22f401559b96c5b8dde5e9efa7d7f0b46adf5ccc5b4d",
+    "packages/core/src/verify-result.ts": "c84a6075a0cc909e2aa519d3bfd9af8ae772eb53f127d6634f62cffe77e02ea3",
+    "packages/core/test/agreement.test.ts": "68e212efdfe32dce2a259b982260a1cc26e7a78551886f8628e05cd1604acbbf",
+    "packages/core/test/coverage-policy.test.ts": "61add31ac1281ad2949cfda26529bfe7ec102b34fb8c06bf2d5d40c90ee32bb8",
+    "packages/core/test/package.test.ts": "6c32b72bc19cd187c4337ae78ff9c2b42f39e5ff40ef0156175a8845d0e84fb4",
+    "packages/core/test/schema.test.ts": "ee3ee3a0d181d9e98ff8aecc6fa70b2197748f938b4265e5ed2c1048ffad2891",
+    "packages/core/test/spec.test.ts": "542fe6ec2963ca726db1b6948e8bbe27f5bc9694cca87b437e4d9f63f6f8c9c3",
+    "packages/core/test/tasks.test.ts": "d317048c05efd6bef9126b9f8a848de40e6202c278bfdff32535bf129439ec2c",
+    "packages/core/test/test-report.test.ts": "c7153a95adba3abf1d612e07134454d17aa93ece23874ffc140db2d5136859f1",
+    "packages/core/test/trace-edit.test.ts": "db99961acc8021a96ae61c6d5e78f76fda0e8383a25958bdf00e975f7e00d98d",
+    "packages/core/test/trace.test.ts": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40",
+    "packages/kit/package.json": "fa9fb1d3c56fb5b7872a46762f803cd0e1a4c0e4cde7cb1dd399e5d92e9e8993",
+    "packages/kit/src/change-files.ts": "7e699339ccc4afa9c3cf6092805923b28301dde5db0c7f3064defbc3a6c59e08",
+    "packages/kit/src/doctor/command.ts": "087b5e2351a2c93204661876892b0319bcd86863ec805f7af8e0e8c79bfc8ee5",
+    "packages/kit/src/doctor/doctor.ts": "ecc38103fa466e370275e52cee5f7e30020a20c27802fceafe8c77c30b4960e5",
+    "packages/kit/src/errors.ts": "5b6ae777bac8827d6edc7f5a0d31e735d9eb60460dcff06ec76d225f0c90e667",
+    "packages/kit/src/index.ts": "3581be26c41d5638c54595a754db8c85ee55820c0c8119d37d98451605ea476a",
+    "packages/kit/src/init/diff.ts": "e64a268db25dfaae9fc8b6dcb879aae8b475b68922582e5186fdd81314299ddb",
+    "packages/kit/src/init/init.ts": "64793b65de5ac0b7ccd82594346d285dc42d09170d7f418d62e74616c0395696",
+    "packages/kit/src/input.ts": "d0a7c8ca16dec8d5c8bcb5383661b4b409240fca6ef8ddfcf6ae884557a294e6",
+    "packages/kit/src/process.ts": "bbddfac452bff8a06565923e98d1f27f1bfc41fe668f235baa46847ff128d233",
+    "packages/kit/src/verify/config.ts": "db2f2b43744c431e97f25b59fbb1494de2a0243d3d4dac79f2ec7c7494eb8b50",
+    "packages/kit/src/verify/format.ts": "a8025779f131b3982662985c9d7ff808cb3ec13c1a38687a6b92171abaf0f896",
+    "packages/kit/src/verify/run.ts": "4bbfc011eb3cf9c0ff9097eedc0f6f4b570c709d2990d29b5dc98e306de02fda",
+    "packages/kit/test/change-files.test.ts": "1964cfcdae7c9ad29aad34668efc4e33606c63dadf9798e7249ce1407b2bbc31",
+    "packages/kit/test/doctor-command.test.ts": "a0e75f4a867c6a7c85dd0959a9737cb2fe4ad50f8d4dd84dfe9e9ab41b1ea0e6",
+    "packages/kit/test/doctor-diagnostics.test.ts": "f30c2b3670db786adda6047b18c348b5ac6abe38a54f6a406ef367960893f985",
+    "packages/kit/test/input.test.ts": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985",
+    "packages/kit/test/process.test.ts": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca",
+    "packages/kit/test/project.ts": "4cc9634bc96658d37cec871ecd161f8293563de7dffba2568f5c2163fc26f3ea",
+    "packages/kit/test/verify.test.ts": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f",
+    "packages/runner/package.json": "723cbd810515e25a61f2b82b23076c17d36ec95da89e6189e63283a443b1a1fa",
+    "packages/runner/src/config.ts": "95f941eab26b7b5de8e8ce779882e229218276d8e400ab2100433620e544b0c8",
+    "packages/runner/src/engine.ts": "1ed24c9dc1d0728d1453096a47ad4d4f2c433fb05743e81fe4f3907e437d0d71",
+    "packages/runner/src/git.ts": "29d164cf63b2f15be3127a16d6c58f7198e5b6a6bc7c94bded9c745f99a112a9",
+    "packages/runner/src/guards.ts": "ffcbe694322c23bb8c04fbc7bab4e9e5a267d0a6bae532b0fa5c5f2d5206fc15",
+    "packages/runner/src/index.ts": "73d1bfde6536bf043efaa2675059e78c34991284a15e25d08733df6ddc2a7e48",
+    "packages/runner/src/lock.ts": "9cc13c0adea1e30bc42ec0fc6dee7f4bc0d91972c18db0c275a63e0a21728a79",
+    "packages/runner/src/log-policy.ts": "2e96f7bcc3c7bc561bbe6de268c7968fcfe058d832dad1df874999bdf51dba4d",
+    "packages/runner/src/logs.ts": "e24dbe51a027a1f05a96aee14c5012eb4f0c8713eea9cdcc00d35fa0233a38aa",
+    "packages/runner/src/mask.ts": "d78908593e541d771b0f7b23312d7a03e7dfef8096dde6d5c3f16d4b470431a9",
+    "packages/runner/src/pr.ts": "69a2820f7c34baba6a3a8296a43420d93cf1e325697e7c74559ded9b01f676f0",
+    "packages/runner/src/private-key-stream.ts": "3735bc3746adf19444e9d740f97fe726008946043f1a2025928b0dea55170e5f",
+    "packages/runner/src/reuse.ts": "0b783e7b000f05b9077b15365520d8abf79214bafb510855a0426a15fd9cf3cd",
+    "packages/runner/src/run.ts": "7cfb5055e76ad5cdd50c8d36da6f35d6fb2d7938f617c70cb9ae7de52644d40f",
+    "packages/runner/src/run/decision-policy.ts": "d2a1c296142f8fb5290612537d81aad8bce7b81b35cc5d778df5d4cfe70d7996",
+    "packages/runner/src/run/phases.ts": "cc23a91f5cbfa52cd50caf75f8db9c88cb695805fa8225e44c26c8104f5abd69",
+    "packages/runner/src/run/prepare.ts": "5033e83ab343bb087586711ccbed8b29891c7a4ea709caec1ec57bf884a7e2f7",
+    "packages/runner/src/run/prompt.ts": "80734d492dbb99f9b01f01354aeb3b43cf56f8b1baf6330cc90c6cf661e8d098",
+    "packages/runner/src/run/recorder.ts": "5a721a7db0c263ac1ba83b155a9ab581470393703cd69d23bfddb213f5b7fa30",
+    "packages/runner/src/run/tasks.ts": "2d7ebbb322a3d2cb488d01ed63d44b6aac9d5cb247ab05901ac8bbf4b1db2116",
+    "packages/runner/src/run/types.ts": "bb96c08d0717411d23fce5b423bb559939034265e39bbe267c04d0e90b04380f",
+    "packages/runner/src/shell.ts": "78c82f36a7bb598abdb013d53f9b36283d643d4f991fb3fba6f5c531f8ae01f4",
+    "packages/runner/test/decision-policy.test.ts": "000c9763c5b9e05f706579261d1f4a14a5bd5d442cb34015ae008532a79ba561",
+    "packages/runner/test/diagnostic-redactor.test.ts": "bc1d89cd9d21bc9079f3626cd0c06eb26f9e7036483b6c3f5c09b2d0414704d4",
+    "packages/runner/test/engine-safety.test.ts": "7c75c2f45e35c3daf7c65fb9551eb924a0b3d7e34656a71cd0cc3ae486711317",
+    "packages/runner/test/evidence-storage.test.ts": "16cd666b698613e965a0c1547e97b68a56431b2f576b7f9e45caf7954adbeebb",
+    "packages/runner/test/external-budget.test.ts": "2526e2b8662dc95fc98b9c20260119778f5ad2eb3ec187b9f1b232a24b3736ac",
+    "packages/runner/test/guard-path-integration.test.ts": "e31d591ad04ece3601b546325c2f627d6ecf467a1675e415eac23220bc594ec4",
+    "packages/runner/test/guards.test.ts": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f",
+    "packages/runner/test/helpers.ts": "ccf3633660095528e8993978bec6b5ccc7d22a0cd7ba060157d532c4c857d913",
+    "packages/runner/test/lock.test.ts": "fee9a0104269281a51692c0c81d265504aa3bcbc74f8b663cf8a357f5502165c",
+    "packages/runner/test/log-config.test.ts": "8f76ad8d7938289e28b1c534473c27bdaed047603e8da7873b5d7fa242f326ea",
+    "packages/runner/test/log-run.test.ts": "8739b25d089dc16b12339bdb8cd0c63f3915848449ed0cf7d20666aafc39c000",
+    "packages/runner/test/logs.test.ts": "fc4f44af93ac4374860bce08583d0884c14adb9d73814ec372cafe70ea6bf9e5",
+    "packages/runner/test/mask.test.ts": "c021eebe799ff8c5762683db208f7b9adb6bdb0f35fe2be7f6e13200832910ec",
+    "packages/runner/test/output-budget.test.ts": "91e585da4ed7785f163c4be3828c85ca5e5e0704865d72439da2e8f3d85e14e0",
+    "packages/runner/test/output-processes.test.ts": "ba1bbba51f418c940a3b40b55501411289b3628d1c4fc5d04e73503ed56d15ec",
+    "packages/runner/test/pr.test.ts": "5c5caa14a32f1536bab7115107c0509a4591fe8afc5387d2048e0ae4b4121e30",
+    "packages/runner/test/publication-retry.test.ts": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506",
+    "packages/runner/test/run-conditions.test.ts": "ad3ecc2391eef40a16199597cc0e4feb6958c38fdfc9f8e3bdcabbe310b34511",
+    "packages/runner/test/run.test.ts": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5",
+    "packages/runner/test/safety-paths.test.ts": "e976ee7e1e4c985ae0566df7cf7d177bb254e35053a8410018fd4794a1ce4673",
+    "packages/trace/package.json": "4cb75f30f9b31e69659806acbd62154f8f2daae242b3c97645e16d472126d9b4",
+    "packages/trace/src/agreement.ts": "c4416dfff93b364a30967b29e414d70cf5856fb37402e81709db9c8be144fc9f",
+    "packages/trace/src/documents.ts": "bf3a706182983035de398c400cbb38459a5d4b375a5fa26277ab0ad1dacf7e9d",
+    "packages/trace/src/evidence.ts": "eec5e7692d76c368c2016b4e306305c5638e2e041982b934101b35813d4eaab5",
+    "packages/trace/src/index.ts": "8988e47627bfbce1e4871b3c48fc8c22f47b6c64d2ed686b4713238b75d4d177",
+    "packages/trace/src/publication.ts": "edcc55c7a8d88d817aa6631f778ff00964bfb0743520f7c9d3638af5740b3d09",
+    "packages/trace/src/record.ts": "102b1c8b330b2663db18c83ac5e24dbde5b909ee74ace4a9bd44d1cc5d59300b",
+    "packages/trace/src/report.ts": "7d32a1396e3518721a61270fdbd07637af4f56ff40e09c9e2604d9dae2f603a8",
+    "packages/trace/src/schema.ts": "5b189229aac70326bb8f06068de0b0a86f90069bed56206ab416c6f11a24027a",
+    "packages/trace/src/serialization.ts": "00c7f06a1c74e36932f92849031edb0805150b11455925106b472752c7595883",
+    "packages/trace/test/publication-crash.test.ts": "1fbdfb9d6afcd7fa07e83f9ca987593e50da39128cd4a6e354286326e9f9e5d6",
+    "packages/trace/test/publication.test.ts": "63231c8f68bbbe7901a3c28a437135b7aaebc689a66752682eb0a2422be710f9",
+    "packages/trace/test/record-size.test.ts": "db71a3294f7e3688bc76c9adbb527a0526a41c76304da1b8f350375514ec87e1",
+    "packages/trace/test/record.test.ts": "b3c144c80403227209fd76fae5ef61da7fb396ec52c8b8eaee1d0788a246ab2e",
+    "packages/trace/test/report.test.ts": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e",
+    "packages/trace/test/serialization.test.ts": "6cf85e33ea1af754e0245fc4259f994504be7310ea55c96abc971e81ebd5c247",
+    "pnpm-lock.yaml": "b181097be6f180fbb92203248121c339a5936dbf4ff0a756b3c625713681f21a",
+    "scripts/action-pins.mjs": "d3c8888814827bd61d105263ac4dbdb616abcb5bef1be1c72dcf587273838671",
+    "scripts/ai-journeys.mjs": "f66d5d96a68f1b4b0c40d09e06e03e7f63960f6da92a8708b70f8f8b6a6e6330",
+    "scripts/changeset-check.mjs": "340a21f2e1e874e840ed2bc75dae403b30d4dbc6addfb395446c0452d41198d9",
+    "scripts/check-public-types.mjs": "8cb6a5928184f693b55d0593737de0c8c2cbe4060f964f3906478c1e8d2e4d66",
+    "scripts/ci-gate.mjs": "cb72c929c5425241897f8bdabebb98819079078b103ab433a9b77c1855be60cd",
+    "scripts/domain-mutations.mjs": "4e9b632a1fdaf738b4e6a691ac36c92782193ba86119fa58e039cf680cc6fe1c",
+    "scripts/package-smoke.mjs": "71aa378a372bde276c091afe2ce079b1e0b34029e13742fb8dec5cd199c63339",
+    "scripts/run-sigint-smoke.mjs": "53ccc8e135f82ad8236266886bf323ad2e9cf5d861dd5a1782e5dc776101bc42",
+    "scripts/runtime-compatibility.mjs": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d",
+    "scripts/scenario-audit.mjs": "3955fe0ffc31ab037de9ea656ce8114e3df62cb61a333c2cd20d804279081cab",
+    "scripts/schema-contract-check.mjs": "6ce2bfedd9ff28dac7253bea7bba5d1748682bc91903f797a4d23a2b306e4d74",
+    "tests/ai-journeys.test.ts": "5d1934a2891224bd9ade78232509f9f529e8e6c36c3bf115843bb56e9a3f11f2",
+    "tests/domain-mutations.test.ts": "2b753f35a5ce2e4372d760077ca03f77e50004ea50e5a650bb9cffe1aa16a15b",
+    "tests/input-boundaries.test.ts": "89a368ec8c39e79bd883da212b897401371958751a3dba23ddc136ec71861829",
+    "tests/kit-assets.test.ts": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40",
+    "tests/monorepo.test.ts": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6",
+    "tests/package-artifacts.test.ts": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a",
+    "tests/package-workflows.test.ts": "c82be3653a952f37c8e5ad976fe0d00aa2028fef9d3ef16eca6a75e8450622bf",
+    "tests/public-source-exports.test.ts": "3668c02f7537b0e4abbfdd8a0c2e3daa2b36f62b2cdb56079fe83658ae5b2e77",
+    "tests/release-security.test.ts": "52b011dbbe528eab5c4576aca08bff0b296b07e0c1d1ef5533a523d85a08dda9",
+    "tests/run-decision-mutations.test.ts": "bdf056d8986a4abcb1afcf6e26c803801a81c1d75cec063f3880886644b4653c",
+    "tests/scenario-audit.test.ts": "4b9d89bde6b3c19867fba52f6e74c69968f001226a7328233e8b491b24dcd4fd",
+    "tests/schema-compatibility.test.ts": "bdb7f3bb6d55a56df0ce3d1f0fa0c31a6a4bb3dcd670c1ba18c7a31d4ec6e0da",
+    "tsconfig.base.json": "0745f7962af6eef29100d4e05231237cfb00dcc1a8867d046f189e74117c19cf",
+    "vitest.config.ts": "b54d1dd51a54cda1410dd75048ab66492b902f98ef808b6c3a895528e38252f0"
+  },
+  "productionChanged": false,
+  "qualitySettingsChanged": false,
+  "assertionChanges": [
+    "REQ-105 engine PID written before waiting, valid PID required, not alive before test finally cleanup",
+    "REQ-105 quality command PID likewise observed after deadline, old deadlines and expected code/reason retained",
+    "REQ-158 all first-run record filenames and bytes unchanged by second invocation",
+    "REQ-159 unknown/foreign lock bytes, HEAD, working tree unchanged and Japanese recovery guide",
+    "REQ-160 both separate saved output results preserved",
+    "REQ-166 actual Git spy uses real implementation, per-test cleared, observed positive push before retry, no push after failed/changed validation",
+    "REQ-166 changed HEAD/branch remains changed after stop"
+  ],
+  "focusedBeforeHookIsolation": {
+    "note": "103 successes precede the added beforeEach return-value correction; not a current full gate result.",
+    "report": {
+      "passed": 103,
+      "failed": 0,
+      "pending": 0,
+      "sha256": "107c9c5bb33bc5e0f75ee29e1982873df4a944040b17b5a8e5b17e964a39daa0",
+      "failures": []
+    }
+  },
+  "hookCorrection": {
+    "failedDoneGate": {
+      "exit": 1,
+      "passed": 840,
+      "failed": 25,
+      "pending": 0,
+      "sha256": "10efd08a93fad8d152f27ff3880274b9ea913c9aed1444f02548c76dfe6b669b",
+      "failures": [
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "証拠とPRの再試行 [REQ-164][REQ-165] 作成のbeforeで失敗した後も同じ証拠とコミットを使う",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "証拠とPRの再試行 [REQ-164][REQ-165] 作成のafterで失敗した後も同じ証拠とコミットを使う",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "証拠とPRの再試行 [REQ-164] push失敗後に同じ証拠を再利用して送信する",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "証拠とPRの再試行 [REQ-164][REQ-165] 完了後も再実行で証拠・コミット・PRを増やさない",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "証拠とPRの再試行 [REQ-164] 証拠の後に実装を変えたら新しい対象SHAの証拠を作る",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "不正な証拠候補を保護する [REQ-164] jsonの証拠は消さず増やさず停止する",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "不正な証拠候補を保護する [REQ-164] shaの証拠は消さず増やさず停止する",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "不正な証拠候補を保護する [REQ-164] changeの証拠は消さず増やさず停止する",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "不正な証拠候補を保護する [REQ-164] failedの証拠は消さず増やさず停止する",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "不正な証拠候補を保護する [REQ-164] fail-resultの証拠は消さず増やさず停止する",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "不正な証拠候補を保護する [REQ-164] hashの証拠は消さず増やさず停止する",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "不正な証拠候補を保護する [REQ-164] snapshotの証拠は消さず増やさず停止する",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "不正な証拠候補を保護する [REQ-164] legacyの証拠は消さず増やさず停止する",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "検索を確認できないときは新規作成しない [REQ-165] 検索結果 fail で停止して証拠を残す",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "検索を確認できないときは新規作成しない [REQ-165] 検索結果 broken で停止して証拠を残す",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "検索を確認できないときは新規作成しない [REQ-165] 検索結果 {} で停止して証拠を残す",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "検索を確認できないときは新規作成しない [REQ-165] 検索結果 [{\"url\":\"javascript:bad\",\"baseRefName\":\"main\",\"headRefName\":\"loomake/c1\",\"isCrossRepository\":false}] で停止して証拠を残す",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "検索を確認できないときは新規作成しない [REQ-165] 検索結果 [{\"url\":\"https://user:password@example.com/a/pull/1\",\"baseRefName\":\"main\",\"headRefName\":\"loomake/c1\",\"isCrossRepository\":false}] で停止して証拠を残す",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "検索を確認できないときは新規作成しない [REQ-165] 検索結果 [{\"url\":\"https://github.com/example/repo/pull/1\",\"baseRefName\":\"main\",\"headRefName\":\"other\",\"isCrossRepository\":false}] で停止して証拠を残す",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "検索を確認できないときは新規作成しない [REQ-165] 検索結果 [{\"url\":\"https://github.com/example/repo/pull/1\",\"baseRefName\":\"main\",\"headRefName\":\"loomake/c1\",\"isCrossRepository\":true}] で停止して証拠を残す",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "検索を確認できないときは新規作成しない [REQ-165] 検索結果 [{\"url\":\"https://github.com/example/repo/pull/1\",\"baseRefName\":\"main\",\"headRefName\":\"loomake/c1\",\"isCrossRepository\":false},{\"url\":\"https://github.com/example/repo/pull/1\",\"baseRefName\":\"main\",\"headRefName\":\"loomake/c1\",\"isCrossRepository\":false}] で停止して証拠を残す",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "再試行の再検証と状態保護 [REQ-166] 今回の検証に不合格なら過去の証拠を代用しない",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "再試行の再検証と状態保護 [REQ-166] 検証がHEADを変えたら取り消さず外部操作を止める",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "再試行の再検証と状態保護 [REQ-166] 検証がブランチを変えたら取り消さず外部操作を止める",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        },
+        {
+          "file": "packages/runner/test/publication-retry.test.ts",
+          "test": "再試行の再検証と状態保護 [REQ-166] 検証が作業ファイルを変えたら、その変更を残して停止する",
+          "messages": [
+            "TypeError: Cannot read properties of undefined (reading '0')\n    at git (/tmp/loomake-quality-after-merge/packages/runner/src/git.ts:18:37)\n    at Mock (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/spy.DDMXghXv.js:353:40)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3318:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3276:10)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:35\n    at run (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1352:20)\n    at limiterFn (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:1362:59)\n    at callCleanupHooks (file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3839:9)\n    at file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:3921:67"
+          ]
+        }
+      ],
+      "log": "$ pnpm -r --silent build && node packages/cli/dist/cli.js verify --change audit-scenario-evidence --done\n… lint: pnpm lint\n… typecheck: pnpm typecheck\n… test: pnpm test\n\nLoomake verify  mode=done  change=audit-scenario-evidence\n\n✔ change の存在\n✔ proposal.md の存在\n✔ tasks.md の存在\n✔ trace.md の存在\n✔ 要件モデルの整合性\n✔ trace.md の解析\n✔ 要件台帳\n✔ ブロッキング確認事項\n✔ 同じ確認事項の回答\n✔ spec.md の解析\n✔ Requirement の Source\n✔ Source が台帳にある\n✔ Scenario の有無\n✔ 反映済の要件が仕様にある\n✔ openspec validate\n✔ 確認待ちが残っていない\n✔ tasks.md\n✔ command: lint\n✔ command: typecheck\n✖ command: test\n     FAIL  packages/runner/test/publication-retry.test.ts > 不正な証拠候補を保護する > [REQ-164] changeの証拠は消さず増やさず停止する\n     FAIL  packages/runner/test/publication-retry.test.ts > 不正な証拠候補を保護する > [REQ-164] failedの証拠は消さず増やさず停止する\n     FAIL  packages/runner/test/publication-retry.test.ts > 不正な証拠候補を保護する > [REQ-164] fail-resultの証拠は消さず増やさず停止する\n     FAIL  packages/runner/test/publication-retry.test.ts > 不正な証拠候補を保護する > [REQ-164] hashの証拠は消さず増やさず停止する\n     FAIL  packages/runner/test/publication-retry.test.ts > 不正な証拠候補を保護する > [REQ-164] snapshotの証拠は消さず増やさず停止する\n     FAIL  packages/runner/test/publication-retry.test.ts > 不正な証拠候補を保護する > [REQ-164] legacyの証拠は消さず増やさず停止する\n     FAIL  packages/runner/test/publication-retry.test.ts > 検索を確認できないときは新規作成しない > [REQ-165] 検索結果 fail で停止して証拠を残す\n     FAIL  packages/runner/test/publication-retry.test.ts > 検索を確認できないときは新規作成しない > [REQ-165] 検索結果 broken で停止して証拠を残す\n     FAIL  packages/runner/test/publication-retry.test.ts > 検索を確認できないときは新規作成しない > [REQ-165] 検索結果 {} で停止して証拠を残す\n     FAIL  packages/runner/test/publication-retry.test.ts > 検索を確認できないときは新規作成しない > [REQ-165] 検索結果 [{\"url\":\"javascript:bad\",\"baseRefName\":\"main\",\"headRefName\":\"loomake/c1\",\"isCrossRepository\":false}] で停止して証拠を残す\n     FAIL  packages/runner/test/publication-retry.test.ts > 検索を確認できないときは新規作成しない > [REQ-165] 検索結果 [{\"url\":\"https://user:password@example.com/a/pull/1\",\"baseRefName\":\"main\",\"headRefName\":\"loomake/c1\",\"isCrossRepository\":false}] で停止して証拠を残す\n     FAIL  packages/runner/test/publication-retry.test.ts > 検索を確認できないときは新規作成しない > [REQ-165] 検索結果 [{\"url\":\"https://github.com/example/repo/pull/1\",\"baseRefName\":\"main\",\"headRefName\":\"other\",\"isCrossRepository\":false}] で停止して証拠を残す\n     FAIL  packages/runner/test/publication-retry.test.ts > 検索を確認できないときは新規作成しない > [REQ-165] 検索結果 [{\"url\":\"https://github.com/example/repo/pull/1\",\"baseRefName\":\"main\",\"headRefName\":\"loomake/c1\",\"isCrossRepository\":true}] で停止して証拠を残す\n     FAIL  packages/runner/test/publication-retry.test.ts > 検索を確認できないときは新規作成しない > [REQ-165] 検索結果 [{\"url\":\"https://github.com/example/repo/pull/1\",\"baseRefName\":\"main\",\"headRefName\":\"loomake/c1\",\"isCrossRepository\":false},{\"url\":\"https://github.com/example/repo/pull/1\",\"baseRefName\":\"main\",\"headRefName\":\"loomake/c1\",\"isCrossRepository\":false}] で停止して証拠を残す\n     FAIL  packages/runner/test/publication-retry.test.ts > 再試行の再検証と状態保護 > [REQ-166] 今回の検証に不合格なら過去の証拠を代用しない\n     FAIL  packages/runner/test/publication-retry.test.ts > 再試行の再検証と状態保護 > [REQ-166] 検証がHEADを変えたら取り消さず外部操作を止める\n     FAIL  packages/runner/test/publication-retry.test.ts > 再試行の再検証と状態保護 > [REQ-166] 検証がブランチを変えたら取り消さず外部操作を止める\n     FAIL  packages/runner/test/publication-retry.test.ts > 再試行の再検証と状態保護 > [REQ-166] 検証が作業ファイルを変えたら、その変更を残して停止する\n    TypeError: Cannot read properties of undefined (reading '0')\n     ❯ git packages/runner/src/git.ts:18:37\n         16| }\n         17|\n         18| /** 未コミットの変更。追跡していないファイルを含み、.gitignore で除外したものは含めない */\n           |                                     ^\n         19| export const dirtyFiles = (root: string, env: NodeJS.ProcessEnv) =>\n         20|   git(root, env, ['status', '--porcelain', '--untracked-files=all']).s…\n    \n    ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/25]⎯\n    \n    [ELIFECYCLE] Test failed. See above for more details.\n✔ 要件ごとのテスト\n\n不合格（1 件）\n[ELIFECYCLE] Command failed with exit code 1.\n"
+    },
+    "cause": "New beforeEach returned the mockClear result (the mock function). Vitest called it as a cleanup hook with no git arguments. The block-bodied callback returns void; no assertions or expected values were relaxed. This is a test-authoring defect, not a product regression.",
+    "correctedFocused": {
+      "passed": 25,
+      "failed": 0,
+      "pending": 0,
+      "sha256": "18c15c6475e262f482bf77730b4894c507a7e9ce09f3a99c2e7988398f2733de",
+      "failures": []
+    }
+  },
+  "mutation": {
+    "scope": "Isolated product mutation: push despite a stopping gate result. Existing local bare origin and actual Git; no remote network service.",
+    "temporaryRoot": "/tmp/loomake-retry-push-mutant-w83wrkl1",
+    "mutation": {
+      "file": "packages/runner/src/run.ts",
+      "before": "    if (stop) return rec.finish(stop.status, stop.reason, stop.remaining);",
+      "after": "    if (stop) { git(ctx.root, ctx.env, ['push', 'origin', ctx.branch]); return rec.finish(stop.status, stop.reason, stop.remaining); }"
+    },
+    "exit": 1,
+    "passed": 0,
+    "failed": 1,
+    "pending": 24,
+    "failures": [
+      {
+        "test": "再試行の再検証と状態保護 [REQ-166] 今回の検証に不合格なら過去の証拠を代用しない",
+        "messages": [
+          "AssertionError: expected [ [ …(3) ] ] to deeply equal []\n    at expectNoPush (/tmp/loomake-retry-push-mutant-w83wrkl1/packages/runner/test/publication-retry.test.ts:20:80)\n    at /tmp/loomake-retry-push-mutant-w83wrkl1/packages/runner/test/publication-retry.test.ts:164:5\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at withRepo (/tmp/loomake-retry-push-mutant-w83wrkl1/packages/runner/test/publication-retry.test.ts:35:5)\n    at async file:///tmp/loomake-quality-after-merge/node_modules/.pnpm/vitest@5.0.5_@types+node@26.6.5_@vitest+coverage-v8@5.0.5_vite@8.3.5_@types+node@26.6.5_yaml@2.9.1_/node_modules/vitest/dist/chunks/run.BPv-BBRv.js:2801:20"
+        ]
+      }
+    ],
+    "testSourceSha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506",
+    "originalProductionSourceUnchanged": true
+  },
+  "specGate": {
+    "exit": 0,
+    "log": "$ pnpm -r --silent build && node packages/cli/dist/cli.js verify --change audit-scenario-evidence --spec-only\n\nLoomake verify  mode=spec-only  change=audit-scenario-evidence\n\n✔ change の存在\n✔ proposal.md の存在\n✔ tasks.md の存在\n✔ trace.md の存在\n✔ 要件モデルの整合性\n✔ trace.md の解析\n✔ 要件台帳\n✔ ブロッキング確認事項\n✔ 同じ確認事項の回答\n✔ spec.md の解析\n✔ Requirement の Source\n✔ Source が台帳にある\n✔ Scenario の有無\n✔ 反映済の要件が仕様にある\n✔ openspec validate\n\n合格\n"
+  },
+  "doneGate": {
+    "exit": 0,
+    "passed": 865,
+    "failed": 0,
+    "pending": 0,
+    "sha256": "a8b57716849acb0469d33f5742d11a95a1290e550c08b912182550ca21062927",
+    "failures": [],
+    "node": "v24.21.0",
+    "log": "$ pnpm -r --silent build && node packages/cli/dist/cli.js verify --change audit-scenario-evidence --done\n… lint: pnpm lint\n… typecheck: pnpm typecheck\n… test: pnpm test\n\nLoomake verify  mode=done  change=audit-scenario-evidence\n\n✔ change の存在\n✔ proposal.md の存在\n✔ tasks.md の存在\n✔ trace.md の存在\n✔ 要件モデルの整合性\n✔ trace.md の解析\n✔ 要件台帳\n✔ ブロッキング確認事項\n✔ 同じ確認事項の回答\n✔ spec.md の解析\n✔ Requirement の Source\n✔ Source が台帳にある\n✔ Scenario の有無\n✔ 反映済の要件が仕様にある\n✔ openspec validate\n✔ 確認待ちが残っていない\n✔ tasks.md\n✔ command: lint\n✔ command: typecheck\n✔ command: test\n✔ 要件ごとのテスト\n\n合格\n"
+  },
+  "node22Full": {
+    "exit": 0,
+    "passed": 865,
+    "failed": 0,
+    "pending": 0,
+    "sha256": "011680f06074f48c00103bbd21e5c2930d803aa5331a0e2d228b01fe8c6a5afa",
+    "failures": [],
+    "node": "v22.12.0",
+    "binarySha256": "f220994a9cd62983cdf538dc638dbc29c7e600fecd3c79828a4bd81ab34e19bf",
+    "os": "Linux ARM64",
+    "command": "PATH=<verified Node22 bin>:$PATH node node_modules/vitest/vitest.mjs run --maxWorkers=1 --reporter=json --outputFile=.loomake/quality/stop-retry-node22-full-report.json",
+    "note": "Separate full execution, not the ordinary done gate or a different OS. Child node commands also use Node22."
+  },
+  "priorPackedNode22": {
+    "sourceEvidenceSha256": "c24f9aef33cc93f6724e2298e75a440cf83c06f74a5a15f0eb7d8f53827c70c8",
+    "productionSourceDiff": "",
+    "runtimeScriptSha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d",
+    "note": "Historical packed checks carried forward after identity checks, not rerun here."
+  },
+  "review": {
+    "entries": [
+      {
+        "id": "SCN-95364dbf8675120e8f4b",
+        "status": "reviewed",
+        "scenarioSha256": "986ac7e204b3023f46466c2153c7412e919c4023f815e400a5ee6ff7da4439a6",
+        "sources": [
+          "REQ-105"
+        ],
+        "reason": "実行中の見本エンジン自身がPIDを書いてから待機する。短い既存の期限でrunが終了1となり、時間上限の理由と従来の経過時間を確認した後、PIDファイルの存在・正の整数・そのPIDが生存しないことをassertする。試験自身の後片付けはassertion後のfinallyで行う。プロセスが起動しなかった場合は成功としない。",
+        "tests": [
+          {
+            "file": "packages/runner/test/run.test.ts",
+            "contains": "実行時間が上限に達したら、エンジンを止めて",
+            "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          }
+        ],
+        "scenario": "上限に達する"
+      },
+      {
+        "id": "SCN-8b478bee2ca2d91a265f",
+        "status": "reviewed",
+        "scenarioSha256": "4483ec28f66006a4a33bd773cb93cb026181312e893427605e372a3b10c99dbd",
+        "sources": [
+          "REQ-105"
+        ],
+        "reason": "実際の品質コマンドがPIDを書いて待機し、既存の期限で停止する入力で、終了1・理由・エンジン起動2回・経過時間・ゲート未完了を維持した。PIDの存在と有効な整数、runが戻った時点のプロセス消滅もassertし、その後に試験自身の後片付けを行う。",
+        "tests": [
+          {
+            "file": "packages/runner/test/run.test.ts",
+            "contains": "完了ゲートのテストが終わらないまま上限に達したら",
+            "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          }
+        ],
+        "scenario": "完了ゲートのあいだに上限に達する"
+      },
+      {
+        "id": "SCN-bbacd660ae842db0a35f",
+        "status": "reviewed",
+        "scenarioSha256": "619f23bdbfde6375b8da091197c4fac6021f51d19843b4db0f96d6a5818f424a",
+        "sources": [
+          "REQ-158"
+        ],
+        "reason": "見本エンジンの起動を待って別のdry-runを実行し、終了1・ロックの理由・起動1回・HEADとtasksの不変を確認する。最初の実行ディレクトリの全ファイル名と内容も前後で一致することをassertし、先の記録を変更しないことを確認する。",
+        "tests": [
+          {
+            "file": "packages/runner/test/run.test.ts",
+            "contains": "二重起動は先の実行を変更せず",
+            "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          }
+        ],
+        "scenario": "実行中に二重起動する"
+      },
+      {
+        "id": "SCN-1ff43e7d569fd71e555e",
+        "status": "reviewed",
+        "scenarioSha256": "63a79ecaa0b999309bb1070cff57bdeef935fe473c7cf25401717f34ae69d753",
+        "sources": [
+          "REQ-158"
+        ],
+        "reason": "エンジンを中断して終了を待ち、ロック不在と次のdry-run終了0を確認する。中断時のfixtureは未コミットの変更を残さない。通常の未コミット変更を拒否する別試験も併用し、ロックの二重取得と解放後の再取得も直接試験する。",
+        "tests": [
+          {
+            "file": "packages/runner/test/run.test.ts",
+            "contains": "二重起動は先の実行を変更せず",
+            "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          },
+          {
+            "file": "packages/runner/test/run.test.ts",
+            "contains": "コミット済みのファイルを書き換えていたら",
+            "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          },
+          {
+            "file": "packages/runner/test/lock.test.ts",
+            "contains": "二重取得を拒否し、解放後は再取得できる",
+            "sha256": "fee9a0104269281a51692c0c81d265504aa3bcbc74f8b663cf8a357f5502165c"
+          }
+        ],
+        "scenario": "中断して再実行する"
+      },
+      {
+        "id": "SCN-a789a80f2fc0149cd5e4",
+        "status": "reviewed",
+        "scenarioSha256": "b300a251fb4d9ab9d0236a76040483bcc49051d1fdc5cd1d60344f45f131f16c",
+        "sources": [
+          "REQ-159"
+        ],
+        "reason": "同じホストの終了済み所有者からの回復と回復用ロックの除去を直接試験する。実際の子プロセスがロックを書いた後、生存中の取得拒否、SIGKILL後のexit待ち、取得と解放も確認する。別の回復処理がある間は元のロックを保つ試験を併用する。",
+        "tests": [
+          {
+            "file": "packages/runner/test/lock.test.ts",
+            "contains": "同じホストの終了済み所有者から回復する",
+            "sha256": "fee9a0104269281a51692c0c81d265504aa3bcbc74f8b663cf8a357f5502165c"
+          },
+          {
+            "file": "packages/runner/test/lock.test.ts",
+            "contains": "強制終了した実プロセスのロックを回復する",
+            "sha256": "fee9a0104269281a51692c0c81d265504aa3bcbc74f8b663cf8a357f5502165c"
+          },
+          {
+            "file": "packages/runner/test/lock.test.ts",
+            "contains": "回復処理が重なったときは元のロックを削除しない",
+            "sha256": "fee9a0104269281a51692c0c81d265504aa3bcbc74f8b663cf8a357f5502165c"
+          }
+        ],
+        "scenario": "終了済みの所有者"
+      },
+      {
+        "id": "SCN-bcc1361db7f3a8a93c09",
+        "status": "reviewed",
+        "scenarioSha256": "e83552c24ea485beb4cb0e4bba0e5d67516be46d878f7f6852c7dfbf6dc995d3",
+        "sources": [
+          "REQ-159"
+        ],
+        "reason": "壊れたJSONと別ホストの所有者の2入力で取得を拒否し、元のロック全文、HEAD、追跡済み・未追跡ファイルを含むclean状態を保つことをassertする。所有者の終了確認と再実行を案内する日本語も確認する。",
+        "tests": [
+          {
+            "file": "packages/runner/test/lock.test.ts",
+            "contains": "不明か別ホストのロック",
+            "sha256": "fee9a0104269281a51692c0c81d265504aa3bcbc74f8b663cf8a357f5502165c"
+          }
+        ],
+        "scenario": "所有者を判断できない"
+      },
+      {
+        "id": "SCN-ab9c8621bac94bca4228",
+        "status": "reviewed",
+        "scenarioSha256": "008e831fd4424025336394d1bf15f39ff3ddb62a7dc2e200185a9ac5b412dc3a",
+        "sources": [
+          "REQ-160"
+        ],
+        "reason": "同じDateをnowへ渡して質問の異なるrunを2回行い、ディレクトリが2個、両summaryの理由と両01-output.jsonのresultが別々に残ることをassertする。",
+        "tests": [
+          {
+            "file": "packages/runner/test/run.test.ts",
+            "contains": "同じ秒に再実行しても両方の理由とログを残す",
+            "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          }
+        ],
+        "scenario": "同じ秒の再実行"
+      },
+      {
+        "id": "SCN-520afb964a4265f49d56",
+        "status": "reviewed",
+        "scenarioSha256": "772bbe5fcab3fe99f0da5bb4caa7ef0395a1e121beb79870df29f9fbe9564f87",
+        "sources": [
+          "REQ-164"
+        ],
+        "reason": "ローカルbare originのpush失敗、見本ghの作成前・作成後の失敗から再試行し、正常終了とHEAD・証拠数・証拠全文の不変、エンジン2回のまま、必要な作成回数を確認する。今回の品質ゲートを不合格にすると進めない別試験も併用する。実際のGitHub接続の成功ではない。",
+        "tests": [
+          {
+            "file": "packages/runner/test/publication-retry.test.ts",
+            "contains": "作成の",
+            "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+          },
+          {
+            "file": "packages/runner/test/publication-retry.test.ts",
+            "contains": "push失敗後に同じ証拠を再利用して送信する",
+            "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+          },
+          {
+            "file": "packages/runner/test/publication-retry.test.ts",
+            "contains": "今回の検証に不合格なら過去の証拠を代用しない",
+            "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+          }
+        ],
+        "scenario": "pushやPR作成の失敗後に再実行する"
+      },
+      {
+        "id": "SCN-798ef6eec89c203fa332",
+        "status": "reviewed",
+        "scenarioSha256": "ec97daaa9fbfed5fc0d3fa42ace52abb125b06aaea1d9beb229fa07e1f6fd989",
+        "sources": [
+          "REQ-164"
+        ],
+        "reason": "json・SHA・change・全体不合格・結果のfail・内容ハッシュ・文書snapshot・旧形式の8候補を証拠だけのコミットへ入れ、再試行を終了1で停止させる。理由の表示、HEAD、証拠全文と数、PR作成呼び出し数の不変をassertする。",
+        "tests": [
+          {
+            "file": "packages/runner/test/publication-retry.test.ts",
+            "contains": "の証拠は消さず増やさず停止する",
+            "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+          }
+        ],
+        "scenario": "不正な証拠が直前にある"
+      },
+      {
+        "id": "SCN-a80f45fe68c7186b0f58",
+        "status": "reviewed",
+        "scenarioSha256": "697b3e9342a457555613eeadd280ae428eae0038542961a7d8911a68ffb4ccae",
+        "sources": [
+          "REQ-164"
+        ],
+        "reason": "証拠コミットの後でimplを変更してコミットし、再試行成功・証拠2個・新しい証拠の対象SHAが変更後のコミットであること・古い証拠全文の不変を確認する。",
+        "tests": [
+          {
+            "file": "packages/runner/test/publication-retry.test.ts",
+            "contains": "証拠の後に実装を変えたら新しい対象SHAの証拠を作る",
+            "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+          }
+        ],
+        "scenario": "証拠の後で実装を変更した"
+      },
+      {
+        "id": "SCN-1009fcbe6e97219df063",
+        "status": "reviewed",
+        "scenarioSha256": "8583768795ee6a09def702211d5c08a7e79f23909cf5178ccb2920284f09c1bd",
+        "sources": [
+          "REQ-165"
+        ],
+        "reason": "見本ghがPRを作ってから失敗する入力の再試行で、終了0・既存PRの案内・同じHEADと証拠全文・作成呼び出し1回を確認する。完了後の再実行でも作成が増えず検索だけが2回となる試験を併用する。実GitHubの応答喪失試験ではない。",
+        "tests": [
+          {
+            "file": "packages/runner/test/publication-retry.test.ts",
+            "contains": "作成のafterで失敗した後も同じ証拠とコミットを使う",
+            "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+          },
+          {
+            "file": "packages/runner/test/publication-retry.test.ts",
+            "contains": "完了後も再実行で証拠・コミット・PRを増やさない",
+            "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+          }
+        ],
+        "scenario": "作成の応答だけが失われた"
+      },
+      {
+        "id": "SCN-c377da1a340269f308e2",
+        "status": "reviewed",
+        "scenarioSha256": "ecbf4c50aac52c98bb633ac9eff46de3396f12b12c78d450818a20db594c1537",
+        "sources": [
+          "REQ-165"
+        ],
+        "reason": "検索エラー・壊れたJSON・配列以外・不正scheme・資格情報付きURL・別head・別リポジトリ・複数候補の8入力で、終了1・PR作成なし・証拠1個を確認する。検索は見本ghであり、実GitHubの状態ではない。",
+        "tests": [
+          {
+            "file": "packages/runner/test/publication-retry.test.ts",
+            "contains": "検索結果",
+            "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+          }
+        ],
+        "scenario": "PR検索の結果を判断できない"
+      },
+      {
+        "id": "SCN-251479fc1e751b7f836a",
+        "status": "reviewed",
+        "scenarioSha256": "d17579ee7e35ac1cd711d0500aa6c1a42c4514556ea40ecada1c68879b708c97",
+        "sources": [
+          "REQ-166"
+        ],
+        "reason": "初回の証拠と作成失敗を用意し、再試行の品質コマンドが不合格レポートを作る条件で、終了1・HEADと証拠数の不変・検索とPR作成が増えないことを確認する。実Gitを呼ぶ関数のspyで初回pushを確認して履歴を消し、再試行にはpushがないこともassertする。不合格でもpushする変異を検出した。",
+        "tests": [
+          {
+            "file": "packages/runner/test/publication-retry.test.ts",
+            "contains": "今回の検証に不合格なら過去の証拠を代用しない",
+            "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+          }
+        ],
+        "scenario": "再試行で検証が不合格になる"
+      },
+      {
+        "id": "SCN-b23b3f5de51d0e388763",
+        "status": "reviewed",
+        "scenarioSha256": "74f880394def561d9109432c04bfc134d1682ac1c9a0fc9717714162fa18ee9b",
+        "sources": [
+          "REQ-166"
+        ],
+        "reason": "再試行の品質コマンドがHEAD・ブランチ・作業ファイルを変える3条件で、終了1と理由を確認し、HEADを元へ戻さず、変更したブランチやファイルを保つことをassertする。初回pushの正の対照を取ったspyで、再試行にはpushがなく、検索・作成と証拠も増えないことを確認する。",
+        "tests": [
+          {
+            "file": "packages/runner/test/publication-retry.test.ts",
+            "contains": "を変えたら取り消さず外部操作を止める",
+            "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+          },
+          {
+            "file": "packages/runner/test/publication-retry.test.ts",
+            "contains": "検証が作業ファイルを変えたら、その変更を残して停止する",
+            "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+          }
+        ],
+        "scenario": "検証が作業状態を変更する"
+      },
+      {
+        "id": "SCN-41989316d0079c9e056f",
+        "status": "reviewed",
+        "scenarioSha256": "222db3d16da66c56fc06d9a506ddfd4cd1038b57bcd4103c07cb5d707e4b86f7",
+        "sources": [
+          "REQ-193"
+        ],
+        "reason": "設定を壊れたJSONへ書き換えてCLI mainを呼び、終了2・設定ファイルを示す日本語・SyntaxErrorの露出なし・エンジン起動なし・実行記録なしを確認する。",
+        "tests": [
+          {
+            "file": "packages/runner/test/run.test.ts",
+            "contains": "loomake.config.json を JSON として読めなければ",
+            "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          }
+        ],
+        "scenario": "JSON が壊れている"
+      }
+    ],
+    "counts": {
+      "total": 455,
+      "reviewed": 404,
+      "superseded": 9,
+      "unreviewed": 28,
+      "invalid": 14
+    },
+    "inputs": {
+      "specs": {
+        "openspec/changes/audit-scenario-evidence/specs/scenario-evidence-audit/spec.md": "8e9b6cde88c1367a3c78ca4c3864c97f4eafe832b64b5c309c480a3e969c8eb5",
+        "openspec/changes/fix-guard-review-findings/specs/run-guards/spec.md": "debb43c72c79f65f7c1112a1be845b29b3d5e4801a26cf4adab20727d4f572cc",
+        "openspec/changes/guard-git-internals/specs/run-guards/spec.md": "ae2d682dbbc3e120f891cf008012aa8828af8980ef7e5f7e99a45ef1ea756a3c",
+        "openspec/changes/guard-git-internals/specs/run/spec.md": "66ba42fd385ae84698354fa2a2304f1e601d1ee919fc93c6d62dff2e7ffec3d2",
+        "openspec/changes/isolate-release-permissions/specs/monorepo/spec.md": "337cad1794b1f4919faa3d2cbffdc5e7a0f54c892182b2e5df11df966a2b3af3",
+        "openspec/changes/isolate-run-decisions/specs/run-decision-policy/spec.md": "5eb1217d3c40b9fdd3dc67991664cca7fb9b63973718b804a246059eef8b407e",
+        "openspec/changes/prepare-npm-publish/specs/monorepo/spec.md": "6777481dcd4055e9029755615da2659cd0211e94190aa6df9c52788ba317c0b4",
+        "openspec/changes/protect-run-diagnostics/specs/run/spec.md": "d3fd4964728b04faf968037f00c6034ede145f3c5502a5cc7832d61b6a24015e",
+        "openspec/changes/relax-commit-push-budget/specs/external-process-budget/spec.md": "a0391648bd6e83f81af152aae23aa609a38420dc40ac28a66deae4df2924da0d",
+        "openspec/changes/require-node-22/specs/monorepo/spec.md": "a71c60341abed633cb5a4fd651720230117ce8f53c7eedb404d8bea4984cfec3",
+        "openspec/changes/require-node-22/specs/run/spec.md": "83a41bcc311daf5905fac7761d31ba200338c2dc6ed441c1a6c905016c9e7bbd",
+        "openspec/changes/require-node-22/specs/trace-record/spec.md": "6b9a228700ecf74dea0fa16402da3c2cc63e7ee0716bd1275ba1e1825ce0b613",
+        "openspec/changes/require-node-22/specs/trace-report/spec.md": "7866fb841f6ccfef00aafe6c876362684f5dfe76d13e2b8d05a671b2e925c586",
+        "openspec/specs/agents-rules/spec.md": "8315a9b5b7668679a1f843120b0d9f150388b822ecf42807bd2e42188081bc5e",
+        "openspec/specs/bounded-input/spec.md": "2db14275dd45eca3387c9c7c618141341b418b4a035d94f878a31e26af88e7b8",
+        "openspec/specs/cli/spec.md": "efd2c40edc6e8cc54b40097e64ff735cc36f3f6a3f05743ec0d1da5159e05875",
+        "openspec/specs/core-parsers/spec.md": "8355b91847d9c9f1dbd9db2f0bc9b4d64605967e671d703b9031404bb7caff8a",
+        "openspec/specs/doctor/spec.md": "49c0ceab823b5859569f9a0865cc6058e03b541a2def98c0bdede016488ba36e",
+        "openspec/specs/domain-mutation-check/spec.md": "6be475fb141c6397905911d539c425d6a95cd6be6985ff74eae239de70acc107",
+        "openspec/specs/evidence-publication/spec.md": "c900f0584fb4acb64ea07985624411359c18bc2fbf3e1494f8d610651998f042",
+        "openspec/specs/external-process-budget/spec.md": "4ac77e340a576c37d7fccc035f045bc1dc549e55dda4d4f5ef1a5c53ff61c7e4",
+        "openspec/specs/init/spec.md": "5f81b6565baf25c80ccca94cdfbfff01777b796ccf8382f0f45fb3cc9b26c098",
+        "openspec/specs/monorepo/spec.md": "9bf3100d8def016ea6a4c8214dda0149e47036beff7028db17b5c98004069dfc",
+        "openspec/specs/quality-journeys/spec.md": "61d9276aa545cdbd991dba104cb3da4d184e963ec3a395e962927f5229596178",
+        "openspec/specs/release-integrity/spec.md": "32f45cde5e4ac85df67ebeb6c24f52cbd59d166fed0fa4ddd5456fa72e1a3420",
+        "openspec/specs/req-to-openspec-skill/spec.md": "7299503a7ac4f0b61403e89e303ec5058bd3fd9cfa44583b49a1734a50d21a13",
+        "openspec/specs/run-guards/spec.md": "c4dd0a864b82671e3fd35b10124d08f67889fa90abd8bf4ee893b868aaedadb6",
+        "openspec/specs/run-pr/spec.md": "afb123cad0b88b4a77339f692372d2ed65d31a4dc776030d36e5bafc7b6d1812",
+        "openspec/specs/run-record-budget/spec.md": "976bcdc4c2985bcf8d43900e71d51d4394eaa17511e3a77073ad4227a30d0620",
+        "openspec/specs/run/spec.md": "713585d18620e958a187a6a98728ee73c6c4c0aa32c627be616e5a2996a287d9",
+        "openspec/specs/trace-agreement/spec.md": "3b44cff0873c91ea855a14e8742dbd4c6e08e59ed70fd7bea162757c726e31dc",
+        "openspec/specs/trace-record/spec.md": "5eb2664fd79a0bff00ece1de6e4462d75e27ace3905537446b67660e99f2ab95",
+        "openspec/specs/trace-report/spec.md": "36593387034d984400333dc5371f88079b2a4e18108d54cca380aa9b20de909d",
+        "openspec/specs/verification-policy/spec.md": "3adba9533cfd13ad34cad39f2d79e02cf3da225bfcd2e11869dc24cea16e7eb2",
+        "openspec/specs/verify/spec.md": "93bda125d67ea5fed42212a909ce4abaf5b561792e3a9d3c8f1fc9048bd83aa7"
+      },
+      "testSources": {
+        "tests/ai-journeys.test.ts": "5d1934a2891224bd9ade78232509f9f529e8e6c36c3bf115843bb56e9a3f11f2",
+        "tests/domain-mutations.test.ts": "2b753f35a5ce2e4372d760077ca03f77e50004ea50e5a650bb9cffe1aa16a15b",
+        "tests/input-boundaries.test.ts": "89a368ec8c39e79bd883da212b897401371958751a3dba23ddc136ec71861829",
+        "tests/kit-assets.test.ts": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40",
+        "tests/monorepo.test.ts": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6",
+        "tests/package-artifacts.test.ts": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a",
+        "tests/package-workflows.test.ts": "c82be3653a952f37c8e5ad976fe0d00aa2028fef9d3ef16eca6a75e8450622bf",
+        "tests/public-source-exports.test.ts": "3668c02f7537b0e4abbfdd8a0c2e3daa2b36f62b2cdb56079fe83658ae5b2e77",
+        "tests/release-security.test.ts": "52b011dbbe528eab5c4576aca08bff0b296b07e0c1d1ef5533a523d85a08dda9",
+        "tests/run-decision-mutations.test.ts": "bdf056d8986a4abcb1afcf6e26c803801a81c1d75cec063f3880886644b4653c",
+        "tests/scenario-audit.test.ts": "4b9d89bde6b3c19867fba52f6e74c69968f001226a7328233e8b491b24dcd4fd",
+        "tests/schema-compatibility.test.ts": "bdb7f3bb6d55a56df0ce3d1f0fa0c31a6a4bb3dcd670c1ba18c7a31d4ec6e0da",
+        "packages/cli/test/arguments.test.ts": "ce0333abbadeb77021844db854f55d9e628c12b99f0f8705ea071ede067ece5a",
+        "packages/cli/test/cli.test.ts": "0f36c01b0c8947a0cfab325b0a3f72149826b3cfcdd7828eb3ce8424b93ef2b2",
+        "packages/cli/test/doctor.test.ts": "b71041f6ee0b7de94ae34a91269839ceadfc0886f92dd4d0ffa52558a4e16b4d",
+        "packages/cli/test/init.test.ts": "b41daa2028a3e4d693210908b60d155bf672e9137bf7ad22d912ce59b4b8856e",
+        "packages/cli/test/trace-agreement.test.ts": "003cf20521ab1362372f1ce93cbbc046ea71a9bfcfd4b401b652509aadab9636",
+        "packages/cli/test/verify-boundaries.test.ts": "453d06454e94c6850d239e713c1258885a0a6e642f5f312aee48eb1fd5436a12",
+        "packages/core/test/agreement.test.ts": "68e212efdfe32dce2a259b982260a1cc26e7a78551886f8628e05cd1604acbbf",
+        "packages/core/test/coverage-policy.test.ts": "61add31ac1281ad2949cfda26529bfe7ec102b34fb8c06bf2d5d40c90ee32bb8",
+        "packages/core/test/package.test.ts": "6c32b72bc19cd187c4337ae78ff9c2b42f39e5ff40ef0156175a8845d0e84fb4",
+        "packages/core/test/schema.test.ts": "ee3ee3a0d181d9e98ff8aecc6fa70b2197748f938b4265e5ed2c1048ffad2891",
+        "packages/core/test/spec.test.ts": "542fe6ec2963ca726db1b6948e8bbe27f5bc9694cca87b437e4d9f63f6f8c9c3",
+        "packages/core/test/tasks.test.ts": "d317048c05efd6bef9126b9f8a848de40e6202c278bfdff32535bf129439ec2c",
+        "packages/core/test/test-report.test.ts": "c7153a95adba3abf1d612e07134454d17aa93ece23874ffc140db2d5136859f1",
+        "packages/core/test/trace-edit.test.ts": "db99961acc8021a96ae61c6d5e78f76fda0e8383a25958bdf00e975f7e00d98d",
+        "packages/core/test/trace.test.ts": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40",
+        "packages/kit/test/change-files.test.ts": "1964cfcdae7c9ad29aad34668efc4e33606c63dadf9798e7249ce1407b2bbc31",
+        "packages/kit/test/doctor-command.test.ts": "a0e75f4a867c6a7c85dd0959a9737cb2fe4ad50f8d4dd84dfe9e9ab41b1ea0e6",
+        "packages/kit/test/doctor-diagnostics.test.ts": "f30c2b3670db786adda6047b18c348b5ac6abe38a54f6a406ef367960893f985",
+        "packages/kit/test/input.test.ts": "c2a2bfddf4de8ef57ea86a3e916d0fcabfc019f50a5221e2cfe186180592f985",
+        "packages/kit/test/process.test.ts": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca",
+        "packages/kit/test/verify.test.ts": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f",
+        "packages/runner/test/decision-policy.test.ts": "000c9763c5b9e05f706579261d1f4a14a5bd5d442cb34015ae008532a79ba561",
+        "packages/runner/test/diagnostic-redactor.test.ts": "bc1d89cd9d21bc9079f3626cd0c06eb26f9e7036483b6c3f5c09b2d0414704d4",
+        "packages/runner/test/engine-safety.test.ts": "7c75c2f45e35c3daf7c65fb9551eb924a0b3d7e34656a71cd0cc3ae486711317",
+        "packages/runner/test/evidence-storage.test.ts": "16cd666b698613e965a0c1547e97b68a56431b2f576b7f9e45caf7954adbeebb",
+        "packages/runner/test/external-budget.test.ts": "2526e2b8662dc95fc98b9c20260119778f5ad2eb3ec187b9f1b232a24b3736ac",
+        "packages/runner/test/guard-path-integration.test.ts": "e31d591ad04ece3601b546325c2f627d6ecf467a1675e415eac23220bc594ec4",
+        "packages/runner/test/guards.test.ts": "0ab3ca54f770d08f43be228fb07a505776b9d818db4e8e97d6fa92626d5fce2f",
+        "packages/runner/test/lock.test.ts": "fee9a0104269281a51692c0c81d265504aa3bcbc74f8b663cf8a357f5502165c",
+        "packages/runner/test/log-config.test.ts": "8f76ad8d7938289e28b1c534473c27bdaed047603e8da7873b5d7fa242f326ea",
+        "packages/runner/test/log-run.test.ts": "8739b25d089dc16b12339bdb8cd0c63f3915848449ed0cf7d20666aafc39c000",
+        "packages/runner/test/logs.test.ts": "fc4f44af93ac4374860bce08583d0884c14adb9d73814ec372cafe70ea6bf9e5",
+        "packages/runner/test/mask.test.ts": "c021eebe799ff8c5762683db208f7b9adb6bdb0f35fe2be7f6e13200832910ec",
+        "packages/runner/test/output-budget.test.ts": "91e585da4ed7785f163c4be3828c85ca5e5e0704865d72439da2e8f3d85e14e0",
+        "packages/runner/test/output-processes.test.ts": "ba1bbba51f418c940a3b40b55501411289b3628d1c4fc5d04e73503ed56d15ec",
+        "packages/runner/test/pr.test.ts": "5c5caa14a32f1536bab7115107c0509a4591fe8afc5387d2048e0ae4b4121e30",
+        "packages/runner/test/publication-retry.test.ts": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506",
+        "packages/runner/test/run-conditions.test.ts": "ad3ecc2391eef40a16199597cc0e4feb6958c38fdfc9f8e3bdcabbe310b34511",
+        "packages/runner/test/run.test.ts": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5",
+        "packages/runner/test/safety-paths.test.ts": "e976ee7e1e4c985ae0566df7cf7d177bb254e35053a8410018fd4794a1ce4673",
+        "packages/trace/test/publication-crash.test.ts": "1fbdfb9d6afcd7fa07e83f9ca987593e50da39128cd4a6e354286326e9f9e5d6",
+        "packages/trace/test/publication.test.ts": "63231c8f68bbbe7901a3c28a437135b7aaebc689a66752682eb0a2422be710f9",
+        "packages/trace/test/record-size.test.ts": "db71a3294f7e3688bc76c9adbb527a0526a41c76304da1b8f350375514ec87e1",
+        "packages/trace/test/record.test.ts": "b3c144c80403227209fd76fae5ef61da7fb396ec52c8b8eaee1d0788a246ab2e",
+        "packages/trace/test/report.test.ts": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e",
+        "packages/trace/test/serialization.test.ts": "6cf85e33ea1af754e0245fc4259f994504be7310ea55c96abc971e81ebd5c247",
+        "scripts/runtime-compatibility.mjs": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
+      },
+      "testReportSha256": "5d45dcadc9a906ae725c411412f4d96eb356e460f316298df6e3660135e9adab",
+      "reviewSha256": "5e18f0d354f6ccdeb9890024ae24d82ab434e07b9b59064a9205d67e99b05d9c",
+      "scriptSha256": "3955fe0ffc31ab037de9ea656ce8114e3df62cb61a333c2cd20d804279081cab"
+    },
+    "environments": [
+      {
+        "id": "node24-full",
+        "node": "24.21.0",
+        "scope": "ordinary done gate",
+        "passed": 865,
+        "reportSha256": "a8b57716849acb0469d33f5742d11a95a1290e550c08b912182550ca21062927"
+      },
+      {
+        "id": "node22-full",
+        "node": "22.12.0",
+        "scope": "full repository, child PATH on Node22, maxWorkers=1",
+        "passed": 865,
+        "reportSha256": "011680f06074f48c00103bbd21e5c2930d803aa5331a0e2d228b01fe8c6a5afa"
+      },
+      {
+        "id": "node22-packed-prior",
+        "node": "22.12.0",
+        "scope": "prior packed offline 4 checks, carried forward after production-source and runtime-script identity checks",
+        "sourceCommit": "ebe7923ca68c05395ab6709a48db786009e2aea3",
+        "resultSha256": "c24f9aef33cc93f6724e2298e75a440cf83c06f74a5a15f0eb7d8f53827c70c8"
+      }
+    ],
+    "reportFile": "openspec/changes/audit-scenario-evidence/stop-retry-executions.json",
+    "reportSha256": "5d45dcadc9a906ae725c411412f4d96eb356e460f316298df6e3660135e9adab"
+  },
+  "assessment": {
+    "all15Scores": "unchanged",
+    "atLeast90": 6,
+    "totalAspects": 15,
+    "remaining": "Other process-group and pre-abort scenarios, remaining scenario evidence, intermittent failure causes, other OS, real engine/GitHub and publication."
+  }
+}

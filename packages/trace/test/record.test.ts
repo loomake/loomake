@@ -137,6 +137,23 @@ describe('証拠の記録', () => {
 });
 
 describe('未コミットの変更があるときは記録しない', () => {
+  it.each(['tracked', 'untracked'])('[REQ-067] %s の変更があるときは品質コマンドを実行しない', (kind) => {
+    const repo = makeRepo();
+    try {
+      const script = readFileSync(join(repo.root, 'write-report.mjs'), 'utf8');
+      repo.write('write-report.mjs', `${script}writeFileSync('quality-ran.log', 'ran');\n`);
+      gitRun(repo.root, 'commit', '-q', '-am', '品質コマンドの実行を記録する');
+      repo.write(kind === 'tracked' ? `openspec/changes/${CHANGE}/proposal.md` : 'new.txt', '変更\n');
+      const r = record(repo.root);
+      expect(r.code).toBe(1);
+      expect(existsSync(join(repo.root, 'quality-ran.log'))).toBe(false);
+      expect(existsSync(join(repo.root, '.loomake/test-report.json'))).toBe(false);
+      expect(evidenceFiles(repo.root)).toEqual([]);
+    } finally {
+      repo.cleanup();
+    }
+  });
+
   it('[REQ-067] コミット済みのファイルを書き換えていたら、ファイル名を出して記録せず、終了コード 1 を返す', () => {
     const repo = makeRepo();
     try {
@@ -252,6 +269,46 @@ describe('検証した時点の文書の保存', () => {
 });
 
 describe('検査のあいだの変更', () => {
+  it('[REQ-128] 検証後に作業ツリーがきれいでもHEADが変わったら記録しない', () => {
+    const repo = makeRepo();
+    try {
+      const before = gitRun(repo.root, 'rev-parse', 'HEAD');
+      const out: string[] = [];
+      const code = runRecord({ root: repo.root, changeId: CHANGE, stdout: (t) => out.push(t), onVerify: () => {
+        gitRun(repo.root, 'commit', '--allow-empty', '-q', '-m', '検証中の別コミット');
+      } });
+      expect(gitRun(repo.root, 'rev-parse', 'HEAD')).not.toBe(before);
+      expect(gitRun(repo.root, 'status', '--porcelain')).toBe('');
+      expect(code).toBe(1);
+      expect(out.join('\n')).toContain('HEAD のコミット');
+      expect(evidenceFiles(repo.root)).toEqual([]);
+    } finally {
+      repo.cleanup();
+    }
+  });
+
+  it('[REQ-128] Gitの除外対象でも保存する文書が検証中に変わったら記録しない', () => {
+    const repo = makeRepo();
+    try {
+      const trace = `openspec/changes/${CHANGE}/trace.md`;
+      repo.write('.gitignore', `.loomake/test-report.json\n*.log\n${trace}\n`);
+      gitRun(repo.root, 'rm', '--cached', trace);
+      gitRun(repo.root, 'commit', '-q', '-am', 'traceをGitの除外対象にする');
+      const before = gitRun(repo.root, 'rev-parse', 'HEAD');
+      const out: string[] = [];
+      const code = runRecord({ root: repo.root, changeId: CHANGE, stdout: (t) => out.push(t), onVerify: () => {
+        repo.write(trace, `${traceMd()}\n検証後の追記\n`);
+      } });
+      expect(gitRun(repo.root, 'rev-parse', 'HEAD')).toBe(before);
+      expect(gitRun(repo.root, 'status', '--porcelain')).toBe('');
+      expect(code).toBe(1);
+      expect(out.join('\n')).toContain('trace.md か差分仕様');
+      expect(evidenceFiles(repo.root)).toEqual([]);
+    } finally {
+      repo.cleanup();
+    }
+  });
+
   it('[REQ-128] 品質コマンドが追跡しているファイルを書き換えたら、記録せずに終了コード 1 を返す', () => {
     const repo = makeRepo();
     try {

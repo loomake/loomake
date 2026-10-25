@@ -52,9 +52,11 @@ describe('同期外部操作の監視', () => {
     }
   });
   it('[REQ-180][REQ-182] 操作間で残り時間を共有し、期限後は起動しない', () => fixture((dir) => {
-    withProcessBudget({ timeoutMs: 350 }, () => {
-      expect(call('setTimeout(()=>{},180)').status).toBe(0);
-      expect(() => call('setTimeout(()=>{},180)')).toThrow('時間の上限');
+    // 1 操作は単独なら予算内（1200ms < 2000ms）、2 操作の合計は予算を超える（2400ms > 2000ms）。
+    // 監視役と子の起動の時間も期限に含めるので、1 つ目の操作には起動のための余裕を 800ms 残す
+    withProcessBudget({ timeoutMs: 2000 }, () => {
+      expect(call('setTimeout(()=>{},1200)').status).toBe(0);
+      expect(() => call('setTimeout(()=>{},1200)')).toThrow('時間の上限');
       expect(() => call(`require('node:fs').writeFileSync(${JSON.stringify(join(dir, 'started'))},'x')`)).toThrow('時間の上限');
       expect(existsSync(join(dir, 'started'))).toBe(false);
     });

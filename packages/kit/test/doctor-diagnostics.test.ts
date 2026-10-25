@@ -47,11 +47,15 @@ describe('品質コマンドと診断範囲', () => {
     const before = snapshot(root); const result = run(root, bin);
     expect(result.code).toBe(0); expect(result.text).toContain('scripts.test を確認');
     expect(result.text).toContain('未確認：品質コマンドの成功・レポート生成・認証・ネットワーク接続');
+    expect(result.text).toContain('確認範囲：導入パス・実行ファイル・単純なscriptの存在・Gitの除外設定');
     expect(snapshot(root)).toEqual(before); expect(existsSync(join(root, 'executed'))).toBe(false);
   }));
   it.each(['CI=1 pnpm test', 'pnpm test && echo ok', 'pnpm --filter app test', 'yarn test', 'yarn run test'])('[REQ-185] %sは未確認の注意とし、不存在と断定しない', (command) => fixture((root, bin) => {
     config(root, command); writeFileSync(join(root, 'package.json'), JSON.stringify({ scripts: { lint: 'x', typecheck: 'x' } }));
     const result = run(root, bin); expect(result.code).toBe(0); expect(result.text).toContain('⚠'); expect(result.text).toContain('未確認'); expect(result.text).not.toContain('✖ test');
+    expect(result.text).toContain(command.startsWith('yarn')
+      ? 'package.json と依存のバイナリ・workspaceの設定を確認してください'
+      : 'commands.test と実際に使う環境を確認してください。doctor はこのコマンドを実行しません');
   }));
   it('[REQ-186] 引用付きの実行ファイルを見つける', () => fixture((root, bin) => {
     const file = join(bin, windows ? 'custom tool.cmd' : 'custom tool'); writeFileSync(file, ''); chmodSync(file, 0o755); config(root, `"${file}" test`);
@@ -70,8 +74,13 @@ describe('品質コマンドと診断範囲', () => {
 
 describe('Gitの診断の境界', () => {
   it('[REQ-187] 共有期限の終了をGit不存在と混同しない', () => fixture((root, bin) => {
-    const result = processes.withProcessBudget({ timeoutMs: 1 }, () => { const start = Date.now(); while (Date.now() - start < 5) { /* 先に期限を使い切る。 */ } return run(root, bin); });
-    expect(result.code).toBe(1); expect(result.text).toContain('実行時間の上限'); expect(result.text).not.toContain('git が見つかりません'); expect(result.text).not.toContain('レポート（.loomake/test-report.json）が .gitignore で除外されていません');
+    const spy = vi.spyOn(processes, 'runExternal');
+    try {
+      const result = processes.withProcessBudget({ timeoutMs: 1 }, () => { const start = Date.now(); while (Date.now() - start < 5) { /* 先に期限を使い切る。 */ } return run(root, bin); });
+      expect(result.code).toBe(1); expect(result.text).toContain('実行時間の上限'); expect(result.text).not.toContain('git が見つかりません'); expect(result.text).not.toContain('レポート（.loomake/test-report.json）が .gitignore で除外されていません');
+      expect(result.text).toContain('git status');
+      expect(spy.mock.calls.map(([command, args]) => [command, args])).toEqual([['git', ['--version']]]);
+    } finally { spy.mockRestore(); }
   }));
   it('[REQ-187] 実際にGit設定が壊れた場合は除外状態を断定しない', () => fixture((root, bin) => {
     writeFileSync(join(root, '.git/config'), '[broken\n');

@@ -22,7 +22,12 @@ export function inventoryScenarios(file, text) {
   const headings = lines.flatMap((line, i) => !masked[i] && /^#{1,3} /.test(line) ? [i] : []);
   const scenarioHeadings = lines.flatMap((line, i) => !masked[i] && /^#### Scenario:/.test(line) ? [i] : []);
   let cursor = 0;
+  let removedSection = false; let removedRequirements = 0; let removedScenarios = 0;
   for (const [index, start] of headings.entries()) {
+    if (/^#{1,2} /.test(lines[start])) {
+      removedSection = /^## REMOVED Requirements\s*$/.test(lines[start]);
+      continue;
+    }
     const heading = lines[start].match(/^### Requirement:\s*(.+?)\s*$/);
     if (!heading) continue;
     const end = headings[index + 1] ?? lines.length;
@@ -30,6 +35,10 @@ export function inventoryScenarios(file, text) {
     const first = cursor;
     while (cursor < scenarioHeadings.length && scenarioHeadings[cursor] < end) cursor++;
     const starts = scenarioHeadings.slice(first, cursor);
+    if (removedSection) {
+      removedRequirements++; removedScenarios += starts.length;
+      continue;
+    }
     required(starts.length > 0, `Scenarioがありません：${file}:${start + 1}`);
     const prefix = lines.slice(start, starts[0]);
     const contract = prefix.join('\n').trim();
@@ -44,8 +53,8 @@ export function inventoryScenarios(file, text) {
       rows.push({ id, file, requirement: heading[1], scenario: name, sources, line: line + 1, sha256: sha256(contract + '\n' + body), body });
     }
   }
-  required(rows.length === scenarioHeadings.length, `Requirementに属さないScenarioがあります：${file}`);
-  required(rows.length > 0, `Scenarioを読み取れません：${file}`);
+  required(rows.length + removedScenarios === scenarioHeadings.length, `Requirementに属さないScenarioがあります：${file}`);
+  required(rows.length > 0 || removedRequirements > 0, `Scenarioを読み取れません：${file}`);
   return rows;
 }
 

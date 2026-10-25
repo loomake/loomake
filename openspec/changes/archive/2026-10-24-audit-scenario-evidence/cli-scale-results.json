@@ -1,0 +1,149 @@
+{
+  "sourceCommit": "55ed8e3",
+  "node": "v24.21.0",
+  "platform": "linux",
+  "arch": "arm64",
+  "scope": "Actual compiled CLI process startup through verify completion, with real local OpenSpec validation and --skip-commands; seeded synthetic test reports, no test command run",
+  "limits": [
+    "Peak RSS is the CLI process only and excludes OpenSpec child RSS.",
+    "Logical fixture bytes exclude filesystem allocation and tool caches outside the fixture.",
+    "Three runs per scale on one host; fixtures were prepared before timing, so filesystem cache can be warm.",
+    "No RSS or disk SLO is inferred from the measurements."
+  ],
+  "inputs": {
+    "packages/cli/dist/cli.js": "bc8e428ea9823c7c61ee983520f87083128c0d3c333bcc92357c999060593a85",
+    "packages/cli/dist/main.js": "2325556f353bdecfdb024db8dfbc9f3613164a06f2657d894ebbbaa2ba3a4454",
+    "packages/kit/dist/verify/run.js": "f0c3c17a4fc41c8a236a258c2a4eb009dd7e1e6f13ab41ad8ad4a10524117929",
+    "packages/kit/dist/input.js": "184c8e524a3ea5ed2116b501d92f145650df505d21b124324cba1ef42dbd3102",
+    "packages/core/dist/index.js": "e0c372b02cb956c1bf8ca73b55212d5394c86047d8482436abfd26ad485cb2a2",
+    "packages/runner/src/run/decision-policy.ts": "d2a1c296142f8fb5290612537d81aad8bce7b81b35cc5d778df5d4cfe70d7996",
+    "packages/cli/test/cli.test.ts": "0f36c01b0c8947a0cfab325b0a3f72149826b3cfcdd7828eb3ce8424b93ef2b2"
+  },
+  "probeSha256": "cb363b9e3bfa1538f2777abb3cbe99b19f926efd35e65d594d253db98db94862",
+  "rows": [
+    {
+      "requirements": 10,
+      "files": 20,
+      "attempt": 1,
+      "wallMs": 1708.040042,
+      "stdoutBytes": 3097,
+      "stderrBytes": 0,
+      "logicalFixtureBytes": 6299,
+      "logicalBytesAdded": 0,
+      "inputAndReportUnchanged": true,
+      "peakCliRssBytes": 61599744,
+      "withinExistingThreeSecondTimeLimit": true
+    },
+    {
+      "requirements": 10,
+      "files": 20,
+      "attempt": 2,
+      "wallMs": 764.9391249999999,
+      "stdoutBytes": 3097,
+      "stderrBytes": 0,
+      "logicalFixtureBytes": 6299,
+      "logicalBytesAdded": 0,
+      "inputAndReportUnchanged": true,
+      "peakCliRssBytes": 62201856,
+      "withinExistingThreeSecondTimeLimit": true
+    },
+    {
+      "requirements": 10,
+      "files": 20,
+      "attempt": 3,
+      "wallMs": 838.224459,
+      "stdoutBytes": 3097,
+      "stderrBytes": 0,
+      "logicalFixtureBytes": 6299,
+      "logicalBytesAdded": 0,
+      "inputAndReportUnchanged": true,
+      "peakCliRssBytes": 62459904,
+      "withinExistingThreeSecondTimeLimit": true
+    },
+    {
+      "requirements": 100,
+      "files": 200,
+      "attempt": 1,
+      "wallMs": 831.6701250000001,
+      "stdoutBytes": 10130,
+      "stderrBytes": 0,
+      "logicalFixtureBytes": 58799,
+      "logicalBytesAdded": 0,
+      "inputAndReportUnchanged": true,
+      "peakCliRssBytes": 63705088,
+      "withinExistingThreeSecondTimeLimit": true
+    },
+    {
+      "requirements": 100,
+      "files": 200,
+      "attempt": 2,
+      "wallMs": 811.668917,
+      "stdoutBytes": 10130,
+      "stderrBytes": 0,
+      "logicalFixtureBytes": 58799,
+      "logicalBytesAdded": 0,
+      "inputAndReportUnchanged": true,
+      "peakCliRssBytes": 63725568,
+      "withinExistingThreeSecondTimeLimit": true
+    },
+    {
+      "requirements": 100,
+      "files": 200,
+      "attempt": 3,
+      "wallMs": 858.3008760000002,
+      "stdoutBytes": 10130,
+      "stderrBytes": 0,
+      "logicalFixtureBytes": 58799,
+      "logicalBytesAdded": 0,
+      "inputAndReportUnchanged": true,
+      "peakCliRssBytes": 64036864,
+      "withinExistingThreeSecondTimeLimit": true
+    },
+    {
+      "requirements": 500,
+      "files": 1000,
+      "attempt": 1,
+      "wallMs": 981.1594999999998,
+      "stdoutBytes": 41731,
+      "stderrBytes": 0,
+      "logicalFixtureBytes": 293199,
+      "logicalBytesAdded": 0,
+      "inputAndReportUnchanged": true,
+      "peakCliRssBytes": 70504448,
+      "withinExistingThreeSecondTimeLimit": true
+    },
+    {
+      "requirements": 500,
+      "files": 1000,
+      "attempt": 2,
+      "wallMs": 1520.3088340000004,
+      "stdoutBytes": 41731,
+      "stderrBytes": 0,
+      "logicalFixtureBytes": 293199,
+      "logicalBytesAdded": 0,
+      "inputAndReportUnchanged": true,
+      "peakCliRssBytes": 70656000,
+      "withinExistingThreeSecondTimeLimit": true
+    },
+    {
+      "requirements": 500,
+      "files": 1000,
+      "attempt": 3,
+      "wallMs": 770.8639589999984,
+      "stdoutBytes": 41731,
+      "stderrBytes": 0,
+      "logicalFixtureBytes": 293199,
+      "logicalBytesAdded": 0,
+      "inputAndReportUnchanged": true,
+      "peakCliRssBytes": 71049216,
+      "withinExistingThreeSecondTimeLimit": true
+    }
+  ],
+  "probeSource": "import assert from 'node:assert/strict';\nimport {writeFileSync,readFileSync,mkdirSync,readdirSync,lstatSync,mkdtempSync,rmSync} from 'node:fs';\nimport {join,resolve,delimiter} from 'node:path';import {tmpdir} from 'node:os';import {spawnSync}from'node:child_process';import {createHash}from'node:crypto';\nimport {withProject,traceMd,ledgerRow,requirement,reportJson}from'./project.mjs';\nconst repo=process.cwd(),cli=join(repo,'packages/cli/dist/cli.js'),scratch=mkdtempSync(join(tmpdir(),'loomake-cli-scale-'));\nconst sha=value=>createHash('sha256').update(value).digest('hex');\nconst snapshot=folder=>Object.fromEntries(readdirSync(folder,{withFileTypes:true}).flatMap(e=>{const p=join(folder,e.name);assert(!e.isSymbolicLink());return e.isDirectory()?Object.entries(snapshot(p)).map(([f,v])=>[join(e.name,f),v]):[[e.name,{bytes:lstatSync(p).size,sha256:sha(readFileSync(p))}]]}));\nconst rows=[];const preload=join(scratch,'metrics.cjs');writeFileSync(preload,\"process.on('exit',()=>require('node:fs').writeFileSync(process.env.LOOMAKE_PROFILE_OUTPUT,JSON.stringify({peakCliRssBytes:process.resourceUsage().maxRSS*1024,cpuUserMicros:process.resourceUsage().userCPU,cpuSystemMicros:process.resourceUsage().systemCPU})));\\n\");\ntry{\n for(const [requirements,fileCount]of [[10,20],[100,200],[500,1000]]){\n const ids=Array.from({length:requirements},(_,i)=>`REQ-${String(i+1).padStart(3,'0')}`);\n const spec=['## ADDED Requirements','',...ids.map(id=>requirement(`振る舞い ${id}`,{source:`Source: ${id}`}))].join('\\n');\n withProject({trace:traceMd({ledger:ids.map(id=>ledgerRow(id))}),spec,config:{openspecValidate:true,commands:{}}},root=>{\n mkdirSync(join(root,'tests'));mkdirSync(join(root,'.loomake'));const cases={};for(let i=0;i<fileCount;i++){const file=`tests/t${i}.test.ts`;cases[file]=[[`[${ids[i%ids.length]}] case ${i}`,'passed']];writeFileSync(join(root,file),`it('[${ids[i%ids.length]}] case ${i}',()=>{});\\n`);}\n writeFileSync(join(root,'.loomake/test-report.json'),reportJson(root,cases));const before=snapshot(root);\n for(let attempt=1;attempt<=3;attempt++){\n const metrics=join(scratch,`m-${requirements}-${attempt}.json`);const started=performance.now();const ran=spawnSync(process.execPath,['--require',preload,cli,'verify','--change','c1','--done','--skip-commands','--json'],{cwd:root,env:{...process.env,PATH:join(repo,'node_modules/.bin')+delimiter+process.env.PATH,LOOMAKE_PROFILE_OUTPUT:metrics},encoding:'utf8',timeout:15000,maxBuffer:8*1024*1024});const wallMs=performance.now()-started;\n assert.equal(ran.error,undefined);assert.equal(ran.status,0,ran.stdout+ran.stderr);const value=JSON.parse(ran.stdout);assert.equal(value.ok,true);assert.equal(Object.keys(value.coverage).length,requirements);assert(value.results.some(r=>r.check==='openspec validate'&&r.status==='pass'));assert(value.results.some(r=>r.check==='品質コマンド'&&r.status==='skip'));\n const after=snapshot(root);assert.deepEqual(after,before);const resource=JSON.parse(readFileSync(metrics,'utf8'));rows.push({requirements,files:fileCount,attempt,wallMs,stdoutBytes:Buffer.byteLength(ran.stdout),stderrBytes:Buffer.byteLength(ran.stderr),logicalFixtureBytes:Object.values(before).reduce((a,v)=>a+v.bytes,0),logicalBytesAdded:0,inputAndReportUnchanged:true,...resource,withinExistingThreeSecondTimeLimit:wallMs<3000});\n }\n });\n }\n const files=['packages/cli/dist/cli.js','packages/cli/dist/main.js','packages/kit/dist/verify/run.js','packages/kit/dist/input.js','packages/core/dist/index.js','packages/runner/src/run/decision-policy.ts','packages/cli/test/cli.test.ts'];\n const result={sourceCommit:'55ed8e3',node:process.version,platform:process.platform,arch:process.arch,scope:'Actual compiled CLI process startup through verify completion, with real local OpenSpec validation and --skip-commands; seeded synthetic test reports, no test command run',limits:['Peak RSS is the CLI process only and excludes OpenSpec child RSS.','Logical fixture bytes exclude filesystem allocation and tool caches outside the fixture.','Three runs per scale on one host; fixtures were prepared before timing, so filesystem cache can be warm.','No RSS or disk SLO is inferred from the measurements.'],inputs:Object.fromEntries(files.map(f=>[f,sha(readFileSync(join(repo,f)))])),probeSha256:sha(readFileSync(new URL(import.meta.url))),rows};writeFileSync(resolve('.loomake/quality/edge-probes/cli-scale-results.json'),JSON.stringify(result,null,2)+'\\n');console.log(JSON.stringify(rows.map(r=>({requirements:r.requirements,attempt:r.attempt,ms:Math.round(r.wallMs),rssMiB:Math.round(r.peakCliRssBytes/1024/1024),outputBytes:r.stdoutBytes}))));\n}catch(error){console.error(error);process.exitCode=1;}finally{rmSync(scratch,{recursive:true,force:true});}\n",
+  "preloadSource": "process.on('exit',()=>require('node:fs').writeFileSync(process.env.LOOMAKE_PROFILE_OUTPUT,JSON.stringify({peakCliRssBytes:process.resourceUsage().maxRSS*1024,cpuUserMicros:process.resourceUsage().userCPU,cpuSystemMicros:process.resourceUsage().systemCPU})));\n",
+  "fixtureHelperSources": {
+    "packages/kit/test/project.ts": "4cc9634bc96658d37cec871ecd161f8293563de7dffba2568f5c2163fc26f3ea",
+    ".loomake/quality/edge-probes/project.mjs": "db7c3980560611981ceabc23358a30f65d2c9e70d65598974691c23e72f7bd87"
+  },
+  "openSpecVersion": "1.14.3"
+}

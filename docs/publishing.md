@@ -14,7 +14,7 @@ changesetで対象パッケージの版を更新し、その変更をmainへ入�
 
 checkoutは資格情報を保存しない。npm公開の認証情報は`pnpm changeset publish`のステップだけへ渡す。タグ送信のGH_TOKENは、公開が成功した後の`gh auth setup-git`と`git push --follow-tags`のステップだけへ渡す。
 
-現在のワークフローはNPM_TOKENを使う。Trusted Publisherの登録や、tokenを使わない方式への移行は、この変更では行っていない。認証方式を変える場合は、利用するツールの対応とGitHub・npmの設定、実際の公開結果を別に確認する。
+現在のワークフローは、公開ステップの`NODE_AUTH_TOKEN`へGitHubのsecret `NPM_TOKEN`を渡す。secretが未設定なら値は空になり、npmのTrusted Publishing（OIDC）を使う想定である。ワークフローの設定だけでは、Trusted Publisherの登録や、`pnpm changeset publish`を経由したOIDC認証の成功は確認できない。初回のトークン利用と移行手順は[release.md](release.md)にまとめる。実際のOIDC公開とprovenanceの発行・検証は未確認である。
 
 ## provenance
 
