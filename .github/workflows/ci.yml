@@ -8,13 +8,23 @@ on:
 permissions:
   contents: read
 
+# 同じ PR に新しい push があれば、古い実行を取り消す。main への push の実行は取り消さない（REQ-215）
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  # 3 つの OS で品質コマンドを実行する（REQ-049）
+  # 3 つの OS で品質コマンドを実行する（REQ-049）。macOS と Windows ではテストを 2 つのシャードに分ける（REQ-214）
   quality:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+        shard: ['1/2', '2/2']
+        exclude:
+          - os: ubuntu-latest
+        include:
+          - os: ubuntu-latest
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -32,10 +42,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
-      - run: pnpm test
-      # カバレッジは閾値（vitest.config.ts）を下回ったら失敗する。1 つの OS で測れば足りる
-      - if: matrix.os == 'ubuntu-latest'
-        run: pnpm test:coverage
+      # 2 つのシャードを合わせて、すべてのテストを実行する
+      - if: matrix.shard
+        run: pnpm test --shard=${{ matrix.shard }}
+      # ubuntu ではすべてのテストを 1 回だけ、カバレッジ付きで実行する。カバレッジは閾値（vitest.config.ts）を下回ったら失敗する。1 つの OS で測れば足りる
+      - if: ${{ !matrix.shard }}
+        run: pnpm test --coverage
       - run: pnpm build
       - run: node scripts/package-smoke.mjs prepare "$RUNNER_TEMP/loomake-package"
         shell: bash
