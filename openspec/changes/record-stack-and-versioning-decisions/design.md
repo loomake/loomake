@@ -41,3 +41,15 @@ C-001（WBS 5 章）は core のスキーマ（W1-1）・契約テスト（W1-2�
 | REQ-221 | REQ-233 | `0.x` の間の形式の互換性（要件定義 7.3） |
 | REQ-222 | REQ-234 | 原則への例外と重要な設計変更を ADR に残す |
 | REQ-223 | REQ-235 | 開発効率の集計（W1-9。範囲外） |
+
+## 次の change：`allow-zod-and-yaml-runtime-deps`
+
+Q-01 の回答（A）と ADR 0003 を仕様に反映するための change。この change では作らず、名前と範囲だけを決めておく（タスク 5.3）。C-001 の実装を始める前に作る。
+
+| 項目 | 内容 |
+|---|---|
+| 変える仕様 | `openspec/specs/core-parsers/spec.md` の「実行時依存ゼロ」（REQ-046）を「`@loomake/core` の外部の実行時依存は `zod` だけ」に変える。`openspec/specs/verify/spec.md` の「実行時依存の範囲」（REQ-047）の kit の部分を「`@loomake/core` と `yaml` だけ」に変える。trace・runner・loomake の依存（REQ-083・REQ-123・REQ-047 の loomake の部分）は変えない |
+| 変える文書 | AGENTS.md の「プロジェクト固有の情報」のコーディング規約、CONTRIBUTING.md の「コードの境界」の依存の記述 |
+| 変えるテスト | `packages/core/test/package.test.ts` の `[REQ-046]`、`packages/cli/test/cli.test.ts` の kit の `[REQ-047]`。仕様の変更に合わせて期待値を変えるので、その change の確認事項で人の承認を得る |
+| 含めないもの | Zod のスキーマを書き、いまの手書きの検査と `packages/core/schema/verify-result.schema.json` を移す作業（C-001 の W1-1）。依存を実際に `package.json` に足すのは、使う C-001 で行う |
+| 出典 | この change の trace.md の Q-01、`docs/adr/0003-zod-as-core-runtime-dependency.md`、要件定義 v0.11.2 の NFR-01 |
