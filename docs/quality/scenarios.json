@@ -6009,43 +6009,6 @@
       ]
     },
     {
-      "id": "SCN-4624fc6a8d7d0780a0ce",
-      "status": "reviewed",
-      "scenarioSha256": "09d03a0ffa7f48de84f3ba6787deb4f71d0b497263a2d715ffe1d597c853dad2",
-      "reason": "共有350ms予算で操作間の時間を累積し、期限後にファイルを作るコマンドを呼んでも起動せず、開始マーカーが存在しないことをassertする。新しい予算外の操作は成功する。",
-      "sources": [
-        "REQ-180"
-      ],
-      "tests": [
-        {
-          "file": "packages/kit/test/process.test.ts",
-          "contains": "[REQ-180][REQ-182] 操作間で残り時間を共有",
-          "sha256": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca"
-        }
-      ]
-    },
-    {
-      "id": "SCN-b20eb1125b7c0b730194",
-      "status": "reviewed",
-      "scenarioSha256": "f628b434c42cf10d8b725813624c1af60db52203fc6e77f25c895a68a061e0b8",
-      "reason": "SIGTERMを無視する実プロセスを200ms期限で止め、3秒以内にProcessLimitErrorとなることをassertする。多バイトstdoutとstderrの合計出力ではkind=outputと返す合計4096バイト以内をassertする。",
-      "sources": [
-        "REQ-180"
-      ],
-      "tests": [
-        {
-          "file": "packages/kit/test/process.test.ts",
-          "contains": "[REQ-180][REQ-181] 終わらない子を期限",
-          "sha256": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca"
-        },
-        {
-          "file": "packages/kit/test/process.test.ts",
-          "contains": "[REQ-180] 合計出力をバイト数",
-          "sha256": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca"
-        }
-      ]
-    },
-    {
       "id": "SCN-ad5cf50a9bb3641f5884",
       "status": "superseded",
       "scenarioSha256": "3c6d596b0f999e4f304093eb4caafdf12dfff093f6748f794f986f15ef1cbd3e",
@@ -7037,7 +7000,7 @@
       ]
     },
     {
-      "id": "SCN-3d101ef009f250c6715d",
+      "id": "SCN-17944c2151150fd5768f",
       "status": "reviewed",
       "scenarioSha256": "80d9e91db2879c6bf61027df895bb28067c3cceb21dfaacfa546ddd0bc03ac95",
       "reason": "子の起動とPIDを確認し、runClaudeが戻った時点の停止状態と、戻ってから1100ms後も遅延ファイルがないことを、試験自身の回収前にassertする。",
@@ -7053,7 +7016,7 @@
       ]
     },
     {
-      "id": "SCN-8358fc7b806a6535e67c",
+      "id": "SCN-1ff909d2ccb596609687",
       "status": "reviewed",
       "scenarioSha256": "019dabba35c3566a34e6b6fe79c967af5340b4c48593da06b3878bec5c7b5575",
       "reason": "SIGTERMの受信後も終了しない子を、標準出力を共有しない場合と継承する場合で起動し、戻り時点の停止と遅延書き込みなし、親の出力と終了コード・フラグの保持をassertする。",
@@ -7074,7 +7037,7 @@
       ]
     },
     {
-      "id": "SCN-3bcbdb8b364248c8e339",
+      "id": "SCN-6d4bc1799cc7e8100a56",
       "status": "reviewed",
       "scenarioSha256": "7503b8f02a947f1484c403bf515744f9382428f97fa19639b964256f4962ebe4",
       "reason": "通常のJSON出力と終了コード0、本文と元の出力、時間切れ・中断・出力上限の各falseをassertする。",
@@ -7090,7 +7053,7 @@
       ]
     },
     {
-      "id": "SCN-37b984cc19ddf98050a7",
+      "id": "SCN-794cb4aa059d0afe857e",
       "status": "reviewed",
       "scenarioSha256": "ea5b40938cebc86adff43d3755202f516930771f228d76a8d1c3750ef0ab0690",
       "reason": "非ゼロ終了と通常出力を渡し、終了コード1と出力を保ち、中断や時間切れ・出力上限にしないことをassertする。",
@@ -7106,12 +7069,12 @@
       ]
     },
     {
-      "id": "SCN-48fa54c475053559866d",
+      "id": "SCN-17ed57f6933098635f86",
       "status": "reviewed",
       "scenarioSha256": "efcfcad984cc22ce3fa357cd84bcafbe1fa8469ea8d2554072a4a47d098b89c5",
       "reason": "外側の期限付き子で実runnerソースの通常runを呼び、FIFOを読まずcode1と日本語の対象・理由を返すこと、エンジン0回、HEADとタスク全文の不変、FIFOの保持、停止summaryと公開なしをassertする。",
       "sources": [
-        "REQ-208"
+        "REQ-224"
       ],
       "tests": [
         {
@@ -7122,12 +7085,12 @@
       ]
     },
     {
-      "id": "SCN-a50812f9bbd1a9644d7b",
+      "id": "SCN-642da6a86db62483f925",
       "status": "reviewed",
       "scenarioSha256": "a64e8e088f17635f88f8479afdae0969f4d4b334bcbd65710946dd99ee77a0fa",
       "reason": "試験用エンジンが実装とFIFOを作る通常runで、code1と日本語の対象・理由、エンジン1回、HEADとタスク全文の不変、実装とFIFOの保持、停止summaryと公開なしをassertする。",
       "sources": [
-        "REQ-208"
+        "REQ-224"
       ],
       "tests": [
         {
@@ -7138,12 +7101,12 @@
       ]
     },
     {
-      "id": "SCN-9260680e9f0b8bbedc6a",
+      "id": "SCN-e3bcdf4624324853a751",
       "status": "reviewed",
       "scenarioSha256": "8b725cf3957d51f00ba77590eab0e96c89d74a8852fbcb5584b17d6b59731cc2",
       "reason": "実post-commitフックを配置し、通常runの成功、タスク完了と実装コミット、フックが作る記録をassertする。",
       "sources": [
-        "REQ-208"
+        "REQ-224"
       ],
       "tests": [
         {
@@ -7154,12 +7117,12 @@
       ]
     },
     {
-      "id": "SCN-12e8e4d8bf0a2b723971",
+      "id": "SCN-cf6cbc34d3dd51cd7358",
       "status": "reviewed",
       "scenarioSha256": "fcab9138ddcabf9de712ee75e09cb688b51032421391e5fa07047f4cc4b4a5a4",
       "reason": "リンク先のないリンクと、FIFOを含むディレクトリへのリンクで通常runを呼び、リンク先を読まず成功し、実装とタスクをコミットしてリンクを保つことをassertする。",
       "sources": [
-        "REQ-208"
+        "REQ-224"
       ],
       "tests": [
         {
@@ -7175,12 +7138,12 @@
       ]
     },
     {
-      "id": "SCN-eb61406b2494318de7ad",
+      "id": "SCN-de2839e10f38c0fc9d00",
       "status": "reviewed",
       "scenarioSha256": "0f443f7d69ab434219cc0a7b1fddf1bb7e210a1286b0ba303171c23d0b323503",
       "reason": "セキュリティ文書を読み、リンク先と呼び出すコードの検査対象外、利用者の権限、内容と依存先を信頼して確認することを明記した文をassertする。",
       "sources": [
-        "REQ-209"
+        "REQ-225"
       ],
       "tests": [
         {
@@ -7191,12 +7154,12 @@
       ]
     },
     {
-      "id": "SCN-0ddb05fe47bc05cd0687",
+      "id": "SCN-cd2d5c54891eb75f861e",
       "status": "reviewed",
       "scenarioSha256": "9c90564078af2d2d24f0a5477063ca47b23b69b4b2067d4f9f4a9f9d540f932e",
       "reason": "文書に同じPOSIXグループを対象とすること、別セッションへ離脱した子とWindowsの同等保証を含めないこと、未実行環境や実接続の成功を主張しないことをassertする。",
       "sources": [
-        "REQ-209"
+        "REQ-225"
       ],
       "tests": [
         {
@@ -7207,7 +7170,7 @@
       ]
     },
     {
-      "id": "SCN-c2631512ffaa58cd1e68",
+      "id": "SCN-4624fc6a8d7d0780a0ce",
       "status": "reviewed",
       "scenarioSha256": "7807a4cd3991c4a7e95fa2eab0c52ecd672e4a38ea74018430510792b7def2b5",
       "reason": "共有する残り時間を使い切った後の操作を拒否し、対象の起動ファイルが作られないことをassertする。",
@@ -7223,7 +7186,7 @@
       ]
     },
     {
-      "id": "SCN-a460b002994de8b20cd5",
+      "id": "SCN-b20eb1125b7c0b730194",
       "status": "reviewed",
       "scenarioSha256": "662081dd661fe5868b4160cf0ca095b54d4e1b8a52cb8dff5a3bef563d7786b8",
       "reason": "実コマンドの期限と出力超過を分けて発生させ、制限の型・理由と返すバイト数の上限をassertする。",
@@ -7244,7 +7207,7 @@
       ]
     },
     {
-      "id": "SCN-1c3764be0bbba0ef3d3c",
+      "id": "SCN-68f18788075fce0e7deb",
       "status": "reviewed",
       "scenarioSha256": "f833b69a5622bd8c561b2ae4c4236480df7899aa56fe1f1e11f46cc4a618f9da",
       "reason": "監視役だけの実起動遅延とその完了合図を確認し、操作期限と共有期限の両方でtimeoutになり、対象が起動ファイルを作らないことをassertする。",
@@ -7260,7 +7223,7 @@
       ]
     },
     {
-      "id": "SCN-7dc829f37dffb14f33cc",
+      "id": "SCN-b4d3f0c6d21b55f499d0",
       "status": "reviewed",
       "scenarioSha256": "3913cebf5d66ee13f00e024702ac9da4b34b2060d5805d51c406924ac714d6f4",
       "reason": "監視役の起動時間を引いた共有予算で実PIDの対象が停止することと、途中の時間を二度引いて早く止めない対照をassertする。untilDeadlineは短い操作期限を超え、共有予算だけを使う。",
@@ -7281,7 +7244,7 @@
       ]
     },
     {
-      "id": "SCN-6041927e2cd4553deb7f",
+      "id": "SCN-7341df05abb680633ab7",
       "status": "reviewed",
       "scenarioSha256": "c2292b6e1819ecd761b2c0fa2215aba2594bf0f6251e31ab8104ed66cc8d9417",
       "reason": "実際の監視役へタイマー上限を60000ms超える有限の予算を渡し、品質コマンドとuntilDeadlineの終了コード・出力・警告なしをassertする。監視役のタイマーだけを2回早く発火させる対照では、期限前に停止せず、3回の待機がすべて上限内であることも確認する。24日以上の実時間待機の結果ではない。",

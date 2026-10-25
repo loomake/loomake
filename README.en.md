@@ -43,7 +43,7 @@ A requirement counts as tested when a **passing** test has its ID in the name, f
 
 ## Requirements
 
-- Node.js 20.19 or later (development uses Node.js 24)
+- Node.js 22.12 or later (development uses Node.js 24)
 - A test runner that writes a JSON report (Vitest and Jest are supported)
 - `loomake run` uses Claude Code and the GitHub CLI, and should run inside a container
 

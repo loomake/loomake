@@ -1281,17 +1281,17 @@ Node22.12.0で子のnodeも同じ版に揃えた全体の順次実行は881件�
 
 ## 継続レビュー：通常終了後の子と特殊フックの拒否
 
-承認された方針を`close-engine-and-hook-safety-gaps`のREQ-207〜REQ-209（REQ-207は、archive済みのlayer-kit-modulesと重複したため後にREQ-212へ振り直した）として仕様化し、仕様ゲートexit 0の後で実装した。POSIXのエンジンが終了した時点で同じプロセスグループの後処理を始め、出力の終了と後処理を待ってから戻る。通常の終了コードと出力、既存の時間切れ・中断・出力上限の判定を保つ。フックはリンク文字列の分岐を保ち、通常ファイル以外を内容の読み込み前にUsageErrorで拒否する。設定・上限・実行時依存は変えていない。
+承認された方針を`close-engine-and-hook-safety-gaps`のREQ-207〜REQ-209（REQ-207は、archive済みのlayer-kit-modulesと重複したため後にREQ-212へ振り直した。REQ-208・REQ-209は、先にmainへ入ったstop-engine-on-termination・bound-report-evidence-readingと重複したため後にREQ-224・REQ-225へ振り直した）として仕様化し、仕様ゲートexit 0の後で実装した。POSIXのエンジンが終了した時点で同じプロセスグループの後処理を始め、出力の終了と後処理を待ってから戻る。通常の終了コードと出力、既存の時間切れ・中断・出力上限の判定を保つ。フックはリンク文字列の分岐を保ち、通常ファイル以外を内容の読み込み前にUsageErrorで拒否する。設定・上限・実行時依存は変えていない。
 
 エンジンの新規5試験は修正前に3件失敗・対照2件成功、修正後は既存の停止・出力予算を含む17件が成功した。標準出力を共有しない子、SIGTERMを無視する子、出力を保持する子について、起動完了・PID・終了要求の受信・後片付け前の停止状態と遅延書き込みなしを確認する。コード0のJSONとコード1の通常出力も保った。
 
-特殊フックの8試験は修正前4件失敗・対照4件成功、修正後は全8件が成功した。実FIFOとUnixソケットを拒否し、通常runの開始前とエンジン実行後の両方で、タスク全文とHEAD、FIFOと実装の保持、停止summary、公開なしを確認する。修正前は外側の期限で回収したもので、製品が正常に拒否した結果ではない。通常フックと、リンク先のないリンク・FIFOを含むディレクトリへのリンクの対照は引き続き成功する。文書の2試験もRed・Greenを確認した。対応する[エンジン](../openspec/changes/close-engine-and-hook-safety-gaps/engine-regression-results.json)・[フック](../openspec/changes/close-engine-and-hook-safety-gaps/hooks-regression-results.json)・[文書](../openspec/changes/close-engine-and-hook-safety-gaps/docs-regression-results.json)の記録を保存した。
+特殊フックの8試験は修正前4件失敗・対照4件成功、修正後は全8件が成功した。実FIFOとUnixソケットを拒否し、通常runの開始前とエンジン実行後の両方で、タスク全文とHEAD、FIFOと実装の保持、停止summary、公開なしを確認する。修正前は外側の期限で回収したもので、製品が正常に拒否した結果ではない。通常フックと、リンク先のないリンク・FIFOを含むディレクトリへのリンクの対照は引き続き成功する。文書の2試験もRed・Greenを確認した。対応する[エンジン](../openspec/changes/archive/2026-10-25-close-engine-and-hook-safety-gaps/engine-regression-results.json)・[フック](../openspec/changes/archive/2026-10-25-close-engine-and-hook-safety-gaps/hooks-regression-results.json)・[文書](../openspec/changes/archive/2026-10-25-close-engine-and-hook-safety-gaps/docs-regression-results.json)の記録を保存した。
 
 Node22.12.0の全体実行は2回とも899件中898件成功・1件失敗だった。初回は既存のtrace変更検出の表示が期待と異なり、再実行は別の既存の要件対応テストが30秒で時間切れになった。初回の失敗を時間切れと混同しない。ガード40件の再実行、同じtraceケース25回、時間切れになった1件の再確認は、期待値・設定・製品コードを変えずに成功した。原因は未確定で、Node22全体の成功とは記録しない。一時的な25回の診断は全体899件の一部として加算していない。
 
 現在のソースから作り直した5パッケージを、公式アーカイブと照合したNode22.12.0で使い、通信拒否の対照、主要CLIと公開API、traceの全25行、runとSIGINTの4チェックがすべて成功した。制限前の対照はECONNREFUSED、制限下ではEPERMであった。製品コードが変わったため、過去の配布物の結果を今回の根拠として持ち越していない。ビルドした実装で修正前の再現手順を再実行すると、子は戻り時点で消滅し遅延ファイルもなく、FIFOは約63msでUsageErrorになった。リンク先をたどらない挙動は承認された境界として残り、保護範囲を文書と試験で確認した。
 
-新規10シナリオの対応を追加した監査は、465件中、確認済み443件・置換8件・未確認10件・無効4件でexit 1。無効4件は通常の並列実行かNode22の全体実行に失敗がある対応で、CPUを限定した成功や部分的な再確認で隠していない。[環境別レポート](../openspec/changes/close-engine-and-hook-safety-gaps/executions.json)と[統合の根拠](../openspec/changes/close-engine-and-hook-safety-gaps/integration-results.json)へ保存した。再検査は `node scripts/scenario-audit.mjs <新しい出力先> docs/quality/scenarios.json openspec/changes/close-engine-and-hook-safety-gaps/executions.json` とする。
+新規10シナリオの対応を追加した監査は、465件中、確認済み443件・置換8件・未確認10件・無効4件でexit 1。無効4件は通常の並列実行かNode22の全体実行に失敗がある対応で、CPUを限定した成功や部分的な再確認で隠していない。[環境別レポート](../openspec/changes/archive/2026-10-25-close-engine-and-hook-safety-gaps/executions.json)と[統合の根拠](../openspec/changes/archive/2026-10-25-close-engine-and-hook-safety-gaps/integration-results.json)へ保存した。再検査は `node scripts/scenario-audit.mjs <新しい出力先> docs/quality/scenarios.json openspec/changes/close-engine-and-hook-safety-gaps/executions.json` とする。
 
 公開文書にも、NPM_TOKENの有無とOIDCの説明に食い違いがあったため、現在のワークフローに合わせた。secretが空であることから認証成功を断定せず、実際のOIDC公開とprovenanceの発行・検証は未確認と明記した。
 
@@ -1335,7 +1335,7 @@ Node22.12.0の関連81件は77件成功・4件失敗だった。pushの試験は
 
 最終のNode24の完了ゲートはexit 0、906件すべて成功し、lint・型・OpenSpec・要件ごとのテスト対応と全タスクの完了も確認した。利用可能なCPUは8つで、CPU数を限定していない。設定・期限・期待値を維持し、試験用の任意の段階ログを有効にした実行である。この1回の成功から、過去の並列失敗がすべて解消したとは結論しない。
 
-7件の対応を追加し、観測の追加でソースハッシュが変わった既存41件の対応も再照合した。現在のNode24全体成功とNode22の失敗を含む監査は、469件中、確認済み448件・置換5件・未確認7件・無効9件でexit 1。kitの製品コードが変わったため、過去のNode22配布物の成功を今回の根拠として持ち越していない。このため無効には配布物の再実行待ちも含む。[環境別レポート](../openspec/changes/count-supervisor-startup-budget/executions.json)・[統合結果](../openspec/changes/count-supervisor-startup-budget/integration-results.json)・[対応のレビュー](../openspec/changes/count-supervisor-startup-budget/scenario-review-results.json)・[段階ごとの診断](../openspec/changes/archive/2026-10-24-audit-scenario-evidence/parallel-diagnostics-results.json)に記録した。
+7件の対応を追加し、観測の追加でソースハッシュが変わった既存41件の対応も再照合した。現在のNode24全体成功とNode22の失敗を含む監査は、469件中、確認済み448件・置換5件・未確認7件・無効9件でexit 1。kitの製品コードが変わったため、過去のNode22配布物の成功を今回の根拠として持ち越していない。このため無効には配布物の再実行待ちも含む。[環境別レポート](../openspec/changes/archive/2026-10-25-count-supervisor-startup-budget/executions.json)・[統合結果](../openspec/changes/archive/2026-10-25-count-supervisor-startup-budget/integration-results.json)・[対応のレビュー](../openspec/changes/archive/2026-10-25-count-supervisor-startup-budget/scenario-review-results.json)・[段階ごとの診断](../openspec/changes/archive/2026-10-24-audit-scenario-evidence/parallel-diagnostics-results.json)に記録した。
 
 実40秒のフック、CIの失敗時の公開停止と認証情報の動的な確認、別OS・実接続・公開後の証明は残る。REQ-144の配布物CIにはNode20.19.0が残り、承認済みのREQ-142のNode22.12.0への変更との仕様整理も必要である。今回は区切りでコミット・PRを作成する依頼に合わせ、新たな改善には着手しない。全15項目の点数は据え置き、90点以上は6／15項目である。
 
@@ -1355,6 +1355,6 @@ mainの7627fe3を1129959で統合し、期限処理をpackages/kit/src/runtime/p
 
 1CPUの全体実行も988件成功・1件失敗だった。終了要求を無視し出力を共有する子が、戻った直後のPID観測でrunningになったケースで、原因は未確定である。2CPU条件のclose-engine-and-hook-safety-gaps完了ゲートはexit 0、989件・lint・型・OpenSpec・要件対応が成功した。いずれも設定・既存の期待値を維持しており、条件の異なる成功で失敗を取り消していない。count-supervisor-startup-budgetの最終ゲートも2CPU条件でexit 0、989件・lint・型・OpenSpec・要件対応が成功し、8タスクの完了を確認した。両ゲートの間で製品コード・テスト・品質設定は変更していない。
 
-mainのarchiveに合わせ、58件の旧Scenario IDを現行の対応索引から外した。元の対応は統合前コミット9e9f703と退避したJSONに残り、既存の実行記録JSONは削除していない。現在の監査は476件中、確認済み193件・置換0件・未確認45件・無効238件でexit 1、索引の未知参照は0件である。mainで仕様・ID・テストソースが変わり、古い根拠の再照合が必要なことを示す。無効238件を製品のテスト失敗238件と解釈しない。保存方針の変更は今回行わず、今回の追加の実行結果は[要約](../openspec/changes/count-supervisor-startup-budget/pr65-review-results.json)に記録した。生のレポートは.loomake/quality/pr65-integration/に保持する。今回、点数の再評価は行っていない。
+mainのarchiveに合わせ、58件の旧Scenario IDを現行の対応索引から外した。元の対応は統合前コミット9e9f703と退避したJSONに残り、既存の実行記録JSONは削除していない。現在の監査は476件中、確認済み193件・置換0件・未確認45件・無効238件でexit 1、索引の未知参照は0件である。mainで仕様・ID・テストソースが変わり、古い根拠の再照合が必要なことを示す。無効238件を製品のテスト失敗238件と解釈しない。保存方針の変更は今回行わず、今回の追加の実行結果は[要約](../openspec/changes/archive/2026-10-25-count-supervisor-startup-budget/pr65-review-results.json)に記録した。生のレポートは.loomake/quality/pr65-integration/に保持する。今回、点数の再評価は行っていない。
 
 更新後の差分のpushとPR本文更新は、自動承認審査で明示的な送信承認が不足しているとして拒否されたため未実施である。ローカルのコミットと本文案を確定させ、PR #65へ送る対象を示して承認を求める。
