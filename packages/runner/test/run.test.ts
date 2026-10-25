@@ -4,8 +4,9 @@ import { join } from 'node:path';
 import { GATE_MARK, RUN_CONFIG_KEYS, runRun, type RunOptions, type RunSummary } from '@loomake/runner';
 import { KNOWN_CONFIG_KEYS } from '@loomake/kit';
 import { main } from '../../cli/src/main.js';
-import { INTERRUPT_SCRIPT, alive, traceMd } from '../../kit/test/project.js';
+import { INTERRUPT_SCRIPT, traceMd } from '../../kit/test/project.js';
 import { CHANGE, makeRepo, type Repo } from './helpers.js';
+import { killOwnedProcess, processState } from './process-state.js';
 
 // git・node・verify のコマンドを何度も起動するので、Windows では 1 件に 10 秒を超えることがある
 vi.setConfig({ testTimeout: 60_000 });
@@ -52,19 +53,19 @@ const log = (repo: Repo) => repo.git('log', '--format=%s', 'loomake/c1').split('
 // 1.1 で impl.txt を書くと、完了ゲートに合格する
 const passing = [{ write: { 'impl.txt': '実装\n' } }, {}];
 
+// 回収前のゾンビと終了途中の子は、利用者のコードを実行できないので「止まった」とみなす（process-state.ts）
 function assertStoppedProcess(pidFile: string) {
   expect(existsSync(pidFile)).toBe(true);
   const pid = Number(readFileSync(pidFile, 'utf8'));
   expect(Number.isSafeInteger(pid) && pid > 0).toBe(true);
-  expect(alive(pid)).toBe(false);
+  expect(processState(pid)).not.toBe('running');
 }
 
 function cleanupTestProcess(pidFile: string) {
   if (!existsSync(pidFile)) return;
   const pid = Number(readFileSync(pidFile, 'utf8'));
-  if (!Number.isSafeInteger(pid) || pid <= 0 || !alive(pid)) return;
-  try { process.kill(pid, 'SIGKILL'); }
-  catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error; }
+  if (!Number.isSafeInteger(pid) || pid <= 0) return;
+  killOwnedProcess(pid);
 }
 
 
@@ -573,7 +574,7 @@ describe('中断', () => {
       expect(repo.calls()).toHaveLength(2);
       expect(summary(repo)).toMatchObject({ status: 'interrupted', reason: '中断されました', remainingTasks: ['3.1 `pnpm -s verify --change c1 --done` を通す'] });
       const pids: number[] = JSON.parse(readFileSync(join(repo.root, 'pids.json'), 'utf8'));
-      expect(pids.filter(alive)).toEqual([]);
+      expect(pids.filter((pid) => processState(pid) === 'running')).toEqual([]);
     }));
 });
 
