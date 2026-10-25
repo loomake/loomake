@@ -1,41 +1,12 @@
 # trace-report Specification
 
 ## Purpose
-`loomake trace report` が検収レポートを出すときの振る舞いを定める。要件ごとの検収の表、冒頭の要注意の一覧、使った証拠の記載、確認事項と仮定の一覧と空の欄の警告、出力の形式、同じ入力から同じレポートを出すこと、性能、日本語、動作環境、実行時依存を含む。
+`loomake trace report` がリリースレポートを出すときの振る舞いを定める。要件ごとの結果の表、冒頭の要注意の一覧、使った証拠の記載、確認事項と仮定の一覧と空の欄の警告、出力の形式、同じ入力から同じレポートを出すこと、性能、日本語、動作環境、実行時依存を含む。
 
 ## Requirements
 
-### Requirement: 要件ごとの検収の表
-`loomake trace report --change <id>` は、`.loomake/evidence/<change-id>/` のいちばん新しい記録を使い、その記録に保存した trace.md の要件台帳の要件ごとに、出典・状態・対応する Requirement・テストファイル・最後の検査結果を 1 行に並べた表を出力する SHALL。対応する Requirement は、その記録に保存した差分仕様で、その要件を `Source:` に持つ Requirement の名前とする SHALL。テストファイルと最後の検査結果は、同じ記録から取る SHALL。記録に文書が保存されていないときの扱いは、「古い形式の証拠の記録」に従う SHALL。change は進行中の change から探し、なければ archive から探す SHALL。change-id が OpenSpec の change 名の形でないときと、`archive` のときは、使い方の誤りとして終了コード 2 を返す SHALL。
-
-Source: REQ-070
-
-#### Scenario: 要件の行が並ぶ
-- **WHEN** REQ-070 を `Source:` に持つ Requirement「表の出力」があり、証拠の記録で REQ-070 に tests/report.test.ts が挙がっている change に `loomake trace report --change c1` を実行する
-- **THEN** 表に REQ-070 の行があり、出典・状態・「表の出力」・tests/report.test.ts・最後の検査結果が並ぶ
-
-#### Scenario: いちばん新しい記録を使う
-- **WHEN** 記録した日時の違う記録が 2 つある change に `loomake trace report` を実行する
-- **THEN** 新しいほうの記録のテストファイルと検査結果が使われる
-
-#### Scenario: archive した change
-- **WHEN** `archive/2026-10-23-c1` にある change c1 に `loomake trace report --change c1` を実行する
-- **THEN** archive の change の証拠の記録からレポートが作られる
-
-#### Scenario: 証拠の記録がない
-- **WHEN** `.loomake/evidence/c1/` に記録がない change に `loomake trace report --change c1` を実行する
-- **THEN** `loomake trace record` を先に実行するよう日本語で案内し、終了コードは 1 である
-
-#### Scenario: パスの区切りを含む change-id
-- **WHEN** `loomake trace report --change ../c1` を実行する
-- **THEN** change-id にパスの区切りを含められないと日本語で表示され、終了コードは 2 である
-
-#### Scenario: 記録のあとで要約を変える
-- **WHEN** 証拠を記録したあとで、trace.md の REQ-070 の要約を書き換えて `loomake trace report --change c1` を実行する
-- **THEN** 表の REQ-070 の要約は記録したときの要約で、書き換えたあとの要約は表に載らない
-
 ### Requirement: 範囲外と既存仕様で充足の要件
-検収の表は、状態が「範囲外」と「既存仕様で充足」の要件も、状態を付けて含める SHALL。
+要件ごとの結果の表は、状態が「範囲外」と「既存仕様で充足」の要件も、状態を付けて含める SHALL。
 
 Source: REQ-071
 
@@ -152,8 +123,8 @@ Source: REQ-072
 Source: REQ-077
 
 #### Scenario: 確認事項が並ぶ
-- **WHEN** 回答者が「顧客 PM」、回答日が 2026-10-23 の Q-01 を持つ change のレポートを作る
-- **THEN** 確認事項の一覧に Q-01 の質問・回答・「顧客 PM」・2026-10-23 が並ぶ
+- **WHEN** 回答者が「プロダクト責任者」、回答日が 2026-10-23 の Q-01 を持つ change のレポートを作る
+- **THEN** 確認事項の一覧に Q-01 の質問・回答・「プロダクト責任者」・2026-10-23 が並ぶ
 
 ### Requirement: 仮定の一覧
 レポートは、仮定ごとに ID・内容・承認者・承認日を一覧にする SHALL。
@@ -213,13 +184,13 @@ Source: REQ-130
 - **THEN** REQ-012 の最後の検査結果は「合格（仕様との対応は未確認）」で、冒頭に仕様との対応を確かめていないことが書かれる
 
 ### Requirement: 検査の範囲の説明
-レポートは、「自動検査は、要件 ID を含む成功したテストの存在を確認しています。テスト内容の妥当性と、要件を満たしているかの判断にはレビューが必要です。」という説明を、要件ごとの検収の表より前に載せる SHALL。
+レポートは、「自動検査は、要件 ID を含む成功したテストの存在を確認しています。テスト内容の妥当性と、要件を満たしているかの判断にはレビューが必要です。」という説明を、要件ごとの結果の表より前に載せる SHALL。
 
 Source: REQ-131
 
 #### Scenario: 説明が載る
 - **WHEN** `loomake trace report --change c1` を実行する
-- **THEN** 要件ごとの検収の表より前に、検査の範囲の説明が載る
+- **THEN** 要件ごとの結果の表より前に、検査の範囲の説明が載る
 
 ### Requirement: 証拠の実行時検証
 証拠を読むときは必須値・対応するschemaVersion・有効な日時・対象changeと検証結果の対応を検証する SHALL。documentsがある場合はパスの重複と内容のSHA-256の不一致を拒否する SHALL。不正な証拠はファイル名と理由を日本語で示し、UsageErrorとして返す SHALL。documentsのない既存の証拠も読む SHALL。
@@ -250,3 +221,41 @@ Source: REQ-142
 #### Scenario: Node.js 22.12 で動く
 - **WHEN** Node.js 22.12 の環境で trace report のテストを実行する
 - **THEN** テストが合格する
+
+### Requirement: レポートを作る change の探し方
+change は進行中の change から探し、なければ archive から探す SHALL。change-id が OpenSpec の change 名の形でないときと、`archive` のときは、使い方の誤りとして終了コード 2 を返す SHALL。
+
+Source: REQ-213
+
+#### Scenario: archive した change
+- **WHEN** `archive/2026-10-23-c1` にある change c1 に `loomake trace report --change c1` を実行する
+- **THEN** archive の change の証拠の記録からレポートが作られる
+
+#### Scenario: パスの区切りを含む change-id
+- **WHEN** `loomake trace report --change ../c1` を実行する
+- **THEN** change-id にパスの区切りを含められないと日本語で表示され、終了コードは 2 である
+
+### Requirement: 要件ごとの結果の表の出力
+`loomake trace report --change <id>` は、`.loomake/evidence/<change-id>/` のいちばん新しい記録を使い、その記録に保存した trace.md の要件台帳の要件ごとに、出典・状態・対応する Requirement・テストファイル・最後の検査結果を 1 行に並べた表を、リリースレポートとして出力する SHALL。Markdown のレポートの題は「リリースレポート」、要件ごとの表の見出しは「要件ごとの結果」とし、題と見出しの固定文言に「検収」の語を使わない SHALL。証拠に保存した要約・質問・回答・仮定の原文は置き換えずに載せる SHALL。対応する Requirement は、その記録に保存した差分仕様で、その要件を `Source:` に持つ Requirement の名前とする SHALL。テストファイルと最後の検査結果は、同じ記録から取る SHALL。記録に文書が保存されていないときの扱いは、「古い形式の証拠の記録」に従う SHALL。
+
+Source: REQ-070
+
+#### Scenario: 要件の行が並ぶ
+- **WHEN** REQ-070 を `Source:` に持つ Requirement「表の出力」があり、証拠の記録で REQ-070 に tests/report.test.ts が挙がっている change に `loomake trace report --change c1` を実行する
+- **THEN** 表に REQ-070 の行があり、出典・状態・「表の出力」・tests/report.test.ts・最後の検査結果が並ぶ
+
+#### Scenario: レポートの題と表の見出し
+- **WHEN** 要約に「検収」の語を含む要件を持つ change に `loomake trace report --change c1` を Markdown で実行する
+- **THEN** 題が「リリースレポート：c1」、要件ごとの表の見出しが「要件ごとの結果」で、題と見出しの固定文言に「検収」の語はなく、要約の「検収」は原文のまま表に載る
+
+#### Scenario: いちばん新しい記録を使う
+- **WHEN** 記録した日時の違う記録が 2 つある change に `loomake trace report` を実行する
+- **THEN** 新しいほうの記録のテストファイルと検査結果が使われる
+
+#### Scenario: 証拠の記録がない
+- **WHEN** `.loomake/evidence/c1/` に記録がない change に `loomake trace report --change c1` を実行する
+- **THEN** `loomake trace record` を先に実行するよう日本語で案内し、終了コードは 1 である
+
+#### Scenario: 記録のあとで要約を変える
+- **WHEN** 証拠を記録したあとで、trace.md の REQ-070 の要約を書き換えて `loomake trace report --change c1` を実行する
+- **THEN** 表の REQ-070 の要約は記録したときの要約で、書き換えたあとの要約は表に載らない

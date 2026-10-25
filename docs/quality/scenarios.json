@@ -3293,7 +3293,7 @@
       ]
     },
     {
-      "id": "SCN-1429d9807ac856ec8552",
+      "id": "SCN-aed887ae49f2aa9b3c99",
       "status": "reviewed",
       "scenarioSha256": "2ac46aede76280d55cab102a4a79aed9fe58272528ebddebd88f2c0a8d30a4ba",
       "reason": "報告の節に、ブロッキング確認事項を顧客へそのまま送れる文面で出す指示があることをassertする。",
@@ -4758,7 +4758,7 @@
       ]
     },
     {
-      "id": "SCN-d305dcdef92686e490ed",
+      "id": "SCN-c9b71bf8810044e47e98",
       "status": "reviewed",
       "scenarioSha256": "439e2b7066d1ca84d46f1b4bbb0fa012698496f2e2c9ec2218faa0319aab7b41",
       "reason": "仕様例と同じREQ-070・表の出力・tests/report.test.tsを持つ文書と証拠を作り、出典・状態・要約・Requirement名・テスト・合格の全列を構造化行とMarkdown行で完全一致でassertする。",
@@ -4774,7 +4774,7 @@
       ]
     },
     {
-      "id": "SCN-21a1dc64ae669c5e17a9",
+      "id": "SCN-42972ca81bd9c3611153",
       "status": "reviewed",
       "scenarioSha256": "901b6124fe59f313d7a7a777c548c11db0b40ab83fa6741052a59bcb44d5a957",
       "reason": "日時の異なる2証拠を与え、新しいSHAと合格結果、tests/latest.test.tsが選ばれ、古い不合格や空のcoverageが混ざらないことをassertする。",
@@ -4795,7 +4795,7 @@
       ]
     },
     {
-      "id": "SCN-6a31ad676ae78c172c55",
+      "id": "SCN-2254680e42079f95b639",
       "status": "reviewed",
       "scenarioSha256": "7ebb595f6652b316d531fe4122b5585b1ff516c76733f8ac1d9a0e0e0fb03fc3",
       "reason": "進行中ディレクトリを作らずarchive/2026-10-23-c1だけを作り、保存した文書の表の出力というRequirement名がレポート行に出ることをassertする。",
@@ -4811,7 +4811,7 @@
       ]
     },
     {
-      "id": "SCN-da7cda8ed9988b629804",
+      "id": "SCN-7a7b55772e9a9816c80c",
       "status": "reviewed",
       "scenarioSha256": "d60b59d9dfe7c22970be0156f51fd65aab0f0b5a3d9d4fe6e1c8d03c5310d6ed",
       "reason": "証拠を空にした入力でrunReportの終了コード1と、先に実行するloomake trace record --change c1の案内をassertする。",
@@ -4827,7 +4827,7 @@
       ]
     },
     {
-      "id": "SCN-9f665713c21c7312691b",
+      "id": "SCN-76f869d7d7e1767bae80",
       "status": "reviewed",
       "scenarioSha256": "6db380f0d699ab43d1d9ab4d486e5ff5b65cdfaef0b571b347e405aff52e7dfd",
       "reason": "CLIへ../c1を渡し、終了コード2とパスの区切りを含めないよう求める日本語をassertする。",
@@ -4843,7 +4843,7 @@
       ]
     },
     {
-      "id": "SCN-990042ab06d5cec624b1",
+      "id": "SCN-44a756307dceb3884d0d",
       "status": "reviewed",
       "scenarioSha256": "e808c857187708d4f2c3c7856a00238f33afa9a8293fdc363cb1be50ae6c3603",
       "reason": "REQ-070の保存した要約を持つ証拠を用意した後で作業ツリーの要約を変更し、全列が元の行のまま、changedDocumentsがtrace.mdだけ、変更後の要約がMarkdownに出ないことをassertする。",
