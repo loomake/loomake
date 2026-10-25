@@ -4,7 +4,7 @@
 
 - 要件書を出典つきの OpenSpec change に変える Skill と、AI が従う共通ルール（AGENTS.md）を置く（`loomake init`）
 - 未確定の要件が残るあいだは実装に進ませず、すべての要件にテストがあることを確かめる（`loomake verify`）
-- 検査の結果を証拠として記録し、要件ごとの検査結果をまとめた検収レポートを作る（`loomake trace`）
+- 検査の結果を証拠として記録し、要件ごとの検査結果をまとめたリリースレポートを作る（`loomake trace`）
 - change のタスクを AI に実装させ、完了ゲートが通るまで直させて、PR を作る（`loomake run`）
 - 導入の状態を調べ、足りない設定と直し方を表示する（`loomake doctor`）
 
@@ -15,7 +15,7 @@ npx loomake verify --change <id> --spec-only      # 仕様ゲート：実装に�
 npx loomake verify --change <id> --done           # 完了ゲート：要件ごとのテストと品質コマンド
 npx loomake run --change <id>                     # 実装から PR までを AI に任せる
 npx loomake trace record --change <id>            # 証拠を記録する
-npx loomake trace report --change <id>            # 検収レポートを出す
+npx loomake trace report --change <id>            # リリースレポートを出す
 ```
 
 各コマンドの使い方は `npx loomake <コマンド> --help` で表示する。

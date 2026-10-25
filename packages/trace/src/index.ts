@@ -1,4 +1,4 @@
-// @loomake/trace：証拠の記録と検収レポート
+// @loomake/trace：証拠の記録とリリースレポート
 export { runRecord, EVIDENCE_DIR, EVIDENCE_SCHEMA_VERSION } from './record.js';
 export type { Evidence, RecordOptions } from './record.js';
 export { runReport, buildReport, formatReportMarkdown, REPORT_SCHEMA_VERSION, SCOPE_NOTE } from './report.js';

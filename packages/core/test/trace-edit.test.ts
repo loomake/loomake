@@ -16,7 +16,7 @@ const trace = (questionHeader = '| ID | 関連 | 質問 | 選択肢 | おすす�
     questionHeader,
     `|${'---|'.repeat(questionHeader.split('|').length - 2)}`,
     row,
-    '| Q-02 | REQ-001 | 別の質問 | a / b | a | no | b | 顧客 | 2026-10-01 |',
+    '| Q-02 | REQ-001 | 別の質問 | a / b | a | no | b | 担当者 | 2026-10-01 |',
     '',
     '## 仮定',
     '',
@@ -28,11 +28,11 @@ const trace = (questionHeader = '| ID | 関連 | 質問 | 選択肢 | おすす�
 
 describe('trace.md の表の行を書く', () => {
   it('[REQ-202] ID の行の列に値を書き、ほかの行は変えない', () => {
-    const r = setTraceCells(trace(), 'questions', 'Q-01', { 回答: '5 回', 回答者: '顧客担当', 回答日: '2026-10-24' });
+    const r = setTraceCells(trace(), 'questions', 'Q-01', { 回答: '5 回', 回答者: '担当者', 回答日: '2026-10-24' });
     expect(r.error).toBeUndefined();
     const parsed = parseTrace('trace.md', r.text ?? '');
     expect(parsed.errors).toEqual([]);
-    expect(parsed.value.questions[0]).toMatchObject({ 回答: '5 回', 回答者: '顧客担当', 回答日: '2026-10-24' });
+    expect(parsed.value.questions[0]).toMatchObject({ 回答: '5 回', 回答者: '担当者', 回答日: '2026-10-24' });
     expect(r.text?.split('\n').filter((l) => !l.startsWith('| Q-01'))).toEqual(trace().split('\n').filter((l) => !l.startsWith('| Q-01')));
   });
 
@@ -50,7 +50,7 @@ describe('trace.md の表の行を書く', () => {
 
   it('[REQ-202] 表にない列は書かずに、ない列として返す', () => {
     const old = trace('| ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 |', '| Q-01 | REQ-001 | 何回ですか | 3 / 5 | 5 | yes | |');
-    const r = setTraceCells(old, 'questions', 'Q-01', { 回答: '5 回', 回答者: '顧客担当', 回答日: '2026-10-24' });
+    const r = setTraceCells(old, 'questions', 'Q-01', { 回答: '5 回', 回答者: '担当者', 回答日: '2026-10-24' });
     expect(r.missingColumns).toEqual(['回答者', '回答日']);
     expect(parseTrace('trace.md', r.text ?? '').value.questions[0]['回答']).toBe('5 回');
   });

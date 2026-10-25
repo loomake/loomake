@@ -79,7 +79,7 @@ const prependField = (root: string, i: number, field: Record<string, unknown>) =
 const renameEvidence = (root: string, names: string[]) =>
   names.forEach((name, i) => renameSync(join(root, `.loomake/evidence/${CHANGE}/${i}.json`), join(root, `.loomake/evidence/${CHANGE}/${name}`)));
 
-describe('要件ごとの検収の表', () => {
+describe('要件ごとの結果の表', () => {
   it('[REQ-070] 要件ごとに、出典・状態・対応する Requirement・テストファイル・最後の検査結果を並べる', () => {
     withProject({ spec: specMd(requirement('表の出力')) }, (root) => {
       expect(report(root).rows).toEqual([
@@ -201,7 +201,7 @@ describe('冒頭の要注意の一覧', () => {
     withProject({ trace, spec: specMd(requirement('a'), requirement('b', { source: 'Source: REQ-070' })) }, (root) => {
       expect(report(root).attention.noPassingTests).toEqual(['REQ-070']);
       const text = markdown(root).text;
-      expect(text.indexOf('合格したテストのない要件：REQ-070')).toBeLessThan(text.indexOf('## 要件ごとの検収'));
+      expect(text.indexOf('合格したテストのない要件：REQ-070')).toBeLessThan(text.indexOf('## 要件ごとの結果'));
     });
   });
 
@@ -228,7 +228,7 @@ describe('冒頭の要注意の一覧', () => {
       expect(report(root).attention.failedChecks).toEqual(['command: lint']);
       const text = markdown(root).text;
       expect(text).toContain('- 不合格の検査：command: lint');
-      expect(text.indexOf('不合格の検査')).toBeLessThan(text.indexOf('## 要件ごとの検収'));
+      expect(text.indexOf('不合格の検査')).toBeLessThan(text.indexOf('## 要件ごとの結果'));
       expect(text).not.toContain('要注意の要件はありません。');
     });
   });
@@ -317,7 +317,7 @@ describe('出力の形式', () => {
     await withProject({}, async (root) => {
       const r = await cli(root, '--format', 'md');
       expect(r.code).toBe(0);
-      expect(r.stdout).toMatch(/^# 検収レポート：c1$/m);
+      expect(r.stdout).toMatch(/^# リリースレポート：c1$/m);
     });
   });
 
@@ -340,19 +340,19 @@ describe('出力の形式', () => {
 
   it('--format を省くと Markdown を出す（仮定 A-07）', async () => {
     await withProject({}, async (root) => {
-      expect((await cli(root)).stdout).toMatch(/^# 検収レポート：c1$/m);
+      expect((await cli(root)).stdout).toMatch(/^# リリースレポート：c1$/m);
     });
   });
 });
 
 describe('確認事項と仮定の一覧', () => {
-  const question = '| Q-01 | REQ-012 | 何回ですか | 3 / 5 | 5 | yes | 5 回 | 顧客 PM | 2026-10-23 |';
+  const question = '| Q-01 | REQ-012 | 何回ですか | 3 / 5 | 5 | yes | 5 回 | プロダクト責任者 | 2026-10-23 |';
   const assumption = '| A-01 | REQ-012 | 8 文字以上 | 記載なし | 承認 | 開発リーダー | 2026-10-23 |';
 
   it('[REQ-077] 確認事項ごとに、ID・質問・回答・回答者・回答日を並べる', () => {
     withProject({ trace: agreementTrace(question, assumption) }, (root) => {
-      expect(report(root).questions).toEqual([{ id: 'Q-01', question: '何回ですか', answer: '5 回', answeredBy: '顧客 PM', answeredAt: '2026-10-23' }]);
-      expect(markdown(root).text).toContain('| Q-01 | 何回ですか | 5 回 | 顧客 PM | 2026-10-23 |');
+      expect(report(root).questions).toEqual([{ id: 'Q-01', question: '何回ですか', answer: '5 回', answeredBy: 'プロダクト責任者', answeredAt: '2026-10-23' }]);
+      expect(markdown(root).text).toContain('| Q-01 | 何回ですか | 5 回 | プロダクト責任者 | 2026-10-23 |');
     });
   });
 
@@ -417,8 +417,19 @@ describe('report の性能と日本語', () => {
   it('[REQ-088] レポートの見出しと表の列名は日本語', () => {
     withProject({}, (root) => {
       const text = markdown(root).text;
-      for (const h of ['# 検収レポート', '## 要注意の要件', '## 使った証拠', '## 要件ごとの検収', '## 確認事項', '## 仮定', '## 合意の記録の警告']) expect(text).toContain(h);
+      for (const h of ['# リリースレポート', '## 要注意の要件', '## 使った証拠', '## 要件ごとの結果', '## 確認事項', '## 仮定', '## 合意の記録の警告']) expect(text).toContain(h);
       expect(text).toContain('| ID | 出典 | 状態 | 要約 | Requirement | テスト | 最後の検査結果 |');
+    });
+  });
+
+  it('[REQ-070] 題と見出しの固定文言に検収の語はなく、要約の検収は原文のまま載る', () => {
+    const row = '| REQ-012 | 要件書 §1 | 機能 | 検収数値を確かめる | 反映済 | specs/x/spec.md |';
+    withProject({ trace: traceMd({ ledger: [row] }) }, (root) => {
+      const text = markdown(root).text;
+      expect(text).toMatch(/^# リリースレポート：c1$/m);
+      expect(text).toMatch(/^## 要件ごとの結果$/m);
+      for (const heading of text.split('\n').filter((l) => l.startsWith('#'))) expect(heading).not.toContain('検収');
+      expect(text).toContain('| REQ-012 | 要件書 §1 | 反映済 | 検収数値を確かめる |');
     });
   });
 });
@@ -465,12 +476,12 @@ describe('記録した文書からのレポート', () => {
     });
   });
 
-  it('[REQ-131] 要件ごとの検収の表より前に、検査の範囲の説明を載せる', () => {
+  it('[REQ-131] 要件ごとの結果の表より前に、検査の範囲の説明を載せる', () => {
     withProject({}, (root) => {
       const text = markdown(root).text;
       expect(SCOPE_NOTE).toBe('自動検査は、要件 ID を含む成功したテストの存在を確認しています。テスト内容の妥当性と、要件を満たしているかの判断にはレビューが必要です。');
       expect(text.indexOf(SCOPE_NOTE)).toBeGreaterThan(-1);
-      expect(text.indexOf(SCOPE_NOTE)).toBeLessThan(text.indexOf('## 要件ごとの検収'));
+      expect(text.indexOf(SCOPE_NOTE)).toBeLessThan(text.indexOf('## 要件ごとの結果'));
     });
   });
 });

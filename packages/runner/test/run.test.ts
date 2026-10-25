@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { chmodSync, existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { GATE_MARK, RUN_CONFIG_KEYS, runRun, type RunOptions, type RunSummary } from '@loomake/runner';
 import { KNOWN_CONFIG_KEYS } from '@loomake/kit';
 import { main } from '../../cli/src/main.js';
@@ -341,7 +341,10 @@ describe('エンジンの選び方と権限', () => {
 
   it('[REQ-101] claude コマンドがなければ、Claude Code を入れるよう表示して終了コード 2 を返す', () =>
     withRepo(async (repo) => {
-      repo.env.PATH = dirname(process.execPath);
+      // Nodeの配置先にGitがあるとは限らない。Git自身の実行ファイルの場所だけを使う。
+      const gitPath = repo.git('--exec-path');
+      expect(existsSync(join(gitPath, process.platform === 'win32' ? 'git.exe' : 'git'))).toBe(true);
+      repo.env.PATH = gitPath;
       const r = await cli(repo);
       expect(r.code).toBe(2);
       expect(r.stderr).toContain('claude コマンドが見つかりません');
