@@ -40,7 +40,7 @@
 - 曖昧な要件を推測で埋める。曖昧なら `trace.md` の「確認事項」に書いて止まる
 - `loomake.config.json` や lint・型・テストの設定を緩める変更を、人の承認なしに行う
 - 秘密情報（API キー、パスワード、個人情報）をコード・ログ・テストデータに書く
-- `openspec/specs/` を直接編集する（変更は必ず change 経由で、archive 時に反映する）。ただし、新しい capability を archive した直後に、`## Purpose` の仮の文（`TBD - created by archiving change …`）を書き換えることだけは例外とする。差分仕様の Purpose は archive で反映されないため
+- `openspec/specs/` を直接編集する（変更は必ず change 経由で、archive 時に反映する）。ただし、change を archive した直後に `## Purpose` を直すことだけは例外とする。新しい capability の仮の文（`TBD - created by archiving change …`）を書き換えるときと、change で Requirement の用語を変えたあとに Purpose に残る古い用語（検収レポートなど）を新しい用語に合わせるときに限る。差分仕様の Purpose は archive で反映されないため
 
 ## 5. 迷ったとき
 

@@ -3,6 +3,7 @@
 - [x] 1.2 req-to-openspec Skill のテンプレートと `.agents/skills/` の写し、配布する AGENTS.md の文面を変える（REQ-028・REQ-029・REQ-033）
 - [x] 1.3 仕様の Scenario の例と同じ値を使うテストの例から「顧客」を外す（REQ-011・REQ-077・REQ-078・REQ-202）
 - [x] 1.4 docs と README の「検収レポート」をリリースレポートにする
+- [x] 1.5 AGENTS.md と `packages/kit/templates/AGENTS.md` の 4 章の例外を、archive 直後に Purpose に残る古い用語（検収レポートなど）を新しい用語に合わせる書き換えも含む形に広げる（Q-01 の回答 A）
 
 ## 2. テスト
 - [x] 2.1 各 Scenario に対応するテストの期待値を新しい文面に合わせる。テスト名に [REQ-xxx] を入れる
