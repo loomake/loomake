@@ -325,10 +325,13 @@ describe('完了ゲートと直し', () => {
           expect(r.code).toBe(1);
           expect(r.stdout).toContain('実行時間の上限に達しました');
           expect(Date.now() - start).toBeLessThan(30_000);
+          // 確かめたいのは、動いているエンジンを期限で止めること。準備で期限を使い切ってエンジンを起動せずに止まった場合と区別する
+          expect(repo.calls(), r.stdout).toHaveLength(1);
           assertStoppedProcess(pidFile);
         } finally { cleanupTestProcess(pidFile); }
       },
-      { run: { timeoutMinutes: 0.02 } },
+      // 負荷の高い CI でも、準備（仕様ゲートと git）のあとにエンジンが起動してから期限に当たる長さにする
+      { run: { timeoutMinutes: 0.1 } },
     ));
 
   it('[REQ-105] 完了ゲートのテストが終わらないまま上限に達したら、テストを止めて止まる', () =>
