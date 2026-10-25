@@ -15,3 +15,4 @@ Loomake 自身の開発で決めたことのうち、続けて守る例外と重
 |---|---|---|
 | [0001](0001-versioning-with-changesets.md) | パッケージの版管理に changesets を使う | 採用 |
 | [0002](0002-breaking-changes-in-0x.md) | `0.x` の間は破壊的変更を minor で出す | 採用 |
+| [0003](0003-zod-as-core-runtime-dependency.md) | core の実行時依存に Zod を採る | 採用（仕様への反映は別の change） |
