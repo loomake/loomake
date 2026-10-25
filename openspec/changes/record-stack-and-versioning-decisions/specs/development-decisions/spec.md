@@ -3,7 +3,7 @@
 ### Requirement: 版管理と互換性の方針の記載
 CONTRIBUTING.md はパッケージの版管理の方式と、`0.x` の間の互換性の方針を書く SHALL。それぞれについて、決めた理由を残した ADR へのリンクを持つ MUST。
 
-Source: REQ-228
+Source: REQ-227, REQ-228
 
 #### Scenario: CONTRIBUTING.md に方針とリンクがある
 - **WHEN** CONTRIBUTING.md を読む
