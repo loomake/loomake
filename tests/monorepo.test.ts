@@ -71,6 +71,42 @@ describe('CI', () => {
     expect(ci).toContain('run: pnpm test');
   });
 
+  it('[REQ-214] macOS と Windows ではテストを 2 つのシャードに分け、ubuntu ではカバレッジ付きで 1 回だけ実行する', () => {
+    const lf = readLf('.github/workflows/ci.yml');
+    const quality = lf.slice(lf.indexOf('\n  quality:'), lf.indexOf('\n  node20:'));
+    // ubuntu はシャードの組み合わせから外し、シャードのない 1 つだけを足す。macOS と Windows には 1/2 と 2/2 が残る
+    const matrix = quality.match(/^ {6}matrix:\n((?: {8}.*\n)*)/m)?.[1];
+    expect(matrix).toBe(
+      [
+        '        os: [ubuntu-latest, macos-latest, windows-latest]',
+        "        shard: ['1/2', '2/2']",
+        '        exclude:',
+        '          - os: ubuntu-latest',
+        '        include:',
+        '          - os: ubuntu-latest',
+        '',
+      ].join('\n'),
+    );
+    expect(quality).toContain('fail-fast: false');
+    // テストの実行は、シャードのあるジョブとないジョブで 1 つずつ。ほかにすべてのテストを実行するステップはない
+    expect(quality.match(/run: pnpm test\b.*/g)).toEqual(['run: pnpm test --shard=${{ matrix.shard }}', 'run: pnpm test --coverage']);
+    expect(quality).toMatch(/- if: matrix\.shard\n {8}run: pnpm test --shard=\$\{\{ matrix\.shard \}\}\n/);
+    expect(quality).toMatch(/- if: \$\{\{ !matrix\.shard \}\}\n {8}run: pnpm test --coverage\n/);
+    expect(quality).not.toContain('test:coverage');
+    // 条件つきのステップはテストの 2 つだけで、lint・typecheck・build・配布物の検査はどのジョブでも実行する
+    expect(quality.match(/^ {6}- if: .*/gm)).toEqual(['      - if: matrix.shard', '      - if: ${{ !matrix.shard }}']);
+    for (const step of ['run: pnpm lint', 'run: pnpm typecheck', 'run: pnpm build', 'package-smoke.mjs prepare', 'package-smoke.mjs check']) expect(quality, step).toContain(step);
+  });
+
+  it('[REQ-215] 同じ PR の古い実行を取り消し、main への push の実行は取り消さない', () => {
+    const lf = readLf('.github/workflows/ci.yml');
+    expect(lf).toMatch(
+      /^concurrency:\n {2}group: ci-\$\{\{ github\.event\.pull_request\.number \|\| github\.ref \}\}\n {2}cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \}\}\n/m,
+    );
+    // ジョブごとの concurrency で上書きしない
+    expect(lf.match(/^\s*concurrency:/gm)).toHaveLength(1);
+  });
+
   it('[REQ-010][REQ-054] PR ごとに完了ゲートを実行する', () => {
     expect(ci).toMatch(/if: github\.event_name == 'pull_request'/);
     expect(ci).toContain('node scripts/ci-gate.mjs "$HEAD_REF"');
