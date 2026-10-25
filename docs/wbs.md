@@ -109,7 +109,7 @@ ID は W<段階>-<連番>。依存の列は着手の前に完了しているこ�
 
 | ID | 作業 | 成果物 | 依存 | 完了条件 |
 |---|---|---|---|---|
-| W1-1 | core：Zod スキーマと型。trace.md・spec・tasks・quality.yaml・verify JSON・quality-report に形式の `version` を付け、JSON Schema を書き出す。既存の手書きの型と JSON Schema（verify 結果、trace.md・spec・tasks、証拠・レポート）は、外部の形を変えずに Zod へ移す。未知のフィールドは受け付けて判定に使わず、証跡をそのまま読み書きする経路では保持する | `@loomake/core` のスキーマ | W0-2 | スキーマから型を導出し、JSON Schema の書き出しが CI で差分を出さない。手書きの型の重複定義が残らない |
+| W1-1 | core：Zod スキーマと型。trace.md・spec・tasks・quality.yaml・verify JSON・quality-report に形式の版（verify JSON は既存の `schemaVersion`、ほかは `version`）を付け、JSON Schema を書き出す。既存の手書きの型と JSON Schema（verify 結果、trace.md・spec・tasks、証拠・レポート）は、外部の形を変えずに Zod へ移す。未知のフィールドは受け付けて判定に使わず、証跡をそのまま読み書きする経路では保持する | `@loomake/core` のスキーマ | W0-2 | スキーマから型を導出し、JSON Schema の書き出しが CI で差分を出さない。手書きの型の重複定義が残らない |
 | W1-2 | core：要件定義 7.3 の契約テスト。ci の completed・partial、local の completed・partial、aborted の各構造、終了コード 0〜3 の優先順（2 は使い方・設定の誤り、3 は実行時の失敗、要判断は 1 と `decision`）、`decision`、既知の禁止フィールド、未知フィールドの許容。verify JSON の形式版を 2.0.0 に上げ、1.0.0 の履歴を残す | 契約テスト | W1-1 | 7.3 の表の各行に対応するテストがあり、通る。1.0.0 の証拠を trace が読めるが、自動の再利用には使わない |
 | W1-3 | core：テストレポートと CI 成果物の変換処理。取得済みの入力を共通形式へ変換し、合否は決めない | 変換処理 | W1-1 | 代表的な形式の fixture が共通形式に変換される |
 | W1-4 | kit：判定関数。core にある `evaluateAgreement`・`evaluateTestCoverage` を kit の判定ディレクトリに移し、core の公開 API から外す（REQ-148・149 を change で改訂）。そのうえで、版の確認 → 証跡の適格性 → 実施確認 → 条件 → 集約 → 自動実行条件 → 根拠の順で、I/O・外部コマンド・現在時刻を持たない通常の関数として実装し、`exports` から公開する | `@loomake/kit` の判定関数 | W1-1、W1-3 | 同じ入力で同じ出力になるテストが通り、未実行・不足・古い・不適合の証跡を合格にしない |
@@ -185,7 +185,7 @@ ID は W<段階>-<連番>。依存の列は着手の前に完了しているこ�
 | W6-2 | reusable workflow の `@v1` 相当のタグ運用。案件側は `uses: loomake/loomake/.github/workflows/<job>.yml@v1` で呼ぶ | タグとワークフロー | W2-1、W3-6 | 案件側に実行ロジックを複製せずに 4 ジョブを呼べる（NFR-10）。自リポジトリの `ci.yml` だけでは完了にしない |
 | W6-3 | 別リポジトリでの導入検証。Loomake 以外のリポジトリで init から主要ループまでを通す。ここが初回配布完了 | 検証の記録 | W5-7、W6-1、W6-2 | 初見の利用者が文書だけで導入し、verify と eval を回せる |
 | W6-4 | 文書とサイト。README、loomake.dev（Docus）、サンプルリポジトリ、各段階の使い方 | 文書 | 各段階の出口 | 段階の出口ごとに更新され、導入手順が公開版と一致する |
-| W6-5 | 互換性の方針の運用。verify JSON・quality.yaml の `version`、非互換変更の理由と移行方法を PR に書く（アーキテクチャ 0.4、要件定義 7.3） | 運用ルール | W1-1 | W1-2 で verify JSON と終了コードを変える前に、旧 fixture の扱いと移行案内の書き方が決まっている。1.0 を出す時点で互換性の範囲が文書化されている |
+| W6-5 | 互換性の方針の運用。verify JSON の `schemaVersion`・quality.yaml の `version`、非互換変更の理由と移行方法を PR に書く（アーキテクチャ 0.4、要件定義 7.3） | 運用ルール | W1-1 | W1-2 で verify JSON と終了コードを変える前に、旧 fixture の扱いと移行案内の書き方が決まっている。1.0 を出す時点で互換性の範囲が文書化されている |
 
 ### W7 初回完成後
 
