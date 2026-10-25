@@ -10,4 +10,4 @@
 - [x] 3.2 `.github/workflows/ci.yml` に、PR の古い実行を取り消す concurrency を足す（REQ-215）
 
 ## 4. 確認
-- [ ] 4.1 `pnpm -s verify --change speed-up-ci --done` を通す <!-- loomake:gate=done -->
+- [x] 4.1 `pnpm -s verify --change speed-up-ci --done` を通す <!-- loomake:gate=done -->
