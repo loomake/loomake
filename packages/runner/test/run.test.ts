@@ -352,7 +352,9 @@ describe('完了ゲートと直し', () => {
           assertStoppedProcess(pidFile);
         } finally { cleanupTestProcess(pidFile); }
       },
-      { run: { timeoutMinutes: 0.1 } },
+      // 期限は run の開始時に決まるので、準備（仕様ゲート・git・エンジン 2 回・verify）が終わって品質コマンドが起動したあとに期限が来る長さにする。
+      // Windows の CI では node と git の起動が遅く、6 秒では品質コマンドが PID を書く前に期限が来た（run 40182208306）。手元の Linux は 1 コアに負荷をかけても 2 秒以内
+      { run: { timeoutMinutes: process.platform === 'win32' ? 0.3 : 0.1 } },
     ));
 });
 
