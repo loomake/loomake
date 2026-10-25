@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const security = readFileSync(join(import.meta.dirname, '../docs/security.md'), 'utf8');
+const security = readFileSync(join(import.meta.dirname, '../docs/guide/3.reference/3.security.md'), 'utf8');
 
 describe('セキュリティ文書の保護範囲', () => {
   it('[REQ-209] フックのリンク先と呼び出すコード、実行する権限を明記する', () => {
