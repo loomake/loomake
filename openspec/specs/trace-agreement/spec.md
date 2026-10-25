@@ -11,8 +11,8 @@
 Source: REQ-202
 
 #### Scenario: 回答を書く
-- **WHEN** 回答が空の Q-01 に `loomake trace answer --change c1 --question Q-01 --answer "5 回" --by 顧客担当 --date 2026-10-24` を実行する
-- **THEN** Q-01 の行の回答が `5 回`、回答者が `顧客担当`、回答日が `2026-10-24` になり、ほかの行は変わらず、終了コードは 0 である
+- **WHEN** 回答が空の Q-01 に `loomake trace answer --change c1 --question Q-01 --answer "5 回" --by 担当者 --date 2026-10-24` を実行する
+- **THEN** Q-01 の行の回答が `5 回`、回答者が `担当者`、回答日が `2026-10-24` になり、ほかの行は変わらず、終了コードは 0 である
 
 #### Scenario: すでに回答がある
 - **WHEN** 回答がある Q-01 に `loomake trace answer` を実行する
