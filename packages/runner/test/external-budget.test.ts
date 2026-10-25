@@ -131,10 +131,16 @@ describe('runから外部操作までの期限', () => {
       const untilDeadline = stage === 'push' || stage === 'create';
       shim(repo, command, condition, stage === 'create', untilDeadline ? 30_000 : 3000);
       diagnosticEvent(repo, 'run-start', { stage });
-      const result = await (untilDeadline ? withProcessBudget({ timeoutMs: 8_000, maxOperationMs: 500 }, () => run(repo)) : budget(() => run(repo)));
+      // untilDeadline の 2 つは、止まる手前の通常の git・gh が負荷で遅れても 1 操作の期限に当たらないよう余裕を持たせ、
+      // 止まったのが共有の期限であることは所要時間の下限で確かめる
+      const SHARED_DEADLINE_MS = 8_000;
+      const runStarted = Date.now();
+      const result = await (untilDeadline ? withProcessBudget({ timeoutMs: SHARED_DEADLINE_MS, maxOperationMs: 5_000 }, () => run(repo)) : budget(() => run(repo)));
+      const runElapsed = Date.now() - runStarted;
       diagnosticEvent(repo, 'run-end', { stage, code: result.code, elapsedMs: Date.now() - started });
       const context = diagnosticContext(repo, { stage, code: result.code, elapsedMs: Date.now() - started, stdout: result.stdout });
       expect(result.code, context).toBe(1);
+      if (untilDeadline) expect(runElapsed, context).toBeGreaterThanOrEqual(SHARED_DEADLINE_MS - 500);
       expect(result.stdout, context).toContain('実行時間の上限');
       expect(summary(repo).status, context).toBe('stopped');
       if (stage === 'create') expect(existsSync(join(repo.base, 'stalled')), context).toBe(true);
