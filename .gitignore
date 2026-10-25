@@ -39,3 +39,6 @@ __pycache__/
 
 # kit を試す試験プロジェクト（別の git リポジトリ）
 .trial/
+
+# pnpm のストア（リポジトリの中にできることがある）
+.pnpm-store/
