@@ -1,7 +1,7 @@
 // run のテスト用に、一時ディレクトリに git のリポジトリと偽の claude コマンドを作る
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, existsSync, linkSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { delimiter, dirname, join } from 'node:path';
+import { delimiter, dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { reportJson, specMd, traceMd } from '../../kit/test/project.js';
 import { attachProcessDiagnostics } from './process-diagnostics.js';
@@ -187,4 +187,146 @@ export function makeRepo({ trace = traceMd(), tasks = TASKS, run }: { trace?: st
     git: gitRun,
     cleanup: () => rmSync(base, { recursive: true, force: true }),
   };
+}
+
+/** 偽の CLI が残す印。時刻は Date.now() */
+export type FakeCliEvent = {
+  event: 'shim-start' | 'forward-start' | 'forward-end' | 'stall-start' | 'delay-start' | 'shim-end';
+  at: number;
+  pid: number;
+  command: string;
+  args: string[];
+  status?: number | null;
+  signal?: string | null;
+  error?: string;
+  code?: number;
+};
+
+export type FakeCliOptions = {
+  /** 偽の CLI が止まる（delayMs なら遅らせる）条件。args（引数の配列）と fs（node:fs）を使う JavaScript の式 */
+  when: string;
+  /** 止まる前に本物へ転送して終える（PR を作ったあとで応答が届かない場合の再現） */
+  forwardFirst?: boolean;
+  /** 止まる時間。SIGTERM は無視し、SIGKILL か taskkill でだけ途中で終わる。省くと 10 秒 */
+  stallMs?: number;
+  /** 止まる代わりに、この時間だけ待ってから本物へ転送する */
+  delayMs?: number;
+};
+
+export type FakeCli = {
+  /** 偽の CLI の印を、書かれた順に返す */
+  events: () => FakeCliEvent[];
+  /** 偽の CLI を外し、元のコマンドに戻す */
+  restore: () => void;
+};
+
+const isWindows = process.platform === 'win32';
+
+// bin を除いた PATH から、本物の実行ファイルを探す。Windows は shell なしの起動と同じく .exe だけを探す
+function findReal(name: string, path: string, exclude: string): string {
+  for (const dir of path.split(delimiter)) {
+    if (!dir || resolve(dir) === resolve(exclude)) continue;
+    const candidate = join(dir, isWindows ? `${name}.exe` : name);
+    if (existsSync(candidate)) return candidate;
+  }
+  throw new Error(`本物の ${name} が PATH に見つかりません`);
+}
+
+/**
+ * 偽の CLI を repo の bin に置く（windows-fake-clis の REQ-240）。製品と同じ起動の仕方で呼ばれるように、OS とコマンドで形を変える。
+ * - POSIX：bin/<名前> に shebang つきの本体を置く
+ * - Windows の gh・openspec（shell 経由で起動する）：bin/<名前> に本体を、bin/<名前>.cmd に node で本体を起動する入口を置く
+ * - Windows の git（shell なしで起動するので .exe しか探されない）：process.execPath を bin/git.exe にハードリンクし、
+ *   NODE_OPTIONS の --require で本体を読み込む。本体は実行ファイルの名前が git.exe のときだけ動き、同期的に終える
+ * 本体は、条件に合えば止まり（delayMs なら遅らせてから転送し）、合わなければ本物へ転送する。node のスクリプトの元は process.execPath で起動する。
+ * Windows の git.exe は Node なので、最初の引数が - で始まる呼び出し（git --version など）は偽の git として動かない。
+ */
+export function fakeCli(repo: Repo, command: 'git' | 'gh' | 'openspec', options: FakeCliOptions): FakeCli {
+  const bin = join(repo.base, 'bin');
+  const log = join(repo.base, `fake-${command}.jsonl`);
+  const git = command === 'git';
+  // 元：git は本物の実行ファイル、gh は makeRepo が置いた node のスクリプト、openspec は元なし
+  let original = '';
+  if (git) original = findReal('git', repo.env.PATH ?? '', bin);
+  else if (existsSync(join(bin, command))) {
+    original = join(bin, `${command}-original`);
+    copyFileSync(join(bin, command), original);
+  }
+  const settings = {
+    log,
+    command,
+    original,
+    viaNode: !git,
+    stalled: join(repo.base, 'stalled'),
+    stallMs: options.stallMs ?? 10_000,
+    delayMs: options.delayMs ?? 0,
+    forwardFirst: options.forwardFirst ?? false,
+  };
+  const body = `const fs=require('node:fs');const cp=require('node:child_process');
+const S=${JSON.stringify(settings)};
+function event(name,details){fs.appendFileSync(S.log,JSON.stringify({event:name,at:Date.now(),pid:process.pid,command:S.command,args:args.slice(0,12).map((a)=>String(a).slice(0,160)),...details})+'\\n');}
+function sleep(ms){Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,ms);}
+function forward(){
+  event('forward-start');
+  if(!S.original){event('forward-end',{status:null,signal:null,error:'ENOENT'});return 127;}
+  const r=cp.spawnSync(S.viaNode?process.execPath:S.original,S.viaNode?[S.original,...args]:args,{stdio:'inherit'});
+  event('forward-end',{status:r.status,signal:r.signal,error:r.error?.code});
+  return r.status??1;
+}
+event('shim-start');
+process.on('exit',(code)=>event('shim-end',{code}));
+if(${options.when}){
+  if(S.delayMs){event('delay-start',{ms:S.delayMs});sleep(S.delayMs);process.exit(forward());}
+  if(S.forwardFirst)forward();
+  event('stall-start',{ms:S.stallMs});fs.writeFileSync(S.stalled,'yes');process.on('SIGTERM',()=>{});sleep(S.stallMs);process.exit(0);
+}
+process.exit(forward());
+`;
+  let restore: () => void;
+  if (git && isWindows) {
+    const exe = join(bin, 'git.exe');
+    try {
+      linkSync(process.execPath, exe);
+    } catch {
+      copyFileSync(process.execPath, exe);
+    }
+    const preload = join(bin, 'fake-git.cjs');
+    // Node は git.exe の最初の引数をメインのスクリプトとみなし、絶対パスに直して process.argv[1] に入れる
+    writeFileSync(
+      preload,
+      `if(require('node:path').basename(process.execPath).toLowerCase()==='git.exe'){
+const args=process.argv.length>1?[require('node:path').relative(process.cwd(),process.argv[1]),...process.argv.slice(2)]:[];
+${body}}\n`,
+    );
+    repo.env.NODE_OPTIONS = `${repo.env.NODE_OPTIONS ?? ''} --require=${JSON.stringify(preload)}`.trim();
+    // 本体は git.exe のときだけ動くので、NODE_OPTIONS は戻さない。止めた git.exe の終了を待って消す
+    restore = () => rmSync(exe, { force: true, maxRetries: 20, retryDelay: 100 });
+  } else {
+    const file = join(bin, command);
+    writeFileSync(file, `#!/usr/bin/env node\nconst args=process.argv.slice(2);\n${body}`);
+    chmodSync(file, 0o755);
+    if (isWindows) writeFileSync(join(bin, `${command}.cmd`), `@node "%~dp0${command}" %*\r\n`);
+    restore = () => (original && !git ? copyFileSync(original, file) : rmSync(file, { force: true }));
+  }
+  return {
+    events: () =>
+      existsSync(log)
+        ? readFileSync(log, 'utf8')
+            .split('\n')
+            .filter(Boolean)
+            .map((l) => JSON.parse(l) as FakeCliEvent)
+        : [],
+    restore,
+  };
+}
+
+/**
+ * 偽の CLI が狙った操作で止まった印（stall-start）と、それより前に起動に失敗した転送（error のある forward-end）を返す（REQ-240）。
+ * 試験は、期限・終了コードを確かめる前に、stall があって failedForwards が空であることを確かめる
+ */
+export function stallOf(cli: FakeCli, match: (args: string[]) => boolean): { stall?: FakeCliEvent; failedForwards: FakeCliEvent[] } {
+  const events = cli.events();
+  const index = events.findIndex((e) => e.event === 'stall-start' && match(e.args));
+  const before = index < 0 ? events : events.slice(0, index);
+  return { stall: index < 0 ? undefined : events[index], failedForwards: before.filter((e) => e.event === 'forward-end' && e.error) };
 }
