@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { spawn, type ChildProcess } from 'node:child_process';
 import { once } from 'node:events';
+import { chmodSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { GROUP_EXIT_TIMEOUT_MS, activeGroupMembers, waitForGroupExit } from '../src/process-group.js';
 
 /** 独立したプロセスグループで動く子を起動し、起動の合図を待つ */
@@ -11,6 +14,14 @@ async function groupLeader(source: string): Promise<ChildProcess> {
 }
 const idle = 'setInterval(() => {}, 1000);';
 const platforms: NodeJS.Platform[] = process.platform === 'linux' ? ['linux', 'darwin'] : [process.platform];
+/** ps の代わりに使う、5 秒止まってから何も返さないスクリプトを作る。exec で置き換えるので、強制終了で孤児は残らない */
+function slowPs(): { path: string; cleanup: () => void } {
+  const dir = mkdtempSync(join(tmpdir(), 'loomake-slow-ps-'));
+  const path = join(dir, 'ps');
+  writeFileSync(path, '#!/bin/sh\nexec sleep 5\n');
+  chmodSync(path, 0o755);
+  return { path, cleanup: () => { rmSync(dir, { recursive: true, force: true }); } };
+}
 
 describe.runIf(process.platform !== 'win32')('同じプロセスグループの後処理の待機', () => {
   const children: ChildProcess[] = [];
@@ -58,6 +69,34 @@ Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0);`);
     expect(await waitForGroupExit(child.pid!, { timeoutMs: 100 })).toBe(false);
     expect(Date.now() - started).toBeLessThan(1000);
     expect(activeGroupMembers(child.pid!)).toEqual([child.pid]);
+  });
+
+  // macOS 等の ps 経路でも、グループの確認を含めた待機の経過時間が上限に従うことを、遅い ps を差し替えて確かめる
+  it('[REQ-212] 待機は、グループの確認に使う ps が止まっていても、上限までに false を返して戻る', async () => {
+    const ps = slowPs();
+    const child = await groupLeader(idle);
+    children.push(child);
+    try {
+      const started = Date.now();
+      expect(await waitForGroupExit(child.pid!, { timeoutMs: 300, platform: 'darwin', psCommand: ps.path })).toBe(false);
+      expect(Date.now() - started).toBeLessThan(500);
+    } finally {
+      ps.cleanup();
+    }
+  });
+
+  it('[REQ-212] 待機は、期限を過ぎてから届いた「動作中のメンバーなし」の確認結果を採用せず false を返す', async () => {
+    // ps が止まったまま期限を迎え、存否の確認がグループの消滅を返しても、期限内に確認できたとは扱わない
+    const ps = slowPs();
+    const child = spawn(process.execPath, ['-e', 'process.exit(0)'], { stdio: 'ignore', detached: true });
+    await once(child, 'exit');
+    try {
+      const started = Date.now();
+      expect(await waitForGroupExit(child.pid!, { timeoutMs: 300, platform: 'darwin', psCommand: ps.path })).toBe(false);
+      expect(Date.now() - started).toBeLessThan(500);
+    } finally {
+      ps.cleanup();
+    }
   });
 
   it('[REQ-212] 待機の上限の既定値は、仕様どおり 1000ms である', () => {
