@@ -11,7 +11,7 @@
 #   partial を In Progress にしないのは、In Progress を「いま誰かが作業中」の意味に保つため。
 #   partial の Issue には本文の「移行時の現状」に evidence と missing を書く
 #
-# 集計: done 3 / partial 25 / none 21（合計 49）
+# 集計: done 2 / partial 26 / none 21（合計 49）
 - id: W0-1
   assessment: partial
   initial_status: Backlog
@@ -70,16 +70,16 @@
   missing: 未決事項の表に作業 ID の列がない。O02・O09・O13・O16 に作業 ID がない
   wbs_mismatch: null
 - id: W0-6
-  assessment: done
-  initial_status: Done
-  close_as: completed
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
   confidence: medium
   evidence:
   - '.changeset/config.json と .changeset/*.md : changesets を運用している'
   - 'CONTRIBUTING.md:26 : changeset を付けるルール'
   - 'docs/compatibility.md : 0.x の破壊的変更の扱い'
   - '.github/workflows/release.yml, scripts/changeset-check.mjs : 版上げとリリースの仕組み'
-  missing: null
+  missing: 成果物の ADR（PR #10 の change で作る予定）。要件定義の O15 の更新
   wbs_mismatch: 成果物の ADR がない。要件定義の O15（版管理の方式）が未決のまま
 - id: W0-7
   assessment: none
@@ -109,8 +109,8 @@
   evidence:
   - 'packages/core/test/schema.test.ts, fixtures/schema-history/1.0.0.json : verify-result の互換性テスト'
   - 'tests/schema-compatibility.test.ts : 必須プロパティの削除・改名を拒否（REQ-053）'
-  - 'packages/cli/src/main.ts : 終了コードは 0・1・2 だけ'
-  missing: 7.3 の構造（ci・local の completed・partial、aborted）、終了コード 0〜3 の優先順、decision、禁止フィールド、未知フィールドの許容
+  - 'packages/cli/src/main.ts : 終了コードは 0（合格）・1（不合格）・2（使い方の誤り）・3（実行時の失敗、REQ-192）'
+  missing: 7.3 の構造（ci・local の completed・partial、aborted）、7.3 の終了コードの意味（2 は decision.required、3 は aborted）と優先順、decision、禁止フィールド、未知フィールドの許容
   wbs_mismatch: 現行の verify JSON は旧形式（schemaVersion・mode・ok・results）で、7.3 の契約とは別物
 - id: W1-3
   assessment: partial

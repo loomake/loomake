@@ -1,6 +1,6 @@
 # WBS の GitHub Issues 移行仕様
 
-版：v0.3（2026-10-26。移行元を WBS v1.4 に変更し、Issue type「Stage」を作らないことにした。v0.2 初期状態の棚卸しの結果を反映。v0.1 初版）
+版：v0.4（2026-10-26。再実行で Issue の手修正を上書きしない規則を足し、W0-6 を partial に直した。v0.3 移行元を WBS v1.4 に変更し、Issue type「Stage」を作らないことにした。v0.2 初期状態の棚卸しの結果を反映。v0.1 初版）
 対象：`loomake/loomake` の `docs/wbs.md` v1.4（v1.3.1 と実装の整合を取って改訂する版）
 関連：`docs/wbs.md`、`docs/wbs/initial-status.yaml`、`docs/requirements-matrix.md`、`docs/requirements/loomake-v0.11.md`
 
@@ -116,13 +116,13 @@ kit：外部コマンドの共通 spawn 関数と証跡の収集。…
 - 関連する実装: packages/kit/src/runtime/process.ts（外部コマンドの共通関数）、packages/runner/src/mask.ts（runner だけのマスキング）
 - 完了条件に足りないもの: 各ツールの出力を読む収集モジュール、kit・trace の証跡へのマスキング
 
-<!-- loomake-wbs: source=docs/wbs/baseline-v1.4.md@<commit> -->
+<!-- loomake-wbs: source=docs/wbs/baseline-v1.4.md@<commit> generated=<sha256> -->
 ```
 
 - 依存は本文に書かない。正本は GitHub の dependencies（blocked-by）とする。
 - 「参照」には要件 ID（FR・NFR・A・O）と章番号を 1 行に 1 つずつ書く。要件定義やアーキテクチャを改訂したとき、影響する Issue をこの欄で検索する（WBS 冒頭の見直し手順を Issues 側に引き継ぐ）。
 - 「移行時の現状」は、`initial-status.yaml` の判定が partial の Issue にだけ付ける。移行時点の記録なので、作業が進んでも書き換えない。
-- 末尾の HTML コメントは移行元を示す。移行後に人が本文を直してもよい。
+- 末尾の HTML コメントは、移行元と、スクリプトが生成した本文の SHA-256 を示す。移行後に人が本文を直してもよい。直した本文は再実行で上書きしない（6.2）。
 
 ### 4.2 Issue fields
 
@@ -187,7 +187,7 @@ Runner が作業を取るのは、次のすべてを満たすときに限る。
 
 ### 6.1 前提作業
 
-1. 初期状態の棚卸し：各作業項目の完了条件と既存の実装・仕様・change を突き合わせ、`docs/wbs/initial-status.yaml` に判定と根拠を書く。判定は done・partial・none の 3 つで、done は Done（`completed` で閉じる）、partial と none は Backlog で移す。partial を In Progress にしないのは、In Progress を「いま誰かが作業中」の意味に保つためである。partial の Issue には本文の「移行時の現状」に、関連する実装と足りないものを書く。2026-10-26 の調査案では done 3 件、partial 25 件、none 21 件だった。
+1. 初期状態の棚卸し：各作業項目の完了条件と既存の実装・仕様・change を突き合わせ、`docs/wbs/initial-status.yaml` に判定と根拠を書く。判定は done・partial・none の 3 つで、done は Done（`completed` で閉じる）、partial と none は Backlog で移す。partial を In Progress にしないのは、In Progress を「いま誰かが作業中」の意味に保つためである。partial の Issue には本文の「移行時の現状」に、関連する実装と足りないものを書く。2026-10-26 の調査案では done 2 件、partial 26 件、none 21 件だった。
 2. WBS 本文の不一致の修正：W0-2 と W0-3 は npm workspaces・node:test・Biome を前提に書かれているが、リポジトリは pnpm・Vitest・ESLint を使っている。移行前に WBS 側を実態に合わせるか、構成を変える作業として残すかを決める。
 3. 組織の設定：Issue fields に WBS ID・Stage・Change を追加する。
 
@@ -198,9 +198,11 @@ Runner が作業を取るのは、次のすべてを満たすときに限る。
 | 段 | 内容 | 既存のものがあるとき |
 |---|---|---|
 | 0. 読み取り | 固定したコミットの `docs/wbs.md` と `initial-status.yaml` を読み、移行計画（作成・更新・関連付け・変更なし）を出力する。`--dry-run` ではここで止まる | なし |
-| 1. 作成 | 段階 Issue → 作業項目 Issue の順に作る | `wbs` ラベルと WBS ID で 1 件見つかれば、移行元から作る項目（タイトル・本文・WBS ID・Stage）だけ差分を更新する。2 件以上見つかれば中断する |
+| 1. 作成 | 段階 Issue → 作業項目 Issue の順に作る | `wbs` ラベルと WBS ID で 1 件見つかれば、生成したときのままのタイトル・本文だけを更新する（下の規則）。WBS ID と Stage は空のときだけ書き、値が違えば報告する。2 件以上見つかれば中断する |
 | 2. 関連付け | sub-issue と blocked-by を張る | 張られていない関係だけを追加する。入力にない既存の関係は削除せず、報告だけする |
 | 3. Projects | Issue を Project に追加し、初期 Status を入れる | Status は新規追加したときだけ書く。移行後に人や Runner が変えた値を上書きしない |
+
+段 1 で既存の Issue を更新するのは、前回スクリプトが生成した内容から人が変えていないときに限る。本文は、末尾の HTML コメントにある `generated` の SHA-256 と、現在の本文（HTML コメントを除く）の SHA-256 が一致するときだけ書き換える。タイトルも、前回生成したタイトルと一致するときだけ書き換える。一致しなければ書き換えず、競合として報告する。途中で止まったあとの再実行でも同じ規則で動くので、手で直した完了条件や作業範囲が古い内容に戻ることはない。
 
 作成（段 1）と関連付け（段 2）を分けるのは、親や依存先がまだない状態で失敗したときに、途中から再開できるようにするためである。
 
@@ -235,6 +237,6 @@ GitHub Actions の定期ジョブで次を確認し、違反があれば Issue �
 | No. | 内容 | 推奨 |
 |---|---|---|
 | 1 | 移行後の `docs/wbs.md` の扱い（v1.4 を PR で確定してから固定することにした。以後、要件定義・アーキテクチャの変更は PR、作業項目の変更は Issue で行う）。v1.0〜v1.3.1 は PR のレビューを通して改訂されてきた。固定版にすると、作業定義の変更はレビューを経ずに Issue 上で行われることになる | 合意どおり固定版にする。作業定義を大きく変えるときは、要件定義の PR で議論してから Issue に反映する |
-| 2 | 初期状態の調査案（`initial-status.yaml`）の確認 | done の 3 件（W0-2・W0-4・W0-6）と、確度の低い W1-12 を人が確かめる。W0-1 は要件対応表に「割り当てを確定して W0-1 を閉じる」が残っているため partial にした |
+| 2 | 初期状態の調査案（`initial-status.yaml`）の確認 | done の 2 件（W0-2・W0-4）と、確度の低い W1-12 を人が確かめる。W0-1 は要件対応表に「割り当てを確定して W0-1 を閉じる」が残っているため、W0-6 は成果物の ADR がないため partial にした |
 | 3 | WBS・要件定義・アーキテクチャが前提とする形と、実装の食い違い。道具の名前（pnpm・Vitest・ESLint）だけでなく、設計にも及ぶ。core は Zod を使わず依存ゼロ、設定は quality.yaml ではなく loomake.config.json、verify JSON は 7.3 の契約ではなく旧形式、判定の純関数は kit ではなく core にある | 移行の前に、どちらに合わせるかを要件定義・アーキテクチャの段階で決める。決めずに移すと、partial の 25 件の完了条件が「作り直し」なのか「文書の修正」なのか読めない |
 | 4 | Issue type「Stage」を作るか | 作らないことにした（2026-10-26）。段階は親 Issue で表し、出口で閉じる |
