@@ -66,7 +66,7 @@ const COMMAND_HELP: Record<Command, string> = {
     ['--codex', 'Skill を .agents/skills/ にも置く（Codex 用）'],
     ['--devcontainer', '.devcontainer/devcontainer.json を置く'],
   ]),
-  verify: help(VERIFY_USAGE, '仕様ゲートと完了ゲートで、仕様・確認事項・テストを検査する。--change を省くと、品質コマンドだけを実行する。終了コードは合格 0・不合格 1・使い方の誤り 2。', [
+  verify: help(VERIFY_USAGE, '仕様ゲートと完了ゲートで、仕様・確認事項・テストを検査する。--change を省くと、品質コマンドだけを実行する。終了コードは合格 0・不合格 1・使い方の誤り 2・実行時の失敗 3。', [
     ['--change <id>', '検査する change'],
     ['--spec-only', '仕様ゲート：実装に入ってよいかを検査する'],
     ['--done', '完了ゲート：仕様ゲートに加え、タスク・要件ごとのテスト・品質コマンドを検査する'],
