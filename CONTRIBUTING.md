@@ -14,7 +14,7 @@ pnpm test
 pnpm build
 ```
 
-配布物のNode下限と開発用ツールの要件は異なる。[互換性](docs/compatibility.md)と[テストの手順](docs/testing.md)も確認する。
+配布物のNode下限と開発用ツールの要件は異なる。[互換性](docs/guide/3.reference/1.compatibility.md)と[テストの手順](docs/testing.md)も確認する。
 
 ## 仕様から変更する
 
