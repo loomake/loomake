@@ -4,7 +4,7 @@ Oct 22, 2026 · @r
 
 ## 全体像
 
-この文書は Loomake 自身をこのリポジトリで開発する流れをまとめる。Loomake を別のプロジェクトで使う手順は [usage.md](usage.md) にある。
+この文書は Loomake 自身をこのリポジトリで開発する流れをまとめる。Loomake を別のプロジェクトで使う手順は [usage.md](guide/1.getting-started/2.usage.md) にある。
 
 1 つの change は「答える → 実装を任せる → ゲートを通す → PR → archive」の順に回し、人がやるのは確認事項への回答と PR のレビューだけを目標にする。ゲートは `loomake verify` で通す。このリポジトリでは `pnpm -s verify` で実行する。
 

@@ -78,7 +78,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル�
   });
   afterAll(() => { if (dependencies) rmSync(dependencies, { recursive: true, force: true }); });
 
-  it('[REQ-208] 通常ファイルのスナップショットは外側の期限内に返る', () => {
+  it('[REQ-224] 通常ファイルのスナップショットは外側の期限内に返る', () => {
     const repo = makeRepo();
     try {
       repo.write('.git/hooks/probe-entry', 'ordinary hook\n');
@@ -88,7 +88,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル�
     } finally { repo.cleanup(); }
   });
 
-  it('[REQ-208] 書き手のないFIFOを開かず対象を示すUsageErrorで拒否する', () => {
+  it('[REQ-224] 書き手のないFIFOを開かず対象を示すUsageErrorで拒否する', () => {
     const repo = makeRepo();
     try {
       const file = join(repo.root, '.git/hooks/probe-entry');
@@ -101,7 +101,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル�
     } finally { repo.cleanup(); }
   });
 
-  it('[REQ-208] Unixソケットを内容の読み取り前にUsageErrorで拒否する', async () => {
+  it('[REQ-224] Unixソケットを内容の読み取り前にUsageErrorで拒否する', async () => {
     const repo = makeRepo();
     const server = createServer();
     try {
@@ -119,7 +119,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル�
     }
   });
 
-  it.each(['before', 'engine'] as const)('[REQ-208] %sのFIFOで通常runを止め、タスク・変更・コミットを保つ', (stage) => {
+  it.each(['before', 'engine'] as const)('[REQ-224] %sのFIFOで通常runを止め、タスク・変更・コミットを保つ', (stage) => {
     const repo = makeRepo();
     try {
       const file = join(repo.root, '.git/hooks/probe-entry');
@@ -147,7 +147,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル�
     } finally { repo.cleanup(); }
   }, 15_000);
 
-  it.each(['regular', 'dangling', 'directory'] as const)('[REQ-208][REQ-204] %sの既存フックを保ち、通常runでタスクをコミットする', (kind) => {
+  it.each(['regular', 'dangling', 'directory'] as const)('[REQ-224][REQ-204] %sの既存フックを保ち、通常runでタスクをコミットする', (kind) => {
     const repo = makeRepo();
     try {
       const hook = join(repo.root, '.git/hooks/probe-entry');
