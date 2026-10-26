@@ -1,5 +1,5 @@
 # WBS v1.3.1 の移行時の初期状態（案）
-# 対象: loomake/loomake の docs/wbs.md、調査時点のコミット f2c4db3（2026-10-26）
+# 対象: loomake/loomake の docs/wbs.md、調査時点のコミット f2c4db3（2026-10-26）。W6-6〜W6-9 は d50586e で追加調査
 # 作り方: 各作業項目の完了条件と、リポジトリの実装・仕様・change・文書を突き合わせた。AI による調査で、人の確認前の案
 #
 # assessment（調査の判定）
@@ -14,7 +14,7 @@
 # missing は WBS v1.4 で採用した契約に照らした残件で書く（v1.4 の 0 章の決定 J01〜J08）。
 # wbs_mismatch は調査時点（v1.3.1）の所見で、v1.4 で解消したものも記録として残す。Issue 本文には転記しない
 #
-# 集計: done 2 / partial 26 / none 21（合計 49）
+# 集計: done 3 / partial 26 / none 24（合計 53。W6-6〜W6-9 は d50586e で main に追加された作業項目）
 - id: W0-1
   assessment: partial
   initial_status: Backlog
@@ -517,3 +517,40 @@
   - '.github/PULL_REQUEST_TEMPLATE.md : 非互換な変更の理由と移行方法の欄はない'
   missing: PR に非互換の理由と移行方法を書く運用、1.0 に向けた互換性の範囲の文書化
   wbs_mismatch: quality.yaml はなく、設定は loomake.config.json
+- id: W6-6
+  assessment: done
+  initial_status: Done
+  close_as: completed
+  confidence: medium
+  evidence:
+  - 'docs/guide/ : はじめに・ガイド・リファレンス・考え方の 4 章がある（PR #8、d50586e で main に取り込み済み）'
+  - 'tests/doc-links.test.ts : docs/guide/ 以下の全ページのリンクを検査する'
+  missing: null
+  wbs_mismatch: v1.3.1 の調査（f2c4db3）のあとに main で追加された作業項目。d50586e で確認した
+- id: W6-7
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: low
+  evidence:
+  - 'loomake/site : 別リポジトリのため、このリポジトリからは確認していない'
+  missing: site の content.config.ts で docs/guide/ を読み込み、loomake.dev/docs と /llms.txt に全ページが出ること
+  wbs_mismatch: v1.3.1 の調査のあとに main で追加された作業項目。site 側の状態は人が確かめる
+- id: W6-8
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - 'scripts/ : CLI のオプションとスキーマからリファレンスを生成するスクリプトはない。docs/guide/3.reference/ は手書きの 3 ページ'
+  missing: 生成スクリプトと、生成し直して差分が出ないことの CI の検査。前提の W1-1 も未完了
+  wbs_mismatch: v1.3.1 の調査のあとに main で追加された作業項目
+- id: W6-9
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - '.github/workflows/ : ci.yml・codeql.yml・release.yml だけで、site を作り直すワークフローはない'
+  missing: docs/guide/ の変更で site を作り直すワークフロー
+  wbs_mismatch: v1.3.1 の調査のあとに main で追加された作業項目
