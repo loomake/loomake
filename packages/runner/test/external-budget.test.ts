@@ -31,6 +31,34 @@ function diagnosticContext(repo: Repo, details: object): string {
   if (output) writeFileSync(output, context, { flag: 'wx' });
   return context;
 }
+type ShimEvent = { event: string; at: number; command?: string; args?: string[]; status?: number | null; signal?: string | null; error?: string };
+// 診断の記録は上限で切られるので、最後の行が壊れていたら読み飛ばす
+function shimEvents(repo: Repo): ShimEvent[] {
+  const file = diagnosticFile(repo);
+  if (!existsSync(file)) return [];
+  return readFileSync(file, 'utf8').split('\n').flatMap((line) => {
+    try { return line ? [JSON.parse(line) as ShimEvent] : []; } catch { return []; }
+  });
+}
+const describeEvent = (event: ShimEvent | undefined) => event ? `${event.event}: ${event.command ?? ''} ${(event.args ?? []).join(' ')}`.trim() : '（偽の CLI の記録がない）';
+/**
+ * 偽の CLI が、狙った操作（引数の先頭が operation）で止まったことを確かめ、その stall-start を返す。
+ * 負荷が高いと、狙った操作に届く前の git・gh で期限に当たり、同じ「実行時間の上限」で止まる。
+ * そのとき、どこで止まったかが分かるメッセージで落とす。
+ */
+function expectStalledAt(repo: Repo, operation: readonly string[], context: string): ShimEvent {
+  const events = shimEvents(repo);
+  const index = events.findIndex((event) => event.event === 'stall-start');
+  // 試験自身の記録（run-start など）を除き、偽の CLI が最後に記録した操作を示す
+  const last = describeEvent(events.filter((event) => event.command && event.event !== 'stall-start').at(-1));
+  expect(existsSync(join(repo.base, 'stalled')), `偽の CLI が ${operation.join(' ')} で止まる前に run が終わりました（stalled の印がない）。最後の記録は ${last}\n${context}`).toBe(true);
+  expect(index, `stall-start の記録がありません。最後の記録は ${last}\n${context}`).toBeGreaterThanOrEqual(0);
+  const stall = events[index]!;
+  expect(stall.args?.slice(0, operation.length), `${operation.join(' ')} ではなく、${describeEvent(stall)} で止まりました\n${context}`).toEqual([...operation]);
+  const failed = events.slice(0, index).filter((event) => event.event === 'forward-end' && (event.error || event.signal));
+  expect(failed, `止まる前の操作が失敗しました：${failed.map((event) => `${describeEvent(event)}（error=${event.error ?? ''}、signal=${event.signal ?? ''}）`).join('、')}\n${context}`).toEqual([]);
+  return stall;
+}
 function shim(repo: Repo, command: string, when: string, finishFirst = false, stallMs = 3000) {
   const bin = join(repo.base, 'bin');
   const original = command === 'git' ? realGit : join(bin, `${command}-original`);
@@ -129,7 +157,13 @@ describe('runから外部操作までの期限', () => {
       // push と PR の作成は 1 操作の期限では止めず、run の残り時間で止める（relax-commit-push-budget）。
       // そこで、この 2 つは run 全体の予算より長く止め、全体の期限で止まることを確かめる
       const untilDeadline = stage === 'push' || stage === 'create';
-      shim(repo, command, condition, stage === 'create', untilDeadline ? 30_000 : 3000);
+      // list・auth は 1 操作の期限で止める。止まる手前の git・gh（ロックの確認、verify、git status など）が
+      // 負荷で遅れても期限に当たらない長さにし、偽の CLI はそれより十分長く止める
+      const OPERATION_MS = 2_000;
+      const STALL_MS = 6_000;
+      // 1 操作の期限には監視役と偽の CLI の起動時間も入るので、stall-start からの時間は期限より短くなりうる
+      const OPERATION_SLACK_MS = 1_000;
+      shim(repo, command, condition, stage === 'create', untilDeadline ? 30_000 : STALL_MS);
       diagnosticEvent(repo, 'run-start', { stage });
       // untilDeadline の 2 つは、止まる手前の通常の git・gh が負荷で遅れても 1 操作の期限に当たらないよう余裕を持たせ、
       // 止まったのが共有の期限であることは所要時間の下限で確かめる。
@@ -137,16 +171,23 @@ describe('runから外部操作までの期限', () => {
       // 短いと、証拠の記録の中で期限に当たって同じ「実行時間の上限」で止まり、確かめたい停止に届かない
       const SHARED_DEADLINE_MS = 12_000;
       const runStarted = Date.now();
-      const result = await (untilDeadline ? withProcessBudget({ timeoutMs: SHARED_DEADLINE_MS, maxOperationMs: 5_000 }, () => run(repo)) : budget(() => run(repo)));
-      const runElapsed = Date.now() - runStarted;
+      const result = await withProcessBudget(untilDeadline ? { timeoutMs: SHARED_DEADLINE_MS, maxOperationMs: 5_000 } : { timeoutMs: 20_000, maxOperationMs: OPERATION_MS }, () => run(repo));
+      const runEnded = Date.now();
+      const runElapsed = runEnded - runStarted;
       diagnosticEvent(repo, 'run-end', { stage, code: result.code, elapsedMs: Date.now() - started });
       const context = diagnosticContext(repo, { stage, code: result.code, elapsedMs: Date.now() - started, stdout: result.stdout });
+      // 期限の検査より先に、止まったのが確かめたい段階であることを、停止の印と偽の CLI の記録で確かめる
+      const operation = { push: ['push'], auth: ['auth', 'status'], list: ['pr', 'list'], create: ['pr', 'create'] }[stage];
+      const stall = expectStalledAt(repo, operation, context);
       expect(result.code, context).toBe(1);
       if (untilDeadline) expect(runElapsed, context).toBeGreaterThanOrEqual(SHARED_DEADLINE_MS - 500);
+      else {
+        // 共有の期限ではなく 1 操作の期限で止まったことを、停止してから run が終わるまでの時間で確かめる
+        expect(runEnded - stall.at, context).toBeGreaterThanOrEqual(OPERATION_MS - OPERATION_SLACK_MS);
+        expect(runEnded - stall.at, context).toBeLessThan(STALL_MS);
+      }
       expect(result.stdout, context).toContain('実行時間の上限');
       expect(summary(repo).status, context).toBe('stopped');
-      // 止まったのが確かめたい段階（push・create の停止）であることを、停止の印で確かめる
-      if (untilDeadline) expect(existsSync(join(repo.base, 'stalled')), context).toBe(true);
       expect(readFileSync(join(repo.root, 'impl.txt'), 'utf8')).toBe('実装');
       expect(repo.prs(), context).toHaveLength(stage === 'create' ? 1 : 0);
       const evidenceDir = join(repo.root, '.loomake/evidence', CHANGE);

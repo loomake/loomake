@@ -31,7 +31,7 @@ npx loomake trace report --change <id>            # リリースレポートを�
 
 ## ドキュメント
 
-使い方・設定・AI エージェント向けの手順は、[GitHub のリポジトリ](https://github.com/loomake/loomake)の [docs/usage.md](https://github.com/loomake/loomake/blob/main/docs/usage.md) と [docs/for-agents.md](https://github.com/loomake/loomake/blob/main/docs/for-agents.md) にある。
+使い方・設定・AI エージェント向けの手順は、[GitHub のリポジトリ](https://github.com/loomake/loomake)の [docs/guide/1.getting-started/2.usage.md](https://github.com/loomake/loomake/blob/main/docs/guide/1.getting-started/2.usage.md) と [docs/guide/2.guides/1.for-agents.md](https://github.com/loomake/loomake/blob/main/docs/guide/2.guides/1.for-agents.md) にある。
 
 ## ライセンス
 
