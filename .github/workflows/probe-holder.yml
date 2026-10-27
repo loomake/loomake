@@ -1,0 +1,35 @@
+# PROBE（使い捨て・マージしない）：PR #22 の Q-05 の B-3（常駐する保持役）が Windows で成り立つかを測る
+name: probe-holder
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    if: github.head_ref == 'probe/windows-holder'
+    strategy:
+      fail-fast: false
+      matrix:
+        run: [1, 2, 3, 4, 5]
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - name: probe
+        shell: bash
+        run: node probe/holder.mjs
+        env:
+          LOOMAKE_PROBE_OUT: ${{ runner.temp }}/probe.jsonl
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: probe-holder-${{ matrix.run }}
+          path: ${{ runner.temp }}/probe.jsonl
