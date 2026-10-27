@@ -8,7 +8,7 @@
 - [x] 2.4 CONTRIBUTING.md の「コードの境界」に、実行時の依存を増やすときは、標準機能で足りないこと、自作よりコードと保守が減ること、実行経路に必要なことの 3 点を文書に書く、という手順を足す。REQ-260 は範囲外なので、仕様とテストは足さない（Q-04 の回答 B、REQ-260）
 
 ## 3. テスト
-- [ ] 3.1 Q-01 の承認を得たあとで、`packages/core/test/package.test.ts` の `[REQ-046]` のテストの名前と期待値を、Scenario「zod 以外の依存がない」に合わせる（REQ-046）
+- [x] 3.1 Q-01 の承認を得たあとで、`packages/core/test/package.test.ts` の `[REQ-046]` のテストの名前と期待値を、Scenario「zod 以外の依存がない」に合わせる（REQ-046）
 - [ ] 3.2 Q-01 の承認を得たあとで、`packages/cli/test/cli.test.ts` の kit の `[REQ-047]` のテストの名前と期待値を、Scenario「kit の依存」に合わせる。loomake の `[REQ-047]` のテストは変えない（REQ-047）
 - [ ] 3.3 `pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` を通す
 
