@@ -69,12 +69,16 @@ Source: REQ-270
 - **WHEN** PR で変えたファイルが `tests/fixtures/verify-project/openspec/changes/sample/tasks.md` だけである
 - **THEN** 判定は「文書だけ」にならず、quality ジョブはすべてのステップを実行する
 
+#### Scenario: 判定のスクリプトとワークフローを変えた PR
+- **WHEN** PR で変えたファイルが、`scripts/ci-docs-only.mjs` か `.github/workflows/ci.yml` と、`docs/` の下の `.md` だけである
+- **THEN** 判定のスクリプトとワークフローは文書ではないので、PR に入っている版のスクリプトで判定しても「文書だけ」にならず、quality ジョブはすべてのステップを実行する
+
 #### Scenario: 文書の置き場所にある設定と実行用のファイル
 - **WHEN** PR で変えたファイルが、`docs/` の下の `.json`・`.yaml`・`.yml`、`.github/` の下の `.md`、`openspec/changes/archive/` の下の `.mjs` のどれか 1 つだけである
 - **THEN** どの場合も、判定は「文書だけ」にならない
 
 ### Requirement: 文書だけかの判定に使う差分
-「文書だけの PR の品質ジョブ」の判定には、PR のベースとの差分（ベースから PR の先頭までのすべてのコミット）で変わったファイルをすべて使う MUST。名前を変えたファイルは、変更前と変更後の両方のパスを判定する MUST。消したファイルも判定する。差分を取れなかったとき、または差分を解釈できなかったときは、文書だけではないとみなす MUST。
+「文書だけの PR の品質ジョブ」の判定には、PR のベースとの差分（ベースから PR の先頭までのすべてのコミット）で変わったファイルをすべて使う MUST。名前を変えたファイルは、変更前と変更後の両方のパスを判定する MUST。消したファイルも判定する。差分を取れなかったとき、差分を解釈できなかったとき、PR のマージ先が main でないときは、文書だけではないとみなす MUST（マージ先を変えても CI は再実行されないため）。
 
 Source: REQ-270
 
@@ -89,3 +93,15 @@ Source: REQ-270
 #### Scenario: 差分を取れない、または解釈できない
 - **WHEN** PR のベースとの差分を取るコマンドが失敗する、または差分の出力に解釈できない行がある
 - **THEN** 判定は「文書だけ」にならず、quality ジョブはすべてのステップを実行する
+
+#### Scenario: マージ先が main でない PR
+- **WHEN** マージ先が `feature-x` の PR で、変えたファイルが `docs/notes.md` だけである
+- **THEN** 判定は「文書だけ」にならず、quality ジョブはすべてのステップを実行する
+
+#### Scenario: main が進んだあとのマージコミット
+- **WHEN** PR を作ったあとで main に `packages/kit/src/a.ts` の変更が入り、判定する HEAD が main と PR のブランチ（`docs/notes.md` だけを変えた）をマージしたコミットである
+- **THEN** 判定は `origin/main...HEAD` の差分で PR の変更分だけを使い、main で変わったファイルを含めないので「文書だけ」になる
+
+#### Scenario: コードのファイルを消した PR
+- **WHEN** PR で `packages/kit/src/a.ts` を消し、`docs/notes.md` を変えた
+- **THEN** 消したファイルも判定するので、判定は「文書だけ」にならない
