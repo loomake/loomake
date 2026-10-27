@@ -34,6 +34,10 @@ function expectStalled(cli: FakeCli, match: (args: string[]) => boolean, context
   const { stall, failedForwards } = stallOf(cli, match);
   expect(failedForwards, context).toEqual([]);
   expect(stall, context).toBeDefined();
+  // シグナルで終わった転送も、止まる前の操作の失敗として扱う（main の expectStalledAt から引き継ぐ）
+  const events = cli.events();
+  const index = events.findIndex((e) => e.event === 'stall-start' && match(e.args));
+  expect(events.slice(0, index).filter((e) => e.event === 'forward-end' && e.signal), context).toEqual([]);
   return stall!;
 }
 // 期限から止まるまでの猶予（windows-fake-clis の仮定 A-03）。監視役の SIGTERM から SIGKILL までの 250ms、子の終了を待つ最大 1 秒、
@@ -176,6 +180,8 @@ describe('runから外部操作までの期限', () => {
       // auth・list は 1 操作の期限で止める。止まる手前の通常の git・gh が負荷で 500ms を超えると、狙った段階の前で止まる
       // （macOS の CI で、印の検査が見つけた）。そこで 1 操作の期限を 2 秒にし、止まった印から期限 + 猶予のうちに止まることを確かめる
       const STAGE_OPERATION_MS = 2_000;
+      // 1 操作の期限には監視役と偽の CLI の起動時間も入るので、止まった印からの時間は期限より短くなりうる（main の PR #23 から引き継ぐ）
+      const OPERATION_SLACK_MS = 1_000;
       const cli = fakeCli(repo, command, { when: condition, forwardFirst: stage === 'create', stallMs: untilDeadline ? SHARED_DEADLINE_MS + 30_000 : STALL_MS });
       diagnosticEvent(repo, 'run-start', { stage });
       // untilDeadline の 2 つは、止まる手前の通常の git・gh が負荷で遅れても 1 操作の期限に当たらないよう余裕を持たせ、
@@ -187,18 +193,21 @@ describe('runから外部操作までの期限', () => {
       diagnosticEvent(repo, 'run-end', { stage, code: result.code, elapsedMs: Date.now() - started });
       const context = diagnosticContext(repo, { stage, code: result.code, elapsedMs: Date.now() - started, stdout: result.stdout }, cli);
       // 期限の検査の前に、狙った段階（push・2 回目の auth・PR の検索・作成）で止まったことを確かめる
-      const stall = expectStalled(cli, (args) => (stage === 'push' ? args[0] === 'push' : stage === 'auth' ? args[0] === 'auth' : args[0] === 'pr' && args[1] === stage), context);
+      const operation = { push: ['push'], auth: ['auth', 'status'], list: ['pr', 'list'], create: ['pr', 'create'] }[stage];
+      const stall = expectStalled(cli, (args) => operation.every((value, i) => args[i] === value), context);
       expect(result.code, context).toBe(1);
       if (untilDeadline) {
         // 1 操作の期限より長く待ち、共有の期限まで待って、共有の期限に猶予を足した時間のうちに止まった
         expect(endedAt - stall.at, context).toBeGreaterThan(UNTIL_DEADLINE_OPERATION_MS);
         expect(runElapsed, context).toBeGreaterThanOrEqual(SHARED_DEADLINE_MS - 500);
         expect(runElapsed, context).toBeLessThan(SHARED_DEADLINE_MS + STOP_GRACE_MS);
-      } else expectStoppedSoon(stall, endedAt, STAGE_OPERATION_MS, context);
+      } else {
+        // 共有の期限ではなく 1 操作の期限まで待ってから止まった
+        expect(endedAt - stall.at, context).toBeGreaterThanOrEqual(STAGE_OPERATION_MS - OPERATION_SLACK_MS);
+        expectStoppedSoon(stall, endedAt, STAGE_OPERATION_MS, context);
+      }
       expect(result.stdout, context).toContain('実行時間の上限');
       expect(summary(repo).status, context).toBe('stopped');
-      // 止まったのが確かめたい段階（push・create の停止）であることを、停止の印で確かめる
-      if (untilDeadline) expect(existsSync(join(repo.base, 'stalled')), context).toBe(true);
       expect(readFileSync(join(repo.root, 'impl.txt'), 'utf8')).toBe('実装');
       expect(repo.prs(), context).toHaveLength(stage === 'create' ? 1 : 0);
       const evidenceDir = join(repo.root, '.loomake/evidence', CHANGE);

@@ -71,6 +71,76 @@ describe('CI', () => {
     expect(ci).toContain('run: pnpm test');
   });
 
+  it('[REQ-214] macOS と Windows ではテストを 2 つのシャードに分け、ubuntu ではカバレッジ付きで 1 回だけ実行する', () => {
+    const lf = readLf('.github/workflows/ci.yml');
+    const quality = lf.slice(lf.indexOf('\n  quality:'), lf.indexOf('\n  node20:'));
+    // ubuntu はシャードの組み合わせから外し、シャードのない 1 つだけを足す。macOS と Windows には 1/2 と 2/2 が残る
+    const matrix = quality.match(/^ {6}matrix:\n((?: {8}.*\n)*)/m)?.[1];
+    expect(matrix).toBe(
+      [
+        '        os: [ubuntu-latest, macos-latest, windows-latest]',
+        "        shard: ['1/2', '2/2']",
+        '        exclude:',
+        '          - os: ubuntu-latest',
+        '        include:',
+        '          - os: ubuntu-latest',
+        '',
+      ].join('\n'),
+    );
+    expect(quality).toContain('fail-fast: false');
+    // テストの実行は、シャードのあるジョブとないジョブで 1 つずつ。ほかにすべてのテストを実行するステップはない
+    expect(quality.match(/run: pnpm test\b.*/g)).toEqual(['run: pnpm test --shard=${{ matrix.shard }}', 'run: pnpm test --coverage']);
+    expect(quality).toMatch(/- if: matrix\.shard\n {8}run: pnpm test --shard=\$\{\{ matrix\.shard \}\}\n/);
+    expect(quality).toMatch(/- if: \$\{\{ !matrix\.shard \}\}\n {8}run: pnpm test --coverage\n/);
+    expect(quality).not.toContain('test:coverage');
+    // 条件つきのステップはテストの 2 つだけで、lint・typecheck・build・配布物の検査はどのジョブでも実行する
+    expect(quality.match(/^ {6}- if: .*/gm)).toEqual(['      - if: matrix.shard', '      - if: ${{ !matrix.shard }}']);
+    for (const step of ['run: pnpm lint', 'run: pnpm typecheck', 'run: pnpm build', 'package-smoke.mjs prepare', 'package-smoke.mjs check']) expect(quality, step).toContain(step);
+  });
+
+  it('[REQ-215] 同じ PR の古い実行を取り消し、main への push の実行は取り消さない', () => {
+    const lf = readLf('.github/workflows/ci.yml');
+    const block = lf.match(/^concurrency:\n {2}group: (.+)\n {2}cancel-in-progress: (.+)\n/m);
+    expect(block, 'ワークフローの concurrency').not.toBeNull();
+    const [, group, cancel] = block!;
+    // ジョブごとの concurrency で上書きしない
+    expect(lf.match(/^\s*concurrency:/gm)).toHaveLength(1);
+
+    // GitHub Actions の式を、ci.yml の concurrency が使う範囲（||・==・文字列・文脈の参照）だけ評価する
+    type Ctx = Record<string, unknown>;
+    const evalExpr = (expr: string, ctx: Ctx): unknown => {
+      const ors = expr.split('||').map((e) => e.trim());
+      if (ors.length > 1) return ors.map((e) => evalExpr(e, ctx)).find(Boolean) ?? evalExpr(ors.at(-1)!, ctx);
+      const eq = expr.split('==').map((e) => e.trim());
+      if (eq.length === 2) return evalExpr(eq[0]!, ctx) === evalExpr(eq[1]!, ctx);
+      const literal = expr.match(/^'(.*)'$/);
+      if (literal) return literal[1];
+      if (!/^[a-z_][\w.]*$/i.test(expr)) throw new Error(`テストが評価できない式です：${expr}`);
+      return expr.split('.').reduce<unknown>((v, k) => (v as Ctx | undefined)?.[k], ctx);
+    };
+    const render = (template: string, ctx: Ctx) => {
+      const whole = template.match(/^\$\{\{(.*)\}\}$/);
+      if (whole) return evalExpr(whole[1]!.trim(), ctx);
+      return template.replace(/\$\{\{(.*?)\}\}/g, (_, e: string) => String(evalExpr(e.trim(), ctx)));
+    };
+    const pr = (number: number, runId: number): Ctx => ({
+      github: { event_name: 'pull_request', ref: `refs/pull/${number}/merge`, run_id: runId, event: { pull_request: { number } } },
+    });
+    const push = (runId: number): Ctx => ({ github: { event_name: 'push', ref: 'refs/heads/main', run_id: runId, event: {} } });
+
+    // 同じ PR の実行は同じ group に入り、古い実行を取り消す
+    expect(render(group!, pr(11, 101))).toBe(render(group!, pr(11, 102)));
+    expect(String(render(group!, pr(11, 101)))).toContain('11');
+    expect(render(cancel!, pr(11, 101))).toBe(true);
+    expect(render(group!, pr(12, 103))).not.toBe(render(group!, pr(11, 101)));
+
+    // main に続けて push しても、実行ごとに group が分かれる。実行中の実行も、待機中の実行も取り消されない
+    const mainGroups = [201, 202, 203].map((id) => render(group!, push(id)));
+    expect(new Set(mainGroups).size).toBe(3);
+    expect(render(cancel!, push(201))).toBe(false);
+    for (const g of mainGroups) expect(g).not.toBe(render(group!, pr(11, 101)));
+  });
+
   it('[REQ-010][REQ-054] PR ごとに完了ゲートを実行する', () => {
     expect(ci).toMatch(/if: github\.event_name == 'pull_request'/);
     expect(ci).toContain('node scripts/ci-gate.mjs "$HEAD_REF"');

@@ -1,5 +1,7 @@
 # dependencies
 node_modules/
+# pnpm のストア（devcontainer では作業ディレクトリに作られる）
+.pnpm-store/
 
 # OS
 .DS_Store
