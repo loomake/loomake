@@ -7456,12 +7456,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 変えたファイルがすべて文書なら、文書だけと判定する",
-          "sha256": "9013bd966dacb2c0cb1560cbd36cc0d9b8c2f868eafbdc76ceda1c61c3c0abdb"
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 文書だけの PR では docs_only=true を書く",
-          "sha256": "9013bd966dacb2c0cb1560cbd36cc0d9b8c2f868eafbdc76ceda1c61c3c0abdb"
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
         },
         {
           "file": "tests/monorepo.test.ts",
@@ -7498,12 +7498,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] main への push では、差分によらず文書だけと判定しない",
-          "sha256": "9013bd966dacb2c0cb1560cbd36cc0d9b8c2f868eafbdc76ceda1c61c3c0abdb"
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] main への push では docs_only=false を書く",
-          "sha256": "9013bd966dacb2c0cb1560cbd36cc0d9b8c2f868eafbdc76ceda1c61c3c0abdb"
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
         },
         {
           "file": "tests/monorepo.test.ts",
@@ -7524,12 +7524,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コードと配布する Markdown は文書として扱わない",
-          "sha256": "9013bd966dacb2c0cb1560cbd36cc0d9b8c2f868eafbdc76ceda1c61c3c0abdb"
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
-          "sha256": "9013bd966dacb2c0cb1560cbd36cc0d9b8c2f868eafbdc76ceda1c61c3c0abdb"
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
         }
       ]
     },
@@ -7545,12 +7545,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コードと配布する Markdown は文書として扱わない",
-          "sha256": "9013bd966dacb2c0cb1560cbd36cc0d9b8c2f868eafbdc76ceda1c61c3c0abdb"
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
-          "sha256": "9013bd966dacb2c0cb1560cbd36cc0d9b8c2f868eafbdc76ceda1c61c3c0abdb"
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
         }
       ]
     },
@@ -7566,12 +7566,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 設定と実行用のファイルは、文書の置き場所にあっても",
-          "sha256": "9013bd966dacb2c0cb1560cbd36cc0d9b8c2f868eafbdc76ceda1c61c3c0abdb"
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
-          "sha256": "9013bd966dacb2c0cb1560cbd36cc0d9b8c2f868eafbdc76ceda1c61c3c0abdb"
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
         }
       ]
     },
@@ -7587,12 +7587,28 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] tests/ の下の試験用データは",
-          "sha256": "9013bd966dacb2c0cb1560cbd36cc0d9b8c2f868eafbdc76ceda1c61c3c0abdb"
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
-          "sha256": "9013bd966dacb2c0cb1560cbd36cc0d9b8c2f868eafbdc76ceda1c61c3c0abdb"
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+        }
+      ]
+    },
+    {
+      "id": "SCN-43e463f4ebf23c4404ee",
+      "status": "reviewed",
+      "scenarioSha256": "6fd86897ec8edec5d32be5987c2443456e4ac3ae074be63553cc7d1599e45f84",
+      "reason": "scripts/ci-docs-only.mjs と .github/workflows/ci.yml を文書として扱わないこと、それぞれを docs/ の下の .md と一緒に変えた差分を文書だけとせず、理由にそのパスを出すことを assert する。PR に入っている版のスクリプトで判定する点は、許可リストの外であることで扱い、判定のロジックは足していない。",
+      "sources": [
+        "REQ-270"
+      ],
+      "tests": [
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "[REQ-270] 判定のスクリプトとワークフローを変えた PR は、文書だけと判定しない",
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
         }
       ]
     },
@@ -7608,14 +7624,14 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 設定と実行用のファイルは、文書の置き場所にあっても",
-          "sha256": "9013bd966dacb2c0cb1560cbd36cc0d9b8c2f868eafbdc76ceda1c61c3c0abdb"
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
         }
       ]
     },
     {
       "id": "SCN-b1013e579b7995de0343",
       "status": "reviewed",
-      "scenarioSha256": "c233038cf758442d3579a342ac8d1867110a534b663f8d1fd1c3da4c33bc4454",
+      "scenarioSha256": "d4c2df1ced2164ea39fe4ae1b1be0495b4337a033ef97b9f0fc635e1ad3d17a0",
       "reason": "一時的な git のリポジトリで、1 つ目のコミットで packages/kit/src/a.ts を変え、2 つ目のコミットで docs/notes.md だけを変えたとき、スクリプトが docs_only=false を書き、理由に packages/kit/src/a.ts を出すことを assert する。判定の関数が origin/<base>...HEAD の差分を -M 付きで読むことも別の試験で assert している。",
       "sources": [
         "REQ-270"
@@ -7624,14 +7640,14 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 前のコミットでコードを変えた PR では",
-          "sha256": "9013bd966dacb2c0cb1560cbd36cc0d9b8c2f868eafbdc76ceda1c61c3c0abdb"
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
         }
       ]
     },
     {
       "id": "SCN-52d13b01d8a78323c886",
       "status": "reviewed",
-      "scenarioSha256": "c5e4fc0392eb89a5bb87ef7159abd3489331886a1f229abe93683687b45330b2",
+      "scenarioSha256": "c2e63bce7f4072d441b7cde856209c9e961fb880b3249e4cf6aca65d0eb8d82f",
       "reason": "R と C の差分の行から変更前と変更後の両方のパスを取り出すこと、scripts/notes.md から docs/notes.md への名前の変更を文書だけとしないこと、一時的な git のリポジトリで git mv した差分でスクリプトが docs_only=false を書き、理由に変更前のパスを出すことを assert する。",
       "sources": [
         "REQ-270"
@@ -7640,20 +7656,20 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 名前を変えたファイルは、変更前のパスも判定する",
-          "sha256": "9013bd966dacb2c0cb1560cbd36cc0d9b8c2f868eafbdc76ceda1c61c3c0abdb"
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 名前を変えたファイルは、変更前のパスが文書でなければ",
-          "sha256": "9013bd966dacb2c0cb1560cbd36cc0d9b8c2f868eafbdc76ceda1c61c3c0abdb"
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
         }
       ]
     },
     {
       "id": "SCN-355ffa6c8b4e84de765c",
       "status": "reviewed",
-      "scenarioSha256": "c0bb3929cb531ed9acab86df96d92043b624511a7fc0f2a173de135031d1c574",
-      "reason": "git が 0 以外で終わるとき、起動できないとき、向き先のブランチがないとき、-z でない出力・知らない状態・衝突・パスの足りない名前の変更・NUL で終わらない出力・空の出力のとき、判定の関数が文書だけとしないことを assert する。存在しないブランチを向き先にしたとき、スクリプトが終了コード 0 で docs_only=false を書くことも assert する。",
+      "scenarioSha256": "be78ad71b64243013ee33137387d152dea4014d2fab9e0a6d1522321ca6d2d47",
+      "reason": "git が 0 以外で終わるとき、起動できないとき、向き先のブランチの名前がないとき、-z でない出力・知らない状態・衝突・パスの足りない名前の変更・NUL で終わらない出力・空の出力のとき、判定の関数が文書だけとしないことを assert する。一時的な git のリポジトリから origin/main を消したとき、スクリプトが終了コード 0 で docs_only=false を書き、調べられなかったと出すことも assert する。",
       "sources": [
         "REQ-270"
       ],
@@ -7661,17 +7677,75 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 差分を取れないときは、文書だけと判定しない",
-          "sha256": "9013bd966dacb2c0cb1560cbd36cc0d9b8c2f868eafbdc76ceda1c61c3c0abdb"
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 差分を解釈できないときは、文書だけと判定しない",
-          "sha256": "9013bd966dacb2c0cb1560cbd36cc0d9b8c2f868eafbdc76ceda1c61c3c0abdb"
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 差分を取れないときは、失敗にせず docs_only=false を書く",
-          "sha256": "9013bd966dacb2c0cb1560cbd36cc0d9b8c2f868eafbdc76ceda1c61c3c0abdb"
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+        }
+      ]
+    },
+    {
+      "id": "SCN-312be9964769f05485d3",
+      "status": "reviewed",
+      "scenarioSha256": "d5cc883bca8f347c0a214a93b562b08071cf18da03f2fb069a01888dbacda73a",
+      "reason": "マージ先が feature-x のとき、判定の関数が git を呼ばずに文書だけとせず、理由にマージ先の名前を出すことを assert する。一時的な git のリポジトリでは、docs/notes.md だけを変えた同じ差分が、マージ先が main なら docs_only=true、feature-x なら docs_only=false になることを assert する。",
+      "sources": [
+        "REQ-270"
+      ],
+      "tests": [
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "[REQ-270] PR のマージ先が main でないときは、差分によらず文書だけと判定しない",
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+        },
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "[REQ-270] マージ先が main でない PR では docs_only=false を書く",
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+        }
+      ]
+    },
+    {
+      "id": "SCN-af0412a0fc52c20e81d3",
+      "status": "reviewed",
+      "scenarioSha256": "3927de825c142b1aafcdedb496a0d70305341595a30f533df367026f7e02e2c4",
+      "reason": "一時的な git のリポジトリで、PR のブランチが docs/notes.md だけを変え、そのあと main に packages/kit/src/a.ts の変更が入り、HEAD を main に PR のブランチをマージしたコミット（CI のマージコミットと同じ形）にしたとき、スクリプトが docs_only=true を書くこと、つまり main で変わったファイルを判定に含めないことを assert する。",
+      "sources": [
+        "REQ-270"
+      ],
+      "tests": [
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "[REQ-270] main が進んだあとのマージコミットでは、PR の変更分だけで判定する",
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+        }
+      ]
+    },
+    {
+      "id": "SCN-0bbf551970f3ff9815ef",
+      "status": "reviewed",
+      "scenarioSha256": "1b877a639f2a7567ffeb3d95880317ad1131d196182df967a6079d90a5292991",
+      "reason": "D の差分の行の packages/kit/src/a.ts を判定に含め、文書だけとせず理由にそのパスを出すことを assert する。一時的な git のリポジトリで git rm したファイルと docs/notes.md の変更でも、スクリプトが docs_only=false を書くことを assert する。",
+      "sources": [
+        "REQ-270"
+      ],
+      "tests": [
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "[REQ-270] コードのファイルを消した PR は、文書だけと判定しない",
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+        },
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "[REQ-270] コードのファイルを消した PR では docs_only=false を書く",
+          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
         }
       ]
     }
