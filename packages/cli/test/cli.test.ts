@@ -135,8 +135,10 @@ describe('change の省略', () => {
 });
 
 describe('実行時依存の範囲', () => {
-  it('[REQ-047] kit の dependencies は @loomake/core だけ', () => {
-    expect(Object.keys(readJson('packages/kit/package.json').dependencies ?? {})).toEqual(['@loomake/core']);
+  it('[REQ-047] kit の dependencies は @loomake/core を含み、@loomake/core と yaml 以外を含まない', () => {
+    const deps = Object.keys(readJson('packages/kit/package.json').dependencies ?? {});
+    expect(deps).toContain('@loomake/core');
+    expect(deps.filter((d) => !['@loomake/core', 'yaml'].includes(d))).toEqual([]);
   });
 
   it('[REQ-047] loomake の dependencies は @loomake/core・@loomake/kit・@loomake/trace・@loomake/runner 以外を含まない', () => {

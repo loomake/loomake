@@ -429,9 +429,11 @@ describe('git の設定の比較の範囲', () => {
       expect(readFileSync(join(r.repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [ ] 1.1');
     }));
 
-  it('[REQ-204] リンク先のないフックがあっても、落ちずにタスクを完了にする', () =>
+  it('[REQ-204][REQ-236] リンク先のないフックがあっても、落ちずにタスクを完了にする', () =>
     check({}, (repo) => {
-      symlinkSync(join(repo.base, 'missing-hook'), join(repo.root, '.git/hooks/pre-commit'));
+      // pre-commit の名前で置くと、Git for Windows は準備のコミットでリンクを実行しようとして失敗する。
+      // git がフックとして実行しない名前で置き、フックのディレクトリの比較だけを確かめる
+      symlinkSync(join(repo.base, 'missing-hook'), join(repo.root, '.git/hooks/missing-link'));
       repo.write('setup.txt', '準備\n');
     }, (r) => {
       expect(r.stdout).not.toContain('エンジンが git の設定かフックを変えました');

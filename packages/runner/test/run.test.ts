@@ -785,13 +785,14 @@ describe('runnerの表示の保護', () => {
 
 
 describe('実行の排他と記録', () => {
-  it('[REQ-158] 二重起動は先の実行を変更せず、中断後はロックを解放する', () =>
+  it('[REQ-158][REQ-236] 二重起動は先の実行を変更せず、中断後はロックを解放する', () =>
     withRepo(async (repo) => {
       repo.plan([{ sleepMs: 10_000 }]);
       const controller = new AbortController();
       const first = run(repo, { signal: controller.signal });
       try {
-        await vi.waitFor(() => expect(repo.calls()).toHaveLength(1));
+        // Windows では run の準備に 1 秒以上かかり、vi.waitFor の既定の 1 秒に収まらない
+        await vi.waitFor(() => expect(repo.calls()).toHaveLength(1), { timeout: 30_000, interval: 50 });
         const head = repo.git('rev-parse', 'HEAD');
         const tasks = tasksMd(repo);
         const dir = runDir(repo);
