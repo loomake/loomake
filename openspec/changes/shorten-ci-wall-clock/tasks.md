@@ -13,3 +13,12 @@
 - [x] 3.1 `pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` を通す
 - [x] 3.2 この PR の CI で、quality ジョブがすべてのステップを実行したこと（この PR はコードを変えるため）と、判定のステップの出力を確かめ、作業記録に書く（REQ-270）
 - [x] 3.3 `pnpm -s verify --change shorten-ci-wall-clock --done` を通す <!-- loomake:gate=done -->
+
+## 4. レビューへの対応（2026-10-27 のレビュー。利用者が「おすすめで」と承認）
+- [x] 4.1 レビューの指摘と利用者の承認を trace.md に記録する（REQ-270）
+- [ ] 4.2 差分仕様に Scenario を足す。マージ先が main でない PR、判定のスクリプトとワークフローを変えた PR、main が進んだあとのマージコミット、コードのファイルを消した PR（REQ-270）
+- [ ] 4.3 PR のマージ先が main でないときは、文書だけと判定しないようにし、テストを足す（REQ-270）
+- [ ] 4.4 判定のスクリプトとワークフローを変えた PR、main が進んだあとのマージコミット、コードのファイルを消した PR のテストを足す。判定のロジックは変えない（REQ-270）
+- [ ] 4.5 文書だけの PR では、文書を読むテストが macOS・Windows で動かなくなることを、proposal.md の Impact に書く（REQ-270）
+- [ ] 4.6 4.2〜4.4 のあとで、変わった Scenario と足した Scenario のレビューを `docs/quality/scenarios.json` に合わせる。`node scripts/scenario-audit.mjs` で、この change の Scenario がすべて reviewed になることを確かめる（REQ-049, REQ-214, REQ-270）
+- [ ] 4.7 `pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` と `pnpm -s verify --change shorten-ci-wall-clock --done` を通し、push のあとの CI の結果を作業記録に書く
