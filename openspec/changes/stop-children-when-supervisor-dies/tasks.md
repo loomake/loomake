@@ -9,7 +9,13 @@
 
 - [x] 2.1 lint の `exec` をやめ、祖先をたどって見つけた監視役に SIGINT を送る。送った先が監視役であることを確かめる（REQ-183・REQ-250）
 
-## 3. 統合検証
+## 3. Windows で親のいない孫を止める（Q-02）
 
-- [ ] 3.1 Windows の CI で、対象の 3 件が通ることを main の失敗とテストごとに照合し、tdd.md に記録する
-- [ ] 3.2 `pnpm -s verify --change stop-children-when-supervisor-dies --done` を通す <!-- loomake:gate=done -->
+- [ ] 3.1 監視役が対象の PID と一緒に、対象を起動する直前と直後の時刻を書く。親は監視役の終了を受け取った時刻を記録する（REQ-252）
+- [ ] 3.2 識別の関数と、差し替えられる一覧の取得・停止を使う後片付けを足し、対象不在・PID の再利用・列挙から停止までの再利用・一覧の取得の失敗・時間切れ・権限不足の試験を Linux で通す（REQ-252・REQ-253・REQ-254）
+- [ ] 3.3 Windows の一覧の取得と停止を PowerShell で実装し、runExternal から使う。停止を確認できないときは理由を中断の理由に加える。Windows だけで動く試験を足し、changeset を更新する（REQ-250・REQ-252・REQ-253・REQ-254）
+
+## 4. 統合検証
+
+- [ ] 4.1 Windows の CI で、対象の 3 件が通ることを main の失敗とテストごとに照合し、tdd.md に記録する。対象の品質コマンドの試験は少なくとも 3 回流す
+- [ ] 4.2 `pnpm -s verify --change stop-children-when-supervisor-dies --done` を通す <!-- loomake:gate=done -->
