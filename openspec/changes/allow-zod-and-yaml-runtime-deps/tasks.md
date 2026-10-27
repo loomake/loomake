@@ -9,7 +9,7 @@
 
 ## 3. テスト
 - [x] 3.1 Q-01 の承認を得たあとで、`packages/core/test/package.test.ts` の `[REQ-046]` のテストの名前と期待値を、Scenario「zod 以外の依存がない」に合わせる（REQ-046）
-- [ ] 3.2 Q-01 の承認を得たあとで、`packages/cli/test/cli.test.ts` の kit の `[REQ-047]` のテストの名前と期待値を、Scenario「kit の依存」に合わせる。loomake の `[REQ-047]` のテストは変えない（REQ-047）
+- [x] 3.2 Q-01 の承認を得たあとで、`packages/cli/test/cli.test.ts` の kit の `[REQ-047]` のテストの名前と期待値を、Scenario「kit の依存」に合わせる。loomake の `[REQ-047]` のテストは変えない（REQ-047）
 - [ ] 3.3 `pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` を通す
 
 ## 4. 品質レビューの記録
