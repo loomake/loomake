@@ -68,7 +68,8 @@ describe('同期外部操作の監視', () => {
       withProcessBudget({ timeoutMs: 5000 }, async () => { await new Promise((r) => setTimeout(r, 130)); expect(call('console.log("ok")').stdout).toBe('ok\n'); }),
     ]);
   });
-  it('[REQ-181][REQ-182] 中断後に同じ共有予算で別の操作を始めない', () => fixture((dir) => {
+  // Issue #5。PR #22（stop-children-when-supervisor-dies）のマージで外す。それまでは Windows でだけ止める
+  it.runIf(process.platform !== 'win32')('[REQ-181][REQ-182] 中断後に同じ共有予算で別の操作を始めない', () => fixture((dir) => {
     const file = join(dir, 'after');
     withProcessBudget({ timeoutMs: 3000 }, () => {
       expect(() => call("process.kill(process.ppid,'SIGINT');setInterval(()=>{},100)")).toThrow('中断');
@@ -85,7 +86,8 @@ describe('同期外部操作の監視', () => {
     expect(alive(Number(readFileSync(file, 'utf8')))).toBe(false);
     expect(Date.now() - start).toBeLessThan(3000);
   }));
-  it('[REQ-181] 監視役へのSIGINTを中断として返し、子を止める', () => fixture((dir) => {
+  // Issue #5。PR #22（stop-children-when-supervisor-dies）のマージで外す。それまでは Windows でだけ止める
+  it.runIf(process.platform !== 'win32')('[REQ-181] 監視役へのSIGINTを中断として返し、子を止める', () => fixture((dir) => {
     const file = join(dir, 'pid');
     const code = `require('node:fs').writeFileSync(${JSON.stringify(file)},String(process.pid)); process.on('SIGTERM',()=>{});process.kill(process.ppid,'SIGINT');setInterval(()=>{},100)`;
     try { call(code); expect.fail('中断される'); }

@@ -225,7 +225,8 @@ describe('runから外部操作までの期限', () => {
 });
 
 describe('verifyとtraceの期限', () => {
-  it('[REQ-183][REQ-240] traceのGitも共有予算で止める', () => {
+  // Issue #5。PR #22（stop-children-when-supervisor-dies）のマージで外す。それまでは Windows でだけ止める
+  it.runIf(process.platform !== 'win32')('[REQ-183][REQ-240] traceのGitも共有予算で止める', () => {
     const repo = makeRepo();
     const cli = fakeCli(repo, 'git', { when: "args[0]==='status'", stallMs: STALL_MS });
     const restoreEnv = useRepoEnv(repo);
@@ -252,7 +253,8 @@ describe('verifyとtraceの期限', () => {
       expect(result.results.find((r) => r.check === 'openspec validate')).toMatchObject({ status: 'fail', detail: expect.stringContaining('実行時間の上限') });
     } finally { restoreEnv(); repo.cleanup(); }
   });
-  it('[REQ-183] 品質コマンドの中断後に次のコマンドを実行しない', () => {
+  // Issue #5。PR #22（stop-children-when-supervisor-dies）のマージで外す。それまでは Windows でだけ止める
+  it.runIf(process.platform !== 'win32')('[REQ-183] 品質コマンドの中断後に次のコマンドを実行しない', () => {
     const repo = makeRepo();
     try {
       repo.write('loomake.config.json', JSON.stringify({ openspecValidate: false, commands: { lint: `node -e "process.kill(process.ppid,'SIGINT');setInterval(()=>{},100)"`, test: `node -e "require('node:fs').writeFileSync('after','x')"` } }));

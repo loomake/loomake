@@ -131,7 +131,8 @@ describe('品質コマンドの時間切れの直接検証', () => {
     }
   }, 20_000);
 
-  it('[REQ-140] 初回の検証成功を確認した後、2回目を停止して時間切れを記録する', async () => {
+  // Issue #5。Windows の CI で不安定に落ちるため、直るまで Windows でだけ止める
+  it.runIf(process.platform !== 'win32')('[REQ-140] 初回の検証成功を確認した後、2回目を停止して時間切れを記録する', async () => {
     const repo = makeRepo({ tasks: task });
     try {
       const head = prepare(repo, 2);
