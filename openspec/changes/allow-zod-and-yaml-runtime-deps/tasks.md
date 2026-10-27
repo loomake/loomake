@@ -22,4 +22,4 @@
 - [x] 5.3 5.1・5.2 のあとで、`pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` を通し、`tests/kit-layers.test.ts` の変更で影響する Scenario のレビューを、テストを読み直してから change 側の ID で `docs/quality/scenarios.json` に足す。ハッシュだけを書き換えることはしない。扱えないものは proposal.md の archive への申し送りに書く（REQ-207）
 
 ## 6. 確認
-- [ ] 6.1 `pnpm -s verify --change allow-zod-and-yaml-runtime-deps --done` を通す <!-- loomake:gate=done -->
+- [x] 6.1 `pnpm -s verify --change allow-zod-and-yaml-runtime-deps --done` を通す <!-- loomake:gate=done -->
