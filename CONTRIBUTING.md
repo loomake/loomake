@@ -14,7 +14,7 @@ pnpm test
 pnpm build
 ```
 
-配布物のNode下限と開発用ツールの要件は異なる。[互換性](docs/compatibility.md)と[テストの手順](docs/testing.md)も確認する。
+配布物のNode下限と開発用ツールの要件は異なる。[互換性](docs/guide/3.reference/1.compatibility.md)と[テストの手順](docs/testing.md)も確認する。
 
 ## 仕様から変更する
 
@@ -35,6 +35,12 @@ PRには、変更する問題と結果の動作、対象change、実行したゲ
 既存テストの削除・skip・期待値の変更、品質設定の緩和は承認なしに行わない。テストが要件に合っていないと思う場合も、実装へ合わせて書き換える前に、仕様と変更理由を示す。日本語の文書はyomiyasuで推敲する。
 
 PR本文には対象を `loomake-change: <change-id>` の行で明示する。対象がなければ `loomake-change: none` と書く。CIはUbuntu・macOS・Windowsで検査する。
+
+## 版と互換性
+
+パッケージの版はchangesetsで管理し、パッケージごとに独立して上げる。利用者に影響する変更にはchangesetを足し、文書や開発用ツールだけの変更には空のchangesetを足す。決めた理由は[ADR 0001](docs/adr/0001-versioning-with-changesets.md)にある。
+
+`0.x`の間は、破壊的変更をminor、それ以外をpatchで公開し、破壊的変更には移行の方法を添える。パッケージの版と形式の版は独立させ、verifyのJSONを壊すときはschemaVersionのmajorを上げる。決めた理由は[ADR 0002](docs/adr/0002-breaking-changes-in-0x.md)にある。設計の判断は[docs/adr/](docs/adr/README.md)に残す。
 
 ## コードの境界
 
