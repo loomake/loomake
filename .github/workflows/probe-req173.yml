@@ -1,0 +1,50 @@
+# PROBE（使い捨て・マージしない）：REQ-173・REQ-172 の通常 run のテストの段階ごとの時間を 3 つの OS で測る
+name: probe-req173
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    if: github.head_ref == 'probe/req173-windows-timing'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # 1. 単独で測る（ほかのテストファイルと並行しない）
+      - name: probe alone
+        run: pnpm vitest run tests/probe-req173-timing.test.ts
+        env:
+          LOOMAKE_PROBE_ITER: '5'
+          LOOMAKE_PROBE_OUT: ${{ runner.temp }}/probe-alone.jsonl
+      # 2. 元のテストを単独で 3 回
+      - name: original alone
+        shell: bash
+        run: for i in 1 2 3; do pnpm vitest run tests/input-boundaries.test.ts -t '通常run' || true; done
+      # 3. CI と同じく、すべてのテストファイルと並行して測る
+      - name: probe under full suite
+        continue-on-error: true
+        run: pnpm vitest run
+        env:
+          LOOMAKE_PROBE_ITER: '3'
+          LOOMAKE_PROBE_OUT: ${{ runner.temp }}/probe-full.jsonl
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: probe-${{ matrix.os }}
+          path: ${{ runner.temp }}/probe-*.jsonl

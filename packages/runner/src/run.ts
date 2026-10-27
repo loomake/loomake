@@ -9,6 +9,7 @@ import { recordAndOpenPr, runEngineTasks, runGate } from './run/phases.js';
 import { startRecording } from './run/recorder.js';
 import { taskLabel } from './run/tasks.js';
 import type { RunContext, RunOptions } from './run/types.js';
+const probe = (label: string) => (globalThis as { __loomakeProbe?: (label: string, data?: unknown) => void }).__loomakeProbe?.(label); // PROBE（使い捨て）
 
 export type { RunOptions, RunSummary } from './run/types.js';
 export { RUN_CONFIG_KEYS } from './config.js';
@@ -19,7 +20,9 @@ export { inContainer } from './run/prepare.js';
 
 /** change の tasks.md を実装させ、完了ゲートが通るまで直させる。終了コード（終えた 0・止まった 1）を返す */
 export async function runRun(options: RunOptions): Promise<number> {
+  probe('runRun:start');
   const config = loadRunConfig(resolve(options.root));
+  probe('runRun:loadRunConfig');
   return withProcessBudget({ timeoutMs: config.timeoutMinutes * 60_000 }, () => runWithinBudget(options));
 }
 
@@ -42,8 +45,9 @@ async function runWithinBudget(options: RunOptions): Promise<number> {
     if (error instanceof GitError) throw new UsageError(error.message);
     throw error;
   }
+  probe('lock:acquired');
   try { return await runLocked(options); }
-  finally { release(); }
+  finally { release(); probe('lock:released'); }
 }
 
 async function runLocked(options: RunOptions): Promise<number> {
@@ -56,7 +60,9 @@ async function runLocked(options: RunOptions): Promise<number> {
     throw e;
   }
   if (typeof ctx === 'number') return ctx;
+  probe('prepare:done');
   const rec = startRecording(ctx);
+  probe('startRecording');
 
   try {
     // PR の向き先は、run が change のブランチを作ったときのブランチ。git の設定に覚えて再開でも使う
@@ -64,6 +70,7 @@ async function runLocked(options: RunOptions): Promise<number> {
       git(ctx.root, ctx.env, ['switch', '-q', '-c', ctx.branch]);
       git(ctx.root, ctx.env, ['config', baseKey(ctx), ctx.startBranch]);
     }
+    probe('switch+config');
     const stop = (await runEngineTasks(ctx, rec)) ?? (await runGate(ctx, rec));
     if (stop) return rec.finish(stop.status, stop.reason, stop.remaining);
     return await recordAndOpenPr(ctx, rec);
@@ -72,6 +79,9 @@ async function runLocked(options: RunOptions): Promise<number> {
     if (!(e instanceof GitError) && !(e instanceof UsageError) && !(e instanceof RuntimeFailure)) throw e;
     const { engineTasks, gateTasks } = ctx;
     const remaining = [...engineTasks, ...gateTasks].filter((t) => !rec.done.includes(taskLabel(t)));
-    return rec.finish('stopped', e.message, remaining);
+    probe('caught');
+    const code = rec.finish('stopped', e.message, remaining);
+    probe('rec.finish');
+    return code;
   }
 }

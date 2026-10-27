@@ -23,6 +23,7 @@ import {
 import { assertChangeId, loadConfig, type LoomakeConfig } from './config.js';
 import { createInputReader, JSON_LIMITS, type InputReader } from '../runtime/input.js';
 import { findChangeDir, specFiles, toPosix } from '../runtime/change-files.js';
+const probe = (label: string) => (globalThis as { __loomakeProbe?: (label: string, data?: unknown) => void }).__loomakeProbe?.(label); // PROBE（使い捨て）
 
 export type VerifyOptions = {
   /** プロジェクトのルート（loomake.config.json のあるディレクトリ） */
@@ -70,14 +71,19 @@ export function runVerify(options: VerifyOptions): VerifyResult {
   if (!changeId) {
     runCommands(root, config, skipCommands, record, progress, options.timeoutMs);
   } else {
+    probe('verify:start');
     const spec = checkSpec(root, config, changeId, record, rel);
+    probe('verify:checkSpec');
     if (spec && mode === 'done') {
       checkTasksAndPending(spec, record);
       // 前回のレポートで合格させないよう、commands を実行する前に消す
       const reportPath = resolve(root, config.tests.report);
       if (!skipCommands) rmSync(reportPath, { force: true });
+      probe('verify:tasks+rm');
       runCommands(root, config, skipCommands, record, progress, options.timeoutMs);
+      probe('verify:runCommands');
       coverage = checkCoverage(root, config, spec.live, reportPath, record, rel);
+      probe('verify:checkCoverage');
     }
   }
 

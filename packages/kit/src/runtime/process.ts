@@ -59,6 +59,7 @@ function utf8Prefix(text: string, bytes: number): string {
 /** 引数を配列のまま渡し、期限・合計出力と子グループを監視する。 */
 export function runExternal(command: string, args: readonly string[], options: ExternalOptions = {}): ExternalResult {
   const startedAt = monotonicMs();
+  const probeT0 = Date.now(); // PROBE（使い捨て）
   const budget = budgets.getStore();
   if (budget?.state.interrupted) throw new ProcessLimitError('interrupted', command);
   // 品質コマンドは 1 操作の上限を使わず、明示した残り時間と共有予算だけで止める
@@ -82,6 +83,7 @@ export function runExternal(command: string, args: readonly string[], options: E
   let outcome: Outcome;
   try { outcome = JSON.parse(result.output[3]?.toString('utf8') ?? '') as Outcome; }
   catch { throw new UsageError(`外部操作の監視結果を読み取れません：${command}`); }
+  (globalThis as { __loomakeProbe?: (label: string, data?: unknown) => void }).__loomakeProbe?.('ext', { command, args: args.slice(0, 2), t0: probeT0, end: Date.now(), bytes: output.stdout?.length ?? 0, sup: (outcome as { t?: unknown }).t }); // PROBE
   if (outcome.kind) {
     if (outcome.kind === 'interrupted' && budget) budget.state.interrupted = true;
     throw new ProcessLimitError(outcome.kind, command, stdout, stderr);

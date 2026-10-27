@@ -12,6 +12,7 @@ import { DEFAULT_LOG_LIMITS } from '../log-policy.js';
 import { GATE_MARK, isGateTask, isLegacyGateTask, taskLabel } from './tasks.js';
 import { buildPrompt, toPosix } from './prompt.js';
 import type { RunContext, RunOptions } from './types.js';
+const probe = (label: string) => (globalThis as { __loomakeProbe?: (label: string, data?: unknown) => void }).__loomakeProbe?.(label); // PROBE（使い捨て）
 
 /** loomake.config.json の run の設定。既定は直し 5 回・60 分 */
 export function loadRunConfig(root: string): RunConfig {
@@ -38,7 +39,9 @@ export async function prepare(options: RunOptions): Promise<RunContext | number>
   const engine = options.engine ?? 'claude-code';
   const config = loadConfig(root);
   const runConfig = loadRunConfig(root);
+  probe('prep:configs');
   if (!options.dryRun) checkLogHistory(root, logLimits(runConfig));
+  probe('prep:checkLogHistory');
   assertChangeId(changeId);
   const changeDir = resolve(root, config.openspecDir, 'changes', changeId);
   if (changeId === 'archive' || !existsSync(join(changeDir, 'tasks.md'))) {
@@ -50,15 +53,19 @@ export async function prepare(options: RunOptions): Promise<RunContext | number>
     );
   }
   assertEngineAvailable(engine, env);
+  probe('prep:assertEngineAvailable');
 
   // 実行前の確認（REQ-093・REQ-094）。未コミットの変更がなければ change のブランチに切り替えられる
   const dirty = dirtyFiles(root, env);
+  probe('prep:dirtyFiles');
   if (dirty.length) {
     stdout(`作業ツリーに未コミットの変更があるので、実装を始めませんでした。コミットしてから、もう一度実行してください。\n${dirty.map((l) => `  ${l}`).join('\n')}`);
     return 1;
   }
   // テストのレポートがコミットに入ると、完了ゲートのあと作業ツリーが変わったままになる
-  if (!isIgnored(root, env, config.tests.report)) {
+  const ignored = isIgnored(root, env, config.tests.report);
+  probe('prep:isIgnored');
+  if (!ignored) {
     stdout(`テストのレポート（${config.tests.report}）が .gitignore で除外されていないので、実装を始めませんでした。.gitignore に足してコミットしてから、もう一度実行してください。`);
     return 1;
   }
@@ -68,10 +75,12 @@ export async function prepare(options: RunOptions): Promise<RunContext | number>
   const hasBranch = branchExists(root, env, branch);
   const switched = hasBranch && startBranch !== branch;
   if (switched) git(root, env, ['switch', '-q', branch]);
+  probe('prep:branch');
   const switchBack = () => {
     if (switched) git(root, env, ['switch', '-q', startBranch]);
   };
   const specGate = runVerify({ root, changeId, gate: 'spec-only', progress });
+  probe('prep:specGate');
   if (!specGate.ok) {
     switchBack();
     stdout(`仕様ゲートに不合格なので、実装を始めませんでした。\n\n${formatVerifyResult(specGate)}`);
@@ -100,7 +109,10 @@ export async function prepare(options: RunOptions): Promise<RunContext | number>
   }
 
   // PRを作れない環境では、エンジンや実装ブランチを作る前に止まる（REQ-116）。
-  if (!ghLoggedIn(root, env)) {
+  probe('prep:tasks');
+  const loggedIn = ghLoggedIn(root, env);
+  probe('prep:ghLoggedIn');
+  if (!loggedIn) {
     switchBack();
     stdout('gh CLI がないか、ログインしていないので、実装を始めませんでした。PR を作るために、gh auth login でログインしてください。');
     return 1;

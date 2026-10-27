@@ -1,4 +1,5 @@
 'use strict';
+const T = { boot: Date.now() }; // PROBE（使い捨て）
 // runExternal が起動する監視役。対象のコマンドを新しいプロセスグループで動かし、期限・出力の上限・中断で子孫ごと止める。
 // 対象の stdout・stderr はそのまま流し、結果（終了コード・シグナル・止めた理由）は fd 3 に JSON で書く。
 const { spawn, spawnSync } = require('node:child_process');
@@ -32,11 +33,13 @@ function kill(signal) {
 function finish() {
   if (ended) return;
   ended = true;
+  T.finish = Date.now(); // PROBE
   clearTimeout(timer);
   clearTimeout(grace);
   let pending = 2;
   const flushed = () => {
     if (--pending === 0) {
+      T.flushed = Date.now(); outcome.t = T; // PROBE
       fs.writeSync(3, JSON.stringify(outcome));
       process.exit(0);
     }
@@ -81,9 +84,13 @@ try {
     outcome.kind = 'timeout';
     finish();
   } else {
+    T.spawn = Date.now(); // PROBE
     child = spawn(command, args, { shell, stdio: ['ignore', 'pipe', 'pipe'], detached: !win });
+    T.spawned = Date.now(); // PROBE
     // 合計の上限までだけを流し、超えたら止める
     const forward = (target, data) => {
+      if (T.firstData === undefined) T.firstData = Date.now(); // PROBE
+      T.lastData = Date.now(); // PROBE
       if (stopping) return;
       const room = Math.max(0, limit - count);
       const part = data.subarray(0, room);
@@ -99,11 +106,15 @@ try {
     });
     child.on('exit', (status, signal) => {
       exited = true;
+      T.exit = Date.now(); // PROBE
       outcome.status = status;
       outcome.signal = signal;
+      T.killStart = Date.now(); // PROBE
       if (!stopping) kill('SIGKILL');
+      T.killEnd = Date.now(); // PROBE
     });
     child.on('close', () => {
+      T.close = Date.now(); // PROBE
       if (!stopping) finish();
     });
     // close が来なくても、通常終了後のグループを片付けて待機を終える

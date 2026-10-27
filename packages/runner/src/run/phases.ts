@@ -13,6 +13,7 @@ import { buildPrompt } from './prompt.js';
 import { checkTask, taskLabel } from './tasks.js';
 import { decideAfterEngine, decideAfterGate } from './decision-policy.js';
 import type { Recorder, RunContext, RunSummary, Stop } from './types.js';
+const probe = (label: string) => (globalThis as { __loomakeProbe?: (label: string, data?: unknown) => void }).__loomakeProbe?.(label); // PROBE（使い捨て）
 
 /** エンジンを 1 回動かす。止まる理由があれば、その状態と文を返す */
 async function callEngine(ctx: RunContext, rec: Recorder, prompt: string): Promise<{ status: RunSummary['status']; reason: string } | undefined> {
@@ -92,6 +93,7 @@ export async function runGate(ctx: RunContext, rec: Recorder): Promise<Stop | un
     if (ctx.options.signal?.aborted) return { status: 'interrupted', reason: '中断されました', remaining: gateTasks };
     const left = Math.min(rec.deadline - ctx.now().getTime(), remainingProcessTime() ?? Infinity);
     if (left <= 0) return stopped('実行時間の上限に達しました');
+    probe('gate:start');
     const originalTasks = createInputReader().read(ctx.tasksPath);
     for (const t of gateTasks) checkTask(ctx.tasksPath, t.line);
     const markedTasks = createInputReader().read(ctx.tasksPath);
@@ -103,14 +105,18 @@ export async function runGate(ctx: RunContext, rec: Recorder): Promise<Stop | un
     let beforeVerify;
     try {
       beforeVerify = headState(root, env);
+      probe('gate:headState1');
       rec.lastVerify = runVerify({ root, changeId, gate: 'done', progress: ctx.progress, timeoutMs: left });
     } catch (error) {
       restore();
       throw error;
     }
     restore();
+    probe('gate:verify+restore');
     rec.save(`${String(rec.step).padStart(2, '0')}-verify${fixes ? `-${fixes}` : ''}.json`, `${JSON.stringify(rec.lastVerify, null, 2)}\n`);
+    probe('gate:save-verify-json');
     if (await interrupted(ctx)) return { status: 'interrupted', reason: '中断されました', remaining: gateTasks };
+    probe('gate:interrupted-check');
     // 中断後は共有予算が閉じる。Gitを追加で呼ぶ前に、観測済みの中断を処理する。
     const observed = {
       ok: rec.lastVerify.ok,
@@ -121,11 +127,14 @@ export async function runGate(ctx: RunContext, rec: Recorder): Promise<Stop | un
     const beforeGit = decideAfterGate({ ...observed, stateChanged: false });
     if (beforeGit.kind === 'interrupted') return { status: 'interrupted', reason: beforeGit.reason, remaining: gateTasks };
     const afterVerify = headState(root, env);
+    probe('gate:headState2');
     const decision = decideAfterGate({ ...observed, stateChanged: beforeVerify.sha !== afterVerify.sha || beforeVerify.branch !== afterVerify.branch });
     if (decision.kind === 'stop') return stopped(decision.reason);
     if (decision.kind === 'interrupted') return { status: 'interrupted', reason: decision.reason, remaining: gateTasks };
     if (decision.kind === 'passed') break;
-    const stop = await callEngine(ctx, rec, buildPrompt(root, ctx.changeDir, '完了ゲートに合格するように直す。', rec.lastVerify));
+    let fixPrompt: string;
+    try { fixPrompt = buildPrompt(root, ctx.changeDir, '完了ゲートに合格するように直す。', rec.lastVerify); } finally { probe('gate:buildPrompt'); }
+    const stop = await callEngine(ctx, rec, fixPrompt);
     if (stop) return { ...stop, remaining: gateTasks };
     const violation = guard(ctx);
     if (violation) return stopped(violation);
