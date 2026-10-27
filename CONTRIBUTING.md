@@ -44,6 +44,6 @@ PR本文には対象を `loomake-change: <change-id>` の行で明示する。�
 
 ## コードの境界
 
-関数はnamed exportにする。設定や使い方の誤りはUsageErrorとし、CLIは終了コード2を返す。利用者へのメッセージは日本語にする。coreの実行時依存はゼロ、kitはcoreのみ、traceはcoreとkit、runnerはcore・kit・trace、CLIはこの4パッケージだけに依存する。
+関数はnamed exportにする。設定や使い方の誤りはUsageErrorとし、CLIは終了コード2を返す。利用者へのメッセージは日本語にする。coreの外部の実行時依存はzodだけ、kitはcoreとyamlだけ、traceはcoreとkit、runnerはcore・kit・trace、CLIはこの4パッケージだけに依存する。
 
 モデルと判定はI/Oから分け、重要な異常・境界をテストする。要件名の存在だけで十分な検証とは判断しない。[アーキテクチャ](docs/architecture.md)と[mutation試験の範囲](docs/testing.md)を参照する。
