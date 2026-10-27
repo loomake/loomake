@@ -18,9 +18,13 @@
 
 ## Impact
 - 影響する capability：core-parsers（REQ-046）、verify（REQ-047 の kit の部分）
-- 影響する文書：AGENTS.md、CONTRIBUTING.md、`docs/adr/0003-zod-as-core-runtime-dependency.md`
+- 影響する文書：AGENTS.md、CONTRIBUTING.md、`docs/adr/0003-zod-as-core-runtime-dependency.md`、`docs/adr/README.md` の一覧の状態
 - 影響する品質記録：`docs/quality/scenarios.json` の REQ-046・REQ-047 のレビュー 3 件（tasks.md 4）
 - 影響するテスト：`packages/core/test/package.test.ts`、`packages/cli/test/cli.test.ts`
 - 影響するコード：なし（この change では依存を足さない）
 - 利用者に見える変更：なし
-- この change のブランチは PR #10（`record-stack-and-versioning-decisions`）のブランチから作った。PR #10 が main に入ると、main との差分はこの change の分だけになる
+- この change のブランチは PR #10（`record-stack-and-versioning-decisions`）のブランチから作った。PR #10 は main に入り、そのあとの main（PR #27 の archive まで）を取り込んだので、main との差分はこの change の分だけである
+- archive する PR への申し送り（tasks.md 4.2）：
+  - core-parsers の「実行時依存ゼロ / dependencies が空」のレビュー（SCN-f9797c510a56149bfd76）を消し、「zod 以外の依存がない」のレビュー（SCN-7a09237b3616f253ec95）の ID を archive 後の ID（SCN-2b9b1052b81cdd63ebbf）に付け替える（前例：コミット cc5df0f）
+  - verify の「kit の依存」と「loomake の依存」は、archive 後も ID が変わらない（SCN-129c1a409ad4cdd46ce6・SCN-38961b7ee7aa96aad6f6）。今の仕様に対するレビューを消し、change 側のレビュー（SCN-96cb0a31550cb8b25bcd・SCN-23a323ae6d48ddc37ec7）の ID を archive 後の ID に付け替えて残す
+  - `packages/core/test/package.test.ts` を変えたので、同じファイルを参照する core-parsers の「OpenSpec 書式との互換 / 追加書式を含む change の検証」のレビュー（SCN-59cd71015c5e0c1dd2e1）も、試験のソースのハッシュが合わなくなって無効になった。この change では、ハッシュだけを書き換えることはしない。テストを読み直してレビューし直すかは、品質記録を見直すときに決める

@@ -14,7 +14,7 @@
 
 ## 4. 品質レビューの記録
 - [x] 4.1 3.1・3.2 のあとで、差分仕様の Scenario 3 件（core-parsers の「core の実行時依存の範囲 / zod 以外の依存がない」、verify の「実行時依存の範囲 / kit の依存」と「loomake の依存」）について、変えたテストを読み直してから、`docs/quality/scenarios.json` に change 側の ID でレビューを足す。今の仕様に対するレビュー（SCN-f9797c510a56149bfd76、SCN-129c1a409ad4cdd46ce6、SCN-38961b7ee7aa96aad6f6）のハッシュだけを書き換えることはしない。`node scripts/scenario-audit.mjs` で、3 件の状態を確かめる（REQ-046, REQ-047）
-- [ ] 4.2 archive する PR への申し送りを、proposal.md の Impact に書く。内容は次の 2 点。1 つ目は、core-parsers の「実行時依存ゼロ / dependencies が空」のレビュー（SCN-f9797c510a56149bfd76）を消し、4.1 のレビューの ID を archive 後の ID に付け替えること（前例：コミット cc5df0f）。2 つ目は、verify の 2 件は archive 後も ID が変わらないので、今の仕様に対するレビューを消して、change 側のレビューを残すこと（REQ-046, REQ-047）
+- [x] 4.2 archive する PR への申し送りを、proposal.md の Impact に書く。内容は次の 2 点。1 つ目は、core-parsers の「実行時依存ゼロ / dependencies が空」のレビュー（SCN-f9797c510a56149bfd76）を消し、4.1 のレビューの ID を archive 後の ID に付け替えること（前例：コミット cc5df0f）。2 つ目は、verify の 2 件は archive 後も ID が変わらないので、今の仕様に対するレビューを消して、change 側のレビューを残すこと（REQ-046, REQ-047）
 
 ## 5. 確認
 - [ ] 5.1 `pnpm -s verify --change allow-zod-and-yaml-runtime-deps --done` を通す <!-- loomake:gate=done -->
