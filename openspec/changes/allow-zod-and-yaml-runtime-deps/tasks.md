@@ -17,4 +17,4 @@
 - [x] 4.2 archive する PR への申し送りを、proposal.md の Impact に書く。内容は次の 2 点。1 つ目は、core-parsers の「実行時依存ゼロ / dependencies が空」のレビュー（SCN-f9797c510a56149bfd76）を消し、4.1 のレビューの ID を archive 後の ID に付け替えること（前例：コミット cc5df0f）。2 つ目は、verify の 2 件は archive 後も ID が変わらないので、今の仕様に対するレビューを消して、change 側のレビューを残すこと（REQ-046, REQ-047）
 
 ## 5. 確認
-- [ ] 5.1 `pnpm -s verify --change allow-zod-and-yaml-runtime-deps --done` を通す <!-- loomake:gate=done -->
+- [x] 5.1 `pnpm -s verify --change allow-zod-and-yaml-runtime-deps --done` を通す <!-- loomake:gate=done -->
