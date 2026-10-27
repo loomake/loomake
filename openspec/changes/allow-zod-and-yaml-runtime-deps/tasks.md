@@ -4,7 +4,7 @@
 ## 2. 文書
 - [x] 2.1 AGENTS.md の「プロジェクト固有の情報」のコーディング規約を、core の外部の実行時依存は `zod` だけ、kit の実行時依存は core と `yaml` だけ、に改める。trace・runner・loomake の記述は変えない（REQ-046, REQ-047）
 - [x] 2.2 CONTRIBUTING.md の「コードの境界」の依存の記述を、2.1 と同じ内容に改める（REQ-046, REQ-047）
-- [ ] 2.3 `docs/adr/0003-zod-as-core-runtime-dependency.md` の「状態」の括弧書き（「仕様への反映は別の change で行う。それまでは…が有効」）を、この change で仕様に反映したことが分かる文に改める（REQ-046, REQ-047）
+- [x] 2.3 `docs/adr/0003-zod-as-core-runtime-dependency.md` の「状態」の括弧書き（「仕様への反映は別の change で行う。それまでは…が有効」）を、この change で仕様に反映したことが分かる文に改める（REQ-046, REQ-047）
 - [ ] 2.4 CONTRIBUTING.md の「コードの境界」に、実行時の依存を増やすときは、標準機能で足りないこと、自作よりコードと保守が減ること、実行経路に必要なことの 3 点を文書に書く、という手順を足す。REQ-260 は範囲外なので、仕様とテストは足さない（Q-04 の回答 B、REQ-260）
 
 ## 3. テスト

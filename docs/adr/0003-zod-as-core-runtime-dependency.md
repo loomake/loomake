@@ -1,6 +1,6 @@
 # 0003 core の実行時依存に Zod を採る
 
-- 状態：採用（仕様への反映は別の change で行う。それまでは仕様 REQ-046 の「core は実行時の外部依存をゼロにする」と REQ-047 の「kit の実行時依存は core のみ」が有効）
+- 状態：採用（仕様への反映は change `allow-zod-and-yaml-runtime-deps` で行った。REQ-046 は core の外部の実行時依存を `zod` だけとし、REQ-047 は kit の実行時依存を `@loomake/core` と `yaml` だけとした）
 - 決めた日：2026-10-26
 - 決めた人：利用者（PR #10 のコメント 6403295324 での回答。利用者の「Q-01〜03の回答して」という依頼に基づく方針選択）
 - 出典：WBS の W1-1、要件定義 v0.11.1 の NFR-01・NFR-02、change `record-stack-and-versioning-decisions` の trace.md の Q-01（REQ-231）
