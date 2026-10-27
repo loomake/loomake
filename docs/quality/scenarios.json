@@ -7316,6 +7316,85 @@
           "sha256": "69e3802bd572f52a9027b262ad9eef6e192dc3078e30601382bcf9f391addcfa"
         }
       ]
+    },
+    {
+      "id": "SCN-5e6e000031be14a382b0",
+      "status": "reviewed",
+      "scenarioSha256": "90e3465282e56f11f31090c3c5faf7b5332b15faa7edd58c53ee66ac58aab3da",
+      "reason": "実際のpackages/kit/src/runtime/のファイルが4件であることと、各ファイルのimportをforbiddenImportsにかけた結果が空であることをassertする。forbiddenImportsはruntime/のファイルについて、node:・@loomake/core・yaml・runtime/の中のファイル以外のimportを返す。",
+      "sources": [
+        "REQ-207"
+      ],
+      "tests": [
+        {
+          "file": "tests/kit-layers.test.ts",
+          "contains": "実行の基盤は runtime/ にあり",
+          "sha256": "ce5ce78431f2d2267c8f611777a182e8ab84b71662c39cd2b9bb00687f6fa9f2"
+        }
+      ]
+    },
+    {
+      "id": "SCN-94d2f7071a629a819201",
+      "status": "reviewed",
+      "scenarioSha256": "7a30517acebff25eb3f3e05976de53f8058c342dab83b4201899b6e53b604c9a",
+      "reason": "実際のverify/・init/・doctor/の各ファイルのimportをforbiddenImportsにかけた結果が空であることをassertする。別の機能への例ではdoctor/doctor.tsだけを返し、verify/config.tsは返さないことをassertする。",
+      "sources": [
+        "REQ-207"
+      ],
+      "tests": [
+        {
+          "file": "tests/kit-layers.test.ts",
+          "contains": "は、自分のディレクトリ・runtime/・verify/config.ts だけを import する",
+          "sha256": "ce5ce78431f2d2267c8f611777a182e8ab84b71662c39cd2b9bb00687f6fa9f2"
+        },
+        {
+          "file": "tests/kit-layers.test.ts",
+          "contains": "機能から別の機能への import を見つけ、設定の読み込みは認める",
+          "sha256": "ce5ce78431f2d2267c8f611777a182e8ab84b71662c39cd2b9bb00687f6fa9f2"
+        }
+      ]
+    },
+    {
+      "id": "SCN-da263600d725a1718b2d",
+      "status": "reviewed",
+      "scenarioSha256": "adf2113023920cc81f34772f5843ffcadefd8134501d33672442de22e376d379",
+      "reason": "runtime/・verify/・init/・doctor/のファイルがyamlをimportする文（名前付き・既定・二重引用符・動的なimport）をforbiddenImportsに渡し、結果が空であることをassertする。",
+      "sources": [
+        "REQ-207"
+      ],
+      "tests": [
+        {
+          "file": "tests/kit-layers.test.ts",
+          "contains": "から yaml への import は認める",
+          "sha256": "ce5ce78431f2d2267c8f611777a182e8ab84b71662c39cd2b9bb00687f6fa9f2"
+        }
+      ]
+    },
+    {
+      "id": "SCN-e411dc633bac0d485dd1",
+      "status": "reviewed",
+      "scenarioSha256": "0ec5cca1add108a6d5a8a311d713f80333be2efac80a199d2d5105922358a137",
+      "reason": "yamlのimportと並べて、runtime/から機能、機能から別の機能、@loomake/kit・@loomake/traceのimportをforbiddenImportsに渡し、禁止のimportだけが返ることをassertする。js-yamlとyaml/utilも返ることをassertする。yamlを含まない従来の例（runtime/から機能への各種のimport、公開の入口やほかのパッケージの経由）も、引き続き見つけることをassertする。",
+      "sources": [
+        "REQ-207"
+      ],
+      "tests": [
+        {
+          "file": "tests/kit-layers.test.ts",
+          "contains": "yaml を認めても、これまでの禁止の import は引き続き見つける",
+          "sha256": "ce5ce78431f2d2267c8f611777a182e8ab84b71662c39cd2b9bb00687f6fa9f2"
+        },
+        {
+          "file": "tests/kit-layers.test.ts",
+          "contains": "runtime/ から機能への",
+          "sha256": "ce5ce78431f2d2267c8f611777a182e8ab84b71662c39cd2b9bb00687f6fa9f2"
+        },
+        {
+          "file": "tests/kit-layers.test.ts",
+          "contains": "から公開の入口やほかのパッケージを経由する依存を見つける",
+          "sha256": "ce5ce78431f2d2267c8f611777a182e8ab84b71662c39cd2b9bb00687f6fa9f2"
+        }
+      ]
     }
   ]
 }

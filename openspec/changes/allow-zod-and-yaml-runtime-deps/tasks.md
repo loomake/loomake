@@ -19,7 +19,7 @@
 ## 5. kit の中の依存の向き（REQ-207）
 - [x] 5.1 Q-05 の承認を得たあとで、`tests/kit-layers.test.ts` の `forbiddenImports` の外部のパッケージの許可に `yaml` だけを加える。runtime/ から機能、機能どうし、`@loomake/kit` やほかのパッケージを経由する依存の拒否は変えない（REQ-207）
 - [x] 5.2 Q-05 の承認を得たあとで、`tests/kit-layers.test.ts` に、runtime/ と機能のディレクトリから `yaml` を import しても拒否しない正の例と、従来の禁止例が引き続き拒否されることを確かめる試験を足す（REQ-207）
-- [ ] 5.3 5.1・5.2 のあとで、`pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` を通し、`tests/kit-layers.test.ts` の変更で影響する Scenario のレビューを、テストを読み直してから change 側の ID で `docs/quality/scenarios.json` に足す。ハッシュだけを書き換えることはしない。扱えないものは proposal.md の archive への申し送りに書く（REQ-207）
+- [x] 5.3 5.1・5.2 のあとで、`pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` を通し、`tests/kit-layers.test.ts` の変更で影響する Scenario のレビューを、テストを読み直してから change 側の ID で `docs/quality/scenarios.json` に足す。ハッシュだけを書き換えることはしない。扱えないものは proposal.md の archive への申し送りに書く（REQ-207）
 
 ## 6. 確認
 - [ ] 6.1 `pnpm -s verify --change allow-zod-and-yaml-runtime-deps --done` を通す <!-- loomake:gate=done -->
