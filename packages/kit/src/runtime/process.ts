@@ -166,10 +166,10 @@ export function describeReason(reason: string | undefined): string {
   if (known) return known;
   const [code = '', ...rest] = reason.split(':');
   const detail = rest.length ? rest.join(':') : undefined;
-  const label: Record<string, string | undefined> = { open: '開けません', 'env-read': '環境変数を読めません', 'params-read': 'PEB から環境変数の位置を読めません', terminate: '止められません', 'unsupported-arch': '対応しない環境です' };
+  const label: Record<string, string | undefined> = { open: '開けません', 'env-read': '環境変数を読めません', 'params-read': 'PEB から環境変数の位置を読めません', terminate: '止められません', 'unsupported-arch': '対応しない環境です', exception: '読み取りの途中で例外が起きました' };
   const text = label[code];
   if (!text || detail === undefined) return reason;
-  return `${text}（${code === 'unsupported-arch' ? 'PROCESSOR_ARCHITECTURE=' : 'エラー '}${detail}）`;
+  return `${text}（${code === 'unsupported-arch' ? 'PROCESSOR_ARCHITECTURE=' : code === 'exception' ? '' : 'エラー '}${detail}）`;
 }
 
 /**

@@ -53,7 +53,6 @@ $FULL = 0x0400 -bor 0x0010 -bor 0x0001 -bor 0x00100000
 $MARK_NAME = 'LOOMAKE_SUPERVISOR_MARK'
 $MAX_ENV = 1048576
 $lower = [DateTimeOffset]::FromUnixTimeMilliseconds([long]$in.fromMs - [long]$in.slackMs).UtcDateTime.ToFileTimeUtc()
-function LastError { [Runtime.InteropServices.Marshal]::GetLastWin32Error() }
 function Created([IntPtr]$h) {
   $c = 0L; $e = 0L; $k = 0L; $u = 0L
   if (-not $api::GetProcessTimes($h, [ref]$c, [ref]$e, [ref]$k, [ref]$u)) { return $null }
@@ -67,7 +66,8 @@ function Query([IntPtr]$h, [int]$cls, [int]$len) {
 }
 function ReadMem([IntPtr]$h, [long]$addr, [int]$size) {
   $buf = New-Object byte[] $size; $read = [IntPtr]::Zero
-  if (-not $api::ReadProcessMemory($h, [IntPtr]$addr, $buf, [IntPtr]$size, [ref]$read)) { return $null }
+  $ok = $api::ReadProcessMemory($h, [IntPtr]$addr, $buf, [IntPtr]$size, [ref]$read); $script:lastReadError = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
+  if (-not $ok) { return $null }
   if ($read.ToInt64() -ne $size) { return $null }
   return ,$buf
 }
@@ -84,7 +84,7 @@ function ReadEnvBlock([IntPtr]$h, [long]$addr) {
   while ($acc.Length -lt $MAX_ENV) {
     $chunk = 4096 - [int]($addr % 4096)
     $b = ReadMem $h $addr $chunk
-    if ($null -eq $b) { return @{ ok = $false; reason = "env-read:$(LastError)" } }
+    if ($null -eq $b) { return @{ ok = $false; reason = "env-read:$($script:lastReadError)" } }
     $acc.Write($b, 0, $b.Length)
     $addr += $chunk
     $bytes = $acc.ToArray()
@@ -113,11 +113,12 @@ function ReadMark([IntPtr]$h) {
     if ($params) { $envAddr = ReadPtr $h ($params + 0x80) 8 }
     $bits = 64
   }
-  if (-not $params -or -not $envAddr) { return @{ state = 'unreadable'; reason = "params-read:$(LastError)"; bits = $bits } }
+  if (-not $params -or -not $envAddr) { return @{ state = 'unreadable'; reason = "params-read:$($script:lastReadError)"; bits = $bits } }
   $block = ReadEnvBlock $h $envAddr
   if (-not $block.ok) { return @{ state = 'unreadable'; reason = $block.reason; bits = $bits } }
   $state = 'no-mark'
   foreach ($v in $block.text.Split([char]0)) {
+    if ($v.Length -lt 2) { continue }
     $eq = $v.IndexOf('=', 1)
     if ($eq -lt 0) { continue }
     if (-not $v.Substring(0, $eq).Equals($MARK_NAME, [StringComparison]::OrdinalIgnoreCase)) { continue }
@@ -171,10 +172,9 @@ do {
     $ppid = [long]$cand.ppid
     $parentGone = (-not $ids.ContainsKey([int]$ppid)) -or ($createdOf.ContainsKey([int]$ppid) -and $createdOf[[int]$ppid] -gt $cand.created)
     $rec = [ordered]@{ kind = 'process'; pid = $cand.pid; ppid = $ppid; created = "$($cand.created)"; parentGone = $parentGone; pass = $pass; opens = 0 }
-    $h = $api::OpenProcess([uint32]$FULL, $false, [uint32]$cand.pid)
+    $h = $api::OpenProcess([uint32]$FULL, $false, [uint32]$cand.pid); $err = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
     $rec.opens = 1
     if ($h -eq [IntPtr]::Zero) {
-      $err = LastError
       $rec.state = 'unreadable'; $rec.reason = "open:$err"
       if ($err -eq 87) { $rec.state = 'exited' }
     } else {
@@ -184,7 +184,7 @@ do {
         $rec.state = 'replaced'
         [void]$api::CloseHandle($h)
       } else {
-        $mark = ReadMark $h
+        try { $mark = ReadMark $h } catch { $mark = @{ state = 'unreadable'; reason = 'exception:' + $_.Exception.GetType().Name } }
         $rec.state = $mark.state
         if ($mark.reason) { $rec.reason = $mark.reason }
         if ($mark.bits) { $rec.bits = $mark.bits }
@@ -200,8 +200,9 @@ do {
   foreach ($id in $kill) {
     $entry = $held[$id]
     $entry.record.stopHandle = $entry.h.ToInt64()
-    if ($api::TerminateProcess($entry.h, 1)) { $entry.record.action = 'terminated' }
-    else { $err = LastError; $entry.record.action = 'failed'; $entry.record.reason = "terminate:$err" }
+    $ok = $api::TerminateProcess($entry.h, 1); $err = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
+    if ($ok) { $entry.record.action = 'terminated' }
+    else { $entry.record.action = 'failed'; $entry.record.reason = "terminate:$err" }
   }
   $timing.stop += $clock.Elapsed.TotalMilliseconds - $t
 } while (-not $in.candidates -and $newMarked -gt 0 -and (Left) -gt 0 -and $pass -lt [int]$in.maxPasses)

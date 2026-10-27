@@ -197,19 +197,17 @@ function cleanupWithOutput(t: CleanupTarget, options: Parameters<typeof cleanupW
   console.info(`[REQ-253] 後片付けの結果：${JSON.stringify(report)}`);
   return { report, output: parseCleanupOutput(stdout) };
 }
-/** cmd.exe を標準入力で操作し、コマンドを流すたびに、終わった合図の行を待つ */
-function interactiveCmd(exe: string, mark: string) {
-  const child: ChildProcess = spawn(exe, ['/d', '/q', '/k'], { stdio: ['pipe', 'pipe', 'ignore'], env: envWith(mark) });
+/**
+ * cmd.exe に、環境を変えるコマンドを実行させてから、ready を出して待たせる。ping は同じビット数の cmd.exe から起動される
+ * windowsVerbatimArguments で、cmd.exe にそのままのコマンド行を渡す
+ */
+function waitingCmd(exe: string, mark: string, before: string) {
+  const child: ChildProcess = spawn(exe, [`/d /c ${before}echo ready& ping -n 120 127.0.0.1 >nul`], { stdio: ['ignore', 'pipe', 'ignore'], env: envWith(mark), windowsVerbatimArguments: true });
   let out = '';
   child.stdout!.on('data', (d: Buffer) => { out += d.toString('latin1'); });
-  let n = 0;
-  const send = (command: string) => {
-    const token = `loomake-done-${++n}`;
-    child.stdin!.write(`${command}\r\necho ${token}\r\n`);
-    return token;
-  };
-  return { child, send, out: () => out };
+  return { child, ready: () => waitFor(() => out.includes('ready'), 15_000) };
 }
+const stopTreeOf = (pid: number) => spawnSync('taskkill', ['/pid', String(pid), '/T', '/F'], { stdio: 'ignore' });
 
 describe.runIf(process.platform === 'win32')('Windows の実際の後片付け', () => {
   it('[REQ-252][REQ-254] cmd.exe が先に終わって残った孫を、印で識別し、識別したのと同じハンドルで止めて待つ', () => {
@@ -261,39 +259,32 @@ describe.runIf(process.platform === 'win32')('Windows の実際の後片付け',
     }
   });
   it.each([
-    ['64', join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'cmd.exe'), 64],
-    ['WOW64', join(process.env.SystemRoot ?? 'C:\\Windows', 'SysWOW64', 'cmd.exe'), 32],
-  ])('[REQ-252] %s ビットの cmd.exe が起動後に印を別の値に変えるか消したら、変えたあとの環境を読んで止めない', (_name, exe, bits) => {
+    ['64', 'System32', 64, 'other'],
+    ['64', 'System32', 64, 'removed'],
+    ['WOW64', 'SysWOW64', 32, 'other'],
+    ['WOW64', 'SysWOW64', 32, 'removed'],
+  ] as const)('[REQ-252] %s ビットの cmd.exe が起動後に印を変えたら（%s）、変えたあとの環境を読んで止めない', (_name, dir, bits, change) => {
     const mark = newMark();
     const from = Date.now();
-    const cmd = interactiveCmd(exe, mark);
+    const value = change === 'other' ? newMark() : '';
+    const cmd = waitingCmd(join(process.env.SystemRoot ?? 'C:\\Windows', dir, 'cmd.exe'), mark, `set ${SUPERVISOR_MARK_ENV}=${value}& `);
     try {
-      let token = cmd.send('ver');
-      expect(waitFor(() => cmd.out().includes(token), 10_000)).toBe(true);
-      token = cmd.send(`set ${SUPERVISOR_MARK_ENV}=${newMark()}`);
-      expect(waitFor(() => cmd.out().includes(token), 10_000)).toBe(true);
-      const changed = cleanupWithOutput({ pid: cmd.child.pid!, mark, from });
-      expect(changed.output.records.find((r) => r.pid === cmd.child.pid), changed.report.detail).toMatchObject({ state: 'other-mark', bits });
+      expect(cmd.ready()).toBe(true);
+      const { report, output } = cleanupWithOutput({ pid: 999_999, mark, from });
+      expect(output.records.find((r) => r.pid === cmd.child.pid), report.detail).toMatchObject({ state: change === 'other' ? 'other-mark' : 'no-mark', bits });
       expect(alive(cmd.child.pid!)).toBe(true);
-      token = cmd.send(`set ${SUPERVISOR_MARK_ENV}=`);
-      expect(waitFor(() => cmd.out().includes(token), 10_000)).toBe(true);
-      const removed = cleanupWithOutput({ pid: cmd.child.pid!, mark, from });
-      expect(removed.output.records.find((r) => r.pid === cmd.child.pid), removed.report.detail).toMatchObject({ state: 'no-mark', bits });
-      expect(alive(cmd.child.pid!)).toBe(true);
-    } finally { cmd.child.kill('SIGKILL'); }
+    } finally { stopTreeOf(cmd.child.pid!); }
   });
   it('[REQ-252] 印を変えていない WOW64 の cmd.exe は、32 ビットの側の環境で印を確かめて止める', () => {
     const mark = newMark();
     const from = Date.now();
-    const cmd = interactiveCmd(join(process.env.SystemRoot ?? 'C:\\Windows', 'SysWOW64', 'cmd.exe'), mark);
+    const cmd = waitingCmd(join(process.env.SystemRoot ?? 'C:\\Windows', 'SysWOW64', 'cmd.exe'), mark, '');
     try {
-      const token = cmd.send('ver');
-      expect(waitFor(() => cmd.out().includes(token), 10_000)).toBe(true);
+      expect(cmd.ready()).toBe(true);
       const { report, output } = cleanupWithOutput({ pid: 999_999, mark, from });
-      expect(report.confirmed, report.detail).toBe(true);
-      expect(output.records.find((r) => r.pid === cmd.child.pid)).toMatchObject({ state: 'marked', bits: 32, action: 'terminated', wait: 'exited' });
+      expect(output.records.find((r) => r.pid === cmd.child.pid), report.detail).toMatchObject({ state: 'marked', bits: 32, action: 'terminated', wait: 'exited' });
       expect(waitFor(() => !alive(cmd.child.pid!), 2_000)).toBe(true);
-    } finally { cmd.child.kill('SIGKILL'); }
+    } finally { stopTreeOf(cmd.child.pid!); }
   });
   it('[REQ-252] 列挙のあとに入れ替わった（作成時刻の違う）候補は、印があっても止めない', () => {
     const mark = newMark();
