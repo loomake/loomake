@@ -7,7 +7,9 @@ import {
   CLEANUP_LIMIT_MS, cleanupWindowsOrphans, planOrphanCleanup, windowsProcessTools,
   type ProcessEntry, type StopRequest, type StopResult, type WindowsProcessTools,
 } from '../src/runtime/process.js';
-import { ProcessLimitError, missingResultError, runExternal, setTreeCleanupForTest, withProcessBudget } from '../src/runtime/process.js';
+import {
+  ProcessLimitError, createWindowsProcessTools, missingResultError, runExternal, runPowerShell, setTreeCleanupForTest, withProcessBudget, type PowerShellRunner,
+} from '../src/runtime/process.js';
 
 vi.setConfig({ testTimeout: 60_000 });
 
@@ -96,7 +98,7 @@ describe('後片付けの上限と、停止を確認できない結果', () => {
     const report = cleanupWindowsOrphans(target, observedAt, tools, clock);
     expect(calls.list).toEqual([CLEANUP_LIMIT_MS]);
     expect(report.confirmed).toBe(false);
-    expect(report.detail).toContain('後片付けの上限（10 秒）に達しました（プロセスの一覧の取得中）');
+    expect(report.detail).toContain('後片付けの上限（10 秒）に達しました（プロセスの一覧の取得中。一覧の取得 0ms）');
   });
   it('[REQ-253] 候補が多くても、停止には全体の残り時間だけを 1 回で渡し、期限を延ばさない', () => {
     const processes = [1, 2, 3, 4, 5].map((n) => entry(200 + n, 100, 30 + n));
@@ -169,6 +171,44 @@ describe('後片付けの上限と、停止を確認できない結果', () => {
       setTreeCleanupForTest(undefined);
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+describe('Windows の一覧の取得と停止の結果の読み取り', () => {
+  // DateTime.Ticks（0001-01-01 からの 100ns 単位）
+  const ticks = (micros: number) => (BigInt(micros) * 10n + 621355968000000000n).toString();
+  it('[REQ-252] 一覧の行から PID・親の PID・作成時刻を読み、読めない行は飛ばす', () => {
+    const calls: { script: string; timeoutMs: number }[] = [];
+    const run: PowerShellRunner = (script, timeoutMs) => { calls.push({ script, timeoutMs }); return { ok: true, stdout: `200 100 ${ticks(at(30))}\r\nごみ\r\n300 200 ${ticks(at(40))}\r\n` }; };
+    const listed = createWindowsProcessTools(run).list(7_000);
+    expect(listed).toEqual({ ok: true, processes: [entry(200, 100, 30), entry(300, 200, 40)] });
+    expect(calls[0]!.timeoutMs).toBe(7_000);
+    expect(calls[0]!.script).toContain('Win32_Process');
+  });
+  it('[REQ-253][REQ-254] 一覧が空か、PowerShell が失敗・時間切れなら、一覧を取得できないと返す', () => {
+    expect(createWindowsProcessTools(() => ({ ok: true, stdout: '' })).list(1000)).toEqual({ ok: false, timedOut: false, message: 'プロセスの一覧が空です' });
+    const failure = { ok: false as const, timedOut: true, message: 'ETIMEDOUT' };
+    expect(createWindowsProcessTools(() => failure).list(1000)).toBe(failure);
+    expect(createWindowsProcessTools(() => failure).stop([], 1000)).toBe(failure);
+  });
+  it('[REQ-252][REQ-253] 停止には作成時刻を Ticks で渡し、待機の上限を残り時間より短くして、結果の行を読む', () => {
+    let input = '';
+    let limit = 0;
+    const run: PowerShellRunner = (script, timeoutMs, env) => {
+      input = env?.LOOMAKE_ORPHAN_STOP ?? ''; limit = timeoutMs;
+      return { ok: true, stdout: '200\tstopped\t\r\n300\tdenied\tアクセスが拒否されました。\r\n400\tunknown\t\r\nx\ty\n' };
+    };
+    const stopped = createWindowsProcessTools(run).stop([{ pid: 200, created: at(30), root: true }, { pid: 300, created: at(40), root: false }], 3_000);
+    expect(stopped).toEqual({ ok: true, results: [{ pid: 200, result: 'stopped' }, { pid: 300, result: 'denied', message: 'アクセスが拒否されました。' }] });
+    expect(limit).toBe(3_000);
+    expect(JSON.parse(input)).toEqual({ limit: 2_500, items: [{ pid: 200, ticks: ticks(at(30)), root: true }, { pid: 300, ticks: ticks(at(40)), root: false }] });
+  });
+  it('[REQ-253][REQ-254] PowerShell を起動できない・残り時間がない・失敗したときは、時間切れと区別して返す', () => {
+    expect(runPowerShell('exit 0', 0)).toEqual({ ok: false, timedOut: true, message: '時間がありません' });
+    const missing = runPowerShell('exit 0', 5_000, undefined, 'loomake-missing-powershell-req253');
+    expect(missing).toMatchObject({ ok: false, timedOut: false });
+    const failing = runPowerShell('', 5_000, undefined, process.execPath);
+    expect(failing).toMatchObject({ ok: false, timedOut: false, message: expect.stringContaining('PowerShell の終了コード') });
   });
 });
 

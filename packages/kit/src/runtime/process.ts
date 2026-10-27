@@ -184,17 +184,25 @@ const RESULT_LABEL: Record<Exclude<StopResult['result'], 'stopped' | 'exited' | 
 export function cleanupWindowsOrphans(
   target: OrphanTarget, observedAt: number, tools: WindowsProcessTools, clock: () => number = monotonicMs, limitMs = CLEANUP_LIMIT_MS,
 ): CleanupReport {
-  const deadline = clock() + limitMs;
-  const timedOut = (step: string) => ({ confirmed: false, detail: `後片付けの上限（${limitMs / 1000} 秒）に達しました（${step}）` });
+  const started = clock();
+  const deadline = started + limitMs;
+  // 時間切れの診断に、各手順にかかった時間を残す
+  let listMs = 0;
+  const spent = (stopMs?: number) => `一覧の取得 ${Math.round(listMs)}ms${stopMs === undefined ? '' : `、停止と待機 ${Math.round(stopMs)}ms`}`;
+  const timedOut = (step: string, stopMs?: number) => ({ confirmed: false, detail: `後片付けの上限（${limitMs / 1000} 秒）に達しました（${step}。${spent(stopMs)}）` });
   const listed = tools.list(limitMs);
+  listMs = clock() - started;
   if (!listed.ok) return listed.timedOut ? timedOut('プロセスの一覧の取得中') : { confirmed: false, detail: `プロセスの一覧を取得できません：${listed.message}` };
   const plan = planOrphanCleanup(target, observedAt, listed.processes);
   const problems = [...plan.unverified];
+  let stopMs: number | undefined;
   if (plan.stop.length > 0) {
     const left = deadline - clock();
     if (left <= 0) return timedOut('プロセスの一覧の取得のあと');
+    const stopStarted = clock();
     const stopped = tools.stop(plan.stop, left);
-    if (!stopped.ok) return stopped.timedOut ? timedOut('停止と終了の待機中') : { confirmed: false, detail: `子孫を止められません：${stopped.message}` };
+    stopMs = clock() - stopStarted;
+    if (!stopped.ok) return stopped.timedOut ? timedOut('停止と終了の待機中', stopMs) : { confirmed: false, detail: `子孫を止められません：${stopped.message}` };
     for (const request of plan.stop) {
       const result = stopped.results.find((r) => r.pid === request.pid);
       if (!result) problems.push(`PID ${request.pid} の停止の結果がありません`);
@@ -205,7 +213,8 @@ export function cleanupWindowsOrphans(
   }
   if (problems.length > 0) return { confirmed: false, detail: problems.join('、') };
   const subject = plan.target === 'alive' ? '対象' : '対象の子';
-  return { confirmed: true, detail: plan.stop.length ? `${subject}と子孫 ${plan.stop.length} 個を止めました` : '止める子孫はありませんでした' };
+  const done = plan.stop.length ? `${subject}と子孫 ${plan.stop.length} 個を止めました` : '止める子孫はありませんでした';
+  return { confirmed: true, detail: `${done}（${spent(stopMs)}）` };
 }
 
 // .NET の DateTime.Ticks（0001-01-01 からの 100ns 単位）と Unix 時刻の差
@@ -280,9 +289,11 @@ foreach ($h in $held) {
 }
 $out -join "\`n"`;
 
-function powershell(script: string, timeoutMs: number, env?: NodeJS.ProcessEnv): { ok: true; stdout: string } | ToolFailure {
+/** PowerShell のスクリプトを、上限の時間まで動かす。試験で差し替えられる */
+export type PowerShellRunner = (script: string, timeoutMs: number, env?: NodeJS.ProcessEnv) => { ok: true; stdout: string } | ToolFailure;
+export function runPowerShell(script: string, timeoutMs: number, env?: NodeJS.ProcessEnv, executable = 'powershell.exe'): { ok: true; stdout: string } | ToolFailure {
   if (timeoutMs <= 0) return { ok: false, timedOut: true, message: '時間がありません' };
-  const result = spawnSync('powershell.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', Buffer.from(script, 'utf16le').toString('base64')], {
+  const result = spawnSync(executable, ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', Buffer.from(script, 'utf16le').toString('base64')], {
     encoding: 'utf8', timeout: Math.ceil(timeoutMs), killSignal: 'SIGKILL', windowsHide: true, maxBuffer: 16 * 1024 * 1024, env: { ...process.env, ...env },
   });
   const error: NodeJS.ErrnoException | undefined = result.error;
@@ -291,35 +302,38 @@ function powershell(script: string, timeoutMs: number, env?: NodeJS.ProcessEnv):
   return { ok: true, stdout: result.stdout };
 }
 
-/** PowerShell で一覧を取得し、ハンドルで確かめてから止める、Windows の実際の道具 */
-export const windowsProcessTools: WindowsProcessTools = {
-  list(timeoutMs) {
-    const result = powershell(LIST_SCRIPT, timeoutMs);
-    if (!result.ok) return result;
-    const processes: ProcessEntry[] = [];
-    for (const line of result.stdout.split(/\r?\n/)) {
-      const match = /^(\d+) (\d+) (\d+)$/.exec(line.trim());
-      if (match) processes.push({ pid: Number(match[1]), ppid: Number(match[2]), created: fromTicks(match[3]) });
-    }
-    if (processes.length === 0) return { ok: false, timedOut: false, message: 'プロセスの一覧が空です' };
-    return { ok: true, processes };
-  },
-  stop(requests, timeoutMs) {
-    // PowerShell の起動と出力のための時間を残して、中の待機の上限を決める
-    const limit = Math.max(0, Math.floor(timeoutMs) - 500);
-    const input = JSON.stringify({ limit, items: requests.map((r) => ({ pid: r.pid, ticks: toTicks(r.created), root: r.root })) });
-    const result = powershell(STOP_SCRIPT, timeoutMs, { LOOMAKE_ORPHAN_STOP: input });
-    if (!result.ok) return result;
-    const results: StopResult[] = [];
-    for (const line of result.stdout.split(/\r?\n/)) {
-      const [pid, kind, message] = line.split('\t');
-      if (!pid || !kind || !/^\d+$/.test(pid)) continue;
-      if (!['stopped', 'exited', 'reused', 'denied', 'failed', 'alive'].includes(kind)) continue;
-      results.push({ pid: Number(pid), result: kind as StopResult['result'], ...(message ? { message } : {}) });
-    }
-    return { ok: true, results };
-  },
-};
+/** PowerShell で一覧を取得し、ハンドルで確かめてから止める、Windows の道具を作る */
+export function createWindowsProcessTools(powershell: PowerShellRunner = runPowerShell): WindowsProcessTools {
+  return {
+    list(timeoutMs) {
+      const result = powershell(LIST_SCRIPT, timeoutMs);
+      if (!result.ok) return result;
+      const processes: ProcessEntry[] = [];
+      for (const line of result.stdout.split(/\r?\n/)) {
+        const match = /^(\d+) (\d+) (\d+)$/.exec(line.trim());
+        if (match) processes.push({ pid: Number(match[1]), ppid: Number(match[2]), created: fromTicks(match[3]) });
+      }
+      if (processes.length === 0) return { ok: false, timedOut: false, message: 'プロセスの一覧が空です' };
+      return { ok: true, processes };
+    },
+    stop(requests, timeoutMs) {
+      // PowerShell の起動と出力のための時間を残して、中の待機の上限を決める
+      const limit = Math.max(0, Math.floor(timeoutMs) - 500);
+      const input = JSON.stringify({ limit, items: requests.map((r) => ({ pid: r.pid, ticks: toTicks(r.created), root: r.root })) });
+      const result = powershell(STOP_SCRIPT, timeoutMs, { LOOMAKE_ORPHAN_STOP: input });
+      if (!result.ok) return result;
+      const results: StopResult[] = [];
+      for (const line of result.stdout.split(/\r?\n/)) {
+        const [pid, kind, message] = line.split('\t');
+        if (!pid || !kind || !/^\d+$/.test(pid)) continue;
+        if (!['stopped', 'exited', 'reused', 'denied', 'failed', 'alive'].includes(kind)) continue;
+        results.push({ pid: Number(pid), result: kind as StopResult['result'], ...(message ? { message } : {}) });
+      }
+      return { ok: true, results };
+    },
+  };
+}
+export const windowsProcessTools = createWindowsProcessTools();
 
 // ---- 監視役が結果を書かずに終わったときの後片付け ----
 
