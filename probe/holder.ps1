@@ -133,7 +133,7 @@ function Cleanup([string]$id, [long]$deadlineMs) {
       $okT = $api::TerminateProcess($r.h, 1); $errT = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
       if ($okT) { $r.action = 'terminated' }
       elseif ($api::WaitForSingleObject($r.h, 0) -eq 0) { $r.action = 'already-exited'; $r.reason = "terminate:$errT" }
-      else { $r.action = 'failed'; $r.reason = "terminate:$errT"; [void]$problems.Add("terminate:$errT:$procId") }
+      else { $r.action = 'failed'; $r.reason = "terminate:$errT"; [void]$problems.Add("terminate:${errT}:$procId") }
     }
     $timing.stop += $sw.Elapsed.TotalMilliseconds - $t0
   }
