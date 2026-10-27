@@ -90,11 +90,15 @@ describe('CI', () => {
     expect(quality).toContain('fail-fast: false');
     // テストの実行は、シャードのあるジョブとないジョブで 1 つずつ。ほかにすべてのテストを実行するステップはない
     expect(quality.match(/run: pnpm test\b.*/g)).toEqual(['run: pnpm test --shard=${{ matrix.shard }}', 'run: pnpm test --coverage']);
-    expect(quality).toMatch(/- if: matrix\.shard\n {8}run: pnpm test --shard=\$\{\{ matrix\.shard \}\}\n/);
-    expect(quality).toMatch(/- if: \$\{\{ !matrix\.shard \}\}\n {8}run: pnpm test --coverage\n/);
+    // 文書だけの PR の条件（REQ-270）は、シャードの条件に足したもの。その条件は REQ-270 の試験で確かめる
+    const docsOnly = "steps.changes.outputs.docs_only != 'true'";
+    expect(quality).toContain(`- if: matrix.shard && ${docsOnly}\n        run: pnpm test --shard=\${{ matrix.shard }}\n`);
+    expect(quality).toContain(`- if: \${{ !matrix.shard && ${docsOnly} }}\n        run: pnpm test --coverage\n`);
     expect(quality).not.toContain('test:coverage');
-    // 条件つきのステップはテストの 2 つだけで、lint・typecheck・build・配布物の検査はどのジョブでも実行する
-    expect(quality.match(/^ {6}- if: .*/gm)).toEqual(['      - if: matrix.shard', '      - if: ${{ !matrix.shard }}']);
+    // シャードで変わる条件はテストの 2 つだけで、ほかのステップの条件は文書だけの PR の条件だけ。lint・typecheck・build・配布物の検査はどのジョブでも実行する
+    const conditions = [...quality.matchAll(/^ {6}(?:- | {2})if: (.*)$/gm)].map((match) => match[1]);
+    expect(conditions.filter((condition) => condition.includes('matrix'))).toEqual([`matrix.shard && ${docsOnly}`, `\${{ !matrix.shard && ${docsOnly} }}`]);
+    expect(conditions.filter((condition) => !condition.includes('matrix')).every((condition) => condition === docsOnly)).toBe(true);
     for (const step of ['run: pnpm lint', 'run: pnpm typecheck', 'run: pnpm build', 'package-smoke.mjs prepare', 'package-smoke.mjs check']) expect(quality, step).toContain(step);
   });
 
