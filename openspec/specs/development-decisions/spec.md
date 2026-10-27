@@ -1,7 +1,7 @@
 # development-decisions Specification
 
 ## Purpose
-TBD - created by archiving change record-stack-and-versioning-decisions. Update Purpose after archive.
+Loomake 自身の開発で決めたことの置き場と書き方を定める。CONTRIBUTING.md に書く版管理の方式と `0.x` の互換性の方針、設計判断の ADR、開発効率の手書きの記録様式、C-001 の事前見積もりを含む。
 
 ## Requirements
 
