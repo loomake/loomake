@@ -70,8 +70,8 @@ describe('文書だけかの判定', () => {
   it('[REQ-270] 変えたファイルがすべて文書なら、文書だけと判定する', () => {
     const { git, calls } = fakeGit(nameStatus(['M', 'docs/worklog/2026-10-27.md'], ['A', 'openspec/changes/c1/tasks.md'], ['A', '.changeset/c1.md']));
     expect(decideDocsOnly({ eventName: 'pull_request', baseRef: 'main', git })).toMatchObject({ docsOnly: true });
-    // ベースから PR の先頭までの差分を、名前の変更を検出して読む
-    expect(calls).toEqual([['diff', '--name-status', '-z', '-M', 'origin/main...HEAD']]);
+    // ベースから PR の先頭までの差分を、名前の変更を検出して読む。ベースは同じ名前のタグと取り違えないよう refs/remotes/ から書く
+    expect(calls).toEqual([['diff', '--name-status', '-z', '-M', 'refs/remotes/origin/main...HEAD']]);
   });
 
   it('[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば、文書だけと判定しない', () => {
@@ -199,6 +199,17 @@ describe('文書だけかの判定（git の差分から）', () => {
   it('[REQ-270] 前のコミットでコードを変えた PR では、最後のコミットが文書だけでも docs_only=false を書く', () => {
     withRepo((repo) => {
       repo.commit({ 'packages/kit/src/a.ts': 'export const a = 2;\n' });
+      repo.commit({ 'docs/notes.md': 'メモ\n' });
+      const result = repo.run();
+      expect(result).toMatchObject({ status: 0, output: 'docs_only=false\n' });
+      expect(result.stderr).toContain('packages/kit/src/a.ts');
+    });
+  });
+
+  it.each(['refs/tags/origin/main', 'refs/heads/origin/main'])('[REQ-270] ベースと同じ名前の参照 %s が PR のコミットの途中を指していても、ベースとの差分で判定して docs_only=false を書く', (name) => {
+    withRepo((repo) => {
+      repo.commit({ 'packages/kit/src/a.ts': 'export const a = 2;\n' });
+      repo.git('update-ref', name, 'HEAD');
       repo.commit({ 'docs/notes.md': 'メモ\n' });
       const result = repo.run();
       expect(result).toMatchObject({ status: 0, output: 'docs_only=false\n' });

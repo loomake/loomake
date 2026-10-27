@@ -71,8 +71,10 @@ export function decideDocsOnly({ eventName = '', baseRef = '', git }) {
   // PR のマージ先を変えても、CI は再実行されない（pull_request の既定の種類に edited がない）。
   // 積み重ねた PR のマージ先を main に変えたときに古い判定が残らないよう、main 向きの PR だけを判定する
   if (baseRef !== 'main') return { docsOnly: false, reason: `PR のマージ先が main ではない（${baseRef}）ので、すべてのステップを実行します` };
-  // ベースから PR の先頭までのすべてのコミットの差分を使う。-M で名前の変更を検出し、変更前のパスも判定する
-  const r = git(['diff', '--name-status', '-z', '-M', `origin/${baseRef}...HEAD`]);
+  // ベースから PR の先頭までのすべてのコミットの差分を使う。-M で名前の変更を検出し、変更前のパスも判定する。
+  // ベースは refs/remotes/ から書く。「origin/main」とだけ書くと、同じ名前のタグやブランチ（refs/tags/origin/main など）が
+  // 先に選ばれ、PR のコミットの途中をベースにして、コードの変更を差分から落とすことがある
+  const r = git(['diff', '--name-status', '-z', '-M', `refs/remotes/origin/${baseRef}...HEAD`]);
   if (r.status !== 0) {
     const detail = (r.stderr || r.error?.message || '').trim();
     return { docsOnly: false, reason: `PR で変えたファイルを調べられなかったので、すべてのステップを実行します（${detail || `終了コード ${r.status}`}）` };
