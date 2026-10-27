@@ -65,3 +65,5 @@ Windows の失敗は 1 回目が 16 件、2 回目が 15 件で、main の run 4
 | input-boundaries.test.ts の `[REQ-173] 通常runで巨大な検証失敗を指示へ加える前に止まり、エンジンを起動しない` | 失敗 5013ms | 通過 4698ms | main 40449196243 では通過。試験名・失敗箇所（`tests/input-boundaries.test.ts:167:3`）・エラー（`Test timed out in 5000ms.`）が、main の run 40315486399 の失敗と一致するので、確認済みの既存の失敗に分類した。期待値と上限は変えていない |
 
 ubuntu・macOS の quality と node20・node22 は 2 回とも成功した。gate は、tasks.md の 3.1・3.2 が未完了だったことだけで失敗した。
+
+3.1 を完了にした 6bde26a の run 40452030727（3 回目）でも、対象の試験は Windows ですべて通った。残った失敗は 2 回目と同じ 15 件で、REQ-173 は通った。gate は 3.2 が未完了だったことだけで失敗した。

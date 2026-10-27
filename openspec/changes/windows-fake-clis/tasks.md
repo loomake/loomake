@@ -13,4 +13,4 @@
 ## 3. 確認
 
 - [x] 3.1 Windows の CI で対象の試験を 2 回以上流し、回数と結果を記録する。失敗が残れば、試験ごとに直近の main の run と照合する
-- [ ] 3.2 `pnpm -s verify --change windows-fake-clis --done` を通す <!-- loomake:gate=done -->
+- [x] 3.2 `pnpm -s verify --change windows-fake-clis --done` を通す <!-- loomake:gate=done -->
