@@ -6,7 +6,8 @@ import { actionReferenceProblem } from '../scripts/action-pins.mjs';
 const root = join(import.meta.dirname, '..');
 const workflowRoot = join(root, '.github/workflows');
 const workflows = readdirSync(workflowRoot).filter((file) => /\.ya?ml$/.test(file));
-const read = (file: string) => readFileSync(join(workflowRoot, file), 'utf8');
+// Windows のチェックアウトでは行末が CRLF になり、`\n` を書いた正規表現に合わないので、LF にそろえて読む
+const read = (file: string) => readFileSync(join(workflowRoot, file), 'utf8').replace(/\r\n/g, '\n');
 
 describe('公開経路の供給網と資格情報', () => {
   it.each(workflows)('[REQ-167] %sの外部Actionsは確認済みの完全なSHAに固定する', (file) => {
@@ -27,7 +28,7 @@ describe('公開経路の供給網と資格情報', () => {
     expect(actionReferenceProblem(`github/codeql-action@${'b'.repeat(40)}`, pins)).not.toBeNull();
   });
 
-  it.each(workflows)('[REQ-168] %sの既定権限はreadでcheckoutに資格情報を保存しない', (file) => {
+  it.each(workflows)('[REQ-168][REQ-236] %sの既定権限はreadでcheckoutに資格情報を保存しない', (file) => {
     const workflow = read(file);
     expect(workflow).toMatch(/^permissions:\n {2}contents: read\n/m);
     const checkouts = [...workflow.matchAll(/- uses: actions\/checkout@[^\n]+\n([\s\S]*?)(?=\n {6}- |$)/g)];
@@ -36,7 +37,7 @@ describe('公開経路の供給網と資格情報', () => {
     if (file !== 'release.yml') expect(workflow).not.toMatch(/^\s+(contents|id-token): write$/m);
   });
 
-  it('[REQ-168][REQ-169] 公開とタグ送信の資格情報を品質コマンドの後の専用ステップだけに渡す', () => {
+  it('[REQ-168][REQ-169][REQ-236] 公開とタグ送信の資格情報を品質コマンドの後の専用ステップだけに渡す', () => {
     const release = read('release.yml');
     expect(release).toContain("if: github.ref == 'refs/heads/main'");
     expect(release).toContain('workflow_dispatch:');
@@ -71,7 +72,7 @@ describe('公開経路の供給網と資格情報', () => {
 });
 
 describe('コードの静的解析', () => {
-  it('[REQ-200] CodeQL のワークフローは PR・main・定期実行で JavaScript と TypeScript を解析し、書き込みは解析のジョブの security-events だけ', () => {
+  it('[REQ-200][REQ-236] CodeQL のワークフローは PR・main・定期実行で JavaScript と TypeScript を解析し、書き込みは解析のジョブの security-events だけ', () => {
     const workflow = read('codeql.yml');
     expect(workflow).toMatch(/^ {2}pull_request:/m);
     expect(workflow).toMatch(/^ {2}push:\n {4}branches: \[main\]/m);
