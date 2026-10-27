@@ -25,3 +25,43 @@
 - 失敗の run：main f535fd2 の [run 40230837026](https://github.com/loomake/loomake/actions/runs/40230837026)（quality (windows-latest)）。ロック取得と push の試験にはログに `shim-start` がなく、`"stalled":false` だった。auth・list・create の試験では、`forward-end` が `"error":"ENOENT"` だった。
 - 対象の試験：`external-budget.test.ts` の `[REQ-182] auth / create / list / push の期限後に先へ進まず、再実行で重複させない`、`[REQ-182] ロック取得のGitが止まったら変更と記録を作らない`、`[REQ-182] 準備で使った時間を含めてエンジンの期限を制限する`、`[REQ-183] traceのGitも共有予算で止める`。見かけの合格は `[REQ-183] OpenSpec検証の時間切れをCLI不存在と区別する` と `[REQ-192][REQ-182] run の準備中に git が時間の上限で止まると…終了コード 3`。
 - 対象外：`[REQ-183] 品質コマンドの中断後に次のコマンドを実行しない` と `packages/kit/test/process.test.ts` の 2 件（change C）。`run.test.ts` の REQ-158、`scripts/` の配布物、`release-security`、`guards`（change A）。
+
+## Windows の CI での確認（tasks 3.1）
+
+origin/main（e26bf94）をマージした 9df179b で、ci の run 40450183461 を 2 回流した（1 回目は 2026-10-27 13:31 JST、2 回目は 13:39 JST に `gh run rerun --failed` で開始）。照合には、マージ元と同じ e26bf94 の main の run 40449196243 を使った。
+
+マージでは external-budget.test.ts が競合した。main の PR #23（`shim` と `expectStalledAt`）がこの change と同じ検査を別に実装していたため、`fakeCli` と `expectStalled` の側を残し、main の側にだけあった次の検査を移した。止まった操作を引数の先頭で照合する（auth は `auth status` まで）。止まる前の転送がシグナルで終わったときも失敗とする。auth・list は、止まった印から「1 操作の期限 - 1000ms」以上待ったことを確かめる。
+
+### 対象の試験の結果（quality (windows-latest)）
+
+| 試験 | 1 回目（job 122010823542） | 2 回目（job 122013273149） | main 40449196243 |
+|---|---|---|---|
+| ロック取得のGitが止まったら変更と記録を作らない | 通過 3586ms | 通過 1925ms | 失敗 |
+| 準備で使った時間を含めてエンジンの期限を制限する | 通過 8471ms | 通過 8700ms | 通過 |
+| 事前の認証確認が期限切れなら実装も記録も始めない | 通過 2434ms | 通過 2915ms | 通過 |
+| pushの期限後に先へ進まず、再実行で重複させない | 通過 44855ms | 通過 45973ms | 失敗 |
+| authの期限後に先へ進まず、再実行で重複させない | 通過 14767ms | 通過 18632ms | 失敗 |
+| listの期限後に先へ進まず、再実行で重複させない | 通過 15777ms | 通過 20232ms | 失敗 |
+| createの期限後に先へ進まず、再実行で重複させない | 通過 43882ms | 通過 45164ms | 失敗 |
+| traceのGitも共有予算で止める | 通過 1307ms | 通過 1531ms | 失敗 |
+| OpenSpec検証の時間切れをCLI不存在と区別する | 通過 1394ms | 通過 1443ms | 失敗 |
+| run の準備中に git が時間の上限で止まると…終了コード 3 | 通過 2076ms | 通過 2201ms | 失敗 |
+
+external-budget.test.ts のほかの 4 件のうち、対象外の `[REQ-183] 品質コマンドの中断後に次のコマンドを実行しない` は 2 回とも失敗した（change C の範囲）。残りの 3 件は 2 回とも通った。
+
+### 残った失敗の照合
+
+Windows の失敗は 1 回目が 16 件、2 回目が 15 件で、main の run 40449196243 は 23 件だった。main にない新しい失敗はなかった。試験ごとに、失敗箇所とエラーを main と照合した。
+
+| 試験 | 1 回目 | 2 回目 | main との照合 |
+|---|---|---|---|
+| process.test.ts の REQ-181・REQ-181/182 の 2 件 | 失敗 | 失敗 | 箇所（:92:35、:74:89）とエラーが一致。対象外（change C） |
+| external-budget.test.ts の REQ-183（中断後に次のコマンドを実行しない） | 失敗 | 失敗 | エラーが一致。箇所はマージで行がずれただけで、同じ検査（main :235:71、この PR :263:71）。対象外（change C） |
+| guards.test.ts の REQ-204 | 失敗 | 失敗 | 箇所（:17:12）とエラーが一致（change A） |
+| run.test.ts の REQ-158 | 失敗 | 失敗 | 箇所（:794:53）とエラーが一致（change A） |
+| ai-journeys.test.ts の 2 件 | 失敗 | 失敗 | 箇所（:14:60）とエラーが一致（change A） |
+| package-artifacts.test.ts の 3 件 | 失敗 | 失敗 | 箇所とエラーが一致（change A） |
+| release-security.test.ts の 5 件 | 失敗 | 失敗 | 箇所とエラーが一致（change A） |
+| input-boundaries.test.ts の `[REQ-173] 通常runで巨大な検証失敗を指示へ加える前に止まり、エンジンを起動しない` | 失敗 5013ms | 通過 4698ms | main 40449196243 では通過。試験名・失敗箇所（`tests/input-boundaries.test.ts:167:3`）・エラー（`Test timed out in 5000ms.`）が、main の run 40315486399 の失敗と一致するので、確認済みの既存の失敗に分類した。期待値と上限は変えていない |
+
+ubuntu・macOS の quality と node20・node22 は 2 回とも成功した。gate は、tasks.md の 3.1・3.2 が未完了だったことだけで失敗した。
