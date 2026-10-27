@@ -1,0 +1,37 @@
+# PROBE（使い捨て・マージしない）：Windows で環境変数の印による子孫の識別と、同じハンドルでの停止を測る（PR #22 の Q-04 の A）
+name: probe-env-mark
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    if: github.head_ref == 'probe/windows-env-mark'
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [emit, addtype]
+        run: [1, 2, 3, 4, 5]
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - name: probe
+        shell: bash
+        run: node probe/env-mark.mjs
+        env:
+          LOOMAKE_PROBE_API: ${{ matrix.api }}
+          LOOMAKE_PROBE_OUT: ${{ runner.temp }}/probe.jsonl
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: probe-${{ matrix.api }}-${{ matrix.run }}
+          path: ${{ runner.temp }}/probe.jsonl
