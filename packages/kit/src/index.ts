@@ -14,3 +14,4 @@ export { createInputReader, DOCUMENT_LIMITS, JSON_LIMITS } from './runtime/input
 export type { InputLimits, InputEntry, InputReader } from './runtime/input.js';
 export { runExternal, withProcessBudget, remainingProcessTime, hasProcessBudget, ProcessLimitError, EXTERNAL_TIMEOUT_MS, EXTERNAL_OUTPUT_BYTES } from './runtime/process.js';
 export type { ExternalOptions, ExternalResult, ProcessBudget, ProcessLimitKind } from './runtime/process.js';
+export type { CleanupReport } from './runtime/process.js';

@@ -1,6 +1,6 @@
 'use strict';
 // runExternal が起動する監視役。対象のコマンドを新しいプロセスグループで動かし、期限・出力の上限・中断で子孫ごと止める。
-// 対象の stdout・stderr はそのまま流す。fd 3 には、対象を起動した直後に PID の行を、最後に結果（終了コード・シグナル・止めた理由）を JSON で書く。
+// 対象の stdout・stderr はそのまま流す。fd 3 には、対象を起動した直後に PID と起動の直前・直後の時刻の行を、最後に結果（終了コード・シグナル・止めた理由）を JSON で書く。
 const { spawn, spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 
@@ -81,9 +81,12 @@ try {
     outcome.kind = 'timeout';
     finish();
   } else {
+    // 対象の作成時刻の範囲として、起動の直前と直後の時刻を親へ渡す（REQ-252）
+    const from = Date.now();
     child = spawn(command, args, { shell, stdio: ['ignore', 'pipe', 'pipe'], detached: !win });
+    const to = Date.now();
     // 監視役が結果を書かずに終わっても親が子孫を止められるよう、対象の PID を先に 1 行で渡す（REQ-250）
-    if (child.pid) fs.writeSync(3, `${JSON.stringify({ pid: child.pid })}\n`);
+    if (child.pid) fs.writeSync(3, `${JSON.stringify({ pid: child.pid, from, to })}\n`);
     // 合計の上限までだけを流し、超えたら止める
     const forward = (target, data) => {
       if (stopping) return;

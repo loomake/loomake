@@ -49,4 +49,4 @@ POSIX でも、監視役が SIGKILL などで結果を書かずに終わると�
 
 ## Impact
 
-kit の `runtime/process.ts` と `supervisor/supervisor.cjs`、Windows の後片付けの新しいモジュール `runtime/orphans.ts`、kit と runner のテスト、kit の changeset を変える。`ProcessLimitError` に省略できる `reason` と `cleanup` を足す（公開 API への追加）。設定・実行時依存・出力 JSON の版は変えない。
+kit の `runtime/process.ts` と `supervisor/supervisor.cjs`、kit と runner のテスト、kit の changeset を変える。`ProcessLimitError` に省略できる `reason` と `cleanup` を足す（公開 API への追加）。設定・実行時依存・出力 JSON の版は変えない。
