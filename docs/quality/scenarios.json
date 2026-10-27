@@ -7263,6 +7263,54 @@
           "sha256": "01e75f3644f7d0f42494d4d0cd05067c689db678295f8134a93137a2d6a50253"
         }
       ]
+    },
+    {
+      "id": "SCN-7a09237b3616f253ec95",
+      "status": "reviewed",
+      "scenarioSha256": "5c75693ec583141f80d4f72404cd5cef24a6f2b749414625722e7aa8163e881c",
+      "reason": "実際のcore package.jsonのdependenciesのキー（dependenciesがなければ空）からzodを除くと空になること、つまりzod以外のパッケージを含まないことをassertする。",
+      "sources": [
+        "REQ-046"
+      ],
+      "tests": [
+        {
+          "file": "packages/core/test/package.test.ts",
+          "contains": "dependencies は zod 以外のパッケージを含まない",
+          "sha256": "035b22955844e1474bb964d7bc1bd0623367f292ca6324f5347aa6a73c8c2ae8"
+        }
+      ]
+    },
+    {
+      "id": "SCN-96cb0a31550cb8b25bcd",
+      "status": "reviewed",
+      "scenarioSha256": "89a9027751f0f95ade63b969daf526c84ea88eb19cf2d1636e39398150aa88e9",
+      "reason": "実際のkit package.jsonのdependenciesのキーが@loomake/coreを含み、@loomake/coreとyamlを除くと空になること、つまりこの2つ以外を含まないことをassertする。",
+      "sources": [
+        "REQ-047"
+      ],
+      "tests": [
+        {
+          "file": "packages/cli/test/cli.test.ts",
+          "contains": "kit の dependencies は @loomake/core を含み",
+          "sha256": "69e3802bd572f52a9027b262ad9eef6e192dc3078e30601382bcf9f391addcfa"
+        }
+      ]
+    },
+    {
+      "id": "SCN-23a323ae6d48ddc37ec7",
+      "status": "reviewed",
+      "scenarioSha256": "3516db0e2182471c061f32d2dda719a5fcf8dabea13eb4acdc48e7094ee83c90",
+      "reason": "実際のCLI package.jsonのdependenciesにcore/kit/trace/runner以外のキーがないことをassertする。",
+      "sources": [
+        "REQ-047"
+      ],
+      "tests": [
+        {
+          "file": "packages/cli/test/cli.test.ts",
+          "contains": "loomake の dependencies は @loomake/core・@loomake/kit",
+          "sha256": "69e3802bd572f52a9027b262ad9eef6e192dc3078e30601382bcf9f391addcfa"
+        }
+      ]
     }
   ]
 }
