@@ -51,7 +51,7 @@ A requirement counts as tested when a **passing** test has its ID in the name, f
 
 | Package | Role |
 |---|---|
-| `@loomake/core` | Parsers for trace.md, spec.md, tasks.md and test reports, and the JSON schema of the verify result (no runtime dependencies) |
+| `@loomake/core` | Parsers for trace.md, spec.md, tasks.md and test reports, and the JSON schema of the verify result (the only external runtime dependency it allows is `zod`) |
 | `@loomake/kit` | `verify`, `init` and `doctor`, and the templates that `init` places |
 | `@loomake/trace` | Evidence records and release reports |
 | `@loomake/runner` | `loomake run` |

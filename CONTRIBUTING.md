@@ -44,6 +44,8 @@ PR本文には対象を `loomake-change: <change-id>` の行で明示する。�
 
 ## コードの境界
 
-関数はnamed exportにする。設定や使い方の誤りはUsageErrorとし、CLIは終了コード2を返す。利用者へのメッセージは日本語にする。coreの実行時依存はゼロ、kitはcoreのみ、traceはcoreとkit、runnerはcore・kit・trace、CLIはこの4パッケージだけに依存する。
+関数はnamed exportにする。設定や使い方の誤りはUsageErrorとし、CLIは終了コード2を返す。利用者へのメッセージは日本語にする。coreの外部の実行時依存はzodだけ、kitはcoreとyamlだけ、traceはcoreとkit、runnerはcore・kit・trace、CLIはこの4パッケージだけに依存する。
+
+実行時の依存を増やすときは、標準機能で足りないこと、自作よりコードと保守が減ること、実行経路に必要なことの3点を文書に書く（例：[ADR 0003](docs/adr/0003-zod-as-core-runtime-dependency.md)）。
 
 モデルと判定はI/Oから分け、重要な異常・境界をテストする。要件名の存在だけで十分な検証とは判断しない。[アーキテクチャ](docs/architecture.md)と[mutation試験の範囲](docs/testing.md)を参照する。
