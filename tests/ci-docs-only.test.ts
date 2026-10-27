@@ -108,6 +108,22 @@ describe('文書だけかの判定', () => {
     expect(() => parseNameStatus('X\0docs/a.md\0')).toThrow('解釈できない差分の状態です');
   });
 
+  it('[REQ-270] 判定のスクリプトとワークフローを変えた PR は、文書だけと判定しない', () => {
+    // どちらも許可リストの外なので、PR に入っている版のスクリプトで判定しても、その PR の quality は飛ばない
+    for (const path of ['scripts/ci-docs-only.mjs', '.github/workflows/ci.yml']) {
+      expect(isDocumentPath(path), path).toBe(false);
+      const result = decide(nameStatus(['M', 'docs/usage.md'], ['M', path]));
+      expect(result.docsOnly, path).toBe(false);
+      expect(result.reason, path).toContain(path);
+    }
+  });
+
+  it('[REQ-270] コードのファイルを消した PR は、文書だけと判定しない', () => {
+    const result = decide(nameStatus(['D', 'packages/kit/src/a.ts'], ['M', 'docs/notes.md']));
+    expect(result).toMatchObject({ docsOnly: false });
+    expect(result.reason).toContain('packages/kit/src/a.ts');
+  });
+
   it('[REQ-270] PR のマージ先が main でないときは、差分によらず文書だけと判定しない', () => {
     const { git, calls } = fakeGit(nameStatus(['M', 'docs/notes.md']));
     const result = decideDocsOnly({ eventName: 'pull_request', baseRef: 'feature-x', git });
@@ -126,7 +142,7 @@ describe('文書だけかの判定', () => {
 
 describe('文書だけかの判定（git の差分から）', () => {
   // 一時的なリポジトリで、ベースのあとに PR のコミットを重ね、スクリプトを実行する
-  function withRepo(check: (repo: { git: (...args: string[]) => void; write: (files: Record<string, string>) => void; commit: (files: Record<string, string>, renames?: [string, string][]) => void; run: (env?: Record<string, string>) => { status: number | null; output: string; stderr: string } }) => void) {
+  function withRepo(check: (repo: { git: (...args: string[]) => void; commit: (files: Record<string, string>, renames?: [string, string][]) => void; run: (env?: Record<string, string>) => { status: number | null; output: string; stderr: string } }) => void) {
     const dir = mkdtempSync(join(tmpdir(), 'loomake-docs-only-'));
     const git = (...args: string[]) => {
       const result = spawnSync('git', ['-c', 'core.hooksPath=', ...args], { cwd: dir, encoding: 'utf8' });
@@ -148,7 +164,6 @@ describe('文書だけかの判定（git の差分から）', () => {
       git('update-ref', 'refs/remotes/origin/main', 'HEAD');
       check({
         git,
-        write,
         commit(files, renames = []) {
           for (const [from, to] of renames) {
             mkdirSync(dirname(join(dir, to)), { recursive: true });
@@ -208,6 +223,32 @@ describe('文書だけかの判定（git の差分から）', () => {
       const result = repo.run();
       expect(result).toMatchObject({ status: 0, output: 'docs_only=false\n' });
       expect(result.stderr).toContain('調べられなかった');
+    });
+  });
+
+  it('[REQ-270] main が進んだあとのマージコミットでは、PR の変更分だけで判定する', () => {
+    withRepo((repo) => {
+      // PR のブランチは文書だけを変える
+      repo.commit({ 'docs/notes.md': 'メモ\n' });
+      repo.git('branch', 'pr');
+      // PR を作ったあとで、main にコードの変更が入る
+      repo.git('checkout', '-q', '-b', 'mainline', 'refs/remotes/origin/main');
+      repo.commit({ 'packages/kit/src/a.ts': 'export const a = 2;\n' });
+      repo.git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+      // CI と同じく、main に PR のブランチをマージしたコミットを HEAD にする
+      repo.git('checkout', '-q', '--detach', 'mainline');
+      repo.git('merge', '-q', '--no-ff', '--no-edit', 'pr');
+      expect(repo.run()).toMatchObject({ status: 0, output: 'docs_only=true\n' });
+    });
+  });
+
+  it('[REQ-270] コードのファイルを消した PR では docs_only=false を書く', () => {
+    withRepo((repo) => {
+      repo.git('rm', '-q', 'packages/kit/src/a.ts');
+      repo.commit({ 'docs/notes.md': 'メモ\n' });
+      const result = repo.run();
+      expect(result).toMatchObject({ status: 0, output: 'docs_only=false\n' });
+      expect(result.stderr).toContain('packages/kit/src/a.ts');
     });
   });
 
