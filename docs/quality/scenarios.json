@@ -7456,12 +7456,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 変えたファイルがすべて文書なら、文書だけと判定する",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 文書だけの PR では docs_only=true を書く",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         },
         {
           "file": "tests/monorepo.test.ts",
@@ -7498,12 +7498,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] main への push では、差分によらず文書だけと判定しない",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] main への push では docs_only=false を書く",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         },
         {
           "file": "tests/monorepo.test.ts",
@@ -7524,12 +7524,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コードと配布する Markdown は文書として扱わない",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         }
       ]
     },
@@ -7545,12 +7545,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コードと配布する Markdown は文書として扱わない",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         }
       ]
     },
@@ -7566,12 +7566,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 設定と実行用のファイルは、文書の置き場所にあっても",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         }
       ]
     },
@@ -7587,12 +7587,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] tests/ の下の試験用データは",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         }
       ]
     },
@@ -7608,7 +7608,7 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 判定のスクリプトとワークフローを変えた PR は、文書だけと判定しない",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         }
       ]
     },
@@ -7624,7 +7624,7 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 設定と実行用のファイルは、文書の置き場所にあっても",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         }
       ]
     },
@@ -7632,7 +7632,7 @@
       "id": "SCN-b1013e579b7995de0343",
       "status": "reviewed",
       "scenarioSha256": "d4c2df1ced2164ea39fe4ae1b1be0495b4337a033ef97b9f0fc635e1ad3d17a0",
-      "reason": "一時的な git のリポジトリで、1 つ目のコミットで packages/kit/src/a.ts を変え、2 つ目のコミットで docs/notes.md だけを変えたとき、スクリプトが docs_only=false を書き、理由に packages/kit/src/a.ts を出すことを assert する。判定の関数が origin/<base>...HEAD の差分を -M 付きで読むことも別の試験で assert している。",
+      "reason": "一時的な git のリポジトリで、1 つ目のコミットで packages/kit/src/a.ts を変え、2 つ目のコミットで docs/notes.md だけを変えたとき、スクリプトが docs_only=false を書き、理由に packages/kit/src/a.ts を出すことを assert する。2 つのコミットのあいだに、ベースと同じ名前のタグ（refs/tags/origin/main）やブランチ（refs/heads/origin/main）を作っても、スクリプトがベースとの差分で判定して docs_only=false を書き、理由に packages/kit/src/a.ts を出すことも assert する。判定の関数が refs/remotes/origin/<base>...HEAD の差分を -M 付きで読むことも別の試験で assert している。",
       "sources": [
         "REQ-270"
       ],
@@ -7640,7 +7640,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 前のコミットでコードを変えた PR では",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+        },
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "[REQ-270] ベースと同じ名前の参照",
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         }
       ]
     },
@@ -7656,12 +7661,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 名前を変えたファイルは、変更前のパスも判定する",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 名前を変えたファイルは、変更前のパスが文書でなければ",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         }
       ]
     },
@@ -7677,17 +7682,17 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 差分を取れないときは、文書だけと判定しない",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 差分を解釈できないときは、文書だけと判定しない",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 差分を取れないときは、失敗にせず docs_only=false を書く",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         }
       ]
     },
@@ -7703,12 +7708,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] PR のマージ先が main でないときは、差分によらず文書だけと判定しない",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] マージ先が main でない PR では docs_only=false を書く",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         }
       ]
     },
@@ -7724,7 +7729,7 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] main が進んだあとのマージコミットでは、PR の変更分だけで判定する",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         }
       ]
     },
@@ -7740,12 +7745,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コードのファイルを消した PR は、文書だけと判定しない",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コードのファイルを消した PR では docs_only=false を書く",
-          "sha256": "3caa2e1b6763da58e45de3c270b8a6f576376f56455f96d1b8fd0c1fc58d6bfe"
+          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
         }
       ]
     }

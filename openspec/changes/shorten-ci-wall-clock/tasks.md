@@ -22,3 +22,4 @@
 - [x] 4.5 文書だけの PR では、文書を読むテストが macOS・Windows で動かなくなることを、proposal.md の Impact に書く（REQ-270）
 - [x] 4.6 4.2〜4.4 のあとで、変わった Scenario と足した Scenario のレビューを `docs/quality/scenarios.json` に合わせる。`node scripts/scenario-audit.mjs` で、この change の Scenario がすべて reviewed になることを確かめる（REQ-049, REQ-214, REQ-270）
 - [x] 4.7 `pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` と `pnpm -s verify --change shorten-ci-wall-clock --done` を通し、push のあとの CI の結果を作業記録に書く
+- [x] 4.8 見直しで見つけた誤判定を直す。2.1 のスクリプトはベースを `origin/<base>` とだけ書いていたので、同じ名前のタグやブランチ（`refs/tags/origin/main` など）があると、そちらがベースに選ばれる。それが PR のコミットの途中を指していると、コードの変更が差分から落ちる。ベースを `refs/remotes/origin/<base>` と書き、その試験を足す。`tests/ci-docs-only.test.ts` を根拠にするレビューは、試験を読み直してハッシュを更新する（REQ-270）
