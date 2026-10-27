@@ -6,6 +6,7 @@
 ## What Changes
 - core-parsers の「実行時依存ゼロ」（REQ-046）を消し（REMOVED）、`@loomake/core` の外部の実行時依存を `zod` だけとする「core の実行時依存の範囲」（REQ-046）を足す（ADDED）。OpenSpec の MODIFIED では Scenario「dependencies が空」を消せないので、この形にした。この形にすることは、確認事項 Q-03 の回答 A で決まった
 - verify の「実行時依存の範囲」（REQ-047）のうち kit の部分を、`@loomake/core` と `yaml` だけにする（MODIFIED）。loomake の部分は変えない
+- monorepo の「kit の中の依存の向き」（REQ-207）で、kit の外部のパッケージとして import してよいものに `yaml` を加える（MODIFIED）。runtime/ から機能、機能どうし、`@loomake/kit` やほかのパッケージを経由する依存を認めない決まりは変えない。REQ-047 で kit に `yaml` を認めても、REQ-207 と `tests/kit-layers.test.ts` が `yaml` の import を拒むと、C-001 で `yaml` を使えないため（PR #26 のレビューの指摘）。`tests/kit-layers.test.ts` を変える前に、確認事項 Q-05 で人の承認を得る（tasks.md 5）
 - AGENTS.md の「プロジェクト固有の情報」のコーディング規約と、CONTRIBUTING.md の「コードの境界」の依存の記述を、仕様に合わせる（tasks.md 2）
 - `packages/core/test/package.test.ts` の `[REQ-046]` と、`packages/cli/test/cli.test.ts` の kit の `[REQ-047]` の期待値を、仕様に合わせて変える。AGENTS.md 4 章により、変える前に確認事項 Q-01 で人の承認を得る（tasks.md 3）
 
@@ -17,10 +18,10 @@
 - core-parsers と verify の Purpose を直すこと（archive では反映されない）
 
 ## Impact
-- 影響する capability：core-parsers（REQ-046）、verify（REQ-047 の kit の部分）
+- 影響する capability：core-parsers（REQ-046）、verify（REQ-047 の kit の部分）、monorepo（REQ-207）
 - 影響する文書：AGENTS.md、CONTRIBUTING.md、`docs/adr/0003-zod-as-core-runtime-dependency.md`、`docs/adr/README.md` の一覧の状態
 - 影響する品質記録：`docs/quality/scenarios.json` の REQ-046・REQ-047 のレビュー 3 件（tasks.md 4）
-- 影響するテスト：`packages/core/test/package.test.ts`、`packages/cli/test/cli.test.ts`
+- 影響するテスト：`packages/core/test/package.test.ts`、`packages/cli/test/cli.test.ts`、`tests/kit-layers.test.ts`（Q-05 の承認のあと）
 - 影響するコード：なし（この change では依存を足さない）
 - 利用者に見える変更：なし
 - この change のブランチは PR #10（`record-stack-and-versioning-decisions`）のブランチから作った。PR #10 は main に入り、そのあとの main（PR #27 の archive まで）を取り込んだので、main との差分はこの change の分だけである
