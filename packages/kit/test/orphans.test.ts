@@ -238,6 +238,8 @@ describe.runIf(process.platform === 'win32')('Windows の実際のプロセス�
       expect(alive(leafPid)).toBe(true);
       const started = Date.now();
       const report = cleanupWindowsOrphans({ pid: shell.pid!, from, to }, Date.now(), windowsProcessTools);
+      // 10 秒の上限に対して各手順にかかった時間を CI の記録に残す
+      console.info(`[REQ-253] 後片付けの結果：${JSON.stringify(report)}`);
       expect(report, JSON.stringify(report)).toMatchObject({ confirmed: true });
       expect(alive(leafPid)).toBe(false);
       expect(Date.now() - started).toBeLessThanOrEqual(CLEANUP_LIMIT_MS + 1000);
