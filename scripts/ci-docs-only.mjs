@@ -68,6 +68,9 @@ export function parseNameStatus(text) {
 export function decideDocsOnly({ eventName = '', baseRef = '', git }) {
   if (eventName !== 'pull_request') return { docsOnly: false, reason: `PR ではない実行（${eventName || '不明'}）なので、すべてのステップを実行します` };
   if (!baseRef) return { docsOnly: false, reason: 'PR の向き先のブランチが分からないので、すべてのステップを実行します' };
+  // PR のマージ先を変えても、CI は再実行されない（pull_request の既定の種類に edited がない）。
+  // 積み重ねた PR のマージ先を main に変えたときに古い判定が残らないよう、main 向きの PR だけを判定する
+  if (baseRef !== 'main') return { docsOnly: false, reason: `PR のマージ先が main ではない（${baseRef}）ので、すべてのステップを実行します` };
   // ベースから PR の先頭までのすべてのコミットの差分を使う。-M で名前の変更を検出し、変更前のパスも判定する
   const r = git(['diff', '--name-status', '-z', '-M', `origin/${baseRef}...HEAD`]);
   if (r.status !== 0) {

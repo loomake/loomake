@@ -108,6 +108,14 @@ describe('文書だけかの判定', () => {
     expect(() => parseNameStatus('X\0docs/a.md\0')).toThrow('解釈できない差分の状態です');
   });
 
+  it('[REQ-270] PR のマージ先が main でないときは、差分によらず文書だけと判定しない', () => {
+    const { git, calls } = fakeGit(nameStatus(['M', 'docs/notes.md']));
+    const result = decideDocsOnly({ eventName: 'pull_request', baseRef: 'feature-x', git });
+    expect(result).toMatchObject({ docsOnly: false });
+    expect(result.reason).toContain('feature-x');
+    expect(calls).toEqual([]);
+  });
+
   it('[REQ-270] main への push では、差分によらず文書だけと判定しない', () => {
     const { git, calls } = fakeGit(nameStatus(['M', 'docs/a.md']));
     expect(decideDocsOnly({ eventName: 'push', baseRef: '', git })).toMatchObject({ docsOnly: false });
@@ -118,7 +126,7 @@ describe('文書だけかの判定', () => {
 
 describe('文書だけかの判定（git の差分から）', () => {
   // 一時的なリポジトリで、ベースのあとに PR のコミットを重ね、スクリプトを実行する
-  function withRepo(check: (repo: { commit: (files: Record<string, string>, renames?: [string, string][]) => void; run: (env?: Record<string, string>) => { status: number | null; output: string; stderr: string } }) => void) {
+  function withRepo(check: (repo: { git: (...args: string[]) => void; write: (files: Record<string, string>) => void; commit: (files: Record<string, string>, renames?: [string, string][]) => void; run: (env?: Record<string, string>) => { status: number | null; output: string; stderr: string } }) => void) {
     const dir = mkdtempSync(join(tmpdir(), 'loomake-docs-only-'));
     const git = (...args: string[]) => {
       const result = spawnSync('git', ['-c', 'core.hooksPath=', ...args], { cwd: dir, encoding: 'utf8' });
@@ -139,6 +147,8 @@ describe('文書だけかの判定（git の差分から）', () => {
       git('commit', '-qm', 'base');
       git('update-ref', 'refs/remotes/origin/main', 'HEAD');
       check({
+        git,
+        write,
         commit(files, renames = []) {
           for (const [from, to] of renames) {
             mkdirSync(dirname(join(dir, to)), { recursive: true });
@@ -193,9 +203,23 @@ describe('文書だけかの判定（git の差分から）', () => {
   it('[REQ-270] 差分を取れないときは、失敗にせず docs_only=false を書く', () => {
     withRepo((repo) => {
       repo.commit({ 'docs/a.md': '文書\n' });
-      const result = repo.run({ BASE_REF: 'no-such-branch' });
+      // 向き先のブランチ（origin/main）がない
+      repo.git('update-ref', '-d', 'refs/remotes/origin/main');
+      const result = repo.run();
       expect(result).toMatchObject({ status: 0, output: 'docs_only=false\n' });
       expect(result.stderr).toContain('調べられなかった');
+    });
+  });
+
+  it('[REQ-270] マージ先が main でない PR では docs_only=false を書く', () => {
+    withRepo((repo) => {
+      repo.git('update-ref', 'refs/remotes/origin/feature-x', 'refs/remotes/origin/main');
+      repo.commit({ 'docs/notes.md': 'メモ\n' });
+      // 同じ差分でも、マージ先が main なら文書だけになる
+      expect(repo.run()).toMatchObject({ status: 0, output: 'docs_only=true\n' });
+      const result = repo.run({ BASE_REF: 'feature-x' });
+      expect(result).toMatchObject({ status: 0, output: 'docs_only=false\n' });
+      expect(result.stderr).toContain('マージ先が main ではない');
     });
   });
 
