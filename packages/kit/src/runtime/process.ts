@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { spawnSync } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import { StringDecoder } from 'node:string_decoder';
 import { fileURLToPath } from 'node:url';
 import { RuntimeFailure, UsageError } from './errors.js';
@@ -91,209 +92,151 @@ function gone(target: number, ms: number): boolean {
     pause(10);
   }
 }
-// ---- Windows で親のいない子孫の後片付け ----
+// ---- Windows で親のいない子孫の後片付け（Q-04 の A） ----
 
 /**
- * Windows で監視役が結果を書かずに終わったときに、残った対象の子孫を識別して止める（REQ-252・REQ-253・REQ-254）。
- * 識別は純粋な関数（planOrphanCleanup）にし、一覧の取得と停止は WindowsProcessTools として差し替えられるようにする
+ * Windows で監視役が結果を書かずに終わったときに、残った対象の子孫を止める（REQ-252・REQ-253・REQ-254）。
+ * 監視役は対象の環境変数に実行ごとの印を足す。後片付けは PowerShell を 1 回だけ起動し、印と作成時刻を確かめたのと同じハンドルで止める。
+ * どれを止めたか・未確認とするかは、PowerShell の出力から judgeCleanup で決める
  */
 
-/** 後片付け（一覧の取得・識別・停止・終了の待機）の合計の上限。通常の共有予算とは別に、後片付けだけに使う（REQ-253） */
+/** 後片付け（PowerShell の起動・探索・識別・停止・終了の待機）の合計の上限。通常の共有予算とは別に、後片付けだけに使う（REQ-253） */
 export const CLEANUP_LIMIT_MS = 10_000;
-/** taskkill 1 回の上限（REQ-181・REQ-253） */
-export const TASKKILL_LIMIT_MS = 1000;
-/** 作成時刻の比較で見込む、時計の刻みの差（A-04） */
+/** 探索で、対象の起動より前に作られたプロセスを除くときに見込む、時計の刻みの差 */
 export const CLOCK_SLACK_MS = 50;
-
-/** 監視役が渡した対象の PID と、対象を起動する直前（from）と直後（to）の時刻（Unix 時刻のミリ秒） */
-export type OrphanTarget = { pid: number; from: number; to: number };
-/** プロセスの一覧の 1 行。created は作成時刻（Unix 時刻のマイクロ秒） */
-export type ProcessEntry = { pid: number; ppid: number; created: number };
-export type StopRequest = { pid: number; created: number; root: boolean };
-/**
- * stopped：止めて終了を確かめた / exited：開く前に終わっていた / reused：PID が別のプロセスに再利用されていた（元のプロセスは終わっている）/
- * denied：権限不足で止められない / failed：そのほかの理由で止められない / alive：期限までに終わらなかった
- */
-export type StopResult = { pid: number; result: 'stopped' | 'exited' | 'reused' | 'denied' | 'failed' | 'alive'; message?: string };
-export type ToolFailure = { ok: false; timedOut: boolean; message: string };
-export type WindowsProcessTools = {
-  list(timeoutMs: number): { ok: true; processes: ProcessEntry[] } | ToolFailure;
-  stop(requests: StopRequest[], timeoutMs: number): { ok: true; results: StopResult[] } | ToolFailure;
-};
-/** 後片付けの結果。confirmed が false なら、detail に停止を確認できない理由を入れる（REQ-254） */
-export type CleanupReport = { confirmed: boolean; detail: string };
-
-export type OrphanPlan = {
-  /** alive：対象がまだ動いている / gone：対象の PID を持つプロセスがない / reused：対象の PID が別のプロセスに再利用されている */
-  target: 'alive' | 'gone' | 'reused';
-  stop: StopRequest[];
-  /** 同一性を確認できず、止めないプロセスとその理由 */
-  unverified: string[];
-};
-
-/**
- * プロセスの一覧から、止める対象を決める（REQ-252）。observedAt は、親が監視役の終了を受け取った時刻（Unix 時刻のミリ秒）
- */
-export function planOrphanCleanup(target: OrphanTarget, observedAt: number, processes: readonly ProcessEntry[], self = process.pid): OrphanPlan {
-  const slack = CLOCK_SLACK_MS * 1000;
-  const from = target.from * 1000 - slack;
-  const to = target.to * 1000 + slack;
-  const observed = observedAt * 1000;
-  const holder = processes.find((p) => p.pid === target.pid);
-  const unverified: string[] = [];
-  let roots: ProcessEntry[];
-  let state: OrphanPlan['target'];
-  if (holder && holder.created >= from && holder.created <= to) {
-    state = 'alive';
-    roots = [holder];
-  } else {
-    // 対象がないか、PID が再利用されているときだけ、親の PID が対象の PID である子を探す
-    state = holder ? 'reused' : 'gone';
-    roots = [];
-    for (const child of processes) {
-      if (child.ppid !== target.pid || child.pid === target.pid || child.pid === self) continue;
-      // 対象より前に作られたプロセスは、前の PID の持ち主の子で、対象の子ではない
-      if (child.created < from) continue;
-      if (child.created > observed) unverified.push(`PID ${child.pid} は監視役の終了を受け取ったあとに作られ、対象の子か確かめられません`);
-      else if (holder && child.created >= holder.created) unverified.push(`PID ${child.pid} は、対象の PID ${target.pid} を再利用したプロセスの子か確かめられません`);
-      else roots.push(child);
-    }
-  }
-  const stop: StopRequest[] = roots.map((p) => ({ pid: p.pid, created: p.created, root: true }));
-  const seen = new Set(stop.map((p) => p.pid));
-  for (const parent of stop) {
-    for (const child of processes) {
-      if (child.ppid !== parent.pid || child.created < parent.created || seen.has(child.pid) || child.pid === self) continue;
-      seen.add(child.pid);
-      stop.push({ pid: child.pid, created: child.created, root: false });
-    }
-  }
-  return { target: state, stop, unverified };
+/** 実行ごとの印を入れる環境変数。値はセミコロンで区切った印の並びで、外側の loomake の印を残したまま足す */
+export const SUPERVISOR_MARK_ENV = 'LOOMAKE_SUPERVISOR_MARK';
+/** 環境変数の値に印を足す */
+export function appendMark(current: string | undefined, mark: string): string {
+  return current ? `${current};${mark}` : mark;
 }
 
-const RESULT_LABEL: Record<Exclude<StopResult['result'], 'stopped' | 'exited' | 'reused'>, string> = {
-  denied: '権限不足で止められません',
-  failed: '止められません',
-  alive: '後片付けの上限までに終わりません',
+/** 後片付けの結果。confirmed が false なら、detail に停止を確認できない理由を入れる。detail には各手順の時間も残す（REQ-254） */
+export type CleanupReport = { confirmed: boolean; detail: string };
+/** 監視役から受け取った対象の PID と、親が作った印と、監視役が対象を起動する直前の時刻（Unix 時刻のミリ秒） */
+export type CleanupTarget = { pid: number; mark: string; from: number };
+export type CleanupState = 'marked' | 'other-mark' | 'no-mark' | 'unreadable' | 'replaced' | 'exited';
+/** PowerShell が出す、プロセスごとの記録。created は FILETIME の文字列 */
+export type CleanupRecord = {
+  pid: number; ppid: number; created: string; parentGone: boolean; state: CleanupState; reason?: string; bits?: number; opens: number;
+  handle?: number; stopHandle?: number; waitHandle?: number; action?: 'terminated' | 'failed'; wait?: string;
 };
+export type CleanupTiming = { define: number; enumerate: number; identify: number; stop: number; wait: number; total: number };
+export type CleanupOutput = { unsupported?: string; records: CleanupRecord[]; timing?: CleanupTiming; timedOut: boolean; passes?: number };
+export type ToolFailure = { ok: false; timedOut: boolean; message: string };
+/** PowerShell のスクリプトを、上限の時間まで動かす。試験で差し替えられる */
+export type PowerShellRunner = (file: string, timeoutMs: number, env?: NodeJS.ProcessEnv) => { ok: true; stdout: string } | ToolFailure;
+/** 試験で、探索の代わりに与える候補 */
+export type CleanupCandidate = { pid: number; created: string };
+
+const CLEANUP_SCRIPT = fileURLToPath(new URL('../../supervisor/windows-cleanup.ps1', import.meta.url));
+const STATES: readonly CleanupState[] = ['marked', 'other-mark', 'no-mark', 'unreadable', 'replaced', 'exited'];
+
+/** PowerShell の出力を読む。読めない行は飛ばす */
+export function parseCleanupOutput(stdout: string): CleanupOutput {
+  const output: CleanupOutput = { records: [], timedOut: false };
+  for (const line of stdout.split(/\r?\n/)) {
+    let value: unknown;
+    try { value = JSON.parse(line); } catch { continue; }
+    if (value === null || typeof value !== 'object') continue;
+    const item = value as Record<string, unknown>;
+    if (item.kind === 'unsupported') output.unsupported = String(item.reason);
+    else if (item.kind === 'timing') {
+      output.timing = item.timing as CleanupTiming;
+      output.timedOut = item.timedOut === true;
+      output.passes = Number(item.passes);
+    } else if (item.kind === 'process' && Number.isSafeInteger(item.pid) && STATES.includes(item.state as CleanupState)) {
+      output.records.push(item as unknown as CleanupRecord);
+    }
+  }
+  return output;
+}
+
+const REASONS: Record<string, string> = {
+  'open:5': '権限不足で開けません',
+  'env-too-large': '環境変数の終わりが 1 MiB 以内にありません',
+  'wow64-query': 'WOW64 かどうかを読めません',
+  'peb-query': 'PEB の位置を読めません',
+  'terminate:5': '権限不足で止められません',
+};
+/** PowerShell が返した理由の符号を、利用者に見せる文にする */
+export function describeReason(reason: string | undefined): string {
+  if (!reason) return '理由は分かりません';
+  const known = REASONS[reason];
+  if (known) return known;
+  const [code = '', ...rest] = reason.split(':');
+  const detail = rest.length ? rest.join(':') : undefined;
+  const label: Record<string, string | undefined> = { open: '開けません', 'env-read': '環境変数を読めません', 'params-read': 'PEB から環境変数の位置を読めません', terminate: '止められません', 'unsupported-arch': '対応しない環境です' };
+  const text = label[code];
+  if (!text || detail === undefined) return reason;
+  return `${text}（${code === 'unsupported-arch' ? 'PROCESSOR_ARCHITECTURE=' : 'エラー '}${detail}）`;
+}
 
 /**
- * 一覧の取得・識別・停止・終了の待機を、合わせて limitMs（既定 10 秒）までに行う（REQ-252・REQ-253・REQ-254）。
- * 各手順には残り時間だけを渡し、候補の数によって期限を延ばさない
+ * どれを止めたか、どれを未確認とするかを決める（REQ-252・REQ-254）。
+ * 子孫の可能性があるのは、親の PID が対象の PID か印を持つプロセスの PID のプロセスと、親がもういないプロセスで印を確かめられないもの。
+ * 子孫の可能性があり、印がない・別の印・読めないものは、止めずに未確認とする
+ */
+export function judgeCleanup(target: CleanupTarget, output: CleanupOutput): { confirmed: boolean; stopped: number; problems: string[] } {
+  const problems: string[] = [];
+  if (output.unsupported) return { confirmed: false, stopped: 0, problems: [`印を確かめられないので、何も止めていません：${describeReason(output.unsupported)}`] };
+  const marked = new Set(output.records.filter((r) => r.state === 'marked').map((r) => r.pid));
+  let stopped = 0;
+  for (const r of output.records) {
+    if (r.state === 'marked') {
+      if (r.action === 'terminated' && r.wait === 'exited') stopped++;
+      else if (r.action === 'failed') problems.push(`PID ${r.pid} は${describeReason(r.reason)}`);
+      else problems.push(`PID ${r.pid} は後片付けの上限までに終わりません`);
+      continue;
+    }
+    if (r.state === 'replaced' || r.state === 'exited') continue;
+    const related = r.ppid === target.pid || marked.has(r.ppid);
+    if (!related && !(r.parentGone && r.state === 'unreadable')) continue;
+    if (r.state === 'unreadable') problems.push(`PID ${r.pid} は印を確かめられないので止めていません（${describeReason(r.reason)}）`);
+    else problems.push(`PID ${r.pid} は${r.state === 'other-mark' ? '別の実行の印' : '印'}${r.state === 'other-mark' ? 'を持つ' : 'がない'}ので止めていません（親の PID ${r.ppid}）`);
+  }
+  if (output.timedOut) problems.push('後片付けの上限に達したので、調べ終えていないプロセスがあります');
+  return { confirmed: problems.length === 0, stopped, problems };
+}
+
+/**
+ * PowerShell の起動から探索・識別・停止・待機までを、合わせて limitMs（既定 10 秒）までに行う（REQ-252・REQ-253・REQ-254）。
+ * PowerShell には残り時間を上限として渡し、中には壁時計の期限を渡す。候補の数によって期限を延ばさない
  */
 export function cleanupWindowsOrphans(
-  target: OrphanTarget, observedAt: number, tools: WindowsProcessTools, clock: () => number = monotonicMs, limitMs = CLEANUP_LIMIT_MS,
+  target: CleanupTarget,
+  run: PowerShellRunner = runPowerShell,
+  options: { clock?: () => number; wall?: () => number; limitMs?: number; candidates?: CleanupCandidate[] } = {},
 ): CleanupReport {
+  const clock = options.clock ?? monotonicMs;
+  const limitMs = options.limitMs ?? CLEANUP_LIMIT_MS;
   const started = clock();
-  const deadline = started + limitMs;
-  // 時間切れの診断に、各手順にかかった時間を残す
-  let listMs = 0;
-  const spent = (stopMs?: number) => `一覧の取得 ${Math.round(listMs)}ms${stopMs === undefined ? '' : `、停止と待機 ${Math.round(stopMs)}ms`}`;
-  const timedOut = (step: string, stopMs?: number) => ({ confirmed: false, detail: `後片付けの上限（${limitMs / 1000} 秒）に達しました（${step}。${spent(stopMs)}）` });
-  const listed = tools.list(limitMs);
-  listMs = clock() - started;
-  if (!listed.ok) return listed.timedOut ? timedOut('プロセスの一覧の取得中') : { confirmed: false, detail: `プロセスの一覧を取得できません：${listed.message}` };
-  const plan = planOrphanCleanup(target, observedAt, listed.processes);
-  const problems = [...plan.unverified];
-  let stopMs: number | undefined;
-  if (plan.stop.length > 0) {
-    const left = deadline - clock();
-    if (left <= 0) return timedOut('プロセスの一覧の取得のあと');
-    const stopStarted = clock();
-    const stopped = tools.stop(plan.stop, left);
-    stopMs = clock() - stopStarted;
-    if (!stopped.ok) return stopped.timedOut ? timedOut('停止と終了の待機中', stopMs) : { confirmed: false, detail: `子孫を止められません：${stopped.message}` };
-    for (const request of plan.stop) {
-      const result = stopped.results.find((r) => r.pid === request.pid);
-      if (!result) problems.push(`PID ${request.pid} の停止の結果がありません`);
-      else if (result.result === 'denied' || result.result === 'failed' || result.result === 'alive') {
-        problems.push(`PID ${request.pid} は${RESULT_LABEL[result.result]}${result.message ? `（${result.message}）` : ''}`);
-      }
-    }
+  const input = {
+    mark: target.mark, targetPid: target.pid, fromMs: target.from, slackMs: CLOCK_SLACK_MS,
+    deadlineMs: (options.wall ?? Date.now)() + limitMs, maxPasses: 3, ...(options.candidates ? { candidates: options.candidates } : {}),
+  };
+  const result = run(CLEANUP_SCRIPT, limitMs, { LOOMAKE_CLEANUP_INPUT: JSON.stringify(input) });
+  const elapsed = Math.round(clock() - started);
+  if (!result.ok) {
+    return result.timedOut
+      ? { confirmed: false, detail: `後片付けの上限（${limitMs / 1000} 秒）に達しました（合計 ${elapsed}ms）` }
+      : { confirmed: false, detail: `子孫を探せません：${result.message}（合計 ${elapsed}ms）` };
   }
-  if (problems.length > 0) return { confirmed: false, detail: problems.join('、') };
-  const subject = plan.target === 'alive' ? '対象' : '対象の子';
-  const done = plan.stop.length ? `${subject}と子孫 ${plan.stop.length} 個を止めました` : '止める子孫はありませんでした';
-  return { confirmed: true, detail: `${done}（${spent(stopMs)}）` };
+  const output = parseCleanupOutput(result.stdout);
+  const judged = judgeCleanup(target, output);
+  const t = output.timing;
+  const spent = t
+    ? `PowerShell の起動 ${Math.max(0, Math.round(elapsed - t.total))}ms、宣言 ${t.define}ms、探索 ${t.enumerate}ms、識別 ${t.identify}ms、停止 ${t.stop}ms、待機 ${t.wait}ms、合計 ${elapsed}ms`
+    : `合計 ${elapsed}ms`;
+  if (!output.unsupported && !t) return { confirmed: false, detail: `後片付けの結果を読めません（${spent}）` };
+  if (!judged.confirmed) return { confirmed: false, detail: `${judged.problems.join('、')}（${spent}）` };
+  return { confirmed: true, detail: `${judged.stopped ? `印のあるプロセス ${judged.stopped} 個を止めました` : '止めるプロセスはありませんでした'}（${spent}）` };
 }
 
-// .NET の DateTime.Ticks（0001-01-01 からの 100ns 単位）と Unix 時刻の差
-const EPOCH_TICKS = 621355968000000000n;
-const toTicks = (micros: number) => (BigInt(micros) * 10n + EPOCH_TICKS).toString();
-const fromTicks = (ticks: string) => Number((BigInt(ticks) - EPOCH_TICKS) / 10n);
-
-const LIST_SCRIPT = `$ErrorActionPreference = 'Stop'
-$ProgressPreference = 'SilentlyContinue'
-[Console]::OutputEncoding = [Text.Encoding]::UTF8
-Get-CimInstance -ClassName Win32_Process -Property ProcessId,ParentProcessId,CreationDate | ForEach-Object {
-  if ($_.CreationDate) { '{0} {1} {2}' -f $_.ProcessId, $_.ParentProcessId, $_.CreationDate.ToUniversalTime().Ticks }
-}`;
-
-// 各プロセスのハンドルを開いたまま作成時刻を一覧の値と比べ、一致したものだけを止める。
-// ハンドルを持っている間は PID が再利用されないので、確かめたプロセスと止めるプロセスは同じになる
-const STOP_SCRIPT = `$ErrorActionPreference = 'Stop'
-$ProgressPreference = 'SilentlyContinue'
-[Console]::OutputEncoding = [Text.Encoding]::UTF8
-$data = $env:LOOMAKE_ORPHAN_STOP | ConvertFrom-Json
-$clock = [Diagnostics.Stopwatch]::StartNew()
-function Left { [int][Math]::Max(0, [double]$data.limit - $clock.ElapsedMilliseconds) }
-function Exited($proc) { try { return [bool]$proc.HasExited } catch { return $false } }
-function Clean([string]$text) { ($text -replace '[\\t\\r\\n]+', ' ').Trim() }
-$held = New-Object System.Collections.ArrayList
-$out = New-Object System.Collections.ArrayList
-foreach ($item in $data.items) {
-  $id = [int]$item.pid
-  $p = $null
-  try { $p = [Diagnostics.Process]::GetProcessById($id) } catch { [void]$out.Add("$id\`texited\`t"); continue }
-  try {
-    $null = $p.Handle
-    if (Exited $p) { [void]$out.Add("$id\`texited\`t"); continue }
-    $t = $p.StartTime.ToUniversalTime().Ticks
-    $t = $t - ($t % 10)
-    if ($t -ne [long]$item.ticks) { [void]$out.Add("$id\`treused\`t"); continue }
-    [void]$held.Add(@{ id = $id; p = $p; root = [bool]$item.root; result = '' ; message = '' })
-  } catch {
-    $e = $_.Exception
-    while ($e.InnerException) { $e = $e.InnerException }
-    if (Exited $p) { [void]$out.Add("$id\`texited\`t") }
-    elseif ($e -is [ComponentModel.Win32Exception] -and $e.NativeErrorCode -eq 5) { [void]$out.Add("$id\`tdenied\`t" + (Clean $e.Message)) }
-    else { [void]$out.Add("$id\`tfailed\`t" + (Clean $e.Message)) }
-  }
-}
-foreach ($h in $held) {
-  if (-not $h.root -or (Exited $h.p)) { continue }
-  $info = New-Object Diagnostics.ProcessStartInfo
-  $info.FileName = Join-Path $env:SystemRoot 'System32\\taskkill.exe'
-  $info.Arguments = "/pid $($h.id) /T /F"
-  $info.UseShellExecute = $false
-  $info.CreateNoWindow = $true
-  try {
-    $tk = [Diagnostics.Process]::Start($info)
-    if (-not $tk.WaitForExit([Math]::Min(${TASKKILL_LIMIT_MS}, (Left)))) { try { $tk.Kill() } catch {} }
-  } catch {}
-}
-foreach ($h in $held) {
-  if (Exited $h.p) { continue }
-  try { $h.p.Kill() } catch {
-    $e = $_.Exception
-    while ($e.InnerException) { $e = $e.InnerException }
-    if (-not (Exited $h.p)) {
-      if ($e -is [ComponentModel.Win32Exception] -and $e.NativeErrorCode -eq 5) { $h.result = 'denied' } else { $h.result = 'failed' }
-      $h.message = Clean $e.Message
-    }
-  }
-}
-foreach ($h in $held) {
-  if ($h.result) { [void]$out.Add("$($h.id)\`t$($h.result)\`t$($h.message)"); continue }
-  if ($h.p.WaitForExit((Left))) { [void]$out.Add("$($h.id)\`tstopped\`t") } else { [void]$out.Add("$($h.id)\`talive\`t") }
-}
-$out -join "\`n"`;
-
-/** PowerShell のスクリプトを、上限の時間まで動かす。試験で差し替えられる */
-export type PowerShellRunner = (script: string, timeoutMs: number, env?: NodeJS.ProcessEnv) => { ok: true; stdout: string } | ToolFailure;
-export function runPowerShell(script: string, timeoutMs: number, env?: NodeJS.ProcessEnv, executable = 'powershell.exe'): { ok: true; stdout: string } | ToolFailure {
+/** Windows PowerShell 5.1 でスクリプトのファイルを動かす */
+export function runPowerShell(file: string, timeoutMs: number, env?: NodeJS.ProcessEnv, executable = 'powershell.exe'): { ok: true; stdout: string } | ToolFailure {
   if (timeoutMs <= 0) return { ok: false, timedOut: true, message: '時間がありません' };
-  const result = spawnSync(executable, ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', Buffer.from(script, 'utf16le').toString('base64')], {
+  const result = spawnSync(executable, ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', file], {
     encoding: 'utf8', timeout: Math.ceil(timeoutMs), killSignal: 'SIGKILL', windowsHide: true, maxBuffer: 16 * 1024 * 1024, env: { ...process.env, ...env },
   });
   const error: NodeJS.ErrnoException | undefined = result.error;
@@ -302,56 +245,22 @@ export function runPowerShell(script: string, timeoutMs: number, env?: NodeJS.Pr
   return { ok: true, stdout: result.stdout };
 }
 
-/** PowerShell で一覧を取得し、ハンドルで確かめてから止める、Windows の道具を作る */
-export function createWindowsProcessTools(powershell: PowerShellRunner = runPowerShell): WindowsProcessTools {
-  return {
-    list(timeoutMs) {
-      const result = powershell(LIST_SCRIPT, timeoutMs);
-      if (!result.ok) return result;
-      const processes: ProcessEntry[] = [];
-      for (const line of result.stdout.split(/\r?\n/)) {
-        const match = /^(\d+) (\d+) (\d+)$/.exec(line.trim());
-        if (match) processes.push({ pid: Number(match[1]), ppid: Number(match[2]), created: fromTicks(match[3]) });
-      }
-      if (processes.length === 0) return { ok: false, timedOut: false, message: 'プロセスの一覧が空です' };
-      return { ok: true, processes };
-    },
-    stop(requests, timeoutMs) {
-      // PowerShell の起動と出力のための時間を残して、中の待機の上限を決める
-      const limit = Math.max(0, Math.floor(timeoutMs) - 500);
-      const input = JSON.stringify({ limit, items: requests.map((r) => ({ pid: r.pid, ticks: toTicks(r.created), root: r.root })) });
-      const result = powershell(STOP_SCRIPT, timeoutMs, { LOOMAKE_ORPHAN_STOP: input });
-      if (!result.ok) return result;
-      const results: StopResult[] = [];
-      for (const line of result.stdout.split(/\r?\n/)) {
-        const [pid, kind, message] = line.split('\t');
-        if (!pid || !kind || !/^\d+$/.test(pid)) continue;
-        if (!['stopped', 'exited', 'reused', 'denied', 'failed', 'alive'].includes(kind)) continue;
-        results.push({ pid: Number(pid), result: kind as StopResult['result'], ...(message ? { message } : {}) });
-      }
-      return { ok: true, results };
-    },
-  };
-}
-export const windowsProcessTools = createWindowsProcessTools();
-
 // ---- 監視役が結果を書かずに終わったときの後片付け ----
 
-type TreeCleanup = (pid: number, spawned: { from: number; to: number } | undefined, observedAt: number) => CleanupReport;
+type TreeCleanup = (pid: number, spawned: { from: number; to: number } | undefined, mark: string) => CleanupReport;
 let cleanupOverride: TreeCleanup | undefined;
 /** 試験で、子孫の後片付けを差し替える（停止を確認できない場合を POSIX でも確かめるため）。undefined で元に戻す */
 export function setTreeCleanupForTest(cleanup: TreeCleanup | undefined): void { cleanupOverride = cleanup; }
 
 /**
  * 監視役が結果を書かずに終わったときに、監視役から先に受け取った PID で対象の子孫を止め、停止を確認できたかを返す（REQ-181・REQ-250・REQ-252・REQ-254）。
- * POSIX は監視役と同じくグループへ SIGTERM を送って 250ms 後に SIGKILL する。Windows は作成時刻と親の PID で識別して、10 秒までに止める
+ * POSIX は監視役と同じくグループへ SIGTERM を送って 250ms 後に SIGKILL する。Windows は印で識別して、PowerShell の起動を含めて 10 秒までに止める
  */
-function stopTree(pid: number, spawned: { from: number; to: number } | undefined, observedAt: number): CleanupReport {
-  if (cleanupOverride) return cleanupOverride(pid, spawned, observedAt);
+function stopTree(pid: number, spawned: { from: number; to: number } | undefined, mark: string): CleanupReport {
+  if (cleanupOverride) return cleanupOverride(pid, spawned, mark);
   if (process.platform === 'win32') {
     if (!spawned) return { confirmed: false, detail: '対象の起動の時刻を受け取っていないので、対象を識別できません' };
-    const target: OrphanTarget = { pid, ...spawned };
-    return cleanupWindowsOrphans(target, observedAt, windowsProcessTools);
+    return cleanupWindowsOrphans({ pid, mark, from: spawned.from });
   }
   try { process.kill(-pid, 'SIGTERM'); } catch (error) { return groupGone(error); }
   if (gone(-pid, 250)) return { confirmed: true, detail: 'グループを止めました' };
@@ -389,19 +298,21 @@ export function runExternal(command: string, args: readonly string[], options: E
   positive(timeout);
   const maxBuffer = options.maxBuffer ?? EXTERNAL_OUTPUT_BYTES;
   if (!Number.isSafeInteger(maxBuffer) || maxBuffer <= 0) throw new UsageError('外部操作の出力予算は正の安全な整数にしてください');
+  // 監視役が結果を書かずに終わったときに、対象の子孫を識別する実行ごとの印（REQ-252）。外側の loomake の印は残す
+  const mark = randomBytes(16).toString('hex');
+  const baseEnv = options.env ?? process.env;
+  const env = { ...baseEnv, [SUPERVISOR_MARK_ENV]: appendMark(baseEnv[SUPERVISOR_MARK_ENV], mark) };
   const result = spawnSync(process.execPath, [SUPERVISOR, JSON.stringify([command, args, options.shell ?? false, startedAt + timeout, maxBuffer])], {
-    cwd: options.cwd, env: options.env, stdio: ['ignore', 'pipe', 'pipe', 'pipe'], maxBuffer: Math.max(maxBuffer, 64 * 1024),
+    cwd: options.cwd, env, stdio: ['ignore', 'pipe', 'pipe', 'pipe'], maxBuffer: Math.max(maxBuffer, 64 * 1024),
   });
   // 不正なUTF-8の置換で文字列のバイト数が増えても、公開する文字列の合計は予算以内にする。
   // 起動に失敗すると、型に反して stdout・stderr が null になる
   const output = result as { stdout: Buffer | null; stderr: Buffer | null; output: (Buffer | null)[] | null };
   const stdout = utf8Prefix(output.stdout?.toString('utf8') ?? '', maxBuffer);
   const stderr = utf8Prefix(output.stderr?.toString('utf8') ?? '', maxBuffer - Buffer.byteLength(stdout));
-  // 監視役の終了を受け取った時刻。これより後に作られたプロセスは、対象の子と確かめられない（REQ-252）
-  const observedAt = Date.now();
   const report = readReport(output.output?.[3]?.toString('utf8') ?? '');
   if (result.error) {
-    if (report.pid !== undefined && !report.outcome) stopTree(report.pid, report.spawned, observedAt);
+    if (report.pid !== undefined && !report.outcome) stopTree(report.pid, report.spawned, mark);
     return { status: null, signal: result.signal, stdout, stderr, error: result.error };
   }
   const outcome = report.outcome;
@@ -410,7 +321,7 @@ export function runExternal(command: string, args: readonly string[], options: E
     // 残った子孫を止め、使い方の誤りではなく理由を含む中断として返し、同じ共有予算の後続の操作を止める（REQ-250）
     // 後片付けの 10 秒は共有予算から引かず、期限も延ばさない。結果によらず、同じ共有予算の後続の操作を止める（REQ-253）
     if (budget) budget.state.interrupted = true;
-    const cleanup = report.pid !== undefined ? stopTree(report.pid, report.spawned, observedAt) : undefined;
+    const cleanup = report.pid !== undefined ? stopTree(report.pid, report.spawned, mark) : undefined;
     const ended = result.signal ? `シグナル ${result.signal}` : `終了コード ${String(result.status)}`;
     throw missingResultError(command, stdout, stderr, ended, report.invalid, cleanup);
   }

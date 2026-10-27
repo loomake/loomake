@@ -1,155 +1,161 @@
-import { spawn, spawnSync } from 'node:child_process';
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import {
-  CLEANUP_LIMIT_MS, cleanupWindowsOrphans, planOrphanCleanup, windowsProcessTools,
-  type ProcessEntry, type StopRequest, type StopResult, type WindowsProcessTools,
-} from '../src/runtime/process.js';
-import {
-  ProcessLimitError, createWindowsProcessTools, missingResultError, runExternal, runPowerShell, setTreeCleanupForTest, withProcessBudget, type PowerShellRunner,
+  CLEANUP_LIMIT_MS, ProcessLimitError, SUPERVISOR_MARK_ENV, appendMark, cleanupWindowsOrphans, describeReason, judgeCleanup, missingResultError,
+  parseCleanupOutput, runExternal, runPowerShell, setTreeCleanupForTest, withProcessBudget,
+  type CleanupRecord, type CleanupTarget, type PowerShellRunner,
 } from '../src/runtime/process.js';
 
 vi.setConfig({ testTimeout: 60_000 });
 
-// 対象を起動した時刻（Unix 時刻のミリ秒）。作成時刻はマイクロ秒で持つ
-const T = 1_800_000_000_000;
-const at = (ms: number) => (T + ms) * 1000;
-const target = { pid: 100, from: T, to: T + 5 };
-const observedAt = T + 500;
-const entry = (pid: number, ppid: number, ms: number): ProcessEntry => ({ pid, ppid, created: at(ms) });
+const target: CleanupTarget = { pid: 100, mark: 'a'.repeat(32), from: 1_800_000_000_000 };
+const rec = (pid: number, ppid: number, state: CleanupRecord['state'], extra: Partial<CleanupRecord> = {}): CleanupRecord => (
+  { pid, ppid, created: '134000000000000000', parentGone: false, state, opens: 1, ...extra }
+);
+const stopped = (pid: number, ppid: number): CleanupRecord => rec(pid, ppid, 'marked', { action: 'terminated', wait: 'exited', handle: 8, stopHandle: 8, waitHandle: 8 });
+const timing = { define: 40, enumerate: 300, identify: 100, stop: 8, wait: 9, total: 600 };
+const lines = (records: object[], extra: object = {}) => [...records.map((r) => JSON.stringify({ kind: 'process', ...r })), JSON.stringify({ kind: 'timing', passes: 1, timedOut: false, timing, ...extra })].join('\r\n');
 
-/** 一覧の取得と停止を差し替えた道具。止めた要求を記録し、時計を進められる */
-function fakeTools(processes: ProcessEntry[], options: {
-  listMs?: number; stopMs?: number; list?: ReturnType<WindowsProcessTools['list']>; results?: (r: StopRequest) => StopResult; stop?: ReturnType<WindowsProcessTools['stop']>;
-} = {}) {
-  let now = 0;
-  const calls: { list: number[]; stop: { requests: StopRequest[]; timeoutMs: number }[] } = { list: [], stop: [] };
-  const tools: WindowsProcessTools = {
-    list(timeoutMs) { calls.list.push(timeoutMs); now += options.listMs ?? 0; return options.list ?? { ok: true, processes }; },
-    stop(requests, timeoutMs) {
-      calls.stop.push({ requests, timeoutMs }); now += options.stopMs ?? 0;
-      return options.stop ?? { ok: true, results: requests.map((r) => options.results?.(r) ?? { pid: r.pid, result: 'stopped' }) };
-    },
-  };
-  return { tools, calls, clock: () => now };
+/** PowerShell の実行を差し替える。渡された上限と入力を記録する */
+function fake(result: ReturnType<PowerShellRunner>) {
+  const calls: { file: string; timeoutMs: number; input: Record<string, unknown> }[] = [];
+  const run: PowerShellRunner = (file, timeoutMs, env) => { calls.push({ file, timeoutMs, input: JSON.parse(env?.LOOMAKE_CLEANUP_INPUT ?? '{}') as Record<string, unknown> }); return result; };
+  return { run, calls };
 }
 
-describe('Windows で親のいない子孫の識別', () => {
-  it('[REQ-252] 対象が不在なら、対象の PID を親に持ち、対象のあとに作られた子とその子孫だけを止める', () => {
-    const processes = [entry(200, 100, 30), entry(300, 200, 40), entry(400, 100, -1000), entry(500, 999, 50), entry(600, 200, -2000)];
-    const { tools, calls, clock } = fakeTools(processes);
-    const report = cleanupWindowsOrphans(target, observedAt, tools, clock);
-    expect(calls.stop).toHaveLength(1);
-    expect(calls.stop[0]!.requests).toEqual([{ pid: 200, created: at(30), root: true }, { pid: 300, created: at(40), root: false }]);
-    expect(report.confirmed).toBe(true);
-    expect(planOrphanCleanup(target, observedAt, processes).target).toBe('gone');
+describe('Windows の後片付けの判定（印による識別）', () => {
+  it('[REQ-252] 印を確かめて止め、終了を確かめたプロセスだけなら、停止を確認できたと返し、各手順の時間を残す', () => {
+    const { run, calls } = fake({ ok: true, stdout: lines([stopped(200, 100), stopped(300, 200), rec(400, 999, 'no-mark', { parentGone: true })]) });
+    let now = 0;
+    const report = cleanupWindowsOrphans(target, run, { clock: () => (now += 700), wall: () => 5_000 });
+    expect(report.confirmed, report.detail).toBe(true);
+    expect(report.detail).toBe('印のあるプロセス 2 個を止めました（PowerShell の起動 100ms、宣言 40ms、探索 300ms、識別 100ms、停止 8ms、待機 9ms、合計 700ms）');
+    expect(calls[0]!.file).toMatch(/[\\/]supervisor[\\/]windows-cleanup\.ps1$/);
+    expect(calls[0]!.input).toMatchObject({ mark: target.mark, targetPid: 100, fromMs: target.from, slackMs: 50, deadlineMs: 5_000 + CLEANUP_LIMIT_MS, maxPasses: 3 });
   });
-  it('[REQ-252] 対象の PID の作成時刻が起動の範囲にあれば、対象がまだ動いているとして対象とその子孫を止める', () => {
-    const processes = [entry(100, 1, 2), entry(200, 100, 30)];
-    const plan = planOrphanCleanup(target, observedAt, processes);
-    expect(plan.target).toBe('alive');
-    expect(plan.stop).toEqual([{ pid: 100, created: at(2), root: true }, { pid: 200, created: at(30), root: false }]);
+  it('[REQ-252] P1 の順：対象の PID を親に持つ印のない子は止めず、未確認として返す', () => {
+    // 対象が終わったあと、同じ PID を取った別のプロセスが作り、その親も終わった子。印がない
+    const output = parseCleanupOutput(lines([rec(6940, 100, 'no-mark', { parentGone: true })]));
+    const judged = judgeCleanup(target, output);
+    expect(judged).toEqual({ confirmed: false, stopped: 0, problems: ['PID 6940 は印がないので止めていません（親の PID 100）'] });
   });
-  it('[REQ-252] 対象の PID が再利用されていたら、再利用したプロセスとそのあとに作られた子を止めず、理由を残す', () => {
-    // 100 は対象の範囲の外（300ms 後）に作られた別のプロセス。200 はそれより前に作られた対象の子
-    const processes = [entry(100, 1, 300), entry(200, 100, 30), entry(700, 100, 350), entry(800, 100, 900)];
-    const { tools, calls, clock } = fakeTools(processes);
-    const report = cleanupWindowsOrphans(target, observedAt, tools, clock);
-    expect(planOrphanCleanup(target, observedAt, processes).target).toBe('reused');
-    expect(calls.stop[0]!.requests.map((r) => r.pid)).toEqual([200]);
-    expect(report.confirmed).toBe(false);
-    expect(report.detail).toContain('PID 700 は、対象の PID 100 を再利用したプロセスの子か確かめられません');
-    expect(report.detail).toContain('PID 800 は監視役の終了を受け取ったあとに作られ');
+  it('[REQ-252] 印を持つプロセスの子で、印を消したか別の印を持つものは止めず、未確認として返す', () => {
+    const judged = judgeCleanup(target, parseCleanupOutput(lines([stopped(200, 100), rec(300, 200, 'no-mark'), rec(400, 200, 'other-mark')])));
+    expect(judged.confirmed).toBe(false);
+    expect(judged.stopped).toBe(1);
+    expect(judged.problems).toEqual(['PID 300 は印がないので止めていません（親の PID 200）', 'PID 400 は別の実行の印を持つので止めていません（親の PID 200）']);
   });
-  it('[REQ-252] 時計の刻みの差（50ms）までは、起動の直前より前の作成時刻も対象の子とみなし、それより前は前の持ち主の子として扱わない', () => {
-    const plan = planOrphanCleanup(target, observedAt, [entry(200, 100, -40), entry(300, 100, -60)]);
-    expect(plan.stop.map((r) => r.pid)).toEqual([200]);
-    expect(plan.unverified).toEqual([]);
+  it('[REQ-252][REQ-254] 子孫の可能性がある読めないプロセスと、親がもういない読めないプロセスは、止めずに理由つきで返す', () => {
+    const judged = judgeCleanup(target, parseCleanupOutput(lines([
+      rec(200, 100, 'unreadable', { reason: 'open:5' }),
+      rec(300, 4242, 'unreadable', { reason: 'env-read:299', parentGone: true }),
+      rec(400, 4242, 'unreadable', { reason: 'open:5', parentGone: false }),
+    ])));
+    expect(judged.problems).toEqual([
+      'PID 200 は印を確かめられないので止めていません（権限不足で開けません）',
+      'PID 300 は印を確かめられないので止めていません（環境変数を読めません（エラー 299））',
+    ]);
   });
-  it('[REQ-252] 子孫は親より後に作られたものだけをたどり、自分自身は止めない', () => {
-    const plan = planOrphanCleanup(target, observedAt, [entry(200, 100, 30), entry(300, 200, 10), entry(400, 200, 60)], 400);
-    expect(plan.stop.map((r) => r.pid)).toEqual([200]);
+  it('[REQ-252] 親がもういないプロセスで印がないと読めたもの、入れ替わったもの、終わっていたものは扱わない', () => {
+    const judged = judgeCleanup(target, parseCleanupOutput(lines([rec(200, 4242, 'no-mark', { parentGone: true }), rec(300, 100, 'replaced'), rec(400, 100, 'exited')])));
+    expect(judged).toEqual({ confirmed: true, stopped: 0, problems: [] });
   });
-  it('[REQ-252] 列挙から停止までの間に PID が再利用されたものは止めず、元のプロセスは終わったものとして扱う', () => {
-    const { tools, calls, clock } = fakeTools([entry(200, 100, 30)], { results: (r) => ({ pid: r.pid, result: 'reused' }) });
-    const report = cleanupWindowsOrphans(target, observedAt, tools, clock);
-    // 止める側には一覧の作成時刻を渡し、ハンドルで同じプロセスか確かめさせる
-    expect(calls.stop[0]!.requests).toEqual([{ pid: 200, created: at(30), root: true }]);
-    expect(report.confirmed).toBe(true);
+  it('[REQ-254] 印のあるプロセスを止められないか、期限までに終わらなければ、停止を確認できないと返す', () => {
+    const judged = judgeCleanup(target, parseCleanupOutput(lines([
+      rec(200, 100, 'marked', { action: 'failed', reason: 'terminate:5' }),
+      rec(300, 100, 'marked', { action: 'terminated', wait: 'timeout' }),
+    ])));
+    expect(judged.problems).toEqual(['PID 200 は権限不足で止められません', 'PID 300 は後片付けの上限までに終わりません']);
   });
-  it('[REQ-252] 止める子孫がなければ停止の手順を呼ばない', () => {
-    const { tools, calls, clock } = fakeTools([entry(500, 999, 50)]);
-    expect(cleanupWindowsOrphans(target, observedAt, tools, clock)).toMatchObject({ confirmed: true });
-    expect(calls.stop).toHaveLength(0);
+  it('[REQ-252][REQ-254] 対応しない環境では何も止めず、未確認として返す', () => {
+    const { run } = fake({ ok: true, stdout: JSON.stringify({ kind: 'unsupported', reason: 'unsupported-arch:ARM64' }) });
+    const report = cleanupWindowsOrphans(target, run, { clock: () => 0 });
+    expect(report).toEqual({ confirmed: false, detail: '印を確かめられないので、何も止めていません：対応しない環境です（PROCESSOR_ARCHITECTURE=ARM64）（合計 0ms）' });
   });
 });
 
-describe('後片付けの上限と、停止を確認できない結果', () => {
-  it('[REQ-253][REQ-254] 一覧の取得に失敗したら何も止めず、停止を確認できないと返す', () => {
-    const { tools, calls, clock } = fakeTools([], { list: { ok: false, timedOut: false, message: 'アクセスが拒否されました' } });
-    const report = cleanupWindowsOrphans(target, observedAt, tools, clock);
-    expect(report).toEqual({ confirmed: false, detail: 'プロセスの一覧を取得できません：アクセスが拒否されました' });
-    expect(calls.stop).toHaveLength(0);
+describe('Windows の後片付けの上限と失敗', () => {
+  it('[REQ-253] PowerShell の起動を含めて全体の上限だけを 1 回で渡し、候補の数で延ばさない', () => {
+    const { run, calls } = fake({ ok: true, stdout: lines([1, 2, 3, 4, 5].map((n) => stopped(200 + n, 100))) });
+    cleanupWindowsOrphans(target, run, { clock: () => 0, wall: () => 1_000 });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]!.timeoutMs).toBe(CLEANUP_LIMIT_MS);
+    expect(calls[0]!.input.deadlineMs).toBe(1_000 + CLEANUP_LIMIT_MS);
   });
-  it('[REQ-253][REQ-254] 一覧の取得が時間切れなら、時間切れを理由に停止を確認できないと返す', () => {
-    const { tools, calls, clock } = fakeTools([], { list: { ok: false, timedOut: true, message: 'ETIMEDOUT' } });
-    const report = cleanupWindowsOrphans(target, observedAt, tools, clock);
-    expect(calls.list).toEqual([CLEANUP_LIMIT_MS]);
+  it('[REQ-253][REQ-254] PowerShell が上限で打ち切られたら、時間切れとして停止を確認できないと返す', () => {
+    const { run } = fake({ ok: false, timedOut: true, message: 'ETIMEDOUT' });
+    let now = 0;
+    expect(cleanupWindowsOrphans(target, run, { clock: () => (now += 10_050) })).toEqual({ confirmed: false, detail: '後片付けの上限（10 秒）に達しました（合計 10050ms）' });
+  });
+  it('[REQ-253][REQ-254] PowerShell の中で期限に達して調べ終えなかったら、停止を確認できないと返す', () => {
+    const { run } = fake({ ok: true, stdout: lines([stopped(200, 100)], { timedOut: true }) });
+    const report = cleanupWindowsOrphans(target, run, { clock: () => 0 });
     expect(report.confirmed).toBe(false);
-    expect(report.detail).toContain('後片付けの上限（10 秒）に達しました（プロセスの一覧の取得中。一覧の取得 0ms）');
+    expect(report.detail).toContain('後片付けの上限に達したので、調べ終えていないプロセスがあります');
   });
-  it('[REQ-253] 候補が多くても、停止には全体の残り時間だけを 1 回で渡し、期限を延ばさない', () => {
-    const processes = [1, 2, 3, 4, 5].map((n) => entry(200 + n, 100, 30 + n));
-    const { tools, calls, clock } = fakeTools(processes, { listMs: 9_600 });
-    cleanupWindowsOrphans(target, observedAt, tools, clock);
-    expect(calls.stop).toHaveLength(1);
-    expect(calls.stop[0]!.requests).toHaveLength(5);
-    expect(calls.stop[0]!.timeoutMs).toBe(400);
+  it('[REQ-253][REQ-254] PowerShell が失敗するか、結果を読めなければ、探索の失敗として返す', () => {
+    expect(cleanupWindowsOrphans(target, fake({ ok: false, timedOut: false, message: 'spawn powershell.exe ENOENT' }).run, { clock: () => 0 }))
+      .toEqual({ confirmed: false, detail: '子孫を探せません：spawn powershell.exe ENOENT（合計 0ms）' });
+    expect(cleanupWindowsOrphans(target, fake({ ok: true, stdout: 'ごみ' }).run, { clock: () => 0 }))
+      .toEqual({ confirmed: false, detail: '後片付けの結果を読めません（合計 0ms）' });
   });
-  it('[REQ-253][REQ-254] 一覧の取得で上限を使い切ったら止めずに打ち切り、停止が時間切れでも停止を確認できないと返す', () => {
-    const spent = fakeTools([entry(200, 100, 30)], { listMs: CLEANUP_LIMIT_MS });
-    expect(cleanupWindowsOrphans(target, observedAt, spent.tools, spent.clock)).toMatchObject({ confirmed: false, detail: expect.stringContaining('後片付けの上限') });
-    expect(spent.calls.stop).toHaveLength(0);
-    const slow = fakeTools([entry(200, 100, 30)], { stop: { ok: false, timedOut: true, message: 'ETIMEDOUT' } });
-    expect(cleanupWindowsOrphans(target, observedAt, slow.tools, slow.clock)).toMatchObject({ confirmed: false, detail: expect.stringContaining('停止と終了の待機中') });
+  it('[REQ-253][REQ-254] PowerShell を起動できない・残り時間がない・失敗したときは、時間切れと区別して返す', () => {
+    expect(runPowerShell('x.ps1', 0)).toEqual({ ok: false, timedOut: true, message: '時間がありません' });
+    expect(runPowerShell('x.ps1', 5_000, undefined, 'loomake-missing-powershell-req253')).toMatchObject({ ok: false, timedOut: false });
+    expect(runPowerShell('x.ps1', 5_000, undefined, process.execPath)).toMatchObject({ ok: false, timedOut: false, message: expect.stringContaining('PowerShell の終了コード') });
   });
-  it('[REQ-254] 権限不足・失敗・残ったプロセスは、停止を確認できない理由として区別して返す', () => {
-    const results: Record<number, StopResult> = {
-      200: { pid: 200, result: 'denied', message: 'アクセスが拒否されました。' },
-      300: { pid: 300, result: 'alive' },
-      400: { pid: 400, result: 'failed', message: '不明' },
-    };
-    const { tools, clock } = fakeTools([entry(200, 100, 30), entry(300, 100, 31), entry(400, 100, 32)], { results: (r) => results[r.pid]! });
-    const report = cleanupWindowsOrphans(target, observedAt, tools, clock);
-    expect(report.confirmed).toBe(false);
-    expect(report.detail).toContain('PID 200 は権限不足で止められません（アクセスが拒否されました。）');
-    expect(report.detail).toContain('PID 300 は後片付けの上限までに終わりません');
-    expect(report.detail).toContain('PID 400 は止められません（不明）');
+  it('[REQ-254] PowerShell が返した理由の符号を、利用者に見せる文にする', () => {
+    expect(describeReason('open:5')).toBe('権限不足で開けません');
+    expect(describeReason('open:6')).toBe('開けません（エラー 6）');
+    expect(describeReason('params-read:299')).toBe('PEB から環境変数の位置を読めません（エラー 299）');
+    expect(describeReason('env-too-large')).toBe('環境変数の終わりが 1 MiB 以内にありません');
+    expect(describeReason(undefined)).toBe('理由は分かりません');
+    expect(describeReason('mystery')).toBe('mystery');
   });
   it('[REQ-250][REQ-254] 停止を確認できない中断は、停止を確認できた中断と理由で区別する', () => {
-    const confirmed = missingResultError('lint', '', '', '終了コード 1', false, { confirmed: true, detail: '対象の子と子孫 1 個を止めました' });
-    const unconfirmed = missingResultError('lint', '', '', '終了コード 1', false, { confirmed: false, detail: 'プロセスの一覧を取得できません：x' });
+    const confirmed = missingResultError('lint', '', '', '終了コード 1', false, { confirmed: true, detail: '印のあるプロセス 1 個を止めました' });
+    const unconfirmed = missingResultError('lint', '', '', '終了コード 1', false, { confirmed: false, detail: '子孫を探せません：x' });
     for (const error of [confirmed, unconfirmed]) {
       expect(error).toBeInstanceOf(ProcessLimitError);
       expect(error.kind).toBe('interrupted');
     }
     expect(confirmed.reason).toBe('監視役が結果を書かずに終了しました（終了コード 1）');
-    expect(unconfirmed.reason).toBe('監視役が結果を書かずに終了しました（終了コード 1）。子孫の停止を確認できません：プロセスの一覧を取得できません：x');
-    expect(unconfirmed.message).toContain('子孫の停止を確認できません');
-    expect(unconfirmed.cleanup).toEqual({ confirmed: false, detail: 'プロセスの一覧を取得できません：x' });
+    expect(unconfirmed.reason).toBe('監視役が結果を書かずに終了しました（終了コード 1）。子孫の停止を確認できません：子孫を探せません：x');
+    expect(unconfirmed.cleanup).toEqual({ confirmed: false, detail: '子孫を探せません：x' });
+  });
+});
+
+describe('対象の環境の印', () => {
+  it('[REQ-252] 外側の印を残したまま、実行ごとの印を足す', () => {
+    expect(appendMark(undefined, 'b')).toBe('b');
+    expect(appendMark('', 'b')).toBe('b');
+    expect(appendMark('a', 'b')).toBe('a;b');
+  });
+  it('[REQ-252] runExternal は対象の環境に実行ごとの印を足し、外側の印を残す', () => {
+    const show = ['-e', `process.stdout.write(process.env.${SUPERVISOR_MARK_ENV} ?? '')`];
+    const env = { ...process.env };
+    delete env[SUPERVISOR_MARK_ENV];
+    const first = runExternal(process.execPath, show, { env }).stdout;
+    const second = runExternal(process.execPath, show, { env }).stdout;
+    expect(first).toMatch(/^[0-9a-f]{32}$/);
+    expect(second).toMatch(/^[0-9a-f]{32}$/);
+    expect(second).not.toBe(first);
+    expect(runExternal(process.execPath, show, { env: { ...env, [SUPERVISOR_MARK_ENV]: 'outer' } }).stdout).toMatch(/^outer;[0-9a-f]{32}$/);
   });
   it('[REQ-252][REQ-253][REQ-254] 後片付けで停止を確認できなくても中断として返し、同じ共有予算の次の操作を起動しない', () => {
     const dir = realpathSync(mkdtempSync(join(tmpdir(), 'loomake-orphans ')));
-    const seen: { pid: number; spawned?: { from: number; to: number }; observedAt: number }[] = [];
+    const seen: { pid: number; spawned?: { from: number; to: number }; mark: string }[] = [];
     try {
-      setTreeCleanupForTest((pid, spawned, observed) => {
-        seen.push({ pid, spawned, observedAt: observed });
+      setTreeCleanupForTest((pid, spawned, mark) => {
+        seen.push({ pid, spawned, mark });
         // 試験の後片付けとして、残った対象を止めてから「確認できない」と返す
         if (process.platform === 'win32') spawnSync('taskkill', ['/pid', String(pid), '/T', '/F'], { stdio: 'ignore' });
         else try { process.kill(-pid, 'SIGKILL'); } catch { /* すでに終わっている */ }
-        return { confirmed: false, detail: 'プロセスの一覧を取得できません：試験' };
+        return { confirmed: false, detail: '子孫を探せません：試験' };
       });
       const after = join(dir, 'after');
       const started = Date.now();
@@ -158,57 +164,19 @@ describe('後片付けの上限と、停止を確認できない結果', () => {
         try { runExternal(process.execPath, ['-e', "process.kill(process.ppid,'SIGKILL');setInterval(()=>{},100)"]); } catch (e) { error = e; }
         expect(error).toBeInstanceOf(ProcessLimitError);
         expect((error as ProcessLimitError).kind).toBe('interrupted');
-        expect((error as ProcessLimitError).reason).toContain('子孫の停止を確認できません：プロセスの一覧を取得できません：試験');
+        expect((error as ProcessLimitError).reason).toContain('子孫の停止を確認できません：子孫を探せません：試験');
         expect(() => runExternal(process.execPath, ['-e', `require('node:fs').writeFileSync(${JSON.stringify(after)},'x')`])).toThrow('中断');
       });
       expect(existsSync(after)).toBe(false);
-      // 監視役は対象の PID と、起動の直前と直後の時刻を渡し、親は監視役の終了を受け取った時刻を記録する
+      // 監視役は対象の PID と起動の直前・直後の時刻を渡し、親は同じ実行の印で後片付けする
       expect(seen).toHaveLength(1);
       expect(seen[0]!.spawned!.from).toBeGreaterThanOrEqual(started - 1);
       expect(seen[0]!.spawned!.from).toBeLessThanOrEqual(seen[0]!.spawned!.to);
-      expect(seen[0]!.observedAt).toBeGreaterThanOrEqual(seen[0]!.spawned!.to);
+      expect(seen[0]!.mark).toMatch(/^[0-9a-f]{32}$/);
     } finally {
       setTreeCleanupForTest(undefined);
       rmSync(dir, { recursive: true, force: true });
     }
-  });
-});
-
-describe('Windows の一覧の取得と停止の結果の読み取り', () => {
-  // DateTime.Ticks（0001-01-01 からの 100ns 単位）
-  const ticks = (micros: number) => (BigInt(micros) * 10n + 621355968000000000n).toString();
-  it('[REQ-252] 一覧の行から PID・親の PID・作成時刻を読み、読めない行は飛ばす', () => {
-    const calls: { script: string; timeoutMs: number }[] = [];
-    const run: PowerShellRunner = (script, timeoutMs) => { calls.push({ script, timeoutMs }); return { ok: true, stdout: `200 100 ${ticks(at(30))}\r\nごみ\r\n300 200 ${ticks(at(40))}\r\n` }; };
-    const listed = createWindowsProcessTools(run).list(7_000);
-    expect(listed).toEqual({ ok: true, processes: [entry(200, 100, 30), entry(300, 200, 40)] });
-    expect(calls[0]!.timeoutMs).toBe(7_000);
-    expect(calls[0]!.script).toContain('Win32_Process');
-  });
-  it('[REQ-253][REQ-254] 一覧が空か、PowerShell が失敗・時間切れなら、一覧を取得できないと返す', () => {
-    expect(createWindowsProcessTools(() => ({ ok: true, stdout: '' })).list(1000)).toEqual({ ok: false, timedOut: false, message: 'プロセスの一覧が空です' });
-    const failure = { ok: false as const, timedOut: true, message: 'ETIMEDOUT' };
-    expect(createWindowsProcessTools(() => failure).list(1000)).toBe(failure);
-    expect(createWindowsProcessTools(() => failure).stop([], 1000)).toBe(failure);
-  });
-  it('[REQ-252][REQ-253] 停止には作成時刻を Ticks で渡し、待機の上限を残り時間より短くして、結果の行を読む', () => {
-    let input = '';
-    let limit = 0;
-    const run: PowerShellRunner = (script, timeoutMs, env) => {
-      input = env?.LOOMAKE_ORPHAN_STOP ?? ''; limit = timeoutMs;
-      return { ok: true, stdout: '200\tstopped\t\r\n300\tdenied\tアクセスが拒否されました。\r\n400\tunknown\t\r\nx\ty\n' };
-    };
-    const stopped = createWindowsProcessTools(run).stop([{ pid: 200, created: at(30), root: true }, { pid: 300, created: at(40), root: false }], 3_000);
-    expect(stopped).toEqual({ ok: true, results: [{ pid: 200, result: 'stopped' }, { pid: 300, result: 'denied', message: 'アクセスが拒否されました。' }] });
-    expect(limit).toBe(3_000);
-    expect(JSON.parse(input)).toEqual({ limit: 2_500, items: [{ pid: 200, ticks: ticks(at(30)), root: true }, { pid: 300, ticks: ticks(at(40)), root: false }] });
-  });
-  it('[REQ-253][REQ-254] PowerShell を起動できない・残り時間がない・失敗したときは、時間切れと区別して返す', () => {
-    expect(runPowerShell('exit 0', 0)).toEqual({ ok: false, timedOut: true, message: '時間がありません' });
-    const missing = runPowerShell('exit 0', 5_000, undefined, 'loomake-missing-powershell-req253');
-    expect(missing).toMatchObject({ ok: false, timedOut: false });
-    const failing = runPowerShell('', 5_000, undefined, process.execPath);
-    expect(failing).toMatchObject({ ok: false, timedOut: false, message: expect.stringContaining('PowerShell の終了コード') });
   });
 });
 
@@ -218,47 +186,138 @@ function waitFor(check: () => boolean, ms: number) {
   while (!check()) { if (Date.now() > until) return false; Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 20); }
   return true;
 }
+const newMark = () => randomBytes(16).toString('hex');
+const envWith = (mark?: string) => { const env = { ...process.env }; delete env[SUPERVISOR_MARK_ENV]; if (mark) env[SUPERVISOR_MARK_ENV] = mark; return env; };
+/** 実際の PowerShell で後片付けし、出力も返す */
+function cleanupWithOutput(t: CleanupTarget, options: Parameters<typeof cleanupWindowsOrphans>[2] = {}) {
+  let stdout = '';
+  const run: PowerShellRunner = (file, timeoutMs, env) => { const r = runPowerShell(file, timeoutMs, env); if (r.ok) stdout = r.stdout; return r; };
+  const report = cleanupWindowsOrphans(t, run, options);
+  // 10 秒の上限に対して各手順にかかった時間を CI の記録に残す
+  console.info(`[REQ-253] 後片付けの結果：${JSON.stringify(report)}`);
+  return { report, output: parseCleanupOutput(stdout) };
+}
+/** cmd.exe を標準入力で操作し、コマンドを流すたびに、終わった合図の行を待つ */
+function interactiveCmd(exe: string, mark: string) {
+  const child: ChildProcess = spawn(exe, ['/d', '/q', '/k'], { stdio: ['pipe', 'pipe', 'ignore'], env: envWith(mark) });
+  let out = '';
+  child.stdout!.on('data', (d: Buffer) => { out += d.toString('latin1'); });
+  let n = 0;
+  const send = (command: string) => {
+    const token = `loomake-done-${++n}`;
+    child.stdin!.write(`${command}\r\necho ${token}\r\n`);
+    return token;
+  };
+  return { child, send, out: () => out };
+}
 
-describe.runIf(process.platform === 'win32')('Windows の実際のプロセスの一覧と停止', () => {
-  it('[REQ-252][REQ-254] cmd.exe が先に終わって残った孫を、作成時刻と親の PID で識別して止める', () => {
+describe.runIf(process.platform === 'win32')('Windows の実際の後片付け', () => {
+  it('[REQ-252][REQ-254] cmd.exe が先に終わって残った孫を、印で識別し、識別したのと同じハンドルで止めて待つ', () => {
     const dir = realpathSync(mkdtempSync(join(tmpdir(), 'loomake-orphans ')));
     try {
+      const mark = newMark();
       const file = join(dir, 'leaf');
       const script = join(dir, 'leaf.cjs');
       writeFileSync(script, `require('node:fs').writeFileSync(${JSON.stringify(file)},String(process.pid));setInterval(()=>{},100)`);
       // 監視役と同じく shell で起動し、cmd.exe の子として孫を動かす
       const from = Date.now();
-      const shell = spawn(`"${process.execPath}" "${script}"`, { shell: true, stdio: 'ignore' });
-      const to = Date.now();
+      const shell = spawn(`"${process.execPath}" "${script}"`, { shell: true, stdio: 'ignore', env: envWith(mark) });
       expect(waitFor(() => existsSync(file) && readFileSync(file, 'utf8') !== '', 15_000)).toBe(true);
       const leafPid = Number(readFileSync(file, 'utf8'));
-      // cmd.exe だけを止め、孫を親のいない状態にする
       process.kill(shell.pid!, 'SIGKILL');
       expect(waitFor(() => !alive(shell.pid!), 5_000)).toBe(true);
       expect(alive(leafPid)).toBe(true);
       const started = Date.now();
-      const report = cleanupWindowsOrphans({ pid: shell.pid!, from, to }, Date.now(), windowsProcessTools);
-      // 10 秒の上限に対して各手順にかかった時間を CI の記録に残す
-      console.info(`[REQ-253] 後片付けの結果：${JSON.stringify(report)}`);
-      expect(report, JSON.stringify(report)).toMatchObject({ confirmed: true });
+      const { report, output } = cleanupWithOutput({ pid: shell.pid!, mark, from });
+      expect(report.confirmed, report.detail).toBe(true);
       expect(alive(leafPid)).toBe(false);
       expect(Date.now() - started).toBeLessThanOrEqual(CLEANUP_LIMIT_MS + 1000);
+      // PID で開き直さず、識別・停止・待機に同じハンドルを使う
+      const leaf = output.records.find((r) => r.pid === leafPid);
+      expect(leaf).toMatchObject({ state: 'marked', bits: 64, opens: 1, action: 'terminated', wait: 'exited' });
+      expect(leaf!.stopHandle).toBe(leaf!.handle);
+      expect(leaf!.waitHandle).toBe(leaf!.handle);
     } finally { rmSync(dir, { recursive: true, force: true }); }
   });
-  it('[REQ-252] 一覧の作成時刻と一致しないプロセスは、PID が同じでも止めない', () => {
-    const child = spawn(process.execPath, ['-e', 'setInterval(()=>{},100)'], { stdio: 'ignore' });
+  it('[REQ-252] P1 の順：印のない親が作った子は、その親の PID を対象としても止めず、未確認として返す', () => {
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), 'loomake-orphans ')));
+    let childPid = 0;
     try {
-      const listed = windowsProcessTools.list(CLEANUP_LIMIT_MS);
-      expect(listed.ok, JSON.stringify(listed)).toBe(true);
-      const own = listed.ok ? listed.processes.find((p) => p.pid === child.pid) : undefined;
-      expect(own).toBeDefined();
-      // 作成時刻を 1 秒ずらし、列挙のあとに PID が再利用された場合と同じにする
-      const stopped = windowsProcessTools.stop([{ pid: child.pid!, created: own!.created - 1_000_000, root: true }], CLEANUP_LIMIT_MS);
-      expect(stopped, JSON.stringify(stopped)).toEqual({ ok: true, results: [{ pid: child.pid, result: 'reused' }] });
+      const file = join(dir, 'child');
+      const from = Date.now();
+      const code = `const c=require('node:child_process').spawn(process.execPath,['-e','setInterval(()=>{},100)'],{detached:true,stdio:'ignore'});c.unref();require('node:fs').writeFileSync(${JSON.stringify(file)},String(c.pid));`;
+      const parent = spawn(process.execPath, ['-e', code], { stdio: 'ignore', env: envWith(undefined) });
+      expect(waitFor(() => existsSync(file) && readFileSync(file, 'utf8') !== '', 15_000)).toBe(true);
+      expect(waitFor(() => !alive(parent.pid!), 5_000)).toBe(true);
+      childPid = Number(readFileSync(file, 'utf8'));
+      const { report, output } = cleanupWithOutput({ pid: parent.pid!, mark: newMark(), from });
+      expect(alive(childPid)).toBe(true);
+      expect(output.records.find((r) => r.pid === childPid)).toMatchObject({ state: 'no-mark', ppid: parent.pid, parentGone: true });
+      expect(report.confirmed).toBe(false);
+      expect(report.detail).toContain(`PID ${childPid} は印がないので止めていません（親の PID ${parent.pid}）`);
+    } finally {
+      if (childPid) try { process.kill(childPid, 'SIGKILL'); } catch { /* すでに終わっている */ }
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+  it.each([
+    ['64', join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'cmd.exe'), 64],
+    ['WOW64', join(process.env.SystemRoot ?? 'C:\\Windows', 'SysWOW64', 'cmd.exe'), 32],
+  ])('[REQ-252] %s ビットの cmd.exe が起動後に印を別の値に変えるか消したら、変えたあとの環境を読んで止めない', (_name, exe, bits) => {
+    const mark = newMark();
+    const from = Date.now();
+    const cmd = interactiveCmd(exe, mark);
+    try {
+      let token = cmd.send('ver');
+      expect(waitFor(() => cmd.out().includes(token), 10_000)).toBe(true);
+      token = cmd.send(`set ${SUPERVISOR_MARK_ENV}=${newMark()}`);
+      expect(waitFor(() => cmd.out().includes(token), 10_000)).toBe(true);
+      const changed = cleanupWithOutput({ pid: cmd.child.pid!, mark, from });
+      expect(changed.output.records.find((r) => r.pid === cmd.child.pid), changed.report.detail).toMatchObject({ state: 'other-mark', bits });
+      expect(alive(cmd.child.pid!)).toBe(true);
+      token = cmd.send(`set ${SUPERVISOR_MARK_ENV}=`);
+      expect(waitFor(() => cmd.out().includes(token), 10_000)).toBe(true);
+      const removed = cleanupWithOutput({ pid: cmd.child.pid!, mark, from });
+      expect(removed.output.records.find((r) => r.pid === cmd.child.pid), removed.report.detail).toMatchObject({ state: 'no-mark', bits });
+      expect(alive(cmd.child.pid!)).toBe(true);
+    } finally { cmd.child.kill('SIGKILL'); }
+  });
+  it('[REQ-252] 印を変えていない WOW64 の cmd.exe は、32 ビットの側の環境で印を確かめて止める', () => {
+    const mark = newMark();
+    const from = Date.now();
+    const cmd = interactiveCmd(join(process.env.SystemRoot ?? 'C:\\Windows', 'SysWOW64', 'cmd.exe'), mark);
+    try {
+      const token = cmd.send('ver');
+      expect(waitFor(() => cmd.out().includes(token), 10_000)).toBe(true);
+      const { report, output } = cleanupWithOutput({ pid: 999_999, mark, from });
+      expect(report.confirmed, report.detail).toBe(true);
+      expect(output.records.find((r) => r.pid === cmd.child.pid)).toMatchObject({ state: 'marked', bits: 32, action: 'terminated', wait: 'exited' });
+      expect(waitFor(() => !alive(cmd.child.pid!), 2_000)).toBe(true);
+    } finally { cmd.child.kill('SIGKILL'); }
+  });
+  it('[REQ-252] 列挙のあとに入れ替わった（作成時刻の違う）候補は、印があっても止めない', () => {
+    const mark = newMark();
+    const child = spawn(process.execPath, ['-e', 'setInterval(()=>{},100)'], { stdio: 'ignore', env: envWith(mark) });
+    try {
+      expect(waitFor(() => alive(child.pid!), 5_000)).toBe(true);
+      const { output } = cleanupWithOutput({ pid: 999_999, mark, from: Date.now() }, { candidates: [{ pid: child.pid!, created: '1' }] });
+      expect(output.records.find((r) => r.pid === child.pid)).toMatchObject({ state: 'replaced', opens: 1 });
       expect(alive(child.pid!)).toBe(true);
-      const matched = windowsProcessTools.stop([{ pid: child.pid!, created: own!.created, root: true }], CLEANUP_LIMIT_MS);
-      expect(matched, JSON.stringify(matched)).toEqual({ ok: true, results: [{ pid: child.pid, result: 'stopped' }] });
-      expect(waitFor(() => !alive(child.pid!), 2_000)).toBe(true);
     } finally { child.kill('SIGKILL'); }
+  });
+  it('[REQ-252][REQ-254] 開けないプロセスは、止めずに理由つきで返す', () => {
+    const listed = spawnSync('tasklist', ['/fi', 'imagename eq wininit.exe', '/fo', 'csv', '/nh'], { encoding: 'utf8' }).stdout;
+    const pid = Number(/"wininit\.exe","(\d+)"/i.exec(listed)?.[1]);
+    expect(pid, listed).toBeGreaterThan(0);
+    const { output } = cleanupWithOutput({ pid: 999_999, mark: newMark(), from: Date.now() }, { candidates: [{ pid, created: '1' }] });
+    expect(output.records.find((r) => r.pid === pid)).toMatchObject({ state: 'unreadable', reason: 'open:5' });
+    expect(alive(pid)).toBe(true);
+  });
+  it('[REQ-253][REQ-254] 上限を短くすると、PowerShell の起動を含めて打ち切り、時間切れとして停止を確認できないと返す', () => {
+    const started = Date.now();
+    const { report } = cleanupWithOutput({ pid: 999_999, mark: newMark(), from: Date.now() }, { limitMs: 300 });
+    expect(report.confirmed).toBe(false);
+    expect(report.detail).toContain('後片付けの上限（0.3 秒）に達しました');
+    expect(Date.now() - started).toBeLessThan(3_000);
   });
 });
