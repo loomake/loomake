@@ -11,5 +11,5 @@
 
 ## 3. 確認
 - [x] 3.1 `pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` を通す
-- [ ] 3.2 この PR の CI で、quality ジョブがすべてのステップを実行したこと（この PR はコードを変えるため）と、判定のステップの出力を確かめ、作業記録に書く（REQ-270）
-- [ ] 3.3 `pnpm -s verify --change shorten-ci-wall-clock --done` を通す <!-- loomake:gate=done -->
+- [x] 3.2 この PR の CI で、quality ジョブがすべてのステップを実行したこと（この PR はコードを変えるため）と、判定のステップの出力を確かめ、作業記録に書く（REQ-270）
+- [x] 3.3 `pnpm -s verify --change shorten-ci-wall-clock --done` を通す <!-- loomake:gate=done -->
