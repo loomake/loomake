@@ -141,15 +141,6 @@ Source: REQ-018
 - **WHEN** 3 行目に不正な状態値を持つ trace.md を、ファイル名 `trace.md` で渡す
 - **THEN** エラーの `file` が `trace.md`、`line` が不正な行の行番号である
 
-### Requirement: 実行時依存ゼロ
-`@loomake/core` の `package.json` は、実行時依存（`dependencies`）を持たない SHALL。
-
-Source: REQ-046
-
-#### Scenario: dependencies が空
-- **WHEN** `packages/core/package.json` を読む
-- **THEN** `dependencies` が存在しないか空である
-
 ### Requirement: OpenSpec 書式との互換
 Loomake の追加書式（`Source:` 行と trace.md）を含む change は、`openspec validate --strict` を通る SHALL。Loomake は独自の仕様書式を導入しない MUST。
 
@@ -158,3 +149,12 @@ Source: REQ-052, REQ-058
 #### Scenario: 追加書式を含む change の検証
 - **WHEN** `Source:` 行つきの spec.md と trace.md を持つ change に `openspec validate --strict` を実行する
 - **THEN** 終了コード 0 で終わる
+
+### Requirement: core の実行時依存の範囲
+`@loomake/core` の外部の実行時依存は `zod` だけとする SHALL。`@loomake/core` の `package.json` の `dependencies` は `zod` 以外のパッケージを含まない MUST。
+
+Source: REQ-046
+
+#### Scenario: zod 以外の依存がない
+- **WHEN** `packages/core/package.json` の `dependencies` を読む
+- **THEN** `zod` 以外のパッケージが含まれない（`dependencies` が存在しないか空のときも、この条件を満たす）
