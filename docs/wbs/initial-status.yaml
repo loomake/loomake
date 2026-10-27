@@ -1,5 +1,5 @@
 # WBS v1.3.1 の移行時の初期状態（案）
-# 対象: loomake/loomake の docs/wbs.md、調査時点のコミット f2c4db3（2026-10-26）。W6-6〜W6-9 は d50586e、W0-8 は dc58ff3 で追加調査
+# 対象: loomake/loomake の docs/wbs.md、調査時点のコミット f2c4db3（2026-10-26）。W6-6〜W6-9 は d50586e、W0-8 は dc58ff3 で追加調査。W0-6・W0-7 は 53b1298（PR #10 のマージ後）で見直し
 # 作り方: 各作業項目の完了条件と、リポジトリの実装・仕様・change・文書を突き合わせた。AI による調査で、人の確認前の案
 #
 # assessment（調査の判定）
@@ -14,7 +14,7 @@
 # missing は WBS v1.4 で採用した契約に照らした残件で書く（v1.4 の 0 章の決定 J01〜J08）。
 # wbs_mismatch は調査時点（v1.3.1）の所見で、v1.4 で解消したものも記録として残す。Issue 本文には転記しない
 #
-# 集計: done 4 / partial 26 / none 24（合計 54。W6-6〜W6-9 は d50586e、W0-8 は dc58ff3 で main に追加された作業項目）
+# 集計: done 6 / partial 25 / none 23（合計 54。W6-6〜W6-9 は d50586e、W0-8 は dc58ff3 で main に追加された作業項目）
 - id: W0-1
   assessment: partial
   initial_status: Backlog
@@ -73,26 +73,27 @@
   missing: 未決事項の表に作業 ID の列がない。O02・O09・O13・O16 に作業 ID がない
   wbs_mismatch: null
 - id: W0-6
-  assessment: partial
-  initial_status: Backlog
-  close_as: null
-  confidence: medium
-  evidence:
-  - '.changeset/config.json と .changeset/*.md : changesets を運用している'
-  - 'CONTRIBUTING.md:26 : changeset を付けるルール'
-  - 'docs/compatibility.md : 0.x の破壊的変更の扱い'
-  - '.github/workflows/release.yml, scripts/changeset-check.mjs : 版上げとリリースの仕組み'
-  missing: 成果物の ADR（PR #10 の change で作る予定）。要件定義の O15 の更新
-  wbs_mismatch: 成果物の ADR がない。要件定義の O15（版管理の方式）が未決のまま
-- id: W0-7
-  assessment: none
-  initial_status: Backlog
-  close_as: null
+  assessment: done
+  initial_status: Done
+  close_as: completed
   confidence: high
   evidence:
-  - 'リポジトリ全体 : C-001・effort・見積は計画の文書にしか出てこない'
-  missing: 記録様式と C-001 の事前見積もり
-  wbs_mismatch: null
+  - 'docs/adr/0001-versioning-with-changesets.md : changesets の採用、npm version を採らなかった理由、見直す条件（PR #10、53b1298 で main に取り込み済み）'
+  - 'docs/adr/0002-breaking-changes-in-0x.md : 0.x の破壊的変更を minor で出す方針と、パッケージの版と形式の版を分けること'
+  - 'docs/requirements/loomake-v0.11.md 11 章 : O15 を「2026-10-26 に changesets に決めた」として解決し、ADR 0001 を参照'
+  - 'CONTRIBUTING.md : 版管理と 0.x の方針を書き、ADR 0001・0002 と docs/adr/README.md にリンク'
+  missing: null
+  wbs_mismatch: f2c4db3 の調査では ADR がなく partial だった。PR #10 で完了条件がそろった
+- id: W0-7
+  assessment: done
+  initial_status: Done
+  close_as: completed
+  confidence: high
+  evidence:
+  - 'docs/effort/template.md : 比較の種類、比較方式、作業範囲、推定の最小・最大・根拠、指示・レビュー・手直し・実行・待機の時間の欄を持つ記録様式（PR #10、53b1298 で main に取り込み済み）'
+  - 'docs/effort/c-001.md : C-001 の着手前（2026-10-26）に事前の推定（24〜58 時間）を書いてコミットした記録。実績の欄は空'
+  missing: null
+  wbs_mismatch: f2c4db3 の調査では様式も見積もりもなく none だった。PR #10 で完了条件がそろった
 - id: W0-8
   assessment: done
   initial_status: Done
