@@ -1,6 +1,6 @@
 # 0003 core の実行時依存に Zod を採る
 
-- 状態：採用（仕様への反映は change `allow-zod-and-yaml-runtime-deps` で行った。REQ-046 は core の外部の実行時依存を `zod` だけとし、REQ-047 は kit の実行時依存を `@loomake/core` と `yaml` だけとした）
+- 状態：採用（change `allow-zod-and-yaml-runtime-deps` の差分仕様に反映した。REQ-046 は core の外部の実行時依存を `zod` だけとし、REQ-047 は kit の実行時依存を `@loomake/core` と `yaml` だけとし、REQ-207 は kit が `yaml` を import することを認めた。`openspec/specs/` への反映はその change の archive で行い、依存の導入は C-001 で行う）
 - 決めた日：2026-10-26
 - 決めた人：利用者（PR #10 のコメント 6403295324 での回答。利用者の「Q-01〜03の回答して」という依頼に基づく方針選択）
 - 出典：WBS の W1-1、要件定義 v0.11.1 の NFR-01・NFR-02、change `record-stack-and-versioning-decisions` の trace.md の Q-01（REQ-231）
@@ -9,7 +9,7 @@
 
 `@loomake/core` の契約（trace.md・spec・tasks・quality.yaml・verify JSON のスキーマ）は Zod で書き、スキーマから型と JSON Schema を導出する。core の外部の実行時依存は `zod` だけとし、`yaml` は kit 側に置く。
 
-いまの仕様 REQ-046（`openspec/specs/core-parsers/spec.md` の「実行時依存ゼロ」）は、別の change `allow-zod-and-yaml-runtime-deps` で変える。kit に `yaml` を置くには REQ-047（`openspec/specs/verify/spec.md` の「実行時依存の範囲」）も変える必要があるので、同じ change で扱う。その change で、AGENTS.md と CONTRIBUTING.md の依存の記述もそろえる。
+REQ-046（`openspec/specs/core-parsers/spec.md` の「実行時依存ゼロ」）と REQ-047（`openspec/specs/verify/spec.md` の「実行時依存の範囲」）は、change `allow-zod-and-yaml-runtime-deps` の差分仕様で、この決定に合わせて書き換えた。kit で `yaml` を import できるように、REQ-207（`openspec/specs/monorepo/spec.md` の「kit の中の依存の向き」）も同じ差分仕様で変えた。差分仕様が `openspec/specs/` に入るのは、その change を archive したときである。AGENTS.md と CONTRIBUTING.md の依存の記述も、同じ change でそろえた。`zod` と `yaml` を `package.json` の `dependencies` に足すのは、C-001（WBS の W1-1）である。
 
 ## 検討した選択肢
 
@@ -26,9 +26,9 @@
 ## 適用範囲
 
 - 対象は `@loomake/core` の実行時依存と、core が公開する契約のスキーマ
-- kit・trace・runner・CLI の内部パッケージへの依存の向き（AGENTS.md と REQ-047・REQ-083・REQ-123）は変えない。kit の外部の実行時依存は `yaml` だけとする（要件定義の NFR-01）
-- 仕様の変更（REQ-046・REQ-047）と、AGENTS.md・CONTRIBUTING.md の依存の記述は、別の change `allow-zod-and-yaml-runtime-deps` で行う。この ADR を書いた change では変えない
-- いまの手書きの検査と `packages/core/schema/verify-result.schema.json` を Zod に移す作業は、C-001（WBS の W1-1）で行う
+- kit・trace・runner・CLI の内部パッケージへの依存の向き（AGENTS.md と REQ-047・REQ-083・REQ-123）は変えない。kit の外部の実行時依存は `yaml` だけとする（要件定義の NFR-01）。kit の中の依存の向き（REQ-207）は、外部のパッケージとして `yaml` を認めることだけを変える
+- 仕様の変更（REQ-046・REQ-047・REQ-207）は、change `allow-zod-and-yaml-runtime-deps` の差分仕様で行い、`openspec/specs/` にはその change の archive で反映する。AGENTS.md・CONTRIBUTING.md の依存の記述も同じ change でそろえた。この ADR を書いた change（`record-stack-and-versioning-decisions`）では、どちらも変えていない
+- `zod` と `yaml` を `package.json` の `dependencies` に足すことと、いまの手書きの検査と `packages/core/schema/verify-result.schema.json` を Zod に移す作業は、C-001（WBS の W1-1）で行う
 
 ## 見直す条件
 
