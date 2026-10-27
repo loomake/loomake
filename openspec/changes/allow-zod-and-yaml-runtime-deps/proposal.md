@@ -14,6 +14,7 @@
 - Zod のスキーマを書くこと、いまの手書きの検査と `packages/core/schema/verify-result.schema.json` を Zod に移すこと（C-001 の W1-1）
 - `zod` と `yaml` を `package.json` の `dependencies` に足すこと。使う C-001 で足す。C-001 への申し送り：足すときは、必要な依存が配布パッケージの `dependencies` に宣言されていることも、配布物の検証で確かめる（確認事項 Q-02 の回答）
 - 依存を増やすときに書く 3 点（REQ-260）を仕様にすること。製品の実行時仕様の範囲外なので、開発上の手順として CONTRIBUTING.md に書く（確認事項 Q-04 の回答 B、tasks.md 2.4）
+- `optionalDependencies` と `peerDependencies` を依存の上限の検査の対象にすること。REQ-046・REQ-047 の文とテストは `dependencies` だけを対象にしているので、この 2 つから依存を足すと上限の検査を通ってしまう。この change では対象を広げない。C-001 への申し送り：C-001 で依存を足す前に、この 2 つを検査の対象に含めるかと、その範囲を決める。含めるなら、仕様とテストの変更になるので、確認事項で人の承認を得る（PR #26 のレビューの 3-1）
 - trace・runner・loomake の依存の範囲（REQ-083・REQ-123・REQ-047 の loomake の部分）を変えること
 - core-parsers と verify の Purpose を直すこと（archive では反映されない）
 
