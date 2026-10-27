@@ -102,6 +102,55 @@ describe('CI', () => {
     for (const step of ['run: pnpm lint', 'run: pnpm typecheck', 'run: pnpm build', 'package-smoke.mjs prepare', 'package-smoke.mjs check']) expect(quality, step).toContain(step);
   });
 
+  // quality ジョブのステップを、先頭から順に取り出す。コメントの行は除く
+  const qualitySteps = () => {
+    const lf = readLf('.github/workflows/ci.yml');
+    const quality = lf.slice(lf.indexOf('\n  quality:'), lf.indexOf('\n  node20:')).replace(/^ *#.*\n/gm, '');
+    return quality.slice(quality.indexOf('\n    steps:\n') + '\n    steps:\n'.length).split(/\n(?= {6}- )/).filter((step) => /^ {6}- /.test(step));
+  };
+  const docsOnlyCondition = "steps.changes.outputs.docs_only != 'true'";
+
+  it('[REQ-270] 文書だけかの判定は、paths フィルタではなく quality ジョブの中のステップで行う', () => {
+    const lf = readLf('.github/workflows/ci.yml');
+    // ワークフローの on に paths・paths-ignore がなく、quality ジョブそのものに条件がない
+    expect(lf).not.toMatch(/^\s*paths(-ignore)?:/m);
+    const quality = lf.slice(lf.indexOf('\n  quality:'), lf.indexOf('\n  node20:'));
+    expect(quality).not.toMatch(/^ {4}if:/m);
+
+    const steps = qualitySteps();
+    const index = steps.findIndex((step) => /^ {6}(- | {2})id: changes$/m.test(step));
+    expect(index, '判定のステップ').toBeGreaterThan(0);
+    // 判定は同梱のスクリプトで行い、新しい外部の Action を使わない。イベントの種類と PR の向き先を渡す
+    const decide = steps[index]!;
+    expect(decide).toContain('run: node scripts/ci-docs-only.mjs');
+    expect(decide).not.toContain('uses:');
+    expect(decide).toContain('EVENT_NAME: ${{ github.event_name }}');
+    expect(decide).toContain('BASE_REF: ${{ github.base_ref }}');
+    // 判定より前のステップ（checkout と main の用意）には条件がない
+    for (const step of steps.slice(0, index + 1)) expect(step).not.toMatch(/^ {6}(- | {2})if:/m);
+    // 判定より後のステップは、すべて文書だけでないときだけ実行する。品質コマンドのステップがすべて含まれる
+    const after = steps.slice(index + 1);
+    for (const step of after) expect(step, step).toContain(docsOnlyCondition);
+    for (const command of ['pnpm/action-setup@', 'actions/setup-node@', 'run: pnpm install', 'run: pnpm lint', 'run: pnpm typecheck', 'run: pnpm test --shard=', 'run: pnpm test --coverage', 'run: pnpm build', 'package-smoke.mjs prepare', 'package-smoke.mjs check']) {
+      expect(after.some((step) => step.includes(command)), command).toBe(true);
+    }
+  });
+
+  it('[REQ-270] main への push では、判定が docs_only=false になり、すべてのステップを実行する', () => {
+    // ci.yml は push でも同じ判定のステップを実行し、イベントの種類をスクリプトに渡す。ci.yml の on は pull_request と main への push だけ
+    const lf = readLf('.github/workflows/ci.yml');
+    expect(lf).toMatch(/^on:\n {2}pull_request:\n {2}push:\n {4}branches: \[main\]\n/m);
+    const r = spawnSync(process.execPath, [join(root, 'scripts', 'ci-docs-only.mjs')], {
+      cwd: root,
+      encoding: 'utf8',
+      env: { ...process.env, EVENT_NAME: 'push', BASE_REF: '', GITHUB_OUTPUT: '' },
+    });
+    expect(r.status, r.stderr).toBe(0);
+    expect(r.stdout).toBe('docs_only=false\n');
+    // 条件は「true でない」なので、false のときも、判定の出力がないときも、ステップを実行する
+    for (const step of qualitySteps().filter((step) => step.includes('docs_only'))) expect(step).toContain(docsOnlyCondition);
+  });
+
   it('[REQ-215] 同じ PR の古い実行を取り消し、main への push の実行は取り消さない', () => {
     const lf = readLf('.github/workflows/ci.yml');
     const block = lf.match(/^concurrency:\n {2}group: (.+)\n {2}cancel-in-progress: (.+)\n/m);
