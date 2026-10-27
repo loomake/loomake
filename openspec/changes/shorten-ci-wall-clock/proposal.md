@@ -18,7 +18,7 @@ main の run 40439394065 では、Windows の quality ジョブで 22 件の試�
 - 判定には PR のベースからの差分をすべて使い、名前の変更（rename）では変更前のパスも判定する。差分を取れなかったときと、解釈できなかったときは飛ばさない
 - 判定はジョブの中のステップで行い、ワークフローの `paths` フィルタやジョブの `if` は使わない。飛ばした PR でも、必須チェックのジョブが同じ名前で成功を報告するようにするためである。main への push では飛ばさない
 - 「3 つの OS での CI」（REQ-049）と「CI のテストの分割」（REQ-214）に、この例外を書き足す（MODIFIED）
-- 既存のテスト `tests/monorepo.test.ts` の `[REQ-049]` と `[REQ-214]` の期待値を、判定のステップを足した ci.yml に合わせる。シャードとカバレッジの検査は弱めない。利用者本人が Q-04 で承認した（2026-10-27 13:25）
+- 既存のテスト `tests/monorepo.test.ts` の `[REQ-049]` と `[REQ-214]` の期待値を、判定のステップを足した ci.yml に合わせる。シャードとカバレッジの検査は弱めない。利用者本人が Q-04 で承認した（2026-10-27 13:25）。実装では `[REQ-214]` だけを変え、`[REQ-049]` は変える必要がなかった
 
 ## Non-goals
 - 案 B（時間を確かめるテストを、固定の待ちではなく合図で進む形に変える）。PR #19・#20・#22 が main に入ってから、別の change・別の PR で出す（Q-03・Q-05）。その change のテストの変更は、そこで改めて人の承認を得る。申し送りは下の「次の change への申し送り」にある
@@ -39,4 +39,5 @@ main の run 40439394065 では、Windows の quality ジョブで 22 件の試�
 - 影響する capability：monorepo（REQ-049・REQ-214 を MODIFIED、REQ-270 を ADDED）
 - 影響するファイル：`.github/workflows/ci.yml`、文書だけかを判定するスクリプト（`scripts/` に足す）、`tests/monorepo.test.ts`
 - 利用者に見える変更：なし（配布するパッケージは変えない。空の changeset を足す）
+- 品質レビューの記録：`docs/quality/scenarios.json` に、差分仕様の Scenario 14 件のレビューを change 側の ID で足した。archive する PR では、次の 2 つを行う（前例：コミット cc5df0f）。1 つ目は、14 件のレビューの ID を archive 後の ID（`openspec/specs/monorepo/spec.md` の Scenario の ID）に付け替えること。2 つ目は、REQ-049 と REQ-214 の今の仕様に対するレビューを、付け替えたレビューで置き換えること。なお、`tests/monorepo.test.ts` を参照する今の仕様のレビュー 18 件は、main の時点ですでに試験のソースのハッシュが合わず無効になっている（この change の前から）。この change では書き換えていない
 - 要件 ID：REQ-270 を使う。REQ-271 は案 B のために取ってあり、この change では範囲外とする。main と開いている PR の最大は REQ-260（PR #26）で、PR #22 は REQ-250〜254 を使っている
