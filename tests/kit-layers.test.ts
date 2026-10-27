@@ -18,11 +18,11 @@ export function importsOf(file: string, text: string): string[] {
 }
 
 // REQ-207 の決まりに反する import。layer は runtime か機能のディレクトリ名。
-// 外部のパッケージは @loomake/core だけを認める。@loomake/kit（自分の公開の入口）を経由すると、別の機能への依存を隠せるため
+// 外部のパッケージは @loomake/core と yaml だけを認める（REQ-047）。@loomake/kit（自分の公開の入口）を経由すると、別の機能への依存を隠せるため
 export function forbiddenImports(file: string, text: string): string[] {
   const layer = relative(src, file).split(/[\\/]/)[0];
   return importsOf(file, text).filter((spec) => {
-    if (spec.startsWith('node:') || spec === '@loomake/core') return false;
+    if (spec.startsWith('node:') || spec === '@loomake/core' || spec === 'yaml') return false;
     if (layer === 'runtime') return !spec.startsWith('runtime/');
     return !(spec.startsWith(`${layer}/`) || spec.startsWith('runtime/') || spec === 'verify/config.ts');
   });

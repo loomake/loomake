@@ -17,7 +17,7 @@
 - [x] 4.2 archive する PR への申し送りを、proposal.md の Impact に書く。内容は次の 2 点。1 つ目は、core-parsers の「実行時依存ゼロ / dependencies が空」のレビュー（SCN-f9797c510a56149bfd76）を消し、4.1 のレビューの ID を archive 後の ID に付け替えること（前例：コミット cc5df0f）。2 つ目は、verify の 2 件は archive 後も ID が変わらないので、今の仕様に対するレビューを消して、change 側のレビューを残すこと（REQ-046, REQ-047）
 
 ## 5. kit の中の依存の向き（REQ-207）
-- [ ] 5.1 Q-05 の承認を得たあとで、`tests/kit-layers.test.ts` の `forbiddenImports` の外部のパッケージの許可に `yaml` だけを加える。runtime/ から機能、機能どうし、`@loomake/kit` やほかのパッケージを経由する依存の拒否は変えない（REQ-207）
+- [x] 5.1 Q-05 の承認を得たあとで、`tests/kit-layers.test.ts` の `forbiddenImports` の外部のパッケージの許可に `yaml` だけを加える。runtime/ から機能、機能どうし、`@loomake/kit` やほかのパッケージを経由する依存の拒否は変えない（REQ-207）
 - [ ] 5.2 Q-05 の承認を得たあとで、`tests/kit-layers.test.ts` に、runtime/ と機能のディレクトリから `yaml` を import しても拒否しない正の例と、従来の禁止例が引き続き拒否されることを確かめる試験を足す（REQ-207）
 - [ ] 5.3 5.1・5.2 のあとで、`pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` を通し、`tests/kit-layers.test.ts` の変更で影響する Scenario のレビューを、テストを読み直してから change 側の ID で `docs/quality/scenarios.json` に足す。ハッシュだけを書き換えることはしない。扱えないものは proposal.md の archive への申し送りに書く（REQ-207）
 
