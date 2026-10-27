@@ -30,3 +30,5 @@
   - core-parsers の「実行時依存ゼロ / dependencies が空」のレビュー（SCN-f9797c510a56149bfd76）を消し、「zod 以外の依存がない」のレビュー（SCN-7a09237b3616f253ec95）の ID を archive 後の ID（SCN-2b9b1052b81cdd63ebbf）に付け替える（前例：コミット cc5df0f）
   - verify の「kit の依存」と「loomake の依存」は、archive 後も ID が変わらない（SCN-129c1a409ad4cdd46ce6・SCN-38961b7ee7aa96aad6f6）。今の仕様に対するレビューを消し、change 側のレビュー（SCN-96cb0a31550cb8b25bcd・SCN-23a323ae6d48ddc37ec7）の ID を archive 後の ID に付け替えて残す
   - `packages/core/test/package.test.ts` を変えたので、同じファイルを参照する core-parsers の「OpenSpec 書式との互換 / 追加書式を含む change の検証」のレビュー（SCN-59cd71015c5e0c1dd2e1）も、試験のソースのハッシュが合わなくなって無効になった。この change では、ハッシュだけを書き換えることはしない。テストを読み直してレビューし直すかは、品質記録を見直すときに決める
+  - `tests/kit-layers.test.ts` を変えたので（tasks.md 5）、このファイルを参照する Scenario のレビュー（monorepo の「kit の中の依存の向き」の Scenario など）も、確かめる対象に含める。この change で monorepo の REQ-207 を MODIFIED にしたので、今の仕様に対する REQ-207 の Scenario のレビューも、本文が変わって合わなくなる。archive の PR では、今の仕様に対するレビューの扱いと、change 側のレビューの ID の付け替えを、ほかの Scenario と同じやり方で確かめる
+  - 無効になるレビューの件数は、ここでは数えない。SCN-129c1a409ad4cdd46ce6・SCN-38961b7ee7aa96aad6f6 は、Issue #33 の一覧ですでに無効に含まれている。archive の PR で、更新したあとの `node scripts/scenario-audit.mjs` の結果を見て、各レビューの状態と件数を確かめる。ハッシュだけを書き換えて有効に戻すことはしない
