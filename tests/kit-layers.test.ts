@@ -18,11 +18,11 @@ export function importsOf(file: string, text: string): string[] {
 }
 
 // REQ-207 の決まりに反する import。layer は runtime か機能のディレクトリ名。
-// 外部のパッケージは @loomake/core だけを認める。@loomake/kit（自分の公開の入口）を経由すると、別の機能への依存を隠せるため
+// 外部のパッケージは @loomake/core と yaml だけを認める（REQ-047）。@loomake/kit（自分の公開の入口）を経由すると、別の機能への依存を隠せるため
 export function forbiddenImports(file: string, text: string): string[] {
   const layer = relative(src, file).split(/[\\/]/)[0];
   return importsOf(file, text).filter((spec) => {
-    if (spec.startsWith('node:') || spec === '@loomake/core') return false;
+    if (spec.startsWith('node:') || spec === '@loomake/core' || spec === 'yaml') return false;
     if (layer === 'runtime') return !spec.startsWith('runtime/');
     return !(spec.startsWith(`${layer}/`) || spec.startsWith('runtime/') || spec === 'verify/config.ts');
   });
@@ -60,6 +60,23 @@ describe('kit の中の依存の向き', () => {
     ['verify', "import { runRecord } from '@loomake/trace';"],
   ])('[REQ-207] %s/ から公開の入口やほかのパッケージを経由する依存を見つける', (layer, line) => {
     expect(forbiddenImports(join(src, layer, 'x.ts'), `${line}\n`)).toHaveLength(1);
+  });
+
+  it.each([
+    ['runtime', "import { parse } from 'yaml';"],
+    ['verify', 'import { parse } from "yaml";'],
+    ['init', "import YAML from 'yaml';"],
+    ['doctor', "const { parse } = await import('yaml');"],
+  ])('[REQ-207] %s/ から yaml への import は認める', (layer, line) => {
+    expect(forbiddenImports(join(src, layer, 'x.ts'), `${line}\n`)).toEqual([]);
+  });
+
+  it('[REQ-207] yaml を認めても、これまでの禁止の import は引き続き見つける', () => {
+    const yaml = "import { parse } from 'yaml';\n";
+    expect(forbiddenImports(join(src, 'runtime', 'process.ts'), `${yaml}import { runVerify } from '../verify/run.js';\n`)).toEqual(['verify/run.ts']);
+    expect(forbiddenImports(join(src, 'init', 'init.ts'), `${yaml}import { runDoctor } from '../doctor/doctor.js';\n`)).toEqual(['doctor/doctor.ts']);
+    expect(forbiddenImports(join(src, 'verify', 'x.ts'), `${yaml}import { runInit } from '@loomake/kit';\nimport { runRecord } from '@loomake/trace';\n`)).toEqual(['@loomake/kit', '@loomake/trace']);
+    expect(forbiddenImports(join(src, 'runtime', 'x.ts'), "import YAML from 'js-yaml';\nimport { stringify } from 'yaml/util';\n")).toEqual(['js-yaml', 'yaml/util']);
   });
 
   it('[REQ-207] 機能から別の機能への import を見つけ、設定の読み込みは認める', () => {

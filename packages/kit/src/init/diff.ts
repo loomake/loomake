@@ -1,4 +1,4 @@
-// 既存のファイルとテンプレートの差分を unified diff の形で作る。kit の実行時依存を core だけに保つため自前で持つ
+// 既存のファイルとテンプレートの差分を unified diff の形で作る。kit の実行時依存は @loomake/core と yaml だけなので（REQ-047）、差分のライブラリを使わず自前で持つ
 
 type Op = { kind: ' ' | '-' | '+'; line: string; a: number; b: number };
 
