@@ -10,7 +10,7 @@
 ## 3. テスト
 - [x] 3.1 Q-01 の承認を得たあとで、`packages/core/test/package.test.ts` の `[REQ-046]` のテストの名前と期待値を、Scenario「zod 以外の依存がない」に合わせる（REQ-046）
 - [x] 3.2 Q-01 の承認を得たあとで、`packages/cli/test/cli.test.ts` の kit の `[REQ-047]` のテストの名前と期待値を、Scenario「kit の依存」に合わせる。loomake の `[REQ-047]` のテストは変えない（REQ-047）
-- [ ] 3.3 `pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` を通す
+- [x] 3.3 `pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` を通す
 
 ## 4. 品質レビューの記録
 - [ ] 4.1 3.1・3.2 のあとで、差分仕様の Scenario 3 件（core-parsers の「core の実行時依存の範囲 / zod 以外の依存がない」、verify の「実行時依存の範囲 / kit の依存」と「loomake の依存」）について、変えたテストを読み直してから、`docs/quality/scenarios.json` に change 側の ID でレビューを足す。今の仕様に対するレビュー（SCN-f9797c510a56149bfd76、SCN-129c1a409ad4cdd46ce6、SCN-38961b7ee7aa96aad6f6）のハッシュだけを書き換えることはしない。`node scripts/scenario-audit.mjs` で、3 件の状態を確かめる（REQ-046, REQ-047）
