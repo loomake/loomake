@@ -1552,16 +1552,21 @@
     {
       "id": "SCN-bf2080219544eaef1205",
       "status": "reviewed",
-      "scenarioSha256": "195d8613452d1aa79e2d24d3e5a6c4891fe3df049b75cd0cbae1ed57d7df1c47",
+      "scenarioSha256": "395c2352d5ed137ee1713aa9265940e535f7a5120f3386ce175cb10d1f772791",
       "sources": [
         "REQ-144"
       ],
-      "reason": "Node24でビルド・pack・専用fixtureへの導入を行い、公式Node20.19.0で公開APIと主要コマンドをassertした。Node20側は開発ツールを実行しない。CI設定の存在と、今回のLinux ARM64での実行成功を区別する。",
+      "reason": "Node24でビルドとpackを行い、2つの検証先に導入した。そのあと公式のNode20.19.0に切り替え、通信を拒否した状態で、公開APIと主要コマンド（--version・--help・init・doctor・verify・trace record・trace report）の成功をassertした。Node20.19.0の側ではpnpmとnpmを実行しない。CI設定の試験では、node20ジョブが、Node24で配布物を準備してからNode20.19.0に切り替えて検査する順序をassertする。宣言する下限Node22.12.0での確認は、このScenarioでは扱わない。",
       "tests": [
         {
           "file": "scripts/runtime-compatibility.mjs",
           "contains": "指定したNodeの配布物で主要コマンドと公開APIを検証する",
           "sha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
+        },
+        {
+          "file": "tests/package-workflows.test.ts",
+          "contains": "[REQ-144] 3OSの品質ジョブとNode下限ジョブで配布物を検査する",
+          "sha256": "c82be3653a952f37c8e5ad976fe0d00aa2028fef9d3ef16eca6a75e8450622bf"
         }
       ]
     },
