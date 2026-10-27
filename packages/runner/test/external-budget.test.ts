@@ -1,5 +1,6 @@
 import { appendFileSync, chmodSync, existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { describe, expect, it, vi } from 'vitest';
 import { RuntimeFailure, UsageError, runVerify } from '@loomake/kit';
 import { main } from '../../cli/src/main.js';
