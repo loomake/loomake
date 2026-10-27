@@ -25,21 +25,13 @@ Source: REQ-214, REQ-270
 ## ADDED Requirements
 
 ### Requirement: 文書だけの PR の品質ジョブ
-CI の quality ジョブは、PR で変えたファイルがすべて文書のとき、lint・typecheck・test・build・配布物の検査を実行せずに成功する SHALL。文書とは、`packages/` の外にあり、拡張子が `.md` のファイルか、`docs/`・`openspec/`・`.changeset/` の下のファイルをいう。判定はジョブの中のステップで行い、ワークフローの `paths`・`paths-ignore` やジョブの `if` では行わない MUST（必須チェックのジョブが、同じ名前で結果を報告するようにするため）。main への push では、判定によらず、すべてのステップを実行する MUST。変えたファイルを調べられなかったときは、文書だけではないとみなす MUST。
+CI の quality ジョブは、PR で変えたファイルがすべて「文書として扱うファイル」に当たるとき、lint・typecheck・test・build・配布物の検査を実行せずに成功する SHALL。判定はジョブの中のステップで行い、ワークフローの `paths`・`paths-ignore` やジョブの `if` では行わない MUST（必須チェックのジョブが、同じ名前で結果を報告するようにするため）。main への push では、判定によらず、すべてのステップを実行する MUST。
 
 Source: REQ-270
 
 #### Scenario: 文書だけの PR
-- **WHEN** PR で変えたファイルが `docs/worklog/2026-10-27.md` と `openspec/changes/c1/tasks.md` だけである
+- **WHEN** PR で変えたファイルが `docs/worklog/2026-10-27.md`・`openspec/changes/c1/tasks.md`・`.changeset/c1.md` だけである
 - **THEN** 判定は「文書だけ」になり、quality ジョブは lint・typecheck・test・build・配布物の検査を実行せずに成功する
-
-#### Scenario: コードを含む PR
-- **WHEN** PR で変えたファイルに `packages/kit/src/verify/run.ts` が含まれる
-- **THEN** 判定は「文書だけ」にならず、quality ジョブはすべてのステップを実行する
-
-#### Scenario: 配布する Markdown を含む PR
-- **WHEN** PR で変えたファイルが `packages/kit/templates/AGENTS.md` だけである
-- **THEN** 判定は「文書だけ」にならず、quality ジョブはすべてのステップを実行する
 
 #### Scenario: 判定をジョブの中で行う
 - **WHEN** `.github/workflows/ci.yml` を読む
@@ -49,23 +41,51 @@ Source: REQ-270
 - **WHEN** main への push で quality ジョブが動く
 - **THEN** 変えたファイルによらず、すべてのステップを実行する
 
-#### Scenario: 変えたファイルを調べられない
-- **WHEN** PR の向き先のブランチとの差分を取れない
+### Requirement: 文書として扱うファイル
+「文書だけの PR の品質ジョブ」の判定で文書として扱うのは、次のファイルだけとする MUST。
+
+- リポジトリの直下にある `.md` のファイル（`README.md`・`CONTRIBUTING.md` など）
+- `docs/` の下にある `.md` のファイル
+- `openspec/specs/` と `openspec/changes/`（`archive/` を含む）の下にある `.md` のファイルと、`openspec/changes/` の下にある `spec-gate.txt`
+- `.changeset/` の直下にある `.md` のファイル（changeset の本文）
+
+これ以外のファイル（設定・実行用のファイル・`tests/` の下・`packages/` の下のファイルを含む）は、文書として扱わない MUST。
+
+Source: REQ-270
+
+#### Scenario: コードを含む PR
+- **WHEN** PR で変えたファイルに `packages/kit/src/verify/run.ts` が含まれる
 - **THEN** 判定は「文書だけ」にならず、quality ジョブはすべてのステップを実行する
 
-### Requirement: 時間を確かめるテストの待ち方
-リポジトリのテストは、子プロセスや偽の CLI が狙った段階に届いたことを、固定の長さの実時間の待ちで確かめない SHALL。段階に届いたことは、子プロセスが残す合図（ファイル・出力）で確かめ、合図を確かめたら次へ進む MUST。期限で止まることを確かめるテストは、期限より前に終わる処理を実時間で待たない SHALL。1000 ms を超える固定の待ちは、期限で止められることを確かめるための、終わらない子プロセスにだけ使う MUST。待ち方を変えるときも、テストが確かめる内容（終了コード・停止の理由・記録・残るファイル）は減らさない MUST。
+#### Scenario: 配布する Markdown を含む PR
+- **WHEN** PR で変えたファイルが `packages/kit/templates/AGENTS.md` だけである
+- **THEN** 判定は「文書だけ」にならず、quality ジョブはすべてのステップを実行する
 
-Source: REQ-271
+#### Scenario: 設定と実行用のファイルを含む PR
+- **WHEN** PR で変えたファイルが、`.changeset/config.json`・`openspec/config.yaml`・`docs/wbs/initial-status.yaml`・`scripts/ci-gate.mjs` のどれか 1 つと、`docs/` の下の `.md` だけである
+- **THEN** どの場合も、判定は「文書だけ」にならず、quality ジョブはすべてのステップを実行する
 
-#### Scenario: 合図で次の段階へ進む
-- **WHEN** 偽のエンジンが遅れて変更を書く段階を、テストが確かめる
-- **THEN** テストは、偽のエンジンが段階に届いた合図を確かめてから先へ進み、固定の秒数が過ぎるのを待たない
+#### Scenario: 試験用データを含む PR
+- **WHEN** PR で変えたファイルが `tests/fixtures/verify-project/openspec/changes/sample/tasks.md` だけである
+- **THEN** 判定は「文書だけ」にならず、quality ジョブはすべてのステップを実行する
 
-#### Scenario: 長い固定の待ちを使う場所
-- **WHEN** `packages/*/test/` と `tests/` のテストのソースを読む
-- **THEN** 1000 ms を超える固定の待ち（偽のエンジンの `sleepMs`・`setTimeout`・`Atomics.wait` など）は、期限で止められることを確かめるための、終わらない子プロセスにだけ使われている
+#### Scenario: 文書の置き場所にある設定と実行用のファイル
+- **WHEN** PR で変えたファイルが、`docs/` の下の `.json`・`.yaml`・`.yml`、`.github/` の下の `.md`、`openspec/changes/archive/` の下の `.mjs` のどれか 1 つだけである
+- **THEN** どの場合も、判定は「文書だけ」にならない
 
-#### Scenario: 確かめる内容を保つ
-- **WHEN** 待ち方を変えたテストを、変える前のテストと比べる
-- **THEN** 終了コード・停止の理由・記録・残るファイルの検査が 1 つも減っていない
+### Requirement: 文書だけかの判定に使う差分
+「文書だけの PR の品質ジョブ」の判定には、PR のベースとの差分（ベースから PR の先頭までのすべてのコミット）で変わったファイルをすべて使う MUST。名前を変えたファイルは、変更前と変更後の両方のパスを判定する MUST。消したファイルも判定する。差分を取れなかったとき、または差分を解釈できなかったときは、文書だけではないとみなす MUST。
+
+Source: REQ-270
+
+#### Scenario: 前のコミットでコードを変えた PR
+- **WHEN** PR の 1 つ目のコミットで `packages/kit/src/verify/run.ts` を変え、2 つ目のコミットで `docs/notes.md` だけを変えた
+- **THEN** 判定はベースとの差分のすべてのファイルを使うので「文書だけ」にならず、quality ジョブはすべてのステップを実行する
+
+#### Scenario: 名前を変えたファイル
+- **WHEN** PR で `scripts/notes.md` の名前を `docs/notes.md` に変えた
+- **THEN** 変更前のパス `scripts/notes.md` が文書ではないので、判定は「文書だけ」にならない
+
+#### Scenario: 差分を取れない、または解釈できない
+- **WHEN** PR のベースとの差分を取るコマンドが失敗する、または差分の出力に解釈できない行がある
+- **THEN** 判定は「文書だけ」にならず、quality ジョブはすべてのステップを実行する
