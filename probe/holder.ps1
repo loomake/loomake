@@ -47,7 +47,7 @@ function ParentPid([IntPtr]$h) {
 
 if ($env:HOLDER_MODE -eq 'check') {
   $id = [uint32]$env:CHECK_PID
-  $h = $api::OpenProcess($QL -bor $SYNC, $false, $id); $err = LastErr
+  $h = $api::OpenProcess($QL -bor $SYNC, $false, $id); $err = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
   if ($h -eq [IntPtr]::Zero) { [Console]::Out.WriteLine((Json @{ ok = $false; err = $err })); exit 0 }
   [Console]::Out.WriteLine((Json @{ ok = $true; created = "$(Created $h)"; exitCode = (ExitCode $h) }))
   [void]$api::CloseHandle($h); exit 0
@@ -65,7 +65,7 @@ function NewServer {
 }
 function Hold($req) {
   $sw = [Diagnostics.Stopwatch]::StartNew()
-  $h = $api::OpenProcess($QL -bor $SYNC, $false, [uint32]$req.pid); $err = LastErr
+  $h = $api::OpenProcess($QL -bor $SYNC, $false, [uint32]$req.pid); $err = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
   if ($h -eq [IntPtr]::Zero) { return @{ id = $req.id; ok = $false; err = $err } }
   $c = Created $h
   $script:holds[[string]$req.id] = @{ h = $h; pid = [int]$req.pid; created = $c; expires = [long]$req.expiresAt }
@@ -130,7 +130,10 @@ function Cleanup([string]$id, [long]$deadlineMs) {
       $r = $held[[string]$procId]
       if ($r.limited) { $r.action = 'failed'; $r.reason = 'terminate:5'; [void]$problems.Add("terminate:5:$procId"); continue }
       $r.stopHandle = $r.h.ToInt64()
-      if ($api::TerminateProcess($r.h, 1)) { $r.action = 'terminated' } else { $r.action = 'failed'; $r.reason = "terminate:$(LastErr)"; [void]$problems.Add("terminate:$procId") }
+      $okT = $api::TerminateProcess($r.h, 1); $errT = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
+      if ($okT) { $r.action = 'terminated' }
+      elseif ($api::WaitForSingleObject($r.h, 0) -eq 0) { $r.action = 'already-exited'; $r.reason = "terminate:$errT" }
+      else { $r.action = 'failed'; $r.reason = "terminate:$errT"; [void]$problems.Add("terminate:$errT:$procId") }
     }
     $timing.stop += $sw.Elapsed.TotalMilliseconds - $t0
   }
@@ -179,6 +182,7 @@ while ($true) {
     $name = [IO.Path]::GetFileName($f).Replace('req-', 'res-')
     if ($req.op -eq 'release') { $res = @{ released = (Release ([string]$req.id) 'request') } }
     elseif ($req.op -eq 'cleanup') { $res = Cleanup ([string]$req.id) ([long]$req.deadlineMs); [void](Release ([string]$req.id) 'after-cleanup') }
+    elseif ($req.op -eq 'hold') { $res = Hold $req }
     elseif ($req.op -eq 'state') { $res = @{ holds = @($holds.Keys) } }
     else { $res = @{ error = 'unknown-op' } }
     $tmp = Join-Path $dir ($name + '.tmp')

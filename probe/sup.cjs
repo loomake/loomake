@@ -18,6 +18,21 @@ sock.on('connect', () => {
   if (cfg.mode === 'die-before-send') process.kill(process.pid, 'SIGKILL');
   const send = () => sock.write(`${JSON.stringify({ id: cfg.id, pid: child.pid, expiresAt: cfg.expiresAt })}\n`);
   if (cfg.mode === 'block-target-exit') block(1500); // target exits while the event loop cannot run 'exit'
+  if (cfg.mode === 'file-hold-blocked' || cfg.mode === 'file-hold-after-exit') {
+    // the request goes through a file written synchronously, so the holder opens the PID while this event loop is still blocked
+    const ask = () => {
+      const req = `${cfg.dir}\\req-sup-${cfg.id}.json`;
+      fs.writeFileSync(`${req}.tmp`, JSON.stringify({ op: 'hold', id: cfg.id, pid: child.pid, expiresAt: cfg.expiresAt }));
+      fs.renameSync(`${req}.tmp`, req);
+      const res = `${cfg.dir}\\res-sup-${cfg.id}.json`;
+      const until = Date.now() + 5000;
+      while (!fs.existsSync(res) && Date.now() < until) block(10);
+      out({ pid: child.pid, fileReply: fs.existsSync(res) ? JSON.parse(fs.readFileSync(res, 'utf8')) : null, exitedBeforeReply: exited });
+    };
+    if (cfg.mode === 'file-hold-blocked') { block(1500); ask(); } else child.once('exit', () => setTimeout(ask, 300));
+    child.on('close', (status) => { out({ status }); setTimeout(() => process.exit(0), 50); });
+    return;
+  }
   if (cfg.mode === 'send-after-exit') child.once('exit', () => setTimeout(send, 300)); else send();
   if (cfg.mode === 'block-before-reply') block(60_000);
   let buf = '';

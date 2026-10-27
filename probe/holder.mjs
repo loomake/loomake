@@ -47,7 +47,7 @@ function check(pid) {
 }
 /** run sup.cjs; returns the child and a live array of fd 3 records */
 function runSup(h, id, command, mode = 'normal', expiresAt = Date.now() + 120_000) {
-  const child = spawn(process.execPath, [SUP, JSON.stringify({ pipe: h.pipe, id, command, mode, expiresAt })], { stdio: ['ignore', 'ignore', 'inherit', 'pipe'] });
+  const child = spawn(process.execPath, [SUP, JSON.stringify({ pipe: h.pipe, dir: h.dir, id, command, mode, expiresAt })], { stdio: ['ignore', 'ignore', 'inherit', 'pipe'] });
   const records = [];
   let buf = '';
   child.stdio[3].on('data', (d) => { buf += d; let i; while ((i = buf.indexOf('\n')) >= 0) { records.push(JSON.parse(buf.slice(0, i))); buf = buf.slice(i + 1); } });
@@ -76,6 +76,22 @@ for (let i = 1; i <= 2; i++) {
   const rep = find(s, 'reply');
   log({ experiment: 'E1-control-after-exit', trial: i, reply: rep?.reply, note: 'expect open to fail (87) or a different process' });
   await request(holder, { op: 'release', id: `e1c-${i}` });
+}
+
+// E1b: the same, but the request reaches the holder while the supervisor's event loop is still blocked (target already exited)
+for (let i = 1; i <= 3; i++) {
+  const s = runSup(holder, `e1b-${i}`, 'exit 0', 'file-hold-blocked');
+  await s.exited;
+  const rep = find(s, 'fileReply');
+  log({ experiment: 'E1b-blocked-hold', trial: i, reply: rep?.fileReply, exitedBeforeReply: rep?.exitedBeforeReply, ok: rep?.fileReply?.ok === true && rep.fileReply.exitCode === 0 && rep.exitedBeforeReply === false });
+  await request(holder, { op: 'release', id: `e1b-${i}` });
+}
+for (let i = 1; i <= 2; i++) {
+  const s = runSup(holder, `e1d-${i}`, 'exit 0', 'file-hold-after-exit');
+  await s.exited;
+  const rep = find(s, 'fileReply');
+  log({ experiment: 'E1b-control-after-exit', trial: i, reply: rep?.fileReply, note: 'expect open to fail (87) or a process with another creation time' });
+  await request(holder, { op: 'release', id: `e1d-${i}` });
 }
 
 // E2: cmd.exe -> quality command -> its child. Kill the supervisor, then clean up through the holder.
@@ -146,13 +162,13 @@ for (const detached of [true, false]) {
   const info = join(dir, `sub-${detached}.json`);
   writeFileSync(sub, `import { spawn } from 'node:child_process';import { writeFileSync, existsSync } from 'node:fs';
 const d=${JSON.stringify(join(dir, `subdir-${detached}`))};(await import('node:fs')).mkdirSync(d,{recursive:true});
-const c=spawn('powershell.exe',${JSON.stringify(ps)},{stdio:['pipe','ignore','ignore'],windowsHide:true,detached:${detached},env:{...process.env,HOLDER_DIR:d,HOLDER_PIPE:'loomake-holder-sub-${detached}-'+process.pid}});
-const t=setInterval(()=>{if(existsSync(d+'/ready')){clearInterval(t);writeFileSync(${JSON.stringify(info)},JSON.stringify({holder:c.pid}));}},20);setInterval(()=>{},1000);`);
+const c=spawn('powershell.exe',${JSON.stringify(ps)},{stdio:['pipe','ignore','pipe'],windowsHide:true,detached:${detached},env:{...process.env,HOLDER_DIR:d,HOLDER_PIPE:'loomake-holder-sub-${detached}-'+process.pid}});
+const t=setInterval(()=>{if(existsSync(d+'/ready')){clearInterval(t);writeFileSync(${JSON.stringify(info)},JSON.stringify({holder:c.pid}));}},20);let err='';c.stderr.on('data',x=>{err+=x;writeFileSync(${JSON.stringify(info)}+'.err',err)});c.on('exit',(code)=>writeFileSync(${JSON.stringify(info)}+'.exit',String(code)));setInterval(()=>{},1000);`);
   const p = spawn(process.execPath, [sub], { stdio: 'ignore' });
   const started = Date.now();
   const up = await waitFor(() => existsSync(info), 20_000);
   const warmReadyMs = Date.now() - started;
-  if (!up) { log({ experiment: 'E6-parent-death', detached, error: 'holder not ready' }); continue; }
+  if (!up) { const rd = (f) => existsSync(f) ? readFileSync(f, 'utf8').slice(0, 800) : undefined; log({ experiment: 'E6-parent-death', detached, error: 'holder not ready', stderr: rd(info + '.err'), exit: rd(info + '.exit') }); try { process.kill(p.pid, 'SIGKILL'); } catch { /* */ } continue; }
   const hp = JSON.parse(readFileSync(info, 'utf8')).holder;
   process.kill(p.pid, 'SIGKILL');
   await sleep(100);
