@@ -6,9 +6,9 @@ import { spawnSync } from 'node:child_process';
 const pkgDir = join(import.meta.dirname, '..');
 
 describe('@loomake/core のパッケージ', () => {
-  it('[REQ-046] dependencies を持たない', () => {
+  it('[REQ-046] dependencies は zod 以外のパッケージを含まない', () => {
     const pkg = JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf8'));
-    expect(Object.keys(pkg.dependencies ?? {})).toEqual([]);
+    expect(Object.keys(pkg.dependencies ?? {}).filter((d) => d !== 'zod')).toEqual([]);
   });
 });
 
