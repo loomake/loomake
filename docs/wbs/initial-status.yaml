@@ -1,0 +1,568 @@
+# WBS v1.3.1 の移行時の初期状態（案）
+# 対象: loomake/loomake の docs/wbs.md、調査時点のコミット f2c4db3（2026-10-26）。W6-6〜W6-9 は d50586e、W0-8 は dc58ff3 で追加調査。W0-6・W0-7 は 53b1298（PR #10 のマージ後）で見直し
+# 作り方: 各作業項目の完了条件と、リポジトリの実装・仕様・change・文書を突き合わせた。AI による調査で、人の確認前の案
+#
+# assessment（調査の判定）
+#   done    : 完了条件を満たす根拠がある
+#   partial : 関連する実装があるが、完了条件を満たしていない
+#   none    : 意味のある実装がない
+# initial_status（移行時に Projects に入れる Status）
+#   done は Done（completed で閉じる）。partial と none は Backlog
+#   partial を In Progress にしないのは、In Progress を「いま誰かが作業中」の意味に保つため。
+#   partial の Issue には本文の「移行時の現状」に evidence と missing を書く
+#
+# missing は WBS v1.4 で採用した契約に照らした残件で書く（v1.4 の 0 章の決定 J01〜J08）。
+# wbs_mismatch は調査時点（v1.3.1）の所見で、v1.4 で解消したものも記録として残す。Issue 本文には転記しない
+#
+# 集計: done 6 / partial 25 / none 23（合計 54。W6-6〜W6-9 は d50586e、W0-8 は dc58ff3 で main に追加された作業項目）
+- id: W0-1
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: medium
+  evidence:
+  - 'docs/requirements-matrix.md : 列は要件ID→対応WBS ID→検証方法・シナリオID→証跡→対象段階。FR・NFR の全件が載り、未割り当ては 0 件'
+  - 'docs/requirements-matrix.md : 10 章の衝突の検出を W7 に対応付けた行と、正本 2 本の SHA-256 がある'
+  - 'docs/requirements-matrix.md:206 : 「割り当てを確定して W0-1 を閉じる」が次の作業として残っている'
+  missing: 表の 3 章にある最終の突き合わせ（割り当ての確定）。表としては完了条件をほぼ満たしている
+  wbs_mismatch: null
+- id: W0-2
+  assessment: done
+  initial_status: Done
+  close_as: completed
+  confidence: medium
+  evidence:
+  - 'pnpm-workspace.yaml, package.json : packages/core・kit・trace・runner・cli と build・lint・typecheck・test のスクリプト'
+  - 'packages/*/package.json, tsconfig.build.json : exports と .d.ts の出力'
+  - '.devcontainer/devcontainer.json, tests/monorepo.test.ts : devcontainer と構成の検査'
+  - 'docs/requirements/loomake-v0.11.md, docs/architecture.md, docs/wbs.md : 冒頭に正本の取り込み（コミット ecbe7fc）の記載'
+  missing: null
+  wbs_mismatch: WBS は npm workspaces・node:test・Biome を想定しているが、実際は pnpm・Vitest・ESLint。パッケージは空ではなく実装済み。cli には exports がない（bin のみ）
+- id: W0-3
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: medium
+  evidence:
+  - '.github/workflows/ci.yml : 3 OS で lint・typecheck・test・coverage・build・package-smoke、gate ジョブ'
+  - 'packages/core/test/package.test.ts : core が dependencies を持たないことを検査する（REQ-046）'
+  - 'tests/kit-layers.test.ts : kit 内の import の向きを制限する（REQ-207）'
+  - 'scripts/schema-contract-check.mjs, tests/schema-compatibility.test.ts : verify-result.schema.json の互換性の検査'
+  missing: kit の依存予算の照合、SDK 不在の照合、判定ディレクトリのグローバル参照の制限、Zod から生成した Schema との差分検査
+  wbs_mismatch: WBS は core に zod を許すが、実際の core は依存ゼロ。判定の純関数は kit ではなく core にある
+- id: W0-4
+  assessment: done
+  initial_status: Done
+  close_as: completed
+  confidence: medium
+  evidence:
+  - 'AGENTS.md : 開発ルールと verify --spec-only / --done の手順、ディレクトリの説明'
+  - 'CLAUDE.md : @AGENTS.md の読み込み'
+  - 'CONTRIBUTING.md : Node・pnpm・lint・typecheck・test・build の手順と changeset の運用'
+  - 'SECURITY.md : 報告経路'
+  missing: null
+  wbs_mismatch: worklog 2026-10-26 で、AGENTS.md の説明に doctor が抜けていると指摘されている
+- id: W0-5
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: medium
+  evidence:
+  - 'docs/requirements/loomake-v0.11.md 11 章 : 各未決事項に確認の段階の目安がある'
+  - 'docs/wbs.md : O17→W1-13、O14→W1-14、O18→対象外、O03→W7 を本文で割り当て'
+  missing: 未決事項の表に作業 ID の列がない。O02・O09・O13・O16 に作業 ID がない
+  wbs_mismatch: null
+- id: W0-6
+  assessment: done
+  initial_status: Done
+  close_as: completed
+  confidence: high
+  evidence:
+  - 'docs/adr/0001-versioning-with-changesets.md : changesets の採用、npm version を採らなかった理由、見直す条件（PR #10、53b1298 で main に取り込み済み）'
+  - 'docs/adr/0002-breaking-changes-in-0x.md : 0.x の破壊的変更を minor で出す方針と、パッケージの版と形式の版を分けること'
+  - 'docs/requirements/loomake-v0.11.md 11 章 : O15 を「2026-10-26 に changesets に決めた」として解決し、ADR 0001 を参照'
+  - 'CONTRIBUTING.md : 版管理と 0.x の方針を書き、ADR 0001・0002 と docs/adr/README.md にリンク'
+  missing: null
+  wbs_mismatch: f2c4db3 の調査では ADR がなく partial だった。PR #10 で完了条件がそろった
+- id: W0-7
+  assessment: done
+  initial_status: Done
+  close_as: completed
+  confidence: high
+  evidence:
+  - 'docs/effort/template.md : 比較の種類、比較方式、作業範囲、推定の最小・最大・根拠、指示・レビュー・手直し・実行・待機の時間の欄を持つ記録様式（PR #10、53b1298 で main に取り込み済み）'
+  - 'docs/effort/c-001.md : C-001 の着手前（2026-10-26）に事前の推定（24〜58 時間）を書いてコミットした記録。実績の欄は空'
+  missing: null
+  wbs_mismatch: f2c4db3 の調査では様式も見積もりもなく none だった。PR #10 で完了条件がそろった
+- id: W0-8
+  assessment: done
+  initial_status: Done
+  close_as: completed
+  confidence: medium
+  evidence:
+  - '.github/workflows/ci.yml : macOS・Windows はテストを 2 つのシャードに分け、ubuntu はカバレッジ付きで 1 回だけ実行し、concurrency で同じ PR の古い実行を取り消す（PR #11、dc58ff3 で main に取り込み済み）'
+  - 'tests/monorepo.test.ts : [REQ-214] シャードの分け方、[REQ-215] 古い実行の取り消しと main の実行を取り消さないことを検査する'
+  - 'PR #11 のコメント : cbeb448 の run 40238644806 で、いちばん遅いジョブ（Windows 1/2）が 8 分 0 秒、全体が 8 分 20 秒'
+  missing: null
+  wbs_mismatch: v1.3.1 の調査（f2c4db3）のあとに PR #11 で追加された作業項目。change speed-up-ci は archive されていない
+- id: W1-1
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - 'packages/core/src/verify-result.ts, packages/core/schema/verify-result.schema.json : 手書きの型と JSON Schema（1.0.0）'
+  - 'packages/core/src/trace.ts, spec.ts, tasks.ts : trace.md・spec・tasks のパーサー'
+  - 'packages/trace/src/schema.ts, report.ts : 証跡とレポートの版'
+  missing: Zod スキーマ、型の導出、JSON Schema の書き出し、quality.yaml と quality-report のスキーマ、trace.md・spec・tasks の version
+  wbs_mismatch: WBS は Zod 前提だが、core は依存ゼロで手書きの型とパーサー
+- id: W1-2
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: medium
+  evidence:
+  - 'packages/core/test/schema.test.ts, fixtures/schema-history/1.0.0.json : verify-result の互換性テスト'
+  - 'tests/schema-compatibility.test.ts : 必須プロパティの削除・改名を拒否（REQ-053）'
+  - 'packages/cli/src/main.ts : 終了コードは 0（合格）・1（不合格）・2（使い方の誤り）・3（実行時の失敗、REQ-192）'
+  missing: 7.3 の構造（ci・local の completed・partial、aborted）、WBS v1.4 で決めた終了コードの契約（2 は使い方・設定の誤り、3 は実行時の失敗、要判断は 1 と decision）と優先順、change が確定しない場合の null、decision、禁止フィールド、未知フィールドの許容、schemaVersion 2.0.0 と 1.0.0 の証拠の読み取り
+  wbs_mismatch: 現行の verify JSON は旧形式（schemaVersion・mode・ok・results）で、7.3 の契約とは別物
+- id: W1-3
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: medium
+  evidence:
+  - 'packages/core/src/test-report.ts : Vitest（Jest 形式）の JSON レポートを要件 ID とテストの対応に変換する。合否は決めない'
+  missing: 他の形式、CI 成果物の変換、対象版・環境・実施日時を持つ共通形式、形式ごとの fixture
+  wbs_mismatch: null
+- id: W1-4
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: medium
+  evidence:
+  - 'packages/core/src/agreement.ts : 確認事項・仮定・保留中の要件・出典なしを純関数で判定'
+  - 'packages/core/src/coverage-policy.ts : 要件とテストの対応を純関数で判定'
+  - 'packages/kit/src/verify/run.ts : I/O と判定を組み合わせる runVerify'
+  missing: 版の確認 → 証跡の適格性 → 実施確認 → 条件 → 集約 → 自動実行条件 → 根拠の順の判定関数、古い証跡・未実行を合格にしないテスト
+  wbs_mismatch: 純関数は kit ではなく core にある
+- id: W1-5
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: medium
+  evidence:
+  - 'packages/cli/src/main.ts : verify に --change・--spec-only・--done・--json。--json のとき stdout は JSON だけ'
+  - 'packages/cli/src/cli.ts : 非対話環境では入力を待たない'
+  - '.github/workflows/ci.yml : CI で --spec-only と --done を実行'
+  missing: 関数 API と CLI の結果が一致することのテスト、CI=1 のテスト。依存先の W1-2・W1-4 が未完了
+  wbs_mismatch: null
+- id: W1-6
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: medium
+  evidence:
+  - 'packages/kit/src/runtime/process.ts, supervisor/supervisor.cjs : 外部コマンドの共通関数 runExternal（時間と出力量の上限）'
+  - 'packages/runner/src/mask.ts : runner の出力・ログ・記録のマスキング'
+  missing: 各ツールの JSON 出力を読んで変換に渡す収集モジュール。マスキングが kit・trace の証跡とレポートに掛かっていない。秘密値が残らないことのテスト
+  wbs_mismatch: マスキングは kit ではなく runner にある
+- id: W1-7
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: medium
+  evidence:
+  - 'packages/kit/templates/skills/req-to-openspec/ : 要件メモから change を作る Skill'
+  - 'openspec/specs/req-to-openspec-skill : ブロッキングの分類と確認事項の文面の仕様'
+  - 'packages/kit/src/verify/run.ts : 未回答のブロッキング確認事項で --spec-only が失敗する'
+  missing: Issue を入力に受け付けない。目的・利用状況・受け入れ条件を quality.yaml に反映する仕組みがない
+  wbs_mismatch: null
+- id: W1-8
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: medium
+  evidence:
+  - 'packages/kit/src/init/init.ts : AGENTS.md・CLAUDE.md・loomake.config.json・Skill・devcontainer を置き、一覧を表示する'
+  - openspec/specs/init, packages/cli/test/init.test.ts
+  missing: quality.yaml v2 の雛形、案件側の薄いワークフロー、空のリポジトリで npx loomake init を試した記録
+  wbs_mismatch: 設定ファイルは quality.yaml ではなく loomake.config.json
+- id: W1-9
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - 'packages/* : effort・estimate・record --effort の実装はない'
+  missing: 人力工数の推定、record --effort、効率の表。前提の W0-7 も未着手
+  wbs_mismatch: null
+- id: W1-10
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: medium
+  evidence:
+  - 'packages/trace/src/record.ts, publication.ts : verify --done の結果を .loomake/evidence/<change>/ に原子的に保存する'
+  - openspec/specs/trace-record, evidence-publication
+  - '.gitignore : .loomake/evidence/ だけをコミット対象にしている'
+  missing: 要約・本体・リリース記録の 3 層、CI 成果物との分離、quality.yaml の evidence:、要約から本体への参照
+  wbs_mismatch: null
+- id: W1-11
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: medium
+  evidence:
+  - 'packages/trace/src/report.ts : change ごとの要件別レポートで、eval や週次レポートではない'
+  missing: trace eval、history.jsonl、report --status、未評価の表示
+  wbs_mismatch: null
+- id: W1-12
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: low
+  evidence:
+  - 'packages/trace/src/evidence.ts, documents.ts : 保存した文書の SHA-256 が一致しなければ拒否する'
+  - 'openspec/specs/trace-report : 内容が一致しないときにレポートを作らない Scenario'
+  missing: リリース記録とその fixture、A16 のテスト
+  wbs_mismatch: null
+- id: W1-14
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - 'packages/* : 切り出し・gzip・索引の実装はない'
+  missing: 切り出し処理と索引の全体
+  wbs_mismatch: null
+- id: W1-13
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: medium
+  evidence:
+  - 'openspec/changes/archive/ : 2026-10-22〜25 の 60 件以上の change を自前の Skill・verify・trace で開発'
+  - 'docs/worklog/ : change ごとの verify と CI の記録'
+  missing: WBS の定義（quality.yaml・eval・状況レポート）での一周、要件定義 O17 への記録
+  wbs_mismatch: 自己適用は旧要件（mvp-v0.x・runner-v0.1・trace-v0.1）の流れで、REQ-xxx は別の採番体系
+- id: W2-1
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - '.github/workflows/ci.yml : pull_request で動く gate ジョブがある。openspec validate --specs --strict と scripts/ci-gate.mjs を実行し、対象 change に verify --done をかける（REQ-010・REQ-054・REQ-132）'
+  - 'scripts/ci-gate.mjs : PR 本文の loomake-change: の行、変えたファイル、ブランチ名から対象 change を決める'
+  - 'docs/flow.md:126, docs/review.md:130 : 必須チェックの設定は人が GitHub 上で行う。設定状態は確認していないと書かれている'
+  missing: reusable workflow（workflow_call を持つ gate.yml）がない。verify を必須チェックにした設定と、落ちた PR をマージできないことの確認記録もない
+  wbs_mismatch: 成果物は gate.yml の reusable workflow だが、実際は ci.yml の中の gate ジョブで、このリポジトリ専用
+- id: W2-2
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - '.github/workflows/ : claude-code-action を使うワークフローはない'
+  - 'docs/architecture.md:269 : 方針の記載だけ'
+  missing: AI レビューのワークフロー、必須チェックの設定、結果を証跡にする収集処理
+  wbs_mismatch: null
+- id: W2-3
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: medium
+  evidence:
+  - 'openspec/specs/run-guards/spec.md, packages/runner/src/guards.ts : テストの削除・skip、アサーションを弱める変更、設定・仕様・git フックの変更を見つけてコミットせずに止まる（REQ-109〜112 ほか）'
+  - 'packages/runner/src/run/decision-policy.ts : 停止判断の純粋関数（変更種別の判定ではない）'
+  - 'packages/*/src, scripts : protected_paths・変更種別・有効期限・確認の記録に当たる実装はない'
+  missing: gate 側の変更種別と自動実行条件の判定（実装前・マージ前）、protected_paths の判定、進行可否と理由の記録、確認済み操作の保持（範囲・版・期限）と再確認の条件、FR-20 のテスト
+  wbs_mismatch: 近い機能は runner のガードとして先に作られている。承認は人がコミットして再実行する方式で、確認の記録を持たない
+- id: W2-4
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - 'packages, .github/workflows, loomake.config.json : 自動マージ・A1/A2 の設定はない'
+  missing: 自動マージの実装と設定、条件を満たす変更だけがマージされることの確認
+  wbs_mismatch: null
+- id: W2-5
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - 'docs/architecture.md:268 : GitHub App を分ける方針の記載だけ'
+  - 'openspec/changes/archive/2026-10-24-isolate-release-permissions : release ワークフロー内のジョブ権限の絞り込み（App の分離ではない）'
+  missing: 2 つの GitHub App と権限設定、文書、エージェント用トークンで必須チェックと保護ルールを変えられないことの確認
+  wbs_mismatch: runner はローカルの gh 認証をそのまま使う。FR-19 が求める CODEOWNERS もない
+- id: W3-1
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - 'リポジトリのルート : templates/ がない（templates/nuxt-supabase/ もない）'
+  - 'packages/kit/templates/ : init で配る AGENTS.md と devcontainer の雛形だけ'
+  - 'docs/architecture.md 9 章 : 設計の記載だけ'
+  missing: 最小テンプレート、確定した protected_paths、変更種別の扱いの確認記録、手動の公開・復旧の記録
+  wbs_mismatch: Vercel・Supabase の利用や検証の痕跡がリポジトリにない
+- id: W3-2
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - 'packages/runner/src/run.ts, run/phases.ts, engine.ts : claude -p で tasks を 1 つずつ実装してコミットし、完了ゲートを実行する（openspec/specs/run）'
+  - 'packages/runner/src/pr.ts, openspec/specs/run-pr : 証拠を記録して push し、gh pr create で PR を作る（REQ-114〜116）'
+  - 'packages/runner/test/pr.test.ts, run.test.ts : 偽のエンジンと偽の gh で PR 作成まで通すテスト'
+  - 'docs/quality/real-engine-trials.md : 実際の Claude Code で 3 件試したが、remote がなく push で止まった'
+  missing: PR が Draft ではない。ローカルで完了ゲート全体を実行し、local と ci の区別がない。実際の GitHub で Draft PR にした記録がない
+  wbs_mismatch: WBS は local 項目 → Draft PR → CI verify の 2 段階だが、実装はローカルで合格してから通常の PR を作る 1 段階
+- id: W3-3
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - 'openspec/specs/run/spec.md : 不合格の内容をエンジンに渡して直させ、run.maxFixes（既定 5）で止まる（REQ-100・REQ-104）'
+  - 'openspec/specs/run『止まったときの報告』: 理由・終えたタスク・残ったタスク・最後の検査結果を summary.json に書く（REQ-107）'
+  - 'packages/runner/test/run.test.ts : 上限に達して止まるテスト'
+  missing: 直しの入力が CI verify ではなくローカルの完了ゲート。decision.required の出力がない。上限時に試したことと残る選択肢を示さない
+  wbs_mismatch: Draft PR 上の CI 結果を取り込む経路がない
+- id: W3-4
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - 'packages/runner/src/pr.ts findOpenPr : push のあと同じ base/head の open PR を照合し、既存の PR を使う（REQ-165・166）'
+  - 'packages/runner/test/publication-retry.test.ts : 作成の前後で失敗したあとの再実行で PR を増やさないテスト'
+  - 'packages/runner/src/lock.ts, docs/run-recovery.md, scripts/run-sigint-smoke.mjs : 作業ツリー単位の排他ロック、中断からの再開'
+  missing: Webhook の重複排除（A05）、Actions の concurrency と再実行による復旧、A05・A06 の障害注入テスト。実際の GitHub での復旧は未検証
+  wbs_mismatch: Webhook と Actions から起動する前提だが、実態はローカルの CLI 実行
+- id: W3-5
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - '.devcontainer/devcontainer.json : devcontainer はあるが、ネットワーク制限の設定はない'
+  - 'packages/runner/src/run/prepare.ts（REQ-121）: --skip-permissions は LOOMAKE_SANDBOX=1 のときだけ。許可ドメインは表示するだけ'
+  - 'docs/security.md:27 : 通信制限は利用者の責任と明記'
+  missing: 許可ドメインに絞った制限と、制限外への通信が失敗するテスト。本番の資格情報を渡さないことの確認
+  wbs_mismatch: security.md は通信制限を利用者の責任としていて、WBS の完了条件と方針が食い違う
+- id: W3-6
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - '.github/workflows/ : run.yml がない'
+  - 'packages/runner/src/engine.ts : ENGINES = [''claude-code''] だけ。run の仕様は --engine codex を使い方の誤りとしている'
+  missing: run.yml、案件側からの呼び出し、Codex への切り替え
+  wbs_mismatch: 現在の run の仕様が Codex 切り替えを拒否している。仕様の変更が先に要る
+- id: W3-7
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - 'リポジトリ全体 : 固定構成のテンプレートも『定休日で絞り込みたい』の change の経緯もない'
+  missing: 前提の W3-1〜W3-6 と、change の経緯の記録、レビュー可能な PR
+  wbs_mismatch: null
+- id: W3-8
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: medium
+  evidence:
+  - 'docs/requirements-matrix.md : W3-8 に割り当てた記載だけ'
+  missing: 受入シナリオの操作の一覧と入口の割り当て
+  wbs_mismatch: null
+- id: W4-1
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - 'packages/trace/src/index.ts : 公開しているのは record・report・agreement だけで、propose はない'
+  - 'packages/cli/src/main.ts : trace のサブコマンドは record・report・answer・approve だけ'
+  - 'packages/ 全体 : propose・eval・history.jsonl を Grep しても一致なし'
+  missing: loomake trace propose がない。前提の eval（W1-11）もない
+  wbs_mismatch: 前提の trace eval と history.jsonl がリポジトリに存在しない。requirements-matrix.md では FR-33〜35 が W4-1 に割り当てられているが、対応する実装はない
+- id: W4-2
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - 'packages/ : 回帰の疑いを切り分ける判定のコードは見当たらない'
+  missing: 回帰の疑いの判定と、原因から分けた表示
+  wbs_mismatch: null
+- id: W4-3
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - 'openspec/changes/archive/ : propose から始まった change の一周を示す記録はない'
+  missing: propose → change → run → マージの一周の記録
+  wbs_mismatch: null
+- id: W5-1
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - 'packages/trace/src/record.ts : verify --done の結果に HEAD の SHA・コミット日時・記録日時を付け、.loomake/evidence/<change>/ に追記専用で保存する。検証時点の文書も SHA-256 付きで残す'
+  - 'openspec/specs/trace-record/spec.md : REQ-066〜068・127・128（書き換えない、検査中の変更で止める）'
+  - 'openspec/specs/evidence-publication/spec.md, packages/trace/src/publication.ts : 証拠を原子的に保存し、サイズの上限を持つ'
+  missing: 'role: release のリリース記録、リリース用要約、タグとの対応付け、長期保管先への自動転送と索引、取得・照合の手順がない。いまの記録は change ごとの検証証拠で、公開版の記録ではない'
+  wbs_mismatch: trace record は change 単位の証拠記録として実装されている。WBS が想定するリリース単位の記録とは単位も目的も違う。2026-10-25 の rename-acceptance-to-release で変わったのは名前と文言だけ
+- id: W5-2
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: medium
+  evidence:
+  - 'packages/trace/src/report.ts : 最新の証拠と trace.md・差分仕様から要件ごとの表を作り、md・json（REPORT_SCHEMA_VERSION 2）で出力する'
+  - 'openspec/specs/trace-report/spec.md : 要注意の一覧、確認事項・仮定の一覧、同じ入力から同じ出力、記録後に変わった文書の検出'
+  - 'packages/trace/test/report.test.ts : レポートのテスト'
+  missing: 品質状況レポート（report --status）がなく、共通の JSON になっていない。kit の判定関数の結果から作る構成ではない。リリース記録（W5-1）を入力にしていない
+  wbs_mismatch: report は change 単位のリリースレポート（旧称は検収レポート）として実装されている
+- id: W5-3
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - 'packages/kit/src, packages/core/src : 受け入れ条件から E2E を生成するコードはない'
+  - 'scripts/ai-journeys.mjs, openspec/specs/quality-journeys/spec.md : 配布物を AI が操作するシナリオ試験はあるが、E2E 生成ではない'
+  missing: E2E の生成、verify --done への組み込み、鮮度の照合、A02・A09 の再確認
+  wbs_mismatch: quality-journeys は名前が近いが、生成アプリの目的単位の E2E とは別物
+- id: W5-4
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - 'packages/cli/src/main.ts : record --observation のオプションはない'
+  missing: 観測の記録、要望の分類、change へのひも付け、重複の防止
+  wbs_mismatch: null
+- id: W5-5
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - '.github/workflows/ : ci.yml・codeql.yml・release.yml（npm 公開）だけで、Vercel への公開ジョブはない'
+  missing: 公開・復旧のジョブとデプロイ ID の対応付け。前提の W3-1 の記録もない
+  wbs_mismatch: release.yml は npm の公開で、生成アプリの公開ジョブとは別物
+- id: W5-6
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - 'リポジトリ全体 : 計測項目・計測点・保存の定義は見当たらない'
+  missing: 計測の定義と、初回公開時の保存
+  wbs_mismatch: null
+- id: W5-7
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - 'docs/worklog/ : A23 の一周の記録はない'
+  missing: A23 の一周の記録
+  wbs_mismatch: null
+- id: W6-1
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - '.github/workflows/release.yml : 手動実行で check を通したあと changeset publish する。OIDC と provenance に対応'
+  - '.changeset/initial-release.md : 5 パッケージを上げる初版の changeset が未消化。packages/*/package.json の version はすべて 0.0.0'
+  - 'README.md, docs/usage.md, docs/quickstart.md : まだ npm に公開していないと書かれている'
+  missing: npm への実際の公開と、公開版での npx loomake init の確認（レジストリは未確認、リポジトリ内の記述で判断）
+  wbs_mismatch: 版管理は changesets（pnpm）
+- id: W6-2
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - '.github/workflows/ci.yml : workflow_call がなく、gate は ci.yml の中のジョブ（scripts/ci-gate.mjs）'
+  - 'git tag : v1 相当のタグはない'
+  missing: reusable workflow（gate・run・evaluate・propose）、@v1 のタグ運用
+  wbs_mismatch: gate.yml・run.yml は存在せず、gate は自リポジトリの CI に埋め込まれている
+- id: W6-3
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - 'scripts/ai-journeys.mjs, scripts/package-smoke.mjs : tarball をオフラインで導入する試験はあるが、別リポジトリでの公開版の導入検証ではない'
+  missing: 別リポジトリでの公開版の導入検証。前提の W5-7・W6-1・W6-2 も未完了
+  wbs_mismatch: null
+- id: W6-4
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - 'README.md, README.en.md, docs/quickstart.md, docs/usage.md : 導入と使い方の文書がある（公開前のためローカルビルドでの代替手順）'
+  missing: loomake.dev（Docus）、サンプルリポジトリ、段階ごとの更新、公開版と一致する導入手順
+  wbs_mismatch: docs/worklog/2026-10-26.md で、architecture・overview・wbs が zod・npm・node:test・Biome 前提で、実装は依存ゼロの core・pnpm・Vitest・ESLint だと報告されている
+- id: W6-5
+  assessment: partial
+  initial_status: Backlog
+  close_as: null
+  confidence: medium
+  evidence:
+  - 'docs/compatibility.md : 終了コード、schemaVersion、0.x の破壊的変更の扱い、changeset と移行説明の要求'
+  - 'packages/core/schema/verify-result.schema.json, tests/schema-compatibility.test.ts : スキーマの互換性を試験している'
+  - '.github/PULL_REQUEST_TEMPLATE.md : 非互換な変更の理由と移行方法の欄はない'
+  missing: PR に非互換の理由と移行方法を書く運用、1.0 に向けた互換性の範囲の文書化
+  wbs_mismatch: quality.yaml はなく、設定は loomake.config.json
+- id: W6-6
+  assessment: done
+  initial_status: Done
+  close_as: completed
+  confidence: medium
+  evidence:
+  - 'docs/guide/ : はじめに・ガイド・リファレンス・考え方の 4 章がある（PR #8、d50586e で main に取り込み済み）'
+  - 'tests/doc-links.test.ts : docs/guide/ 以下の全ページのリンクを検査する'
+  missing: null
+  wbs_mismatch: v1.3.1 の調査（f2c4db3）のあとに main で追加された作業項目。d50586e で確認した
+- id: W6-7
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: low
+  evidence:
+  - 'loomake/site : 別リポジトリのため、このリポジトリからは確認していない'
+  missing: site の content.config.ts で docs/guide/ を読み込み、loomake.dev/docs と /llms.txt に全ページが出ること
+  wbs_mismatch: v1.3.1 の調査のあとに main で追加された作業項目。site 側の状態は人が確かめる
+- id: W6-8
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - 'scripts/ : CLI のオプションとスキーマからリファレンスを生成するスクリプトはない。docs/guide/3.reference/ は手書きの 3 ページ'
+  missing: 生成スクリプトと、生成し直して差分が出ないことの CI の検査。前提の W1-1 も未完了
+  wbs_mismatch: v1.3.1 の調査のあとに main で追加された作業項目
+- id: W6-9
+  assessment: none
+  initial_status: Backlog
+  close_as: null
+  confidence: high
+  evidence:
+  - '.github/workflows/ : ci.yml・codeql.yml・release.yml だけで、site を作り直すワークフローはない'
+  missing: docs/guide/ の変更で site を作り直すワークフロー
+  wbs_mismatch: v1.3.1 の調査のあとに main で追加された作業項目
