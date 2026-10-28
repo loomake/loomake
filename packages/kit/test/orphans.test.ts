@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import {
   CLEANUP_LIMIT_MS, HOLDER_START_LIMIT_MS, ProcessLimitError, remainingProcessTime, closeWindowsHolderForTest, describeUnprotected, holdExpiry, judgeHolderCleanup, missingResultError,
-  prepareWindowsHolder, readReport, runExternal, setHolderForTest, setTreeCleanupForTest, stopTree, windowsHolder, windowsHolderStateForTest,
+  prepareWindowsHolder, readReport, runExternal, setHolderCommandForTest, setHolderForTest, setTreeCleanupForTest, stopTree, windowsHolder, windowsHolderStateForTest,
   withProcessBudget, type HolderClient, type HolderCleanupOutput, type HolderCleanupRequest, type HolderRecord, type HolderReply,
 } from '../src/runtime/process.js';
 
@@ -337,6 +337,90 @@ function logCleanup(label: string, value: unknown) {
   // 10 秒の上限に対して各手順にかかった時間を CI の記録に残す
   console.info(`[REQ-253] ${label}：${JSON.stringify(value)}`);
 }
+
+/**
+ * 作業用のディレクトリで親とやりとりする偽の保持役（windows-holder.ps1 と同じ形）。mode で振る舞いを変える。
+ * ok：準備して頼みに答える。slow：準備しない。mute：準備するが頼みに答えない
+ */
+function fakeFileHolder(dir: string, mode: 'ok' | 'slow' | 'mute') {
+  const script = join(dir, 'file-holder.cjs');
+  writeFileSync(script, `const fs=require('node:fs');const path=require('node:path');const d=process.env.LOOMAKE_HOLDER_DIR;
+const log=(o)=>fs.appendFileSync(path.join(${JSON.stringify(dir)},'requests'),JSON.stringify(o)+'\\n');
+if(${JSON.stringify(mode)}!=='slow'){fs.writeFileSync(path.join(d,'ready.tmp'),'{}');fs.renameSync(path.join(d,'ready.tmp'),path.join(d,'ready'));}
+setInterval(()=>{for(const f of fs.readdirSync(d)){if(!/^req-.*\\.json$/.test(f))continue;const r=JSON.parse(fs.readFileSync(path.join(d,f),'utf8'));fs.rmSync(path.join(d,f));log(r);
+if(${JSON.stringify(mode)}!=='ok'||r.op==='release')continue;
+const res=r.op==='state'?{holds:['kept']}:{target:'no-hold',passes:0,stable:false,records:[],timing:{enumerate:0,stop:0,wait:0,total:1}};
+fs.writeFileSync(path.join(d,'tmp-'+f),JSON.stringify(res));fs.renameSync(path.join(d,'tmp-'+f),path.join(d,f.replace('req-','res-')));}},5);
+process.stdin.on('end',()=>{fs.rmSync(d,{recursive:true,force:true});process.exit(0);});process.stdin.resume();`);
+  setHolderCommandForTest({ command: process.execPath, args: [script] });
+  const requests = () => (existsSync(join(dir, 'requests')) ? readFileSync(join(dir, 'requests'), 'utf8').trim().split('\n').map((l) => JSON.parse(l) as Record<string, unknown>) : []);
+  return { requests };
+}
+
+describe.runIf(process.platform !== 'win32')('作業用のディレクトリでの保持役とのやりとり', () => {
+  it('[REQ-255][REQ-257] 保持役を起動して準備を待ち、解放・後片付け・状態の問い合わせを頼み、親が閉じると保持役は終わる', async () => {
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), 'loomake-file-holder-')));
+    const { requests } = fakeFileHolder(dir, 'ok');
+    try {
+      const prepared = windowsHolder.prepare(10_000);
+      expect(prepared).toMatchObject({ pipe: expect.stringMatching(/^\\\\\.\\pipe\\loomake-holder-[0-9a-f]{32}$/) });
+      // 2 回目は同じ保持役を使い、待たない
+      expect(windowsHolder.prepare(0)).toEqual(prepared);
+      windowsHolder.release('done');
+      const reply = windowsHolder.cleanup({ id: 'gone', pid: 1, created: '5' }, CLEANUP_LIMIT_MS);
+      expect(judgeHolderCleanup(reply)).toMatchObject({ confirmed: false, detail: expect.stringContaining('対象の保持がなく') });
+      expect(windowsHolderStateForTest()).toEqual(['kept']);
+      expect(requests().map((r) => r.op)).toEqual(['release', 'cleanup', 'state']);
+      expect(requests()[1]).toMatchObject({ id: 'gone', pid: 1, created: '5', deadlineMs: expect.any(Number) });
+      const pid = closeWindowsHolderForTest()!;
+      expect(await waitFor(() => !alive(pid), 5_000)).toBe(true);
+      // 保持役が終わったあとの頼みは、送らずに終わっていると返す
+      windowsHolder.release('late');
+      expect(windowsHolderStateForTest()).toBeUndefined();
+      expect(judgeHolderCleanup(windowsHolder.cleanup({ id: 'late', pid: 1, created: '5' }, CLEANUP_LIMIT_MS)).detail).toContain('保持役が終わっています');
+    } finally {
+      closeWindowsHolderForTest();
+      setHolderCommandForTest(undefined);
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+  it('[REQ-257][REQ-253] 保持役の準備が上限に間に合わなければ使えないと返し、後片付けに答えなければ上限で打ち切る', async () => {
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), 'loomake-file-holder-')));
+    try {
+      fakeFileHolder(dir, 'slow');
+      expect(windowsHolder.prepare(300)).toEqual({ unavailable: 'holder-not-ready' });
+      const slow = closeWindowsHolderForTest()!;
+      expect(await waitFor(() => !alive(slow), 5_000)).toBe(true);
+
+      fakeFileHolder(dir, 'mute');
+      expect(windowsHolder.prepare(10_000)).toHaveProperty('pipe');
+      const started = Date.now();
+      const report = judgeHolderCleanup(windowsHolder.cleanup({ id: 'mute', pid: 1, created: '5' }, 300));
+      expect(report).toMatchObject({ confirmed: false, detail: expect.stringContaining('後片付けの上限（0.3 秒）までに応答しません') });
+      expect(Date.now() - started).toBeLessThan(3_000);
+      expect(windowsHolderStateForTest(300)).toBeUndefined();
+    } finally {
+      closeWindowsHolderForTest();
+      setHolderCommandForTest(undefined);
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+  it('[REQ-257] 保持役を起動できなければ、準備できないと返す', async () => {
+    setHolderCommandForTest({ command: join(tmpdir(), 'loomake-no-such-holder'), args: [] });
+    try {
+      const result = windowsHolder.prepare(300);
+      expect(result).toHaveProperty('unavailable');
+      expect(['holder-spawn', 'holder-not-ready', 'holder-exited']).toContain((result as { unavailable: string }).unavailable);
+      await sleep(50);
+    } finally {
+      closeWindowsHolderForTest();
+      setHolderCommandForTest(undefined);
+    }
+  });
+  it('[REQ-257] Windows 以外では、試験の準備で保持役を起動しない', () => {
+    expect(prepareWindowsHolder()).toBe(false);
+  });
+});
 
 describe.runIf(process.platform === 'win32')('Windows の実際の保持役', () => {
   it('[REQ-250][REQ-252][REQ-256] cmd.exe → 品質コマンド → さらに子で監視役が強制終了したら、保持中の対象から 2 段をたどって止め、停止を確認できた中断として返す', async () => {

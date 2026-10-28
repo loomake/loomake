@@ -173,11 +173,16 @@ function waitUntil(check: () => boolean, ms: number): boolean {
   }
 }
 
+let holderCommand: { command: string; args: string[] } | undefined;
+/** 試験で、保持役として起動するコマンドを差し替える（POSIX でも、作業用のディレクトリでのやりとりを確かめるため）。undefined で元に戻す */
+export function setHolderCommandForTest(command: { command: string; args: string[] } | undefined): void { holderCommand = command; }
+
 function startHolder(): HolderProcess {
   const dir = mkdtempSync(join(tmpdir(), 'loomake-holder-'));
   const name = `loomake-holder-${randomBytes(16).toString('hex')}`;
   // stdin はパイプにして、親が終わったことを保持役が EOF で知る。親のイベントループを保持役のために止めない
-  const child = spawn('powershell.exe', POWERSHELL_ARGS, {
+  const launch = holderCommand ?? { command: 'powershell.exe', args: POWERSHELL_ARGS };
+  const child = spawn(launch.command, launch.args, {
     stdio: ['pipe', 'ignore', 'ignore'], windowsHide: true, env: { ...process.env, LOOMAKE_HOLDER_DIR: dir, LOOMAKE_HOLDER_PIPE: name },
   });
   child.on('error', () => { /* 起動に失敗したら、準備ができないこととして扱う */ });
