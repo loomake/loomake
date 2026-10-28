@@ -8,6 +8,7 @@ const gate = join(import.meta.dirname, '..', 'scripts', 'ci-gate.mjs');
 
 function withProject(check: (project: {
   dir: string;
+  git: (...args: string[]) => void;
   commitFiles: (files: string[]) => void;
   run: (branch: string, body?: string, statuses?: Record<string, number>) => { status: number | null; stderr: string; calls: string[][] };
 }) => void) {
@@ -40,6 +41,7 @@ process.exit(JSON.parse(process.env.CI_STATUSES)[id] ?? 0);
     git('update-ref', 'refs/remotes/origin/main', 'HEAD');
     check({
       dir,
+      git,
       commitFiles(files) {
         for (const file of files) {
           mkdirSync(dirname(join(dir, file)), { recursive: true });
@@ -162,6 +164,19 @@ describe('実際のCIゲートの子プロセスの契約', () => {
       commitFiles(['openspec/changes/c1/tasks.md']);
       const result = run('c2');
       expect(result.calls).toEqual([done('c1'), done('c2')]);
+      expect(result.status).toBe(0);
+    });
+  });
+
+  it.each(['refs/tags/origin/main', 'refs/heads/origin/main'])('[REQ-272] ベースと同じ名前の参照 %s が PR のコミットの途中を指していても、リモートの追跡ブランチとの差分で change を選ぶ', (name) => {
+    withProject(({ git, commitFiles, run }) => {
+      // 1 つ目のコミットで change を、2 つ目でコードを変え、そのあいだを同じ名前の参照に指させる
+      commitFiles(['openspec/changes/c1/tasks.md']);
+      git('update-ref', name, 'HEAD');
+      commitFiles(['packages/a.ts']);
+      const result = run('fix-x');
+      expect(result.stderr).not.toContain('対象の change を特定できませんでした');
+      expect(result.calls).toEqual([done('c1')]);
       expect(result.status).toBe(0);
     });
   });

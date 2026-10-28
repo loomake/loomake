@@ -64,7 +64,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const base = process.env.BASE_REF ?? '';
   let files = [];
   if (base) {
-    const r = spawnSync('git', ['diff', '--name-only', `origin/${base}...HEAD`], { encoding: 'utf8' });
+    // ベースは refs/remotes/ から書く。「origin/main」とだけ書くと、同じ名前のタグやブランチ（refs/tags/origin/main など）が
+    // 先に選ばれ、PR で変えたファイルを取り違える
+    const r = spawnSync('git', ['diff', '--name-only', `refs/remotes/origin/${base}...HEAD`], { encoding: 'utf8' });
     if (r.status !== 0) {
       console.error(`ci-gate: PR で変えたファイルを調べられませんでした（${(r.stderr || '').trim()}）`);
       process.exit(1);
