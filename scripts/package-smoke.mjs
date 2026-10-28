@@ -1,6 +1,6 @@
 // prepareは開発用Node、checkは配布物の対応Nodeで実行する。
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, linkSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
@@ -44,68 +44,88 @@ const alive = (pid) => {
     return error.code === 'EPERM';
   }
 };
-const readOwner = (dir) => {
+const readJson = (file) => {
   try {
-    return JSON.parse(readFileSync(join(dir, 'owner.json'), 'utf8'));
+    return JSON.parse(readFileSync(file, 'utf8'));
   } catch {
     return undefined;
   }
 };
-
-const statMtime = (path) => {
+const latestGeneration = (dir) => {
+  let latest = 0;
+  for (const name of readdirSync(dir)) {
+    const match = /^(\d+)\.owner$/.exec(name);
+    if (match) latest = Math.max(latest, Number(match[1]));
+  }
+  return latest;
+};
+// 中身を書き終えた一時ファイルを、世代の名前へハードリンクする。リンクは名前が空いているときだけ成功するので、
+// 同じ世代を取れるのは 1 つのプロセスだけで、読む側に書きかけの中身は見えない
+const createGeneration = (dir, generation, owner) => {
+  const temporary = join(dir, `tmp-${owner.token}`);
+  writeFileSync(temporary, JSON.stringify(owner));
   try {
-    return statSync(path).mtimeMs;
-  } catch {
-    return Date.now();
+    linkSync(temporary, join(dir, `${generation}.owner`));
+    return true;
+  } catch (error) {
+    if (error.code === 'EEXIST') return false;
+    throw error;
+  } finally {
+    rmSync(temporary, { force: true });
   }
 };
 
 /**
- * リポジトリの dist を書き換える処理を、ディレクトリのロックで 1 つずつ動かす。
- * 持ち主のプロセスが終わっているか、取ってから staleMs を過ぎたロックは外して取り直す。
+ * リポジトリの dist を書き換える処理を、ロックで 1 つずつ動かす。
+ * ロックは世代ごとのファイル（1.owner、2.owner…）で表し、いちばん新しい世代の持ち主がロックを持つ。
+ * その世代が解放済み（N.released がある）か、持ち主のプロセスが終わっているか、取ってから staleMs を過ぎたときは、
+ * 次の世代のファイルを作って取る。ほかのプロセスのロックを消したり移したりしないので、
+ * 古いロックを複数の待ち手が同時に見ても、次の世代を作れた 1 つだけが中の処理へ進む（PR #107 のレビュー）。
+ * hooks は試験で待ち手の順序を固定するためのもの。
  */
-export function withBuildLock(fn, { lockDir = join(root, '.loomake', 'build.lock'), waitMs = 300_000, staleMs = 600_000, pollMs = 100 } = {}) {
-  mkdirSync(dirname(lockDir), { recursive: true });
-  const token = `${process.pid}-${randomUUID()}`;
+export function withBuildLock(fn, { lockDir = join(root, '.loomake', 'build-lock'), waitMs = 300_000, staleMs = 600_000, pollMs = 100, hooks = {} } = {}) {
+  mkdirSync(lockDir, { recursive: true });
+  const owner = { pid: process.pid, token: `${process.pid}-${randomUUID()}` };
   const started = Date.now();
+  let held;
   for (;;) {
-    try {
-      mkdirSync(lockDir);
-      writeFileSync(join(lockDir, 'owner.json'), JSON.stringify({ pid: process.pid, token, acquiredAt: Date.now() }));
-      break;
-    } catch (error) {
-      if (error.code !== 'EEXIST') throw error;
-    }
-    const owner = readOwner(lockDir);
-    // 取った直後で owner.json がまだないときは、持ち主の書き込みを待つ
-    const stale = owner ? !alive(owner.pid) || Date.now() - owner.acquiredAt > staleMs : statMtime(lockDir) < Date.now() - staleMs;
-    if (stale) {
-      // 外す前に一意の名前へ移し、移したものが古いロックのままかを確かめる。
-      // ほかの待ち手が先に取り直していたら、そのロックを戻す
-      const moved = `${lockDir}.stale-${token}`;
-      try {
-        renameSync(lockDir, moved);
-      } catch (error) {
-        if (error.code !== 'ENOENT') throw error;
-        continue;
-      }
-      if (readOwner(moved)?.token === owner?.token) rmSync(moved, { recursive: true, force: true });
-      else {
-        try {
-          renameSync(moved, lockDir);
-        } catch {
-          rmSync(moved, { recursive: true, force: true });
-        }
+    const current = latestGeneration(lockDir);
+    const file = join(lockDir, `${current}.owner`);
+    const holder = current ? readJson(file) : undefined;
+    // readdir のあとで新しい世代の持ち主が古い世代を消したときは、読み直す
+    if (current && !holder && !existsSync(file)) continue;
+    // 読めない世代は持ち主が動いているものとみなして待つ
+    const free = !current || (holder !== undefined && (existsSync(join(lockDir, `${current}.released`)) || !alive(holder.pid) || Date.now() - holder.acquiredAt > staleMs));
+    if (free) {
+      const next = current + 1;
+      hooks.beforeTake?.(next);
+      const taken = createGeneration(lockDir, next, { ...owner, acquiredAt: Date.now() });
+      hooks.afterTake?.(next, taken);
+      if (taken) {
+        held = next;
+        break;
       }
       continue;
     }
-    if (Date.now() - started > waitMs) throw new Error(`build のロックを ${Math.round(waitMs / 1000)} 秒待っても取れませんでした：${lockDir}（持ち主の PID ${owner?.pid ?? '不明'}）`);
+    if (Date.now() - started > waitMs) throw new Error(`build のロックを ${Math.round(waitMs / 1000)} 秒待っても取れませんでした：${lockDir}（持ち主の PID ${holder?.pid ?? '不明'}）。持ち主がもう動いていなければ、このディレクトリを消してください`);
+    hooks.onWait?.();
     sleep(pollMs);
+  }
+  // 古い世代は、もう誰も取ろうとしない。消せなくてもロックの働きには関わらない
+  for (const name of readdirSync(lockDir)) {
+    const match = /^(\d+)\./.exec(name);
+    if (match && Number(match[1]) < held) {
+      try {
+        rmSync(join(lockDir, name), { force: true });
+      } catch {
+        // Windows でほかのプロセスが読んでいる間は消せないことがある
+      }
+    }
   }
   try {
     return fn();
   } finally {
-    if (readOwner(lockDir)?.token === token) rmSync(lockDir, { recursive: true, force: true });
+    writeFileSync(join(lockDir, `${held}.released`), '');
   }
 }
 
