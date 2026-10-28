@@ -2,7 +2,9 @@ import { describe, it, expect, expectTypeOf } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { z } from 'zod';
-import { verifyResultSchema, VERIFY_RESULT_SCHEMA_VERSION, type VerifyResult, type VerifyCheckResult, type VerifyMode } from '../src/index.js';
+import { loadVerifyResultSchemas, VERIFY_RESULT_SCHEMA_VERSION, type VerifyResult, type VerifyCheckResult, type VerifyMode } from '../src/index.js';
+
+const { verifyResultSchema } = await loadVerifyResultSchemas();
 
 const valid = {
   schemaVersion: VERIFY_RESULT_SCHEMA_VERSION,
@@ -32,8 +34,9 @@ describe('verify 結果の Zod スキーマ', () => {
     expectTypeOf<VerifyResult>().toEqualTypeOf<z.infer<typeof verifyResultSchema>>();
     expectTypeOf<VerifyCheckResult>().toEqualTypeOf<VerifyResult['results'][number]>();
     expectTypeOf<VerifyMode>().toEqualTypeOf<VerifyResult['mode']>();
-    const source = readFileSync(join(import.meta.dirname, '..', 'src', 'verify-result.ts'), 'utf8');
-    expect(source).not.toMatch(/export type \w+ = \{/);
+    for (const file of ['verify-result.ts', 'verify-result-schema.ts']) {
+      expect(readFileSync(join(import.meta.dirname, '..', 'src', file), 'utf8')).not.toMatch(/export type \w+ = \{/);
+    }
   });
 
   it('[REQ-274] 未知のフィールドを拒否せず、値を変えずに残す', () => {

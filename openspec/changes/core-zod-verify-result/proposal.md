@@ -16,7 +16,8 @@ W1-1 の範囲は広い（verify 結果、trace.md・spec・tasks、quality.yaml
 ## What Changes
 
 - `@loomake/core` の `dependencies` に `zod` を足す。
-- verify 結果を Zod スキーマ（`verifyResultSchema`）で定義し、`VerifyResult`・`VerifyCheckResult`・`VerifyMode` の型をスキーマから導出する。手書きの型は消す。外部の形（`schemaVersion` 1.0.0、必須プロパティ、`mode`・`status` の値、`coverage` の形）は変えない。
+- verify 結果を Zod スキーマ（`verifyResultSchema`。`@loomake/core` からは `loadVerifyResultSchemas()` で読む）で定義し、`VerifyResult`・`VerifyCheckResult`・`VerifyMode` の型をスキーマから導出する。手書きの型は消す。外部の形（`schemaVersion` 1.0.0、必須プロパティ、`mode`・`status` の値、`coverage` の形）は変えない。
+- CLI の起動で zod を読まないように、Zod スキーマは `loadVerifyResultSchemas()` で遅れて読む。型は型だけの import で公開する。
 - 未知のフィールドは拒否せず、解析結果にそのまま残す（要件定義 7.3 の互換性の規則）。
 - `packages/core/schema/verify-result.schema.json` を、Zod スキーマから `z.toJSONSchema()` で書き出したものに置き換える。書き出しのコマンドを用意し、書き出した結果とファイルが違えばテストが失敗するようにする。テストは CI で動く。
 - `scripts/schema-contract-check.mjs` は、複製した core のソースから `zod` を読めるようにする。`scripts/package-smoke.mjs` の準備では、外部の実行時依存を npm の cache に入れてから、オフラインで入れる。

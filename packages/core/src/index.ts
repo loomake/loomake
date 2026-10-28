@@ -12,7 +12,7 @@ export type { Task } from './tasks.js';
 export { extractTestRequirements } from './test-report.js';
 export type { TestRequirements } from './test-report.js';
 export { createTraceTemplate } from './template.js';
-export { VERIFY_RESULT_SCHEMA_VERSION, verifyResultSchema, verifyCheckResultSchema, verifyModeSchema } from './verify-result.js';
+export { VERIFY_RESULT_SCHEMA_VERSION, loadVerifyResultSchemas } from './verify-result.js';
 export type { VerifyMode, VerifyCheckResult, VerifyResult } from './verify-result.js';
 export { createAgreement, evaluateAgreement } from './agreement.js';
 export type { Agreement, AgreementDecision, RequirementId, LedgerState } from './agreement.js';
