@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 import { describe, expect, it, vi } from 'vitest';
 import { RuntimeFailure, UsageError, runVerify } from '@loomake/kit';
 import { main } from '../../cli/src/main.js';
-import { withProcessBudget } from '../../kit/src/runtime/process.js';
+import { holderWaitTime, withProcessBudget } from '../../kit/src/runtime/process.js';
 import { runRecord } from '@loomake/trace';
 import { runRun } from '@loomake/runner';
 import { makeRepo, CHANGE, fakeCli, stallOf, type FakeCli, type FakeCliEvent, type Repo } from './helpers.js';
@@ -98,17 +98,21 @@ describe('runから外部操作までの期限', () => {
   it('[REQ-182][REQ-240] 準備で使った時間を含めてエンジンの期限を制限する', async () => {
     // 準備の gh auth status を PREP_DELAY_MS だけ遅らせ、エンジンに予算を最初から与え直すと上限を超えるようにする。
     // 予算は、Windows の遅い準備（約 1.4 秒）と遅らせた分を足してもエンジンを呼べる長さにする。
-    // 猶予は元の試験（予算 1200ms・上限 2500ms）と同じ 1300ms にし、遅らせる時間をそれより長くする
+    // 猶予は元の試験（予算 1200ms・上限 2500ms）と同じ 1300ms にし、遅らせる時間をそれより長くする。
+    // Windows では、期限で git を止めるのに taskkill を使うので、止まるまでに 2 秒近くかかることがある（PR #43 の run 40612195551 で 1983ms）。
+    // そこで Windows では猶予を 3000ms にし、遅らせる時間をそれより長い 4000ms にして、準備の分を引き忘れたら上限を超えることを保つ
     const BUDGET_MS = 8000;
-    const PREP_DELAY_MS = 2000;
-    const ENGINE_GRACE_MS = 1300;
+    const PREP_DELAY_MS = process.platform === 'win32' ? 4000 : 2000;
+    const ENGINE_GRACE_MS = process.platform === 'win32' ? 3000 : 1300;
     const repo = makeRepo();
     try {
       repo.plan([{ sleepMs: 30_000, write: { 'late.txt': '遅い変更' } }]);
       const cli = fakeCli(repo, 'gh', { when: "args[0]==='auth'", delayMs: PREP_DELAY_MS });
       const start = Date.now();
+      const waitedBefore = holderWaitTime();
       const result = await withProcessBudget({ timeoutMs: BUDGET_MS }, () => run(repo));
-      const elapsed = Date.now() - start;
+      // Windows の保持役の準備を待った時間は予算に含めない（REQ-257）ので、経過時間からも除く
+      const elapsed = Date.now() - start - (holderWaitTime() - waitedBefore);
       const context = diagnosticContext(repo, { elapsed, stdout: result.stdout }, cli);
       // 準備を遅らせ、転送が成功し、エンジンまで届いた
       const events = cli.events();
@@ -375,7 +379,9 @@ describe('フックを動かす git の操作の期限', () => {
         chmodSync(hook, 0o755);
       }
       repo.plan([{ write: { 'impl.txt': '実装\n' } }, {}]);
-      const r = await budget(() => run(repo));
+      // Windows では外部操作ごとに保持役へ保持を頼むので、run 全体が遅くなる（run 40615810055 などで 20.7〜21.1 秒）。
+      // フックが 1 操作の期限より遅いことは変えずに、run の予算だけを Windows で 30 秒にする
+      const r = await withProcessBudget({ timeoutMs: process.platform === 'win32' ? 30_000 : 20_000, maxOperationMs: OPERATION_MS }, () => run(repo));
       expect(r.code, r.stdout).toBe(0);
       expect(summary(repo)).toMatchObject({ status: 'completed', remainingTasks: [] });
       expect(repo.prs()).toHaveLength(1);
