@@ -28,4 +28,4 @@
 
 ## Impact
 
-`openspec/specs/monorepo/spec.md`（archive で反映）、`docs/dev/`、`docs/adr/`、AGENTS.md、試験の名前（tests/ と packages/runner/test/ の 17 か所）、`.github/workflows/ci.yml` と試験の補助関数のコメントを変える。製品のコード、公開 API、設定、依存、配布物は変えない。配布するパッケージを変えないので、changeset は空にする。
+`openspec/specs/monorepo/spec.md`（archive で反映）、`docs/dev/`、`docs/adr/`、AGENTS.md、試験の名前（tests/ と packages/runner/test/ の 17 か所）と、試験の補助関数のコメントを変える。`.github/workflows/ci.yml` のコメントに残る REQ-215 は、PR #108 との競合を避けるため、この change では直さない。製品のコード、公開 API、設定、依存、配布物は変えない。配布するパッケージを変えないので、changeset は空にする。
