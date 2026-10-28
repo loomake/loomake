@@ -1,7 +1,7 @@
 # Loomake 要件対応表（W0-1）
 
 最終更新：2026-10-26（v0.3 W0-6・W0-7 の結果を書いた。FR-49・FR-50 の証跡に手書きの記録（`docs/effort/`）を、0.6 の証跡に ADR の置き場（`docs/adr/`）を足した。v0.2 レビュー反映。未割り当て 5 件を WBS v1.3 に割り当て、残件を「未割り当て」「割り当て済み・判断待ち」「初回完成の対象外」に分けた。段階をまたぐ要件の検証欄に段階ごとの確認範囲を書いた。v0.1 初版。要件定義 v0.11.1 の FR・NFR 全件と、ID のない必須事項（7 章の仕様、10 章の段階横断シナリオ、アーキテクチャの必須ルール）を WBS v1.2.1 に結び付けた。対応先のない項目と初回完成の対象外を 2 章に挙げる）
-関連：`docs/wbs.md`（WBS ID の定義）、`docs/requirements/loomake-v0.11.md`、`docs/architecture.md`
+関連：`docs/wbs/baseline-v1.4.md`（WBS ID の定義。作業項目の正本は GitHub Issues）、`docs/requirements/loomake-v0.11.md`、`docs/architecture.md`
 正本：`loomake/loomake` の `docs/requirements-matrix.md`（2026-10-25 にコミット ecbe7fc で取り込み。以後はこのファイルが正本）
 
 固定した正本
