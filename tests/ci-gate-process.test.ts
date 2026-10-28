@@ -1,8 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+
+// どのテストも git とゲートの子プロセスを何度も起動する。Windows の CI では 1 件で最大 5 秒ほどかかり、
+// 既定の 5000ms で時間切れすることがある（Issue #5）。Windows でだけ上限を延ばし、ほかの OS は既定のまま
+if (process.platform === 'win32') vi.setConfig({ testTimeout: 15_000 });
 
 const gate = join(import.meta.dirname, '..', 'scripts', 'ci-gate.mjs');
 
