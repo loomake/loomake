@@ -9,7 +9,9 @@ describe('配布物のCIと公開前ゲート', () => {
     const ci = read('ci.yml');
     const quality = ci.slice(ci.indexOf('  quality:'), ci.indexOf('  node20:'));
     const runtime = ci.slice(ci.indexOf('  node20:'), ci.indexOf('  gate:'));
-    expect(quality).toContain('os: [ubuntu-latest, macos-latest, windows-latest]');
+    // quality ジョブの OS はイベントとラベルで切り替える式で、main への push では 3 つの OS で動く（REQ-049。展開は tests/monorepo.test.ts で確かめる）
+    const osLine = quality.match(/^ {8}os: (.+)$/m)?.[1] ?? '';
+    for (const os of ['ubuntu-latest', 'macos-latest', 'windows-latest']) expect(osLine, os).toContain(os);
     expect(quality).toContain('package-smoke.mjs prepare');
     expect(quality).toContain('package-smoke.mjs check');
     const prepare = runtime.indexOf('package-smoke.mjs prepare');
