@@ -16,7 +16,7 @@
 
 ## 4. 案 E の申し送り（Issue #42 の 4）
 
-- [ ] 4.1 `.github/workflows/ci.yml` の gate ジョブと `scripts/ci-gate.mjs` に、文書だけの PR でテストを実行するのは gate ジョブだけであり、gate でテストを飛ばす変更では REQ-270 を見直すことを、コメントで書く（REQ-270）
+- [x] 4.1 `.github/workflows/ci.yml` の gate ジョブと `scripts/ci-gate.mjs` に、文書だけの PR でテストを実行するのは gate ジョブだけであり、gate でテストを飛ばす変更では REQ-270 を見直すことを、コメントで書く（REQ-270）
 
 ## 5. 確認
 
