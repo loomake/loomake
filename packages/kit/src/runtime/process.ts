@@ -273,10 +273,12 @@ function prepareHolder(holder: HolderClient, waitMs = HOLDER_START_LIMIT_MS): { 
   try { return holder.prepare(waitMs); } finally { holderWaitMs += monotonicMs() - started; }
 }
 
-/** 試験で、Windows の保持役を先に起動して準備を待つ。最初の外部操作の待ちを済ませたことになる。準備できれば true */
+/** 試験で、Windows の保持役を起動して準備を待つ。最初の外部操作の待ちを済ませたことになる。準備できれば true */
 export function prepareWindowsHolder(waitMs = 60_000): boolean {
   if (process.platform !== 'win32') return false;
-  return 'pipe' in prepareHolder(windowsHolder, waitMs);
+  // 試験の準備なので、保持役が終わって起動し直すときも、準備を待つ。待った時間は予算と関係しない
+  holderGate().waited = true;
+  return 'pipe' in windowsHolder.prepare(waitMs);
 }
 
 const UNPROTECTED: Record<string, string> = {
@@ -345,9 +347,17 @@ export function setTreeCleanupForTest(cleanup: TreeCleanup | undefined): void { 
  * 対象を起動したが PID を受け取れなかったときは、未確認として返す
  */
 export function stopTree(target: SupervisorTarget, holdId: string | undefined, holder: HolderClient | undefined): CleanupReport | undefined {
-  if (target.pid === undefined) return target.spawning ? { confirmed: false, detail: '対象を起動したあと、PID を受け取る前に監視役が終わりました' } : undefined;
+  if (target.pid === undefined) {
+    // 監視役が保持を頼んだあとに終わったかもしれないので、保持を解放する（REQ-255）
+    if (holder && holdId !== undefined) holder.release(holdId);
+    return target.spawning ? { confirmed: false, detail: '対象を起動したあと、PID を受け取る前に監視役が終わりました' } : undefined;
+  }
   const pid = target.pid;
-  if (cleanupOverride) return cleanupOverride({ ...target, pid });
+  if (cleanupOverride) {
+    const report = cleanupOverride({ ...target, pid });
+    if (holder && holdId !== undefined) holder.release(holdId);
+    return report;
+  }
   if (holder && holdId !== undefined) {
     if (target.created === undefined) {
       holder.release(holdId);

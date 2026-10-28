@@ -181,7 +181,8 @@ describe('差し替えた保持役との順序', () => {
         try { runExternal(process.execPath, ['-e', killSupervisorLater]); } catch (e) { error = e; }
         expect(error).toBeInstanceOf(ProcessLimitError);
         expect((error as ProcessLimitError).kind).toBe('interrupted');
-        expect((error as ProcessLimitError).reason).toBe(`監視役が結果を書かずに終了しました（シグナル SIGKILL）`);
+        // Windows では、強制終了した監視役の終わり方が終了コード 1 になる
+        expect((error as ProcessLimitError).reason).toBe(`監視役が結果を書かずに終了しました（${process.platform === 'win32' ? '終了コード 1' : 'シグナル SIGKILL'}）`);
         expect((error as ProcessLimitError).cleanup?.confirmed).toBe(true);
         expect(() => runExternal(process.execPath, ['-e', `require('node:fs').writeFileSync(${JSON.stringify(after)},'x')`])).toThrow('中断');
       });
@@ -296,7 +297,8 @@ describe('差し替えた保持役との順序', () => {
       const after = join(dir, 'after');
       withProcessBudget({ timeoutMs: 20_000 }, () => {
         let error: unknown;
-        try { runExternal(process.execPath, ['-e', "process.kill(process.ppid,'SIGKILL');setInterval(()=>{},100)"]); } catch (e) { error = e; }
+        // Windows では保持を確かめてから PID を受け取るので、監視役を止める前に少し待つ
+        try { runExternal(process.execPath, ['-e', "setTimeout(()=>process.kill(process.ppid,'SIGKILL'),300);setInterval(()=>{},100)"]); } catch (e) { error = e; }
         expect(error).toBeInstanceOf(ProcessLimitError);
         expect((error as ProcessLimitError).kind).toBe('interrupted');
         expect((error as ProcessLimitError).reason).toContain('子孫の停止を確認できません：子孫を探せません：試験');
@@ -500,11 +502,12 @@ process.kill(sup,'SIGKILL');setInterval(()=>{},100);`);
     const t = await targetWithChild(dir, 'open');
     try {
       const held = await askHold(t.target.pid!, 'open');
-      // System（PID 4）は開けない
-      const result = windowsHolder.cleanup({ id: 'open', pid: t.target.pid!, created: held.created!, candidates: [{ pid: 4 }] }, CLEANUP_LIMIT_MS);
+      // 終わったプロセスの PID は開けない（管理者で動く CI では、System の PID 4 も開けることがある）
+      const ended = spawn(process.execPath, ['-e', ''], { stdio: 'ignore' });
+      await new Promise((resolve) => ended.once('exit', resolve));
+      const result = windowsHolder.cleanup({ id: 'open', pid: t.target.pid!, created: held.created!, candidates: [{ pid: ended.pid! }] }, CLEANUP_LIMIT_MS);
       logCleanup('開けない候補', result);
-      expect('output' in result && result.output.records?.find((r) => r.pid === 4)).toMatchObject({ state: 'unopenable', reason: expect.stringMatching(/^open:/) });
-      expect(alive(4)).toBe(true);
+      expect('output' in result && result.output.records?.find((r) => r.pid === ended.pid)).toMatchObject({ state: 'unopenable', reason: expect.stringMatching(/^open:/) });
     } finally {
       try { process.kill(t.childPid, 'SIGKILL'); } catch { /* */ }
       t.target.kill('SIGKILL');
