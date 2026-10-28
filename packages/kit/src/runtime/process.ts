@@ -1,6 +1,9 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
+import { existsSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { StringDecoder } from 'node:string_decoder';
 import { fileURLToPath } from 'node:url';
 import { RuntimeFailure, UsageError } from './errors.js';
@@ -11,6 +14,11 @@ type Budget = { deadline: number; maxOperationMs: number; state: { interrupted: 
 const budgets = new AsyncLocalStorage<Budget>();
 export type ProcessBudget = { timeoutMs: number; maxOperationMs?: number };
 const monotonicMs = () => Number(process.hrtime.bigint()) / 1_000_000;
+/** 保持役の準備を待った時間の合計。操作の期限にも共有予算にも含めないので、期限を計る時計から差し引く（REQ-257） */
+let holderWaitMs = 0;
+const budgetNow = () => monotonicMs() - holderWaitMs;
+/** このプロセスで保持役の準備を待った時間（ミリ秒）。run の記録の期限のように実時間で計る期限から差し引く（REQ-257） */
+export function holderWaitTime(): number { return holderWaitMs; }
 
 function positive(value: number) {
   if (!Number.isFinite(value) || value <= 0) throw new UsageError('外部操作の予算は正の有限数にしてください');
@@ -21,12 +29,12 @@ export function withProcessBudget<T>(options: ProcessBudget, action: () => T): T
   const outer = budgets.getStore();
   const maxOperationMs = Math.min(options.maxOperationMs ?? EXTERNAL_TIMEOUT_MS, outer?.maxOperationMs ?? Infinity);
   positive(maxOperationMs);
-  const deadline = Math.min(monotonicMs() + options.timeoutMs, outer?.deadline ?? Infinity);
+  const deadline = Math.min(budgetNow() + options.timeoutMs, outer?.deadline ?? Infinity);
   return budgets.run({ deadline, maxOperationMs, state: outer?.state ?? { interrupted: false } }, action);
 }
 export function remainingProcessTime(): number | undefined {
   const budget = budgets.getStore();
-  return budget && Math.max(0, budget.deadline - monotonicMs());
+  return budget && Math.max(0, budget.deadline - budgetNow());
 }
 export function hasProcessBudget(): boolean { return budgets.getStore() !== undefined; }
 
@@ -61,25 +69,29 @@ type Outcome = { status: number | null; signal: NodeJS.Signals | null; kind?: Pr
 // 対象の出力と制御情報を別のpipに流し、コマンド自身の出力を結果の形式と解釈しない。
 const SUPERVISOR = fileURLToPath(new URL('../../supervisor/supervisor.cjs', import.meta.url));
 
-/** 監視役が fd 3 に書いた、対象の PID（と起動の直前・直後の時刻）の行と結果。解釈できない行があれば invalid にする */
-function readReport(text: string): { pid?: number; spawned?: { from: number; to: number }; outcome?: Outcome; invalid: boolean } {
-  let pid: number | undefined;
-  let spawned: { from: number; to: number } | undefined;
+/**
+ * 監視役が fd 3 に書いた、対象の識別の行と結果を読む（REQ-250・REQ-252）。
+ * 行は、対象を起動する直前の {"spawning":true}、起動した直後の {"pid"}（保持を確かめたら "created"、確かめられなければ "unprotected" も持つ）、結果の順。解釈できない行があれば invalid にする
+ */
+export function readReport(text: string): { target: SupervisorTarget; outcome?: Outcome; invalid: boolean } {
+  const target: SupervisorTarget = { spawning: false };
   let outcome: Outcome | undefined;
   let invalid = false;
   for (const line of text.split('\n')) {
     if (!line) continue;
     let value: unknown;
     try { value = JSON.parse(line); } catch { invalid = true; continue; }
-    if (value === null || typeof value !== 'object' || Array.isArray(value)) invalid = true;
-    else if ('status' in value) outcome = value as Outcome;
-    else if ('pid' in value && Number.isSafeInteger(value.pid) && (value.pid as number) > 0) {
-      pid = value.pid as number;
-      const { from, to } = value as { from?: unknown; to?: unknown };
-      if (typeof from === 'number' && typeof to === 'number' && Number.isFinite(from) && Number.isFinite(to) && from <= to) spawned = { from, to };
+    if (value === null || typeof value !== 'object' || Array.isArray(value)) { invalid = true; continue; }
+    const item = value as Record<string, unknown>;
+    if ('status' in item) outcome = item as unknown as Outcome;
+    else if (item.spawning === true) target.spawning = true;
+    else if (Number.isSafeInteger(item.pid) && (item.pid as number) > 0) {
+      target.pid = item.pid as number;
+      if (typeof item.created === 'string' && /^\d+$/.test(item.created)) target.created = item.created;
+      else if (typeof item.unprotected === 'string') target.unprotected = item.unprotected;
     } else invalid = true;
   }
-  return { pid, spawned, outcome, invalid };
+  return { target, outcome, invalid };
 }
 
 const pause = (ms: number) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
@@ -92,175 +104,252 @@ function gone(target: number, ms: number): boolean {
     pause(10);
   }
 }
-// ---- Windows で親のいない子孫の後片付け（Q-04 の A） ----
+// ---- Windows の保持役（Q-05 の B-3） ----
 
 /**
- * Windows で監視役が結果を書かずに終わったときに、残った対象の子孫を止める（REQ-252・REQ-253・REQ-254）。
- * 監視役は対象の環境変数に実行ごとの印を足す。後片付けは PowerShell を 1 回だけ起動し、印と作成時刻を確かめたのと同じハンドルで止める。
- * どれを止めたか・未確認とするかは、PowerShell の出力から judgeCleanup で決める
+ * Windows で監視役が結果を書かずに終わったときに、残った対象の子孫を止めるための保持役（REQ-252・REQ-253・REQ-255・REQ-256）。
+ * loomake のプロセスごとに 1 つ起動して使い回し、監視役が対象を起動した直後に名前つきパイプで対象のハンドルの保持を頼む。
+ * 後片付けも保持役が行う。どれを未確認とするかは、保持役の結果から judgeHolderCleanup で決める
  */
 
-/** 後片付け（PowerShell の起動・探索・識別・停止・終了の待機）の合計の上限。通常の共有予算とは別に、後片付けだけに使う（REQ-253） */
+/** 後片付け（保持役への依頼・探索・識別・停止・終了の待機）の合計の上限。通常の共有予算とは別に、後片付けだけに使う（REQ-253） */
 export const CLEANUP_LIMIT_MS = 10_000;
-/** 探索で、対象の起動より前に作られたプロセスを除くときに見込む、時計の刻みの差 */
-export const CLOCK_SLACK_MS = 50;
-/** 実行ごとの印を入れる環境変数。値はセミコロンで区切った印の並びで、外側の loomake の印を残したまま足す */
-export const SUPERVISOR_MARK_ENV = 'LOOMAKE_SUPERVISOR_MARK';
-/** 環境変数の値に印を足す */
-export function appendMark(current: string | undefined, mark: string): string {
-  return current ? `${current};${mark}` : mark;
+/** 保持役の準備を待つ上限。loomake のプロセスごとに最初の外部操作の前に一度だけ待ち、操作の期限にも共有予算にも含めない（REQ-257） */
+export const HOLDER_START_LIMIT_MS = 10_000;
+/** 保持の期限に足す、監視役の停止の猶予（250ms と 1 秒の待機と出力の書き出し）と余裕（REQ-255） */
+const SUPERVISOR_STOP_GRACE_MS = 2_000;
+const HOLD_MARGIN_MS = 5_000;
+
+/** 保持の期限（壁時計の Unix 時刻のミリ秒）。対象の期限に、監視役の停止の猶予と後片付けの上限と余裕を足す（REQ-255） */
+export function holdExpiry(wallNow: number, targetTimeoutMs: number): number {
+  return wallNow + targetTimeoutMs + SUPERVISOR_STOP_GRACE_MS + CLEANUP_LIMIT_MS + HOLD_MARGIN_MS;
 }
 
 /** 後片付けの結果。confirmed が false なら、detail に停止を確認できない理由を入れる。detail には各手順の時間も残す（REQ-254） */
 export type CleanupReport = { confirmed: boolean; detail: string };
-/** 監視役から受け取った対象の PID と、親が作った印と、監視役が対象を起動する直前の時刻（Unix 時刻のミリ秒） */
-export type CleanupTarget = { pid: number; mark: string; from: number };
-export type CleanupState = 'marked' | 'other-mark' | 'no-mark' | 'unreadable' | 'replaced' | 'exited';
-/** PowerShell が出す、プロセスごとの記録。created は FILETIME の文字列 */
-export type CleanupRecord = {
-  pid: number; ppid: number; created: string; parentGone: boolean; state: CleanupState; reason?: string; bits?: number; opens: number;
-  handle?: number; stopHandle?: number; waitHandle?: number; action?: 'terminated' | 'failed'; wait?: string;
+/** 保持役が返す、プロセスごとの記録。created は FILETIME の文字列 */
+export type HolderRecord = {
+  pid: number; ppid?: number; created?: string; listed?: string; state: 'descendant' | 'same-tick' | 'replaced' | 'unopenable';
+  reason?: string; pass?: number; opens: number; access?: 'full' | 'limited';
+  handle?: number; stopHandle?: number; waitHandle?: number; action?: 'terminated' | 'failed' | 'skipped'; wait?: string;
 };
-export type CleanupTiming = { define: number; enumerate: number; identify: number; stop: number; wait: number; total: number };
-export type CleanupOutput = { unsupported?: string; records: CleanupRecord[]; timing?: CleanupTiming; timedOut: boolean; passes?: number };
-export type ToolFailure = { ok: false; timedOut: boolean; message: string };
-/** PowerShell のスクリプトを、上限の時間まで動かす。試験で差し替えられる */
-export type PowerShellRunner = (file: string, timeoutMs: number, env?: NodeJS.ProcessEnv) => { ok: true; stdout: string } | ToolFailure;
-/** 試験で、探索の代わりに与える候補 */
-export type CleanupCandidate = { pid: number; created: string };
+export type HolderCleanupOutput = {
+  target?: 'held' | 'mismatch' | 'no-hold'; passes?: number; stable?: boolean; error?: string;
+  records?: HolderRecord[]; timing?: { enumerate: number; stop: number; wait: number; total: number };
+};
+/** 親から保持役への後片付けの頼み。candidates は試験で探索の代わりに与える候補 */
+export type HolderCleanupRequest = { id: string; pid: number; created: string; candidates?: { pid: number; created?: string }[] };
+/** 保持役の結果。届かなければ failure に理由を入れる */
+export type HolderReply = { output: HolderCleanupOutput; elapsedMs: number } | { failure: string; elapsedMs: number };
+/** 保持役とのやりとり。試験で差し替えられる */
+export type HolderClient = {
+  /** 保持役の準備を、waitMs まで同期で待つ。準備できればパイプのパスを返す */
+  prepare(waitMs: number): { pipe: string } | { unavailable: string };
+  /** その対象の保持の解放を頼む。結果は待たない */
+  release(id: string): void;
+  /** 後片付けを頼み、limitMs まで同期で結果を待つ */
+  cleanup(request: HolderCleanupRequest, limitMs: number): HolderReply;
+};
 
-const CLEANUP_SCRIPT = fileURLToPath(new URL('../../supervisor/windows-cleanup.ps1', import.meta.url));
-const STATES: readonly CleanupState[] = ['marked', 'other-mark', 'no-mark', 'unreadable', 'replaced', 'exited'];
-
-/** PowerShell の出力を読む。読めない行は飛ばす */
-export function parseCleanupOutput(stdout: string): CleanupOutput {
-  const output: CleanupOutput = { records: [], timedOut: false };
-  for (const line of stdout.split(/\r?\n/)) {
-    let value: unknown;
-    try { value = JSON.parse(line); } catch { continue; }
-    if (value === null || typeof value !== 'object') continue;
-    const item = value as Record<string, unknown>;
-    if (item.kind === 'unsupported') output.unsupported = String(item.reason);
-    else if (item.kind === 'timing') {
-      output.timing = item.timing as CleanupTiming;
-      output.timedOut = item.timedOut === true;
-      output.passes = Number(item.passes);
-    } else if (item.kind === 'process' && Number.isSafeInteger(item.pid) && STATES.includes(item.state as CleanupState)) {
-      output.records.push(item as unknown as CleanupRecord);
-    }
+const HOLDER_SCRIPT = fileURLToPath(new URL('../../supervisor/windows-holder.ps1', import.meta.url));
+const POWERSHELL_ARGS = ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', HOLDER_SCRIPT];
+type HolderProcess = { child: ChildProcess; dir: string; name: string; seq: number };
+// 試験のように同じプロセスでこのモジュールが何度も読まれても、保持役は 1 つにする
+const HOLDER_KEY = Symbol.for('loomake.windowsHolder');
+const holderSlot = (): { current?: HolderProcess } => {
+  const store = globalThis as unknown as Record<symbol, { current?: HolderProcess } | undefined>;
+  return (store[HOLDER_KEY] ??= {});
+};
+function processAlive(pid: number | undefined): boolean {
+  if (!pid) return false;
+  try { process.kill(pid, 0); return true; } catch (error) { return (error as NodeJS.ErrnoException).code === 'EPERM'; }
+}
+function waitUntil(check: () => boolean, ms: number): boolean {
+  const until = monotonicMs() + ms;
+  for (;;) {
+    if (check()) return true;
+    if (monotonicMs() >= until) return false;
+    pause(5);
   }
-  return output;
 }
 
-const REASONS: Record<string, string> = {
-  'open:5': '権限不足で開けません',
-  'env-too-large': '環境変数の終わりが 1 MiB 以内にありません',
-  'wow64-query': 'WOW64 かどうかを読めません',
-  'peb-query': 'PEB の位置を読めません',
-  'terminate:5': '権限不足で止められません',
+function startHolder(): HolderProcess {
+  const dir = mkdtempSync(join(tmpdir(), 'loomake-holder-'));
+  const name = `loomake-holder-${randomBytes(16).toString('hex')}`;
+  // stdin はパイプにして、親が終わったことを保持役が EOF で知る。親のイベントループを保持役のために止めない
+  const child = spawn('powershell.exe', POWERSHELL_ARGS, {
+    stdio: ['pipe', 'ignore', 'ignore'], windowsHide: true, env: { ...process.env, LOOMAKE_HOLDER_DIR: dir, LOOMAKE_HOLDER_PIPE: name },
+  });
+  child.on('error', () => { /* 起動に失敗したら、準備ができないこととして扱う */ });
+  child.stdin.on('error', () => { /* 保持役が先に終わっても、親を止めない */ });
+  child.unref();
+  (child.stdin as unknown as { unref?: () => void } | null)?.unref?.();
+  return { child, dir, name, seq: 0 };
+}
+
+function requestFile(holder: HolderProcess, body: object): string {
+  const n = ++holder.seq;
+  const tmp = join(holder.dir, `tmp-${n}`);
+  writeFileSync(tmp, JSON.stringify(body));
+  renameSync(tmp, join(holder.dir, `req-${n}.json`));
+  return join(holder.dir, `res-${n}.json`);
+}
+
+/** Windows の既定の保持役 */
+export const windowsHolder: HolderClient = {
+  prepare(waitMs) {
+    const slot = holderSlot();
+    if (!slot.current || !processAlive(slot.current.child.pid)) slot.current = startHolder();
+    const holder = slot.current;
+    if (!holder.child.pid) return { unavailable: 'holder-spawn' };
+    const ready = join(holder.dir, 'ready');
+    if (!waitUntil(() => existsSync(ready), Math.max(0, waitMs))) return { unavailable: processAlive(holder.child.pid) ? 'holder-not-ready' : 'holder-exited' };
+    return { pipe: `\\\\.\\pipe\\${holder.name}` };
+  },
+  release(id) {
+    const holder = holderSlot().current;
+    if (!holder || !processAlive(holder.child.pid)) return;
+    try { requestFile(holder, { op: 'release', id }); } catch { /* 解放できなくても、保持は期限で解放される */ }
+  },
+  cleanup(request, limitMs) {
+    const started = monotonicMs();
+    const holder = holderSlot().current;
+    const elapsed = () => Math.round(monotonicMs() - started);
+    if (!holder || !processAlive(holder.child.pid)) return { failure: '保持役が終わっています', elapsedMs: elapsed() };
+    let res: string;
+    try { res = requestFile(holder, { op: 'cleanup', ...request, deadlineMs: Date.now() + limitMs }); }
+    catch (error) { return { failure: `保持役に頼めません：${(error as Error).message}`, elapsedMs: elapsed() }; }
+    if (!waitUntil(() => existsSync(res), limitMs)) return { failure: `保持役が後片付けの上限（${limitMs / 1000} 秒）までに応答しません`, elapsedMs: elapsed() };
+    try { return { output: JSON.parse(readFileSync(res, 'utf8')) as HolderCleanupOutput, elapsedMs: elapsed() }; }
+    catch { return { failure: '保持役の結果を読めません', elapsedMs: elapsed() }; }
+    finally { try { rmSync(res, { force: true }); } catch { /* 作業用のディレクトリは保持役が終わるときに消す */ } }
+  },
 };
-/** PowerShell が返した理由の符号を、利用者に見せる文にする */
-export function describeReason(reason: string | undefined): string {
-  if (!reason) return '理由は分かりません';
-  const known = REASONS[reason];
-  if (known) return known;
-  const [code = '', ...rest] = reason.split(':');
-  const detail = rest.length ? rest.join(':') : undefined;
-  const label: Record<string, string | undefined> = { open: '開けません', 'env-read': '環境変数を読めません', 'params-read': 'PEB から環境変数の位置を読めません', terminate: '止められません', 'unsupported-arch': '対応しない環境です', exception: '読み取りの途中で例外が起きました' };
-  const text = label[code];
-  if (!text || detail === undefined) return reason;
-  return `${text}（${code === 'unsupported-arch' ? 'PROCESSOR_ARCHITECTURE=' : code === 'exception' ? '' : 'エラー '}${detail}）`;
+/** 試験で、保持役が持っている保持の ID の一覧を読む。読めなければ undefined */
+export function windowsHolderStateForTest(waitMs = 5_000): string[] | undefined {
+  const holder = holderSlot().current;
+  if (!holder || !processAlive(holder.child.pid)) return undefined;
+  const res = requestFile(holder, { op: 'state' });
+  if (!waitUntil(() => existsSync(res), waitMs)) return undefined;
+  try { return (JSON.parse(readFileSync(res, 'utf8')) as { holds?: string[] }).holds ?? []; } finally { rmSync(res, { force: true }); }
+}
+/** 試験で、保持役の stdin を閉じる（親が終わったときと同じ）。保持役の PID を返す */
+export function closeWindowsHolderForTest(): number | undefined {
+  const slot = holderSlot();
+  const holder = slot.current;
+  slot.current = undefined;
+  holder?.child.stdin?.end();
+  return holder?.child.pid;
+}
+let holderOverride: HolderClient | undefined;
+/** 試験で、保持役を差し替える（POSIX でも保持役を使う流れを確かめるため）。undefined で元に戻す */
+export function setHolderForTest(client: HolderClient | undefined): void {
+  holderOverride = client;
+  // 差し替えた保持役でも、最初の外部操作の待ちを確かめられるようにする
+  holderGate().waited = false;
+}
+const currentHolder = (): HolderClient | undefined => holderOverride ?? (process.platform === 'win32' ? windowsHolder : undefined);
+// 準備を待ったかどうか。試験のように同じプロセスでこのモジュールが何度も読まれても、一度だけにする
+const GATE_KEY = Symbol.for('loomake.windowsHolderGate');
+const holderGate = (): { waited: boolean } => {
+  const store = globalThis as unknown as Record<symbol, { waited: boolean } | undefined>;
+  return (store[GATE_KEY] ??= { waited: false });
+};
+
+/**
+ * 保持役を使えるようにする。loomake のプロセスごとに最初の 1 回だけ、準備を最大 waitMs（既定は 10 秒）待ち、
+ * 待った時間は操作の期限にも共有予算にも含めない。2 回目以降は待たずに、いまの状態だけを見る（REQ-257）
+ */
+function prepareHolder(holder: HolderClient, waitMs = HOLDER_START_LIMIT_MS): { pipe: string } | { unavailable: string } {
+  const gate = holderGate();
+  if (gate.waited) return holder.prepare(0);
+  gate.waited = true;
+  const started = monotonicMs();
+  try { return holder.prepare(waitMs); } finally { holderWaitMs += monotonicMs() - started; }
+}
+
+/** 試験で、Windows の保持役を先に起動して準備を待つ。最初の外部操作の待ちを済ませたことになる。準備できれば true */
+export function prepareWindowsHolder(waitMs = 60_000): boolean {
+  if (process.platform !== 'win32') return false;
+  return 'pipe' in prepareHolder(windowsHolder, waitMs);
+}
+
+const UNPROTECTED: Record<string, string> = {
+  'no-holder': '保持役がありません',
+  'holder-spawn': '保持役を起動できません',
+  'holder-not-ready': '保持役の準備が間に合いません',
+  'holder-exited': '保持役が準備の前に終わりました',
+  connect: '保持役につなげません',
+  'connect-timeout': '保持役につなぐのが間に合いません',
+  'no-reply': '保持役の返事が間に合いません',
+  'invalid-reply': '保持役の返事を解釈できません',
+  disconnected: '保持役との通信が切れました',
+  'exited-first': '保持を確かめる前に対象が終わりました',
+};
+/** 監視役が書いた、保持を確かめられない理由の符号を、利用者に見せる文にする */
+export function describeUnprotected(code: string): string {
+  if (UNPROTECTED[code]) return UNPROTECTED[code];
+  const open = /^open:(.+)$/.exec(code);
+  if (open) return open[1] === '87' ? '保持役が対象を開けません（対象はもう終わっています）' : `保持役が対象を開けません（エラー ${open[1]}）`;
+  return code;
 }
 
 /**
- * どれを止めたか、どれを未確認とするかを決める（REQ-252・REQ-254）。
- * 子孫の可能性があるのは、親の PID が対象の PID か印を持つプロセスの PID のプロセスと、親がもういないプロセスで印を確かめられないもの。
- * 子孫の可能性があり、印がない・別の印・読めないものは、止めずに未確認とする
+ * 保持役の後片付けの結果から、停止を確認できたかを決める（REQ-252・REQ-253・REQ-254・REQ-256）。
+ * 止めるのに失敗しても、識別に使ったのと同じハンドルの待機で終了を確かめられれば、止まったとする（A-05）
  */
-export function judgeCleanup(target: CleanupTarget, output: CleanupOutput): { confirmed: boolean; stopped: number; problems: string[] } {
-  const problems: string[] = [];
-  if (output.unsupported) return { confirmed: false, stopped: 0, problems: [`印を確かめられないので、何も止めていません：${describeReason(output.unsupported)}`] };
-  const marked = new Set(output.records.filter((r) => r.state === 'marked').map((r) => r.pid));
-  let stopped = 0;
-  for (const r of output.records) {
-    if (r.state === 'marked') {
-      if (r.action === 'terminated' && r.wait === 'exited') stopped++;
-      else if (r.action === 'failed') problems.push(`PID ${r.pid} は${describeReason(r.reason)}`);
-      else problems.push(`PID ${r.pid} は後片付けの上限までに終わりません`);
-      continue;
-    }
-    if (r.state === 'replaced' || r.state === 'exited') continue;
-    const related = r.ppid === target.pid || marked.has(r.ppid);
-    if (!related && !(r.parentGone && r.state === 'unreadable')) continue;
-    if (r.state === 'unreadable') problems.push(`PID ${r.pid} は印を確かめられないので止めていません（${describeReason(r.reason)}）`);
-    else problems.push(`PID ${r.pid} は${r.state === 'other-mark' ? '別の実行の印' : '印'}${r.state === 'other-mark' ? 'を持つ' : 'がない'}ので止めていません（親の PID ${r.ppid}）`);
-  }
-  if (output.timedOut) problems.push('後片付けの上限に達したので、調べ終えていないプロセスがあります');
-  return { confirmed: problems.length === 0, stopped, problems };
-}
-
-/**
- * PowerShell の起動から探索・識別・停止・待機までを、合わせて limitMs（既定 10 秒）までに行う（REQ-252・REQ-253・REQ-254）。
- * PowerShell には残り時間を上限として渡し、中には壁時計の期限を渡す。候補の数によって期限を延ばさない
- */
-export function cleanupWindowsOrphans(
-  target: CleanupTarget,
-  run: PowerShellRunner = runPowerShell,
-  options: { clock?: () => number; wall?: () => number; limitMs?: number; candidates?: CleanupCandidate[] } = {},
-): CleanupReport {
-  const clock = options.clock ?? monotonicMs;
-  const limitMs = options.limitMs ?? CLEANUP_LIMIT_MS;
-  const started = clock();
-  const input = {
-    mark: target.mark, targetPid: target.pid, fromMs: target.from, slackMs: CLOCK_SLACK_MS,
-    deadlineMs: (options.wall ?? Date.now)() + limitMs, maxPasses: 3, ...(options.candidates ? { candidates: options.candidates } : {}),
-  };
-  const result = run(CLEANUP_SCRIPT, limitMs, { LOOMAKE_CLEANUP_INPUT: JSON.stringify(input) });
-  const elapsed = Math.round(clock() - started);
-  if (!result.ok) {
-    return result.timedOut
-      ? { confirmed: false, detail: `後片付けの上限（${limitMs / 1000} 秒）に達しました（合計 ${elapsed}ms）` }
-      : { confirmed: false, detail: `子孫を探せません：${result.message}（合計 ${elapsed}ms）` };
-  }
-  const output = parseCleanupOutput(result.stdout);
-  const judged = judgeCleanup(target, output);
+export function judgeHolderCleanup(reply: HolderReply): CleanupReport {
+  if ('failure' in reply) return { confirmed: false, detail: `${reply.failure}（合計 ${reply.elapsedMs}ms）` };
+  const output = reply.output;
   const t = output.timing;
   const spent = t
-    ? `PowerShell の起動 ${Math.max(0, Math.round(elapsed - t.total))}ms、宣言 ${t.define}ms、探索 ${t.enumerate}ms、識別 ${t.identify}ms、停止 ${t.stop}ms、待機 ${t.wait}ms、合計 ${elapsed}ms`
-    : `合計 ${elapsed}ms`;
-  if (!output.unsupported && !t) return { confirmed: false, detail: `後片付けの結果を読めません（${spent}）` };
-  if (!judged.confirmed) return { confirmed: false, detail: `${judged.problems.join('、')}（${spent}）` };
-  return { confirmed: true, detail: `${judged.stopped ? `印のあるプロセス ${judged.stopped} 個を止めました` : '止めるプロセスはありませんでした'}（${spent}）` };
-}
-
-/** Windows PowerShell 5.1 でスクリプトのファイルを動かす */
-export function runPowerShell(file: string, timeoutMs: number, env?: NodeJS.ProcessEnv, executable = 'powershell.exe'): { ok: true; stdout: string } | ToolFailure {
-  if (timeoutMs <= 0) return { ok: false, timedOut: true, message: '時間がありません' };
-  const result = spawnSync(executable, ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', file], {
-    encoding: 'utf8', timeout: Math.ceil(timeoutMs), killSignal: 'SIGKILL', windowsHide: true, maxBuffer: 16 * 1024 * 1024, env: { ...process.env, ...env },
-  });
-  const error: NodeJS.ErrnoException | undefined = result.error;
-  if (error) return { ok: false, timedOut: error.code === 'ETIMEDOUT', message: error.message };
-  if (result.status !== 0) return { ok: false, timedOut: false, message: `PowerShell の終了コード ${String(result.status)}：${(result.stderr || '').trim().split(/\r?\n/)[0] ?? ''}` };
-  return { ok: true, stdout: result.stdout };
+    ? `探索 ${output.passes ?? 0} 回、探索 ${t.enumerate}ms、停止 ${t.stop}ms、待機 ${t.wait}ms、保持役の中 ${t.total}ms、合計 ${reply.elapsedMs}ms`
+    : `合計 ${reply.elapsedMs}ms`;
+  if (output.target === 'no-hold') return { confirmed: false, detail: `対象の保持がなく、対象の作成時刻を確かめられないので、何も止めていません（${spent}）` };
+  if (output.target === 'mismatch') return { confirmed: false, detail: `対象の作成時刻が監視役から受け取った値と合わないので、何も止めていません（${spent}）` };
+  if (output.target !== 'held') return { confirmed: false, detail: `後片付けの結果を読めません${output.error ? `：${output.error}` : ''}（${spent}）` };
+  const problems: string[] = [];
+  let stopped = 0;
+  for (const r of output.records ?? []) {
+    if (r.state === 'same-tick') problems.push(`PID ${r.pid} は作成時刻が親（PID ${String(r.ppid)}）と同じで前後を決められないので止めていません`);
+    if (r.state !== 'descendant') continue;
+    // TERMINATE の権限なしでしか開けなかったものは、終わっていても権限不足として未確認にする（A-05）
+    if (r.action === 'skipped') { problems.push(`PID ${r.pid} は権限不足で止められません`); continue; }
+    if (r.wait === 'exited') { stopped++; continue; }
+    if (r.action === 'failed') problems.push(`PID ${r.pid} は止められず（${String(r.reason)}）、終了も確かめられません`);
+    else problems.push(`PID ${r.pid} は後片付けの上限までに終わりません`);
+  }
+  if (output.error) problems.push(`プロセスの一覧を取得できません（${output.error}）`);
+  else if (!output.stable) problems.push('後片付けの上限に達したので、探し終えていません');
+  if (problems.length) return { confirmed: false, detail: `${problems.join('、')}（${spent}）` };
+  return { confirmed: true, detail: `${stopped ? `子孫 ${stopped} 個を止めました` : '止める子孫はありませんでした'}（${spent}）` };
 }
 
 // ---- 監視役が結果を書かずに終わったときの後片付け ----
 
-type TreeCleanup = (pid: number, spawned: { from: number; to: number } | undefined, mark: string) => CleanupReport;
+/** 監視役が fd 3 に書いた、対象の識別の情報 */
+export type SupervisorTarget = { spawning: boolean; pid?: number; created?: string; unprotected?: string };
+type TreeCleanup = (target: SupervisorTarget & { pid: number }) => CleanupReport;
 let cleanupOverride: TreeCleanup | undefined;
 /** 試験で、子孫の後片付けを差し替える（停止を確認できない場合を POSIX でも確かめるため）。undefined で元に戻す */
 export function setTreeCleanupForTest(cleanup: TreeCleanup | undefined): void { cleanupOverride = cleanup; }
 
 /**
  * 監視役が結果を書かずに終わったときに、監視役から先に受け取った PID で対象の子孫を止め、停止を確認できたかを返す（REQ-181・REQ-250・REQ-252・REQ-254）。
- * POSIX は監視役と同じくグループへ SIGTERM を送って 250ms 後に SIGKILL する。Windows は印で識別して、PowerShell の起動を含めて 10 秒までに止める
+ * 保持役を使ったとき（Windows）は、保持を確かめた対象だけを保持役に後片付けさせる。保持役を使わないとき（POSIX）は、監視役と同じくグループへ SIGTERM を送って 250ms 後に SIGKILL する。
+ * 対象を起動したが PID を受け取れなかったときは、未確認として返す
  */
-function stopTree(pid: number, spawned: { from: number; to: number } | undefined, mark: string): CleanupReport {
-  if (cleanupOverride) return cleanupOverride(pid, spawned, mark);
-  if (process.platform === 'win32') {
-    if (!spawned) return { confirmed: false, detail: '対象の起動の時刻を受け取っていないので、対象を識別できません' };
-    return cleanupWindowsOrphans({ pid, mark, from: spawned.from });
+export function stopTree(target: SupervisorTarget, holdId: string | undefined, holder: HolderClient | undefined): CleanupReport | undefined {
+  if (target.pid === undefined) return target.spawning ? { confirmed: false, detail: '対象を起動したあと、PID を受け取る前に監視役が終わりました' } : undefined;
+  const pid = target.pid;
+  if (cleanupOverride) return cleanupOverride({ ...target, pid });
+  if (holder && holdId !== undefined) {
+    if (target.created === undefined) {
+      holder.release(holdId);
+      return { confirmed: false, detail: `保持を確かめられないので、何も止めていません：${describeUnprotected(target.unprotected ?? 'no-holder')}` };
+    }
+    // 保持役は、保持したまま後片付けを行い、終えてから解放する（REQ-255）
+    return judgeHolderCleanup(holder.cleanup({ id: holdId, pid, created: target.created }, CLEANUP_LIMIT_MS));
   }
   try { process.kill(-pid, 'SIGTERM'); } catch (error) { return groupGone(error); }
   if (gone(-pid, 250)) return { confirmed: true, detail: 'グループを止めました' };
@@ -286,24 +375,30 @@ function utf8Prefix(text: string, bytes: number): string {
 }
 /** 引数を配列のまま渡し、期限・合計出力と子グループを監視する。 */
 export function runExternal(command: string, args: readonly string[], options: ExternalOptions = {}): ExternalResult {
-  const startedAt = monotonicMs();
   const budget = budgets.getStore();
   if (budget?.state.interrupted) throw new ProcessLimitError('interrupted', command);
   // 品質コマンドは 1 操作の上限を使わず、明示した残り時間と共有予算だけで止める
   const unbounded = options.qualityCommand || options.untilDeadline;
   const requested = options.timeoutMs ?? (unbounded ? Infinity : EXTERNAL_TIMEOUT_MS);
   const perOperation = unbounded ? Infinity : budget?.maxOperationMs ?? EXTERNAL_TIMEOUT_MS;
-  const timeout = Math.min(requested, perOperation, budget ? budget.deadline - startedAt : Infinity);
-  if (timeout <= 0) throw new ProcessLimitError('timeout', command);
-  positive(timeout);
+  const timeLeft = () => Math.min(requested, perOperation, budget ? budget.deadline - budgetNow() : Infinity);
+  if (timeLeft() <= 0) throw new ProcessLimitError('timeout', command);
   const maxBuffer = options.maxBuffer ?? EXTERNAL_OUTPUT_BYTES;
   if (!Number.isSafeInteger(maxBuffer) || maxBuffer <= 0) throw new UsageError('外部操作の出力予算は正の安全な整数にしてください');
-  // 監視役が結果を書かずに終わったときに、対象の子孫を識別する実行ごとの印（REQ-252）。外側の loomake の印は残す
-  const mark = randomBytes(16).toString('hex');
-  const baseEnv = options.env ?? process.env;
-  const env = { ...baseEnv, [SUPERVISOR_MARK_ENV]: appendMark(baseEnv[SUPERVISOR_MARK_ENV], mark) };
-  const result = spawnSync(process.execPath, [SUPERVISOR, JSON.stringify([command, args, options.shell ?? false, startedAt + timeout, maxBuffer])], {
-    cwd: options.cwd, env, stdio: ['ignore', 'pipe', 'pipe', 'pipe'], maxBuffer: Math.max(maxBuffer, 64 * 1024),
+  // Windows では保持役を使う。最初の外部操作の前に一度だけ準備を待ち、待った時間は期限に含めない（REQ-257）。
+  // 準備できなければ保護なしで起動し、監視役が結果を書かずに終わったときは未確認として返す
+  const holder = currentHolder();
+  const prepared = holder && prepareHolder(holder);
+  // 待ったあとも、残り時間がなければ監視役も対象も起動しない（REQ-180・REQ-257）
+  const startedAt = monotonicMs();
+  const timeout = timeLeft();
+  if (timeout <= 0) throw new ProcessLimitError('timeout', command);
+  positive(timeout);
+  const holdId = holder ? randomBytes(16).toString('hex') : undefined;
+  let hold: { pipe: string; id: string; expiresAt: number } | { unavailable: string } | null = null;
+  if (prepared && holdId) hold = 'pipe' in prepared ? { pipe: prepared.pipe, id: holdId, expiresAt: holdExpiry(Date.now(), timeout) } : prepared;
+  const result = spawnSync(process.execPath, [SUPERVISOR, JSON.stringify([command, args, options.shell ?? false, startedAt + timeout, maxBuffer, hold])], {
+    cwd: options.cwd, env: options.env, stdio: ['ignore', 'pipe', 'pipe', 'pipe'], maxBuffer: Math.max(maxBuffer, 64 * 1024),
   });
   // 不正なUTF-8の置換で文字列のバイト数が増えても、公開する文字列の合計は予算以内にする。
   // 起動に失敗すると、型に反して stdout・stderr が null になる
@@ -311,20 +406,24 @@ export function runExternal(command: string, args: readonly string[], options: E
   const stdout = utf8Prefix(output.stdout?.toString('utf8') ?? '', maxBuffer);
   const stderr = utf8Prefix(output.stderr?.toString('utf8') ?? '', maxBuffer - Buffer.byteLength(stdout));
   const report = readReport(output.output?.[3]?.toString('utf8') ?? '');
+  const usesHolder = hold !== null && 'pipe' in hold ? holdId : undefined;
+  const outcome = report.outcome;
   if (result.error) {
-    if (report.pid !== undefined && !report.outcome) stopTree(report.pid, report.spawned, mark);
+    if (!outcome) stopTree(report.target, holdId, holder);
+    else if (usesHolder) holder?.release(usesHolder);
     return { status: null, signal: result.signal, stdout, stderr, error: result.error };
   }
-  const outcome = report.outcome;
   if (!outcome) {
     // 外からの強制終了（Windows の process.kill(pid, 'SIGINT') など）や異常終了で、監視役が結果を書かなかった。
     // 残った子孫を止め、使い方の誤りではなく理由を含む中断として返し、同じ共有予算の後続の操作を止める（REQ-250）
     // 後片付けの 10 秒は共有予算から引かず、期限も延ばさない。結果によらず、同じ共有予算の後続の操作を止める（REQ-253）
     if (budget) budget.state.interrupted = true;
-    const cleanup = report.pid !== undefined ? stopTree(report.pid, report.spawned, mark) : undefined;
+    const cleanup = stopTree(report.target, holdId, holder);
     const ended = result.signal ? `シグナル ${result.signal}` : `終了コード ${String(result.status)}`;
     throw missingResultError(command, stdout, stderr, ended, report.invalid, cleanup);
   }
+  // 有効な通常の結果を読めたので、保持を解放する。監視役が結果を書いたことだけでは解放しない（REQ-255）
+  if (usesHolder) holder?.release(usesHolder);
   if (outcome.kind) {
     if (outcome.kind === 'interrupted' && budget) budget.state.interrupted = true;
     throw new ProcessLimitError(outcome.kind, command, stdout, stderr);

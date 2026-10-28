@@ -1,4 +1,5 @@
 // 実行の記録（summary.json・stop.json）と、終わったときの表示
+import { holderWaitTime } from '@loomake/kit';
 import { maskSecrets } from '../mask.js';
 import { createLogStore } from '../logs.js';
 import { LogQuotaError } from '../log-policy.js';
@@ -14,9 +15,12 @@ export function startRecording(ctx: RunContext): Recorder {
   const startedAt = ctx.now();
   const store = createLogStore(root, `${stamp(startedAt)}-${changeId}`, logLimits(ctx.runConfig));
   const { runDir, runId } = store;
+  const base = startedAt.getTime() + ctx.runConfig.timeoutMinutes * 60_000;
+  const waitedAtStart = holderWaitTime();
   const rec: Recorder = {
     runDir,
-    deadline: startedAt.getTime() + ctx.runConfig.timeoutMinutes * 60_000,
+    // Windows の保持役の準備を待った時間は、run の共有予算に含めない（REQ-257）
+    get deadline() { return base + holderWaitTime() - waitedAtStart; },
     done: [],
     lastVerify: null,
     step: 0,
