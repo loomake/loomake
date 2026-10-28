@@ -24,7 +24,7 @@ export function isDocumentPath(path) {
   if (parts.some((part) => part === '' || part === '.' || part === '..')) return false;
   // Windows で checkout できない名前は、文書の置き場所にあっても文書として扱わない（REQ-273）。
   // git の出力を UTF-8 として読むと、正しくないバイトは U+FFFD になる
-  if (/[<>:"|?*\u0000-\u001f�]/.test(path)) return false;
+  if (/[<>:"|?*�]/.test(path) || [...path].some((char) => char.charCodeAt(0) < 0x20)) return false;
   if (parts.some((part) => /[. ]$/.test(part) || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)/i.test(part))) return false;
   const markdown = path.endsWith('.md');
   // リポジトリの直下の .md（README.md・CONTRIBUTING.md など）
