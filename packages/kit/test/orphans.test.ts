@@ -297,8 +297,8 @@ describe('差し替えた保持役との順序', () => {
       const after = join(dir, 'after');
       withProcessBudget({ timeoutMs: 20_000 }, () => {
         let error: unknown;
-        // Windows では保持を確かめてから PID を受け取るので、監視役を止める前に少し待つ
-        try { runExternal(process.execPath, ['-e', "setTimeout(()=>process.kill(process.ppid,'SIGKILL'),300);setInterval(()=>{},100)"]); } catch (e) { error = e; }
+        // Windows では保持を確かめてから PID を受け取るので、監視役を止める前に、保持役の返事を待つ上限（1 秒）より長く待つ
+        try { runExternal(process.execPath, ['-e', "setTimeout(()=>process.kill(process.ppid,'SIGKILL'),1500);setInterval(()=>{},100)"]); } catch (e) { error = e; }
         expect(error).toBeInstanceOf(ProcessLimitError);
         expect((error as ProcessLimitError).kind).toBe('interrupted');
         expect((error as ProcessLimitError).reason).toContain('子孫の停止を確認できません：子孫を探せません：試験');

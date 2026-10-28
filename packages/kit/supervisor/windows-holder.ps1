@@ -185,6 +185,16 @@ $sessions = New-Object Collections.ArrayList
 $stdin = [Console]::OpenStandardInput()
 $stdinBuf = New-Object byte[] 256
 $stdinTask = $stdin.ReadAsync($stdinBuf, 0, 256)
+# 準備の印を書く前に、保持の手順を自分の PID で一度通しておく。最初の保持で PowerShell の関数と JSON の変換を
+# 初めて動かすと時間がかかり、監視役が返事を待つ 1 秒に間に合わないことがあった（run 40629670446）
+try {
+  $warm = Hold ((Json @{ id = '__warmup'; pid = $PID; expiresAt = 0 }) | ConvertFrom-Json)
+  [void](Json $warm)
+  [void](Release '__warmup')
+  $warmBuf = New-Object IO.MemoryStream
+  $warmWriter = New-Object IO.StreamWriter($warmBuf); $warmWriter.WriteLine('{}'); $warmWriter.Flush()
+  $warmBuf.Position = 0; [void](New-Object IO.StreamReader($warmBuf)).ReadLineAsync().Result
+} catch { }
 [IO.File]::WriteAllText((Join-Path $dir 'ready.tmp'), (Json @{ pid = $PID; readyMs = [int]$clock.Elapsed.TotalMilliseconds }))
 [IO.File]::Move((Join-Path $dir 'ready.tmp'), (Join-Path $dir 'ready'))
 
