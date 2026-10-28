@@ -253,6 +253,8 @@ try {
 [IO.File]::Move((Join-Path $dir 'ready.tmp'), (Join-Path $dir 'ready'))
 
 while ($true) {
+  # 1 回の処理で例外が出ても（頼みのファイルを消せないなど）、保持役を終わらせずに続ける
+  try {
   for ($i = 0; $i -lt $servers.Count; $i++) {
     if (-not $servers[$i].t.IsCompleted) { continue }
     $s = $servers[$i].s
@@ -306,4 +308,5 @@ while ($true) {
   foreach ($x in $sessions) { $tasks.Add($x.t) }
   $tasks.Add($stdinTask)
   try { [void][Threading.Tasks.Task]::WaitAny($tasks.ToArray(), 20) } catch { Start-Sleep -Milliseconds 20 }
+  } catch { try { Start-Sleep -Milliseconds 20 } catch { } }
 }

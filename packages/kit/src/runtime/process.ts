@@ -153,7 +153,9 @@ export type HolderClient = {
 
 const HOLDER_SCRIPT = fileURLToPath(new URL('../../supervisor/windows-holder.ps1', import.meta.url));
 const POWERSHELL_ARGS = ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', HOLDER_SCRIPT];
-type HolderProcess = { child: ChildProcess; dir: string; name: string; seq: number };
+type HolderProcess = { child: ChildProcess; dir: string; name: string; seq: number; startedAt: number };
+/** 終わった保持役を起動し直す間隔の下限。保持役が続けて終わるときに、外部操作のたびに PowerShell を起動しない */
+const HOLDER_RESTART_MS = 30_000;
 // 試験のように同じプロセスでこのモジュールが何度も読まれても、保持役は 1 つにする
 const HOLDER_KEY = Symbol.for('loomake.windowsHolder');
 const holderSlot = (): { current?: HolderProcess } => {
@@ -189,7 +191,7 @@ function startHolder(): HolderProcess {
   child.stdin.on('error', () => { /* 保持役が先に終わっても、親を止めない */ });
   child.unref();
   (child.stdin as unknown as { unref?: () => void } | null)?.unref?.();
-  return { child, dir, name, seq: 0 };
+  return { child, dir, name, seq: 0, startedAt: monotonicMs() };
 }
 
 function requestFile(holder: HolderProcess, body: object): string {
@@ -204,7 +206,10 @@ function requestFile(holder: HolderProcess, body: object): string {
 export const windowsHolder: HolderClient = {
   prepare(waitMs) {
     const slot = holderSlot();
-    if (!slot.current || !processAlive(slot.current.child.pid)) slot.current = startHolder();
+    if (!slot.current || !processAlive(slot.current.child.pid)) {
+      if (slot.current && monotonicMs() - slot.current.startedAt < HOLDER_RESTART_MS) return { unavailable: 'holder-exited' };
+      slot.current = startHolder();
+    }
     const holder = slot.current;
     if (!holder.child.pid) return { unavailable: 'holder-spawn' };
     const ready = join(holder.dir, 'ready');
