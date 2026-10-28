@@ -13,5 +13,5 @@
 
 ## 3. 確認
 
-- [ ] 3.1 `pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` を通す
-- [ ] 3.2 `pnpm -s verify --change align-template-worklog --done` を通す <!-- loomake:gate=done -->
+- [x] 3.1 `pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` を通す
+- [x] 3.2 `pnpm -s verify --change align-template-worklog --done` を通す <!-- loomake:gate=done -->
