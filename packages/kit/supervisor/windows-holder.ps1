@@ -18,7 +18,8 @@ $sigs = @(
   @('kernel32.dll', 'GetProcessTimes', $bool, @($ptr, $long.MakeByRefType(), $long.MakeByRefType(), $long.MakeByRefType(), $long.MakeByRefType())),
   @('kernel32.dll', 'TerminateProcess', $bool, @($ptr, $uint)),
   @('kernel32.dll', 'WaitForSingleObject', $uint, @($ptr, $uint)),
-  @('ntdll.dll', 'NtQueryInformationProcess', $int, @($ptr, $int, [byte[]], $int, $int.MakeByRefType()))
+  @('ntdll.dll', 'NtQueryInformationProcess', $int, @($ptr, $int, [byte[]], $int, $int.MakeByRefType())),
+  @('ntdll.dll', 'NtQuerySystemInformation', $int, @($int, [byte[]], $int, $int.MakeByRefType()))
 )
 # Reflection.Emit で宣言し、C# のコンパイルを使わない
 $asm = [AppDomain]::CurrentDomain.DefineDynamicAssembly((New-Object Reflection.AssemblyName 'LoomakeHolderNative'), [Reflection.Emit.AssemblyBuilderAccess]::Run)
@@ -41,6 +42,30 @@ function ParentPid([IntPtr]$h) {
   $buf = New-Object byte[] 48; $ret = 0
   if ($api::NtQueryInformationProcess($h, 0, $buf, 48, [ref]$ret) -ne 0) { return $null }
   return [BitConverter]::ToInt64($buf, 40)
+}
+
+# 開けないプロセスの親の PID と作成時刻を、開かずに読む。SystemProcessInformation（5）の一覧で、64 ビットの
+# SYSTEM_PROCESS_INFORMATION の CreateTime（0x20）・UniqueProcessId（0x50）・InheritedFromUniqueProcessId（0x58）だけを使う。読めなければ $null
+function SystemProcesses {
+  $size = 1048576; $st = -1
+  for ($try = 0; $try -lt 5; $try++) {
+    $buf = New-Object byte[] $size; $ret = 0
+    $st = $api::NtQuerySystemInformation(5, $buf, $size, [ref]$ret)
+    if ($st -eq 0) { break }
+    # STATUS_INFO_LENGTH_MISMATCH（0xC0000004）なら、大きくして読み直す
+    if ($st -ne -1073741820) { return $null }
+    $size = [Math]::Max($ret, $size * 2) + 65536
+  }
+  if ($st -ne 0) { return $null }
+  $map = @{}; $off = 0
+  while ($true) {
+    $next = [BitConverter]::ToUInt32($buf, $off)
+    $spid = [int][BitConverter]::ToInt64($buf, $off + 0x50)
+    $map[$spid] = @{ created = [BitConverter]::ToInt64($buf, $off + 0x20); ppid = [int][BitConverter]::ToInt64($buf, $off + 0x58) }
+    if ($next -eq 0) { break }
+    $off += $next
+  }
+  return $map
 }
 
 $dir = $env:LOOMAKE_HOLDER_DIR
@@ -96,19 +121,24 @@ function Cleanup($req) {
       else { $ids = @([Diagnostics.Process]::GetProcesses() | ForEach-Object { $x = $_.Id; $_.Dispose(); @{ pid = $x } }) }
     } catch { $result.error = "enumerate:$($_.Exception.Message)"; break }
     $info = @{}
+    # 開けない（または作成時刻・親の PID を読めない）プロセス。あとで、開かずに読める一覧で子孫かどうかを確かめる
+    $unopened = New-Object Collections.ArrayList
     foreach ($item in $ids) {
       $procId = [int]$item.pid
       if ($procId -eq 0 -or $known.ContainsKey($procId) -or $seen.ContainsKey($procId)) { continue }
       $limited = $false
+      # 試験では、開けないプロセスの代わりに、指定した PID を開かずに扱う
+      if ($null -ne $req.unopenable -and @($req.unopenable) -contains $procId) { [void]$unopened.Add(@{ pid = $procId; reason = 'open:test' }); continue }
       $h = $api::OpenProcess($QL -bor $SYNC -bor $TERM, $false, [uint32]$procId)
       if ($h -eq [IntPtr]::Zero) { $h = $api::OpenProcess($QL -bor $SYNC, $false, [uint32]$procId); $limited = $true }
       if ($h -eq [IntPtr]::Zero) {
         $err = LastErr
         if ($null -ne $req.candidates) { [void]$records.Add([ordered]@{ pid = $procId; state = 'unopenable'; reason = "open:$err"; opens = 1 }); $seen[$procId] = $true }
+        else { [void]$unopened.Add(@{ pid = $procId; reason = "open:$err" }) }
         continue
       }
       $c = Created $h; $pp = ParentPid $h
-      if ($null -eq $c -or $null -eq $pp) { [void]$api::CloseHandle($h); continue }
+      if ($null -eq $c -or $null -eq $pp) { [void]$api::CloseHandle($h); [void]$unopened.Add(@{ pid = $procId; reason = 'unreadable' }); continue }
       # 試験で与えた候補の作成時刻が、開いたハンドルの作成時刻と違えば、列挙のあとに入れ替わったものとして扱わない
       if ($null -ne $item.created -and [long]$item.created -ne [long]$c) {
         [void]$records.Add([ordered]@{ pid = $procId; state = 'replaced'; created = "$c"; listed = "$($item.created)"; opens = 1 }); $seen[$procId] = $true
@@ -118,6 +148,8 @@ function Cleanup($req) {
     }
     # 識別済みのどれかが親で、作成時刻が親より後のものを子孫とする。加えたものの子も同じ探索の中でたどる
     $new = New-Object Collections.ArrayList
+    $sysTried = $false; $sysMap = $null
+    do {
     do {
       $changed = $false
       foreach ($procId in @($info.Keys)) {
@@ -136,6 +168,28 @@ function Cleanup($req) {
         }
       }
     } while ($changed)
+    # 開けないプロセスも、開かずに読める一覧で親の PID と作成時刻を確かめ、子孫なら止められないものとして記録する（REQ-254）。
+    # 子孫と分かったものの子もたどるので、加えたら上の識別をやり直す。一覧を読めなければ、子孫かどうかを確かめられないとする
+    $added = $false
+    if ($unopened.Count -gt 0) {
+      if (-not $sysTried) { $sysTried = $true; $sysMap = SystemProcesses }
+      if ($null -eq $sysMap) { $result.unknownUnopened = $unopened.Count; $unopened.Clear() }
+      foreach ($u in @($unopened)) {
+        $e2 = $sysMap[[int]$u.pid]
+        if ($null -eq $e2) { $unopened.Remove($u); continue }
+        if (-not $known.ContainsKey($e2.ppid)) { continue }
+        $pc = $known[$e2.ppid]
+        if ([long]$e2.created -gt $pc) {
+          $known[[int]$u.pid] = [long]$e2.created
+          [void]$records.Add([ordered]@{ pid = [int]$u.pid; ppid = $e2.ppid; created = "$($e2.created)"; state = 'unopenable'; descendant = $true; reason = $u.reason; pass = $result.passes; opens = 0 })
+          $seen[[int]$u.pid] = $true; $added = $true
+        } elseif ([long]$e2.created -eq $pc) {
+          [void]$records.Add([ordered]@{ pid = [int]$u.pid; ppid = $e2.ppid; created = "$($e2.created)"; state = 'same-tick'; opens = 0 }); $seen[[int]$u.pid] = $true
+        }
+        $unopened.Remove($u)
+      }
+    }
+    } while ($added)
     foreach ($x in $info.Values) { [void]$api::CloseHandle($x.h) }
     $timing.enumerate += [int]($sw.Elapsed.TotalMilliseconds - $t0)
     # 4. 新しい子孫が見つからない探索を 1 回終えたら、探し終えたとする

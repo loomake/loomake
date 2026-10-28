@@ -130,15 +130,15 @@ export type CleanupReport = { confirmed: boolean; detail: string };
 /** 保持役が返す、プロセスごとの記録。created は FILETIME の文字列 */
 export type HolderRecord = {
   pid: number; ppid?: number; created?: string; listed?: string; state: 'descendant' | 'same-tick' | 'replaced' | 'unopenable';
-  reason?: string; pass?: number; opens: number; access?: 'full' | 'limited';
+  reason?: string; pass?: number; opens: number; access?: 'full' | 'limited'; descendant?: boolean;
   handle?: number; stopHandle?: number; waitHandle?: number; action?: 'terminated' | 'failed' | 'skipped'; wait?: string;
 };
 export type HolderCleanupOutput = {
-  target?: 'held' | 'mismatch' | 'no-hold'; passes?: number; stable?: boolean; error?: string;
+  target?: 'held' | 'mismatch' | 'no-hold'; passes?: number; stable?: boolean; error?: string; unknownUnopened?: number;
   records?: HolderRecord[]; timing?: { enumerate: number; stop: number; wait: number; total: number };
 };
-/** 親から保持役への後片付けの頼み。candidates は試験で探索の代わりに与える候補 */
-export type HolderCleanupRequest = { id: string; pid: number; created: string; candidates?: { pid: number; created?: string }[] };
+/** 親から保持役への後片付けの頼み。candidates は試験で探索の代わりに与える候補、unopenable は試験で開けないものとして扱う PID */
+export type HolderCleanupRequest = { id: string; pid: number; created: string; candidates?: { pid: number; created?: string }[]; unopenable?: number[] };
 /** 保持役の結果。届かなければ failure に理由を入れる */
 export type HolderReply = { output: HolderCleanupOutput; elapsedMs: number } | { failure: string; elapsedMs: number };
 /** 保持役とのやりとり。試験で差し替えられる */
@@ -318,6 +318,8 @@ export function judgeHolderCleanup(reply: HolderReply): CleanupReport {
   const problems: string[] = [];
   let stopped = 0;
   for (const r of output.records ?? []) {
+    // 開けない子孫は止められず、終了も確かめられない（REQ-254）
+    if (r.state === 'unopenable' && r.descendant) problems.push(`PID ${r.pid} は子孫ですが、開けないので止めていません（${String(r.reason)}）`);
     if (r.state === 'same-tick') problems.push(`PID ${r.pid} は作成時刻が親（PID ${String(r.ppid)}）と同じで前後を決められないので止めていません`);
     if (r.state !== 'descendant') continue;
     // TERMINATE の権限なしでしか開けなかったものは、終わっていても権限不足として未確認にする（A-05）
@@ -326,6 +328,7 @@ export function judgeHolderCleanup(reply: HolderReply): CleanupReport {
     if (r.action === 'failed') problems.push(`PID ${r.pid} は止められず（${String(r.reason)}）、終了も確かめられません`);
     else problems.push(`PID ${r.pid} は後片付けの上限までに終わりません`);
   }
+  if (output.unknownUnopened) problems.push(`開けないプロセスが ${output.unknownUnopened} 個あり、子孫かどうかを確かめられません`);
   if (output.error) problems.push(`プロセスの一覧を取得できません（${output.error}）`);
   else if (!output.stable) problems.push('後片付けの上限に達したので、探し終えていません');
   if (problems.length) return { confirmed: false, detail: `${problems.join('、')}（${spent}）` };

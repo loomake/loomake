@@ -73,6 +73,13 @@ describe('保持役の後片付けの判定', () => {
     expect(report.confirmed).toBe(false);
     expect(report.detail).toContain('PID 300 は作成時刻が親（PID 100）と同じで前後を決められないので止めていません');
   });
+  it('[REQ-252][REQ-254] 開けない子孫と、子孫かどうかを確かめられない開けないプロセスがあれば、未確認として返す', () => {
+    const report = judgeHolderCleanup(reply({ records: [done(200, 100), { pid: 300, ppid: 200, created: '7', state: 'unopenable', descendant: true, reason: 'open:5', opens: 0 }] }));
+    expect(report).toMatchObject({ confirmed: false, detail: expect.stringContaining('PID 300 は子孫ですが、開けないので止めていません（open:5）') });
+    // 子孫でない開けない候補（試験の候補）は判定に使わない
+    expect(judgeHolderCleanup(reply({ records: [{ pid: 9, state: 'unopenable', reason: 'open:87', opens: 1 }] })).confirmed).toBe(true);
+    expect(judgeHolderCleanup(reply({ unknownUnopened: 2 }))).toMatchObject({ confirmed: false, detail: expect.stringContaining('開けないプロセスが 2 個あり、子孫かどうかを確かめられません') });
+  });
   it('[REQ-254] 権限不足で止められない子孫は、権限不足を理由とする未確認として返す', () => {
     const report = judgeHolderCleanup(reply({ records: [done(200, 100, { access: 'limited', action: 'skipped', reason: 'terminate:5', wait: 'timeout', stopHandle: undefined })] }));
     expect(report).toMatchObject({ confirmed: false, detail: expect.stringContaining('PID 200 は権限不足で止められません') });
@@ -494,6 +501,27 @@ process.kill(sup,'SIGKILL');setInterval(()=>{},100);`);
       expect(await waitFor(() => !alive(second.childPid), 2_000)).toBe(true);
     } finally {
       for (const t of [first, second]) { try { process.kill(t.childPid, 'SIGKILL'); } catch { /* */ } t.target.kill('SIGKILL'); }
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+  it('[REQ-252][REQ-254][REQ-256] 開けない子孫は、開かずに読める一覧で子孫と分かれば止めずに記録し、停止を確認できないと返す', async () => {
+    const dir = realpathSync(mkdtempSync(join(tmpdir(), 'loomake-holder ')));
+    const t = await targetWithChild(dir, 'unopen');
+    try {
+      const held = await askHold(t.target.pid!, 'unopen');
+      expect(held.ok).toBe(true);
+      // 試験では、対象の子を開けないものとして扱う
+      const result = windowsHolder.cleanup({ id: 'unopen', pid: t.target.pid!, created: held.created!, unopenable: [t.childPid] }, CLEANUP_LIMIT_MS);
+      logCleanup('開けない子孫', result);
+      expect('output' in result && result.output.records?.find((r) => r.pid === t.childPid)).toMatchObject({ state: 'unopenable', descendant: true, ppid: t.target.pid });
+      const report = judgeHolderCleanup(result);
+      expect(report.confirmed).toBe(false);
+      expect(report.detail).toContain(`PID ${t.childPid} は子孫ですが、開けないので止めていません`);
+      // 開けないものとして扱った子は止めていない
+      expect(alive(t.childPid)).toBe(true);
+    } finally {
+      try { process.kill(t.childPid, 'SIGKILL'); } catch { /* */ }
+      t.target.kill('SIGKILL');
       rmSync(dir, { recursive: true, force: true });
     }
   });
