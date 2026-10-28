@@ -45,13 +45,33 @@ Source: REQ-142
 - **THEN** Node 22.12.0 で `packages/cli/dist/cli.js` を実行するジョブがある
 
 ### Requirement: 3 つの OS での CI
-CI は ubuntu-latest・macos-latest・windows-latest の 3 つで `pnpm test` を実行する SHALL。
+CI の quality ジョブは、main への push と、毎日 1 回の定期実行（schedule）では、ubuntu-latest・macos-latest・windows-latest の 3 つで実行し、`pnpm test` を実行する SHALL。pull_request では、quality ジョブを ubuntu-latest だけで実行する SHALL。ただし、PR に `ci:all-os` ラベルが付いているときは、pull_request でも 3 つの OS で実行する SHALL。PR にラベルを付けたとき（labeled）にも、CI を起動する MUST。node20・node22・gate のジョブは、この OS の切り替えの影響を受けない MUST。「文書だけの PR の品質ジョブ」に当てはまる PR では、quality ジョブで `pnpm test` を実行しなくてよい。
 
-Source: REQ-049
+Source: REQ-049, REQ-270, REQ-273
 
 #### Scenario: ワークフローが 3 OS を指定している
 - **WHEN** `.github/workflows/ci.yml` を読む
-- **THEN** ジョブのマトリクスに ubuntu-latest・macos-latest・windows-latest が含まれる
+- **THEN** quality ジョブのマトリクスの OS を決める式に、ubuntu-latest・macos-latest・windows-latest が含まれる
+
+#### Scenario: ラベルのない PR は ubuntu だけで実行する
+- **WHEN** `ci:all-os` ラベルのない PR で CI が動く
+- **THEN** quality ジョブは ubuntu-latest の 1 つだけで動き、lint・typecheck・`pnpm test --coverage`・build・配布物の検査を実行する。macos-latest と windows-latest の quality ジョブは動かない
+
+#### Scenario: main への push と定期実行は 3 つの OS で実行する
+- **WHEN** main への push か、毎日 1 回の定期実行（schedule）で CI が動く
+- **THEN** quality ジョブは ubuntu-latest・macos-latest・windows-latest の 3 つで動き、macOS と Windows ではシャード `1/2` と `2/2` で `pnpm test` を実行する
+
+#### Scenario: ci:all-os ラベルの付いた PR は 3 つの OS で実行する
+- **WHEN** `ci:all-os` ラベルの付いた PR で CI が動く
+- **THEN** quality ジョブは main への push と同じく、ubuntu-latest・macos-latest・windows-latest の 3 つで動く
+
+#### Scenario: ラベルを付けると CI が起動する
+- **WHEN** `.github/workflows/ci.yml` を読む
+- **THEN** pull_request の起動の種類に、既定の opened・synchronize・reopened に加えて labeled があり、schedule に 1 日 1 回の cron がある
+
+#### Scenario: ほかのジョブは OS の切り替えの影響を受けない
+- **WHEN** `.github/workflows/ci.yml` を読む
+- **THEN** node20・node22・gate のジョブは ubuntu-latest で動き、OS を切り替える式を使わない。gate は今までどおり pull_request のときだけ動く
 
 ### Requirement: プルリクエストごとの完了ゲート
 CI はプルリクエストごとに完了ゲートを実行し、不合格のときジョブを失敗させる SHALL。対象の change は「完了ゲートの対象の決め方」に従って決め、対象の change ごとに `--change <id> --done` で実行し、1 つでも不合格ならジョブを失敗させる MUST。対象の change がないときは、「対象の change がない PR の扱い」に従う MUST。あわせて、PR の種類によらず、いまの仕様（`openspec/specs/`）に `openspec validate --specs --strict` を実行し、失敗したらジョブを失敗させる SHALL。
@@ -295,9 +315,9 @@ Source: REQ-207
 - **THEN** 検査はどれも決まりに反する import として返す
 
 ### Requirement: CI のテストの分割
-CI の quality ジョブは、macOS と Windows では `pnpm test` を `--shard` で 2 つのシャードに分け、別々のジョブで実行する SHALL。2 つのシャードを合わせて、すべてのテストを実行する MUST。ubuntu では `pnpm test` を 1 回だけ、カバレッジ付き（`--coverage`）で実行し、カバレッジが閾値を下回ったらジョブを失敗させる SHALL。どのジョブでも、lint・typecheck・build・配布物の検査を実行する MUST。
+CI の quality ジョブは、macOS と Windows では `pnpm test` を `--shard` で 2 つのシャードに分け、別々のジョブで実行する SHALL。2 つのシャードを合わせて、すべてのテストを実行する MUST。ubuntu では `pnpm test` を 1 回だけ、カバレッジ付き（`--coverage`）で実行し、カバレッジが閾値を下回ったらジョブを失敗させる SHALL。どのジョブでも、lint・typecheck・build・配布物の検査を実行する MUST。ただし、「文書だけの PR の品質ジョブ」に当てはまる PR では、これらのステップを実行しなくてよい。
 
-Source: REQ-214
+Source: REQ-214, REQ-270
 
 #### Scenario: macOS と Windows のシャード
 - **WHEN** `.github/workflows/ci.yml` を読む
@@ -353,3 +373,85 @@ Source: REQ-240
 #### Scenario: 準備で予算を使い切る
 - **WHEN** 準備の外部操作だけで共有予算を使い切り、狙った操作に届かない
 - **THEN** 試験は合格しない
+
+### Requirement: 文書だけの PR の品質ジョブ
+CI の quality ジョブは、PR で変えたファイルがすべて「文書として扱うファイル」に当たるとき、lint・typecheck・test・build・配布物の検査を実行せずに成功する SHALL。判定はジョブの中のステップで行い、ワークフローの `paths`・`paths-ignore` やジョブの `if` では行わない MUST（必須チェックのジョブが、同じ名前で結果を報告するようにするため）。main への push では、判定によらず、すべてのステップを実行する MUST。
+
+Source: REQ-270
+
+#### Scenario: 文書だけの PR
+- **WHEN** PR で変えたファイルが `docs/worklog/2026-10-27.md`・`openspec/changes/c1/tasks.md`・`.changeset/c1.md` だけである
+- **THEN** 判定は「文書だけ」になり、quality ジョブは lint・typecheck・test・build・配布物の検査を実行せずに成功する
+
+#### Scenario: 判定をジョブの中で行う
+- **WHEN** `.github/workflows/ci.yml` を読む
+- **THEN** ワークフローの `on` に `paths`・`paths-ignore` がなく、quality ジョブに変えたファイルを判定するステップがあり、lint・typecheck・test・build・配布物の検査のステップは、判定が「文書だけ」でないときだけ実行される
+
+#### Scenario: main への push
+- **WHEN** main への push で quality ジョブが動く
+- **THEN** 変えたファイルによらず、すべてのステップを実行する
+
+### Requirement: 文書として扱うファイル
+「文書だけの PR の品質ジョブ」の判定で文書として扱うのは、次のファイルだけとする MUST。
+
+- リポジトリの直下にある `.md` のファイル（`README.md`・`CONTRIBUTING.md` など）
+- `docs/` の下にある `.md` のファイル
+- `openspec/specs/` と `openspec/changes/`（`archive/` を含む）の下にある `.md` のファイルと、`openspec/changes/` の下にある `spec-gate.txt`
+- `.changeset/` の直下にある `.md` のファイル（changeset の本文）
+
+これ以外のファイル（設定・実行用のファイル・`tests/` の下・`packages/` の下のファイルを含む）は、文書として扱わない MUST。
+
+Source: REQ-270
+
+#### Scenario: コードを含む PR
+- **WHEN** PR で変えたファイルに `packages/kit/src/verify/run.ts` が含まれる
+- **THEN** 判定は「文書だけ」にならず、quality ジョブはすべてのステップを実行する
+
+#### Scenario: 配布する Markdown を含む PR
+- **WHEN** PR で変えたファイルが `packages/kit/templates/AGENTS.md` だけである
+- **THEN** 判定は「文書だけ」にならず、quality ジョブはすべてのステップを実行する
+
+#### Scenario: 設定と実行用のファイルを含む PR
+- **WHEN** PR で変えたファイルが、`.changeset/config.json`・`openspec/config.yaml`・`docs/wbs/initial-status.yaml`・`scripts/ci-gate.mjs` のどれか 1 つと、`docs/` の下の `.md` だけである
+- **THEN** どの場合も、判定は「文書だけ」にならず、quality ジョブはすべてのステップを実行する
+
+#### Scenario: 試験用データを含む PR
+- **WHEN** PR で変えたファイルが `tests/fixtures/verify-project/openspec/changes/sample/tasks.md` だけである
+- **THEN** 判定は「文書だけ」にならず、quality ジョブはすべてのステップを実行する
+
+#### Scenario: 判定のスクリプトとワークフローを変えた PR
+- **WHEN** PR で変えたファイルが、`scripts/ci-docs-only.mjs` か `.github/workflows/ci.yml` と、`docs/` の下の `.md` だけである
+- **THEN** 判定のスクリプトとワークフローは文書ではないので、PR に入っている版のスクリプトで判定しても「文書だけ」にならず、quality ジョブはすべてのステップを実行する
+
+#### Scenario: 文書の置き場所にある設定と実行用のファイル
+- **WHEN** PR で変えたファイルが、`docs/` の下の `.json`・`.yaml`・`.yml`、`.github/` の下の `.md`、`openspec/changes/archive/` の下の `.mjs` のどれか 1 つだけである
+- **THEN** どの場合も、判定は「文書だけ」にならない
+
+### Requirement: 文書だけかの判定に使う差分
+「文書だけの PR の品質ジョブ」の判定には、PR のベースとの差分（ベースから PR の先頭までのすべてのコミット）で変わったファイルをすべて使う MUST。名前を変えたファイルは、変更前と変更後の両方のパスを判定する MUST。消したファイルも判定する。差分を取れなかったとき、差分を解釈できなかったとき、PR のマージ先が main でないときは、文書だけではないとみなす MUST（マージ先を変えても CI は再実行されないため）。
+
+Source: REQ-270
+
+#### Scenario: 前のコミットでコードを変えた PR
+- **WHEN** PR の 1 つ目のコミットで `packages/kit/src/verify/run.ts` を変え、2 つ目のコミットで `docs/notes.md` だけを変えた
+- **THEN** 判定はベースとの差分のすべてのファイルを使うので「文書だけ」にならず、quality ジョブはすべてのステップを実行する
+
+#### Scenario: 名前を変えたファイル
+- **WHEN** PR で `scripts/notes.md` の名前を `docs/notes.md` に変えた
+- **THEN** 変更前のパス `scripts/notes.md` が文書ではないので、判定は「文書だけ」にならない
+
+#### Scenario: 差分を取れない、または解釈できない
+- **WHEN** PR のベースとの差分を取るコマンドが失敗する、または差分の出力に解釈できない行がある
+- **THEN** 判定は「文書だけ」にならず、quality ジョブはすべてのステップを実行する
+
+#### Scenario: マージ先が main でない PR
+- **WHEN** マージ先が `feature-x` の PR で、変えたファイルが `docs/notes.md` だけである
+- **THEN** 判定は「文書だけ」にならず、quality ジョブはすべてのステップを実行する
+
+#### Scenario: main が進んだあとのマージコミット
+- **WHEN** PR を作ったあとで main に `packages/kit/src/a.ts` の変更が入り、判定する HEAD が main と PR のブランチ（`docs/notes.md` だけを変えた）をマージしたコミットである
+- **THEN** 判定は `origin/main...HEAD` の差分で PR の変更分だけを使い、main で変わったファイルを含めないので「文書だけ」になる
+
+#### Scenario: コードのファイルを消した PR
+- **WHEN** PR で `packages/kit/src/a.ts` を消し、`docs/notes.md` を変えた
+- **THEN** 消したファイルも判定するので、判定は「文書だけ」にならない

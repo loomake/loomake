@@ -65,20 +65,178 @@ describe('CI', () => {
   // archive したあとも動くよう、本物の change ではなく検査用プロジェクトの changes/ を使う
   const changes = join(root, 'tests', 'fixtures', 'verify-project', 'openspec', 'changes');
 
-  it('[REQ-049] ubuntu・macos・windows の 3 つで pnpm test を実行する', () => {
-    expect(ci).toMatch(/os:\s*\[ubuntu-latest, macos-latest, windows-latest\]/);
-    expect(ci).toMatch(/runs-on: \$\{\{ matrix\.os \}\}/);
-    expect(ci).toContain('run: pnpm test');
+  // GitHub Actions の式を、ci.yml の quality ジョブの OS の式が使う範囲（||・&&・!・==・文字列・文脈の参照・.*・contains・fromJSON）だけ評価する
+  type ExprCtx = Record<string, unknown>;
+  const evalGithubExpr = (source: string, ctx: ExprCtx): unknown => {
+    const tokens = source.match(/'(?:[^']|'')*'|\|\||&&|==|!=|!|\(|\)|,|[A-Za-z_][\w-]*(?:\.(?:\*|[A-Za-z_][\w-]*))*/g) ?? [];
+    expect(tokens.join('').replace(/\s+/g, ''), `テストが評価できない式です：${source}`).toBe(source.replace(/\s+/g, ''));
+    let pos = 0;
+    const peek = () => tokens[pos];
+    const take = (expected?: string) => {
+      const token = tokens[pos++];
+      if (expected !== undefined && token !== expected) throw new Error(`式の ${expected} がありません：${source}`);
+      return token!;
+    };
+    const lookup = (path: string): unknown =>
+      path.split('.').reduce<unknown>((value, key) => {
+        if (key === '*') return Array.isArray(value) ? value : [];
+        if (Array.isArray(value)) return value.map((item) => (item as ExprCtx | undefined)?.[key]);
+        return (value as ExprCtx | undefined)?.[key];
+      }, ctx);
+    const functions: Record<string, (...args: unknown[]) => unknown> = {
+      contains: (haystack, needle) =>
+        Array.isArray(haystack)
+          ? haystack.some((item) => String(item).toLowerCase() === String(needle).toLowerCase())
+          : String(haystack).toLowerCase().includes(String(needle).toLowerCase()),
+      fromJSON: (text) => JSON.parse(String(text)),
+    };
+    const primary = (): unknown => {
+      const token = take();
+      if (token === '!') return !primary();
+      if (token === '(') {
+        const value = or();
+        take(')');
+        return value;
+      }
+      if (token.startsWith("'")) return token.slice(1, -1).replace(/''/g, "'");
+      if (peek() === '(') {
+        const fn = functions[token];
+        if (!fn) throw new Error(`テストが評価できない関数です：${token}`);
+        take('(');
+        const args = [or()];
+        while (peek() === ',') {
+          take(',');
+          args.push(or());
+        }
+        take(')');
+        return fn(...args);
+      }
+      return lookup(token);
+    };
+    const equality = (): unknown => {
+      const left = primary();
+      if (peek() === '==' || peek() === '!=') {
+        const op = take();
+        const right = primary();
+        return op === '==' ? left === right : left !== right;
+      }
+      return left;
+    };
+    const and = (): unknown => {
+      let value = equality();
+      while (peek() === '&&') {
+        take();
+        const right = equality();
+        value = value ? right : value;
+      }
+      return value;
+    };
+    const or = (): unknown => {
+      let value = and();
+      while (peek() === '||') {
+        take();
+        const right = and();
+        value = value ? value : right;
+      }
+      return value;
+    };
+    const result = or();
+    expect(pos, `式を最後まで読めませんでした：${source}`).toBe(tokens.length);
+    return result;
+  };
+
+  // quality ジョブのマトリクスから、イベントごとにできるジョブ（os と shard の組み合わせ）を、GitHub Actions と同じ順で展開する。
+  // 組み合わせを作り、exclude に当たるものを除き、include のうち既存の組み合わせに足せないものを新しい組み合わせとして足す
+  const qualityJobs = (ctx: ExprCtx) => {
+    const lf = readLf('.github/workflows/ci.yml');
+    const quality = lf.slice(lf.indexOf('\n  quality:'), lf.indexOf('\n  node20:'));
+    const matrix = quality.match(/^ {6}matrix:\n((?: {8}.*\n)*)/m)?.[1] ?? '';
+    const osLine = matrix.match(/^ {8}os: (.+)$/m)?.[1];
+    expect(osLine, 'マトリクスの os').toBeTruthy();
+    const whole = osLine!.match(/^\$\{\{(.*)\}\}$/);
+    expect(whole, 'os は式で決める').not.toBeNull();
+    const oses = evalGithubExpr(whole![1]!.trim(), ctx) as string[];
+    const shards = JSON.parse((matrix.match(/^ {8}shard: (.+)$/m)?.[1] ?? '[]').replace(/'/g, '"')) as string[];
+    const entries = (key: string) => [...(matrix.split(new RegExp(`^ {8}${key}:\\n`, 'm'))[1] ?? '').matchAll(/^ {10}- os: (\S+)$/gm)].map((m) => ({ os: m[1]! }));
+    let jobs: { os: string; shard?: string }[] = oses.flatMap((os) => shards.map((shard) => ({ os, shard })));
+    jobs = jobs.filter((job) => !entries('exclude').some((ex) => ex.os === job.os));
+    for (const add of entries('include')) if (!jobs.some((job) => job.os === add.os)) jobs.push(add);
+    return jobs.map((job) => (job.shard ? `${job.os} ${job.shard}` : job.os));
+  };
+  const githubCtx = (event_name: string, labels: string[] = []): ExprCtx => ({
+    github: { event_name, event: event_name === 'pull_request' ? { pull_request: { labels: labels.map((name) => ({ name })) } } : {} },
+  });
+  const allOsJobs = ['macos-latest 1/2', 'macos-latest 2/2', 'windows-latest 1/2', 'windows-latest 2/2', 'ubuntu-latest'];
+
+  it('[REQ-049] ラベルのない PR では、quality ジョブを ubuntu-latest の 1 つだけで実行する', () => {
+    expect(qualityJobs(githubCtx('pull_request'))).toEqual(['ubuntu-latest']);
+    // ci:all-os 以外のラベルでは、3 つの OS にならない
+    expect(qualityJobs(githubCtx('pull_request', ['documentation', 'ci:all-os-later']))).toEqual(['ubuntu-latest']);
+    // ubuntu のジョブは、lint・typecheck・カバレッジ付きのテスト・build・配布物の検査を実行する
+    const lf = readLf('.github/workflows/ci.yml');
+    const quality = lf.slice(lf.indexOf('\n  quality:'), lf.indexOf('\n  node20:'));
+    expect(quality).toMatch(/runs-on: \$\{\{ matrix\.os \}\}/);
+    for (const step of ['run: pnpm lint', 'run: pnpm typecheck', 'run: pnpm test --coverage', 'run: pnpm build', 'package-smoke.mjs prepare', 'package-smoke.mjs check']) expect(quality, step).toContain(step);
+  });
+
+  it('[REQ-049] main への push と定期実行では、quality ジョブを ubuntu・macos・windows の 3 つで実行し、macOS と Windows では 2 つのシャードに分ける', () => {
+    expect(qualityJobs(githubCtx('push'))).toEqual(allOsJobs);
+    expect(qualityJobs(githubCtx('schedule'))).toEqual(allOsJobs);
+    // OS の式には 3 つの OS が書いてある
+    const lf = readLf('.github/workflows/ci.yml');
+    const osLine = lf.match(/^ {8}os: (.+)$/m)?.[1] ?? '';
+    for (const os of ['ubuntu-latest', 'macos-latest', 'windows-latest']) expect(osLine).toContain(os);
+  });
+
+  it('[REQ-273] ci:all-os ラベルの付いた PR では、quality ジョブを 3 つの OS で実行する', () => {
+    expect(qualityJobs(githubCtx('pull_request', ['ci:all-os']))).toEqual(allOsJobs);
+    expect(qualityJobs(githubCtx('pull_request', ['documentation', 'ci:all-os']))).toEqual(allOsJobs);
+  });
+
+  it('[REQ-049][REQ-273] PR にラベルを付けたときにも起動し、毎日 1 回、定期実行する', () => {
+    const lf = readLf('.github/workflows/ci.yml');
+    const on = lf.slice(lf.indexOf('\non:\n'), lf.indexOf('\npermissions:'));
+    // 既定の種類（opened・synchronize・reopened）を残したまま、labeled を足す
+    expect(on).toMatch(/^ {2}pull_request:\n {4}types: \[opened, synchronize, reopened, labeled\]\n/m);
+    expect(on).toMatch(/^ {2}push:\n {4}branches: \[main\]\n/m);
+    // cron は 1 つだけで、分と時を固定し、日・月・曜日は * にする（1 日 1 回）
+    const crons = [...on.matchAll(/^ {4}- cron: '(.+)'$/gm)].map((m) => m[1]!);
+    expect(crons).toHaveLength(1);
+    expect(crons[0]).toMatch(/^\d{1,2} \d{1,2} \* \* \*$/);
+    expect(on).toMatch(/^ {2}schedule:\n/m);
+  });
+
+  it('[REQ-273] node20・node22・gate のジョブは、OS の切り替えの影響を受けない', () => {
+    const lf = readLf('.github/workflows/ci.yml');
+    const jobs = {
+      node20: lf.slice(lf.indexOf('\n  node20:'), lf.indexOf('\n  node22:')),
+      node22: lf.slice(lf.indexOf('\n  node22:'), lf.indexOf('\n  gate:')),
+      gate: lf.slice(lf.indexOf('\n  gate:')),
+    };
+    for (const [name, job] of Object.entries(jobs)) {
+      expect(job, name).toMatch(/^ {4}runs-on: ubuntu-latest$/m);
+      expect(job, name).not.toContain('matrix');
+      expect(job, name).not.toContain('ci:all-os');
+      expect(job, name).not.toContain('labels');
+    }
+    // node20・node22 には条件がなく、gate は今までどおり pull_request のときだけ動く
+    expect(jobs.node20).not.toMatch(/^ {4}if:/m);
+    expect(jobs.node22).not.toMatch(/^ {4}if:/m);
+    expect(jobs.gate).toMatch(/^ {4}if: github\.event_name == 'pull_request'$/m);
+    // OS の切り替えの式は、quality ジョブの os の行の 1 か所だけ
+    expect(lf.replace(/^ *#.*\n/gm, '').match(/ci:all-os/g)).toHaveLength(1);
   });
 
   it('[REQ-214] macOS と Windows ではテストを 2 つのシャードに分け、ubuntu ではカバレッジ付きで 1 回だけ実行する', () => {
     const lf = readLf('.github/workflows/ci.yml');
     const quality = lf.slice(lf.indexOf('\n  quality:'), lf.indexOf('\n  node20:'));
-    // ubuntu はシャードの組み合わせから外し、シャードのない 1 つだけを足す。macOS と Windows には 1/2 と 2/2 が残る
+    // ubuntu はシャードの組み合わせから外し、シャードのない 1 つだけを足す。macOS と Windows には 1/2 と 2/2 が残る。
+    // os の行はイベントとラベルで切り替える式なので（REQ-049・REQ-273）、ここでは os の行のほかを比べ、展開したジョブは 3 つの OS で動くときで確かめる
+    expect(qualityJobs(githubCtx('push'))).toEqual(['macos-latest 1/2', 'macos-latest 2/2', 'windows-latest 1/2', 'windows-latest 2/2', 'ubuntu-latest']);
     const matrix = quality.match(/^ {6}matrix:\n((?: {8}.*\n)*)/m)?.[1];
-    expect(matrix).toBe(
+    expect(matrix?.replace(/^ {8}os: \$\{\{ .+ \}\}\n/m, '        os: <OS の式>\n')).toBe(
       [
-        '        os: [ubuntu-latest, macos-latest, windows-latest]',
+        '        os: <OS の式>',
         "        shard: ['1/2', '2/2']",
         '        exclude:',
         '          - os: ubuntu-latest',
@@ -137,16 +295,21 @@ describe('CI', () => {
   });
 
   it('[REQ-270] main への push では、判定が docs_only=false になり、すべてのステップを実行する', () => {
-    // ci.yml は push でも同じ判定のステップを実行し、イベントの種類をスクリプトに渡す。ci.yml の on は pull_request と main への push だけ
+    // ci.yml は push でも同じ判定のステップを実行し、イベントの種類をスクリプトに渡す。ci.yml の on は pull_request と main への push と定期実行（REQ-049）だけ
     const lf = readLf('.github/workflows/ci.yml');
-    expect(lf).toMatch(/^on:\n {2}pull_request:\n {2}push:\n {4}branches: \[main\]\n/m);
-    const r = spawnSync(process.execPath, [join(root, 'scripts', 'ci-docs-only.mjs')], {
-      cwd: root,
-      encoding: 'utf8',
-      env: { ...process.env, EVENT_NAME: 'push', BASE_REF: '', GITHUB_OUTPUT: '' },
-    });
-    expect(r.status, r.stderr).toBe(0);
-    expect(r.stdout).toBe('docs_only=false\n');
+    const on = lf.slice(lf.indexOf('\non:\n') + 1, lf.indexOf('\npermissions:'));
+    expect(on.match(/^ {2}[a-z_]+:/gm)).toEqual(['  pull_request:', '  push:', '  schedule:']);
+    expect(on).toMatch(/^ {2}push:\n {4}branches: \[main\]\n/m);
+    // main への push でも定期実行でも、判定は docs_only=false になる
+    for (const eventName of ['push', 'schedule']) {
+      const r = spawnSync(process.execPath, [join(root, 'scripts', 'ci-docs-only.mjs')], {
+        cwd: root,
+        encoding: 'utf8',
+        env: { ...process.env, EVENT_NAME: eventName, BASE_REF: '', GITHUB_OUTPUT: '' },
+      });
+      expect(r.status, r.stderr).toBe(0);
+      expect(r.stdout, eventName).toBe('docs_only=false\n');
+    }
     // 条件は「true でない」なので、false のときも、判定の出力がないときも、ステップを実行する
     for (const step of qualitySteps().filter((step) => step.includes('docs_only'))) expect(step).toContain(docsOnlyCondition);
   });
