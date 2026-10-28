@@ -253,10 +253,14 @@ describe('CI', () => {
     expect(quality).toContain(`- if: matrix.shard && ${docsOnly}\n        run: pnpm test --shard=\${{ matrix.shard }}\n`);
     expect(quality).toContain(`- if: \${{ !matrix.shard && ${docsOnly} }}\n        run: pnpm test --coverage\n`);
     expect(quality).not.toContain('test:coverage');
-    // シャードで変わる条件はテストの 2 つだけで、ほかのステップの条件は文書だけの PR の条件だけ。lint・typecheck・build・配布物の検査はどのジョブでも実行する
+    // シャードで変わる条件はテストの 2 つだけ。品質コマンドは文書だけの PR の条件を保ち、診断の 2 ステップは失敗後にも実行する
     const conditions = [...quality.matchAll(/^ {6}(?:- | {2})if: (.*)$/gm)].map((match) => match[1]);
     expect(conditions.filter((condition) => condition.includes('matrix'))).toEqual([`matrix.shard && ${docsOnly}`, `\${{ !matrix.shard && ${docsOnly} }}`]);
-    expect(conditions.filter((condition) => !condition.includes('matrix')).every((condition) => condition === docsOnly)).toBe(true);
+    const diagnostics = "${{ !cancelled() && steps.checkout.outcome == 'success' && steps.node.outcome == 'success' && steps.changes.outputs.docs_only != 'true' }}";
+    // 品質コマンドの条件は維持し、失敗後にも動く診断の2ステップだけを追加する（REQ-291）
+    expect(conditions.filter((condition) => !condition.includes('matrix'))).toEqual([
+      ...Array(5).fill(docsOnly), diagnostics, diagnostics, ...Array(3).fill(docsOnly),
+    ]);
     for (const step of ['run: pnpm lint', 'run: pnpm typecheck', 'run: pnpm build', 'package-smoke.mjs prepare', 'package-smoke.mjs check']) expect(quality, step).toContain(step);
   });
 
