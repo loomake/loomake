@@ -1,6 +1,7 @@
 // prepareは開発用Node、checkは配布物の対応Nodeで実行する。
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -34,6 +35,80 @@ export function copyFixture(source, target) {
   }
 }
 
+const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+const alive = (pid) => {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return error.code === 'EPERM';
+  }
+};
+const readOwner = (dir) => {
+  try {
+    return JSON.parse(readFileSync(join(dir, 'owner.json'), 'utf8'));
+  } catch {
+    return undefined;
+  }
+};
+
+const statMtime = (path) => {
+  try {
+    return statSync(path).mtimeMs;
+  } catch {
+    return Date.now();
+  }
+};
+
+/**
+ * リポジトリの dist を書き換える処理を、ディレクトリのロックで 1 つずつ動かす。
+ * 持ち主のプロセスが終わっているか、取ってから staleMs を過ぎたロックは外して取り直す。
+ */
+export function withBuildLock(fn, { lockDir = join(root, '.loomake', 'build.lock'), waitMs = 300_000, staleMs = 600_000, pollMs = 100 } = {}) {
+  mkdirSync(dirname(lockDir), { recursive: true });
+  const token = `${process.pid}-${randomUUID()}`;
+  const started = Date.now();
+  for (;;) {
+    try {
+      mkdirSync(lockDir);
+      writeFileSync(join(lockDir, 'owner.json'), JSON.stringify({ pid: process.pid, token, acquiredAt: Date.now() }));
+      break;
+    } catch (error) {
+      if (error.code !== 'EEXIST') throw error;
+    }
+    const owner = readOwner(lockDir);
+    // 取った直後で owner.json がまだないときは、持ち主の書き込みを待つ
+    const stale = owner ? !alive(owner.pid) || Date.now() - owner.acquiredAt > staleMs : statMtime(lockDir) < Date.now() - staleMs;
+    if (stale) {
+      // 外す前に一意の名前へ移し、移したものが古いロックのままかを確かめる。
+      // ほかの待ち手が先に取り直していたら、そのロックを戻す
+      const moved = `${lockDir}.stale-${token}`;
+      try {
+        renameSync(lockDir, moved);
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+        continue;
+      }
+      if (readOwner(moved)?.token === owner?.token) rmSync(moved, { recursive: true, force: true });
+      else {
+        try {
+          renameSync(moved, lockDir);
+        } catch {
+          rmSync(moved, { recursive: true, force: true });
+        }
+      }
+      continue;
+    }
+    if (Date.now() - started > waitMs) throw new Error(`build のロックを ${Math.round(waitMs / 1000)} 秒待っても取れませんでした：${lockDir}（持ち主の PID ${owner?.pid ?? '不明'}）`);
+    sleep(pollMs);
+  }
+  try {
+    return fn();
+  } finally {
+    if (readOwner(lockDir)?.token === token) rmSync(lockDir, { recursive: true, force: true });
+  }
+}
+
 /** 既存のディレクトリを上書きせず、配布物と独立した利用先を準備する。 */
 export function prepare(target) {
   mkdirSync(target);
@@ -41,8 +116,12 @@ export function prepare(target) {
   const consumer = join(target, 'consumer');
   mkdirSync(tarballs);
   mkdirSync(consumer);
-  run('pnpm', ['-r', 'build'], root);
-  for (const name of packages) run('pnpm', ['pack', '--pack-destination', tarballs, '--silent'], join(root, 'packages', name));
+  // 試験の中では複数のファイルが同時に prepare を呼ぶ。tsc は出力を空にしてから書くので、
+  // build を重ねると、ほかの build が空の .d.ts を読んだり、pack が書きかけの dist を固めたりする（Issue #34）
+  withBuildLock(() => {
+    run('pnpm', ['-r', 'build'], root);
+    for (const name of packages) run('pnpm', ['pack', '--pack-destination', tarballs, '--silent'], join(root, 'packages', name));
+  });
   const files = readdirSync(tarballs).filter((name) => name.endsWith('.tgz'));
   assert.equal(files.length, 5);
   writeFileSync(join(consumer, 'package.json'), '{"name":"loomake-smoke-consumer","private":true,"type":"module"}\n');
