@@ -79,11 +79,16 @@ describe('監視役の起動時間と外部操作の予算', () => {
     expect(running(pid)).toBe(false);
   }), 10_000);
 
+  // 準備に PREP_MS かかり、対象は 2 秒で終わる。準備の時間を一度だけ引けば残りで対象が終わり、二度引けば対象の 2 秒が残らない。
+  // Windows では外部操作ごとに保持役へ保持を頼む分だけ監視役と対象の起動が遅く、5 秒の予算の残り 3 秒に収まらないことがあった
+  // （run 40638584189 の 2 回目）。そこで Windows では予算を 9 秒、準備を 4 秒にし、二度引けば残りが 1 秒になることを保つ
+  const BUDGET_MS = process.platform === 'win32' ? 9000 : 5000;
+  const PREP_MS = process.platform === 'win32' ? 4000 : 2000;
   it('[REQ-180][REQ-182] 共有期限から準備の経過時間を二度引かない', () => fixture(0, ({ dir, env, target, boot }) => {
-    const result = withProcessBudget({ timeoutMs: 5000 }, () => runExternal(process.execPath, ['-e', startedTarget(target, 'setTimeout(()=>process.exit(7),2000)')], {
+    const result = withProcessBudget({ timeoutMs: BUDGET_MS }, () => runExternal(process.execPath, ['-e', startedTarget(target, 'setTimeout(()=>process.exit(7),2000)')], {
       cwd: dir, env, untilDeadline: true,
       get timeoutMs() {
-        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2000);
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, PREP_MS);
         return undefined;
       },
     }));
@@ -91,5 +96,5 @@ describe('監視役の起動時間と外部操作の予算', () => {
     expect(existsSync(target)).toBe(true);
     expect(result.status).toBe(7);
     expect(result.error).toBeUndefined();
-  }), 10_000);
+  }), process.platform === 'win32' ? 15_000 : 10_000);
 });
