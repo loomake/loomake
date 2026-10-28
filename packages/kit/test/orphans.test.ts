@@ -502,12 +502,11 @@ process.kill(sup,'SIGKILL');setInterval(()=>{},100);`);
     const t = await targetWithChild(dir, 'open');
     try {
       const held = await askHold(t.target.pid!, 'open');
-      // 終わったプロセスの PID は開けない（管理者で動く CI では、System の PID 4 も開けることがある）
-      const ended = spawn(process.execPath, ['-e', ''], { stdio: 'ignore' });
-      await new Promise((resolve) => ended.once('exit', resolve));
-      const result = windowsHolder.cleanup({ id: 'open', pid: t.target.pid!, created: held.created!, candidates: [{ pid: ended.pid! }] }, CLEANUP_LIMIT_MS);
+      // 使われていない PID は開けない（管理者で動く CI では、System の PID 4 も開けることがある）
+      const unused = 2_147_483_644;
+      const result = windowsHolder.cleanup({ id: 'open', pid: t.target.pid!, created: held.created!, candidates: [{ pid: unused }] }, CLEANUP_LIMIT_MS);
       logCleanup('開けない候補', result);
-      expect('output' in result && result.output.records?.find((r) => r.pid === ended.pid)).toMatchObject({ state: 'unopenable', reason: expect.stringMatching(/^open:/) });
+      expect('output' in result && result.output.records?.find((r) => r.pid === unused)).toMatchObject({ state: 'unopenable', reason: expect.stringMatching(/^open:/) });
     } finally {
       try { process.kill(t.childPid, 'SIGKILL'); } catch { /* */ }
       t.target.kill('SIGKILL');
@@ -538,7 +537,9 @@ process.kill(sup,'SIGKILL');setInterval(()=>{},100);`);
     const t = spawn(process.execPath, ['-e', 'setInterval(()=>{},100)'], { stdio: 'ignore' });
     try {
       expect((await askHold(t.pid!, 'expiry', Date.now() + 300)).ok).toBe(true);
-      expect(await waitFor(() => !(windowsHolderStateForTest() ?? ['expiry']).includes('expiry'), 5_000)).toBe(true);
+      let state: string[] | undefined;
+      const released = await waitFor(() => { state = windowsHolderStateForTest(); return state !== undefined && !state.includes('expiry'); }, 10_000);
+      expect(released, `保持役の状態：${JSON.stringify(state)}`).toBe(true);
     } finally { t.kill('SIGKILL'); }
   });
   it('[REQ-255] 親が終わったとき（stdin の EOF）と保持役が強制終了したとき、保持役は残らず、後片付けは未確認になる', async () => {
