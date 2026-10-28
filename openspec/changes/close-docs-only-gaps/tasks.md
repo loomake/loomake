@@ -6,8 +6,8 @@
 
 ## 2. ファイルの名前（Issue #42 の 1）
 
-- [ ] 2.1 `tests/ci-docs-only.test.ts` に、Windows で使えない文字・制御文字・末尾のドットや空白・予約名・UTF-8 として正しくない名前・大文字と小文字だけが違う名前・ツリーを読めないときの試験を足す。直す前のスクリプトで失敗することを確かめ、`tdd.md` に書く（REQ-273）
-- [ ] 2.2 `scripts/ci-docs-only.mjs` の `isDocumentPath` で 2.1 の名前を文書として扱わないようにし、判定で `git ls-tree -r -z --name-only HEAD` を読んで大文字と小文字だけが違う名前を検出する（REQ-273）
+- [x] 2.1 `tests/ci-docs-only.test.ts` に、Windows で使えない文字・制御文字・末尾のドットや空白・予約名・UTF-8 として正しくない名前・大文字と小文字だけが違う名前・ツリーを読めないときの試験を足す。直す前のスクリプトで失敗することを確かめ、`tdd.md` に書く（REQ-273）
+- [x] 2.2 `scripts/ci-docs-only.mjs` の `isDocumentPath` で 2.1 の名前を文書として扱わないようにし、判定で `git ls-tree -r -z --name-only HEAD` を読んで大文字と小文字だけが違う名前を検出する（REQ-273）
 
 ## 3. ファイルの種類（Issue #42 の 2）
 

@@ -22,6 +22,10 @@ export function isDocumentPath(path) {
   if (typeof path !== 'string' || !path || path.includes('\\')) return false;
   const parts = path.split('/');
   if (parts.some((part) => part === '' || part === '.' || part === '..')) return false;
+  // Windows で checkout できない名前は、文書の置き場所にあっても文書として扱わない（REQ-273）。
+  // git の出力を UTF-8 として読むと、正しくないバイトは U+FFFD になる
+  if (/[<>:"|?*\u0000-\u001f�]/.test(path)) return false;
+  if (parts.some((part) => /[. ]$/.test(part) || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)/i.test(part))) return false;
   const markdown = path.endsWith('.md');
   // リポジトリの直下の .md（README.md・CONTRIBUTING.md など）
   if (parts.length === 1) return markdown;
@@ -60,6 +64,8 @@ export function parseNameStatus(text) {
   return paths;
 }
 
+const list = (paths) => paths.slice(0, 5).join('、') + (paths.length > 5 ? ` ほか ${paths.length - 5} 件` : '');
+
 /**
  * 文書だけの PR かを決める。PR でないとき、差分を取れないとき、差分を解釈できないときは、文書だけとしない
  * @param {{ eventName?: string; baseRef?: string; git: (args: string[]) => { status: number | null; stdout?: string; stderr?: string; error?: Error } }} options
@@ -88,10 +94,19 @@ export function decideDocsOnly({ eventName = '', baseRef = '', git }) {
   // 変えたファイルが 1 つもない差分は、解釈できない差分と同じに扱う
   if (!paths.length) return { docsOnly: false, reason: 'PR で変えたファイルが見つからなかったので、すべてのステップを実行します' };
   const others = [...new Set(paths.filter((path) => !isDocumentPath(path)))];
-  if (others.length) {
-    const shown = others.slice(0, 5).join('、') + (others.length > 5 ? ` ほか ${others.length - 5} 件` : '');
-    return { docsOnly: false, reason: `文書ではないファイルを変えているので、すべてのステップを実行します：${shown}` };
+  if (others.length) return { docsOnly: false, reason: `文書ではないファイルを変えているので、すべてのステップを実行します：${list(others)}` };
+  // macOS と Windows の checkout では、大文字と小文字だけが違うパスは 1 つのファイルに重なる（REQ-273）
+  const tree = git(['ls-tree', '-r', '-z', '--name-only', 'HEAD']);
+  if (tree.status !== 0) {
+    const detail = (tree.stderr || tree.error?.message || '').trim();
+    return { docsOnly: false, reason: `PR の先頭のファイルの一覧を読めなかったので、すべてのステップを実行します（${detail || `終了コード ${tree.status}`}）` };
   }
+  const treeText = tree.stdout ?? '';
+  if (treeText && !treeText.endsWith('\0')) return { docsOnly: false, reason: 'PR の先頭のファイルの一覧を解釈できなかったので、すべてのステップを実行します（NUL で終わっていません）' };
+  const byFolded = new Map();
+  for (const path of treeText.split('\0').filter(Boolean)) byFolded.set(path.toLowerCase(), [...(byFolded.get(path.toLowerCase()) ?? []), path]);
+  const colliding = [...new Set(paths.filter((path) => (byFolded.get(path.toLowerCase()) ?? []).some((other) => other !== path)))];
+  if (colliding.length) return { docsOnly: false, reason: `大文字と小文字だけが違う別のパスがあるので、すべてのステップを実行します：${list(colliding)}` };
   return { docsOnly: true, reason: `変えたファイル（${paths.length} 件）はすべて文書なので、品質コマンドを飛ばします` };
 }
 

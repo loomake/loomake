@@ -64,6 +64,25 @@ describe('文書として扱うファイル', () => {
   it('[REQ-270] 読めないパスは文書として扱わない', () => {
     for (const path of ['', 'docs\\a.md', 'docs/../packages/a.md', './README.md', 'docs//a.md']) expect(isDocumentPath(path), path).toBe(false);
   });
+
+  it('[REQ-273] Windows で使えない文字と制御文字を含む名前は文書として扱わない', () => {
+    for (const path of ['docs/a:b.md', 'docs/a\npackages.md', 'docs/a?.md', 'docs/a<b.md', 'docs/a>b.md', 'docs/a"b.md', 'docs/a|b.md', 'docs/a*.md', 'docs/a\tb.md', 'docs/a\u0000b.md', 'docs/a\u001fb.md', 'docs/x:y/a.md'])
+      expect(isDocumentPath(path), JSON.stringify(path)).toBe(false);
+  });
+
+  it('[REQ-273] 末尾がドットか空白の部分と、Windows の予約名の部分を含む名前は文書として扱わない', () => {
+    for (const path of ['docs/notes./a.md', 'docs/notes /a.md', 'docs/a.md ', 'docs/aux.md', 'docs/Com1.md', 'docs/nul/a.md', 'CON.md', 'docs/prn.tar.md', 'docs/LPT9.md', 'openspec/changes/aux/tasks.md'])
+      expect(isDocumentPath(path), JSON.stringify(path)).toBe(false);
+    // 予約名に似ているだけの名前は文書として扱う
+    for (const path of ['docs/auxiliary.md', 'docs/com10.md', 'docs/con-notes.md', 'docs/lpt.md', 'docs/a.b.md']) expect(isDocumentPath(path), path).toBe(true);
+  });
+
+  it('[REQ-273] UTF-8 として正しくないバイトを含む名前は文書として扱わない', () => {
+    // git の出力を UTF-8 として読むと、正しくないバイトは U+FFFD になる
+    expect(isDocumentPath('docs/�x.md')).toBe(false);
+    expect(isDocumentPath(Buffer.from([...Buffer.from('docs/'), 0xff, ...Buffer.from('x.md')]).toString('utf8'))).toBe(false);
+    expect(isDocumentPath('docs/日本語の名前.md')).toBe(true);
+  });
 });
 
 describe('文書だけかの判定', () => {
@@ -71,7 +90,8 @@ describe('文書だけかの判定', () => {
     const { git, calls } = fakeGit(nameStatus(['M', 'docs/worklog/2026-10-27.md'], ['A', 'openspec/changes/c1/tasks.md'], ['A', '.changeset/c1.md']));
     expect(decideDocsOnly({ eventName: 'pull_request', baseRef: 'main', git })).toMatchObject({ docsOnly: true });
     // ベースから PR の先頭までの差分を、名前の変更を検出して読む。ベースは同じ名前のタグと取り違えないよう refs/remotes/ から書く
-    expect(calls).toEqual([['diff', '--name-status', '-z', '-M', 'refs/remotes/origin/main...HEAD']]);
+    // そのあとで、大文字と小文字だけが違うパスを探すため、PR の先頭のツリーを読む（REQ-273）
+    expect(calls).toEqual([['diff', '--name-status', '-z', '-M', 'refs/remotes/origin/main...HEAD'], ['ls-tree', '-r', '-z', '--name-only', 'HEAD']]);
   });
 
   it('[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば、文書だけと判定しない', () => {
@@ -124,6 +144,38 @@ describe('文書だけかの判定', () => {
     expect(result.reason).toContain('packages/kit/src/a.ts');
   });
 
+  // 差分と PR の先頭のツリーを、引数で分けて返す偽の git
+  const treeOf = (...paths: string[]) => paths.map((path) => path + '\0').join('');
+  const decideWithTree = (diff: string, tree: string, treeStatus = 0) => {
+    const calls: string[][] = [];
+    const git = (args: string[]) => {
+      calls.push(args);
+      if (args[0] === 'ls-tree') return { status: treeStatus, stdout: tree, stderr: treeStatus ? 'fatal: not a tree object' : '' };
+      return { status: 0, stdout: diff, stderr: '' };
+    };
+    return { result: decideDocsOnly({ eventName: 'pull_request', baseRef: 'main', git }), calls };
+  };
+
+  it('[REQ-273] PR の先頭のツリーに大文字と小文字の違いだけで同じになる別のパスがあれば、文書だけと判定しない', () => {
+    const collide = decideWithTree(nameStatus(['A', 'docs/Notes.md']), treeOf('README.md', 'docs/Notes.md', 'docs/notes.md'));
+    expect(collide.result.docsOnly).toBe(false);
+    expect(collide.result.reason).toContain('docs/Notes.md');
+    // ディレクトリの名前だけが違う場合も、同じパスになる
+    expect(decideWithTree(nameStatus(['A', 'docs/Guide/a.md']), treeOf('docs/Guide/a.md', 'docs/guide/a.md')).result.docsOnly).toBe(false);
+    // 重ならなければ文書だけになる。ツリーは PR の先頭（HEAD）から読む
+    const ok = decideWithTree(nameStatus(['A', 'docs/Notes.md']), treeOf('README.md', 'docs/Notes.md', 'docs/notes-old.md'));
+    expect(ok.result.docsOnly).toBe(true);
+    expect(ok.calls.find((args) => args[0] === 'ls-tree')).toEqual(['ls-tree', '-r', '-z', '--name-only', 'HEAD']);
+  });
+
+  it('[REQ-273] PR の先頭のツリーのパスを読めないときは、文書だけと判定しない', () => {
+    const failed = decideWithTree(nameStatus(['M', 'docs/notes.md']), '', 128).result;
+    expect(failed.docsOnly).toBe(false);
+    expect(failed.reason).toContain('not a tree object');
+    // NUL で終わらない出力は解釈できない
+    expect(decideWithTree(nameStatus(['M', 'docs/notes.md']), 'docs/notes.md').result.docsOnly).toBe(false);
+  });
+
   it('[REQ-270] PR のマージ先が main でないときは、差分によらず文書だけと判定しない', () => {
     const { git, calls } = fakeGit(nameStatus(['M', 'docs/notes.md']));
     const result = decideDocsOnly({ eventName: 'pull_request', baseRef: 'feature-x', git });
@@ -142,7 +194,10 @@ describe('文書だけかの判定', () => {
 
 describe('文書だけかの判定（git の差分から）', () => {
   // 一時的なリポジトリで、ベースのあとに PR のコミットを重ね、スクリプトを実行する
-  function withRepo(check: (repo: { git: (...args: string[]) => void; commit: (files: Record<string, string>, renames?: [string, string][]) => void; run: (env?: Record<string, string>) => { status: number | null; output: string; stderr: string } }) => void) {
+  // commitIndex は、作業ツリーを通さずに索引へ項目を足してコミットする。Windows で作れない名前・シンボリックリンク・サブモジュールも、
+  // OS によらず同じ形で作れる。作業ツリーと索引がずれるので、commit より後にだけ使う
+  type IndexEntry = { mode: string; path: string | Buffer; content?: string; object?: string };
+  function withRepo(check: (repo: { git: (...args: string[]) => void; commit: (files: Record<string, string>, renames?: [string, string][]) => void; commitIndex: (entries: IndexEntry[]) => void; run: (env?: Record<string, string>) => { status: number | null; output: string; stderr: string } }) => void) {
     const dir = mkdtempSync(join(tmpdir(), 'loomake-docs-only-'));
     const git = (...args: string[]) => {
       const result = spawnSync('git', ['-c', 'core.hooksPath=', ...args], { cwd: dir, encoding: 'utf8' });
@@ -171,6 +226,20 @@ describe('文書だけかの判定（git の差分から）', () => {
           }
           write(files);
           git('add', '-A');
+          git('commit', '-qm', 'change');
+        },
+        commitIndex(entries) {
+          const lines = entries.map(({ mode, path, content = '', object }) => {
+            let id = object;
+            if (!id) {
+              const hashed = spawnSync('git', ['hash-object', '-w', '--stdin'], { cwd: dir, input: content, encoding: 'utf8' });
+              expect(hashed.status, hashed.stderr).toBe(0);
+              id = hashed.stdout.trim();
+            }
+            return Buffer.concat([Buffer.from(`${mode} ${id}\t`), Buffer.isBuffer(path) ? path : Buffer.from(path), Buffer.from([0])]);
+          });
+          const updated = spawnSync('git', ['update-index', '-z', '--index-info'], { cwd: dir, input: Buffer.concat(lines) });
+          expect(updated.status, updated.stderr?.toString()).toBe(0);
           git('commit', '-qm', 'change');
         },
         run(env = {}) {
@@ -272,6 +341,30 @@ describe('文書だけかの判定（git の差分から）', () => {
       const result = repo.run({ BASE_REF: 'feature-x' });
       expect(result).toMatchObject({ status: 0, output: 'docs_only=false\n' });
       expect(result.stderr).toContain('マージ先が main ではない');
+    });
+  });
+
+  it.each([
+    ['docs/a:b.md', 'docs/a:b.md'],
+    ['改行を含む名前', 'docs/a\npackages.md'],
+    ['UTF-8 として正しくない名前', Buffer.from([...Buffer.from('docs/'), 0xff, ...Buffer.from('x.md')])],
+    ['予約名', 'docs/aux.md'],
+    ['末尾が空白の部分', 'docs/notes /a.md'],
+  ])('[REQ-273] Windows で扱えない名前（%s）を足した PR では docs_only=false を書く', (_name, path) => {
+    withRepo((repo) => {
+      repo.commitIndex([{ mode: '100644', path, content: '文書\n' }]);
+      expect(repo.run()).toMatchObject({ status: 0, output: 'docs_only=false\n' });
+    });
+  });
+
+  it('[REQ-273] ベースにある名前と大文字と小文字だけが違う名前を足した PR では docs_only=false を書く', () => {
+    withRepo((repo) => {
+      repo.commitIndex([{ mode: '100644', path: 'docs/notes.md', content: 'メモ\n' }]);
+      repo.git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+      repo.commitIndex([{ mode: '100644', path: 'docs/Notes.md', content: '別のメモ\n' }]);
+      const result = repo.run();
+      expect(result).toMatchObject({ status: 0, output: 'docs_only=false\n' });
+      expect(result.stderr).toContain('docs/Notes.md');
     });
   });
 
