@@ -35,6 +35,18 @@ def gh(args, data=None, ok404=False):
     return json.loads(r.stdout) if r.stdout.strip() else None
 
 
+def gh_all(path):
+    """一覧を返す API を、すべてのページをたどって読む（100 件ずつ）"""
+    sep = '&' if '?' in path else '?'
+    out, page = [], 1
+    while True:
+        batch = gh([f'{path}{sep}per_page=100&page={page}']) or []
+        out += batch
+        if len(batch) < 100:
+            return out
+        page += 1
+
+
 # ---- 段 0：読み取り ----
 
 def parse_wbs(text):
@@ -161,10 +173,10 @@ CLOSE_MARK = '<!-- loomake-wbs: initial-status=done -->'
 def close_state(repo, number):
     """初期状態が done の Issue を閉じる処理がどこまで済んだかを返す。
     人が開き直した Issue（reopened の記録がある）は閉じない"""
-    events = gh([f'repos/{repo}/issues/{number}/events?per_page=100']) or []
+    events = gh_all(f'repos/{repo}/issues/{number}/events')
     if any(e.get('event') == 'reopened' for e in events):
         return 'reopened'
-    comments = gh([f'repos/{repo}/issues/{number}/comments?per_page=100']) or []
+    comments = gh_all(f'repos/{repo}/issues/{number}/comments')
     return 'commented' if any(CLOSE_MARK in (c.get('body') or '') for c in comments) else 'none'
 
 
@@ -229,7 +241,7 @@ def main():
         if parent not in num:
             return set()
         if parent not in sub_cache:
-            sub_cache[parent] = {s['id'] for s in gh([f"repos/{a.repo}/issues/{num[parent]}/sub_issues?per_page=100"]) or []}
+            sub_cache[parent] = {s['id'] for s in gh_all(f"repos/{a.repo}/issues/{num[parent]}/sub_issues")}
         return sub_cache[parent]
 
     for i in items:
@@ -244,7 +256,7 @@ def main():
             continue
         cur = set()
         if i['id'] in num:
-            cur = {b['id'] for b in gh([f"repos/{a.repo}/issues/{num[i['id']]}/dependencies/blocked_by?per_page=100"]) or []}
+            cur = {b['id'] for b in gh_all(f"repos/{a.repo}/issues/{num[i['id']]}/dependencies/blocked_by")}
         for d in i['deps']:
             if d in nid and nid[d] in cur:
                 continue
