@@ -13,3 +13,10 @@
 - verify の結果：最終の `pnpm -s verify --change profile-slow-ci-tests --done` はexit 0。1,147件成功、失敗0件、既存のpending8件。全要件の対応テスト、Lint、型検査が成功した。既存ci.yml・品質設定・lockfileの差分はない。
 - 残っている確認事項・仮定：Windowsの3サンプルはこれから取得する。ブロッキング質問なし。
 - 次にやること：PR #118のブランチをbaseにしたPRを作り、Windowsの計測artifactを確認する。
+
+## PR初回起動での修正（タスク3.1・4.1）
+
+- やったこと：PR #120をPR #118のブランチをbaseに作成した。初回の計測workflowは起動前の構文検証で失敗したため、`runner.temp` を参照する設定をjob envからtest・collectのstep envへ移した。既存の期待値は維持し、参照位置の回帰試験を追加した（cdb2b1d）。
+- verify の結果：修正後の関連29試験、Lint、型検査が成功した。修正前の完了ゲートはexit 0、修正後は再実行する。
+- 残っている確認事項・仮定：Windowsの3サンプルはまだ取得していない。GitHubの公式context一覧で、job envではrunnerを参照できずstep envでは参照できることを確認した。
+- 次にやること：修正を送信し、完了ゲートとWindows測定を再実行する。
