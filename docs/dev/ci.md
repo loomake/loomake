@@ -30,3 +30,17 @@ gate ジョブでテストを実行しないようにする変更（change short
 - CI のテストの分割（REQ-214）
 
 完了ゲート（gate のジョブ）と release ワークフローは、利用者や配布物にかかわるので、仕様に残す。
+
+## quality のテスト診断
+
+quality ジョブの要約には、テストステップの成否と JSON レポートの状態を別々に表示する。レポートの状態は、有効・欠損・不正・空の4つ。テストが未実行なら、そのことも明示する。レポートがないことを、成功の証拠にはしない。
+
+状態別件数は全結果を数え、skip・pending・todo・disabled は成功と分ける。失敗の一覧はファイル名とテストの完全名を最大20件、所要時間の一覧は時間のあるテストを長い順に最大10件表示する。各ファイル名とテスト名は200文字、要約全体は32KiB以内に収め、省略があれば件数や文字の省略を表示する。名前に含まれる Markdown と HTML の記号は文字として表示する。
+
+実行画面の Artifacts から、`ci-tests-<run-id>-<attempt>-<os>-<shard>` をダウンロードできる。シャードの `/` は `-` に置き換え、分割しない実行は `all` とする。次のファイルを参照する。
+
+- `metadata.json`：`schemaVersion: 1`、run の URL・ID・試行番号、実際に checkout した SHA、OS、Node の版、シャード、テストステップの結果、レポートの状態、状態別件数。
+- `summary.md`：ジョブ要約と同じ日本語の診断。
+- `test-report.json`：元レポートの写し。元レポートがあるときだけ保存する。失敗メッセージの全文や一覧で省略されたテストは、このファイルで確認する。
+
+診断スクリプトは `node scripts/ci-test-diagnostics.mjs` で実行する。`CI_TEST_OS`、`CI_TEST_SHARD`、`CI_TEST_OUTCOME` に実行環境とテストステップの outcome を渡す。run 情報は `GITHUB_*` から、SHA は `git rev-parse HEAD` から取得する。出力先は `$RUNNER_TEMP/loomake-ci-test-diagnostics`。`GITHUB_STEP_SUMMARY` があれば要約を追記し、`GITHUB_OUTPUT` には `artifact-name` と `directory` を書く。
