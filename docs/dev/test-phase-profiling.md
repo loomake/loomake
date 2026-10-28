@@ -1,0 +1,16 @@
+# 遅い試験の区間計測
+
+`LOOMAKE_TEST_PHASE_PROFILE_DIR` に保存先を指定したときだけ、対象試験の計測イベントをプロセスごとのJSONLへ保存します。指定しなければ計測ファイルは生成しません。記録に失敗しても、元の試験へ例外を返しません。
+
+```sh
+LOOMAKE_TEST_PHASE_PROFILE_DIR=/tmp/loomake-phases pnpm exec vitest run tests/ai-journeys.test.ts packages/runner/test/external-budget.test.ts
+LOOMAKE_TEST_PHASE_PROFILE_DIR=/tmp/loomake-phases node scripts/test-phase-profile.mjs
+```
+
+集計コマンドは保存先へ `profile.json` と `summary.md` を生成します。記録が不完全なら終了コード1を返します。JSONLはプロセスごとに1MiBまで記録し、上限到達を示すイベントを残します。区間の欠損、不正な時刻、重複、読み取り失敗は計測不足として表示し、0秒や成功として補いません。生のJSONLはCIの保存対象に含めません。
+
+対象は配布物操作の `journeys-temp`・`journeys-repo`、期限試験の `deadline-push`・`deadline-create`、共有準備の `shared-package-build` です。期限試験は準備、停止前の処理、停止待ちと停止処理、再実行、後片付けを分けます。配布物操作では準備、npm導入、Git操作、CLI操作、後片付けを分けます。準備に含まれるコマンドを操作時間へ重ねて計上しません。総時間から各区間を引いた残りが「その他」です。欠損や重複があれば残りを推計しません。共有build・packは個別試験へ加算せず、別枠に表示します。
+
+JSONにはrun、試行、`LOOMAKE_TEST_PHASE_SAMPLE`、実際のcheckout SHA、OS、Node、`TEST_PHASE_OUTCOME` を記録します。stdout、stderr、コマンド引数、環境変数全体、利用者のファイル内容は保存しません。日本語要約は表示する文字をエスケープし、32KiB以内に収めます。
+
+計測を有効にした実行には記録の負荷も含まれます。通常CIの所要時間と同一とは扱わず、区間の内訳を比較するために利用してください。
