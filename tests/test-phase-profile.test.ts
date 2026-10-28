@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 import { aggregateProfile, CASE_IDS, collectProfile, escapeSummaryText, PROFILE_LIMIT, profileEvent, renderSummary } from '../scripts/test-phase-profile.mjs';
 
 const directories: string[] = [];
@@ -36,6 +38,57 @@ describe('テスト区間の記録と集計', () => {
     expect(result.complete).toBe(false);
     expect(result.issues).toContain('記録ディレクトリが未計測');
     expect(result.cases.every((row) => row.totalMs === null && row.outcome === 'unknown')).toBe(true);
+  });
+
+  it('[REQ-292][REQ-293] 一時的な書き込み失敗を次の記録へ残し、区間が揃っても不足にする', () => {
+    const dir = fixture(); const moved = `${dir}-moved`;
+    const env = { LOOMAKE_TEST_PHASE_PROFILE_DIR: dir };
+    // 1件のコマンド記録中だけ保存先をファイルにして、書き込みを失敗させる。
+    renameSync(dir, moved);
+    try {
+      writeFileSync(dir, '書き込みできない保存先');
+      expect(() => profileEvent('journeys-temp', 'command-timing', { kind: 'npm', durationMs: 5 }, env)).not.toThrow();
+    } finally {
+      rmSync(dir, { force: true });
+      renameSync(moved, dir);
+    }
+    for (const row of completeEvents()) {
+      const { caseId, event: name, ...details } = row;
+      profileEvent(caseId, name, details, env);
+    }
+    const result = collectProfile(dir);
+    expect(result.cases.every((row) => row.complete)).toBe(true);
+    expect(result.complete).toBe(false);
+    expect(result.issues).toContain('記録の書き込みに失敗');
+    expect(readFileSync(join(dir, 'summary.md'), 'utf8')).toContain('記録の書き込みに失敗');
+  });
+
+  it('[REQ-292][REQ-293] 子プロセス最後の記録失敗も終了時に保存して完備と扱わない', () => {
+    const dir = fixture();
+    const env = { ...process.env, LOOMAKE_TEST_PHASE_PROFILE_DIR: dir };
+    for (const row of completeEvents()) {
+      const { caseId, event: name, ...details } = row;
+      profileEvent(caseId, name, details, env);
+    }
+    const moduleUrl = pathToFileURL(join(import.meta.dirname, '../scripts/test-phase-profile.mjs')).href;
+    const source = `import {profileEvent} from ${JSON.stringify(moduleUrl)};
+      import {renameSync,writeFileSync,rmSync} from 'node:fs';
+      const dir=process.env.LOOMAKE_TEST_PHASE_PROFILE_DIR;
+      renameSync(dir,dir+'-moved');
+      try {
+        writeFileSync(dir,'unavailable');
+        profileEvent('journeys-temp','command-timing',{kind:'npm',durationMs:5});
+      } finally {
+        rmSync(dir,{force:true}); renameSync(dir+'-moved',dir);
+      }
+      // これ以降profileEventを呼ばずに終了する。
+      process.exitCode=1;`;
+    const child = spawnSync(process.execPath, ['--input-type=module', '-e', source], { env, encoding: 'utf8' });
+    expect(child.status, child.stderr).toBe(1);
+    const result = collectProfile(dir);
+    expect(result.cases.every((row) => row.complete)).toBe(true);
+    expect(result.complete).toBe(false);
+    expect(result.issues).toContain('記録の書き込みに失敗');
   });
 
   it('[REQ-292][REQ-293] 1プロセス1MiBで止め、上限到達を集計で識別する', () => {

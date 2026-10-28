@@ -12,6 +12,23 @@ const EVENTS = ['test-start', 'test-outcome', 'test-end', 'run-start', 'stall-st
 const KINDS = ['npm', 'git', 'cli'];
 const processFile = `${process.pid}-${randomUUID()}.jsonl`;
 const capped = new Set();
+const writeFailures = new Set();
+let failureFlushRegistered = false;
+function flushWriteFailures() {
+  for (const directory of writeFailures) {
+    try {
+      mkdirSync(directory, { recursive: true });
+      const file = join(directory, processFile);
+      let size = 0;
+      try { size = statSync(file).size; } catch { /* 未作成なら新規作成する。 */ }
+      const marker = JSON.stringify({ event: 'write-failed' }) + '\n';
+      if (size + Buffer.byteLength(marker) <= PROFILE_LIMIT) {
+        appendFileSync(file, marker);
+        writeFailures.delete(directory);
+      }
+    } catch { /* 保存先自体が利用不能なら、元の終了結果を維持する。 */ }
+  }
+}
 const finite = (n) => typeof n === 'number' && Number.isFinite(n) && n >= 0;
 
 /** 記録は任意。失敗しても対象の試験へ例外を返さない。 */
@@ -31,13 +48,24 @@ export function profileEvent(caseId, event, details = {}, env = process.env) {
     try { size = statSync(file).size; } catch { /* 初回は新規作成する。 */ }
     const line = JSON.stringify(record) + '\n';
     const marker = JSON.stringify({ event: 'limit-reached' }) + '\n';
-    if (size + Buffer.byteLength(line) + Buffer.byteLength(marker) > PROFILE_LIMIT) {
+    const failureMarker = writeFailures.has(directory) ? JSON.stringify({ event: 'write-failed' }) + '\n' : '';
+    if (size + Buffer.byteLength(failureMarker) + Buffer.byteLength(line) + Buffer.byteLength(marker) > PROFILE_LIMIT) {
       if (size + Buffer.byteLength(marker) <= PROFILE_LIMIT) appendFileSync(file, marker);
       capped.add(directory);
       return;
     }
+    if (failureMarker) {
+      appendFileSync(file, failureMarker);
+      writeFailures.delete(directory);
+    }
     appendFileSync(file, line);
-  } catch { /* 未記録の区間は集計で不足として示す。 */ }
+  } catch {
+    writeFailures.add(directory);
+    if (!failureFlushRegistered) {
+      process.once('exit', flushWriteFailures);
+      failureFlushRegistered = true;
+    }
+  }
 }
 
 function validEvent(row) {
@@ -152,6 +180,7 @@ export function collectProfile(directory, env = process.env, cwd = process.cwd()
           try {
             const row = JSON.parse(line);
             if (row.event === 'limit-reached') issues.push('記録が上限に到達');
+            else if (row.event === 'write-failed') issues.push('記録の書き込みに失敗');
             else events.push(row);
           } catch { issues.push('不正なJSONL'); }
         }
