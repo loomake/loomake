@@ -2763,7 +2763,7 @@
         {
           "file": "tests/ci-gate-process.test.ts",
           "contains": "ブランチsetup-monorepoで指定どおりの完了ゲートを呼び、失敗を伝える",
-          "sha256": "53762b5bb103345564ed572f6f4bac22563c5b332c6ec84848c0201f6a2d1c6c"
+          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
         },
         {
           "file": "tests/monorepo.test.ts",
@@ -2786,7 +2786,7 @@
         {
           "file": "tests/ci-gate-process.test.ts",
           "contains": "ブランチloomake/c1で指定どおりの完了ゲートを呼び、失敗を伝える",
-          "sha256": "53762b5bb103345564ed572f6f4bac22563c5b332c6ec84848c0201f6a2d1c6c"
+          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
         },
         {
           "file": "tests/monorepo.test.ts",
@@ -2809,7 +2809,7 @@
         {
           "file": "tests/ci-gate-process.test.ts",
           "contains": "複数のchangeの明示で両方の完了ゲートを呼ぶ",
-          "sha256": "53762b5bb103345564ed572f6f4bac22563c5b332c6ec84848c0201f6a2d1c6c"
+          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
         },
         {
           "file": "tests/monorepo.test.ts",
@@ -2832,7 +2832,7 @@
         {
           "file": "tests/ci-gate-process.test.ts",
           "contains": "明示したchangeがなければverifyを呼ぶ前に日本語で止まる",
-          "sha256": "53762b5bb103345564ed572f6f4bac22563c5b332c6ec84848c0201f6a2d1c6c"
+          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
         },
         {
           "file": "tests/monorepo.test.ts",
@@ -2855,7 +2855,7 @@
         {
           "file": "tests/ci-gate-process.test.ts",
           "contains": "noneの明示があればコードの変更でも品質コマンドだけを呼ぶ",
-          "sha256": "53762b5bb103345564ed572f6f4bac22563c5b332c6ec84848c0201f6a2d1c6c"
+          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
         },
         {
           "file": "tests/monorepo.test.ts",
@@ -2878,7 +2878,7 @@
         {
           "file": "tests/ci-gate-process.test.ts",
           "contains": "変更したchangeのファイルから完了ゲートを選ぶ",
-          "sha256": "53762b5bb103345564ed572f6f4bac22563c5b332c6ec84848c0201f6a2d1c6c"
+          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
         },
         {
           "file": "tests/monorepo.test.ts",
@@ -2901,7 +2901,7 @@
         {
           "file": "tests/ci-gate-process.test.ts",
           "contains": "対象未指定のコードファイル [ 'packages/a.ts' ] があればverifyを呼ぶ前に止まる",
-          "sha256": "53762b5bb103345564ed572f6f4bac22563c5b332c6ec84848c0201f6a2d1c6c"
+          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
         },
         {
           "file": "tests/monorepo.test.ts",
@@ -2924,7 +2924,7 @@
         {
           "file": "tests/ci-gate-process.test.ts",
           "contains": "文書ファイル [ 'docs/usage.md' ] の変更では品質コマンドだけを呼ぶ",
-          "sha256": "53762b5bb103345564ed572f6f4bac22563c5b332c6ec84848c0201f6a2d1c6c"
+          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
         },
         {
           "file": "tests/monorepo.test.ts",
@@ -2947,7 +2947,7 @@
         {
           "file": "tests/ci-gate-process.test.ts",
           "contains": "archive時の削除とarchive・specの追加では品質コマンドだけを呼ぶ",
-          "sha256": "53762b5bb103345564ed572f6f4bac22563c5b332c6ec84848c0201f6a2d1c6c"
+          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
         },
         {
           "file": "tests/monorepo.test.ts",
@@ -3005,7 +3005,7 @@
         {
           "file": "tests/ci-gate-process.test.ts",
           "contains": "明示した選択を変更ファイルとブランチの選択より優先する",
-          "sha256": "53762b5bb103345564ed572f6f4bac22563c5b332c6ec84848c0201f6a2d1c6c"
+          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
         }
       ]
     },
@@ -3021,7 +3021,7 @@
         {
           "file": "tests/ci-gate-process.test.ts",
           "contains": "変更ファイルとブランチの選択を合わせて両方のゲートを呼ぶ",
-          "sha256": "53762b5bb103345564ed572f6f4bac22563c5b332c6ec84848c0201f6a2d1c6c"
+          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
         }
       ]
     },
@@ -3037,7 +3037,7 @@
         {
           "file": "tests/ci-gate-process.test.ts",
           "contains": "文書ファイル [ 'README.md', '.changeset/x.md' ] の変更では品質コマンドだけを呼ぶ",
-          "sha256": "53762b5bb103345564ed572f6f4bac22563c5b332c6ec84848c0201f6a2d1c6c"
+          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
         }
       ]
     },
@@ -3053,7 +3053,7 @@
         {
           "file": "tests/ci-gate-process.test.ts",
           "contains": "対象未指定のコードファイル [ 'docs/usage.md', 'packages/a.ts' ] があればverifyを呼ぶ前に止まる",
-          "sha256": "53762b5bb103345564ed572f6f4bac22563c5b332c6ec84848c0201f6a2d1c6c"
+          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
         }
       ]
     },
@@ -7703,6 +7703,22 @@
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コードのファイルを消した PR では docs_only=false を書く",
           "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+        }
+      ]
+    },
+    {
+      "id": "SCN-4c7b119b9dbc9914c8ee",
+      "status": "reviewed",
+      "scenarioSha256": "6d4d679da998e108053142a87b6a9bf076c07fbafddf5c7e093c8ecb1f967d6f",
+      "reason": "一時的な git のリポジトリで、1 つ目のコミットで openspec/changes/c1/tasks.md を、2 つ目のコミットで packages/a.ts を変え、2 つのコミットのあいだをベースと同じ名前のタグ（refs/tags/origin/main）またはブランチ（refs/heads/origin/main）に指させる。そのうえで、ブランチ名 fix-x・本文の明示なしで実際の scripts/ci-gate.mjs を子プロセスで実行し、change を特定できないという案内を出さず、verify --change c1 --done だけを呼び、終了コード 0 で終わることを assert する。ベースの書き方を origin/main に戻すと、2 つの試験はどちらも失敗する。",
+      "sources": [
+        "REQ-272"
+      ],
+      "tests": [
+        {
+          "file": "tests/ci-gate-process.test.ts",
+          "contains": "[REQ-272] ベースと同じ名前の参照",
+          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
         }
       ]
     }
