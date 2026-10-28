@@ -1,0 +1,28 @@
+# Proposal
+
+## Why
+
+CI の失敗を調べるたびに、ログからテスト名・所要時間・実行環境を取り出している。Issue #5 の修正はマージ済みで、残る試験の修正も PR #109 が担当しているため、今回は既存の JSON レポートを診断用に保存し、次の失敗の調査を短くする。
+
+## What Changes
+
+- quality ジョブのテスト結果を、実際に checkout した SHA・run・試行・OS・シャードと結び付けて保存する。
+- 失敗したテストと時間のかかったテストを、日本語のジョブ要約で確認できるようにする。
+- レポートがない場合や不正な場合、テストが未実行の場合を、成功した結果と区別する。
+- 診断の生成と保存をテスト失敗後にも実行する。品質コマンドの失敗はそのまま残す。
+
+## Capabilities
+
+### New Capabilities
+
+- `ci-test-diagnostics`: このリポジトリの quality ジョブのテスト結果を保存し、調査用に要約する。
+
+### Modified Capabilities
+
+なし。REQ-049・REQ-214・REQ-270・REQ-273 の実行条件と、完了ゲートの契約は変えない。
+
+## Impact
+
+対象は `.github/workflows/ci.yml`、新しい `scripts/ci-test-diagnostics.mjs` とそのテスト、`docs/dev/ci.md`。Vitest がすでに出力する `.loomake/test-report.json` を使い、製品の公開 API や実行時依存は追加しない。
+
+PR #109・#115 の担当範囲には入らない。テストの skip・期待値・時間の上限・再試行・カバレッジ閾値は変更しない。main との自動照合や不安定なテストの自動判定は、比較条件が別途必要なため今回の範囲に含めない。
