@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { decideDocsOnly, isDocumentPath, parseNameStatus } from '../scripts/ci-docs-only.mjs';
+import { decideDocsOnly, isDocumentPath, parseRawDiff } from '../scripts/ci-docs-only.mjs';
 
 const script = join(import.meta.dirname, '..', 'scripts', 'ci-docs-only.mjs');
 
@@ -16,7 +16,11 @@ const fakeGit = (stdout: string, status = 0, stderr = '') => {
   };
   return { git, calls };
 };
-const nameStatus = (...entries: string[][]) => entries.map((entry) => entry.join('\0') + '\0').join('');
+// `git diff --raw -z` の形の差分。[状態, パス...] を渡すと、通常のファイル（100644）の差分にする。
+// 足したファイルの変更前と、消したファイルの変更後は、ファイルがない（000000）
+const regularModes = (status: string) => (status === 'A' ? '000000 100644' : status === 'D' ? '100644 000000' : '100644 100644');
+const rawEntry = (modes: string, status: string, ...paths: string[]) => [`:${modes} 1111111 2222222 ${status}`, ...paths].join('\0') + '\0';
+const nameStatus = (...entries: string[][]) => entries.map(([status, ...paths]) => rawEntry(regularModes(status!), status!, ...paths)).join('');
 const decide = (stdout: string, status = 0) => decideDocsOnly({ eventName: 'pull_request', baseRef: 'main', git: fakeGit(stdout, status).git });
 
 describe('文書として扱うファイル', () => {
@@ -91,7 +95,8 @@ describe('文書だけかの判定', () => {
     expect(decideDocsOnly({ eventName: 'pull_request', baseRef: 'main', git })).toMatchObject({ docsOnly: true });
     // ベースから PR の先頭までの差分を、名前の変更を検出して読む。ベースは同じ名前のタグと取り違えないよう refs/remotes/ から書く
     // そのあとで、大文字と小文字だけが違うパスを探すため、PR の先頭のツリーを読む（REQ-273）
-    expect(calls).toEqual([['diff', '--name-status', '-z', '-M', 'refs/remotes/origin/main...HEAD'], ['ls-tree', '-r', '-z', '--name-only', 'HEAD']]);
+    // 差分は --raw で読み、モードも判定に使う（REQ-274）
+    expect(calls).toEqual([['diff', '--raw', '-z', '-M', 'refs/remotes/origin/main...HEAD'], ['ls-tree', '-r', '-z', '--name-only', 'HEAD']]);
   });
 
   it('[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば、文書だけと判定しない', () => {
@@ -106,7 +111,7 @@ describe('文書だけかの判定', () => {
     expect(decide(nameStatus(['R100', 'scripts/notes.md', 'docs/notes.md']))).toMatchObject({ docsOnly: false });
     expect(decide(nameStatus(['R087', 'docs/old.md', 'docs/new.md']))).toMatchObject({ docsOnly: true });
     expect(decide(nameStatus(['C100', 'packages/kit/templates/AGENTS.md', 'docs/agents.md']))).toMatchObject({ docsOnly: false });
-    expect(parseNameStatus(nameStatus(['R100', 'scripts/notes.md', 'docs/notes.md'], ['D', 'docs/gone.md']))).toEqual(['scripts/notes.md', 'docs/notes.md', 'docs/gone.md']);
+    expect(parseRawDiff(nameStatus(['R100', 'scripts/notes.md', 'docs/notes.md'], ['D', 'docs/gone.md'])).flatMap((entry) => entry.paths)).toEqual(['scripts/notes.md', 'docs/notes.md', 'docs/gone.md']);
   });
 
   it('[REQ-270] 差分を取れないときは、文書だけと判定しない', () => {
@@ -121,11 +126,12 @@ describe('文書だけかの判定', () => {
       'M\tdocs/a.md\n', // -z でない出力
       nameStatus(['X', 'docs/a.md']), // 知らない状態
       nameStatus(['U', 'docs/a.md']), // 衝突
-      'R100\0docs/a.md\0', // 名前の変更で、変更後のパスがない
+      ':100644 100644 1111111 2222222 R100\0docs/a.md\0', // 名前の変更で、変更後のパスがない
+      'M\0docs/a.md\0', // --raw でない（モードのない）出力
       nameStatus(['M', 'docs/a.md']).slice(0, -1), // NUL で終わらない
       '', // 変えたファイルがない
     ]) expect(decide(stdout).docsOnly, JSON.stringify(stdout)).toBe(false);
-    expect(() => parseNameStatus('X\0docs/a.md\0')).toThrow('解釈できない差分の状態です');
+    expect(() => parseRawDiff(':100644 100644 1111111 2222222 X\0docs/a.md\0')).toThrow('解釈できない差分の状態です');
   });
 
   it('[REQ-270] 判定のスクリプトとワークフローを変えた PR は、文書だけと判定しない', () => {
@@ -142,6 +148,27 @@ describe('文書だけかの判定', () => {
     const result = decide(nameStatus(['D', 'packages/kit/src/a.ts'], ['M', 'docs/notes.md']));
     expect(result).toMatchObject({ docsOnly: false });
     expect(result.reason).toContain('packages/kit/src/a.ts');
+  });
+
+  it('[REQ-274] 変更前か変更後が通常のファイルでないものは、.md の名前でも文書だけと判定しない', () => {
+    for (const [modes, status, name] of [
+      ['000000 120000', 'A', 'シンボリックリンク'],
+      ['000000 160000', 'A', 'サブモジュール'],
+      ['100644 100755', 'M', '実行できるファイル'],
+      ['100755 100644', 'M', '実行できるファイル'],
+      ['100644 120000', 'T', 'シンボリックリンク'],
+      ['120000 000000', 'D', 'シンボリックリンク'],
+      ['100664 100664', 'M', 'モード 100664'],
+      ['000000 000000', 'M', 'モードなし'],
+    ] as const) {
+      const result = decide(rawEntry(modes, status, 'docs/link.md') + nameStatus(['M', 'docs/usage.md']));
+      expect(result.docsOnly, modes).toBe(false);
+      expect(result.reason, modes).toContain(`docs/link.md（${name}）`);
+    }
+    // 名前の変更では、変更後のパスを示す
+    expect(decide(rawEntry('100644 120000', 'R100', 'docs/a.md', 'docs/b.md')).reason).toContain('docs/b.md（シンボリックリンク）');
+    // 通常のファイルを足し、変え、消すだけなら文書だけになる
+    expect(decide(nameStatus(['A', 'docs/notes.md'], ['M', 'README.md'], ['D', 'docs/old.md'], ['R100', 'docs/x.md', 'docs/y.md'])).docsOnly).toBe(true);
   });
 
   // 差分と PR の先頭のツリーを、引数で分けて返す偽の git
@@ -365,6 +392,29 @@ describe('文書だけかの判定（git の差分から）', () => {
       const result = repo.run();
       expect(result).toMatchObject({ status: 0, output: 'docs_only=false\n' });
       expect(result.stderr).toContain('docs/Notes.md');
+    });
+  });
+
+  it.each([
+    ['シンボリックリンク', { mode: '120000', path: 'docs/link.md', content: '../packages/kit/src/a.ts' }],
+    ['サブモジュール', { mode: '160000', path: 'docs/sub.md', object: '0123456789abcdef0123456789abcdef01234567' }],
+    ['モードだけの変更', { mode: '100755', path: 'README.md', content: 'base\n' }],
+  ])('[REQ-274] 通常のファイルでないもの（%s）を .md の名前で足した PR では docs_only=false を書く', (_name, entry) => {
+    withRepo((repo) => {
+      repo.commitIndex([entry]);
+      const result = repo.run();
+      expect(result).toMatchObject({ status: 0, output: 'docs_only=false\n' });
+      expect(result.stderr).toContain(entry.path);
+    });
+  });
+
+  it('[REQ-274] 通常のファイルの文書を足し、変え、消した PR では docs_only=true を書く', () => {
+    withRepo((repo) => {
+      repo.commit({ 'docs/old.md': '古いメモ\n' });
+      repo.git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+      repo.git('rm', '-q', 'docs/old.md');
+      repo.commit({ 'docs/notes.md': 'メモ\n', 'README.md': 'changed\n' });
+      expect(repo.run()).toMatchObject({ status: 0, output: 'docs_only=true\n' });
     });
   });
 
