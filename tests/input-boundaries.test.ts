@@ -12,6 +12,9 @@ const tooLarge = ' '.repeat(1024 * 1024 + 1);
 const directoryLink = (target: string, link: string) => symlinkSync(target, link, process.platform === 'win32' ? 'junction' : 'dir');
 const changeOf = (root: string) => join(root, 'openspec/changes/c1');
 const sparse = (file: string, bytes: number) => { writeFileSync(file, ''); truncateSync(file, bytes); };
+// 実際の run を動かすテストは、Windows の CI で 3〜5 秒かかり、既定の 5000ms で時間切れすることがある（Issue #5）。
+// Windows でだけ上限を延ばす。ほかの OS は既定のまま
+const runTimeout = process.platform === 'win32' ? 15_000 : 5_000;
 
 describe('コマンドの入力予算', () => {
   it('[REQ-172] 設定を一括読み取りする前にサイズで拒否する', () => withProject({}, (root) => {
@@ -77,7 +80,7 @@ describe('コマンドの入力予算', () => {
       expect(repo.calls()).toEqual([]);
       expect(existsSync(join(repo.root, '.loomake/runs'))).toBe(false);
     } finally { repo.cleanup(); }
-  });
+  }, runTimeout);
 
   it.each(['trace.md', 'tasks.md', 'specs/x/spec.md'])('[REQ-172] 通常runでも過大な%sを開始前に拒否し、エンジンと公開を始めない', async (name) => {
     const repo = makeRepo();
@@ -100,7 +103,7 @@ describe('コマンドの入力予算', () => {
       expect(existsSync(join(repo.root, '.loomake/evidence'))).toBe(false);
       expect(repo.git('ls-remote', 'origin')).toBe('');
     } finally { repo.cleanup(); }
-  });
+  }, runTimeout);
 
   it('[REQ-172] JSONのテストレポートは64MiBを超えたら解析しない', () => withProject({}, (root) => {
     mkdirSync(join(root, '.loomake'));
@@ -164,8 +167,7 @@ describe('組み立てた指示の全体予算', () => {
   it('[REQ-173] 検証の失敗情報による指示の超過も止める', () => withProject({}, (root) => {
     expect(() => buildPrompt(root, changeOf(root), 'task', { schemaVersion: '1.0.0', mode: 'done', change: 'c1', ok: false, results: [{ check: 'test', status: 'fail', detail: 'x'.repeat(16 * 1024 * 1024) }] })).toThrow(/指示.*16777216/);
   }));
-  // Issue #5。Windows の CI で不安定に落ちるため、直るまで Windows でだけ止める
-  it.runIf(process.platform !== 'win32')('[REQ-173] 通常runで巨大な検証失敗を指示へ加える前に止まり、エンジンを起動しない', async () => {
+  it('[REQ-173] 通常runで巨大な検証失敗を指示へ加える前に止まり、エンジンを起動しない', async () => {
     const tasks = '- [ ] 完了ゲート（REQ-012） <!-- loomake:gate=done -->\n';
     const repo = makeRepo({ tasks });
     try {
@@ -196,6 +198,6 @@ describe('組み立てた指示の全体予算', () => {
       expect(existsSync(join(repo.root, '.loomake/evidence'))).toBe(false);
       expect(repo.git('ls-remote', 'origin')).toBe('');
     } finally { repo.cleanup(); }
-  });
+  }, runTimeout);
 
 });
