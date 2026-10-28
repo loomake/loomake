@@ -12,7 +12,7 @@
 
 ## 3. 統合確認
 
-- [ ] 3.1 品質コマンドと全要件のテスト対応を確認し、空の changeset と作業記録を追加する。タスクをすべてチェックした状態で `pnpm -s verify --change record-ci-test-diagnostics --done` を実行し、exit 0 と未解決の確認事項がないことを確かめてコミットする。
+- [x] 3.1 品質コマンドと全要件のテスト対応を確認し、空の changeset と作業記録を追加する。タスクをすべてチェックした状態で `pnpm -s verify --change record-ci-test-diagnostics --done` を実行し、exit 0 と未解決の確認事項がないことを確かめてコミットする。
 
 ## Workflow follow-up
 
