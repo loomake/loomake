@@ -22,7 +22,7 @@ export function isDocumentPath(path) {
   if (typeof path !== 'string' || !path || path.includes('\\')) return false;
   const parts = path.split('/');
   if (parts.some((part) => part === '' || part === '.' || part === '..')) return false;
-  // Windows で checkout できない名前は、文書の置き場所にあっても文書として扱わない（REQ-273）。
+  // Windows で checkout できない名前は、文書の置き場所にあっても文書として扱わない（REQ-281）。
   // git の出力を UTF-8 として読むと、正しくないバイトは U+FFFD になる
   if (/[<>:"|?*�]/.test(path) || [...path].some((char) => char.charCodeAt(0) < 0x20)) return false;
   if (parts.some((part) => /[. ]$/.test(part) || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)/i.test(part))) return false;
@@ -69,7 +69,7 @@ export function parseRawDiff(text) {
   return entries;
 }
 
-// 文書として扱うのは通常のファイル（100644）だけ。ファイルがない側（足したファイルの変更前、消したファイルの変更後）は 000000（REQ-274）
+// 文書として扱うのは通常のファイル（100644）だけ。ファイルがない側（足したファイルの変更前、消したファイルの変更後）は 000000（REQ-282）
 const isRegularOrAbsent = (mode) => mode === '100644' || mode === '000000';
 const modeNames = { '120000': 'シンボリックリンク', '160000': 'サブモジュール', '100755': '実行できるファイル' };
 
@@ -89,7 +89,7 @@ export function decideDocsOnly({ eventName = '', baseRef = '', git }) {
   // ベースから PR の先頭までのすべてのコミットの差分を使う。-M で名前の変更を検出し、変更前のパスも判定する。
   // ベースは refs/remotes/ から書く。「origin/main」とだけ書くと、同じ名前のタグやブランチ（refs/tags/origin/main など）が
   // 先に選ばれ、PR のコミットの途中をベースにして、コードの変更を差分から落とすことがある
-  // --raw でモードも読み、シンボリックリンク・サブモジュール・モードの変更を見分ける（REQ-274）
+  // --raw でモードも読み、シンボリックリンク・サブモジュール・モードの変更を見分ける（REQ-282）
   const r = git(['diff', '--raw', '-z', '-M', `refs/remotes/origin/${baseRef}...HEAD`]);
   if (r.status !== 0) {
     const detail = (r.stderr || r.error?.message || '').trim();
@@ -111,7 +111,7 @@ export function decideDocsOnly({ eventName = '', baseRef = '', git }) {
     const shown = irregular.map((entry) => `${entry.paths.at(-1)}（${[...new Set(entry.modes.filter((mode) => !isRegularOrAbsent(mode)).map((mode) => modeNames[mode] ?? `モード ${mode}`))].join('・') || 'モードなし'}）`);
     return { docsOnly: false, reason: `通常のファイルでないものを変えているので、すべてのステップを実行します：${list(shown)}` };
   }
-  // macOS と Windows の checkout では、大文字と小文字だけが違うパスは 1 つのファイルに重なる（REQ-273）
+  // macOS と Windows の checkout では、大文字と小文字だけが違うパスは 1 つのファイルに重なる（REQ-281）
   const tree = git(['ls-tree', '-r', '-z', '--name-only', 'HEAD']);
   if (tree.status !== 0) {
     const detail = (tree.stderr || tree.error?.message || '').trim();

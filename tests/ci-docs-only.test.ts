@@ -69,19 +69,19 @@ describe('文書として扱うファイル', () => {
     for (const path of ['', 'docs\\a.md', 'docs/../packages/a.md', './README.md', 'docs//a.md']) expect(isDocumentPath(path), path).toBe(false);
   });
 
-  it('[REQ-273] Windows で使えない文字と制御文字を含む名前は文書として扱わない', () => {
+  it('[REQ-281] Windows で使えない文字と制御文字を含む名前は文書として扱わない', () => {
     for (const path of ['docs/a:b.md', 'docs/a\npackages.md', 'docs/a?.md', 'docs/a<b.md', 'docs/a>b.md', 'docs/a"b.md', 'docs/a|b.md', 'docs/a*.md', 'docs/a\tb.md', 'docs/a\u0000b.md', 'docs/a\u001fb.md', 'docs/x:y/a.md'])
       expect(isDocumentPath(path), JSON.stringify(path)).toBe(false);
   });
 
-  it('[REQ-273] 末尾がドットか空白の部分と、Windows の予約名の部分を含む名前は文書として扱わない', () => {
+  it('[REQ-281] 末尾がドットか空白の部分と、Windows の予約名の部分を含む名前は文書として扱わない', () => {
     for (const path of ['docs/notes./a.md', 'docs/notes /a.md', 'docs/a.md ', 'docs/aux.md', 'docs/Com1.md', 'docs/nul/a.md', 'CON.md', 'docs/prn.tar.md', 'docs/LPT9.md', 'openspec/changes/aux/tasks.md'])
       expect(isDocumentPath(path), JSON.stringify(path)).toBe(false);
     // 予約名に似ているだけの名前は文書として扱う
     for (const path of ['docs/auxiliary.md', 'docs/com10.md', 'docs/con-notes.md', 'docs/lpt.md', 'docs/a.b.md']) expect(isDocumentPath(path), path).toBe(true);
   });
 
-  it('[REQ-273] UTF-8 として正しくないバイトを含む名前は文書として扱わない', () => {
+  it('[REQ-281] UTF-8 として正しくないバイトを含む名前は文書として扱わない', () => {
     // git の出力を UTF-8 として読むと、正しくないバイトは U+FFFD になる
     expect(isDocumentPath('docs/�x.md')).toBe(false);
     expect(isDocumentPath(Buffer.from([...Buffer.from('docs/'), 0xff, ...Buffer.from('x.md')]).toString('utf8'))).toBe(false);
@@ -94,8 +94,8 @@ describe('文書だけかの判定', () => {
     const { git, calls } = fakeGit(nameStatus(['M', 'docs/worklog/2026-10-27.md'], ['A', 'openspec/changes/c1/tasks.md'], ['A', '.changeset/c1.md']));
     expect(decideDocsOnly({ eventName: 'pull_request', baseRef: 'main', git })).toMatchObject({ docsOnly: true });
     // ベースから PR の先頭までの差分を、名前の変更を検出して読む。ベースは同じ名前のタグと取り違えないよう refs/remotes/ から書く
-    // そのあとで、大文字と小文字だけが違うパスを探すため、PR の先頭のツリーを読む（REQ-273）
-    // 差分は --raw で読み、モードも判定に使う（REQ-274）
+    // そのあとで、大文字と小文字だけが違うパスを探すため、PR の先頭のツリーを読む（REQ-281）
+    // 差分は --raw で読み、モードも判定に使う（REQ-282）
     expect(calls).toEqual([['diff', '--raw', '-z', '-M', 'refs/remotes/origin/main...HEAD'], ['ls-tree', '-r', '-z', '--name-only', 'HEAD']]);
   });
 
@@ -150,7 +150,7 @@ describe('文書だけかの判定', () => {
     expect(result.reason).toContain('packages/kit/src/a.ts');
   });
 
-  it('[REQ-274] 変更前か変更後が通常のファイルでないものは、.md の名前でも文書だけと判定しない', () => {
+  it('[REQ-282] 変更前か変更後が通常のファイルでないものは、.md の名前でも文書だけと判定しない', () => {
     for (const [modes, status, name] of [
       ['000000 120000', 'A', 'シンボリックリンク'],
       ['000000 160000', 'A', 'サブモジュール'],
@@ -183,7 +183,7 @@ describe('文書だけかの判定', () => {
     return { result: decideDocsOnly({ eventName: 'pull_request', baseRef: 'main', git }), calls };
   };
 
-  it('[REQ-273] PR の先頭のツリーに大文字と小文字の違いだけで同じになる別のパスがあれば、文書だけと判定しない', () => {
+  it('[REQ-281] PR の先頭のツリーに大文字と小文字の違いだけで同じになる別のパスがあれば、文書だけと判定しない', () => {
     const collide = decideWithTree(nameStatus(['A', 'docs/Notes.md']), treeOf('README.md', 'docs/Notes.md', 'docs/notes.md'));
     expect(collide.result.docsOnly).toBe(false);
     expect(collide.result.reason).toContain('docs/Notes.md');
@@ -195,7 +195,7 @@ describe('文書だけかの判定', () => {
     expect(ok.calls.find((args) => args[0] === 'ls-tree')).toEqual(['ls-tree', '-r', '-z', '--name-only', 'HEAD']);
   });
 
-  it('[REQ-273] PR の先頭のツリーのパスを読めないときは、文書だけと判定しない', () => {
+  it('[REQ-281] PR の先頭のツリーのパスを読めないときは、文書だけと判定しない', () => {
     const failed = decideWithTree(nameStatus(['M', 'docs/notes.md']), '', 128).result;
     expect(failed.docsOnly).toBe(false);
     expect(failed.reason).toContain('not a tree object');
@@ -377,14 +377,14 @@ describe('文書だけかの判定（git の差分から）', () => {
     ['UTF-8 として正しくない名前', Buffer.from([...Buffer.from('docs/'), 0xff, ...Buffer.from('x.md')])],
     ['予約名', 'docs/aux.md'],
     ['末尾が空白の部分', 'docs/notes /a.md'],
-  ])('[REQ-273] Windows で扱えない名前（%s）を足した PR では docs_only=false を書く', (_name, path) => {
+  ])('[REQ-281] Windows で扱えない名前（%s）を足した PR では docs_only=false を書く', (_name, path) => {
     withRepo((repo) => {
       repo.commitIndex([{ mode: '100644', path, content: '文書\n' }]);
       expect(repo.run()).toMatchObject({ status: 0, output: 'docs_only=false\n' });
     });
   });
 
-  it('[REQ-273] ベースにある名前と大文字と小文字だけが違う名前を足した PR では docs_only=false を書く', () => {
+  it('[REQ-281] ベースにある名前と大文字と小文字だけが違う名前を足した PR では docs_only=false を書く', () => {
     withRepo((repo) => {
       repo.commitIndex([{ mode: '100644', path: 'docs/notes.md', content: 'メモ\n' }]);
       repo.git('update-ref', 'refs/remotes/origin/main', 'HEAD');
@@ -399,7 +399,7 @@ describe('文書だけかの判定（git の差分から）', () => {
     ['シンボリックリンク', { mode: '120000', path: 'docs/link.md', content: '../packages/kit/src/a.ts' }],
     ['サブモジュール', { mode: '160000', path: 'docs/sub.md', object: '0123456789abcdef0123456789abcdef01234567' }],
     ['モードだけの変更', { mode: '100755', path: 'README.md', content: 'base\n' }],
-  ])('[REQ-274] 通常のファイルでないもの（%s）を .md の名前で足した PR では docs_only=false を書く', (_name, entry) => {
+  ])('[REQ-282] 通常のファイルでないもの（%s）を .md の名前で足した PR では docs_only=false を書く', (_name, entry) => {
     withRepo((repo) => {
       repo.commitIndex([entry]);
       const result = repo.run();
@@ -408,7 +408,7 @@ describe('文書だけかの判定（git の差分から）', () => {
     });
   });
 
-  it('[REQ-274] 通常のファイルの文書を足し、変え、消した PR では docs_only=true を書く', () => {
+  it('[REQ-282] 通常のファイルの文書を足し、変え、消した PR では docs_only=true を書く', () => {
     withRepo((repo) => {
       repo.commit({ 'docs/old.md': '古いメモ\n' });
       repo.git('update-ref', 'refs/remotes/origin/main', 'HEAD');

@@ -7408,12 +7408,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 変えたファイルがすべて文書なら、文書だけと判定する",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 文書だけの PR では docs_only=true を書く",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         },
         {
           "file": "tests/monorepo.test.ts",
@@ -7450,12 +7450,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] main への push では、差分によらず文書だけと判定しない",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] main への push では docs_only=false を書く",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         },
         {
           "file": "tests/monorepo.test.ts",
@@ -7476,12 +7476,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コードと配布する Markdown は文書として扱わない",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         }
       ]
     },
@@ -7497,12 +7497,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コードと配布する Markdown は文書として扱わない",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         }
       ]
     },
@@ -7518,12 +7518,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 設定と実行用のファイルは、文書の置き場所にあっても",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         }
       ]
     },
@@ -7539,12 +7539,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] tests/ の下の試験用データは",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         }
       ]
     },
@@ -7560,7 +7560,7 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 判定のスクリプトとワークフローを変えた PR は、文書だけと判定しない",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         }
       ]
     },
@@ -7576,7 +7576,7 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 設定と実行用のファイルは、文書の置き場所にあっても",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         }
       ]
     },
@@ -7592,12 +7592,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 前のコミットでコードを変えた PR では",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] ベースと同じ名前の参照",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         }
       ]
     },
@@ -7613,12 +7613,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 名前を変えたファイルは、変更前のパスも判定する",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 名前を変えたファイルは、変更前のパスが文書でなければ",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         }
       ]
     },
@@ -7634,17 +7634,17 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 差分を取れないときは、文書だけと判定しない",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 差分を解釈できないときは、文書だけと判定しない",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 差分を取れないときは、失敗にせず docs_only=false を書く",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         }
       ]
     },
@@ -7660,12 +7660,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] PR のマージ先が main でないときは、差分によらず文書だけと判定しない",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] マージ先が main でない PR では docs_only=false を書く",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         }
       ]
     },
@@ -7681,7 +7681,7 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] main が進んだあとのマージコミットでは、PR の変更分だけで判定する",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         }
       ]
     },
@@ -7697,12 +7697,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コードのファイルを消した PR は、文書だけと判定しない",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コードのファイルを消した PR では docs_only=false を書く",
-          "sha256": "c2dd6678ab5f8174f88b6c9154ea3ec725420f09c6b865a71083fed66e385475"
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         }
       ]
     },
@@ -7751,6 +7751,200 @@
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-273] 報告の形の節に、作業記録は作業の PR に含め",
           "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+        }
+      ]
+    },
+    {
+      "id": "SCN-9910abceb73dea003d89",
+      "status": "reviewed",
+      "scenarioSha256": "7186dcaa4ba609c7e6f12c68e94781d9574f3b3621c3f9dbd488ea551e6732d8",
+      "reason": "`docs/a:b.md`・改行を含む名前・`docs/a?.md` などの文字と制御文字で isDocumentPath が false になることと、一時的な git リポジトリで `docs/a:b.md` と改行を含む名前を索引に足した PR が docs_only=false になることを assert する。",
+      "sources": [
+        "REQ-281"
+      ],
+      "tests": [
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "Windows で使えない文字と制御文字を含む名前",
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+        },
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "Windows で扱えない名前（docs/a:b.md）",
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+        },
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "Windows で扱えない名前（改行を含む名前）",
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+        }
+      ]
+    },
+    {
+      "id": "SCN-50ff9ffb3305191a4c6d",
+      "status": "reviewed",
+      "scenarioSha256": "388c9c9af52e041c317a33fa04fe05c865fe9fb96bd20c52517f5d9eea2a51a7",
+      "reason": "`docs/notes./a.md`・`docs/notes /a.md`・`docs/aux.md`・`docs/Com1.md`・`docs/nul/a.md` が文書にならず、予約名に似ているだけの名前は文書のままであることと、一時的な git リポジトリで予約名と末尾が空白の部分を足した PR が docs_only=false になることを assert する。",
+      "sources": [
+        "REQ-281"
+      ],
+      "tests": [
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "末尾がドットか空白の部分と、Windows の予約名",
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+        },
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "Windows で扱えない名前（予約名）",
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+        },
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "Windows で扱えない名前（末尾が空白の部分）",
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+        }
+      ]
+    },
+    {
+      "id": "SCN-e3839e03e19ca28deb0a",
+      "status": "reviewed",
+      "scenarioSha256": "a227e44116585b5eeaf5d77a00d0dc135371019ec322504067a75602d58a9cb1",
+      "reason": "0xFF を UTF-8 として読んだ名前（U+FFFD）が文書にならないことと、一時的な git リポジトリで 0xFF を含む名前を索引に足した PR が docs_only=false になることを assert する。",
+      "sources": [
+        "REQ-281"
+      ],
+      "tests": [
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "UTF-8 として正しくないバイトを含む名前",
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+        },
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "Windows で扱えない名前（UTF-8 として正しくない名前）",
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+        }
+      ]
+    },
+    {
+      "id": "SCN-1471ca8cdf15d7563734",
+      "status": "reviewed",
+      "scenarioSha256": "2dee3bef3c8bd714c08b976b7e49869ae8f6e1b6421de2c6ed1b656477a2f7b6",
+      "reason": "ツリーに `docs/notes.md` と `docs/Notes.md` があると理由にパスを含めて文書だけにならず、重ならなければ文書だけになり、ツリーを HEAD から読むことと、一時的な git リポジトリでベースの `docs/notes.md` に `docs/Notes.md` を足した PR が docs_only=false になることを assert する。",
+      "sources": [
+        "REQ-281"
+      ],
+      "tests": [
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "大文字と小文字の違いだけで同じになる別のパス",
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+        },
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "大文字と小文字だけが違う名前を足した PR",
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+        }
+      ]
+    },
+    {
+      "id": "SCN-541567a67fde54190080",
+      "status": "reviewed",
+      "scenarioSha256": "49e3c55af4f7d07cf056735e53eff51c1a0e0446914e2f385f1e43f528dd3065",
+      "reason": "ls-tree が終了コード 128 のときと、NUL で終わらない出力のときに、文書だけにならず理由に失敗の内容を含むことを assert する。",
+      "sources": [
+        "REQ-281"
+      ],
+      "tests": [
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "PR の先頭のツリーのパスを読めないとき",
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+        }
+      ]
+    },
+    {
+      "id": "SCN-0ce19040aeedc4f75b8b",
+      "status": "reviewed",
+      "scenarioSha256": "9c26cf7ceee2acf4a4a5e3c6576b408880a77d7d65359f81aa4372090b7c257a",
+      "reason": "一時的な git リポジトリで `../packages/kit/src/a.ts` を指すシンボリックリンク `docs/link.md` を足した PR が docs_only=false になり、理由にパスを含むことと、偽の差分でモード 120000 の追加・型の変更・削除が文書だけにならないことを assert する。",
+      "sources": [
+        "REQ-282"
+      ],
+      "tests": [
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "通常のファイルでないもの（シンボリックリンク）",
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+        },
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "変更前か変更後が通常のファイルでないもの",
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+        }
+      ]
+    },
+    {
+      "id": "SCN-be85f25e28812e6e42ee",
+      "status": "reviewed",
+      "scenarioSha256": "aa9c16bde2f204660c55dc0c5c65e395227c6cd3702369f3a24aea207883a016",
+      "reason": "一時的な git リポジトリでサブモジュール（gitlink）`docs/sub.md` を足した PR が docs_only=false になることと、偽の差分でモード 160000 の追加が文書だけにならないことを assert する。",
+      "sources": [
+        "REQ-282"
+      ],
+      "tests": [
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "通常のファイルでないもの（サブモジュール）",
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+        },
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "変更前か変更後が通常のファイルでないもの",
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+        }
+      ]
+    },
+    {
+      "id": "SCN-3153578af9e5cef8921c",
+      "status": "reviewed",
+      "scenarioSha256": "011098711e487bbf07bee0081ccc82ff38e83416b0048ec0c55aa0fc5de2376a",
+      "reason": "一時的な git リポジトリで内容を変えずに `README.md` のモードを 100755 にした PR が docs_only=false になることと、偽の差分で 100644 と 100755 のあいだの変更が文書だけにならないことを assert する。",
+      "sources": [
+        "REQ-282"
+      ],
+      "tests": [
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "通常のファイルでないもの（モードだけの変更）",
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+        },
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "変更前か変更後が通常のファイルでないもの",
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+        }
+      ]
+    },
+    {
+      "id": "SCN-019e0db676ab8e0feb18",
+      "status": "reviewed",
+      "scenarioSha256": "a9f97ac58a1cd8dd00d1309e42e055ec136b61b53e287da9d29ec25e72d0977d",
+      "reason": "一時的な git リポジトリで通常のファイルの `docs/notes.md` を足し、`README.md` を変え、`docs/old.md` を消した PR が docs_only=true になることと、偽の差分で足す・変える・消す・名前を変えるだけなら文書だけになることを assert する。",
+      "sources": [
+        "REQ-282"
+      ],
+      "tests": [
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "通常のファイルの文書を足し、変え、消した PR",
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+        },
+        {
+          "file": "tests/ci-docs-only.test.ts",
+          "contains": "変更前か変更後が通常のファイルでないもの",
+          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
         }
       ]
     }

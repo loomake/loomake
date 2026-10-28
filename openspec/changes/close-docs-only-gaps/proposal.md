@@ -16,7 +16,7 @@ Issue #42 の 4 は change shorten-ci-wall-clock の確認事項 Q-08 の案 E�
 - `isDocumentPath` は、Windows で使えない文字・制御文字・末尾のドットや空白・Windows の予約名・UTF-8 として正しくないバイトを含むパスを、文書として扱わない。
 - 判定では PR の先頭のツリーのパスを `git ls-tree` で読む。変えたファイルと大文字小文字の違いだけで同じになる別のパスがあれば、文書だけとしない。
 - 差分を `git diff --raw -z -M` で読み、変更前と変更後のモードを判定に使う。通常のファイル（100644）でないもの（シンボリックリンク・サブモジュール・実行できるファイル）は、文書として扱わない。
-- Issue #42 の 4 には仕様を変えずに対応する。`.github/workflows/ci.yml` の gate ジョブと `scripts/ci-gate.mjs` に、案 E のような変更では REQ-270 を見直すことをコメントで書く。この Impact にも申し送りを書く。
+- Issue #42 の 4 には仕様を変えずに対応する。開発の仕組みの文書 `docs/dev/ci.md` に、案 E のような変更では REQ-270 を見直すことを書き、`.github/workflows/ci.yml` の gate ジョブと `scripts/ci-gate.mjs` のコメントからそこを指す。
 
 ## Capabilities
 
@@ -26,14 +26,14 @@ Issue #42 の 4 は change shorten-ci-wall-clock の確認事項 Q-08 の案 E�
 
 ### Modified Capabilities
 
-- `monorepo`: 文書として扱わないファイルの名前（REQ-273）と種類（REQ-274）の要件を足す。REQ-270 の Requirement の文は変えない。
+- `monorepo`: 文書として扱わないファイルの名前（REQ-281）と種類（REQ-282）の要件を足す。REQ-270 の Requirement の文は変えない。
 
 ## Impact
 
-`scripts/ci-docs-only.mjs`・`tests/ci-docs-only.test.ts`・`.github/workflows/ci.yml`（コメントだけ）・`scripts/ci-gate.mjs`（コメントだけ）を変える。`tests/ci-docs-only.test.ts` の既存の試験は、偽の git が返す差分の形を `--raw` に合わせ、呼び出す git の引数の期待値を変える（仮定 A-01）。確かめる振る舞いは変えない。`docs/quality/scenarios.json` のうち、`tests/ci-docs-only.test.ts` を根拠にするレビューは、試験を読み直してハッシュを更新する。製品のコード、公開 API、依存は変えない。配布するパッケージを変えないので、changeset は空にする。
+`scripts/ci-docs-only.mjs`・`tests/ci-docs-only.test.ts`・`.github/workflows/ci.yml`（コメントだけ）・`scripts/ci-gate.mjs`（コメントだけ）・`docs/dev/ci.md` を変える。`tests/ci-docs-only.test.ts` の既存の試験は、偽の git が返す差分の形を `--raw` に合わせ、呼び出す git の引数の期待値を変える（仮定 A-01）。確かめる振る舞いは変えない。`docs/quality/scenarios.json` のうち、`tests/ci-docs-only.test.ts` を根拠にするレビューは、試験を読み直してハッシュを更新する。製品のコード、公開 API、依存は変えない。配布するパッケージを変えないので、changeset は空にする。
 
 判定には git の呼び出しが 1 回増える（`git ls-tree -r -z --name-only HEAD`）。
 
 案 E の申し送り：gate ジョブでテストを実行しないようにする change は、文書だけの PR でテストを実行するジョブがなくなることを proposal に書き、REQ-270 との組み合わせを見直す。たとえば、文書だけの PR では gate でテストを実行するか、REQ-270 の文書の範囲を狭める。この change では gate の振る舞いを仕様に書き足さない。change shorten-ci-wall-clock の Q-01 で、「文書だけの PR でも gate で必ず全テストが 1 回走る」とは書かないと決めたためである（確認事項 Q-04）。
 
-archive する PR では、この change の Scenario のレビュー（`docs/quality/scenarios.json` の change 側の ID）を、`openspec/specs/monorepo/spec.md` 側の ID に移す。この change は、change shorten-ci-wall-clock の「文書として扱うファイル」に条件を足すので、shorten-ci-wall-clock を先か同時に archive する。
+archive する PR では、この change の Scenario のレビュー（`docs/quality/scenarios.json` の change 側の ID）を、`openspec/specs/monorepo/spec.md` 側の ID に移す。この change は「文書として扱うファイル」（change shorten-ci-wall-clock で足し、archive 済み）に条件を足す。

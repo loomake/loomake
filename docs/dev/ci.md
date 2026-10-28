@@ -16,6 +16,12 @@
 
 この決まりは以前、monorepo の仕様の Requirement「PR の古い CI 実行の取り消し」（REQ-215）だった。change move-dev-mechanics-to-docs で仕様から外した。
 
+## 文書だけの PR でテストを実行するジョブ
+
+文書だけの PR（REQ-270）では、quality ジョブは品質コマンドを飛ばす。このとき、文書を読むテスト（`tests/doc-links.test.ts` など）を実行するのは、gate ジョブの `verify` だけになる。
+
+gate ジョブでテストを実行しないようにする変更（change shorten-ci-wall-clock の確認事項 Q-08 の案 E など）では、文書だけの PR でテストを実行するジョブがなくなる。その change では、REQ-270 との組み合わせを見直す。たとえば、文書だけの PR では gate でテストを実行するか、REQ-270 の文書の範囲を狭める（Issue #42 の 4、change close-docs-only-gaps）。
+
 ## まだ仕様にあるもの
 
 次の 2 つはいま monorepo の仕様にあり、変えるには change が要る。進行中の change が終わってから、このページに移す候補にしている。

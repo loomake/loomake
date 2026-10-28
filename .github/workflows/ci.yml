@@ -145,8 +145,7 @@ jobs:
         shell: bash
 
   # PR ごとの完了ゲート（REQ-010, REQ-054, REQ-132）。PR 本文・変えたファイル・ブランチ名から決めた change を --done で検査する
-  # 文書だけの PR（REQ-270）では quality ジョブがテストを飛ばすので、テストを実行するのはこのジョブの verify だけになる。
-  # このジョブでテストを実行しないようにする変更（shorten-ci-wall-clock の Q-08 の案 E など）では、REQ-270 との組み合わせを見直すこと
+  # 文書だけの PR（REQ-270）でテストを実行するのは、このジョブの verify だけになる。テストを飛ばす変更の前に docs/dev/ci.md を読むこと
   gate:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
