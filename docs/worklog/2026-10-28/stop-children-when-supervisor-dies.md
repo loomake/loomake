@@ -1,4 +1,4 @@
-# 2026-10-28 の作業記録
+# 2026-10-28 の作業記録（stop-children-when-supervisor-dies）
 
 ## PR #22（stop-children-when-supervisor-dies）の B-3 の保持役の試作（05:50）
 
