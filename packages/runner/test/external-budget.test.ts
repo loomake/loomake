@@ -30,7 +30,7 @@ function diagnosticContext(repo: Repo, details: object, cli?: FakeCli): string {
   if (output) writeFileSync(output, context, { flag: 'wx' });
   return context;
 }
-// 偽の CLI が狙った操作で止まり、それより前の本物への転送が起動に失敗していないことを、期限の検査より先に確かめる（REQ-240）
+// 偽の CLI が狙った操作で止まり、それより前の本物への転送が起動に失敗していないことを、期限の検査より先に確かめる（docs/dev/testing-across-os.md）
 function expectStalled(cli: FakeCli, match: (args: string[]) => boolean, context: string) {
   const { stall, failedForwards } = stallOf(cli, match);
   expect(failedForwards, context).toEqual([]);
@@ -49,7 +49,7 @@ const STALL_MS = 10_000;
 // Date.now() と監視役の単調時計の丸めの差
 const CLOCK_SLACK_MS = 50;
 const OPERATION_MS = 500;
-// 止まった印から止まるまでが、期限に猶予を足した時間より短いことを確かめる（REQ-240）
+// 止まった印から止まるまでが、期限に猶予を足した時間より短いことを確かめる（docs/dev/testing-across-os.md）
 function expectStoppedSoon(stall: FakeCliEvent, endedAt: number, limitMs: number, context: string) {
   expect(endedAt - stall.at, context).toBeLessThan(limitMs + STOP_GRACE_MS);
 }
@@ -70,7 +70,7 @@ const budget = <T>(action: () => T) => withProcessBudget({ timeoutMs: 20_000, ma
 const summary = (repo: Repo) => { const dir = join(repo.root, '.loomake/runs'); const run = readdirSync(dir).filter((s) => s !== '.gitignore').sort().at(-1)!; return JSON.parse(readFileSync(join(dir, run, 'summary.json'), 'utf8')); };
 
 describe('runから外部操作までの期限', () => {
-  it('[REQ-182][REQ-240] ロック取得のGitが止まったら変更と記録を作らない', async () => {
+  it('[REQ-182] ロック取得のGitが止まったら変更と記録を作らない', async () => {
     const started = Date.now();
     const repo = makeRepo();
     diagnosticEvent(repo, 'fixture-ready', { elapsedMs: Date.now() - started });
@@ -95,7 +95,7 @@ describe('runから外部操作までの期限', () => {
       expect(existsSync(join(repo.root, '.loomake/runs'))).toBe(false);
     } finally { repo.cleanup(); }
   });
-  it('[REQ-182][REQ-240] 準備で使った時間を含めてエンジンの期限を制限する', async () => {
+  it('[REQ-182] 準備で使った時間を含めてエンジンの期限を制限する', async () => {
     // 準備の gh auth status を PREP_DELAY_MS だけ遅らせ、エンジンに予算を最初から与え直すと上限を超えるようにする。
     // 予算は、Windows の遅い準備（約 1.4 秒）と遅らせた分を足してもエンジンを呼べる長さにする。
     // 猶予は元の試験（予算 1200ms・上限 2500ms）と同じ 1300ms にし、遅らせる時間をそれより長くする。
@@ -144,7 +144,7 @@ describe('runから外部操作までの期限', () => {
       expect(repo.git('log', '-1', '--format=%s')).not.toContain('完了ゲートに合格');
     } finally { repo.cleanup(); }
   });
-  it('[REQ-116][REQ-182][REQ-240] 事前の認証確認が期限切れなら実装も記録も始めない', async () => {
+  it('[REQ-116][REQ-182] 事前の認証確認が期限切れなら実装も記録も始めない', async () => {
     const repo = makeRepo();
     try {
       const before = repo.git('rev-parse', 'HEAD');
@@ -165,7 +165,7 @@ describe('runから外部操作までの期限', () => {
     } finally { repo.cleanup(); }
   });
   // authは事前確認を通した後、実装の完了後に行う公開前の確認だけを止める。
-  it.each(['push', 'auth', 'list', 'create'] as const)('[REQ-182][REQ-240] %sの期限後に先へ進まず、再実行で重複させない', async (stage) => {
+  it.each(['push', 'auth', 'list', 'create'] as const)('[REQ-182] %sの期限後に先へ進まず、再実行で重複させない', async (stage) => {
     const started = Date.now();
     const repo = makeRepo();
     diagnosticEvent(repo, 'fixture-ready', { elapsedMs: Date.now() - started, stage });
@@ -280,7 +280,7 @@ function leftovers(word: string): string {
 }
 
 describe('verifyとtraceの期限', () => {
-  it('[REQ-183][REQ-240] traceのGitも共有予算で止める', () => {
+  it('[REQ-183] traceのGitも共有予算で止める', () => {
     const repo = makeRepo();
     const cli = fakeCli(repo, 'git', { when: "args[0]==='status'", stallMs: STALL_MS });
     const restoreEnv = useRepoEnv(repo);
@@ -293,7 +293,7 @@ describe('verifyとtraceの期限', () => {
       expect(existsSync(join(repo.root, '.loomake/evidence'))).toBe(false);
     } finally { restoreEnv(); repo.cleanup(); }
   });
-  it('[REQ-183][REQ-240] OpenSpec検証の時間切れをCLI不存在と区別する', () => {
+  it('[REQ-183] OpenSpec検証の時間切れをCLI不存在と区別する', () => {
     const repo = makeRepo();
     const cli = fakeCli(repo, 'openspec', { when: 'true', stallMs: STALL_MS });
     const restoreEnv = useRepoEnv(repo);
@@ -343,7 +343,7 @@ describe('verifyとtraceの期限', () => {
 });
 
 describe('実行時の失敗の終了コード', () => {
-  it('[REQ-192][REQ-182][REQ-240] run の準備中に git が時間の上限で止まると、使い方を出さずに終了コード 3 を返す', async () => {
+  it('[REQ-192][REQ-182] run の準備中に git が時間の上限で止まると、使い方を出さずに終了コード 3 を返す', async () => {
     const RUN_TIMEOUT_MS = 1200;
     const repo = makeRepo({ run: { timeoutMinutes: RUN_TIMEOUT_MS / 60_000 } });
     const saved = { ...process.env };

@@ -233,7 +233,7 @@ function findReal(name: string, path: string, exclude: string): string {
 }
 
 /**
- * 偽の CLI を repo の bin に置く（windows-fake-clis の REQ-240）。製品と同じ起動の仕方で呼ばれるように、OS とコマンドで形を変える。
+ * 偽の CLI を repo の bin に置く（docs/dev/testing-across-os.md）。製品と同じ起動の仕方で呼ばれるように、OS とコマンドで形を変える。
  * - POSIX：bin/<名前> に shebang つきの本体を置く
  * - Windows の gh・openspec（shell 経由で起動する）：bin/<名前> に本体を、bin/<名前>.cmd に node で本体を起動する入口を置く
  * - Windows の git（shell なしで起動するので .exe しか探されない）：process.execPath を bin/git.exe にハードリンクし、
@@ -321,7 +321,7 @@ ${body}}\n`,
 }
 
 /**
- * 偽の CLI が狙った操作で止まった印（stall-start）と、それより前に起動に失敗した転送（error のある forward-end）を返す（REQ-240）。
+ * 偽の CLI が狙った操作で止まった印（stall-start）と、それより前に起動に失敗した転送（error のある forward-end）を返す（docs/dev/testing-across-os.md）。
  * 試験は、期限・終了コードを確かめる前に、stall があって failedForwards が空であることを確かめる
  */
 export function stallOf(cli: FakeCli, match: (args: string[]) => boolean): { stall?: FakeCliEvent; failedForwards: FakeCliEvent[] } {
