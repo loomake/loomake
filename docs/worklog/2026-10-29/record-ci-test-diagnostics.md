@@ -20,3 +20,10 @@
 - verify の結果：`pnpm -s verify --change record-ci-test-diagnostics --done` は exit 0。全体のLint・型検査・テストと、REQ-283〜285のテスト対応が成功した。関連123テストと、YAML構文・対象外ジョブとマトリクスの照合も成功。2回目の実装レビューでも重大な指摘はなかった。
 - 残っている確認事項・仮定：ブロッキング質問なし。GitHub上の3OSでのartifact保存は未実施。承認の範囲はtraceに記録した。
 - 次にやること：PRを作る場合は `loomake-change: record-ci-test-diagnostics` を記載し、`ci:all-os` で3OSの実行結果とartifactを確認する。archiveは未実施。
+
+## 要件IDの調整とPR準備（タスク4.1）
+
+- やったこと：全15 worktreeの仕様とテストを照合し、診断の要件IDをREQ-289〜291へ再割当した（c7934dc）。REQ-283〜287は品質スキーマ、REQ-288はテンプレート変更で使用済みだった。要件の意味と試験の期待値は維持している。
+- verify の結果：ID調整後の `pnpm -s verify --change record-ci-test-diagnostics --done` は exit 0。仕様ゲート、厳格検証、診断15テストも成功。全6タスクがチェック済み。
+- 残っている確認事項・仮定：GitHub上の3OS確認はこれから行う。PRはこの記録の時点では未作成。送信は自動承認レビューで一度拒否されたため、送信先が既存の公開リポジトリで、接続アカウントにpush権限があることを確認した。
+- 次にやること：送信の可否を再確認し、許可されればPRを作成して `ci:all-os` を付け、qualityの5ジョブの診断保存を確認する。
