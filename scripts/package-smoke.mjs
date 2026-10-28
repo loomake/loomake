@@ -54,6 +54,15 @@ export function prepare(target) {
   else buildAndPack(tarballs);
   const files = readdirSync(tarballs).filter((name) => name.endsWith('.tgz'));
   assert.equal(files.length, 5);
+  // 外部の実行時依存（core の zod など）は、ワークスペースに入っている版を npm の cache に入れてから、オフラインで入れる
+  const external = new Set();
+  for (const name of packages) {
+    const dir = join(root, 'packages', name);
+    for (const dep of Object.keys(json(join(dir, 'package.json')).dependencies ?? {})) {
+      if (!dep.startsWith('@loomake/') && dep !== 'loomake') external.add(`${dep}@${json(join(dir, 'node_modules', dep, 'package.json')).version}`);
+    }
+  }
+  for (const spec of external) run('npm', ['cache', 'add', spec], root);
   writeFileSync(join(consumer, 'package.json'), '{"name":"loomake-smoke-consumer","private":true,"type":"module"}\n');
   run('npm', ['install', '--offline', '--ignore-scripts', '--no-audit', '--no-fund', ...files.map((file) => join(tarballs, file))], consumer);
   const fixture = join(root, 'tests/fixtures/verify-project/openspec/changes/sample');

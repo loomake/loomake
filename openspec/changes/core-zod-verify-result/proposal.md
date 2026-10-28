@@ -19,7 +19,7 @@ W1-1 の範囲は広い（verify 結果、trace.md・spec・tasks、quality.yaml
 - verify 結果を Zod スキーマ（`verifyResultSchema`）で定義し、`VerifyResult`・`VerifyCheckResult`・`VerifyMode` の型をスキーマから導出する。手書きの型は消す。外部の形（`schemaVersion` 1.0.0、必須プロパティ、`mode`・`status` の値、`coverage` の形）は変えない。
 - 未知のフィールドは拒否せず、解析結果にそのまま残す（要件定義 7.3 の互換性の規則）。
 - `packages/core/schema/verify-result.schema.json` を、Zod スキーマから `z.toJSONSchema()` で書き出したものに置き換える。書き出しのコマンドを用意し、書き出した結果とファイルが違えばテストが失敗するようにする。テストは CI で動く。
-- `scripts/schema-contract-check.mjs` は、複製した core のソースから `zod` を読めるようにする。
+- `scripts/schema-contract-check.mjs` は、複製した core のソースから `zod` を読めるようにする。`scripts/package-smoke.mjs` の準備では、外部の実行時依存を npm の cache に入れてから、オフラインで入れる。
 
 ## Capabilities
 
@@ -33,6 +33,6 @@ W1-1 の範囲は広い（verify 結果、trace.md・spec・tasks、quality.yaml
 
 ## Impact
 
-`packages/core`（`package.json`・`src/verify-result.ts`・`src/json-schema.ts`・`src/index.ts`・`schema/verify-result.schema.json`・テスト）、`pnpm-lock.yaml`、`scripts/schema-contract-check.mjs` を変える。`@loomake/core` に実行時依存 `zod` が入り、公開 API に Zod スキーマが増えるので、changeset を足す。kit・trace・runner・CLI が出す JSON の形は変えない。
+`packages/core`（`package.json`・`src/verify-result.ts`・`src/json-schema.ts`・`src/index.ts`・`schema/verify-result.schema.json`・テスト）、`pnpm-lock.yaml`、`scripts/schema-contract-check.mjs`、`scripts/package-smoke.mjs` を変える。`@loomake/core` に実行時依存 `zod` が入り、公開 API に Zod スキーマが増えるので、changeset を足す。kit・trace・runner・CLI が出す JSON の形は変えない。
 
 trace.md・spec・tasks・quality.yaml・quality-report のスキーマと、証拠・レポートの版の移行は、後続の change で行う。

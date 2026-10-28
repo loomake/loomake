@@ -1,7 +1,7 @@
 // 現在のスキーマ検査をコピーし、破壊的な変更と版の変更を実際に与える。
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -43,6 +43,8 @@ export function checkSchemaContract(destination) {
       copyFixture(join(core, 'test/fixtures/schema-history'), join(trial, 'test/fixtures/schema-history'));
       writeFileSync(join(trial, 'test/schema.test.ts'), readFileSync(join(core, 'test/schema.test.ts')));
       writeFileSync(join(trial, 'package.json'), readFileSync(join(core, 'package.json')));
+      // 複製したソースが core の実行時依存（zod）を読めるように、core の node_modules を指す
+      symlinkSync(join(core, 'node_modules'), join(trial, 'node_modules'), 'junction');
       const schemaPath = join(trial, 'schema/verify-result.schema.json');
       const schema = JSON.parse(readFileSync(schemaPath, 'utf8'));
       if (entry.kind === 'remove') { schema.required = schema.required.filter((name) => name !== 'ok'); delete schema.properties.ok; }
@@ -72,7 +74,7 @@ export function checkSchemaContract(destination) {
       const verdict = classifyMutation(processResult.error ? null : processResult.status, report, names);
       const status = verdict.status === 'survived' ? 'passed' : verdict.status === 'killed' ? 'rejected' : 'error';
       result.trials.push({ ...entry, status, exitCode: processResult.status, failedTests: verdict.failedTests, schemaSha256: sha256(schemaPath) });
-      for (const path of ['src', 'schema', 'test', 'package.json', 'vitest.config.mjs']) rmSync(join(trial, path), { recursive: true, force: true });
+      for (const path of ['src', 'schema', 'test', 'package.json', 'vitest.config.mjs', 'node_modules']) rmSync(join(trial, path), { recursive: true, force: true });
       if (entry.id === 'baseline' && status !== 'passed') break;
     }
   } finally {
