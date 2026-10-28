@@ -6,3 +6,10 @@
 2. verify の結果：製品コード・仕様の変更がないため change の verify は未実行。全 88 行の列数・WBS・検証方法・証跡・段階・状態の記載と、FR/NFR の欠落・重複ゼロを確認。`git diff --check` 成功。yomiyasu の lint・diff・資料照合を実施し、最終稿のハッシュ一致を確認。親担当の `pnpm exec vitest run tests/doc-links.test.ts` は 1 file・40 tests 成功、exit 0（2026-10-29 07:02 ごろ JST、Linux・Node 24）。spec-only・done は未実行。
 3. 残っている確認事項・仮定：実装状態は基準 commit の実装・テストの存在に基づく棚卸しで、受入検証の成功や WBS 完了を示さない。J01〜J08 は決定済みとして扱い、O03・O04・O11・O14 などの未決事項は維持した。未マージの品質スキーマ・CI 診断は除外した。取り込み前の調整事項として、`core-quality-yaml-schema` と `record-ci-test-diagnostics` が REQ-283〜285 を重複して使用している（親担当の調査）。今回、main と各 change は書き換えていない。
 4. 次にやること：親担当の差分レビューと文書リンク検査を経て、文書更新のコミット・PR を作る。Issue #52 の受入判断と close は別途行う。
+
+## W0-1のDraft PR作成
+
+1. やったこと：W0-1（Issue #52、change-id・タスク番号は対象外）の要件対応表を更新し、[Draft PR #117](https://github.com/loomake/loomake/pull/117)を作成した。FR 50件・NFR 12件・必須事項26件の全88件へ、現行仕様との衝突、実装状態、根拠と残作業を追記した。
+2. verify の結果：文書のみの変更のため、製品changeのspec-only・doneは未実行。既存の文書リンク40テスト成功。全88行の9列、FR/NFRの欠落・重複ゼロ、既存6列の維持、3ファイルのSHA-256一致、diff --checkを確認した。PRのCIは確認待ち。
+3. 残っている確認事項・仮定：Issue #52の受入判断とcloseは行っていない。実装状態は基準56bd425の棚卸しで、製品の受入成功を意味しない。品質スキーマとCI診断のREQ-283〜285の重複は、各既存担当による取り込み前の番号調整が必要。
+4. 次にやること：PR #117のCIとレビューを確認し、既存担当と重複せずにC-001の判定・接続の残作業を進める。
