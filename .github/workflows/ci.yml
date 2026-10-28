@@ -13,7 +13,7 @@ on:
 permissions:
   contents: read
 
-# 同じ PR に新しい push があれば、古い実行を取り消す。main への push の実行は取り消さない（REQ-215）
+# 同じ PR に新しい push があれば、古い実行を取り消す。main への push の実行は取り消さない（docs/dev/ci.md）
 # main への push は実行ごとに group を分ける。group が同じだと、待機中の実行が次の push の実行に置き換えられて取り消される
 concurrency:
   group: ci-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}

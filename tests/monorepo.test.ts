@@ -35,11 +35,11 @@ describe('devcontainer', () => {
   const devcontainer = read('.devcontainer/devcontainer.json');
   const postCreate = devcontainer.match(/"postCreateCommand":\s*"([^"]*)"/)?.[1] ?? '';
 
-  it('[REQ-004] postCreateCommand で OpenSpec CLI を入れる', () => {
+  it('postCreateCommand で OpenSpec CLI を入れる', () => {
     expect(postCreate).toContain('@fission-ai/openspec');
   });
 
-  it('[REQ-061] Node 24 系のイメージを使う', () => {
+  it('Node 24 系のイメージを使う', () => {
     const image = devcontainer.match(/^\s*"image":\s*"([^"]*)"/m)?.[1] ?? '';
     expect(image).toMatch(/typescript-node:(\d+-)?24(-|$)/);
   });
@@ -314,7 +314,7 @@ describe('CI', () => {
     for (const step of qualitySteps().filter((step) => step.includes('docs_only'))) expect(step).toContain(docsOnlyCondition);
   });
 
-  it('[REQ-215] 同じ PR の古い実行を取り消し、main への push の実行は取り消さない', () => {
+  it('同じ PR の古い実行を取り消し、main への push の実行は取り消さない', () => {
     const lf = readLf('.github/workflows/ci.yml');
     const block = lf.match(/^concurrency:\n {2}group: (.+)\n {2}cancel-in-progress: (.+)\n/m);
     expect(block, 'ワークフローの concurrency').not.toBeNull();

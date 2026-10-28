@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process';
 const env = { ...process.env, LOOMAKE_PACKED_TARBALLS: inject('packedTarballs') };
 
 describe('AIが作成・実行する配布物の操作試験', () => {
-  it.each([tmpdir(), join(import.meta.dirname, '../.loomake/quality')])('[REQ-155][REQ-156][REQ-157][REQ-236] %s で導入・通常操作・失敗と復旧を実行し、操作結果を記録する', (parent) => {
+  it.each([tmpdir(), join(import.meta.dirname, '../.loomake/quality')])('[REQ-155][REQ-156][REQ-157] %s で導入・通常操作・失敗と復旧を実行し、操作結果を記録する', (parent) => {
     mkdirSync(parent, { recursive: true });
     const base = mkdtempSync(join(parent, 'loomake journeys '));
     const target = join(base, 'trial');
