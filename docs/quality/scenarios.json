@@ -2099,22 +2099,6 @@
       ]
     },
     {
-      "id": "SCN-f9797c510a56149bfd76",
-      "status": "reviewed",
-      "scenarioSha256": "4e47b401e77865d1ce7fb602cbb8875c50de67ad716569167780f5649c11b36d",
-      "reason": "coreのpackage.jsonのdependenciesのキーが空であることをassertする。",
-      "sources": [
-        "REQ-046"
-      ],
-      "tests": [
-        {
-          "file": "packages/core/test/package.test.ts",
-          "contains": "dependencies を持たない",
-          "sha256": "6c32b72bc19cd187c4337ae78ff9c2b42f39e5ff40ef0156175a8845d0e84fb4"
-        }
-      ]
-    },
-    {
       "id": "SCN-59cd71015c5e0c1dd2e1",
       "status": "reviewed",
       "scenarioSha256": "585abcb63153dd73340632d25680d3f64f8a5986b33f7eab2d4f5d8562af81fa",
@@ -5748,38 +5732,6 @@
       ]
     },
     {
-      "id": "SCN-129c1a409ad4cdd46ce6",
-      "status": "reviewed",
-      "scenarioSha256": "bfc0cfb36b49df771c50f4505bc984af7cb34174dcb31c24e91fcfc53cc0fd52",
-      "sources": [
-        "REQ-047"
-      ],
-      "reason": "実際のkit package.jsonのdependenciesキーがcoreだけという配列に完全一致することをassertする。",
-      "tests": [
-        {
-          "file": "packages/cli/test/cli.test.ts",
-          "contains": "kit の dependencies は @loomake/core だけ",
-          "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
-        }
-      ]
-    },
-    {
-      "id": "SCN-38961b7ee7aa96aad6f6",
-      "status": "reviewed",
-      "scenarioSha256": "0fc6dd543ded3083f2568ca7040843c07c1b926b916920a80170246fc7118ee3",
-      "sources": [
-        "REQ-047"
-      ],
-      "reason": "実際のCLI package.jsonのdependenciesにcore/kit/trace/runner以外のキーがないことをassertする。",
-      "tests": [
-        {
-          "file": "packages/cli/test/cli.test.ts",
-          "contains": "loomake の dependencies は @loomake/core・@loomake/kit",
-          "sha256": "3152665b0f979a924f501d0d111ebce6b5c891fe7b9b99e3629519047fc53102"
-        }
-      ]
-    },
-    {
       "id": "SCN-f9f8eb6c78a2fa7479ef",
       "status": "reviewed",
       "scenarioSha256": "fb82d2509a479e9a370ffab0079bb3785b0749b0f941ad4cdb4f6b470cb137c0",
@@ -7270,7 +7222,7 @@
       ]
     },
     {
-      "id": "SCN-7a09237b3616f253ec95",
+      "id": "SCN-2b9b1052b81cdd63ebbf",
       "status": "reviewed",
       "scenarioSha256": "5c75693ec583141f80d4f72404cd5cef24a6f2b749414625722e7aa8163e881c",
       "reason": "実際のcore package.jsonのdependenciesのキー（dependenciesがなければ空）からzodを除くと空になること、つまりzod以外のパッケージを含まないことをassertする。",
@@ -7286,7 +7238,7 @@
       ]
     },
     {
-      "id": "SCN-96cb0a31550cb8b25bcd",
+      "id": "SCN-129c1a409ad4cdd46ce6",
       "status": "reviewed",
       "scenarioSha256": "89a9027751f0f95ade63b969daf526c84ea88eb19cf2d1636e39398150aa88e9",
       "reason": "実際のkit package.jsonのdependenciesのキーが@loomake/coreを含み、@loomake/coreとyamlを除くと空になること、つまりこの2つ以外を含まないことをassertする。",
@@ -7302,7 +7254,7 @@
       ]
     },
     {
-      "id": "SCN-23a323ae6d48ddc37ec7",
+      "id": "SCN-38961b7ee7aa96aad6f6",
       "status": "reviewed",
       "scenarioSha256": "3516db0e2182471c061f32d2dda719a5fcf8dabea13eb4acdc48e7094ee83c90",
       "reason": "実際のCLI package.jsonのdependenciesにcore/kit/trace/runner以外のキーがないことをassertする。",
@@ -7318,7 +7270,7 @@
       ]
     },
     {
-      "id": "SCN-5e6e000031be14a382b0",
+      "id": "SCN-70b9f889fb7ca9c37630",
       "status": "reviewed",
       "scenarioSha256": "90e3465282e56f11f31090c3c5faf7b5332b15faa7edd58c53ee66ac58aab3da",
       "reason": "実際のpackages/kit/src/runtime/のファイルが4件であることと、各ファイルのimportをforbiddenImportsにかけた結果が空であることをassertする。forbiddenImportsはruntime/のファイルについて、node:・@loomake/core・yaml・runtime/の中のファイル以外のimportを返す。",
@@ -7334,7 +7286,7 @@
       ]
     },
     {
-      "id": "SCN-94d2f7071a629a819201",
+      "id": "SCN-d389820ee1c32bdd6435",
       "status": "reviewed",
       "scenarioSha256": "7a30517acebff25eb3f3e05976de53f8058c342dab83b4201899b6e53b604c9a",
       "reason": "実際のverify/・init/・doctor/の各ファイルのimportをforbiddenImportsにかけた結果が空であることをassertする。別の機能への例ではdoctor/doctor.tsだけを返し、verify/config.tsは返さないことをassertする。",
@@ -7355,7 +7307,7 @@
       ]
     },
     {
-      "id": "SCN-da263600d725a1718b2d",
+      "id": "SCN-ccc7ce83bcffcd6564b6",
       "status": "reviewed",
       "scenarioSha256": "adf2113023920cc81f34772f5843ffcadefd8134501d33672442de22e376d379",
       "reason": "runtime/・verify/・init/・doctor/のファイルがyamlをimportする文（名前付き・既定・二重引用符・動的なimport）をforbiddenImportsに渡し、結果が空であることをassertする。",
@@ -7371,7 +7323,7 @@
       ]
     },
     {
-      "id": "SCN-e411dc633bac0d485dd1",
+      "id": "SCN-c0ef285bed6ab0535a9f",
       "status": "reviewed",
       "scenarioSha256": "0ec5cca1add108a6d5a8a311d713f80333be2efac80a199d2d5105922358a137",
       "reason": "yamlのimportと並べて、runtime/から機能、機能から別の機能、@loomake/kit・@loomake/traceのimportをforbiddenImportsに渡し、禁止のimportだけが返ることをassertする。js-yamlとyaml/utilも返ることをassertする。yamlを含まない従来の例（runtime/から機能への各種のimport、公開の入口やほかのパッケージの経由）も、引き続き見つけることをassertする。",

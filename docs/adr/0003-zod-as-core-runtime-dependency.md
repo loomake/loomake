@@ -1,6 +1,6 @@
 # 0003 core の実行時依存に Zod を採る
 
-- 状態：採用（change `allow-zod-and-yaml-runtime-deps` の差分仕様に反映した。REQ-046 は core の外部の実行時依存を `zod` だけとし、REQ-047 は kit の実行時依存を `@loomake/core` と `yaml` だけとし、REQ-207 は kit が `yaml` を import することを認めた。`openspec/specs/` への反映はその change の archive で行い、依存の導入は C-001 で行う）
+- 状態：採用（change `allow-zod-and-yaml-runtime-deps` の差分仕様に反映した。REQ-046 は core の外部の実行時依存を `zod` だけとし、REQ-047 は kit の実行時依存を `@loomake/core` と `yaml` だけとし、REQ-207 は kit が `yaml` を import することを認めた。2026-10-27 にその change を archive し、`openspec/specs/` に反映した。依存の導入は C-001 で行う）
 - 決めた日：2026-10-26
 - 決めた人：利用者（PR #10 のコメント 6403295324 での回答。利用者の「Q-01〜03の回答して」という依頼に基づく方針選択）
 - 出典：WBS の W1-1、要件定義 v0.11.1 の NFR-01・NFR-02、change `record-stack-and-versioning-decisions` の trace.md の Q-01（REQ-231）

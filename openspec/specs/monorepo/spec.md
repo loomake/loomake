@@ -274,17 +274,25 @@ Source: REQ-143
 - **THEN** どれも `@` のあとが 40 桁の 16 進数である
 
 ### Requirement: kit の中の依存の向き
-`@loomake/kit` の実行の基盤（外部プロセスの監視・入力の上限・エラーの型など）は `packages/kit/src/runtime/` に置き、`node:` のモジュール・`@loomake/core`・`runtime/` の中のファイルだけを import する SHALL。機能（`verify/`・`init/`・`doctor/`）は、自分のディレクトリ・`runtime/`・設定の読み込み（`verify/config.ts`）だけを import し、ほかの機能を import しない SHALL。
+`@loomake/kit` の実行の基盤（外部プロセスの監視・入力の上限・エラーの型など）は `packages/kit/src/runtime/` に置き、`node:` のモジュール・`@loomake/core`・`yaml`・`runtime/` の中のファイルだけを import する SHALL。機能（`verify/`・`init/`・`doctor/`）は、自分のディレクトリ・`runtime/`・設定の読み込み（`verify/config.ts`）だけを import し、ほかの機能を import しない SHALL。kit の外部のパッケージとして import してよいのは、`node:` のモジュール・`@loomake/core`・`yaml` だけとする SHALL。`@loomake/kit`（自分の公開の入口）やほかのパッケージを経由して import しない MUST。
 
 Source: REQ-207
 
 #### Scenario: 基盤が機能を import しない
 - **WHEN** `packages/kit/src/runtime/` のファイルの import を読む
-- **THEN** `node:`・`@loomake/core`・`runtime/` の中のファイルだけを import している
+- **THEN** `node:`・`@loomake/core`・`yaml`・`runtime/` の中のファイルだけを import している
 
 #### Scenario: 機能どうしが import しない
 - **WHEN** `packages/kit/src/init/` と `packages/kit/src/doctor/` のファイルの import を読む
 - **THEN** ほかの機能のディレクトリは、設定の読み込み（`verify/config.ts`）だけを import している
+
+#### Scenario: yaml の import を認める
+- **WHEN** 依存の向きの検査に、`runtime/` または機能のディレクトリのファイルが `yaml` を import する文を渡す
+- **THEN** 検査はその import を決まりに反するものとして返さない
+
+#### Scenario: これまでの禁止の例を引き続き拒否する
+- **WHEN** 依存の向きの検査に、`runtime/` から機能への import、機能から別の機能への import（設定の読み込みの `verify/config.ts` を除く）、`@loomake/kit` やほかのパッケージ（`@loomake/trace` など）の import を渡す
+- **THEN** 検査はどれも決まりに反する import として返す
 
 ### Requirement: CI のテストの分割
 CI の quality ジョブは、macOS と Windows では `pnpm test` を `--shard` で 2 つのシャードに分け、別々のジョブで実行する SHALL。2 つのシャードを合わせて、すべてのテストを実行する MUST。ubuntu では `pnpm test` を 1 回だけ、カバレッジ付き（`--coverage`）で実行し、カバレッジが閾値を下回ったらジョブを失敗させる SHALL。どのジョブでも、lint・typecheck・build・配布物の検査を実行する MUST。
@@ -311,3 +319,37 @@ Source: REQ-215
 #### Scenario: main への push の実行は取り消さない
 - **WHEN** `.github/workflows/ci.yml` を読み、main への push で続けて動く実行の `concurrency` の group を求める
 - **THEN** group には `github.run_id` が入り、実行ごとに分かれる。`cancel-in-progress` は false になる。待機中の実行が、同じ group の次の push の実行に置き換えられて取り消されることはない
+
+### Requirement: OS によらないテストの前提
+リポジトリのテストとテスト用のスクリプトは、ubuntu-latest・macos-latest・windows-latest で同じ期待値を使う SHALL。OS の違いは期待値を変えず、skip もせずに、テストの準備と読み方で吸収する MUST。行の正規表現で読むファイルは、改行を LF にそろえてから読む MUST。リンク先のないシンボリックリンクを `.git/hooks` に置くときは、git がフックとして実行しない名前にする MUST。Windows でシェルから起動するとき、固定の裸のコマンド名 `pnpm`・`npm` は引用符で囲まず、空白を含みうる実行パスと引数は囲む MUST。準備の時間が OS で変わる非同期の待ちには、待ち時間を明示する MUST。
+
+Source: REQ-236
+
+#### Scenario: CRLF で取り出したワークフロー
+- **WHEN** Windows でワークフローの YAML が CRLF で取り出され、公開経路の権限と CodeQL のワークフローの検査を実行する
+- **THEN** 改行を LF にそろえてから読み、LF のときと同じ期待値で検査する
+
+#### Scenario: リンク先のないリンクを置いたフックのディレクトリ
+- **WHEN** リンク先のないシンボリックリンクを `.git/hooks` に置いて、テストの準備のコミットをする
+- **THEN** git はそのリンクを実行せず、run の git の設定とフックの比較まで進む
+
+#### Scenario: 配布物の準備のコマンド
+- **WHEN** Windows で配布物の試験のスクリプトが `pnpm` か `npm` を起動する
+- **THEN** コマンド名を引用符で囲まずに起動し、引数と、`.cmd` で終わる実行パスは引用符で囲む
+
+#### Scenario: 二重起動の待ち
+- **WHEN** Windows で run の開始からエンジンの起動までに 1 秒以上かかる
+- **THEN** 二重起動の検査は明示した待ち時間のうちに先の実行のエンジンの起動を待ってから、二重起動を試す
+
+### Requirement: 外部操作の期限の試験の偽の CLI
+外部操作の期限を確かめる試験は、ubuntu-latest・macos-latest・windows-latest のどれでも、偽の CLI（git・gh・OpenSpec CLI）を製品と同じ起動の仕方で呼ばせる SHALL。git は shell なしで、gh と OpenSpec CLI は Windows では shell 経由で起動する。試験は、偽の CLI が狙った操作で止まった印と、それより前の本物への転送が起動に失敗していないことを確かめてから、期限・終了コード・停止の理由・後続の処理を確かめる SHALL。予算を延ばした試験は、1 操作の期限または共有予算より長く待ったことと、期限に猶予を足した時間のうちに止まったことを確かめる SHALL。
+
+Source: REQ-240
+
+#### Scenario: 偽の git が呼ばれない
+- **WHEN** 偽の git が呼ばれず、本物の git が動く
+- **THEN** 試験は狙った段階に届いていないとして失敗し、期限と終了コードだけで合格にしない
+
+#### Scenario: 準備で予算を使い切る
+- **WHEN** 準備の外部操作だけで共有予算を使い切り、狙った操作に届かない
+- **THEN** 試験は合格しない
