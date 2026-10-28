@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: quality.yaml のスキーマと版
-core は quality.yaml を YAML として解析した値の Zod スキーマを公開する SHALL。スキーマは形式の版 `version` を必須にし、core が対応する版（`2`）以外を拒否する MUST。定義していないフィールドは拒否せず、解析結果に残す SHALL。
+core は quality.yaml を YAML として解析した値の Zod スキーマを公開する SHALL。スキーマは形式の版 `version` を必須にし、core が対応する版（`2`）以外を拒否する MUST。`model` と、各目標・要件の `characteristic` は必須とし、空でない文字列であることだけを確かめる SHALL。`subcharacteristic` と、証拠・指標の `metric`・`source` も、空でない文字列であることだけを確かめる SHALL。`evidence` と `indicators` は、省くと空の配列になる SHALL。`target` は `<=`・`>=`・`==`・`<`・`>` のどれかと数値の組でなければならない MUST。期間（`window` など）は、正の整数と `d`・`w`・`y` のどれかでなければならない MUST。定義していないフィールドは拒否せず、解析結果に残す SHALL。
 
 Source: REQ-283
 
@@ -11,6 +11,10 @@ Source: REQ-283
 
 #### Scenario: 版のない quality.yaml を拒否する
 - **WHEN** `version` のない値、または `version` が `1` の値を解析する
+- **THEN** 解析は失敗する
+
+#### Scenario: 書式の違う target と期間を拒否する
+- **WHEN** `target` が `about 1800` の値、または `defaults.window` が `2m` の値を解析する
 - **THEN** 解析は失敗する
 
 ### Requirement: quality.yaml の型の導出と遅延読み込み
@@ -36,7 +40,7 @@ Source: REQ-285
 - **THEN** 解析は失敗する
 
 ### Requirement: 対象外の項目の理由と確認者
-`applicability` が `not_applicable` の目標・要件は、`reason` と `confirmed_by` を持たなければならない MUST。
+`applicability` は `applicable` か `not_applicable` とする MUST。`applicability` が `not_applicable` の目標・要件は、`reason` と `confirmed_by` を持たなければならない MUST。
 
 Source: REQ-286
 
