@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -86,6 +86,8 @@ function runTrial(target, mutation) {
     writeFileSync(join(trial, 'mutation.txt'), after);
   }
   writeFileSync(join(trial, 'package.json'), JSON.stringify({ private: true, type: 'module' }));
+  // 複製したソースが core の実行時依存（zod）を読めるように、core の node_modules を指す
+  symlinkSync(join(root, 'packages/core/node_modules'), join(trial, 'node_modules'), 'junction');
   writeFileSync(join(trial, 'vitest.config.mjs'), `export default { test: { include: ['test/**/*.test.ts'], reporters: ['json'], outputFile: { json: './report.json' } } };\n`);
   const result = spawnSync(process.execPath, [join(root, 'node_modules/vitest/vitest.mjs'), 'run', '--root', trial, '--config', join(trial, 'vitest.config.mjs')], {
     cwd: trial, encoding: 'utf8', timeout: 30_000, maxBuffer: 4 * 1024 * 1024,
