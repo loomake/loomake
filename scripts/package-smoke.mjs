@@ -1,6 +1,6 @@
 // prepareは開発用Node、checkは配布物の対応Nodeで実行する。
 import assert from 'node:assert/strict';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -40,6 +40,16 @@ export function buildAndPack(destination) {
   for (const name of packages) run('pnpm', ['pack', '--pack-destination', destination, '--silent'], join(root, 'packages', name));
 }
 
+/** パッケージの外部の実行時依存（core の zod など）を、複製先の node_modules から実体を指すリンクで読めるようにする。 */
+export function linkRuntimeDependencies(packageDir, target) {
+  for (const dep of Object.keys(json(join(packageDir, 'package.json')).dependencies ?? {})) {
+    if (dep.startsWith('@loomake/') || dep === 'loomake') continue;
+    const link = join(target, 'node_modules', dep);
+    mkdirSync(dirname(link), { recursive: true });
+    symlinkSync(realpathSync(join(packageDir, 'node_modules', dep)), link, 'junction');
+  }
+}
+
 /** 既存のディレクトリを上書きせず、配布物と独立した利用先を準備する。 */
 export function prepare(target) {
   mkdirSync(target);
@@ -54,6 +64,15 @@ export function prepare(target) {
   else buildAndPack(tarballs);
   const files = readdirSync(tarballs).filter((name) => name.endsWith('.tgz'));
   assert.equal(files.length, 5);
+  // 外部の実行時依存（core の zod など）は、ワークスペースに入っている版を npm の cache に入れてから、オフラインで入れる
+  const external = new Set();
+  for (const name of packages) {
+    const dir = join(root, 'packages', name);
+    for (const dep of Object.keys(json(join(dir, 'package.json')).dependencies ?? {})) {
+      if (!dep.startsWith('@loomake/') && dep !== 'loomake') external.add(`${dep}@${json(join(dir, 'node_modules', dep, 'package.json')).version}`);
+    }
+  }
+  for (const spec of external) run('npm', ['cache', 'add', spec], root);
   writeFileSync(join(consumer, 'package.json'), '{"name":"loomake-smoke-consumer","private":true,"type":"module"}\n');
   run('npm', ['install', '--offline', '--ignore-scripts', '--no-audit', '--no-fund', ...files.map((file) => join(tarballs, file))], consumer);
   const fixture = join(root, 'tests/fixtures/verify-project/openspec/changes/sample');

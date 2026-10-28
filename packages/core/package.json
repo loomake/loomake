@@ -41,6 +41,10 @@
     "provenance": true
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json"
+    "build": "tsc -p tsconfig.build.json",
+    "schema:write": "tsc -p tsconfig.build.json && node scripts/write-schemas.mjs"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
   }
 }

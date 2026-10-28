@@ -107,11 +107,11 @@ describe('実際に配るパッケージ', () => {
     const types = (name: string) => spawnSync(process.execPath, ['scripts/check-public-types.mjs', target, join(base, name)], { cwd: root, encoding: 'utf8', timeout: 70000 });
     const healthy = types('types-healthy');
     expect(healthy.status, healthy.stdout + healthy.stderr).toBe(0);
-    const declaration = join(target, 'consumer/node_modules/@loomake/core/dist/verify-result.d.ts');
+    const declaration = join(target, 'consumer/node_modules/@loomake/core/dist/verify-result-schema.d.ts');
     const original = readFileSync(declaration, 'utf8');
     try {
-      expect(original.split('ok: boolean')).toHaveLength(2);
-      writeFileSync(declaration, original.replace('ok: boolean', 'ok: string'));
+      expect(original.split('ok: z.ZodBoolean')).toHaveLength(2);
+      writeFileSync(declaration, original.replace('ok: z.ZodBoolean', 'ok: z.ZodString'));
       const broken = types('types-broken');
       expect(broken.status).toBe(1);
       expect(broken.stdout).toContain('error TS2322');

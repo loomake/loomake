@@ -5,7 +5,7 @@ import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { performance } from 'node:perf_hooks';
-import { copyFixture } from './package-smoke.mjs';
+import { copyFixture, linkRuntimeDependencies } from './package-smoke.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const sha256 = (value) => createHash('sha256').update(value).digest('hex');
@@ -86,6 +86,8 @@ function runTrial(target, mutation) {
     writeFileSync(join(trial, 'mutation.txt'), after);
   }
   writeFileSync(join(trial, 'package.json'), JSON.stringify({ private: true, type: 'module' }));
+  // 複製したソースが core の実行時依存（zod）を読めるようにする
+  linkRuntimeDependencies(join(root, 'packages/core'), trial);
   writeFileSync(join(trial, 'vitest.config.mjs'), `export default { test: { include: ['test/**/*.test.ts'], reporters: ['json'], outputFile: { json: './report.json' } } };\n`);
   const result = spawnSync(process.execPath, [join(root, 'node_modules/vitest/vitest.mjs'), 'run', '--root', trial, '--config', join(trial, 'vitest.config.mjs')], {
     cwd: trial, encoding: 'utf8', timeout: 30_000, maxBuffer: 4 * 1024 * 1024,
