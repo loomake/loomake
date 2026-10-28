@@ -14,3 +14,5 @@ LOOMAKE_TEST_PHASE_PROFILE_DIR=/tmp/loomake-phases node scripts/test-phase-profi
 JSONにはrun、試行、`LOOMAKE_TEST_PHASE_SAMPLE`、実際のcheckout SHA、OS、Node、`TEST_PHASE_OUTCOME` を記録します。stdout、stderr、コマンド引数、環境変数全体、利用者のファイル内容は保存しません。日本語要約は表示する文字をエスケープし、32KiB以内に収めます。
 
 計測を有効にした実行には記録の負荷も含まれます。通常CIの所要時間と同一とは扱わず、区間の内訳を比較するために利用してください。
+
+期限試験の準備はテスト開始から最初のrun直前まで、停止前の処理はrun開始から偽CLIの既存の停止時刻まで、停止待ちと停止処理はその時刻から実際のrun終了までです。再実行と後片付けを別々に測り、後片付けまで成功した場合だけ試験の成功を記録します。配布物操作は子プロセスのprepare全体と、その外で実行した既存stepのdurationMsを使います。prepare内のnpmやGit操作はコマンド別集計へ加算しません。fixture作成や後片付けが失敗しても試験の成否と終了を記録し、完了しなかった区間は未計測として扱います。
