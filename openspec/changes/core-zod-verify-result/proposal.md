@@ -30,7 +30,7 @@ W1-1 の範囲は広い（verify 結果、trace.md・spec・tasks、quality.yaml
 
 ### Modified Capabilities
 
-- `core-parsers`: verify 結果のスキーマを Zod で定義し、型と JSON Schema をスキーマから導出する要件（REQ-273・REQ-274・REQ-275）を足す。既存の「verify 結果の JSON スキーマ」（REQ-016・REQ-053）は変えない。
+- `core-parsers`: verify 結果のスキーマを Zod で定義し、型と JSON Schema をスキーマから導出する要件（REQ-274・REQ-275・REQ-276）を足す。既存の「verify 結果の JSON スキーマ」（REQ-016・REQ-053）は変えない。
 
 ## Impact
 

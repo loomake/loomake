@@ -1,4 +1,4 @@
-// Zod スキーマから packages/core/schema/ の JSON Schema を書き出す（REQ-275）。
+// Zod スキーマから packages/core/schema/ の JSON Schema を書き出す（REQ-276）。
 // `pnpm --filter @loomake/core schema:write` で、ビルドしてから実行する
 import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';

@@ -9,7 +9,7 @@ const pkgDir = join(import.meta.dirname, '..');
 const schemaDir = join(pkgDir, 'schema');
 
 describe('JSON Schema の書き出し', () => {
-  it('[REQ-275] Zod スキーマから書き出した内容と packages/core/schema/ のファイルが一致する', () => {
+  it('[REQ-276] Zod スキーマから書き出した内容と packages/core/schema/ のファイルが一致する', () => {
     const rendered = renderJsonSchemas();
     expect(Object.keys(rendered).sort()).toEqual(readdirSync(schemaDir).filter((f) => f.endsWith('.json')).sort());
     for (const [file, text] of Object.entries(rendered)) {
@@ -18,7 +18,7 @@ describe('JSON Schema の書き出し', () => {
     }
   });
 
-  it('[REQ-275] 書き出した verify 結果の JSON Schema が、移す前の必須プロパティと値を持つ', () => {
+  it('[REQ-276] 書き出した verify 結果の JSON Schema が、移す前の必須プロパティと値を持つ', () => {
     const schema = JSON.parse(renderJsonSchemas()['verify-result.schema.json']);
     expect(schema.$id).toBe('https://loomake.dev/schema/verify-result.schema.json');
     expect(schema.required).toEqual(['schemaVersion', 'mode', 'change', 'ok', 'results']);
@@ -29,7 +29,7 @@ describe('JSON Schema の書き出し', () => {
     expect(schema.properties.coverage.propertyNames.pattern).toBe('^REQ-[0-9]{3,}$');
   });
 
-  it('[REQ-275] 書き出しのコマンドで schema/ のファイルを作り直せる', () => {
+  it('[REQ-276] 書き出しのコマンドで schema/ のファイルを作り直せる', () => {
     const work = mkdtempSync(join(tmpdir(), 'loomake-core-schema-'));
     try {
       // 実際の schema/ を書き換えないように、書き出しのスクリプトとビルドの結果を一時ディレクトリに写して実行する

@@ -16,12 +16,12 @@ const valid = {
 };
 
 describe('verify 結果の Zod スキーマ', () => {
-  it('[REQ-273] いまの verify 結果を受け付ける', () => {
+  it('[REQ-274] いまの verify 結果を受け付ける', () => {
     expect(verifyResultSchema.safeParse(valid).success).toBe(true);
     expect(verifyResultSchema.safeParse({ ...valid, mode: 'spec-only', change: null, coverage: undefined }).success).toBe(true);
   });
 
-  it('[REQ-273] 形の違う verify 結果を拒否する', () => {
+  it('[REQ-274] 形の違う verify 結果を拒否する', () => {
     const withoutOk: Record<string, unknown> = { ...valid };
     delete withoutOk.ok;
     expect(verifyResultSchema.safeParse(withoutOk).success).toBe(false);
@@ -30,7 +30,7 @@ describe('verify 結果の Zod スキーマ', () => {
     expect(verifyResultSchema.safeParse({ ...valid, coverage: { 'TASK-1': [] } }).success).toBe(false);
   });
 
-  it('[REQ-273] 型はスキーマから導出し、手書きの型を別に定義しない', () => {
+  it('[REQ-274] 型はスキーマから導出し、手書きの型を別に定義しない', () => {
     expectTypeOf<VerifyResult>().toEqualTypeOf<z.infer<typeof verifyResultSchema>>();
     expectTypeOf<VerifyCheckResult>().toEqualTypeOf<VerifyResult['results'][number]>();
     expectTypeOf<VerifyMode>().toEqualTypeOf<VerifyResult['mode']>();
@@ -39,7 +39,7 @@ describe('verify 結果の Zod スキーマ', () => {
     }
   });
 
-  it('[REQ-274] 未知のフィールドを拒否せず、値を変えずに残す', () => {
+  it('[REQ-275] 未知のフィールドを拒否せず、値を変えずに残す', () => {
     const input = { ...valid, extra: { nested: [1, 2] }, results: [{ ...valid.results[0], hint: '次の手順' }] };
     const parsed = verifyResultSchema.parse(input);
     expect(parsed.extra).toEqual({ nested: [1, 2] });

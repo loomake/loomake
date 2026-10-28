@@ -1,5 +1,5 @@
-// verify 結果の Zod スキーマ（REQ-016・REQ-273）。
-// packages/core/schema/verify-result.schema.json は、このスキーマから書き出す（REQ-275）。
+// verify 結果の Zod スキーマ（REQ-016・REQ-274）。
+// packages/core/schema/verify-result.schema.json は、このスキーマから書き出す（REQ-276）。
 // CLI の起動で zod を読まないように、@loomake/core の入口からは loadVerifyResultSchemas() で遅れて読む
 import { z } from 'zod';
 import { VERIFY_RESULT_SCHEMA_VERSION } from './verify-result.js';
@@ -8,7 +8,7 @@ export const verifyModeSchema = z
   .enum(['quality', 'spec-only', 'done'])
   .describe('quality = 品質コマンドだけ、spec-only = 仕様ゲート、done = 完了ゲート');
 
-// 未知のフィールドは拒否せず、解析結果にそのまま残す（REQ-274）
+// 未知のフィールドは拒否せず、解析結果にそのまま残す（REQ-275）
 export const verifyCheckResultSchema = z.looseObject({
   check: z.string().describe('検査の名前'),
   status: z.enum(['pass', 'fail', 'warn', 'skip']),

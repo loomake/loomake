@@ -1,4 +1,4 @@
-// verify 結果の版と、Zod スキーマ（verify-result-schema.ts）から導出した型（REQ-016・REQ-273）。
+// verify 結果の版と、Zod スキーマ（verify-result-schema.ts）から導出した型（REQ-016・REQ-274）。
 // 型は import type だけで参照するので、このファイルを読んでも zod は読まない
 import type { z } from 'zod';
 import type { verifyCheckResultSchema, verifyModeSchema, verifyResultSchema } from './verify-result-schema.js';

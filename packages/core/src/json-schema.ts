@@ -1,4 +1,4 @@
-// 外部ツール向けの JSON Schema を Zod スキーマから書き出す（REQ-275）。
+// 外部ツール向けの JSON Schema を Zod スキーマから書き出す（REQ-276）。
 // packages/core/schema/ のファイルは、この関数の結果と同じ内容にする
 import { z } from 'zod';
 import { verifyResultSchema } from './verify-result-schema.js';
