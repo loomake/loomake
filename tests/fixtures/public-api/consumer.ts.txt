@@ -1,8 +1,8 @@
 import {
-  parseTrace, parseTasks, parseSpec, extractTestRequirements, VERIFY_RESULT_SCHEMA_VERSION,
+  createAgreement, parseTrace, parseTasks, parseSpec, extractTestRequirements, VERIFY_RESULT_SCHEMA_VERSION,
   type ParseError, type Trace, type Task, type VerifyResult, type VerifyCheckResult,
 } from '@loomake/core';
-import { runVerify, formatVerifyResult, UsageError, type VerifyOptions } from '@loomake/kit';
+import { evaluateAgreement, evaluateTestCoverage, type AgreementDecision, type TestCoverageDecision, runVerify, formatVerifyResult, UsageError, type VerifyOptions } from '@loomake/kit';
 import { runRecord, runReport, buildReport, EVIDENCE_SCHEMA_VERSION, type Evidence, type Report } from '@loomake/trace';
 import { runRun, maskSecrets, type RunOptions, type RunSummary } from '@loomake/runner';
 
@@ -32,4 +32,12 @@ export function consumePublicApi(root: string) {
   const summary: RunSummary = { change: 'sample', status: 'interrupted', reason: '', doneTasks: [], remainingTasks: [], lastVerify: null };
   const masked: string = maskSecrets(text);
   return { trace, checked, specs, ids, ok, oldEvidence, recorded, reported, report, running, summary, masked, error: new UsageError('設定の確認') };
+}
+
+// @ts-expect-error REQ-148: coreでは判定関数と結果型を公開しない。
+import { evaluateAgreement as removedAgreement, type AgreementDecision as RemovedAgreement } from '@loomake/core';
+// @ts-expect-error REQ-149: coreでは判定関数と結果型を公開しない。
+import { evaluateTestCoverage as removedCoverage, type TestCoverageDecision as RemovedCoverage } from '@loomake/core';
+export function consumePolicyApi(trace: Trace): [AgreementDecision, TestCoverageDecision] {
+  return [evaluateAgreement(createAgreement('trace.md', trace).value), evaluateTestCoverage(['REQ-148'], {})];
 }

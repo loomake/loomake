@@ -113,6 +113,11 @@ export async function check(target) {
   }
   const core = await import(pathToFileURL(require.resolve('@loomake/core')).href);
   assert.equal(core.parseTasks('tasks.md', '- [x] done').value[0].checked, true);
+  const kit = await import(pathToFileURL(require.resolve('@loomake/kit')).href);
+  assert.equal(Object.hasOwn(core, 'evaluateAgreement'), false);
+  assert.equal(Object.hasOwn(core, 'evaluateTestCoverage'), false);
+  assert.deepEqual(kit.evaluateAgreement(core.createAgreement('trace.md', { ledger: [], questions: [], assumptions: [] }).value), { blockingQuestions: [], pendingRequirements: [], unapprovedAssumptions: [], missingSources: [] });
+  assert.deepEqual(kit.evaluateTestCoverage(['REQ-149'], {}), { coverage: { 'REQ-149': [] }, missing: ['REQ-149'] });
   assert.equal(json(require.resolve('@loomake/core/schema/verify-result.schema.json')).properties.schemaVersion.const, core.VERIFY_RESULT_SCHEMA_VERSION);
   const cli = join(consumer, 'node_modules/loomake/dist/cli.js');
   const command = (...args) => run(process.execPath, [cli, ...args], consumer);
