@@ -192,7 +192,10 @@ describe('runから外部操作までの期限', () => {
       // untilDeadline の 2 つは、止まる手前の通常の git・gh が負荷で遅れても 1 操作の期限に当たらないよう余裕を持たせ、
       // 止まったのが共有の期限であることは所要時間の下限で確かめる。
       const runStarted = Date.now();
-      const result = await withProcessBudget(untilDeadline ? { timeoutMs: SHARED_DEADLINE_MS, maxOperationMs: UNTIL_DEADLINE_OPERATION_MS } : { timeoutMs: 20_000, maxOperationMs: STAGE_OPERATION_MS }, () => run(repo));
+      // auth・list は 1 操作の期限で止まることを確かめる。run の予算は狙った段階に届くための長さで、Windows では外部操作ごとに保持役へ保持を頼む分だけ
+      // 遅くなり、20 秒では list に届く前に尽きることがあった（run 40634806172 の再実行）。そこで Windows では 35 秒にする
+      const stageBudgetMs = process.platform === 'win32' ? 35_000 : 20_000;
+      const result = await withProcessBudget(untilDeadline ? { timeoutMs: SHARED_DEADLINE_MS, maxOperationMs: UNTIL_DEADLINE_OPERATION_MS } : { timeoutMs: stageBudgetMs, maxOperationMs: STAGE_OPERATION_MS }, () => run(repo));
       const endedAt = Date.now();
       const runElapsed = endedAt - runStarted;
       diagnosticEvent(repo, 'run-end', { stage, code: result.code, elapsedMs: Date.now() - started });
