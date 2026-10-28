@@ -1,0 +1,25 @@
+## 1. 確認事項の反映
+- [x] 1.1 確認事項 Q-01〜Q-08 の回答を trace.md に書き、差分仕様・proposal.md・tasks.md を回答に合わせて直す。案 B（REQ-271）は別の change に分け、申し送りを proposal.md に書く（REQ-049, REQ-214, REQ-270, REQ-271）
+
+## 2. 文書だけの PR（案 A）
+- [x] 2.1 変えたファイルが文書だけかを判定するスクリプトを `scripts/` に足す。PR のベースとの差分を、名前の変更を含めて読む（REQ-270）
+- [x] 2.2 2.1 のスクリプトのテストを書く。Scenario「文書だけの PR」「コードを含む PR」「配布する Markdown を含む PR」「設定と実行用のファイルを含む PR」「試験用データを含む PR」「文書の置き場所にある設定と実行用のファイル」「前のコミットでコードを変えた PR」「名前を変えたファイル」「差分を取れない、または解釈できない」を確かめる（REQ-270）
+- [x] 2.3 Q-04 で承認された範囲で、`tests/monorepo.test.ts` の `[REQ-049]` と `[REQ-214]` の期待値を、判定のステップと条件つきのステップを含む ci.yml に合わせる。シャードとカバレッジの検査は弱めない（REQ-049, REQ-214）
+- [x] 2.4 `tests/monorepo.test.ts` に、Scenario「判定をジョブの中で行う」「main への push」のテストを足す（REQ-270）
+- [x] 2.5 `.github/workflows/ci.yml` の quality ジョブに判定のステップを足し、lint・typecheck・test・build・配布物の検査のステップを、判定が「文書だけ」でないときだけ実行する（REQ-270）
+- [x] 2.6 2.2〜2.4 の試験を読み直してから、差分仕様の Scenario 14 件について、`docs/quality/scenarios.json` に change 側の ID でレビューを足す。`node scripts/scenario-audit.mjs` で 14 件が reviewed になることを確かめる。archive する PR への申し送りを proposal.md の Impact に書く（REQ-049, REQ-214, REQ-270）
+
+## 3. 確認
+- [x] 3.1 `pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` を通す
+- [x] 3.2 この PR の CI で、quality ジョブがすべてのステップを実行したこと（この PR はコードを変えるため）と、判定のステップの出力を確かめ、作業記録に書く（REQ-270）
+- [x] 3.3 `pnpm -s verify --change shorten-ci-wall-clock --done` を通す <!-- loomake:gate=done -->
+
+## 4. レビューへの対応（2026-10-27 のレビュー。利用者が「おすすめで」と承認）
+- [x] 4.1 レビューの指摘と利用者の承認を trace.md に記録する（REQ-270）
+- [x] 4.2 差分仕様に Scenario を足す。マージ先が main でない PR、判定のスクリプトとワークフローを変えた PR、main が進んだあとのマージコミット、コードのファイルを消した PR（REQ-270）
+- [x] 4.3 PR のマージ先が main でないときは、文書だけと判定しないようにし、テストを足す（REQ-270）
+- [x] 4.4 判定のスクリプトとワークフローを変えた PR、main が進んだあとのマージコミット、コードのファイルを消した PR のテストを足す。判定のロジックは変えない（REQ-270）
+- [x] 4.5 文書だけの PR では、文書を読むテストが macOS・Windows で動かなくなることを、proposal.md の Impact に書く（REQ-270）
+- [x] 4.6 4.2〜4.4 のあとで、変わった Scenario と足した Scenario のレビューを `docs/quality/scenarios.json` に合わせる。`node scripts/scenario-audit.mjs` で、この change の Scenario がすべて reviewed になることを確かめる（REQ-049, REQ-214, REQ-270）
+- [x] 4.7 `pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` と `pnpm -s verify --change shorten-ci-wall-clock --done` を通し、push のあとの CI の結果を作業記録に書く
+- [x] 4.8 見直しで見つけた誤判定を直す。2.1 のスクリプトはベースを `origin/<base>` とだけ書いていたので、同じ名前のタグやブランチ（`refs/tags/origin/main` など）があると、そちらがベースに選ばれる。それが PR のコミットの途中を指していると、コードの変更が差分から落ちる。ベースを `refs/remotes/origin/<base>` と書き、その試験を足す。`tests/ci-docs-only.test.ts` を根拠にするレビューは、試験を読み直してハッシュを更新する（REQ-270）
