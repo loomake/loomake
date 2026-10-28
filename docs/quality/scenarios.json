@@ -1614,7 +1614,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-043]",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -1630,7 +1630,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-044]",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -1646,7 +1646,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-045]",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -1662,7 +1662,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-055] 見出しと本文",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -3069,7 +3069,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-025] 入力が",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -3085,7 +3085,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-025] .docx",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -3101,7 +3101,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-026] 1 文ずつ",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -3117,7 +3117,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-026] REQ は",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -3133,7 +3133,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-026] Q・A は",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -3149,7 +3149,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-027] 曖昧さチェックリスト",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -3165,7 +3165,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-027] 要件書の未決事項",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -3181,7 +3181,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-028]",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -3197,7 +3197,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-029] 1 change",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -3213,7 +3213,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-029] 複数の change",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -3229,7 +3229,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-030]",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -3245,7 +3245,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-031] 範囲外の要件",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -3261,7 +3261,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-031] 後のフェーズ",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -3277,7 +3277,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-032]",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -3293,7 +3293,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-033]",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -3309,7 +3309,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-059] kit のコード",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -3325,7 +3325,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-059] Skill に",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -3341,7 +3341,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-055] SKILL.md",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -3357,7 +3357,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-136]",
-          "sha256": "15a7a4fadde95118f19267a52f5da6ebb6b060869b7eac028ffc1edd99299e40"
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     },
@@ -7719,6 +7719,38 @@
           "file": "tests/ci-gate-process.test.ts",
           "contains": "[REQ-272] ベースと同じ名前の参照",
           "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
+        }
+      ]
+    },
+    {
+      "id": "SCN-6faf65f6f11c2f18e4c5",
+      "status": "reviewed",
+      "scenarioSha256": "71777ba0dadfaf84e64667faee6a9008160ea799fd243b6daf26aeec91587ebe",
+      "reason": "配る packages/kit/templates/AGENTS.md の報告の形の節を読み、作業したブランチごとのファイル docs/worklog/<日本時間の日付>/<ブランチ名>.md に記録すること、ブランチ名の / を - に置き換えること、同じ日・同じブランチのファイルがあれば末尾に追記することが書いてあると assert する。あわせて、<作業した日> が節になく、docs/worklog/<作業した日>.md がファイル全体にないこと、このリポジトリの移行のための「2026-10-27 までの日付ごとのファイル」の文が節にないことを assert する。日付ごとのファイルに書く元の文に戻すと失敗する。",
+      "sources": [
+        "REQ-273"
+      ],
+      "tests": [
+        {
+          "file": "tests/kit-assets.test.ts",
+          "contains": "[REQ-273] 報告の形の節に、作業したブランチごとのファイルに記録し",
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+        }
+      ]
+    },
+    {
+      "id": "SCN-40633e5892a3c2a2c98b",
+      "status": "reviewed",
+      "scenarioSha256": "92954538955d2ce39553b94c9cc2c022406f9affc0a90f63b8045f82487096ee",
+      "reason": "配る packages/kit/templates/AGENTS.md の報告の形の節を読み、作業記録はその作業の PR に含め、作業記録だけの PR は作らないという文と、PR のマージ後に記録を足すときは次の作業のブランチのファイルに書き、その PR に含めるという文があると assert する。どちらかの文を消すと失敗する。",
+      "sources": [
+        "REQ-273"
+      ],
+      "tests": [
+        {
+          "file": "tests/kit-assets.test.ts",
+          "contains": "[REQ-273] 報告の形の節に、作業記録は作業の PR に含め",
+          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
         }
       ]
     }
