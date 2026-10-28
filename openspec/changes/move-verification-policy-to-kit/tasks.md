@@ -10,7 +10,7 @@
 
 ## 3. 統合
 
-- [ ] 3.1 全要件のテスト対応、lint・型・配布物と既存verifyの回帰を確認し、作業記録を更新する。全タスクをチェックして `pnpm -s verify --change move-verification-policy-to-kit --done` がexit 0となることを確認してコミットする。 <!-- loomake:gate=done -->
+- [x] 3.1 全要件のテスト対応、lint・型・配布物と既存verifyの回帰を確認し、作業記録を更新する。全タスクをチェックして `pnpm -s verify --change move-verification-policy-to-kit --done` がexit 0となることを確認してコミットする。 <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
