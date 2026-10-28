@@ -21,3 +21,14 @@
 - verify の結果：change がないので verify は実行していない。手元（Linux）で `pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test`（76 ファイル、1089 件成功・8 件 skip）が通った。`tests/ai-journeys.test.ts` と `tests/package-artifacts.test.ts` だけを同時に流しても通った。
 - 残っている確認事項・仮定：Windows と macOS では手元で試していない。CI で確かめる。ハードリンクは NTFS と、macOS・Linux の通常のファイルシステムで使える前提にしている。
 - 次にやること：レビューの 2 つのスレッドに返信し、Codex に再レビューを頼む。マージの判断は利用者に委ねる。
+
+## ロックをやめ、build と pack を試験の前に 1 回だけにする（19:55）
+
+- やったこと：Codex が 775d526 に新しい P2 を出した（`scripts/package-smoke.mjs` の 119 行）。A が解放済みの 1 世代目を見て 2 世代目を作る直前で止まる。その間に B が 2 世代目を取って解放し、C が 3 世代目を取って `2.owner` を消すと、A は `2.owner` を作り直せてしまい、C が中にいる間に A も入る。ロックを直すたびに別の順序の不具合が見つかるので、調整役の指示で、古いロックの回収が要らない形に切り替えた。
+  - 直し方：ロックのコードと `tests/package-smoke-lock.test.ts` を消した。`vitest.config.ts` を 2 つのプロジェクトに分けた。`package` には配布物を使う `tests/ai-journeys.test.ts` と `tests/package-artifacts.test.ts` を、`unit` にはそれ以外を入れる。`package` の globalSetup（`tests/package-build.setup.ts`）が、試験を始める前に `pnpm -r build` と 5 パッケージの `pnpm pack` を 1 回だけ動かし、tarball の場所を `provide` で渡す。2 つの試験はその場所を `LOOMAKE_PACKED_TARBALLS` で `prepare` に渡す。`prepare` は、この環境変数があれば tarball を写すだけで、build も pack もしない。なければ前と同じく build と pack をするので、CI の `package-smoke.mjs prepare` の手順は変わらない。これで、1 回の試験の中で build が重なることはなくなる。
+  - プロジェクトを分けたのは、`package` の試験を含まない実行では build を動かさないため。`tests/doc-links.test.ts` だけを流しても build は動かなかった（runner の dist を消して確かめた）。
+  - 試験の期待値と中身は変えていない。2 つの試験で変えたのは、子プロセスに渡す環境変数だけ。`vitest.config.ts` の変更は試験を流す構成の変更で、試験を緩めるものではない。カバレッジの閾値も変えていない。
+  - CI のシャード（quality の 1/2・2/2）は、それぞれ `package` の試験を含むときだけ globalSetup を動かす。
+- verify の結果：change がないので verify は実行していない。手元（Linux）で `pnpm -s lint`・`pnpm -s typecheck` が通った。`pnpm -s test` は 75 ファイル、1083 件成功・8 件 skip（消したロックの試験の 1 ファイル 6 件のぶん減った）。`--shard=1/2` は 38 ファイル 462 件、`--shard=2/2` は 37 ファイル 621 件成功・8 件 skip で、合わせると全体と同じ。`pnpm test --coverage` も閾値を超えて通った（文 94.87%・分岐 89.97%・関数 97.01%・行 97.96%）。環境変数なしの `node scripts/package-smoke.mjs prepare` も通った。
+- 残っている確認事項・仮定：試験の外の build（同じ作業ツリーで別の作業が動かす `pnpm verify` など）が試験と重なれば、同じ失敗が起こり得る。Windows と macOS は CI で確かめる。
+- 次にやること：2 つの P2 のスレッドに返信し、Codex に再レビューを頼む。マージの判断は利用者に委ねる。

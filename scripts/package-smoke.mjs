@@ -1,7 +1,6 @@
 // prepareは開発用Node、checkは配布物の対応Nodeで実行する。
 import assert from 'node:assert/strict';
-import { existsSync, linkSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
-import { randomUUID } from 'node:crypto';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -35,98 +34,10 @@ export function copyFixture(source, target) {
   }
 }
 
-const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
-const alive = (pid) => {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (error) {
-    return error.code === 'EPERM';
-  }
-};
-const readJson = (file) => {
-  try {
-    return JSON.parse(readFileSync(file, 'utf8'));
-  } catch {
-    return undefined;
-  }
-};
-const latestGeneration = (dir) => {
-  let latest = 0;
-  for (const name of readdirSync(dir)) {
-    const match = /^(\d+)\.owner$/.exec(name);
-    if (match) latest = Math.max(latest, Number(match[1]));
-  }
-  return latest;
-};
-// 中身を書き終えた一時ファイルを、世代の名前へハードリンクする。リンクは名前が空いているときだけ成功するので、
-// 同じ世代を取れるのは 1 つのプロセスだけで、読む側に書きかけの中身は見えない
-const createGeneration = (dir, generation, owner) => {
-  const temporary = join(dir, `tmp-${owner.token}`);
-  writeFileSync(temporary, JSON.stringify(owner));
-  try {
-    linkSync(temporary, join(dir, `${generation}.owner`));
-    return true;
-  } catch (error) {
-    if (error.code === 'EEXIST') return false;
-    throw error;
-  } finally {
-    rmSync(temporary, { force: true });
-  }
-};
-
-/**
- * リポジトリの dist を書き換える処理を、ロックで 1 つずつ動かす。
- * ロックは世代ごとのファイル（1.owner、2.owner…）で表し、いちばん新しい世代の持ち主がロックを持つ。
- * その世代が解放済み（N.released がある）か、持ち主のプロセスが終わっているか、取ってから staleMs を過ぎたときは、
- * 次の世代のファイルを作って取る。ほかのプロセスのロックを消したり移したりしないので、
- * 古いロックを複数の待ち手が同時に見ても、次の世代を作れた 1 つだけが中の処理へ進む（PR #107 のレビュー）。
- * hooks は試験で待ち手の順序を固定するためのもの。
- */
-export function withBuildLock(fn, { lockDir = join(root, '.loomake', 'build-lock'), waitMs = 300_000, staleMs = 600_000, pollMs = 100, hooks = {} } = {}) {
-  mkdirSync(lockDir, { recursive: true });
-  const owner = { pid: process.pid, token: `${process.pid}-${randomUUID()}` };
-  const started = Date.now();
-  let held;
-  for (;;) {
-    const current = latestGeneration(lockDir);
-    const file = join(lockDir, `${current}.owner`);
-    const holder = current ? readJson(file) : undefined;
-    // readdir のあとで新しい世代の持ち主が古い世代を消したときは、読み直す
-    if (current && !holder && !existsSync(file)) continue;
-    // 読めない世代は持ち主が動いているものとみなして待つ
-    const free = !current || (holder !== undefined && (existsSync(join(lockDir, `${current}.released`)) || !alive(holder.pid) || Date.now() - holder.acquiredAt > staleMs));
-    if (free) {
-      const next = current + 1;
-      hooks.beforeTake?.(next);
-      const taken = createGeneration(lockDir, next, { ...owner, acquiredAt: Date.now() });
-      hooks.afterTake?.(next, taken);
-      if (taken) {
-        held = next;
-        break;
-      }
-      continue;
-    }
-    if (Date.now() - started > waitMs) throw new Error(`build のロックを ${Math.round(waitMs / 1000)} 秒待っても取れませんでした：${lockDir}（持ち主の PID ${holder?.pid ?? '不明'}）。持ち主がもう動いていなければ、このディレクトリを消してください`);
-    hooks.onWait?.();
-    sleep(pollMs);
-  }
-  // 古い世代は、もう誰も取ろうとしない。消せなくてもロックの働きには関わらない
-  for (const name of readdirSync(lockDir)) {
-    const match = /^(\d+)\./.exec(name);
-    if (match && Number(match[1]) < held) {
-      try {
-        rmSync(join(lockDir, name), { force: true });
-      } catch {
-        // Windows でほかのプロセスが読んでいる間は消せないことがある
-      }
-    }
-  }
-  try {
-    return fn();
-  } finally {
-    writeFileSync(join(lockDir, `${held}.released`), '');
-  }
+/** リポジトリの 5 パッケージを build し、pack した tarball を destination に書き出す。 */
+export function buildAndPack(destination) {
+  run('pnpm', ['-r', 'build'], root);
+  for (const name of packages) run('pnpm', ['pack', '--pack-destination', destination, '--silent'], join(root, 'packages', name));
 }
 
 /** 既存のディレクトリを上書きせず、配布物と独立した利用先を準備する。 */
@@ -136,12 +47,11 @@ export function prepare(target) {
   const consumer = join(target, 'consumer');
   mkdirSync(tarballs);
   mkdirSync(consumer);
-  // 試験の中では複数のファイルが同時に prepare を呼ぶ。tsc は出力を空にしてから書くので、
-  // build を重ねると、ほかの build が空の .d.ts を読んだり、pack が書きかけの dist を固めたりする（Issue #34）
-  withBuildLock(() => {
-    run('pnpm', ['-r', 'build'], root);
-    for (const name of packages) run('pnpm', ['pack', '--pack-destination', tarballs, '--silent'], join(root, 'packages', name));
-  });
+  // 試験では、Vitest の globalSetup（tests/package-build.setup.ts）がワーカーを起こす前に 1 回だけ build と pack をして、
+  // その tarball の場所を渡す。試験の中で build を重ねると、tsc が空にした .d.ts をほかの build が読んで落ちる（Issue #34）
+  const packed = process.env.LOOMAKE_PACKED_TARBALLS;
+  if (packed) for (const file of readdirSync(packed).filter((name) => name.endsWith('.tgz'))) copyFileSync(join(packed, file), join(tarballs, file));
+  else buildAndPack(tarballs);
   const files = readdirSync(tarballs).filter((name) => name.endsWith('.tgz'));
   assert.equal(files.length, 5);
   writeFileSync(join(consumer, 'package.json'), '{"name":"loomake-smoke-consumer","private":true,"type":"module"}\n');
