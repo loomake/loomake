@@ -12,13 +12,6 @@ export type Agreement = {
   readonly assumptions: readonly { readonly id: string; readonly approval: string }[];
 };
 
-export type AgreementDecision = {
-  blockingQuestions: string[];
-  pendingRequirements: RequirementId[];
-  unapprovedAssumptions: string[];
-  missingSources: RequirementId[];
-};
-
 /** 解析したtraceを検証してモデルに変換する。不正な行はエラーに残し、モデルへ含めない。 */
 export function createAgreement(file: string, trace: Trace): ParseResult<Agreement> {
   const errors: ParseError[] = [];
@@ -41,15 +34,5 @@ export function createAgreement(file: string, trace: Trace): ParseResult<Agreeme
       assumptions: trace.assumptions.map((a) => ({ id: a.ID, approval: a['承認'] })),
     },
     errors,
-  };
-}
-
-/** 合意に基づく停止・警告条件を判定する。表示とI/Oは呼び出し側が担当する。 */
-export function evaluateAgreement(model: Agreement): AgreementDecision {
-  return {
-    blockingQuestions: model.questions.filter((q) => q.blocking && !q.answer).map((q) => q.id),
-    pendingRequirements: model.requirements.filter((r) => r.state === '確認待ち').map((r) => r.id),
-    unapprovedAssumptions: model.assumptions.filter((a) => !a.approval).map((a) => a.id),
-    missingSources: model.requirements.filter((r) => !r.source).map((r) => r.id),
   };
 }

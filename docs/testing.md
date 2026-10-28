@@ -18,7 +18,7 @@ node scripts/ai-journeys.mjs /tmp/loomake-ai-journeys
 
 ## ドメイン判定のmutation試験
 
-次のコマンドは、既存のagreementとcoverage-policyの10テストをコピーし、重要な13条件を1つずつ変更して実行する。通常のテストでも、この検査を別プロセスで実行する。
+次のコマンドは、coreのモデル変換とkitのagreement・coverage-policyの既存10テストをコピーし、重要な13条件を1つずつ変更して実行する。通常のテストでも、この検査を別プロセスで実行する。
 
 ```sh
 node scripts/domain-mutations.mjs .loomake/quality/domain-mutations-trial
