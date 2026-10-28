@@ -21,5 +21,5 @@
 ## 5. 確認
 
 - [x] 5.1 Scenario のレビューを、change 側の ID で `docs/quality/scenarios.json` に足す。`tests/ci-docs-only.test.ts` を根拠にする既存のレビューは、試験を読み直してハッシュを更新する。`node scripts/scenario-audit.mjs` で、この change と shorten-ci-wall-clock の Scenario が reviewed になることを確かめる（REQ-273, REQ-274）
-- [ ] 5.2 `pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` を通す
-- [ ] 5.3 `pnpm -s verify --change close-docs-only-gaps --done` を通す <!-- loomake:gate=done -->
+- [x] 5.2 `pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` を通す
+- [x] 5.3 `pnpm -s verify --change close-docs-only-gaps --done` を通す <!-- loomake:gate=done -->
