@@ -429,7 +429,7 @@ describe('git の設定の比較の範囲', () => {
       expect(readFileSync(join(r.repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [ ] 1.1');
     }));
 
-  it('[REQ-204][REQ-236] リンク先のないフックがあっても、落ちずにタスクを完了にする', () =>
+  it('[REQ-204] リンク先のないフックがあっても、落ちずにタスクを完了にする', () =>
     check({}, (repo) => {
       // pre-commit の名前で置くと、Git for Windows は準備のコミットでリンクを実行しようとして失敗する。
       // git がフックとして実行しない名前で置き、フックのディレクトリの比較だけを確かめる

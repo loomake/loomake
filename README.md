@@ -106,7 +106,7 @@ skills-lock.json                  npx skills で入れたスキルの出所と�
 
 ### CI とリリース
 
-- PR と main への push で、ubuntu・macos・windows の 3 つで lint・typecheck・test・build を実行する。Node 22.12 でも、ビルドした CLI が動くかを確かめる
+- PR では ubuntu だけで、main への push と毎日 1 回の定期実行では ubuntu・macos・windows の 3 つで、lint・typecheck・test・build を実行する。PR に `ci:all-os` ラベルを付けると、その PR でも 3 つの OS で実行する。macOS か Windows に関わる変更をする PR では、このラベルを付ける。Node 22.12 でも、ビルドした CLI が動くかを確かめる
 - gate ジョブは、対象の change ごとに `verify --change <id> --done` を実行する。対象は、PR 本文に `loomake-change: <id>` の行があればその change とし、なければ PR で変えた `openspec/changes/<id>/` の下のファイルと、ブランチ名（`loomake/` で始まるときは、それを除いた名前）から決める
 - 対象の change がなく、文書（`.md`、`docs/`・`openspec/`・`.changeset/` の下）だけを変えた PR と archive の PR は、品質コマンドだけを実行する。コードを変える PR で change がないときは、本文に `loomake-change: none` と書く。書かないと gate ジョブは失敗する
 - gate ジョブは PR 本文を実行のたびに読む。本文を書き直したら、gate ジョブを再実行する

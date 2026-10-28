@@ -74,6 +74,9 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル�
         const from = join(packages, name, asset);
         if (existsSync(from)) cpSync(from, join(dependencies, name, asset), { recursive: true });
       }
+      // 外部の実行時依存（core の zod など）は、元のパッケージの node_modules から読む
+      const modules = join(packages, name, 'node_modules');
+      if (existsSync(modules)) symlinkSync(modules, join(dependencies, name, 'node_modules'), 'junction');
     }
   });
   afterAll(() => { if (dependencies) rmSync(dependencies, { recursive: true, force: true }); });

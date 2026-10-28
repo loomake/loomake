@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, inject, it } from 'vitest';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -8,11 +8,13 @@ import { pathToFileURL } from 'node:url';
 const root = join(import.meta.dirname, '..');
 const base = mkdtempSync(join(tmpdir(), 'loomake artifacts '));
 const target = join(base, 'prepared');
-const run = (mode: string) => spawnSync(process.execPath, ['scripts/package-smoke.mjs', mode, target], { cwd: root, encoding: 'utf8' });
+// prepare は、globalSetup が試験の前に 1 回だけ build と pack をした tarball を使う（tests/package-build.setup.ts）
+const env = { ...process.env, LOOMAKE_PACKED_TARBALLS: inject('packedTarballs') };
+const run = (mode: string) => spawnSync(process.execPath, ['scripts/package-smoke.mjs', mode, target], { cwd: root, encoding: 'utf8', env });
 afterAll(() => rmSync(base, { recursive: true, force: true }));
 
 describe('実際に配るパッケージ', () => {
-  it('[REQ-057][REQ-138][REQ-139][REQ-143][REQ-146][REQ-169][REQ-236] packした5パッケージだけで主要コマンドと公開APIを使える', () => {
+  it('[REQ-057][REQ-138][REQ-139][REQ-143][REQ-146][REQ-169] packした5パッケージだけで主要コマンドと公開APIを使える', () => {
     const prepared = run('prepare');
     expect(prepared.status, prepared.stdout + prepared.stderr).toBe(0);
     const checked = run('check');
@@ -86,7 +88,7 @@ describe('実際に配るパッケージ', () => {
       expect(unsupported.stderr).toContain('この通信拒否の検証はLinuxを対象にしています');
       return;
     }
-    const prepared = spawnSync(process.execPath, ['scripts/package-smoke.mjs', 'prepare', offlineTarget], { cwd: root, encoding: 'utf8', timeout: 60000 });
+    const prepared = spawnSync(process.execPath, ['scripts/package-smoke.mjs', 'prepare', offlineTarget], { cwd: root, encoding: 'utf8', timeout: 60000, env });
     expect(prepared.status, prepared.stdout + prepared.stderr).toBe(0);
     const unrestricted = spawnSync(process.execPath, [...args, join(base, 'unrestricted'), process.versions.node], { cwd: root, encoding: 'utf8', timeout: 20000 });
     expect(unrestricted.status).toBe(1);
@@ -105,11 +107,11 @@ describe('実際に配るパッケージ', () => {
     const types = (name: string) => spawnSync(process.execPath, ['scripts/check-public-types.mjs', target, join(base, name)], { cwd: root, encoding: 'utf8', timeout: 70000 });
     const healthy = types('types-healthy');
     expect(healthy.status, healthy.stdout + healthy.stderr).toBe(0);
-    const declaration = join(target, 'consumer/node_modules/@loomake/core/dist/verify-result.d.ts');
+    const declaration = join(target, 'consumer/node_modules/@loomake/core/dist/verify-result-schema.d.ts');
     const original = readFileSync(declaration, 'utf8');
     try {
-      expect(original.split('ok: boolean')).toHaveLength(2);
-      writeFileSync(declaration, original.replace('ok: boolean', 'ok: string'));
+      expect(original.split('ok: z.ZodBoolean')).toHaveLength(2);
+      writeFileSync(declaration, original.replace('ok: z.ZodBoolean', 'ok: z.ZodString'));
       const broken = types('types-broken');
       expect(broken.status).toBe(1);
       expect(broken.stdout).toContain('error TS2322');
