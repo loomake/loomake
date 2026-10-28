@@ -11,7 +11,6 @@
 - [x] 2.3 Zod スキーマから JSON Schema を書き出す関数とコマンドを作り、`packages/core/schema/verify-result.schema.json` を書き出した内容に置き換える。ファイルと書き出した内容が一致することをテストで確かめる（REQ-276）。core のソースを複製して動かす試験（`scripts/domain-mutations.mjs`・`packages/runner/test/guards-special-files.test.ts`）が `zod` を読めるようにし、公開型の試験（`tests/package-artifacts.test.ts`）で壊す宣言を Zod の型に合わせる
 - [x] 2.4 changeset を足す
 - [x] 2.5 `@loomake/core` の入口で zod を静的に読まないようにし、Zod スキーマは `loadVerifyResultSchemas()` で読む。CLI の入口と core の入口から静的にたどれる範囲に zod がないことを試験する（A-03）
-- [x] 2.5 `@loomake/core` の入口から zod を静的に読まないようにし、Zod スキーマは `loadVerifyResultSchemas()` で遅れて読む。CLI の入口から静的にたどれる範囲に zod がないことをテストで確かめる（A-03）
 
 ## 3. 確認
 
