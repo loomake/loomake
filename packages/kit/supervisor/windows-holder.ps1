@@ -192,9 +192,12 @@ while ($true) {
   for ($i = 0; $i -lt $servers.Count; $i++) {
     if (-not $servers[$i].t.IsCompleted) { continue }
     $s = $servers[$i].s
-    $reader = New-Object IO.StreamReader($s)
-    [void]$sessions.Add(@{ s = $s; r = $reader; t = $reader.ReadLineAsync() })
     $servers[$i] = NewServer
+    # 待ち受けが失敗した（接続が切れたなど）ときは、そのインスタンスを捨てる
+    try {
+      $reader = New-Object IO.StreamReader($s)
+      [void]$sessions.Add(@{ s = $s; r = $reader; t = $reader.ReadLineAsync() })
+    } catch { try { $s.Dispose() } catch { } }
   }
   foreach ($sess in @($sessions)) {
     if (-not $sess.t.IsCompleted) { continue }
@@ -233,5 +236,10 @@ while ($true) {
     if ($n -le 0) { Finish 'stdin-eof' }
     $stdinTask = $stdin.ReadAsync($stdinBuf, 0, 256)
   }
-  Start-Sleep -Milliseconds 1
+  # 接続・監視役の頼み・stdin のどれかが届くまで眠る。頼みのファイルと保持の期限は 20ms ごとに見る（待ち続けて CPU を使わない）
+  $tasks = New-Object Collections.Generic.List[Threading.Tasks.Task]
+  foreach ($x in $servers) { $tasks.Add($x.t) }
+  foreach ($x in $sessions) { $tasks.Add($x.t) }
+  $tasks.Add($stdinTask)
+  try { [void][Threading.Tasks.Task]::WaitAny($tasks.ToArray(), 20) } catch { Start-Sleep -Milliseconds 20 }
 }
