@@ -11,3 +11,10 @@
 - verify の結果：`pnpm -s verify --change close-docs-only-gaps --spec-only` と `--done` は合格（exit 0）。警告は「仮定の承認」（A-01 が未承認）だけ。`pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test`（1099 件が成功、8 件が skip）も通った。1 回目の `--done` では、`packages/cli/test/cli.test.ts` の [REQ-050]（3 秒以内に終わる性能の試験）が 3.59 秒で失敗した。この change とは関係がなく、再実行で通った。`node scripts/scenario-audit.mjs` では、この change と shorten-ci-wall-clock の Scenario はすべて reviewed になった。gate-base-remote-ref の Scenario「同じ名前のタグやブランチがある」は、main で `tests/ci-gate-process.test.ts` が変わったため、main と同じく invalid のまま（この change では触っていない）。
 - 残っている確認事項・仮定：A-01（既存の試験の入力の形と git の引数の期待値を変えること）は、AGENTS.md 4 章により利用者本人の承認が要る。Q-01〜Q-04 は、利用者の方針「おすすめで」によりおすすめで答えた（利用者本人の承認ではない）。
 - 次にやること：PR の CI を見届け、A-01 の承認をもらう。
+
+## 仮定 A-01 の承認と、確認事項の回答者の記録（19:46）
+
+- やったこと：リポジトリの持ち主が、本体のセッションの質問に「おすすめで」と答え、A-01 を承認し、Q-01〜Q-04 をおすすめのとおりに答えた（依頼者経由で伝えられた。2026-10-28）。trace.md の Q-01〜Q-04 の回答者と A-01 の承認を、PR #110（align-template-worklog）の trace.md と同じ書き方で記録した。Codex の P1 の指摘（`tests/ci-docs-only.test.ts` で、人の承認なしに期待値を変えた）には、A-01 の承認と記録したコミットを示して返信した。
+- verify の結果：`pnpm -s verify --change close-docs-only-gaps --done` は合格（exit 0）。「仮定の承認」の警告は出なくなった。
+- 残っている確認事項・仮定：要件 ID の重なり。PR #110（align-template-worklog）と PR #113（core-zod-verify-result）も REQ-272〜274 を使っている。Q-01 の回答のとおり、先にマージした方が番号を残す。#110 と #113 が先にマージしたら、origin/main に rebase し、この change の REQ-273・REQ-274 を main の最大の番号の次から振り直す。
+- 次にやること：PR の CI と Codex のレビューを見届ける。#110 と #113 のマージを待って、番号を振り直す。
