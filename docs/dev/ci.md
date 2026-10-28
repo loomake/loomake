@@ -44,3 +44,9 @@ quality ジョブの要約には、テストステップの成否と JSON レポ
 - `test-report.json`：元レポートの写し。元レポートがあるときだけ保存する。失敗メッセージの全文や一覧で省略されたテストは、このファイルで確認する。
 
 診断スクリプトは `node scripts/ci-test-diagnostics.mjs` で実行する。`CI_TEST_OS`、`CI_TEST_SHARD`、`CI_TEST_OUTCOME` に実行環境とテストステップの outcome を渡す。run 情報は `GITHUB_*` から、SHA は `git rev-parse HEAD` から取得する。出力先は `$RUNNER_TEMP/loomake-ci-test-diagnostics`。`GITHUB_STEP_SUMMARY` があれば要約を追記し、`GITHUB_OUTPUT` には `artifact-name` と `directory` を書く。
+
+artifact の保存期間は7日とする。保存対象は上の3ファイルに限り、ほかの `.loomake` 内のファイルは含めない。レポートが欠損・不正・空でも、その状態を記録する。元レポートが不正な JSON であっても、存在するなら写しを保存する。
+
+テストや、それより前の lint・型検査が失敗したあとも、キャンセルされておらず、checkout と Node の準備が済んでいれば診断を生成する。テストに進まなかった場合は未実行と表示する。生成と upload は別ステップで、生成が失敗しても生成済みのファイルの保存を試みる。保存対象がなければ警告する。診断は品質コマンドの失敗を成功に変えない。
+
+文書だけと判定されたジョブでは診断を生成しない。キャンセルされた実行や、checkout・Node の準備に失敗した実行では、診断の生成と保存を保証しない。artifact がないことを成功と解釈せず、ジョブの状態とログを確認する。
