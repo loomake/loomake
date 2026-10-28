@@ -1,6 +1,6 @@
 // prepareは開発用Node、checkは配布物の対応Nodeで実行する。
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -34,6 +34,12 @@ export function copyFixture(source, target) {
   }
 }
 
+/** リポジトリの 5 パッケージを build し、pack した tarball を destination に書き出す。 */
+export function buildAndPack(destination) {
+  run('pnpm', ['-r', 'build'], root);
+  for (const name of packages) run('pnpm', ['pack', '--pack-destination', destination, '--silent'], join(root, 'packages', name));
+}
+
 /** 既存のディレクトリを上書きせず、配布物と独立した利用先を準備する。 */
 export function prepare(target) {
   mkdirSync(target);
@@ -41,8 +47,11 @@ export function prepare(target) {
   const consumer = join(target, 'consumer');
   mkdirSync(tarballs);
   mkdirSync(consumer);
-  run('pnpm', ['-r', 'build'], root);
-  for (const name of packages) run('pnpm', ['pack', '--pack-destination', tarballs, '--silent'], join(root, 'packages', name));
+  // 試験では、Vitest の globalSetup（tests/package-build.setup.ts）がワーカーを起こす前に 1 回だけ build と pack をして、
+  // その tarball の場所を渡す。試験の中で build を重ねると、tsc が空にした .d.ts をほかの build が読んで落ちる（Issue #34）
+  const packed = process.env.LOOMAKE_PACKED_TARBALLS;
+  if (packed) for (const file of readdirSync(packed).filter((name) => name.endsWith('.tgz'))) copyFileSync(join(packed, file), join(tarballs, file));
+  else buildAndPack(tarballs);
   const files = readdirSync(tarballs).filter((name) => name.endsWith('.tgz'));
   assert.equal(files.length, 5);
   writeFileSync(join(consumer, 'package.json'), '{"name":"loomake-smoke-consumer","private":true,"type":"module"}\n');

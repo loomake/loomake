@@ -1,26 +1,33 @@
 name: ci
 
 on:
+  # PR にラベルを付けたときにも起動する（REQ-273）。既定の種類（opened・synchronize・reopened）は残す
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
   push:
     branches: [main]
+  # 毎日 1 回、main を 3 つの OS で確かめる（REQ-049）。18:00 UTC は日本時間の 3:00
+  schedule:
+    - cron: '0 18 * * *'
 
 permissions:
   contents: read
 
-# 同じ PR に新しい push があれば、古い実行を取り消す。main への push の実行は取り消さない（REQ-215）
+# 同じ PR に新しい push があれば、古い実行を取り消す。main への push の実行は取り消さない（docs/dev/ci.md）
 # main への push は実行ごとに group を分ける。group が同じだと、待機中の実行が次の push の実行に置き換えられて取り消される
 concurrency:
   group: ci-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # 3 つの OS で品質コマンドを実行する（REQ-049）。macOS と Windows ではテストを 2 つのシャードに分ける（REQ-214）。文書だけの PR では飛ばす（REQ-270）
+  # 品質コマンドを実行する。PR では ubuntu だけで、main への push・定期実行と、専用のラベルが付いた PR では 3 つの OS で実行する（REQ-049・REQ-273）。
+  # macOS と Windows ではテストを 2 つのシャードに分ける（REQ-214）。文書だけの PR では飛ばす（REQ-270）
+  # OS が ubuntu だけのときは、シャードの組み合わせがすべて exclude で除かれ、include の ubuntu だけが残る
   quality:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: ${{ fromJSON(github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'ci:all-os') && '["ubuntu-latest"]' || '["ubuntu-latest", "macos-latest", "windows-latest"]') }}
         shard: ['1/2', '2/2']
         exclude:
           - os: ubuntu-latest
