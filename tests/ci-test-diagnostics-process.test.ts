@@ -25,7 +25,7 @@ function invoke(cwd: string, outcome: string, overrides: Record<string, string> 
       GITHUB_STEP_SUMMARY: join(cwd, 'step-summary.md'), GITHUB_OUTPUT: join(cwd, 'step-output.txt'), ...overrides },
   });
 }
-const report = (status: string) => JSON.stringify({ testResults: [{ name: 'fixture.test.ts', assertionResults: [{ fullName: '[REQ-284] child fixture', status, duration: 12 }] }] });
+const report = (status: string) => JSON.stringify({ testResults: [{ name: 'fixture.test.ts', assertionResults: [{ fullName: '[REQ-290] child fixture', status, duration: 12 }] }] });
 
 describe('CI 診断の子プロセス実行', () => {
   it.each([
@@ -33,7 +33,7 @@ describe('CI 診断の子プロセス実行', () => {
     ['failure', report('failed'), 'valid', '失敗', 0, 1],
     ['skipped', undefined, 'missing', '未実行', 0, 0],
     ['failure', '{invalid', 'invalid', '失敗', 0, 0],
-  ] as const)('[REQ-283][REQ-284][REQ-285] %s と %s の診断を元の結果と区別して保存する', (outcome, raw, reportState, label, passed, failed) => {
+  ] as const)('[REQ-289][REQ-290][REQ-291] %s と %s の診断を元の結果と区別して保存する', (outcome, raw, reportState, label, passed, failed) => {
     const cwd = fixture();
     if (raw !== undefined) writeFileSync(join(cwd, '.loomake/test-report.json'), raw);
     writeFileSync(join(cwd, '.loomake/unrelated.txt'), '保存しない');
@@ -54,7 +54,7 @@ describe('CI 診断の子プロセス実行', () => {
     expect(existsSync(join(directory, 'unrelated.txt'))).toBe(false);
   }, 20_000);
 
-  it('[REQ-285] 要約の追記が失敗しても生成済みの診断ファイルを残し、終了コードは非ゼロになる', () => {
+  it('[REQ-291] 要約の追記が失敗しても生成済みの診断ファイルを残し、終了コードは非ゼロになる', () => {
     const cwd = fixture();
     writeFileSync(join(cwd, '.loomake/test-report.json'), report('failed'));
     const result = invoke(cwd, 'failure', { GITHUB_STEP_SUMMARY: cwd });

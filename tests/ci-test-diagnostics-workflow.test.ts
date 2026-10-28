@@ -22,7 +22,7 @@ const ready = (docs = 'false', checkout = 'success', node = 'success') => ({
 });
 
 describe('quality の診断保存', () => {
-  it('[REQ-283][REQ-285] テスト失敗後と診断生成失敗後も保存し、未準備・文書だけ・キャンセルを除く', () => {
+  it('[REQ-289][REQ-291] テスト失敗後と診断生成失敗後も保存し、未準備・文書だけ・キャンセルを除く', () => {
     const generate = stepById('diagnostics');
     const upload = stepById('diagnostics_upload');
     for (const step of [generate, upload]) {
@@ -45,7 +45,7 @@ describe('quality の診断保存', () => {
     expect(workflow.slice(workflow.indexOf('\n  node20:'))).not.toContain('ci-test-diagnostics');
   });
 
-  it('[REQ-283][REQ-285] 固定SHAで3ファイルだけを7日保存し、生成ステップの出力がなくてもuploadできる', () => {
+  it('[REQ-289][REQ-291] 固定SHAで3ファイルだけを7日保存し、生成ステップの出力がなくてもuploadできる', () => {
     const upload = stepById('diagnostics_upload');
     expect(upload).toContain('actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02');
     expect(upload).toContain('retention-days: 7');
@@ -64,7 +64,7 @@ describe('quality の診断保存', () => {
     expect(new Set(names).size).toBe(names.length);
   });
 
-  it('[REQ-283] OS・シャード・選択したテストステップの結果を診断へ渡す', () => {
+  it('[REQ-289] OS・シャード・選択したテストステップの結果を診断へ渡す', () => {
     const generate = stepById('diagnostics');
     expect(generate).toContain('run: node scripts/ci-test-diagnostics.mjs');
     expect(generate).toContain('CI_TEST_OS: ${{ matrix.os }}');

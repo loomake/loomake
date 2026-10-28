@@ -257,7 +257,7 @@ describe('CI', () => {
     const conditions = [...quality.matchAll(/^ {6}(?:- | {2})if: (.*)$/gm)].map((match) => match[1]);
     expect(conditions.filter((condition) => condition.includes('matrix'))).toEqual([`matrix.shard && ${docsOnly}`, `\${{ !matrix.shard && ${docsOnly} }}`]);
     const diagnostics = "${{ !cancelled() && steps.checkout.outcome == 'success' && steps.node.outcome == 'success' && steps.changes.outputs.docs_only != 'true' }}";
-    // 品質コマンドの条件は維持し、失敗後にも動く診断の2ステップだけを追加する（REQ-285）
+    // 品質コマンドの条件は維持し、失敗後にも動く診断の2ステップだけを追加する（REQ-291）
     expect(conditions.filter((condition) => !condition.includes('matrix'))).toEqual([
       ...Array(5).fill(docsOnly), diagnostics, diagnostics, ...Array(3).fill(docsOnly),
     ]);

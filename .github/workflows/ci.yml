@@ -74,7 +74,7 @@ jobs:
       - if: ${{ !matrix.shard && steps.changes.outputs.docs_only != 'true' }}
         run: pnpm test --coverage
         id: test_all
-      # テスト失敗後も診断を保存する。生成が失敗しても、別ステップの upload は試みる（REQ-283〜285）
+      # テスト失敗後も診断を保存する。生成が失敗しても、別ステップの upload は試みる（REQ-289〜291）
       - id: diagnostics
         if: ${{ !cancelled() && steps.checkout.outcome == 'success' && steps.node.outcome == 'success' && steps.changes.outputs.docs_only != 'true' }}
         run: node scripts/ci-test-diagnostics.mjs

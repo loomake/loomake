@@ -19,14 +19,14 @@ afterEach(() => { for (const directory of directories.splice(0)) rmSync(director
 const env = { GITHUB_SERVER_URL: 'https://github.com', GITHUB_REPOSITORY: 'loomake/loomake', GITHUB_RUN_ID: '123', GITHUB_RUN_ATTEMPT: '2', RUNNER_OS: 'Windows', CI_TEST_OS: 'windows-latest', CI_TEST_SHARD: '1/2', CI_TEST_OUTCOME: 'failure' };
 
 describe('CI のテスト診断', () => {
-  it('[REQ-283] run・試行・OS・シャードごとに artifact 名を分ける', () => {
+  it('[REQ-289] run・試行・OS・シャードごとに artifact 名を分ける', () => {
     expect(artifactName(env)).toBe('ci-tests-123-2-windows-latest-1-2');
     const variants = [env, { ...env, CI_TEST_SHARD: '2/2' }, { ...env, GITHUB_RUN_ATTEMPT: '3' }, { ...env, CI_TEST_OS: 'ubuntu-latest' }, { ...env, GITHUB_RUN_ID: '124' }];
     expect(new Set(variants.map(artifactName)).size).toBe(5);
     expect(artifactName({ ...env, CI_TEST_SHARD: '' })).toMatch(/-all$/);
   });
 
-  it('[REQ-283] 実際の checkout SHA と Node 版を記録し、元レポートだけを写す', () => {
+  it('[REQ-289] 実際の checkout SHA と Node 版を記録し、元レポートだけを写す', () => {
     const cwd = fixture();
     const raw = '{"testResults": []}\n';
     writeFileSync(join(cwd, '.loomake/test-report.json'), raw);
@@ -45,7 +45,7 @@ const report = (tests: object[], file = 'tests/example.test.ts') => JSON.stringi
 const metadata = { testOutcome: 'failure', runUrl: 'https://github.com/loomake/loomake/actions/runs/123', runAttempt: '2', checkoutSha: 'abc', os: 'Windows', node: 'v24.0.0', shard: '1/2' };
 
 describe('診断レポートの要約', () => {
-  it('[REQ-284] 全結果を状態別に数え、失敗の完全名と時間順を表示する', () => {
+  it('[REQ-290] 全結果を状態別に数え、失敗の完全名と時間順を表示する', () => {
     const parsed = parseTestReport(report([
       { fullName: 'suite succeeds', status: 'passed', duration: 20 },
       { fullName: 'suite fails', status: 'failed', duration: 120, failureMessages: ['要約には載せない失敗メッセージ'] },
@@ -68,7 +68,7 @@ describe('診断レポートの要約', () => {
     expect(slow).not.toContain('suite pending');
   });
 
-  it('[REQ-284] 欠損・不正なJSONや構造・空の結果を成功として表示しない', () => {
+  it('[REQ-290] 欠損・不正なJSONや構造・空の結果を成功として表示しない', () => {
     for (const [raw, state] of [[undefined, 'missing'], ['{', 'invalid'], ['null', 'invalid'], ['{}', 'invalid'], ['{"testResults":[{}]}', 'invalid'], [report([{ fullName: 'bad', status: 'unknown' }]), 'invalid'], [report([{ fullName: 'bad', status: 'passed', duration: -1 }]), 'invalid'], [report([{ status: 'passed' }]), 'invalid'], ['{"testResults":[]}', 'empty'], [report([]), 'empty']] as const) {
       const parsed = parseTestReport(raw);
       expect(parsed.reportState).toBe(state);
@@ -81,7 +81,7 @@ describe('診断レポートの要約', () => {
     expect(renderSummary({ ...metadata, testOutcome: 'not_run' }, parseTestReport(report([{ fullName: 'a', status: 'passed' }])))).toContain('テストステップ：未実行');
   });
 
-  it('[REQ-284] 失敗20件・時間上位10件に制限し、省略しても全件を集計する', () => {
+  it('[REQ-290] 失敗20件・時間上位10件に制限し、省略しても全件を集計する', () => {
     const parsed = parseTestReport(report(Array.from({ length: 25 }, (_, i) => ({ fullName: `test ${i}`, status: 'failed', duration: i }))));
     const summary = renderSummary(metadata, parsed);
     const failed = summary.split('### 失敗したテスト')[1]!.split('### 所要時間')[0]!;
@@ -95,7 +95,7 @@ describe('診断レポートの要約', () => {
     expect(slow).not.toContain('test 14：14 ms');
   });
 
-  it('[REQ-284] 名前を200文字で省略し、Markdown・HTML・改行をエスケープし、全体を32KiB以内に収める', () => {
+  it('[REQ-290] 名前を200文字で省略し、Markdown・HTML・改行をエスケープし、全体を32KiB以内に収める', () => {
     const dangerous = '[link](https://example.invalid) | <script> & `code`\n# title \\ **bold**';
     const escaped = escapeSummaryText(dangerous);
     expect(escaped).not.toMatch(/[<\n|`*]/);
@@ -112,7 +112,7 @@ describe('診断レポートの要約', () => {
     expect(parsed.counts.failed).toBe(100);
   });
 
-  it('[REQ-283][REQ-284] metadata にレポート状態と全件集計を書き、要約と不正レポートの写しも保存する', () => {
+  it('[REQ-289][REQ-290] metadata にレポート状態と全件集計を書き、要約と不正レポートの写しも保存する', () => {
     const cwd = fixture();
     const path = join(cwd, '.loomake/test-report.json');
     writeFileSync(path, report([{ fullName: 'suite test', status: 'passed', duration: 0 }]));
