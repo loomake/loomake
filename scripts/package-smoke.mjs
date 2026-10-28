@@ -1,6 +1,6 @@
 // prepareは開発用Node、checkは配布物の対応Nodeで実行する。
 import assert from 'node:assert/strict';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -38,6 +38,16 @@ export function copyFixture(source, target) {
 export function buildAndPack(destination) {
   run('pnpm', ['-r', 'build'], root);
   for (const name of packages) run('pnpm', ['pack', '--pack-destination', destination, '--silent'], join(root, 'packages', name));
+}
+
+/** パッケージの外部の実行時依存（core の zod など）を、複製先の node_modules から実体を指すリンクで読めるようにする。 */
+export function linkRuntimeDependencies(packageDir, target) {
+  for (const dep of Object.keys(json(join(packageDir, 'package.json')).dependencies ?? {})) {
+    if (dep.startsWith('@loomake/') || dep === 'loomake') continue;
+    const link = join(target, 'node_modules', dep);
+    mkdirSync(dirname(link), { recursive: true });
+    symlinkSync(realpathSync(join(packageDir, 'node_modules', dep)), link, 'junction');
+  }
 }
 
 /** 既存のディレクトリを上書きせず、配布物と独立した利用先を準備する。 */

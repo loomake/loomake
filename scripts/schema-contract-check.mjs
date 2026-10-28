@@ -1,11 +1,11 @@
 // 現在のスキーマ検査をコピーし、破壊的な変更と版の変更を実際に与える。
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { copyFixture } from './package-smoke.mjs';
+import { copyFixture, linkRuntimeDependencies } from './package-smoke.mjs';
 import { classifyMutation, mutateOnce } from './domain-mutations.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -43,8 +43,8 @@ export function checkSchemaContract(destination) {
       copyFixture(join(core, 'test/fixtures/schema-history'), join(trial, 'test/fixtures/schema-history'));
       writeFileSync(join(trial, 'test/schema.test.ts'), readFileSync(join(core, 'test/schema.test.ts')));
       writeFileSync(join(trial, 'package.json'), readFileSync(join(core, 'package.json')));
-      // 複製したソースが core の実行時依存（zod）を読めるように、core の node_modules を指す
-      symlinkSync(join(core, 'node_modules'), join(trial, 'node_modules'), 'junction');
+      // 複製したソースが core の実行時依存（zod）を読めるようにする
+      linkRuntimeDependencies(core, trial);
       const schemaPath = join(trial, 'schema/verify-result.schema.json');
       const schema = JSON.parse(readFileSync(schemaPath, 'utf8'));
       if (entry.kind === 'remove') { schema.required = schema.required.filter((name) => name !== 'ok'); delete schema.properties.ok; }

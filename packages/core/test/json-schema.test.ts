@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cpSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -13,7 +13,8 @@ describe('JSON Schema の書き出し', () => {
     const rendered = renderJsonSchemas();
     expect(Object.keys(rendered).sort()).toEqual(readdirSync(schemaDir).filter((f) => f.endsWith('.json')).sort());
     for (const [file, text] of Object.entries(rendered)) {
-      expect(readFileSync(join(schemaDir, file), 'utf8'), `schema/${file} が Zod スキーマと違います。pnpm --filter @loomake/core schema:write で書き出してください`).toBe(text);
+      // Windows の checkout では改行が CRLF になりうるので、改行をそろえて比べる
+      expect(readFileSync(join(schemaDir, file), 'utf8').replace(/\r\n/g, '\n'), `schema/${file} が Zod スキーマと違います。pnpm --filter @loomake/core schema:write で書き出してください`).toBe(text);
     }
   });
 
@@ -35,7 +36,8 @@ describe('JSON Schema の書き出し', () => {
       const build = spawnSync(process.execPath, [join(pkgDir, '..', '..', 'node_modules', 'typescript', 'bin', 'tsc'), '-p', join(pkgDir, 'tsconfig.build.json'), '--outDir', join(work, 'dist')], { encoding: 'utf8' });
       expect(build.status, build.stdout + build.stderr).toBe(0);
       cpSync(join(pkgDir, 'scripts'), join(work, 'scripts'), { recursive: true });
-      symlinkSync(join(pkgDir, 'node_modules'), join(work, 'node_modules'), 'junction');
+      mkdirSync(join(work, 'node_modules'));
+      symlinkSync(realpathSync(join(pkgDir, 'node_modules', 'zod')), join(work, 'node_modules', 'zod'), 'junction');
       cpSync(join(pkgDir, 'package.json'), join(work, 'package.json'));
       cpSync(schemaDir, join(work, 'schema'), { recursive: true });
       rmSync(join(work, 'schema', 'verify-result.schema.json'));

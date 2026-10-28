@@ -8,3 +8,8 @@
 - 気づいたこと：この環境では `import('zod')` に約 300ms かかり、CLI の起動（`--version`）の中央値は約 430ms だった。REQ-050 の性能の試験は、余裕が少なくなっている。
 - 残っている確認事項・仮定：Q-01（要件 ID の振り方）、Q-02（quality-report の項目が要件定義で決まっていない）、Q-03（trace.md・spec・tasks の `version` をどこに持つか）。どれもこの change ではブロッキングにしていないが、Q-02 と Q-03 は後続の change ではブロッキングになる。A-01（JSON Schema で未知のフィールドを許し、版は 1.0.0 のまま）、A-02（書き出しの検査は新しい CI の手順を足さず、テストで行う）は承認待ち。
 - 次にやること：PR の CI を確かめる。W1-1 の残り（quality.yaml のスキーマ、trace.md・spec・tasks のスキーマと版、quality-report のスキーマ、証跡とレポートの版の移行）を、後続の change で進める。
+
+## PR #113 の Windows の CI への対応
+
+- やったこと：Windows の quality ジョブで落ちた 4 件を直した（core-zod-verify-result 2.3 の追従）。(1) checkout で改行が CRLF になり、書き出した JSON Schema との比較が合わなかったので、改行をそろえて比べるようにした。(2) 複製したソースから `zod` を読めなかったので、`scripts/package-smoke.mjs` に `linkRuntimeDependencies` を足した。`node_modules` 全体ではなく、`zod` の実体を指すリンクを作る。スキーマ契約の検査、ドメインテストを壊す検査、書き出しのコマンドの試験で使う。
+- verify の結果：lint・typecheck と、変えた試験（78 件）がローカルで通った。Windows での結果は CI で確かめる。
