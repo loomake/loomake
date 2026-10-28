@@ -68,8 +68,7 @@ describe('同期外部操作の監視', () => {
       withProcessBudget({ timeoutMs: 5000 }, async () => { await new Promise((r) => setTimeout(r, 130)); expect(call('console.log("ok")').stdout).toBe('ok\n'); }),
     ]);
   });
-  // Issue #5。PR #22（stop-children-when-supervisor-dies）のマージで外す。それまでは Windows でだけ止める
-  it.runIf(process.platform !== 'win32')('[REQ-181][REQ-182] 中断後に同じ共有予算で別の操作を始めない', () => fixture((dir) => {
+  it('[REQ-181][REQ-182] 中断後に同じ共有予算で別の操作を始めない', () => fixture((dir) => {
     const file = join(dir, 'after');
     withProcessBudget({ timeoutMs: 3000 }, () => {
       expect(() => call("process.kill(process.ppid,'SIGINT');setInterval(()=>{},100)")).toThrow('中断');
@@ -86,13 +85,41 @@ describe('同期外部操作の監視', () => {
     expect(alive(Number(readFileSync(file, 'utf8')))).toBe(false);
     expect(Date.now() - start).toBeLessThan(3000);
   }));
-  // Issue #5。PR #22（stop-children-when-supervisor-dies）のマージで外す。それまでは Windows でだけ止める
-  it.runIf(process.platform !== 'win32')('[REQ-181] 監視役へのSIGINTを中断として返し、子を止める', () => fixture((dir) => {
+  it('[REQ-181] 監視役へのSIGINTを中断として返し、子を止める', () => fixture((dir) => {
     const file = join(dir, 'pid');
     const code = `require('node:fs').writeFileSync(${JSON.stringify(file)},String(process.pid)); process.on('SIGTERM',()=>{});process.kill(process.ppid,'SIGINT');setInterval(()=>{},100)`;
     try { call(code); expect.fail('中断される'); }
-    catch (error) { expect(error).toBeInstanceOf(ProcessLimitError); expect((error as ProcessLimitError).kind).toBe('interrupted'); }
+    catch (error) {
+      expect(error).toBeInstanceOf(ProcessLimitError);
+      expect((error as ProcessLimitError).kind).toBe('interrupted');
+      // POSIX では監視役が SIGINT を受けて結果を書くので、利用者の中断として理由を持たない。
+      // Windows では SIGINT が強制終了になり、監視役が結果を書かずに終わった理由を持つ（REQ-250）
+      if (process.platform !== 'win32') expect((error as ProcessLimitError).reason).toBeUndefined();
+    }
     expect(alive(Number(readFileSync(file, 'utf8')))).toBe(false);
+  }));
+  it('[REQ-181][REQ-250] 監視役が結果を書かずに終わったら、子孫を止め、理由を含む中断として返し、同じ予算で次を始めない', () => fixture((dir) => {
+    const parentFile = join(dir, 'parent');
+    const leafFile = join(dir, 'leaf');
+    const after = join(dir, 'after');
+    const leaf = `require('node:fs').writeFileSync(${JSON.stringify(leafFile)},String(process.pid));setInterval(()=>{},100)`;
+    // 孫が起動したのを確かめてから、監視役を SIGKILL で止める。監視役は結果を書けない
+    const code = `const fs=require('node:fs');fs.writeFileSync(${JSON.stringify(parentFile)},String(process.pid));`
+      + `require('node:child_process').spawn(process.execPath,['-e',${JSON.stringify(leaf)}],{stdio:'ignore'});`
+      + `const timer=setInterval(()=>{if(fs.existsSync(${JSON.stringify(leafFile)})){clearInterval(timer);process.kill(process.ppid,'SIGKILL');setInterval(()=>{},100);}},10)`;
+    withProcessBudget({ timeoutMs: 20_000 }, () => {
+      let error: unknown;
+      try { call(code); } catch (e) { error = e; }
+      expect(error).toBeInstanceOf(ProcessLimitError);
+      expect(error).not.toBeInstanceOf(UsageError);
+      expect((error as ProcessLimitError).kind).toBe('interrupted');
+      expect((error as ProcessLimitError).reason).toContain('監視役が結果を書かずに終了しました');
+      expect(String(error)).toContain('中断');
+      expect(alive(Number(readFileSync(parentFile, 'utf8')))).toBe(false);
+      expect(alive(Number(readFileSync(leafFile, 'utf8')))).toBe(false);
+      expect(() => call(`require('node:fs').writeFileSync(${JSON.stringify(after)},'x')`)).toThrow('中断');
+      expect(existsSync(after)).toBe(false);
+    });
   }));
 });
 

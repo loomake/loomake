@@ -1,7 +1,7 @@
 import { existsSync, realpathSync, rmSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { hasProcessBudget, ProcessLimitError, runExternal } from '../runtime/process.js';
+import { hasProcessBudget, holderWaitTime, ProcessLimitError, runExternal } from '../runtime/process.js';
 import {
   LEDGER_STATES,
   VERIFY_RESULT_SCHEMA_VERSION,
@@ -300,12 +300,14 @@ function runCommands(root: string, config: LoomakeConfig, skip: boolean, record:
     record('品質コマンド', 'skip', COMMANDS_SKIPPED);
     return;
   }
-  const deadline = timeoutMs === undefined ? undefined : Date.now() + timeoutMs;
+  // Windows の保持役の準備を待った時間は、品質コマンドの合計の予算に含めない（REQ-257）
+  const now = () => Date.now() - holderWaitTime();
+  const deadline = timeoutMs === undefined ? undefined : now() + timeoutMs;
   const names = [...COMMAND_ORDER.filter((n) => n in config.commands), ...Object.keys(config.commands).filter((n) => !COMMAND_ORDER.includes(n))];
   for (const name of names) {
     const cmd = config.commands[name];
     if (!cmd) continue;
-    const left = deadline === undefined ? undefined : deadline - Date.now();
+    const left = deadline === undefined ? undefined : deadline - now();
     if (left !== undefined && left <= 0) {
       record(`command: ${name}`, 'fail', TIMED_OUT);
       continue;
@@ -318,7 +320,7 @@ function runCommands(root: string, config: LoomakeConfig, skip: boolean, record:
         : runExternal(cmd, [], { cwd: root, shell: true, timeoutMs: left, qualityCommand: true, maxBuffer: MAX_BUFFER });
     } catch (error) {
       if (!(error instanceof ProcessLimitError)) throw error;
-      record(`command: ${name}`, 'fail', error.kind === 'timeout' ? TIMED_OUT : error.kind === 'interrupted' ? INTERRUPTED : error.message);
+      record(`command: ${name}`, 'fail', error.kind === 'timeout' ? TIMED_OUT : error.kind === 'interrupted' ? (error.reason ? `${INTERRUPTED}（${error.reason}）` : INTERRUPTED) : error.message);
       // 共有予算では後続の外部操作も起動せず拒否し、各項目に未実行の理由を残す。
       if (error.kind === 'interrupted' && !hasProcessBudget()) return;
       continue;

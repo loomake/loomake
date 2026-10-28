@@ -1,9 +1,10 @@
 import { appendFileSync, chmodSync, existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { describe, expect, it, vi } from 'vitest';
 import { RuntimeFailure, UsageError, runVerify } from '@loomake/kit';
 import { main } from '../../cli/src/main.js';
-import { withProcessBudget } from '../../kit/src/runtime/process.js';
+import { holderWaitTime, withProcessBudget } from '../../kit/src/runtime/process.js';
 import { runRecord } from '@loomake/trace';
 import { runRun } from '@loomake/runner';
 import { makeRepo, CHANGE, fakeCli, stallOf, type FakeCli, type FakeCliEvent, type Repo } from './helpers.js';
@@ -97,17 +98,21 @@ describe('runから外部操作までの期限', () => {
   it('[REQ-182][REQ-240] 準備で使った時間を含めてエンジンの期限を制限する', async () => {
     // 準備の gh auth status を PREP_DELAY_MS だけ遅らせ、エンジンに予算を最初から与え直すと上限を超えるようにする。
     // 予算は、Windows の遅い準備（約 1.4 秒）と遅らせた分を足してもエンジンを呼べる長さにする。
-    // 猶予は元の試験（予算 1200ms・上限 2500ms）と同じ 1300ms にし、遅らせる時間をそれより長くする
+    // 猶予は元の試験（予算 1200ms・上限 2500ms）と同じ 1300ms にし、遅らせる時間をそれより長くする。
+    // Windows では、期限で git を止めるのに taskkill を使うので、止まるまでに 2 秒近くかかることがある（PR #43 の run 40612195551 で 1983ms）。
+    // そこで Windows では猶予を 3000ms にし、遅らせる時間をそれより長い 4000ms にして、準備の分を引き忘れたら上限を超えることを保つ
     const BUDGET_MS = 8000;
-    const PREP_DELAY_MS = 2000;
-    const ENGINE_GRACE_MS = 1300;
+    const PREP_DELAY_MS = process.platform === 'win32' ? 4000 : 2000;
+    const ENGINE_GRACE_MS = process.platform === 'win32' ? 3000 : 1300;
     const repo = makeRepo();
     try {
       repo.plan([{ sleepMs: 30_000, write: { 'late.txt': '遅い変更' } }]);
       const cli = fakeCli(repo, 'gh', { when: "args[0]==='auth'", delayMs: PREP_DELAY_MS });
       const start = Date.now();
+      const waitedBefore = holderWaitTime();
       const result = await withProcessBudget({ timeoutMs: BUDGET_MS }, () => run(repo));
-      const elapsed = Date.now() - start;
+      // Windows の保持役の準備を待った時間は予算に含めない（REQ-257）ので、経過時間からも除く
+      const elapsed = Date.now() - start - (holderWaitTime() - waitedBefore);
       const context = diagnosticContext(repo, { elapsed, stdout: result.stdout }, cli);
       // 準備を遅らせ、転送が成功し、エンジンまで届いた
       const events = cli.events();
@@ -187,7 +192,10 @@ describe('runから外部操作までの期限', () => {
       // untilDeadline の 2 つは、止まる手前の通常の git・gh が負荷で遅れても 1 操作の期限に当たらないよう余裕を持たせ、
       // 止まったのが共有の期限であることは所要時間の下限で確かめる。
       const runStarted = Date.now();
-      const result = await withProcessBudget(untilDeadline ? { timeoutMs: SHARED_DEADLINE_MS, maxOperationMs: UNTIL_DEADLINE_OPERATION_MS } : { timeoutMs: 20_000, maxOperationMs: STAGE_OPERATION_MS }, () => run(repo));
+      // auth・list は 1 操作の期限で止まることを確かめる。run の予算は狙った段階に届くための長さで、Windows では外部操作ごとに保持役へ保持を頼む分だけ
+      // 遅くなり、20 秒では list に届く前に尽きることがあった（run 40634806172 の再実行）。そこで Windows では 35 秒にする
+      const stageBudgetMs = process.platform === 'win32' ? 35_000 : 20_000;
+      const result = await withProcessBudget(untilDeadline ? { timeoutMs: SHARED_DEADLINE_MS, maxOperationMs: UNTIL_DEADLINE_OPERATION_MS } : { timeoutMs: stageBudgetMs, maxOperationMs: STAGE_OPERATION_MS }, () => run(repo));
       const endedAt = Date.now();
       const runElapsed = endedAt - runStarted;
       diagnosticEvent(repo, 'run-end', { stage, code: result.code, elapsedMs: Date.now() - started });
@@ -224,9 +232,55 @@ describe('runから外部操作までの期限', () => {
   }, process.platform === 'win32' ? 120_000 : 60_000);
 });
 
+// 品質コマンドから、祖先をたどって外部操作の監視役を探し、SIGINT を送る。送った先を interrupted.json に書く。
+// POSIX の ps には監視役の process.title が、Windows の CommandLine には監視役のスクリプトのパスが出る
+const PS_LIST = 'Get-CimInstance Win32_Process | ForEach-Object { "{0}`t{1}`t{2}" -f $_.ProcessId, $_.ParentProcessId, $_.CommandLine }';
+const SEND_SIGINT_TO_SUPERVISOR = `const { execFileSync } = require('node:child_process');
+const fs = require('node:fs');
+const win = process.platform === 'win32';
+const listing = win
+  ? execFileSync('powershell', ['-NoProfile', '-NonInteractive', '-Command', ${JSON.stringify(PS_LIST)}], { encoding: 'utf8', maxBuffer: 16 << 20, windowsHide: true })
+  : execFileSync('ps', ['-axo', 'pid=,ppid=,command='], { encoding: 'utf8', maxBuffer: 16 << 20 });
+const table = new Map();
+for (const line of listing.split(/\\r?\\n/)) {
+  const m = win ? line.match(/^(\\d+)\\t(\\d+)\\t(.*)$/) : line.match(/^\\s*(\\d+)\\s+(\\d+)\\s(.*)$/);
+  if (m) table.set(Number(m[1]), { ppid: Number(m[2]), command: m[3] });
+}
+let pid = process.ppid;
+let found;
+for (let i = 0; i < 10 && table.has(pid); i++) {
+  const entry = table.get(pid);
+  if (/[\\\\/]supervisor\\.cjs|^loomake: command supervisor/.test(entry.command)) { found = { pid, command: entry.command, self: process.pid }; break; }
+  pid = entry.ppid;
+}
+if (found) {
+  fs.writeFileSync('interrupted.json', JSON.stringify(found));
+  process.kill(found.pid, 'SIGINT');
+  setInterval(() => {}, 100);
+} else {
+  fs.writeFileSync('interrupted.json', JSON.stringify({ error: '祖先に監視役が見つかりません', ppid: process.ppid }));
+  process.exit(1);
+}
+`;
+
+function alive(pid: number) {
+  try {
+    process.kill(pid, 0);
+    if (process.platform === 'linux' && /\) Z /.test(readFileSync(`/proc/${pid}/stat`, 'utf8'))) return false;
+    return true;
+  } catch { return false; }
+}
+
+/** コマンドラインに word を含む、生きているプロセスの一覧（後片付けに失敗したときの手がかり） */
+function leftovers(word: string): string {
+  const listing = process.platform === 'win32'
+    ? spawnSync('powershell', ['-NoProfile', '-NonInteractive', '-Command', PS_LIST], { encoding: 'utf8', windowsHide: true }).stdout
+    : spawnSync('ps', ['-axo', 'pid=,ppid=,command='], { encoding: 'utf8' }).stdout;
+  return (listing ?? '').split(/\r?\n/).filter((line) => line.includes(word) && !line.includes('powershell')).join('\n') || 'なし';
+}
+
 describe('verifyとtraceの期限', () => {
-  // Issue #5。PR #22（stop-children-when-supervisor-dies）のマージで外す。それまでは Windows でだけ止める
-  it.runIf(process.platform !== 'win32')('[REQ-183][REQ-240] traceのGitも共有予算で止める', () => {
+  it('[REQ-183][REQ-240] traceのGitも共有予算で止める', () => {
     const repo = makeRepo();
     const cli = fakeCli(repo, 'git', { when: "args[0]==='status'", stallMs: STALL_MS });
     const restoreEnv = useRepoEnv(repo);
@@ -253,19 +307,30 @@ describe('verifyとtraceの期限', () => {
       expect(result.results.find((r) => r.check === 'openspec validate')).toMatchObject({ status: 'fail', detail: expect.stringContaining('実行時間の上限') });
     } finally { restoreEnv(); repo.cleanup(); }
   });
-  // Issue #5。PR #22（stop-children-when-supervisor-dies）のマージで外す。それまでは Windows でだけ止める
-  it.runIf(process.platform !== 'win32')('[REQ-183] 品質コマンドの中断後に次のコマンドを実行しない', () => {
+  it('[REQ-183][REQ-250] 品質コマンドの中断後に次のコマンドを実行しない', () => {
     const repo = makeRepo();
+    let failure: unknown;
     try {
-      repo.write('loomake.config.json', JSON.stringify({ openspecValidate: false, commands: { lint: `node -e "process.kill(process.ppid,'SIGINT');setInterval(()=>{},100)"`, test: `node -e "require('node:fs').writeFileSync('after','x')"` } }));
-      // shellの親ではなく監視役へ送るため、shellからexecでNodeへ置き換える。
-      const config = JSON.parse(readFileSync(join(repo.root, 'loomake.config.json'), 'utf8')); config.commands.lint = 'exec ' + config.commands.lint;
-      repo.write('loomake.config.json', JSON.stringify(config));
-      const result = withProcessBudget({ timeoutMs: 3000 }, () => runVerify({ root: repo.root }));
+      // shell の親ではなく監視役へ送る。POSIX の exec は cmd.exe にないので、祖先をたどって監視役を見つけ、送った先を記録する。
+      // Windows で別のプロセスから送る SIGINT は監視役の強制終了になり、結果を書かずに終わった監視役の扱い（REQ-250）を通る
+      repo.write('send-sigint.cjs', SEND_SIGINT_TO_SUPERVISOR);
+      repo.write('loomake.config.json', JSON.stringify({ openspecValidate: false, commands: { lint: 'node send-sigint.cjs', test: `node -e "require('node:fs').writeFileSync('after','x')"` } }));
+      // 祖先の一覧を Windows の PowerShell で読むと数秒かかるので、期限は中断より十分長くする。期限で止まると「中断」を含まず、この試験は落ちる
+      const result = withProcessBudget({ timeoutMs: 30_000 }, () => runVerify({ root: repo.root }));
+      const sent = JSON.parse(readFileSync(join(repo.root, 'interrupted.json'), 'utf8')) as { pid?: number; command?: string; self?: number; error?: string };
+      expect(sent).toMatchObject({ command: expect.stringMatching(/[\\/]supervisor\.cjs|^loomake: command supervisor/) });
       expect(result.results.find((r) => r.check === 'command: lint')).toMatchObject({ status: 'fail', detail: expect.stringContaining('中断') });
       expect(result.results.find((r) => r.check === 'command: test')).toMatchObject({ status: 'fail', detail: expect.stringContaining('中断') });
       expect(existsSync(join(repo.root, 'after'))).toBe(false);
-    } finally { repo.cleanup(); }
+      // SIGINT を送った品質コマンド自身も、止めてから返す（REQ-181・REQ-250）
+      expect(alive(sent.self!), JSON.stringify(sent)).toBe(false);
+    } catch (error) {
+      failure = error;
+    }
+    // 後片付けの失敗で、先の検査の失敗を隠さない。残ったプロセスがあれば一緒に示す
+    try { repo.cleanup(); }
+    catch (error) { throw new Error(`後片付けに失敗しました：${String(error)}\n先の失敗：${String(failure)}\n残ったプロセス：${leftovers('send-sigint')}`, { cause: error }); }
+    if (failure !== undefined) throw failure as Error;
   });
   it('[REQ-183] 明示したtimeoutMsがなくても共有期限で品質コマンドを止める', () => {
     const repo = makeRepo();
@@ -309,15 +374,20 @@ describe('実行時の失敗の終了コード', () => {
 
 describe('フックを動かす git の操作の期限', () => {
   it('[REQ-182] 1 操作の期限より遅い pre-commit・pre-push のフックがあっても、run の残り時間の中でコミット・push・PR の作成まで進む', async () => {
+    // Windows では外部操作ごとに保持役へ保持を頼むので、通常の git も 500ms を超えることがある（run 40630863426）。
+    // そこで Windows では 1 操作の期限を 2 秒、フックを 3 秒、run の予算を 40 秒にし、フックが 1 操作の期限より遅いことは保つ
+    const win = process.platform === 'win32';
+    const operationMs = win ? 2_000 : OPERATION_MS;
+    const hookSeconds = win ? 3 : 1;
     const repo = makeRepo();
     try {
       for (const name of ['pre-commit', 'pre-push']) {
         const hook = join(repo.root, '.git', 'hooks', name);
-        writeFileSync(hook, '#!/bin/sh\nsleep 1\n');
+        writeFileSync(hook, `#!/bin/sh\nsleep ${hookSeconds}\n`);
         chmodSync(hook, 0o755);
       }
       repo.plan([{ write: { 'impl.txt': '実装\n' } }, {}]);
-      const r = await budget(() => run(repo));
+      const r = await withProcessBudget({ timeoutMs: win ? 40_000 : 20_000, maxOperationMs: operationMs }, () => run(repo));
       expect(r.code, r.stdout).toBe(0);
       expect(summary(repo)).toMatchObject({ status: 'completed', remainingTasks: [] });
       expect(repo.prs()).toHaveLength(1);
