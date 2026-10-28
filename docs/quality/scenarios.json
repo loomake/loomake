@@ -7408,12 +7408,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 変えたファイルがすべて文書なら、文書だけと判定する",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 文書だけの PR では docs_only=true を書く",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/monorepo.test.ts",
@@ -7450,12 +7450,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] main への push では、差分によらず文書だけと判定しない",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] main への push では docs_only=false を書く",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/monorepo.test.ts",
@@ -7476,12 +7476,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コードと配布する Markdown は文書として扱わない",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         }
       ]
     },
@@ -7497,12 +7497,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コードと配布する Markdown は文書として扱わない",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         }
       ]
     },
@@ -7518,12 +7518,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 設定と実行用のファイルは、文書の置き場所にあっても",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         }
       ]
     },
@@ -7539,12 +7539,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] tests/ の下の試験用データは",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         }
       ]
     },
@@ -7560,7 +7560,7 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 判定のスクリプトとワークフローを変えた PR は、文書だけと判定しない",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         }
       ]
     },
@@ -7576,7 +7576,7 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 設定と実行用のファイルは、文書の置き場所にあっても",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         }
       ]
     },
@@ -7592,12 +7592,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 前のコミットでコードを変えた PR では",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] ベースと同じ名前の参照",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         }
       ]
     },
@@ -7613,12 +7613,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 名前を変えたファイルは、変更前のパスも判定する",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 名前を変えたファイルは、変更前のパスが文書でなければ",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         }
       ]
     },
@@ -7634,17 +7634,17 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 差分を取れないときは、文書だけと判定しない",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 差分を解釈できないときは、文書だけと判定しない",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] 差分を取れないときは、失敗にせず docs_only=false を書く",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         }
       ]
     },
@@ -7660,12 +7660,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] PR のマージ先が main でないときは、差分によらず文書だけと判定しない",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] マージ先が main でない PR では docs_only=false を書く",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         }
       ]
     },
@@ -7681,7 +7681,7 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] main が進んだあとのマージコミットでは、PR の変更分だけで判定する",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         }
       ]
     },
@@ -7697,12 +7697,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コードのファイルを消した PR は、文書だけと判定しない",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "[REQ-270] コードのファイルを消した PR では docs_only=false を書く",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         }
       ]
     },
@@ -7766,17 +7766,17 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "Windows で使えない文字と制御文字を含む名前",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "Windows で扱えない名前（docs/a:b.md）",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "Windows で扱えない名前（改行を含む名前）",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         }
       ]
     },
@@ -7792,17 +7792,17 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "末尾がドットか空白の部分と、Windows の予約名",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "Windows で扱えない名前（予約名）",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "Windows で扱えない名前（末尾が空白の部分）",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         }
       ]
     },
@@ -7818,12 +7818,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "UTF-8 として正しくないバイトを含む名前",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "Windows で扱えない名前（UTF-8 として正しくない名前）",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         }
       ]
     },
@@ -7839,12 +7839,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "大文字と小文字の違いだけで同じになる別のパス",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "大文字と小文字だけが違う名前を足した PR",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         }
       ]
     },
@@ -7860,7 +7860,7 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "PR の先頭のツリーのパスを読めないとき",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         }
       ]
     },
@@ -7876,12 +7876,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "通常のファイルでないもの（シンボリックリンク）",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "変更前か変更後が通常のファイルでないもの",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         }
       ]
     },
@@ -7897,12 +7897,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "通常のファイルでないもの（サブモジュール）",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "変更前か変更後が通常のファイルでないもの",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         }
       ]
     },
@@ -7918,12 +7918,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "通常のファイルでないもの（モードだけの変更）",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "変更前か変更後が通常のファイルでないもの",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         }
       ]
     },
@@ -7939,12 +7939,12 @@
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "通常のファイルの文書を足し、変え、消した PR",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         },
         {
           "file": "tests/ci-docs-only.test.ts",
           "contains": "変更前か変更後が通常のファイルでないもの",
-          "sha256": "6e852f9e1789de37de5c340c8781c37af67219eaca5f07fdc902d0c831824720"
+          "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
         }
       ]
     }

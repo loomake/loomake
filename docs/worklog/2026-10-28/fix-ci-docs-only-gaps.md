@@ -25,3 +25,10 @@
 - verify の結果：`pnpm -s verify --change close-docs-only-gaps --done` は合格（警告なし）。lint・typecheck・test も通った。scenario-audit では、この change の Scenario 9 件が reviewed。
 - 残っている確認事項・仮定：なし。main には、archive した shorten-ci-wall-clock の Scenario のレビューが change 側の ID のまま残っている（spec 側の 22 件が unreviewed）。この PR の範囲外。
 - 次にやること：CI を見届ける。AI のレビューは 2 回済んだので、これ以上は頼まない。
+
+## Windows の CI での失敗への対応（21:00）
+
+- やったこと：`ci:all-os` の run 40681600243 で、quality (windows-latest, 1/2) の REQ-281 の試験 4 件が失敗した。Windows の git は既定（`core.protectNTFS=true`）で Windows で扱えない名前をコミットさせないので、試験の準備のコミットが失敗した（判定のスクリプトの失敗ではない）。一時的なリポジトリでだけ `core.protectNTFS=false` にした。確かめる内容は変えていない。scenarios.json の試験のハッシュを更新した。
+- verify の結果：`pnpm -s verify --change close-docs-only-gaps --done` は合格。scenario-audit では、この change の Scenario 9 件が reviewed。
+- 残っている確認事項・仮定：なし。
+- 次にやること：push のあとの 3 つの OS の CI を見届ける。
