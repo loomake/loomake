@@ -177,7 +177,9 @@ function Finish([string]$why) {
   exit 0
 }
 
-$server = NewServer
+# 待ち受けのインスタンスを 4 つ用意しておく。1 つだけだと、つないだ直後の監視役が次のインスタンスの用意を待たされ、外部操作ごとに対象の起動が遅れる
+$servers = New-Object Collections.ArrayList
+foreach ($i in 1..4) { [void]$servers.Add((NewServer)) }
 $sessions = New-Object Collections.ArrayList
 # 親が終わると stdin が閉じる（EOF）。そのときはすべての保持を解放して終わる
 $stdin = [Console]::OpenStandardInput()
@@ -187,11 +189,12 @@ $stdinTask = $stdin.ReadAsync($stdinBuf, 0, 256)
 [IO.File]::Move((Join-Path $dir 'ready.tmp'), (Join-Path $dir 'ready'))
 
 while ($true) {
-  if ($server.t.IsCompleted) {
-    $s = $server.s
+  for ($i = 0; $i -lt $servers.Count; $i++) {
+    if (-not $servers[$i].t.IsCompleted) { continue }
+    $s = $servers[$i].s
     $reader = New-Object IO.StreamReader($s)
     [void]$sessions.Add(@{ s = $s; r = $reader; t = $reader.ReadLineAsync() })
-    $server = NewServer
+    $servers[$i] = NewServer
   }
   foreach ($sess in @($sessions)) {
     if (-not $sess.t.IsCompleted) { continue }
@@ -230,5 +233,5 @@ while ($true) {
     if ($n -le 0) { Finish 'stdin-eof' }
     $stdinTask = $stdin.ReadAsync($stdinBuf, 0, 256)
   }
-  Start-Sleep -Milliseconds 5
+  Start-Sleep -Milliseconds 1
 }
