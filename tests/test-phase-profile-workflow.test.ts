@@ -38,6 +38,17 @@ describe('Windowsの区間計測workflow', () => {
     expect(workflow).not.toMatch(/continue-on-error|--retry|--repeat|--shard|--testTimeout/);
   });
 
+  it('[REQ-294] runnerの保存先を参照できるtestとcollectのstep環境へ計測設定を渡す', () => {
+    const jobConfiguration = workflow.slice(workflow.indexOf('\n  profile:'), workflow.indexOf('\n    steps:'));
+    expect(jobConfiguration).not.toContain('runner.temp');
+    expect(jobConfiguration).not.toMatch(/^ {4}env:/m);
+    for (const step of [stepById('test'), stepById('collect')]) {
+      expect(step).toContain('        env:\n');
+      expect(step).toContain('          LOOMAKE_TEST_PHASE_PROFILE_DIR: ${{ runner.temp }}/loomake-test-phases');
+      expect(step).toContain('          LOOMAKE_TEST_PHASE_SAMPLE: ${{ matrix.sample }}');
+    }
+  });
+
   it('[REQ-294] テストと集計の失敗後も保存し、準備失敗とキャンセルを除外する', () => {
     for (const step of [stepById('collect'), stepById('upload')]) {
       const condition = step.match(/^ {8}if: (.*)$/m)![1];
