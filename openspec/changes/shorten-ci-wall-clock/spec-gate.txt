@@ -1,0 +1,26 @@
+$ pnpm -r --silent build && node packages/cli/dist/cli.js verify --change shorten-ci-wall-clock --spec-only
+
+Loomake verify  mode=spec-only  change=shorten-ci-wall-clock
+
+✔ change の存在
+✔ proposal.md の存在
+✔ tasks.md の存在
+✔ trace.md の存在
+✔ 要件モデルの整合性
+✔ trace.md の解析
+✔ 要件台帳
+✖ ブロッキング確認事項
+    Q-01（REQ-049, REQ-214, REQ-270）案 A を採りますか。PR で変えたファイルがすべて文書なら、quality ジョブ（5 つ）は lint・typecheck・test・build・配布物の検査を実行せずに成功します。作業記録だけの PR でも、いまは 8 分以上の CI が走っています。判定は、ワークフローの `paths` フィルタではなく、ジョブの中のステップで行います。`paths` フィルタでワークフローそのものを動かさないようにすると、必須チェックのジョブが結果を報告せず、PR をマージできなくなるためです。main への push では飛ばしません。差分仕様は A で書いてあります
+    Q-03（REQ-271）案 B を採りますか。時間を確かめるテストを、固定の実時間の待ちではなく、子プロセスが段階に届いた合図で進む形に変えます。固定の `sleepMs: 3000`、偽の OpenSpec CLI の `setTimeout(…,3000)`、`timeoutMinutes: 0.1`（Windows では 0.3）、20 秒の予算などが対象です。手元では runner の 4 ファイル（run 53 秒・external-budget 46 秒・publication-retry 42 秒・guards 29 秒）が、ファイルごとの合計 315 秒のうち 168 秒を占めます。main の Windows で失敗している 13 件（external-budget・process・ai-journeys・guards）も、期限や時間に関わるものです。差分仕様は A で書いてあります
+    Q-04（REQ-049, REQ-214, REQ-271）既存のテストを、次のように変えてよいですか。AGENTS.md 4 章により、人の承認が要ります。この確認事項の回答者欄は、利用者本人の回答があるまで空にします。AI のレビューのコメントは承認として扱いません。（1）案 A：`tests/monorepo.test.ts` の `[REQ-049]` と `[REQ-214]` の期待値を、判定のステップと条件つきのステップを含む ci.yml に合わせる。いまの `[REQ-214]` は「条件つきのステップはテストの 2 つだけ」を確かめていて、A の ci.yml では通らない。（2）案 B：`packages/runner/test/`・`packages/kit/test/`・`tests/` の時間を待つテストで、固定の待ちを合図に変え、期限を短くする
+    Q-05（REQ-271）案 B は、進行中の作業と同じテストを変えます。PR #19（fix-windows-test-assumptions。guards・run など）、PR #20（windows-fake-clis。external-budget と `helpers.ts`）、PR #22（stop-children-when-supervisor-dies。external-budget と kit の process）です。PR #30（probe/req173-windows-timing）は、Windows の REQ-173 の時間を測る使い捨ての PR で、2026-10-27 11:54 に閉じられています。B をどの順で進めますか
+✔ 同じ確認事項の回答
+✔ spec.md の解析
+✔ Requirement の Source
+✔ Source が台帳にある
+✔ Scenario の有無
+✔ 反映済の要件が仕様にある
+✔ openspec validate
+
+不合格（1 件）
+[ELIFECYCLE] Command failed with exit code 1.
