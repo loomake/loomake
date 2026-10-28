@@ -371,17 +371,20 @@ describe('実行時の失敗の終了コード', () => {
 
 describe('フックを動かす git の操作の期限', () => {
   it('[REQ-182] 1 操作の期限より遅い pre-commit・pre-push のフックがあっても、run の残り時間の中でコミット・push・PR の作成まで進む', async () => {
+    // Windows では外部操作ごとに保持役へ保持を頼むので、通常の git も 500ms を超えることがある（run 40630863426）。
+    // そこで Windows では 1 操作の期限を 2 秒、フックを 3 秒、run の予算を 40 秒にし、フックが 1 操作の期限より遅いことは保つ
+    const win = process.platform === 'win32';
+    const operationMs = win ? 2_000 : OPERATION_MS;
+    const hookSeconds = win ? 3 : 1;
     const repo = makeRepo();
     try {
       for (const name of ['pre-commit', 'pre-push']) {
         const hook = join(repo.root, '.git', 'hooks', name);
-        writeFileSync(hook, '#!/bin/sh\nsleep 1\n');
+        writeFileSync(hook, `#!/bin/sh\nsleep ${hookSeconds}\n`);
         chmodSync(hook, 0o755);
       }
       repo.plan([{ write: { 'impl.txt': '実装\n' } }, {}]);
-      // Windows では外部操作ごとに保持役へ保持を頼むので、run 全体が遅くなる（run 40615810055 などで 20.7〜21.1 秒）。
-      // フックが 1 操作の期限より遅いことは変えずに、run の予算だけを Windows で 30 秒にする
-      const r = await withProcessBudget({ timeoutMs: process.platform === 'win32' ? 30_000 : 20_000, maxOperationMs: OPERATION_MS }, () => run(repo));
+      const r = await withProcessBudget({ timeoutMs: win ? 40_000 : 20_000, maxOperationMs: operationMs }, () => run(repo));
       expect(r.code, r.stdout).toBe(0);
       expect(summary(repo)).toMatchObject({ status: 'completed', remainingTasks: [] });
       expect(repo.prs()).toHaveLength(1);
