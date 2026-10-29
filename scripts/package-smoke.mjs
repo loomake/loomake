@@ -160,6 +160,16 @@ export async function check(target) {
   assert.deepEqual(traceSchemas.evidenceDocumentSchema.parse({ path: '', sha256: '', content: '' }), { path: '', sha256: '', content: '' });
   assert.equal(traceSchemas.reportRowSchema.parse({ id: '', source: '', state: '', summary: '', requirements: [], tests: [], result: null }).result, null);
 
+  // 評価済みの品質結果を core と kit の配布入口から扱う（REQ-305・REQ-306）。
+  const { qualityResultSchema } = await core.loadQualityResultSchema();
+  for (const result of ['PASS', 'FAIL', 'INSUFFICIENT_EVIDENCE', 'NOT_APPLICABLE']) assert.equal(qualityResultSchema.parse(result), result);
+  assert.equal(qualityResultSchema.safeParse('unknown').success, false);
+  assert.equal(kit.aggregateCiVerdict(['PASS', 'NOT_APPLICABLE']), 'PASS');
+  assert.equal(kit.aggregateCiVerdict(['PASS', 'INSUFFICIENT_EVIDENCE']), 'INSUFFICIENT_EVIDENCE');
+  assert.equal(kit.aggregateCiVerdict(['PASS', 'FAIL', 'INSUFFICIENT_EVIDENCE']), 'FAIL');
+  assert.equal(kit.aggregateCiVerdict([]), 'INSUFFICIENT_EVIDENCE');
+  assert.equal(kit.aggregateCiVerdict(['NOT_APPLICABLE']), 'INSUFFICIENT_EVIDENCE');
+
   const cli = join(consumer, 'node_modules/loomake/dist/cli.js');
   const command = (...args) => run(process.execPath, [cli, ...args], consumer);
   const installedBin = join(consumer, 'node_modules/.bin', win ? 'loomake.cmd' : 'loomake');

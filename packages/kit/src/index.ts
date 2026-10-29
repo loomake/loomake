@@ -19,3 +19,4 @@ export { evaluateAgreement } from './verify/policy/agreement.js';
 export type { AgreementDecision } from './verify/policy/agreement.js';
 export { evaluateTestCoverage } from './verify/policy/coverage-policy.js';
 export type { TestCoverageDecision } from './verify/policy/coverage-policy.js';
+export { aggregateCiVerdict } from './verify/policy/quality-verdict.js';

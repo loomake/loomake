@@ -23,3 +23,5 @@ export { createAgreement } from './agreement.js';
 export type { Agreement, RequirementId, LedgerState } from './agreement.js';
 export { EVIDENCE_SCHEMA_VERSION, REPORT_SCHEMA_VERSION, loadTraceSchemas } from './trace-contracts.js';
 export type { Evidence, EvidenceDocument, Report, ReportRow } from './trace-contracts.js';
+export { loadQualityResultSchema } from './quality-result.js';
+export type { QualityResult } from './quality-result.js';
