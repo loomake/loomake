@@ -4,6 +4,7 @@ import { spawnSync } from 'node:child_process';
 import { describe, expect, it, vi } from 'vitest';
 import { RuntimeFailure, UsageError, runVerify } from '@loomake/kit';
 import { main } from '../../cli/src/main.js';
+import { profileEvent } from '../../../scripts/test-phase-profile.mjs';
 import { holderWaitTime, withProcessBudget } from '../../kit/src/runtime/process.js';
 import { runRecord } from '@loomake/trace';
 import { runRun } from '@loomake/runner';
@@ -170,69 +171,88 @@ describe('runから外部操作までの期限', () => {
   });
   // authは事前確認を通した後、実装の完了後に行う公開前の確認だけを止める。
   it.each(['push', 'auth', 'list', 'create'] as const)('[REQ-182] %sの期限後に先へ進まず、再実行で重複させない', async (stage) => {
-    const started = Date.now();
-    const repo = makeRepo();
-    diagnosticEvent(repo, 'fixture-ready', { elapsedMs: Date.now() - started, stage });
+    const caseId = stage === 'push' || stage === 'create' ? `deadline-${stage}` : undefined;
+    const profile = (event: string, details: object = {}) => profileEvent(caseId, event, details);
+    profile('test-start');
+    let outcome = 'failed';
     try {
-      repo.plan([{ write: { 'impl.txt': '実装' } }, {}]);
-      const command = stage === 'push' ? 'git' : 'gh';
-      const condition = stage === 'push' ? "args[0]==='push'" : stage === 'auth' ? "args[0]==='auth' && fs.existsSync('impl.txt')" : `args[0]==='pr' && args[1]===${JSON.stringify(stage)}`;
-      // push と PR の作成は 1 操作の期限では止めず、run の残り時間で止める（relax-commit-push-budget）。
-      // そこで、この 2 つは run 全体の予算より長く止め、全体の期限で止まることを確かめる
-      const untilDeadline = stage === 'push' || stage === 'create';
-      // 共有の期限は、負荷の高い CI でも証拠の記録（verify を含む）が終わって push・create の停止に届き、そこから 1 操作の期限より長く待てる長さにする。
-      // 短いと、証拠の記録の中で期限に当たって同じ「実行時間の上限」で止まり、確かめたい停止に届かない。
-      // 止まった印から 1 操作の期限（5 秒）より長く待てるよう、macOS の CI で push に届いた時刻（約 7.4 秒）に余裕を足して 20 秒にする。
-      // Windows は外部操作の起動が遅く、偽の git を通すと node の起動も増えるので、さらに長くする（windows-fake-clis）
-      const SHARED_DEADLINE_MS = process.platform === 'win32' ? 40_000 : 20_000;
-      const UNTIL_DEADLINE_OPERATION_MS = 5_000;
-      // auth・list は 1 操作の期限で止める。止まる手前の通常の git・gh が負荷で 500ms を超えると、狙った段階の前で止まる
-      // （macOS の CI で、印の検査が見つけた）。そこで 1 操作の期限を 2 秒にし、止まった印から期限 + 猶予のうちに止まることを確かめる
-      const STAGE_OPERATION_MS = 2_000;
-      // 1 操作の期限には監視役と偽の CLI の起動時間も入るので、止まった印からの時間は期限より短くなりうる（main の PR #23 から引き継ぐ）
-      const OPERATION_SLACK_MS = 1_000;
-      const cli = fakeCli(repo, command, { when: condition, forwardFirst: stage === 'create', stallMs: untilDeadline ? SHARED_DEADLINE_MS + 30_000 : STALL_MS });
-      diagnosticEvent(repo, 'run-start', { stage });
-      // untilDeadline の 2 つは、止まる手前の通常の git・gh が負荷で遅れても 1 操作の期限に当たらないよう余裕を持たせ、
-      // 止まったのが共有の期限であることは所要時間の下限で確かめる。
-      const runStarted = Date.now();
-      // auth・list は 1 操作の期限で止まることを確かめる。run の予算は狙った段階に届くための長さで、Windows では外部操作ごとに保持役へ保持を頼む分だけ
-      // 遅くなり、20 秒では list に届く前に尽きることがあった（run 40634806172 の再実行）。そこで Windows では 35 秒にする
-      const stageBudgetMs = process.platform === 'win32' ? 35_000 : 20_000;
-      const result = await withProcessBudget(untilDeadline ? { timeoutMs: SHARED_DEADLINE_MS, maxOperationMs: UNTIL_DEADLINE_OPERATION_MS } : { timeoutMs: stageBudgetMs, maxOperationMs: STAGE_OPERATION_MS }, () => run(repo));
-      const endedAt = Date.now();
-      const runElapsed = endedAt - runStarted;
-      diagnosticEvent(repo, 'run-end', { stage, code: result.code, elapsedMs: Date.now() - started });
-      const context = diagnosticContext(repo, { stage, code: result.code, elapsedMs: Date.now() - started, stdout: result.stdout }, cli);
-      // 期限の検査の前に、狙った段階（push・2 回目の auth・PR の検索・作成）で止まったことを確かめる
-      const operation = { push: ['push'], auth: ['auth', 'status'], list: ['pr', 'list'], create: ['pr', 'create'] }[stage];
-      const stall = expectStalled(cli, (args) => operation.every((value, i) => args[i] === value), context);
-      expect(result.code, context).toBe(1);
-      if (untilDeadline) {
-        // 1 操作の期限より長く待ち、共有の期限まで待って、共有の期限に猶予を足した時間のうちに止まった
-        expect(endedAt - stall.at, context).toBeGreaterThan(UNTIL_DEADLINE_OPERATION_MS);
-        expect(runElapsed, context).toBeGreaterThanOrEqual(SHARED_DEADLINE_MS - 500);
-        expect(runElapsed, context).toBeLessThan(SHARED_DEADLINE_MS + STOP_GRACE_MS);
-      } else {
-        // 共有の期限ではなく 1 操作の期限まで待ってから止まった
-        expect(endedAt - stall.at, context).toBeGreaterThanOrEqual(STAGE_OPERATION_MS - OPERATION_SLACK_MS);
-        expectStoppedSoon(stall, endedAt, STAGE_OPERATION_MS, context);
+      const started = Date.now();
+      const repo = makeRepo();
+      diagnosticEvent(repo, 'fixture-ready', { elapsedMs: Date.now() - started, stage });
+      try {
+        repo.plan([{ write: { 'impl.txt': '実装' } }, {}]);
+        const command = stage === 'push' ? 'git' : 'gh';
+        const condition = stage === 'push' ? "args[0]==='push'" : stage === 'auth' ? "args[0]==='auth' && fs.existsSync('impl.txt')" : `args[0]==='pr' && args[1]===${JSON.stringify(stage)}`;
+        // push と PR の作成は 1 操作の期限では止めず、run の残り時間で止める（relax-commit-push-budget）。
+        // そこで、この 2 つは run 全体の予算より長く止め、全体の期限で止まることを確かめる
+        const untilDeadline = stage === 'push' || stage === 'create';
+        // 共有の期限は、負荷の高い CI でも証拠の記録（verify を含む）が終わって push・create の停止に届き、そこから 1 操作の期限より長く待てる長さにする。
+        // 短いと、証拠の記録の中で期限に当たって同じ「実行時間の上限」で止まり、確かめたい停止に届かない。
+        // 止まった印から 1 操作の期限（5 秒）より長く待てるよう、macOS の CI で push に届いた時刻（約 7.4 秒）に余裕を足して 20 秒にする。
+        // Windows は外部操作の起動が遅く、偽の git を通すと node の起動も増えるので、さらに長くする（windows-fake-clis）
+        const SHARED_DEADLINE_MS = process.platform === 'win32' ? 40_000 : 20_000;
+        const UNTIL_DEADLINE_OPERATION_MS = 5_000;
+        // auth・list は 1 操作の期限で止める。止まる手前の通常の git・gh が負荷で 500ms を超えると、狙った段階の前で止まる
+        // （macOS の CI で、印の検査が見つけた）。そこで 1 操作の期限を 2 秒にし、止まった印から期限 + 猶予のうちに止まることを確かめる
+        const STAGE_OPERATION_MS = 2_000;
+        // 1 操作の期限には監視役と偽の CLI の起動時間も入るので、止まった印からの時間は期限より短くなりうる（main の PR #23 から引き継ぐ）
+        const OPERATION_SLACK_MS = 1_000;
+        const cli = fakeCli(repo, command, { when: condition, forwardFirst: stage === 'create', stallMs: untilDeadline ? SHARED_DEADLINE_MS + 30_000 : STALL_MS });
+        diagnosticEvent(repo, 'run-start', { stage });
+        // untilDeadline の 2 つは、止まる手前の通常の git・gh が負荷で遅れても 1 操作の期限に当たらないよう余裕を持たせ、
+        // 止まったのが共有の期限であることは所要時間の下限で確かめる。
+        const runStarted = Date.now();
+        profile('run-start', { at: runStarted });
+        // auth・list は 1 操作の期限で止まることを確かめる。run の予算は狙った段階に届くための長さで、Windows では外部操作ごとに保持役へ保持を頼む分だけ
+        // 遅くなり、20 秒では list に届く前に尽きることがあった（run 40634806172 の再実行）。そこで Windows では 35 秒にする
+        const stageBudgetMs = process.platform === 'win32' ? 35_000 : 20_000;
+        const result = await withProcessBudget(untilDeadline ? { timeoutMs: SHARED_DEADLINE_MS, maxOperationMs: UNTIL_DEADLINE_OPERATION_MS } : { timeoutMs: stageBudgetMs, maxOperationMs: STAGE_OPERATION_MS }, () => run(repo));
+        const endedAt = Date.now();
+        profile('run-end', { at: endedAt });
+        const runElapsed = endedAt - runStarted;
+        diagnosticEvent(repo, 'run-end', { stage, code: result.code, elapsedMs: Date.now() - started });
+        const context = diagnosticContext(repo, { stage, code: result.code, elapsedMs: Date.now() - started, stdout: result.stdout }, cli);
+        // 期限の検査の前に、狙った段階（push・2 回目の auth・PR の検索・作成）で止まったことを確かめる
+        const operation = { push: ['push'], auth: ['auth', 'status'], list: ['pr', 'list'], create: ['pr', 'create'] }[stage];
+        const stall = expectStalled(cli, (args) => operation.every((value, i) => args[i] === value), context);
+        profile('stall-start', { at: stall.at });
+        expect(result.code, context).toBe(1);
+        if (untilDeadline) {
+          // 1 操作の期限より長く待ち、共有の期限まで待って、共有の期限に猶予を足した時間のうちに止まった
+          expect(endedAt - stall.at, context).toBeGreaterThan(UNTIL_DEADLINE_OPERATION_MS);
+          expect(runElapsed, context).toBeGreaterThanOrEqual(SHARED_DEADLINE_MS - 500);
+          expect(runElapsed, context).toBeLessThan(SHARED_DEADLINE_MS + STOP_GRACE_MS);
+        } else {
+          // 共有の期限ではなく 1 操作の期限まで待ってから止まった
+          expect(endedAt - stall.at, context).toBeGreaterThanOrEqual(STAGE_OPERATION_MS - OPERATION_SLACK_MS);
+          expectStoppedSoon(stall, endedAt, STAGE_OPERATION_MS, context);
+        }
+        expect(result.stdout, context).toContain('実行時間の上限');
+        expect(summary(repo).status, context).toBe('stopped');
+        expect(readFileSync(join(repo.root, 'impl.txt'), 'utf8')).toBe('実装');
+        expect(repo.prs(), context).toHaveLength(stage === 'create' ? 1 : 0);
+        const evidenceDir = join(repo.root, '.loomake/evidence', CHANGE);
+        if (stage !== 'auth') expect(readdirSync(evidenceDir)).toHaveLength(1);
+        if (stage === 'push') expect(existsSync(repo.env.FAKE_GH_LOOKUP_LOG!)).toBe(false);
+        // 元のコマンドへ戻し、通常の再試行で同じ証拠・PRを再利用する。
+        cli.restore();
+        profile('retry-start');
+        const retry = await run(repo);
+        profile('retry-end');
+        expect(retry.code, retry.stdout).toBe(0);
+        expect(repo.prs()).toHaveLength(1);
+        expect(readdirSync(evidenceDir)).toHaveLength(1);
+        expect(repo.calls()).toHaveLength(2);
+      } finally {
+        profile('cleanup-start');
+        repo.cleanup();
+        profile('cleanup-end');
       }
-      expect(result.stdout, context).toContain('実行時間の上限');
-      expect(summary(repo).status, context).toBe('stopped');
-      expect(readFileSync(join(repo.root, 'impl.txt'), 'utf8')).toBe('実装');
-      expect(repo.prs(), context).toHaveLength(stage === 'create' ? 1 : 0);
-      const evidenceDir = join(repo.root, '.loomake/evidence', CHANGE);
-      if (stage !== 'auth') expect(readdirSync(evidenceDir)).toHaveLength(1);
-      if (stage === 'push') expect(existsSync(repo.env.FAKE_GH_LOOKUP_LOG!)).toBe(false);
-      // 元のコマンドへ戻し、通常の再試行で同じ証拠・PRを再利用する。
-      cli.restore();
-      const retry = await run(repo);
-      expect(retry.code, retry.stdout).toBe(0);
-      expect(repo.prs()).toHaveLength(1);
-      expect(readdirSync(evidenceDir)).toHaveLength(1);
-      expect(repo.calls()).toHaveLength(2);
-    } finally { repo.cleanup(); }
+      outcome = 'passed';
+    } finally {
+      profile('test-outcome', { outcome });
+      profile('test-end');
+    }
   }, process.platform === 'win32' ? 120_000 : 60_000);
 });
 

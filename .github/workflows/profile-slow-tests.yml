@@ -1,0 +1,60 @@
+name: profile-slow-tests
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/profile-slow-tests.yml'
+      - 'scripts/test-phase-profile.mjs'
+      - 'scripts/ai-journeys.mjs'
+      - 'tests/test-phase-profile*.test.ts'
+      - 'tests/ai-journeys.test.ts'
+      - 'tests/package-build.setup.ts'
+      - 'packages/runner/test/external-budget.test.ts'
+      - 'docs/dev/test-phase-profiling.md'
+      - 'openspec/changes/profile-slow-ci-tests/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  profile:
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [1, 2, 3]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        id: checkout
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        id: node
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - id: test
+        run: node node_modules/vitest/vitest.mjs run tests/ai-journeys.test.ts packages/runner/test/external-budget.test.ts -t '導入・通常操作・失敗と復旧|(?:create|push)の期限後'
+        env:
+          LOOMAKE_TEST_PHASE_PROFILE_DIR: ${{ runner.temp }}/loomake-test-phases
+          LOOMAKE_TEST_PHASE_SAMPLE: ${{ matrix.sample }}
+      - id: collect
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' && steps.node.outcome == 'success' }}
+        run: node scripts/test-phase-profile.mjs
+        env:
+          LOOMAKE_TEST_PHASE_PROFILE_DIR: ${{ runner.temp }}/loomake-test-phases
+          LOOMAKE_TEST_PHASE_SAMPLE: ${{ matrix.sample }}
+          TEST_PHASE_OUTCOME: ${{ steps.test.outcome }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        id: upload
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' && steps.node.outcome == 'success' }}
+        with:
+          name: ci-phases-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.sample }}
+          path: |
+            ${{ runner.temp }}/loomake-test-phases/profile.json
+            ${{ runner.temp }}/loomake-test-phases/summary.md
+          retention-days: 7
+          if-no-files-found: warn
