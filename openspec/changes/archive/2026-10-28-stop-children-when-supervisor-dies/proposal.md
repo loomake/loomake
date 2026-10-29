@@ -46,7 +46,7 @@ POSIX でも、監視役が SIGKILL などで結果を書かずに終わると�
 
 ### Modified Capabilities
 
-- `external-process-budget`: 監視対象の子プロセスの停止（REQ-181）に、監視役が結果を書かずに終わったときの停止と分類を足す。監視役が結果を書かずに終わったときの子孫の後片付け（REQ-252・REQ-253・REQ-254）を足す。
+- `external-process-budget`: 監視役が結果を書かずに終わったときの停止と分類（REQ-250）を、Requirement「監視役が結果を書かずに終わったときの停止」として足す。監視役が結果を書かずに終わったときの子孫の後片付け（REQ-252・REQ-253・REQ-254）を足す。
 
 ## Impact
 

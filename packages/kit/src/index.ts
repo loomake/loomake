@@ -15,3 +15,7 @@ export type { InputLimits, InputEntry, InputReader } from './runtime/input.js';
 export { runExternal, withProcessBudget, remainingProcessTime, hasProcessBudget, holderWaitTime, ProcessLimitError, EXTERNAL_TIMEOUT_MS, EXTERNAL_OUTPUT_BYTES } from './runtime/process.js';
 export type { ExternalOptions, ExternalResult, ProcessBudget, ProcessLimitKind } from './runtime/process.js';
 export type { CleanupReport } from './runtime/process.js';
+export { evaluateAgreement } from './verify/policy/agreement.js';
+export type { AgreementDecision } from './verify/policy/agreement.js';
+export { evaluateTestCoverage } from './verify/policy/coverage-policy.js';
+export type { TestCoverageDecision } from './verify/policy/coverage-policy.js';

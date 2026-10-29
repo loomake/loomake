@@ -1,6 +1,7 @@
 import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { describe, expect, it, vi } from 'vitest';
 import { ProcessLimitError, runExternal, withProcessBudget } from '../src/runtime/process.js';
 import { RuntimeFailure, UsageError } from '../src/runtime/errors.js';
@@ -13,6 +14,9 @@ function alive(pid: number) {
   try {
     process.kill(pid, 0);
     if (process.platform === 'linux' && /\) Z /.test(readFileSync(`/proc/${pid}/stat`, 'utf8'))) return false;
+    // macOS には /proc がない。止めた子の親（監視役）も止まっていると、launchd が回収するまでゾンビとして残り、kill(pid, 0) が通る
+    // （main の run 40669766883 の macOS で、止めた子がこの状態で生きていると判定された）。ゾンビは ps の状態で見分ける
+    if (process.platform === 'darwin') return !/^Z/.test(execFileSync('ps', ['-o', 'stat=', '-p', String(pid)], { encoding: 'utf8' }).trim());
     return true;
   } catch { return false; }
 }

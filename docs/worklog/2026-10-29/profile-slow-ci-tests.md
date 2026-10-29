@@ -34,3 +34,10 @@
 - verify の結果：承認後の `pnpm -s verify --change profile-slow-ci-tests --done` はexit 0（1,148件成功、失敗0件、既存pending8件）。関連29試験、仕様ゲート、Lint、型検査も成功した。
 - 残っている確認事項・仮定：ブロッキング質問なし。Windowsの測定はこの修正を送信して再実行する。
 - 次にやること：[PR #120](https://github.com/loomake/loomake/pull/120) で3サンプルとartifactを確認し、中央値と範囲をPR本文へ記録する。通常CIとの速度差は結論にしない。
+
+## Codex管理役への引き継ぎとmain統合（タスク4.1後の取り込み）
+
+- やったこと：利用者が旧管理役の停止とCodexへの引き継ぎを明示した。既存worktreeの未コミット変更・未push commitがないことを確認し、担当を引き継いだ。PR #120のbaseをmainへ変更し、最新main（158e15d）を競合なく取り込んだ。運用記録はIssue #116・#121へ反映した。
+- verify の結果：旧headの完了ゲート・通常CI・CodeQLは成功。Windows計測の既知のpush失敗は後続PR #126で修正済み。main統合後のheadでCIの完了ゲートを再確認する。設定や試験は緩めていない。
+- 残っている確認事項・仮定：元のPR作業とは別に、今回の管理役引き継ぎの承認範囲でマージと完了changeのarchiveを進める。Issue #116全体の解消とは扱わない。
+- 次にやること：独立レビューとこのheadのCIを確認してPR #120をmainへ取り込み、続けてPR #124・#126を順に取り込む。

@@ -12,6 +12,7 @@
 
 | ファイル | 内容 | 守る試験 |
 |---|---|---|
+| [autonomous-delivery.md](autonomous-delivery.md) | VS CodeからIssueを自律して進める手順と起動文 | 文書のリンクを確認 |
 | [devcontainer.md](devcontainer.md) | このリポジトリの devcontainer | `tests/monorepo.test.ts` の「devcontainer」 |
 | [ci.md](ci.md) | CI のワークフローの組み方（PR の古い実行の取り消し） | `tests/monorepo.test.ts` の「CI」 |
 | [testing-across-os.md](testing-across-os.md) | 3 つの OS で同じ期待値を使うためのテストの前提と、外部操作の期限の試験の偽の CLI | 各ファイルに書いた試験 |

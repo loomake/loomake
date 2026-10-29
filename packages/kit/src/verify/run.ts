@@ -1,3 +1,5 @@
+import { evaluateAgreement, type AgreementDecision } from './policy/agreement.js';
+import { evaluateTestCoverage } from './policy/coverage-policy.js';
 import { existsSync, realpathSync, rmSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -6,13 +8,10 @@ import {
   LEDGER_STATES,
   VERIFY_RESULT_SCHEMA_VERSION,
   createAgreement,
-  evaluateAgreement,
-  evaluateTestCoverage,
   extractTestRequirements,
   parseSpec,
   parseTasks,
   parseTrace,
-  type AgreementDecision,
   type ParseError,
   type SpecRequirement,
   type Trace,
