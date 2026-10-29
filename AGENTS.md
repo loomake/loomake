@@ -2,6 +2,8 @@
 
 このリポジトリは **Loomake** の規約で開発する。Claude Code・Codex など、どのエージェントでもこのファイルが共通ルールの正本。
 
+調査・設計・実装・レビューでは、[エージェントの分担と共通原則](docs/dev/agent-workflow.md)を読む。工程の担当、4つの開発原則、引き継ぎと証跡の扱いは同文書を正本とし、ここには複製しない。既存の仕様ゲート、承認条件、レビュー回数の上限、完了条件は維持する。
+
 ## 1. 仕様の正（何が「正」か）
 
 - **現在の仕様**：`openspec/specs/` — いまシステムが満たしているべき振る舞い
@@ -87,3 +89,4 @@
 - パッケージマネージャ：pnpm（workspaces）。リリースは changesets
 - 主なディレクトリ：`packages/core/` = trace.md などの読み取りと JSON スキーマ、`packages/kit/` = verify・init・doctor の本体と `templates/`（init が配るファイル）、`packages/trace/` = trace record・trace report の本体、`packages/runner/` = run の本体、`packages/cli/` = CLI 本体、`tests/` = リポジトリ全体のテスト、`docs/` = 使い方・開発の流れ・要件定義書・記録
 - コーディング規約：関数は named export。`@loomake/core` の外部の実行時依存は `zod` だけ、`@loomake/kit` は core と `yaml` だけ、`@loomake/trace` は core と kit だけ、`@loomake/runner` は core・kit・trace だけ、`loomake` は core・kit・trace・runner だけに保つ（REQ-046・REQ-047・REQ-083・REQ-123）。使い方や設定の誤りは `UsageError` を投げ、CLI が終了コード 2 で返す。利用者に見せるメッセージは日本語で書く
+
