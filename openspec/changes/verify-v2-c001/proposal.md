@@ -41,7 +41,7 @@
 
 対象はcore・kit・trace・runner・CLIと `scripts/ci-gate.mjs`、関連fixture、配布smoke、互換性文書。verifyを埋め込むEvidenceは2へ上げ、旧Evidence 1の閲覧を保持する。Report 2とRunSummaryの外形は維持し、既存フィールドへ投影する。core・kit・trace・CLIの公開契約の破壊的変更にはminor、内部追従だけのrunnerにはpatchのchangesetを計画し、形式版とは分ける。
 
-本PRは計画のみ。branch作成時の基準はmain `f397109`。その後、#60の未知キー保持修正（REQ-307）はPR #140と仕様反映・archiveのPR #141で受け入れられ、#60はclose済みで、最新にfetchしたmain `751a8a1b6ffca673f44f2fa272b9029a667bf12b`に含まれる。実装を止めているのは保留のR-C001-05/06/08と仕様ゲートであり、#60を現在の未受入依存には数えない。既存REQ-305・307は意味を引き継いでMODIFIEDとし、REQ-306や使用済みIDを別の要件へ再割当しない。新しい要件IDは今回割り当てない。
+本PRは計画のみ。branch作成時の基準はmain `f397109`。その後、#60の未知キー保持修正（REQ-307）はPR #140と仕様反映・archiveのPR #141で受け入れられ、#60はclose済みで、最新にfetchしたmain `d5aa30d7a9326be44ea4eac5145b5fa95529efce`に含まれる。このmainを通常mergeで取り込み、PR #155でCLI/URL両changeの同期/archiveとREQ-322の短縮文面が受け入れられた正本へ基準を合わせた。実装を止めているのは保留のR-C001-05/06/08と仕様ゲートであり、#60を現在の未受入依存には数えない。既存REQ-305・307は意味を引き継いでMODIFIEDとし、REQ-306や使用済みIDを別の要件へ再割当しない。新しい要件IDは今回割り当てない。
 
 ## 部分承認と残るA案の具体化
 

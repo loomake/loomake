@@ -38,3 +38,10 @@
 2. PR155の承認コメント6510874679と未merge状態を読み、承認済みtree8519f1fの480字本文を比較元にREQ-322を本文482字・Source込み499字へ整理した。受入記録のみを追加した現head758b018と、未mergeのmain751a8a1を区別してtraceへ記載した。29 MODIFIEDのSourceと、main+active CLI基準89 Scenarioに149の追加1件を含めたaccepted tree基準90 Scenarioを保持し、322の全4 Scenario全文と完全URL2本も機械照合した。branch strictは旧主仕様のINFO付き0、main751 snapshotはCLI未archiveのINFO付き0、155 accepted tree snapshotはINFOなし0。spec-onlyは未回答05/06/08の3件だけで1。最終版の通常doneは未回答・確認待ち要件・未完了tasks・未実装REQ試験の4検査で1、lint・型・既存試験は成功し、ローカル1,259成功/skip8/失敗0だった。先行doneが編集途中の表を読んだため、表と完了ゲートの印を直したあと再実行した。yomiyasuのlint/diff/資料照合/最終稿照合とdiff --checkを確認した。
 3. R01/02/03/04/07/09/10のA承認、05/06/08の回答欄の空欄、R08 Bのおすすめを維持する。REQ-093/135/136の規範差分確定と実際の雛形変更は回答後の作業であり、今回行わない。既存assertion/旧46例の具体差分には方針承認と別の個別承認が必要である。
 4. 計画差分をcommit/pushし、PR本文の全置換案を管理役へ渡す。PR155受入後の実mainでREQ-322とarchive依存を再照合してからC-001を最終確定する。製品実装、主仕様・既存試験・設定・雛形の変更、新ID割当、追加AI評価、投稿、マージは行わない。
+
+## 6回目レビューへの対応
+
+1. [PR139の6回目レビュー](https://github.com/loomake/loomake/pull/139#issuecomment-6511160717)を読み、verify-v2-c001のtask 1.1の計画整合を実施した。main d5aa30dを通常mergeし、REQ-306を短縮、移行対象と個別承認を追加、093/135/136の確定をtask 1.2へ移した。
+2. 一時コピーで全差分をarchiveし、修正前の主仕様strictは28成功/1失敗、修正後は29成功/0失敗。change strictは0、spec-onlyは保留3件で1。通常doneは未回答・確認待ち要件・未完了tasks・要件対応試験未実装の4検査で1、lint・型・既存試験は成功した。検証の内訳と字数はPR本文へ記載する。
+3. 承認7件と未回答05/06/08、おすすめ08 Bを保持する。計画だけの例外マージ判断M139-01も人の承認待ちで、製品実装・期待値変更へ進まない。
+4. 計画差分をcommit/pushして本文案を管理役へ渡す。CI・自動Codex確認、承認依頼、マージは管理役が行う。追加Opus評価は起動しない。

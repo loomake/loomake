@@ -4,7 +4,7 @@
 
 kit は評価済みの `readonly QualityResult[]` から CI verdict だけを返す named export `aggregateCiVerdict` を公開する SHALL。FAIL があれば FAIL、次に INSUFFICIENT_EVIDENCE があれば同値、PASS があり残りが PASS/NOT_APPLICABLE なら PASS、空配列と全件 NOT_APPLICABLE は INSUFFICIENT_EVIDENCE を返す MUST。順序と重複で結果を変えず、入力を変更せず、I/O・環境・時計を参照しない MUST。
 
-API の説明には、評価済み入力の集約専用で、NA の理由・確認者と証跡適格性・個別条件は集約前の責務であり、証跡適格性や完了ゲート全体の最終合格を判定しないことを明記する SHALL。この集約関数の定義変更単独では件数・summaryの生成やverifyへの接続を行わない SHALL。呼出し側で件数・summary・verifyへの接続を定める別のchangeは、この単独変更の対象外とする SHALL。集約関数自身はverdictだけを返す契約を維持する MUST。
+API の説明には、評価済み入力の集約専用で、NA の理由・確認者と証跡適格性・個別条件は集約前の責務であり、証跡適格性や完了ゲート全体の最終合格を判定しないことを明記する SHALL。集約関数の定義変更単独では件数・summary・verifyへ接続せず、それらを定める別changeは対象外とする SHALL。
 
 Source: REQ-306
 

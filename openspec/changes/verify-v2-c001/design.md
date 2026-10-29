@@ -4,7 +4,7 @@
 
 branch作成時の基準はmain `f397109`、製品調査の基準はmain `f4e3edb7145f35dac49fd139902ab17c5592a5d5`で、この計画branchの製品コードは更新していない。動機と能力の範囲はproposalを参照する。`runVerify` は同期のI/O統合であり、現在はquality.yamlを読まず1.0.0の `ok/results/coverage` を返す。CLIは設定の読取不能もUsageErrorへまとめ、`--json` の引数エラーを結果JSONにできない。ci-gateは終了コード、runnerは `ok/results`、traceは埋め込まれた同じ型とcoverageに依存する。
 
-共有品質4値と純粋集約はPR #138で受入済み。#60の未知フィールド保持修正（REQ-307）はbranch作成時には未受入と記録したが、PR #140・#141で修正と仕様反映・archiveを受け入れ、現在はclose済みでmain `f4e3edb`に含まれる。最新の仕様照合基準はfetchしたmain `751a8a1b6ffca673f44f2fa272b9029a667bf12b`。R01/02/03/04/07/09/10はA承認済みで、実装停止は保留のR05/06/08と仕様ゲートによる。既存の事前工数推定 `docs/effort/c-001.md` は変更しない。
+共有品質4値と純粋集約はPR #138で受入済み。#60の未知フィールド保持修正（REQ-307）はbranch作成時には未受入と記録したが、PR #140・#141で修正と仕様反映・archiveを受け入れ、現在はclose済みでmain `f4e3edb`に含まれる。最新の仕様照合基準は通常mergeで取り込んだmain `d5aa30d7a9326be44ea4eac5145b5fa95529efce`。PR #155でCLI/URL両changeの同期/archiveも受入済みである。R01/02/03/04/07/09/10はA承認済みで、実装停止は保留のR05/06/08と仕様ゲートによる。既存の事前工数推定 `docs/effort/c-001.md` は変更しない。
 
 追加の全A案は[design-candidate-a.md](design-candidate-a.md)へ分離した。同文書は7件の承認を反映し、残る3件の採否を得るための資料であり、現行仕様や回答記録を採用済みに変えない。Bがあれば該当部分を再設計する。
 
@@ -130,7 +130,7 @@ CLIのargs.ts共通定義、help/usage、生成ページ、新旧reference-cli-b
 
 ## 4回目レビューの範囲と保留
 
-REQ-323/324の未確定契約を追加しないMUSTとhelp/usage/終了コード/8 JSONを変えないMUSTを、CLI生成/共通定義集約単独の変更へ限定する。改版を扱う別changeまで永久に禁止しない。CLI changeのarchive後の正本でC-001のMODIFIEDを確定する順を守り、現在はactive CLIの全Scenario/Sourceを保護する。REQ-306も集約関数の定義変更単独では外側のsummaryやverify接続を増やさない範囲に限定し、verdictだけを返す純粋APIは維持する。
+REQ-323/324の未確定契約を追加しないMUSTとhelp/usage/終了コード/8 JSONを変えないMUSTを、CLI生成/共通定義集約単独の変更へ限定する。改版を扱う別changeまで永久に禁止しない。PR #155でarchive受入済みの主仕様を比較元にC-001のMODIFIEDを確定し、全既存Scenario/Sourceを保護する。REQ-306も集約関数の定義変更単独では外側のsummaryやverify接続を増やさない範囲に限定し、verdictだけを返す純粋APIは維持する。
 
 REQ-100はverify --done --scope localと同じ検査へ追従し、既存5 ScenarioとREQ-205の再修正判断順を保つ。REQ-135はhelpの --scopeと既定値を加え、業務処理を実行せずstdout/0を保つ候補。REQ-093はspec-onlyの通常不合格1、usage/config aborted2、その他aborted3で止まり、実装ブランチとエンジンを起動しない候補とする。いずれも保留のR05/R06に対する判断材料であり、製品や既存試験は変更しない。
 

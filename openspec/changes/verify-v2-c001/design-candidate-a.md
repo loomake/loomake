@@ -4,7 +4,7 @@
 
 R01/02/03/04/07/09/10は[3回目レビューの明示回答](https://github.com/loomake/loomake/pull/139#issuecomment-6510041693)でAと承認された。以下はその7件を反映し、残るR05/06/08もAとなる場合の具体案である。R08のBはlocalのOpenSpec不在をNAとする別候補であり、本文中のAの理由付きPASSは比較用に残す。4回目レビューを受け、おすすめは基本Aの共通部分を保ちlocal不在だけNAにするBへ変えたが、R08の採否は未決である。R05/06/08の選択は未決であり、その回答欄を空に保つ。承認済み7件は承認者・日付・出典とともにtraceへ反映した。残る項目がBなら該当部分を再設計する。この文書をそのまま実装指示や規範仕様にせず、採否後に必要な差分仕様へ反映し、仕様ゲートexit 0を確認する。製品・既存試験・設定は変更しない。差分仕様はレビュー指摘に基づき既存仕様と整合させた候補であり、製品実装を始める採否はR05/06/08の保留が解けるまで未確定である。
 
-計画branchの作成基準はmain `f397109`。今回の製品調査基準はmain `f4e3edb`で、同mainの製品ソースを調査した。#60は当時の未受入依存であったが、[PR140](https://github.com/loomake/loomake/pull/140)・[PR141](https://github.com/loomake/loomake/pull/141)で修正・仕様同期・archiveを受け入れ、2026-10-29T03:32:23Zにclose済みである。最新の仕様照合基準はfetchしたmain `751a8a1b6ffca673f44f2fa272b9029a667bf12b`。現在の実装停止理由は保留のR05/06/08と仕様ゲートである。
+計画branchの作成基準はmain `f397109`。今回の製品調査基準はmain `f4e3edb`で、同mainの製品ソースを調査した。#60は当時の未受入依存であったが、[PR140](https://github.com/loomake/loomake/pull/140)・[PR141](https://github.com/loomake/loomake/pull/141)で修正・仕様同期・archiveを受け入れ、2026-10-29T03:32:23Zにclose済みである。最新の仕様照合基準は通常mergeで取り込んだmain `d5aa30d7a9326be44ea4eac5145b5fa95529efce`。PR #155でCLI/URL両changeの同期/archiveも受入済みである。現在の実装停止理由は保留のR05/06/08と仕様ゲートである。
 
 根拠は固定要件7.3、既存REQ-310・313・314・319等と元のDoDである。新しいREQ IDを割り当てず、品質/CLIで使用済みのREQ-320〜325も再使用しない。source/metric・plan・producer mappingは承認済みR-C001-03 A、S1基準準備・private handoffは承認済みR-C001-04 Aであり、現行スキーマに実装済みとは扱わない。技術事項と確認事項10件の採否を区別する。
 

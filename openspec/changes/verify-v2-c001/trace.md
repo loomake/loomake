@@ -11,7 +11,7 @@
 | Issue #61・#63・#64の作業・先行範囲・調査記録 | 2026-10-29取得 | 2026-10-29 |
 | openspec/specs/core-parsers・verify・trace-record・trace-report・run-decision-policy、受入済みadd-quality-verdict-aggregation | main f397109 | 2026-10-29 |
 | packages/kit/src/verify、packages/cli/src/main.ts、packages/core/src/verify-result*・trace-schemas.ts、packages/trace/src/record.ts・report.ts、packages/runner/src/run、scripts/ci-gate.mjs | 実装観測、main f397109 | 2026-10-29 |
-| mainの追加契約とCLI実装・3回目レビューの部分承認 | 751a8a1b6ffca673f44f2fa272b9029a667bf12b、コメント6510041693 | 2026-10-30 |
+| mainの追加契約・CLI/URL両archive受入と部分承認 | d5aa30d7a9326be44ea4eac5145b5fa95529efce、PR155、コメント6510041693 | 2026-10-30 |
 
 Issue参照：[契約 #61](https://github.com/loomake/loomake/issues/61)、[判定 #63](https://github.com/loomake/loomake/issues/63)、[CLI #64](https://github.com/loomake/loomake/issues/64)。質問の管理先は[進行管理 #121](https://github.com/loomake/loomake/issues/121)。7件の明示承認は下表の出典で記録し、保留3件やIssueの調査メモを採用承認へ広げない。
 
@@ -20,19 +20,19 @@ Issue参照：[契約 #61](https://github.com/loomake/loomake/issues/61)、[判�
 
 | ID | 出典 | 種別 | 要約（原文に忠実に） | 状態 | 反映先 |
 |---|---|---|---|---|---|
-| REQ-093 | 現行run「仕様ゲートの確認」・5回目レビュー軽微2 | 既存変更予定 | spec-only不合格1とaborted 2/3を分けるMODIFIEDをR05/R06採否後に用意する | 確認待ち | tasks.md 4.4 |
-| REQ-135 | 現行cli「ヘルプと版」・5回目レビュー軽微2 | 既存変更予定 | 本文の全オプション説明義務は保持し、既存help Scenarioへscopeを追加するMODIFIEDをR05採否後に用意する | 確認待ち | tasks.md 4.1 |
-| REQ-136 | 現行req-to-openspec-skill「完了ゲートのタスクの印」・5回目レビュー中1 | 既存変更予定 | R06 Aなら本文の完了ゲートを明示localへMODIFIEDし、印と既存Scenarioを保持して両雛形を同期。Bなら本文・コマンド保持 | 確認待ち | tasks.md 5.1 |
+| REQ-093 | 現行run「仕様ゲートの確認」・5回目レビュー軽微2 | 既存変更予定 | spec-only不合格1とaborted 2/3を分けるMODIFIEDをR05/R06採否後に用意する | 確認待ち | tasks.md 1.2（確定）・4.4（実装/試験） |
+| REQ-135 | 現行cli「ヘルプと版」・5回目レビュー軽微2 | 既存変更予定 | 本文の全オプション説明義務は保持し、既存help Scenarioへscopeを追加するMODIFIEDをR05採否後に用意する | 確認待ち | tasks.md 1.2（確定）・4.1（実装/試験） |
+| REQ-136 | 現行req-to-openspec-skill「完了ゲートのタスクの印」・5回目レビュー中1 | 既存変更予定 | R06 Aなら本文の完了ゲートを明示localへMODIFIEDし、印と既存Scenarioを保持して両雛形を同期。Bなら本文・コマンド保持 | 確認待ち | tasks.md 1.2（確定）・5.1（反映/試験） |
 | REQ-100 | 現行run「完了ゲートと直し」・4回目レビュー中2 | 既存変更 | runの完了ゲートを明示localにし、純粋判断と既存5 Scenarioを保持する | 確認待ち | specs/run/spec.md |
 | REQ-306 | 現行verification-policy・4回目レビュー中3 | 既存変更 | 件数/summary/verifyへの非接続を集約定義単独の範囲へ限定する | 確認待ち | specs/verification-policy/spec.md |
-| REQ-323 | active CLI差分・4回目レビュー中1 | 既存変更 | 未確定契約を追加しないMUSTをCLI生成単独の範囲へ限定し、改版後の共通定義へ従う | 確認待ち | specs/reference-docs/spec.md |
-| REQ-324 | active CLI差分・4回目レビュー中1 | 既存変更 | help/usage/終了コード/8 JSON等の不変MUSTを共通定義集約単独へ限定する | 確認待ち | specs/reference-docs/spec.md |
+| REQ-323 | 現行reference-docs（PR155受入済み）・4回目レビュー中1 | 既存変更 | 未確定契約を追加しないMUSTをCLI生成単独の範囲へ限定し、改版後の共通定義へ従う | 確認待ち | specs/reference-docs/spec.md |
+| REQ-324 | 現行reference-docs（PR155受入済み）・4回目レビュー中1 | 既存変更 | help/usage/終了コード/8 JSON等の不変MUSTを共通定義集約単独へ限定する | 確認待ち | specs/reference-docs/spec.md |
 | REQ-036 | 現行verify「仕様ゲートの警告」・追加レビュー重大1 | 既存変更 | spec-onlyの案内PASS/0とdoneの不足/1を分ける候補。採否はR08待ち | 確認待ち | specs/verify/spec.md |
 | REQ-037 | 現行verify「openspec validateの実行」・追加レビュー重大1 | 既存変更 | auto時CLI不在はlocal理由PASSかNA、ci不足の候補をR08で比較する | 確認待ち | specs/verify/spec.md |
 | REQ-038 | 現行verify「完了ゲート」・3回目レビュー中2 | 既存変更 | doneの確認待ちは036と同じ不足/要判断に統一。未完了tasksと実施済み失敗はFAIL | 確認待ち | specs/verify/spec.md |
 | REQ-050 | 現行verify「性能」・3回目レビュー中1 | 既存変更 | localのskip不足1とレポート解析を含む3秒条件の試験案。具体assertion差分はR05待ち | 確認待ち | specs/verify/spec.md |
 | REQ-183 | 現行external-process-budget・3回目レビュー重大1 | 既存変更 | JSON/依存の不変を予算単独変更の影響範囲へ限定する | 確認待ち | specs/external-process-budget/spec.md |
-| REQ-322 | 現行reference-docs・3回目レビュー重大1 | 既存変更 | 公開8 JSON等の不変をqualityリファレンス生成/check単独の影響範囲へ限定する | 確認待ち | specs/reference-docs/spec.md |
+| REQ-322 | 現行reference-docs（PR155受入済み）・3回目レビュー重大1 | 既存変更 | 公開8 JSON等の不変をqualityリファレンス生成/check単独の影響範囲へ限定する | 確認待ち | specs/reference-docs/spec.md |
 | REQ-114 | 現行run-pr・3回目レビュー軽微2 | 既存変更 | local完了からDraft PRへ進み、明示localのv2記録を先に作る | 確認待ち | specs/run-pr/spec.md |
 | REQ-115 | 現行run-pr・3回目レビュー軽微2 | 既存変更 | PR本文はlocal完了0と最終CI未確認を区別する | 確認待ち | specs/run-pr/spec.md |
 | REQ-164 | 現行run・3回目レビュー軽微2 | 既存変更 | v2/local証拠の同一状態の外部再試行と旧版非再利用を315と整合する | 確認待ち | specs/run/spec.md |
@@ -78,7 +78,7 @@ REQ-305/306はPR #138、REQ-307は#60保持修正の既存IDである。305・30
 | R-C001-03 | REQ-313・319 | C-001で実証跡を取る範囲をどうするか。adapter・verification.yamlの契約と適格性検査だけでも複数タスクを要する | A: 新鮮なコマンド結果/REQレポートの最小adapter・plan・適格性をC-001へ先行 / B: C-003と並行準備し必要範囲を合同受入 | A。正常/不正/不足を同じCLI/APIで受入可能にする。信頼する判定器の構築は04で別に判断する | yes | A。[承認元](https://github.com/loomake/loomake/pull/139#issuecomment-6510041693) | rrr-xxx（rrr-www名義・Claude Code代筆） | 2026-10-30 |
 | R-C001-04 | REQ-313・318・319 | 信頼する判定器をS1独立changeとして準備するか。追加レビュー用のS1見積は44〜88人時（8時間/人日で5.5〜11人日）、実績ではなく待機を除く作業推定 | A: S1のbase-built checker・private handoff・S2照合契約を採用 / B: その案を採らず信頼基準と依存を再設計 | A。自己申告だけで合格にしない。詳細候補の内訳・再利用/新規・前提を確認して判断する。S2本実装や外部承認待ちの時間は見積外 | yes | A。[承認元](https://github.com/loomake/loomake/pull/139#issuecomment-6510041693) | rrr-xxx（rrr-www名義・Claude Code代筆） | 2026-10-30 |
 | R-C001-05 | REQ-036〜041・050・055・073・093・100・114・115・135・164・183・191・203・274〜276・302〜306・307・315・322〜325 | 既存互換差分に加え、323/324の未確定契約追加禁止・help/usage/終了コード/8 JSON不変MUSTの範囲変更、100のlocal化、306の接続範囲を受け入れるか | A: 既存のv2形式・183/322範囲・未承認done1・040/050/191・CLI基準の非互換案を保持し、REQ-093のspec-only abortedをusage/config 2・その他3（不合格1のまま）へ分け、REQ-135のhelpへ --scopeのlocal/ciと既定値を追加し、323/324のMUSTを生成/集約単独へ限定、100を明示local、306を集約定義単独に限定 / B: これらの範囲と互換移行を再設計 | A。別の改版を永久に禁じない範囲へ限定する。未承認仮定done1、skip coverage省略/1、性能条件保持、CLI基準・help更新の方針を含むが、具体的assertion/旧46例の変更承認は別に取得する | yes |  |  |  |
-| R-C001-06 | REQ-100・136・311・312・315・319、AGENTS DoD | done既定ciに対してローカルDoDをどう満たすか | A: ローカルは --done --scope local の0、最終受入は --done --scope ci の0と必須CIを要求するよう規約/guideを移行し、REQ-136を明示localへMODIFIEDして配布用/リポジトリ内の両req-to-openspec雛形を同期 / B: ローカルでもci証拠を取得し既定done 0を要求し、REQ-136本文と雛形の既定ciコマンドを保持 | A。ローカル完了と最終合格を区別し、CI証拠不足でローカル作業が恒久停止しない。AGENTS・配布規約・PRテンプレートも同時に修正する | yes |  |  |  |
+| R-C001-06 | REQ-100・136・311・312・315・319、AGENTS DoD | done既定ciに対してローカルDoDをどう満たすか | A: ローカルは --done --scope local の0、最終受入は --done --scope ci の0と必須CIを要求するようREADME・CONTRIBUTING・delivery Skillを含む規約/guideを移行し、REQ-136を明示localへMODIFIEDして両req-to-openspec雛形を同期。kit-assets期待値変更は具体差分の個別承認後に行う / B: ローカルでもci証拠を取得し既定done 0を要求し、REQ-136本文と雛形の既定ciコマンドを保持 | A。ローカル完了と最終合格を区別し、CI証拠不足でローカル作業が恒久停止しない。AGENTS・配布規約・PRテンプレートも同時に修正する | yes |  |  |  |
 | R-C001-07 | REQ-310・312・319 | root quality初期内容と、切替日にopenなPRをどう移行するか | A: 詳細候補のci.test_report 1必須項目を置き、全open PRを棚卸し、実装PRはmain取込と新鮮な実証跡で再検証。spec-only不在許容/done不在3 / B: 初期項目と切替順を再設計 | A。空/全NAで一斉不足にしない。C-001対象だけでなく各PRの承認REQ集合へplanを割り当て、移行できないPRのマージを止める。検証前に品質合格を与えない | yes | A。[承認元](https://github.com/loomake/loomake/pull/139#issuecomment-6510041693) | rrr-xxx（rrr-www名義・Claude Code代筆） | 2026-10-30 |
 | R-C001-08 | REQ-036〜039・191・203・312・314 | warnとskipをゲート/scope別にどう移行し、doneの確認待ち/未承認仮定をどの分類に統一するか | A: spec-onlyの未承認/確認待ちは案内PASS/0、doneは不足+要判断/1。未知キーは理由PASS、auto CLI不在はlocal理由PASS・ci不足、skip不足1 / B: 同じAの共通部分を保ち、auto CLI不在localだけ理由付きNA | B。4回目レビューの基本AとlocalだけBを合成した案。未知キーの理由PASS等は変えず、実行していないvalidateはNAとする。ci不足、明示trueの失敗、品質条件のFAILを維持する。おすすめであり回答ではない | yes |  |  |  |
 | R-C001-09 | REQ-276・304・305 | 外部から読める旧verify/evidence JSON Schemaを公開し続けるか | A: 既存パスを現行版へ移し、旧版を版付きの追加パス/exportsで配布 / B: 旧版JSONは配布せず履歴型/fixtureだけ残す | A。履歴データを検証する外部利用側にも移行先を用意できる。パス変更と読み分けを移行説明へ記載する | yes | A。[承認元](https://github.com/loomake/loomake/pull/139#issuecomment-6510041693) | rrr-xxx（rrr-www名義・Claude Code代筆） | 2026-10-30 |
@@ -92,11 +92,9 @@ R05/06/08は同じコメントで保留とされた。パーサが回答済み�
 
 ## mainとCLI changeの順序
 
-2026-10-30にfetchした最新mainは`751a8a1b6ffca673f44f2fa272b9029a667bf12b`で、PR #144の実装と#150/#152を含む。PR #144の`add-cli-reference-generation`はこのSHAで進行中changeのまま、REQ-323〜325はその差分にある。C-001では採用する共通定義args.ts・生成ページ・reference-cli-baseline.jsonをその実装へ追従させる。旧46例は互換原本として保持し、v2で変わる例の具体差分をR05の方針採否とは別に承認対象へ出す。
+2026-10-30にfetchしたmain `d5aa30d7a9326be44ea4eac5145b5fa95529efce` を通常mergeで取り込んだ。[PR #155](https://github.com/loomake/loomake/pull/155)はこのmainでmerge済みで、add-cli-reference-generationとfix-quality-reference-source-linksの同期/archiveも受入済みである。REQ-323〜325とREQ-322のURL文/4 Scenarioは主仕様にあり、C-001のMODIFIEDの比較元もこの正本へ更新した。[短縮文面の明示承認](https://github.com/loomake/loomake/pull/155#issuecomment-6510874679)と、受入元head `758b0182c107b43827c4c40e1780df76cf97e995` を参照する。以前の751a8a1/候補tree比較は過去の検証であり、現在のarchive待ちではない。
 
-C-001の実装前にCLI changeのDoD・仕様同期/archiveが受け入れられた最新mainを通常mergeし、REQ-323〜325の正本が主仕様へ入ったことを確認する。そのあとREQ-323/324のMUST範囲を生成/集約単独へ限定するC-001のMODIFIEDを最終確定する。今はactive CLIの全Scenario/Sourceを保護した予約差分であり、archive前に正本を変更したとは扱わない。CLI changeのarchive待ちを理由にその主仕様を直接書き換えず、未archiveなら依存を記録して止める。fix-quality-reference-source-links（PR #149はmain取込済み、changeは未archive）のREQ-322のURL SHALLと4番目ScenarioもC-001のMODIFIEDへ保持し、同changeも仕様同期/archiveされてから最終整合を確認する。C-001を先にarchiveし、あとから古いグローバル不変条件を復活させる順にしない。現在のmain snapshot検証と、main取込済みで未archiveの149差分のURL文/全4 Scenario保持は別に検証する。snapshotの成功をどちらかのarchive実施の証拠とは扱わない。
-
-[PR #155](https://github.com/loomake/loomake/pull/155)のhead `8519f1f9eb1eeca8107b3d99b545e160106dbbf3` は、CLI/URL両changeをarchiveし、REQ-322の短縮本文480字を持つ受入候補treeである。[コメント6510874679](https://github.com/loomake/loomake/pull/155#issuecomment-6510874679)に実ユーザーrrr-xxxによる短縮文面の明示承認（rrr-www名義・Claude Code代筆）がある。その後、受入記録のみを追加したhead `758b0182c107b43827c4c40e1780df76cf97e995` へ更新された。REQ-322とarchive内容は8519f1fから不変とPRに記録されている。確認時点ではPRは未mergeでmainは上記751a8a1のままであり、このtreeとの比較を本流でのarchive完了とは扱わない。C-001のREQ-322はこの承認本文を比較元に、生成/check単独への範囲限定を短く記し、完全URL2本・全4 Scenario・Sourceを保持する。PR155の受入後は実際の最新mainのREQ-322と再照合し、Source込み500字以内も確認してからC-001を最終確定する。
+C-001は共通定義args.ts・生成ページ・reference-cli-baseline.jsonへ追従する。旧46例は互換原本として保持し、新契約で変わる例はR05の方針採否と別に具体差分の個別承認を得る。REQ-323/324のMUST範囲、100のlocal、306の非接続範囲、322の生成/check単独への限定はR05待ちである。R05/R06回答後に093/135/136の規範差分をtasks 1.2で確定し、全差分を一時コピーでarchiveした主仕様のstrictと全MODIFIEDの500字制限を照合する。C-001自体は製品DoD達成前にarchiveしない。
 
 ## 仮定
 
