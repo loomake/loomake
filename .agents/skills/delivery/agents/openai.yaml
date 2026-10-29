@@ -1,0 +1,4 @@
+interface:
+  display_name: "Loomake Delivery"
+  short_description: "Loomakeの初回配布に向け、GoalとGitHub Issueを依存順に進める"
+  default_prompt: "$delivery で初回配布に向けたGoalを確認し、GitHubの次の作業へ進んでください。"
