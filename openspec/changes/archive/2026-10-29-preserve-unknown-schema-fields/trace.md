@@ -7,7 +7,7 @@
 | core-zod-verify-result の REQ-275、core-quality-yaml-schema の REQ-283、core-parser-schemas の REQ-298、core-quality-report-schema の REQ-301 | main 96138c7 | 2026-10-29 |
 | [PR #134](https://github.com/loomake/loomake/pull/134) で統合済みの証拠とリリースレポートの未知フィールド保持（REQ-302） | main f397109 | 2026-10-29 |
 | PR #132 の最終レビューで JSON.parse の own property __proto__ が失われることを再現した結果 | 本会話 | 2026-10-29 |
-| 利用者の回答「仕様どおり安全に保持する修正を進める（推奨）」 | 本会話。[作業記録の「保持修正の承認」](../../../docs/worklog/2026-10-29/fix-preserve-unknown-schema-fields.md#保持修正の承認)を参照 | 2026-10-29 |
+| 利用者の回答「仕様どおり安全に保持する修正を進める（推奨）」 | 本会話。[作業記録の「保持修正の承認」](../../../../docs/worklog/2026-10-29/fix-preserve-unknown-schema-fields.md#保持修正の承認)を参照 | 2026-10-29 |
 | [Issue #60](https://github.com/loomake/loomake/issues/60) の「delivery の引き継ぎと未知キーの保持修正」 | 取得時点 | 2026-10-29 |
 
 ## 要件台帳

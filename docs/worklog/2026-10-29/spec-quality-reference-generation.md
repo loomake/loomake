@@ -18,3 +18,10 @@
 2. 関連62試験（新規13、文書リンク41、既存JSON Schema一致8）、lint、typecheck、再生成check、OpenSpec strict、仕様ゲートはすべて成功した。全体doneは一時領域不足のため繰り返さず、最終headのnative CIで受け入れる。
 3. 未回答の製品仕様・仮定はない。独立レビュー・全体done・必須CIが未確認なので4.1を未チェックとし、change全体の完了とは報告しない。CLI生成が残るため#104をopen維持する。
 4. 管理役へ実装固定headと検証結果を渡し、Draft PR・独立レビュー・native CIへ進める。PR作成とpushは管理役が担当する。
+
+## 最終受入記録とmainの統合
+
+1. [PR #142](https://github.com/loomake/loomake/pull/142)の実装head f095482の独立レビュー1回目は指摘なし。実装を固定してmain 684abf0の受入済み仕様反映を統合し、最後の4.1を記録した。
+2. [CI 40814418823](https://github.com/loomake/loomake/actions/runs/40814418823)は全体1,314件成功・既存skip8件、lint・型・Node20/22・CodeQL成功。対象doneは4.1未チェックだけでexit 1、他の全項目と要件対応テストは合格した。
+3. 新しい未決事項はない。記録反映後の最終headのdoneはまだ確認していないため、changeの受入は最終CI成功まで保留する。CLIは後続で#104 openを維持する。
+4. このコミットをpushし、同じ完了ゲートと必須CIの成功を確認して受け入れる。

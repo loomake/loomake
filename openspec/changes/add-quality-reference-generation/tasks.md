@@ -19,4 +19,4 @@
 
 ## 4. 受入確認
 
-- [ ] 4.1 関連ID付き試験・既存JSON Schema一致・文書リンク・lint・typecheckを通し、独立レビューと最終headの通常の完了ゲート/必須CIを確認する。CLI生成が残るため#104全体をcloseしないことを記録する <!-- loomake:gate=done -->
+- [x] 4.1 関連ID付き試験・既存JSON Schema一致・文書リンク・lint・typecheckを通し、独立レビューと最終headの通常の完了ゲート/必須CIを確認する。CLI生成が残るため#104全体をcloseしないことを記録する <!-- loomake:gate=done -->
