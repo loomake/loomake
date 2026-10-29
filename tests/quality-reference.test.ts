@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { describeQualitySchema, renderQualityReference } from '../scripts/quality-reference.mjs';
 import { runQualityReference } from '../scripts/generate-quality-reference.mjs';
 import { loadQualitySchema } from '../packages/core/src/index.js';
@@ -121,6 +122,25 @@ function referenceWorkspace() {
   return { directory, options, messages };
 }
 
+
+function linkedReferenceWorkspace() {
+  const { directory } = referenceWorkspace();
+  const physical = join(directory, 'physical');
+  const linked = join(directory, 'linked');
+  const cwd = join(directory, 'unrelated-cwd');
+  for (const path of ['scripts', 'packages/core/schema', 'docs/guide/3.reference']) mkdirSync(join(physical, path), { recursive: true });
+  mkdirSync(cwd);
+  for (const file of ['quality-reference.mjs', 'generate-quality-reference.mjs']) copyFileSync(join(root, 'scripts', file), join(physical, 'scripts', file));
+  copyFileSync(join(root, 'packages/core/schema/quality.schema.json'), join(physical, 'packages/core/schema/quality.schema.json'));
+  symlinkSync(physical, linked, process.platform === 'win32' ? 'junction' : 'dir');
+  return {
+    directory, physical, linked, cwd,
+    target: join(physical, 'docs/guide/3.reference/4.quality-yaml.md'),
+    run: (...args: string[]) => spawnSync(process.execPath, [join(linked, 'scripts/generate-quality-reference.mjs'), ...args], { cwd, encoding: 'utf8' }),
+    unlink: () => rmSync(linked, { recursive: true, force: true }),
+  };
+}
+
 describe('qualityリファレンスの生成/check', () => {
   it('[REQ-321][REQ-322] 生成は対象だけを書き、繰り返して同一内容になる', () => {
     const { directory, options } = referenceWorkspace();
@@ -210,6 +230,70 @@ describe('qualityリファレンスの生成/check', () => {
     const checked = run('--check');
     expect(checked.status, checked.stderr).toBe(0);
   });
+
+  it.each([
+    { argument: '--check', status: 1, diagnostic: '再生成' },
+    { argument: '--unknown', status: 2, diagnostic: '使い方' },
+  ])('[REQ-321] 親リンク経由の $argument は終了 $status で生成せず診断する', ({ argument, status, diagnostic }) => {
+    const workspace = linkedReferenceWorkspace();
+    try {
+      const result = workspace.run(argument);
+      expect(result.status, result.stderr).toBe(status);
+      expect(result.stdout).toBe('');
+      expect(result.stderr).toContain(diagnostic);
+      expect(existsSync(workspace.target)).toBe(false);
+    } finally {
+      workspace.unlink();
+    }
+  });
+
+  it('[REQ-321] 親リンク経由でも別cwdから同じ生成先を使い、一致と改変を照合する', () => {
+    const workspace = linkedReferenceWorkspace();
+    try {
+      const generated = workspace.run();
+      expect(generated.status, generated.stderr).toBe(0);
+      expect(existsSync(workspace.target)).toBe(true);
+      const original = readFileSync(workspace.target, 'utf8');
+      expect(original).toBe(renderQualityReference(schema));
+      expect(existsSync(join(workspace.cwd, 'docs'))).toBe(false);
+      const checked = workspace.run('--check');
+      expect(checked.status, checked.stderr).toBe(0);
+      expect(checked.stdout).toContain('一致');
+      const modified = original + '変更を残す';
+      writeFileSync(workspace.target, modified);
+      const rejected = workspace.run('--check');
+      expect(rejected.status, rejected.stderr).toBe(1);
+      expect(rejected.stderr).toContain('再生成');
+      expect(readFileSync(workspace.target, 'utf8')).toBe(modified);
+    } finally {
+      workspace.unlink();
+    }
+  });
+
+  it.each(['physical', 'linked'] as const)('[REQ-321] %sのimportは起動引数なし・別ファイル・解決不能でも無副作用である', (location) => {
+    const workspace = linkedReferenceWorkspace();
+    try {
+      const moduleUrl = pathToFileURL(join(workspace[location], 'scripts/generate-quality-reference.mjs')).href;
+      const wrapper = join(workspace.directory, 'wrapper.mjs');
+      const source = `process.exitCode = 7; await import(${JSON.stringify(moduleUrl)});`;
+      writeFileSync(wrapper, source);
+      const launches = [
+        ['--input-type=module', '--eval', source],
+        [wrapper],
+        ['--input-type=module', '--eval', `process.argv[1] = ${JSON.stringify(join(workspace.directory, 'missing-entry.mjs'))}; ${source}`],
+      ];
+      for (const args of launches) {
+        const result = spawnSync(process.execPath, args, { cwd: workspace.cwd, encoding: 'utf8' });
+        expect(result.status, result.stderr).toBe(7);
+        expect(result.stdout).toBe('');
+        expect(result.stderr).toBe('');
+        expect(existsSync(workspace.target)).toBe(false);
+      }
+    } finally {
+      workspace.unlink();
+    }
+  });
+
 });
 
 
