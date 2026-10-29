@@ -170,7 +170,7 @@ describe('runから外部操作までの期限', () => {
     } finally { repo.cleanup(); }
   });
   // authは事前確認を通した後、実装の完了後に行う公開前の確認だけを止める。
-  it.each(['push', 'auth', 'list', 'create'] as const)('[REQ-182] %sの期限後に先へ進まず、再実行で重複させない', async (stage) => {
+  it.each(['push', 'auth', 'list', 'create'] as const)('[REQ-182][REQ-297] %sの期限後に先へ進まず、再実行で重複させない', async (stage) => {
     const caseId = stage === 'push' || stage === 'create' ? `deadline-${stage}` : undefined;
     const profile = (event: string, details: object = {}) => profileEvent(caseId, event, details);
     profile('test-start');
@@ -202,6 +202,7 @@ describe('runから外部操作までの期限', () => {
         // untilDeadline の 2 つは、止まる手前の通常の git・gh が負荷で遅れても 1 操作の期限に当たらないよう余裕を持たせ、
         // 止まったのが共有の期限であることは所要時間の下限で確かめる。
         const runStarted = Date.now();
+        const waitedBefore = holderWaitTime();
         const clockStart = caseId && process.env.LOOMAKE_TEST_BUDGET_CLOCK === '1'
           ? { wall: performance.now(), holder: holderWaitTime() } : undefined;
         profile('run-start', { at: runStarted });
@@ -217,7 +218,8 @@ describe('runから外部操作までの期限', () => {
         } : undefined;
         profile('run-end', { at: endedAt });
         if (budgetClock) profile('budget-clock', budgetClock);
-        const runElapsed = endedAt - runStarted;
+        // 保持役の準備待ちは共有予算に含めないため、判定の経過時間からも除く（REQ-257）。
+        const runElapsed = endedAt - runStarted - (holderWaitTime() - waitedBefore);
         diagnosticEvent(repo, 'run-end', { stage, code: result.code, elapsedMs: Date.now() - started });
         const context = diagnosticContext(repo, { stage, code: result.code, elapsedMs: Date.now() - started, stdout: result.stdout }, cli);
         // 期限の検査の前に、狙った段階（push・2 回目の auth・PR の検索・作成）で止まったことを確かめる
