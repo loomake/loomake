@@ -8,3 +8,5 @@
 ## 既存工程記録の移記
 
 2026-10-29の既存記録から、Opusの設計著述3回はactual model `claude-opus-5-5`のみ、fresh session、exit 0、is_error=false、permission_denials=[]と記録されている。初稿sessionは`46c6f248-d65b-44c4-a4c3-23940167a414`、第2稿は`68e661c1-3d1d-407f-9493-4614cbb64b86`、第3稿は`13b92bac-7e8a-42b4-b281-e62bf76044ad`である。今回は呼び直さず、保存先のignoredファイルを公開証拠として参照しない。著述は独立評価として数えず、今回の追加AI評価0、過去のPR139ローカル評価回数は不明で上限をリセットしない。独立レビュー・人の採否は未実施のままである。
+
+既存の限定実験では、Node24.21.0と公式SHA256に一致するNode22.12.0 linux-arm64で、core/kitの静的入口からZodが読み込まれず、必要時に同期loaderでschemaをload/parse/cacheできたと記録されている。Node22.12ではrequire(ESM)のExperimentalWarningと観測器終了時の診断があり、製品統合や配布時のstderrを検証した結果ではない。OpenSpec1.14.3の一時rootではverification.yamlを追加してもstrictが通ったが、配置の許容だけで内容の検証ではない。今回はこれらの実験を再実行せず、既存記録の事実と制約を移記した。
