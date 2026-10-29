@@ -3,6 +3,7 @@
 // CLI の起動で zod を読まないように、@loomake/core の入口からは loadQualitySchema() で遅れて読む（REQ-284）
 import { z } from 'zod';
 import { QUALITY_SCHEMA_VERSION } from './quality.js';
+import { preserveUnknownFields } from './preserve-unknown-fields.js';
 
 const text = z.string().min(1);
 /** 期間。正の整数と d（日）・w（週）・y（年）のどれか。例：14d、90d、5y */
@@ -14,12 +15,12 @@ const target = z
   .describe('目標値。<=・>=・==・<・> のどれかと数値の組（例：<= 1800）');
 const ids = z.array(text);
 
-export const qualityMeasureSchema = z.looseObject({
+export const qualityMeasureSchema = preserveUnknownFields(z.looseObject({
   metric: text.describe('指標の名前'),
   source: text.describe('指標の出どころ（ci.*、e2e.*、telemetry.*、observation.* など）'),
   target: target.optional(),
   min_samples: z.int().positive().optional(),
-});
+}));
 
 const itemShape = {
   characteristic: text.describe('品質特性'),
@@ -40,29 +41,29 @@ function withApplicability<T extends z.ZodRawShape>(shape: T) {
   ]);
 }
 
-export const qualityObjectiveSchema = withApplicability({
+export const qualityObjectiveSchema = preserveUnknownFields(withApplicability({
   ...itemShape,
   context: text.optional().describe('対象利用者、作業、端末、環境の定義への参照'),
   task: text.optional(),
   guardrails: ids.optional().describe('悪化を防ぐ目標'),
-});
+}));
 
-export const qualityProductSchema = withApplicability({
+export const qualityProductSchema = preserveUnknownFields(withApplicability({
   ...itemShape,
   subcharacteristic: text.optional().describe('品質副特性'),
   objectives: ids.optional().describe('支える利用時品質目標'),
-});
+}));
 
 // 証跡の保管方針。省いたキーには既定値を補う（REQ-285、要件定義 7.1 の最小スキーマ）
-export const qualityEvidencePolicySchema = z.looseObject({
+export const qualityEvidencePolicySchema = preserveUnknownFields(z.looseObject({
   artifact_retention: duration.default('90d').describe('開発中の本体に要求する保持期間'),
   long_term_store: z.enum(['github-release', 'manual']).default('github-release').describe('リリースに採用した本体の保管先'),
   long_term_retention: duration.default('5y').describe('長期保管の保持期間'),
   access: z.enum(['project-members', 'owner']).default('project-members').describe('取得確認に使う閲覧者の権限'),
   delete_policy: z.enum(['owner-approval', 'never']).default('owner-approval').describe('削除条件'),
-});
+}));
 
-export const qualitySchema = z
+export const qualitySchema = preserveUnknownFields(z
   .looseObject({
     version: z.literal(QUALITY_SCHEMA_VERSION).describe('quality.yaml の形式の版'),
     model: text.describe('品質モデルの識別子と版（例：iso-iec-25010-2011）'),
@@ -96,4 +97,4 @@ export const qualitySchema = z
     $id: 'https://loomake.dev/schema/quality.schema.json',
     title: 'Loomake quality.yaml',
     description: 'quality.yaml を YAML として解析した値。破壊的変更を入れるときは version を上げる',
-  });
+  }));

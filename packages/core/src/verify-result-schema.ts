@@ -3,19 +3,20 @@
 // CLI の起動で zod を読まないように、@loomake/core の入口からは loadVerifyResultSchemas() で遅れて読む
 import { z } from 'zod';
 import { VERIFY_RESULT_SCHEMA_VERSION } from './verify-result.js';
+import { preserveUnknownFields } from './preserve-unknown-fields.js';
 
 export const verifyModeSchema = z
   .enum(['quality', 'spec-only', 'done'])
   .describe('quality = 品質コマンドだけ、spec-only = 仕様ゲート、done = 完了ゲート');
 
 // 未知のフィールドは拒否せず、解析結果にそのまま残す（REQ-275）
-export const verifyCheckResultSchema = z.looseObject({
+export const verifyCheckResultSchema = preserveUnknownFields(z.looseObject({
   check: z.string().describe('検査の名前'),
   status: z.enum(['pass', 'fail', 'warn', 'skip']),
   detail: z.string().describe('補足。無いときは空文字列'),
-});
+}));
 
-export const verifyResultSchema = z
+export const verifyResultSchema = preserveUnknownFields(z
   .looseObject({
     schemaVersion: z.literal(VERIFY_RESULT_SCHEMA_VERSION).describe('このスキーマの版（MAJOR.MINOR.PATCH）'),
     mode: verifyModeSchema,
@@ -31,4 +32,4 @@ export const verifyResultSchema = z
     $id: 'https://loomake.dev/schema/verify-result.schema.json',
     title: 'Loomake verify result',
     description: 'verify --json が出力する結果。破壊的変更を入れるときは schemaVersion のメジャー番号を上げる（REQ-053）',
-  });
+  }));
