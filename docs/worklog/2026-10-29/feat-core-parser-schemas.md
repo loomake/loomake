@@ -21,3 +21,13 @@
 - verify：生成差分・AJV による独立検証・parser・静的 import の試験は 14/14 成功。lint と型チェックも exit 0。core を pack して別の利用先へ展開し、公開 exports から定数・loader・JSON を読み取れることを確認した。
 - 確認事項・仮定：なし。JSON に独自のバージョン annotation は加えていない。
 - 次：task 4.1 の全体試験と完了ゲート。ローカル環境の空き容量と POSIX 権限の制約があるため、必要なら同じ head の PR CI で受入を確認する。
+
+- やったこと：task 4.1 の完了ゲートを実行した。独立レビュー 1 回目（実装 head 49f84d2）は重大な指摘なし。
+- verify：ローカルの完了ゲートは exit 1。lint・型チェック・タスク・全 Requirement のテスト対応は成功したが、全体試験は 1,235 件中 1,202 成功・25 失敗・8 skip。失敗時に自己タスクの完了印を戻した。
+- 確認事項・仮定：worktree 内 TMPDIR では長い Unix ソケットパスの EINVAL、type:module を継承した偽コマンドの require 未定義、chmod の差異が出た。既存のテストや製品設定は変更せず、ネイティブ Linux の CI で同じ head を検証する。
+- 次：draft PR の品質 CI を確認し、全体成功後に task 4.1 を完了にして最終 head の同じ完了ゲートを確認する。変更全体の完了はまだ宣言しない。
+
+- やったこと：task 4.1 の自己タスクを、ネイティブ CI の結果を根拠に確定した。[PR #131](https://github.com/loomake/loomake/pull/131)の実装は独立レビュー済みの 49f84d2 と同一である。
+- verify：[初回 CI](https://github.com/loomake/loomake/actions/runs/40802266085)で lint・型チェック・全体試験 1,227 成功/8 skip・coverage・配布物 smoke・Node 20/22・CodeQL が成功した。[gate のログ](https://github.com/loomake/loomake/actions/runs/40802266085/job/123212882402)は最後の未チェック自己タスクだけが不合格で、すべてのコマンドと要件ごとのテストは成功した。
+- 確認事項・仮定：追加なし。ローカル環境差による失敗を製品や試験の変更で回避していない。
+- 次：タスク確定後の同じ head の完了ゲートを確認し、受入は管理役へ引き継ぐ。Issue #60 全体は後続の作業が残るため open を保つ。

@@ -1,5 +1,6 @@
 import {
   createAgreement, parseTrace, parseTasks, parseSpec, extractTestRequirements, VERIFY_RESULT_SCHEMA_VERSION, loadParserSchemas, TRACE_SCHEMA_VERSION, SPEC_SCHEMA_VERSION, TASKS_SCHEMA_VERSION, loadTraceSchemas, type Evidence as CoreEvidence, type EvidenceDocument as CoreEvidenceDocument, type Report as CoreReport, type ReportRow as CoreReportRow,
+  QUALITY_REPORT_SCHEMA_VERSION, loadQualityReportSchema, type QualityReport,
   type ParseError, type Trace, type LedgerRow, type QuestionRow, type AssumptionRow, type SpecOperation, type SpecRequirement, type Task, type VerifyResult, type VerifyCheckResult,
 } from '@loomake/core';
 import { evaluateAgreement, evaluateTestCoverage, type AgreementDecision, type TestCoverageDecision, runVerify, formatVerifyResult, UsageError, type VerifyOptions } from '@loomake/kit';
@@ -64,4 +65,11 @@ export async function consumeTraceContracts(evidence: Evidence, document: Eviden
   const oldEvidence: Evidence = schemas.evidenceSchema.parse(futureEvidence);
   const oldReport: Report = schemas.reportSchema.parse(futureReport);
   return { saved, result, oldEvidence, oldReport };
+}
+
+export async function consumeQualityReportContract(input: unknown): Promise<QualityReport> {
+  const version: 1 = QUALITY_REPORT_SCHEMA_VERSION;
+  const { qualityReportSchema } = await loadQualityReportSchema();
+  const result: QualityReport = qualityReportSchema.parse(input);
+  return { ...result, version };
 }

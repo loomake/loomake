@@ -14,7 +14,7 @@ const pkgDir = join(import.meta.dirname, '..');
 const schemaDir = join(pkgDir, 'schema');
 
 describe('JSON Schema の書き出し', () => {
-  it('[REQ-276][REQ-287][REQ-300][REQ-304] Zod スキーマから書き出した内容と packages/core/schema/ のファイルが一致する', () => {
+  it('[REQ-276][REQ-287][REQ-300][REQ-301][REQ-304] Zod スキーマから書き出した内容と packages/core/schema/ のファイルが一致する', () => {
     const rendered = renderJsonSchemas();
     expect(Object.keys(rendered).sort()).toEqual(readdirSync(schemaDir).filter((f) => f.endsWith('.json')).sort());
     for (const [file, text] of Object.entries(rendered)) {
@@ -136,7 +136,7 @@ describe('JSON Schema の書き出し', () => {
     }
   });
 
-  it('[REQ-276][REQ-287][REQ-300][REQ-304] 書き出しのコマンドで schema/ のファイルを作り直せる', () => {
+  it('[REQ-276][REQ-287][REQ-300][REQ-301][REQ-304] 書き出しのコマンドで schema/ のファイルを作り直せる', () => {
     const work = mkdtempSync(join(tmpdir(), 'loomake-core-schema-'));
     try {
       // 実際の schema/ を書き換えないように、書き出しのスクリプトとビルドの結果を一時ディレクトリに写して実行する

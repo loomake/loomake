@@ -1,10 +1,10 @@
-# CI deadline clock alignment
+# ci-deadline-clock-alignment Specification
 
 ## Purpose
 
-共有期限の試験を、保持役の準備待ちを除外する本体の仕様と同じ基準で測る。
+共有期限の試験を、保持役の準備待ちを除外する本体の仕様と同じ基準で測る。予算と猶予を維持し、実時間の診断と停止・再実行の検証を残す。
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: 共有期限を測る時計の整合
 

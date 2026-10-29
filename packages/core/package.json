@@ -28,6 +28,7 @@
     "./schema/trace.schema.json": "./schema/trace.schema.json",
     "./schema/spec.schema.json": "./schema/spec.schema.json",
     "./schema/tasks.schema.json": "./schema/tasks.schema.json",
+    "./schema/quality-report.schema.json": "./schema/quality-report.schema.json",
     "./schema/evidence.schema.json": "./schema/evidence.schema.json",
     "./schema/report.schema.json": "./schema/report.schema.json"
   },
@@ -47,6 +48,7 @@
       "./schema/trace.schema.json": "./schema/trace.schema.json",
       "./schema/spec.schema.json": "./schema/spec.schema.json",
       "./schema/tasks.schema.json": "./schema/tasks.schema.json",
+      "./schema/quality-report.schema.json": "./schema/quality-report.schema.json",
       "./schema/evidence.schema.json": "./schema/evidence.schema.json",
       "./schema/report.schema.json": "./schema/report.schema.json"
     },
