@@ -8,7 +8,7 @@
 ## 2. 入口判定と回帰試験
 
 - [x] 2.1 tests/quality-reference.test.tsへREQ-321付きの子プロセス試験を追加する。POSIXの親symlinkとWindowsのjunctionで、欠落check1・不明引数2・生成0・一致check0・改変check1と非書込、別cwdでの生成先、importの無副作用を確かめ、未修正の生成器でリンク経由のケースが失敗することを確認する
-- [ ] 2.2 scripts/generate-quality-reference.mjsの入口判定で同じ実体のパスを比較する。既存の生成・引数処理を保ち、追加試験と既存のqualityリファレンス試験を成功させる。既存の期待値・skip・品質設定・未マージCLI生成器に差分がないことを確認する
+- [x] 2.2 scripts/generate-quality-reference.mjsの入口判定で同じ実体のパスを比較する。既存の生成・引数処理を保ち、追加試験と既存のqualityリファレンス試験を成功させる。既存の期待値・skip・品質設定・未マージCLI生成器に差分がないことを確認する
 
 ## 3. 統合確認
 

@@ -32,6 +32,6 @@
 
 ## 担当と検証の範囲
 
-担当はdelivery管理役配下のCodex。branchは `fix/reference-entrypoint-paths`、worktreeは `.claude/worktrees/codex-reference-entrypoint-paths`。既存のopen PRとworktreeに同changeの担当がいないことを確認した。元の製品コード・試験は変更していない。
+担当はdelivery管理役配下のCodex。branchは `fix/reference-entrypoint-paths`、worktreeは `.claude/worktrees/codex-reference-entrypoint-paths`。既存のopen PRとworktreeに同changeの担当がいないことを確認した。既存の試験本文と期待値を保持し、リンク経由の起動とimportの回帰試験、生成器の直接起動の判定だけを変更した。
 
-失敗元は上のCIを参照する。Linux Node24で同じ起動判定の不一致を再現した。WindowsとmacOSの修正後の成功、実装、完了ゲート、独立レビュー、PR作成は未実施である。詳細な再現ログは専有worktreeの `node_modules/.cache/reference-entrypoint-paths/reproduction.json` に置き、引継ぎ時に管理役へ伝える。
+失敗元は上のCIを参照する。Linux Node24で同じ起動判定の不一致を再現した。2.1・2.2の実装と関連試験、生成物check、lint・typecheckをローカルで確認した。WindowsとmacOSの修正後の成功、全体の完了ゲート、独立レビュー、PR作成は未実施で、3.1を未チェックで保持する。詳細な再現ログは専有worktreeの `node_modules/.cache/reference-entrypoint-paths/reproduction.json` に置き、引継ぎ時に管理役へ伝える。

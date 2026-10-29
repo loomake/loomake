@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderQualityReference } from './quality-reference.mjs';
@@ -43,6 +43,15 @@ export function runQualityReferenceCommand(args) {
   return runQualityReference({ check: args.length === 1 });
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+let directlyInvoked = false;
+if (process.argv[1]) {
+  try {
+    directlyInvoked = realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    // import元の起動パスを解決できない場合は、生成・照合を開始しない。
+  }
+}
+
+if (directlyInvoked) {
   process.exitCode = runQualityReferenceCommand(process.argv.slice(2));
 }
