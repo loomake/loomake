@@ -1,3 +1,5 @@
+import type { z } from 'zod';
+import type { assumptionRowSchema, ledgerRowSchema, questionRowSchema, traceSchema } from './parser-schemas.js';
 import { readTable, splitLines, type ParseError, type ParseResult, type TableRow } from './parse.js';
 
 // 表の列名。trace.md の列名をそのままキーにする
@@ -11,15 +13,10 @@ const OPTIONAL_COLUMNS: readonly string[] = ['回答者', '回答日', '承認�
 /** 表の行。列名をキーにした値と、行番号を持つ */
 type Row<C extends readonly string[]> = { [K in C[number]]: string } & { line: number };
 
-export type LedgerRow = Row<typeof LEDGER_COLUMNS>;
-export type QuestionRow = Row<typeof QUESTION_COLUMNS>;
-export type AssumptionRow = Row<typeof ASSUMPTION_COLUMNS>;
-
-export type Trace = {
-  ledger: LedgerRow[];
-  questions: QuestionRow[];
-  assumptions: AssumptionRow[];
-};
+export type LedgerRow = z.infer<typeof ledgerRowSchema>;
+export type QuestionRow = z.infer<typeof questionRowSchema>;
+export type AssumptionRow = z.infer<typeof assumptionRowSchema>;
+export type Trace = z.infer<typeof traceSchema>;
 
 /** 要件台帳の「状態」に書いてよい値 */
 export const LEDGER_STATES = ['反映済', '確認待ち', '範囲外', '既存仕様で充足'] as const;

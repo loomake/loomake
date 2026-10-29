@@ -1,12 +1,8 @@
+import type { z } from 'zod';
+import type { taskSchema } from './parser-schemas.js';
 import { fenceMask, splitLines, type ParseResult } from './parse.js';
 
-export type Task = {
-  /** `- [x]`・`- [X]` なら true、`- [ ]` なら false。箇条書きの記号は `-`・`*`・`+` のどれでもよい */
-  checked: boolean;
-  /** チェックボックスのあとの文 */
-  text: string;
-  line: number;
-};
+export type Task = z.infer<typeof taskSchema>;
 
 /** tasks.md からチェック済みと未チェックのタスクを取り出す（REQ-014）。コードブロックの中は読まない */
 export function parseTasks(_file: string, text: string): ParseResult<Task[]> {
