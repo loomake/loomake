@@ -10,3 +10,10 @@
 2026-10-29の既存記録から、Opusの設計著述3回はactual model `claude-opus-5-5`のみ、fresh session、exit 0、is_error=false、permission_denials=[]と記録されている。初稿sessionは`46c6f248-d65b-44c4-a4c3-23940167a414`、第2稿は`68e661c1-3d1d-407f-9493-4614cbb64b86`、第3稿は`13b92bac-7e8a-42b4-b281-e62bf76044ad`である。今回は呼び直さず、保存先のignoredファイルを公開証拠として参照しない。著述は独立評価として数えず、今回の追加AI評価0、過去のPR139ローカル評価回数は不明で上限をリセットしない。独立レビュー・人の採否は未実施のままである。
 
 既存の限定実験では、Node24.21.0と公式SHA256に一致するNode22.12.0 linux-arm64で、core/kitの静的入口からZodが読み込まれず、必要時に同期loaderでschemaをload/parse/cacheできたと記録されている。Node22.12ではrequire(ESM)のExperimentalWarningと観測器終了時の診断があり、製品統合や配布時のstderrを検証した結果ではない。OpenSpec1.14.3の一時rootではverification.yamlを追加してもstrictが通ったが、配置の許容だけで内容の検証ではない。今回はこれらの実験を再実行せず、既存記録の事実と制約を移記した。
+
+## 再レビューへの対応
+
+1. [追加レビュー](https://github.com/loomake/loomake/pull/139#issuecomment-6509157676)を受け、head `9869726`・cleanの状態からタスク1.1の計画整合を引き継いだ。末尾のおすすめは回答ではなく、10件とも未承認として扱う。
+2. strictはexit 0、現main f4e3edbの主仕様を展開した一時snapshotでもINFOなしでexit 0。spec-onlyは未回答10件だけでexit 1。通常doneは未回答・確認待ち・未完了tasks・要件対応テスト未実装の4検査でexit 1、lint・typecheck・testは成功した。ローカル試験は1,259成功・既存8件skip・失敗0。初期quality候補のversion 2構造解析も成功したが、実証跡取得や品質PASSの証拠ではない。yomiyasuとdiff --checkを実施した。
+3. 全台帳行を確認待ちに揃え、R08のゲート/scope別警告移行とPASS/NA比較、R05/R08のREQ-191、R07の初期必須1項目と全open PR再検証を具体化した。S1は既存実装を調べ、1人AIなしの実作業44〜88人時と8項目の内訳・前提・対象外を提示した。見積りは実績や承認ではなく、既存C-001の固定見積りも変更していない。
+4. 計画のみを修正して管理役へ引き継ぐ。製品実装、追加AI評価、投稿、マージは行わない。

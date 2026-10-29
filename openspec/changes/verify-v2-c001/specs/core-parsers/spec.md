@@ -18,20 +18,20 @@ Source: REQ-274
 - **THEN** 解析は失敗する
 
 ### Requirement: 証拠とリリースレポートの構造スキーマ
-core は既存の `Evidence`・`EvidenceDocument`・`Report`・`ReportRow` と同じデータ構造の Zod スキーマを公開し、4 型をそこから導出する SHALL。Evidence と Report の `schemaVersion` は number 型とし、Evidenceの現在の書き出しの定数は2とし、旧Evidence 1の構造スキーマと型を別名で保持する MUST。Reportの定数2・外形・日本語結果を維持する MUST。`documents` は任意のままとし、空配列を補ってはならない MUST NOT。ReportRow の日本語の結果と null、各フィールドの必須・任意・null の区別を保持する SHALL。全 object 階層で未知のフィールドを拒否せず値を保持する SHALL。日時・SHA・パスなどに既存データ型にない新しい制約を加えてはならない MUST NOT。
+coreは現行Evidence 2/verify 2.0.0と履歴Evidence 1/verify 1.0.0を別の構造スキーマと型で公開し、EvidenceDocument・Report・ReportRowも対応するスキーマから導出する SHALL。Evidence と Report の `schemaVersion` は number 型とし、Evidenceの現在の書き出しの定数は2とし、旧Evidence 1の構造スキーマと型を別名で保持する MUST。Reportの定数2・外形・日本語結果を維持する MUST。`documents` は任意のままとし、空配列を補ってはならない MUST NOT。ReportRow の日本語の結果と null、各フィールドの必須・任意・null の区別を保持する SHALL。全 object 階層で未知のフィールドを拒否せず値を保持する SHALL。日時・SHA・パスなどに既存データ型にない新しい制約を加えてはならない MUST NOT。
 
 Source: REQ-302
 
 #### Scenario: 既存の証拠とレポートを解析する
-- **WHEN** documents のある証拠とない証拠、日本語の結果と null を持つ既存のレポートを構造スキーマで解析する
+- **WHEN** documentsのある/ない現行Evidence 2を現行スキーマへ、履歴Evidence 1を履歴スキーマへ、日本語の結果とnullを持つReport 2をReportスキーマへ渡す
 - **THEN** 解析は成功し、入力したデータを保持して documents の省略も保持する
 
 #### Scenario: 型と構造の互換性
-- **WHEN** 既存型に合う任意の number の schemaVersion と、日時・SHA・パスを文字列として持つ値を履歴用構造スキーマで解析する
+- **WHEN** 履歴型に合う任意のnumberのschemaVersionと日時・SHA・パスを文字列として持つ値を履歴用構造スキーマで解析する。現行Evidence 2も対応するv2構造スキーマで別に解析する
 - **THEN** 構造として受け付け、必須の配列・文字列・boolean の型が違う値は拒否する
 
 #### Scenario: 未知のフィールドを保持する
-- **WHEN** 証拠とレポートの各 object 階層に未知のキーを持つ値を履歴用構造スキーマで解析する
+- **WHEN** 現行Evidence 2/verify 2.0.0、履歴Evidence 1/verify 1.0.0、Report 2それぞれの各object階層に未知キーを持つ値を対応する版の構造スキーマで解析する
 - **THEN** 未知の値は解析結果に残る
 
 ### Requirement: trace の既存公開元と同期実行の維持

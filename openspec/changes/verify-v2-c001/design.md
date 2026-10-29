@@ -22,13 +22,13 @@ kitの `runVerify(options)` の名前と同期実行は維持し、戻り値を2
 
 実行環境のCI変数からscopeを推測する案は使わない。利用側がscopeを明示でき、runnerのローカル完了とci-gateの最終合格を取り違えにくいため。APIの不正な引数・設定・読取失敗もv2のabortedを返し、CLIと同じ純関数 `verifyExitCode(result)` で0〜3を選ぶ。progressと人向けformatterはstderrへ送り、JSON出力へ混ぜない。verify以外のUsageError/RuntimeFailure契約は変えない。
 
-`--spec-only` は現在の仕様検査を維持し、R-C001-07のA候補では存在するquality.yamlの構造と既定値も確認し、不在だけは対象外とする。target充足や品質成果物の実施を仕様ゲートで要求せず、構造検査が通ったことを品質PASSとして保存しない。R-C001-10のA候補では品質targetやquality:subjectsを生成・計数せず、仕様/構造検査だけをchecks/summaryへ載せ、localの検査完了を返す。`--skip-commands` は既存の呼出し方を残すが、未実施や古い証跡を成功へ昇格させない。
+`--spec-only` は現在の仕様検査を維持し、R-C001-07のA候補では存在するquality.yamlの構造と既定値も確認し、不在だけは対象外とする。target充足や品質成果物の実施を仕様ゲートで要求せず、構造検査が通ったことを品質PASSとして保存しない。R-C001-10のA候補では品質targetやquality:subjectsを生成・計数せず、仕様/構造検査だけをchecks/summaryへ載せ、localの検査完了を返す。`--skip-commands` の呼出し方は残すが、R05/R08の候補では未実施を不足/1にする。これは旧REQ-191のskip単独成功からの非互換変更であり、採否前に実装しない。
 
 ### 2. quality入力と限定条件
 
 現在のkitの実行時依存はcoreだけで、yamlは未追加である。REQ-047の許容範囲でyamlとlockfileの変更を提案し、rootのquality.yaml読取にcoreのversion 2スキーマを使う。入力予算・リンク制約は既存InputReaderを使う。キーの既定値はcoreだけで補い、環境変数やAGENTSから拾わない。R-C001-07のA候補ではspec-onlyのquality不在を除き、必要ファイルの不在は読取不能のruntime/3、権限不足はpermission/3、構文・型・未対応版・NA必須値の不正はconfig/2とする。既存loomake.config.json省略時の既定値は維持するが、存在する設定の読取不能は3へ分ける。
 
-R-C001-07の回答後、v2切替前にこのリポジトリへ有効なroot quality.yamlを配置し、進行中changeのspec-onlyとdoneへの影響を確認する。新規導入・既存導入に最小例（version、model、品質項目と証拠条件）と手動配置の案内を用意する。空の最小例も構造としては読めるが、空や全NAでdoneのPASSにしない。#66の全面init生成を待たず、既存ファイルを自動上書きする方法も採らない。
+R-C001-07のA候補では、[初期品質と切替手順](design-candidate-a.md#初期品質と切替手順)のci.test_report 1必須項目をv2切替前に配置し、各changeの承認REQ集合とplanへ結び付ける。切替当日の全open PRを棚卸し、実装済みPRはmain取込・最新headの新鮮な実証跡・新ゲート成功を確認する。計画Draftや証拠未取得PRを一括合格にせず、未移行PRのマージを止める。新規導入・既存導入に最小例（version、model、品質項目と証拠条件）と手動配置の案内を用意する。空の最小例も構造としては読めるが、空や全NAでdoneのPASSにしない。#66の全面init生成を待たず、既存ファイルを自動上書きする方法も採らない。
 
 純粋判定 `evaluateQualityConditions` の入力はqualityと、別段階で適格性/実施を照合した観測結果。比較値は有限数値、比較演算子は既存5種とし、min_samplesを満たす必要証拠を全件照合する。証拠ごとに未定義・未取得・未実施・未照合・不足を区別し、適格な証拠で確認できた必須条件の違反が1件でもあればFAILを優先する。FAILがなければ不足を優先する。NA理由と確認者はスキーマと判定境界で確認する。集約は既存 `aggregateCiVerdict` を使う。自動実行条件・版・適格性の確認を飛ばして最終合格を作らない。
 
@@ -91,7 +91,7 @@ runのlastVerify.okはlocal項目の完了を表す既存表示へ投影し、CI
 
 ## Migration Plan
 
-現在の#60受入は確認済み。確認事項10件の回答と追加具体案の採否を記録し、必要な差分仕様・trace・tasksを更新してstrictと仕様ゲートexit 0を確認してから、既存delivery指示のapplyへ進む。全A候補ではS1の内部基準準備とS2の公開側/全利用側のv2一体切替を分け得るが、S1やschema 2だけを置いた状態をC-001完了にしない。S1を先行受入する場合は、独立changeの限定したDoD・REQ対応試験・通常done 0と同期archiveを経てS2へ進む未承認候補とし、未完了の親C001 gateを緩めない。新change/IDは今回作成しない。S2の通常self-ci gateと独立trusted check、最終headの必須CI・配布検証と、R-C001-06で採用したローカル/CIのDoDをすべて満たす。
+現在の#60受入は確認済み。確認事項10件の回答と追加具体案の採否を記録し、必要な差分仕様・trace・tasksを更新し、受入済みREQ-305/307を含むmainを通常mergeしてからstrictと仕様ゲートexit 0を確認して、既存delivery指示のapplyへ進む。全A候補ではS1の内部基準準備とS2の公開側/全利用側のv2一体切替を分け得るが、S1やschema 2だけを置いた状態をC-001完了にしない。S1を先行受入する場合は、独立changeの限定したDoD・REQ対応試験・通常done 0と同期archiveを経てS2へ進む未承認候補とし、未完了の親C001 gateを緩めない。新change/IDは今回作成しない。S2の通常self-ci gateと独立trusted check、最終headの必須CI・配布検証と、R-C001-06で採用したローカル/CIのDoDをすべて満たす。
 
 戻す場合は公開側・利用側を同じ単位で戻し、既に追加したv2証拠や旧fixtureを消さない。旧版へ戻した環境で新証拠を1.0.0に読み替えず、未対応版として止める。計画だけのPRではchangesetの実バージョン切替や製品コードを変更しない。
 
@@ -99,13 +99,19 @@ runのlastVerify.okはlocal項目の完了を表す既存表示へ投影し、CI
 
 未回答のR-C001-01〜10はtraceに選択肢・おすすめ・止まる範囲を記した。いずれも採用済みの技術判断ではない。同期/lazyの技術的実現性、Report投影、既存consumerの追従は技術資料で具体化する。取得範囲は03、判定器の構築は04、保護差分は05に分けた。DoD・quality配置・warn・旧Schema公開・spec-only計数も06〜10の回答前に決定しない。
 
-## warnの移行候補（R-C001-08）
+## warnと省略コマンドの移行候補（R-C001-08）
 
-| 現行run.tsのwarn | A候補のv2表現 |
-|---|---|
-| loomake.config.jsonの未知キー | 既知項目の検査が有効ならPASSのreasonに案内を残す。未知キーを必須違反に変えない |
-| 未承認の仮定 | decision.requiredへ理由を残し、該当する確認項目は不足とする。承認済みへ読み替えない |
-| 確認待ちの要件 | decision.requiredへ理由を残し、該当確認は不足とする |
-| auto時のOpenSpec CLI不在 | 未実施の構造検証を不足として示す。strict検証を実施したと扱わない |
+R-C001-08のA/Bは未承認であり、下の比較を採用済みとは扱わない。追加レビュー末尾の推奨も回答ではない。REQ-036・037・039・191をMODIFIEDとし、R-C001-05の承認対象にも含める。
 
-この表は採用前の候補である。R-C001-08のBなら全warnを不足とし、既存利用側への影響と保護された期待値を再確認する。新しい警告が増えた場合も機械的にPASSへ写さず、同じ分類を明示する。
+| 現行状態 | A候補 | B候補 |
+|---|---|---|
+| spec-onlyの未承認仮定/確認待ち要件 | PASSのreasonに案内を残す。その案内だけで要判断/pendingを立てず0を保つ | Aと同じ |
+| doneの未承認仮定/確認待ち要件 | 該当IDを不足・要判断理由へ残し1にする | Aと同じ |
+| auto時のOpenSpec CLI不在、local | 未実施をPASSのreasonと人向け案内へ残す。strict実施済みとは報告しない | 設定上任意の構造検証を理由付きNOT_APPLICABLEにし、summaryのNAへ数える |
+| auto時のOpenSpec CLI不在、ci | 不足として1にする。任意設定を使って必要なci検証を実施済みにしない | Aと同じ |
+| loomake.config.jsonの未知キー | 既知項目の検査が有効ならPASSのreasonへ案内を残す | Aと同じ |
+| doneのskip-commands | 品質コマンドを不足としlocal/ciとも1。古いレポートを今回の成功根拠にしない | Aと同じ |
+
+Aをおすすめとする。localでの任意CLI不在という案内を品質項目のNAと混ぜず、既存のspec-only 0を保ちやすいからである。BのNAは構造検証のgate項目だけに使う案であり、品質項目の対象外理由・人の確認を代替しない。いずれも明示trueでのCLI不在/実検証失敗とブロッキング質問の不合格は保持する。入力不正等のabortedがあれば、終了コード2/3の優先順は変えない。
+
+spec-onlyの案内だけでdecision.requiredを立てるとREQ-036の0を失うため、この案内とdoneの判断待ちを分ける。R08採否後に採用分だけを規範仕様へ残し、候補・質問IDを規範文から除く。旧skipの単独成功から不足1への変更はREQ-191とR05/R08で明示承認する。

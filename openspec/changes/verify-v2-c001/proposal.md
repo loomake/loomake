@@ -9,8 +9,8 @@
 - **BREAKING** verify JSON を `schemaVersion: 2.0.0` の実行状態・scope・4値判定へ移す。aborted と終了コード0〜3を契約試験にし、旧1.0.0は履歴閲覧に限って残す。旧JSON Schemaの追加公開案はR-C001-09で判断する。
 - quality.yaml `version: 2` を読み、対象外の理由・確認者、比較条件、証拠不足、集約を純関数で判定する。正常PASSに必要な最小実証跡の取得範囲はR-C001-03で確定し、未取得・未照合の証拠をPASSにしない。
 - kit/CLI、ci-gate、runner、trace record/report、埋め込みJSON Schema、公開型・配布物・移行説明を一体で追従させる。
-- quality.yamlの初期準備は最小例の手動作成と移行案内を計画する。31副特性のinit生成全体（#66）は含めない。
-- bare verifyの契約衝突（R-C001-01）、`summary.evaluated` の意味（R-C001-02）、最小実証跡の範囲（R-C001-03）と信頼する判定器の構築（04）を分け、互換差分（05）・ローカルDoD（06）・quality配置（07）・warn移行（08）・旧JSON Schema公開（09）・spec-only計数（10）も未回答のブロッキング質問としてレビューへ出す。推奨案を承認済みとは扱わない。
+- quality.yamlの初期準備はci.test_reportの1必須項目を持つ具体候補と、切替当日の全open PRの再検証をR07で判断する。31副特性のinit生成全体（#66）は含めない。
+- bare verifyの契約衝突（R-C001-01）、`summary.evaluated` の意味（R-C001-02）、最小実証跡の範囲（R-C001-03）と信頼する判定器の構築（04）を分け、互換差分（05）・ローカルDoD（06）・quality配置（07）・ゲート/scope別warnとskip-commandsの非互換移行（08）・旧JSON Schema公開（09）・spec-only計数（10）も未回答のブロッキング質問としてレビューへ出す。推奨案を承認済みとは扱わない。
 
 ## Capabilities
 

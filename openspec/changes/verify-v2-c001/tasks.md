@@ -5,7 +5,7 @@
 ## 1. 仕様と依存の確定
 
 - [x] 1.1 proposal・差分仕様・design・tasks・traceを準備し、出典・公開側/利用側・未回答の停止範囲をレビューできる資料にする。OpenSpec strictの成功と、仕様ゲートが未回答で失敗することを記録する
-- [ ] 1.2 R-C001-01〜10の人の回答・追加具体案の採否と承認元を記録する。#60受入済みの事実を踏まえ、採用するsource/metric・plan・最小適格性・正常PASS例・REQ-042/055/073/275/276/305/307の扱いとC1〜C5の具体的assertion差分を差分仕様へ反映し、実装前に受入済みREQ-305/307を含むmainと整合し、保護された期待値変更の個別承認とstrict・仕様ゲートexit 0を確認する
+- [ ] 1.2 R-C001-01〜10の人の回答・追加具体案の採否と承認元を記録する。#60受入済みの事実を踏まえ、採用するsource/metric・plan・最小適格性・正常PASS例・REQ-036/037/039/042/055/073/191/275/276/305/307とC1〜C5の具体的assertion差分を整理する。全回答を記録したあと、差分仕様の規範文から候補・質問ID・未決選択肢の文言を除き、採用した振る舞いだけへ確定し、台帳の確認待ち状態を照合して更新する。受入済みREQ-305/307を含む最新mainを通常mergeしてからstrictと仕様ゲートexit 0を確認する。保護された期待値変更は具体差分の個別承認を得る
 - [ ] 1.3 1.2後、R-C001-04のAを採用する場合だけS1内部基準準備を具体化する。承認済みanchor/spec/必須REQ集合・quality/plan/method/tool/version/hashを固定し、private handoff・base-built判定module・S2自己ゲートとの一致検査を準備する。先行受入するS1は独立change・その範囲のDoD/REQ対応試験/通常done 0で受け入れ同期archive後にS2へ進む候補とし、新change/IDは採否後の担当・既用ID・枠確認まで作らない。親doneを緩めず、S1をC-001完了とせず、設定・公開操作は別途の具体的承認まで行わない（REQ-313・319）
 
 ## 2. 公開形式と履歴の分離
@@ -15,10 +15,10 @@
 
 ## 3. 最小入力と限定した判定
 
-- [ ] 3.1 quality.yamlの予算付き読取と既定値を接続し、最小入力・YAML不正・型/版不正・不在・権限をID付き試験で区別する。R-C001-07の回答に従いv2切替前にroot quality.yamlを配置し、進行中changeのspec-onlyで不在許容/構造検査を確認する。手動配置の最小例と構文2/読取3の移行説明を追加する（REQ-310）
+- [ ] 3.1 quality.yamlの予算付き読取と既定値を接続し、最小入力・YAML不正・型/版不正・不在・権限をID付き試験で区別する。R-C001-07の回答に従いv2切替前にroot quality.yamlを配置し、詳細候補のci.test_report 1必須項目と各changeの承認済みREQ集合へのplanを準備し、進行中changeのspec-onlyとdone/ciを確認する。切替当日の全open PRを棚卸し、実装済みPRはmain取込・対象headの新鮮な証拠・新ゲート成功を確認する。計画Draftは仕様待ち失敗を維持し、未移行/証拠未取得のPRはマージを止める。手動配置の最小例と構文2/読取3の移行説明を追加する（REQ-310）
 - [ ] 3.2 適格性と実施確認を含む観測入力の限定条件判定を追加し、5比較演算子の境界、min_samples、NA、参考指標、未実施/古い/未照合の不足、未完の集計値で暫定FAIL/PASSにしないこと、入力不変をID付き試験で確かめる（REQ-313）
 - [ ] 3.3 R-C001-03と04で決めた範囲の最小接続を満たし、producer/version・実効script/config/lock/tool・承認済みspec/REQ集合・対象SHA・環境・同一invocation鮮度・基準と証拠hashを正常PASS例で照合する。failedとmissing/skip/todoを分け、古い結果・PRのREQ削除・exit 0だけの偽陽性と最小接続のpartial/abortedを試験する（REQ-313・319）
-- [ ] 3.4 既存集約と回答済みevaluatedの定義でsummaryを作り、件数とchecks一致、品質対象0/全NA/証拠空をgateのPASSで相殺しないquality:subjects guard、local pending、decisionとの独立性をID付き試験で確かめる。R-C001-02がAならguardもevaluatedへ数える。R-C001-08のwarn対応と10のspec-only品質計数を回答どおりに確認する（REQ-314）
+- [ ] 3.4 既存集約と回答済みevaluatedの定義でsummaryを作り、件数とchecks一致、品質対象0/全NA/証拠空をgateのPASSで相殺しないquality:subjects guard、local pending、decisionとの独立性をID付き試験で確かめる。R-C001-02がAならguardもevaluatedへ数える。R-C001-08のゲート別warn対応・localのOpenSpec不在PASS/NA・ci不足と、REQ-191のskip-commands不足1、10のspec-only品質計数を回答どおりに確認する（REQ-314）
 
 ## 4. CLIと既存利用側の一体移行
 

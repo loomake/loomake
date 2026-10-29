@@ -2,7 +2,7 @@
 
 ## 位置づけと基準
 
-確認事項R-C001-01〜10がすべてAとなる場合の、採否を判断するための具体案である。回答・回答者・回答日は未記入のままとし、承認済みの仮定を追加しない。いずれかがBなら該当部分を再設計する。この文書をそのまま実装指示や規範仕様にせず、採否後に必要な差分仕様へ反映し、仕様ゲートexit 0を確認する。製品・既存試験・設定は変更しない。差分仕様はレビュー指摘に基づき既存仕様と整合させた候補であり、採否は未回答のままである。
+確認事項R-C001-01〜10がすべてAとなる場合の、採否を判断するための具体案である。R08のBはlocalのOpenSpec不在をNAとする別候補であり、この全A案ではAの理由付きPASSを例示する。いずれも未承認である。回答・回答者・回答日は未記入のままとし、承認済みの仮定を追加しない。いずれかがBなら該当部分を再設計する。この文書をそのまま実装指示や規範仕様にせず、採否後に必要な差分仕様へ反映し、仕様ゲートexit 0を確認する。製品・既存試験・設定は変更しない。差分仕様はレビュー指摘に基づき既存仕様と整合させた候補であり、採否は未回答のままである。
 
 計画branchの作成基準はmain `f397109`。今回の製品調査基準はmain `f4e3edb`で、同mainの製品ソースを調査した。#60は当時の未受入依存であったが、[PR140](https://github.com/loomake/loomake/pull/140)・[PR141](https://github.com/loomake/loomake/pull/141)で修正・仕様同期・archiveを受け入れ、2026-10-29T03:32:23Zにclose済みである。現在の実装停止理由は未回答10件と仕様ゲートである。
 
@@ -14,7 +14,27 @@ R01Aのbare品質専用経路は、架空のchange IDを補わず `change: null`
 
 S1は公開側の切替前に信頼する内部判定器と固定基準を準備する段階、S2はverify/Evidenceのv2実出力と利用側を一体で切り替える段階を指す。anchorは人の承認と基準側の固定情報から取る版・commit・hashなどの識別情報、base-built checkerはその固定した基準側ソースをbuildした判定器である。private handoffはその判定器と計画の保存先を内部で引き渡す経路を指す。fresh Tは基準側が今回の実行で新しく取得した結果、Sは対象CLI/APIの結果であり、Tを独立した照合の基準にする。
 
-R-C001-03のAだけならadapter・plan・適格性の実装と試験が対象である。04のAも採用するとS1独立changeの仕様・build・受入・archive、private handoff、S2との照合が加わり、単一adapterの追加を超える複数段階の作業になる。工数の数値は採否前に確定せず、既存見積りをこの候補だけで更新しない。
+R-C001-03のAだけならadapter・plan・適格性の実装と試験が対象である。04のAも採用するとS1独立changeの仕様・build・受入・archive、private handoff、S2との照合が加わり、単一adapterの追加を超える複数段階の作業になる。採否前の判断材料として以下に44〜88人時の見積幅を示す。実装実績や納期の保証ではなく、固定済みの既存C-001見積りは書き換えない。
+
+## S1の工数見積り
+
+2026-10-30に、TypeScript/Nodeと本リポジトリに慣れた1人がAIを使わずに進める場合の実作業を、**44〜88人時**と見積もった。1人日を8時間とすれば5.5〜11人日になる。これはR-C001-04のS1準備とS2への引継ぎ契約までの推定であり、実測・実装開始・人の採用判断ではない。承認/CIキューの待機、S2の公開側/全利用側の本実装、全面host隔離、全provider、公開/権限操作は含めない。元のC-001見積り24〜58時間とは範囲が異なり、重なる検証もあるため単純加算しない。
+
+| S1で準備する範囲 | 人時 | 調査した再利用部分と新規部分 |
+|---|---|---|
+| 独立changeの仕様・受入・固定anchorの契約 | 4〜8 | OpenSpec/既存DoDを使えるが、基準承認とS1/S2の契約は新規 |
+| exact2.0.0の内部parser・同期loader・旧公開v1の保持 | 4〜8 | coreの既存schema/遅延loaderを参考にできるが、現在のverify schemaは1.0.0 |
+| verification.yaml・品質条件とmethod/producer/REQ集合のvalidator・hash照合 | 6〜12 | kitの予算付きInputReader、traceのhash検査は再利用候補。独立した基準manifest/依存graphの照合とtarget比較・不足/FAIL判定の接続は新規 |
+| ci.test_reportの最小adapter・今回実施のreceipt | 6〜12 | core/test-report.tsはpassed ID抽出だけ。failed/skip/todo、実tool/対象/鮮度の照合は追加が必要 |
+| 基準側checkout/build・module確認・private handoff | 6〜12 | kitのprocess予算は使えるが、信頼するS1 moduleの準備/拘束とcontrollerは存在しない |
+| S2が直接呼べる境界とS/T一致の契約試験 | 8〜16 | ci-gate.mjsはCLI終了値だけを使う。別のfresh T・exact解析・差分照合のharnessを新規に用意する。S2本実装は別 |
+| 境界/改変/古い証拠の拒否と配布・Node22/24確認 | 6〜12 | 既存Vitest/smokeの枠を使い、改変manifest・module・REQ集合、partial/abortedを追加確認する |
+| 設計資料・レビュー対応・限定DoD・同期archive・引継ぎ | 4〜8 | 既存手順を使うが、S1単独での受入と親gateを緩めない確認が必要 |
+| 合計 | 44〜88 | 8項目の作業幅の合計。並列化による短縮は計上していない |
+
+根拠として読んだ実装はpackages/core/src/test-report.ts・verify-result-schema.ts・quality-schema.ts、packages/kit/src/verify/policy/coverage-policy.ts・quality-verdict.ts・runtime/input.ts・runtime/process.ts、scripts/ci-gate.mjsと既存CIである。既存集約は適格な入力が来たあとの4値集約であり、S1の信頼や実施確認を代替しない。
+
+前提は1つのVitest JSON形式とLinuxの基準側controller、現在のpackage/lock構成を対象にし、Node22.12/24の互換性を確認できることである。S1のcode/job/anchorを独立承認で固定できることも前提とする。Windows/macOSの基準側controllerまで同時実装する場合や、実効scriptの動的な依存先を固定できない場合はこの幅では見積もれず、契約と範囲を再調査する。下限は既存I/O/予算/loaderを再利用できる場合、上限は改変拒否と配布境界の手直しが増える場合の作業量で、完了までの暦日ではない。
 
 ## 最小の入力と観測
 
@@ -43,6 +63,38 @@ product:
 既存のcoverage抽出はpassedだけを保持する。これを欠落判定の根拠に転用せず、adapterで必要最小限のstatus観測を別に追加する案とする。適格なpassed/failedと、missing・skip・todo・pending・未取得・未照合を分ける。failedは実施された違反の根拠になり、後者は不足の根拠になる。coverageの既存意味と旧assertionは維持する。
 
 比較演算子は既存5種（<=・>=・==・<・>）を維持し、例だけを `== 0` とする。有限で完全な有効値、または当該比較の違反が確定する有効な実施根拠があるときに比較する。未完の集計値・数値0・成功IDのabsenceだけから暫定PASS/FAILを作らず、それまでは不足とする。適格な実施違反が確立したときに限り、ほかの不足と同時でも既存のFAIL優先を適用する。5演算子の境界試験はタスク3.2に残す。
+
+## 初期品質と切替手順
+
+R-C001-07のA候補として、空や全NAのroot qualityではなく、次の**ci.test_reportの必須1項目**を置く。これは03/04の最小接続を採用する場合の提案であり、PQ-900の正式割当・指標・閾値・初期ファイルを承認済みとは扱わない。実際のrootファイルは今回作成せず、既用PQ IDとの衝突を配置前に確認する。
+
+```yaml
+version: 2
+model: iso-iec-25010-2011
+product:
+  PQ-900:
+    characteristic: functional_suitability
+    subcharacteristic: functional_correctness
+    blocking: true
+    applicability: applicable
+    evidence:
+      - source: ci.test_report
+        metric: required_subjects_with_failed_tests
+        target: "== 0"
+        min_samples: 1
+```
+
+初期値のmin_samplesは1であり、上の説明用合成例の3とは別の採否対象である。各changeのverification.yamlは、承認されたそのchangeの全必須REQ集合とPQ-900のmeasureを結び付ける。linked_requirementsをC-001の2要件だけへ固定して他changeへ流用しない。必要な全REQが実施されていることは別に必須とし、1つの成功テストだけでほかのREQのmissing/skipを通す条件にはしない。failed・不足・古い結果・偽装した自己申告は従来の候補どおりnotPASSとする。31副特性全体の品質合格を表す初期値でもない。
+
+切替日のA候補は次の順とする。日付は採否後に決め、今回のおすすめを実施済みの切替許可とは扱わない。
+
+1. S1採用時はその独立受入と同期/archiveを終え、v2切替前に上のroot品質と各進行中changeの承認REQ集合/planを準備する。文書追加だけの先行段階では旧ゲートの成功をv2合格とは呼ばない。
+2. 切替直前にGitHubの全open PRの番号・対象change・head・依存・ゲート版を棚卸しする。固定の現在PR一覧を将来の全件だとは扱わない。plan/adapter/初期root品質を含むS2で同じ契約を有効にする。
+3. 完了を主張する実装PRは、承認REQ集合のplanを割り当て、切替mainを通常mergeした最新headで品質コマンドを新規実行する。ローカルdone/localと最終done/ci・必須CIを再確認する。切替前の緑CIや旧v1証拠だけでマージしない。
+4. 計画だけのDraft PRはspec-onlyで既存の未回答を検出し、doneの未完了失敗を保つ。移行用の架空のPASSやNAを与えない。plan/実証跡を準備できない実装PRはそのマージだけを保留し、不足の対象・担当・次の検証をPRへ記録する。
+5. changeなしの文書/開発補助PRは、従来の対象選択とR01で採用した品質専用経路を保ち、存在しないchangeや空の品質PASSへ付け替えない。各実装PRの移行が済んだことを確認してから通常の取り込みへ戻す。
+
+これにより初期空入力による一斉不足の原因を避けるが、1項目を置くだけで既存PR全件がPASSになるとは約束しない。必要なplanと実施がそろわないPRは止める。Bなら初期項目・対象PRの準備・切替順を再設計し、空や全NAを合格にする例外は加えない。
 
 ### 検証計画の候補と照合順
 
@@ -116,6 +168,9 @@ Sは一致検査の対象で、独立Tを置き換えない。S/T不一致やanc
 | 構文は有効だが存在しないchange | 既存REQ-055の存在check FAIL/1を保持。自動でusage/2へ変更しない |
 | 品質対象0、全NA、または必要証拠配列空、gateだけPASS | quality:subjectsが不足。ci全体は不足/1。Aならguardを含めevaluated=checks.length |
 | 有効違反に加えてdecision.required=true | checks/summaryへFAILを残して1。runnerは修正を続けず判断待ち |
+| spec-onlyの未承認仮定/確認待ちだけの案内 | A/BともPASSの理由と案内に残し、その案内だけではpending/要判断を立てず0。ブロッキング質問の不合格は保持 |
+| auto OpenSpec CLI不在 | localはR08 Aの理由PASSかBの理由NA、ciは不足1。いずれもstrict実施済みとは報告しない |
+| doneでskip-commands | local/ciとも品質コマンド不足1。古いレポートで成功を補わない |
 | localの全項目完了／未完了あり | 前者はverdictなし・pending0/fail0で0、後者はpendingへ数えて1。local0をci合格にしない |
 | reportのexit0だけ、CI集約skip/neutralだけ、未完の測定値0だけ | PASS不可。必要実施と適格性を確認できなければ不足 |
 
@@ -169,7 +224,7 @@ kitの現在の直接依存はcoreだけでyamlはない。REQ-047の許容内�
 | C2 R01Aのmissing-change | change必須経路の--change未指定はaborted2だが、有効な非実在IDはREQ-055の存在FAIL1である。両者を混同しない。R01の意図が後者もabortedなら、便宜変更せず採否を踏まえて再設計する |
 | C3 REQ-073 | Evidenceの未対応版2を拒否する現行Scenario/診断とEvidence2導入が衝突する。便宜的に未対応版を3へ書換えず、R05の採否を得てから、必要な既存期待値変更の明示承認を得る |
 | C4 埋め込み・公開型 | Evidence1を埋め込む型・smoke・report/reuseの旧定数を棚卸しする。履歴のbytes・documents省略を保持し、現行書出しだけをv2へ一体移行する |
-| C5 診断・同期性 | stderr空や同期/予算の既存assertionを、観測warningに合わせて弱めない。配布時の実際の挙動を確認し、必要な互換変更は承認材料として残す |
+| C5 診断・同期性と警告/省略コマンド | REQ-036/037/039のwarnはR08のゲート/scope別案、REQ-191のskipは不足/1へ移す未承認候補である。stderr空や同期/予算の既存assertionを、観測warningに合わせて弱めない。配布時の実際の挙動を確認し、必要な互換変更は承認材料として残す |
 
 これらは変更済み・承認済みではない。R-C001-05で非互換範囲の採否を明示し、具体的assertion変更は差分を棚卸しして個別承認を得る。R01のbare経路とR03/04の正常PASSの範囲にも結び付け、要件番号の定義を便宜的に変更しない。
 
@@ -188,7 +243,7 @@ kitの現在の直接依存はcoreだけでyamlはない。REQ-047の許容内�
 
 ## 採否と完了条件
 
-R01はbare verifyの境界、R02はevaluated、R03は最小adapter・plan・producer mapping、R04はS1/bootstrap/private handoffの追加契約と依存を判断する。R05はC1〜C5、R06はローカルDoD、R07はquality移行、R08はwarn、R09は旧JSON Schema公開、R10はspec-onlyの計数を判断する。日常的なsource照合・同期loader・利用側の追従は技術作業として扱い、10質問への人の回答を代行しない。
+R01はbare verifyの境界、R02はevaluated、R03は最小adapter・plan・producer mapping、R04はS1/bootstrap/private handoffの追加契約と依存を判断する。R05はC1〜C5、R06はローカルDoD、R07はquality移行、R08はゲート/scope別warnとskip-commands、R09は旧JSON Schema公開、R10はspec-onlyの計数を判断する。日常的なsource照合・同期loader・利用側の追従は技術作業として扱い、10質問への人の回答を代行しない。
 
 C003には全provider、全host隔離、広いCI成果物取得/再利用連鎖、最小接続以外のpartial取得経路、全禁止キーの網羅が残る。C001の最小接続の適格性・実施確認・必須のpartial/aborted分類はその残作業へ先送りしない。S2の実出力v2と全利用側移行、ローカルdone/localの0、最終done/ciのPASS・要判断なし・0、独立trusted TのPASS、全要件のID付き試験、全タスクと必須CI・配布検証を確認する。
 
