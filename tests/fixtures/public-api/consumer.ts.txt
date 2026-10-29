@@ -73,3 +73,12 @@ export async function consumeQualityReportContract(input: unknown): Promise<Qual
   const result: QualityReport = qualityReportSchema.parse(input);
   return { ...result, version };
 }
+
+// REQ-305・REQ-306: 配布物の共有型と集約関数を追加APIとして使う。
+export async function consumeQualityVerdict(input: readonly import('@loomake/core').QualityResult[]) {
+  const { loadQualityResultSchema } = await import('@loomake/core');
+  const { aggregateCiVerdict } = await import('@loomake/kit');
+  const { qualityResultSchema } = await loadQualityResultSchema();
+  const verdict: import('@loomake/core').QualityResult = qualityResultSchema.parse(aggregateCiVerdict(input));
+  return verdict;
+}
