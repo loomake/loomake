@@ -49,7 +49,7 @@ Source: REQ-321
 - **THEN** 生成・照合や診断出力を行わず、呼び出し元の終了コードを変更しない
 
 ### Requirement: 生成ページの導線と既存契約の保持
-生成ページはdocs/guide/3.referenceに置き、空でないtitle/descriptionと生成元・再生成方法を持ち、guideの入口からリンクできる SHALL。既存のリファレンスとリンクを保持し、CLI・quality.yamlの受理/補完・公開8 JSON・公開型/exports・実行時依存・判定を変更しない MUST。CLIリファレンス生成とC-001の未決契約は本範囲へ含めない MUST。スキーマの文字列はMarkdown/HTMLの構文として実行されない形で表示する SHALL。
+生成ページはdocs/guide/3.referenceに置き、空でないtitle/descriptionと生成元・再生成方法を持ち、guideの入口からリンクできる SHALL。既存のリファレンスとリンクを保持し、CLI・quality.yamlの受理/補完・公開8 JSON・公開型/exports・実行時依存・判定を変更しない MUST。CLIリファレンス生成とC-001の未決契約は本範囲へ含めない MUST。スキーマの文字列はMarkdown/HTMLの構文として実行されない形で表示する SHALL。掲載先によらずquality.schema.jsonはhttps://github.com/loomake/loomake/blob/main/packages/core/schema/quality.schema.json、quality-schema.tsはhttps://github.com/loomake/loomake/blob/main/packages/core/src/quality-schema.tsへリンクする SHALL。
 
 Source: REQ-322
 
@@ -64,6 +64,10 @@ Source: REQ-322
 #### Scenario: 文字列の表示
 - **WHEN** スキーマのdescriptionや値にMarkdownの区切り・改行・HTML記号が含まれる
 - **THEN** 表の列や構造を壊さず、元の文字列として読める形で表示する
+
+#### Scenario: GitHubとサイトでの生成元リンク
+- **WHEN** 生成したqualityリファレンスをGitHubの文書ページまたは使い方サイトで読む
+- **THEN** quality.schema.jsonとquality-schema.tsの生成元リンクが、それぞれ `https://github.com/loomake/loomake/blob/main/packages/core/schema/quality.schema.json` と `https://github.com/loomake/loomake/blob/main/packages/core/src/quality-schema.ts` を指す。両掲載先を基準に解決しても同じURLとなり、リポジトリ内にある対応する通常ファイルを参照する
 
 ### Requirement: 現行CLIの全コマンドとオプションのリファレンス
 CLIのリファレンスは、CLIと共通の定義から生成する SHALL。全コマンド・操作・各コマンドが受け付けるオプションについて、構文・説明・値を取るかどうか・必須/任意・組合せ条件・既定値・受理値と環境条件を表示する MUST。共通のhelp/version操作も含め、現在のCLIにない引数や未確定のv2契約を追加しない MUST。

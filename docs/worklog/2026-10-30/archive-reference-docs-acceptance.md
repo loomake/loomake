@@ -1,6 +1,6 @@
 # reference-docsの受入と仕様反映
 
-1. `add-cli-reference-generation`（7/7タスク、[PR #144](https://github.com/loomake/loomake/pull/144)）のREQ-323〜325を同期し、UTCのCLI日付に合わせて2026-10-29付でarchiveした。6成果物はbyte不変。main `751a8a1`の受入済み設計と既存の同期・archive手順を再利用し、Codexが実作業を担当した。実際のCodexモデル識別子は不明。
-2. 同じmainでCLIとURL changeの通常完了ゲートがそれぞれexit 0。全タスクと要件ごとの対応試験を確認し、CLI同期後の主仕様strictは29/29成功した。
-3. `fix-quality-reference-source-links`は次の同期対象。REQ-322の500字上限には設定を変えず対応する。元の4文・8 JSON不変条件・全Scenarioを保持したOpusの文面設計を受領した。新たな最終レビューは未実施で、管理役が別のOpusセッションで行う。
-4. 続いてURL changeを同期・archiveし、全体strictと通常verifyを確認する。[Issue #104](https://github.com/loomake/loomake/issues/104)の完了判断、PR作成・push・マージは管理役へ引き継ぐ。
+1. main `751a8a1`から、`add-cli-reference-generation`（7/7、[PR #144](https://github.com/loomake/loomake/pull/144)）と`fix-quality-reference-source-links`（5/5、[PR #149](https://github.com/loomake/loomake/pull/149)）を順に同期・archiveした。REQ-323〜325を追加しREQ-322を更新、Purpose・REQ-320/321と対象外の行を保持した。UTCのCLI日付に合わせた2026-10-29付のarchiveで、各6成果物はbyte不変。実作業はCodexが担当し、実際のモデル識別子は不明。
+2. 受入main上の通常完了ゲートは両方exit 0で、全タスクと要件ごとの対応試験を確認した。同期後strictは主仕様29/29、全体34/34、archive済み93/93成功。通常verifyもexit 0（lint・型検査・全1,434試験成功、既存skip 8）だった。製品コード・試験・品質設定は変更していない。
+3. 受入済み設計と機械的な同期・archive手順を再利用した。REQ-322の表現だけはOpusの文面設計（対象`751a8a1`、`claude-opus-5-5`、session `90ebbbf1-4f18-4110-b3b1-f6a1713eb627`、exit 0・権限拒否0）を受領し、Codexが追記節の重複4字とbacktick4個だけを除いた。本文480字・Source込み497字で、元の4文256字・公開8 JSON不変条件・両完全URLと4 Scenarioを保持した。元の差分仕様は変更していない。追加設計評価は0回で、最終レビューは未実施。管理役が新しいOpusセッションで行う。
+4. [Issue #103](https://github.com/loomake/loomake/issues/103)の追加検証では、固定site `12ab076`と受入main `751a8a1`で新たにローカルbuildがexit 0。14/14 HTML・title・llms/raw、2完全GitHub href、内部6 section参照を確認し、222 CSS/JS・498 CSS URL参照の欠落0、128 fontを確認した。本文index 13・edit 14・旧名称source 8ファイル45箇所（描画後の表示は別集計9 HTML 74箇所）、S103-01未回答と公開未確認は残る。管理役が[Issue #104](https://github.com/loomake/loomake/issues/104)の完了判断、最終レビューとPR作成・push・マージを行う。生成器・サイトコード・公開操作は変更していない。
