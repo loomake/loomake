@@ -116,6 +116,18 @@ export const SHARED_OPERATIONS = [
   { names: ['-v', '--version'], label: '-v, --version', description: '版を表示する', condition: '先頭引数として指定する。サブコマンドの固有オプションではない' },
 ] as const;
 
+export const CLI_REFERENCE = {
+  commands: CLI_COMMANDS,
+  sharedOperations: SHARED_OPERATIONS,
+  syntax: [
+    '値付きオプションは --name value と --name=value を受け付ける。空値は拒否する。',
+    '空白区切りで次の値が -- から始まるときは値不足とする。等号区切りでは -- から始まる値も渡せる。',
+    '値付きオプションを反復すると最後の値を使う。flagの反復は1回と同じで、flagに等号で値を付けると拒否する。',
+    '知らないコマンド・オプション・位置引数は拒否する。近い候補があるときは日本語で示す。',
+    'helpは同じ引数内のほかの処理より優先する。versionは先頭の引数としてだけ扱う。',
+  ],
+} as const;
+
 export function commandDefinition(name: Command): CliCommand {
   // nameはCOMMANDSで受理した名前か、既存handlerの名前に限る。
   const command = CLI_COMMANDS.find((item) => item.name === name);
