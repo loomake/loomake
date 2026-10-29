@@ -3,9 +3,8 @@ import { existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { createInputReader, specFiles, toPosix } from '@loomake/kit';
 
-/** 証拠に保存する文書の 1 つ。path は change のディレクトリからの / 区切りのパス */
-export type EvidenceDocument = { path: string; sha256: string; content: string };
-
+import type { EvidenceDocument } from '@loomake/core';
+export type { EvidenceDocument } from '@loomake/core';
 
 /** change の trace.md と差分仕様を読む。レポートが読むのはこの 2 種類だけ（REQ-127） */
 export function readDocuments(changeDir: string): EvidenceDocument[] {
