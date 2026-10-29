@@ -23,8 +23,7 @@ Loomake を導入してから日常的に使うまでの文書をまとめる。
 - [入力と実行の資源予算](3.reference/2.resources.md)
 - [信頼境界と保護の範囲](3.reference/3.security.md)
 - [quality.yamlの全項目](3.reference/4.quality-yaml.md)
-
-CLIのコマンドとオプションは、コードから生成するページとして後続で追加する予定。
+- [CLIのコマンドとオプション](3.reference/5.cli.md)
 
 ## 考え方
 
