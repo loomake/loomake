@@ -3,7 +3,7 @@
 ## 1. 計画と実装開始の依存
 
 - [x] 1.1 出典つきproposal・specs・design・traceを揃え、yomiyasu・OpenSpec strict・`pnpm -s verify --change add-cli-reference-generation --spec-only`の成功を記録する
-- [ ] 1.2 quality生成の受入・完了ゲート・全tasks完了とreference-docsの主仕様反映を確認してから最新mainへ追従し、Purpose・REQ-320〜322を保った計画と仕様ゲートの成功を再確認する。依存が揃うまで2.1へ進まない
+- [x] 1.2 quality生成の受入・完了ゲート・全tasks完了とreference-docsの主仕様反映を確認してから最新mainへ追従し、Purpose・REQ-320〜322を保った計画と仕様ゲートの成功を再確認する。依存が揃うまで2.1へ進まない
 
 ## 2. CLI定義とリファレンス
 

@@ -4,7 +4,7 @@
 
 動機はproposal.mdを参照する。基準main`684abf0`のargs.tsはparseOptionsと候補計算を持ち、コマンド定義はmain.tsにある。現在は5トップレベル、traceの4操作を含む8末端である。表示・受理・業務側の条件を一律の引数ライブラリへ置き換えると、診断の順序やhelpの優先が変わるため、定義の共用に範囲を絞る。
 
-quality先行changeはreference-docsを新設し、4.quality-yaml.md・guide入口・docs/dev/reference-generation.mdを担当する。この計画のCLIページは5.cli.mdとし、先行成果物は読み取り参照した。主仕様への反映はまだないため、先行changeの受入・archiveを実装開始条件にする。
+quality先行changeはreference-docsを新設し、4.quality-yaml.md・guide入口・docs/dev/reference-generation.mdを整備した。CLIページは5.cli.mdとする。PR #142とarchive PR #143を受入済みのmain `8d2d7ce`で主仕様のPurpose・REQ-320〜322を確認し、実装開始の依存を解消した。
 
 ## Goals / Non-Goals
 
@@ -75,4 +75,4 @@ CLIの配布コードargs.ts/main.tsが変わるため、loomakeをpatchにす�
 
 ## Migration Plan
 
-このターンは計画で止める。依存受入と仕様ゲートを再確認してから別のapplyで進める。共通記述と互換回帰、ページ生成/check、導線・開発手順・changeset、全体ゲートと独立レビューの順に小さくコミットする。問題があれば実装を差し戻し、旧help fixtureや既存試験を弱めて合わせない。Issue #104はqualityとCLIの両方を受け入れてから完了判断する。
+計画はcommit `9db6f64`で完了した。依存受入と仕様ゲートを再確認してから、既存delivery指示によるapplyで進める。共通記述と互換回帰、ページ生成/check、導線・開発手順・changeset、全体ゲートと独立レビューの順に小さくコミットする。問題があれば実装を差し戻し、旧help fixtureや既存試験を弱めて合わせない。Issue #104はqualityとCLIの両方を受け入れてから完了判断する。

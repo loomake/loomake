@@ -19,7 +19,7 @@ WBS W6-8・Issue #104は、CLIのコマンドとオプションからリファ�
 
 ### Modified Capabilities
 
-- `reference-docs`: 先行する`add-quality-reference-generation`が新設する同名capabilityへ、CLIの生成内容・既存動作の保持・生成一致の要件を追加する。REQ-320〜322とPurposeは複製しない。
+- `reference-docs`: `add-quality-reference-generation`で新設された同名capabilityへ、CLIの生成内容・既存動作の保持・生成一致の要件を追加する。REQ-320〜322とPurposeは複製しない。
 
 ## Impact
 
@@ -27,4 +27,4 @@ WBS W6-8・Issue #104は、CLIのコマンドとオプションからリファ�
 
 ## Planning Boundary / Dependencies
 
-基準mainは`684abf0`。この作業はplanning artifactsだけを作り、製品コードや試験を編集しない。quality生成の受入と、`reference-docs`の主仕様反映を実装開始の必須依存とする。現時点の主仕様に同capabilityがないことは確認済みであり、この計画で先に主仕様を作らない。依存受入後の実装でのみguide入口・共通手順へ追記し、quality担当と同時に編集しない。
+計画の基準mainは`684abf0`。計画commit `9db6f64`を、quality生成PR #142と仕様反映PR #143を受入済みのmain `8d2d7ce`へ引き継いだ。`reference-docs`のPurpose・REQ-320〜322と全7タスク完了を確認し、実装開始の依存を解消した。既存delivery指示による別のapply作業で実装し、guide入口・共通手順への追記は受入済みの内容を保って行う。

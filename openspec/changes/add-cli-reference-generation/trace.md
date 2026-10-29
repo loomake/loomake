@@ -40,8 +40,8 @@ REQ-320〜322はquality、REQ-308〜319はC-001のため再使用しない。本
 
 | 対象 | 扱い・根拠 |
 |---|---|
-| planningの範囲 | この作業は計画とstrict/spec-only検証だけ。製品コード・試験・主仕様・設定を変更せず、PRを作らない |
-| quality先行と共有capability | add-quality-reference-generationの受入・完了ゲート・全tasksとreference-docsのarchive/主仕様反映を実装開始の必須依存にする。基準mainに同capabilityがないため、この計画ではADDED差分だけを持ち、Purpose・REQ-320〜322を複製しない |
+| planningからの引き継ぎ | 旧planning担当は停止済み、commit 9db6f64の未push作業は本branchへcherry-pick済み。main 8d2d7ceからfeat/cli-reference-generationを作り、既存delivery指示でapplyへ移る |
+| quality先行と共有capability | [PR142](https://github.com/loomake/loomake/pull/142)のdone・全7tasks・CI40814920276成功と、[PR143](https://github.com/loomake/loomake/pull/143)の通常verify・CI40815827958成功を管理役が確認し受入済み。main 8d2d7ceで主仕様反映を確認し依存解消。Purpose・REQ-320〜322は保つ |
 | 担当の境界 | CLI担当は本changeのみ。quality側の生成器・共通helper・indexを同時に編集しない。guide入口と共通手順は先行受入後に追記する |
 | 表示と解析の差 | trace answerの--answerはparser候補順で最後、helpでは--byより前。runのengine表示もusageとhelpで異なる。現行を保つ |
 | 条件と既定値 | main.tsに加えrunAgreementとrunner prepareを根拠にする。記述の注記を新しい必須チェックへ転用せず、診断優先と下位処理を回帰試験で確認する |
