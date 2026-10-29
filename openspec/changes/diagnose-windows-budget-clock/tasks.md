@@ -10,7 +10,7 @@
 
 ## 3. 統合確認
 
-- [ ] 3.1 子プロセスの記録から2ファイル保存まで確認し、空のchangesetと作業記録を追加する。全タスクをチェックして `pnpm -s verify --change diagnose-windows-budget-clock --done` のexit 0と全要件のテスト対応を確認し、コミットする。
+- [x] 3.1 子プロセスの記録から2ファイル保存まで確認し、空のchangesetと作業記録を追加する。全タスクをチェックして `pnpm -s verify --change diagnose-windows-budget-clock --done` のexit 0と全要件のテスト対応を確認し、コミットする。
 
 ## Workflow follow-up
 
