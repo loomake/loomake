@@ -27,3 +27,10 @@
 2. verify の結果：生成/check、関連2ファイル63試験、typecheck・対象lint、生成ページのyomiyasu run/verifyは成功。通常/tmpでは容量不足でI/O試験9件が失敗し、TMPDIRを専有worktree内へ指定した同じ試験は全成功した。コード・期待値・設定は環境差のために変えていない。
 3. 残っている確認事項・仮定：全体doneの環境依存の再試験は行わず、native CIへ残す。
 4. 次にやること：タスク2.3の導線・手順・CLI patch changesetと配布試験経路での入口確認を行う。
+
+## タスク2.3と実装固定前の確認
+
+1. やったこと：guide入口と開発手順へCLI分を追記し、loomakeのpatch changesetと、packしたCLIの共通定義・原本46例・生成checkを検査する試験を追加した。生成器の作業ディレクトリ非依存と、先頭versionの扱いも確認した。
+2. verify の結果：最終の関連unit 12ファイル202試験、配布経路の新規1試験、全体lint/typecheck、build、OpenSpec全体strict 35/35、両生成ページのcheckは成功。通常npm cacheのENOSPCを記録し、TMPDIRとnpm_config_cacheを専有worktree内へ指定した同じ配布試験は成功した。文書・changesetはyomiyasu run/verify済み。
+3. 残っている確認事項・仮定：5/6タスク完了。3.1は独立レビュー・native CIと最終doneの確認待ちで未チェック。全体doneをローカルで反復せず、設定・期限・既存期待値を緩めていない。
+4. 次にやること：実装を固定して管理役へ渡す。push・PR作成、独立レビューとCIの受入は管理役が行う。

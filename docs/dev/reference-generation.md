@@ -1,6 +1,6 @@
-# quality.yamlリファレンスの生成
+# リファレンスの生成
 
-利用者向けの全項目リファレンスは、`packages/core/schema/quality.schema.json` から `docs/guide/3.reference/4.quality-yaml.md` へ生成する。生成ページを直接編集せず、coreのスキーマとdescriptionを正として更新する。現行の生成対象はquality.yamlだけで、CLIの共通定義とリファレンス生成はIssue #104の後続作業である。
+利用者向けのquality.yamlの全項目リファレンスは、`packages/core/schema/quality.schema.json` から `docs/guide/3.reference/4.quality-yaml.md` へ生成する。生成ページを直接編集せず、coreのスキーマとdescriptionを正として更新する。CLIのリファレンスは`packages/cli/src/args.ts`の共通定義から`docs/guide/3.reference/5.cli.md`へ生成する。
 
 ## 更新する順序
 
@@ -28,3 +28,20 @@ objectの子、recordの値とキー制約、配列要素、oneOfの各分岐を
 `tests/quality-reference.test.ts` は既存のunitプロジェクトに含まれ、`pnpm test` で保存済みページと再生成内容を照合する。専用のCIジョブや既存のskip条件は追加しない。文書だけのPRでもgateのverifyが品質コマンドを実行するため、生成ページだけを手編集したずれを検出できる。
 
 TSスキーマだけを変更して保存済みJSONを残した場合は、既存のcore JSON Schema一致試験が失敗する。JSONも更新して生成ページを残した場合は、リファレンス一致試験が失敗する。checkモードを試験内で使うときも読み取り専用とし、失敗を再生成で隠さない。
+
+## CLIリファレンスの更新
+
+CLIの受理名・候補順・ヘルプ・リファレンスは`packages/cli/src/args.ts`の共通記述を使う。値を取るかどうか・表示ラベル・説明・必須条件・既定値の注記をここで管理する。必須条件の検査や既定値の適用は従来のhandlerが行うため、変更時は記述とhandlerの振る舞いを両方確認する。
+
+```sh
+pnpm build
+node scripts/generate-cli-reference.mjs
+node scripts/generate-cli-reference.mjs --check
+pnpm exec vitest run --project unit tests/cli-reference.test.ts packages/cli/test/reference-definition.test.ts tests/doc-links.test.ts
+```
+
+生成の入口はビルド済みの`packages/cli/dist/args.js`を読み、ソースを暗黙にビルドしない。定義を編集したら最初にbuildする。checkはページを作成・修復せず、一致なら0、欠落・改変・読取/生成エラーなら非0を返す。生成器は作業ディレクトリによらず同じページを対象にする。
+
+`tests/cli-reference.test.ts`はビルド済みファイルではなくソースの共通記述からページを再生成して照合する。古いdistや生成ページを残したままでも、CLI定義とのずれを既存CIで検出できる。配布試験の経路でもビルド済み入口とpackしたCLIのhelp/usageを検査する。品質側の生成器・公開JSONの更新手順は変更しない。
+
+helpの原本は`packages/cli/test/fixtures/reference-cli-baseline.json`に基準mainとともに保存している。usage、help、解析候補には異なる順序や表記があるため、リファレンスの都合で揃えない。受理引数・診断の変更には別途仕様の変更を用い、原本や既存の試験期待値を都合よく書き換えない。

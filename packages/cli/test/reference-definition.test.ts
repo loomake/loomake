@@ -24,6 +24,16 @@ describe('変更前のCLI原本', () => {
   });
 });
 
+it('[REQ-324] versionは先頭だけで扱い、その後のhelpをコマンドのhelpとして扱わない', async () => {
+  const version = (JSON.parse(readFileSync(resolve(root, 'packages/cli/package.json'), 'utf8')) as { version: string }).version;
+  const output = io();
+  expect(await main(['--version', '--help'], output)).toBe(0);
+  expect(output.output).toEqual([version]);
+  const nested = io();
+  expect(await main(['doctor', '--version'], nested)).toBe(2);
+  expect(nested.errors.join('\n')).toContain('知らないオプションです：--version');
+});
+
 it('[REQ-323][REQ-324] 全コマンド・操作の受理名と解析順を明示値と照合する', () => {
   expect(CLI_COMMANDS.map((command) => command.name)).toEqual(['init', 'verify', 'trace', 'run', 'doctor']);
   expect(commandDefinition('trace').operations?.map((command) => command.name)).toEqual(['record', 'report', 'answer', 'approve']);
