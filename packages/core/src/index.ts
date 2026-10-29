@@ -21,3 +21,5 @@ export { QUALITY_REPORT_SCHEMA_VERSION, loadQualityReportSchema } from './qualit
 export type { QualityReport } from './quality-report.js';
 export { createAgreement } from './agreement.js';
 export type { Agreement, RequirementId, LedgerState } from './agreement.js';
+export { EVIDENCE_SCHEMA_VERSION, REPORT_SCHEMA_VERSION, loadTraceSchemas } from './trace-contracts.js';
+export type { Evidence, EvidenceDocument, Report, ReportRow } from './trace-contracts.js';

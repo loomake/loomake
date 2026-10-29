@@ -14,7 +14,7 @@ const run = (mode: string) => spawnSync(process.execPath, ['scripts/package-smok
 afterAll(() => rmSync(base, { recursive: true, force: true }));
 
 describe('実際に配るパッケージ', () => {
-  it('[REQ-057][REQ-138][REQ-139][REQ-143][REQ-146][REQ-169] packした5パッケージだけで主要コマンドと公開APIを使える', () => {
+  it('[REQ-057][REQ-138][REQ-139][REQ-143][REQ-146][REQ-169][REQ-304] packした5パッケージだけで主要コマンドと公開APIを使える', () => {
     const prepared = run('prepare');
     expect(prepared.status, prepared.stdout + prepared.stderr).toBe(0);
     const checked = run('check');

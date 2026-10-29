@@ -1,29 +1,16 @@
 import { existsSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { runExternal } from '@loomake/kit';
-import type { VerifyResult } from '@loomake/core';
+import type { VerifyResult, Evidence } from '@loomake/core';
 import { UsageError, assertChangeId, loadConfig, runVerify } from '@loomake/kit';
-import { changedDocuments, readDocuments, type EvidenceDocument } from './documents.js';
+import { changedDocuments, readDocuments } from './documents.js';
 
 import { EVIDENCE_SCHEMA_VERSION } from './schema.js';
 import { serializeEvidence } from './serialization.js';
 import { publishEvidence } from './publication.js';
 export { EVIDENCE_SCHEMA_VERSION } from './schema.js';
 
-/** `.loomake/evidence/<change-id>/` に置く 1 回分の記録 */
-export type Evidence = {
-  schemaVersion: number;
-  change: string;
-  /** 検査したコミットの SHA（全体） */
-  sha: string;
-  /** 検査したコミットの日時（ISO 8601） */
-  committedAt: string;
-  /** 記録した日時（ISO 8601、UTC） */
-  recordedAt: string;
-  verify: VerifyResult;
-  /** 検証した時点の trace.md と差分仕様（REQ-127）。古い記録にはない */
-  documents?: EvidenceDocument[];
-};
+export type { Evidence } from '@loomake/core';
 
 export type RecordOptions = {
   /** プロジェクトのルート（loomake.config.json のあるディレクトリ） */

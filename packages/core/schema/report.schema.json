@@ -1,0 +1,214 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number"
+    },
+    "change": {
+      "type": "string"
+    },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "recordedAt": {
+          "type": "string"
+        },
+        "sha": {
+          "type": "string"
+        },
+        "committedAt": {
+          "type": "string"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "documents": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "recordedAt",
+        "sha",
+        "committedAt",
+        "ok",
+        "documents"
+      ],
+      "additionalProperties": {}
+    },
+    "attention": {
+      "type": "object",
+      "properties": {
+        "noPassingTests": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "pending": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "changedDocuments": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "failedChecks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "noPassingTests",
+        "pending",
+        "changedDocuments",
+        "failedChecks"
+      ],
+      "additionalProperties": {}
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "requirements": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tests": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "result": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "合格",
+                  "合格（仕様との対応は未確認）",
+                  "合格したテストなし"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "source",
+          "state",
+          "summary",
+          "requirements",
+          "tests",
+          "result"
+        ],
+        "additionalProperties": {}
+      }
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "question": {
+            "type": "string"
+          },
+          "answer": {
+            "type": "string"
+          },
+          "answeredBy": {
+            "type": "string"
+          },
+          "answeredAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "question",
+          "answer",
+          "answeredBy",
+          "answeredAt"
+        ],
+        "additionalProperties": {}
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "approval": {
+            "type": "string"
+          },
+          "approvedBy": {
+            "type": "string"
+          },
+          "approvedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "content",
+          "approval",
+          "approvedBy",
+          "approvedAt"
+        ],
+        "additionalProperties": {}
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "change",
+    "evidence",
+    "attention",
+    "rows",
+    "questions",
+    "assumptions",
+    "warnings"
+  ],
+  "additionalProperties": {},
+  "$id": "https://loomake.dev/schema/report.schema.json",
+  "title": "Loomake release report"
+}

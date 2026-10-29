@@ -28,16 +28,18 @@ function staticPackages(file: string, seen = new Set<string>(), found = new Set<
 }
 
 describe('CLI の起動で zod を読まない', () => {
-  it('[REQ-050][REQ-284][REQ-301] CLI の入口から静的にたどれる範囲で zod を読まない', () => {
+  it('[REQ-050][REQ-284][REQ-301][REQ-303] CLI の入口から静的にたどれる範囲で zod を読まない', () => {
     expect([...staticPackages(join(packages, 'cli', 'src', 'cli.ts'))]).not.toContain('zod');
     expect([...staticPackages(entry('@loomake/core'))]).not.toContain('zod');
+    expect([...staticPackages(entry('@loomake/trace'))]).not.toContain('zod');
   });
 
-  it('[REQ-050][REQ-284][REQ-301] zod を読むファイルは、この検査で見つかる', () => {
+  it('[REQ-050][REQ-284][REQ-301][REQ-303] zod を読むファイルは、この検査で見つかる', () => {
     expect([...staticPackages(join(packages, 'core', 'src', 'json-schema.ts'))]).toContain('zod');
     expect([...staticPackages(join(packages, 'core', 'src', 'verify-result-schema.ts'))]).toContain('zod');
     expect([...staticPackages(join(packages, 'core', 'src', 'parser-schemas.ts'))]).toContain('zod');
     expect([...staticPackages(join(packages, 'core', 'src', 'quality-schema.ts'))]).toContain('zod');
+    expect([...staticPackages(join(packages, 'core', 'src', 'trace-schemas.ts'))]).toContain('zod');
     expect([...staticPackages(join(packages, 'core', 'src', 'quality-report-schema.ts'))]).toContain('zod');
   });
 });

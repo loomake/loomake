@@ -1,40 +1,15 @@
 import { join, relative, resolve } from 'node:path';
-import { parseSpec, parseTrace } from '@loomake/core';
+import { parseSpec, parseTrace, REPORT_SCHEMA_VERSION } from '@loomake/core';
+import type { Report, ReportRow } from '@loomake/core';
 import { UsageError, assertChangeId, loadConfig, findChangeDir, toPosix, createInputReader, JSON_LIMITS, type InputReader } from '@loomake/kit';
 import { EVIDENCE_DIR, EVIDENCE_SCHEMA_VERSION, type Evidence } from './record.js';
 import { changedDocuments, readDocuments, type EvidenceDocument } from './documents.js';
 import { evidenceProblem } from './evidence.js';
 
-/** レポートの JSON の形の版 */
-export const REPORT_SCHEMA_VERSION = 2;
+export { REPORT_SCHEMA_VERSION } from '@loomake/core';
+export type { Report, ReportRow } from '@loomake/core';
 
 export type ReportFormat = 'md' | 'json';
-
-export type ReportRow = {
-  id: string;
-  source: string;
-  state: string;
-  summary: string;
-  /** その要件を Source に持つ Requirement の名前 */
-  requirements: string[];
-  /** 証拠の記録で、その要件の合格したテストがあるファイル */
-  tests: string[];
-  /** 反映済の要件だけ「合格」か「合格したテストなし」。文書のない古い記録では「合格（仕様との対応は未確認）」。ほかの状態では null */
-  result: '合格' | '合格（仕様との対応は未確認）' | '合格したテストなし' | null;
-};
-
-export type Report = {
-  schemaVersion: number;
-  change: string;
-  /** documents は、検証した時点の文書を記録に保存しているか */
-  evidence: { recordedAt: string; sha: string; committedAt: string; ok: boolean; documents: boolean };
-  /** changedDocuments は、記録のあとで変わった文書のパス */
-  attention: { noPassingTests: string[]; pending: string[]; changedDocuments: string[]; failedChecks: string[] };
-  rows: ReportRow[];
-  questions: { id: string; question: string; answer: string; answeredBy: string; answeredAt: string }[];
-  assumptions: { id: string; content: string; approval: string; approvedBy: string; approvedAt: string }[];
-  warnings: string[];
-};
 
 export type ReportOptions = {
   root: string;

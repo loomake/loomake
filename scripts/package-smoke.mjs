@@ -141,6 +141,25 @@ export async function check(target) {
     assert.equal(Object.hasOwn(schema, 'version'), false);
   }
 
+  // 証拠・リリースレポートの公開契約は core と従来の trace の両方から使える（REQ-303・REQ-304）。
+  const traceSchemas = await core.loadTraceSchemas();
+  const tracePackage = await import(pathToFileURL(require.resolve('@loomake/trace')).href);
+  assert.equal(core.EVIDENCE_SCHEMA_VERSION, 1);
+  assert.equal(core.REPORT_SCHEMA_VERSION, 2);
+  assert.equal(tracePackage.EVIDENCE_SCHEMA_VERSION, core.EVIDENCE_SCHEMA_VERSION);
+  assert.equal(tracePackage.REPORT_SCHEMA_VERSION, core.REPORT_SCHEMA_VERSION);
+  const evidenceContract = { schemaVersion: 1, change: 'sample', sha: '', committedAt: '', recordedAt: '', verify: { schemaVersion: '1.0.0', mode: 'done', change: 'sample', ok: true, results: [] } };
+  const reportContract = { schemaVersion: 2, change: 'sample', evidence: { recordedAt: '', sha: '', committedAt: '', ok: true, documents: false }, attention: { noPassingTests: [], pending: [], changedDocuments: [], failedChecks: [] }, rows: [], questions: [], assumptions: [], warnings: [] };
+  for (const [name, value] of [['evidence', evidenceContract], ['report', reportContract]]) {
+    assert.deepEqual(traceSchemas[`${name}Schema`].parse(value), value);
+    const schema = json(require.resolve(`@loomake/core/schema/${name}.schema.json`));
+    assert.equal(schema.properties.schemaVersion.type, 'number');
+    assert.equal(Object.hasOwn(schema.properties, 'version'), false);
+  }
+  assert.equal(Object.hasOwn(traceSchemas.evidenceSchema.parse(evidenceContract), 'documents'), false);
+  assert.deepEqual(traceSchemas.evidenceDocumentSchema.parse({ path: '', sha256: '', content: '' }), { path: '', sha256: '', content: '' });
+  assert.equal(traceSchemas.reportRowSchema.parse({ id: '', source: '', state: '', summary: '', requirements: [], tests: [], result: null }).result, null);
+
   const cli = join(consumer, 'node_modules/loomake/dist/cli.js');
   const command = (...args) => run(process.execPath, [cli, ...args], consumer);
   const installedBin = join(consumer, 'node_modules/.bin', win ? 'loomake.cmd' : 'loomake');
