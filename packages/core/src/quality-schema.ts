@@ -32,30 +32,26 @@ const itemShape = {
   linked_requirements: ids.optional(),
 };
 
-// 対象外（not_applicable）の項目には、理由と確認者を必須にする（REQ-286）
-const requireReasonWhenNotApplicable = (item: { applicability?: string; reason?: string; confirmed_by?: string }, ctx: z.RefinementCtx) => {
-  if (item.applicability !== 'not_applicable') return;
-  for (const key of ['reason', 'confirmed_by'] as const) {
-    if (!item[key]) ctx.addIssue({ code: 'custom', path: [key], message: `applicability が not_applicable のときは ${key} が必要です` });
-  }
-};
+// 対象外の必須項目を分岐で表し、JSON Schema にも同じ条件を書き出す（REQ-286・REQ-287）
+function withApplicability<T extends z.ZodRawShape>(shape: T) {
+  return z.discriminatedUnion('applicability', [
+    z.looseObject({ ...shape, applicability: z.literal('applicable').optional() }),
+    z.looseObject({ ...shape, applicability: z.literal('not_applicable'), reason: text, confirmed_by: text }),
+  ]);
+}
 
-export const qualityObjectiveSchema = z
-  .looseObject({
-    ...itemShape,
-    context: text.optional().describe('対象利用者、作業、端末、環境の定義への参照'),
-    task: text.optional(),
-    guardrails: ids.optional().describe('悪化を防ぐ目標'),
-  })
-  .superRefine(requireReasonWhenNotApplicable);
+export const qualityObjectiveSchema = withApplicability({
+  ...itemShape,
+  context: text.optional().describe('対象利用者、作業、端末、環境の定義への参照'),
+  task: text.optional(),
+  guardrails: ids.optional().describe('悪化を防ぐ目標'),
+});
 
-export const qualityProductSchema = z
-  .looseObject({
-    ...itemShape,
-    subcharacteristic: text.optional().describe('品質副特性'),
-    objectives: ids.optional().describe('支える利用時品質目標'),
-  })
-  .superRefine(requireReasonWhenNotApplicable);
+export const qualityProductSchema = withApplicability({
+  ...itemShape,
+  subcharacteristic: text.optional().describe('品質副特性'),
+  objectives: ids.optional().describe('支える利用時品質目標'),
+});
 
 // 証跡の保管方針。省いたキーには既定値を補う（REQ-285、要件定義 7.1 の最小スキーマ）
 export const qualityEvidencePolicySchema = z.looseObject({
