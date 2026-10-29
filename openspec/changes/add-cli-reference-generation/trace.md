@@ -12,7 +12,7 @@
 | add-quality-reference-generationのproposal・specs/reference-docs/spec.md・design | 別担当の計画を読み取り参照、REQ-320〜322 | 2026-10-29 |
 | AGENTS.md、docs/adr/0005-keep-dev-mechanics-out-of-specs.md、docs/guide/index.md、tests/doc-links.test.ts、vitest.config.ts、scripts/ci-gate.mjs | 仕様境界・導線・既存CI経路、main 684abf0 | 2026-10-29確認 |
 | main CIのmacOS shard 2の失敗 | [CI40844515674・job123348619751](https://github.com/loomake/loomake/actions/runs/40844515674/job/123348619751) | 2026-10-29確認 |
-| CLIの固定head 6b8a390の起動再現 | [ローカル再現結果](/workspaces/loomake/.claude/scratch/cli-symlink-evidence-6b8a390/results.json)、[作業記録](../../../docs/worklog/2026-10-29/feat-cli-reference-generation.md) | 2026-10-29 |
+| CLIの固定head 6b8a390の起動再現 | [対象commit 6b8a390](https://github.com/loomake/loomake/commit/6b8a3907c94478de50dc9a4cb9f6c73b91e79a0d)、[再現条件と実測の要点](../../../docs/worklog/2026-10-29/feat-cli-reference-generation.md) | 2026-10-29 |
 
 ## 要件台帳
 
@@ -31,7 +31,7 @@ REQ-320〜322はquality、REQ-308〜319はC-001のため再使用しない。本
 
 現行CLIの整理と列挙に未回答の製品仕様はない。C-001の未決項目には回答せず、現行にないv2出力・scope・証拠採否を生成しない。人の新しい承認が必要な振る舞いの変更は計画していない。
 
-入口の修正はREQ-325の既存契約を満たすための技術対応で、未確定の製品仕様ではない。未回答のM144-01はPR #144のマージ承認であり、仕様ゲートのブロッキング確認事項へは追加しない。修正後のheadと検証結果を管理役が人へ提示するまで、マージ・仕様反映・archiveとIssue #104の完了判断は行わない。
+入口の修正はREQ-325の既存契約を満たすための技術対応で、未確定の製品仕様ではない。M144-01はPR #144のマージ承認であり、仕様ゲートのブロッキング確認事項ではない。[2026-10-30の明示回答](https://github.com/loomake/loomake/pull/144#issuecomment-6508732891)でA（修正コードを受け入れる）が選ばれた。回答者はrrr-wwwで、利用者rrr-xxxの指示を受けたClaude Codeによる転記である。条件はローカル証跡リンクの文書修正、承認記録、3.1のチェック、最終headのdoneと必須CIの成功。追加AIレビューは依頼しない。これらの条件を確認してから取り込みを判断し、仕様反映・archiveとIssue #104の完了判断はその後に行う。
 
 ## 仮定
 
@@ -52,4 +52,4 @@ REQ-320〜322はquality、REQ-308〜319はC-001のため再使用しない。本
 | CLIのpatch | args.ts/main.tsは配布コードのためloomakeのpatch changesetを計画する。新動作の追加とは記さず、公開exports・依存は増やさない |
 | Issue104の完了 | quality先行だけでは閉じない。両方の生成範囲を受け入れ、再生成一致のCI根拠を確認して判断する |
 | 入口の契約回復 | 上記CIと固定headの実測を受け、タスク2.4を追加し3.1を未完了へ戻す。詳細は作業記録へ残す。CLI側だけを直し、main側のfix-reference-entrypoint-pathsとは分ける |
-| AIレビューとマージ判断 | [PR144のbot記録](https://github.com/loomake/loomake/pull/144#issuecomment-6488291614)と独立レビューで既存AI2回を消化済み。追加AIレビューは依頼しない。[Issue121のM144-01](https://github.com/loomake/loomake/issues/121)は回答待ちで、人の承認を記録していない |
+| AIレビューとマージ判断 | [PR144のbot記録](https://github.com/loomake/loomake/pull/144#issuecomment-6488291614)と独立レビューで既存AI2回を消化済み。追加AIレビューは依頼しない。[M144-01の条件付きA回答](https://github.com/loomake/loomake/pull/144#issuecomment-6508732891)を記録済み。rrr-www（利用者指示を受けClaude Codeが転記）、日本時間2026-10-30。条件は上記「確認事項」を参照 |

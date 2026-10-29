@@ -14,7 +14,7 @@
 
 ## 3. 統合確認
 
-- [ ] 3.1 修正後のlint・型検査・関連試験・REQ-323〜325のID付き試験・OS別CIと、最終headの`pnpm -s verify --change add-cli-reference-generation --done`合格を確認する。既存AIレビュー2回の記録を保持し追加のAIレビューは依頼せず、具体的な修正後headと回帰結果をM144-01の人の最終判断へ回す <!-- loomake:gate=done -->
+- [x] 3.1 修正後のlint・型検査・関連試験・REQ-323〜325のID付き試験・OS別CIと、最終headの`pnpm -s verify --change add-cli-reference-generation --done`合格を確認する。既存AIレビュー2回の記録を保持し追加のAIレビューは依頼せず、具体的な修正後headと回帰結果をM144-01の人の最終判断へ回す <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
