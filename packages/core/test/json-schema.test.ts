@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { qualitySchema } from '../src/quality-schema.js';
+import { evidenceSchema, reportSchema } from '../src/trace-schemas.js';
+import { evidenceValue, reportValue } from './fixtures/trace-contract-values.js';
 import { createTraceTemplate, parseTrace, parseSpec, parseTasks } from '../src/index.js';
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -12,7 +14,7 @@ const pkgDir = join(import.meta.dirname, '..');
 const schemaDir = join(pkgDir, 'schema');
 
 describe('JSON Schema の書き出し', () => {
-  it('[REQ-276][REQ-287][REQ-300][REQ-301] Zod スキーマから書き出した内容と packages/core/schema/ のファイルが一致する', () => {
+  it('[REQ-276][REQ-287][REQ-300][REQ-301][REQ-304] Zod スキーマから書き出した内容と packages/core/schema/ のファイルが一致する', () => {
     const rendered = renderJsonSchemas();
     expect(Object.keys(rendered).sort()).toEqual(readdirSync(schemaDir).filter((f) => f.endsWith('.json')).sort());
     for (const [file, text] of Object.entries(rendered)) {
@@ -41,6 +43,48 @@ describe('JSON Schema の書き出し', () => {
       expect(validate(value), JSON.stringify(validate.errors)).toBe(true);
       expect(validate(invalid)).toBe(false);
       expect(validate(file === 'trace.schema.json' ? parseTrace('trace.md', createTraceTemplate({ changeId: 'empty' })).value : [])).toBe(true);
+    }
+  });
+
+  it('[REQ-304] Evidence/Report の JSON は構造・任意フィールド・未知キーを Zod と同じに公開する', () => {
+    const pkg = JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf8'));
+    const cases = [
+      ['evidence', evidenceSchema, evidenceValue(), { ...evidenceValue(), documents: null }],
+      ['report', reportSchema, reportValue(), { ...reportValue(), warnings: null }],
+    ] as const;
+    for (const [name, zodSchema, value, invalid] of cases) {
+      const file = `${name}.schema.json`;
+      const schema = JSON.parse(readFileSync(join(schemaDir, file), 'utf8'));
+      const validate = new Ajv2020({ strict: false }).compile(schema);
+      expect(schema.properties.schemaVersion.type).toBe('number');
+      expect(schema.properties.schemaVersion).not.toHaveProperty('const');
+      expect(schema.properties).not.toHaveProperty('version');
+      for (const exports of [pkg.exports, pkg.publishConfig.exports]) expect(exports[`./schema/${file}`]).toBe(`./schema/${file}`);
+      expect(validate(value), JSON.stringify(validate.errors)).toBe(true);
+      expect(zodSchema.safeParse(value).success).toBe(true);
+      expect(validate(invalid)).toBe(false);
+      expect(zodSchema.safeParse(invalid).success).toBe(false);
+      const future = { ...value, schemaVersion: 9.5, extra: { note: 'future' } };
+      expect(validate(future), JSON.stringify(validate.errors)).toBe(true);
+      expect(zodSchema.parse(future)).toEqual(future);
+      if (name === 'evidence') {
+        expect(schema.required).not.toContain('documents');
+        expect(schema.properties.documents).not.toHaveProperty('default');
+      }
+    }
+  });
+
+  it('[REQ-304] 全公開 JSON Schema を同じ registry へ両順で登録して参照できる', () => {
+    const schemas = Object.values(renderJsonSchemas()).map((text) => JSON.parse(text));
+    for (const order of [schemas, [...schemas].reverse()]) {
+      const registry = new Ajv2020({ strict: false });
+      for (const schema of order) registry.addSchema(schema);
+      for (const schema of schemas) expect(registry.getSchema(schema.$id), schema.$id).toEqual(expect.any(Function));
+      const evidence = registry.getSchema('https://loomake.dev/schema/evidence.schema.json')!;
+      const verify = registry.getSchema('https://loomake.dev/schema/verify-result.schema.json')!;
+      expect(evidence(evidenceValue()), JSON.stringify(evidence.errors)).toBe(true);
+      expect(verify(evidenceValue().verify), JSON.stringify(verify.errors)).toBe(true);
+      expect(evidence({ ...evidenceValue(), verify: { ...evidenceValue().verify, ok: 1 } })).toBe(false);
     }
   });
 
@@ -92,7 +136,7 @@ describe('JSON Schema の書き出し', () => {
     }
   });
 
-  it('[REQ-276][REQ-287][REQ-300][REQ-301] 書き出しのコマンドで schema/ のファイルを作り直せる', () => {
+  it('[REQ-276][REQ-287][REQ-300][REQ-301][REQ-304] 書き出しのコマンドで schema/ のファイルを作り直せる', () => {
     const work = mkdtempSync(join(tmpdir(), 'loomake-core-schema-'));
     try {
       // 実際の schema/ を書き換えないように、書き出しのスクリプトとビルドの結果を一時ディレクトリに写して実行する
