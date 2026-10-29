@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: 生成ページの導線と既存契約の保持
-生成ページはdocs/guide/3.referenceに置き、空でないtitle/descriptionと生成元・再生成方法を持ち、guideの入口からリンクできる SHALL。qualityリファレンスの生成/check単独の変更では、既存のリファレンスとリンクを保持し、CLI・quality.yamlの受理/補完・公開8 JSON・公開型/exports・実行時依存・判定を変更しない MUST。形式の版を上げる別のchangeはこの単独変更の対象外とし、この不変条件をその別changeに適用しない SHALL。スキーマの文字列はMarkdown/HTMLの構文として実行されない形で表示する SHALL。qualityリファレンスの生成元2リンクは、掲載先によらず同じソースを参照する完全なGitHub URLを使い、quality.schema.jsonには `https://github.com/loomake/loomake/blob/main/packages/core/schema/quality.schema.json`、quality-schema.tsには `https://github.com/loomake/loomake/blob/main/packages/core/src/quality-schema.ts` を指定する SHALL。
+生成ページはdocs/guide/3.referenceに置き、空でないtitle/descriptionと生成元・再生成方法を持ち、guideの入口からリンクできる SHALL。生成/check単独では既存のリファレンスとリンクを保持し、CLI・quality.yamlの受理/補完・公開8 JSON・公開型/exports・実行時依存・判定を変更しない MUST。CLI生成・未決契約・他の形式改版は範囲外 MUST。スキーマの文字列はMarkdown/HTMLの構文として実行されない形で表示する SHALL。掲載先によらずquality.schema.jsonはhttps://github.com/loomake/loomake/blob/main/packages/core/schema/quality.schema.json、quality-schema.tsはhttps://github.com/loomake/loomake/blob/main/packages/core/src/quality-schema.tsへリンクする SHALL。
 
 Source: REQ-322
 

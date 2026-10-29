@@ -29,6 +29,10 @@
 - `monorepo`: ci-gateを同時追従させ、公開契約と移行を配布物で確認する。
 - `external-process-budget`: 予算単独変更の版不変と、別途承認する形式移行を区別する。
 - `reference-docs`: quality生成/check単独の不変範囲を明確にし、CLI共通定義と生成基準の移行を計画する。
+- `reference-docs`（REQ-323）: 未確定契約を追加しないMUSTをCLI生成単独の範囲へ限定する。
+- `reference-docs`（REQ-324）: help/usage・終了コード・8 JSON等の不変MUSTを共通定義集約単独へ限定する。
+- `verification-policy`（REQ-306）: summary・件数・verifyへの非接続を集約定義単独の範囲へ限定する。
+- `run`（REQ-100）: 完了ゲートをverify --done --scope localと同じ検査へ追従する。
 - `trace-agreement`: 未承認の案内と承認後の表示をv2用語へ追従する。
 - `run-pr`: local完了と最終CI合格を区別してv2証拠とDraft PRを作る。
 - `run`: v2/local証拠の同一状態での外部再試行と旧版非再利用を整合する。

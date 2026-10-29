@@ -31,3 +31,10 @@
 2. fetchしたmainは751a8a1。29 MODIFIED（現main27件、未archive CLI2件）の既存89 Scenario/Sourceと、149のURL文/全4 Scenario保持を照合した。branch単独strictは古い主仕様のINFO付きexit 0、現main snapshotはCLI未archiveのINFO付きexit 0。依存2changeの仕様反映後を一時領域だけで構成したstrictはINFOなしexit 0で、実際のarchive実施とは区別する。spec-onlyはR05/06/08だけでexit 1、通常doneは計画の4検査でexit 1。lint・型・試験は成功し、ローカル1,259成功/skip8/失敗0。日本語のyomiyasuとdiff --checkも確認した。
 3. R05へREQ-323/324のMUST範囲、REQ-100のlocalゲート、REQ-306の接続範囲を追加する。R08は共通のA部分を保ち、auto CLI不在localだけ理由付きNAとするBを新しいおすすめにするが、未承認のまま提示する。
 4. 計画だけをcommit/pushし、本文案を管理役へ渡す。製品実装、追加AI評価、投稿、マージは行わない。
+
+## 5回目レビューへの対応
+
+1. [5回目レビュー](https://github.com/loomake/loomake/pull/139#issuecomment-6510883681)をconnectorで読み、head `cbdd3cb`・cleanからタスク1.1の計画だけを修正した。tasks 5.1へ配布用/リポジトリ内のreq-to-openspec書式雛形2箇所を追加し、R06 AならREQ-136を明示localへMODIFIEDして印と既存Scenarioを保持、Bなら本文/雛形の既定ciを保持する案を記載した。R05 AへREQ-093のaborted 2/3とREQ-135のhelp scopeを明記し、093/135/136の予定を台帳へ追加した。proposalへ100/306/323/324を各1行で記し、core-parsers規範から承認質問IDを除いた。
+2. PR155の承認コメント6510874679と未merge状態を読み、承認済みtree8519f1fの480字本文を比較元にREQ-322を本文482字・Source込み499字へ整理した。受入記録のみを追加した現head758b018と、未mergeのmain751a8a1を区別してtraceへ記載した。29 MODIFIEDのSourceと、main+active CLI基準89 Scenarioに149の追加1件を含めたaccepted tree基準90 Scenarioを保持し、322の全4 Scenario全文と完全URL2本も機械照合した。branch strictは旧主仕様のINFO付き0、main751 snapshotはCLI未archiveのINFO付き0、155 accepted tree snapshotはINFOなし0。spec-onlyは未回答05/06/08の3件だけで1。最終版の通常doneは未回答・確認待ち要件・未完了tasks・未実装REQ試験の4検査で1、lint・型・既存試験は成功し、ローカル1,259成功/skip8/失敗0だった。先行doneが編集途中の表を読んだため、表と完了ゲートの印を直したあと再実行した。yomiyasuのlint/diff/資料照合/最終稿照合とdiff --checkを確認した。
+3. R01/02/03/04/07/09/10のA承認、05/06/08の回答欄の空欄、R08 Bのおすすめを維持する。REQ-093/135/136の規範差分確定と実際の雛形変更は回答後の作業であり、今回行わない。既存assertion/旧46例の具体差分には方針承認と別の個別承認が必要である。
+4. 計画差分をcommit/pushし、PR本文の全置換案を管理役へ渡す。PR155受入後の実mainでREQ-322とarchive依存を再照合してからC-001を最終確定する。製品実装、主仕様・既存試験・設定・雛形の変更、新ID割当、追加AI評価、投稿、マージは行わない。
