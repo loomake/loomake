@@ -1,14 +1,32 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { ESLint } from 'eslint';
+import { ESLint, Linter } from 'eslint';
 
 const root = join(import.meta.dirname, '..');
 const policyFile = join(root, 'packages/kit/src/verify/policy/coverage-policy.ts');
 const lint = new ESLint({ cwd: root });
 const restrictions = new Set(['no-restricted-imports', 'no-restricted-globals', 'no-restricted-properties', 'no-restricted-syntax']);
-const violations = async (source: string, filePath = policyFile) =>
-  (await lint.lintText(source, { filePath })).flatMap((result) => result.messages.filter((message) => restrictions.has(message.ruleId ?? '')));
+const policyLint = new Linter({ cwd: root });
+const violations = async (source: string, filePath = policyFile) => {
+  const config = await lint.calculateConfigForFile(filePath) as Linter.Config | undefined;
+  if (!config) throw new Error(`ESLint の設定が見つかりません: ${filePath}`);
+  const rules: NonNullable<Linter.Config['rules']> = {};
+  for (const name of restrictions) {
+    const rule = config.rules?.[name];
+    if (rule !== undefined) rules[name] = rule;
+  }
+  const languageOptions = config.languageOptions as Linter.LanguageOptions | undefined;
+  // 各 fixture の parser と制限の適用範囲を保ち、TypeScript の型情報は初期化しない。
+  return policyLint.verify(source, [{
+    files: ['**/*.ts'],
+    languageOptions: {
+      ...languageOptions,
+      parserOptions: { ...languageOptions?.parserOptions, project: false, projectService: false },
+    },
+    rules,
+  }], { filename: filePath }).filter((message) => restrictions.has(message.ruleId ?? ''));
+};
 
 // optional/peer に移しても、配布物が依存するパッケージの予算から外れない
 const budgets: Record<string, readonly string[]> = {
