@@ -14,6 +14,8 @@ export type { TestRequirements } from './test-report.js';
 export { createTraceTemplate } from './template.js';
 export { VERIFY_RESULT_SCHEMA_VERSION, loadVerifyResultSchemas } from './verify-result.js';
 export type { VerifyMode, VerifyCheckResult, VerifyResult } from './verify-result.js';
+export { QUALITY_SCHEMA_VERSION, loadQualitySchema } from './quality.js';
+export type { Quality, QualityInput, QualityMeasure, QualityObjective, QualityProduct, QualityEvidencePolicy } from './quality.js';
 export { createAgreement, evaluateAgreement } from './agreement.js';
 export type { Agreement, AgreementDecision, RequirementId, LedgerState } from './agreement.js';
 export { evaluateTestCoverage } from './coverage-policy.js';

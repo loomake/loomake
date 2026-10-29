@@ -6,7 +6,7 @@
 
 ## 2. 実装
 
-- [ ] 2.1 quality.yaml の Zod スキーマを `packages/core/src/quality-schema.ts` に書き、型をスキーマから導出する。`@loomake/core` からは `loadQualitySchema()` で読む（REQ-283・REQ-284・REQ-285・REQ-286）
+- [x] 2.1 quality.yaml の Zod スキーマを `packages/core/src/quality-schema.ts` に書き、型をスキーマから導出する。`@loomake/core` からは `loadQualitySchema()` で読む（REQ-283・REQ-284・REQ-285・REQ-286）
 - [ ] 2.2 `schema/quality.schema.json` を書き出し、ファイルとの差分をテストで検出する（REQ-287）
 - [ ] 2.3 changeset を足す
 
