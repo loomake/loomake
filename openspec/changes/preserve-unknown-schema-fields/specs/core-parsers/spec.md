@@ -2,7 +2,7 @@
 
 ### Requirement: 未知キーをプロトタイプを変えずに保持する
 
-core の verify 結果、Markdown 解析結果、quality.yaml、quality-report の公開スキーマは、未知の own property `__proto__`・`constructor`・`prototype` を通常の未知キーと同じく値を変えず解析結果に保持する SHALL。最上位とスキーマが検証する入れ子・配列要素に同じ規則を適用する MUST。入力と共有プロトタイプを変更せず、`__proto__` を出力のプロトタイプ変更として解釈しない MUST。既知項目の検証・既定値、既存の導出型・遅延ロードと配布 JSON Schema の内容を維持する MUST。
+core の verify 結果、Markdown 解析結果、quality.yaml、quality-report、証拠とリリースレポートの公開スキーマは、未知の own property `__proto__`・`constructor`・`prototype` を通常の未知キーと同じく値を変えず解析結果に保持する SHALL。最上位とスキーマが検証する入れ子・配列要素に同じ規則を適用する MUST。入力と共有プロトタイプを変更せず、`__proto__` を出力のプロトタイプ変更として解釈しない MUST。既知項目の検証・既定値、既存の導出型・遅延ロードと8種類の配布 JSON Schema の内容を維持する MUST。
 
 Source: REQ-307
 
@@ -11,7 +11,7 @@ Source: REQ-307
 - **THEN** parse と safeParse は成功し、各キーが同じ値の own property として解析結果に残る
 
 #### Scenario: 検証する入れ子と配列要素のキーを保持する
-- **WHEN** verify の results、Markdown の各解析行、quality.yaml の検証対象の入れ子に未知の `__proto__` を持つ値を解析する
+- **WHEN** verify の results、Markdown の各解析行、quality.yaml の検証対象の入れ子、証拠内の verify・results・documents、レポート内の evidence・attention・rows・questions・assumptions に未知の `__proto__` を持つ値を解析する
 - **THEN** 各階層の同じキーと値が解析結果に残り、未知キーの値の入れ子も変わらない
 
 #### Scenario: 入力とプロトタイプを変更しない

@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import assert from 'node:assert/strict';
 import { z } from 'zod';
-import { loadParserSchemas, loadQualityReportSchema, loadQualitySchema, loadVerifyResultSchemas } from '../src/index.js';
+import { loadParserSchemas, loadQualityReportSchema, loadQualitySchema, loadTraceSchemas, loadVerifyResultSchemas } from '../src/index.js';
 import { ASSUMPTION_COLUMNS, LEDGER_COLUMNS, QUESTION_COLUMNS } from '../src/trace.js';
 import { preserveUnknownFields } from '../src/preserve-unknown-fields.js';
+import { evidenceValue, reportValue } from './fixtures/trace-contract-values.js';
 
 const parser = await loadParserSchemas();
 const quality = await loadQualitySchema();
 const verify = await loadVerifyResultSchemas();
 const report = await loadQualityReportSchema();
+const trace = await loadTraceSchemas();
 
 function specialFields() {
   return JSON.parse('{"__proto__":{"loomakeProbe":true},"constructor":{"prototype":{"loomakeProbe":true}},"prototype":{"value":1},"extra":{"__proto__":{"nested":true},"values":[null,false,1]}}') as Record<string, unknown>;
@@ -55,6 +57,10 @@ const cases: { name: string; schema: z.ZodType; value: Record<string, unknown> }
   { name: 'objective', schema: quality.qualityObjectiveSchema, value: { characteristic: 'x' } },
   { name: 'product', schema: quality.qualityProductSchema, value: { characteristic: 'x' } },
   { name: 'policy', schema: quality.qualityEvidencePolicySchema, value: {} },
+  { name: 'evidence', schema: trace.evidenceSchema, value: evidenceValue() },
+  { name: 'evidence document', schema: trace.evidenceDocumentSchema, value: { path: '', sha256: '', content: '' } },
+  { name: 'release report', schema: trace.reportSchema, value: reportValue() },
+  { name: 'release report row', schema: trace.reportRowSchema, value: reportValue().rows[0] },
 ];
 
 describe('未知キーの own property を安全に保持する', () => {
@@ -239,5 +245,42 @@ describe('未知キーの own property を安全に保持する', () => {
       expect(result.success).toBe(true);
       if (result.success) expectFields(result.data, input);
     }));
+  });
+
+  it('[REQ-307] 証拠の metadata 設定後の verify と検証結果・文書を保持する', async () => {
+    const value = evidenceValue();
+    const check = marked(value.verify.results[0]);
+    const verifyValue = marked({ ...value.verify, results: [check] });
+    const document = marked({ path: '', sha256: '', content: '' });
+    const input = marked({ ...value, verify: verifyValue, documents: [document] });
+    const original = structuredClone(input);
+    freeze(input);
+    for (const output of [trace.evidenceSchema.parse(input), await trace.evidenceSchema.parseAsync(input)]) {
+      expectFields(output, input);
+      expectFields(output.verify, verifyValue);
+      expectFields(output.verify.results[0], check);
+      expectFields(output.documents![0], document);
+      assert.deepStrictEqual(output, original);
+    }
+    assert.deepStrictEqual(input, original);
+  });
+
+  it('[REQ-307] リリースレポートの全 object 階層と配列要素を保持する', () => {
+    const value = reportValue();
+    const evidence = marked(value.evidence);
+    const attention = marked(value.attention);
+    const row = marked(value.rows[0]);
+    const question = marked(value.questions[0]);
+    const assumption = marked(value.assumptions[0]);
+    const input = marked({ ...value, evidence, attention, rows: [row], questions: [question], assumptions: [assumption] });
+    const original = structuredClone(input);
+    freeze(input);
+    const output = trace.reportSchema.parse(input);
+    for (const [parsed, value] of [
+      [output, input], [output.evidence, evidence], [output.attention, attention], [output.rows[0], row],
+      [output.questions[0], question], [output.assumptions[0], assumption],
+    ] as const) expectFields(parsed, value);
+    assert.deepStrictEqual(output, original);
+    assert.deepStrictEqual(input, original);
   });
 });

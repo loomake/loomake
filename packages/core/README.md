@@ -30,7 +30,7 @@ JSON Schema は `@loomake/core/schema/quality-report.schema.json` から取得�
 
 ## 未知キーの保持
 
-公開 loader から取得した verify・Markdown 解析結果・quality.yaml・quality-report のスキーマは、未知の own property `__proto__`・`constructor`・`prototype` を値を変えず保持する。スキーマが検証する入れ子と配列要素にも同じ規則を適用し、入力や共有プロトタイプは変更しない。キーに制約のある record は従来の検証と出力を保つ。
+公開 loader から取得した verify・Markdown 解析結果・quality.yaml・quality-report・証拠・リリースレポートのスキーマは、未知の own property `__proto__`・`constructor`・`prototype` を値を変えず保持する。スキーマが検証する入れ子と配列要素にも同じ規則を適用し、入力や共有プロトタイプは変更しない。キーに制約のある record は従来の検証と出力を保つ。
 
 保持処理は各公開スキーマの clone に適用する。利用側で `.clone()`・`.meta({...})`・`.describe('...')`・`.extend({...})` によって作った派生スキーマには、この保持処理は引き継がれない。公開型、既知項目の検証・既定値・診断の設定と配布 JSON Schema は維持する。
 

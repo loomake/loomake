@@ -6,7 +6,7 @@
 
 ## What Changes
 
-- verify 結果、Markdown 解析結果、quality.yaml、quality-report の未知キーを、`__proto__` を含めて保持する。
+- verify 結果、Markdown 解析結果、quality.yaml、quality-report、証拠とリリースレポートの未知キーを、`__proto__` を含めて保持する。
 - 解析結果の own property として値を保持し、入力・出力・共有プロトタイプを書き換えないことを回帰試験で確認する。
 - 既知フィールドの検証、既定値、導出型、遅延ロードと配布 JSON Schema の契約を維持する。
 
@@ -22,4 +22,4 @@
 
 ## Impact
 
-`packages/core/src/` の対象スキーマと関連試験、changesetを更新する。Issue #60 の受入に関係する。未マージの trace スキーマは、その担当の作業を保持し、統合時に同じ保持契約を確認する。
+`packages/core/src/` の対象スキーマと関連試験、changesetを更新する。Issue #60 の受入に関係する。main に統合済みの PR #134 の証拠とリリースレポートも対象とし、配布する8種類の JSON Schema を維持する。trace の既存関数と JSON 出力は変更しない。
