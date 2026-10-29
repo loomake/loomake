@@ -9,7 +9,8 @@
 | 使い方の文書の置き場所 | [Issue #102](https://github.com/loomake/loomake/issues/102)、切れない文書導線 | 2026-10-29確認 |
 | リファレンスの生成 | [Issue #104](https://github.com/loomake/loomake/issues/104)、生成ページとスキーマの一致 | 2026-10-29確認 |
 | AGENTS.md 4章、docs/dev/agent-workflow.md | main f4e3edb、承認・分担・共通原則1 | 2026-10-29確認 |
-| delivery管理役からの計画準備の割当 | 既存Codex代替で計画資料まで。製品・試験の編集とレビュー依頼は行わない | 2026-10-29 |
+| delivery管理役からの計画準備の割当 | Codexによる資料作成と、実行確認後のOpus新規設計の反映。製品・試験の編集や追加評価は行わない | 2026-10-29 |
+| Opusの新規設計出力 | 対象64e5c45、claude-opus-5-5、session 4190d7a2-20b1-42f3-8320-c16eded842bd。出典はdesign末尾の実行記録 | 2026-10-29 |
 
 ## 要件台帳
 
@@ -36,6 +37,8 @@
 
 branchは `spec/quality-reference-source-links`、worktreeは `.claude/worktrees/codex-quality-reference-source-links`。既存PRとworktreeに同changeの担当がいないことを確認した。renderer・生成ページ・試験・設定・主仕様は変更していない。
 
-管理役の計画を受けたCodex配下セッションが資料を作成する。実行ツールはCodex、実際のモデル識別子は不明、適用する共通原則は1。Opusが利用できないため、AGENTS.md 2章5の管理役による計画・調整と配下への作業分担に基づく代替である。Opusの設計、独立した設計レビュー、最終レビューは未実施であり、同モデルかどうかも確認できないセッションの分担を異なるモデルでのレビューと扱わない。
+当初はOpusの実行可否を確認していないのに、利用できないと記載した。既存認証が有効と確認した後、対象64e5c45に対してClaude Codeの新しいsessionでOpus設計を1回生成した。actual modelUsageはclaude-opus-5-5のみ、sessionは4190d7a2-20b1-42f3-8320-c16eded842bd、exit 0、is_error=false、permission_denials=[]。新規設計の出典と反映範囲はdesignの実行記録に記す。
+
+日本語資料の整合は管理役配下のCodexが担当する。Codexの実際のモデル識別子は不明、共通原則は1。設計生成は評価ではなく、AI評価は0回。独立した設計レビューと最終レビューは未実施。最終レビューは後日の別Opus session、自動bot予定分は1枠を確保し、今回追加の評価を依頼しない。
 
 URL解決とローカルソースの存在を調べた。修正後の回帰試験、site build、公開サイトのHTTP到達、done・全体試験は未実施である。今の成果は承認待ちの計画に限り、設計レビュー・最終レビューを依頼していない。
