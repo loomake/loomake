@@ -9,7 +9,7 @@
 
 ## 2. 生成と直接試験
 
-- [ ] 2.1 入力JSON Schemaから全項目を描画するrendererを追加し、object・record・配列・NA分岐・親/子のdefault・型/制約・未記載description・特殊文字をID付き試験で確かめる。スキーマにないmetric/sourceの意味を足していないことと既存schemaの省略時解析結果との対応も確認する（REQ-320・322）
+- [x] 2.1 入力JSON Schemaから全項目を描画するrendererを追加し、object・record・配列・NA分岐・親/子のdefault・型/制約・未記載description・特殊文字をID付き試験で確かめる。スキーマにないmetric/sourceの意味を足していないことと既存schemaの省略時解析結果との対応も確認する（REQ-320・322）
 - [ ] 2.2 生成スクリプトと読み取り専用checkを追加し、一時領域で一致0、欠落/改変/エラーの非0、失敗時の非書換え、CRLF、繰り返しの同一出力をID付き試験で確認する。生成/checkの操作手順をdocs/devへ記す（REQ-321）
 
 ## 3. 生成ページと既存経路への接続
