@@ -55,3 +55,10 @@
 2. verify の結果：修正前のGit blob `545c8e86976acd0892a34d0aa097f4ff59814c2b`で新規回帰を先に実行し、19件中17件成功・2件失敗を記録した。失敗は別名経由の欠落checkが期待1に対し0、不正引数が期待2に対し0の2件。修正後は関連unit 9ファイル175件と、実パスfixtureを正規化した後の生成器19件が成功。packしたCLIの共通定義・原本・生成checkの対象1件も成功し、名前指定で対象外の7件は実行していない。lint・typecheck・build・生成/checkはexit 0で、生成ページの差分はない。記録は[実装検証結果](/workspaces/loomake/.claude/scratch/cli-entrypoint-implementation/evidence.json)と同じフォルダの各JSON・logへ保存した。容量不足を避け、TMPDIRを専有worktreeの`.loomake/cli-entrypoint-tmp`、npm_config_cacheを`.loomake/cli-entrypoint-npm-cache`へ指定し、設定・期限・skipを変えていない。
 3. 残っている確認事項・仮定：タスクは6/7完了で、3.1は未チェック。今回の実行環境はLinuxであり、macOS・Windowsの成功や最終DoDは報告していない。AIレビューは既存2回のままで追加を依頼していない。M144-01の人のマージ承認は回答待ちであり、実装・回帰の合格を承認として扱わない。
 4. 次にやること：実装を固定し管理役へ渡す。main側のquality生成器の修正を受け入れた後、管理役が最新mainを統合してOS別CIと最終doneを確認し、新headと結果をM144-01の人の最終判断へ回す。この作業ではpush・PR更新・remote metadata・mergeを行わない。
+
+## 受入済みmainの統合とCIへの引き継ぎ
+
+1. やったこと：change `add-cli-reference-generation`のタスク2.4後・3.1の準備として、管理役が[PR147](https://github.com/loomake/loomake/pull/147)と[PR148](https://github.com/loomake/loomake/pull/148)を受け入れたmain `f4e3edb7145f35dac49fd139902ab17c5592a5d5`をfetchで確認し、`42271dd`へ通常mergeした。統合commitは`27fa56aa9d0b00e6689402f842450caad2968b55`で競合なし。quality修正・archive・guideの6参照を保持した。AGENTS.mdと共通原則版1を読み、既存不具合修正の統合作業としてCodexの同じ担当が継続した。実モデル識別子は不明。
+2. verify の結果：CLIのargs・help・診断定義・原本46例・既存テストは`42271dd`と同一、quality側とguideは受入済みmainと同一。change strict・主仕様strict 29件・spec-only・両生成器のcheckはexit 0、限定doc-linksは42件成功。[統合検証結果](/workspaces/loomake/.claude/scratch/cli-main-integration-27fa56a/integration.json)へ記録した。全体試験とdoneは実行していない。
+3. 残っている確認事項・仮定：6/7タスク完了で3.1は未チェック。修正後headのOS別CIと最終done、M144-01の人のマージ判断が残る。AI評価は既存2回のまま。今回、指定モデルでの独立調査や別セッションの新しいレビューは実施しておらず、人の承認も記録していない。
+4. 次にやること：統合結果と記録を管理役へ渡し、native CIでOS別の回帰と最終doneを確認する。push・PR更新・M144-01の対象head更新・マージは管理役へ引き継ぐ。この担当ではまだpushしない。
