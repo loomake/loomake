@@ -17,5 +17,7 @@ export { VERIFY_RESULT_SCHEMA_VERSION, loadVerifyResultSchemas } from './verify-
 export type { VerifyMode, VerifyCheckResult, VerifyResult } from './verify-result.js';
 export { QUALITY_SCHEMA_VERSION, loadQualitySchema } from './quality.js';
 export type { Quality, QualityInput, QualityMeasure, QualityObjective, QualityProduct, QualityEvidencePolicy } from './quality.js';
+export { QUALITY_REPORT_SCHEMA_VERSION, loadQualityReportSchema } from './quality-report.js';
+export type { QualityReport } from './quality-report.js';
 export { createAgreement } from './agreement.js';
 export type { Agreement, RequirementId, LedgerState } from './agreement.js';

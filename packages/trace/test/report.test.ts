@@ -80,6 +80,30 @@ const renameEvidence = (root: string, names: string[]) =>
   names.forEach((name, i) => renameSync(join(root, `.loomake/evidence/${CHANGE}/${i}.json`), join(root, `.loomake/evidence/${CHANGE}/${name}`)));
 
 describe('要件ごとの結果の表', () => {
+  it('[REQ-301] quality-report追加後も既存のschemaVersion:2のJSONをそのまま出す', () => {
+    withProject({ spec: specMd(requirement('既存の形式')) }, (root) => {
+      const result = markdown(root, 'json');
+      const expected = {
+        schemaVersion: 2,
+        change: CHANGE,
+        evidence: {
+          recordedAt: '2026-10-23T01:00:00.000Z',
+          sha: '0123456789abcdef0123456789abcdef01234567',
+          committedAt: '2026-10-23T09:00:00+09:00',
+          ok: true,
+          documents: true,
+        },
+        attention: { noPassingTests: [], pending: [], changedDocuments: [], failedChecks: [] },
+        rows: [{ id: 'REQ-012', source: '要件書 §1', state: '反映済', summary: '要約', requirements: ['既存の形式'], tests: ['tests/x.test.ts'], result: '合格' }],
+        questions: [],
+        assumptions: [],
+        warnings: [],
+      };
+      expect(result.code).toBe(0);
+      expect(result.text).toBe(`${JSON.stringify(expected, null, 2)}\n`);
+    });
+  });
+
   it('[REQ-070] 要件ごとに、出典・状態・対応する Requirement・テストファイル・最後の検査結果を並べる', () => {
     withProject({ spec: specMd(requirement('表の出力')) }, (root) => {
       expect(report(root).rows).toEqual([

@@ -20,6 +20,14 @@
 
 JSON Schema は `@loomake/core/schema/trace.schema.json`・`spec.schema.json`・`tasks.schema.json` から読める。いずれも `.value` の構造を記述する。JSON Schema に独自のバージョン annotation は付けず、上の公開定数で対象スキーマのバージョンを確認する。
 
+## quality-report の初期契約
+
+`QUALITY_REPORT_SCHEMA_VERSION` は数値の `1`。`await loadQualityReportSchema()` で `qualityReportSchema` を読み、`{ "version": 1 }` を解析できる。公開型 `QualityReport` はこのスキーマから導出する。`version` の欠落や文字列の `"1"` は拒否し、既定値で補わない。未知の項目は入れ子も含めて保持する。
+
+この契約はスキーマだけを提供する。評価や quality-report.json の生成は含めず、既存のリリースレポートの `Report` と `schemaVersion: 2` も変更しない。
+
+JSON Schema は `@loomake/core/schema/quality-report.schema.json` から取得できる。Zod と JSON Schema は同じ最小入力を受け付け、版の欠落を拒否する。
+
 ## ライセンス
 
 MIT
