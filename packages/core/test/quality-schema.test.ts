@@ -90,14 +90,16 @@ describe('quality.yaml の Zod スキーマ', () => {
   });
 
   it('[REQ-283] 版のない quality.yaml と、版が 2 でない quality.yaml を拒否する', () => {
-    const { version: _version, ...withoutVersion } = example();
+    const withoutVersion: Record<string, unknown> = example();
+    delete withoutVersion.version;
     expect(parses(withoutVersion)).toBe(false);
     expect(parses({ ...example(), version: 1 })).toBe(false);
     expect(parses({ ...example(), version: '2' })).toBe(false);
   });
 
   it('[REQ-283] model と characteristic を必須にし、空の文字列を拒否する', () => {
-    const { model: _model, ...withoutModel } = example();
+    const withoutModel: Record<string, unknown> = example();
+    delete withoutModel.model;
     expect(parses(withoutModel)).toBe(false);
     expect(parses({ ...example(), model: '' })).toBe(false);
     const value = example();
@@ -133,7 +135,8 @@ describe('quality.yaml の Zod スキーマ', () => {
   });
 
   it('[REQ-285] evidence: を省くと、最小スキーマの既定値を補う', () => {
-    const { evidence: _evidence, ...withoutPolicy } = example();
+    const withoutPolicy: Record<string, unknown> = example();
+    delete withoutPolicy.evidence;
     expect(qualitySchema.parse(withoutPolicy).evidence).toEqual({
       artifact_retention: '90d',
       long_term_store: 'github-release',
