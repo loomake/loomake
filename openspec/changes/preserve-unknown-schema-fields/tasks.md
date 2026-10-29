@@ -12,7 +12,7 @@
 
 ## 3. 統合確認
 
-- [ ] 3.1 lint・型検査・関連試験・全体の完了ゲートを実行し、要件ごとのテストと独立レビューを確認して最終 head の `pnpm -s verify --change preserve-unknown-schema-fields --done` を通す <!-- loomake:gate=done -->
+- [x] 3.1 lint・型検査・関連試験・全体の完了ゲートを実行し、要件ごとのテストと独立レビューを確認して最終 head の `pnpm -s verify --change preserve-unknown-schema-fields --done` を通す <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
