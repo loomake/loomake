@@ -26,6 +26,8 @@ JSON Schema は `@loomake/core/schema/trace.schema.json`・`spec.schema.json`・
 
 この契約はスキーマだけを提供する。評価や quality-report.json の生成は含めず、既存のリリースレポートの `Report` と `schemaVersion: 2` も変更しない。
 
+JSON Schema は `@loomake/core/schema/quality-report.schema.json` から取得できる。Zod と JSON Schema は同じ最小入力を受け付け、版の欠落を拒否する。
+
 ## ライセンス
 
 MIT

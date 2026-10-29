@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { verifyResultSchema } from './verify-result-schema.js';
 import { qualitySchema } from './quality-schema.js';
 import { traceSchema, specSchema, tasksSchema } from './parser-schemas.js';
+import { qualityReportSchema } from './quality-report-schema.js';
 
 /** packages/core/schema/ に置くファイル名と、その元になる Zod スキーマ */
 export const CONTRACT_SCHEMAS = {
@@ -12,6 +13,7 @@ export const CONTRACT_SCHEMAS = {
   'trace.schema.json': traceSchema,
   'spec.schema.json': specSchema,
   'tasks.schema.json': tasksSchema,
+  'quality-report.schema.json': qualityReportSchema,
 } as const;
 
 /** ファイル名ごとに、書き出す JSON Schema の文字列（2 字下げ、末尾に改行）を返す */

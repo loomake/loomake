@@ -119,6 +119,13 @@ export async function check(target) {
   assert.deepEqual(kit.evaluateAgreement(core.createAgreement('trace.md', { ledger: [], questions: [], assumptions: [] }).value), { blockingQuestions: [], pendingRequirements: [], unapprovedAssumptions: [], missingSources: [] });
   assert.deepEqual(kit.evaluateTestCoverage(['REQ-149'], {}), { coverage: { 'REQ-149': [] }, missing: ['REQ-149'] });
   assert.equal(json(require.resolve('@loomake/core/schema/verify-result.schema.json')).properties.schemaVersion.const, core.VERIFY_RESULT_SCHEMA_VERSION);
+  const { qualityReportSchema } = await core.loadQualityReportSchema();
+  assert.equal(core.QUALITY_REPORT_SCHEMA_VERSION, 1);
+  assert.deepEqual(qualityReportSchema.parse({ version: 1 }), { version: 1 });
+  assert.equal(qualityReportSchema.safeParse({}).success, false);
+  const qualityReportJson = json(require.resolve('@loomake/core/schema/quality-report.schema.json'));
+  assert.deepEqual(qualityReportJson.required, ['version']);
+  assert.equal(qualityReportJson.properties.version.const, core.QUALITY_REPORT_SCHEMA_VERSION);
   // Markdown 解析結果の契約は、配布された入口と JSON Schema から使える（REQ-299・REQ-300）。
   const parserSchemas = await core.loadParserSchemas();
   const parserContracts = [

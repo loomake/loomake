@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "const": 1
+    }
+  },
+  "required": [
+    "version"
+  ],
+  "additionalProperties": {},
+  "$id": "https://loomake.dev/schema/quality-report.schema.json",
+  "title": "Loomake quality report",
+  "description": "quality-report の初期契約。version のみ必須とし、追加項目は保持する。"
+}
