@@ -41,3 +41,10 @@
 2. verify の結果：管理役が[CI40819056146](https://github.com/loomake/loomake/actions/runs/40819056146)のquality・Node20/22成功と[CodeQL40819056145](https://github.com/loomake/loomake/actions/runs/40819056145)成功を確認。qualityは102ファイル・1380件成功・既存8件skip。対象doneは3.1未チェックの1件だけ失敗し、lint・型・テスト・要件ごとのテストを含む他の検査はすべて合格した。
 3. 残っている確認事項・仮定：この記録を含む最終headのdone・全必須CIは待機中で、最終受入はしていない。製品仕様の未回答はなく、製品コード・既存試験・設定は変更していない。
 4. 次にやること：記録だけの1コミットをpushし、管理役が最終headのdone・全必須CI成功を確認して受け入れる。Issue104の完了判断と仕様反映・archiveはその後に行う。
+
+## 旧headの検証後に判明した入口の不具合と修正計画
+
+1. やったこと：change `add-cli-reference-generation`のタスク2.4を追加し、3.1を未完了へ戻した。[PR144](https://github.com/loomake/loomake/pull/144)の旧head `6b8a3907c94478de50dc9a4cb9f6c73b91e79a0d`は[CI40819669470](https://github.com/loomake/loomake/actions/runs/40819669470)の対象done・全必須CIとCodeQLが合格済みだった。その後の[main CI40844515674・macOS shard 2 job123348619751](https://github.com/loomake/loomake/actions/runs/40844515674/job/123348619751)でquality生成器の欠落checkが期待1に対し0を返したため、CLIの同じ入口判定を実行検証し、REQ-325の未達を確認した。製品コード・テスト・設定はこの計画更新で変更していない。
+2. verify の結果：固定headの生成器をLinux/Node v24.21.0の専有scratchへ複製した実測では、実パスの欠落checkは1・不明引数は2、親ディレクトリsymlink経由ではどちらも無出力で0だった。一致checkも実パスだけが成功文を出し、importだけのケースを含む8回の起動でファイル変更はなかった。原本のGit blobは`545c8e86976acd0892a34d0aa097f4ff59814c2b`、SHA-256は`2a6daf2863cd9bae6255454bc0b1c799e9720cdf3711adcc60624a67bed3b1e8`。コマンド・期待値・実測・副作用は[results.json](/workspaces/loomake/.claude/scratch/cli-symlink-evidence-6b8a390/results.json)と同じフォルダのreproduce.pyへ保存した。計画更新のOpenSpec strictとspec-onlyはともにexit 0。文書はyomiyasu run/verifyで検査してからコミットする。
+3. 残っている確認事項・仮定：製品仕様の未回答はなく、realpathによる入口比較と既存の生成0/欠落check1/不正引数2、importだけの無副作用を計画した。実測済みはLinuxのディレクトリsymlinkだけで、macOSとWindows junctionの回帰は未実施。M144-01のマージ承認は回答待ちで、人の承認を得たとは扱わない。独立レビュー1回と旧最終headのbotレビュー1回でAIレビュー2回を消化済みのため、追加AIコードレビューは依頼しない。
+4. 次にやること：計画検査後に管理役へ渡し、別のapply作業でタスク2.4を実装する。既存の全期待値・期限・skip・設定を保ち、修正後のOS別CIと最終doneを確認してから、新headと回帰結果をM144-01の人の最終判断へ回す。main側のquality生成器は別change `fix-reference-entrypoint-paths`の担当へ任せ、PR・remote metadata・push・mergeはこの作業で変更しない。
