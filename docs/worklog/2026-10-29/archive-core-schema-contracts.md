@@ -1,0 +1,8 @@
+# core のスキーマ契約の仕様反映と archive
+
+- 作業: `core-parser-schemas`・`core-quality-report-schema`・`core-trace-schemas` と先行する `core-zod-verify-result` の全 21 タスク完了を確認し、REQ-274〜276・REQ-298〜304 の 10 Requirement・27 Scenario を既存 `core-parsers` に同期した。既存の仕様本文と Purpose は保持し、元の全 22 ファイルを内容を変えずに `archive/2026-10-29-*` へ移した。先行 change の欠けていた design だけを、受入済み実装と承認済み A-01〜A-03 に基づいて補完した。
+- 受入: [PR #131](https://github.com/loomake/loomake/pull/131) は head `8ee9d08` の done gate・必須 CI に成功して main `347337b` へ、[PR #132](https://github.com/loomake/loomake/pull/132) は head `01a7072` で同じ条件を満たして main `96138c7` へマージ済み。[PR #134](https://github.com/loomake/loomake/pull/134) も head `ff0fe1f` の done gate・必須 CI・独立レビューを通り、main `47b31f2` へマージ済み。3件の受入を確認してから同期・archive した。
+- 先行分の受入: [PR #113](https://github.com/loomake/loomake/pull/113) は head `2814564` の [完了ゲート](https://github.com/loomake/loomake/actions/runs/40679404183/job/122785951265) で当該 change の mode=done・exit 0、当時の全必須 CI・3 OS 品質検査・CodeQL 成功を管理役と core 監査担当が確認した。現在も REQ-274・275 は verify-result-schema.test.ts、REQ-276 は json-schema.test.ts に対応し、verify 型・スキーマ・JSON は受入時と同じだった。
+- 後続への対応: 先行 trace の範囲外と旧 Q-02・Q-03 は履歴として保持した。Q-02 は `core-quality-report-schema/trace.md` の Q-01 と利用者の明示承認、Q-03 は `core-parser-schemas/trace.md` と [Issue #60 の決定](https://github.com/loomake/loomake/issues/60#issuecomment-6480846573) に対応する。これらの trace は今回の archive に保存した。
+- 検証: 全 change の成果物は done、タスクは各 4/4・4/4・5/5・8/8。全 change の strict、同期後と archive 後の main specs strict（28/28）、要件・Scenario の完全一致、元のファイルのバイト一致、`git diff --check` は成功した。日本語仕様と補完 design を yomiyasu で検査した。
+- 未決事項と次の作業: 製品判断の未決事項はない。管理役の独立レビュー 1 回目で重大な指摘はなかった。容量制約のあるローカルで全体試験を繰り返さず、PR の native Linux CI の通常 verify で全体検証を確認する。Issue #60 の全体受入は管理役が別途判断する。
