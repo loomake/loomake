@@ -20,3 +20,18 @@
 2. verifyの結果：関連18試験・生成物check・lint・typecheck・OpenSpec strictは成功。関連試験では専有workspaceのTMPDIRを使った。実装開始前と最終資料のspec-onlyもexit 0。
 3. 残る確認事項：3.1の全体done・全OS CI・独立レビューは管理役へ残す。macOS/Windowsでの修正後の成功は未確認。品質設定や既存期待値を変えず、CLI未マージコードも変更していない。
 4. 次にやること：固定実装headを管理役へ引き継ぎ、native CIと独立レビューで3.1を確認する。この担当からpush・PR作成は行わない。
+
+
+## 3.1 初回全OS CIと最終記録
+
+1. やったこと：[PR #147](https://github.com/loomake/loomake/pull/147)の実装head `426bdcb`を固定し、独立レビュー1回目の指摘なしと全OSの品質確認を根拠に、最後のタスク記録を反映する。製品・試験コードはレビュー後に変更していない。
+2. verifyの結果：[CI40850304458](https://github.com/loomake/loomake/actions/runs/40850304458)でUbuntu・macOS両シャード・Windows両シャード、Node20/22が成功。CodeQL40850297052も成功した。Ubuntuは1,319件成功・既存8件skip。対象doneは3.1未チェックだけでexit 1、他の全項目とREQ-321の対応試験は合格した。
+3. 残る確認事項：新たな製品判断はない。記録反映後の最終headのdone・全OS CIはまだ未確認なので、最終受入は保留する。CLIの旧headは別途修正中で、M144-01は未承認のまま。
+4. 次にやること：記録だけのコミットをpushし、最終headのdone・全必須CIが成功したら受け入れる。期待値・skip・設定は変更せず、公開・リリースも行わない。
+
+## 前作業のマージ後記録
+
+1. やったこと：[PR #145](https://github.com/loomake/loomake/pull/145)の節リンク修理をmain `03ff605`へ受け入れ、#99のA23依存を省略しないことをIssueへ記録した。
+2. verifyの結果：PRの通常verify・必須CIが成功。固定siteとCLI未マージ候補の14ページ複合buildは成功し、全6節参照の解決と既存29見出しの保持を確認した。
+3. 残る確認事項：mainの3OS CIで本changeの起点となる起動判定不具合を見つけたため、初回配布や#104全体は未完了。siteにはパス・編集先・旧ブランドと公開確認の未達が残る。
+4. 次にやること：本changeを全OSで受け入れ、CLIの修正後headを再検証して人の最終判断へ提示する。詳細は#100・#103・#121に記録した。

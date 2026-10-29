@@ -12,7 +12,7 @@
 
 ## 3. 統合確認
 
-- [ ] 3.1 strict・関連試験・生成物checkと `pnpm -s verify --change fix-reference-entrypoint-paths --done` を成功させる。生成内容の不変、REQ-321の対応試験と全タスクを照合し、対象headの必須CI（macOS/Windowsを含む）と独立レビューを確認する <!-- loomake:gate=done -->
+- [x] 3.1 strict・関連試験・生成物checkと `pnpm -s verify --change fix-reference-entrypoint-paths --done` を成功させる。生成内容の不変、REQ-321の対応試験と全タスクを照合し、対象headの必須CI（macOS/Windowsを含む）と独立レビューを確認する <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
