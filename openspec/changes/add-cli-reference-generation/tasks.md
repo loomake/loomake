@@ -7,7 +7,7 @@
 
 ## 2. CLI定義とリファレンス
 
-- [ ] 2.1 基準mainのhelp/usage全文fixtureを固定し、args.tsの共通記述へmain/help/候補を接続する。REQ-323/324の全コマンド・オプション・条件・既定値・構文・候補順・診断優先の新規回帰と、既存args/help/usage/trace-agreement/遅延起動試験を通し、説明を共通記述へ揃える
+- [x] 2.1 基準mainのhelp/usage全文fixtureを固定し、args.tsの共通記述へmain/help/候補を接続する。REQ-323/324の全コマンド・オプション・条件・既定値・構文・候補順・診断優先の新規回帰と、既存args/help/usage/trace-agreement/遅延起動試験を通し、説明を共通記述へ揃える
 - [ ] 2.2 CLI専用renderer・生成/checkと5.cli.mdを実装し、REQ-323/325の全列挙・特殊文字・決定性・一致・欠落・改変・LF/CRLF・read/render失敗・check非変更を試験する。生成元・再生成方法・title/descriptionをページに持たせ、ソース定義との一致が既存CIのテスト経路で検査されることを確認する
 - [ ] 2.3 quality側の既存ページ・Purpose・要件を保ってguide入口と開発手順へCLI分を追記し、loomakeのpatch changesetを追加する。doc-links、生成/check、配布物からの生成入口とhelp/引数の互換を確認する。quality生成器・共通helperを変更しない
 

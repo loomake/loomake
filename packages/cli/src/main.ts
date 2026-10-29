@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { RuntimeFailure, UsageError, formatVerifyResult, runDoctor, runInit, runVerify } from '@loomake/kit';
 import { runRun } from '@loomake/runner';
 import { runAgreement, runRecord, runReport } from '@loomake/trace';
-import { didYouMean, parseOptions } from './args.js';
+import { COMMANDS, HELP, USAGE, commandDefinition, commandHelp, didYouMean, isHelp, isVersion, optionSpec, parseOptions, traceOperation, type Command } from './args.js';
 
 export type Io = {
   cwd: string;
@@ -16,92 +16,6 @@ export type Io = {
   signal?: AbortSignal;
 };
 
-const USAGE = 'loomake <init | verify | trace | run | doctor> [オプション]';
-const INIT_USAGE = 'loomake init [--codex] [--devcontainer]';
-const VERIFY_USAGE = 'loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]';
-const RUN_USAGE = 'loomake run --change <id> [--engine claude-code] [--dry-run] [--skip-permissions]';
-const TRACE_RECORD_USAGE = 'loomake trace record --change <id>';
-const TRACE_REPORT_USAGE = 'loomake trace report --change <id> [--format md|json]';
-const TRACE_ANSWER_USAGE = 'loomake trace answer --change <id> --question <Q-ID> --answer <回答> --by <回答者> [--date YYYY-MM-DD]';
-const TRACE_APPROVE_USAGE = 'loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]';
-const TRACE_USAGE = [TRACE_RECORD_USAGE, TRACE_REPORT_USAGE, TRACE_ANSWER_USAGE, TRACE_APPROVE_USAGE].join('\n       ');
-const DOCTOR_USAGE = 'loomake doctor';
-const COMMANDS = ['init', 'verify', 'trace', 'run', 'doctor'] as const;
-type Command = (typeof COMMANDS)[number];
-const COMMAND_USAGE: Record<Command, string> = { init: INIT_USAGE, verify: VERIFY_USAGE, trace: TRACE_USAGE, run: RUN_USAGE, doctor: DOCTOR_USAGE };
-// 値を取るオプション。--change=<id> の形も受け付ける（REQ-041、improve-cli-help の仮定 A-01）
-
-// 端末での幅。全角の文字は 2 桁と数え、オプションの説明の桁をそろえる
-const width = (s: string) => {
-  let n = 0;
-  for (const c of s) n += c.charCodeAt(0) > 0xff ? 2 : 1;
-  return n;
-};
-
-/** サブコマンドのヘルプ：使い方の行・説明・各オプションの説明（REQ-135） */
-const help = (usage: string, description: string, options: [string, string][] = []) =>
-  [
-    `使い方: ${usage}`,
-    description,
-    ...(options.length ? ['', 'オプション:', ...options.map(([name, text]) => `  ${name}${' '.repeat(Math.max(1, 20 - width(name)))}${text}`)] : []),
-  ].join('\n');
-
-const TRACE_RECORD_HELP = help(TRACE_RECORD_USAGE, 'verify --done を実行し、結果をコミットの SHA と合わせて .loomake/evidence/<change-id>/ に記録する。未コミットの変更があれば記録しない。', [
-  ['--change <id>', '記録する change'],
-]);
-const TRACE_REPORT_HELP = help(TRACE_REPORT_USAGE, 'いちばん新しい証拠の記録から、要件ごとのリリースレポートを標準出力に出す。', [
-  ['--change <id>', 'レポートを作る change（進行中になければ archive から探す）'],
-  ['--format md|json', '出力の形式。省くと md'],
-]);
-const TRACE_ANSWER_HELP = help(TRACE_ANSWER_USAGE, 'trace.md の確認事項へ回答を書く。すでに回答がある行は上書きしない。', [
-  ['--change <id>', '回答する change'], ['--question <Q-ID>', '確認事項の ID'],
-  ['--answer <回答>', '確認事項への回答'], ['--by <回答者>', '回答を決めた人'], ['--date YYYY-MM-DD', '回答日。省くと今日の日付'],
-]);
-const TRACE_APPROVE_HELP = help(TRACE_APPROVE_USAGE, 'trace.md の仮定に承認を書く。すでに承認がある行は上書きしない。', [
-  ['--change <id>', '承認する change'], ['--assumption <A-ID>', '仮定の ID'],
-  ['--by <承認者>', '承認を決めた人'], ['--date YYYY-MM-DD', '承認日。省くと今日の日付'],
-]);
-const COMMAND_HELP: Record<Command, string> = {
-  init: help(INIT_USAGE, 'AGENTS.md・CLAUDE.md・loomake.config.json・Skill をプロジェクトに置く。内容の違う同名のファイルは、確かめてから上書きする。', [
-    ['--codex', 'Skill を .agents/skills/ にも置く（Codex 用）'],
-    ['--devcontainer', '.devcontainer/devcontainer.json を置く'],
-  ]),
-  verify: help(VERIFY_USAGE, '仕様ゲートと完了ゲートで、仕様・確認事項・テストを検査する。--change を省くと、品質コマンドだけを実行する。終了コードは合格 0・不合格 1・使い方の誤り 2・実行時の失敗 3。', [
-    ['--change <id>', '検査する change'],
-    ['--spec-only', '仕様ゲート：実装に入ってよいかを検査する'],
-    ['--done', '完了ゲート：仕様ゲートに加え、タスク・要件ごとのテスト・品質コマンドを検査する'],
-    ['--json', '結果を JSON で標準出力に出す（進捗は標準エラー）'],
-    ['--skip-commands', '品質コマンドを実行せず、すでにあるテストのレポートを読む'],
-  ]),
-  trace: [TRACE_RECORD_HELP, '', TRACE_REPORT_HELP, '', TRACE_ANSWER_HELP, '', TRACE_APPROVE_HELP].join('\n'),
-  run: help(RUN_USAGE, 'change のタスクをエンジンに 1 つずつ実装させ、完了ゲートが通るまで直させて、PR を作る。', [
-    ['--change <id>', '実装する change'],
-    ['--engine <名前>', '使うエンジン。省くと claude-code（いまは claude-code だけ）'],
-    ['--dry-run', 'エンジンに渡す予定のタスクと最初の指示を表示するだけで、実装しない'],
-    ['--skip-permissions', '権限確認なしでエンジンを動かす。LOOMAKE_SANDBOX=1 のときだけ使える'],
-  ]),
-  doctor: help(DOCTOR_USAGE, '導入状態を調べ、足りない設定と直し方を表示する。ファイルは変えず、品質コマンドも実行しない。'),
-};
-
-// 全体のヘルプ（REQ-135）
-const HELP = [
-  `使い方: ${USAGE}`,
-  '',
-  'コマンド:',
-  '  init     AGENTS.md・CLAUDE.md・loomake.config.json・Skill をプロジェクトに置く',
-  '  verify   仕様ゲートと完了ゲートで、仕様・確認事項・テストを検査する',
-  '  trace    証拠を記録し（record）、リリースレポートを出す（report）。確認事項の回答（answer）と仮定の承認（approve）を書く',
-  '  run      change のタスクをエンジンに 1 つずつ実装させ、完了ゲートを通して PR を作る',
-  '  doctor   導入状態を調べ、足りない設定と直し方を表示する',
-  '',
-  'オプション:',
-  '  -h, --help     使い方を表示する',
-  '  -v, --version  版を表示する',
-  '',
-  '各コマンドの使い方は、loomake <コマンド> --help で表示します。',
-].join('\n');
-
-const isHelp = (a: string | undefined) => a === '--help' || a === '-h';
 // src/ からも dist/ からも、loomake の package.json は 1 つ上にある
 const version = () => (JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }).version;
 
@@ -113,7 +27,7 @@ export async function main(argv: string[], io: Io): Promise<number> {
     io.stdout(HELP);
     return 0;
   }
-  if (command === '--version' || command === '-v') {
+  if (isVersion(command)) {
     io.stdout(version());
     return 0;
   }
@@ -127,8 +41,8 @@ export async function main(argv: string[], io: Io): Promise<number> {
   // サブコマンドの --help は、ほかの処理をせずに使い方だけを出す。trace は record と report を分ける（REQ-135）
   if (args.some(isHelp)) {
     // オブジェクトの添字で引くと constructor のような継承したプロパティを拾うので、名前を 1 つずつ比べる
-    const sub = cmd !== 'trace' ? undefined : args[0] === 'record' ? TRACE_RECORD_HELP : args[0] === 'report' ? TRACE_REPORT_HELP : args[0] === 'answer' ? TRACE_ANSWER_HELP : args[0] === 'approve' ? TRACE_APPROVE_HELP : undefined;
-    io.stdout(sub ?? COMMAND_HELP[cmd]);
+    const sub = cmd === 'trace' ? traceOperation(args[0]) : undefined;
+    io.stdout(commandHelp(sub ?? commandDefinition(cmd)));
     return 0;
   }
   try {
@@ -144,18 +58,18 @@ export async function main(argv: string[], io: Io): Promise<number> {
     }
     if (!(e instanceof UsageError)) throw e;
     io.stderr(`loomake ${cmd}: ${e.message}`);
-    io.stderr(`使い方: ${COMMAND_USAGE[cmd]}`);
+    io.stderr(`使い方: ${commandDefinition(cmd).usage}`);
     return 2;
   }
 }
 
 function doctor(args: string[], io: Io): number {
-  parseOptions(args, {});
+  parseOptions(args, optionSpec(commandDefinition('doctor')));
   return runDoctor({ root: io.cwd, stdout: io.stdout });
 }
 
 function init(args: string[], io: Io): Promise<number> {
-  const { flags } = parseOptions(args, { flags: ['--codex', '--devcontainer'] });
+  const { flags } = parseOptions(args, optionSpec(commandDefinition('init')));
   const { prompt } = io;
   return runInit({
     root: io.cwd,
@@ -169,7 +83,7 @@ function init(args: string[], io: Io): Promise<number> {
 }
 
 function verify(args: string[], io: Io): number {
-  const { values, flags } = parseOptions(args, { values: ['--change'], flags: ['--spec-only', '--done', '--json', '--skip-commands'] });
+  const { values, flags } = parseOptions(args, optionSpec(commandDefinition('verify')));
   const changeId = values.get('--change');
   const specOnly = flags.has('--spec-only');
   const done = flags.has('--done');
@@ -191,12 +105,12 @@ function verify(args: string[], io: Io): number {
 
 function trace(args: string[], io: Io): number {
   const [sub, ...rest] = args;
-  const subs = ['record', 'report', 'answer', 'approve'];
+  const subs = commandDefinition('trace').operations?.map((operation) => operation.name) ?? [];
   if (sub === 'answer' || sub === 'approve') return agreement(sub, rest, io);
   if (sub !== 'record' && sub !== 'report') {
     throw new UsageError(sub ? `知らないサブコマンドです：${sub}${didYouMean(sub, subs)}` : 'record・report・answer・approve のどれかを指定してください');
   }
-  const { values } = parseOptions(rest, { values: sub === 'report' ? ['--change', '--format'] : ['--change'] });
+  const { values } = parseOptions(rest, optionSpec(traceOperation(sub) ?? commandDefinition('trace')));
   const changeId = values.get('--change');
   const format = values.get('--format');
   if (!changeId) throw new UsageError('--change <id> が必要です');
@@ -211,7 +125,7 @@ function trace(args: string[], io: Io): number {
 // 確認事項の回答と仮定の承認を trace.md に書く（REQ-202・REQ-203）
 function agreement(kind: 'answer' | 'approve', args: string[], io: Io): number {
   const target = kind === 'answer' ? '--question' : '--assumption';
-  const { values } = parseOptions(args, { values: ['--change', target, '--by', '--date', ...(kind === 'answer' ? ['--answer'] : [])] });
+  const { values } = parseOptions(args, optionSpec(traceOperation(kind) ?? commandDefinition('trace')));
   const changeId = values.get('--change');
   const id = values.get(target);
   if (!changeId || !id) throw new UsageError(`--change <id> と ${target} <ID> が必要です`);
@@ -219,7 +133,7 @@ function agreement(kind: 'answer' | 'approve', args: string[], io: Io): number {
 }
 
 function run(args: string[], io: Io): Promise<number> {
-  const { values, flags } = parseOptions(args, { values: ['--change', '--engine'], flags: ['--dry-run', '--skip-permissions'] });
+  const { values, flags } = parseOptions(args, optionSpec(commandDefinition('run')));
   const changeId = values.get('--change');
   if (!changeId) throw new UsageError('--change <id> が必要です');
   const { prompt } = io;
