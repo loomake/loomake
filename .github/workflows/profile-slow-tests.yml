@@ -41,12 +41,14 @@ jobs:
         env:
           LOOMAKE_TEST_PHASE_PROFILE_DIR: ${{ runner.temp }}/loomake-test-phases
           LOOMAKE_TEST_PHASE_SAMPLE: ${{ matrix.sample }}
+          LOOMAKE_TEST_BUDGET_CLOCK: '1'
       - id: collect
         if: ${{ !cancelled() && steps.checkout.outcome == 'success' && steps.node.outcome == 'success' }}
         run: node scripts/test-phase-profile.mjs
         env:
           LOOMAKE_TEST_PHASE_PROFILE_DIR: ${{ runner.temp }}/loomake-test-phases
           LOOMAKE_TEST_PHASE_SAMPLE: ${{ matrix.sample }}
+          LOOMAKE_TEST_BUDGET_CLOCK: '1'
           TEST_PHASE_OUTCOME: ${{ steps.test.outcome }}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         id: upload
