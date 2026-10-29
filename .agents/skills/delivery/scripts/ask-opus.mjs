@@ -1,7 +1,7 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs';
+import { isAbsolute, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const ROLES = ['design', 'second-opinion', 'review'];
@@ -27,8 +27,8 @@ export function parseArgs(args) {
 
 export function buildClaudeArgs(sessionId, requestDir) {
   return ['--print', '--model', 'opus', '--permission-mode', 'plan',
-    '--tools', TOOLS.join(','), '--allowedTools', TOOLS.join(','),
-    '--setting-sources', '', '--settings', '{"disableAllHooks":true,"autoMemoryEnabled":false}',
+    '--tools', TOOLS.join(','), '--allowedTools', 'Read(./**)',
+    '--setting-sources', '', '--settings', '{"disableAllHooks":true,"autoMemoryEnabled":false,"permissions":{"blockReadsOutsideWorkingDirectories":true}}',
     '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}',
     '--no-session-persistence', '--session-id', sessionId,
     '--add-dir', requestDir, '--output-format', 'stream-json', '--verbose'];
@@ -130,13 +130,32 @@ export async function askOpus(input, options = {}) {
   try {
     if (!ROLES.includes(input.role) || !/^[a-f0-9]{40}$/.test(input.head)) throw new Error('工程またはheadが不正です。');
     checkTree(cwd, input.head);
-    const request = resolve(cwd, input.request);
+    const root = realpathSync(cwd);
+    const requestRoot = realpathSync(resolve(cwd, '.loomake'));
+    const request = realpathSync(resolve(cwd, input.request));
+    const inside = (parent, child) => {
+      const path = relative(parent, child);
+      return path !== '' && path !== '..' && !path.startsWith('../') && !path.startsWith('..\\') && !isAbsolute(path);
+    };
+    if (!inside(root, requestRoot) || !inside(requestRoot, request)) {
+      throw new Error('依頼ファイルの実パスは作業ツリーの.loomake/配下に置いてください。');
+    }
     if (statSync(request).size > 200 * 1024) throw new Error('依頼ファイルが200KiBを超えています。');
     const content = readFileSync(request, 'utf8');
     if (!content.trim()) throw new Error('依頼ファイルが空です。');
-    dir = resolve(cwd, '.loomake/claude', sessionId);
-    mkdirSync(dir, { recursive: true, mode: 0o700 });
-    if (git(cwd, ['check-ignore', dir]) === '') throw new Error('成果物の保存先がGitの除外対象になっていません。');
+    const outputRoot = resolve(requestRoot, 'claude');
+    let realOutputRoot;
+    try { realOutputRoot = realpathSync(outputRoot); }
+    catch (error) { if (error.code !== 'ENOENT') throw error; }
+    if (realOutputRoot && !inside(requestRoot, realOutputRoot)) {
+      throw new Error('成果物の保存先の実パスは作業ツリーの.loomake/配下に置いてください。');
+    }
+    const outputDir = resolve(outputRoot, sessionId);
+    const ignored = spawnSync('git', ['check-ignore', '-q', '--', outputDir], { cwd, shell: false });
+    if (ignored.status === 1) throw new Error('成果物の保存先がGitの除外対象になっていません。');
+    if (ignored.status !== 0) throw new Error('成果物の保存先がGitの除外対象か確認できませんでした。');
+    mkdirSync(outputDir, { recursive: true, mode: 0o700 });
+    dir = outputDir;
     const prompt = `担当工程: ${input.role}\n対象コミット: ${input.head}\n` +
       '最初にAGENTS.mdとdocs/dev/agent-workflow.mdを読んでください。Read/Glob/Grepだけで依頼を処理してください。計画ファイルの作成、編集、ExitPlanMode、承認・投稿はしないでください。成果物は最終メッセージの本文で返してください。\n\n' + content;
     writeFileSync(resolve(dir, 'request.md'), prompt, { mode: 0o600 });

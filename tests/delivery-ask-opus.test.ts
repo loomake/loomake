@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, existsSync, symlinkSync, chmodSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { askOpus, buildClaudeArgs, evaluateEvents, parseArgs } from '../.agents/skills/delivery/scripts/ask-opus.mjs';
 
 const session = 'test-session';
@@ -40,8 +41,8 @@ describe('deliveryのOpus応答の検証', () => {
   });
   it('新規セッション・読取ツール・hook/MCP無効を固定し、既存セッションを再開しない', () => {
     const args = buildClaudeArgs(session, '/request');
-    expect(args).toEqual(['--print', '--model', 'opus', '--permission-mode', 'plan', '--tools', 'Read,Glob,Grep', '--allowedTools', 'Read,Glob,Grep',
-      '--setting-sources', '', '--settings', '{"disableAllHooks":true,"autoMemoryEnabled":false}', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}',
+    expect(args).toEqual(['--print', '--model', 'opus', '--permission-mode', 'plan', '--tools', 'Read,Glob,Grep', '--allowedTools', 'Read(./**)',
+      '--setting-sources', '', '--settings', '{"disableAllHooks":true,"autoMemoryEnabled":false,"permissions":{"blockReadsOutsideWorkingDirectories":true}}', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}',
       '--no-session-persistence', '--session-id', session, '--add-dir', '/request', '--output-format', 'stream-json', '--verbose']);
   });
   it('未知の引数・短いhead・時間上限なしを受け付けない', () => {
@@ -53,7 +54,7 @@ describe('deliveryのOpus応答の検証', () => {
   });
 });
 
-async function withRepo(mode: string, check: (fixture: { cwd: string; input: ReturnType<typeof parseArgs>; options: Parameters<typeof askOpus>[1] }) => Promise<void>) {
+async function withRepo(mode: string, check: (fixture: { cwd: string; input: ReturnType<typeof parseArgs>; options: { cwd: string; executable: string; prefixArgs: string[]; env: NodeJS.ProcessEnv } }) => Promise<void>) {
   const cwd = mkdtempSync(join(tmpdir(), 'loomake-opus-'));
   try {
     execFileSync('git', ['init', '-q'], { cwd });
@@ -103,6 +104,7 @@ describe('deliveryのClaude起動', () => {
   it('head不一致・未コミット変更ではClaudeを起動しない', async () => {
     await withRepo('success', async ({ cwd, input, options }) => {
       expect((await askOpus({ ...input, head: 'a'.repeat(40) }, options)).ok).toBe(false);
+      expect(existsSync(join(cwd, '.loomake/called'))).toBe(false);
       writeFileSync(join(cwd, 'dirty.txt'), 'dirty');
       expect((await askOpus(input, options)).ok).toBe(false);
       expect(existsSync(join(cwd, '.loomake/called'))).toBe(false);
@@ -120,6 +122,105 @@ describe('deliveryのClaude起動', () => {
       if (!('reason' in result)) throw new Error('失敗結果が必要です');
       expect(result.reason).toContain(reason);
       expect(JSON.parse(readFileSync(join(result.dir!, 'manifest.json'), 'utf8'))).toMatchObject({ ok: false });
+    });
+  });
+
+  it('除外されていない保存先では正しい理由を返し、ディレクトリも作らない', async () => {
+    await withRepo('success', async ({ cwd, input, options }) => {
+      writeFileSync(join(cwd, '.gitignore'), '');
+      execFileSync('git', ['add', '.gitignore'], { cwd });
+      execFileSync('git', ['-c', 'user.name=Delivery test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'unignore'], { cwd });
+      writeFileSync(join(cwd, '.git/info/exclude'), '.loomake/request.md\n.loomake/fake.mjs\n');
+      const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd, encoding: 'utf8' }).trim();
+      expect(await askOpus({ ...input, head }, options)).toMatchObject({ ok: false, dir: null, reason: '成果物の保存先がGitの除外対象になっていません。' });
+      expect(existsSync(join(cwd, '.loomake/claude'))).toBe(false);
+      expect(existsSync(join(cwd, '.loomake/called'))).toBe(false);
+    });
+  });
+  it.each([['空', '', '空'], ['上限超過', 'x'.repeat(200 * 1024 + 1), '200KiB']])('%sの依頼は起動前に拒む', async (_name, content, reason) => {
+    await withRepo('success', async ({ cwd, input, options }) => {
+      writeFileSync(input.request, content);
+      expect(await askOpus(input, options)).toMatchObject({ ok: false, dir: null, reason: expect.stringContaining(reason) });
+      expect(existsSync(join(cwd, '.loomake/called'))).toBe(false);
+    });
+  });
+  it('ツリー外、接頭辞が似た隣接ディレクトリ、外向きsymlinkの依頼を起動前に拒む', async () => {
+    const outside = mkdtempSync(join(tmpdir(), 'loomake-outside-'));
+    try {
+      const externalRequest = join(outside, 'request.md');
+      writeFileSync(externalRequest, '無害な試験用の依頼');
+      await withRepo('success', async ({ cwd, input, options }) => {
+        const linkedRequest = join(cwd, '.loomake/linked.md');
+        symlinkSync(externalRequest, linkedRequest);
+        mkdirSync(join(cwd, '.loomake-sibling'));
+        writeFileSync(join(cwd, '.loomake-sibling/request.md'), '無害な試験用の依頼');
+        writeFileSync(join(cwd, '.git/info/exclude'), '.loomake-sibling/\n');
+        for (const request of [externalRequest, linkedRequest, '.loomake-sibling/request.md']) {
+          expect(await askOpus({ ...input, request }, options)).toMatchObject({ ok: false, dir: null, reason: expect.stringContaining('実パス') });
+          expect(existsSync(join(cwd, '.loomake/called'))).toBe(false);
+        }
+      });
+      await withRepo('success', async ({ cwd, input, options }) => {
+        rmSync(join(cwd, '.loomake'), { recursive: true });
+        symlinkSync(outside, join(cwd, '.loomake'), 'junction');
+        writeFileSync(join(cwd, '.git/info/exclude'), '.loomake\n');
+        expect(await askOpus(input, options)).toMatchObject({ ok: false, dir: null, reason: expect.stringContaining('実パス') });
+      });
+    } finally { rmSync(outside, { recursive: true, force: true }); }
+  });
+  it('成果物ディレクトリの外向きsymlinkへ書き込まない', async () => {
+    const outside = mkdtempSync(join(tmpdir(), 'loomake-output-'));
+    try {
+      await withRepo('success', async ({ cwd, input, options }) => {
+        symlinkSync(outside, join(cwd, '.loomake/claude'), 'junction');
+        expect(await askOpus(input, options)).toMatchObject({ ok: false, dir: null, reason: expect.stringContaining('実パス') });
+        expect(existsSync(join(cwd, '.loomake/called'))).toBe(false);
+      });
+    } finally { rmSync(outside, { recursive: true, force: true }); }
+  });
+  it('Claudeが見つからない場合は未実施を保存する', async () => {
+    await withRepo('success', async ({ cwd, input, options }) => {
+      const result = await askOpus(input, { ...options, executable: join(cwd, '.loomake/not-installed'), prefixArgs: [] });
+      expect(result).toMatchObject({ ok: false, reason: expect.stringContaining('起動できません') });
+      expect(JSON.parse(readFileSync(join(result.dir!, 'manifest.json'), 'utf8')).exitCode).not.toBe(0);
+    });
+  });
+  it('SIGINTで子プロセスを止め、未実施を保存する', async () => {
+    await withRepo('timeout', async ({ cwd, input, options }) => {
+      const modulePath = resolve(import.meta.dirname, '../.agents/skills/delivery/scripts/ask-opus.mjs');
+      const code = `import {askOpus} from ${JSON.stringify(pathToFileURL(modulePath).href)};
+import {existsSync} from 'node:fs';
+const timer=setInterval(()=>{if(existsSync('.loomake/called')) {clearInterval(timer);process.kill(process.pid,'SIGINT');}},10);
+console.log(JSON.stringify(await askOpus(${JSON.stringify(input)},${JSON.stringify({ ...options, env: undefined })})));
+clearInterval(timer);`;
+      const child = spawnSync(process.execPath, ['--input-type=module', '-e', code], { cwd, env: options.env, encoding: 'utf8', timeout: 10000 });
+      expect(child.status).toBe(0);
+      const result = JSON.parse(child.stdout);
+      expect(result).toMatchObject({ ok: false, reason: expect.stringContaining('中断') });
+      expect(JSON.parse(readFileSync(join(result.dir, 'manifest.json'), 'utf8'))).toMatchObject({ ok: false });
+    });
+  });
+
+  it('CLIの正常な実行はJSON要約と終了コード0を返す（Windows npm版は未対応）', async () => {
+    await withRepo('success', async ({ cwd, input }) => {
+      const bin = join(cwd, '.loomake/bin');
+      mkdirSync(bin);
+      const executable = join(bin, process.platform === 'win32' ? 'claude.cmd' : 'claude');
+      writeFileSync(executable, `#!${process.execPath}\n` + readFileSync(join(cwd, '.loomake/fake.mjs'), 'utf8'));
+      chmodSync(executable, 0o700);
+      const script = resolve(import.meta.dirname, '../.agents/skills/delivery/scripts/ask-opus.mjs');
+      const child = spawnSync(process.execPath, [script, '--role', input.role, '--request', input.request, '--head', input.head], {
+        cwd, encoding: 'utf8', timeout: 10000, env: { ...process.env, PATH: bin + (process.platform === 'win32' ? ';' : ':') + process.env.PATH },
+      });
+      if (process.platform === 'win32') {
+        expect(child.status).toBe(1);
+        expect(JSON.parse(child.stdout)).toMatchObject({ ok: false, status: '未実施' });
+      } else {
+        expect(child.status).toBe(0);
+        expect(JSON.parse(child.stdout)).toMatchObject({ ok: true, status: '実施済み' });
+        expect(child.stdout.trim().split('\n')).toHaveLength(1);
+        expect(child.stdout).not.toMatch(/依頼の目印|回答の目印/);
+      }
     });
   });
   it('CLIの不正引数はJSON要約と終了コード2を返す', () => {
