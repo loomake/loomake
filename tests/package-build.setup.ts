@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { TestProject } from 'vitest/node';
 import { buildAndPack } from '../scripts/package-smoke.mjs';
+import { profileEvent } from '../scripts/test-phase-profile.mjs';
 
 declare module 'vitest' {
   export interface ProvidedContext {
@@ -15,7 +16,9 @@ declare module 'vitest' {
 // 試験は tarball の場所を、LOOMAKE_PACKED_TARBALLS で scripts/package-smoke.mjs の prepare に渡す
 export default function setup(project: TestProject) {
   const dir = mkdtempSync(join(tmpdir(), 'loomake packed '));
+  profileEvent('shared-package-build', 'package-build-start');
   buildAndPack(dir);
+  profileEvent('shared-package-build', 'package-build-end');
   project.provide('packedTarballs', dir);
   return () => rmSync(dir, { recursive: true, force: true });
 }

@@ -16,6 +16,12 @@
 
 この決まりは以前、monorepo の仕様の Requirement「PR の古い CI 実行の取り消し」（REQ-215）だった。change move-dev-mechanics-to-docs で仕様から外した。
 
+## 文書だけの PR でテストを実行するジョブ
+
+文書だけの PR（REQ-270）では、quality ジョブは品質コマンドを飛ばす。このとき、文書を読むテスト（`tests/doc-links.test.ts` など）を実行するのは、gate ジョブの `verify` だけになる。
+
+gate ジョブでテストを実行しないようにする変更（change shorten-ci-wall-clock の確認事項 Q-08 の案 E など）では、文書だけの PR でテストを実行するジョブがなくなる。その change では、REQ-270 との組み合わせを見直す。たとえば、文書だけの PR では gate でテストを実行するか、REQ-270 の文書の範囲を狭める（Issue #42 の 4、change close-docs-only-gaps）。
+
 ## まだ仕様にあるもの
 
 次の 2 つはいま monorepo の仕様にあり、変えるには change が要る。進行中の change が終わってから、このページに移す候補にしている。
@@ -24,3 +30,44 @@
 - CI のテストの分割（REQ-214）
 
 完了ゲート（gate のジョブ）と release ワークフローは、利用者や配布物にかかわるので、仕様に残す。
+
+## quality のテスト診断
+
+quality ジョブの要約には、テストステップの成否と JSON レポートの状態を別々に表示する。レポートの状態は、有効・欠損・不正・空の4つ。テストが未実行なら、そのことも明示する。レポートがないことを、成功の証拠にはしない。
+
+状態別件数は全結果を数え、skip・pending・todo・disabled は成功と分ける。失敗の一覧はファイル名とテストの完全名を最大20件、所要時間の一覧は時間のあるテストを長い順に最大10件表示する。各ファイル名とテスト名は200文字、要約全体は32KiB以内に収め、省略があれば件数や文字の省略を表示する。名前に含まれる Markdown と HTML の記号は文字として表示する。
+
+実行画面の Artifacts から、`ci-tests-<run-id>-<attempt>-<os>-<shard>` をダウンロードできる。シャードの `/` は `-` に置き換え、分割しない実行は `all` とする。次のファイルを参照する。
+
+- `metadata.json`：`schemaVersion: 1`、run の URL・ID・試行番号、実際に checkout した SHA、OS、Node の版、シャード、テストステップの結果、レポートの状態、状態別件数。
+- `summary.md`：ジョブ要約と同じ日本語の診断。
+- `test-report.json`：元レポートの写し。元レポートがあるときだけ保存する。失敗メッセージの全文や一覧で省略されたテストは、このファイルで確認する。
+
+診断スクリプトは `node scripts/ci-test-diagnostics.mjs` で実行する。`CI_TEST_OS`、`CI_TEST_SHARD`、`CI_TEST_OUTCOME` に実行環境とテストステップの outcome を渡す。run 情報は `GITHUB_*` から、SHA は `git rev-parse HEAD` から取得する。出力先は `$RUNNER_TEMP/loomake-ci-test-diagnostics`。`GITHUB_STEP_SUMMARY` があれば要約を追記し、`GITHUB_OUTPUT` には `artifact-name` と `directory` を書く。
+
+artifact の保存期間は7日とする。保存対象は上の3ファイルに限り、ほかの `.loomake` 内のファイルは含めない。レポートが欠損・不正・空でも、その状態を記録する。元レポートが不正な JSON であっても、存在するなら写しを保存する。
+
+テストや、それより前の lint・型検査が失敗したあとも、キャンセルされておらず、checkout と Node の準備が済んでいれば診断を生成する。テストに進まなかった場合は未実行と表示する。生成と upload は別ステップで、生成が失敗しても生成済みのファイルの保存を試みる。保存対象がなければ警告する。診断は品質コマンドの失敗を成功に変えない。
+
+文書だけと判定されたジョブでは診断を生成しない。キャンセルされた実行や、checkout・Node の準備に失敗した実行では、診断の生成と保存を保証しない。artifact がないことを成功と解釈せず、ジョブの状態とログを確認する。
+
+## 依存予算と判定ディレクトリの補助検査（W0-3）
+
+`pnpm test` は `tests/ci-policy-boundaries.test.ts` で、5パッケージの実行時依存を許可集合と照合する。coreはzod、kitはcoreとyaml、traceはcoreとkit、runnerはcore・kit・trace、CLIはcore・kit・trace・runnerだけを許可する。これは上限の検査であり、まだ使っていない依存を追加するものではない。
+
+`dependencies` のほか、`optionalDependencies`・`peerDependencies`・`bundledDependencies`・`bundleDependencies` も照合する。npmの別名は参照先のパッケージ名も照合する。外部ツールのSDKは許可集合にないため、これらへ追加するとCIが失敗する。開発時だけに使う `devDependencies` と、Actions経由で別プロセスとして使うSDKはこの実行時予算の対象外とする。
+
+`pnpm lint` は `packages/kit/src/verify/policy/**/*.ts` に次のESLint規則を適用する。
+
+- `no-restricted-imports`：`node:` 付きと裸の名前のNode組み込みモジュールへの値のimport・再exportを禁止する。型だけのimportは許可する。
+- `no-restricted-globals`：`Date`・`process`・通信・時計・タイマー・ログ・動的コード実行などのグローバル参照を禁止する。`globalThis`・`global`・`window`・`self` 自体の参照も禁止し、そこから同じ入口を参照する書き方も検出する。
+- `no-restricted-properties`：`Math.random` と `Math['random']` を禁止する。
+- `no-restricted-syntax`：動的なimportと `import = require` を禁止する。
+
+判定に使う時刻や環境値は呼び出し側から引数で渡す。収集・実行を担当するモジュールには、このディレクトリ限定の制限を掛けない。試験では実際のESLint設定へ違反例を渡し、拒否されることと、型のimportや引数で渡すデータが許可されることを確かめる。
+
+補助検査の試験は、対象ファイルで有効な4規則と同じTypeScriptパーサーをESLintの設定から読み、型情報を作らずに実行する。これらの規則は構文とスコープを使うため、TypeScriptのプロジェクト全体を初期化する必要はない。通常の `pnpm lint` の型情報を使う検査は維持する。
+
+これらは外部状態への直接参照を見つける補助検査であり、純粋性を保証するものではない。依存先の副作用、引数の変更、別名で渡された関数などはレビューと「同じ入力なら同じ出力」の動作試験で確認する。既存の `tests/kit-layers.test.ts` による層の向きの検査と、判定関数の動作試験も引き続き実行する。
+
+Schemaの再生成一致は、既存の `packages/core/test/json-schema.test.ts` が `renderJsonSchemas()` の結果と保存済みファイルを照合する。Schemaの互換性検査も既存の試験を維持する。

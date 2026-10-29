@@ -4,17 +4,21 @@ import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { copyFixture, prepare } from './package-smoke.mjs';
+import { profileEvent } from './test-phase-profile.mjs';
 
 const win = process.platform === 'win32';
 const quote = (text) => `"${text.replace(/"/g, '""')}"`;
 
 /** AIが作成した操作シナリオを配布物で実行する。人の利用者試験や外部接続は含めない。 */
 export function runJourneys(target) {
+  const caseId = process.env.LOOMAKE_TEST_PHASE_CASE_ID;
   mkdirSync(target);
   const report = { schemaVersion: 1, kind: 'ai-authored-scenarios', humanParticipants: 0, externalGitHub: false, scenarios: [] };
   const artifacts = join(target, 'artifacts');
   try {
+    profileEvent(caseId, 'prepare-start');
     prepare(artifacts);
+    profileEvent(caseId, 'prepare-end');
     const tarballs = readdirSync(join(artifacts, 'tarballs')).map((name) => join(artifacts, 'tarballs', name));
     const scenario = (id, title) => {
       const value = { id, title, status: 'running', steps: [] };
@@ -29,6 +33,8 @@ export function runJourneys(target) {
       const result = spawnSync(shell && !bare ? quote(command) : command, shell ? args.map(quote) : args, { cwd, shell, encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 });
       const step = { command, args, expectedExitCode, exitCode: result.status, stdout: result.stdout ?? '', stderr: result.stderr ?? '', durationMs: Date.now() - started };
       current.steps.push(step);
+      const kind = command === 'npm' ? 'npm' : command === 'git' ? 'git' : command === process.execPath ? 'cli' : undefined;
+      if (kind) profileEvent(caseId, 'command-timing', { kind, durationMs: step.durationMs });
       assert.equal(result.status, expectedExitCode, `${current.id}: ${command} ${args.join(' ')}\n${step.stdout}${step.stderr}${result.error?.message ?? ''}`);
       return step.stdout;
     };

@@ -12,3 +12,10 @@
 2. 仕様ゲート・lint・型チェック・全体試験（79 ファイル、1109 成功、既存の OS 条件による 8 skip）・全タスクチェック後の完了ゲートが exit 0。REQ-283〜REQ-287 に ID 付き試験があり、6/6 タスクをチェック済み。
 3. この change の未決事項はない。Issue #60 全体の quality-report と trace.md・spec・tasks の版は別作業として残る。
 4. [PR #128](https://github.com/loomake/loomake/pull/128) を作成した。次は本体が CI を確認し、承認範囲内で受入・マージ・archive を進める。
+
+## main との統合
+
+1. [PR #128](https://github.com/loomake/loomake/pull/128) の競合解消のため、管理役の指定した main `50dc3b0` を取り込んだ。`core-quality-yaml-schema` の製品差分は維持し、競合した core の入口は main を採用して quality の遅延エクスポート 2 行だけを加えた。判定処理の kit への移管、最新の AGENTS.md、ほかのブランチの作業記録を保持した。
+2. main 取り込み前の完了ゲートは exit 0。統合後の型チェック・lint・関連 9 ファイル 48 試験が exit 0。更新 head の CI gate の結果は PR #128 に記録する。
+3. 未決事項はない。AI レビューは実施済みの 2 回までとし、追加では行わない。
+4. 次は統合した head を push し、更新 head の CI gate を確認して管理役へ引き継ぐ。

@@ -87,7 +87,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     console.error(`ci-gate: ${selected.error}`);
     process.exit(1);
   }
-  // loomake verify は先に pnpm build しておく（CI の gate ジョブ）
+  // loomake verify は先に pnpm build しておく（CI の gate ジョブ）。
+  // 文書だけの PR（REQ-270）でテストを実行するのは、ここで呼ぶ verify の品質コマンドだけになる。
+  // verify を呼ばない経路や、テストを飛ばす引数を足す前に、docs/dev/ci.md の「文書だけの PR でテストを実行するジョブ」を読むこと
   const verify = (args) => spawnSync(process.execPath, ['packages/cli/dist/cli.js', 'verify', ...args], { stdio: 'inherit' }).status ?? 1;
   if (selected.qualityOnly) {
     console.error(`ci-gate: branch=${branch || '(なし)'} → verify（品質コマンドのみ。${selected.qualityOnly}）`);
