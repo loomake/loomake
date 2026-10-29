@@ -41,9 +41,9 @@ quality先行範囲に未回答の製品仕様はない。metric/sourceの名前
 | 対象 | 扱い・根拠 |
 |---|---|
 | #102 / W6-6 | 受入済み。guideの4章と既存リンク検査がある |
-| #60 / W1-1 | 保持修正PR140はmain 8426d8cで受入済み。仕様反映・archiveの最終受入確認を実装開始の依存に残す。根拠は[Issue60](https://github.com/loomake/loomake/issues/60)と[PR141](https://github.com/loomake/loomake/pull/141) |
+| #60 / W1-1 | 保持修正PR140はmain 8426d8cで受入済み。仕様反映・archiveはPR141のmain 684abf0への受入で完了し、Issueのcompletedを確認して実装依存を解消した。根拠は[Issue60](https://github.com/loomake/loomake/issues/60)と[PR141](https://github.com/loomake/loomake/pull/141) |
 | 元スキーマ | 保存済み入力JSON Schemaにはproperties/items/record値/oneOf/required/default/制約があり、既存のZod生成一致試験を維持する |
 | defaultの表現 | evidence親のdefault:{}と子の既定値を分け、解析後の補完結果は既存スキーマの最小入力で照合する |
 | docs/dev例外 | 生成内容は利用者へ届くため本changeへ置く。開発者だけの実行手順・CIへの接続方法はdocs/devへ記す |
 | C-001とCLI | C-001の型・判定・scope、CLI共通定義・生成は対象外。#139の質問へ回答したことにも扱わない |
-| 検証の範囲 | 今回はstrictとspec-onlyまで。製品実装、ID付き試験の追加、設定変更、完了ゲートとPR作成は行わない |
+| 検証の範囲 | 計画段階でstrictとspec-onlyを確認し、依存受入後に実装・ID付き試験へ進んだ。最終の全体done/必須CIは管理役の受入確認へ残し、4.1を未チェックで保持する |

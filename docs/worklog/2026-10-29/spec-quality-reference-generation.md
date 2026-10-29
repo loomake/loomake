@@ -11,3 +11,10 @@
 2. [CI 40812088328](https://github.com/loomake/loomake/actions/runs/40812088328)は通常verifyと必須CI/CodeQL成功、全体1,300試験成功・既存skip8件。今回も仕様ゲートはexit 0。
 3. quality先行範囲に未回答事項はない。#139の3件は回答待ちを維持し、CLI生成は対象外として#104をopen維持する。
 4. 次は2.1のrendererから実装する。依存実装は同一なのでmainの追加統合は行わず、最終の通常done/CI待ちなら4.1を未チェックで保持する。
+
+## qualityリファレンスの実装と受入待ち
+
+1. `add-quality-reference-generation` の2.1〜3.2として、全階層・NA分岐・default/制約の生成、読み取り専用check、利用者ページ・入口・開発手順、REQ-320〜322の13試験を追加した。既存テスト経路へ接続し、公開8 JSONはbaseとbyte一致、製品コード・型/exports・設定・既存試験は変更していない。
+2. 関連62試験（新規13、文書リンク41、既存JSON Schema一致8）、lint、typecheck、再生成check、OpenSpec strict、仕様ゲートはすべて成功した。全体doneは一時領域不足のため繰り返さず、最終headのnative CIで受け入れる。
+3. 未回答の製品仕様・仮定はない。独立レビュー・全体done・必須CIが未確認なので4.1を未チェックとし、change全体の完了とは報告しない。CLI生成が残るため#104をopen維持する。
+4. 管理役へ実装固定headと検証結果を渡し、Draft PR・独立レビュー・native CIへ進める。PR作成とpushは管理役が担当する。

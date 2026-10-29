@@ -30,7 +30,9 @@ function constraints(schema, path) {
   for (const key of scalarConstraints) if (own(schema, key)) values.push(`${key}: ${JSON.stringify(schema[key])}`);
   if (schema.propertyNames !== undefined) {
     const names = schemaObject(schema.propertyNames, `${path}のキー`);
-    const fields = [names.type && `type: ${names.type}`, ...constraints(names, `${path}のキー`)];
+    const nested = ['properties', 'required', 'additionalProperties', 'propertyNames', 'items', 'oneOf'].filter((key) => own(names, key));
+    if (nested.length) throw new Error(`${path}: 未対応のキー制約です: ${nested.join(', ')}`);
+    const fields = [names.type && `type: ${names.type}`, ...constraints(names, `${path}のキー`), names.description];
     values.push(`キー: ${fields.filter(Boolean).join(', ') || '制約なし'}`);
   }
   if (own(schema, 'additionalProperties')) {

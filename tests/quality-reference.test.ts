@@ -102,6 +102,7 @@ describe('quality.yamlの生成リファレンス', () => {
   it('[REQ-320] 未対応の構造を黙って省かない', () => {
     expect(() => renderQualityReference({ allOf: [{ type: 'string' }] })).toThrow('未対応のスキーマ項目');
     expect(() => renderQualityReference({ type: 'array', items: false })).toThrow('未対応のスキーマ構造');
+    expect(() => renderQualityReference({ type: 'object', propertyNames: { oneOf: [{ type: 'string' }] } })).toThrow('未対応のキー制約');
     expect(() => renderQualityReference({ type: 'object', properties: { nested: { $ref: '#/$defs/x' } } })).toThrow('$ref');
   });
 });
@@ -256,6 +257,7 @@ describe('実ページと文書導線', () => {
     expect(page).toMatch(/^---\ntitle: .+\ndescription: .+\n---\n/);
     expect(page).toContain('../../../packages/core/schema/quality.schema.json');
     expect(page).toContain('node scripts/generate-quality-reference.mjs');
+    expect(page).toContain('説明中の改行は `\\n` と表記します。');
     const index = readFileSync(join(root, 'docs/guide/index.md'), 'utf8');
     for (const file of ['1.compatibility.md', '2.resources.md', '3.security.md', '4.quality-yaml.md']) {
       expect(index).toContain(`](3.reference/${file})`);

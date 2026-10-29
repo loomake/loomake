@@ -2,7 +2,7 @@
 
 ## Context
 
-main `8426d8c` では、quality.yamlのversion 2スキーマはcoreにあり、`renderJsonSchemas()` が入力向けの `quality.schema.json` を生成する。既存のcore試験はZod由来の生成内容と保存済みJSONを照合し、NA分岐と既定値も検証している。#60の実装修正は受入済みだが、仕様反映・archiveの最終受入は待ちである。
+main `8426d8c` では、quality.yamlのversion 2スキーマはcoreにあり、`renderJsonSchemas()` が入力向けの `quality.schema.json` を生成する。既存のcore試験はZod由来の生成内容と保存済みJSONを照合し、NA分岐と既定値も検証している。#60の仕様反映・archiveは計画時点では受入待ちだったが、apply開始前にPR #141の受入とIssueのcompletedを確認した。
 
 `docs/guide/3.reference/` には互換性・資源予算・セキュリティの3ページがあり、guide入口はCLIとqualityの全項目を後続の生成ページにすると記している。WBS W6-8/Issue #104のうち、qualityだけを先行する。利用者に届くページの内容は本changeで定め、開発者だけに効く生成・検査の操作手順はADR 0005に沿ってdocs/devへ書く。
 
@@ -59,4 +59,4 @@ guide入口から新ページへリンクし、CLI生成の予定は後続とし
 
 ## Migration Plan
 
-#60の仕様反映・archiveの最終受入と仕様ゲート成功を確認してから、別のapply作業へ進む。このターンは計画で止める。実装ではrendererと直接試験、生成/checkと差分試験、ページと導線・開発手順の順にまとめ、通常の完了ゲートと独立レビューを確認する。Issue #104全体はCLI側の残作業を明記してopenを維持する。
+#60の仕様反映・archiveの最終受入と仕様ゲート成功を確認し、計画ターン後のapply作業へ進んだ。実装ではrendererと直接試験、生成/checkと差分試験、ページと導線・開発手順の順にまとめ、通常の完了ゲートと独立レビューを確認する。Issue #104全体はCLI側の残作業を明記してopenを維持する。

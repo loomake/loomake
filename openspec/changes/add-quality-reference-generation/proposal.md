@@ -27,6 +27,6 @@ WBS W6-8とIssue #104は、コードに一致するCLI・quality.yamlリファ�
 
 Issue #104のCLI共通定義・CLIリファレンス生成は後続へ残し、この先行範囲だけではIssueをcloseしない。未確定のmetric/sourceの名前空間、C-001のv2出力・scope・証拠の採否などを説明へ先取りしない。
 
-## Planning Boundary / Dependencies
+## Planning History / Dependencies
 
-このターンは計画成果物だけを作る。基準mainは `8426d8c`。#102は受入済み、#60は保持修正の実装を受入済みだが仕様反映・archiveの最終受入待ちであり、実装開始前に確認する。#60受入と仕様ゲート成功を確認した後の実装は、既存delivery指示の範囲で別のapply作業として進める。
+計画作成時の基準mainは `8426d8c`。計画ターンではコードを変更せず、#60の仕様反映・archive受入を依存に残した。その後、Issue #60のcompletedとPR #141の受入を照合し、仕様ゲート成功を確認して、既存delivery指示に基づくapplyへ進んだ。#102も受入済みである。
