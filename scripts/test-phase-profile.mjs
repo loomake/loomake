@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 export const PROFILE_LIMIT = 1024 * 1024;
 export const CASE_IDS = ['journeys-temp', 'journeys-repo', 'deadline-push', 'deadline-create', 'shared-package-build'];
-const EVENTS = ['test-start', 'test-outcome', 'test-end', 'run-start', 'stall-start', 'run-end', 'retry-start', 'retry-end', 'cleanup-start', 'cleanup-end', 'prepare-start', 'prepare-end', 'command-timing', 'package-build-start', 'package-build-end'];
+const EVENTS = ['test-start', 'test-outcome', 'test-end', 'run-start', 'stall-start', 'run-end', 'retry-start', 'retry-end', 'cleanup-start', 'cleanup-end', 'prepare-start', 'prepare-end', 'command-timing', 'package-build-start', 'package-build-end', 'budget-clock'];
 const KINDS = ['npm', 'git', 'cli'];
 const processFile = `${process.pid}-${randomUUID()}.jsonl`;
 const capped = new Set();
@@ -35,7 +35,13 @@ const finite = (n) => typeof n === 'number' && Number.isFinite(n) && n >= 0;
 export function profileEvent(caseId, event, details = {}, env = process.env) {
   const directory = env.LOOMAKE_TEST_PHASE_PROFILE_DIR;
   if (!directory || !CASE_IDS.includes(caseId) || !EVENTS.includes(event) || capped.has(directory)) return;
+  if (event === 'budget-clock' && env.LOOMAKE_TEST_BUDGET_CLOCK !== '1') return;
   const record = { caseId, event, at: details.at ?? Date.now() };
+  if (event === 'budget-clock') {
+    for (const name of ['wallElapsedMs', 'holderWaitMs', 'budgetMs', 'graceMs']) {
+      if (typeof details[name] === 'number') record[name] = details[name];
+    }
+  }
   if (event === 'test-outcome' && ['passed', 'failed'].includes(details.outcome)) record.outcome = details.outcome;
   if (event === 'command-timing') {
     if (KINDS.includes(details.kind)) record.kind = details.kind;
@@ -144,6 +150,30 @@ export function aggregateProfile(events, context = {}, issues = []) {
   return { schemaVersion: 1, context, complete: problems.length === 0 && cases.every((row) => row.complete), issues: [...new Set(problems)], cases };
 }
 
+/** 初回runの時計を区間の時間とは独立して検証する。 */
+export function aggregateBudgetClocks(events) {
+  const fields = ['wallElapsedMs', 'holderWaitMs', 'budgetMs', 'graceMs'];
+  const cases = ['deadline-push', 'deadline-create'].map((caseId) => {
+    const rows = events.filter((row) => row?.event === 'budget-clock' && row.caseId === caseId);
+    const missing = [];
+    if (rows.length !== 1) missing.push(rows.length ? '時計が重複' : '時計が未計測');
+    else {
+      for (const field of fields) if (!finite(rows[0][field])) missing.push(`${field}: 未計測または不正`);
+      if (finite(rows[0].budgetMs) && rows[0].budgetMs <= 0) missing.push('予算が正でない');
+      if (finite(rows[0].holderWaitMs) && finite(rows[0].wallElapsedMs) && rows[0].holderWaitMs > rows[0].wallElapsedMs) missing.push('保持役の待ちが実時間を超過');
+    }
+    const complete = missing.length === 0;
+    const values = {
+      wallElapsedMs: complete ? rows[0].wallElapsedMs : null,
+      holderWaitMs: complete ? rows[0].holderWaitMs : null,
+      budgetMs: complete ? rows[0].budgetMs : null,
+      graceMs: complete ? rows[0].graceMs : null,
+    };
+    return { caseId, complete, ...values, budgetElapsedMs: complete ? rows[0].wallElapsedMs - rows[0].holderWaitMs : null, missing };
+  });
+  return { complete: cases.every((row) => row.complete), cases };
+}
+
 export function escapeSummaryText(value) {
   return [...String(value ?? '')].slice(0, 200).join('').replace(/[\r\n\t]/g, ' ')
     .replace(/[&<>\\`*_{}[\]()#+.!|~=:"'-]/g, (char) => `&#${char.codePointAt(0)};`);
@@ -160,6 +190,16 @@ export function renderSummary(profile) {
     for (const part of row.phases) output += `- ${escape(labels[part.name] ?? part.name)}：${part.durationMs === null ? '未計測' : `${part.durationMs} ms`}\n`;
     for (const item of row.missing) output += `- 不足：${escape(item)}\n`;
     output += '\n';
+  }
+  if (profile.budgetClocks) {
+    output += '## 初回runの時計診断\n\n区間の総時間には加算しません。元の試験の成否は時計診断で変更しません。\n\n';
+    const clockLabels = { wallElapsedMs: '実時間', holderWaitMs: '保持役の準備待ち', budgetElapsedMs: '予算上の経過時間', budgetMs: '予算', graceMs: '猶予' };
+    for (const clock of profile.budgetClocks.cases) {
+      output += `### ${escape(clock.caseId)}\n\n時計診断：${clock.complete ? '完備' : '不足または不整合'}\n\n`;
+      for (const [name, label] of Object.entries(clockLabels)) output += `- ${label}：${clock[name] === null ? '未計測' : `${clock[name]} ms`}\n`;
+      for (const item of clock.missing) output += `- 不足：${escape(item)}\n`;
+      output += '\n';
+    }
   }
   for (const issue of profile.issues.slice(0, 20)) output += `- 計測の問題：${escape(issue)}\n`;
   return Buffer.byteLength(output) <= 32 * 1024 ? output : '# テスト区間の計測\n\n表示上限に達しました。profile.json を確認してください。\n';
@@ -195,7 +235,12 @@ export function collectProfile(directory, env = process.env, cwd = process.cwd()
     os: env.RUNNER_OS || process.platform, node: process.version,
     testOutcome: ['success', 'failure'].includes(env.TEST_PHASE_OUTCOME) ? env.TEST_PHASE_OUTCOME : 'unknown',
   };
-  const profile = aggregateProfile(events, context, issues);
+  /** @type {ReturnType<typeof aggregateProfile> & { budgetClocks?: ReturnType<typeof aggregateBudgetClocks> }} */
+  const profile = aggregateProfile(events.filter((row) => row?.event !== 'budget-clock'), context, issues);
+  if (env.LOOMAKE_TEST_BUDGET_CLOCK === '1') {
+    profile.budgetClocks = aggregateBudgetClocks(events);
+    profile.complete = profile.complete && profile.budgetClocks.complete;
+  }
   mkdirSync(directory, { recursive: true });
   writeFileSync(join(directory, 'profile.json'), JSON.stringify(profile, null, 2) + '\n');
   writeFileSync(join(directory, 'summary.md'), renderSummary(profile));
