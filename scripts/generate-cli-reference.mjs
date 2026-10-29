@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { URL, fileURLToPath, pathToFileURL } from 'node:url';
+import { URL, fileURLToPath } from 'node:url';
 
 /** @typedef {import('../packages/cli/src/args.js').CliCommand} CliCommand */
 /** @typedef {{commands: readonly CliCommand[], sharedOperations: readonly {names: readonly string[], label: string, description: string, condition: string}[], syntax: readonly string[]}} CliReference */
@@ -98,7 +98,16 @@ export async function runCliReference({
   }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+function isDirectExecution() {
+  if (!process.argv[1]) return false;
+  try {
+    return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+}
+
+if (isDirectExecution()) {
   const args = process.argv.slice(2);
   if (args.length && (args.length !== 1 || args[0] !== '--check')) {
     console.error('使い方: node scripts/generate-cli-reference.mjs [--check]');

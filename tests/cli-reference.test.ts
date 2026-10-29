@@ -1,7 +1,8 @@
-import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { CLI_REFERENCE, type CliCommand } from '../packages/cli/src/args.js';
 import { cliReferenceText, renderCliReference, runCliReference } from '../scripts/generate-cli-reference.mjs';
@@ -47,6 +48,92 @@ it('[REQ-325] 開発用入口は不正引数とビルド不足を日本語で失
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+describe('CLI生成器の実パスと別名からの起動', () => {
+  function withEntrypoint(route: 'real' | 'alias', check: (script: string, outputPath: string, sentinel: string) => void) {
+    const directory = mkdtempSync(join(tmpdir(), 'loomake cli entry '));
+    try {
+      const real = join(realpathSync(directory), 'real');
+      const alias = join(directory, 'alias');
+      mkdirSync(join(real, 'scripts'), { recursive: true });
+      mkdirSync(join(real, 'packages/cli/dist'), { recursive: true });
+      mkdirSync(join(real, 'docs/guide/3.reference'), { recursive: true });
+      writeFileSync(join(real, 'package.json'), '{"type":"module"}');
+      writeFileSync(join(real, 'packages/cli/dist/args.js'), `export const CLI_REFERENCE = ${JSON.stringify(CLI_REFERENCE)};`);
+      copyFileSync(join(root, 'scripts/generate-cli-reference.mjs'), join(real, 'scripts/generate-cli-reference.mjs'));
+      symlinkSync(real, alias, process.platform === 'win32' ? 'junction' : 'dir');
+      const sentinel = join(real, 'unrelated.txt');
+      writeFileSync(sentinel, 'unrelated');
+      check(join(route === 'real' ? real : alias, 'scripts/generate-cli-reference.mjs'), join(real, 'docs/guide/3.reference/5.cli.md'), sentinel);
+      expect(readFileSync(sentinel, 'utf8')).toBe('unrelated');
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  }
+
+  it.each(['real', 'alias'] as const)('[REQ-325] %s経由でも欠落check1・生成0・一致check0・改変check1を返しcheckで書き換えない', (route) => {
+    withEntrypoint(route, (script, outputPath) => {
+      const run = (...args: string[]) => spawnSync(process.execPath, [script, ...args], { cwd: root, encoding: 'utf8' });
+      const missing = run('--check');
+      expect(missing.status, missing.stderr).toBe(1);
+      expect(missing.stdout).toBe('');
+      expect(missing.stderr).toContain(outputPath);
+      expect(missing.stderr).toContain('再生成してください');
+      expect(existsSync(outputPath)).toBe(false);
+      const generated = run();
+      expect(generated.status, generated.stderr).toBe(0);
+      expect(generated.stderr).toBe('');
+      expect(generated.stdout).toContain('書き出しました');
+      expect(readFileSync(outputPath, 'utf8')).toBe(render());
+      const original = readFileSync(outputPath);
+      const matched = run('--check');
+      expect(matched.status, matched.stderr).toBe(0);
+      expect(matched.stderr).toBe('');
+      expect(matched.stdout).toContain('リファレンスは一致しています');
+      expect(readFileSync(outputPath)).toEqual(original);
+      writeFileSync(outputPath, 'modified');
+      const modified = run('--check');
+      expect(modified.status).toBe(1);
+      expect(modified.stdout).toBe('');
+      expect(modified.stderr).toContain('生成内容と違います');
+      expect(readFileSync(outputPath, 'utf8')).toBe('modified');
+    });
+  });
+
+  it.each(['real', 'alias'] as const)('[REQ-325] %s経由の不明引数と未対応の組合せは2を返してファイルを作成・変更しない', (route) => {
+    withEntrypoint(route, (script, outputPath) => {
+      for (const args of [['--unknown'], ['--check', '--unknown'], ['--check', '--check']]) {
+        const invalid = spawnSync(process.execPath, [script, ...args], { encoding: 'utf8' });
+        expect(invalid.status, invalid.stderr).toBe(2);
+        expect(invalid.stdout).toBe('');
+        expect(invalid.stderr).toContain('使い方: node scripts/generate-cli-reference.mjs [--check]');
+        expect(existsSync(outputPath)).toBe(false);
+      }
+      writeFileSync(outputPath, 'original');
+      expect(spawnSync(process.execPath, [script, '--unknown']).status).toBe(2);
+      expect(readFileSync(outputPath, 'utf8')).toBe('original');
+    });
+  });
+
+  it.each(['real', 'alias'] as const)('[REQ-325] %s経由のimportはargvなし・解決不能・別entryでも無出力でファイルを作成・変更しない', (route) => {
+    withEntrypoint(route, (script, outputPath, sentinel) => {
+      for (const entry of [undefined, join(outputPath, 'missing'), sentinel]) {
+        const code = `process.argv = [process.execPath, ${JSON.stringify(entry) ?? 'undefined'}, '--unknown']; await import(${JSON.stringify(pathToFileURL(script).href)});`;
+        const imported = spawnSync(process.execPath, ['--input-type=module', '-e', code], { encoding: 'utf8' });
+        expect(imported.status, imported.stderr).toBe(0);
+        expect(imported.stdout).toBe('');
+        expect(imported.stderr).toBe('');
+        expect(existsSync(outputPath)).toBe(false);
+      }
+      writeFileSync(outputPath, 'original');
+      const imported = spawnSync(process.execPath, ['--input-type=module', '-e', `await import(${JSON.stringify(pathToFileURL(script).href)});`], { encoding: 'utf8' });
+      expect(imported.status, imported.stderr).toBe(0);
+      expect(imported.stdout).toBe('');
+      expect(imported.stderr).toBe('');
+      expect(readFileSync(outputPath, 'utf8')).toBe('original');
+    });
+  });
 });
 
 it('[REQ-323] 入力の必須性・相互条件・動的既定値と受理値を表に残す', () => {

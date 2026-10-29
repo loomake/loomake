@@ -10,7 +10,7 @@
 - [x] 2.1 基準mainのhelp/usage全文fixtureを固定し、args.tsの共通記述へmain/help/候補を接続する。REQ-323/324の全コマンド・オプション・条件・既定値・構文・候補順・診断優先の新規回帰と、既存args/help/usage/trace-agreement/遅延起動試験を通し、説明を共通記述へ揃える
 - [x] 2.2 CLI専用renderer・生成/checkと5.cli.mdを実装し、REQ-323/325の全列挙・特殊文字・決定性・一致・欠落・改変・LF/CRLF・read/render失敗・check非変更を試験する。生成元・再生成方法・title/descriptionをページに持たせ、ソース定義との一致が既存CIのテスト経路で検査されることを確認する
 - [x] 2.3 quality側の既存ページ・Purpose・要件を保ってguide入口と開発手順へCLI分を追記し、loomakeのpatch changesetを追加する。doc-links、生成/check、配布物からの生成入口とhelp/引数の互換を確認する。quality生成器・共通helperを変更しない
-- [ ] 2.4 CLI生成器の直接起動判定だけを局所修正し、REQ-325の実パス・親ディレクトリsymlink・Windows junctionで生成0/一致check0/欠落・改変check1/不正引数2とimportだけの無副作用を実プロセスで回帰する。既存の全期待値・期限・skip・設定とquality生成器を保つ
+- [x] 2.4 CLI生成器の直接起動判定だけを局所修正し、REQ-325の実パス・親ディレクトリsymlink・Windows junctionで生成0/一致check0/欠落・改変check1/不正引数2とimportだけの無副作用を実プロセスで回帰する。既存の全期待値・期限・skip・設定とquality生成器を保つ
 
 ## 3. 統合確認
 

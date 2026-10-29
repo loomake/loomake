@@ -48,3 +48,10 @@
 2. verify の結果：固定headの生成器をLinux/Node v24.21.0の専有scratchへ複製した実測では、実パスの欠落checkは1・不明引数は2、親ディレクトリsymlink経由ではどちらも無出力で0だった。一致checkも実パスだけが成功文を出し、importだけのケースを含む8回の起動でファイル変更はなかった。原本のGit blobは`545c8e86976acd0892a34d0aa097f4ff59814c2b`、SHA-256は`2a6daf2863cd9bae6255454bc0b1c799e9720cdf3711adcc60624a67bed3b1e8`。コマンド・期待値・実測・副作用は[results.json](/workspaces/loomake/.claude/scratch/cli-symlink-evidence-6b8a390/results.json)と同じフォルダのreproduce.pyへ保存した。計画更新のOpenSpec strictとspec-onlyはともにexit 0。文書はyomiyasu run/verifyで検査してからコミットする。
 3. 残っている確認事項・仮定：製品仕様の未回答はなく、realpathによる入口比較と既存の生成0/欠落check1/不正引数2、importだけの無副作用を計画した。実測済みはLinuxのディレクトリsymlinkだけで、macOSとWindows junctionの回帰は未実施。M144-01のマージ承認は回答待ちで、人の承認を得たとは扱わない。独立レビュー1回と旧最終headのbotレビュー1回でAIレビュー2回を消化済みのため、追加AIコードレビューは依頼しない。
 4. 次にやること：計画検査後に管理役へ渡し、別のapply作業でタスク2.4を実装する。既存の全期待値・期限・skip・設定を保ち、修正後のOS別CIと最終doneを確認してから、新headと回帰結果をM144-01の人の最終判断へ回す。main側のquality生成器は別change `fix-reference-entrypoint-paths`の担当へ任せ、PR・remote metadata・push・mergeはこの作業で変更しない。
+
+## タスク2.4の局所修正と回帰
+
+1. やったこと：change `add-cli-reference-generation`のタスク2.4として、[PR144](https://github.com/loomake/loomake/pull/144)のCLI生成器の起動判定をrealpathでの同一実体比較へ変更した。argvなし・解決不能・別entryのimportは無出力・無副作用を保つ。REQ-325の新規6試験で実パスと別名からの生成/check・不正引数・importを検査し、POSIXはsymlink、Windowsはjunctionを使う。args・help・診断定義・原本46例・quality生成器・既存の全assertionは変更していない。
+2. verify の結果：修正前のGit blob `545c8e86976acd0892a34d0aa097f4ff59814c2b`で新規回帰を先に実行し、19件中17件成功・2件失敗を記録した。失敗は別名経由の欠落checkが期待1に対し0、不正引数が期待2に対し0の2件。修正後は関連unit 9ファイル175件と、実パスfixtureを正規化した後の生成器19件が成功。packしたCLIの共通定義・原本・生成checkの対象1件も成功し、名前指定で対象外の7件は実行していない。lint・typecheck・build・生成/checkはexit 0で、生成ページの差分はない。記録は[実装検証結果](/workspaces/loomake/.claude/scratch/cli-entrypoint-implementation/evidence.json)と同じフォルダの各JSON・logへ保存した。容量不足を避け、TMPDIRを専有worktreeの`.loomake/cli-entrypoint-tmp`、npm_config_cacheを`.loomake/cli-entrypoint-npm-cache`へ指定し、設定・期限・skipを変えていない。
+3. 残っている確認事項・仮定：タスクは6/7完了で、3.1は未チェック。今回の実行環境はLinuxであり、macOS・Windowsの成功や最終DoDは報告していない。AIレビューは既存2回のままで追加を依頼していない。M144-01の人のマージ承認は回答待ちであり、実装・回帰の合格を承認として扱わない。
+4. 次にやること：実装を固定し管理役へ渡す。main側のquality生成器の修正を受け入れた後、管理役が最新mainを統合してOS別CIと最終doneを確認し、新headと結果をM144-01の人の最終判断へ回す。この作業ではpush・PR更新・remote metadata・mergeを行わない。
