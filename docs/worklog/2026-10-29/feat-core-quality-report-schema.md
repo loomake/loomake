@@ -24,3 +24,10 @@
 - verify の結果：focused 試験17件、lint、型チェックは成功。既存の verify・quality・parser の JSON Schema と製品の trace・CLI 処理に差分はない。全体完了ゲートは未実施。
 - 残っている確認事項・仮定：なし。一時領域は123MBで、同環境の既存全体試験には容量・POSIX制約の失敗があるため、設定を変えずネイティブLinuxのPR CIで全体テストと完了ゲートを確認する。タスク3.1は成功を確認するまで未完了とする。
 - 次にやること：独立レビュー1回目を管理役へ依頼し、Draft PRのCIを確認する。全体テストの成功後にタスク3.1を更新し、同じheadの完了ゲートを確認する。
+
+## タスク 3.1 の検証と最終 head
+
+- やったこと：[Draft PR #132](https://github.com/loomake/loomake/pull/132) を parser ブランチへ積み上げた。管理役の独立レビュー1回目は head `3c4a359` で指摘なし。親の最終 head `8ee9d08` を取り込み、タスクチェックと記録だけを更新した。
+- verify の結果：[CI 40802824278](https://github.com/loomake/loomake/actions/runs/40802824278) の quality は成功。全体テスト1,236件成功・既存skip8件で、coverage基準・配布物smokeも合格。Node20・Node22・CodeQLも成功。最終headの完了ゲートはこの記録のpush後に確認するため、現時点ではchange全体の完了と報告しない。
+- 残っている確認事項・仮定：なし。製品コードと試験を追加変更せず、最終CIを確認する。
+- 次にやること：同じ最終headの `verify --change core-quality-report-schema --done` がexit 0になったことをCIログで確認し、PR本文へ反映する。mainへのretargetと受入は管理役が調整する。

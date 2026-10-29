@@ -13,7 +13,7 @@
 
 ## 3. 統合確認
 
-- [ ] 3.1 lint・型検査・全体テストと Requirement の ID 付きテストを確認する。`pnpm -s verify --change core-quality-report-schema --done` の成功を記録する（REQ-301）。 <!-- loomake:gate=done -->
+- [x] 3.1 lint・型検査・全体テストと Requirement の ID 付きテストを確認する。`pnpm -s verify --change core-quality-report-schema --done` の成功を記録する（REQ-301）。 <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
