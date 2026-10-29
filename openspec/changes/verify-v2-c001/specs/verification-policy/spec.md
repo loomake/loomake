@@ -18,13 +18,13 @@ Source: REQ-313
 - **THEN** 入力と順序を変更せず同じ結果を返す
 
 ### Requirement: 集約値と件数の一貫性
-kitは既存の共有4値と集約規則を使い、FAIL、証跡不足、PASSの順で優先し、空と全NAを不足とする MUST。summaryはfail・insufficient・not_applicableをchecksの該当件数として持ち、localのpendingはローカルの未完了件数とする SHALL。evaluatedの数え方はR-C001-02の回答を反映して確定する SHALL。decisionは品質判定と独立に保持し、NAや非blockingの指定で必須条件の違反を相殺しない MUST。
+kitは既存の共有4値と集約規則を使い、FAIL、証跡不足、PASSの順で優先し、空と全NAを不足とする MUST。summaryはfail・insufficient・not_applicableをchecksの該当件数として持ち、localのpendingはローカルの未完了件数とする SHALL。evaluatedはPASS/FAIL/不足/NAを含む全checksの件数と一致する SHALL。decisionは品質判定と独立に保持し、NAや非blockingの指定で必須条件の違反を相殺しない MUST。
 
 Source: REQ-314
 
 #### Scenario: 集約と件数
 - **WHEN** FAIL・不足・PASS・NAを含む項目を順序・重複を変えて評価する
-- **THEN** 集約規則に従い、各件数はその実行のchecksと一致する。evaluatedの期待値はR-C001-02回答後に固定する
+- **THEN** 集約規則に従い、各件数はその実行のchecksと一致する。evaluatedはchecks.lengthと一致する
 
 #### Scenario: localの未完了
 - **WHEN** local項目に適格なPASS、確認済みNA、不足、FAILがある

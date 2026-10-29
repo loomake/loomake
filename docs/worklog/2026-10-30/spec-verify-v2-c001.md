@@ -17,3 +17,10 @@
 2. strictはexit 0、現main f4e3edbの主仕様を展開した一時snapshotでもINFOなしでexit 0。spec-onlyは未回答10件だけでexit 1。通常doneは未回答・確認待ち・未完了tasks・要件対応テスト未実装の4検査でexit 1、lint・typecheck・testは成功した。ローカル試験は1,259成功・既存8件skip・失敗0。初期quality候補のversion 2構造解析も成功したが、実証跡取得や品質PASSの証拠ではない。yomiyasuとdiff --checkを実施した。
 3. 全台帳行を確認待ちに揃え、R08のゲート/scope別警告移行とPASS/NA比較、R05/R08のREQ-191、R07の初期必須1項目と全open PR再検証を具体化した。S1は既存実装を調べ、1人AIなしの実作業44〜88人時と8項目の内訳・前提・対象外を提示した。見積りは実績や承認ではなく、既存C-001の固定見積りも変更していない。
 4. 計画のみを修正して管理役へ引き継ぐ。製品実装、追加AI評価、投稿、マージは行わない。
+
+## 3回目レビューと部分承認への対応
+
+1. [3回目レビュー](https://github.com/loomake/loomake/pull/139#issuecomment-6510041693)を受け、head `3ab373e`・cleanから計画整合を引き継いだ。R-C001-01/02/03/04/07/09/10のAを、rrr-xxxの指示を受けたrrr-www名義・Claude Code代筆の明示コメントに基づき2026-10-30の承認として記録する。R-C001-05/06/08の保留は別記し、回答欄は未決のままにする。
+2. 最新main `751a8a1b6ffca673f44f2fa272b9029a667bf12b`をfetchし、一時snapshotのstrictはINFOなしexit 0。25件のMODIFIEDで既存73 ScenarioとSourceの保持、別に149のURL SHALL/全4 Scenario保持を照合した。branch単独strictは旧主仕様未同期のINFO付きexit 0。spec-onlyはR05/06/08の3件だけでexit 1、doneは未回答・確認待ち・未完了tasks・未実装REQ試験の4検査でexit 1。lint・型・既存試験1,259成功/skip8/失敗0、diff --checkと日本語のyomiyasu検査を確認した。
+3. 方針の承認と、既存assertion/CLI基準fixtureの具体的変更に必要な個別承認を区別する。保留3件が残るため製品実装は開始しない。
+4. CLI changeとfix-quality-reference-source-linksの仕様同期/archiveを先に受け入れた最新mainでC-001を最終確定する順を明記した。計画の差分だけをcommit/pushし、本文案を管理役へ渡す。追加Opus評価、投稿、マージは行わない。

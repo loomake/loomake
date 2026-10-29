@@ -48,7 +48,7 @@ Source: REQ-303
 - **THEN** zod を静的に読む経路がなく、新旧の型を明示した利用側がコンパイルできる
 
 ### Requirement: 証拠とレポートの JSON Schema の生成と公開
-core は Evidence と Report の JSON Schema をそれぞれ `schema/evidence.schema.json`・`schema/report.schema.json` に Zod から生成し、通常と publishConfig の exports で公開する SHALL。生成結果と配布ファイルの不一致を CI の試験で検出する MUST。JSON Schema は構造スキーマと同じ必須・任意の区別と未知フィールドの許可を表す SHALL。verify・evidenceの現行公開JSON Schemaは新形式へ更新する SHALL。R-C001-09のA候補として、旧版JSON Schemaも版付きパスとexportsで公開し、旧fixtureと履歴用スキーマを保持する SHALL。report・quality・trace・spec・tasks・quality-reportのJSON Schemaは変更しない MUST。
+core は Evidence と Report の JSON Schema をそれぞれ `schema/evidence.schema.json`・`schema/report.schema.json` に Zod から生成し、通常と publishConfig の exports で公開する SHALL。生成結果と配布ファイルの不一致を CI の試験で検出する MUST。JSON Schema は構造スキーマと同じ必須・任意の区別と未知フィールドの許可を表す SHALL。verify・evidenceの現行公開JSON Schemaは新形式へ更新する SHALL。旧版JSON Schemaも版付きパスとexportsで公開し、旧fixtureと履歴用スキーマを保持する SHALL。report・quality・trace・spec・tasks・quality-reportのJSON Schemaは変更しない MUST。
 
 Source: REQ-304
 
@@ -70,7 +70,7 @@ Source: REQ-275
 - **THEN** 解析は成功し、解析結果に同じフィールドが同じ値で残っている
 
 ### Requirement: JSON Schema の書き出し
-core が公開する `schema/verify-result.schema.json` は、verify 結果の Zod スキーマから `z.toJSONSchema()` で書き出した内容と一致する MUST。core は Zod スキーマからこのファイルを書き出すコマンドを提供する SHALL。ファイルと書き出した内容が違うときは、CI で動くテストが失敗する MUST。現行パスは2.0.0を表し、R-C001-09のA候補では履歴1.0.0も版付きパスとexportsで公開して同様に再生成一致を検査する SHALL。
+core が公開する `schema/verify-result.schema.json` は、verify 結果の Zod スキーマから `z.toJSONSchema()` で書き出した内容と一致する MUST。core は Zod スキーマからこのファイルを書き出すコマンドを提供する SHALL。ファイルと書き出した内容が違うときは、CI で動くテストが失敗する MUST。現行パスは2.0.0を表し、履歴1.0.0も版付きパスとexportsで公開して同様に再生成一致を検査する SHALL。
 
 Source: REQ-276
 
@@ -84,7 +84,7 @@ Source: REQ-276
 
 ### Requirement: 品質判定の共有4値
 
-core は `PASS`・`FAIL`・`INSUFFICIENT_EVIDENCE`・`NOT_APPLICABLE` のみを受け付ける Zod enum と、そのスキーマから導出した `QualityResult` 型を公開する SHALL。スキーマは `loadQualityResultSchema()` で遅延ロードし、core・kit・CLI の入口から zod を静的に読み込まない MUST。現行VerifyResultは2.0.0、Evidenceは2へ移し、履歴1.0.0の型・fixtureを保持する MUST。report・quality・trace・spec・tasks・quality-reportの6本のJSON Schemaを変えない MUST。旧verify・evidenceのJSON Schema公開継続はR-C001-09の候補に従う。共有 enum 単独の JSON ファイルは追加しない。
+core は `PASS`・`FAIL`・`INSUFFICIENT_EVIDENCE`・`NOT_APPLICABLE` のみを受け付ける Zod enum と、そのスキーマから導出した `QualityResult` 型を公開する SHALL。スキーマは `loadQualityResultSchema()` で遅延ロードし、core・kit・CLI の入口から zod を静的に読み込まない MUST。現行VerifyResultは2.0.0、Evidenceは2へ移し、履歴1.0.0の型・fixtureを保持する MUST。report・quality・trace・spec・tasks・quality-reportの6本のJSON Schemaを変えない MUST。旧verify・evidenceのJSON Schemaも版付きパスとexportsで公開する SHALL。共有 enum 単独の JSON ファイルは追加しない。
 
 Source: REQ-305
 

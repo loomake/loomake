@@ -1,20 +1,20 @@
-# 全Aの場合の設計候補（未承認）
+# A案の具体化（7件承認・3件保留）
 
 ## 位置づけと基準
 
-確認事項R-C001-01〜10がすべてAとなる場合の、採否を判断するための具体案である。R08のBはlocalのOpenSpec不在をNAとする別候補であり、この全A案ではAの理由付きPASSを例示する。いずれも未承認である。回答・回答者・回答日は未記入のままとし、承認済みの仮定を追加しない。いずれかがBなら該当部分を再設計する。この文書をそのまま実装指示や規範仕様にせず、採否後に必要な差分仕様へ反映し、仕様ゲートexit 0を確認する。製品・既存試験・設定は変更しない。差分仕様はレビュー指摘に基づき既存仕様と整合させた候補であり、採否は未回答のままである。
+R01/02/03/04/07/09/10は[3回目レビューの明示回答](https://github.com/loomake/loomake/pull/139#issuecomment-6510041693)でAと承認された。以下はその7件を反映し、残るR05/06/08もAとなる場合の具体案である。R08のBはlocalのOpenSpec不在をNAとする別候補であり、この全A案ではAの理由付きPASSを例示する。R05/06/08の選択は未決であり、その回答欄を空に保つ。承認済み7件は承認者・日付・出典とともにtraceへ反映した。残る項目がBなら該当部分を再設計する。この文書をそのまま実装指示や規範仕様にせず、採否後に必要な差分仕様へ反映し、仕様ゲートexit 0を確認する。製品・既存試験・設定は変更しない。差分仕様はレビュー指摘に基づき既存仕様と整合させた候補であり、製品実装を始める採否はR05/06/08の保留が解けるまで未確定である。
 
-計画branchの作成基準はmain `f397109`。今回の製品調査基準はmain `f4e3edb`で、同mainの製品ソースを調査した。#60は当時の未受入依存であったが、[PR140](https://github.com/loomake/loomake/pull/140)・[PR141](https://github.com/loomake/loomake/pull/141)で修正・仕様同期・archiveを受け入れ、2026-10-29T03:32:23Zにclose済みである。現在の実装停止理由は未回答10件と仕様ゲートである。
+計画branchの作成基準はmain `f397109`。今回の製品調査基準はmain `f4e3edb`で、同mainの製品ソースを調査した。#60は当時の未受入依存であったが、[PR140](https://github.com/loomake/loomake/pull/140)・[PR141](https://github.com/loomake/loomake/pull/141)で修正・仕様同期・archiveを受け入れ、2026-10-29T03:32:23Zにclose済みである。最新の仕様照合基準はfetchしたmain `751a8a1b6ffca673f44f2fa272b9029a667bf12b`。現在の実装停止理由は保留のR05/06/08と仕様ゲートである。
 
-根拠は固定要件7.3、既存REQ-310・313・314・319等と元のDoDである。新しいREQ IDを割り当てず、品質/CLIで使用済みのREQ-320〜325も再使用しない。source/metric・plan・producer mappingはR-C001-03、S1基準準備・private handoffはR-C001-04のA候補であり、現行スキーマに実装済みとは扱わない。技術事項と確認事項10件の採否を区別する。
+根拠は固定要件7.3、既存REQ-310・313・314・319等と元のDoDである。新しいREQ IDを割り当てず、品質/CLIで使用済みのREQ-320〜325も再使用しない。source/metric・plan・producer mappingは承認済みR-C001-03 A、S1基準準備・private handoffは承認済みR-C001-04 Aであり、現行スキーマに実装済みとは扱わない。技術事項と確認事項10件の採否を区別する。
 
-R01Aのbare品質専用経路は、架空のchange IDを補わず `change: null`、`scope: local` のcompleted/partial、verdictなしで表す未承認候補とする。quality.yamlを新たに要求せず、設定済みの品質コマンドだけを実行する。change必須gateの未指定はusageのaborted/2として区別する。bareの品質コマンドやspec-onlyの構造確認だけではCI最終PASSを作らず、明示ciでも必要な実施を確認できない結果は最終PASSにしない。通常のspec-only既定localは保持する。
+承認済みR01 Aのbare品質専用経路は架空のchange IDを補わず `change: null`、`scope: local` のcompleted/partial、verdictなしで表す。quality.yamlを新たに要求せず、設定済みの品質コマンドだけを実行する。change必須gateの未指定はusageのaborted/2として区別する。bareの品質コマンドやspec-onlyの構造確認だけではCI最終PASSを作らず、明示ciでも必要な実施を確認できない結果は最終PASSにしない。通常のspec-only既定localは保持する。
 
 ## 用語
 
 S1は公開側の切替前に信頼する内部判定器と固定基準を準備する段階、S2はverify/Evidenceのv2実出力と利用側を一体で切り替える段階を指す。anchorは人の承認と基準側の固定情報から取る版・commit・hashなどの識別情報、base-built checkerはその固定した基準側ソースをbuildした判定器である。private handoffはその判定器と計画の保存先を内部で引き渡す経路を指す。fresh Tは基準側が今回の実行で新しく取得した結果、Sは対象CLI/APIの結果であり、Tを独立した照合の基準にする。
 
-R-C001-03のAだけならadapter・plan・適格性の実装と試験が対象である。04のAも採用するとS1独立changeの仕様・build・受入・archive、private handoff、S2との照合が加わり、単一adapterの追加を超える複数段階の作業になる。採否前の判断材料として以下に44〜88人時の見積幅を示す。実装実績や納期の保証ではなく、固定済みの既存C-001見積りは書き換えない。
+承認済みR-C001-03 Aはadapter・plan・適格性の実装と試験が対象である。承認済み04 AによりS1独立changeの仕様・build・受入・archive、private handoff、S2との照合が加わり、単一adapterの追加を超える複数段階の作業になる。R04 Aの採用時に提示した44〜88人時の見積幅を以下に保持する。実装実績や納期の保証ではなく、固定済みの既存C-001見積りは書き換えない。
 
 ## S1の工数見積り
 
@@ -66,7 +66,7 @@ product:
 
 ## 初期品質と切替手順
 
-R-C001-07のA候補として、空や全NAのroot qualityではなく、次の**ci.test_reportの必須1項目**を置く。これは03/04の最小接続を採用する場合の提案であり、PQ-900の正式割当・指標・閾値・初期ファイルを承認済みとは扱わない。実際のrootファイルは今回作成せず、既用PQ IDとの衝突を配置前に確認する。
+承認済みR-C001-07 Aに従う初期内容として空や全NAのroot qualityではなく、次の**ci.test_reportの必須1項目**を置く。この必須1項目・指標・閾値の内容は03/04/07 Aの承認を反映する。PQ-900の正式な割当と既用IDとの衝突確認、実配置は実装時の作業として残る。実際のrootファイルは今回作成せず、既用PQ IDとの衝突を配置前に確認する。
 
 ```yaml
 version: 2
@@ -84,9 +84,9 @@ product:
         min_samples: 1
 ```
 
-初期値のmin_samplesは1であり、上の説明用合成例の3とは別の採否対象である。各changeのverification.yamlは、承認されたそのchangeの全必須REQ集合とPQ-900のmeasureを結び付ける。linked_requirementsをC-001の2要件だけへ固定して他changeへ流用しない。必要な全REQが実施されていることは別に必須とし、1つの成功テストだけでほかのREQのmissing/skipを通す条件にはしない。failed・不足・古い結果・偽装した自己申告は従来の候補どおりnotPASSとする。31副特性全体の品質合格を表す初期値でもない。
+初期値のmin_samplesは1であり、上の説明用合成例の3と区別し、R07 Aで採用された初期値である。各changeのverification.yamlは、承認されたそのchangeの全必須REQ集合とPQ-900のmeasureを結び付ける。linked_requirementsをC-001の2要件だけへ固定して他changeへ流用しない。必要な全REQが実施されていることは別に必須とし、1つの成功テストだけでほかのREQのmissing/skipを通す条件にはしない。failed・不足・古い結果・偽装した自己申告は従来の候補どおりnotPASSとする。31副特性全体の品質合格を表す初期値でもない。
 
-切替日のA候補は次の順とする。日付は採否後に決め、今回のおすすめを実施済みの切替許可とは扱わない。
+R07 Aで承認された切替の手順は次のとおり。日付はR05/06/08の保留解消後に決め、今回の承認を切替の実施済み記録や未決の設定操作の包括承認とは扱わない。
 
 1. S1採用時はその独立受入と同期/archiveを終え、v2切替前に上のroot品質と各進行中changeの承認REQ集合/planを準備する。文書追加だけの先行段階では旧ゲートの成功をv2合格とは呼ばない。
 2. 切替直前にGitHubの全open PRの番号・対象change・head・依存・ゲート版を棚卸しする。固定の現在PR一覧を将来の全件だとは扱わない。plan/adapter/初期root品質を含むS2で同じ契約を有効にする。
@@ -94,7 +94,7 @@ product:
 4. 計画だけのDraft PRはspec-onlyで既存の未回答を検出し、doneの未完了失敗を保つ。移行用の架空のPASSやNAを与えない。plan/実証跡を準備できない実装PRはそのマージだけを保留し、不足の対象・担当・次の検証をPRへ記録する。
 5. changeなしの文書/開発補助PRは、従来の対象選択とR01で採用した品質専用経路を保ち、存在しないchangeや空の品質PASSへ付け替えない。各実装PRの移行が済んだことを確認してから通常の取り込みへ戻す。
 
-これにより初期空入力による一斉不足の原因を避けるが、1項目を置くだけで既存PR全件がPASSになるとは約束しない。必要なplanと実施がそろわないPRは止める。Bなら初期項目・対象PRの準備・切替順を再設計し、空や全NAを合格にする例外は加えない。
+これにより初期空入力による一斉不足の原因を避けるが、1項目を置くだけで既存PR全件がPASSになるとは約束しない。必要なplanと実施がそろわないPRは止める。承認済みの初期内容や切替範囲を後で変える場合は、変更する項目だけを再確認する。空や全NAを合格にする例外は加えない。
 
 ### 検証計画の候補と照合順
 
@@ -118,19 +118,19 @@ product:
 
 ### 品質対象専用guard
 
-REQ-314の未評価notPASSを、gateが混在するchecksでも保つ。候補check `quality:subjects` は品質対象0・全NA・必要証拠配列空ならINSUFFICIENT_EVIDENCEとする。構造gateやテストcommandのPASSで相殺しない。非ゼロの適用品質対象とplanへの結び付きを示すevidenceがあればguard自体はPASSにできるが、個々の品質条件の証明を代替しない。R-C001-02 Aならこのguardも含む全checksを `evaluated` に数える。NAには理由・確認者とquality定義へのevidence参照を付ける。
+REQ-314の未評価notPASSを、gateが混在するchecksでも保つ。候補check `quality:subjects` は品質対象0・全NA・必要証拠配列空ならINSUFFICIENT_EVIDENCEとする。構造gateやテストcommandのPASSで相殺しない。非ゼロの適用品質対象とplanへの結び付きを示すevidenceがあればguard自体はPASSにできるが、個々の品質条件の証明を代替しない。承認済みR-C001-02 Aに従いこのguardも含む全checksを `evaluated` に数える。NAには理由・確認者とquality定義へのevidence参照を付ける。
 
 ## 信頼する判定器と自己ゲートの段取り
 
-S1の準備を先に受け入れる案自体がR-C001-04 Aの追加未承認内容である。公開版の発行・新しい鍵・新サービスを前提にしない。S1を置くだけ、schema 2だけを追加して実出力を1に残すだけでは、C001完了にしない。
+S1の準備を独立changeで先に受け入れる範囲はR-C001-04 Aで承認された。R05/06/08が保留のため、承認だけで実装へは進まない。公開版の発行・新しい鍵・新サービスを前提にしない。S1を置くだけ、schema 2だけを追加して実出力を1に残すだけでは、C001完了にしない。
 
 | 段階 | 候補の作業と終了条件 |
 |---|---|
-| 採否前 | 質問10件は未回答。製品実装しない。採用する追加契約・保護された互換差分を人が判断し、差分仕様とtraceへ反映して仕様ゲート0を確認する |
+| 残る採否 | 7件はA承認済み、R05/06/08は保留。製品実装しない。採用する追加契約・保護された互換差分を人が判断し、差分仕様とtraceへ反映して仕様ゲート0を確認する |
 | S1内部基準の準備 | 基準側で独立したbase-built checker/policy moduleとexact2.0.0 parser、承認spec/REQ集合、quality/plan/method manifestを準備する。anchor identityを明示的に固定・承認する。準備段階では公開v1を維持できるが、C001 DoD達成ではない。先に取り込む場合は、限定した内部checker/基準の準備を独立changeとその範囲のDoD・REQ対応試験・通常done 0で受け入れ、仕様同期/archive後に親C001のS2を行う |
 | S2一体切替 | verify2/Evidence2へ実出力を切り替え、全利用側を同じ範囲で移す。正常self-ci、独立trusted check、全要件の試験・配布確認・R06で採用するローカル/CIのDoDまで成立させる |
 
-S1の独立change/REQ IDは今回作成・割当しない。A採用後、他担当・既用ID・同時3枠を照合し、1枠を確保してから準備する。未完了tasksを持つ親C001のdoneをS1 PRで合格扱いにしない。限定したS1自体が独立gateを通せる範囲にできない場合はR04Aの未決点として残し、親gate・自己task・必須試験を緩めない。
+S1の独立change/REQ IDは今回作成・割当しない。R05/06/08の保留解消後、他担当・既用ID・同時3枠を照合し、1枠を確保してから準備する。未完了tasksを持つ親C001のdoneをS1 PRで合格扱いにしない。限定したS1自体が独立gateを通せる範囲にできない場合はR04Aの未決点として残し、親gate・自己task・必須試験を緩めない。
 
 S2の最終CIのnormal commandは `pnpm -s verify --change verify-v2-c001 --done --scope ci`。real v2/PASS・decision.required=false・exit 0を要求し、ローカルDoDの `--done --scope local` の0と分ける。この変更はR-C001-06のA採用時に規約と配布文書へ反映する。独立checkerのPASSはこれに**追加する条件**である。
 
@@ -221,7 +221,7 @@ kitの現在の直接依存はcoreだけでyamlはない。REQ-047の許容内�
 | 候補 | 具体的な衝突・扱い |
 |---|---|
 | C1 REQ-055の旧verify形 | 現在の正確な{check,status:fail,detail}の期待値はv2形と両立しない。FAIL・日本語detail・exit1は維持し、形の変更はR01に結び付く保護差分として提示する。個別承認前に既存assertionを変更しない |
-| C2 R01Aのmissing-change | change必須経路の--change未指定はaborted2だが、有効な非実在IDはREQ-055の存在FAIL1である。両者を混同しない。R01の意図が後者もabortedなら、便宜変更せず採否を踏まえて再設計する |
+| C2 R01Aのmissing-change | change必須経路の--change未指定はaborted2だが、有効な非実在IDはREQ-055の存在FAIL1である。両者を混同しない。承認済みR01 Aの範囲を変えて不存在IDをabortedへ変更しない |
 | C3 REQ-073 | Evidenceの未対応版2を拒否する現行Scenario/診断とEvidence2導入が衝突する。便宜的に未対応版を3へ書換えず、R05の採否を得てから、必要な既存期待値変更の明示承認を得る |
 | C4 埋め込み・公開型 | Evidence1を埋め込む型・smoke・report/reuseの旧定数を棚卸しする。履歴のbytes・documents省略を保持し、現行書出しだけをv2へ一体移行する |
 | C5 診断・同期性と警告/省略コマンド | REQ-036/037/039のwarnはR08のゲート/scope別案、REQ-191のskipは不足/1へ移す未承認候補である。stderr空や同期/予算の既存assertionを、観測warningに合わせて弱めない。配布時の実際の挙動を確認し、必要な互換変更は承認材料として残す |
@@ -243,8 +243,18 @@ kitの現在の直接依存はcoreだけでyamlはない。REQ-047の許容内�
 
 ## 採否と完了条件
 
-R01はbare verifyの境界、R02はevaluated、R03は最小adapter・plan・producer mapping、R04はS1/bootstrap/private handoffの追加契約と依存を判断する。R05はC1〜C5、R06はローカルDoD、R07はquality移行、R08はゲート/scope別warnとskip-commands、R09は旧JSON Schema公開、R10はspec-onlyの計数を判断する。日常的なsource照合・同期loader・利用側の追従は技術作業として扱い、10質問への人の回答を代行しない。
+R01はbare verifyの境界、R02はevaluated、R03は最小adapter・plan・producer mapping、R04はS1/bootstrap/private handoffの追加契約と依存を判断する。R05はC1〜C5、R06はローカルDoD、R07はquality移行、R08はゲート/scope別warnとskip-commands、R09は旧JSON Schema公開、R10はspec-onlyの計数を判断する。日常的なsource照合・同期loader・利用側の追従は技術作業として扱い、承認済み7件を再質問せず、R05/06/08への回答を代行しない。
 
 C003には全provider、全host隔離、広いCI成果物取得/再利用連鎖、最小接続以外のpartial取得経路、全禁止キーの網羅が残る。C001の最小接続の適格性・実施確認・必須のpartial/aborted分類はその残作業へ先送りしない。S2の実出力v2と全利用側移行、ローカルdone/localの0、最終done/ciのPASS・要判断なし・0、独立trusted TのPASS、全要件のID付き試験、全タスクと必須CI・配布検証を確認する。
 
 著述3回のactual model/session/exit/denialsは[作業記録](../../../docs/worklog/2026-10-30/spec-verify-v2-c001.md)に記した。原文3稿はignored領域で無改変のまま保持し、本候補では指定された既存要件との整合を取った。追加AI評価0、過去PR139ローカル回数不明、上限リセットなし。独立レビュー・人の採否は未実施である。
+
+## 3回目レビューの追加互換差分（R05保留）
+
+REQ-183は予算/後片付けだけの変更の版不変、REQ-322はquality生成/checkだけの公開8 JSON等の不変へ範囲を限定する。別途承認するv2形式移行を恒久的に禁止する要件にしない。両者を差分仕様と台帳へ追加し、既存Scenarioを保持した。
+
+REQ-040のskip時coverageはプロパティを省略する案で、古いレポートを今回の成功一覧にしない。正常coverageの試験は今回のコマンドが新たにレポートを生成する経路へ移す。REQ-050の呼出しは --done --scope local --skip-commands --json、期待は不足1とする。500要件/1,000ファイルと3秒を維持し、同じfixtureの実際の抽出/対応判定関数を含む合計時間と対応件数も検査して処理量を減らさない。独立に解析したfixtureの一覧は公開coverageや品質合格へ使わない。
+
+REQ-036/038のdone確認待ちは不足/要判断へ統一する候補で、未承認仮定のdoneも旧warn/0から不足/1へ強める。未完了tasksと実施済み失敗のFAILとは分ける。これらとCLI基準の出力変更はR05へ追加した未承認の方針であり、実際の既存assertion/46例fixtureの差分を変更する承認は別に必要である。
+
+REQ-114/115はlocal完了のv2証拠からDraft PRへ進み、本文にCI最終未確認を記す候補へ追従する。REQ-164/315のEvidence 2/localの同一状態再試行はlocalゲートを省略せず、旧Evidence 1や過去の証拠から新しいci合格を作らない。REQ-203の承認後の案内/不足用語も合わせる。
