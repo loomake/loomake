@@ -4,7 +4,7 @@
 
 WBS の W1-1（[Issue #60](https://github.com/loomake/loomake/issues/60)）の 2 つ目の部分。change core-zod-verify-result（PR #113）で、verify 結果を Zod スキーマに移し、JSON Schema を書き出す処理と、zod を遅れて読む形を作った。この change では同じ形で quality.yaml（要件定義 7.1）のスキーマを足す。
 
-quality-report のスキーマと、trace.md・spec・tasks の版は、change core-zod-verify-result の Q-02・Q-03 の回答を待つので、この change の範囲外とする。
+quality-report のスキーマと、trace.md・spec・tasks の版は、この change の範囲外とする。対応方針は [Issue #60 のコメント](https://github.com/loomake/loomake/issues/60#issuecomment-6480846573) で決定済みで、別の change で実装する。
 
 ## What Changes
 
