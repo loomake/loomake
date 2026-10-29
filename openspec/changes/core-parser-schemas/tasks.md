@@ -14,7 +14,7 @@
 
 ## 4. 統合検証
 
-- [ ] 4.1 lint・型チェック・全体テストと `pnpm -s verify --change core-parser-schemas --done` を通し、全 Requirement の対応テストを確認する（REQ-298・REQ-299・REQ-300） <!-- loomake:gate=done -->
+- [x] 4.1 lint・型チェック・全体テストと `pnpm -s verify --change core-parser-schemas --done` を通し、全 Requirement の対応テストを確認する（REQ-298・REQ-299・REQ-300） <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
