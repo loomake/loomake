@@ -18,3 +18,10 @@
 2. 取得したabe5777のCI40967196223/job123774571493は同じSIGINT試験のstatus期待0・実値1で失敗し、main751のEPERMとは主エラーが異なる。文書・patchのyomiyasu/diff/applycheckと既存test/helper/config保持を確認し、実装・mutation・新Windows実行の結果とは分ける。外部のLinux32件/9連続/mutation成果はレビュアー申告である。
 3. 初回773と今回の外部設計レビュー（actual claude-opus-5-5、session不明）でOpus評価は2/2使用済み。独立性のない調査・設計として採用し、回数を確認代行の別枠へ移さない。追加最終レビューは実際には3回目となるため、Fの承認へ混ぜず別の判断まで起動しない。
 4. Fを再質問せず、計画commit後に承認範囲のCodex実装・試験を進める。追加評価の回数だけを管理役が具体head/CIをそろえて確認する。現時点でpush・追加Opusは行わない。
+
+## 承認範囲のテスト実装
+
+1. F-SIGINT-01 Aの4条件に従い、testだけへhandler event/POSIX native明示skip、SIGKILL、PIDガード、内外cleanupのAggregateError保持を実装した。3例外の保持・実所有子cleanup・Windows不一致PID拒否の回帰も追加し、helper/config/元の期待値・3000ms/10000ms・rmSync指定は保持した。
+2. Node24.21.0/Linux arm64で対象34試験・型・lintが成功。今回のmutationはlistener除去2失敗、stopChild no-op1失敗（約10.35秒・watchdog発火なし）、旧finally1失敗で、残存子なし。外部の32件/9連続申告と区別する。通常verifyはこの実装commit後に確認する。
+3. main d5aaのCI40973889686/job123797067291も取得し、同じ試験のstatus期待0/実値1（856成功・1失敗・既存5 skip）を確認した。EPERMのrunとは分け、Windowsでの新実装の実行・PIDガードの実機検証・最終受入は未実施である。
+4. 次は通常verifyと対象headの全OS CIを確認する。Fは承認済みのまま、Opus実数2/2・追加最終評価だけ保留とし、新しいモデル呼出し・push・main統合は行わない。

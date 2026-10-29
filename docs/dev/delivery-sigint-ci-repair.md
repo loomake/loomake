@@ -4,7 +4,7 @@
 
 main `751a8a1b6ffca673f44f2fa272b9029a667bf12b`の[CI run 40968703839 / Windows shard 2](https://github.com/loomake/loomake/actions/runs/40968703839/job/123779684746)で、`tests/delivery-ask-opus.test.ts`のSIGINT試験が772msで失敗した。記録されたエラーはfixtureを削除するfinallyのEPERMで、同shardは856成功・1失敗・既存5 skip、ほか50ファイルは成功した。CIはNode24.22.1、今回の先行観測はNode24.21.0/Linux arm64である。
 
-これは開発補助試験の修復案であり、製品の振る舞いを変えるchangeではない。[AGENTS.md](../../AGENTS.md)の開発の仕組みに関する例外に従う。F-SIGINT-01は[4条件付きA回答](https://github.com/loomake/loomake/pull/156#issuecomment-6511113103)で採用された。まず文書と未適用patchを整合し、その計画commit後に承認範囲のテスト修復を実装する。製品helper・設定は変えない。追加Opus最終評価の回数に関する判断は別に残る。Issue116の断続的な時間切れ、品質生成器の起動判定、C001、進行中のarchive、Issue153の残事項は修正範囲に含めない。
+これは開発補助試験の修復案であり、製品の振る舞いを変えるchangeではない。[AGENTS.md](../../AGENTS.md)の開発の仕組みに関する例外に従う。F-SIGINT-01は[4条件付きA回答](https://github.com/loomake/loomake/pull/156#issuecomment-6511113103)で採用された。計画commit `136aa62`で文書と承認案を整合し、承認範囲のテスト修復と追加回帰を実装した。製品helper・設定は変えない。追加Opus最終評価の回数に関する判断は別に残る。Issue116の断続的な時間切れ、品質生成器の起動判定、C001、進行中のarchive、Issue153の残事項は修正範囲に含めない。
 
 ## 観測と原因仮説
 
@@ -74,159 +74,7 @@ PID検査はkill(pid,0)とLinux/macOSのzombie判別を使い、不明なエラ�
 
 このguardはCIM照合から停止までを原子的に固定するものではなく、その間の競合まで解消したとは主張しない。固定scriptのWindows実行とguardの正常/不一致/取得失敗は新headのCIで確認する。製品helper内の通常のtaskkill経路は今回変更しない。
 
-下は計画commit時点で未適用・未実行の、F承認条件を反映した具体的なpatchである。ignoredの `.loomake/repair-proposal.patch` と同じ差分を示す。適用できることの確認は試験の成功を意味しない。
-
-```diff
-diff --git a/tests/delivery-ask-opus.test.ts b/tests/delivery-ask-opus.test.ts
---- a/tests/delivery-ask-opus.test.ts
-+++ b/tests/delivery-ask-opus.test.ts
-@@ -54,9 +54,83 @@
-   });
- });
-
-+async function withCleanup(action: () => void | Promise<void>, cleanup: () => void | Promise<void>) {
-+  const errors: unknown[] = [];
-+  try { await action(); } catch (error) { errors.push(error); }
-+  try { await cleanup(); } catch (error) { errors.push(error); }
-+  if (errors.length === 1) throw errors[0];
-+  if (errors.length > 1) throw new AggregateError(errors, '試験と後片付けの失敗を保持しました。');
-+}
-+
-+function alive(pid: number): boolean {
-+  try { process.kill(pid, 0); }
-+  catch (error) {
-+    if ((error as NodeJS.ErrnoException).code === 'ESRCH') return false;
-+    throw error;
-+  }
-+  if (process.platform === 'linux') {
-+    try { return !/\) Z /.test(readFileSync(`/proc/${pid}/stat`, 'utf8')); }
-+    catch (error) {
-+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return false;
-+      throw error;
-+    }
-+  }
-+  if (process.platform === 'darwin') {
-+    const result = spawnSync('ps', ['-o', 'stat=', '-p', String(pid)], { encoding: 'utf8' });
-+    if (result.error) throw result.error;
-+    if (result.status === 1 && !result.stdout.trim()) return false;
-+    if (result.status !== 0) throw new Error('子プロセスの状態を確認できませんでした。');
-+    return !/^Z/.test(result.stdout.trim());
-+  }
-+  return true;
-+}
-+
-+function readFakePid(cwd: string): number | undefined {
-+  const file = join(cwd, '.loomake/pid');
-+  if (!existsSync(file)) return undefined;
-+  const pid = Number(readFileSync(file, 'utf8'));
-+  if (!Number.isSafeInteger(pid) || pid <= 0 || pid === process.pid) throw new Error('偽プロセスのPIDが不正です。');
-+  return pid;
-+}
-+
-+const windowsStopScript = String.raw`
-+$ErrorActionPreference = 'Stop'
-+$targetPidValue = [uint32]::Parse($env:LOOMAKE_CLEANUP_PID)
-+$expectedFixture = [IO.Path]::GetFullPath($env:LOOMAKE_CLEANUP_FIXTURE)
-+$record = Get-CimInstance -ClassName Win32_Process -Filter ('ProcessId = ' + $targetPidValue)
-+if ($null -eq $record) { exit 0 }
-+if ([string]::IsNullOrWhiteSpace($record.CommandLine)) { throw 'Process command line unavailable' }
-+$escapedFixture = [regex]::Escape($expectedFixture)
-+$fixtureArgument = '(?:^|\s)(?:"' + $escapedFixture + '"|' + $escapedFixture + ')(?=\s|$)'
-+if (-not [regex]::IsMatch($record.CommandLine, $fixtureArgument, [Text.RegularExpressions.RegexOptions]::IgnoreCase)) {
-+  throw 'Process fixture argument mismatch'
-+}
-+& taskkill.exe /PID $targetPidValue /F | Out-Null
-+if ($LASTEXITCODE -ne 0) { throw 'Owned process termination failed' }
-+`;
-+
-+async function stopOwnedFake(cwd: string, timeoutMs: number) {
-+  const pid = readFakePid(cwd);
-+  if (pid === undefined || !alive(pid)) return;
-+  if (process.platform === 'win32') {
-+    const result = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', windowsStopScript], {
-+      env: { ...process.env, LOOMAKE_CLEANUP_PID: String(pid), LOOMAKE_CLEANUP_FIXTURE: join(cwd, '.loomake/fake.mjs') },
-+      encoding: 'utf8', shell: false, timeout: timeoutMs, killSignal: 'SIGKILL',
-+    });
-+    if (result.error) throw result.error;
-+    if (result.status !== 0) throw new Error(`所有する偽プロセスを確認・停止できませんでした。${result.stderr}`);
-+  } else {
-+    try { process.kill(-pid, 'SIGKILL'); }
-+    catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error; }
-+  }
-+  const deadline = Date.now() + timeoutMs;
-+  while (alive(pid) && Date.now() < deadline) await new Promise((resolvePromise) => setTimeout(resolvePromise, 25));
-+  if (alive(pid)) throw new Error('所有する偽プロセスが後片付け後も動いています。');
-+}
-+
- async function withRepo(mode: string, check: (fixture: { cwd: string; input: ReturnType<typeof parseArgs>; options: { cwd: string; executable: string; prefixArgs: string[]; env: NodeJS.ProcessEnv } }) => Promise<void>) {
-   const cwd = mkdtempSync(join(tmpdir(), 'loomake-opus-'));
--  try {
-+  await withCleanup(async () => {
-     execFileSync('git', ['init', '-q'], { cwd });
-     writeFileSync(join(cwd, '.gitignore'), '.loomake/\n');
-     execFileSync('git', ['add', '.gitignore'], { cwd });
-@@ -68,6 +142,7 @@
-     const fixture = join(cwd, '.loomake/fake.mjs');
-     writeFileSync(fixture, `import {writeFileSync} from 'node:fs';
- const args=process.argv.slice(2); const id=args[args.indexOf('--session-id')+1];
-+writeFileSync('.loomake/pid', String(process.pid));
- writeFileSync('.loomake/called', 'yes');
- writeFileSync('.loomake/env.json', JSON.stringify({memory:process.env.CLAUDE_CODE_DISABLE_AUTO_MEMORY, preserved:process.env.DELIVERY_TEST_SENTINEL}));
- let request=''; for await (const chunk of process.stdin) request+=chunk;
-@@ -84,7 +159,7 @@
- `);
-     await check({ cwd, input: { role: 'design', request, head, timeoutMs: 3000 },
-       options: { cwd, executable: process.execPath, prefixArgs: [fixture], env: { ...process.env, DELIVERY_TEST_MODE: mode, CLAUDE_CODE_DISABLE_AUTO_MEMORY: '0', DELIVERY_TEST_SENTINEL: 'kept' } } });
--  } finally { rmSync(cwd, { recursive: true, force: true }); }
-+  }, () => rmSync(cwd, { recursive: true, force: true }));
- }
-
- describe('deliveryのClaude起動', () => {
-@@ -214,21 +289,32 @@
-       expect(JSON.parse(readFileSync(join(result.dir!, 'manifest.json'), 'utf8')).exitCode).not.toBe(0);
-     });
-   });
--  it('SIGINTで子プロセスを止め、未実施を保存する', async () => {
-+  async function checkInterrupted(trigger: string) {
-     await withRepo('timeout', async ({ cwd, input, options }) => {
--      const modulePath = resolve(import.meta.dirname, '../.agents/skills/delivery/scripts/ask-opus.mjs');
--      const code = `import {askOpus} from ${JSON.stringify(pathToFileURL(modulePath).href)};
-+      await withCleanup(async () => {
-+        const modulePath = resolve(import.meta.dirname, '../.agents/skills/delivery/scripts/ask-opus.mjs');
-+        const code = `import {askOpus} from ${JSON.stringify(pathToFileURL(modulePath).href)};
- import {existsSync} from 'node:fs';
--const timer=setInterval(()=>{if(existsSync('.loomake/called')) {clearInterval(timer);process.kill(process.pid,'SIGINT');}},10);
-+const timer=setInterval(()=>{if(existsSync('.loomake/called')) {clearInterval(timer);${trigger};}},10);
- console.log(JSON.stringify(await askOpus(${JSON.stringify(input)},${JSON.stringify({ ...options, env: undefined })})));
- clearInterval(timer);`;
--      const child = spawnSync(process.execPath, ['--input-type=module', '-e', code], { cwd, env: options.env, encoding: 'utf8', timeout: 10000 });
--      expect(child.status).toBe(0);
--      const result = JSON.parse(child.stdout);
--      expect(result).toMatchObject({ ok: false, reason: expect.stringContaining('中断') });
--      expect(JSON.parse(readFileSync(join(result.dir, 'manifest.json'), 'utf8'))).toMatchObject({ ok: false });
--    });
--  });
-+        const child = spawnSync(process.execPath, ['--input-type=module', '-e', code], {
-+          cwd, env: options.env, encoding: 'utf8', timeout: 10000, killSignal: 'SIGKILL',
-+        });
-+        expect(child.error).toBeUndefined();
-+        expect(child.signal).toBeNull();
-+        expect(child.status, child.stderr).toBe(0);
-+        const result = JSON.parse(child.stdout);
-+        expect(result).toMatchObject({ ok: false, reason: expect.stringContaining('中断') });
-+        expect(JSON.parse(readFileSync(join(result.dir, 'manifest.json'), 'utf8'))).toMatchObject({ ok: false });
-+        const pid = readFakePid(cwd);
-+        expect(pid).toBeDefined();
-+        expect(alive(pid!)).toBe(false);
-+      }, () => stopOwnedFake(cwd, input.timeoutMs));
-+    });
-+  }
-+  it('SIGINTイベントで子プロセスを止め、未実施を保存する', () => checkInterrupted("process.emit('SIGINT')"));
-+  it.skipIf(process.platform === 'win32')('SIGINTで子プロセスを止め、未実施を保存する', () => checkInterrupted("process.kill(process.pid,'SIGINT')"));
-
-   it('CLIの正常な実行はJSON要約と終了コード0を返す（Windows npm版は未対応）', async () => {
-     await withRepo('success', async ({ cwd, input }) => {
-```
+承認時のfull patchは計画commit `136aa62`とignored `.loomake/repair-proposal.patch`に保持した。現行実装は[テスト本体](../../tests/delivery-ask-opus.test.ts)を参照する。実装時には承認案に加えて多重エラー保持・実際の所有子cleanup・Windowsの不一致PID拒否を検査する回帰を追加した。外側withRepoの削除まで含むエラー集約と、通常の正常性assertion後に生存PIDを拒否する位置を維持している。
 
 ## 維持するassertionと期限
 
@@ -243,7 +91,7 @@ diff --git a/tests/delivery-ask-opus.test.ts b/tests/delivery-ask-opus.test.ts
 
 ## 実装と検証の手順
 
-今回、patchの適用も以下の試験も実行していない。実装時は元headと修正head・実行環境・結果を分けて保存する。
+以下は承認後の実装・検証項目である。今回の担当によるローカル実測と、未実施のWindows/最終レビューを下で区別する。
 
 | 確認 | 期待する証拠 |
 |---|---|
@@ -264,4 +112,10 @@ diff --git a/tests/delivery-ask-opus.test.ts b/tests/delivery-ask-opus.test.ts
 
 公開資料はこの設計と作業記録に限定し、内部thinking・認証・生envを含めない。管理役が保持するignored資料は `.loomake/investigation/` のCI抜粋・Issue153/116 snapshot・Linux観測、`.loomake/second-opinion/codex-findings.md`、`.loomake/claude/773e82ab-6ea6-46f3-9078-1c31c7628b15/result.md` とsanitized実行情報である。Opusの原文は変更しない。
 
-計画commitの検査は日本語のyomiyasu、diff/applycheck、既存test/helper/configのbyte保持である。次に承認済みpatchを追跡テストへ適用し、型・lint・対象試験・意味のあるmutation/失敗診断回帰・通常verifyを別の実行として記録する。Windows実行は管理役が新headの全OS CIで行い、追加Opusは保留する。文書の検査を製品DoD達成とは扱わない。
+計画commitではyomiyasu、diff/applycheckと既存test/helper/configのbyte保持を確認した。承認案をテストへ適用後、今回の担当がNode24.21.0/Linux arm64で対象34試験・型・lintの成功を確認した。ここにはWindows専用のPID拒否回帰は含まれず、その実行は新headの全OS CIを待つ。
+
+専有scratch copyのmutationも新たに実行した。SIGINT listener除去は2失敗、stopChild no-opは1失敗で約10.35秒にETIMEDOUTを検出し、外側watchdogは発火しなかった。例外を上書きする旧finallyへのmutationでは、多重エラー保持回帰が1失敗となった。3実行とも対象childの残存はなく、正常34試験成功と対に記録した。これは外部レビュアーの32件/9連続という申告とは別の実測である。
+
+main d5aa30dの[CI40973889686 / Windows job123797067291](https://github.com/loomake/loomake/actions/runs/40973889686/job/123797067291)も取得した。同じSIGINT試験でstatus期待0・実値1、856成功・1失敗・既存5 skipであり、このjobにEPERMはない。修正前の別headの証拠として扱い、ローカルの新実装やWindows修復成功へ読み替えない。
+
+通常verifyは実装commit後に実行し、結果を追記する。Windows実行は管理役が新headの全OS CIで行い、追加Opusは回数の扱いが決まるまで保留する。製品helper・設定・既存の期待値と期限を保持し、今回のローカル検査だけで最終受入とは報告しない。
