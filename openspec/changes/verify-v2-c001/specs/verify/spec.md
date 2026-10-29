@@ -38,3 +38,16 @@ Source: REQ-312
 #### Scenario: local結果の持ち込み
 - **WHEN** localの完了結果、旧1.0.0のok:true、または証跡のないskip-commandsをciゲートへ使う
 - **THEN** それだけではPASSにしない
+
+### Requirement: C-001の成功経路と不足拒否
+C-001は、最小quality.yamlから適格な実証跡に基づく正常なPASS、不正入力のaborted、証跡不足のINSUFFICIENT_EVIDENCEを区別できる MUST。C-003待ちを理由に成功経路・自己完了ゲートを削らず、未実施・古い・旧形式・全NAを合格にする例外を作らない MUST。最小実証跡の取得をC-001へ含める範囲かC-003への依存方法はR-C001-03の回答後に確定する SHALL。回答までは実装と形式切替を行わない MUST。
+
+Source: REQ-319
+
+#### Scenario: 正常・不正・不足の受入
+- **WHEN** 最小の適格な実証跡がある正常入力、不正設定、未実施または古い証跡を使って同じCLI/APIを検査する
+- **THEN** 正常はciのPASS/0、不正はaborted/2または3、不足はINSUFFICIENT_EVIDENCE/1となる。成功例に手書きのok:trueや未照合の適格フラグを使わない
+
+#### Scenario: 完了ゲートの維持
+- **WHEN** 本changeを完了と報告する
+- **THEN** 全要件のID付き試験と全タスクの完了、最終headの通常の完了ゲートexit 0が必要であり、未接続を理由に省略しない
