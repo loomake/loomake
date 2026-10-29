@@ -146,14 +146,18 @@ describe('runから外部操作までの期限', () => {
     } finally { repo.cleanup(); }
   });
   it('[REQ-116][REQ-182] 事前の認証確認が期限切れなら実装も記録も始めない', async () => {
+    // Windows の gh は cmd.exe から偽の CLI の node を起動するので、500ms では偽の CLI が印を書く前に期限に当たることがあった
+    // （main の run 40617269029 で、偽の CLI のイベントが空のまま「実行時間の上限」で止まった）。
+    // そこで Windows では 1 操作の期限を、auth・list の段階の試験と同じ 2 秒にする。偽の CLI は STALL_MS 止まるので、期限で止めたことは変わらない
+    const operationMs = process.platform === 'win32' ? 2_000 : OPERATION_MS;
     const repo = makeRepo();
     try {
       const before = repo.git('rev-parse', 'HEAD');
       const cli = fakeCli(repo, 'gh', { when: "args[0]==='auth'", stallMs: STALL_MS });
-      const error = await budget(() => run(repo)).catch((value: unknown) => value);
+      const error = await withProcessBudget({ timeoutMs: 20_000, maxOperationMs: operationMs }, () => run(repo)).catch((value: unknown) => value);
       const endedAt = Date.now();
       const context = diagnosticContext(repo, { error: String(error) }, cli);
-      expectStoppedSoon(expectStalled(cli, (args) => args[0] === 'auth', context), endedAt, OPERATION_MS, context);
+      expectStoppedSoon(expectStalled(cli, (args) => args[0] === 'auth', context), endedAt, operationMs, context);
       expect(error).toBeInstanceOf(RuntimeFailure);
       expect(error).not.toBeInstanceOf(UsageError);
       expect(String(error)).toContain('実行時間の上限');

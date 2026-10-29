@@ -66,9 +66,9 @@ if (count === ${stopAt}) {
   return repo.git('rev-parse', 'HEAD');
 }
 
-async function run(repo: Repo) {
+async function run(repo: Repo, timeoutMs = 6000) {
   const output: string[] = [];
-  const code = await withProcessBudget({ timeoutMs: 6000 }, () => runRun({
+  const code = await withProcessBudget({ timeoutMs }, () => runRun({
     root: repo.root, changeId: CHANGE, env: repo.env, interactive: false,
     confirm: async () => false, stdout: (text) => output.push(text), fileExists: () => false,
   }));
@@ -131,12 +131,15 @@ describe('品質コマンドの時間切れの直接検証', () => {
     }
   }, 20_000);
 
-  // Issue #5。Windows の CI で不安定に落ちるため、直るまで Windows でだけ止める
-  it.runIf(process.platform !== 'win32')('[REQ-140] 初回の検証成功を確認した後、2回目を停止して時間切れを記録する', async () => {
+  // 2 回目の品質コマンドに届くまでに、1 回目の検証・タスクのコミット・2 回目の検証の準備の外部操作がある。
+  // Windows では外部操作ごとに保持役へ保持を頼むので遅く、6 秒では 2 回目を始める前に予算が尽きることがあった（run 40485476247、Issue #5）。
+  // そこで Windows では予算を 20 秒にする。2 回目は自分では終わらないので、予算を延ばしても共有期限で止まることは変わらない
+  const SECOND_RUN_BUDGET_MS = process.platform === 'win32' ? 20_000 : 6000;
+  it('[REQ-140] 初回の検証成功を確認した後、2回目を停止して時間切れを記録する', async () => {
     const repo = makeRepo({ tasks: task });
     try {
       const head = prepare(repo, 2);
-      const result = await run(repo);
+      const result = await run(repo, SECOND_RUN_BUDGET_MS);
       expect(result.code, result.output).toBe(1);
       stoppedQuality(repo, 2);
       const { summary, firstVerify } = records(repo);
@@ -153,5 +156,5 @@ describe('品質コマンドの時間切れの直接検証', () => {
       repo.cleanup();
       monitor.ready = '';
     }
-  }, 20_000);
+  }, process.platform === 'win32' ? 45_000 : 20_000);
 });

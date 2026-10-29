@@ -50,3 +50,24 @@ artifact の保存期間は7日とする。保存対象は上の3ファイルに
 テストや、それより前の lint・型検査が失敗したあとも、キャンセルされておらず、checkout と Node の準備が済んでいれば診断を生成する。テストに進まなかった場合は未実行と表示する。生成と upload は別ステップで、生成が失敗しても生成済みのファイルの保存を試みる。保存対象がなければ警告する。診断は品質コマンドの失敗を成功に変えない。
 
 文書だけと判定されたジョブでは診断を生成しない。キャンセルされた実行や、checkout・Node の準備に失敗した実行では、診断の生成と保存を保証しない。artifact がないことを成功と解釈せず、ジョブの状態とログを確認する。
+
+## 依存予算と判定ディレクトリの補助検査（W0-3）
+
+`pnpm test` は `tests/ci-policy-boundaries.test.ts` で、5パッケージの実行時依存を許可集合と照合する。coreはzod、kitはcoreとyaml、traceはcoreとkit、runnerはcore・kit・trace、CLIはcore・kit・trace・runnerだけを許可する。これは上限の検査であり、まだ使っていない依存を追加するものではない。
+
+`dependencies` のほか、`optionalDependencies`・`peerDependencies`・`bundledDependencies`・`bundleDependencies` も照合する。npmの別名は参照先のパッケージ名も照合する。外部ツールのSDKは許可集合にないため、これらへ追加するとCIが失敗する。開発時だけに使う `devDependencies` と、Actions経由で別プロセスとして使うSDKはこの実行時予算の対象外とする。
+
+`pnpm lint` は `packages/kit/src/verify/policy/**/*.ts` に次のESLint規則を適用する。
+
+- `no-restricted-imports`：`node:` 付きと裸の名前のNode組み込みモジュールへの値のimport・再exportを禁止する。型だけのimportは許可する。
+- `no-restricted-globals`：`Date`・`process`・通信・時計・タイマー・ログ・動的コード実行などのグローバル参照を禁止する。`globalThis`・`global`・`window`・`self` 自体の参照も禁止し、そこから同じ入口を参照する書き方も検出する。
+- `no-restricted-properties`：`Math.random` と `Math['random']` を禁止する。
+- `no-restricted-syntax`：動的なimportと `import = require` を禁止する。
+
+判定に使う時刻や環境値は呼び出し側から引数で渡す。収集・実行を担当するモジュールには、このディレクトリ限定の制限を掛けない。試験では実際のESLint設定へ違反例を渡し、拒否されることと、型のimportや引数で渡すデータが許可されることを確かめる。
+
+補助検査の試験は、対象ファイルで有効な4規則と同じTypeScriptパーサーをESLintの設定から読み、型情報を作らずに実行する。これらの規則は構文とスコープを使うため、TypeScriptのプロジェクト全体を初期化する必要はない。通常の `pnpm lint` の型情報を使う検査は維持する。
+
+これらは外部状態への直接参照を見つける補助検査であり、純粋性を保証するものではない。依存先の副作用、引数の変更、別名で渡された関数などはレビューと「同じ入力なら同じ出力」の動作試験で確認する。既存の `tests/kit-layers.test.ts` による層の向きの検査と、判定関数の動作試験も引き続き実行する。
+
+Schemaの再生成一致は、既存の `packages/core/test/json-schema.test.ts` が `renderJsonSchemas()` の結果と保存済みファイルを照合する。Schemaの互換性検査も既存の試験を維持する。
