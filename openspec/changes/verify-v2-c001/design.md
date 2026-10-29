@@ -28,7 +28,7 @@ kitの既存yaml依存でrootのquality.yamlを読み、coreのloaderとversion 
 
 新規導入・既存導入に最小例（version、model、品質項目と証拠条件）と手動配置の案内を用意する。空の最小例も構造としては読めるが、空や全NAでdoneのPASSにしない。#66の全面init生成を待たず、既存ファイルを自動上書きする方法も採らない。
 
-純粋判定 `evaluateQualityConditions` の入力はqualityと、別段階で適格性/実施を照合した観測結果。比較値は有限数値、比較演算子は既存5種とし、min_samplesを満たす必要証拠を全件照合する。未定義・未取得・未実施・未照合・不足を優先して不足とし、有効な証拠で確認できた必須条件の違反をFAILにする。NA理由と確認者はスキーマと判定境界で確認する。集約は既存 `aggregateCiVerdict` を使う。自動実行条件・版・適格性の確認を飛ばして最終合格を作らない。
+純粋判定 `evaluateQualityConditions` の入力はqualityと、別段階で適格性/実施を照合した観測結果。比較値は有限数値、比較演算子は既存5種とし、min_samplesを満たす必要証拠を全件照合する。証拠ごとに未定義・未取得・未実施・未照合・不足を区別し、適格な証拠で確認できた必須条件の違反が1件でもあればFAILを優先する。FAILがなければ不足を優先する。NA理由と確認者はスキーマと判定境界で確認する。集約は既存 `aggregateCiVerdict` を使う。自動実行条件・版・適格性の確認を飛ばして最終合格を作らない。
 
 ### 3. 実証跡と正常PASSの停止点
 
@@ -36,11 +36,11 @@ kitの既存yaml依存でrootのquality.yamlを読み、coreのloaderとversion 
 
 この先行adapterが担うsource/metricはO01の一般名前空間全体の確定と分け、対象となる指標・対応するquality項目・期待targetをR-C001-03回答時に差分仕様へ追記する。例示の `ci.test_report` を無条件に実装済みの接続とは扱わない。鮮度条件と信頼する基準の取得元も受入例に必要な範囲を固定する。
 
-B案はC-003の適格性取得を先に受け入れ、その依存を満たしてからC-001を実装・形式切替する。どちらも正常PASSの統合試験と通常の自己完了ゲートを必須とする。いまはA/Bと必要条件が未確定なので、実装禁止。C-001のDoDを満たせない範囲を完了として受け入れない。
+B案はC-003との循環依存を避けるため、取得/適格性とC-001の公開側/利用側を並行準備し、必要範囲を合同受入する計画へ変える。どちらも正常PASSの統合試験と通常の自己完了ゲートを必須とする。いまはA/Bと必要条件が未確定なので、実装禁止。C-001のDoDを満たせない範囲を完了として受け入れない。
 
 ### 4. JSON・型・埋め込みの移行
 
-verifyは2.0.0、Evidenceは2へ上げる。Evidence 1の必須verifyが旧構造であり、型とJSON Schemaをそのまま変えると旧データを読めなくするため、Evidenceにも形式変更を明示する。履歴用 `LegacyVerifyResult`・`LegacyEvidence` と各schema/loaderを別名で残し、旧verify fixture、旧Evidence、documents省略を改変しない。現行の書き出しへ旧版を混ぜない。VerifyModeは既存のモード入力型として維持する。新チェック型・実行エラー型・scope型はスキーマから導出する。
+verifyは2.0.0、Evidenceは2へ上げる。Evidence 1の必須verifyが旧構造であり、型とJSON Schemaをそのまま変えると旧データを読めなくするため、Evidenceにも形式変更を明示する。履歴用 `LegacyVerifyResult`・`LegacyEvidence` と各schema/loaderを別名で残し、旧verify fixture、旧Evidence、documents省略を改変しない。現行の書き出しへ旧版を混ぜない。VerifyModeは既存のモード入力型として維持する。REQ-040が要求する要件→成功テストファイル一覧は、completed/partialの任意coverageとして保持しReportの既存行へ投影する。abortedへ一覧を補わない。これは将来の追加フィールドではなく現行公開契約の維持である。新チェック型・実行エラー型・scope型はスキーマから導出する。
 
 ci/localのcompleted/partialとabortedの5形をスキーマで区別する。abortedはschemaVersion/change/runだけ、localにはverdictがない。未知キーの許容と既知禁止キーの拒否を区別し、REQ-307の安全な保持経路を使う。C-001ではcompletedとabortedと最低限の禁止キーを試験し、partial取得経路と全禁止キーの網羅をC-003へ残す。新しい2.0.0だけをスキーマに置いて実出力を1.0.0に据え置く移行はしない。
 
@@ -83,7 +83,7 @@ runのlastVerify.okはlocal項目の完了を表す既存表示へ投影し、CI
 
 ## Migration Plan
 
-#60受入と質問3件の回答を確認し、差分仕様・trace・tasksを更新してstrictと仕様ゲートを通す。新たなapply指示のあと、型と履歴fixture、純粋判定、最小の適格な取得、CLI、全利用側の順で実装し、同じPRで切り替える。公開前に通常の完了ゲートと最終headのCI・配布検証を確認する。
+#60受入と質問3件の回答を確認し、差分仕様・trace・tasksを更新してstrictと仕様ゲートを通す。回答を反映し依存受入と仕様ゲート成功を確認したら、既存のdelivery指示に基づきapplyへ進み、型と履歴fixture、純粋判定、最小の適格な取得、CLI、全利用側の順で実装し、同じPRで切り替える。公開前に通常の完了ゲートと最終headのCI・配布検証を確認する。
 
 戻す場合は公開側・利用側を同じ単位で戻し、既に追加したv2証拠や旧fixtureを消さない。旧版へ戻した環境で新証拠を1.0.0に読み替えず、未対応版として止める。計画だけのPRではchangesetの実バージョン切替や製品コードを変更しない。
 

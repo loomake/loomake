@@ -59,7 +59,7 @@ Source: REQ-304
 ## ADDED Requirements
 
 ### Requirement: verify 2.0.0の状態とscope
-coreは要件定義7.3の `schemaVersion: 2.0.0` のZodスキーマと導出型を公開する SHALL。ci/local各completed・partialとabortedを区別し、ciにはchecks・summary・decision・verdict、localにはchecks・summary・decisionとsummary.pendingを持たせverdictを持たせない MUST。abortedはchange・run.errorsを持ち、scope・checks・summary・decision・verdictを持たない MUST。全objectの未知キーは拒否せず値を保持し、既知の禁止キーは拒否する MUST。スキーマは遅延ロードする SHALL。
+coreは要件定義7.3の `schemaVersion: 2.0.0` のZodスキーマと導出型を公開する SHALL。ci/local各completed・partialとabortedを区別し、ciにはchecks・summary・decision・verdict、localにはchecks・summary・decisionとsummary.pendingを持たせverdictを持たせない MUST。completed/partialでは既存の成功テスト対応coverageを任意に保持する SHALL。abortedはchange・run.errorsを持ち、scope・checks・summary・decision・verdictを持たない MUST。全objectの未知キーは拒否せず値を保持し、既知の禁止キーは拒否する MUST。スキーマは遅延ロードする SHALL。
 
 Source: REQ-308
 
