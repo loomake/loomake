@@ -1,5 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import { EVIDENCE_SCHEMA_VERSION as CORE_EVIDENCE_VERSION, REPORT_SCHEMA_VERSION as CORE_REPORT_VERSION, loadTraceSchemas, type Evidence as CoreEvidence, type EvidenceDocument as CoreDocument, type Report as CoreReport, type ReportRow as CoreRow } from '@loomake/core';
 import { EVIDENCE_SCHEMA_VERSION, REPORT_SCHEMA_VERSION, buildReport, runReport, evidenceProblem, readDocuments, type Evidence, type EvidenceDocument, type Report, type ReportRow } from '../src/index.js';
@@ -23,11 +24,13 @@ describe('trace の公開元と同期境界', () => {
 
   it('[REQ-303] 構造スキーマが受ける不適合な証拠を従来の意味検証が拒否する', () => {
     const base = evidenceValue();
+    const document = { path: 'trace.md', content: '', sha256: createHash('sha256').update('').digest('hex') };
     const inputs = [
       { ...base, schemaVersion: 2 }, { ...base, sha: 'wrong' }, { ...base, committedAt: '' }, { ...base, recordedAt: 'wrong' }, { ...base, change: 'other' },
       { ...base, verify: { ...base.verify, change: 'other' } }, { ...base, verify: { ...base.verify, mode: 'quality' } },
       { ...base, documents: [{ path: 'trace.md', content: '', sha256: 'wrong' }] },
       { ...base, documents: [{ path: '', content: '', sha256: '' }] },
+      { ...base, documents: [document, document] },
     ];
     for (const value of inputs) {
       expect(evidenceSchema.safeParse(value).success, JSON.stringify(value)).toBe(true);
@@ -35,6 +38,7 @@ describe('trace の公開元と同期境界', () => {
       expect(problem).toEqual(expect.any(String));
       expect(problem).not.toBeInstanceOf(Promise);
       expect(() => serializeEvidence(value as Evidence)).toThrow();
+      if (value.documents?.length === 2) expect(problem).toContain('重複');
     }
   });
 

@@ -28,7 +28,10 @@ export const reportSchema = z.looseObject({
   schemaVersion: z.number(),
   change: z.string(),
   evidence: z.looseObject({ recordedAt: z.string(), sha: z.string(), committedAt: z.string(), ok: z.boolean(), documents: z.boolean() }),
-  attention: z.looseObject({ noPassingTests: z.array(z.string()), pending: z.array(z.string()), changedDocuments: z.array(z.string()), failedChecks: z.array(z.string()) }),
+  attention: z.looseObject({
+    noPassingTests: z.array(z.string()), pending: z.array(z.string()),
+    changedDocuments: z.array(z.string()), failedChecks: z.array(z.string()),
+  }),
   rows: z.array(reportRowSchema),
   questions: z.array(z.looseObject({ id: z.string(), question: z.string(), answer: z.string(), answeredBy: z.string(), answeredAt: z.string() })),
   assumptions: z.array(z.looseObject({ id: z.string(), content: z.string(), approval: z.string(), approvedBy: z.string(), approvedAt: z.string() })),
