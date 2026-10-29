@@ -6,6 +6,10 @@ core は verify 結果の形を Zod スキーマで定義し、公開する SHAL
 Source: REQ-274
 
 #### Scenario: いまの verify 結果を受け付ける
+- **WHEN** 現行の2.0.0の状態別必須項目を持つverify結果を現行スキーマで解析する
+- **THEN** 解析は成功し、履歴の1.0.0とは版で区別する
+
+#### Scenario: 履歴の1.0.0を受け付ける
 - **WHEN** `schemaVersion` が `1.0.0` で、`mode`・`change`・`ok`・`results`・`coverage` を持つ verify 結果を、core の履歴専用 Zod スキーマで解析する
 - **THEN** 解析は成功する
 
@@ -44,7 +48,7 @@ Source: REQ-303
 - **THEN** zod を静的に読む経路がなく、新旧の型を明示した利用側がコンパイルできる
 
 ### Requirement: 証拠とレポートの JSON Schema の生成と公開
-core は Evidence と Report の JSON Schema をそれぞれ `schema/evidence.schema.json`・`schema/report.schema.json` に Zod から生成し、通常と publishConfig の exports で公開する SHALL。生成結果と配布ファイルの不一致を CI の試験で検出する MUST。JSON Schema は構造スキーマと同じ必須・任意の区別と未知フィールドの許可を表す SHALL。verify・evidenceの現行公開JSON Schemaは新形式へ更新し、旧版は履歴fixtureと履歴用スキーマで保持する SHALL。report・quality・trace・spec・tasks・quality-reportのJSON Schemaは変更しない MUST。
+core は Evidence と Report の JSON Schema をそれぞれ `schema/evidence.schema.json`・`schema/report.schema.json` に Zod から生成し、通常と publishConfig の exports で公開する SHALL。生成結果と配布ファイルの不一致を CI の試験で検出する MUST。JSON Schema は構造スキーマと同じ必須・任意の区別と未知フィールドの許可を表す SHALL。verify・evidenceの現行公開JSON Schemaは新形式へ更新する SHALL。R-C001-09のA候補として、旧版JSON Schemaも版付きパスとexportsで公開し、旧fixtureと履歴用スキーマを保持する SHALL。report・quality・trace・spec・tasks・quality-reportのJSON Schemaは変更しない MUST。
 
 Source: REQ-304
 
@@ -55,6 +59,68 @@ Source: REQ-304
 #### Scenario: 既存 JSON Schema の保持
 - **WHEN** スキーマを再生成する
 - **THEN** report・quality・trace・spec・tasks・quality-reportの6ファイルは変わらず、verify・evidenceは新形式と一致し旧版fixtureも保持される
+
+### Requirement: verify 結果の未知のフィールド
+core の現行verify 2.0.0と履歴verify 1.0.0のZodスキーマは、定義していないフィールドを拒否せず値を保持する SHALL。2.0.0で明示的に禁止された既知キーは拒否する MUST。
+
+Source: REQ-275
+
+#### Scenario: 未知のフィールドを残す
+- **WHEN** 履歴1.0.0の最上位と `results`、および現行2.0.0の最上位と `checks` の要素に、定義していないフィールドを持つverify結果を解析する
+- **THEN** 解析は成功し、解析結果に同じフィールドが同じ値で残っている
+
+### Requirement: JSON Schema の書き出し
+core が公開する `schema/verify-result.schema.json` は、verify 結果の Zod スキーマから `z.toJSONSchema()` で書き出した内容と一致する MUST。core は Zod スキーマからこのファイルを書き出すコマンドを提供する SHALL。ファイルと書き出した内容が違うときは、CI で動くテストが失敗する MUST。現行パスは2.0.0を表し、R-C001-09のA候補では履歴1.0.0も版付きパスとexportsで公開して同様に再生成一致を検査する SHALL。
+
+Source: REQ-276
+
+#### Scenario: 書き出した内容とファイルが一致する
+- **WHEN** Zod スキーマから JSON Schema を書き出し、`packages/core/schema/` のファイルと比べる
+- **THEN** 内容が一致する
+
+#### Scenario: 書き出しのコマンドでファイルを作り直せる
+- **WHEN** core の書き出しのコマンドを実行する
+- **THEN** `packages/core/schema/verify-result.schema.json` が、Zod スキーマから書き出した内容になる
+
+### Requirement: 品質判定の共有4値
+
+core は `PASS`・`FAIL`・`INSUFFICIENT_EVIDENCE`・`NOT_APPLICABLE` のみを受け付ける Zod enum と、そのスキーマから導出した `QualityResult` 型を公開する SHALL。スキーマは `loadQualityResultSchema()` で遅延ロードし、core・kit・CLI の入口から zod を静的に読み込まない MUST。現行VerifyResultは2.0.0、Evidenceは2へ移し、履歴1.0.0の型・fixtureを保持する MUST。report・quality・trace・spec・tasks・quality-reportの6本のJSON Schemaを変えない MUST。旧verify・evidenceのJSON Schema公開継続はR-C001-09の候補に従う。共有 enum 単独の JSON ファイルは追加しない。
+
+Source: REQ-305
+
+#### Scenario: 4値の読み取り
+- **WHEN** 遅延 loader で取得した `qualityResultSchema` に4値をそれぞれ渡す
+- **THEN** 値をそのまま返し、それ以外の値・型を拒否する
+
+#### Scenario: 公開型と既存形式
+- **WHEN** core の公開型と loader を配布物から利用する
+- **THEN** `QualityResult` はスキーマから導出され、現行verify 2.0.0と履歴1.0.0を区別でき、無関係の6本のJSONは変わらない
+
+### Requirement: 未知キーをプロトタイプを変えずに保持する
+
+core の verify 結果、Markdown 解析結果、quality.yaml、quality-report、証拠とリリースレポートの公開スキーマは、未知の own property `__proto__`・`constructor`・`prototype` を通常の未知キーと同じく値を変えず解析結果に保持する SHALL。最上位とスキーマが検証する入れ子・配列要素に同じ規則を適用する MUST。入力と共有プロトタイプを変更せず、`__proto__` を出力のプロトタイプ変更として解釈しない MUST。既知項目の検証・既定値、現行と履歴の導出型・遅延ロードを維持する MUST。verify・evidenceの現行JSON Schemaだけをv2へ更新し、無関係の6種類の内容を維持する MUST。
+
+Source: REQ-307
+
+#### Scenario: 最上位の未知キーを保持する
+- **WHEN** 必須項目に加え、JSON の own property として `__proto__`・`constructor`・`prototype` を持つ値を公開スキーマで解析する
+- **THEN** parse と safeParse は成功し、各キーが同じ値の own property として解析結果に残る
+
+#### Scenario: 検証する入れ子と配列要素のキーを保持する
+- **WHEN** 現行verifyのchecksと履歴verifyのresults、Markdown の各解析行、quality.yaml の検証対象の入れ子、版に対応する証拠内のverify・checks/results・documents、レポート内の evidence・attention・rows・questions・assumptions に未知の `__proto__` を持つ値を解析する
+- **THEN** 各階層の同じキーと値が解析結果に残り、未知キーの値の入れ子も変わらない
+
+#### Scenario: 入力とプロトタイプを変更しない
+- **WHEN** `__proto__` の値にオブジェクト・配列・null・プリミティブを指定して解析する
+- **THEN** 入力は変わらず、解析結果はそのキーを own property として持ち、共有プロトタイプと解析結果の通常のプロトタイプは変更されない
+
+#### Scenario: 既知項目の検証と既定値を保つ
+- **WHEN** 未知キーを含む正常入力、必須項目の欠落、不正な版、省略可能な既定値を持つ入力を解析する
+- **THEN** 従来と同じ受理・拒否と既定値が得られ、非同期の解析でも未知キーが保持される
+
+#### Scenario: 配布スキーマと遅延ロードを保つ
+- **WHEN** 対象スキーマから JSON Schema を生成し、公開 loader と core・CLI の入口を検査する
+- **THEN** 配布JSONが版別スキーマと一致し、無関係の6種類の内容と公開する導出型が維持され、core・CLI の静的な入口から zod が読み込まれない
 
 ## ADDED Requirements
 
@@ -69,7 +135,7 @@ Source: REQ-308
 
 #### Scenario: partialの構造と未完了範囲
 - **WHEN** ci/localのpartialを解析する
-- **THEN** 構造は受け付けるが、実証跡取得の部分失敗を発生させる経路と禁止フィールドの網羅試験はC-003へ残り、C-001完了を契約全体完了と表示しない
+- **THEN** ci/localに応じた必須項目を受け付け、localのverdictとaborted専用の形を区別する
 
 #### Scenario: 未知キーと公開型
 - **WHEN** 各object階層へ `__proto__` を含む未知キーを渡し、配布物の型とloaderを利用する
@@ -81,8 +147,8 @@ verifyの `run.errors` は種別 `usage/config/permission/tool/network/runtime`�
 Source: REQ-309
 
 #### Scenario: changeが確定しない
-- **WHEN** change必須ゲートでchange値欠落・不正なID・存在しないIDを指定する
-- **THEN** change:nullのabortedとusageエラー、元の入力、次の操作を返す。bare verifyへの適用はR-C001-01の回答後に確定する
+- **WHEN** change必須ゲートでchange値欠落・構文が不正なIDを指定する
+- **THEN** change:nullのabortedとusageエラー、元の入力、次の操作を返す。bare verifyへの適用はR-C001-01の回答後に確定する。構文が有効で存在しないchangeはこのusage分類へ含めず、REQ-055の存在検査FAIL/1を保持する
 
 #### Scenario: 不正設定と読取失敗
 - **WHEN** 設定の構文・型・対応版が不正、または権限等で読取不能になる

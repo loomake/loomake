@@ -22,6 +22,10 @@ Source: REQ-205
 - **THEN** 再修正のエンジンを呼ばずinterruptedで止まる。検証中の状態変更と合格の優先順位は維持する
 
 
+#### Scenario: abortedでは自動修正しない
+- **WHEN** 作業状態が変わらずverifyがusage/configまたは実行エラーのabortedを返す
+- **THEN** local完了や再修正へ進めず、実行エラーの理由を記録して停止する。修正回数が残っていても修正エンジンを呼ばない
+
 ## ADDED Requirements
 
 ### Requirement: runnerのv2判定追従

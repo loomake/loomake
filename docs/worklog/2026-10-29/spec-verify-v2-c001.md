@@ -9,5 +9,5 @@
 
 1. `verify-v2-c001`・[PR139](https://github.com/loomake/loomake/pull/139)の計画資料を整合し、詳細をdesign-candidate-a.mdへ分離した。#60の当時の履歴と現在の受入済み事実、kitのyaml未追加を訂正した。7 capabilityの差分仕様・質問行・製品・既存試験・設定は保持し、1.1だけ完了のままにした。
 2. OpenSpec strictはexit 0。spec-onlyは未回答R-C001-01〜03だけでexit 1、解析・台帳・Source・Scenario等は成功した。yomiyasu run/verifyと差分範囲・7差分仕様/質問行の保持を確認した。全体試験・コード実装・完了ゲートは実行していない。
-3. R-C001-01〜03は未回答。Opusの設計著述3回のactual session ID・exit 0・denials 0は[trace](../../../openspec/changes/verify-v2-c001/trace.md#全a候補と著述の出典)に記録した。追加AI評価0、過去PR139ローカル回数不明、上限リセットなし。独立レビュー・人の採否は未実施で、S1や設定操作の承認を代行していない。
+3. R-C001-01〜03は未回答。Opusの設計著述3回のactual session ID・exit 0・denials 0は[後日の工程記録](../2026-10-30/spec-verify-v2-c001.md)に記録した。追加AI評価0、過去PR139ローカル回数不明、上限リセットなし。独立レビュー・人の採否は未実施で、S1や設定操作の承認を代行していない。
 4. 管理役へ計画headと検査結果を渡す。人の回答・具体案の採否と必要な保護差分の承認を記録し、差分仕様の反映と仕様ゲートexit 0を確認するまで実装しない。push・PR更新は管理役が行う。

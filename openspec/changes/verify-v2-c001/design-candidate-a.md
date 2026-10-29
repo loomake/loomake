@@ -2,13 +2,19 @@
 
 ## 位置づけと基準
 
-R-C001-01〜03がすべてAとなる場合の、採否を判断するための具体案である。回答・回答者・回答日は未記入のままとし、承認済みの仮定を追加しない。いずれかがBなら該当部分を再設計する。この文書をそのまま実装指示や規範仕様にせず、採否後に必要な差分仕様へ反映し、仕様ゲートexit 0を確認する。今回、7 capabilityの差分仕様・製品・既存試験・設定は変更しない。
+確認事項R-C001-01〜10がすべてAとなる場合の、採否を判断するための具体案である。回答・回答者・回答日は未記入のままとし、承認済みの仮定を追加しない。いずれかがBなら該当部分を再設計する。この文書をそのまま実装指示や規範仕様にせず、採否後に必要な差分仕様へ反映し、仕様ゲートexit 0を確認する。製品・既存試験・設定は変更しない。差分仕様はレビュー指摘に基づき既存仕様と整合させた候補であり、採否は未回答のままである。
 
-計画branchの作成基準はmain `f397109`。今回の製品調査基準はmain `f4e3edb`で、製品ソースが同一の専有worktree `codex-quality-reference-source-links`（head `77f9e2e`）を読んだ。#60は当時の未受入依存であったが、[PR140](https://github.com/loomake/loomake/pull/140)・[PR141](https://github.com/loomake/loomake/pull/141)で修正・仕様同期・archiveを受け入れ、2026-10-29T03:32:23Zにclose済みである。現在の実装停止理由は未回答3件と仕様ゲートである。
+計画branchの作成基準はmain `f397109`。今回の製品調査基準はmain `f4e3edb`で、同mainの製品ソースを調査した。#60は当時の未受入依存であったが、[PR140](https://github.com/loomake/loomake/pull/140)・[PR141](https://github.com/loomake/loomake/pull/141)で修正・仕様同期・archiveを受け入れ、2026-10-29T03:32:23Zにclose済みである。現在の実装停止理由は未回答10件と仕様ゲートである。
 
-根拠は固定要件7.3、既存REQ-310・313・314・319等と元のDoDである。新しいREQ IDを割り当てず、品質/CLIで使用済みのREQ-320〜325も再使用しない。source/metricの綴り、以下のplan、S1基準準備・private handoff・producer mappingは、R-C001-03 Aの**新しい契約候補**であり、現行スキーマに実装済みとは扱わない。19項目の新質問を増やさず、技術事項と既存3質問の採否を区別する。
+根拠は固定要件7.3、既存REQ-310・313・314・319等と元のDoDである。新しいREQ IDを割り当てず、品質/CLIで使用済みのREQ-320〜325も再使用しない。source/metric・plan・producer mappingはR-C001-03、S1基準準備・private handoffはR-C001-04のA候補であり、現行スキーマに実装済みとは扱わない。技術事項と確認事項10件の採否を区別する。
 
 R01Aのbare品質専用経路は、架空のchange IDを補わず `change: null`、`scope: local` のcompleted/partial、verdictなしで表す未承認候補とする。quality.yamlを新たに要求せず、設定済みの品質コマンドだけを実行する。change必須gateの未指定はusageのaborted/2として区別する。bareの品質コマンドやspec-onlyの構造確認だけではCI最終PASSを作らず、明示ciでも必要な実施を確認できない結果は最終PASSにしない。通常のspec-only既定localは保持する。
+
+## 用語
+
+S1は公開側の切替前に信頼する内部判定器と固定基準を準備する段階、S2はverify/Evidenceのv2実出力と利用側を一体で切り替える段階を指す。anchorは人の承認と基準側の固定情報から取る版・commit・hashなどの識別情報、base-built checkerはその固定した基準側ソースをbuildした判定器である。private handoffはその判定器と計画の保存先を内部で引き渡す経路を指す。fresh Tは基準側が今回の実行で新しく取得した結果、Sは対象CLI/APIの結果であり、Tを独立した照合の基準にする。
+
+R-C001-03のAだけならadapter・plan・適格性の実装と試験が対象である。04のAも採用するとS1独立changeの仕様・build・受入・archive、private handoff、S2との照合が加わり、単一adapterの追加を超える複数段階の作業になる。工数の数値は採否前に確定せず、既存見積りをこの候補だけで更新しない。
 
 ## 最小の入力と観測
 
@@ -64,17 +70,17 @@ REQ-314の未評価notPASSを、gateが混在するchecksでも保つ。候補ch
 
 ## 信頼する判定器と自己ゲートの段取り
 
-S1の準備を先に受け入れる案自体がR-C001-03 Aの追加未承認内容である。公開版の発行・新しい鍵・新サービスを前提にしない。S1を置くだけ、schema 2だけを追加して実出力を1に残すだけでは、C001完了にしない。
+S1の準備を先に受け入れる案自体がR-C001-04 Aの追加未承認内容である。公開版の発行・新しい鍵・新サービスを前提にしない。S1を置くだけ、schema 2だけを追加して実出力を1に残すだけでは、C001完了にしない。
 
 | 段階 | 候補の作業と終了条件 |
 |---|---|
-| 採否前 | 質問3件は未回答。製品実装しない。採用する追加契約・保護された互換差分を人が判断し、差分仕様とtraceへ反映して仕様ゲート0を確認する |
+| 採否前 | 質問10件は未回答。製品実装しない。採用する追加契約・保護された互換差分を人が判断し、差分仕様とtraceへ反映して仕様ゲート0を確認する |
 | S1内部基準の準備 | 基準側で独立したbase-built checker/policy moduleとexact2.0.0 parser、承認spec/REQ集合、quality/plan/method manifestを準備する。anchor identityを明示的に固定・承認する。準備段階では公開v1を維持できるが、C001 DoD達成ではない。先に取り込む場合は、限定した内部checker/基準の準備を独立changeとその範囲のDoD・REQ対応試験・通常done 0で受け入れ、仕様同期/archive後に親C001のS2を行う |
-| S2一体切替 | verify2/Evidence2へ実出力を切り替え、全利用側を同じ範囲で移す。正常self-ci、独立trusted check、全要件の試験・配布確認・元のDoDまで成立させる |
+| S2一体切替 | verify2/Evidence2へ実出力を切り替え、全利用側を同じ範囲で移す。正常self-ci、独立trusted check、全要件の試験・配布確認・R06で採用するローカル/CIのDoDまで成立させる |
 
-S1の独立change/REQ IDは今回作成・割当しない。A採用後、他担当・既用ID・同時3枠を照合し、1枠を確保してから準備する。未完了tasksを持つ親C001のdoneをS1 PRで合格扱いにしない。限定したS1自体が独立gateを通せる範囲にできない場合はR03Aの未決点として残し、親gate・自己task・必須試験を緩めない。
+S1の独立change/REQ IDは今回作成・割当しない。A採用後、他担当・既用ID・同時3枠を照合し、1枠を確保してから準備する。未完了tasksを持つ親C001のdoneをS1 PRで合格扱いにしない。限定したS1自体が独立gateを通せる範囲にできない場合はR04Aの未決点として残し、親gate・自己task・必須試験を緩めない。
 
-S2のnormal commandは `pnpm -s verify --change verify-v2-c001 --done`。提案済みのdone既定ciでreal v2/PASS・decision.required=false・exit 0を要求し、local 0で代替しない。独立checkerのPASSはこれに**追加する条件**である。
+S2の最終CIのnormal commandは `pnpm -s verify --change verify-v2-c001 --done --scope ci`。real v2/PASS・decision.required=false・exit 0を要求し、ローカルDoDの `--done --scope local` の0と分ける。この変更はR-C001-06のA採用時に規約と配布文書へ反映する。独立checkerのPASSはこれに**追加する条件**である。
 
 private runtime handoffは、基準側のcheckout/build済みmodule locator、計画・入力のlocator、結果出力先を渡す内部経路の案である。公開APIに必須schemas引数を増やさず、`--trusted-ref` やpublic provenance fieldも増やさない。locator/envは場所を指すだけで承認ではない。祖先であることやhandoffの自己申告hashだけでも信頼しない。expected anchorはtargetと独立したS1承認・基準側の固定情報から取る。
 
@@ -104,7 +110,7 @@ Sは一致検査の対象で、独立Tを置き換えない。S/T不一致やanc
 | producer/version・実効method・対象SHA・環境・鮮度・anchorが不一致 | 適格証拠なしとしてnotPASS。対象が確定した取得不足は不足/1、対象自体が確定しない読取/起動失敗はaborted/3 |
 | PRがSource/REQを実行前に削除し、その前後だけは一致 | 承認済みspec hash/必須REQ集合との不一致でnotPASS。縮小populationからPASSを作らない |
 | 対象は確定しているが取得の一部が権限不足 | partial、該当checkは不足、原因をrun.errorsへ。ほかの有効違反がなければci不足/1 |
-| 必須quality/planのENOENT・read不能で評価対象が確定しない | runtimeまたはpermissionのaborted/3。読み取りをconfig/2へまとめない |
+| doneの必須quality/planのENOENT・read不能で評価対象が確定しない | runtimeまたはpermissionのaborted/3。読み取りをconfig/2へまとめない |
 | quality/planの構文・型・版・内容が不正 | configのaborted/2 |
 | 必須change未指定・値欠落・構文不正ID | usageのaborted/2、change:null。R01Aのbare品質専用経路とは区別 |
 | 構文は有効だが存在しないchange | 既存REQ-055の存在check FAIL/1を保持。自動でusage/2へ変更しない |
@@ -153,23 +159,23 @@ NAの参照先には理由・確認者を含む定義が必要である。上の
 | agreement・doctor | 共有config/validatorの影響を確認。既存の承認日記録・非verifyの例外契約を保持。doctorで品質コマンドを実行しない |
 | tests・smoke・公開型・配布物 | 旧fixtureを保持する履歴試験とv2新規試験、公開型のstrict検査、tarball実行、Node22/24、offline・SIGINT・既存hash/予算回帰を確認 |
 
-kitの現在の直接依存はcoreだけでyamlはない。REQ-047の許容内でyaml依存とlock変更を提案する。coreの既存zod以外や新パッケージを当然に追加しない。sync loaderは下の実測に基づく最小案とし、必須schemas引数の追加を前提にしない。他6 JSON、Report2、RunSummary、履歴1の閲覧と元のDoDは削らない。
+kitの現在の直接依存はcoreだけでyamlはない。REQ-047の許容内でyaml依存とlock変更を提案する。coreの既存zod以外や新パッケージを当然に追加しない。sync loaderは下の実測に基づく最小案とし、必須schemas引数の追加を前提にしない。他6 JSON、Report2、RunSummary、履歴1の閲覧と全要件/タスク/必須CIの条件は削らない。
 
-### 保護された互換差分 C1〜C5
+### 保護された互換差分 C1〜C5（R-C001-05）
 
 | 候補 | 具体的な衝突・扱い |
 |---|---|
 | C1 REQ-055の旧verify形 | 現在の正確な{check,status:fail,detail}の期待値はv2形と両立しない。FAIL・日本語detail・exit1は維持し、形の変更はR01に結び付く保護差分として提示する。個別承認前に既存assertionを変更しない |
 | C2 R01Aのmissing-change | change必須経路の--change未指定はaborted2だが、有効な非実在IDはREQ-055の存在FAIL1である。両者を混同しない。R01の意図が後者もabortedなら、便宜変更せず採否を踏まえて再設計する |
-| C3 REQ-073 | Evidenceの未対応版2を拒否する現行Scenario/診断とEvidence2導入が衝突する。便宜的に未対応版を3へ書換えず、R01/R03の採否後に必要な規範差分・既存期待値変更の明示承認を得る |
+| C3 REQ-073 | Evidenceの未対応版2を拒否する現行Scenario/診断とEvidence2導入が衝突する。便宜的に未対応版を3へ書換えず、R05の採否を得てから、必要な既存期待値変更の明示承認を得る |
 | C4 埋め込み・公開型 | Evidence1を埋め込む型・smoke・report/reuseの旧定数を棚卸しする。履歴のbytes・documents省略を保持し、現行書出しだけをv2へ一体移行する |
 | C5 診断・同期性 | stderr空や同期/予算の既存assertionを、観測warningに合わせて弱めない。配布時の実際の挙動を確認し、必要な互換変更は承認材料として残す |
 
-これらは変更済み・承認済みではない。R01のbare経路の採否、R03の正常PASSの範囲と互換移行へ結び付け、要件番号の定義を便宜的に変更しない。
+これらは変更済み・承認済みではない。R-C001-05で非互換範囲の採否を明示し、具体的assertion変更は差分を棚卸しして個別承認を得る。R01のbare経路とR03/04の正常PASSの範囲にも結び付け、要件番号の定義を便宜的に変更しない。
 
 ## 技術的に確認した範囲
 
-以下は実装成功の判定ではなく、設計候補の実現性を限定して調べた事実である。実験は製品WTのignored `node_modules/.cache/` 内に保存した。
+以下は実装成功の判定ではなく、設計候補の実現性を限定して調べた事実である。以下は当時の実験記録の要点であり、Git対象外の保存先を読者が開ける証拠として参照しない。
 
 | 実測 | 事実・制限 |
 |---|---|
@@ -178,12 +184,12 @@ kitの現在の直接依存はcoreだけでyamlはない。REQ-047の許容内�
 | 観測器の診断 | Node22では専有V8 coverage観測器の終了時に「Precise coverage has not been started」も出た。原因の独立再現はしていない。loader失敗とは確認しておらず、stderr cleanとも主張しない |
 | OpenSpec1.14.3 | scratchへ既存root/changeをコピーしたstrict control0。同一byteの.openspec.yamlをverification.yamlへコピー後もstrict0/issues[]。ファイル配置の許容だけであり、plan内容schema/意味の検証ではない |
 
-証跡は同WTの `c001-technical-experiments-20261029/result.json` と `c001-node2212-technical-20261029/result.json`。[Node22.12公式docs](https://nodejs.org/download/release/v22.12.0/docs/api/modules.html#loading-ecmascript-modules-using-require)は同期ESM graphのrequireを扱い、TLA graphは対象外である。製品統合・tarball・CLIのJSON/日本語stderr/互換性は未検証。後日のnative CIと配布検証を必要とし、global warning抑制・設定緩和・既存assertionの無承認変更では解決しない。
+[Node22.12公式docs](https://nodejs.org/download/release/v22.12.0/docs/api/modules.html#loading-ecmascript-modules-using-require)は同期ESM graphのrequireを扱い、TLA graphは対象外である。製品統合・tarball・CLIのJSON/日本語stderr/互換性は未検証。後日のnative CIと配布検証を必要とし、global warning抑制・設定緩和・既存assertionの無承認変更では解決しない。
 
 ## 採否と完了条件
 
-R01はbare verifyの境界、R02はevaluated、R03は最小adapter・plan・producer mapping・S1/bootstrap/private handoffの追加契約と依存を判断する。日常的なsource照合・同期loader・利用側の追従は技術作業として扱い、3質問への人の回答を代行しない。
+R01はbare verifyの境界、R02はevaluated、R03は最小adapter・plan・producer mapping、R04はS1/bootstrap/private handoffの追加契約と依存を判断する。R05はC1〜C5、R06はローカルDoD、R07はquality移行、R08はwarn、R09は旧JSON Schema公開、R10はspec-onlyの計数を判断する。日常的なsource照合・同期loader・利用側の追従は技術作業として扱い、10質問への人の回答を代行しない。
 
-C003には全provider、全host隔離、広いCI成果物取得/再利用連鎖、最小接続以外のpartial取得経路、全禁止キーの網羅が残る。C001の最小接続の適格性・実施確認・必須のpartial/aborted分類はその残作業へ先送りしない。S2の実出力v2と全利用側移行、normal done ci/PASS・要判断なし・0、独立trusted TのPASS、全要件のID付き試験、全タスクと必須CI・配布検証という元のDoDを維持する。
+C003には全provider、全host隔離、広いCI成果物取得/再利用連鎖、最小接続以外のpartial取得経路、全禁止キーの網羅が残る。C001の最小接続の適格性・実施確認・必須のpartial/aborted分類はその残作業へ先送りしない。S2の実出力v2と全利用側移行、ローカルdone/localの0、最終done/ciのPASS・要判断なし・0、独立trusted TのPASS、全要件のID付き試験、全タスクと必須CI・配布検証を確認する。
 
-著述3回のactual model/session/exit/denialsは[traceの出典](trace.md#全a候補と著述の出典)に記した。原文3稿はignored領域で無改変のまま保持し、本候補では指定された既存要件との整合を取った。追加AI評価0、過去PR139ローカル回数不明、上限リセットなし。独立レビュー・人の採否は未実施である。
+著述3回のactual model/session/exit/denialsは[作業記録](../../../docs/worklog/2026-10-30/spec-verify-v2-c001.md)に記した。原文3稿はignored領域で無改変のまま保持し、本候補では指定された既存要件との整合を取った。追加AI評価0、過去PR139ローカル回数不明、上限リセットなし。独立レビュー・人の採否は未実施である。

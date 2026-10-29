@@ -6,11 +6,11 @@
 
 ## What Changes
 
-- **BREAKING** verify JSON を `schemaVersion: 2.0.0` の実行状態・scope・4値判定へ移す。aborted と終了コード0〜3を契約試験にし、旧1.0.0は履歴閲覧に限って残す。
+- **BREAKING** verify JSON を `schemaVersion: 2.0.0` の実行状態・scope・4値判定へ移す。aborted と終了コード0〜3を契約試験にし、旧1.0.0は履歴閲覧に限って残す。旧JSON Schemaの追加公開案はR-C001-09で判断する。
 - quality.yaml `version: 2` を読み、対象外の理由・確認者、比較条件、証拠不足、集約を純関数で判定する。正常PASSに必要な最小実証跡の取得範囲はR-C001-03で確定し、未取得・未照合の証拠をPASSにしない。
 - kit/CLI、ci-gate、runner、trace record/report、埋め込みJSON Schema、公開型・配布物・移行説明を一体で追従させる。
 - quality.yamlの初期準備は最小例の手動作成と移行案内を計画する。31副特性のinit生成全体（#66）は含めない。
-- bare verifyの契約衝突（R-C001-01）、`summary.evaluated` の意味（R-C001-02）、正常PASSに必要な最小実証跡の範囲/依存（R-C001-03）を未回答のブロッキング質問としてレビューへ出す。推奨案を承認済みとは扱わない。
+- bare verifyの契約衝突（R-C001-01）、`summary.evaluated` の意味（R-C001-02）、最小実証跡の範囲（R-C001-03）と信頼する判定器の構築（04）を分け、互換差分（05）・ローカルDoD（06）・quality配置（07）・warn移行（08）・旧JSON Schema公開（09）・spec-only計数（10）も未回答のブロッキング質問としてレビューへ出す。推奨案を承認済みとは扱わない。
 
 ## Capabilities
 
@@ -32,11 +32,11 @@
 
 対象はcore・kit・trace・runner・CLIと `scripts/ci-gate.mjs`、関連fixture、配布smoke、互換性文書。verifyを埋め込むEvidenceは2へ上げ、旧Evidence 1の閲覧を保持する。Report 2とRunSummaryの外形は維持し、既存フィールドへ投影する。core・kit・trace・CLIの公開契約の破壊的変更にはminor、内部追従だけのrunnerにはpatchのchangesetを計画し、形式版とは分ける。
 
-本PRは計画のみ。branch作成時の基準はmain `f397109`。その後、#60の未知キー保持修正（REQ-307）はPR #140と仕様反映・archiveのPR #141で受け入れられ、#60はclose済みで、現在確認したmain `f4e3edb`に含まれる。実装を止めているのは未回答のR-C001-01〜03と仕様ゲートであり、#60を現在の未受入依存には数えない。REQ-305・306を再利用し、新しい要件IDは今回割り当てない。
+本PRは計画のみ。branch作成時の基準はmain `f397109`。その後、#60の未知キー保持修正（REQ-307）はPR #140と仕様反映・archiveのPR #141で受け入れられ、#60はclose済みで、現在確認したmain `f4e3edb`に含まれる。実装を止めているのは未回答のR-C001-01〜10と仕様ゲートであり、#60を現在の未受入依存には数えない。既存REQ-305・307は意味を引き継いでMODIFIEDとし、REQ-306や使用済みIDを別の要件へ再割当しない。新しい要件IDは今回割り当てない。
 
 ## 全Aの場合の未承認候補
 
-[design-candidate-a.md](design-candidate-a.md)に、3質問がすべてAの場合だけのsource/metric・検証計画・最小適格性・信頼する検証器の準備・正常自己ゲート・受入例を整理した。S1準備とprivate handoffを含むR-C001-03 Aの追加具体案は未承認であり、7 capabilityの差分仕様は人の採否前に置き換えていない。Bがあれば該当部分を再設計し、この全A案を無条件に実装しない。
+[design-candidate-a.md](design-candidate-a.md)に、確認事項10件がすべてAの場合だけのsource/metric・検証計画・最小適格性・信頼する検証器の準備・正常自己ゲート・受入例を整理した。S1準備とprivate handoffを含むR-C001-04 Aの追加具体案は未承認であり、7 capabilityの差分仕様には採否前の候補と既存仕様との整合修正を記した。Bがあれば該当部分を再設計し、この全A案を無条件に実装しない。
 
 ## C-003との境界
 

@@ -6,7 +6,7 @@
 Source: REQ-066
 
 #### Scenario: 合格した結果を記録する
-- **WHEN** 完了ゲートに合格する change に、未コミットの変更のない作業ツリーで `loomake trace record --change c1` を実行する
+- **WHEN** ci完了ゲートに合格するchangeに、未コミットの変更のない作業ツリーで `loomake trace record --change c1 --scope ci` を実行する
 - **THEN** `.loomake/evidence/c1/` に JSON のファイルが 1 つ作られ、verify の結果・HEAD のコミットの SHA・コミットの日時・記録した日時が入り、終了コードは 0 である
 
 #### Scenario: コミットを案内する
