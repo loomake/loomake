@@ -8,7 +8,7 @@
 ## Draft PR作成後の引き継ぎ
 
 1. やったこと：管理役が計画head `f7092d6` をpushし、[Draft PR #149](https://github.com/loomake/loomake/pull/149)を作成した。この追記は作業記録だけを変更する。
-2. verifyの結果：計画のstrictはexit 0、spec-onlyはT-URL-01だけでexit 1を維持。管理役からの引継ぎでは、PR148は[CI40855069293](https://github.com/loomake/loomake/actions/runs/40855069293)の通常verifyとCodeQL成功を確認してmain `f4e3edb`へ受入済み。CLI側の検証・判断待ちの記録は[CLIの作業記録](feat-cli-reference-generation.md#cli修正の全os検証と判断待ち)へ移した。
+2. verifyの結果：計画のstrictはexit 0、spec-onlyはT-URL-01だけでexit 1を維持。管理役からの引継ぎでは、PR148は[CI40855069293](https://github.com/loomake/loomake/actions/runs/40855069293)の通常verifyとCodeQL成功を確認してmain `f4e3edb`へ受入済み。CLI側の検証・判断待ちの記録は[CLIの作業記録](feat-cli-reference-generation.md)へ移した。
 3. 残る確認事項：T-URL-01は未回答。モデル識別子は不明、Opusの設計・独立した設計レビュー・最終レビューは未実施のままで、今回の記録をレビューや承認と扱わない。
 4. 次にやること：記録コミットを管理役へ引き継ぎ、pushは管理役が行う。T-URL-01の人の承認・別のapply指示・仕様ゲート成功まで実装を始めない。
 

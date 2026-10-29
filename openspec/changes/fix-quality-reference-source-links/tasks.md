@@ -3,7 +3,7 @@
 ## 1. 計画と承認
 
 - [x] 1.1 proposal・差分仕様・design・traceを揃え、REQ-322の既存本文と3 Scenarioを保持する。strict成功と、spec-onlyがT-URL-01未回答だけで失敗することを確認する
-- [ ] 1.2 T-URL-01の人の回答・承認元をtraceへ記録し、承認された範囲を照合する。`pnpm -s verify --change fix-quality-reference-source-links --spec-only` がexit 0になることを確認する。承認前は製品・生成ページ・試験を編集しない
+- [x] 1.2 T-URL-01の人の回答・承認元をtraceへ記録し、承認された範囲を照合する。`pnpm -s verify --change fix-quality-reference-source-links --spec-only` がexit 0になることを確認する。承認前は製品・生成ページ・試験を編集しない
 
 ## 2. 生成元リンクと回帰試験
 
@@ -12,7 +12,7 @@
 
 ## 3. 統合確認
 
-- [ ] 3.1 strict・関連試験・lint/typecheckと `pnpm -s verify --change fix-quality-reference-source-links --done` を成功させる。REQ-322対応のURL解決を含む単体試験と全タスク、対象headの必須CIと別の新しいOpus sessionの最終レビューを確認する。AI評価と自動レビューは、実行時点のagent-workflowに従って区別して記録する。担当・モデル不明や代替・未実施工程はagent-workflowに従って記録する <!-- loomake:gate=done -->
+- [ ] 3.1 strict・関連試験・lint/typecheckと `pnpm -s verify --change fix-quality-reference-source-links --done` を成功させる。REQ-322対応のURL解決を含む単体試験と全タスク、対象headの必須CIと別の新しいOpus sessionの最終レビューを確認する。AI評価と自動レビューの区別、担当・モデル不明や代替・未実施工程は、実行時点のagent-workflowに従って記録する <!-- loomake:gate=done -->
 
 site/docs SHAを固定したローカルbuildと描画後hrefの抽出は、担当と環境が揃った場合の追加確認とする。実施可否と結果を記録し、このchangeの完了条件には含めない。担当・設計・レビューの実行履歴は作業記録へ集約する。
 

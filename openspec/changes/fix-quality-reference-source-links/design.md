@@ -4,7 +4,7 @@
 
 動機と変更範囲はproposalを参照する。比較基準はmain `f4e3edb7145f35dac49fd139902ab17c5592a5d5`。rendererと生成済みページの2つの相対hrefは、GitHubではソースURLへ、サイトでは同じサイトの `/packages/` へ解決される。観測したのはURL解決とローカルファイルの存在であり、HTTP到達や公開の確認ではない。
 
-T-URL-01は未回答で、回答・回答者・回答日は空である。以下は承認待ちの案であり、人がAを承認した場合に限って使う。A/Bの採否は決めない。Aの承認記録、別のapply指示、仕様ゲートexit 0がそろうまで、renderer・生成ページ・試験は編集しない。Bまたは空欄なら実装しない。
+T-URL-01は[2026-10-30の明示コメント](https://github.com/loomake/loomake/pull/149#issuecomment-6509157217)でAが承認された。実装前の条件だった作業記録の競合は、mainのPR #144記録をそのまま保持して解消した。既存のOpus設計と今回の実装指示に従い、traceの承認記録と仕様ゲートexit 0を確認してから、既存1 assertionの置換と追加検査、2 hrefの修正を進める。
 
 ## Goals / Non-Goals
 
@@ -61,4 +61,4 @@ T-URL-01のA承認を記録し、仕様ゲート成功と別のapply指示を確
 
 ## 設計の実行記録
 
-担当・モデル・セッション・設計生成とレビューの区別は、[作業記録](../../../docs/worklog/2026-10-29/spec-quality-reference-source-links.md#opus新規設計の反映と実行可否の訂正)を参照する。
+担当・モデル・セッション・設計生成とレビューの区別は、[設計反映時の作業記録](../../../docs/worklog/2026-10-29/spec-quality-reference-source-links.md#opus新規設計の反映と実行可否の訂正)と[2026-10-30の作業記録](../../../docs/worklog/2026-10-30/spec-quality-reference-source-links.md)を参照する。
