@@ -34,3 +34,10 @@
 2. verify の結果：最終の関連unit 12ファイル202試験、配布経路の新規1試験、全体lint/typecheck、build、OpenSpec全体strict 35/35、両生成ページのcheckは成功。通常npm cacheのENOSPCを記録し、TMPDIRとnpm_config_cacheを専有worktree内へ指定した同じ配布試験は成功した。文書・changesetはyomiyasu run/verify済み。
 3. 残っている確認事項・仮定：5/6タスク完了。3.1は独立レビュー・native CIと最終doneの確認待ちで未チェック。全体doneをローカルで反復せず、設定・期限・既存期待値を緩めていない。
 4. 次にやること：実装を固定して管理役へ渡す。push・PR作成、独立レビューとCIの受入は管理役が行う。
+
+## タスク3.1の自己タスク記録と最終CIへの引き継ぎ
+
+1. やったこと：[PR144](https://github.com/loomake/loomake/pull/144)の実装head `a346937`は独立レビュー1回で指摘なし。初回CIの合格結果を受け、doneが唯一未チェックとした自己タスク3.1をチェックした。PR作成は宛先の公開性・同repoの公開済みhead・利用者が明示したdeliveryスキルのPR作成規定を確認し、縮小本文で通常の自動承認レビューを通過した。
+2. verify の結果：管理役が[CI40819056146](https://github.com/loomake/loomake/actions/runs/40819056146)のquality・Node20/22成功と[CodeQL40819056145](https://github.com/loomake/loomake/actions/runs/40819056145)成功を確認。qualityは102ファイル・1380件成功・既存8件skip。対象doneは3.1未チェックの1件だけ失敗し、lint・型・テスト・要件ごとのテストを含む他の検査はすべて合格した。
+3. 残っている確認事項・仮定：この記録を含む最終headのdone・全必須CIは待機中で、最終受入はしていない。製品仕様の未回答はなく、製品コード・既存試験・設定は変更していない。
+4. 次にやること：記録だけの1コミットをpushし、管理役が最終headのdone・全必須CI成功を確認して受け入れる。Issue104の完了判断と仕様反映・archiveはその後に行う。

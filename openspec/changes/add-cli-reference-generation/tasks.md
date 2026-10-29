@@ -13,7 +13,7 @@
 
 ## 3. 統合確認
 
-- [ ] 3.1 lint・型検査・関連試験・全体完了ゲートを通し、REQ-323〜325のID付き試験と独立レビュー、最終headの`pnpm -s verify --change add-cli-reference-generation --done`合格を確認する <!-- loomake:gate=done -->
+- [x] 3.1 lint・型検査・関連試験・全体完了ゲートを通し、REQ-323〜325のID付き試験と独立レビュー、最終headの`pnpm -s verify --change add-cli-reference-generation --done`合格を確認する <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
