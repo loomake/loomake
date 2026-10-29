@@ -27,7 +27,9 @@
     "./schema/quality.schema.json": "./schema/quality.schema.json",
     "./schema/trace.schema.json": "./schema/trace.schema.json",
     "./schema/spec.schema.json": "./schema/spec.schema.json",
-    "./schema/tasks.schema.json": "./schema/tasks.schema.json"
+    "./schema/tasks.schema.json": "./schema/tasks.schema.json",
+    "./schema/evidence.schema.json": "./schema/evidence.schema.json",
+    "./schema/report.schema.json": "./schema/report.schema.json"
   },
   "files": [
     "dist",
@@ -44,7 +46,9 @@
       "./schema/quality.schema.json": "./schema/quality.schema.json",
       "./schema/trace.schema.json": "./schema/trace.schema.json",
       "./schema/spec.schema.json": "./schema/spec.schema.json",
-      "./schema/tasks.schema.json": "./schema/tasks.schema.json"
+      "./schema/tasks.schema.json": "./schema/tasks.schema.json",
+      "./schema/evidence.schema.json": "./schema/evidence.schema.json",
+      "./schema/report.schema.json": "./schema/report.schema.json"
     },
     "provenance": true
   },

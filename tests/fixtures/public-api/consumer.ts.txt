@@ -1,9 +1,9 @@
 import {
-  createAgreement, parseTrace, parseTasks, parseSpec, extractTestRequirements, VERIFY_RESULT_SCHEMA_VERSION, loadParserSchemas, TRACE_SCHEMA_VERSION, SPEC_SCHEMA_VERSION, TASKS_SCHEMA_VERSION,
+  createAgreement, parseTrace, parseTasks, parseSpec, extractTestRequirements, VERIFY_RESULT_SCHEMA_VERSION, loadParserSchemas, TRACE_SCHEMA_VERSION, SPEC_SCHEMA_VERSION, TASKS_SCHEMA_VERSION, loadTraceSchemas, type Evidence as CoreEvidence, type EvidenceDocument as CoreEvidenceDocument, type Report as CoreReport, type ReportRow as CoreReportRow,
   type ParseError, type Trace, type LedgerRow, type QuestionRow, type AssumptionRow, type SpecOperation, type SpecRequirement, type Task, type VerifyResult, type VerifyCheckResult,
 } from '@loomake/core';
 import { evaluateAgreement, evaluateTestCoverage, type AgreementDecision, type TestCoverageDecision, runVerify, formatVerifyResult, UsageError, type VerifyOptions } from '@loomake/kit';
-import { runRecord, runReport, buildReport, EVIDENCE_SCHEMA_VERSION, type Evidence, type Report } from '@loomake/trace';
+import { runRecord, runReport, buildReport, EVIDENCE_SCHEMA_VERSION, type Evidence, type EvidenceDocument, type Report, type ReportRow } from '@loomake/trace';
 import { runRun, maskSecrets, type RunOptions, type RunSummary } from '@loomake/runner';
 
 type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
@@ -52,4 +52,16 @@ export async function consumeParserContracts(trace: Trace, spec: SpecRequirement
   const operation: SpecOperation | null = schemas.specSchema.parse(spec)[0].op;
   const parsedTasks: Task[] = schemas.tasksSchema.parse(tasks);
   return { versions, ledger, questions, assumptions, operation, parsedTasks };
+}
+
+// REQ-302・REQ-303・REQ-304: 従来の公開元と導出型を同じ配布物から使う。
+export async function consumeTraceContracts(evidence: Evidence, document: EvidenceDocument, report: Report, row: ReportRow) {
+  const schemas = await loadTraceSchemas();
+  const futureEvidence: CoreEvidence = { ...evidence, schemaVersion: 9.5 };
+  const futureReport: CoreReport = { ...report, schemaVersion: -1 };
+  const saved: CoreEvidenceDocument = schemas.evidenceDocumentSchema.parse(document);
+  const result: CoreReportRow = schemas.reportRowSchema.parse(row);
+  const oldEvidence: Evidence = schemas.evidenceSchema.parse(futureEvidence);
+  const oldReport: Report = schemas.reportSchema.parse(futureReport);
+  return { saved, result, oldEvidence, oldReport };
 }

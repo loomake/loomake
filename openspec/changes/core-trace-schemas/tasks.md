@@ -7,7 +7,7 @@
 ## 2. 実装
 
 - [x] 2.1 core の 4 構造スキーマ・導出型・遅延 loader を追加し、trace の従来の型と定数を再エクスポートする。同期実行コードを保持する（REQ-302・REQ-303）
-- [ ] 2.2 Evidence/Report の JSON Schema を生成し、通常・publish の公開入口と配布確認を追加する。既存 JSON を保持する（REQ-304）
+- [x] 2.2 Evidence/Report の JSON Schema を生成し、通常・publish の公開入口と配布確認を追加する。既存 JSON を保持する（REQ-304）
 - [ ] 2.3 ID 付き試験・changeset を追加し、focused tests・lint・型チェックを通す（REQ-302〜REQ-304）
 
 ## 3. 確認
