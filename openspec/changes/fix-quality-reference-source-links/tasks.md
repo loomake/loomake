@@ -2,7 +2,7 @@
 
 ## 1. 計画と承認
 
-- [x] 1.1 proposal・差分仕様・design・traceを揃え、REQ-322全文と既存3 Scenarioを保持する。strict成功と、spec-onlyがT-URL-01未回答だけで失敗することを確認する
+- [x] 1.1 proposal・差分仕様・design・traceを揃え、REQ-322の既存本文と3 Scenarioを保持する。strict成功と、spec-onlyがT-URL-01未回答だけで失敗することを確認する
 - [ ] 1.2 T-URL-01の人の回答・承認元をtraceへ記録し、承認された範囲を照合する。`pnpm -s verify --change fix-quality-reference-source-links --spec-only` がexit 0になることを確認する。承認前は製品・生成ページ・試験を編集しない
 
 ## 2. 生成元リンクと回帰試験
@@ -12,9 +12,9 @@
 
 ## 3. 統合確認
 
-- [ ] 3.1 strict・関連試験・lint/typecheckと `pnpm -s verify --change fix-quality-reference-source-links --done` を成功させる。固定site/docs SHAで描画後の2 href、REQ-322対応試験と全タスク、対象headの必須CIと別の新しいOpus sessionの最終レビューを確認する。自動bot用1枠を確保し、設計生成とAI評価を区別して回数を記録する。担当・モデル不明や代替・未実施工程はagent-workflowに従って記録する <!-- loomake:gate=done -->
+- [ ] 3.1 strict・関連試験・lint/typecheckと `pnpm -s verify --change fix-quality-reference-source-links --done` を成功させる。REQ-322対応のURL解決を含む単体試験と全タスク、対象headの必須CIと別の新しいOpus sessionの最終レビューを確認する。AI評価と自動レビューは、実行時点のagent-workflowに従って区別して記録する。担当・モデル不明や代替・未実施工程はagent-workflowに従って記録する <!-- loomake:gate=done -->
 
-この計画整合時点のAI評価は0回。設計レビューと最終レビューは未実施で、設計生成を評価へ数えない。最終レビューは後日の別Opus session、自動bot予定分は1枠を確保する。
+site/docs SHAを固定したローカルbuildと描画後hrefの抽出は、担当と環境が揃った場合の追加確認とする。実施可否と結果を記録し、このchangeの完了条件には含めない。担当・設計・レビューの実行履歴は作業記録へ集約する。
 
 ## Workflow follow-up
 

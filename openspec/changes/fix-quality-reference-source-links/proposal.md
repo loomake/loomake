@@ -6,7 +6,7 @@ quality.yamlリファレンスの生成元2リンクはGitHubではソースのU
 
 ## What Changes
 
-- REQ-322の本文と既存3 Scenarioを保持し、GitHubとサイトで同じ生成元を参照するScenarioを足す。
+- REQ-322の既存本文と3 Scenarioを保持し、掲載先に依存しない完全な生成元URLの要件文と、GitHubとサイトで同じ生成元を参照するScenarioを足す。
 - rendererの生成元2リンクを `https://github.com/loomake/loomake/blob/main/packages/` 以下へ変え、qualityリファレンスを再生成する案とする。
 - 2リンクのラベルとhrefの完全一致・各1回・ソースファイルの実在・GitHubとサイトを基準にした解決結果を確認する回帰試験を計画する。
 
@@ -35,4 +35,4 @@ expect(page).toContain('../../../packages/core/schema/quality.schema.json');
 expect(page).toContain('https://github.com/loomake/loomake/blob/main/packages/core/schema/quality.schema.json');
 ```
 
-Aはこの置換と上の追加検査を承認する。Bは承認せず現状を保持して別案を検討する。おすすめはA。GitHubでは現在と同じソースURLを保ち、サイトでの誤解決を直し、2 hrefの検査を追加するためである。回答はtraceの同IDへ承認元とともに記録する。この提案では採否を決めず、renderer・生成ページ・試験は編集しない。
+Aはこの置換と上の追加検査を承認する。Bは承認せず現状を保持して別案を検討する。おすすめはA。GitHubでは現在と同じソースURLを保ち、サイトでの誤解決を直し、2 hrefの検査を追加するためである。既存の `docs/guide/3.reference/1.compatibility.md` も同じ `blob/main` の完全なURLを使っている。回答はtraceの同IDへ承認元とともに記録する。この提案では採否を決めず、renderer・生成ページ・試験は編集しない。
