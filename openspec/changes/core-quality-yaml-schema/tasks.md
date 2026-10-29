@@ -13,4 +13,4 @@
 ## 3. 確認
 
 - [x] 3.1 `pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` を通す
-- [ ] 3.2 `pnpm -s verify --change core-quality-yaml-schema --done` を通す <!-- loomake:gate=done -->
+- [x] 3.2 `pnpm -s verify --change core-quality-yaml-schema --done` を通す <!-- loomake:gate=done -->
