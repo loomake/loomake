@@ -119,6 +119,21 @@ export async function check(target) {
   assert.deepEqual(kit.evaluateAgreement(core.createAgreement('trace.md', { ledger: [], questions: [], assumptions: [] }).value), { blockingQuestions: [], pendingRequirements: [], unapprovedAssumptions: [], missingSources: [] });
   assert.deepEqual(kit.evaluateTestCoverage(['REQ-149'], {}), { coverage: { 'REQ-149': [] }, missing: ['REQ-149'] });
   assert.equal(json(require.resolve('@loomake/core/schema/verify-result.schema.json')).properties.schemaVersion.const, core.VERIFY_RESULT_SCHEMA_VERSION);
+  // Markdown 解析結果の契約は、配布された入口と JSON Schema から使える（REQ-299・REQ-300）。
+  const parserSchemas = await core.loadParserSchemas();
+  const parserContracts = [
+    ['trace', core.TRACE_SCHEMA_VERSION, core.parseTrace('trace.md', core.createTraceTemplate({ changeId: 'empty' })).value, 'object'],
+    ['spec', core.SPEC_SCHEMA_VERSION, core.parseSpec('spec.md', '### Requirement: empty').value, 'array'],
+    ['tasks', core.TASKS_SCHEMA_VERSION, core.parseTasks('tasks.md', '- [x] done').value, 'array'],
+  ];
+  for (const [name, version, value, type] of parserContracts) {
+    assert.equal(version, '1.0.0');
+    assert.deepEqual(parserSchemas[`${name}Schema`].parse(value), value);
+    const schema = json(require.resolve(`@loomake/core/schema/${name}.schema.json`));
+    assert.equal(schema.type, type);
+    assert.equal(Object.hasOwn(schema, 'version'), false);
+  }
+
   const cli = join(consumer, 'node_modules/loomake/dist/cli.js');
   const command = (...args) => run(process.execPath, [cli, ...args], consumer);
   const installedBin = join(consumer, 'node_modules/.bin', win ? 'loomake.cmd' : 'loomake');

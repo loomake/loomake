@@ -1,20 +1,9 @@
+import type { z } from 'zod';
+import type { specOperationSchema, specRequirementSchema } from './parser-schemas.js';
 import { REQ_ID, fenceMask, splitLines, type ParseError, type ParseResult } from './parse.js';
 
-export type SpecOperation = 'ADDED' | 'MODIFIED' | 'REMOVED' | 'RENAMED';
-
-export type SpecRequirement = {
-  /** 属する見出し（`## ADDED Requirements` など）の操作。どの見出しの下にも無いときは null */
-  op: SpecOperation | null;
-  /** Requirement の名前。RENAMED では新しい名前（TO） */
-  name: string;
-  /** RENAMED の古い名前（FROM）。RENAMED 以外では無い */
-  from?: string;
-  /** `Source:` 行にある要件 ID */
-  sources: string[];
-  scenarios: number;
-  /** `### Requirement:` の行（RENAMED では FROM の行）の行番号 */
-  line: number;
-};
+export type SpecOperation = z.infer<typeof specOperationSchema>;
+export type SpecRequirement = z.infer<typeof specRequirementSchema>;
 
 // OpenSpec 1.14 と同じく、RENAMED の FROM・TO は箇条書きの記号を省いてよく、名前はバッククォートで囲んでよい
 const FROM = /^\s*[-*+]?\s*FROM:\s*`?###\s*Requirement:\s*(.+?)`?\s*$/;

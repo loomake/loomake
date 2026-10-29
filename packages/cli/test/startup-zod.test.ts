@@ -36,6 +36,7 @@ describe('CLI の起動で zod を読まない', () => {
   it('[REQ-050][REQ-284] zod を読むファイルは、この検査で見つかる', () => {
     expect([...staticPackages(join(packages, 'core', 'src', 'json-schema.ts'))]).toContain('zod');
     expect([...staticPackages(join(packages, 'core', 'src', 'verify-result-schema.ts'))]).toContain('zod');
+    expect([...staticPackages(join(packages, 'core', 'src', 'parser-schemas.ts'))]).toContain('zod');
     expect([...staticPackages(join(packages, 'core', 'src', 'quality-schema.ts'))]).toContain('zod');
   });
 });

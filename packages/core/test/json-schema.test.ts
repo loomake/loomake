@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { qualitySchema } from '../src/quality-schema.js';
+import { createTraceTemplate, parseTrace, parseSpec, parseTasks } from '../src/index.js';
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -11,12 +12,35 @@ const pkgDir = join(import.meta.dirname, '..');
 const schemaDir = join(pkgDir, 'schema');
 
 describe('JSON Schema の書き出し', () => {
-  it('[REQ-276][REQ-287] Zod スキーマから書き出した内容と packages/core/schema/ のファイルが一致する', () => {
+  it('[REQ-276][REQ-287][REQ-300] Zod スキーマから書き出した内容と packages/core/schema/ のファイルが一致する', () => {
     const rendered = renderJsonSchemas();
     expect(Object.keys(rendered).sort()).toEqual(readdirSync(schemaDir).filter((f) => f.endsWith('.json')).sort());
     for (const [file, text] of Object.entries(rendered)) {
       // Windows の checkout では改行が CRLF になりうるので、改行をそろえて比べる
       expect(readFileSync(join(schemaDir, file), 'utf8').replace(/\r\n/g, '\n'), `schema/${file} が Zod スキーマと違います。pnpm --filter @loomake/core schema:write で書き出してください`).toBe(text);
+    }
+  });
+
+
+  it('[REQ-300] 3 形式の JSON Schema は公開 exports から読み取れ、既存の解析値を検証する', () => {
+    const rendered = renderJsonSchemas();
+    const pkg = JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf8'));
+    const traceText = readFileSync(join(pkgDir, 'test/fixtures/openspec-project/openspec/changes/add-x/trace.md'), 'utf8').replace('反映済', '対応中');
+    const examples = [
+      ['trace.schema.json', parseTrace('trace.md', traceText).value, { ledger: [], questions: 'bad', assumptions: [] }],
+      ['spec.schema.json', parseSpec('spec.md', '### Requirement: outside\n## RENAMED Requirements\n- FROM: ### Requirement: old\n- TO: ### Requirement: new').value, [{ op: 'UNKNOWN', name: 'x', sources: [], scenarios: 0, line: 1 }]],
+      ['tasks.schema.json', parseTasks('tasks.md', '- [ ] first\n- [X] second').value, [{ checked: 1, text: 'x', line: 1 }]],
+    ] as const;
+    for (const [file, value, invalid] of examples) {
+      const schema = JSON.parse(rendered[file]);
+      const validate = new Ajv2020({ strict: false }).compile(schema);
+      for (const exports of [pkg.exports, pkg.publishConfig.exports]) expect(exports[`./schema/${file}`]).toBe(`./schema/${file}`);
+      expect(schema.$id).toBe(`https://loomake.dev/schema/${file}`);
+      expect(schema).not.toHaveProperty('version');
+      expect(schema.properties ?? {}).not.toHaveProperty('version');
+      expect(validate(value), JSON.stringify(validate.errors)).toBe(true);
+      expect(validate(invalid)).toBe(false);
+      expect(validate(file === 'trace.schema.json' ? parseTrace('trace.md', createTraceTemplate({ changeId: 'empty' })).value : [])).toBe(true);
     }
   });
 
@@ -68,7 +92,7 @@ describe('JSON Schema の書き出し', () => {
     }
   });
 
-  it('[REQ-276][REQ-287] 書き出しのコマンドで schema/ のファイルを作り直せる', () => {
+  it('[REQ-276][REQ-287][REQ-300] 書き出しのコマンドで schema/ のファイルを作り直せる', () => {
     const work = mkdtempSync(join(tmpdir(), 'loomake-core-schema-'));
     try {
       // 実際の schema/ を書き換えないように、書き出しのスクリプトとビルドの結果を一時ディレクトリに写して実行する

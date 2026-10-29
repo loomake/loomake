@@ -1,6 +1,6 @@
 import {
-  createAgreement, parseTrace, parseTasks, parseSpec, extractTestRequirements, VERIFY_RESULT_SCHEMA_VERSION,
-  type ParseError, type Trace, type Task, type VerifyResult, type VerifyCheckResult,
+  createAgreement, parseTrace, parseTasks, parseSpec, extractTestRequirements, VERIFY_RESULT_SCHEMA_VERSION, loadParserSchemas, TRACE_SCHEMA_VERSION, SPEC_SCHEMA_VERSION, TASKS_SCHEMA_VERSION,
+  type ParseError, type Trace, type LedgerRow, type QuestionRow, type AssumptionRow, type SpecOperation, type SpecRequirement, type Task, type VerifyResult, type VerifyCheckResult,
 } from '@loomake/core';
 import { evaluateAgreement, evaluateTestCoverage, type AgreementDecision, type TestCoverageDecision, runVerify, formatVerifyResult, UsageError, type VerifyOptions } from '@loomake/kit';
 import { runRecord, runReport, buildReport, EVIDENCE_SCHEMA_VERSION, type Evidence, type Report } from '@loomake/trace';
@@ -40,4 +40,16 @@ import { evaluateAgreement as removedAgreement, type AgreementDecision as Remove
 import { evaluateTestCoverage as removedCoverage, type TestCoverageDecision as RemovedCoverage } from '@loomake/core';
 export function consumePolicyApi(trace: Trace): [AgreementDecision, TestCoverageDecision] {
   return [evaluateAgreement(createAgreement('trace.md', trace).value), evaluateTestCoverage(['REQ-148'], {})];
+}
+
+// REQ-298・REQ-299: 配布されたスキーマ由来の型と遅延 loader だけを使う。
+export async function consumeParserContracts(trace: Trace, spec: SpecRequirement[], tasks: Task[]) {
+  const schemas = await loadParserSchemas();
+  const versions: ['1.0.0', '1.0.0', '1.0.0'] = [TRACE_SCHEMA_VERSION, SPEC_SCHEMA_VERSION, TASKS_SCHEMA_VERSION];
+  const ledger: LedgerRow[] = schemas.traceSchema.parse(trace).ledger;
+  const questions: QuestionRow[] = trace.questions;
+  const assumptions: AssumptionRow[] = trace.assumptions;
+  const operation: SpecOperation | null = schemas.specSchema.parse(spec)[0].op;
+  const parsedTasks: Task[] = schemas.tasksSchema.parse(tasks);
+  return { versions, ledger, questions, assumptions, operation, parsedTasks };
 }
