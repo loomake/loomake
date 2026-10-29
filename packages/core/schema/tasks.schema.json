@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "checked": {
+        "type": "boolean"
+      },
+      "text": {
+        "type": "string"
+      },
+      "line": {
+        "type": "number"
+      }
+    },
+    "required": [
+      "checked",
+      "text",
+      "line"
+    ],
+    "additionalProperties": {}
+  },
+  "$id": "https://loomake.dev/schema/tasks.schema.json",
+  "title": "Loomake parsed tasks"
+}

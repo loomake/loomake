@@ -18,6 +18,8 @@
 
 このバージョンは解析結果の構造を表し、パッケージのバージョンとは独立する。Markdown とパーサの返却データにバージョンのフィールドは加えない。スキーマは未知フィールドを受け付け、その値を保持する。
 
+JSON Schema は `@loomake/core/schema/trace.schema.json`・`spec.schema.json`・`tasks.schema.json` から読める。いずれも `.value` の構造を記述する。JSON Schema に独自のバージョン annotation は付けず、上の公開定数で対象スキーマのバージョンを確認する。
+
 ## ライセンス
 
 MIT

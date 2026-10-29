@@ -16,3 +16,8 @@
 - verify：要件 ID 付き試験と Zod の静的 import 検査は 8/8 成功、型チェックは exit 0。README は yomiyasu の検査と最終稿の照合を実行した。
 - 確認事項・仮定：なし。
 - 次：task 3.1 の JSON Schema 生成と配布経路。
+
+- やったこと：task 3.1。3 形式の JSON Schema を生成・公開し、既存の配布物 smoke と公開型の利用側 fixture、patch の changeset を追加した。
+- verify：生成差分・AJV による独立検証・parser・静的 import の試験は 14/14 成功。lint と型チェックも exit 0。core を pack して別の利用先へ展開し、公開 exports から定数・loader・JSON を読み取れることを確認した。
+- 確認事項・仮定：なし。JSON に独自のバージョン annotation は加えていない。
+- 次：task 4.1 の全体試験と完了ゲート。ローカル環境の空き容量と POSIX 権限の制約があるため、必要なら同じ head の PR CI で受入を確認する。

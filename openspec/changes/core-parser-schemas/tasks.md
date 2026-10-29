@@ -10,7 +10,7 @@
 
 ## 3. JSON Schema と配布
 
-- [ ] 3.1 JSON Schema の生成・公開 exports・配布物 smoke を拡張し、生成差分・JSON による解析結果の検証・配布物の読込を要件 ID 付きテストで確認する（REQ-300）
+- [x] 3.1 JSON Schema の生成・公開 exports・配布物 smoke を拡張し、生成差分・JSON による解析結果の検証・配布物の読込を要件 ID 付きテストで確認する（REQ-300）
 
 ## 4. 統合検証
 

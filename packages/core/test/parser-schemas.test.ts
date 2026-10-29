@@ -57,6 +57,11 @@ describe('Markdown 解析結果の Zod スキーマ', () => {
     const spec = parseSpec('spec.md', specText);
     const tasks = parseTasks('tasks.md', '* [ ] first\n+ [X] second');
     expect(traceSchema.parse(trace.value)).toEqual(trace.value);
+    expect(ledgerRowSchema.parse(trace.value.ledger[0])).toEqual(trace.value.ledger[0]);
+    expect(questionRowSchema.parse(trace.value.questions[0])).toEqual(trace.value.questions[0]);
+    expect(assumptionRowSchema.parse(trace.value.assumptions[0])).toEqual(trace.value.assumptions[0]);
+    for (const op of ['ADDED', 'MODIFIED', 'REMOVED', 'RENAMED']) expect(specOperationSchema.parse(op)).toBe(op);
+    expect(specOperationSchema.safeParse('UNKNOWN').success).toBe(false);
     expect(specSchema.parse(spec.value)).toEqual(spec.value);
     expect(tasksSchema.parse(tasks.value)).toEqual(tasks.value);
     expect(traceSchema.safeParse({ questions: [], assumptions: [] }).success).toBe(false);

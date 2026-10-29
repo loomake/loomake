@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "op": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "ADDED",
+              "MODIFIED",
+              "REMOVED",
+              "RENAMED"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "name": {
+        "type": "string"
+      },
+      "from": {
+        "type": "string"
+      },
+      "sources": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "scenarios": {
+        "type": "number"
+      },
+      "line": {
+        "type": "number"
+      }
+    },
+    "required": [
+      "op",
+      "name",
+      "sources",
+      "scenarios",
+      "line"
+    ],
+    "additionalProperties": {}
+  },
+  "$id": "https://loomake.dev/schema/spec.schema.json",
+  "title": "Loomake parsed spec"
+}

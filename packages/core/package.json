@@ -24,7 +24,10 @@
       "default": "./dist/index.js"
     },
     "./schema/verify-result.schema.json": "./schema/verify-result.schema.json",
-    "./schema/quality.schema.json": "./schema/quality.schema.json"
+    "./schema/quality.schema.json": "./schema/quality.schema.json",
+    "./schema/trace.schema.json": "./schema/trace.schema.json",
+    "./schema/spec.schema.json": "./schema/spec.schema.json",
+    "./schema/tasks.schema.json": "./schema/tasks.schema.json"
   },
   "files": [
     "dist",
@@ -38,7 +41,10 @@
         "default": "./dist/index.js"
       },
       "./schema/verify-result.schema.json": "./schema/verify-result.schema.json",
-      "./schema/quality.schema.json": "./schema/quality.schema.json"
+      "./schema/quality.schema.json": "./schema/quality.schema.json",
+      "./schema/trace.schema.json": "./schema/trace.schema.json",
+      "./schema/spec.schema.json": "./schema/spec.schema.json",
+      "./schema/tasks.schema.json": "./schema/tasks.schema.json"
     },
     "provenance": true
   },
