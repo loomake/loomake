@@ -14,7 +14,7 @@
 
 ## 4. 統合確認
 
-- [x] 4.1 記録から集計までの子プロセス試験、既存CI・権限・文書テスト、全要件の対応を確認する。空のchangesetと作業記録を追加し、全タスクをチェックした状態の `pnpm -s verify --change profile-slow-ci-tests --done` がexit 0になることを確かめてコミットする。
+- [ ] 4.1 記録から集計までの子プロセス試験、既存CI・権限・文書テスト、全要件の対応を確認する。空のchangesetと作業記録を追加し、全タスクをチェックした状態の `pnpm -s verify --change profile-slow-ci-tests --done` がexit 0になることを確かめてコミットする。
 
 ## Workflow follow-up
 

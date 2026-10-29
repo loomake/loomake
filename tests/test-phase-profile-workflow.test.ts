@@ -34,7 +34,7 @@ describe('Windowsの区間計測workflow', () => {
     expect(stepById('node')).toContain('node-version: 24');
     expect(workflow).toContain('LOOMAKE_TEST_PHASE_PROFILE_DIR: ${{ runner.temp }}/loomake-test-phases');
     expect(workflow).toContain('LOOMAKE_TEST_PHASE_SAMPLE: ${{ matrix.sample }}');
-    expect(stepById('test').match(/^ {8}run: (.*)$/m)?.[1]).toBe("pnpm test tests/ai-journeys.test.ts packages/runner/test/external-budget.test.ts -t '導入・通常操作・失敗と復旧|(?:create|push)の期限後'");
+    expect(stepById('test').match(/^ {8}run: (.*)$/m)?.[1]).toBe("node node_modules/vitest/vitest.mjs run tests/ai-journeys.test.ts packages/runner/test/external-budget.test.ts -t '導入・通常操作・失敗と復旧|(?:create|push)の期限後'");
     expect(workflow).not.toMatch(/continue-on-error|--retry|--repeat|--shard|--testTimeout/);
   });
 

@@ -37,7 +37,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - id: test
-        run: pnpm test tests/ai-journeys.test.ts packages/runner/test/external-budget.test.ts -t '導入・通常操作・失敗と復旧|(?:create|push)の期限後'
+        run: node node_modules/vitest/vitest.mjs run tests/ai-journeys.test.ts packages/runner/test/external-budget.test.ts -t '導入・通常操作・失敗と復旧|(?:create|push)の期限後'
         env:
           LOOMAKE_TEST_PHASE_PROFILE_DIR: ${{ runner.temp }}/loomake-test-phases
           LOOMAKE_TEST_PHASE_SAMPLE: ${{ matrix.sample }}
