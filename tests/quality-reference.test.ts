@@ -210,3 +210,56 @@ describe('qualityリファレンスの生成/check', () => {
     expect(checked.status, checked.stderr).toBe(0);
   });
 });
+
+
+describe('実ページと文書導線', () => {
+  const generatedPath = join(root, 'docs/guide/3.reference/4.quality-yaml.md');
+  const readPage = () => readFileSync(generatedPath, 'utf8').replace(/\r\n/g, '\n');
+  const table = (text: string) => text.split('\n').filter((line) => line.startsWith('| ') && !line.startsWith('| パス |') && !line.startsWith('| --- |'))
+    .map((line) => line.slice(2, -2).split(' | ').map((value) => value.replace(/&#([0-9]+);/g, (_, code: string) => String.fromCodePoint(Number(code)))));
+
+  it('[REQ-320][REQ-322] 保存済みページは全階層の全パスとNA条件を含む', () => {
+    const fixed = ['$', 'version', 'model', 'defaults', 'defaults.window', 'defaults.min_samples', 'report', 'report.status', 'report.publish',
+      'evidence', ...['artifact_retention', 'long_term_store', 'long_term_retention', 'access', 'delete_policy'].map((key) => `evidence.${key}`),
+      'automation', ...['level', 'max_diff_lines', 'require_rollback', 'allowed_paths', 'allowed_paths[]', 'protected_paths', 'protected_paths[]'].map((key) => `automation.${key}`)];
+    const expected = new Set(fixed);
+    for (const [group, ownFields] of [['objectives', ['context', 'task', 'guardrails', 'guardrails[]']], ['product', ['subcharacteristic', 'objectives', 'objectives[]']]] as const) {
+      expected.add(group);
+      expected.add(`${group}.<id>`);
+      for (const name of ['applicability', 'blocking', 'characteristic', 'confirmed_by', 'reason', 'linked_requirements', 'linked_requirements[]', ...ownFields]) expected.add(`${group}.<id>.${name}`);
+      for (const name of ['evidence', 'indicators']) {
+        expected.add(`${group}.<id>.${name}`);
+        expected.add(`${group}.<id>.${name}[]`);
+        for (const field of ['metric', 'source', 'target', 'min_samples']) expected.add(`${group}.<id>.${name}[].${field}`);
+      }
+    }
+    const rows = table(readPage());
+    expect([...new Set(rows.map((row) => row[0]))].sort()).toEqual([...expected].sort());
+    for (const group of ['objectives', 'product']) {
+      const reason = rows.filter((row) => row[0] === `${group}.<id>.reason`);
+      expect(reason.find((row) => row[1].includes('"not_applicable"'))?.[3]).toBe('必須');
+      expect(reason.find((row) => row[1].includes('"applicable"'))?.[3]).toBe('省略可');
+    }
+    expect(rows.find((row) => row[0] === 'evidence')?.[4]).toBe('{}');
+    expect(rows.find((row) => row[0] === 'evidence.artifact_retention')?.[4]).toBe('"90d"');
+    expect(readPage()).not.toContain('scope: local');
+    expect(readPage()).not.toContain('schemaVersion: 2.0.0');
+  });
+
+  it('[REQ-321] 実スキーマからの再生成内容が保存済みページと一致する', () => {
+    expect(readPage(), 'node scripts/generate-quality-reference.mjs で再生成してください').toBe(renderQualityReference(schema));
+    expect(runQualityReference({ check: true, stdout: () => {}, stderr: () => {} })).toBe(0);
+  });
+
+  it('[REQ-322] title/description・生成元と再生成方法を持ち、既存3ページとともに入口から辿れる', () => {
+    const page = readPage();
+    expect(page).toMatch(/^---\ntitle: .+\ndescription: .+\n---\n/);
+    expect(page).toContain('../../../packages/core/schema/quality.schema.json');
+    expect(page).toContain('node scripts/generate-quality-reference.mjs');
+    const index = readFileSync(join(root, 'docs/guide/index.md'), 'utf8');
+    for (const file of ['1.compatibility.md', '2.resources.md', '3.security.md', '4.quality-yaml.md']) {
+      expect(index).toContain(`](3.reference/${file})`);
+      expect(existsSync(join(root, 'docs/guide/3.reference', file))).toBe(true);
+    }
+  });
+});
