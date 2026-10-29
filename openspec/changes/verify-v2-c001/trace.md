@@ -20,6 +20,10 @@ Issue参照：[契約 #61](https://github.com/loomake/loomake/issues/61)、[判�
 
 | ID | 出典 | 種別 | 要約（原文に忠実に） | 状態 | 反映先 |
 |---|---|---|---|---|---|
+| REQ-100 | 現行run「完了ゲートと直し」・4回目レビュー中2 | 既存変更 | runの完了ゲートを明示localにし、純粋判断と既存5 Scenarioを保持する | 確認待ち | specs/run/spec.md |
+| REQ-306 | 現行verification-policy・4回目レビュー中3 | 既存変更 | 件数/summary/verifyへの非接続を集約定義単独の範囲へ限定する | 確認待ち | specs/verification-policy/spec.md |
+| REQ-323 | active CLI差分・4回目レビュー中1 | 既存変更 | 未確定契約を追加しないMUSTをCLI生成単独の範囲へ限定し、改版後の共通定義へ従う | 確認待ち | specs/reference-docs/spec.md |
+| REQ-324 | active CLI差分・4回目レビュー中1 | 既存変更 | help/usage/終了コード/8 JSON等の不変MUSTを共通定義集約単独へ限定する | 確認待ち | specs/reference-docs/spec.md |
 | REQ-036 | 現行verify「仕様ゲートの警告」・追加レビュー重大1 | 既存変更 | spec-onlyの案内PASS/0とdoneの不足/1を分ける候補。採否はR08待ち | 確認待ち | specs/verify/spec.md |
 | REQ-037 | 現行verify「openspec validateの実行」・追加レビュー重大1 | 既存変更 | auto時CLI不在はlocal理由PASSかNA、ci不足の候補をR08で比較する | 確認待ち | specs/verify/spec.md |
 | REQ-038 | 現行verify「完了ゲート」・3回目レビュー中2 | 既存変更 | doneの確認待ちは036と同じ不足/要判断に統一。未完了tasksと実施済み失敗はFAIL | 確認待ち | specs/verify/spec.md |
@@ -70,16 +74,16 @@ REQ-305/306はPR #138、REQ-307は#60保持修正の既存IDである。305・30
 | R-C001-02 | REQ-314 | summary.evaluatedは何件を数えるか | A: checks全件（PASS/FAIL/不足/NA） / B: NAを除く適用対象件数 | A。全4値の合計と一致し、ゼロと全NAを別に説明できる。既存資料には定義がなく採否が必要 | yes | A。[承認元](https://github.com/loomake/loomake/pull/139#issuecomment-6510041693) | rrr-xxx（rrr-www名義・Claude Code代筆） | 2026-10-30 |
 | R-C001-03 | REQ-313・319 | C-001で実証跡を取る範囲をどうするか。adapter・verification.yamlの契約と適格性検査だけでも複数タスクを要する | A: 新鮮なコマンド結果/REQレポートの最小adapter・plan・適格性をC-001へ先行 / B: C-003と並行準備し必要範囲を合同受入 | A。正常/不正/不足を同じCLI/APIで受入可能にする。信頼する判定器の構築は04で別に判断する | yes | A。[承認元](https://github.com/loomake/loomake/pull/139#issuecomment-6510041693) | rrr-xxx（rrr-www名義・Claude Code代筆） | 2026-10-30 |
 | R-C001-04 | REQ-313・318・319 | 信頼する判定器をS1独立changeとして準備するか。追加レビュー用のS1見積は44〜88人時（8時間/人日で5.5〜11人日）、実績ではなく待機を除く作業推定 | A: S1のbase-built checker・private handoff・S2照合契約を採用 / B: その案を採らず信頼基準と依存を再設計 | A。自己申告だけで合格にしない。詳細候補の内訳・再利用/新規・前提を確認して判断する。S2本実装や外部承認待ちの時間は見積外 | yes | A。[承認元](https://github.com/loomake/loomake/pull/139#issuecomment-6510041693) | rrr-xxx（rrr-www名義・Claude Code代筆） | 2026-10-30 |
-| R-C001-05 | REQ-036〜041・050・055・073・114・115・164・183・191・203・274〜276・302〜305・307・315・322〜325 | v2形/警告に加え、183/322の不変条件の範囲、050の性能呼出し、040のskip時coverage、038の不足分類、CLI基準更新を受け入れるか | A: 詳細候補の非互換方針を採用し、未承認仮定done1・skip coverage省略/1・性能処理量保持・CLI定義/基準の更新を含める / B: 非互換範囲を再設計 | A。予算/生成だけの不変条件を別の版移行へ広げない。具体的な旧assertion・46例基準の差分承認は方針承認と別に取得し、未定の緩和/skip追加は含めない | yes |  |  |  |
-| R-C001-06 | REQ-311・312・315・319、AGENTS DoD | done既定ciに対してローカルDoDをどう満たすか | A: ローカルは --done --scope local の0、最終受入は --done --scope ci の0と必須CIを要求するよう規約/guideを移行 / B: ローカルでもci証拠を取得し既定done 0を要求 | A。ローカル完了と最終合格を区別し、CI証拠不足でローカル作業が恒久停止しない。AGENTS・配布規約・PRテンプレートも同時に修正する | yes |  |  |  |
+| R-C001-05 | REQ-036〜041・050・055・073・093・100・114・115・135・164・183・191・203・274〜276・302〜306・307・315・322〜325 | 既存互換差分に加え、323/324の未確定契約追加禁止・help/usage/終了コード/8 JSON不変MUSTの範囲変更、100のlocal化、306の接続範囲を受け入れるか | A: 既存のv2形式・183/322範囲・未承認done1・040/050/191・CLI基準の非互換案を保持し、323/324のMUSTを生成/集約単独へ限定、100を明示local、306を集約定義単独に限定 / B: これらの範囲と互換移行を再設計 | A。別の改版を永久に禁じない範囲へ限定する。未承認仮定done1、skip coverage省略/1、性能条件保持、CLI基準・help更新の方針を含むが、具体的assertion/旧46例の変更承認は別に取得する | yes |  |  |  |
+| R-C001-06 | REQ-100・311・312・315・319、AGENTS DoD | done既定ciに対してローカルDoDをどう満たすか | A: ローカルは --done --scope local の0、最終受入は --done --scope ci の0と必須CIを要求するよう規約/guideを移行 / B: ローカルでもci証拠を取得し既定done 0を要求 | A。ローカル完了と最終合格を区別し、CI証拠不足でローカル作業が恒久停止しない。AGENTS・配布規約・PRテンプレートも同時に修正する | yes |  |  |  |
 | R-C001-07 | REQ-310・312・319 | root quality初期内容と、切替日にopenなPRをどう移行するか | A: 詳細候補のci.test_report 1必須項目を置き、全open PRを棚卸し、実装PRはmain取込と新鮮な実証跡で再検証。spec-only不在許容/done不在3 / B: 初期項目と切替順を再設計 | A。空/全NAで一斉不足にしない。C-001対象だけでなく各PRの承認REQ集合へplanを割り当て、移行できないPRのマージを止める。検証前に品質合格を与えない | yes | A。[承認元](https://github.com/loomake/loomake/pull/139#issuecomment-6510041693) | rrr-xxx（rrr-www名義・Claude Code代筆） | 2026-10-30 |
-| R-C001-08 | REQ-036〜039・191・203・312・314 | warnとskipをゲート/scope別にどう移行し、doneの確認待ち/未承認仮定をどの分類に統一するか | A: spec-onlyの未承認/確認待ちは案内PASS/0、doneは不足+要判断/1。auto CLI不在はlocal理由PASS・ci不足、skip不足1 / B: 同じ分離だがauto CLI不在localだけ理由付きNA | A。036/038のdone確認待ちを不足へ統一し、未承認仮定done1もR05の非互換対象とする。Bはlocal NA件数が異なる。明示trueでの失敗と品質条件FAILは保つ | yes |  |  |  |
+| R-C001-08 | REQ-036〜039・191・203・312・314 | warnとskipをゲート/scope別にどう移行し、doneの確認待ち/未承認仮定をどの分類に統一するか | A: spec-onlyの未承認/確認待ちは案内PASS/0、doneは不足+要判断/1。未知キーは理由PASS、auto CLI不在はlocal理由PASS・ci不足、skip不足1 / B: 同じAの共通部分を保ち、auto CLI不在localだけ理由付きNA | B。4回目レビューの基本AとlocalだけBを合成した案。未知キーの理由PASS等は変えず、実行していないvalidateはNAとする。ci不足、明示trueの失敗、品質条件のFAILを維持する。おすすめであり回答ではない | yes |  |  |  |
 | R-C001-09 | REQ-276・304・305 | 外部から読める旧verify/evidence JSON Schemaを公開し続けるか | A: 既存パスを現行版へ移し、旧版を版付きの追加パス/exportsで配布 / B: 旧版JSONは配布せず履歴型/fixtureだけ残す | A。履歴データを検証する外部利用側にも移行先を用意できる。パス変更と読み分けを移行説明へ記載する | yes | A。[承認元](https://github.com/loomake/loomake/pull/139#issuecomment-6510041693) | rrr-xxx（rrr-www名義・Claude Code代筆） | 2026-10-30 |
 | R-C001-10 | REQ-312・314 | localのspec-onlyで品質項目をchecks/summaryへ数えるか | A: 仕様/構造検査のみ数え、品質targetやquality:subjectsを生成しない / B: 品質項目を不足として数えpendingにする | A。仕様ゲートで品質実施を要求しない原則と一致し、構造検査のPASSを品質PASSへ転用しない | yes | A。[承認元](https://github.com/loomake/loomake/pull/139#issuecomment-6510041693) | rrr-xxx（rrr-www名義・Claude Code代筆） | 2026-10-30 |
 
 質問管理先：[PR #139](https://github.com/loomake/loomake/pull/139)。[3回目レビューの回答](https://github.com/loomake/loomake/pull/139#issuecomment-6510041693)で、R01/02/03/04/07/09/10はAと明示された。承認者はrrr-xxxで、rrr-www名義のコメントをClaude Codeがその指示に基づいて代筆したと出典に記載されている。回答日は日本時間2026-10-30である。AI評価やCI成功を承認として扱ったものではない。
 
-R05/06/08は同じコメントで保留とされた。パーサが回答済みと扱わないよう選択回答・回答者・回答日は空のまま保ち、保留の経緯と出典をここへ記す。3回目レビューで追加された関連/具体案はこの3件の判断材料であり、すでに承認された7件の選択肢を変更して再質問していない。
+R05/06/08は同じコメントで保留とされた。パーサが回答済みと扱わないよう選択回答・回答者・回答日は空のまま保ち、保留の経緯と出典をここへ記す。[4回目レビュー](https://github.com/loomake/loomake/pull/139#issuecomment-6510532640)のMUST範囲・localゲート・品質集約と軽微指摘も、この3件の判断材料へ加えた。同コメント末尾のおすすめは新たな回答ではない。すでに承認された7件の選択肢を変更して再質問していない。
 
 製品実装・形式切替・利用側移行を止めているのはR05/06/08である。方針採否後も既存assertionとCLI基準fixtureの具体差分は別途の個別承認を要する。全回答後、採用した振る舞いへ規範文を確定し、主仕様へ同期される本文に候補・質問ID・未決選択肢を残さない。最新mainの通常merge、strict・仕様ゲートexit 0の順を守る。
 
@@ -87,7 +91,7 @@ R05/06/08は同じコメントで保留とされた。パーサが回答済み�
 
 2026-10-30にfetchした最新mainは`751a8a1b6ffca673f44f2fa272b9029a667bf12b`で、PR #144の実装と#150/#152を含む。PR #144の`add-cli-reference-generation`はこのSHAで進行中changeのまま、REQ-323〜325はその差分にある。C-001では採用する共通定義args.ts・生成ページ・reference-cli-baseline.jsonをその実装へ追従させる。旧46例は互換原本として保持し、v2で変わる例の具体差分をR05の方針採否とは別に承認対象へ出す。
 
-C-001の実装前にCLI changeのDoD・仕様同期/archiveが受け入れられた最新mainを通常mergeし、REQ-323〜325の正本が主仕様へ入ったことを確認する。CLI changeのarchive待ちを理由にその主仕様を直接書き換えず、未archiveなら依存を記録して止める。fix-quality-reference-source-links（PR #149はmain取込済み、changeは未archive）のREQ-322のURL SHALLと4番目ScenarioもC-001のMODIFIEDへ保持し、同changeも仕様同期/archiveされてから最終整合を確認する。C-001を先にarchiveし、あとから古いグローバル不変条件を復活させる順にしない。現在のmain snapshot検証と、main取込済みで未archiveの149差分のURL文/全4 Scenario保持は別に検証する。snapshotの成功をどちらかのarchive実施の証拠とは扱わない。
+C-001の実装前にCLI changeのDoD・仕様同期/archiveが受け入れられた最新mainを通常mergeし、REQ-323〜325の正本が主仕様へ入ったことを確認する。そのあとREQ-323/324のMUST範囲を生成/集約単独へ限定するC-001のMODIFIEDを最終確定する。今はactive CLIの全Scenario/Sourceを保護した予約差分であり、archive前に正本を変更したとは扱わない。CLI changeのarchive待ちを理由にその主仕様を直接書き換えず、未archiveなら依存を記録して止める。fix-quality-reference-source-links（PR #149はmain取込済み、changeは未archive）のREQ-322のURL SHALLと4番目ScenarioもC-001のMODIFIEDへ保持し、同changeも仕様同期/archiveされてから最終整合を確認する。C-001を先にarchiveし、あとから古いグローバル不変条件を復活させる順にしない。現在のmain snapshot検証と、main取込済みで未archiveの149差分のURL文/全4 Scenario保持は別に検証する。snapshotの成功をどちらかのarchive実施の証拠とは扱わない。
 
 ## 仮定
 

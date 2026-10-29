@@ -18,7 +18,7 @@ C-003へ残る全providerの取得、完全なhost隔離、広いCI成果物・�
 
 ### 1. 公開APIとscopeの具体案
 
-kitの `runVerify(options)` の名前と同期実行は維持し、戻り値を2.0.0へ切り替える。`VerifyOptions` に `scope?: 'local' | 'ci'` を追加する。CLIは `--scope local|ci` を追加し、doneはci、spec-onlyはlocalを既定にする候補とする。ローカルDoDはR-C001-06のAなら `--done --scope local`、最終受入は `--done --scope ci` と必須CIで分ける。Bならローカルでもci証拠取得を準備する。既存AGENTSの規定をこの計画だけで変更したとは扱わない。bare verifyは承認済みR-C001-01 Aに従いlocalの品質コマンド専用として維持し、quality.yamlを新たに要求しない。承認済みのbare経路を品質専用代替へ変えて再質問しない。
+kitの `runVerify(options)` の名前と同期実行は維持し、戻り値を2.0.0へ切り替える。`VerifyOptions` に `scope?: 'local' | 'ci'` を追加する。CLIは `--scope local|ci` を追加し、doneはci、spec-onlyはlocalを既定にする。ローカルDoDの採否はR06の保留として別に扱う。ローカルDoDはR-C001-06のAなら `--done --scope local`、最終受入は `--done --scope ci` と必須CIで分ける。Bならローカルでもci証拠取得を準備する。既存AGENTSの規定をこの計画だけで変更したとは扱わない。bare verifyは承認済みR-C001-01 Aに従いlocalの品質コマンド専用として維持し、quality.yamlを新たに要求しない。承認済みのbare経路を品質専用代替へ変えて再質問しない。
 
 実行環境のCI変数からscopeを推測する案は使わない。利用側がscopeを明示でき、runnerのローカル完了とci-gateの最終合格を取り違えにくいため。APIの不正な引数・設定・読取失敗もv2のabortedを返し、CLIと同じ純関数 `verifyExitCode(result)` で0〜3を選ぶ。progressと人向けformatterはstderrへ送り、JSON出力へ混ぜない。verify以外のUsageError/RuntimeFailure契約は変えない。
 
@@ -112,7 +112,7 @@ R-C001-08のA/Bは未承認であり、下の比較を採用済みとは扱わ�
 | loomake.config.jsonの未知キー | 既知項目の検査が有効ならPASSのreasonへ案内を残す | Aと同じ |
 | doneのskip-commands | 品質コマンドを不足としlocal/ciとも1。古いレポートを今回の成功根拠にしない | Aと同じ |
 
-Aをおすすめとする。localでの任意CLI不在という案内を品質項目のNAと混ぜず、既存のspec-only 0を保ちやすいからである。BのNAは構造検証のgate項目だけに使う案であり、品質項目の対象外理由・人の確認を代替しない。いずれも明示trueでのCLI不在/実検証失敗とブロッキング質問の不合格は保持する。入力不正等のabortedがあれば、終了コード2/3の優先順は変えない。
+おすすめをBへ変更した。4回目レビューの基本AとlocalのOpenSpec不在だけBという案を、既存の選択肢Bとして明示する。未知キーの理由PASS、spec-onlyの案内0、doneの不足/1とci不足はAと同じであり、実施していないvalidateをPASSにしない。BのNAは構造検証のgate項目だけに使う案であり、品質項目の対象外理由・人の確認を代替しない。いずれも明示trueでのCLI不在/実検証失敗とブロッキング質問の不合格は保持する。入力不正等のabortedがあれば、終了コード2/3の優先順は変えない。
 
 spec-onlyの案内だけでdecision.requiredを立てるとREQ-036の0を失うため、この案内とdoneの判断待ちを分ける。R08採否後に採用分だけを規範仕様へ残し、候補・質問IDを規範文から除く。旧skipの単独成功から不足1への変更はREQ-191とR05/R08で明示承認する。
 
@@ -127,3 +127,11 @@ REQ-050の性能試験は --done --scope local --skip-commands --jsonへ明示�
 REQ-036/038ではdoneの確認待ちをINSUFFICIENT_EVIDENCEと要判断/1へ統一する。未承認仮定を旧warn単独成功からdone不足/1へ強める変更もR05へ含める。未完了tasksや適格な実施済み失敗のFAILはこの統一と分ける。
 
 CLIのargs.ts共通定義、help/usage、生成ページ、新旧reference-cli-baseline.jsonを同じ改版で更新する。現mainのCLI実装は採用済みだが、REQ-323〜325の正本化はadd-cli-reference-generationの同期/archive受入後に確認する。REQ-322のURL文/全4 Scenarioもfix-quality-reference-source-linksの同期/archive後に確認する。C-001ではその最新mainを通常mergeし、生成契約の既存Scenarioも再照合してから実装へ進む。
+
+## 4回目レビューの範囲と保留
+
+REQ-323/324の未確定契約を追加しないMUSTとhelp/usage/終了コード/8 JSONを変えないMUSTを、CLI生成/共通定義集約単独の変更へ限定する。改版を扱う別changeまで永久に禁止しない。CLI changeのarchive後の正本でC-001のMODIFIEDを確定する順を守り、現在はactive CLIの全Scenario/Sourceを保護する。REQ-306も集約関数の定義変更単独では外側のsummaryやverify接続を増やさない範囲に限定し、verdictだけを返す純粋APIは維持する。
+
+REQ-100はverify --done --scope localと同じ検査へ追従し、既存5 ScenarioとREQ-205の再修正判断順を保つ。REQ-135はhelpの --scopeと既定値を加え、業務処理を実行せずstdout/0を保つ候補。REQ-093はspec-onlyの通常不合格1、usage/config aborted2、その他aborted3で止まり、実装ブランチとエンジンを起動しない候補とする。いずれも保留のR05/R06に対する判断材料であり、製品や既存試験は変更しない。
+
+仕様と対応試験が変わったあと、REQ-190のScenario監査とdocs/quality/scenarios.jsonを実際の試験へ再照合する。hashの自動置換で前の評価を新しいScenarioへ流用しない。

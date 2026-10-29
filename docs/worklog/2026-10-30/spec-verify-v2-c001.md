@@ -24,3 +24,10 @@
 2. 最新main `751a8a1b6ffca673f44f2fa272b9029a667bf12b`をfetchし、一時snapshotのstrictはINFOなしexit 0。25件のMODIFIEDで既存73 ScenarioとSourceの保持、別に149のURL SHALL/全4 Scenario保持を照合した。branch単独strictは旧主仕様未同期のINFO付きexit 0。spec-onlyはR05/06/08の3件だけでexit 1、doneは未回答・確認待ち・未完了tasks・未実装REQ試験の4検査でexit 1。lint・型・既存試験1,259成功/skip8/失敗0、diff --checkと日本語のyomiyasu検査を確認した。
 3. 方針の承認と、既存assertion/CLI基準fixtureの具体的変更に必要な個別承認を区別する。保留3件が残るため製品実装は開始しない。
 4. CLI changeとfix-quality-reference-source-linksの仕様同期/archiveを先に受け入れた最新mainでC-001を最終確定する順を明記した。計画の差分だけをcommit/pushし、本文案を管理役へ渡す。追加Opus評価、投稿、マージは行わない。
+
+## 4回目レビューへの対応
+
+1. [4回目レビュー](https://github.com/loomake/loomake/pull/139#issuecomment-6510532640)を受け、head `665d458`・cleanから計画整合を引き継いだ。おすすめは新しい回答ではなく、R01/02/03/04/07/09/10のA承認とR05/06/08の未回答を維持する。
+2. fetchしたmainは751a8a1。29 MODIFIED（現main27件、未archive CLI2件）の既存89 Scenario/Sourceと、149のURL文/全4 Scenario保持を照合した。branch単独strictは古い主仕様のINFO付きexit 0、現main snapshotはCLI未archiveのINFO付きexit 0。依存2changeの仕様反映後を一時領域だけで構成したstrictはINFOなしexit 0で、実際のarchive実施とは区別する。spec-onlyはR05/06/08だけでexit 1、通常doneは計画の4検査でexit 1。lint・型・試験は成功し、ローカル1,259成功/skip8/失敗0。日本語のyomiyasuとdiff --checkも確認した。
+3. R05へREQ-323/324のMUST範囲、REQ-100のlocalゲート、REQ-306の接続範囲を追加する。R08は共通のA部分を保ち、auto CLI不在localだけ理由付きNAとするBを新しいおすすめにするが、未承認のまま提示する。
+4. 計画だけをcommit/pushし、本文案を管理役へ渡す。製品実装、追加AI評価、投稿、マージは行わない。

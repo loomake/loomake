@@ -148,7 +148,7 @@ Source: REQ-309
 
 #### Scenario: changeが確定しない
 - **WHEN** change必須ゲートでchange値欠落・構文が不正なIDを指定する
-- **THEN** change:nullのabortedとusageエラー、元の入力、次の操作を返す。bare verifyへの適用はR-C001-01の回答後に確定する。構文が有効で存在しないchangeはこのusage分類へ含めず、REQ-055の存在検査FAIL/1を保持する
+- **THEN** change:nullのabortedとusageエラー、元の入力、次の操作を返す。bare verifyは承認済みR01 Aの品質専用local結果として区別し、このchange必須ゲートのusageエラーに含めない。構文が有効で存在しないchangeはこのusage分類へ含めず、REQ-055の存在検査FAIL/1を保持する
 
 #### Scenario: 不正設定と読取失敗
 - **WHEN** 設定の構文・型・対応版が不正、または権限等で読取不能になる
