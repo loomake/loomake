@@ -23,7 +23,7 @@
 |---|---|---|---|---|---|---|---|---|
 | T-URL-01 | REQ-322 | proposalのコード例に示した既存1 assertionの相対URL期待をGitHub URL期待へ置き換え、2リンクの追加検査を行ってよいか。AGENTS.md 4章に基づく承認 | A：示した1 assertionの置換と追加検査を承認。B：承認せず現状保持・別案検討。サイトの誤解決と#103の生成元リンク未修理が続く | A。GitHubとサイトから同じ実在ソースを参照し、2 hrefの完全一致・各1回・実在・解決結果を確かめる。既存の1.compatibility.mdもblob/mainの完全URLを使う | yes | A。[承認元](https://github.com/loomake/loomake/pull/149#issuecomment-6509157217)。実装前条件のworklog競合はmain内容の保持で解消 | rrr-www（利用者rrr-xxxの指示をClaude Codeが転記） | 2026-10-30 |
 
-承認範囲はproposalのコード例に示した既存1 assertionの置換と2リンクの追加検査に限る。条件だった `docs/worklog/2026-10-29/feat-cli-reference-generation.md` のadd/add競合はmainの受入済み内容を保持して解消した。仕様ゲート成功前には実装しない。
+承認範囲はproposalのコード例に示した既存1 assertionの置換と2リンクの追加検査に限る。条件だった `docs/worklog/2026-10-29/feat-cli-reference-generation.md` のadd/add競合はmainの受入済み内容を保持して解消した。仕様ゲートの成功（15/15）を確かめてから承認範囲を実装した。
 
 ## 仮定
 
@@ -36,4 +36,12 @@
 
 担当割当・モデル・セッション・検証の実行履歴は、[設計反映時の作業記録](../../../docs/worklog/2026-10-29/spec-quality-reference-source-links.md#opus新規設計の反映と実行可否の訂正)と[レビュー対応の作業記録](../../../docs/worklog/2026-10-30/spec-quality-reference-source-links.md)を参照する。要件の出典とは区別する。
 
-2026-10-30に利用者が本会話で「Opusを2回使用した」と回答したため、[初回レビュー](https://github.com/loomake/loomake/pull/149#issuecomment-6508733280)と[再レビュー](https://github.com/loomake/loomake/pull/149#issuecomment-6509157217)をOpus評価2/2回として記録する。初回は対象headの記載なし、再レビューは77ac01dが対象である。実際のモデル識別子とセッションIDは不明のままとし、現在の実装d986a37の最終Opusレビューは未実施である。追加評価を起動せず、人の最終確認へ引き継ぐ。T-URL-01のA承認と4/5タスクの状態は維持する。
+2026-10-30に利用者が本会話で「Opusを2回使用した」と回答したため、[初回レビュー](https://github.com/loomake/loomake/pull/149#issuecomment-6508733280)と[再レビュー](https://github.com/loomake/loomake/pull/149#issuecomment-6509157217)をOpus評価2/2回として記録する。初回は対象headの記載なし、再レビューは77ac01dが対象である。実際のモデル識別子とセッションIDは不明のままとし、実装headは81641fc、記録込みの確認対象は1898f03である。この実装に対する新しいOpusセッションの最終レビューは未実施のままとし、追加評価を起動せず、M149-01のA承認による最終確認の代替を採用した。T-URL-01のA承認は維持する。
+
+## 工程の承認
+
+| ID | 決定 | 承認者 | 承認日（日本時間） | 承認元 |
+|---|---|---|---|---|
+| M149-01 | A。低1〜3を文書だけで直して3.1をチェックし、Opus評価2回後の最終確認を利用者指定の確認代行で代える。その後Draft解除、自動Codex指摘なし、最終headのdone・必須CI成功を条件にマージする | rrr-www（利用者rrr-xxxの指示をClaude Codeが転記） | 2026-10-30 | [明示コメント](https://github.com/loomake/loomake/pull/149#issuecomment-6510040913) |
+
+上限枠内のOpus評価は2/2回。別記の利用者指定確認代行は1回で、実行ツール・モデルはコメント記載のClaude Code / Claude Opus 5.5（claude-opus-5-5）、対象headは1898f03、セッションIDは記載なしである。確認の実施者はClaude Codeであり、M149-01の決定元は利用者の指示を転記した上記コメントである。同コメントの明示決定に従い、この確認代行をOpus評価の3回目には数えない。今後の追加AI評価は起動しない。

@@ -12,7 +12,9 @@
 
 ## 3. 統合確認
 
-- [ ] 3.1 strict・関連試験・lint/typecheckと `pnpm -s verify --change fix-quality-reference-source-links --done` を成功させる。REQ-322対応のURL解決を含む単体試験と全タスク、対象headの必須CIと別の新しいOpus sessionの最終レビューを確認する。AI評価と自動レビューの区別、担当・モデル不明や代替・未実施工程は、実行時点のagent-workflowに従って記録する <!-- loomake:gate=done -->
+- [x] 3.1 strict・関連試験・lint/typecheckと `pnpm -s verify --change fix-quality-reference-source-links --done` を成功させる。REQ-322対応のURL解決を含む単体試験と全タスク、最終確認はM149-01のA承認に基づく利用者指定の確認代行で代える。最終headのdone・必須CI成功と自動Codexレビュー指摘なしをマージ条件として確認する。AI評価と自動レビューの区別、担当・モデル不明や代替・未実施工程は、実行時点のagent-workflowに従って記録する <!-- loomake:gate=done -->
+
+3.1のチェックと最終ゲートの実行順は[M149-01の明示承認](https://github.com/loomake/loomake/pull/149#issuecomment-6510040913)に従う。Draft解除、自動Codexレビューと必須CIの最終確認、マージは管理役が行う。
 
 site/docs SHAを固定したローカルbuildと描画後hrefの抽出は、担当と環境が揃った場合の追加確認とする。実施可否と結果を記録し、このchangeの完了条件には含めない。担当・設計・レビューの実行履歴は作業記録へ集約する。
 
