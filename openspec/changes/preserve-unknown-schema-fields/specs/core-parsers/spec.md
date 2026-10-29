@@ -4,7 +4,7 @@
 
 core の verify 結果、Markdown 解析結果、quality.yaml、quality-report の公開スキーマは、未知の own property `__proto__`・`constructor`・`prototype` を通常の未知キーと同じく値を変えず解析結果に保持する SHALL。最上位とスキーマが検証する入れ子・配列要素に同じ規則を適用する MUST。入力と共有プロトタイプを変更せず、`__proto__` を出力のプロトタイプ変更として解釈しない MUST。既知項目の検証・既定値、既存の導出型・遅延ロードと配布 JSON Schema の内容を維持する MUST。
 
-Source: REQ-305
+Source: REQ-307
 
 #### Scenario: 最上位の未知キーを保持する
 - **WHEN** 必須項目に加え、JSON の own property として `__proto__`・`constructor`・`prototype` を持つ値を公開スキーマで解析する

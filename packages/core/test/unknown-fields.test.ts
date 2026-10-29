@@ -58,7 +58,7 @@ const cases: { name: string; schema: z.ZodType; value: Record<string, unknown> }
 ];
 
 describe('未知キーの own property を安全に保持する', () => {
-  it.each(cases)('[REQ-305] $name の parse と safeParse は特殊キーと未知値を保持する', ({ schema, value }) => {
+  it.each(cases)('[REQ-307] $name の parse と safeParse は特殊キーと未知値を保持する', ({ schema, value }) => {
     const input = marked(value);
     const original = structuredClone(input);
     freeze(input);
@@ -74,7 +74,7 @@ describe('未知キーの own property を安全に保持する', () => {
     expect(Object.hasOwn(Object.prototype, 'loomakeProbe')).toBe(false);
   });
 
-  it.each([{}, [], null, 'text', 1, false, undefined].map((value) => ({ value })))('[REQ-305] __proto__ の値 $value をプロトタイプの変更として扱わない', ({ value }) => {
+  it.each([{}, [], null, 'text', 1, false, undefined].map((value) => ({ value })))('[REQ-307] __proto__ の値 $value をプロトタイプの変更として扱わない', ({ value }) => {
     const input = { version: 1, ['__proto__']: value };
     freeze(input);
     const output = report.qualityReportSchema.parse(input);
@@ -85,7 +85,7 @@ describe('未知キーの own property を安全に保持する', () => {
     expect(Object.hasOwn(Object.prototype, 'loomakeProbe')).toBe(false);
   });
 
-  it('[REQ-305] verify と Markdown の検証する配列要素にも同じ保持規則を適用する', () => {
+  it('[REQ-307] verify と Markdown の検証する配列要素にも同じ保持規則を適用する', () => {
     const check = marked({ check: 'x', status: 'pass', detail: '' });
     expectFields(verify.verifyResultSchema.parse({ ...verifyValue, results: [check] }).results[0], check);
     const ledger = marked(row(LEDGER_COLUMNS));
@@ -101,7 +101,7 @@ describe('未知キーの own property を安全に保持する', () => {
     expectFields(parser.tasksSchema.parse([task])[0], task);
   });
 
-  it('[REQ-305] quality.yaml の検証する入れ子と既定値を保持し、未知値を変更しない', () => {
+  it('[REQ-307] quality.yaml の検証する入れ子と既定値を保持し、未知値を変更しない', () => {
     const measure = marked({ metric: 'x', source: 'x' });
     const objective = marked({ characteristic: 'x', evidence: [measure], indicators: [measure] });
     const product = marked({ characteristic: 'x', applicability: 'not_applicable', reason: 'x', confirmed_by: 'x' });
@@ -124,7 +124,7 @@ describe('未知キーの own property を安全に保持する', () => {
     assert.deepStrictEqual(input, original);
   });
 
-  it('[REQ-305] 元の検証の診断と既知フィールドの拒否を維持する', () => {
+  it('[REQ-307] 元の検証の診断と既知フィールドの拒否を維持する', () => {
     const structural = z.looseObject({ items: z.array(z.looseObject({ required: z.string() })), version: z.literal(1) });
     const schema = preserveUnknownFields(structural);
     for (const input of [{}, { version: '1', items: [] }, { version: 1, items: [{}] }, marked({ version: 2, items: [] })]) {
@@ -137,12 +137,105 @@ describe('未知キーの own property を安全に保持する', () => {
     expect(verify.verifyResultSchema.safeParse(marked({ ...verifyValue, results: [{ check: 'x', detail: '' }] })).success).toBe(false);
   });
 
-  it('[REQ-305] 非同期の解析を並行しても別の入力の値を混ぜない', async () => {
+  it('[REQ-307] 非同期の解析を並行しても別の入力の値を混ぜない', async () => {
     await Promise.all(cases.map(async ({ schema, value }) => {
       const input = { ...marked(value), ['__proto__']: { schema: schema.description ?? Object.keys(value).join(',') } };
       freeze(input);
       expectFields(await schema.parseAsync(input), input);
       const result = await schema.safeParseAsync(input);
+      expect(result.success).toBe(true);
+      if (result.success) expectFields(result.data, input);
+    }));
+  });
+
+  it('[REQ-307] 制約付き record の特殊キーを未知許容オブジェクトのキーとして復元しない', () => {
+    const coverage = JSON.parse('{"__proto__":[],"REQ-001":[]}');
+    const verified = verify.verifyResultSchema.parse({ ...verifyValue, coverage });
+    expect(verified.coverage).toEqual({ 'REQ-001': [] });
+    expect(Object.hasOwn(verified.coverage!, '__proto__')).toBe(false);
+    const objectives = JSON.parse('{"__proto__":{"characteristic":"x"},"UQ-001":{"characteristic":"x"}}');
+    const product = JSON.parse('{"__proto__":{"characteristic":"x"},"PQ-001":{"characteristic":"x"}}');
+    const output = quality.qualitySchema.parse({ version: 2, model: 'x', objectives, product });
+    expect(Object.keys(output.objectives)).toEqual(['UQ-001']);
+    expect(Object.keys(output.product)).toEqual(['PQ-001']);
+    for (const key of ['constructor', 'prototype', 'invalid']) {
+      expect(verify.verifyResultSchema.safeParse({ ...verifyValue, coverage: { [key]: [] } }).success).toBe(false);
+      expect(quality.qualitySchema.safeParse({ version: 2, model: 'x', objectives: { [key]: { characteristic: 'x' } } }).success).toBe(false);
+    }
+  });
+
+  it('[REQ-307] 既定の診断に union 内部の入力値を追加しない', () => {
+    const structural = z.looseObject({ choice: z.union([z.string(), z.number()]) });
+    const input = { choice: { privateProbe: 'value' } };
+    const schema = preserveUnknownFields(structural);
+    expect(schema.safeParse(input).error?.issues).toEqual(structural.safeParse(input).error?.issues);
+    expect(JSON.stringify(schema.safeParse(input).error?.issues)).not.toContain('privateProbe');
+  });
+
+  it('[REQ-307] 公開スキーマで呼び出し側の error 設定を使える', async () => {
+    for (const { schema } of cases) {
+      const options = { error: () => 'caller diagnostic' };
+      for (const result of [schema.safeParse(null, options), await schema.safeParseAsync(null, options)]) {
+        expect(result.success).toBe(false);
+        expect(result.error?.issues.map((issue) => issue.message)).toEqual(['caller diagnostic']);
+      }
+    }
+    const invalid = { version: 2, model: 'x', objectives: { 'UQ-001': { characteristic: 3 } } };
+    const issues = quality.qualitySchema.safeParse(invalid, { error: () => 'caller diagnostic' }).error!.issues;
+    expect(issues[0].path).toEqual(['objectives', 'UQ-001', 'characteristic']);
+    expect(issues[0].message).toBe('caller diagnostic');
+  });
+
+  it('[REQ-307] 現行の構造で schema・呼び出し側・global の診断優先順位を保つ', () => {
+    const structural = z.looseObject({
+      fixed: z.string({ error: 'schema diagnostic' }),
+      choice: z.discriminatedUnion('kind', [
+        z.looseObject({ kind: z.literal('a'), value: z.string() }),
+        z.looseObject({ kind: z.literal('b'), value: z.number() }),
+      ]),
+      codes: z.record(z.string().regex(/^REQ-[0-9]{3,}$/), z.array(z.string())),
+    });
+    const schema = preserveUnknownFields(structural);
+    const previous = z.config().customError;
+    try {
+      for (const customError of [undefined, () => 'global diagnostic']) {
+        z.config({ customError });
+        for (const input of [{}, { fixed: 1, choice: { kind: 'bad' }, codes: { invalid: [] } }, { fixed: '', choice: { kind: 'a', value: 1 }, codes: {} }]) {
+          for (const options of [{}, { error: () => 'caller diagnostic' }, { reportInput: true }, { reportInput: true, error: () => 'caller diagnostic' }]) {
+            assert.deepStrictEqual(schema.safeParse(input, options).error?.issues, structural.safeParse(input, options).error?.issues);
+          }
+        }
+      }
+    } finally {
+      z.config({ customError: previous });
+    }
+  });
+
+  it('[REQ-307] 元スキーマを変更せず native の型とトップレベル解析関数を保つ', () => {
+    const structural = z.looseObject({ required: z.string() }).meta({ title: 'original' });
+    const run = structural._zod.run;
+    const schema = preserveUnknownFields(structural);
+    const input = marked({ required: 'x' });
+    expect(schema).not.toBe(structural);
+    expect(schema._zod).not.toBe(structural._zod);
+    expect(structural._zod.run).toBe(run);
+    expect(Object.hasOwn(structural.parse(input), '__proto__')).toBe(false);
+    expectFields(z.parse(schema, input), input);
+    const result = z.safeParse(schema, input);
+    expect(result.success).toBe(true);
+    if (result.success) expectFields(result.data, input);
+    expect(schema.shape.required).toBe(structural.shape.required);
+    expect(typeof schema.extend).toBe('function');
+  });
+
+  it('[REQ-307] native parser 自体が非同期でも成功後に値を復元する', async () => {
+    const structural = z.looseObject({ required: z.string() }).refine(async () => Promise.resolve(true));
+    const schema = preserveUnknownFields(structural);
+    await Promise.all([1, 2, 3].map(async (index) => {
+      const input = { ...marked({ required: 'x' }), ['__proto__']: { index } };
+      freeze(input);
+      expectFields(await schema.parseAsync(input), input);
+      const result = await z.safeParseAsync(schema, input);
       expect(result.success).toBe(true);
       if (result.success) expectFields(result.data, input);
     }));

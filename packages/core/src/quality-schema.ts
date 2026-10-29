@@ -67,28 +67,28 @@ export const qualitySchema = preserveUnknownFields(z
   .looseObject({
     version: z.literal(QUALITY_SCHEMA_VERSION).describe('quality.yaml の形式の版'),
     model: text.describe('品質モデルの識別子と版（例：iso-iec-25010-2011）'),
-    defaults: z
+    defaults: preserveUnknownFields(z
       .looseObject({
         window: duration.optional().describe('利用時の指標の比較期間'),
         min_samples: z.int().positive().optional().describe('判定に必要な最低サンプル数'),
-      })
+      }))
       .optional(),
-    report: z
+    report: preserveUnknownFields(z
       .looseObject({
         status: z.enum(['weekly', 'daily']).optional().describe('品質状況レポートの頻度'),
         publish: z.enum(['discussion', 'issue', 'none']).optional().describe('投稿先'),
-      })
+      }))
       .optional(),
     objectives: z.record(z.string().regex(/^UQ-[0-9]{3,}$/), qualityObjectiveSchema).default({}).describe('利用時品質目標'),
     product: z.record(z.string().regex(/^PQ-[0-9]{3,}$/), qualityProductSchema).default({}).describe('製品品質要件'),
-    automation: z
+    automation: preserveUnknownFields(z
       .looseObject({
         level: z.enum(['A0', 'A1', 'A2', 'A3']).optional().describe('自動化レベル'),
         allowed_paths: z.array(z.string()).optional(),
         protected_paths: z.array(z.string()).optional(),
         max_diff_lines: z.int().nonnegative().optional(),
         require_rollback: z.boolean().optional(),
-      })
+      }))
       .optional()
       .describe('自動実行条件'),
     evidence: qualityEvidencePolicySchema.prefault({}).describe('証跡の保管方針'),
