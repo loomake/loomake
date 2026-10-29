@@ -35,3 +35,5 @@
 ## 担当と検証の範囲
 
 担当割当・モデル・セッション・検証の実行履歴は、[設計反映時の作業記録](../../../docs/worklog/2026-10-29/spec-quality-reference-source-links.md#opus新規設計の反映と実行可否の訂正)と[レビュー対応の作業記録](../../../docs/worklog/2026-10-30/spec-quality-reference-source-links.md)を参照する。要件の出典とは区別する。
+
+2026-10-30に利用者が本会話で「Opusを2回使用した」と回答したため、[初回レビュー](https://github.com/loomake/loomake/pull/149#issuecomment-6508733280)と[再レビュー](https://github.com/loomake/loomake/pull/149#issuecomment-6509157217)をOpus評価2/2回として記録する。初回は対象headの記載なし、再レビューは77ac01dが対象である。実際のモデル識別子とセッションIDは不明のままとし、現在の実装d986a37の最終Opusレビューは未実施である。追加評価を起動せず、人の最終確認へ引き継ぐ。T-URL-01のA承認と4/5タスクの状態は維持する。
