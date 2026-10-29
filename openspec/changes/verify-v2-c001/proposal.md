@@ -30,7 +30,7 @@
 
 ## Impact
 
-対象はcore・kit・trace・runner・CLIと `scripts/ci-gate.mjs`、関連fixture、配布smoke、互換性文書。verifyのほか、verifyを埋め込むEvidenceを2、意味が変わるReportを3へ上げる案をdesignで具体化する。パッケージ0.xは破壊的変更のminor changesetを用意し、形式版とは分ける。
+対象はcore・kit・trace・runner・CLIと `scripts/ci-gate.mjs`、関連fixture、配布smoke、互換性文書。verifyを埋め込むEvidenceは2へ上げ、旧Evidence 1の閲覧を保持する。Report 2とRunSummaryの外形は維持し、既存フィールドへ投影する。core・kit・trace・CLIの公開契約の破壊的変更にはminor、内部追従だけのrunnerにはpatchのchangesetを計画し、形式版とは分ける。
 
 本PRは計画のみ。#60の未知キー保持修正（REQ-307）の受入、質問の回答反映、仕様ゲート成功と新たな実装指示までは着手しない。REQ-305・306の共有型と集約を再利用し、REQ-308以降を使う。
 

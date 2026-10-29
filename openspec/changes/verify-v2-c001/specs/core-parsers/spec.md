@@ -14,7 +14,7 @@ Source: REQ-274
 - **THEN** 解析は失敗する
 
 ### Requirement: 証拠とリリースレポートの構造スキーマ
-core は既存の `Evidence`・`EvidenceDocument`・`Report`・`ReportRow` と同じデータ構造の Zod スキーマを公開し、4 型をそこから導出する SHALL。Evidence と Report の `schemaVersion` は number 型とし、現在の書き出しの定数はそれぞれ2・3とし、旧Evidence 1・Report 2の構造スキーマと型を別名で保持する MUST。`documents` は任意のままとし、空配列を補ってはならない MUST NOT。ReportRow の日本語の結果と null、各フィールドの必須・任意・null の区別を保持する SHALL。全 object 階層で未知のフィールドを拒否せず値を保持する SHALL。日時・SHA・パスなどに既存データ型にない新しい制約を加えてはならない MUST NOT。
+core は既存の `Evidence`・`EvidenceDocument`・`Report`・`ReportRow` と同じデータ構造の Zod スキーマを公開し、4 型をそこから導出する SHALL。Evidence と Report の `schemaVersion` は number 型とし、Evidenceの現在の書き出しの定数は2とし、旧Evidence 1の構造スキーマと型を別名で保持する MUST。Reportの定数2・外形・日本語結果を維持する MUST。`documents` は任意のままとし、空配列を補ってはならない MUST NOT。ReportRow の日本語の結果と null、各フィールドの必須・任意・null の区別を保持する SHALL。全 object 階層で未知のフィールドを拒否せず値を保持する SHALL。日時・SHA・パスなどに既存データ型にない新しい制約を加えてはならない MUST NOT。
 
 Source: REQ-302
 
@@ -31,7 +31,7 @@ Source: REQ-302
 - **THEN** 未知の値は解析結果に残る
 
 ### Requirement: trace の既存公開元と同期実行の維持
-trace は移行した型と版の定数を従来の公開元から再エクスポートする SHALL。証拠の版・対象 change・日時・SHA・文書 hash・重複などの整合性検査、I/O、serializeEvidence・buildReport・runReport などの同期実行を維持する SHALL。現在の出力はEvidence 2・Report 3へ移し、旧1・2の閲覧時には旧型を明示して解釈する SHALL。新しいスキーマは構造の検査とし、既存の同期 validator を Zod に置き換えてはならない MUST NOT。core から kit・trace への依存を作らず、core の入口からは zod を静的に読まず、構造スキーマを使うときに遅延読み込みする MUST。
+trace は移行した型と版の定数を従来の公開元から再エクスポートする SHALL。証拠の版・対象 change・日時・SHA・文書 hash・重複などの整合性検査、I/O、serializeEvidence・buildReport・runReport などの同期実行を維持する SHALL。現在の証拠出力はEvidence 2へ移し、旧Evidence 1の閲覧時には旧型を明示して解釈する SHALL。Reportの外形と版2は維持する SHALL。新しいスキーマは構造の検査とし、既存の同期 validator を Zod に置き換えてはならない MUST NOT。core から kit・trace への依存を作らず、core の入口からは zod を静的に読まず、構造スキーマを使うときに遅延読み込みする MUST。
 
 Source: REQ-303
 
@@ -44,7 +44,7 @@ Source: REQ-303
 - **THEN** zod を静的に読む経路がなく、新旧の型を明示した利用側がコンパイルできる
 
 ### Requirement: 証拠とレポートの JSON Schema の生成と公開
-core は Evidence と Report の JSON Schema をそれぞれ `schema/evidence.schema.json`・`schema/report.schema.json` に Zod から生成し、通常と publishConfig の exports で公開する SHALL。生成結果と配布ファイルの不一致を CI の試験で検出する MUST。JSON Schema は構造スキーマと同じ必須・任意の区別と未知フィールドの許可を表す SHALL。verify・evidence・reportの現行公開JSON Schemaは新形式へ更新し、旧版は履歴fixtureと履歴用スキーマで保持する SHALL。quality・trace・spec・tasks・quality-reportのJSON Schemaは変更しない MUST。
+core は Evidence と Report の JSON Schema をそれぞれ `schema/evidence.schema.json`・`schema/report.schema.json` に Zod から生成し、通常と publishConfig の exports で公開する SHALL。生成結果と配布ファイルの不一致を CI の試験で検出する MUST。JSON Schema は構造スキーマと同じ必須・任意の区別と未知フィールドの許可を表す SHALL。verify・evidenceの現行公開JSON Schemaは新形式へ更新し、旧版は履歴fixtureと履歴用スキーマで保持する SHALL。report・quality・trace・spec・tasks・quality-reportのJSON Schemaは変更しない MUST。
 
 Source: REQ-304
 
@@ -54,7 +54,7 @@ Source: REQ-304
 
 #### Scenario: 既存 JSON Schema の保持
 - **WHEN** スキーマを再生成する
-- **THEN** quality・trace・spec・tasks・quality-reportの5ファイルは変わらず、verify・evidence・reportは新形式と一致し旧版fixtureも保持される
+- **THEN** report・quality・trace・spec・tasks・quality-reportの6ファイルは変わらず、verify・evidenceは新形式と一致し旧版fixtureも保持される
 
 ## ADDED Requirements
 
