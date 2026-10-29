@@ -20,7 +20,7 @@
 |---|---|---|
 | 先行調査 | Opusが設計と同じセッションで目的・範囲を調べる | Codexが再現条件・観測事実・原因仮説を整理する |
 | 独立調査 | 既定では追加しない | OpusがCodexの仮説を見ずに調べ、見解を先に保存する（AI評価1回目） |
-| 設計 | Opusが受入条件・確認方法・変更対象を定める | 独立調査を担当したOpusが、保存した見解とCodexの仮説を比較して設計する |
+| 設計 | Opusが受入条件・確認方法・変更対象を定める | 独立調査を担当したOpusが両者の見解を比較し、原因と修正方針を設計する |
 | 実装・修正 | Codex | Codex |
 | 最終レビュー | 設計・実装とは別の新しいOpusセッション | 設計・実装とは別の新しいOpusセッション（AI評価2回目） |
 | 品質判定 | 既存のverifyとCIによる証跡の確認 | 既存のverifyとCIによる証跡の確認 |
@@ -47,18 +47,24 @@ Opusの指定だけで実施済みとは扱わない。実行結果または実�
 
 Claude Codeが使えることと、指定したOpusの工程が成功したことを区別する。Codexのモデル設定を変えてOpusとして扱わない。
 
-Claude Codeを呼ぶ場合は `--model opus` を明示する。設計の作成とレビューを分け、最終レビューには `--resume` や `--continue` で設計セッションを引き継がない。次は、既存のClaude認証を使い、読取ツールだけで依頼内容を処理してJSONを返す例である。`request.txt` に仕様・対象コミット・AGENTS.md・この文書と必要な資料への参照を用意し、最初にAGENTS.mdとこの文書を読むよう明記する。設定ソースを無効にした起動で、規約が自動で読み込まれるとは扱わない。
+管理役のCodexは、利用者に追加のプロンプト入力を求めず、依頼ファイルを作って[deliveryの補助スクリプト](../../.agents/skills/delivery/scripts/ask-opus.mjs)を実行する。依頼には仕様・対象コミット・AGENTS.md・この文書と必要な資料への参照を含め、最初に規約を読むよう明記する。設定ソースを無効にした起動で、規約が自動で読み込まれるとは扱わない。作業の対象を専用worktreeでコミットし、依頼ファイルや検証資料はそのworktreeの `.loomake/` 配下へ用意する。依頼ファイルと `.loomake/` の実パスを確認し、作業ツリーの外へ解決されるパスやシンボリックリンクは起動前に拒否する。成果物の保存先も `.loomake/` 内であることとGitの除外対象であることを、ディレクトリ作成前に確認する。
 
 ```sh
-claude --print --model opus --permission-mode plan \
-  --tools Read,Glob,Grep --allowedTools Read,Glob,Grep \
-  --setting-sources '' --settings '{"disableAllHooks":true}' \
-  --strict-mcp-config --mcp-config '{"mcpServers":{}}' \
-  --no-session-persistence --output-format json \
-  < request.txt > response.json
+node .agents/skills/delivery/scripts/ask-opus.mjs \
+  --role design --request .loomake/design-request.md --head <40桁の対象SHA>
 ```
 
-この例ではOpusはファイルを変更せず、設計メモまたはレビュー結果を返す。管理役は内容を保持して成果物へ反映し、作成した担当と転記した担当を分けて記録する。CLIの終了コードだけで判断せず、結果のエラー有無、実際のモデル、権限拒否、成果物を確認する。`opus` の解決先は環境と版で変わるため、利用した識別子を毎回記録する。ログインや利用枠が使えない場合は、その工程を未実施として #121 等の進行管理に残し、独立して進められる作業だけを続ける。
+`--role` は `design`、`second-opinion`、`review` のいずれか。難しいバグの独立調査には `second-opinion` を使い、先行担当の仮説や推奨修正を依頼に含めない。最終レビューは `review` で別途起動する。工程をまたぐときは保存した成果物を次の依頼へ渡す。独立調査から設計を同じ担当が続ける既定は維持する。本補助で保存成果物を別の新規セッションへ渡して設計する案は、PR #152のAUTO-152-02で人の判断を待つ。回答前は、この案による独立調査から設計への自動引き継ぎを行わない。スクリプトは毎回新しいセッションIDを作り、`--resume` や `--continue` を使わない。既存のClaude認証をそのまま使い、APIキーの追加や認証設定の書き換えは行わない。
+
+起動時は `--model opus`、読取ツールのRead/Glob/Grep、`Read(./**)` の範囲付き許可、`permissions.blockReadsOutsideWorkingDirectories:true`、hook無効、自動メモリ無効、MCPなしを固定する。[Claude公式の読取拒否設定](https://code.claude.com/docs/en/settings-reference#permissions-blockreadsoutsideworkingdirectories)は2.1.257以降が必要で、本補助の実機確認はLinuxのClaude Code 2.1.308で行った。作業ツリー外へのRead/Grep/Globと、外向きシンボリックリンクの読取を拒否する。Claude自身が読み込む規約・スキル等まで遮断するOSの隔離ではない。Windowsのnpm版 `claude.cmd` は `shell:false` で起動できないため未対応とし、未実施を返す。自動メモリの無効化はこの子プロセスに限り、利用者の設定ファイルを書き換えない。シェルを介さず依頼を標準入力で渡し、時間と出力の上限で停止する。時間上限は既定20分で、`--timeout-min` に1〜60の整数を指定できる。この上限は各Claude呼び出しに適用し、Goal全体の利用上限やAI評価回数を置き換えない。
+
+stdoutはverboseのツール結果を含めて8MiB、stderrは64KiBを上限とする。子プロセスからの無制限な出力で管理役のメモリを使い切らないための保守的な上限で、大きな差分のレビューが収まる保証はない。上限到達は未実施として停止し、切り詰めた結果を合格にしない。
+
+標準出力は1行のJSON要約とし、依頼や回答の本文を含めない。成果物はGitの除外対象である `.loomake/claude/<session-id>/` へ保存する。`request.md`、`events.jsonl`、`stderr.txt`、`result.md`、`manifest.json` を参照し、管理役が必要な根拠をPRへ転記する。生ログには入力やコードが含まれるため、そのまま公開しない。
+
+終了コード0かつ `ok:true` の結果だけを実施済みとして扱う。実行前後のheadと未コミット変更、開始・終了のセッションID、実際のOpusモデル、結果の成功、権限拒否0件、読取専用ツールとMCPなしを確認できなければ、終了コード1で未実施を返す。引数の誤りは終了コード2とする。モデルの自己申告や終了コードだけで合格にせず、回答内容と受入条件も確認する。設定した `opus` の解決先は環境と版で変わるため、実際の識別子をPRへ記録する。開始情報とmodelUsageの全モデルがOpusであることを要求し、補助処理で別モデルが含まれる版も未実施とする。別モデルを許可する変更はこの補助に含めない。
+
+スクリプトは設計やレビューを実行する補助であり、承認や品質合格を自動で与えない。Opus評価の残枠と、別枠の自動Codexレビューの予定は管理役が起動前に確認する。ログインや利用枠が使えない場合は、その工程を未実施として #121 等の進行管理に残し、独立して進められる作業を続ける。
 
 ## 3. すべての担当が守る4つの原則
 
