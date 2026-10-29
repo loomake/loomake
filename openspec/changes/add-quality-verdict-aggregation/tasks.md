@@ -12,4 +12,4 @@
 
 ## 3. 完了確認
 
-- [ ] 3.1 独立レビューと全体検証を行い、全タスクをチェックした最終 head の `pnpm -s verify --change add-quality-verdict-aggregation --done` を通す <!-- loomake:gate=done -->
+- [x] 3.1 独立レビューと全体検証を行い、全タスクをチェックした最終 head の `pnpm -s verify --change add-quality-verdict-aggregation --done` を通す <!-- loomake:gate=done -->
