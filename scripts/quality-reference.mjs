@@ -93,7 +93,7 @@ export function renderQualityReference(schema) {
   const lines = [
     '---', 'title: quality.yaml リファレンス', 'description: 現行スキーマから生成したquality.yamlの全項目・入力条件・既定値', '---', '',
     '<!-- scripts/generate-quality-reference.mjs で生成。直接編集せず、元スキーマから再生成してください。 -->', '',
-    'このページは、coreの現行スキーマから書き出した [quality.schema.json](../../../packages/core/schema/quality.schema.json) を元に生成しています。定義元は [quality-schema.ts](../../../packages/core/src/quality-schema.ts) です。', '',
+    'このページは、coreの現行スキーマから書き出した [quality.schema.json](https://github.com/loomake/loomake/blob/main/packages/core/schema/quality.schema.json) を元に生成しています。定義元は [quality-schema.ts](https://github.com/loomake/loomake/blob/main/packages/core/src/quality-schema.ts) です。', '',
     '再生成はリポジトリのルートで `node scripts/generate-quality-reference.mjs`、照合は同じコマンドに `--check` を付けて実行します。', '',
     '## 表の読み方', '',
     '`<id>` はrecordのキー、`[]` は配列要素を表します。キーの制約は親の行にあります。「必須」は、その親objectや配列要素が入力されたときの条件です。任意の親objectそのものを常に必須とする意味ではありません。', '',
