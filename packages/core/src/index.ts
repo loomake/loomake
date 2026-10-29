@@ -9,6 +9,7 @@ export { parseSpec } from './spec.js';
 export type { SpecOperation, SpecRequirement } from './spec.js';
 export { parseTasks } from './tasks.js';
 export type { Task } from './tasks.js';
+export { TRACE_SCHEMA_VERSION, SPEC_SCHEMA_VERSION, TASKS_SCHEMA_VERSION, loadParserSchemas } from './parser-contracts.js';
 export { extractTestRequirements } from './test-report.js';
 export type { TestRequirements } from './test-report.js';
 export { createTraceTemplate } from './template.js';

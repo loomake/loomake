@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { z } from 'zod';
-import { createTraceTemplate, parseSpec, parseTasks, parseTrace, type AssumptionRow, type LedgerRow, type QuestionRow, type SpecOperation, type SpecRequirement, type Task, type Trace } from '../src/index.js';
-import { assumptionRowSchema, ledgerRowSchema, questionRowSchema, specOperationSchema, specRequirementSchema, specSchema, taskSchema, tasksSchema, traceSchema } from '../src/parser-schemas.js';
+import { createTraceTemplate, loadParserSchemas, TRACE_SCHEMA_VERSION, SPEC_SCHEMA_VERSION, TASKS_SCHEMA_VERSION, parseSpec, parseTasks, parseTrace, type AssumptionRow, type LedgerRow, type QuestionRow, type SpecOperation, type SpecRequirement, type Task, type Trace } from '../src/index.js';
+const { assumptionRowSchema, ledgerRowSchema, questionRowSchema, specOperationSchema, specRequirementSchema, specSchema, taskSchema, tasksSchema, traceSchema } = await loadParserSchemas();
 
 const fixture = join(import.meta.dirname, 'fixtures/openspec-project/openspec/changes/add-x');
 const traceText = readFileSync(join(fixture, 'trace.md'), 'utf8')
@@ -22,6 +22,21 @@ Source: REQ-001, REQ-002
 `;
 
 describe('Markdown 解析結果の Zod スキーマ', () => {
+  it('[REQ-299] 公開初版の定数と遅延ロードを提供し、返却データへ版を加えない', async () => {
+    expect([TRACE_SCHEMA_VERSION, SPEC_SCHEMA_VERSION, TASKS_SCHEMA_VERSION]).toEqual(['1.0.0', '1.0.0', '1.0.0']);
+    const loading = loadParserSchemas();
+    expect(loading).toBeInstanceOf(Promise);
+    const schemas = await loading;
+    expect(schemas.traceSchema).toBe(traceSchema);
+    expect(schemas.specSchema).toBe(specSchema);
+    expect(schemas.tasksSchema).toBe(tasksSchema);
+    const template = createTraceTemplate({ changeId: 'plain' });
+    expect(template).not.toContain('version');
+    expect(parseTrace('trace.md', template)).toEqual({ value: { ledger: [], questions: [], assumptions: [] }, errors: [] });
+    expect(parseTasks('tasks.md', '- [x] done')).toEqual({ value: [{ checked: true, text: 'done', line: 1 }], errors: [] });
+    expect(parseSpec('spec.md', '### Requirement: empty')).toEqual({ value: [{ op: null, name: 'empty', sources: [], scenarios: 0, line: 1 }], errors: [] });
+  });
+
   it('[REQ-298] 公開型は各スキーマから導出する', () => {
     expectTypeOf<Trace>().toEqualTypeOf<z.infer<typeof traceSchema>>();
     expectTypeOf<LedgerRow>().toEqualTypeOf<z.infer<typeof ledgerRowSchema>>();
