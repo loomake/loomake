@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
@@ -339,7 +339,7 @@ describe('実ページと文書導線', () => {
   it('[REQ-322] title/description・生成元と再生成方法を持ち、既存3ページとともに入口から辿れる', () => {
     const page = readPage();
     expect(page).toMatch(/^---\ntitle: .+\ndescription: .+\n---\n/);
-    expect(page).toContain('../../../packages/core/schema/quality.schema.json');
+    expect(page).toContain('https://github.com/loomake/loomake/blob/main/packages/core/schema/quality.schema.json');
     expect(page).toContain('node scripts/generate-quality-reference.mjs');
     expect(page).toContain('説明中の改行は `\\n` と表記します。');
     const index = readFileSync(join(root, 'docs/guide/index.md'), 'utf8');
@@ -347,5 +347,51 @@ describe('実ページと文書導線', () => {
       expect(index).toContain(`](3.reference/${file})`);
       expect(existsSync(join(root, 'docs/guide/3.reference', file))).toBe(true);
     }
+  });
+});
+
+
+describe('quality生成元リンクの掲載先に依存しない解決', () => {
+  const githubBase = 'https://github.com/loomake/loomake/blob/main/docs/guide/3.reference/4.quality-yaml.md';
+  const expectedLinks = [
+    { label: 'quality.schema.json', href: 'https://github.com/loomake/loomake/blob/main/packages/core/schema/quality.schema.json' },
+    { label: 'quality-schema.ts', href: 'https://github.com/loomake/loomake/blob/main/packages/core/src/quality-schema.ts' },
+  ];
+  const pages = [
+    { name: 'renderer', read: () => renderQualityReference(schema) },
+    { name: '保存済みページ', read: () => readFileSync(join(root, 'docs/guide/3.reference/4.quality-yaml.md'), 'utf8') },
+  ];
+  const links = (text: string) => [...text.matchAll(/\[([^\]]+)\]\(([^)\s]+)\)/g)]
+    .map(([, label, href]) => ({ label, href }))
+    .filter(({ label }) => expectedLinks.some((expected) => expected.label === label));
+
+  it.each(pages)('[REQ-322] $name の2リンクはラベルと完全URLが各1回ずつ一致する', ({ read }) => {
+    expect(links(read())).toEqual(expectedLinks);
+  });
+
+  it.each(pages)('[REQ-322] $name に旧相対hrefを残さない', ({ read }) => {
+    expect(read()).not.toContain('../../../packages/');
+  });
+
+  for (const page of pages) {
+    it.each([
+      githubBase,
+      'https://site.example.invalid/guide/reference/quality-yaml',
+      'https://site.example.invalid/guide/reference/quality-yaml/',
+    ])(`[REQ-322] ${page.name} はbase %sから同じ生成元URLへ解決する`, (base) => {
+      const resolved = links(page.read()).map(({ label, href }) => ({ label, href: new URL(href, base).href }));
+      expect(resolved).toEqual(expectedLinks);
+    });
+  }
+
+  it.each(pages)('[REQ-322] $name の生成元URLはリポジトリ内の2つの通常ファイルを指す', ({ read }) => {
+    const paths = links(read()).map(({ href }) => {
+      const url = new URL(href, githubBase);
+      expect(url.origin).toBe('https://github.com');
+      expect(url.pathname).toMatch(/^\/loomake\/loomake\/blob\/main\/packages\/core\//);
+      return url.pathname.slice('/loomake/loomake/blob/main/'.length);
+    });
+    expect(paths).toEqual(['packages/core/schema/quality.schema.json', 'packages/core/src/quality-schema.ts']);
+    for (const path of paths) expect(statSync(join(root, path)).isFile()).toBe(true);
   });
 });
