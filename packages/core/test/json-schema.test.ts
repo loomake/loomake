@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import { Ajv2020 } from 'ajv/dist/2020.js';
+import { qualitySchema } from '../src/quality-schema.js';
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -9,7 +11,7 @@ const pkgDir = join(import.meta.dirname, '..');
 const schemaDir = join(pkgDir, 'schema');
 
 describe('JSON Schema の書き出し', () => {
-  it('[REQ-276] Zod スキーマから書き出した内容と packages/core/schema/ のファイルが一致する', () => {
+  it('[REQ-276][REQ-287] Zod スキーマから書き出した内容と packages/core/schema/ のファイルが一致する', () => {
     const rendered = renderJsonSchemas();
     expect(Object.keys(rendered).sort()).toEqual(readdirSync(schemaDir).filter((f) => f.endsWith('.json')).sort());
     for (const [file, text] of Object.entries(rendered)) {
@@ -29,7 +31,44 @@ describe('JSON Schema の書き出し', () => {
     expect(schema.properties.coverage.propertyNames.pattern).toBe('^REQ-[0-9]{3,}$');
   });
 
-  it('[REQ-276] 書き出しのコマンドで schema/ のファイルを作り直せる', () => {
+  it('[REQ-287] quality.yaml の JSON Schema は入力の省略と既定値を表し、パッケージから公開する', () => {
+    const schema = JSON.parse(renderJsonSchemas()['quality.schema.json']);
+    expect(schema.$id).toBe('https://loomake.dev/schema/quality.schema.json');
+    expect(schema.required).toEqual(['version', 'model']);
+    expect(schema.properties.version.const).toBe(2);
+    expect(schema.properties.evidence.properties.artifact_retention.default).toBe('90d');
+    for (const branch of schema.properties.objectives.additionalProperties.oneOf) {
+      expect(branch.properties.evidence.default).toEqual([]);
+    }
+    const pkg = JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf8'));
+    for (const exports of [pkg.exports, pkg.publishConfig.exports]) {
+      expect(exports['./schema/quality.schema.json']).toBe('./schema/quality.schema.json');
+    }
+  });
+
+  it('[REQ-286][REQ-287] Zod と配布 JSON Schema が対象外の理由と確認者をともに必須にする', () => {
+    const schema = JSON.parse(readFileSync(join(schemaDir, 'quality.schema.json'), 'utf8'));
+    const validate = new Ajv2020({ strict: false }).compile(schema);
+    for (const [collection, id] of [['product', 'PQ-001'], ['objectives', 'UQ-001']]) {
+      const base = { characteristic: 'custom', applicability: 'not_applicable' };
+      for (const item of [base, { ...base, reason: '対象外' }, { ...base, confirmed_by: 'owner' }, { ...base, reason: '', confirmed_by: 'owner' }]) {
+        const input = { version: 2, model: 'm', [collection]: { [id]: item } };
+        expect(qualitySchema.safeParse(input).success, JSON.stringify(input)).toBe(false);
+        expect(validate(input), JSON.stringify(input)).toBe(false);
+      }
+      for (const item of [
+        { ...base, reason: '対象外', confirmed_by: 'owner' },
+        { characteristic: 'custom', applicability: 'applicable' },
+        { characteristic: 'custom' },
+      ]) {
+        const input = { version: 2, model: 'm', [collection]: { [id]: item } };
+        expect(qualitySchema.safeParse(input).success, JSON.stringify(input)).toBe(true);
+        expect(validate(input), JSON.stringify(validate.errors)).toBe(true);
+      }
+    }
+  });
+
+  it('[REQ-276][REQ-287] 書き出しのコマンドで schema/ のファイルを作り直せる', () => {
     const work = mkdtempSync(join(tmpdir(), 'loomake-core-schema-'));
     try {
       // 実際の schema/ を書き換えないように、書き出しのスクリプトとビルドの結果を一時ディレクトリに写して実行する
@@ -40,10 +79,12 @@ describe('JSON Schema の書き出し', () => {
       symlinkSync(realpathSync(join(pkgDir, 'node_modules', 'zod')), join(work, 'node_modules', 'zod'), 'junction');
       cpSync(join(pkgDir, 'package.json'), join(work, 'package.json'));
       cpSync(schemaDir, join(work, 'schema'), { recursive: true });
-      rmSync(join(work, 'schema', 'verify-result.schema.json'));
+      for (const file of Object.keys(renderJsonSchemas())) rmSync(join(work, 'schema', file));
       const run = spawnSync(process.execPath, [join(work, 'scripts', 'write-schemas.mjs')], { encoding: 'utf8' });
       expect(run.status, run.stdout + run.stderr).toBe(0);
-      expect(readFileSync(join(work, 'schema', 'verify-result.schema.json'), 'utf8')).toBe(renderJsonSchemas()['verify-result.schema.json']);
+      for (const [file, text] of Object.entries(renderJsonSchemas())) {
+        expect(readFileSync(join(work, 'schema', file), 'utf8'), file).toBe(text);
+      }
     } finally {
       rmSync(work, { recursive: true, force: true });
     }

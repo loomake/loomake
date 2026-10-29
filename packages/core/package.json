@@ -23,7 +23,8 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./schema/verify-result.schema.json": "./schema/verify-result.schema.json"
+    "./schema/verify-result.schema.json": "./schema/verify-result.schema.json",
+    "./schema/quality.schema.json": "./schema/quality.schema.json"
   },
   "files": [
     "dist",
@@ -36,7 +37,8 @@
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
       },
-      "./schema/verify-result.schema.json": "./schema/verify-result.schema.json"
+      "./schema/verify-result.schema.json": "./schema/verify-result.schema.json",
+      "./schema/quality.schema.json": "./schema/quality.schema.json"
     },
     "provenance": true
   },

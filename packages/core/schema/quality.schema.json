@@ -1,0 +1,672 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "const": 2,
+      "description": "quality.yaml の形式の版"
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1,
+      "description": "品質モデルの識別子と版（例：iso-iec-25010-2011）"
+    },
+    "defaults": {
+      "type": "object",
+      "properties": {
+        "window": {
+          "description": "利用時の指標の比較期間",
+          "type": "string",
+          "pattern": "^[1-9][0-9]*[dwy]$"
+        },
+        "min_samples": {
+          "description": "判定に必要な最低サンプル数",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "additionalProperties": {}
+    },
+    "report": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "description": "品質状況レポートの頻度",
+          "type": "string",
+          "enum": [
+            "weekly",
+            "daily"
+          ]
+        },
+        "publish": {
+          "description": "投稿先",
+          "type": "string",
+          "enum": [
+            "discussion",
+            "issue",
+            "none"
+          ]
+        }
+      },
+      "additionalProperties": {}
+    },
+    "objectives": {
+      "default": {},
+      "description": "利用時品質目標",
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^UQ-[0-9]{3,}$"
+      },
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "characteristic": {
+                "type": "string",
+                "minLength": 1,
+                "description": "品質特性"
+              },
+              "evidence": {
+                "default": [],
+                "description": "合格に必要な証拠",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "metric": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "指標の名前"
+                    },
+                    "source": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "指標の出どころ（ci.*、e2e.*、telemetry.*、observation.* など）"
+                    },
+                    "target": {
+                      "type": "string",
+                      "pattern": "^(<=|>=|==|<|>)\\s*-?[0-9]+(\\.[0-9]+)?$",
+                      "description": "目標値。<=・>=・==・<・> のどれかと数値の組（例：<= 1800）"
+                    },
+                    "min_samples": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "metric",
+                    "source"
+                  ],
+                  "additionalProperties": {}
+                }
+              },
+              "indicators": {
+                "default": [],
+                "description": "参考指標。これだけで PASS にしない",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "metric": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "指標の名前"
+                    },
+                    "source": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "指標の出どころ（ci.*、e2e.*、telemetry.*、observation.* など）"
+                    },
+                    "target": {
+                      "type": "string",
+                      "pattern": "^(<=|>=|==|<|>)\\s*-?[0-9]+(\\.[0-9]+)?$",
+                      "description": "目標値。<=・>=・==・<・> のどれかと数値の組（例：<= 1800）"
+                    },
+                    "min_samples": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "metric",
+                    "source"
+                  ],
+                  "additionalProperties": {}
+                }
+              },
+              "blocking": {
+                "description": "true の未達は、ほかの達成で相殺せず、公開を阻止する",
+                "type": "boolean"
+              },
+              "applicability": {
+                "type": "string",
+                "const": "applicable"
+              },
+              "reason": {
+                "description": "対象外にする理由",
+                "type": "string",
+                "minLength": 1
+              },
+              "confirmed_by": {
+                "description": "対象外を確認した人",
+                "type": "string",
+                "minLength": 1
+              },
+              "linked_requirements": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "context": {
+                "description": "対象利用者、作業、端末、環境の定義への参照",
+                "type": "string",
+                "minLength": 1
+              },
+              "task": {
+                "type": "string",
+                "minLength": 1
+              },
+              "guardrails": {
+                "description": "悪化を防ぐ目標",
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [
+              "characteristic"
+            ],
+            "additionalProperties": {}
+          },
+          {
+            "type": "object",
+            "properties": {
+              "characteristic": {
+                "type": "string",
+                "minLength": 1,
+                "description": "品質特性"
+              },
+              "evidence": {
+                "default": [],
+                "description": "合格に必要な証拠",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "metric": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "指標の名前"
+                    },
+                    "source": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "指標の出どころ（ci.*、e2e.*、telemetry.*、observation.* など）"
+                    },
+                    "target": {
+                      "type": "string",
+                      "pattern": "^(<=|>=|==|<|>)\\s*-?[0-9]+(\\.[0-9]+)?$",
+                      "description": "目標値。<=・>=・==・<・> のどれかと数値の組（例：<= 1800）"
+                    },
+                    "min_samples": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "metric",
+                    "source"
+                  ],
+                  "additionalProperties": {}
+                }
+              },
+              "indicators": {
+                "default": [],
+                "description": "参考指標。これだけで PASS にしない",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "metric": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "指標の名前"
+                    },
+                    "source": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "指標の出どころ（ci.*、e2e.*、telemetry.*、observation.* など）"
+                    },
+                    "target": {
+                      "type": "string",
+                      "pattern": "^(<=|>=|==|<|>)\\s*-?[0-9]+(\\.[0-9]+)?$",
+                      "description": "目標値。<=・>=・==・<・> のどれかと数値の組（例：<= 1800）"
+                    },
+                    "min_samples": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "metric",
+                    "source"
+                  ],
+                  "additionalProperties": {}
+                }
+              },
+              "blocking": {
+                "description": "true の未達は、ほかの達成で相殺せず、公開を阻止する",
+                "type": "boolean"
+              },
+              "applicability": {
+                "type": "string",
+                "const": "not_applicable"
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              },
+              "confirmed_by": {
+                "type": "string",
+                "minLength": 1
+              },
+              "linked_requirements": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "context": {
+                "description": "対象利用者、作業、端末、環境の定義への参照",
+                "type": "string",
+                "minLength": 1
+              },
+              "task": {
+                "type": "string",
+                "minLength": 1
+              },
+              "guardrails": {
+                "description": "悪化を防ぐ目標",
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [
+              "characteristic",
+              "applicability",
+              "reason",
+              "confirmed_by"
+            ],
+            "additionalProperties": {}
+          }
+        ]
+      }
+    },
+    "product": {
+      "default": {},
+      "description": "製品品質要件",
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^PQ-[0-9]{3,}$"
+      },
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "characteristic": {
+                "type": "string",
+                "minLength": 1,
+                "description": "品質特性"
+              },
+              "evidence": {
+                "default": [],
+                "description": "合格に必要な証拠",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "metric": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "指標の名前"
+                    },
+                    "source": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "指標の出どころ（ci.*、e2e.*、telemetry.*、observation.* など）"
+                    },
+                    "target": {
+                      "type": "string",
+                      "pattern": "^(<=|>=|==|<|>)\\s*-?[0-9]+(\\.[0-9]+)?$",
+                      "description": "目標値。<=・>=・==・<・> のどれかと数値の組（例：<= 1800）"
+                    },
+                    "min_samples": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "metric",
+                    "source"
+                  ],
+                  "additionalProperties": {}
+                }
+              },
+              "indicators": {
+                "default": [],
+                "description": "参考指標。これだけで PASS にしない",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "metric": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "指標の名前"
+                    },
+                    "source": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "指標の出どころ（ci.*、e2e.*、telemetry.*、observation.* など）"
+                    },
+                    "target": {
+                      "type": "string",
+                      "pattern": "^(<=|>=|==|<|>)\\s*-?[0-9]+(\\.[0-9]+)?$",
+                      "description": "目標値。<=・>=・==・<・> のどれかと数値の組（例：<= 1800）"
+                    },
+                    "min_samples": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "metric",
+                    "source"
+                  ],
+                  "additionalProperties": {}
+                }
+              },
+              "blocking": {
+                "description": "true の未達は、ほかの達成で相殺せず、公開を阻止する",
+                "type": "boolean"
+              },
+              "applicability": {
+                "type": "string",
+                "const": "applicable"
+              },
+              "reason": {
+                "description": "対象外にする理由",
+                "type": "string",
+                "minLength": 1
+              },
+              "confirmed_by": {
+                "description": "対象外を確認した人",
+                "type": "string",
+                "minLength": 1
+              },
+              "linked_requirements": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "subcharacteristic": {
+                "description": "品質副特性",
+                "type": "string",
+                "minLength": 1
+              },
+              "objectives": {
+                "description": "支える利用時品質目標",
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [
+              "characteristic"
+            ],
+            "additionalProperties": {}
+          },
+          {
+            "type": "object",
+            "properties": {
+              "characteristic": {
+                "type": "string",
+                "minLength": 1,
+                "description": "品質特性"
+              },
+              "evidence": {
+                "default": [],
+                "description": "合格に必要な証拠",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "metric": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "指標の名前"
+                    },
+                    "source": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "指標の出どころ（ci.*、e2e.*、telemetry.*、observation.* など）"
+                    },
+                    "target": {
+                      "type": "string",
+                      "pattern": "^(<=|>=|==|<|>)\\s*-?[0-9]+(\\.[0-9]+)?$",
+                      "description": "目標値。<=・>=・==・<・> のどれかと数値の組（例：<= 1800）"
+                    },
+                    "min_samples": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "metric",
+                    "source"
+                  ],
+                  "additionalProperties": {}
+                }
+              },
+              "indicators": {
+                "default": [],
+                "description": "参考指標。これだけで PASS にしない",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "metric": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "指標の名前"
+                    },
+                    "source": {
+                      "type": "string",
+                      "minLength": 1,
+                      "description": "指標の出どころ（ci.*、e2e.*、telemetry.*、observation.* など）"
+                    },
+                    "target": {
+                      "type": "string",
+                      "pattern": "^(<=|>=|==|<|>)\\s*-?[0-9]+(\\.[0-9]+)?$",
+                      "description": "目標値。<=・>=・==・<・> のどれかと数値の組（例：<= 1800）"
+                    },
+                    "min_samples": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "metric",
+                    "source"
+                  ],
+                  "additionalProperties": {}
+                }
+              },
+              "blocking": {
+                "description": "true の未達は、ほかの達成で相殺せず、公開を阻止する",
+                "type": "boolean"
+              },
+              "applicability": {
+                "type": "string",
+                "const": "not_applicable"
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              },
+              "confirmed_by": {
+                "type": "string",
+                "minLength": 1
+              },
+              "linked_requirements": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "subcharacteristic": {
+                "description": "品質副特性",
+                "type": "string",
+                "minLength": 1
+              },
+              "objectives": {
+                "description": "支える利用時品質目標",
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [
+              "characteristic",
+              "applicability",
+              "reason",
+              "confirmed_by"
+            ],
+            "additionalProperties": {}
+          }
+        ]
+      }
+    },
+    "automation": {
+      "description": "自動実行条件",
+      "type": "object",
+      "properties": {
+        "level": {
+          "description": "自動化レベル",
+          "type": "string",
+          "enum": [
+            "A0",
+            "A1",
+            "A2",
+            "A3"
+          ]
+        },
+        "allowed_paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "protected_paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "max_diff_lines": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "require_rollback": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "evidence": {
+      "description": "証跡の保管方針",
+      "default": {},
+      "type": "object",
+      "properties": {
+        "artifact_retention": {
+          "default": "90d",
+          "description": "開発中の本体に要求する保持期間",
+          "type": "string",
+          "pattern": "^[1-9][0-9]*[dwy]$"
+        },
+        "long_term_store": {
+          "default": "github-release",
+          "description": "リリースに採用した本体の保管先",
+          "type": "string",
+          "enum": [
+            "github-release",
+            "manual"
+          ]
+        },
+        "long_term_retention": {
+          "default": "5y",
+          "description": "長期保管の保持期間",
+          "type": "string",
+          "pattern": "^[1-9][0-9]*[dwy]$"
+        },
+        "access": {
+          "default": "project-members",
+          "description": "取得確認に使う閲覧者の権限",
+          "type": "string",
+          "enum": [
+            "project-members",
+            "owner"
+          ]
+        },
+        "delete_policy": {
+          "default": "owner-approval",
+          "description": "削除条件",
+          "type": "string",
+          "enum": [
+            "owner-approval",
+            "never"
+          ]
+        }
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "version",
+    "model"
+  ],
+  "additionalProperties": {},
+  "$id": "https://loomake.dev/schema/quality.schema.json",
+  "title": "Loomake quality.yaml",
+  "description": "quality.yaml を YAML として解析した値。破壊的変更を入れるときは version を上げる"
+}
