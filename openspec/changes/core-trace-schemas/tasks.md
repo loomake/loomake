@@ -12,4 +12,4 @@
 
 ## 3. 確認
 
-- [ ] 3.1 CI の同じ完了ゲートで全体を検証し、全タスクを完了した最終 head で `pnpm -s verify --change core-trace-schemas --done` を通す <!-- loomake:gate=done -->
+- [x] 3.1 CI の同じ完了ゲートで全体を検証し、全タスクを完了した最終 head で `pnpm -s verify --change core-trace-schemas --done` を通す <!-- loomake:gate=done -->
