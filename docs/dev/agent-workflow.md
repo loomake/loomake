@@ -18,7 +18,7 @@
 |---|---|---|
 | 先行調査 | Opusが設計と同じセッションで目的・範囲を調べる | Codexが再現条件・観測事実・原因仮説を整理する |
 | 独立調査 | 既定では追加しない | OpusがCodexの仮説を見ずに調べ、見解を先に保存する（AI評価1回目） |
-| 設計 | Opusが受入条件・確認方法・変更対象を定める | 独立調査を担当したOpusが、保存した見解とCodexの仮説を比較して設計する |
+| 設計 | Opusが受入条件・確認方法・変更対象を定める | Opusが、保存した独立調査の見解とCodexの仮説を比較して設計する |
 | 実装・修正 | Codex | Codex |
 | 最終レビュー | 設計・実装とは別の新しいOpusセッション | 設計・実装とは別の新しいOpusセッション（AI評価2回目） |
 | 品質判定 | 既存のverifyとCIによる証跡の確認 | 既存のverifyとCIによる証跡の確認 |
@@ -41,16 +41,16 @@ Opusの指定だけで実施済みとは扱わない。実行結果または実�
 
 `$delivery` の管理役はCodexとし、設計と最終レビューをClaude CodeのOpusへ依頼する。Claude Codeが使えることと、指定したOpusの工程が成功したことを区別する。Codexのモデル設定を変えてOpusとして扱わない。
 
-管理役のCodexは、利用者に追加のプロンプト入力を求めず、依頼ファイルを作って[deliveryの補助スクリプト](../../.agents/skills/delivery/scripts/ask-opus.mjs)を実行する。依頼には仕様・対象コミット・必要な文書への参照を含める。作業の対象を専用worktreeでコミットし、依頼ファイルや検証資料はそのworktreeの `.loomake/` 配下へ用意する。
+管理役のCodexは、利用者に追加のプロンプト入力を求めず、依頼ファイルを作って[deliveryの補助スクリプト](../../.agents/skills/delivery/scripts/ask-opus.mjs)を実行する。依頼には仕様・対象コミット・規約文書と必要な資料への参照を含める。作業の対象を専用worktreeでコミットし、依頼ファイルや検証資料はそのworktreeの `.loomake/` 配下へ用意する。
 
 ```sh
 node .agents/skills/delivery/scripts/ask-opus.mjs \
   --role design --request .loomake/design-request.md --head <40桁の対象SHA>
 ```
 
-`--role` は `design`、`second-opinion`、`review` のいずれか。難しいバグの独立調査には `second-opinion` を使い、先行担当の仮説や推奨修正を依頼に含めない。最終レビューは `review` で別途起動する。スクリプトは毎回新しいセッションIDを作り、`--resume` や `--continue` を使わない。既存のClaude認証をそのまま使い、APIキーの追加や認証設定の書き換えは行わない。
+`--role` は `design`、`second-opinion`、`review` のいずれか。難しいバグの独立調査には `second-opinion` を使い、先行担当の仮説や推奨修正を依頼に含めない。最終レビューは `review` で別途起動する。工程をまたぐときは保存した成果物を次の依頼へ渡す。スクリプトは毎回新しいセッションIDを作り、`--resume` や `--continue` を使わない。既存のClaude認証をそのまま使い、APIキーの追加や認証設定の書き換えは行わない。
 
-起動時は `--model opus`、読取ツールのRead/Glob/Grep、hook無効、MCPなしを固定する。シェルを介さず依頼を標準入力で渡し、時間と出力の上限で停止する。時間上限は既定20分で、`--timeout-min` に1〜60の整数を指定できる。この上限は各Claude呼び出しに適用し、Goal全体の利用上限やAI評価回数を置き換えない。
+起動時は `--model opus`、読取ツールのRead/Glob/Grep、hook無効、自動メモリ無効、MCPなしを固定する。自動メモリの無効化はこの子プロセスに限り、利用者の設定ファイルを書き換えない。シェルを介さず依頼を標準入力で渡し、時間と出力の上限で停止する。時間上限は既定20分で、`--timeout-min` に1〜60の整数を指定できる。この上限は各Claude呼び出しに適用し、Goal全体の利用上限やAI評価回数を置き換えない。
 
 標準出力は1行のJSON要約とし、依頼や回答の本文を含めない。成果物はGitの除外対象である `.loomake/claude/<session-id>/` へ保存する。`request.md`、`events.jsonl`、`stderr.txt`、`result.md`、`manifest.json` を参照し、管理役が必要な根拠をPRへ転記する。生ログには入力やコードが含まれるため、そのまま公開しない。
 

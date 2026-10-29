@@ -28,7 +28,7 @@ export function parseArgs(args) {
 export function buildClaudeArgs(sessionId, requestDir) {
   return ['--print', '--model', 'opus', '--permission-mode', 'plan',
     '--tools', TOOLS.join(','), '--allowedTools', TOOLS.join(','),
-    '--setting-sources', '', '--settings', '{"disableAllHooks":true}',
+    '--setting-sources', '', '--settings', '{"disableAllHooks":true,"autoMemoryEnabled":false}',
     '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}',
     '--no-session-persistence', '--session-id', sessionId,
     '--add-dir', requestDir, '--output-format', 'stream-json', '--verbose'];
@@ -84,7 +84,7 @@ function stopChild(child, signal) {
 async function invoke(cwd, prompt, args, options) {
   return new Promise((resolvePromise) => {
     const child = spawn(options.executable ?? 'claude', [...(options.prefixArgs ?? []), ...args], {
-      cwd, env: options.env ?? process.env, shell: false, detached: process.platform !== 'win32', stdio: ['pipe', 'pipe', 'pipe'],
+      cwd, env: { ...(options.env ?? process.env), CLAUDE_CODE_DISABLE_AUTO_MEMORY: '1' }, shell: false, detached: process.platform !== 'win32', stdio: ['pipe', 'pipe', 'pipe'],
     });
     const chunks = { stdout: [], stderr: [] };
     const sizes = { stdout: 0, stderr: 0 };
@@ -138,7 +138,7 @@ export async function askOpus(input, options = {}) {
     mkdirSync(dir, { recursive: true, mode: 0o700 });
     if (git(cwd, ['check-ignore', dir]) === '') throw new Error('成果物の保存先がGitの除外対象になっていません。');
     const prompt = `担当工程: ${input.role}\n対象コミット: ${input.head}\n` +
-      'Read/Glob/Grepだけで依頼を処理してください。計画ファイルの作成、編集、ExitPlanMode、承認・投稿はしないでください。成果物は最終メッセージの本文で返してください。\n\n' + content;
+      '最初にAGENTS.mdとdocs/dev/agent-workflow.mdを読んでください。Read/Glob/Grepだけで依頼を処理してください。計画ファイルの作成、編集、ExitPlanMode、承認・投稿はしないでください。成果物は最終メッセージの本文で返してください。\n\n' + content;
     writeFileSync(resolve(dir, 'request.md'), prompt, { mode: 0o600 });
     execution = await invoke(cwd, prompt, buildClaudeArgs(sessionId, dir), { ...options, timeoutMs: input.timeoutMs });
     writeFileSync(resolve(dir, 'events.jsonl'), execution.stdout, { mode: 0o600 });

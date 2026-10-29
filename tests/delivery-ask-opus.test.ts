@@ -41,7 +41,7 @@ describe('deliveryのOpus応答の検証', () => {
   it('新規セッション・読取ツール・hook/MCP無効を固定し、既存セッションを再開しない', () => {
     const args = buildClaudeArgs(session, '/request');
     expect(args).toEqual(['--print', '--model', 'opus', '--permission-mode', 'plan', '--tools', 'Read,Glob,Grep', '--allowedTools', 'Read,Glob,Grep',
-      '--setting-sources', '', '--settings', '{"disableAllHooks":true}', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}',
+      '--setting-sources', '', '--settings', '{"disableAllHooks":true,"autoMemoryEnabled":false}', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}',
       '--no-session-persistence', '--session-id', session, '--add-dir', '/request', '--output-format', 'stream-json', '--verbose']);
   });
   it('未知の引数・短いhead・時間上限なしを受け付けない', () => {
@@ -68,6 +68,7 @@ async function withRepo(mode: string, check: (fixture: { cwd: string; input: Ret
     writeFileSync(fixture, `import {writeFileSync} from 'node:fs';
 const args=process.argv.slice(2); const id=args[args.indexOf('--session-id')+1];
 writeFileSync('.loomake/called', 'yes');
+writeFileSync('.loomake/env.json', JSON.stringify({memory:process.env.CLAUDE_CODE_DISABLE_AUTO_MEMORY, preserved:process.env.DELIVERY_TEST_SENTINEL}));
 let request=''; for await (const chunk of process.stdin) request+=chunk;
 const mode=process.env.DELIVERY_TEST_MODE;
 if(mode==='timeout') { setInterval(()=>{},1000); }
@@ -81,15 +82,16 @@ else {
 }
 `);
     await check({ cwd, input: { role: 'design', request, head, timeoutMs: 3000 },
-      options: { cwd, executable: process.execPath, prefixArgs: [fixture], env: { ...process.env, DELIVERY_TEST_MODE: mode } } });
+      options: { cwd, executable: process.execPath, prefixArgs: [fixture], env: { ...process.env, DELIVERY_TEST_MODE: mode, CLAUDE_CODE_DISABLE_AUTO_MEMORY: '0', DELIVERY_TEST_SENTINEL: 'kept' } } });
   } finally { rmSync(cwd, { recursive: true, force: true }); }
 }
 
 describe('deliveryのClaude起動', () => {
   it('成果物を保存し、返す要約に依頼や回答の本文を混ぜない', async () => {
-    await withRepo('success', async ({ input, options }) => {
+    await withRepo('success', async ({ cwd, input, options }) => {
       const result = await askOpus(input, options);
       expect(result.ok).toBe(true);
+      expect(JSON.parse(readFileSync(join(cwd, '.loomake/env.json'), 'utf8'))).toEqual({ memory: '1', preserved: 'kept' });
       expect(JSON.stringify(result)).not.toMatch(/依頼の目印|回答の目印/);
       expect(result.dir).toBeTruthy();
       const dir = result.dir!;
