@@ -64,14 +64,28 @@ REQ-305/306はPR #138、REQ-307は#60保持修正の専用IDであり、本chang
 
 | 対象 | 確認結果・扱い |
 |---|---|
-| #60 / REQ-307 | 未知キー保持修正の受入が実装開始の依存。本branchはf397109時点で未受入のため、実装しない |
-| 最小quality読取 | coreにversion 2のスキーマと既定値があり、kitにyaml依存・予算付きInputReaderがある。新しい一般名前空間を仮定せず利用できる |
+| #60 / REQ-307 | f397109基準のbranch作成時は未受入と記録。その後[PR140](https://github.com/loomake/loomake/pull/140)・[PR141](https://github.com/loomake/loomake/pull/141)で修正と仕様同期/archiveを受入、#60はclose済み。現在の実装停止は未回答3件と仕様ゲート |
+| 最小quality読取 | coreにversion 2のスキーマ、kitに予算付きInputReaderがある。kitの現在の直接依存はcoreのみ。REQ-047の許容内でyaml追加を提案する |
 | 証拠の既存取得 | runVerifyはコマンド前に古いレポートを消し、成功IDを抽出する。ただし版/SHA/環境/鮮度を含む完全な適格性は未接続。exit 0だけをPASS根拠にしない |
 | scope | 既存API/CLIに指定なし。明示引数と--scopeを設計案にし、環境からの推測を避ける |
 | Evidenceの版 | 必須verifyを2.0.0へ移すため新書き出しを2とする。旧1を履歴型・fixtureで保持する |
 | Reportとrunner | Report 2の既存フィールド、RunSummaryの既存外形へ投影する。不要な新フィールドやReport 3を追加しない |
 | 互換性・配布 | 公開側/利用側を同じchangeで切替。旧fixture改変、試験期待値の便宜的書換え、skipや設定緩和を禁止する |
-| C-003へ残るもの | partialの実取得経路と全禁止キーの網羅、全providerの実証跡取得・適格性/実施確認。03で先行する最小範囲が決まるまでは全体を完了としない |
+| C-003へ残るもの | 全provider、完全なhost隔離、広いCI成果物/再利用、最小接続以外のpartialと全禁止キーの網羅。A候補の最小接続の適格性・実施確認はC-001内で成立させる |
+
+## 全A候補と著述の出典
+
+[全Aの場合の未承認候補](design-candidate-a.md)はR-C001-03 Aの追加具体案を含む。S1準備・plan・private handoff・producer mappingは未承認で、locator/envは承認や信頼根拠にならない。質問行・仮定表・7 capabilityの差分仕様はこの整理で変更しない。REQ-320〜325は品質/CLIへ割当済みのため再使用せず、新IDを割り当てない。
+
+実際のOpus著述は次の3回。いずれも `claude-opus-5-5`だけ、fresh session、exit 0、is_error=false、permission_denials=[]。独立した評価・レビュー・採点ではない。追加AI評価は0、過去のPR139ローカル評価回数は不明で、上限をリセットしない。独立レビューは未実施として残す。
+
+| 著述 | actual session ID | 原文・metadata（ignored） |
+|---|---|---|
+| 初稿生成 | 46c6f248-d65b-44c4-a4c3-23940167a414 | codex-quality-reference-source-links/node_modules/.cache/c001-all-a-opus-design-20261029/ |
+| 第2稿生成 | 68e661c1-3d1d-407f-9493-4614cbb64b86 | 同worktreeのnode_modules/.cache/c001-all-a-opus-design-revision2-20261029/ |
+| 指定箇所の第3稿著述 | 13b92bac-7e8a-42b4-b281-e62bf76044ad | 同worktreeのnode_modules/.cache/c001-all-a-opus-design-revision3-20261029/ |
+
+Node24/公式SHA256一致Node22.12の同期lazy-loader実測とOpenSpecの配置許容は、[詳細候補の技術確認](design-candidate-a.md#技術的に確認した範囲)へ記す。製品integration・配布物の成功や人の承認の証拠ではない。
 
 ## 検証の記録
 

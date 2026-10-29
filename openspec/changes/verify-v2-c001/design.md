@@ -2,15 +2,17 @@
 
 ## Context
 
-基準はmain `f397109`。動機と能力の範囲はproposalを参照する。`runVerify` は同期のI/O統合であり、現在はquality.yamlを読まず1.0.0の `ok/results/coverage` を返す。CLIは設定の読取不能もUsageErrorへまとめ、`--json` の引数エラーを結果JSONにできない。ci-gateは終了コード、runnerは `ok/results`、traceは埋め込まれた同じ型とcoverageに依存する。
+branch作成時の基準はmain `f397109`、現在の製品調査の基準はmain `f4e3edb`。製品ソースは同mainと一致する専有worktree `77f9e2e`で確認し、この計画branchの製品コードは更新していない。動機と能力の範囲はproposalを参照する。`runVerify` は同期のI/O統合であり、現在はquality.yamlを読まず1.0.0の `ok/results/coverage` を返す。CLIは設定の読取不能もUsageErrorへまとめ、`--json` の引数エラーを結果JSONにできない。ci-gateは終了コード、runnerは `ok/results`、traceは埋め込まれた同じ型とcoverageに依存する。
 
-共有品質4値と純粋集約はPR #138で受入済み。#60の未知フィールド保持修正（REQ-307）は未受入の依存で、スキーマ利用を増やす実装はその受入後とする。既存の事前工数推定は `docs/effort/c-001.md` に固定されており書き換えない。
+共有品質4値と純粋集約はPR #138で受入済み。#60の未知フィールド保持修正（REQ-307）はbranch作成時には未受入と記録したが、PR #140・#141で修正と仕様反映・archiveを受け入れ、現在はclose済みでmain `f4e3edb`に含まれる。実装停止はR-C001-01〜03の未回答と仕様ゲートによる。既存の事前工数推定 `docs/effort/c-001.md` は変更しない。
+
+追加の全A案は[design-candidate-a.md](design-candidate-a.md)へ分離した。同文書は人の採否を得るための未承認候補であり、現行仕様・7 capabilityの差分仕様・回答記録を置き換えない。Bがあれば該当部分を再設計する。
 
 ## Goals / Non-Goals
 
 C-001の正常・不正・不足の区別と自己完了ゲートを維持したまま、公開側・利用側を一体で移す。既存の合意・タスク・要件ID対応・入力予算・コマンド実行予算・中断・文書hash・追記保存を保持する。
 
-C-003で完成する全providerの実レポート取得、版/SHA/環境/時刻の適格性と実施確認、partial経路と禁止フィールドの網羅試験を、この計画だけで完成扱いにしない。成功経路のためC-001へ先行させる最小取得範囲はR-C001-03で決める。未接続のsource/metric、参考指標、古い結果はPASSへ上げない。31副特性init、eval・telemetry・履歴の長期保管、runnerのCI取得とready化全体は範囲外。
+C-003へ残る全providerの取得、完全なhost隔離、広いCI成果物・再利用連鎖、最小接続以外のpartial経路と禁止フィールドの網羅試験を、この計画だけで完成扱いにしない。A案の最小接続自体の適格性・実施確認と必要なpartial分類はC-001内で成立させる候補とする。成功経路のためC-001へ先行させる最小取得範囲はR-C001-03で決める。未接続のsource/metric、参考指標、古い結果はPASSへ上げない。31副特性init、eval・telemetry・履歴の長期保管、runnerのCI取得とready化全体は範囲外。
 
 ## Decisions
 
@@ -24,7 +26,7 @@ kitの `runVerify(options)` の名前と同期実行は維持し、戻り値を2
 
 ### 2. quality入力と限定条件
 
-kitの既存yaml依存でrootのquality.yamlを読み、coreのloaderとversion 2を使う。入力予算・リンク制約は既存InputReaderを使う。キーの既定値はcoreだけで補い、環境変数やAGENTSから拾わない。必要ファイルの不在は読取不能のruntime/3、権限不足はpermission/3、構文・型・未対応版・NA必須値の不正はconfig/2とする。既存loomake.config.json省略時の既定値は維持するが、存在する設定の読取不能は3へ分ける。
+現在のkitの実行時依存はcoreだけで、yamlは未追加である。REQ-047の許容範囲でyamlとlockfileの変更を提案し、rootのquality.yaml読取にcoreのversion 2スキーマを使う。入力予算・リンク制約は既存InputReaderを使う。キーの既定値はcoreだけで補い、環境変数やAGENTSから拾わない。必要ファイルの不在は読取不能のruntime/3、権限不足はpermission/3、構文・型・未対応版・NA必須値の不正はconfig/2とする。既存loomake.config.json省略時の既定値は維持するが、存在する設定の読取不能は3へ分ける。
 
 新規導入・既存導入に最小例（version、model、品質項目と証拠条件）と手動配置の案内を用意する。空の最小例も構造としては読めるが、空や全NAでdoneのPASSにしない。#66の全面init生成を待たず、既存ファイルを自動上書きする方法も採らない。
 
@@ -32,17 +34,19 @@ kitの既存yaml依存でrootのquality.yamlを読み、coreのloaderとversion 
 
 ### 3. 実証跡と正常PASSの停止点
 
-実装範囲を勝手に不足拒否だけへ狭めない。R-C001-03のA案は、現在の品質コマンドとVitest/Jestの成功ID抽出を使う最小adapterを先行させる案である。古いレポートを実行前に除き、その実行で取得したレポートを読む。対象SHAを前後で照合し、実コマンド・ツール版・環境・時刻・レポートhash・基準と検証方法のhashを観測事実として記録する。skip/todo/失敗を成功に数えず、要求REQとの対応がある成功だけを限定条件へ渡す。全成功であっても版・SHA・環境・手順・鮮度を照合できない入力は不足にする。コマンドexit 0だけを証拠にせず、手書きのeligible:trueも受け付けない。
+実装範囲を不足拒否だけへ狭めない。全A案のsourceは `ci.test_report`、metricは `required_subjects_with_failed_tests`、例のtargetは `== 0`とする未承認候補である。source/metric、計画のversion・required_by・承認済みspec/REQ集合、producer/versionと実効method、対象SHA・環境・同一invocationの鮮度を[詳細候補](design-candidate-a.md)に示す。既存のqualityスキーマにrequired_byや適格性の意味が実装済みとは扱わない。
 
-この先行adapterが担うsource/metricはO01の一般名前空間全体の確定と分け、対象となる指標・対応するquality項目・期待targetをR-C001-03回答時に差分仕様へ追記する。例示の `ci.test_report` を無条件に実装済みの接続とは扱わない。鮮度条件と信頼する基準の取得元も受入例に必要な範囲を固定する。
+有効な実施failedと、missing・skip・todo・未取得・未照合を分ける。比較は既存5演算子を保ち、未完の集計値や暫定0からFAIL/PASSを作らない。適格な実施違反が確立したときだけFAILを優先する。gateのPASSで品質対象0・全NA・証拠空がPASSにならないよう、REQ-314の品質対象専用guardを全checksの件数に含める案を具体化する。
 
-B案はC-003との循環依存を避けるため、取得/適格性とC-001の公開側/利用側を並行準備し、必要範囲を合同受入する計画へ変える。どちらも正常PASSの統合試験と通常の自己完了ゲートを必須とする。いまはA/Bと必要条件が未確定なので、実装禁止。C-001のDoDを満たせない範囲を完了として受け入れない。
+S1の信頼するbase-built checkerを準備し、S2のCLI/APIはその判定moduleを直接load/callする候補とする。locator/env・祖先関係・handoff内の自己申告hashでは信頼を与えない。独立したS1承認と基準側由来のexpected anchorを照合し、独立したfresh Tを権威としてtarget Sとの一致を検査する。S/Tはtrusted coreのexact `2.0.0`スキーマで解析する。通常の `pnpm -s verify --change verify-v2-c001 --done` はci/PASS・要判断なし・exit 0が必要で、local 0や独立checkerだけでは代替しない。
+
+S1準備・private handoff・producer mappingはR-C001-03 Aの追加具体案であり、未承認である。3質問の回答・採用内容の差分仕様反映・仕様ゲートexit 0前は実装しない。B案では依存順と必要範囲を再設計し、正常PASS・元のDoDを削らない。required-checkや公開・権限設定の操作は、実装・検証後の具体対象について個別承認を得るまで行わない。
 
 ### 4. JSON・型・埋め込みの移行
 
 verifyは2.0.0、Evidenceは2へ上げる。Evidence 1の必須verifyが旧構造であり、型とJSON Schemaをそのまま変えると旧データを読めなくするため、Evidenceにも形式変更を明示する。履歴用 `LegacyVerifyResult`・`LegacyEvidence` と各schema/loaderを別名で残し、旧verify fixture、旧Evidence、documents省略を改変しない。現行の書き出しへ旧版を混ぜない。VerifyModeは既存のモード入力型として維持する。REQ-040が要求する要件→成功テストファイル一覧は、completed/partialの任意coverageとして保持しReportの既存行へ投影する。abortedへ一覧を補わない。これは将来の追加フィールドではなく現行公開契約の維持である。新チェック型・実行エラー型・scope型はスキーマから導出する。
 
-ci/localのcompleted/partialとabortedの5形をスキーマで区別する。abortedはschemaVersion/change/runだけ、localにはverdictがない。未知キーの許容と既知禁止キーの拒否を区別し、REQ-307の安全な保持経路を使う。C-001ではcompletedとabortedと最低限の禁止キーを試験し、partial取得経路と全禁止キーの網羅をC-003へ残す。新しい2.0.0だけをスキーマに置いて実出力を1.0.0に据え置く移行はしない。
+ci/localのcompleted/partialとabortedの5形をスキーマで区別する。abortedはschemaVersion/change/runだけ、localにはverdictがない。未知キーの許容と既知禁止キーの拒否を区別し、REQ-307の安全な保持経路を使う。C-001ではcompleted・aborted・最低限の禁止キーと、採用した最小接続の部分取得失敗を試験する候補とする。その他のpartial取得経路と全禁止キーの網羅はC-003へ残す。新しい2.0.0だけをスキーマに置いて実出力を1.0.0に据え置く移行はしない。
 
 Reportは既存の2を維持する。新しい実行状態フィールドは追加しない。checkのID・理由と、その実行の成功テスト対応を既存ReportRow・failedChecksへ投影する。証拠にないテスト対応は作らず「合格したテストなし」とする。evidence.okはその記録の実施結果を投影した表示値で、現在の再利用可否を表さない。local/旧形式は既存warningsで最終CI合格ではないこと・履歴閲覧専用を説明し、どの自動ゲートもReport.evidence.okを合格APIとして使わない。abortedはok:falseと理由を投影する。Reportの日時・文書snapshot・既存日本語結果は保持する。
 
@@ -55,6 +59,10 @@ Reportは既存の2を維持する。新しい実行状態フィールドは追�
 | runner | spec-only/local、done/localを明示しdecision.requiredで停止 | HEAD変更・中断・予算の順序、Draft PRまで。RunSummary外形は維持 |
 | trace record | RecordOptions.scopeとCLI --scopeを追加（既定ci）、runnerはlocalを渡す | snapshot・検査前後照合・未コミット拒否・追記専用・同じ0〜3 |
 | trace report | 旧/newを版別に読み既存Report 2へ投影 | 同期・オフライン・保存済み文書・既存行結果 |
+| runner reuse・pr・prompt・recorder | v1のok/results直読と型をv2へ追従 | 親SHA・文書snapshot・未コミット拒否、localの非最終合格 |
+| trace serialization・publication | 版別validatorへ追従しJSON前後の検査とbyte予算を保持 | 同期・末尾改行・fsync・原子的な上書き禁止公開 |
+| agreement・doctor | 共有configの影響を点検する | verify限定の2/3分類を既存の非verify契約へ漏らさず、doctorで品質コマンドを実行しない |
+| smoke・runtime・公開型fixture | 現行v2と履歴v1の両経路を同じ変更で確認 | offline・SIGINT・strict型検査・既存の保護された期待値 |
 
 runのlastVerify.okはlocal項目の完了を表す既存表示へ投影し、CI最終合格と呼ばない。decision.requiredとFAILが同時なら両方を記録し、自動修正に進まない。ci-gateで通常の終了コード0だけを見てローカル結果を合格にする互換処理は置かない。
 
@@ -83,10 +91,10 @@ runのlastVerify.okはlocal項目の完了を表す既存表示へ投影し、CI
 
 ## Migration Plan
 
-#60受入と質問3件の回答を確認し、差分仕様・trace・tasksを更新してstrictと仕様ゲートを通す。回答を反映し依存受入と仕様ゲート成功を確認したら、既存のdelivery指示に基づきapplyへ進み、型と履歴fixture、純粋判定、最小の適格な取得、CLI、全利用側の順で実装し、同じPRで切り替える。公開前に通常の完了ゲートと最終headのCI・配布検証を確認する。
+現在の#60受入は確認済み。質問3件の回答と追加具体案の採否を記録し、必要な差分仕様・trace・tasksを更新してstrictと仕様ゲートexit 0を確認してから、既存delivery指示のapplyへ進む。全A候補ではS1の内部基準準備とS2の公開側/全利用側のv2一体切替を分け得るが、S1やschema 2だけを置いた状態をC-001完了にしない。S1を先行受入する場合は、独立changeの限定したDoD・REQ対応試験・通常done 0と同期archiveを経てS2へ進む未承認候補とし、未完了の親C001 gateを緩めない。新change/IDは今回作成しない。S2の通常self-ci gateと独立trusted check、最終headの必須CI・配布検証・元のDoDをすべて満たす。
 
 戻す場合は公開側・利用側を同じ単位で戻し、既に追加したv2証拠や旧fixtureを消さない。旧版へ戻した環境で新証拠を1.0.0に読み替えず、未対応版として止める。計画だけのPRではchangesetの実バージョン切替や製品コードを変更しない。
 
 ## Blocking Questions
 
-未回答のR-C001-01〜03はtraceに選択肢・おすすめ・止まる範囲を記した。いずれも採用済みの技術判断ではない。scopeの明示方法、同期APIの維持、Report投影、初期qualityの手動配置、内部の責務分離はレビュー可能な技術案であり、人に追加の仕様決定を求める項目とは区別する。
+未回答のR-C001-01〜03はtraceに選択肢・おすすめ・止まる範囲を記した。いずれも採用済みの技術判断ではない。同期/lazyの技術的実現性、Report投影、既存consumerの追従は技術資料で具体化する。信頼anchorの採用・bootstrap・source/metricやplanの新契約・保護された互換差分の採否は、別の19質問へ増やさず既存3質問の具体材料として区別する。
