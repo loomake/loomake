@@ -1,0 +1,562 @@
+{
+  "source": "main 8d2d7cefac81eb859c359840a4ea3a019b123dbb (before CLI refactor)",
+  "cases": [
+    {
+      "argv": [
+        "--help"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake <init | verify | trace | run | doctor> [オプション]\n\nコマンド:\n  init     AGENTS.md・CLAUDE.md・loomake.config.json・Skill をプロジェクトに置く\n  verify   仕様ゲートと完了ゲートで、仕様・確認事項・テストを検査する\n  trace    証拠を記録し（record）、リリースレポートを出す（report）。確認事項の回答（answer）と仮定の承認（approve）を書く\n  run      change のタスクをエンジンに 1 つずつ実装させ、完了ゲートを通して PR を作る\n  doctor   導入状態を調べ、足りない設定と直し方を表示する\n\nオプション:\n  -h, --help     使い方を表示する\n  -v, --version  版を表示する\n\n各コマンドの使い方は、loomake <コマンド> --help で表示します。"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "-h"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake <init | verify | trace | run | doctor> [オプション]\n\nコマンド:\n  init     AGENTS.md・CLAUDE.md・loomake.config.json・Skill をプロジェクトに置く\n  verify   仕様ゲートと完了ゲートで、仕様・確認事項・テストを検査する\n  trace    証拠を記録し（record）、リリースレポートを出す（report）。確認事項の回答（answer）と仮定の承認（approve）を書く\n  run      change のタスクをエンジンに 1 つずつ実装させ、完了ゲートを通して PR を作る\n  doctor   導入状態を調べ、足りない設定と直し方を表示する\n\nオプション:\n  -h, --help     使い方を表示する\n  -v, --version  版を表示する\n\n各コマンドの使い方は、loomake <コマンド> --help で表示します。"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "init",
+        "--help"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake init [--codex] [--devcontainer]\nAGENTS.md・CLAUDE.md・loomake.config.json・Skill をプロジェクトに置く。内容の違う同名のファイルは、確かめてから上書きする。\n\nオプション:\n  --codex             Skill を .agents/skills/ にも置く（Codex 用）\n  --devcontainer      .devcontainer/devcontainer.json を置く"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "init",
+        "-h"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake init [--codex] [--devcontainer]\nAGENTS.md・CLAUDE.md・loomake.config.json・Skill をプロジェクトに置く。内容の違う同名のファイルは、確かめてから上書きする。\n\nオプション:\n  --codex             Skill を .agents/skills/ にも置く（Codex 用）\n  --devcontainer      .devcontainer/devcontainer.json を置く"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "verify",
+        "--help"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]\n仕様ゲートと完了ゲートで、仕様・確認事項・テストを検査する。--change を省くと、品質コマンドだけを実行する。終了コードは合格 0・不合格 1・使い方の誤り 2・実行時の失敗 3。\n\nオプション:\n  --change <id>       検査する change\n  --spec-only         仕様ゲート：実装に入ってよいかを検査する\n  --done              完了ゲート：仕様ゲートに加え、タスク・要件ごとのテスト・品質コマンドを検査する\n  --json              結果を JSON で標準出力に出す（進捗は標準エラー）\n  --skip-commands     品質コマンドを実行せず、すでにあるテストのレポートを読む"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "verify",
+        "-h"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]\n仕様ゲートと完了ゲートで、仕様・確認事項・テストを検査する。--change を省くと、品質コマンドだけを実行する。終了コードは合格 0・不合格 1・使い方の誤り 2・実行時の失敗 3。\n\nオプション:\n  --change <id>       検査する change\n  --spec-only         仕様ゲート：実装に入ってよいかを検査する\n  --done              完了ゲート：仕様ゲートに加え、タスク・要件ごとのテスト・品質コマンドを検査する\n  --json              結果を JSON で標準出力に出す（進捗は標準エラー）\n  --skip-commands     品質コマンドを実行せず、すでにあるテストのレポートを読む"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "trace",
+        "--help"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake trace record --change <id>\nverify --done を実行し、結果をコミットの SHA と合わせて .loomake/evidence/<change-id>/ に記録する。未コミットの変更があれば記録しない。\n\nオプション:\n  --change <id>       記録する change\n\n使い方: loomake trace report --change <id> [--format md|json]\nいちばん新しい証拠の記録から、要件ごとのリリースレポートを標準出力に出す。\n\nオプション:\n  --change <id>       レポートを作る change（進行中になければ archive から探す）\n  --format md|json    出力の形式。省くと md\n\n使い方: loomake trace answer --change <id> --question <Q-ID> --answer <回答> --by <回答者> [--date YYYY-MM-DD]\ntrace.md の確認事項へ回答を書く。すでに回答がある行は上書きしない。\n\nオプション:\n  --change <id>       回答する change\n  --question <Q-ID>   確認事項の ID\n  --answer <回答>     確認事項への回答\n  --by <回答者>       回答を決めた人\n  --date YYYY-MM-DD   回答日。省くと今日の日付\n\n使い方: loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]\ntrace.md の仮定に承認を書く。すでに承認がある行は上書きしない。\n\nオプション:\n  --change <id>       承認する change\n  --assumption <A-ID> 仮定の ID\n  --by <承認者>       承認を決めた人\n  --date YYYY-MM-DD   承認日。省くと今日の日付"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "trace",
+        "-h"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake trace record --change <id>\nverify --done を実行し、結果をコミットの SHA と合わせて .loomake/evidence/<change-id>/ に記録する。未コミットの変更があれば記録しない。\n\nオプション:\n  --change <id>       記録する change\n\n使い方: loomake trace report --change <id> [--format md|json]\nいちばん新しい証拠の記録から、要件ごとのリリースレポートを標準出力に出す。\n\nオプション:\n  --change <id>       レポートを作る change（進行中になければ archive から探す）\n  --format md|json    出力の形式。省くと md\n\n使い方: loomake trace answer --change <id> --question <Q-ID> --answer <回答> --by <回答者> [--date YYYY-MM-DD]\ntrace.md の確認事項へ回答を書く。すでに回答がある行は上書きしない。\n\nオプション:\n  --change <id>       回答する change\n  --question <Q-ID>   確認事項の ID\n  --answer <回答>     確認事項への回答\n  --by <回答者>       回答を決めた人\n  --date YYYY-MM-DD   回答日。省くと今日の日付\n\n使い方: loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]\ntrace.md の仮定に承認を書く。すでに承認がある行は上書きしない。\n\nオプション:\n  --change <id>       承認する change\n  --assumption <A-ID> 仮定の ID\n  --by <承認者>       承認を決めた人\n  --date YYYY-MM-DD   承認日。省くと今日の日付"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "trace",
+        "record",
+        "--help"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake trace record --change <id>\nverify --done を実行し、結果をコミットの SHA と合わせて .loomake/evidence/<change-id>/ に記録する。未コミットの変更があれば記録しない。\n\nオプション:\n  --change <id>       記録する change"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "trace",
+        "record",
+        "-h"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake trace record --change <id>\nverify --done を実行し、結果をコミットの SHA と合わせて .loomake/evidence/<change-id>/ に記録する。未コミットの変更があれば記録しない。\n\nオプション:\n  --change <id>       記録する change"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "trace",
+        "report",
+        "--help"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake trace report --change <id> [--format md|json]\nいちばん新しい証拠の記録から、要件ごとのリリースレポートを標準出力に出す。\n\nオプション:\n  --change <id>       レポートを作る change（進行中になければ archive から探す）\n  --format md|json    出力の形式。省くと md"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "trace",
+        "report",
+        "-h"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake trace report --change <id> [--format md|json]\nいちばん新しい証拠の記録から、要件ごとのリリースレポートを標準出力に出す。\n\nオプション:\n  --change <id>       レポートを作る change（進行中になければ archive から探す）\n  --format md|json    出力の形式。省くと md"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "trace",
+        "answer",
+        "--help"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake trace answer --change <id> --question <Q-ID> --answer <回答> --by <回答者> [--date YYYY-MM-DD]\ntrace.md の確認事項へ回答を書く。すでに回答がある行は上書きしない。\n\nオプション:\n  --change <id>       回答する change\n  --question <Q-ID>   確認事項の ID\n  --answer <回答>     確認事項への回答\n  --by <回答者>       回答を決めた人\n  --date YYYY-MM-DD   回答日。省くと今日の日付"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "trace",
+        "answer",
+        "-h"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake trace answer --change <id> --question <Q-ID> --answer <回答> --by <回答者> [--date YYYY-MM-DD]\ntrace.md の確認事項へ回答を書く。すでに回答がある行は上書きしない。\n\nオプション:\n  --change <id>       回答する change\n  --question <Q-ID>   確認事項の ID\n  --answer <回答>     確認事項への回答\n  --by <回答者>       回答を決めた人\n  --date YYYY-MM-DD   回答日。省くと今日の日付"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "trace",
+        "approve",
+        "--help"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]\ntrace.md の仮定に承認を書く。すでに承認がある行は上書きしない。\n\nオプション:\n  --change <id>       承認する change\n  --assumption <A-ID> 仮定の ID\n  --by <承認者>       承認を決めた人\n  --date YYYY-MM-DD   承認日。省くと今日の日付"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "trace",
+        "approve",
+        "-h"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]\ntrace.md の仮定に承認を書く。すでに承認がある行は上書きしない。\n\nオプション:\n  --change <id>       承認する change\n  --assumption <A-ID> 仮定の ID\n  --by <承認者>       承認を決めた人\n  --date YYYY-MM-DD   承認日。省くと今日の日付"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "run",
+        "--help"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake run --change <id> [--engine claude-code] [--dry-run] [--skip-permissions]\nchange のタスクをエンジンに 1 つずつ実装させ、完了ゲートが通るまで直させて、PR を作る。\n\nオプション:\n  --change <id>       実装する change\n  --engine <名前>     使うエンジン。省くと claude-code（いまは claude-code だけ）\n  --dry-run           エンジンに渡す予定のタスクと最初の指示を表示するだけで、実装しない\n  --skip-permissions  権限確認なしでエンジンを動かす。LOOMAKE_SANDBOX=1 のときだけ使える"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "run",
+        "-h"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake run --change <id> [--engine claude-code] [--dry-run] [--skip-permissions]\nchange のタスクをエンジンに 1 つずつ実装させ、完了ゲートが通るまで直させて、PR を作る。\n\nオプション:\n  --change <id>       実装する change\n  --engine <名前>     使うエンジン。省くと claude-code（いまは claude-code だけ）\n  --dry-run           エンジンに渡す予定のタスクと最初の指示を表示するだけで、実装しない\n  --skip-permissions  権限確認なしでエンジンを動かす。LOOMAKE_SANDBOX=1 のときだけ使える"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "doctor",
+        "--help"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake doctor\n導入状態を調べ、足りない設定と直し方を表示する。ファイルは変えず、品質コマンドも実行しない。"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "doctor",
+        "-h"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake doctor\n導入状態を調べ、足りない設定と直し方を表示する。ファイルは変えず、品質コマンドも実行しない。"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "verify",
+        "--change",
+        "--help"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]\n仕様ゲートと完了ゲートで、仕様・確認事項・テストを検査する。--change を省くと、品質コマンドだけを実行する。終了コードは合格 0・不合格 1・使い方の誤り 2・実行時の失敗 3。\n\nオプション:\n  --change <id>       検査する change\n  --spec-only         仕様ゲート：実装に入ってよいかを検査する\n  --done              完了ゲート：仕様ゲートに加え、タスク・要件ごとのテスト・品質コマンドを検査する\n  --json              結果を JSON で標準出力に出す（進捗は標準エラー）\n  --skip-commands     品質コマンドを実行せず、すでにあるテストのレポートを読む"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "trace",
+        "constructor",
+        "--help"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake trace record --change <id>\nverify --done を実行し、結果をコミットの SHA と合わせて .loomake/evidence/<change-id>/ に記録する。未コミットの変更があれば記録しない。\n\nオプション:\n  --change <id>       記録する change\n\n使い方: loomake trace report --change <id> [--format md|json]\nいちばん新しい証拠の記録から、要件ごとのリリースレポートを標準出力に出す。\n\nオプション:\n  --change <id>       レポートを作る change（進行中になければ archive から探す）\n  --format md|json    出力の形式。省くと md\n\n使い方: loomake trace answer --change <id> --question <Q-ID> --answer <回答> --by <回答者> [--date YYYY-MM-DD]\ntrace.md の確認事項へ回答を書く。すでに回答がある行は上書きしない。\n\nオプション:\n  --change <id>       回答する change\n  --question <Q-ID>   確認事項の ID\n  --answer <回答>     確認事項への回答\n  --by <回答者>       回答を決めた人\n  --date YYYY-MM-DD   回答日。省くと今日の日付\n\n使い方: loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]\ntrace.md の仮定に承認を書く。すでに承認がある行は上書きしない。\n\nオプション:\n  --change <id>       承認する change\n  --assumption <A-ID> 仮定の ID\n  --by <承認者>       承認を決めた人\n  --date YYYY-MM-DD   承認日。省くと今日の日付"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "trace",
+        "toString",
+        "--help"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake trace record --change <id>\nverify --done を実行し、結果をコミットの SHA と合わせて .loomake/evidence/<change-id>/ に記録する。未コミットの変更があれば記録しない。\n\nオプション:\n  --change <id>       記録する change\n\n使い方: loomake trace report --change <id> [--format md|json]\nいちばん新しい証拠の記録から、要件ごとのリリースレポートを標準出力に出す。\n\nオプション:\n  --change <id>       レポートを作る change（進行中になければ archive から探す）\n  --format md|json    出力の形式。省くと md\n\n使い方: loomake trace answer --change <id> --question <Q-ID> --answer <回答> --by <回答者> [--date YYYY-MM-DD]\ntrace.md の確認事項へ回答を書く。すでに回答がある行は上書きしない。\n\nオプション:\n  --change <id>       回答する change\n  --question <Q-ID>   確認事項の ID\n  --answer <回答>     確認事項への回答\n  --by <回答者>       回答を決めた人\n  --date YYYY-MM-DD   回答日。省くと今日の日付\n\n使い方: loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]\ntrace.md の仮定に承認を書く。すでに承認がある行は上書きしない。\n\nオプション:\n  --change <id>       承認する change\n  --assumption <A-ID> 仮定の ID\n  --by <承認者>       承認を決めた人\n  --date YYYY-MM-DD   承認日。省くと今日の日付"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [
+        "trace",
+        "nothing",
+        "--help"
+      ],
+      "code": 0,
+      "stdout": [
+        "使い方: loomake trace record --change <id>\nverify --done を実行し、結果をコミットの SHA と合わせて .loomake/evidence/<change-id>/ に記録する。未コミットの変更があれば記録しない。\n\nオプション:\n  --change <id>       記録する change\n\n使い方: loomake trace report --change <id> [--format md|json]\nいちばん新しい証拠の記録から、要件ごとのリリースレポートを標準出力に出す。\n\nオプション:\n  --change <id>       レポートを作る change（進行中になければ archive から探す）\n  --format md|json    出力の形式。省くと md\n\n使い方: loomake trace answer --change <id> --question <Q-ID> --answer <回答> --by <回答者> [--date YYYY-MM-DD]\ntrace.md の確認事項へ回答を書く。すでに回答がある行は上書きしない。\n\nオプション:\n  --change <id>       回答する change\n  --question <Q-ID>   確認事項の ID\n  --answer <回答>     確認事項への回答\n  --by <回答者>       回答を決めた人\n  --date YYYY-MM-DD   回答日。省くと今日の日付\n\n使い方: loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]\ntrace.md の仮定に承認を書く。すでに承認がある行は上書きしない。\n\nオプション:\n  --change <id>       承認する change\n  --assumption <A-ID> 仮定の ID\n  --by <承認者>       承認を決めた人\n  --date YYYY-MM-DD   承認日。省くと今日の日付"
+      ],
+      "stderr": []
+    },
+    {
+      "argv": [],
+      "code": 2,
+      "stdout": [],
+      "stderr": [
+        "使い方: loomake <init | verify | trace | run | doctor> [オプション]"
+      ]
+    },
+    {
+      "argv": [
+        "init",
+        "--bad"
+      ],
+      "code": 2,
+      "stdout": [],
+      "stderr": [
+        "loomake init: 知らないオプションです：--bad",
+        "使い方: loomake init [--codex] [--devcontainer]"
+      ]
+    },
+    {
+      "argv": [
+        "doctor",
+        "--bad"
+      ],
+      "code": 2,
+      "stdout": [],
+      "stderr": [
+        "loomake doctor: 知らないオプションです：--bad",
+        "使い方: loomake doctor"
+      ]
+    },
+    {
+      "argv": [
+        "verify",
+        "--spec-only"
+      ],
+      "code": 2,
+      "stdout": [],
+      "stderr": [
+        "loomake verify: --spec-only・--done には --change <id> が必要です",
+        "使い方: loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]"
+      ]
+    },
+    {
+      "argv": [
+        "verify",
+        "--change",
+        "x"
+      ],
+      "code": 2,
+      "stdout": [],
+      "stderr": [
+        "loomake verify: --change を指定するときは --spec-only か --done を付けてください",
+        "使い方: loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]"
+      ]
+    },
+    {
+      "argv": [
+        "verify",
+        "--change",
+        "x",
+        "--spec-only",
+        "--done"
+      ],
+      "code": 2,
+      "stdout": [],
+      "stderr": [
+        "loomake verify: --spec-only と --done は同時に指定できません",
+        "使い方: loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]"
+      ]
+    },
+    {
+      "argv": [
+        "trace"
+      ],
+      "code": 2,
+      "stdout": [],
+      "stderr": [
+        "loomake trace: record・report・answer・approve のどれかを指定してください",
+        "使い方: loomake trace record --change <id>\n       loomake trace report --change <id> [--format md|json]\n       loomake trace answer --change <id> --question <Q-ID> --answer <回答> --by <回答者> [--date YYYY-MM-DD]\n       loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]"
+      ]
+    },
+    {
+      "argv": [
+        "trace",
+        "recrd"
+      ],
+      "code": 2,
+      "stdout": [],
+      "stderr": [
+        "loomake trace: 知らないサブコマンドです：recrd。もしかして：record",
+        "使い方: loomake trace record --change <id>\n       loomake trace report --change <id> [--format md|json]\n       loomake trace answer --change <id> --question <Q-ID> --answer <回答> --by <回答者> [--date YYYY-MM-DD]\n       loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]"
+      ]
+    },
+    {
+      "argv": [
+        "trace",
+        "record"
+      ],
+      "code": 2,
+      "stdout": [],
+      "stderr": [
+        "loomake trace: --change <id> が必要です",
+        "使い方: loomake trace record --change <id>\n       loomake trace report --change <id> [--format md|json]\n       loomake trace answer --change <id> --question <Q-ID> --answer <回答> --by <回答者> [--date YYYY-MM-DD]\n       loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]"
+      ]
+    },
+    {
+      "argv": [
+        "trace",
+        "report"
+      ],
+      "code": 2,
+      "stdout": [],
+      "stderr": [
+        "loomake trace: --change <id> が必要です",
+        "使い方: loomake trace record --change <id>\n       loomake trace report --change <id> [--format md|json]\n       loomake trace answer --change <id> --question <Q-ID> --answer <回答> --by <回答者> [--date YYYY-MM-DD]\n       loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]"
+      ]
+    },
+    {
+      "argv": [
+        "trace",
+        "report",
+        "--change",
+        "x",
+        "--format",
+        "html"
+      ],
+      "code": 2,
+      "stdout": [],
+      "stderr": [
+        "loomake trace: HTML の形式は次の版で対応します。いまは md か json を指定してください",
+        "使い方: loomake trace record --change <id>\n       loomake trace report --change <id> [--format md|json]\n       loomake trace answer --change <id> --question <Q-ID> --answer <回答> --by <回答者> [--date YYYY-MM-DD]\n       loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]"
+      ]
+    },
+    {
+      "argv": [
+        "trace",
+        "report",
+        "--change",
+        "x",
+        "--format",
+        "xml"
+      ],
+      "code": 2,
+      "stdout": [],
+      "stderr": [
+        "loomake trace: --format は md か json にしてください：xml",
+        "使い方: loomake trace record --change <id>\n       loomake trace report --change <id> [--format md|json]\n       loomake trace answer --change <id> --question <Q-ID> --answer <回答> --by <回答者> [--date YYYY-MM-DD]\n       loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]"
+      ]
+    },
+    {
+      "argv": [
+        "trace",
+        "answer"
+      ],
+      "code": 2,
+      "stdout": [],
+      "stderr": [
+        "loomake trace: --change <id> と --question <ID> が必要です",
+        "使い方: loomake trace record --change <id>\n       loomake trace report --change <id> [--format md|json]\n       loomake trace answer --change <id> --question <Q-ID> --answer <回答> --by <回答者> [--date YYYY-MM-DD]\n       loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]"
+      ]
+    },
+    {
+      "argv": [
+        "trace",
+        "answer",
+        "--change",
+        "x",
+        "--question",
+        "Q-01"
+      ],
+      "code": 2,
+      "stdout": [],
+      "stderr": [
+        "loomake trace: --by で回答者を指定してください",
+        "使い方: loomake trace record --change <id>\n       loomake trace report --change <id> [--format md|json]\n       loomake trace answer --change <id> --question <Q-ID> --answer <回答> --by <回答者> [--date YYYY-MM-DD]\n       loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]"
+      ]
+    },
+    {
+      "argv": [
+        "trace",
+        "answer",
+        "--change",
+        "x",
+        "--question",
+        "Q-01",
+        "--by",
+        "x"
+      ],
+      "code": 2,
+      "stdout": [],
+      "stderr": [
+        "loomake trace: --answer で回答を指定してください",
+        "使い方: loomake trace record --change <id>\n       loomake trace report --change <id> [--format md|json]\n       loomake trace answer --change <id> --question <Q-ID> --answer <回答> --by <回答者> [--date YYYY-MM-DD]\n       loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]"
+      ]
+    },
+    {
+      "argv": [
+        "trace",
+        "approve"
+      ],
+      "code": 2,
+      "stdout": [],
+      "stderr": [
+        "loomake trace: --change <id> と --assumption <ID> が必要です",
+        "使い方: loomake trace record --change <id>\n       loomake trace report --change <id> [--format md|json]\n       loomake trace answer --change <id> --question <Q-ID> --answer <回答> --by <回答者> [--date YYYY-MM-DD]\n       loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]"
+      ]
+    },
+    {
+      "argv": [
+        "trace",
+        "approve",
+        "--change",
+        "x",
+        "--assumption",
+        "A-01"
+      ],
+      "code": 2,
+      "stdout": [],
+      "stderr": [
+        "loomake trace: --by で承認者を指定してください",
+        "使い方: loomake trace record --change <id>\n       loomake trace report --change <id> [--format md|json]\n       loomake trace answer --change <id> --question <Q-ID> --answer <回答> --by <回答者> [--date YYYY-MM-DD]\n       loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]"
+      ]
+    },
+    {
+      "argv": [
+        "run"
+      ],
+      "code": 2,
+      "stdout": [],
+      "stderr": [
+        "loomake run: --change <id> が必要です",
+        "使い方: loomake run --change <id> [--engine claude-code] [--dry-run] [--skip-permissions]"
+      ]
+    },
+    {
+      "argv": [
+        "verfy"
+      ],
+      "code": 2,
+      "stdout": [],
+      "stderr": [
+        "知らないコマンドです：verfy。もしかして：verify",
+        "使い方: loomake <init | verify | trace | run | doctor> [オプション]"
+      ]
+    },
+    {
+      "argv": [
+        "verify",
+        "--chnage"
+      ],
+      "code": 2,
+      "stdout": [],
+      "stderr": [
+        "loomake verify: 知らないオプションです：--chnage。もしかして：--change",
+        "使い方: loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]"
+      ]
+    },
+    {
+      "argv": [
+        "verify",
+        "--change="
+      ],
+      "code": 2,
+      "stdout": [],
+      "stderr": [
+        "loomake verify: --change には値を続けてください",
+        "使い方: loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]"
+      ]
+    },
+    {
+      "argv": [
+        "verify",
+        "--json=true"
+      ],
+      "code": 2,
+      "stdout": [],
+      "stderr": [
+        "loomake verify: 知らないオプションです：--json=true。もしかして：--json",
+        "使い方: loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]"
+      ]
+    }
+  ]
+}

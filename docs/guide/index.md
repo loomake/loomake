@@ -22,8 +22,8 @@ Loomake を導入してから日常的に使うまでの文書をまとめる。
 - [互換性と対応範囲](3.reference/1.compatibility.md)
 - [入力と実行の資源予算](3.reference/2.resources.md)
 - [信頼境界と保護の範囲](3.reference/3.security.md)
-
-CLI のコマンドと quality.yaml の全項目は、コードから生成するページとして追加する予定。
+- [quality.yamlの全項目](3.reference/4.quality-yaml.md)
+- [CLIのコマンドとオプション](3.reference/5.cli.md)
 
 ## 考え方
 

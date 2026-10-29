@@ -14,6 +14,36 @@ const run = (mode: string) => spawnSync(process.execPath, ['scripts/package-smok
 afterAll(() => rmSync(base, { recursive: true, force: true }));
 
 describe('実際に配るパッケージ', () => {
+  it('[REQ-324][REQ-325] ビルド済み生成入口とpackしたCLIの共通定義・help・usageが一致する', () => {
+    const cliTarget = join(base, 'cli-reference');
+    const prepared = spawnSync(process.execPath, ['scripts/package-smoke.mjs', 'prepare', cliTarget], { cwd: root, encoding: 'utf8', env });
+    expect(prepared.status, prepared.stdout + prepared.stderr).toBe(0);
+    const generator = join(root, 'scripts/generate-cli-reference.mjs');
+    // cwdを変えてもスクリプト自身の場所を基準に生成済みページを照合する。
+    const checked = spawnSync(process.execPath, [generator, '--check'], { cwd: cliTarget, encoding: 'utf8' });
+    expect(checked.status, checked.stdout + checked.stderr).toBe(0);
+    const argsUrl = pathToFileURL(join(cliTarget, 'consumer/node_modules/loomake/dist/args.js')).href;
+    const mainUrl = pathToFileURL(join(cliTarget, 'consumer/node_modules/loomake/dist/main.js')).href;
+    const generatorUrl = pathToFileURL(generator).href;
+    const baselinePath = join(root, 'packages/cli/test/fixtures/reference-cli-baseline.json');
+    const packed = spawnSync(process.execPath, ['--input-type=module', '-e', `
+import { readFileSync } from 'node:fs';
+import { CLI_REFERENCE } from ${JSON.stringify(argsUrl)};
+import { main } from ${JSON.stringify(mainUrl)};
+import { runCliReference } from ${JSON.stringify(generatorUrl)};
+const baseline = JSON.parse(readFileSync(${JSON.stringify(baselinePath)}, 'utf8'));
+for (const item of baseline.cases) {
+  const stdout = [], stderr = [];
+  const code = await main(item.argv, { cwd: process.cwd(), stdout: (text) => stdout.push(text), stderr: (text) => stderr.push(text) });
+  if (JSON.stringify({ code, stdout, stderr }) !== JSON.stringify({ code: item.code, stdout: item.stdout, stderr: item.stderr })) {
+    throw new Error('packしたCLIが原本と異なります：' + JSON.stringify(item.argv));
+  }
+}
+process.exitCode = await runCliReference({ definition: CLI_REFERENCE, check: true });
+`], { cwd: cliTarget, encoding: 'utf8' });
+    expect(packed.status, packed.stdout + packed.stderr).toBe(0);
+  }, 60000);
+
   it('[REQ-057][REQ-138][REQ-139][REQ-143][REQ-146][REQ-169][REQ-304][REQ-305][REQ-306] packした5パッケージだけで主要コマンドと公開APIを使える', () => {
     const prepared = run('prepare');
     expect(prepared.status, prepared.stdout + prepared.stderr).toBe(0);
