@@ -11,4 +11,4 @@
 1. `core-quality-yaml-schema` の 2.1〜3.2 を完了。スキーマ・導出した型・遅延読み込み・JSON Schema と package exports・changeset を追加した。独立レビューを 2 回行い、対象外の必須条件を JSON Schema にも出す指摘を修正した。最終レビューに重大な指摘はない。
 2. 仕様ゲート・lint・型チェック・全体試験（79 ファイル、1109 成功、既存の OS 条件による 8 skip）・全タスクチェック後の完了ゲートが exit 0。REQ-283〜REQ-287 に ID 付き試験があり、6/6 タスクをチェック済み。
 3. この change の未決事項はない。Issue #60 全体の quality-report と trace.md・spec・tasks の版は別作業として残る。
-4. 次は PR を作成し、本体へ CI 確認と受入を引き継ぐ。
+4. [PR #128](https://github.com/loomake/loomake/pull/128) を作成した。次は本体が CI を確認し、承認範囲内で受入・マージ・archive を進める。
