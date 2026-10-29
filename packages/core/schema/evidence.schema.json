@@ -100,7 +100,6 @@
         "results"
       ],
       "additionalProperties": {},
-      "$id": "https://loomake.dev/schema/verify-result.schema.json",
       "title": "Loomake verify result",
       "description": "verify --json が出力する結果。破壊的変更を入れるときは schemaVersion のメジャー番号を上げる（REQ-053）"
     },

@@ -16,7 +16,7 @@
 
 新スキーマが検査するのはデータ構造である。Evidence の版の適合性、対象 change、日時、SHA、文書 hash、パスの重複などの証拠の正しさは、既存の evidenceProblem・読み取り・serializeEvidence が引き続き検査する。Zod を同期 validator に機械的に置き換えない。新スキーマの parse に成功しても、証拠として利用できるとは限らない。
 
-CONTRACT_SCHEMAS に 2 形式を登録し、既存の生成コマンドを使う。通常と publishConfig の exports に公開先を追加する。子の EvidenceDocument・ReportRow は loader 内でスキーマを公開し、JSON では親の構造に含める。既存 5 ファイルの不変も照合する。
+CONTRACT_SCHEMAS に 2 形式を登録し、既存の生成コマンドを使う。埋め込む VerifyResult は構造と型を再利用し、単独公開スキーマの `$id` だけを外して、同じ検証器への登録時に識別子が衝突しないようにする。通常と publishConfig の exports に公開先を追加する。子の EvidenceDocument・ReportRow は loader 内でスキーマを公開し、JSON では親の構造に含める。既存 5 ファイルの不変も照合する。
 
 ## Risks / Trade-offs
 

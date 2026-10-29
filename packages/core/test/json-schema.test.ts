@@ -74,6 +74,20 @@ describe('JSON Schema の書き出し', () => {
     }
   });
 
+  it('[REQ-304] 全公開 JSON Schema を同じ registry へ両順で登録して参照できる', () => {
+    const schemas = Object.values(renderJsonSchemas()).map((text) => JSON.parse(text));
+    for (const order of [schemas, [...schemas].reverse()]) {
+      const registry = new Ajv2020({ strict: false });
+      for (const schema of order) registry.addSchema(schema);
+      for (const schema of schemas) expect(registry.getSchema(schema.$id), schema.$id).toEqual(expect.any(Function));
+      const evidence = registry.getSchema('https://loomake.dev/schema/evidence.schema.json')!;
+      const verify = registry.getSchema('https://loomake.dev/schema/verify-result.schema.json')!;
+      expect(evidence(evidenceValue()), JSON.stringify(evidence.errors)).toBe(true);
+      expect(verify(evidenceValue().verify), JSON.stringify(verify.errors)).toBe(true);
+      expect(evidence({ ...evidenceValue(), verify: { ...evidenceValue().verify, ok: 1 } })).toBe(false);
+    }
+  });
+
   it('[REQ-276] 書き出した verify 結果の JSON Schema が、移す前の必須プロパティと値を持つ', () => {
     const schema = JSON.parse(renderJsonSchemas()['verify-result.schema.json']);
     expect(schema.$id).toBe('https://loomake.dev/schema/verify-result.schema.json');

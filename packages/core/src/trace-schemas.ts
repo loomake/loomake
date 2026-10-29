@@ -10,7 +10,8 @@ export const evidenceSchema = z.looseObject({
   sha: z.string(),
   committedAt: z.string(),
   recordedAt: z.string(),
-  verify: verifyResultSchema,
+  // 構造は共有し、埋め込み先には単独公開スキーマの識別子を重ねない。
+  verify: verifyResultSchema.meta({ ...verifyResultSchema.meta(), $id: undefined }),
   documents: z.array(evidenceDocumentSchema).optional(),
 }).meta({ $id: 'https://loomake.dev/schema/evidence.schema.json', title: 'Loomake evidence' });
 
