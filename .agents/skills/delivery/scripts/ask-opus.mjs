@@ -140,7 +140,9 @@ export async function askOpus(input, options = {}) {
     if (!inside(root, requestRoot) || !inside(requestRoot, request)) {
       throw new Error('依頼ファイルの実パスは作業ツリーの.loomake/配下に置いてください。');
     }
-    if (statSync(request).size > 200 * 1024) throw new Error('依頼ファイルが200KiBを超えています。');
+    const requestStat = statSync(request);
+    if (!requestStat.isFile()) throw new Error('依頼ファイルには通常ファイルを指定してください。');
+    if (requestStat.size > 200 * 1024) throw new Error('依頼ファイルが200KiBを超えています。');
     const content = readFileSync(request, 'utf8');
     if (!content.trim()) throw new Error('依頼ファイルが空です。');
     const outputRoot = resolve(requestRoot, 'claude');

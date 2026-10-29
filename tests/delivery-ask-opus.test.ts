@@ -144,6 +144,35 @@ describe('deliveryのClaude起動', () => {
       expect(existsSync(join(cwd, '.loomake/called'))).toBe(false);
     });
   });
+  it('通常ファイルではないディレクトリの依頼を読取前に拒む', async () => {
+    await withRepo('success', async ({ cwd, input, options }) => {
+      rmSync(input.request);
+      mkdirSync(input.request);
+      expect(await askOpus(input, options)).toMatchObject({ ok: false, dir: null, reason: '依頼ファイルには通常ファイルを指定してください。' });
+      expect(existsSync(join(cwd, '.loomake/called'))).toBe(false);
+      expect(existsSync(join(cwd, '.loomake/claude'))).toBe(false);
+    });
+  });
+  if (process.platform !== 'win32') {
+    it('通常ファイルではないFIFOの依頼を期限内に拒みClaudeを起動しない', async () => {
+      await withRepo('success', async ({ cwd, input, options }) => {
+        rmSync(input.request);
+        execFileSync('mkfifo', [input.request]);
+        const modulePath = resolve(import.meta.dirname, '../.agents/skills/delivery/scripts/ask-opus.mjs');
+        const code = `import {askOpus} from ${JSON.stringify(pathToFileURL(modulePath).href)};
+console.log(JSON.stringify(await askOpus(${JSON.stringify({ ...input, timeoutMs: 100 })},${JSON.stringify({ ...options, env: undefined })})));`;
+        const child = spawnSync(process.execPath, ['--input-type=module', '-e', code], {
+          cwd, env: options.env, encoding: 'utf8', timeout: 2000, killSignal: 'SIGKILL',
+        });
+        expect(child.error).toBeUndefined();
+        expect(child.signal).toBeNull();
+        expect(child.status).toBe(0);
+        expect(JSON.parse(child.stdout)).toMatchObject({ ok: false, dir: null, reason: '依頼ファイルには通常ファイルを指定してください。' });
+        expect(existsSync(join(cwd, '.loomake/called'))).toBe(false);
+        expect(existsSync(join(cwd, '.loomake/claude'))).toBe(false);
+      });
+    });
+  }
   it('ツリー外、接頭辞が似た隣接ディレクトリ、外向きsymlinkの依頼を起動前に拒む', async () => {
     const outside = mkdtempSync(join(tmpdir(), 'loomake-outside-'));
     try {
