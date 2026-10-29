@@ -22,7 +22,7 @@ Zod内部構造を新たに走査する案は使わない。公開JSON Schemaに
 
 ### 2. 全構造と分岐の表現
 
-生成ページは `docs/guide/3.reference/4.quality-yaml.md`。固定frontmatterのtitle/description、生成元と再生成方法の注記、項目表を持つ。項目表はパス・型・入力時の必須/任意・default注記・制約・descriptionを表示する。
+生成ページは `docs/guide/3.reference/4.quality-yaml.md`。固定frontmatterのtitle/description、生成元と再生成方法の注記、項目表を持つ。項目表はパス・型・入力時の必須/任意・default注記・制約・descriptionを表示する。子のrequiredは親objectや配列要素が入力された場合の条件であり、任意の親ごと常に入力必須とは表示しない。
 
 objectのproperties、recordのadditionalPropertiesとpropertyNames、arrayのitems、oneOfの各分岐を再帰的にたどる。recordのキーは `<id>`、配列要素は `[]` と表記し、IDの正規表現を別の制約として示す。`objectives.<id>` と `product.<id>` はapplicability省略/applicableの分岐とnot_applicableの分岐を別々に記述する。枝ごとのrequiredを保持し、reason/confirmed_byを全枝の必須へまとめない。未知キーを許すadditionalPropertiesと、IDキーを持つrecordの値スキーマも区別する。
 
