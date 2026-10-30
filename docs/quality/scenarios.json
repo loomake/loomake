@@ -4042,7 +4042,7 @@
       "id": "SCN-f9315c7fbdb72df9b4ae",
       "status": "reviewed",
       "scenarioSha256": "3625842a21dfafe250092a030dd128a66d8da8be9f92b7f8c64ab32cf0bdb81f",
-      "reason": "「タスクを終える」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "reason": "実Gitのタスク1.1のコミットを取り出し、コミット名・impl.txtとtasks.mdの同梱・そのコミット内の1.1完了をassertする。",
       "sources": [
         "REQ-099"
       ],
@@ -4058,7 +4058,7 @@
       "id": "SCN-134eab2689aeae75762b",
       "status": "reviewed",
       "scenarioSha256": "7374cd235b3193482152a19ccb4c0f971096752cc86426d2a28cbdc326a032a3",
-      "reason": "「エンジンが失敗する」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "reason": "エンジンが変更後にexit1となり、run終了コード1・失敗理由・タスク未完了・履歴がinitだけ・summary stoppedをassertする。",
       "sources": [
         "REQ-099"
       ],
@@ -4074,7 +4074,7 @@
       "id": "SCN-26243f1a65c5a0117c34",
       "status": "reviewed",
       "scenarioSha256": "cb3b240b3999f83274dcaa8390434abdf938a27808246c967cb66ecfe2d4bf6c",
-      "reason": "「直して合格する」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "reason": "2通常タスク後に不合格を起こし修正でimplを作る台本で、終了コード0・修正指示の不合格理由・修正とゲートのコミット順・ゲートタスク完了をassertする。",
       "sources": [
         "REQ-100"
       ],
@@ -4090,7 +4090,7 @@
       "id": "SCN-4ba30adb659f40b75511",
       "status": "reviewed",
       "scenarioSha256": "696baf3497837378096bdb9330d3f7f6f2263b74c478a83d589ebfd01a302b01",
-      "reason": "「完了ゲートのタスクはエンジンに渡さない」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "reason": "旧形式のverify/doneタスクを持つfixtureで、起動2回だけ、全指示に3.1がないことをassertする。",
       "sources": [
         "REQ-100"
       ],
@@ -4106,7 +4106,7 @@
       "id": "SCN-942c7f2fc346c9bf72cb",
       "status": "reviewed",
       "scenarioSha256": "bc17577606494733db8d396834ed09e0be1d942254efb83b56d9b078ab0e22c4",
-      "reason": "「印のあるタスク」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "reason": "印つきの品質確認タスクで、終了コード0・起動1回・指示に品質確認なし・印を残したタスク完了と旧形式警告なしをassertする。",
       "sources": [
         "REQ-100"
       ],
@@ -4122,7 +4122,7 @@
       "id": "SCN-afc355e9cc38a423e972",
       "status": "reviewed",
       "scenarioSha256": "663c6050ba0c3d4324c1338830f73a63f842c70ff40f89fd1c26afdf81222ca5",
-      "reason": "「旧書式のタスク」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "reason": "旧形式タスクをエンジンへ渡さず、終了コード0と判定理由・印の追加案内をassertする。",
       "sources": [
         "REQ-100"
       ],
@@ -4138,7 +4138,7 @@
       "id": "SCN-5026fbdf7790b44ec704",
       "status": "reviewed",
       "scenarioSha256": "c8fa67ea314efb1f99eabe44d2fc517e570d398fd52f958e58e74e3c8d9acbfc",
-      "reason": "「印は指示とメッセージに含めない」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "reason": "maxFixes=1で止まる印つきゲートfixtureで、終了コード1・修正回数上限・残タスク表示とsummary配列から印が除かれていることをassertする。",
       "sources": [
         "REQ-100"
       ],

@@ -24,3 +24,10 @@
 2. 既存 Purpose、未対象ブロック、旧 Scenario・Source を保持し、全 delta 一致と主仕様 29 件の strict 検証が成功。24 change ID を削除して main ID へ移し、重複する旧 main 側 7 ID を置換したため、台帳は 497 件となった。未対象レコードと全 top-level metadata は保持した。
 3. 新たな仕様判断なし。既存の run-decision-policy の Purpose は書き換えていない。archive の全 17 Markdown ファイルを調べ、#157 trace の ADR 0006 への href だけ `../../../docs/adr/…` から `../../../../docs/adr/…` に補正した。移動前後の実 target が同じこと、全相対リンクとアンカーの解決、その他の bytes が同一であることを確認した。管理役の指示による意味を保つ階層補正である。
 4. 3 件が揃った head をコミットし、既存設定の normal verify・lint・typecheck・full suite を実行する。archived change ID への done は行わず、元の受入証拠を保持する。資料完成後に新規 Opus 最終レビューを指摘ゼロまで往復し、外部 push・PR は管理役と結果を照合してから進める。
+
+## archive 最終レビューの修正
+
+1. 初回 Opus `40bef701`（head `9b0aada`、実 `claude-opus-5-5`、ok:true・権限拒否0）は軽微F1を1件指摘した。REQ-099・100の既存main7件の具体reasonを、change側の定型文で置換したため、実assertを過大に説明していた。実assertと照合し、受入main8feの具体reasonだけを戻した。F1の連続出現は1回。
+2. `9b0aada` の normal verify は lint・typecheck・full suite が成功、1509成功・失敗0・既存対象外8件。今回はreasonだけの文書データ修正なので、管理役指示でfull suiteを重複実行せず、新headのJSON/台帳・当該Scenario監査試験・strict/scope/linkを再検証する。旧結果を新headのfull suite実施済みとは扱わない。
+3. 製品コード・テスト・品質設定と、台帳のid/Scenario hash/Source/tests/test hashは保持した。新たな仕様判断や承認待ちはない。
+4. 検証資料を更新し、修正後の新headを新規Opusセッションへ渡して指摘ゼロまで続ける。マージ対象headのCIは全チェック成功が必要で、push・PRは管理役へ証拠を共有してから調整する。
