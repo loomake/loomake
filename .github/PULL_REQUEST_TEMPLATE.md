@@ -17,7 +17,7 @@ loomake-tier: L1|L2|L3
 
 ## 実行したゲートとテスト
 
-- [ ] `pnpm -s verify --change <change-id> --done` が exit 0（L3 のみ）
+- [ ] `pnpm -s verify --change <change-id> --done` が exit 0（change を持つ PR。L3 は change が必須）
 - [ ] `pnpm lint`・`pnpm typecheck`・`pnpm test`
 
 ## 確認事項・仮定と決定の記録
@@ -35,12 +35,15 @@ loomake-tier: L1|L2|L3
 
 ## 証跡
 
-<!-- マージ対象 head ごとに、このブロック 1 つだけを書く。差分を変えたら書き直す。形は delivery スキル「マージと証跡」 -->
+<!-- マージ対象 head ごとに、このブロック 1 つだけを書く。差分を変えたら書き直す。形は delivery スキル「マージと証跡」。Opus の行は工程ごとに複数書いてよい -->
 
 ```text
-head: <40 桁 SHA>
+head: <マージ対象の 40 桁 SHA>
 ci: <必須 CI の run URL>
-codex-review: <Codex 自動レビューが受領した head の SHA。未実施なら「未実施」>
-opus-review: <セッション ID>（重大 N・軽微 N・情報 N）。L1 なら「対象外」
-opus-model: <実際のモデル識別子（例 claude-opus-5-5）。レビューしていなければ「対象外」>
+codex-review: <Codex 自動レビューが受領した head の SHA。なければ「未実施」>
+reviewed-head: <Opus がレビューした head の SHA。L1 なら「対象外（L1）」、まだなら「未実施」>
+opus-review: <工程（設計／最終 1 回目／最終 2 回目）: セッション ID（重大 N・軽微 N・情報 N）。工程ごとに 1 行ずつ書く>
+opus-model: <実際のモデル識別子（例 claude-opus-5-5）。L1 なら「対象外（L1）」、確認できなければ「未実施」>
 ```
+
+AI のレビュー・CI の成功・マージ・返答がないことを、利用者の新しい承認とは扱わない。
