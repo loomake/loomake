@@ -39,6 +39,7 @@ Source: REQ-149
 #### Scenario: 公開元の移管
 - **WHEN** core と kit の公開 API を読む
 - **THEN** テスト対応の判定関数と結果型は kit から利用でき、core からは公開されない
+
 ### Requirement: 評価済み品質結果のCI集約
 
 kit は評価済みの `readonly QualityResult[]` から CI verdict だけを返す named export `aggregateCiVerdict` を公開する SHALL。FAIL があれば FAIL、次に INSUFFICIENT_EVIDENCE があれば同値、PASS があり残りが PASS/NOT_APPLICABLE なら PASS、空配列と全件 NOT_APPLICABLE は INSUFFICIENT_EVIDENCE を返す MUST。順序と重複で結果を変えず、入力を変更せず、I/O・環境・時計を参照しない MUST。
