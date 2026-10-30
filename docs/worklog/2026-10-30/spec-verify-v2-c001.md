@@ -1,0 +1,68 @@
+# spec/verify-v2-c001
+
+1. [PR #139](https://github.com/loomake/loomake/pull/139)のレビュー指摘を受け、`verify-v2-c001`のタスク1.1の計画整合を引き継いだ。開始時headは`8b3e2c5`、作業ツリーはcleanで未push変更はなかった。製品コードは変更しない。
+2. OpenSpec strictはexit 0。受入済みmain `f4e3edb`の主仕様を一時snapshotへ展開したstrictもexit 0で、archive整合の警告はなかった。この旧branch単独のstrictには主仕様未同期のINFOが残るため、実装前にmainとの整合を確認する。spec-onlyは未回答10件でexit 1。doneは未回答・確認待ち要件・未完了tasks・要件対応テスト未実装の4検査でexit 1、既存lint・型・テストの3コマンドは成功した。ローカルのテストは1,259成功・既存8件skip・失敗0で、mainとのmerge結果を使うCI件数とは区別する。yomiyasuのlint/diff/最終稿照合とdiff --checkを実施した。
+3. R-C001-01〜10は未回答。03の取得範囲と04の判定器を分け、05互換・06DoD・07quality移行・08warn・09旧Schema公開・10spec-only計数を追加した。採否や既存assertion変更の承認は代行しない。#60/REQ-307はPR #140・#141で受入済みで、現在の実装停止理由には数えない。
+4. 差分仕様と計画を整合し、strict・仕様ゲート・doneの結果を管理役へ渡す。実装、追加AI評価、マージは行わない。
+
+## 既存工程記録の移記
+
+2026-10-29の既存記録から、Opusの設計著述3回はactual model `claude-opus-5-5`のみ、fresh session、exit 0、is_error=false、permission_denials=[]と記録されている。初稿sessionは`46c6f248-d65b-44c4-a4c3-23940167a414`、第2稿は`68e661c1-3d1d-407f-9493-4614cbb64b86`、第3稿は`13b92bac-7e8a-42b4-b281-e62bf76044ad`である。今回は呼び直さず、保存先のignoredファイルを公開証拠として参照しない。著述は独立評価として数えず、今回の追加AI評価0、過去のPR139ローカル評価回数は不明で上限をリセットしない。独立レビュー・人の採否は未実施のままである。
+
+既存の限定実験では、Node24.21.0と公式SHA256に一致するNode22.12.0 linux-arm64で、core/kitの静的入口からZodが読み込まれず、必要時に同期loaderでschemaをload/parse/cacheできたと記録されている。Node22.12ではrequire(ESM)のExperimentalWarningと観測器終了時の診断があり、製品統合や配布時のstderrを検証した結果ではない。OpenSpec1.14.3の一時rootではverification.yamlを追加してもstrictが通ったが、配置の許容だけで内容の検証ではない。今回はこれらの実験を再実行せず、既存記録の事実と制約を移記した。
+
+## 再レビューへの対応
+
+1. [追加レビュー](https://github.com/loomake/loomake/pull/139#issuecomment-6509157676)を受け、head `9869726`・cleanの状態からタスク1.1の計画整合を引き継いだ。末尾のおすすめは回答ではなく、10件とも未承認として扱う。
+2. strictはexit 0、現main f4e3edbの主仕様を展開した一時snapshotでもINFOなしでexit 0。spec-onlyは未回答10件だけでexit 1。通常doneは未回答・確認待ち・未完了tasks・要件対応テスト未実装の4検査でexit 1、lint・typecheck・testは成功した。ローカル試験は1,259成功・既存8件skip・失敗0。初期quality候補のversion 2構造解析も成功したが、実証跡取得や品質PASSの証拠ではない。yomiyasuとdiff --checkを実施した。
+3. 全台帳行を確認待ちに揃え、R08のゲート/scope別警告移行とPASS/NA比較、R05/R08のREQ-191、R07の初期必須1項目と全open PR再検証を具体化した。S1は既存実装を調べ、1人AIなしの実作業44〜88人時と8項目の内訳・前提・対象外を提示した。見積りは実績や承認ではなく、既存C-001の固定見積りも変更していない。
+4. 計画のみを修正して管理役へ引き継ぐ。製品実装、追加AI評価、投稿、マージは行わない。
+
+## 3回目レビューと部分承認への対応
+
+1. [3回目レビュー](https://github.com/loomake/loomake/pull/139#issuecomment-6510041693)を受け、head `3ab373e`・cleanから計画整合を引き継いだ。R-C001-01/02/03/04/07/09/10のAを、rrr-xxxの指示を受けたrrr-www名義・Claude Code代筆の明示コメントに基づき2026-10-30の承認として記録する。R-C001-05/06/08の保留は別記し、回答欄は未決のままにする。
+2. 最新main `751a8a1b6ffca673f44f2fa272b9029a667bf12b`をfetchし、一時snapshotのstrictはINFOなしexit 0。25件のMODIFIEDで既存73 ScenarioとSourceの保持、別に149のURL SHALL/全4 Scenario保持を照合した。branch単独strictは旧主仕様未同期のINFO付きexit 0。spec-onlyはR05/06/08の3件だけでexit 1、doneは未回答・確認待ち・未完了tasks・未実装REQ試験の4検査でexit 1。lint・型・既存試験1,259成功/skip8/失敗0、diff --checkと日本語のyomiyasu検査を確認した。
+3. 方針の承認と、既存assertion/CLI基準fixtureの具体的変更に必要な個別承認を区別する。保留3件が残るため製品実装は開始しない。
+4. CLI changeとfix-quality-reference-source-linksの仕様同期/archiveを先に受け入れた最新mainでC-001を最終確定する順を明記した。計画の差分だけをcommit/pushし、本文案を管理役へ渡す。追加Opus評価、投稿、マージは行わない。
+
+## 4回目レビューへの対応
+
+1. [4回目レビュー](https://github.com/loomake/loomake/pull/139#issuecomment-6510532640)を受け、head `665d458`・cleanから計画整合を引き継いだ。おすすめは新しい回答ではなく、R01/02/03/04/07/09/10のA承認とR05/06/08の未回答を維持する。
+2. fetchしたmainは751a8a1。29 MODIFIED（現main27件、未archive CLI2件）の既存89 Scenario/Sourceと、149のURL文/全4 Scenario保持を照合した。branch単独strictは古い主仕様のINFO付きexit 0、現main snapshotはCLI未archiveのINFO付きexit 0。依存2changeの仕様反映後を一時領域だけで構成したstrictはINFOなしexit 0で、実際のarchive実施とは区別する。spec-onlyはR05/06/08だけでexit 1、通常doneは計画の4検査でexit 1。lint・型・試験は成功し、ローカル1,259成功/skip8/失敗0。日本語のyomiyasuとdiff --checkも確認した。
+3. R05へREQ-323/324のMUST範囲、REQ-100のlocalゲート、REQ-306の接続範囲を追加する。R08は共通のA部分を保ち、auto CLI不在localだけ理由付きNAとするBを新しいおすすめにするが、未承認のまま提示する。
+4. 計画だけをcommit/pushし、本文案を管理役へ渡す。製品実装、追加AI評価、投稿、マージは行わない。
+
+## 5回目レビューへの対応
+
+1. [5回目レビュー](https://github.com/loomake/loomake/pull/139#issuecomment-6510883681)をconnectorで読み、head `cbdd3cb`・cleanからタスク1.1の計画だけを修正した。tasks 5.1へ配布用/リポジトリ内のreq-to-openspec書式雛形2箇所を追加し、R06 AならREQ-136を明示localへMODIFIEDして印と既存Scenarioを保持、Bなら本文/雛形の既定ciを保持する案を記載した。R05 AへREQ-093のaborted 2/3とREQ-135のhelp scopeを明記し、093/135/136の予定を台帳へ追加した。proposalへ100/306/323/324を各1行で記し、core-parsers規範から承認質問IDを除いた。
+2. PR155の承認コメント6510874679と未merge状態を読み、承認済みtree8519f1fの480字本文を比較元にREQ-322を本文482字・Source込み499字へ整理した。受入記録のみを追加した現head758b018と、未mergeのmain751a8a1を区別してtraceへ記載した。29 MODIFIEDのSourceと、main+active CLI基準89 Scenarioに149の追加1件を含めたaccepted tree基準90 Scenarioを保持し、322の全4 Scenario全文と完全URL2本も機械照合した。branch strictは旧主仕様のINFO付き0、main751 snapshotはCLI未archiveのINFO付き0、155 accepted tree snapshotはINFOなし0。spec-onlyは未回答05/06/08の3件だけで1。最終版の通常doneは未回答・確認待ち要件・未完了tasks・未実装REQ試験の4検査で1、lint・型・既存試験は成功し、ローカル1,259成功/skip8/失敗0だった。先行doneが編集途中の表を読んだため、表と完了ゲートの印を直したあと再実行した。yomiyasuのlint/diff/資料照合/最終稿照合とdiff --checkを確認した。
+3. R01/02/03/04/07/09/10のA承認、05/06/08の回答欄の空欄、R08 Bのおすすめを維持する。REQ-093/135/136の規範差分確定と実際の雛形変更は回答後の作業であり、今回行わない。既存assertion/旧46例の具体差分には方針承認と別の個別承認が必要である。
+4. 計画差分をcommit/pushし、PR本文の全置換案を管理役へ渡す。PR155受入後の実mainでREQ-322とarchive依存を再照合してからC-001を最終確定する。製品実装、主仕様・既存試験・設定・雛形の変更、新ID割当、追加AI評価、投稿、マージは行わない。
+
+## 6回目レビューへの対応
+
+1. [PR139の6回目レビュー](https://github.com/loomake/loomake/pull/139#issuecomment-6511160717)を読み、verify-v2-c001のtask 1.1の計画整合を実施した。main d5aa30dを通常mergeし、REQ-306を短縮、移行対象と個別承認を追加、093/135/136の確定をtask 1.2へ移した。
+2. 一時コピーで全差分をarchiveし、修正前の主仕様strictは28成功/1失敗、修正後は29成功/0失敗。change strictは0、spec-onlyは保留3件で1。通常doneは未回答・確認待ち要件・未完了tasks・要件対応試験未実装の4検査で1、lint・型・既存試験は成功した。検証の内訳と字数はPR本文へ記載する。
+3. 承認7件と未回答05/06/08、おすすめ08 Bを保持する。計画だけの例外マージ判断M139-01も人の承認待ちで、製品実装・期待値変更へ進まない。
+4. 計画差分をcommit/pushして本文案を管理役へ渡す。CI・自動Codex確認、承認依頼、マージは管理役が行う。追加Opus評価は起動しない。
+
+## M139-01の明示承認
+
+1. 本会話の利用者が2026-10-30（日本時間）にM139-01 Aを明示承認した。対象はhead23e6f571の計画差分で、原回答の公開コメントURLはない。[PR139本文](https://github.com/loomake/loomake/pull/139)は公開記録として参照する。承認者のログインは推測しない。
+2. 通常done/CI gateの4失敗を当PRだけの例外とし、未回答05/06/08と製品DoDを後続に維持する。全archive主仕様strict、品質・Node20/22・CodeQLの成功、自動Codexの重大な未解決指摘がないことをマージ条件とし、追加Opus評価は行わない。
+3. traceと本記録に承認だけを追記し、全体試験は再実行しない。規範・仕様・計画本文・製品コード・既存試験・設定は承認対象headから変更しない。
+4. 承認記録をcommit/pushし、最終headのCI確認・ready化・自動レビュー・マージを管理役へ引き継ぐ。
+
+## 追加回答の記録とCI対象案M139-02
+
+1. [追加回答6511434324](https://github.com/loomake/loomake/pull/139#issuecomment-6511434324)のR05 A・R06 A・R08 Bをtraceへ記録した。回答者はrrr-xxxの指示を受けたrrr-www名義・Claude Code代筆、回答日は日本時間2026-10-30。10件の回答が揃ったことと、task 1.2の規範反映は未完了であることを区別した。
+2. spec-onlyはexit 0。通常verifyもlint・型・全テストを実行してexit 0。通常doneは再実行せず、以前の4失敗を今回の結果や合格へ読み替えない。製品DoDは未達である。検証の内訳は[PR139本文](https://github.com/loomake/loomake/pull/139)へ記載する。
+3. 現在のmarkerはC001のまま。既存none経路で完了対象を再指定するM139-02はM139-01の前提変更であり、具体案への明示承認待ち。規範・specs・design・proposal・tasks、主仕様・コード・既存試験・設定は変更しない。
+4. traceと作業記録だけをcommit/pushし、markerを維持した本文案を管理役へ渡す。承認依頼・本文の対象再指定・ready化・CI・自動Codex・マージは管理役が行う。追加Opus評価は行わない。
+
+## M139-02の明示承認
+
+1. 本会話の利用者が2026-10-30（日本時間）にM139-02 Aを明示承認した。対象はhead192e44f16e49985fdb783ce926c1ce38bc935588。原回答の公開URLはなく、[PR139本文](https://github.com/loomake/loomake/pull/139)は公開記録として参照する。
+2. PR139だけnoneへ実装完了対象を再指定し、planning metadataは説明用とする。M139-01のmarker変更なし条件を当PRだけ置き換える。通常verifyの全品質と別途spec-only 0を確認し、製品DoD未達・残tasks・後続実装PRのdone必須を維持する。
+3. traceと本記録への追記だけとし、既存本文・規範・計画・コード・既存試験・設定は変更しない。全体試験は再実行せず、追加AI評価も起動しない。
+4. 承認記録をcommit/pushし、本文のnone切替・最終headのCI/自動Codex確認・マージを管理役へ引き継ぐ。
