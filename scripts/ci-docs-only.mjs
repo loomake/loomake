@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// CI の quality ジョブで、PR で変えたファイルがすべて文書かを判定する（REQ-270）。
+// CI の quality ジョブで、PR の段階が L1（文書だけ）かを判定する（REQ-270・REQ-342）。段階の決め方は ci-tier.mjs で、完了ゲートと同じ。
 // 文書だけなら、quality ジョブは品質コマンドを飛ばして成功する。必須チェックのジョブが同じ名前で結果を報告するよう、
 // ワークフローの paths フィルタではなく、ジョブの中のステップでこのスクリプトを実行する。
 //
@@ -12,32 +12,10 @@ import { appendFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { decideTier, formatTierLine, isDocumentPath, isSpecPath } from './ci-tier.mjs';
 
-/**
- * 文書として扱うファイルか。ここに挙げたものだけを文書とし、ほかはすべて quality の対象に残す
- * （設定・実行用のファイル・tests/ の下・packages/ の下は、拡張子が .md でも文書ではない）
- * @param {string} path リポジトリの根からの、/ で区切ったパス
- */
-export function isDocumentPath(path) {
-  if (typeof path !== 'string' || !path || path.includes('\\')) return false;
-  const parts = path.split('/');
-  if (parts.some((part) => part === '' || part === '.' || part === '..')) return false;
-  // Windows で checkout できない名前は、文書の置き場所にあっても文書として扱わない（REQ-281）。
-  // git の出力を UTF-8 として読むと、正しくないバイトは U+FFFD になる
-  if (/[<>:"|?*�]/.test(path) || [...path].some((char) => char.charCodeAt(0) < 0x20)) return false;
-  if (parts.some((part) => /[. ]$/.test(part) || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)/i.test(part))) return false;
-  const markdown = path.endsWith('.md');
-  // リポジトリの直下の .md（README.md・CONTRIBUTING.md など）
-  if (parts.length === 1) return markdown;
-  // docs/ の下の .md
-  if (parts[0] === 'docs') return markdown;
-  // changeset の本文（.changeset/ の直下の .md）。.changeset/config.json などの設定は含めない
-  if (parts[0] === '.changeset') return parts.length === 2 && markdown;
-  // 仕様と change の成果物（archive/ を含む）。change の spec-gate.txt も含める
-  if (parts[0] === 'openspec' && parts[1] === 'specs') return markdown;
-  if (parts[0] === 'openspec' && parts[1] === 'changes') return markdown || parts[parts.length - 1] === 'spec-gate.txt';
-  return false;
-}
+// 文書として扱うファイルの判定は、完了ゲートの段階の判定と共有する（ci-tier.mjs）。ここからも同じ名前で使えるようにする
+export { isDocumentPath } from './ci-tier.mjs';
 
 /**
  * `git diff --raw -z` の出力から、変わったファイルごとに、状態・変更前と変更後のモード・パスを取り出す。
@@ -76,7 +54,7 @@ const modeNames = { '120000': 'シンボリックリンク', '160000': 'サブ�
 const list = (paths) => paths.slice(0, 5).join('、') + (paths.length > 5 ? ` ほか ${paths.length - 5} 件` : '');
 
 /**
- * 文書だけの PR かを決める。PR でないとき、差分を取れないとき、差分を解釈できないときは、文書だけとしない
+ * 文書だけ（段階 L1）の PR かを決める。PR でないとき、差分を取れないとき、差分を解釈できないときは、文書だけとしない
  * @param {{ eventName?: string; baseRef?: string; git: (args: string[]) => { status: number | null; stdout?: string; stderr?: string; error?: Error } }} options
  * @returns {{ docsOnly: boolean; reason: string }}
  */
@@ -123,7 +101,22 @@ export function decideDocsOnly({ eventName = '', baseRef = '', git }) {
   for (const path of treeText.split('\0').filter(Boolean)) byFolded.set(path.toLowerCase(), [...(byFolded.get(path.toLowerCase()) ?? []), path]);
   const colliding = [...new Set(paths.filter((path) => (byFolded.get(path.toLowerCase()) ?? []).some((other) => other !== path)))];
   if (colliding.length) return { docsOnly: false, reason: `大文字と小文字だけが違う別のパスがあるので、すべてのステップを実行します：${list(colliding)}` };
-  return { docsOnly: true, reason: `変えたファイル（${paths.length} 件）はすべて文書なので、品質コマンドを飛ばします` };
+  // Requirement の本文を変えた spec.md は文書だけと扱わない（段階 L3）。spec.md の差分だけを -U0 で読む（REQ-342）
+  let specDiff = '';
+  const specPaths = [...new Set(paths.filter(isSpecPath))];
+  if (specPaths.length) {
+    const d = git(['-c', 'core.quotePath=false', 'diff', '-U0', `refs/remotes/origin/${baseRef}...HEAD`, '--', ...specPaths]);
+    if (d.status !== 0) {
+      const detail = (d.stderr || d.error?.message || '').trim();
+      return { docsOnly: false, reason: `spec.md の差分を読めなかったので、すべてのステップを実行します（${detail || `終了コード ${d.status}`}）` };
+    }
+    specDiff = d.stdout ?? '';
+  }
+  // PR 本文は読まない（quality ジョブは本文を読む権限を持たない。tier-ci-gate の仮定 A-03）
+  const decided = decideTier({ entries, specDiff });
+  if (decided.error) return { docsOnly: false, reason: `段階を決められなかったので、すべてのステップを実行します（${decided.error}）` };
+  if (decided.tier !== 'L1') return { docsOnly: false, reason: `段階が ${decided.tier} なので、すべてのステップを実行します（${formatTierLine(decided)}）` };
+  return { docsOnly: true, reason: `変えたファイル（${paths.length} 件）はすべて文書（段階 L1）なので、品質コマンドを飛ばします` };
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

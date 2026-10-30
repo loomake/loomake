@@ -1,6 +1,8 @@
 #!/usr/bin/env node
-// CI の完了ゲート。対象の change を、PR 本文の「loomake-change:」の行、PR で変えたファイル、ブランチ名から決め、
-// それぞれに --change <id> --done を実行する（REQ-010・REQ-132）。
+// CI の完了ゲート。先に PR の段階（L1・L2・L3）を変えたファイルと spec の差分から決め（REQ-342、ci-tier.mjs）、
+// 段階ごとに検査を変える（REQ-343）。L1 は lint と文書のリンクの試験だけで、verify を呼ばない。
+// L2・L3 は対象の change を、PR 本文の「loomake-change:」の行、PR で変えたファイル、ブランチ名から決め、
+// それぞれに --change <id> --done を実行する（REQ-010・REQ-132）。L3 では change が必須。
 // loomake run が作る loomake/<id> のブランチは、先頭の loomake/ を除いて比べる（fix-review-findings の仮定 A-01）
 //
 //   BASE_REF=<向き先のブランチ> PR_NUMBER=<PR の番号> node scripts/ci-gate.mjs <branch>
@@ -8,10 +10,12 @@
 // PR 本文は、実行のたびに gh で読む。本文を書き直したら、gate のジョブを再実行すれば反映される（make-ci-change-selection-explicit の仮定 A-03）。
 // PR_BODY を渡せば、gh を使わずにその文を本文として使う
 
-import { existsSync, statSync } from 'node:fs';
+import { appendFileSync, existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { parseRawDiff } from './ci-docs-only.mjs';
+import { decideTier, formatTierLine, isDocumentPath, isSpecPath } from './ci-tier.mjs';
 
 // change は changes/ の直下のディレクトリだけ。changes/archive/ は完了した change の置き場で、change ではない
 const isChangeName = (name) => /^[^/\\.][^/\\]*$/.test(name) && name !== 'archive';
@@ -31,9 +35,6 @@ export function declaredChanges(body) {
   return [...new Set(m[1].split(',').map((s) => s.trim()).filter(Boolean))];
 }
 
-// 文書とみなすファイル。ほかはすべてコードとみなす（make-ci-change-selection-explicit の仮定 A-01）
-const isDocument = (f) => f.endsWith('.md') || /^(docs|openspec|\.changeset)\//.test(f);
-
 /**
  * 対象の change を決める。明示があれば明示だけを、なければ変えたファイルとブランチ名から決めた change を合わせて使う（仮定 A-02）。
  * 返すのは { changes }・{ qualityOnly: 理由 }・{ error: 理由 } のどれか
@@ -52,27 +53,57 @@ export function selectChanges({ ref = '', body = '', files = [], changesDir, cha
   const fromBranch = verifyArgs(ref, changesDir)[1];
   const changes = [...new Set([...fromFiles, fromBranch].filter((id) => id && isChangeDir(changesDir, id)))].sort();
   if (changes.length) return { changes };
-  if (files.every(isDocument)) return { qualityOnly: '対象の change がなく、変えたのは文書だけです' };
+  // 文書の判定は quality ジョブと同じ関数（ci-tier.mjs の isDocumentPath）。段階 L1 はここに来ないので、本文で段階を上げた文書だけの PR が当たる
+  if (files.every(isDocumentPath)) return { qualityOnly: '対象の change がなく、変えたのは文書だけです' };
   return {
     error:
       'コードを変えていますが、対象の change を特定できませんでした。PR 本文に「loomake-change: <change-id>」の行を書いてください。change のない PR なら「loomake-change: none」と書いてください',
   };
 }
 
+/** L1 で実行する検査。lint は loomake.config.json の commands.lint（既定 pnpm lint）、文書のリンクの試験は vitest で 1 ファイルだけ */
+export function tierOneCommands(configPath = 'loomake.config.json') {
+  let lint = 'pnpm lint';
+  if (existsSync(configPath)) {
+    const config = JSON.parse(readFileSync(configPath, 'utf8'));
+    if (typeof config?.commands?.lint === 'string' && config.commands.lint) lint = config.commands.lint;
+  }
+  return [lint, 'pnpm exec vitest run tests/doc-links.test.ts'];
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const branch = process.argv[2] ?? '';
   const base = process.env.BASE_REF ?? '';
-  let files = [];
+  const git = (args) => spawnSync('git', ['-c', 'core.quotePath=false', ...args], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  let entries = [];
+  let specDiff = '';
   if (base) {
     // ベースは refs/remotes/ から書く。「origin/main」とだけ書くと、同じ名前のタグやブランチ（refs/tags/origin/main など）が
-    // 先に選ばれ、PR で変えたファイルを取り違える
-    const r = spawnSync('git', ['diff', '--name-only', `refs/remotes/origin/${base}...HEAD`], { encoding: 'utf8' });
+    // 先に選ばれ、PR で変えたファイルを取り違える（REQ-272）。--raw -z -M で、名前の変更は変更前と変更後の両方を読む
+    const range = `refs/remotes/origin/${base}...HEAD`;
+    const r = git(['diff', '--raw', '-z', '-M', range]);
     if (r.status !== 0) {
-      console.error(`ci-gate: PR で変えたファイルを調べられませんでした（${(r.stderr || '').trim()}）`);
+      console.error(`ci-gate: PR で変えたファイルを調べられませんでした（${(r.stderr || r.error?.message || '').trim()}）`);
       process.exit(1);
     }
-    files = r.stdout.split('\n').filter(Boolean);
+    try {
+      entries = parseRawDiff(r.stdout ?? '');
+    } catch (error) {
+      console.error(`ci-gate: PR の差分を解釈できませんでした（${error.message}）`);
+      process.exit(1);
+    }
+    // Requirement の本文の変更は、spec.md だけの -U0 の差分で見る（REQ-342）
+    const specPaths = [...new Set(entries.flatMap((entry) => entry.paths).filter(isSpecPath))];
+    if (specPaths.length) {
+      const d = git(['diff', '-U0', range, '--', ...specPaths]);
+      if (d.status !== 0) {
+        console.error(`ci-gate: spec.md の差分を読めませんでした（${(d.stderr || d.error?.message || '').trim()}）`);
+        process.exit(1);
+      }
+      specDiff = d.stdout ?? '';
+    }
   }
+  const files = [...new Set(entries.flatMap((entry) => entry.paths))];
   let body = process.env.PR_BODY ?? '';
   if (process.env.PR_BODY === undefined && process.env.PR_NUMBER) {
     const r = spawnSync('gh', ['pr', 'view', process.env.PR_NUMBER, '--json', 'body', '-q', '.body'], { encoding: 'utf8' });
@@ -82,22 +113,46 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     }
     body = r.stdout;
   }
+  const decided = decideTier({ entries, specDiff, body });
+  if (decided.error) {
+    console.error(`ci-gate: ${decided.error}`);
+    process.exit(1);
+  }
+  // 段階と理由は標準出力の 1 行に書く（進行の表示は標準エラー）。GITHUB_OUTPUT があれば後続のステップにも渡す（REQ-343）
+  const tierLine = formatTierLine(decided);
+  console.log(tierLine);
+  if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `tier=${decided.tier}\ntier_line=${tierLine}\n`);
+
+  const run = (cmd) => spawnSync(cmd, { shell: true, stdio: 'inherit' }).status ?? 1;
+  if (decided.tier === 'L1') {
+    // L1 は lint と文書のリンクの試験だけ。verify は呼ばない（REQ-343）。
+    // 文書だけの PR では quality ジョブが品質コマンドを飛ばすので、文書を読む試験を回すのはここだけになる（docs/dev/ci.md）
+    let status = 0;
+    for (const cmd of tierOneCommands()) {
+      console.error(`ci-gate: branch=${branch || '(なし)'} 段階 L1 → ${cmd}`);
+      const code = run(cmd);
+      if (code !== 0) status = code;
+    }
+    process.exit(status);
+  }
   const selected = selectChanges({ ref: branch, body, files, changesDir: join('openspec', 'changes') });
   if (selected.error) {
     console.error(`ci-gate: ${selected.error}`);
     process.exit(1);
   }
-  // loomake verify は先に pnpm build しておく（CI の gate ジョブ）。
-  // 文書だけの PR（REQ-270）でテストを実行するのは、ここで呼ぶ verify の品質コマンドだけになる。
-  // verify を呼ばない経路や、テストを飛ばす引数を足す前に、docs/dev/ci.md の「文書だけの PR でテストを実行するジョブ」を読むこと
+  // loomake verify は先に pnpm build しておく（CI の gate ジョブ）
   const verify = (args) => spawnSync(process.execPath, ['packages/cli/dist/cli.js', 'verify', ...args], { stdio: 'inherit' }).status ?? 1;
   if (selected.qualityOnly) {
-    console.error(`ci-gate: branch=${branch || '(なし)'} → verify（品質コマンドのみ。${selected.qualityOnly}）`);
+    if (decided.tier === 'L3') {
+      console.error(`ci-gate: L3 では change が必須です（${selected.qualityOnly}）。PR 本文に「loomake-change: <change-id>」の行を書いてください`);
+      process.exit(1);
+    }
+    console.error(`ci-gate: branch=${branch || '(なし)'} 段階 ${decided.tier} → verify（品質コマンドのみ。${selected.qualityOnly}）`);
     process.exit(verify([]));
   }
   let failed = false;
   for (const id of selected.changes) {
-    console.error(`ci-gate: branch=${branch || '(なし)'} → verify --change ${id} --done`);
+    console.error(`ci-gate: branch=${branch || '(なし)'} 段階 ${decided.tier} → verify --change ${id} --done`);
     if (verify(['--change', id, '--done']) !== 0) failed = true;
   }
   process.exit(failed ? 1 : 0);
