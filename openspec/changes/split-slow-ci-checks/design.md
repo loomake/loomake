@@ -1,6 +1,6 @@
 # Context
 
-基点はmain `085a82686dc1c14506fbdbad88b5b9b3961f522e`。利用者のdelivery指示1-1、管理役Q01〜Q10、補足設計62aba81dとQ-N1〜Q-N5の採用をこの起案へ反映する。原文・版・hashは専用treeの`.loomake/ci-formal-adoption/inputs/`と索引へ保存した。正式起案だけで、以下の実装はまだ行っていない。
+基点はmain `085a82686dc1c14506fbdbad88b5b9b3961f522e`。利用者のdelivery指示1-1、管理役Q01〜Q10、補足設計62aba81dとQ-N1〜Q-N5の採用をこの起案へ反映する。原文・版・hashは専用treeの`.loomake/ci-formal-adoption/inputs/`と索引へ保存した。C1の正式起案を終え、管理役の指示によりC2〜C5の独立実装へ進む。ここに記す未実装・未実測の受入を、先行着手だけで完了としない。
 
 # 仕様と運用の境界
 
@@ -42,4 +42,4 @@ ruleset mainの変更案はrequired_status_checksからnode20 contextだけを�
 
 # 工程と未完了
 
-内部工程はtasksに従い、すべて1-1の同じPRで受け入れる。先にPR179最終headを統合して元caseを固定し、必要な個別設計、実装、同head測定、完了ゲート、独立レビューへ進む。C001/S1/E3の既存treeと担当は保持する。本文やfixtureの重複は最新差分と担当の統合順で解決し、未測定・未設計を完成としない。
+内部工程はtasksに従い、すべて1-1の同じPRで受け入れる。管理役はC2のNode20削除、C3のroot共有準備、C4の空registryを用いる純粋helper/slow足場、C5の実13条件試験を先行可能と指定した。これらは採用済み62abaの範囲に限定し、未測定のOS割当や未設計case本体を加えない。179の最終受入head統合と残10fileの個別設計は、case本体分割と最終同head測定の前提として残す。統合後に元caseを固定し、先行実装もfresh差分・測定・完了ゲート・独立レビューで再検証する。C001/S1/E3の既存treeと担当は保持する。本文やfixtureの重複は最新差分と担当の統合順で解決し、未測定・未設計を完成としない。
