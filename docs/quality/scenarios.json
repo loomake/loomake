@@ -6263,7 +6263,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-204]",
-          "sha256": "72842e7c2618eafd5182af15ebd59e844a9cab1a9fb38ec82ed4046e9d55709b"
+          "sha256": "af19e0af745cc27ad069e3617e8e5809360bcff3d3b29d47e0070683e5e2804d"
         }
       ]
     },
@@ -6279,7 +6279,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-204]",
-          "sha256": "72842e7c2618eafd5182af15ebd59e844a9cab1a9fb38ec82ed4046e9d55709b"
+          "sha256": "af19e0af745cc27ad069e3617e8e5809360bcff3d3b29d47e0070683e5e2804d"
         }
       ]
     },
@@ -6295,7 +6295,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-204] 正常終了",
-          "sha256": "72842e7c2618eafd5182af15ebd59e844a9cab1a9fb38ec82ed4046e9d55709b"
+          "sha256": "af19e0af745cc27ad069e3617e8e5809360bcff3d3b29d47e0070683e5e2804d"
         }
       ]
     },
@@ -6311,7 +6311,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-205] 状態変更",
-          "sha256": "72842e7c2618eafd5182af15ebd59e844a9cab1a9fb38ec82ed4046e9d55709b"
+          "sha256": "af19e0af745cc27ad069e3617e8e5809360bcff3d3b29d47e0070683e5e2804d"
         }
       ]
     },
@@ -6327,7 +6327,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-205]",
-          "sha256": "72842e7c2618eafd5182af15ebd59e844a9cab1a9fb38ec82ed4046e9d55709b"
+          "sha256": "af19e0af745cc27ad069e3617e8e5809360bcff3d3b29d47e0070683e5e2804d"
         }
       ]
     },
@@ -6343,7 +6343,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-205] 合格は回数",
-          "sha256": "72842e7c2618eafd5182af15ebd59e844a9cab1a9fb38ec82ed4046e9d55709b"
+          "sha256": "af19e0af745cc27ad069e3617e8e5809360bcff3d3b29d47e0070683e5e2804d"
         }
       ]
     },
@@ -6359,7 +6359,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-206]",
-          "sha256": "72842e7c2618eafd5182af15ebd59e844a9cab1a9fb38ec82ed4046e9d55709b"
+          "sha256": "af19e0af745cc27ad069e3617e8e5809360bcff3d3b29d47e0070683e5e2804d"
         }
       ]
     },
@@ -7960,7 +7960,7 @@
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "[REQ-330] 合図なしなら",
-          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
+          "sha256": "989bd9e5c8e7705293d7d98953c2a4893422b285f201a862435b703fc0fd7c40"
         }
       ]
     },
@@ -7976,12 +7976,12 @@
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "[REQ-330] 行頭でない合図なら",
-          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
+          "sha256": "989bd9e5c8e7705293d7d98953c2a4893422b285f201a862435b703fc0fd7c40"
         },
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "[REQ-330] 空の理由なら",
-          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
+          "sha256": "989bd9e5c8e7705293d7d98953c2a4893422b285f201a862435b703fc0fd7c40"
         }
       ]
     },
@@ -7997,17 +7997,17 @@
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "変更不要の理由を表示しtasks.mdだけ",
-          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
+          "sha256": "989bd9e5c8e7705293d7d98953c2a4893422b285f201a862435b703fc0fd7c40"
         },
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "理由に含まれる既知の秘密情報",
-          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
+          "sha256": "989bd9e5c8e7705293d7d98953c2a4893422b285f201a862435b703fc0fd7c40"
         },
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "の区切りに続く理由で変更なしのタスクを完了する",
-          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
+          "sha256": "989bd9e5c8e7705293d7d98953c2a4893422b285f201a862435b703fc0fd7c40"
         }
       ]
     },
@@ -8023,7 +8023,7 @@
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "変更と合図があれば",
-          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
+          "sha256": "989bd9e5c8e7705293d7d98953c2a4893422b285f201a862435b703fc0fd7c40"
         }
       ]
     },
@@ -8039,7 +8039,7 @@
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "質問と合図が両方あれば",
-          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
+          "sha256": "989bd9e5c8e7705293d7d98953c2a4893422b285f201a862435b703fc0fd7c40"
         }
       ]
     },
@@ -8055,14 +8055,14 @@
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "dry-runのタスクの指示に",
-          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
+          "sha256": "989bd9e5c8e7705293d7d98953c2a4893422b285f201a862435b703fc0fd7c40"
         }
       ]
     },
     {
       "id": "SCN-ab333e12681dba9b36c6",
       "status": "reviewed",
-      "scenarioSha256": "2a97e7477834e35bda817c0fd05d6ab274a181889d1192a666a101e017014787",
+      "scenarioSha256": "ef2e8d57e6defc4ca79c3db884aa17ae7f0ed94912d234ba8e3f03f7f13694cf",
       "reason": "「直しで何も変えない」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
       "sources": [
         "REQ-331"
@@ -8071,14 +8071,14 @@
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "直しが合図なしで変更なしなら",
-          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
+          "sha256": "989bd9e5c8e7705293d7d98953c2a4893422b285f201a862435b703fc0fd7c40"
         }
       ]
     },
     {
       "id": "SCN-eabbe8817c1aea421112",
       "status": "reviewed",
-      "scenarioSha256": "e4cef20ceffad23340b9268a04ebb64923a7ce46aab794c44799ad0fab4f40a2",
+      "scenarioSha256": "d201fc1406560bcb036ceb5ed867646898e4898e5d7dd278748e873120822c74",
       "reason": "「直しで変更が要らないと合図する」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
       "sources": [
         "REQ-331"
@@ -8087,14 +8087,14 @@
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "直しが合図ありで変更なしなら",
-          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
+          "sha256": "989bd9e5c8e7705293d7d98953c2a4893422b285f201a862435b703fc0fd7c40"
         }
       ]
     },
     {
       "id": "SCN-4d4a3aaf9bfeab50bbe2",
       "status": "reviewed",
-      "scenarioSha256": "73f8c939b89b91a9e1229fe443f82acae90a69c417e7eb6c97cf1f1c871533dc",
+      "scenarioSha256": "eb92d4b9f89d9fbff4f996379fdd24dc180d744b9ca1f60999c30fea9344851f",
       "reason": "「直しの指示」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
       "sources": [
         "REQ-331"
@@ -8103,7 +8103,7 @@
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "[REQ-331][REQ-100]",
-          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
+          "sha256": "989bd9e5c8e7705293d7d98953c2a4893422b285f201a862435b703fc0fd7c40"
         }
       ]
     },
@@ -8231,12 +8231,12 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-332] タスクで変更あり",
-          "sha256": "72842e7c2618eafd5182af15ebd59e844a9cab1a9fb38ec82ed4046e9d55709b"
+          "sha256": "af19e0af745cc27ad069e3617e8e5809360bcff3d3b29d47e0070683e5e2804d"
         },
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-332] 直しで変更あり",
-          "sha256": "72842e7c2618eafd5182af15ebd59e844a9cab1a9fb38ec82ed4046e9d55709b"
+          "sha256": "af19e0af745cc27ad069e3617e8e5809360bcff3d3b29d47e0070683e5e2804d"
         }
       ]
     },
@@ -8252,7 +8252,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-332]",
-          "sha256": "72842e7c2618eafd5182af15ebd59e844a9cab1a9fb38ec82ed4046e9d55709b"
+          "sha256": "af19e0af745cc27ad069e3617e8e5809360bcff3d3b29d47e0070683e5e2804d"
         }
       ]
     },
@@ -8268,7 +8268,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-332] 直しでは合図があっても停止",
-          "sha256": "72842e7c2618eafd5182af15ebd59e844a9cab1a9fb38ec82ed4046e9d55709b"
+          "sha256": "af19e0af745cc27ad069e3617e8e5809360bcff3d3b29d47e0070683e5e2804d"
         }
       ]
     },
@@ -8285,6 +8285,54 @@
           "file": "tests/run-decision-mutations.test.ts",
           "contains": "[REQ-206][REQ-332]",
           "sha256": "fde058b4656c75f1739caaa06b12b6e599d432dce310b6cd3965bf3cca6e4c6d"
+        }
+      ]
+    },
+    {
+      "id": "SCN-aefc16f8996ec3ea5f7b",
+      "status": "reviewed",
+      "scenarioSha256": "fc40ec9ad8d332fd6e4c7080607cd2a32d60d520e14bf373788d36242b1eedbb",
+      "reason": "「理由の制御文字を見える形にする」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "sources": [
+        "REQ-339"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "[REQ-330][REQ-339] 理由の制御文字",
+          "sha256": "989bd9e5c8e7705293d7d98953c2a4893422b285f201a862435b703fc0fd7c40"
+        }
+      ]
+    },
+    {
+      "id": "SCN-724857f20e4caff74c8a",
+      "status": "reviewed",
+      "scenarioSha256": "3c8ad917f4a7452fee9a0fd4a6dd48e21470a362e4d5bdbfeb4674eccca15366",
+      "reason": "「理由に NUL がある」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "sources": [
+        "REQ-339"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "[REQ-330][REQ-339] NUL",
+          "sha256": "989bd9e5c8e7705293d7d98953c2a4893422b285f201a862435b703fc0fd7c40"
+        }
+      ]
+    },
+    {
+      "id": "SCN-040ded6c2ba815775102",
+      "status": "reviewed",
+      "scenarioSha256": "7288f530d66d03761f524d98e2ca7b1bac2843f231737c8ff4fc9e58ea1fc261",
+      "reason": "「直しで止まるときの記録の場所」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "sources": [
+        "REQ-331"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "[REQ-331] 直しが",
+          "sha256": "989bd9e5c8e7705293d7d98953c2a4893422b285f201a862435b703fc0fd7c40"
         }
       ]
     }
