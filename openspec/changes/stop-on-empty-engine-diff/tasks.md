@@ -67,3 +67,7 @@
 ## 13. 台帳の出所情報の復元
 
 - [x] 13.1 mainにある台帳トップレベルのreviewerを戻し、2か所のtests要素のキー順をmainへ合わせる。reviewsのIDと内容を保ち、reviews以外のトップレベル項目もmainと同一か検証する。作業記録を更新し、5.2の完了ゲートを新headで再実行する
+
+## 14. 提案と配布説明の範囲の整合
+
+- [x] 14.1 proposalのWhat Changes・Modified Capabilities・ImpactにREQ-339の可視化・原文保存・末尾保持を反映し、changesetにも利用者に見える変更を記す。製品と試験の意味は保ち、作業記録を更新して5.2の完了ゲートを新headで再実行する
