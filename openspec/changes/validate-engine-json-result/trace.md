@@ -74,3 +74,12 @@ A1・A2・A3・Bの原本はdesign7章を参照する。選択肢が競合する
 ## 所有と次の工程
 
 旧E3 treeは5c71ae0のまま保持した。正式起案は管理役の指示でmain085aから新しい`change/validate-engine-json-result-adoption`へ移し、旧treeに製品実装・未commit変更がないことを確認した。C001/S1・PR179の所有は変更していない。差分仕様と仕様ゲートのあとに、修正版の独立設計確認、製品実装、実観測、全done受入を行う。head6c951b9の独立設計4工程は実施済みだが、製品実装と実CLI採集は未実施である。今回は以前の完了成果を照合して再利用し、今回の重複起動417111fcは停止・未実施として保持した。管理役の判断を反映したstrict/spec-only後に製品実装へ進む。
+
+
+## 公式2版の導入と採集前提の状態（2026-10-31）
+
+task4.1として、公式2版のwrapper/nativeを独立prefixへignore-scriptsで導入し、integrityとnative実checksum、version/helpを照合した。実機はlinux-arm64-glibcで、既存資料のx64指定による初回EBADPLATFORMも保持した。Q-08のBに従い、helpにないmax-turnsは公式referenceと、両版のchecksum確定native内のoption宣言で版適用の根拠を確認した。会話を使った成功の証明ではない。
+
+管理役は2026-10-31に、具体的な採集手順も含めて4.1を完了にできると確認した。固定argv/prompt・保護維持・メモリ内変換・raw/秘密/hash拒否・4.2不明なら起動しない順をdesign8章へ記録した。元証跡は専用treeの`.loomake/e3-cli/`にある。実4枠は0/4で、4.2〜4.4と親DoDは未達のまま。
+
+製品D01〜D05のhead796324dは、strict/spec-onlyと容量復旧後の通常verifyが成功した（1655成功・失敗0・既存skip8）。先の同headの108失敗と再実行理由を保持した。CI、自動Codex、独立最終Opus、製品doneはまだ実施しておらず、通常verifyで代替しない。最終受入taskとdone工程の循環は管理役の計画監査で扱い、未実施をチェックして通さない。

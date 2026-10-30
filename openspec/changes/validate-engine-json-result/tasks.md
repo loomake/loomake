@@ -22,7 +22,7 @@
 
 ## 4. 公式CLIの実4件
 
-- [ ] 4.1 既存保護を維持する採集手順を確認し、公式package/integrityと独立prefixのignore-scripts導入、nativeの版/checksum、必要help/referenceを版ごとに照合する（REQ-340・REQ-341）
+- [x] 4.1 既存保護を維持する採集手順を確認し、公式package/integrityと独立prefixのignore-scripts導入、nativeの版/checksum、必要help/referenceを版ごとに照合する（REQ-340・REQ-341）
 - [ ] 4.2 設定源・hook・会話記録・subscription認証・保存先・debug出力・argv監査を採集前に確認する。原raw/秘密を永続化しない条件を確認できなければ起動せず、未収集・Issue・未完了taskを残す（REQ-340・REQ-341）
 - [ ] 4.3 2.1.307/2.1.308 × success/error_max_turnsの実4件を収集し、全試行と不足を記録する。synthetic/未収集で必須件数を埋めない（REQ-340・REQ-341）
 - [ ] 4.4 許可された最小fixtureだけを保存し、provenance・presence/value/type・置換箇所・版/caseを照合する。原raw hashを保存せず、再解析/独立照合不能という限界を記録する（REQ-340・REQ-341）

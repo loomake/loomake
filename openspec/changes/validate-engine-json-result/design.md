@@ -140,3 +140,63 @@ BのQ-B3にあるsettingsのメモリ内読取案と、Q-B4にある会話以外
 保存検査の実装はscripts/claude-result-fixture.mjsへ集約する。resultSignalsは存在・JSON型と分類/表示の合図だけを返す。createObservedResultFixtureは元rawをメモリ内で直接処理し、validateResultFixtureは各階層の追加欄とcross-field不整合を拒否する。matchesResultCaseはfixtureの形と終了/case条件を確認するだけであり、採集前提や元値の一致を証明しない。metarecordからinputを生成する経路は作らない。
 
 保存するfieldsはtype/subtype/is_error/resultの4欄を持ち、各欄は{present:false}か{present:true,jsonType:<6種>}とする。cliはversion/nativeSha256だけ、exitはcode/signal/timedOut/stdoutLimitHitだけとする。これらを含め定義外の欄を保存しない。66件の合成回帰は保存許可と分類の対応を検査するための入力であり、CLIの実観測や実4枠の収集成立へ数えない。保存モジュールだけの成功で採集を起動せず、4章/5章の保護前提と実4件は別に受け入れる。
+
+
+## 8. 公式CLI 2版の導入確認と、採集前に固定する手順
+
+### 8.1 確認できた配布と版（task4.1）
+
+この実機はlinux/arm64/glibcである。既存資料にあったlinux-x64の初回導入はEBADPLATFORMで失敗し、その原本を保持した。CPU/OSの偽装やforceは使わず、実機に合う公式linux-arm64を選び直した。
+
+2.1.307と2.1.308をそれぞれ`.loomake/e3-cli/<version>-arm64/`の独立prefixへ、公式registry・固定版・ignore-scripts・omit=optionalで導入した。wrapperとnativeを明示して導入し、公開integrityとlockの一致を確認した。既存のglobal CLI、認証、settingsは変更していない。
+
+両nativeの絶対パスからversion/helpだけを実行し、exit0・版一致・stderr0を確認した。print、output-format、tools、disallowedTools、no-session-persistenceは両版のhelpにある。max-turnsはhelpにないが、checksum確定の両native内のoption宣言と[公式CLI reference](https://code.claude.com/docs/en/cli-reference)を照合した。これは版適用の静的な根拠であり、max-turnsを付けた会話の成功や実caseの採集ではない。
+
+| native版 | 実binaryのSHA-256 |
+|---|---|
+| 2.1.307 | 1c67968ab8410c9644e2f4867167a0dab1a8c6c9de9cc83fe78449e5ae8a3633 |
+| 2.1.308 | fdd22e6cbb734d580f5664c48df4294eeec850218ff07f186f9af30426396ee1 |
+
+元metadata、導入失敗/成功、integrity、binary checksum、helpの固定metadata、静的option宣言は専用treeの`.loomake/e3-cli/`へ保存した。help本文と認証情報は保存していない。
+
+### 8.2 採集を起動する前の条件（task4.2）
+
+次の条件をすべて確かめられるまで、会話promptを渡さない。現在は認証方式、hook/plugin/debug、会話記録を含む原raw/秘密の非永続化が未確認である。settingsのメモリ内読取や、会話外書込みを単に限界として記すことを安全性の証明へ代用しない。
+
+- 保存先は専用worktree内のGit除外対象で、外向きsymlinkを含まないことを作成前に確認する。cwdはgit外の一時領域とし、機密でない固定のnote.txtだけを用意する。
+- 既存subscription認証、設定源、hook、許可規則、保護、MCP設定を維持する。認証秘密ファイルの読取/コピーや、設定源を空にするflag、独自settings、権限緩和、bare/safe-modeは使わない。
+- 既存hook/plugin/debug/CLI自身の会話記録が原rawや認証秘密を永続化しないことを確認する。必要な設定や挙動が不明なら、その版/caseを未収集として止める。保護を外して不足を埋めない。
+- 必須flagと対象版の根拠、実binary checksum、保存先、stderr/stdoutの容量、期限、後述argvを起動前に照合する。不一致なら起動しない。
+
+### 8.3 固定する呼出しと、メモリ内の変換（tasks4.3〜4.4）
+
+shellを使わず、先頭は検証したnativeの絶対パスとし、引数を次へ固定する。promptはstdinで渡し、argvへ含めない。
+
+```text
+success:
+-p --output-format json --tools Read --disallowedTools mcp__* --no-session-persistence
+error_max_turns:
+-p --output-format json --tools Read --disallowedTools mcp__* --no-session-persistence --max-turns 1
+```
+
+successの固定promptは次の文字列とする。
+
+```text
+Reply exactly OK. Do not access files or call tools.
+```
+
+error_max_turnsの固定promptは次の文字列とし、note.txtの本文は `Safe fixture note.` と末尾改行だけにする。
+
+```text
+Read note.txt in the current working directory and then report its contents.
+```
+
+Read拒否や違うsubtypeを目的caseの成功へ数えない。successでresultがOK以外の文字列なら、その値をderivedへ置換する。各版/caseの試行は2回までとし、全試行と不足を残す。
+
+環境は継承し、子へDISABLE_AUTOUPDATER=1だけを足す。debug等の既存環境が非永続化と両立しない場合は、値を記録したり保護を無効化したりせず起動を止める。verbose/debug/resume/continueや独自のsettings/MCP構成は付けない。ReadだけでMCPが除外されたとは扱わず、mcp__*の追加拒否を保つ。
+
+stdoutは1MiB、stderrは64KiB、期限は5分とする。端末への継承やrawの一時ファイルを作らず、メモリ内で容量と期限を管理する。例外messageやstderr本文は保存せず、固定の結果符号へ変換する。取得した元rawから直接createObservedResultFixtureへ渡し、元の存在/JSON型と分類/表示の合図の一致、および保存schemaを検査する。元値や元rawのhashは保存しない。確実なメモリ消去を約束しない。
+
+実caseの判定には元のsubtype/is_error/resultと必要な拒否の有無をメモリ内だけで使う。終了0や保存schema合格だけを収集成立にしない。projection/derived以外、case不一致、拒否、unknown option、上限停止、保存/保護の不一致は未収集へ残す。metarecordからinputを生成して観測を名乗らず、syntheticは実4枠へ数えない。
+
+最後に、保存を許可した最小fixtureと出所・版/case/試行の固定metadataだけを検査して残す。原rawを保存しないので、後から元値を再解析したり独立に一致確認したりはできない。この限界は実4件を免除しない。2.1.307/2.1.308×success/error_max_turnsの必須4枠は、現在0/4・未収集のままである。task4.1の導入/手順確認と、task4.2の保護前提の達成、4.3の実収集、親DoDを区別する。

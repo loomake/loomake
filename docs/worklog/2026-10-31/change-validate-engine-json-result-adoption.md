@@ -74,3 +74,11 @@
 2. verify：新規66合成回帰が成功。4欄×全JSON型、許可外の値・原raw hash・未知metadata・置換不一致を拒否し、失敗実行やcase不一致を収集へ数えないことを確認した。型と対象lintを確認し、固定headの通常verifyはこれから再実行する。
 3. 残る事項：tasks4.1〜4.4と5章。実CLI2.1.307/2.1.308×success/error_max_turnsは0/4で、非永続化等の前提が未確認。親done・CI・自動Codex・独立最終レビュー・初回配布全体は未完了。
 4. 次：今回headの全体verifyを確認し、管理役へ製品D01〜D05と未収集の受入を分けて引き継ぐ。
+
+
+## 容量復旧後の全体回帰とtask4.1
+
+1. やったこと：task4.1として公式CLI2版を独立prefixへignore-scriptsで導入し、wrapper/native integrity・実checksum・version/helpとmax-turns静的宣言を確認。具体的な採集前手順をdesign8章へ反映した。初回x64不一致の失敗も保持し、global CLI/settings/authは変更していない。
+2. verify：head796324dのstrict/spec-onlyは成功。通常verify初回は1547成功/108失敗/既存skip8で、101件はENOSPC、4件はGitの容量不足を明記し、3件はassertion不一致だった。rootの容量復旧後、同head・設定/期待値/TMPDIR不変の単独再実行が1655成功/失敗0/既存skip8・exit0。両原本とhashを専用treeへ保全した。
+3. 残る事項：4.2の認証/保護/非永続化前提、実4件0/4、4.4、5章、doneと最終受入taskの計画整合、CI・自動Codex・独立最終レビュー。実caseを合成fixtureで埋めない。
+4. 次：大規模試験の容量枠をrootへ返し、4.2をstatic/非promptで確認する。保護を証明できなければ採集を起動せず未収集を保つ。
