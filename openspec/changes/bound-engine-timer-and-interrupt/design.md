@@ -1,71 +1,14 @@
 # Design: bound-engine-timer-and-interrupt
 
-## エンジンの期限の待機（REQ-336）
+## 目的と範囲
 
-監視役（`packages/kit/supervisor/supervisor.cjs` の watchDeadline）と同じ形にする。runClaude は呼ばれた時点の単調時計に timeoutMs を足して期限を持ち、`min(残り, 2147483647)` だけ待つ。発火したら残り時間を計り直し、残っていれば待ち直し、尽きたら既存の停止処理を呼ぶ。最初の待機は従来どおり setTimeout で始め、同期で停止しない。通常の終了・中断・出力超過では、そのとき有効なタイマーを解除する。
+REQ-336 はエンジンの期限を Node のタイマーの上限で短縮しないこと、REQ-337 は記録開始後の git・gh の利用者による中断を interrupted、監視役の異常終了による中断を stopped と記録することである。共有予算で後続操作を拒否するときも、REQ-250 が定める理由の有無による区別を保つ。
 
-`run.timeoutMinutes` に上限を置く案は採らない。今まで受け付けていた値を拒むことになり（REQ-141 の変更）、runClaude を直接呼んだときの丸めも残るためである。
+設定の受け付ける値、公開 API、依存、準備中の終了コード 3 は変えない。supervisor.cjs の SIGHUP の扱いは PR #158 の範囲とする。約 1.8e303 分を超える設定で timeoutMinutes×60000 が Infinity になるときの文言と、コミット中断時に tasks.md の完了印が残る既存の挙動は対象外とする。
 
-24 日を超える実時間の待機は試験しない。分けた待機が早く発火する状況を setTimeout の差し替えで作り、待ち直すことと、各待機が上限以下であることを確かめる（kit の `process-long-deadline.test.ts` と同じ手法）。
+端末の Ctrl-C は監視役にも届くが、コマンドは detached の別グループにある。利用者の中断は reason を持たず、監視役が結果を書かずに終わった中断は reason を持つ。Windows では他プロセスからの SIGINT は強制終了になるため、REQ-337 の統合試験は POSIX だけで行う。
 
-## 中断の写し方（REQ-337）
-
-`ProcessLimitError` の kind が interrupted で reason がないものを、利用者の信号による中断とする。reason の有無で区別するのは REQ-250 の決まりである。判定は `run/phases.ts` の `interruptedOperation` にまとめ、`run.ts` の実行中の失敗の catch と、`recordAndOpenPr` の push・PR の catch で、状態だけを選ぶ。理由の文は変えない。
-
-信号を受けたかどうかを AbortSignal で確かめる案は採らない。監視役だけが信号を受けた場合を取りこぼし、試験もイベントループの順序に依存するためである。
-
-SIGHUP を監視役で扱うのは別の change（`stop-command-group-on-sighup`）の範囲とする。この change は kind と reason だけを見るので、その change で SIGHUP による中断が reason なしで返れば、同じく interrupted に写る。
-
-## 試験
-
-監視役へ信号を送るため、git のフック（pre-commit・pre-push）から祖先の監視役を探して信号を送るスクリプトを使う（`external-budget.test.ts` の REQ-183・REQ-250 の試験と同じもの。helpers に移して共有する）。Windows では、別のプロセスから送る SIGINT は監視役の強制終了になるので、REQ-337 の統合試験は POSIX だけで行う。
-
-## 目的・範囲・対象外・前提
-
-**目的**
-- O1：`run.timeoutMinutes` が Node のタイマーの上限（2147483647ms ≒ 35,791.4 分）を超えても、エンジンをすぐ時間切れにしないようにする。
-- O2：git・gh の実行中に監視役が SIGINT・SIGTERM で操作を止めたとき、summary.json の状態を `interrupted` にする。いまは `stopped` になっている。
-
-**範囲**
-- `packages/runner/src/engine.ts`：期限のタイマーを分ける。
-- `packages/runner/src/run.ts`：実行中の失敗を `interrupted` に写す。
-- `packages/runner/src/run/phases.ts`：push・PR の catch も同じく写す。依頼の範囲の外だが、同じ原因なので含める（Q-04）。
-- 上の 2 点の回帰テスト、差分仕様、Scenario のレビュー、changeset、run の復旧の説明に 1 文。
-
-**対象外**
-- `packages/kit/supervisor/supervisor.cjs` と `packages/kit/src/runtime/process.ts`（SIGHUP の扱い。別の change `stop-command-group-on-sighup` の担当）。
-- `config.ts` の `timeoutMinutes` の上限。おすすめの案では変えない（Q-01）。
-- 約 1.8e303 分を超えて `timeoutMinutes*60000` が Infinity になるときの文言。いまも UsageError（終了コード 2）になっているので、Issue に回す（Q-06）。
-- 準備中（記録を作る前）の中断。REQ-182 のとおり終了コード 3 のまま。
-- 品質コマンドが理由つきの中断（監視役の異常終了）で終わったあとに、直しへ進む既存の経路。`phases.ts:117` は `INTERRUPTED` と完全に一致するときだけを中断とみなすため。Issue に回す。
-- コミット中に中断したとき、tasks.md の完了印が作業ツリーに残る既存の挙動（`phases.ts:67` の印は commit より前に付く）。
-
-**前提**
-- 端末の Ctrl-C は前面のプロセスグループに届くので、監視役（spawnSync の子で、親と同じグループ）も受ける。対象のコマンドは `detached` で別グループなので受けない（`supervisor.cjs:134`）。
-- 利用者の中断と監視役の異常終了は、`ProcessLimitError.reason` があるかどうかで区別する（REQ-250、`external-process-budget/spec.md:48`）。
-
-行番号は、設計時点の origin/main（d5aa30d）のもの。
-
-## 観測事実と原因
-
-### O1：タイマーの丸め
-- `engine.ts:130-133`：`setTimeout(…, Math.max(call.timeoutMs, 0))` に上限を超える値を渡すと、Node は 1ms に丸めて `TimeoutOverflowWarning` を出す。そのため `timedOut = true` になり、`stop()` の 250ms の猶予のあとに止まる（`engine.ts:88-92`）。再現スクリプトの `.loomake/repro/timer-overflow.mjs:3`（`timeoutMs: 2_147_483_648`）と同じ結果である。
-- 値の出どころ：
-  - `config.ts:27-28` は `timeoutMinutes` を正の有限数なら受け付ける。
-  - `run.ts:23` は `withProcessBudget({ timeoutMs: timeoutMinutes*60_000 })` を作る。
-  - `recorder.ts:18` は `base = startedAt + timeoutMinutes*60_000` である。
-  - `phases.ts:23,33` は `Math.min(rec.deadline - now, remainingProcessTime())` をそのまま `runClaude` に渡す。
-- 監視役は分けて待っている（`supervisor.cjs:80-88`：`Math.min(remaining, 2_147_483_647)`、発火のたびに計り直す）。kit 側の仕様（`external-process-budget/spec.md:29-31`）とテスト（`packages/kit/test/process-long-deadline.test.ts`）もあるが、エンジン側だけが未対応である。
-
-### O2：中断が `stopped` になる
-- `git.ts:17` と `pr.ts:10,67,82` は `runExternal` を呼ぶ。監視役が SIGINT・SIGTERM を受けると `stop('interrupted')` になり（`supervisor.cjs:90-91`）、`process.ts:450-452` が `ProcessLimitError('interrupted')` を投げる。これは `RuntimeFailure` で、`GitError` ではない（`process.ts:42`）。
-- `run.ts:70-76`：`RuntimeFailure` をまとめて `rec.finish('stopped', e.message, remaining)` にしている。decision-policy を通らない。
-- `phases.ts:179-192`：push・PR の検索・PR の作成の catch も、まとめて `'stopped'` にしている。push 中の中断はここを通るので、run.ts だけを直しても残る。
-- これは仕様と合っていない。REQ-124（`run/spec.md:246-257`、中断した旨の summary.json）と REQ-208（`run/spec.md:506-525`、git のような同期の処理のあいだの中断も中断として扱う。Scenario の状態は interrupted）である。
-- 既存のテストで見つからなかった理由：`signal-during-sync.test.ts:13-37` は AbortController だけで中断をまねていて、監視役は信号を受けない。そのため `ProcessLimitError` の経路を通らない。
-- 理由つきの中断（`process.ts:388-394` の `missingResultError`。監視役が結果を書かずに終わった）は、REQ-250 で「利用者の中断と区別する」と定められている。こちらは `stopped` のまま残すのが仕様に合う。
-
-## 修正方針の比較
+## タイマーの設計
 
 ### O1：エンジンのタイマー
 
@@ -91,56 +34,134 @@ timer = setTimeout(watchDeadline, Math.min(Math.max(call.timeoutMs, 0), MAX_TIME
 - 最初の発火は従来どおり非同期にする。`finishMonitoring`（`engine.ts:139-142`）の `clearTimeout(timer)` は、そのとき有効なタイマーを解除する。
 - `!(left > 0)` にしているので、NaN が来ても従来と同じくすぐ時間切れになる。
 
-### O2：中断の写し方
+## 1. 採用する最小方針
 
-採用するのは、`ProcessLimitError` の `kind === 'interrupted'` で、かつ `reason === undefined` のときだけ `interrupted` に写す案である。
-- `phases.ts` に小さな判定 `interruptedOperation(e)` を export する。run.ts はすでに phases から import しているので、循環しない。
-- `run.ts:75` と `phases.ts:191` の 2 か所で、状態だけをこの判定で選ぶ。理由の文は今のまま変えない。push のときの「証拠のコミットを保っていますが…」も残る（A-02）。
+### 1-1. 理由付き中断の区別（高 1 への対応）
 
-比べた案：
-- 「catch で `setImmediate` を待ってから `signal.aborted` を見る」案は、監視役だけが信号を受けた場合に取りこぼす。テストもイベントループの順序に依存してしまうので、採らない。
-- decision-policy に入れる案は、REQ-206 の直接試験の対象が増えるだけで得るものがないので、採らない。
+**原因：** 品質コマンドの監視役が結果を書かずに終わると、`process.ts:443` で `budget.state.interrupted = true` になります。後続の `runExternal` は、`process.ts:402` で reason のない `ProcessLimitError('interrupted')` を投げます。この経路は 2 つあります。
 
-**SIGHUP の change（`stop-command-group-on-sighup`）との境界**：その change は supervisor と process.ts で、SIGHUP を `stop('interrupted')` に足す担当である。こちらは `kind` と `reason` だけを見るので、その change がマージされれば SIGHUP も自動で `interrupted` に写る。条件は、その change が利用者の信号の中断に `reason` を付けないことである（Q-05）。
+- **経路 A（後続の品質コマンドがある場合）**
+  1. lint の監視役が強制終了されると、verify は lint を `INTERRUPTED（理由）` と記録します。
+  2. 続く test は、`402` で reason のない中断になり、`INTERRUPTED` と完全に一致する文で記録されます（`verify/run.ts:322`）。
+  3. `phases.ts:117` がこれを中断とみなし、`:122` で `interrupted` を返します。現行のままでも、理由付きの中断が interrupted として記録されています。
+- **経路 B（最後の品質コマンドだけが強制終了された場合）**
+  1. `:117` は中断とみなしません。
+  2. `:123` の `headState` の git が `402` で reason のない例外を投げ、`run.ts` の catch に届きます。
+  3. 現行は stopped ですが、catch に判定を足すだけだと interrupted になります。
 
-### 1 つの change にする
+**(a) を選ぶ理由**
 
-1 つの change・1 つの PR とする（Q-03）。どちらも run の capability と runner パッケージの中で閉じていて、「run の期限と中断の記録のずれ」という同じ主題である。commit も 6〜8 個で、1 日でマージできる大きさに収まる。tasks.md は 2 と 3 に分けるので、必要ならその境目で PR を分けられる。
+- (b)（runner で `rec.lastVerify` を見て補正する）では、経路 A が `:122` で interrupted を返して終わり、catch まで届きません。`:117` の判定も変える必要があります。
+- (b) は verify を通る経路しか見られません。証拠の記録（runRecord）の中の git など、ほかの後続操作の拒否も補えません。
+- 区別の元は kit の共有予算の状態です。`:443` と `:402` の 2 行を直せば、すべての後続操作の拒否が reason を持ちます。runner 側は、変更前の design どおり「`kind==='interrupted' && reason===undefined` だけを interrupted にする」判定のままで済みます。
+- REQ-250 は「利用者の中断とは理由の有無で区別する SHALL」と定めています。後続の拒否で理由が消えるのは、この区別を崩している状態です。REQ-250 の文は変えず（MODIFIED にせず）、その意図どおりの実装に揃えるという位置づけにします。
 
-## 受入条件と確認方法
+**kit の差分（`packages/kit/src/runtime/process.ts`。#159 だけが変更する範囲）**
 
-| ID | 受入条件 | 確認方法（修正前に失敗→修正後に成功） |
+```ts
+type Budget = { deadline: number; maxOperationMs: number; state: { interrupted: boolean; reason?: string } };
+// withProcessBudget の初期値 { interrupted: false } はそのまま（reason は未設定）
+if (budget?.state.interrupted) throw new ProcessLimitError('interrupted', command, '', '', budget.state.reason);   // 402
+...
+const error = missingResultError(command, stdout, stderr, ended, report.invalid, cleanup);
+if (budget) { budget.state.interrupted = true; budget.state.reason = error.reason; }                             // 443 付近
+throw error;
+```
+
+- 443 行は、`stopTree` のあとに作った error の reason を入れる順に並べ替えます。後片付けの結果を含む reason を引き継ぐためです。`state.interrupted` を立てる時点は、同じ `runExternal` の中なので変わりません。
+- 利用者の信号による中断（`:451`）では reason を入れません。そのため後続の拒否も、従来どおり reason を持ちません。
+- 引き継いだ文は変えずにそのまま使います。拒否された側のコマンド名は、従来どおりメッセージの先頭に入ります。
+- 中断（kind は interrupted）として返すことは変えません。`cleanup` は元の操作の記録なので引き継ぎません。
+
+**runner の差分**（変更前の design と同じです）
+
+- `phases.ts` に次を export します。
+
+  ```ts
+  export const interruptedOperation = (e: unknown) => e instanceof ProcessLimitError && e.kind === 'interrupted' && e.reason === undefined;
+  ```
+
+- 状態だけをこの判定で選ぶのは次の 2 か所です。理由の文は変えません。
+  - `run.ts:75`
+  - `phases.ts:191`（push と、gh の PR の検索・作成の catch）
+- `ghLoggedIn`（`gh auth status`）の中断は try の外なので、`run.ts` の catch で同じ判定を受けます。
+
+**目に見える影響：** 先に理由付きの中断があった場合、後続の品質コマンドの detail が `INTERRUPTED` から `INTERRUPTED（理由）` に変わります。その結果、run の状態は stopped になります（経路 A は、いまは interrupted）。これは承認済みの Q-02（理由がないものだけ interrupted）と REQ-250 の範囲内の帰結です。新たに質問はせず、仮定 A-07 として明記します。
+
+### 1-2. 変更前の設計の誤りの訂正
+
+- 旧設計で「品質コマンドの理由付きの中断のあと、直しへ進む経路」を対象外とした判断を訂正します。run は必ず共有予算の中で動くので、`:123` の git が必ず拒まれ、直しへは進みません。1-1 の修正で、この経路も stopped に揃います。Issue に回す必要はありません。
+- 旧設計で #158 が process.ts を変えるとした記述を訂正します。#158 が変えるのは `supervisor.cjs` だけで、`process.ts` は変えません。`process.ts` は #159 だけが変える範囲とします。
+  - #158 の SIGHUP は `stop('interrupted')` を通り、reason を持ちません。そのため、#158 がマージされれば SIGHUP も自動で interrupted に写ります。Q-05 の取り決めは変わりません。
+
+### 1-3. タイマー（REQ-336）は変えない
+
+`design.md:78-92` の案 A を維持します。
+
+- 待機は `min(残り, 2147483647)` に分け、発火のたびに単調時計で計り直します。
+- `!(left > 0)` で判定するので、NaN・0・負の値はすぐ時間切れになります（現行と同じ）。
+- 最初の待機は従来どおり非同期で始めます。
+- `timer` は `let` にし、`finishMonitoring` の `clearTimeout(timer)` が、その時点で有効なタイマーを解除します。
+
+## 2. 変更対象
+
+| ファイル | 変えること | 重なり |
 |---|---|---|
-| AC-1 | `runClaude` に上限を超える `timeoutMs` を渡しても、時間内に終えたエンジンを時間切れにせず、`TimeoutOverflowWarning` も出さない | `[REQ-336] タイマーの上限を超える時間の上限でも、時間内に終えたエンジンの結果を保つ`：偽の claude が 300ms 後に `{"result":"完了"}` を出して 0 で終わる。`timeoutMs: 2_147_483_647 + 60_000`。`timedOut:false`、`exitCode:0`、`text:'完了'`、`process.on('warning')` で警告が 0 件。修正前は `timedOut:true` で失敗 |
-| AC-2 | 分けた待機が早く発火しても、計り直して待ち直す | `[REQ-336] 分割した待機が期限前に発火しても、残り時間を確かめて待ち直す`：`vi.spyOn(globalThis,'setTimeout')` で ms>1000 の待機を記録し、最初の 2 回は 1ms で発火させる（kit の `process-long-deadline.test.ts:19-47` と同じ手法）。`timedOut:false`、待機は 3 回で、どれも `0 < ms ≤ 2147483647`。修正前は 1 回だけで、ms が上限を超えるので失敗 |
-| AC-3 | `run.timeoutMinutes: 40000` でも run が完了する | `[REQ-336] run.timeoutMinutes がタイマーの上限を超えても、エンジンをすぐに時間切れにしない`：`makeRepo({ run:{ timeoutMinutes: 40_000 } })`、`plan([{ write:{'impl.txt':'実装\n'}, sleepMs: 500 }, {}])`。終了コード 0、`status:'completed'`、出力に「実行時間の上限」がない。修正前は `stopped`「実行時間の上限に達しました」で失敗 |
-| AC-4 | タスクのコミットの git のあいだに監視役が SIGINT を受けたら、状態は `interrupted`、終了コード 1、エンジンは再び呼ばない | `[REQ-337] タスクのコミットの git のあいだに監視役が中断を受けたら、summary.json の状態を interrupted にする`（POSIX のみ）：pre-commit のフックが祖先の監視役へ SIGINT を送る。`status:'interrupted'`、`doneTasks:[]`、`remainingTasks[0]` が 1.1、`repo.calls()` が 1 件、`impl.txt` が作業ツリーに残る、PR は 0 件。修正前は `stopped` で失敗 |
-| AC-5 | push のあいだの中断も `interrupted` で、証拠のコミットを保つ | `[REQ-337] 証拠の push のあいだに監視役が中断を受けたら、証拠のコミットを保ち interrupted にする`：pre-push のフックで SIGINT を送る。`status:'interrupted'`、`reason` に「証拠のコミットを保っています」、最新のコミットが `evidence(c1):`、`ls-remote --heads` が空、PR は 0 件。修正前は `stopped` で失敗 |
-| AC-6 | 理由つきの中断（監視役が結果を書かずに終わる）は `stopped` のまま | `[REQ-337] 監視役が結果を書かずに終わったときは、利用者の中断と区別して stopped のままにする`：pre-commit のフックで監視役へ SIGKILL を送る。`status:'stopped'`、`reason` に「監視役が結果を書かずに終了しました」。修正の前後とも成功する（写し方を広げすぎていないことの見張り） |
-| AC-7 | 既存の期限・中断のテストが変わらず通る | `engine-safety`（REQ-139、timeoutMs 500）、`engine-normal-exit`、`run.test` の REQ-105・REQ-124・REQ-137、`signal-during-sync`、`external-budget` |
+| `packages/kit/src/runtime/process.ts` | `state.reason` を足す。402 行の拒否と 443 行付近の記録（1-1） | #159 だけが変える |
+| `packages/kit/test/process.test.ts` | 1-1 の kit の試験（AC-11） | なし |
+| `packages/runner/src/engine.ts` | 130-142 行のタイマーを分けて待つ形にする（変更前の設計どおり） | なし |
+| `packages/runner/src/run/phases.ts` | `interruptedOperation` を export し、191 行の catch で使う。`ProcessLimitError` を `@loomake/kit` から import する | #157（`callEngine` と noChange）。互いに離れた行で、意味の上では衝突しない |
+| `packages/runner/src/run.ts` | 75 行の状態の選び方 | なし |
+| `packages/runner/test/helpers.ts` | 監視役へ信号を送るスクリプトを、信号を引数に取る形で、ファイルの**末尾**に export する。結果の JSON はスクリプトと同じ場所（`repo.base`）に書き、作業ツリーを汚さない | #157 も helpers を変えるので、末尾に足して衝突を減らす |
+| `packages/runner/test/external-budget.test.ts` | 上のスクリプトを helpers から使う。期待値は変えない | なし |
+| `packages/runner/test/engine-long-deadline.test.ts`（新規） | AC-1〜3 | なし |
+| `packages/runner/test/signal-during-sync.test.ts` | AC-4〜9（POSIX だけ） | なし |
+| `docs/guide/2.guides/3.run-recovery.md` | 節「端末を閉じたときとコンテナを止めたとき」の末尾に 1 文 | #158 と同じ節。あとからマージする側が合わせる |
+| `docs/quality/scenarios.json` と `.changeset/*.md` | Scenario のレビューを足す。changeset は `@loomake/kit`・`@loomake/runner`・`loomake` の patch | なし |
 
-修正前の失敗は、テストを入れたコミットで実装前に実行し、結果を PR に記録する。
+`supervisor.cjs` と `config.ts` は変えません。
 
-## 変更対象
+## 3. 受入条件と試験
 
-| ファイル | 変えること |
-|---|---|
-| `packages/runner/src/engine.ts` | 期限のタイマーを分けて待つ形にする（130-133 行を置き換え）。`MAX_TIMER_MS` と単調時計を足す |
-| `packages/runner/src/run/phases.ts` | `interruptedOperation(e)` を export する。`recordAndOpenPr` の catch（191 行）で状態を選ぶ。`ProcessLimitError` を `@loomake/kit` から import する |
-| `packages/runner/src/run.ts` | catch（75 行）で `interruptedOperation(e) ? 'interrupted' : 'stopped'` にする |
-| `packages/runner/src/config.ts` | 変更なし（案 A） |
-| `packages/runner/test/engine-long-deadline.test.ts`（新規） | AC-1〜AC-3。kit の `process-long-deadline.test.ts` と対にする |
-| `packages/runner/test/helpers.ts` | `external-budget.test.ts:269-298` の「祖先の監視役へ信号を送るスクリプト」を、信号を引数に取る形で export する。結果の JSON はスクリプトの置き場所（`repo.base`）に書き、作業ツリーを汚さない |
-| `packages/runner/test/external-budget.test.ts` | 上のスクリプトを helpers から使う。期待値は変えない |
-| `packages/runner/test/signal-during-sync.test.ts` | AC-4〜AC-6 の describe を足す（`it.runIf(process.platform !== 'win32')`） |
-| `docs/guide/2.guides/3.run-recovery.md` | 100 行目の節「端末を閉じたときとコンテナを止めたとき」に、git・gh の実行中の中断も summary.json の状態が interrupted になると 1 文足す（yomiyasu で推敲） |
-| `docs/quality/scenarios.json` | この change の Scenario のレビューを足す。根拠にするテストファイルが変わった既存のレビューは、読み直してハッシュを更新する |
-| `.changeset/*.md` | `@loomake/runner` と `loomake` の patch |
+試験名には要件 ID を入れます。REQ-337 の統合試験は `it.runIf(process.platform !== 'win32')` とします（A-03）。
+
+**信号の送り方**
+
+- helpers のスクリプトを `repo.base` に置きます。
+- git のフック（`.git/hooks/pre-commit` と `pre-push`。`makeRepo` のあとに置く）か、偽の gh の入口から、`node <script> <SIG>` を同期で呼びます。
+- スクリプトは祖先をたどって監視役を探し、指定の信号を送ってから、止められるまで待ちます。
+- **偽の gh の入口：** `bin/gh` を、対象のサブコマンド（`pr list` か `pr create`）のときだけスクリプトを実行し、それ以外は元の偽の gh（`gh-original`）へ渡す形に差し替えます。`fakeCli` が元のファイルを写すのと同じ方法です。
+
+| ID | 受入条件 | 試験（修正前 → 修正後） |
+|---|---|---|
+| AC-1〜3 | タイマーの上限を超える値、分けた待機の早い発火、`timeoutMinutes: 40000` | 変更前の設計の表どおり。修正前は失敗する |
+| AC-4 | タスクのコミットの git のあいだに、監視役が **SIGINT・SIGTERM** を受けたら interrupted | `it.each(['SIGINT','SIGTERM'])` `[REQ-337] タスクのコミットのgitのあいだに監視役が%sを受けたら、interruptedにする`。pre-commit から送る。状態は `interrupted`、`doneTasks: []`、`remainingTasks[0]` は 1.1、エンジンの呼び出しは 1 回、PR は 0 件、終了コード 1。修正前は stopped で失敗する |
+| AC-5 | 証拠の push のあいだの中断 | pre-push から SIGINT を送る。状態は `interrupted`、reason に「証拠のコミットを保っています」、HEAD は `evidence(c1):`、`ls-remote` は空、PR は 0 件、終了コード 1。修正前は失敗する |
+| AC-6 | **gh の PR の検索・作成**のあいだの中断 | `it.each([['list','SIGINT'],['create','SIGTERM']])` `[REQ-337] PRの%sのあいだに監視役が%sを受けたら、証拠とpushを保ちinterruptedにする`。偽の gh の入口から送る。状態は `interrupted`、HEAD は `evidence(c1):`、`ls-remote` にブランチがある、PR は 0 件（作成の記録がない）、終了コード 1。修正前は失敗する |
+| AC-7 | タスクのコミット中の監視役の強制終了は stopped | pre-commit から SIGKILL を送る。状態は `stopped`、reason に「監視役が結果を書かずに終了しました」。修正の前後とも成功する（写し方を広げすぎていないかの見張り） |
+| AC-8 | **品質コマンドの監視役が強制終了されたあとの git**（経路 A） | `commands: { lint: 'node <script> SIGKILL', test: 'node write-report.mjs' }`。状態は `stopped`、reason に「監視役が結果を書かずに終了しました」、エンジンの呼び出しは 1 回（直しなし）、push・PR はなし、終了コード 1。保存した verify の JSON の test の detail に `中断されたので止めました（監視役が結果を書かずに`。**修正前は `:122` で interrupted になり失敗する** |
+| AC-9 | 同じく、最後の品質コマンドの場合（経路 B） | `commands: { test: 'node <script> SIGKILL' }`。AC-8 と同じ期待値。修正前は成功し、**runner の写し方だけを入れた時点で失敗し**、kit を直すと成功する |
+| AC-10 | 既存の試験が変わらず通る | `engine-safety`・`engine-normal-exit`、`run.test` の REQ-105・REQ-124・REQ-137・REQ-182、`signal-during-sync` の REQ-208 の 3 件、`external-budget` の REQ-183・REQ-250、kit の `process.test`・`orphans.test`・`process-long-deadline.test` |
+| AC-11 | kit：後続の拒否は最初の reason を引き継ぎ、利用者の中断では reason を持たない | (1) 既存の `[REQ-181][REQ-250]`（`process.test.ts:105`）の 124 行の後続の呼び出しに、`kind:'interrupted'` と `reason` が「監視役が結果を書かずに終了しました」を含むことを**足す**（既存の期待値は残す）。修正前は失敗する。(2) 新規 `[REQ-250][REQ-337] 利用者の中断のあとの後続の拒否はreasonを持たない`（POSIX）。同じ予算で監視役に SIGINT を送ったあと、次の呼び出しが `reason === undefined` であること。修正の前後とも成功する |
+
+修正前に失敗する試験は、入れたコミットで実装前に実行し、結果を PR に記録します。
+
+
+## 記録と確認事項
+
+Q-01〜06 の既存の回答を維持する。Q-07 の案 (a) は、REQ-250・REQ-337 と承認済み Q-02 の実現に必要な技術方針として Opus が採用した。新たな人の個別承認とは記録しない。A-01〜07 の未承認の仮定は trace.md に残す。
+
+1 つの change・PR とする既存 Q-03 と、各タスクを小さくコミットする今回の管理役の指示に従う。修正版の細分タスクでは 10 commit を超えるため、その理由を PR の引き継ぎに残す。
+
+## 付録：再現の要点
+
+runClaude に timeoutMs: 2_147_483_648 を渡し、300ms で終わる偽の claude を使うと、Node のタイマーが 1ms に丸められ、約 250ms の停止猶予後に timedOut:true となり、TimeoutOverflowWarning が出る。コミットする AC-1 のテストを再現手順とし、gitignore 対象の再現スクリプトを前提にしない。
 
 ## 設計工程の記録
 
-- 実行ツール：Claude Code 2.1.308（`.agents/skills/delivery/scripts/ask-opus.mjs` 経由）
-- セッション：`380d4efd-8a0c-4224-b255-3283edbb838a`（`.loomake/claude/380d4efd-8a0c-4224-b255-3283edbb838a/`）
-- `events.jsonl` の assistant のモデル：`claude-opus-5-5`（56 ターン）
-- `manifest.json` の modelUsage には `claude-haiku-5-5`（補助の呼び出し）も含まれていたため、スクリプトは `ok: false`（Opus 工程は未実施）を返した
-- 工程の状態：人の判断待ち。Opus 工程を実施済みとは扱わない
+- 実行ツール：Claude Code 2.1.308、共通原則の版 1。
+- 旧設計：session 380d4efd-8a0c-4224-b255-3283edbb838a、対象 d5aa30d。実際の本体は claude-opus-5-5、補助は claude-haiku-5-5。旧 validator は補助を含むため ok:false と判定した。
+- 旧ログの再確認：修正後 validator（c4dd0d3）で、本体と補助を区別し、読取専用・MCP なし・権限拒否 0 を確認して ok:true。成果物は同セッションの result-revalidated.md / manifest-revalidated.json。元の ok:false を上書きせず、設計を再利用する。
+- 修正版設計：session fdfe3430-6d70-445a-8c6b-404fbc53ac62、対象 12286031518849a04248dbfdbd91d9582a514a9f。本体 claude-opus-5-5、補助なし、Read/Glob/Grep のみ、MCP なし、権限拒否 0、ok:true（実施済み）。管理役から .loomake/handoff/redesign.md と redesign-summary.json で引き継いだ。
+- Codex 実装：実行ツール Codex、実際のモデル識別子は取得できず不明。
+- Opus 評価は既存設計レビュー 1 回。追加評価は起動せず、管理役が残り 1 回を別セッションの最終レビューに使う。設計作成自体は評価回数に含めない。

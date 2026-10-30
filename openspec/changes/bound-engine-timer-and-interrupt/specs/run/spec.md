@@ -14,12 +14,12 @@ Source: REQ-336
 - **THEN** 残り時間を計り直して待ち直し、どの待機もタイマーの上限以下で、時間内に終えたエンジンの結果を保つ
 
 ### Requirement: 外部操作のあいだの中断の記録
-実行の記録を作ったあと、git や gh の実行中に監視役が SIGINT か SIGTERM を受けて操作を止めたとき（理由を持たない中断）、`loomake run` は中断として止まる SHALL。summary.json の状態を interrupted にし、理由・終えたタスク・残ったタスクを書いて、終了コード 1 で終わる SHALL。後続のタスク・エンジン・証拠の記録・push・PR の作成には進まない SHALL。証拠のコミットのあとの push・PR の検索・PR の作成で中断したときも、証拠のコミットを保ち、状態を interrupted とする SHALL。監視役が結果を書かずに終わったときのように理由を持つ中断は、利用者の中断と区別して、状態を stopped とする SHALL。
+実行の記録を作ったあと、git や gh の実行中に監視役が SIGINT か SIGTERM を受けて操作を止めたとき（理由を持たない中断）、`loomake run` は中断として止まる SHALL。summary.json の状態を interrupted にし、理由・終えたタスク・残ったタスクを書いて、終了コード 1 で終わる SHALL。後続のタスク・エンジン・証拠の記録・push・PR の作成には進まない SHALL。証拠のコミットのあとの push・PR の検索・PR の作成で中断したときも、証拠のコミットを保ち、状態を interrupted とする SHALL。監視役が結果を書かずに終わったときのように理由を持つ中断は、利用者の中断と区別して、状態を stopped とする SHALL。先の外部操作の監視役が結果を書かずに終わったために、同じ共有予算の後続の git や gh を起動しなかったときも、その理由を持つ中断として、状態を stopped とし、理由に監視役が結果を書かずに終わったことを含める SHALL。
 
 Source: REQ-337
 
 #### Scenario: タスクのコミットのあいだに中断する
-- **WHEN** 1 つ目のタスクのコミットの git の実行中に、監視役が SIGINT を受ける
+- **WHEN** 1 つ目のタスクのコミットの git の実行中に、監視役が SIGINT か SIGTERM を受ける
 - **THEN** summary.json の状態は interrupted で、終えたタスクはなく、残ったタスクに 1 つ目のタスクがあり、エンジンは再び呼ばれず、終了コードは 1 である
 
 #### Scenario: 証拠の push のあいだに中断する
@@ -29,3 +29,11 @@ Source: REQ-337
 #### Scenario: 監視役が結果を書かずに終わる
 - **WHEN** タスクのコミットの git の実行中に、監視役が強制終了される
 - **THEN** summary.json の状態は stopped で、理由に監視役が結果を書かずに終わったことが含まれる
+
+#### Scenario: PR の検索か作成のあいだに中断する
+- **WHEN** push のあと、gh の PR の検索か作成の実行中に、監視役が SIGINT か SIGTERM を受ける
+- **THEN** 証拠のコミットと push したブランチが残り、summary.json の状態は interrupted で、PR は作られず、終了コードは 1 である
+
+#### Scenario: 品質コマンドの監視役が結果を書かずに終わったあとの git
+- **WHEN** 完了ゲートの品質コマンドの実行中に、その監視役が強制終了される
+- **THEN** 後続の git は起動されず、summary.json の状態は stopped で、理由に監視役が結果を書かずに終わったことが含まれ、エンジンは直しに呼ばれず、push も PR の作成もされず、終了コードは 1 である
