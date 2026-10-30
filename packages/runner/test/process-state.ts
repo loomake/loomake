@@ -19,7 +19,12 @@ export function processState(pid: number | undefined): ProcessState {
   if (process.platform !== 'linux') return psState(pid);
   let status: string;
   try { status = readFileSync(`/proc/${pid}/status`, 'utf8'); }
-  catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') return 'missing'; throw error; }
+  catch (error) {
+    // 開いた後に対象が消えると、read も ESRCH を返すことがある
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === 'ENOENT' || code === 'ESRCH') return 'missing';
+    throw error;
+  }
   if (/^State:\s+[ZX]/m.test(status)) return 'zombie';
   const killPending = [...status.matchAll(/^(?:SigPnd|ShdPnd):\s+([0-9a-f]+)$/gm)].some(([, mask]) => (BigInt(`0x${mask}`) & SIGKILL_PENDING) !== 0n);
   // VmSize は mm を持つプロセスにだけ現れる。exit_mm のあとは利用者のコードを実行できない
