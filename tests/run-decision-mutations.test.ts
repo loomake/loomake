@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { classifyMutation, mutateOnce } from '../scripts/domain-mutations.mjs';
 
-it('[REQ-206] 判断の優先順位と回数の境界を逆転すると同じ直接試験で検出する', () => {
+it('[REQ-206][REQ-332] 判断の優先順位と回数の境界を逆転すると同じ直接試験で検出する', () => {
   const root = join(import.meta.dirname, '..');
   const parent = join(root, '.loomake/quality');
   mkdirSync(parent, { recursive: true });
@@ -18,6 +18,8 @@ it('[REQ-206] 判断の優先順位と回数の境界を逆転すると同じ直
   const mutations = [
     { id: 'interrupt', before: 'if (value.aborted)', after: 'if (value.aborted && !value.outputLimitExceeded)' },
     { id: 'work-state', before: 'if (value.stateChanged)', after: 'if (value.stateChanged && !value.ok)' },
+    { id: 'repair-no-change', before: "if (value.phase === 'repair')", after: "if (value.phase === 'repair' && !value.text)" },
+    { id: 'no-change-anchor', before: '/^LOOMAKE-NOCHANGE:', after: '/LOOMAKE-NOCHANGE:' },
     { id: 'fix-limit', before: 'value.fixes >= value.maxFixes', after: 'value.fixes > value.maxFixes' },
   ];
   const trials = [{ id: 'baseline', text: source }, ...mutations.map((m) => ({ id: m.id, text: mutateOnce(source, m.before, m.after) }))];
@@ -42,8 +44,8 @@ it('[REQ-206] 判断の優先順位と回数の境界を逆転すると同じ直
   const originalsUnchanged = readFileSync(join(root, sourcePath), 'utf8') === source && readFileSync(join(root, testPath), 'utf8') === tests;
   writeFileSync(join(target, 'results.json'), JSON.stringify({ scope: 'selected-run-decisions', environment: { node: process.version, platform: process.platform, arch: process.arch }, source: { path: sourcePath, sha256: sha(source) }, tests: { path: testPath, sha256: sha(tests), names }, mutations, results, originalsUnchanged }, null, 2) + '\n');
   expect(results[0].status).toBe('survived');
-  expect(names).toHaveLength(27);
-  expect(results.slice(1).map((result) => result.status)).toEqual(['killed', 'killed', 'killed']);
+  expect(names).toHaveLength(36);
+  expect(results.slice(1).map((result) => result.status)).toEqual(['killed', 'killed', 'killed', 'killed', 'killed']);
   expect(results.slice(1).every((result) => result.failedTests.length > 0)).toBe(true);
   expect(originalsUnchanged).toBe(true);
 }, 220000);
