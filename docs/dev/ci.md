@@ -71,3 +71,112 @@ artifact の保存期間は7日とする。保存対象は上の3ファイルに
 これらは外部状態への直接参照を見つける補助検査であり、純粋性を保証するものではない。依存先の副作用、引数の変更、別名で渡された関数などはレビューと「同じ入力なら同じ出力」の動作試験で確認する。既存の `tests/kit-layers.test.ts` による層の向きの検査と、判定関数の動作試験も引き続き実行する。
 
 Schemaの再生成一致は、既存の `packages/core/test/json-schema.test.ts` が `renderJsonSchemas()` の結果と保存済みファイルを照合する。Schemaの互換性検査も既存の試験を維持する。
+
+## split-slow-ci-checksの移管保存
+
+次の2契約は、ADR0005と利用者の2026-10-30の1-1に基づき、change `split-slow-ci-checks` で開発運用へ移す。ここは正式起案時点の原文保存で、実装・主仕様への同期・archiveはまだ行っていない。上の「まだ仕様にあるもの」は、その移行が完了するまで有効である。
+
+採用予定の運用では、quality/gate/ci:all-os/シャードと診断profilerを含む全PR経路でslowを実行せず、mainへのpushと定期実行では全件を実行する。ローカルtest/doneと、既存releaseの手動品質ゲートも全件を維持する。診断profiler2本のPR/手動起動は撤去し、companionを含む対象をpush/scheduleで測る。releaseのmanual dispatchを縮小する意味ではない。
+
+同headの3OS各3sampleをマージ前に得る測定専用workflowは、`ci/measure-*`へのpushだけを対象とする。PRへslowを戻すenvや必須検査の追加には使わない。node20ジョブと同名必須contextだけを外すが、node22・quality・gate・CodeQL、Node22.12下限と3OS Node24を保つ。規則の変更は、人が具体案と受入を確認して行う。
+
+REQ-297の元4case、19.5秒/39.5秒の下限と上限、保持役の待ちだけを引く時計、retry、全assertは変えない。REQ-161の元全体試験も残し、本当の13条件を確かめるfastを追加する。caseのfast+slowの和集合、元名・parameter・assert・timeout、coverage94/89/96/97を維持する。未設計10file、PR179統合後の実測と新fastを未完了として扱う。
+
+次の原文にあるnode20とPR全testの表現は、移管元の歴史をそのまま保存したもので、新運用への反対の約束ではない。差分は利用者が明示した1-1と管理役のQ01〜Q10/N1〜N5、release適用範囲の採用としてchangeのtraceへ記録する。Source270の他の文書PR契約とagents-rulesのSource273は消さない。CI側273の使用をやめても衝突履歴の解消とは呼ばず、B1へ引き継ぐ。
+
+### 移管元の原文：3 つの OS での CI
+
+取得：`openspec/specs/monorepo/spec.md:34-62` @ `085a82686dc1c14506fbdbad88b5b9b3961f522e`。raw SHA-256：`3b1fd4b81c8e88b9903db3ca9eed3fa68aea9bcfca1f07233f6c0f4b3f629410`。全Sourceと全Scenarioを保持する。
+
+````markdown
+### Requirement: 3 つの OS での CI
+CI の quality ジョブは、main への push と、毎日 1 回の定期実行（schedule）では、ubuntu-latest・macos-latest・windows-latest の 3 つで実行し、`pnpm test` を実行する SHALL。pull_request では、quality ジョブを ubuntu-latest だけで実行する SHALL。ただし、PR に `ci:all-os` ラベルが付いているときは、pull_request でも 3 つの OS で実行する SHALL。PR にラベルを付けたとき（labeled）にも、CI を起動する MUST。node20・node22・gate のジョブは、この OS の切り替えの影響を受けない MUST。「文書だけの PR の品質ジョブ」に当てはまる PR では、quality ジョブで `pnpm test` を実行しなくてよい。
+
+Source: REQ-049, REQ-270, REQ-273
+
+#### Scenario: ワークフローが 3 OS を指定している
+- **WHEN** `.github/workflows/ci.yml` を読む
+- **THEN** quality ジョブのマトリクスの OS を決める式に、ubuntu-latest・macos-latest・windows-latest が含まれる
+
+#### Scenario: ラベルのない PR は ubuntu だけで実行する
+- **WHEN** `ci:all-os` ラベルのない PR で CI が動く
+- **THEN** quality ジョブは ubuntu-latest の 1 つだけで動き、lint・typecheck・`pnpm test --coverage`・build・配布物の検査を実行する。macos-latest と windows-latest の quality ジョブは動かない
+
+#### Scenario: main への push と定期実行は 3 つの OS で実行する
+- **WHEN** main への push か、毎日 1 回の定期実行（schedule）で CI が動く
+- **THEN** quality ジョブは ubuntu-latest・macos-latest・windows-latest の 3 つで動き、macOS と Windows ではシャード `1/2` と `2/2` で `pnpm test` を実行する
+
+#### Scenario: ci:all-os ラベルの付いた PR は 3 つの OS で実行する
+- **WHEN** `ci:all-os` ラベルの付いた PR で CI が動く
+- **THEN** quality ジョブは main への push と同じく、ubuntu-latest・macos-latest・windows-latest の 3 つで動く
+
+#### Scenario: ラベルを付けると CI が起動する
+- **WHEN** `.github/workflows/ci.yml` を読む
+- **THEN** pull_request の起動の種類に、既定の opened・synchronize・reopened に加えて labeled があり、schedule に 1 日 1 回の cron がある
+
+#### Scenario: ほかのジョブは OS の切り替えの影響を受けない
+- **WHEN** `.github/workflows/ci.yml` を読む
+- **THEN** node20・node22・gate のジョブは ubuntu-latest で動き、OS を切り替える式を使わない。gate は今までどおり pull_request のときだけ動く
+
+````
+
+### 移管元の原文：CI のテストの分割
+
+取得：`openspec/specs/monorepo/spec.md:304-316` @ `085a82686dc1c14506fbdbad88b5b9b3961f522e`。raw SHA-256：`c4718c090ddaac10ea73811fd1cca4d053e77c80070efab87a9c05e8f6394393`。全Sourceと全Scenarioを保持する。
+
+````markdown
+### Requirement: CI のテストの分割
+CI の quality ジョブは、macOS と Windows では `pnpm test` を `--shard` で 2 つのシャードに分け、別々のジョブで実行する SHALL。2 つのシャードを合わせて、すべてのテストを実行する MUST。ubuntu では `pnpm test` を 1 回だけ、カバレッジ付き（`--coverage`）で実行し、カバレッジが閾値を下回ったらジョブを失敗させる SHALL。どのジョブでも、lint・typecheck・build・配布物の検査を実行する MUST。ただし、「文書だけの PR の品質ジョブ」に当てはまる PR では、これらのステップを実行しなくてよい。
+
+Source: REQ-214, REQ-270
+
+#### Scenario: macOS と Windows のシャード
+- **WHEN** `.github/workflows/ci.yml` を読む
+- **THEN** quality ジョブのマトリクスで、macos-latest と windows-latest のそれぞれにシャード `1/2` と `2/2` があり、`pnpm test --shard=` にシャードを渡すステップがある
+
+#### Scenario: ubuntu ではカバレッジ付きで 1 回だけ実行する
+- **WHEN** `.github/workflows/ci.yml` を読む
+- **THEN** ubuntu-latest にはシャードがなく、`pnpm test --coverage` のステップがあり、ほかにすべてのテストを実行するステップ（`pnpm test:coverage` など）はない
+
+````
+
+### 移管前のSourceと試験名の対応
+
+以下は基点085aの対応であり、テストの削除を指示する一覧ではない。実装後の新名・タグとの対応は同じPRで追記する。Source270の別契約と、agents-rulesに対応するSource273の別契約・試験は残す。
+
+| Sourceを含む旧試験 | 出典 |
+|---|---|
+| `it('[REQ-270] 直下・docs/・openspec/ の .md、change の spec-gate.txt、changeset の本文は文書として扱う', () => {` | `tests/ci-docs-only.test.ts:27` |
+| `it('[REQ-270] コードと配布する Markdown は文書として扱わない', () => {` | `tests/ci-docs-only.test.ts:42` |
+| `it('[REQ-270] 設定と実行用のファイルは、文書の置き場所にあっても文書として扱わない', () => {` | `tests/ci-docs-only.test.ts:46` |
+| `it('[REQ-270] tests/ の下の試験用データは、.md でも文書として扱わない', () => {` | `tests/ci-docs-only.test.ts:63` |
+| `it('[REQ-270] 読めないパスは文書として扱わない', () => {` | `tests/ci-docs-only.test.ts:68` |
+| `it('[REQ-270] 変えたファイルがすべて文書なら、文書だけと判定する', () => {` | `tests/ci-docs-only.test.ts:93` |
+| `it('[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば、文書だけと判定しない', () => {` | `tests/ci-docs-only.test.ts:102` |
+| `it('[REQ-270] 名前を変えたファイルは、変更前のパスも判定する', () => {` | `tests/ci-docs-only.test.ts:110` |
+| `it('[REQ-270] 差分を取れないときは、文書だけと判定しない', () => {` | `tests/ci-docs-only.test.ts:117` |
+| `it('[REQ-270] 差分を解釈できないときは、文書だけと判定しない', () => {` | `tests/ci-docs-only.test.ts:124` |
+| `it('[REQ-270] 判定のスクリプトとワークフローを変えた PR は、文書だけと判定しない', () => {` | `tests/ci-docs-only.test.ts:137` |
+| `it('[REQ-270] コードのファイルを消した PR は、文書だけと判定しない', () => {` | `tests/ci-docs-only.test.ts:147` |
+| `it('[REQ-270] PR のマージ先が main でないときは、差分によらず文書だけと判定しない', () => {` | `tests/ci-docs-only.test.ts:206` |
+| `it('[REQ-270] main への push では、差分によらず文書だけと判定しない', () => {` | `tests/ci-docs-only.test.ts:214` |
+| `it('[REQ-270] 文書だけの PR では docs_only=true を書く', () => {` | `tests/ci-docs-only.test.ts:291` |
+| `it('[REQ-270] 前のコミットでコードを変えた PR では、最後のコミットが文書だけでも docs_only=false を書く', () => {` | `tests/ci-docs-only.test.ts:298` |
+| `it.each(['refs/tags/origin/main', 'refs/heads/origin/main'])('[REQ-270] ベースと同じ名前の参照 %s が PR のコミットの途中を指していても、ベースとの差分で判定して docs_only=false を書く', (name) => {` | `tests/ci-docs-only.test.ts:308` |
+| `it('[REQ-270] 名前を変えたファイルは、変更前のパスが文書でなければ docs_only=false を書く', () => {` | `tests/ci-docs-only.test.ts:319` |
+| `it('[REQ-270] 差分を取れないときは、失敗にせず docs_only=false を書く', () => {` | `tests/ci-docs-only.test.ts:328` |
+| `it('[REQ-270] main が進んだあとのマージコミットでは、PR の変更分だけで判定する', () => {` | `tests/ci-docs-only.test.ts:339` |
+| `it('[REQ-270] コードのファイルを消した PR では docs_only=false を書く', () => {` | `tests/ci-docs-only.test.ts:355` |
+| `it('[REQ-270] マージ先が main でない PR では docs_only=false を書く', () => {` | `tests/ci-docs-only.test.ts:365` |
+| `it('[REQ-270] main への push では docs_only=false を書く', () => {` | `tests/ci-docs-only.test.ts:424` |
+| `it('[REQ-273] 報告の形の節に、作業したブランチごとのファイルに記録し、/ を - に置き換え、あれば追記すると書いてある', () => {` | `tests/kit-assets.test.ts:85` |
+| `it('[REQ-273] 報告の形の節に、作業記録は作業の PR に含め、マージ後の記録は次の作業のブランチのファイルに書くと書いてある', () => {` | `tests/kit-assets.test.ts:95` |
+| `it('[REQ-049] ラベルのない PR では、quality ジョブを ubuntu-latest の 1 つだけで実行する', () => {` | `tests/monorepo.test.ts:171` |
+| `it('[REQ-049] main への push と定期実行では、quality ジョブを ubuntu・macos・windows の 3 つで実行し、macOS と Windows では 2 つのシャードに分ける', () => {` | `tests/monorepo.test.ts:182` |
+| `it('[REQ-273] ci:all-os ラベルの付いた PR では、quality ジョブを 3 つの OS で実行する', () => {` | `tests/monorepo.test.ts:191` |
+| `it('[REQ-049][REQ-273] PR にラベルを付けたときにも起動し、毎日 1 回、定期実行する', () => {` | `tests/monorepo.test.ts:196` |
+| `it('[REQ-273] node20・node22・gate のジョブは、OS の切り替えの影響を受けない', () => {` | `tests/monorepo.test.ts:209` |
+| `it('[REQ-214] macOS と Windows ではテストを 2 つのシャードに分け、ubuntu ではカバレッジ付きで 1 回だけ実行する', () => {` | `tests/monorepo.test.ts:230` |
+| `it('[REQ-270] 文書だけかの判定は、paths フィルタではなく quality ジョブの中のステップで行う', () => {` | `tests/monorepo.test.ts:275` |
+| `it('[REQ-270] main への push では、判定が docs_only=false になり、すべてのステップを実行する', () => {` | `tests/monorepo.test.ts:301` |
+| `it('[REQ-144] 3OSの品質ジョブとNode下限ジョブで配布物を検査する', () => {` | `tests/package-workflows.test.ts:8` |

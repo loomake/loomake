@@ -1,0 +1,45 @@
+# Context
+
+基点はmain `085a82686dc1c14506fbdbad88b5b9b3961f522e`。利用者のdelivery指示1-1、管理役Q01〜Q10、補足設計62aba81dとQ-N1〜Q-N5の採用をこの起案へ反映する。原文・版・hashは専用treeの`.loomake/ci-formal-adoption/inputs/`と索引へ保存した。正式起案だけで、以下の実装はまだ行っていない。
+
+# 仕様と運用の境界
+
+REQ-144のNode20追加検査だけを削るMODIFIED全文を使い、3OS Node24とNode22.12.0の下限契約を残す。049/214はADR0005の開発運用としてREMOVEDのReason/Migrationを付け、取得時の全文・全Scenario・Sourceと旧試験名をdocs/dev/ci.mdに保存する。運用変更は利用者が明示したNode20削除とPRのslow不実施に限り、移管を試験の削除へ読み替えない。main正本は実装と受入の後、対応スキルのsync/archiveを通じて更新する。
+
+CI側の049に由来する273タグは後続実装で外すが、agents-rulesの273や旧履歴を変更しない。Source270の文書判定など別契約も保つ。衝突の解消はB1に引き継ぎ、今回のタグ変更で解消済みと記録しない。
+
+# case分割と測定
+
+各OSで最新headの3sampleを集め、caseごとの最大が10秒を超えた集合をそのOSのslowにする。歴史資料の108key/14fileは候補であり、新headの合格値ではない。OS pathの正規化、同じfile/fullNameの重複3件、Node24.21/24.22混在を旧観測の制限として保持する。重複は多重集合で照合し、曖昧なparameter行は同じ側に保つ。推測で実測の遅さを取り消さない。
+
+補足設計は元`x.test.ts`、共通の`x.cases.ts`、slow companionの`x.slow.test.ts`を用い、同じdescribe/it名・parameter・assert・timeout・hookを保って片側のcaseだけを登録する。skipやtestNamePatternによる未実行化は使わない。`tests/test-split.ts`のcase IDとOS別集合、未登録IDの拒否、caseがないファイルの選択除外を実装時に検査する。case IDは新しいREQ番号ではない。
+
+現在具体設計があるのはexternal-budget、ai-journeys、domain-mutations、package-artifactsの4fileまでである。残10fileとpublication-retryのPR179最終headは、全文のfixture/hook/callerと受入をそろえて先に設計する。重い処理をbeforeAllへ移してcase時間を隠さない。PR179統合後の出版診断がcompanion/shardでも元caseを捕捉するかを確かめる。E3/helperの統合による影響もfresh diffと再測定で扱う。
+
+測定経路はpush `ci/measure-*`専用とし、同じheadで3OS各3sampleの全件を実行する。PRへslowを戻さず、新しいrequired statusにも加えない。失敗や未計測を0や成功に変えず、checkout SHA・実行版・case数・結果とraw timingを残す。
+
+# Vitestと共有build
+
+unit/package/slowの名前付きprojectを保つ。GitHub Actionsのpull_requestではslow projectを構成から外し、quality/gate/ci:all-osとshardを含む全PR経路でslowを実行しない。main pushとscheduleでは全件を実行する。ローカルの通常test/doneとreleaseの既存manual dispatch品質ゲートは全件を維持する。
+
+root globalSetupがbuildAndPackしてprovideし、packageとslowがinjectする。project間の同module memo共有や0caseならsetupが動かないという反証済みの仮説を使わない。rootの判定、選択project/file、inject欠落の失敗、build/pack失敗時のcleanup、正常終了とwatch再実行の寿命を実repoで検査する。unit-onlyで不要buildが起きる経路は実測して記録する。package fixtureの準備をcase内でどう保つかも再測定する。独立コピー依存を使い、共有依存のshimを変更しない。
+
+# 保持する契約と品質判定
+
+REQ-161は元の全体試験をslowに残し、元13条件を実際に1つずつ変えて既存テストが検出するfast試験を足す。選択肢をrunnerへ追加するときも既存CLIの既定動作と結果形式を変えない。baseline成功、同じテストの過不足ない実行、assertionによる検出、未検出と試験エラーの区別、ハッシュと元source/test/reportの不変を確かめる。タグや合成した成功結果を実証の代わりにしない。
+
+REQ-297はmainに残す。元4case、Linux/macOSの19.5秒とWindowsの39.5秒の下限、既存の上限、保持役の準備待ちの差だけを引く時計、retryと全assertを保つ。auth/listの同タグをpush/createのfast実証とは呼ばない。291/292/296/297の実行条件不変は、その診断・時計機能のOS/Node/env/sample/case/元判定を守る条件であり、今回の利用者が明示したevent/slow分離を永久に禁止する意味ではない。失敗後保存と未計測の扱いも保つ。
+
+coverageの94/89/96/97、local full done、選択changeのADDED/MODIFIED live Sourceに対するpassed対応を維持する。古いreportの合流、虚偽REQタグ、閾値緩和で通さない。C001の未採用v2/scopeを現在のci-gateやverifyへ混ぜない。PRで実際に検査した範囲とslow未実施を正直に記録する。
+
+# workflowと人の規則操作
+
+後続実装でci.ymlのnode20ジョブを削り、node22の下限検査とquality/gate/CodeQLを残す。workflow文字照合はnode22とgateなどの実在する境界を先に検査してからsliceし、`indexOf=-1`の誤成功を防ぐ。診断記録の非対象ジョブ、prepare→指定runtime→offline check、continue-on-error禁止を保つ。REQ-144の旧Scenarioを参照するdocs/quality/scenarios.jsonも正式MODIFIEDの2Scenarioとの対応を確認し、必要なmigrationを同じPRで行う。
+
+profile-slow-testsとprofile-publication-retryの2本は、元ファイルとcompanionの4pathを明記してmain push/scheduleだけで起動する。元のcaseId集合と3独立sample、診断のprivacy/保存上限/失敗時保存を保つ。Q04/N3の手動起動撤去はこの2本に限る。既存releaseのmanual dispatchは公開に必要な全件品質ゲートとして残す。これは利用者のPR軽量化をrelease検査縮小へ広げないための管理役の包括承認による明示判断であり、release実行の証拠ではない。
+
+ruleset mainの変更案はrequired_status_checksからnode20 contextだけを除く。他のgate、quality (ubuntu-latest)、CodeQL、node22と全rule/parameterを保つ。実装headのローカル受入・他4check・Codex・指摘ゼロOpusをそろえ、廃止したnode20だけが期待どおり未成立であることを分けて示す。管理役がfresh GETと具体差分をIssue121の@rrr-xxxへ渡し、人の操作後のfresh GETで保持条件を照合し、全残存required成功の後にマージする。dummy check、管理役のPUT、保護の迂回は行わない。
+
+# 工程と未完了
+
+内部工程はtasksに従い、すべて1-1の同じPRで受け入れる。先にPR179最終headを統合して元caseを固定し、必要な個別設計、実装、同head測定、完了ゲート、独立レビューへ進む。C001/S1/E3の既存treeと担当は保持する。本文やfixtureの重複は最新差分と担当の統合順で解決し、未測定・未設計を完成としない。
