@@ -37,8 +37,9 @@ export type EngineObservation = Readonly<{
   exitCode: number | null;
   movementReason?: string;
   internalsReason?: string;
+  resultFault?: Readonly<{ fault: ResultFault; outputPath: string }>;
 }>;
-export type EngineDecision = { kind: 'continue' } | { kind: 'stop'; status: 'stopped' | 'interrupted'; reason: string };
+export type EngineDecision = { kind: 'continue' } | { kind: 'hold'; reason: string } | { kind: 'stop'; status: 'stopped' | 'interrupted'; reason: string };
 export type GateObservation = Readonly<{ stateChanged: boolean; ok: boolean; interrupted?: boolean; timedOut: boolean; fixes: number; maxFixes: number }>;
 export type GateDecision = { kind: 'passed' | 'repair' } | { kind: 'stop' | 'interrupted'; reason: string };
 
@@ -54,8 +55,19 @@ export function decideAfterEngine(value: EngineObservation): EngineDecision {
     else if (value.exitCode !== 0) stop = { kind: 'stop', status: 'stopped', reason: `エンジンが終了コード ${value.exitCode ?? '（なし）'} で終わりました` };
   }
   const changed = value.movementReason ?? value.internalsReason;
-  if (changed) return { kind: 'stop', status: stop?.status ?? 'stopped', reason: stop ? `${changed}。${stop.reason}` : changed };
-  return stop ?? { kind: 'continue' };
+  const faultReason = !stop && value.resultFault ? resultFaultReason(value.resultFault.fault, value.resultFault.outputPath) : undefined;
+  if (changed) return { kind: 'stop', status: stop?.status ?? 'stopped', reason: stop ? `${changed}。${stop.reason}` : faultReason ? `${changed}。${faultReason}` : changed };
+  if (stop) return stop;
+  return faultReason ? { kind: 'hold', reason: faultReason } : { kind: 'continue' };
+}
+
+export type GuardObservation = Readonly<{ resultReason?: string; violationReason?: string }>;
+export type GuardDecision = { kind: 'continue' } | { kind: 'stop'; reason: string };
+
+/** Combine only observed reasons after the caller has completed the existing guards. */
+export function decideAfterGuard(value: GuardObservation): GuardDecision {
+  const reasons = [value.resultReason, value.violationReason].filter((reason): reason is string => Boolean(reason));
+  return reasons.length ? { kind: 'stop', reason: reasons.join('。') } : { kind: 'continue' };
 }
 
 /** 検証中の変更、合格、期限、修正回数の順に判断する（REQ-205）。 */

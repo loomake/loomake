@@ -18,3 +18,11 @@
 2. verify：新規37件と既存45件の計82件、型確認が成功。対象lintの改行指摘1件を直して再確認する。task2.2のrun接続と全体doneはまだ実施していない。
 3. 残る事項：task2.2以降、実CLI4件、CI・自動Codex・独立最終レビュー・親DoD。
 4. 次：holdとAfterGuard、既存guardの表示・index解除をtask/repair両経路へ接続する。
+
+
+## task2.2 のguardと停止への接続
+
+1. やったこと：保存後の元raw分類をholdへ接続し、task/repair両方で既存guardの表示後にAfterGuardを判断する。E3単独時もindexを解除し、タスク完了・commit・NoChange・再gateへ進めない。fake engineには任意欄だけを追加し、従来の出力と既存assertは保持した。
+2. verify：純粋分類53件、既存45件、既存run70件・NoChange25件の193件と、新規run統合11件がすべて成功。型と対象lintも成功した。元rawと保存後JSONの形が変わる回帰、guard削除表示、Git内部変更の理由順、直しの再gate禁止を確認した。
+3. 残る事項：task2.3の保存予算/保存失敗と長path回帰、task2.4以降、実CLI4件・done・CI・自動Codex・独立最終レビュー・親DoD。
+4. 次：既存recorderを変えず、全OSで長pathとsummary/stop保存失敗を確認する。

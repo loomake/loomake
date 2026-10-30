@@ -19,6 +19,10 @@ export type FakeStep = {
   git?: string[][];
   /** 標準出力の JSON の result に入れる文 */
   output?: string;
+  /** Additional result metadata for abnormal-result regression cases. */
+  resultFields?: Record<string, unknown>;
+  /** Original stdout for malformed JSON regression cases. */
+  stdout?: string;
   sleepMs?: number;
   pidFile?: string;
   /** 終了コード。省くと 0 */
@@ -47,7 +51,8 @@ for (const [p, text] of Object.entries(step.write ?? {})) { mkdirSync(dirname(jo
 for (const p of step.chmod ?? []) chmodSync(join(process.cwd(), p), 0o755);
 for (const p of step.delete ?? []) rmSync(join(process.cwd(), p), { force: true });
 for (const a of step.git ?? []) spawnSync('git', a, { stdio: 'ignore' });
-console.log(JSON.stringify({ type: 'result', result: step.output ?? '終えました' }));
+if (step.stdout !== undefined) process.stdout.write(step.stdout);
+else console.log(JSON.stringify({ type: 'result', result: step.output ?? '終えました', ...step.resultFields }));
 process.exitCode = step.exitCode ?? 0;
 `;
 
