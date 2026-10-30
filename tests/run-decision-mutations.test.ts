@@ -44,7 +44,7 @@ it('[REQ-206][REQ-332] 判断の優先順位と回数の境界を逆転すると
   const originalsUnchanged = readFileSync(join(root, sourcePath), 'utf8') === source && readFileSync(join(root, testPath), 'utf8') === tests;
   writeFileSync(join(target, 'results.json'), JSON.stringify({ scope: 'selected-run-decisions', environment: { node: process.version, platform: process.platform, arch: process.arch }, source: { path: sourcePath, sha256: sha(source) }, tests: { path: testPath, sha256: sha(tests), names }, mutations, results, originalsUnchanged }, null, 2) + '\n');
   expect(results[0].status).toBe('survived');
-  expect(names).toHaveLength(36);
+  expect(names).toHaveLength(44);
   expect(results.slice(1).map((result) => result.status)).toEqual(['killed', 'killed', 'killed', 'killed', 'killed']);
   expect(results.slice(1).every((result) => result.failedTests.length > 0)).toBe(true);
   expect(originalsUnchanged).toBe(true);

@@ -19,7 +19,7 @@
 
 ## 合図
 
-`LOOMAKE-QUESTION:` と同じく、行頭の合図にする（`/^LOOMAKE-NOCHANGE:[ \t]*(\S.*)$/m`）。
+`LOOMAKE-QUESTION:` と同じく、行頭の合図にする（`/^LOOMAKE-NOCHANGE:[^\S\r\n\u2028\u2029]*(\S.*)$/m`）。
 
 - 理由を必須にするのは、変更なしの完了をレビューで見分けるため。
 - 合図はタスクの段階だけで意味を持つ。直しの段階では、差分のない直しは完了ゲートの結果を変えないので、合図があっても止まる。
@@ -114,7 +114,7 @@
 
 ### 3.2 合図の扱い（A を採る場合）
 
-- **正規表現：** `/^LOOMAKE-NOCHANGE:[ \t]*(\S.*)$/m`。行頭だけを認め、理由が空なら合図とみなしません。合図が複数あれば最初を使います。
+- **正規表現：** `/^LOOMAKE-NOCHANGE:[^\S\r\n\u2028\u2029]*(\S.*)$/m`。行頭だけを認め、理由が空なら合図とみなしません。合図が複数あれば最初を使います。
 - **質問との優先順位：** `decideAfterEngine` が先に動くので、質問の合図が優先されます。既存の規則は変えません。
 - **差分と合図が両方ある場合：** 合図は無視して、ふつうにコミットします（仮定 A-02）。
 - **直しの段階：** 合図は意味を持たないので、差分がなければ止まります（Q-02）。直しの指示には、この決まりを含めません。
@@ -151,7 +151,7 @@ export type ChangeDecision = { kind: 'commit' } | { kind: 'no-change'; reason: s
 export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
   if (value.changed) return { kind: 'commit' };
   if (value.phase === 'repair') return { kind: 'stop', reason: '完了ゲートの直しで、エンジンが変更を残さずに終わりました' };
-  const noChange = value.text.match(/^LOOMAKE-NOCHANGE:[ \t]*(\S.*)$/m);
+  const noChange = value.text.match(/^LOOMAKE-NOCHANGE:[^\S\r\n\u2028\u2029]*(\S.*)$/m);
   if (noChange) return { kind: 'no-change', reason: noChange[1].trim() };
   return { kind: 'stop', reason: 'エンジンが変更を残さずに終わりました' };
 }
@@ -267,4 +267,4 @@ export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
 
 ## 最終レビュー後の修正方針
 
-2026-10-30 の管理役の確認で、REQ-330・REQ-332 の「空でない理由」に対し、上記の ASCII 空白・タブだけの正規表現では同一行の全角空白や NBSP に続く理由を認めないと分かった。仕様を ASCII 限定へ狭めず、同一行の空白を区切りとして認めるよう判定を修正する。LF・CR・U+2028・U+2029 を越えて、別行の文字を理由に取り込まない。既存の期待値は維持し、要件 ID 付きの直接試験と統合試験を追加する。Opus 評価は 2/2 のまま保持し、修正後 head の最終レビューは追加 1 回の明示承認が得られるまで未実施とする。
+2026-10-30 の管理役の確認で、REQ-330・REQ-332 の「空でない理由」に対し、修正前の ASCII 空白・タブだけの正規表現では同一行の全角空白や NBSP に続く理由を認めないと分かった。仕様を ASCII 限定へ狭めず、同一行の空白を区切りとして認めるよう判定を修正する。LF・CR・U+2028・U+2029 を越えて、別行の文字を理由に取り込まない。既存の期待値は維持し、要件 ID 付きの直接試験と統合試験を追加する。Opus 評価は 2/2 のまま保持し、修正後 head の最終レビューは追加 1 回の明示承認が得られるまで未実施とする。

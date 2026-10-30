@@ -45,6 +45,6 @@ export type ChangeDecision = { kind: 'commit' | 'stop' } | { kind: 'no-change'; 
 export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
   if (value.hasChanges) return { kind: 'commit' };
   if (value.phase === 'repair') return { kind: 'stop' };
-  const signal = value.text.match(/^LOOMAKE-NOCHANGE:[ \t]*(\S.*)$/m);
+  const signal = value.text.match(/^LOOMAKE-NOCHANGE:[^\S\r\n\u2028\u2029]*(\S.*)$/m);
   return signal ? { kind: 'no-change', reason: signal[1] } : { kind: 'stop' };
 }

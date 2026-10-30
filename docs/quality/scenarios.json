@@ -6263,7 +6263,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-204]",
-          "sha256": "65a2922e96775897fc72c68c0af02504eee396fea713b2869310ef60804b62b7"
+          "sha256": "72842e7c2618eafd5182af15ebd59e844a9cab1a9fb38ec82ed4046e9d55709b"
         }
       ]
     },
@@ -6279,7 +6279,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-204]",
-          "sha256": "65a2922e96775897fc72c68c0af02504eee396fea713b2869310ef60804b62b7"
+          "sha256": "72842e7c2618eafd5182af15ebd59e844a9cab1a9fb38ec82ed4046e9d55709b"
         }
       ]
     },
@@ -6295,7 +6295,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-204] 正常終了",
-          "sha256": "65a2922e96775897fc72c68c0af02504eee396fea713b2869310ef60804b62b7"
+          "sha256": "72842e7c2618eafd5182af15ebd59e844a9cab1a9fb38ec82ed4046e9d55709b"
         }
       ]
     },
@@ -6311,7 +6311,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-205] 状態変更",
-          "sha256": "65a2922e96775897fc72c68c0af02504eee396fea713b2869310ef60804b62b7"
+          "sha256": "72842e7c2618eafd5182af15ebd59e844a9cab1a9fb38ec82ed4046e9d55709b"
         }
       ]
     },
@@ -6327,7 +6327,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-205]",
-          "sha256": "65a2922e96775897fc72c68c0af02504eee396fea713b2869310ef60804b62b7"
+          "sha256": "72842e7c2618eafd5182af15ebd59e844a9cab1a9fb38ec82ed4046e9d55709b"
         }
       ]
     },
@@ -6343,7 +6343,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-205] 合格は回数",
-          "sha256": "65a2922e96775897fc72c68c0af02504eee396fea713b2869310ef60804b62b7"
+          "sha256": "72842e7c2618eafd5182af15ebd59e844a9cab1a9fb38ec82ed4046e9d55709b"
         }
       ]
     },
@@ -6359,7 +6359,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-206]",
-          "sha256": "65a2922e96775897fc72c68c0af02504eee396fea713b2869310ef60804b62b7"
+          "sha256": "72842e7c2618eafd5182af15ebd59e844a9cab1a9fb38ec82ed4046e9d55709b"
         }
       ]
     },
@@ -6375,7 +6375,7 @@
         {
           "file": "tests/run-decision-mutations.test.ts",
           "contains": "[REQ-206]",
-          "sha256": "105e730b63a6c99b6fd1754b79c14bc829ecc47f3c671e74607e3ca07912db02"
+          "sha256": "fde058b4656c75f1739caaa06b12b6e599d432dce310b6cd3965bf3cca6e4c6d"
         }
       ]
     },
@@ -7960,7 +7960,7 @@
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "[REQ-330] 合図なしなら",
-          "sha256": "33cdad7d8ed1ccca5b64428031e3731f32c29650d46973ab54a6f622d88a77e7"
+          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
         }
       ]
     },
@@ -7976,12 +7976,12 @@
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "[REQ-330] 行頭でない合図なら",
-          "sha256": "33cdad7d8ed1ccca5b64428031e3731f32c29650d46973ab54a6f622d88a77e7"
+          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
         },
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "[REQ-330] 空の理由なら",
-          "sha256": "33cdad7d8ed1ccca5b64428031e3731f32c29650d46973ab54a6f622d88a77e7"
+          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
         }
       ]
     },
@@ -7997,12 +7997,17 @@
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "変更不要の理由を表示しtasks.mdだけ",
-          "sha256": "33cdad7d8ed1ccca5b64428031e3731f32c29650d46973ab54a6f622d88a77e7"
+          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
         },
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "理由に含まれる既知の秘密情報",
-          "sha256": "33cdad7d8ed1ccca5b64428031e3731f32c29650d46973ab54a6f622d88a77e7"
+          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
+        },
+        {
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "の区切りに続く理由で変更なしのタスクを完了する",
+          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
         }
       ]
     },
@@ -8018,7 +8023,7 @@
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "変更と合図があれば",
-          "sha256": "33cdad7d8ed1ccca5b64428031e3731f32c29650d46973ab54a6f622d88a77e7"
+          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
         }
       ]
     },
@@ -8034,7 +8039,7 @@
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "質問と合図が両方あれば",
-          "sha256": "33cdad7d8ed1ccca5b64428031e3731f32c29650d46973ab54a6f622d88a77e7"
+          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
         }
       ]
     },
@@ -8050,7 +8055,7 @@
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "dry-runのタスクの指示に",
-          "sha256": "33cdad7d8ed1ccca5b64428031e3731f32c29650d46973ab54a6f622d88a77e7"
+          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
         }
       ]
     },
@@ -8066,7 +8071,7 @@
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "直しが合図なしで変更なしなら",
-          "sha256": "33cdad7d8ed1ccca5b64428031e3731f32c29650d46973ab54a6f622d88a77e7"
+          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
         }
       ]
     },
@@ -8082,7 +8087,7 @@
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "直しが合図ありで変更なしなら",
-          "sha256": "33cdad7d8ed1ccca5b64428031e3731f32c29650d46973ab54a6f622d88a77e7"
+          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
         }
       ]
     },
@@ -8098,7 +8103,7 @@
         {
           "file": "packages/runner/test/run-no-change.test.ts",
           "contains": "[REQ-331][REQ-100]",
-          "sha256": "33cdad7d8ed1ccca5b64428031e3731f32c29650d46973ab54a6f622d88a77e7"
+          "sha256": "bf1dd7f9cf021fc1755df97fca94a29f6002048ed6537d75f8a9f1a2979c5268"
         }
       ]
     },
@@ -8226,12 +8231,12 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-332] タスクで変更あり",
-          "sha256": "65a2922e96775897fc72c68c0af02504eee396fea713b2869310ef60804b62b7"
+          "sha256": "72842e7c2618eafd5182af15ebd59e844a9cab1a9fb38ec82ed4046e9d55709b"
         },
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-332] 直しで変更あり",
-          "sha256": "65a2922e96775897fc72c68c0af02504eee396fea713b2869310ef60804b62b7"
+          "sha256": "72842e7c2618eafd5182af15ebd59e844a9cab1a9fb38ec82ed4046e9d55709b"
         }
       ]
     },
@@ -8247,7 +8252,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-332]",
-          "sha256": "65a2922e96775897fc72c68c0af02504eee396fea713b2869310ef60804b62b7"
+          "sha256": "72842e7c2618eafd5182af15ebd59e844a9cab1a9fb38ec82ed4046e9d55709b"
         }
       ]
     },
@@ -8263,7 +8268,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-332] 直しでは合図があっても停止",
-          "sha256": "65a2922e96775897fc72c68c0af02504eee396fea713b2869310ef60804b62b7"
+          "sha256": "72842e7c2618eafd5182af15ebd59e844a9cab1a9fb38ec82ed4046e9d55709b"
         }
       ]
     },
@@ -8279,7 +8284,7 @@
         {
           "file": "tests/run-decision-mutations.test.ts",
           "contains": "[REQ-206][REQ-332]",
-          "sha256": "105e730b63a6c99b6fd1754b79c14bc829ecc47f3c671e74607e3ca07912db02"
+          "sha256": "fde058b4656c75f1739caaa06b12b6e599d432dce310b6cd3965bf3cca6e4c6d"
         }
       ]
     }
