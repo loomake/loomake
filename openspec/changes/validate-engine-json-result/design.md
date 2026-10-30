@@ -230,3 +230,14 @@ stdoutはメモリ内1MiBまで、stderrは本文を保持せず64KiBまで数�
 共通の独立Opus設計92ea61a2と既存archiveの手順を管理役が確認し、E3の旧5.3だけをtasks.md「完了ゲート後の必須受入」へ移す計画整合を採用した。元の番号・本文・担当・条件を保持し、5.2自身と未完了4.2〜4.4/5.1はcheckboxのまま残す。旧18意図は17tasksと必須受入1に対応し、現時点は12/17、受入1未達である。共通設計の別change向け件数16をE3へ転記しない。
 
 5.2成功後、同じマージ対象headの必須CI・自動Codex・設計/実装と別セッションの指摘ゼロOpus最終レビューをそろえる。管理役がPR #185とIssue #121で受入を判定するまで完了としない。headを変更したら新headへすべてそろえ直す。条件・規則・テスト・ゲートの削減ではなく、未実施をチェックして通すこともしない。
+
+
+### 9.3 確認した資料と拒否実装の到達点
+
+[server-managed settings](https://code.claude.com/docs/en/server-managed-settings)はサーバーからの配布だけでなく起動時cacheの経路も説明する。[monitoring](https://code.claude.com/docs/en/monitoring-usage)は原API本文を含むtelemetryとファイル出力の選択肢を説明する。[data usage](https://code.claude.com/docs/en/data-usage)はデータフローの資料であり、対象2版の全ローカルstate/history/debug経路の非永続化を証明しない。現在の公式資料を対象版の完全な動作保証へ置き換えない。
+
+checksum確定native2版の公開nK/K_n/FT関数から、userのconfigDir/settings.jsonとproject/localの.claude/settings.json・settings.local.jsonという3経路を確認した。probeはこの非認証JSONだけを容量1MiB・深さ32・node数4096までメモリで読み、symlink・ファイル型・inode不一致・不正UTF-8/JSONを固定理由へ変換する。parent/flag/managed/plugin由来の他経路を調べ終えたとは扱わない。credential/authファイルを開く入口や、任意filenameを受ける入口は作っていない。
+
+実readonly probeではuser settings読取成功、hook/plugin/envの各設定false、未知欄あり、診断環境set/nonempty=trueとなった。自己作成cwdのproject/local JSONは不在だったが、git非ゼロだけではgit外を証明しないため、その判定は未証明として残した。出力は固定boolean/状態/理由だけで、設定値・原文・環境値・動的名前一覧・個人情報を含むパスは保存しない。
+
+scripts/claude-result-preflight.mjsは限定probeと拒否判断、claude-result-collector.mjsは固定argv/prompt/環境計画と合成processのメモリ内検査を実装した。CLI実起動・採集資格の証拠adapter・fixture永続化・版/case間の試行履歴はまだ実装/受入していない。実起動口を設けず、設定が空でも自己申告booleanでも拒否する。合成processのcase一致もcollected=falseを返し、実観測へ数えない。102件の合成/fixture回帰はこの範囲の検査であり、4.2達成の証拠ではない。

@@ -101,3 +101,10 @@ task4.1として、公式2版のwrapper/nativeを独立prefixへignore-scripts�
 ## 完了ゲート後の必須受入への計画整合（2026-10-31）
 
 管理役が共通独立設計92ea61a2を照合し、旧5.3だけを原文・番号・担当・条件のままtasks.mdの非checkbox節へ移す案を採用した。全18意図を17tasksと必須受入1へ機械照合し、他17行の本文/状態が不変であることを確認した。現在は12/17、受入1未達である。実4件と4.2〜4.4、5.1、5.2は真の未完了として残す。最終受入は5.2後の同headで行い、新headではCI/Codex/独立最終Opusをそろえ直す。未実施のチェックや条件の削減は行っていない。
+
+
+## task4.2の限定probeと拒否側の進行（2026-10-31）
+
+公開nativeの既知3経路だけを読むprobe、固定argv/環境計画、秘密を返さない合成stream検査を追加した。実readonly probeは固定booleanと理由だけを保存し、user設定内のhook/plugin/envはfalseでも未知欄があり、診断環境はset/nonempty=trueだった。managed/他設定源・CLI stateの非永続化は未証明のままで、実起動口は作らず拒否を維持した。自己作成cwdの設定不在は全設定源不在の証明ではなく、git非ゼロもgit外の証明へ数えていない。
+
+新規36件と既存fixture66件の合成回帰、eslintとtypecheckは成功した。実prompt0・実4件0/4、task4.2〜4.4未チェックを維持する。採集資格の証拠adapter・実起動・永続化・試行履歴と全done/同head最終受入は残っている。
