@@ -12,7 +12,7 @@
 
 ## 3. run の流れ
 
-- [ ] 3.1 `packages/runner/test/run-no-change.test.ts` に REQ-330・REQ-331 の試験を書き、修正前に失敗することを確かめる（確認：設計の 4 章の 1・2・5・6・7 が失敗する）
+- [x] 3.1 `packages/runner/test/run-no-change.test.ts` に REQ-330・REQ-331 の試験を書き、修正前に失敗することを確かめる（確認：設計の 4 章の 1・2・5・6・7 が失敗する）
 - [ ] 3.2 `phases.ts` の `callEngine` が本文を返すようにし、`runEngineTasks` で `guard` の後・`checkTask` の前に判断を呼ぶ。止まるときの表示と、変更なしの完了の表示（Q-03 の決定に従いコミット本文）を足す（確認：3.1 の REQ-330 の試験が通る）
 - [ ] 3.3 `runGate` の直しのあとの差分の判定を `decideAfterChanges` に置き換える（確認：3.1 の REQ-331 の試験が通る）
 - [ ] 3.4 `prompt.ts` で、タスクの指示だけに `LOOMAKE-NOCHANGE:` の決まりを足す（確認：3.1 の指示の試験が通る）
