@@ -12,3 +12,7 @@ Q-04 は ADR 0006 の包括承認に基づきおすすめ A を採用済み。�
 
 - [x] 2.1 `docs/guide/2.guides/3.run-recovery.md` の「端末を閉じたときとコンテナを止めたとき」を design.md の D-4 のとおり直し、yomiyasu で推敲する。文書のリンクの試験が通ることを確かめてコミットする
 - [x] 2.2 `@loomake/kit` の patch の changeset、`docs/quality/scenarios.json` の Scenario のレビュー（変えた試験のファイルを根拠にする既存のレビューを確かめ直してから更新）、作業記録を足す。`pnpm -s verify --change stop-command-group-on-sighup --done` が exit 0 になることを確かめてコミットする <!-- loomake:gate=done -->
+
+## 3. 最終レビューの修正
+
+- [x] 3.1 最新の利用者指示に従い、LOW-01〜05 の fixture・記録を修正する。SIGKILL 直後の再送負例と ready 前の後片付けの回帰を mutation で確かめ、製品の 250ms・外側 2 秒・既存期待値を維持する。Scenario の対応を再確認し、done と新しい head の独立 Opus 最終レビューを指摘ゼロまで進める

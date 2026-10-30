@@ -1,5 +1,7 @@
 # SIGHUP で監視役が終わるときも対象を止める change の作成
 
+訂正：以下の作成時の旧設計 session180efb22 は権限拒否1のため未実施だった。実施済みの設計は再設計 session6fe32a2b（claude-opus-5-5、ok:true・権限拒否0）であり、design.mdの工程記録を正本とする。旧評価上限の記述は当時の履歴で、最新の利用者指示により現在は上限を設けず、最新headのOpus最終レビューで指摘ゼロになるまで修正を続ける。
+
 1. やったこと：change `stop-command-group-on-sighup` を作った（proposal・specs・design・tasks・trace）。要件は REQ-333〜334（335 は予備） で、設計は Opus（`claude-opus-5-5`、session `180efb22-b5d7-4cbe-80e1-ffb9ce6fad69`、.agents/skills/delivery/scripts/ask-opus.mjs 経由、対象 `d5aa30d`）が書き、Claude Code（Fable 5.1）が OpenSpec の形に写した。確認事項は、利用者の 2026-10-30 の「おすすめで進めて」の指示に基づき、設計のおすすめ案を回答として記入した。製品コード・試験・設定は変えていない。
 2. verify の結果：`pnpm -s verify --change stop-command-group-on-sighup --spec-only` は exit 0（警告は仮定の未承認だけ）。`openspec validate stop-command-group-on-sighup --strict` も exit 0。コミットは `0d30c00`。
 3. 残っている確認事項・仮定：設計工程は補助スクリプトが ok:false（modelUsage に `claude-haiku-5-5` の補助呼び出しが含まれたため）を返し、規約上は未実施。最小の依頼でも同じ結果になるため、この環境では Opus 工程を実施済みにできない。Opus 本体の回答を設計として採るか、補助の判定を直すかは人の判断待ち。仮定の承認欄は空。当初記録では gh が未認証で PR と Issue は未作成だった。現在は [PR #158](https://github.com/loomake/loomake/pull/158) を作成済み。
@@ -40,3 +42,10 @@
 2. verifyの結果：changesetコミット後のdoneはexit0。lint・型・全体1450試験成功、既存8skip。新しい6 Scenarioは確認済み、main比較で既存対応の悪化なし。Scenario監査全体はmainからの未整備が残るため不合格であり、全件合格とは扱わない。
 3. 残っている確認事項・仮定：未回答なし。全OS CI・自動Codex・独立Opus最終評価を最終headで確認する。
 4. 次にやること：PR #158へ検証と決定を反映し、最終レビュー・CIの結果を管理役へ引き継ぐ。
+
+## 最新指示による最終レビュー修正
+
+1. やったこと：タスク3.1としてLOW01〜05のfixture・記録を修正。grace配送を試験内で対象exitまで保留し、SIGKILL直後のnextTick例外とready前cleanupの回帰を追加した。空行を除き、旧設計sessionの未実施と最新設計を先頭に訂正した。INFO01は既存仕様のPID再利用の保証範囲を保持し、追加保証を実装しない。
+2. verifyの結果：関連78試験・lint成功。!exitedの再送mutationとready依存cleanupのmutationは各1件でRed、正実装はGreen。初回の新しい例外fixtureはkill内catchに吸収されたため、期待値を変えずnextTickの未処理例外に修正した。doneと新headの最終レビューはこれから実施する。
+3. 残っている確認事項・仮定：利用者の最新指示でOpus最終回数の上限は撤廃。旧head273851aの全OS CI・自動Codex・Opus重大なしは履歴として保持するが、軽微指摘があるため受入に使わない。同一指摘が3回続いたらIssue記録し往復を継続する。
+4. 次にやること：新headでdone・全OS CI・自動Codexを確認し、freshsessionのOpus最終レビューで指摘ゼロまで進める。

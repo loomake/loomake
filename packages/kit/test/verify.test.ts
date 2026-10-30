@@ -374,7 +374,6 @@ describe('中断されたときの品質コマンド', () => {
       expect(existsSync(join(root, 'after.txt'))).toBe(false);
     });
   });
-
 });
 
 describe('change の省略', () => {
