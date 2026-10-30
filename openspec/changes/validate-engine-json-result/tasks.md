@@ -31,4 +31,8 @@
 
 - [ ] 5.1 runnerの必要なchangeset、trace/作業記録、全要件対応試験と全Scenarioの証跡をそろえ、既存テスト・品質設定・完成範囲を維持する（REQ-099・REQ-100・REQ-204・REQ-330・REQ-331・REQ-340・REQ-341）
 - [ ] 5.2 `pnpm -s verify --change validate-engine-json-result --done` を通す（REQ-099・REQ-100・REQ-204・REQ-330・REQ-331・REQ-340・REQ-341） <!-- loomake:gate=done -->
-- [ ] 5.3 同じマージ対象headの必須CI・自動Codex・設計/実装と別セッションの指摘ゼロOpus最終レビューをそろえ、管理役が受入を判定する。未収集や残taskを完了にしない（REQ-340・REQ-341）
+## 完了ゲート後の必須受入
+
+次の5.3は5.2の成功後に実施する。完了ゲートのタスク完了印では代用せず、PR #185とIssue #121で管理役が証拠を照合する。未達の間はchange・PR・親DoDを完了としない。修正でheadが変わった場合は、新headで完了ゲート・必須CI・自動Codex・独立Opus最終レビューをやり直す。
+
+- 5.3 同じマージ対象headの必須CI・自動Codex・設計/実装と別セッションの指摘ゼロOpus最終レビューをそろえ、管理役が受入を判定する。未収集や残taskを完了にしない（REQ-340・REQ-341）

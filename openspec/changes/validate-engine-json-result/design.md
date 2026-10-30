@@ -106,7 +106,7 @@ CIで確認できるのは保存物自身の型・出所と整合までである
 
 Q5はunknown/non-subscriptionなら未収集・Issueであり、管理役回答待ちのまま他作業まで止めない。Q9/Q10は不明でも無害promptだから採集する旧推奨を採用しない。no-session-persistenceが使えない場合や既存hookの永続化を避けられない場合も、保護を外さず未収集にする。必須4件のtaskは残す。
 
-起動はshellなし・promptはstdin、stdoutは1MiB・stderrは64KiB・上限5分を前提とし、生の出力を端末/ファイル/ログへ継承しない。環境は既存を保ち、採集の子にDISABLE_AUTOUPDATER=1だけを足す。ReadだけでMCPを除いたとは主張せず、公式disallowedToolsのmcp__*を追加拒否する。既存設定源、hook、保護、MCP設定を無効にしない。MCPサーバー接続の有無は推測せず、不明なら不明と記録する。原raw/秘密の非永続化を確認できなければ未収集とする。
+起動はshellなし・promptはstdin、stdoutは1MiB・stderrは64KiB・上限5分を前提とし、生の出力を端末/ファイル/ログへ継承しない。環境は既存を保ち、採集の子にDISABLE_AUTOUPDATER=1とCLAUDE_CODE_DISABLE_AUTO_MEMORY=1を足す。ReadだけでMCPを除いたとは主張せず、公式disallowedToolsのmcp__*を追加拒否する。既存設定源、hook、保護、MCP設定を無効にしない。MCPサーバー接続の有無は推測せず、不明なら不明と記録する。原raw/秘密の非永続化を確認できなければ未収集とする。
 
 argvの必要flagを対象版のhelpで確認する。max-turnsがhelpにない版は、その版へ適用できる公式referenceを保存できる場合だけ試し、unknown optionは未収集にする。設定sourceの無効化、bare、safe-mode、permission緩和、独自settings/MCP構成、debug/verbose/resume等を付けない。error_max_turnsは無害なnoteをReadした後の固定promptで確認し、Read拒否や別subtypeを成功へ数えない。同じ条件の試行は元案の2回までとし、全試行と不足を残す。
 
@@ -193,10 +193,40 @@ Read note.txt in the current working directory and then report its contents.
 
 Read拒否や違うsubtypeを目的caseの成功へ数えない。successでresultがOK以外の文字列なら、その値をderivedへ置換する。各版/caseの試行は2回までとし、全試行と不足を残す。
 
-環境は継承し、子へDISABLE_AUTOUPDATER=1だけを足す。debug等の既存環境が非永続化と両立しない場合は、値を記録したり保護を無効化したりせず起動を止める。verbose/debug/resume/continueや独自のsettings/MCP構成は付けない。ReadだけでMCPが除外されたとは扱わず、mcp__*の追加拒否を保つ。
+環境は継承し、子へDISABLE_AUTOUPDATER=1とCLAUDE_CODE_DISABLE_AUTO_MEMORY=1を足す。debug等の既存環境が非永続化と両立しない場合は、値を記録したり保護を無効化したりせず起動を止める。verbose/debug/resume/continueや独自のsettings/MCP構成は付けない。ReadだけでMCPが除外されたとは扱わず、mcp__*の追加拒否を保つ。
 
 stdoutは1MiB、stderrは64KiB、期限は5分とする。端末への継承やrawの一時ファイルを作らず、メモリ内で容量と期限を管理する。例外messageやstderr本文は保存せず、固定の結果符号へ変換する。取得した元rawから直接createObservedResultFixtureへ渡し、元の存在/JSON型と分類/表示の合図の一致、および保存schemaを検査する。元値や元rawのhashは保存しない。確実なメモリ消去を約束しない。
 
 実caseの判定には元のsubtype/is_error/resultと必要な拒否の有無をメモリ内だけで使う。終了0や保存schema合格だけを収集成立にしない。projection/derived以外、case不一致、拒否、unknown option、上限停止、保存/保護の不一致は未収集へ残す。metarecordからinputを生成して観測を名乗らず、syntheticは実4枠へ数えない。
 
 最後に、保存を許可した最小fixtureと出所・版/case/試行の固定metadataだけを検査して残す。原rawを保存しないので、後から元値を再解析したり独立に一致確認したりはできない。この限界は実4件を免除しない。2.1.307/2.1.308×success/error_max_turnsの必須4枠は、現在0/4・未収集のままである。task4.1の導入/手順確認と、task4.2の保護前提の達成、4.3の実収集、親DoDを区別する。
+
+
+## 9. 追加の採集制御設計と管理判断（2026-10-31）
+
+公開済みhead6ece6adのPR #185と公式資料・固定booleanだけを渡し、独立Opus設計3203554f-62b1-4053-a61c-1fc49feb1706を新たに実行した。manifestはrole=design、要求/応答モデルともclaude-opus-5-5、ok=true、拒否0を示す。設定原文・認証・環境値・非公開rawを送っていない。この設計と管理役のADR0006判断は採集制御の手順を具体化するもので、実4件や最終レビューを代替しない。
+
+| 判断 | 採用した手順と理由 | 保持する元選択肢・限界 |
+|---|---|---|
+| CD-1=A | 子の環境へCLAUDE_CODE_DISABLE_AUTO_MEMORY=1を追加する。公式の無効化手段と両版の静的分岐に従い、既存保護を削らずmemoryの経路を閉じる | B：DISABLE_AUTOUPDATERだけ、は採らない。他の環境は追加・削除しない |
+| CD-2=A | nativeの既知の設定ローダーに対応する非認証settings JSONだけをメモリで読み、hook/plugin/env等の固定booleanと固定理由コードだけを返す限定readonly probeを認める | 旧E3-D06の読取禁止をこの技術手順に限り改訂する。B：全hook無効、C：通常利用と同程度だから許容、は採らない。credential/authファイルを読まず、設定値・原文・個人情報を含むパス・例外messageを保存しない。設定変更や「読めたので安全」という代用をしない |
+| CD-3=A | managedが読み込まれないという版ごとの根拠と管理確認がそろうまでunknownとして拒否する | B：managedを保証範囲外にする、は採らない。ローカルファイル不在だけでサーバー側も不在とは扱わない |
+| CD-4=A | 固定の診断用環境名・接頭辞について、set/nonemptyだけをメモリで判定し、設定envも限定probeの対象にする | B：子環境から削除、は採らない。値や動的な名前一覧を保存せず、存在だけで有効とも無効とも証明しない。不明は拒否する |
+| CD-5=A | 公式資料と対象版のコードからCLI state/history/診断を含む非永続化を確認する。未証明なら拒否する | B：metadata保存なので許す、は採らない。no-session-persistenceだけで他の書込経路も安全とは扱わない |
+| CD-6（任意） | 自己作成の一時cwdから導くprojects配下の対象1件だけをstatして、出現なら保護不一致を検出できる | 検出は予防の証明に数えない。任意の設定ディレクトリ探索は行わない |
+
+### 9.1 probeとcollectorの拒否側実装
+
+公開の公式宣言・版固定nativeのローダー根拠を補い、scriptsの独立probeとcollector、および合成回帰を実装する。実装の対象はtask4.2の採集前確認であり、4.2〜4.4の完了とは区別する。probeは深さ・容量を制限し、読取失敗・未知の設定源・追加構造は固定理由へ変換して拒否する。グローバル設定・auth・保護は変更しない。
+
+起動前にP1 nativeのrealpath/checksum、P2 ignoredの保存先とsymlink、P3新しいgit外cwdと固定noteだけ、P4固定argv/prompt、P5許可2環境だけの差分、P6保護各booleanの実証拠と管理確認、P7版/caseあたり最大2試行を確認する。false/unknownが1件でもあればspawnは0にする。P6の自己申告booleanファイルを、安全性の証明や実4件の資格へ使わない。証拠が未確認のままtrueを書いて起動する経路を作らない。
+
+stdoutはメモリ内1MiBまで、stderrは本文を保持せず64KiBまで数え、UTF-8不正・期限5分・中断・容量超過は固定理由で止める。必要なら子のprocess groupを終了し、5秒後に強制終了する。permission_denialsとcaseの元合図はメモリ内だけで確かめる。保存は既存schemaを満たす最小fixtureと固定metadataだけで、raw/秘密/hash/例外messageは保存しない。合成試験は拒否時spawn0、固定argv/環境差分、容量/期限、本文非漏出、UTF-8、非ゼロ/拒否/case不一致、試行上限を確認する。既存試験や品質設定を緩めない。
+
+現在はmanaged・hook/plugin・診断・CLI stateの非永続化に未証明があり、実prompt0、実4件0/4である。collectorの拒否回帰が成功しても、採集前提達成や実観測の成立へ読み替えない。
+
+### 9.2 完了ゲートと最終受入の順序
+
+共通の独立Opus設計92ea61a2と既存archiveの手順を管理役が確認し、E3の旧5.3だけをtasks.md「完了ゲート後の必須受入」へ移す計画整合を採用した。元の番号・本文・担当・条件を保持し、5.2自身と未完了4.2〜4.4/5.1はcheckboxのまま残す。旧18意図は17tasksと必須受入1に対応し、現時点は12/17、受入1未達である。共通設計の別change向け件数16をE3へ転記しない。
+
+5.2成功後、同じマージ対象headの必須CI・自動Codex・設計/実装と別セッションの指摘ゼロOpus最終レビューをそろえる。管理役がPR #185とIssue #121で受入を判定するまで完了としない。headを変更したら新headへすべてそろえ直す。条件・規則・テスト・ゲートの削減ではなく、未実施をチェックして通すこともしない。
