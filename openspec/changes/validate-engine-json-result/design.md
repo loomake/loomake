@@ -4,7 +4,7 @@
 
 基準はmain `085a82686dc1c14506fbdbad88b5b9b3961f522e`。品質E3の旧treeと設計head5cを保持し、同じchange-idの正式起案だけを新treeへ移した。Opus b95d2ffbの8 Requirement・41 Scenarioと、管理役のQ1〜Q11・監査残5点を採用元とする。予約済みのREQ-340/341だけを使う。C001/S1のv2/local/ciは未採用なので、現行verify --doneと既存runnerの正常経路を維持する。
 
-製品実装、実CLI採集、install、Opus起動、PR/pushはこの起案では行わない。修正版の独立設計確認はtasks1.3へ残す。仕様ゲートの成功も製品の完了や実観測の成功を意味しない。
+この正式起案に対する独立Opus設計A1・A2・A3・Bを実施し、管理役が2026-10-31（日本時間）に下記7章の方針を採用した。A3は資料の一部を未読と明記しており、その範囲を確認済みへ数えない。製品実装、実CLI採集、install、PR/pushはまだ実施していない。仕様ゲートの成功も製品の完了や実観測の成功を意味しない。
 
 ## 1. 分類と停止の責務
 
@@ -45,7 +45,7 @@ hold後も既存guardの検査と、削除・差分・承認の必要な表示�
 
 ## 4. 観測入力の出所と保存許可
 
-採集時の元raw、認証秘密、stderr本文、例外message、個々の元値のhashは永続化しない。元raw全体のhashも既定では保存しない。session_idがあるから安全という普遍的な仮定は置かない。fixture自身のhashは保存物の整合確認に使えるが、元rawの一致・再解析・独立再現の証明には使わない。
+採集時の元raw、認証秘密、stderr本文、例外message、個々の元値のhashは永続化しない。元raw全体のhashも保存しない。session_idがあるから安全という普遍的な仮定は置かない。fixture自身のhashは保存物の整合確認に使えるが、元rawの一致・再解析・独立再現の証明には使わない。
 
 | provenance | 入力の作り方 | 保存/試験上の区別 |
 |---|---|---|
@@ -58,10 +58,22 @@ hold後も既存guardの検査と、削除・差分・承認の必要な表示�
 
 | 欄 | projectionに保存できる値 | それ以外をderivedへ置換する場合 |
 |---|---|---|
-| type | `^[a-z_]{1,32}$`の文字列 | 同じJSON型を保つ固定値。型不正を文字列へ直さない |
-| subtype | `^[a-z0-9_]{1,70}$`の文字列 | 文字列はerror_開始の有無と表示可否を保つ。表示不可のerror系には固定のerror_X等を使い、表示可能へ直さない |
-| is_error | true/false/null/安全な整数 | booleanはその値を保つ。他の型は同型の固定値で、failure/shapeをnormalへ変えない |
-| result | 文字列OKとnullだけ | 許可外string→文字列の固定置き値、number→0、object→空object、array→空array。欠落は欠落のまま |
+| type | `"result"`、null | 許可外の文字列は `"withheld"`。ほかは下表の同型固定値 |
+| subtype | `"success"`、`"error_max_turns"`、null | error_開始かつ表示可能なら `"error_withheld"`、表示不可なら `"error_X"`。error_以外の文字列は `"withheld"` |
+| is_error | true、false、null | 真偽値は保つ。許可外の文字列は `"withheld"`、ほかは同型固定値 |
+| result | `"OK"`、null | 許可外の文字列は `"withheld"`、ほかは同型固定値。欠落は欠落のまま |
+
+置換する全JSON型の固定値を次のとおりそろえる。nullは各欄の許可集合に含め、存在しない欄は補わない。
+
+| 元のJSON型 | type・subtype・is_error・resultの置換値 |
+|---|---|
+| string | 上の欄別の固定文字列。subtypeのerror_開始・表示可否を保つ |
+| number | 0 |
+| boolean | false。is_errorのtrue/falseは許可値なので置換しない |
+| object | 空object |
+| array | 空array |
+
+分類に使う最上位型、各欄の存在・JSON型、is_errorのtrue、subtypeのerror_開始と表示可否を、保存前にメモリ内で元の値と比較する。不一致なら保存しない。閉じた許可集合にない欄が1つでもあればrecordはderivedとし、置換箇所と元の型をsubstitutionsへ残す。製品の理由に表示するsubtypeの契約は変更せず、公開fixtureの保存許可集合と区別する。
 
 result:42はderivedのresult:0、result:nullはprojectionのnullである。resultの任意の数値・文・object・arrayをprojectionへ保存しない。元がobjectのinputには既知4欄以外を足さず、未知欄は保存しない。元の型を保つだけで分類の全合図を維持できるとは仮定せず、error_開始・is_error・表示可否を含む直接試験を用意する。
 
@@ -76,7 +88,7 @@ result:42はderivedのresult:0、result:nullはprojectionのnullである。resu
 | synthetic | 合成である出所、input | 観測caseの成立へ数えない。観測版/実行を自己申告で付与しない |
 | 実観測record | cli.version=2.1.307または2.1.308、native binaryのsha256、case、attempt、終了/上限の固定metadata | stderrはbytesだけ。秘密や本文を加えない。unknown key/許可値外は保存前に拒否 |
 
-同型の固定値はnull/true/false/0/空array/空object、文字列の固定置き値と、分類に必要な固定error合図に限定する。任意のraw値へ広げない。fieldsはpresence=false、またはpresence=trueとJSON型だけとし、元値を持たない。長さなど採集に不要なmetadataを追加しない。上の表のcross-field整合も保存前に検査し、単なるJSON型合格だけで保存可能とはしない。
+同型の固定値はnull/true/false/0/空array/空object、文字列の固定置き値と、分類に必要な固定error合図に限定する。任意のraw値へ広げない。fieldsはpresence=false、またはpresence=trueとJSON型だけとし、元値を持たない。fieldsへ長さなど採集に不要なmetadataを追加しない。recordのstderrBytesは本文を持たない既定の件数として区別する。上の表のcross-field整合も保存前に検査し、単なるJSON型合格だけで保存可能とはしない。
 
 形だけを示す合成例は次のとおり。実観測のversion/hashを捏造していない。
 
@@ -102,6 +114,24 @@ argvの必要flagを対象版のhelpで確認する。max-turnsがhelpにない�
 
 ## 6. 検証と引継ぎ
 
-strict/spec-onlyと正式IDの500 UTF-16本文再測定、既存Source/Scenario比較はこの起案で行う。次は管理役が修正版の独立Opus設計を確認し、製品実装と回帰、実4case、done、同headの必須CI・自動Codex・独立最終レビューへ進む。どこかが未実施/未収集なら全体を完了にしない。
+strict/spec-onlyと正式IDの500 UTF-16本文再測定、既存Source/Scenario比較はhead6c951b9で成功した。独立設計4工程と下記の管理判断を反映したら、strict/spec-onlyを再実行してから製品実装と回帰へ進む。実4case、done、同headの必須CI・自動Codex・独立最終レビューは別に受け入れる。どこかが未実施/未収集なら全体を完了にしない。
 
 旧source340/341の仮名を正式IDへ置換しただけの長さ測定や、旧5cのgate成功を流用しない。C001が先に採用された場合は、最新mainへ統合して仕様・全Scenario・採集/回帰前提を再照合する。個別の停止で他の独立作業を止めないが、未達の受入を短縮して済ませることもしない。
+
+
+## 7. 独立設計の確認と管理役の採用（2026-10-31）
+
+同じhead6c951b9のA1=f39faeb5、A2=1bb16ffa、A3=a1351704、B=e2a2fb83は、すべて実モデルclaude-opus-5-5、ok:true、拒否0の別セッションで完了した。原本と検証は専用treeの`.loomake/claude/`と`.loomake/e3-revised-design/existing-design-audit.json`にある。これは設計であり、製品の最終レビューではない。A3の未読資料727〜1626行と別抜粋は、確認済みとしない。今回誤って重複起動した417111fcは管理役の指示で停止し、未実施のまま記録する。
+
+管理役はADR0006の包括承認に基づき、各工程の選択肢と理由を照合して次を採用した。確認事項の回答者は利用者（ADR 0006 の包括承認）と記録する。
+
+- 分類器、分類と具体パスからだけ理由を作る関数、AfterGuardはdecision-policy.tsへ置く。構造化したfaultとoutputPathを観測へ渡す。rawは渡さず、既存の質問の判定に必要なtext等は明示した欄で渡す。engine.tsのraw/text契約と公開indexは変更しない。
+- 既存の45件と既存mutation試験の期待値を変えず、新しいresult-policy試験とmutation試験を作る。失敗優先とAfterGuardの理由順を逆にしたコピーが、同じ新規直接試験のassertionで失敗することを確認する。タイムアウトやimport失敗は検出成功へ数えない。
+- taskとrepairの正常・hold両経路で同じAfterGuardを使う。違反時のresetは既存guardが行い、E3単独で止まるときだけresetを追加する。reset自体が失敗した場合は既存REQ-137のGitError経路を保ち、その場合にE3の理由が残るとは約束しない。
+- recorder、logs、log-policyは変更せず再利用する。短いパスは実runで確認し、長いパスはstartRecordingの直接試験で全OS同じ文字列条件を確認する。OS限定の新しいskipや実在できない長いrunDirは作らない。
+- fixtureのprojectionは4章の閉じたliteral集合に限定し、derivedは全JSON型と分類・表示の合図を保持する。collectorとvalidatorはscriptsへ置き、このchangeのtasksに含める。元rawと個々の元値のhashは一律に保存しない。
+- successの実caseはresultが文字列なら成立し、OK以外はderivedに置換する。error_max_turnsの実caseは元の合図と拒否の条件をメモリ内で確認する。syntheticやmetarecordは必須4枠を埋めない。
+
+BのQ-B3にあるsettingsのメモリ内読取案と、Q-B4にある会話以外の書込みを既知の制約として許す案は、安全性の証明に代用しない。原raw・秘密の非永続化を確認できるまでは採集しない。必要な前提は未確認であり、2.1.307/2.1.308の実4件は未収集のままとする。製品D01〜D05はこの採集に依存しないので先行できるが、tasks4.2〜4.4、親DoDと最終受入を完了にしない。
+
+既存REQ-109と早期停止時のguard省略、および分類前output保存失敗時のGit内部検査省略は、この変更で広げも縮めもしない。範囲外の差として管理役へ引き継ぎ、E3の受入済みと混同しない。

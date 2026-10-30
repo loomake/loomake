@@ -13,7 +13,7 @@
 - 既存REQ-204・099・330の二つのRequirement・331・100を全文で更新し、正常経路と全既存Scenarioを維持する。REQ-100の追加Scenarioはa1原文を復元する。同じSource204の別契約を変更しない。
 - 分類前のoutput保存失敗と、分類後のsummary/stop保存失敗を分ける。前者は既存のI/O停止、後者はREQ-179の短い理由と表示を維持する。
 - 実際のCLI 2.1.307/2.1.308とsuccess/error_max_turnsの4件を、既存の認証・設定源・hook・保護を維持し、原raw・認証秘密を永続化しない条件で採集する。条件を確認できないcaseは未収集とし、Issueと未完了taskを残す。
-- 保存する観測をprojection・derived・metarecord・syntheticに分け、表・例・schemaと試験名を一致させる。原rawのhashを既定で保存せず、元の値を保存しないことによる検証の限界を記録する。
+- 保存する観測をprojection・derived・metarecord・syntheticに分け、表・例・schemaと試験名を一致させる。原rawのhashを保存せず、元の値を保存しないことによる検証の限界を記録する。
 
 ## Non-goals
 
@@ -25,6 +25,6 @@ C001/S1のverify v2・local/ci切替・producer mappingは採用しない。現�
 
 ## Impact
 
-capabilityはrunとrun-decision-policy。将来の実装対象はrunnerのengine、run/phases、run/decision-policyと必要な記録接続、既存fake engine fixture、直接試験・runner回帰である。公開indexへの不要なexport、別パッケージ、新しい常駐機構は追加しない。
+capabilityはrunとrun-decision-policy。実装対象はrunnerのrun/phases、run/decision-policyと必要な記録接続、既存fake engine fixture、直接試験・runner回帰である。公開indexへの不要なexport、別パッケージ、新しい常駐機構は追加しない。
 
-既存Source/Scenarioの保持は独立した比較資料で確認する。既存guard・index解除・記録予算はREQ-112・118・154・179などの現行契約を使い、同Sourceの別Requirementを誤って置換しない。実装時のchangesetと最終受入はtasksに残す。
+既存Source/Scenarioの保持は独立した比較資料で確認する。既存guard・index解除・記録予算はREQ-112・118・154・179などの現行契約を使い、同Sourceの別Requirementを誤って置換しない。独立設計A1・A2・A3・Bと2026-10-31の管理判断はdesign7章に記録した。engine.tsのraw/text契約と既存recorderは保ち、collector採集の保護前提が未確認の間も製品D01〜D05は先行する。実装時のchangesetと最終受入はtasksに残す。

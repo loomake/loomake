@@ -4,7 +4,7 @@
 
 - [x] 1.1 管理役のQ1〜Q11と残5点、REQ-340/341の予約、main085a基準、既存担当の保持を記録する（REQ-340・REQ-341）
 - [x] 1.2 8 Requirement・41 Scenarioと全既存Scenario/Sourceを照合し、正規parserの500 UTF-16本文、strict、spec-onlyを確認する（REQ-099・REQ-100・REQ-204・REQ-330・REQ-331・REQ-340・REQ-341）
-- [ ] 1.3 修正版の分類・保存失敗・privacyの表/schemaを独立Opus設計で確認し、管理役が成果と受入条件を実装担当へ引き継ぐ（REQ-340・REQ-341）
+- [x] 1.3 修正版の分類・保存失敗・privacyの表/schemaを独立Opus設計で確認し、管理役が成果と受入条件を実装担当へ引き継ぐ（REQ-340・REQ-341）
 
 ## 2. 製品実装
 
@@ -25,7 +25,7 @@
 - [ ] 4.1 既存保護を維持する採集手順を確認し、公式package/integrityと独立prefixのignore-scripts導入、nativeの版/checksum、必要help/referenceを版ごとに照合する（REQ-340・REQ-341）
 - [ ] 4.2 設定源・hook・会話記録・subscription認証・保存先・debug出力・argv監査を採集前に確認する。原raw/秘密を永続化しない条件を確認できなければ起動せず、未収集・Issue・未完了taskを残す（REQ-340・REQ-341）
 - [ ] 4.3 2.1.307/2.1.308 × success/error_max_turnsの実4件を収集し、全試行と不足を記録する。synthetic/未収集で必須件数を埋めない（REQ-340・REQ-341）
-- [ ] 4.4 許可された最小fixtureだけを保存し、provenance・presence/value/type・置換箇所・版/caseを照合する。原raw hashを既定で保存せず、再解析/独立照合不能という限界を記録する（REQ-340・REQ-341）
+- [ ] 4.4 許可された最小fixtureだけを保存し、provenance・presence/value/type・置換箇所・版/caseを照合する。原raw hashを保存せず、再解析/独立照合不能という限界を記録する（REQ-340・REQ-341）
 
 ## 5. 完了と受入
 
