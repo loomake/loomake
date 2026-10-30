@@ -1,0 +1,6 @@
+# 自律配布の包括承認（ADR 0006）
+
+1. やったこと：利用者の2026-10-30の決定をADR0006に先行記録し、AGENTS・delivery（同時4change）・agent-workflowを整合。開発運用の文書変更のためchange・製品タスクなし。規約更新は利用者の確定した決定を記録する管理作業のため、Opus設計は省略し、最終レビューは独立した新規Opusセッションで行う。担当はCodex（API接続、実モデル識別子は不明）。PR160はhead c4dd0d3の39試験・必須CI・自動Codex指摘なし・Opus最終session738a0a1d/ok:trueを確認しmain ddbf2deへマージ。ほかのセッション停止済みとの利用者の明示回答を受け、残コマンド終了後に157〜159を引き継ぐ。
+2. verifyの結果：製品change用ゲートは対象外。lint・型検査・delivery helper回帰39件、Markdownローカルリンクとスキルfrontmatterを確認。yomiyasuはlint・diff・資料照合・最終稿照合を実行。「版」はモデル等のversionを指す定着した用語として残した。skill-creatorのquick_validateはPython環境にPyYAMLとpipがなく起動不可のため、既存yamlパーサーでfrontmatter・ローカルリンクを代替確認。独立Opus最終レビューと必須CI・自動Codex結果はPRへ記録する。
+3. 残っている確認事項・仮定：ChatGPTアプリのpush設定を変更するツールがなく、notifyは外部プログラム起動のためpushは未設定。代替はIssue121の@rrr-xxxと本会話への報告。到達確認は未実施。サブスクリプション範囲の費用上限なし、Opus評価2回規則は維持。
+4. 次にやること：この規約差分を独立レビュー・必須CI・自動Codexで確認して取り込み、157〜159のdone・最終レビュー・CIの受入へ進む。初回配布全体は未完了。
