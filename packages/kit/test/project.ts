@@ -96,7 +96,7 @@ export const vitestCommand = (report = '.loomake/test-report.json') =>
  * 端末の Ctrl-C をまねる品質コマンドのスクリプト。親をたどって時間の上限の見張り役を見つけて SIGINT を送り、
  * 自分と子のプロセスの番号を pids.json に書いてから眠る。Windows 以外で使う（ps で親をたどる）
  */
-export const INTERRUPT_SCRIPT = `
+export const interruptScript = (signal: 'SIGINT' | 'SIGHUP') => `
 const { execFileSync, spawn } = require('node:child_process');
 const { writeFileSync } = require('node:fs');
 let pid = process.ppid;
@@ -110,9 +110,11 @@ for (let i = 0; i < 5 && pid > 1 && !found; i++) {
 if (!found) throw new Error('時間の上限の見張り役が見つかりません');
 const child = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)'], { stdio: 'ignore' });
 writeFileSync('pids.json', JSON.stringify([process.pid, child.pid]));
-process.kill(pid, 'SIGINT');
+process.kill(pid, '${signal}');
 setTimeout(() => writeFileSync('finished.txt', ''), 15000);
 `;
+
+export const INTERRUPT_SCRIPT = interruptScript('SIGINT');
 
 /** プロセスが動いているか */
 export const alive = (pid: number) => {
