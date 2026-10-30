@@ -26,3 +26,11 @@
 2. verify：純粋分類53件、既存45件、既存run70件・NoChange25件の193件と、新規run統合11件がすべて成功。型と対象lintも成功した。元rawと保存後JSONの形が変わる回帰、guard削除表示、Git内部変更の理由順、直しの再gate禁止を確認した。
 3. 残る事項：task2.3の保存予算/保存失敗と長path回帰、task2.4以降、実CLI4件・done・CI・自動Codex・独立最終レビュー・親DoD。
 4. 次：既存recorderを変えず、全OSで長pathとsummary/stop保存失敗を確認する。
+
+
+## task2.3 の既存記録経路の再利用
+
+1. やったこと：通常表示の完全path、予約超過のstop形式、分類後summary/stop保存失敗、分類前output保存失敗の区別を回帰で固定した。recorder/logs/log-policyは変更していない。長pathは文字列を渡したstartRecordingの直接試験で全OS共通にし、新skipを加えていない。
+2. verify：新規記録5件と既存記録6件の11件、型、対象lintが成功。多数の実違反でsummary予約超過を発生させる新規1件は、このLinux観測で約20秒だった。Windows/macOSでの実行は未実施。
+3. 残る事項：task2.4以降、全OS CI、実CLI4件・done・自動Codex・独立最終レビュー・親DoD。
+4. 次：正常な結果の正例と、既存利用側・全Scenarioの対応をそろえる。
