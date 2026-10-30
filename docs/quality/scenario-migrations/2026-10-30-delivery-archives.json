@@ -1,0 +1,373 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario-review-path-migration",
+  "base": "9a3fe04a89da68e67334a5b535bd5f967428a2b6",
+  "ledgerBeforeSha256": "f4eff8cdecee197f8516139ff0ab902f0170eacfeec7fe091f6a18eca02e892e",
+  "ledgerAfterSha256": "a8adace405550a314e81cca39fb46613bad89f603ec563383e874022100b7d0c",
+  "newReviewsCreated": 0,
+  "scope": "IDs follow archived declarations into main specs; status, reasons, scenario hashes and test selectors/hashes preserved",
+  "entries": [
+    {
+      "oldId": "SCN-6faf65f6f11c2f18e4c5",
+      "newId": "SCN-a470663d48eb55390e75",
+      "oldFile": "openspec/changes/align-template-worklog/specs/agents-rules/spec.md",
+      "newFile": "openspec/specs/agents-rules/spec.md",
+      "requirement": "AGENTS.md の作業記録の決まり",
+      "scenario": "ブランチごとのファイルに記録する",
+      "scenarioSha256": "71777ba0dadfaf84e64667faee6a9008160ea799fd243b6daf26aeec91587ebe",
+      "auditStatusBeforeMigration": "reviewed",
+      "originalRecord": {
+        "id": "SCN-6faf65f6f11c2f18e4c5",
+        "status": "reviewed",
+        "scenarioSha256": "71777ba0dadfaf84e64667faee6a9008160ea799fd243b6daf26aeec91587ebe",
+        "reason": "配る packages/kit/templates/AGENTS.md の報告の形の節を読み、作業したブランチごとのファイル docs/worklog/<日本時間の日付>/<ブランチ名>.md に記録すること、ブランチ名の / を - に置き換えること、同じ日・同じブランチのファイルがあれば末尾に追記することが書いてあると assert する。あわせて、<作業した日> が節になく、docs/worklog/<作業した日>.md がファイル全体にないこと、このリポジトリの移行のための「2026-10-27 までの日付ごとのファイル」の文が節にないことを assert する。日付ごとのファイルに書く元の文に戻すと失敗する。",
+        "sources": [
+          "REQ-273"
+        ],
+        "tests": [
+          {
+            "file": "tests/kit-assets.test.ts",
+            "contains": "[REQ-273] 報告の形の節に、作業したブランチごとのファイルに記録し",
+            "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-40633e5892a3c2a2c98b",
+      "newId": "SCN-625576c9f4194ed54eff",
+      "oldFile": "openspec/changes/align-template-worklog/specs/agents-rules/spec.md",
+      "newFile": "openspec/specs/agents-rules/spec.md",
+      "requirement": "AGENTS.md の作業記録の決まり",
+      "scenario": "作業記録だけの PR を作らない",
+      "scenarioSha256": "92954538955d2ce39553b94c9cc2c022406f9affc0a90f63b8045f82487096ee",
+      "auditStatusBeforeMigration": "reviewed",
+      "originalRecord": {
+        "id": "SCN-40633e5892a3c2a2c98b",
+        "status": "reviewed",
+        "scenarioSha256": "92954538955d2ce39553b94c9cc2c022406f9affc0a90f63b8045f82487096ee",
+        "reason": "配る packages/kit/templates/AGENTS.md の報告の形の節を読み、作業記録はその作業の PR に含め、作業記録だけの PR は作らないという文と、PR のマージ後に記録を足すときは次の作業のブランチのファイルに書き、その PR に含めるという文があると assert する。どちらかの文を消すと失敗する。",
+        "sources": [
+          "REQ-273"
+        ],
+        "tests": [
+          {
+            "file": "tests/kit-assets.test.ts",
+            "contains": "[REQ-273] 報告の形の節に、作業記録は作業の PR に含め",
+            "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-9910abceb73dea003d89",
+      "newId": "SCN-136b85e237b8cd4090d3",
+      "oldFile": "openspec/changes/close-docs-only-gaps/specs/monorepo/spec.md",
+      "newFile": "openspec/specs/monorepo/spec.md",
+      "requirement": "文書として扱わないファイルの名前",
+      "scenario": "Windows で使えない文字を含む名前",
+      "scenarioSha256": "7186dcaa4ba609c7e6f12c68e94781d9574f3b3621c3f9dbd488ea551e6732d8",
+      "auditStatusBeforeMigration": "reviewed",
+      "originalRecord": {
+        "id": "SCN-9910abceb73dea003d89",
+        "status": "reviewed",
+        "scenarioSha256": "7186dcaa4ba609c7e6f12c68e94781d9574f3b3621c3f9dbd488ea551e6732d8",
+        "reason": "`docs/a:b.md`・改行を含む名前・`docs/a?.md` などの文字と制御文字で isDocumentPath が false になることと、一時的な git リポジトリで `docs/a:b.md` と改行を含む名前を索引に足した PR が docs_only=false になることを assert する。",
+        "sources": [
+          "REQ-281"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "Windows で使えない文字と制御文字を含む名前",
+            "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
+          },
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "Windows で扱えない名前（docs/a:b.md）",
+            "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
+          },
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "Windows で扱えない名前（改行を含む名前）",
+            "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-50ff9ffb3305191a4c6d",
+      "newId": "SCN-ac7f93631795cd2a03bd",
+      "oldFile": "openspec/changes/close-docs-only-gaps/specs/monorepo/spec.md",
+      "newFile": "openspec/specs/monorepo/spec.md",
+      "requirement": "文書として扱わないファイルの名前",
+      "scenario": "末尾のドットや空白と予約名",
+      "scenarioSha256": "388c9c9af52e041c317a33fa04fe05c865fe9fb96bd20c52517f5d9eea2a51a7",
+      "auditStatusBeforeMigration": "reviewed",
+      "originalRecord": {
+        "id": "SCN-50ff9ffb3305191a4c6d",
+        "status": "reviewed",
+        "scenarioSha256": "388c9c9af52e041c317a33fa04fe05c865fe9fb96bd20c52517f5d9eea2a51a7",
+        "reason": "`docs/notes./a.md`・`docs/notes /a.md`・`docs/aux.md`・`docs/Com1.md`・`docs/nul/a.md` が文書にならず、予約名に似ているだけの名前は文書のままであることと、一時的な git リポジトリで予約名と末尾が空白の部分を足した PR が docs_only=false になることを assert する。",
+        "sources": [
+          "REQ-281"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "末尾がドットか空白の部分と、Windows の予約名",
+            "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
+          },
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "Windows で扱えない名前（予約名）",
+            "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
+          },
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "Windows で扱えない名前（末尾が空白の部分）",
+            "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-e3839e03e19ca28deb0a",
+      "newId": "SCN-64330d4bc30664498c0e",
+      "oldFile": "openspec/changes/close-docs-only-gaps/specs/monorepo/spec.md",
+      "newFile": "openspec/specs/monorepo/spec.md",
+      "requirement": "文書として扱わないファイルの名前",
+      "scenario": "UTF-8 として正しくない名前",
+      "scenarioSha256": "a227e44116585b5eeaf5d77a00d0dc135371019ec322504067a75602d58a9cb1",
+      "auditStatusBeforeMigration": "reviewed",
+      "originalRecord": {
+        "id": "SCN-e3839e03e19ca28deb0a",
+        "status": "reviewed",
+        "scenarioSha256": "a227e44116585b5eeaf5d77a00d0dc135371019ec322504067a75602d58a9cb1",
+        "reason": "0xFF を UTF-8 として読んだ名前（U+FFFD）が文書にならないことと、一時的な git リポジトリで 0xFF を含む名前を索引に足した PR が docs_only=false になることを assert する。",
+        "sources": [
+          "REQ-281"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "UTF-8 として正しくないバイトを含む名前",
+            "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
+          },
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "Windows で扱えない名前（UTF-8 として正しくない名前）",
+            "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-1471ca8cdf15d7563734",
+      "newId": "SCN-ca7666fa8c5e76abc58d",
+      "oldFile": "openspec/changes/close-docs-only-gaps/specs/monorepo/spec.md",
+      "newFile": "openspec/specs/monorepo/spec.md",
+      "requirement": "文書として扱わないファイルの名前",
+      "scenario": "大文字と小文字だけが違う名前",
+      "scenarioSha256": "2dee3bef3c8bd714c08b976b7e49869ae8f6e1b6421de2c6ed1b656477a2f7b6",
+      "auditStatusBeforeMigration": "reviewed",
+      "originalRecord": {
+        "id": "SCN-1471ca8cdf15d7563734",
+        "status": "reviewed",
+        "scenarioSha256": "2dee3bef3c8bd714c08b976b7e49869ae8f6e1b6421de2c6ed1b656477a2f7b6",
+        "reason": "ツリーに `docs/notes.md` と `docs/Notes.md` があると理由にパスを含めて文書だけにならず、重ならなければ文書だけになり、ツリーを HEAD から読むことと、一時的な git リポジトリでベースの `docs/notes.md` に `docs/Notes.md` を足した PR が docs_only=false になることを assert する。",
+        "sources": [
+          "REQ-281"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "大文字と小文字の違いだけで同じになる別のパス",
+            "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
+          },
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "大文字と小文字だけが違う名前を足した PR",
+            "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-541567a67fde54190080",
+      "newId": "SCN-1cd8d00f6950eb547de3",
+      "oldFile": "openspec/changes/close-docs-only-gaps/specs/monorepo/spec.md",
+      "newFile": "openspec/specs/monorepo/spec.md",
+      "requirement": "文書として扱わないファイルの名前",
+      "scenario": "ツリーを読めない",
+      "scenarioSha256": "49e3c55af4f7d07cf056735e53eff51c1a0e0446914e2f385f1e43f528dd3065",
+      "auditStatusBeforeMigration": "reviewed",
+      "originalRecord": {
+        "id": "SCN-541567a67fde54190080",
+        "status": "reviewed",
+        "scenarioSha256": "49e3c55af4f7d07cf056735e53eff51c1a0e0446914e2f385f1e43f528dd3065",
+        "reason": "ls-tree が終了コード 128 のときと、NUL で終わらない出力のときに、文書だけにならず理由に失敗の内容を含むことを assert する。",
+        "sources": [
+          "REQ-281"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "PR の先頭のツリーのパスを読めないとき",
+            "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-0ce19040aeedc4f75b8b",
+      "newId": "SCN-ffbe00741219d4f517d5",
+      "oldFile": "openspec/changes/close-docs-only-gaps/specs/monorepo/spec.md",
+      "newFile": "openspec/specs/monorepo/spec.md",
+      "requirement": "文書として扱わないファイルの種類",
+      "scenario": "シンボリックリンク",
+      "scenarioSha256": "9c26cf7ceee2acf4a4a5e3c6576b408880a77d7d65359f81aa4372090b7c257a",
+      "auditStatusBeforeMigration": "reviewed",
+      "originalRecord": {
+        "id": "SCN-0ce19040aeedc4f75b8b",
+        "status": "reviewed",
+        "scenarioSha256": "9c26cf7ceee2acf4a4a5e3c6576b408880a77d7d65359f81aa4372090b7c257a",
+        "reason": "一時的な git リポジトリで `../packages/kit/src/a.ts` を指すシンボリックリンク `docs/link.md` を足した PR が docs_only=false になり、理由にパスを含むことと、偽の差分でモード 120000 の追加・型の変更・削除が文書だけにならないことを assert する。",
+        "sources": [
+          "REQ-282"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "通常のファイルでないもの（シンボリックリンク）",
+            "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
+          },
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "変更前か変更後が通常のファイルでないもの",
+            "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-be85f25e28812e6e42ee",
+      "newId": "SCN-b2d97d7ac7bd3b74ff85",
+      "oldFile": "openspec/changes/close-docs-only-gaps/specs/monorepo/spec.md",
+      "newFile": "openspec/specs/monorepo/spec.md",
+      "requirement": "文書として扱わないファイルの種類",
+      "scenario": "サブモジュール",
+      "scenarioSha256": "aa9c16bde2f204660c55dc0c5c65e395227c6cd3702369f3a24aea207883a016",
+      "auditStatusBeforeMigration": "reviewed",
+      "originalRecord": {
+        "id": "SCN-be85f25e28812e6e42ee",
+        "status": "reviewed",
+        "scenarioSha256": "aa9c16bde2f204660c55dc0c5c65e395227c6cd3702369f3a24aea207883a016",
+        "reason": "一時的な git リポジトリでサブモジュール（gitlink）`docs/sub.md` を足した PR が docs_only=false になることと、偽の差分でモード 160000 の追加が文書だけにならないことを assert する。",
+        "sources": [
+          "REQ-282"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "通常のファイルでないもの（サブモジュール）",
+            "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
+          },
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "変更前か変更後が通常のファイルでないもの",
+            "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-3153578af9e5cef8921c",
+      "newId": "SCN-e09d4455134f4e0b5b51",
+      "oldFile": "openspec/changes/close-docs-only-gaps/specs/monorepo/spec.md",
+      "newFile": "openspec/specs/monorepo/spec.md",
+      "requirement": "文書として扱わないファイルの種類",
+      "scenario": "モードだけの変更",
+      "scenarioSha256": "011098711e487bbf07bee0081ccc82ff38e83416b0048ec0c55aa0fc5de2376a",
+      "auditStatusBeforeMigration": "reviewed",
+      "originalRecord": {
+        "id": "SCN-3153578af9e5cef8921c",
+        "status": "reviewed",
+        "scenarioSha256": "011098711e487bbf07bee0081ccc82ff38e83416b0048ec0c55aa0fc5de2376a",
+        "reason": "一時的な git リポジトリで内容を変えずに `README.md` のモードを 100755 にした PR が docs_only=false になることと、偽の差分で 100644 と 100755 のあいだの変更が文書だけにならないことを assert する。",
+        "sources": [
+          "REQ-282"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "通常のファイルでないもの（モードだけの変更）",
+            "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
+          },
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "変更前か変更後が通常のファイルでないもの",
+            "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-019e0db676ab8e0feb18",
+      "newId": "SCN-fa54fd720c5442791978",
+      "oldFile": "openspec/changes/close-docs-only-gaps/specs/monorepo/spec.md",
+      "newFile": "openspec/specs/monorepo/spec.md",
+      "requirement": "文書として扱わないファイルの種類",
+      "scenario": "通常のファイルの文書",
+      "scenarioSha256": "a9f97ac58a1cd8dd00d1309e42e055ec136b61b53e287da9d29ec25e72d0977d",
+      "auditStatusBeforeMigration": "reviewed",
+      "originalRecord": {
+        "id": "SCN-019e0db676ab8e0feb18",
+        "status": "reviewed",
+        "scenarioSha256": "a9f97ac58a1cd8dd00d1309e42e055ec136b61b53e287da9d29ec25e72d0977d",
+        "reason": "一時的な git リポジトリで通常のファイルの `docs/notes.md` を足し、`README.md` を変え、`docs/old.md` を消した PR が docs_only=true になることと、偽の差分で足す・変える・消す・名前を変えるだけなら文書だけになることを assert する。",
+        "sources": [
+          "REQ-282"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "通常のファイルの文書を足し、変え、消した PR",
+            "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
+          },
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "変更前か変更後が通常のファイルでないもの",
+            "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-4c7b119b9dbc9914c8ee",
+      "newId": "SCN-b4aa7d284a164ad27829",
+      "oldFile": "openspec/changes/gate-base-remote-ref/specs/monorepo/spec.md",
+      "newFile": "openspec/specs/monorepo/spec.md",
+      "requirement": "完了ゲートが読む差分のベース",
+      "scenario": "同じ名前のタグやブランチがある",
+      "scenarioSha256": "6d4d679da998e108053142a87b6a9bf076c07fbafddf5c7e093c8ecb1f967d6f",
+      "auditStatusBeforeMigration": "invalid",
+      "originalRecord": {
+        "id": "SCN-4c7b119b9dbc9914c8ee",
+        "status": "reviewed",
+        "scenarioSha256": "6d4d679da998e108053142a87b6a9bf076c07fbafddf5c7e093c8ecb1f967d6f",
+        "reason": "一時的な git のリポジトリで、1 つ目のコミットで openspec/changes/c1/tasks.md を、2 つ目のコミットで packages/a.ts を変え、2 つのコミットのあいだをベースと同じ名前のタグ（refs/tags/origin/main）またはブランチ（refs/heads/origin/main）に指させる。そのうえで、ブランチ名 fix-x・本文の明示なしで実際の scripts/ci-gate.mjs を子プロセスで実行し、change を特定できないという案内を出さず、verify --change c1 --done だけを呼び、終了コード 0 で終わることを assert する。ベースの書き方を origin/main に戻すと、2 つの試験はどちらも失敗する。",
+        "sources": [
+          "REQ-272"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-gate-process.test.ts",
+            "contains": "[REQ-272] ベースと同じ名前の参照",
+            "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
+          }
+        ]
+      }
+    }
+  ]
+}
