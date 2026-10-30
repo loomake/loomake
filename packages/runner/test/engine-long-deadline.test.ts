@@ -8,11 +8,11 @@ import { CHANGE, makeRepo } from './helpers.js';
 vi.setConfig({ testTimeout: 60_000 });
 const MAX_TIMER_MS = 2_147_483_647;
 
-async function invoke() {
+async function invoke(timeoutMs = MAX_TIMER_MS + 60_000) {
   const repo = makeRepo();
   try {
     repo.plan([{ sleepMs: 300, output: '完了' }]);
-    return await runClaude({ cwd: repo.root, env: repo.env, prompt: '試験', commands: [], skipPermissions: false, timeoutMs: MAX_TIMER_MS + 60_000 });
+    return await runClaude({ cwd: repo.root, env: repo.env, prompt: '試験', commands: [], skipPermissions: false, timeoutMs });
   } finally { repo.cleanup(); }
 }
 
@@ -59,6 +59,36 @@ describe('エンジンのタイマーの上限', () => {
     expect(result.text).toBe('完了');
     expect(waits).toHaveLength(3);
     expect(waits.every((ms) => ms > 0 && ms <= MAX_TIMER_MS)).toBe(true);
+  });
+
+  it('[REQ-336] 上限より短い期限の前に発火したら、残り時間だけ待ち直す', async () => {
+    const timeoutMs = 5000;
+    const nativeTimeout = globalThis.setTimeout;
+    const nativeClearTimeout = globalThis.clearTimeout;
+    const waits: number[] = [];
+    const scheduled: NodeJS.Timeout[] = [];
+    const timer = vi.spyOn(globalThis, 'setTimeout').mockImplementation(((callback: (...args: unknown[]) => void, ms: number, ...args: unknown[]) => {
+      if (ms > 1000) {
+        waits.push(ms);
+        const handle = nativeTimeout(callback, waits.length === 1 ? 1 : ms, ...args);
+        scheduled.push(handle);
+        return handle;
+      }
+      return nativeTimeout(callback, ms, ...args);
+    }) as typeof setTimeout);
+    let result;
+    try { result = await invoke(timeoutMs); }
+    finally {
+      timer.mockRestore();
+      for (const handle of scheduled) nativeClearTimeout(handle);
+    }
+    expect(result.timedOut).toBe(false);
+    expect(result.exitCode).toBe(0);
+    expect(result.text).toBe('完了');
+    expect(waits).toHaveLength(2);
+    expect(waits[0]).toBe(timeoutMs);
+    expect(waits[1]).toBeGreaterThan(0);
+    expect(waits[1]).toBeLessThan(timeoutMs);
   });
 
   it('[REQ-336] run.timeoutMinutes がタイマーの上限を超えても、エンジンをすぐに時間切れにしない', async () => {

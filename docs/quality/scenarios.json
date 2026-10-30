@@ -7960,7 +7960,7 @@
         {
           "file": "packages/runner/test/engine-long-deadline.test.ts",
           "contains": "run.timeoutMinutes がタイマーの上限を超えても",
-          "sha256": "d43b1954a1270e9903b2f65dc0f34b6ef32aa9bdc9ba521ea6b2bee2ccd401fa"
+          "sha256": "190e48197d520c849bbf248629380c20bcb48753403098ec86d8ba11ec5b7e5a"
         }
       ]
     },
@@ -7968,7 +7968,7 @@
       "id": "SCN-7bf8b4c7e50629f0a4f0",
       "status": "reviewed",
       "scenarioSha256": "b22577f2dcc3508ed23a168894d6c263604a833ea2661c0e5c02deff2470b420",
-      "reason": "長い待機の最初の2回を早く発火させ、3回待ち直し、各待機が上限以下で、エンジンの結果を保ち、最後に有効なタイマーを解除することを確かめる。",
+      "reason": "長い待機の最初の2回を早く発火させ、3回待ち直し、各待機が上限以下で、エンジンの結果を保ち、最後に有効なタイマーを解除することを確かめる。上限より短い5000msでも最初の待機を早く発火させ、次の待機が0より大きく5000ms未満であることを検査する。残り時間を無視して上限固定で待ち直す変異で、この試験が失敗する。",
       "sources": [
         "REQ-336"
       ],
@@ -7976,7 +7976,12 @@
         {
           "file": "packages/runner/test/engine-long-deadline.test.ts",
           "contains": "分割した待機が期限前に発火しても",
-          "sha256": "d43b1954a1270e9903b2f65dc0f34b6ef32aa9bdc9ba521ea6b2bee2ccd401fa"
+          "sha256": "190e48197d520c849bbf248629380c20bcb48753403098ec86d8ba11ec5b7e5a"
+        },
+        {
+          "file": "packages/runner/test/engine-long-deadline.test.ts",
+          "contains": "[REQ-336] 上限より短い期限の前に発火したら、残り時間だけ待ち直す",
+          "sha256": "190e48197d520c849bbf248629380c20bcb48753403098ec86d8ba11ec5b7e5a"
         }
       ]
     },

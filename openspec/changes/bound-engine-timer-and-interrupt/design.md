@@ -135,7 +135,7 @@ throw error;
 | ID | 受入条件 | 試験（修正前 → 修正後） |
 |---|---|---|
 | AC-1 | タイマー上限超えでも時間内の結果を保つ | `runClaude` に2147483647ms＋60000msを渡し300msで終わる偽エンジンを呼ぶ。timedOut:false・終了コード0・出力「完了」と、TimeoutOverflowWarningなしを確認する。タイマー修正前は失敗する |
-| AC-2 | 分割待機の早い発火と、最後に有効な待機の解除 | 最初の2回の長い待機を早く発火させ、3回待ち直すこと、各待機が上限以下で結果を保つことを確認する。返った時点で最後のhandleがclearTimeoutへ渡されたことも検査する。最初のhandleだけを解除する変異が失敗することを確認する |
+| AC-2 | 分割待機の早い発火と、最後に有効な待機の解除 | 最初の2回の長い待機を早く発火させ、3回待ち直すこと、各待機が上限以下で結果を保つことを確認する。返った時点で最後のhandleがclearTimeoutへ渡されたことも検査する。最初のhandleだけを解除する変異が失敗することを確認する。上限より短い5000msの期限でも最初だけ早く発火させ、次の待機が0より大きく5000ms未満になることを検査し、残り時間を無視して上限で待ち直す変異が失敗することを確認する |
 | AC-3 | timeoutMinutes 40000のrun | 偽エンジンが500msで実装を書き、通常runがcompleted・終了コード0となり、タスクのコミットが残り、実行時間の上限の表示がないことを確認する。タイマー修正前は失敗する |
 | AC-4 | タスクのコミットの git のあいだに、監視役が **SIGINT・SIGTERM** を受けたら interrupted | `it.each(['SIGINT','SIGTERM'])` `[REQ-337] タスクのコミットのgitのあいだに監視役が%sを受けたら、interruptedにする`。pre-commit から送る。状態は `interrupted`、`doneTasks: []`、`remainingTasks[0]` は 1.1、エンジンの呼び出しは 1 回、PR は 0 件、終了コード 1。修正前は stopped で失敗する |
 | AC-5 | 証拠の push のあいだの中断 | pre-push から SIGINT を送る。状態は `interrupted`、reason に「証拠のコミットを保っています」、HEAD は `evidence(c1):`、`ls-remote` は空、PR は 0 件、終了コード 1。修正前は失敗する |
@@ -144,7 +144,7 @@ throw error;
 | AC-8 | **品質コマンドの監視役が強制終了されたあとの git**（経路 A） | `commands: { lint: 'node <script> SIGKILL', test: 'node write-report.mjs' }`。状態は `stopped`、reason に「監視役が結果を書かずに終了しました」、エンジンの呼び出しは 1 回（直しなし）、push・PR はなし、終了コード 1。保存した verify の JSON の test の detail に `中断されたので止めました（監視役が結果を書かずに`。**修正前は `:122` で interrupted になり失敗する** |
 | AC-9 | 同じく、最後の品質コマンドの場合（経路 B） | `commands: { test: 'node <script> SIGKILL' }`。AC-8 と同じ期待値。修正前は status が stopped のままだが、reason が失われるため失敗する。runner の写し方だけを入れると status も interrupted になり、kit を直すと成功する |
 | AC-10 | 既存の試験が変わらず通る | `engine-safety`・`engine-normal-exit`、`run.test` の REQ-105・REQ-124・REQ-137・REQ-182、`signal-during-sync` の REQ-208 の 3 件、`external-budget` の REQ-183・REQ-250、kit の `process.test`・`orphans.test`・`process-long-deadline.test` |
-| AC-11 | kit：後続の拒否は最初の reason を引き継ぎ、利用者の中断では reason を持たない | (1) 既存の `[REQ-181][REQ-250]`（`process.test.ts:105`）の 124 行の後続の呼び出しに、`kind:'interrupted'` と `reason` が「監視役が結果を書かずに終了しました」を含むことを**足す**（既存の期待値は残す）。修正前は失敗する。(2) 新規 `[REQ-250][REQ-337] 利用者の中断のあとの後続の拒否はreasonを持たない`（POSIX）。同じ予算で監視役に SIGINT を送ったあと、次の呼び出しが `reason === undefined` であること。修正の前後とも成功する |
+| AC-11 | kit：後続の拒否は最初の reason を引き継ぎ、利用者の中断では reason を持たない | (1) `process.test.ts` の「監視役が結果を書かずに終わったら、子孫を止め」で始まる `[REQ-181][REQ-250][REQ-337]` の試験の後続呼び出しに、`kind:'interrupted'` と `reason` が「監視役が結果を書かずに終了しました」を含むことを**足す**（既存の期待値は残す）。修正前は失敗する。(2) 新規 `[REQ-250][REQ-337] 利用者の中断のあとの後続の拒否はreasonを持たない`（POSIX）。同じ予算で監視役に SIGINT を送ったあと、次の呼び出しが `reason === undefined` であること。修正の前後とも成功する |
 
 修正前に失敗する試験は、入れたコミットで実装前に実行し、結果を PR に記録します。
 

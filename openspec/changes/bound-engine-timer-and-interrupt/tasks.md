@@ -27,3 +27,5 @@
 
 - [x] 5.1 `pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` を通す
 - [x] 5.2 `pnpm -s verify --change bound-engine-timer-and-interrupt --done` を通す <!-- loomake:gate=done -->
+
+- [x] 5.3 Opus 最終レビューの N1〜N3 を直す。短い期限の待ち直し試験で上限固定の変異が失敗し、復元後に成功することを確かめる。受入済み SIGHUP の説明と安定した試験名参照へ追従し、Scenario・仕様ゲート・完了ゲートを確かめて新しい head を独立レビューへ渡す（REQ-336・REQ-337）
