@@ -46,3 +46,10 @@
 2. verify の結果：changeset status、lint、typecheck は exit 0。pnpm test --maxWorkers=2 は 104 ファイル・1446 件成功、既存 Windows 限定 8 件は対象外。新たな skip や期待値の緩和はない。
 3. 残っている確認事項・仮定：変更なし。
 4. 次にやること：5.2 の完了ゲートを実行し、管理役へ最終レビュー用の差分を渡す。
+
+## 完了ゲート（タスク 5.2）
+
+1. やったこと：change bound-engine-timer-and-interrupt の全 13 タスクを終えた（PR #159）。実装と Red/Green の引き継ぎを管理役へ用意した。
+2. verify の結果：VITEST_MAX_WORKERS=2 pnpm -s verify --change bound-engine-timer-and-interrupt --done は exit 0。REQ-336 の 3 件、REQ-337 の 10 件に成功したテストがある。tasks.md は全件チェック済み。yomiyasu の lint・diff・資料との照合・最終稿の照合を実行した。
+3. 残っている確認事項・仮定：A-01〜07 は未承認の警告のまま。Scenario 監査全体の既存台帳不備は残るが、今回と関連既存の計 13 件は reviewed。新たな仕様判断・テストの弱化・設定の緩和はない。
+4. 次にやること：管理役の指示で PR #157 後の main を取り込み、統合検証後に別セッションの Opus 最終レビューを受ける。現時点はマージしていない。
