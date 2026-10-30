@@ -5,7 +5,7 @@ import { GitError, git } from './git.js';
 import { maskSecrets } from './mask.js';
 import { acquireRunLock, RunBusyError } from './lock.js';
 import { baseKey, loadRunConfig, prepare } from './run/prepare.js';
-import { recordAndOpenPr, runEngineTasks, runGate } from './run/phases.js';
+import { interruptedOperation, recordAndOpenPr, runEngineTasks, runGate } from './run/phases.js';
 import { startRecording } from './run/recorder.js';
 import { taskLabel } from './run/tasks.js';
 import type { RunContext, RunOptions } from './run/types.js';
@@ -72,6 +72,6 @@ async function runLocked(options: RunOptions): Promise<number> {
     if (!(e instanceof GitError) && !(e instanceof UsageError) && !(e instanceof RuntimeFailure)) throw e;
     const { engineTasks, gateTasks } = ctx;
     const remaining = [...engineTasks, ...gateTasks].filter((t) => !rec.done.includes(taskLabel(t)));
-    return rec.finish('stopped', e.message, remaining);
+    return rec.finish(interruptedOperation(e) ? 'interrupted' : 'stopped', e.message, remaining);
   }
 }
