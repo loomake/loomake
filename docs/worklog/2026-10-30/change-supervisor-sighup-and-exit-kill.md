@@ -19,3 +19,10 @@
 2. verifyの結果：spec-only exit0。製品コードは未変更。
 3. 残っている確認事項・仮定：未回答なし。Opus設計6fe32a2bを再利用し、設計評価1回・残り最終評価1回を維持する。
 4. 次にやること：既存再現をこのworktreeのビルドで取り直し、タスク1.1の4件の回帰試験をRed/Greenで確認する。
+
+## 修正前後の再現
+
+1. やったこと：タスク1.1・1.2をコミットし、1.3の元の再現をこのworktreeのHEADビルドで取り直した。古いroot distはUsageErrorと孤児を示したが、修正前HEADではREQ250の親が子を止め、監視役異常終了の理由つきProcessLimitErrorを返した。修正後は理由のない中断で返し、子も停止した。
+2. verifyの結果：REQ333の新規4件は全件Red→Green。関連103試験成功・既存8skip。REQ334は旧コードでEPIPE・先頭exit後例外がRed、!exited案でも猶予中の孫残存がRed、!killed案で19試験成功。
+3. 残っている確認事項・仮定：A03のLinux実プロセス検証は成功。macOSを含む全OS CIと独立Opus最終レビューは未実施。
+4. 次にやること：復旧文書とScenario対応・changesetを記録し、完了ゲートと全OS CIを実行する。
