@@ -20,7 +20,7 @@
 
 ## 4. 文書と記録
 
-- [ ] 4.1 `docs/guide/1.getting-started/2.usage.md` と `docs/guide/2.guides/3.run-recovery.md` に、合図と止まったときの対処を書く。yomiyasu で推敲する（確認：リンクと記述を読み直す）
+- [x] 4.1 `docs/guide/1.getting-started/2.usage.md` と `docs/guide/2.guides/3.run-recovery.md` に、合図と止まったときの対処を書く。yomiyasu で推敲する（確認：リンクと記述を読み直す）
 - [ ] 4.2 `docs/quality/scenarios.json` に、この change の Scenario のレビューを足し、台本を変えた試験を根拠にする既存のレビューのハッシュを更新する（確認：`node scripts/scenario-audit.mjs` で、この change の Scenario が reviewed になる）
 - [ ] 4.3 `@loomake/runner` と `loomake` の changeset を足す（確認：`pnpm changeset status`）
 
