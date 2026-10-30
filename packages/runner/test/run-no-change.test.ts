@@ -160,4 +160,30 @@ describe('変更を残さないエンジン', () => {
     expect(summary(repo).status).toBe('stopped');
     expect(readdirSync(join(repo.root, '.loomake/runs', readdirSync(join(repo.root, '.loomake/runs')).find((name) => name !== '.gitignore')!)).filter((name) => name.includes('-verify'))).toHaveLength(1);
   }));
+  it.each([
+    ['ASCII空白1個', ' ', ' ', ''],
+    ['ASCII空白3個', '   ', '   ', ''],
+    ['NBSP後のASCII空白', '\u00a0 ', '\u00a0 ', ''],
+    ['NBSP', '\u00a0', '\u00a0', ''],
+    ['全角空白', '\u3000', '\u3000', ''],
+    ['en-space', '\u2002', '\u2002', ''],
+    ['可視化したタブ', '\t', '\\u0009', ''],
+    ['ASCII空白3個と補足行', '   ', '   ', '\n補足の行'],
+  ])('[REQ-330][REQ-339] 理由の末尾の%sを標準出力とコミット本文で同じに保つ', (_name, raw, shown, ending) => withRepo(async (repo) => {
+    repo.plan([impl, { output: `LOOMAKE-NOCHANGE: 確認済み${raw}${ending}` }]);
+    const r = await run(repo);
+    expect(r.code).toBe(0);
+    const prefix = '変更不要としてタスクを完了にします：';
+    const line = r.stdout.split(/\r?\n/).find((value) => value.startsWith(prefix));
+    expect(line).toBe(`${prefix}確認済み${shown}`);
+    const rev = repo.git('log', '--format=%H', '--grep', '^run(c1): 1.2', 'loomake/c1');
+    // repo.gitのtrimで理由の末尾を落とさないよう、本文の後ろにNULを置く。
+    const output = repo.git('show', '-s', '--format=%B%x00', rev);
+    const boundary = output.indexOf('\0');
+    expect(boundary).toBeGreaterThan(-1);
+    const body = output.slice(0, boundary).split(/\r?\n/).find((value) => value.startsWith('変更不要：'));
+    expect(body).toBe(`変更不要：確認済み${shown}`);
+    expect(body!.slice('変更不要：'.length)).toBe(line!.slice(prefix.length));
+  }));
+
 });
