@@ -26,3 +26,10 @@
 2. verifyの結果：REQ333の新規4件は全件Red→Green。関連103試験成功・既存8skip。REQ334は旧コードでEPIPE・先頭exit後例外がRed、!exited案でも猶予中の孫残存がRed、!killed案で19試験成功。
 3. 残っている確認事項・仮定：A03のLinux実プロセス検証は成功。macOSを含む全OS CIと独立Opus最終レビューは未実施。
 4. 次にやること：復旧文書とScenario対応・changesetを記録し、完了ゲートと全OS CIを実行する。
+
+## 文書と完了ゲートの準備
+
+1. やったこと：タスク2.1でグループ全体の信号とCLIだけへの信号を復旧文書で区別し、yomiyasuで検査した。タスク2.2のkit patch changesetと6 Scenarioレビューを追加。変更した試験の既存assertionと51選択条件を確認して既存レビューのハッシュを更新した。helper修正を含むmainを統合した。
+2. verifyの結果：文書リンク42件成功。spec-only成功。初回doneはlint・型・要件対応が成功し、未追跡のchangesetをchangeset statusが検出しないためREQ056の1件だけ失敗した。changesetをコミット後に再実行し、最終結果とScenario監査はPRへ記録する。
+3. 残っている確認事項・仮定：未回答なし。独立Opus最終評価1枠、全OS CI、自動Codexレビューの最終head確認は残る。
+4. 次にやること：完了ゲートとScenario監査を通し、最終headをpushして独立Opus・自動Codex・全OS CIを確認する。実装担当はCodex、実行ツールはCodexのツール環境、版と実際のモデル識別子は不明。
