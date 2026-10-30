@@ -140,7 +140,7 @@ throw error;
 | AC-6 | **gh の PR の検索・作成**のあいだの中断 | `it.each([['list','SIGINT'],['create','SIGTERM']])` `[REQ-337] PRの%sのあいだに監視役が%sを受けたら、証拠とpushを保ちinterruptedにする`。偽の gh の入口から送る。状態は `interrupted`、HEAD は `evidence(c1):`、`ls-remote` にブランチがある、PR は 0 件（作成の記録がない）、終了コード 1。修正前は失敗する |
 | AC-7 | タスクのコミット中の監視役の強制終了は stopped | pre-commit から SIGKILL を送る。状態は `stopped`、reason に「監視役が結果を書かずに終了しました」。修正の前後とも成功する（写し方を広げすぎていないかの見張り） |
 | AC-8 | **品質コマンドの監視役が強制終了されたあとの git**（経路 A） | `commands: { lint: 'node <script> SIGKILL', test: 'node write-report.mjs' }`。状態は `stopped`、reason に「監視役が結果を書かずに終了しました」、エンジンの呼び出しは 1 回（直しなし）、push・PR はなし、終了コード 1。保存した verify の JSON の test の detail に `中断されたので止めました（監視役が結果を書かずに`。**修正前は `:122` で interrupted になり失敗する** |
-| AC-9 | 同じく、最後の品質コマンドの場合（経路 B） | `commands: { test: 'node <script> SIGKILL' }`。AC-8 と同じ期待値。修正前は成功し、**runner の写し方だけを入れた時点で失敗し**、kit を直すと成功する |
+| AC-9 | 同じく、最後の品質コマンドの場合（経路 B） | `commands: { test: 'node <script> SIGKILL' }`。AC-8 と同じ期待値。修正前は status が stopped のままだが、reason が失われるため失敗する。runner の写し方だけを入れると status も interrupted になり、kit を直すと成功する |
 | AC-10 | 既存の試験が変わらず通る | `engine-safety`・`engine-normal-exit`、`run.test` の REQ-105・REQ-124・REQ-137・REQ-182、`signal-during-sync` の REQ-208 の 3 件、`external-budget` の REQ-183・REQ-250、kit の `process.test`・`orphans.test`・`process-long-deadline.test` |
 | AC-11 | kit：後続の拒否は最初の reason を引き継ぎ、利用者の中断では reason を持たない | (1) 既存の `[REQ-181][REQ-250]`（`process.test.ts:105`）の 124 行の後続の呼び出しに、`kind:'interrupted'` と `reason` が「監視役が結果を書かずに終了しました」を含むことを**足す**（既存の期待値は残す）。修正前は失敗する。(2) 新規 `[REQ-250][REQ-337] 利用者の中断のあとの後続の拒否はreasonを持たない`（POSIX）。同じ予算で監視役に SIGINT を送ったあと、次の呼び出しが `reason === undefined` であること。修正の前後とも成功する |
 
@@ -165,3 +165,5 @@ runClaude に timeoutMs: 2_147_483_648 を渡し、300ms で終わる偽の clau
 - 修正版設計：session fdfe3430-6d70-445a-8c6b-404fbc53ac62、対象 12286031518849a04248dbfdbd91d9582a514a9f。本体 claude-opus-5-5、補助なし、Read/Glob/Grep のみ、MCP なし、権限拒否 0、ok:true（実施済み）。管理役から .loomake/handoff/redesign.md と redesign-summary.json で引き継いだ。
 - Codex 実装：実行ツール Codex、実際のモデル識別子は取得できず不明。
 - Opus 評価は既存設計レビュー 1 回。追加評価は起動せず、管理役が残り 1 回を別セッションの最終レビューに使う。設計作成自体は評価回数に含めない。
+
+補助モデルの選択肢 A は利用者の今回の明示依頼を出典とする。[PR #160](https://github.com/loomake/loomake/pull/160) に承認記録の要約があるが、人の承認投稿そのものの URL は不明である。Q-01〜06 の元の回答を維持し、存在しない承認元 URL は補わない。Q-06 の追跡先は [Issue #161](https://github.com/loomake/loomake/issues/161) とする。

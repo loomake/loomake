@@ -37,6 +37,6 @@ archive する PR では、この change の Scenario のレビュー（`docs/qu
 
 ## Issue に回す
 
-設計で見つかったが、この change では扱わないもの。管理役が追跡する。
+設計で見つかったが、この change では扱わないもの。[Issue #161](https://github.com/loomake/loomake/issues/161) で追跡する。
 
 - `timeoutMinutes × 60000` が Infinity になる値（約 1.8e303 分超）を設定したときの文言。いまも `UsageError`（終了コード 2）で止まり、丸めの不具合とは別である（Q-06）。
