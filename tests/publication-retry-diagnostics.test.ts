@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join, relative } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { runExternal, withProcessBudget } from '../packages/kit/src/runtime/process.js';
@@ -27,6 +27,27 @@ describe('publication retryの任意診断', () => {
     attachProcessDiagnostics(base, env);
     expect(readdirSync(base)).toEqual([]);
     expect(env).toEqual({ NODE_OPTIONS: '--no-warnings' });
+  });
+
+  it('相対診断dirはworkerのcwdで解決し、子のcwdへ記録を混ぜない', () => {
+    const { base } = fixture();
+    const directory = join(process.cwd(), '.loomake', 'relative-' + basename(base));
+    bases.push(directory);
+    vi.stubEnv('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR', relative(process.cwd(), directory));
+    const phase = createCaseDiagnostics('sha');
+    phase.bind(base); phase.event('case-start'); phase.event('case-end', { completed: true });
+    const env = { ...process.env };
+    attachProcessDiagnostics(base, env);
+    const script = join(base, 'gh');
+    writeFileSync(script, "process.stdout.write('unchanged'); process.exitCode = 7;");
+    const result = spawnSync(process.execPath, [script, 'pr', 'list'], { cwd: base, env, encoding: 'utf8' });
+    expect(result.status, result.stderr).toBe(7);
+    expect(result.stdout).toBe('unchanged');
+    const files = readdirSync(directory);
+    expect(files.filter((file) => file.endsWith('.phases.jsonl'))).toHaveLength(1);
+    expect(files.filter((file) => file.endsWith('.processes.jsonl'))).toHaveLength(1);
+    expect(rows(join(directory, files.find((file) => file.endsWith('.processes.jsonl'))!)).map((row) => row.event)).toEqual(['fake-cli-entry', 'fake-cli-exit']);
+    expect(readdirSync(base).sort()).toEqual(['gh', 'process-diagnostics.cjs']);
   });
 
   it('case-start前のIDで交錯するcallbackを分け、固定欄だけを残す', () => {

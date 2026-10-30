@@ -13,8 +13,9 @@ describe('publication retryの独立Windowsサンプル', () => {
     expect(workflow).toMatch(/on:\n {2}pull_request:\n {4}paths:/);
     expect(workflow).toContain('  workflow_dispatch:');
     const expectedPaths = ['.github/workflows/profile-publication-retry.yml', 'packages/runner/test/publication-retry.test.ts',
-      'packages/runner/test/process-diagnostics.ts', 'packages/runner/test/helpers.ts', 'packages/kit/supervisor/supervisor.cjs',
-      'packages/kit/src/runtime/process.ts', 'vitest.config.ts', 'tests/publication-retry-diagnostics*.test.ts', 'docs/dev/test-phase-profiling.md'];
+      'packages/runner/test/process-diagnostics.ts', 'packages/runner/test/helpers.ts', 'packages/kit/supervisor/**',
+      'packages/kit/src/runtime/**', 'packages/kit/test/project.ts', 'packages/runner/src/**', 'vitest.config.ts',
+      'tests/publication-retry-diagnostics*.test.ts', 'docs/dev/test-phase-profiling.md'];
     const paths = [...workflow.matchAll(/^ {6}- '([^']+)'$/gm)].map((match) => match[1]);
     expect(paths.sort()).toEqual([...expectedPaths].sort());
     const docs = readFileSync(join(root, 'docs/dev/test-phase-profiling.md'), 'utf8').replace(/\r\n/g, '\n');

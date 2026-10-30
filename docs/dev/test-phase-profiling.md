@@ -37,7 +37,7 @@ Actionsの各実行から `ci-phases-<run>-<attempt>-<sample>` artifactを開い
 
 `profile-publication-retry` は、元と同じコマンド `pnpm test --shard=1/2` を Windows・Node 24.22.1・pnpm 12.10.1 の独立した3ジョブで実行します。試験ファイルの増減でshardの割当は変わるため、元と同じファイル構成や負荷は保証しません。サンプル1〜3は失敗の再試行ではなく、成否をそれぞれ保存する別の実行です。`fail-fast: false` とし、既存の assertion・ケース・60秒制限・skip・retry・通常の `ci.yml` は変更しません。導入は `--frozen-lockfile --ignore-scripts` で行います。
 
-workflow自身、publication-retry試験、共通fixtureと診断のhelper、監視役とその引数を作るruntime、shard構成の設定、診断用試験、本文が変わったPRで起動し、手動でも起動できます。診断ステップには `LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR` を渡します。未指定なら、この診断のファイルとpreloadは作りません。既存の `LOOMAKE_TEST_PHASE_PROFILE_DIR` による集計とは別の記録です。
+workflow自身、publication-retry試験、共通fixtureと診断のhelper、監視役・Windowsの保持役・runtime、runnerの実装、shard構成の設定、診断用試験、本文が変わったPRで起動し、手動でも起動できます。診断ステップには `LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR` を渡します。指定値はテストworkerのcwdを基準に絶対パスへ解決し、子プロセスにも同じ保存先を渡します。未指定なら、この診断のファイルとpreloadは作りません。既存の `LOOMAKE_TEST_PHASE_PROFILE_DIR` による集計とは別の記録です。
 
 自動起動の対象は次のパスです。
 
@@ -45,8 +45,10 @@ workflow自身、publication-retry試験、共通fixtureと診断のhelper、監
 - `packages/runner/test/publication-retry.test.ts`
 - `packages/runner/test/process-diagnostics.ts`
 - `packages/runner/test/helpers.ts`
-- `packages/kit/supervisor/supervisor.cjs`
-- `packages/kit/src/runtime/process.ts`
+- `packages/kit/supervisor/**`
+- `packages/kit/src/runtime/**`
+- `packages/kit/test/project.ts`
+- `packages/runner/src/**`
 - `vitest.config.ts`
 - `tests/publication-retry-diagnostics*.test.ts`
 - `docs/dev/test-phase-profiling.md`
@@ -71,6 +73,36 @@ artifactは `publication-retry-<run>-<attempt>-<sample>` という名前で、�
 2. phaseのcase IDと安全なrepo basenameを確認し、同じrepoのprocessをsessionごとに対応させます。entryだけ、exitだけ、truncated、不正時刻は計測不足として残します。別sessionやPID再利用を理由に記録を補いません。
 3. phaseの段階時間、supervisorと偽CLIの区間、他repoとの重なりを確認します。他repoのbasenameはテストファイル名を表さず、新artifactにtest-reportはないため、D0のファイル開始/終了時刻による推定を同じ形で再計算できません。別runのreportで代用しません。
 
+期待する25ラベルと、`publication-retry.test.ts` のケースの対応は次のとおりです。`it.each` の行は、その引数で識別します。各ラベルを1件ずつ確認し、代替値の `publication-retry`・`lookup-invalid` が出た場合や、重複・不足がある場合は計測不足とします。
+
+| ラベル | Vitestのケース名またはit.eachの引数 |
+|---|---|
+| `create-before` | 作成の%sで失敗した後も同じ証拠とコミットを使う：`before` |
+| `create-after` | 同上：`after` |
+| `push-retry` | push失敗後に同じ証拠を再利用して送信する |
+| `repeat` | 完了後も再実行で証拠・コミット・PRを増やさない |
+| `new-source` | 証拠の後に実装を変えたら新しい対象SHAの証拠を作る |
+| `json` | %sの証拠は消さず増やさず停止する：`json` |
+| `sha` | 同上：`sha` |
+| `change` | 同上：`change` |
+| `failed` | 同上：`failed` |
+| `fail-result` | 同上：`fail-result` |
+| `hash` | 同上：`hash` |
+| `snapshot` | 同上：`snapshot` |
+| `legacy` | 同上：`legacy` |
+| `lookup-fail` | 検索結果 %s で停止して証拠を残す：`fail` |
+| `lookup-broken-json` | 同上：`broken` |
+| `lookup-object` | 同上：`{}` |
+| `lookup-bad-url` | 同上：URLがjavascriptスキームの1件配列 |
+| `lookup-credentials` | 同上：URLに認証情報がある1件配列 |
+| `lookup-wrong-head` | 同上：headRefNameがotherの1件配列 |
+| `lookup-cross-repo` | 同上：isCrossRepositoryがtrueの1件配列 |
+| `lookup-multiple` | 同上：同じrowが2件の配列 |
+| `verify-fail` | 今回の検証に不合格なら過去の証拠を代用しない |
+| `verify-head` | 検証が%sを変えたら取り消さず外部操作を止める：`HEAD` |
+| `verify-branch` | 同上：`ブランチ` |
+| `verify-dirty` | 検証が作業ファイルを変えたら、その変更を残して停止する |
+
 操作分類は固定集合です。Windowsの外側の引用符を判定時だけ外し、gh-pr-listとgh-pr-createを分けます。生の値は保存しません。集合にない操作はotherや大分類に残り、claudeの版確認などの詳細を分類だけでは区別できない場合があります。順序からの推定も確定とは扱いません。
 
 監視役のentry/exitでは、実runExternalが渡すdeadlineとhrtimeの差を有限数値のremainingMsとして残します。無い値・非数値・非有限値は保存せず、期限を過ぎた負値はそのまま記録します。偽CLIの行にはこの欄はありません。操作分類と残り時間は1操作と共有予算を区別する手がかりですが、起動待ち・保持役・停止処理の内訳や停止原因を単独で断定しません。
@@ -82,5 +114,7 @@ publication-retryのfixtureでは、repo.envを渡さないrunVerify・品質コ
 run区間から、同じrepoの完全なentry/exitがそろった監視役と偽CLIの区間の和集合を引いた残りを「未分類時間」とします。直接起動されるengineの偽CLIも含め、各区間をrunの開始・終了内へ切り詰めてから集計します。同じrepoの監視役と重なる偽CLIは集計上の入れ子として扱い、重なる部分を二重に加算しません。
 
 未分類時間には、publication fixtureの未観測verify・品質・trace、仕様ゲートのプロセス内処理、観測済み操作の監視役がentryを記録する前やexit後に親へ戻るまでの時間、JSの処理、待ち、記録負荷も含まれます。品質処理の時間やCPU時間と決めません。entry/exit欠落・truncated・I/O切断などで必要な区間が不明なら、完全な和集合や未分類時間は確定できません。観測できた区間だけを残し、欠測を0秒として引き算を完成させません。記録がないことを外部操作がない証拠にしません。
+
+Windowsでは、各テストプロセスの最初の外部操作の前に、保持役の準備を最大10秒待ちます。この待ちはpreloadの記録とremainingMsには現れず、操作の期限と共有予算からは除かれますが、Vitestの制限時間には含まれます。また、監視役が結果を書かずに終わったあとの子孫停止確認は、監視役のexit後に親で最大10秒かかります。この後片付けも期限を延ばさず共有予算から除かれないまま、未分類時間へ入ります。最初のrunと後続のrunを同じ条件として比較せず、これらの待ちを品質処理や未観測verifyの時間と断定しません。
 
 旧headの計測も失敗を含めて保存するため、この診断workflowには新pushで旧実行を取り消すconcurrencyを設定しません。新旧が並行する負荷の違いも残し、headとrunを混ぜず判定します。実測の数値、未解決の[Issue178](https://github.com/loomake/loomake/issues/178)・[Issue181](https://github.com/loomake/loomake/issues/181)・[Issue183](https://github.com/loomake/loomake/issues/183)と対応は[PR179](https://github.com/loomake/loomake/pull/179)へ記録し、診断だけで修理完了や全検査成功とはしません。

@@ -1,5 +1,5 @@
 import { appendFileSync, existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs';
-import { basename, join } from 'node:path';
+import { basename, join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
 const LIMIT = 64 * 1024;
@@ -24,7 +24,8 @@ function appendBounded(file: string, row: object) {
 /** case開始時に閉包を作る。並行して残ったcallbackも別caseへ混ざらない。 */
 export function createCaseDiagnostics(kind = 'publication-retry') {
   const label = CASE_LABELS.has(kind) ? kind : 'publication-retry';
-  const directory = process.env.LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR;
+  const configured = process.env.LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR;
+  const directory = configured ? resolve(configured) : undefined;
   const id = `publication-retry-${process.pid}-${randomUUID()}`;
   let repo: string | undefined;
   let terminal = false;
@@ -48,7 +49,8 @@ export function createCaseDiagnostics(kind = 'publication-retry') {
 
 /** 任意のローカル診断。生の引数・出力・環境値は記録しない。 */
 export function attachProcessDiagnostics(base: string, env: NodeJS.ProcessEnv) {
-  const directory = process.env.LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR;
+  const configured = process.env.LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR;
+  const directory = configured ? resolve(configured) : undefined;
   if (!directory) return;
   try {
     const repo = basename(base);
