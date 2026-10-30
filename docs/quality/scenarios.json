@@ -4041,15 +4041,15 @@
     {
       "id": "SCN-f9315c7fbdb72df9b4ae",
       "status": "reviewed",
-      "scenarioSha256": "ae80b1c6cb5f9f6dfb125eab6a0bd81406bb5f36b1629df727071aac9f8b3d53",
+      "scenarioSha256": "3625842a21dfafe250092a030dd128a66d8da8be9f92b7f8c64ab32cf0bdb81f",
+      "reason": "実Gitのタスク1.1のコミットを取り出し、コミット名・impl.txtとtasks.mdの同梱・そのコミット内の1.1完了をassertする。",
       "sources": [
         "REQ-099"
       ],
-      "reason": "実Gitのタスク1.1のコミットを取り出し、コミット名・impl.txtとtasks.mdの同梱・そのコミット内の1.1完了をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "タスクを終えるたびに、変更と完了にした tasks.md を",
+          "contains": "[REQ-099] タスクを終えるたびに",
           "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
@@ -4057,15 +4057,15 @@
     {
       "id": "SCN-134eab2689aeae75762b",
       "status": "reviewed",
-      "scenarioSha256": "681dd9532f08c0fb0b8c8cb0659ef2ca8facf00112ed1f7fac8e14a367999894",
+      "scenarioSha256": "7374cd235b3193482152a19ccb4c0f971096752cc86426d2a28cbdc326a032a3",
+      "reason": "エンジンが変更後にexit1となり、run終了コード1・失敗理由・タスク未完了・履歴がinitだけ・summary stoppedをassertする。",
       "sources": [
         "REQ-099"
       ],
-      "reason": "エンジンが変更後にexit1となり、run終了コード1・失敗理由・タスク未完了・履歴がinitだけ・summary stoppedをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "エンジンが 0 以外の終了コードで終わったら",
+          "contains": "[REQ-099] エンジンが 0 以外",
           "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
@@ -4073,15 +4073,15 @@
     {
       "id": "SCN-26243f1a65c5a0117c34",
       "status": "reviewed",
-      "scenarioSha256": "9f7d467fffcc29425b65c77304dcb8e1b9a4cf30ae676f7bd7b45237503776ef",
+      "scenarioSha256": "cb3b240b3999f83274dcaa8390434abdf938a27808246c967cb66ecfe2d4bf6c",
+      "reason": "2通常タスク後に不合格を起こし修正でimplを作る台本で、終了コード0・修正指示の不合格理由・修正とゲートのコミット順・ゲートタスク完了をassertする。",
       "sources": [
         "REQ-100"
       ],
-      "reason": "2通常タスク後に不合格を起こし修正でimplを作る台本で、終了コード0・修正指示の不合格理由・修正とゲートのコミット順・ゲートタスク完了をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "不合格なら内容をエンジンに渡して直させ、直しをコミットし",
+          "contains": "[REQ-100][REQ-111]",
           "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
@@ -4089,15 +4089,15 @@
     {
       "id": "SCN-4ba30adb659f40b75511",
       "status": "reviewed",
-      "scenarioSha256": "2782d07d0f58cfda738988c07104b129547d8d95c612d182a12e94b9f72617da",
+      "scenarioSha256": "696baf3497837378096bdb9330d3f7f6f2263b74c478a83d589ebfd01a302b01",
+      "reason": "旧形式のverify/doneタスクを持つfixtureで、起動2回だけ、全指示に3.1がないことをassertする。",
       "sources": [
         "REQ-100"
       ],
-      "reason": "旧形式のverify/doneタスクを持つfixtureで、起動2回だけ、全指示に3.1がないことをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "完了ゲートのタスクはエンジンに渡さない",
+          "contains": "[REQ-100] 完了ゲートのタスクは",
           "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
@@ -4105,15 +4105,15 @@
     {
       "id": "SCN-942c7f2fc346c9bf72cb",
       "status": "reviewed",
-      "scenarioSha256": "de9fddac9b3c601f38ce54c248907310acdc5c97426f70208ce55861b584e11a",
+      "scenarioSha256": "bc17577606494733db8d396834ed09e0be1d942254efb83b56d9b078ab0e22c4",
+      "reason": "印つきの品質確認タスクで、終了コード0・起動1回・指示に品質確認なし・印を残したタスク完了と旧形式警告なしをassertする。",
       "sources": [
         "REQ-100"
       ],
-      "reason": "印つきの品質確認タスクで、終了コード0・起動1回・指示に品質確認なし・印を残したタスク完了と旧形式警告なしをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "印のあるタスクは、文に verify と --done がなくても",
+          "contains": "[REQ-100][REQ-136]",
           "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
@@ -4121,15 +4121,15 @@
     {
       "id": "SCN-afc355e9cc38a423e972",
       "status": "reviewed",
-      "scenarioSha256": "440e05666aeceba507ec71398b346c0438d56288704e3dd254c4496b464a9614",
+      "scenarioSha256": "663c6050ba0c3d4324c1338830f73a63f842c70ff40f89fd1c26afdf81222ca5",
+      "reason": "旧形式タスクをエンジンへ渡さず、終了コード0と判定理由・印の追加案内をassertする。",
       "sources": [
         "REQ-100"
       ],
-      "reason": "旧形式タスクをエンジンへ渡さず、終了コード0と判定理由・印の追加案内をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "印のない旧書式のタスクもエンジンに渡さず",
+          "contains": "[REQ-100] 印のない旧書式",
           "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
@@ -4137,15 +4137,15 @@
     {
       "id": "SCN-5026fbdf7790b44ec704",
       "status": "reviewed",
-      "scenarioSha256": "ed44c17cce39d0cf6e51d39f59a8e60b3e67ac03c0b5c41707a57b3d8ba43a46",
+      "scenarioSha256": "c8fa67ea314efb1f99eabe44d2fc517e570d398fd52f958e58e74e3c8d9acbfc",
+      "reason": "maxFixes=1で止まる印つきゲートfixtureで、終了コード1・修正回数上限・残タスク表示とsummary配列から印が除かれていることをassertする。",
       "sources": [
         "REQ-100"
       ],
-      "reason": "maxFixes=1で止まる印つきゲートfixtureで、終了コード1・修正回数上限・残タスク表示とsummary配列から印が除かれていることをassertする。",
       "tests": [
         {
           "file": "packages/runner/test/run.test.ts",
-          "contains": "残ったタスクの表示と summary.json には、印を含めない",
+          "contains": "[REQ-100] 残ったタスクの表示と summary.json",
           "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
@@ -7949,7 +7949,299 @@
       ]
     },
     {
-      "id": "SCN-6859375381bab49b06eb",
+      "id": "SCN-2b3eff9d099521347eaa",
+      "status": "reviewed",
+      "scenarioSha256": "1f85922697a5b051440fb8bebde50f836156e6e28a049ba3b7f9b474cda3b5a7",
+      "reason": "実際の監視役へSIGHUPを送り、理由のないinterrupted、SIGTERMを無視する孫の停止、同じ予算で後続の起動なしを確認する。",
+      "sources": [
+        "REQ-333"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/process.test.ts",
+          "contains": "[REQ-333] 監視役へのSIGHUP",
+          "sha256": "9a4917d04666f238df72dbbf9996bbfb4c62c644fbe9f0d6f256fae249a8a9bb"
+        }
+      ]
+    },
+    {
+      "id": "SCN-490b2747201541a35878",
+      "status": "reviewed",
+      "scenarioSha256": "f5c2661d5d5f211085dda26564caafea8b022b999a65dd4f920c073c90808fcd",
+      "reason": "packしたCLIのグループへSIGHUPを送り、CLIがSIGHUPで終了しても別グループのopenspecとSIGTERMを無視する孫が停止することを確認する。",
+      "sources": [
+        "REQ-333"
+      ],
+      "tests": [
+        {
+          "file": "tests/package-artifacts.test.ts",
+          "contains": "[REQ-333] packしたCLIと監視役",
+          "sha256": "2435189e2802341831466761662d5eb5a70321ec4eab8c1bd43cb96a146b5359"
+        }
+      ]
+    },
+    {
+      "id": "SCN-c6bfcaadafde67cce86d",
+      "status": "reviewed",
+      "scenarioSha256": "c6852dc74a362ef40c488f264e7cd836b047f7be8a46e601360662b29dc2d620",
+      "reason": "品質コマンドから監視役へSIGHUPを送り、detailが理由なしのINTERRUPTED、後続検査なし、子の停止を確認する。",
+      "sources": [
+        "REQ-333"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "[REQ-333] 品質コマンドの監視役へのSIGHUP",
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
+        }
+      ]
+    },
+    {
+      "id": "SCN-b3bdc6513251e203ecea",
+      "status": "reviewed",
+      "scenarioSha256": "9ff2d23a75159400e422b32e9c0225477ecd12f78ef42bfce32ce8c6c31ce076",
+      "reason": "stdoutの読み手を閉じてから対象に出力させ、監視役の非ゼロ終了とEPIPE、対象とSIGTERMを無視する孫の停止を確認する。",
+      "sources": [
+        "REQ-334"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/supervisor.test.ts",
+          "contains": "[REQ-334] stdoutの読み手が閉じてEPIPE",
+          "sha256": "42af61007cfbd3f642778aab3adf087a206702e89eb55bb6ed4f673ddc712e79"
+        }
+      ]
+    },
+    {
+      "id": "SCN-07f1f8a8b723eaac0bcb",
+      "status": "reviewed",
+      "scenarioSha256": "029c641f82b0058c534dd6046dc4d49440b6ec4f7c2cc2707134d9761b8b89f5",
+      "reason": "試験内でgraceコールバックの配送を実対象exitまで保留し、全exitハンドラ処理後に例外を起こす。SIGTERM・grace-scheduled・target-exit・SIGKILLの順序と孫の停止を確認する。製品250msと外側2秒を維持し、!exitedの対照では孫残存を検出する。",
+      "sources": [
+        "REQ-334"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/supervisor.test.ts",
+          "contains": "[REQ-334] SIGTERM後の先頭exit処理済み",
+          "sha256": "42af61007cfbd3f642778aab3adf087a206702e89eb55bb6ed4f673ddc712e79"
+        }
+      ]
+    },
+    {
+      "id": "SCN-e8890f591114f8618b39",
+      "status": "reviewed",
+      "scenarioSha256": "3f7d9ecafe28f66e6a8a8bfd6d060265213dd7b757ba997d4e50270bd02f6fd0",
+      "reason": "実際のSIGKILL送信を観測し、正常終了・SIGINT終了と、SIGKILL直後でtarget-exit未処理の例外でも送信が各1回だけであることを確認する。!exitedの対照では再送を検出する。",
+      "sources": [
+        "REQ-334"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/supervisor.test.ts",
+          "contains": "終了でSIGKILLを送信済みなら",
+          "sha256": "42af61007cfbd3f642778aab3adf087a206702e89eb55bb6ed4f673ddc712e79"
+        },
+        {
+          "file": "packages/kit/test/supervisor.test.ts",
+          "contains": "SIGKILL送信直後で対象exit未処理",
+          "sha256": "42af61007cfbd3f642778aab3adf087a206702e89eb55bb6ed4f673ddc712e79"
+        }
+      ]
+    },
+    {
+      "id": "SCN-deeddc260f1944c905bf",
+      "status": "reviewed",
+      "scenarioSha256": "0a2a8f143c3b698a03786ee1686228be3d3fddb165d1a370406502ca7fe9528c",
+      "reason": "timeoutMinutes 40000 で正常完了し、タスクのコミットと終了コード0を保ち、時間上限の表示がないことを確かめる。",
+      "sources": [
+        "REQ-336"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/engine-long-deadline.test.ts",
+          "contains": "run.timeoutMinutes がタイマーの上限を超えても",
+          "sha256": "757e23e84100ceee6240ccd070d25954343043c32c8fbfd3ea97a402ee84224f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-d53387ea68e0e6f6d986",
+      "status": "reviewed",
+      "scenarioSha256": "b22577f2dcc3508ed23a168894d6c263604a833ea2661c0e5c02deff2470b420",
+      "reason": "長い待機の最初の2回を早く発火させ、3回待ち直し、各待機が上限以下で、エンジンの結果を保ち、最後に有効なタイマーを解除することを確かめる。上限より短い5000msでも最初の待機を早く発火させ、次の待機が0より大きく5000ms未満であることを検査する。残り時間を無視して上限固定で待ち直す変異で、この試験が失敗する。",
+      "sources": [
+        "REQ-336"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/engine-long-deadline.test.ts",
+          "contains": "分割した待機が期限前に発火しても",
+          "sha256": "757e23e84100ceee6240ccd070d25954343043c32c8fbfd3ea97a402ee84224f"
+        },
+        {
+          "file": "packages/runner/test/engine-long-deadline.test.ts",
+          "contains": "[REQ-336] 上限より短い期限の前に発火したら、残り時間だけ待ち直す",
+          "sha256": "757e23e84100ceee6240ccd070d25954343043c32c8fbfd3ea97a402ee84224f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-87ac185f00abb5f08d12",
+      "status": "reviewed",
+      "scenarioSha256": "10afe00d27737d04e9c60cc4db3d08bce91f27d7d0be0b3747bdeed5e4a5a929",
+      "reason": "pre-commitからSIGINTとSIGTERMを送り、interrupted、終了コード1、未完了タスク、エンジン1回、PRとpushなしを確かめる。POSIX上の信号試験である。",
+      "sources": [
+        "REQ-337"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/signal-during-sync.test.ts",
+          "contains": "タスクのコミットのgitのあいだに監視役が",
+          "sha256": "bfa80494d3c8349cf28397bbe728cb08a438a6efc2f862d5bc94b1dfcf469f14"
+        }
+      ]
+    },
+    {
+      "id": "SCN-1d24c0fa63492de621c2",
+      "status": "reviewed",
+      "scenarioSha256": "873122a0b7e54ebce4d04bab8a85686bb763cda05845b5a63b2704b7e5a41c90",
+      "reason": "pre-pushからSIGINTを送り、証拠コミットとその理由、interrupted、終了コード1、リモートブランチとPRなしを確かめる。",
+      "sources": [
+        "REQ-337"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/signal-during-sync.test.ts",
+          "contains": "証拠のpushのあいだの中断で",
+          "sha256": "bfa80494d3c8349cf28397bbe728cb08a438a6efc2f862d5bc94b1dfcf469f14"
+        }
+      ]
+    },
+    {
+      "id": "SCN-af36bdb1a63149b4ca79",
+      "status": "reviewed",
+      "scenarioSha256": "2b989d1b1bea0a00fa544d5d76ba79934da86fcb1e84c6436682e97eee61b065",
+      "reason": "pre-commitから監視役へSIGKILLを送り、stopped、監視役の異常終了理由、終了コード1、PRとpushなしを確かめる。",
+      "sources": [
+        "REQ-337"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/signal-during-sync.test.ts",
+          "contains": "監視役が結果を書かずに終わったときは、利用者の中断と区別して",
+          "sha256": "bfa80494d3c8349cf28397bbe728cb08a438a6efc2f862d5bc94b1dfcf469f14"
+        }
+      ]
+    },
+    {
+      "id": "SCN-2daf0a55232888f1318d",
+      "status": "reviewed",
+      "scenarioSha256": "d2eb015bf74ccc9e055b24c04617fc8cd96a7ef9c12eb6f186238fcd9a338485",
+      "reason": "gh pr listでSIGINT、pr createでSIGTERMを送り、証拠コミットとpush済みブランチを保ち、interrupted、終了コード1、PR未作成を確かめる。",
+      "sources": [
+        "REQ-337"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/signal-during-sync.test.ts",
+          "contains": "PRの",
+          "sha256": "bfa80494d3c8349cf28397bbe728cb08a438a6efc2f862d5bc94b1dfcf469f14"
+        }
+      ]
+    },
+    {
+      "id": "SCN-9b2c4541da2c45417c27",
+      "status": "reviewed",
+      "scenarioSha256": "bcfda3cab1378908fe372499505a4d89d50cf366988b5a2b10846bd216144e43",
+      "reason": "品質コマンドの監視役へSIGKILLを送り、後続の品質コマンドの有無の両方でstoppedと異常終了理由を保ち、エンジンの直し・push・PRへ進まないことを確かめる。kitの試験でも後続操作が起動しないことを確かめる。",
+      "sources": [
+        "REQ-337"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/signal-during-sync.test.ts",
+          "contains": "品質コマンドの監視役の異常終了後は理由を保ち",
+          "sha256": "bfa80494d3c8349cf28397bbe728cb08a438a6efc2f862d5bc94b1dfcf469f14"
+        },
+        {
+          "file": "packages/kit/test/process.test.ts",
+          "contains": "監視役が結果を書かずに終わったら、子孫を止め",
+          "sha256": "9a4917d04666f238df72dbbf9996bbfb4c62c644fbe9f0d6f256fae249a8a9bb"
+        }
+      ]
+    },
+    {
+      "id": "SCN-9f37ab8cae755b21a40e",
+      "status": "reviewed",
+      "scenarioSha256": "df1b3bdf602b680dc1fb29ef7dd26436e3103350ce331233ab31a9c96b6bc07e",
+      "reason": "「変更がある」の入力と結果を対応試験で確認する。観測値からの判断と入力不変を直接試験し、判断の逆転は変異試験で検出する。",
+      "sources": [
+        "REQ-332"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/decision-policy.test.ts",
+          "contains": "[REQ-332] タスクで変更あり",
+          "sha256": "4132af5e828261e7e935e74f87af0258a789afa77d0fb99c94ca15ca91ef2d38"
+        },
+        {
+          "file": "packages/runner/test/decision-policy.test.ts",
+          "contains": "[REQ-332] 直しで変更あり",
+          "sha256": "4132af5e828261e7e935e74f87af0258a789afa77d0fb99c94ca15ca91ef2d38"
+        }
+      ]
+    },
+    {
+      "id": "SCN-c1bc7f5e6424718679d1",
+      "status": "reviewed",
+      "scenarioSha256": "7fcb9a6eb3b8b78b8612ccf92fd1b5a9efdc78b43a0be92cecd60bca94dcb3fd",
+      "reason": "「タスクの段階で変更がない」の入力と結果を対応試験で確認する。観測値からの判断と入力不変を直接試験し、判断の逆転は変異試験で検出する。",
+      "sources": [
+        "REQ-332"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/decision-policy.test.ts",
+          "contains": "[REQ-332]",
+          "sha256": "4132af5e828261e7e935e74f87af0258a789afa77d0fb99c94ca15ca91ef2d38"
+        }
+      ]
+    },
+    {
+      "id": "SCN-f359402c602f4b91c2d5",
+      "status": "reviewed",
+      "scenarioSha256": "96c7adf27a8350ccfe79a3f432a25013a2ce59d40a8548f20f13dd355bc095a7",
+      "reason": "「直しの段階で変更がない」の入力と結果を対応試験で確認する。観測値からの判断と入力不変を直接試験し、判断の逆転は変異試験で検出する。",
+      "sources": [
+        "REQ-332"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/decision-policy.test.ts",
+          "contains": "[REQ-332] 直しでは合図があっても停止",
+          "sha256": "4132af5e828261e7e935e74f87af0258a789afa77d0fb99c94ca15ca91ef2d38"
+        }
+      ]
+    },
+    {
+      "id": "SCN-22b23609a2ed37dd3a55",
+      "status": "reviewed",
+      "scenarioSha256": "af9d84a6ca19d5c24696789d97be1c5ca204ddbd979fa81188167b08e273338c",
+      "reason": "「判断の逆転」の入力と結果を対応試験で確認する。観測値からの判断と入力不変を直接試験し、判断の逆転は変異試験で検出する。",
+      "sources": [
+        "REQ-332"
+      ],
+      "tests": [
+        {
+          "file": "tests/run-decision-mutations.test.ts",
+          "contains": "[REQ-206][REQ-332]",
+          "sha256": "e94d4bb1c68c1e055d2c00657bad9eeca4409f10b285f1c60d109d8b56033029"
+        }
+      ]
+    },
+    {
+      "id": "SCN-436083de520092f652b5",
       "status": "reviewed",
       "scenarioSha256": "7180c2ceb6a2709c1e45d349dcecb9b1a8306c86f849c1f75d1cd8f186ef902f",
       "reason": "「何も変えずに終える」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
@@ -7965,7 +8257,7 @@
       ]
     },
     {
-      "id": "SCN-32cc1a3f5a93a4d68299",
+      "id": "SCN-ac698af2b18b3b977879",
       "status": "reviewed",
       "scenarioSha256": "b40bb6e8047219aee044f0571029111b6d8de6d38a9f462913cb9ac54d94081e",
       "reason": "「行頭にない合図と理由のない合図」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
@@ -7986,7 +8278,7 @@
       ]
     },
     {
-      "id": "SCN-618b4a492d5e7fd7f0ee",
+      "id": "SCN-5a46bca2ef17b74efe0b",
       "status": "reviewed",
       "scenarioSha256": "1b90287db9a4454bbef324be4e014151d0919098e2334a20459e0d434264a834",
       "reason": "「変更が要らないと合図する」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
@@ -8012,7 +8304,7 @@
       ]
     },
     {
-      "id": "SCN-e6d08bc803fc3d7fe7ed",
+      "id": "SCN-e904bda146037c1d1a2d",
       "status": "reviewed",
       "scenarioSha256": "5a1e54fba81620c2a7ae41cecb213300c0de427ea7345edafbf2ec3a076897a5",
       "reason": "「変更と合図が両方ある」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
@@ -8028,7 +8320,7 @@
       ]
     },
     {
-      "id": "SCN-993d4b02baddd7a38cab",
+      "id": "SCN-8da2d30e748e83f3de49",
       "status": "reviewed",
       "scenarioSha256": "0f511121db5f5561a26489f44ebb885de09293964fcd58c9c86fd996d462acd6",
       "reason": "「質問と合図が両方ある」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
@@ -8044,7 +8336,7 @@
       ]
     },
     {
-      "id": "SCN-135fbc3b2d353124f10c",
+      "id": "SCN-be31b9da19e747d3d5a0",
       "status": "reviewed",
       "scenarioSha256": "1dc615b2cb1c670ef14acd74d3232e0c095a3dbce9641271eb24c2f9819f8e32",
       "reason": "「指示に合図の決まりを含める」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
@@ -8060,236 +8352,7 @@
       ]
     },
     {
-      "id": "SCN-ab333e12681dba9b36c6",
-      "status": "reviewed",
-      "scenarioSha256": "ef2e8d57e6defc4ca79c3db884aa17ae7f0ed94912d234ba8e3f03f7f13694cf",
-      "reason": "「直しで何も変えない」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
-      "sources": [
-        "REQ-331"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/run-no-change.test.ts",
-          "contains": "直しが合図なしで変更なしなら",
-          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
-        }
-      ]
-    },
-    {
-      "id": "SCN-eabbe8817c1aea421112",
-      "status": "reviewed",
-      "scenarioSha256": "d201fc1406560bcb036ceb5ed867646898e4898e5d7dd278748e873120822c74",
-      "reason": "「直しで変更が要らないと合図する」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
-      "sources": [
-        "REQ-331"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/run-no-change.test.ts",
-          "contains": "直しが合図ありで変更なしなら",
-          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
-        }
-      ]
-    },
-    {
-      "id": "SCN-4d4a3aaf9bfeab50bbe2",
-      "status": "reviewed",
-      "scenarioSha256": "eb92d4b9f89d9fbff4f996379fdd24dc180d744b9ca1f60999c30fea9344851f",
-      "reason": "「直しの指示」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
-      "sources": [
-        "REQ-331"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/run-no-change.test.ts",
-          "contains": "[REQ-331][REQ-100]",
-          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
-        }
-      ]
-    },
-    {
-      "id": "SCN-6aa37f075c3b308fc6d9",
-      "status": "reviewed",
-      "scenarioSha256": "3625842a21dfafe250092a030dd128a66d8da8be9f92b7f8c64ab32cf0bdb81f",
-      "reason": "「タスクを終える」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
-      "sources": [
-        "REQ-099"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/run.test.ts",
-          "contains": "[REQ-099] タスクを終えるたびに",
-          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
-        }
-      ]
-    },
-    {
-      "id": "SCN-5e2777d1ea591028bf93",
-      "status": "reviewed",
-      "scenarioSha256": "7374cd235b3193482152a19ccb4c0f971096752cc86426d2a28cbdc326a032a3",
-      "reason": "「エンジンが失敗する」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
-      "sources": [
-        "REQ-099"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/run.test.ts",
-          "contains": "[REQ-099] エンジンが 0 以外",
-          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
-        }
-      ]
-    },
-    {
-      "id": "SCN-439f2fbe4dee584f722d",
-      "status": "reviewed",
-      "scenarioSha256": "cb3b240b3999f83274dcaa8390434abdf938a27808246c967cb66ecfe2d4bf6c",
-      "reason": "「直して合格する」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
-      "sources": [
-        "REQ-100"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/run.test.ts",
-          "contains": "[REQ-100][REQ-111]",
-          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
-        }
-      ]
-    },
-    {
-      "id": "SCN-7e856e0c2467e67f40e7",
-      "status": "reviewed",
-      "scenarioSha256": "696baf3497837378096bdb9330d3f7f6f2263b74c478a83d589ebfd01a302b01",
-      "reason": "「完了ゲートのタスクはエンジンに渡さない」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
-      "sources": [
-        "REQ-100"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/run.test.ts",
-          "contains": "[REQ-100] 完了ゲートのタスクは",
-          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
-        }
-      ]
-    },
-    {
-      "id": "SCN-b29a2697152ec9ca4afb",
-      "status": "reviewed",
-      "scenarioSha256": "bc17577606494733db8d396834ed09e0be1d942254efb83b56d9b078ab0e22c4",
-      "reason": "「印のあるタスク」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
-      "sources": [
-        "REQ-100"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/run.test.ts",
-          "contains": "[REQ-100][REQ-136]",
-          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
-        }
-      ]
-    },
-    {
-      "id": "SCN-2111dc2cf91fe4fd4bd3",
-      "status": "reviewed",
-      "scenarioSha256": "663c6050ba0c3d4324c1338830f73a63f842c70ff40f89fd1c26afdf81222ca5",
-      "reason": "「旧書式のタスク」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
-      "sources": [
-        "REQ-100"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/run.test.ts",
-          "contains": "[REQ-100] 印のない旧書式",
-          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
-        }
-      ]
-    },
-    {
-      "id": "SCN-af933afd9b2f76916e84",
-      "status": "reviewed",
-      "scenarioSha256": "c8fa67ea314efb1f99eabe44d2fc517e570d398fd52f958e58e74e3c8d9acbfc",
-      "reason": "「印は指示とメッセージに含めない」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
-      "sources": [
-        "REQ-100"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/run.test.ts",
-          "contains": "[REQ-100] 残ったタスクの表示と summary.json",
-          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
-        }
-      ]
-    },
-    {
-      "id": "SCN-8efc96559bd75fc5a159",
-      "status": "reviewed",
-      "scenarioSha256": "df1b3bdf602b680dc1fb29ef7dd26436e3103350ce331233ab31a9c96b6bc07e",
-      "reason": "「変更がある」の入力と結果を対応試験で確認する。観測値からの判断と入力不変を直接試験し、判断の逆転は変異試験で検出する。",
-      "sources": [
-        "REQ-332"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/decision-policy.test.ts",
-          "contains": "[REQ-332] タスクで変更あり",
-          "sha256": "4132af5e828261e7e935e74f87af0258a789afa77d0fb99c94ca15ca91ef2d38"
-        },
-        {
-          "file": "packages/runner/test/decision-policy.test.ts",
-          "contains": "[REQ-332] 直しで変更あり",
-          "sha256": "4132af5e828261e7e935e74f87af0258a789afa77d0fb99c94ca15ca91ef2d38"
-        }
-      ]
-    },
-    {
-      "id": "SCN-f398a4c21f3fd0af9eb0",
-      "status": "reviewed",
-      "scenarioSha256": "7fcb9a6eb3b8b78b8612ccf92fd1b5a9efdc78b43a0be92cecd60bca94dcb3fd",
-      "reason": "「タスクの段階で変更がない」の入力と結果を対応試験で確認する。観測値からの判断と入力不変を直接試験し、判断の逆転は変異試験で検出する。",
-      "sources": [
-        "REQ-332"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/decision-policy.test.ts",
-          "contains": "[REQ-332]",
-          "sha256": "4132af5e828261e7e935e74f87af0258a789afa77d0fb99c94ca15ca91ef2d38"
-        }
-      ]
-    },
-    {
-      "id": "SCN-995989066111bf4a189d",
-      "status": "reviewed",
-      "scenarioSha256": "96c7adf27a8350ccfe79a3f432a25013a2ce59d40a8548f20f13dd355bc095a7",
-      "reason": "「直しの段階で変更がない」の入力と結果を対応試験で確認する。観測値からの判断と入力不変を直接試験し、判断の逆転は変異試験で検出する。",
-      "sources": [
-        "REQ-332"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/decision-policy.test.ts",
-          "contains": "[REQ-332] 直しでは合図があっても停止",
-          "sha256": "4132af5e828261e7e935e74f87af0258a789afa77d0fb99c94ca15ca91ef2d38"
-        }
-      ]
-    },
-    {
-      "id": "SCN-f3ea88a9a856b9fb3b98",
-      "status": "reviewed",
-      "scenarioSha256": "af9d84a6ca19d5c24696789d97be1c5ca204ddbd979fa81188167b08e273338c",
-      "reason": "「判断の逆転」の入力と結果を対応試験で確認する。観測値からの判断と入力不変を直接試験し、判断の逆転は変異試験で検出する。",
-      "sources": [
-        "REQ-332"
-      ],
-      "tests": [
-        {
-          "file": "tests/run-decision-mutations.test.ts",
-          "contains": "[REQ-206][REQ-332]",
-          "sha256": "e94d4bb1c68c1e055d2c00657bad9eeca4409f10b285f1c60d109d8b56033029"
-        }
-      ]
-    },
-    {
-      "id": "SCN-aefc16f8996ec3ea5f7b",
+      "id": "SCN-44b46a6dbb0d2e9bcb29",
       "status": "reviewed",
       "scenarioSha256": "fc40ec9ad8d332fd6e4c7080607cd2a32d60d520e14bf373788d36242b1eedbb",
       "reason": "「理由の制御文字を見える形にする」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
@@ -8305,7 +8368,7 @@
       ]
     },
     {
-      "id": "SCN-724857f20e4caff74c8a",
+      "id": "SCN-cf752900114377812cb9",
       "status": "reviewed",
       "scenarioSha256": "3c8ad917f4a7452fee9a0fd4a6dd48e21470a362e4d5bdbfeb4674eccca15366",
       "reason": "「理由に NUL がある」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
@@ -8321,124 +8384,7 @@
       ]
     },
     {
-      "id": "SCN-040ded6c2ba815775102",
-      "status": "reviewed",
-      "scenarioSha256": "7288f530d66d03761f524d98e2ca7b1bac2843f231737c8ff4fc9e58ea1fc261",
-      "reason": "「直しで止まるときの記録の場所」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
-      "sources": [
-        "REQ-331"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/run-no-change.test.ts",
-          "contains": "[REQ-331] 直しが",
-          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
-        }
-      ]
-    },
-    {
-      "id": "SCN-00e2df0bf8b6382e8245",
-      "status": "reviewed",
-      "scenarioSha256": "1f85922697a5b051440fb8bebde50f836156e6e28a049ba3b7f9b474cda3b5a7",
-      "reason": "実際の監視役へSIGHUPを送り、理由のないinterrupted、SIGTERMを無視する孫の停止、同じ予算で後続の起動なしを確認する。",
-      "sources": [
-        "REQ-333"
-      ],
-      "tests": [
-        {
-          "file": "packages/kit/test/process.test.ts",
-          "contains": "[REQ-333] 監視役へのSIGHUP",
-          "sha256": "9a4917d04666f238df72dbbf9996bbfb4c62c644fbe9f0d6f256fae249a8a9bb"
-        }
-      ]
-    },
-    {
-      "id": "SCN-855428c541dfc5d8e36d",
-      "status": "reviewed",
-      "scenarioSha256": "f5c2661d5d5f211085dda26564caafea8b022b999a65dd4f920c073c90808fcd",
-      "reason": "packしたCLIのグループへSIGHUPを送り、CLIがSIGHUPで終了しても別グループのopenspecとSIGTERMを無視する孫が停止することを確認する。",
-      "sources": [
-        "REQ-333"
-      ],
-      "tests": [
-        {
-          "file": "tests/package-artifacts.test.ts",
-          "contains": "[REQ-333] packしたCLIと監視役",
-          "sha256": "2435189e2802341831466761662d5eb5a70321ec4eab8c1bd43cb96a146b5359"
-        }
-      ]
-    },
-    {
-      "id": "SCN-a7bbf52030389e872ec4",
-      "status": "reviewed",
-      "scenarioSha256": "c6852dc74a362ef40c488f264e7cd836b047f7be8a46e601360662b29dc2d620",
-      "reason": "品質コマンドから監視役へSIGHUPを送り、detailが理由なしのINTERRUPTED、後続検査なし、子の停止を確認する。",
-      "sources": [
-        "REQ-333"
-      ],
-      "tests": [
-        {
-          "file": "packages/kit/test/verify.test.ts",
-          "contains": "[REQ-333] 品質コマンドの監視役へのSIGHUP",
-          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
-        }
-      ]
-    },
-    {
-      "id": "SCN-970800ea4b365cb68ab0",
-      "status": "reviewed",
-      "scenarioSha256": "9ff2d23a75159400e422b32e9c0225477ecd12f78ef42bfce32ce8c6c31ce076",
-      "reason": "stdoutの読み手を閉じてから対象に出力させ、監視役の非ゼロ終了とEPIPE、対象とSIGTERMを無視する孫の停止を確認する。",
-      "sources": [
-        "REQ-334"
-      ],
-      "tests": [
-        {
-          "file": "packages/kit/test/supervisor.test.ts",
-          "contains": "[REQ-334] stdoutの読み手が閉じてEPIPE",
-          "sha256": "42af61007cfbd3f642778aab3adf087a206702e89eb55bb6ed4f673ddc712e79"
-        }
-      ]
-    },
-    {
-      "id": "SCN-7795f36d60926bc77e94",
-      "status": "reviewed",
-      "scenarioSha256": "029c641f82b0058c534dd6046dc4d49440b6ec4f7c2cc2707134d9761b8b89f5",
-      "reason": "試験内でgraceコールバックの配送を実対象exitまで保留し、全exitハンドラ処理後に例外を起こす。SIGTERM・grace-scheduled・target-exit・SIGKILLの順序と孫の停止を確認する。製品250msと外側2秒を維持し、!exitedの対照では孫残存を検出する。",
-      "sources": [
-        "REQ-334"
-      ],
-      "tests": [
-        {
-          "file": "packages/kit/test/supervisor.test.ts",
-          "contains": "[REQ-334] SIGTERM後の先頭exit処理済み",
-          "sha256": "42af61007cfbd3f642778aab3adf087a206702e89eb55bb6ed4f673ddc712e79"
-        }
-      ]
-    },
-    {
-      "id": "SCN-be4e51ee725a53739278",
-      "status": "reviewed",
-      "scenarioSha256": "3f7d9ecafe28f66e6a8a8bfd6d060265213dd7b757ba997d4e50270bd02f6fd0",
-      "reason": "実際のSIGKILL送信を観測し、正常終了・SIGINT終了と、SIGKILL直後でtarget-exit未処理の例外でも送信が各1回だけであることを確認する。!exitedの対照では再送を検出する。",
-      "sources": [
-        "REQ-334"
-      ],
-      "tests": [
-        {
-          "file": "packages/kit/test/supervisor.test.ts",
-          "contains": "終了でSIGKILLを送信済みなら",
-          "sha256": "42af61007cfbd3f642778aab3adf087a206702e89eb55bb6ed4f673ddc712e79"
-        },
-        {
-          "file": "packages/kit/test/supervisor.test.ts",
-          "contains": "SIGKILL送信直後で対象exit未処理",
-          "sha256": "42af61007cfbd3f642778aab3adf087a206702e89eb55bb6ed4f673ddc712e79"
-        }
-      ]
-    },
-    {
-      "id": "SCN-ed300ab19156149116f3",
+      "id": "SCN-8be30e153fba4b357634",
       "status": "reviewed",
       "scenarioSha256": "ddff4dd65e233713099d282bea54c8b4b6c44b6f9a876245a202b51657b2098f",
       "reason": "「理由の末尾の空白を保つ」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
@@ -8454,124 +8400,66 @@
       ]
     },
     {
-      "id": "SCN-2ae0b9c26b02a7a07597",
+      "id": "SCN-9a4048160357005bd399",
       "status": "reviewed",
-      "scenarioSha256": "0a2a8f143c3b698a03786ee1686228be3d3fddb165d1a370406502ca7fe9528c",
-      "reason": "timeoutMinutes 40000 で正常完了し、タスクのコミットと終了コード0を保ち、時間上限の表示がないことを確かめる。",
+      "scenarioSha256": "ef2e8d57e6defc4ca79c3db884aa17ae7f0ed94912d234ba8e3f03f7f13694cf",
+      "reason": "「直しで何も変えない」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
       "sources": [
-        "REQ-336"
+        "REQ-331"
       ],
       "tests": [
         {
-          "file": "packages/runner/test/engine-long-deadline.test.ts",
-          "contains": "run.timeoutMinutes がタイマーの上限を超えても",
-          "sha256": "757e23e84100ceee6240ccd070d25954343043c32c8fbfd3ea97a402ee84224f"
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "直しが合図なしで変更なしなら",
+          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
         }
       ]
     },
     {
-      "id": "SCN-7bf8b4c7e50629f0a4f0",
+      "id": "SCN-12b012a3f3190be02901",
       "status": "reviewed",
-      "scenarioSha256": "b22577f2dcc3508ed23a168894d6c263604a833ea2661c0e5c02deff2470b420",
-      "reason": "長い待機の最初の2回を早く発火させ、3回待ち直し、各待機が上限以下で、エンジンの結果を保ち、最後に有効なタイマーを解除することを確かめる。上限より短い5000msでも最初の待機を早く発火させ、次の待機が0より大きく5000ms未満であることを検査する。残り時間を無視して上限固定で待ち直す変異で、この試験が失敗する。",
+      "scenarioSha256": "d201fc1406560bcb036ceb5ed867646898e4898e5d7dd278748e873120822c74",
+      "reason": "「直しで変更が要らないと合図する」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
       "sources": [
-        "REQ-336"
+        "REQ-331"
       ],
       "tests": [
         {
-          "file": "packages/runner/test/engine-long-deadline.test.ts",
-          "contains": "分割した待機が期限前に発火しても",
-          "sha256": "757e23e84100ceee6240ccd070d25954343043c32c8fbfd3ea97a402ee84224f"
-        },
-        {
-          "file": "packages/runner/test/engine-long-deadline.test.ts",
-          "contains": "[REQ-336] 上限より短い期限の前に発火したら、残り時間だけ待ち直す",
-          "sha256": "757e23e84100ceee6240ccd070d25954343043c32c8fbfd3ea97a402ee84224f"
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "直しが合図ありで変更なしなら",
+          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
         }
       ]
     },
     {
-      "id": "SCN-9f0513dd500f1a66f24d",
+      "id": "SCN-6d0b52edd07f16cac3ef",
       "status": "reviewed",
-      "scenarioSha256": "10afe00d27737d04e9c60cc4db3d08bce91f27d7d0be0b3747bdeed5e4a5a929",
-      "reason": "pre-commitからSIGINTとSIGTERMを送り、interrupted、終了コード1、未完了タスク、エンジン1回、PRとpushなしを確かめる。POSIX上の信号試験である。",
+      "scenarioSha256": "eb92d4b9f89d9fbff4f996379fdd24dc180d744b9ca1f60999c30fea9344851f",
+      "reason": "「直しの指示」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
       "sources": [
-        "REQ-337"
+        "REQ-331"
       ],
       "tests": [
         {
-          "file": "packages/runner/test/signal-during-sync.test.ts",
-          "contains": "タスクのコミットのgitのあいだに監視役が",
-          "sha256": "bfa80494d3c8349cf28397bbe728cb08a438a6efc2f862d5bc94b1dfcf469f14"
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "[REQ-331][REQ-100]",
+          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
         }
       ]
     },
     {
-      "id": "SCN-8780238979655d4650d6",
+      "id": "SCN-14a4366318dd093dcd6d",
       "status": "reviewed",
-      "scenarioSha256": "873122a0b7e54ebce4d04bab8a85686bb763cda05845b5a63b2704b7e5a41c90",
-      "reason": "pre-pushからSIGINTを送り、証拠コミットとその理由、interrupted、終了コード1、リモートブランチとPRなしを確かめる。",
+      "scenarioSha256": "7288f530d66d03761f524d98e2ca7b1bac2843f231737c8ff4fc9e58ea1fc261",
+      "reason": "「直しで止まるときの記録の場所」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
       "sources": [
-        "REQ-337"
+        "REQ-331"
       ],
       "tests": [
         {
-          "file": "packages/runner/test/signal-during-sync.test.ts",
-          "contains": "証拠のpushのあいだの中断で",
-          "sha256": "bfa80494d3c8349cf28397bbe728cb08a438a6efc2f862d5bc94b1dfcf469f14"
-        }
-      ]
-    },
-    {
-      "id": "SCN-8f4b00d1e9dbe870b888",
-      "status": "reviewed",
-      "scenarioSha256": "2b989d1b1bea0a00fa544d5d76ba79934da86fcb1e84c6436682e97eee61b065",
-      "reason": "pre-commitから監視役へSIGKILLを送り、stopped、監視役の異常終了理由、終了コード1、PRとpushなしを確かめる。",
-      "sources": [
-        "REQ-337"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/signal-during-sync.test.ts",
-          "contains": "監視役が結果を書かずに終わったときは、利用者の中断と区別して",
-          "sha256": "bfa80494d3c8349cf28397bbe728cb08a438a6efc2f862d5bc94b1dfcf469f14"
-        }
-      ]
-    },
-    {
-      "id": "SCN-2db570e0ac6ac2e10216",
-      "status": "reviewed",
-      "scenarioSha256": "d2eb015bf74ccc9e055b24c04617fc8cd96a7ef9c12eb6f186238fcd9a338485",
-      "reason": "gh pr listでSIGINT、pr createでSIGTERMを送り、証拠コミットとpush済みブランチを保ち、interrupted、終了コード1、PR未作成を確かめる。",
-      "sources": [
-        "REQ-337"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/signal-during-sync.test.ts",
-          "contains": "PRの",
-          "sha256": "bfa80494d3c8349cf28397bbe728cb08a438a6efc2f862d5bc94b1dfcf469f14"
-        }
-      ]
-    },
-    {
-      "id": "SCN-f6de9fc39a8a3ef2235a",
-      "status": "reviewed",
-      "scenarioSha256": "bcfda3cab1378908fe372499505a4d89d50cf366988b5a2b10846bd216144e43",
-      "reason": "品質コマンドの監視役へSIGKILLを送り、後続の品質コマンドの有無の両方でstoppedと異常終了理由を保ち、エンジンの直し・push・PRへ進まないことを確かめる。kitの試験でも後続操作が起動しないことを確かめる。",
-      "sources": [
-        "REQ-337"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/signal-during-sync.test.ts",
-          "contains": "品質コマンドの監視役の異常終了後は理由を保ち",
-          "sha256": "bfa80494d3c8349cf28397bbe728cb08a438a6efc2f862d5bc94b1dfcf469f14"
-        },
-        {
-          "file": "packages/kit/test/process.test.ts",
-          "contains": "監視役が結果を書かずに終わったら、子孫を止め",
-          "sha256": "9a4917d04666f238df72dbbf9996bbfb4c62c644fbe9f0d6f256fae249a8a9bb"
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "[REQ-331] 直しが",
+          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
         }
       ]
     }
