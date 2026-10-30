@@ -162,7 +162,7 @@ export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
 - **`runEngineTasks`：** `guard` のあとに `decideAfterChanges({ phase: 'task', hasChanges, text })` を呼びます。
   - `stop`：止まる。index は空なので、戻す処理は要りません。
   - `no-change`：標準出力に「変更不要としてタスクを完了にします：<可視化した理由>」と出し、これまでどおり `checkTask`・`add`・`commit` をします。
-  - Q-03 の決定に従い、理由を `maskSecrets` で置換し、REQ-339のC0/C1可視化を行った同じ文字列を標準出力とgit commit本文へ渡します。
+  - Q-03 の決定に従い、理由を `maskSecrets` で置換し、REQ-339のC0/C1可視化を行った同じ文字列を標準出力とgit commit本文へ渡します。変更不要のコミットだけに `--cleanup=verbatim` を指定します。
 - **`runGate`：** ガードのあとに `decideAfterChanges({ phase: 'repair', hasChanges, text })` を呼びます。`stop` なら出力記録の具体パスを含む理由で `stopped(reason)` を返します。
 - **`prompt.ts`：** `failure` がないとき（タスクの指示）だけ、次の決まりを 1 行足します。
   > - 変更が要らないタスクなら、何も変えずに `LOOMAKE-NOCHANGE:` で始まる行に理由を書いて終える。変更を残さず、この行もなければ、run はタスクを完了にせずに止まる
@@ -268,7 +268,7 @@ export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
 
 2026-10-30 の管理役の確認で、REQ-330・REQ-332 の「空でない理由」に対し、修正前の ASCII 空白・タブだけの正規表現では同一行の全角空白や NBSP に続く理由を認めないと分かった。仕様を ASCII 限定へ狭めず、同一行の空白を区切りとして認めるよう判定を修正する。LF・CR・U+2028・U+2029 を越えて、別行の文字を理由に取り込まない。既存の期待値は維持し、要件 ID 付きの直接試験と統合試験を追加する。この時点では Opus 評価 2/2 の履歴を保持し、修正後 head の最終レビューを追加 1 回の明示承認待ちとして記録した。その後の回数上限の撤廃は末尾に記録する。
 
-理由の末尾の空白は、仕様が除去を要求していないため判定関数では保持する。表示とgit commitへ渡す文字列は同じで、コミット本文の整形はGitの規則に従う。例のコードを現行の型・戻り値・表示文言へ合わせた。
+理由の末尾の空白は、仕様が除去を要求していないため判定関数では保持する。変更不要のコミットだけに `--cleanup=verbatim` を渡し、Gitの既定の整形で末尾ASCII空白を削らせない。通常・直し・evidenceのコミットの整形は変えない。例のコードを現行の型・戻り値・表示文言へ合わせた。
 
 ## 最終レビュー後の表示の設計
 
@@ -279,3 +279,9 @@ Opus が、利用者の具体的な対象資料の送信承認の範囲で、表
 旧 head の Opus 評価 2 回の履歴は保持する。その後の利用者の明示指示でレビュー回数の上限は撤廃され、修正後の head に指摘ゼロが出るまで独立した新規セッションで最終レビューする。上記の追加 1 回の承認待ちは、この新しい指示で解消した。送信範囲は利用者が明示承認した対象資料に限定する。
 
 理由の表示と記録は、OpenSpecの500文字制限を保つため、管理役が予約したREQ-339として独立したRequirementに記録する。追加の機能ではなく、上記の設計と同じ振る舞いを分けて表した。対応する新規回帰にはREQ-330とREQ-339を併記する。
+
+## 理由の末尾を実際のコミット本文にも保つ
+
+実Gitの比較で、既定の整形は末尾ASCII空白を削り、verbatimなら保持することを確認した。REQ-339の本文は変えず、NoChangeの理由を第2段落へ足す分岐だけに `--cleanup=verbatim` を加える。通常のタスク・直し・完了ゲート・evidenceのコミットは変えない。
+
+実Gitの追加回帰は、stdoutとcommit本文の理由の行を完全一致で比べる。repo.gitのtrimで末尾を失わないよう、`%B%x00` のNUL終端より前を読む。ASCII空白1個・3個・NBSP後のASCII空白、NBSP・全角・en-space・可視化タブを確かめる。engineはJSONのresultをtrimしないことをCodexがローカルで確認したため、出力末尾の理由を検証し、補足行が続く場合も確認する。旧回数の履歴は保持し、新headの独立最終レビューを指摘ゼロまで続ける。
