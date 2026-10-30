@@ -10,3 +10,8 @@
 | 1-1、PR未作成 | 未測定（既存Opus設計を再利用） | 進行中 | 未実施 | 未実施 | 進行中 |
 
 観測日は2026-10-31 JST。対象はtask2.2の作業ツリーで、確定headの完了ゲート・CI・最終レビューの成功ではない。検証原本は専用treeの `.loomake/ci-implementation/c3-final/c3-receipt.json` に保存した。
+
+1. task2.3として、空の測定一覧と純粋なfast/slow選択を実装した。未測定のOS割当とcase本体は追加していない。
+2. 選択14件と共有準備5件、型・lintが成功。実設定を同じbyteで使う独立fixtureの7経路で、PRと両shardのslow不実施、local/push/schedule/releaseの全件、空ファイル除外とPR両shardの和集合を確認した。元のreporter/outputFile/coverageと製品gateは保持した。
+3. fixtureの成功は実caseの3OS性能合格ではない。タスクは5/18完了で、case分割・全体done・CI・最終レビュー・人ruleset操作は未完了。
+4. 次はtask2.4の実13条件の独立mutation試験を追加する。計測表は上記の進行中の状態を維持する。
