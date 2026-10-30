@@ -29,6 +29,13 @@
 
 - [ ] 5.1 元全caseと全assertの保持、coverage94/89/96/97、local full、change.liveの実passed対応、Node22.12/3OS24を検証する。旧reportや虚偽タグを使わない
 - [ ] 5.2 対象headの完了ゲートと全tasks・要件対応テストを確認する <!-- loomake:gate=done -->
-- [ ] 5.3 同headの他4必須check・自動Codex・独立した新Opusの指摘ゼロをそろえ、node20だけ廃止に伴い未成立であることを記録する。修正後は新headを再検証/再レビューする
-- [ ] 5.4 管理役がrulesetのfresh beforeとnode20 contextだけの差分・証跡をIssue121で@rrr-xxxへ渡し、人の操作後fresh afterで他4checkと全fieldを照合する。規則を補助や管理役が書き換えない
-- [ ] 5.5 残存required成功後に管理役が同じ1-1 PRをマージし、対応スキルでsync/archiveの受入へ続く。旧Source/試験対応と273衝突のB1引継ぎを保持する
+
+## 完了ゲート後の必須受入
+
+次の3件は5.2の後に行う必須受入であり、タスクの完了印では代用しない。原文・番号・順序・担当を保持し、実施の証拠はPR #184とIssue #121に記録する。どれかが未達の間はchange・PR・配布の完了を報告しない。
+
+- 5.3 同headの他4必須check・自動Codex・独立した新Opusの指摘ゼロをそろえ、node20だけ廃止に伴い未成立であることを記録する。修正後は新headを再検証/再レビューする
+- 5.4 管理役がrulesetのfresh beforeとnode20 contextだけの差分・証跡をIssue121で@rrr-xxxへ渡し、人の操作後fresh afterで他4checkと全fieldを照合する。規則を補助や管理役が書き換えない
+- 5.5 残存required成功後に管理役が同じ1-1 PRをマージし、対応スキルでsync/archiveの受入へ続く。旧Source/試験対応と273衝突のB1引継ぎを保持する
+
+全18件の意図は実装・検証の15タスクと本節の必須受入3件として残す。最終レビュー等で修正が必要になったら、5.2より前に修正タスクを追加し、新headで完了ゲート・CI・自動Codex・新規独立Opusをやり直す。規則・検査・完了条件は変更しない。
