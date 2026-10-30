@@ -70,7 +70,9 @@ try {
   console.log('SIGHUPでCLIが終了してもopenspecと子が停止しました');
 } finally {
   if (child.exitCode === null && child.signalCode === null) {
-    try { process.kill(-child.pid, 'SIGKILL'); } catch (error) { if (error.code !== 'ESRCH') throw error; }
+    try { process.kill(-child.pid, 'SIGKILL'); } catch (error) {
+      if (error.code !== 'ESRCH') { console.error(error); process.exitCode = 1; }
+    }
   }
   await closed;
   const targetPid = existsSync(leader) ? Number(readFileSync(leader, 'utf8')) : pids[0];

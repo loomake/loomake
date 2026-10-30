@@ -56,3 +56,10 @@
 2. verifyの結果：旧head1da9616のdoneは1452成功8skipだったが、全OS CI40992720498のmacOS2/2はpack REQ333のreadyファイルが空の間にJSON.parseし失敗（874成功8skip）。完全なPID配列の読取をready条件にし、空→50ms後JSONの回帰を追加。通常/分割readyと直接fixtureの4ケース成功。旧exists-only読取のmutationの結果と新head doneはPRへ記録する。
 3. 残っている確認事項・仮定：Opus review3はsession7feab1fc、claude-opus-5-5、権限拒否0、重大0・軽微2・情報2。旧6指摘は解消または既存限界記録として妥当と評価された。新指摘はESRCH・誤REQタグ・task完了印・Scenario理由が各連続1回で、3連続の同一指摘はない。
 4. 次にやること：新しいheadでdone・全OS CI・自動Codexを確認し、freshsessionのOpus最終レビューで指摘ゼロまで往復を続ける。今回も製品250ms・外側2秒・既存期限と期待値を維持する。
+
+## review4前のlint修正
+
+1. やったこと：タスク3.2のESRCH対応でfinallyから例外を投げ直す文がlintに拒否されたため、予想外の停止失敗はstderrと終了コード1で表し、元の失敗と後続cleanupを保つ形へ直した。設定は変えていない。
+2. verifyの結果：head68e69efのdoneは型・全体試験・要件対応が成功し、no-unsafe-finallyのlint1件だけ失敗した。新headで再実行する。
+3. 残っている確認事項・仮定：Opus review4は未起動。旧68eの結果を新headの結果とは扱わない。
+4. 次にやること：lintとdoneを確認し、新headで独立最終レビューとCIを進める。
