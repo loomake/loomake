@@ -40,7 +40,9 @@ node .agents/skills/delivery/scripts/ask-opus.mjs \
   --role design --request .loomake/design-request.md --head <40桁の対象SHA>
 ```
 
-`--role` は `design`、`second-opinion`、`review` のいずれか。難しいバグの独立調査には `second-opinion` を使い、先行担当の仮説や推奨修正を依頼に含めない。スクリプトは毎回新しいセッションIDを作り、`--resume` や `--continue` を使わない。既存のClaude認証をそのまま使い、APIキーの追加や認証設定の書き換えは行わない。
+`$delivery` を使わずClaude Codeが本体として作業する場合も、実装・修正はCodexへ委譲する。Claude Codeが使えることと、指定したOpusの工程が成功したことを区別し、Codexのモデル設定を変えてOpusとして扱わない。同じモデルの別セッションによるレビューを、異なるモデルのレビューと報告しない。
+
+`--role` は `design`、`second-opinion`、`review` のいずれか。難しいバグの独立調査には `second-opinion` を使い、先行担当の仮説や推奨修正を依頼に含めない。独立調査から設計を同じ担当が続ける既定は維持する。PR #152 の AUTO-152-02（独立調査の保存成果物を別の新規セッションへ渡す案）は、規則の変更が決まるまで適用しない。スクリプトは毎回新しいセッションIDを作り、`--resume` や `--continue` を使わない。既存のClaude認証をそのまま使い、APIキーの追加や認証設定の書き換えは行わない。
 
 起動時は `--model opus`、読取ツールのRead/Glob/Grep、`Read(./**)` の範囲付き許可、`permissions.blockReadsOutsideWorkingDirectories:true`、hook無効、自動メモリ無効、MCPなしを固定する。[Claude公式の読取拒否設定](https://code.claude.com/docs/en/settings-reference#permissions-blockreadsoutsideworkingdirectories)は2.1.257以降が必要。Windowsのnpm版 `claude.cmd` は `shell:false` で起動できないため未対応とし、未実施を返す。時間上限は既定20分で、`--timeout-min` に1〜60の整数を指定できる。stdoutは8MiB、stderrは64KiBを上限とし、上限到達は未実施として停止する。
 
