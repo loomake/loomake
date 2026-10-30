@@ -37,13 +37,25 @@ Actionsの各実行から `ci-phases-<run>-<attempt>-<sample>` artifactを開い
 
 `profile-publication-retry` は、元と同じコマンド `pnpm test --shard=1/2` を Windows・Node 24.22.1・pnpm 12.10.1 の独立した3ジョブで実行します。試験ファイルの増減でshardの割当は変わるため、元と同じファイル構成や負荷は保証しません。サンプル1〜3は失敗の再試行ではなく、成否をそれぞれ保存する別の実行です。`fail-fast: false` とし、既存の assertion・ケース・60秒制限・skip・retry・通常の `ci.yml` は変更しません。導入は `--frozen-lockfile --ignore-scripts` で行います。
 
-workflow自身、publication-retry試験、共通fixtureのhelperと診断helper、診断用試験、本文が変わったPRで起動し、手動でも起動できます。診断ステップには `LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR` を渡します。未指定なら、この診断のファイルとpreloadは作りません。既存の `LOOMAKE_TEST_PHASE_PROFILE_DIR` による集計とは別の記録です。
+workflow自身、publication-retry試験、共通fixtureと診断のhelper、監視役とその引数を作るruntime、shard構成の設定、診断用試験、本文が変わったPRで起動し、手動でも起動できます。診断ステップには `LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR` を渡します。未指定なら、この診断のファイルとpreloadは作りません。既存の `LOOMAKE_TEST_PHASE_PROFILE_DIR` による集計とは別の記録です。
+
+自動起動の対象は次のパスです。
+
+- `.github/workflows/profile-publication-retry.yml`
+- `packages/runner/test/publication-retry.test.ts`
+- `packages/runner/test/process-diagnostics.ts`
+- `packages/runner/test/helpers.ts`
+- `packages/kit/supervisor/supervisor.cjs`
+- `packages/kit/src/runtime/process.ts`
+- `vitest.config.ts`
+- `tests/publication-retry-diagnostics*.test.ts`
+- `docs/dev/test-phase-profiling.md`
 
 publication-retryの25ケースは、fixture作成前に固有のIDを作り、固定のケース分類とともに `*.phases.jsonl` へ記録します。repo-ready以降の安全なfixture basenameで `*.processes.jsonl` と対応します。phaseはcase-start、repo-ready、run-start/end、破損8ケースのmutate-end/amend-end、cleanup-start/end、case-endです。runの番号・終了コード・「作成前に失敗」を含むかというexpectedReasonのbooleanを全runで記録します。作成前失敗の判定として解釈するのはFAKE_GH_CREATE=beforeの初回で、他のrunのfalseを異常と決めません。lookupの不正7種類は固定ラベルで分け、元の入力やURLは保存しません。理由のbooleanは診断であり、元のassertionを置き換えません。
 
 caseごとの閉包とRepoのWeakMapを使うので、timeout後に古いcallbackが残って次のケースと重なっても、同じ「現在のcase」へ記録を混ぜません。監視役と偽claude・ghのentry/exitは、fixture basename・PID・preload起動ごとのUUID sessionを含む一意なファイルへ記録します。PIDが再利用されても、別sessionのentry/exitを同じ組にしません。時刻は全てDate.now()です。固定のevent・操作分類、UUID、有限の数値、boolean、安全なbasenameだけを残し、生のstdout/stderr、引数、環境値、認証情報は保存しません。
 
-各ファイルは64KiB以内の完全なJSONLとし、上限では `truncated` を1行だけ残し、以後は短い行も追記せず終端とします。準備・書込みの失敗を元の試験へ返さず、診断だけを欠損させます。I/O失敗ではtruncatedの印を残せない場合や、途中で切れたJSONL行が残る場合があり、プロセス停止との区別が付かなければ未確定とします。truncated、phaseやentry/exitの不足、不正な時刻、途中で切れた実行は計測不足です。0秒や成功へ補いません。case-endのcompletedはcallbackとcleanupが終わったことを表し、Vitestが既にtimeoutと判定したケースを成功へ戻しません。
+新しい `*.phases.jsonl` と `*.processes.jsonl` は、正常に書けた行を64KiB以内の完全なJSONLとして保存し、上限では `truncated` を1行だけ残し、以後は短い行も追記せず終端とします。準備・書込みの失敗を元の試験へ返さず、診断だけを欠損させます。I/O失敗ではtruncatedの印を残せない場合や、途中で切れたJSONL行が残る場合があり、プロセス停止との区別が付かなければ未確定とします。truncated、phaseやentry/exitの不足、不正な時刻、途中で切れた実行は計測不足です。0秒や成功へ補いません。case-endのcompletedはcallbackとcleanupが終わったことを表し、Vitestが既にtimeoutと判定したケースを成功へ戻しません。
 
 artifactは `publication-retry-<run>-<attempt>-<sample>` という名前で、診断ディレクトリだけを7日保存します。`always()` でテスト失敗後やキャンセル後もuploadを試みますが、runner停止や準備失敗などでファイルがなければ計測不足です。全3サンプルの失敗も残して管理役が判定し、成功したサンプルだけを選びません。
 
@@ -53,7 +65,7 @@ artifactは `publication-retry-<run>-<attempt>-<sample>` という名前で、�
 
 ### 診断artifactとjobログの読み合わせ
 
-環境変数はshard 1/2全体へ渡ります。ただしpreloadはmakeRepoのrepo.env.NODE_OPTIONSへ追加するため、記録されるのはそのenvを渡すrunnerのgit・gh・claudeと、それらからenvを引き継ぐNode子プロセスです。publication-retry以外のmakeRepo利用試験にもこの範囲で入ります。既存external-budgetの安全な分類・時刻を持つ `<base>.jsonl` も同じディレクトリへ保存されます。多数の小さなファイルとI/O、WindowsのDefenderによる走査が観測負荷を増やす可能性があります。診断ありの時間を通常CIの時間と同一には扱いません。
+環境変数はshard 1/2全体へ渡ります。ただしpreloadはmakeRepoのrepo.env.NODE_OPTIONSへ追加するため、記録されるのはそのenvを渡すrunnerのgit・gh・claudeと、それらからenvを引き継ぐNode子プロセスです。publication-retry以外のmakeRepo利用試験にもこの範囲で入ります。既存external-budgetの分類・時刻を持つ `<base>.jsonl` も同じディレクトリへ保存されます。この既存形式は上限で末尾の行が途中で切れる場合があり、truncatedの印も保証しません。新しいphase/processの完全行の説明とは分けて読み、切断やI/O欠測は計測不足として残します。多数の小さなファイルとI/O、WindowsのDefenderによる走査が観測負荷を増やす可能性があります。診断ありの時間を通常CIの時間と同一には扱いません。
 
 1. run・attempt・sample・checkout/headを確認し、成功と失敗を含む3artifactと各jobログを保存します。毎sampleのjobログでpublication-retry.test.tsの実行と25ケースを確かめ、対応するphaseファイル25件の分類・IDを照合します。0件や不足なら、対象が別shardへ移った可能性を含む計測不足とし、元症状の未再現とは扱いません。artifactは診断dirだけなので、Vitestの各ケースの成否とtimeoutはjobログで照合します。case-endがcompletedでも、Vitestのtimeoutを成功へ戻しません。
 2. phaseのcase IDと安全なrepo basenameを確認し、同じrepoのprocessをsessionごとに対応させます。entryだけ、exitだけ、truncated、不正時刻は計測不足として残します。別sessionやPID再利用を理由に記録を補いません。
@@ -65,7 +77,10 @@ artifactは `publication-retry-<run>-<attempt>-<sample>` という名前で、�
 
 workflowのpnpm版はpackageManagerと同じ値を明示します。実setupと導入の成否、版指定を維持した判断は[PR179](https://github.com/loomake/loomake/pull/179)に記録します。過去の成功で将来の失敗を無視しません。
 
+publication-retryのfixtureでは、repo.envを渡さないrunVerify・品質コマンドとtrace recordのverify・gitに、このpreloadは入りません。このfixtureは `openspecValidate: false` なので、仕様ゲートは外部プロセスを起動せず、プロセス内の処理だけを行います。一方、既存external-budgetのuseRepoEnvなどはrepo.envのNODE_OPTIONSをworkerのprocess.envへ一時的に移します。その間にverify・trace・仕様ゲートが外部操作を起動すれば、その監視役も記録される場合があります。今回の変更ではworker全体のNODE_OPTIONSの扱いを変えません。
 
-repo.envを受け取らない仕様ゲート、runVerifyと品質コマンド、trace recordのverifyとgitは、このpreloadでは観測しません。workerのglobal NODE_OPTIONSへ付け替えて観測を拡げることはしません。これらの未観測操作は、run区間から観測済み監視役区間のunionを引いた残りに、準備・待ち・記録負荷などとともに含まれます。入れ子の偽CLI区間を重ねて加算せず、記録がないことを外部操作がない証拠にしません。
+run区間から、同じrepoの完全なentry/exitがそろった監視役と偽CLIの区間の和集合を引いた残りを「未分類時間」とします。直接起動されるengineの偽CLIも含め、各区間をrunの開始・終了内へ切り詰めてから集計します。同じrepoの監視役と重なる偽CLIは集計上の入れ子として扱い、重なる部分を二重に加算しません。
+
+未分類時間には、publication fixtureの未観測verify・品質・trace、仕様ゲートのプロセス内処理、観測済み操作の監視役がentryを記録する前やexit後に親へ戻るまでの時間、JSの処理、待ち、記録負荷も含まれます。品質処理の時間やCPU時間と決めません。entry/exit欠落・truncated・I/O切断などで必要な区間が不明なら、完全な和集合や未分類時間は確定できません。観測できた区間だけを残し、欠測を0秒として引き算を完成させません。記録がないことを外部操作がない証拠にしません。
 
 旧headの計測も失敗を含めて保存するため、この診断workflowには新pushで旧実行を取り消すconcurrencyを設定しません。新旧が並行する負荷の違いも残し、headとrunを混ぜず判定します。実測の数値、未解決の[Issue178](https://github.com/loomake/loomake/issues/178)・[Issue181](https://github.com/loomake/loomake/issues/181)・[Issue183](https://github.com/loomake/loomake/issues/183)と対応は[PR179](https://github.com/loomake/loomake/pull/179)へ記録し、診断だけで修理完了や全検査成功とはしません。

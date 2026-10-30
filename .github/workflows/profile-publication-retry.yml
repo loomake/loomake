@@ -8,6 +8,8 @@ on:
       - 'packages/runner/test/process-diagnostics.ts'
       - 'packages/runner/test/helpers.ts'
       - 'packages/kit/supervisor/supervisor.cjs'
+      - 'packages/kit/src/runtime/process.ts'
+      - 'vitest.config.ts'
       - 'tests/publication-retry-diagnostics*.test.ts'
       - 'docs/dev/test-phase-profiling.md'
   workflow_dispatch:

@@ -12,9 +12,14 @@ describe('publication retryの独立Windowsサンプル', () => {
   it('対象PRと手動で元shard全体を独立3サンプル実行し成否を上書きしない', () => {
     expect(workflow).toMatch(/on:\n {2}pull_request:\n {4}paths:/);
     expect(workflow).toContain('  workflow_dispatch:');
-    for (const path of ['.github/workflows/profile-publication-retry.yml', 'packages/runner/test/publication-retry.test.ts',
+    const expectedPaths = ['.github/workflows/profile-publication-retry.yml', 'packages/runner/test/publication-retry.test.ts',
       'packages/runner/test/process-diagnostics.ts', 'packages/runner/test/helpers.ts', 'packages/kit/supervisor/supervisor.cjs',
-      'tests/publication-retry-diagnostics*.test.ts', 'docs/dev/test-phase-profiling.md']) expect(workflow).toContain(`'${path}'`);
+      'packages/kit/src/runtime/process.ts', 'vitest.config.ts', 'tests/publication-retry-diagnostics*.test.ts', 'docs/dev/test-phase-profiling.md'];
+    const paths = [...workflow.matchAll(/^ {6}- '([^']+)'$/gm)].map((match) => match[1]);
+    expect(paths.sort()).toEqual([...expectedPaths].sort());
+    const docs = readFileSync(join(root, 'docs/dev/test-phase-profiling.md'), 'utf8').replace(/\r\n/g, '\n');
+    const documented = docs.match(/^自動起動の対象は次のパスです。\n\n((?:- `[^`]+`\n)+)/m)![1];
+    expect([...documented.matchAll(/^- `([^`]+)`$/gm)].map((match) => match[1]).sort()).toEqual([...expectedPaths].sort());
     expect(workflow).toContain('fail-fast: false');
     expect(workflow).toContain('sample: [1, 2, 3]');
     expect(workflow).toContain('runs-on: windows-latest');
@@ -26,10 +31,10 @@ describe('publication retryの独立Windowsサンプル', () => {
     expect(workflow).not.toMatch(/continue-on-error|--retry|--repeat|--testTimeout|--maxWorkers|--no-file-parallelism/);
   });
 
-  it('失敗とキャンセル後も診断dirだけの保存を試み、sampleを混ぜない', () => {
+  it('保存条件はalways()に固定し、診断dirとsampleを混ぜず保存する', () => {
     const upload = step('upload');
-    const condition = upload.match(/^ {8}if: (.*)$/m)![1].replace(/^\$\{\{\s*|\s*\}\}$/g, '');
-    for (const outcome of ['success', 'failure', 'cancelled']) expect(runInNewContext(condition, { always: () => true, outcome }, { timeout: 1000 })).toBe(true);
+    const condition = upload.match(/^ {8}if: (.*)$/m)?.[1];
+    expect(condition).toBe('${{ always() }}');
     expect(upload.match(/^ {10}path: (.*)$/m)?.[1]).toBe('${{ runner.temp }}/publication-retry-diagnostics/');
     expect(upload).toContain('retention-days: 7');
     const template = upload.match(/^ {10}name: (.*)$/m)![1];
