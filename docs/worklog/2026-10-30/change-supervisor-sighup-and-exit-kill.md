@@ -33,3 +33,10 @@
 2. verifyの結果：文書リンク42件成功。spec-only成功。初回doneはlint・型・要件対応が成功し、未追跡のchangesetをchangeset statusが検出しないためREQ056の1件だけ失敗した。changesetをコミット後に再実行し、最終結果とScenario監査はPRへ記録する。
 3. 残っている確認事項・仮定：未回答なし。独立Opus最終評価1枠、全OS CI、自動Codexレビューの最終head確認は残る。
 4. 次にやること：完了ゲートとScenario監査を通し、最終headをpushして独立Opus・自動Codex・全OS CIを確認する。実装担当はCodex、実行ツールはCodexのツール環境、版と実際のモデル識別子は不明。
+
+## 完了ゲートの結果
+
+1. やったこと：stop-command-group-on-sighupの全5タスクを実装した。変更した既存試験のassertionは維持し、新しいScenario6件と既存51セレクタを再確認した。
+2. verifyの結果：changesetコミット後のdoneはexit0。lint・型・全体1450試験成功、既存8skip。新しい6 Scenarioは確認済み、main比較で既存対応の悪化なし。Scenario監査全体はmainからの未整備が残るため不合格であり、全件合格とは扱わない。
+3. 残っている確認事項・仮定：未回答なし。全OS CI・自動Codex・独立Opus最終評価を最終headで確認する。
+4. 次にやること：PR #158へ検証と決定を反映し、最終レビュー・CIの結果を管理役へ引き継ぐ。
