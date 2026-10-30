@@ -75,7 +75,9 @@ export async function runEngineTasks(ctx: RunContext, rec: Recorder): Promise<St
       const output = join(rec.runDir, `${String(rec.step).padStart(2, '0')}-output.json`);
       return { status: 'stopped', reason: `エンジンが変更を残さずに終わりました。出力の記録：${output}。権限や環境を見直して実行し直すか、変更が要らないなら人が tasks.md のこのタスクを完了にしてコミットしてから実行し直してください。`, remaining };
     }
-    const reason = decision.kind === 'no-change' ? maskSecrets(decision.reason) : undefined;
+    const reason = decision.kind === 'no-change'
+      ? maskSecrets(decision.reason).replace(/\p{Cc}/gu, (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`)
+      : undefined;
     if (reason !== undefined) ctx.stdout(`変更不要としてタスクを完了にします：${reason}`);
     checkTask(ctx.tasksPath, task.line);
     git(root, env, ['add', '-A']);
@@ -143,7 +145,10 @@ export async function runGate(ctx: RunContext, rec: Recorder): Promise<Stop | un
     const violation = guard(ctx);
     if (violation) return stopped(violation);
     const changes = decideAfterChanges({ phase: 'repair', hasChanges: hasStagedChanges(ctx), text: result.text });
-    if (changes.kind === 'stop') return stopped('直しでエンジンが変更を残さずに終わりました。出力の記録を確認し、権限や環境を見直してから実行し直してください。');
+    if (changes.kind === 'stop') {
+      const output = join(rec.runDir, `${String(rec.step).padStart(2, '0')}-output.json`);
+      return stopped(`直しでエンジンが変更を残さずに終わりました。出力の記録：${output}。権限や環境を見直してから実行し直してください。`);
+    }
     git(root, env, ['commit', '-q', '-m', `run(${changeId}): 完了ゲートの直し（${fixes + 1} 回目）`]);
   }
   if (gateTasks.length) {
