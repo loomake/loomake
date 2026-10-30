@@ -18,11 +18,12 @@ export default defineConfig({
     },
   },
   test: {
-    // 配布物を使う 2 ファイルは別のプロジェクトにして、そのプロジェクトの試験を流すときだけ、
-    // ワーカーを起こす前に build と pack を 1 回だけ動かす（tests/package-build.setup.ts、Issue #34）
+    // root が配布物を 1 回だけ準備し、選択された package/slow へ provide する。
+    // ファイル指定だけでは余計に build することがある。unit だけなら --project unit を使う。
+    globalSetup: ['tests/package-build.setup.ts'],
     projects: [
       { extends: true, test: { name: 'unit', include: ['tests/**/*.test.ts', 'packages/*/test/**/*.test.ts'], exclude: [...configDefaults.exclude, ...packageTests] } },
-      { extends: true, test: { name: 'package', include: packageTests, globalSetup: ['tests/package-build.setup.ts'] } },
+      { extends: true, test: { name: 'package', include: packageTests } },
     ],
     reporters: ['default', 'json'],
     outputFile: { json: report },

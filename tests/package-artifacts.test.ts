@@ -1,4 +1,5 @@
-import { afterAll, describe, expect, inject, it } from 'vitest';
+import { packedTarballsEnv } from './packed-tarballs.js';
+import { afterAll, describe, expect, it } from 'vitest';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -9,7 +10,7 @@ const root = join(import.meta.dirname, '..');
 const base = mkdtempSync(join(tmpdir(), 'loomake artifacts '));
 const target = join(base, 'prepared');
 // prepare は、globalSetup が試験の前に 1 回だけ build と pack をした tarball を使う（tests/package-build.setup.ts）
-const env = { ...process.env, LOOMAKE_PACKED_TARBALLS: inject('packedTarballs') };
+const env = packedTarballsEnv();
 const run = (mode: string) => spawnSync(process.execPath, ['scripts/package-smoke.mjs', mode, target], { cwd: root, encoding: 'utf8', env });
 afterAll(() => rmSync(base, { recursive: true, force: true }));
 
