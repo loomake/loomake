@@ -146,3 +146,19 @@ describe('結果の異常で止める記録と保存失敗の段階', () => {
     } finally { repo.cleanup(); }
   });
 });
+
+it('[REQ-178][REQ-340] 分類前の出力予算超過は記録の上限として止め結果の理由を補わない', async () => {
+  const repo = makeRepo({ run: { maxLogBytes: 65536 + 10000 } });
+  try {
+    repo.plan([{ write: { 'impl.txt': 'unfinished' }, output: 'a'.repeat(16000), resultFields: failure }]);
+    const result = await run(repo);
+    expect(result.code).toBe(1);
+    const recorded = JSON.parse(readFileSync(join(dir(repo), 'summary.json'), 'utf8'));
+    expect(recorded.reason).toContain('記録の上限');
+    expect(recorded.reason).not.toContain('エンジンが失敗の結果を返しました');
+    expect(existsSync(join(dir(repo), '01-output.json'))).toBe(false);
+    expect(readFileSync(join(repo.root, 'impl.txt'), 'utf8')).toBe('unfinished');
+    expect(repo.calls()).toHaveLength(1);
+    expect(repo.prs()).toEqual([]);
+  } finally { repo.cleanup(); }
+});

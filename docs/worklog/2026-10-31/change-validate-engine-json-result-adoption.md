@@ -50,3 +50,11 @@
 2. verify：新規変異baselineは53/53、3変異はすべてassertion失敗として検出した。既存の6変異も既存45件で検出し、両外側試験が成功した。型と対象lintも成功。
 3. 残る事項：3.2以降、実CLI4件・done・CI・自動Codex・独立最終レビュー・親DoD。
 4. 次：保存/停止/正常経路の全Scenario対応を確かめ、fixtureの出所と保存許可を実装する。
+
+
+## task3.2 の保存/停止の全Scenario確認
+
+1. やったこと：REQ-340の全8ScenarioとREQ-179の保存段階を新規統合/記録試験へ対応付けた。異常JSON自体のoutput保存が予算を超えた場合も、分類済みの理由を足さない負例を追加。必要なrunner patch changesetを先行して用意した。
+2. verify：新規保存予算負例は成功。通常/短path/長path/summaryとstop I/O失敗/guard重複/元raw分類は前記の成功結果と照合した。41Scenarioの対応表は専用treeのscenario-test-map.jsonへ保存した。全体verifyはこれから。
+3. 残る事項：3.3以降、実CLI4件・done・CI・自動Codex・独立最終レビュー・親DoD。changeset作成だけではtask5.1完了としない。
+4. 次：旧全Scenarioと既存停止順の回帰を通常verifyで確認する。
