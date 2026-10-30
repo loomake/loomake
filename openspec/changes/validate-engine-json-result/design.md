@@ -252,3 +252,30 @@ scripts/claude-result-preflight.mjsは限定probeと拒否判断、claude-result
 両版の公開nativeを再hashし、no-session-persistenceがprint条件検査からsessionPersistenceDisabledを設定して主要transcript writerのskipへ届くことを静的に確認した。一方、別historyクラスのadd入口はskip-history環境と入れ子条件を見ており、同flagの直接guardはない。printから全callerへ到達しないという証明はまだないため、必ず書くとも安全とも判断しない。新しい環境変数を追加して解消した扱いにはしない。
 
 managedの適格判定にはteam/enterpriseだけでなくprofile・machine pin・gateway・key等の経路とcache読取があるため、subscription種別だけでmanaged不在としない。これらの公開分岐と公式資料を根拠として、保存経路に残る確認事項を限定した。3pathのreadonly probeをparent/managed/flag/pluginのcoverage証明へ使わず、実CLI起動0・実4件0/4を維持する。
+
+
+### 9.5 追加制御設計6c4bd8c7の採否（2026-10-31）
+
+head9cc0abcの全8 Requirement・41 Scenario、関連契約・コード全文と旧3203554fを保持して追加設計を新たに実行した。要求/実応答はclaude-opus-5-5、role=design、ok=true、拒否0で、回答138行全文を管理役が確認した。kernel本文はモデルへ未提供で管理要約に基づくという不足を保持し、設計の同意だけでOS強制や採集資格を認めない。
+
+| 判断 | 元の選択肢・おすすめ | 管理役の採否と理由 |
+|---|---|---|
+| QD-1 | A：C launcher／B：Python ctypes／C：第三者ツール／D：導入なし。Aを候補として調査 | Aは調査候補だけ。新sandbox・C launcherの実装/適用は未採用。B1〜B4を解けず、技術可能性を資格にしない |
+| QD-2 | A：hook/pluginが空なら制限下の結果をgenuineへ数える／B：数えない。A推奨 | 未採用。空というだけでgenuineとせず、従前P6と全証拠を維持。保護と非保存を実際に確認できる条件が正で、hook/pluginが必ず空という一般条件は追加しない |
+| QD-3 | A：seccompでAF_UNIX拒否を調査／B：ABI9待ち／C：拒否維持。Aを調査し不成立ならC | 追加制御候補の調査だけ。seccomp実装/適用は未採用 |
+| QD-4 | A：固定boolで未証明なら拒否／B：host audit/eBPF/swap等を保証外とする。モデルは一部Bを推奨 | 新しい無限の証明義務は追加しない。既承認のJSメモリ消去を保証しない限界とcollector/CLI/子孫の原raw非保存を保持する。ホスト外の仮想的観測まで閉じたとは主張しない。実在する診断B1等の未証明は残す |
+| QD-5 | A：純粋試験は全OS、syscall調査は手動記録／B：Linux限定の新skip。A推奨 | A採用。新skipや品質設定の緩和はしない。OS制御の採用を意味しない |
+| QD-6 | A：固定診断名をstderr-only/file-or-network/unknownへ分類／B：存在で拒否。B維持でA検討 | B維持。Aは対象2版の公開nativeの厳密な根拠を準備する段階のみ。実環境値は読まない |
+
+追加設計6章のP1/P2/P3だけを今回の実装へ採用する。P1は固定版nativeのpath/type/symlink/hashをread-onlyで確認し、P2はignored内のcontainmentを検査する。P3は自己所有の一時cwd、O_EXCL/0600の固定note、祖先の.git不在とGIT環境の不在、git自身が非repoと判定した根拠を確認し、finallyで自己領域を片付ける。失敗は固定理由へ変換する。どれも資格adapterや実起動へつながず、P6の拒否・実0/4・task4.2未完了を保つ。
+
+atomic renameだけの保存は既存fixtureを上書きできるため、永続化/試行台帳は未採用とする。REQのnooverwriteと全試行保持に結ぶ具体手順が別に必要である。process tree/stream終結も既存部品の利用境界を具体化してから扱う。今回のvalidatorsでこれらの未受入や5.3を完了にしない。既存36/66/45件とmutation期待値を変えず、新しい合成否定試験だけを追加する。
+
+
+### 9.6 先行するP1/P2/P3の到達点
+
+scripts/claude-result-paths.mjsへread-only validatorとowned cwd管理を追加する。P1の実入口はversionから公式prefixと既存の固定SHAを導き、別pinを受けない。低水準のfile検査は合成試験用にも使うが、その戻り値を実観測の資格へ使わない。path/type/symlinkを確認して同じopenのFDを逐次hashし、途中のfile変更や不一致は固定理由で拒否する。execするFDとの拘束は未実装のままである。
+
+P2は実pathの境界とgit check-ignoreをread-onlyで調べ、保存先を作らない。成功しても、その後のopenとの原子性や資格を証明しない。P3は自己作成cwdへO_EXCL/0600で固定noteだけを書き、祖先.git/GIT環境の存在を拒否する。gitの明示的な非repo結果も照合し、単なる非ゼロやbare repoをgit外としない。callbackの例外messageを捨て、成功/失敗後に自己cwdをfinallyで削除する。CLI呼出しや資格adapterへは接続しない。
+
+追加24件の合成試験はnativeの偽pin/path/type/symlink、保存先の境界/除外/祖先file、git内/bare/GIT環境/実行不能、noteと成功/失敗時のcleanupを確認する。既存36/66/45件とmutation期待値は保持する。実4件0/4、P6拒否、4.2未チェック、永続化/試行台帳・process tree/stream終結の未受入を維持する。
