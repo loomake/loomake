@@ -56,6 +56,18 @@ describe('変更を残さないエンジン', () => {
     expect(tasks(repo)).toContain('- [x] 1.2');
   }));
 
+  it.each([
+    ['全角空白', '\u3000'],
+    ['NBSP', '\u00a0'],
+  ])('[REQ-330] %sの区切りに続く理由で変更なしのタスクを完了する', (_name, separator) => withRepo(async (repo) => {
+    repo.plan([impl, { output: `LOOMAKE-NOCHANGE:${separator}確認済み` }]);
+    const r = await run(repo);
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain('変更不要としてタスクを完了にします：確認済み');
+    expect(repo.git('log', '--format=%B', '--grep', '^run(c1): 1.2', 'loomake/c1')).toContain('変更不要：確認済み');
+    expect(tasks(repo)).toContain('- [x] 1.2');
+  }));
+
   it('[REQ-330] 理由に含まれる既知の秘密情報の形式を表示とコミット本文で置換する', () => withRepo(async (repo) => {
     const token = 'sk-' + 'testonly'.repeat(4);
     repo.plan([impl, { output: `LOOMAKE-NOCHANGE: 確認済み ${token}` }]);
