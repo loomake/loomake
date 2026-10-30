@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { runInNewContext } from 'node:vm';
 
 const root = join(import.meta.dirname, '..');
-const workflow = readFileSync(join(root, '.github/workflows/profile-publication-retry.yml'), 'utf8');
+const workflow = readFileSync(join(root, '.github/workflows/profile-publication-retry.yml'), 'utf8').replace(/\r\n/g, '\n');
 const steps = workflow.split(/\n(?= {6}- )/).slice(1);
 const step = (id: string) => steps.find((value) => new RegExp(`^ {6}(?:- | {2})id: ${id}$`, 'm').test(value))!;
 

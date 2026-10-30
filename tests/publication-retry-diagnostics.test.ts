@@ -87,6 +87,53 @@ describe('publication retryの任意診断', () => {
     expect(JSON.stringify(events)).not.toMatch(/unrecorded-argument|intended-output|argv|stdout|stderr|NODE_OPTIONS/);
   });
 
+
+  it.each(['list', 'create'])('Windows引用符付きgh pr %sも固定分類へ直し、生の引数を残さない', (operation) => {
+    const { base, directory } = fixture(); const env = { ...process.env };
+    attachProcessDiagnostics(base, env);
+    const script = join(base, 'supervisor.cjs'); writeFileSync(script, 'process.exitCode = 0;');
+    const result = spawnSync(process.execPath, [script, JSON.stringify(['gh', ['"pr"', '"' + operation + '"', '"unrecorded-argument"'], true, 1])], { env, encoding: 'utf8' });
+    expect(result.status, result.stderr).toBe(0);
+    const events = rows(join(directory, readdirSync(directory)[0]));
+    expect(events.map((row) => row.operation)).toEqual(['gh-pr-' + operation, 'gh-pr-' + operation]);
+    expect(JSON.stringify(events)).not.toContain('unrecorded-argument');
+  });
+
+  it('長い行が入らなかった後の短いphaseも保存せずtruncatedを終端にする', () => {
+    const { directory } = fixture(); const phase = createCaseDiagnostics(); phase.event('case-start');
+    const file = join(directory, readdirSync(directory)[0]); const first = rows(file)[0];
+    const shortBytes = Buffer.byteLength(JSON.stringify({ ...first, event: 'case-end' }) + '\n');
+    const markerBytes = Buffer.byteLength(JSON.stringify({ event: 'truncated', at: Date.now(), pid: process.pid }) + '\n');
+    const desired = 65536 - 160 - shortBytes - markerBytes - 2;
+    const paddingBytes = Buffer.byteLength(JSON.stringify({ padding: '' }) + '\n');
+    writeFileSync(file, JSON.stringify({ padding: 'x'.repeat(desired - paddingBytes) }) + '\n');
+    phase.event('run-end', { n: Number.MAX_SAFE_INTEGER, code: Number.MAX_SAFE_INTEGER, expectedReason: true, completed: true });
+    for (let n = 0; n < 5; n++) phase.event('case-end');
+    expect(rows(file).at(-1)?.event).toBe('truncated');
+    expect(rows(file).filter((row) => row.event === 'truncated')).toHaveLength(1);
+    expect(rows(file).some((row) => row.event === 'case-end')).toBe(false);
+    expect(Buffer.byteLength(readFileSync(file))).toBeLessThanOrEqual(65536);
+  });
+
+  it('同一PIDでpreloadを読み直しても別sessionファイルへentry/exitを対応させる', () => {
+    const { base, directory } = fixture(); const env = { ...process.env };
+    attachProcessDiagnostics(base, env);
+    const preload = join(base, 'process-diagnostics.cjs');
+    const script = join(base, 'gh');
+    writeFileSync(script, `delete require.cache[require.resolve(${JSON.stringify(preload)})]; require(${JSON.stringify(preload)}); process.exitCode = 3;`);
+    const result = spawnSync(process.execPath, [script, 'pr', 'list'], { env, encoding: 'utf8' });
+    expect(result.status, result.stderr).toBe(3);
+    const groups = readdirSync(directory).map((file) => rows(join(directory, file)));
+    expect(groups).toHaveLength(2);
+    expect(new Set(groups.flat().map((row) => row.pid)).size).toBe(1);
+    expect(new Set(groups.map((group) => group[0].session)).size).toBe(2);
+    for (const group of groups) {
+      expect(group.map((row) => row.event)).toEqual(['fake-cli-entry', 'fake-cli-exit']);
+      expect(group[0].session).toBe(group[1].session);
+      expect(group[1].code).toBe(3);
+    }
+  });
+
   it('preload実行時の書込失敗も元の終了コードと出力を保つ', () => {
     const { base, directory } = fixture(); const env = { ...process.env };
     attachProcessDiagnostics(base, env);
@@ -106,5 +153,6 @@ describe('publication retryの任意診断', () => {
     const file = join(directory, readdirSync(directory)[0]);
     expect(Buffer.byteLength(readFileSync(file))).toBeLessThanOrEqual(65536);
     expect(rows(file).at(-1)?.event).toBe('truncated');
+    expect(rows(file).filter((row) => row.event === 'truncated')).toHaveLength(1);
   });
 });

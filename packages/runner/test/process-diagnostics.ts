@@ -13,11 +13,12 @@ type Details = { n?: number; code?: number; expectedReason?: boolean; completed?
 function appendBounded(file: string, row: object) {
   try {
     const used = existsSync(file) ? statSync(file).size : 0;
-    if (used > LIMIT - RESERVE) return;
+    if (used > LIMIT - RESERVE) return false;
     const line = JSON.stringify(row) + '\n';
-    if (used + Buffer.byteLength(line) <= LIMIT - RESERVE) appendFileSync(file, line);
-    else appendFileSync(file, JSON.stringify({ event: 'truncated', at: Date.now(), pid: process.pid }) + '\n');
+    if (used + Buffer.byteLength(line) <= LIMIT - RESERVE) { appendFileSync(file, line); return true; }
+    appendFileSync(file, JSON.stringify({ event: 'truncated', at: Date.now(), pid: process.pid }) + '\n');
   } catch { /* 計測不足として扱い、元の処理へ例外を返さない。 */ }
+  return false;
 }
 
 /** case開始時に閉包を作る。並行して残ったcallbackも別caseへ混ざらない。 */
@@ -26,19 +27,20 @@ export function createCaseDiagnostics(kind = 'publication-retry') {
   const directory = process.env.LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR;
   const id = `publication-retry-${process.pid}-${randomUUID()}`;
   let repo: string | undefined;
+  let terminal = false;
   return {
     bind(base: string) {
       const name = basename(base);
       if (/^loomake-run-[a-zA-Z0-9_-]{1,80}$/.test(name)) repo = name;
     },
     event(event: Phase, details: Details = {}) {
-      if (!directory || !PHASES.has(event)) return;
+      if (!directory || terminal || !PHASES.has(event)) return;
       try {
         mkdirSync(directory, { recursive: true });
         const safe: Details = {};
         for (const key of ['n', 'code'] as const) if (Number.isSafeInteger(details[key])) safe[key] = details[key];
         for (const key of ['expectedReason', 'completed'] as const) if (typeof details[key] === 'boolean') safe[key] = details[key];
-        appendBounded(join(directory, `${id}.phases.jsonl`), { event, at: Date.now(), pid: process.pid, id, label, ...(repo ? { repo } : {}), ...safe });
+        terminal = !appendBounded(join(directory, `${id}.phases.jsonl`), { event, at: Date.now(), pid: process.pid, id, label, ...(repo ? { repo } : {}), ...safe });
       } catch { /* 保存先が使えなくても元の処理を続ける。 */ }
     },
   };
@@ -60,28 +62,38 @@ export function attachProcessDiagnostics(base: string, env: NodeJS.ProcessEnv) {
       const supervisor = name === 'supervisor.cjs';
       const fake = name === 'claude' || name === 'gh';
       if (supervisor || fake) {
+        const session = require('node:crypto').randomUUID();
         const operations = new Set(['status', 'show', 'diff', 'rev-parse', 'check-ignore', 'switch', 'add', 'commit', 'push', 'init', 'remote', 'config', 'list', 'create', 'auth', 'pr']);
         let operation = fake ? name : 'other';
         if (supervisor) {
           const [target, args] = JSON.parse(process.argv[2]);
           const command = path.basename(String(target)).replace(/\\.exe$/i, '');
           if (['git', 'gh', 'node', 'cmd', 'sh', 'bash', 'powershell'].includes(command)) operation = command;
-          if ((command === 'git' || command === 'gh') && operations.has(args[0])) operation += '-' + args[0];
+          const unquote = value => String(value).replace(/^"(.*)"$/, '$1');
+          const first = unquote(args[0]);
+          const second = unquote(args[1]);
+          if ((command === 'git' || command === 'gh') && operations.has(first)) operation += '-' + first;
+          if (command === 'gh' && operations.has(first) && operations.has(second)) operation += '-' + second;
         } else if (name === 'gh') {
           if (operations.has(process.argv[2])) operation += '-' + process.argv[2];
           if (operations.has(process.argv[3])) operation += '-' + process.argv[3];
         }
-        const file = path.join(${JSON.stringify(directory)}, ${JSON.stringify(repo)} + '.' + process.pid + '.processes.jsonl');
+        const file = path.join(${JSON.stringify(directory)}, ${JSON.stringify(repo)} + '.' + process.pid + '.' + session + '.processes.jsonl');
+        let terminal = false;
         const event = (event, code) => {
+          if (terminal) return;
           try {
             const used = fs.existsSync(file) ? fs.statSync(file).size : 0;
-            if (used > ${LIMIT - RESERVE}) return;
-            const row = { event, at: Date.now(), pid: process.pid, repo: ${JSON.stringify(repo)}, operation };
+            if (used > ${LIMIT - RESERVE}) { terminal = true; return; }
+            const row = { event, at: Date.now(), pid: process.pid, session, repo: ${JSON.stringify(repo)}, operation };
             if (Number.isSafeInteger(code)) row.code = code;
             const line = JSON.stringify(row) + '\\n';
             if (used + Buffer.byteLength(line) <= ${LIMIT - RESERVE}) fs.appendFileSync(file, line);
-            else fs.appendFileSync(file, JSON.stringify({ event: 'truncated', at: Date.now(), pid: process.pid }) + '\\n');
-          } catch { /* 診断だけを欠損させる。 */ }
+            else {
+              terminal = true;
+              fs.appendFileSync(file, JSON.stringify({ event: 'truncated', at: Date.now(), pid: process.pid, session }) + '\\n');
+            }
+          } catch { terminal = true; /* 診断だけを欠損させる。 */ }
         };
         event(supervisor ? 'supervisor-entry' : 'fake-cli-entry');
         process.on('exit', code => event(supervisor ? 'supervisor-exit' : 'fake-cli-exit', code));
