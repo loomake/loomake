@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { runRun } from '@loomake/runner';
-import { CHANGE, makeRepo, type Repo } from './helpers.js';
+import { CHANGE, makeRepo, noChange, type Repo } from './helpers.js';
 import { git } from '../src/git.js';
 
 vi.mock('../src/git.js', async (original) => {
@@ -31,7 +31,7 @@ async function run(repo: Repo) {
 async function withRepo(action: (repo: Repo) => Promise<void>) {
   const repo = makeRepo({ run: { maxFixes: 1 } });
   try {
-    repo.plan([{ write: { 'impl.txt': '実装\n' } }, {}]);
+    repo.plan([{ write: { 'impl.txt': '実装\n' } }, noChange]);
     await action(repo);
   } finally { repo.cleanup(); }
 }

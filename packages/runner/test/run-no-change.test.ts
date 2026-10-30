@@ -16,7 +16,7 @@ const summary = (repo: Repo): RunSummary => {
 };
 async function run(repo: Repo, dryRun = false) {
   const out: string[] = [];
-  const code = await runRun({ root: repo.root, changeId: 'c1', env: repo.env, interactive: false, fileExists: () => false, stdout: (text) => out.push(text), dryRun });
+  const code = await runRun({ root: repo.root, changeId: 'c1', env: repo.env, interactive: false, confirm: async () => false, fileExists: () => false, stdout: (text) => out.push(text), dryRun });
   return { code, stdout: out.join('\n') };
 }
 async function withRepo(fn: (repo: Repo) => Promise<void>) {

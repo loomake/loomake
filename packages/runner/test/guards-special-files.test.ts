@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { ModuleKind, ScriptTarget, transpileModule } from 'typescript';
-import { CHANGE, makeRepo, type Repo } from './helpers.js';
+import { CHANGE, makeRepo, noChange, type Repo } from './helpers.js';
 
 const runnerSource = join(import.meta.dirname, '../src');
 const packages = join(import.meta.dirname, '../..');
@@ -162,7 +162,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル�
         if (kind === 'directory') { mkdirSync(target); fifo(join(target, 'unread-fifo')); }
         symlinkSync(target, hook);
       }
-      repo.plan([{ write: { 'impl.txt': 'implementation\n' } }, {}]);
+      repo.plan([{ write: { 'impl.txt': 'implementation\n' } }, noChange]);
       const result = probe(repo, executableRunner(repo.base, 'run'), 'run', runAction, 10_000);
       expect(result.code, result.output.join('\n')).toBe(0);
       expect(result.output.join('\n')).not.toContain('特殊ファイル');

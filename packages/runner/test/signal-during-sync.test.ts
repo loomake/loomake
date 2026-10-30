@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { runRun } from '@loomake/runner';
-import { CHANGE, makeRepo } from './helpers.js';
+import { CHANGE, makeRepo, noChange } from './helpers.js';
 
 vi.setConfig({ testTimeout: 60_000 });
 
@@ -13,7 +13,7 @@ vi.setConfig({ testTimeout: 60_000 });
 async function abortDuring(when: (text: string, count: number) => boolean, lookup = false) {
   const repo = makeRepo();
   try {
-    repo.plan([{ write: { 'impl.txt': '実装\n' } }, {}]);
+    repo.plan([{ write: { 'impl.txt': '実装\n' } }, noChange]);
     const controller = new AbortController();
     let count = 0;
     // lookup のときは、偽の gh が PR を検索した記録を見て中断を予約する。検索は同期的に動くので、記録を見られるのは検索のあと

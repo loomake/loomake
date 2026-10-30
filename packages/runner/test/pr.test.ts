@@ -3,7 +3,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { runRun } from '@loomake/runner';
-import { CHANGE, makeRepo, type Repo } from './helpers.js';
+import { CHANGE, makeRepo, noChange, type Repo } from './helpers.js';
 
 // git・node・verify のコマンドを何度も起動するので、Windows では 1 件に 10 秒を超えることがある
 vi.setConfig({ testTimeout: 60_000 });
@@ -12,7 +12,7 @@ async function withPassingRun(fn: (repo: Repo, r: { code: number; stdout: string
   const repo = makeRepo();
   try {
     setup?.(repo);
-    repo.plan([{ write: { 'impl.txt': '実装\n' } }, {}]);
+    repo.plan([{ write: { 'impl.txt': '実装\n' } }, noChange]);
     const out: string[] = [];
     const code = await runRun({
       root: repo.root,
@@ -76,7 +76,7 @@ describe('再開したときの PR の向き先', () => {
   it('[REQ-114] 止まったあと loomake/<change-id> の上で再開しても、最初に始めたブランチに向けた PR を作る', async () => {
     const repo = makeRepo();
     try {
-      repo.plan([{ output: 'LOOMAKE-QUESTION: 続けますか' }, { write: { 'impl.txt': '実装\n' } }, {}]);
+      repo.plan([{ output: 'LOOMAKE-QUESTION: 続けますか' }, { write: { 'impl.txt': '実装\n' } }, noChange]);
       expect((await runOnce(repo)).code).toBe(1);
       expect(repo.git('rev-parse', '--abbrev-ref', 'HEAD')).toBe('loomake/c1');
       const r = await runOnce(repo);
@@ -91,7 +91,7 @@ describe('再開したときの PR の向き先', () => {
     const repo = makeRepo();
     try {
       repo.git('switch', '-q', '-c', 'loomake/c1');
-      repo.plan([{ write: { 'impl.txt': '実装\n' } }, {}]);
+      repo.plan([{ write: { 'impl.txt': '実装\n' } }, noChange]);
       const r = await runOnce(repo);
       expect(r.code).toBe(1);
       expect(r.stdout).toContain('PR の向き先が分かりません');
@@ -180,7 +180,7 @@ describe('gh CLI で PR を作る', () => {
       const authLog = join(repo.base, 'gh-auth.jsonl');
       repo.env.FAKE_GH_AUTH_LOG = authLog;
       // 1 回目の呼び出しで、エンジンが実装と同時に gh-logout を作る
-      repo.plan([{ write: { 'impl.txt': '実装\n', '../gh-logout': '' } }, {}]);
+      repo.plan([{ write: { 'impl.txt': '実装\n', '../gh-logout': '' } }, noChange]);
       const out: string[] = [];
       const code = await runRun({ root: repo.root, changeId: CHANGE, interactive: false, confirm: async () => false, stdout: (t) => out.push(t), env: repo.env, fileExists: () => false });
       expect(code).toBe(1);

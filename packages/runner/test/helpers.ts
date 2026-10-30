@@ -9,6 +9,9 @@ import { attachProcessDiagnostics } from './process-diagnostics.js';
 export const CHANGE = 'c1';
 
 /** 偽の claude が 1 回の呼び出しですること */
+/** 変更が要らないタスクを明示して終える台本。 */
+export const noChange = { output: 'LOOMAKE-NOCHANGE: 検査用に変更が要らない' };
+
 export type FakeStep = {
   /** プロジェクトのルートからのパス → 中身 */
   write?: Record<string, string>;

@@ -8,7 +8,7 @@ import { profileEvent } from '../../../scripts/test-phase-profile.mjs';
 import { holderWaitTime, withProcessBudget } from '../../kit/src/runtime/process.js';
 import { runRecord } from '@loomake/trace';
 import { runRun } from '@loomake/runner';
-import { makeRepo, CHANGE, fakeCli, stallOf, type FakeCli, type FakeCliEvent, type Repo } from './helpers.js';
+import { makeRepo, noChange, CHANGE, fakeCli, stallOf, type FakeCli, type FakeCliEvent, type Repo } from './helpers.js';
 
 // git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
 vi.setConfig({ testTimeout: 60_000 });
@@ -136,7 +136,7 @@ describe('runから外部操作までの期限', () => {
     try {
       repo.write('write-report.mjs', "import { appendFileSync } from 'node:fs'; appendFileSync('openspec/changes/c1/tasks.md','変更された内容');");
       repo.git('add', 'write-report.mjs'); repo.git('commit', '-qm', '品質コマンドの変更');
-      repo.plan([{}, {}]);
+      repo.plan([noChange, noChange]);
       const result = await run(repo);
       expect(result.code).toBe(1);
       expect(result.stdout).toContain('tasks.mdが変わりました');
@@ -180,7 +180,7 @@ describe('runから外部操作までの期限', () => {
       const repo = makeRepo();
       diagnosticEvent(repo, 'fixture-ready', { elapsedMs: Date.now() - started, stage });
       try {
-        repo.plan([{ write: { 'impl.txt': '実装' } }, {}]);
+        repo.plan([{ write: { 'impl.txt': '実装' } }, noChange]);
         const command = stage === 'push' ? 'git' : 'gh';
         const condition = stage === 'push' ? "args[0]==='push'" : stage === 'auth' ? "args[0]==='auth' && fs.existsSync('impl.txt')" : `args[0]==='pr' && args[1]===${JSON.stringify(stage)}`;
         // push と PR の作成は 1 操作の期限では止めず、run の残り時間で止める（relax-commit-push-budget）。
@@ -420,7 +420,7 @@ describe('フックを動かす git の操作の期限', () => {
         writeFileSync(hook, `#!/bin/sh\nsleep ${hookSeconds}\n`);
         chmodSync(hook, 0o755);
       }
-      repo.plan([{ write: { 'impl.txt': '実装\n' } }, {}]);
+      repo.plan([{ write: { 'impl.txt': '実装\n' } }, noChange]);
       const r = await withProcessBudget({ timeoutMs: win ? 40_000 : 20_000, maxOperationMs: operationMs }, () => run(repo));
       expect(r.code, r.stdout).toBe(0);
       expect(summary(repo)).toMatchObject({ status: 'completed', remainingTasks: [] });

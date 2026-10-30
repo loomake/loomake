@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { runRun } from '@loomake/runner';
-import { CHANGE, makeRepo, type Repo } from './helpers.js';
+import { CHANGE, makeRepo, noChange, type Repo } from './helpers.js';
 
 vi.setConfig({ testTimeout: 60_000 });
 
@@ -13,7 +13,7 @@ async function pushFailsWith(message: string) {
     const hook = join(repo.root, '.git', 'hooks', 'pre-push');
     writeFileSync(hook, `#!/bin/sh\necho "\${GIT_TERMINAL_PROMPT:-unset}" > "${join(repo.base, 'prompt.txt')}"\necho "${message}" >&2\nexit 1\n`);
     chmodSync(hook, 0o755);
-    repo.plan([{ write: { 'impl.txt': '実装\n' } }, {}]);
+    repo.plan([{ write: { 'impl.txt': '実装\n' } }, noChange]);
     const out: string[] = [];
     const code = await runRun({ root: repo.root, changeId: CHANGE, interactive: false, confirm: async () => false, stdout: (t) => out.push(t), env: repo.env, fileExists: () => false });
     return { code, stdout: out.join('\n'), prompt: readFileSync(join(repo.base, 'prompt.txt'), 'utf8').trim() };
