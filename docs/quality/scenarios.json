@@ -195,7 +195,7 @@
         {
           "file": "packages/kit/test/process.test.ts",
           "contains": "[REQ-181] 親が先に終わっても",
-          "sha256": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca"
+          "sha256": "fab7820492e60b1e014f11871cb0195a95e431ab77a8754275e117761be3966b"
         }
       ]
     },
@@ -211,7 +211,7 @@
         {
           "file": "packages/kit/test/process.test.ts",
           "contains": "[REQ-181] 監視役へのSIGINT",
-          "sha256": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca"
+          "sha256": "fab7820492e60b1e014f11871cb0195a95e431ab77a8754275e117761be3966b"
         }
       ]
     },
@@ -227,7 +227,7 @@
         {
           "file": "packages/runner/test/external-budget.test.ts",
           "contains": "[REQ-183] OpenSpec検証の時間切れ",
-          "sha256": "9ff1ca9d8c01b717f525ce4ddc388b560016d891fbea4b4764a8ac6b29353563"
+          "sha256": "5e46266361a820f6aa3af98e016f3fea1cde38bf95261bc2f1bcc2ae936342f6"
         }
       ]
     },
@@ -5860,7 +5860,7 @@
         {
           "file": "packages/runner/test/external-budget.test.ts",
           "contains": "[REQ-192][REQ-182] run の準備中に git",
-          "sha256": "9ff1ca9d8c01b717f525ce4ddc388b560016d891fbea4b4764a8ac6b29353563"
+          "sha256": "5e46266361a820f6aa3af98e016f3fea1cde38bf95261bc2f1bcc2ae936342f6"
         }
       ]
     },
@@ -7138,7 +7138,7 @@
         {
           "file": "packages/kit/test/process.test.ts",
           "contains": "操作間で残り時間を共有し、期限後は起動しない",
-          "sha256": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca"
+          "sha256": "fab7820492e60b1e014f11871cb0195a95e431ab77a8754275e117761be3966b"
         }
       ]
     },
@@ -7154,12 +7154,12 @@
         {
           "file": "packages/kit/test/process.test.ts",
           "contains": "終わらない子を期限で止める",
-          "sha256": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca"
+          "sha256": "fab7820492e60b1e014f11871cb0195a95e431ab77a8754275e117761be3966b"
         },
         {
           "file": "packages/kit/test/process.test.ts",
           "contains": "合計出力をバイト数で制限し理由を区別する",
-          "sha256": "469b75b401deaa9ea5aa7b78246db6d9e740525b4e929218459e9b88d415d1ca"
+          "sha256": "fab7820492e60b1e014f11871cb0195a95e431ab77a8754275e117761be3966b"
         }
       ]
     },
@@ -7945,6 +7945,123 @@
           "file": "tests/ci-docs-only.test.ts",
           "contains": "変更前か変更後が通常のファイルでないもの",
           "sha256": "d0d61688ac0eac6b75ea6f2f04119296c2b7585d44521acc6be98fd61f36eaec"
+        }
+      ]
+    },
+    {
+      "id": "SCN-2ae0b9c26b02a7a07597",
+      "status": "reviewed",
+      "scenarioSha256": "0a2a8f143c3b698a03786ee1686228be3d3fddb165d1a370406502ca7fe9528c",
+      "reason": "timeoutMinutes 40000 で正常完了し、タスクのコミットと終了コード0を保ち、時間上限の表示がないことを確かめる。",
+      "sources": [
+        "REQ-336"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/engine-long-deadline.test.ts",
+          "contains": "run.timeoutMinutes がタイマーの上限を超えても",
+          "sha256": "1cd3ba63bca56711938063adcc2410629d741a2b3fc50ddac63eea6dd77dc59e"
+        }
+      ]
+    },
+    {
+      "id": "SCN-7bf8b4c7e50629f0a4f0",
+      "status": "reviewed",
+      "scenarioSha256": "b22577f2dcc3508ed23a168894d6c263604a833ea2661c0e5c02deff2470b420",
+      "reason": "長い待機の最初の2回を早く発火させ、3回待ち直し、各待機が上限以下で、エンジンの結果を保つことを確かめる。",
+      "sources": [
+        "REQ-336"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/engine-long-deadline.test.ts",
+          "contains": "分割した待機が期限前に発火しても",
+          "sha256": "1cd3ba63bca56711938063adcc2410629d741a2b3fc50ddac63eea6dd77dc59e"
+        }
+      ]
+    },
+    {
+      "id": "SCN-9f0513dd500f1a66f24d",
+      "status": "reviewed",
+      "scenarioSha256": "10afe00d27737d04e9c60cc4db3d08bce91f27d7d0be0b3747bdeed5e4a5a929",
+      "reason": "pre-commitからSIGINTとSIGTERMを送り、interrupted、終了コード1、未完了タスク、エンジン1回、PRとpushなしを確かめる。Linux上の信号試験である。",
+      "sources": [
+        "REQ-337"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/signal-during-sync.test.ts",
+          "contains": "タスクのコミットのgitのあいだに監視役が",
+          "sha256": "90a6e03f450d51f587ff63eb1e3f39a2e4be895c9c7a21f57a6df7b14e7c2259"
+        }
+      ]
+    },
+    {
+      "id": "SCN-8780238979655d4650d6",
+      "status": "reviewed",
+      "scenarioSha256": "873122a0b7e54ebce4d04bab8a85686bb763cda05845b5a63b2704b7e5a41c90",
+      "reason": "pre-pushからSIGINTを送り、証拠コミットとその理由、interrupted、終了コード1、リモートブランチとPRなしを確かめる。",
+      "sources": [
+        "REQ-337"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/signal-during-sync.test.ts",
+          "contains": "証拠のpushのあいだの中断で",
+          "sha256": "90a6e03f450d51f587ff63eb1e3f39a2e4be895c9c7a21f57a6df7b14e7c2259"
+        }
+      ]
+    },
+    {
+      "id": "SCN-8f4b00d1e9dbe870b888",
+      "status": "reviewed",
+      "scenarioSha256": "2b989d1b1bea0a00fa544d5d76ba79934da86fcb1e84c6436682e97eee61b065",
+      "reason": "pre-commitから監視役へSIGKILLを送り、stopped、監視役の異常終了理由、終了コード1、PRとpushなしを確かめる。",
+      "sources": [
+        "REQ-337"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/signal-during-sync.test.ts",
+          "contains": "監視役が結果を書かずに終わったときは、利用者の中断と区別して",
+          "sha256": "90a6e03f450d51f587ff63eb1e3f39a2e4be895c9c7a21f57a6df7b14e7c2259"
+        }
+      ]
+    },
+    {
+      "id": "SCN-2db570e0ac6ac2e10216",
+      "status": "reviewed",
+      "scenarioSha256": "d2eb015bf74ccc9e055b24c04617fc8cd96a7ef9c12eb6f186238fcd9a338485",
+      "reason": "gh pr listでSIGINT、pr createでSIGTERMを送り、証拠コミットとpush済みブランチを保ち、interrupted、終了コード1、PR未作成を確かめる。",
+      "sources": [
+        "REQ-337"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/signal-during-sync.test.ts",
+          "contains": "PRの",
+          "sha256": "90a6e03f450d51f587ff63eb1e3f39a2e4be895c9c7a21f57a6df7b14e7c2259"
+        }
+      ]
+    },
+    {
+      "id": "SCN-f6de9fc39a8a3ef2235a",
+      "status": "reviewed",
+      "scenarioSha256": "bcfda3cab1378908fe372499505a4d89d50cf366988b5a2b10846bd216144e43",
+      "reason": "品質コマンドの監視役へSIGKILLを送り、後続の品質コマンドの有無の両方でstoppedと異常終了理由を保ち、エンジンの直し・push・PRへ進まないことを確かめる。kitの試験でも後続操作が起動しないことを確かめる。",
+      "sources": [
+        "REQ-337"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/signal-during-sync.test.ts",
+          "contains": "品質コマンドの監視役の異常終了後は理由を保ち",
+          "sha256": "90a6e03f450d51f587ff63eb1e3f39a2e4be895c9c7a21f57a6df7b14e7c2259"
+        },
+        {
+          "file": "packages/kit/test/process.test.ts",
+          "contains": "監視役が結果を書かずに終わったら、子孫を止め",
+          "sha256": "fab7820492e60b1e014f11871cb0195a95e431ab77a8754275e117761be3966b"
         }
       ]
     }
