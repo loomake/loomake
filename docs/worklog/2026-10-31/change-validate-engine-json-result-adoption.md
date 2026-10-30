@@ -66,3 +66,11 @@
 2. verify：head432ad60の通常pnpm verifyはexit0。lint・型・全体1589成功/失敗0/既存skip8。実行中のheadとtracked cleanを保持し、原レポート・loghash・受入範囲を専用treeのnormal-verify-receipt-432ad60.jsonへ保存した。
 3. 残る事項：3.4の保存schema/provenance確認、実CLI4件、製品done・CI・自動Codex・独立最終レビュー・親DoD。全体の通常verify成功を未収集の実観測へ流用しない。
 4. 次：採集を起動せず、閉集合projectionと全型derivedの検査を共通モジュールへまとめる。
+
+
+## task3.4 の保存schemaと出所
+
+1. やったこと：scripts/claude-result-fixture.mjsへ閉集合projection、全型derived、metarecord/syntheticの区別、各階層の追加欄拒否とcross-field検査をまとめた。元rawをメモリ内で直接投影し、元の存在/型と分類/表示合図を保存前に比較する。採集は起動していない。
+2. verify：新規66合成回帰が成功。4欄×全JSON型、許可外の値・原raw hash・未知metadata・置換不一致を拒否し、失敗実行やcase不一致を収集へ数えないことを確認した。型と対象lintを確認し、固定headの通常verifyはこれから再実行する。
+3. 残る事項：tasks4.1〜4.4と5章。実CLI2.1.307/2.1.308×success/error_max_turnsは0/4で、非永続化等の前提が未確認。親done・CI・自動Codex・独立最終レビュー・初回配布全体は未完了。
+4. 次：今回headの全体verifyを確認し、管理役へ製品D01〜D05と未収集の受入を分けて引き継ぐ。

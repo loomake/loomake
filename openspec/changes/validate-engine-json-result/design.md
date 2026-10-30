@@ -4,7 +4,7 @@
 
 基準はmain `085a82686dc1c14506fbdbad88b5b9b3961f522e`。品質E3の旧treeと設計head5cを保持し、同じchange-idの正式起案だけを新treeへ移した。Opus b95d2ffbの8 Requirement・41 Scenarioと、管理役のQ1〜Q11・監査残5点を採用元とする。予約済みのREQ-340/341だけを使う。C001/S1のv2/local/ciは未採用なので、現行verify --doneと既存runnerの正常経路を維持する。
 
-この正式起案に対する独立Opus設計A1・A2・A3・Bを実施し、管理役が2026-10-31（日本時間）に下記7章の方針を採用した。A3は資料の一部を未読と明記しており、その範囲を確認済みへ数えない。製品実装、実CLI採集、install、PR/pushはまだ実施していない。仕様ゲートの成功も製品の完了や実観測の成功を意味しない。
+この正式起案に対する独立Opus設計A1・A2・A3・Bを実施し、管理役が2026-10-31（日本時間）に下記7章の方針を採用した。A3は資料の一部を未読と明記しており、その範囲を確認済みへ数えない。設計確認時点では製品実装、実CLI採集、install、PR/pushは実施していなかった。実装の進捗はtasksと各commitの検証で区別する。仕様ゲートの成功も製品の完了や実観測の成功を意味しない。
 
 ## 1. 分類と停止の責務
 
@@ -82,13 +82,13 @@ result:42はderivedのresult:0、result:nullはprojectionのnullである。resu
 | 分岐 | 必須 | 禁止/整合検査 |
 |---|---|---|
 | 全record | schemaVersion=1、provenance。定義したkeyだけを許可 | additionalProperties=false。raw/body/privateRawSha256/個々の元値hashを認めない |
-| projection | input=object、fieldsのpresence/jsonType | inputのkeyはtype/subtype/is_error/resultだけ。上表のprojection許可値と一致。欠落・型をfieldsと比較 |
+| projection | input=object、fieldsのpresent/jsonType | inputのkeyはtype/subtype/is_error/resultだけ。上表のprojection許可値と一致。欠落・型をfieldsと比較 |
 | derived | input=object、fields、substitutions | 上表の同型固定値だけ。置換fieldと元の型、input型が一致。保持すべき合図を変えない |
 | metarecord | parse/topLevelとfields | input/substitutions/値を持たない |
 | synthetic | 合成である出所、input | 観測caseの成立へ数えない。観測版/実行を自己申告で付与しない |
 | 実観測record | cli.version=2.1.307または2.1.308、native binaryのsha256、case、attempt、終了/上限の固定metadata | stderrはbytesだけ。秘密や本文を加えない。unknown key/許可値外は保存前に拒否 |
 
-同型の固定値はnull/true/false/0/空array/空object、文字列の固定置き値と、分類に必要な固定error合図に限定する。任意のraw値へ広げない。fieldsはpresence=false、またはpresence=trueとJSON型だけとし、元値を持たない。fieldsへ長さなど採集に不要なmetadataを追加しない。recordのstderrBytesは本文を持たない既定の件数として区別する。上の表のcross-field整合も保存前に検査し、単なるJSON型合格だけで保存可能とはしない。
+同型の固定値はnull/true/false/0/空array/空object、文字列の固定置き値と、分類に必要な固定error合図に限定する。任意のraw値へ広げない。fieldsの各欄はpresent=false、またはpresent=trueとjsonTypeだけとし、元値を持たない。fieldsへ長さなど採集に不要なmetadataを追加しない。recordのstderrBytesは本文を持たない既定の件数として区別する。上の表のcross-field整合も保存前に検査し、単なるJSON型合格だけで保存可能とはしない。
 
 形だけを示す合成例は次のとおり。実観測のversion/hashを捏造していない。
 
@@ -135,3 +135,8 @@ strict/spec-onlyと正式IDの500 UTF-16本文再測定、既存Source/Scenario�
 BのQ-B3にあるsettingsのメモリ内読取案と、Q-B4にある会話以外の書込みを既知の制約として許す案は、安全性の証明に代用しない。原raw・秘密の非永続化を確認できるまでは採集しない。必要な前提は未確認であり、2.1.307/2.1.308の実4件は未収集のままとする。製品D01〜D05はこの採集に依存しないので先行できるが、tasks4.2〜4.4、親DoDと最終受入を完了にしない。
 
 既存REQ-109と早期停止時のguard省略、および分類前output保存失敗時のGit内部検査省略は、この変更で広げも縮めもしない。範囲外の差として管理役へ引き継ぎ、E3の受入済みと混同しない。
+
+
+保存検査の実装はscripts/claude-result-fixture.mjsへ集約する。resultSignalsは存在・JSON型と分類/表示の合図だけを返す。createObservedResultFixtureは元rawをメモリ内で直接処理し、validateResultFixtureは各階層の追加欄とcross-field不整合を拒否する。matchesResultCaseはfixtureの形と終了/case条件を確認するだけであり、採集前提や元値の一致を証明しない。metarecordからinputを生成する経路は作らない。
+
+保存するfieldsはtype/subtype/is_error/resultの4欄を持ち、各欄は{present:false}か{present:true,jsonType:<6種>}とする。cliはversion/nativeSha256だけ、exitはcode/signal/timedOut/stdoutLimitHitだけとする。これらを含め定義外の欄を保存しない。66件の合成回帰は保存許可と分類の対応を検査するための入力であり、CLIの実観測や実4枠の収集成立へ数えない。保存モジュールだけの成功で採集を起動せず、4章/5章の保護前提と実4件は別に受け入れる。
