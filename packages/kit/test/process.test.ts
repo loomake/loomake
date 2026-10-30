@@ -102,6 +102,27 @@ describe('同期外部操作の監視', () => {
     }
     expect(alive(Number(readFileSync(file, 'utf8')))).toBe(false);
   }));
+  it.runIf(process.platform !== 'win32')('[REQ-333] 監視役へのSIGHUPを理由のない中断として返し、子孫を止めて同じ予算の次を起動しない', () => fixture((dir) => {
+    const leafFile = join(dir, 'leaf');
+    const after = join(dir, 'after');
+    const leaf = `const fs=require('node:fs');process.on('SIGTERM',()=>{});fs.writeFileSync(${JSON.stringify(leafFile)},String(process.pid));setInterval(()=>{},100)`;
+    const code = `const fs=require('node:fs');process.on('SIGTERM',()=>{});require('node:child_process').spawn(process.execPath,['-e',${JSON.stringify(leaf)}],{stdio:'ignore'});`
+      + `const timer=setInterval(()=>{if(fs.existsSync(${JSON.stringify(leafFile)})){clearInterval(timer);process.kill(process.ppid,'SIGHUP');}},10);setInterval(()=>{},100)`;
+    let leafPid: number | undefined;
+    try {
+      withProcessBudget({ timeoutMs: 20_000 }, () => {
+        let error: unknown;
+        try { call(code); } catch (caught) { error = caught; }
+        leafPid = Number(readFileSync(leafFile, 'utf8'));
+        expect(error).toBeInstanceOf(ProcessLimitError);
+        expect((error as ProcessLimitError).kind).toBe('interrupted');
+        expect((error as ProcessLimitError).reason).toBeUndefined();
+        expect(alive(leafPid)).toBe(false);
+        expect(() => call(`require('node:fs').writeFileSync(${JSON.stringify(after)},'x')`)).toThrow('中断');
+        expect(existsSync(after)).toBe(false);
+      });
+    } finally { if (leafPid && alive(leafPid)) process.kill(leafPid, 'SIGKILL'); }
+  }));
   it('[REQ-181][REQ-250] 監視役が結果を書かずに終わったら、子孫を止め、理由を含む中断として返し、同じ予算で次を始めない', () => fixture((dir) => {
     const parentFile = join(dir, 'parent');
     const leafFile = join(dir, 'leaf');

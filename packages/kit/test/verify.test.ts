@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, 
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { formatVerifyResult, INTERRUPTED, runVerify } from '@loomake/kit';
-import { CHANGE, INTERRUPT_SCRIPT, alive, ledgerRow, reportJson, requirement, specMd, traceMd, vitestCommand, withProject } from './project.js';
+import { CHANGE, INTERRUPT_SCRIPT, interruptScript, alive, ledgerRow, reportJson, requirement, specMd, traceMd, vitestCommand, withProject } from './project.js';
 
 // git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
 vi.setConfig({ testTimeout: 60_000 });
@@ -361,6 +361,20 @@ describe('中断されたときの品質コマンド', () => {
       expect(existsSync(join(root, 'after.txt'))).toBe(false);
     });
   });
+  it.runIf(process.platform !== 'win32')('[REQ-333] 品質コマンドの監視役へのSIGHUPを理由のない中断で記録し、後続を実行しない', () => {
+    const config = { openspecValidate: false, commands: { test: 'node interrupt.cjs', after: 'node -e "require(\'fs\').writeFileSync(\'after.txt\', \'\')"' } };
+    withProject({ config, files: { 'interrupt.cjs': interruptScript('SIGHUP') } }, (root) => {
+      const start = Date.now();
+      const result = runVerify({ root, timeoutMs: 60_000 });
+      expect(Date.now() - start).toBeLessThan(10_000);
+      expect(check(result, 'command: test')).toEqual({ check: 'command: test', status: 'fail', detail: INTERRUPTED });
+      expect(check(result, 'command: after')).toBeUndefined();
+      const pids: number[] = JSON.parse(readFileSync(join(root, 'pids.json'), 'utf8'));
+      expect(pids.filter(alive)).toEqual([]);
+      expect(existsSync(join(root, 'after.txt'))).toBe(false);
+    });
+  });
+
 });
 
 describe('change の省略', () => {

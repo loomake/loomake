@@ -89,6 +89,7 @@ function watchDeadline() {
 
 process.on('SIGINT', () => stop('interrupted'));
 process.on('SIGTERM', () => stop('interrupted'));
+if (!win) process.on('SIGHUP', () => stop('interrupted'));
 
 /** 保持役に対象の PID を送り、返事を受け取った時点で対象の exit をまだ処理していなければ、保持を確かめたとする */
 function askHold(socket) {
