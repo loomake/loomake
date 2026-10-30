@@ -19,7 +19,7 @@
 ## 4. 開発の仕組み
 
 - [x] 4.1 `scripts/clean-merged-worktrees.sh`（100755）と `scripts/delivery-metrics.sh`（100755）を足す。`clean-merged-worktrees.sh --dry-run` を実機で 1 回流し、結果を作業記録に書く
-- [ ] 4.2 `docs/dev/ci.md` の「文書だけの PR でテストを実行するジョブ」を段階の説明に書き換え、2 つの台本に触れる。changeset は不要（公開パッケージを変えない）
+- [x] 4.2 `docs/dev/ci.md` の「文書だけの PR でテストを実行するジョブ」を段階の説明に書き換え、2 つの台本に触れる。changeset は不要（公開パッケージを変えない）
 
 ## 5. 確認
 

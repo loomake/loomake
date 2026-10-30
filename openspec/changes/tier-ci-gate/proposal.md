@@ -2,7 +2,7 @@
 
 ## Why
 
-AGENTS.md 2 章は、変更の種類で工程を 3 段階（L1 文書・L2 試験と開発基盤・L3 製品コード）に分け、段階は PR の変更パスから gate が決めると定めた（PR #187、計画 rebuild-plan 2.1）。しかし CI の完了ゲート（`scripts/ci-gate.mjs`）は、いまも PR の種類によらず `verify` を呼ぶ。文書だけの PR でも lint・typecheck・全体のテストが走り、L1 の「gate ＋ lint」という軽い工程が成立していない。
+AGENTS.md 2 章は変更の種類で工程を 3 段階（L1 文書・L2 試験と開発基盤・L3 製品コード）に分け、段階は PR の変更パスから gate が決めると定めた（PR #187、計画 rebuild-plan 2.1）。しかし CI の完了ゲート（`scripts/ci-gate.mjs`）は、いまも PR の種類によらず `verify` を呼ぶ。文書だけの PR でも lint・typecheck・全体のテストが走り、L1 の「gate ＋ lint」という軽い工程が成立していない。
 
 gate が文書かどうかを決める判定（`isDocument`）は、quality ジョブの判定（`scripts/ci-docs-only.mjs` の `isDocumentPath`）と別の実装で、`.md` ならどこでも文書、`openspec/` の下は設定でも文書と扱う。2 つのジョブで「文書だけ」の意味が食い違う。
 
