@@ -37,7 +37,7 @@ Actionsの各実行から `ci-phases-<run>-<attempt>-<sample>` artifactを開い
 
 `profile-publication-retry` は、元と同じコマンド `pnpm test --shard=1/2` を Windows・Node 24.22.1・pnpm 12.10.1 の独立した3ジョブで実行します。試験ファイルの増減でshardの割当は変わるため、元と同じファイル構成や負荷は保証しません。サンプル1〜3は失敗の再試行ではなく、成否をそれぞれ保存する別の実行です。`fail-fast: false` とし、既存の assertion・ケース・60秒制限・skip・retry・通常の `ci.yml` は変更しません。導入は `--frozen-lockfile --ignore-scripts` で行います。
 
-workflow自身、publication-retry試験、共通fixtureと診断のhelper、監視役・Windowsの保持役・runtime、runnerの実装、shard構成の設定、診断用試験、本文が変わったPRで起動し、手動でも起動できます。診断ステップには `LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR` を渡します。指定値はテストworkerのcwdを基準に絶対パスへ解決し、子プロセスにも同じ保存先を渡します。未指定なら、この診断のファイルとpreloadは作りません。既存の `LOOMAKE_TEST_PHASE_PROFILE_DIR` による集計とは別の記録です。
+workflow自身、publication-retry試験、共通fixtureと診断のhelper、監視役・Windowsの保持役、core・kit・trace・runner・CLIの実装、shard構成の設定、診断用試験、本文が変わったPRで起動し、手動でも起動できます。診断ステップには `LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR` を渡します。指定値はテストworkerのcwdを基準に絶対パスへ解決し、子プロセスにも同じ保存先を渡します。未指定なら、この診断のファイルとpreloadは作りません。既存の `LOOMAKE_TEST_PHASE_PROFILE_DIR` による集計とは別の記録です。
 
 自動起動の対象は次のパスです。
 
@@ -46,9 +46,8 @@ workflow自身、publication-retry試験、共通fixtureと診断のhelper、監
 - `packages/runner/test/process-diagnostics.ts`
 - `packages/runner/test/helpers.ts`
 - `packages/kit/supervisor/**`
-- `packages/kit/src/runtime/**`
+- `packages/**/src/**`
 - `packages/kit/test/project.ts`
-- `packages/runner/src/**`
 - `vitest.config.ts`
 - `tests/publication-retry-diagnostics*.test.ts`
 - `docs/dev/test-phase-profiling.md`
