@@ -34,3 +34,11 @@
 2. verify：新規記録5件と既存記録6件の11件、型、対象lintが成功。多数の実違反でsummary予約超過を発生させる新規1件は、このLinux観測で約20秒だった。Windows/macOSでの実行は未実施。
 3. 残る事項：task2.4以降、全OS CI、実CLI4件・done・自動Codex・独立最終レビュー・親DoD。
 4. 次：正常な結果の正例と、既存利用側・全Scenarioの対応をそろえる。
+
+
+## task2.4 の正常経路と既存利用側
+
+1. やったこと：正常metadata、未知の文字列/欄、空result、NoChangeと完了ゲートの正常経路、先行完了commitの保持、repairで禁止変更が重なるときの表示を新規回帰に追加した。既存fakeの出力とassertは変えていない。
+2. verify：新規run16件と既存guard40件・特殊guard8件の64件、型、対象lintが成功。tasks1.3と製品実装2.1〜2.4までを固定した。
+3. 残る事項：3章の全Scenario/変異/provenance確認、実CLI4件、done・CI・自動Codex・独立最終レビュー・親DoD。
+4. 次：失敗優先・理由順の変異を新規直接試験で検出し、全Scenarioとの対応を点検する。
