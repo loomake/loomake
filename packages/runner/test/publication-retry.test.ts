@@ -59,6 +59,27 @@ const evidence = (repo: Repo) => `.loomake/evidence/${CHANGE}/${files(repo)[0]}`
 const lookupCount = (repo: Repo) => readFileSync(repo.env.FAKE_GH_LOOKUP_LOG!, 'utf8').trim().split('\n').length;
 const row = { url: 'https://github.com/example/repo/pull/1', baseRefName: 'main', headRefName: 'loomake/c1', isCrossRepository: false };
 
+// 元の入力は保存せず、既存7種類を固定の診断ラベルへ写す。
+function lookupDiagnosticLabel(value: string): string {
+  if (value === 'fail') return 'lookup-fail';
+  let results: unknown;
+  try { results = JSON.parse(value); } catch { return 'lookup-broken-json'; }
+  if (!Array.isArray(results)) return 'lookup-object';
+  if (results.length !== 1) return 'lookup-multiple';
+  const result = results[0] as { url?: unknown; headRefName?: unknown; isCrossRepository?: unknown } | null;
+  if (!result || typeof result !== 'object') return 'lookup-invalid';
+  if (result.isCrossRepository === true) return 'lookup-cross-repo';
+  if (result.headRefName !== row.headRefName) return 'lookup-wrong-head';
+  try {
+    if (typeof result.url !== 'string') return 'lookup-bad-url';
+    const url = new URL(result.url);
+    if (url.protocol !== 'https:') return 'lookup-bad-url';
+    if (url.username || url.password) return 'lookup-credentials';
+  } catch { return 'lookup-bad-url'; }
+  return 'lookup-invalid';
+}
+
+
 describe('証拠とPRの再試行', () => {
   it.each(['before', 'after'])('[REQ-164][REQ-165] 作成の%sで失敗した後も同じ証拠とコミットを使う', (failure) => withRepo(failure === 'before' ? 'create-before' : 'create-after', async (repo) => {
     repo.env.FAKE_GH_CREATE = failure;
@@ -151,7 +172,7 @@ describe('不正な証拠候補を保護する', () => {
 });
 
 describe('検索を確認できないときは新規作成しない', () => {
-  it.each(['fail', 'broken', '{}', JSON.stringify([{ ...row, url: 'javascript:bad' }]), JSON.stringify([{ ...row, url: 'https://user:password@example.com/a/pull/1' }]), JSON.stringify([{ ...row, headRefName: 'other' }]), JSON.stringify([{ ...row, isCrossRepository: true }]), JSON.stringify([row, row])])('[REQ-165] 検索結果 %s で停止して証拠を残す', (value) => withRepo(value === 'fail' ? 'lookup-fail' : 'lookup-invalid', async (repo) => {
+  it.each(['fail', 'broken', '{}', JSON.stringify([{ ...row, url: 'javascript:bad' }]), JSON.stringify([{ ...row, url: 'https://user:password@example.com/a/pull/1' }]), JSON.stringify([{ ...row, headRefName: 'other' }]), JSON.stringify([{ ...row, isCrossRepository: true }]), JSON.stringify([row, row])])('[REQ-165] 検索結果 %s で停止して証拠を残す', (value) => withRepo(lookupDiagnosticLabel(value), async (repo) => {
     if (value === 'fail') repo.env.FAKE_GH_LOOKUP = 'fail';
     else repo.env.FAKE_GH_RESULT = value;
     const result = await run(repo);

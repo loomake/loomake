@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'n
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
+import { runExternal, withProcessBudget } from '../packages/kit/src/runtime/process.js';
 import { attachProcessDiagnostics, createCaseDiagnostics } from '../packages/runner/test/process-diagnostics.js';
 
 const bases: string[] = [];
@@ -133,6 +134,45 @@ describe('publication retryの任意診断', () => {
       expect(group[1].code).toBe(3);
     }
   });
+
+  it.each([
+    ['zero', '0', true], ['negative', '-1', true], ['string', '"invalid-deadline"', false],
+    ['null', 'null', false], ['overflow', '1e309', false],
+  ] as const)('監視役の%s deadlineは有限数値だけremainingMsへ残す', (_, deadline, present) => {
+    const { base, directory } = fixture(); const env = { ...process.env };
+    attachProcessDiagnostics(base, env);
+    const script = join(base, 'supervisor.cjs'); writeFileSync(script, 'process.exitCode = 0;');
+    const payload = '["git",["status","unrecorded-argument"],false,' + deadline + ',1024,null]';
+    const result = spawnSync(process.execPath, [script, payload], { env, encoding: 'utf8' });
+    expect(result.status, result.stderr).toBe(0);
+    const events = rows(join(directory, readdirSync(directory)[0]));
+    for (const event of events) {
+      expect('remainingMs' in event).toBe(present);
+      if (present) expect(Number.isFinite(event.remainingMs)).toBe(true);
+    }
+    if (present) expect(Number(events[1].remainingMs)).toBeLessThanOrEqual(Number(events[0].remainingMs));
+    expect(JSON.stringify(events)).not.toMatch(/unrecorded-argument|invalid-deadline|argv|stdout|stderr/);
+  });
+
+  it('実runExternalと監視役を通して有限な残予算と子CLIの記録を確認する', () => {
+    const { base, directory } = fixture(); const env = { ...process.env };
+    attachProcessDiagnostics(base, env);
+    const script = join(base, 'gh'); writeFileSync(script, "process.stdout.write('expected-output');");
+    const result = withProcessBudget({ timeoutMs: 60_000 }, () => runExternal(process.execPath, [script, 'pr', 'list'], { cwd: base, env }));
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout).toBe('expected-output');
+    const groups = readdirSync(directory).map((file) => rows(join(directory, file)));
+    const supervisor = groups.find((group) => group[0].event === 'supervisor-entry')!;
+    const fake = groups.find((group) => group[0].event === 'fake-cli-entry')!;
+    expect(supervisor.map((event) => event.operation)).toEqual(['node', 'node']);
+    expect(supervisor.map((event) => Number.isFinite(event.remainingMs))).toEqual([true, true]);
+    expect(Number(supervisor[0].remainingMs)).toBeGreaterThan(0);
+    expect(Number(supervisor[0].remainingMs)).toBeLessThanOrEqual(30_000);
+    expect(Number(supervisor[1].remainingMs)).toBeLessThanOrEqual(Number(supervisor[0].remainingMs));
+    expect(fake.map((event) => event.operation)).toEqual(['gh-pr-list', 'gh-pr-list']);
+    expect(fake.every((event) => !('remainingMs' in event))).toBe(true);
+    expect(JSON.stringify(groups)).not.toMatch(/expected-output|argv|stdout|stderr|NODE_OPTIONS/);
+  }, 60_000);
 
   it('preload実行時の書込失敗も元の終了コードと出力を保つ', () => {
     const { base, directory } = fixture(); const env = { ...process.env };

@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 
 const LIMIT = 64 * 1024;
 const RESERVE = 160;
-const CASE_LABELS = new Set(['publication-retry', 'create-before', 'create-after', 'push-retry', 'repeat', 'new-source', 'json', 'sha', 'change', 'failed', 'fail-result', 'hash', 'snapshot', 'legacy', 'lookup-fail', 'lookup-invalid', 'verify-fail', 'verify-head', 'verify-branch', 'verify-dirty']);
+const CASE_LABELS = new Set(['publication-retry', 'create-before', 'create-after', 'push-retry', 'repeat', 'new-source', 'json', 'sha', 'change', 'failed', 'fail-result', 'hash', 'snapshot', 'legacy', 'lookup-fail', 'lookup-invalid', 'verify-fail', 'verify-head', 'verify-branch', 'verify-dirty', 'lookup-broken-json', 'lookup-object', 'lookup-bad-url', 'lookup-credentials', 'lookup-wrong-head', 'lookup-cross-repo', 'lookup-multiple']);
 const PHASES = new Set(['case-start', 'repo-ready', 'run-start', 'run-end', 'mutate-end', 'amend-end', 'cleanup-start', 'cleanup-end', 'case-end']);
 type Phase = 'case-start' | 'repo-ready' | 'run-start' | 'run-end' | 'mutate-end' | 'amend-end' | 'cleanup-start' | 'cleanup-end' | 'case-end';
 type Details = { n?: number; code?: number; expectedReason?: boolean; completed?: boolean };
@@ -65,8 +65,10 @@ export function attachProcessDiagnostics(base: string, env: NodeJS.ProcessEnv) {
         const session = require('node:crypto').randomUUID();
         const operations = new Set(['status', 'show', 'diff', 'rev-parse', 'check-ignore', 'switch', 'add', 'commit', 'push', 'init', 'remote', 'config', 'list', 'create', 'auth', 'pr']);
         let operation = fake ? name : 'other';
+        let deadline;
         if (supervisor) {
-          const [target, args] = JSON.parse(process.argv[2]);
+          const [target, args, , observedDeadline] = JSON.parse(process.argv[2]);
+          if (typeof observedDeadline === 'number' && Number.isFinite(observedDeadline)) deadline = observedDeadline;
           const command = path.basename(String(target)).replace(/\\.exe$/i, '');
           if (['git', 'gh', 'node', 'cmd', 'sh', 'bash', 'powershell'].includes(command)) operation = command;
           const unquote = value => String(value).replace(/^"(.*)"$/, '$1');
@@ -87,6 +89,10 @@ export function attachProcessDiagnostics(base: string, env: NodeJS.ProcessEnv) {
             if (used > ${LIMIT - RESERVE}) { terminal = true; return; }
             const row = { event, at: Date.now(), pid: process.pid, session, repo: ${JSON.stringify(repo)}, operation };
             if (Number.isSafeInteger(code)) row.code = code;
+            if (supervisor && deadline !== undefined) {
+              const remainingMs = deadline - Number(process.hrtime.bigint()) / 1000000;
+              if (Number.isFinite(remainingMs)) row.remainingMs = remainingMs;
+            }
             const line = JSON.stringify(row) + '\\n';
             if (used + Buffer.byteLength(line) <= ${LIMIT - RESERVE}) fs.appendFileSync(file, line);
             else {

@@ -13,7 +13,8 @@ describe('publication retryの独立Windowsサンプル', () => {
     expect(workflow).toMatch(/on:\n {2}pull_request:\n {4}paths:/);
     expect(workflow).toContain('  workflow_dispatch:');
     for (const path of ['.github/workflows/profile-publication-retry.yml', 'packages/runner/test/publication-retry.test.ts',
-      'packages/runner/test/process-diagnostics.ts', 'packages/runner/test/helpers.ts', 'tests/publication-retry-diagnostics*.test.ts']) expect(workflow).toContain(`'${path}'`);
+      'packages/runner/test/process-diagnostics.ts', 'packages/runner/test/helpers.ts', 'packages/kit/supervisor/supervisor.cjs',
+      'tests/publication-retry-diagnostics*.test.ts', 'docs/dev/test-phase-profiling.md']) expect(workflow).toContain(`'${path}'`);
     expect(workflow).toContain('fail-fast: false');
     expect(workflow).toContain('sample: [1, 2, 3]');
     expect(workflow).toContain('runs-on: windows-latest');
