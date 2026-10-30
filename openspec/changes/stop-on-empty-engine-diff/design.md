@@ -56,16 +56,16 @@
 - `decideAfterEngine` の優先順位（REQ-204）。
 - 品質コマンドの不安定さ（flaky）の扱い。
 
-**前提**
-- 対象は HEAD `d5aa30d`。進行中の change 5 件は、どれも今回の範囲と重なりません。
+**当初の前提（調査開始時の記録）**
+- 当初の対象は HEAD `d5aa30d`。以下の並行changeの記録は、その時点の状態です。
   - `align-template-worklog`：テンプレート
   - `close-docs-only-gaps`：CI の文書判定
   - `gate-base-remote-ref`：CI の gate
   - `move-verification-policy-to-kit`：core と kit の判定
   - `record-ci-test-diagnostics`：CI の診断
-- 要件 ID は REQ-330〜332 を使います。
+- 当初の要件 ID は REQ-330〜332です。その後、表示と記録をREQ-339に分けて追加しました。
 
-**不明点**
+**当初の確認事項（回答済み）**
 
 | ID | 内容 | ブロッキング |
 |---|---|---|
@@ -75,30 +75,30 @@
 
 詳しくは trace.md の確認事項に書きます（Q-01〜Q-03 は 2026-10-30 におすすめ案で回答済み）。
 
-## 観測事実と原因
+## 修正前の観測事実と原因（d5aa30d）
 
-1. **タスクの段階**（`packages/runner/src/run/phases.ts:63-70`）
-   - `callEngine` は、エンジンの終わり方だけで止まるかを決めます。終了コード 0 で質問もなければ `undefined` を返します（`phases.ts:43-44`、`decision-policy.ts:21-28`）。
-   - そのあと `guard(ctx)`（`phases.ts:65`）、`checkTask`（`phases.ts:67`）、`git add -A`（`phases.ts:68`）、`git commit`（`phases.ts:69`）が、差分の有無を見ずに続きます。
+1. **タスクの段階**（`packages/runner/src/run/phases.ts`）
+   - `callEngine` は、エンジンの終わり方だけで止まるかを決めます。終了コード 0 で質問もなければ `undefined` を返します（`phases.ts`、`decision-policy.ts`）。
+   - そのあと `guard(ctx)`（`phases.ts`）、`checkTask`（`phases.ts`）、`git add -A`（`phases.ts`）、`git commit`（`phases.ts`）が、差分の有無を見ずに続きます。
    - このため、エンジンが何も変えなくても、tasks.md だけを含む `run(<id>): 1.1 …` のコミットができます。
-2. **ガードの入力**（`packages/runner/src/guards.ts:62-64`）
+2. **ガードの入力**（`packages/runner/src/guards.ts`）
    - `findViolations` は最初に `git add -A` を実行し、index に載せた差分を調べます。
    - つまり `guard()` から戻った直後の index は、エンジンの変更だけを持っています。run 自身のチェックは、まだ付いていません。
-   - エンジンが tasks.md を書き換えた場合は、ガードが「change の文書を変えました」として先に止めます（`guards.ts:74`）。
-3. **直しの段階**（`phases.ts:132-135`）
+   - エンジンが tasks.md を書き換えた場合は、ガードが「change の文書を変えました」として先に止めます（`guards.ts`）。
+3. **直しの段階**（`phases.ts`）
    - 差分がないときはコミットを飛ばしますが、止まらずにループの先頭へ戻ります。
-   - 差分がないので完了ゲートは同じ結果で不合格になり、`decideAfterGate` の上限（`decision-policy.ts:37`）まで、エンジンと verify を繰り返します。
+   - 差分がないので完了ゲートは同じ結果で不合格になり、`decideAfterGate` の上限（`decision-policy.ts`）まで、エンジンと verify を繰り返します。
 4. **既存の合図**
-   - 質問の合図は `decideAfterEngine` が行頭の `^LOOMAKE-QUESTION:\s*(.*)$/m` で読みます（`decision-policy.ts:22-23`）。
-   - 指示の決まりは `prompt.ts:23-26` にあります。
-   - 停止の状態は `RunSummary.status` の `'completed' | 'stopped' | 'interrupted'` です（`run/types.ts:35`）。理由は自由な文で、種別を表す欄はありません。
+   - 質問の合図は `decideAfterEngine` が行頭の `^LOOMAKE-QUESTION:\s*(.*)$/m` で読みます（`decision-policy.ts`）。
+   - 指示の決まりは `prompt.ts` にあります。
+   - 停止の状態は `RunSummary.status` の `'completed' | 'stopped' | 'interrupted'` です（`run/types.ts`）。理由は自由な文で、種別を表す欄はありません。
 5. **再現**
    - `.loomake/repro/bin/claude` は、入力を読み捨てて、何もせずに result（`I could not make changes because the Bash tool was not permitted.`）を返す偽のエンジンです。
    - `.loomake/repro/run.mjs` はこれを使って `runRun` を呼びます。
 6. **既存の試験も、差分なしの完了に頼っています**
-   - `packages/runner/test/run.test.ts:54` の `passing = [{ write: { 'impl.txt': … } }, {}]` は、1.2 で何も変えないエンジンを完了として扱います。
-   - `packages/runner/test/helpers.ts:40` の偽の claude は、台本が尽きると何もしません。
-   - `{}` を使う台本は、runner の試験の 9 ファイルにあります。例：`run.test.ts:188,286,305(台本なし),343`、`guards.test.ts:19,333`、`external-budget.test.ts:139`、`pr.test.ts:15` など。
+   - `packages/runner/test/run.test.ts` の `passing = [{ write: { 'impl.txt': … } }, {}]` は、1.2 で何も変えないエンジンを完了として扱います。
+   - `packages/runner/test/helpers.ts` の偽の claude は、台本が尽きると何もしません。
+   - `{}` を使う台本は、`run.test.ts`・`guards.test.ts`・`external-budget.test.ts`・`pr.test.ts`などにありました。変更対象表にある既存試験では、意味と期待値を保って台本を置き換えます。
    - 修正すると、これらは仕様どおりに止まって失敗するので、台本の置き換えが必要です。
 
 **原因：** run の段階の流れに「エンジンの変更がない」ことを判断する分岐がありません。終了コード 0 を「タスクを終えた」と同じに扱っています。
@@ -123,14 +123,14 @@
 
 | 案 | 内容 |
 |---|---|
-| **a（おすすめ）** | `guard()` の直後、`checkTask` の前に `git diff --cached --name-only` を見る。ガードと同じ index を入力にするので、ガードの入力と同じ差分になる。run 自身のチェックはまだ付いていないので、「tasks.md のチェックだけの差分」は構造上、差分なしと数えられ、除外する処理が要らない。直しの段階の `phases.ts:133` と同じ書き方になる |
+| **a（おすすめ）** | `guard()` の直後、`checkTask` の前に `git diff --cached --name-only` を見る。ガードと同じ index を入力にするので、ガードの入力と同じ差分になる。run 自身のチェックはまだ付いていないので、「tasks.md のチェックだけの差分」は構造上、差分なしと数えられ、除外する処理が要らない。`runGate`の差分判定と同じ入力を使える |
 | b | `checkTask` と `git add -A` のあとに見て、tasksRel を除外する。除外する処理が増えるうえ、エンジンが tasks.md を変えた場合と区別しにくい |
 
 ### 3.4 止まるときの扱い
 
 - 状態は `stopped`、終了コードは 1 で、既存の REQ-107 と同じです。新しい状態の種別は足しません。
 - 理由の文：
-  - タスク：`エンジンが変更を残さずに終わりました`
+  - タスク：`エンジンが変更を残さずに終わりました。出力の記録：<パス>。権限や環境を見直して実行し直すか、変更が要らないなら人が tasks.md のこのタスクを完了にしてコミットしてから実行し直してください。`
   - 直し：`直しでエンジンが変更を残さずに終わりました。出力の記録：<パス>。権限や環境を見直してから実行し直してください。`
 - 残ったタスク：
   - タスクの段階：止まったタスクから後ろ（`remaining`）
@@ -165,7 +165,7 @@ export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
   - Q-03 の決定に従い、理由を `maskSecrets` で置換し、REQ-339のC0/C1可視化を行った同じ文字列を標準出力とgit commit本文へ渡します。変更不要のコミットだけに `--cleanup=verbatim` を指定します。
 - **`runGate`：** ガードのあとに `decideAfterChanges({ phase: 'repair', hasChanges, text })` を呼びます。`stop` なら出力記録の具体パスを含む理由で `stopped(reason)` を返します。
 - **`prompt.ts`：** `failure` がないとき（タスクの指示）だけ、次の決まりを 1 行足します。
-  > - 変更が要らないタスクなら、何も変えずに `LOOMAKE-NOCHANGE:` で始まる行に理由を書いて終える。変更を残さず、この行もなければ、run はタスクを完了にせずに止まる
+  > - 変更が要らないときは何も変えず、`LOOMAKE-NOCHANGE:` で始まる行に理由を書いて終える。変更もこの行もなければ loomake run は止まる
 
 ## 受入条件と確認方法
 
@@ -204,16 +204,24 @@ export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
    - **修正前に失敗する理由：** 既定の maxFixes 5 で calls が 7 件になる
 7. **`[REQ-331] 完了ゲートの直しで LOOMAKE-NOCHANGE を出しても、変更がなければ止まる`**
 8. **`[REQ-332] %s`**（`packages/runner/test/decision-policy.test.ts` に `it.each` で足す）
-   - 次の 9 行を確かめます。
+   - 次の17行を確かめます。全ケースで入力をfreezeし、同じ判断を繰り返して入力が変わらないことも確認します。
      - タスクで変更あり → commit
      - 直しで変更あり → commit
      - 変更なし・合図なし → stop
-     - 合図あり → no-change と理由
+     - 合図と理由あり → no-change
      - 行頭でない合図 → stop
-     - 理由が空の合図 → stop
-     - 最初の合図を使う
-     - 直しでは合図があっても stop
-     - freeze した入力を変えない
+     - 空の理由 → stop
+     - 最初の合図 → no-change
+     - 直しでは合図があっても停止 → stop
+     - 全角空白の区切り → no-change
+     - NBSPの区切り → no-change
+     - 同じ行の空白が混ざる区切り → no-change
+     - 同じ行の空白だけの理由 → stop
+     - LFを越えた理由 → stop
+     - CRLFを越えた理由 → stop
+     - U+2028を越えた理由 → stop
+     - U+2029を越えた理由 → stop
+     - freezeした入力を変更しない → no-change
 
 ### 突然変異試験（`tests/run-decision-mutations.test.ts`）
 
@@ -224,33 +232,35 @@ export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
 | `{ id: 'repair-no-change' }` | `if (value.phase === 'repair')` | `if (value.phase === 'repair' && !value.text)` |
 | `{ id: 'no-change-anchor' }` | `/^LOOMAKE-NOCHANGE:` | `/LOOMAKE-NOCHANGE:` |
 
-- 試験の名前の数の期待値 `27` は、足した行の数だけ増やします。
+- 試験の名前の数は、既存27行と追加17行を合わせた44行です。
 - 結果の期待値は `['killed' × 5]` にします（仮定 A-04）。
 
 ### 確認コマンド
 
-- `pnpm -s test -- packages/runner`
+Scenario監査の保存先には、まだ存在しないパスを指定します。change外の未確認と対象changeの状態を分けて読みます。
+
+- `pnpm -s vitest run packages/runner`
 - `pnpm -s lint`
 - `pnpm -s typecheck`
 - `pnpm -s test`
-- `node scripts/scenario-audit.mjs`
+- `node scripts/scenario-audit.mjs .loomake/scenario-audit-check-01`
 - `pnpm -s verify --change stop-on-empty-engine-diff --done`
-- 手動：`.loomake/repro/run.mjs` を実行すると、`exit code 1` で、コミットが増えないことを確かめる
+- 元の再現台本の実測結果は `evidence.md` と作業記録に残します。新しいcheckoutでは、追跡対象の `run-no-change.test.ts` の合図なしの試験で終了コード1・未完了・コミット不変を確認できます。
 
 ## 変更対象
 
 | ファイル | 変えること |
 |---|---|
 | `packages/runner/src/run/decision-policy.ts` | `ChangeObservation`・`ChangeDecision`・`decideAfterChanges` を足す |
-| `packages/runner/src/run/phases.ts` | `callEngine` が本文を返すようにする。`runEngineTasks` に差分の判定と `no-change` の処理を足す。`runGate` の `phases.ts:133-135` を判断に置き換える。差分を見る小さな関数を 1 つ置く |
+| `packages/runner/src/run/phases.ts` | `callEngine` が本文を返すようにする。`runEngineTasks` に差分の判定と `no-change` の処理を足す。`runGate` の修正後の差分判定を純粋関数の判断に置き換える。差分を見る小さな関数を 1 つ置く |
 | `packages/runner/src/run/prompt.ts` | `failure` がないときだけ、`LOOMAKE-NOCHANGE` の決まりを 1 行足す |
 | `packages/runner/src/mask.ts` | 変更なし。Q-03 の決定に従い、`maskSecrets` を phases から使う |
-| `packages/runner/test/run-no-change.test.ts`（新規） | 回帰試験 1〜7 |
+| `packages/runner/test/run-no-change.test.ts`（新規） | タスク・直し・Unicode区切り・制御文字・末尾保持の回帰 |
 | `packages/runner/test/decision-policy.test.ts` | REQ-332 の `it.each` を足す |
 | `tests/run-decision-mutations.test.ts` | 変異 2 つを足し、名前の数と結果の期待値を増やす |
 | `packages/runner/test/helpers.ts` | `export const noChange = { output: 'LOOMAKE-NOCHANGE: 検査用に変更が要らない' }` を足す。偽の claude の既定の動き（台本が尽きたら何もしない）は変えない |
-| runner の既存試験 9 ファイル（例：`run.test.ts`・`guards.test.ts`・`external-budget.test.ts`・`pr.test.ts`） | エンジンのタスクに当たる `{}` を `noChange` に置き換える。`run.test.ts` の REQ-100・REQ-111 の試験はタスクを `noChange` にする。REQ-104 と、残ったタスクの印を確かめる REQ-100 の試験は、タスクを `noChange` にし、直しで不合格のままの `fix.txt` を書く台本にする。期待値は変えない |
-| `docs/guide/1.getting-started/2.usage.md` | `:282` の近くに、合図と、差分なしで止まることを 1 項目足す |
+| runner の既存試験（例：`run.test.ts`・`guards.test.ts`・`external-budget.test.ts`・`pr.test.ts`） | エンジンのタスクに当たる `{}` を `noChange` に置き換える。`run.test.ts` の REQ-100・REQ-111 の試験はタスクを `noChange` にする。REQ-104 と、残ったタスクの印を確かめる REQ-100 の試験は、タスクを `noChange` にし、直しで不合格のままの `fix.txt` を書く台本にする。期待値は変えない |
+| `docs/guide/1.getting-started/2.usage.md` | runの使い方に、合図と差分なしで止まることを1項目追加する |
 | `docs/guide/2.guides/3.run-recovery.md` | 「エンジンが変更を残さずに止まった場合」の短い節を足す（記録の場所と 2 つの対処） |
 | `docs/quality/scenarios.json` | この change の Scenario のレビューを足す。台本を変えた試験を根拠にする既存のレビューは、読み直してハッシュを更新する |
 | `.changeset/*.md` | `@loomake/runner`・`loomake` の minor（新しい合図を足すため） |
@@ -262,7 +272,7 @@ export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
 - 実際の主モデル：`claude-opus-5-5`。補助呼び出しの `claude-haiku-5-5` を含む。修正後の validator で保存ログを再確認し、`manifest-revalidated.json` の `ok:true`・権限拒否 0 件を管理役が確認した。工程は実施済みとして再利用する。
 - 設計成果物：`.loomake/claude/c9f6a4c0-7acf-4533-a132-1b6d6fec06dc/result-revalidated.md`。公開する根拠は [PR #157 の設計レビュー](https://github.com/loomake/loomake/pull/157#issuecomment-6512610409) と `evidence.md` に要約する。
 - 当初の設計レビューは Opus 評価 1 回として数えた。修正前 head の最終レビューを 2 回目として実施した。その後の回数と工程は、末尾の利用者の新しい指示に従う。
-- 実装担当：Codex（実際のモデル識別子は取得できず不明）。PR #159 は `bound-engine-timer-and-interrupt` で phases.ts・helpers.ts 等が重なる。別 worktree で実装し、157→158→159 の順に管理役が統合する。
+- 実装担当：Codex（実際のモデル識別子は取得できず不明）。PR #159 は `bound-engine-timer-and-interrupt` で phases.ts・helpers.ts 等が重なる。当初は別worktreeで実装して157→158→159の順に統合する計画だった。現在は条件の揃ったPRから管理役が取り込み、後続がmainへ追従する。PR #158は取り込み済み。
 
 ## 最終レビュー後の修正方針
 
