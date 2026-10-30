@@ -18,7 +18,7 @@ REQ-336 はエンジンの期限を Node のタイマーの上限で短縮しな
 | B | `parseRunConfig` で `timeoutMinutes ≤ 35791` に制限し、超えたら UsageError にする | 今まで受け付けていた値を拒むので、仕様（REQ-141）を変えることになり、人の承認が要る。runClaude を直接呼んだときの丸めも残る |
 | A＋B | 両方 | 上限を置く理由がなくなるので、B は要らない |
 
-案 A のコードの形（`engine.ts:130-133` を置き換え）：
+案 A のコードの形（`engine.ts` の期限の監視）：
 ```ts
 const MAX_TIMER_MS = 2_147_483_647; // これを超えると Node は 1ms に丸める
 const monotonicMs = () => Number(process.hrtime.bigint()) / 1_000_000;
@@ -31,7 +31,7 @@ const watchDeadline = () => {
 };
 timer = setTimeout(watchDeadline, Math.min(Math.max(call.timeoutMs, 0), MAX_TIMER_MS));
 ```
-- 最初の発火は従来どおり非同期にする。`finishMonitoring`（`engine.ts:139-142`）の `clearTimeout(timer)` は、そのとき有効なタイマーを解除する。
+- 最初の発火は従来どおり非同期にする。`finishMonitoring` の `clearTimeout(timer)` は、そのとき有効なタイマーを解除する。
 - `!(left > 0)` にしているので、NaN が来ても従来と同じくすぐ時間切れになる。
 
 ## 1. 採用する最小方針
@@ -53,7 +53,7 @@ timer = setTimeout(watchDeadline, Math.min(Math.max(call.timeoutMs, 0), MAX_TIME
 
 - (b)（runner で `rec.lastVerify` を見て補正する）では、経路 A が `:122` で interrupted を返して終わり、catch まで届きません。`:117` の判定も変える必要があります。
 - (b) は verify を通る経路しか見られません。証拠の記録（runRecord）の中の git など、ほかの後続操作の拒否も補えません。
-- 区別の元は kit の共有予算の状態です。`:443` と `:402` の 2 行を直せば、すべての後続操作の拒否が reason を持ちます。runner 側は、変更前の design どおり「`kind==='interrupted' && reason===undefined` だけを interrupted にする」判定のままで済みます。
+- 区別の元は kit の共有予算の状態です。`:443` と `:402` の 2 行を直せば、すべての後続操作の拒否が reason を持ちます。runner 側は「`kind==='interrupted' && reason===undefined` だけを interrupted にする」判定のままで済みます。
 - REQ-250 は「利用者の中断とは理由の有無で区別する SHALL」と定めています。後続の拒否で理由が消えるのは、この区別を崩している状態です。REQ-250 の文は変えず（MODIFIED にせず）、その意図どおりの実装に揃えるという位置づけにします。
 
 **kit の差分（`packages/kit/src/runtime/process.ts`。#159 だけが変更する範囲）**
@@ -68,12 +68,12 @@ if (budget) { budget.state.interrupted = true; budget.state.reason = error.reaso
 throw error;
 ```
 
-- 443 行は、`stopTree` のあとに作った error の reason を入れる順に並べ替えます。後片付けの結果を含む reason を引き継ぐためです。`state.interrupted` を立てる時点は、同じ `runExternal` の中なので変わりません。
+- 443 行は、`stopTree` のあとに作った error の reason を入れる順に並べ替えます。後片付けの結果を含む reason を引き継ぐためです。`state.interrupted` と reason は、`stopTree` の結果を含む error を作ったあとに記録します。`stopTree` が想定外の例外を投げた場合は、その例外を外へ投げ直す既存の経路となり、この記録までは進みません。
 - 利用者の信号による中断（`:451`）では reason を入れません。そのため後続の拒否も、従来どおり reason を持ちません。
 - 引き継いだ文は変えずにそのまま使います。拒否された側のコマンド名は、従来どおりメッセージの先頭に入ります。
 - 中断（kind は interrupted）として返すことは変えません。`cleanup` は元の操作の記録なので引き継ぎません。
 
-**runner の差分**（変更前の design と同じです）
+**runner の差分**
 
 - `phases.ts` に次を export します。
 
@@ -92,11 +92,11 @@ throw error;
 
 - 旧設計で「品質コマンドの理由付きの中断のあと、直しへ進む経路」を対象外とした判断を訂正します。run は必ず共有予算の中で動くので、`:123` の git が必ず拒まれ、直しへは進みません。1-1 の修正で、この経路も stopped に揃います。Issue に回す必要はありません。
 - 旧設計で #158 が process.ts を変えるとした記述を訂正します。#158 が変えるのは `supervisor.cjs` だけで、`process.ts` は変えません。`process.ts` は #159 だけが変える範囲とします。
-  - #158 の SIGHUP は `stop('interrupted')` を通り、reason を持ちません。そのため、#158 がマージされれば SIGHUP も自動で interrupted に写ります。Q-05 の取り決めは変わりません。
+  - #158 の SIGHUP は `stop('interrupted')` を通り、reason を持ちません。そのため、PR #158はmain ac87014から統合済みであり、SIGHUPも同じ判定でinterruptedに写ります。Q-05の取り決めは変わりません。
 
 ### 1-3. タイマー（REQ-336）は変えない
 
-`design.md:78-92` の案 A を維持します。
+本書の「O1：エンジンのタイマー」節の採用案 A を維持します。
 
 - 待機は `min(残り, 2147483647)` に分け、発火のたびに単調時計で計り直します。
 - `!(left > 0)` で判定するので、NaN・0・負の値はすぐ時間切れになります（現行と同じ）。
@@ -109,14 +109,14 @@ throw error;
 |---|---|---|
 | `packages/kit/src/runtime/process.ts` | `state.reason` を足す。402 行の拒否と 443 行付近の記録（1-1） | #159 だけが変える |
 | `packages/kit/test/process.test.ts` | 1-1 の kit の試験（AC-11） | なし |
-| `packages/runner/src/engine.ts` | 130-142 行のタイマーを分けて待つ形にする（変更前の設計どおり） | なし |
+| `packages/runner/src/engine.ts` | 本書「O1：エンジンのタイマー」節の採用案 A に従い、タイマーを分けて待つ形にする | なし |
 | `packages/runner/src/run/phases.ts` | `interruptedOperation` を export し、191 行の catch で使う。`ProcessLimitError` を `@loomake/kit` から import する | #157（`callEngine` と noChange）。互いに離れた行で、意味の上では衝突しない |
 | `packages/runner/src/run.ts` | 75 行の状態の選び方 | なし |
 | `packages/runner/test/helpers.ts` | 監視役へ信号を送るスクリプトを、信号を引数に取る形で、ファイルの**末尾**に export する。結果の JSON はスクリプトと同じ場所（`repo.base`）に書き、作業ツリーを汚さない | #157 も helpers を変えるので、末尾に足して衝突を減らす |
 | `packages/runner/test/external-budget.test.ts` | 上のスクリプトを helpers から使う。期待値は変えない | なし |
 | `packages/runner/test/engine-long-deadline.test.ts`（新規） | AC-1〜3 | なし |
 | `packages/runner/test/signal-during-sync.test.ts` | AC-4〜9（POSIX だけ） | なし |
-| `docs/guide/2.guides/3.run-recovery.md` | 節「端末を閉じたときとコンテナを止めたとき」の末尾に 1 文 | #158 と同じ節。あとからマージする側が合わせる |
+| `docs/guide/2.guides/3.run-recovery.md` | 節「端末を閉じたときとコンテナを止めたとき」の末尾に 1 文 | #158と同じ節。main ac87014との統合で両方の説明を保持する |
 | `docs/quality/scenarios.json` と `.changeset/*.md` | Scenario のレビューを足す。changeset は `@loomake/kit`・`@loomake/runner`・`loomake` の patch | なし |
 
 `supervisor.cjs` と `config.ts` は変えません。
@@ -134,7 +134,9 @@ throw error;
 
 | ID | 受入条件 | 試験（修正前 → 修正後） |
 |---|---|---|
-| AC-1〜3 | タイマーの上限を超える値、分けた待機の早い発火、`timeoutMinutes: 40000` | 変更前の設計の表どおり。修正前は失敗する |
+| AC-1 | タイマー上限超えでも時間内の結果を保つ | `runClaude` に2147483647ms＋60000msを渡し300msで終わる偽エンジンを呼ぶ。timedOut:false・終了コード0・出力「完了」と、TimeoutOverflowWarningなしを確認する。タイマー修正前は失敗する |
+| AC-2 | 分割待機の早い発火と、最後に有効な待機の解除 | 最初の2回の長い待機を早く発火させ、3回待ち直すこと、各待機が上限以下で結果を保つことを確認する。返った時点で最後のhandleがclearTimeoutへ渡されたことも検査する。最初のhandleだけを解除する変異が失敗することを確認する |
+| AC-3 | timeoutMinutes 40000のrun | 偽エンジンが500msで実装を書き、通常runがcompleted・終了コード0となり、タスクのコミットが残り、実行時間の上限の表示がないことを確認する。タイマー修正前は失敗する |
 | AC-4 | タスクのコミットの git のあいだに、監視役が **SIGINT・SIGTERM** を受けたら interrupted | `it.each(['SIGINT','SIGTERM'])` `[REQ-337] タスクのコミットのgitのあいだに監視役が%sを受けたら、interruptedにする`。pre-commit から送る。状態は `interrupted`、`doneTasks: []`、`remainingTasks[0]` は 1.1、エンジンの呼び出しは 1 回、PR は 0 件、終了コード 1。修正前は stopped で失敗する |
 | AC-5 | 証拠の push のあいだの中断 | pre-push から SIGINT を送る。状態は `interrupted`、reason に「証拠のコミットを保っています」、HEAD は `evidence(c1):`、`ls-remote` は空、PR は 0 件、終了コード 1。修正前は失敗する |
 | AC-6 | **gh の PR の検索・作成**のあいだの中断 | `it.each([['list','SIGINT'],['create','SIGTERM']])` `[REQ-337] PRの%sのあいだに監視役が%sを受けたら、証拠とpushを保ちinterruptedにする`。偽の gh の入口から送る。状態は `interrupted`、HEAD は `evidence(c1):`、`ls-remote` にブランチがある、PR は 0 件（作成の記録がない）、終了コード 1。修正前は失敗する |

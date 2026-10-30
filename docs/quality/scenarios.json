@@ -227,7 +227,7 @@
         {
           "file": "packages/runner/test/external-budget.test.ts",
           "contains": "[REQ-183] OpenSpec検証の時間切れ",
-          "sha256": "eba3216dd9e90f0027f2ac4f7cc4a302461c9af1d062585f8f84d38512609cf0"
+          "sha256": "7c82285b2ef4d72141c55830453250d093fb5bf5a87468ebc0a93f2348ad6709"
         }
       ]
     },
@@ -5860,7 +5860,7 @@
         {
           "file": "packages/runner/test/external-budget.test.ts",
           "contains": "[REQ-192][REQ-182] run の準備中に git",
-          "sha256": "eba3216dd9e90f0027f2ac4f7cc4a302461c9af1d062585f8f84d38512609cf0"
+          "sha256": "7c82285b2ef4d72141c55830453250d093fb5bf5a87468ebc0a93f2348ad6709"
         }
       ]
     },
@@ -7960,7 +7960,7 @@
         {
           "file": "packages/runner/test/engine-long-deadline.test.ts",
           "contains": "run.timeoutMinutes がタイマーの上限を超えても",
-          "sha256": "1cd3ba63bca56711938063adcc2410629d741a2b3fc50ddac63eea6dd77dc59e"
+          "sha256": "d43b1954a1270e9903b2f65dc0f34b6ef32aa9bdc9ba521ea6b2bee2ccd401fa"
         }
       ]
     },
@@ -7968,7 +7968,7 @@
       "id": "SCN-7bf8b4c7e50629f0a4f0",
       "status": "reviewed",
       "scenarioSha256": "b22577f2dcc3508ed23a168894d6c263604a833ea2661c0e5c02deff2470b420",
-      "reason": "長い待機の最初の2回を早く発火させ、3回待ち直し、各待機が上限以下で、エンジンの結果を保つことを確かめる。",
+      "reason": "長い待機の最初の2回を早く発火させ、3回待ち直し、各待機が上限以下で、エンジンの結果を保ち、最後に有効なタイマーを解除することを確かめる。",
       "sources": [
         "REQ-336"
       ],
@@ -7976,7 +7976,7 @@
         {
           "file": "packages/runner/test/engine-long-deadline.test.ts",
           "contains": "分割した待機が期限前に発火しても",
-          "sha256": "1cd3ba63bca56711938063adcc2410629d741a2b3fc50ddac63eea6dd77dc59e"
+          "sha256": "d43b1954a1270e9903b2f65dc0f34b6ef32aa9bdc9ba521ea6b2bee2ccd401fa"
         }
       ]
     },
@@ -7984,7 +7984,7 @@
       "id": "SCN-9f0513dd500f1a66f24d",
       "status": "reviewed",
       "scenarioSha256": "10afe00d27737d04e9c60cc4db3d08bce91f27d7d0be0b3747bdeed5e4a5a929",
-      "reason": "pre-commitからSIGINTとSIGTERMを送り、interrupted、終了コード1、未完了タスク、エンジン1回、PRとpushなしを確かめる。Linux上の信号試験である。",
+      "reason": "pre-commitからSIGINTとSIGTERMを送り、interrupted、終了コード1、未完了タスク、エンジン1回、PRとpushなしを確かめる。POSIX上の信号試験である。",
       "sources": [
         "REQ-337"
       ],

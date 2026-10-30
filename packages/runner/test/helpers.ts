@@ -331,7 +331,10 @@ export function stallOf(cli: FakeCli, match: (args: string[]) => boolean): { sta
   return { stall: index < 0 ? undefined : events[index], failedForwards: before.filter((e) => e.event === 'forward-end' && e.error) };
 }
 
-/** 祖先の監視役へ指定した信号を送り、送信先をスクリプトと同じ場所へ記録する。 */
+/**
+ * 祖先の外部操作の監視役を探し、送信先をスクリプトと同じ場所へ記録してから指定した信号を送る。
+ * POSIXではpsのprocess.title、WindowsではCommandLineの監視役スクリプトのパスで判別する。
+ */
 export function signalSupervisorScript(signal: NodeJS.Signals): string {
   const psList = 'Get-CimInstance Win32_Process | ForEach-Object { "{0}`t{1}`t{2}" -f $_.ProcessId, $_.ParentProcessId, $_.CommandLine }';
   return `const { execFileSync } = require('node:child_process');

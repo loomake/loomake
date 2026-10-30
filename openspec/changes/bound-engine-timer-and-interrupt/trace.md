@@ -32,7 +32,6 @@
 | Q-04 | REQ-337 | 依頼の範囲（engine.ts・config.ts・run.ts）の外の run/phases.ts の push・PR の catch も直すか | A: 直す / B: run.ts だけにして push・PR は Issue に回す | A。push 中の中断は phases.ts の catch で stopped になり、run.ts だけでは直らない | no | A（おすすめ案）。phases.ts の push・PR の catch も直す | 利用者（2026-10-30 の「おすすめで進めて」の指示に基づき、おすすめ案を採用） | 2026-10-30 |
 | Q-05 | REQ-337 | SIGHUP の change（stop-command-group-on-sighup）との取り決め | A: SIGHUP の change は利用者の信号の中断に reason を付けない / B: SIGHUP の change が reason を付け、こちらで信号名を見る | A。こちらは kind と reason だけを見るので、SIGHUP の change のマージで SIGHUP も interrupted に写る | no | A（おすすめ案）。SIGHUP の change は利用者の信号の中断に reason を付けない | 利用者（2026-10-30 の「おすすめで進めて」の指示に基づき、おすすめ案を採用） | 2026-10-30 |
 | Q-06 | REQ-336 | timeoutMinutes×60000 が Infinity になる値（約 1.8e303 分超）の文言を run の設定の誤りに直すか | A: 範囲外にして Issue に回す / B: この change で直す | A。いまも UsageError（終了コード 2）で止まり、丸めの不具合とは別である | no | A（おすすめ案）。範囲外にして Issue に回す（proposal.md の「Issue に回す」） | 利用者（2026-10-30 の「おすすめで進めて」の指示に基づき、おすすめ案を採用） | 2026-10-30 |
-
 | Q-07 | REQ-337 | 理由の区別をどこで保つか | (a) kit の共有予算で引き継ぐ / (b) runner の lastVerify から補う | (a)。経路 A・B と verify 以外の拒否も同じ箇所で直せる | no | (a)。REQ-250・REQ-337 と承認済み Q-02 を実現する技術設計として解消。人の個別承認ではない | Opus 設計（fdfe3430-6d70-445a-8c6b-404fbc53ac62） | 2026-10-30 |
 
 ## 仮定

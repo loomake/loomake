@@ -32,17 +32,28 @@ describe('エンジンのタイマーの上限', () => {
 
   it('[REQ-336] 分割した待機が期限前に発火しても、残り時間を確かめて待ち直す', async () => {
     const nativeTimeout = globalThis.setTimeout;
+    const nativeClearTimeout = globalThis.clearTimeout;
     const waits: number[] = [];
+    const scheduled: NodeJS.Timeout[] = [];
+    const cleared = vi.spyOn(globalThis, 'clearTimeout');
     const timer = vi.spyOn(globalThis, 'setTimeout').mockImplementation(((callback: (...args: unknown[]) => void, ms: number, ...args: unknown[]) => {
       if (ms > 1000) {
         waits.push(ms);
-        return nativeTimeout(callback, waits.length <= 2 ? 1 : ms, ...args);
+        const handle = nativeTimeout(callback, waits.length <= 2 ? 1 : ms, ...args);
+        scheduled.push(handle);
+        return handle;
       }
       return nativeTimeout(callback, ms, ...args);
     }) as typeof setTimeout);
     let result;
-    try { result = await invoke(); }
-    finally { timer.mockRestore(); }
+    try {
+      result = await invoke();
+      expect(cleared).toHaveBeenCalledWith(scheduled.at(-1));
+    } finally {
+      timer.mockRestore();
+      cleared.mockRestore();
+      for (const handle of scheduled) nativeClearTimeout(handle);
+    }
     expect(result.timedOut).toBe(false);
     expect(result.exitCode).toBe(0);
     expect(result.text).toBe('完了');

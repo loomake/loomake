@@ -266,8 +266,7 @@ describe('runから外部操作までの期限', () => {
   }, process.platform === 'win32' ? 120_000 : 60_000);
 });
 
-// 品質コマンドから、祖先をたどって外部操作の監視役を探し、SIGINT を送る。送った先を interrupted.json に書く。
-// POSIX の ps には監視役の process.title が、Windows の CommandLine には監視役のスクリプトのパスが出る
+// leftovers が後片付け失敗時の診断に使う、Windows の PID・親 PID・コマンドラインの一覧。
 const PS_LIST = 'Get-CimInstance Win32_Process | ForEach-Object { "{0}`t{1}`t{2}" -f $_.ProcessId, $_.ParentProcessId, $_.CommandLine }';
 
 function alive(pid: number) {

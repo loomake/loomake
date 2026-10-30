@@ -74,3 +74,10 @@
 2. verifyの結果：統合後8647710のspec-only/doneはexit0、全体1454成功・既存8件対象外。追加した診断の検証と最終headの結果はPR #159へ記録する。
 3. 残っている確認事項・仮定：旧Windowsのreceipt不在は原因未確定であり、新headで成功しても解明済みとは扱わない。同じrunのai-journeys120秒超過は既存Issue #116の範囲と切り分ける。
 4. 次にやること：最新headのCIで診断付き結果を確認し、必要なら原因を絞って修正する。Opusは最新headに対して指摘ゼロまで往復する。
+
+## 158の統合とOpus指摘F1〜F5の修正
+
+1. やったこと：PR #158受入済みのmain ac87014を統合した。復旧ガイド・Scenario台帳・kitのprocess試験の競合を解消し、両側のSource/Scenario/期待値を保持した。head4c09のOpus最終レビュー（claude-opus-5-5、session2155aad4、ok:true、権限拒否0）の軽微5件を修正した。設計の参照とAC1〜3を具体化、Q07表の空行を除去、有効timer解除のassertを追加、共有signal helper/PS_LISTのコメントを整え、Scenarioの対象OSをPOSIXへ直した。
+2. verifyの結果：指摘修正後の関連3ファイル32試験が成功。「最初のtimerだけ解除」の一時変異はexit1となり、製品ソースを厳密に戻した後、タイマー3試験が成功した。旧head4c09のCI40994925597は全OS・gate・Node20/22成功、自動Codexも同headで指摘なし。これらを統合後headの合格とは扱わない。
+3. 残っている確認事項・仮定：Opusの5件は修正済みだが、新headのレビュー指摘ゼロはまだ未確認。旧Windows receipt不在の根本原因は未特定のまま。
+4. 次にやること：統合後の最終headでspec-only/doneと全体試験、Scenario対応、CI全OS・自動Codexを確認し、新しいOpusセッションで指摘ゼロまで往復する。
