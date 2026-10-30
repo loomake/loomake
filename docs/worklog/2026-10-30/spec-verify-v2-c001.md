@@ -59,3 +59,10 @@
 2. spec-onlyはexit 0。通常verifyもlint・型・全テストを実行してexit 0。通常doneは再実行せず、以前の4失敗を今回の結果や合格へ読み替えない。製品DoDは未達である。検証の内訳は[PR139本文](https://github.com/loomake/loomake/pull/139)へ記載する。
 3. 現在のmarkerはC001のまま。既存none経路で完了対象を再指定するM139-02はM139-01の前提変更であり、具体案への明示承認待ち。規範・specs・design・proposal・tasks、主仕様・コード・既存試験・設定は変更しない。
 4. traceと作業記録だけをcommit/pushし、markerを維持した本文案を管理役へ渡す。承認依頼・本文の対象再指定・ready化・CI・自動Codex・マージは管理役が行う。追加Opus評価は行わない。
+
+## M139-02の明示承認
+
+1. 本会話の利用者が2026-10-30（日本時間）にM139-02 Aを明示承認した。対象はhead192e44f16e49985fdb783ce926c1ce38bc935588。原回答の公開URLはなく、[PR139本文](https://github.com/loomake/loomake/pull/139)は公開記録として参照する。
+2. PR139だけnoneへ実装完了対象を再指定し、planning metadataは説明用とする。M139-01のmarker変更なし条件を当PRだけ置き換える。通常verifyの全品質と別途spec-only 0を確認し、製品DoD未達・残tasks・後続実装PRのdone必須を維持する。
+3. traceと本記録への追記だけとし、既存本文・規範・計画・コード・既存試験・設定は変更しない。全体試験は再実行せず、追加AI評価も起動しない。
+4. 承認記録をcommit/pushし、本文のnone切替・最終headのCI/自動Codex確認・マージを管理役へ引き継ぐ。
