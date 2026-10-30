@@ -10,7 +10,7 @@ import { RuntimeFailure, UsageError } from './errors.js';
 
 export const EXTERNAL_TIMEOUT_MS = 30_000;
 export const EXTERNAL_OUTPUT_BYTES = 64 * 1024 * 1024;
-type Budget = { deadline: number; maxOperationMs: number; state: { interrupted: boolean } };
+type Budget = { deadline: number; maxOperationMs: number; state: { interrupted: boolean; reason?: string } };
 const budgets = new AsyncLocalStorage<Budget>();
 export type ProcessBudget = { timeoutMs: number; maxOperationMs?: number };
 const monotonicMs = () => Number(process.hrtime.bigint()) / 1_000_000;
@@ -399,7 +399,7 @@ function utf8Prefix(text: string, bytes: number): string {
 /** 引数を配列のまま渡し、期限・合計出力と子グループを監視する。 */
 export function runExternal(command: string, args: readonly string[], options: ExternalOptions = {}): ExternalResult {
   const budget = budgets.getStore();
-  if (budget?.state.interrupted) throw new ProcessLimitError('interrupted', command);
+  if (budget?.state.interrupted) throw new ProcessLimitError('interrupted', command, '', '', budget.state.reason);
   // 品質コマンドは 1 操作の上限を使わず、明示した残り時間と共有予算だけで止める
   const unbounded = options.qualityCommand || options.untilDeadline;
   const requested = options.timeoutMs ?? (unbounded ? Infinity : EXTERNAL_TIMEOUT_MS);
@@ -440,10 +440,11 @@ export function runExternal(command: string, args: readonly string[], options: E
     // 外からの強制終了（Windows の process.kill(pid, 'SIGINT') など）や異常終了で、監視役が結果を書かなかった。
     // 残った子孫を止め、使い方の誤りではなく理由を含む中断として返し、同じ共有予算の後続の操作を止める（REQ-250）
     // 後片付けの 10 秒は共有予算から引かず、期限も延ばさない。結果によらず、同じ共有予算の後続の操作を止める（REQ-253）
-    if (budget) budget.state.interrupted = true;
     const cleanup = stopTree(report.target, holdId, holder);
     const ended = result.signal ? `シグナル ${result.signal}` : `終了コード ${String(result.status)}`;
-    throw missingResultError(command, stdout, stderr, ended, report.invalid, cleanup);
+    const error = missingResultError(command, stdout, stderr, ended, report.invalid, cleanup);
+    if (budget) { budget.state.interrupted = true; budget.state.reason = error.reason; }
+    throw error;
   }
   // 有効な通常の結果を読めたので、保持を解放する。監視役が結果を書いたことだけでは解放しない（REQ-255）
   if (usesHolder) holder?.release(usesHolder);
