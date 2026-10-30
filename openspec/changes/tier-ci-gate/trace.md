@@ -21,7 +21,7 @@
 | REQ-342 | 設計メモ 1 章、rebuild-plan 2.1、AGENTS.md 2 章 | 機能 | gate は変更パスと spec の差分から段階 L1・L2・L3 を決める。最も高い段階を採り、archive の PR は L1。`loomake-tier:` は上げる方向にだけ上書きでき、下げと不正値は失敗 | 反映済 | specs/monorepo/spec.md |
 | REQ-343 | 設計メモ 2・3 章、rebuild-plan 3 章の手順 2（完了条件「L1 の PR で gate が verify --done を呼ばない」） | 機能 | L1 は lint と doc-links だけで verify を呼ばない。L2 は現行どおり。L3 は change が必須。段階と理由を標準出力の 1 行と GITHUB_OUTPUT に書く | 反映済 | specs/monorepo/spec.md |
 | REQ-010 | 設計メモ 2 章（既存の Requirement「プルリクエストごとの完了ゲート」） | 既存変更 | 完了ゲートは先に段階を決め、L1 では verify を呼ばない。L2・L3 では現行どおり change ごとに --done | 反映済 | specs/monorepo/spec.md |
-| REQ-132 | 設計メモ 1 章末尾（独自 isDocument の削除）、既存の Requirement「対象の change がない PR の扱い」 | 既存変更 | 文書の判定を「文書として扱うファイル」に合わせる。L2 で change がなく文書だけなら品質コマンドだけ、L1 では品質コマンドを実行しない | 反映済 | specs/monorepo/spec.md |
+| REQ-132 | 設計メモ 1 章末尾（独自 isDocument の削除）、既存の Requirement「完了ゲートの対象の決め方」「対象の change がない PR の扱い」 | 既存変更 | 対象の change は L2・L3 のときだけ決める。文書の判定を「文書として扱うファイル」に合わせ、L2 で change がなく文書だけなら品質コマンドだけ、L1 では品質コマンドを実行しない | 反映済 | specs/monorepo/spec.md |
 | REQ-054 | 既存の Requirement「プルリクエストごとの完了ゲート」の Source | 既存 | 完了ゲートが不合格ならジョブを失敗させる。この change では変えない | 既存仕様で充足 | specs/monorepo/spec.md |
 | REQ-270 | 設計メモ 2 章の「quality ジョブとの整合」 | 既存変更 | quality の docs_only の判定を段階 L1 と同値にする。Requirement の本文だけを変えた spec.md は文書だけと判定しない | 反映済 | specs/monorepo/spec.md |
 
@@ -39,4 +39,5 @@
 |---|---|---|---|---|---|---|
 | A-01 | REQ-342 | Requirement の本文の変更を「`### Requirement:` の行か RFC 2119 の語（SHALL・MUST・SHOULD・MAY、単語境界）を含む行の追加・削除」で近似する。段落の途中で RFC 語のない行だけを変えた場合は L1 になる | 厳密な段落解析は過剰。Scenario の WHEN/THEN・Purpose・見出しの文言は L1 のまま残せる | 承認 | 設計担当（設計メモ 1 章。ADR 0006 の包括承認に基づく） | 2026-10-31 |
 | A-02 | REQ-342 | `openspec/changes/archive/` への追加があり、全パスが L1 なら、Requirement の行を足していても L1 とする | archive の PR は Requirement を実装 PR の --done で検査済み。例外がないと archive PR は change ディレクトリがもうないため L3 で必ず失敗する | 承認 | 設計担当（設計メモ 1 章。ADR 0006 の包括承認に基づく） | 2026-10-31 |
+| A-04 | REQ-132 | 「完了ゲートの対象の決め方」も MODIFIED にする（設計メモは MODIFIED 3 件）。change の tasks.md だけを変えた PR は L1 なので、既存 Scenario「明示を優先する」「変えたファイルとブランチ名を合わせる」は `scripts/x.mjs` も変える形に直す | L1 で verify を呼ばない（REQ-343）と、tasks.md だけの変更で --done を呼ぶ既存 Scenario は両立しない。設計メモの「L1 では verify を呼ばない」を優先する | 承認 | 実装担当（ADR 0006 の包括承認に基づく。設計メモからの逸脱として PR に書く） | 2026-10-31 |
 | A-03 | REQ-270 | quality ジョブの docs_only の判定は PR 本文の `loomake-tier:` を読まない。本文で L2 以上に上げた文書だけの PR は、quality は飛び、gate の verify が lint・typecheck・test を実行する | quality ジョブは gh で PR 本文を読む権限を持たない。gate の verify で同じ品質コマンドが走るので検査は抜けない | 承認 | 実装担当（設計メモ 1 章「同じ入力・同じ関数で一致」の範囲を本文なしに限定。ADR 0006 の包括承認に基づく） | 2026-10-31 |

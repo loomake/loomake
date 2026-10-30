@@ -149,6 +149,28 @@ Source: REQ-010, REQ-054, REQ-132, REQ-343
 - **WHEN** archive で反映した Requirement の本文が長すぎて、`openspec validate --specs --strict` が失敗する PR で CI が動く
 - **THEN** gate ジョブが失敗する
 
+### Requirement: 完了ゲートの対象の決め方
+CI の完了ゲートは、段階が L2・L3 のとき、対象の change を次の順に決める MUST。段階が L1 のときは対象の change を決めず、`verify` を実行しない。
+
+1. PR 本文に `loomake-change: <id>` の行があれば、その change とする。`,` で区切って複数を書ける。`loomake-change: none` なら、change のない PR とする
+2. 明示がなければ、PR で変えたファイルのうち `openspec/changes/<id>/` の下にあるもの（`archive` を除き、いまディレクトリがあるもの）の change と、PR のブランチ名、またはブランチ名から先頭の `loomake/` を除いた名前と一致する `openspec/changes/<id>` の change を合わせたものとする
+
+明示した change のディレクトリがないときは、ジョブを失敗させる MUST。
+
+Source: REQ-132, REQ-343
+
+#### Scenario: 明示を優先する
+- **WHEN** `openspec/changes/c1` と `openspec/changes/c2` があり、ブランチ名 `c2` で、`openspec/changes/c2/tasks.md` と `scripts/x.mjs` を変え、本文に `loomake-change: c1` の行がある PR で CI が動く
+- **THEN** `verify --change c1 --done` だけが実行される
+
+#### Scenario: 変えたファイルとブランチ名を合わせる
+- **WHEN** `openspec/changes/c1` と `openspec/changes/c2` があり、ブランチ名 `c2` で、本文に明示がなく、`openspec/changes/c1/tasks.md` と `scripts/x.mjs` を変えた PR で CI が動く
+- **THEN** `verify --change c1 --done` と `verify --change c2 --done` が実行される
+
+#### Scenario: change の文書だけを変えた PR
+- **WHEN** ブランチ名 `c2` で、`openspec/changes/c2/tasks.md` だけを変えた PR で CI が動く
+- **THEN** 段階は L1 になり、`verify` は実行されない
+
 ### Requirement: 対象の change がない PR の扱い
 段階が L2 で対象の change がなく、`loomake-change: none` の明示があるか、PR で変えたファイルが「文書として扱うファイル」だけのときは、CI は品質コマンドだけを実行する MUST。段階が L2 で対象の change がなく、文書のほかのファイルを変えているときは、`loomake-change:` の行を書くよう日本語で案内し、ジョブを失敗させる MUST。段階が L1 のときは「段階ごとの完了ゲートの動作」に従い、品質コマンドを実行しない MUST。
 
