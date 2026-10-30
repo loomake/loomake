@@ -324,7 +324,9 @@ describe('verifyとtraceの期限', () => {
       repo.write('loomake.config.json', JSON.stringify({ openspecValidate: false, commands: { lint: 'node send-sigint.cjs', test: `node -e "require('node:fs').writeFileSync('after','x')"` } }));
       // 祖先の一覧を Windows の PowerShell で読むと数秒かかるので、期限は中断より十分長くする。期限で止まると「中断」を含まず、この試験は落ちる
       const result = withProcessBudget({ timeoutMs: 30_000 }, () => runVerify({ root: repo.root }));
-      const sent = JSON.parse(readFileSync(join(repo.root, 'interrupted.json'), 'utf8')) as { pid?: number; command?: string; self?: number; error?: string };
+      const receipt = join(repo.root, 'interrupted.json');
+      expect(existsSync(receipt), JSON.stringify({ results: result.results })).toBe(true);
+      const sent = JSON.parse(readFileSync(receipt, 'utf8')) as { pid?: number; command?: string; self?: number; error?: string };
       expect(sent).toMatchObject({ command: expect.stringMatching(/[\\/]supervisor\.cjs|^loomake: command supervisor/) });
       expect(result.results.find((r) => r.check === 'command: lint')).toMatchObject({ status: 'fail', detail: expect.stringContaining('中断') });
       expect(result.results.find((r) => r.check === 'command: test')).toMatchObject({ status: 'fail', detail: expect.stringContaining('中断') });

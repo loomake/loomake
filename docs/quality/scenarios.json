@@ -227,7 +227,7 @@
         {
           "file": "packages/runner/test/external-budget.test.ts",
           "contains": "[REQ-183] OpenSpec検証の時間切れ",
-          "sha256": "5e46266361a820f6aa3af98e016f3fea1cde38bf95261bc2f1bcc2ae936342f6"
+          "sha256": "eba3216dd9e90f0027f2ac4f7cc4a302461c9af1d062585f8f84d38512609cf0"
         }
       ]
     },
@@ -5860,7 +5860,7 @@
         {
           "file": "packages/runner/test/external-budget.test.ts",
           "contains": "[REQ-192][REQ-182] run の準備中に git",
-          "sha256": "5e46266361a820f6aa3af98e016f3fea1cde38bf95261bc2f1bcc2ae936342f6"
+          "sha256": "eba3216dd9e90f0027f2ac4f7cc4a302461c9af1d062585f8f84d38512609cf0"
         }
       ]
     },
