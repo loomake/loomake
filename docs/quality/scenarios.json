@@ -195,7 +195,7 @@
         {
           "file": "packages/kit/test/process.test.ts",
           "contains": "[REQ-181] 親が先に終わっても",
-          "sha256": "fab7820492e60b1e014f11871cb0195a95e431ab77a8754275e117761be3966b"
+          "sha256": "9a4917d04666f238df72dbbf9996bbfb4c62c644fbe9f0d6f256fae249a8a9bb"
         }
       ]
     },
@@ -211,7 +211,7 @@
         {
           "file": "packages/kit/test/process.test.ts",
           "contains": "[REQ-181] 監視役へのSIGINT",
-          "sha256": "fab7820492e60b1e014f11871cb0195a95e431ab77a8754275e117761be3966b"
+          "sha256": "9a4917d04666f238df72dbbf9996bbfb4c62c644fbe9f0d6f256fae249a8a9bb"
         }
       ]
     },
@@ -7138,7 +7138,7 @@
         {
           "file": "packages/kit/test/process.test.ts",
           "contains": "操作間で残り時間を共有し、期限後は起動しない",
-          "sha256": "fab7820492e60b1e014f11871cb0195a95e431ab77a8754275e117761be3966b"
+          "sha256": "9a4917d04666f238df72dbbf9996bbfb4c62c644fbe9f0d6f256fae249a8a9bb"
         }
       ]
     },
@@ -7154,12 +7154,12 @@
         {
           "file": "packages/kit/test/process.test.ts",
           "contains": "終わらない子を期限で止める",
-          "sha256": "fab7820492e60b1e014f11871cb0195a95e431ab77a8754275e117761be3966b"
+          "sha256": "9a4917d04666f238df72dbbf9996bbfb4c62c644fbe9f0d6f256fae249a8a9bb"
         },
         {
           "file": "packages/kit/test/process.test.ts",
           "contains": "合計出力をバイト数で制限し理由を区別する",
-          "sha256": "fab7820492e60b1e014f11871cb0195a95e431ab77a8754275e117761be3966b"
+          "sha256": "9a4917d04666f238df72dbbf9996bbfb4c62c644fbe9f0d6f256fae249a8a9bb"
         }
       ]
     },
@@ -8061,7 +8061,108 @@
         {
           "file": "packages/kit/test/process.test.ts",
           "contains": "監視役が結果を書かずに終わったら、子孫を止め",
-          "sha256": "fab7820492e60b1e014f11871cb0195a95e431ab77a8754275e117761be3966b"
+          "sha256": "9a4917d04666f238df72dbbf9996bbfb4c62c644fbe9f0d6f256fae249a8a9bb"
+        }
+      ]
+    },
+    {
+      "id": "SCN-00e2df0bf8b6382e8245",
+      "status": "reviewed",
+      "scenarioSha256": "1f85922697a5b051440fb8bebde50f836156e6e28a049ba3b7f9b474cda3b5a7",
+      "reason": "実際の監視役へSIGHUPを送り、理由のないinterrupted、SIGTERMを無視する孫の停止、同じ予算で後続の起動なしを確認する。",
+      "sources": [
+        "REQ-333"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/process.test.ts",
+          "contains": "[REQ-333] 監視役へのSIGHUP",
+          "sha256": "9a4917d04666f238df72dbbf9996bbfb4c62c644fbe9f0d6f256fae249a8a9bb"
+        }
+      ]
+    },
+    {
+      "id": "SCN-855428c541dfc5d8e36d",
+      "status": "reviewed",
+      "scenarioSha256": "f5c2661d5d5f211085dda26564caafea8b022b999a65dd4f920c073c90808fcd",
+      "reason": "packしたCLIのグループへSIGHUPを送り、CLIがSIGHUPで終了しても別グループのopenspecとSIGTERMを無視する孫が停止することを確認する。",
+      "sources": [
+        "REQ-333"
+      ],
+      "tests": [
+        {
+          "file": "tests/package-artifacts.test.ts",
+          "contains": "[REQ-333] packしたCLIと監視役",
+          "sha256": "2435189e2802341831466761662d5eb5a70321ec4eab8c1bd43cb96a146b5359"
+        }
+      ]
+    },
+    {
+      "id": "SCN-a7bbf52030389e872ec4",
+      "status": "reviewed",
+      "scenarioSha256": "c6852dc74a362ef40c488f264e7cd836b047f7be8a46e601360662b29dc2d620",
+      "reason": "品質コマンドから監視役へSIGHUPを送り、detailが理由なしのINTERRUPTED、後続検査なし、子の停止を確認する。",
+      "sources": [
+        "REQ-333"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/verify.test.ts",
+          "contains": "[REQ-333] 品質コマンドの監視役へのSIGHUP",
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
+        }
+      ]
+    },
+    {
+      "id": "SCN-970800ea4b365cb68ab0",
+      "status": "reviewed",
+      "scenarioSha256": "9ff2d23a75159400e422b32e9c0225477ecd12f78ef42bfce32ce8c6c31ce076",
+      "reason": "stdoutの読み手を閉じてから対象に出力させ、監視役の非ゼロ終了とEPIPE、対象とSIGTERMを無視する孫の停止を確認する。",
+      "sources": [
+        "REQ-334"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/supervisor.test.ts",
+          "contains": "[REQ-334] stdoutの読み手が閉じてEPIPE",
+          "sha256": "42af61007cfbd3f642778aab3adf087a206702e89eb55bb6ed4f673ddc712e79"
+        }
+      ]
+    },
+    {
+      "id": "SCN-7795f36d60926bc77e94",
+      "status": "reviewed",
+      "scenarioSha256": "029c641f82b0058c534dd6046dc4d49440b6ec4f7c2cc2707134d9761b8b89f5",
+      "reason": "試験内でgraceコールバックの配送を実対象exitまで保留し、全exitハンドラ処理後に例外を起こす。SIGTERM・grace-scheduled・target-exit・SIGKILLの順序と孫の停止を確認する。製品250msと外側2秒を維持し、!exitedの対照では孫残存を検出する。",
+      "sources": [
+        "REQ-334"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/supervisor.test.ts",
+          "contains": "[REQ-334] SIGTERM後の先頭exit処理済み",
+          "sha256": "42af61007cfbd3f642778aab3adf087a206702e89eb55bb6ed4f673ddc712e79"
+        }
+      ]
+    },
+    {
+      "id": "SCN-be4e51ee725a53739278",
+      "status": "reviewed",
+      "scenarioSha256": "3f7d9ecafe28f66e6a8a8bfd6d060265213dd7b757ba997d4e50270bd02f6fd0",
+      "reason": "実際のSIGKILL送信を観測し、正常終了・SIGINT終了と、SIGKILL直後でtarget-exit未処理の例外でも送信が各1回だけであることを確認する。!exitedの対照では再送を検出する。",
+      "sources": [
+        "REQ-334"
+      ],
+      "tests": [
+        {
+          "file": "packages/kit/test/supervisor.test.ts",
+          "contains": "終了でSIGKILLを送信済みなら",
+          "sha256": "42af61007cfbd3f642778aab3adf087a206702e89eb55bb6ed4f673ddc712e79"
+        },
+        {
+          "file": "packages/kit/test/supervisor.test.ts",
+          "contains": "SIGKILL送信直後で対象exit未処理",
+          "sha256": "42af61007cfbd3f642778aab3adf087a206702e89eb55bb6ed4f673ddc712e79"
         }
       ]
     }
