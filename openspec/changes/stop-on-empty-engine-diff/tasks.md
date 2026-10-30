@@ -26,5 +26,5 @@
 
 ## 5. 確認
 
-- [ ] 5.1 `pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` を通す。`.loomake/repro/run.mjs` で、コミットが増えずに終了コード 1 になることを確かめる
+- [x] 5.1 `pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` を通す。`.loomake/repro/run.mjs` で、コミットが増えずに終了コード 1 になることを確かめる
 - [ ] 5.2 `pnpm -s verify --change stop-on-empty-engine-diff --done` を通す <!-- loomake:gate=done -->
