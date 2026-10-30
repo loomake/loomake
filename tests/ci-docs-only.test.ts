@@ -107,6 +107,31 @@ describe('文書だけかの判定', () => {
     }
   });
 
+  it('[REQ-270][REQ-342] Requirement の本文を変えた spec.md だけの PR は、段階 L3 なので文書だけと判定しない', () => {
+    // spec.md があるときだけ、その spec.md の -U0 の差分を読む。Requirement の行か RFC 2119 の語を含む行の追加・削除で段階 L3 になる
+    const specDiff = (lines: string[]) => ['diff --git a/openspec/specs/x/spec.md b/openspec/specs/x/spec.md', '--- a/openspec/specs/x/spec.md', '+++ b/openspec/specs/x/spec.md', '@@ -1,0 +2 @@', ...lines].join('\n') + '\n';
+    const decideWithSpec = (lines: string[]) => {
+      const calls: string[][] = [];
+      const git = (args: string[]) => {
+        calls.push(args);
+        if (args.includes('-U0')) return { status: 0, stdout: specDiff(lines), stderr: '' };
+        if (args[0] === 'ls-tree') return { status: 0, stdout: 'openspec/specs/x/spec.md\0', stderr: '' };
+        return { status: 0, stdout: nameStatus(['M', 'openspec/specs/x/spec.md']), stderr: '' };
+      };
+      return { result: decideDocsOnly({ eventName: 'pull_request', baseRef: 'main', git }), calls };
+    };
+    const requirement = decideWithSpec(['+新しい振る舞い SHALL。']);
+    expect(requirement.result.docsOnly).toBe(false);
+    expect(requirement.result.reason).toContain('段階が L3');
+    expect(requirement.calls.at(-1)).toEqual(['-c', 'core.quotePath=false', 'diff', '-U0', 'refs/remotes/origin/main...HEAD', '--', 'openspec/specs/x/spec.md']);
+    // Scenario の文言だけなら文書だけ（段階 L1）
+    expect(decideWithSpec(['-- **THEN** 古い結果', '+- **THEN** 新しい結果']).result.docsOnly).toBe(true);
+    // spec.md の差分を読めなければ、文書だけと判定しない
+    const failed = decideDocsOnly({ eventName: 'pull_request', baseRef: 'main', git: (args) => (args.includes('-U0') ? { status: 128, stdout: '', stderr: 'fatal: bad revision' } : { status: 0, stdout: args[0] === 'ls-tree' ? 'openspec/specs/x/spec.md\0' : nameStatus(['M', 'openspec/specs/x/spec.md']), stderr: '' }) });
+    expect(failed.docsOnly).toBe(false);
+    expect(failed.reason).toContain('spec.md の差分を読めなかった');
+  });
+
   it('[REQ-270] 名前を変えたファイルは、変更前のパスも判定する', () => {
     expect(decide(nameStatus(['R100', 'scripts/notes.md', 'docs/notes.md']))).toMatchObject({ docsOnly: false });
     expect(decide(nameStatus(['R087', 'docs/old.md', 'docs/new.md']))).toMatchObject({ docsOnly: true });

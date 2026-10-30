@@ -14,7 +14,7 @@
 
 ## 3. 試験
 
-- [ ] 3.1 `tests/ci-tier.test.ts` を足し、`tests/ci-gate-process.test.ts`・`tests/ci-docs-only.test.ts` に段階の試験を足す。既存の「品質コマンドだけ」の 3 件を lint 前提に書き換える（REQ-342・REQ-343・REQ-270）
+- [x] 3.1 `tests/ci-tier.test.ts` を足し、`tests/ci-gate-process.test.ts`・`tests/ci-docs-only.test.ts` に段階の試験を足す。既存の「品質コマンドだけ」の 3 件を lint 前提に書き換える（REQ-342・REQ-343・REQ-270）
 
 ## 4. 開発の仕組み
 
