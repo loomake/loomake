@@ -50,8 +50,8 @@ const kill=process.kill;process.kill=function(pid,signal){record(signal);const r
 ${options.throwAfterExit ? "const timer=global.setTimeout;global.setTimeout=function(callback,ms,...args){if(ms!==250)return timer(callback,ms,...args);record('grace-scheduled');return timer(function deliver(){if(!targetExited)return timer(deliver,10);callback(...args);},ms);};" : ''}
 const spawn=cp.spawn;cp.spawn=function(...args){const child=spawn(...args);const emit=child.emit;child.emit=function(event,...values){const result=emit.call(this,event,...values);if(event==='exit'){targetExited=true;record('target-exit');${options.throwAfterExit ? "throw new Error('fixture-after-target-exit');" : ''}}return result;};return child;};
 `);
-  const leaf = `process.on('SIGTERM',()=>{});require('node:fs').writeFileSync(${JSON.stringify(leafFile)},String(process.pid));setInterval(()=>{},100)`;
-  const code = `const fs=require('node:fs');process.on('SIGTERM',()=>{${options.exitOnTerm ? 'process.exit(0);' : ''}});const leaf=require('node:child_process').spawn(process.execPath,['-e',${JSON.stringify(leaf)}],{stdio:'ignore'});`
+  const leaf = "process.on('SIGTERM',()=>{});require('node:fs').writeFileSync(process.argv[1],String(process.pid));setInterval(()=>{},100)";
+  const code = `const fs=require('node:fs');process.on('SIGTERM',()=>{${options.exitOnTerm ? 'process.exit(0);' : ''}});const leaf=require('node:child_process').spawn(process.execPath,['-e',${JSON.stringify(leaf)},'--',${JSON.stringify(leafFile)}],{stdio:'ignore'});`
     + `const timer=setInterval(()=>{if(fs.existsSync(${JSON.stringify(leafFile)})){clearInterval(timer);${options.publishReady === false ? '' : 'fs.writeFileSync(' + JSON.stringify(readyFile) + ',JSON.stringify([process.pid,leaf.pid]));'}}},10);`
     + `const output=setInterval(()=>{if(fs.existsSync(${JSON.stringify(trigger)})){clearInterval(output);${options.normalExit ? 'process.exit(0);' : "process.stdout.write('trigger');"}}},10);setInterval(()=>{},100)`;
   const deadline = Number(process.hrtime.bigint()) / 1_000_000 + 10_000;

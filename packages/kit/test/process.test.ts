@@ -106,8 +106,8 @@ describe('同期外部操作の監視', () => {
     const parentFile = join(dir, 'parent');
     const leafFile = join(dir, 'leaf');
     const after = join(dir, 'after');
-    const leaf = `const fs=require('node:fs');process.on('SIGTERM',()=>{});fs.writeFileSync(${JSON.stringify(leafFile)},String(process.pid));setInterval(()=>{},100)`;
-    const code = `const fs=require('node:fs');fs.writeFileSync(${JSON.stringify(parentFile)},String(process.pid));process.on('SIGTERM',()=>{});require('node:child_process').spawn(process.execPath,['-e',${JSON.stringify(leaf)}],{stdio:'ignore'});`
+    const leaf = "const fs=require('node:fs');process.on('SIGTERM',()=>{});fs.writeFileSync(process.argv[1],String(process.pid));setInterval(()=>{},100)";
+    const code = `const fs=require('node:fs');fs.writeFileSync(${JSON.stringify(parentFile)},String(process.pid));process.on('SIGTERM',()=>{});require('node:child_process').spawn(process.execPath,['-e',${JSON.stringify(leaf)},'--',${JSON.stringify(leafFile)}],{stdio:'ignore'});`
       + `const timer=setInterval(()=>{if(fs.existsSync(${JSON.stringify(leafFile)})){clearInterval(timer);process.kill(process.ppid,'SIGHUP');}},10);setInterval(()=>{},100)`;
     let leafPid: number | undefined;
     try {

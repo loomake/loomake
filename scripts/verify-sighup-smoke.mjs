@@ -21,13 +21,13 @@ const ready = join(results, 'ready.json');
 const leaf = join(results, 'leaf.pid');
 const leader = join(results, 'leader.pid');
 const executable = join(bin, 'openspec');
-const leafCode = `process.on('SIGTERM',()=>{});require('node:fs').writeFileSync(${JSON.stringify(leaf)},String(process.pid));setInterval(()=>{},100)`;
+const leafCode = "process.on('SIGTERM',()=>{});require('node:fs').writeFileSync(process.argv[1],String(process.pid));setInterval(()=>{},100)";
 writeFileSync(executable, `#!/usr/bin/env node
 import { spawn } from 'node:child_process';
 import { existsSync, writeFileSync } from 'node:fs';
 process.on('SIGTERM',()=>{});
 writeFileSync(${JSON.stringify(leader)},String(process.pid));
-const child=spawn(process.execPath,['-e',${JSON.stringify(leafCode)}],{stdio:'ignore'});
+const child=spawn(process.execPath,['-e',${JSON.stringify(leafCode)},'--',${JSON.stringify(leaf)}],{stdio:'ignore'});
 const timer=setInterval(()=>{if(existsSync(${JSON.stringify(leaf)})){clearInterval(timer);${splitReady ? 'writeFileSync(' + JSON.stringify(ready) + ',\'\');setTimeout(()=>writeFileSync(' + JSON.stringify(ready) + ',JSON.stringify([process.pid,child.pid])),50);' : 'writeFileSync(' + JSON.stringify(ready) + ',JSON.stringify([process.pid,child.pid]));'}}},10);
 setInterval(()=>{},100);
 `);
