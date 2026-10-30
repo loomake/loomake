@@ -163,7 +163,7 @@ export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
 - **`runEngineTasks`：** `guard` のあとに `decideAfterChanges({ phase: 'task', changed, text })` を呼びます。
   - `stop`：止まる。index は空なので、戻す処理は要りません。
   - `no-change`：標準出力に「変更なしで完了にしました：<タスク>（<理由>）」と出し、これまでどおり `checkTask`・`add`・`commit` をします。
-  - Q-03 の A を採るなら、コミット本文に `LOOMAKE-NOCHANGE: ${maskSecrets(reason)}` を付けます。
+  - Q-03 の決定に従い、理由を `maskSecrets` で置換して標準出力とコミット本文に残します。
 - **`runGate`：** `phases.ts:133-135` の `if` を `decideAfterChanges({ phase: 'repair', … })` に置き換えます。`stop` なら `stopped(reason)` を返します。
 - **`prompt.ts`：** `failure` がないとき（タスクの指示）だけ、次の決まりを 1 行足します。
   > - 変更が要らないタスクなら、何も変えずに `LOOMAKE-NOCHANGE:` で始まる行に理由を書いて終える。変更を残さず、この行もなければ、run はタスクを完了にせずに止まる
@@ -250,7 +250,7 @@ export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
 | `packages/runner/test/decision-policy.test.ts` | REQ-332 の `it.each` を足す |
 | `tests/run-decision-mutations.test.ts` | 変異 2 つを足し、名前の数と結果の期待値を増やす |
 | `packages/runner/test/helpers.ts` | `export const noChange = { output: 'LOOMAKE-NOCHANGE: 検査用に変更が要らない' }` を足す。偽の claude の既定の動き（台本が尽きたら何もしない）は変えない |
-| runner の試験 12 ファイル（例：`run.test.ts`・`guards.test.ts`・`external-budget.test.ts`・`pr.test.ts`） | エンジンのタスクに当たる `{}` を `noChange` に置き換える。`run.test.ts:305` の REQ-100・REQ-111 の試験のタスクを `noChange` にし、REQ-104 の試験は、タスクを `noChange` にし、直しを不合格のままのファイルを書く台本（例：`{ write: { 'fix.txt': '1' } }` と `'2'`）にする。期待値は変えない |
+| runner の既存試験 9 ファイル（例：`run.test.ts`・`guards.test.ts`・`external-budget.test.ts`・`pr.test.ts`） | エンジンのタスクに当たる `{}` を `noChange` に置き換える。`run.test.ts` の REQ-100・REQ-111 の試験はタスクを `noChange` にする。REQ-104 と、残ったタスクの印を確かめる REQ-100 の試験は、タスクを `noChange` にし、直しで不合格のままの `fix.txt` を書く台本にする。期待値は変えない |
 | `docs/guide/1.getting-started/2.usage.md` | `:282` の近くに、合図と、差分なしで止まることを 1 項目足す |
 | `docs/guide/2.guides/3.run-recovery.md` | 「エンジンが変更を残さずに止まった場合」の短い節を足す（記録の場所と 2 つの対処） |
 | `docs/quality/scenarios.json` | この change の Scenario のレビューを足す。台本を変えた試験を根拠にする既存のレビューは、読み直してハッシュを更新する |
