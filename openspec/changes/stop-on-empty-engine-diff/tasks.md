@@ -54,4 +54,4 @@
 
 - [x] 10.1 REQ-339の本文を保って末尾空白のScenario、Q-06、designを更新し、仕様ゲートを通す
 - [x] 10.2 実Gitの末尾空白の完全一致回帰を追加し、既存の期待値を維持してRedを確かめる
-- [ ] 10.3 NoChangeコミットだけをverbatimにしてGreenにし、Scenario対応・ガイド・作業記録を更新して、5.2を最終main統合後のheadで再実行する
+- [x] 10.3 NoChangeコミットだけをverbatimにしてGreenにし、Scenario対応・ガイド・作業記録を更新して、5.2を最終main統合後のheadで再実行する

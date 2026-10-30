@@ -81,7 +81,7 @@ export async function runEngineTasks(ctx: RunContext, rec: Recorder): Promise<St
     if (reason !== undefined) ctx.stdout(`変更不要としてタスクを完了にします：${reason}`);
     checkTask(ctx.tasksPath, task.line);
     git(root, env, ['add', '-A']);
-    git(root, env, ['commit', '-q', '-m', `run(${changeId}): ${taskLabel(task)}`, ...(reason === undefined ? [] : ['-m', `変更不要：${reason}`])]);
+    git(root, env, ['commit', '-q', '-m', `run(${changeId}): ${taskLabel(task)}`, ...(reason === undefined ? [] : ['--cleanup=verbatim', '-m', `変更不要：${reason}`])]);
     rec.done.push(taskLabel(task));
   }
   return undefined;
