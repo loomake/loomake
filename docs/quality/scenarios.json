@@ -699,7 +699,7 @@
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "packした5パッケージだけで主要コマンドと公開APIを使える",
-          "sha256": "a5827b94e5fb414e12446edfd26c0d4a5bd46b40c86caafb8eda7e777f3397ed"
+          "sha256": "2435189e2802341831466761662d5eb5a70321ec4eab8c1bd43cb96a146b5359"
         },
         {
           "file": "tests/release-security.test.ts",
@@ -1545,7 +1545,7 @@
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "packした5パッケージだけで主要コマンドと公開APIを使える",
-          "sha256": "a5827b94e5fb414e12446edfd26c0d4a5bd46b40c86caafb8eda7e777f3397ed"
+          "sha256": "2435189e2802341831466761662d5eb5a70321ec4eab8c1bd43cb96a146b5359"
         }
       ]
     },
@@ -1588,12 +1588,12 @@
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "packした5パッケージだけで主要コマンドと公開APIを使える",
-          "sha256": "a5827b94e5fb414e12446edfd26c0d4a5bd46b40c86caafb8eda7e777f3397ed"
+          "sha256": "2435189e2802341831466761662d5eb5a70321ec4eab8c1bd43cb96a146b5359"
         },
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "配布物の公開型を使い、型の破壊的変更を利用側のコンパイルで検出する",
-          "sha256": "a5827b94e5fb414e12446edfd26c0d4a5bd46b40c86caafb8eda7e777f3397ed"
+          "sha256": "2435189e2802341831466761662d5eb5a70321ec4eab8c1bd43cb96a146b5359"
         },
         {
           "file": "tests/public-source-exports.test.ts",
@@ -2989,7 +2989,7 @@
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "packした5パッケージだけで主要コマンドと公開APIを使える",
-          "sha256": "a5827b94e5fb414e12446edfd26c0d4a5bd46b40c86caafb8eda7e777f3397ed"
+          "sha256": "2435189e2802341831466761662d5eb5a70321ec4eab8c1bd43cb96a146b5359"
         }
       ]
     },
@@ -4434,7 +4434,7 @@
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "POSIXの配布物を実際のSIGINTで中断する",
-          "sha256": "a5827b94e5fb414e12446edfd26c0d4a5bd46b40c86caafb8eda7e777f3397ed"
+          "sha256": "2435189e2802341831466761662d5eb5a70321ec4eab8c1bd43cb96a146b5359"
         }
       ]
     },
@@ -4668,7 +4668,7 @@
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "Linuxで通信を拒否して配布物を使う",
-          "sha256": "a5827b94e5fb414e12446edfd26c0d4a5bd46b40c86caafb8eda7e777f3397ed"
+          "sha256": "2435189e2802341831466761662d5eb5a70321ec4eab8c1bd43cb96a146b5359"
         }
       ]
     },
@@ -4992,7 +4992,7 @@
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "Linuxで通信を拒否して配布物を使う",
-          "sha256": "a5827b94e5fb414e12446edfd26c0d4a5bd46b40c86caafb8eda7e777f3397ed"
+          "sha256": "2435189e2802341831466761662d5eb5a70321ec4eab8c1bd43cb96a146b5359"
         }
       ]
     },
@@ -7976,7 +7976,7 @@
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "[REQ-333] packしたCLIと監視役",
-          "sha256": "a5827b94e5fb414e12446edfd26c0d4a5bd46b40c86caafb8eda7e777f3397ed"
+          "sha256": "2435189e2802341831466761662d5eb5a70321ec4eab8c1bd43cb96a146b5359"
         }
       ]
     },
@@ -8008,7 +8008,7 @@
         {
           "file": "packages/kit/test/supervisor.test.ts",
           "contains": "[REQ-334] stdoutの読み手が閉じてEPIPE",
-          "sha256": "8b01f4e0b89b991d9f9fc3d7639775b20bb43050c41142426b3ce009a5b1c6c1"
+          "sha256": "42af61007cfbd3f642778aab3adf087a206702e89eb55bb6ed4f673ddc712e79"
         }
       ]
     },
@@ -8016,7 +8016,7 @@
       "id": "SCN-7795f36d60926bc77e94",
       "status": "reviewed",
       "scenarioSha256": "029c641f82b0058c534dd6046dc4d49440b6ec4f7c2cc2707134d9761b8b89f5",
-      "reason": "実際の先頭のexit処理後に例外を起こし、SIGTERM・target-exit・SIGKILLの順序と孫の停止を確認する。!exited条件では孫が残り失敗する。",
+      "reason": "試験内でgraceコールバックの配送を実対象exitまで保留し、全exitハンドラ処理後に例外を起こす。SIGTERM・grace-scheduled・target-exit・SIGKILLの順序と孫の停止を確認する。製品250msと外側2秒を維持し、!exitedの対照では孫残存を検出する。",
       "sources": [
         "REQ-334"
       ],
@@ -8024,7 +8024,7 @@
         {
           "file": "packages/kit/test/supervisor.test.ts",
           "contains": "[REQ-334] SIGTERM後の先頭exit処理済み",
-          "sha256": "8b01f4e0b89b991d9f9fc3d7639775b20bb43050c41142426b3ce009a5b1c6c1"
+          "sha256": "42af61007cfbd3f642778aab3adf087a206702e89eb55bb6ed4f673ddc712e79"
         }
       ]
     },
@@ -8040,12 +8040,12 @@
         {
           "file": "packages/kit/test/supervisor.test.ts",
           "contains": "終了でSIGKILLを送信済みなら",
-          "sha256": "8b01f4e0b89b991d9f9fc3d7639775b20bb43050c41142426b3ce009a5b1c6c1"
+          "sha256": "42af61007cfbd3f642778aab3adf087a206702e89eb55bb6ed4f673ddc712e79"
         },
         {
           "file": "packages/kit/test/supervisor.test.ts",
           "contains": "SIGKILL送信直後で対象exit未処理",
-          "sha256": "8b01f4e0b89b991d9f9fc3d7639775b20bb43050c41142426b3ce009a5b1c6c1"
+          "sha256": "42af61007cfbd3f642778aab3adf087a206702e89eb55bb6ed4f673ddc712e79"
         }
       ]
     }

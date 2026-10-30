@@ -49,3 +49,10 @@
 2. verifyの結果：関連78試験・lint成功。!exitedの再送mutationとready依存cleanupのmutationは各1件でRed、正実装はGreen。初回の新しい例外fixtureはkill内catchに吸収されたため、期待値を変えずnextTickの未処理例外に修正した。doneと新headの最終レビューはこれから実施する。
 3. 残っている確認事項・仮定：利用者の最新指示でOpus最終回数の上限は撤廃。旧head273851aの全OS CI・自動Codex・Opus重大なしは履歴として保持するが、軽微指摘があるため受入に使わない。同一指摘が3回続いたらIssue記録し往復を継続する。
 4. 次にやること：新headでdone・全OS CI・自動Codexを確認し、freshsessionのOpus最終レビューで指摘ゼロまで進める。
+
+## review3とmacOSのfixture競合の修正
+
+1. やったこと：タスク3.2でreview3の軽微2・情報2を修正した。smoke finallyのESRCHを許容し、fixture専用試験の誤REQタグを外した。製品のID付き試験とassertionは維持。完了印と最終レビューゼロの受入を分離し、Scenario理由へgrace配送制御を明記した。
+2. verifyの結果：旧head1da9616のdoneは1452成功8skipだったが、全OS CI40992720498のmacOS2/2はpack REQ333のreadyファイルが空の間にJSON.parseし失敗（874成功8skip）。完全なPID配列の読取をready条件にし、空→50ms後JSONの回帰を追加。通常/分割readyと直接fixtureの4ケース成功。旧exists-only読取のmutationの結果と新head doneはPRへ記録する。
+3. 残っている確認事項・仮定：Opus review3はsession7feab1fc、claude-opus-5-5、権限拒否0、重大0・軽微2・情報2。旧6指摘は解消または既存限界記録として妥当と評価された。新指摘はESRCH・誤REQタグ・task完了印・Scenario理由が各連続1回で、3連続の同一指摘はない。
+4. 次にやること：新しいheadでdone・全OS CI・自動Codexを確認し、freshsessionのOpus最終レビューで指摘ゼロまで往復を続ける。今回も製品250ms・外側2秒・既存期限と期待値を維持する。

@@ -61,8 +61,15 @@ const spawn=cp.spawn;cp.spawn=function(...args){const child=spawn(...args);const
   child.stdio[3]!.on('data', (data) => { report += data; });
   child.stdout!.resume(); child.stderr!.on('data', (data) => { stderr += data; });
   const targetPid = () => report.trim().split('\n').flatMap((line) => { try { const value = JSON.parse(line); return Number.isInteger(value.pid) ? [value.pid as number] : []; } catch { return []; } }).at(0);
-  const leafPid = () => existsSync(leafFile) ? Number(readFileSync(leafFile, 'utf8')) : undefined;
-  const pids = () => existsSync(readyFile) ? JSON.parse(readFileSync(readyFile, 'utf8')) as number[] : [];
+  const leafPid = () => {
+    const pid = existsSync(leafFile) ? Number(readFileSync(leafFile, 'utf8')) : undefined;
+    return Number.isInteger(pid) && pid! > 1 ? pid : undefined;
+  };
+  const pids = () => {
+    if (!existsSync(readyFile)) return [];
+    try { return JSON.parse(readFileSync(readyFile, 'utf8')) as number[]; }
+    catch (error) { if (error instanceof SyntaxError) return []; throw error; }
+  };
   try {
     await action({ child, closed, ready: () => pids().length === 2 && /"pid":/.test(report), pids, report: () => report,
       targetPid, leafPid, stderr: () => stderr, trigger: () => writeFileSync(trigger, ''),
@@ -122,7 +129,7 @@ describe.runIf(process.platform !== 'win32')('監視役自身によるPOSIXの�
       expect(await waitFor(() => pids().every((pid) => !alive(pid)), 2000)).toBe(true);
     }, { throwAfterKill: true });
   }, 10_000);
-  it('[REQ-333][REQ-334] readyファイルの前にfixtureが失敗しても報告済みPIDの対象と孫を片付ける', async () => {
+  it('readyファイルの前にfixtureが失敗しても報告済みPIDの対象と孫を片付ける', async () => {
     let leader: number | undefined; let leaf: number | undefined;
     try {
       await expect(withSupervisor(async ({ ready, targetPid, leafPid }) => {

@@ -69,7 +69,7 @@ run-recovery の「端末を閉じたときとコンテナを止めたとき」�
 | AC-5 | 既存の試験が同じ期待値で通る | process・orphans・process-startup・verify・signal-during-sync・runner の run・配布物の REQ-124/208 を確認する |
 | AC-6 | Q-01：対象 HEAD のビルドで元の再現を取り直す | この worktree の dist を読む再現スクリプトを使い、修正前後を PR に記録する |
 
-直接起動の試験は POSIX だけにする。孫は stdio を ignore とし、準備完了を待ってから信号や出力を送る。停止判定は既存の macOS のゾンビ判定にならう。E2E は既存の run-sigint-smoke.mjs にならって consumer を複製し、openspecValidate:true にする。finally で試験自身の子孫を後片付けする。
+直接起動の試験は POSIX だけにする。孫は stdio を ignore とし、準備完了を待ってから信号や出力を送る。停止判定は既存の macOS のゾンビ判定にならう。E2E は既存の run-sigint-smoke.mjs にならって consumer を複製し、openspecValidate:true にする。ready ファイルは存在だけでなく、有効な 2 個の PID を読み終えた時点で準備完了とする。空の ready を先に作ってから JSON を書く分割書込の回帰でも、既存の 15 秒の準備期限と 3 秒以内の子孫停止を維持する。finally で試験自身の子孫を後片付けする。
 
 A に従い、SIGKILL 送信済みの正常終了・既存の SIGINT 終了で exit ハンドラが再送しないことも確かめる。SIGKILL 送信直後で対象の exit が未処理の例外を nextTick で起こす試験も加え、!exited の対照では再送を検出する。A-03 は Node 22.12 以上と開発用 Node 24 の既存 CI で検証する。実装 PR へ ci:all-os を付け、macOS の非同期 EPIPE 経路を確認する。
 

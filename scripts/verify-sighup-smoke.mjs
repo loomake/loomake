@@ -9,6 +9,8 @@ import { setTimeout as delay } from 'node:timers/promises';
 assert.notEqual(process.platform, 'win32', 'この検証はPOSIXのSIGHUPを対象にしています');
 assert.ok(process.argv[2], 'package-smokeで準備した検証先を指定してください');
 const target = resolve(process.argv[2]);
+const splitReady = process.argv[3] === '--split-ready';
+assert.ok(!process.argv[3] || splitReady, '未知のfixtureモードです');
 const consumer = join(target, 'consumer-verify-sighup');
 cpSync(join(target, 'consumer'), consumer, { recursive: true, verbatimSymlinks: true });
 writeFileSync(join(consumer, 'loomake.config.json'), JSON.stringify({ openspecValidate: true, commands: {} }));
@@ -26,7 +28,7 @@ import { existsSync, writeFileSync } from 'node:fs';
 process.on('SIGTERM',()=>{});
 writeFileSync(${JSON.stringify(leader)},String(process.pid));
 const child=spawn(process.execPath,['-e',${JSON.stringify(leafCode)}],{stdio:'ignore'});
-const timer=setInterval(()=>{if(existsSync(${JSON.stringify(leaf)})){clearInterval(timer);writeFileSync(${JSON.stringify(ready)},JSON.stringify([process.pid,child.pid]));}},10);
+const timer=setInterval(()=>{if(existsSync(${JSON.stringify(leaf)})){clearInterval(timer);${splitReady ? 'writeFileSync(' + JSON.stringify(ready) + ',\'\');setTimeout(()=>writeFileSync(' + JSON.stringify(ready) + ',JSON.stringify([process.pid,child.pid])),50);' : 'writeFileSync(' + JSON.stringify(ready) + ',JSON.stringify([process.pid,child.pid]));'}}},10);
 setInterval(()=>{},100);
 `);
 chmodSync(executable, 0o755);
@@ -50,8 +52,16 @@ async function waitFor(check, timeout) {
   return true;
 }
 try {
-  assert.ok(await waitFor(() => existsSync(ready), 15000), `openspecの準備が時間切れ：${stdout}\n${stderr}`);
-  pids = JSON.parse(readFileSync(ready, 'utf8'));
+  assert.ok(await waitFor(() => {
+    if (!existsSync(ready)) return false;
+    const text = readFileSync(ready, 'utf8');
+    if (!text.trim()) return false;
+    let value;
+    try { value = JSON.parse(text); } catch (error) { if (error instanceof SyntaxError) return false; throw error; }
+    assert.ok(Array.isArray(value) && value.length === 2 && value.every((pid) => Number.isInteger(pid) && pid > 1), 'fixtureのPIDが不正です');
+    pids = value;
+    return true;
+  }, 15000), `openspecの準備が時間切れ：${stdout}\n${stderr}`);
   process.kill(-child.pid, 'SIGHUP');
   assert.ok(await waitFor(() => pids.every((pid) => !alive(pid)), 3000), 'SIGHUP後にopenspecまたは子が残りました');
   const [code, signal] = await closed;
@@ -59,7 +69,9 @@ try {
   writeFileSync(join(results, 'results.json'), JSON.stringify({ requirement: 'REQ-333', ok: true, exit: { code, signal }, remaining: pids.filter(alive) }, null, 2) + '\n');
   console.log('SIGHUPでCLIが終了してもopenspecと子が停止しました');
 } finally {
-  if (child.exitCode === null && child.signalCode === null) process.kill(-child.pid, 'SIGKILL');
+  if (child.exitCode === null && child.signalCode === null) {
+    try { process.kill(-child.pid, 'SIGKILL'); } catch (error) { if (error.code !== 'ESRCH') throw error; }
+  }
   await closed;
   const targetPid = existsSync(leader) ? Number(readFileSync(leader, 'utf8')) : pids[0];
   if (targetPid) { try { process.kill(-targetPid, 'SIGKILL'); } catch { /* 停止済み */ } }
