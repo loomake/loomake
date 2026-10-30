@@ -58,3 +58,11 @@
 2. verify：新規保存予算負例は成功。通常/短path/長path/summaryとstop I/O失敗/guard重複/元raw分類は前記の成功結果と照合した。41Scenarioの対応表は専用treeのscenario-test-map.jsonへ保存した。全体verifyはこれから。
 3. 残る事項：3.3以降、実CLI4件・done・CI・自動Codex・独立最終レビュー・親DoD。changeset作成だけではtask5.1完了としない。
 4. 次：旧全Scenarioと既存停止順の回帰を通常verifyで確認する。
+
+
+## task3.3 の全体回帰
+
+1. やったこと：旧20Scenarioと追加Scenarioを含む全41件の対応、停止の優先順、HEAD/branch/Git内部変更、中断/上限/質問、正常なcommit/NoChange/gateを照合した。8差分本文は6c951b9から全byte不変。a1のREQ-100追加Scenarioも保持した。
+2. verify：head432ad60の通常pnpm verifyはexit0。lint・型・全体1589成功/失敗0/既存skip8。実行中のheadとtracked cleanを保持し、原レポート・loghash・受入範囲を専用treeのnormal-verify-receipt-432ad60.jsonへ保存した。
+3. 残る事項：3.4の保存schema/provenance確認、実CLI4件、製品done・CI・自動Codex・独立最終レビュー・親DoD。全体の通常verify成功を未収集の実観測へ流用しない。
+4. 次：採集を起動せず、閉集合projectionと全型derivedの検査を共通モジュールへまとめる。
