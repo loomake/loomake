@@ -42,4 +42,5 @@ head: <40 桁 SHA>
 ci: <必須 CI の run URL>
 codex-review: <Codex 自動レビューが受領した head の SHA。未実施なら「未実施」>
 opus-review: <セッション ID>（重大 N・軽微 N・情報 N）。L1 なら「対象外」
+opus-model: <実際のモデル識別子（例 claude-opus-5-5）。レビューしていなければ「対象外」>
 ```
