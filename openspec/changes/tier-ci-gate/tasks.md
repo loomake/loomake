@@ -9,8 +9,8 @@
 - [x] 2.1 `scripts/ci-tier.mjs` を足す：`isDocumentPath`（ci-docs-only.mjs から移す）・`classifyPath`・`requirementBodyChanged`・`decideTier`・`formatTierLine`（REQ-342）
 - [x] 2.2 `scripts/ci-gate.mjs`：`--raw -z -M` と spec の `-U0` の差分、段階の分岐、L1 の lint と doc-links、標準出力の tier 行、`GITHUB_OUTPUT`、独自の `isDocument` の削除（REQ-343）
 - [x] 2.3 `scripts/ci-docs-only.mjs`：最終判定を段階 L1 にする。安全側の検査（PR でない・差分を取れない・解釈できない・通常のファイルでない・大文字小文字）は残す（REQ-270・REQ-342）
-- [ ] 2.4 `.github/workflows/ci.yml`：gate ステップに `id: gate` を付け、コメントを段階の説明に直す
-- [ ] 2.5 `.github/PULL_REQUEST_TEMPLATE.md`・`.agents/skills/delivery/SKILL.md`：証跡ブロックに `tier:` の行を足し、SKILL に worktree の削除の 1 行を足す
+- [x] 2.4 `.github/workflows/ci.yml`：gate ステップに `id: gate` を付け、コメントを段階の説明に直す
+- [x] 2.5 `.github/PULL_REQUEST_TEMPLATE.md`・`.agents/skills/delivery/SKILL.md`：証跡ブロックに `tier:` の行を足し、SKILL に worktree の削除の 1 行を足す
 
 ## 3. 試験
 
