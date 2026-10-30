@@ -52,6 +52,8 @@ workflow自身、publication-retry試験、共通fixtureと診断のhelper、監
 - `tests/publication-retry-diagnostics*.test.ts`
 - `docs/dev/test-phase-profiling.md`
 
+自動起動は上記のパスに限ります。列挙外で、この診断の導入・実行に影響するpackage.json・lockfile・workspace・action pin・tsconfig、root setup・補助fixture・build/pack/診断script・生成物の入力などを変える修理PRでは、`workflow_dispatch` で修理PRのbranchを指定して3サンプルを実行します。各runのcheckoutが受入対象headと一致することと、元25ケースの所属・成否を照合してから修理を受け入れます。静的なimportの参照だけで動的読込みや生成scriptを網羅したとは扱わず、列挙外への影響がある修理も同じ手順で確認します。
+
 publication-retryの25ケースは、fixture作成前に固有のIDを作り、固定のケース分類とともに `*.phases.jsonl` へ記録します。repo-ready以降の安全なfixture basenameで `*.processes.jsonl` と対応します。phaseはcase-start、repo-ready、run-start/end、破損8ケースのmutate-end/amend-end、cleanup-start/end、case-endです。runの番号・終了コード・「作成前に失敗」を含むかというexpectedReasonのbooleanを全runで記録します。作成前失敗の判定として解釈するのはFAKE_GH_CREATE=beforeの初回で、他のrunのfalseを異常と決めません。lookupの不正7種類は固定ラベルで分け、元の入力やURLは保存しません。理由のbooleanは診断であり、元のassertionを置き換えません。
 
 caseごとの閉包とRepoのWeakMapを使うので、timeout後に古いcallbackが残って次のケースと重なっても、同じ「現在のcase」へ記録を混ぜません。監視役と偽claude・ghのentry/exitは、fixture basename・PID・preload起動ごとのUUID sessionを含む一意なファイルへ記録します。PIDが再利用されても、別sessionのentry/exitを同じ組にしません。時刻は全てDate.now()です。固定のevent・操作分類、UUID、有限の数値、boolean、安全なbasenameだけを残し、生のstdout/stderr、引数、環境値、認証情報は保存しません。

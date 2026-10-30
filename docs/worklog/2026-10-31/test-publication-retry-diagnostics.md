@@ -11,7 +11,7 @@
 
 この表は修正中の観測。根拠は[旧head7eb](https://github.com/loomake/loomake/commit/7eb460e55f482129512daf0c2e550fb51ce06c60)、ローカルのwave04原本と修正前後ログ。新headのSHA・完了時刻・レビューとCIの確定値はPR179の外部受入記録へ残す。
 
-1. やったこと：wave05のpaths同根指摘を受け、製品src全体を `packages/**/src/**` で含める管理役採用案を反映した。workflow・文書一覧・静的試験の期待集合を同時に更新し、通常ciや製品srcは変更していない。再発記録は[Issue178](https://github.com/loomake/loomake/issues/178#issuecomment-6534120187)を参照する。
-2. 検証：新headの通常verify・lint・型・関連試験と元assert/ケース/期限の保持を確認し、結果はPR179へ記録する。旧913の成功を新headへ流用しない。
+1. やったこと：wave05のpaths同根指摘を受け、製品src全体を `packages/**/src/**` で含める管理役採用案を反映した。workflow・文書一覧・静的試験の期待集合を同時に更新した。公開の静的import閉包と導入・設定入力を照合し、列挙外の影響を直す修理は対象headをdispatchで3サンプル確認する手順も明記した。通常ciや製品srcは変更していない。再発記録は[Issue178](https://github.com/loomake/loomake/issues/178#issuecomment-6534120187)を参照する。
+2. 検証：4f0e183の通常verifyは1537成功・失敗0・既存skip8、lint・型・関連22件と元assert/ケース/期限の保持も成功した。以後は文書と作業記録だけを追記し、機能byteの一致と関連22件・diffを再確認した。全体試験を繰り返したとは扱わず、詳細と新headの受入結果はPR179へ記録する。旧913の成功を新headへ流用しない。
 3. 確認事項・仮定：管理役rootが元設計D3内の正当な起動条件の拡張として採用した。wave05の独立Opusは4工程とも実施済みで、R1/R2aは指摘0、R2bは軽微1、R2cは情報1。全工程の指摘ゼロは未達で、正常レビューの修正往復は4。
 4. 次：新headをpushし、管理役による新しい全4工程の最終レビュー・自動Codex・必須CIをそろえる。初回macOS失敗と既存Issue116等の原因未確定を保持する。
