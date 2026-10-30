@@ -32,3 +32,11 @@
 2. 初回0949の通常verifyは1,412成功・25失敗・既存8 skipでexit1。worktree内TMPDIRによるCJS継承18件/socketパス5件/実行権限1件/上位Git1件を分類・probeで照合した。専有の短い/tmpが上位Gitなしと確認後、統合headの通常verifyは1,437成功・0失敗・既存8 skip、exit0（約82.65秒）。旧25件も全成功、strict主仕様29/29・exit0である。
 3. 対象34試験・型/lint成功とmutation2/1/1失敗・残存子なしは今回の実測として保持し、外部32件/9連続申告とは区別する。新headでのnative Windows/macOS CI、Windows guardの実機検証、最終受入はまだ行っていない。
 4. 最終記録はdoc/worklogだけで、テスト/helper/config/期限/rmSync指定は変えない。追加Opusだけは実数2/2使用済みとして別判断まで保留し、push・PR更新と全OS CIは管理役へ引き継ぐ。
+
+## native positive guard失敗への照合・受渡しの修正
+
+1. [CI40977422954のWindows2実ログ](https://github.com/loomake/loomake/actions/runs/40977422954/job/123808803025)を取得し、positive guardだけがargument mismatchで失敗（859成功・1失敗・6 skip）と確認した。handler eventとnegative guardは成功、承認済みnative signal skip1件は可視化されている。
+2. PowerShellをUTF-16LE/Base64のEncodedCommandで渡す処理と、既にabsoluteのspawn引数をGetFullPathへ通さずenv文字列で照合する処理の2行を修正した。この2行を戻すと9aのテスト全体とbyte一致する。script自体はexpectedFixtureの代入1行が変わり、regex/envデータ/未知PID拒否/期限/killSignal/cleanup/assertionは保持した。
+3. EncodedCommandだけの前段の通常verifyは1,437成功・0失敗・既存8 skip、exit0（約81.23秒）。最終2行候補はLinux関連34試験・型・lintが成功した。追加1行はWindows分岐なのでLinuxで実行済みとはせず、最終head全体のUbuntu/gateとnative positive/negative guardは管理役の新CIで確認する。
+4. [GetFullPathの一次資料](https://learn.microsoft.com/en-us/dotnet/api/system.io.path.getfullpath?view=netframework-4.8.1)の短名展開と、spawn/envの同じabsolute引数を確認した。local Windowsでの変換再現は未実施で、今回のnative failureの原因とは断定しない。query-to-killの非原子性も残る。
+5. Fは承認済みのまま、実評価は[追加実装レビュー6511719551](https://github.com/loomake/loomake/pull/156#issuecomment-6511719551)を含め合計3回。actual claude-opus-5-5、session不明で、外部Linux34件/6連続/mutationはレビュアー申告と区別する。次は4回目・追加1回としてR156-REVIEW-01の回答待ちで起動しない。製品helper・設定・期待値・skip範囲・期限は変えず、pushとPR更新は管理役へ引き継ぐ。

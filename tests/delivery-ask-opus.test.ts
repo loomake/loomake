@@ -97,7 +97,7 @@ function readFakePid(cwd: string): number | undefined {
 const windowsStopScript = String.raw`
 $ErrorActionPreference = 'Stop'
 $targetPidValue = [uint32]::Parse($env:LOOMAKE_CLEANUP_PID)
-$expectedFixture = [IO.Path]::GetFullPath($env:LOOMAKE_CLEANUP_FIXTURE)
+$expectedFixture = $env:LOOMAKE_CLEANUP_FIXTURE
 $record = Get-CimInstance -ClassName Win32_Process -Filter ('ProcessId = ' + $targetPidValue)
 if ($null -eq $record) { exit 0 }
 if ([string]::IsNullOrWhiteSpace($record.CommandLine)) { throw 'Process command line unavailable' }
@@ -114,7 +114,7 @@ async function stopOwnedFake(cwd: string, timeoutMs: number) {
   const pid = readFakePid(cwd);
   if (pid === undefined || !alive(pid)) return;
   if (process.platform === 'win32') {
-    const result = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', windowsStopScript], {
+    const result = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(windowsStopScript, 'utf16le').toString('base64')], {
       env: { ...process.env, LOOMAKE_CLEANUP_PID: String(pid), LOOMAKE_CLEANUP_FIXTURE: join(cwd, '.loomake/fake.mjs') },
       encoding: 'utf8', shell: false, timeout: timeoutMs, killSignal: 'SIGKILL',
     });

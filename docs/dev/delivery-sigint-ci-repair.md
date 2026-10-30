@@ -28,7 +28,8 @@ Linuxの限定観測では、実helperと同一の偽fixtureに対するself-SIG
 | session `773e82ab-6ea6-46f3-9078-1c31c7628b15` | actual `claude-opus-5-5`、helper exit0/ok:true、拒否0、読取ツールのみ・MCP0、113.749秒。調査・比較・設計の成果物あり。今回のOpus評価1/2として数える |
 | 初回調査の独立性 | 証明できない。Codex資料のReadはevent81、最終assistant本文はevent113で、それ以前の公開見解がない。事前保存だけの欠落とせず、独立性のない調査・設計として扱う |
 | [外部設計レビュー6511060043](https://github.com/loomake/loomake/pull/156#issuecomment-6511060043) | Claude Code / actual claude-opus-5-5。sessionは不明。初回773に加わる2回目のOpus評価であり、確認代行の別枠へ移さない |
-| 実装後の最終レビュー | 未実施。通常の評価枠は2/2使用済み。次の起動は実際には3回目なので、回数の扱いについて別途判断を得るまで開始しない |
+| [外部実装レビュー6511719551](https://github.com/loomake/loomake/pull/156#issuecomment-6511719551) | actual claude-opus-5-5、head9a84ad7、sessionは不明。実評価の3回目として数え、既存枠をリセットしない |
+| 修正後headの最終レビュー | 未実施。実評価は合計3回で、次の起動は4回目となる。R156-REVIEW-01は追加1回・合計4回の扱いへの判断待ちで、承認済みとはしない |
 
 成果物の「Codex資料を読む前に初期見解を投稿した」という自己申告は、eventの順序で裏付けられないため採用しない。内部thinkingを工程の証拠へ読み替えず、抽出・添付しない。helperのok:trueは実行結果の確認であり、工程全体の完了を意味しない。失敗した先行呼出しを成功とせず、初回の1枠も取り消さない。旧PR152のOpus評価2/2やその後の人の受入・別枠自動Codexレビューは、この新しい故障の調査でリセットしない。
 
@@ -55,7 +56,7 @@ FのA回答は今回の調査・設計を独立性なしとして扱い、独立
 
 この回答を受け、計画整合後のCodex実装・試験は進める。Fを未回答へ戻さず、工程省略や実装範囲を再質問しない。外部レビュー6511060043自体はFに回答していないが、後の6511113103は明示回答である。
 
-回答は今後の最終レビューを2/2と記すが、実数は初回773と外部設計レビューで既に2回である。このAを3回目評価の例外承認へ読み替えず、追加起動を止める。管理役は実装headとCIをそろえて、この回数の扱いだけを別途確認する。既存2回を取り消したり、確認代行の別枠へ移したりしない。受入は未実施で、新headの全OS CIと最終レビュー条件を残す。
+回答は当時の最終レビューを2/2と記したが、初回773・外部設計レビュー6511060043・外部実装レビュー6511719551で、実評価は既に合計3回である。このAを追加評価の例外承認へ読み替えず、次の4回目の起動を止める。管理役はR156-REVIEW-01として追加1回・合計4回の扱いだけを別途確認する。既存3回を取り消したり、確認代行の別枠へ移したりしない。受入は未実施で、新headの全OS CIと最終レビュー条件を残す。
 
 外部レビュアーはLinux Node24.21で32試験成功・9連続成功・listener除去mutationの2失敗を報告した。これはレビュアーの申告であり、今回の担当が実行した結果ではない。新しいpatchやWindowsの成功へ流用しない。
 
@@ -70,7 +71,7 @@ FのA回答は今回の調査・設計を独立性なしとして扱い、独立
 
 全OS handler caseを追加し、元のnative signal caseはPOSIXで実行、Windowsで明示skipにする。Windowsで従来の実signal入力を実行しないというカバレッジ変更を隠さず、Fの承認範囲として扱う。ほかの既存skip指定は変えない。handler eventはnative Ctrl+Cの配送試験を代替しない。
 
-PID検査はkill(pid,0)とLinux/macOSのzombie判別を使い、不明なエラーを停止済みへ変換しない。正常結果を確認したあと、後片付け前にPIDが生存していないことを追加assertionにする。失敗時のcleanupは、このfixtureが保存した正のPIDを対象候補とし、再照合する。Windowsでは固定PowerShell scriptからCIMのCommandLineを取得し、正規化したfixtureのfake.mjsパスが独立した引数として一致するときだけtaskkill /PID /Fを使う。/Tは使わず、パス・PIDはenvのデータとして渡し、script文字列へ埋め込まない。照合不能・不一致は停止命令を出さず失敗にする。全nodeプロセスや他worktreeを止めない。後片付けの待機上限には既存input.timeoutMs（3000ms）を使い、正常性のassertionをretryで通す方法にはしない。既存rmSyncの指定はそのまま残す。内側のassertionと所有子cleanup、外側withRepoのrmSyncをそれぞれwithCleanupで扱い、単一エラーは同じ例外、多重エラーは入れ子のAggregateError.errorsで全件保持する。cleanup失敗も握り潰さない。
+PID検査はkill(pid,0)とLinux/macOSのzombie判別を使い、不明なエラーを停止済みへ変換しない。正常結果を確認したあと、後片付け前にPIDが生存していないことを追加assertionにする。失敗時のcleanupは、このfixtureが保存した正のPIDを対象候補とし、再照合する。Windowsでは固定PowerShell scriptからCIMのCommandLineを取得し、spawnに渡したfixtureのfake.mjsパスが独立した引数として一致するときだけtaskkill /PID /Fを使う。/Tは使わず、パス・PIDはenvのデータとして渡し、script文字列へ埋め込まない。照合不能・不一致は停止命令を出さず失敗にする。全nodeプロセスや他worktreeを止めない。後片付けの待機上限には既存input.timeoutMs（3000ms）を使い、正常性のassertionをretryで通す方法にはしない。既存rmSyncの指定はそのまま残す。内側のassertionと所有子cleanup、外側withRepoのrmSyncをそれぞれwithCleanupで扱い、単一エラーは同じ例外、多重エラーは入れ子のAggregateError.errorsで全件保持する。cleanup失敗も握り潰さない。
 
 このguardはCIM照合から停止までを原子的に固定するものではなく、その間の競合まで解消したとは主張しない。固定scriptのWindows実行とguardの正常/不一致/取得失敗は新headのCIで確認する。製品helper内の通常のtaskkill経路は今回変更しない。
 
@@ -104,7 +105,7 @@ PID検査はkill(pid,0)とLinux/macOSのzombie判別を使い、不明なエラ�
 | mutationの安全な実行 | 追跡helper・設定は変えず、専有scratch copyを使う。watchdogは合否の期限を延ばすためでなく暴走回収用とし、対象PID/子孫と回収結果を保存する。生存assertionを削除した試験で代用しない |
 | 型・lint・全OS CI | 修正した同一headで確認。OS/shard別の実施件数と既存skipを区別し、承認されたWindows skip1件以外の変更・期限緩和がないことを照合 |
 | native Windowsの受入 | handler eventの実childkill/manifest/PID停止とEPERMなしを新CIで確認。子が停止済みでもEPERMが残れば別要因として記録し再設計。削除retryで隠さない |
-| 最終レビュー | 規定2回は使用済みで、追加起動は回数の扱いへの別途判断まで保留する。許可後は設計・実装とは別の新Opus sessionで対象head・actual model・結果・拒否・未解決事項を記録する |
+| 最終レビュー | 実評価は3回済みで、次の4回目の起動はR156-REVIEW-01の判断まで保留する。許可後は設計・実装とは別の新Opus sessionで対象head・actual model・結果・拒否・未解決事項を記録する |
 
 過去CIやLinuxの比較だけでWindows修復済みとは報告しない。新しい対象headの必須CI・全OS/shardを確認し、重大な未解決事項があれば規約に従って人へ提示する。
 
@@ -124,4 +125,21 @@ main d5aa30dの[CI40973889686 / Windows job123797067291](https://github.com/loom
 
 短い専有/tmpをrealpath・Git上位なし（rev-parse128）で確認し、CJS・権限・socketの前提も照合してから、統合headで1回だけ通常verifyを再実行した。exit0、1,437成功・0失敗・既存8 skip、約82.65秒で、以前失敗した25件もすべて成功した。同じ統合headのstrict主仕様は29/29・exit0。これは新treeと実行前提の訂正を根拠とする検証で、失敗した最初の実行を成功へ読み替えない。
 
-Windows実行は管理役が最終候補headの全OS CIで行い、追加Opusは回数の扱いが決まるまで保留する。最後の記録commitではテスト・規範を変えず、上の検証元との一致を残す。製品helper・設定・既存の期待値と期限を保持し、ローカル成功だけで最終受入とは報告しない。
+9aのnative CI結果は次節に記録する。追加の修正headでは管理役による全OS CIと、R156-REVIEW-01の回数判断後の最終Opusを待つ。前の記録commitではテスト・規範を変えず、上の検証元との一致を残した。製品helper・設定・既存の期待値と期限を保持し、ローカル成功だけで最終受入とは報告しない。
+
+
+## Windowsのpositive guard失敗と照合・受渡しの修正
+
+[9aのCI40977422954 / Windows shard2 job123808803025](https://github.com/loomake/loomake/actions/runs/40977422954/job/123808803025)を今回取得した。唯一の失敗は「fixtureの所有子を停止してから削除できる」で、PowerShellのexact argument照合がProcess fixture argument mismatchを返した。859成功・1失敗・6 skipであり、6件には個別承認済みのWindows native signal skip1件を含む。handler eventは749ms、negative PID guardは979msで成功したが、positive guardは1294msで失敗した。この結果をWindows修復済みとは扱わない。
+
+修正はテストsourceの2行に限定した。まず、固定scriptの受渡しを-Commandの生文字列から-EncodedCommandのUTF-16LE/Base64へ変えた。[Microsoft一次資料](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_powershell_exe?view=powershell-5.1#-encodedcommand-base64encodedcommand)が、複雑な引用符を含むcommandの受渡しにこの形式を定めている。
+
+もう1行は照合するfixtureをGetFullPathで再変換せず、envで受けた文字列そのものとした。spawnのprefixArgsとcleanup envには、同じ `join(cwd, '.loomake/fake.mjs')` のabsoluteな引数を渡している。[.NET Frameworkの一次資料](https://learn.microsoft.com/en-us/dotnet/api/system.io.path.getfullpath?view=netframework-4.8.1)はGetFullPathの短名から長名への展開を明記しているため、渡した引数の表記を照合前に変換する処理を除いた。positive guard自体のcommandlineは未取得で、この変換が今回のnative failureの原因だったと確定したものではない。
+
+この2行を戻すと9aのテストsource全体とbyte一致する。新scriptをencode/decodeしても内容は保持されるが、旧scriptからはexpectedFixtureの代入1行が変わる。exact argumentのregex、env経由のPID/path、未知PIDを停止しない分岐、/Tなし、期限とkillSignal、assertion・cleanupは変更していない。PID/pathの値をscriptへ埋め込まず、未知プロセスのcommandline全文を診断に出す変更も加えていない。
+
+EncodedCommandだけを変更した前段の通常verifyはexit0、1,437成功・0失敗・既存8 skip、約81.23秒だった。最終2行候補ではLinux Node24.21.0/arm64の関連34試験・型・lintが成功した。追加のGetFullPath除去はWindows分岐のため、このLinux試験で実行したとは扱わない。最終head全体は新CIのUbuntu/gateとnative Windowsで確認する。
+
+ローカルWindowsでの再現は未実施であり、quote transportと8.3/長いパスのどちらが原因かは未確定である。同じpositive/negative guardが新headのnative CIで成功することを回復証拠とし、依然失敗するなら実ログから調べる。CIM照合から停止までが非原子的である限界も保持する。
+
+[追加実装レビュー6511719551](https://github.com/loomake/loomake/pull/156#issuecomment-6511719551)は実評価の3回目として記録した。actual claude-opus-5-5で、sessionは不明。外部のLinux34件を6連続・mutation等の結果はレビュアー申告で、今回の担当の実測とは分ける。低優先のPOSIX PID照合と既存timeout/output試験の残留可能性は、今回の修正と分けて管理役へ引き継ぐ。Fは承認済みのまま、次のOpusは合計4回目・追加1回としてR156-REVIEW-01の回答待ちであり、起動していない。
