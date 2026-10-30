@@ -52,3 +52,10 @@
 2. 通常done/CI gateの4失敗を当PRだけの例外とし、未回答05/06/08と製品DoDを後続に維持する。全archive主仕様strict、品質・Node20/22・CodeQLの成功、自動Codexの重大な未解決指摘がないことをマージ条件とし、追加Opus評価は行わない。
 3. traceと本記録に承認だけを追記し、全体試験は再実行しない。規範・仕様・計画本文・製品コード・既存試験・設定は承認対象headから変更しない。
 4. 承認記録をcommit/pushし、最終headのCI確認・ready化・自動レビュー・マージを管理役へ引き継ぐ。
+
+## 追加回答の記録とCI対象案M139-02
+
+1. [追加回答6511434324](https://github.com/loomake/loomake/pull/139#issuecomment-6511434324)のR05 A・R06 A・R08 Bをtraceへ記録した。回答者はrrr-xxxの指示を受けたrrr-www名義・Claude Code代筆、回答日は日本時間2026-10-30。10件の回答が揃ったことと、task 1.2の規範反映は未完了であることを区別した。
+2. spec-onlyはexit 0。通常verifyもlint・型・全テストを実行してexit 0。通常doneは再実行せず、以前の4失敗を今回の結果や合格へ読み替えない。製品DoDは未達である。検証の内訳は[PR139本文](https://github.com/loomake/loomake/pull/139)へ記載する。
+3. 現在のmarkerはC001のまま。既存none経路で完了対象を再指定するM139-02はM139-01の前提変更であり、具体案への明示承認待ち。規範・specs・design・proposal・tasks、主仕様・コード・既存試験・設定は変更しない。
+4. traceと作業記録だけをcommit/pushし、markerを維持した本文案を管理役へ渡す。承認依頼・本文の対象再指定・ready化・CI・自動Codex・マージは管理役が行う。追加Opus評価は行わない。
