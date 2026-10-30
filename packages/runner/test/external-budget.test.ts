@@ -8,7 +8,7 @@ import { profileEvent } from '../../../scripts/test-phase-profile.mjs';
 import { holderWaitTime, withProcessBudget } from '../../kit/src/runtime/process.js';
 import { runRecord } from '@loomake/trace';
 import { runRun } from '@loomake/runner';
-import { makeRepo, CHANGE, fakeCli, stallOf, type FakeCli, type FakeCliEvent, type Repo } from './helpers.js';
+import { makeRepo, CHANGE, signalSupervisorScript, fakeCli, stallOf, type FakeCli, type FakeCliEvent, type Repo } from './helpers.js';
 
 // git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
 vi.setConfig({ testTimeout: 60_000 });
@@ -269,33 +269,6 @@ describe('runから外部操作までの期限', () => {
 // 品質コマンドから、祖先をたどって外部操作の監視役を探し、SIGINT を送る。送った先を interrupted.json に書く。
 // POSIX の ps には監視役の process.title が、Windows の CommandLine には監視役のスクリプトのパスが出る
 const PS_LIST = 'Get-CimInstance Win32_Process | ForEach-Object { "{0}`t{1}`t{2}" -f $_.ProcessId, $_.ParentProcessId, $_.CommandLine }';
-const SEND_SIGINT_TO_SUPERVISOR = `const { execFileSync } = require('node:child_process');
-const fs = require('node:fs');
-const win = process.platform === 'win32';
-const listing = win
-  ? execFileSync('powershell', ['-NoProfile', '-NonInteractive', '-Command', ${JSON.stringify(PS_LIST)}], { encoding: 'utf8', maxBuffer: 16 << 20, windowsHide: true })
-  : execFileSync('ps', ['-axo', 'pid=,ppid=,command='], { encoding: 'utf8', maxBuffer: 16 << 20 });
-const table = new Map();
-for (const line of listing.split(/\\r?\\n/)) {
-  const m = win ? line.match(/^(\\d+)\\t(\\d+)\\t(.*)$/) : line.match(/^\\s*(\\d+)\\s+(\\d+)\\s(.*)$/);
-  if (m) table.set(Number(m[1]), { ppid: Number(m[2]), command: m[3] });
-}
-let pid = process.ppid;
-let found;
-for (let i = 0; i < 10 && table.has(pid); i++) {
-  const entry = table.get(pid);
-  if (/[\\\\/]supervisor\\.cjs|^loomake: command supervisor/.test(entry.command)) { found = { pid, command: entry.command, self: process.pid }; break; }
-  pid = entry.ppid;
-}
-if (found) {
-  fs.writeFileSync('interrupted.json', JSON.stringify(found));
-  process.kill(found.pid, 'SIGINT');
-  setInterval(() => {}, 100);
-} else {
-  fs.writeFileSync('interrupted.json', JSON.stringify({ error: '祖先に監視役が見つかりません', ppid: process.ppid }));
-  process.exit(1);
-}
-`;
 
 function alive(pid: number) {
   try {
@@ -347,7 +320,7 @@ describe('verifyとtraceの期限', () => {
     try {
       // shell の親ではなく監視役へ送る。POSIX の exec は cmd.exe にないので、祖先をたどって監視役を見つけ、送った先を記録する。
       // Windows で別のプロセスから送る SIGINT は監視役の強制終了になり、結果を書かずに終わった監視役の扱い（REQ-250）を通る
-      repo.write('send-sigint.cjs', SEND_SIGINT_TO_SUPERVISOR);
+      repo.write('send-sigint.cjs', signalSupervisorScript('SIGINT'));
       repo.write('loomake.config.json', JSON.stringify({ openspecValidate: false, commands: { lint: 'node send-sigint.cjs', test: `node -e "require('node:fs').writeFileSync('after','x')"` } }));
       // 祖先の一覧を Windows の PowerShell で読むと数秒かかるので、期限は中断より十分長くする。期限で止まると「中断」を含まず、この試験は落ちる
       const result = withProcessBudget({ timeoutMs: 30_000 }, () => runVerify({ root: repo.root }));
