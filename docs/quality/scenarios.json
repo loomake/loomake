@@ -1551,12 +1551,12 @@
     },
     {
       "id": "SCN-bf2080219544eaef1205",
-      "status": "reviewed",
+      "status": "superseded",
       "scenarioSha256": "395c2352d5ed137ee1713aa9265940e535f7a5120f3386ce175cb10d1f772791",
       "sources": [
         "REQ-144"
       ],
-      "reason": "Node24でビルドとpackを行い、2つの検証先に導入した。そのあと公式のNode20.19.0に切り替え、通信を拒否した状態で、公開APIと主要コマンド（--version・--help・init・doctor・verify・trace record・trace report）の成功をassertした。Node20.19.0の側ではpnpmとnpmを実行しない。CI設定の試験では、node20ジョブが、Node24で配布物を準備してからNode20.19.0に切り替えて検査する順序をassertする。宣言する下限Node22.12.0での確認は、このScenarioでは扱わない。",
+      "reason": "利用者1-1によりNode20の追加検査を廃止する差分仕様へ移行する。新Node22.12/3OS24は実行証拠がそろうまで未確認で、旧Node20の成功を新下限の成功へ流用しない。置換先がunreviewedの間は監査上も有効な置換とは扱わない。旧確認の履歴：Node24でビルドとpackを行い、2つの検証先に導入した。そのあと公式のNode20.19.0に切り替え、通信を拒否した状態で、公開APIと主要コマンド（--version・--help・init・doctor・verify・trace record・trace report）の成功をassertした。Node20.19.0の側ではpnpmとnpmを実行しない。CI設定の試験では、node20ジョブが、Node24で配布物を準備してからNode20.19.0に切り替えて検査する順序をassertする。宣言する下限Node22.12.0での確認は、このScenarioでは扱わない。",
       "tests": [
         {
           "file": "scripts/runtime-compatibility.mjs",
@@ -1568,7 +1568,8 @@
           "contains": "[REQ-144] 3OSの品質ジョブとNode下限ジョブで配布物を検査する",
           "sha256": "c82be3653a952f37c8e5ad976fe0d00aa2028fef9d3ef16eca6a75e8450622bf"
         }
-      ]
+      ],
+      "replacement": "SCN-e643361995371591e6de"
     },
     {
       "id": "SCN-ba93b05041bc568cc7d7",
@@ -8462,6 +8463,24 @@
           "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
         }
       ]
+    },
+    {
+      "id": "SCN-beb5ce3e5f27a15d5968",
+      "status": "unreviewed",
+      "scenarioSha256": "654de89d6795c469e3e9a76fef4e9ef200dfba4697e01052671033e36cb3c66b",
+      "sources": [
+        "REQ-144"
+      ],
+      "reason": "C2ではworkflowの実在境界とNode24準備・Node22.12下限・3OS構成を静的に検査した。最新headのNode22.12実runtimeと3OS CI成果物は未取得であり、実行成功と静的構成を分ける。最終受入で同headの証拠を対応付けて再確認する。"
+    },
+    {
+      "id": "SCN-e643361995371591e6de",
+      "status": "unreviewed",
+      "scenarioSha256": "a02d1cf102579dc5e7295bc117e6f5cb3f45aafe1a377cca19efe02b184c6267",
+      "sources": [
+        "REQ-144"
+      ],
+      "reason": "C2ではworkflowの実在境界とNode24準備・Node22.12下限・3OS構成を静的に検査した。最新headのNode22.12実runtimeと3OS CI成果物は未取得であり、実行成功と静的構成を分ける。最終受入で同headの証拠を対応付けて再確認する。"
     }
   ]
 }

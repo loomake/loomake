@@ -17,3 +17,10 @@
 2. 更新後のstrict/spec-onlyを実行し、結果を`.loomake/ci-implementation/`へ保存する。
 3. 新しい仮定や受入の削除はない。実装・測定のタスクは未完了である。
 4. 仕様ゲート成功後に小さくcommitし、tasks 2.1から実装する。
+
+## C2 Node20追加ジョブの削除
+
+1. task 2.1のNode20ジョブを削除し、照合試験に実在境界とNode20不存在を追加した。node22/gate本体と3OS品質マトリクスを保ち、下限の文書とScenario移管記録を更新した。
+2. 関連3fileの54caseが成功した。node22から末尾のraw一致を照合した。
+3. rulesetは未変更。旧runtime20は履歴として残し、新Node22.12/3OS24はunreviewed。Scenario監査全体は成功扱いしていない。
+4. 同じPRのC3共有root準備へ進む。

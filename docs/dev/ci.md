@@ -180,3 +180,7 @@ Source: REQ-214, REQ-270
 | `it('[REQ-270] 文書だけかの判定は、paths フィルタではなく quality ジョブの中のステップで行う', () => {` | `tests/monorepo.test.ts:275` |
 | `it('[REQ-270] main への push では、判定が docs_only=false になり、すべてのステップを実行する', () => {` | `tests/monorepo.test.ts:301` |
 | `it('[REQ-144] 3OSの品質ジョブとNode下限ジョブで配布物を検査する', () => {` | `tests/package-workflows.test.ts:8` |
+
+### Node20追加ジョブの削除
+
+配布物のengines.nodeは`>=22.12.0`であるため、宣言範囲より古いNode20の追加ジョブを削除した。下限はNode22.12.0のnode22ジョブで確認し、準備はNode24で行う。3OSのNode24品質ジョブ、node22・gate・CodeQLは維持した。main rulesetのnode20 required contextはまだ変更しておらず、ready時に人へ具体差分を渡す。slow分離と最新headの3OS計測は後続taskであり、この削除だけを1-1の完成としない。
