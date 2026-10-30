@@ -98,7 +98,7 @@
 6. **既存の試験も、差分なしの完了に頼っています**
    - `packages/runner/test/run.test.ts:54` の `passing = [{ write: { 'impl.txt': … } }, {}]` は、1.2 で何も変えないエンジンを完了として扱います。
    - `packages/runner/test/helpers.ts:40` の偽の claude は、台本が尽きると何もしません。
-   - `{}` を使う台本は、runner の試験の 12 ファイルにあります。例：`run.test.ts:188,286,305(台本なし),343`、`guards.test.ts:19,333`、`external-budget.test.ts:139`、`pr.test.ts:15` など。
+   - `{}` を使う台本は、runner の試験の 9 ファイルにあります。例：`run.test.ts:188,286,305(台本なし),343`、`guards.test.ts:19,333`、`external-budget.test.ts:139`、`pr.test.ts:15` など。
    - 修正すると、これらは仕様どおりに止まって失敗するので、台本の置き換えが必要です。
 
 **原因：** run の段階の流れに「エンジンの変更がない」ことを判断する分岐がありません。終了コード 0 を「タスクを終えた」と同じに扱っています。
@@ -131,11 +131,11 @@
 - 状態は `stopped`、終了コードは 1 で、既存の REQ-107 と同じです。新しい状態の種別は足しません。
 - 理由の文：
   - タスク：`エンジンが変更を残さずに終わりました`
-  - 直し：`完了ゲートの直しで、エンジンが変更を残さずに終わりました`
+  - 直し：`直しでエンジンが変更を残さずに終わりました。出力の記録：<パス>。権限や環境を見直してから実行し直してください。`
 - 残ったタスク：
   - タスクの段階：止まったタスクから後ろ（`remaining`）
   - 直しの段階：`gateTasks`
-- 標準出力には、エンジンの出力の記録の場所（`.loomake/runs/<run>/NN-output.json`）と、次の 2 つの対処を表示します。
+- タスク段階の標準出力には、エンジンの出力の記録の場所（`.loomake/runs/<run>/NN-output.json`）と、次の 2 つの対処を表示します。直しの段階は、同じ記録の場所と権限や環境を見直して再実行する対処を示します。
   1. 権限や環境を見直して、もう一度実行する
   2. 変更が要らないなら、tasks.md のそのタスクを完了にして自分でコミットしてから、もう一度実行する
 
@@ -144,27 +144,26 @@
 `decision-policy.ts` に、I/O を持たない `decideAfterChanges` を足します（REQ-332）。`decideAfterEngine` には手を入れません。
 
 ```ts
-export type ChangeObservation = Readonly<{ phase: 'task' | 'repair'; changed: boolean; text: string }>;
-export type ChangeDecision = { kind: 'commit' } | { kind: 'no-change'; reason: string } | { kind: 'stop'; reason: string };
+export type ChangeObservation = Readonly<{ phase: 'task' | 'repair'; hasChanges: boolean; text: string }>;
+export type ChangeDecision = { kind: 'commit' | 'stop' } | { kind: 'no-change'; reason: string };
 
-/** エンジンの変更の有無と合図から、コミット・変更なしの完了・停止を決める（REQ-330〜REQ-332） */
+/** エンジンの変更がない場合の完了と停止を判断する（REQ-332）。 */
 export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
-  if (value.changed) return { kind: 'commit' };
-  if (value.phase === 'repair') return { kind: 'stop', reason: '完了ゲートの直しで、エンジンが変更を残さずに終わりました' };
-  const noChange = value.text.match(/^LOOMAKE-NOCHANGE:[^\S\r\n\u2028\u2029]*(\S.*)$/m);
-  if (noChange) return { kind: 'no-change', reason: noChange[1] };
-  return { kind: 'stop', reason: 'エンジンが変更を残さずに終わりました' };
+  if (value.hasChanges) return { kind: 'commit' };
+  if (value.phase === 'repair') return { kind: 'stop' };
+  const signal = value.text.match(/^LOOMAKE-NOCHANGE:[^\S\r\n\u2028\u2029]*(\S.*)$/m);
+  return signal ? { kind: 'no-change', reason: signal[1] } : { kind: 'stop' };
 }
 ```
 
 ### 3.6 phases.ts の変更
 
-- **`callEngine`：** 続行のときにエンジンの本文を返す形にします（例：`{ stop } | { text }`）。
-- **`runEngineTasks`：** `guard` のあとに `decideAfterChanges({ phase: 'task', changed, text })` を呼びます。
+- **`callEngine`：** 続行のときは `{ kind: 'continue', text }`、停止のときは `{ kind: 'stop', status, reason }` を返します。
+- **`runEngineTasks`：** `guard` のあとに `decideAfterChanges({ phase: 'task', hasChanges, text })` を呼びます。
   - `stop`：止まる。index は空なので、戻す処理は要りません。
-  - `no-change`：標準出力に「変更なしで完了にしました：<タスク>（<理由>）」と出し、これまでどおり `checkTask`・`add`・`commit` をします。
-  - Q-03 の決定に従い、理由を `maskSecrets` で置換して標準出力とコミット本文に残します。
-- **`runGate`：** `phases.ts:133-135` の `if` を `decideAfterChanges({ phase: 'repair', … })` に置き換えます。`stop` なら `stopped(reason)` を返します。
+  - `no-change`：標準出力に「変更不要としてタスクを完了にします：<可視化した理由>」と出し、これまでどおり `checkTask`・`add`・`commit` をします。
+  - Q-03 の決定に従い、理由を `maskSecrets` で置換し、REQ-339のC0/C1可視化を行った同じ文字列を標準出力とgit commit本文へ渡します。
+- **`runGate`：** ガードのあとに `decideAfterChanges({ phase: 'repair', hasChanges, text })` を呼びます。`stop` なら出力記録の具体パスを含む理由で `stopped(reason)` を返します。
 - **`prompt.ts`：** `failure` がないとき（タスクの指示）だけ、次の決まりを 1 行足します。
   > - 変更が要らないタスクなら、何も変えずに `LOOMAKE-NOCHANGE:` で始まる行に理由を書いて終える。変更を残さず、この行もなければ、run はタスクを完了にせずに止まる
 
@@ -269,7 +268,7 @@ export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
 
 2026-10-30 の管理役の確認で、REQ-330・REQ-332 の「空でない理由」に対し、修正前の ASCII 空白・タブだけの正規表現では同一行の全角空白や NBSP に続く理由を認めないと分かった。仕様を ASCII 限定へ狭めず、同一行の空白を区切りとして認めるよう判定を修正する。LF・CR・U+2028・U+2029 を越えて、別行の文字を理由に取り込まない。既存の期待値は維持し、要件 ID 付きの直接試験と統合試験を追加する。この時点では Opus 評価 2/2 の履歴を保持し、修正後 head の最終レビューを追加 1 回の明示承認待ちとして記録した。その後の回数上限の撤廃は末尾に記録する。
 
-理由の末尾の空白は、仕様が除去を要求していないため保持する。例のコードから `.trim()` を外し、実装と説明をそろえた。
+理由の末尾の空白は、仕様が除去を要求していないため判定関数では保持する。表示とgit commitへ渡す文字列は同じで、コミット本文の整形はGitの規則に従う。例のコードを現行の型・戻り値・表示文言へ合わせた。
 
 ## 最終レビュー後の表示の設計
 
