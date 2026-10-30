@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { runRun, type RunSummary } from '@loomake/runner';
 import { makeRepo, type Repo } from './helpers.js';
@@ -68,6 +68,39 @@ describe('変更を残さないエンジン', () => {
     expect(tasks(repo)).toContain('- [x] 1.2');
   }));
 
+  it('[REQ-330][REQ-339] 理由の制御文字を表示とコミット本文で可視化し監査JSONの原文を保つ', () => withRepo(async (repo) => {
+    const token = 'sk-' + 'testonly'.repeat(4);
+    const raw = '確認\u001b[31m\u0009\u001f ~\u007f\u0085\u009f\u00a0\u3000済み\u001b' + token;
+    repo.plan([impl, { output: `LOOMAKE-NOCHANGE: ${raw}` }]);
+    const r = await run(repo);
+    const shown = '確認\\u001b[31m\\u0009\\u001f ~\\u007f\\u0085\\u009f\u00a0\u3000済み\\u001b***';
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain(`変更不要としてタスクを完了にします：${shown}`);
+    const body = repo.git('log', '--format=%B', '--grep', '^run(c1): 1.2', 'loomake/c1');
+    expect(body).toContain(`変更不要：${shown}`);
+    for (const text of [r.stdout, body]) {
+      expect([...text].filter((c) => c !== '\n' && /\p{Cc}/u.test(c))).toEqual([]);
+      expect(text).not.toContain(token);
+    }
+    const dir = readdirSync(join(repo.root, '.loomake/runs')).find((name) => name !== '.gitignore')!;
+    const audit = JSON.parse(readFileSync(join(repo.root, '.loomake/runs', dir, '02-output.json'), 'utf8'));
+    expect(audit.result).toBe(`LOOMAKE-NOCHANGE: ${raw.replace(token, '***')}`);
+  }));
+
+  it('[REQ-330][REQ-339] NULを含む理由でもtasks.mdだけのコミットで完了する', () => withRepo(async (repo) => {
+    const raw = 'LOOMAKE-NOCHANGE: 確認\u0000済み';
+    repo.plan([impl, { output: raw }]);
+    const r = await run(repo);
+    expect(r.code).toBe(0);
+    expect(tasks(repo)).toContain('- [x] 1.2');
+    const rev = repo.git('log', '--format=%H', '--grep', '^run(c1): 1.2', 'loomake/c1');
+    expect(repo.git('diff-tree', '--no-commit-id', '--name-only', '-r', rev)).toBe('openspec/changes/c1/tasks.md');
+    expect(repo.git('show', '-s', '--format=%B', rev)).toContain('変更不要：確認\\u0000済み');
+    const dir = readdirSync(join(repo.root, '.loomake/runs')).find((name) => name !== '.gitignore')!;
+    const audit = JSON.parse(readFileSync(join(repo.root, '.loomake/runs', dir, '02-output.json'), 'utf8'));
+    expect(audit.result).toBe(raw);
+  }));
+
   it('[REQ-330] 理由に含まれる既知の秘密情報の形式を表示とコミット本文で置換する', () => withRepo(async (repo) => {
     const token = 'sk-' + 'testonly'.repeat(4);
     repo.plan([impl, { output: `LOOMAKE-NOCHANGE: 確認済み ${token}` }]);
@@ -101,6 +134,18 @@ describe('変更を残さないエンジン', () => {
     const r = await run(repo, true);
     expect(r.stdout).toContain('`LOOMAKE-NOCHANGE:`');
     expect(r.stdout).toContain('変更もこの行もなければ');
+  }));
+
+  it.each([['合図なし', {}], ['合図あり', noChange]])('[REQ-331] 直しが%sで変更なしなら停止理由に出力記録の具体パスを示す', (_name, step) => withRepo(async (repo) => {
+    repo.plan([{ write: { 'a.txt': 'a' } }, { write: { 'b.txt': 'b' } }, step]);
+    const r = await run(repo);
+    const dir = readdirSync(join(repo.root, '.loomake/runs')).find((name) => name !== '.gitignore')!;
+    const output = join('.loomake', 'runs', dir, '03-output.json');
+    expect(r.code).toBe(1);
+    expect(existsSync(join(repo.root, output))).toBe(true);
+    expect(r.stdout).toContain('出力の記録：');
+    expect(r.stdout).toContain(output);
+    expect(summary(repo).reason).toContain(output);
   }));
 
   it.each([['合図なし', {}], ['合図あり', noChange]])('[REQ-331][REQ-100] 直しが%sで変更なしなら再検証せず止まり直しの指示に合図の決まりを含めない', (_name, step) => withRepo(async (repo) => {
