@@ -25,3 +25,10 @@
 2. Node24.21.0/Linux arm64で対象34試験・型・lintが成功。今回のmutationはlistener除去2失敗、stopChild no-op1失敗（約10.35秒・watchdog発火なし）、旧finally1失敗で、残存子なし。外部の32件/9連続申告と区別する。通常verifyはこの実装commit後に確認する。
 3. main d5aaのCI40973889686/job123797067291も取得し、同じ試験のstatus期待0/実値1（856成功・1失敗・既存5 skip）を確認した。EPERMのrunとは分け、Windowsでの新実装の実行・PIDガードの実機検証・最終受入は未実施である。
 4. 次は通常verifyと対象headの全OS CIを確認する。Fは承認済みのまま、Opus実数2/2・追加最終評価だけ保留とし、新しいモデル呼出し・push・main統合は行わない。
+
+## main統合後の最終候補検証
+
+1. cleanの実装head0949a5dへmain d5aa30dを通常mergeし、統合head107cba0を用意した。main由来のPR155主仕様/archiveと修復固有3ファイルを分け、実装テストのSHA256不変・openspecのmainとのbyte一致を記録した。F-SIGINT-01 Aの承認元・4条件、ce81の受入記録は保持する。
+2. 初回0949の通常verifyは1,412成功・25失敗・既存8 skipでexit1。worktree内TMPDIRによるCJS継承18件/socketパス5件/実行権限1件/上位Git1件を分類・probeで照合した。専有の短い/tmpが上位Gitなしと確認後、統合headの通常verifyは1,437成功・0失敗・既存8 skip、exit0（約82.65秒）。旧25件も全成功、strict主仕様29/29・exit0である。
+3. 対象34試験・型/lint成功とmutation2/1/1失敗・残存子なしは今回の実測として保持し、外部32件/9連続申告とは区別する。新headでのnative Windows/macOS CI、Windows guardの実機検証、最終受入はまだ行っていない。
+4. 最終記録はdoc/worklogだけで、テスト/helper/config/期限/rmSync指定は変えない。追加Opusだけは実数2/2使用済みとして別判断まで保留し、push・PR更新と全OS CIは管理役へ引き継ぐ。

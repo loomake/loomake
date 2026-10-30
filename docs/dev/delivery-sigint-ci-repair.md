@@ -118,4 +118,10 @@ PID検査はkill(pid,0)とLinux/macOSのzombie判別を使い、不明なエラ�
 
 main d5aa30dの[CI40973889686 / Windows job123797067291](https://github.com/loomake/loomake/actions/runs/40973889686/job/123797067291)も取得した。同じSIGINT試験でstatus期待0・実値1、856成功・1失敗・既存5 skipであり、このjobにEPERMはない。修正前の別headの証拠として扱い、ローカルの新実装やWindows修復成功へ読み替えない。
 
-通常verifyは実装commit後に実行し、結果を追記する。Windows実行は管理役が新headの全OS CIで行い、追加Opusは回数の扱いが決まるまで保留する。製品helper・設定・既存の期待値と期限を保持し、今回のローカル検査だけで最終受入とは報告しない。
+実装head `0949a5d`の最初の通常verifyはexit1、1,412成功・25失敗・既存8 skipだった。TMPDIRをworktree内に置いたため、extensionlessなCommonJS fixtureのESM継承18件、Unix socketの長いパス5件、mountの実行権限判定1件、上位Gitの発見1件に分類した。内外のprobeで、0644ファイルのX_OK、extensionless Node、socket bind、Git上位探索の違いを測定し、失敗結果と全25件の分類を保持した。コードや期待値の変更で通したものではない。
+
+追跡cleanの状態でmain `d5aa30d`を通常mergeし、統合head `107cba0`を用意した。PR155の主仕様・archiveの取り込みはmain由来の差分で、この修復固有の差分とは分ける。実装0949と統合107のテストはSHA256 `51d0ab9d105fb79caac1f30c22c2ac9375e40279dadada7f396285a92895af5f`で一致し、openspec全体は統合main d5とbyte一致する。
+
+短い専有/tmpをrealpath・Git上位なし（rev-parse128）で確認し、CJS・権限・socketの前提も照合してから、統合headで1回だけ通常verifyを再実行した。exit0、1,437成功・0失敗・既存8 skip、約82.65秒で、以前失敗した25件もすべて成功した。同じ統合headのstrict主仕様は29/29・exit0。これは新treeと実行前提の訂正を根拠とする検証で、失敗した最初の実行を成功へ読み替えない。
+
+Windows実行は管理役が最終候補headの全OS CIで行い、追加Opusは回数の扱いが決まるまで保留する。最後の記録commitではテスト・規範を変えず、上の検証元との一致を残す。製品helper・設定・既存の期待値と期限を保持し、ローカル成功だけで最終受入とは報告しない。
