@@ -20,6 +20,7 @@ it('[REQ-206][REQ-332] 判断の優先順位と回数の境界を逆転すると
     { id: 'work-state', before: 'if (value.stateChanged)', after: 'if (value.stateChanged && !value.ok)' },
     { id: 'repair-no-change', before: "if (value.phase === 'repair')", after: "if (value.phase === 'repair' && !value.text)" },
     { id: 'no-change-anchor', before: '/^LOOMAKE-NOCHANGE:', after: '/LOOMAKE-NOCHANGE:' },
+    { id: 'no-change-cr', before: String.raw`[^\S\r\n\u2028\u2029]`, after: String.raw`[^\S\n\u2028\u2029]` },
     { id: 'fix-limit', before: 'value.fixes >= value.maxFixes', after: 'value.fixes > value.maxFixes' },
   ];
   const trials = [{ id: 'baseline', text: source }, ...mutations.map((m) => ({ id: m.id, text: mutateOnce(source, m.before, m.after) }))];
@@ -44,8 +45,8 @@ it('[REQ-206][REQ-332] 判断の優先順位と回数の境界を逆転すると
   const originalsUnchanged = readFileSync(join(root, sourcePath), 'utf8') === source && readFileSync(join(root, testPath), 'utf8') === tests;
   writeFileSync(join(target, 'results.json'), JSON.stringify({ scope: 'selected-run-decisions', environment: { node: process.version, platform: process.platform, arch: process.arch }, source: { path: sourcePath, sha256: sha(source) }, tests: { path: testPath, sha256: sha(tests), names }, mutations, results, originalsUnchanged }, null, 2) + '\n');
   expect(results[0].status).toBe('survived');
-  expect(names).toHaveLength(44);
-  expect(results.slice(1).map((result) => result.status)).toEqual(['killed', 'killed', 'killed', 'killed', 'killed']);
+  expect(names).toHaveLength(45);
+  expect(results.slice(1).map((result) => result.status)).toEqual(['killed', 'killed', 'killed', 'killed', 'killed', 'killed']);
   expect(results.slice(1).every((result) => result.failedTests.length > 0)).toBe(true);
   expect(originalsUnchanged).toBe(true);
 }, 220000);

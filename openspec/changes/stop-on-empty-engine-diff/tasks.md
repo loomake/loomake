@@ -21,7 +21,7 @@
 ## 4. 文書と記録
 
 - [x] 4.1 `docs/guide/1.getting-started/2.usage.md` と `docs/guide/2.guides/3.run-recovery.md` に、合図と止まったときの対処を書く。yomiyasu で推敲する（確認：リンクと記述を読み直す）
-- [x] 4.2 `docs/quality/scenarios.json` に、この change の Scenario のレビューを足し、台本を変えた試験を根拠にする既存のレビューのハッシュを更新する（確認：`node scripts/scenario-audit.mjs` で、この change の Scenario が reviewed になる）
+- [x] 4.2 `docs/quality/scenarios.json` に、この change の Scenario のレビューを足し、台本を変えた試験を根拠にする既存のレビューのハッシュを更新する（確認：`node scripts/scenario-audit.mjs .loomake/scenario-audit-check-01` で、この change の Scenario が reviewed になる）
 - [x] 4.3 `@loomake/runner` と `loomake` の changeset を足す（確認：`pnpm changeset status`）
 
 ## 5. 確認
@@ -58,4 +58,8 @@
 
 ## 11. 再レビューM-1の残りの整合
 
-- [x] 11.1 promptの引用と両停止reasonを実コードから機械的一致で照合し、設計内の行番号・直接試験17ケース・確認コマンド・当初の観測記録を現行と区別して整理する。製品とテストは変えない
+- [x] 11.1 promptの引用と両停止reasonを実コードから機械的一致で照合し、設計内の行番号・当時の直接試験17ケース・確認コマンド・当初の観測記録を現行と区別して整理する。製品とテストは変えない
+
+## 12. CR単独改行の境界の検証
+
+- [x] 12.1 REQ-332のCR単独改行を拒む直接試験と、正規表現からCRの除外を外す変異検査を追加する。既存期待値を維持し、追加変異が修正前にsurvived、追加試験後にkilledとなることを確かめる。設計件数・Scenarioのハッシュ・作業記録を更新し、5.2の完了ゲートを最終headで再実行する

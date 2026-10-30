@@ -75,6 +75,7 @@ describe('エンジンの変更の有無から次の段階を決める', () => {
     ['同じ行の空白が混ざる区切り', 'task', false, 'LOOMAKE-NOCHANGE: \t\u3000\u00a0確認済み', { kind: 'no-change', reason: '確認済み' }],
     ['同じ行の空白だけの理由', 'task', false, 'LOOMAKE-NOCHANGE:\u3000\u00a0\t', { kind: 'stop' }],
     ['LFを越えた理由', 'task', false, 'LOOMAKE-NOCHANGE: \n次の行', { kind: 'stop' }],
+    ['CRを越えた理由', 'task', false, 'LOOMAKE-NOCHANGE: \r次の行', { kind: 'stop' }],
     ['CRLFを越えた理由', 'task', false, 'LOOMAKE-NOCHANGE: \r\n次の行', { kind: 'stop' }],
     ['U+2028を越えた理由', 'task', false, 'LOOMAKE-NOCHANGE: \u2028次の行', { kind: 'stop' }],
     ['U+2029を越えた理由', 'task', false, 'LOOMAKE-NOCHANGE: \u2029次の行', { kind: 'stop' }],

@@ -204,7 +204,7 @@ export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
    - **修正前に失敗する理由：** 既定の maxFixes 5 で calls が 7 件になる
 7. **`[REQ-331] 完了ゲートの直しで LOOMAKE-NOCHANGE を出しても、変更がなければ止まる`**
 8. **`[REQ-332] %s`**（`packages/runner/test/decision-policy.test.ts` に `it.each` で足す）
-   - 次の17行を確かめます。全ケースで入力をfreezeし、同じ判断を繰り返して入力が変わらないことも確認します。
+   - 次の18行を確かめます。全ケースで入力をfreezeし、同じ判断を繰り返して入力が変わらないことも確認します。
      - タスクで変更あり → commit
      - 直しで変更あり → commit
      - 変更なし・合図なし → stop
@@ -218,6 +218,7 @@ export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
      - 同じ行の空白が混ざる区切り → no-change
      - 同じ行の空白だけの理由 → stop
      - LFを越えた理由 → stop
+     - CRを越えた理由 → stop
      - CRLFを越えた理由 → stop
      - U+2028を越えた理由 → stop
      - U+2029を越えた理由 → stop
@@ -225,15 +226,16 @@ export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
 
 ### 突然変異試験（`tests/run-decision-mutations.test.ts`）
 
-次の 2 つの変異を足します。
+次の 3 つの変異を足します。
 
 | 変異 | 変える前 | 変えた後 |
 |---|---|---|
 | `{ id: 'repair-no-change' }` | `if (value.phase === 'repair')` | `if (value.phase === 'repair' && !value.text)` |
 | `{ id: 'no-change-anchor' }` | `/^LOOMAKE-NOCHANGE:` | `/LOOMAKE-NOCHANGE:` |
+| `{ id: 'no-change-cr' }` | `[^\S\r\n\u2028\u2029]` | `[^\S\n\u2028\u2029]` |
 
-- 試験の名前の数は、既存27行と追加17行を合わせた44行です。
-- 結果の期待値は `['killed' × 5]` にします（仮定 A-04）。
+- 試験の名前の数は、既存27行と追加18行を合わせた45行です。
+- 結果の期待値は `['killed' × 6]` にします（仮定 A-04）。
 
 ### 確認コマンド
 
@@ -257,7 +259,7 @@ Scenario監査の保存先には、まだ存在しないパスを指定します
 | `packages/runner/src/mask.ts` | 変更なし。Q-03 の決定に従い、`maskSecrets` を phases から使う |
 | `packages/runner/test/run-no-change.test.ts`（新規） | タスク・直し・Unicode区切り・制御文字・末尾保持の回帰 |
 | `packages/runner/test/decision-policy.test.ts` | REQ-332 の `it.each` を足す |
-| `tests/run-decision-mutations.test.ts` | 変異 2 つを足し、名前の数と結果の期待値を増やす |
+| `tests/run-decision-mutations.test.ts` | 変異 3 つを足し、名前の数と結果の期待値を増やす |
 | `packages/runner/test/helpers.ts` | `export const noChange = { output: 'LOOMAKE-NOCHANGE: 検査用に変更が要らない' }` を足す。偽の claude の既定の動き（台本が尽きたら何もしない）は変えない |
 | runner の既存試験（例：`run.test.ts`・`guards.test.ts`・`external-budget.test.ts`・`pr.test.ts`） | エンジンのタスクに当たる `{}` を `noChange` に置き換える。`run.test.ts` の REQ-100・REQ-111 の試験はタスクを `noChange` にする。REQ-104 と、残ったタスクの印を確かめる REQ-100 の試験は、タスクを `noChange` にし、直しで不合格のままの `fix.txt` を書く台本にする。期待値は変えない |
 | `docs/guide/1.getting-started/2.usage.md` | runの使い方に、合図と差分なしで止まることを1項目追加する |
@@ -295,3 +297,7 @@ Opus が、利用者の具体的な対象資料の送信承認の範囲で、表
 実Gitの比較で、既定の整形は末尾ASCII空白を削り、verbatimなら保持することを確認した。REQ-339の本文は変えず、NoChangeの理由を第2段落へ足す分岐だけに `--cleanup=verbatim` を加える。通常のタスク・直し・完了ゲート・evidenceのコミットは変えない。
 
 実Gitの追加回帰は、stdoutとcommit本文の理由の行を完全一致で比べる。repo.gitのtrimで末尾を失わないよう、`%B%x00` のNUL終端より前を読む。ASCII空白1個・3個・NBSP後のASCII空白、NBSP・全角・en-space・可視化タブを確かめる。engineはJSONのresultをtrimしないことをCodexがローカルで確認したため、出力末尾の理由を検証し、補足行が続く場合も確認する。旧回数の履歴は保持し、新headの独立最終レビューを指摘ゼロまで続ける。
+
+## CR単独改行を拒む境界の追加回帰
+
+最終レビューで、CRLFの試験だけではCRの除外を失う変異を検出できないと分かった。REQ-332の意味と製品コードを保ち、CR単独改行の直接試験を追加する。CRの除外だけを外した変異が、追加前にsurvived、追加後にkilledとなることを確かめる。LF・CRLF・U+2028・U+2029と、同一行のUnicode空白の既存ケースは残す。
