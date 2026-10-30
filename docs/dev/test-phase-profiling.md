@@ -32,3 +32,21 @@ Actionsの各実行から `ci-phases-<run>-<attempt>-<sample>` artifactを開い
 追加診断を指定した集計では、`profile.json` の `budgetClocks` に2ケースの結果を保存します。欠損、重複、負値、非有限数、実時間を超える待ち、正でない予算は不足または不整合として示し、そのケースの数値をnullにします。元の区間が途中で欠けても、得られた時計は独立して確認できます。時計が不足した集計は非ゼロで終了します。追加診断を指定しなければ、従来の出力と判定を維持します。
 
 予算上の経過時間だけで元の試験を成功へ読み替えません。実時間、保持役の待ち、予算上の時間、元の試験の成否を合わせて、計時基準の差と停止処理の影響を判断してください。
+
+## publication-retry の Windows 診断（Issue #178）
+
+`profile-publication-retry` は、元の失敗と同じ `pnpm test --shard=1/2` を Windows・Node 24.22.1・pnpm 12.10.1 の独立した3ジョブで実行します。サンプル1〜3は失敗の再試行ではなく、成否をそれぞれ保存する別の実行です。`fail-fast: false` とし、既存の assertion・ケース・60秒制限・skip・retry・通常の `ci.yml` は変更しません。導入は `--frozen-lockfile --ignore-scripts` で行います。
+
+workflow自身、publication-retry試験、共通fixtureのhelperと診断helper、診断用試験、本文が変わったPRで起動し、手動でも起動できます。診断ステップには `LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR` を渡します。未指定なら、この診断のファイルとpreloadは作りません。既存の `LOOMAKE_TEST_PHASE_PROFILE_DIR` による集計とは別の記録です。
+
+publication-retryの25ケースは、fixture作成前に固有のIDを作り、固定のケース分類とともに `*.phases.jsonl` へ記録します。repo-ready以降の安全なfixture basenameで `*.processes.jsonl` と対応します。phaseはcase-start、repo-ready、run-start/end、破損8ケースのmutate-end/amend-end、cleanup-start/end、case-endです。runの番号・終了コード・初回に想定した作成前失敗の理由を含むかというbooleanを記録します。理由のbooleanは診断であり、元のassertionを置き換えません。
+
+caseごとの閉包とRepoのWeakMapを使うので、timeout後に古いcallbackが残って次のケースと重なっても、同じ「現在のcase」へ記録を混ぜません。監視役と偽claude・ghのentry/exitは、fixture basenameとPIDごとのファイルへ記録します。時刻は全てDate.now()です。固定のevent・操作分類、数値、boolean、安全なbasenameだけを残し、生のstdout/stderr、引数、環境値、認証情報は保存しません。
+
+各ファイルは64KiB以内の完全なJSONLとし、上限では `truncated` を残します。準備・書込みの失敗を元の試験へ返さず、診断だけを欠損させます。truncated、phaseやentry/exitの不足、不正な時刻、途中で切れた実行は計測不足です。0秒や成功へ補いません。case-endのcompletedはcallbackとcleanupが終わったことを表し、Vitestが既にtimeoutと判定したケースを成功へ戻しません。
+
+artifactは `publication-retry-<run>-<attempt>-<sample>` という名前で、診断ディレクトリだけを7日保存します。`always()` でテスト失敗後やキャンセル後もuploadを試みますが、runner停止や準備失敗などでファイルがなければ計測不足です。全3サンプルの失敗も残して管理役が判定し、成功したサンプルだけを選びません。
+
+保存済みreportのファイル開始時刻に先行ケースのdurationを足すと、失敗ケースの時間帯と他ファイルとの重なりを推定できます。ただしhookや隙間の位置、timeout後のcallback終了は観測していません。ファイルの時間帯が重なっても同時のCPU使用や原因を証明しません。新しいphase記録と合わせて判断してください。
+
+この追加は原因を絞るための診断です。Linuxの成功やWindowsでの未再現を修理完了とせず、管理役が全結果を判定するまで[Issue #178](https://github.com/loomake/loomake/issues/178)を開いたままにします。

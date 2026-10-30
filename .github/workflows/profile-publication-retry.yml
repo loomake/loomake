@@ -1,0 +1,54 @@
+name: profile-publication-retry
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/profile-publication-retry.yml'
+      - 'packages/runner/test/publication-retry.test.ts'
+      - 'packages/runner/test/process-diagnostics.ts'
+      - 'packages/runner/test/helpers.ts'
+      - 'tests/publication-retry-diagnostics*.test.ts'
+      - 'docs/dev/test-phase-profiling.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  profile:
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [1, 2, 3]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        id: checkout
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - run: git rev-parse --verify main || git branch main origin/main
+        shell: bash
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 12.10.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        id: node
+        with:
+          node-version: 24.22.1
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - id: test
+        run: pnpm test --shard=1/2
+        env:
+          LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR: ${{ runner.temp }}/publication-retry-diagnostics
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        id: upload
+        if: ${{ always() }}
+        with:
+          name: publication-retry-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.sample }}
+          path: ${{ runner.temp }}/publication-retry-diagnostics/
+          retention-days: 7
+          if-no-files-found: warn
