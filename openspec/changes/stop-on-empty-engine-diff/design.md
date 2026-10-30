@@ -264,3 +264,7 @@ export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
 - 設計成果物：`.loomake/claude/c9f6a4c0-7acf-4533-a132-1b6d6fec06dc/result-revalidated.md`。公開する根拠は [PR #157 の設計レビュー](https://github.com/loomake/loomake/pull/157#issuecomment-6512610409) と `evidence.md` に要約する。
 - 設計レビューは Opus 評価 1 回として数える。残り 1 回の最終レビューは管理役が実施する。追加の AI レビューは実行しない。
 - 実装担当：Codex（実際のモデル識別子は取得できず不明）。PR #159 は `bound-engine-timer-and-interrupt` で phases.ts・helpers.ts 等が重なる。別 worktree で実装し、157→158→159 の順に管理役が統合する。
+
+## 最終レビュー後の修正方針
+
+2026-10-30 の管理役の確認で、REQ-330・REQ-332 の「空でない理由」に対し、上記の ASCII 空白・タブだけの正規表現では同一行の全角空白や NBSP に続く理由を認めないと分かった。仕様を ASCII 限定へ狭めず、同一行の空白を区切りとして認めるよう判定を修正する。LF・CR・U+2028・U+2029 を越えて、別行の文字を理由に取り込まない。既存の期待値は維持し、要件 ID 付きの直接試験と統合試験を追加する。Opus 評価は 2/2 のまま保持し、修正後 head の最終レビューは追加 1 回の明示承認が得られるまで未実施とする。
