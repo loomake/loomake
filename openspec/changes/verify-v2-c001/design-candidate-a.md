@@ -307,6 +307,32 @@ JSON形式の選択は解析成功と分け、共通option定義に従って値�
 
 既承認R07はci.test_reportの初期必須1項目を各PR/changeの承認REQ集合へ結ぶもので、全main245IDを一律に必須とする決定ではない。min_samples1は観測数であり、必須subjectを1件へ縮める許可でもない。対案Bとして基準側で承認したroot planへ正当なsubjectを固定する方向を追加設計の候補とし、PR側による母集団の縮小・空品質・タグだけの偽充足を禁止する。実changeの全承認REQと原47要件・16条件を残し、changeなしPRのsubjectが何かを一意に確定して適格なS/Tへ結ぶまでは、Bも成立済み・採用確定とはしない。
 
+2026-10-31の追加Opus設計を管理役が確認し、ADR0006に基づいて次の方向を採用した。確認事項の回答者は「利用者（ADR 0006 の包括承認）」とし、候補の採否と不足を後段のtraceへ移す。技術成立、task1.2受入、S1/S2実装の完了を表す判断ではない。
+
+| 論点 | 採用した方向・保持する条件 | 未採用・未確認の境界 |
+|---|---|---|
+| none-pathのsubject | 基準側SHAでPRレーンをfresh収集し、headのfresh reportと多重集合で照合する方向。head追加failedも見落とさない。none-pathに限り、coverageを生成しない | 全changeへのinventory検査、全mainREQ・同タグ全identityの一律必須化は不採用。実changeは元の承認Source・必要Scenario・selector集合を保持し、必要操作の不足を同タグ別操作で代用しない |
+| 名前・状態・重複 | Vitest5.0.5のdynamic APIで展開後のcaseを収集し、fileとsuite/titleの構造、件数、各statusを保持する。APIのok()や収集時のpendingをpassed証拠にしない | CLI listはskipを落とし、staticはtable/loopを未展開にするため代用しない。reporterとAPIの名前は実producerの構造で対応付け、単純な文字列置換で変換しない。JSONのprojectName欠落と同pathの複数projectの識別は未確定 |
+| Q1 OS適用除外 | 基準側で既に明示承認された既存条件と、同じ環境でのbaseの実skipの両方を確認し、理由・出典・環境を残す。head自己申告の新skipは不足 | マージ済みだけで新たな除外を承認せず、素のskipや根拠不明は不足。同名caseの件数だけで除外枠を割り当てず、由来を保証できなければ不足 |
+| Q2 anchor更新 | trusted baseline manifest、前後hash、対象PRへの拘束による独立した承認を採用方向とする。head自身の自己申告では承認しない | 更新のたびに別PRを必須とする案は未採用。task1.3の既存anchor更新との統合方法を追加設計する |
+| Q3削除 | テスト弱体化を許さず、削除を自動承認しない。rename/delete/method変更の正当な根拠とanchor更新を確認する | 開発試験という分類だけでは削除を許さない。必要な対応が曖昧な間は不足 |
+| Q4 checkout path | 基準とheadを同じpathで順に扱う案を採用方向とする。trusted controllerとprivate handoffは切替・cleanupの対象外に保持する | 既存ai-journeysのタイトルにはpathが入る。実repoでの名前の安定性、切替時の残存物排除と隔離は未検証 |
+| Q5共有setup | baseの実globalSetupとprovide/injectを使い、収集用stubへすり替えない | PR184の技術参照headではSPLIT_FILESが空で、OS別割当・元case分割・実build/packを含む収集費用は未測定 |
+| Q6予算とT/S | Tを先に実行し、成功時だけ別invocationのSを順に実行する。既存の閉予算・出力上限を緩めず、収集・準備・T・S・cleanupの段階を記録する | 実費用と総予算値は未測定。通常外部操作30秒をqualityCommandへ一律適用せず、runner既定60分を新controllerの承認済み値と推測しない |
+| Q7 move-lane | 既存1-1の統合受入をS2有効化より先行させ、元caseとfast+slowの多重集合、PR slow不実施を保持する | 新しいslow collectの自動追加は不採用。1-1後のbaseline/head双方をfast母集団として扱えばmove特例が不要か、追加設計で照合する |
+| Q8失敗・中断 | cleanup失敗はnotPASS。評価対象確定前のruntime失敗はaborted/3、確定後の取得不足はpartial・不足/1という既存契約を維持する | timeoutを一律partial/1にする追加案は採らず、対象確定の境界とmodule/file失敗、未照合の分類を具体化する |
+
+同じ報告の二重取込みと、実際に登録された同名caseは分ける。前者のdedupで後者の多重集合を1件へまとめず、元のmetricとmin_samples=1を保つ。caseの由来・対応が不明なまま順序だけで同一性を認定しない。少なくとも次の2反例を不足として拒否する契約が必要であり、追加設計の件数集計式をそのまま採用しない。
+
+| 反例 | 件数だけの式が見落とすもの | 必須の判定 |
+|---|---|---|
+| 同名2caseのうちbaseの承認済みOS除外が1件、headはpassed1/skip1。本来runするcaseを新skipにし、除外caseを代わりにrunする | 基準件数2・除外枠1・passed1・skip1が同じでも、新skipと既存除外の由来が入れ替わる | 由来の不一致または対応不明は不足。件数の除外枠だけでPASSにしない |
+| 基準件数1・承認済み除外1・head passed0/skip1 | 全対象が除外され、適格な実行観測が0 | 空・全NA・必要証拠空をPASSにしない。min_samplesも満たさない |
+
+追加Opus設計は実施済みだが、実repoのbase/head安定性、同名caseの由来保証、複数projectの識別、実効method依存集合とanchor更新、T/Sの実測・予算は未確認である。PR184の実装固定head `b39aea61bf7968c31dac083d86ef2142136d0ce3` の設計・tasks・trace・test-split・config・共有setup/injectと、小fixtureのAPI観測は補助資料であり、未測定registryやrepo全体の成立を証明しない。後続のpostgate受入整理はこの技術参照へ混ぜない。
+
+通常のCI設定の実装と、required check等の受入規則の変更は、既存規約どおり区別する。「none-pathのgateを変更するだけで、すべて人の操作が必要」とする追加案は不採用。規則変更や人の操作が必要な具体差分は管理役がIssue121へ通知する。設計・実装・検証を進める通常作業を、この一律の承認条件で止めない。
+
 後段ではREQ-132のchangeなし/branch不一致/archive経路、REQ-318の最終ci、REQ-312のbare境界を同時に整合させ、内部結果の正式なschema/validatorとS/T一致範囲をtask1.3で確定する。現行REQ-270の品質job省略とmain push全実行を維持し、品質jobを省いてもgateの必要な実施を省略しない。
 
 #### F17：実tarballのproducerとprivate handoff

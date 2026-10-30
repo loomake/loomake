@@ -12,3 +12,8 @@
 | [180](https://github.com/loomake/loomake/pull/180) | 未測定（今回2設計のモデル処理239748/232220msとは別） | 進行中（候補文書の検証） | 未実施（変更後の固定head） | 未測定（旧headの10工程と新head未実施を区別） | 進行中 |
 
 管理役の追加照合で、R07は全main245REQの一律必須化を承認していないと確認した。F16の案Aを不採用へ更新し、基準側承認root planで正当なsubjectを固定するBを追加設計の方向にした。1-1のPR slow不実施とREQ297の実時間下限・4case、同タグ別操作の偽充足禁止を守る。追加依頼は具体payloadを管理役へ渡し、起動は別に確認する。
+
+1. やったこと：`verify-v2-c001` task1.2、[PR180](https://github.com/loomake/loomake/pull/180)のF16へ追加設計の管理役採否と未確認境界を追記。独立Opus設計は実claude-opus-5-5・ok:true・拒否0。同名caseの新skip入替と全除外の2反例は不足とし、件数だけの判定式を採用しない。
+2. verify：候補文書のstrict・diffcheck成功、原47要件/16条件と規範・製品保護ファイルのbyte保持、yomiyasuの最終稿hash一致を確認。製品spec-only/doneやfull suiteの実施ではない。
+3. 確認事項・仮定：基準の明示承認済みOS条件、独立anchor承認、実setup、閉予算と段階記録、cleanup notPASSを採用方向とした。同名caseの由来、複数project、anchor更新統合、1-1後のmove特例不要性、エラー境界と実費用は未確認。task1.2成立・S2可能とはしない。
+4. 次：追加設計の素材をrootへ渡す。小fixtureのproducer確認に限定し、E3終了まではfull suite/repo全collectを開始しない。更新headにはCI・Codex・全工程の新規独立Opus最終レビューが必要。
