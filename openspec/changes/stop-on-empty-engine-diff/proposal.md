@@ -20,7 +20,7 @@
 
 ### Modified Capabilities
 
-- `run`：差分のないタスク（REQ-330）と、差分のない直し（REQ-331）の要件を足す。既存の Requirement の文は変えない。
+- `run`：差分のないタスク（REQ-330）と、差分のない直し（REQ-331）の要件を足す。REQ-099・REQ-100 に、変更がない場合の例外を反映する。
 - `run-decision-policy`：変更の有無による純粋な判断（REQ-332）を足す。REQ-204・REQ-205 の優先順位は変えない。
 
 ## Impact

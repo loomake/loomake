@@ -2,7 +2,7 @@
 
 ## 1. 仕様
 
-- [ ] 1.1 proposal・design・trace と差分仕様（REQ-330〜REQ-332）を書き、仕様ゲートを通す。確認事項 Q-01・Q-02 の回答を trace.md に記録する（確認：`pnpm -s verify --change stop-on-empty-engine-diff --spec-only` が exit 0）
+- [x] 1.1 proposal・design・trace と差分仕様（REQ-330〜REQ-332）を書き、仕様ゲートを通す。確認事項 Q-01〜Q-03 の回答を trace.md に記録する（確認：`pnpm -s verify --change stop-on-empty-engine-diff --spec-only` が exit 0）
 
 ## 2. 判断
 
@@ -16,7 +16,7 @@
 - [ ] 3.2 `phases.ts` の `callEngine` が本文を返すようにし、`runEngineTasks` で `guard` の後・`checkTask` の前に判断を呼ぶ。止まるときの表示と、変更なしの完了の表示（Q-03 の決定に従いコミット本文）を足す（確認：3.1 の REQ-330 の試験が通る）
 - [ ] 3.3 `runGate` の直しのあとの差分の判定を `decideAfterChanges` に置き換える（確認：3.1 の REQ-331 の試験が通る）
 - [ ] 3.4 `prompt.ts` で、タスクの指示だけに `LOOMAKE-NOCHANGE:` の決まりを足す（確認：3.1 の指示の試験が通る）
-- [ ] 3.5 `helpers.ts` に `noChange` を足し、runner の試験で、エンジンのタスクに当たる何も変えない台本を置き換える。REQ-104 の試験は、直しでファイルを書く台本にする。期待値は変えない（確認：`pnpm -s vitest run packages/runner tests/input-boundaries.test.ts` が通り、`git diff` で `expect` の行が変わっていない）
+- [ ] 3.5 `helpers.ts` に `noChange` を足し、runner の試験で、エンジンのタスクに当たる何も変えない台本を置き換える。REQ-100・REQ-111 の試験のタスクも置き換え、REQ-104 の試験は、直しでファイルを書く台本にする。期待値は変えない（確認：`pnpm -s vitest run packages/runner tests/input-boundaries.test.ts` が通り、`git diff` で `expect` の行が変わっていない）
 
 ## 4. 文書と記録
 

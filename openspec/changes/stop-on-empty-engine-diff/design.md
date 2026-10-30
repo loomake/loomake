@@ -47,7 +47,7 @@
 - 実装：`packages/runner/src/run/phases.ts`（タスクの段階と直しの段階）、`run/decision-policy.ts`（純粋な判断を 1 つ足す）、`run/prompt.ts`（決まりを 1 行足す）
 - 試験：試験と、既存の試験の台本の置き換え
 - 文書：利用者向けの文書（usage と run-recovery）、`docs/quality/scenarios.json`
-- 仕様：差分仕様（`run` と `run-decision-policy` に ADDED）
+- 仕様：差分仕様（`run` と `run-decision-policy` に ADDED、`run` の REQ-099・REQ-100 に MODIFIED）
 
 **対象外**
 - エンジンの権限の設定（`claudeArgs` の許可一覧）の変更。今回の再現は権限が足りないことが原因ですが、権限を広げる判断は別に扱います。
@@ -192,7 +192,7 @@ export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
    - **修正前に失敗する理由：** 1.1 が `- [x]` になり、コミットが増え、直しまで呼ばれて calls が 7 件になる
 2. **`[REQ-330] LOOMAKE-NOCHANGE: と理由を出して変更を残さなければ、tasks.md だけのコミットで完了にし、理由を表示する`**
    - 台本：`[{ write: impl }, { output: '確かめました。\nLOOMAKE-NOCHANGE: 1.1 で済んでいます' }]`
-   - 期待：`code===0`、1.2 のコミットのファイルが tasks.md だけ、標準出力に理由がある。Q-03 が A なら、コミット本文にも理由がある
+   - 期待：`code===0`、1.2 のコミットのファイルが tasks.md だけ、標準出力に理由がある。Q-03 の決定に従い、コミット本文にも理由がある
    - **修正前に失敗する理由：** 理由の表示がない
 3. **`[REQ-330] 変更を残したうえで LOOMAKE-NOCHANGE を出したら、変更と合わせてコミットする`**
    - 修正前も成功します。退行を防ぐための試験です。
@@ -245,12 +245,12 @@ export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
 | `packages/runner/src/run/decision-policy.ts` | `ChangeObservation`・`ChangeDecision`・`decideAfterChanges` を足す |
 | `packages/runner/src/run/phases.ts` | `callEngine` が本文を返すようにする。`runEngineTasks` に差分の判定と `no-change` の処理を足す。`runGate` の `phases.ts:133-135` を判断に置き換える。差分を見る小さな関数を 1 つ置く |
 | `packages/runner/src/run/prompt.ts` | `failure` がないときだけ、`LOOMAKE-NOCHANGE` の決まりを 1 行足す |
-| `packages/runner/src/mask.ts` | 変更なし。Q-03 が A なら、`maskSecrets` を phases から使う |
+| `packages/runner/src/mask.ts` | 変更なし。Q-03 の決定に従い、`maskSecrets` を phases から使う |
 | `packages/runner/test/run-no-change.test.ts`（新規） | 回帰試験 1〜7 |
 | `packages/runner/test/decision-policy.test.ts` | REQ-332 の `it.each` を足す |
 | `tests/run-decision-mutations.test.ts` | 変異 2 つを足し、名前の数と結果の期待値を増やす |
 | `packages/runner/test/helpers.ts` | `export const noChange = { output: 'LOOMAKE-NOCHANGE: 検査用に変更が要らない' }` を足す。偽の claude の既定の動き（台本が尽きたら何もしない）は変えない |
-| runner の試験 12 ファイル（例：`run.test.ts`・`guards.test.ts`・`external-budget.test.ts`・`pr.test.ts`） | エンジンのタスクに当たる `{}` を `noChange` に置き換える。`run.test.ts:305` の REQ-104 の試験は、タスクを `noChange` にし、直しを不合格のままのファイルを書く台本（例：`{ write: { 'fix.txt': '1' } }` と `'2'`）にする。期待値は変えない |
+| runner の試験 12 ファイル（例：`run.test.ts`・`guards.test.ts`・`external-budget.test.ts`・`pr.test.ts`） | エンジンのタスクに当たる `{}` を `noChange` に置き換える。`run.test.ts:305` の REQ-100・REQ-111 の試験のタスクを `noChange` にし、REQ-104 の試験は、タスクを `noChange` にし、直しを不合格のままのファイルを書く台本（例：`{ write: { 'fix.txt': '1' } }` と `'2'`）にする。期待値は変えない |
 | `docs/guide/1.getting-started/2.usage.md` | `:282` の近くに、合図と、差分なしで止まることを 1 項目足す |
 | `docs/guide/2.guides/3.run-recovery.md` | 「エンジンが変更を残さずに止まった場合」の短い節を足す（記録の場所と 2 つの対処） |
 | `docs/quality/scenarios.json` | この change の Scenario のレビューを足す。台本を変えた試験を根拠にする既存のレビューは、読み直してハッシュを更新する |
@@ -259,8 +259,8 @@ export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
 
 ## 設計工程の記録
 
-- 実行ツール：Claude Code 2.1.308（`.agents/skills/delivery/scripts/ask-opus.mjs` 経由）
-- セッション：`c9f6a4c0-7acf-4533-a132-1b6d6fec06dc`
-- events.jsonl で観測した主モデル：`claude-opus-5-5`（assistant イベント 66 件）
-- modelUsage には `claude-haiku-5-5`（出力 24 トークン、補助的な呼び出し）も含まれていたため、スクリプトは `ok:false`（未実施）を返した
-- この設計の工程状態：未実施（人の判断待ち）。Opus の設計工程を実施済みとは扱わない
+- 実行ツール：Claude Code 2.1.308（ask-opus.mjs 経由）、設計セッション：`c9f6a4c0-7acf-4533-a132-1b6d6fec06dc`、設計元コミット：`d5aa30d`。
+- 実際の主モデル：`claude-opus-5-5`。補助呼び出しの `claude-haiku-5-5` を含む。修正後の validator で保存ログを再確認し、`manifest-revalidated.json` の `ok:true`・権限拒否 0 件を管理役が確認した。工程は実施済みとして再利用する。
+- 設計成果物：`.loomake/claude/c9f6a4c0-7acf-4533-a132-1b6d6fec06dc/result-revalidated.md`。公開する根拠は [PR #157 の設計レビュー](https://github.com/loomake/loomake/pull/157#issuecomment-6512610409) と `evidence.md` に要約する。
+- 設計レビューは Opus 評価 1 回として数える。残り 1 回の最終レビューは管理役が実施する。追加の AI レビューは実行しない。
+- 実装担当：Codex（実際のモデル識別子は取得できず不明）。PR #159 は `bound-engine-timer-and-interrupt` で phases.ts・helpers.ts 等が重なる。別 worktree で実装し、157→158→159 の順に管理役が統合する。
