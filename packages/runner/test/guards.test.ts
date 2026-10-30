@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { chmodSync, existsSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { findViolations, runRun } from '@loomake/runner';
-import { CHANGE, makeRepo, type FakeStep, type Repo } from './helpers.js';
+import { CHANGE, makeRepo, noChange, type FakeStep, type Repo } from './helpers.js';
 
 // git・node・verify のコマンドを何度も起動するので、Windows では 1 件に 10 秒を超えることがある
 vi.setConfig({ testTimeout: 60_000 });
@@ -16,7 +16,7 @@ async function runWith(step: FakeStep, setup?: (repo: Repo) => void) {
       repo.git('add', '-A');
       repo.git('commit', '-q', '-m', '準備');
     }
-    repo.plan([{ ...step, write: { 'impl.txt': '実装\n', ...step.write } }, {}]);
+    repo.plan([{ ...step, write: { 'impl.txt': '実装\n', ...step.write } }, noChange]);
     const out: string[] = [];
     const code = await runRun({
       root: repo.root,
@@ -330,7 +330,7 @@ describe('エンジンによるコミットとブランチの切り替えの検�
   it('[REQ-126] 完了ゲートの直しでエンジンがコミットしたら、完了ゲートのタスクを完了にせずに止まる', async () => {
     const repo = makeRepo();
     try {
-      repo.plan([{}, {}, { write: { 'impl.txt': '直した\n' }, git: commit }]);
+      repo.plan([noChange, noChange, { write: { 'impl.txt': '直した\n' }, git: commit }]);
       const out: string[] = [];
       const code = await runRun({
         root: repo.root,

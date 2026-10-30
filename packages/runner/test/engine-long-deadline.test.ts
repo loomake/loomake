@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { runRun } from '@loomake/runner';
 import { runClaude } from '../src/engine.js';
-import { CHANGE, makeRepo } from './helpers.js';
+import { CHANGE, makeRepo, noChange } from './helpers.js';
 
 vi.setConfig({ testTimeout: 60_000 });
 const MAX_TIMER_MS = 2_147_483_647;
@@ -94,7 +94,7 @@ describe('エンジンのタイマーの上限', () => {
   it('[REQ-336] run.timeoutMinutes がタイマーの上限を超えても、エンジンをすぐに時間切れにしない', async () => {
     const repo = makeRepo({ run: { timeoutMinutes: 40_000 } });
     try {
-      repo.plan([{ write: { 'impl.txt': '実装\n' }, sleepMs: 500 }, {}]);
+      repo.plan([{ write: { 'impl.txt': '実装\n' }, sleepMs: 500 }, noChange]);
       const output: string[] = [];
       const code = await runRun({ root: repo.root, env: repo.env, changeId: CHANGE, interactive: false, confirm: async () => false, fileExists: () => false, stdout: (text) => output.push(text) });
       const directory = join(repo.root, '.loomake/runs');

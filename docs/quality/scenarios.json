@@ -163,7 +163,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "大きな出力で停止し、タスクと変更を未完了のまま残す",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -179,7 +179,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "不正な出力上限",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -227,7 +227,7 @@
         {
           "file": "packages/runner/test/external-budget.test.ts",
           "contains": "[REQ-183] OpenSpec検証の時間切れ",
-          "sha256": "7c82285b2ef4d72141c55830453250d093fb5bf5a87468ebc0a93f2348ad6709"
+          "sha256": "8c54b62888a4fb9def02af699e2cddd18be2a8ec930da96165af1a82526033de"
         }
       ]
     },
@@ -831,7 +831,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "不正なrun設定",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -847,7 +847,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "不正なrun設定",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -863,12 +863,12 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "正しい整数と正の小数の時間を受け付ける",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         },
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "--dry-run は、タスクの一覧と最初の指示を表示し",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -1021,7 +1021,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "[REQ-154] 質問",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -1037,7 +1037,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "[REQ-154] 品質コマンド",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -1127,7 +1127,7 @@
         {
           "file": "packages/runner/test/evidence-storage.test.ts",
           "contains": "保存先の作成失敗を停止記録に残し、復旧後は実装を繰り返さず完了する",
-          "sha256": "16cd666b698613e965a0c1547e97b68a56431b2f576b7f9e45caf7954adbeebb"
+          "sha256": "06c97eaab17f45d2a626e24806266b4aa31f57c5605cdf2164e5075eadd4d737"
         }
       ]
     },
@@ -1143,12 +1143,12 @@
         {
           "file": "packages/runner/test/evidence-storage.test.ts",
           "contains": "保存先の作成失敗を停止記録に残し、復旧後は実装を繰り返さず完了する",
-          "sha256": "16cd666b698613e965a0c1547e97b68a56431b2f576b7f9e45caf7954adbeebb"
+          "sha256": "06c97eaab17f45d2a626e24806266b4aa31f57c5605cdf2164e5075eadd4d737"
         },
         {
           "file": "packages/runner/test/evidence-storage.test.ts",
           "contains": "公開後の片付け失敗は確認・一時名の削除・証拠のコミットから復旧できる",
-          "sha256": "16cd666b698613e965a0c1547e97b68a56431b2f576b7f9e45caf7954adbeebb"
+          "sha256": "06c97eaab17f45d2a626e24806266b4aa31f57c5605cdf2164e5075eadd4d737"
         }
       ]
     },
@@ -1164,17 +1164,17 @@
         {
           "file": "packages/runner/test/publication-retry.test.ts",
           "contains": "作成の",
-          "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+          "sha256": "46f182b3a3e27a7883d40fee4d6e057418dae84608f7afd85bb64c5a8b7fef7e"
         },
         {
           "file": "packages/runner/test/publication-retry.test.ts",
           "contains": "push失敗後に同じ証拠を再利用して送信する",
-          "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+          "sha256": "46f182b3a3e27a7883d40fee4d6e057418dae84608f7afd85bb64c5a8b7fef7e"
         },
         {
           "file": "packages/runner/test/publication-retry.test.ts",
           "contains": "今回の検証に不合格なら過去の証拠を代用しない",
-          "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+          "sha256": "46f182b3a3e27a7883d40fee4d6e057418dae84608f7afd85bb64c5a8b7fef7e"
         }
       ]
     },
@@ -1190,7 +1190,7 @@
         {
           "file": "packages/runner/test/publication-retry.test.ts",
           "contains": "の証拠は消さず増やさず停止する",
-          "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+          "sha256": "46f182b3a3e27a7883d40fee4d6e057418dae84608f7afd85bb64c5a8b7fef7e"
         }
       ]
     },
@@ -1206,7 +1206,7 @@
         {
           "file": "packages/runner/test/publication-retry.test.ts",
           "contains": "証拠の後に実装を変えたら新しい対象SHAの証拠を作る",
-          "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+          "sha256": "46f182b3a3e27a7883d40fee4d6e057418dae84608f7afd85bb64c5a8b7fef7e"
         }
       ]
     },
@@ -1222,12 +1222,12 @@
         {
           "file": "packages/runner/test/publication-retry.test.ts",
           "contains": "作成のafterで失敗した後も同じ証拠とコミットを使う",
-          "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+          "sha256": "46f182b3a3e27a7883d40fee4d6e057418dae84608f7afd85bb64c5a8b7fef7e"
         },
         {
           "file": "packages/runner/test/publication-retry.test.ts",
           "contains": "完了後も再実行で証拠・コミット・PRを増やさない",
-          "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+          "sha256": "46f182b3a3e27a7883d40fee4d6e057418dae84608f7afd85bb64c5a8b7fef7e"
         }
       ]
     },
@@ -1243,7 +1243,7 @@
         {
           "file": "packages/runner/test/publication-retry.test.ts",
           "contains": "検索結果",
-          "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+          "sha256": "46f182b3a3e27a7883d40fee4d6e057418dae84608f7afd85bb64c5a8b7fef7e"
         }
       ]
     },
@@ -1259,7 +1259,7 @@
         {
           "file": "packages/runner/test/publication-retry.test.ts",
           "contains": "今回の検証に不合格なら過去の証拠を代用しない",
-          "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+          "sha256": "46f182b3a3e27a7883d40fee4d6e057418dae84608f7afd85bb64c5a8b7fef7e"
         }
       ]
     },
@@ -1275,12 +1275,12 @@
         {
           "file": "packages/runner/test/publication-retry.test.ts",
           "contains": "を変えたら取り消さず外部操作を止める",
-          "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+          "sha256": "46f182b3a3e27a7883d40fee4d6e057418dae84608f7afd85bb64c5a8b7fef7e"
         },
         {
           "file": "packages/runner/test/publication-retry.test.ts",
           "contains": "検証が作業ファイルを変えたら、その変更を残して停止する",
-          "sha256": "0973645dfc4ba486d1b7b6a8e8eb29f897770fe872ed577abfdfba24e9fe8506"
+          "sha256": "46f182b3a3e27a7883d40fee4d6e057418dae84608f7afd85bb64c5a8b7fef7e"
         }
       ]
     },
@@ -1365,7 +1365,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "二重起動は先の実行を変更せず",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -1381,12 +1381,12 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "二重起動は先の実行を変更せず",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         },
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "コミット済みのファイルを書き換えていたら",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         },
         {
           "file": "packages/runner/test/lock.test.ts",
@@ -1449,7 +1449,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "同じ秒に再実行しても両方の理由とログを残す",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -3373,7 +3373,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストファイルを消したら、削除を表示し",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -3389,7 +3389,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストファイルに it.skip の行を足したら",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -3405,22 +3405,22 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストファイルに it.skipIf(true)",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         },
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストファイルに describe.skipIf(true)",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         },
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストファイルに it.runIf(false)",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         },
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストファイルに it.concurrent.skip",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -3436,7 +3436,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "ふつうのテストを足しただけなら",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -3452,7 +3452,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "loomake.config.json を変えたら、差分を表示して止まる",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -3468,7 +3468,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "package.json の scripts を変えたら止まる",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -3484,7 +3484,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "子パッケージの package.json の scripts を変えたら止まる",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -3500,7 +3500,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "package.json の dependencies だけを変えたら",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -3516,7 +3516,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "openspec/specs/ の下を書き換えたら止まる",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -3532,7 +3532,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "change の trace.md を書き換えたら止まる",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -3548,7 +3548,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "tasks.md から未完了のタスクの行を消したら止まる",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -3564,7 +3564,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "差分仕様から Requirement を消したら止まる",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -3596,7 +3596,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "不合格なら内容をエンジンに渡して直させ、直しをコミットし",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -3612,7 +3612,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "理由と差分を表示し、変更を作業ツリーに残し",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -3628,7 +3628,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "承認せずにもう一度実行すると",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -3644,7 +3644,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "エンジンが自分でコミットしたら、前後の SHA を表示し",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -3660,7 +3660,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "設定を変えてコミットしたら、その差分を表示して止まる",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -3676,7 +3676,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "エンジンが別のブランチに切り替えたら",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -3692,7 +3692,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "コミットしてから失敗したら、HEAD が変わったことを",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -3708,7 +3708,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "完了ゲートの直しでエンジンがコミットしたら",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -3724,7 +3724,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "エンジンがコミットせずに終えたら",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -3746,7 +3746,7 @@
         {
           "file": "packages/runner/test/pr.test.ts",
           "contains": "PR を作る時点で、ブランチの最後のコミットに証拠の記録が入っている",
-          "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          "sha256": "636764feb2d688a08683d0685548b213eb13c12693b6f2a2366b33aafd4bcfc4"
         }
       ]
     },
@@ -3768,7 +3768,7 @@
         {
           "file": "packages/runner/test/pr.test.ts",
           "contains": "人が作った loomake/<change-id> の上で始めて向き先が分からなければ、証拠を記録せずに止まる",
-          "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          "sha256": "636764feb2d688a08683d0685548b213eb13c12693b6f2a2366b33aafd4bcfc4"
         }
       ]
     },
@@ -3784,7 +3784,7 @@
         {
           "file": "packages/runner/test/pr.test.ts",
           "contains": "本文に、proposal の Why と What Changes、完了ゲートの結果、要件ごとのテスト、証拠の記録のパスを含める",
-          "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          "sha256": "636764feb2d688a08683d0685548b213eb13c12693b6f2a2366b33aafd4bcfc4"
         }
       ]
     },
@@ -3800,7 +3800,7 @@
         {
           "file": "packages/runner/test/pr.test.ts",
           "contains": "gh pr create に、タイトル・本文・向き先のブランチを渡す",
-          "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          "sha256": "636764feb2d688a08683d0685548b213eb13c12693b6f2a2366b33aafd4bcfc4"
         }
       ]
     },
@@ -3816,12 +3816,12 @@
         {
           "file": "packages/runner/test/pr.test.ts",
           "contains": "gh にログインしていなければ、エンジンを呼ばず、change のブランチも作らずに止まり、終了コード 1 を返す",
-          "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          "sha256": "636764feb2d688a08683d0685548b213eb13c12693b6f2a2366b33aafd4bcfc4"
         },
         {
           "file": "packages/runner/test/pr.test.ts",
           "contains": "gh にログインしていなければ、証拠を記録せず、ブランチも送らずに止まり、終了コード 1 を返す",
-          "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          "sha256": "636764feb2d688a08683d0685548b213eb13c12693b6f2a2366b33aafd4bcfc4"
         }
       ]
     },
@@ -3837,7 +3837,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "仕様ゲートに不合格なら、内容を表示し",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -3853,7 +3853,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "仕様ゲートに合格すれば、実装に進む",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -3869,7 +3869,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "コミット済みのファイルを書き換えていたら、ファイル名を出し",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -3901,7 +3901,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "テストのレポートを .gitignore で除外していなければ",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -3917,7 +3917,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "--dry-run は、タスクの一覧と最初の指示を表示し",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -3933,7 +3933,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "loomake/<change-id> がなければ、いまの HEAD から作ってコミットする",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -3949,7 +3949,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "loomake/<change-id> があれば",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -3965,7 +3965,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "別のブランチから再開したら、loomake/<change-id> の tasks.md で",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -3981,12 +3981,12 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "未完了のタスクを上から順に、1 回に 1 つずつ渡す",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         },
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "完了ゲートのタスクはエンジンに渡さない",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4002,7 +4002,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "[REQ-097] 完了済みのタスクは渡さない",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4018,7 +4018,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "指示に、AGENTS.md・タスク・差分仕様・trace.md",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4034,7 +4034,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "指示に、git でコミットしたりブランチを切り替えたりせず",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4050,7 +4050,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "タスクを終えるたびに、変更と完了にした tasks.md を",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4066,7 +4066,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "エンジンが 0 以外の終了コードで終わったら",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4082,7 +4082,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "不合格なら内容をエンジンに渡して直させ、直しをコミットし",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4098,7 +4098,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "完了ゲートのタスクはエンジンに渡さない",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4114,7 +4114,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "印のあるタスクは、文に verify と --done がなくても",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4130,7 +4130,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "印のない旧書式のタスクもエンジンに渡さず",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4146,7 +4146,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "残ったタスクの表示と summary.json には、印を含めない",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4162,7 +4162,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "ふだんは -p と JSON の出力で呼び",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4178,7 +4178,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "知らないエンジンでは、使い方の誤りとして",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4194,7 +4194,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "claude コマンドがなければ、Claude Code を入れるよう",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4210,7 +4210,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "change-id にパスの区切りを含めると、使い方の誤りとして",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4226,7 +4226,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "LOOMAKE_SANDBOX=1 で --skip-permissions を付ければ",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4242,7 +4242,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "LOOMAKE_SANDBOX=1 でなければ、--skip-permissions を断り",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4258,7 +4258,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "直しの回数が上限に達したら止まり",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4274,7 +4274,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "実行時間が上限に達したら、エンジンを止めて",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4290,7 +4290,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "完了ゲートのテストが終わらないまま上限に達したら",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4306,7 +4306,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "エンジンが LOOMAKE-QUESTION: を出したら",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4322,7 +4322,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "止まったら、理由・終えたタスク・残ったタスク",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4338,7 +4338,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "1つのタスクと完了ゲートの記録を同じ実行に保存する",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4354,7 +4354,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "実行の記録は、git の未コミットの変更に出てこない",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4370,7 +4370,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "出力の中のトークンを *** に置き換えて保存し",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4386,7 +4386,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "REMOTE_CONTAINERS が設定されていれば",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4402,7 +4402,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "コンテナの外で確認に断ると",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4418,7 +4418,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "コンテナの外で確認を受け付けられなければ",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4450,7 +4450,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "@loomake/runner の dependencies は core・kit・trace だけ",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4466,7 +4466,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "始めたあとにコミットが git のフックで失敗したら",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -4482,7 +4482,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "git のリポジトリでなければ、実行の記録を作らず",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -5860,7 +5860,7 @@
         {
           "file": "packages/runner/test/external-budget.test.ts",
           "contains": "[REQ-192][REQ-182] run の準備中に git",
-          "sha256": "7c82285b2ef4d72141c55830453250d093fb5bf5a87468ebc0a93f2348ad6709"
+          "sha256": "8c54b62888a4fb9def02af699e2cddd18be2a8ec930da96165af1a82526033de"
         }
       ]
     },
@@ -6007,7 +6007,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "loomake.config.json を JSON として読めなければ",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -6167,7 +6167,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "[REQ-198] エンジンがフック",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -6183,7 +6183,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "[REQ-198] エンジンが git",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -6199,7 +6199,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "[REQ-198] run の前",
-          "sha256": "6cbdaa997f41b4cfdcab91920edce1d92e82f0effea92a8e2fbae55eec30ad6c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -6215,7 +6215,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "追加された既知形式と隣接する秘密鍵を実際の出力記録",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -6231,7 +6231,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "追加された既知形式と隣接する秘密鍵を実際の出力記録",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -6247,7 +6247,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "追加された既知形式と隣接する秘密鍵を実際の出力記録",
-          "sha256": "6e7fdc16a4c9ce1c7dfb72cf0d373eb510e5494902357f0b92ca9bfcc1a37fcb"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         }
       ]
     },
@@ -6263,7 +6263,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-204]",
-          "sha256": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b"
+          "sha256": "4132af5e828261e7e935e74f87af0258a789afa77d0fb99c94ca15ca91ef2d38"
         }
       ]
     },
@@ -6279,7 +6279,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-204]",
-          "sha256": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b"
+          "sha256": "4132af5e828261e7e935e74f87af0258a789afa77d0fb99c94ca15ca91ef2d38"
         }
       ]
     },
@@ -6295,7 +6295,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-204] 正常終了",
-          "sha256": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b"
+          "sha256": "4132af5e828261e7e935e74f87af0258a789afa77d0fb99c94ca15ca91ef2d38"
         }
       ]
     },
@@ -6311,7 +6311,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-205] 状態変更",
-          "sha256": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b"
+          "sha256": "4132af5e828261e7e935e74f87af0258a789afa77d0fb99c94ca15ca91ef2d38"
         }
       ]
     },
@@ -6327,7 +6327,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-205]",
-          "sha256": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b"
+          "sha256": "4132af5e828261e7e935e74f87af0258a789afa77d0fb99c94ca15ca91ef2d38"
         }
       ]
     },
@@ -6343,7 +6343,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-205] 合格は回数",
-          "sha256": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b"
+          "sha256": "4132af5e828261e7e935e74f87af0258a789afa77d0fb99c94ca15ca91ef2d38"
         }
       ]
     },
@@ -6359,7 +6359,7 @@
         {
           "file": "packages/runner/test/decision-policy.test.ts",
           "contains": "[REQ-206]",
-          "sha256": "b4d53615a38add630b55d652c388923a7456023242f82f907188bf87cead1d6b"
+          "sha256": "4132af5e828261e7e935e74f87af0258a789afa77d0fb99c94ca15ca91ef2d38"
         }
       ]
     },
@@ -6375,7 +6375,7 @@
         {
           "file": "tests/run-decision-mutations.test.ts",
           "contains": "[REQ-206]",
-          "sha256": "8a3fec58f6e7d8367606054eef907f1ec90ea1128860ee8a9b5dd22f6735f154"
+          "sha256": "e94d4bb1c68c1e055d2c00657bad9eeca4409f10b285f1c60d109d8b56033029"
         }
       ]
     },
@@ -6835,7 +6835,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "HEAD にあったアサーションを書き換えたら",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -6851,7 +6851,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "ファイルの中のテストを消したら",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -6867,7 +6867,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "アサーションの行の字下げを変えて別の describe へ移すだけなら",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -6883,7 +6883,7 @@
         {
           "file": "packages/runner/test/guards.test.ts",
           "contains": "テストでない呼び出し（/x/.test(s)）の行を書き換えるだけなら",
-          "sha256": "1e3be1b0047538137808bb9d19d0c54059a0c01b82e64ba730e576c227ddb59c"
+          "sha256": "4c7cfc8a2cd748d53effd0d63fb1a882dd545a95dd1ff23e2ddd143cf21dc9d5"
         }
       ]
     },
@@ -6899,7 +6899,7 @@
         {
           "file": "packages/runner/test/run.test.ts",
           "contains": "完了ゲートの品質コマンドの途中で中断されたら",
-          "sha256": "114a0fd063df96002ab459e6976aa623ba0789a1b1fa8b88e9d33445f9a8a7e5"
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
         },
         {
           "file": "packages/kit/test/verify.test.ts",
@@ -6936,7 +6936,7 @@
         {
           "file": "packages/runner/test/pr.test.ts",
           "contains": "--dry-run では gh を確かめず、予定のタスクを表示して終了コード 0 を返す",
-          "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          "sha256": "636764feb2d688a08683d0685548b213eb13c12693b6f2a2366b33aafd4bcfc4"
         }
       ]
     },
@@ -6952,7 +6952,7 @@
         {
           "file": "packages/runner/test/pr.test.ts",
           "contains": "実行のあいだに gh からログアウトしたら、証拠を記録せず、ブランチも送らずに止まり、終了コード 1 を返す",
-          "sha256": "f012808848d1a061c7554a56abd8b4c953130b454c690b73b4c9c5c00cf80860"
+          "sha256": "636764feb2d688a08683d0685548b213eb13c12693b6f2a2366b33aafd4bcfc4"
         }
       ]
     },
@@ -7037,7 +7037,7 @@
         {
           "file": "packages/runner/test/guards-special-files.test.ts",
           "contains": "beforeのFIFOで通常runを止め、タスク・変更・コミットを保つ",
-          "sha256": "ea1f05162fe201861580c41fa414475adad867effab5b236e96236ec0b158782"
+          "sha256": "cea7bf25f965ab4b1bf21143e1a3438754d4d3fecda09471fb5263cc4449b993"
         }
       ]
     },
@@ -7053,7 +7053,7 @@
         {
           "file": "packages/runner/test/guards-special-files.test.ts",
           "contains": "engineのFIFOで通常runを止め、タスク・変更・コミットを保つ",
-          "sha256": "ea1f05162fe201861580c41fa414475adad867effab5b236e96236ec0b158782"
+          "sha256": "cea7bf25f965ab4b1bf21143e1a3438754d4d3fecda09471fb5263cc4449b993"
         }
       ]
     },
@@ -7069,7 +7069,7 @@
         {
           "file": "packages/runner/test/guards-special-files.test.ts",
           "contains": "regularの既存フックを保ち、通常runでタスクをコミットする",
-          "sha256": "ea1f05162fe201861580c41fa414475adad867effab5b236e96236ec0b158782"
+          "sha256": "cea7bf25f965ab4b1bf21143e1a3438754d4d3fecda09471fb5263cc4449b993"
         }
       ]
     },
@@ -7085,12 +7085,12 @@
         {
           "file": "packages/runner/test/guards-special-files.test.ts",
           "contains": "danglingの既存フックを保ち、通常runでタスクをコミットする",
-          "sha256": "ea1f05162fe201861580c41fa414475adad867effab5b236e96236ec0b158782"
+          "sha256": "cea7bf25f965ab4b1bf21143e1a3438754d4d3fecda09471fb5263cc4449b993"
         },
         {
           "file": "packages/runner/test/guards-special-files.test.ts",
           "contains": "directoryの既存フックを保ち、通常runでタスクをコミットする",
-          "sha256": "ea1f05162fe201861580c41fa414475adad867effab5b236e96236ec0b158782"
+          "sha256": "cea7bf25f965ab4b1bf21143e1a3438754d4d3fecda09471fb5263cc4449b993"
         }
       ]
     },
@@ -7949,124 +7949,390 @@
       ]
     },
     {
-      "id": "SCN-2ae0b9c26b02a7a07597",
+      "id": "SCN-6859375381bab49b06eb",
       "status": "reviewed",
-      "scenarioSha256": "0a2a8f143c3b698a03786ee1686228be3d3fddb165d1a370406502ca7fe9528c",
-      "reason": "timeoutMinutes 40000 で正常完了し、タスクのコミットと終了コード0を保ち、時間上限の表示がないことを確かめる。",
+      "scenarioSha256": "7180c2ceb6a2709c1e45d349dcecb9b1a8306c86f849c1f75d1cd8f186ef902f",
+      "reason": "「何も変えずに終える」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
       "sources": [
-        "REQ-336"
+        "REQ-330"
       ],
       "tests": [
         {
-          "file": "packages/runner/test/engine-long-deadline.test.ts",
-          "contains": "run.timeoutMinutes がタイマーの上限を超えても",
-          "sha256": "190e48197d520c849bbf248629380c20bcb48753403098ec86d8ba11ec5b7e5a"
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "[REQ-330] 合図なしなら",
+          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
         }
       ]
     },
     {
-      "id": "SCN-7bf8b4c7e50629f0a4f0",
+      "id": "SCN-32cc1a3f5a93a4d68299",
       "status": "reviewed",
-      "scenarioSha256": "b22577f2dcc3508ed23a168894d6c263604a833ea2661c0e5c02deff2470b420",
-      "reason": "長い待機の最初の2回を早く発火させ、3回待ち直し、各待機が上限以下で、エンジンの結果を保ち、最後に有効なタイマーを解除することを確かめる。上限より短い5000msでも最初の待機を早く発火させ、次の待機が0より大きく5000ms未満であることを検査する。残り時間を無視して上限固定で待ち直す変異で、この試験が失敗する。",
+      "scenarioSha256": "b40bb6e8047219aee044f0571029111b6d8de6d38a9f462913cb9ac54d94081e",
+      "reason": "「行頭にない合図と理由のない合図」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
       "sources": [
-        "REQ-336"
+        "REQ-330"
       ],
       "tests": [
         {
-          "file": "packages/runner/test/engine-long-deadline.test.ts",
-          "contains": "分割した待機が期限前に発火しても",
-          "sha256": "190e48197d520c849bbf248629380c20bcb48753403098ec86d8ba11ec5b7e5a"
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "[REQ-330] 行頭でない合図なら",
+          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
         },
         {
-          "file": "packages/runner/test/engine-long-deadline.test.ts",
-          "contains": "[REQ-336] 上限より短い期限の前に発火したら、残り時間だけ待ち直す",
-          "sha256": "190e48197d520c849bbf248629380c20bcb48753403098ec86d8ba11ec5b7e5a"
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "[REQ-330] 空の理由なら",
+          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
         }
       ]
     },
     {
-      "id": "SCN-9f0513dd500f1a66f24d",
+      "id": "SCN-618b4a492d5e7fd7f0ee",
       "status": "reviewed",
-      "scenarioSha256": "10afe00d27737d04e9c60cc4db3d08bce91f27d7d0be0b3747bdeed5e4a5a929",
-      "reason": "pre-commitからSIGINTとSIGTERMを送り、interrupted、終了コード1、未完了タスク、エンジン1回、PRとpushなしを確かめる。POSIX上の信号試験である。",
+      "scenarioSha256": "1b90287db9a4454bbef324be4e014151d0919098e2334a20459e0d434264a834",
+      "reason": "「変更が要らないと合図する」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
       "sources": [
-        "REQ-337"
+        "REQ-330"
       ],
       "tests": [
         {
-          "file": "packages/runner/test/signal-during-sync.test.ts",
-          "contains": "タスクのコミットのgitのあいだに監視役が",
-          "sha256": "90a6e03f450d51f587ff63eb1e3f39a2e4be895c9c7a21f57a6df7b14e7c2259"
-        }
-      ]
-    },
-    {
-      "id": "SCN-8780238979655d4650d6",
-      "status": "reviewed",
-      "scenarioSha256": "873122a0b7e54ebce4d04bab8a85686bb763cda05845b5a63b2704b7e5a41c90",
-      "reason": "pre-pushからSIGINTを送り、証拠コミットとその理由、interrupted、終了コード1、リモートブランチとPRなしを確かめる。",
-      "sources": [
-        "REQ-337"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/signal-during-sync.test.ts",
-          "contains": "証拠のpushのあいだの中断で",
-          "sha256": "90a6e03f450d51f587ff63eb1e3f39a2e4be895c9c7a21f57a6df7b14e7c2259"
-        }
-      ]
-    },
-    {
-      "id": "SCN-8f4b00d1e9dbe870b888",
-      "status": "reviewed",
-      "scenarioSha256": "2b989d1b1bea0a00fa544d5d76ba79934da86fcb1e84c6436682e97eee61b065",
-      "reason": "pre-commitから監視役へSIGKILLを送り、stopped、監視役の異常終了理由、終了コード1、PRとpushなしを確かめる。",
-      "sources": [
-        "REQ-337"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/signal-during-sync.test.ts",
-          "contains": "監視役が結果を書かずに終わったときは、利用者の中断と区別して",
-          "sha256": "90a6e03f450d51f587ff63eb1e3f39a2e4be895c9c7a21f57a6df7b14e7c2259"
-        }
-      ]
-    },
-    {
-      "id": "SCN-2db570e0ac6ac2e10216",
-      "status": "reviewed",
-      "scenarioSha256": "d2eb015bf74ccc9e055b24c04617fc8cd96a7ef9c12eb6f186238fcd9a338485",
-      "reason": "gh pr listでSIGINT、pr createでSIGTERMを送り、証拠コミットとpush済みブランチを保ち、interrupted、終了コード1、PR未作成を確かめる。",
-      "sources": [
-        "REQ-337"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/signal-during-sync.test.ts",
-          "contains": "PRの",
-          "sha256": "90a6e03f450d51f587ff63eb1e3f39a2e4be895c9c7a21f57a6df7b14e7c2259"
-        }
-      ]
-    },
-    {
-      "id": "SCN-f6de9fc39a8a3ef2235a",
-      "status": "reviewed",
-      "scenarioSha256": "bcfda3cab1378908fe372499505a4d89d50cf366988b5a2b10846bd216144e43",
-      "reason": "品質コマンドの監視役へSIGKILLを送り、後続の品質コマンドの有無の両方でstoppedと異常終了理由を保ち、エンジンの直し・push・PRへ進まないことを確かめる。kitの試験でも後続操作が起動しないことを確かめる。",
-      "sources": [
-        "REQ-337"
-      ],
-      "tests": [
-        {
-          "file": "packages/runner/test/signal-during-sync.test.ts",
-          "contains": "品質コマンドの監視役の異常終了後は理由を保ち",
-          "sha256": "90a6e03f450d51f587ff63eb1e3f39a2e4be895c9c7a21f57a6df7b14e7c2259"
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "変更不要の理由を表示しtasks.mdだけ",
+          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
         },
         {
-          "file": "packages/kit/test/process.test.ts",
-          "contains": "監視役が結果を書かずに終わったら、子孫を止め",
-          "sha256": "9a4917d04666f238df72dbbf9996bbfb4c62c644fbe9f0d6f256fae249a8a9bb"
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "理由に含まれる既知の秘密情報",
+          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
+        },
+        {
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "の区切りに続く理由で変更なしのタスクを完了する",
+          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
+        }
+      ]
+    },
+    {
+      "id": "SCN-e6d08bc803fc3d7fe7ed",
+      "status": "reviewed",
+      "scenarioSha256": "5a1e54fba81620c2a7ae41cecb213300c0de427ea7345edafbf2ec3a076897a5",
+      "reason": "「変更と合図が両方ある」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "sources": [
+        "REQ-330"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "変更と合図があれば",
+          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
+        }
+      ]
+    },
+    {
+      "id": "SCN-993d4b02baddd7a38cab",
+      "status": "reviewed",
+      "scenarioSha256": "0f511121db5f5561a26489f44ebb885de09293964fcd58c9c86fd996d462acd6",
+      "reason": "「質問と合図が両方ある」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "sources": [
+        "REQ-330"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "質問と合図が両方あれば",
+          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
+        }
+      ]
+    },
+    {
+      "id": "SCN-135fbc3b2d353124f10c",
+      "status": "reviewed",
+      "scenarioSha256": "1dc615b2cb1c670ef14acd74d3232e0c095a3dbce9641271eb24c2f9819f8e32",
+      "reason": "「指示に合図の決まりを含める」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "sources": [
+        "REQ-330"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "dry-runのタスクの指示に",
+          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
+        }
+      ]
+    },
+    {
+      "id": "SCN-ab333e12681dba9b36c6",
+      "status": "reviewed",
+      "scenarioSha256": "ef2e8d57e6defc4ca79c3db884aa17ae7f0ed94912d234ba8e3f03f7f13694cf",
+      "reason": "「直しで何も変えない」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "sources": [
+        "REQ-331"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "直しが合図なしで変更なしなら",
+          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
+        }
+      ]
+    },
+    {
+      "id": "SCN-eabbe8817c1aea421112",
+      "status": "reviewed",
+      "scenarioSha256": "d201fc1406560bcb036ceb5ed867646898e4898e5d7dd278748e873120822c74",
+      "reason": "「直しで変更が要らないと合図する」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "sources": [
+        "REQ-331"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "直しが合図ありで変更なしなら",
+          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
+        }
+      ]
+    },
+    {
+      "id": "SCN-4d4a3aaf9bfeab50bbe2",
+      "status": "reviewed",
+      "scenarioSha256": "eb92d4b9f89d9fbff4f996379fdd24dc180d744b9ca1f60999c30fea9344851f",
+      "reason": "「直しの指示」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "sources": [
+        "REQ-331"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "[REQ-331][REQ-100]",
+          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
+        }
+      ]
+    },
+    {
+      "id": "SCN-6aa37f075c3b308fc6d9",
+      "status": "reviewed",
+      "scenarioSha256": "3625842a21dfafe250092a030dd128a66d8da8be9f92b7f8c64ab32cf0bdb81f",
+      "reason": "「タスクを終える」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "sources": [
+        "REQ-099"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "[REQ-099] タスクを終えるたびに",
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
+        }
+      ]
+    },
+    {
+      "id": "SCN-5e2777d1ea591028bf93",
+      "status": "reviewed",
+      "scenarioSha256": "7374cd235b3193482152a19ccb4c0f971096752cc86426d2a28cbdc326a032a3",
+      "reason": "「エンジンが失敗する」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "sources": [
+        "REQ-099"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "[REQ-099] エンジンが 0 以外",
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
+        }
+      ]
+    },
+    {
+      "id": "SCN-439f2fbe4dee584f722d",
+      "status": "reviewed",
+      "scenarioSha256": "cb3b240b3999f83274dcaa8390434abdf938a27808246c967cb66ecfe2d4bf6c",
+      "reason": "「直して合格する」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "sources": [
+        "REQ-100"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "[REQ-100][REQ-111]",
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
+        }
+      ]
+    },
+    {
+      "id": "SCN-7e856e0c2467e67f40e7",
+      "status": "reviewed",
+      "scenarioSha256": "696baf3497837378096bdb9330d3f7f6f2263b74c478a83d589ebfd01a302b01",
+      "reason": "「完了ゲートのタスクはエンジンに渡さない」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "sources": [
+        "REQ-100"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "[REQ-100] 完了ゲートのタスクは",
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
+        }
+      ]
+    },
+    {
+      "id": "SCN-b29a2697152ec9ca4afb",
+      "status": "reviewed",
+      "scenarioSha256": "bc17577606494733db8d396834ed09e0be1d942254efb83b56d9b078ab0e22c4",
+      "reason": "「印のあるタスク」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "sources": [
+        "REQ-100"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "[REQ-100][REQ-136]",
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
+        }
+      ]
+    },
+    {
+      "id": "SCN-2111dc2cf91fe4fd4bd3",
+      "status": "reviewed",
+      "scenarioSha256": "663c6050ba0c3d4324c1338830f73a63f842c70ff40f89fd1c26afdf81222ca5",
+      "reason": "「旧書式のタスク」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "sources": [
+        "REQ-100"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "[REQ-100] 印のない旧書式",
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
+        }
+      ]
+    },
+    {
+      "id": "SCN-af933afd9b2f76916e84",
+      "status": "reviewed",
+      "scenarioSha256": "c8fa67ea314efb1f99eabe44d2fc517e570d398fd52f958e58e74e3c8d9acbfc",
+      "reason": "「印は指示とメッセージに含めない」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "sources": [
+        "REQ-100"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "contains": "[REQ-100] 残ったタスクの表示と summary.json",
+          "sha256": "a166fe2fe4263df7568efb31468eba89591481662f8e347aee0ec4de8a11a779"
+        }
+      ]
+    },
+    {
+      "id": "SCN-8efc96559bd75fc5a159",
+      "status": "reviewed",
+      "scenarioSha256": "df1b3bdf602b680dc1fb29ef7dd26436e3103350ce331233ab31a9c96b6bc07e",
+      "reason": "「変更がある」の入力と結果を対応試験で確認する。観測値からの判断と入力不変を直接試験し、判断の逆転は変異試験で検出する。",
+      "sources": [
+        "REQ-332"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/decision-policy.test.ts",
+          "contains": "[REQ-332] タスクで変更あり",
+          "sha256": "4132af5e828261e7e935e74f87af0258a789afa77d0fb99c94ca15ca91ef2d38"
+        },
+        {
+          "file": "packages/runner/test/decision-policy.test.ts",
+          "contains": "[REQ-332] 直しで変更あり",
+          "sha256": "4132af5e828261e7e935e74f87af0258a789afa77d0fb99c94ca15ca91ef2d38"
+        }
+      ]
+    },
+    {
+      "id": "SCN-f398a4c21f3fd0af9eb0",
+      "status": "reviewed",
+      "scenarioSha256": "7fcb9a6eb3b8b78b8612ccf92fd1b5a9efdc78b43a0be92cecd60bca94dcb3fd",
+      "reason": "「タスクの段階で変更がない」の入力と結果を対応試験で確認する。観測値からの判断と入力不変を直接試験し、判断の逆転は変異試験で検出する。",
+      "sources": [
+        "REQ-332"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/decision-policy.test.ts",
+          "contains": "[REQ-332]",
+          "sha256": "4132af5e828261e7e935e74f87af0258a789afa77d0fb99c94ca15ca91ef2d38"
+        }
+      ]
+    },
+    {
+      "id": "SCN-995989066111bf4a189d",
+      "status": "reviewed",
+      "scenarioSha256": "96c7adf27a8350ccfe79a3f432a25013a2ce59d40a8548f20f13dd355bc095a7",
+      "reason": "「直しの段階で変更がない」の入力と結果を対応試験で確認する。観測値からの判断と入力不変を直接試験し、判断の逆転は変異試験で検出する。",
+      "sources": [
+        "REQ-332"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/decision-policy.test.ts",
+          "contains": "[REQ-332] 直しでは合図があっても停止",
+          "sha256": "4132af5e828261e7e935e74f87af0258a789afa77d0fb99c94ca15ca91ef2d38"
+        }
+      ]
+    },
+    {
+      "id": "SCN-f3ea88a9a856b9fb3b98",
+      "status": "reviewed",
+      "scenarioSha256": "af9d84a6ca19d5c24696789d97be1c5ca204ddbd979fa81188167b08e273338c",
+      "reason": "「判断の逆転」の入力と結果を対応試験で確認する。観測値からの判断と入力不変を直接試験し、判断の逆転は変異試験で検出する。",
+      "sources": [
+        "REQ-332"
+      ],
+      "tests": [
+        {
+          "file": "tests/run-decision-mutations.test.ts",
+          "contains": "[REQ-206][REQ-332]",
+          "sha256": "e94d4bb1c68c1e055d2c00657bad9eeca4409f10b285f1c60d109d8b56033029"
+        }
+      ]
+    },
+    {
+      "id": "SCN-aefc16f8996ec3ea5f7b",
+      "status": "reviewed",
+      "scenarioSha256": "fc40ec9ad8d332fd6e4c7080607cd2a32d60d520e14bf373788d36242b1eedbb",
+      "reason": "「理由の制御文字を見える形にする」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "sources": [
+        "REQ-339"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "[REQ-330][REQ-339] 理由の制御文字",
+          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
+        }
+      ]
+    },
+    {
+      "id": "SCN-724857f20e4caff74c8a",
+      "status": "reviewed",
+      "scenarioSha256": "3c8ad917f4a7452fee9a0fd4a6dd48e21470a362e4d5bdbfeb4674eccca15366",
+      "reason": "「理由に NUL がある」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "sources": [
+        "REQ-339"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "[REQ-330][REQ-339] NUL",
+          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
+        }
+      ]
+    },
+    {
+      "id": "SCN-040ded6c2ba815775102",
+      "status": "reviewed",
+      "scenarioSha256": "7288f530d66d03761f524d98e2ca7b1bac2843f231737c8ff4fc9e58ea1fc261",
+      "reason": "「直しで止まるときの記録の場所」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "sources": [
+        "REQ-331"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "[REQ-331] 直しが",
+          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
         }
       ]
     },
@@ -8168,6 +8434,144 @@
           "file": "packages/kit/test/supervisor.test.ts",
           "contains": "SIGKILL送信直後で対象exit未処理",
           "sha256": "42af61007cfbd3f642778aab3adf087a206702e89eb55bb6ed4f673ddc712e79"
+        }
+      ]
+    },
+    {
+      "id": "SCN-ed300ab19156149116f3",
+      "status": "reviewed",
+      "scenarioSha256": "ddff4dd65e233713099d282bea54c8b4b6c44b6f9a876245a202b51657b2098f",
+      "reason": "「理由の末尾の空白を保つ」の入力と結果を対応試験で確認する。Scenarioの条件に合わせて、タスクの状態、コミット、表示、呼び出し回数をassertする。",
+      "sources": [
+        "REQ-339"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/run-no-change.test.ts",
+          "contains": "[REQ-330][REQ-339] 理由の末尾の",
+          "sha256": "4b0c3e6173be44d26d0f6ecae6f7ae24dd5e4c4c6491b1aaa64d0f30ed9b9176"
+        }
+      ]
+    },
+    {
+      "id": "SCN-2ae0b9c26b02a7a07597",
+      "status": "reviewed",
+      "scenarioSha256": "0a2a8f143c3b698a03786ee1686228be3d3fddb165d1a370406502ca7fe9528c",
+      "reason": "timeoutMinutes 40000 で正常完了し、タスクのコミットと終了コード0を保ち、時間上限の表示がないことを確かめる。",
+      "sources": [
+        "REQ-336"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/engine-long-deadline.test.ts",
+          "contains": "run.timeoutMinutes がタイマーの上限を超えても",
+          "sha256": "757e23e84100ceee6240ccd070d25954343043c32c8fbfd3ea97a402ee84224f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-7bf8b4c7e50629f0a4f0",
+      "status": "reviewed",
+      "scenarioSha256": "b22577f2dcc3508ed23a168894d6c263604a833ea2661c0e5c02deff2470b420",
+      "reason": "長い待機の最初の2回を早く発火させ、3回待ち直し、各待機が上限以下で、エンジンの結果を保ち、最後に有効なタイマーを解除することを確かめる。上限より短い5000msでも最初の待機を早く発火させ、次の待機が0より大きく5000ms未満であることを検査する。残り時間を無視して上限固定で待ち直す変異で、この試験が失敗する。",
+      "sources": [
+        "REQ-336"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/engine-long-deadline.test.ts",
+          "contains": "分割した待機が期限前に発火しても",
+          "sha256": "757e23e84100ceee6240ccd070d25954343043c32c8fbfd3ea97a402ee84224f"
+        },
+        {
+          "file": "packages/runner/test/engine-long-deadline.test.ts",
+          "contains": "[REQ-336] 上限より短い期限の前に発火したら、残り時間だけ待ち直す",
+          "sha256": "757e23e84100ceee6240ccd070d25954343043c32c8fbfd3ea97a402ee84224f"
+        }
+      ]
+    },
+    {
+      "id": "SCN-9f0513dd500f1a66f24d",
+      "status": "reviewed",
+      "scenarioSha256": "10afe00d27737d04e9c60cc4db3d08bce91f27d7d0be0b3747bdeed5e4a5a929",
+      "reason": "pre-commitからSIGINTとSIGTERMを送り、interrupted、終了コード1、未完了タスク、エンジン1回、PRとpushなしを確かめる。POSIX上の信号試験である。",
+      "sources": [
+        "REQ-337"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/signal-during-sync.test.ts",
+          "contains": "タスクのコミットのgitのあいだに監視役が",
+          "sha256": "bfa80494d3c8349cf28397bbe728cb08a438a6efc2f862d5bc94b1dfcf469f14"
+        }
+      ]
+    },
+    {
+      "id": "SCN-8780238979655d4650d6",
+      "status": "reviewed",
+      "scenarioSha256": "873122a0b7e54ebce4d04bab8a85686bb763cda05845b5a63b2704b7e5a41c90",
+      "reason": "pre-pushからSIGINTを送り、証拠コミットとその理由、interrupted、終了コード1、リモートブランチとPRなしを確かめる。",
+      "sources": [
+        "REQ-337"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/signal-during-sync.test.ts",
+          "contains": "証拠のpushのあいだの中断で",
+          "sha256": "bfa80494d3c8349cf28397bbe728cb08a438a6efc2f862d5bc94b1dfcf469f14"
+        }
+      ]
+    },
+    {
+      "id": "SCN-8f4b00d1e9dbe870b888",
+      "status": "reviewed",
+      "scenarioSha256": "2b989d1b1bea0a00fa544d5d76ba79934da86fcb1e84c6436682e97eee61b065",
+      "reason": "pre-commitから監視役へSIGKILLを送り、stopped、監視役の異常終了理由、終了コード1、PRとpushなしを確かめる。",
+      "sources": [
+        "REQ-337"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/signal-during-sync.test.ts",
+          "contains": "監視役が結果を書かずに終わったときは、利用者の中断と区別して",
+          "sha256": "bfa80494d3c8349cf28397bbe728cb08a438a6efc2f862d5bc94b1dfcf469f14"
+        }
+      ]
+    },
+    {
+      "id": "SCN-2db570e0ac6ac2e10216",
+      "status": "reviewed",
+      "scenarioSha256": "d2eb015bf74ccc9e055b24c04617fc8cd96a7ef9c12eb6f186238fcd9a338485",
+      "reason": "gh pr listでSIGINT、pr createでSIGTERMを送り、証拠コミットとpush済みブランチを保ち、interrupted、終了コード1、PR未作成を確かめる。",
+      "sources": [
+        "REQ-337"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/signal-during-sync.test.ts",
+          "contains": "PRの",
+          "sha256": "bfa80494d3c8349cf28397bbe728cb08a438a6efc2f862d5bc94b1dfcf469f14"
+        }
+      ]
+    },
+    {
+      "id": "SCN-f6de9fc39a8a3ef2235a",
+      "status": "reviewed",
+      "scenarioSha256": "bcfda3cab1378908fe372499505a4d89d50cf366988b5a2b10846bd216144e43",
+      "reason": "品質コマンドの監視役へSIGKILLを送り、後続の品質コマンドの有無の両方でstoppedと異常終了理由を保ち、エンジンの直し・push・PRへ進まないことを確かめる。kitの試験でも後続操作が起動しないことを確かめる。",
+      "sources": [
+        "REQ-337"
+      ],
+      "tests": [
+        {
+          "file": "packages/runner/test/signal-during-sync.test.ts",
+          "contains": "品質コマンドの監視役の異常終了後は理由を保ち",
+          "sha256": "bfa80494d3c8349cf28397bbe728cb08a438a6efc2f862d5bc94b1dfcf469f14"
+        },
+        {
+          "file": "packages/kit/test/process.test.ts",
+          "contains": "監視役が結果を書かずに終わったら、子孫を止め",
+          "sha256": "9a4917d04666f238df72dbbf9996bbfb4c62c644fbe9f0d6f256fae249a8a9bb"
         }
       ]
     }
