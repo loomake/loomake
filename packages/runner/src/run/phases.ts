@@ -138,14 +138,13 @@ export async function runGate(ctx: RunContext, rec: Recorder): Promise<Stop | un
     if (decision.kind === 'stop') return stopped(decision.reason);
     if (decision.kind === 'interrupted') return { status: 'interrupted', reason: decision.reason, remaining: gateTasks };
     if (decision.kind === 'passed') break;
-    const stop = await callEngine(ctx, rec, buildPrompt(root, ctx.changeDir, '完了ゲートに合格するように直す。', rec.lastVerify));
-    if (stop.kind === 'stop') return { status: stop.status, reason: stop.reason, remaining: gateTasks };
+    const result = await callEngine(ctx, rec, buildPrompt(root, ctx.changeDir, '完了ゲートに合格するように直す。', rec.lastVerify));
+    if (result.kind === 'stop') return { status: result.status, reason: result.reason, remaining: gateTasks };
     const violation = guard(ctx);
     if (violation) return stopped(violation);
-    git(root, env, ['add', '-A']);
-    if (git(root, env, ['diff', '--cached', '--name-only']).trim()) {
-      git(root, env, ['commit', '-q', '-m', `run(${changeId}): 完了ゲートの直し（${fixes + 1} 回目）`]);
-    }
+    const changes = decideAfterChanges({ phase: 'repair', hasChanges: hasStagedChanges(ctx), text: result.text });
+    if (changes.kind === 'stop') return stopped('直しでエンジンが変更を残さずに終わりました。出力の記録を確認し、権限や環境を見直してから実行し直してください。');
+    git(root, env, ['commit', '-q', '-m', `run(${changeId}): 完了ゲートの直し（${fixes + 1} 回目）`]);
   }
   if (gateTasks.length) {
     for (const t of gateTasks) checkTask(ctx.tasksPath, t.line);
