@@ -152,7 +152,7 @@ export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
   if (value.changed) return { kind: 'commit' };
   if (value.phase === 'repair') return { kind: 'stop', reason: '完了ゲートの直しで、エンジンが変更を残さずに終わりました' };
   const noChange = value.text.match(/^LOOMAKE-NOCHANGE:[^\S\r\n\u2028\u2029]*(\S.*)$/m);
-  if (noChange) return { kind: 'no-change', reason: noChange[1].trim() };
+  if (noChange) return { kind: 'no-change', reason: noChange[1] };
   return { kind: 'stop', reason: 'エンジンが変更を残さずに終わりました' };
 }
 ```
@@ -268,3 +268,5 @@ export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
 ## 最終レビュー後の修正方針
 
 2026-10-30 の管理役の確認で、REQ-330・REQ-332 の「空でない理由」に対し、修正前の ASCII 空白・タブだけの正規表現では同一行の全角空白や NBSP に続く理由を認めないと分かった。仕様を ASCII 限定へ狭めず、同一行の空白を区切りとして認めるよう判定を修正する。LF・CR・U+2028・U+2029 を越えて、別行の文字を理由に取り込まない。既存の期待値は維持し、要件 ID 付きの直接試験と統合試験を追加する。Opus 評価は 2/2 のまま保持し、修正後 head の最終レビューは追加 1 回の明示承認が得られるまで未実施とする。
+
+理由の末尾の空白は、仕様が除去を要求していないため保持する。例のコードから `.trim()` を外し、実装と説明をそろえた。

@@ -60,7 +60,6 @@ it.each([
   expect(decideAfterGate(Object.freeze({ ...gate, interrupted: true, ...patch }))).toEqual(expected);
 });
 
-
 describe('エンジンの変更の有無から次の段階を決める', () => {
   it.each([
     ['タスクで変更あり', 'task', true, '', { kind: 'commit' }],
