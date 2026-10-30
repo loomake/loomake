@@ -18,4 +18,4 @@ Loomake 自身の開発で決めたことのうち、続けて守る例外と重
 | [0003](0003-zod-as-core-runtime-dependency.md) | core の実行時依存に Zod を採る | 採用 |
 | [0004](0004-keep-development-stack.md) | 開発の技術スタックをいまのリポジトリのまま維持する | 採用 |
 | [0005](0005-keep-dev-mechanics-out-of-specs.md) | 開発の仕組みを製品の仕様から外す | 採用 |
-| [0006](0006-autonomous-delivery-authorization.md) | 自律配布の包括承認 | 採用 |
+| [0006](0006-standing-approval-for-autonomous-delivery.md) | 自律配布の包括承認 | 採用 |
