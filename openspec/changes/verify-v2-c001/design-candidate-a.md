@@ -1,16 +1,16 @@
 # 承認済み決定に基づくS1/S2の設計詳細
 
-この文書は設計候補だけの先行更新である。承認済み方針の履歴は保持し、規範specs・trace・tasksは後段で反映する。task 1.2とC001のDoDは未受入。後段で反映する節への参照先は予定のためコード表記にしている。
+この文書は設計候補だけの先行更新である。承認済み方針と旧作業木での補足設計の履歴は保持し、規範specs・trace・tasks・design.mdへの反映は後段で行う。task 1.2とC001のDoDは未受入。参照元のproposal・design・tasks・traceに残る旧説明も後段で更新する。それまでは、現headの規範反映状態は参照元の記録に従い、旧作業木の承認・採用事実とは区別する。後段で反映する節への参照先は予定のためコード表記にしている。
 
 ## 位置づけと基準
 
-R01/02/03/04/07/09/10は[先の7件の明示回答](https://github.com/loomake/loomake/pull/139#issuecomment-6510041693)でA、R05/06は[追加回答](https://github.com/loomake/loomake/pull/139#issuecomment-6511434324)でA、R08は同追加回答でBと承認された。10件の決定はtraceへ出典付きで記録し、規範へ反映した。補足R11〜13の構造NA/scope/型付き観測・REQ205の採用条件はdesignの補足設計節（後段予定：`design.md#最終レビュー指摘に対する補足設計の採用`）を正とし、旧回答と区別する。localのOpenSpec CLI不在は理由付きNAとし、未実施をPASSと扱う不採用案は実装しない。製品・既存試験・設定は今回変更しない。S1の内部契約はtask 1.3で具体設計し、仕様ゲートと独立受入を経てS2へ進む。
+R01/02/03/04/07/09/10は[先の7件の明示回答](https://github.com/loomake/loomake/pull/139#issuecomment-6510041693)でA、R05/06は[追加回答](https://github.com/loomake/loomake/pull/139#issuecomment-6511434324)でA、R08は同追加回答でBと承認された。10件の決定と規範への反映は旧60dc/bb88作業木に記録済みだが、この先行headの規範specs・traceへの移植は後段で行う。補足R11〜13の構造NA/scope/型付き観測・REQ205の採用条件も旧作業木で管理役が採用した技術的補足であり、このheadのtrace・designには未移植である。採用条件は後段でdesignの補足設計節（後段予定：`design.md#最終レビュー指摘に対する補足設計の採用`）へ反映し、過去10件の直接回答と区別する。localのOpenSpec CLI不在は理由付きNAとし、未実施をPASSと扱う不採用案は実装しない。製品・既存試験・設定は今回変更しない。S1の内部契約はtask 1.3で具体設計し、仕様ゲートと独立受入を経てS2へ進む。
 
 計画branchの作成基準はmain `f397109`。今回の製品調査基準はmain `f4e3edb`で、同mainの製品ソースを調査した。#60は当時の未受入依存であったが、[PR140](https://github.com/loomake/loomake/pull/140)・[PR141](https://github.com/loomake/loomake/pull/141)で修正・仕様同期・archiveを受け入れ、2026-10-29T03:32:23Zにclose済みである。最新の仕様照合基準は通常mergeで取り込んだmain `d5aa30d7a9326be44ea4eac5145b5fa95529efce`。PR #155でCLI/URL両changeの同期/archiveも受入済みである。当初の反映基準はADR 0006を含むmain `e73fb3e`だった。現在は3製品PRと同期archive #168・表記整合 #166・依頼テンプレート #165を含むmain `5c71ae0584cabb9be18c15a6bb8cf9dfd4c0df17`で正本へ再整合した後、PR #169受入main `9a3fe04a89da68e67334a5b535bd5f967428a2b6`を通常統合している。方針回答は揃っているが、規範反映とS1の具体設計・独立受入、S2実装は別の作業として確認する。
 
 根拠は固定要件7.3、既存REQ-310・313・314・319等と元のDoDである。新しいREQ IDを割り当てず、品質/CLIで使用済みのREQ-320〜325も再使用しない。source/metric・plan・producer mappingは承認済みR-C001-03 A、S1基準準備・private handoffは承認済みR-C001-04 Aであり、現行スキーマに実装済みとは扱わない。未実装の技術事項と過去10件の直接回答・補足R11〜13を区別する。
 
-承認済みR01 Aのbare品質専用経路は架空のchange IDを補わず `change: null`、`scope: local` のcompleted/partial、verdictなしで表す。quality.yamlを新たに要求せず、設定済みの品質コマンドだけを実行する。change必須gateの未指定はusageのaborted/2として区別する。bareは明示localを受理し、明示ci・空/範囲外scopeを品質コマンド前にusageのaborted/2で拒否する。bareの品質コマンドやspec-onlyの構造確認だけではCI最終PASSを作らない。通常のspec-only既定localは保持する。
+承認済みR01 Aのbare品質専用経路は架空のchange IDを補わず `change: null`、`scope: local` のcompleted/partial、verdictなしで表す。quality.yamlを新たに要求せず、設定済みの品質コマンドだけを実行する。change必須gateの未指定はusageのaborted/2として区別する。bareの明示local受理・明示ci拒否と不正scopeの扱いは、R01 Aだけによる決定ではなく、旧作業木で管理役が採用した補足R12による。採用事実と根拠を後段traceへ移す。明示ci・空/範囲外scopeは品質コマンド前にusageのaborted/2で拒否する。bareの品質コマンドやspec-onlyの構造確認だけではCI最終PASSを作らない。通常のspec-only既定localは保持する。旧作業木の補足R12とbb88のREQ-191/312どおり、bareのskip-commandsは不足1・最後の行で再実行を案内し、通常実行でcommands未設定なら0を保つ。この保持条件を候補へ明示することは管理役がADR 0006の包括承認として採用した。
 
 ## 用語
 
@@ -122,7 +122,7 @@ R07 Aで承認された切替の手順は次のとおり。日付はS1独立受�
 
 ### 品質対象専用guard
 
-REQ-314の未評価notPASSを、gateが混在するchecksでも保つ。候補check `quality:subjects` は品質対象0・全NA・必要証拠配列空ならINSUFFICIENT_EVIDENCEとする。構造gateやテストcommandのPASSで相殺しない。非ゼロの適用品質対象とplanへの結び付きを示すevidenceがあればguard自体はPASSにできるが、個々の品質条件の証明を代替しない。承認済みR-C001-02 Aに従いこのguardも含む全checksを `evaluated` に数える。NAには理由・確認者とquality定義へのevidence参照を付ける。
+REQ-314の未評価notPASSを、gateが混在するchecksでも保つ。候補check `quality:subjects` は品質対象0・全NA・必要証拠配列空ならINSUFFICIENT_EVIDENCEとする。構造gateやテストcommandのPASSで相殺しない。非ゼロの適用品質対象とplanへの結び付きを示すevidenceがあればguard自体はPASSにできるが、個々の品質条件の証明を代替しない。承認済みR-C001-02 Aに従いこのguardも含む全checksを `evaluated` に数える。ここでのNAは品質NAであり、理由・確認者とquality定義へのevidence参照を付ける。旧作業木で採用した補足R11の構造NAは、auto・OpenSpec CLI不在・localだけの限定例外である。構造NAは理由と明示/既定の設定出典を持ち、確認者なしでNA/evaluatedへ数え、pending0・run.errorsなしとする。この例外で品質NAの確認者や品質対象guardを相殺しない。後段規範と試験へこれらを反映する。
 
 ## 信頼する判定器と自己ゲートの段取り
 
@@ -140,7 +140,7 @@ S2の最終CIのnormal commandは `pnpm -s verify --change verify-v2-c001 --done
 
 private runtime handoffは、基準側のcheckout/build済みmodule locator、計画・入力のlocator、結果出力先を渡す内部経路の案である。公開APIに必須schemas引数を増やさず、`--trusted-ref` やpublic provenance fieldも増やさない。locator/envは場所を指すだけで承認ではない。祖先であることやhandoffの自己申告hashだけでも信頼しない。expected anchorはtargetと独立したS1承認・基準側の固定情報から取る。
 
-対象CLI/APIの判定は検証済みS1 base-built checker moduleを**直接load/call**して実行する。定義だけ読んでtarget側policyで判定する方式は採らない。実行前にmodule実体・依存graph・固定manifestのidentityを独立したexpected anchorへ照合し、実行中の変化も拒否する。private bindingを設定したという自己申告は、この照合の代わりにならない。
+対象CLI/APIの判定は検証済みS1 base-built checker moduleを**直接load/call**して実行する。定義だけ読んでtarget側policyで判定する方式は採らない。facadeを置くパッケージとレイヤー、外部build moduleのloadをパッケージ依存へ追加しない境界は、S1の具体設計で確定する保持条件とする。REQ-046/047の依存制約、REQ-303/305の公開入口からの静的ロード禁止、REQ-207のレイヤー検査は維持または同強度で拡張し、動的specifierによる検査回避で成立させない。実行前にmodule実体・依存graph・固定manifestのidentityを独立したexpected anchorへ照合し、実行中の変化も拒否する。private bindingを設定したという自己申告は、この照合の代わりにならない。
 
 同じCIで自己待ちを起こさない段取りは次の候補とする。
 
@@ -173,8 +173,9 @@ Sは一致検査の対象で、独立Tを置き換えない。S/T不一致やanc
 | 品質対象0、全NA、または必要証拠配列空、gateだけPASS | quality:subjectsが不足。ci全体は不足/1。承認済みR02 Aに従いguardを含めevaluated=checks.length |
 | 有効違反に加えてdecision.required=true | checks/summaryへFAILを残して1。runnerは修正を続けず判断待ち |
 | spec-onlyの未承認仮定/確認待ちだけの案内 | PASSの理由と案内に残し、その案内だけではpending/要判断を立てず0。ブロッキング質問の不合格は保持 |
-| auto OpenSpec CLI不在 | localは承認済みR08 Bの理由付きNA、ciは不足1。いずれもstrict実施済みとは報告しない |
-| doneでskip-commands | local/ciとも品質コマンド不足1。古いレポートで成功を補わない |
+| auto OpenSpec CLI不在 | localは補足R11による理由・明示/既定の設定出典付きNA。確認者不要の限定例外としてNA/evaluatedへ数え、pending0・run.errorsなしとし、品質NAの確認者/品質guardを相殺しない。ciは不足1。明示false/trueとの区別を保ち、strict実施済みとは報告しない |
+| doneでskip-commands、またはbare/localでskip-commands | doneはlocal/ci、bareはlocalで品質コマンド不足1・再実行案内。古いレポートで成功を補わない。bareの明示ciは補足R12のusage/2であり、受理してci不足へ付け替えない |
+| bareを通常実行しcommands未設定 | 補足R12とREQ-312どおり0。quality.yamlを新たに要求しない |
 | localの全項目完了／未完了あり | 前者はverdictなし・pending0/fail0で0、後者はpendingへ数えて1。local0をci合格にしない |
 | reportのexit0だけ、CI集約skip/neutralだけ、未完の測定値0だけ | PASS不可。必要実施と適格性を確認できなければ不足 |
 
@@ -213,7 +214,7 @@ NAの参照先には理由・確認者を含む定義が必要である。上の
 | ci-gate・workflow | target facadeからS1判定moduleを直接使う正常self-ciと独立Tを確認。旧ok・local・skip/neutralで合格にしない。設定操作の許可とは分ける |
 | trace record・runner record | trace record既定ci、runnerは明示local。同じ0〜3、文書snapshot・前後照合・未コミット拒否・追記専用を保持 |
 | serialization・publication | 新旧validator、JSON前後検査、同期・byte予算・末尾改行、fsync・原子的な上書き禁止公開・失敗cleanupを保持 |
-| trace report | Report2の既存外形・日本語行へ投影。coverageの既存意味と保存文書を保持。旧1は履歴閲覧専用、local/旧版の表示okを自動ゲートにしない |
+| trace report | Report2の既存外形・日本語行へ投影。管理役が包括承認で採用した射影Aは、v2のci/PASSかつ要判断なしだけok:true、それ以外はfalseとする。FAIL/不足の実在checkだけをfailedChecksへ写し、状態・scope・理由は既存warningsで区別する案を技術設計で具体化する。coverageの既存意味と保存文書を保持し、旧1は履歴閲覧専用とする。local完了を検査不合格と誤表示しないMarkdown、公開formatterのJSON roundtrip、旧原本保持の具体契約は未設計であり、S2前に確定する。日本語を制御用タグにせず、WeakMapだけに依存してroundtrip情報を失わない |
 | runner run・reuse・pr・prompt・recorder | v1 ok/results直読・型をすべて追従。親SHA・文書snapshot・未コミット拒否・reuse制約、decision停止、変更保持・予算・中断、RunSummary外形を保持 |
 | agreement・doctor | 共有config/validatorの影響を確認。既存の承認日記録・非verifyの例外契約を保持。doctorで品質コマンドを実行しない |
 | tests・smoke・公開型・配布物 | 旧fixtureを保持する履歴試験とv2新規試験、公開型のstrict検査、tarball実行、Node22/24、offline・SIGINT・既存hash/予算回帰を確認 |
@@ -230,7 +231,7 @@ kitの現在の直接依存はcoreだけでyamlはない。REQ-047の許容内�
 | C4 埋め込み・公開型 | Evidence1を埋め込む型・smoke・report/reuseの旧定数を棚卸しする。履歴のbytes・documents省略を保持し、現行書出しだけをv2へ一体移行する |
 | C5 診断・同期性と警告/省略コマンド | REQ-036/037/039のwarnは承認済みR08 Bのゲート/scope別分類、REQ-191のskipは不足/1へ移す。stderr空や同期/予算の既存assertionを、観測warningに合わせて弱めない。配布時の実際の挙動を確認し、正当な互換移行は管理役の強度維持確認を記録する材料として残す |
 
-R-C001-05 Aで非互換範囲は回答済みであり、製品実装・具体的assertion差分の適用は未実施である。差分を棚卸しし、旧原本と検査強度を保持して確認する。ADR 0006に従いテスト弱体化・設定緩和・範囲縮小は禁止する。R01のbare経路とR03/04の正常PASSの範囲にも結び付け、要件番号の定義を便宜的に変更しない。
+R-C001-05 Aで非互換範囲は回答済みであり、製品実装・具体的assertion差分の適用は未実施である。差分を棚卸しし、旧原本と検査強度を保持して確認する。過去回答R05/R06とREQ-324の具体差分の個別承認は、ADR 0006に従い管理役が旧原本と具体差分を照合し、強度維持・承認者・日付・ADR参照・根拠を記録する経路へ対応付ける。方針承認だけで具体差分を適用せず、後段でtrace・designの表現もこの経路にそろえる。テスト弱体化・設定緩和・範囲縮小は禁止し、例外承認の経路は設けない。R01のbare経路とR03/04の正常PASSの範囲にも結び付け、要件番号の定義を便宜的に変更しない。
 
 ## 既存assertionの移行点（task 1.2）
 
@@ -238,23 +239,37 @@ R-C001-05 Aで非互換範囲は回答済みであり、製品実装・具体的
 
 | 要件・保護差分 | 実際の既存試験・assertion | 採用契約に沿う移行と保持する条件 |
 |---|---|---|
-| REQ-036/037/038/039/191・C5 | `packages/kit/test/verify.test.ts` のwarn、fail、skipと `packages/cli/test/arguments.test.ts` のresults/skip | v2のchecks/result/reasonへ追従する。spec-onlyの案内0、doneの未承認/確認待ち/skip不足1、auto不在localのNAとci不足を個別に検査する。未完了tasks・実施失敗のFAIL、明示trueのvalidate失敗、未知キー名と再実行案内を保つ |
+| REQ-036/037/038/039/191・C5 | `packages/kit/test/verify.test.ts` のwarn、fail、skipと `packages/cli/test/arguments.test.ts` のresults/skip | v2のchecks/result/reasonへ追従する。spec-onlyの案内0、doneの未承認/確認待ち/skip不足1、auto不在localのNAとci不足を個別に検査する。構造NAの理由・設定出典・確認者不要の限定例外・NA/evaluated計数・pending0・run.errorsなしと、品質NAの確認者/guardを相殺しないことをspec-only単独とdone/local混在の両方で検査する。明示false/trueとの区別も保つ。未完了tasks・実施失敗のFAIL、明示trueのvalidate失敗、未知キー名と再実行案内を保つ |
 | REQ-040 | `packages/cli/test/cli.test.ts` のschemaVersion 1.0.0とskip時coverage完全一致 | 現行2.0.0のschema検証と、今回のtestコマンドが新規生成する成功coverage一覧を検査する。skipは別に不足1・coverage省略を検査し、正常coverageを単に削除しない。stdoutがJSONだけ、進捗stderrも保つ |
-| REQ-042 | `packages/cli/test/cli.test.ts` のbare verify commands専用 | change:null/local/verdictなしで品質コマンドだけを実行し、quality.yamlを新たに要求しない。架空changeで代替しない |
+| REQ-042 | `packages/cli/test/cli.test.ts` のbare verify commands専用 | change:null/local/verdictなしで品質コマンドだけを実行し、quality.yamlを新たに要求しない。bare skipは不足1・再実行案内、通常のcommands未設定は0を保つ。補足R12に従いCLI bareはgateを渡さず、changeなしでgateだけ指定するAPIは旧来の無視からusage aborted/2へ移す。reference-definition.test.ts:93–99の完全一致も具体差分へ含め、既定値を下位へ引き継ぐ強度と旧APIからの移行説明を保持する。架空changeで代替しない |
 | REQ-050 | `packages/cli/test/cli.test.ts` の500要件/1,000ファイル、skip経路のexit0と3000ms未満 | 明示local・skip不足1へ移行する。抽出/対応判定の実関数を同じfixtureで連続計測し、合計3秒・500要件全件対応を保持する。処理量や時間閾値を緩めない |
 | REQ-055・C1/C2 | `packages/kit/test/verify.test.ts` の存在検査の厳密なcheck/status/detail一致 | 旧構造の原本を履歴試験へ保ち、現行は対応するv2 checkのFAIL・同じ日本語理由を検査する。有効な非実在IDの存在FAIL/1と、change未確定のusage aborted/2を分ける |
-| REQ-073・C3 | `packages/trace/test/report.test.ts` のschemaVersion 2拒否、results欠落、パス/診断/終了コード2 | v1履歴の解析と拒否fixtureを残し、現在のEvidence 2/verify 2.0.0の受理と状態別必須欄欠落拒否を別に検査する。未対応版検査を便宜的な数値置換で済ませず、新旧の対応版と未対応版・同じ日本語案内/2・スタックなしを確認する |
+| REQ-073・C3 | `packages/trace/test/report.test.ts` のschemaVersion 2拒否、results欠落、パス/診断/終了コード2 | v1履歴の解析と拒否fixtureを残し、現在のEvidence 2/verify 2.0.0の受理と状態別必須欄欠落拒否を別に検査する。Evidence2/verify1とEvidence1/verify2の混在は拒否する。未対応版検査を便宜的な数値置換で済ませず、新旧の対応版と未対応版を確認する。対応版を増やす診断は具体差分として承認記録へ結び付け、記録パス・対象版・日本語案内・終了2・スタックなしを保持する |
+| REQ-066/127/128・trace record | `packages/trace/test/record.test.ts:64,66`のschemaVersion/modeと文書snapshot・前後一致・dirty拒否 | 旧版fixtureと期待原本を保持し、現行Evidence2/verify2の対応を別に検査する。同期API・文書hash・前後の不一致拒否・追記専用と失敗時の保存なしを維持する |
+| REQ-302/303/304・公開trace契約 | `packages/trace/test/schema-contracts.test.ts:22,29–30`の版配列・拒否入力、`packages/core/test/fixtures/trace-contract-values.ts:4`と`evidence.ts:12,18–19` | 旧公開元・schema・型と原本を履歴用に保持し、新版は版別の受理/拒否を検査する。旧mode拒否を削るだけにせず、新版の状態別必須欄欠落・混在版拒否へ同強度の検査を加える |
+| REQ-205/206/124/332・純粋判断 | `packages/runner/test/decision-policy.test.ts:30–90`の旧13観測・期待文言・冪等性と判断順 | 旧ケースの原本・観測と期待文言を保持し、v2のlocal完了・要判断・aborted・実観測不能を別に追加する。`phases.ts:135–139`のdetail文字列による原因推測を型付きonLimitへ移し、REQ204のエンジン判断は変えない |
+| REQ-100/331・直しとNoChange | `run.test.ts:289–291`の直し指示の欠落要件表示、`run-no-change.test.ts:139–162`の単一verify・合図なし・出力記録 | v2の失敗/不足理由から同じ具体的な直し情報を作る。変更がなければ追加のcommit・再検証を行わず、合図の決まりをエンジンへ渡さず、出力記録の所在を保持する |
+| REQ-105/182・期限と閉予算 | `run.test.ts:318–359`と`external-budget.test.ts:134–266`の期限理由・完了印・Git起動 | 期限の理由と一時完了印の復元、予算閉鎖後にGitを起動しないこと、再試行の重複防止を保持する。エンジン中断とverify中断を区別し、後者の型付き観測を照合する |
 | REQ-093 | `packages/runner/test/run.test.ts` のブランチ未作成・エンジン未呼出し・不合格1 | 既存条件を保ち、usage/config aborted2とその他aborted3の停止を追加する。成功経路だけを確認して終了しない |
-| REQ-114/115 | `packages/runner/test/pr.test.ts` の証拠コミットが先、向き先保持、本文順序 | local完了のEvidence 2とDraft PRへ追従し、本文にlocal完了とCI最終未確認を分ける。コミット/push/PR順、向き先不明時停止と未記録、要件別テスト表を保つ |
-| REQ-135/194/041・CLI旧46例 | `packages/cli/test/cli.test.ts`・`arguments.test.ts`、`packages/cli/test/fixtures/reference-cli-baseline.json`、`tests/cli-reference.test.ts` | helpの全既存オプションとstdout/0/処理なしを保ちscopeの受理値/既定値を追加する。値の空白/等号構文と空値拒否も保つ。旧46例原本は残し、v2の変化と追加例を別の明示基準へ整理して共通定義・生成ページ・配布CLIを同時照合する |
-| REQ-136 | `tests/kit-assets.test.ts` の既定ciコマンド文字列と `packages/runner/test/run.test.ts` の完了ゲート印 | 両req-to-openspec雛形の明示localコマンドへ追従し、印の存在・エンジンに渡さないこと・成功時だけ完了の検査を保持する。最終ci確認をローカル完了で代替しない |
-| REQ-164 | `packages/runner/test/publication-retry.test.ts` の同じ証拠/コミット/PR、旧証拠と改変時停止 | Evidence 2/localの同一状態に限る再試行と、旧Evidence 1の非再利用を検査する。再local検査、親SHA・文書snapshot、改変証拠の保存、重複公開の防止を保持する |
-| REQ-124/208/337・制限観測 | `packages/runner/test/run.test.ts:548–584`・`signal-during-sync.test.ts:115–171` のresults/detail、中断状態と厳密な理由一致 | 未完了checkを不足、run.errors runtime/partialとし、v2 check.reasonへ中断で止めたこと・監視役の理由を同強度で移す。onLimitは実原因から通知し、理由なし/空文字付き理由を区別する。実観測不能かつlocal未完了の理由なし中断は「中断されました」を保ち、旧assertionを削らない |
+| REQ-114/115/116/165 | `packages/runner/test/pr.test.ts` の証拠コミットが先、向き先保持、本文順序、:127のgh argv完全一致と既存PR検索 | local完了のEvidence 2とDraft PRへ追従し、本文にlocal完了とCI最終未確認を分ける。コミット/push/PR順、向き先不明時停止と未記録、要件別テスト表を保つ。Draft指定の具体argvとR05の形式移行への対応、既存ready PRの扱いは後段で確定し、既存PRを無断で作り直さない。phases.ts・record.ts・pr.tsとpr.test.tsのlocalに対する合格表記も具体移行対象へ含める |
+| REQ-135/194/041・CLI旧46例 | `packages/cli/test/cli.test.ts`・`arguments.test.ts`、`packages/cli/test/fixtures/reference-cli-baseline.json`、`tests/cli-reference.test.ts` | helpの全既存オプションとstdout/0/処理なしを保ちscopeの受理値/既定値を追加する。値の空白/等号構文と空値拒否も保つ。`tests/cli-reference.test.ts:29,153–154`の23行完全一致・scope/decision不在と`packages/cli/test/cli.test.ts:185`のusage全文一致を具体移行対象とし、REQ-135/323/324の後段MODIFIEDと具体差分の承認記録を前提に追従する。旧46例原本は残し、v2の変化と追加例を別の明示基準へ整理して共通定義・生成ページ・配布CLIを同時照合する |
+| REQ-136 | `tests/kit-assets.test.ts` の既定ciコマンド文字列と `packages/runner/test/run.test.ts` の完了ゲート印 | R06の具体差分の承認記録を前提に、両req-to-openspec雛形の明示localコマンドへ追従し、印の存在・エンジンに渡さないこと・成功時だけ完了の検査を保持する。最終ci確認をローカル完了で代替しない |
+| REQ-164 | `packages/runner/test/publication-retry.test.ts` の同じ証拠/コミット/PR、旧証拠と改変時停止 | Evidence 2/localの同一状態に限る再試行を検査する。既存8kindのfailed/fail-resultは旧ok/resultsの未知欄だけを書き換えず、v2の実在する状態・scope・pending・decision・check FAILへ対応付ける。正常な旧Evidence1は保存して新v2を記録し2ファイルとする。旧版のJSON破損・SHA/change/文書不正は停止し、正常v2のci・local未完了・要判断・abortedは別の条件不一致理由で停止する。停止・保存・1ファイル・PR不変、再local検査、親SHA・文書snapshot、改変証拠の保存、重複公開の防止を保持する |
+| REQ-124/208/337・制限観測 | `packages/runner/test/run.test.ts:548–584`・`signal-during-sync.test.ts:115–171` の中断状態と厳密な理由一致（results/detailの直接照合はsignal-during-sync側） | 未完了checkを不足、run.errors runtime/partialとし、v2 check.reasonへ中断で止めたこと・監視役の理由を同強度で移す。onLimitは実原因から通知し、理由なし/空文字付き理由を区別する。実観測不能かつlocal未完了の理由なし中断は「中断されました」を保ち、旧assertionを削らない |
 | REQ-183 | `packages/runner/test/external-budget.test.ts` の期限と中断、`packages/kit/test/process-startup.test.ts` | 時間・出力・共有予算の回帰をそのまま保つ。JSON版不変は予算単独変更の範囲とし、C001の形式移行を理由に資源制限を緩めない |
-| REQ-203 | `packages/cli/test/trace-agreement.test.ts` の承認/承認者/日付・警告消失 | 同じ承認記録と対象外の不変を保ち、承認後はspec-only案内とdone不足/要判断から該当IDが消えることを検査する |
-| REQ-275/276/305/307・C4 | coreの`verify-result-schema.test.ts`・`json-schema.test.ts`・`quality-result-schema.test.ts`・`unknown-fields*.test.ts`と`scripts/schema-contract-check.mjs` | v1履歴とv2現行を版別に検査し、特殊未知キー・既定値・型・遅延ロード、必須項目削除/改名の変異検出を保持する。verify/evidenceだけを現行形式へ移し、無関係6 JSONのbyte不変と旧版exportsを検査する |
+| REQ-203 | `packages/cli/test/trace-agreement.test.ts` の承認/承認者/日付・警告消失 | 同じ承認記録と対象外の不変を保ち、承認前に該当IDが出ることもv2で確認する。承認後はspec-only案内とdone不足/要判断から該当IDが消えることを検査する |
+| REQ-275/276/305/307・C4 | coreの`verify-result-schema.test.ts`・`json-schema.test.ts`・`quality-result-schema.test.ts`・`unknown-fields*.test.ts`と`scripts/schema-contract-check.mjs` | v1履歴とv2現行を版別に検査し、特殊未知キー・既定値・型・遅延ロード、必須項目削除/改名の変異検出を保持する。verify/evidenceだけを現行形式へ移し、無関係6 JSONのbyte不変と旧版exportsを検査する。schema-contract-checkのメジャー変異を現行2.0.0と同一にせず、現行形式へ作用する変異へ移す。json-schemaの一覧完全一致・同registry登録・旧版の一意な$idと、coverageの__proto__非復元も個別に保持する |
 | REQ-322〜325 | `tests/quality-reference.test.ts`・`tests/cli-reference.test.ts`・`tests/package-artifacts.test.ts` | quality生成/checkとCLI共通定義集約単独の不変条件を保つ。C001の明示改版ではscopeを共通定義・生成文書へ同時反映し、既存URL4 Scenarioと生成/check一致を保持する |
-| REQ-143/155・配布/導入試験 | `scripts/package-smoke.mjs` のverified.ok/coverage25件と`scripts/ai-journeys.mjs`のdone/trace、`tests/package-artifacts.test.ts`・`tests/ai-journeys.test.ts` | 実tarballの公開API/型・履歴データと、3つの導入/通常/復旧シナリオを保つ。quality/planと必要な実証跡を用意し、local完了と最終ciを分ける。旧.okの比較をただ消さず、v2の状態/scope/decision/終了コードと25要件/行の対応を照合する。失敗・復旧・未コミット拒否を省かない |
+| REQ-146・公開型破壊検出 | `tests/package-artifacts.test.ts:145–161`のd.ts変異とTS2322 | 旧ok文字列の出現数に依存した変異を現行v2公開型へ実際に作用する変異へ移す。履歴型だけを壊して合格にせず、公開利用側のstrict型不一致を同強度で検出する |
+| REQ-143/155・配布/導入試験 | `scripts/package-smoke.mjs` のverified.ok/coverage25件と`scripts/ai-journeys.mjs`のdone/trace、`tests/package-artifacts.test.ts`・`tests/ai-journeys.test.ts` | 実tarballの公開API/型・履歴データと、3つの導入/通常/復旧シナリオを保つ。quality/planと必要な実証跡を用意し、local完了と最終ciを分ける。tarballだけのconsumerでci/PASSを得る具体経路はtask 1.3のhandoff設計に依存し、REQ-143/155/319をlocal成功だけで代替しない。旧.okの比較をただ消さず、v2の状態/scope/decision/終了コードと25要件/行の対応を照合する。失敗・復旧・未コミット拒否を省かない |
+
+### 後段の規範・技術設計で確定する境界
+
+changeなし文書PRのbare品質専用経路とREQ-318のci-gate MUSTは、適用範囲の例外を当然視せず、必要なci結果を得る経路か正当な契約境界を確定する。tarball consumerのci/PASS、Report2の表示とJSON roundtripも未達の設計条件であり、必要保護を外して完了扱いにしない。
+
+不正scopeの副作用前拒否、CLI bareとAPI gateのみの区別、解析時の誤りと業務検査のaborted/2のJSON/stdout/stderr境界は、旧R12と既存CLI基準を照合して具体表にする。trace recordのGit失敗を既存UsageError/2から他の分類へ変更する判断も自動では行わない。既存メッセージと終了コードの変更は具体差分として扱う。
+
+規約のDoDコマンド変更は、R06の明示回答と利用者決定の承認元を管理役が照合し、ADR 0006の規則変更の扱いを記録したうえで反映する。Node20ジョブ削除は利用者の依頼1-1で明示決定済みであり、新たな承認待ちに戻さない。削除前は現行Node20.19検査も維持し、1-1の実施とS2のloader/配布検証の順序を確認する。Node22.12/24の既存実測をNode20での実測へ流用しない。
 
 ## 技術的に確認した範囲
 
@@ -275,11 +290,11 @@ R01はbare verifyの境界、R02はevaluated、R03は最小adapter・plan・prod
 
 C003には全provider、全host隔離、広いCI成果物取得/再利用連鎖、最小接続以外のpartial取得経路、全禁止キーの網羅が残る。C001の最小接続の適格性・実施確認・必須のpartial/aborted分類はその残作業へ先送りしない。S2の実出力v2と全利用側移行、ローカルdone/localの0、最終done/ciのPASS・要判断なし・0、独立trusted TのPASS、全要件のID付き試験、全タスクと必須CI・配布検証を確認する。
 
-著述3回のactual model/session/exit/denialsは[作業記録](../../../docs/worklog/2026-10-30/spec-verify-v2-c001.md)に記した。原文3稿はignored領域で無改変のまま保持し、この詳細では指定された既存要件との整合を取った。当時の追加AI評価0という記録を保持し、方針の採否はその後のPR #139で回答済みである。当初の規範反映では既存設計を再利用し、新規Opus設計は実施しなかった。その後、最終レビューの指摘を受け、2026-10-30に独立Opus補足設計2回を実施し、採用条件をtraceへ記録した。
+著述3回のactual model/session/exit/denialsは[作業記録](../../../docs/worklog/2026-10-30/spec-verify-v2-c001.md)に記した。原文3稿はignored領域で無改変のまま保持し、この詳細では指定された既存要件との整合を取った。当時の追加AI評価0という記録を保持し、方針の採否はその後のPR #139で回答済みである。旧作業木で当初規範を反映した際には既存設計を再利用し、新規Opus設計は実施しなかった。その後、最終レビューの指摘を受け、2026-10-30に独立Opus補足設計2回を実施し、旧作業木のtraceへ採用条件を記録した。実モデルは両方claude-opus-5-5、sessionは`9b8c1bd2-3fed-4ee8-bf9b-19ccd818552b`と`4b757858-2041-4eca-abf1-796e3287c37b`、両manifestはok:true・権限拒否0である。旧60dc/bb88のdesign補足節・traceが採用記録の所在であり、この先行headの同名ファイルには未移植である。後段で採用条件を移し、今回の作業記録にも原本照合の履歴を残す。設計の実施・採用を製品実装や最終レビュー合格へ読み替えない。
 
 ## 承認済みの追加互換差分（R05 A）
 
-REQ-183は予算/後片付けだけの変更の版不変、REQ-322はquality生成/checkだけの公開8 JSON等の不変へ範囲を限定する。別途承認するv2形式移行を恒久的に禁止する要件にしない。両者を差分仕様と台帳へ追加し、既存Scenarioを保持した。
+REQ-183は予算/後片付けだけの変更の版不変、REQ-322はquality生成/checkだけの公開8 JSON等の不変へ範囲を限定する。別途承認するv2形式移行を恒久的に禁止する要件にしない。両者の範囲限定は旧60dc/bb88の差分仕様と台帳へ反映し、既存Scenarioを保持した。この先行headに既にあるREQ-183等の差分と、REQ-322等の未移植の範囲限定を区別し、後段で残る規範差分を反映する。
 
 REQ-040のskip時coverageはプロパティを省略する契約で、古いレポートを今回の成功一覧にしない。正常coverageの試験は今回のコマンドが新たにレポートを生成する経路へ移す。REQ-050の呼出しは --done --scope local --skip-commands --json、期待は不足1とする。500要件/1,000ファイルと3秒を維持し、同じfixtureの実際の抽出/対応判定関数を含む合計時間と対応件数も検査して処理量を減らさない。独立に解析したfixtureの一覧は公開coverageや品質合格へ使わない。
 
@@ -291,4 +306,4 @@ REQ-114/115はlocal完了のv2証拠からDraft PRへ進み、本文にCI最終�
 
 REQ-323/324はCLIリファレンス生成/共通定義集約単独の変更に限り、現在定義のない契約やhelp/usage/終了コード/8 JSONを変えないMUSTを適用する。別の改版を恒久的に禁止する仕様にしない。PR #155でarchive受入済みの正本とMODIFIEDを照合し、R05 AのMUST範囲変更と具体基準差分を区別して確認する。
 
-REQ-306はverdictだけを返す純粋な集約APIを保ち、その定義変更単独でsummaryやverifyへ接続しない範囲に限定する。別changeの呼出し側からの接続まで禁じない。REQ-100の整合条件はdesignの確認事項と残る実装準備（後段予定：`design.md#確認事項と残る実装準備`）を参照する。R05 A・R06 A・R08 Bの明示回答を規範へ反映し、承認元をtraceに残す。
+REQ-306はverdictだけを返す純粋な集約APIを保ち、その定義変更単独でsummaryやverifyへ接続しない範囲に限定する。別changeの呼出し側からの接続まで禁じない。REQ-100は変更のある直しだけを所定のメッセージでcommitし、明示localの完了ゲートを再実行する。変更がなければREQ-331に従い再実行せず止まる。ローカル完了とCI最終合格を分け、REQ-205の純粋判断・Source・既存5 Scenarioを保持する。後段ではdesignの確認事項と残る実装準備（後段予定：`design.md#確認事項と残る実装準備`）にもこの整合条件を反映する。R05 A・R06 A・R08 Bの明示回答は旧作業木での反映事実と区別し、この先行headへ続く後段で規範へ移植し、承認元をtraceに残す。
