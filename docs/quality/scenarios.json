@@ -8071,7 +8071,7 @@
       ]
     },
     {
-      "id": "SCN-00e2df0bf8b6382e8245",
+      "id": "SCN-2b3eff9d099521347eaa",
       "status": "reviewed",
       "scenarioSha256": "1f85922697a5b051440fb8bebde50f836156e6e28a049ba3b7f9b474cda3b5a7",
       "reason": "実際の監視役へSIGHUPを送り、理由のないinterrupted、SIGTERMを無視する孫の停止、同じ予算で後続の起動なしを確認する。",
@@ -8087,7 +8087,7 @@
       ]
     },
     {
-      "id": "SCN-855428c541dfc5d8e36d",
+      "id": "SCN-490b2747201541a35878",
       "status": "reviewed",
       "scenarioSha256": "f5c2661d5d5f211085dda26564caafea8b022b999a65dd4f920c073c90808fcd",
       "reason": "packしたCLIのグループへSIGHUPを送り、CLIがSIGHUPで終了しても別グループのopenspecとSIGTERMを無視する孫が停止することを確認する。",
@@ -8103,7 +8103,7 @@
       ]
     },
     {
-      "id": "SCN-a7bbf52030389e872ec4",
+      "id": "SCN-c6bfcaadafde67cce86d",
       "status": "reviewed",
       "scenarioSha256": "c6852dc74a362ef40c488f264e7cd836b047f7be8a46e601360662b29dc2d620",
       "reason": "品質コマンドから監視役へSIGHUPを送り、detailが理由なしのINTERRUPTED、後続検査なし、子の停止を確認する。",
@@ -8119,7 +8119,7 @@
       ]
     },
     {
-      "id": "SCN-970800ea4b365cb68ab0",
+      "id": "SCN-b3bdc6513251e203ecea",
       "status": "reviewed",
       "scenarioSha256": "9ff2d23a75159400e422b32e9c0225477ecd12f78ef42bfce32ce8c6c31ce076",
       "reason": "stdoutの読み手を閉じてから対象に出力させ、監視役の非ゼロ終了とEPIPE、対象とSIGTERMを無視する孫の停止を確認する。",
@@ -8135,7 +8135,7 @@
       ]
     },
     {
-      "id": "SCN-7795f36d60926bc77e94",
+      "id": "SCN-07f1f8a8b723eaac0bcb",
       "status": "reviewed",
       "scenarioSha256": "029c641f82b0058c534dd6046dc4d49440b6ec4f7c2cc2707134d9761b8b89f5",
       "reason": "試験内でgraceコールバックの配送を実対象exitまで保留し、全exitハンドラ処理後に例外を起こす。SIGTERM・grace-scheduled・target-exit・SIGKILLの順序と孫の停止を確認する。製品250msと外側2秒を維持し、!exitedの対照では孫残存を検出する。",
@@ -8151,7 +8151,7 @@
       ]
     },
     {
-      "id": "SCN-be4e51ee725a53739278",
+      "id": "SCN-e8890f591114f8618b39",
       "status": "reviewed",
       "scenarioSha256": "3f7d9ecafe28f66e6a8a8bfd6d060265213dd7b757ba997d4e50270bd02f6fd0",
       "reason": "実際のSIGKILL送信を観測し、正常終了・SIGINT終了と、SIGKILL直後でtarget-exit未処理の例外でも送信が各1回だけであることを確認する。!exitedの対照では再送を検出する。",
