@@ -9,7 +9,7 @@ Loomake 自身の開発で決めたことのうち、続けて守る例外と重
 - 決めたことを変えるときは、既存の ADR を書き換えずに新しい ADR を足し、古い ADR の「状態」に、置き換えた ADR の番号を書く
 - 仕様（`openspec/specs/`）を変える必要がある判断は、ADR を書いたうえで change を作る。ADR だけでは仕様を変えない
 
-旧名の `0006-autonomous-delivery-authorization.md` は今回の移動案内として残すもので、ADR の本文や新しい番号を追加するものではない。
+旧名の `0006-autonomous-delivery-authorization.md` は2026-10-30 のファイル名整合で残した移動案内であり、ADR の本文や新しい番号を追加するものではない。
 
 ## 一覧
 
