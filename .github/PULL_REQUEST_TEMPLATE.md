@@ -40,10 +40,11 @@ loomake-tier: L1|L2|L3
 ```text
 head: <マージ対象の 40 桁 SHA>
 ci: <必須 CI の run URL>
-codex-review: <Codex 自動レビューが受領した head の SHA。なければ「未実施」>
+codex-review: <Codex 自動レビューが受領した head の SHA（参考。マージ条件ではない）。なければ「未実施」>
 reviewed-head: <Opus がレビューした head の SHA。L1 なら「対象外（L1）」、まだなら「未実施」>
 opus-review: <工程（設計／最終 1 回目／最終 2 回目）: セッション ID（重大 N・軽微 N・情報 N）。工程ごとに 1 行ずつ書く>
 opus-model: <実際のモデル識別子（例 claude-opus-5-5）。L1 なら「対象外（L1）」、確認できなければ「未実施」>
+process: <工程ごとの状態（実施済み／未実施／再利用／省略／代替）。省略・代替はその承認元も書く>
 ```
 
 AI のレビュー・CI の成功・マージ・返答がないことを、利用者の新しい承認とは扱わない。
