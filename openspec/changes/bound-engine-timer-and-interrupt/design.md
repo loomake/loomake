@@ -164,6 +164,6 @@ runClaude に timeoutMs: 2_147_483_648 を渡し、300ms で終わる偽の clau
 - 旧ログの再確認：修正後 validator（c4dd0d3）で、本体と補助を区別し、読取専用・MCP なし・権限拒否 0 を確認して ok:true。成果物は同セッションの result-revalidated.md / manifest-revalidated.json。元の ok:false を上書きせず、設計を再利用する。
 - 修正版設計：session fdfe3430-6d70-445a-8c6b-404fbc53ac62、対象 12286031518849a04248dbfdbd91d9582a514a9f。本体 claude-opus-5-5、補助なし、Read/Glob/Grep のみ、MCP なし、権限拒否 0、ok:true（実施済み）。管理役から .loomake/handoff/redesign.md と redesign-summary.json で引き継いだ。
 - Codex 実装：実行ツール Codex、実際のモデル識別子は取得できず不明。
-- Opus 評価は既存設計レビュー 1 回。追加評価は起動せず、管理役が残り 1 回を別セッションの最終レビューに使う。設計作成自体は評価回数に含めない。
+- 既存の Opus 設計レビュー 1 回は履歴として保持する。2026-10-30 の最新の利用者指示に従い、最終レビューは設計・実装と別の新しいセッションで、回数上限なく新しい head の指摘ゼロまで繰り返す。同じ指摘が 3 回連続したら Issue へ記録し、修正・検証・レビューは続ける。
 
 補助モデルの選択肢 A は利用者の今回の明示依頼を出典とする。[PR #160](https://github.com/loomake/loomake/pull/160) に承認記録の要約があるが、人の承認投稿そのものの URL は不明である。Q-01〜06 の元の回答を維持し、存在しない承認元 URL は補わない。Q-06 の追跡先は [Issue #161](https://github.com/loomake/loomake/issues/161) とする。
