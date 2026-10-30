@@ -68,7 +68,7 @@ artifactは `publication-retry-<run>-<attempt>-<sample>` という名前で、�
 
 ### 診断artifactとjobログの読み合わせ
 
-環境変数はshard 1/2全体へ渡ります。ただしpreloadはmakeRepoのrepo.env.NODE_OPTIONSへ追加するため、記録されるのはそのenvを渡すrunnerのgit・gh・claudeと、それらからenvを引き継ぐNode子プロセスです。publication-retry以外のmakeRepo利用試験にもこの範囲で入ります。既存external-budgetの分類・時刻を持つ `<base>.jsonl` も同じディレクトリへ保存されます。この既存形式は上限で末尾の行が途中で切れる場合があり、truncatedの印も保証しません。新しいphase/processの完全行の説明とは分けて読み、切断やI/O欠測は計測不足として残します。多数の小さなファイルとI/O、WindowsのDefenderによる走査が観測負荷を増やす可能性があります。診断ありの時間を通常CIの時間と同一には扱いません。
+環境変数はshard 1/2全体へ渡ります。makeRepoはpreloadをrepo.env.NODE_OPTIONSへ追加し、runnerのgit・gh・claudeの呼出しに使うenvと、それを引き継ぐNode子プロセスへ渡します。そのNodeプロセスのうち、argv[1]のbasenameが `supervisor.cjs`・`claude`・`gh` のときだけ、processのentry/exitを記録します。偽gitやopenspecのNodeプロセスはpreloadを読み込んでも、このprocess記録を作りません。監視役の記録がある場合も、その対象プロセス自体を別の行で観測したとは扱いません。publication-retry以外のmakeRepo利用試験にも、この範囲でpreloadが入ります。既存external-budgetの分類・時刻を持つ `<base>.jsonl` も同じディレクトリへ保存されます。この既存形式は上限で末尾の行が途中で切れる場合があり、truncatedの印も保証しません。新しいphase/processの完全行の説明とは分けて読み、切断やI/O欠測は計測不足として残します。多数の小さなファイルとI/O、WindowsのDefenderによる走査が観測負荷を増やす可能性があります。診断ありの時間を通常CIの時間と同一には扱いません。
 
 1. run・attempt・sample・checkout/headを確認し、成功と失敗を含む3artifactと各jobログを保存します。毎sampleのjobログでpublication-retry.test.tsの実行と25ケースを確かめ、対応するphaseファイル25件の分類・IDを照合します。0件や不足なら、対象が別shardへ移った可能性を含む計測不足とし、元症状の未再現とは扱いません。artifactは診断dirだけなので、Vitestの各ケースの成否とtimeoutはjobログで照合します。case-endがcompletedでも、Vitestのtimeoutを成功へ戻しません。
 2. phaseのcase IDと安全なrepo basenameを確認し、同じrepoのprocessをsessionごとに対応させます。entryだけ、exitだけ、truncated、不正時刻は計測不足として残します。別sessionやPID再利用を理由に記録を補いません。
@@ -116,6 +116,6 @@ run区間から、同じrepoの完全なentry/exitがそろった監視役と偽
 
 未分類時間には、publication fixtureの未観測verify・品質・trace、仕様ゲートのプロセス内処理、観測済み操作の監視役がentryを記録する前やexit後に親へ戻るまでの時間、JSの処理、待ち、記録負荷も含まれます。品質処理の時間やCPU時間と決めません。entry/exit欠落・truncated・I/O切断などで必要な区間が不明なら、完全な和集合や未分類時間は確定できません。観測できた区間だけを残し、欠測を0秒として引き算を完成させません。記録がないことを外部操作がない証拠にしません。
 
-Windowsでは、各テストプロセスの最初の外部操作の前に、保持役の準備を最大10秒待ちます。この待ちはpreloadの記録とremainingMsには現れず、操作の期限と共有予算からは除かれますが、Vitestの制限時間には含まれます。また、監視役が結果を書かずに終わったあとの子孫停止確認は、監視役のexit後に親で最大10秒かかります。この後片付けも期限を延ばさず共有予算から除かれないまま、未分類時間へ入ります。最初のrunと後続のrunを同じ条件として比較せず、これらの待ちを品質処理や未観測verifyの時間と断定しません。
+Windowsでは、各テストプロセスの最初の外部操作の前に、保持役の準備を最大10秒待ちます。この待ちはpreloadの記録とremainingMsには現れず、操作の期限と共有予算からは除かれますが、Vitestの制限時間には含まれます。また、監視役が結果を書かずに終わったあと、親は子孫停止の確認を最大10秒行い、期限も共有予算も延ばしません。強制終了などで `supervisor-exit` が記録されないこともあります。entryだけの区間は計測不足とし、この場合は完全な区間の和集合も未分類時間も確定できません。後片付けの最大10秒を残差へ割り当てたり、記録区間の外の時間が停止確認の実時間を表すと断定したりしません。最初のrunと後続のrunを同じ条件として比較せず、これらの待ちを品質処理や未観測verifyの時間と断定しません。
 
 旧headの計測も失敗を含めて保存するため、この診断workflowには新pushで旧実行を取り消すconcurrencyを設定しません。新旧が並行する負荷の違いも残し、headとrunを混ぜず判定します。実測の数値、未解決の[Issue178](https://github.com/loomake/loomake/issues/178)・[Issue181](https://github.com/loomake/loomake/issues/181)・[Issue183](https://github.com/loomake/loomake/issues/183)と対応は[PR179](https://github.com/loomake/loomake/pull/179)へ記録し、診断だけで修理完了や全検査成功とはしません。
