@@ -183,7 +183,7 @@ export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
 
 ### 回帰試験
 
-修正前に失敗し、修正後に成功する試験です。新しいファイル `packages/runner/test/run-no-change.test.ts` に置き、`run.test.ts` の `withRepo`・`run` と同じ書き方にします。
+以下は当初の検証観点の要約で、コード上の試験名の全文引用ではありません。新しい振る舞いは修正前の失敗と修正後の成功を確認し、既存の振る舞いを守るケースは修正前から成功することを確認します。`packages/runner/test/run-no-change.test.ts` に置き、`run.test.ts` の `withRepo`・`run` と同じ書き方にします。
 
 1. **`[REQ-330] エンジンが変更を残さず合図もなく終えたら、タスクを完了にせず、コミットせずに止まる`**
    - 台本：`[{ output: 'I could not make changes because the Bash tool was not permitted.' }]`
