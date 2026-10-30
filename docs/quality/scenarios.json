@@ -699,7 +699,7 @@
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "packした5パッケージだけで主要コマンドと公開APIを使える",
-          "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
+          "sha256": "2435189e2802341831466761662d5eb5a70321ec4eab8c1bd43cb96a146b5359"
         },
         {
           "file": "tests/release-security.test.ts",
@@ -1349,7 +1349,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "範囲外の要件でも不正なIDを台帳に通さない",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -1545,7 +1545,7 @@
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "packした5パッケージだけで主要コマンドと公開APIを使える",
-          "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
+          "sha256": "2435189e2802341831466761662d5eb5a70321ec4eab8c1bd43cb96a146b5359"
         }
       ]
     },
@@ -1588,12 +1588,12 @@
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "packした5パッケージだけで主要コマンドと公開APIを使える",
-          "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
+          "sha256": "2435189e2802341831466761662d5eb5a70321ec4eab8c1bd43cb96a146b5359"
         },
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "配布物の公開型を使い、型の破壊的変更を利用側のコンパイルで検出する",
-          "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
+          "sha256": "2435189e2802341831466761662d5eb5a70321ec4eab8c1bd43cb96a146b5359"
         },
         {
           "file": "tests/public-source-exports.test.ts",
@@ -2989,7 +2989,7 @@
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "packした5パッケージだけで主要コマンドと公開APIを使える",
-          "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
+          "sha256": "2435189e2802341831466761662d5eb5a70321ec4eab8c1bd43cb96a146b5359"
         }
       ]
     },
@@ -4434,7 +4434,7 @@
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "POSIXの配布物を実際のSIGINTで中断する",
-          "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
+          "sha256": "2435189e2802341831466761662d5eb5a70321ec4eab8c1bd43cb96a146b5359"
         }
       ]
     },
@@ -4668,7 +4668,7 @@
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "Linuxで通信を拒否して配布物を使う",
-          "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
+          "sha256": "2435189e2802341831466761662d5eb5a70321ec4eab8c1bd43cb96a146b5359"
         }
       ]
     },
@@ -4992,7 +4992,7 @@
         {
           "file": "tests/package-artifacts.test.ts",
           "contains": "Linuxで通信を拒否して配布物を使う",
-          "sha256": "e9c670505088cc18544d3eeb89370ff1717b8accf985966a804e337b6249701a"
+          "sha256": "2435189e2802341831466761662d5eb5a70321ec4eab8c1bd43cb96a146b5359"
         }
       ]
     },
@@ -5248,7 +5248,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "未回答のブロッキング確認事項があると、ID・関連・質問",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         },
         {
           "file": "packages/cli/test/cli.test.ts",
@@ -5269,7 +5269,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "ブロッキングの確認事項がすべて回答済みなら合格",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5285,7 +5285,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "ブロッキングでない確認事項は、回答が空でも合格",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5301,7 +5301,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "確認事項の節名が崩れていると",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5317,7 +5317,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "差分仕様に解析エラーがあると",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5333,7 +5333,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "Source の無い Requirement の名前を出して不合格",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5349,7 +5349,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "台帳に無い要件 ID を Source に持つと",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5365,7 +5365,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "Scenario の無い Requirement の名前を出して不合格",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5381,7 +5381,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "反映済なのにどの Requirement からも参照されない",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5397,7 +5397,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "未承認の仮定と確認待ちの要件は警告になり",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         },
         {
           "file": "packages/cli/test/cli.test.ts",
@@ -5418,7 +5418,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "openspec validate --strict が失敗すると",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5434,7 +5434,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "OpenSpec CLI が見つからず openspecValidate が auto なら",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5450,7 +5450,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "未完了のタスクがあると、その行を出して不合格",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5466,7 +5466,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "確認待ちの要件が残ると、その ID を出して不合格",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5482,7 +5482,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "仕様で参照される要件を名前に含むテストが無いと",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5498,7 +5498,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "it.skip のテストだけなら",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5514,7 +5514,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "describe.skip.each の中にだけあるテストは数えない",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5530,7 +5530,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "テスト名以外の文字列にだけある要件 ID は数えない",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5546,7 +5546,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "テストランナーが実行しないファイルのテストは数えない",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5562,7 +5562,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "test コマンドがレポートを書き出さないと",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5578,7 +5578,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "コマンドが失敗すると、出力の末尾を詳細に入れて不合格",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5594,7 +5594,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "3 つのコマンドがすべて成功すると",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5706,7 +5706,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "change を省略すると commands だけを実行し",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         },
         {
           "file": "packages/cli/test/cli.test.ts",
@@ -5727,7 +5727,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "存在しない change-id では、change の存在が日本語の説明つきで",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5759,7 +5759,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "参照先の change と回答が同じなら合格",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5775,7 +5775,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "参照先の change と回答が違えば、両方の回答を出して不合格",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         },
         {
           "file": "packages/cli/test/cli.test.ts",
@@ -5796,7 +5796,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "片方だけ回答があれば不合格",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5812,7 +5812,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "参照先が archive にあれば、archive の trace.md と比べる",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5828,7 +5828,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "参照先の change が進行中にも archive にもなければ",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -5844,7 +5844,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "印が無ければ、同じ ID の確認事項の回答が違っても",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -6023,7 +6023,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "--skip-commands の完了ゲートは、品質コマンドの skip の項目と最後の行で",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -6055,7 +6055,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "品質コマンドを実行するときは、skip の項目を加えない",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -6724,7 +6724,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "ブロッキング列が はい で回答が空なら",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         },
         {
           "file": "packages/cli/test/cli.test.ts",
@@ -6745,7 +6745,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "ブロッキング列が yes・no・はい・いいえ のどれでもなければ",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         },
         {
           "file": "packages/cli/test/cli.test.ts",
@@ -6766,7 +6766,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "tasks.md にタスクが 1 つも無いと",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -6782,7 +6782,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "loomake.config.json に知らないキーがあれば、そのキーを警告にし",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
@@ -6904,7 +6904,7 @@
         {
           "file": "packages/kit/test/verify.test.ts",
           "contains": "時間の上限つきの品質コマンドの途中で中断されたら",
-          "sha256": "f28cb54d4a6bf13ee5d817c2961172fc4c451bfffd557baac6710947aac1653f"
+          "sha256": "16b019d9c140f4479f04b2e9700804806f891dc601b6b6e1a9cab955d3bcaa57"
         }
       ]
     },
