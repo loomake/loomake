@@ -214,7 +214,7 @@ NAの参照先には理由・確認者を含む定義が必要である。上の
 | ci-gate・workflow | target facadeからS1判定moduleを直接使う正常self-ciと独立Tを確認。旧ok・local・skip/neutralで合格にしない。設定操作の許可とは分ける |
 | trace record・runner record | trace record既定ci、runnerは明示local。同じ0〜3、文書snapshot・前後照合・未コミット拒否・追記専用を保持 |
 | serialization・publication | 新旧validator、JSON前後検査、同期・byte予算・末尾改行、fsync・原子的な上書き禁止公開・失敗cleanupを保持 |
-| trace report | Report2の既存外形・日本語行へ投影。管理役が包括承認で採用した射影Aは、v2のci/PASSかつ要判断なしだけok:true、それ以外はfalseとする。FAIL/不足の実在checkだけをfailedChecksへ写し、状態・scope・理由は既存warningsで区別する案を技術設計で具体化する。coverageの既存意味と保存文書を保持し、旧1は履歴閲覧専用とする。local完了を検査不合格と誤表示しないMarkdown、公開formatterのJSON roundtrip、旧原本保持の具体契約は未設計であり、S2前に確定する。日本語を制御用タグにせず、WeakMapだけに依存してroundtrip情報を失わない |
+| trace report | Report2の既存外形・日本語行へ射影する。採用済みAはv2のci/PASSかつ要判断なしだけok:true、それ以外false。v1は旧verify.okを保持し、履歴閲覧専用の警告を加え、自動再利用しない。実在FAIL/不足だけをfailedChecksへ写し、coverage・保存文書を保持する。追加Opus設計に基づく下記「Report2射影Aの具体契約」に従い、JSON roundtripとlocal完了の中立表示を同時に確認する。日本語制御タグ・WeakMapだけの状態保持・Reportの新欄を使わない |
 | runner run・reuse・pr・prompt・recorder | v1 ok/results直読・型をすべて追従。親SHA・文書snapshot・未コミット拒否・reuse制約、decision停止、変更保持・予算・中断、RunSummary外形を保持 |
 | agreement・doctor | 共有config/validatorの影響を確認。既存の承認日記録・非verifyの例外契約を保持。doctorで品質コマンドを実行しない |
 | tests・smoke・公開型・配布物 | 旧fixtureを保持する履歴試験とv2新規試験、公開型のstrict検査、tarball実行、Node22/24、offline・SIGINT・既存hash/予算回帰を確認 |
@@ -263,13 +263,93 @@ R-C001-05 Aで非互換範囲は回答済みであり、製品実装・具体的
 | REQ-146・公開型破壊検出 | `tests/package-artifacts.test.ts:145–161`のd.ts変異とTS2322 | 旧ok文字列の出現数に依存した変異を現行v2公開型へ実際に作用する変異へ移す。履歴型だけを壊して合格にせず、公開利用側のstrict型不一致を同強度で検出する |
 | REQ-143/155・配布/導入試験 | `scripts/package-smoke.mjs` のverified.ok/coverage25件と`scripts/ai-journeys.mjs`のdone/trace、`tests/package-artifacts.test.ts`・`tests/ai-journeys.test.ts` | 実tarballの公開API/型・履歴データと、3つの導入/通常/復旧シナリオを保つ。quality/planと必要な実証跡を用意し、local完了と最終ciを分ける。tarballだけのconsumerでci/PASSを得る具体経路はtask 1.3のhandoff設計に依存し、REQ-143/155/319をlocal成功だけで代替しない。旧.okの比較をただ消さず、v2の状態/scope/decision/終了コードと25要件/行の対応を照合する。失敗・復旧・未コミット拒否を省かない |
 
-### 後段の規範・技術設計で確定する境界
+### 追加境界設計の採用と残る成立条件
 
-changeなし文書PRのbare品質専用経路とREQ-318のci-gate MUSTは、適用範囲の例外を当然視せず、必要なci結果を得る経路か正当な契約境界を確定する。tarball consumerのci/PASS、Report2の表示とJSON roundtripも未達の設計条件であり、必要保護を外して完了扱いにしない。
+2026-10-31に、head `71223c16e32be768e211a397bfe780b75cfc465c` の追加Opus設計2本を管理役が確認した。境界設計はsession `ae8a181f-7672-4812-b236-6be83a41b407`、Report2は `01aa2d9f-4500-4331-a228-1f925dcb672c`。実モデルは両方claude-opus-5-5、ok:true・権限拒否0・読取専用・MCPなしである。利用者が本会話でこの2件の送信・実行を許可し、その範囲で実施した。設計の完了を最終レビューや製品受入の成功とは扱わない。
 
-不正scopeの副作用前拒否、CLI bareとAPI gateのみの区別、解析時の誤りと業務検査のaborted/2のJSON/stdout/stderr境界は、旧R12と既存CLI基準を照合して具体表にする。trace recordのGit失敗を既存UsageError/2から他の分類へ変更する判断も自動では行わない。既存メッセージと終了コードの変更は具体差分として扱う。
+管理役はADR 0006により、R-F12=A、R-F15=A、R-F17=A、Report2のD-R2-01=A・02=A・04=Aを採用した。確認事項の回答者は「利用者（ADR 0006 の包括承認）」、採用記録日は日本時間2026-10-31である。R-F18は既存の速度対策1-1の1change/1PRを維持する決定と整合させた。F16は後述の方向だけを暫定採用し、成立済みとは扱わない。後段の規範PRで選択肢・理由・決定・出典をtraceへ移す。今回の候補だけでは規範、task1.2、S1/S2、親C001のDoDは完了しない。
 
-規約のDoDコマンド変更は、R06の明示回答と利用者決定の承認元を管理役が照合し、ADR 0006の規則変更の扱いを記録したうえで反映する。Node20ジョブ削除は利用者の依頼1-1で明示決定済みであり、新たな承認待ちに戻さない。削除前は現行Node20.19検査も維持し、1-1の実施とS2のloader/配布検証の順序を確認する。Node22.12/24の既存実測をNode20での実測へ流用しない。
+#### F12：新規Draftと既存PRの再利用
+
+新規PRだけをDraftとして作り、既存の`gh pr create`のargv末尾へ`--draft`を加える。本文ファイルの位置と証拠commit→push→PR作成の順序を保つ。同じrepository/base/headの一意なopen PRはreadyでもDraftでも作り直さず、状態も変えずにURLを返し0とする。検索の`isDraft`はbooleanとして検査・記録し、ready/Draftの表示を事実に結び付ける。型不正・検索失敗・複数候補・不正URL・向き先不一致は停止し、既存PRの状態変更を行わない。
+
+local完了を「合格」と表示せず、PR本文・停止理由・再利用の表示にlocal完了とCI最終未確認を区別して記す。REQ-114/115/116/165の既存Scenario・期待原本を保持し、新規argvの完全一致、既存ready/Draftそれぞれの作成0回・状態変更0回、検索異常時の証拠/commit/PR不変を後段で検査する。
+
+#### F15：JSONの選択と副作用前の入力検証
+
+help優先→argv解析→要求の検証→設定読取→品質コマンド/Git/保存の順に処理する。scopeの空値・範囲外、gateとchangeの組合せ、change-idの構文は設定読取や副作用より前に拒否する。CLI bareはgateを渡さず、changeなしでgateだけを指定するAPIは旧来の無視からusage aborted/2へ移す。旧APIとの具体差分と共通定義/旧46例の対応を記録する。
+
+JSON形式の選択は解析成功と分け、共通option定義に従って値に消費されなかった独立の`--json`だけを認識する。`--change=--json`や`--json=1`を独立flagと誤認しない。構文エラーを受理するための別文法を加えず、最初の日本語診断・空白/等号構文・重複拒否・help優先を保持する。
+
+| 条件 | stdout | stderr・終了と副作用 |
+|---|---|---|
+| helpがある | 従来のhelpだけ | 0。検査・JSON・Git・保存を起動しない |
+| verifyの構文/要求の誤り、独立--jsonあり | 正規2.0.0のusage abortedを1個 | 日本語診断と既存の使い方、2。設定・品質コマンド・Git・保存なし |
+| 同じ誤り、独立--jsonなし | JSONなし | 同じ診断・使い方、2。副作用なし |
+| bareの明示ci、全gateの空/範囲外scope | 上の形式選択どおり | usage/2。品質コマンド・Git・既存レポート削除より前に拒否 |
+| 構文が有効な非実在change | 対応するv2結果 | REQ-055の存在check FAIL/1。change:nullやusageへ変えない |
+| 設定の構文・型・対応版の誤り | --json時はconfig aborted | 日本語診断、2 |
+| verifyの読取不能・外部操作の上限 | --json時はpermission/runtime等のaborted | REQ-192の日本語理由、3。使い方を出さない |
+| trace recordの不正scope | 新しい--jsonを設けない | UsageError/2。設定・Git・verify・保存の前に拒否 |
+| trace record自身のGit非0終了 | 従来どおり | 既存UsageError/2と日本語文言を保持。ProcessLimitError等の上限停止3とは区別 |
+
+未確定changeはnullとし、生の入力をrun.errorsの対象へ保持する。確定したIDと未確定入力を分け、abortedへscope・checks・summary・decision・verdictを補わない。型・キーはtask2.1の正式契約へそろえる。JSON位置の前後、等号値、全gate/APIとrecordの番兵による副作用ゼロ、stdout単独JSON、CI=1の非対話、既存診断と0〜3を後段で確認する。
+
+#### F16：changeなしPRのCI経路（暫定採用・成立未確認）
+
+公開bareはchange:null/local/verdictなしを維持し、明示ciは拒否する。方向として、ci-gateの基準側controllerがS1判定器から独立した正式v2のci結果Tを取得し、別invocationのbare local結果Sと照合する。Tはtarget SHAに拘束されたchange:null/ciで、公開bare/APIからciを作る経路とは分ける。Tのci/PASS・要判断なし・0と、Sのlocal完了/pending0/fail0/0、同じcommand checkのid/result・target・環境の一致がそろった場合だけ成功とする。localの0だけやskip/neutralを最終合格にしない。
+
+母集団はPR側で縮めず、基準側の現行主仕様にある全REQと承認済みroot plan・PQ-900を固定する方向を暫定採用した。空集合・全NA・必要証拠空・実施不足をPASSへ補わない。IDの既存衝突を集合化で隠さず、宣言元と対応の未整備を予備監査へ残す。基準資料が読めず評価対象を確定できない場合は既存aborted契約を保持し、空の不足checkや成功を捏造しない。
+
+現mainの全必須REQが適格なID付きpassed試験で充足されるか、S/T別invocationの実施費用と全体時間がいくらかは未実測である。旧reportを使う予備照合は不足の棚卸しだけに使い、最新headの性能や受入成功にはしない。全REQ/宣言元とreport/headの対応、不足一覧、重複ID、必要な解消範囲を記録し、実測が揃うまでこの案を成立済み・S2切替可能としない。command実施を二重にする影響も未測定とする。S1の独立受入より前にS2の新ci-gateを有効にせず、架空change・MUST適用外・空PASSで回避しない。
+
+速度対策1-1の全PR経路でslowを実施しない条件と、REQ-297の元4case・実時計下限19.5/39.5秒を保持する条件も、F16の成立に必要である。全REQのタグがあっても、auth/list等の同REQタグをpush/createのfast実証へ流用しない。全main母集団の案がPR内の実slowを要求するなら、この統合条件と両立せず、未採用の外部証跡再利用を補って解決済みにしない。
+
+既承認R07はci.test_reportの初期必須1項目を各PR/changeの承認REQ集合へ結ぶもので、全main245IDを一律に必須とする決定ではない。min_samples1は観測数であり、必須subjectを1件へ縮める許可でもない。対案Bとして基準側で承認したroot planへ正当なsubjectを固定する方向を追加設計の候補とし、PR側による母集団の縮小・空品質・タグだけの偽充足を禁止する。実changeの全承認REQと原47要件・16条件を残し、changeなしPRのsubjectが何かを一意に確定して適格なS/Tへ結ぶまでは、Bも成立済み・採用確定とはしない。
+
+後段ではREQ-132のchangeなし/branch不一致/archive経路、REQ-318の最終ci、REQ-312のbare境界を同時に整合させ、内部結果の正式なschema/validatorとS/T一致範囲をtask1.3で確定する。現行REQ-270の品質job省略とmain push全実行を維持し、品質jobを省いてもgateの必要な実施を省略しない。
+
+#### F17：実tarballのproducerとprivate handoff
+
+製品の公開入口は実tarballのinstallだけから解決し、実パスを検査する。producerはワークスペースのlockに対応する実Vitestを用い、製品をrepoのsrc/distへすり替えない。実tool/version/実体hash・method/config/lock・target・nonce・開始終了・専有report/hashを基準側が照合し、手書きpassed JSONを新しい品質証明に使わない。producerの実体を供給するlinkは製品の公開依存の追加と区別する。
+
+consumerには実際の値を検査する25件のID付きfixtureと25REQのplan・PQ-900を用意し、タグだけのassert(true)へ置き換えない。基準側controllerの承認anchor/module/依存graphとconsumer外のprivate handoffを使い、別invocationのTと通常CLI/APIのSでci/PASS/0・decisionなし・coverage25件を照合する。private locator/envそのものを承認とせず、独立したexpected anchorとの照合を維持する。具体的bindingと起動順はtask1.3で受け入れる。
+
+doctor/spec-onlyの正常系、handoffなしの不足1、local0/verdictなし、既定ciのtrace record/Evidence2とReport2の25行を同時に確認する。first-use/daily-use/recoveryの3シナリオ、未回答・不足・実失敗・復旧、未コミット拒否、init再実行の不変と既存AGENTS保護を残す。REQ-143/155/319をlocal成功だけで代替せず、新旧JSON・公開型・同期性・unknown key・非通信・予算・Node22.12/24の保護を維持する。
+
+#### F18：既存承認と速度対策1-1の統合順
+
+規約DoDの反映はR06 Aの元の問い・回答・具体patchを照合し、その明示承認の範囲だけを記録して行う。作業中local完了と最終ci/PASS/要判断なし/0を分け、全要件対応試験・tasks・必須CI・独立レビューを残す。承認元を超える新たな規則変更はIssue121で人へ依頼し、包括承認だけで全規則を変更しない。
+
+Node20削除は利用者の依頼1-1で決定済みであり、既存change `split-slow-ci-checks`の1change/1PRでNode20とslowを受け入れ、S2より前に統合する。追加Opusの別change/別PR推奨はこの既存決定と異なるため採らない。rulesetは同changeのQ09に従い、ready時の具体的なbefore/afterと検証結果を揃えて人へ依頼する。先に規則を変更済みとしたり、別の承認待ちへ戻したりしない。削除前はNode20.19の既存検査を保ち、削除後は受入済み基準でNode22.12/24を検証する。既存の実測を未実測OS/Nodeへ流用しない。
+
+### Report2射影Aの具体契約
+
+v1は旧verify.okとstatus:failのcheck一覧を保持し、warnings先頭へ履歴閲覧専用の警告1件を加える。v1のtrueをfalseへ書き換えず、履歴閲覧と最終CIの自動合格への再利用不可を区別する。追加Opus結果8章の「v1をok:trueにすることは禁止」という一文は同結果2章・採用済みAと矛盾する誤記として不採用にした。原本は変更せず、この採否を後段traceへ記録する。
+
+v2のok:trueはcompleted/partial・ci・PASS・decision.required=falseに限る。failedChecksは実在するFAIL/INSUFFICIENT_EVIDENCEのidをchecks順に写し、abortedでは空にする。scopeやrun.errorsを架空checkへ変換せず、abortedへcoverageや合格行を補わない。不整合な状態・summary・verdictはexact validatorで拒否する。
+
+| 証拠の状態 | evidence.ok・failedChecks | warningsと表示 |
+|---|---|---|
+| v1の正常/失敗、documentsあり/なし | 旧okと旧fail一覧を保持 | 履歴閲覧専用・現在の自動合格へ再利用不可を先頭警告に加える |
+| v2 ci/PASS・判断不要 | true、FAIL/不足なし | 最終ciの結果として扱う |
+| v2 ci/FAIL | false、実在FAILと不足のid | 違反確定と証拠不足の理由を別に示す |
+| v2 ci/不足 | false、実在不足のid | 未実施・不足を実施済みFAILと混同しない |
+| v2 local完了 | false、実在FAIL/不足がなければ空 | local完了・最終CI未確認。失敗した検査を捏造しない |
+| v2 local未完了/要判断 | false、実在FAIL/不足だけ | pending/failと判断理由、最終CI未確認を分ける |
+| v2 partial | scope/verdict/decisionに従う | run.errorsの種別・対象・日本語理由を示す。partialだけで一律不合格にしない |
+| v2 aborted | false、空配列 | 中止・run.errorsの理由。存在しないchecks/coverageを補わない |
+| Evidence1/verify2、Evidence2/verify1、未対応版、必須欄欠落 | 射影しない | パス・対象版・日本語診断・終了2・スタックなしを保持して拒否 |
+
+状態/scope・FAILと不足の別・decision/run.errorsは、型付きの欄から日本語warningsを組み立てる。証拠の警告を先、既存の合意警告を後に置く。formatterはReportの既存欄だけで表示を決め、warningsは解析せずに表示する。Markdownは「合格していない検査」「合格ではない」「証拠と合意の記録の警告」とし、local完了を不合格とも最終CI合格とも呼ばない。新しいReportの欄・列挙値・公開signature、WeakMapだけの状態保持、日本語制御タグは加えない。旧documentsなしの行と説明、coverageの意味は保持する。
+
+REQ-301の旧JSON期待原本を保持し、v1の出力は履歴警告1件だけの差分をbyteで照合する。先頭警告を除いた残りは原本と完全一致させ、対応するv2 ci/PASS入力は従来JSON原本とbyte一致させる。REQ-079の警告の完全一致、REQ-072/088/209の表示・順序とREQ-073の拒否強度も保持する。旧fixtureを変更せず、新旧対応版・混在版・0/3/999/文字列/nullの拒否を別に検査し、便宜的な数値置換だけで済ませない。
+
+全状態についてbuildReport→直接formatter、runReport JSON→JSON.parse→formatter、Report schema parse→formatterの結果一致を確認する。warningsを任意の文字列へ変えても警告節以外の表示が変わらないことを検査し、隠れた状態や日本語の解析へ依存しない。旧JSON/fixture原本、決定性と同じ秒の選択順を保持する。
+
+D-R2-03はreportが保存あり/なし両方を扱う設計だけを採用した。recordが新しくaborted/partialを保存する方針を、この候補では決定しない。既存task4.2の保存条件と結合して具体化するまで未確定とし、reportの対応設計から保存許可を逆算しない。
+
+後段では原47要件・16横断条件を保持したまま、必要な既存REQ-072/073/079/088/209/301/316、F12〜18のREQ-116/132/143/155/165等の規範/Scenario・移行表とtask1.3/4.1〜4.5/5.1を追従させる。既存Scenarioは削除せず、旧期待原本と具体差分の強度維持・承認者・日付・ADR参照を照合してから実装へ適用する。原47外に必要な既存REQへの補足は工程coverageにも追加し、元の47と16を縮めない。
 
 ## 技術的に確認した範囲
 
