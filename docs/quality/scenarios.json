@@ -7949,7 +7949,7 @@
       ]
     },
     {
-      "id": "SCN-2ae0b9c26b02a7a07597",
+      "id": "SCN-deeddc260f1944c905bf",
       "status": "reviewed",
       "scenarioSha256": "0a2a8f143c3b698a03786ee1686228be3d3fddb165d1a370406502ca7fe9528c",
       "reason": "timeoutMinutes 40000 で正常完了し、タスクのコミットと終了コード0を保ち、時間上限の表示がないことを確かめる。",
@@ -7965,7 +7965,7 @@
       ]
     },
     {
-      "id": "SCN-7bf8b4c7e50629f0a4f0",
+      "id": "SCN-d53387ea68e0e6f6d986",
       "status": "reviewed",
       "scenarioSha256": "b22577f2dcc3508ed23a168894d6c263604a833ea2661c0e5c02deff2470b420",
       "reason": "長い待機の最初の2回を早く発火させ、3回待ち直し、各待機が上限以下で、エンジンの結果を保ち、最後に有効なタイマーを解除することを確かめる。上限より短い5000msでも最初の待機を早く発火させ、次の待機が0より大きく5000ms未満であることを検査する。残り時間を無視して上限固定で待ち直す変異で、この試験が失敗する。",
@@ -7986,7 +7986,7 @@
       ]
     },
     {
-      "id": "SCN-9f0513dd500f1a66f24d",
+      "id": "SCN-87ac185f00abb5f08d12",
       "status": "reviewed",
       "scenarioSha256": "10afe00d27737d04e9c60cc4db3d08bce91f27d7d0be0b3747bdeed5e4a5a929",
       "reason": "pre-commitからSIGINTとSIGTERMを送り、interrupted、終了コード1、未完了タスク、エンジン1回、PRとpushなしを確かめる。POSIX上の信号試験である。",
@@ -8002,7 +8002,7 @@
       ]
     },
     {
-      "id": "SCN-8780238979655d4650d6",
+      "id": "SCN-1d24c0fa63492de621c2",
       "status": "reviewed",
       "scenarioSha256": "873122a0b7e54ebce4d04bab8a85686bb763cda05845b5a63b2704b7e5a41c90",
       "reason": "pre-pushからSIGINTを送り、証拠コミットとその理由、interrupted、終了コード1、リモートブランチとPRなしを確かめる。",
@@ -8018,7 +8018,7 @@
       ]
     },
     {
-      "id": "SCN-8f4b00d1e9dbe870b888",
+      "id": "SCN-af36bdb1a63149b4ca79",
       "status": "reviewed",
       "scenarioSha256": "2b989d1b1bea0a00fa544d5d76ba79934da86fcb1e84c6436682e97eee61b065",
       "reason": "pre-commitから監視役へSIGKILLを送り、stopped、監視役の異常終了理由、終了コード1、PRとpushなしを確かめる。",
@@ -8034,7 +8034,7 @@
       ]
     },
     {
-      "id": "SCN-2db570e0ac6ac2e10216",
+      "id": "SCN-2daf0a55232888f1318d",
       "status": "reviewed",
       "scenarioSha256": "d2eb015bf74ccc9e055b24c04617fc8cd96a7ef9c12eb6f186238fcd9a338485",
       "reason": "gh pr listでSIGINT、pr createでSIGTERMを送り、証拠コミットとpush済みブランチを保ち、interrupted、終了コード1、PR未作成を確かめる。",
@@ -8050,7 +8050,7 @@
       ]
     },
     {
-      "id": "SCN-f6de9fc39a8a3ef2235a",
+      "id": "SCN-9b2c4541da2c45417c27",
       "status": "reviewed",
       "scenarioSha256": "bcfda3cab1378908fe372499505a4d89d50cf366988b5a2b10846bd216144e43",
       "reason": "品質コマンドの監視役へSIGKILLを送り、後続の品質コマンドの有無の両方でstoppedと異常終了理由を保ち、エンジンの直し・push・PRへ進まないことを確かめる。kitの試験でも後続操作が起動しないことを確かめる。",
