@@ -1,5 +1,5 @@
 import { packedTarballsEnv } from './packed-tarballs.js';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, inject, it } from 'vitest';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { profileEvent } from '../scripts/test-phase-profile.mjs';
 
 // prepare は、globalSetup が試験の前に 1 回だけ build と pack をした tarball を使う（tests/package-build.setup.ts）
-const env = packedTarballsEnv();
+const env = packedTarballsEnv(inject('packedTarballs'));
 
 describe('AIが作成・実行する配布物の操作試験', () => {
   it.each([tmpdir(), join(import.meta.dirname, '../.loomake/quality')])('[REQ-155][REQ-156][REQ-157] %s で導入・通常操作・失敗と復旧を実行し、操作結果を記録する', (parent) => {
