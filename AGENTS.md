@@ -14,27 +14,29 @@
 
 ## 2. 工程の 3 段階
 
-変更の種類で、かける検査を変える。段階は PR の変更パスから gate が決め、PR 本文の `loomake-tier: L1|L2|L3` で上げる方向にだけ上書きできる。
+変更の種類で、かける検査を変える。段階は PR の変更パスで決め、PR 本文の `loomake-tier: L1|L2|L3` で上げる方向にだけ上書きできる。gate の段階判定が入るまでは、起草者が `loomake-tier` を書き、管理役が確かめる。どの段階にも入らないパスは安全側の L2 とする。
 
 | 段階 | 対象 | 必須の検査 | レビュー | 記録 |
 |---|---|---|---|---|
-| **L1 文書** | docs/・openspec の文言・worklog・changeset だけ | gate（docs-only 判定）＋ lint | Codex 自動レビューのみ | PR 本文に 1 行 |
-| **L2 試験・CI・開発基盤** | test/・`.github/`・`scripts/`・`.agents/skills/`（テンプレートを含む） | 必須 5 チェック | Codex ＋ 独立 Opus **1 回**（指摘があれば修正後に 1 回だけ再レビュー） | worklog に 4 行 |
-| **L3 製品コード** | packages/*/src・openspec の Requirement 変更 | 必須 5 チェック ＋ `verify --done` ＋ 変更した package の 3 OS 試験（ラベル `ci:all-os`） | Opus 設計 ＋ Codex ＋ 独立 Opus **最大 2 往復** | worklog に 4 行 ＋ 計測表 |
+| **L1 文書** | `docs/`・README・openspec の Scenario の文言と Purpose・worklog・changeset だけ | gate（docs-only 判定）＋ lint | Codex 自動レビューのみ | PR 本文に 1 行 |
+| **L2 試験・CI・開発基盤** | `tests/`・`packages/*/test/`・`.github/`・`scripts/`・`.agents/skills/`・`packages/kit/templates/`・`packages/*/schema`・ルート設定（package.json、pnpm-lock.yaml、eslint、tsconfig、loomake.config.json）・AGENTS.md・ADR・delivery スキル（規則の変更。利用者の承認が要る） | 必須 5 チェック（change があれば `verify --done` も） | Codex ＋ 独立 Opus **1 回**（指摘があれば修正後に 1 回だけ再レビュー） | worklog に 4 行 |
+| **L3 製品コード** | `packages/*/src`・openspec の Requirement の変更（spec.md の Requirement 本文・SHALL 文） | 必須 5 チェック ＋ `verify --done` ＋ 変更した package の 3 OS 試験（ラベル `ci:all-os`） | Opus 設計 ＋ Codex ＋ 独立 Opus **最大 2 往復** | worklog に 4 行 ＋ 計測表 |
+
+必須 5 チェックは gate / quality (ubuntu-latest) / CodeQL / node20 / node22。change を持つ PR は段階を問わず `verify --done` を通す（gate が実行する）。L3 は change が必須で、L2 は change がなければ lint・typecheck・test の品質コマンドだけでよい。「往復」の数え方とマージ条件は ADR 0006 のレビュー規則に従う。
 
 どの段階でも、流れは次のとおり。
 
 1. 要件書・仕様書を渡されたら、`req-to-openspec` スキルで change を作る
 2. 実装に入る前に **仕様ゲート** `pnpm -s verify --change <change-id> --spec-only` を通す。ブロッキングな確認事項が未回答なら失敗する。ADR 0006 に従っておすすめ案を回答として記録し、ゲートが成功するまで実装に進まない
 3. `tasks.md` の順に実装する。1 タスクごとに小さくコミットし、終わったタスクは `- [x]` にする。1 つの PR は 1 日以内にマージできる大きさ（目安は commit 10 個以内）にし、大きい change は `tasks.md` の区切りで PR を分ける。main をブランチに取り込むのは、競合したときとマージの直前だけにする
-4. 完了したら **完了ゲート** `pnpm -s verify --change <change-id> --done` を通す
+4. change があれば、完了したら **完了ゲート** `pnpm -s verify --change <change-id> --done` を通す
 5. レビュー・修正・検証・記録のような実作業はサブエージェントに分けて任せ、本体は計画と調整に集中する。担当は 1 つの change につき 1 つ。同時に進める本数、マージ条件、レビューの回数は ADR 0006 と delivery スキルに従う
 
 `trace.md` の「要件台帳」「確認事項」「仮定」の表と必須の列は、これまでどおり書く（verify が確かめる）。各欄には問い・選択肢・おすすめ・決定・出典のような要点だけを、おおむね 300 文字以内で書き、経緯や測った結果は PR か Issue に書いてリンクだけを置く。
 
 ## 3. 完了の定義（DoD）
 
-次をすべて満たすまで「完了」と報告しない。
+change を持つ作業は、次をすべて満たすまで「完了」と報告しない。change のない L1・L2 の作業は、段階の必須の検査とレビューが済んだときに完了とする。
 
 - `pnpm -s verify --change <change-id> --done` が exit 0
 - change 内の各 Requirement に、対応するテストが 1 つ以上ある
