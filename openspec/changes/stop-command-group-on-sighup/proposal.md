@@ -11,7 +11,7 @@ change stop-engine-on-termination（REQ-208）は、run で SIGHUP も SIGINT �
 ## What Changes
 
 - POSIX の監視役はSIGHUP も SIGINT・SIGTERM と同じく中断として扱い、対象のプロセスグループを止める（REQ-333）。
-- POSIX の監視役は未処理の例外などで停止の手順を終えずに終わるとき、対象の終了をまだ処理していなければ、終わる直前に対象のグループへ SIGKILL を送る（REQ-334）。
+- POSIX の監視役は未処理の例外などで停止の手順を終えずに終わるとき、対象のグループへ SIGKILL をまだ送っていなければ、終わる直前に対象のグループへ SIGKILL を送る（REQ-334）。
 - 復旧の文書で、実行中のコマンドを止める場合と、そのコマンドが終わってから扱う場合を分けて書く。
 
 ## Non-goals
@@ -44,4 +44,4 @@ archive する PR ではこの change の Scenario のレビュー（`docs/quali
 
 [PR #158](https://github.com/loomake/loomake/pull/158) の依頼はPOSIX の監視役に SIGHUP の中断処理を足し、親が同時に終わっても対象のグループを残さないことと、exit 時の SIGKILL による後片付けの是非を調べることである。親の ProcessLimitError は REQ-250 で対応済みなので変えない。REQ-333〜334 をこの change で扱う。元の再現は worktree 外の古い dist を読んだ可能性があるため、Q-01 に従いこの worktree のビルドで取り直す。
 
-2026-10-30 の再設計はREQ-334 の送信条件を `!exited` から「グループへ SIGKILL をまだ送っていない」に変える案を提示した。これは現行の否定 SHALL と異なるため、Q-04 の人の回答を待つ。上の What Changes と差分仕様は、回答前の仕様を保つ。
+2026-10-30 の再設計はREQ-334 の送信条件を `!exited` から「グループへ SIGKILL をまだ送っていない」に変える案を提示した。利用者の ADR 0006「自律配布の包括承認」に基づき Q-04 はおすすめ A で回答し、上の What Changes と差分仕様へ反映した。先頭の終了処理後も SIGKILL 未送信なら送り、送信済みなら再送しない。

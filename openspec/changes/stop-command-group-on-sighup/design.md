@@ -18,7 +18,7 @@ runExternal は予算の有無によらず監視役を通る。配布物の E2E 
 
 ## Goals / Non-Goals
 
-SIGHUP の停止手順は SIGINT・SIGTERM と同じにする。親が先に終わっていても監視役自身で止める。exit イベントが起きる異常終了の後片付けも扱うが、送信条件の変更は Q-04 で人が決める。
+SIGHUP の停止手順は SIGINT・SIGTERM と同じにする。親が先に終わっていても監視役自身で止める。exit イベントが起きる異常終了の後片付けも扱うが、送信条件は ADR 0006 に基づく Q-04 の A 回答に従う。
 
 親の process.ts、verify/run.ts、runner、CLI、公開 API、依存は変えない。Windows のハンドラ追加は Q-03 で対象外と決定済み。監視役の SIGKILL・OOM による結果なし終了時の run の status は Q-02 に従い別 Issue へ回す。
 
@@ -30,11 +30,9 @@ supervisor.cjs の SIGINT・SIGTERM の隣に、POSIX だけ `process.on('SIGHUP
 
 親で SIGHUP の結果なし終了を理由なしに写す案は採らない。REQ-250 の異常終了と利用者中断の区別を保つためである。CLI の全サブコマンドへハンドラを足す案も、spawnSync 中にはハンドラが動かないため採らない。
 
-### D-2 exit 時の SIGKILL（REQ-334、Q-04 回答待ち）
+### D-2 exit 時の SIGKILL（REQ-334、Q-04 は A）
 
-現在の差分仕様は「対象の終了を処理する前」を条件とし、処理したあとは送らない SHALL と定める。従来案は `child && child.pid && !exited` を exit ハンドラの条件とする。この仕様はまだ変えない。
-
-再設計のおすすめ A はグループへの SIGKILL の送信を killed で記録し、`child && child.pid && !killed` を条件にする。対象の終了処理済みかどうかと、グループを止めたかどうかを分ける案である。Q-04 の回答前に採用済みとは扱わず、差分仕様も製品コードも変えない。
+Q-04 は ADR 0006 の包括承認に基づき、おすすめ A を採用する。グループへの SIGKILL の送信を killed で記録し、`child && child.pid && !killed` を exit ハンドラの条件にする。対象の終了処理済みかどうかと、グループを止めたかどうかを分ける。
 
 | exit 時の状態 | A の動作 | 現行 !exited の動作 |
 |---|---|---|
@@ -44,7 +42,7 @@ supervisor.cjs の SIGINT・SIGTERM の隣に、POSIX だけ `process.on('SIGHUP
 | stop の SIGTERM 後、対象の先頭だけが終了し、250ms の猶予中に例外終了。孫は SIGTERM を無視 | 送る | 送らず、孫が残る |
 | 起動失敗などで対象の PID がない | 送らない | 送らない |
 
-A に決まったら、REQ-334 の条件を「グループへの SIGKILL をまだ送っていない」に置き換える。現行の「対象の終了を処理したあとは送らない SHALL」は、その条件とは両立しないため置き換えの対象とする。SIGKILL 送信済みなら再送しない設計と試験を残す。猶予中の先頭終了後の例外を明示する Scenario と回帰試験も加え、否定の保証を説明だけ消して済ませない。
+A の採用により、REQ-334 の条件を「グループへの SIGKILL をまだ送っていない」に置き換える。現行の「対象の終了を処理したあとは送らない SHALL」は、その条件とは両立しないため置き換えの対象とする。SIGKILL 送信済みなら再送しない設計と試験を残す。猶予中の先頭終了後の例外を明示する Scenario と回帰試験も加え、否定の保証を説明だけ消して済ませない。
 
 ### D-3 Windows
 
@@ -65,19 +63,19 @@ run-recovery の「端末を閉じたときとコンテナを止めたとき」�
 | AC-2E | REQ-333：配布物の CLI も SIGHUP で終わる状況で、openspec と孫が残らない | package-artifacts.test.ts と新しい verify-sighup-smoke.mjs。偽 openspec が SIGTERM を無視する孫を作り、ready に PID を書く。detached で起動した CLI のグループへ SIGHUP を送り、CLI の signal が SIGHUP、3 秒以内に子孫が停止と確認する。修正前は残る |
 | AC-3 | REQ-333：監視役を通る品質コマンドの中断は detail が INTERRUPTED で、後続を実行しない | verify.test.ts で runVerify に timeoutMs:60000 を渡す。project.ts に interruptScript(signal) を足し、既存の INTERRUPT_SCRIPT = interruptScript('SIGINT') の文字列を保つ。修正前は理由つき detail になる |
 | AC-4 | REQ-334：EPIPE で監視役が例外終了しても子孫を残さない | supervisor.test.ts で stdout の読み手を閉じ、引き金のファイルで対象に出力させる。監視役が非ゼロ終了し stderr に EPIPE があることと、2 秒以内の孫の停止を確認する。1.1 の修正後も孫が残って Red になる |
-| AC-4G | Q-04 の A を選んだ場合：先頭の exit 処理済みでも SIGKILL 未送信なら孫を止める | SIGTERM の猶予中に先頭が終わり、孫が生きている状態で監視役が例外終了する回帰試験を足す。!exited では Red、!killed では Green とする。実機で順序を確かめられなければ完了と扱わず、検証方法を見直す |
+| AC-4G | Q-04 の A に従い：先頭の exit 処理済みでも SIGKILL 未送信なら孫を止める | SIGTERM の猶予中に先頭が終わり、孫が生きている状態で監視役が例外終了する回帰試験を足す。!exited では Red、!killed では Green とする。実機で順序を確かめられなければ完了と扱わず、検証方法を見直す |
 | AC-5 | 既存の試験が同じ期待値で通る | process・orphans・process-startup・verify・signal-during-sync・runner の run・配布物の REQ-124/208 を確認する |
 | AC-6 | Q-01：対象 HEAD のビルドで元の再現を取り直す | この worktree の dist を読む再現スクリプトを使い、修正前後を PR に記録する |
 
 直接起動の試験は POSIX だけにする。孫は stdio を ignore とし、準備完了を待ってから信号や出力を送る。停止判定は既存の macOS のゾンビ判定にならう。E2E は既存の run-sigint-smoke.mjs にならって consumer を複製し、openspecValidate:true にする。finally で試験自身の子孫を後片付けする。
 
-A を選んだ場合は、SIGKILL 送信済みの正常終了・既存の SIGINT 終了で exit ハンドラが再送しないことも確かめる。A-03 は Node 22.12 以上と開発用 Node 24 の既存 CI で検証する。実装 PR へ ci:all-os を付け、macOS の非同期 EPIPE 経路を確認する。
+A に従い、SIGKILL 送信済みの正常終了・既存の SIGINT 終了で exit ハンドラが再送しないことも確かめる。A-03 は Node 22.12 以上と開発用 Node 24 の既存 CI で検証する。実装 PR へ ci:all-os を付け、macOS の非同期 EPIPE 経路を確認する。
 
 ## 変更対象
 
 | ファイル | 変更 |
 |---|---|
-| packages/kit/supervisor/supervisor.cjs | POSIX の SIGHUP ハンドラ。exit ハンドラの条件は Q-04 の回答後に確定する |
+| packages/kit/supervisor/supervisor.cjs | POSIX の SIGHUP ハンドラ。exit ハンドラは SIGKILL 未送信のときだけ送る |
 | packages/kit/test/process.test.ts | AC-1 を追加 |
 | packages/kit/test/supervisor.test.ts | AC-2・AC-4、A 選択時は AC-4G と再送しない条件を追加 |
 | packages/kit/test/verify.test.ts・project.ts | AC-3 と信号別の補助関数を追加 |
@@ -95,7 +93,7 @@ exit イベントが起きない SIGKILL などは監視役自身では後片付
 
 A では、先頭の exit 処理後もグループが残っていれば -pid へ送る。既存の stop の 250ms 後の送信と同じ対象の扱いで、正常終了は既存の exit 処理による SIGKILL 送信済みなので再送しない。PID 再利用の安全性を新たに保証するものとは扱わない。
 
-Q-04 は仕様判断を要するため、trace.md に未回答のブロッキング項目として残す。仕様ゲートが失敗している間、この change の製品実装へ進まない。
+Q-04 は包括承認のおすすめ A として trace.md に回答を記録した。仕様ゲートを通してから製品実装へ進む。
 
 ## 設計工程の記録
 
@@ -110,4 +108,4 @@ Q-04 は仕様判断を要するため、trace.md に未回答のブロッキン
 | ローカル証跡 | .loomake/handoff/redesign.md・redesign-summary.json、同セッションの .loomake/claude/ 内の記録。要件の唯一の出典にはしない |
 | 旧設計 | 180efb22-b5d7-4cbe-80e1-ffb9ce6fad69 は権限拒否 1 のため未実施。補助モデル判定の修正だけでは再利用しない |
 | AI 評価 | [旧レビュー](https://github.com/loomake/loomake/pull/158#issuecomment-6512610756) を保守的に 1 回と数える。残りは別セッションの最終レビュー 1 回。追加評価は起動しない |
-| 転記・計画補正 | Codex。実際のモデル識別子は取得できず不明。製品コードは未変更 |
+| 転記・計画補正 | Codex。ADR 0006 に基づく Q-04=A と管理役の仮定承認を記録。製品コードは未変更 |
