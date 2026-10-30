@@ -10,6 +10,7 @@ const session = 'test-session';
 function events() {
   return [
     { type: 'system', subtype: 'init', session_id: session, model: 'claude-opus-test', tools: ['Read', 'Glob', 'Grep'], mcp_servers: [], apiKeySource: 'none' },
+    { type: 'assistant', session_id: session, message: { model: 'claude-opus-test' } },
     { type: 'result', subtype: 'success', is_error: false, session_id: session, result: '回答の目印', modelUsage: { 'claude-opus-test': {} }, permission_denials: [] },
   ];
 }
@@ -20,20 +21,45 @@ describe('deliveryのOpus応答の検証', () => {
     expect(evaluateEvents(encode(events()), session)).toMatchObject({ models: ['claude-opus-test'], sessionId: session, permissionDenials: 0 });
   });
   it.each([
-    ['別モデル', (items: ReturnType<typeof events>) => { Object.assign(items[1], { modelUsage: { 'claude-sonnet-test': {} } }); }],
-    ['モデル情報なし', (items: ReturnType<typeof events>) => { Object.assign(items[1], { modelUsage: {} }); }],
-    ['拒否', (items: ReturnType<typeof events>) => { Object.assign(items[1], { permission_denials: [{ tool_name: 'Write' }] }); }],
-    ['拒否情報なし', (items: ReturnType<typeof events>) => { delete items[1].permission_denials; }],
-    ['実行エラー', (items: ReturnType<typeof events>) => { items[1].is_error = true; }],
-    ['空の回答', (items: ReturnType<typeof events>) => { items[1].result = ''; }],
-    ['上限停止', (items: ReturnType<typeof events>) => { items[1].subtype = 'error_max_turns'; }],
-    ['セッション不一致', (items: ReturnType<typeof events>) => { items[1].session_id = 'other-session'; }],
+    ['別モデル', (items: ReturnType<typeof events>) => { Object.assign(items[2], { modelUsage: { 'claude-sonnet-test': {} } }); }],
+    ['モデル情報なし', (items: ReturnType<typeof events>) => { Object.assign(items[2], { modelUsage: {} }); }],
+    ['拒否', (items: ReturnType<typeof events>) => { Object.assign(items[2], { permission_denials: [{ tool_name: 'Write' }] }); }],
+    ['拒否情報なし', (items: ReturnType<typeof events>) => { delete items[2].permission_denials; }],
+    ['実行エラー', (items: ReturnType<typeof events>) => { items[2].is_error = true; }],
+    ['空の回答', (items: ReturnType<typeof events>) => { items[2].result = ''; }],
+    ['上限停止', (items: ReturnType<typeof events>) => { items[2].subtype = 'error_max_turns'; }],
+    ['セッション不一致', (items: ReturnType<typeof events>) => { items[2].session_id = 'other-session'; }],
     ['編集できるツール', (items: ReturnType<typeof events>) => { items[0].tools = ['Read', 'Write']; }],
     ['MCP', (items: ReturnType<typeof events>) => { Object.assign(items[0], { mcp_servers: [{ name: 'external' }] }); }],
   ])('%sを成功と扱わない', (_name, mutate) => {
     const items = events();
     mutate(items);
     expect(() => evaluateEvents(encode(items), session)).toThrow();
+  });
+  it('本体はOpusに限定し、補助モデルの名前と使用量を保存する', () => {
+    const items = events();
+    Object.assign(items[2], { modelUsage: { 'claude-opus-test': { inputTokens: 100, outputTokens: 50 }, 'claude-haiku-test': { inputTokens: 1360, outputTokens: 22 } } });
+    expect(evaluateEvents(encode(items), session)).toMatchObject({
+      responseModels: ['claude-opus-test'], helperModels: [{ model: 'claude-haiku-test', inputTokens: 1360, outputTokens: 22 }],
+    });
+  });
+  it('assistantに別モデルが1件でも含まれる場合は、モデル名を示して拒む', () => {
+    expect(() => evaluateEvents(encode([...events(), { type: 'assistant', message: { model: 'claude-sonnet-test' } }]), session))
+      .toThrow('本体の応答にOpus以外のモデル（claude-sonnet-test）');
+  });
+  it('assistantがない場合・応答のモデルが不明の場合・開始モデルが異なる場合を区別して拒む', () => {
+    expect(() => evaluateEvents(encode(events().filter((event) => event.type !== 'assistant')), session)).toThrow('assistantの応答がありません');
+    const missing = events();
+    Object.assign(missing[1], { message: {} });
+    expect(() => evaluateEvents(encode(missing), session)).toThrow('本体の応答にOpus以外のモデル（不明）');
+    const wrongInit = events();
+    wrongInit[0].model = 'claude-sonnet-test';
+    expect(() => evaluateEvents(encode(wrongInit), session)).toThrow('開始情報のモデルがOpusではありません');
+  });
+  it('本体がOpusでもmodelUsageにOpusがなければ拒む', () => {
+    const items = events();
+    Object.assign(items[2], { modelUsage: { 'claude-haiku-test': { inputTokens: 10, outputTokens: 2 } } });
+    expect(() => evaluateEvents(encode(items), session)).toThrow('modelUsageにOpusの実行記録がありません');
   });
   it('壊れたJSONや最終結果の欠落を成功と扱わない', () => {
     expect(() => evaluateEvents('not JSON', session)).toThrow();
@@ -78,7 +104,8 @@ else {
  if(mode==='dirty') writeFileSync('unexpected.txt','changed');
  const init={type:'system',subtype:'init',session_id:id,model:'claude-opus-test',tools:['Read','Glob','Grep'],mcp_servers:[],apiKeySource:'none'};
  const result={type:'result',subtype:'success',is_error:false,session_id:id,result:'回答の目印',modelUsage:{'claude-opus-test':{}},permission_denials:[]};
- console.log(JSON.stringify(init)); console.log(JSON.stringify(result));
+ if(mode==='helper') result.modelUsage['claude-haiku-test']={inputTokens:1360,outputTokens:22};
+ console.log(JSON.stringify(init)); console.log(JSON.stringify({type:'assistant',session_id:id,message:{model:'claude-opus-test'}})); console.log(JSON.stringify(result));
  if(mode==='exit') process.exitCode=3;
 }
 `);
@@ -99,6 +126,14 @@ describe('deliveryのClaude起動', () => {
       expect(readFileSync(join(dir, 'request.md'), 'utf8')).toContain('依頼の目印');
       expect(readFileSync(join(dir, 'result.md'), 'utf8')).toBe('回答の目印');
       expect(JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8'))).toMatchObject({ ok: true, head: input.head });
+    });
+  });
+  it('補助モデルを許した成功結果で、JSON要約とmanifestに同じ使用量を残す', async () => {
+    await withRepo('helper', async ({ input, options }) => {
+      const result = await askOpus(input, options);
+      const helpers = [{ model: 'claude-haiku-test', inputTokens: 1360, outputTokens: 22 }];
+      expect(result).toMatchObject({ ok: true, helperModels: helpers });
+      expect(JSON.parse(readFileSync(join(result.dir!, 'manifest.json'), 'utf8'))).toMatchObject({ ok: true, helperModels: helpers });
     });
   });
   it('head不一致・未コミット変更ではClaudeを起動しない', async () => {
