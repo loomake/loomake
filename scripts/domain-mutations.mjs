@@ -104,7 +104,13 @@ function runTrial(target, mutation) {
 }
 
 /** .loomake/quality配下の新規保存先に、選んだ13条件の試験と結果を残す。 */
-export function runMutations(destination) {
+export function runMutations(destination, { only } = {}) {
+  if (only !== undefined) {
+    assert.ok(Array.isArray(only) && only.length > 0, '検査する条件は空でないIDの配列で指定してください');
+    assert.equal(new Set(only).size, only.length, '検査する条件のIDは重複できません');
+    assert.ok(only.every((id) => DOMAIN_MUTATIONS.some((mutation) => mutation.id === id)), '登録されていない条件のIDがあります');
+  }
+  const selected = only === undefined ? DOMAIN_MUTATIONS : only.map((id) => DOMAIN_MUTATIONS.find((mutation) => mutation.id === id));
   const quality = join(root, '.loomake/quality');
   const target = resolve(destination);
   assert.ok(within(quality, target), '保存先はリポジトリの.loomake/quality配下にしてください');
@@ -116,13 +122,14 @@ export function runMutations(destination) {
   const files = [...sourceFiles(join(root, 'packages/core/src')), ...sourceFiles(join(root, 'packages/kit/src')), ...['core/test/agreement.test.ts', 'kit/test/agreement.test.ts', 'kit/test/coverage-policy.test.ts'].map((name) => join(root, 'packages', name))];
   const sources = files.map((file) => ({ path: relative(root, file).split('\\').join('/'), sha256: sha256(readFileSync(file)) }));
   const summary = { scope: 'selected-domain-conditions', environment: { node: process.version, platform: process.platform, arch: process.arch }, scriptSha256: sha256(readFileSync(fileURLToPath(import.meta.url))), sources, baseline: null, mutations: [], originalsUnchanged: false, ok: false };
+  if (only !== undefined) summary.selected = [...only];
   try {
     const baseline = runTrial(target);
     const tests = assertions(baseline.report).map((row) => row.fullName);
     const verdict = classifyMutation(baseline.exitCode, baseline.report, tests);
     summary.baseline = { status: verdict.status === 'survived' ? 'passed' : 'error', tests, exitCode: baseline.exitCode, durationMs: baseline.durationMs };
     if (summary.baseline.status === 'passed') {
-      for (const mutation of DOMAIN_MUTATIONS) {
+      for (const mutation of selected) {
         try {
           const trial = runTrial(target, mutation);
           const verdict = classifyMutation(trial.exitCode, trial.report, tests);
@@ -138,7 +145,7 @@ export function runMutations(destination) {
       try { return sha256(readFileSync(join(root, source.path))) === source.sha256; }
       catch { return false; }
     });
-    summary.ok = summary.originalsUnchanged && summary.baseline?.status === 'passed' && summary.mutations.length === DOMAIN_MUTATIONS.length && summary.mutations.every((mutation) => mutation.status === 'killed');
+    summary.ok = summary.originalsUnchanged && summary.baseline?.status === 'passed' && summary.mutations.length === selected.length && summary.mutations.every((mutation) => mutation.status === 'killed');
     writeFileSync(join(target, 'results.json'), JSON.stringify(summary, null, 2) + '\n');
   }
   return summary;

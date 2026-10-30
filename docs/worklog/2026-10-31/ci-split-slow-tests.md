@@ -15,3 +15,8 @@
 2. 選択14件と共有準備5件、型・lintが成功。実設定を同じbyteで使う独立fixtureの7経路で、PRと両shardのslow不実施、local/push/schedule/releaseの全件、空ファイル除外とPR両shardの和集合を確認した。元のreporter/outputFile/coverageと製品gateは保持した。
 3. fixtureの成功は実caseの3OS性能合格ではない。タスクは5/18完了で、case分割・全体done・CI・最終レビュー・人ruleset操作は未完了。
 4. 次はtask2.4の実13条件の独立mutation試験を追加する。計測表は上記の進行中の状態を維持する。
+
+1. task2.4の選択APIと13条件の個別mutation試験を実装した。CLIの既定13条件と元の全体試験は残した。
+2. 元と新規の33試験、型・lintが成功。各条件で実baseline10件・同じ既存テストのassertion失敗・元source/test/reportの保持・保存JSONと返値の一致を確認した。未知・重複・空の選択は保存前に拒否する。
+3. 3OS各3sampleによるfast確定は未実施のため、task2.4は未チェック、5/18完了のままとする。初回のTypeScript推論エラーも検証ログに保持した。
+4. 次は固定headの通常verifyを実行し、PR179の最終受入・統合と残10file設計の前提を確認する。計測表の実装とマージまでの値は進行中、CIと最終レビューは未実施である。
