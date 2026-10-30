@@ -6,7 +6,7 @@
 
 ## 2. エンジンのタイマー（REQ-336）
 
-- [ ] 2.1 `packages/runner/test/engine-long-deadline.test.ts` に 3 つの試験（runClaude の上限超え・分けた待機の早い発火・timeoutMinutes 40000 の run）を足す。実装の前に実行し、3 つとも失敗することを PR に記録する（REQ-336）
+- [x] 2.1 `packages/runner/test/engine-long-deadline.test.ts` に 3 つの試験（runClaude の上限超え・分けた待機の早い発火・timeoutMinutes 40000 の run）を足す。実装の前に実行し、3 つとも失敗することを PR に記録する（REQ-336）
 - [ ] 2.2 `engine.ts` の期限の待機を、上限以下に分けて計り直す形にする。2.1 の試験と、既存の `engine-safety`・`engine-normal-exit`・`run.test` の REQ-105 の試験が通ることを確かめる（REQ-336）
 
 ## 3. 外部操作のあいだの中断（REQ-337）
