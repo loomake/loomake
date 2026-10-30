@@ -1,3 +1,33 @@
+export type ResultFault = Readonly<{ kind: 'failure'; subtype?: string } | { kind: 'shape' }>;
+
+const DISPLAYABLE_RESULT_SUBTYPE = /^error_[a-z0-9_]{1,64}$/;
+
+/** Classify the original engine stdout without exposing its body or parse errors. */
+export function classifyEngineResult(raw: string): ResultFault | undefined {
+  let value: unknown;
+  try { value = JSON.parse(raw); }
+  catch { return { kind: 'shape' }; }
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return { kind: 'shape' };
+  const object = value as Record<string, unknown>;
+  const has = (key: string) => Object.hasOwn(object, key);
+  const failed = object.is_error === true || (typeof object.subtype === 'string' && object.subtype.startsWith('error_'));
+  const malformed = (has('type') && typeof object.type !== 'string') ||
+    (has('subtype') && typeof object.subtype !== 'string') ||
+    (has('is_error') && typeof object.is_error !== 'boolean') || typeof object.result !== 'string';
+  if (failed) {
+    return typeof object.subtype === 'string' && DISPLAYABLE_RESULT_SUBTYPE.test(object.subtype)
+      ? { kind: 'failure', subtype: object.subtype } : { kind: 'failure' };
+  }
+  return malformed ? { kind: 'shape' } : undefined;
+}
+
+/** The reason accepts only the classification and its recorded output location. */
+export function resultFaultReason(fault: ResultFault, outputPath: string): string {
+  if (fault.kind === 'shape') return `エンジンの結果を読めません（JSONでないか、形が正しくありません）。出力の記録：${outputPath}`;
+  const subtype = fault.subtype !== undefined && DISPLAYABLE_RESULT_SUBTYPE.test(fault.subtype) ? `（subtype：${fault.subtype}）` : '';
+  return `エンジンが失敗の結果を返しました${subtype}。出力の記録：${outputPath}`;
+}
+
 /** 観測済みの値だけを使う、実行固有の判断。I/Oは呼び出し側が担当する。 */
 export type EngineObservation = Readonly<{
   aborted: boolean;
