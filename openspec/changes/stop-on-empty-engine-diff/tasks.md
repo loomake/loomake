@@ -7,7 +7,7 @@
 ## 2. 判断
 
 - [x] 2.1 `packages/runner/test/decision-policy.test.ts` に REQ-332 の `it.each` を足し、失敗することを確かめる（確認：`pnpm -s vitest run packages/runner/test/decision-policy.test.ts` で、新しい行だけが失敗する）
-- [ ] 2.2 `packages/runner/src/run/decision-policy.ts` に `decideAfterChanges` を足す（確認：2.1 の試験が通る）
+- [x] 2.2 `packages/runner/src/run/decision-policy.ts` に `decideAfterChanges` を足す（確認：2.1 の試験が通る）
 - [ ] 2.3 `tests/run-decision-mutations.test.ts` に変異 `repair-no-change`・`no-change-anchor` を足し、名前の数と結果の期待値を増やす（確認：この試験が通り、5 つの変異が killed になる）
 
 ## 3. run の流れ
