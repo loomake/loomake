@@ -39,3 +39,10 @@
 2. verify の結果：今回の 7 件と対象の既存 6 件はすべて reviewed。監査全体は既存台帳の未確認・古いハッシュにより exit 1（635 件中 reviewed 95、unreviewed 185、invalid 355）。全体テスト初回は changeset 未追加の REQ-056 だけ失敗し、1445 件成功、既存 Windows 限定 8 件は対象外。
 3. 残っている確認事項・仮定：今回と無関係な既存の Scenario 台帳の更新は対象外。監査全体の成功とは報告しない。
 4. 次にやること：予定の changeset を追加し、全体検証と完了ゲートを通す。
+
+## 全体検証（タスク 4.2・5.1）
+
+1. やったこと：kit・runner・CLI の patch changeset を追加し、全体の品質コマンドを実行した（PR #159）。
+2. verify の結果：changeset status、lint、typecheck は exit 0。pnpm test --maxWorkers=2 は 104 ファイル・1446 件成功、既存 Windows 限定 8 件は対象外。新たな skip や期待値の緩和はない。
+3. 残っている確認事項・仮定：変更なし。
+4. 次にやること：5.2 の完了ゲートを実行し、管理役へ最終レビュー用の差分を渡す。

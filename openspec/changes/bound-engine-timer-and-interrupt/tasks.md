@@ -25,5 +25,5 @@
 
 ## 5. 確認
 
-- [ ] 5.1 `pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` を通す
+- [x] 5.1 `pnpm -s lint`・`pnpm -s typecheck`・`pnpm -s test` を通す
 - [ ] 5.2 `pnpm -s verify --change bound-engine-timer-and-interrupt --done` を通す <!-- loomake:gate=done -->
