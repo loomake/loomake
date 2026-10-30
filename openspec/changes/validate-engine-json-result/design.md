@@ -279,3 +279,28 @@ scripts/claude-result-paths.mjsへread-only validatorとowned cwd管理を追加
 P2は実pathの境界とgit check-ignoreをread-onlyで調べ、保存先を作らない。成功しても、その後のopenとの原子性や資格を証明しない。P3は自己作成cwdへO_EXCL/0600で固定noteだけを書き、祖先.git/GIT環境の存在を拒否する。gitの明示的な非repo結果も照合し、単なる非ゼロやbare repoをgit外としない。callbackの例外messageを捨て、成功/失敗後に自己cwdをfinallyで削除する。CLI呼出しや資格adapterへは接続しない。
 
 追加24件の合成試験はnativeの偽pin/path/type/symlink、保存先の境界/除外/祖先file、git内/bare/GIT環境/実行不能、noteと成功/失敗時のcleanupを確認する。既存36/66/45件とmutation期待値は保持する。実4件0/4、P6拒否、4.2未チェック、永続化/試行台帳・process tree/stream終結の未受入を維持する。
+
+
+### 9.7 lifecycle driverの採否（2026-10-31）
+
+独立Opus設計dbfb3588-5554-4865-8ec4-869177f3514fはhead87957d3、role=design、要求/実応答claude-opus-5-5、ok=true、拒否0だった。158行全文と既存契約を管理役が確認し、次をADR0006で採用した。66/45件の個別ファイルはモデルに特定材料不足と明記されており、その全体をレビュー済みとは数えない。
+
+| 判断 | 元の選択肢 | 採否と理由 |
+|---|---|---|
+| LC-1 | A：spawn/group/clock/timer/signalの必須注入／B：private TS/dist直接import／C：runner公開export追加 | A採用。実factory/OS adapterの既定値を作らず、runner本体・公開index・build順を変えない |
+| LC-2 | close猶予500/1000/5000ms | 1000ms採用。TERM猶予5000ms・group待機1000msと合わせ、最初のstop/exitから最大7000msで終結する |
+| LC-3 | HUPを扱う／扱わない | 扱う。SIGINT/SIGTERMと同じ中断へそろえ、偽emitterだけで検証する |
+| LC-4 | 純粋projection抽出／複製／proxy child | projectResultTransport抽出。既存36件を変更せず、元の分類/fixture判定を一か所に保ち、listener/timerの二重化を避ける |
+| LC-5 | Windows tree adapter追加／factory0で拒否 | win32はfactory0で拒否。実OS/Windows/別sessionの保証を新たに作らない |
+| LC-6 | close codeをexitへ代用／exit-unobserved | 後者採用。exitを作り出さず、exit/close不一致も固定exit-close-mismatchで拒否する |
+
+scripts/claude-result-lifecycle.mjsのdriveResultProcessは全依存を必須とし、呼出元は合成試験だけとする。shell=false・detached=true・3pipeの凍結optionsを注入factoryへ渡し、正の安全なPID（1と自分のPID以外）だけをowned pgidとして記録する。factory前の中断は起動0。起動後は元exit/closeと、timeout/abort/上限のflags、最初のprimary、transport、cleanupを分け、後処理で元の結果を書き換えない。実owned groupと同一PID/別session/Windows通常終了の保証は未受入である。
+
+stdoutは1MiBのメモリだけ、stderrは64KiBのbyte数だけとし、3stream/child errorを固定理由へ変換する。実行期限5分は単調時計で再確認し、stop/exitの後はTERM→5秒後KILL→group最大1秒→close最大1秒で終結する。signal/waitのthrow・reject・false・never-resolveもdriver自身で有界にし、wait trueが遅れて届いてもnow<deadlineを再確認して期限後は採らない。cleanupの完了や失敗をtimeoutへ代用しない。
+
+settleは一度だけとし、timer/親signal/abort/data listenerを回収しowned pipeをdestroyする。遅いerrorはmessageを捨てるsinkで吸収する。primaryなし・cleanup確認済み・transport closed・exit観測済み・exit/close一致の場合だけ、純粋projectResultTransportへ渡す。戻り値はcollected=falseで、原raw・stderr・例外message・PID一覧を保存しない。同期依存が任意にhostをブロックする場合までの保証は追加しない。
+
+[Node22.12の一次資料](https://nodejs.org/download/release/v22.12.0/docs/api/child_process.html#event-close)では、exit時のstdio未closeと、spawn失敗のerror後close、error後exitの未保証が説明されている。元データの分類とtransport完了を分離する根拠であり、実OSの停止保証や採集資格へ置き換えない。P6拒否・実0/4・4.2未チェック、実adapter/資格adapter/CLI入口/永続化台帳の未採用を維持する。
+
+
+lifecycleの先行実装は全依存fakeの48試験で、依存欠落/中断済み/不正PID/不完全pipe、元code/flags、group停止と期限、stream error、close未到達/不一致、UTF-8、marker非漏出とlistener/timer/pipe回収を確認する。判定後半だけをprojectResultTransportへ抽出し、旧inspectResultProcessのcaptureと既存36件は保持する。旧captureが実OS接続に適格になったとは扱わず、新driverもcollectorの実行入口へ接続しない。

@@ -91,8 +91,13 @@ export async function inspectResultProcess(child, metadata, { stdoutLimit = 1048
     child.stdout.removeListener('data', onStdout);
     child.stderr.removeListener('data', onStderr);
   }
+  if (reason) return { outcome: reason, collected: false };
+  return projectResultTransport({ stdout, stderrBytes, exit, metadata });
+}
+
+/** Pure post-transport projection, shared without a second set of listeners or timers. */
+export function projectResultTransport({ stdout, stderrBytes, exit, metadata }) {
   const refused = (outcome) => ({ outcome, collected: false });
-  if (reason) return refused(reason);
   if (exit.code !== 0 || exit.signal !== null) return refused('nonzero-exit');
   const observedMetadata = {
     ...metadata, exit: { ...exit, timedOut: false, stdoutLimitHit: false }, stderrBytes,

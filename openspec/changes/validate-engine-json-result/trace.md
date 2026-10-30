@@ -92,12 +92,26 @@ A1・A2・A3・Bの原本はdesign7章を参照する。選択肢が競合する
 
 P1/P2/P3のreadonly検証とowned cwd管理だけを先行採用した。資格adapter・live呼出し・新sandboxは実装しない。上書きを防ぐ固定保存/全試行台帳、process treeとstream終結は具体化前の未受入として残す。実0/4・4.2未チェックと全17tasks+必須受入1を維持する。
 
+### lifecycle設計dbfb3588の採用（2026-10-31）
+
+管理役が全文と実応答model/deny/headを照合した。旧選択肢と理由はdesign9.7に保持する。原exit/flagsとprimary/transport/cleanupを分け、実OS停止や実4件の資格とは扱わない。
+
+| ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |
+|---|---|---|---|---|---|---|---|---|
+| LC-1 | REQ-340・REQ-341 | 依存の利用境界 | 必須注入／TS/dist直結／公開export追加 | 必須注入 | yes | A採用。fake factoryだけ、実OS/CLI adapter既定なし | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| LC-2 | REQ-340・REQ-341 | close猶予 | 500/1000/5000ms | 1000ms | yes | 1000ms採用。既存5分/TERM5秒とgroup1秒を保持し終結を有界にする | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| LC-3 | REQ-340・REQ-341 | HUPを扱うか | 同中断／扱わない | 同中断 | yes | SIGINT/TERMと同じ中断。偽emitterだけで検証 | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| LC-4 | REQ-340・REQ-341 | capture後の判定共有 | 純粋関数抽出／複製／proxy | 抽出 | yes | projectResultTransportへ抽出。既存36/66/45とmutation期待値を維持 | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| LC-5 | REQ-340・REQ-341 | win32の動作 | tree adapter追加／factory0拒否 | 拒否 | yes | factory0でplatform-unsupported。実Windows通常終了の保証なし | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| LC-6 | REQ-340・REQ-341 | closeだけの場合 | exitへ代用／exit-unobserved | 後者 | yes | 後者採用。不一致はexit-close-mismatchでnot-collected。遅いgroup trueは期限後採らない | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+
 ## 仮定
 
 | ID | 関連 | 仮定の内容 | 理由 | 承認 | 承認者 | 承認日 |
 |---|---|---|---|---|---|---|
+| A-LC-1 | REQ-340・REQ-341 | 注入clockは単調な有限ms、schedulerはcallbackを進める契約とする | 合成driverの契約であり、任意の同期依存がhostを停止する保証まで追加しない。実OS/資格の証明ではない | yes | 管理役root（ADR 0006） | 2026-10-31 |
 
-新しい仮定は置いていない。CLIの実導入/help・認証方式・hookや会話記録の永続化は未確認のまま残し、実採集の前提taskで確かめる。C001/S1は未採用の別担当の契約であり、現行mainへ推測で混ぜない。
+製品D01〜D05には新しい仮定を置いていない。lifecycleだけの依存契約をA-LC-1へ記録した。CLIの実導入/help・認証方式・hookや会話記録の永続化は未確認のまま残し、実採集の前提taskで確かめる。C001/S1は未採用の別担当の契約であり、現行mainへ推測で混ぜない。
 
 ## 所有と次の工程
 
