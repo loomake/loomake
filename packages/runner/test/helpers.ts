@@ -330,3 +330,39 @@ export function stallOf(cli: FakeCli, match: (args: string[]) => boolean): { sta
   const before = index < 0 ? events : events.slice(0, index);
   return { stall: index < 0 ? undefined : events[index], failedForwards: before.filter((e) => e.event === 'forward-end' && e.error) };
 }
+
+/**
+ * 祖先の外部操作の監視役を探し、送信先をスクリプトと同じ場所へ記録してから指定した信号を送る。
+ * POSIXではpsのprocess.title、WindowsではCommandLineの監視役スクリプトのパスで判別する。
+ */
+export function signalSupervisorScript(signal: NodeJS.Signals): string {
+  const psList = 'Get-CimInstance Win32_Process | ForEach-Object { "{0}`t{1}`t{2}" -f $_.ProcessId, $_.ParentProcessId, $_.CommandLine }';
+  return `const { execFileSync } = require('node:child_process');
+const fs = require('node:fs');
+const resultFile = require('node:path').join(__dirname, 'interrupted.json');
+const win = process.platform === 'win32';
+const listing = win
+  ? execFileSync('powershell', ['-NoProfile', '-NonInteractive', '-Command', ${JSON.stringify(psList)}], { encoding: 'utf8', maxBuffer: 16 << 20, windowsHide: true })
+  : execFileSync('ps', ['-axo', 'pid=,ppid=,command='], { encoding: 'utf8', maxBuffer: 16 << 20 });
+const table = new Map();
+for (const line of listing.split(/\\r?\\n/)) {
+  const m = win ? line.match(/^(\\d+)\\t(\\d+)\\t(.*)$/) : line.match(/^\\s*(\\d+)\\s+(\\d+)\\s(.*)$/);
+  if (m) table.set(Number(m[1]), { ppid: Number(m[2]), command: m[3] });
+}
+let pid = process.ppid;
+let found;
+for (let i = 0; i < 10 && table.has(pid); i++) {
+  const entry = table.get(pid);
+  if (/[\\\\/]supervisor\\.cjs|^loomake: command supervisor/.test(entry.command)) { found = { pid, command: entry.command, self: process.pid }; break; }
+  pid = entry.ppid;
+}
+if (found) {
+  fs.writeFileSync(resultFile, JSON.stringify(found));
+  process.kill(found.pid, ${JSON.stringify(signal)});
+  setInterval(() => {}, 100);
+} else {
+  fs.writeFileSync(resultFile, JSON.stringify({ error: '祖先に監視役が見つかりません', ppid: process.ppid }));
+  process.exit(1);
+}
+`;
+}

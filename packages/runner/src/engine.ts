@@ -127,10 +127,20 @@ export function runClaude(call: EngineCall): Promise<EngineResult> {
     const diagnostics = createDiagnosticRedactor(call.onStderr ?? ((text) => { process.stderr.write(text); }));
     child.stdout.setEncoding('utf8').on('data', (data: string) => accept(data, (text) => { raw += text; }));
     child.stderr.setEncoding('utf8').on('data', (data: string) => accept(data, diagnostics.write));
-    const timer = setTimeout(() => {
-      timedOut = true;
-      stopping ??= stop(child);
-    }, Math.max(call.timeoutMs, 0));
+    const maxTimerMs = 2_147_483_647;
+    const monotonicMs = () => Number(process.hrtime.bigint()) / 1_000_000;
+    const deadline = monotonicMs() + Math.max(call.timeoutMs, 0);
+    let timer: NodeJS.Timeout;
+    const watchDeadline = () => {
+      const left = deadline - monotonicMs();
+      if (!(left > 0)) {
+        timedOut = true;
+        stopping ??= stop(child);
+        return;
+      }
+      timer = setTimeout(watchDeadline, Math.min(left, maxTimerMs));
+    };
+    timer = setTimeout(watchDeadline, Math.min(Math.max(call.timeoutMs, 0), maxTimerMs));
     const onAbort = () => {
       aborted = true;
       stopping ??= stop(child);
