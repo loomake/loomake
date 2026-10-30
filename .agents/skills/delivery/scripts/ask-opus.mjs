@@ -48,15 +48,24 @@ export function evaluateEvents(raw, sessionId) {
     throw new Error('Claudeの実行ツールが読取専用の範囲を満たしていません。');
   }
   if (init.session_id !== sessionId || result.session_id !== sessionId) throw new Error('Claudeのセッションが指定した新規セッションと一致しません。');
-  const models = Object.keys(result.modelUsage ?? {});
-  if (!/^claude-opus-/.test(init.model ?? '') || models.length === 0 || models.some((model) => !/^claude-opus-/.test(model))) {
-    throw new Error('実際のOpusモデルを確認できませんでした。');
+  if (!/^claude-opus-/.test(init.model ?? '')) throw new Error('開始情報のモデルがOpusではありません。');
+  const responses = events.filter((event) => event?.type === 'assistant');
+  if (responses.length === 0) throw new Error('assistantの応答がありません。');
+  const responseModels = [...new Set(responses.map((event) => event.message?.model))];
+  const invalidModel = responseModels.find((model) => typeof model !== 'string' || !/^claude-opus-/.test(model));
+  if (responseModels.some((model) => typeof model !== 'string' || !/^claude-opus-/.test(model))) {
+    throw new Error(`本体の応答にOpus以外のモデル（${invalidModel ?? '不明'}）が含まれます。`);
   }
+  const models = Object.keys(result.modelUsage ?? {});
+  if (!models.some((model) => /^claude-opus-/.test(model))) throw new Error('modelUsageにOpusの実行記録がありません。');
+  const helperModels = models.filter((model) => !/^claude-opus-/.test(model)).map((model) => ({
+    model, inputTokens: result.modelUsage[model]?.inputTokens ?? null, outputTokens: result.modelUsage[model]?.outputTokens ?? null,
+  }));
   if (result.subtype !== 'success' || result.is_error !== false || typeof result.result !== 'string' || !result.result.trim()) {
     throw new Error('Claudeが工程の成功結果を返していません。');
   }
   if (!Array.isArray(result.permission_denials) || result.permission_denials.length !== 0) throw new Error('権限拒否があるか、拒否の有無を確認できませんでした。');
-  return { result: result.result, models, tools: init.tools, mcpServers: init.mcp_servers,
+  return { result: result.result, models, responseModels, helperModels, tools: init.tools, mcpServers: init.mcp_servers,
     authenticationSource: init.apiKeySource ?? '不明', sessionId, permissionDenials: 0,
     durationMs: result.duration_ms ?? null, costUsd: result.total_cost_usd ?? null };
 }
