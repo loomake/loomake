@@ -21,7 +21,7 @@
 ## 4. 記録
 
 - [x] 4.1 この change の Scenario のレビューを `docs/quality/scenarios.json` に足す。根拠のテストファイルを変えた既存のレビューは、読み直してハッシュを更新する。`node scripts/scenario-audit.mjs` で reviewed になることを確かめる
-- [ ] 4.2 `@loomake/kit`・`@loomake/runner`・`loomake` の patch の changeset を足す
+- [x] 4.2 `@loomake/kit`・`@loomake/runner`・`loomake` の patch の changeset を足す
 
 ## 5. 確認
 
