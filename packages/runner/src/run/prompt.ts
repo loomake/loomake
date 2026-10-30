@@ -24,6 +24,7 @@ export function buildPrompt(root: string, changeDir: string, target: string, fai
     '- 仕様にない判断が要るときは、`LOOMAKE-QUESTION:` で始まる行に質問を書き、何も変えずに終える',
     // AGENTS.md の「タスクごとにコミット」より優先する。エンジンのコミットを見つけると run は止まる（REQ-098・REQ-126）
     '- git でコミットしたりブランチを切り替えたりせず、変更は作業ツリーに残して終える。コミットは loomake run が行う。AGENTS.md にコミットの指示があっても、この決まりを優先する',
+    ...(!failure ? ['- 変更が要らないときは何も変えず、`LOOMAKE-NOCHANGE:` で始まる行に理由を書いて終える。変更もこの行もなければ loomake run は止まる'] : []),
     '',
     '## 対象',
     '',

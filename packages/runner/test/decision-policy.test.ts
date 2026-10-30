@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decideAfterEngine, decideAfterGate, type EngineObservation, type GateObservation } from '../src/run/decision-policy.js';
+import { decideAfterEngine, decideAfterGate, decideAfterChanges, type EngineObservation, type GateObservation } from '../src/run/decision-policy.js';
 
 const engine: EngineObservation = { aborted: false, timedOut: false, text: '正常な出力', exitCode: 0 };
 const gate: GateObservation = { stateChanged: false, ok: false, timedOut: false, fixes: 0, maxFixes: 2 };
@@ -58,4 +58,33 @@ it.each([
   ['状態が変わらない合格は中断の記録より優先する', { ok: true }, { kind: 'passed' }],
 ] as const)('[REQ-205][REQ-124] %s', (_name, patch, expected) => {
   expect(decideAfterGate(Object.freeze({ ...gate, interrupted: true, ...patch }))).toEqual(expected);
+});
+
+describe('エンジンの変更の有無から次の段階を決める', () => {
+  it.each([
+    ['タスクで変更あり', 'task', true, '', { kind: 'commit' }],
+    ['直しで変更あり', 'repair', true, 'LOOMAKE-NOCHANGE: 理由', { kind: 'commit' }],
+    ['変更なし・合図なし', 'task', false, '正常終了', { kind: 'stop' }],
+    ['合図と理由あり', 'task', false, '前置き\nLOOMAKE-NOCHANGE: 既に実装済み', { kind: 'no-change', reason: '既に実装済み' }],
+    ['行頭でない合図', 'task', false, '引用 LOOMAKE-NOCHANGE: 例', { kind: 'stop' }],
+    ['空の理由', 'task', false, 'LOOMAKE-NOCHANGE: \t\n次の行', { kind: 'stop' }],
+    ['最初の合図', 'task', false, 'LOOMAKE-NOCHANGE: 最初\nLOOMAKE-NOCHANGE: 次', { kind: 'no-change', reason: '最初' }],
+    ['直しでは合図があっても停止', 'repair', false, 'LOOMAKE-NOCHANGE: 変更不要', { kind: 'stop' }],
+    ['全角空白の区切り', 'task', false, 'LOOMAKE-NOCHANGE:\u3000確認済み', { kind: 'no-change', reason: '確認済み' }],
+    ['NBSPの区切り', 'task', false, 'LOOMAKE-NOCHANGE:\u00a0確認済み', { kind: 'no-change', reason: '確認済み' }],
+    ['同じ行の空白が混ざる区切り', 'task', false, 'LOOMAKE-NOCHANGE: \t\u3000\u00a0確認済み', { kind: 'no-change', reason: '確認済み' }],
+    ['同じ行の空白だけの理由', 'task', false, 'LOOMAKE-NOCHANGE:\u3000\u00a0\t', { kind: 'stop' }],
+    ['LFを越えた理由', 'task', false, 'LOOMAKE-NOCHANGE: \n次の行', { kind: 'stop' }],
+    ['CRを越えた理由', 'task', false, 'LOOMAKE-NOCHANGE: \r次の行', { kind: 'stop' }],
+    ['CRLFを越えた理由', 'task', false, 'LOOMAKE-NOCHANGE: \r\n次の行', { kind: 'stop' }],
+    ['U+2028を越えた理由', 'task', false, 'LOOMAKE-NOCHANGE: \u2028次の行', { kind: 'stop' }],
+    ['U+2029を越えた理由', 'task', false, 'LOOMAKE-NOCHANGE: \u2029次の行', { kind: 'stop' }],
+    ['freezeした入力を変更しない', 'task', false, 'LOOMAKE-NOCHANGE: 確認済み', { kind: 'no-change', reason: '確認済み' }],
+  ] as const)('[REQ-332] %s', (_name, phase, hasChanges, text, expected) => {
+    const input = Object.freeze({ phase, hasChanges, text });
+    const before = JSON.stringify(input);
+    expect(decideAfterChanges(input)).toEqual(expected);
+    expect(decideAfterChanges(input)).toEqual(expected);
+    expect(JSON.stringify(input)).toBe(before);
+  });
 });

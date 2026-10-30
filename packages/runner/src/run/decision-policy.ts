@@ -37,3 +37,14 @@ export function decideAfterGate(value: GateObservation): GateDecision {
   if (value.fixes >= value.maxFixes) return { kind: 'stop', reason: `直しの回数の上限（${value.maxFixes} 回）に達しました` };
   return { kind: 'repair' };
 }
+
+export type ChangeObservation = Readonly<{ phase: 'task' | 'repair'; hasChanges: boolean; text: string }>;
+export type ChangeDecision = { kind: 'commit' | 'stop' } | { kind: 'no-change'; reason: string };
+
+/** エンジンの変更がない場合の完了と停止を判断する（REQ-332）。 */
+export function decideAfterChanges(value: ChangeObservation): ChangeDecision {
+  if (value.hasChanges) return { kind: 'commit' };
+  if (value.phase === 'repair') return { kind: 'stop' };
+  const signal = value.text.match(/^LOOMAKE-NOCHANGE:[^\S\r\n\u2028\u2029]*(\S.*)$/m);
+  return signal ? { kind: 'no-change', reason: signal[1] } : { kind: 'stop' };
+}

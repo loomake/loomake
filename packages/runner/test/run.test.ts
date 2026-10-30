@@ -5,7 +5,7 @@ import { GATE_MARK, RUN_CONFIG_KEYS, runRun, type RunOptions, type RunSummary } 
 import { KNOWN_CONFIG_KEYS } from '@loomake/kit';
 import { main } from '../../cli/src/main.js';
 import { INTERRUPT_SCRIPT, traceMd } from '../../kit/test/project.js';
-import { CHANGE, makeRepo, type Repo } from './helpers.js';
+import { CHANGE, makeRepo, noChange, type Repo } from './helpers.js';
 import { killOwnedProcess, processState } from './process-state.js';
 
 // git・node・verify のコマンドを何度も起動するので、Windows では 1 件に 10 秒を超えることがある
@@ -51,7 +51,7 @@ const summary = (repo: Repo): RunSummary => JSON.parse(readFileSync(join(runDir(
 const log = (repo: Repo) => repo.git('log', '--format=%s', 'loomake/c1').split('\n');
 
 // 1.1 で impl.txt を書くと、完了ゲートに合格する
-const passing = [{ write: { 'impl.txt': '実装\n' } }, {}];
+const passing = [{ write: { 'impl.txt': '実装\n' } }, noChange];
 
 // 回収前のゾンビと終了途中の子は、利用者のコードを実行できないので「止まった」とみなす（process-state.ts）
 function assertStoppedProcess(pidFile: string) {
@@ -185,7 +185,7 @@ describe('ブランチとタスク', () => {
       repo.git('add', '-A');
       repo.git('commit', '-q', '-m', 'run(c1): 1.1 一つ目のタスク（REQ-012）');
       repo.git('switch', '-q', 'main');
-      repo.plan([{}]);
+      repo.plan([noChange]);
       const r = await run(repo);
       expect(r.code, r.stdout).toBe(0);
       expect(repo.calls()).toHaveLength(1);
@@ -283,7 +283,7 @@ describe('ブランチとタスク', () => {
 describe('完了ゲートと直し', () => {
   it('[REQ-100][REQ-111] 不合格なら内容をエンジンに渡して直させ、直しをコミットし、合格したら完了ゲートのタスクを完了にする。run が完了にしたタスクは不正な直し方とみなさない', () =>
     withRepo(async (repo) => {
-      repo.plan([{}, {}, { write: { 'impl.txt': '直した\n' } }]);
+      repo.plan([noChange, noChange, { write: { 'impl.txt': '直した\n' } }]);
       const r = await run(repo);
       expect(r.code).toBe(0);
       const fix = repo.calls()[2].prompt;
@@ -305,6 +305,7 @@ describe('完了ゲートと直し', () => {
   it('[REQ-104] 直しの回数が上限に達したら止まり、終了コード 1 を返す', () =>
     withRepo(
       async (repo) => {
+        repo.plan([noChange, noChange, { write: { 'fix.txt': '1' } }, { write: { 'fix.txt': '2' } }]);
         const r = await run(repo);
         expect(r.code).toBe(1);
         expect(r.stdout).toContain('直しの回数の上限（2 回）に達しました');
@@ -340,7 +341,7 @@ describe('完了ゲートと直し', () => {
         const pidFile = join(repo.base, 'quality.pid');
         repo.write('write-report.mjs', `import { writeFileSync } from 'node:fs';\nwriteFileSync(${JSON.stringify(pidFile)}, String(process.pid));\nsetInterval(() => {}, 1000);\n`);
         repo.git('commit', '-q', '-am', '終わらないテスト');
-        repo.plan([{}, {}]);
+        repo.plan([noChange, noChange]);
         const start = Date.now();
         try {
           const r = await run(repo);
@@ -498,7 +499,7 @@ describe('実行の記録', () => {
   it('[REQ-118] 出力の中のトークンを *** に置き換えて保存し、環境変数は保存しない', () =>
     withRepo(async (repo) => {
       repo.env.SECRET_FOR_TEST = 'env-secret-value';
-      repo.plan([{ write: { 'impl.txt': '実装\n' }, output: 'トークン ghp_abcdefghijklmnopqrstuvwxyz0123 を見ました' }, {}]);
+      repo.plan([{ write: { 'impl.txt': '実装\n' }, output: 'トークン ghp_abcdefghijklmnopqrstuvwxyz0123 を見ました' }, noChange]);
       await run(repo);
       const saved = readdirSync(runDir(repo)).map((f) => readFileSync(join(runDir(repo), f), 'utf8')).join('\n');
       expect(saved).not.toContain('ghp_abcdefghijklmnopqrstuvwxyz0123');
@@ -570,7 +571,7 @@ describe('中断', () => {
       repo.write('.gitignore', '.loomake/test-report.json\npids.json\nfinished.txt\n');
       repo.git('add', '-A');
       repo.git('commit', '-q', '-m', '中断する test コマンド');
-      repo.plan([{ write: { 'impl.txt': '実装\n' } }, {}]);
+      repo.plan([{ write: { 'impl.txt': '実装\n' } }, noChange]);
       const start = Date.now();
       const r = await run(repo);
       expect(Date.now() - start).toBeLessThan(30_000);
@@ -625,6 +626,7 @@ describe('完了ゲートのタスクの印', () => {
   it('[REQ-100] 残ったタスクの表示と summary.json には、印を含めない', () =>
     withRepo(
       async (repo) => {
+        repo.plan([noChange, { write: { 'fix.txt': '1' } }]);
         const r = await run(repo);
         expect(r.code).toBe(1);
         expect(r.stdout).toContain('直しの回数の上限（1 回）に達しました');
@@ -748,7 +750,7 @@ describe('runnerの表示の保護', () => {
       ];
       const key = '-----BEGIN PRIVATE KEY-----\nFAKE_PRIVATE_BODY\n-----END PRIVATE KEY-----';
       const text = values.slice(0, 5).join('\n') + '\nAuthorization: Bearer ' + values[5] + '\nsk-' + 'x'.repeat(24) + key;
-      repo.plan([{ write: { 'impl.txt': 'ready' }, output: text }, {}]);
+      repo.plan([{ write: { 'impl.txt': 'ready' }, output: text }, noChange]);
       expect((await run(repo)).code).toBe(0);
       const output = readFileSync(join(runDir(repo), '01-output.json'), 'utf8');
       for (const value of [...values, 'FAKE_PRIVATE_BODY', '-----BEGIN PRIVATE KEY-----']) expect(output).not.toContain(value);

@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, unlinkSync } from 'no
 import { join, resolve } from 'node:path';
 import { runRun } from '@loomake/runner';
 import { runReport } from '@loomake/trace';
-import { CHANGE, makeRepo, type Repo } from './helpers.js';
+import { CHANGE, makeRepo, noChange, type Repo } from './helpers.js';
 
 // git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
 vi.setConfig({ testTimeout: 60_000 });
@@ -30,7 +30,7 @@ describe('証拠保存失敗からの復旧', () => {
     const actual = await vi.importActual<typeof import('node:fs')>('node:fs');
     const repo = makeRepo();
     try {
-      repo.plan([{ write: { 'impl.txt': '実装\n' } }, {}]);
+      repo.plan([{ write: { 'impl.txt': '実装\n' } }, noChange]);
       const evidenceDir = join(repo.root, '.loomake/evidence', CHANGE);
       vi.mocked(mkdirSync).mockImplementation((path, options) => {
         if (resolve(String(path)) === evidenceDir) throw Object.assign(new Error('storage denied'), { code: 'EACCES' });
@@ -66,7 +66,7 @@ it('[REQ-176] 公開後の片付け失敗は確認・一時名の削除・証拠
   const actual = await vi.importActual<typeof import('node:fs')>('node:fs');
   const repo = makeRepo();
   try {
-    repo.plan([{ write: { 'impl.txt': '実装\n' } }, {}]);
+    repo.plan([{ write: { 'impl.txt': '実装\n' } }, noChange]);
     vi.mocked(unlinkSync).mockImplementation((path) => {
       if (String(path).includes('.loomake-evidence-')) throw Object.assign(new Error('cleanup denied'), { code: 'EACCES' });
       return actual.unlinkSync(path);

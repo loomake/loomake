@@ -25,6 +25,9 @@ export type FakeStep = {
   exitCode?: number;
 };
 
+/** 変更が要らないタスクを明示して終える台本。 */
+export const noChange = { output: 'LOOMAKE-NOCHANGE: 検査用に変更が要らない' };
+
 // 呼ばれた回数に応じて台本の手順を行い、引数と指示を記録する。台本が尽きたら何もしない
 const FAKE_CLAUDE = `#!/usr/bin/env node
 import { appendFileSync, chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
