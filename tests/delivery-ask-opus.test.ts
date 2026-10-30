@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
+import { once } from 'node:events';
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, existsSync, symlinkSync, chmodSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -10,6 +11,7 @@ const session = 'test-session';
 function events() {
   return [
     { type: 'system', subtype: 'init', session_id: session, model: 'claude-opus-test', tools: ['Read', 'Glob', 'Grep'], mcp_servers: [], apiKeySource: 'none' },
+    { type: 'assistant', session_id: session, message: { model: 'claude-opus-test' } },
     { type: 'result', subtype: 'success', is_error: false, session_id: session, result: '回答の目印', modelUsage: { 'claude-opus-test': {} }, permission_denials: [] },
   ];
 }
@@ -20,20 +22,45 @@ describe('deliveryのOpus応答の検証', () => {
     expect(evaluateEvents(encode(events()), session)).toMatchObject({ models: ['claude-opus-test'], sessionId: session, permissionDenials: 0 });
   });
   it.each([
-    ['別モデル', (items: ReturnType<typeof events>) => { Object.assign(items[1], { modelUsage: { 'claude-sonnet-test': {} } }); }],
-    ['モデル情報なし', (items: ReturnType<typeof events>) => { Object.assign(items[1], { modelUsage: {} }); }],
-    ['拒否', (items: ReturnType<typeof events>) => { Object.assign(items[1], { permission_denials: [{ tool_name: 'Write' }] }); }],
-    ['拒否情報なし', (items: ReturnType<typeof events>) => { delete items[1].permission_denials; }],
-    ['実行エラー', (items: ReturnType<typeof events>) => { items[1].is_error = true; }],
-    ['空の回答', (items: ReturnType<typeof events>) => { items[1].result = ''; }],
-    ['上限停止', (items: ReturnType<typeof events>) => { items[1].subtype = 'error_max_turns'; }],
-    ['セッション不一致', (items: ReturnType<typeof events>) => { items[1].session_id = 'other-session'; }],
+    ['別モデル', (items: ReturnType<typeof events>) => { Object.assign(items[2], { modelUsage: { 'claude-sonnet-test': {} } }); }],
+    ['モデル情報なし', (items: ReturnType<typeof events>) => { Object.assign(items[2], { modelUsage: {} }); }],
+    ['拒否', (items: ReturnType<typeof events>) => { Object.assign(items[2], { permission_denials: [{ tool_name: 'Write' }] }); }],
+    ['拒否情報なし', (items: ReturnType<typeof events>) => { delete items[2].permission_denials; }],
+    ['実行エラー', (items: ReturnType<typeof events>) => { items[2].is_error = true; }],
+    ['空の回答', (items: ReturnType<typeof events>) => { items[2].result = ''; }],
+    ['上限停止', (items: ReturnType<typeof events>) => { items[2].subtype = 'error_max_turns'; }],
+    ['セッション不一致', (items: ReturnType<typeof events>) => { items[2].session_id = 'other-session'; }],
     ['編集できるツール', (items: ReturnType<typeof events>) => { items[0].tools = ['Read', 'Write']; }],
     ['MCP', (items: ReturnType<typeof events>) => { Object.assign(items[0], { mcp_servers: [{ name: 'external' }] }); }],
   ])('%sを成功と扱わない', (_name, mutate) => {
     const items = events();
     mutate(items);
     expect(() => evaluateEvents(encode(items), session)).toThrow();
+  });
+  it('本体はOpusに限定し、補助モデルの名前と使用量を保存する', () => {
+    const items = events();
+    Object.assign(items[2], { modelUsage: { 'claude-opus-test': { inputTokens: 100, outputTokens: 50 }, 'claude-haiku-test': { inputTokens: 1360, outputTokens: 22 } } });
+    expect(evaluateEvents(encode(items), session)).toMatchObject({
+      responseModels: ['claude-opus-test'], helperModels: [{ model: 'claude-haiku-test', inputTokens: 1360, outputTokens: 22 }],
+    });
+  });
+  it('assistantに別モデルが1件でも含まれる場合は、モデル名を示して拒む', () => {
+    expect(() => evaluateEvents(encode([...events(), { type: 'assistant', message: { model: 'claude-sonnet-test' } }]), session))
+      .toThrow('本体の応答にOpus以外のモデル（claude-sonnet-test）');
+  });
+  it('assistantがない場合・応答のモデルが不明の場合・開始モデルが異なる場合を区別して拒む', () => {
+    expect(() => evaluateEvents(encode(events().filter((event) => event.type !== 'assistant')), session)).toThrow('assistantの応答がありません');
+    const missing = events();
+    Object.assign(missing[1], { message: {} });
+    expect(() => evaluateEvents(encode(missing), session)).toThrow('本体の応答にOpus以外のモデル（不明）');
+    const wrongInit = events();
+    wrongInit[0].model = 'claude-sonnet-test';
+    expect(() => evaluateEvents(encode(wrongInit), session)).toThrow('開始情報のモデルがOpusではありません');
+  });
+  it('本体がOpusでもmodelUsageにOpusがなければ拒む', () => {
+    const items = events();
+    Object.assign(items[2], { modelUsage: { 'claude-haiku-test': { inputTokens: 10, outputTokens: 2 } } });
+    expect(() => evaluateEvents(encode(items), session)).toThrow('modelUsageにOpusの実行記録がありません');
   });
   it('壊れたJSONや最終結果の欠落を成功と扱わない', () => {
     expect(() => evaluateEvents('not JSON', session)).toThrow();
@@ -54,9 +81,83 @@ describe('deliveryのOpus応答の検証', () => {
   });
 });
 
+async function withCleanup(action: () => void | Promise<void>, cleanup: () => void | Promise<void>) {
+  const errors: unknown[] = [];
+  try { await action(); } catch (error) { errors.push(error); }
+  try { await cleanup(); } catch (error) { errors.push(error); }
+  if (errors.length === 1) throw errors[0];
+  if (errors.length > 1) throw new AggregateError(errors, '試験と後片付けの失敗を保持しました。');
+}
+
+function alive(pid: number): boolean {
+  try { process.kill(pid, 0); }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ESRCH') return false;
+    throw error;
+  }
+  if (process.platform === 'linux') {
+    try { return !/\) Z /.test(readFileSync(`/proc/${pid}/stat`, 'utf8')); }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return false;
+      throw error;
+    }
+  }
+  if (process.platform === 'darwin') {
+    const result = spawnSync('ps', ['-o', 'stat=', '-p', String(pid)], { encoding: 'utf8' });
+    if (result.error) throw result.error;
+    if (result.status === 1 && !result.stdout.trim()) return false;
+    if (result.status !== 0) throw new Error('子プロセスの状態を確認できませんでした。');
+    return !/^Z/.test(result.stdout.trim());
+  }
+  return true;
+}
+
+function readFakePid(cwd: string): number | undefined {
+  const file = join(cwd, '.loomake/pid');
+  if (!existsSync(file)) return undefined;
+  const pid = Number(readFileSync(file, 'utf8'));
+  if (!Number.isSafeInteger(pid) || pid <= 0 || pid === process.pid) throw new Error('偽プロセスのPIDが不正です。');
+  return pid;
+}
+
+const windowsStopScript = String.raw`
+$ErrorActionPreference = 'Stop'
+$targetPidValue = [uint32]::Parse($env:LOOMAKE_CLEANUP_PID)
+$expectedFixture = $env:LOOMAKE_CLEANUP_FIXTURE
+$record = Get-CimInstance -ClassName Win32_Process -Filter ('ProcessId = ' + $targetPidValue)
+if ($null -eq $record) { exit 0 }
+if ([string]::IsNullOrWhiteSpace($record.CommandLine)) { throw 'Process command line unavailable' }
+$escapedFixture = [regex]::Escape($expectedFixture)
+$fixtureArgument = '(?:^|\s)(?:"' + $escapedFixture + '"|' + $escapedFixture + ')(?=\s|$)'
+if (-not [regex]::IsMatch($record.CommandLine, $fixtureArgument, [Text.RegularExpressions.RegexOptions]::IgnoreCase)) {
+  throw 'Process fixture argument mismatch'
+}
+& taskkill.exe /PID $targetPidValue /F | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'Owned process termination failed' }
+`;
+
+async function stopOwnedFake(cwd: string, timeoutMs: number) {
+  const pid = readFakePid(cwd);
+  if (pid === undefined || !alive(pid)) return;
+  if (process.platform === 'win32') {
+    const result = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(windowsStopScript, 'utf16le').toString('base64')], {
+      env: { ...process.env, LOOMAKE_CLEANUP_PID: String(pid), LOOMAKE_CLEANUP_FIXTURE: join(cwd, '.loomake/fake.mjs') },
+      encoding: 'utf8', shell: false, timeout: timeoutMs, killSignal: 'SIGKILL',
+    });
+    if (result.error) throw result.error;
+    if (result.status !== 0) throw new Error(`所有する偽プロセスを確認・停止できませんでした。${result.stderr}`);
+  } else {
+    try { process.kill(-pid, 'SIGKILL'); }
+    catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error; }
+  }
+  const deadline = Date.now() + timeoutMs;
+  while (alive(pid) && Date.now() < deadline) await new Promise((resolvePromise) => setTimeout(resolvePromise, 25));
+  if (alive(pid)) throw new Error('所有する偽プロセスが後片付け後も動いています。');
+}
+
 async function withRepo(mode: string, check: (fixture: { cwd: string; input: ReturnType<typeof parseArgs>; options: { cwd: string; executable: string; prefixArgs: string[]; env: NodeJS.ProcessEnv } }) => Promise<void>) {
   const cwd = mkdtempSync(join(tmpdir(), 'loomake-opus-'));
-  try {
+  await withCleanup(async () => {
     execFileSync('git', ['init', '-q'], { cwd });
     writeFileSync(join(cwd, '.gitignore'), '.loomake/\n');
     execFileSync('git', ['add', '.gitignore'], { cwd });
@@ -68,6 +169,7 @@ async function withRepo(mode: string, check: (fixture: { cwd: string; input: Ret
     const fixture = join(cwd, '.loomake/fake.mjs');
     writeFileSync(fixture, `import {writeFileSync} from 'node:fs';
 const args=process.argv.slice(2); const id=args[args.indexOf('--session-id')+1];
+writeFileSync('.loomake/pid', String(process.pid));
 writeFileSync('.loomake/called', 'yes');
 writeFileSync('.loomake/env.json', JSON.stringify({memory:process.env.CLAUDE_CODE_DISABLE_AUTO_MEMORY, preserved:process.env.DELIVERY_TEST_SENTINEL}));
 let request=''; for await (const chunk of process.stdin) request+=chunk;
@@ -78,16 +180,75 @@ else {
  if(mode==='dirty') writeFileSync('unexpected.txt','changed');
  const init={type:'system',subtype:'init',session_id:id,model:'claude-opus-test',tools:['Read','Glob','Grep'],mcp_servers:[],apiKeySource:'none'};
  const result={type:'result',subtype:'success',is_error:false,session_id:id,result:'回答の目印',modelUsage:{'claude-opus-test':{}},permission_denials:[]};
- console.log(JSON.stringify(init)); console.log(JSON.stringify(result));
+ if(mode==='helper') result.modelUsage['claude-haiku-test']={inputTokens:1360,outputTokens:22};
+ console.log(JSON.stringify(init)); console.log(JSON.stringify({type:'assistant',session_id:id,message:{model:'claude-opus-test'}})); console.log(JSON.stringify(result));
  if(mode==='exit') process.exitCode=3;
 }
 `);
     await check({ cwd, input: { role: 'design', request, head, timeoutMs: 3000 },
       options: { cwd, executable: process.execPath, prefixArgs: [fixture], env: { ...process.env, DELIVERY_TEST_MODE: mode, CLAUDE_CODE_DISABLE_AUTO_MEMORY: '0', DELIVERY_TEST_SENTINEL: 'kept' } } });
-  } finally { rmSync(cwd, { recursive: true, force: true }); }
+  }, () => rmSync(cwd, { recursive: true, force: true }));
 }
 
 describe('deliveryのClaude起動', () => {
+  it('assertion・所有子cleanup・外側rmの失敗をすべて保持する', async () => {
+    const assertion = new Error('assertion');
+    const ownedCleanup = new Error('owned cleanup');
+    const removal = new Error('rm');
+    const failure: unknown = await withCleanup(
+      () => withCleanup(() => { throw assertion; }, () => { throw ownedCleanup; }),
+      () => { throw removal; },
+    ).catch((error: unknown) => error);
+    expect(failure).toBeInstanceOf(AggregateError);
+    if (!(failure instanceof AggregateError)) throw new Error('外側の失敗集約が必要です。');
+    expect(failure.errors[1]).toBe(removal);
+    const inner: unknown = failure.errors[0];
+    expect(inner).toBeInstanceOf(AggregateError);
+    if (!(inner instanceof AggregateError)) throw new Error('内側の失敗集約が必要です。');
+    expect(inner.errors).toEqual([assertion, ownedCleanup]);
+    await expect(withCleanup(() => {}, () => { throw removal; })).rejects.toBe(removal);
+  });
+  it('fixtureの所有子を停止してから削除できる', async () => {
+    await withRepo('timeout', async ({ cwd, input, options }) => {
+      const child = spawn(options.executable, options.prefixArgs, {
+        cwd, env: options.env, shell: false, detached: process.platform !== 'win32', stdio: ['pipe', 'ignore', 'ignore'],
+      });
+      const closed = once(child, 'close');
+      await withCleanup(async () => {
+        await once(child, 'spawn');
+        child.stdin!.end();
+        const deadline = Date.now() + input.timeoutMs;
+        while (!existsSync(join(cwd, '.loomake/called')) && Date.now() < deadline) await new Promise((resolvePromise) => setTimeout(resolvePromise, 25));
+        expect(existsSync(join(cwd, '.loomake/called'))).toBe(true);
+        const pid = readFakePid(cwd);
+        expect(pid).toBe(child.pid);
+        expect(alive(pid!)).toBe(true);
+        await stopOwnedFake(cwd, input.timeoutMs);
+        await closed;
+        expect(alive(pid!)).toBe(false);
+      }, async () => {
+        if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
+        await closed;
+      });
+    });
+  });
+  if (process.platform === 'win32') {
+    it('Windowsのfixture引数が一致しないPIDへ停止命令を出さない', async () => {
+      await withRepo('timeout', async ({ cwd, input }) => {
+        const child = spawn(process.execPath, ['-e', 'setInterval(()=>{},1000)'], { cwd, shell: false, stdio: 'ignore' });
+        const closed = once(child, 'close');
+        await withCleanup(async () => {
+          await once(child, 'spawn');
+          writeFileSync(join(cwd, '.loomake/pid'), String(child.pid));
+          await expect(stopOwnedFake(cwd, input.timeoutMs)).rejects.toThrow('所有する偽プロセスを確認・停止できませんでした。');
+          expect(alive(child.pid!)).toBe(true);
+        }, async () => {
+          if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
+          await closed;
+        });
+      });
+    });
+  }
   it('成果物を保存し、返す要約に依頼や回答の本文を混ぜない', async () => {
     await withRepo('success', async ({ cwd, input, options }) => {
       const result = await askOpus(input, options);
@@ -99,6 +260,14 @@ describe('deliveryのClaude起動', () => {
       expect(readFileSync(join(dir, 'request.md'), 'utf8')).toContain('依頼の目印');
       expect(readFileSync(join(dir, 'result.md'), 'utf8')).toBe('回答の目印');
       expect(JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8'))).toMatchObject({ ok: true, head: input.head });
+    });
+  });
+  it('補助モデルを許した成功結果で、JSON要約とmanifestに同じ使用量を残す', async () => {
+    await withRepo('helper', async ({ input, options }) => {
+      const result = await askOpus(input, options);
+      const helpers = [{ model: 'claude-haiku-test', inputTokens: 1360, outputTokens: 22 }];
+      expect(result).toMatchObject({ ok: true, helperModels: helpers });
+      expect(JSON.parse(readFileSync(join(result.dir!, 'manifest.json'), 'utf8'))).toMatchObject({ ok: true, helperModels: helpers });
     });
   });
   it('head不一致・未コミット変更ではClaudeを起動しない', async () => {
@@ -214,21 +383,32 @@ console.log(JSON.stringify(await askOpus(${JSON.stringify({ ...input, timeoutMs:
       expect(JSON.parse(readFileSync(join(result.dir!, 'manifest.json'), 'utf8')).exitCode).not.toBe(0);
     });
   });
-  it('SIGINTで子プロセスを止め、未実施を保存する', async () => {
+  async function checkInterrupted(trigger: string) {
     await withRepo('timeout', async ({ cwd, input, options }) => {
-      const modulePath = resolve(import.meta.dirname, '../.agents/skills/delivery/scripts/ask-opus.mjs');
-      const code = `import {askOpus} from ${JSON.stringify(pathToFileURL(modulePath).href)};
+      await withCleanup(async () => {
+        const modulePath = resolve(import.meta.dirname, '../.agents/skills/delivery/scripts/ask-opus.mjs');
+        const code = `import {askOpus} from ${JSON.stringify(pathToFileURL(modulePath).href)};
 import {existsSync} from 'node:fs';
-const timer=setInterval(()=>{if(existsSync('.loomake/called')) {clearInterval(timer);process.kill(process.pid,'SIGINT');}},10);
+const timer=setInterval(()=>{if(existsSync('.loomake/called')) {clearInterval(timer);${trigger};}},10);
 console.log(JSON.stringify(await askOpus(${JSON.stringify(input)},${JSON.stringify({ ...options, env: undefined })})));
 clearInterval(timer);`;
-      const child = spawnSync(process.execPath, ['--input-type=module', '-e', code], { cwd, env: options.env, encoding: 'utf8', timeout: 10000 });
-      expect(child.status).toBe(0);
-      const result = JSON.parse(child.stdout);
-      expect(result).toMatchObject({ ok: false, reason: expect.stringContaining('中断') });
-      expect(JSON.parse(readFileSync(join(result.dir, 'manifest.json'), 'utf8'))).toMatchObject({ ok: false });
+        const child = spawnSync(process.execPath, ['--input-type=module', '-e', code], {
+          cwd, env: options.env, encoding: 'utf8', timeout: 10000, killSignal: 'SIGKILL',
+        });
+        expect(child.error).toBeUndefined();
+        expect(child.signal).toBeNull();
+        expect(child.status, child.stderr).toBe(0);
+        const result = JSON.parse(child.stdout);
+        expect(result).toMatchObject({ ok: false, reason: expect.stringContaining('中断') });
+        expect(JSON.parse(readFileSync(join(result.dir, 'manifest.json'), 'utf8'))).toMatchObject({ ok: false });
+        const pid = readFakePid(cwd);
+        expect(pid).toBeDefined();
+        expect(alive(pid!)).toBe(false);
+      }, () => stopOwnedFake(cwd, input.timeoutMs));
     });
-  });
+  }
+  it('SIGINTイベントで子プロセスを止め、未実施を保存する', () => checkInterrupted("process.emit('SIGINT')"));
+  it.skipIf(process.platform === 'win32')('SIGINTで子プロセスを止め、未実施を保存する', () => checkInterrupted("process.kill(process.pid,'SIGINT')"));
 
   it('CLIの正常な実行はJSON要約と終了コード0を返す（Windows npm版は未対応）', async () => {
     await withRepo('success', async ({ cwd, input }) => {
