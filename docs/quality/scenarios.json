@@ -1,5 +1,6 @@
 {
   "schemaVersion": 1,
+  "reviewer": "codex-self-review",
   "reviews": [
     {
       "id": "SCN-b3fb02612f1c7ff7df3b",
@@ -224,8 +225,8 @@
       ],
       "tests": [
         {
-          "contains": "[REQ-183] OpenSpec検証の時間切れ",
           "file": "packages/runner/test/external-budget.test.ts",
+          "contains": "[REQ-183] OpenSpec検証の時間切れ",
           "sha256": "8c54b62888a4fb9def02af699e2cddd18be2a8ec930da96165af1a82526033de"
         }
       ]
@@ -5857,8 +5858,8 @@
       ],
       "tests": [
         {
-          "contains": "[REQ-192][REQ-182] run の準備中に git",
           "file": "packages/runner/test/external-budget.test.ts",
+          "contains": "[REQ-192][REQ-182] run の準備中に git",
           "sha256": "8c54b62888a4fb9def02af699e2cddd18be2a8ec930da96165af1a82526033de"
         }
       ]
