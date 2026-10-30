@@ -2,7 +2,7 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { runRecord } from '@loomake/trace';
-import { remainingProcessTime, INTERRUPTED, TIMED_OUT, UsageError, runVerify, createInputReader } from '@loomake/kit';
+import { remainingProcessTime, ProcessLimitError, INTERRUPTED, TIMED_OUT, UsageError, runVerify, createInputReader } from '@loomake/kit';
 import { runClaude } from '../engine.js';
 import { git, gitConfig } from '../git.js';
 import { APPROVAL_GUIDE, findEngineMove, findInternalsChange, findViolations, gitInternals, headState } from '../guards.js';
@@ -14,6 +14,11 @@ import { buildPrompt } from './prompt.js';
 import { checkTask, taskLabel } from './tasks.js';
 import { decideAfterEngine, decideAfterGate, decideAfterChanges } from './decision-policy.js';
 import type { Recorder, RunContext, RunSummary, Stop } from './types.js';
+
+/** 利用者の信号による中断だけを、監視役の異常終了と区別する（REQ-250・REQ-337）。 */
+export function interruptedOperation(error: unknown): boolean {
+  return error instanceof ProcessLimitError && error.kind === 'interrupted' && error.reason === undefined;
+}
 
 /** エンジンを 1 回動かす。止まる理由があれば、その状態と文を返す */
 async function callEngine(ctx: RunContext, rec: Recorder, prompt: string): Promise<{ kind: 'continue'; text: string } | { kind: 'stop'; status: RunSummary['status']; reason: string }> {
@@ -205,6 +210,6 @@ export async function recordAndOpenPr(ctx: RunContext, rec: Recorder): Promise<n
     const url = createPr(root, env, { base, head: branch, title: changeId, bodyFile: join(rec.runDir, 'pr-body.md') });
     return rec.finish('completed', `PR を作りました：${url}`, []);
   } catch (e) {
-    return rec.finish('stopped', `証拠のコミットを保っていますが、PRの公開を完了できませんでした：${(e as Error).message}`, []);
+    return rec.finish(interruptedOperation(e) ? 'interrupted' : 'stopped', `証拠のコミットを保っていますが、PRの公開を完了できませんでした：${(e as Error).message}`, []);
   }
 }

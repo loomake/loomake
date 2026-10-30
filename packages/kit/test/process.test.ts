@@ -129,7 +129,7 @@ describe('同期外部操作の監視', () => {
       }
     }
   }));
-  it('[REQ-181][REQ-250] 監視役が結果を書かずに終わったら、子孫を止め、理由を含む中断として返し、同じ予算で次を始めない', () => fixture((dir) => {
+  it('[REQ-181][REQ-250][REQ-337] 監視役が結果を書かずに終わったら、子孫を止め、理由を含む中断として返し、同じ予算で次を始めない', () => fixture((dir) => {
     const parentFile = join(dir, 'parent');
     const leafFile = join(dir, 'leaf');
     const after = join(dir, 'after');
@@ -149,10 +149,30 @@ describe('同期外部操作の監視', () => {
       expect(alive(Number(readFileSync(parentFile, 'utf8')))).toBe(false);
       expect(alive(Number(readFileSync(leafFile, 'utf8')))).toBe(false);
       expect(() => call(`require('node:fs').writeFileSync(${JSON.stringify(after)},'x')`)).toThrow('中断');
+      let nextError: unknown;
+      try { call(`require('node:fs').writeFileSync(${JSON.stringify(after)},'x')`); } catch (e) { nextError = e; }
+      expect(nextError).toBeInstanceOf(ProcessLimitError);
+      expect((nextError as ProcessLimitError).kind).toBe('interrupted');
+      expect((nextError as ProcessLimitError).reason).toBe((error as ProcessLimitError).reason);
+      expect((nextError as ProcessLimitError).cleanup).toBeUndefined();
       expect(existsSync(after)).toBe(false);
     });
   }));
 });
+
+it.runIf(process.platform !== 'win32')('[REQ-250][REQ-337] 利用者の中断のあとの後続の拒否はreasonを持たない', () => fixture((dir) => {
+  const after = join(dir, 'after');
+  const code = "process.kill(process.ppid,'SIGINT');setInterval(()=>{},100)";
+  withProcessBudget({ timeoutMs: 20_000 }, () => {
+    expect(() => call(code)).toThrow(ProcessLimitError);
+    let nextError: unknown;
+    try { call(`require('node:fs').writeFileSync(${JSON.stringify(after)},'x')`); } catch (e) { nextError = e; }
+    expect(nextError).toBeInstanceOf(ProcessLimitError);
+    expect((nextError as ProcessLimitError).kind).toBe('interrupted');
+    expect((nextError as ProcessLimitError).reason).toBeUndefined();
+    expect(existsSync(after)).toBe(false);
+  });
+}));
 
 describe('実行時の失敗の型', () => {
   it('[REQ-192][REQ-180] 制限による停止は実行時の失敗で、使い方の誤りと区別する', () => {
