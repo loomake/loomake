@@ -9,7 +9,7 @@
 
 | PR | 設計待ち | 実装 | CI待ち | レビュー往復回数 | マージまで |
 |---|---|---|---|---|---|
-| [174](https://github.com/loomake/loomake/pull/174) | 対象外（agent-workflow 2章の明確な文書変更として省略） | 進行中（18:41:57 JST開始、上記観測時刻まで） | 未収集（結果の取得前） | 未実施 | 進行中（18:45:10 JST作成、上記観測時刻まで） |
-| [169](https://github.com/loomake/loomake/pull/169) | 対象外（文書変更として省略） | 未測定 | 内訳は未測定（最終headのCI作成→更新306秒は[元記録](https://github.com/loomake/loomake/issues/121#issuecomment-6516185055)） | 1（正常な最終レビュー2回） | 12189秒（3時間23分09秒、14:32:37→17:55:46 JST） |
+| [174](https://github.com/loomake/loomake/pull/174) | 対象外（agent-workflow 2章の明確な文書変更として省略） | 進行中（18:41:57→18:45:57 JST、240秒、開始は作業開始の記録） | 未測定（観測時点では起動有無・時刻を未確認） | 未実施 | 進行中（18:45:10→18:45:57 JST、47秒、作成時刻はGitHub PR API） |
+| [169](https://github.com/loomake/loomake/pull/169) | 対象外（agent-workflow 2章の明確な文書変更として省略） | 未測定 | 内訳は未測定（最終headのCI作成→更新306秒は[元記録](https://github.com/loomake/loomake/issues/121#issuecomment-6516185055)） | 1（正常な最終レビュー2回） | 12189秒（3時間23分09秒、14:32:37→17:55:46 JST） |
 
 PR169の対象headは`b96b539f78bb2f913e281fd30d2ecde37e51f666`、mergeは`9a3fe04a89da68e67334a5b535bd5f967428a2b6`。マージ日時はGitHub PR APIで照合し、[元の作業記録](https://github.com/loomake/loomake/blob/b96b539f78bb2f913e281fd30d2ecde37e51f666/docs/worklog/2026-10-30/docs-delivery-overlap-pipeline.md)の確定値をこの次作業へ追記した。工程時間は足し合わせず、実工数とは扱わない。
