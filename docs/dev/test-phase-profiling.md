@@ -70,7 +70,7 @@ artifactは `publication-retry-<run>-<attempt>-<sample>` という名前で、�
 
 環境変数はshard 1/2全体へ渡ります。makeRepoはpreloadをrepo.env.NODE_OPTIONSへ追加し、runnerのgit・gh・claudeの呼出しに使うenvと、それを引き継ぐNode子プロセスへ渡します。そのNodeプロセスのうち、argv[1]のbasenameが `supervisor.cjs`・`claude`・`gh` のときだけ、processのentry/exitを記録します。偽gitやopenspecのNodeプロセスはpreloadを読み込んでも、このprocess記録を作りません。監視役の記録がある場合も、その対象プロセス自体を別の行で観測したとは扱いません。publication-retry以外のmakeRepo利用試験にも、この範囲でpreloadが入ります。既存external-budgetの分類・時刻を持つ `<base>.jsonl` も同じディレクトリへ保存されます。この既存形式は上限で末尾の行が途中で切れる場合があり、truncatedの印も保証しません。新しいphase/processの完全行の説明とは分けて読み、切断やI/O欠測は計測不足として残します。多数の小さなファイルとI/O、WindowsのDefenderによる走査が観測負荷を増やす可能性があります。診断ありの時間を通常CIの時間と同一には扱いません。
 
-1. run・attempt・sample・checkout/headを確認し、成功と失敗を含む3artifactと各jobログを保存します。毎sampleのjobログでpublication-retry.test.tsの実行と25ケースを確かめ、対応するphaseファイル25件の分類・IDを照合します。0件や不足なら、対象が別shardへ移った可能性を含む計測不足とし、元症状の未再現とは扱いません。artifactは診断dirだけなので、Vitestの各ケースの成否とtimeoutはjobログで照合します。case-endがcompletedでも、Vitestのtimeoutを成功へ戻しません。
+1. run・attempt・sample・checkout/headを確認し、成功と失敗を含む3artifactと各jobログを保存します。毎sampleのjobログでpublication-retry.test.tsの実行と25ケースを確かめ、対応するphaseファイル25件の分類・IDを照合します。0件や不足なら、対象が別shardへ移った可能性を含む計測不足とし、元症状の未再現とは扱いません。artifactは診断dirだけなので、Vitestの各ケースの成否とtimeoutはjobログで照合します。 default reporterで成功ケースの個別名が出ない場合は、固定25一覧とファイル内の総数・失敗名・skip 0の一致から残りのpassを対応付け、総数・skip・名前が一致しなければ計測不足とします。case-endがcompletedでも、Vitestのtimeoutを成功へ戻しません。
 2. phaseのcase IDと安全なrepo basenameを確認し、同じrepoのprocessをsessionごとに対応させます。entryだけ、exitだけ、truncated、不正時刻は計測不足として残します。別sessionやPID再利用を理由に記録を補いません。
 3. phaseの段階時間、supervisorと偽CLIの区間、他repoとの重なりを確認します。他repoのbasenameはテストファイル名を表さず、新artifactにtest-reportはないため、D0のファイル開始/終了時刻による推定を同じ形で再計算できません。別runのreportで代用しません。
 
