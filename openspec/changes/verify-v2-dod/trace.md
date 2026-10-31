@@ -44,3 +44,11 @@ R05 A・R08 Bも親traceと同じ[承認元](https://github.com/loomake/loomake/
 ## 実装時の監査区分
 
 正規repository監査は進行中のdeltaをpendingに分類するため、管理役は主仕様canonical pathとdelta全文を正規関数へ渡す子側の実監査を採用した。audit/ に旧1件と新2件の実対応を記録し、主仕様への適用とは区別する。主仕様の旧Scenarioは旧契約hashのまま内容を再レビューし、既存itの試験ブロックと理由だけを更新する。本番同期後のrepository適用・全体再監査は親6/6後に残す。設定・完成条件・範囲は変更しない。
+
+## ローカルの検証結果
+
+承認済みpatchを適用し、全後像26件と凍結17範囲、元SourceとScenarioの301 bytesを照合した。既存のテストブロックは承認した期待値1行を除いて保持し、実init・実tarball・lint・型検査・CLI参照の一致を確認した。全体試験は478 suiteが成功し、2093件成功・既存pending8件・失敗0件だった。
+
+local doneの初回はtask4.1の未チェック行だけでexit 1となった。正規runnerが行う一時完了印と失敗時の復元に合わせて再実行し、schemaVersion 2.0.0・scope local・run.status completed・errors空・全21チェックPASS・decision.required false・exit 0を確認した。最終scope ci・必須5チェック・3 OS・Opus最終レビューは別に必要であり、この結果で免除しない。
+
+管理役が旧主仕様1件と子delta3件の対応を独立に読み、正規関数による再照合の成功を確認した。全体試験後の子監査も3件reviewed・invalid 0であるが、repository監査は392件reviewed・240件unreviewed・71件invalidで、進行中の子delta3件もpendingに残る。主仕様への本番適用・全体再監査と親の残受入を完了扱いにしない。

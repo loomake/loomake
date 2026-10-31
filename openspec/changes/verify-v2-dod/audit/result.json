@@ -59,6 +59,11 @@
           "file": "packages/cli/test/init.test.ts",
           "fullName": "生成したローカルの完了と最終の合格の案内 [REQ-136] init の両 Skill に local の印と最終 CI の注記があり、AGENTS も両者を分ける",
           "status": "passed"
+        },
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "fullName": "完了ゲートのタスクの印 [REQ-100][REQ-136] 印のあるタスクは、文に verify と --done がなくてもエンジンに渡さず、合格したときに完了にする",
+          "status": "passed"
         }
       ]
     },
@@ -109,6 +114,11 @@
         {
           "file": "packages/cli/test/init.test.ts",
           "fullName": "生成したローカルの完了と最終の合格の案内 [REQ-136] init の両 Skill に local の印と最終 CI の注記があり、AGENTS も両者を分ける",
+          "status": "passed"
+        },
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "fullName": "完了ゲートのタスクの印 [REQ-100][REQ-136] 印のあるタスクは、文に verify と --done がなくてもエンジンに渡さず、合格したときに完了にする",
           "status": "passed"
         }
       ]
@@ -161,6 +171,11 @@
           "file": "packages/cli/test/init.test.ts",
           "fullName": "生成したローカルの完了と最終の合格の案内 [REQ-136] init の両 Skill に local の印と最終 CI の注記があり、AGENTS も両者を分ける",
           "status": "passed"
+        },
+        {
+          "file": "packages/runner/test/run.test.ts",
+          "fullName": "完了ゲートのタスクの印 [REQ-100][REQ-136] 印のあるタスクは、文に verify と --done がなくてもエンジンに渡さず、合格したときに完了にする",
+          "status": "passed"
         }
       ]
     }
@@ -171,7 +186,7 @@
     "deltaPath": "openspec/changes/verify-v2-dod/specs/req-to-openspec-skill/spec.md",
     "canonicalPath": "openspec/specs/req-to-openspec-skill/spec.md",
     "deltaSha256": "80e35e96fbd705260f8161d4ebb63e19481d2f0328b67b1ec17ccb8e650ac3a2",
-    "testReportSha256": "0acaea7f59595f3fd3fec8a870e284db0dc647e4219edc37fe78d00a0f8e0689",
+    "testReportSha256": "803e1eafd646ea5ca1a3119b663d06c5c93a161241ab09890de466531d0036e1",
     "reviewSha256": "9a47261cce6db79d3eaeb634a142740410acedb39436e52ffe11769ae46fc534",
     "scriptSha256": "12aca3fb1712c8bf5cec2edf42a914351e453fa0351f34ec9882734137492e3c"
   }

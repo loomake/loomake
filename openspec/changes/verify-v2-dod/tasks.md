@@ -16,11 +16,11 @@
 ## 3. 試験と監査
 
 - [x] 3.1 kit-assets:251を承認済み全文へ変更し、既存it名・他のexpect・印・SKILL指示・repo一致を保持する。追加のkit-assets/init/tarball試験を実行して成功と確認し、既存試験を削除・skip・緩和していないことを差分で確認する（REQ-136）
-- [x] 3.2 元ScenarioとSourceのバイトを保持し、契約を含むcanonical hashを再計算して、実試験を確認してから既存1件の対応試験hashと理由、新2件のScenario監査を更新する。正規の監査コマンドと独立レビューで対応関係を確認する（REQ-136）
+- [x] 3.2 元ScenarioとSourceのバイトを保持し、契約を含むcanonical hashを再計算して、実試験を確認してから既存1件の対応試験hashと理由、新2件のScenario監査を更新する。正規の監査コマンドと独立レビューで対応関係を確認する。子deltaの旧1件と新2件の実監査、主仕様の旧契約1件の再レビュー、本番同期後のrepository適用を区別し、最後の本番適用・全体再監査は下記follow-upに残す（REQ-136）
 
 ## 4. ローカルの完了
 
-- [ ] 4.1 lint・typecheck・全体試験・CLI参照の生成一致を確認し、`pnpm -s verify --change verify-v2-dod --done --scope local` がexit 0になることを確認する <!-- loomake:gate=done -->
+- [x] 4.1 lint・typecheck・全体試験・CLI参照の生成一致を確認し、`pnpm -s verify --change verify-v2-dod --done --scope local` がexit 0になることを確認する <!-- loomake:gate=done -->
 
 注：4.1はローカルの完了だけである。最終の合格には、CIの `--done --scope ci` が exact 2.0.0・scope ci・completed・errors空・PASS・要判断なし・exit 0となり、必須5チェック・3 OSと独立レビューが成功が別に必要になる。これらはチェックボックスにしない。子の受入をC001の完成とは扱わない。
 
@@ -29,3 +29,5 @@
 - 最終のCIとレビューの証跡を揃え、人の承認元を照合してからマージする。
 - 本番同期・archiveは親6/6受入後。evidence→scope→quality→dod→parentの順と、S1の先行受入・同期・archiveを保つ。
 - guideの旧JSON/usageは親5.1の残り。docs/flow.md:164の誤記は管理役が別Issueへ記録する。
+
+- REQ-136の子3件の実監査を、本番同期後の主仕様と実試験へ照合してrepositoryのレビュー表へ反映し、正規repository監査を再実行する。

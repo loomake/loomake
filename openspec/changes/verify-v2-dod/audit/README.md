@@ -35,3 +35,9 @@ node scripts/scenario-audit.mjs <新しい出力先> docs/quality/scenarios.json
 ```sh
 node openspec/changes/verify-v2-dod/audit/replay.mjs .loomake/test-report.json .loomake/review-audit-independent.json
 ```
+
+## 全体試験での再照合
+
+local done内の全体試験は478 suiteが成功し、2093件成功・既存pending8件・失敗0件だった。同じ成功レポートで子の再照合を実行し、`result.json` を更新した。子の3件はreviewed、invalidは0件で、repositoryへの反映は引き続き行っていない。
+
+正規repository監査も同じ全体試験レポートで実行した。結果は392件reviewed・240件unreviewed・71件invalidでexit 1となり、進行中のchangeはpending161件（うちこの子3件）である。旧主仕様の元Scenarioはreviewedを確認した。子の実監査とこの全体未達を区別し、親の受入まで全体監査の条件を保持する。
