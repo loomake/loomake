@@ -55,7 +55,7 @@ const SHA = /^[0-9a-f]{40}([0-9a-f]{24})?$/;
 /**
  * HEAD の SHA とブランチ名を、withPlaces なら設定ファイルとフックの場所も、1 回の git rev-parse で読む（REQ-348）。
  * 0 以外で終わったとき（HEAD のコミットがないときなど）や出力の形が合わないときは、項目ごとの呼び出しに戻して同じ値を返す。
- * 期限・出力の上限・中断による例外は、項目ごとの呼び出しを起動せずにそのまま渡す（REQ-180〜REQ-182）
+ * 期限・出力の上限・中断による例外は、項目ごとの呼び出しを起動せずにそのまま渡す（REQ-349・REQ-180〜REQ-182）
  */
 export function readHead(root: string, env: NodeJS.ProcessEnv): HeadRead;
 export function readHead(root: string, env: NodeJS.ProcessEnv, withPlaces: true): HeadRead & GitPlaces;

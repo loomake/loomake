@@ -32,16 +32,16 @@ async function withRepo(setup: (repo: Repo) => void, fn: (repo: Repo) => void | 
 }
 
 describe('HEAD と git の場所のまとめた読み取り', () => {
-  const cases: [string, (repo: Repo) => void, number][] = [
+  const cases: [string, string, (repo: Repo) => void, number][] = [
     // 場所つきと場所なしで 1 回ずつ
-    ['ブランチにいる', () => {}, 2],
-    ['detached HEAD', (repo) => repo.git('checkout', '-q', '--detach'), 2],
-    ['HEAD という名前のファイルがある', (repo) => repo.write('HEAD', '紛らわしいファイル\n'), 2],
+    ['ブランチにいる', '', () => {}, 2],
+    ['detached HEAD', '', (repo) => repo.git('checkout', '-q', '--detach'), 2],
+    ['HEAD という名前のファイルがある', '', (repo) => repo.write('HEAD', '紛らわしいファイル\n'), 2],
     // コミットがないと、まとめた呼び出しは失敗するので、項目ごとの呼び出し（HEAD 2 回と、場所つきなら場所 1 回）に戻す。1 + 2 + 1 と 1 + 2
-    ['HEAD のコミットがない', (repo) => repo.git('checkout', '-q', '--orphan', 'empty'), 7],
+    ['HEAD のコミットがない', '[REQ-349]', (repo) => repo.git('checkout', '-q', '--orphan', 'empty'), 7],
   ];
-  for (const [name, setup, calls] of cases) {
-    it(`[REQ-348][REQ-126][REQ-198] ${name}とき、別々に読んだときと同じ値を返す`, () =>
+  for (const [name, fallback, setup, calls] of cases) {
+    it(`[REQ-348]${fallback}[REQ-126][REQ-198] ${name}とき、別々に読んだときと同じ値を返す`, () =>
       withRepo(setup, (repo) => {
         const expected = separateReads(repo);
         const cli = fakeCli(repo, 'git', { when: 'false' });
@@ -56,7 +56,7 @@ describe('HEAD と git の場所のまとめた読み取り', () => {
       }));
   }
 
-  it('[REQ-348][REQ-180] まとめた読み取りが 1 操作の期限に達したら、項目ごとの呼び出しを起動せずに止まる', () =>
+  it('[REQ-349][REQ-180] まとめた読み取りが 1 操作の期限に達したら、項目ごとの呼び出しを起動せずに止まる', () =>
     withRepo(() => {}, (repo) => {
       const cli = fakeCli(repo, 'git', { when: "args[0] === 'rev-parse'" });
       try {

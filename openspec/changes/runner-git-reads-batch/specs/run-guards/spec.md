@@ -20,7 +20,7 @@ Source: REQ-348
 ### Requirement: まとめた Git の読み取りの失敗
 段階の境目のまとめた `git rev-parse` が、HEAD のコミットがないなどの通常の失敗に終わったときは、項目ごとの呼び出しに戻して、REQ-126・REQ-198 と同じ値を求める SHALL。期限・出力の上限・中断で止まったときは、項目ごとの呼び出しを起動せずに、REQ-180〜REQ-182 の失敗として扱う SHALL。
 
-Source: REQ-348
+Source: REQ-349
 
 #### Scenario: HEAD のコミットがない
 - **WHEN** HEAD のコミットがないリポジトリで、エンジンの前の読み取りを行う
