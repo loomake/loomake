@@ -128,12 +128,14 @@ function partitionRowsSource(node) {
   const path = literal(node.parent.parent.parent.moduleSpecifier);
   return path !== undefined && /(?:^|\/)partition-part\.js$/.test(path);
 }
+function canonicalSpecifier(file, target) {
+  if (posix.isAbsolute(file) || /^[A-Za-z]:/.test(file) || file.includes('\\') || file.split('/').includes('..')) return undefined;
+  const relative = posix.relative(posix.dirname(file), target);
+  return relative.startsWith('.') ? relative : `./${relative}`;
+}
 function partitionRowsImport(node, file) {
   if (!partitionRowsSource(node) || node.isTypeOnly || node.parent.parent.isTypeOnly || node.propertyName) return false;
-  if (posix.isAbsolute(file) || /^[A-Za-z]:/.test(file) || file.includes('\\') || file.split('/').includes('..')) return false;
-  const relative = posix.relative(posix.dirname(file), 'tests/helpers/partition-part.js');
-  const expected = relative.startsWith('.') ? relative : `./${relative}`;
-  return literal(node.parent.parent.parent.moduleSpecifier) === expected;
+  return literal(node.parent.parent.parent.moduleSpecifier) === canonicalSpecifier(file, 'tests/helpers/partition-part.js');
 }
 
 // Only an unconditional chain of plain describe callbacks can contain a row block.
@@ -295,4 +297,106 @@ export function checkRegistration(file, source, cases) {
     if (empty && !guarded) error('unguardedDescribe', node, '空になる describe に hasAny のガードが必要です');
   });
   return errors;
+}
+
+/** Validate partition headers without executing source or resolving filesystem modules. */
+export function checkPartitionWiring(file, source) {
+  const { text, ast } = parse(source, file);
+  const bindings = localBindings(ast, posix.normalize(file));
+  const validFile = canonicalSpecifier(file, 'tests/helpers/partition-part.js') !== undefined;
+  const errors = [];
+  const messages = { syntax: '試験の構文が不正です', wiringImport: '分割の import を静的に確認できません', wiringHeader: '分割の header を静的に確認できません', wiringBinding: '分割の束縛を静的に確認できません' };
+  const error = (code, node = ast) => errors.push({ code, file, line: ast.getLineAndCharacterOfPosition(node.getStart(ast)).line + 1, message: messages[code], position: node.getStart(ast) });
+  const diagnostics = ts.transpileModule(text, { fileName: file, reportDiagnostics: true, compilerOptions: { target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext } }).diagnostics ?? [];
+  if (diagnostics.some(item => item.category === ts.DiagnosticCategory.Error)) error('syntax');
+  const imports = []; walk(ast, node => { if (ts.isImportDeclaration(node)) imports.push(node); });
+  const imported = new Map(); const invalidImports = new Set();
+  const families = [
+    ['scripts/lib/test-partition.mjs', ['includeCase', 'loadPartition']],
+    ['tests/helpers/partition-part.js', ['currentPart', 'eachRows']],
+    ['node:path', ['join']],
+  ];
+  for (const [target, names] of families) {
+    const expected = target === 'node:path' ? target : canonicalSpecifier(file, target);
+    const candidates = imports.filter(node => {
+      const path = literal(node.moduleSpecifier);
+      const list = node.importClause?.namedBindings;
+      const named = list && ts.isNamedImports(list) ? list.elements.map(item => (item.propertyName ?? item.name).text) : [];
+      return path === expected || (target === 'node:path' ? path === 'path' : path?.includes(target.split('/').at(-1).replace(/\.(?:js|mjs)$/, ''))) || names.some(name => named.includes(name));
+    });
+    const node = candidates[0]; const clause = node?.importClause; const list = clause?.namedBindings;
+    const elements = list && ts.isNamedImports(list) ? [...list.elements] : [];
+    const actual = elements.map(item => item.name.text);
+    const required = target === 'tests/helpers/partition-part.js' ? ['currentPart'] : names;
+    const namesValid = required.every(name => actual.includes(name)) && new Set(actual).size === actual.length && (target === 'node:path' || actual.every(name => names.includes(name)));
+    const valid = expected !== undefined && candidates.length === 1 && literal(node.moduleSpecifier) === expected && !clause?.isTypeOnly && !clause?.name && list && ts.isNamedImports(list) && elements.every(item => !item.isTypeOnly && !item.propertyName) && namesValid;
+    if (!valid) { error('wiringImport', node); invalidImports.add(target); }
+    for (const item of elements) if (!item.propertyName && names.includes(item.name.text)) imported.set(item.name.text, item);
+    if (clause?.name && names.includes(clause.name.text)) imported.set(clause.name.text, clause);
+  }
+  const top = ast.statements;
+  const declarations = new Map();
+  for (const statement of top) if (ts.isVariableStatement(statement)) for (const declaration of statement.declarationList.declarations) if (ts.isIdentifier(declaration.name) && ['registry', 'has', 'hasAny'].includes(declaration.name.text)) declarations.set(declaration.name.text, declaration);
+  const registry = declarations.get('registry'); const has = declarations.get('has'); const hasAny = declarations.get('hasAny');
+  const protectedNodes = new Set();
+  for (const declaration of declarations.values()) walk(declaration, node => protectedNodes.add(node));
+  const isName = (node, name) => node && ts.isIdentifier(node) && node.text === name;
+  const resolves = (node, declaration) => node && ts.isIdentifier(node) && bindings.declarationOf(node) === declaration;
+  // Missing imports are owned by wiringImport; a real local replacement is a header violation.
+  const importedCall = (node, name, count) => node && ts.isCallExpression(node) && isName(node.expression, name) && node.arguments.length === count && (imported.has(name) ? resolves(node.expression, imported.get(name)) : bindings.declarationOf(node.expression) === undefined);
+  const statementOf = declaration => declaration?.parent?.parent;
+  const singleConst = declaration => {
+    const statement = statementOf(declaration);
+    return statement && ts.isVariableStatement(statement) && statement.parent === ast && statement.declarationList.flags & ts.NodeFlags.Const && statement.declarationList.declarations.length === 1 && !statement.modifiers?.length;
+  };
+  const arrow = declaration => {
+    const value = declaration?.initializer;
+    return value && ts.isArrowFunction(value) && !value.modifiers?.length && value.parameters.length === 1 && ts.isIdentifier(value.parameters[0].name) && !value.parameters[0].dotDotDotToken && !value.parameters[0].initializer ? value : undefined;
+  };
+  const root = registry?.initializer;
+  const join = root && ts.isCallExpression(root) ? root.arguments[0] : undefined;
+  const dirname = join && ts.isCallExpression(join) ? join.arguments[0] : undefined;
+  const meta = dirname && ts.isPropertyAccessExpression(dirname) ? dirname.expression : undefined;
+  const rootValid = importedCall(root, 'loadPartition', 1) && importedCall(join, 'join', 2) && dirname && ts.isPropertyAccessExpression(dirname) && dirname.name.text === 'dirname' && meta && ts.isMetaProperty(meta) && meta.keywordToken === ts.SyntaxKind.ImportKeyword && meta.name.text === 'meta' && (!validFile || literal(join.arguments[1]) === posix.relative(posix.dirname(file), ''));
+  if (!singleConst(registry) || !rootValid) error('wiringHeader', registry);
+  const hasArrow = arrow(has); const body = hasArrow?.body;
+  const hasValid = importedCall(body, 'includeCase', 4) && resolves(body.arguments[0], registry) && (!validFile || literal(body.arguments[1]) === file) && importedCall(body.arguments[2], 'currentPart', 0) && resolves(body.arguments[3], hasArrow.parameters[0]);
+  if (!singleConst(has) || !hasValid) error('wiringHeader', has);
+  // A captured-part declaration used by a malformed header belongs to H3, not B6.
+  if (body && ts.isCallExpression(body) && body.arguments[2] && ts.isIdentifier(body.arguments[2])) {
+    const captured = bindings.declarationOf(body.arguments[2]);
+    if (captured && ts.isVariableDeclaration(captured) && importedCall(captured.initializer, 'currentPart', 0)) walk(captured, node => protectedNodes.add(node));
+  }
+  const anyArrow = arrow(hasAny); const anyBody = anyArrow?.body;
+  const anyValid = anyBody && ts.isCallExpression(anyBody) && ts.isPropertyAccessExpression(anyBody.expression) && anyBody.expression.name.text === 'some' && resolves(anyBody.expression.expression, anyArrow.parameters[0]) && anyBody.arguments.length === 1 && resolves(anyBody.arguments[0], has);
+  if (hasAny && (!singleConst(hasAny) || !anyValid)) error('wiringHeader', hasAny);
+  const lastImport = Math.max(-1, ...top.map((statement, index) => ts.isImportDeclaration(statement) ? index : -1));
+  const ordered = [registry, has, ...(hasAny ? [hasAny] : [])];
+  if (ordered.some((declaration, index) => declaration && top[lastImport + 1 + index] !== statementOf(declaration))) error('wiringHeader', registry ?? has);
+  const valueIdentifier = node => {
+    if (!ts.isIdentifier(node)) return false;
+    for (let parent = node.parent; parent && parent !== ast; parent = parent.parent) if (ts.isTypeNode(parent)) return false;
+    const parent = node.parent;
+    if (ts.isShorthandPropertyAssignment(parent)) return true;
+    if (ts.isPropertyAccessExpression(parent) && parent.name === node) return false;
+    if ((ts.isPropertyAssignment(parent) || ts.isMethodDeclaration(parent) || ts.isPropertyDeclaration(parent) || ts.isBindingElement(parent)) && parent.name === node) return false;
+    if ((ts.isVariableDeclaration(parent) || ts.isParameter(parent) || ts.isFunctionDeclaration(parent) || ts.isFunctionExpression(parent) || ts.isClassDeclaration(parent) || ts.isImportSpecifier(parent) || ts.isImportClause(parent) || ts.isNamespaceImport(parent)) && parent.name === node) return false;
+    return true;
+  };
+  walk(ast, node => {
+    if (!valueIdentifier(node) || protectedNodes.has(node)) return;
+    const parent = node.parent; const declaration = bindings.declarationOf(node);
+    if (node.text === 'has' || node.text === 'hasAny') {
+      const expected = node.text === 'has' ? has : hasAny;
+      const call = ts.isCallExpression(parent) && parent.expression === node && (node.text === 'hasAny' || parent.arguments.length === 1);
+      const row = node.text === 'has' && ts.isCallExpression(parent) && parent.arguments[0] === node && ((imported.has('eachRows') && resolves(parent.expression, imported.get('eachRows'))) || (invalidImports.has('tests/helpers/partition-part.js') && isName(parent.expression, 'eachRows') && bindings.declarationOf(parent.expression) === undefined));
+      if (!expected || declaration !== expected || !(call || row)) error('wiringBinding', node);
+    } else if (['registry', 'includeCase', 'loadPartition', 'currentPart'].includes(node.text)) {
+      const expected = node.text === 'registry' ? registry : imported.get(node.text);
+      if (expected && declaration === expected) error('wiringBinding', node);
+    } else if (node.text === 'eachRows' && imported.has('eachRows') && declaration === imported.get('eachRows')) {
+      if (!(ts.isCallExpression(parent) && parent.expression === node && resolves(parent.arguments[0], has))) error('wiringBinding', node);
+    }
+  });
+  return errors.sort((a, b) => a.position - b.position).map(({ code, file, line, message }) => ({ code, file, line, message }));
 }

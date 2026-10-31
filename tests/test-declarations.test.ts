@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { inventoryDeclarations, checkRegistration } from '../scripts/lib/test-declarations.mjs';
+import { inventoryDeclarations, checkRegistration, checkPartitionWiring } from '../scripts/lib/test-declarations.mjs';
 import { companionOf, loadPartition } from '../scripts/lib/test-partition.mjs';
 
 const file = 'tests/fixture.test.ts';
@@ -153,6 +153,7 @@ describe('独立した試験宣言 inventory', () => {
       const source = readFileSync(path, 'utf8');
       expect(inventoryDeclarations(source, path).errors).toEqual([]);
       expect(checkRegistration(path, source, cases)).toEqual([]);
+      expect(checkPartitionWiring(path, source)).toEqual([]);
     }
     const companions: string[] = [];
     const visit = (dir: string) => {
@@ -445,4 +446,95 @@ describe('行登録の閉じた import と祖先', () => {
     expect(helper.isFile()).toBe(true);
     expect(helper.isSymbolicLink()).toBe(false);
   });
+});
+
+
+import { mkdirSync, writeFileSync } from 'node:fs';
+
+describe('正規 partition wiring の独立検査', () => {
+  const file = 'tests/x.test.ts';
+  const header = (file = 'tests/x.test.ts', root = '..', helper = './helpers/partition-part.js', partition = '../scripts/lib/test-partition.mjs') => `import {it,describe} from 'vitest';
+import {join} from 'node:path';
+import {includeCase,loadPartition} from '${partition}';
+import {currentPart,eachRows} from '${helper}';
+const registry=loadPartition(join(import.meta.dirname,'${root}'));
+const has=(id: string)=>includeCase(registry,'${file}',currentPart(),id);
+const hasAny=(ids: readonly string[])=>ids.some(has);
+`;
+  const row = "{const it=eachRows(has,['a','b']);it.each(['x','y'])('row %s',()=>{});}";
+  const tail = `if(hasAny(['a','b'])) describe('rows',()=>{${row}});`;
+  const source = header()+tail;
+  const codes = (errors: {code: string}[]) => [...new Set(errors.map(e=>e.code))].sort();
+  const observations: {id: string; inventory: unknown; registration: unknown; wiring: unknown}[] = [];
+  const check = (id: string, input: string, expected: string[], path = file) => {
+    const inventory = inventoryDeclarations(input, path).errors;
+    const registration = checkRegistration(path, input, {a:[],b:['linux']});
+    const wiring=checkPartitionWiring(path,input);
+    observations.push({id,inventory,registration,wiring});
+    expect(codes(wiring)).toEqual([...expected].sort());
+    if (id === 'I3' || id.startsWith('H1')) {
+      expect(inventory).toEqual([]); expect(registration).toEqual([]);
+    }
+  };
+  it.each([
+    ['A1',source,file],
+    ['A2',header().replace(/const hasAny=.*;\n/,'')+row,file],
+    ['A3',header('packages/runner/test/x.test.ts','../../..','../../../tests/helpers/partition-part.js','../../../scripts/lib/test-partition.mjs')+tail,'packages/runner/test/x.test.ts'],
+    ['A4',header('tests/sub/x.test.ts','../..','../helpers/partition-part.js','../../scripts/lib/test-partition.mjs')+tail,'tests/sub/x.test.ts'],
+    ['A5',source.replace('(id: string)','id'),file],
+    ['A6',header().replace('currentPart,eachRows','currentPart')+"if(has('a')) it('direct',()=>{});",file],
+    ['A7',source.replace('{join}', '{dirname,join}')+"join('a','b');",file],
+    ['A8',source+"vi.mock('x'); const map=new Map();map.has('a');",file],
+  ])('%s のheaderを受理する', (id,input,path) => check(id,input,[],path));
+  const variants: [string,string,string[]][] = [];
+  for (const [name,line] of [['partition',"import {includeCase,loadPartition} from '../scripts/lib/test-partition.mjs';\n"],['helper',"import {currentPart,eachRows} from './helpers/partition-part.js';\n"],['join',"import {join} from 'node:path';\n"]]) variants.push(['I1-'+name,source.replace(line!,''),['wiringImport']]);
+  for (const [from,to] of [['../scripts/lib/test-partition.mjs','test-partition.mjs'],['./helpers/partition-part.js','./helpers/partition-part.ts'],['./helpers/partition-part.js','./helpers/partition-part.js?x'],['./helpers/partition-part.js','../tests/helpers/partition-part.js'],['node:path','path']]) variants.push(['I2-'+to,source.replace(from!,to!),['wiringImport']]);
+  variants.push(
+    ['I3',source.replace('includeCase,loadPartition','includeCase as real,loadPartition').replace('const registry','const includeCase=()=>true;\nconst registry'),['wiringImport','wiringHeader']],
+    ['I4-declaration',source.replace('import {currentPart','import type {currentPart'),['wiringImport']],
+    ['I4-specifier',source.replace('{currentPart,','{type currentPart,'),['wiringImport']],
+    ['I5-namespace',source.replace("import {currentPart,eachRows}","import * as helper"),['wiringImport']],
+    ['I5-default',source.replace("import {join}","import join"),['wiringImport']],
+    ['I5-duplicate',source.replace("import {join} from 'node:path';","import {join} from 'node:path';import {dirname} from 'node:path';"),['wiringImport']],
+    ['I6',source.replace('currentPart,eachRows','currentPart,eachRows,setPart'),['wiringImport']],
+    ['H1-zero',source.replace('(id: string)=>includeCase(registry,\'tests/x.test.ts\',currentPart(),id)','()=>true'),['wiringHeader']],
+    ['H1-id',source.replace("includeCase(registry,'tests/x.test.ts',currentPart(),id)",'true'),['wiringHeader']],
+    ['H2-FILE',source.replace("'tests/x.test.ts',currentPart()","FILE,currentPart()"),['wiringHeader']],
+    ['H2-file',source.replace("'tests/x.test.ts'","'tests/y.test.ts'"),['wiringHeader']],
+    ['H3',source.replace('const registry','const part=currentPart();\nconst registry').replace(",currentPart(),id)",",part,id)"),['wiringHeader']],
+    ['H4',source.replace('currentPart(),id)','currentPart(),id,\'linux\')'),['wiringHeader']],
+    ['H5-root',source.replace("join(import.meta.dirname,'..')","import.meta.dirname+'/..'"),['wiringHeader']],
+    ['H5-depth',source.replace("dirname,'..'","dirname,'../..'"),['wiringHeader']],
+    ['H5-cwd',source.replace("join(import.meta.dirname,'..')","process.cwd()"),['wiringHeader']],
+    ['H6-let',source.replace('const has=','let has='),['wiringHeader']],
+    ['H6-export',source.replace('const has=','export const has='),['wiringHeader']],
+    ['H6-multiple',source.replace('const has=','const other=1,has='),['wiringHeader']],
+    ['H6-wrapper',source.replace("const has=(id: string)=>includeCase(registry,'tests/x.test.ts',currentPart(),id);","const has=((id: string)=>includeCase(registry,'tests/x.test.ts',currentPart(),id));"),['wiringHeader']],
+    ['H7-gap',source.replace('const registry','0;const registry'),['wiringHeader']],
+    ['H7-order',source.replace(/(const registry=.*;\n)(const has=.*;\n)/,'$2$1'),['wiringHeader']],
+    ['H7-import',source+"import {expect} from 'vitest';",['wiringHeader']],
+    ['H8-block',source.replace("=>includeCase(registry,'tests/x.test.ts',currentPart(),id)","=>{return includeCase(registry,'tests/x.test.ts',currentPart(),id)}"),['wiringHeader']],
+    ['H8-async',source.replace('(id: string)=>','async (id: string)=>'),['wiringHeader']],
+    ['H8-default',source.replace('(id: string)','(id=\'a\')'),['wiringHeader']],
+    ['H8-rest',source.replace('(id: string)','(...id)'),['wiringHeader']],
+    ['H8-destructure',source.replace('(id: string)','({id})'),['wiringHeader']],
+    ['H9-arrow',source.replace('ids.some(has)','ids.some(id=>has(id))'),['wiringHeader']],
+    ['H9-every',source.replace('ids.some(has)','ids.every(has)'),['wiringHeader']],
+    ['H9-args',source.replace('ids.some(has)','ids.some(has,0)'),['wiringHeader']],
+    ['B1',header()+`describe('shadow',()=>{const has=()=>true;if(has('a')) it('a',()=>{});});`,['wiringBinding']],
+    ['B2',source+"fn((has)=>has('a'));",['wiringBinding']],
+    ['B3-argument',source+'fn(has);',['wiringBinding']],
+    ['B3-shorthand',source+'({has});',['wiringBinding']],
+    ['B3-property',source+'has.call(null,\'a\');',['wiringBinding']],
+    ['B3-alias',source+'const h=has;',['wiringBinding']],
+    ['B3-unimported-row',source.replace('currentPart,eachRows','currentPart'),['wiringBinding']],
+    ['B4-assign',source+'has=x;',['wiringBinding']],
+    ['B4-mutate',source+'registry.files={};',['wiringBinding']],
+    ['B5',source.replace(/const hasAny=.*;\n/,''),['wiringBinding']],
+    ['B6',source+'currentPart();',['wiringBinding']],
+    ['S1',source+'const = ;',['syntax']],
+  );
+  it.each(variants)('%s を設計の診断集合で拒否する', (id,input,expected) => check(id,input,expected));
+  it.each(['/tests/x.test.ts','tests/../x.test.ts'])('I7 %s を拒否する',path=>check('I7',source,['wiringImport'],path));
+  it('matrixで旧2APIの結果も観測する', () => { expect(observations.length).toBeGreaterThan(40); mkdirSync('.loomake/design-r4-impl',{recursive:true}); writeFileSync('.loomake/design-r4-impl/matrix-observations.json',JSON.stringify(observations,null,2)); });
 });
