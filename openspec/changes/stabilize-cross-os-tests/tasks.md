@@ -14,7 +14,7 @@
 
 ## 4. 心拍
 
-- [ ] 4.1 `scripts/ci-heartbeat.mjs` と ci.yml・quality-quarantine.yml への組み込み、`tests/ci-heartbeat.test.ts`（REQ-345）
+- [x] 4.1 `scripts/ci-heartbeat.mjs` と ci.yml・quality-quarantine.yml への組み込み、`tests/ci-heartbeat.test.ts`（REQ-345）
 
 ## 5. 段階の記録
 

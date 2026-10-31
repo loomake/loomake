@@ -74,12 +74,19 @@ jobs:
         shell: bash
         env:
           CI_TEST_OS: ${{ matrix.os }}
+      # macOS と Windows のシャードでは、実行環境が止まった区間を見つけるため、テストの前に心拍の記録を裏で起動する（REQ-345）。
+      # 起動・記録の失敗でジョブの成否は変わらない
+      - if: matrix.shard && steps.changes.outputs.docs_only != 'true'
+        id: heartbeat
+        run: node scripts/ci-heartbeat.mjs start "$RUNNER_TEMP/loomake-ci-heartbeat"
+        shell: bash
       # 2 つのシャードと quality-quarantine ワークフローを合わせて、すべてのテストを実行する。除くファイルは vitest.config.ts が受け取る
       - if: matrix.shard && steps.changes.outputs.docs_only != 'true'
         run: pnpm test --shard=${{ matrix.shard }}
         id: test_shard
         env:
           LOOMAKE_TEST_QUARANTINE_EXCLUDE: ${{ steps.quarantine.outputs.exclude }}
+          LOOMAKE_CI_HEARTBEAT_DIR: ${{ runner.temp }}/loomake-ci-heartbeat
       # ubuntu ではすべてのテストを 1 回だけ、カバレッジ付きで実行する。カバレッジは閾値（vitest.config.ts）を下回ったら失敗する。1 つの OS で測れば足りる
       - if: ${{ !matrix.shard && steps.changes.outputs.docs_only != 'true' }}
         run: pnpm test --coverage
@@ -101,6 +108,19 @@ jobs:
             ${{ runner.temp }}/loomake-ci-test-diagnostics/metadata.json
             ${{ runner.temp }}/loomake-ci-test-diagnostics/summary.md
             ${{ runner.temp }}/loomake-ci-test-diagnostics/test-report.json
+          retention-days: 7
+          if-no-files-found: warn
+      # テストの成否によらず心拍を止めて要約を出し、試験の段階の記録と合わせて 7 日保存する（REQ-345）
+      - id: heartbeat_stop
+        if: ${{ !cancelled() && matrix.shard && steps.changes.outputs.docs_only != 'true' }}
+        run: node scripts/ci-heartbeat.mjs stop "$RUNNER_TEMP/loomake-ci-heartbeat"
+        shell: bash
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        id: heartbeat_upload
+        if: ${{ !cancelled() && matrix.shard && steps.changes.outputs.docs_only != 'true' }}
+        with:
+          name: ci-heartbeat-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.os }}-${{ matrix.shard == '1/2' && '1-2' || '2-2' }}
+          path: ${{ runner.temp }}/loomake-ci-heartbeat/
           retention-days: 7
           if-no-files-found: warn
       - if: steps.changes.outputs.docs_only != 'true'

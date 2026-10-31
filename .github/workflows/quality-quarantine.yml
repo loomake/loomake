@@ -83,6 +83,9 @@ jobs:
           echo "TEMP=$RUNNER_TEMP" >> "$GITHUB_ENV"
           echo "TMP=$RUNNER_TEMP" >> "$GITHUB_ENV"
         shell: bash
+      - id: heartbeat
+        run: node scripts/ci-heartbeat.mjs start "$RUNNER_TEMP/loomake-quarantine/heartbeat"
+        shell: bash
       - id: test
         run: pnpm test $QUARANTINE_FILES $WORKERS
         shell: bash
@@ -91,6 +94,11 @@ jobs:
           WORKERS: ${{ inputs.max_workers == '1' && '--maxWorkers=1' || '' }}
           LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR: ${{ runner.temp }}/loomake-quarantine/processes
           LOOMAKE_TEST_PHASE_PROFILE_DIR: ${{ runner.temp }}/loomake-quarantine/phases
+          LOOMAKE_CI_HEARTBEAT_DIR: ${{ runner.temp }}/loomake-quarantine/heartbeat
+      - id: heartbeat_stop
+        if: ${{ !cancelled() }}
+        run: node scripts/ci-heartbeat.mjs stop "$RUNNER_TEMP/loomake-quarantine/heartbeat"
+        shell: bash
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         id: upload
         if: ${{ !cancelled() && steps.checkout.outcome == 'success' && steps.node.outcome == 'success' }}

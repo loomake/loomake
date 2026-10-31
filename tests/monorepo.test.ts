@@ -253,9 +253,9 @@ describe('CI', () => {
     expect(quality).toContain(`- if: matrix.shard && ${docsOnly}\n        run: pnpm test --shard=\${{ matrix.shard }}\n`);
     expect(quality).toContain(`- if: \${{ !matrix.shard && ${docsOnly} }}\n        run: pnpm test --coverage\n`);
     expect(quality).not.toContain('test:coverage');
-    // シャードで変わる条件は、隔離一覧の検査（REQ-344）とテストの 2 つ。品質コマンドは文書だけの PR の条件を保ち、診断の 2 ステップは失敗後にも実行する
+    // シャードで変わる条件は、隔離一覧の検査（REQ-344）・心拍の起動（REQ-345）・テストの 2 つ・心拍の停止と保存（REQ-345）。品質コマンドは文書だけの PR の条件を保ち、診断の 2 ステップは失敗後にも実行する
     const conditions = [...quality.matchAll(/^ {6}(?:- | {2})if: (.*)$/gm)].map((match) => match[1]);
-    expect(conditions.filter((condition) => condition.includes('matrix'))).toEqual([`matrix.shard && ${docsOnly}`, `matrix.shard && ${docsOnly}`, `\${{ !matrix.shard && ${docsOnly} }}`]);
+    expect(conditions.filter((condition) => condition.includes('matrix'))).toEqual([...Array(3).fill(`matrix.shard && ${docsOnly}`), `\${{ !matrix.shard && ${docsOnly} }}`, ...Array(2).fill(`\${{ !cancelled() && matrix.shard && ${docsOnly} }}`)]);
     const diagnostics = "${{ !cancelled() && steps.checkout.outcome == 'success' && steps.node.outcome == 'success' && steps.changes.outputs.docs_only != 'true' }}";
     // 品質コマンドの条件は維持し、失敗後にも動く診断の2ステップだけを追加する（REQ-291）
     expect(conditions.filter((condition) => !condition.includes('matrix'))).toEqual([
