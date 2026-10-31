@@ -45,6 +45,8 @@ function verifyV2Problem(verify: Record<string, unknown>, change: string): strin
   if (verify.scope === 'local' ? !count(summary.pending) || 'verdict' in verify : 'pending' in summary || !RESULTS.includes(String(verify.verdict))) {
     return '検証結果のscopeとsummary・verdictが合いません';
   }
+  // local の未完了（pending）は、証拠不足の検査をすべて含む（REQ-164・REQ-311）
+  if (verify.scope === 'local' && (summary.pending as number) < (summary.insufficient as number)) return '検証結果のsummary.pendingがinsufficientより少ないです';
   const decision = verify.decision;
   if (!object(decision) || typeof decision.required !== 'boolean' || !Array.isArray(decision.reasons)
     || !decision.reasons.every((r) => object(r) && DECISIONS.includes(String(r.code)) && typeof r.target === 'string' && typeof r.message === 'string')) {

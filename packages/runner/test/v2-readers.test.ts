@@ -67,6 +67,20 @@ describe('完了ゲートの純粋判断', () => {
   });
 });
 
+describe('完了ゲートに ci の結果が来たときの純粋判断', () => {
+  it('[REQ-317] scope:ci なら、修正回数が残っていても直しに進まず、ci の PASS を完了にもしない。aborted は ci より先、要判断は ci より後に見る', () => {
+    const stop = decideAfterGate({ ...base, scope: 'ci' });
+    expect(stop.kind).toBe('stop');
+    expect((stop as { reason: string }).reason).toContain('scope:ci');
+    expect(decideAfterGate({ ...base, scope: 'ci', ok: true })).toEqual(stop);
+    expect(decideAfterGate({ ...base, scope: 'ci', decisionReasons: ['仮定の承認'] })).toEqual(stop);
+    expect((decideAfterGate({ ...base, scope: 'ci', aborted: 'runtime：x' }) as { reason: string }).reason).toContain('実行エラー');
+    expect(decideAfterGate({ ...base, scope: 'local', ok: true })).toEqual({ kind: 'passed' });
+    expect(gateObservation(ci()).scope).toBe('ci');
+    expect(gateObservation(local()).scope).toBe('local');
+  });
+});
+
 describe('run の完了ゲートと仕様ゲートで 2.0.0 を読む', () => {
   // 完了ゲートの最初の検査だけを 2.0.0 にする。証拠の記録はいまの書き出し（1.0.0）で行う
   function mockFirstDone(result: VerifyResultV2) {
@@ -140,6 +154,21 @@ describe('run の完了ゲートと仕様ゲートで 2.0.0 を読む', () => {
     } finally { spy.mockRestore(); repo.cleanup(); }
   });
 
+  it('[REQ-317] 完了ゲートに scope:ci の PASS が来たら、直しのエンジンを呼ばず、Draft PR も作らずに理由を記録して止まる', async () => {
+    const repo = makeRepo();
+    const spy = mockFirstDone(ci());
+    try {
+      repo.plan([{ write: { 'impl.txt': '実装\n' } }, noChange]);
+      const r = await run(repo);
+      expect(r.code, r.stdout).toBe(1);
+      expect(repo.calls()).toHaveLength(2);
+      expect(repo.prs()).toHaveLength(0);
+      const s: RunSummary = JSON.parse(readFileSync(join(runDir(repo), 'summary.json'), 'utf8'));
+      expect(s.reason).toContain('scope:ci');
+      expect(s.lastVerify).toEqual({ ok: false, mode: 'done' });
+    } finally { spy.mockRestore(); repo.cleanup(); }
+  });
+
   it('[REQ-093] 仕様ゲートの結果は、1.0.0 は ok で、2.0.0 は不合格 1・usage と config の aborted 2・ほかの aborted 3 で決める', () => {
     expect(specGateOutcome({ schemaVersion: '1.0.0', mode: 'spec-only', change: CHANGE, ok: false, results: [] })).toEqual({ code: 1, aborted: false });
     expect(specGateOutcome(local([failed]))).toEqual({ code: 1, aborted: false });
@@ -202,6 +231,15 @@ describe('証拠の再利用と PR 本文で Evidence 2 を読む', () => {
       expect(body).toContain('ローカルの項目はすべて完了（CI の最終合格は未確認）');
       expect(body).toContain('- ✔ command: test');
       expect(body).toContain('| REQ-012 | tests/a.test.ts |');
+    });
+  });
+
+  it('[REQ-164] Evidence 1 の合格証拠は再利用せず、不正としても止まらず、ファイルを残したまま新しい検証と記録に進む', () => {
+    const legacyVerify = { schemaVersion: '1.0.0', mode: 'done', change: CHANGE, ok: true, results: [{ check: 'command: test', status: 'pass', detail: '' }] };
+    withCandidate((sha, documents) => ({ ...common(sha, documents), schemaVersion: 1, verify: legacyVerify }), (repo, file) => {
+      const before = readFileSync(join(repo.root, file), 'utf8');
+      expect(reusableEvidence(repo.root, repo.env, CHANGE, changeDir(repo))).toBeUndefined();
+      expect(readFileSync(join(repo.root, file), 'utf8')).toBe(before);
     });
   });
 
