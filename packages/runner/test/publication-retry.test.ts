@@ -67,6 +67,8 @@ const withRepo = (label: string, action: (repo: Repo) => Promise<void>) => withC
 // write-report.mjs のコミットなどが絶対パスを含むので、場所は変えない。ケースは順に流れるので、互いの書き込みは見えない。
 type SharedRun = { template: Repo; env: NodeJS.ProcessEnv; snapshot: string; first: RunResult };
 let shared: Promise<SharedRun> | undefined;
+// 1回目のrunや複製が途中で失敗しても消せるように、保存先は Promise の外で持つ。
+let snapshotDir: string | undefined;
 function sharedFirstRun(): Promise<SharedRun> {
   shared ??= (async () => {
     let saved: SharedRun | undefined;
@@ -74,7 +76,7 @@ function sharedFirstRun(): Promise<SharedRun> {
       template.env.FAKE_GH_CREATE = 'before';
       const first = await run(template);
       delete template.env.FAKE_GH_CREATE;
-      const snapshot = mkdtempSync(join(tmpdir(), 'loomake-run-snapshot-'));
+      const snapshot = snapshotDir = mkdtempSync(join(tmpdir(), 'loomake-run-snapshot-'));
       cpSync(template.base, snapshot, { recursive: true, preserveTimestamps: true });
       saved = { template, env: { ...template.env }, snapshot, first };
     });
@@ -83,9 +85,8 @@ function sharedFirstRun(): Promise<SharedRun> {
   return shared;
 }
 afterAll(async () => {
-  if (!shared) return;
-  const { snapshot } = await shared;
-  rmSync(snapshot, { recursive: true, force: true });
+  await shared?.catch(() => undefined);
+  if (snapshotDir) rmSync(snapshotDir, { recursive: true, force: true });
 });
 async function withFailedCreate(label: string, action: (repo: Repo, first: RunResult) => Promise<void>) {
   const { template, env, snapshot, first } = await sharedFirstRun();
