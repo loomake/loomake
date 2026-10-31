@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:changed": "node scripts/test-changed.mjs",
     "test:coverage": "vitest run --coverage",
     "verify": "pnpm -r --silent build && node packages/cli/dist/cli.js verify"
   },

@@ -68,6 +68,8 @@ quality ジョブの macOS・Windows のシャードでは、`scripts/ci-quarant
 
 外した試験は別のワークフロー `.github/workflows/quality-quarantine.yml` で流します。main への push・定期実行・`ci:all-os` ラベルの PR・手動実行で動きます。plan ジョブが `ci-quarantine.mjs --matrix` で OS ごとの matrix を作り、`quality-quarantine` ジョブが一覧のファイルだけをシャードに分けずに実行します。このジョブは `continue-on-error: true` なので、失敗しても run の成否には数えません。一覧が空なら、このジョブは飛ばされます。ci.yml の中に置かないのは、ci.yml の既存の試験（`ci:all-os` の式が 1 か所であること、gate が最後のジョブであることなど）を変えないためです。
 
+同じワークフローには、変異試験（`scripts/domain-mutations.mjs`、[testing.md](../testing.md)）を流す `domain-mutations` ジョブもあります。定期実行と手動実行のときだけ動き、PR と main への push では動きません。ほかのジョブとは独立しているので、変異が生き残って失敗しても隔離の試験は止まりません。生き残った変異の数と一覧は実行の概要と `survived.json` に書き、`results.json` とあわせて `domain-mutations-<run>-<attempt>` の artifact に 30 日保存します。
+
 隔離のジョブでは publication-retry の段階と外部操作の記録（[test-phase-profiling.md](test-phase-profiling.md)）、ai-journeys の区間の記録、心拍を有効にします。それらと vitest の JSON レポートを `quality-quarantine-<run>-<attempt>-<os>-<sample>` の artifact に 7 日保存します。
 
 手動実行では計測のためにだけ次を選べます。既定はどちらも変えません（stabilize-cross-os-tests の Q-03）。
@@ -76,7 +78,7 @@ quality ジョブの macOS・Windows のシャードでは、`scripts/ci-quarant
 - `temp`：Windows の `TEMP`・`TMP` を `RUNNER_TEMP` に向けるか
 - `max_workers`：vitest の並列度を 1 にするか
 
-隔離一覧の期限切れは、macOS・Windows のシャードと `quality-quarantine` の plan ジョブで失敗します。どちらも必須チェックではないので、`ci:all-os` ラベルのない PR は緑のまま通ります。夜間実行の失敗は管理役が毎朝確かめ、期限までに直すか、理由を書いて期限を延ばす PR（L2）を出します。延長は 1 回につき 14 日までです。
+隔離一覧の期限切れは、macOS・Windows のシャードと `quality-quarantine` の plan ジョブで失敗します。どちらも必須チェックではないので、`ci:all-os` ラベルのない PR は緑のまま通ります。夜間実行の失敗は管理役が毎朝確かめ、期限までに直すか、理由を書いて期限を延ばす PR（L2）を出します。延長は 1 回につき 14 日までです。夜間実行が赤いときは、失敗したジョブの名前で原因を分けてください。`plan` が失敗するのは、隔離一覧の期限切れか一覧の誤りのときです。`domain-mutations` が失敗するのは、生き残った変異があるとき、試行がエラーになったとき、基準の試験が error のとき、元ファイルが変わったとき（`originalsUnchanged: false`）、`results.json` を書く前に落ちたとき（install の失敗など）です。それ以外の原因は、`results.json` とログを見て確かめてください。
 
 手動実行は既定ブランチにあるワークフローだけが対象です。一覧から外すときは、そのファイルが `quality-quarantine` と夜間実行で安定して通ることを確かめてから、エントリを消してください。
 
