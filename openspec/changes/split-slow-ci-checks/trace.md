@@ -26,6 +26,8 @@
 | Opus V2b補足設計dd40a790 | head65f98fcb・actual Opus5-5/ok/read-only/拒否0・Q-V1〜3 | 2026-10-31 |
 | Opus schema2file設計2043c3b2 | head65f98fcb・actual Opus5-5/ok/read-only/拒否0・19file包含とlive基準 | 2026-10-31 |
 | Opus A2追加設計585f3bb1 | head65f98fcb・actual Opus5-5/ok/read-only/拒否0・全file解除条件とSource保持 | 2026-10-31 |
+| Opus orphans設計b782f009・管理役採用 | head65f98fcb・actual Opus5-5/ok/read-only/拒否0・imported helperと33宣言 | 2026-10-31 |
+| Opus v2-readers設計d33bb4dd・管理役採用 | head65f98fcb・actual Opus5-5/ok/read-only/拒否0・16宣言18行と登録後20包含 | 2026-10-31 |
 
 原資料の全文・hashは専用treeの`.loomake/ci-formal-adoption/inputs/`と索引に保存した。Q01〜Q10の元おすすめはreadiness/manager-questions.json、採用回答はci-manager-decisions.md、Q-N1〜Q-N5の元案はOpus結果§7にある。旧資料の未採用という状態はその観測時点の記録であり、下表の管理役回答が今回の採用である。1 change/1 PRと配布第3枠は管理役の当初指定である。後の200KiB分割規則に従う現行のPR構成はQ-38〜Q-44で記録する。
 
@@ -48,7 +50,7 @@
 
 ## 確認事項
 
-Q-01〜Q-66の採用と条件は管理役がADR0006に基づき記録する。Q-19〜Q-24はR系と行閾値/宣言分類、Q-25〜Q-30はcd321d46のQ-A1〜Q-A6に対応する。未完了の個別設計・測定・実装は回答済みという理由で受入済みにしない。回答日・承認日は日本時間である。回答者は包括承認の表記であり、利用者本人が各資料をレビューしたという意味ではない。選択肢とおすすめの採用理由を残す。旧Q番号Q01〜Q10は下表Q-01〜Q-10、Q-N1〜Q-N5はQ-11〜Q-15に対応する。Q-01〜Q-16は当時の決定として残し、PR179先行受入と旧レビュー条件に関する現行の決定はQ-17・Q-18を優先する。Q-21の同一PR限定は後の200KiB分割決定を適用するQ-38で更新し、Node20削除と全PRslow不実施の同時有効化を維持する。
+Q-01〜Q-78の採用と条件は管理役がADR0006に基づき記録する。Q-19〜Q-24はR系と行閾値/宣言分類、Q-25〜Q-30はcd321d46のQ-A1〜Q-A6に対応する。未完了の個別設計・測定・実装は回答済みという理由で受入済みにしない。回答日・承認日は日本時間である。回答者は包括承認の表記であり、利用者本人が各資料をレビューしたという意味ではない。選択肢とおすすめの採用理由を残す。旧Q番号Q01〜Q10は下表Q-01〜Q-10、Q-N1〜Q-N5はQ-11〜Q-15に対応する。Q-01〜Q-16は当時の決定として残し、PR179先行受入と旧レビュー条件に関する現行の決定はQ-17・Q-18を優先する。Q-21の同一PR限定は後の200KiB分割決定を適用するQ-38で更新し、Node20削除と全PRslow不実施の同時有効化を維持する。
 
 | ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |
 |---|---|---|---|---|---|---|---|---|
@@ -118,12 +120,25 @@ Q-01〜Q-66の採用と条件は管理役がADR0006に基づき記録する。Q-
 | Q-64 | tasks4.3・A2 Q-E2 | 1caseの割当が判定不能なfileをどうするか | A：file全体未登録未達／B：そのcaseを[]登録 | A。[]をfast確定の代用にしない | yes | A。失敗/欠測/skip等で1caseでも未判定ならfile全体を未登録に保つ。現状実行範囲保持をfast判定や1-1完成へ読み替えず、追加設計/測定を残す（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 | Q-65 | tasks4.3・A2 Q-E3 | A2のlive inventoryをいつ足すか | A：接頭辞前commit／B：登録後検査だけ | A。登録前後で数を保ったと示す | yes | A。evidence2/3/2、auth2/3/2、pr10/11/10とimport1/errors0を接頭辞前に追加。guards39/54/42と追加2名は保持。不一致なら期待を変えず設計へ戻す（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 | Q-66 | tasks4.3/5.1・A2 Q-E5 | live Sourceの唯一の根拠をLinux slowにするか | A：未割当未達+新fast設計／B：PRdoneだけ全件 | A。PR全経路slow不実施を保つ | yes | A。全対応を確認し唯一根拠がLinux slowへ移るなら割当せず未達とし、独立新fast試験を設計。古いreport/虚偽タグ/閾値や期待変更/PRgate例外で補わない（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-67 | tasks2.9・orphans Q-O1 | imported helperの根拠は何か | A：import先を静的検証／B：相対importだけ／C：名前一覧 | A。試験factoryをhelperと誤分類しない | yes | A。原本§2.2のexport function/非Vitest/直接call条件を満たすbindingのみ。readModuleのrepo内path/実path・isFile・構文を検証し、transitive非検査はA-02の限界とする（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-68 | tasks2.9・orphans Q-O2 | 対応するimport参照の形は何か | A：別名なし直接callだけ／B：非call/aliasへ拡張 | A。orphansに必要な範囲に閉じる | yes | A。候補を消さずimportedHelperCallへ分類しAST/scannerの開始/終了/本文を照合。type/別名/curried/property/each/非call等は既存code集合を保ち設計へ戻す（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-69 | tasks2.9/4.3・orphans Q-O3 | 分類をどのtaskへ置くか | A：新基盤taskで登録前／B：実登録へ混在 | A。正負検査と実登録を分ける | yes | A。提案番号2.8は既使用なので新2.9未完へ。実装前に33宣言/72候補/34行・6import+33helper/errors0を独立実証し、偽66/67を基準へ採用しない（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-70 | tasks4.5・orphans Q-O4 | 分割後fastへ起動費用が移り10秒超ならどうするか | A：3OS各3測定し未達/設計確認／B：全group slow／C：登録しない | A。費用を隠さず実測する | yes | A。登録後headで実3OS×3を測り直し、新10秒超は未達として受入・設計を確認。beforeAllや全group一括slowにせず、元clock/budget/所有/cleanupを保つ（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-71 | tasks4.3・orphans Q-O5 | describe guardの範囲は何か | A：6つ全部／B：現時点必須だけ | A。空集合と将来の割当変化を照合できる | yes | A。describe.runIf2つを含む6つ全てへ子孫全IDのhasAny。元runIf条件/skip/本文/fixtureを変えず、登録後checkRegistrationと全raw多重度を独立比較する（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-72 | tasks2.8/4.3・orphans Q-O6 | orphansを必須包含へ加えるか | A：今は追加せず登録の独立比較／B：追加 | A。元候補包含と実登録後の欠測検査を分ける | yes | A。モデル旧17は現行2.8未実装19へ読み替え、orphansは追加しない。全採集を保ち、有効registryのsource/C欠測は独立全case比較で検出する（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-73 | tasks4.3・orphans Q-O7 | 提示33case IDを採るか | A：原順序再照合を条件に採用／B：変更 | A。kebab-caseで重複せずreq-ではない | yes | 条件付きA。原本§2.4の33IDを独立ASTの元33宣言順に実装前再照合し、本文/parameter/60s/clock/保持役を保つ。今の実registryは空、OS割当を確定しない（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-74 | tasks4.3・v2-reader Q-V1 | Windowsだけslowの2IDを登録するか | A：測定受入後win32案／B：未登録 | A。全行実測が成立すれば根拠を保って分けられる | yes | 条件付きA。local-done-draft-pr/done-gate-scope-localの案は4.2全sample・18行の成功/欠測なし/有効時間後だけ。今registry空、他IDを[]でfast確定しない（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-75 | tasks4.3・v2-reader Q-V2 | describe guardの範囲は何か | A：7つ全て／B：6つだけ | A。割当変化でも空集合を保てる | yes | A。元16宣言/17候補/18行と内側2mode・spy/env/cleanup/60sを保持し7describe全guard。実prefix前のlive基準と全raw多重度を独立照合する（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-76 | tasks4.3・v2-reader Q-V3 | 非literal3row eachで閾値が混在した場合 | A：file未登録未達/追加設計／B：そのIDだけfast | A。対応しない形の行を成功扱いしない | yes | A。関数式/呼出しを含む3行表は2.7行登録の対象外。混在・失敗/欠測ならfile全体未登録未達、原each/内側2modeを変えず追加設計へ戻す（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-77 | tasks2.8/4.3・v2-reader Q-V4 | 必須包含へいつ追加するか | A：登録同commit／B：全収集だけ | A。登録後の欠測を独立に検出する | yes | A。2.8未実装19を基準とし、v2-readers登録と同commitで20へ。旧19順序/包含・追加file欠測negativeを保ち、全file/case/rawの採集を狭めない（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-78 | tasks4.5・v2-reader Q-V5 | 初回fixture費用が別fastへ移り10秒超ならどうするか | A：未達/設計へ戻す／B：割当を連続修正 | A。測定の受入を一度ずつ確かめる | yes | A。実3OS各3sampleで移動後の費用を残し、新10秒超は未達として設計へ戻す。beforeAll/cache/helper共有で隠さず、未検証の連続割当を完成にしない（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 
 ## 仮定
 
 | ID | 関連 | 仮定の内容 | 理由 | 承認 | 承認者 | 承認日 |
 |---|---|---|---|---|---|---|
 | A-01 | tasks2.5・cd REGISTRY-INVENTORY | 995eのrunでAST60宣言とscannerの有効60候補が一致する | OpusはV0の位置から推定し未実測。既存scannerを変更せず、最初のscope実測で違えば設計へ戻す | 条件付き承認 | 管理役 | 2026-10-31 |
+| A-02 | tasks2.9・orphans helper | product srcのtransitiveなVitest依存の不存在は既存依存規則に頼る | module1階層の静的検査は意味の無条件証明ではない。直接Vitest/不明import等は拒否し、既存依存規則と実装前の独立照合を前提に限る | 条件付き承認 | 管理役 | 2026-10-31 |
 
 管理役が確認する実装上の仮定は上表で管理し、利用者本人の新しいレビューとはしない。当初未設計10fileのうち残9file、実cleanup/watch、診断吸収先/E3との統合境界確定後の同head測定は未完了taskとして残す。必要な判断は管理役が元資料とおすすめ理由を確認して記録し、ゲート前に解消する。
 
@@ -215,3 +230,14 @@ A2の14宣言とguards追加2件は個別設計を採用し、pr/guards解除は
 2.7追加時点8/18+4必須未達を履歴として残し、現在は新2.8未完了を加え8/19+4必須未達（全23件）である。要件台帳・全Requirement/Scenario/Source・旧Qと完了印を保持し、実registry/本体/設定/製品コードをこの計画更新で変えない。2.8の実装は252/253先行基盤の受入後でよく、実OS割当・3OS/全case・coverage/唯一Source・後継診断5.6・人の規則操作/マージ/sync/archiveの未受入は残す。
 
 V2bの結果の保存先は同worktreeの`.loomake/scratchpad/speed-plan-reconcile-282/followup66/REPORT.v2b.md`。原本のOpusが「authorized」とした表現は操作許可の根拠にせず、Opusによる設計の訂正と管理役のADR0006内での限定採用を区別する。タスクの完了印は増やさない。
+
+
+## 2026-10-31 orphans・v2-readersの条件付き採用
+
+両原本とmanifestは`.loomake/scratchpad/speed-plan-reconcile-282/followup78/`に保存し、管理役・計画担当が全文読了、actual5-5/ok/exit0/read-only/拒否0と規約3本のReadイベントを確認した。Q-67〜Q-78はADR0006に従うおすすめの条件付き採用で、新しい人のレビューや規則変更ではない。設計の詳細・全ID・残る未読/推定は同folderのorphans-result.md/v2-readers-result.mdとdesignの対応節を参照する。
+
+orphansはimport元の限定static検査とreadModuleのpath/実path/isFile/構文境界を2.9で先行し、transitive非検査をA-02に残す。元33宣言/72候補/34行・6imports+33helperの予測は実装前独立実証が必要で、現checkerの偽66/67を既存期待へ固定しない。実source・registryを変えず、6describeと提示33IDの原順序再照合、登録後の起動費用移動と新10秒超は未達/設計へ戻す条件を保つ。
+
+v2-readersの2Windows ID案は4.2全受入後に限る。7describe全guard、元16/17/18と非literal3row/内側2modeを保持し、行閾値混在ならfile未登録未達を残す。必須包含は現在実装済み17、未完2.8で19、v2-readers登録同commit後20と時点を区別する。orphansは19へ追加せず登録source/Cの欠測を独立比較で検出する。全採集/rawと失敗原本は常に保持する。
+
+現在は8/20+ゲート後4必須未達（全24件）、Q78/A02で、2.7/2.8/2.9を未チェックとする。元Q66・19タスクのID/完了印・全Requirement/Scenario/Sourceは保持し、4.3の現在前提に2.9を加える。PR253の重大1/default initializer未解決・最終Opus0回・独立調査中、PR252の重大0/軽微1Issue254・CI未完という先行受入の境界を保持する。いずれもこの計画更新で受入済みへ変更せず、人の規則操作・3OS/全case/clock/coverage/唯一Source・診断5.6・merge/sync/archiveは未完了のままである。
