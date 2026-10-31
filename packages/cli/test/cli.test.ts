@@ -27,7 +27,7 @@ const writeReport = (root: string, tests: Record<string, [string, string][]>) =>
 
 describe('JSON 出力', () => {
   it('[REQ-040] --json の標準出力は JSON だけで、schemaVersion を含み、core のスキーマで検証できる', async () => {
-    const r = await withProject({ config: { openspecValidate: false, commands: { lint: 'node -e "console.log(1)"' } } }, (root) => {
+    const r = await withProject({ config: { openspecValidate: false, commands: { lint: 'node -e "console.log(1)"' } }, quality: true }, (root) => {
       writeReport(root, { 'tests/a.test.ts': [['[REQ-012] 動く', 'passed']] });
       return run(root, 'verify', '--change', CHANGE, '--done', '--json');
     });
@@ -41,7 +41,7 @@ describe('JSON 出力', () => {
 
   it('[REQ-040] 要件ごとのテストファイルの一覧を出す', async () => {
     // 今回の test コマンドが書き出したレポートで数える。--skip-commands では coverage を出さない（REQ-040）
-    const r = await withProject({ config: { openspecValidate: false, commands: { test: COPY_REPORT } } }, (root) => {
+    const r = await withProject({ config: { openspecValidate: false, commands: { test: COPY_REPORT } }, quality: true }, (root) => {
       writeFileSync(join(root, 'report-src.json'), reportJson(root, { 'tests/a.test.ts': [['[REQ-012] 動く', 'passed']] }));
       return run(root, 'verify', '--change', CHANGE, '--done', '--json');
     });
@@ -49,7 +49,7 @@ describe('JSON 出力', () => {
   });
 
   it('[REQ-040] 前回の成功レポートがあっても、--skip-commands の --json は coverage を出さず、不足で終了コード 1', async () => {
-    const r = await withProject({}, (root) => {
+    const r = await withProject({ quality: true }, (root) => {
       writeReport(root, { 'tests/a.test.ts': [['[REQ-012] 動く', 'passed']] });
       return run(root, 'verify', '--change', CHANGE, '--done', '--json', '--skip-commands');
     });
@@ -178,7 +178,7 @@ describe('verify の性能', () => {
     const ids = Array.from({ length: 500 }, (_, i) => `REQ-${String(i + 1).padStart(3, '0')}`);
     const trace = traceMd({ ledger: ids.map((id) => ledgerRow(id)) });
     const spec = ['## ADDED Requirements', '', ...ids.map((id) => requirement(`振る舞い ${id}`, { source: `Source: ${id}` }))].join('\n');
-    const r = await withProject({ trace, spec, config: { openspecValidate: 'auto', commands: {} } }, async (root) => {
+    const r = await withProject({ trace, spec, config: { openspecValidate: 'auto', commands: {} }, quality: true }, async (root) => {
       const tests: Record<string, [string, string][]> = {};
       mkdirSync(join(root, 'tests'));
       for (let f = 0; f < 1000; f++) {
@@ -201,10 +201,12 @@ describe('verify の性能', () => {
     expect(r.decided.missing).toEqual([]);
     expect(Object.values(r.decided.coverage).every((files) => files.length === 2)).toBe(true);
     expect(r.decided.coverage['REQ-001']).toEqual(['tests/t0.test.ts', 'tests/t500.test.ts']);
-    // --skip-commands は品質コマンドの不足で 1（REQ-040）。不足は品質コマンドと要件ごとのテストの 2 件だけ
+    // --skip-commands は品質コマンドの不足で 1（REQ-040）。不足は品質コマンドと要件ごとのテストの 2 件だけ。
+    // ci では quality.yaml の品質条件も、品質コマンドを実行していないので未実施の不足になる（REQ-319）
     expect(r.code, r.stdout).toBe(1);
     const parsed = JSON.parse(r.stdout);
-    expect(parsed.checks.filter((c: { result: string }) => c.result !== 'PASS').map((c: { id: string }) => c.id)).toEqual(['品質コマンド', '要件ごとのテスト']);
+    const skipped = ['品質コマンド', '要件ごとのテスト', ...(scopeArgs.length ? [] : ['quality:PQ-900'])];
+    expect(parsed.checks.filter((c: { result: string }) => c.result !== 'PASS').map((c: { id: string }) => c.id)).toEqual(skipped);
     // --skip-commands では coverage を出さない（REQ-040）
     expect(parsed).not.toHaveProperty('coverage');
     expect(parsed.scope).toBe(scopeArgs.length ? 'local' : 'ci');

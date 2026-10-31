@@ -9,10 +9,13 @@ import { makeRepo, CHANGE } from '../../runner/test/helpers.js';
 
 vi.setConfig({ testTimeout: 60_000 });
 
+// quality.yaml のスキーマ（zod）は呼び出し側が読んで渡す（REQ-319）
+const qualitySchema = await kit.loadVerifyQualitySchema();
+
 const { evidenceSchema } = await loadTraceSchemas();
 
 function doneRepo() {
-  const repo = makeRepo({ tasks: '## 1. 実装\n- [x] 1.1 完了（REQ-012）\n' });
+  const repo = makeRepo({ tasks: '## 1. 実装\n- [x] 1.1 完了（REQ-012）\n', quality: true });
   repo.write('impl.txt', '実装\n'); repo.git('add', 'impl.txt'); repo.git('commit', '-q', '-m', 'implementation');
   return repo;
 }
@@ -26,7 +29,7 @@ describe('Evidence 2 の記録', () => {
     try {
       const out: string[] = [];
       let seen: unknown;
-      const code = runRecord({ root: repo.root, changeId: CHANGE, stdout: (t) => out.push(t), onVerify: (r) => { seen = r; } });
+      const code = runRecord({ root: repo.root, qualitySchema, changeId: CHANGE, stdout: (t) => out.push(t), onVerify: (r) => { seen = r; } });
       expect(code).toBe(0);
       const [name] = files(repo.root);
       const evidence = read(repo.root, name);
@@ -44,7 +47,7 @@ describe('Evidence 2 の記録', () => {
     const repo = doneRepo();
     try {
       const out: string[] = [];
-      expect(runRecord({ root: repo.root, changeId: CHANGE, scope: 'local', stdout: (t) => out.push(t) })).toBe(0);
+      expect(runRecord({ root: repo.root, qualitySchema, changeId: CHANGE, scope: 'local', stdout: (t) => out.push(t) })).toBe(0);
       const evidence = read(repo.root, files(repo.root)[0]);
       expect(evidence.verify).toMatchObject({ scope: 'local', summary: { pending: 0, fail: 0 } });
       expect(evidence.verify).not.toHaveProperty('verdict');
@@ -63,7 +66,7 @@ describe('Evidence 2 の記録', () => {
       const old = join(dir(repo.root), '00000000T000000Z-legacy.json');
       repo.write('.loomake/evidence/c1/00000000T000000Z-legacy.json', '{"keep":true}\n');
       repo.git('add', '-A'); repo.git('commit', '-q', '-m', 'old');
-      expect(runRecord({ root: repo.root, changeId: CHANGE, stdout: () => {} })).toBe(3);
+      expect(runRecord({ root: repo.root, qualitySchema, changeId: CHANGE, stdout: () => {} })).toBe(3);
       const recorded = files(repo.root).filter((f) => !f.includes('legacy'));
       expect(recorded).toHaveLength(1);
       const evidence = read(repo.root, recorded[0]);
@@ -78,7 +81,7 @@ describe('Evidence 1 と Evidence 2 の読み分け', () => {
   const withRecorded = (fn: (root: string, evidence: Record<string, unknown>, file: string) => void) => {
     const repo = doneRepo();
     try {
-      runRecord({ root: repo.root, changeId: CHANGE, stdout: () => {} });
+      runRecord({ root: repo.root, qualitySchema, changeId: CHANGE, stdout: () => {} });
       const file = files(repo.root)[0];
       fn(repo.root, read(repo.root, file), join(dir(repo.root), file));
     } finally { repo.cleanup(); }

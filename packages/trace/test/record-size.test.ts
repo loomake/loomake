@@ -1,15 +1,18 @@
 import { describe, expect, it, vi } from 'vitest';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { UsageError } from '@loomake/kit';
+import { UsageError, loadVerifyQualitySchema } from '@loomake/kit';
 import { buildReport, runRecord } from '@loomake/trace';
 import { makeRepo, CHANGE } from '../../runner/test/helpers.js';
 
 // git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
 vi.setConfig({ testTimeout: 60_000 });
 
+// quality.yaml のスキーマ（zod）は呼び出し側が読んで渡す（REQ-319）
+const qualitySchema = await loadVerifyQualitySchema();
+
 function doneRepo() {
-  const repo = makeRepo({ tasks: '## 1. 実装\n- [x] 1.1 完了（REQ-012）\n' });
+  const repo = makeRepo({ tasks: '## 1. 実装\n- [x] 1.1 完了（REQ-012）\n', quality: true });
   repo.write('impl.txt', '実装\n'); repo.git('add', 'impl.txt'); repo.git('commit', '-q', '-m', 'implementation');
   return repo;
 }
@@ -18,7 +21,7 @@ describe('生成した証拠と読み取り側の整合性', () => {
   it('[REQ-174] 通常の生成結果をreportで読める', () => {
     const repo = doneRepo();
     try {
-      expect(runRecord({ root: repo.root, changeId: CHANGE, stdout: () => {} })).toBe(0);
+      expect(runRecord({ root: repo.root, qualitySchema, changeId: CHANGE, stdout: () => {} })).toBe(0);
       expect(buildReport(repo.root, CHANGE)?.evidence.ok).toBe(true);
     } finally { repo.cleanup(); }
   });
@@ -26,7 +29,7 @@ describe('生成した証拠と読み取り側の整合性', () => {
   it('[REQ-174] 64MiBを超える生成結果は証拠ファイルを作らず止まる', () => {
     const repo = doneRepo();
     try {
-      expect(() => runRecord({ root: repo.root, changeId: CHANGE, stdout: () => {}, onVerify: (result) => { if ('checks' in result && result.checks) result.checks[0].reason = 'x'.repeat(64 * 1024 * 1024); } })).toThrow(/証拠.*上限.*67108864/);
+      expect(() => runRecord({ root: repo.root, qualitySchema, changeId: CHANGE, stdout: () => {}, onVerify: (result) => { if ('checks' in result && result.checks) result.checks[0].reason = 'x'.repeat(64 * 1024 * 1024); } })).toThrow(/証拠.*上限.*67108864/);
       expect(existsSync(join(repo.root, '.loomake/evidence', CHANGE))).toBe(false);
       expect(repo.git('status', '--porcelain')).toBe('');
     } finally { repo.cleanup(); }
@@ -35,7 +38,7 @@ describe('生成した証拠と読み取り側の整合性', () => {
   it('[REQ-174] 形式が壊れた生成結果も保存しない', () => {
     const repo = doneRepo();
     try {
-      expect(() => runRecord({ root: repo.root, changeId: CHANGE, stdout: () => {}, onVerify: (result) => { (result as { schemaVersion: string }).schemaVersion = 'other'; } })).toThrow(UsageError);
+      expect(() => runRecord({ root: repo.root, qualitySchema, changeId: CHANGE, stdout: () => {}, onVerify: (result) => { (result as { schemaVersion: string }).schemaVersion = 'other'; } })).toThrow(UsageError);
       expect(existsSync(join(repo.root, '.loomake/evidence', CHANGE))).toBe(false);
     } finally { repo.cleanup(); }
   });

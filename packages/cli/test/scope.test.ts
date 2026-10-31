@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { runVerify, verifyExitCode } from '@loomake/kit';
+import { loadVerifyQualitySchema, runVerify, verifyExitCode } from '@loomake/kit';
 import * as trace from '@loomake/trace';
 import { main } from '../src/main.js';
 import { CHANGE, COPY_REPORT, reportJson, withProject } from '../../kit/test/project.js';
@@ -11,6 +11,8 @@ vi.setConfig({ testTimeout: 60_000 });
 afterEach(() => vi.restoreAllMocks());
 
 const config = { openspecValidate: false, commands: { test: COPY_REPORT } };
+// quality.yaml のスキーマ（zod）は呼び出し側が読んで渡す（REQ-319）
+const qualitySchema = await loadVerifyQualitySchema();
 
 async function run(root: string, env: string | undefined, ...argv: string[]) {
   const out: string[] = [];
@@ -28,7 +30,7 @@ async function run(root: string, env: string | undefined, ...argv: string[]) {
 }
 
 const withDone = <T>(fn: (root: string) => Promise<T>) =>
-  withProject({ config }, (root) => {
+  withProject({ config, quality: true }, (root) => {
     writeFileSync(join(root, 'report-src.json'), reportJson(root, { 'tests/a.test.ts': [['[REQ-012] 動く', 'passed']] }));
     return fn(root);
   });
@@ -63,11 +65,11 @@ describe('verify の --scope', () => {
   it('[REQ-312] 関数 API と CLI は、同じ入力で同じ scope と終了コードになる（local の結果を ci に使えない）', async () => {
     await withDone(async (root) => {
       const cases: [string[], Parameters<typeof runVerify>[0]][] = [
-        [['--change', CHANGE, '--done'], { root, changeId: CHANGE, gate: 'done' }],
-        [['--change', CHANGE, '--done', '--scope', 'local'], { root, changeId: CHANGE, gate: 'done', scope: 'local' }],
-        [['--change', CHANGE, '--done', '--skip-commands'], { root, changeId: CHANGE, gate: 'done', skipCommands: true }],
-        [['--change', CHANGE, '--done', '--skip-commands', '--scope', 'local'], { root, changeId: CHANGE, gate: 'done', skipCommands: true, scope: 'local' }],
-        [['--change', CHANGE, '--spec-only'], { root, changeId: CHANGE, gate: 'spec-only' }],
+        [['--change', CHANGE, '--done'], { root, qualitySchema, changeId: CHANGE, gate: 'done' }],
+        [['--change', CHANGE, '--done', '--scope', 'local'], { root, qualitySchema, changeId: CHANGE, gate: 'done', scope: 'local' }],
+        [['--change', CHANGE, '--done', '--skip-commands'], { root, qualitySchema, changeId: CHANGE, gate: 'done', skipCommands: true }],
+        [['--change', CHANGE, '--done', '--skip-commands', '--scope', 'local'], { root, qualitySchema, changeId: CHANGE, gate: 'done', skipCommands: true, scope: 'local' }],
+        [['--change', CHANGE, '--spec-only'], { root, qualitySchema, changeId: CHANGE, gate: 'spec-only' }],
       ];
       for (const [argv, options] of cases) {
         const api = runVerify(options);
@@ -75,8 +77,8 @@ describe('verify の --scope', () => {
         expect([argv.join(' '), cli.code, JSON.parse(cli.stdout).scope]).toEqual([argv.join(' '), verifyExitCode(api), api.scope]);
       }
       // 省略した done は ci なので、local の完了（0）とは別の結果になる
-      expect(runVerify({ root, changeId: CHANGE, gate: 'done', scope: 'local' }).scope).toBe('local');
-      expect(runVerify({ root, changeId: CHANGE, gate: 'done' }).scope).toBe('ci');
+      expect(runVerify({ root, qualitySchema, changeId: CHANGE, gate: 'done', scope: 'local' }).scope).toBe('local');
+      expect(runVerify({ root, qualitySchema, changeId: CHANGE, gate: 'done' }).scope).toBe('ci');
     });
   });
 

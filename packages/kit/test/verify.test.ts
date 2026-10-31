@@ -2,14 +2,17 @@ import { describe, it, expect, vi } from 'vitest';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { formatVerifyResult, INTERRUPTED, NOTICE, OPENSPEC_NA_CONFIRMER, isAbortedResult, runVerify, verifyExitCode } from '@loomake/kit';
+import { formatVerifyResult, loadVerifyQualitySchema, INTERRUPTED, NOTICE, OPENSPEC_NA_CONFIRMER, isAbortedResult, runVerify, verifyExitCode } from '@loomake/kit';
 import { CHANGE, COPY_REPORT, INTERRUPT_SCRIPT, interruptScript, alive, ledgerRow, reportJson, requirement, specMd, traceMd, vitestCommand, withProject } from './project.js';
 
 // git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
 vi.setConfig({ testTimeout: 60_000 });
 
-const specOnly = (root: string) => runVerify({ root, changeId: CHANGE, gate: 'spec-only' });
-const done = (root: string, skipCommands = false) => runVerify({ root, changeId: CHANGE, gate: 'done', skipCommands });
+// quality.yaml のスキーマ（zod）は呼び出し側が読んで渡す（REQ-319）
+const qualitySchema = await loadVerifyQualitySchema();
+
+const specOnly = (root: string) => runVerify({ root, qualitySchema, changeId: CHANGE, gate: 'spec-only' });
+const done = (root: string, skipCommands = false) => runVerify({ root, qualitySchema, changeId: CHANGE, gate: 'done', skipCommands });
 type Result = ReturnType<typeof runVerify>;
 // 2.0.0 の checks を、検査ごとの観測（名前・状態・説明）として読む。案内つきの合格は warn、不足は insufficient、対象外は na（仮定 A-01・A-02）
 const view = (result: Result) => (isAbortedResult(result) ? [] : result.checks).map((c) => {
@@ -201,7 +204,7 @@ describe('完了ゲート', () => {
   const passedReport = (root: string) => reportJson(root, { 'tests/a.test.ts': [['[REQ-012] 動く', 'passed']] });
   // 今回の test コマンドがレポートを書き出す（REQ-040。前回のレポートは今回の証拠にしない）
   const withReport = (files: Parameters<typeof withProject>[0], fn: (root: string) => ReturnType<typeof runVerify>) =>
-    withProject({ config: { openspecValidate: false, commands: { test: COPY_REPORT } }, ...files }, (root) => {
+    withProject({ config: { openspecValidate: false, commands: { test: COPY_REPORT } }, quality: true, ...files }, (root) => {
       writeFileSync(join(root, 'report-src.json'), passedReport(root));
       return fn(root);
     });
@@ -225,7 +228,7 @@ describe('完了ゲート', () => {
   });
 
   it('[REQ-038] 仕様で参照される要件を名前に含むテストが無いと不合格', () => {
-    const r = withProject({ config: { openspecValidate: false, commands: { test: COPY_REPORT } } }, (root) => {
+    const r = withProject({ config: { openspecValidate: false, commands: { test: COPY_REPORT } }, quality: true }, (root) => {
       writeFileSync(join(root, 'report-src.json'), reportJson(root, { 'tests/a.test.ts': [['[REQ-001] 別の要件', 'passed']] }));
       return done(root);
     });
@@ -240,7 +243,7 @@ describe('完了ゲート', () => {
 
   // 以下は一時プロジェクトで実際に Vitest を実行し、書き出されたレポートで判定する
   const withTests = (tests: Record<string, string>) =>
-    withProject({ config: { openspecValidate: false, commands: { test: vitestCommand() } }, files: tests }, (root) => done(root));
+    withProject({ config: { openspecValidate: false, commands: { test: vitestCommand() } }, files: tests, quality: true }, (root) => done(root));
 
   it('[REQ-038] it.skip のテストだけなら、テストが無い要件として不合格', () => {
     const r = withTests({ 'tests/a.test.ts': "it.skip('[REQ-012] skip', () => {});\nit('別のテスト', () => {});\n" });
@@ -277,7 +280,7 @@ describe('完了ゲート', () => {
   // テストランナーはレポートに実パスを書くので、ルートも実パスにそろえないと相対パスがずれる
   it('[REQ-038] ルートがシンボリックリンクを通っても、要件 ID のテストをルートからのパスで数える', () => {
     const r = withProject(
-      { config: { openspecValidate: false, commands: { test: vitestCommand() } }, files: { 'tests/a.test.ts': "it('[REQ-012] 成功する', () => {});\n" } },
+      { config: { openspecValidate: false, commands: { test: vitestCommand() } }, files: { 'tests/a.test.ts': "it('[REQ-012] 成功する', () => {});\n" }, quality: true },
       (root) => {
         const link = join(mkdtempSync(join(tmpdir(), 'loomake-link-')), 'project');
         symlinkSync(root, link, 'dir');
@@ -293,7 +296,7 @@ describe('完了ゲート', () => {
   }, 30_000);
 
   it('[REQ-038] ルートがシンボリックリンクを通り、レポートにリンクのままのパスが書かれていても、ルートからのパスで数える', () => {
-    const r = withProject({ config: { openspecValidate: false, commands: { test: COPY_REPORT } } }, (root) => {
+    const r = withProject({ config: { openspecValidate: false, commands: { test: COPY_REPORT } }, quality: true }, (root) => {
       const link = join(mkdtempSync(join(tmpdir(), 'loomake-link-')), 'project');
       symlinkSync(root, link, 'dir');
       try {
@@ -318,14 +321,14 @@ describe('完了ゲート', () => {
 describe('品質コマンドの実行', () => {
   it('[REQ-039] コマンドが失敗すると、出力の末尾を詳細に入れて不合格', () => {
     const config = { openspecValidate: false, commands: { test: 'node -e "console.log(\'テストの出力\'); process.exit(1)"' } };
-    const r = withProject({ config }, (root) => done(root));
+    const r = withProject({ config, quality: true }, (root) => done(root));
     expect(check(r, 'command: test')).toMatchObject({ status: 'fail', detail: 'テストの出力' });
     expect(ok(r)).toBe(false);
   });
 
   it('[REQ-039] loomake.config.json に知らないキーがあれば、そのキーを警告にし、不合格にはしない', () => {
     const config = { openspecValidate: false, comands: { test: 'node -e "process.exit(1)"' }, tests: { report: '.loomake/test-report.json', reprot: 'x' }, run: { maxFix: 1 }, commands: {} };
-    for (const r of withProject({ config }, (root) => [runVerify({ root }), specOnly(root)])) {
+    for (const r of withProject({ config }, (root) => [runVerify({ root, qualitySchema }), specOnly(root)])) {
       expect(check(r, 'loomake.config.json')).toEqual({ check: 'loomake.config.json', status: 'warn', detail: '知らないキー：comands、tests.reprot、run.maxFix（打ち間違いなら直してください）' });
       expect(ok(r)).toBe(true);
     }
@@ -333,18 +336,18 @@ describe('品質コマンドの実行', () => {
 
   it('[REQ-039] 継承したプロパティと同じ名前のキー（toString・__proto__）も、例外を出さずに知らないキーとして示す', () => {
     const files = { 'loomake.config.json': '{ "openspecValidate": false, "toString": { "x": 1 }, "__proto__": { "y": 1 }, "commands": {} }' };
-    const r = withProject({ files }, (root) => runVerify({ root }));
+    const r = withProject({ files }, (root) => runVerify({ root, qualitySchema }));
     expect(check(r, 'loomake.config.json')?.detail).toBe('知らないキー：toString、__proto__（打ち間違いなら直してください）');
   });
 
   it('[REQ-039] 知らないキーがなければ、loomake.config.json の検査は出さない', () => {
-    const r = withProject({ config: { $comment: 'x', openspecValidate: false, commands: { e2e: 'node -e ""' }, run: { maxFixes: 1, timeoutMinutes: 5, maxOutputBytes: 1, maxLogBytes: 1, maxHistoryBytes: 1 } } }, (root) => runVerify({ root }));
+    const r = withProject({ config: { $comment: 'x', openspecValidate: false, commands: { e2e: 'node -e ""' }, run: { maxFixes: 1, timeoutMinutes: 5, maxOutputBytes: 1, maxLogBytes: 1, maxHistoryBytes: 1 } } }, (root) => runVerify({ root, qualitySchema }));
     expect(check(r, 'loomake.config.json')).toBeUndefined();
   });
 
   it('[REQ-039] 3 つのコマンドがすべて成功すると、command: の検査はすべて合格', () => {
     const ok = 'node -e ""';
-    const r = withProject({ config: { openspecValidate: false, commands: { test: ok, lint: ok, typecheck: ok } } }, (root) => done(root));
+    const r = withProject({ config: { openspecValidate: false, commands: { test: ok, lint: ok, typecheck: ok } }, quality: true }, (root) => done(root));
     // lint・typecheck・test の順に実行する（仮定 A-02）
     expect(view(r).filter((x) => x.check.startsWith('command:'))).toEqual([
       { check: 'command: lint', status: 'pass', detail: '' },
@@ -360,7 +363,7 @@ describe('中断されたときの品質コマンド', () => {
     const config = { openspecValidate: false, commands: { test: 'node interrupt.cjs', after: 'node -e "require(\'fs\').writeFileSync(\'after.txt\', \'\')"' } };
     withProject({ config, files: { 'interrupt.cjs': INTERRUPT_SCRIPT } }, (root) => {
       const start = Date.now();
-      const r = runVerify({ root, timeoutMs: 60_000 });
+      const r = runVerify({ root, qualitySchema, timeoutMs: 60_000 });
       expect(Date.now() - start).toBeLessThan(10_000);
       expect(check(r, 'command: test')).toEqual({ check: 'command: test', status: 'insufficient', detail: INTERRUPTED });
       expect(r.run).toMatchObject({ status: 'partial', errors: [{ kind: 'runtime', target: 'command: test', message: INTERRUPTED }] });
@@ -374,7 +377,7 @@ describe('中断されたときの品質コマンド', () => {
     const config = { openspecValidate: false, commands: { test: 'node interrupt.cjs', after: 'node -e "require(\'fs\').writeFileSync(\'after.txt\', \'\')"' } };
     withProject({ config, files: { 'interrupt.cjs': interruptScript('SIGHUP') } }, (root) => {
       const start = Date.now();
-      const result = runVerify({ root, timeoutMs: 60_000 });
+      const result = runVerify({ root, qualitySchema, timeoutMs: 60_000 });
       expect(Date.now() - start).toBeLessThan(10_000);
       expect(check(result, 'command: test')).toEqual({ check: 'command: test', status: 'insufficient', detail: INTERRUPTED });
       expect(result.run).toMatchObject({ status: 'partial', errors: [{ kind: 'runtime', target: 'command: test', message: INTERRUPTED }] });
@@ -388,7 +391,7 @@ describe('中断されたときの品質コマンド', () => {
 
 describe('change の省略', () => {
   it('[REQ-042] change を省略すると commands だけを実行し、仕様の検査はしない', () => {
-    const r = withProject({ config: { commands: { lint: 'node -e ""' } } }, (root) => runVerify({ root }));
+    const r = withProject({ config: { commands: { lint: 'node -e ""' } } }, (root) => runVerify({ root, qualitySchema }));
     expect(r).toMatchObject({ schemaVersion: '2.0.0', scope: 'local', change: null, run: { status: 'completed', errors: [] } });
     expect(r).not.toHaveProperty('verdict');
     expect(view(r).map((x) => x.check)).toEqual(['command: lint']);
@@ -397,7 +400,7 @@ describe('change の省略', () => {
 
 describe('日本語のメッセージ', () => {
   it('[REQ-055] 存在しない change-id では、change の存在が日本語の説明つきで不合格', () => {
-    const r = withProject({}, (root) => runVerify({ root, changeId: 'no-such-change', gate: 'spec-only' }));
+    const r = withProject({}, (root) => runVerify({ root, qualitySchema, changeId: 'no-such-change', gate: 'spec-only' }));
     expect(check(r, 'change の存在')).toEqual({
       check: 'change の存在',
       status: 'fail',
@@ -417,7 +420,7 @@ describe('要件モデルの整合性', () => {
 
 describe('品質コマンドを省いたことの表示', () => {
   const withReport = <T>(fn: (root: string) => T) =>
-    withProject({ config: { commands: { test: 'node -e "process.exit(1)"' } } }, (root) => {
+    withProject({ config: { commands: { test: 'node -e "process.exit(1)"' } }, quality: true }, (root) => {
       mkdirSync(join(root, '.loomake'), { recursive: true });
       writeFileSync(join(root, '.loomake', 'test-report.json'), reportJson(root, { 'tests/a.test.ts': [['[REQ-012] 動く', 'passed']] }));
       return fn(root);
@@ -449,9 +452,9 @@ describe('ゲート別の分類', () => {
   });
   const passedReport = (root: string) => reportJson(root, { 'tests/a.test.ts': [['[REQ-012] 動く', 'passed']] });
   const doneWith = (files: Parameters<typeof withProject>[0], scope: 'local' | 'ci') =>
-    withProject({ config: { openspecValidate: false, commands: { test: COPY_REPORT } }, ...files }, (root) => {
+    withProject({ config: { openspecValidate: false, commands: { test: COPY_REPORT } }, quality: true, ...files }, (root) => {
       writeFileSync(join(root, 'report-src.json'), passedReport(root));
-      return runVerify({ root, changeId: CHANGE, gate: 'done', scope });
+      return runVerify({ root, qualitySchema, changeId: CHANGE, gate: 'done', scope });
     });
   const withoutOpenspec = <T>(fn: () => T): T => {
     const empty = mkdtempSync(join(tmpdir(), 'loomake-empty-path-'));
@@ -463,7 +466,7 @@ describe('ゲート別の分類', () => {
 
   it('[REQ-036] spec-only の未承認の仮定と確認待ちは、案内つきの合格で、pending も要判断も立てず 0', () => {
     for (const scope of ['local', 'ci'] as const) {
-      const r = withProject({ trace: pendingTrace }, (root) => runVerify({ root, changeId: CHANGE, gate: 'spec-only', scope }));
+      const r = withProject({ trace: pendingTrace }, (root) => runVerify({ root, qualitySchema, changeId: CHANGE, gate: 'spec-only', scope }));
       expect(check(r, '仮定の承認')?.status).toBe('warn');
       expect(check(r, '確認待ちの要件')?.status).toBe('warn');
       expect(decisionOf(r)).toEqual({ required: false, reasons: [] });
@@ -499,13 +502,13 @@ describe('ゲート別の分類', () => {
   it('[REQ-037] auto で OpenSpec CLI が無いと、local は理由と確認者つきの対象外、ci は不足になる', () => {
     withoutOpenspec(() => {
       const config = { openspecValidate: 'auto', commands: {} };
-      const local = withProject({ config }, (root) => runVerify({ root, changeId: CHANGE, gate: 'spec-only', scope: 'local' }));
+      const local = withProject({ config }, (root) => runVerify({ root, qualitySchema, changeId: CHANGE, gate: 'spec-only', scope: 'local' }));
       if (isAbortedResult(local)) throw new Error('aborted');
       expect(local.checks.find((c) => c.id === 'openspec validate')).toMatchObject({ result: 'NOT_APPLICABLE' });
       expect(check(local, 'openspec validate')?.detail).toContain(OPENSPEC_NA_CONFIRMER);
       expect(local.summary.not_applicable).toBe(1);
       expect(verifyExitCode(local)).toBe(0);
-      const ci = withProject({ config }, (root) => runVerify({ root, changeId: CHANGE, gate: 'spec-only', scope: 'ci' }));
+      const ci = withProject({ config }, (root) => runVerify({ root, qualitySchema, changeId: CHANGE, gate: 'spec-only', scope: 'ci' }));
       expect(check(ci, 'openspec validate')).toMatchObject({ status: 'insufficient' });
       expect(check(ci, 'openspec validate')?.detail).toContain('OpenSpec CLI が見つかりません');
       expect(verifyExitCode(ci)).toBe(1);
@@ -522,7 +525,7 @@ describe('ゲート別の分類', () => {
 
   it('[REQ-037] 明示 true で OpenSpec CLI が無いと、local でも不合格のまま', () => {
     withoutOpenspec(() => {
-      const r = withProject({ config: { openspecValidate: true, commands: {} } }, (root) => runVerify({ root, changeId: CHANGE, gate: 'spec-only', scope: 'local' }));
+      const r = withProject({ config: { openspecValidate: true, commands: {} } }, (root) => runVerify({ root, qualitySchema, changeId: CHANGE, gate: 'spec-only', scope: 'local' }));
       expect(check(r, 'openspec validate')?.status).toBe('fail');
       expect(verifyExitCode(r)).toBe(1);
     });
@@ -531,12 +534,12 @@ describe('ゲート別の分類', () => {
   it('[REQ-039] 未知キーは spec-only・done・change なしの local/ci で、理由つきの合格の案内になり、それだけでは 0', () => {
     const config = { openspecValidate: false, comands: {}, commands: { test: COPY_REPORT } };
     for (const scope of ['local', 'ci'] as const) {
-      const results = withProject({ config }, (root) => {
+      const results = withProject({ config, quality: true }, (root) => {
         writeFileSync(join(root, 'report-src.json'), passedReport(root));
         return [
-          runVerify({ root, scope }),
-          runVerify({ root, changeId: CHANGE, gate: 'spec-only', scope }),
-          runVerify({ root, changeId: CHANGE, gate: 'done', scope }),
+          runVerify({ root, qualitySchema, scope }),
+          runVerify({ root, qualitySchema, changeId: CHANGE, gate: 'spec-only', scope }),
+          runVerify({ root, qualitySchema, changeId: CHANGE, gate: 'done', scope }),
         ];
       });
       for (const r of results) {
@@ -550,8 +553,8 @@ describe('ゲート別の分類', () => {
 
   it('[REQ-191] --skip-commands の完了ゲートは local も ci も不足で 1 になる', () => {
     for (const scope of ['local', 'ci'] as const) {
-      const r = withProject({ config: { openspecValidate: false, commands: { test: 'node -e ""' } } }, (root) =>
-        runVerify({ root, changeId: CHANGE, gate: 'done', skipCommands: true, scope }));
+      const r = withProject({ config: { openspecValidate: false, commands: { test: 'node -e ""' } }, quality: true }, (root) =>
+        runVerify({ root, qualitySchema, changeId: CHANGE, gate: 'done', skipCommands: true, scope }));
       expect(check(r, '品質コマンド')?.status).toBe('insufficient');
       expect(verifyExitCode(r)).toBe(1);
     }
@@ -559,7 +562,7 @@ describe('ゲート別の分類', () => {
 
   it('[REQ-036] spec-only は local でも ci でも品質項目（quality:）を checks に作らない', () => {
     for (const scope of ['local', 'ci'] as const) {
-      const r = withProject({}, (root) => runVerify({ root, changeId: CHANGE, gate: 'spec-only', scope }));
+      const r = withProject({}, (root) => runVerify({ root, qualitySchema, changeId: CHANGE, gate: 'spec-only', scope }));
       expect(isAbortedResult(r) ? [] : r.checks.filter((c) => c.id.startsWith('quality:'))).toEqual([]);
     }
   });

@@ -55,6 +55,35 @@ export function linkRuntimeDependencies(packageDir, target) {
   }
 }
 
+/** ci.test_report の必須 1 項目だけを置く quality.yaml（リポジトリ直下の quality.yaml と同じ形。REQ-319） */
+export const QUALITY_YAML = [
+  'version: 2',
+  'model: iso-iec-25010-2011',
+  'product:',
+  '  PQ-900:',
+  '    characteristic: functional_suitability',
+  '    subcharacteristic: functional_correctness',
+  '    blocking: true',
+  '    applicability: applicable',
+  '    evidence:',
+  '      - source: ci.test_report',
+  '        metric: required_subjects_with_failed_tests',
+  '        target: "== 0"',
+  '        min_samples: 1',
+  '',
+].join('\n');
+
+/**
+ * ci の完了ゲートに要る quality.yaml と、テストランナーの版を読む node_modules/vitest（リポジトリの Vitest を指すリンク）を置く（REQ-319）。
+ * node_modules/ は呼び出し側の .gitignore で除く
+ */
+export function placeCiQuality(project) {
+  writeFileSync(join(project, 'quality.yaml'), QUALITY_YAML);
+  const link = join(project, 'node_modules', 'vitest');
+  mkdirSync(dirname(link), { recursive: true });
+  symlinkSync(dirname(createRequire(join(root, 'package.json')).resolve('vitest/package.json')), link, 'junction');
+}
+
 /** 既存のディレクトリを上書きせず、配布物と独立した利用先を準備する。 */
 export function prepare(target) {
   mkdirSync(target);
@@ -87,7 +116,8 @@ export function prepare(target) {
   writeFileSync(join(consumer, 'loomake.config.json'), JSON.stringify({ openspecValidate: false, commands: { test: 'node test-command.mjs' } }));
   const assertions = Array.from({ length: 25 }, (_, i) => ({ fullName: `[REQ-${String(i + 1).padStart(3, '0')}] smoke`, status: 'passed' }));
   const report = { testResults: [{ name: join(consumer, 'tests/smoke.test.ts'), assertionResults: assertions }] };
-  writeFileSync(join(consumer, 'test-command.mjs'), `import { mkdirSync, writeFileSync } from 'node:fs';\nmkdirSync('.loomake', { recursive: true });\nwriteFileSync('.loomake/test-report.json', ${JSON.stringify(JSON.stringify(report))});\n`);
+  writeFileSync(join(consumer, 'test-command.mjs'), `import { mkdirSync, writeFileSync } from 'node:fs';\nmkdirSync('.loomake', { recursive: true });\nwriteFileSync('.loomake/test-report.json', JSON.stringify({ ...${JSON.stringify(report)}, startTime: Date.now() }));\n`);
+  placeCiQuality(consumer);
   run('git', ['init', '-q'], consumer);
   run('git', ['config', 'user.name', 'loomake-smoke'], consumer);
   run('git', ['config', 'user.email', 'smoke@example.invalid'], consumer);
