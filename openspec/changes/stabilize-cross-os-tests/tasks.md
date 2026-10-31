@@ -19,7 +19,7 @@
 ## 5. 段階の記録
 
 - [x] 5.1 PR #179（head 3571c20）の診断を取り込む：`packages/runner/test/process-diagnostics.ts`・`publication-retry.test.ts` の段階の記録・`tests/publication-retry-diagnostics.test.ts`・`docs/dev/test-phase-profiling.md`。専用ワークフローは作らない
-- [ ] 5.2 `tests/package-artifacts.test.ts` と `scripts/package-smoke.mjs` に prepare・check・照合の段階の記録を足す。assertion は変えない（REQ-345）
+- [x] 5.2 `tests/package-artifacts.test.ts` と `scripts/package-smoke.mjs` に prepare・check・照合の段階の記録を足す。assertion は変えない（REQ-345）
 
 ## 6. 文書と確認
 
