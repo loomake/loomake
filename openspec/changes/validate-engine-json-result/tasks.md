@@ -8,12 +8,14 @@
 
 ## 2. 製品実装
 
+S2-Q01の採用により、2.5と3.5をS4として先行し、その後S2の2.1〜2.4・3.1・3.2へ進む。依存上の実施順だけを変え、以下19taskのID・本文・受入・完了印は保持する。S4の3OS受入前に3.5を完了としない。
+
 - [ ] 2.1 元の標準出力でJSONを読み、失敗優先・型検査・subtype表示を純粋関数へ接続する。秘密置換後に分類しない（REQ-341）
 - [ ] 2.2 先行停止→hold→既存guardと必要表示→純粋AfterGuard→index解除と停止を接続する。既存停止優先順位と正常経路を保持する（REQ-204・REQ-340・REQ-341）
 - [ ] 2.3 通常summary/displayの完全な出力パス、分類後summary/stop保存失敗の短い理由、分類前output保存失敗の従来I/O停止を実装する（REQ-340・REQ-179）
 - [ ] 2.4 異常結果ではタスク・NoChange完了・commit・直しの再gate・後続engineへ進まないよう既存利用側とfixtureを追従し、正常なタスクと完了ゲートを保つ（REQ-099・REQ-100・REQ-330・REQ-331・REQ-340）
 
-- [ ] 2.5 findViolationsの内容差分を8192文字基準の群で取得してfile単位に照合し、表示をliteral/固定形式のfile区切りで絞り、filter前のstdout/stderr合計予算とUTF8末尾の安全側課金を維持する。不完全hunkを成功にしない。検出内容と順序、対象file、Git失敗・共有期限の扱いを保つ（REQ-109・REQ-110・REQ-111・REQ-112・REQ-137・REQ-138・REQ-180・REQ-201）
+- [x] 2.5 findViolationsの内容差分を8192文字基準の群で取得してfile単位に照合し、表示をliteral/固定形式のfile区切りで絞り、filter前のstdout/stderr合計予算とUTF8末尾の安全側課金を維持する。不完全hunkを成功にしない。検出内容と順序、対象file、Git失敗・共有期限の扱いを保つ（REQ-109・REQ-110・REQ-111・REQ-112・REQ-137・REQ-138・REQ-180・REQ-201）
 
 ## 3. 直接試験と回帰
 
