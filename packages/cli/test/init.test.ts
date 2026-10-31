@@ -447,7 +447,7 @@ describe('生成したローカルの完了と最終の合格の案内', () => {
     expect(agents).toContain('必須チェックが成功している');
     for (const base of ['.claude', '.agents']) {
       const format = r.files[`${base}/skills/req-to-openspec/references/openspec-format.md`];
-      const match = /## tasks\.md\s+```markdown\n([\s\S]*?)\n```/.exec(format);
+      const match = /## tasks\.md\s+```markdown\n([\s\S]*?)\n```/.exec(format.replace(/\r\n/g, '\n'));
       expect(match).not.toBeNull();
       const lines = match![1].split('\n');
       expect(lines.filter((line) => line.includes('<!-- loomake:gate=done -->'))).toEqual(['- [ ] 3.1 `npx loomake verify --change <change-id> --done --scope local` を通す <!-- loomake:gate=done -->']);

@@ -230,7 +230,7 @@ export async function check(target) {
   assert.ok(initAgents.includes('必須チェックが成功している'));
   for (const base of ['.claude', '.agents']) {
     const format = readFileSync(join(initRoot, base, 'skills/req-to-openspec/references/openspec-format.md'), 'utf8');
-    const match = /## tasks\.md\s+```markdown\n([\s\S]*?)\n```/.exec(format);
+    const match = /## tasks\.md\s+```markdown\n([\s\S]*?)\n```/.exec(format.replace(/\r\n/g, '\n'));
     assert.ok(match, `${base}: tasks.md の雛形がありません`);
     const lines = match[1].split('\n');
     assert.deepEqual(lines.filter((line) => line.includes('<!-- loomake:gate=done -->')), ['- [ ] 3.1 `npx loomake verify --change <change-id> --done --scope local` を通す <!-- loomake:gate=done -->']);
