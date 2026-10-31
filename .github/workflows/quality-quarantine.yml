@@ -79,7 +79,7 @@ jobs:
         if: ${{ !cancelled() && hashFiles('.loomake/quality/domain-mutations-nightly/results.json') != '' }}
         run: |
           results=.loomake/quality/domain-mutations-nightly/results.json
-          jq '{ok: .ok, baseline: .baseline.status, survived: ([.mutations[] | select(.status == "survived")] | length), errors: ([.mutations[] | select(.status == "error")] | length), mutations: [.mutations[] | select(.status != "killed") | {id: .id, label: .label, file: .file, status: .status}]}' "$results" > .loomake/quality/domain-mutations-nightly/survived.json
+          jq '{ok: .ok, baseline: (.baseline.status // "未実施"), survived: ([.mutations[] | select(.status == "survived")] | length), errors: ([.mutations[] | select(.status == "error")] | length), mutations: [.mutations[] | select(.status != "killed") | {id: .id, label: .label, file: .file, status: .status}]}' "$results" > .loomake/quality/domain-mutations-nightly/survived.json
           {
             echo "## 変異試験（夜間）"
             echo

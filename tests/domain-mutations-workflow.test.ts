@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { runInNewContext } from 'node:vm';
 
@@ -12,6 +14,28 @@ const rest = workflow.slice(start + 1);
 const job = rest.slice(0, rest.slice(1).search(/\n {2}[a-z#][a-z0-9-]*/) + 1);
 const steps = job.slice(job.indexOf('\n    steps:\n')).split(/\n(?= {6}- )/).filter((step) => /^ {6}- /.test(step));
 const stepOf = (id: string) => steps.find((step) => new RegExp(`^ {6}(?:- | {2})id: ${id}$`, 'm').test(step));
+// survived の段階の run を取り出し、作った results.json に bash と jq で当てる。jq は GitHub の ubuntu の実行環境に入っている
+const hasTools = ['bash', 'jq'].every((tool) => spawnSync(tool, ['--version'], { encoding: 'utf8' }).status === 0);
+function runSurvived(results: unknown) {
+  const block = stepOf('survived')!.split('\n');
+  const at = block.findIndex((line) => /^ {8}run: \|$/.test(line));
+  const body = block.slice(at + 1);
+  const end = body.findIndex((line) => line.trim() && !line.startsWith(' '.repeat(10)));
+  const script = body.slice(0, end < 0 ? undefined : end).map((line) => line.slice(10)).join('\n') + '\n';
+  const dir = mkdtempSync(join(tmpdir(), 'loomake-nightly-mutations-'));
+  try {
+    const out = join(dir, '.loomake/quality/domain-mutations-nightly');
+    mkdirSync(out, { recursive: true });
+    writeFileSync(join(out, 'results.json'), JSON.stringify(results));
+    const summaryFile = join(dir, 'summary.md');
+    const result = spawnSync('bash', ['-e', '-c', script], { cwd: dir, encoding: 'utf8', env: { ...process.env, GITHUB_STEP_SUMMARY: summaryFile } });
+    expect(result.status, result.stderr).toBe(0);
+    return { survived: JSON.parse(readFileSync(join(out, 'survived.json'), 'utf8')), summary: readFileSync(summaryFile, 'utf8') };
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+const mutation = (id: string, status: string) => ({ id, label: `${id} の条件`, file: `packages/core/src/${id}.ts`, status, failedTests: [], reason: 'x' });
 
 describe('夜間の変異試験のジョブ', () => {
   it('定期実行と手動実行のときだけ動き、PR と main への push では動かない', () => {
@@ -44,5 +68,32 @@ describe('夜間の変異試験のジョブ', () => {
     expect(upload).toContain('path: .loomake/quality/domain-mutations-nightly/');
     expect(steps.indexOf(stepOf('mutations')!)).toBeLessThan(steps.indexOf(survived));
     expect(steps.indexOf(survived)).toBeLessThan(steps.indexOf(upload));
+  });
+
+  it.skipIf(!hasTools)('生き残った変異と試行のエラーだけを survived.json と要約に書く', () => {
+    const { survived, summary } = runSurvived({ ok: false, baseline: { status: 'passed', tests: [] }, mutations: [mutation('m1', 'killed'), mutation('m2', 'survived'), mutation('m3', 'error'), mutation('m4', 'survived')] });
+    expect(survived).toEqual({
+      ok: false,
+      baseline: 'passed',
+      survived: 2,
+      errors: 1,
+      mutations: ['m2', 'm3', 'm4'].map((id) => ({ id, label: `${id} の条件`, file: `packages/core/src/${id}.ts`, status: id === 'm3' ? 'error' : 'survived' })),
+    });
+    expect(summary).toBe([
+      '## 変異試験（夜間）',
+      '',
+      '生き残った変異：2 件、試行のエラー：1 件（基準の試験：passed）',
+      '',
+      '- m2 m2 の条件（packages/core/src/m2.ts）：survived',
+      '- m3 m3 の条件（packages/core/src/m3.ts）：error',
+      '- m4 m4 の条件（packages/core/src/m4.ts）：survived',
+      '',
+    ].join('\n'));
+  });
+
+  it.skipIf(!hasTools)('基準の試験の前で止まった結果（baseline が null）でも要約を書く', () => {
+    const { survived, summary } = runSurvived({ ok: false, baseline: null, mutations: [] });
+    expect(survived).toEqual({ ok: false, baseline: '未実施', survived: 0, errors: 0, mutations: [] });
+    expect(summary).toBe('## 変異試験（夜間）\n\n生き残った変異：0 件、試行のエラー：0 件（基準の試験：未実施）\n\n');
   });
 });
