@@ -37,7 +37,7 @@
 | REQ-316 | 親 trace、WBS J03 | 機能 | 新旧の証拠を既存Report 2へ投影し、旧版を閲覧専用にする | 反映済 | specs/trace-report/spec.md |
 | REQ-322 | 親 trace、現行reference-docs | 既存変更 | 公開8 JSONなどの不変を、qualityリファレンスの生成/checkだけの変更に限る | 反映済 | specs/reference-docs/spec.md |
 
-設計メモ2.2はREQ-073を含む18件をこの子changeへ移す案だった。REQ-073は、trace reportのCLIでEvidence 2を受け付けると、既存試験（`packages/trace/test/report.test.ts` の「schemaVersion が読める版でない記録」）の期待する文言が変わるため、親に残した。期待値の変更は2本目で具体差分を示して扱う。
+設計メモからの逸脱5点（PR #192本文）は管理役承認済み（2026-10-31）。設計メモ2.2はREQ-073を含む18件をこの子changeへ移す案だった。REQ-073は、trace reportのCLIでEvidence 2を受け付けると、既存試験（`packages/trace/test/report.test.ts` の「schemaVersion が読める版でない記録」）の期待する文言が変わるため、親に残した。期待値の変更は2本目で具体差分を示して扱う。
 
 ## 確認事項
 
@@ -58,3 +58,5 @@
 
 | ID | 関連 | 仮定の内容 | 理由 | 承認 | 承認者 | 承認日 |
 |---|---|---|---|---|---|---|
+| A-01 | REQ-308 | ciのsummaryに `pending` があれば禁止キーとして拒否する | 要件定義7.3の(a)のsummaryに `pending` がなく、localの(b)だけが持つため | 管理役承認済み（2026-10-31） | 管理役（Claude、ADR 0006） | 2026-10-31 |
+| A-02 | REQ-309 | abortedの `run.errors` にusage・configとほかの種別が混在するときは終了コード2を返す | 7.3に混在の定めがなく、表の上の行（usage・configの2）を優先する | 管理役承認済み（2026-10-31） | 管理役（Claude、ADR 0006） | 2026-10-31 |
