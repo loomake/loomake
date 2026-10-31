@@ -8,7 +8,7 @@
 // --matrix は matrix（JSON）と has_entries。一覧の誤り・期限切れは理由を表示して終了コード 2 で終わる。
 // Ubuntu のジョブはこの一覧を読まない。日付は日本時間で比べる。LOOMAKE_QUARANTINE_TODAY（YYYY-MM-DD）で上書きできる（試験用）。
 
-import { appendFileSync, existsSync, readFileSync, statSync } from 'node:fs';
+import { appendFileSync, existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -128,4 +128,10 @@ export function main(argv, root = resolve(dirname(fileURLToPath(import.meta.url)
   }
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) process.exitCode = main(process.argv.slice(2));
+// 直接実行されたかを実体のパスで比べる。macOS の一時ディレクトリ（/var → /private/var）のように、
+// シンボリックリンクを通して起動すると argv[1] と import.meta.url の文字列が食い違い、main が呼ばれないため
+function invokedDirectly() {
+  if (!process.argv[1]) return false;
+  try { return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url)); } catch { return false; }
+}
+if (invokedDirectly()) process.exitCode = main(process.argv.slice(2));
