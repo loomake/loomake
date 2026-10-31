@@ -10,7 +10,7 @@
 - [x] 2.1 ci.ymlのnode20ジョブを削除し、node22/3OS Node24を保つ。docs/dev/ci.mdと互換性文書、docs/quality/scenarios.jsonのREQ-144対応、monorepo/package-workflows/ci-test-diagnostics-workflowの照合を実在境界検査付きで更新する
 - [x] 2.2 root globalSetup/provideとpackage/slow injectを実装し、build/pack共有1回、unit-only/file選択の費用、inject欠落のfallback拒否、実build失敗/正常cleanup/watchを独立依存で検証する
 - [x] 2.3 純粋split helperとnamed slowの足場を作り、未測定のOS割当やcase本体の分割を加えず、空集合・未知ID/OS・PR判定とファイル選択を検査する。reporter/outputFile/coverage/ci-gate/verifyを保つ
-- [ ] 2.4 REQ-161の元13条件を実際に検出する独立fast試験とrunnerのonly選択を追加し、未知/重複拒否、baseline/検出/未検出/エラー/元source-test-report不変を確認する。既定13条件の元全体試験も残す。fastの確定は統合後3OS各3sampleで行う
+- [x] 2.4 REQ-161の元13条件を実際に検出する独立fast試験とrunnerのonly選択を追加し、未知/重複拒否、baseline/検出/未検出/エラー/元source-test-report不変を確認する。既定13条件の元全体試験も残す。fastの確定は統合後3OS各3sampleで行う
 
 # 3. 統合と残設計
 
@@ -20,7 +20,7 @@
 
 # 4. case分割と実測
 
-- [ ] 4.2 push ci/measure-*専用の同head3OS×3sample測定を用意し、新required statusを加えず最新headの元caseと新fastを測る
+- [x] 4.2 push ci/measure-*専用の同head3OS×3sample測定を用意し、新required statusを加えず最新headの元caseと新fastを測る
 - [ ] 4.3 採用済みの個別設計に従い、各OSの最大10秒超caseだけをslowへ分ける。元名/parameter/assert/timeoutとfast+slowの多重集合、空file選択、未知ID/OSと全PR経路のslow不実施、local/releaseの全件を検査する
 - [ ] 4.4 両診断profilerをmain push/schedule・companion含む4pathへ更新し、PR/手動起動の撤去、元caseId/3sample/失敗後保存/未計測を照合する。release manual dispatch品質ゲートは全件保持する
 - [ ] 4.5 最新実装headで3OS各3sampleを再取得し、checkout SHA/Node版/全case数/時間/失敗を保存する。REQ-297の4case・19.5/39.5秒下限・既存上限/clock/retry/assertと全診断契約を保持する
