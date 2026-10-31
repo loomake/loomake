@@ -5,7 +5,12 @@ import { runInNewContext } from 'node:vm';
 
 const root = join(import.meta.dirname, '..');
 const workflow = readFileSync(join(root, '.github/workflows/ci.yml'), 'utf8').replace(/\r\n/g, '\n');
-const quality = workflow.slice(workflow.indexOf('\n  quality:'), workflow.indexOf('\n  node20:'));
+const qualityStart = workflow.indexOf('\n  quality:');
+const runtimeStart = workflow.indexOf('\n  node22:');
+expect(qualityStart).toBeGreaterThanOrEqual(0);
+expect(runtimeStart).toBeGreaterThan(qualityStart);
+expect(workflow.indexOf('\n  gate:')).toBeGreaterThan(runtimeStart);
+const quality = workflow.slice(qualityStart, runtimeStart);
 const steps = quality.slice(quality.indexOf('\n    steps:\n') + '\n    steps:\n'.length).split(/\n(?= {6}- )/).filter((step) => /^ {6}- /.test(step));
 const stepById = (id: string) => {
   const found = steps.find((step) => new RegExp(`^ {6}(?:- | {2})id: ${id}$`, 'm').test(step));
@@ -42,7 +47,7 @@ describe('quality の診断保存', () => {
     expect(quality).not.toContain('continue-on-error');
     expect(quality).not.toMatch(/retry|rerun|--retry/);
     expect(quality.match(/run: pnpm test\b.*/g)).toEqual(['run: pnpm test --shard=${{ matrix.shard }}', 'run: pnpm test --coverage']);
-    expect(workflow.slice(workflow.indexOf('\n  node20:'))).not.toContain('ci-test-diagnostics');
+    expect(workflow.slice(runtimeStart)).not.toContain('ci-test-diagnostics');
   });
 
   it('[REQ-289][REQ-291] 固定SHAで3ファイルだけを7日保存し、生成ステップの出力がなくてもuploadできる', () => {

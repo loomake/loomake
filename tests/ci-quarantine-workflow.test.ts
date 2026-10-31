@@ -7,7 +7,10 @@ const root = join(import.meta.dirname, '..');
 // Windows のチェックアウトでは行末が CRLF になるので、LF にそろえて読む
 const readLf = (path: string) => readFileSync(join(root, path), 'utf8').replace(/\r\n/g, '\n');
 const ci = readLf('.github/workflows/ci.yml');
-const quality = ci.slice(ci.indexOf('\n  quality:'), ci.indexOf('\n  node20:')).replace(/^ *#.*\n/gm, '');
+const qualityStart = ci.indexOf('\n  quality:');
+const qualityEnd = ci.indexOf('\n  node22:');
+if (qualityStart < 0 || qualityEnd <= qualityStart) throw new Error('quality と node22 のジョブ境界がありません');
+const quality = ci.slice(qualityStart, qualityEnd).replace(/^ *#.*\n/gm, '');
 const qualitySteps = quality.slice(quality.indexOf('\n    steps:\n')).split(/\n(?= {6}- )/).filter((step) => /^ {6}- /.test(step));
 const stepOf = (steps: string[], id: string) => {
   const found = steps.find((step) => new RegExp(`^ {6}(?:- | {2})id: ${id}$`, 'm').test(step));

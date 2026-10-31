@@ -8567,6 +8567,24 @@
           "hashScope": "block"
         }
       ]
+    },
+    {
+      "id": "SCN-beb5ce3e5f27a15d5968",
+      "status": "unreviewed",
+      "scenarioSha256": "654de89d6795c469e3e9a76fef4e9ef200dfba4697e01052671033e36cb3c66b",
+      "sources": [
+        "REQ-144"
+      ],
+      "reason": "C2ではworkflowの実在境界とNode24準備・Node22.12下限・3OS構成を静的に検査した。最新headのNode22.12実runtimeと3OS CI成果物は未取得であり、実行成功と静的構成を分ける。最終受入で同headの証拠を対応付けて再確認する。"
+    },
+    {
+      "id": "SCN-e643361995371591e6de",
+      "status": "unreviewed",
+      "scenarioSha256": "a02d1cf102579dc5e7295bc117e6f5cb3f45aafe1a377cca19efe02b184c6267",
+      "sources": [
+        "REQ-144"
+      ],
+      "reason": "C2ではworkflowの実在境界とNode24準備・Node22.12下限・3OS構成を静的に検査した。最新headのNode22.12実runtimeと3OS CI成果物は未取得であり、実行成功と静的構成を分ける。最終受入で同headの証拠を対応付けて再確認する。"
     }
   ]
 }

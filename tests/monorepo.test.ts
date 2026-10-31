@@ -11,6 +11,13 @@ const read = (p: string) => readFileSync(join(root, p), 'utf8');
 const readJson = (p: string) => JSON.parse(read(p));
 // Windows のチェックアウトでは行末が CRLF になるので、行の正規表現で読むファイルは LF にそろえる
 const readLf = (p: string) => read(p).replace(/\r\n/g, '\n');
+const jobBlock = (workflow: string, start: string, end?: string) => {
+  const from = workflow.indexOf(`\n  ${start}:`);
+  expect(from, start).toBeGreaterThanOrEqual(0);
+  const to = end ? workflow.indexOf(`\n  ${end}:`) : workflow.length;
+  expect(to, end ?? 'end of workflow').toBeGreaterThan(from);
+  return workflow.slice(from, to);
+};
 const run = (cmd: string) => spawnSync(cmd, { cwd: root, shell: true, encoding: 'utf8' });
 
 const packageJsons = ['package.json', 'packages/core/package.json', 'packages/kit/package.json', 'packages/cli/package.json'];
@@ -149,7 +156,7 @@ describe('CI', () => {
   // 組み合わせを作り、exclude に当たるものを除き、include のうち既存の組み合わせに足せないものを新しい組み合わせとして足す
   const qualityJobs = (ctx: ExprCtx) => {
     const lf = readLf('.github/workflows/ci.yml');
-    const quality = lf.slice(lf.indexOf('\n  quality:'), lf.indexOf('\n  node20:'));
+    const quality = jobBlock(lf, 'quality', 'node22');
     const matrix = quality.match(/^ {6}matrix:\n((?: {8}.*\n)*)/m)?.[1] ?? '';
     const osLine = matrix.match(/^ {8}os: (.+)$/m)?.[1];
     expect(osLine, 'マトリクスの os').toBeTruthy();
@@ -174,7 +181,7 @@ describe('CI', () => {
     expect(qualityJobs(githubCtx('pull_request', ['documentation', 'ci:all-os-later']))).toEqual(['ubuntu-latest']);
     // ubuntu のジョブは、lint・typecheck・カバレッジ付きのテスト・build・配布物の検査を実行する
     const lf = readLf('.github/workflows/ci.yml');
-    const quality = lf.slice(lf.indexOf('\n  quality:'), lf.indexOf('\n  node20:'));
+    const quality = jobBlock(lf, 'quality', 'node22');
     expect(quality).toMatch(/runs-on: \$\{\{ matrix\.os \}\}/);
     for (const step of ['run: pnpm lint', 'run: pnpm typecheck', 'run: pnpm test --coverage', 'run: pnpm build', 'package-smoke.mjs prepare', 'package-smoke.mjs check']) expect(quality, step).toContain(step);
   });
@@ -206,12 +213,13 @@ describe('CI', () => {
     expect(on).toMatch(/^ {2}schedule:\n/m);
   });
 
-  it('[REQ-273] node20・node22・gate のジョブは、OS の切り替えの影響を受けない', () => {
+  it('[REQ-273] node22・gate のジョブは、OS の切り替えの影響を受けない', () => {
     const lf = readLf('.github/workflows/ci.yml');
+    expect(lf).not.toContain('\n  node20:');
+    expect(lf).not.toContain('20.19.0');
     const jobs = {
-      node20: lf.slice(lf.indexOf('\n  node20:'), lf.indexOf('\n  node22:')),
-      node22: lf.slice(lf.indexOf('\n  node22:'), lf.indexOf('\n  gate:')),
-      gate: lf.slice(lf.indexOf('\n  gate:')),
+      node22: jobBlock(lf, 'node22', 'gate'),
+      gate: jobBlock(lf, 'gate'),
     };
     for (const [name, job] of Object.entries(jobs)) {
       expect(job, name).toMatch(/^ {4}runs-on: ubuntu-latest$/m);
@@ -219,8 +227,7 @@ describe('CI', () => {
       expect(job, name).not.toContain('ci:all-os');
       expect(job, name).not.toContain('labels');
     }
-    // node20・node22 には条件がなく、gate は今までどおり pull_request のときだけ動く
-    expect(jobs.node20).not.toMatch(/^ {4}if:/m);
+    // node22 には条件がなく、gate は今までどおり pull_request のときだけ動く
     expect(jobs.node22).not.toMatch(/^ {4}if:/m);
     expect(jobs.gate).toMatch(/^ {4}if: github\.event_name == 'pull_request'$/m);
     // OS の切り替えの式は、quality ジョブの os の行の 1 か所だけ
@@ -229,7 +236,7 @@ describe('CI', () => {
 
   it('[REQ-214] macOS と Windows ではテストを 2 つのシャードに分け、ubuntu ではカバレッジ付きで 1 回だけ実行する', () => {
     const lf = readLf('.github/workflows/ci.yml');
-    const quality = lf.slice(lf.indexOf('\n  quality:'), lf.indexOf('\n  node20:'));
+    const quality = jobBlock(lf, 'quality', 'node22');
     // ubuntu はシャードの組み合わせから外し、シャードのない 1 つだけを足す。macOS と Windows には 1/2 と 2/2 が残る。
     // os の行はイベントとラベルで切り替える式なので（REQ-049・REQ-273）、ここでは os の行のほかを比べ、展開したジョブは 3 つの OS で動くときで確かめる
     expect(qualityJobs(githubCtx('push'))).toEqual(['macos-latest 1/2', 'macos-latest 2/2', 'windows-latest 1/2', 'windows-latest 2/2', 'ubuntu-latest']);
@@ -267,7 +274,7 @@ describe('CI', () => {
   // quality ジョブのステップを、先頭から順に取り出す。コメントの行は除く
   const qualitySteps = () => {
     const lf = readLf('.github/workflows/ci.yml');
-    const quality = lf.slice(lf.indexOf('\n  quality:'), lf.indexOf('\n  node20:')).replace(/^ *#.*\n/gm, '');
+    const quality = jobBlock(lf, 'quality', 'node22').replace(/^ *#.*\n/gm, '');
     return quality.slice(quality.indexOf('\n    steps:\n') + '\n    steps:\n'.length).split(/\n(?= {6}- )/).filter((step) => /^ {6}- /.test(step));
   };
   const docsOnlyCondition = "steps.changes.outputs.docs_only != 'true'";
@@ -276,7 +283,7 @@ describe('CI', () => {
     const lf = readLf('.github/workflows/ci.yml');
     // ワークフローの on に paths・paths-ignore がなく、quality ジョブそのものに条件がない
     expect(lf).not.toMatch(/^\s*paths(-ignore)?:/m);
-    const quality = lf.slice(lf.indexOf('\n  quality:'), lf.indexOf('\n  node20:'));
+    const quality = jobBlock(lf, 'quality', 'node22');
     expect(quality).not.toMatch(/^ {4}if:/m);
 
     const steps = qualitySteps();

@@ -1,9 +1,9 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import * as kit from '../packages/kit/src/index.js';
 import { afterEach, describe, expect, it } from 'vitest';
-import { auditRepository, auditScenarios, blockDigest, extractTestBlocks, inventoryRepository, inventoryScenarios, migrateRepository, migrateReviews, renderAudit, sha256 } from '../scripts/scenario-audit.mjs';
+import { auditRepository, auditScenarios, blockDigest, companionLinks, extractTestBlocks, inventoryRepository, inventoryScenarios, migrateRepository, migrateReviews, renderAudit, sha256 } from '../scripts/scenario-audit.mjs';
 
 const spec = (scenario = '条件', rule = '規則を守る SHALL。') => `### Requirement: 振る舞い\n${rule}\nSource: REQ-012\n#### Scenario: ${scenario}\n- **WHEN** 条件\n- **THEN** 結果\n`;
 const rows = () => inventoryScenarios('openspec/specs/x/spec.md', spec());
@@ -150,12 +150,12 @@ describe('旧形式の対応の移行', () => {
 describe('リポジトリでの実行', () => {
   let root: string | undefined;
   afterEach(() => { if (root) rmSync(root, { recursive: true, force: true }); root = undefined; });
-  const prepare = (reviews: unknown[]) => {
+  const prepare = (reviews: unknown[], options: { registry?: string; files?: Record<string, string>; report?: { name: string; assertionResults: { fullName: string; status: string }[] }[] } = {}) => {
     root = mkdtempSync(join(tmpdir(), 'scenario-audit-'));
-    for (const [path, text] of [['openspec/specs/x/spec.md', spec()], ['openspec/changes/c1/specs/x/spec.md', '## ADDED Requirements\n' + spec('変更中')], [testFile, file()], ['scripts/scenario-audit.mjs', readFileSync('scripts/scenario-audit.mjs', 'utf8')]]) {
+    for (const [path, text] of [['openspec/specs/x/spec.md', spec()], ['openspec/changes/c1/specs/x/spec.md', '## ADDED Requirements\n' + spec('変更中')], [testFile, file()], ['tests/test-partition.json', options.registry ?? JSON.stringify({ files: {} })], ...Object.entries(options.files ?? {}), ['scripts/scenario-audit.mjs', readFileSync('scripts/scenario-audit.mjs', 'utf8')]]) {
       mkdirSync(join(root, path, '..'), { recursive: true }); writeFileSync(join(root, path), text);
     }
-    writeFileSync(join(root, 'report.json'), JSON.stringify({ testResults: [{ name: testFile, assertionResults: run() }] }));
+    writeFileSync(join(root, 'report.json'), JSON.stringify({ testResults: options.report ?? [{ name: testFile, assertionResults: run() }] }));
     mkdirSync(join(root, 'docs/quality'), { recursive: true });
     writeFileSync(join(root, 'docs/quality/scenarios.json'), JSON.stringify({ schemaVersion: 1, reviews }));
     return root;
@@ -176,4 +176,146 @@ describe('リポジトリでの実行', () => {
     expect(result.counts.total).toBe(1);
     expect(JSON.parse(readFileSync(join(dir, 'out/audit.json'), 'utf8')).pending).toEqual({ total: 1, byChange: { c1: 1 }, unreadable: [] });
   });
+  const companion = 'tests/fixture.slow.test.ts';
+  const companionText = "// 整形やコメントがあっても元fileだけを読む\nawait import( './fixture.test.js' );\n";
+  const registered = JSON.stringify({ files: { [testFile]: { cases: { a: [], b: ['linux'] } } } });
+  const routed = (tests = run(), source = file(), text = companionText) => ({ registry: registered, files: { [testFile]: source, [companion]: text }, report: [{ name: companion, assertionResults: tests }] });
+  const execute = (dir: string, out = 'out') => auditRepository(dir, join(dir, out), undefined, 'report.json', kit);
+
+  it('[REQ-347] 登録済みcompanionを元本文で照合しraw入力・レビュー表と追跡用hashを保つ', async () => {
+    const dir = prepare([blockReview()], routed());
+    const raw = readFileSync(join(dir, 'report.json'), 'utf8'); const ledger = readFileSync(join(dir, 'docs/quality/scenarios.json'), 'utf8');
+    const result = await execute(dir);
+    expect(result.rows[0].status).toBe('reviewed');
+    expect(result.rows[0].tests).toEqual([{ ...run()[0], rawFile: companion }]);
+    expect(result.inputs).toMatchObject({ partitionSha256: sha256(registered), companions: { [companion]: sha256(companionText) }, testReportSha256: sha256(raw), reviewSha256: sha256(ledger) });
+    expect(result.inputs.testSources[testFile]).toBe(sha256(file()));
+    expect(renderAudit(result)).toContain(`${testFile}（${companion}）: ${run()[0].fullName}`);
+    expect(readFileSync(join(dir, 'report.json'), 'utf8')).toBe(raw);
+    expect(readFileSync(join(dir, 'docs/quality/scenarios.json'), 'utf8')).toBe(ledger);
+    writeFileSync(join(dir, companion), companionText + '// comment\n');
+    const commented = await execute(dir, 'commented');
+    expect(commented.rows[0].status).toBe('reviewed');
+    expect(commented.inputs.companions[companion]).not.toBe(result.inputs.companions[companion]);
+    writeFileSync(join(dir, testFile), file(target.replace('toBe(true)', 'toBe(false)')));
+    expect((await execute(dir, 'changed')).rows[0]).toMatchObject({ status: 'invalid', reason: expect.stringContaining('本文が変更') });
+  });
+  it.each(['failed', 'skipped', 'todo'])('[REQ-347] 元fileの成功でcompanionの%sを覆わない', async (status) => {
+    const options = routed(run(undefined, status)); options.report.unshift({ name: testFile, assertionResults: run() });
+    const result = await execute(prepare([blockReview()], options));
+    expect(result.rows[0]).toMatchObject({ status: 'invalid', reason: '選んだ試験に失敗または未実行があります' });
+  });
+  it('[REQ-347] companion対応後も必要なSourceを欠く実行は無効にする', async () => {
+    const source = file(target.replace('[REQ-012] ', ''));
+    const tests = run('群 条件を検査する');
+    const result = await execute(prepare([blockReview(source, tests)], routed(tests, source)));
+    expect(result.rows[0]).toMatchObject({ status: 'invalid', reason: '対応する試験に必要なSourceがありません' });
+  });
+  it('[REQ-347] 登録外companionはrawfileを保ち名前から元fileへ対応させない', async () => {
+    const dir = prepare([blockReview()], { files: { [companion]: file() }, report: [{ name: companion, assertionResults: run() }] });
+    const result = await execute(dir);
+    expect(result.rows[0]).toMatchObject({ status: 'invalid', reason: expect.stringContaining('ソースが変更されたか存在しません') });
+    expect(result.rows[0].candidates).toEqual([{ ...run()[0], file: companion, rawFile: companion }]);
+    expect(result.inputs.companions).toEqual({});
+  });
+  it.each([
+    ['壊れたJSON', '{'],
+    ['未知key', JSON.stringify({ files: {}, extra: true })],
+    ['不正path', JSON.stringify({ files: { '../fixture.test.ts': { cases: { a: [] } } } })],
+  ])('[REQ-347] 不正な一覧（%s）は出力作成前に拒否する', async (_, registry) => {
+    const dir = prepare([blockReview()], { registry });
+    await expect(execute(dir)).rejects.toThrow('試験の分割一覧を読めません');
+    expect(existsSync(join(dir, 'out'))).toBe(false);
+  });
+  it('[REQ-347] 欠落した一覧・companionを監査と移行の両入口で拒否する', async () => {
+    const dir = prepare([blockReview()], routed());
+    rmSync(join(dir, companion));
+    await expect(execute(dir)).rejects.toThrow('ファイルがありません');
+    await expect(migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).rejects.toThrow('ファイルがありません');
+    writeFileSync(join(dir, 'tests/test-partition.json'), JSON.stringify({ files: {} }));
+    rmSync(join(dir, 'tests/test-partition.json'));
+    await expect(execute(dir)).rejects.toThrow('試験の分割一覧を読めません');
+    await expect(migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).rejects.toThrow('試験の分割一覧を読めません');
+    expect(existsSync(join(dir, 'out'))).toBe(false);
+  });
+  it.each([
+    "it('own case', () => {}); await import('./fixture.test.js');",
+    "await import('./other.test.js');",
+    "await import('./fixture.test.js'); await import('./fixture.test.js');",
+    "import './other.test.js'; await import('./fixture.test.js');",
+    "import { helper } from './other.test.ts'; await import('./fixture.test.js');",
+    "await import(target);",
+    "import * as v from 'vitest'; (v).it('own case', () => {}); await import('./fixture.test.js');",
+    "import * as v from 'vitest'; (v as typeof v).test('own case', () => {}); await import('./fixture.test.js');",
+    "import * as v from 'vitest'; const namespace = (v); const check = namespace.it; check('own case', () => {}); await import('./fixture.test.js');",
+    "import * as v from 'vitest'; const namespace = v as typeof v; const check = namespace.test; check('own case', () => {}); await import('./fixture.test.js');",
+    "import * as v from 'vitest'; const check = (v.it); check('own case', () => {}); await import('./fixture.test.js');",
+    "import * as v from 'vitest'; const check = v.test as typeof v.test; check('own case', () => {}); await import('./fixture.test.js');",
+    "import * as v from 'vitest'; const namespace = v; const check = namespace.it; check('own case', () => {}); await import('./fixture.test.js');",
+    "import * as v from 'vitest'; v['test']('own case', () => {}); await import('./fixture.test.js');",
+    "import * as vitest from 'vitest'; vitest.it('own case', () => {}); await import('./fixture.test.js');",
+    "import * as v from 'vitest'; const check = v.test; check('own case', () => {}); await import('./fixture.test.js');",
+    "import * as v from 'vitest'; v.test.each([1])('own %j', () => {}); await import('./fixture.test.js');",
+    "await import('./fixture.test.js'",
+  ])('[REQ-347] 不正なcompanionを出力作成前に拒否する: %s', async (text) => {
+    const dir = prepare([blockReview()], routed(run(), file(), text));
+    await expect(execute(dir)).rejects.toThrow('companion');
+    await expect(migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).rejects.toThrow('companion');
+    expect(existsSync(join(dir, 'out'))).toBe(false);
+  });
+  it('[REQ-347] rawFileのない従来の純粋関数入力も元fileで表示する', () => {
+    const markdown = renderAudit(audit(blockReview(), file()));
+    expect(markdown).toContain(`${testFile}: ${run()[0].fullName}`);
+    expect(markdown).not.toContain('undefined');
+  });
+  it('[REQ-347] companionのコメント内の偽importを無視し構造で確認する', () => {
+    expect(companionLinks(JSON.parse(registered), () => "import { helper } from './helper.js'; /* import('./other.test.js') */ await import( './fixture.test.js' );")).toEqual(new Map([[companion, testFile]]));
+  });
+  it('[REQ-347] 選んだ複数本文blockの一部欠測を成功で補わない', async () => {
+    const tests = [...run(), ...run('群 [REQ-012] 別の条件')];
+    const review = blockReview(file(), tests, '[REQ-012]');
+    const result = await execute(prepare([review], routed()));
+    expect(result.rows[0]).toMatchObject({ status: 'invalid', reason: expect.stringContaining('本文が変更') });
+  });
+  it('[REQ-347] 同名の別入力行は残し、overlap selectorによる同じ行の重複を除く', async () => {
+    const review = blockReview(); review.tests.push({ ...review.tests[0], contains: '[REQ-012]' });
+    const dir = prepare([review], routed([...run(), ...run()]));
+    const result = await execute(dir);
+    expect(result.rows[0].status).toBe('reviewed');
+    expect(result.rows[0].tests).toHaveLength(2);
+    expect(result.rows[0].tests[0]).not.toBe(result.rows[0].tests[1]);
+    writeFileSync(join(dir, 'report.json'), JSON.stringify({ testResults: [{ name: companion, assertionResults: [...run(), ...run(undefined, 'failed')] }] }));
+    expect((await execute(dir, 'failed')).rows[0].status).toBe('invalid');
+  });
+  it('[REQ-347] overlap selectorが単一入力行を選んでも一度だけ数える', async () => {
+    const review = blockReview(); review.tests.push({ ...review.tests[0], contains: '[REQ-012]' });
+    const result = await execute(prepare([review], routed()));
+    expect(result.rows[0].status).toBe('reviewed'); expect(result.rows[0].tests).toHaveLength(1);
+  });
+  it.each([
+    [{ scenarioSha256: 'old' }, 'invalid', 'ScenarioかRequirementが変更されています'],
+    [{ status: 'unreviewed', reason: '未確認のまま' }, 'unreviewed', '未確認のまま'],
+    [{ tests: [{ file: testFile, contains: '条件を検査する', sha256: sha256(file() + '// old') }] }, 'invalid', `試験のソースが変更されたか存在しません：${testFile}`],
+  ])('[REQ-347] companion登録だけで既存状態を昇格させない: %s', async (patch, status, reason) => {
+    const result = await execute(prepare([{ ...blockReview(), ...patch }], routed()));
+    expect(result.rows[0]).toMatchObject({ status, reason });
+  });
+  it('[REQ-347] companionだけで実行された旧形式も元本文で移行しdry-runとblock形式を保つ', async () => {
+    const legacy = { ...blockReview(), tests: [{ file: testFile, contains: '条件を検査する', sha256: sha256(file()) }] };
+    const dir = prepare([legacy, blockReview()], routed());
+    const before = readFileSync(join(dir, 'docs/quality/scenarios.json'), 'utf8');
+    const dry = await migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit, history: () => file() });
+    expect(dry.counts.migrated.unchangedFile).toBe(1); expect(dry.counts.alreadyBlock).toBe(1); expect(dry.counts.kept.notExecuted).toBe(0);
+    expect(readFileSync(join(dir, 'docs/quality/scenarios.json'), 'utf8')).toBe(before);
+    writeFileSync(join(dir, testFile), '// prefix\n' + file());
+    const sameBlock = await migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit, history: () => file() });
+    expect(sameBlock.counts.migrated.sameBlock).toBe(1); expect(sameBlock.counts.alreadyBlock).toBe(1);
+    const prefixed = auditScenarios(rows(), [legacy], [{ ...run()[0], rawFile: companion }], { [testFile]: '// prefix\n' + file() });
+    expect(prefixed.rows[0]).toMatchObject({ status: 'invalid', reason: expect.stringContaining('ソースが変更されたか存在しません') });
+    writeFileSync(join(dir, testFile), file(target.replace('toBe(true)', 'toBe(false)')));
+    const changed = await migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit, history: () => file() });
+    expect(changed.counts.kept.blockChanged).toBe(1); expect(changed.counts.kept.notExecuted).toBe(0);
+    expect(readFileSync(join(dir, 'docs/quality/scenarios.json'), 'utf8')).toBe(before);
+  });
+
 });

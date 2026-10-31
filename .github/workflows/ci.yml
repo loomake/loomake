@@ -132,40 +132,7 @@ jobs:
         run: node scripts/package-smoke.mjs check "$RUNNER_TEMP/loomake-package"
         shell: bash
 
-  # 過去の下限Node20での追加確認。配布物の宣言する下限は下のnode22で検証する。
-  # 開発用ツールの動作環境に左右されないよう、インストールとビルドは開発と同じ Node 24 で行う
-  node20:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          persist-credentials: false
-      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm build
-      - run: node scripts/package-smoke.mjs prepare "$RUNNER_TEMP/loomake-package"
-        shell: bash
-      - run: node scripts/package-smoke.mjs prepare "$RUNNER_TEMP/loomake-offline"
-        shell: bash
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: 20.19.0
-      - run: node --version
-      # 引数なしの CLI は使い方を表示して終了コード 2 を返す
-      - run: code=0; node packages/cli/dist/cli.js || code=$?; test $code -eq 2
-      # archive のあとも動くよう、検査用プロジェクトの change で動かす
-      - run: node ../../../packages/cli/dist/cli.js verify --change sample --spec-only
-        working-directory: tests/fixtures/verify-project
-      - run: node scripts/package-smoke.mjs check "$RUNNER_TEMP/loomake-package"
-        shell: bash
-      - run: python3 scripts/deny-network.py node scripts/runtime-compatibility.mjs "$RUNNER_TEMP/loomake-offline" "$RUNNER_TEMP/loomake-runtime-results" 20.19.0
-        shell: bash
-
-  # 配布物で宣言する下限Node。Node20の追加試験とは分ける。
+  # 配布物で宣言する下限Node。準備は開発用Node24で行う。
   node22:
     runs-on: ubuntu-latest
     steps:

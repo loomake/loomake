@@ -7,15 +7,24 @@ const read = (name: string) => readFileSync(join(import.meta.dirname, '..', '.gi
 describe('配布物のCIと公開前ゲート', () => {
   it('[REQ-144] 3OSの品質ジョブとNode下限ジョブで配布物を検査する', () => {
     const ci = read('ci.yml');
-    const quality = ci.slice(ci.indexOf('  quality:'), ci.indexOf('  node20:'));
-    const runtime = ci.slice(ci.indexOf('  node20:'), ci.indexOf('  gate:'));
+    const qualityStart = ci.indexOf('\n  quality:');
+    const runtimeStart = ci.indexOf('\n  node22:');
+    const gateStart = ci.indexOf('\n  gate:');
+    expect(qualityStart).toBeGreaterThanOrEqual(0);
+    expect(runtimeStart).toBeGreaterThan(qualityStart);
+    expect(gateStart).toBeGreaterThan(runtimeStart);
+    expect(ci).not.toContain('\n  node20:');
+    expect(ci).not.toContain('20.19.0');
+    const quality = ci.slice(qualityStart, runtimeStart);
+    const runtime = ci.slice(runtimeStart, gateStart);
     // quality ジョブの OS はイベントとラベルで切り替える式で、main への push では 3 つの OS で動く（REQ-049。展開は tests/monorepo.test.ts で確かめる）
     const osLine = quality.match(/^ {8}os: (.+)$/m)?.[1] ?? '';
     for (const os of ['ubuntu-latest', 'macos-latest', 'windows-latest']) expect(osLine, os).toContain(os);
+    expect(quality).toContain('node-version: 24');
     expect(quality).toContain('package-smoke.mjs prepare');
     expect(quality).toContain('package-smoke.mjs check');
     const prepare = runtime.indexOf('package-smoke.mjs prepare');
-    const switchNode = runtime.indexOf('node-version: 20.19.0');
+    const switchNode = runtime.indexOf('node-version: 22.12.0');
     const check = runtime.indexOf('package-smoke.mjs check');
     expect(prepare).toBeGreaterThan(0);
     expect(switchNode).toBeGreaterThan(prepare);
@@ -25,7 +34,7 @@ describe('配布物のCIと公開前ゲート', () => {
     expect(offlinePrepare).toBeGreaterThan(prepare);
     expect(offlinePrepare).toBeLessThan(switchNode);
     expect(offlineCheck).toBeGreaterThan(check);
-    expect(runtime.slice(offlineCheck)).toContain('20.19.0');
+    expect(runtime.slice(offlineCheck)).toContain('22.12.0');
     expect(quality + runtime).not.toContain('continue-on-error: true');
   });
 
