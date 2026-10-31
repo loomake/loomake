@@ -1,8 +1,6 @@
 # AGENTS.md
 
-このリポジトリは **Loomake** の規約で開発する。Claude Code・Codex など、どのエージェントでもこのファイルが共通ルールの正本。
-
-調査・設計・実装・レビューでは、[エージェントの分担と共通原則](docs/dev/agent-workflow.md)を読む。工程の担当、4つの開発原則、引き継ぎと証跡の扱いは同文書を正本とし、ここには複製しない。仕様ゲートと完了条件は維持し、レビューの反復条件と承認範囲は [ADR 0006](docs/adr/0006-standing-approval-for-autonomous-delivery.md) に従う。
+このリポジトリは **Loomake** の規約で開発する。Claude Code・Codex など、どのエージェントでもこのファイルが共通ルールの正本。承認の範囲と人の操作は [ADR 0006](docs/adr/0006-standing-approval-for-autonomous-delivery.md)、管理役の手順は [delivery スキル](.agents/skills/delivery/SKILL.md)、工程の分担と独立レビューの原則は [agent-workflow.md](docs/dev/agent-workflow.md) に置き、ここには複製しない。
 
 ## 1. 仕様の正（何が「正」か）
 
@@ -12,37 +10,33 @@
 
 仕様に書かれていない振る舞いは実装しない。必要だと気づいたら、実装を止めて change の specs を更新する提案をする。
 
-ただし、`docs/dev/` に書いた開発の仕組み（devcontainer、CI の組み方、テストの書き方の前提など）は製品の仕様ではないので、この決まりには当てはまらず、change を通さずに直してよい。開発の仕組みの変更は管理役が行う。ただし、承認範囲・工程分担・ゲート・完了条件・禁止事項・レビューの反復条件の変更は規則の変更として扱う。
+`docs/dev/` に書いた開発の仕組み（devcontainer、CI の組み方、テストの書き方の前提など）は製品の仕様ではないので、change を通さずに直してよい（[ADR 0005](docs/adr/0005-keep-dev-mechanics-out-of-specs.md)）。ただし、承認範囲・工程分担・ゲート・完了条件・禁止事項・レビュー規則の変更は規則の変更として扱い、人の判断を仰ぐ。
 
-## 2. 作業の流れ
+## 2. 工程の 3 段階
+
+変更の種類で、かける検査を変える。段階は PR の変更パスで決め、PR 本文の `loomake-tier: L1|L2|L3` で上げる方向にだけ上書きできる。gate の段階判定が入るまでは、起草者が `loomake-tier` を書き、管理役が確かめる。どの段階にも入らないパスは安全側の L2 とする。規則の文書（AGENTS.md・`docs/adr/`・`docs/dev/agent-workflow.md`・`.agents/skills/delivery/`）は `docs/` 配下でも L2 で、利用者の承認が要る。段階は L3 → L2 → L1 の順に当たりを見て決める。
+
+| 段階 | 対象 | 必須の検査 | レビュー | 記録 |
+|---|---|---|---|---|
+| **L1 文書** | `docs/`・README・openspec の Scenario の文言と Purpose・worklog・changeset だけ | gate（docs-only 判定）＋ lint | Codex 自動レビューのみ | PR 本文に 1 行 |
+| **L2 試験・CI・開発基盤** | `tests/`・`packages/*/test/`・`.github/`・`scripts/`・`.agents/skills/`・`packages/kit/templates/`・`packages/*/schema`・ルート設定（package.json、pnpm-lock.yaml、eslint、tsconfig、loomake.config.json）・AGENTS.md・ADR・delivery スキル（規則の変更。利用者の承認が要る） | 必須 5 チェック（change があれば `verify --done` も） | Codex ＋ 独立 Opus **1 回**（指摘があれば修正後に 1 回だけ再レビュー） | worklog に 4 行 |
+| **L3 製品コード** | `packages/*/src`・openspec の Requirement の変更（spec.md の Requirement 本文・SHALL 文） | 必須 5 チェック ＋ `verify --done` ＋ 変更した package の 3 OS 試験（ラベル `ci:all-os`） | Opus 設計 ＋ Codex ＋ 独立 Opus **最大 2 往復** | worklog に 4 行 ＋ 計測表 |
+
+必須 5 チェックは gate / quality (ubuntu-latest) / CodeQL / node20 / node22。change を持つ PR は段階を問わず `verify --done` を通す（gate が実行する）。L3 は change が必須で、L2 は change がなければ lint・typecheck・test の品質コマンドだけでよい。「往復」の数え方とマージ条件は ADR 0006 のレビュー規則に従う。
+
+どの段階でも、流れは次のとおり。
 
 1. 要件書・仕様書を渡されたら、`req-to-openspec` スキルで change を作る
-2. 実装に入る前に **仕様ゲート** を通す
-   ```sh
-   pnpm -s verify --change <change-id> --spec-only
-   ```
-   ブロッキングな確認事項が未回答なら、ここで失敗する。ADR 0006 に従っておすすめ案を回答として記録し、仕様を整えてから再実行する。ゲートが成功するまで実装に進まない
-3. `tasks.md` の順に実装する。1タスクごとに小さくコミットし、終わったタスクは `- [x]` にする
-4. 完了したら **完了ゲート** を通す
-   ```sh
-   pnpm -s verify --change <change-id> --done
-   ```
-5. レビュー・修正・検証・記録のような実作業は、必要に応じて毎回サブエージェントに分けて任せる。本体のエージェントは計画と調整に集中し、PR ごと・作業ごとに担当を分けて並行して進める。担当の数と同時に進める数は、次の節の決まりに従う
+2. 実装に入る前に **仕様ゲート** `pnpm -s verify --change <change-id> --spec-only` を通す。ブロッキングな確認事項が未回答なら失敗する。ADR 0006 に従っておすすめ案を回答として記録し、ゲートが成功するまで実装に進まない
+3. `tasks.md` の順に実装する。1 タスクごとに小さくコミットし、終わったタスクは `- [x]` にする。1 つの PR は 1 日以内にマージできる大きさ（目安は commit 10 個以内）にし、大きい change は `tasks.md` の区切りで PR を分ける。main をブランチに取り込むのは、競合したときとマージの直前だけにする
+4. change があれば、完了したら **完了ゲート** `pnpm -s verify --change <change-id> --done` を通す
+5. レビュー・修正・検証・記録のような実作業はサブエージェントに分けて任せ、本体は計画と調整に集中する。担当は 1 つの change につき 1 つ。同時に進める本数、マージ条件、レビューの回数は ADR 0006 と delivery スキルに従う
 
-マイルストーンの作業を自律して進めるときは、[deliveryスキル](.agents/skills/delivery/SKILL.md)を参照する。作業状態と依存はGitHubのIssueを正本とし、既存の承認範囲と本ファイルの完了条件に従って、次の着手可能な作業へ進む。
-
-### 並行して進めるときの決まり
-
-1. 担当は 1 つの change につき 1 つだけにする。同時に進める change は全セッション合計 4 本までにし、配布 3 枠・品質計画 1 枠を基本とする。既存の引き継ぎ対象は終了した枠からこの配分へ移す。始める前に `git worktree list` と open な PR を見て、同じ change の担当がいないことを確かめる。担当を変えるときは、前の担当の作業を止めたことを確かめ、引き継ぎ（どこまで済んだか、未 push の作業があるか）を `trace.md` か作業記録に書いてから始める
-2. 1 つの PR は作ってから 1 日以内にマージできる大きさにする。目安は commit 10 個以内とする。大きい change は、`tasks.md` の区切りで PR を分ける。main をブランチに取り込むのは競合したときと、マージの直前だけにする
-3. `trace.md` の「要件台帳」「確認事項」「仮定」の表と、それぞれの必須の列は、これまでどおり書く（verify が表と列を確かめる）。確認事項と仮定の表の各欄には、問い・選択肢・おすすめ・決定・出典のような要点だけを書き、1 つの欄はおおむね 300 文字以内にする。経緯や測った結果（実験のログ、レビューの経緯など）は PR か Issue に書き、`trace.md` にはそのリンク（run の番号やコメントの URL）だけを置く
-4. Opus 最終レビューの回数上限は設けず、設計・実装から独立した新しいセッションで、マージ対象 head の指摘がゼロになるまで修正・検証・レビューを繰り返す。従来の Opus 評価合計による回数制限は撤廃する。レビュー後に差分を変えたら、新しい head を再レビューする。同じ指摘が 3 回連続で再出現したら Issue に記録し、往復は続ける。Issue 化だけで解消済みやマージ可能とは扱わない。回数・head・指摘と対応を PR に残し、自動 Codex レビューは別枠として記録する
-5. 確認事項と仮定は、対応する PR の本文へ ID・選択肢・おすすめと理由・影響をまとめる。確認事項は ADR 0006 に基づきおすすめ案で回答し、仮定は管理役が理由を添えて承認する。確認事項の回答者は「利用者（ADR 0006 の包括承認）」と記録する。決定・承認者・日本時間の日付・ADR への参照を `trace.md` に記録する。change がない作業は PR と作業記録に残す。管理役の承認を利用者本人のレビューとして投稿しない
-6. マージ対象 head の必須 CI・自動 Codex レビュー・独立した Opus 最終レビューが揃い、Opus 最終レビューが指摘ゼロで、自動 Codex の重大な未解決指摘もない PR は管理役がマージする。人の操作が必要なのは npm 公開・public 化・リリース・規則の変更の 4 つだけとし、対象と検証結果を具体化して Issue #121 にコメントし `@rrr-xxx` を呼ぶ。ChatGPT アプリへの通知設定を確認し、設定できなければ理由と代替を報告する。ADR 0006（2026-10-30）で指定された規約更新は利用者が承認済み。返答待ちには独立した作業を進める。AI のレビュー、CI 成功、返答がないことを利用者の新しい承認とは扱わない
+`trace.md` の「要件台帳」「確認事項」「仮定」の表と必須の列は、これまでどおり書く（verify が確かめる）。各欄には問い・選択肢・おすすめ・決定・出典のような要点だけを、おおむね 300 文字以内で書き、経緯や測った結果は PR か Issue に書いてリンクだけを置く。
 
 ## 3. 完了の定義（DoD）
 
-次をすべて満たすまで「完了」と報告しない。
+change を持つ作業は、次をすべて満たすまで「完了」と報告しない。change のない L1・L2 の作業は、段階の必須の検査とレビューが済んだときに完了とする。
 
 - `pnpm -s verify --change <change-id> --done` が exit 0
 - change 内の各 Requirement に、対応するテストが 1 つ以上ある
@@ -58,26 +52,20 @@
 - 秘密情報（API キー、パスワード、個人情報）をコード・ログ・テストデータに書く
 - `openspec/specs/` を直接編集する（変更は必ず change 経由で、archive 時に反映する）。ただし、change を archive した直後に `## Purpose` を直すことだけは例外とする。新しい capability の仮の文（`TBD - created by archiving change …`）を書き換えるときと、change で Requirement の用語を変えたあとに Purpose に残る古い用語（検収レポートなど）を新しい用語に合わせるときに限る。差分仕様の Purpose は archive で反映されないため
 
-## 5. 迷ったとき
+## 5. 報告の形
 
-分からないことは「何が分からないか」「選択肢」「おすすめとその理由」の形で整理し、ADR 0006 に従っておすすめ案を回答にする。仮定は管理役が理由を添えて承認する。人の操作が必要な 4 項目は Issue #121 で `@rrr-xxx` に依頼する。費用の上限を設けない。Opus 最終レビューの反復は 2 章と ADR 0006 に従う。
-
-## 6. 報告の形
-
-作業の区切りでは次の順で短く報告する。
+作業の区切りでは次の 4 項目を、各 1〜2 文で報告する。
 
 1. やったこと（change-id とタスク番号、PR へのリンク）
 2. verify の結果
 3. 残っている確認事項・仮定
 4. 次にやること
 
-報告した内容は、作業したブランチごとのファイル `docs/worklog/<日本時間の日付>/<ブランチ名>.md`（例：`docs/worklog/2026-10-28/worklog-per-branch.md`）にも記録する。ブランチ名の `/` は `-` に置き換える（`docs/foo` なら `docs-foo.md`）。同じ日・同じブランチのファイルがあれば、末尾に追記する。
+L2・L3 の PR では同じ 4 項目を `docs/worklog/<日本時間の日付>/<ブランチ名>.md`（`/` は `-` に置き換える。例：`docs/worklog/2026-10-28/docs-foo.md`）に、1 PR 1 節で書く。L1 の記録は PR 本文の 1 行だけで、worklog は書かない。run ID・session ID・ハッシュは PR 本文の証跡ブロックにあるので書かない。計測表は L3 の PR だけに付け、形は delivery スキルに従う。作業記録はその作業の PR に含め、作業記録だけの PR は作らない。マージ後に記録を足すときは、次の作業のブランチのファイルに書く。2026-10-27 までの日付ごとのファイルは移さずにそのまま残す。
 
-作業記録は、1 つの PR（または作業の区切り）につき、上の 4 項目を数行で書く。経緯や測った結果は PR の本文に書き、作業記録にはそのリンクだけを置く。ただし、delivery の PR ごとの計測表は例外として作業記録にも残す。表には設計待ち・実装・CI 待ち・レビュー往復回数・マージまでの 5 欄と対象 PR を置き、区間の定義と根拠・更新の扱いは delivery スキルに従う。詳細な経緯やログは PR 本文から参照する。
+確認事項と仮定は PR 本文に ID・選択肢・おすすめと理由・影響をまとめ、決定・承認者・日本時間の日付・ADR への参照を `trace.md` に記録する（回答の仕方は ADR 0006）。
 
-作業記録はその作業の PR に含め、作業記録だけの PR は作らない。PR のマージ後に記録を足すとき（CI の結果やマージの記録など）は、次の作業のブランチのファイルに書き、その PR に含める。2026-10-27 までの日付ごとのファイル（`docs/worklog/2026-10-22.md` など）は、移さずにそのまま残す。
-
-利用者が読む文書（openspec の proposal・specs・design・trace、README・docs の説明、PR の本文）の日本語を書いたり直したりするときは、yomiyasu スキルで推敲してください（Claude Code では `yomiyasu`、Codex では `yomiyasu:yomiyasu`）。作業記録と commit メッセージは、推敲の対象に入れない。
+yomiyasu スキル（Claude Code では `yomiyasu`、Codex では `yomiyasu:yomiyasu`）は、利用者向けの文書（docs/、README、Issue の依頼文）を書くときに使う。報告文・handoff・worklog には使わない。
 
 ---
 
@@ -89,4 +77,3 @@
 - パッケージマネージャ：pnpm（workspaces）。リリースは changesets
 - 主なディレクトリ：`packages/core/` = trace.md などの読み取りと JSON スキーマ、`packages/kit/` = verify・init・doctor の本体と `templates/`（init が配るファイル）、`packages/trace/` = trace record・trace report の本体、`packages/runner/` = run の本体、`packages/cli/` = CLI 本体、`tests/` = リポジトリ全体のテスト、`docs/` = 使い方・開発の流れ・要件定義書・記録
 - コーディング規約：関数は named export。`@loomake/core` の外部の実行時依存は `zod` だけ、`@loomake/kit` は core と `yaml` だけ、`@loomake/trace` は core と kit だけ、`@loomake/runner` は core・kit・trace だけ、`loomake` は core・kit・trace・runner だけに保つ（REQ-046・REQ-047・REQ-083・REQ-123）。使い方や設定の誤りは `UsageError` を投げ、CLI が終了コード 2 で返す。利用者に見せるメッセージは日本語で書く
-

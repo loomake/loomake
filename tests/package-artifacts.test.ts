@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
+import { markPhase } from '../scripts/ci-heartbeat.mjs';
 
 const root = join(import.meta.dirname, '..');
 const base = mkdtempSync(join(tmpdir(), 'loomake artifacts '));
@@ -17,16 +18,22 @@ afterAll(() => rmSync(base, { recursive: true, force: true }));
 describe('実際に配るパッケージ', () => {
   it('[REQ-324][REQ-325] ビルド済み生成入口とpackしたCLIの共通定義・help・usageが一致する', () => {
     const cliTarget = join(base, 'cli-reference');
+    // 時間切れの段階を見分けるため、LOOMAKE_CI_HEARTBEAT_DIR があるときだけ段階を記録する（REQ-345、Issue #183）
+    markPhase('package-reference', 'prepare-start');
     const prepared = spawnSync(process.execPath, ['scripts/package-smoke.mjs', 'prepare', cliTarget], { cwd: root, encoding: 'utf8', env });
+    markPhase('package-reference', 'prepare-end');
     expect(prepared.status, prepared.stdout + prepared.stderr).toBe(0);
     const generator = join(root, 'scripts/generate-cli-reference.mjs');
     // cwdを変えてもスクリプト自身の場所を基準に生成済みページを照合する。
+    markPhase('package-reference', 'check-start');
     const checked = spawnSync(process.execPath, [generator, '--check'], { cwd: cliTarget, encoding: 'utf8' });
+    markPhase('package-reference', 'check-end');
     expect(checked.status, checked.stdout + checked.stderr).toBe(0);
     const argsUrl = pathToFileURL(join(cliTarget, 'consumer/node_modules/loomake/dist/args.js')).href;
     const mainUrl = pathToFileURL(join(cliTarget, 'consumer/node_modules/loomake/dist/main.js')).href;
     const generatorUrl = pathToFileURL(generator).href;
     const baselinePath = join(root, 'packages/cli/test/fixtures/reference-cli-baseline.json');
+    markPhase('package-reference', 'compare-start');
     const packed = spawnSync(process.execPath, ['--input-type=module', '-e', `
 import { readFileSync } from 'node:fs';
 import { CLI_REFERENCE } from ${JSON.stringify(argsUrl)};
@@ -42,6 +49,7 @@ for (const item of baseline.cases) {
 }
 process.exitCode = await runCliReference({ definition: CLI_REFERENCE, check: true });
 `], { cwd: cliTarget, encoding: 'utf8' });
+    markPhase('package-reference', 'compare-end');
     expect(packed.status, packed.stdout + packed.stderr).toBe(0);
   }, 60000);
 

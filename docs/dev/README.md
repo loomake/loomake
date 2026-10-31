@@ -13,7 +13,7 @@
 | ファイル | 内容 | 守る試験 |
 |---|---|---|
 | [deliveryスキル](../../.agents/skills/delivery/SKILL.md) | `$delivery` からGoalとIssueを進める手順 | スキル形式・文書リンクを確認 |
-| [agent-workflow.md](agent-workflow.md) | 工程別のモデル分担、共通原則、独立レビューと検証証跡 | 文書リンクを確認し、適用結果をPRでレビュー |
+| [agent-workflow.md](agent-workflow.md) | 工程別のモデル分担、共通原則、独立した調査とレビュー | 文書リンクを確認し、適用結果をPRでレビュー |
 | [devcontainer.md](devcontainer.md) | このリポジトリの devcontainer | `tests/monorepo.test.ts` の「devcontainer」 |
 | [ci.md](ci.md) | CI のワークフローの組み方（PR の古い実行の取り消し） | `tests/monorepo.test.ts` の「CI」 |
 | [compatibility-changes.md](compatibility-changes.md) | 公開契約の変更理由、移行方法、旧fixtureをPRへ記録する手順 | 文書リンクと既存のPRテンプレートの契約を確認 |

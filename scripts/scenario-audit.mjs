@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
@@ -58,16 +59,180 @@ export function inventoryScenarios(file, text) {
   return rows;
 }
 
-/** レビューと実行結果を照合する。IDの候補だけでは確認済みにしない。 */
-export function auditScenarios(scenarios, reviews, executions, testSources) {
+const KEYWORDS_BEFORE_REGEX = new Set(['return', 'typeof', 'case', 'in', 'of', 'void', 'delete', 'throw', 'new', 'else', 'do', 'yield', 'await', 'instanceof']);
+const CLOSERS = { '(': ')', '[': ']', '{': '}' };
+
+/** 文字列・テンプレート・コメント・正規表現を読み飛ばし、閉じた位置の次を返す。閉じなければ -1。 */
+function skipLiteral(text, i) {
+  const c = text[i];
+  if (c === '/' && text[i + 1] === '/') { const end = text.indexOf('\n', i); return end < 0 ? text.length : end; }
+  if (c === '/' && text[i + 1] === '*') { const end = text.indexOf('*/', i + 2); return end < 0 ? -1 : end + 2; }
+  if (c === '"' || c === "'") {
+    for (let j = i + 1; j < text.length; j++) { if (text[j] === '\\') j++; else if (text[j] === c) return j + 1; else if (text[j] === '\n') return -1; }
+    return -1;
+  }
+  if (c === '`') {
+    for (let j = i + 1; j < text.length; j++) {
+      if (text[j] === '\\') j++;
+      else if (text[j] === '`') return j + 1;
+      else if (text[j] === '$' && text[j + 1] === '{') { const end = matchBracket(text, j + 1); if (end < 0) return -1; j = end; }
+    }
+    return -1;
+  }
+  if (c === '/') {
+    let inClass = false;
+    for (let j = i + 1; j < text.length; j++) {
+      if (text[j] === '\\') j++;
+      else if (text[j] === '\n') return -1;
+      else if (text[j] === '[') inClass = true;
+      else if (text[j] === ']') inClass = false;
+      else if (text[j] === '/' && !inClass) { let k = j + 1; while (/[a-z]/i.test(text[k] ?? '')) k++; return k; }
+    }
+    return -1;
+  }
+  return i + 1;
+}
+
+/** `/` が正規表現の始まりかを、直前の意味のある字句で決める。 */
+function regexAllowed(text, i) {
+  let j = i - 1; while (j >= 0 && /\s/.test(text[j])) j--;
+  if (j < 0) return true;
+  if (/[(,=:[!&|?{};+\-*%<>~^]/.test(text[j])) return true;
+  const word = text.slice(Math.max(0, j - 15), j + 1).match(/[A-Za-z_$][\w$]*$/);
+  return Boolean(word && KEYWORDS_BEFORE_REGEX.has(word[0]));
+}
+
+const literalStart = (text, i) => text[i] === '"' || text[i] === "'" || text[i] === '`' || (text[i] === '/' && (text[i + 1] === '/' || text[i + 1] === '*' || regexAllowed(text, i)));
+
+/** open の位置の括弧に対応する閉じ括弧の位置を返す。不釣り合いや未完なら -1。 */
+function matchBracket(text, open) {
+  const stack = [CLOSERS[text[open]]];
+  for (let i = open + 1; i < text.length;) {
+    if (literalStart(text, i)) { const next = skipLiteral(text, i); if (next < 0) return -1; i = next; continue; }
+    const c = text[i];
+    if (CLOSERS[c]) stack.push(CLOSERS[c]);
+    else if (c === ')' || c === ']' || c === '}') { if (stack.pop() !== c) return -1; if (!stack.length) return i; }
+    i++;
+  }
+  return -1;
+}
+
+const skipSpace = (text, i) => { while (i < text.length && /\s/.test(text[i])) i++; return i; };
+
+/** 試験名のリテラルを、実行結果の試験名に当てる正規表現の断片へ変える。式と置換は任意の文字列とみなす。 */
+function titlePattern(text, start) {
+  const quote = text[start]; const end = skipLiteral(text, start);
+  if (end < 0) return undefined;
+  const escape = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const unescape = (value) => value.replace(/\\(u\{[0-9a-fA-F]+\}|u[0-9a-fA-F]{4}|x[0-9a-fA-F]{2}|\r?\n|.)/g, (_, code) => {
+    if (code[0] === 'u') return String.fromCodePoint(parseInt(code.replace(/[u{}]/g, ''), 16));
+    if (code[0] === 'x') return String.fromCharCode(parseInt(code.slice(1), 16));
+    return { n: '\n', t: '\t', r: '\r', b: '\b', f: '\f', v: '\v', 0: '\0' }[code] ?? (/^\r?\n$/.test(code) ? '' : code);
+  });
+  const parts = [];
+  if (quote === '`') {
+    let chunk = '';
+    for (let i = start + 1; i < end - 1; i++) {
+      if (text[i] === '\\') { chunk += text.slice(i, i + 2); i++; }
+      else if (text[i] === '$' && text[i + 1] === '{') { parts.push(unescape(chunk), null); chunk = ''; i = matchBracket(text, i + 1); }
+      else chunk += text[i];
+    }
+    parts.push(unescape(chunk));
+  } else parts.push(unescape(text.slice(start + 1, end - 1)));
+  // 置換と式を除いた固定の文字がない名前（`%s` だけ、`${n}` だけなど）は、どの試験名にも当たるので照合に使わない
+  const fixed = parts.some((part) => part !== null && part.replace(/%[sdifjoOc#]|\$[A-Za-z_][\w.]*/g, '').trim() !== '');
+  const pattern = parts.map((part) => part === null ? '.*' : part.split(/(%[sdifjoOc#]|%%|\$[A-Za-z_][\w.]*)/).map((piece, index) => index % 2 === 0 ? escape(piece) : piece === '%%' ? '%' : '.*').join('')).join('');
+  return { end, pattern: fixed ? pattern : undefined };
+}
+
+/** `it(`・`test(` の呼び出しを、修飾と `.each` の表を含めて本文ブロックとして取り出す。 */
+export function extractTestBlocks(source) {
+  const text = source.replace(/\r\n/g, '\n'); const blocks = [];
+  for (let i = 0; i < text.length;) {
+    if (literalStart(text, i)) { const next = skipLiteral(text, i); if (next < 0) break; i = next; continue; }
+    const word = /[A-Za-z_$]/.test(text[i]) ? text.slice(i, i + 256).match(/^[A-Za-z_$][\w$]*/)[0] : undefined;
+    if (word === undefined && /[0-9]/.test(text[i])) { while (/[\w.]/.test(text[i] ?? '')) i++; continue; }
+    if (!word) { i++; continue; }
+    let back = i - 1; while (back >= 0 && /\s/.test(text[back])) back--;
+    if (TEST_FUNCTION.test(word) && text[back] !== '.') blocks.push(readCall(text, i, word.length));
+    i += word.length;
+  }
+  return blocks;
+}
+
+/** TypeScript の型引数 `<...>` を読み飛ばす。閉じなければ -1。 */
+function skipTypeArguments(text, open) {
+  let depth = 0;
+  for (let i = open; i < text.length;) {
+    if (literalStart(text, i)) { const next = skipLiteral(text, i); if (next < 0) return -1; i = next; continue; }
+    const c = text[i];
+    if (CLOSERS[c]) { const close = matchBracket(text, i); if (close < 0) return -1; i = close + 1; continue; }
+    if (c === '<') depth++;
+    else if (c === '>' && text[i - 1] !== '=') { depth--; if (!depth) return i + 1; }
+    else if (c === ';' || c === ')') return -1;
+    i++;
+  }
+  return -1;
+}
+
+const TEST_FUNCTION = /^(?:it|test|[a-z][\w$]*(?:It|Test))$/;
+
+function readCall(text, start, length) {
+  let i = skipSpace(text, start + length); /** @type {{ start: number, end: number, pattern: string | undefined, text: string }} */
+  const broken = { start, end: -1, pattern: undefined, text: '' };
+  for (;;) {
+    if (text[i] === '.') {
+      const at = skipSpace(text, i + 1); const name = text.slice(at, at + 64).match(/^[A-Za-z_$][\w$]*/);
+      if (!name) return broken;
+      i = skipSpace(text, at + name[0].length); continue;
+    }
+    if (text[i] === '`') { i = skipLiteral(text, i); if (i < 0) return broken; i = skipSpace(text, i); continue; }
+    if (text[i] === '<') { i = skipTypeArguments(text, i); if (i < 0) return broken; i = skipSpace(text, i); continue; }
+    if (text[i] !== '(') return broken;
+    const close = matchBracket(text, i); if (close < 0) return broken;
+    const after = skipSpace(text, close + 1);
+    if (text[after] === '(' || text[after] === '.') { i = after; continue; }
+    const first = skipSpace(text, i + 1); let pattern;
+    if (text[first] === '"' || text[first] === "'" || text[first] === '`') {
+      const title = titlePattern(text, first);
+      if (title && /[,)]/.test(text[skipSpace(text, title.end)] ?? '')) pattern = title.pattern;
+    }
+    return { start, end: close + 1, pattern, text: text.slice(start, close + 1) };
+  }
+}
+
+/** 実行した試験ごとに名前の合う本文ブロックを選び、連結したハッシュを返す。特定できなければ undefined。 */
+export function blockDigest(source, tests, cache = new Map()) {
+  if (typeof source !== 'string') return undefined;
+  if (!cache.has(source)) cache.set(source, extractTestBlocks(source));
+  const blocks = cache.get(source); const chosen = new Set();
+  for (const test of tests) {
+    const matched = blocks.filter((block) => block.pattern !== undefined && new RegExp(`(?:^| )${block.pattern}$`, 's').test(test.fullName));
+    if (!matched.length || matched.some((block) => block.end < 0)) return undefined;
+    for (const block of matched) chosen.add(block);
+  }
+  if (!chosen.size) return undefined;
+  return sha256([...chosen].sort((a, b) => a.start - b.start).map((block) => block.text).join('\n'));
+}
+
+/**
+ * レビューと実行結果を照合する。IDの候補だけでは確認済みにしない。進行中のchangeのScenarioは未着手として数えるだけにする。
+ * @param {any[]} scenarios
+ * @param {any[]} reviews
+ * @param {any[]} executions
+ * @param {Record<string, string>} testSources
+ * @param {{ scenarios: { id: string, change: string }[], unreadable: string[] }} [pending]
+ */
+export function auditScenarios(scenarios, reviews, executions, testSources, pending = { scenarios: [], unreadable: [] }) {
   required(Array.isArray(scenarios) && Array.isArray(reviews) && Array.isArray(executions), 'Scenario・レビュー・実行結果は配列にしてください');
-  const issues = []; const byId = new Map(); const mappings = new Map();
+  const issues = []; const byId = new Map(); const mappings = new Map(); const blockCache = new Map();
+  const pendingIds = new Set(pending.scenarios.map((row) => row.id));
   for (const row of scenarios) { required(!byId.has(row.id), `Scenarioが重複しています：${row.id}`); byId.set(row.id, row); }
   for (const entry of reviews) {
     if (!object(entry) || typeof entry.id !== 'string') { issues.push('レビューの形が不正です'); continue; }
     if (mappings.has(entry.id)) issues.push(`レビューが重複しています：${entry.id}`);
     const entries = mappings.get(entry.id) ?? []; entries.push(entry); mappings.set(entry.id, entries);
-    if (!byId.has(entry.id)) issues.push(`存在しないScenarioのレビューです：${entry.id}`);
+    if (!byId.has(entry.id) && !pendingIds.has(entry.id)) issues.push(`存在しないScenarioのレビューです：${entry.id}`);
   }
   for (const test of executions) required(object(test) && typeof test.file === 'string' && typeof test.fullName === 'string' && typeof test.status === 'string', '試験結果の形が不正です');
   const cache = new Map();
@@ -96,9 +261,16 @@ export function auditScenarios(scenarios, reviews, executions, testSources) {
           const selected = []; let error;
           for (const selector of entry.tests) {
             if (!object(selector) || typeof selector.file !== 'string' || typeof selector.contains !== 'string' || !selector.contains.trim()) { error = '試験の選択条件が不正です'; break; }
-            if (typeof testSources[selector.file] !== 'string' || sha256(testSources[selector.file]) !== selector.sha256) { error = `試験のソースが変更されたか存在しません：${selector.file}`; break; }
+            if (selector.hashScope !== undefined && selector.hashScope !== 'block') { error = `試験のハッシュの範囲が不正です：${selector.file}`; break; }
+            if (typeof testSources[selector.file] !== 'string') { error = `試験のソースが変更されたか存在しません：${selector.file}`; break; }
+            if (selector.hashScope === undefined && sha256(testSources[selector.file]) !== selector.sha256) { error = `試験のソースが変更されたか存在しません：${selector.file}`; break; }
             const found = executions.filter((test) => test.file === selector.file && test.fullName.includes(selector.contains));
             if (!found.length) { error = `実行した試験が見つかりません：${selector.file} ${selector.contains}`; break; }
+            if (selector.hashScope === 'block') {
+              const digest = blockDigest(testSources[selector.file], found, blockCache);
+              if (digest === undefined) { error = `試験の本文ブロックを特定できません：${selector.file} ${selector.contains}`; break; }
+              if (digest !== selector.sha256) { error = `選んだ試験の本文が変更されています：${selector.file} ${selector.contains}`; break; }
+            }
             if (found.some((test) => test.status !== 'passed')) { error = '選んだ試験に失敗または未実行があります'; break; }
             selected.push(...found);
           }
@@ -112,43 +284,64 @@ export function auditScenarios(scenarios, reviews, executions, testSources) {
   const rows = scenarios.map((row) => ({ ...row, ...check(row.id), candidates: executions.filter((test) => row.sources.some((id) => test.fullName.includes(`[${id}]`))) }));
   const counts = { total: rows.length, reviewed: 0, superseded: 0, unreviewed: 0, invalid: 0 };
   for (const row of rows) counts[row.status]++;
-  return { schemaVersion: 1, kind: 'scenario-evidence-audit', ok: rows.length > 0 && counts.unreviewed === 0 && counts.invalid === 0 && issues.length === 0, counts, issues, rows };
+  const byChange = {};
+  for (const row of pending.scenarios) byChange[row.change] = (byChange[row.change] ?? 0) + 1;
+  return { schemaVersion: 1, kind: 'scenario-evidence-audit', ok: rows.length > 0 && counts.unreviewed === 0 && counts.invalid === 0 && issues.length === 0, counts, pending: { total: pending.scenarios.length, byChange, unreadable: pending.unreadable }, issues, rows };
 }
 
 export function renderAudit(report, prefix = '') {
   const cell = (text) => String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\|/g, '\\|').replace(/\n/g, '<br>');
-  return ['# Scenarioと試験の対応', '', `確認済み ${report.counts.reviewed}、置換 ${report.counts.superseded}、未確認 ${report.counts.unreviewed}、無効 ${report.counts.invalid} / 全${report.counts.total}件`, '',
+  const pending = report.pending ?? { total: 0, byChange: {}, unreadable: [] };
+  const pendingLines = pending.total || pending.unreadable.length ? [`未着手（進行中のchange。終了コードに含めない）${pending.total}件：${Object.entries(pending.byChange).map(([change, count]) => `${cell(change)} ${count}`).join('、') || 'なし'}`, ...pending.unreadable.map((file) => `- 読めなかった差分仕様：${cell(file)}`), ''] : [];
+  return ['# Scenarioと試験の対応', '', `確認済み ${report.counts.reviewed}、置換 ${report.counts.superseded}、未確認 ${report.counts.unreviewed}、無効 ${report.counts.invalid} / 全${report.counts.total}件`, '', ...pendingLines,
     'REQ-IDの一致は候補です。対応理由はレビュー上の判断で、試験内容の十分さや外部環境の成功を自動で保証しません。', '',
     ...report.issues.map((issue) => `- ${cell(issue)}`), '', '| 仕様の場所 | Requirement / Scenario | 状態 | 理由と対応試験 |', '|---|---|---|---|',
     ...report.rows.map((row) => `| [${cell(row.file)}:${row.line}](${prefix}${row.file}#L${row.line}) | ${cell(row.requirement)} / ${cell(row.scenario)} | ${row.status} | ${cell(row.reason)}<br>${row.tests.length ? row.tests.map((test) => cell(test.file + ': ' + test.fullName)).join('<br>') : `候補 ${row.candidates.length} 件`} |`), '',
   ].join('\n');
 }
 
-export async function auditRepository(root, output, reviewFile = 'docs/quality/scenarios.json', reportFile) {
-  const { createInputReader, JSON_LIMITS, loadConfig } = await import('../packages/kit/dist/index.js');
+/**
+ * 仕様ファイルを、監査の対象（openspec/specs）と未着手（archive 以外の進行中の change）に分ける。
+ * archive の差分仕様は主仕様へ反映済みなので数えない。進行中の change を読めなくても失敗にしない。
+ */
+export function inventoryRepository(entries) {
+  const inventory = [];
+  /** @type {{ scenarios: { id: string, change: string }[], unreadable: string[] }} */
+  const pending = { scenarios: [], unreadable: [] };
+  for (const { file, text } of [...entries].sort((a, b) => a.file < b.file ? -1 : a.file > b.file ? 1 : 0)) {
+    if (!/\/spec\.md$/.test(file)) continue;
+    if (file.startsWith('openspec/specs/')) { inventory.push(...inventoryScenarios(file, text)); continue; }
+    const change = file.match(/^openspec\/changes\/([^/]+)\/specs\//)?.[1];
+    if (!change || change === 'archive') continue;
+    try { pending.scenarios.push(...inventoryScenarios(file, text).map((row) => ({ id: row.id, change }))); }
+    catch { pending.unreadable.push(file); }
+  }
+  return { inventory, pending };
+}
+
+const loadKit = () => import('../packages/kit/dist/index.js');
+
+export async function auditRepository(root, output, reviewFile = 'docs/quality/scenarios.json', reportFile, kit) {
+  const { createInputReader, JSON_LIMITS, loadConfig } = kit ?? await loadKit();
   const reader = createInputReader(); const jsonReader = createInputReader(JSON_LIMITS);
   const read = (file) => reader.read(join(root, file));
-  const files = reader.walk(join(root, 'openspec/specs')).filter((file) => file.endsWith('/spec.md') || file.endsWith('\\spec.md'));
-  for (const item of reader.entries(join(root, 'openspec/changes'))) {
-    if (item.name === 'archive' || item.kind !== 'directory') continue;
+  const posix = (file) => relative(root, file).split('\\').join('/');
+  const files = reader.walk(join(root, 'openspec/specs')).filter((file) => /[/\\]spec\.md$/.test(file));
+  for (const item of existsSync(join(root, 'openspec/changes')) ? reader.entries(join(root, 'openspec/changes')) : []) {
+    if (item.name === 'archive' || item.kind !== 'directory' || !existsSync(join(root, 'openspec/changes', item.name, 'specs'))) continue;
     files.push(...reader.walk(join(root, 'openspec/changes', item.name, 'specs')).filter((file) => /[/\\]spec\.md$/.test(file)));
   }
-  const inventory = files.sort().flatMap((file) => inventoryScenarios(relative(root, file).split('\\').join('/'), reader.read(file)));
+  const texts = new Map(files.map((file) => [posix(file), reader.read(file)]));
+  const { inventory, pending } = inventoryRepository([...texts].map(([file, text]) => ({ file, text })));
   const reportPath = resolve(root, reportFile ?? loadConfig(root).tests.report);
   const reportText = jsonReader.read(reportPath); const input = JSON.parse(reportText);
-  required(object(input) && Array.isArray(input.testResults), '試験レポートにtestResultsがありません');
-  const executions = input.testResults.flatMap((suite) => {
-    required(object(suite) && typeof suite.name === 'string' && Array.isArray(suite.assertionResults), '試験レポートのsuiteが不正です');
-    const file = relative(root, resolve(root, suite.name)).split('\\').join('/');
-    required(!file.startsWith('../') && !isAbsolute(file), 'リポジトリ外の試験レポートは扱えません');
-    return suite.assertionResults.map((test) => ({ file, fullName: test.fullName, status: test.status }));
-  });
+  const executions = readExecutions(root, input);
   const reviewText = existsSync(join(root, reviewFile)) ? jsonReader.read(join(root, reviewFile)) : undefined;
   const review = reviewText ? JSON.parse(reviewText) : { schemaVersion: 1, reviews: [] };
   required(object(review) && review.schemaVersion === 1 && Array.isArray(review.reviews), 'レビュー表の形式かschemaVersionが不正です');
   const sources = Object.fromEntries([...new Set(executions.map((test) => test.file))].map((file) => [file, read(file)]));
-  const result = auditScenarios(inventory, review.reviews, executions, sources);
-  result.inputs = { specs: Object.fromEntries(files.map((file) => [relative(root, file).split('\\').join('/'), sha256(reader.read(file))])), testSources: Object.fromEntries(Object.entries(sources).map(([file, text]) => [file, sha256(text)])), testReportSha256: sha256(reportText), reviewSha256: reviewText ? sha256(reviewText) : null, scriptSha256: sha256(read('scripts/scenario-audit.mjs')) };
+  const result = auditScenarios(inventory, review.reviews, executions, sources, pending);
+  result.inputs = { specs: Object.fromEntries([...texts].sort(([a], [b]) => a < b ? -1 : 1).map(([file, text]) => [file, sha256(text)])), testSources: Object.fromEntries(Object.entries(sources).map(([file, text]) => [file, sha256(text)])), testReportSha256: sha256(reportText), reviewSha256: reviewText ? sha256(reviewText) : null, scriptSha256: sha256(read('scripts/scenario-audit.mjs')) };
   mkdirSync(dirname(output), { recursive: true });
   mkdirSync(output);
   writeFileSync(join(output, 'audit.json'), JSON.stringify(result, null, 2) + '\n');
@@ -156,12 +349,102 @@ export async function auditRepository(root, output, reviewFile = 'docs/quality/s
   return result;
 }
 
+/**
+ * 旧形式（hashScope なし）の選択条件を本文ブロックのハッシュへ移す。本文ブロックが記録時から
+ * 変わっていないと確かめられたものだけを書き換え、ほかは旧形式のまま理由ごとに数える。
+ * history(file, sha256) は記録したハッシュと同じ内容の過去の版を返す（なければ undefined）。
+ */
+export function migrateReviews(review, executions, testSources, history) {
+  required(object(review) && Array.isArray(review.reviews), 'レビュー表の形式が不正です');
+  const counts = { migrated: { unchangedFile: 0, sameBlock: 0 }, kept: { notExecuted: 0, missingFile: 0, unextractable: 0, historyNotFound: 0, blockChanged: 0 }, alreadyBlock: 0 };
+  const cache = new Map();
+  const reviews = review.reviews.map((entry) => {
+    if (!object(entry) || !Array.isArray(entry.tests)) return entry;
+    return { ...entry, tests: entry.tests.map((selector) => {
+      if (!object(selector) || typeof selector.file !== 'string' || typeof selector.contains !== 'string') return selector;
+      if (selector.hashScope !== undefined) { counts.alreadyBlock++; return selector; }
+      const keep = (reason) => { counts.kept[reason]++; return selector; };
+      const found = executions.filter((test) => test.file === selector.file && test.fullName.includes(selector.contains));
+      if (!found.length) return keep('notExecuted');
+      const current = testSources[selector.file];
+      if (typeof current !== 'string') return keep('missingFile');
+      const digest = blockDigest(current, found, cache);
+      if (digest === undefined) return keep('unextractable');
+      const migrate = (reason) => { counts.migrated[reason]++; return { ...selector, sha256: digest, hashScope: 'block' }; };
+      if (sha256(current) === selector.sha256) return migrate('unchangedFile');
+      const old = history(selector.file, selector.sha256);
+      if (typeof old !== 'string') return keep('historyNotFound');
+      return blockDigest(old, found, cache) === digest ? migrate('sameBlock') : keep('blockChanged');
+    }) };
+  });
+  return { review: { ...review, reviews }, counts };
+}
+
+/** gitの履歴から、指定したハッシュと同じ内容のファイルの版を探す。 */
+export function gitHistory(root) {
+  const versions = new Map();
+  return (file, digest) => {
+    if (!versions.has(file)) {
+      const found = new Map();
+      try {
+        const log = execFileSync('git', ['log', '--all', '--no-abbrev', '--raw', '--format=', '--', file], { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+        const blobs = [...new Set(log.split('\n').flatMap((line) => line.match(/^:\d+ \d+ ([0-9a-f]{40,64}) ([0-9a-f]{40,64}) /)?.slice(1) ?? []))].filter((blob) => !/^0+$/.test(blob));
+        if (blobs.length) {
+          const output = execFileSync('git', ['cat-file', '--batch'], { cwd: root, input: blobs.join('\n') + '\n', maxBuffer: 1024 * 1024 * 1024 });
+          for (let offset = 0; offset < output.length;) {
+            const header = output.indexOf(10, offset); const [, type, size] = output.subarray(offset, header).toString().split(' ');
+            if (type !== 'blob') { offset = header + 1; continue; }
+            const text = output.subarray(header + 1, header + 1 + Number(size)).toString('utf8');
+            found.set(sha256(text), text); offset = header + 1 + Number(size) + 1;
+          }
+        }
+      } catch { /* 履歴を読めなければ版がないものとして扱う */ }
+      versions.set(file, found);
+    }
+    return versions.get(file).get(digest);
+  };
+}
+
+/**
+ * @param {string} root
+ * @param {{ dryRun?: boolean, reviewFile?: string, reportFile?: string, kit?: any, history?: (file: string, digest: string) => string | undefined }} [options]
+ */
+export async function migrateRepository(root, { dryRun = false, reviewFile = 'docs/quality/scenarios.json', reportFile, kit, history } = {}) {
+  const { createInputReader, JSON_LIMITS, loadConfig } = kit ?? await loadKit();
+  const reader = createInputReader(); const jsonReader = createInputReader(JSON_LIMITS);
+  const input = JSON.parse(jsonReader.read(resolve(root, reportFile ?? loadConfig(root).tests.report)));
+  const executions = readExecutions(root, input);
+  const review = JSON.parse(jsonReader.read(join(root, reviewFile)));
+  required(object(review) && review.schemaVersion === 1 && Array.isArray(review.reviews), 'レビュー表の形式かschemaVersionが不正です');
+  const sources = Object.fromEntries([...new Set(executions.map((test) => test.file))].flatMap((file) => existsSync(join(root, file)) ? [[file, reader.read(join(root, file))]] : []));
+  const result = migrateReviews(review, executions, sources, history ?? gitHistory(root));
+  if (!dryRun) writeFileSync(join(root, reviewFile), JSON.stringify(result.review, null, 2) + '\n');
+  return { dryRun, counts: result.counts };
+}
+
+function readExecutions(root, input) {
+  required(object(input) && Array.isArray(input.testResults), '試験レポートにtestResultsがありません');
+  return input.testResults.flatMap((suite) => {
+    required(object(suite) && typeof suite.name === 'string' && Array.isArray(suite.assertionResults), '試験レポートのsuiteが不正です');
+    const file = relative(root, resolve(root, suite.name)).split('\\').join('/');
+    required(!file.startsWith('../') && !isAbsolute(file), 'リポジトリ外の試験レポートは扱えません');
+    return suite.assertionResults.map((test) => ({ file, fullName: test.fullName, status: test.status }));
+  });
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+  const args = process.argv.slice(2);
   try {
-    required(process.argv[2], '新しい監査結果の保存先を指定してください');
-    const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-    const result = await auditRepository(root, resolve(process.argv[2]), process.argv[3], process.argv[4]);
-    console.log(JSON.stringify({ ok: result.ok, counts: result.counts, issues: result.issues }));
-    process.exitCode = result.ok ? 0 : 1;
+    if (args[0] === '--migrate') {
+      const dryRun = args[1] === '--dry-run'; const rest = args.slice(dryRun ? 2 : 1);
+      const result = await migrateRepository(root, { dryRun, reviewFile: rest[0], reportFile: rest[1] });
+      console.log(JSON.stringify(result));
+    } else {
+      required(args[0] && !args[0].startsWith('--'), '新しい監査結果の保存先を指定してください');
+      const result = await auditRepository(root, resolve(args[0]), args[1], args[2]);
+      console.log(JSON.stringify({ ok: result.ok, counts: result.counts, pending: { total: result.pending.total, byChange: result.pending.byChange, unreadable: result.pending.unreadable }, issues: result.issues }));
+      process.exitCode = result.ok ? 0 : 1;
+    }
   } catch (error) { console.error(`Scenarioの監査に失敗しました：${error.message}`); process.exitCode = 1; }
 }

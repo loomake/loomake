@@ -1,0 +1,52 @@
+{
+  "entries": [
+    {
+      "file": "packages/runner/test/guards.test.ts",
+      "tests": ["[REQ-201] テストを足すだけなら止まらない", "[REQ-126] エンジンがコミットせずに終えたら、止まらずにタスクを完了にしてコミットする", "[REQ-198] エンジンがフックを足したら、コミットせず、フックを実行せずに止まる"],
+      "os": ["windows-latest"],
+      "issue": 116,
+      "added": "2026-10-31",
+      "expires": "2026-11-14"
+    },
+    {
+      "file": "packages/runner/test/pr.test.ts",
+      "tests": ["[REQ-114] PR を作る時点で、ブランチの最後のコミットに証拠の記録が入っている"],
+      "os": ["windows-latest"],
+      "issue": 116,
+      "added": "2026-10-31",
+      "expires": "2026-11-14"
+    },
+    {
+      "file": "packages/runner/test/publication-retry.test.ts",
+      "tests": ["[REQ-164] %sの証拠は消さず増やさず停止する"],
+      "os": ["windows-latest"],
+      "issue": 178,
+      "added": "2026-10-31",
+      "expires": "2026-11-14"
+    },
+    {
+      "file": "packages/runner/test/guards-special-files.test.ts",
+      "tests": ["[REQ-224][REQ-204] %sの既存フックを保ち、通常runでタスクをコミットする"],
+      "os": ["macos-latest"],
+      "issue": 116,
+      "added": "2026-10-31",
+      "expires": "2026-11-14"
+    },
+    {
+      "file": "tests/ai-journeys.test.ts",
+      "tests": ["[REQ-155][REQ-156][REQ-157] %s で導入・通常操作・失敗と復旧を実行し、操作結果を記録する"],
+      "os": ["windows-latest"],
+      "issue": 181,
+      "added": "2026-10-31",
+      "expires": "2026-11-14"
+    },
+    {
+      "file": "tests/package-artifacts.test.ts",
+      "tests": ["[REQ-324][REQ-325] ビルド済み生成入口とpackしたCLIの共通定義・help・usageが一致する"],
+      "os": ["windows-latest"],
+      "issue": 183,
+      "added": "2026-10-31",
+      "expires": "2026-11-14"
+    }
+  ]
+}

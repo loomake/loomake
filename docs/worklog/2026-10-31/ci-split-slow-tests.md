@@ -1,38 +1,12 @@
-# 速度対策1-1の共有build
+# 速度対策1-1（PR184）
 
-以下は当時の作業記録。PR179先行受入と旧レビュー条件に関する現行決定は末尾の再編反映を優先する。
-
-1. `split-slow-ci-checks` task2.2を実装・検証した。rootからpackage/slowへ配布物を共有し、inject欠落を拒否する。引継ぎと未完了範囲は [Issue121](https://github.com/loomake/loomake/issues/121#issuecomment-6533973395) に記録した。
-2. spec-only、型、lint、共有準備5試験、実配布物12試験が成功。実pack失敗時のcleanup、fixtureの実tsc失敗と元例外保持、実watch再build・inject更新・正常closeを確認した。
-3. case分割・全体done・coverage・3OS実測・ruleset操作は未完了。独立依存の本体差分は0、生成キャッシュ6件の差分は保存した。初回のVite例外表示とwatch終了操作の失敗も保持する。
-4. 次はtask2.3の空registryとnamed slowの準備を進める。PR179統合と残10file設計の前提は維持する。
+1. `split-slow-ci-checks`のtask2.1〜2.4を先行実装し、task3.1の途中作業として[PR184](https://github.com/loomake/loomake/pull/184)へmainを取り込み、隔離とroot共有build・空registryを両立させた。過去の作業・失敗・検証の経緯は[固定済みのworklog](https://github.com/loomake/loomake/blob/0df1531699573e2f6ff4744c0a80f3bcf1c0330e/docs/worklog/2026-10-31/ci-split-slow-tests.md)に残し、旧レビュー条件は現行条件として扱わない。
+2. strict/spec-only・型・lint・関連122試験、同じ設定を使う独立fixtureの8経路、通常verify（1647成功・失敗0・既存skip8）が成功した。通常verifyの初回は引数誤りで品質コマンド前に止まったため原本を保持して正しい引数で実行し、publication・配布物操作の元試験定義とassertion・timeoutの一致も構文で確認した。
+3. 元case・parameter・全assertion・timeout・skipとcoverage94/89/96/97、REQ-297の元4case・19.5/39.5秒下限・既存上限・保持役待ち差分だけの時計・retryを保持する。task2.4のfast確定・task3.1/3.2・3OS各3sampleは未完了で、5/15と必須受入3件未実施を維持し、PR190の実修理・5夜成功も完了としていない。
+4. 管理役の差分確認後にmerge commit/pushへ進み、既存設計内のtask4.2測定準備を先行して残10fileの設計材料を得る。旧179専用workflowは復活させず、未設計case分割と新しいprofiler挙動は加えず、改訂ADR 0006に従うレビュー・人のnode20-only規則操作・マージとsync/archiveの受入を残す。
 
 | PR | 設計待ち | 実装 | CI待ち | レビュー往復回数 | マージまで |
 |---|---|---|---|---|---|
-| 1-1、PR未作成 | 未測定（既存Opus設計を再利用） | 進行中 | 未実施 | 未実施 | 進行中 |
+| [184](https://github.com/loomake/loomake/pull/184) | 未測定（既存設計を再利用、残10file未設計） | 進行中 | 未測定（main統合後は未実行） | 未集計（最終レビュー未実施） | 未マージ・未測定 |
 
-観測日は2026-10-31 JST。対象はtask2.2の作業ツリーで、確定headの完了ゲート・CI・最終レビューの成功ではない。検証原本は専用treeの `.loomake/ci-implementation/c3-final/c3-receipt.json` に保存した。
-
-1. task2.3として、空の測定一覧と純粋なfast/slow選択を実装した。未測定のOS割当とcase本体は追加していない。
-2. 選択14件と共有準備5件、型・lintが成功。実設定を同じbyteで使う独立fixtureの7経路で、PRと両shardのslow不実施、local/push/schedule/releaseの全件、空ファイル除外とPR両shardの和集合を確認した。元のreporter/outputFile/coverageと製品gateは保持した。
-3. fixtureの成功は実caseの3OS性能合格ではない。タスクは5/18完了で、case分割・全体done・CI・最終レビュー・人ruleset操作は未完了。
-4. 次はtask2.4の実13条件の独立mutation試験を追加する。計測表は上記の進行中の状態を維持する。
-
-1. task2.4の選択APIと13条件の個別mutation試験を実装した。CLIの既定13条件と元の全体試験は残した。
-2. 元と新規の33試験、型・lintが成功。各条件で実baseline10件・同じ既存テストのassertion失敗・元source/test/reportの保持・保存JSONと返値の一致を確認した。未知・重複・空の選択は保存前に拒否する。
-3. 3OS各3sampleによるfast確定は未実施のため、task2.4は未チェック、5/18完了のままとする。初回のTypeScript推論エラーも検証ログに保持した。
-4. 次は固定headの通常verifyを実行し、PR179の最終受入・統合と残10file設計の前提を確認する。計測表の実装とマージまでの値は進行中、CIと最終レビューは未実施である。
-
-通常verifyのhead06e9066は、1548成功・1失敗・既存skip8だった。全体実行ではrootのinjectがあるため、テストで渡したundefinedが既定値のinjectへ置き換わる問題を検出した。元の5期待値を保ち、利用側でinjectした値を検査関数へ明示して渡す形へ修正した。元の失敗reportとログを保持し、新headで再検証する。配布パッケージに変更がないため空changesetを追加した。
-
-修正headb39aea6の通常verifyは容量不足で失敗したが、生成済みダウンロードキャッシュ2件をhash照合して退避した後、同head・設定/期待値/TMPDIR不変で1549成功・失敗0・既存skip8となった。失敗124件の原本も保持した。差分は [Draft PR184](https://github.com/loomake/loomake/pull/184) へまとめ、受入は未完了としている。
-
-1. 独立Opus設計92ea61a2と既存archiveの前例を管理役が確認し、5.3〜5.5を原文・番号・順序・担当を保った「完了ゲート後の必須受入」へ移した。全18件の意図を実装15タスクと必須受入3件で保持する。
-2. 計画の整合であり、verify・CI・テスト・設定・規則は変更していない。元の実装15行と必須受入3行をbyteで照合し、strict/spec-onlyを再確認する。
-3. 実装は5/15、必須受入3件はいずれも未実施。タスク数の変更を完成範囲の縮小や完了とは扱わない。最終Opusは全重大度ゼロ、同headの必須CIと自動Codex、人のnode20-only操作、マージとsync/archiveまで必要である。
-4. PR179の受入後統合と残10file設計・3OS実測へ進む。計測表は実装・マージまで進行中、最終レビュー未実施を維持する。
-
-1. `split-slow-ci-checks`のtasks3.1・5.3とdesign/traceを再編計画へ整合した。[PR184](https://github.com/loomake/loomake/pull/184)のcase実装を進めず、凍結179診断のstabilize引継ぎと重複・統合順序の確定を未完了条件へ置き換えた。
-2. 計画だけの差分についてstrict/spec-onlyとdiff検査が成功した。製品・試験・設定・主仕様と既存の完了チェックは変えず、mainも取り込んでいない。
-3. 15タスク中5件完了と受入3件未実施を維持し、actualcase/3OS測定・REQ-297・人のnode20-only操作は残る。独立レビューとCodexの扱いは改訂ADRへ合わせ、旧全重大度ゼロ・無制限反復・Codex必須は現条件にしない。
-4. 管理役へ計画差分と検査結果を提示し、吸収先との境界・順序と残10fileの設計を確認する。commit/push・GitHub更新と実装の再開は管理役の次の指示に従う。
+2026-10-31 JSTのmain統合作業時点の途中記録。全工程の開始時刻は未測定であり、過去の局所作業開始から全体所要時間を算出しない。

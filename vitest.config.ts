@@ -9,6 +9,17 @@ const fastFiles = filesFor('fast');
 const slowFiles = filesFor('slow');
 // loomake verify は、test コマンドがこのファイルに書き出した JSON レポートで、要件ごとのテストを判定する（add-verify-cli の仮定 A-05）
 const report: string = JSON.parse(readFileSync(join(root, 'loomake.config.json'), 'utf8')).tests.report;
+// CI の macOS・Windows のシャードでは、隔離一覧（tests/quarantine.json）でその OS に指定したファイルを除く（REQ-214・REQ-344）。
+// 一覧は scripts/ci-quarantine.mjs が検査し、除くファイルを JSON の配列で渡す。指定がなければ何も除かない
+const quarantined: string[] = (() => {
+  const value = process.env.LOOMAKE_TEST_QUARANTINE_EXCLUDE;
+  if (!value) return [];
+  const files: unknown = JSON.parse(value);
+  if (!Array.isArray(files) || !files.every((file) => typeof file === 'string' && /^[A-Za-z0-9._/-]+\.test\.ts$/.test(file))) {
+    throw new Error(`LOOMAKE_TEST_QUARANTINE_EXCLUDE は試験ファイルの JSON の配列にしてください：${value}`);
+  }
+  return files;
+})();
 
 export default defineConfig({
   resolve: {
@@ -25,8 +36,8 @@ export default defineConfig({
     // ファイル指定だけでは余計に build することがある。unit だけなら --project unit を使う。
     globalSetup: ['tests/package-build.setup.ts'],
     projects: [
-      { extends: true, test: { name: 'unit', include: ['tests/**/*.test.ts', 'packages/*/test/**/*.test.ts'], exclude: [...configDefaults.exclude, ...packageTests, '**/*.slow.test.ts', ...fastFiles.exclude] } },
-      { extends: true, test: { name: 'package', include: packageTests, exclude: [...configDefaults.exclude, '**/*.slow.test.ts', ...fastFiles.exclude] } },
+      { extends: true, test: { name: 'unit', include: ['tests/**/*.test.ts', 'packages/*/test/**/*.test.ts'], exclude: [...configDefaults.exclude, ...packageTests, '**/*.slow.test.ts', ...fastFiles.exclude, ...quarantined] } },
+      { extends: true, test: { name: 'package', include: packageTests, exclude: [...configDefaults.exclude, '**/*.slow.test.ts', ...fastFiles.exclude, ...quarantined] } },
       ...(!isPullRequestRun() && slowFiles.include.length > 0 ? [{ extends: true as const, test: { name: 'slow', include: slowFiles.include } }] : []),
     ],
     reporters: ['default', 'json'],

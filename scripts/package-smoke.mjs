@@ -5,6 +5,8 @@ import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { markPhase } from './ci-heartbeat.mjs';
+import { isMain } from './lib/is-main.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const packages = ['core', 'kit', 'trace', 'runner', 'cli'];
@@ -17,7 +19,10 @@ function run(command, args, cwd, expected = 0) {
   // 空白を含みうる実行パス（.cmd の絶対パス）と引数は囲む
   const bare = command === 'pnpm' || command === 'npm';
   const shell = win && (bare || command.endsWith('.cmd'));
+  const started = Date.now();
   const result = spawnSync(shell && !bare ? quote(command) : command, shell ? args.map(quote) : args, { cwd, encoding: 'utf8', shell, env: { ...process.env, OPENSPEC_TELEMETRY: '0' } });
+  // LOOMAKE_CI_HEARTBEAT_DIR があるときだけ、コマンドの種類と時間を記録する。引数と出力は記録しない（REQ-345）
+  markPhase('package-smoke', 'command', { kind: ['npm', 'pnpm', 'git'].includes(command) ? command : 'other', durationMs: Date.now() - started });
   assert.equal(result.status, expected, `${command} ${args.join(' ')}\n${result.stdout ?? ''}${result.stderr ?? ''}${result.error?.message ?? ''}`);
   return result.stdout;
 }
@@ -193,12 +198,14 @@ export async function check(target) {
   console.log(`配布物の検証に合格しました：${process.version} ${process.platform}`);
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (isMain(import.meta.url)) {
   const [mode, target] = process.argv.slice(2);
   try {
     assert.ok(target && ['prepare', 'check'].includes(mode), 'prepareかcheckと、新規の検証先ディレクトリを指定してください');
+    markPhase('package-smoke', `${mode}-start`);
     if (mode === 'prepare') prepare(resolve(target));
     else await check(resolve(target));
+    markPhase('package-smoke', `${mode}-end`);
   } catch (error) {
     console.error(`配布物の検証に失敗しました：${error.message}`);
     process.exitCode = 1;
