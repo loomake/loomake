@@ -72,6 +72,40 @@ export function gateArgs(changesDir, id, tier) {
   return ['--change', id, checked ? '--done' : '--spec-only'];
 }
 
+/**
+ * change の完了ゲート（--done）の結果を、CI の最終合格として受け入れるか（REQ-318）。受け入れないときは理由を返す。
+ * verify 2.0.0 は ci・completed・要判断なし・verdict PASS・不合格や不足の検査なし・終了コード 0 のときだけ受け入れ、
+ * local・partial・要判断・中止の結果は合格にしない。いまの書き出しの 1.0.0 は、ok:true・fail の検査なし・終了コード 0 なら
+ * これまでどおり受け入れる（verify-v2-readers。1.0.0 を受け入れなくするのは verify-v2-wiring）。ci-gate の実行の流れにはまだつながない
+ * @param {string} stdout verify --json の標準出力
+ * @param {number} exitCode verify の終了コード
+ * @returns {string | undefined}
+ */
+export function ciGateProblem(stdout, exitCode) {
+  let result;
+  try { result = JSON.parse(stdout); } catch { return 'verify の結果を JSON として読めません'; }
+  if (!result || typeof result !== 'object' || Array.isArray(result)) return 'verify の結果が JSON のオブジェクトではありません';
+  if (result.schemaVersion === '1.0.0') {
+    if (result.ok !== true || !Array.isArray(result.results) || result.results.some((r) => r?.status === 'fail')) return 'verify の結果（1.0.0）が合格ではありません';
+    return exitCode === 0 ? undefined : `verify の終了コードが 0 ではありません（${exitCode}）`;
+  }
+  if (result.schemaVersion !== '2.0.0') return `verify の結果の版に対応していません（${JSON.stringify(result.schemaVersion)}）`;
+  const run = result.run && typeof result.run === 'object' ? result.run : {};
+  if (run.status === 'aborted') {
+    const errors = Array.isArray(run.errors) ? run.errors.map((e) => `${e?.kind}：${e?.message}`).join(' / ') : '';
+    return `verify が実行エラーで中止されました（${errors}）`;
+  }
+  if (result.scope !== 'ci') return `scope が ci ではありません（${JSON.stringify(result.scope)}）。ローカルの結果は最終の合格にしません`;
+  if (run.status !== 'completed') return `一部の証拠を取得できませんでした（${JSON.stringify(run.status)}）`;
+  if (result.decision?.required !== false) return '人の判断が必要です';
+  if (result.verdict !== 'PASS') return `verdict が PASS ではありません（${JSON.stringify(result.verdict)}）`;
+  const checks = Array.isArray(result.checks) ? result.checks : [];
+  const notPassed = checks.filter((c) => c?.result === 'FAIL' || c?.result === 'INSUFFICIENT_EVIDENCE').map((c) => c.id);
+  if (!checks.length || notPassed.length) return `不合格か証拠不足の検査があります（${notPassed.join('、') || '検査なし'}）`;
+  if (exitCode !== 0) return `verify の終了コードが 0 ではありません（${exitCode}）`;
+  return undefined;
+}
+
 /** L1 で実行する検査。lint は loomake.config.json の commands.lint（既定 pnpm lint）、文書のリンクの試験は vitest で 1 ファイルだけ */
 export function tierOneCommands(configPath = 'loomake.config.json') {
   let lint = 'pnpm lint';

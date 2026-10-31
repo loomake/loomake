@@ -5,7 +5,7 @@
 ## 1. 仕様と依存の確定
 
 - [x] 1.1 proposal・差分仕様・design・tasks・traceを準備し、出典・公開側/利用側・未回答の停止範囲をレビューできる資料にする。OpenSpec strictの成功と、仕様ゲートが未回答で失敗することを記録する
-- [ ] 1.2 承認済みR01/02/03/04/07/09/10のAを保持し、保留のR05/06/08の採否と承認元を記録する。#60受入済みの事実を踏まえ、採用するsource/metric・plan・最小適格性・正常PASS例・REQ-036/037/038/039/040/042/050/055/073/093/114/115/135/136/164/183/191/203/275/276/305/307/322とC1〜C5の具体的assertion差分を整理する。R05/R06の回答後、このタスクでREQ-093・135・136のMODIFIEDを確定する。R05 Aなら093はspec-only不合格1とusage/config aborted 2・その他aborted 3を分け、実装ブランチ作成/エンジン呼出しを止める。135もR05 Aなら全オプション説明義務の本文を保持し、既存verify/trace recordヘルプScenarioへscopeを加える。136はR06 Aなら完了ゲート本文を明示localへ変更し、最終ci確認と区別して印と既存Scenarioを保持する。Bなら136本文と雛形の既定ciコマンドを保持する。全回答後、規範文から候補・質問ID・未決選択肢を除いて採用した振る舞いだけへ確定し、台帳を更新する。PR #155でCLI/URL両changeが同期/archiveされ、main d5aa30dのREQ-323〜325とREQ-322のURL/4 Scenarioへ入ったことを確認する。REQ-323/324のMUSTを生成/集約単独へ限定する差分、REQ-100の明示local、REQ-306の非接続範囲もR05の採否へ含め、全既存Scenario/Sourceを保持する。最新mainは通常merge済みであり、採否確定後のstrictと仕様ゲートexit 0を確認する。全C-001差分を一時コピーでarchiveして全capabilityの主仕様strictを通し、全MODIFIEDの本文字数をOpenSpecのパーサで測って500以内と確認する。上限に近いREQ-322・114と短縮した306は文言確定後に再計測する。本番archiveは製品DoD達成後とし、保護された期待値変更は具体差分の個別承認を得る
+- [ ] 1.2 承認済みR01/02/03/04/07/09/10のAを保持し、保留のR05/06/08の採否と承認元を記録する。#60受入済みの事実を踏まえ、採用するsource/metric・plan・最小適格性・正常PASS例・REQ-036/037/038/039/040/042/050/055/073/093/114/115/135/136/164/183/191/203/275/276/305/307/322とC1〜C5の具体的assertion差分を整理する。R05/R06の回答後、このタスクでREQ-135・136のMODIFIEDを確定する。REQ-093のMODIFIED（spec-only不合格1とusage/config aborted 2・その他aborted 3を分け、実装ブランチ作成/エンジン呼出しを止める）は、子change `verify-v2-readers` で確定済み。135もR05 Aなら全オプション説明義務の本文を保持し、既存verify/trace recordヘルプScenarioへscopeを加える。136はR06 Aなら完了ゲート本文を明示localへ変更し、最終ci確認と区別して印と既存Scenarioを保持する。Bなら136本文と雛形の既定ciコマンドを保持する。全回答後、規範文から候補・質問ID・未決選択肢を除いて採用した振る舞いだけへ確定し、台帳を更新する。PR #155でCLI/URL両changeが同期/archiveされ、main d5aa30dのREQ-323〜325とREQ-322のURL/4 Scenarioへ入ったことを確認する。REQ-323/324のMUSTを生成/集約単独へ限定する差分、REQ-100の明示local、REQ-306の非接続範囲もR05の採否へ含め、全既存Scenario/Sourceを保持する。最新mainは通常merge済みであり、採否確定後のstrictと仕様ゲートexit 0を確認する。全C-001差分を一時コピーでarchiveして全capabilityの主仕様strictを通し、全MODIFIEDの本文字数をOpenSpecのパーサで測って500以内と確認する。上限に近いREQ-322・114と短縮した306は文言確定後に再計測する。本番archiveは製品DoD達成後とし、保護された期待値変更は具体差分の個別承認を得る
 - [ ] 1.3 1.2後、承認済みR-C001-04 Aに従い、R05/06/08の採否後にS1内部基準準備を具体化する。承認済みanchor/spec/必須REQ集合・quality/plan/method/tool/version/hashを固定し、private handoff・base-built判定module・S2自己ゲートとの一致検査を準備する。先行受入するS1は独立change・その範囲のDoD/REQ対応試験/通常done 0で受け入れ同期archive後にS2へ進む候補とし、新change/IDは採否後の担当・既用ID・枠確認まで作らない。親doneを緩めず、S1をC-001完了とせず、設定・公開操作は別途の具体的承認まで行わない（REQ-313・319）
 
 ## 2. 公開形式と履歴の分離
@@ -24,7 +24,7 @@
 
 ## 4. CLIと既存利用側の一体移行
 
-旧タスク4.3の版別の投影は子change `verify-v2-shape` のタスク1.9へ移した。
+旧タスク4.3の版別の投影は子change `verify-v2-shape` のタスク1.9へ移した。runnerの純粋判断（REQ-205）と仕様ゲートのaborted（REQ-093）の読み取りは、子change `verify-v2-readers` へ移した。
 
 - [ ] 4.1 runVerify・formatter・CLIをv2へ移し、scope既定値、JSON引数エラー、stderr、CI=1非対話、API/CLIの0〜3一致をID付き試験で確認する。承認済みR01 Aのbare verify品質専用経路を保持する。REQ-323〜325に従いargs.tsの共通定義・help/usage・docs/guide/3.reference/5.cli.mdを同じ改版で更新し、生成器 --checkを通す。reference-cli-baseline.jsonの旧46例は原本を残し、新契約で変わる出力/追加scope例を具体差分としてR05方針承認とは別の個別承認へ出す。1.2で確定したREQ-135に従い、verify/trace recordヘルプの --scope local|ci・受理値/既定値とskip不足/coverage省略の説明を実装し、helpでは検査せずstdout/0を保つことと全既存Scenarioを試験する。REQ-050のCLI呼出し/不足1とレポート抽出の処理量保持、REQ-040の正常coverageとskip省略を承認後に試験する（REQ-040・041・050・135・311・312・323〜325）
 - [ ] 4.2 trace recordをEvidence 2へ移し、scopeと終了コード、aborted、文書snapshot・未コミット・検査前後変化・追記専用・同期性とserializationのJSON前後検査・publicationの上書き禁止を既存回帰とID付き試験で確認する（REQ-066・315）
@@ -33,6 +33,10 @@
 - [ ] 4.5 ci-gateと関連workflowの利用経路をv2/ciへ移し、local・旧形式・skip/neutral・全NAを合格にしない統合試験、R-C001-04がAの場合だけnormal self-ciがS1判定moduleを直接使うことと、fresh Tを基準としたexact 2.0.0解析・S/T一致を確認し、採用したbare verify品質経路を確認する（REQ-312・318）
 - [ ] 4.6 2本目（verify-v2-wiring）：ciのpartialとverdictの整合（partialでPASSを出さない、NOT_APPLICABLEの扱い）は、結果を組み立てる側で保証する
 - [ ] 4.7 2本目（verify-v2-wiring）：子change `verify-v2-shape` のREQ-276・302〜305・307に残る現行版への切替を満たす
+- [ ] 4.8 2本目（verify-v2-wiring）：reportが、壊れたEvidence 2の不正箇所（版の混在や状態別の必須欄の欠け）を示す（REQ-073）
+- [ ] 4.9 2本目（verify-v2-wiring）：runVerifyがlocal・partialでpending>0を保証し、evidenceProblemでpending≥insufficientを確かめる
+- [ ] 4.10 2本目（verify-v2-wiring）：ci-gateを2.0.0のmodeとchangeで判定し、1.0.0・spec-only・全件NOT_APPLICABLEを合格にしない
+- [ ] 4.11 2本目（verify-v2-wiring）：runの完了ゲートは --scope local に固定し、ciの結果が来たら停止する
 
 ## 5. 配布・受入
 

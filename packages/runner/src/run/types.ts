@@ -1,5 +1,5 @@
 // loomake run の設定・記録・実行中の状態の型
-import { type Task, type VerifyResult } from '@loomake/core';
+import { type Task, type VerifyResult, type VerifyResultV2 } from '@loomake/core';
 import { loadConfig } from '@loomake/kit';
 import { type RunConfig } from '../config.js';
 
@@ -70,7 +70,8 @@ export type Recorder = {
   runDir: string;
   deadline: number;
   done: string[];
-  lastVerify: VerifyResult | null;
+  /** 最後の検証結果。いまの書き出しは 1.0.0 で、2.0.0 も読む */
+  lastVerify: VerifyResult | VerifyResultV2 | null;
   /** エンジンを呼んだ回数。記録のファイル名の番号に使う */
   step: number;
   save: (name: string, text: string) => void;
