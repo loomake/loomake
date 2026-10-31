@@ -97,5 +97,6 @@ console.log('PARTITION_WATCH='+JSON.stringify(phases));
     const line = result.stdout.split('\n').find((line) => line.startsWith('PARTITION_WATCH='));
     return { ...result, phases: line ? JSON.parse(line.slice('PARTITION_WATCH='.length)) as WatchPhase[] : undefined };
   };
-  return { root, registry, setRegistry, markers, marker, reset, run, watch, cleanup: () => rmSync(root, { recursive: true, force: true }) };
+  // Windows では子プロセスの終了直後やウイルス対策ソフトの走査中にフォルダを消すと EPERM・EBUSY になることがあるので、再試行する（#229）。
+  return { root, registry, setRegistry, markers, marker, reset, run, watch, cleanup: () => rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }) };
 }
