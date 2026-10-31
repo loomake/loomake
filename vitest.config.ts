@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { configDefaults, defineConfig } from 'vitest/config';
 
 const root = import.meta.dirname;
-const packageTests = ['tests/ai-journeys.test.ts', 'tests/package-artifacts.test.ts'];
+const packageTests = ['tests/ai-journeys.test.ts', 'tests/package-artifacts.test.ts', 'tests/pending-approvals-cli.test.ts'];
 // loomake verify は、test コマンドがこのファイルに書き出した JSON レポートで、要件ごとのテストを判定する（add-verify-cli の仮定 A-05）
 const report: string = JSON.parse(readFileSync(join(root, 'loomake.config.json'), 'utf8')).tests.report;
 // CI の macOS・Windows のシャードでは、隔離一覧（tests/quarantine.json）でその OS に指定したファイルを除く（REQ-214・REQ-344）。
@@ -29,7 +29,7 @@ export default defineConfig({
     },
   },
   test: {
-    // 配布物を使う 2 ファイルは別のプロジェクトにして、そのプロジェクトの試験を流すときだけ、
+    // 配布物（tarball か dist）を使う 3 ファイルは別のプロジェクトにして、そのプロジェクトの試験を流すときだけ、
     // ワーカーを起こす前に build と pack を 1 回だけ動かす（tests/package-build.setup.ts、Issue #34）
     projects: [
       { extends: true, test: { name: 'unit', include: ['tests/**/*.test.ts', 'packages/*/test/**/*.test.ts'], exclude: [...configDefaults.exclude, ...packageTests, ...quarantined] } },
