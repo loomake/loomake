@@ -50,6 +50,8 @@ Goal操作ツールが使えない、またはGoal作成が失敗した場合は
 
 管理役は1セッションに固定し、依存を確認して実装・独立レビューを分担する。担当の重複や未コミット作業は `git worktree list`・既存PR・Issueの記録と照合する。実装担当ごとにworktreeを分け、同じIssue・changeへ重複着手しない。同時に進める本数と配分は ADR 0006 に従い、ほかのセッションも数に含める。既存の変更があるフォルダでブランチを切り替えない。既存の PR ブランチは worktree で扱い、新しい作業は `git fetch` したあとの origin/main から専用 worktree を作る。ルートの作業ツリーが main と一致するまで、ルートの規約は読まず、自分の worktree の規約を読む。マージされた PR の worktree は当日中に消す。削除は `scripts/clean-merged-worktrees.sh --dry-run` で一覧を確かめてから引数なしで実行する。各 worktree の `.loomake/` は `.loomake/archive/worktree-loomake-<日付>/` に退避される。
 
+実装の受け取りは GitHub Issue で行う。ラベル `post-merge-review` の Issue を最優先で、次にラベル `implementation-queue` の Issue を古い順に拾う。`post-merge-review` は、マージ代行があったと記録された PR の承認元と実際のマージ結果を照合するための事後レビューで、Issue に書かれたマージ commit と reviewed-head の差分を `docs/dev/review-checklist.md` で見て、結果を Issue にコメントする。重大があれば修正 PR を立てて Issue から参照し、なければ「重大 0」と書いて閉じる。`implementation-queue` は設計済みの実装依頼で、Issue に書かれた change-id・設計ファイル・対象 SHA・受け入れ条件に従って実装する。マージ代行の可否は、適用される規約と利用者の明示的な承認に従う。事後レビューでは、代行の承認元と実際のマージ結果を照合し、マージ前に必要な独立 Opus レビューと必須 CI の条件も確認する。
+
 サブエージェントの下書きや一時ファイルは、scratchpad の担当別フォルダ（`scratchpad/<担当>/`。例：`scratchpad/w5/`）に置く。scratchpad 直下の同じ名前のファイルを担当どうしで共用しない。
 
 リポジトリ全体で開いている PR のうち、作成から 24 時間以上たち、まだマージ条件を満たしていないもの（Draft か Ready かを問わない）が 2 本以上あるときは、新しい L3 PR を起こさない。先にそのどれかを受け入れる（マージかクローズ）か、分割する。
