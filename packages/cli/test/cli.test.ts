@@ -173,7 +173,8 @@ describe('実行時依存の範囲', () => {
 });
 
 describe('verify の性能', () => {
-  it('[REQ-050] 要件 500 件・テストファイル 1,000 個の --done --skip-commands が 3 秒以内に終わる', async () => {
+  // 省略したときの既定（ci）と、明示した local の両方で、処理量を保つ
+  it.each([['--scope local の', ['--scope', 'local']], ['scope 省略（ci）の', []]] as const)('[REQ-050] 要件 500 件・テストファイル 1,000 個の %s --done --skip-commands が 3 秒以内に終わる', async (_name, scopeArgs) => {
     const ids = Array.from({ length: 500 }, (_, i) => `REQ-${String(i + 1).padStart(3, '0')}`);
     const trace = traceMd({ ledger: ids.map((id) => ledgerRow(id)) });
     const spec = ['## ADDED Requirements', '', ...ids.map((id) => requirement(`振る舞い ${id}`, { source: `Source: ${id}` }))].join('\n');
@@ -187,7 +188,7 @@ describe('verify の性能', () => {
       }
       writeReport(root, tests);
       const start = performance.now();
-      const result = await run(root, 'verify', '--change', CHANGE, '--done', '--skip-commands', '--json');
+      const result = await run(root, 'verify', '--change', CHANGE, '--done', ...scopeArgs, '--skip-commands', '--json');
       // --skip-commands では前回のレポートを読まないので（REQ-040）、checkCoverage と同じく、レポートのパスの解決・抽出・テストファイルの相対パス化・要件の対応の判定を続けて測り、処理量を保つ
       const reportPath = resolve(root, '.loomake/test-report.json');
       if (!existsSync(reportPath)) throw new Error('テストのレポートがありません');
@@ -202,7 +203,11 @@ describe('verify の性能', () => {
     expect(r.decided.coverage['REQ-001']).toEqual(['tests/t0.test.ts', 'tests/t500.test.ts']);
     // --skip-commands は品質コマンドの不足で 1（REQ-040）。不足は品質コマンドと要件ごとのテストの 2 件だけ
     expect(r.code, r.stdout).toBe(1);
-    expect(JSON.parse(r.stdout).checks.filter((c: { result: string }) => c.result !== 'PASS').map((c: { id: string }) => c.id)).toEqual(['品質コマンド', '要件ごとのテスト']);
+    const parsed = JSON.parse(r.stdout);
+    expect(parsed.checks.filter((c: { result: string }) => c.result !== 'PASS').map((c: { id: string }) => c.id)).toEqual(['品質コマンド', '要件ごとのテスト']);
+    // --skip-commands では coverage を出さない（REQ-040）
+    expect(parsed).not.toHaveProperty('coverage');
+    expect(parsed.scope).toBe(scopeArgs.length ? 'local' : 'ci');
     expect(r.ms).toBeLessThan(3000);
   }, 30_000);
 });
@@ -219,15 +224,16 @@ describe('ヘルプと版', () => {
   it('[REQ-135] loomake verify --help は verify の使い方と各オプションの説明を出し、検査を実行せずに終了コード 0 を返す', async () => {
     const r = await run(repo, 'verify', '--change', 'nothing', '--done', '--help');
     expect(r.code).toBe(0);
-    expect(r.stdout.split('\n')[0]).toBe('使い方: loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]');
-    for (const option of ['--change <id>', '--spec-only', '--done', '--json', '--skip-commands']) expect(r.stdout).toMatch(new RegExp(`^  ${option.replace(/[<>]/g, '.')} +\\S`, 'm'));
+    expect(r.stdout.split('\n')[0]).toBe('使い方: loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands] [--scope local|ci]');
+    for (const option of ['--change <id>', '--spec-only', '--done', '--json', '--skip-commands', '--scope local|ci']) expect(r.stdout).toMatch(new RegExp(`^  ${option.replace(/[<>]/g, '.')} +\\S`, 'm'));
     expect(r.stderr).toBe('');
   });
 
   it('[REQ-135] trace record --help と trace report --help は、それぞれの使い方を出す', async () => {
     const record = await run(repo, 'trace', 'record', '--help');
     expect(record.code).toBe(0);
-    expect(record.stdout.split('\n')[0]).toBe('使い方: loomake trace record --change <id>');
+    expect(record.stdout.split('\n')[0]).toBe('使い方: loomake trace record --change <id> [--scope local|ci]');
+    expect(record.stdout).toMatch(/^ {2}--scope local\|ci +記録する verify の範囲。省くと ci/m);
     expect(record.stdout).not.toContain('--format');
     const report = await run(repo, 'trace', 'report', '-h');
     expect(report.stdout.split('\n')[0]).toBe('使い方: loomake trace report --change <id> [--format md|json]');

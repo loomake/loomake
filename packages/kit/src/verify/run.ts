@@ -21,6 +21,7 @@ import {
 } from '@loomake/core';
 import { assembleVerifyResult } from './result.js';
 import { assertChangeId, loadConfig, type LoomakeConfig } from './config.js';
+import { UsageError } from '../runtime/errors.js';
 import { createInputReader, JSON_LIMITS, type InputReader } from '../runtime/input.js';
 import { findChangeDir, specFiles, toPosix } from '../runtime/change-files.js';
 
@@ -65,6 +66,8 @@ export function runVerify(options: VerifyOptions): VerifyResult {
   const root = existsSync(givenRoot) ? realpathSync(givenRoot) : givenRoot;
   const config = loadConfig(root);
   const gate = changeId ? (options.gate ?? 'spec-only') : undefined;
+  // change を指定しない verify は品質コマンドだけのローカル結果。明示した ci は使い方の誤り（REQ-312）
+  if (!changeId && options.scope === 'ci') throw new UsageError('--change を指定しない verify では --scope ci は使えません。local を指定するか、省いてください');
   const scope: VerifyScope = options.scope ?? (gate === 'done' ? 'ci' : 'local');
   const checks: GateCheck[] = [];
   const errors: VerifyRunError[] = [];

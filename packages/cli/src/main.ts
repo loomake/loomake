@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { CHANGE_ID, RuntimeFailure, UsageError, formatVerifyResult, runDoctor, runInit, runVerify, verifyAbortedResult, verifyExitCode } from '@loomake/kit';
 import { runRun } from '@loomake/runner';
 import { runAgreement, runRecord, runReport } from '@loomake/trace';
-import { COMMANDS, HELP, USAGE, commandDefinition, commandHelp, didYouMean, isHelp, isVersion, optionSpec, parseOptions, traceOperation, type Command } from './args.js';
+import { COMMANDS, HELP, SCOPES, USAGE, commandDefinition, commandHelp, didYouMean, isHelp, isVersion, optionSpec, parseOptions, traceOperation, type Command } from './args.js';
 
 export type Io = {
   cwd: string;
@@ -82,6 +82,15 @@ function init(args: string[], io: Io): Promise<number> {
   });
 }
 
+/** --scope の値を確かめる。省いたときは undefined（既定値は各処理が決める。環境変数 CI では変えない）（REQ-312） */
+function scopeOption(values: Map<string, string>): (typeof SCOPES)[number] | undefined {
+  const scope = values.get('--scope');
+  if (scope === undefined) return undefined;
+  const hit = SCOPES.find((item) => item === scope);
+  if (!hit) throw new UsageError(`--scope は ${SCOPES.join(' か ')} にしてください：${scope}`);
+  return hit;
+}
+
 // 値として読まれない、単独の --json。構文の誤りでも JSON で返すかを決めるのに使う（R-F15）
 const standaloneJson = (args: string[]) => args.some((arg, i) => arg === '--json' && args[i - 1] !== '--change');
 
@@ -107,6 +116,7 @@ function verify(args: string[], io: Io): number {
       changeId,
       gate: done ? 'done' : 'spec-only',
       skipCommands: flags.has('--skip-commands'),
+      scope: scopeOption(values),
       // --json のとき標準出力には JSON だけを出すので、進捗は標準エラーに出す
       progress: io.stderr,
     });
@@ -131,11 +141,12 @@ function trace(args: string[], io: Io): number {
     throw new UsageError(sub ? `知らないサブコマンドです：${sub}${didYouMean(sub, subs)}` : 'record・report・answer・approve のどれかを指定してください');
   }
   const { values } = parseOptions(rest, optionSpec(traceOperation(sub) ?? commandDefinition('trace')));
+  const scope = scopeOption(values);
   const changeId = values.get('--change');
   const format = values.get('--format');
   if (!changeId) throw new UsageError('--change <id> が必要です');
   // verify の進捗は標準エラーに出す（verify と同じ）
-  if (sub === 'record') return runRecord({ root: io.cwd, changeId, stdout: io.stdout, progress: io.stderr });
+  if (sub === 'record') return runRecord({ root: io.cwd, changeId, scope, stdout: io.stdout, progress: io.stderr });
   // 初版は Markdown と JSON だけ。省いたら Markdown
   if (format === 'html') throw new UsageError('HTML の形式は次の版で対応します。いまは md か json を指定してください');
   if (format !== undefined && format !== 'md' && format !== 'json') throw new UsageError(`--format は md か json にしてください：${format}`);

@@ -26,7 +26,7 @@ it('[REQ-323][REQ-325] ソース定義から全コマンド・操作と既存ペ
   expect(rendered).toContain('先頭引数として指定する');
   expect(rendered).toContain('## loomake doctor\n\n使い方: loomake doctor\n');
   expect(rendered).toContain('固有オプションなし。');
-  expect(rendered.split('\n').filter((line) => line.startsWith('| --'))).toHaveLength(23);
+  expect(rendered.split('\n').filter((line) => line.startsWith('| --'))).toHaveLength(25);
   expect(rendered).toMatch(/^title: \S/m);
   expect(rendered).toMatch(/^description: \S/m);
   expect(rendered).toContain('packages/cli/src/args.ts');
@@ -150,7 +150,9 @@ it('[REQ-323] 入力の必須性・相互条件・動的既定値と受理値を
   expect(rendered).toContain('trace.mdの確認事項表に存在するID');
   expect(rendered).toContain('英小文字・数字と、間に1つずつのハイフン');
   expect(rendered.indexOf('| --answer')).toBeLessThan(rendered.indexOf('| --by'));
-  expect(rendered).not.toContain('--scope');
+  // verify と trace record に --scope local|ci がある（REQ-312・135）
+  expect(rendered.split('\n').filter((line) => line.startsWith('| --scope'))).toHaveLength(2);
+  expect(rendered).toContain('local / ci');
   expect(rendered).not.toContain('decision');
 });
 

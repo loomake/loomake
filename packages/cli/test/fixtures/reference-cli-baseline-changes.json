@@ -24,6 +24,259 @@
       "stream": "stdout",
       "from": "  --skip-commands     品質コマンドを実行せず、すでにあるテストのレポートを読む",
       "to": "  --skip-commands     品質コマンドを実行せず、テストのレポートも読まずに、その項目を証拠不足にする（終了コード 1）"
+    },
+    {
+      "change": "verify-v2-scope",
+      "requirement": "REQ-135",
+      "approval": "R-C001-05（方針の承認のみ。具体差分は PR 本文で個別承認待ち）",
+      "reason": "verify の使い方の行に --scope local|ci を足す",
+      "argv": [
+        [
+          "verify",
+          "--help"
+        ],
+        [
+          "verify",
+          "-h"
+        ],
+        [
+          "verify",
+          "--change",
+          "--help"
+        ]
+      ],
+      "stream": "stdout",
+      "from": "使い方: loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]",
+      "to": "使い方: loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands] [--scope local|ci]"
+    },
+    {
+      "change": "verify-v2-scope",
+      "requirement": "REQ-135",
+      "approval": "R-C001-05（方針の承認のみ。具体差分は PR 本文で個別承認待ち）",
+      "reason": "verify の使い方の誤りで出す使い方の行（2 回目の出力）に --scope local|ci を足す",
+      "argv": [
+        [
+          "verify",
+          "--spec-only"
+        ],
+        [
+          "verify",
+          "--change",
+          "x"
+        ],
+        [
+          "verify",
+          "--change",
+          "x",
+          "--spec-only",
+          "--done"
+        ],
+        [
+          "verify",
+          "--chnage"
+        ],
+        [
+          "verify",
+          "--change="
+        ],
+        [
+          "verify",
+          "--json=true"
+        ]
+      ],
+      "stream": "stderr",
+      "entry": 1,
+      "from": "使い方: loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]",
+      "to": "使い方: loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands] [--scope local|ci]"
+    },
+    {
+      "change": "verify-v2-scope",
+      "requirement": "REQ-135",
+      "approval": "R-C001-05（方針の承認のみ。具体差分は PR 本文で個別承認待ち）",
+      "reason": "--skip-commands の説明に coverage を出さないことを足し、--scope の説明（受理値・既定値・bare verify の ci 拒否）を足す",
+      "argv": [
+        [
+          "verify",
+          "--help"
+        ],
+        [
+          "verify",
+          "-h"
+        ],
+        [
+          "verify",
+          "--change",
+          "--help"
+        ]
+      ],
+      "stream": "stdout",
+      "from": "  --skip-commands     品質コマンドを実行せず、テストのレポートも読まずに、その項目を証拠不足にする（終了コード 1）",
+      "to": "  --skip-commands     品質コマンドを実行せず、テストのレポートも読まずに、その項目を証拠不足にする（終了コード 1）。coverage は出さない\n  --scope local|ci    結果の範囲。省くと --done は ci、--spec-only と --change なしは local（--change なしの ci は使えない）"
+    },
+    {
+      "change": "verify-v2-scope",
+      "requirement": "REQ-135",
+      "approval": "R-C001-05（方針の承認のみ。具体差分は PR 本文で個別承認待ち）",
+      "reason": "trace record の使い方の行に --scope local|ci を足す",
+      "argv": [
+        [
+          "trace",
+          "--help"
+        ],
+        [
+          "trace",
+          "-h"
+        ],
+        [
+          "trace",
+          "record",
+          "--help"
+        ],
+        [
+          "trace",
+          "record",
+          "-h"
+        ],
+        [
+          "trace",
+          "constructor",
+          "--help"
+        ],
+        [
+          "trace",
+          "toString",
+          "--help"
+        ],
+        [
+          "trace",
+          "nothing",
+          "--help"
+        ]
+      ],
+      "stream": "stdout",
+      "from": "使い方: loomake trace record --change <id>",
+      "to": "使い方: loomake trace record --change <id> [--scope local|ci]"
+    },
+    {
+      "change": "verify-v2-scope",
+      "requirement": "REQ-135",
+      "approval": "R-C001-05（方針の承認のみ。具体差分は PR 本文で個別承認待ち）",
+      "reason": "trace の使い方の誤りで出す使い方の行（2 回目の出力。trace record の行）に --scope local|ci を足す",
+      "argv": [
+        [
+          "trace"
+        ],
+        [
+          "trace",
+          "recrd"
+        ],
+        [
+          "trace",
+          "record"
+        ],
+        [
+          "trace",
+          "report"
+        ],
+        [
+          "trace",
+          "report",
+          "--change",
+          "x",
+          "--format",
+          "html"
+        ],
+        [
+          "trace",
+          "report",
+          "--change",
+          "x",
+          "--format",
+          "xml"
+        ],
+        [
+          "trace",
+          "answer"
+        ],
+        [
+          "trace",
+          "answer",
+          "--change",
+          "x",
+          "--question",
+          "Q-01"
+        ],
+        [
+          "trace",
+          "answer",
+          "--change",
+          "x",
+          "--question",
+          "Q-01",
+          "--by",
+          "x"
+        ],
+        [
+          "trace",
+          "approve"
+        ],
+        [
+          "trace",
+          "approve",
+          "--change",
+          "x",
+          "--assumption",
+          "A-01"
+        ]
+      ],
+      "stream": "stderr",
+      "entry": 1,
+      "from": "使い方: loomake trace record --change <id>",
+      "to": "使い方: loomake trace record --change <id> [--scope local|ci]"
+    },
+    {
+      "change": "verify-v2-scope",
+      "requirement": "REQ-135",
+      "approval": "R-C001-05（方針の承認のみ。具体差分は PR 本文で個別承認待ち）",
+      "reason": "trace record の説明に --scope の受理値と既定値（ci）を足す",
+      "argv": [
+        [
+          "trace",
+          "--help"
+        ],
+        [
+          "trace",
+          "-h"
+        ],
+        [
+          "trace",
+          "record",
+          "--help"
+        ],
+        [
+          "trace",
+          "record",
+          "-h"
+        ],
+        [
+          "trace",
+          "constructor",
+          "--help"
+        ],
+        [
+          "trace",
+          "toString",
+          "--help"
+        ],
+        [
+          "trace",
+          "nothing",
+          "--help"
+        ]
+      ],
+      "stream": "stdout",
+      "from": "  --change <id>       記録する change",
+      "to": "  --change <id>       記録する change\n  --scope local|ci    記録する verify の範囲。省くと ci。local の記録は最終 CI の合格ではない"
     }
   ]
 }
