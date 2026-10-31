@@ -25,6 +25,8 @@
 
 リポジトリの `docs/metrics/tokens.csv` を更新するときは、リポジトリのルートで `scripts/metrics-tokens-pr.sh` を実行します。CSV を作り直し、origin/main と違うときだけ、ブランチ `metrics/tokens-<日付>` で L1 の PR を出します。`--dry-run` を付けると、PR の中身を表示するだけで、ブランチも PR も作りません。
 
+初回の `tokens.csv` は、利用者が開発機で `bash scripts/metrics-tokens-pr.sh` を実行し、L1 の PR として入れます。Claude のサブエージェントは手元のログを読めないので、この作業を任せられません。
+
 集計だけを見たいときは、`python3 -I scripts/metrics-tokens.py` を実行すると標準出力に CSV が出ます。`--out <path>` で出力先を、`--since <YYYY-MM-DD>` で集計を始める日を指定できます。`--since` の既定は 2026-10-22 です。
 
 ## 注意
