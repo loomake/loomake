@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 import { existsSync, lstatSync, readFileSync, readdirSync, readlinkSync, statSync } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
+import { join, relative } from 'node:path';
 import { runExternal, UsageError } from '@loomake/kit';
-import { dirtyFiles, git } from './git.js';
+import { dirtyFiles, git, gitPlaces, readHead, type GitPlaces, type HeadRead } from './git.js';
 
 /** 不正な直し方として見つけたもの */
 export type GuardFinding = { file: string; reason: string };
@@ -105,12 +105,19 @@ export const APPROVAL_GUIDE = [
 ].join('\n');
 
 /** HEAD のコミットの SHA とブランチ名。コミットがなければ sha は空、detached なら branch は HEAD */
-export type HeadState = { sha: string; branch: string };
+export type HeadState = HeadRead;
 
-export const headState = (root: string, env: NodeJS.ProcessEnv): HeadState => ({
-  sha: runExternal('git', ['rev-parse', '--verify', '-q', 'HEAD'], { cwd: root, env }).stdout.trim(),
-  branch: runExternal('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: root, env }).stdout.trim(),
-});
+/** HEAD を 1 回の git rev-parse で読む（REQ-348）。境目ごとに読み直し、前の境目の値を使い回さない */
+export const headState = (root: string, env: NodeJS.ProcessEnv): HeadState => readHead(root, env);
+
+/**
+ * エンジンを呼ぶ前の HEAD と、git の設定とフックの状態を読む（REQ-126・REQ-198・REQ-348）。
+ * HEAD と設定ファイル・フックの場所は 1 回の git rev-parse で、設定は git config --list の 1 回で読む
+ */
+export function engineBaseline(root: string, env: NodeJS.ProcessEnv): { head: HeadState; internals: GitInternals } {
+  const { sha, branch, config, hooks } = readHead(root, env, true);
+  return { head: { sha, branch }, internals: gitInternals(root, env, { config, hooks }) };
+}
 
 /**
  * エンジンが自分でコミットしたかブランチを切り替えたかを、呼ぶ前の HEAD と比べて調べる（REQ-126）。
@@ -143,9 +150,6 @@ export function findEngineMove(
   return { reason: `エンジンが HEAD かブランチを変えました（${label(before)} → ${label(after)}）`, report };
 }
 
-/** git の設定ファイルとフックのディレクトリの場所。`--git-path hooks` は core.hooksPath を反映する */
-const gitPath = (root: string, env: NodeJS.ProcessEnv, name: string) => resolve(root, git(root, env, ['rev-parse', '--git-path', name]).trim());
-
 // シンボリックリンクはたどらない（REQ-204）。リンク先のないリンクでも落ちない
 const filesUnder = (dir: string): string[] =>
   readdirSync(dir, { withFileTypes: true })
@@ -163,9 +167,8 @@ const entryDigest = (file: string) => {
 export type GitInternals = { config: string; hooks: string; digest: string };
 
 /** git の設定ファイルの中身と、フックのディレクトリのファイルの相対パスと中身から、比べるための SHA-256 を作る */
-export function gitInternals(root: string, env: NodeJS.ProcessEnv, places?: { config: string; hooks: string }): GitInternals {
-  const config = places?.config ?? gitPath(root, env, 'config');
-  const hooks = places?.hooks ?? gitPath(root, env, 'hooks');
+export function gitInternals(root: string, env: NodeJS.ProcessEnv, places?: GitPlaces): GitInternals {
+  const { config, hooks } = places ?? gitPlaces(root, env);
   const hash = createHash('sha256');
   hash.update(existsSync(config) ? readFileSync(config) : '');
   // include の先・利用者全体・システム全体・worktree の設定も含めて、git が実際に使う設定を比べる（REQ-204）
