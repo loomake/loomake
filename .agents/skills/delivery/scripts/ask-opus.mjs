@@ -120,15 +120,24 @@ function rejectPriorAccess(events, prior, cwd) {
   }
 }
 
+function evaluatePriorPhase(events, sessionId) {
+  const evidence = evaluateEvents(events.map((event) => JSON.stringify(event)).join('\n'), sessionId);
+  const init = events.findIndex((event) => event?.type === 'system' && event.subtype === 'init');
+  const assistant = events.findIndex((event) => event?.type === 'assistant');
+  if (init > assistant) throw new Error('Claudeの開始情報より前に応答があります。');
+  return evidence;
+}
+
 export function evaluatePriorEvents(raw, sessionId) {
   const events = priorEvents(raw, sessionId);
   const ends = events.flatMap((event, index) => event?.type === 'result' ? [index] : []);
   if (ends.length !== 2) throw new Error('Claudeの2段階の最終結果が不足・重複しています。');
-  const encode = (items) => items.map((event) => JSON.stringify(event)).join('\n');
-  const first = evaluateEvents(encode(events.slice(0, ends[0] + 1)), sessionId);
-  const second = evaluateEvents(encode(events.slice(ends[0] + 1)), sessionId);
+  const first = evaluatePriorPhase(events.slice(0, ends[0] + 1), sessionId);
+  const second = evaluatePriorPhase(events.slice(ends[0] + 1), sessionId);
   const inits = events.filter((event) => event?.type === 'system' && event.subtype === 'init');
-  if (inits[0].model !== inits[1].model || JSON.stringify([...first.tools].sort()) !== JSON.stringify([...second.tools].sort())) {
+  if (inits[0].model !== inits[1].model ||
+      JSON.stringify([...first.responseModels].sort()) !== JSON.stringify([...second.responseModels].sort()) ||
+      JSON.stringify([...first.tools].sort()) !== JSON.stringify([...second.tools].sort())) {
     throw new Error('Claudeの2段階でモデルまたは実行ツールが変わりました。');
   }
   return { ...second, independentResult: first.result, turns: 2 };
@@ -335,8 +344,9 @@ export async function askOpus(input, options = {}) {
     const invocation = prior ? {
       first: prompt,
       onFirstResult: (raw) => {
-        const first = evaluateEvents(raw, sessionId);
-        rejectPriorAccess(priorEvents(raw, sessionId), prior, cwd);
+        const events = priorEvents(raw, sessionId);
+        const first = evaluatePriorPhase(events, sessionId);
+        rejectPriorAccess(events, prior, cwd);
         checkTree(cwd, input.head);
         try { saveIndependentView(dir, first.result, options.syncIndependentView); }
         catch { throw new Error('独立見解を保存できませんでした。'); }

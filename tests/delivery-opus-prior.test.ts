@@ -30,6 +30,7 @@ for await(const line of createInterface({input:process.stdin})) {
   if(mode==='save-fail') mkdirSync(join(dir,'independent-view.md'));
   if(mode==='dirty') writeFileSync('unexpected.txt','dirty');
   const events=[init(),assistant(),result(view)];
+  if(mode==='first-order') [events[0],events[1]]=[events[1],events[0]];
   if(mode==='first-error') events[2].is_error=true;
   if(mode==='first-denied') events[2].permission_denials=[{tool_name:'Read'}];
   if(mode==='first-model') events[1].message.model='claude-sonnet-test';
@@ -55,6 +56,8 @@ for await(const line of createInterface({input:process.stdin})) {
   writeFileSync('.loomake/second-prompt',input.message.content);
   if(mode==='timeout-second') {setInterval(()=>{},1000);continue;}
   const events=[init(),assistant(),result('比較と修正方針です。')];
+  if(mode==='second-order') [events[0],events[1]]=[events[1],events[0]];
+  if(mode==='second-opus-model') events[1].message.model='claude-opus-other';
   if(mode==='second-init-model') events[0].model='claude-opus-other';
   if(mode==='second-tools') events[0].tools=['Read'];
   if(mode==='second-error') events[2].is_error=true;
@@ -129,7 +132,7 @@ describe('独立見解の保存後に同じOpusへ先行仮説を渡す', () => 
 
   it.each([
     ['prior-first', '先行仮説'], ['windows-prior-directory', '先行仮説'], ['glob-leak', '先行仮説'], ['first-error', '成功結果'], ['first-denied', '権限拒否'],
-    ['first-model', 'Opus以外'], ['first-session', 'セッション'], ['first-usage', 'modelUsage'], ['save-fail', '保存'],
+    ['first-model', 'Opus以外'], ['first-order', '開始情報'], ['first-session', 'セッション'], ['first-usage', 'modelUsage'], ['save-fail', '保存'],
     ['dirty', '未コミット'], ['invalid-json', 'JSON'],
   ])('%s: 第一段階で失敗したら仮説を送らない', async (mode, reason) => {
     await withPrior(mode, async ({ cwd, input, options }) => {
@@ -150,7 +153,7 @@ describe('独立見解の保存後に同じOpusへ先行仮説を渡す', () => 
     });
   });
 
-  it.each(['second-error', 'second-denied', 'second-model', 'second-init-model', 'second-tools', 'second-session', 'second-usage', 'extra-result', 'one-result'])('%s: 二段階全体が成功しなければ未実施にする', async (mode) => {
+  it.each(['second-error', 'second-denied', 'second-model', 'second-opus-model', 'second-order', 'second-init-model', 'second-tools', 'second-session', 'second-usage', 'extra-result', 'one-result'])('%s: 二段階全体が成功しなければ未実施にする', async (mode) => {
     await withPrior(mode, async ({ input, options }) => {
       expect(await askOpus(input, options)).toMatchObject({ ok: false, status: '未実施' });
     });
@@ -185,6 +188,20 @@ describe('独立見解の保存後に同じOpusへ先行仮説を渡す', () => 
       expect(await askOpus({ ...input, prior: path }, options)).toMatchObject({ ok: false });
       expect(existsSync(join(cwd, '.loomake/called'))).toBe(false);
     });
+  });
+
+  it.each(['first', 'second'])('%s段階でassistantより後のinitを拒む', (phase) => {
+    const id = 'session';
+    const turn = (text: string) => [
+      { type: 'system', subtype: 'init', session_id: id, model: 'claude-opus-test', tools: ['Read'], mcp_servers: [] },
+      { type: 'assistant', session_id: id, message: { model: 'claude-opus-test' } },
+      { type: 'result', session_id: id, subtype: 'success', is_error: false, result: text, permission_denials: [], modelUsage: { 'claude-opus-test': {} } },
+    ];
+    const first = turn('first');
+    const second = turn('second');
+    const target = phase === 'first' ? first : second;
+    [target[0], target[1]] = [target[1], target[0]];
+    expect(() => evaluatePriorEvents([...first, ...second].map(event => JSON.stringify(event)).join('\n'), id)).toThrow('開始情報');
   });
 
   it('独立評価の単一段階検証を各段階に掛け、余分なinitを受理しない', () => {
