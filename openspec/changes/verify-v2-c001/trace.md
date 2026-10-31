@@ -20,20 +20,16 @@ Issue参照：[契約 #61](https://github.com/loomake/loomake/issues/61)、[判�
 
 | ID | 出典 | 種別 | 要約（原文に忠実に） | 状態 | 反映先 |
 |---|---|---|---|---|---|
-| REQ-135 | 現行cli「ヘルプと版」・5回目レビュー軽微2 | 既存変更予定 | 本文の全オプション説明義務は保持し、既存help Scenarioへscopeを追加するMODIFIEDを、承認済みR05 Aに従いtask 1.2で確定する | 確認待ち | 子change `verify-v2-scope` の specs/cli/spec.md |
 | REQ-136 | 現行req-to-openspec-skill「完了ゲートのタスクの印」・5回目レビュー中1 | 既存変更予定 | R06 A承認を受け、task 1.2で明示localへのMODIFIEDを確定し、印と既存Scenarioを保持して両雛形を同期する | 確認待ち | tasks.md 1.2（確定）・5.1（反映/試験） |
-| REQ-323 | 現行reference-docs（PR155受入済み）・4回目レビュー中1 | 既存変更 | 未確定契約を追加しないMUSTをCLI生成単独の範囲へ限定し、改版後の共通定義へ従う | 確認待ち | 子change `verify-v2-scope` の specs/reference-docs/spec.md |
 | REQ-036 | 現行verify「仕様ゲートの警告」・追加レビュー重大1 | 既存変更 | spec-onlyの案内PASS/0とdoneの不足/1を分けるR08 B承認を規範へ反映する | 確認待ち | specs/verify/spec.md |
 | REQ-037 | 現行verify「openspec validateの実行」・追加レビュー重大1 | 既存変更 | auto時CLI不在はlocal理由NA、ci不足とするR08 B承認を規範へ反映する | 確認待ち | specs/verify/spec.md |
 | REQ-038 | 現行verify「完了ゲート」・3回目レビュー中2 | 既存変更 | doneの確認待ちは036と同じ不足/要判断に統一。未完了tasksと実施済み失敗はFAIL | 確認待ち | specs/verify/spec.md |
-| REQ-050 | 現行verify「性能」・3回目レビュー中1 | 既存変更 | localのskip不足1とレポート解析を含む3秒条件の試験案。R05 Aの方針承認済み。具体assertion差分の承認は別途必要 | 確認待ち | 子change `verify-v2-scope` の specs/verify/spec.md |
 | REQ-114 | 現行run-pr・3回目レビュー軽微2 | 既存変更 | local完了からDraft PRへ進み、明示localのv2記録を先に作る | 確認待ち | specs/run-pr/spec.md |
 | REQ-115 | 現行run-pr・3回目レビュー軽微2 | 既存変更 | PR本文はlocal完了0と最終CI未確認を区別する | 確認待ち | specs/run-pr/spec.md |
 | REQ-203 | 現行trace-agreement・3回目レビュー軽微1 | 既存変更 | 仮定承認後に未承認の案内/不足へ出ない用語へ追従する | 確認待ち | specs/trace-agreement/spec.md |
 | REQ-039 | 現行verify「品質コマンドの実行」・追加レビュー重大1 | 既存変更 | 未知キーのwarnを理由付きPASSの案内へ移し、コマンド失敗は保つ | 確認待ち | specs/verify/spec.md |
 | REQ-191 | 現行verify「品質コマンドを省いたことの表示」・追加レビュー重大2 | 既存変更 | skip-commandsをchecksの不足として1にし、未実施と再実行を案内する候補 | 確認待ち | specs/verify/spec.md |
 | REQ-066 | 現行trace-record「証拠の記録」、WBS W1-5 | 既存変更 | v2結果と同じ終了コードで追記記録する。未コミット・change不正の停止は保持する | 確認待ち | specs/trace-record/spec.md |
-| REQ-312 | 要件7.3・FR-12、現行REQ-042、WBS W1-5 | 機能 | bare verify維持はR01 A採用。scope既定とR06 A/R08 BのDoD/警告分類の規範反映を確認する | 確認待ち | 子change `verify-v2-scope` の specs/verify/spec.md |
 | REQ-319 | WBS5章C-001正常/不正/不足、AGENTS DoD、Issue61調査 | 受入 | CLI/APIは正常PASS・不正aborted・不足を区別し、古い結果から合格を作らない | 確認待ち | specs/verify/spec.md |
 
 R01〜10の方針回答を記録した。R05/R06はA、R08はBが追加承認された。REQ-310・313以外の確認待ちは人の選択回答待ちではなく、task 1.2での採用した規範文・MODIFIED・台帳の整合確認待ちを指す。今回は承認記録だけを更新し、規範や実装が未完了の行を反映済みにしない。文書の反映済みも製品実装やDoD達成を意味しない。

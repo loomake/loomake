@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { writeFileSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { UsageError, runVerify, verifyExitCode } from '@loomake/kit';
 import * as trace from '@loomake/trace';
@@ -95,6 +95,26 @@ describe('verify の --scope', () => {
       expect(JSON.parse(local.stdout)).toMatchObject({ scope: 'local', change: null });
       expect(() => runVerify({ root, scope: 'ci' })).toThrow(UsageError);
       expect(runVerify({ root, scope: 'local' }).scope).toBe('local');
+    });
+  });
+});
+
+describe('品質コマンドは実行しない', () => {
+  it('[REQ-312] spec-only の local と、change なしの明示 ci（使い方の誤り）では、品質コマンドを動かさない', async () => {
+    const marker = 'ran.txt';
+    const command = `node -e "require('fs').writeFileSync('${marker}','x')"`;
+    await withProject({ config: { openspecValidate: false, commands: { test: command, lint: command } } }, async (root) => {
+      const spec = await run(root, undefined, 'verify', '--change', CHANGE, '--spec-only', '--scope', 'local', '--json');
+      expect(JSON.parse(spec.stdout).scope).toBe('local');
+      expect(existsSync(join(root, marker))).toBe(false);
+      const ci = await run(root, undefined, 'verify', '--scope', 'ci', '--json');
+      expect(ci.code).toBe(2);
+      expect(existsSync(join(root, marker))).toBe(false);
+      expect(() => runVerify({ root, scope: 'ci' })).toThrow(UsageError);
+      expect(existsSync(join(root, marker))).toBe(false);
+      // 対照：change なしの local は品質コマンドを動かすので、痕跡が残る
+      await run(root, undefined, 'verify', '--scope', 'local', '--json');
+      expect(existsSync(join(root, marker))).toBe(true);
     });
   });
 });
