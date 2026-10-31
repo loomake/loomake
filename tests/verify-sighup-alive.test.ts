@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { describe, expect, it, vi } from 'vitest';
-import { createProcessAlive } from '../scripts/process-alive.mjs';
+import { createProcessAlive, createProcessIdentityRecorder } from '../scripts/process-alive.mjs';
 
 const error = (code: string) => Object.assign(new Error(code), { code });
 const psResult = (stdout: string | null, status: number | null = 0) => ({ stdout, status });
@@ -87,5 +87,51 @@ describe('SIGHUP smoke の生存確認', () => {
     expect([null, undefined]).toContain(result.stdout);
     expect(result.output).toBe(null);
     expect(result.status).toBe(null);
+  });
+});
+
+
+describe('SIGHUP smoke の identity 記録', () => {
+  it('macOS の両時点に lstart と command を残し、PID 再利用の差を比較できる', () => {
+    let failed = false;
+    const recorder = createProcessIdentityRecorder({ pids: () => [123, 456], platform: 'darwin', ps: () => psResult(failed ? '1 123 S Sun Nov  1 01:00:01 2026 replacement\n' : '1 123 S Sun Nov  1 01:00:00 2026 fixture\n') });
+    recorder.capture('ready');
+    failed = true;
+    recorder.capture('failure');
+    expect(recorder.identities).toHaveLength(4);
+    expect(recorder.identities.map(({ pid, phase, lstart, command }) => ({ pid, phase, lstart, command }))).toEqual([
+      { pid: 123, phase: 'ready', lstart: 'Sun Nov  1 01:00:00 2026', command: 'fixture' },
+      { pid: 456, phase: 'ready', lstart: 'Sun Nov  1 01:00:00 2026', command: 'fixture' },
+      { pid: 123, phase: 'failure', lstart: 'Sun Nov  1 01:00:01 2026', command: 'replacement' },
+      { pid: 456, phase: 'failure', lstart: 'Sun Nov  1 01:00:01 2026', command: 'replacement' },
+    ]);
+  });
+
+  it('2 PID・2時点を超えて採取せず、長い command と raw の省略を記録する', () => {
+    let owned = [123, 456, 789];
+    const recorder = createProcessIdentityRecorder({ pids: () => owned, platform: 'darwin', ps: () => psResult(`1 123 S Sun Nov  1 01:00:00 2026 ${'x'.repeat(5000)}`) });
+    recorder.capture('ready');
+    owned = [999];
+    for (let i = 0; i < 20; i++) { recorder.capture('ready'); recorder.capture('failure'); }
+    expect(recorder.identities.map(({ pid }) => pid)).toEqual([123, 456, 123, 456]);
+    expect(recorder.identities.every((entry) => entry.command?.length === 4096 && entry.raw?.length === 4096 && entry.commandTruncated && entry.rawTruncated)).toBe(true);
+  });
+
+  it('失敗時の診断エラーは記録して返し、元の例外を上書きしない', () => {
+    let failed = false;
+    const recorder = createProcessIdentityRecorder({ pids: () => [123, 456], platform: 'darwin', ps: () => failed ? { ...psResult(null, 1), error: error('EACCES') } : psResult('1 123 S Sun Nov  1 01:00:00 2026 fixture') });
+    recorder.capture('ready');
+    failed = true;
+    expect(() => recorder.capture('failure')).not.toThrow();
+    expect(recorder.identities.slice(2)).toMatchObject([{ pid: 123, phase: 'failure', error: 'EACCES' }, { pid: 456, phase: 'failure', error: 'EACCES' }]);
+  });
+
+  it('Linux の両時点に開始tickとcommandを残す', () => {
+    let failed = false;
+    const recorder = createProcessIdentityRecorder({ pids: () => [123], platform: 'linux', readStat: () => `123 (${failed ? 'replacement' : 'fixture'}) S 1 123 123 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ${failed ? '999' : '100'}` });
+    recorder.capture('ready');
+    failed = true;
+    recorder.capture('failure');
+    expect(recorder.identities).toMatchObject([{ pid: 123, phase: 'ready', command: 'fixture', starttime: '100' }, { pid: 123, phase: 'failure', command: 'replacement', starttime: '999' }]);
   });
 });
