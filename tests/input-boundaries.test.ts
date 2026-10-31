@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, symlinkSync, truncateSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { loadConfig, runVerify, UsageError } from '../packages/kit/src/index.js';
+import { loadConfig, loadVerifyQualitySchema, runVerify, UsageError } from '../packages/kit/src/index.js';
 import { readDocuments, runReport } from '../packages/trace/src/index.js';
 import { buildPrompt, runRun } from '../packages/runner/src/index.js';
 import { prBody } from '../packages/runner/src/pr.js';
 import { withProject } from '../packages/kit/test/project.js';
 import { makeRepo, CHANGE } from '../packages/runner/test/helpers.js';
 
+// quality.yaml のスキーマ（zod）は呼び出し側が読んで渡す（REQ-319）
+const qualitySchema = await loadVerifyQualitySchema();
 const tooLarge = ' '.repeat(1024 * 1024 + 1);
 const directoryLink = (target: string, link: string) => symlinkSync(target, link, process.platform === 'win32' ? 'junction' : 'dir');
 const changeOf = (root: string) => join(root, 'openspec/changes/c1');
@@ -22,9 +24,9 @@ describe('コマンドの入力予算', () => {
     expect(() => loadConfig(root)).toThrow(/上限.*1048576/);
   }));
 
-  it.each(['trace.md', 'tasks.md', 'specs/x/spec.md'])('[REQ-172] verifyの%sを文書の上限で止める', (name) => withProject({}, (root) => {
+  it.each(['trace.md', 'tasks.md', 'specs/x/spec.md'])('[REQ-172] verifyの%sを文書の上限で止める', (name) => withProject({ quality: true }, (root) => {
     appendFileSync(join(changeOf(root), name), tooLarge);
-    expect(() => runVerify({ root, changeId: 'c1', gate: name === 'tasks.md' ? 'done' : 'spec-only', skipCommands: true })).toThrow(/上限.*1048576/);
+    expect(() => runVerify({ root, qualitySchema, changeId: 'c1', gate: name === 'tasks.md' ? 'done' : 'spec-only', skipCommands: true })).toThrow(/上限.*1048576/);
   }));
 
   it('[REQ-172] specsの循環リンクをverifyとtraceとpromptで同じUsageErrorにする', () => withProject({}, (root) => {
@@ -107,8 +109,8 @@ describe('コマンドの入力予算', () => {
 
   // --skip-commands では前回のレポートを読まないので（REQ-040）、今回の test コマンドが上限を超えるレポートを書き出す
   const BIG_REPORT = `node -e "const f=require('fs');f.mkdirSync('.loomake',{recursive:true});f.writeFileSync('.loomake/test-report.json','');f.truncateSync('.loomake/test-report.json',${64 * 1024 * 1024 + 1})"`;
-  it('[REQ-172] JSONのテストレポートは64MiBを超えたら解析しない', () => withProject({ config: { openspecValidate: false, commands: { test: BIG_REPORT } } }, (root) => {
-    expect(() => runVerify({ root, changeId: 'c1', gate: 'done' })).toThrow(/上限.*67108864/);
+  it('[REQ-172] JSONのテストレポートは64MiBを超えたら解析しない', () => withProject({ config: { openspecValidate: false, commands: { test: BIG_REPORT } }, quality: true }, (root) => {
+    expect(() => runVerify({ root, qualitySchema, changeId: 'c1', gate: 'done' })).toThrow(/上限.*67108864/);
   }));
 
   it('[REQ-172] JSONの証拠も64MiBを超えたら報告しない', () => withProject({}, (root) => {

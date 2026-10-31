@@ -3,7 +3,7 @@ import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { copyFixture, prepare } from './package-smoke.mjs';
+import { copyFixture, placeCiQuality, prepare } from './package-smoke.mjs';
 import { profileEvent } from './test-phase-profile.mjs';
 
 const win = process.platform === 'win32';
@@ -52,8 +52,9 @@ export function runJourneys(target) {
       writeFileSync(join(project, 'loomake.config.json'), JSON.stringify({ openspecValidate: false, commands: { lint: 'node --check test-command.mjs', test: 'node test-command.mjs' } }));
       writeFileSync(join(project, '.gitignore'), 'node_modules/\n.loomake/*\n!.loomake/evidence/\n');
       const assertions = Array.from({ length: 25 }, (_, index) => ({ fullName: `[REQ-${String(index + 1).padStart(3, '0')}] fixture`, status: 'passed' }));
-      const script = `import { mkdirSync, writeFileSync } from 'node:fs';\nimport { resolve } from 'node:path';\nmkdirSync('.loomake', { recursive: true });\nwriteFileSync('.loomake/test-report.json', JSON.stringify({ testResults: [{ name: resolve('tests/fixture.test.ts'), assertionResults: ${JSON.stringify(assertions)} }] }));\n`;
+      const script = `import { mkdirSync, writeFileSync } from 'node:fs';\nimport { resolve } from 'node:path';\nmkdirSync('.loomake', { recursive: true });\nwriteFileSync('.loomake/test-report.json', JSON.stringify({ testResults: [{ name: resolve('tests/fixture.test.ts'), assertionResults: ${JSON.stringify(assertions)} }], startTime: Date.now() }));\n`;
       writeFileSync(join(project, 'test-command.mjs'), script);
+      placeCiQuality(project);
       for (const args of [['init', '-q', '-b', 'main'], ['config', 'user.name', 'journey'], ['config', 'user.email', 'journey@example.invalid'], ['add', '-A'], ['commit', '-qm', 'trial setup']]) execute(current, 'git', args, project);
       return script;
     };
@@ -100,7 +101,7 @@ export function runJourneys(target) {
     assert.ok(failed.run(['verify', '--change', 'sample', '--spec-only'], 1).includes('Q-01'));
     writeFileSync(traceFile, readFileSync(traceFile, 'utf8').replace('| yes | |', '| yes | 試験用の回答 |'));
     failed.run(['verify', '--change', 'sample', '--spec-only']);
-    writeFileSync(join(failed.project, 'test-command.mjs'), "import { mkdirSync, writeFileSync } from 'node:fs'; mkdirSync('.loomake', { recursive: true }); writeFileSync('.loomake/test-report.json', '{\"testResults\":[]}');\n");
+    writeFileSync(join(failed.project, 'test-command.mjs'), "import { mkdirSync, writeFileSync } from 'node:fs'; mkdirSync('.loomake', { recursive: true }); writeFileSync('.loomake/test-report.json', JSON.stringify({ testResults: [], startTime: Date.now() }));\n");
     assert.ok(failed.run(['verify', '--change', 'sample', '--done'], 1).includes('テストが無い要件'));
     writeFileSync(join(failed.project, 'test-command.mjs'), originalScript);
     failed.run(['verify', '--change', 'sample', '--done']);

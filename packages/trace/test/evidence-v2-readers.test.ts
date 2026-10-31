@@ -1,10 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { loadVerifyQualitySchema } from '@loomake/kit';
 import { buildReport, evidenceProblem, runRecord } from '@loomake/trace';
 import { makeRepo, CHANGE } from '../../runner/test/helpers.js';
 
 vi.setConfig({ testTimeout: 60_000 });
+
+// quality.yaml のスキーマ（zod）は呼び出し側が読んで渡す（REQ-319）
+const qualitySchema = await loadVerifyQualitySchema();
 
 const checks = [{ id: 'command: test', result: 'PASS', reason: '', evidence: [] }];
 const summary = { fail: 0, insufficient: 0, not_applicable: 0, evaluated: 1 };
@@ -15,10 +19,10 @@ delete localDone.verdict;
 
 // いまの書き出し（Evidence 1）で記録し、その記録を Evidence 2 に置き換えて読む
 function withRecorded(fn: (root: string, evidence: Record<string, unknown>, file: string) => void) {
-  const repo = makeRepo({ tasks: '## 1. 実装\n- [x] 1.1 完了（REQ-012）\n' });
+  const repo = makeRepo({ tasks: '## 1. 実装\n- [x] 1.1 完了（REQ-012）\n', quality: true });
   try {
     repo.write('impl.txt', '実装\n'); repo.git('add', 'impl.txt'); repo.git('commit', '-q', '-m', 'implementation');
-    expect(runRecord({ root: repo.root, changeId: CHANGE, stdout: () => {} })).toBe(0);
+    expect(runRecord({ root: repo.root, qualitySchema, changeId: CHANGE, stdout: () => {} })).toBe(0);
     const dir = join(repo.root, '.loomake/evidence', CHANGE);
     const file = join(dir, readdirSync(dir)[0]);
     fn(repo.root, JSON.parse(readFileSync(file, 'utf8')), file);

@@ -2,7 +2,7 @@
 import { existsSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { parseTasks } from '@loomake/core';
-import { UsageError, assertChangeId, formatVerifyResult, isAbortedResult, isVerifyResultV2, loadConfig, runVerify, verifyExitCode, createInputReader } from '@loomake/kit';
+import { UsageError, assertChangeId, formatVerifyResult, isAbortedResult, loadVerifyQualitySchema, isVerifyResultV2, loadConfig, runVerify, verifyExitCode, createInputReader } from '@loomake/kit';
 import type { LegacyVerifyResult, VerifyResult } from '@loomake/core';
 import { DEFAULT_ALLOWED_DOMAINS, assertEngineAvailable } from '../engine.js';
 import { ghLoggedIn } from '../pr.js';
@@ -77,7 +77,7 @@ export async function prepare(options: RunOptions): Promise<RunContext | number>
   // いまの書き出しは 2.0.0。履歴の 1.0.0 も読む
   let specGate: LegacyVerifyResult | VerifyResult;
   try {
-    specGate = runVerify({ root, changeId, gate: 'spec-only', progress });
+    specGate = runVerify({ root, changeId, gate: 'spec-only', progress, qualitySchema: await loadVerifyQualitySchema() });
   } catch (error) {
     switchBack();
     throw error;

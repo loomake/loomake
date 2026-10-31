@@ -4,12 +4,16 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { loadVerifyQualitySchema } from '@loomake/kit';
 import { runRecord, type Evidence } from '@loomake/trace';
 import { main } from '../../cli/src/main.js';
-import { CHANGE, reportJson, specMd, traceMd } from '../../kit/test/project.js';
+import { CHANGE, placeCiQuality, reportJson, specMd, traceMd } from '../../kit/test/project.js';
 
 // git・node・verify のコマンドを何度も起動するので、Windows では 1 件に 5 秒を超えることがある（runner のテストと同じ上限にする）
 vi.setConfig({ testTimeout: 60_000 });
+
+// quality.yaml のスキーマ（zod）は呼び出し側が読んで渡す（REQ-319）
+const qualitySchema = await loadVerifyQualitySchema();
 
 const gitRun = (root: string, ...args: string[]) => {
   const r = spawnSync('git', ['-c', 'user.name=loomake-test', '-c', 'user.email=test@example.com', ...args], { cwd: root, encoding: 'utf8' });
@@ -19,7 +23,9 @@ const gitRun = (root: string, ...args: string[]) => {
 
 /**
  * 一時ディレクトリに、change c1 を持つ git のリポジトリを作ってコミットする。
- * test コマンドは、passed が true なら [REQ-012] の合格したテストを、false なら何も含まないレポートを書き出す
+ * test コマンドは、passed が true なら [REQ-012] の合格したテストを、false なら何も含まないレポートを書き出す。
+ * ci の完了ゲートに要る quality.yaml と node_modules/vitest も置く（REQ-319）。node_modules/ は .git/info/exclude で除き、
+ * 試験が .gitignore を書き換えても作業ツリーがきれいなままになるようにする
  */
 function makeRepo({ passed = true } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'loomake-trace-'));
@@ -28,7 +34,7 @@ function makeRepo({ passed = true } = {}) {
     writeFileSync(join(root, p), text);
   };
   const report = reportJson(root, passed ? { 'tests/x.test.ts': [['[REQ-012] 確かめる', 'passed']] } : {});
-  write('write-report.mjs', `import { mkdirSync, writeFileSync } from 'node:fs';\nmkdirSync('.loomake', { recursive: true });\nwriteFileSync('.loomake/test-report.json', ${JSON.stringify(report)});\n`);
+  write('write-report.mjs', `import { mkdirSync, writeFileSync } from 'node:fs';\nmkdirSync('.loomake', { recursive: true });\nwriteFileSync('.loomake/test-report.json', JSON.stringify({ ...JSON.parse(${JSON.stringify(report)}), startTime: Date.now() }));\n`);
   write('loomake.config.json', JSON.stringify({ openspecValidate: false, commands: { test: 'node write-report.mjs' } }));
   write('.gitignore', '.loomake/test-report.json\n*.log\n');
   write(`openspec/changes/${CHANGE}/proposal.md`, `# ${CHANGE}\n\n## Why\n検査用。\n`);
@@ -36,6 +42,8 @@ function makeRepo({ passed = true } = {}) {
   write(`openspec/changes/${CHANGE}/trace.md`, traceMd());
   write(`openspec/changes/${CHANGE}/specs/x/spec.md`, specMd());
   gitRun(root, 'init', '-q');
+  placeCiQuality(root);
+  writeFileSync(join(root, '.git', 'info', 'exclude'), 'node_modules/\n');
   gitRun(root, 'add', '-A');
   gitRun(root, 'commit', '-q', '-m', 'init');
   return { root, write, cleanup: () => rmSync(root, { recursive: true, force: true }) };
@@ -43,7 +51,7 @@ function makeRepo({ passed = true } = {}) {
 
 function record(root: string, now = new Date('2026-10-23T01:02:03.456Z')) {
   const out: string[] = [];
-  const code = runRecord({ root, changeId: CHANGE, stdout: (t) => out.push(t), now: () => now });
+  const code = runRecord({ root, qualitySchema, changeId: CHANGE, stdout: (t) => out.push(t), now: () => now });
   return { code, stdout: out.join('\n') };
 }
 
@@ -275,7 +283,7 @@ describe('検査のあいだの変更', () => {
     try {
       const before = gitRun(repo.root, 'rev-parse', 'HEAD');
       const out: string[] = [];
-      const code = runRecord({ root: repo.root, changeId: CHANGE, stdout: (t) => out.push(t), onVerify: () => {
+      const code = runRecord({ root: repo.root, qualitySchema, changeId: CHANGE, stdout: (t) => out.push(t), onVerify: () => {
         gitRun(repo.root, 'commit', '--allow-empty', '-q', '-m', '検証中の別コミット');
       } });
       expect(gitRun(repo.root, 'rev-parse', 'HEAD')).not.toBe(before);
@@ -297,7 +305,7 @@ describe('検査のあいだの変更', () => {
       gitRun(repo.root, 'commit', '-q', '-am', 'traceをGitの除外対象にする');
       const before = gitRun(repo.root, 'rev-parse', 'HEAD');
       const out: string[] = [];
-      const code = runRecord({ root: repo.root, changeId: CHANGE, stdout: (t) => out.push(t), onVerify: () => {
+      const code = runRecord({ root: repo.root, qualitySchema, changeId: CHANGE, stdout: (t) => out.push(t), onVerify: () => {
         repo.write(trace, `${traceMd()}\n検証後の追記\n`);
       } });
       expect(gitRun(repo.root, 'rev-parse', 'HEAD')).toBe(before);

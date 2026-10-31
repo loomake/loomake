@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { CHANGE_ID, RuntimeFailure, UsageError, formatVerifyResult, runDoctor, runInit, runVerify, verifyAbortedResult, verifyExitCode } from '@loomake/kit';
+import { CHANGE_ID, RuntimeFailure, UsageError, formatVerifyResult, loadVerifyQualitySchema, runDoctor, runInit, runVerify, verifyAbortedResult, verifyExitCode } from '@loomake/kit';
 import { runRun } from '@loomake/runner';
 import { runAgreement, runRecord, runReport } from '@loomake/trace';
 import { COMMANDS, HELP, SCOPES, USAGE, commandDefinition, commandHelp, didYouMean, isHelp, isVersion, optionSpec, parseOptions, traceOperation, type Command } from './args.js';
@@ -49,7 +49,7 @@ export async function main(argv: string[], io: Io): Promise<number> {
     if (cmd === 'init') return await init(args, io);
     if (cmd === 'run') return await run(args, io);
     if (cmd === 'doctor') return doctor(args, io);
-    return cmd === 'verify' ? verify(args, io) : trace(args, io);
+    return cmd === 'verify' ? await verify(args, io) : await trace(args, io);
   } catch (e) {
     // 実行時の失敗は使い方を表示せず、終了コード 3 で使い方の誤りと区別する（REQ-192）
     if (e instanceof RuntimeFailure) {
@@ -98,7 +98,7 @@ const standaloneJson = (args: string[]) => args.some((arg, i) => arg === '--json
  * verify の結果を 2.0.0 で出し、終了コードを verifyExitCode で決める（REQ-311・REQ-041）。
  * --json のときは、使い方・設定の誤りと実行時の失敗も aborted の JSON を標準出力に出す。診断は標準エラーに出す
  */
-function verify(args: string[], io: Io): number {
+async function verify(args: string[], io: Io): Promise<number> {
   const json = standaloneJson(args);
   let changeId: string | undefined;
   let result;
@@ -111,9 +111,12 @@ function verify(args: string[], io: Io): number {
     if (specOnly && done) throw new UsageError('--spec-only と --done は同時に指定できません');
     if (changeId && !specOnly && !done) throw new UsageError('--change を指定するときは --spec-only か --done を付けてください');
 
+    // quality.yaml のスキーマ（zod）は、change を検査するときだけ読む（REQ-284・REQ-319）
+    const qualitySchema = changeId ? await loadVerifyQualitySchema() : undefined;
     result = runVerify({
       root: io.cwd,
       changeId,
+      qualitySchema,
       gate: done ? 'done' : 'spec-only',
       skipCommands: flags.has('--skip-commands'),
       scope: scopeOption(values),
@@ -133,7 +136,7 @@ function verify(args: string[], io: Io): number {
   return verifyExitCode(result);
 }
 
-function trace(args: string[], io: Io): number {
+async function trace(args: string[], io: Io): Promise<number> {
   const [sub, ...rest] = args;
   const subs = commandDefinition('trace').operations?.map((operation) => operation.name) ?? [];
   if (sub === 'answer' || sub === 'approve') return agreement(sub, rest, io);
@@ -146,7 +149,7 @@ function trace(args: string[], io: Io): number {
   const format = values.get('--format');
   if (!changeId) throw new UsageError('--change <id> が必要です');
   // verify の進捗は標準エラーに出す（verify と同じ）
-  if (sub === 'record') return runRecord({ root: io.cwd, changeId, scope, stdout: io.stdout, progress: io.stderr });
+  if (sub === 'record') return runRecord({ root: io.cwd, changeId, scope, qualitySchema: await loadVerifyQualitySchema(), stdout: io.stdout, progress: io.stderr });
   // 初版は Markdown と JSON だけ。省いたら Markdown
   if (format === 'html') throw new UsageError('HTML の形式は次の版で対応します。いまは md か json を指定してください');
   if (format !== undefined && format !== 'md' && format !== 'json') throw new UsageError(`--format は md か json にしてください：${format}`);
