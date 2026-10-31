@@ -1,5 +1,7 @@
 # 速度対策1-1の共有build
 
+以下は当時の作業記録。PR179先行受入と旧レビュー条件に関する現行決定は末尾の再編反映を優先する。
+
 1. `split-slow-ci-checks` task2.2を実装・検証した。rootからpackage/slowへ配布物を共有し、inject欠落を拒否する。引継ぎと未完了範囲は [Issue121](https://github.com/loomake/loomake/issues/121#issuecomment-6533973395) に記録した。
 2. spec-only、型、lint、共有準備5試験、実配布物12試験が成功。実pack失敗時のcleanup、fixtureの実tsc失敗と元例外保持、実watch再build・inject更新・正常closeを確認した。
 3. case分割・全体done・coverage・3OS実測・ruleset操作は未完了。独立依存の本体差分は0、生成キャッシュ6件の差分は保存した。初回のVite例外表示とwatch終了操作の失敗も保持する。
@@ -29,3 +31,8 @@
 2. 計画の整合であり、verify・CI・テスト・設定・規則は変更していない。元の実装15行と必須受入3行をbyteで照合し、strict/spec-onlyを再確認する。
 3. 実装は5/15、必須受入3件はいずれも未実施。タスク数の変更を完成範囲の縮小や完了とは扱わない。最終Opusは全重大度ゼロ、同headの必須CIと自動Codex、人のnode20-only操作、マージとsync/archiveまで必要である。
 4. PR179の受入後統合と残10file設計・3OS実測へ進む。計測表は実装・マージまで進行中、最終レビュー未実施を維持する。
+
+1. `split-slow-ci-checks`のtasks3.1・5.3とdesign/traceを再編計画へ整合した。[PR184](https://github.com/loomake/loomake/pull/184)のcase実装を進めず、凍結179診断のstabilize引継ぎと重複・統合順序の確定を未完了条件へ置き換えた。
+2. 計画だけの差分についてstrict/spec-onlyとdiff検査が成功した。製品・試験・設定・主仕様と既存の完了チェックは変えず、mainも取り込んでいない。
+3. 15タスク中5件完了と受入3件未実施を維持し、actualcase/3OS測定・REQ-297・人のnode20-only操作は残る。独立レビューとCodexの扱いは改訂ADRへ合わせ、旧全重大度ゼロ・無制限反復・Codex必須は現条件にしない。
+4. 管理役へ計画差分と検査結果を提示し、吸収先との境界・順序と残10fileの設計を確認する。commit/push・GitHub更新と実装の再開は管理役の次の指示に従う。

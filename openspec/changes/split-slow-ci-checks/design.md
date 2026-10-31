@@ -14,7 +14,7 @@ CI側の049に由来する273タグは後続実装で外すが、agents-rulesの
 
 補足設計は元`x.test.ts`、共通の`x.cases.ts`、slow companionの`x.slow.test.ts`を用い、同じdescribe/it名・parameter・assert・timeout・hookを保って片側のcaseだけを登録する。skipやtestNamePatternによる未実行化は使わない。`tests/test-split.ts`のcase IDとOS別集合、未登録IDの拒否、caseがないファイルの選択除外を実装時に検査する。case IDは新しいREQ番号ではない。
 
-現在具体設計があるのはexternal-budget、ai-journeys、domain-mutations、package-artifactsの4fileまでである。残10fileとpublication-retryのPR179最終headは、全文のfixture/hook/callerと受入をそろえて先に設計する。重い処理をbeforeAllへ移してcase時間を隠さない。PR179統合後の出版診断がcompanion/shardでも元caseを捕捉するかを確かめる。E3/helperの統合による影響もfresh diffと再測定で扱う。
+現在具体設計があるのはexternal-budget、ai-journeys、domain-mutations、package-artifactsの4fileまでである。残10fileと凍結したPR179診断は、全文のfixture/hook/callerと関連Requirementをそろえて先に設計する。重い処理をbeforeAllへ移してcase時間を隠さない。PR179を単独受入・マージする経路は廃止し、凍結head `3571c208` の診断をstabilize-cross-os-testsへ引き継ぐ。吸収先の担当と統合境界・重複・順序を管理役が確定したうえで、最新mainの元case/parameter/assert/timeout・診断対象とcompanion/shard対応を照合する。境界が未確定の間はcase本体を分割しない。E3/helperの統合による影響もfresh diffと再測定で扱う。
 
 測定経路はpush `ci/measure-*`専用とし、同じheadで3OS各3sampleの全件を実行する。PRへslowを戻さず、新しいrequired statusにも加えない。失敗や未計測を0や成功に変えず、checkout SHA・実行版・case数・結果とraw timingを残す。
 
@@ -38,10 +38,16 @@ coverageの94/89/96/97、local full done、選択changeのADDED/MODIFIED live So
 
 profile-slow-testsとprofile-publication-retryの2本は、元ファイルとcompanionの4pathを明記してmain push/scheduleだけで起動する。元のcaseId集合と3独立sample、診断のprivacy/保存上限/失敗時保存を保つ。Q04/N3の手動起動撤去はこの2本に限る。既存releaseのmanual dispatchは公開に必要な全件品質ゲートとして残す。これは利用者のPR軽量化をrelease検査縮小へ広げないための管理役の包括承認による明示判断であり、release実行の証拠ではない。
 
-ruleset mainの変更案はrequired_status_checksからnode20 contextだけを除く。他のgate、quality (ubuntu-latest)、CodeQL、node22と全rule/parameterを保つ。実装headのローカル受入・他4check・Codex・指摘ゼロOpusをそろえ、廃止したnode20だけが期待どおり未成立であることを分けて示す。管理役がfresh GETと具体差分をIssue121の@rrr-xxxへ渡し、人の操作後のfresh GETで保持条件を照合し、全残存required成功の後にマージする。dummy check、管理役のPUT、保護の迂回は行わない。
+ruleset mainの変更案はrequired_status_checksからnode20 contextだけを除く。他のgate、quality (ubuntu-latest)、CodeQL、node22と全rule/parameterを保つ。実装headのローカル受入と他4check、改訂ADR 0006の段階別レビュー条件をそろえ、廃止したnode20だけが期待どおり未成立であることを分けて示す。管理役がfresh GETと具体差分をIssue121の@rrr-xxxへ渡し、人の操作後のfresh GETで保持条件を照合し、全残存required成功の後にマージする。dummy check、管理役のPUT、保護の迂回は行わない。Codexは参考としてPR末尾の証跡ブロックへ記録し、必須条件には加えない。
 
 # 工程と未完了
 
-内部工程はtasksに従い、すべて1-1の同じPRで受け入れる。管理役はC2のNode20削除、C3のroot共有準備、C4の空registryを用いる純粋helper/slow足場、C5の実13条件試験を先行可能と指定した。これらは採用済み62abaの範囲に限定し、未測定のOS割当や未設計case本体を加えない。179の最終受入head統合と残10fileの個別設計は、case本体分割と最終同head測定の前提として残す。統合後に元caseを固定し、先行実装もfresh差分・測定・完了ゲート・独立レビューで再検証する。C001/S1/E3の既存treeと担当は保持する。本文やfixtureの重複は最新差分と担当の統合順で解決し、未測定・未設計を完成としない。
+内部工程はtasksに従い、すべて1-1の同じPRで受け入れる。管理役はC2のNode20削除、C3のroot共有準備、C4の空registryを用いる純粋helper/slow足場、C5の実13条件試験を先行可能と指定した。これらは採用済み62abaの範囲に限定し、未測定のOS割当や未設計case本体を加えない。凍結head `3571c208` の診断を引き継ぐ吸収先との統合境界・重複・順序の確定と残10fileの個別設計は、case本体分割と最終同head測定の前提として残す。統合後に元caseを固定し、先行実装もfresh差分・測定・完了ゲート・独立レビューで再検証する。C001/S1/E3の既存treeと担当は保持する。本文やfixtureの重複は最新差分と担当の統合順で解決し、未測定・未設計を完成としない。
 
-5.2の完了ゲートは実装・検証の15タスクを判定し、5.3〜5.5はtasks.mdの「完了ゲート後の必須受入」で追跡する。全18件の意図と原文・番号・順序・担当・証拠先は保持する。ゲート後の出来事をゲートの前提へ含めない計画の整合であり、規則・マージ条件・人の操作は変えない。マージとsync/archiveの受入までchangeを完了としない。凍結したheadの受入証拠はPR #184とIssue #121へ記録し、headが変われば完了ゲートと各レビュー・CIをやり直す。
+5.2の完了ゲートは実装・検証の15タスクを判定し、5.3〜5.5はtasks.mdの「完了ゲート後の必須受入」で追跡する。全18件の作業範囲・番号・順序・担当を保持する。ゲート後の出来事をゲートの前提へ含めない構造は維持し、レビューと証跡の運用だけを利用者が採用した2026-10-31の改訂規約へ合わせる。人のruleset操作は維持する。マージとsync/archiveの受入までchangeを完了としない。対象headの証跡はPR #184末尾の1ブロックに記録する。head変更時は必要な完了ゲート・CIを再検証し、独立Opusの回数・重大指摘ゼロ・軽微指摘のIssue化・reviewed-headとの対応は改訂ADR 0006に従う。無制限の全重大度ゼロとCodex必須をマージ条件へ戻さない。
+
+# 2026-10-31の再編決定
+
+当初のmain085a基点・PR179を先に受け入れる計画は出典として保持するが、現行の依存は上記のstabilize-cross-os-testsへの引継ぎと統合境界の確定に置き換えた。利用者が採用した再編計画の手順5・7と改訂ADR 0006を適用した計画更新であり、PR179の受入・マージ、吸収先の設計完了やcase実装を宣言するものではない。
+
+Node20削除とslow分離は同じ1-1 PRで受け入れる。REQ-297の4case・下限/上限・clock/retry/assert、全case・coverage・3OS各3sample測定・release/local全件・人のnode20-only ruleset操作を保持する。今回mainは取り込まず、未完了taskと受入3件を完了へ進めない。PRの段階は改訂AGENTSに従って管理役が確認し、その段階のゲート・独立レビューを適用する。

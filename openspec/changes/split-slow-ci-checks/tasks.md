@@ -5,7 +5,7 @@
 
 # 2. 先行できる独立実装（C2〜C5）
 
-179の最終統合と残10fileの設計はcase本体分割の前提であり、この節の独立実装の前提ではない。基点085aと採用済み62abaの範囲で先行し、統合後にfresh差分と検証を繰り返す。
+凍結した179診断の吸収先との統合境界・重複・順序の確定と残10fileの設計はcase本体分割の前提であり、この節の独立実装の前提ではない。基点085aと採用済み62abaの範囲で先行し、統合後にfresh差分と検証を繰り返す。
 
 - [x] 2.1 ci.ymlのnode20ジョブを削除し、node22/3OS Node24を保つ。docs/dev/ci.mdと互換性文書、docs/quality/scenarios.jsonのREQ-144対応、monorepo/package-workflows/ci-test-diagnostics-workflowの照合を実在境界検査付きで更新する
 - [x] 2.2 root globalSetup/provideとpackage/slow injectを実装し、build/pack共有1回、unit-only/file選択の費用、inject欠落のfallback拒否、実build失敗/正常cleanup/watchを独立依存で検証する
@@ -14,7 +14,7 @@
 
 # 3. 統合と残設計
 
-- [ ] 3.1 PR179の最終受入headを統合してfresh差分・元case/parameter/assert/timeout・診断対象を固定し、C001/E3との重複と順序を確認する
+- [ ] 3.1 head `3571c208` で凍結したPR179診断をstabilize-cross-os-testsへ引き継ぎ、その統合境界と最新mainを基準にfresh差分・元case/parameter/assert/timeout・診断対象/companionを照合する。case本体分割の前に吸収先/C001/E3との重複と統合順序を管理役が確定する
 - [ ] 3.2 未設計10fileの全文・fixture/hook/callerと関連Requirement全文をそろえ、管理役がOpus設計を確認する。出版診断のcompanion/shard対応も決める
 - [ ] 3.3 仕様ゲートを再実行し、残る数値・外部連携・失敗境界の判断をtraceへ反映する
 
@@ -32,10 +32,10 @@
 
 ## 完了ゲート後の必須受入
 
-次の3件は5.2の後に行う必須受入であり、タスクの完了印では代用しない。原文・番号・順序・担当を保持し、実施の証拠はPR #184とIssue #121に記録する。どれかが未達の間はchange・PR・配布の完了を報告しない。
+次の3件は5.2の後に行う必須受入であり、タスクの完了印では代用しない。番号・順序・担当と未完了の受入を保持し、2026-10-31のレビュー規則改訂を5.3へ反映する。証跡の正本はPR #184末尾の証跡ブロックとし、人へのruleset依頼はIssue #121に記録する。どれかが未達の間はchange・PR・配布の完了を報告しない。
 
-- 5.3 同headの他4必須check・自動Codex・独立した新Opusの指摘ゼロをそろえ、node20だけ廃止に伴い未成立であることを記録する。修正後は新headを再検証/再レビューする
+- 5.3 同headの他4必須checkをそろえ、node20だけ廃止に伴い未成立であることを記録する。独立Opusの回数・重大指摘ゼロ・軽微指摘とhead対応の扱いはADR 0006の「レビュー規則（2026-10-31 改訂）」に従う。自動Codexは参考としてPR末尾の証跡ブロックへ記録し、マージ条件には加えない
 - 5.4 管理役がrulesetのfresh beforeとnode20 contextだけの差分・証跡をIssue121で@rrr-xxxへ渡し、人の操作後fresh afterで他4checkと全fieldを照合する。規則を補助や管理役が書き換えない
 - 5.5 残存required成功後に管理役が同じ1-1 PRをマージし、対応スキルでsync/archiveの受入へ続く。旧Source/試験対応と273衝突のB1引継ぎを保持する
 
-全18件の意図は実装・検証の15タスクと本節の必須受入3件として残す。最終レビュー等で修正が必要になったら、5.2より前に修正タスクを追加し、新headで完了ゲート・CI・自動Codex・新規独立Opusをやり直す。規則・検査・完了条件は変更しない。
+全18件の作業範囲は実装・検証の15タスクと本節の必須受入3件として残す。最終レビュー等で修正が必要になったら5.2より前に修正タスクを追加し、新headで必要な完了ゲート・CIを再検証する。独立Opusの再レビュー要否と回数は改訂ADR 0006に従い、無制限の全重大度ゼロやCodex必須という旧条件は適用しない。仕様・測定・要件対応テスト・人のruleset操作・マージとsync/archiveの残受入は保持する。
