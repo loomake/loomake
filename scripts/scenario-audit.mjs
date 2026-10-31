@@ -455,7 +455,10 @@ export function companionLinks(registry, readText) {
       if ((ts.isPropertyAssignment(parent) || ts.isBindingElement(parent)) && (parent.propertyName ?? parent.name) === expression && !ts.isComputedPropertyName(expression)) return true;
       return false;
     };
+    const relativeModule = (text) => /^(?:\.\/|(?:\.\.\/)+)(?:[A-Za-z0-9_-][\w.-]*\/)*[A-Za-z0-9_-][\w.-]*\.(?:js|ts|mjs|mts|cjs|cts|jsx|tsx)$/.test(text) && !/\.(?:test|spec)(?:\.|$)/i.test(text.slice(text.lastIndexOf('/') + 1));
+    const readingError = `companionの読み込み先を静的に確認できません：${companion}`;
     const closedSyntax = (node) => {
+      required(!(ts.isMetaProperty(node) && node.keywordToken === ts.SyntaxKind.ImportKeyword) && !(ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'require'), readingError);
       let module;
       if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) module = node.moduleSpecifier;
       if (ts.isImportEqualsDeclaration(node)) {
@@ -463,7 +466,7 @@ export function companionLinks(registry, readText) {
         module = node.moduleReference.expression;
       }
       if (module) {
-        required(ts.isStringLiteral(module) && (module.text === 'vitest' || (/^\.\.?\//.test(module.text) && !/\.test\.[jt]s$/.test(module.text))), `companionの読み込み先を静的に確認できません：${companion}`);
+        required(ts.isStringLiteral(module) && (module.text === 'vitest' || relativeModule(module.text)), readingError);
         if (module.text === 'vitest' && (ts.isImportDeclaration(node) || ts.isImportEqualsDeclaration(node))) {
           required(ts.isImportDeclaration(node) && !node.importClause?.name, bindingError);
           const bindings = node.importClause?.namedBindings;
