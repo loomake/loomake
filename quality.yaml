@@ -1,5 +1,6 @@
 # Loomake 自身の品質基準（verify-v2-c001 の承認済み R-C001-07 A の初期内容）。
-# ci.test_report の必須 1 項目だけを置く。verify の判定への接続は verify-v2-c001（C001 の 6/6）で行う
+# ci.test_report の必須 1 項目だけを置く。CI の完了ゲート（verify --done、scope ci）が読み、Vitest のレポートで判定する
+# （verify-v2-quality、C001 の 5/6）。ci-gate の利用経路の移行と受入は verify-v2-c001（C001 の 6/6）で行う
 version: 2
 model: iso-iec-25010-2011
 product:

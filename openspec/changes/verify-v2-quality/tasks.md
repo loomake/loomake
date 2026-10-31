@@ -11,6 +11,17 @@
 
 ## 3. 受入（1本目）
 
-接続（quality.yamlの読取とrunVerifyへの接続、CLI/runner/traceへのschema渡し、統合試験）は、2本目のPRでtask 3.x・4.x・5.xとして足す。
-
 - [x] 3.1 lint・typecheck・全体試験、changeset（core・kit minor）。`pnpm -s verify --change verify-v2-quality --done` を通す <!-- loomake:gate=done -->
+
+## 4. 接続（2本目）
+
+- [x] 4.1 kit：`runVerify` に `qualitySchema` を足し、changeがあるとき品質コマンドとopenspec validateより前にquality.yamlを読む。doneのciでは必須（不在はaborted 3、誤りは2、権限は3）、ほかのゲートではあれば形だけを確かめる。`loadVerifyQualitySchema()` を公開する（REQ-319）
+- [x] 4.2 kit：doneのciで、品質コマンドの前に対象SHAと基準のhashを取り、レポートを消してから実行し、producerと版・前後のSHAとhash・レポートの本文とsha256（`verify/hash.ts` の `sha256Hex`）・実行の時刻をreceiptにまとめる。`--skip-commands` ではreceiptを作らない。`quality:subjects` と `quality:<ID>` のcheckを足す（REQ-319）
+- [x] 4.3 cli・runner・trace：`verify`・`loomake run`・`trace record` からquality.yamlのスキーマを渡す（REQ-319）
+- [x] 4.4 既存試験：期待値を変えず、doneのciを使う試験の準備にquality.yaml・git・producer（実際のVitest）・`startTime` 付きのレポートを足す。配布物の試験とAIシナリオ試験の利用先にも足す
+
+## 5. 受入（2本目）
+
+- [x] 5.1 API/CLI統合試験：gitの一時リポジトリで実際のVitestを動かし、正常PASS/0、quality.yamlの誤り2・不在3・権限3、不足1、対象SHAと必須仕様を変えたあとの置き残した結果の拒否、品質コマンドが0以外で終わったときにPASSを返さないことを確かめる（REQ-319）
+- [x] 5.2 ルートのquality.yamlの説明を接続後の内容にする。changeset（kit・trace・cli minor、runner patch）
+- [x] 5.3 lint・typecheck・全体試験。`pnpm -s verify --change verify-v2-quality --done` を通す <!-- loomake:gate=done -->
