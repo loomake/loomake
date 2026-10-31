@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { classifyPath, decideTier, declaredTier, formatTierLine, isSpecPath, requirementBodyChanged, requirementChangedSpecs } from '../scripts/ci-tier.mjs';
+import { classifyPath, decideTier, declaredTier, formatTierLine, isSpecPath, requirementBodyChanged, requirementChangedSpecs, sectionOf } from '../scripts/ci-tier.mjs';
 
 // `git diff --raw -z -M` を parseRawDiff で読んだ形。名前の変更は変更前と変更後の両方のパスを持つ
 const entry = (status: string, ...paths: string[]) => ({ status, modes: ['100644', '100644'] as [string, string], paths });
 const changed = (...paths: string[]) => paths.map((path) => entry('M', path));
-// `git diff -U0` の形の差分。file ごとに、足した行（+）と消した行（-）を並べる
-const unified = (file: string, lines: string[]) => [`diff --git a/${file} b/${file}`, `--- a/${file}`, `+++ b/${file}`, '@@ -1,0 +2 @@', ...lines].join('\n') + '\n';
-const decide = (paths: string[], specDiff = '', body = '') => decideTier({ entries: changed(...paths), specDiff, body });
+// `git diff -U0` の形の差分。file の oldLine 行目を消し、newLine 行目に足したことにして、消した行（-）と足した行（+）を並べる
+const unified = (file: string, lines: string[], { oldLine = 1, newLine = 2 } = {}) => [`diff --git a/${file} b/${file}`, `--- a/${file}`, `+++ b/${file}`, `@@ -${oldLine},0 +${newLine} @@`, ...lines].join('\n') + '\n';
+// 変更前（old）と変更後（new）の spec.md を返す偽の読み取り
+const specText = ['# x', '', '## Purpose', '段階の説明。', '', '## Requirements', '', '### Requirement: 振る舞い', '本文を書く SHALL。', '- 箇条書きの条件', '', '#### Scenario: 場面', '- **WHEN** 条件', '- **THEN** 結果', ''].join('\n');
+const reader = (text = specText, oldText = text) => (side: 'old' | 'new') => (side === 'new' ? text : oldText);
+const decide = (paths: string[], specDiff = '', body = '', readSpec = reader()) => decideTier({ entries: changed(...paths), specDiff, body, readSpec });
 
 describe('パスの段階', () => {
   it('[REQ-342] docs/・直下の .md・.changeset の本文・change の成果物は L1', () => {
@@ -55,39 +58,71 @@ describe('Requirement の本文の変更', () => {
       expect(isSpecPath(path), path).toBe(false);
   });
 
-  it('[REQ-342] `### Requirement:` の行か RFC 2119 の語を含む行の追加・削除を本文の変更とみなす', () => {
-    for (const line of ['+### Requirement: 新しい振る舞い', '-### Requirement: 古い振る舞い', '+CI は完了ゲートを実行する SHALL。', '-ジョブを失敗させる MUST。', '+推奨する SHOULD。', '+許す MAY。'])
-      expect(requirementBodyChanged(unified('openspec/specs/x/spec.md', [line])), line).toBe(true);
-    expect(requirementChangedSpecs(unified('openspec/changes/c1/specs/x/spec.md', ['+本文 MUST']))).toEqual(['openspec/changes/c1/specs/x/spec.md']);
+  it('[REQ-342] 行が属する節は直前の見出しで決まる', () => {
+    const lines = specText.split('\n');
+    expect(sectionOf(lines, 4)).toBe('other'); // Purpose の本文
+    expect(sectionOf(lines, 8)).toBe('requirement'); // Requirement の見出し
+    expect(sectionOf(lines, 9)).toBe('requirement');
+    expect(sectionOf(lines, 10)).toBe('requirement'); // RFC 語のない箇条書きも本文
+    expect(sectionOf(lines, 12)).toBe('scenario');
+    expect(sectionOf(lines, 14)).toBe('scenario');
+    expect(sectionOf(lines, 1)).toBe('other');
   });
 
-  it('[REQ-342] Scenario の WHEN/THEN・Purpose・見出しの文言の変更と、spec.md 以外の差分は本文の変更にしない', () => {
-    const scenario = ['-- **WHEN** 古い条件', '+- **WHEN** 新しい条件', '-- **THEN** 古い結果', '+- **THEN** 新しい結果', '+#### Scenario: 新しい場面', '+## Purpose', '+段階の説明。', '+MAYBE や MUSTARD のような語は数えない'];
-    expect(requirementBodyChanged(unified('openspec/specs/x/spec.md', scenario))).toBe(false);
+  it('[REQ-342] Requirement の見出しと本文の行の追加・削除を Requirement の変更とみなし、RFC 語の有無では決めない', () => {
+    const spec = 'openspec/specs/x/spec.md';
+    // 本文の箇条書き（RFC 語なし）を足す・変える
+    expect(requirementBodyChanged(unified(spec, ['+- 新しい条件'], { newLine: 11 }), reader())).toBe(true);
+    expect(requirementBodyChanged(unified(spec, ['-- 箇条書きの条件', '+- 直した条件'], { oldLine: 10, newLine: 10 }), reader())).toBe(true);
+    // 見出し自体を変える
+    expect(requirementBodyChanged(unified(spec, ['-### Requirement: 振る舞い', '+### Requirement: 新しい振る舞い'], { oldLine: 8, newLine: 8 }), reader())).toBe(true);
+    // 消した行は変更前のファイルの節で判定する
+    const without = specText.split('\n').filter((line) => line !== '本文を書く SHALL。').join('\n');
+    expect(requirementBodyChanged(unified(spec, ['-本文を書く SHALL。'], { oldLine: 9, newLine: 8 }), reader(without, specText))).toBe(true);
+    expect(requirementChangedSpecs(unified('openspec/changes/c1/specs/x/spec.md', ['+- 条件'], { newLine: 11 }), reader())).toEqual(['openspec/changes/c1/specs/x/spec.md']);
+  });
+
+  it('[REQ-342] Scenario の WHEN/THEN・Purpose・見出しの変更と、spec.md 以外の差分は Requirement の変更にしない', () => {
+    const spec = 'openspec/specs/x/spec.md';
+    // Scenario の THEN に MUST を足しても L1
+    expect(requirementBodyChanged(unified(spec, ['-- **THEN** 結果', '+- **THEN** 結果を返す MUST'], { oldLine: 14, newLine: 14 }), reader())).toBe(false);
+    expect(requirementBodyChanged(unified(spec, ['+- **WHEN** 別の条件'], { newLine: 14 }), reader())).toBe(false);
+    expect(requirementBodyChanged(unified(spec, ['-段階の説明。', '+新しい説明。'], { oldLine: 4, newLine: 4 }), reader())).toBe(false);
+    expect(requirementBodyChanged(unified(spec, ['+#### Scenario: 新しい場面'], { newLine: 15 }), reader())).toBe(false);
     // 差分のヘッダ（--- a/… と +++ b/…）は数えない
-    expect(requirementBodyChanged(unified('openspec/specs/x/spec.md', []))).toBe(false);
+    expect(requirementBodyChanged(unified(spec, []), reader())).toBe(false);
     for (const file of ['openspec/changes/c1/tasks.md', 'openspec/changes/c1/proposal.md', 'docs/usage.md'])
-      expect(requirementBodyChanged(unified(file, ['+この変更は MUST を足す'])), file).toBe(false);
-    expect(requirementBodyChanged('')).toBe(false);
+      expect(requirementBodyChanged(unified(file, ['+この変更は MUST を足す'], { newLine: 9 }), reader()), file).toBe(false);
+    expect(requirementBodyChanged('', reader())).toBe(false);
+  });
+
+  it('[REQ-342] spec.md を読めなければ安全側に Requirement の変更として数える', () => {
+    expect(requirementBodyChanged(unified('openspec/specs/x/spec.md', ['+- 条件'], { newLine: 14 }), () => undefined)).toBe(true);
+    expect(requirementBodyChanged(unified('openspec/specs/x/spec.md', ['+- 条件'], { newLine: 14 }))).toBe(true);
   });
 
   it('[REQ-342] Requirement の本文を変えた spec.md は L3 にし、その spec.md を理由にする', () => {
-    const diff = unified('openspec/specs/x/spec.md', ['+新しい振る舞い SHALL。']);
+    const diff = unified('openspec/specs/x/spec.md', ['+- 新しい条件'], { newLine: 11 });
     expect(decide(['openspec/specs/x/spec.md'], diff)).toMatchObject({ tier: 'L3', reasons: ['openspec/specs/x/spec.md'] });
-    const change = unified('openspec/changes/c1/specs/x/spec.md', ['+### Requirement: 新しい振る舞い']);
+    const change = unified('openspec/changes/c1/specs/x/spec.md', ['-### Requirement: 振る舞い', '+### Requirement: 新しい振る舞い'], { oldLine: 8, newLine: 8 });
     expect(decide(['openspec/changes/c1/specs/x/spec.md', 'openspec/changes/c1/tasks.md'], change)).toMatchObject({ tier: 'L3', reasons: ['openspec/changes/c1/specs/x/spec.md'] });
     // src と spec の両方が理由になる
     expect(decide(['packages/kit/src/a.ts', 'openspec/specs/x/spec.md'], diff)).toMatchObject({ tier: 'L3', reasons: ['packages/kit/src/a.ts', 'openspec/specs/x/spec.md'] });
     // Scenario の文言だけなら L1 のまま
-    expect(decide(['openspec/specs/x/spec.md'], unified('openspec/specs/x/spec.md', ['+- **THEN** 新しい結果']))).toMatchObject({ tier: 'L1' });
+    expect(decide(['openspec/specs/x/spec.md'], unified('openspec/specs/x/spec.md', ['+- **THEN** 新しい結果 MUST'], { newLine: 15 }))).toMatchObject({ tier: 'L1' });
   });
 
   it('[REQ-342] archive の PR は Requirement を足していても L1', () => {
     const entries = [entry('D', 'openspec/changes/c1/tasks.md'), entry('A', 'openspec/changes/archive/2026-10-23-c1/tasks.md'), entry('M', 'openspec/specs/x/spec.md')];
-    const diff = unified('openspec/specs/x/spec.md', ['+### Requirement: 反映した振る舞い', '+本文 SHALL。']);
-    expect(decideTier({ entries, specDiff: diff })).toMatchObject({ tier: 'L1' });
+    const diff = unified('openspec/specs/x/spec.md', ['+### Requirement: 反映した振る舞い', '+本文 SHALL。'], { newLine: 15 });
+    const readSpec = reader(specText + '### Requirement: 反映した振る舞い\n本文 SHALL。\n');
+    expect(decideTier({ entries, specDiff: diff, readSpec })).toMatchObject({ tier: 'L1' });
+    // 名前の変更で archive に移す場合も例外に当たる
+    expect(decideTier({ entries: [entry('R100', 'openspec/changes/c1/tasks.md', 'openspec/changes/archive/2026-10-23-c1/tasks.md'), entry('M', 'openspec/specs/x/spec.md')], specDiff: diff, readSpec })).toMatchObject({ tier: 'L1' });
     // archive と一緒にコードを変えていれば例外ではない
-    expect(decideTier({ entries: [...entries, entry('M', 'scripts/x.mjs')], specDiff: diff })).toMatchObject({ tier: 'L3' });
+    expect(decideTier({ entries: [...entries, entry('M', 'scripts/x.mjs')], specDiff: diff, readSpec })).toMatchObject({ tier: 'L3' });
+    // archive の下のファイルを変えただけ（足していない）なら例外ではなく、主仕様の Requirement の追加で L3
+    expect(decideTier({ entries: [entry('M', 'openspec/changes/archive/2026-10-23-c1/tasks.md'), entry('M', 'openspec/specs/x/spec.md')], specDiff: diff, readSpec })).toMatchObject({ tier: 'L3' });
   });
 });
 

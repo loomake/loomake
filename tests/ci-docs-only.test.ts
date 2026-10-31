@@ -109,23 +109,27 @@ describe('文書だけかの判定', () => {
 
   it('[REQ-270][REQ-342] Requirement の本文を変えた spec.md だけの PR は、段階 L3 なので文書だけと判定しない', () => {
     // spec.md があるときだけ、その spec.md の -U0 の差分を読む。Requirement の行か RFC 2119 の語を含む行の追加・削除で段階 L3 になる
-    const specDiff = (lines: string[]) => ['diff --git a/openspec/specs/x/spec.md b/openspec/specs/x/spec.md', '--- a/openspec/specs/x/spec.md', '+++ b/openspec/specs/x/spec.md', '@@ -1,0 +2 @@', ...lines].join('\n') + '\n';
-    const decideWithSpec = (lines: string[]) => {
+    // 変更後の spec.md は 2 行目が Requirement の本文、5 行目が Scenario の THEN
+    const specText = '### Requirement: 振る舞い\n本文。\n\n#### Scenario: 場面\n- **THEN** 結果\n';
+    const specDiff = (lines: string[], newLine: number) => ['diff --git a/openspec/specs/x/spec.md b/openspec/specs/x/spec.md', '--- a/openspec/specs/x/spec.md', '+++ b/openspec/specs/x/spec.md', `@@ -${newLine - 1},0 +${newLine} @@`, ...lines].join('\n') + '\n';
+    const decideWithSpec = (lines: string[], newLine: number) => {
       const calls: string[][] = [];
       const git = (args: string[]) => {
         calls.push(args);
-        if (args.includes('-U0')) return { status: 0, stdout: specDiff(lines), stderr: '' };
+        if (args.includes('-U0')) return { status: 0, stdout: specDiff(lines, newLine), stderr: '' };
+        if (args[0] === 'show') return { status: 0, stdout: specText, stderr: '' };
         if (args[0] === 'ls-tree') return { status: 0, stdout: 'openspec/specs/x/spec.md\0', stderr: '' };
         return { status: 0, stdout: nameStatus(['M', 'openspec/specs/x/spec.md']), stderr: '' };
       };
       return { result: decideDocsOnly({ eventName: 'pull_request', baseRef: 'main', git }), calls };
     };
-    const requirement = decideWithSpec(['+新しい振る舞い SHALL。']);
+    const requirement = decideWithSpec(['+本文の条件。'], 2);
     expect(requirement.result.docsOnly).toBe(false);
     expect(requirement.result.reason).toContain('段階が L3');
-    expect(requirement.calls.at(-1)).toEqual(['-c', 'core.quotePath=false', 'diff', '-U0', 'refs/remotes/origin/main...HEAD', '--', 'openspec/specs/x/spec.md']);
+    expect(requirement.calls).toContainEqual(['-c', 'core.quotePath=false', 'diff', '-U0', 'refs/remotes/origin/main...HEAD', '--', 'openspec/specs/x/spec.md']);
+    expect(requirement.calls).toContainEqual(['show', 'HEAD:openspec/specs/x/spec.md']);
     // Scenario の文言だけなら文書だけ（段階 L1）
-    expect(decideWithSpec(['-- **THEN** 古い結果', '+- **THEN** 新しい結果']).result.docsOnly).toBe(true);
+    expect(decideWithSpec(['+- **THEN** 新しい結果 MUST'], 5).result.docsOnly).toBe(true);
     // spec.md の差分を読めなければ、文書だけと判定しない
     const failed = decideDocsOnly({ eventName: 'pull_request', baseRef: 'main', git: (args) => (args.includes('-U0') ? { status: 128, stdout: '', stderr: 'fatal: bad revision' } : { status: 0, stdout: args[0] === 'ls-tree' ? 'openspec/specs/x/spec.md\0' : nameStatus(['M', 'openspec/specs/x/spec.md']), stderr: '' }) });
     expect(failed.docsOnly).toBe(false);

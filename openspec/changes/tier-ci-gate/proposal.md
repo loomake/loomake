@@ -10,13 +10,14 @@ gate が文書かどうかを決める判定（`isDocument`）は、quality ジ�
 
 ## What Changes
 
-- `scripts/ci-tier.mjs` を足し、変更パスと spec の差分から段階 L1・L2・L3 を決める。`loomake-tier:` の行で上げる方向にだけ上書きできる。
-- `scripts/ci-gate.mjs` を段階で分ける。L1 は lint と文書のリンクの試験を実行し、change がなければ `verify` を呼ばない（change があれば段階を問わず `--done` を通す）。L2 は今までどおり。L3 は change を必須にする。決めた段階と理由を標準出力の 1 行と `GITHUB_OUTPUT` に書く。gate の独自の `isDocument` を消し、quality と同じ `isDocumentPath` を使う。
+- `scripts/ci-tier.mjs` を足し、変更パスと spec の差分から段階 L1・L2・L3 を決める。Requirement の変更は、変更行が属する節（`### Requirement:` の見出しから次の見出しまで）で判定する。`loomake-tier:` の行で上げる方向にだけ上書きできる。
+- `scripts/ci-gate.mjs` を段階で分ける。L1 は lint と文書のリンクの試験を実行し、change がなければ `verify` を呼ばない（change があれば段階を問わず `verify` を通す。tasks.md に完了した印がない提案だけの change は `--spec-only`）。L2 は今までどおり。L3 は change を必須にする。決めた段階と理由を標準出力の 1 行と `GITHUB_OUTPUT` に書く。gate の独自の `isDocument` を消し、quality と同じ `isDocumentPath` を使う。
 - `scripts/ci-docs-only.mjs` の最終判定を「段階が L1」に変える。Requirement の本文だけを変えた spec.md の PR は、文書だけと判定しなくなる。
 - `.github/workflows/ci.yml` の gate ステップに `id: gate` を付け、コメントを段階の説明に直す。
 - PR テンプレートと delivery スキルの証跡ブロックに `tier:` の行を足す。スキルに worktree の削除の手順を 1 行足す。
 - `scripts/clean-merged-worktrees.sh` と `scripts/delivery-metrics.sh` を足す。どちらも開発の仕組みで、仕様の対象にしない。
 - `docs/dev/ci.md` の「文書だけの PR でテストを実行するジョブ」を段階の説明に書き換える。
+- main で重複している REQ-273 を解消する。agents-rules の「AGENTS.md の作業記録の決まり」の Source を REQ-288 に振り直し、`tests/kit-assets.test.ts` と `docs/quality/scenarios.json` の ID も合わせる。本文は変えない。
 
 ## Capabilities
 
@@ -26,6 +27,7 @@ gate が文書かどうかを決める判定（`isDocument`）は、quality ジ�
 
 ### Modified Capabilities
 
+- `agents-rules`: 「AGENTS.md の作業記録の決まり」の Source を REQ-273 から REQ-288 に振り直す（本文は変えない）。
 - `monorepo`: 「工程の段階の判定」（REQ-342）と「段階ごとの完了ゲートの動作」（REQ-343）を足す。「プルリクエストごとの完了ゲート」「対象の change がない PR の扱い」を段階に合わせて直し、「文書だけの PR の品質ジョブ」の判定を段階 L1 に変える。
 
 ## Impact

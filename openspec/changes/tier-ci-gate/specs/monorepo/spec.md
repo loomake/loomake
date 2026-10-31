@@ -3,7 +3,7 @@
 ### Requirement: 工程の段階の判定
 CI の完了ゲートは、変えたファイルのパス（名前の変更は前後両方）と `spec.md` の差分から、段階を次のうち最も高いものに決める MUST。
 
-- L3：`packages/<name>/src/` の下。`spec.md` で `### Requirement:` の行か RFC 2119 の語を含む行の追加・削除
+- L3：`packages/<name>/src/` の下。`spec.md` で `### Requirement:` の見出しから次の見出しまでの節（見出しを含む）に当たる行の追加・削除
 - L2：`tests/`・`test/`・`.github/`・`scripts/`・`.agents/skills/`・`packages/` の下（src 以外）、`.changeset/config.json`、`openspec/config.yaml`、規則の文書（AGENTS.md・ADR・agent-workflow.md）、どれにも当たらないもの
 - L1：「文書として扱うファイル」
 
@@ -28,8 +28,12 @@ Source: REQ-342
 - **THEN** 段階は L3 になる
 
 #### Scenario: Requirement の本文を変えた spec.md
-- **WHEN** `openspec/specs/x/spec.md` か `openspec/changes/c1/specs/x/spec.md` で、`### Requirement:` の行か SHALL を含む行を足すか消した PR で CI が動く
+- **WHEN** `openspec/specs/x/spec.md` か `openspec/changes/c1/specs/x/spec.md` で、`### Requirement:` の見出しか、その本文の行（RFC 2119 の語のない箇条書きを含む）を足すか消した PR で CI が動く
 - **THEN** 段階は L3 になる
+
+#### Scenario: Scenario に RFC 2119 の語を足す
+- **WHEN** `openspec/specs/x/spec.md` の `#### Scenario:` の THEN の行に MUST を足しただけの PR で CI が動く
+- **THEN** 段階は L1 になる
 
 #### Scenario: 複数の段階に当たる PR
 - **WHEN** `docs/usage.md` と `scripts/x.mjs` を変えた PR と、`docs/usage.md` と `packages/kit/src/a.ts` を変えた PR で CI が動く
@@ -37,7 +41,7 @@ Source: REQ-342
 
 #### Scenario: archive の PR
 - **WHEN** `openspec/changes/c1/` の削除と、`openspec/changes/archive/2026-10-23-c1/` の追加と、`openspec/specs/x/spec.md` への Requirement の追加だけの PR で CI が動く
-- **THEN** 段階は L1 になる
+- **THEN** 段階は L1 になる。archive の下のファイルを変えただけで足していなければ例外に当たらず、L3 になる
 
 #### Scenario: 名前を変えたファイル
 - **WHEN** `scripts/x.md` を `docs/x.md` に名前を変えただけの PR で CI が動く
@@ -62,11 +66,11 @@ Source: REQ-342
 ### Requirement: 段階ごとの完了ゲートの動作
 CI の完了ゲートは、決めた段階に応じて次のとおり動く MUST。
 
-- L1：`commands.lint` と文書のリンクの試験（`tests/doc-links.test.ts`）を実行する。change があれば change ごとに `verify --change <id> --done` も実行し、なければ `verify` は実行しない
-- L2：「完了ゲートの対象の決め方」で change を決め、change ごとに `--done` を実行する。change がなければ「対象の change がない PR の扱い」に従う
-- L3：L2 と同じに検査する。`loomake-change: none` の明示と、change を特定できないときは失敗させる
+- L1：`commands.lint` と `tests/doc-links.test.ts` を実行する。change があれば change ごとに `verify` も実行し、なければ実行しない
+- L2：「完了ゲートの対象の決め方」で change を決め、change ごとに `verify` を実行する。change がなければ「対象の change がない PR の扱い」に従う
+- L3：L2 と同じ。`loomake-change: none` の明示と、change を特定できないときは失敗させる
 
-段階と理由を `loomake-tier: <段階>（<理由>）` の形で標準出力に 1 行書き、`GITHUB_OUTPUT` があれば `tier` と `tier_line` も書く SHALL。
+`verify` は `--change <id> --done`。tasks.md に完了した印がない change は `--spec-only`。段階と理由を `loomake-tier: <段階>（<理由>）` の形で標準出力に 1 行書き、`GITHUB_OUTPUT` があれば `tier` と `tier_line` も書く SHALL。
 
 Source: REQ-343
 
@@ -105,6 +109,10 @@ Source: REQ-343
 #### Scenario: L3 で change がある
 - **WHEN** `openspec/changes/c1/tasks.md` と `packages/kit/src/a.ts` を変えた PR で CI が動く
 - **THEN** `verify --change c1 --done` が実行され、標準出力に `loomake-tier: L3（packages/kit/src/a.ts）` の行が書かれる
+
+#### Scenario: 提案だけの change
+- **WHEN** `openspec/changes/c1/proposal.md` と、完了した印が 1 つもない `openspec/changes/c1/tasks.md` を足した PR で CI が動く
+- **THEN** `verify --change c1 --spec-only` が実行され、`--done` は実行されない
 
 #### Scenario: 理由の件数
 - **WHEN** 4 つのファイルが段階を決めた PR で CI が動く

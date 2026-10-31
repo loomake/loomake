@@ -3,7 +3,7 @@
 // 「文書だけ」と「段階 L1」が同じ入力・同じ関数で一致するようにする。
 //
 // 段階の規則は AGENTS.md 2 章。パスの判定は順に行い、どれにも当たらなければ安全側の L2 にする。
-// Requirement の本文の変更は「`### Requirement:` の行か RFC 2119 の語を含む行の追加・削除」で近似する（tier-ci-gate の仮定 A-01）
+// Requirement の変更は、変更行が属する節（`### Requirement:` の見出しから次の見出しまで）で判定する（tier-ci-gate の仮定 A-01）
 
 const TIERS = ['L1', 'L2', 'L3'];
 const rank = (tier) => TIERS.indexOf(tier);
@@ -55,35 +55,80 @@ export function classifyPath(path) {
   return 'L2';
 }
 
-// Requirement の本文とみなす行：見出しか、RFC 2119 の語（単語境界）を含む
-const isRequirementLine = (line) => /^### Requirement:/.test(line) || /\b(SHALL|MUST|SHOULD|MAY)\b/.test(line);
+/**
+ * spec.md の行がどの節に属するか。直前の見出しで決める。
+ * `### Requirement:` の見出しとその本文（次の見出しまで）は 'requirement'、`#### Scenario:` の配下は 'scenario'、Purpose などは 'other'
+ * @param {string[]} lines ファイルの行
+ * @param {number} lineNo 1 始まりの行番号
+ */
+export function sectionOf(lines, lineNo) {
+  for (let i = Math.min(lineNo, lines.length) - 1; i >= 0; i--) {
+    const line = lines[i];
+    if (/^### Requirement:/.test(line)) return 'requirement';
+    if (/^#### Scenario:/.test(line)) return 'scenario';
+    if (/^#{1,6}\s/.test(line)) return 'other';
+  }
+  return 'other';
+}
 
 /**
- * `git diff -U0` の出力から、Requirement の本文（`### Requirement:` の行か RFC 2119 の語を含む行）を足すか消した spec.md を返す。
- * spec.md 以外のファイルの差分は数えない
+ * `git diff -U0` の出力から、Requirement の見出しか本文の行を足すか消した spec.md を返す（tier-ci-gate の仮定 A-01）。
+ * 変更行の行番号をハンクから読み、足した行は変更後のファイル、消した行は変更前のファイルの節で判定する。
+ * spec.md 以外のファイルの差分は数えない。ファイルを読めないときは安全側に Requirement の変更として数える
  * @param {string} unifiedDiff
+ * @param {(side: 'old' | 'new', path: string) => string | undefined} readSpec 変更前（old）か変更後（new）のファイルの内容
  * @returns {string[]}
  */
-export function requirementChangedSpecs(unifiedDiff) {
+export function requirementChangedSpecs(unifiedDiff, readSpec = () => undefined) {
   if (typeof unifiedDiff !== 'string' || !unifiedDiff) return [];
   const changed = [];
-  let current = '';
+  const cache = new Map();
+  const linesOf = (side, path) => {
+    const key = `${side}\0${path}`;
+    if (!cache.has(key)) {
+      const text = readSpec(side, path);
+      cache.set(key, typeof text === 'string' ? text.split('\n') : undefined);
+    }
+    return cache.get(key);
+  };
+  let oldPath = '';
+  let newPath = '';
+  let oldLine = 0;
+  let newLine = 0;
+  const hit = (side, path, lineNo) => {
+    const lines = linesOf(side, path);
+    const isRequirement = !lines || sectionOf(lines, lineNo) === 'requirement';
+    const name = newPath || oldPath;
+    if (isRequirement && !changed.includes(name)) changed.push(name);
+  };
   for (const line of unifiedDiff.split('\n')) {
     const header = /^diff --git a\/(.*) b\/(.*)$/.exec(line);
     if (header) {
-      current = header[2];
+      [, oldPath, newPath] = header;
       continue;
     }
-    if (/^(\+\+\+|---) /.test(line)) continue;
-    if (!/^[+-]/.test(line) || !isSpecPath(current)) continue;
-    if (isRequirementLine(line.slice(1)) && !changed.includes(current)) changed.push(current);
+    const hunk = /^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/.exec(line);
+    if (hunk) {
+      oldLine = Number(hunk[1]);
+      newLine = Number(hunk[2]);
+      continue;
+    }
+    if (/^(\+\+\+|---) /.test(line) || line.startsWith('\\')) continue;
+    const target = isSpecPath(newPath) ? newPath : isSpecPath(oldPath) ? oldPath : '';
+    if (line.startsWith('+')) {
+      if (target) hit('new', newPath, newLine);
+      newLine++;
+    } else if (line.startsWith('-')) {
+      if (target) hit('old', oldPath, oldLine);
+      oldLine++;
+    }
   }
   return changed;
 }
 
-/** Requirement の本文を足すか消した spec.md が 1 つでもあるか */
-export function requirementBodyChanged(unifiedDiff) {
-  return requirementChangedSpecs(unifiedDiff).length > 0;
+/** Requirement の見出しか本文を足すか消した spec.md が 1 つでもあるか */
+export function requirementBodyChanged(unifiedDiff, readSpec) {
+  return requirementChangedSpecs(unifiedDiff, readSpec).length > 0;
 }
 
 /** PR 本文の `loomake-tier:` の行の値。行がなければ undefined */
@@ -94,12 +139,12 @@ export function declaredTier(body) {
 
 /**
  * PR の段階を決める。
- * @param {{ entries?: { status: string; paths: string[] }[]; specDiff?: string; body?: string }} options
+ * @param {{ entries?: { status: string; paths: string[] }[]; specDiff?: string; body?: string; readSpec?: (side: 'old' | 'new', path: string) => string | undefined }} options
  *   entries は `git diff --raw -z -M` を parseRawDiff で読んだもの（名前の変更は変更前と変更後の両方のパスを持つ）。
- *   specDiff は spec.md に対する `git diff -U0` の出力。body は PR 本文
+ *   specDiff は spec.md に対する `git diff -U0` の出力、readSpec は変更前後の spec.md を読む関数。body は PR 本文
  * @returns {{ tier: 'L1'|'L2'|'L3'; detected: 'L1'|'L2'|'L3'; reasons: string[]; override?: { from: string; to: string }; error?: undefined } | { error: string }}
  */
-export function decideTier({ entries = [], specDiff = '', body = '' } = {}) {
+export function decideTier({ entries = [], specDiff = '', body = '', readSpec } = {}) {
   const paths = [...new Set(entries.flatMap((entry) => entry.paths))];
   let detected = 'L1';
   let reasons = [];
@@ -114,9 +159,9 @@ export function decideTier({ entries = [], specDiff = '', body = '' } = {}) {
         reasons = [path];
       } else if (tier === detected) reasons.push(path);
     }
-    const specs = requirementChangedSpecs(specDiff);
-    // archive の PR は Requirement を実装 PR の --done で検査済みなので L1 のまま（仮定 A-02）
-    const archive = detected === 'L1' && paths.some((path) => path.startsWith('openspec/changes/archive/'));
+    const specs = requirementChangedSpecs(specDiff, readSpec);
+    // archive の PR（archive/ の下にファイルを足すか移す）は Requirement を実装 PR の --done で検査済みなので L1 のまま（仮定 A-02）
+    const archive = detected === 'L1' && entries.some((entry) => /^(A|R\d*)$/.test(entry.status) && entry.paths.at(-1).startsWith('openspec/changes/archive/'));
     if (specs.length && !archive) {
       if (detected !== 'L3') reasons = [];
       detected = 'L3';

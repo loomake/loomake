@@ -61,6 +61,13 @@ export function selectChanges({ ref = '', body = '', files = [], changesDir, cha
   };
 }
 
+/** change の tasks.md に完了した印（- [x]）が 1 つもなければ提案だけの change なので、--done ではなく --spec-only（仕様ゲート）で検査する */
+export function gateArgs(changesDir, id) {
+  const tasksPath = join(changesDir, id, 'tasks.md');
+  const checked = existsSync(tasksPath) ? readFileSync(tasksPath, 'utf8').split('\n').filter((line) => /^\s*[-*]\s+\[[xX]\]/.test(line)).length : 1;
+  return ['--change', id, checked ? '--done' : '--spec-only'];
+}
+
 /** L1 で実行する検査。lint は loomake.config.json の commands.lint（既定 pnpm lint）、文書のリンクの試験は vitest で 1 ファイルだけ */
 export function tierOneCommands(configPath = 'loomake.config.json') {
   let lint = 'pnpm lint';
@@ -103,6 +110,11 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       specDiff = d.stdout ?? '';
     }
   }
+  // 変更行が属する節を見るため、変更前（ベース）と変更後（HEAD）の spec.md を読む
+  const readSpec = (side, path) => {
+    const r = git(['show', `${side === 'new' ? 'HEAD' : `refs/remotes/origin/${base}`}:${path}`]);
+    return r.status === 0 ? r.stdout : undefined;
+  };
   const files = [...new Set(entries.flatMap((entry) => entry.paths))];
   let body = process.env.PR_BODY ?? '';
   if (process.env.PR_BODY === undefined && process.env.PR_NUMBER) {
@@ -113,15 +125,16 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     }
     body = r.stdout;
   }
-  const decided = decideTier({ entries, specDiff, body });
+  const decided = decideTier({ entries, specDiff, body, readSpec });
   if (decided.error) {
     console.error(`ci-gate: ${decided.error}`);
     process.exit(1);
   }
   // 段階と理由は標準出力の 1 行に書く（進行の表示は標準エラー）。GITHUB_OUTPUT があれば後続のステップにも渡す（REQ-343）
-  const tierLine = formatTierLine(decided);
+  const tierLine = formatTierLine(decided).replace(/[\r\n%]/g, '');
   console.log(tierLine);
-  if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `tier=${decided.tier}\ntier_line=${tierLine}\n`);
+  // 複数行の値と同じ形（heredoc）で書く。区切りの語が値に現れないよう、改行と % は先に除いてある
+  if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `tier=${decided.tier}\ntier_line<<LOOMAKE_TIER_EOF\n${tierLine}\nLOOMAKE_TIER_EOF\n`);
 
   const run = (cmd) => spawnSync(cmd, { shell: true, stdio: 'inherit' }).status ?? 1;
   // loomake verify は先に pnpm build しておく（CI の gate ジョブ）
@@ -152,8 +165,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     process.exit(verify([]));
   }
   for (const id of selected.changes) {
-    console.error(`ci-gate: branch=${branch || '(なし)'} 段階 ${decided.tier} → verify --change ${id} --done`);
-    if (verify(['--change', id, '--done']) !== 0) status = 1;
+    const args = gateArgs(join('openspec', 'changes'), id);
+    console.error(`ci-gate: branch=${branch || '(なし)'} 段階 ${decided.tier} → verify ${args.join(' ')}`);
+    if (verify(args) !== 0) status = 1;
   }
   process.exit(status);
 }

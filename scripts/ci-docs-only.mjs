@@ -113,7 +113,11 @@ export function decideDocsOnly({ eventName = '', baseRef = '', git }) {
     specDiff = d.stdout ?? '';
   }
   // PR 本文は読まない（quality ジョブは本文を読む権限を持たない。tier-ci-gate の仮定 A-03）
-  const decided = decideTier({ entries, specDiff });
+  const readSpec = (side, path) => {
+    const r = git(['show', `${side === 'new' ? 'HEAD' : `refs/remotes/origin/${baseRef}`}:${path}`]);
+    return r.status === 0 ? r.stdout : undefined;
+  };
+  const decided = decideTier({ entries, specDiff, readSpec });
   if (decided.error) return { docsOnly: false, reason: `段階を決められなかったので、すべてのステップを実行します（${decided.error}）` };
   if (decided.tier !== 'L1') return { docsOnly: false, reason: `段階が ${decided.tier} なので、すべてのステップを実行します（${formatTierLine(decided)}）` };
   return { docsOnly: true, reason: `変えたファイル（${paths.length} 件）はすべて文書（段階 L1）なので、品質コマンドを飛ばします` };

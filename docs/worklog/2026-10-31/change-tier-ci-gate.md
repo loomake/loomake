@@ -7,4 +7,11 @@
 
 | PR | 設計待ち | 実装 | CI 待ち | レビュー往復回数 | マージまで |
 |---|---|---|---|---|---|
-| change/tier-ci-gate | 未測定（設計メモは着手前に受領） | 約 20 分（最初のコミット 08:48 JST から完了ゲート成功 09:05 JST まで。change の起草は含まない） | 未 | 未 | 未 |
+| change/tier-ci-gate | 未測定（設計メモは着手前に受領） | 約 20 分（最初のコミット 08:48 JST から完了ゲート成功 09:05 JST まで。change の起草は含まない） | 未 | 1 | 未 |
+
+## 独立 Opus レビュー（初回）への対応
+
+1. やったこと：head 2ee33f3 の独立 Opus レビュー（claude-opus-5-5）の重大 1・軽微 5・情報 4 を管理役の決定どおり直した。`clean-merged-worktrees.sh` は origin/main の祖先かではなく、ブランチを head にした PR が GitHub で merged かで判定し（gh を使えなければ何も消さない）、detached HEAD と `.loomake/`・`node_modules/`・`dist/`・`coverage/` 以外の無視ファイルがあるものを残す。Requirement の変更は RFC 語の近似をやめ、変更行が属する節で判定する（仮定 A-01 を書き換え）。archive の例外は A か R で archive の下に足したときだけ。tasks.md に完了した印がない change は `--spec-only` で検査する（A-05）。`tier_line` は heredoc 形式で書く。`delivery-metrics.sh` は一時ディレクトリに書いてから移し、段階は `ci-tier.mjs` の `classifyPath` で決める。あわせて main で重複していた REQ-273 を解消し、agents-rules の「作業記録の決まり」を REQ-288 に振り直した（Q-04）。`clean-merged-worktrees.sh --dry-run` を再度 1 回流し、`delivery-manager-main-20261030` と `c001-report2-design-20261030` は「残す（detached）」、PR のないブランチ 2 件は「PR なし」、`.yomiyasu/` や `__pycache__/` の無視ファイルがある 7 件は「無視ファイルあり」、いまいる worktree 1 件、未登録 5 件は触らない判定だった（消す予定は 0 件）。
+2. verify の結果：仕様ゲートと `pnpm -s verify --change tier-ci-gate --done` は exit 0。追加した試験は節の判定（箇条書きの変更 → L3、Scenario に MUST → L1、読めなければ安全側）、archive の M だけ → L3、提案だけの change → `--spec-only`、GITHUB_OUTPUT の heredoc。
+3. 残っている確認事項・仮定：A-01 は「節で判定」に書き換え、A-05 と Q-04 を足した。PR #187 の worktree（rules-consolidation-20261031）は `__pycache__/` の無視ファイルで「残す」になるので、消すときは手で無視ファイルを消してから流す。
+4. 次にやること：修正後の head の CI・Codex・独立 Opus の再レビュー（往復 1 回目）を管理役が確かめてマージする。

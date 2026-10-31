@@ -65,7 +65,8 @@ process.exit(JSON.parse(process.env.CI_STATUSES)[id] ?? 0);
       dir,
       git,
       commitFiles(files) {
-        const entries = Array.isArray(files) ? files.map((file) => [file, 'changed\n'] as const) : Object.entries(files);
+        // tasks.md は完了した印を残して変える（印が 1 つもない change は --spec-only で検査されるため）
+        const entries = Array.isArray(files) ? files.map((file) => [file, file.endsWith('tasks.md') ? '- [x] changed\n' : 'changed\n'] as const) : Object.entries(files);
         for (const [file, content] of entries) {
           mkdirSync(dirname(join(dir, file)), { recursive: true });
           writeFileSync(join(dir, file), content);
@@ -104,8 +105,7 @@ const lintOnly = [['lint'], ['pnpm', 'exec', 'vitest', 'run', 'tests/doc-links.t
 
 describe('実際のCIゲートの子プロセスの契約', () => {
   it.each(['setup-monorepo', 'loomake/c1'])('[REQ-010][REQ-054][REQ-132] ブランチ%sで指定どおりの完了ゲートを呼び、失敗を伝える', (branch) => {
-    withProject(({ commitFiles, run }) => {
-      commitFiles(['scripts/x.mjs']);
+    withProject(({ run }) => {
       const id = branch.replace(/^loomake\//, '');
       const result = run(branch, '', { [id]: 9 });
       expect(result.calls).toEqual([done(id)]);
@@ -123,8 +123,7 @@ describe('実際のCIゲートの子プロセスの契約', () => {
   });
 
   it('[REQ-010][REQ-132] 最初のchangeが失敗しても次を検査し、全体を不合格にする', () => {
-    withProject(({ commitFiles, run }) => {
-      commitFiles(['scripts/x.mjs']);
+    withProject(({ run }) => {
       const result = run('fix-typo', 'loomake-change: c1, c2', { c1: 7 });
       expect(result.calls).toEqual([done('c1'), done('c2')]);
       expect(result.status).toBe(1);
@@ -132,8 +131,7 @@ describe('実際のCIゲートの子プロセスの契約', () => {
   });
 
   it('[REQ-010][REQ-132] 明示したchangeがなければverifyを呼ぶ前に日本語で止まる', () => {
-    withProject(({ commitFiles, run }) => {
-      commitFiles(['scripts/x.mjs']);
+    withProject(({ run }) => {
       const result = run('fix-typo', 'loomake-change: nothing');
       expect(result.status).toBe(1);
       expect(result.stderr).toContain('PR 本文の loomake-change: に書いた change がありません：nothing');
@@ -153,15 +151,15 @@ describe('実際のCIゲートの子プロセスの契約', () => {
 
   it('[REQ-010][REQ-132][REQ-343] L2 で変更したchangeのファイルから完了ゲートを選ぶ', () => {
     withProject(({ commitFiles, run }) => {
-      commitFiles(['openspec/changes/c1/tasks.md', 'scripts/x.mjs']);
+      commitFiles(['openspec/changes/c1/tasks.md', 'packages/a.ts']);
       const result = run('feature-x');
-      expect(result.stdout).toContain('loomake-tier: L2（scripts/x.mjs）');
+      expect(result.stdout).toContain('loomake-tier: L2（packages/a.ts）');
       expect(result.calls).toEqual([done('c1')]);
       expect(result.status).toBe(0);
     });
   });
 
-  it.each([{ files: ['scripts/x.mjs'] }, { files: ['docs/usage.md', 'scripts/x.mjs'] }])('[REQ-010][REQ-132] 対象未指定のコードファイル $files があればverifyを呼ぶ前に止まる', ({ files }) => {
+  it.each([{ files: ['packages/a.ts'] }, { files: ['docs/usage.md', 'packages/a.ts'] }, { files: ['scripts/x.mjs'] }])('[REQ-010][REQ-132] 対象未指定のコードファイル $files があればverifyを呼ぶ前に止まる', ({ files }) => {
     withProject(({ commitFiles, run }) => {
       commitFiles(files);
       const result = run('fix-typo');
@@ -186,7 +184,7 @@ describe('実際のCIゲートの子プロセスの契約', () => {
     withProject(({ commitFiles, run }) => {
       commitFiles(['docs/usage.md']);
       const result = run('fix-typo');
-      expect(result.output).toBe('tier=L1\ntier_line=loomake-tier: L1（docs/usage.md）\n');
+      expect(result.output).toBe('tier=L1\ntier_line<<LOOMAKE_TIER_EOF\nloomake-tier: L1（docs/usage.md）\nLOOMAKE_TIER_EOF\n');
     });
   });
 
@@ -214,7 +212,7 @@ describe('実際のCIゲートの子プロセスの契約', () => {
 
   it('[REQ-342][REQ-343] Requirement の本文を変えた spec.md は L3 で、change があれば --done を呼び stdout に段階の行を書く', () => {
     withProject(({ commitFiles, run }) => {
-      commitFiles({ 'openspec/changes/c1/specs/x/spec.md': '### Requirement: 新しい振る舞い\n本文 MUST。\n', 'openspec/changes/c1/tasks.md': '- [ ] 1.1\n' });
+      commitFiles({ 'openspec/changes/c1/specs/x/spec.md': '### Requirement: 新しい振る舞い\n- 本文の箇条書き\n', 'openspec/changes/c1/tasks.md': '- [x] 1.1\n- [ ] 2.1\n' });
       const result = run('fix-x');
       expect(result.stdout).toContain('loomake-tier: L3（openspec/changes/c1/specs/x/spec.md）');
       expect(result.output).toContain('tier=L3\n');
@@ -308,6 +306,18 @@ describe('実際のCIゲートの子プロセスの契約', () => {
       expect(result.stdout).toContain('loomake-tier: L1（openspec/changes/c2/tasks.md）');
       expect(result.calls).toEqual([...lintOnly, done('c2')]);
       expect(result.status).toBe(5);
+    });
+  });
+
+  it('[REQ-343] tasks.md に完了した印がない change（提案だけの PR）は --done ではなく --spec-only で検査する', () => {
+    withProject(({ commitFiles, run }) => {
+      commitFiles({ 'openspec/changes/c1/tasks.md': '- [ ] 1.1 仕様を書く\n- [ ] 2.1 実装する\n', 'openspec/changes/c1/proposal.md': '# Proposal\n' });
+      const result = run('c1');
+      expect(result.calls).toEqual([...lintOnly, ['verify', '--change', 'c1', '--spec-only']]);
+      expect(result.status).toBe(0);
+      // 1 つでも完了していれば --done
+      commitFiles({ 'openspec/changes/c1/tasks.md': '- [x] 1.1 仕様を書く\n- [ ] 2.1 実装する\n' });
+      expect(run('c1').calls.at(-1)).toEqual(done('c1'));
     });
   });
 
