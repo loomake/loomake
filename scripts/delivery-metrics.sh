@@ -18,7 +18,7 @@ python3 - "$TMP" <<'EOF'
 import json,subprocess,sys,time
 from concurrent.futures import ThreadPoolExecutor
 S=sys.argv[1]; R="repos/loomake/loomake"
-# 一時的な 5xx や二次レート制限に備えて 3 回まで試す。最後も失敗したら gh の stderr を出して止める
+# 一時的な 5xx に備えて 3 回まで試す（二次レート制限の長い待ちには対応しない。毎時の次の回でやり直す）。最後も失敗したら gh の stderr を出して止める
 def api(path,jq):
     for i in range(3):
         r=subprocess.run(["gh","api",path,"--paginate","--jq",jq],capture_output=True,text=True)
