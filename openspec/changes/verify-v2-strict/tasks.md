@@ -19,4 +19,4 @@
 
 ## 5. 受入
 
-- [ ] 5.1 lint・typecheck・全体試験、文書（docs/dev/ci.md・互換性）、changeset（runner・trace patch）。`pnpm -s verify --change verify-v2-strict --done` を通す <!-- loomake:gate=done -->
+- [x] 5.1 lint・typecheck・全体試験、文書（docs/dev/ci.md・互換性）、changeset（runner・trace patch）。`pnpm -s verify --change verify-v2-strict --done` を通す <!-- loomake:gate=done -->
