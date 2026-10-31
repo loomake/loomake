@@ -122,7 +122,8 @@ function completePatch(text: string, file: string): void {
         if (!contentLine) patchError(file);
         contentLine = false; continue;
       }
-      const lead = line[0];
+      // diff.suppressBlankEmpty は空の文脈行の先頭空白を省く。行数の検証は同じく両側を消費する。
+      const lead = line === '' ? ' ' : line[0];
       if (lead === ' ' || lead === '-') hunk.old--;
       if (lead === ' ' || lead === '+') hunk.next--;
       if (![' ', '-', '+'].includes(lead) || hunk.old < 0 || hunk.next < 0) patchError(file);
@@ -158,8 +159,8 @@ export function splitStagedPatch(
   for (const file of files) {
     const code = codes.get(file); const expected = code === 'T' ? 2 : ['A', 'M', 'D'].includes(code ?? '') ? 1 : 0;
     // textconv が旧新を同じ表現にする M は、正常な Git 出力でも区切りがない。
-    // 非曖昧な batchOutput を通った consumer だけが許可する。
-    if (allowEmptyModified && code === 'M' && !byPath.has(file)) { byPath.set(file, []); continue; }
+    // 非曖昧な batchOutput を通り、パスの復号損失の疑いがない consumer だけが許可する。
+    if (allowEmptyModified && code === 'M' && !file.includes('\ufffd') && !byPath.has(file)) { byPath.set(file, []); continue; }
     if (!expected || byPath.get(file)?.length !== expected) patchError(file);
   }
   return { byPath, ordered };

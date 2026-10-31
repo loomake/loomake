@@ -203,7 +203,7 @@ public API、git/gitMeasuredのsignature、runtime/監視役protocol、群化・
 
 ## 11. S4先行の統合順（2026-11-01）
 
-S2-Q01/02の管理役採用により、S1の次はS4（tasks2.5/3.5）を先行し、S2（2.1〜2.4/3.1/3.2全6task・71件候補）をその上へ重ねる。S2の範囲を純粋classifierだけへ縮めず、1200file・60秒・全assertとrunner3OSの受入を保持する。旧d822のファイル全体を移す方法は採らず、currentのGit読み取り集約・C001 local/CI・qualitySchema・helperを保持する。旧S4設計と実関数の適合確認が製品実装の前提で、新しい判断を要する差があればその部分だけ設計へ戻す。
+S2-Q01/02の管理役採用により、S1の次はS4（tasks2.5/3.5）を先行し、S2（2.1〜2.4/3.1/3.2全6task・71件候補）をその上へ重ねる。S2の範囲を純粋classifierだけへ縮めず、1200file・60秒・全assertとrunner3OSの受入を保持する。旧d822のファイル全体を移す方法は採らず、currentのGit読み取り集約・C001 local/CI・qualitySchema・helperを保持する。旧S4設計と実関数の適合確認が製品実装の前提で、新しい判断を要する差があればその部分だけ設計へ戻す。 再利用した設計と適合確認の結果は [PR #261](https://github.com/loomake/loomake/pull/261) の証跡を参照する。
 
 計画採用時点では19taskのID・本文・受入と4済15未の印を保持した。S4のローカル実装・回帰時点では2.5だけを完了とし、5済14未であった。3.5はrunner3OSとWindowsのpush期限順の受入まで未完了とする。S4の先行は依存上必要な順序の変更だけで、S1 gate/merge未達、全体done未達と実4件0/4・P6未成立を免除しない。REQ100本文の統合はIssue259でF前に再照合する。
 
