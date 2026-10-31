@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { formatVerifyResult, INTERRUPTED, NOTICE, isAbortedResult, runVerify, verifyExitCode } from '@loomake/kit';
+import { formatVerifyResult, INTERRUPTED, NOTICE, OPENSPEC_NA_CONFIRMER, isAbortedResult, runVerify, verifyExitCode } from '@loomake/kit';
 import { CHANGE, COPY_REPORT, INTERRUPT_SCRIPT, interruptScript, alive, ledgerRow, reportJson, requirement, specMd, traceMd, vitestCommand, withProject } from './project.js';
 
 // git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
@@ -180,14 +180,15 @@ describe('openspec validate の実行', () => {
     expect(v?.detail).toMatch(/SHALL|MUST/);
   });
 
-  it('[REQ-037] OpenSpec CLI が見つからず openspecValidate が auto なら、警告だけで不合格にしない', () => {
+  it('[REQ-037] OpenSpec CLI が見つからず openspecValidate が auto なら、local は理由と確認者つきの対象外にして不合格にしない', () => {
     const empty = mkdtempSync(join(tmpdir(), 'loomake-empty-path-'));
     const saved = process.env.PATH;
     process.env.PATH = empty;
     try {
       const r = withProject({ config: { openspecValidate: 'auto', commands: {} } }, specOnly);
-      expect(check(r, 'openspec validate')).toMatchObject({ status: 'warn' });
+      expect(check(r, 'openspec validate')).toMatchObject({ status: 'na' });
       expect(check(r, 'openspec validate')?.detail).toContain('OpenSpec CLI が見つかりません');
+      expect(check(r, 'openspec validate')?.detail).toContain(`確認者：${OPENSPEC_NA_CONFIRMER}`);
       expect(ok(r)).toBe(true);
     } finally {
       process.env.PATH = saved;
@@ -220,7 +221,7 @@ describe('完了ゲート', () => {
   it('[REQ-038] 確認待ちの要件が残ると、その ID を出して不合格', () => {
     const trace = traceMd({ ledger: [ledgerRow('REQ-012'), ledgerRow('REQ-002', '確認待ち')] });
     const r = withReport({ trace }, (root) => done(root));
-    expect(check(r, '確認待ちが残っていない')).toMatchObject({ status: 'fail', detail: 'REQ-002' });
+    expect(check(r, '確認待ちが残っていない')).toMatchObject({ status: 'insufficient', detail: 'REQ-002' });
   });
 
   it('[REQ-038] 仕様で参照される要件を名前に含むテストが無いと不合格', () => {
@@ -437,5 +438,134 @@ describe('品質コマンドを省いたことの表示', () => {
     const r = withReport((root) => done(root));
     expect(check(r, '品質コマンド')).toBeUndefined();
     expect(formatVerifyResult(r).split('\n').at(-1)).not.toContain('品質コマンドを実行していません');
+  });
+});
+
+// C001 3/6（verify-v2-gates）：warn・skip・未承認・確認待ちの分類（R-C001-08 B・R-C001-10 A）
+describe('ゲート別の分類', () => {
+  const pendingTrace = traceMd({
+    ledger: [ledgerRow('REQ-012'), ledgerRow('REQ-002', '確認待ち')],
+    assumptions: ['| A-01 | REQ-012 | 8 文字以上 | 記載なし | |'],
+  });
+  const passedReport = (root: string) => reportJson(root, { 'tests/a.test.ts': [['[REQ-012] 動く', 'passed']] });
+  const doneWith = (files: Parameters<typeof withProject>[0], scope: 'local' | 'ci') =>
+    withProject({ config: { openspecValidate: false, commands: { test: COPY_REPORT } }, ...files }, (root) => {
+      writeFileSync(join(root, 'report-src.json'), passedReport(root));
+      return runVerify({ root, changeId: CHANGE, gate: 'done', scope });
+    });
+  const withoutOpenspec = <T>(fn: () => T): T => {
+    const empty = mkdtempSync(join(tmpdir(), 'loomake-empty-path-'));
+    const saved = process.env.PATH;
+    process.env.PATH = empty;
+    try { return fn(); } finally { process.env.PATH = saved; rmSync(empty, { recursive: true, force: true }); }
+  };
+  const decisionOf = (r: Result) => (isAbortedResult(r) ? undefined : r.decision);
+
+  it('[REQ-036] spec-only の未承認の仮定と確認待ちは、案内つきの合格で、pending も要判断も立てず 0', () => {
+    for (const scope of ['local', 'ci'] as const) {
+      const r = withProject({ trace: pendingTrace }, (root) => runVerify({ root, changeId: CHANGE, gate: 'spec-only', scope }));
+      expect(check(r, '仮定の承認')?.status).toBe('warn');
+      expect(check(r, '確認待ちの要件')?.status).toBe('warn');
+      expect(decisionOf(r)).toEqual({ required: false, reasons: [] });
+      if (!isAbortedResult(r) && r.scope === 'local') expect(r.summary.pending).toBe(0);
+      expect(verifyExitCode(r)).toBe(0);
+    }
+  });
+
+  it('[REQ-036][REQ-038] done の未承認の仮定と確認待ちは、不足と要判断理由になり、local も ci も 1', () => {
+    for (const scope of ['local', 'ci'] as const) {
+      const r = doneWith({ trace: pendingTrace }, scope);
+      expect(check(r, '仮定の承認')).toMatchObject({ status: 'insufficient', detail: '未承認：A-01 8 文字以上' });
+      expect(check(r, '確認待ちが残っていない')).toMatchObject({ status: 'insufficient', detail: 'REQ-002' });
+      expect(check(r, '確認待ちの要件')).toBeUndefined();
+      expect(decisionOf(r)).toEqual({
+        required: true,
+        reasons: [
+          { code: 'APPROVAL_REQUIRED', target: 'A-01', message: '仮定 A-01 が未承認です' },
+          { code: 'APPROVAL_REQUIRED', target: 'REQ-002', message: '要件 REQ-002 が確認待ちです' },
+        ],
+      });
+      expect(verifyExitCode(r)).toBe(1);
+      expect(formatVerifyResult(r)).toContain('人の判断が必要です');
+    }
+  });
+
+  it('[REQ-038] 確認待ちと未承認がなければ done の要判断は立たない', () => {
+    const r = doneWith({}, 'ci');
+    expect(decisionOf(r)).toEqual({ required: false, reasons: [] });
+    expect(verifyExitCode(r)).toBe(0);
+  });
+
+  it('[REQ-037] auto で OpenSpec CLI が無いと、local は理由と確認者つきの対象外、ci は不足になる', () => {
+    withoutOpenspec(() => {
+      const config = { openspecValidate: 'auto', commands: {} };
+      const local = withProject({ config }, (root) => runVerify({ root, changeId: CHANGE, gate: 'spec-only', scope: 'local' }));
+      if (isAbortedResult(local)) throw new Error('aborted');
+      expect(local.checks.find((c) => c.id === 'openspec validate')).toMatchObject({ result: 'NOT_APPLICABLE' });
+      expect(check(local, 'openspec validate')?.detail).toContain(OPENSPEC_NA_CONFIRMER);
+      expect(local.summary.not_applicable).toBe(1);
+      expect(verifyExitCode(local)).toBe(0);
+      const ci = withProject({ config }, (root) => runVerify({ root, changeId: CHANGE, gate: 'spec-only', scope: 'ci' }));
+      expect(check(ci, 'openspec validate')).toMatchObject({ status: 'insufficient' });
+      expect(check(ci, 'openspec validate')?.detail).toContain('OpenSpec CLI が見つかりません');
+      expect(verifyExitCode(ci)).toBe(1);
+    });
+  });
+
+  it('[REQ-037] 明示 true で OpenSpec CLI が無いと、local でも不合格のまま', () => {
+    withoutOpenspec(() => {
+      const r = withProject({ config: { openspecValidate: true, commands: {} } }, (root) => runVerify({ root, changeId: CHANGE, gate: 'spec-only', scope: 'local' }));
+      expect(check(r, 'openspec validate')?.status).toBe('fail');
+      expect(verifyExitCode(r)).toBe(1);
+    });
+  });
+
+  it('[REQ-039] 未知キーは spec-only・done・change なしの local/ci で、理由つきの合格の案内になり、それだけでは 0', () => {
+    const config = { openspecValidate: false, comands: {}, commands: { test: COPY_REPORT } };
+    for (const scope of ['local', 'ci'] as const) {
+      const results = withProject({ config }, (root) => {
+        writeFileSync(join(root, 'report-src.json'), passedReport(root));
+        return [
+          runVerify({ root, scope }),
+          runVerify({ root, changeId: CHANGE, gate: 'spec-only', scope }),
+          runVerify({ root, changeId: CHANGE, gate: 'done', scope }),
+        ];
+      });
+      for (const r of results) {
+        expect(check(r, 'loomake.config.json')?.status).toBe('warn');
+        expect(check(r, 'loomake.config.json')?.detail).toContain('comands');
+        expect(isAbortedResult(r) ? undefined : r.checks.find((c) => c.id === 'loomake.config.json')?.result).toBe('PASS');
+      }
+      expect(verifyExitCode(results[1])).toBe(0);
+    }
+  });
+
+  it('[REQ-191] --skip-commands の完了ゲートは local も ci も不足で 1 になり、spec-only は品質項目を数えない', () => {
+    for (const scope of ['local', 'ci'] as const) {
+      const r = withProject({ config: { openspecValidate: false, commands: { test: 'node -e ""' } } }, (root) =>
+        runVerify({ root, changeId: CHANGE, gate: 'done', skipCommands: true, scope }));
+      expect(check(r, '品質コマンド')?.status).toBe('insufficient');
+      expect(verifyExitCode(r)).toBe(1);
+    }
+  });
+
+  it('[REQ-036] spec-only は local でも ci でも品質項目（quality:）を checks に作らない', () => {
+    for (const scope of ['local', 'ci'] as const) {
+      const r = withProject({}, (root) => runVerify({ root, changeId: CHANGE, gate: 'spec-only', scope }));
+      expect(isAbortedResult(r) ? [] : r.checks.filter((c) => c.id.startsWith('quality:'))).toEqual([]);
+    }
+  });
+
+  it('[REQ-203] 仮定を承認すると、spec-only の案内と done の不足・要判断理由から未承認が消える', () => {
+    const approved = traceMd({
+      ledger: [ledgerRow('REQ-012')],
+      assumptions: ['| A-01 | REQ-012 | 8 文字以上 | 記載なし | 承認 |'],
+    });
+    const spec = withProject({ trace: approved }, specOnly);
+    expect(check(spec, '仮定の承認')).toBeUndefined();
+    const r = doneWith({ trace: approved }, 'ci');
+    expect(check(r, '仮定の承認')).toBeUndefined();
+    expect(decisionOf(r)).toEqual({ required: false, reasons: [] });
+    expect(verifyExitCode(r)).toBe(0);
   });
 });
