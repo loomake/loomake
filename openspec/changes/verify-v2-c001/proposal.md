@@ -58,4 +58,4 @@ Requirementは既存のIDのまま、重複させずに移す。新しいREQ-ID�
 
 2本目は、読む側の対応（`verify-v2-readers`）と書く側の切り替え（`verify-v2-wiring`）の2つのPRに分けた。PRの差分がOpusへの依頼の上限（200KiB）を超えたための管理役の決定（2026-10-31）である。`verify-v2-readers` へREQ-093・205を移した。REQ-093は承認済みR-C001-05 AのMODIFIEDとして子changeで確定した。
 
-書く側はさらに3つに分けた（管理役の決定、2026-10-31）。全体は6本で、1/6 `verify-v2-shape`、2a/6 `verify-v2-readers`、2b-1/6 `verify-v2-wiring`（verifyの書き出しの切替。REQ-040・041・100・311・315）、2b-2/6 `verify-v2-evidence`（Evidenceの現行名の切替とreport。REQ-073・324）、2c/6（旧形式の不合格。REQ-164・317・318の予定）、6/6はこの親で受入を行う。
+書く側はさらに3つに分けた（管理役の決定、2026-10-31）。全体は6本で、1/6 `verify-v2-shape`、2a/6 `verify-v2-readers`、2b-1/6 `verify-v2-wiring`（verifyの書き出しの切替。REQ-040・041・100・311・315）、2b-2/6 `verify-v2-evidence`（Evidenceの現行名の切替とreport。REQ-073・324）、2c/6 `verify-v2-strict`（旧形式の不合格。REQ-164・317・318）、6/6はこの親で受入を行う。
