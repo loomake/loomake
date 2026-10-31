@@ -62,7 +62,7 @@ export function register(file,part){const registry=loadPartition(import.meta.dir
   const run = (args: string[] = [], env: NodeJS.ProcessEnv = process.env) => {
     const reportPath = join(root, '.loomake/test-report.json');
     rmSync(reportPath, { force: true });
-    const result = spawnSync(process.execPath, [join(repository, 'node_modules/vitest/vitest.mjs'), 'run', '--config', join(root, 'vitest.config.ts'), ...args], { cwd: root, env, encoding: 'utf8', timeout: 60000 });
+    const result = spawnSync(process.execPath, [join(repository, 'node_modules/vitest/vitest.mjs'), 'run', '--config', join(root, 'vitest.config.ts'), ...args], { cwd: root, env: { ...env, LOOMAKE_TEST_PHASE_PROFILE_DIR: join(root, '.loomake/profile') }, encoding: 'utf8', timeout: 60000 });
     const report = existsSync(reportPath) ? JSON.parse(readFileSync(reportPath, 'utf8')) as FixtureReport : undefined;
     return { ...result, report, markers: markers() };
   };
@@ -88,7 +88,7 @@ try{
 }finally{await ctx.close();save('closed');}
 console.log('PARTITION_WATCH='+JSON.stringify(phases));
 `);
-    const result = spawnSync(process.execPath, [driver], { cwd: root, encoding: 'utf8', timeout: 60000 });
+    const result = spawnSync(process.execPath, [driver], { cwd: root, env: { ...process.env, LOOMAKE_TEST_PHASE_PROFILE_DIR: join(root, '.loomake/profile') }, encoding: 'utf8', timeout: 60000 });
     const line = result.stdout.split('\n').find((line) => line.startsWith('PARTITION_WATCH='));
     return { ...result, phases: line ? JSON.parse(line.slice('PARTITION_WATCH='.length)) as WatchPhase[] : undefined };
   };

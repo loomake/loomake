@@ -127,3 +127,19 @@ artifact の保存期間は7日とする。保存対象は上の3ファイルに
 これらは外部状態への直接参照を見つける補助検査であり、純粋性を保証するものではない。依存先の副作用、引数の変更、別名で渡された関数などはレビューと「同じ入力なら同じ出力」の動作試験で確認する。既存の `tests/kit-layers.test.ts` による層の向きの検査と、判定関数の動作試験も引き続き実行する。
 
 Schemaの再生成一致は、既存の `packages/core/test/json-schema.test.ts` が `renderJsonSchemas()` の結果と保存済みファイルを照合する。Schemaの互換性検査も既存の試験を維持する。
+
+## 共通の試験分割と配布物の準備
+
+`tests/test-partition.json` は case 単位で fast と slow を選ぶ一覧です。現在の実リポジトリは `{"files":{}}` のままで、既存 case の登録・本文・移動は変えていません。Node20、全件の実行、隔離一覧、既存の期待値・上限時間・skip・カバレッジ閾値も保持します。
+
+一覧を読む処理は `scripts/lib/test-partition.mjs` にまとめ、Vitest の設定と隔離の台本が同じ検査を使います。将来の登録では元の `.test.ts` をキーに、`cases.<case-id>` に slow にする OS（`linux`・`darwin`・`win32`）の配列を書きます。companion は元の名前の `.test.ts` を `.slow.test.ts` に置き換えた名前です。両方のファイルが実在し、`cases` が1件以上必要です。空の OS 配列は全 OS で fast を表します。誤ったキー・パス・OS、OS の重複、未登録 case はエラーにします。未知の実行 OS は fast とし、登録 OS の誤記とは区別します。
+
+元ファイルと companion は同じ登録関数を呼び、`includeCase` の判定後に渡された callback を登録します。case の本文は分割基盤で書き換えません。全 case が slow の OS では元ファイルを fast から外し、slow が1件もない companion は実行しません。未登録の `.slow.test.ts` を glob だけで除外することはありません。選択したファイルが0件なら、全件へ戻さず0以外で終了します。
+
+配布物は root の globalSetup が1回だけ build・pack し、package と slow の project に同じ場所を provide します。試験は inject した場所を `packedTarballsEnv` へ渡します。場所がなければ失敗し、個別 build へは戻りません。通常終了と build 失敗時に出力を消します。watch では unit の再実行で準備せず、package または slow の再実行時に同じ場所へ準備し直します。
+
+Vitest 5.0.5 の実 fixture では、全件とファイルの明示選択で準備が1回、`--project unit` で0回でした。unit のファイルだけを明示しても、Vitest の project 一覧には package が残るため1回増えます。package を含まないシャードや隔離の実行でも同様の費用が生じることがあります。0件選択と存在しない project の選択は、どちらも準備なしで失敗しました。これらの起動数と実行時間は PR の結果へ記録します。
+
+隔離一覧と分割一覧には、同じ元ファイルや companion を登録できません。Vitest の設定と `ci-quarantine` の両方で拒否します。実一覧が空の現在は、従来の whole-file 隔離の出力・順序・期限・起動条件を変えません。
+
+この基盤では PR の slow 除外を結線しません。Node20 の削除、実 case の OS 別割当と移動、隔離と分割の両立、PR の実行範囲、元の時計と全件の測定、required context の人の操作を含む速度対策1-1の受入は PR184 に残ります。合成 fixture の成功を実 case の独立性や速度対策の完成には数えません。
