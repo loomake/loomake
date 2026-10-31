@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs';
-import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { existsSync, lstatSync, mkdirSync, realpathSync, statSync, writeFileSync } from 'node:fs';
+import { basename, dirname, isAbsolute, join, posix, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 import { companionOf, validatePartition } from './lib/test-partition.mjs';
@@ -322,7 +322,7 @@ export function inventoryRepository(entries) {
 }
 
 /** 登録済み companion が元ファイルだけを動的に読み込むことを構造で確かめる。 */
-export function companionLinks(registry, readText) {
+export function companionLinks(registry, readText, readModule) {
   const links = new Map();
   const unwrap = (node) => {
     while (ts.isParenthesizedExpression(node) || ts.isAsExpression(node) || ts.isSatisfiesExpression(node) || ts.isNonNullExpression(node)) node = node.expression;
@@ -520,20 +520,31 @@ export function companionLinks(registry, readText) {
       if ((ts.isLabeledStatement(parent) || ts.isBreakStatement(parent) || ts.isContinueStatement(parent)) && parent.label === node) return false;
       return true;
     };
-    const runtimeBinding = (node) => {
+    const bindingDeclarations = (node) => {
       const parent = node.parent;
       const symbol = ts.isShorthandPropertyAssignment(parent) ? checker.getShorthandAssignmentValueSymbol(parent)
         : ts.isExportSpecifier(parent) ? checker.getExportSpecifierLocalTargetSymbol(parent) : checker.getSymbolAtLocation(node);
-      const declarations = symbol?.declarations ?? [];
-      return declarations.some(runtimeDeclaration) || (node.text === 'undefined' && declarations.length === 0);
+      return symbol?.declarations ?? [];
     };
     const forbiddenProperties = new Set(['constructor', '__proto__', 'prototype']);
     const literalKey = (node) => {
       node = unwrap(node);
       return ts.isStringLiteralLike(node) || ts.isNumericLiteral(node) ? node.text : undefined;
     };
+    const helperCalls = [];
     const closedRuntime = (node) => {
-      if (ts.isIdentifier(node) && valueReference(node)) required(runtimeBinding(node), readingError);
+      if (ts.isIdentifier(node) && valueReference(node)) {
+        const declarations = bindingDeclarations(node);
+        required(declarations.some(runtimeDeclaration) || (node.text === 'undefined' && declarations.length === 0), readingError);
+        for (const declaration of declarations) {
+          if (!ts.isImportSpecifier(declaration) && !ts.isImportClause(declaration) && !ts.isNamespaceImport(declaration)) continue;
+          let imported = declaration.parent;
+          while (imported && !ts.isImportDeclaration(imported)) imported = imported.parent;
+          if (!imported || imported.moduleSpecifier.text === 'vitest') continue;
+          required(ts.isCallExpression(node.parent) && node.parent.expression === node && ts.isExpressionStatement(node.parent.parent), readingError);
+          helperCalls.push({ module: imported.moduleSpecifier.text, name: ts.isImportSpecifier(declaration) ? (declaration.propertyName ?? declaration.name).text : undefined });
+        }
+      }
       if (ts.isPropertyAccessExpression(node)) required(!forbiddenProperties.has(node.name.text), readingError);
       if (ts.isElementAccessExpression(node)) {
         const key = node.argumentExpression && literalKey(node.argumentExpression);
@@ -550,6 +561,94 @@ export function companionLinks(registry, readText) {
       ts.forEachChild(node, closedRuntime);
     };
     closedRuntime(ast);
+    if (readModule) {
+      const modules = new Map();
+      const literal = (node) => ts.isLiteralExpression(node) || [ts.SyntaxKind.TrueKeyword, ts.SyntaxKind.FalseKeyword, ts.SyntaxKind.NullKeyword].includes(node.kind);
+      const decorated = (node) => Boolean(ts.canHaveDecorators(node) && ts.getDecorators(node)?.length);
+      const inertClass = (node) => !decorated(node)
+        && (node.heritageClauses ?? []).every((clause) => clause.types.every((type) => ts.isIdentifier(type.expression)))
+        && node.members.every((member) => !decorated(member)
+          && !ts.isComputedPropertyName(member.name ?? member) && !ts.isClassStaticBlockDeclaration(member)
+          && !(ts.isPropertyDeclaration(member) && member.initializer && member.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.StaticKeyword))
+          && !(member.parameters ?? []).some(decorated));
+      const inert = (expression) => {
+        const node = unwrap(expression);
+        if (literal(node) || ts.isIdentifier(node) || ts.isArrowFunction(node) || ts.isFunctionExpression(node)) return true;
+        if (ts.isPrefixUnaryExpression(node)) return node.operator === ts.SyntaxKind.MinusToken && ts.isNumericLiteral(node.operand);
+        if (ts.isClassExpression(node)) return inertClass(node);
+        if (ts.isArrayLiteralExpression(node)) return node.elements.every((element) => !ts.isSpreadElement(element) && inert(element));
+        if (ts.isObjectLiteralExpression(node)) return node.properties.every((property) => !ts.isSpreadAssignment(property)
+          && !ts.isComputedPropertyName(property.name ?? property)
+          && (ts.isPropertyAssignment(property) ? inert(property.initializer)
+            : ts.isShorthandPropertyAssignment(property) || ts.isMethodDeclaration(property) || ts.isGetAccessor(property) || ts.isSetAccessor(property)));
+        return false;
+      };
+      const candidates = (from, specifier) => {
+        const file = posix.normalize(posix.join(posix.dirname(from), specifier));
+        required(!posix.isAbsolute(file) && file !== '..' && !file.startsWith('../'), readingError);
+        const mapped = file.replace(/\.(js|mjs|cjs|jsx)$/, (_, extension) => '.' + ({ js: 'ts', mjs: 'mts', cjs: 'cts', jsx: 'tsx' })[extension]);
+        const found = [];
+        for (const candidate of new Set([file, mapped])) {
+          if (modules.has(candidate)) { found.push(modules.get(candidate)); continue; }
+          let text;
+          try { text = readModule(candidate); } catch { throw new Error(readingError); }
+          if (text === undefined) continue;
+          const parsed = ts.createSourceFile(candidate, text, ts.ScriptTarget.Latest, true);
+          required(parsed.parseDiagnostics.length === 0, readingError);
+          modules.set(candidate, parsed); found.push(parsed);
+          for (const statement of parsed.statements) {
+            if (ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement)) {
+              readDependency(candidate, statement); continue;
+            }
+            const valid = ts.isFunctionDeclaration(statement) ? Boolean(statement.body)
+              : ts.isClassDeclaration(statement) ? inertClass(statement)
+              : ts.isVariableStatement(statement) ? statement.declarationList.declarations.every((item) => ts.isIdentifier(item.name) && (!item.initializer || inert(item.initializer)))
+              : ts.isExportAssignment(statement) ? !statement.isExportEquals && inert(statement.expression)
+              : ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement) || ts.isEmptyStatement(statement);
+            required(valid, readingError);
+          }
+        }
+        required(found.length > 0, readingError);
+        return found;
+      };
+      const readDependency = (from, node) => {
+        if (node.isTypeOnly || node.importClause?.isTypeOnly || !node.moduleSpecifier) return;
+        required(ts.isStringLiteral(node.moduleSpecifier), readingError);
+        const specifier = node.moduleSpecifier.text;
+        required(specifier === 'vitest' || /^node:[a-z_]+(?:\/[a-z_]+)*$/.test(specifier) || relativeModule(specifier), readingError);
+        if (relativeModule(specifier)) candidates(from, specifier);
+      };
+      for (const statement of ast.statements) if (ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement)) readDependency(companion, statement);
+      for (const call of helperCalls) {
+        required(call.name !== undefined, readingError);
+        for (const parsed of candidates(companion, call.module)) {
+          const named = [];
+          const mutable = new Set();
+          for (const statement of parsed.statements) {
+            if (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) { if (statement.name?.text === call.name) named.push(statement); }
+            if (ts.isVariableStatement(statement)) for (const item of statement.declarationList.declarations) {
+              if (ts.isIdentifier(item.name) && item.name.text === call.name) named.push(item);
+              if (ts.isIdentifier(item.name) && !(statement.declarationList.flags & ts.NodeFlags.Const)) mutable.add(item.name.text);
+            }
+            if (ts.isImportDeclaration(statement)) {
+              const clause = statement.importClause; const bindings = clause?.namedBindings;
+              for (const name of [clause?.name, ...(bindings && ts.isNamedImports(bindings) ? bindings.elements.map((item) => item.name) : bindings && ts.isNamespaceImport(bindings) ? [bindings.name] : [])]) if (name?.text === call.name) named.push(name);
+            }
+            if (ts.isExportDeclaration(statement) && statement.exportClause && ts.isNamedExports(statement.exportClause)) for (const item of statement.exportClause.elements) if (item.name.text === call.name) named.push(item);
+          }
+          const fn = named[0]; const modifiers = fn?.modifiers ?? [];
+          required(named.length === 1 && ts.isFunctionDeclaration(fn) && fn.body && !fn.asteriskToken && modifiers.some((item) => item.kind === ts.SyntaxKind.ExportKeyword) && !modifiers.some((item) => [ts.SyntaxKind.AsyncKeyword, ts.SyntaxKind.DefaultKeyword].includes(item.kind)), readingError);
+          required(fn.parameters.every((item) => ts.isIdentifier(item.name) && !item.initializer && !item.dotDotDotToken && !decorated(item)), readingError);
+          const parameters = new Set(fn.parameters.map((item) => item.name.text));
+          for (const statement of fn.body.statements) {
+            const assignment = ts.isExpressionStatement(statement) && statement.expression;
+            required(assignment && ts.isBinaryExpression(assignment) && assignment.operatorToken.kind === ts.SyntaxKind.EqualsToken && ts.isIdentifier(assignment.left) && mutable.has(assignment.left.text) && !parameters.has(assignment.left.text), readingError);
+            const value = unwrap(assignment.right);
+            required(literal(value) || (ts.isIdentifier(value) && parameters.has(value.text)), readingError);
+          }
+        }
+      }
+    }
     links.set(companion, source);
   }
   return links;
@@ -561,10 +660,18 @@ function partitionInputs(root, jsonReader, reader) {
     const registry = validatePartition(JSON.parse(text), { exists: (file) => existsSync(join(root, file)) && statSync(join(root, file)).isFile() });
     /** @type {Record<string, string>} */
     const companions = {};
+    const companionDependencies = {};
     const links = companionLinks(registry, (file) => {
       const source = reader.read(join(root, file)); companions[file] = sha256(source); return source;
+    }, (file) => {
+      const path = join(root, file);
+      let info;
+      try { info = lstatSync(path); } catch (error) { if (['ENOENT', 'ENOTDIR'].includes(error.code)) return undefined; throw error; }
+      const location = relative(realpathSync(root), realpathSync(path));
+      required(info.isFile() && !info.isSymbolicLink() && location !== '..' && !location.startsWith('..' + (process.platform === 'win32' ? '\\' : '/')) && !isAbsolute(location), '補助moduleの配置が不正です');
+      const text = reader.read(path); companionDependencies[file] = sha256(text); return text;
     });
-    return { links, partitionSha256: sha256(text), companions };
+    return { links, partitionSha256: sha256(text), companions, companionDependencies };
   } catch (error) { throw new Error(`試験の分割一覧を読めません：${error.message}`, { cause: error }); }
 }
 
@@ -590,7 +697,7 @@ export async function auditRepository(root, output, reviewFile = 'docs/quality/s
   const review = reviewText ? JSON.parse(reviewText) : { schemaVersion: 1, reviews: [] };
   required(object(review) && review.schemaVersion === 1 && Array.isArray(review.reviews), 'レビュー表の形式かschemaVersionが不正です');
   const sources = Object.fromEntries([...new Set(executions.map((test) => test.file))].map((file) => [file, read(file)]));
-  const inputs = { partitionSha256: partition.partitionSha256, companions: partition.companions, specs: Object.fromEntries([...texts].sort(([a], [b]) => a < b ? -1 : 1).map(([file, text]) => [file, sha256(text)])), testSources: Object.fromEntries(Object.entries(sources).map(([file, text]) => [file, sha256(text)])), testReportSha256: sha256(reportText), reviewSha256: reviewText ? sha256(reviewText) : null, scriptSha256: sha256(read('scripts/scenario-audit.mjs')) };
+  const inputs = { partitionSha256: partition.partitionSha256, companions: partition.companions, companionDependencies: partition.companionDependencies, specs: Object.fromEntries([...texts].sort(([a], [b]) => a < b ? -1 : 1).map(([file, text]) => [file, sha256(text)])), testSources: Object.fromEntries(Object.entries(sources).map(([file, text]) => [file, sha256(text)])), testReportSha256: sha256(reportText), reviewSha256: reviewText ? sha256(reviewText) : null, scriptSha256: sha256(read('scripts/scenario-audit.mjs')) };
   const result = { ...auditScenarios(inventory, review.reviews, executions, sources, pending), inputs };
   mkdirSync(dirname(output), { recursive: true });
   mkdirSync(output);
