@@ -8,7 +8,7 @@ run の試験の遅さと、macOS・Windows の時間切れの主な原因は、
 
 ## What Changes
 
-- `packages/runner/src/git.ts` に、HEAD の SHA・ブランチ名と、必要なら `--git-path config`・`--git-path hooks` を 1 回の `git rev-parse` で読む補助を足す。HEAD のコミットがない場合などで 1 回の呼び出しが失敗したときは、今と同じ別々の呼び出しに戻して、今と同じ値を返す。
+- `packages/runner/src/git.ts` に、HEAD の SHA・ブランチ名と、必要なら `--git-path config`・`--git-path hooks` を 1 回の `git rev-parse` で読む補助を足す。HEAD のコミットがない場合などで 1 回の呼び出しが失敗したときは、HEAD は今と同じ別々の呼び出しに、場所は `--git-path` 2 つを付けた 1 回の呼び出しに戻して、今と同じ値を返す。
 - `packages/runner/src/guards.ts` の `headState`・`gitInternals` をこの補助で読む。エンジンを呼ぶ前の読み取りは `rev-parse` 4 回と `config --list` 1 回から、`rev-parse` 1 回と `config --list` 1 回になる。呼んだ後は `rev-parse` 2 回と `config --list` 1 回から、`rev-parse` 1 回と `config --list` 1 回になる。
 - `packages/runner/src/run/phases.ts` の完了ゲートの前後の読み取り（`headState`）を、それぞれ `rev-parse` 2 回から 1 回にする。
 - 読み取りは今と同じ時点で行う。段階の境目（エンジンの前・後、完了ゲートの前・後）ごとに読み直し、前の境目で読んだ値を次の境目で使い回さない。

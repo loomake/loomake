@@ -52,7 +52,7 @@ git rev-parse [--git-path config --git-path hooks] HEAD --abbrev-ref HEAD
 - 作業ツリーに `HEAD` という名前のファイルがあっても、終了コード 0 で同じ出力になる
 - HEAD のコミットがない（unborn）：場所の 2 行と `HEAD` を出したあと、終了コード 128 で失敗する。今の `headState` は、この場合 `sha` を空、`branch` を `HEAD` にしている
 
-このため、1 回の呼び出しが 0 以外で終わったときや、行の数が合わないときは、今と同じ別々の呼び出し（`--verify -q HEAD`、`--abbrev-ref HEAD`、`--git-path config`、`--git-path hooks`）に戻して値を求める。unborn の run は少ないので、回数への影響はない。期限や出力の上限で止まったとき（`ProcessLimitError`・`RuntimeFailure`）は今と同じく例外のまま上へ渡し、別々の呼び出しには戻らない。
+このため、1 回の呼び出しが 0 以外で終わったときや、行の数が合わないときは、今と同じ別々の呼び出し（`--verify -q HEAD` と `--abbrev-ref HEAD`）に戻して値を求める。場所が要るときは、`--git-path config --git-path hooks` を 1 回で読む。`--git-path` は HEAD のコミットがなくても読めるので、まとめても値は変わらない。場所を渡さずに `gitInternals` を呼んだとき（guards-special-files.test.ts の子プロセス）も、この 1 回で読む。unborn の run は少ないので、回数への影響はない。期限や出力の上限で止まったとき（`ProcessLimitError`・`RuntimeFailure`）は今と同じく例外のまま上へ渡し、別々の呼び出しには戻らない。
 
 ## 読み直しの時点が変わらない根拠
 
@@ -90,6 +90,23 @@ git rev-parse [--git-path config --git-path hooks] HEAD --abbrev-ref HEAD
 #199 の失敗（external-budget.test.ts:148）は、gh の認証確認より前の git 1 操作が 500ms の期限に当たったものである。この試験の run は、認証確認より前の段階ではエンジンを呼ばないので、この change で減る操作は少ない。#199 の対策は Q-B1-1（操作期限の見直し）が主で、この change は負荷を下げる側から効くだけである。
 
 実際の前後の数は、タスク 3.1 で同じ方法で数えて PR に書く。
+
+## 実測（タスク 3.1）
+
+変更の前（`b5fc010f` の runner のソースと試験）と後（タスク 2.3 のコミット）で、同じ方法で数えた。後の guards.test.ts には、この change で足した 2 件（96 回）が入るので、前と同じ試験の数に直すために引いた。
+
+| ファイル | 前 | 後 | 減った数 | 割合 | 見込みの減る数 |
+|---|---|---|---|---|---|
+| run.test.ts | 1,580 | 1,275 | 305 | −19.3% | 305 |
+| guards.test.ts | 1,175 | 955（足した 2 件を除く） | 220 | −18.7% | 220 |
+| publication-retry.test.ts | 1,120 | 922 | 198 | −17.7% | 198 |
+| pr.test.ts | 385 | 311 | 74 | −19.2% | 74 |
+| external-budget.test.ts | 392 | 322 | 70 | −17.9% | 70 |
+| 合計 | 4,652 | 3,785 | 867 | −18.6% | 867 |
+
+減った数は 5 ファイルとも見込みと一致した。`GIT_TRACE` では、後の `rev-parse --verify -q HEAD` は 0 回で、項目ごとの呼び出しへの戻りは起きていない。
+
+publication-retry.test.ts の前の数は、見込みの表の 1,597 回と 30% ずれた。見込みの表のこの行は、設計メモの値（PR #218 で 1 回目の run を 10 ケースで共有する前の数）をそのまま使っていたためである。そのため、この行の割合は見込みの −12% ではなく −17.7% になり、合計の割合も −17% ではなく −18.6% になった。
 
 ## 仕様の差分
 
