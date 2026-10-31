@@ -1,0 +1,57 @@
+name: diagnose-hook-budget
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/diagnose-hook-budget.yml'
+      - 'scripts/external-call-diagnostics.mjs'
+      - 'packages/runner/test/process-diagnostics.ts'
+      - 'packages/runner/test/external-budget-deadline.test.ts'
+      - 'packages/runner/test/process-diagnostics.test.ts'
+      - 'tests/external-call-diagnostics.test.ts'
+      - 'tests/hook-budget-diagnostics-workflow.test.ts'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        id: checkout
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        id: node
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - id: heartbeat
+        run: node scripts/ci-heartbeat.mjs start "${{ runner.temp }}/loomake-hook-budget/heartbeat"
+      - id: test
+        run: node node_modules/vitest/vitest.mjs run packages/runner/test/external-budget-deadline.test.ts -t 'pre-commit・pre-push のフックがあっても'
+        env:
+          LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR: ${{ runner.temp }}/loomake-hook-budget/processes
+          LOOMAKE_CI_HEARTBEAT_DIR: ${{ runner.temp }}/loomake-hook-budget/heartbeat
+      - id: heartbeat_stop
+        if: ${{ !cancelled() && steps.heartbeat.outcome == 'success' }}
+        run: node --input-type=module -e "import { stopHeartbeat } from './scripts/ci-heartbeat.mjs'; stopHeartbeat(process.argv[1], {});" "${{ runner.temp }}/loomake-hook-budget/heartbeat"
+      - id: summarize
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' && steps.node.outcome == 'success' }}
+        run: node scripts/external-call-diagnostics.mjs "${{ runner.temp }}/loomake-hook-budget/processes" .loomake/test-report.json --public-export "${{ runner.temp }}/loomake-hook-budget/export"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        id: upload
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' && steps.node.outcome == 'success' && steps.summarize.outputs.export_validated == 'true' }}
+        with:
+          name: hook-budget-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/loomake-hook-budget/export/calls.jsonl
+            ${{ runner.temp }}/loomake-hook-budget/export/summary.json
+            ${{ runner.temp }}/loomake-hook-budget/export/summary.md
+            ${{ runner.temp }}/loomake-hook-budget/export/heartbeat.json
+          retention-days: 7
+          if-no-files-found: warn

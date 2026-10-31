@@ -27,3 +27,22 @@
 - 予算を延ばした試験は、1 操作の期限または共有予算より長く待ったことと、期限に猶予を足した時間のうちに止まったことを確かめる
 
 外部操作の期限そのもの（run・verify・trace が守る期限と終了コード）は、製品の振る舞いなので、run と external-process-budget などの仕様に残っている。
+
+
+## フック試験の外部操作をローカルで診断する
+
+`external-budget-deadline.test.ts` は、`LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR` を指定したときだけ外部操作の観測を保存する。保存先を `<診断先>/processes` にして、次の試験を1回実行する。元の期限・期待値・通常CIの選択は変えない。
+
+```sh
+pnpm exec vitest run --project unit packages/runner/test/external-budget-deadline.test.ts -t 'pre-commit・pre-push のフックがあっても'
+node scripts/external-call-diagnostics.mjs <診断先>/processes .loomake/test-report.json
+```
+
+集計は `<診断先>/summary.json` と `summary.md` を作る。最後のgh操作と上限で停止した操作について、入口の共有残予算、監視役に渡した絶対deadline、終了kind、欠けた欄を同じcall IDで確認できる。内部timeoutの厳密な値は取得せずnullとし、観測時刻から求めた区間と区別する。共有期限と1操作の上限が近い場合や観測が欠けた場合は、原因を未確定として扱う。診断ファイルごとに64KiBの上限を設け、上限到達と読めない行も集計する。
+
+観測では、元の関数を同じ引数で一度だけ呼び、返値とthrowをそのまま返す。生の引数・環境値・出力・例外messageは記録しない。保存に失敗しても元の試験結果を変えないが、観測のI/Oとpreloadは実行時間や失敗頻度に影響しうる。単独実行の成功を、mainの並行実行での失敗の再現や修理完了とは扱わない。
+
+
+CIの`diagnose-hook-budget`は、関連PRと手動起動で同じ1件を実行する。手動起動はworkflowをdefault branchへ取り込んだあとに使える。通常CIの試験範囲や期限は変えず、試験が失敗すればjobも失敗のままになる。
+
+公開artifactには、専用export先の`calls.jsonl`・`summary.json`・`summary.md`・`heartbeat.json`だけを個別に指定し、7日間保存する。exportではcall IDを固定連番へ置き換え、許可したキー・列挙値・有限数・nullだけへ再投影してschemaを検査する。元のPID・生レポート・preload・一時ディレクトリ全体はアップロード対象に含めない。選択が1件でなければ集計を失敗にし、schema検査済みの診断がある場合だけartifactへ保存する。Step Summaryも検査済みの要約だけを使う。
