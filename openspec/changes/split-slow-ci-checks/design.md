@@ -71,6 +71,8 @@ scripts/scenario-audit.mjs、tests/scenario-audit-scope.test.ts、新しいscrip
 
 G-Bの元test内prefixとcompanion方式を採用する。本文を変えず、実registry登録とprefix追加は測定後の同じ4.3で行う。guardsの37宣言/52候補/40行、run-no-changeの12宣言/13候補/25行はモデルの静的読取値であり、実装担当が独立ASTで照合する。モデルは候補44と数えたが、同じ3d664のsourceを管理役と実装担当が独立実測し、52候補＝37宣言＋import1＋propertyKey8＋通常helper6と確認した。本文を変更せず、未実測だった静的見積の漏れを訂正し、宣言37/展開40は一致した。
 
+2026-10-31、受入済みmain d04e212f（PR235）を取り込んだhead 22be0369を照合した。3d664093のguards37宣言は本文の文字列多重集合をbyte同一で保持し、追加はrunner-git-reads-batchのREQ-348に対応する通常itの2宣言だけだった。現行guardsは39宣言/54候補/42展開行で、import1・propertyKey8・通常helper6は変わらない。旧37/52/40は当時の基準として残し、live inventoryでは現行の正確な数と追加2件の正確な試験名を検査する。run58/60/68、run-timeout2/3/2、run-no-change12/13/25と全既存assertは保持する。実registry・元本文・製品コード・Requirementは変更しない。
+
 Q-G1は推奨Cとし、each行の閾値混在が実測されるまで追加のwrapperや本文変更を実装しない。混在があれば未割当のまま具体設計を追加し、fast行を表ごとslowへ送らない。Q-G2は推奨Aを採用し、同fileのconstで定義された通常fixture helperの宣言名・非call参照をbindingに基づいて非宣言と分類する。withTest6候補を検査対象から消さず、テスト関数を指す初期値やそのaliasは拒否する。元run/timeoutの検査を保持し、2.5でこの2fileと正負fixtureも独立照合する。Q-G3は推奨Aの条件付き採用とし、最新測定でWindows隔離中の3試験が成功した場合だけ4.3の登録と同じcommitで隔離を解除する。失敗時はBの未登録・未達を保ち、隔離/分割の重複拒否を変更しない。
 
 モデルはADR本文未読と明記した。AGENTSとworkflowのRead、actual Opus5-5/read-only/拒否0と管理役の全文読了を確認し、管理役はADRのおすすめ回答・品質維持・人の操作の境界を照合した。3規約のRead済みや新しい人のレビューとは記録しない。異なる不正条件が重なる場合の診断は抑制せず、負のfixtureで全code集合を確認する。独立全case比較は有効な登録対応だけでCからSへ戻し、名前の推測mappingを採用しない。

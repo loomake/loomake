@@ -22,9 +22,9 @@ describe('独立した試験宣言 inventory', () => {
     expect(inventory.nonCall.map((item: { kind: string }) => item.kind)).toEqual(nonCall);
     if (path.endsWith('/run.test.ts')) expect(inventory.declarations.reduce((counts: Record<string, number>, item: { kind: string }) => ({ ...counts, [item.kind]: (counts[item.kind] ?? 0) + 1 }), {})).toEqual({ direct: 55, runIf: 1, each: 2 });
   });
-  // G-B baseline: 3d664093。将来 main を統合するときは本文保持の証拠と再照合する。
+  // 3d664093: 37/52/40。PR235の旧37本文保持＋REQ-348の2宣言追加を照合済み（22be0369）。
   it.each([
-    ['packages/runner/test/guards.test.ts', 37, 52, 40, 1, 8, 6],
+    ['packages/runner/test/guards.test.ts', 39, 54, 42, 1, 8, 6],
     ['packages/runner/test/run-no-change.test.ts', 12, 13, 25, 1, 0, 0],
   ] as const)('G-B設計の宣言・候補・全展開行とhelper分類を保つ: %s', (path, declarations, candidates, rows, imports, properties, helpers) => {
     const result = inventoryDeclarations(readFileSync(path, 'utf8'), path);
@@ -33,6 +33,14 @@ describe('独立した試験宣言 inventory', () => {
     expect(result.nonCall.filter((item: { kind: string }) => item.kind === 'importSpecifier')).toHaveLength(imports);
     expect(result.nonCall.filter((item: { kind: string }) => item.kind === 'propertyKey')).toHaveLength(properties);
     expect(result.nonCall.filter((item: { kind: string }) => item.kind === 'localHelper')).toHaveLength(helpers);
+    if (path.endsWith('/guards.test.ts')) {
+      const addedNames = result.declarations.map((item: { text: string }) => item.text.match(/^it\('([^']+)'/)?.[1]).filter((name: string | undefined) => name?.startsWith('[REQ-348]'));
+      expect(addedNames).toEqual([
+        '[REQ-348][REQ-126][REQ-198][REQ-204] エンジンの前後で、rev-parse と config --list を 1 回ずつ読む',
+        '[REQ-348][REQ-205][REQ-126] 完了ゲートの検証の前後で HEAD を 1 回ずつ読み、直しのエンジンの前で読み直す',
+      ]);
+      expect(result.declarations.length - addedNames.length).toBe(37);
+    }
   });
   it('通常const helperの定義と同じbindingの非call参照を区別する', () => {
     const result = inventoryDeclarations("const withTest = (repo) => repo.write('file', 'it( only text'); fn(withTest); const options = { withTest };", file);

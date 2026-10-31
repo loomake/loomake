@@ -18,6 +18,8 @@
 
 2.5の995e基点run60宣言/62候補/70展開行は履歴として残す。受入済みmain PR231の移動後はlive run58宣言/60候補/68行とrun-timeout2宣言/3候補/2行を合わせ、元60宣言/70行のscopeを保持する。raw候補計63は追加importの非call1増であり、宣言数には数えない。本文blockとselector/hashの独立保持照合に基づくbaseline更新とし、既存期待を実装へ合わせて変えない。非literalなeach表の展開未確定はdynamicRowsで明示し、宣言を除外せずdynamicTitleも流用しない。
 
+2.5の現行guards基準は、受入済みmain d04e212f（PR235）取込後の22be0369で39宣言/54候補/42展開行とする。3d664093の37/52/40は履歴として残す。旧37宣言の本文多重集合保持とREQ-348の追加2宣言だけであることを独立照合した根拠に従い、追加2件の正確な試験名も検査する。run58/60/68・run-timeout2/3/2・run-no-change12/13/25と既存assertを保ち、計画追記後のspec-only成功をlive inventory編集前の条件とする。
+
 # 3. 統合と残設計
 
 - [ ] 3.1 head `3571c208` で凍結したPR179診断をstabilize-cross-os-testsへ引き継ぎ、その統合境界と最新mainを基準にfresh差分・元case/parameter/assert/timeout・診断対象/companionを照合する。case本体分割の前に吸収先/C001/E3との重複と統合順序を管理役が確定する

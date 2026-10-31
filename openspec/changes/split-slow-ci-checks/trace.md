@@ -120,3 +120,9 @@ REQ-347差分、監査source、実registryは変更しない。6/16と必須受�
 Opus5753a1af（head3d664093）の全文を管理役が読み、Q-G1=C、Q-G2=A、Q-G3=条件付きA/失敗時BをQ-31〜Q-33へ記録した。元の規則の変更や新しい人のレビューではない。モデルのADR本文未読を保持し、管理役がADR0006の採用範囲を照合した。通常helperの分類を2.5へ加える前に仕様ゲートを再実行し、実registry/隔離/元caseをまだ変更しない。
 
 G-Bのguards候補数44はモデルの未実測値であり、管理役と実装担当が3d664の同じsourceで52を確認した（有効37、import1、propertyKey8、helper6、展開40）。scopeから候補を除外せず、static見積の漏れを訂正した。元case/Source/本文は変更していない。
+
+## 2026-10-31 Git読取集約の受入後baseline
+
+2026-10-31、受入済みmain d04e212f（PR235）を取り込んだhead 22be0369を照合した。3d664093のguards37宣言は本文の文字列多重集合をbyte同一で保持し、追加はrunner-git-reads-batchのREQ-348に対応する通常itの2宣言だけだった。現行guardsは39宣言/54候補/42展開行で、import1・propertyKey8・通常helper6は変わらない。旧37/52/40は当時の基準として残し、live inventoryでは現行の正確な数と追加2件の正確な試験名を検査する。run58/60/68、run-timeout2/3/2、run-no-change12/13/25と全既存assertは保持する。実registry・元本文・製品コード・Requirementは変更しない。
+
+出典は受入済みPR235のdesign.md・specs/run-guards/spec.md（Source: REQ-348）と、3d664093から22be0369への独立AST/本文多重集合比較である。追加2宣言はエンジン前後の読取回数と、完了ゲート前後・直しの前のHEAD読直しを確かめる。現行guardsは受入済みmainとbyte同一で、inventoryのerrorsは空だった。管理役が既存2.5の基準照合として採用した範囲であり、新しいRequirementやcase個別設計を追加しない。7/16と必須受入3件未達を保持し、最新全件測定や最終受入の証拠へ流用しない。
