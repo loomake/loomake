@@ -158,6 +158,10 @@ Q-01〜Q-98の採用と条件は管理役がADR0006に基づき記録する。Q-
 
 | Q-98 | PR184・253・利用者Q-S1/S2 | 未完成コードをどの枝で統合するか | A：main基点の統合枝／B：noneでmainへ部分merge | A。文書限定noneの決定を守る | yes | A。change/split-slow-ci-checksをmain248cから作り、採用計画だけ移植。実装taskは受入まで未完。部分PRを同枝へ向け、最終main受入は全done・必須CI・独立レビューを満たす（Issue121 comment6543715081） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 
+
+| Q-101 | tasks2.10・Issue258 R4′/A1 | companionの自由な値参照をどう閉じるか | A：TS checkerと実行時宣言の種類／B：require名だけ拒否 | A。実証したprocess/eval/Function系を同族として拒む | yes | A。同fileの字句scopeと実行時宣言を検査しambient・型専用・本文なし関数・enum・namespace・ImportEqualsを拒否。未束縛undefinedだけは危険な能力を持たない例外として許す。41523/f41の一致範囲を部分採用（管理役・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
+| Q-102 | tasks2.10・Issue258 R5′/A2 | 反射へのproperty/キーをどう扱うか | A：companionだけ閉じる／B：正規helperにも同じ文法 | A。正規helperのchosen[index]等を保つ | yes | A。constructor・__proto__・prototypeの固定property/keyと非literalキーをcompanion本体で拒否。既存closedSyntax後へ追加し既存文言・順序を保つ。helper R6/R7と入口B層は未採用、known bad免除にしない（管理役・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
+
 ## 仮定
 
 | ID | 関連 | 仮定の内容 | 理由 | 承認 | 承認者 | 承認日 |
@@ -308,3 +312,10 @@ spec-only成功後だけ同PR253の2.10修理を行う。既存269件・旧拒�
 利用者のQ-S1/S2決定はIssue121コメント6543715081を参照する。統合枝はmain248c89b6から作成し、元枝d9647be5の正式計画7ファイルを移植した。差分仕様2ファイルの本文・Source・Scenarioと元21タスクの受入範囲を保持した。元枝の8完了印のうち実装2.1〜2.6は履歴とし、この枝への受入までは未完了へ戻した。元枝での試験成功や未達の根拠は取り消さない。原本と経過の「現在」は各記録時点を指す。
 
 PR252は既にmainへ取り込まれた履歴で、今回あらためて受入済みにしたものではない。PR253修理は別担当で未受入。Node20削除・実registry・全PRslow不実施の有効化と最終main受入は後段に残し、計画移植を1-1完成とは扱わない。実観測・全case保存・coverage・ruleset人操作・sync/archiveの条件は削らない。
+
+
+## 2026-11-01 companion本体の部分修理（Q-101・Q-102）
+
+管理役は、Opus 41523a05 のR4′/R5′と、一次資料だけの独立見解保存後に先行見解を比較したf41a7a1eのA1/A2が一致する範囲を採用した。未束縛undefinedは41523の安全な例外を選ぶ。初回公開52Readは許可一次資料内、保存済み初回回答と最初のresultが一致し、実モデルはclaude-opus-5-5・ok・拒否0・Readのみだった。各技術設計は利用者本人の個別レビューではない。
+
+第12ScenarioのWHENにR4/R5本体の条件だけを加え、先頭11Scenario・短いSHALL・Sourceと既存THENを保持する。元308件とrow統合後の関連395件の期待・拒否順・文言を変更しない。helperのR6/R7と入口をcanonicalだけへ限るB層は今回採用しない。helper-oneを含む既知の未修理、native追加対照、C1/wiring/oracle、実登録、3OS、親doneを未達のまま残し、2.10も完了にしない。spec-only成功後だけ実装する。

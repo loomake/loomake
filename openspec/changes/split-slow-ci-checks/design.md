@@ -366,3 +366,12 @@ queryとfragmentはnativeで他test行とsource行が各2passedとなり、現�
 | T5 | 既存docs/dev/ci.mdへ技術限界を追記する。文書が存在しないとのモデル発言はGrep不足であり、新規文書は作らない |
 
 spec-only成功後だけ修理へ進み、2.10/PR253は未受入のまま残す。rowのQ91〜94は別scope、R4完全設計とC1のstatic/native対応・一般oracle重大3は未採用で、実registry空・8/21+必須4未達・独立最終/全3OS/全体done/人ruleset/merge/sync/archiveの残受入を保持する。
+
+
+# 2026-11-01 companion本体の字句束縛と反射property（Q-101・Q-102）
+
+Issue258に対し、Opus 41523a05のR4′/R5′と厳格独立調査f41a7a1eのA1/A2が一致する本体部分だけを管理役が採用した。既存closedSyntaxを最後まで実行した後、noLib/noResolveの単一ファイルTS checkerで値のIdentifierを解決する。型の位置、宣言名、固定property名、importのpropertyName、bindingのpropertyName、labelは値参照に含めない。shorthandはgetShorthandAssignmentValueSymbol、export specifierはgetExportSpecifierLocalTargetSymbolで解決する。
+
+同fileのambientでないVariableDeclaration・Parameter・BindingElement、本文付きFunctionDeclaration、ClassDeclaration、型専用でないImportSpecifier・NamespaceImport・ImportClauseだけを実行時の宣言として認める。未束縛のundefinedだけを許し、ambient/type-only/本文なし関数/enum/namespace/ImportEqualsや宣言のない値は拒否する。constructor・__proto__・prototypeの固定property/keyと、literalでないelement/computed keyも拒否する。追加違反は既存readingErrorを使う。
+
+pure companionLinksのAPI、読み取り対象、scanner/hash/migrate/registry/configと既存395件の期待を保つ。実証したwrapped require2形、QBの5経路、型だけ・ambientの負例、字句shadowingの正負対照、反射propertyを追加試験で先にREDにする。新たなnativeは別工程であり、静的fixtureをnative実証とは呼ばない。helper検査R6/R7と入口B層、相対import値の直接callee限定は未採用で今回は実装しない。helper-oneの不正と親の全受入が残るため、2.10・2.7全体のcheckboxを変えない。
