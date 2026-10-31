@@ -3,6 +3,8 @@
 // 段階ごとに検査を変える（REQ-343）。L1 は lint と文書のリンクの試験を実行し、change がなければ verify を呼ばない。
 // change があれば段階を問わず verify を呼ぶ（L2・L3 は --done、L1 は tasks.md に完了した印がない change だけ --spec-only）。L2・L3 は対象の change を、PR 本文の「loomake-change:」の行、PR で変えたファイル、ブランチ名から決め、
 // それぞれに --change <id> --done を実行する（REQ-010・REQ-132）。L3 では change が必須。
+// change のゲートは --json で実行し、終了コードではなく 2.0.0 の結果の JSON（対象の change・scope ci・completed・要判断なし・verdict PASS・
+// 完了ゲートの検査あり）で合格を決める。履歴の 1.0.0・local・証拠不足・全件 NOT_APPLICABLE は合格にしない（REQ-318、ciGateProblem）。
 // loomake run が作る loomake/<id> のブランチは、先頭の loomake/ を除いて比べる（fix-review-findings の仮定 A-01）
 //
 //   BASE_REF=<向き先のブランチ> PR_NUMBER=<PR の番号> node scripts/ci-gate.mjs <branch>
@@ -72,36 +74,48 @@ export function gateArgs(changesDir, id, tier) {
   return ['--change', id, checked ? '--done' : '--spec-only'];
 }
 
+/** 完了ゲート（--done）の結果に必ずある検査の id（verify-v2-wiring の仮定 A-01、verify-v2-strict の仮定 A-03）。品質コマンドは command: で始まる */
+export const DONE_GATE_CHECKS = ['tasks.md', '要件ごとのテスト'];
+
 /**
- * change の完了ゲート（--done）の結果を、CI の最終合格として受け入れるか（REQ-318）。受け入れないときは理由を返す。
- * verify 2.0.0 は ci・completed・要判断なし・verdict PASS・不合格や不足の検査なし・終了コード 0 のときだけ受け入れ、
- * local・partial・要判断・中止の結果は合格にしない。いまの書き出しの 1.0.0 は、ok:true・fail の検査なし・終了コード 0 なら
- * これまでどおり受け入れる（verify-v2-readers。1.0.0 を受け入れなくするのは verify-v2-wiring）。ci-gate の実行の流れにはまだつながない
+ * change のゲートの結果を、CI の合格として受け入れるか（REQ-318）。受け入れないときは理由を返す。
+ * verify 2.0.0 だけを受け入れ、履歴の 1.0.0 は合格にしない。対象の change が一致し、aborted・partial・要判断がなく、終了コードが 0 であることを両方のゲートで求める。
+ * 完了ゲート（gate: 'done'）はさらに、scope が ci、verdict が PASS、不合格や不足（--skip-commands など）の検査がなく、検査が 0 件や全件 NOT_APPLICABLE でなく、
+ * 完了ゲートの検査（tasks.md・要件ごとのテスト・品質コマンド）を含むことを求める。local の結果や、仕様ゲート・品質コマンドだけの結果は完了ゲートの合格にしない。
+ * 仕様ゲート（gate: 'spec-only'）は、不合格の検査がないことを求める
  * @param {string} stdout verify --json の標準出力
  * @param {number} exitCode verify の終了コード
+ * @param {{ change: string; gate: 'done' | 'spec-only' }} expected 検査した change とゲート
  * @returns {string | undefined}
  */
-export function ciGateProblem(stdout, exitCode) {
+export function ciGateProblem(stdout, exitCode, expected) {
   let result;
   try { result = JSON.parse(stdout); } catch { return 'verify の結果を JSON として読めません'; }
   if (!result || typeof result !== 'object' || Array.isArray(result)) return 'verify の結果が JSON のオブジェクトではありません';
-  if (result.schemaVersion === '1.0.0') {
-    if (result.ok !== true || !Array.isArray(result.results) || result.results.some((r) => r?.status === 'fail')) return 'verify の結果（1.0.0）が合格ではありません';
-    return exitCode === 0 ? undefined : `verify の終了コードが 0 ではありません（${exitCode}）`;
-  }
+  if (result.schemaVersion === '1.0.0') return 'verify の結果（1.0.0）は合格にしません。2.0.0 の結果が必要です';
   if (result.schemaVersion !== '2.0.0') return `verify の結果の版に対応していません（${JSON.stringify(result.schemaVersion)}）`;
   const run = result.run && typeof result.run === 'object' ? result.run : {};
   if (run.status === 'aborted') {
     const errors = Array.isArray(run.errors) ? run.errors.map((e) => `${e?.kind}：${e?.message}`).join(' / ') : '';
     return `verify が実行エラーで中止されました（${errors}）`;
   }
-  if (result.scope !== 'ci') return `scope が ci ではありません（${JSON.stringify(result.scope)}）。ローカルの結果は最終の合格にしません`;
+  if (result.change !== expected.change) return `verify の結果の change が対象と違います（対象 ${expected.change}、結果 ${JSON.stringify(result.change)}）`;
   if (run.status !== 'completed') return `一部の証拠を取得できませんでした（${JSON.stringify(run.status)}）`;
   if (result.decision?.required !== false) return '人の判断が必要です';
-  if (result.verdict !== 'PASS') return `verdict が PASS ではありません（${JSON.stringify(result.verdict)}）`;
   const checks = Array.isArray(result.checks) ? result.checks : [];
-  const notPassed = checks.filter((c) => c?.result === 'FAIL' || c?.result === 'INSUFFICIENT_EVIDENCE').map((c) => c.id);
-  if (!checks.length || notPassed.length) return `不合格か証拠不足の検査があります（${notPassed.join('、') || '検査なし'}）`;
+  const notPassed = checks.filter((c) => c?.result === 'FAIL' || (expected.gate === 'done' && c?.result === 'INSUFFICIENT_EVIDENCE')).map((c) => c.id);
+  if (expected.gate === 'done') {
+    if (result.scope !== 'ci') return `scope が ci ではありません（${JSON.stringify(result.scope)}）。ローカルの結果は最終の合格にしません`;
+    if (result.verdict !== 'PASS') return `verdict が PASS ではありません（${JSON.stringify(result.verdict)}）`;
+    if (!checks.length || checks.every((c) => c?.result === 'NOT_APPLICABLE')) return `検査が 0 件か、すべて NOT_APPLICABLE です（${checks.length} 件）`;
+    if (notPassed.length) return `不合格か証拠不足の検査があります（${notPassed.join('、')}）`;
+    const ids = checks.map((c) => c?.id);
+    const missing = DONE_GATE_CHECKS.filter((id) => !ids.includes(id));
+    if (!ids.some((id) => typeof id === 'string' && id.startsWith('command: '))) missing.push('command: *');
+    if (missing.length) return `完了ゲートの検査がありません（${missing.join('、')}）。仕様ゲートや品質コマンドだけの結果は完了ゲートの合格にしません`;
+  } else if (notPassed.length) {
+    return `不合格の検査があります（${notPassed.join('、')}）`;
+  }
   if (exitCode !== 0) return `verify の終了コードが 0 ではありません（${exitCode}）`;
   return undefined;
 }
@@ -184,7 +198,21 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 
   const run = (cmd) => spawnSync(cmd, { shell: true, stdio: 'inherit' }).status ?? 1;
   // loomake verify は先に pnpm build しておく（CI の gate ジョブ）
-  const verify = (args) => spawnSync(process.execPath, ['packages/cli/dist/cli.js', 'verify', ...args], { stdio: 'inherit' }).status ?? 1;
+  const verify = (args, options = {}) => spawnSync(process.execPath, ['packages/cli/dist/cli.js', 'verify', ...args], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, ...options });
+  /**
+   * change のゲートを --json で実行し、終了コードではなく結果の JSON で合格を決める（REQ-318）。
+   * 結果の JSON は標準エラーに写す（標準出力は段階の行だけにする）
+   */
+  const gateChange = (args) => {
+    const id = args[1];
+    const gate = args[2] === '--done' ? 'done' : 'spec-only';
+    const r = verify([...args, '--json'], { stdio: ['inherit', 'pipe', 'inherit'] });
+    const stdout = r.stdout ?? '';
+    if (stdout.trim()) console.error(stdout.trimEnd());
+    const problem = ciGateProblem(stdout, r.status ?? 1, { change: id, gate });
+    if (problem) console.error(`ci-gate: ${id} の${gate === 'done' ? '完了' : '仕様'}ゲートを合格にしません：${problem}`);
+    return problem === undefined;
+  };
   let status = 0;
   if (decided.tier === 'L1') {
     // L1 は lint と文書のリンクの試験を実行する（REQ-343）。
@@ -208,12 +236,12 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       process.exit(1);
     }
     console.error(`ci-gate: branch=${branch || '(なし)'} 段階 ${decided.tier} → verify（品質コマンドのみ。${selected.qualityOnly}）`);
-    process.exit(verify([]));
+    process.exit(verify([], { stdio: 'inherit' }).status ?? 1);
   }
   for (const id of selected.changes) {
     const args = gateArgs(join('openspec', 'changes'), id, decided.tier);
-    console.error(`ci-gate: branch=${branch || '(なし)'} 段階 ${decided.tier} → verify ${args.join(' ')}`);
-    if (verify(args) !== 0) status = 1;
+    console.error(`ci-gate: branch=${branch || '(なし)'} 段階 ${decided.tier} → verify ${args.join(' ')} --json`);
+    if (!gateChange(args)) status = 1;
   }
   process.exit(status);
 }

@@ -4,7 +4,7 @@ import { configDefaults, defineConfig } from 'vitest/config';
 import { assertNotPartitioned, loadPartition, partitionFiles } from './scripts/lib/test-partition.mjs';
 
 const root = import.meta.dirname;
-const packageTests = ['tests/ai-journeys.test.ts', 'tests/package-artifacts.test.ts'];
+const packageTests = ['tests/ai-journeys.test.ts', 'tests/package-artifacts.test.ts', 'tests/pending-approvals-cli.test.ts'];
 // loomake verify は、test コマンドがこのファイルに書き出した JSON レポートで、要件ごとのテストを判定する（add-verify-cli の仮定 A-05）
 const report: string = JSON.parse(readFileSync(join(root, 'loomake.config.json'), 'utf8')).tests.report;
 // CI の macOS・Windows のシャードでは、隔離一覧（tests/quarantine.json）でその OS に指定したファイルを除く（REQ-214・REQ-344）。

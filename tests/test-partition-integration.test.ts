@@ -19,7 +19,7 @@ describe('実Vitestによる共通partition', () => {
       const profileDirectory = join(f.root, 'collection-profile');
       const result = relevantSpecifications(root, excluded, profileDirectory, f.root);
       expect(result.status, result.stderr + result.stdout).toBe(0);
-      const packages = ['tests/ai-journeys.test.ts', 'tests/package-artifacts.test.ts'];
+      const packages = ['tests/ai-journeys.test.ts', 'tests/package-artifacts.test.ts', 'tests/pending-approvals-cli.test.ts'];
       const expected = globSync(['tests/**/*.test.ts', 'packages/*/test/**/*.test.ts'], { cwd: root, exclude: configDefaults.exclude })
         .map((file) => file.replaceAll('\\', '/')).filter((file) => !excluded.includes(file))
         .map((file) => `${packages.includes(file) ? 'package' : 'unit'}:${file}`).sort();

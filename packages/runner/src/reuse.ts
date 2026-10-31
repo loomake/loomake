@@ -1,10 +1,13 @@
 import { join } from 'node:path';
-import { EVIDENCE_V2_SCHEMA_VERSION, type LegacyEvidence, type VerifyResult } from '@loomake/core';
+import { EVIDENCE_V2_SCHEMA_VERSION, type Evidence } from '@loomake/core';
 import { UsageError, createInputReader, JSON_LIMITS, isAbortedResult, verifyExitCode } from '@loomake/kit';
-import { changedDocuments, evidenceProblem, readDocuments, type Evidence } from '@loomake/trace';
+import { changedDocuments, evidenceProblem, readDocuments } from '@loomake/trace';
 import { dirtyFiles, git } from './git.js';
 
-/** 直前の証拠だけのコミットを再利用する。不正な候補は保ったまま停止する。 */
+/**
+ * 直前の証拠だけのコミットを再利用する。不正な候補は保ったまま停止する。
+ * 再利用するのは Evidence 2 の scope:local の完了だけ。Evidence 1 は履歴の閲覧に限り、再利用せずに新しい検証と記録へ進む（REQ-164）
+ */
 export function reusableEvidence(root: string, env: NodeJS.ProcessEnv, change: string, changeDir: string): string | undefined {
   if (dirtyFiles(root, env).length) throw new UsageError('検証後に未コミットの変更があるため、証拠を再利用しません。変更を確認してから、もう一度実行してください。');
   const parents = git(root, env, ['show', '-s', '--format=%P', 'HEAD']).trim().split(' ').filter(Boolean);
@@ -24,16 +27,13 @@ export function reusableEvidence(root: string, env: NodeJS.ProcessEnv, change: s
   }
   const problem = evidenceProblem(value, change);
   if (problem) return stop(problem);
-  const evidence = value as LegacyEvidence | Evidence;
-  if (evidence.schemaVersion === EVIDENCE_V2_SCHEMA_VERSION) {
-    // Evidence 2 は scope:local の完了で、不合格や不足の検査がないものだけを再利用する（REQ-205）
-    const verify = evidence.verify as VerifyResult;
-    if (isAbortedResult(verify) || verify.scope !== 'local' || verifyExitCode(verify) !== 0 || verify.checks.some((c) => c.result === 'FAIL' || c.result === 'INSUFFICIENT_EVIDENCE')) {
-      return stop('ローカルの項目がすべて完了した証拠（scope:local）ではありません');
-    }
-  } else {
-    const verify = (evidence as LegacyEvidence).verify;
-    if (!verify.ok || verify.results.some((result) => result.status === 'fail')) return stop('合格した証拠ではありません');
+  // 旧 Evidence 1 は再利用の根拠にしない。ファイルは削除せず、通常の検証と記録を行う（REQ-164）
+  if ((value as { schemaVersion: unknown }).schemaVersion !== EVIDENCE_V2_SCHEMA_VERSION) return undefined;
+  const evidence = value as Evidence;
+  // Evidence 2 は scope:local の完了で、不合格や不足の検査がないものだけを再利用する（REQ-205）
+  const verify = evidence.verify;
+  if (isAbortedResult(verify) || verify.scope !== 'local' || verifyExitCode(verify) !== 0 || verify.checks.some((c) => c.result === 'FAIL' || c.result === 'INSUFFICIENT_EVIDENCE')) {
+    return stop('ローカルの項目がすべて完了した証拠（scope:local）ではありません');
   }
   if (evidence.sha !== parents[0] || !file.endsWith(`-${evidence.sha.slice(0, 12)}.json`)) return stop('対象SHAが直前の親コミットと一致しません');
   if (!evidence.documents) return stop('文書のスナップショットがありません');

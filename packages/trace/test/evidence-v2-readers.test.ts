@@ -42,6 +42,17 @@ describe('Evidence 2 を読む', () => {
     });
   });
 
+  it('[REQ-164] local の summary.pending は insufficient 以上でなければ受け付けない', () => {
+    withRecorded((_root, evidence) => {
+      const insufficient = [{ id: '品質コマンド', result: 'INSUFFICIENT_EVIDENCE', reason: '--skip-commands', evidence: [] }];
+      const base = { ...localDone, checks: insufficient };
+      const v2 = (pending: number) => ({ ...evidence, schemaVersion: 2, verify: { ...base, summary: { ...summary, insufficient: 1, pending } } });
+      expect(evidenceProblem(v2(1), CHANGE)).toBeUndefined();
+      expect(evidenceProblem(v2(2), CHANGE)).toBeUndefined();
+      expect(evidenceProblem(v2(0), CHANGE)).toBe('検証結果のsummary.pendingがinsufficientより少ないです');
+    });
+  });
+
   it('report は Evidence 2 の ci・PASS を合格と、local の完了を合格でないと表示する', () => {
     withRecorded((root, evidence, file) => {
       writeFileSync(file, JSON.stringify({ ...evidence, schemaVersion: 2, verify: ciPass }));
