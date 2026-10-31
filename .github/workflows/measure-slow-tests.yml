@@ -15,23 +15,6 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         sample: [1, 2, 3]
     runs-on: ${{ matrix.os }}
-    env:
-      MEASURE_FILES: >-
-        packages/runner/test/external-budget.test.ts
-        tests/ai-journeys.test.ts
-        tests/domain-mutations.test.ts
-        tests/package-artifacts.test.ts
-        packages/runner/test/publication-retry.test.ts
-        packages/runner/test/evidence-storage.test.ts
-        packages/runner/test/auth-prompts.test.ts
-        packages/runner/test/engine-long-deadline.test.ts
-        packages/runner/test/guards.test.ts
-        packages/runner/test/pr.test.ts
-        packages/runner/test/run-no-change.test.ts
-        packages/runner/test/run.test.ts
-        packages/runner/test/scenario-timeout-evidence.test.ts
-        packages/runner/test/signal-during-sync.test.ts
-        tests/domain-mutations-conditions.test.ts
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -45,7 +28,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - id: test
-        run: pnpm test $MEASURE_FILES
+        run: pnpm test
         shell: bash
       - id: metadata
         if: ${{ !cancelled() }}

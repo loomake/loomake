@@ -136,6 +136,8 @@ Schemaの再生成一致は、既存の `packages/core/test/json-schema.test.ts`
 
 同headの3OS各3sampleをマージ前に得る測定専用workflowは、`ci/measure-*`へのpushだけを対象とする。PRへslowを戻すenvや必須検査の追加には使わない。node20ジョブと同名必須contextだけを外すが、node22・quality・gate・CodeQL、Node22.12下限と3OS Node24を保つ。規則の変更は、人が具体案と受入を確認して行う。
 
+測定workflowはファイルや名前を指定せず、`pnpm test`で全件を実行する。新しく加わった試験も対象にし、元15fileは最低限の包含確認に残す。保存する測定用metadataは`schemaVersion: 2`・`selection: all`で、`requiredFiles`に元15file、`files`に保存したraw reportの実suite一覧を持つ。同じsuite名の重複は残し、`missingRequiredFiles`で元対象の欠落を示す。reportがなければ`collectionState: missing`、読めないかrepo外のsuiteを含めば`invalid`とし、どちらも一覧を`null`にする。`recorded`は一覧を読めた状態で、全件成功や包含済みを意味しない。旧schemaVersion 1の15file測定は履歴として保持し、最新headの全件測定に流用しない。
+
 REQ-297の元4case、19.5秒/39.5秒の下限と上限、保持役の待ちだけを引く時計、retry、全assertは変えない。REQ-161の元全体試験も残し、本当の13条件を確かめるfastを追加する。caseのfast+slowの和集合、元名・parameter・assert・timeout、coverage94/89/96/97を維持する。未設計10file、PR179統合後の実測と新fastを未完了として扱う。
 
 次の原文にあるnode20とPR全testの表現は、移管元の歴史をそのまま保存したもので、新運用への反対の約束ではない。差分は利用者が明示した1-1と管理役のQ01〜Q10/N1〜N5、release適用範囲の採用としてchangeのtraceへ記録する。Source270の他の文書PR契約とagents-rulesのSource273は消さない。CI側273の使用をやめても衝突履歴の解消とは呼ばず、B1へ引き継ぐ。
