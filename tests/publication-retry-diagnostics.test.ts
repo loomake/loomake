@@ -18,7 +18,7 @@ const rows = (file: string): Record<string, unknown>[] => readFileSync(file, 'ut
 afterEach(() => { vi.unstubAllEnvs(); for (const base of bases.splice(0)) rmSync(base, { recursive: true, force: true }); });
 
 describe('publication retryの任意診断', () => {
-  it('指定がなければphaseとpreloadのファイルを作らず環境も変えない', () => {
+  it('[REQ-345] 指定がなければphaseとpreloadのファイルを作らず環境も変えない', () => {
     const { base } = fixture();
     vi.stubEnv('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR', '');
     const env = { NODE_OPTIONS: '--no-warnings' };
@@ -29,7 +29,7 @@ describe('publication retryの任意診断', () => {
     expect(env).toEqual({ NODE_OPTIONS: '--no-warnings' });
   });
 
-  it('相対診断dirはworkerのcwdで解決し、子のcwdへ記録を混ぜない', () => {
+  it('[REQ-345] 相対診断dirはworkerのcwdで解決し、子のcwdへ記録を混ぜない', () => {
     const { base } = fixture();
     const directory = join(process.cwd(), '.loomake', 'relative-' + basename(base));
     bases.push(directory);
@@ -50,7 +50,7 @@ describe('publication retryの任意診断', () => {
     expect(readdirSync(base).sort()).toEqual(['gh', 'process-diagnostics.cjs']);
   });
 
-  it('case-start前のIDで交錯するcallbackを分け、固定欄だけを残す', () => {
+  it('[REQ-345] case-start前のIDで交錯するcallbackを分け、固定欄だけを残す', () => {
     const { base, directory } = fixture();
     const first = createCaseDiagnostics('sha'); const second = createCaseDiagnostics('unrecorded-label');
     first.event('case-start'); second.event('case-start');
@@ -76,7 +76,7 @@ describe('publication retryの任意診断', () => {
     }
   });
 
-  it('phase記録は64KiB内の完全JSONLと上限の印で止まる', () => {
+  it('[REQ-345] phase記録は64KiB内の完全JSONLと上限の印で止まる', () => {
     const { directory } = fixture(); const phase = createCaseDiagnostics();
     for (let n = 0; n < 2000; n++) phase.event('run-start', { n });
     const file = join(directory, readdirSync(directory)[0]);
@@ -85,7 +85,7 @@ describe('publication retryの任意診断', () => {
     expect(rows(file).filter((row) => row.event === 'run-start').length).toBeGreaterThan(0);
   });
 
-  it('保存先の準備失敗は元の処理へ例外を返さずpreloadを注入しない', () => {
+  it('[REQ-345] 保存先の準備失敗は元の処理へ例外を返さずpreloadを注入しない', () => {
     const { base, directory } = fixture(); writeFileSync(directory, 'not a directory');
     const phase = createCaseDiagnostics(); const env = { NODE_OPTIONS: '--no-warnings' };
     expect(() => phase.event('case-start')).not.toThrow();
@@ -94,7 +94,7 @@ describe('publication retryの任意診断', () => {
     expect(readdirSync(base)).toEqual(['diagnostics']);
   });
 
-  it.each(['claude', 'gh', 'supervisor.cjs'])('preloadは%sのentry/exitを分類し生の入力と出力を記録しない', (name) => {
+  it.each(['claude', 'gh', 'supervisor.cjs'])('[REQ-345] preloadは%sのentry/exitを分類し生の入力と出力を記録しない', (name) => {
     const { base, directory } = fixture(); const env = { ...process.env };
     attachProcessDiagnostics(base, env);
     const script = join(base, name); writeFileSync(script, "process.stdout.write('intended-output'); process.exitCode = 7;");
@@ -110,7 +110,7 @@ describe('publication retryの任意診断', () => {
   });
 
 
-  it.each(['list', 'create'])('Windows引用符付きgh pr %sも固定分類へ直し、生の引数を残さない', (operation) => {
+  it.each(['list', 'create'])('[REQ-345] Windows引用符付きgh pr %sも固定分類へ直し、生の引数を残さない', (operation) => {
     const { base, directory } = fixture(); const env = { ...process.env };
     attachProcessDiagnostics(base, env);
     const script = join(base, 'supervisor.cjs'); writeFileSync(script, 'process.exitCode = 0;');
@@ -121,7 +121,7 @@ describe('publication retryの任意診断', () => {
     expect(JSON.stringify(events)).not.toContain('unrecorded-argument');
   });
 
-  it('長い行が入らなかった後の短いphaseも保存せずtruncatedを終端にする', () => {
+  it('[REQ-345] 長い行が入らなかった後の短いphaseも保存せずtruncatedを終端にする', () => {
     const { directory } = fixture(); const phase = createCaseDiagnostics(); phase.event('case-start');
     const file = join(directory, readdirSync(directory)[0]); const first = rows(file)[0];
     const shortBytes = Buffer.byteLength(JSON.stringify({ ...first, event: 'case-end' }) + '\n');
@@ -137,7 +137,7 @@ describe('publication retryの任意診断', () => {
     expect(Buffer.byteLength(readFileSync(file))).toBeLessThanOrEqual(65536);
   });
 
-  it('同一PIDでpreloadを読み直しても別sessionファイルへentry/exitを対応させる', () => {
+  it('[REQ-345] 同一PIDでpreloadを読み直しても別sessionファイルへentry/exitを対応させる', () => {
     const { base, directory } = fixture(); const env = { ...process.env };
     attachProcessDiagnostics(base, env);
     const preload = join(base, 'process-diagnostics.cjs');
@@ -159,7 +159,7 @@ describe('publication retryの任意診断', () => {
   it.each([
     ['zero', '0', true], ['negative', '-1', true], ['string', '"invalid-deadline"', false],
     ['null', 'null', false], ['overflow', '1e309', false],
-  ] as const)('監視役の%s deadlineは有限数値だけremainingMsへ残す', (_, deadline, present) => {
+  ] as const)('[REQ-345] 監視役の%s deadlineは有限数値だけremainingMsへ残す', (_, deadline, present) => {
     const { base, directory } = fixture(); const env = { ...process.env };
     attachProcessDiagnostics(base, env);
     const script = join(base, 'supervisor.cjs'); writeFileSync(script, 'process.exitCode = 0;');
@@ -175,7 +175,7 @@ describe('publication retryの任意診断', () => {
     expect(JSON.stringify(events)).not.toMatch(/unrecorded-argument|invalid-deadline|argv|stdout|stderr/);
   });
 
-  it('実runExternalと監視役を通して有限な残予算と子CLIの記録を確認する', () => {
+  it('[REQ-345] 実runExternalと監視役を通して有限な残予算と子CLIの記録を確認する', () => {
     const { base, directory } = fixture(); const env = { ...process.env };
     attachProcessDiagnostics(base, env);
     const script = join(base, 'gh'); writeFileSync(script, "process.stdout.write('expected-output');");
@@ -195,7 +195,7 @@ describe('publication retryの任意診断', () => {
     expect(JSON.stringify(groups)).not.toMatch(/expected-output|argv|stdout|stderr|NODE_OPTIONS/);
   }, 60_000);
 
-  it('preload実行時の書込失敗も元の終了コードと出力を保つ', () => {
+  it('[REQ-345] preload実行時の書込失敗も元の終了コードと出力を保つ', () => {
     const { base, directory } = fixture(); const env = { ...process.env };
     attachProcessDiagnostics(base, env);
     rmSync(directory, { recursive: true }); writeFileSync(directory, 'blocked');
@@ -205,7 +205,7 @@ describe('publication retryの任意診断', () => {
     expect(result.stdout).toBe('unchanged');
   });
 
-  it('preloadの反復イベントも64KiB内に収め完全な上限印を残す', () => {
+  it('[REQ-345] preloadの反復イベントも64KiB内に収め完全な上限印を残す', () => {
     const { base, directory } = fixture(); const env = { ...process.env };
     attachProcessDiagnostics(base, env);
     const script = join(base, 'gh'); writeFileSync(script, 'for (let n=0; n<2000; n++) process.emit("exit", 0);');
