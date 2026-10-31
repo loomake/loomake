@@ -24,7 +24,7 @@ pnpm build
 4. 仕様を確かめるテストを先に書き、不具合修正では修正前の失敗を確認する。テスト名にREQ-IDを入れ、RedとGreenをchangeのtdd.mdに残す。
 5. タスクごとに実装とテストを確認し、小さくコミットしてtasks.mdをチェックする。
 6. 利用者に影響するパッケージにはchangesetを追加し、文書を実装と揃える。文書や開発用ツールだけの場合は、空のchangesetで公開対象がないことを示す。
-7. 全タスクと全Requirementのテスト対応を確認し、`pnpm -s verify --change <id> --done`を通す。
+7. 全タスクと全Requirementのテスト対応を確認し、`pnpm -s verify --change <id> --done --scope local`を通す。最終の合格は PR の gate ジョブ（scope ci）と必須チェックで確かめる。
 
 現行仕様を直接書き換えない。完了したchangeの差分は、archiveの手順で反映する。文書だけの修正で新しい製品の振る舞いがない場合は、そのためだけに製品のRequirementを作らない。
 

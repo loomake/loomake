@@ -12,7 +12,8 @@
 npx loomake init                                  # AGENTS.md・設定・Skill を置く
 npx loomake doctor                                # 導入の状態を調べる
 npx loomake verify --change <id> --spec-only      # 仕様ゲート：実装に入ってよいか
-npx loomake verify --change <id> --done           # 完了ゲート：要件ごとのテストと品質コマンド
+npx loomake verify --change <id> --done --scope local # 完了ゲート（ローカル）：要件ごとのテスト・品質コマンド
+npx loomake verify --change <id> --done               # 完了ゲート（最終。既定は --scope ci）
 npx loomake run --change <id>                     # 実装から PR までを AI に任せる
 npx loomake trace record --change <id>            # 証拠を記録する
 npx loomake trace report --change <id>            # リリースレポートを出す

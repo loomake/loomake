@@ -1,0 +1,543 @@
+{
+  "base": "77aabfb98bff8e90938732bbeb8da2dda8faa5c4",
+  "approval": "pending; no operational application or projected tests",
+  "patchSha256": "258a599353e3afa43b20409b20db0396d7dad3b200b88c08cf4415aae80dc275",
+  "patchBytes": 36732,
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "beforeSha256": "dd83c65d2a124d3f3e05223fe5e2937c008260c8c925692a877d87d5dc78e088",
+      "afterSha256": "485b22c997ee3c8d593f960b6eca38179b7f77ae78c164fda42de2bf093f2182",
+      "beforeBytes": 13169,
+      "afterBytes": 13719,
+      "proposedChange": true,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": "packages/kit/templates/AGENTS.md",
+      "beforeSha256": "6bf7c77d701538928f589f97443ab9e170c16e873e8b4a1585016cbff5636c5c",
+      "afterSha256": "68f3d9662ff0abf1d39c40dcccf643d6f0ee6d2d74da7123e61a3793b8f94d16",
+      "beforeBytes": 4343,
+      "afterBytes": 4662,
+      "proposedChange": true,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "beforeSha256": "7dca9123b95be79ce0b9855163bf2ab5c3940a5e8c7c0be19b5e21ad0f4b4212",
+      "afterSha256": "5bccf9e5a6cba1f16164cfff5159b67b0b86cce1a37f824667b00c1d3f7b3677",
+      "beforeBytes": 4342,
+      "afterBytes": 4449,
+      "proposedChange": true,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": "README.md",
+      "beforeSha256": "32f23f8c631a76c06d1cf7a3261490979e6cbc6d058eeb3b030d8792fcf73234",
+      "afterSha256": "46ebf011b1190059a0a81586eadd7119afeed0d52903551776fde259f9387908",
+      "beforeBytes": 12900,
+      "afterBytes": 13115,
+      "proposedChange": true,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": "README.en.md",
+      "beforeSha256": "d5a0c83a1bc2e43b610c1ab322d5a07a6d76f3dff8cd9544cecc773342869a1b",
+      "afterSha256": "4dba1ff9e761410ac668010deb5309df1546f126a67d4a654336fc0fa031a7b5",
+      "beforeBytes": 3830,
+      "afterBytes": 3954,
+      "proposedChange": true,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": "packages/cli/README.md",
+      "beforeSha256": "a00e1b6ec8c54b2aec17b653d859bbe4ce2c7bef5664c6658ff419323a4d10a2",
+      "afterSha256": "6eb460963525d71eb4175eec905cff1a40e1afa97a59f3c47b19e0d5472cb0bb",
+      "beforeBytes": 2551,
+      "afterBytes": 2680,
+      "proposedChange": true,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": "docs/flow.md",
+      "beforeSha256": "9c198d2c7884b907d9ae73992902e5f4165baa40d67bd873b78c989d1875f12f",
+      "afterSha256": "c4748b240ca7d4055487884d67f2b41deb4e0a485b5cb4f4f1f821b971c18f65",
+      "beforeBytes": 8921,
+      "afterBytes": 9054,
+      "proposedChange": true,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": ".agents/skills/delivery/SKILL.md",
+      "beforeSha256": "ff023c8750ba5847ea376cf77fcb26dd410f7599c8c21c62961efcbbd0f2e002",
+      "afterSha256": "c6d55d3453255c56d33b156e0b9b4980d513493e662f98740bfda6ba7898b3e4",
+      "beforeBytes": 24004,
+      "afterBytes": 24168,
+      "proposedChange": true,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": ".github/PULL_REQUEST_TEMPLATE.md",
+      "beforeSha256": "e0adb5563ebf8c876cb0e994b8750b186a3800ba166c24e9bf34116f262121c0",
+      "afterSha256": "ec5b53a554362bca82109015edbb84674b8a4f8a03224663d235cd1023202937",
+      "beforeBytes": 3084,
+      "afterBytes": 3229,
+      "proposedChange": true,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": ".agents/skills/req-to-openspec/references/openspec-format.md",
+      "beforeSha256": "8543ea11fc71bb27d713c3b045f84a17faa8e334f32fe2f6f0009d913c71b941",
+      "afterSha256": "ddfe5ec4f31727edd5a1e4626bbb48195c33f26bc3249e152d81bfa0c6155ebf",
+      "beforeBytes": 3130,
+      "afterBytes": 3504,
+      "proposedChange": true,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": ".agents/skills/req-to-openspec/SKILL.md",
+      "beforeSha256": "d6c7dff313f326613844b5d03f677b27902ec117e6d628a77e175a9cf54f1e2a",
+      "afterSha256": "ca7192c834a00c6fed1aea3ca0521987a642fff17200f37d999c7ffe42f345d7",
+      "beforeBytes": 8404,
+      "afterBytes": 8552,
+      "proposedChange": true,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": "packages/kit/templates/skills/req-to-openspec/references/openspec-format.md",
+      "beforeSha256": "43f0c462936ff610b7ac4d5e206a78f98b796879787578d584c22bcc977e2daf",
+      "afterSha256": "093d5302ae9904542614181ebbd07b3e038b2008a686ac055d5a2312ac14c28d",
+      "beforeBytes": 3134,
+      "afterBytes": 3512,
+      "proposedChange": true,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": "packages/kit/templates/skills/req-to-openspec/SKILL.md",
+      "beforeSha256": "e6502455ecb109f5381b67facc57a18fc7762dd79341262d84cb21091222691d",
+      "afterSha256": "895551c7d7996bc387990d176ad8520858d3219508038902e84693cae37e7941",
+      "beforeBytes": 8408,
+      "afterBytes": 8556,
+      "proposedChange": true,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": "docs/guide/2.guides/1.for-agents.md",
+      "beforeSha256": "8da8e618d8e09bd88fb1cfb28d96b8e1423beb10d15c513a837acaa73fef1542",
+      "afterSha256": "7c4ecc57bf6ef0ad0aead4cad3a140649d0f9fc102fc9acde86ef42748228696",
+      "beforeBytes": 11220,
+      "afterBytes": 11563,
+      "proposedChange": true,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": "docs/guide/1.getting-started/2.usage.md",
+      "beforeSha256": "4ced2b0f7351d2fbc5f989caccd7fa353dfd1b3f9946d85f019b80b636ee0c2e",
+      "afterSha256": "fc02abfe1966d43f32d9b0825d5ff122739a37f4af9588694ad227936940d1d4",
+      "beforeBytes": 31250,
+      "afterBytes": 31420,
+      "proposedChange": true,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": "docs/guide/1.getting-started/1.quickstart.md",
+      "beforeSha256": "8e379f6c1d3a3cdd006b323c4b44e471e37b2c8dcfb0f1327fe1abcf8b0c77d6",
+      "afterSha256": "d5a06fc0d07527e663874bc417c8f7f5d69a752649ad36e421dda21bad15fd6b",
+      "beforeBytes": 9912,
+      "afterBytes": 10082,
+      "proposedChange": true,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": "tests/kit-assets.test.ts",
+      "beforeSha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa",
+      "afterSha256": "9e79f35e034050d1b8e7f11a6fd28c3ddc22f09dd2c1a2f75cd5b46b8eed05ab",
+      "beforeBytes": 14518,
+      "afterBytes": 16284,
+      "proposedChange": true,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": "packages/cli/test/init.test.ts",
+      "beforeSha256": "15e804885c205eff63e7baa0cab6197eecce6d6ae18c6285788caa7557a42967",
+      "afterSha256": "9d86ae455e6622d2b64c772b6d608219a8b2b3462f7a9be0e8d2c317471f0ded",
+      "beforeBytes": 22741,
+      "afterBytes": 24281,
+      "proposedChange": true,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": "scripts/package-smoke.mjs",
+      "beforeSha256": "28791e3d2729cf23487cd00f15520ae6c2699cf057725e7e6ad92969d5b464ed",
+      "afterSha256": "9b88239f68e88677f906df00cfe6bc2fb591f54d8d34a65e9e0406f151d727fc",
+      "beforeBytes": 17413,
+      "afterBytes": 18754,
+      "proposedChange": true,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": ".changeset/verify-v2-dod.md",
+      "beforeSha256": null,
+      "afterSha256": "3edc5ab8139fc9cd61699cd67e59dd5af06e198965c9d60cee179705c0addd38",
+      "beforeBytes": 0,
+      "afterBytes": 174,
+      "proposedChange": true,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": "docs/guide/3.reference/5.cli.md",
+      "beforeSha256": "dfe8828bbeffea7f7fad606f9e9c6e6f4af8455223417ef65ba19a8a4851ff1d",
+      "afterSha256": "dfe8828bbeffea7f7fad606f9e9c6e6f4af8455223417ef65ba19a8a4851ff1d",
+      "beforeBytes": 9402,
+      "afterBytes": 9402,
+      "proposedChange": false,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": "packages/runner/src/run/tasks.ts",
+      "beforeSha256": "2d7ebbb322a3d2cb488d01ed63d44b6aac9d5cb247ab05901ac8bbf4b1db2116",
+      "afterSha256": "2d7ebbb322a3d2cb488d01ed63d44b6aac9d5cb247ab05901ac8bbf4b1db2116",
+      "beforeBytes": 1402,
+      "afterBytes": 1402,
+      "proposedChange": false,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": "packages/runner/src/run/phases.ts",
+      "beforeSha256": "6fd64fd1e6ed7e32ee675e38a7290622308e279befa9ec46231cf287a5d5f053",
+      "afterSha256": "6fd64fd1e6ed7e32ee675e38a7290622308e279befa9ec46231cf287a5d5f053",
+      "beforeBytes": 16236,
+      "afterBytes": 16236,
+      "proposedChange": false,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": "docs/quality/scenarios.json",
+      "beforeSha256": "7955cdd3e31ba201813998f321fc317ff3245c4468747d32a712ad14b7afa5f5",
+      "afterSha256": "7955cdd3e31ba201813998f321fc317ff3245c4468747d32a712ad14b7afa5f5",
+      "beforeBytes": 372496,
+      "afterBytes": 372496,
+      "proposedChange": false,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": "loomake.config.json",
+      "beforeSha256": "c49e93abdc2bf770e1852d14f4daf84c127ca2163bfd82c59516b2818eb9e1e8",
+      "afterSha256": "c49e93abdc2bf770e1852d14f4daf84c127ca2163bfd82c59516b2818eb9e1e8",
+      "beforeBytes": 345,
+      "afterBytes": 345,
+      "proposedChange": false,
+      "actualBytesUnchanged": true
+    },
+    {
+      "path": "vitest.config.ts",
+      "beforeSha256": "d1d4bc0716e1429945bb793de3db6532bdb6a2fca2442e425caf42b1567ec164",
+      "afterSha256": "d1d4bc0716e1429945bb793de3db6532bdb6a2fca2442e425caf42b1567ec164",
+      "beforeBytes": 3298,
+      "afterBytes": 3298,
+      "proposedChange": false,
+      "actualBytesUnchanged": true
+    }
+  ],
+  "frozen": [
+    {
+      "path": "AGENTS.md",
+      "startLine": 22,
+      "endLine": 25,
+      "sha256": "971aecd13791967d6efd48868942a49e0b5c3b721d887da599ae3f857f26a92b",
+      "text": "| **L2 試験・CI・開発基盤** | `tests/`・`packages/*/test/`・`.github/`・`scripts/`・`.agents/skills/`・`packages/kit/templates/`・`packages/*/schema`・ルート設定（package.json、pnpm-lock.yaml、eslint、tsconfig、loomake.config.json）・AGENTS.md・ADR・delivery スキル（規則の変更。利用者の承認が要る） | 必須 5 チェック（change があれば `verify --done` も） | Codex ＋ 独立 Opus **1 回**（指摘があれば修正後に 1 回だけ再レビュー） | worklog に 4 行 |\n| **L3 製品コード** | `packages/*/src`・openspec の Requirement の変更（spec.md の Requirement 本文・SHALL 文） | 必須 5 チェック ＋ `verify --done` ＋ 変更した package の 3 OS 試験（ラベル `ci:all-os`） | Opus 設計 ＋ Codex ＋ 独立 Opus **最大 2 往復** | worklog に 4 行 ＋ 計測表 |\n\n必須 5 チェックは gate / quality (ubuntu-latest) / CodeQL / node20 / node22。change を持つ PR は段階を問わず `verify --done` を通す（gate が実行する）。L3 は change が必須で、L2 は change がなければ lint・typecheck・test の品質コマンドだけでよい。「往復」の数え方とマージ条件は ADR 0006 のレビュー規則に従う。\n"
+    },
+    {
+      "path": "AGENTS.md",
+      "startLine": 41,
+      "endLine": 41,
+      "sha256": "b99ecba8c7828b2fde79dd761e1b8f3a2949de6f182d44028cd9e43d2713b74c",
+      "text": "change を持つ作業は、次をすべて満たすまで「完了」と報告しない。change のない L1・L2 の作業は、段階の必須の検査とレビューが済んだときに完了とする。\n"
+    },
+    {
+      "path": "AGENTS.md",
+      "startLine": 44,
+      "endLine": 47,
+      "sha256": "6670c71fd31ef2cc2d45a0f7e3985f8b8e78e01cce42da3c1bf25c93358c02ec",
+      "text": "- change 内の各 Requirement に、対応するテストが 1 つ以上ある\n  - テスト名に要件 ID を入れる：`it('[REQ-012] 未ログインのとき 401 を返す', ...)`\n  - 1 つのテストが複数の要件を確かめる場合は `[REQ-012][REQ-013]` と並べる\n- `tasks.md` がすべてチェック済み\n"
+    },
+    {
+      "path": "packages/kit/templates/AGENTS.md",
+      "startLine": 29,
+      "endLine": 30,
+      "sha256": "a283fe09a997f026309e3216a200a903d7013b5cc3db56001c9ba8c216159678",
+      "text": "次をすべて満たすまで「完了」と報告しない。\n\n"
+    },
+    {
+      "path": "packages/kit/templates/AGENTS.md",
+      "startLine": 32,
+      "endLine": 35,
+      "sha256": "6670c71fd31ef2cc2d45a0f7e3985f8b8e78e01cce42da3c1bf25c93358c02ec",
+      "text": "- change 内の各 Requirement に、対応するテストが 1 つ以上ある\n  - テスト名に要件 ID を入れる：`it('[REQ-012] 未ログインのとき 401 を返す', ...)`\n  - 1 つのテストが複数の要件を確かめる場合は `[REQ-012][REQ-013]` と並べる\n- `tasks.md` がすべてチェック済み\n"
+    },
+    {
+      "path": "packages/kit/templates/AGENTS.md",
+      "startLine": 37,
+      "endLine": 75,
+      "sha256": "6d3a445290a20b25398b74dfb51e867fee7b7fc4d012fb3c224681daa26e08df",
+      "text": "## 4. 禁止事項\n\n- 人の承認なしに、テストを弱める・skip する・期待値を実装に合わせて書き換える\n- 曖昧な要件を推測で埋める。曖昧なら `trace.md` の「確認事項」に書いて止まる\n- `loomake.config.json` や lint・型・テストの設定を緩める変更を、人の承認なしに行う\n- 秘密情報（API キー、パスワード、個人情報）をコード・ログ・テストデータに書く\n- `openspec/specs/` を直接編集する（変更は必ず change 経由で、archive 時に反映する）。ただし、change を archive した直後に `## Purpose` を直すことだけは例外とする。新しい capability の仮の文（`TBD - created by archiving change …`）を書き換えるときと、change で Requirement の用語を変えたあとに Purpose に残る古い用語（検収レポートなど）を新しい用語に合わせるときに限る。差分仕様の Purpose は archive で反映されないため\n\n## 5. 迷ったとき\n\n推測で進めるより、止まって質問を並べる方が良い。質問は「何が分からないか」「選択肢」「おすすめとその理由」の形で出す。\n\n## 6. 報告の形\n\n作業の区切りでは次の順で短く報告する。\n\n1. やったこと（change-id とタスク番号）\n2. verify の結果\n3. 残っている確認事項・仮定\n4. 次にやること\n\n報告した内容は、作業したブランチごとのファイル `docs/worklog/<日本時間の日付>/<ブランチ名>.md`（例：`docs/worklog/2026-10-28/feat-login.md`）にも記録する。ブランチ名の `/` は `-` に置き換える（`feat/login` なら `feat-login.md`）。同じ日・同じブランチのファイルがあれば、末尾に追記する。\n\n作業記録はその作業の PR に含め、作業記録だけの PR は作らない。PR のマージ後に記録を足すとき（CI の結果やマージの記録など）は、次の作業のブランチのファイルに書き、その PR に含める。\n\n---\n\n## プロジェクト固有の情報\n\n<!-- ここから下はプロジェクトごとに書き換える -->\n\n- 技術スタック：例）TypeScript / Node.js 20 / Nuxt 3\n- パッケージマネージャ：例）pnpm\n- 主なディレクトリ：例）`server/api/` = API、`app/` = 画面、`tests/` = テスト\n- コーディング規約：例）関数は named export、エラーは `createError` で返す\n"
+    },
+    {
+      "path": "README.md",
+      "startLine": 91,
+      "endLine": 91,
+      "sha256": "8ff08ccc9f99c1ab4973359c6671d154b2d3b6207596b4ecef48b9a1b3e1af76",
+      "text": "scripts/ci-gate.mjs               CI 用。PR 本文・変えたファイル・ブランチ名から change を決め、--done で verify を実行する\n"
+    },
+    {
+      "path": "README.md",
+      "startLine": 111,
+      "endLine": 114,
+      "sha256": "da3238055ba165a49c2fd5d2414e25efaa2f0470dbdb691e6b919541a4af7206",
+      "text": "- 対象の change がなく、文書（`.md`、`docs/`・`openspec/`・`.changeset/` の下）だけを変えた PR と archive の PR は、品質コマンドだけを実行する。コードを変える PR で change がないときは、本文に `loomake-change: none` と書く。書かないと gate ジョブは失敗する\n- gate ジョブは PR 本文を実行のたびに読む。本文を書き直したら、gate ジョブを再実行する\n- archive で反映したあとの仕様の誤りは、change ごとの完了ゲートでは見つからない。そのため gate ジョブは、PR の種類によらず、いまの仕様（`openspec/specs/`）に `openspec validate --specs --strict` も実行する\n- npm への公開は GitHub の Actions から release ワークフローを main で手動実行する。事前に `pnpm changeset version` でバージョンを上げた変更を main に入れておく。未消化の changeset が残っていると公開を止める。初回だけリポジトリのシークレットの `NPM_TOKEN` で公開し、そのあと npm の Trusted Publishing（OIDC）に切り替える（[docs/release.md](docs/release.md)）\n"
+    },
+    {
+      "path": ".agents/skills/delivery/SKILL.md",
+      "startLine": 157,
+      "endLine": 157,
+      "sha256": "142a2b54d3156539ebabdebc0edb29f09c74e090e8ceaa64650b0471da21c322",
+      "text": "設計待ちは、Opus への設計依頼から、成果物を確認して実装への引き継ぎが可能になるまでの経過時間とする。実装は、最初の着手から、その PR のマージ対象 head の完了ゲート成功までの経過時間とする。CI 待ちは、対象 head に必要な CI の最初の起動から、必要な検査の結果がそろうまでの経過時間とする。マージまでは、PR 作成からマージまでの経過時間とする。レビュー往復回数は、独立 Opus レビューの指摘を受け、修正後の再レビュー結果を受け取るまでを 1 往復とし、初回のレビューは往復に含めない。工程どうしは重なるため、各欄を足して全所要時間にしない。測定できなかった値は「未測定」、続いているものは「進行中」、まだ始めていないものは「未実施」、適用しない欄は理由付きで「対象外」とし、欠測を推定で埋めない。\n"
+    },
+    {
+      "path": "docs/flow.md",
+      "startLine": 162,
+      "endLine": 164,
+      "sha256": "a80bd82f8a957d76aa47e17e6ddfdfca131d2b498c374bbc3b01a55e791bcd2d",
+      "text": "`loomake init` が配る Skill・AGENTS.md・CLAUDE.md・devcontainer.json の正は `packages/kit/templates/` にある。このリポジトリの `.agents/skills/req-to-openspec/` もテンプレートと同じ内容に保つので、Skill を直すときは両方を直す。違うのは verify の実行方法だけで、テンプレートは `npx loomake verify`、このリポジトリは `pnpm -s verify` と書く。2 つがそろっているかは `tests/kit-assets.test.ts` が確かめる。\n\nこのリポジトリの `AGENTS.md` とテンプレートの違いは、verify の実行方法、yomiyasu で推敲する決まり（このリポジトリだけのもの）、末尾のプロジェクト固有の情報だけにする。共通の決まりを直すときは、テンプレートにも同じ直しを入れる。\n"
+    },
+    {
+      "path": "docs/guide/1.getting-started/1.quickstart.md",
+      "startLine": 117,
+      "endLine": 117,
+      "sha256": "b1de540bb31b363766a637bbbfb64e0fe368290e8830bc06545f46d95d9f5249",
+      "text": "  CI -- \"PR ごとに<br>verify --done\" --> L\n"
+    },
+    {
+      "path": "docs/guide/1.getting-started/1.quickstart.md",
+      "startLine": 126,
+      "endLine": 126,
+      "sha256": "0ac636488e5a1830b7cd5874813e84bf114242bf595f8ef5a63a65dc899ca4b1",
+      "text": "| CI（GitHub Actions など） | PR ごとに検査を実行し、不合格ならマージを止める | `loomake verify --change <id> --done` を実行する。必須チェックの設定は利用者がする |\n"
+    },
+    {
+      "path": "docs/guide/1.getting-started/1.quickstart.md",
+      "startLine": 146,
+      "endLine": 146,
+      "sha256": "01d7c9cd034c305228898b974b53c8654ada1d4f6152f313f69f674da06380c5",
+      "text": "- run: npx loomake verify --change \"$HEAD_REF\" --done\n"
+    },
+    {
+      "path": "docs/guide/1.getting-started/1.quickstart.md",
+      "startLine": 161,
+      "endLine": 161,
+      "sha256": "75432efaf85851c5d97ced5b5b3497f0dcda22ed3ee8bb856988914b13b1bab2",
+      "text": "| `loomake verify --change <id> --done` | 完了ゲート：タスク・品質コマンド・要件ごとのテスト |\n"
+    },
+    {
+      "path": "docs/guide/1.getting-started/2.usage.md",
+      "startLine": 364,
+      "endLine": 364,
+      "sha256": "01d7c9cd034c305228898b974b53c8654ada1d4f6152f313f69f674da06380c5",
+      "text": "- run: npx loomake verify --change \"$HEAD_REF\" --done\n"
+    },
+    {
+      "path": "tests/kit-assets.test.ts",
+      "startLine": 249,
+      "endLine": 250,
+      "sha256": "1af41e324bde5c26687446838456ddd9c9fa3090762f527cc02c60a53008fe33",
+      "text": "  it('[REQ-136] Skill の tasks.md の雛形で、完了ゲートのタスクの行末に印があり、SKILL.md が印を付けるよう指示している', () => {\n    const format = read(join(skillDir, 'references/openspec-format.md'));\n"
+    },
+    {
+      "path": "tests/kit-assets.test.ts",
+      "startLine": 252,
+      "endLine": 254,
+      "sha256": "50f509312e113f7dd29985f6baa8587010c42aa56d7a85f54e0ad49b008fcc4b",
+      "text": "    expect(read(join(skillDir, 'SKILL.md'))).toContain('verify のタスクの行末に `<!-- loomake:gate=done -->` を付ける');\n  });\n});\n"
+    }
+  ],
+  "protectedAssertion": {
+    "file": "tests/kit-assets.test.ts",
+    "oldLine": 251,
+    "old": "    expect(format).toContain('- [ ] 3.1 `npx loomake verify --change <change-id> --done` を通す <!-- loomake:gate=done -->');",
+    "new": "    expect(format).toContain('- [ ] 3.1 `npx loomake verify --change <change-id> --done --scope local` を通す <!-- loomake:gate=done -->');"
+  },
+  "noAppliedTests": true,
+  "newScenarioAudit": "planned only; no scenarios.json edits",
+  "additionalProtectedFiles": [
+    {
+      "path": ".agents/skills/delivery/SKILL.md",
+      "sha256": "ff023c8750ba5847ea376cf77fcb26dd410f7599c8c21c62961efcbbd0f2e002",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": ".agents/skills/req-to-openspec/SKILL.md",
+      "sha256": "d6c7dff313f326613844b5d03f677b27902ec117e6d628a77e175a9cf54f1e2a",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": ".agents/skills/req-to-openspec/references/openspec-format.md",
+      "sha256": "8543ea11fc71bb27d713c3b045f84a17faa8e334f32fe2f6f0009d913c71b941",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": ".github/PULL_REQUEST_TEMPLATE.md",
+      "sha256": "e0adb5563ebf8c876cb0e994b8750b186a3800ba166c24e9bf34116f262121c0",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "dd83c65d2a124d3f3e05223fe5e2937c008260c8c925692a877d87d5dc78e088",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "sha256": "7dca9123b95be79ce0b9855163bf2ab5c3940a5e8c7c0be19b5e21ad0f4b4212",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": "README.en.md",
+      "sha256": "d5a0c83a1bc2e43b610c1ab322d5a07a6d76f3dff8cd9544cecc773342869a1b",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": "README.md",
+      "sha256": "32f23f8c631a76c06d1cf7a3261490979e6cbc6d058eeb3b030d8792fcf73234",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": "docs/flow.md",
+      "sha256": "9c198d2c7884b907d9ae73992902e5f4165baa40d67bd873b78c989d1875f12f",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": "docs/guide/1.getting-started/1.quickstart.md",
+      "sha256": "8e379f6c1d3a3cdd006b323c4b44e471e37b2c8dcfb0f1327fe1abcf8b0c77d6",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": "docs/guide/1.getting-started/2.usage.md",
+      "sha256": "4ced2b0f7351d2fbc5f989caccd7fa353dfd1b3f9946d85f019b80b636ee0c2e",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": "docs/guide/2.guides/1.for-agents.md",
+      "sha256": "8da8e618d8e09bd88fb1cfb28d96b8e1423beb10d15c513a837acaa73fef1542",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": "docs/guide/3.reference/5.cli.md",
+      "sha256": "dfe8828bbeffea7f7fad606f9e9c6e6f4af8455223417ef65ba19a8a4851ff1d",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": "docs/quality/scenarios.json",
+      "sha256": "7955cdd3e31ba201813998f321fc317ff3245c4468747d32a712ad14b7afa5f5",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": "loomake.config.json",
+      "sha256": "c49e93abdc2bf770e1852d14f4daf84c127ca2163bfd82c59516b2818eb9e1e8",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": "packages/cli/README.md",
+      "sha256": "a00e1b6ec8c54b2aec17b653d859bbe4ce2c7bef5664c6658ff419323a4d10a2",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": "packages/cli/test/init.test.ts",
+      "sha256": "15e804885c205eff63e7baa0cab6197eecce6d6ae18c6285788caa7557a42967",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": "packages/kit/src/init/init.ts",
+      "sha256": "49eb4ee648c0d39934976b6f6172d1017e6730bdea2f82d94597bdadf2cdb776",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": "packages/kit/templates/AGENTS.md",
+      "sha256": "6bf7c77d701538928f589f97443ab9e170c16e873e8b4a1585016cbff5636c5c",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": "packages/kit/templates/skills/req-to-openspec/SKILL.md",
+      "sha256": "e6502455ecb109f5381b67facc57a18fc7762dd79341262d84cb21091222691d",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": "packages/kit/templates/skills/req-to-openspec/references/openspec-format.md",
+      "sha256": "43f0c462936ff610b7ac4d5e206a78f98b796879787578d584c22bcc977e2daf",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": "packages/runner/src/run/phases.ts",
+      "sha256": "6fd64fd1e6ed7e32ee675e38a7290622308e279befa9ec46231cf287a5d5f053",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": "packages/runner/src/run/tasks.ts",
+      "sha256": "2d7ebbb322a3d2cb488d01ed63d44b6aac9d5cb247ab05901ac8bbf4b1db2116",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": "scripts/package-smoke.mjs",
+      "sha256": "28791e3d2729cf23487cd00f15520ae6c2699cf057725e7e6ad92969d5b464ed",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": "tests/kit-assets.test.ts",
+      "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    },
+    {
+      "path": "vitest.config.ts",
+      "sha256": "d1d4bc0716e1429945bb793de3db6532bdb6a2fca2442e425caf42b1567ec164",
+      "actualUnchanged": true,
+      "mainPreimageMatches": true
+    }
+  ],
+  "sourceScenarioIntegrity": {
+    "sourceAndOriginalScenarioBytesIdentical": true,
+    "sourceAndScenarioBytes": 301,
+    "sourceAndScenarioSha256": "c3272f5353580a23953f4c9b1b011399742b78c075ef4d733d3447d753ddb8f7",
+    "scenarioBytes": 284,
+    "scenarioSha256OfRawExcerpt": "7da1bd4e3061b3d14b193e11f90e20c4a5ef21fb786c02f3c0d483637f14be5e",
+    "canonicalAuditScenarioHash": "a87d8729c33e2d095a74de3c8dacc6adeabf51a0695054c6b91b50f5fd18113e"
+  },
+  "diagnosticMain": {
+    "head": "d83112d5a4a97175a1137a6b9a23c8d17cddc915",
+    "allProtectedPreimagesMatch": true,
+    "rebased": false
+  },
+  "patchEncoding": "Git-accepted unified diff; empty context rows omit the optional leading blank to avoid trailing whitespace in the data artifact"
+}

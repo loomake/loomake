@@ -3513,15 +3513,15 @@
       "id": "SCN-0c9a8c1de5d86a559154",
       "status": "reviewed",
       "scenarioSha256": "a87d8729c33e2d095a74de3c8dacc6adeabf51a0695054c6b91b50f5fd18113e",
-      "reason": "tasks.mdの雛形の完了ゲート行末にloomake:gate=doneがあり、Skill本文にも印を付ける指示があることをassertする。",
+      "reason": "旧契約と元Scenarioの本文を再確認した。個別承認済みの明示local付きコマンドでもtasks雛形の完了ゲート行末に印があり、既存のSKILL指示のassertも保持するため、元Scenarioの条件を満たす。既存itの成功を確認し、追加Scenarioを混ぜずその本文ブロックだけを対応させる。新契約のhashは子側の監査表だけに保持する。",
       "sources": [
         "REQ-136"
       ],
       "tests": [
         {
           "file": "tests/kit-assets.test.ts",
-          "contains": "[REQ-136]",
-          "sha256": "00881c55bfad1a79efb1d9a3129f20531b759d410d7847260a643c06f8e49f25",
+          "contains": "[REQ-136] Skill の tasks.md の雛形で、完了ゲートのタスクの行末に印があり、SKILL.md が印を付けるよう指示している",
+          "sha256": "01fbf7d73876e79c470cc7aeca1b5828d0a4a8abf01003fd5ef279e83be640b5",
           "hashScope": "block"
         }
       ]

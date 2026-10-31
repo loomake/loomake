@@ -248,7 +248,51 @@ describe('req-to-openspec Skill のテンプレート', () => {
 describe('完了ゲートのタスクの印', () => {
   it('[REQ-136] Skill の tasks.md の雛形で、完了ゲートのタスクの行末に印があり、SKILL.md が印を付けるよう指示している', () => {
     const format = read(join(skillDir, 'references/openspec-format.md'));
-    expect(format).toContain('- [ ] 3.1 `npx loomake verify --change <change-id> --done` を通す <!-- loomake:gate=done -->');
+    expect(format).toContain('- [ ] 3.1 `npx loomake verify --change <change-id> --done --scope local` を通す <!-- loomake:gate=done -->');
     expect(read(join(skillDir, 'SKILL.md'))).toContain('verify のタスクの行末に `<!-- loomake:gate=done -->` を付ける');
+  });
+});
+
+
+describe('ローカルの完了と最終の合格', () => {
+  const taskLines = (input: string) => {
+    const match = /## tasks\.md\s+```markdown\n([\s\S]*?)\n```/.exec(input.replace(/\r\n/g, '\n'));
+    expect(match).not.toBeNull();
+    return match![1].split('\n');
+  };
+
+  it('[REQ-136] 印のあるタスクはローカルの完了ゲートで、ci のタスクは無い', () => {
+    const lines = taskLines(format);
+    const marked = lines.filter((line) => line.includes('<!-- loomake:gate=done -->'));
+    expect(marked).toEqual(['- [ ] 3.1 `npx loomake verify --change <change-id> --done --scope local` を通す <!-- loomake:gate=done -->']);
+    expect(lines.filter((line) => /^- \[/.test(line) && line.includes('--scope ci'))).toEqual([]);
+  });
+
+  it('[REQ-136] 雛形の末尾に、最終の合格を区別するチェックボックスでない注記がある', () => {
+    const last = taskLines(format).filter((line) => line.trim()).at(-1)!;
+    expect(last).toMatch(/^注：/);
+    expect(last).not.toMatch(/^- \[/);
+    expect(last).toContain('CI で `npx loomake verify --change <change-id> --done --scope ci` が exit 0（判定 PASS・要判断なし）');
+    expect(last).toContain('必須 CI の成功が別に要る');
+    expect(last).toContain('これはタスクにしない');
+  });
+
+  it('[REQ-136] 実配布の雛形は LF と CRLF で同じタスク行と末尾注記になる', () => {
+    const lf = format.replace(/\r\n/g, '\n');
+    const expected = taskLines(lf);
+    const actual = taskLines(lf.replace(/\n/g, '\r\n'));
+    expect(actual).toEqual(expected);
+    expect(actual.some((line) => line.includes('\r'))).toBe(false);
+    expect(actual.filter((line) => line.includes('<!-- loomake:gate=done -->'))).toEqual(['- [ ] 3.1 `npx loomake verify --change <change-id> --done --scope local` を通す <!-- loomake:gate=done -->']);
+    expect(actual.filter((line) => /^- \[/.test(line) && line.includes('--scope ci'))).toEqual([]);
+    expect(actual.filter((line) => line.trim()).at(-1)).toBe('注：3.1 はローカルの完了。最終の合格には、CI で `npx loomake verify --change <change-id> --done --scope ci` が exit 0（判定 PASS・要判断なし）になることと、必須 CI の成功が別に要る。これはタスクにしない');
+  });
+
+  it('AGENTS.md のテンプレートの完了の定義は、ローカルの完了と最終の合格を分ける', () => {
+    const dod = section(agents, /完了の定義/);
+    expect(dod).toContain('--done --scope local` が exit 0（ローカルの完了）');
+    expect(dod).toContain('--done --scope ci` が exit 0（判定 PASS・要判断なし）');
+    expect(dod).toContain('必須チェックが成功している');
+    expect(dod).not.toContain('--done`');
   });
 });

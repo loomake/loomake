@@ -88,9 +88,11 @@ Source: REQ-010
 - [ ] 2.1 各 Scenario に対応するテストを書く。テスト名に [REQ-xxx] を入れる
 
 ## 3. 確認
-- [ ] 3.1 `npx loomake verify --change <change-id> --done` を通す <!-- loomake:gate=done -->
+- [ ] 3.1 `npx loomake verify --change <change-id> --done --scope local` を通す <!-- loomake:gate=done -->
+
+注：3.1 はローカルの完了。最終の合格には、CI で `npx loomake verify --change <change-id> --done --scope ci` が exit 0（判定 PASS・要判断なし）になることと、必須 CI の成功が別に要る。これはタスクにしない
 ```
 
-★ 完了ゲートのタスク（`verify --done` を通すタスク）の行末には `<!-- loomake:gate=done -->` を付ける。`loomake run` はこの印のあるタスクをエンジンに渡さず、完了ゲートに合格したときに完了にする。
+★ ローカルの完了ゲートのタスク（`verify --done --scope local` を通すタスク）の行末には `<!-- loomake:gate=done -->` を付ける。`loomake run` はこの印のあるタスクをエンジンに渡さず、ローカルの完了ゲートに合格したときに完了にする。末尾の注記はチェックボックスにしない。
 
 ★ タスクの末尾に関係する REQ ID を書いておくと、runner（`loomake run`）がタスクとテストを結び付けやすくなる。
