@@ -3,7 +3,7 @@
 ## 1. 契約の形
 
 - [x] 1.1 子changeを作る。親 `verify-v2-c001` の差分仕様から17件のRequirementを移し、proposal・design・tasks・traceを書く。traceの確認事項には親のR-C001-01〜10とPR #180の採否、分割の判断S8-01〜03を記録する。`verify --spec-only` が0になることを確かめる（REQ-308・309）
-- [ ] 1.2 core：2.0.0のZodスキーマ（ci/local×completed/partial、aborted、run.errors、scope、checksの4値、summary、decision、verdict）と導出型を追加し、既存の遅延loaderから読めるようにする。`VERIFY_RESULT_SCHEMA_VERSION` は1.0.0のままにし、2.0.0は別の定数で公開する（REQ-274・308・309）
+- [x] 1.2 core：2.0.0のZodスキーマ（ci/local×completed/partial、aborted、run.errors、scope、checksの4値、summary、decision、verdict）と導出型を追加し、既存の遅延loaderから読めるようにする。`VERIFY_RESULT_SCHEMA_VERSION` は1.0.0のままにし、2.0.0は別の定数で公開する（REQ-274・308・309）
 - [ ] 1.3 core：履歴用の `LegacyVerifyResult`・`LegacyEvidence` と、Evidence 2のスキーマ・型を別名で公開する。旧fixtureとスキーマ履歴の1.0.0は変えない（REQ-302・303・304・305）
 - [ ] 1.4 core：未知キーの保持（`__proto__` を含む各階層）と、既知の禁止キー（localのverdict、abortedのscope・checks・summary・decision・verdict）の拒否を分けて試験する（REQ-275・307）
 - [ ] 1.5 core：版付きのJSON Schemaを書き出し、exportsで公開する。既存のパスは変えない。`scripts/schema-contract-check.mjs` に版付きパスへの変更の試行を加え、既存の8試行と必須項目の削除・改名・版の変更の検出を保つ（REQ-276・322・183）

@@ -13,8 +13,9 @@ export { TRACE_SCHEMA_VERSION, SPEC_SCHEMA_VERSION, TASKS_SCHEMA_VERSION, loadPa
 export { extractTestRequirements } from './test-report.js';
 export type { TestRequirements } from './test-report.js';
 export { createTraceTemplate } from './template.js';
-export { VERIFY_RESULT_SCHEMA_VERSION, loadVerifyResultSchemas } from './verify-result.js';
-export type { VerifyMode, VerifyCheckResult, VerifyResult } from './verify-result.js';
+export { VERIFY_RESULT_SCHEMA_VERSION, LEGACY_VERIFY_RESULT_SCHEMA_VERSION, VERIFY_RESULT_V2_SCHEMA_VERSION, loadVerifyResultSchemas } from './verify-result.js';
+export type { VerifyMode, VerifyCheckResult, VerifyResult, LegacyVerifyResult } from './verify-result.js';
+export type { VerifyScope, VerifyRunError, VerifyCheckV2, VerifyDecision, VerifyResultV2, VerifyResultV2Ci, VerifyResultV2Local, VerifyResultV2Aborted } from './verify-result.js';
 export { QUALITY_SCHEMA_VERSION, loadQualitySchema } from './quality.js';
 export type { Quality, QualityInput, QualityMeasure, QualityObjective, QualityProduct, QualityEvidencePolicy } from './quality.js';
 export { QUALITY_REPORT_SCHEMA_VERSION, loadQualityReportSchema } from './quality-report.js';
