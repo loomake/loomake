@@ -23,7 +23,7 @@
 
 metricは `required_subjects_with_failed_tests` だけを扱う。値は「必須の要件のうち、実施されたfailedのテストを持つものの数」。samplesは必須の要件を名前に持つpassedかfailedのテストの、重複のない数（観測の識別は report hash・ファイル・fullName）。skip・todo・pendingは実施に数えない。必須の要件のどれかに実施されたテストがなければ incomplete（不足）にする。ただし、すでに数えたfailedだけで目標の違反が確定するとき（`<=`・`==` で値が上限を超える、`<` で上限以上）は、その値で measured を返し、既存の判定がFAILを優先する。ほかのmetricと、quality.yamlにないsourceの観測は作らない（判定は「観測がありません」の不足になる）。
 
-判定の順は必須の要件 → producer → レポートの有無 → target → basis → レポートのhash → 事前の削除 → 読取 → `startTime` → ファイル単位の失敗 → 未実施の要件である。先に当たった不適格の理由だけを返す（レポートもproducerもないときはineligible）。
+判定の順は必須の要件 → producer → レポートの有無 → target → basis → レポートのhash → 事前の削除 → 終了コード → 読取 → `startTime` → ファイル単位の失敗 → 未実施の要件である。先に当たった不適格の理由だけを返す（レポートもproducerもないときはineligible）。
 
 hash関数は呼び出し側が渡す（policyの純粋性規則のため）。`observeTestReport(quality, receipt, { sha256Hex })` の第3引数は省略できない。kitは `node:crypto` を使う `sha256Hex` を `verify/hash.ts` に置き、2本目の接続で `runVerify` が渡す。
 
