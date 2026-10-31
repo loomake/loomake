@@ -61,8 +61,9 @@ export async function inspectResultNative(workspace, version) {
 }
 
 /** Read-only P2. Path acceptance is not an atomic-open guarantee or a collection certificate. */
-export function inspectResultOutputPath(workspace, output) {
+export function inspectResultOutputPath(workspace, output, environment = process.env) {
   try {
+    if (Object.keys(environment).some((key) => key.toUpperCase().startsWith('GIT_'))) return result(false, 'output-git-environment');
     const root = realpathSync(workspace), lexicalRoot = join(root, '.loomake');
     const boundary = realpathSync(lexicalRoot), requested = resolve(root, output);
     if (!inside(root, boundary) || !inside(lexicalRoot, requested)) return result(false, 'output-outside-boundary');
@@ -79,7 +80,7 @@ export function inspectResultOutputPath(workspace, output) {
     const actual = realpathSync(existing);
     if (actual !== boundary && !inside(boundary, actual)) return result(false, 'output-outside-boundary');
     if (!lstatSync(actual).isDirectory()) return result(false, 'output-not-directory');
-    const ignored = spawnSync('git', ['check-ignore', '-q', '--', requested], { cwd: root, shell: false, stdio: 'ignore', timeout: 5000 });
+    const ignored = spawnSync('git', ['check-ignore', '-q', '--', requested], { cwd: root, shell: false, env: { ...environment }, stdio: 'ignore', timeout: 5000 });
     return ignored.status === 0 && !ignored.error ? result(true, 'output-path-checked') : result(false, 'output-ignore-unproved');
   } catch { return result(false, 'output-path-unproved'); }
 }
@@ -87,7 +88,7 @@ export function inspectResultOutputPath(workspace, output) {
 /** P3 checks ancestor entries, ambient Git-variable presence and an explicit Git non-repo error. */
 export async function inspectResultCwd(cwd, environment = process.env) {
   try {
-    if (Object.keys(environment).some((key) => key.startsWith('GIT_'))) return result(false, 'cwd-git-environment');
+    if (Object.keys(environment).some((key) => key.toUpperCase().startsWith('GIT_'))) return result(false, 'cwd-git-environment');
     const root = realpathSync(cwd);
     let ancestor = root;
     for (;;) {
