@@ -13,7 +13,7 @@ import { reusableEvidence } from '../reuse.js';
 import { baseKey } from './prepare.js';
 import { buildPrompt } from './prompt.js';
 import { checkTask, taskLabel } from './tasks.js';
-import { decideAfterEngine, decideAfterGate, decideAfterChanges, type GateObservation } from './decision-policy.js';
+import { classifyEngineResult, decideAfterGuard, decideAfterEngine, decideAfterGate, decideAfterChanges, type GateObservation } from './decision-policy.js';
 import type { Recorder, RunContext, RunSummary, Stop } from './types.js';
 
 /** 完了ゲートの検査のうち、理由（1.0.0 の detail、2.0.0 の reason）が reason と一致するものがあるか。aborted は検査を持たない */
@@ -45,7 +45,7 @@ export function interruptedOperation(error: unknown): boolean {
 }
 
 /** エンジンを 1 回動かす。止まる理由があれば、その状態と文を返す */
-async function callEngine(ctx: RunContext, rec: Recorder, prompt: string): Promise<{ kind: 'continue'; text: string } | { kind: 'stop'; status: RunSummary['status']; reason: string }> {
+async function callEngine(ctx: RunContext, rec: Recorder, prompt: string): Promise<{ kind: 'continue'; text: string } | { kind: 'hold'; reason: string; text: string } | { kind: 'stop'; status: RunSummary['status']; reason: string }> {
   const { root, env, options } = ctx;
   rec.step++;
   const n = String(rec.step).padStart(2, '0');
@@ -70,8 +70,14 @@ async function callEngine(ctx: RunContext, rec: Recorder, prompt: string): Promi
   const changed = moved ? undefined : findInternalsChange(root, env, internals);
   if (moved) ctx.stdout(moved.report);
   else if (changed) ctx.stdout(changed.report);
-  const decision = decideAfterEngine({ ...result, movementReason: moved?.reason, internalsReason: changed?.reason });
-  return decision.kind === 'stop' ? decision : { kind: 'continue', text: result.text };
+  const fault = classifyEngineResult(result.raw);
+  const decision = decideAfterEngine({
+    aborted: result.aborted, outputLimitExceeded: result.outputLimitExceeded, timedOut: result.timedOut,
+    text: result.text, exitCode: result.exitCode, movementReason: moved?.reason, internalsReason: changed?.reason,
+    resultFault: fault ? { fault, outputPath: join(rec.runDir, `${n}-output.json`) } : undefined,
+  });
+  if (decision.kind === 'stop') return decision;
+  return { ...decision, text: result.text };
 }
 
 // コミットする前に不正な直し方を探し、見つけたら変更を作業ツリーに残して止まる理由を返す（REQ-109〜REQ-112）
@@ -81,6 +87,16 @@ function guard(ctx: RunContext): string | undefined {
   git(ctx.root, ctx.env, ['reset', '-q']);
   ctx.stdout(['不正な直し方を見つけました。', ...findings.map((f) => `  - ${f.file}：${f.reason}`), '', diff, APPROVAL_GUIDE].join('\n'));
   return `不正な直し方を見つけました（${findings.map((f) => f.file).join('、')}）`;
+}
+
+/** Run existing guard reports before stopping on an abnormal engine result. */
+function stopAfterGuard(ctx: RunContext, resultReason: string | undefined): string | undefined {
+  const violationReason = guard(ctx);
+  const decision = decideAfterGuard({ resultReason, violationReason });
+  if (decision.kind === 'continue') return undefined;
+  // guard already resets the index when it finds a violation.
+  if (!violationReason) git(ctx.root, ctx.env, ['reset', '-q']);
+  return decision.reason;
 }
 
 /** ガードと同じ index の差分を、run が tasks.md を完了にする前に調べる。 */
@@ -97,7 +113,7 @@ export async function runEngineTasks(ctx: RunContext, rec: Recorder): Promise<St
     if (ctx.options.signal?.aborted) return { status: 'interrupted', reason: '中断されました', remaining };
     const result = await callEngine(ctx, rec, buildPrompt(root, ctx.changeDir, `- [ ] ${taskLabel(task)}`));
     if (result.kind === 'stop') return { status: result.status, reason: result.reason, remaining };
-    const violation = guard(ctx);
+    const violation = stopAfterGuard(ctx, result.kind === 'hold' ? result.reason : undefined);
     if (violation) return { status: 'stopped', reason: violation, remaining };
     const decision = decideAfterChanges({ phase: 'task', hasChanges: hasStagedChanges(ctx), text: result.text });
     if (decision.kind === 'stop') {
@@ -167,7 +183,7 @@ export async function runGate(ctx: RunContext, rec: Recorder): Promise<Stop | un
     if (decision.kind === 'passed') break;
     const result = await callEngine(ctx, rec, buildPrompt(root, ctx.changeDir, '完了ゲートに合格するように直す。', rec.lastVerify));
     if (result.kind === 'stop') return { status: result.status, reason: result.reason, remaining: gateTasks };
-    const violation = guard(ctx);
+    const violation = stopAfterGuard(ctx, result.kind === 'hold' ? result.reason : undefined);
     if (violation) return stopped(violation);
     const changes = decideAfterChanges({ phase: 'repair', hasChanges: hasStagedChanges(ctx), text: result.text });
     if (changes.kind === 'stop') {
