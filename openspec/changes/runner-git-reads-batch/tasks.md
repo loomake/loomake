@@ -13,5 +13,5 @@
 ## 3. 計測と確認
 
 - [x] 3.1 `LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR` の診断の記録と `GIT_TRACE` で、run.test.ts・guards.test.ts・publication-retry.test.ts・pr.test.ts・external-budget.test.ts の監視つき操作の数と `git rev-parse` の数を、変更の前後で数え、design.md の見込み（合計 5,129 回から約 867 回減る）と比べて PR 本文に書く。見込みと 10% 以上ずれたら理由を design.md に書き足す
-- [ ] 3.2 試験の上限時間・assertion・skip の数が変わっていないことを `git diff origin/main -- packages/*/test tests` で確かめる。changeset（`@loomake/runner` の patch）を足す
+- [x] 3.2 試験の上限時間・assertion・skip の数が変わっていないことを `git diff origin/main -- packages/*/test tests` で確かめる。changeset（`@loomake/runner` の patch）を足す
 - [ ] 3.3 `pnpm -s lint`・`pnpm -s typecheck`・runner の試験を通し、`pnpm -s verify --change runner-git-reads-batch --done` を通す <!-- loomake:gate=done -->
