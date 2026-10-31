@@ -6,7 +6,11 @@ branch作成時の基準はmain `f397109`、製品調査の基準はmain `f4e3ed
 
 共有品質4値と純粋集約はPR #138で受入済み。#60の未知フィールド保持修正（REQ-307）はbranch作成時には未受入と記録したが、PR #140・#141で修正と仕様反映・archiveを受け入れ、現在はclose済みでmain `f4e3edb`に含まれる。当時の仕様照合基準は通常mergeで取り込んだmain `d5aa30d7a9326be44ea4eac5145b5fa95529efce`。PR #155でCLI/URL両changeの同期/archiveも受入済みである。R01/02/03/04/07/09/10はA承認済みで、[追加回答](https://github.com/loomake/loomake/pull/139#issuecomment-6511434324)によるR05 A・R06 A・R08 Bも回答済みである。これらを現在の未回答による停止理由とせず、親1.2の残確認と1.3のS1具体化・独立受入を進める。既存の事前工数推定 `docs/effort/c-001.md` は変更しない。
 
-[design-candidate-a.md](design-candidate-a.md)は承認済み決定に基づくS1/S2の設計詳細であり、R03/04/07 AとR05 A・R06 A・R08 B、旧作業木で採用済みの補足R11〜13等、未実装の技術候補を区別して参照する。当時の全A比較だけを履歴として扱い、R08 Aだけに依存する候補は採用しない。承認済みR04 Aの最小適格性・固定基準・基準側controller・private handoffと独立S1準備の義務を保持し、独立changeの通常done 0と同期/archiveを経てS2へ進む。これらの採用事実と、規範への残反映・S1の具体設計・実装・独立受入の完了は区別する。
+[design-candidate-a.md](design-candidate-a.md)は承認済み決定に基づくS1/S2の設計詳細であり、R03/04/07 AとR05 A・R06 A・R08 B、旧作業木で採用した補足R11〜13等の履歴、未実装の技術候補を区別して参照する。当時の全A比較と補足の採用履歴は保持し、補足の現在の扱いは後続の利用者判断と現子changeの規範を優先する。R08 Aだけに依存する候補は採用しない。承認済みR04 Aの最小適格性・固定基準・基準側controller・private handoffと独立S1準備の義務を保持し、独立changeの通常done 0と同期/archiveを経てS2へ進む。これらの採用事実と、規範への残反映・S1の具体設計・実装・独立受入の完了は区別する。
+
+### 旧補足と後続判断の対応
+
+[子scopeの記録](../verify-v2-scope/trace.md)と[PR #217](https://github.com/loomake/loomake/pull/217)では、changeなしの明示 `--scope ci` を拒否する案を外し、明示したscopeをそのまま使う。[子gatesの規範](../verify-v2-gates/specs/verify/spec.md)と[採用記録](../verify-v2-gates/trace.md)では、auto設定でOpenSpec CLIが無いlocalの構造NAに、理由と自動判定を示す固定の確認者を付ける。旧R12のchangeなしの明示ci拒否案や旧R11の確認者不要案を現在の義務へ戻さない。補足の採否対応と承認元を親台帳へ整理する作業はtask1.2に残すが、回答済み事項として再質問しない。
 
 ## Goals / Non-Goals
 
