@@ -82,10 +82,19 @@ export function readQualityFile(options: QualityReadOptions): QualityReadResult 
     const line = first.linePos?.[0].line;
     return errorOf('config', `quality.yaml の YAML の書き方が正しくありません${line ? `（${line} 行目）` : ''}：${first.message}`, 'YAML の書き方を直してください');
   }
-  const value: unknown = document.toJS({ maxAliasCount: 100 });
+  let value: unknown;
+  try {
+    value = document.toJS({ maxAliasCount: 100 });
+  } catch (error) {
+    // エイリアスの展開が上限を超えたときなど。書き方の誤りとして結果で返し、例外にしない
+    return errorOf('config', `quality.yaml を展開できません：${(error as Error).message}`, 'エイリアス（*名前）の使い方を見直してください');
+  }
   const parsed = options.schema.safeParse(value);
   if (!parsed.success) {
     const version = typeof value === 'object' && value !== null ? (value as { version?: unknown }).version : undefined;
+    if (typeof version === 'string' && Number(version) === 2) {
+      return errorOf('config', `quality.yaml の version は数値で書いてください（${JSON.stringify(version)} ではなく 2）`, '引用符を外して version: 2 と書いてください');
+    }
     if (version !== undefined && version !== 2) {
       return errorOf('config', `quality.yaml の version ${JSON.stringify(version)} には対応していません（対応している版は 2）`, 'version: 2 の形式に書き直してください');
     }

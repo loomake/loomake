@@ -91,6 +91,28 @@ describe('quality.yaml の最小読取', () => {
     });
   });
 
+  it('[REQ-310] 入れ子のエイリアスが展開の上限を超えても例外を投げず、spec-only・done とも config にする', () => {
+    const ten = (name: string) => `[${Array.from({ length: 10 }, () => `*${name}`).join(', ')}]`;
+    const content = `version: 2\nmodel: x\na: &a [${Array.from({ length: 10 }, () => 'x').join(', ')}]\nb: &b ${ten('a')}\nc: &c ${ten('b')}\nd: ${ten('c')}\n`;
+    withRoot(content, (root) => {
+      for (const gate of ['spec-only', 'done'] as const) {
+        let result: QualityReadResult | undefined;
+        expect(() => { result = read(root, gate); }).not.toThrow();
+        const error = errorOf(result!);
+        expect(error.kind).toBe('config');
+        expect(exitOf(error)).toBe(2);
+      }
+    });
+  });
+
+  it('[REQ-310] version を文字列で書いたときは、数値で書くよう型の違いを示す', () => {
+    withRoot('version: "2"\nmodel: x\n', (root) => {
+      const error = errorOf(read(root));
+      expect(error.kind).toBe('config');
+      expect(error.message).toContain('version は数値で書いてください（"2" ではなく 2）');
+    });
+  });
+
   it('[REQ-310] spec-only では quality.yaml の不在を許し、品質の構造検査を対象外にする', () => {
     withRoot(undefined, (root) => {
       expect(read(root, 'spec-only')).toEqual({ status: 'absent' });
