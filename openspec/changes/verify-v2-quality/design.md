@@ -23,7 +23,7 @@
 
 metricは `required_subjects_with_failed_tests` だけを扱う。値は「必須の要件のうち、実施されたfailedのテストを持つものの数」。samplesは必須の要件を名前に持つpassedかfailedのテストの、重複のない数（観測の識別は report hash・ファイル・fullName）。skip・todo・pendingは実施に数えない。必須の要件のどれかに実施されたテストがなければ incomplete（不足）にする。ただし、すでに数えたfailedだけで目標の違反が確定するとき（`<=`・`==` で値が上限を超える、`<` で上限以上）は、その値で measured を返し、既存の判定がFAILを優先する。ほかのmetricと、quality.yamlにないsourceの観測は作らない（判定は「観測がありません」の不足になる）。
 
-adapterは本文のsha256を自前の純関数（`policy/sha256.ts`）で計算する。判定関数は `node:*` を読めない（eslintの純粋性の補助検査）ため、`node:crypto` は使わない。同じ値になることは試験で `node:crypto` と比べて確かめる。
+hash関数は呼び出し側が渡す（policyの純粋性規則のため）。`observeTestReport(quality, receipt, { sha256Hex })` の第3引数は省略できない。kitは `node:crypto` を使う `sha256Hex` を `verify/hash.ts` に置き、2本目の接続で `runVerify` が渡す。
 
 観測のevidenceには `report:sha256:…`・`basis:sha256:…`・`target:<SHA>`・`producer:<名前>@<版>` を入れる。適格でない理由は `detail` に書き、checkのreasonに出す。
 

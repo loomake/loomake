@@ -1,7 +1,6 @@
 import { createHash } from 'node:crypto';
 import { describe, it, expect } from 'vitest';
 import { loadQualitySchema, type Quality } from '@loomake/core';
-import { sha256Hex } from '../src/verify/policy/sha256.js';
 import { FAILED_SUBJECTS_METRIC, TEST_REPORT_SOURCE, evaluateQualityConditions, observeTestReport, type TestReportReceipt } from '../src/index.js';
 
 const { qualitySchema } = await loadQualitySchema();
@@ -19,6 +18,7 @@ const reportText = (tests: [string, string][], startTime: number | null = START 
   JSON.stringify({ ...(startTime === null ? {} : { startTime }), testResults: [{ name: '/p/a.test.ts', assertionResults: tests.map(([fullName, status]) => ({ fullName, status })) }] });
 
 const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
+const options = { sha256Hex: sha256 };
 const reportOf = (text: string, path = '.loomake/test-report.json') => ({ path, text, sha256: sha256(text) });
 
 const receipt = (over: Partial<TestReportReceipt> = {}, tests: [string, string][] = [['[REQ-012] 成功', 'passed']]): TestReportReceipt => ({
@@ -31,7 +31,7 @@ const receipt = (over: Partial<TestReportReceipt> = {}, tests: [string, string][
   ...over,
 });
 
-const observe = (r: TestReportReceipt | null, q = quality()) => observeTestReport(q, r);
+const observe = (r: TestReportReceipt | null, q = quality()) => observeTestReport(q, r, options);
 const status = (r: TestReportReceipt | null, q = quality()) => observe(r, q)[0].status;
 
 function deepFreeze<T>(value: T): T {
@@ -135,12 +135,6 @@ describe('ci.test_report の adapter', () => {
     expect(status(receipt({ required: [] }))).toBe('unavailable');
   });
 
-  it('[REQ-319] レポートの照合に使う SHA-256 は node:crypto と同じ値を返す', () => {
-    for (const text of ['', 'abc', 'あいう😀', 'x'.repeat(55), 'x'.repeat(56), 'y'.repeat(64), 'z'.repeat(1000), reportText([['[REQ-012] 成功', 'passed']])]) {
-      expect(sha256Hex(text)).toBe(sha256(text));
-    }
-  });
-
   it('[REQ-319] レポートの hash が本文と一致しなければ未照合にする', () => {
     const base = receipt();
     const [observation] = observe({ ...base, report: { ...base.report!, sha256: 'f'.repeat(64) } });
@@ -181,14 +175,14 @@ describe('ci.test_report の adapter', () => {
         'PQ-004': { characteristic: 'c', indicators: [{ source: TEST_REPORT_SOURCE, metric: FAILED_SUBJECTS_METRIC, target: '== 0' }] },
       },
     });
-    expect(observeTestReport(q, receipt())).toEqual([]);
-    expect(evaluateQualityConditions(q, observeTestReport(q, receipt())).map((c) => c.result)).not.toContain('PASS');
+    expect(observeTestReport(q, receipt(), options)).toEqual([]);
+    expect(evaluateQualityConditions(q, observeTestReport(q, receipt(), options)).map((c) => c.result)).not.toContain('PASS');
   });
 
   it('[REQ-319] 入力を変えず、同じ入力に同じ結果を返す', () => {
     const q = deepFreeze(quality());
     const r = deepFreeze(receipt());
-    const first = observeTestReport(q, r);
-    expect(observeTestReport(q, r)).toEqual(first);
+    const first = observeTestReport(q, r, options);
+    expect(observeTestReport(q, r, options)).toEqual(first);
   });
 });

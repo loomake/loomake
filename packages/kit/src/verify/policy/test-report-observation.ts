@@ -1,6 +1,5 @@
 import { parseTestReport, type Quality, type QualityMeasure } from '@loomake/core';
 import type { QualityObservation } from './quality-conditions.js';
-import { sha256Hex } from './sha256.js';
 
 /** テストのレポートを出どころにする品質の source */
 export const TEST_REPORT_SOURCE = 'ci.test_report';
@@ -26,6 +25,12 @@ export type TestReportReceipt = {
   required: readonly string[];
 };
 
+/** adapter に渡す道具。判定関数は node:* を読めないので、hash の計算は呼び出し側が渡す */
+export type TestReportOptions = {
+  /** 文字列の SHA-256 を小文字の 16 進で返す関数。kit の `sha256Hex` を渡す */
+  sha256Hex: (text: string) => string;
+};
+
 const PRODUCERS = ['vitest', 'jest'];
 const VERSION = /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/;
 const TARGET = /^(<=|>=|==|<|>)\s*(-?[0-9]+(?:\.[0-9]+)?)$/;
@@ -42,7 +47,7 @@ type Base = Pick<QualityObservation, 'subject' | 'source' | 'metric'>;
 type Facts = Omit<QualityObservation, 'subject' | 'source' | 'metric'>;
 
 // 適格性と実施を、決めた順に確かめる。最初に見つかった問題をその観測の状態にする
-function judge(receipt: TestReportReceipt | null, target: string | undefined): Facts {
+function judge(receipt: TestReportReceipt | null, target: string | undefined, options: TestReportOptions): Facts {
   if (!receipt) return { status: 'not_run', detail: '品質コマンドを実行していません' };
   const { producer, report, invocation } = receipt;
   const evidence = [
@@ -59,7 +64,7 @@ function judge(receipt: TestReportReceipt | null, target: string | undefined): F
   if (!receipt.target.before || !receipt.target.after) return { status: 'unverified', evidence, detail: '対象のコミットを確かめられません' };
   if (receipt.target.before !== receipt.target.after) return { status: 'stale', evidence, detail: '実行中に対象のコミットが変わりました' };
   if (receipt.basis.before !== receipt.basis.after) return { status: 'stale', evidence, detail: '実行中に基準（quality.yaml・仕様・trace.md）が変わりました' };
-  if (sha256Hex(report.text) !== report.sha256) {
+  if (options.sha256Hex(report.text) !== report.sha256) {
     return { status: 'unverified', evidence, detail: 'レポートの hash が本文と一致しません' };
   }
   if (!invocation.clearedBefore) return { status: 'unverified', evidence, detail: '前回のレポートを消してから実行していません' };
@@ -105,9 +110,9 @@ type Item = { evidence: QualityMeasure[]; applicability?: string };
  * metric が required_subjects_with_failed_tests の必須証拠ごとに観測を 1 つ返す。
  * producer と版・対象のコミット・基準の hash・レポートの hash・同じ実行で作られたレポートか・テストを実行できなかったファイルがないかを照合し、
  * 通らなければ measured にしない。
- * receipt が null なら未実施にする。入力を変えず、I/O・環境・時計を読まない
+ * receipt が null なら未実施にする。レポートの hash は options.sha256Hex で計算する。入力を変えず、I/O・環境・時計を読まない
  */
-export function observeTestReport(quality: Quality, receipt: TestReportReceipt | null): QualityObservation[] {
+export function observeTestReport(quality: Quality, receipt: TestReportReceipt | null, options: TestReportOptions): QualityObservation[] {
   const items = [...Object.entries(quality.objectives), ...Object.entries(quality.product)] as [string, Item][];
   const observations: QualityObservation[] = [];
   for (const [subject, item] of items) {
@@ -116,7 +121,7 @@ export function observeTestReport(quality: Quality, receipt: TestReportReceipt |
     if (measures.length === 0) continue;
     // 同じ指標を 2 つ書いても観測は 1 つにする。目標は最初のものを違反の確定に使う
     const base: Base = { subject, source: TEST_REPORT_SOURCE, metric: FAILED_SUBJECTS_METRIC };
-    observations.push({ ...base, ...judge(receipt, measures[0].target) });
+    observations.push({ ...base, ...judge(receipt, measures[0].target, options) });
   }
   return observations;
 }
