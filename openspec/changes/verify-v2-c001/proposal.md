@@ -30,7 +30,6 @@
 - `external-process-budget`: 予算単独変更の版不変と、別途承認する形式移行を区別する。
 - `reference-docs`: quality生成/check単独の不変範囲を明確にし、CLI共通定義と生成基準の移行を計画する。
 - `reference-docs`（REQ-323）: 未確定契約を追加しないMUSTをCLI生成単独の範囲へ限定する。
-- `reference-docs`（REQ-324）: help/usage・終了コード・8 JSON等の不変MUSTを共通定義集約単独へ限定する。
 - `verification-policy`（REQ-306）: summary・件数・verifyへの非接続を集約定義単独の範囲へ限定する。
 - `run`（REQ-100）: 完了ゲートをverify --done --scope localと同じ検査へ追従する。
 - `trace-agreement`: 未承認の案内と承認後の表示をv2用語へ追従する。
@@ -56,3 +55,7 @@ C-001は最小quality入力、条件と集約、abortedと終了コード、`--d
 C-001は3つのPRに分けて受け入れる。1本目は子change `verify-v2-shape` で、契約の形を追加だけで用意する。2本目は子change `verify-v2-wiring` で、書き出しと利用側を2.0.0へ切り替える。3本目はこの親で、正常PASSの受入と移行を行う。PRごとに `verify --done` を通すため、changeをPRごとに分けた。
 
 Requirementは既存のIDのまま、重複させずに移す。新しいREQ-IDは作らない。REQ-183・274〜276・302〜310・313・314・316・322の17件は `verify-v2-shape` へ移した。REQ-274にあった書き出しの版を2.0.0にする文は、REQ-311へ移した。REQ-073は既存の試験の期待値を変えずには1本目で満たせないため、この親に残した。archiveは3本目のあとに、子change・親の順に行う。分け方の採否は`verify-v2-shape` のtraceの確認事項S8-01〜03に記録した。
+
+2本目は、読む側の対応（`verify-v2-readers`）と書く側の切り替え（`verify-v2-wiring`）の2つのPRに分けた。PRの差分がOpusへの依頼の上限（200KiB）を超えたための管理役の決定（2026-10-31）である。`verify-v2-readers` へREQ-093・205を移した。REQ-093は承認済みR-C001-05 AのMODIFIEDとして子changeで確定した。
+
+書く側はさらに3つに分けた（管理役の決定、2026-10-31）。全体は6本で、1/6 `verify-v2-shape`、2a/6 `verify-v2-readers`、2b-1/6 `verify-v2-wiring`（verifyの書き出しの切替。REQ-040・041・100・311・315）、2b-2/6 `verify-v2-evidence`（Evidenceの現行名の切替とreport。REQ-073・324）、2c/6 `verify-v2-strict`（旧形式の不合格。REQ-164・317・318）、6/6はこの親で受入を行う。

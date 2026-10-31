@@ -1,0 +1,29 @@
+{
+  "description": "reference-cli-baseline.json（基準mainの原本）に当てる、承認済みの具体差分。原本は書き換えず、試験は原本にこの差分を当てた全文と比べる（REQ-324）",
+  "changes": [
+    {
+      "change": "verify-v2-evidence",
+      "requirement": "REQ-040",
+      "approval": "S8-07（管理役採用、2026-10-31。C001 の分割 2b-2/6）",
+      "reason": "--skip-commands はレポートを読まずに品質コマンドの項目を不足にし、終了コード 1 を返す（REQ-040）。旧文はレポートを読むと説明していた",
+      "argv": [
+        [
+          "verify",
+          "--help"
+        ],
+        [
+          "verify",
+          "-h"
+        ],
+        [
+          "verify",
+          "--change",
+          "--help"
+        ]
+      ],
+      "stream": "stdout",
+      "from": "  --skip-commands     品質コマンドを実行せず、すでにあるテストのレポートを読む",
+      "to": "  --skip-commands     品質コマンドを実行せず、テストのレポートも読まずに、その項目を証拠不足にする（終了コード 1）"
+    }
+  ]
+}

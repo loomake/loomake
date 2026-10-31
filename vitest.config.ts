@@ -1,12 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { configDefaults, defineConfig } from 'vitest/config';
-import { filesFor, isPullRequestRun } from './tests/test-split.js';
+import { assertNotPartitioned, loadPartition, partitionFiles } from './scripts/lib/test-partition.mjs';
 
 const root = import.meta.dirname;
-const packageTests = ['tests/ai-journeys.test.ts', 'tests/package-artifacts.test.ts'];
-const fastFiles = filesFor('fast');
-const slowFiles = filesFor('slow');
+const packageTests = ['tests/ai-journeys.test.ts', 'tests/package-artifacts.test.ts', 'tests/pending-approvals-cli.test.ts'];
 // loomake verify は、test コマンドがこのファイルに書き出した JSON レポートで、要件ごとのテストを判定する（add-verify-cli の仮定 A-05）
 const report: string = JSON.parse(readFileSync(join(root, 'loomake.config.json'), 'utf8')).tests.report;
 // CI の macOS・Windows のシャードでは、隔離一覧（tests/quarantine.json）でその OS に指定したファイルを除く（REQ-214・REQ-344）。
@@ -20,6 +18,9 @@ const quarantined: string[] = (() => {
   }
   return files;
 })();
+const partition = loadPartition(root);
+assertNotPartitioned(quarantined, partition);
+const files = partitionFiles(partition);
 
 export default defineConfig({
   resolve: {
@@ -32,13 +33,12 @@ export default defineConfig({
     },
   },
   test: {
-    // root が配布物を 1 回だけ準備し、選択された package/slow へ provide する。
-    // ファイル指定だけでは余計に build することがある。unit だけなら --project unit を使う。
+    // package/slow に同じ配布物を渡す。明示ファイル選択でも project が残る場合は準備を1回行う。
     globalSetup: ['tests/package-build.setup.ts'],
     projects: [
-      { extends: true, test: { name: 'unit', include: ['tests/**/*.test.ts', 'packages/*/test/**/*.test.ts'], exclude: [...configDefaults.exclude, ...packageTests, '**/*.slow.test.ts', ...fastFiles.exclude, ...quarantined] } },
-      { extends: true, test: { name: 'package', include: packageTests, exclude: [...configDefaults.exclude, '**/*.slow.test.ts', ...fastFiles.exclude, ...quarantined] } },
-      ...(!isPullRequestRun() && slowFiles.include.length > 0 ? [{ extends: true as const, test: { name: 'slow', include: slowFiles.include } }] : []),
+      { extends: true, test: { name: 'unit', include: ['tests/**/*.test.ts', 'packages/*/test/**/*.test.ts'], exclude: [...configDefaults.exclude, ...packageTests, ...files.companions, ...files.fastExclude, ...quarantined] } },
+      { extends: true, test: { name: 'package', include: packageTests, exclude: [...configDefaults.exclude, ...files.companions, ...files.fastExclude, ...quarantined] } },
+      ...(files.slowInclude.length ? [{ extends: true as const, test: { name: 'slow', include: files.slowInclude } }] : []),
     ],
     reporters: ['default', 'json'],
     outputFile: { json: report },

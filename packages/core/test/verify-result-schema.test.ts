@@ -2,12 +2,18 @@ import { describe, it, expect, expectTypeOf } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { z } from 'zod';
-import { loadVerifyResultSchemas, VERIFY_RESULT_SCHEMA_VERSION, type VerifyResult, type VerifyCheckResult, type VerifyMode } from '../src/index.js';
+import {
+  loadVerifyResultSchemas, LEGACY_VERIFY_RESULT_SCHEMA_VERSION,
+  type VerifyResult, type VerifyCheckResult, type VerifyCheckV2, type VerifyMode, type LegacyVerifyResult, type LegacyVerifyCheckResult,
+} from '../src/index.js';
 
-const { verifyResultSchema } = await loadVerifyResultSchemas();
+// いまの書き出しは 2.0.0（verify-result-v2-schema.test.ts）。このファイルは公開した 1.0.0 の形を、履歴の名前で確かめる
+const schemas = await loadVerifyResultSchemas();
+const { legacyVerifyResultSchema: verifyResultSchema } = schemas;
+type CurrentSchema = typeof schemas.verifyResultSchema;
 
 const valid = {
-  schemaVersion: VERIFY_RESULT_SCHEMA_VERSION,
+  schemaVersion: LEGACY_VERIFY_RESULT_SCHEMA_VERSION,
   mode: 'done',
   change: 'add-x',
   ok: true,
@@ -31,9 +37,11 @@ describe('verify 結果の Zod スキーマ', () => {
   });
 
   it('[REQ-274] 型はスキーマから導出し、手書きの型を別に定義しない', () => {
-    expectTypeOf<VerifyResult>().toEqualTypeOf<z.infer<typeof verifyResultSchema>>();
-    expectTypeOf<VerifyCheckResult>().toEqualTypeOf<VerifyResult['results'][number]>();
-    expectTypeOf<VerifyMode>().toEqualTypeOf<VerifyResult['mode']>();
+    expectTypeOf<VerifyResult>().toEqualTypeOf<z.infer<CurrentSchema>>();
+    expectTypeOf<VerifyCheckResult>().toEqualTypeOf<VerifyCheckV2>();
+    expectTypeOf<LegacyVerifyResult>().toEqualTypeOf<z.infer<typeof verifyResultSchema>>();
+    expectTypeOf<LegacyVerifyCheckResult>().toEqualTypeOf<LegacyVerifyResult['results'][number]>();
+    expectTypeOf<VerifyMode>().toEqualTypeOf<LegacyVerifyResult['mode']>();
     for (const file of ['verify-result.ts', 'verify-result-schema.ts']) {
       expect(readFileSync(join(import.meta.dirname, '..', 'src', file), 'utf8')).not.toMatch(/export type \w+ = \{/);
     }

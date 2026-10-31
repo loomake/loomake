@@ -9,7 +9,15 @@ export type EngineObservation = Readonly<{
   internalsReason?: string;
 }>;
 export type EngineDecision = { kind: 'continue' } | { kind: 'stop'; status: 'stopped' | 'interrupted'; reason: string };
-export type GateObservation = Readonly<{ stateChanged: boolean; ok: boolean; interrupted?: boolean; timedOut: boolean; fixes: number; maxFixes: number }>;
+/**
+ * 完了ゲートの観測。ok は完了ゲートの完了（2.0.0 では scope:local の項目がすべて完了したこと。最終 CI の合格ではない）。
+ * aborted は実行エラーの説明、decisionReasons は人の判断が要る理由（1 件以上なら要判断）（REQ-205）。
+ * scope は 2.0.0 の評価した結果の scope。run の完了ゲートは local なので、ci が来たら止まる（REQ-317）
+ */
+export type GateObservation = Readonly<{
+  stateChanged: boolean; ok: boolean; interrupted?: boolean; timedOut: boolean; fixes: number; maxFixes: number;
+  aborted?: string; decisionReasons?: readonly string[]; scope?: 'ci' | 'local';
+}>;
 export type GateDecision = { kind: 'passed' | 'repair' } | { kind: 'stop' | 'interrupted'; reason: string };
 
 /** 変更の理由を先に示し、中断の状態は保持する（REQ-204）。 */
@@ -28,9 +36,14 @@ export function decideAfterEngine(value: EngineObservation): EngineDecision {
   return stop ?? { kind: 'continue' };
 }
 
-/** 検証中の変更、合格、期限、修正回数の順に判断する（REQ-205）。 */
+/** 検証中の変更、実行エラーと ci の結果と要判断、完了、中断、期限、修正回数の順に判断する（REQ-205・REQ-317）。 */
 export function decideAfterGate(value: GateObservation): GateDecision {
   if (value.stateChanged) return { kind: 'stop', reason: '検証のあいだにHEADかブランチが変わりました。変更を取り消していません。Gitの状態を確認してから、もう一度実行してください。' };
+  // 実行エラー・ci の結果・人の判断は、エンジンに直させても解けないので、修正回数が残っていても止まる
+  if (value.aborted !== undefined) return { kind: 'stop', reason: `完了ゲートが実行エラーで中止されました（${value.aborted}）。直しに進みません。原因を確かめてから、もう一度実行してください。` };
+  // run の完了ゲートはローカルの完了（scope:local）を見る。ci の結果はローカルの完了ではなく、CI の最終合格にも変換しない（REQ-317）
+  if (value.scope === 'ci') return { kind: 'stop', reason: '完了ゲートの結果が scope:ci でした。run はローカルの完了（scope:local）だけを扱い、ci の結果を完了にも CI の最終合格にもしません。直しに進みません。verify --done --scope local の検査で、もう一度実行してください。' };
+  if (value.decisionReasons?.length) return { kind: 'stop', reason: `人の判断が必要です（${value.decisionReasons.join(' / ')}）。直しに進みません。判断を記録してから、もう一度実行してください。` };
   if (value.ok) return { kind: 'passed' };
   if (value.interrupted) return { kind: 'interrupted', reason: '中断されました' };
   if (value.timedOut) return { kind: 'stop', reason: '実行時間の上限に達しました' };

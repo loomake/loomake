@@ -67,7 +67,7 @@ export function runJourneys(target) {
     configure(initial, first.project);
     first.run(['doctor']);
     first.run(['verify', '--change', 'sample', '--spec-only']);
-    assert.equal(JSON.parse(first.run(['verify', '--change', 'sample', '--done', '--json'])).ok, true);
+    assert.equal(JSON.parse(first.run(['verify', '--change', 'sample', '--done', '--json'])).verdict, 'PASS');
     initial.status = 'passed';
 
     const daily = scenario('daily-use', '既存ファイルの保護と証拠の出力');

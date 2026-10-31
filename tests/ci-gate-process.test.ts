@@ -20,7 +20,7 @@ function withProject(check: (project: {
   dir: string;
   git: (...args: string[]) => void;
   commitFiles: (files: string[] | Record<string, string>) => void;
-  run: (branch: string, body?: string, statuses?: Record<string, number>) => { status: number | null; stdout: string; stderr: string; calls: string[][]; output: string };
+  run: (branch: string, body?: string, statuses?: Record<string, number>, results?: Record<string, unknown>) => { status: number | null; stdout: string; stderr: string; calls: string[][]; output: string };
 }) => void) {
   const dir = mkdtempSync(join(tmpdir(), 'loomake-ci-process-'));
   const callsFile = join(dir, 'calls.jsonl');
@@ -31,13 +31,22 @@ function withProject(check: (project: {
   };
   try {
     writeFileSync(join(dir, 'package.json'), '{"type":"module"}\n');
-    // verify の偽物。--change <id> の id か quality を鍵にする
+    // verify の偽物。--change <id> の id か quality を鍵にする。change のゲートは --json で呼ばれ、2.0.0 の結果を標準出力に書く。
+    // 結果は CI_VERIFY_RESULTS の id の値で差し替えられる（既定は --done なら ci の PASS、--spec-only なら local の完了）
     const cli = join(dir, 'packages', 'cli', 'dist', 'cli.js');
     mkdirSync(dirname(cli), { recursive: true });
     writeFileSync(cli, `import { appendFileSync } from 'node:fs';
 const args = process.argv.slice(2);
 appendFileSync(process.env.CI_CALLS_FILE, JSON.stringify(args) + '\\n');
 const id = args.includes('--change') ? args[args.indexOf('--change') + 1] : 'quality';
+if (args.includes('--json')) {
+  const checks = ['change の存在', 'tasks.md', '要件ごとのテスト', 'command: test'].map((c) => ({ id: c, result: 'PASS', reason: '', evidence: [] }));
+  const summary = { fail: 0, insufficient: 0, not_applicable: 0, evaluated: checks.length };
+  const base = { schemaVersion: '2.0.0', change: id, run: { status: 'completed', errors: [] }, checks, decision: { required: false, reasons: [] } };
+  const result = args.includes('--done') ? { ...base, scope: 'ci', summary, verdict: 'PASS' } : { ...base, scope: 'local', summary: { ...summary, pending: 0 } };
+  const override = JSON.parse(process.env.CI_VERIFY_RESULTS ?? '{}')[id];
+  process.stdout.write(JSON.stringify(override ?? result, null, 2) + '\\n');
+}
 process.exit(JSON.parse(process.env.CI_STATUSES)[id] ?? 0);
 `);
     // L1 の lint は loomake.config.json の commands.lint で偽物に差し替える
@@ -73,7 +82,7 @@ process.exit(JSON.parse(process.env.CI_STATUSES)[id] ?? 0);
         git('add', '-A');
         git('commit', '-qm', 'change');
       },
-      run(branch, body = '', statuses = {}) {
+      run(branch, body = '', statuses = {}, results = {}) {
         rmSync(outputFile, { force: true });
         const result = spawnSync(process.execPath, [gate, branch], {
           cwd: dir,
@@ -87,6 +96,7 @@ process.exit(JSON.parse(process.env.CI_STATUSES)[id] ?? 0);
             GITHUB_OUTPUT: outputFile,
             CI_CALLS_FILE: callsFile,
             CI_STATUSES: JSON.stringify(statuses),
+            CI_VERIFY_RESULTS: JSON.stringify(results),
           },
         });
         const calls = existsSync(callsFile) ? readFileSync(callsFile, 'utf8').trim().split('\n').map((line) => JSON.parse(line) as string[]) : [];
@@ -99,9 +109,10 @@ process.exit(JSON.parse(process.env.CI_STATUSES)[id] ?? 0);
   }
 }
 
-const done = (id: string) => ['verify', '--change', id, '--done'];
+// change のゲートは --json で呼び、結果の JSON で合格を決める（REQ-318）
+const done = (id: string) => ['verify', '--change', id, '--done', '--json'];
 // L1 で、tasks.md に完了した印がない change は仕様ゲートで検査する（commitFiles が tasks.md を書き換えると印がなくなる）
-const specOnly = (id: string) => ['verify', '--change', id, '--spec-only'];
+const specOnly = (id: string) => ['verify', '--change', id, '--spec-only', '--json'];
 const lintOnly = [['lint'], ['pnpm', 'exec', 'vitest', 'run', 'tests/doc-links.test.ts']];
 
 describe('実際のCIゲートの子プロセスの契約', () => {
@@ -292,7 +303,7 @@ describe('実際のCIゲートの子プロセスの契約', () => {
     });
   });
 
-  it('[REQ-132][REQ-343] 変更ファイルとブランチの選択を合わせて両方のゲートを呼ぶ。L1 でも change があれば --done を呼ぶ', () => {
+  it('[REQ-132][REQ-343] 変更ファイルとブランチの選択を合わせて両方のゲートを呼ぶ。L1 では完了した印のない change を --spec-only、印のある change を --done で呼ぶ', () => {
     withProject(({ commitFiles, run }) => {
       commitFiles(['openspec/changes/c1/tasks.md']);
       const result = run('c2');
@@ -363,6 +374,105 @@ describe('実際のCIゲートの子プロセスの契約', () => {
       const result = run('fix-typo', 'loomake-change: none', { quality: 7 });
       expect(result.calls).toEqual([['verify']]);
       expect(result.status).toBe(7);
+    });
+  });
+});
+
+describe('完了ゲートの JSON を合格として受け入れるか', () => {
+  const checks = ['change の存在', 'tasks.md', '要件ごとのテスト', 'command: test'].map((id) => ({ id, result: 'PASS', reason: '', evidence: [] }));
+  const ci = (patch: Record<string, unknown> = {}) => ({
+    schemaVersion: '2.0.0', change: 'c1', run: { status: 'completed', errors: [] }, scope: 'ci', checks,
+    summary: { fail: 0, insufficient: 0, not_applicable: 0, evaluated: checks.length }, decision: { required: false, reasons: [] }, verdict: 'PASS', ...patch,
+  });
+  const local = (patch: Record<string, unknown> = {}) => {
+    const value: Record<string, unknown> = { ...ci(), scope: 'local', summary: { fail: 0, insufficient: 0, not_applicable: 0, evaluated: checks.length, pending: 0 }, ...patch };
+    delete value.verdict;
+    return value;
+  };
+  const legacy = { schemaVersion: '1.0.0', mode: 'done', change: 'c1', ok: true, results: [{ check: 'command: test', status: 'pass', detail: '' }] };
+  const na = (id: string) => ({ id, result: 'NOT_APPLICABLE', reason: '対象外', evidence: [] });
+
+  it('[REQ-318] 完了ゲートは、対象の change の 2.0.0 で ci・completed・要判断なし・PASS・完了ゲートの検査あり・終了コード 0 だけを受け入れる', async () => {
+    const { ciGateProblem } = await import('../scripts/ci-gate.mjs');
+    const done = (value: unknown, code = 0) => ciGateProblem(JSON.stringify(value), code, { change: 'c1', gate: 'done' });
+    expect(done(ci())).toBeUndefined();
+    expect(done(ci(), 1)).toMatch(/終了コードが 0 ではありません/);
+    expect(done(ci({ run: { status: 'partial', errors: [{ kind: 'runtime', target: 'x', message: 'y', next: 'z' }] } }))).toMatch(/一部の証拠を取得できませんでした/);
+    expect(done(ci({ decision: { required: true, reasons: [] } }))).toMatch(/人の判断が必要です/);
+    expect(done({ schemaVersion: '2.0.0', change: 'c1', run: { status: 'aborted', errors: [{ kind: 'config', target: 'c1', message: '不正', next: '直す' }] } })).toMatch(/実行エラーで中止されました/);
+    expect(done({ schemaVersion: '3.0.0' })).toMatch(/版に対応していません/);
+    expect(ciGateProblem('not json', 0, { change: 'c1', gate: 'done' })).toMatch(/JSON として読めません/);
+  });
+
+  it('[REQ-318] local・1.0.0・証拠不足（skip）・仕様ゲートの結果・全件 NOT_APPLICABLE・別の change・verdict が PASS 以外は、終了コードが 0 でも合格にしない', async () => {
+    const { ciGateProblem } = await import('../scripts/ci-gate.mjs');
+    const done = (value: unknown) => ciGateProblem(JSON.stringify(value), 0, { change: 'c1', gate: 'done' });
+    expect(done(local())).toMatch(/scope が ci ではありません/);
+    expect(done(legacy)).toMatch(/1\.0\.0）は合格にしません/);
+    expect(done(ci({ checks: [...checks, { id: '品質コマンド', result: 'INSUFFICIENT_EVIDENCE', reason: '--skip-commands', evidence: [] }] }))).toMatch(/証拠不足の検査があります（品質コマンド）/);
+    // 仕様ゲートや品質コマンドだけの結果には、完了ゲートの検査（tasks.md・要件ごとのテスト・command: *）がない
+    expect(done(ci({ checks: [checks[0]] }))).toMatch(/完了ゲートの検査がありません（tasks\.md、要件ごとのテスト、command: \*）/);
+    expect(done(ci({ checks: [checks[0], checks[1], checks[2]] }))).toMatch(/完了ゲートの検査がありません（command: \*）/);
+    expect(done(ci({ checks: [] }))).toMatch(/0 件か、すべて NOT_APPLICABLE です（0 件）/);
+    expect(done(ci({ checks: [na('tasks.md'), na('要件ごとのテスト'), na('command: test')] }))).toMatch(/すべて NOT_APPLICABLE です（3 件）/);
+    expect(done(ci({ change: 'c2' }))).toMatch(/change が対象と違います（対象 c1、結果 "c2"）/);
+    expect(done(ci({ verdict: 'INSUFFICIENT_EVIDENCE' }))).toMatch(/verdict が PASS ではありません/);
+    expect(done(ci({ checks: [...checks, { id: 'command: lint', result: 'FAIL', reason: 'x', evidence: [] }] }))).toMatch(/verdict が PASS ではありません|不合格か証拠不足の検査があります/);
+  });
+
+  it('[REQ-318] 仕様ゲートは、対象の change の 2.0.0 で不合格・要判断・aborted がなく終了コード 0 なら受け入れ、1.0.0 と別の change は受け入れない', async () => {
+    const { ciGateProblem } = await import('../scripts/ci-gate.mjs');
+    const spec = (value: unknown, code = 0) => ciGateProblem(JSON.stringify(value), code, { change: 'c1', gate: 'spec-only' });
+    expect(spec(local({ checks: [checks[0]], summary: { fail: 0, insufficient: 0, not_applicable: 0, evaluated: 1, pending: 0 } }))).toBeUndefined();
+    expect(spec(local(), 1)).toMatch(/終了コードが 0 ではありません/);
+    expect(spec(local({ checks: [{ id: 'change の存在', result: 'FAIL', reason: 'ない', evidence: [] }] }))).toMatch(/不合格の検査があります（change の存在）/);
+    expect(spec(local({ decision: { required: true, reasons: [] } }))).toMatch(/人の判断が必要です/);
+    expect(spec(legacy)).toMatch(/1\.0\.0）は合格にしません/);
+    expect(spec(local({ change: 'c2' }))).toMatch(/change が対象と違います/);
+  });
+});
+
+describe('ci-gate は終了コードではなく結果の JSON で合格を決める', () => {
+  const checks = ['change の存在', 'tasks.md', '要件ごとのテスト', 'command: test'].map((id) => ({ id, result: 'PASS', reason: '', evidence: [] }));
+  const summary = { fail: 0, insufficient: 0, not_applicable: 0, evaluated: checks.length };
+  const pass = { schemaVersion: '2.0.0', change: 'c1', run: { status: 'completed', errors: [] }, scope: 'ci', checks, summary, decision: { required: false, reasons: [] }, verdict: 'PASS' };
+  const rejected: [string, unknown, RegExp][] = [
+    ['local', { ...pass, scope: 'local', summary: { ...summary, pending: 0 }, verdict: undefined }, /scope が ci ではありません/],
+    ['1.0.0', { schemaVersion: '1.0.0', mode: 'done', change: 'c1', ok: true, results: [{ check: 'command: test', status: 'pass', detail: '' }] }, /1\.0\.0）は合格にしません/],
+    ['skip', { ...pass, checks: [...checks, { id: '品質コマンド', result: 'INSUFFICIENT_EVIDENCE', reason: '--skip-commands', evidence: [] }], summary: { ...summary, insufficient: 1, evaluated: 5 } }, /証拠不足の検査があります/],
+    ['spec-only', { ...pass, checks: [checks[0]], summary: { ...summary, evaluated: 1 } }, /完了ゲートの検査がありません/],
+    ['NOT_APPLICABLE', { ...pass, checks: checks.map((c) => ({ ...c, result: 'NOT_APPLICABLE' })), summary: { ...summary, not_applicable: 4 } }, /すべて NOT_APPLICABLE です/],
+    ['別の change', { ...pass, change: 'c2' }, /change が対象と違います/],
+    ['verdict FAIL', { ...pass, verdict: 'FAIL' }, /verdict が PASS ではありません/],
+  ];
+  it.each(rejected)('[REQ-318] %s の結果は、verify の終了コードが 0 でも完了ゲートを合格にしない', (_label, result, message) => {
+    withProject(({ run }) => {
+      const r = run('c1', '', {}, { c1: result });
+      expect(r.calls).toEqual([done('c1')]);
+      expect(r.stderr).toMatch(message);
+      expect(r.stderr).toContain('ci-gate: c1 の完了ゲートを合格にしません');
+      expect(r.status).toBe(1);
+    });
+  });
+
+  it('[REQ-318] 合格の JSON でも、verify の終了コードが 0 でなければ合格にしない。結果の JSON は標準エラーに写し、標準出力は段階の行だけにする', () => {
+    withProject(({ run }) => {
+      const r = run('c1', '', { c1: 1 });
+      expect(r.stderr).toMatch(/終了コードが 0 ではありません（1）/);
+      expect(r.stderr).toContain('"schemaVersion": "2.0.0"');
+      expect(r.stdout.trim().split('\n').every((line) => line.startsWith('loomake-tier: '))).toBe(true);
+      expect(r.status).toBe(1);
+    });
+  });
+
+  it('[REQ-318] L1 の提案だけの change は仕様ゲートの JSON で判定し、不合格の検査があれば終了コードが 0 でも失敗する', () => {
+    withProject(({ commitFiles, run }) => {
+      commitFiles({ 'openspec/changes/c1/tasks.md': '- [ ] 1.1 仕様を書く\n' });
+      const local = { schemaVersion: '2.0.0', change: 'c1', run: { status: 'completed', errors: [] }, scope: 'local', checks: [{ id: 'change の存在', result: 'FAIL', reason: 'ない', evidence: [] }], summary: { fail: 1, insufficient: 0, not_applicable: 0, evaluated: 1, pending: 0 }, decision: { required: false, reasons: [] } };
+      const r = run('c1', '', {}, { c1: local });
+      expect(r.calls).toEqual([...lintOnly, specOnly('c1')]);
+      expect(r.stderr).toContain('ci-gate: c1 の仕様ゲートを合格にしません：不合格の検査があります（change の存在）');
+      expect(r.status).toBe(1);
     });
   });
 });

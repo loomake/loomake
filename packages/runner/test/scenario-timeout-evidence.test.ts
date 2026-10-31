@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { runRun } from '@loomake/runner';
-import { TIMED_OUT, withProcessBudget } from '@loomake/kit';
+import { TIMED_OUT, verifyExitCode, withProcessBudget } from '@loomake/kit';
 import { CHANGE, makeRepo, type Repo } from './helpers.js';
 
 const monitor = vi.hoisted(() => ({ ready: '', git: [] as { args: string[]; afterReady: boolean }[] }));
@@ -117,8 +117,9 @@ describe('品質コマンドの時間切れの直接検証', () => {
       expect(result.code, result.output).toBe(1);
       stoppedQuality(repo, 1);
       const { summary, firstVerify } = records(repo);
-      expect(firstVerify.ok).toBe(false);
-      expect(firstVerify.results).toContainEqual(expect.objectContaining({ check: 'command: test', status: 'fail', detail: TIMED_OUT }));
+      expect(verifyExitCode(firstVerify)).toBe(1);
+      // 時間の上限で止めた品質コマンドは不足と実行エラー（verify-v2-wiring の仮定 A-03）
+      expect(firstVerify.checks).toContainEqual(expect.objectContaining({ id: 'command: test', result: 'INSUFFICIENT_EVIDENCE', reason: TIMED_OUT }));
       expect(summary).toMatchObject({ status: 'stopped', doneTasks: [], lastVerify: { ok: false } });
       expect(summary.reason).toContain('実行時間の上限');
       expect(readFileSync(tasksPath(repo), 'utf8')).toBe(task);
@@ -143,8 +144,8 @@ describe('品質コマンドの時間切れの直接検証', () => {
       expect(result.code, result.output).toBe(1);
       stoppedQuality(repo, 2);
       const { summary, firstVerify } = records(repo);
-      expect(firstVerify.ok).toBe(true);
-      expect(firstVerify.results).toContainEqual(expect.objectContaining({ check: 'command: test', status: 'pass' }));
+      expect(verifyExitCode(firstVerify)).toBe(0);
+      expect(firstVerify.checks).toContainEqual(expect.objectContaining({ id: 'command: test', result: 'PASS' }));
       expect(summary).toMatchObject({ status: 'stopped', lastVerify: { ok: false } });
       expect(summary.reason).toContain('実行時間の上限');
       expect(readFileSync(tasksPath(repo), 'utf8')).toBe(task.replace('[ ]', '[x]'));

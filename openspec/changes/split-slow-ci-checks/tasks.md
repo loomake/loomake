@@ -20,7 +20,7 @@
 
 # 4. case分割と実測
 
-- [x] 4.2 push ci/measure-*専用の同head3OS×3sample測定を用意し、新required statusを加えず最新headの元caseと新fastを測る
+- [ ] 4.2 push ci/measure-*専用の同head3OS×3sample測定を用意し、新required statusを加えず最新headの元caseと新fastを測る
 - [ ] 4.3 採用済みの個別設計に従い、各OSの最大10秒超caseだけをslowへ分ける。元名/parameter/assert/timeoutとfast+slowの多重集合、空file選択、未知ID/OSと全PR経路のslow不実施、local/releaseの全件を検査する
 - [ ] 4.4 両診断profilerをmain push/schedule・companion含む4pathへ更新し、PR/手動起動の撤去、元caseId/3sample/失敗後保存/未計測を照合する。release manual dispatch品質ゲートは全件保持する
 - [ ] 4.5 最新実装headで3OS各3sampleを再取得し、checkout SHA/Node版/全case数/時間/失敗を保存する。REQ-297の4case・19.5/39.5秒下限・既存上限/clock/retry/assertと全診断契約を保持する

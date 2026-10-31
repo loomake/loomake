@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createHash } from 'node:crypto';
-import { readFileSync, readdirSync } from 'node:fs';
+import { cpSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { runRun } from '@loomake/runner';
 import { CHANGE, makeRepo, noChange, type Repo } from './helpers.js';
@@ -35,16 +36,15 @@ async function run(repo: Repo) {
   context?.phase.event('run-end', { n, code, expectedReason: out.some((text) => text.includes('作成前に失敗')) });
   return { code, stdout: out.join('\n') };
 }
-async function withRepo(label: string, action: (repo: Repo) => Promise<void>) {
+type RunResult = Awaited<ReturnType<typeof run>>;
+async function withCase(label: string, prepare: (phase: ReturnType<typeof createCaseDiagnostics>) => { repo: Repo; n: number }, action: (repo: Repo) => Promise<void>) {
   const phase = createCaseDiagnostics(label);
   phase.event('case-start');
-  const repo = makeRepo({ run: { maxFixes: 1 } });
-  phase.bind(repo.base);
-  diagnostics.set(repo, { phase, n: 0 });
+  const { repo, n } = prepare(phase);
+  diagnostics.set(repo, { phase, n });
   phase.event('repo-ready');
   let completed = false;
   try {
-    repo.plan([{ write: { 'impl.txt': '実装\n' } }, noChange]);
     await action(repo);
     completed = true;
   } finally {
@@ -53,6 +53,51 @@ async function withRepo(label: string, action: (repo: Repo) => Promise<void>) {
     try { repo.cleanup(); cleaned = true; phase.event('cleanup-end'); }
     finally { phase.event('case-end', { completed: completed && cleaned }); }
   }
+}
+function newRepo(phase: ReturnType<typeof createCaseDiagnostics>) {
+  const repo = makeRepo({ run: { maxFixes: 1 } });
+  phase.bind(repo.base);
+  repo.plan([{ write: { 'impl.txt': '実装\n' } }, noChange]);
+  return repo;
+}
+const withRepo = (label: string, action: (repo: Repo) => Promise<void>) => withCase(label, (phase) => ({ repo: newRepo(phase), n: 0 }), action);
+
+// 「作成前に失敗する1回目のrun」までは10ケースで同じ形なので、その状態を1回だけ作って保存する。
+// 各ケースは保存した状態を元の場所へ戻した作業ディレクトリから2回目のrunを始める。
+// write-report.mjs のコミットなどが絶対パスを含むので、場所は変えない。ケースは順に流れるので、互いの書き込みは見えない。
+type SharedRun = { template: Repo; env: NodeJS.ProcessEnv; snapshot: string; first: RunResult };
+let shared: Promise<SharedRun> | undefined;
+// 1回目のrunや複製が途中で失敗しても消せるように、保存先は Promise の外で持つ。
+let snapshotDir: string | undefined;
+function sharedFirstRun(): Promise<SharedRun> {
+  shared ??= (async () => {
+    let saved: SharedRun | undefined;
+    await withCase('shared-first-run', (phase) => ({ repo: newRepo(phase), n: 0 }), async (template) => {
+      template.env.FAKE_GH_CREATE = 'before';
+      const first = await run(template);
+      delete template.env.FAKE_GH_CREATE;
+      const snapshot = snapshotDir = mkdtempSync(join(tmpdir(), 'loomake-run-snapshot-'));
+      cpSync(template.base, snapshot, { recursive: true, preserveTimestamps: true });
+      saved = { template, env: { ...template.env }, snapshot, first };
+    });
+    return saved!;
+  })();
+  return shared;
+}
+afterAll(async () => {
+  await shared?.catch(() => undefined);
+  if (snapshotDir) rmSync(snapshotDir, { recursive: true, force: true });
+});
+async function withFailedCreate(label: string, action: (repo: Repo, first: RunResult) => Promise<void>) {
+  const { template, env, snapshot, first } = await sharedFirstRun();
+  await withCase(label, (phase) => {
+    rmSync(template.base, { recursive: true, force: true });
+    cpSync(snapshot, template.base, { recursive: true, preserveTimestamps: true });
+    phase.bind(template.base);
+    // 注意：repo.git・calls・prs・plan は template が作られたときの元の env を参照したまま。
+    // ここで作る repo.env を書き換えても、それらには届かない（届くのは run に渡す env だけ）。
+    return { repo: { ...template, env: { ...env, FAKE_GH_CREATE: 'before' } }, n: 1 };
+  }, (repo) => action(repo, first));
 }
 const files = (repo: Repo) => readdirSync(join(repo.root, '.loomake/evidence', CHANGE));
 const evidence = (repo: Repo) => `.loomake/evidence/${CHANGE}/${files(repo)[0]}`;
@@ -81,9 +126,14 @@ function lookupDiagnosticLabel(value: string): string {
 
 
 describe('証拠とPRの再試行', () => {
-  it.each(['before', 'after'])('[REQ-164][REQ-165] 作成の%sで失敗した後も同じ証拠とコミットを使う', (failure) => withRepo(failure === 'before' ? 'create-before' : 'create-after', async (repo) => {
-    repo.env.FAKE_GH_CREATE = failure;
-    expect((await run(repo)).code).toBe(1);
+  it.each(['before', 'after'])('[REQ-164][REQ-165] 作成の%sで失敗した後も同じ証拠とコミットを使う', (failure) => (failure === 'before'
+    ? withFailedCreate('create-before', (repo, first) => retryAfterCreateFailure(failure, repo, first))
+    : withRepo('create-after', async (repo) => {
+      repo.env.FAKE_GH_CREATE = failure;
+      await retryAfterCreateFailure(failure, repo, await run(repo));
+    })));
+  async function retryAfterCreateFailure(failure: string, repo: Repo, first: RunResult) {
+    expect(first.code).toBe(1);
     const head = repo.git('rev-parse', 'HEAD');
     const saved = readFileSync(join(repo.root, evidence(repo)), 'utf8');
     delete repo.env.FAKE_GH_CREATE;
@@ -95,7 +145,7 @@ describe('証拠とPRの再試行', () => {
     expect(repo.calls()).toHaveLength(2);
     expect(repo.prs()).toHaveLength(failure === 'after' ? 1 : 2);
     if (failure === 'after') expect(second.stdout).toContain('既存のPR');
-  }));
+  }
 
   it('[REQ-164] push失敗後に同じ証拠を再利用して送信する', () => withRepo('push-retry', async (repo) => {
     repo.git('remote', 'set-url', '--push', 'origin', join(repo.base, 'missing.git'));
@@ -121,9 +171,8 @@ describe('証拠とPRの再試行', () => {
     expect(lookupCount(repo)).toBe(2);
   }));
 
-  it('[REQ-164] 証拠の後に実装を変えたら新しい対象SHAの証拠を作る', () => withRepo('new-source', async (repo) => {
-    repo.env.FAKE_GH_CREATE = 'before';
-    expect((await run(repo)).code).toBe(1);
+  it('[REQ-164] 証拠の後に実装を変えたら新しい対象SHAの証拠を作る', () => withFailedCreate('new-source', async (repo, first) => {
+    expect(first.code).toBe(1);
     const old = evidence(repo);
     const oldContent = readFileSync(join(repo.root, old), 'utf8');
     repo.write('impl.txt', '変更した実装\n');
@@ -139,15 +188,15 @@ describe('証拠とPRの再試行', () => {
 });
 
 describe('不正な証拠候補を保護する', () => {
-  it.each(['json', 'sha', 'change', 'failed', 'fail-result', 'hash', 'snapshot', 'legacy'])('[REQ-164] %sの証拠は消さず増やさず停止する', (kind) => withRepo(kind, async (repo) => {
-    repo.env.FAKE_GH_CREATE = 'before';
-    expect((await run(repo)).code).toBe(1);
+  it.each(['json', 'sha', 'change', 'failed', 'fail-result', 'hash', 'snapshot', 'legacy'])('[REQ-164] %sの証拠は消さず増やさず停止する', (kind) => withFailedCreate(kind, async (repo, first) => {
+    expect(first.code).toBe(1);
     const path = evidence(repo);
     const value = JSON.parse(readFileSync(join(repo.root, path), 'utf8'));
     if (kind === 'sha') value.sha = '0'.repeat(40);
     if (kind === 'change') value.change = 'other';
-    if (kind === 'failed') value.verify.ok = false;
-    if (kind === 'fail-result') value.verify.results[0].status = 'fail';
+    // Evidence 2 の実在する欄で、完了していない記録と FAIL の検査を作る（REQ-164）
+    if (kind === 'failed') value.verify.summary.fail = 1;
+    if (kind === 'fail-result') value.verify.checks[0].result = 'FAIL';
     if (kind === 'hash') value.documents[0].sha256 = '0'.repeat(64);
     if (kind === 'snapshot') {
       value.documents[0].content += '\n違う文書\n';

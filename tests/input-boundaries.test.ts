@@ -105,10 +105,10 @@ describe('コマンドの入力予算', () => {
     } finally { repo.cleanup(); }
   }, runTimeout);
 
-  it('[REQ-172] JSONのテストレポートは64MiBを超えたら解析しない', () => withProject({}, (root) => {
-    mkdirSync(join(root, '.loomake'));
-    sparse(join(root, '.loomake/test-report.json'), 64 * 1024 * 1024 + 1);
-    expect(() => runVerify({ root, changeId: 'c1', gate: 'done', skipCommands: true })).toThrow(/上限.*67108864/);
+  // --skip-commands では前回のレポートを読まないので（REQ-040）、今回の test コマンドが上限を超えるレポートを書き出す
+  const BIG_REPORT = `node -e "const f=require('fs');f.mkdirSync('.loomake',{recursive:true});f.writeFileSync('.loomake/test-report.json','');f.truncateSync('.loomake/test-report.json',${64 * 1024 * 1024 + 1})"`;
+  it('[REQ-172] JSONのテストレポートは64MiBを超えたら解析しない', () => withProject({ config: { openspecValidate: false, commands: { test: BIG_REPORT } } }, (root) => {
+    expect(() => runVerify({ root, changeId: 'c1', gate: 'done' })).toThrow(/上限.*67108864/);
   }));
 
   it('[REQ-172] JSONの証拠も64MiBを超えたら報告しない', () => withProject({}, (root) => {
@@ -165,7 +165,7 @@ describe('組み立てた指示の全体予算', () => {
   }));
 
   it('[REQ-173] 検証の失敗情報による指示の超過も止める', () => withProject({}, (root) => {
-    expect(() => buildPrompt(root, changeOf(root), 'task', { schemaVersion: '1.0.0', mode: 'done', change: 'c1', ok: false, results: [{ check: 'test', status: 'fail', detail: 'x'.repeat(16 * 1024 * 1024) }] })).toThrow(/指示.*16777216/);
+    expect(() => buildPrompt(root, changeOf(root), 'task', { schemaVersion: '2.0.0', change: 'c1', run: { status: 'completed', errors: [] }, scope: 'local', checks: [{ id: 'test', result: 'FAIL', reason: 'x'.repeat(16 * 1024 * 1024), evidence: [] }], summary: { fail: 1, insufficient: 0, not_applicable: 0, evaluated: 1, pending: 0 }, decision: { required: false, reasons: [] } })).toThrow(/指示.*16777216/);
   }));
   it('[REQ-173] 通常runで巨大な検証失敗を指示へ加える前に止まり、エンジンを起動しない', async () => {
     const tasks = '- [ ] 完了ゲート（REQ-012） <!-- loomake:gate=done -->\n';
@@ -188,7 +188,7 @@ describe('組み立てた指示の全体予算', () => {
       expect(directories).toHaveLength(1);
       const run = join(runs, directories[0]);
       const verify = JSON.parse(readFileSync(join(run, '00-verify.json'), 'utf8'));
-      expect(verify.results.find((result: { check: string }) => result.check === 'command: test')).toMatchObject({ status: 'fail', detail: 'x'.repeat(failureBytes) });
+      expect(verify.checks.find((check: { id: string }) => check.id === 'command: test')).toMatchObject({ result: 'FAIL', reason: 'x'.repeat(failureBytes) });
       expect(JSON.parse(readFileSync(join(run, 'summary.json'), 'utf8'))).toMatchObject({ status: 'stopped', doneTasks: [], remainingTasks: ['完了ゲート（REQ-012）'], reason: expect.stringContaining('指示の上限は16777216バイト') });
       expect(readFileSync(join(repo.root, 'openspec/changes', CHANGE, 'tasks.md'), 'utf8')).toBe(tasks);
       expect(repo.git('rev-parse', 'HEAD')).toBe(before);

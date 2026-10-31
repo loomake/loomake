@@ -5,7 +5,7 @@
     {
       "id": "SCN-b3fb02612f1c7ff7df3b",
       "status": "reviewed",
-      "scenarioSha256": "a00fd7ead4cd1713b8fe7ba0c5caa1c469a1a51668fb4b60a163d0616723a2e9",
+      "scenarioSha256": "d9ec08a75405b4ff6f3a0190da910987ca31c70ed3ea3a333697e2c1a046f1cc",
       "reason": "同名の2Requirementとコード例内の見出しを入力し、2件だけで別IDになることをassertする。",
       "sources": [
         "REQ-188"
@@ -22,8 +22,8 @@
     {
       "id": "SCN-d2c18a6b959b093b1374",
       "status": "reviewed",
-      "scenarioSha256": "f59f2e7c0039ad4c96afe22abd53f58361db817ef69e9783d3c412adff0e7b69",
-      "reason": "行移動でIDと内容ハッシュを保ち、規則本文・コード例の変更でハッシュが変わることをassertする。",
+      "scenarioSha256": "f3f7eecf6b39583467706d4039cd830f96374f44496e8e385c4747bad5673c38",
+      "reason": "行移動でIDと内容ハッシュを保ち、規則本文・コード例の変更でハッシュが変わることをassertする。記録した scenarioSha256 が現在と違う（old）対応は invalid になり ok が false になることも assertする。",
       "sources": [
         "REQ-188"
       ],
@@ -39,13 +39,19 @@
           "contains": "規則のコード例の変更も検出し",
           "sha256": "a322c27dbd006b5e3646623aca062d97208e65e05c9b47cc76a1deef00963b7e",
           "hashScope": "block"
+        },
+        {
+          "file": "tests/scenario-audit.test.ts",
+          "contains": "不足・古い根拠を認めない",
+          "sha256": "a9912b7eda7dc1eaff2a227ec4399a76828d2ee1a551d01a87848a0988bb2279",
+          "hashScope": "block"
         }
       ]
     },
     {
       "id": "SCN-9446942971418102520e",
       "status": "reviewed",
-      "scenarioSha256": "174d1f09b5f0570144489900059148ed2682823bc913a578db0226201b35e349",
+      "scenarioSha256": "9b821fcbdf7063e5bf84b2860b87ee7a8496adc4b7fe3b77a0ffddbd5f3cd2aa",
       "reason": "成功したREQ一致の実行だけを与え、候補1件と未確認、全体不合格をassertする。",
       "sources": [
         "REQ-189"
@@ -62,7 +68,7 @@
     {
       "id": "SCN-0ed1e9ecdd4dd9982db1",
       "status": "reviewed",
-      "scenarioSha256": "ba852478dff5570418d62d8f107a7ed4ba3e65dc9741aa28824f5dd1c3c0e415",
+      "scenarioSha256": "cf2e592bd65dfd43a6b9bcdaae16d16ef0e2ea5623ace4572ec2d78c08e958cb",
       "reason": "選択に一致する成功とfailed/pending/todo/skippedを混在させ、いずれも無効となることをassertする。",
       "sources": [
         "REQ-189"
@@ -78,25 +84,14 @@
     },
     {
       "id": "SCN-50cb7a15f43e93bb5146",
-      "status": "reviewed",
-      "scenarioSha256": "c85ab992b8fced8cd5ac880ce152f0ab02609cfd97ce1c41c437009b532714f3",
-      "reason": "未レビューの行を与え、集計とMarkdownの状態・行番号・名前が残ることをassertする。",
-      "sources": [
-        "REQ-190"
-      ],
-      "tests": [
-        {
-          "file": "tests/scenario-audit.test.ts",
-          "contains": "未確認と行番号・理由をMarkdownへ残す",
-          "sha256": "3fc82d2b4e5395aff666187218d31f40e8dbc65e40853bf69438a6467a1fe633",
-          "hashScope": "block"
-        }
-      ]
+      "status": "unreviewed",
+      "scenarioSha256": "fcb8e774fdcf43b20972274c14c43249acb8596f2b4febbd4b5dcb3430688a34",
+      "reason": "基準：THEN の文言どおりに読む。THEN は「監査は終了コード1で不足を示す」だが、選んだ試験は未確認の行がMarkdownと集計に残ることだけを assert し、終了コードも ok も確かめていない。ok=false は別の試験（IDの一致だけでは候補）にあるが、ok を終了コード1にする CLI の分岐を実行する試験はない。"
     },
     {
       "id": "SCN-82566e61841cac69dc3c",
       "status": "reviewed",
-      "scenarioSha256": "b72d1d982e77e325b81d889cc4894f9120b5f6cf2b173f65a84f8a8ae0671e38",
+      "scenarioSha256": "8cb2ec8f85a6f3e302f3990e6f4c8e9bb3866862b6ea4528f00e7f90ce6b3d80",
       "reason": "自分自身と存在しないIDを置換先にし、無効となることをassertする。",
       "sources": [
         "REQ-190"
@@ -3052,15 +3047,53 @@
     },
     {
       "id": "SCN-d31a4872ae040eb68a4e",
-      "status": "unreviewed",
-      "scenarioSha256": "e57173a186be84ff3746c8576e8e5104cd3590b301b59e9da9cca51f0de459ec",
-      "reason": "基準：THEN の文言どおりに読む。THEN は「--change なしで品質コマンドだけが実行される」だが、今の試験は docs/usage.md だけの変更を L1 として lint と文書のリンクの試験だけを呼ぶことを確かめており、品質コマンド（lint・typecheck・test）を実行する THEN は成り立たない。"
+      "status": "reviewed",
+      "scenarioSha256": "39e32eb2189e238119a236d9712ce84669337000fbe1cc4462dd3ccb71376ad0",
+      "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用のlint・pnpm・CLIへの呼び出しと終了コードをassertする。docs/usage.mdだけを変更したfix-typoで、stdoutにloomake-tier: L1を書き、呼び出しがlintとtests/doc-links.test.tsのvitestの2つだけ（verifyを呼ばない）であることを確かめる。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
+      "sources": [
+        "REQ-010",
+        "REQ-054",
+        "REQ-132"
+      ],
+      "tests": [
+        {
+          "file": "tests/ci-gate-process.test.ts",
+          "contains": "文書ファイル [ 'docs/usage.md' ] の変更は L1 で",
+          "sha256": "77b7117b3ee36ed34a2561e9a94d1cd9463f430bc24f796852e526739af6eeb9",
+          "hashScope": "block"
+        },
+        {
+          "file": "tests/monorepo.test.ts",
+          "contains": "PR ごとに完了ゲートを実行する",
+          "sha256": "09866b0c5a59db83eba29ef4f5c2918e437479ce526b8f9dc2de55404d40ee92",
+          "hashScope": "block"
+        }
+      ]
     },
     {
       "id": "SCN-711b5333ddc017bf8f8a",
-      "status": "unreviewed",
-      "scenarioSha256": "feb21eb733a07e2ba5c0b8774d25516efc16706bb9d57a437c79240f7b90082c",
-      "reason": "基準：THEN の文言どおりに読む。THEN は「--change なしで品質コマンドだけが実行される」だが、今の試験は archive の PR を L1 として lint と文書のリンクの試験だけを呼ぶことを確かめており、品質コマンド（lint・typecheck・test）を実行する THEN は成り立たない。"
+      "status": "reviewed",
+      "scenarioSha256": "4f0c5af1984c1cc5205e2c40330d5f633b05ee0f5b1ad6b5483674e3d5606335",
+      "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用のlint・pnpm・CLIへの呼び出しと終了コードをassertする。c1を削除しarchiveとspecを追加したarchive-c1ブランチのGit差分で、stdoutにloomake-tier: L1を書き、呼び出しがlintとtests/doc-links.test.tsのvitestの2つだけ（verifyを呼ばない）であることを確かめる。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
+      "sources": [
+        "REQ-010",
+        "REQ-054",
+        "REQ-132"
+      ],
+      "tests": [
+        {
+          "file": "tests/ci-gate-process.test.ts",
+          "contains": "archive時の削除とarchive・specの追加は",
+          "sha256": "9e02579734b22a240e055e725b5e89a8405a508bbb7e42137ee5569cfa3110e4",
+          "hashScope": "block"
+        },
+        {
+          "file": "tests/monorepo.test.ts",
+          "contains": "PR ごとに完了ゲートを実行する",
+          "sha256": "09866b0c5a59db83eba29ef4f5c2918e437479ce526b8f9dc2de55404d40ee92",
+          "hashScope": "block"
+        }
+      ]
     },
     {
       "id": "SCN-92a3ac86378cabd507ba",
@@ -3104,21 +3137,54 @@
     },
     {
       "id": "SCN-149eab9b65181496a38e",
-      "status": "unreviewed",
-      "scenarioSha256": "87df447744acde0596df8d5e12095743dc78ec97c0b3bb4098cf638eaae1f024",
-      "reason": "基準：THEN の文言どおりに読む。THEN は「verify --change c1 --done だけが実行される」とコマンド全般を限定しているが、今の試験の呼び出し一覧は lint・文書のリンクの試験・c1 の --done であり、THEN は成り立たない。"
+      "status": "reviewed",
+      "scenarioSha256": "ecdb9f136287d591ccd948f4fb0fc1315ea491c40d0b9e1a9ba4f2de6e176f3f",
+      "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用のlint・pnpm・CLIへの呼び出しと終了コードをassertする。c2ブランチでc2のtasks.mdを変え、本文にloomake-change: c1がある場合の呼び出しが、L1のlintと文書のリンクの試験のあとにverify --change c1 --doneの1回だけであることを確かめる（verifyの呼び出しはc1の完了ゲートだけ）。spec-fixups-1031のarchive後のScenarioのハッシュで記録する。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。",
+      "sources": [
+        "REQ-132"
+      ],
+      "tests": [
+        {
+          "file": "tests/ci-gate-process.test.ts",
+          "contains": "明示した選択を変更ファイルとブランチの選択より優先する",
+          "sha256": "fe30b929e851995d6641e806b0e4a9acf07b1c368462100cbe5078e2d5805e55",
+          "hashScope": "block"
+        }
+      ]
     },
     {
       "id": "SCN-366e01b502420cbcda61",
-      "status": "unreviewed",
-      "scenarioSha256": "8e437ceb7be7459c03352a63eb01b5d3aee70cd842d6d7b277dafe7c1d437aeb",
-      "reason": "今の試験は c1 を --spec-only、c2 を --done で呼ぶことを assert しており、Scenario の「verify --change c1 --done と verify --change c2 --done が実行される」を確かめていない。"
+      "status": "reviewed",
+      "scenarioSha256": "16681b7050c6796df5f1d688c48fefe3cdd661ddb54671dfd1a20384fe40a534",
+      "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用のlint・pnpm・CLIへの呼び出しと終了コードをassertする。c2ブランチでc1のtasks.mdを完了した印のない内容に変え（c2のtasks.mdには印が残る）、呼び出しがlint・文書のリンクの試験・verify --change c1 --spec-only・verify --change c2 --doneの順であることを確かめる。spec-fixups-1031のarchive後のScenarioのハッシュで記録する。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。",
+      "sources": [
+        "REQ-132"
+      ],
+      "tests": [
+        {
+          "file": "tests/ci-gate-process.test.ts",
+          "contains": "変更ファイルとブランチの選択を合わせて両方のゲートを呼ぶ",
+          "sha256": "a31b4ddfbdb5c4b02a89956fe4e9bd185bfa2fb10be0c72754e664d950ce3aa4",
+          "hashScope": "block"
+        }
+      ]
     },
     {
       "id": "SCN-2f7149cce94ed98f34a7",
-      "status": "unreviewed",
-      "scenarioSha256": "cd8f10cba9ead3192b929b6a9e175124be7b1c33f4eb59feb28066e381a883ae",
-      "reason": "基準：THEN の文言どおりに読む。THEN は「--change なしで品質コマンドだけが実行される」だが、今の試験は README.md と .changeset/x.md だけの変更を L1 として lint と文書のリンクの試験だけを呼ぶことを確かめており、品質コマンド（lint・typecheck・test）を実行する THEN は成り立たない。"
+      "status": "reviewed",
+      "scenarioSha256": "4d698a0a07475937b15df7176e618c914ea4ddfa7c12e0d12dd5a07bf76487cb",
+      "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用のlint・pnpm・CLIへの呼び出しと終了コードをassertする。README.mdと.changeset/x.mdだけを変更したfix-typoのGit差分で、stdoutにloomake-tier: L1を書き、呼び出しがlintとtests/doc-links.test.tsのvitestの2つだけ（verifyを呼ばない）であることを確かめる。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。",
+      "sources": [
+        "REQ-132"
+      ],
+      "tests": [
+        {
+          "file": "tests/ci-gate-process.test.ts",
+          "contains": "文書ファイル [ 'README.md', '.changeset/x.md' ] の変更は L1 で",
+          "sha256": "77b7117b3ee36ed34a2561e9a94d1cd9463f430bc24f796852e526739af6eeb9",
+          "hashScope": "block"
+        }
+      ]
     },
     {
       "id": "SCN-abcce1ac255f52f2ec1d",

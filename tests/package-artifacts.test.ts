@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { markPhase } from '../scripts/ci-heartbeat.mjs';
+import { currentBaseline } from '../packages/cli/test/cli-baseline.js';
 
 const root = join(import.meta.dirname, '..');
 const base = mkdtempSync(join(tmpdir(), 'loomake artifacts '));
@@ -32,7 +33,9 @@ describe('実際に配るパッケージ', () => {
     const argsUrl = pathToFileURL(join(cliTarget, 'consumer/node_modules/loomake/dist/args.js')).href;
     const mainUrl = pathToFileURL(join(cliTarget, 'consumer/node_modules/loomake/dist/main.js')).href;
     const generatorUrl = pathToFileURL(generator).href;
-    const baselinePath = join(root, 'packages/cli/test/fixtures/reference-cli-baseline.json');
+    // 原本に、改版の change で承認した具体差分を当てた期待値（REQ-324）
+    const baselinePath = join(base, 'reference-cli-baseline-current.json');
+    writeFileSync(baselinePath, JSON.stringify({ cases: currentBaseline() }));
     markPhase('package-reference', 'compare-start');
     const packed = spawnSync(process.execPath, ['--input-type=module', '-e', `
 import { readFileSync } from 'node:fs';
@@ -44,7 +47,7 @@ for (const item of baseline.cases) {
   const stdout = [], stderr = [];
   const code = await main(item.argv, { cwd: process.cwd(), stdout: (text) => stdout.push(text), stderr: (text) => stderr.push(text) });
   if (JSON.stringify({ code, stdout, stderr }) !== JSON.stringify({ code: item.code, stdout: item.stdout, stderr: item.stderr })) {
-    throw new Error('packしたCLIが原本と異なります：' + JSON.stringify(item.argv));
+    throw new Error('packしたCLIが基準と異なります：' + JSON.stringify(item.argv));
   }
 }
 process.exitCode = await runCliReference({ definition: CLI_REFERENCE, check: true });
@@ -155,11 +158,15 @@ process.exitCode = await runCliReference({ definition: CLI_REFERENCE, check: tru
     const types = (name: string) => spawnSync(process.execPath, ['scripts/check-public-types.mjs', target, join(base, name)], { cwd: root, encoding: 'utf8', timeout: 70000 });
     const healthy = types('types-healthy');
     expect(healthy.status, healthy.stdout + healthy.stderr).toBe(0);
-    const declaration = join(target, 'consumer/node_modules/@loomake/core/dist/verify-result-schema.d.ts');
+    // 現行の verify 2.0.0 の公開型（要判断の required）を壊し、利用側のコンパイルで検出する（REQ-318）
+    const declaration = join(target, 'consumer/node_modules/@loomake/core/dist/verify-result-v2-schema.d.ts');
     const original = readFileSync(declaration, 'utf8');
     try {
-      expect(original.split('ok: z.ZodBoolean')).toHaveLength(2);
-      writeFileSync(declaration, original.replace('ok: z.ZodBoolean', 'ok: z.ZodString'));
+      const marker = 'export declare const verifyDecisionSchema';
+      expect(original.split(marker)).toHaveLength(2);
+      const at = original.indexOf(marker);
+      expect(original.slice(at).indexOf('required: z.ZodBoolean')).toBeLessThan(original.slice(at).indexOf('reasons:'));
+      writeFileSync(declaration, original.slice(0, at) + original.slice(at).replace('required: z.ZodBoolean', 'required: z.ZodString'));
       const broken = types('types-broken');
       expect(broken.status).toBe(1);
       expect(broken.stdout).toContain('error TS2322');

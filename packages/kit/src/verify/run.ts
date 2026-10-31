@@ -6,7 +6,6 @@ import { spawnSync } from 'node:child_process';
 import { hasProcessBudget, holderWaitTime, ProcessLimitError, runExternal } from '../runtime/process.js';
 import {
   LEDGER_STATES,
-  VERIFY_RESULT_SCHEMA_VERSION,
   createAgreement,
   extractTestRequirements,
   parseSpec,
@@ -16,9 +15,12 @@ import {
   type SpecRequirement,
   type Trace,
   type VerifyCheckResult,
-  type VerifyMode,
+  type VerifyDecision,
   type VerifyResult,
+  type VerifyRunError,
+  type VerifyScope,
 } from '@loomake/core';
+import { assembleVerifyResult } from './result.js';
 import { assertChangeId, loadConfig, type LoomakeConfig } from './config.js';
 import { createInputReader, JSON_LIMITS, type InputReader } from '../runtime/input.js';
 import { findChangeDir, specFiles, toPosix } from '../runtime/change-files.js';
@@ -30,23 +32,31 @@ export type VerifyOptions = {
   changeId?: string;
   /** --spec-only なら 'spec-only'、--done なら 'done'。changeId を省略したときは使わない */
   gate?: 'spec-only' | 'done';
-  /** commands を実行しない。完了ゲートでは、すでにあるテストのレポートを読む */
+  /** commands を実行せず、テストのレポートも読まない。品質コマンドの項目（完了ゲートでは要件ごとのテストも）を不足（INSUFFICIENT_EVIDENCE）にするので、終了コードは 1 になる（REQ-040） */
   skipCommands?: boolean;
   /** 進捗の表示先。--json のときも標準出力を汚さないよう、CLI は標準エラーを渡す */
   progress?: (message: string) => void;
-  /** 品質コマンドの実行時間の上限（ミリ秒、すべてのコマンドの合計）。上限を過ぎたコマンドは止めて不合格にする */
+  /** 品質コマンドの実行時間の上限（ミリ秒、すべてのコマンドの合計）。上限を過ぎたコマンドは止めて、その項目を不足にする */
   timeoutMs?: number;
+  /**
+   * ci = CI 必須項目を含む全条件で集約して verdict を返す。local = ローカル実施項目の完了だけを返す（verdict なし）。
+   * 省略すると、完了ゲートは ci、仕様ゲートと change なしの実行は local（REQ-311）
+   */
+  scope?: VerifyScope;
 };
 
 // 試作の verify.mjs と同じく、出力の上限を 64MB にする
 const MAX_BUFFER = 64 * 1024 * 1024;
 const COMMAND_ORDER = ['lint', 'typecheck', 'test'];
-/** 実行時間の上限で止めた品質コマンドの detail */
+/** 実行時間の上限で止めた品質コマンドの reason */
 export const TIMED_OUT = '実行時間の上限に達したので止めました';
 export const INTERRUPTED = '中断されたので止めました';
 
 
-/** verify を実行して結果を返す。設定の誤りは UsageError を投げる */
+/**
+ * verify を実行して 2.0.0 の結果を返す（REQ-311）。使い方と設定の誤りは UsageError を投げる。
+ * 終了コードは verifyExitCode で決め、例外は verifyAbortedResult で aborted の結果にできる
+ */
 export function runVerify(options: VerifyOptions): VerifyResult {
   const { changeId, skipCommands = false, progress = () => {} } = options;
   if (changeId) assertChangeId(changeId);
@@ -55,48 +65,74 @@ export function runVerify(options: VerifyOptions): VerifyResult {
   const givenRoot = resolve(options.root);
   const root = existsSync(givenRoot) ? realpathSync(givenRoot) : givenRoot;
   const config = loadConfig(root);
-  const results: VerifyCheckResult[] = [];
-  const record = (check: string, status: VerifyCheckResult['status'], detail = '') => results.push({ check, status, detail });
+  const gate = changeId ? (options.gate ?? 'spec-only') : undefined;
+  const scope: VerifyScope = options.scope ?? (gate === 'done' ? 'ci' : 'local');
+  const checks: GateCheck[] = [];
+  const errors: VerifyRunError[] = [];
+  const record: Recorder = (check, status, detail = '') => checks.push({ check, status, detail });
+  const fail: RunErrorRecorder = (check, detail) => {
+    record(check, 'insufficient', detail);
+    errors.push({ kind: 'runtime', target: check, message: detail, next: '原因を確かめてから、もう一度実行してください' });
+  };
   const rel = (p: string) => {
     const inside = [root, givenRoot].map((base) => relative(base, p)).find((r) => r !== '..' && !r.startsWith(`..${sep}`) && !isAbsolute(r));
     return toPosix(inside ?? relative(root, p));
   };
-  const mode: VerifyMode = changeId ? (options.gate ?? 'spec-only') : 'quality';
-  // 知らないキーは、打ち間違いに気づけるよう警告にする。新しい版の設定でも止まらないよう、不合格にはしない（REQ-039）
+  // 知らないキーは、打ち間違いに気づけるよう案内にする。新しい版の設定でも止まらないよう、不合格にはしない（REQ-039）
   if (config.unknownKeys.length) record('loomake.config.json', 'warn', `知らないキー：${config.unknownKeys.join('、')}（打ち間違いなら直してください）`);
   let coverage: Record<string, string[]> | undefined;
+  const approvals: ApprovalNeed[] = [];
 
   if (!changeId) {
-    runCommands(root, config, skipCommands, record, progress, options.timeoutMs);
+    runCommands(root, config, skipCommands, record, fail, progress, options.timeoutMs);
   } else {
-    const spec = checkSpec(root, config, changeId, record, rel);
-    if (spec && mode === 'done') {
-      checkTasksAndPending(spec, record);
+    const spec = checkSpec(root, config, changeId, gate ?? 'spec-only', scope, record, rel, approvals);
+    if (spec && gate === 'done') {
+      checkTasksAndPending(spec, record, approvals);
       // 前回のレポートで合格させないよう、commands を実行する前に消す
       const reportPath = resolve(root, config.tests.report);
       if (!skipCommands) rmSync(reportPath, { force: true });
-      runCommands(root, config, skipCommands, record, progress, options.timeoutMs);
-      coverage = checkCoverage(root, config, spec.live, reportPath, record, rel);
+      runCommands(root, config, skipCommands, record, fail, progress, options.timeoutMs);
+      // 品質コマンドを省いたときは、前回のレポートを今回の成功の一覧に使わず、coverage を出さない（REQ-040）
+      if (skipCommands) record('要件ごとのテスト', 'insufficient', REQUIREMENTS_NOT_RUN);
+      else coverage = checkCoverage(root, config, spec.live, reportPath, record, rel);
     }
   }
 
-  return {
-    schemaVersion: VERIFY_RESULT_SCHEMA_VERSION,
-    mode,
-    change: changeId ?? null,
-    ok: results.every((r) => r.status !== 'fail'),
-    results,
-    ...(coverage ? { coverage } : {}),
-  };
+  return assembleVerifyResult({ change: changeId ?? null, scope, checks: checks.map(toCheck), errors, coverage, decision: decisionOf(approvals) });
 }
 
-type Recorder = (check: string, status: VerifyCheckResult['status'], detail?: string) => void;
+/** 1 つの検査の観測。warn は案内つきの合格、insufficient は証拠の不足（仮定 A-02・A-03） */
+type GateCheck = { check: string; status: 'pass' | 'fail' | 'warn' | 'insufficient' | 'na'; detail: string };
+
+/** doneで人の承認が足りない対象（未承認の仮定・確認待ちの要件）。decision.reasons になる（REQ-036・038） */
+type ApprovalNeed = { target: string; message: string };
+const decisionOf = (needs: readonly ApprovalNeed[]): VerifyDecision => ({
+  required: needs.length > 0,
+  reasons: needs.map((n) => ({ code: 'APPROVAL_REQUIRED' as const, target: n.target, message: n.message })),
+});
+
+/** 案内つきの合格の reason の先頭（formatVerifyResult が「!」で示す） */
+export const NOTICE = '案内：';
+
+const toCheck = ({ check, status, detail }: GateCheck): VerifyCheckResult => ({
+  id: check,
+  result: status === 'fail' ? 'FAIL' : status === 'insufficient' ? 'INSUFFICIENT_EVIDENCE' : status === 'na' ? 'NOT_APPLICABLE' : 'PASS',
+  reason: status === 'warn' ? `${NOTICE}${detail}` : detail,
+  evidence: [],
+});
+
+type Recorder = (check: string, status: GateCheck['status'], detail?: string) => void;
+/** 品質コマンドを最後まで実行できなかったとき、その項目を不足にし、実行エラー（runtime）を残す */
+type RunErrorRecorder = (check: string, detail: string) => void;
 type SpecState = { reader: InputReader; changeDir: string; trace: Trace; live: SpecRequirement[]; decision: AgreementDecision };
 
 const formatErrors = (errors: ParseError[]) => errors.map((e) => `${e.file}:${e.line} ${e.message}`).join('\n');
 
 // ---------- 仕様ゲート ----------
-function checkSpec(root: string, config: LoomakeConfig, changeId: string, record: Recorder, rel: (p: string) => string): SpecState | null {
+function checkSpec(
+  root: string, config: LoomakeConfig, changeId: string, gate: 'spec-only' | 'done', scope: VerifyScope, record: Recorder, rel: (p: string) => string, approvals: ApprovalNeed[],
+): SpecState | null {
   const reader = createInputReader();
   const changeDir = resolve(root, config.openspecDir, 'changes', changeId);
   if (!existsSync(changeDir) || !statSync(changeDir).isDirectory()) {
@@ -142,10 +178,14 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   checkSharedQuestions(root, config, changeId, questions, record, reader);
 
   const unapproved = assumptions.filter((a) => decision.unapprovedAssumptions.includes(a.ID));
-  if (unapproved.length) record('仮定の承認', 'warn', `未承認：${unapproved.map((a) => `${a.ID} ${a['仮定の内容']}`).join(' / ')}`);
+  // spec-only は案内つきの合格（0）、done は不足と要判断（1）にする（REQ-036・R-C001-08 B）。確認待ちの要件は done の「確認待ちが残っていない」が示す
+  if (unapproved.length) {
+    record('仮定の承認', gate === 'done' ? 'insufficient' : 'warn', `未承認：${unapproved.map((a) => `${a.ID} ${a['仮定の内容']}`).join(' / ')}`);
+    if (gate === 'done') approvals.push(...unapproved.map((a) => ({ target: a.ID, message: `仮定 ${a.ID} が未承認です` })));
+  }
 
   const pending = ledger.filter((r) => decision.pendingRequirements.some((id) => id === r.ID));
-  if (pending.length) record('確認待ちの要件', 'warn', pending.map((r) => r.ID).join(', '));
+  if (pending.length && gate === 'spec-only') record('確認待ちの要件', 'warn', pending.map((r) => r.ID).join(', '));
 
   // specs
   const specs = specFiles(changeDir, reader);
@@ -176,7 +216,7 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   const orphan = ledger.filter((r) => r['状態'] === '反映済' && !referenced.has(r.ID));
   record('反映済の要件が仕様にある', orphan.length ? 'fail' : 'pass', orphan.map((r) => r.ID).join(', '));
 
-  checkOpenspecValidate(root, config, changeId, record);
+  checkOpenspecValidate(root, config, changeId, scope, record);
   return { reader, changeDir, trace, live, decision };
 }
 
@@ -216,8 +256,12 @@ function checkSharedQuestions(root: string, config: LoomakeConfig, changeId: str
   else record('同じ確認事項の回答', 'pass', shared ? `${shared} 件が参照先と一致` : 'ほかの change と同じ確認事項なし');
 }
 
-// openspec validate（REQ-037）。CLI が無いときは、openspecValidate が auto なら警告、true なら不合格にする
-function checkOpenspecValidate(root: string, config: LoomakeConfig, changeId: string, record: Recorder) {
+/** OpenSpec CLI が無いときの NOT_APPLICABLE の確認者。人ではなく、設定による自動判定である（trace S9-02） */
+export const OPENSPEC_NA_CONFIRMER = 'loomake verify（openspecValidate: auto の自動判定）';
+const OPENSPEC_MISSING = 'OpenSpec CLI が見つかりません（npm install -g @fission-ai/openspec）';
+
+// openspec validate（REQ-037）。CLI が無いときは、true なら不合格、auto なら local は理由と確認者つきの対象外、ci は不足にする
+function checkOpenspecValidate(root: string, config: LoomakeConfig, changeId: string, scope: VerifyScope, record: Recorder) {
   if (config.openspecValidate === false) return;
   let r;
   try { r = runExternal('openspec', ['validate', changeId, '--strict'], {
@@ -232,17 +276,20 @@ function checkOpenspecValidate(root: string, config: LoomakeConfig, changeId: st
   // Windows では shell 経由で起動するので、CLI が無いと ENOENT ではなくシェルが終了コード 1 を返す
   const missing = r.error?.code === 'ENOENT' || (process.platform === 'win32' && /is not recognized|認識されていません/.test(r.stderr));
   if (missing) {
-    record('openspec validate', config.openspecValidate === 'auto' ? 'warn' : 'fail', 'OpenSpec CLI が見つかりません（npm install -g @fission-ai/openspec）');
+    if (config.openspecValidate !== 'auto') record('openspec validate', 'fail', OPENSPEC_MISSING);
+    else if (scope === 'ci') record('openspec validate', 'insufficient', `${OPENSPEC_MISSING}。validate を実行していません`);
+    else record('openspec validate', 'na', `対象外：${OPENSPEC_MISSING}ため、validate を実行していません（確認者：${OPENSPEC_NA_CONFIRMER}）`);
   } else {
     record('openspec validate', r.status === 0 ? 'pass' : 'fail', r.status === 0 ? '' : `${r.stdout}${r.stderr}`.trim().slice(0, 2000));
   }
 }
 
 // ---------- 完了ゲート ----------
-function checkTasksAndPending(spec: SpecState, record: Recorder) {
-  // 完了時に確認待ちの要件が残っていてはいけない
+function checkTasksAndPending(spec: SpecState, record: Recorder, approvals: ApprovalNeed[]) {
+  // 完了時に確認待ちの要件が残っていてはいけない。不足にして、人の判断が要ることを decision に残す（REQ-038）
   const pending = spec.trace.ledger.filter((r) => spec.decision.pendingRequirements.some((id) => id === r.ID));
-  record('確認待ちが残っていない', pending.length ? 'fail' : 'pass', pending.map((r) => r.ID).join(', '));
+  record('確認待ちが残っていない', pending.length ? 'insufficient' : 'pass', pending.map((r) => r.ID).join(', '));
+  approvals.push(...pending.map((r) => ({ target: r.ID, message: `要件 ${r.ID} が確認待ちです` })));
 
   const tasksPath = join(spec.changeDir, 'tasks.md');
   if (existsSync(tasksPath)) {
@@ -290,13 +337,17 @@ function checkCoverage(
 
 // ---------- 品質コマンド ----------
 // lint・typecheck・test の順に実行し、1 つ失敗しても残りを実行する
-/** --skip-commands で省いたときの項目の detail */
-export const COMMANDS_SKIPPED = '--skip-commands で実行していません。テストの判定には前回のテストのレポートを使いました。完了の確認には --skip-commands を付けずに実行してください';
+/** --skip-commands で省いたときの項目の reason */
+export const COMMANDS_SKIPPED = '--skip-commands で実行していません。完了の確認には --skip-commands を付けずに実行してください';
+/** --skip-commands で省いたときの「要件ごとのテスト」の reason。前回のレポートは今回の証拠にしない（REQ-040） */
+export const REQUIREMENTS_NOT_RUN = '品質コマンドを実行していないので、要件ごとの成功したテストを確かめていません。--skip-commands を付けずに実行してください';
 
-function runCommands(root: string, config: LoomakeConfig, skip: boolean, record: Recorder, progress: (m: string) => void, timeoutMs?: number) {
-  // 省いたことを結果に残し、前回のレポートでの合格を、品質コマンドを実行した合格と見分けられるようにする（REQ-191）
+function runCommands(
+  root: string, config: LoomakeConfig, skip: boolean, record: Recorder, fail: RunErrorRecorder, progress: (m: string) => void, timeoutMs?: number,
+) {
+  // 省いたことを証拠の不足として残し、品質コマンドを実行した合格と見分けられるようにする（REQ-191・REQ-040）
   if (skip) {
-    record('品質コマンド', 'skip', COMMANDS_SKIPPED);
+    record('品質コマンド', 'insufficient', COMMANDS_SKIPPED);
     return;
   }
   // Windows の保持役の準備を待った時間は、品質コマンドの合計の予算に含めない（REQ-257）
@@ -308,7 +359,7 @@ function runCommands(root: string, config: LoomakeConfig, skip: boolean, record:
     if (!cmd) continue;
     const left = deadline === undefined ? undefined : deadline - now();
     if (left !== undefined && left <= 0) {
-      record(`command: ${name}`, 'fail', TIMED_OUT);
+      fail(`command: ${name}`, TIMED_OUT);
       continue;
     }
     progress(`… ${name}: ${cmd}`);
@@ -319,7 +370,8 @@ function runCommands(root: string, config: LoomakeConfig, skip: boolean, record:
         : runExternal(cmd, [], { cwd: root, shell: true, timeoutMs: left, qualityCommand: true, maxBuffer: MAX_BUFFER });
     } catch (error) {
       if (!(error instanceof ProcessLimitError)) throw error;
-      record(`command: ${name}`, 'fail', error.kind === 'timeout' ? TIMED_OUT : error.kind === 'interrupted' ? (error.reason ? `${INTERRUPTED}（${error.reason}）` : INTERRUPTED) : error.message);
+      const reason = error.kind === 'interrupted' ? (error.reason ? `${INTERRUPTED}（${error.reason}）` : INTERRUPTED) : error.message;
+      fail(`command: ${name}`, error.kind === 'timeout' ? TIMED_OUT : reason);
       // 共有予算では後続の外部操作も起動せず拒否し、各項目に未実行の理由を残す。
       if (error.kind === 'interrupted' && !hasProcessBudget()) return;
       continue;

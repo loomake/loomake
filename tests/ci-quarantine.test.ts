@@ -27,6 +27,7 @@ function repo(entries: unknown[]) {
   writeFileSync(join(dir, 'packages/runner/test/guards.test.ts'), '');
   writeFileSync(join(dir, 'tests/a.test.ts'), '');
   writeFileSync(join(dir, 'tests/quarantine.json'), JSON.stringify({ entries }));
+  writeFileSync(join(dir, 'tests/test-partition.json'), JSON.stringify({ files: {} }));
   return dir;
 }
 function cli(dir: string, args: string[], today = '2026-11-01', launch = dir) {
@@ -36,6 +37,7 @@ function cli(dir: string, args: string[], today = '2026-11-01', launch = dir) {
   mkdirSync(join(dir, 'scripts/lib'), { recursive: true });
   writeFileSync(join(dir, 'scripts/ci-quarantine.mjs'), readFileSync(script));
   writeFileSync(join(dir, 'scripts/lib/is-main.mjs'), readFileSync(join(root, 'scripts/lib/is-main.mjs')));
+  writeFileSync(join(dir, 'scripts/lib/test-partition.mjs'), readFileSync(join(root, 'scripts/lib/test-partition.mjs')));
   const result = spawnSync(process.execPath, [join(launch, 'scripts/ci-quarantine.mjs'), ...args], {
     encoding: 'utf8', env: { ...process.env, GITHUB_OUTPUT: output, LOOMAKE_QUARANTINE_TODAY: today },
   });
@@ -44,6 +46,17 @@ function cli(dir: string, args: string[], today = '2026-11-01', launch = dir) {
 }
 
 describe('試験の隔離一覧', () => {
+  it('分割済みの元ファイルとcompanionは隔離一覧へ混ぜない', () => {
+    const dir = repo([entry()]);
+    const file = 'packages/runner/test/guards.test.ts';
+    writeFileSync(join(dir, 'packages/runner/test/guards.slow.test.ts'), '');
+    writeFileSync(join(dir, 'tests/test-partition.json'), JSON.stringify({ files: { [file]: { cases: { example: ['win32'] } } } }));
+    const result = cli(dir, ['--matrix']);
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain('試験の分割一覧');
+    expect(result.outputs).toEqual({});
+  });
+
   it('[REQ-344] 期限内のエントリは、指定した OS のシャードでだけ除外の対象になる', () => {
     const entries = check([entry()], '2026-11-14');
     expect(excludedFiles(entries, 'windows-latest')).toEqual(['packages/runner/test/guards.test.ts']);

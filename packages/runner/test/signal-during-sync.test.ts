@@ -103,7 +103,7 @@ async function runWithSupervisorSignal(setup: (repo: Repo) => void) {
     const [run] = readdirSync(directory).filter((name) => name !== '.gitignore');
     const runDir = join(directory, run);
     const summary = JSON.parse(readFileSync(join(runDir, 'summary.json'), 'utf8')) as RunSummary;
-    const verifications = readdirSync(runDir).filter((name) => /^\d+-verify/.test(name)).map((name) => JSON.parse(readFileSync(join(runDir, name), 'utf8')) as { results: { check: string; detail?: string }[] });
+    const verifications = readdirSync(runDir).filter((name) => /^\d+-verify/.test(name)).map((name) => JSON.parse(readFileSync(join(runDir, name), 'utf8')) as { checks: { id: string; reason?: string }[] });
     const sent = JSON.parse(readFileSync(join(repo.base, 'interrupted.json'), 'utf8')) as { command?: string };
     expect(sent.command).toMatch(/[\\/]supervisor\.cjs|^loomake: command supervisor/);
     return { code, summary, verifications, calls: repo.calls(), prs: repo.prs(), pushed: repo.git('ls-remote', '--heads', 'origin'), head: repo.git('log', '-1', '--format=%s'), implementation: existsSync(join(repo.root, 'impl.txt')) };
@@ -167,6 +167,6 @@ describe('外部操作の監視役が受けた中断', () => {
     expect(result.calls).toHaveLength(1);
     expect(result.prs).toHaveLength(0);
     expect(result.pushed).toBe('');
-    if (followingCommand) expect(result.verifications[0].results.find((item) => item.check === 'command: test')?.detail).toContain('中断されたので止めました（監視役が結果を書かずに');
+    if (followingCommand) expect(result.verifications[0].checks.find((item) => item.id === 'command: test')?.reason).toContain('中断されたので止めました（監視役が結果を書かずに');
   });
 });

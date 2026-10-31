@@ -24,6 +24,8 @@ gate ジョブは PR の段階（AGENTS.md 2 章の L1・L2・L3）を先に決�
 - L2（試験・CI・開発基盤）：これまでどおり、対象の change があれば `verify --change <id> --done`、なければ `verify`（品質コマンドだけ）を実行する
 - L3（製品コードと Requirement の変更）：change が必須。`loomake-change: none` や change を特定できない PR は失敗する
 
+change のゲート（`--done`・`--spec-only`）は `--json` で実行し、verify の終了コードではなく 2.0.0 の結果の JSON で合格を決める（REQ-318、`scripts/ci-gate.mjs` の `ciGateProblem`）。完了ゲートは対象の change と一致し、scope が ci、run.status が completed、要判断なし、verdict が PASS、不合格や証拠不足（`--skip-commands`）の検査がなく、検査が 0 件や全件 NOT_APPLICABLE でなく、完了ゲートの検査（`tasks.md`・`要件ごとのテスト`・`command: *`）を含み、終了コードが 0 のときだけ合格にする。履歴の 1.0.0、local の結果、仕様ゲートや品質コマンドだけの結果は、終了コードが 0 でも合格にしない。結果の JSON は標準エラーに写し、標準出力には段階の行だけを書く。
+
 段階は PR 本文の `loomake-tier:` の行で上げる方向にだけ上書きできる。gate は決めた段階と理由を標準出力に `loomake-tier: L2（scripts/ci-gate.mjs）` の形で 1 行書き、ステップの出力 `tier`・`tier_line` にも入れる。この行を PR 本文の証跡ブロックの `tier:` に写す。
 
 Requirement の変更は、`openspec/specs/` と `openspec/changes/<id>/specs/` の `spec.md` で、変更した行が属する節で見る。`git diff -U0` のハンクの行番号から、足した行は HEAD の、消した行はベースのファイルを読み、直前の見出しが `### Requirement:` なら Requirement の変更（L3）とする。`#### Scenario:` の配下や Purpose の文言だけなら、RFC 2119 の語を足しても L1 のまま。archive の PR（`openspec/changes/archive/` にファイルを足すか移す）は Requirement を主仕様に写すが、実装 PR の `--done` で検査済みなので L1 として扱う。
@@ -35,7 +37,7 @@ change のない L1 の PR では `verify` を呼ばないため、`tests/doc-li
 ## 開発の台本
 
 - `scripts/clean-merged-worktrees.sh`：ブランチを head にした PR が GitHub で merged になっている clean な worktree を消す（`gh pr list --state merged` で確かめる。gh を使えなければ何も消さない）。detached HEAD、dirty、`.loomake/`・`node_modules/`・`dist/`・`coverage/` 以外の無視ファイルがあるものは残す。`--dry-run` で一覧と判定理由だけを表示し、`--keep <name>` で残すものを指定する。各 worktree の `.loomake/` は `.loomake/archive/worktree-loomake-<日付>/` に退避する。ブランチは消さない
-- `scripts/delivery-metrics.sh <出力ディレクトリ>`：配布ワークフロー改善ダッシュボードの指標（PR の段階と所要時間、Issue #121 の投稿量、worklog の量、CI の実行時間）を CSV に集める。段階は `ci-tier.mjs` の `classifyPath` で決める。一時ディレクトリに書いてから移すので、gh に失敗しても前のファイルは残る。gh・git・node・python3 が要る
+- `scripts/delivery-metrics.sh <出力ディレクトリ>`：配布ワークフロー改善ダッシュボードの指標（PR の段階と所要時間、Issue #121 の投稿量、worklog の量、CI の実行時間、利用者の判断待ちの項目）を CSV に集める。段階は `ci-tier.mjs` の `classifyPath` で決める。判断待ちの項目（`pending-approvals.csv`）は `scripts/pending-approvals.mjs` が決め、trace.md の未回答のブロッキングな確認事項は verify と同じ core・kit の関数で判定する。一時ディレクトリに書いてから移すので、gh に失敗しても前のファイルは残る。判断待ちの一覧だけが作れなかったときは、ほかの CSV を移したうえで前の `pending-approvals.csv` を残し、原因を `pending-approvals.err` に書いて非ゼロで終わる。gh は REST（`gh api`）だけを使う。Claude Code のクラウドのセッションでは GitHub の GraphQL が 403 になるため、`gh pr list`・`gh issue list` は使わない。クラウドの中継は次のページの URL（`repositories/<数字>/…`）と検索 API も断るので、`--paginate`・`gh run list`・`search/issues` も使わず、`repos/loomake/loomake/…` に `page=` を付けて自分でページを送る。gh・git・jq・node・pnpm・python3 が要る。`node_modules` がなければ `pnpm install --frozen-lockfile` を流すので、ネットワークにつながっている必要がある
 
 ## まだ仕様にあるもの
 
@@ -267,3 +269,29 @@ Source: REQ-214, REQ-270
 - **WHEN** `.github/workflows/ci.yml` を読む
 - **THEN** シャードのあるジョブだけに、`scripts/ci-quarantine.mjs` に OS を渡して一覧を検査するステップがあり、その出力をシャードのテストのステップに渡している。ubuntu のテストのステップには渡していない
 ````
+
+## 共通の試験分割と配布物の準備
+
+この節は共通基盤PR204の受入時点の記録で、そこで保持したNode20は後続PR184の廃止案と区別する。PR184のNode20廃止とslow分離の全受入はまだ終わっていない。
+
+PR184の現行configも、この共通実装だけを使う。旧`tests/test-split.ts`は既存試験用のprototypeとして残し、実routingからは呼ばない。PR判定とslow除外を実routingへつなぐ作業は、後続の設計・受入として残す。
+
+`tests/test-partition.json` は case 単位で fast と slow を選ぶ一覧です。現在の実リポジトリは `{"files":{}}` のままで、既存 case の登録・本文・移動は変えていません。Node20、全件の実行、隔離一覧、既存の期待値・上限時間・skip・カバレッジ閾値も保持します。
+
+一覧を読む処理は `scripts/lib/test-partition.mjs` にまとめ、Vitest の設定と隔離の台本が同じ検査を使います。将来の登録では元の `.test.ts` をキーに、`cases.<case-id>` に slow にする OS（`linux`・`darwin`・`win32`）の配列を書きます。companion は元の名前の `.test.ts` を `.slow.test.ts` に置き換えた名前です。両方のファイルが実在し、`cases` が1件以上必要です。空の OS 配列は全 OS で fast を表します。誤ったキー・パス・OS、OS の重複、未登録 case はエラーにします。未知の実行 OS は fast とし、登録 OS の誤記とは区別します。
+
+元ファイルと companion は同じ登録関数を呼び、`includeCase` の判定後に渡された callback を登録します。case の本文は分割基盤で書き換えません。全 case が slow の OS では元ファイルを fast から外し、slow が1件もない companion は実行しません。未登録の `.slow.test.ts` を glob だけで除外することはありません。選択したファイルが0件なら、全件へ戻さず0以外で終了します。
+
+配布物は root の globalSetup が1回だけ build・pack し、package と slow の project に同じ場所を provide します。試験は inject した場所を `packedTarballsEnv` へ渡します。場所がなければ失敗し、個別 build へは戻りません。通常終了と build 失敗時に出力を消します。watch では unit の再実行で準備せず、package または slow の再実行時に同じ場所へ準備し直します。
+
+Vitest 5.0.5 の実 fixture では、全件とファイルの明示選択で準備が1回、`--project unit` で0回でした。unit のファイルだけを明示しても、Vitest の project 一覧には package が残るため1回増えます。package を含まないシャードや隔離の実行でも同様の費用が生じることがあります。0件選択と存在しない project の選択は、どちらも準備なしで失敗しました。これらの起動数と実行時間は PR の結果へ記録します。
+
+`tests/test-partition-integration.test.ts` は8つの試験で実 Vitest を22子プロセス起動します。Linux・Node 24.21.0 で `CI=true` と Windows の隔離 env を与えた修正後の観測は、ファイル全体6.860秒、単一 case 最大2.002秒でした。旧6試験・17回の値を修正後へ流用せず、coverage と他 OS の最新値は別に確認します。速度対策1-1の後続測定には、この新ファイルと E3 の guard batch も含め、最新 head の case 別結果から判定します。
+
+合成 fixture は親の `LOOMAKE_TEST_QUARANTINE_EXCLUDE` を継承せず、重なり拒否を試すときだけ明示します。実リポジトリや CI の隔離設定は変えません。列挙 driver は各 fixture 内に置き、後片付けで消します。
+
+隔離一覧と分割一覧には、同じ元ファイルや companion を登録できません。Vitest の設定と `ci-quarantine` の両方で拒否します。実一覧が空の現在は、従来の whole-file 隔離の出力・順序・期限・起動条件を変えません。
+
+実リポジトリの列挙試験は、現在の空一覧と独立したファイル一覧を比較しています。PR184 で実一覧を非空にするときは、case・parameter・status の多重集合まで独立した比較の基準を拡張します。期待値を実装の出力に合わせて緩めたり、同じ routing 関数だけから期待値を作ったりしません。
+
+この基盤では PR の slow 除外を結線しません。Node20 の削除、実 case の OS 別割当と移動、隔離と分割の両立、PR の実行範囲、元の時計と全件の測定、required context の人の操作を含む速度対策1-1の受入は PR184 に残ります。合成 fixture の成功を実 case の独立性や速度対策の完成には数えません。
