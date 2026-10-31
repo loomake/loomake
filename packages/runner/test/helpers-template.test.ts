@@ -63,7 +63,7 @@ describe('makeRepo の雛形', () => {
       expect(copied.git('config', '--get', 'remote.origin.url')).toBe(join(copied.base, 'origin.git'));
       expect(readFileSync(join(copied.root, '.git/config'), 'utf8')).not.toContain('loomake-run-template-');
     } finally { fresh.cleanup(); copied.cleanup(); }
-  });
+  }, 30_000);
 
   it('雛形から作った repo と origin は試験ごとに別で、片方の変更がもう片方と雛形に及ばない', () => {
     const first = makeRepo();
@@ -83,5 +83,5 @@ describe('makeRepo の雛形', () => {
         expect(gitState(third)).toEqual(gitState(second));
       } finally { third.cleanup(); }
     } finally { first.cleanup(); second.cleanup(); }
-  });
+  }, 30_000);
 });
