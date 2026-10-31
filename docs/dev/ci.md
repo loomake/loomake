@@ -140,6 +140,8 @@ Schemaの再生成一致は、既存の `packages/core/test/json-schema.test.ts`
 
 Vitest 5.0.5 の実 fixture では、全件とファイルの明示選択で準備が1回、`--project unit` で0回でした。unit のファイルだけを明示しても、Vitest の project 一覧には package が残るため1回増えます。package を含まないシャードや隔離の実行でも同様の費用が生じることがあります。0件選択と存在しない project の選択は、どちらも準備なしで失敗しました。これらの起動数と実行時間は PR の結果へ記録します。
 
+`tests/test-partition-integration.test.ts` は6つの試験で実 Vitest を17子プロセス起動します。設計時の約7回という目安より多く、Linux・Node 24.21.0 の単独実行は4.899秒、全件の coverage 実行中はファイル全体で10.327秒、単一 case の最大は3.036秒でした。これは今回のローカル観測で、他 OS の値ではありません。速度対策1-1の後続測定には、この新ファイルと E3 の guard batch も含めます。旧候補だけで測定対象を固定せず、最新 head の case 別結果から判定します。
+
 隔離一覧と分割一覧には、同じ元ファイルや companion を登録できません。Vitest の設定と `ci-quarantine` の両方で拒否します。実一覧が空の現在は、従来の whole-file 隔離の出力・順序・期限・起動条件を変えません。
 
 この基盤では PR の slow 除外を結線しません。Node20 の削除、実 case の OS 別割当と移動、隔離と分割の両立、PR の実行範囲、元の時計と全件の測定、required context の人の操作を含む速度対策1-1の受入は PR184 に残ります。合成 fixture の成功を実 case の独立性や速度対策の完成には数えません。
