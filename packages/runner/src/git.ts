@@ -13,15 +13,27 @@ const NEEDS_PROMPT = /could not read (Username|Password)|terminal prompts disabl
 export const PROMPT_GUIDE =
   'run は git を端末なしで動かすので、端末での入力ができません。ssh-agent に鍵を登録するか、credential helper（gh auth setup-git など）や gpg-agent を設定して、入力なしで push・commit できるようにしてから、もう一度実行してください';
 
-export function git(root: string, env: NodeJS.ProcessEnv, args: string[]): string {
+type GitOptions = { maxBuffer?: number };
+
+/** 内部用。返却された UTF-8 の stdout と stderr を両方数える。wire のバイト数ではない。 */
+export function gitMeasured(
+  root: string, env: NodeJS.ProcessEnv, args: string[], options: GitOptions = {},
+): { stdout: string; bytes: number; hasReplacementCharacter: boolean } {
   // 端末での入力を求めず、すぐ失敗させる（REQ-211）
-  const r = runExternal('git', args, { cwd: root, env: { ...env, GIT_TERMINAL_PROMPT: '0' }, untilDeadline: RUNS_HOOKS.has(args[0]) });
+  const r = runExternal('git', args, { cwd: root, env: { ...env, GIT_TERMINAL_PROMPT: '0' }, untilDeadline: RUNS_HOOKS.has(args[0]), ...options });
   if (r.error || r.status !== 0) {
     const detail = (r.stderr || r.error?.message || '').trim();
     const guide = RUNS_HOOKS.has(args[0]) && NEEDS_PROMPT.test(detail) ? `。${PROMPT_GUIDE}` : '';
     throw new GitError(`git の操作に失敗しました：git ${args.join(' ')}（${detail}）${guide}`);
   }
-  return r.stdout;
+  return {
+    stdout: r.stdout, bytes: Buffer.byteLength(r.stdout) + Buffer.byteLength(r.stderr),
+    hasReplacementCharacter: r.stdout.includes('\ufffd') || r.stderr.includes('\ufffd'),
+  };
+}
+
+export function git(root: string, env: NodeJS.ProcessEnv, args: string[], options?: GitOptions): string {
+  return gitMeasured(root, env, args, options).stdout;
 }
 
 /** 未コミットの変更。追跡していないファイルを含み、.gitignore で除外したものは含めない */

@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 import { existsSync, lstatSync, readFileSync, readdirSync, readlinkSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { runExternal, UsageError } from '@loomake/kit';
-import { dirtyFiles, git, gitPlaces, readHead, type GitPlaces, type HeadRead } from './git.js';
+import { EXTERNAL_OUTPUT_BYTES, ProcessLimitError, runExternal, UsageError } from '@loomake/kit';
+import { dirtyFiles, git, gitMeasured, GitError, gitPlaces, readHead, type GitPlaces, type HeadRead } from './git.js';
 
 /** 不正な直し方として見つけたもの */
 export type GuardFinding = { file: string; reason: string };
@@ -50,18 +50,206 @@ const scriptsOf = (root: string, env: NodeJS.ProcessEnv, rev: string, file: stri
   }
 };
 
+type GuardLimits = { maxPathspecChars: number; maxOutputBytes: number };
+const DEFAULT_GUARD_LIMITS: GuardLimits = { maxPathspecChars: 8192, maxOutputBytes: EXTERNAL_OUTPUT_BYTES };
+const PATCH_OPTIONS = ['--no-renames', '--no-color', '--no-ext-diff', '--submodule=short', '--src-prefix=a/', '--dst-prefix=b/'];
+
+/** 連続する群。単独の長いパスは切り捨てず、そのまま従来の起動境界へ渡す。 */
+export function groupPaths(paths: readonly string[], limit = 8192): string[][] {
+  const groups: string[][] = [];
+  let group: string[] = []; let weight = 0;
+  for (const path of paths) {
+    const size = JSON.stringify(path).length + 1;
+    if (group.length && weight + size > limit) { groups.push(group); group = []; weight = 0; }
+    group.push(path); weight += size;
+  }
+  if (group.length) groups.push(group);
+  return groups;
+}
+
+function patchError(file: string): never {
+  throw new GitError(`git の操作に失敗しました：git diff --cached（差分のファイルの区切りか完全性を確かめられません：${file}）`);
+}
+
+function unquotePath(quoted: string): string | undefined {
+  const bytes: number[] = [];
+  const escapes: Partial<Record<string, number>> = { a: 7, b: 8, t: 9, n: 10, v: 11, f: 12, r: 13, '\\': 92, '"': 34 };
+  for (let i = 0; i < quoted.length;) {
+    if (quoted[i] !== '\\') {
+      const point = quoted.codePointAt(i); if (point === undefined) return undefined;
+      const char = String.fromCodePoint(point);
+      bytes.push(...Buffer.from(char)); i += char.length; continue;
+    }
+    const octal = quoted.slice(i + 1, i + 4);
+    if (/^[0-7]{3}$/.test(octal)) { bytes.push(parseInt(octal, 8)); i += 4; continue; }
+    const escaped = escapes[quoted[i + 1]];
+    if (escaped === undefined) return undefined;
+    bytes.push(escaped); i += 2;
+  }
+  const buffer = Buffer.from(bytes); const text = buffer.toString('utf8');
+  return Buffer.from(text).equals(buffer) ? text : undefined;
+}
+
+function patchPath(header: string, candidates: readonly string[]): string | undefined {
+  const exact = candidates.find((file) => header === `a/${file} b/${file}`);
+  if (exact !== undefined) return exact;
+  const quoted = header.match(/^"((?:\\.|[^"\\])*)" "((?:\\.|[^"\\])*)"$/);
+  if (!quoted) return undefined;
+  const before = unquotePath(quoted[1]); const after = unquotePath(quoted[2]);
+  return before?.startsWith('a/') && after === `b/${before.slice(2)}` ? before.slice(2) : undefined;
+}
+
+/** Git の完結した unified patch だけを受ける。header の個数だけでは切断を検出できない。 */
+function completePatch(text: string, file: string): void {
+  if (!text.endsWith('\n')) patchError(file);
+  const lines = text.split('\n').slice(1, -1);
+  let hunk: { old: number; next: number } | undefined;
+  let oldPath = false; let newPath = false; let contentLine = false;
+  let metadata = false;
+  for (const line of lines) {
+    if (line.startsWith('@@')) {
+      if (hunk && (hunk.old !== 0 || hunk.next !== 0)) patchError(file);
+      const match = line.match(/^@@ -(\d+(?:,\d+)?) \+(\d+(?:,\d+)?) @@[^\n]*$/);
+      if (!match || !oldPath || !newPath) patchError(file);
+      const [oldPosition, oldCount = '1'] = match[1].split(',');
+      const [newPosition, newCount = '1'] = match[2].split(',');
+      const old = Number(oldCount); const next = Number(newCount);
+      if (![Number(oldPosition), Number(newPosition), old, next].every(Number.isSafeInteger) || old + next === 0) patchError(file);
+      hunk = { old, next }; contentLine = false; continue;
+    }
+    if (hunk) {
+      if (line === '\\ No newline at end of file') {
+        if (!contentLine) patchError(file);
+        contentLine = false; continue;
+      }
+      const lead = line[0];
+      if (lead === ' ' || lead === '-') hunk.old--;
+      if (lead === ' ' || lead === '+') hunk.next--;
+      if (![' ', '-', '+'].includes(lead) || hunk.old < 0 || hunk.next < 0) patchError(file);
+      contentLine = true; continue;
+    }
+    if (line.startsWith('--- ')) { if (oldPath) patchError(file); oldPath = true; continue; }
+    if (line.startsWith('+++ ')) { if (!oldPath || newPath) patchError(file); newPath = true; continue; }
+    if (/^(?:old mode|new mode|deleted file mode|new file mode) [0-7]{6}$/.test(line) || /^Binary files .+ differ$/.test(line)) { metadata = true; continue; }
+    if (/^index [0-9a-f]+\.\.[0-9a-f]+(?: [0-7]{6})?$/.test(line)) continue;
+    patchError(file);
+  }
+  if ((!metadata && !hunk) || (hunk && (hunk.old !== 0 || hunk.next !== 0)) || oldPath !== newPath || (oldPath && !hunk)) patchError(file);
+}
+
+type StagedPatch = { byPath: Map<string, string[]>; ordered: { path: string; text: string }[] };
+/** 非公開の純粋 parser。未知の区切り、欠落、切れた hunk を成功へ補わない。 */
+export function splitStagedPatch(
+  output: string, files: readonly string[], codes: ReadonlyMap<string, string>, allowExtra: (path: string) => boolean = () => false,
+  allowEmptyModified = false,
+): StagedPatch {
+  const markers = [...output.matchAll(/^diff --git ([^\n]*)\n/gm)];
+  if (output.slice(0, markers[0]?.index ?? output.length).replace(/\n/g, '') !== '') patchError(files[0] ?? '');
+  const wanted = new Set(files); const byPath = new Map<string, string[]>();
+  const ordered: StagedPatch['ordered'] = []; const candidates = [...codes.keys()];
+  for (let i = 0; i < markers.length; i++) {
+    const path = patchPath(markers[i][1], candidates);
+    if (path === undefined || !codes.has(path)) patchError(files[0] ?? '');
+    const text = output.slice(markers[i].index, markers[i + 1]?.index ?? output.length);
+    completePatch(text, path);
+    if (!wanted.has(path)) { if (!allowExtra(path)) patchError(path); continue; }
+    const parts = byPath.get(path) ?? []; parts.push(text); byPath.set(path, parts); ordered.push({ path, text });
+  }
+  for (const file of files) {
+    const code = codes.get(file); const expected = code === 'T' ? 2 : ['A', 'M', 'D'].includes(code ?? '') ? 1 : 0;
+    // textconv が旧新を同じ表現にする M は、正常な Git 出力でも区切りがない。
+    // 非曖昧な batchOutput を通った consumer だけが許可する。
+    if (allowEmptyModified && code === 'M' && !byPath.has(file)) { byPath.set(file, []); continue; }
+    if (!expected || byPath.get(file)?.length !== expected) patchError(file);
+  }
+  return { byPath, ordered };
+}
+
+function* stagedContentDiff(
+  root: string, env: NodeJS.ProcessEnv, files: string[], codes: ReadonlyMap<string, string>, limits: GuardLimits,
+): Generator<Map<string, string[]>> {
+  let output: string | undefined;
+  try {
+    output = batchOutput(root, env, ['diff', '--cached', '-U0', ...PATCH_OPTIONS, '--', ...files], limits.maxOutputBytes).stdout;
+  }
+  catch (error) {
+    if (!(error instanceof ProcessLimitError) || error.kind !== 'output' || files.length === 1) throw error;
+  }
+  // error の大きい部分出力は catch を抜けて解放し、子の群を lazy に読む。
+  if (output === undefined) {
+    const middle = Math.floor(files.length / 2);
+    yield* stagedContentDiff(root, env, files.slice(0, middle), codes, limits);
+    yield* stagedContentDiff(root, env, files.slice(middle), codes, limits);
+    return;
+  }
+  const extra = (path: string) => codes.get(path) === 'D' && files.some((file) => path.startsWith(`${file}/`));
+  yield splitStagedPatch(output, files, codes, extra, true).byPath;
+}
+
+/** UTF-8 prefix の末尾で StringDecoder が保留し得る最大3byteを安全側へ課金する。 */
+export function chargedOutputBytes(bytes: number, room: number): number {
+  if (!Number.isSafeInteger(bytes) || bytes < 0 || bytes > room) throw new ProcessLimitError('output', 'git');
+  return bytes >= room - 3 ? room : bytes;
+}
+
+function batchOutput(root: string, env: NodeJS.ProcessEnv, args: string[], room: number): ReturnType<typeof gitMeasured> {
+  const result = gitMeasured(root, { ...env, GIT_LITERAL_PATHSPECS: '1' }, args, { maxBuffer: room });
+  // U+FFFD は正常な本文にも存在する。上限近傍では復号後の切断と区別できないため停止する。
+  if ((result.bytes >= room - 3 && result.hasReplacementCharacter) || (room <= 3 && result.stdout === '')) {
+    throw new ProcessLimitError('output', 'git', '', '', '上限近傍で差分の完全性を確認できない');
+  }
+  return result;
+}
+
+/** 表示用。filter で捨てる差分も stderr も、先に合計予算へ数える。index からは公開しない。 */
+export function stagedDisplayDiff(
+  root: string, env: NodeJS.ProcessEnv, files: readonly string[], codes: ReadonlyMap<string, string>, limits: GuardLimits = DEFAULT_GUARD_LIMITS,
+): string {
+  let used = 0; const output: string[] = [];
+  for (const group of groupPaths(files, limits.maxPathspecChars)) {
+    const room = limits.maxOutputBytes - used;
+    if (room <= 0) throw new ProcessLimitError('output', 'git');
+    const result = batchOutput(root, env, ['diff', '--cached', ...PATCH_OPTIONS, '--', ...group], room);
+    used += chargedOutputBytes(result.bytes, room);
+    const extra = (path: string) => codes.has(path) && group.some((file) => path.startsWith(`${file}/`));
+    const patch = splitStagedPatch(result.stdout, group, codes, extra, true);
+    output.push(...patch.ordered.map((part) => part.text));
+  }
+  return output.join('');
+}
+
 /**
  * エンジンの変更を index に載せ、HEAD との差分から不正な直し方を探す（REQ-109〜REQ-111、仮定 A-20）。
  * テストファイルの削除、skip・todo の追加、HEAD にあったアサーションとテストの宣言の書き換え・削除を見る。
  * 見つけたら、その差分を返す。変更は index に載ったままなので、呼び出し側で戻すかコミットする
  */
 export function findViolations(root: string, env: NodeJS.ProcessEnv, openspecDir = 'openspec'): { findings: GuardFinding[]; diff: string } {
+  return findViolationsWithLimits(root, env, openspecDir);
+}
+
+/** 試験用の内部入口。index から公開しない。 */
+export function findViolationsWithLimits(root: string, env: NodeJS.ProcessEnv, openspecDir = 'openspec', limits: GuardLimits = DEFAULT_GUARD_LIMITS): { findings: GuardFinding[]; diff: string } {
   const prefix = openspecPrefix(openspecDir);
   const specsDir = `${prefix}specs/`;
   const changesDir = `${prefix}changes/`;
   git(root, env, ['add', '-A']);
   const findings: GuardFinding[] = [];
-  const status = git(root, env, ['diff', '--cached', '--name-status', '--no-renames', '-z']).split('\0');
+  const statusOutput = git(root, env, ['diff', '--cached', '--name-status', '--no-renames', '-z']);
+  const status = statusOutput.split('\0');
+  if (statusOutput !== '' && (!statusOutput.endsWith('\0') || status.length % 2 !== 1)) {
+    throw new GitError('git の操作に失敗しました：git diff --cached --name-status（パス一覧の終端か項目を確かめられません）');
+  }
+  const codes = new Map<string, string>();
+  for (let i = 0; i + 1 < status.length; i += 2) {
+    const code = status[i]; const file = status[i + 1];
+    if (!code || !file || codes.has(file)) {
+      throw new GitError('git の操作に失敗しました：git diff --cached --name-status（パス一覧の欠損か復号後の重複を検出しました）');
+    }
+    codes.set(file, code);
+  }
+  const groups = groupPaths([...codes.keys()].filter((file) => codes.get(file) !== 'D'), limits.maxPathspecChars);
+  const batches = (function* () { for (const group of groups) yield* stagedContentDiff(root, env, group, codes, limits); })();
+  let patches = new Map<string, string[]>();
   for (let i = 0; i + 1 < status.length; i += 2) {
     const code = status[i];
     const file = status[i + 1];
@@ -73,7 +261,9 @@ export function findViolations(root: string, env: NodeJS.ProcessEnv, openspecDir
     if (file.startsWith(specsDir)) findings.push({ file, reason: 'いまの仕様を変えました' });
     else if (file.startsWith(changesDir)) findings.push({ file, reason: file.endsWith('/trace.md') ? 'trace.md を変えました' : 'change の文書を変えました' });
     if (code !== 'D') {
-      const lines = git(root, env, ['diff', '--cached', '-U0', '--', file]).split('\n');
+      if (!patches.has(file)) { const next = batches.next(); if (next.done) patchError(file); patches = next.value; }
+      const patch = patches.get(file); if (!patch) patchError(file);
+      const lines = patch.join('').split('\n');
       const added = lines.filter((l) => l.startsWith('+') && !l.startsWith('+++'));
       for (const l of added) if (SKIP.test(l)) findings.push({ file, reason: `skip・todo を足しました：${l.slice(1).trim()}` });
       if (isTestFile(file)) {
@@ -93,7 +283,7 @@ export function findViolations(root: string, env: NodeJS.ProcessEnv, openspecDir
     }
   }
   const files = [...new Set(findings.map((f) => f.file))];
-  const diff = files.length ? git(root, env, ['diff', '--cached', '--', ...files]) : '';
+  const diff = stagedDisplayDiff(root, env, files, codes, limits);
   return { findings, diff };
 }
 
