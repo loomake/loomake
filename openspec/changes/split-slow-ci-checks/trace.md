@@ -52,7 +52,7 @@
 
 ## 確認事項
 
-Q-01〜Q-98の採用と条件は管理役がADR0006に基づき記録する。Q-19〜Q-24はR系と行閾値/宣言分類、Q-25〜Q-30はcd321d46のQ-A1〜Q-A6に対応する。未完了の個別設計・測定・実装は回答済みという理由で受入済みにしない。回答日・承認日は日本時間である。回答者は包括承認の表記であり、利用者本人が各資料をレビューしたという意味ではない。選択肢とおすすめの採用理由を残す。旧Q番号Q01〜Q10は下表Q-01〜Q-10、Q-N1〜Q-N5はQ-11〜Q-15に対応する。Q-01〜Q-16は当時の決定として残し、PR179先行受入と旧レビュー条件に関する現行の決定はQ-17・Q-18を優先する。Q-21の同一PR限定は後の200KiB分割決定を適用するQ-38で更新し、Node20削除と全PRslow不実施の同時有効化を維持する。
+Q-01〜Q-100の採用と条件は管理役がADR0006に基づき記録する。Q-19〜Q-24はR系と行閾値/宣言分類、Q-25〜Q-30はcd321d46のQ-A1〜Q-A6に対応する。未完了の個別設計・測定・実装は回答済みという理由で受入済みにしない。回答日・承認日は日本時間である。回答者は包括承認の表記であり、利用者本人が各資料をレビューしたという意味ではない。選択肢とおすすめの採用理由を残す。旧Q番号Q01〜Q10は下表Q-01〜Q-10、Q-N1〜Q-N5はQ-11〜Q-15に対応する。Q-01〜Q-16は当時の決定として残し、PR179先行受入と旧レビュー条件に関する現行の決定はQ-17・Q-18を優先する。Q-21の同一PR限定は後の200KiB分割決定を適用するQ-38で更新し、Node20削除と全PRslow不実施の同時有効化を維持する。
 
 | ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |
 |---|---|---|---|---|---|---|---|---|
@@ -158,6 +158,8 @@ Q-01〜Q-98の採用と条件は管理役がADR0006に基づき記録する。Q-
 
 | Q-98 | PR184・253・利用者Q-S1/S2 | 未完成コードをどの枝で統合するか | A：main基点の統合枝／B：noneでmainへ部分merge | A。文書限定noneの決定を守る | yes | A。change/split-slow-ci-checksをmain248cから作り、採用計画だけ移植。実装taskは受入まで未完。部分PRを同枝へ向け、最終main受入は全done・必須CI・独立レビューを満たす（Issue121 comment6543715081） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 
+| Q-99 | task2.7・N3 else | 原設計の予測診断を訂正するか | A：元guardOfから訂正／B：予測を維持 | A。元else非guard規則から独立に導ける | yes | A。Opus5f83の訂正を採用。elseはguardMismatchでなくunguardedDescribe。旧321回帰・元335行・guardOf/checkRegistrationは不変、修理前RED[]/[]を保全し、新試験は完全一致と正負対照を増やす | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-100 | task2.7・N3 guardOf | 元guardOfへelse受理を追加するか | A：変更しない／B：elseを認める | A。既存else試験と閉じた祖先規則を保つ | yes | A。元guardOfとcheckRegistrationを変更しない。予測表だけの訂正で、新規else2形のunsupported拒否とrowBindingゼロ・else除去の正常対照を検査。元の期待や設定を緩めない | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 
 | Q-101 | tasks2.10・Issue258 R4′/A1 | companionの自由な値参照をどう閉じるか | A：TS checkerと実行時宣言の種類／B：require名だけ拒否 | A。実証したprocess/eval/Function系を同族として拒む | yes | A。同fileの字句scopeと実行時宣言を検査しambient・型専用・本文なし関数・enum・namespace・ImportEqualsを拒否。未束縛undefinedだけは危険な能力を持たない例外として許す。41523/f41の一致範囲を部分採用（管理役・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
 | Q-102 | tasks2.10・Issue258 R5′/A2 | 反射へのproperty/キーをどう扱うか | A：companionだけ閉じる／B：正規helperにも同じ文法 | A。正規helperのchosen[index]等を保つ | yes | A。constructor・__proto__・prototypeの固定property/keyと非literalキーをcompanion本体で拒否。既存closedSyntax後へ追加し既存文言・順序を保つ。helper R6/R7と入口B層は未採用、known bad免除にしない（管理役・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
@@ -313,6 +315,13 @@ spec-only成功後だけ同PR253の2.10修理を行う。既存269件・旧拒�
 
 PR252は既にmainへ取り込まれた履歴で、今回あらためて受入済みにしたものではない。PR253修理は別担当で未受入。Node20削除・実registry・全PRslow不実施の有効化と最終main受入は後段に残し、計画移植を1-1完成とは扱わない。実観測・全case保存・coverage・ruleset人操作・sync/archiveの条件は削らない。
 
+## N3 else診断の予測表訂正（Q-99・Q-100）
+
+Opus5f83ae6cの設計全文を管理役が読み、元guardOfのelse除外と既存test-declarationsのelse試験から、unguardedDescribeが導かれることを確認した。guardOf/checkRegistration本文は元7edと修理候補でそれぞれ844/3256bytes同一である。修理前はelse行が[]/[]で通るREDだった。候補はunsupportedRowFormで拒否し、予測guardMismatchとの違いだけが残っていた。元の321回帰と全既存期待を変えず、elseを共通予測表から分け、式/Block形の完全一致・rowBindingゼロ・診断文言・else除去の正対照を追加する。新しい結果に合わせる救済ではなく、元の拒否規則による予測表の訂正である。
+
+送信依頼の抜粋は候補snapshotを固定headと誤表示していた。元依頼は変更せず、専用row-n3-designツリーのEXCERPT-CORRECTION.mdとactual-head-source.mjsで訂正した。モデルは元headと候補を読み比べ、本文の不変を確認した。実モデル5-5/ok/ReadOnly/拒否0だが、原OpusのRead前に公開された文章は作業予告だけで、具体的な独立所見の事前保存を確認できない。3規約の全Readも確認できないため、独立調査工程の成功とは数えず、設計訂正の技術所見として採用する。規約と採用範囲は管理役が照合した。
+
+R4/C1・一般oracle・実登録・OS割当は未設計/未達のまま。PR253は追加require包み型から実nativeの偽reviewedが実証され、最終Opusを起動せず別の設計確認へ戻す。N3の訂正を、PR253や2.7全体・main受入の完了へ読み替えない。
 
 ## 2026-11-01 companion本体の部分修理（Q-101・Q-102）
 
