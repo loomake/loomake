@@ -35,7 +35,7 @@ change のない L1 の PR では `verify` を呼ばないため、`tests/doc-li
 ## 開発の台本
 
 - `scripts/clean-merged-worktrees.sh`：ブランチを head にした PR が GitHub で merged になっている clean な worktree を消す（`gh pr list --state merged` で確かめる。gh を使えなければ何も消さない）。detached HEAD、dirty、`.loomake/`・`node_modules/`・`dist/`・`coverage/` 以外の無視ファイルがあるものは残す。`--dry-run` で一覧と判定理由だけを表示し、`--keep <name>` で残すものを指定する。各 worktree の `.loomake/` は `.loomake/archive/worktree-loomake-<日付>/` に退避する。ブランチは消さない
-- `scripts/delivery-metrics.sh <出力ディレクトリ>`：配布ワークフロー改善ダッシュボードの指標（PR の段階と所要時間、Issue #121 の投稿量、worklog の量、CI の実行時間）を CSV に集める。段階は `ci-tier.mjs` の `classifyPath` で決める。一時ディレクトリに書いてから移すので、gh に失敗しても前のファイルは残る。gh・git・node・python3 が要る
+- `scripts/delivery-metrics.sh <出力ディレクトリ>`：配布ワークフロー改善ダッシュボードの指標（PR の段階と所要時間、Issue #121 の投稿量、worklog の量、CI の実行時間、利用者の判断待ちの項目）を CSV に集める。段階は `ci-tier.mjs` の `classifyPath` で決める。判断待ちの項目（`pending-approvals.csv`）は `scripts/pending-approvals.mjs` が決め、trace.md の未回答のブロッキングな確認事項は verify と同じ core・kit の関数で判定する。一時ディレクトリに書いてから移すので、gh に失敗しても前のファイルは残る。gh・git・node・pnpm・python3 が要る
 
 ## まだ仕様にあるもの
 

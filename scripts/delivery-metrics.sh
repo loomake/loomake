@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# 配布ワークフロー改善ダッシュボードの指標を集める。PR の段階・所要時間・Codex の指摘数、Issue #121 の投稿量、worklog の量、CI の実行時間、時間切れの Issue を CSV にする。
-# 使い方: scripts/delivery-metrics.sh <出力ディレクトリ>   （gh と git と node と python3 が要る。リポジトリ根で実行）
+# 配布ワークフロー改善ダッシュボードの指標を集める。PR の段階・所要時間・Codex の指摘数、Issue #121 の投稿量、worklog の量、CI の実行時間、時間切れの Issue、利用者の判断待ちの項目を CSV にする。
+# 使い方: scripts/delivery-metrics.sh <出力ディレクトリ>   （gh と git と node と pnpm と python3 が要る。リポジトリ根で実行）
 # 出力は一時ディレクトリに書き、すべて成功したら出力ディレクトリへ移す。gh に失敗したら前のファイルを残して非ゼロで終わる。
 # PR の段階は scripts/ci-tier.mjs の classifyPath で決める（パスだけで判定し、spec.md の Requirement の変更は見ない）。
 set -euo pipefail
@@ -76,6 +76,12 @@ while pos < len(text):
     for i in items: seen[i["number"]]=i
 w=csv.writer(open(f"{S}/flaky.csv","w")); w.writerow(["number","title","state","created","closed"])
 for n in sorted(seen): i=seen[n]; w.writerow([n,i["title"],i["state"],i["createdAt"][:10],(i.get("closedAt") or "")[:10]])' "$TMP"
+# 利用者の判断待ち（Issue #121 の呼びかけ・待ちと書いた開いている PR・main の trace.md の未回答のブロッキングな確認事項）。
+# 判定は scripts/pending-approvals.mjs。trace.md の未回答は verify と同じ core・kit の関数で決めるので、先に 2 つを build する
+gh api "repos/loomake/loomake/issues/121/comments?per_page=100" --paginate --jq '.[]|{login: .user.login, body, created_at, html_url, via_app: (if .performed_via_github_app then (.performed_via_github_app.slug // "unknown") else null end)}' > "$TMP/issue121-comments.jsonl"
+gh pr list --state open --limit 200 --json number,title,url,body,updatedAt > "$TMP/open-prs.json"
+pnpm -s --filter @loomake/core --filter @loomake/kit build
+node scripts/pending-approvals.mjs "$TMP/issue121-comments.jsonl" "$TMP/open-prs.json" "$TMP/pending-approvals.csv" origin/main
 mkdir -p "$OUT"
-mv -f "$TMP"/prs.jsonl "$TMP"/prs.csv "$TMP"/issue121.csv "$TMP"/worklog.csv "$TMP"/ci.csv "$TMP"/flaky.csv "$OUT"/
+mv -f "$TMP"/prs.jsonl "$TMP"/prs.csv "$TMP"/issue121.csv "$TMP"/worklog.csv "$TMP"/ci.csv "$TMP"/flaky.csv "$TMP"/pending-approvals.csv "$OUT"/
 ls -la "$OUT"
