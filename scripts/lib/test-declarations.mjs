@@ -14,12 +14,22 @@ function chainParent(node) {
   const parent = node.parent;
   return parent && (((ts.isCallExpression(parent) || ts.isPropertyAccessExpression(parent)) && parent.expression === node) || (ts.isTaggedTemplateExpression(parent) && parent.tag === node));
 }
+function conditionalFactory(node) {
+  if (!ts.isVariableDeclaration(node) || !ts.isIdentifier(node.name) || !TEST_NAME.test(node.name.text)) return false;
+  const list = node.parent; const statement = list.parent;
+  if (!ts.isVariableDeclarationList(list) || !(list.flags & ts.NodeFlags.Const) || !ts.isVariableStatement(statement) || statement.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)) return false;
+  const call = node.initializer;
+  return call && ts.isCallExpression(call) && call.arguments.length === 1 && !ts.isSpreadElement(call.arguments[0]) && ts.isPropertyAccessExpression(call.expression) && ts.isIdentifier(call.expression.expression) && ['it', 'test'].includes(call.expression.expression.text) && ['runIf', 'skipIf'].includes(call.expression.name.text);
+}
 function parse(source, file) {
   const text = source.replace(/\r\n/g, '\n');
   const ast = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
-  const calls = [];
-  walk(ast, (node) => { if (ts.isCallExpression(node) && TEST_NAME.test(rootName(node) ?? '') && !chainParent(node)) calls.push(node); });
-  return { text, ast, calls };
+  const calls = []; const factories = new Set(); const factoryCandidates = new Set();
+  walk(ast, (node) => {
+    if (conditionalFactory(node)) { factories.add(node.initializer); factoryCandidates.add(node.name.getStart(ast)); factoryCandidates.add(node.initializer.getStart(ast)); }
+  });
+  walk(ast, (node) => { if (ts.isCallExpression(node) && !factories.has(node) && TEST_NAME.test(rootName(node) ?? '') && !chainParent(node)) calls.push(node); });
+  return { text, ast, calls, factoryCandidates };
 }
 function declarationKind(call) {
   let result = 'direct';
@@ -41,7 +51,8 @@ function rowCount(call) {
   let expression = call.expression;
   while (expression) {
     if (ts.isCallExpression(expression) && ts.isPropertyAccessExpression(expression.expression) && expression.expression.name.text === 'each') {
-      const table = expression.arguments[0];
+      let table = expression.arguments[0];
+      while (table && (ts.isParenthesizedExpression(table) || ts.isAsExpression(table) || ts.isSatisfiesExpression(table) || ts.isNonNullExpression(table))) table = table.expression;
       return table && ts.isArrayLiteralExpression(table) && !table.elements.some(ts.isSpreadElement) ? table.elements.length : undefined;
     }
     if (ts.isTaggedTemplateExpression(expression) && ts.isPropertyAccessExpression(expression.tag) && expression.tag.name.text === 'each') {
@@ -100,7 +111,7 @@ function localBindings(ast, file) {
 
 /** scanner に依存せず宣言を集め、最後に候補と照合する。コードは実行しない。 */
 export function inventoryDeclarations(source, file) {
-  const { text, ast, calls } = parse(source, file);
+  const { text, ast, calls, factoryCandidates } = parse(source, file);
   const errors = []; const nonCall = [];
   const bindings = localBindings(ast, file);
   const error = (code, node, message) => errors.push({ code, file, line: ast.getLineAndCharacterOfPosition(node.getStart(ast)).line + 1, message });
@@ -122,6 +133,7 @@ export function inventoryDeclarations(source, file) {
   for (const candidate of scannerCandidates) {
     if (starts.has(candidate.start)) continue;
     const node = identifiers.get(candidate.start) ?? ast;
+    if (factoryCandidates.has(candidate.start)) { nonCall.push({ start: candidate.start, line: ast.getLineAndCharacterOfPosition(candidate.start).line + 1, kind: 'conditionalFactory' }); continue; }
     if (candidate.end > 0) { error('scannerFalsePositive', node, '本文候補が試験の宣言ではありません'); continue; }
     const parent = node.parent;
     const kind = parent && ts.isImportSpecifier(parent) && parent.name === node && !parent.propertyName ? 'importSpecifier' : parent && ts.isPropertyAssignment(parent) && parent.name === node ? 'propertyKey' : undefined;
@@ -139,7 +151,7 @@ export function inventoryDeclarations(source, file) {
       const declaration = node.parent.parent.parent;
       if (ts.isImportDeclaration(declaration) && literal(declaration.moduleSpecifier) === 'vitest') error('alias', node, 'vitest の別名を検査できません');
     }
-    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer && bindings.testValue(node.initializer)) error('alias', node, '試験関数の別名を検査できません');
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer && !conditionalFactory(node) && bindings.testValue(node.initializer)) error('alias', node, '試験関数の別名を検査できません');
   });
   return { declarations, nonCall, scannerCandidates, expandedRows: declarations.some((item) => item.rows === undefined) ? undefined : declarations.reduce((sum, item) => sum + item.rows, 0), errors };
 }

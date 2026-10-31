@@ -42,6 +42,78 @@ describe('独立した試験宣言 inventory', () => {
       expect(result.declarations.length - addedNames.length).toBe(37);
     }
   });
+  it.each([
+    ['packages/runner/test/engine-long-deadline.test.ts', 4, 5, 4, 0, 0],
+    ['packages/runner/test/scenario-timeout-evidence.test.ts', 2, 4, 2, 1, 0],
+    ['packages/runner/test/signal-during-sync.test.ts', 8, 13, 11, 2, 2],
+    ['packages/runner/test/run-timeout.test.ts', 2, 3, 2, 0, 0],
+    ['packages/runner/test/external-budget-deadline.test.ts', 3, 4, 6, 0, 0],
+  ] as const)('独立照合したC1・C2の元宣言・全候補・展開行を保持する: %s', (path, declarations, candidates, rows, properties, factories) => {
+    const result = inventoryDeclarations(readFileSync(path, 'utf8'), path);
+    expect(result.errors).toEqual([]);
+    expect(result.declarations).toHaveLength(declarations);
+    expect(result.scannerCandidates).toHaveLength(candidates);
+    expect(result.expandedRows).toBe(rows);
+    expect(result.nonCall.filter((item: { kind: string }) => item.kind === 'importSpecifier')).toHaveLength(1);
+    expect(result.nonCall.filter((item: { kind: string }) => item.kind === 'propertyKey')).toHaveLength(properties);
+    expect(result.nonCall.filter((item: { kind: string }) => item.kind === 'conditionalFactory')).toHaveLength(factories);
+  });
+  it.each(['it', 'test'])('同じfileの非export const factoryを静的に分類する: %s', (name) => {
+    for (const method of ['runIf', 'skipIf']) {
+      const initializer = `${name}.${method}(conditionMustNotRun())`;
+      const direct = "posixIt('direct case', () => { assertBody(); })";
+      const each = "posixIt.each([1, 2] as const)('table %j', () => { assertBody(); })";
+      const source = `const posixIt = ${initializer}; if (has('a')) ${direct}; if (has('b')) ${each};`;
+      const result = inventoryDeclarations(source, file);
+      expect(result.errors).toEqual([]);
+      expect(result.nonCall).toEqual([
+        { start: source.indexOf('posixIt'), line: 1, kind: 'conditionalFactory' },
+        { start: source.indexOf(initializer), line: 1, kind: 'conditionalFactory' },
+      ]);
+      expect(result.declarations.map((item: { text: string; kind: string; rows: number | undefined }) => ({ text: item.text, kind: item.kind, rows: item.rows }))).toEqual([
+        { text: direct, kind: 'direct', rows: 1 }, { text: each, kind: 'each', rows: 2 },
+      ]);
+      expect(result.expandedRows).toBe(3);
+      expect(registration(source, { a: ['linux'], b: [] })).toEqual([]);
+    }
+  });
+  it.each([
+    ["let posixIt = it.runIf(true);", ['dynamicTitle', 'unclassifiedCandidate', 'alias']],
+    ["export const posixIt = it.runIf(true);", ['dynamicTitle', 'unclassifiedCandidate', 'alias']],
+    ["const check = it.runIf(true);", ['dynamicTitle', 'alias']],
+    ["const posixIt = it.runIf();", ['dynamicTitle', 'unclassifiedCandidate', 'alias']],
+    ["const posixIt = it.runIf(...conditions);", ['dynamicTitle', 'unclassifiedCandidate', 'alias']],
+    ["const posixIt = it.skipIf(true, false);", ['dynamicTitle', 'unclassifiedCandidate', 'alias']],
+    ["const posixIt = it.skip;", ['unclassifiedCandidate', 'unclassifiedCandidate', 'alias']],
+    ["const base = it; const posixIt = base.runIf(true);", ['unclassifiedCandidate', 'unclassifiedCandidate', 'alias', 'alias']],
+    ["const posixIt = it.runIf(true); export { posixIt };", ['unclassifiedCandidate']],
+    ["const posixIt = it.runIf(true); fn(posixIt);", ['unclassifiedCandidate']],
+  ])('限定条件に合わないfactoryと非call参照を拒否する: %s', (source, expected) => {
+    expect(codes(source)).toEqual(expected);
+  });
+  it('直接のrunIf/skipIfのcurried宣言はfactory候補として除外しない', () => {
+    const source = "if (has('a')) it.runIf(true)('case a', () => {}); if (has('b')) test.skipIf(false)('case b', () => {});";
+    const result = inventoryDeclarations(source, file);
+    expect(result.errors).toEqual([]);
+    expect(result.nonCall).toEqual([]);
+    expect(result.declarations).toHaveLength(2);
+    expect(result.expandedRows).toBe(2);
+    expect(registration(source, { a: [], b: [] })).toEqual([]);
+  });
+  it.each(['[1, 2] as const', '[1, 2] satisfies number[]', '([1, 2])', '[1, 2]!', '(([1, 2] as const) satisfies readonly number[])!'])('型だけのwrapper内のliteral表を実行せず数える: %s', (table) => {
+    const result = inventoryDeclarations(`it.each(${table})('case %j', () => {});`, file);
+    expect(result.errors).toEqual([]);
+    expect(result.declarations).toHaveLength(1);
+    expect(result.declarations[0].rows).toBe(2);
+    expect(result.expandedRows).toBe(2);
+  });
+  it.each(['rows as const', '(rows satisfies number[])!', '([1, ...rows] as const)', 'makeRows() as number[]'])('wrapperを外しても変数・spread・呼出しの行数を推測しない: %s', (table) => {
+    const result = inventoryDeclarations(`it.each(${table})('case %j', () => {});`, file);
+    expect(result.errors.map((error: { code: string }) => error.code)).toEqual(['dynamicRows']);
+    expect(result.declarations).toHaveLength(1);
+    expect(result.declarations[0].rows).toBeUndefined();
+    expect(result.expandedRows).toBeUndefined();
+  });
   it('通常const helperの定義と同じbindingの非call参照を区別する', () => {
     const result = inventoryDeclarations("const withTest = (repo) => repo.write('file', 'it( only text'); fn(withTest); const options = { withTest };", file);
     expect(result.errors).toEqual([]); expect(result.declarations).toEqual([]);
