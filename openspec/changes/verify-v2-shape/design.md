@@ -44,7 +44,7 @@ kitは同期のまま、YAMLの解析に `yaml` を使い、Zodスキーマは�
 
 ### 6. Report 2への投影
 
-trace reportのCLIはまだEvidence 1だけを受け付ける。既存の試験（REQ-073）が、Evidence 2を「読めない版」として拒否する文言をそのまま確かめているため。この子changeでは、版ごとの投影を純関数 `projectEvidence` として追加し、`buildReport` のEvidence 1の経路もこの関数を通す（出力は変えない）。履歴閲覧専用の警告は、書き出しの版より古い証拠にだけ付ける。いまの書き出しは1なので、Evidence 1の出力は変わらない。v2のok:trueは「ci・PASS・要判断なし」に限る。failedChecksはFAILと不足のcheckのIDを順に写し、abortedでは空にする。
+trace reportのCLIはまだEvidence 1だけを受け付ける。既存の試験（REQ-073）が、Evidence 2を「読めない版」として拒否する文言をそのまま確かめているため。この子changeでは版ごとの投影を純関数 `projectEvidence` として追加し、`buildReport` のEvidence 1の経路もこの関数を通す（出力は変えない）。履歴閲覧専用の警告は書き出しの版より古い証拠にだけ付ける。いまの書き出しは1なので、Evidence 1の出力は変わらない。v2のok:trueは「ci・PASS・要判断なし」に限る。failedChecksはFAILと不足のcheckのIDを順に写し、abortedでは空にする。
 
 ## Risks / Trade-offs
 
