@@ -10,8 +10,8 @@
 
 ## 3. runner
 
-- [ ] 3.1 `reuse.ts`：Evidence 1は外部操作の再試行に再利用せず、新しい検証と記録に進む。旧ファイルは削除しない（REQ-164）
-- [ ] 3.2 `phases.ts`・`decision-policy.ts`：完了ゲートにscope:ciの結果が来たら、エンジンを呼ばずに理由を記録して停止する（REQ-317）
+- [x] 3.1 `reuse.ts`：Evidence 1は外部操作の再試行に再利用せず、新しい検証と記録に進む。旧ファイルは削除しない（REQ-164）
+- [x] 3.2 `phases.ts`・`decision-policy.ts`：完了ゲートにscope:ciの結果が来たら、エンジンを呼ばずに理由を記録して停止する（REQ-317）
 
 ## 4. trace
 
