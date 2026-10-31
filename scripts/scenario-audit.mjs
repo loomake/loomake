@@ -139,8 +139,10 @@ function titlePattern(text, start) {
     }
     parts.push(unescape(chunk));
   } else parts.push(unescape(text.slice(start + 1, end - 1)));
+  // 置換と式を除いた固定の文字がない名前（`%s` だけ、`${n}` だけなど）は、どの試験名にも当たるので照合に使わない
+  const fixed = parts.some((part) => part !== null && part.replace(/%[sdifjoOc#]|\$[A-Za-z_][\w.]*/g, '').trim() !== '');
   const pattern = parts.map((part) => part === null ? '.*' : part.split(/(%[sdifjoOc#]|%%|\$[A-Za-z_][\w.]*)/).map((piece, index) => index % 2 === 0 ? escape(piece) : piece === '%%' ? '%' : '.*').join('')).join('');
-  return { end, pattern };
+  return { end, pattern: fixed ? pattern : undefined };
 }
 
 /** `it(`・`test(` の呼び出しを、修飾と `.each` の表を含めて本文ブロックとして取り出す。 */

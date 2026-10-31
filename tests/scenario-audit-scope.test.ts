@@ -64,6 +64,21 @@ describe('試験の本文ブロックのハッシュ', () => {
     expect(result.rows[0].status).toBe('invalid');
     expect(result.rows[0].reason).toContain('本文ブロックを特定できません');
   });
+  it('[REQ-189] ヘルパー経由の本物の試験と it(`${n}`) が同じファイルにあるとき、本物の本文の変更で無効になる', () => {
+    const helper = (assertion: string) => `const check = (name: string) => it(name, () => { expect(${assertion}).toBe(true); });\ncheck('[REQ-012] 条件を検査する');\nfor (const n of ['a']) it(\`\${n}\`, () => {});\n`;
+    const tests = [{ file: testFile, fullName: '[REQ-012] 条件を検査する', status: 'passed' }];
+    expect(blockDigest(helper('value'), tests)).toBeUndefined();
+    const recorded = { ...blockReview(), tests: [{ file: testFile, contains: '条件を検査する', sha256: sha256('記録時の本文'), hashScope: 'block' }] };
+    const result = auditScenarios(rows(), [recorded], tests, { [testFile]: helper('changed') });
+    expect(result.rows[0].status).toBe('invalid');
+    expect(result.rows[0].reason).toContain('本文ブロックを特定できません');
+  });
+  it("[REQ-189] '%s' だけのブロックの変更が別の試験を無効にしない", () => {
+    const each = (value: string) => `  it.each(['x'])('%s', (v) => { expect(v).toBe('${value}'); });`;
+    const review = blockReview(file(target, each('x')));
+    const result = audit(review, file(target, each('y')));
+    expect(result.rows[0].status).toBe('reviewed');
+  });
   it('[REQ-189] 不明な hashScope と、旧形式のファイル全体のハッシュの違いを無効にする', () => {
     const review = blockReview();
     expect(audit({ ...review, tests: [{ ...review.tests[0], hashScope: 'line' }] }, file()).rows[0].status).toBe('invalid');
