@@ -6,7 +6,7 @@
 
 ## 2. 隔離一覧
 
-- [ ] 2.1 `tests/quarantine.json`（Issue #116・#178・#181・#183 の 6 ファイル、期限 2026-11-14）と `scripts/ci-quarantine.mjs`、`tests/ci-quarantine.test.ts` を足す（REQ-344）
+- [x] 2.1 `tests/quarantine.json`（Issue #116・#178・#181・#183 の 6 ファイル、期限 2026-11-14）と `scripts/ci-quarantine.mjs`、`tests/ci-quarantine.test.ts` を足す（REQ-344）
 
 ## 3. CI の組み込み
 
