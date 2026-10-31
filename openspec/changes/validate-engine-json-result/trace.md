@@ -1,5 +1,7 @@
 # Trace: validate-engine-json-result
 
+本書は現在の出典と全元表を残す。詳細経緯・元資料/所有の対応・旧採否・失敗/再実行は[3b3bの元trace][original]、現在条件はdesignへ集約する。表のID/出典/質問/選択肢/おすすめ/回答/回答者/日付は原文不変で、最大欄長163字である。
+
 ## 入力文書
 
 | 文書 | 版 | 日付 |
@@ -10,7 +12,7 @@
 | Issue121 comment6524458298 | 管理役のREQ-340/341予約 | 2026-10-30 |
 | 現行main085aのrun/run-decision-policy | 085a82686dc1c14506fbdbad88b5b9b3961f522e | 2026-10-30 |
 
-元資料は専用treeの`.loomake/e3-adoption/inputs/`、原本との対応とhashは`input-manifest.json`に保存した。b95の元8本文・41Scenarioを出典とし、REQ-100追加Scenarioはa1e01e90原文を復元した。管理役の決定は`.loomake/manager-transition-2026-10-30/e3-adoption/manager-decisions.md`と予約コメントにある。正式起案は管理役が同じchange-id・一つの品質枠で指定したため、分割案を新たに仮定していない。
+元8本文/41 Scenario、REQ-100のa1追加Scenarioと正式ID340/341の出典を保持する。元資料/manifest等の位置は[固定元][original]を参照する。
 
 ## 要件台帳
 
@@ -27,9 +29,6 @@
 | REQ-118 | main runの秘密情報保護・b95 R-16 | 制約 | 既存の秘密情報の置換を維持する | 既存仕様で充足 | openspec/specs/run/spec.md |
 | REQ-154 | main runの秘密情報保護・b95 R-16 | 制約 | 出力と記録の既存保護を維持する | 既存仕様で充足 | openspec/specs/run/spec.md |
 | REQ-179 | main run-record-budget・管理判断Q1/残件4 | 制約 | 予約量超過はstop形式、保存不可は表示と終了1を保つ | 既存仕様で充足 | openspec/specs/run-record-budget/spec.md |
-
-反映済はこの差分仕様への反映を示す。製品実装・実4caseの採集・完了ゲートの成功を示さない。Source204の別契約とSource330の二つの見出しを混同しない。340/341以外の採番や予約は行わない。
-
 | REQ-109 | main run-guards「テストの削除とskip・todo」「宣言書換え」 | 制約 | 群化後もfile内の削除/skip/宣言検出と順序を保持する | 既存仕様で充足 | openspec/specs/run-guards/spec.md |
 | REQ-110 | main run-guards「設定の変更の検出」 | 制約 | config/package scripts検出を保持する | 既存仕様で充足 | openspec/specs/run-guards/spec.md |
 | REQ-111 | main run-guards「仕様とtrace.mdの変更の検出」 | 制約 | spec/change文書変更の検出を保持する | 既存仕様で充足 | openspec/specs/run-guards/spec.md |
@@ -38,9 +37,13 @@
 | REQ-180 | main external-process-budget「期限と出力を監視する外部操作」 | 制約 | 各操作30秒とstdout/stderr合計64MiBを維持する | 既存仕様で充足 | openspec/specs/external-process-budget/spec.md |
 | REQ-201 | main run-guards「テストの検査を弱める変更の検出」 | 制約 | 検査削減/自明assertをfile単位で検出する | 既存仕様で充足 | openspec/specs/run-guards/spec.md |
 
+「反映済」は差分specへの反映だけで、製品/実4件/done成功を意味しない。Source204の別契約/330の二見出しは別扱い、新規採番なし。
+
 ## 確認事項
 
-以下はすべて管理役がADR0006の包括承認で回答した。管理役の判断を利用者本人のレビューとして扱わない。元の選択肢・おすすめは残し、修正したおすすめの理由を回答欄とdesignに記録した。Q3の後続回答は元案の`error_`後ろ1〜64字を維持するという管理役の明示決定である。
+表の承認はADR0006に基づく方針決定で、利用者本人のレビュー/採集資格ではない。後続の限定改訂だけを優先し、外部条件不明は未収集・Issue/taskへ残す。
+
+### 初期Q-01〜Q-11
 
 | ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |
 |---|---|---|---|---|---|---|---|---|
@@ -56,12 +59,9 @@
 | Q-10 | REQ-340・REQ-341 | 2.1.307 に `--no-session-persistence` があるかは未確認です | 記録して採集する／未収集にする | **非永続化を確認できなければ未収集**（旧：記録して採集する） | yes | その版・case は未収集とし、Issue と未完了 task を残す。CLI 自身の会話記録を許して採集完了とする案は採用しない。既存保護を外して解決しない（管理役判断。ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-30 |
 | Q-11 | REQ-340・REQ-341 | 3xa は見積もり493で、余裕が7字です | 実測が500以下ならそのまま／超えたら §2.2 の削る候補を使う | 実測してから決める | yes | 予約照合後に 340/341 を割り当て、正式 ID・最新 main で正規 parser の 500 UTF-16 制限を再計測する。仮 ID の測定を正式本文の合格根拠へ流用しない。Source と全 Scenario を保つ（管理役判断。ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-30 |
 
-Q8〜Q10の外部環境は承認済みという意味ではない。採集時に必須条件を確認できなければ未収集・Issue・未完了taskとし、その採集だけを保留する。原raw/秘密の永続化を容認して不足を埋めない。
+Q-08〜10の根拠/導入をtask4.1で確認しても、認証/保護/全保存経路が未証明の4.2や実4件の完了とはしない。
 
-
-### 2026-10-31の独立設計の採用判断
-
-A1・A2・A3・Bの原本はdesign7章を参照する。選択肢が競合する点は管理役が下表のおすすめを採用した。新しいOpusの起動履歴と、以前完了した設計の再利用を区別する。保護前提は未確認のままであり、採集の許可や安全性を推測しない。
+### 分類/保存の独立設計採用
 
 | ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |
 |---|---|---|---|---|---|---|---|---|
@@ -72,9 +72,7 @@ A1・A2・A3・Bの原本はdesign7章を参照する。選択肢が競合する
 | E3-D05 | REQ-340・REQ-341 | collectorの場所とsuccessの成立 | scripts／test内。任意string／OKだけ | scriptsと任意string。許可集合を共通化 | yes | collector/validatorはscripts。successのOK以外はderived。実case/fixtureの真偽を維持 | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 | E3-D06 | REQ-340・REQ-341 | settings読取と会話外書込の限界を安全性の代わりにするか | Bの読取/限界記録案／保護確認まで採集しない | 採集しない。原raw/秘密の非永続化を弱めない | yes | Q-B3/B4案を安全性の証明に代用しない。実4件未収集・task未完了を保ち、依存しない製品D01〜D05だけ先行 | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 
-### 追加の採集制御判断（2026-10-31）
-
-独立Opus設計3203554fの全文を管理役が照合し、次をADR0006の包括承認として回答した。旧案・理由と制約はdesign9章に残す。実証拠と管理確認のないbooleanを採集資格へ使わない。
+### 採集制御3203554f
 
 | ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |
 |---|---|---|---|---|---|---|---|---|
@@ -85,9 +83,9 @@ A1・A2・A3・Bの原本はdesign7章を参照する。選択肢が競合する
 | CD-5 | REQ-340・REQ-341 | CLI state等の書込 | A：公式/対象版根拠で非永続化を確認／B：metadataなら許容 | A | yes | A採用。未証明なら起動しない。no-session-persistenceだけで全経路安全としない | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 | CD-6 | REQ-340・REQ-341 | 任意の事後検出 | 自己cwd由来1対象stat／実施しない | 任意 | yes | 自己作成cwd由来の対象だけstat可。予防証明には数えず、他領域の探索をしない | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 
-### 追加制御設計6c4bd8c7の管理判断（2026-10-31）
+CD-2は旧読取禁止を非認証3JSONの限定技術手順だけ改訂する。読取成功/会話外書込の限界記録を安全性証明へ代用せず、固定booleanには実証拠と管理確認を要する。
 
-回答全文と要求/実応答モデル・拒否0を確認した。選択肢と理由はdesign9.5に原意を保持する。採否は利用者のADR0006包括承認に基づく管理役判断で、利用者本人のレビューではない。
+### 追加制御6c4bd8c7
 
 | ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |
 |---|---|---|---|---|---|---|---|---|
@@ -98,11 +96,9 @@ A1・A2・A3・Bの原本はdesign7章を参照する。選択肢が競合する
 | QD-5 | REQ-340・REQ-341 | syscall試験の配置 | 全OS純粋試験+手動調査／新skip | 前者 | yes | 前者採用。新skip/設定緩和なし | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 | QD-6 | REQ-340・REQ-341 | 診断の固定分類 | 固定分類／存在で拒否 | 後者維持 | yes | 後者維持。公開nativeの厳密な分類根拠だけ準備し環境値は読まない | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 
-P1/P2/P3のreadonly検証とowned cwd管理だけを先行採用した。資格adapter・live呼出し・新sandboxは実装しない。上書きを防ぐ固定保存/全試行台帳、process treeとstream終結は具体化前の未受入として残す。実0/4・4.2未チェックと全17tasks+必須受入1を維持する。
+QD-1/3は調査候補だけでsandbox/launcher/seccompの実装適用は未採用。P1/P2/P3とfake lifecycleの先行実装を資格adapter/live/永続化台帳へ接続せず、P6拒否/実0/4を維持する。
 
-### lifecycle設計dbfb3588の採用（2026-10-31）
-
-管理役が全文と実応答model/deny/headを照合した。旧選択肢と理由はdesign9.7に保持する。原exit/flagsとprimary/transport/cleanupを分け、実OS停止や実4件の資格とは扱わない。
+### lifecycle dbfb3588
 
 | ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |
 |---|---|---|---|---|---|---|---|---|
@@ -113,13 +109,13 @@ P1/P2/P3のreadonly検証とowned cwd管理だけを先行採用した。資格a
 | LC-5 | REQ-340・REQ-341 | win32の動作 | tree adapter追加／factory0拒否 | 拒否 | yes | factory0でplatform-unsupported。実Windows通常終了の保証なし | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 | LC-6 | REQ-340・REQ-341 | closeだけの場合 | exitへ代用／exit-unobserved | 後者 | yes | 後者採用。不一致はexit-close-mismatchでnot-collected。遅いgroup trueは期限後採らない | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 
-### 受入規則の改訂への整合（2026-10-31）
-
-レビュー規則だけを、利用者が本会話で採用したmainの改訂ADR0006へ合わせる。旧5.3本文と以前の判断は、この変更前のcommitのtasks/designと作業記録を履歴として参照する。非checkboxの必須受入という配置、他17task行、実4件・done・全spec/既存試験/製品コードは保持する。
+### 受入規則の整合
 
 | ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |
 |---|---|---|---|---|---|---|---|---|
 | WF-20261031 | REQ-340・REQ-341 | PR185の5.3を改訂レビュー規則へ合わせるか | 旧規則を残す／改訂ADRへ合わせる | 改訂ADRへ合わせる。利用者の明示採用と正本に整合する | yes | L3の重大な指摘ゼロ・最大2往復、Codex参考、指摘修正だけのhead差は管理役判定。3OS必須を明記し、実4件/P6/tasks/doneを免除しない | 利用者（ADR 0006 の包括承認・本会話の明示採用） | 2026-10-31 |
+
+19task13済6未（3.5、4.2〜4.4、5.1/5.2）と非checkbox必須受入1未達を保持する。元18意図=17tasks+1の移動時点は履歴で、現件数へ転用しない。元8 Requirement/41 Scenario/Source・19task行と状態は変更しない。
 
 ## 仮定
 
@@ -127,50 +123,22 @@ P1/P2/P3のreadonly検証とowned cwd管理だけを先行採用した。資格a
 |---|---|---|---|---|---|---|
 | A-LC-1 | REQ-340・REQ-341 | 注入clockは単調な有限ms、schedulerはcallbackを進める契約とする | 合成driverの契約であり、任意の同期依存がhostを停止する保証まで追加しない。実OS/資格の証明ではない | yes | 管理役root（ADR 0006） | 2026-10-31 |
 
-製品D01〜D05には新しい仮定を置いていない。lifecycleだけの依存契約をA-LC-1へ記録した。CLIの実導入/help・認証方式・hookや会話記録の永続化は未確認のまま残し、実採集の前提taskで確かめる。C001/S1は未採用の別担当の契約であり、現行mainへ推測で混ぜない。
+D01〜D05に新仮定なし。C001/S1の契約を推測で混ぜない。各設計の未読/材料不足、重複実行の未実施を確認済みへ数えない（design7と固定元）。
 
-## 所有と次の工程
-
-旧E3 treeは5c71ae0のまま保持した。正式起案は管理役の指示でmain085aから新しい`change/validate-engine-json-result-adoption`へ移し、旧treeに製品実装・未commit変更がないことを確認した。C001/S1・PR179の所有は変更していない。差分仕様と仕様ゲートのあとに、修正版の独立設計確認、製品実装、実観測、全done受入を行う。head6c951b9の独立設計4工程は実施済みだが、製品実装と実CLI採集は未実施である。今回は以前の完了成果を照合して再利用し、今回の重複起動417111fcは停止・未実施として保持した。管理役の判断を反映したstrict/spec-only後に製品実装へ進む。
-
-
-## 公式2版の導入と採集前提の状態（2026-10-31）
-
-task4.1として、公式2版のwrapper/nativeを独立prefixへignore-scriptsで導入し、integrityとnative実checksum、version/helpを照合した。実機はlinux-arm64-glibcで、既存資料のx64指定による初回EBADPLATFORMも保持した。Q-08のBに従い、helpにないmax-turnsは公式referenceと、両版のchecksum確定native内のoption宣言で版適用の根拠を確認した。会話を使った成功の証明ではない。
-
-管理役は2026-10-31に、具体的な採集手順も含めて4.1を完了にできると確認した。固定argv/prompt・保護維持・メモリ内変換・raw/秘密/hash拒否・4.2不明なら起動しない順をdesign8章へ記録した。元証跡は専用treeの`.loomake/e3-cli/`にある。実4枠は0/4で、4.2〜4.4と親DoDは未達のまま。
-
-製品D01〜D05のhead796324dは、strict/spec-onlyと容量復旧後の通常verifyが成功した（1655成功・失敗0・既存skip8）。先の同headの108失敗と再実行理由を保持した。CI、自動Codex、独立最終Opus、製品doneはまだ実施しておらず、通常verifyで代替しない。最終受入taskとdone工程の循環は管理役の計画監査で扱い、未実施をチェックして通さない。
-
-
-## 完了ゲート後の必須受入への計画整合（2026-10-31）
-
-管理役が共通独立設計92ea61a2を照合し、旧5.3だけを原文・番号・担当・条件のままtasks.mdの非checkbox節へ移す案を採用した。全18意図を17tasksと必須受入1へ機械照合し、他17行の本文/状態が不変であることを確認した。現在は12/17、受入1未達である。実4件と4.2〜4.4、5.1、5.2は真の未完了として残す。この時点の旧レビュー条件は、2026-10-31に利用者が採用した改訂ADR0006へ更新する。L3の重大な指摘ゼロ・最大2往復、Codex参考、指摘修正だけのhead差を管理役が判定する条件を適用する。未実施のチェックや実4件・tasks・gate・製品範囲の削減は行わない。
-
-
-## task4.2の限定probeと拒否側の進行（2026-10-31）
-
-公開nativeの既知3経路だけを読むprobe、固定argv/環境計画、秘密を返さない合成stream検査を追加した。実readonly probeは固定booleanと理由だけを保存し、user設定内のhook/plugin/envはfalseでも未知欄があり、診断環境はset/nonempty=trueだった。managed/他設定源・CLI stateの非永続化は未証明のままで、実起動口は作らず拒否を維持した。自己作成cwdの設定不在は全設定源不在の証明ではなく、git非ゼロもgit外の証明へ数えていない。
-
-新規36件と既存fixture66件の合成回帰、eslintとtypecheckは成功した。実prompt0・実4件0/4、task4.2〜4.4未チェックを維持する。採集資格の証拠adapter・実起動・永続化・試行履歴と全done/同head最終受入は残っている。
-
-
-### 1200file guard設計と追補の採用（2026-10-31）
-
-独立Opus設計ecb3f21cと追補08fff24dを管理役が全文確認し、actual/responseはclaude-opus-5-5、ok=true・deny=0を確認した。G-Q1/2/3/5とG-Q7のmulti-file8192/single-over例外を採用し、G-Q4/R3はH-Qで置換する。旧表示連結/旧stdout単独累計おすすめと不採用理由をdesign10章へ残した。G-Q6の差分spec不要は要求振舞いを保つ範囲に限定する。
+## guard ecb3f21c/08fff24dと管理補正
 
 | ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |
 |---|---|---|---|---|---|---|---|---|
 | G-BUDGET | REQ-180 | 表示群の出力予算をどう維持するか | stdout単独累計／返却stdout+stderr累計／kit protocolでwire計測 | 返却stdout+stderr。kitを変えず旧合計予算を保つ | yes | H-Q2=Aと管理補正採用。bytesは返却UTF8の値。末尾3byte以内はroomへ安全側課金。返却textのU+FFFDが同境界にあればbatchだけoutput停止し、不完全hunkも成功にしない | 利用者（ADR0006包括承認、管理役採用） | 2026-10-31 |
 | G-DISPLAY | REQ-112・REQ-138 | 表示群で対象fileだけをどう保つか | 旧連結／literalだけ／literal+固定形式+file境界選別 | 最後。literalだけではdir子削除を含む | yes | H-Q1=B'・H-Q3=A no-renames・H-Q4=A固定を採用。filter前の全stdout/stderrを課金する | 利用者（ADR0006包括承認、管理役採用） | 2026-10-31 |
 
-owned Git2.56のT/dir/quotePath/color観測と1200path純粋計算はdesign10.3へ記録。後者は製品成功実測でなく、24回や一般ceil(W/C)を上限へ採用しない。固定形式/renameで旧byte列が変わる例外を明示する。追補の「不正UTF8置換は常に減らない」は採用せず、返却UTF8・安全側課金・hunk完全性検査に置き換える。資料sources未読という先行モデルの自己申告を全8Req/41Scenario確認済みへ換算しない。新task2.5/3.5は実検証に応じて完了し、旧17行は状態ごと保持する。実0/4/P6拒否と最終受入未達も維持する。
+G-Q1/2/3/5/7とH-Qの採否はdesign10へ集約した。旧表示連結/stdout単独課金を不採用とし、返却UTF8 bytesとwireを同一視しない。U+FFFD境界/完全hunk/EOF/極小roomの拒否、constant textconvのM0、name-status終端/ペア/空項目/decoded重複の管理補正を保持する。旧git caller/kit protocol/品質設定/元1200fileと60秒/全旧assertは不変。
 
-root追加補正：hasReplacementCharacterは返却textにU+FFFDがある合図だけで、invalid UTF8と断定しない。正規U+FFFDの境界近傍も停止し、完全prefixの後hunk欠落・極小room全落ち・正常UTF8 exact境界と余裕あるU+FFFDを新試験で区別する。旧git() callerとkit protocolは変えない。
+## 現在の未受入
 
-管理役追加採用（2026-10-31）：owned constant textconvでM/正常0headerを実証したため、M=1固定を訂正する。非曖昧なbatch成功のconsumerだけM0空entryを許し旧挙動を保持、parser既定strictとA/D/T等は不変。room<=3の空stdoutは曖昧としてoutput拒否する。旧/新content/display等価・混合群・strict missing拒否を新試験で確認し、既存Req内の設定保持として扱う。
+実CLI起動0・実4件0/4、P6と親の旧5task/3.5/done/最終受入は未達。fixture投影の新literal候補は未採用/未実装である。原raw/元値hash非保存、保護維持、native/設定源/managed/hook/plugin/診断/stateの資格未成立、実OS/live/保存台帳の未実装を残す。採集制御の先行分割は親完成や元Source/Scenarioの削減にしない。
 
-管理役最終補正（2026-10-31）：name-statusをMapへ入れる前にNUL終端/ペア/空項目/復号後path重複を検証し、不正な上書きをGitErrorで拒否する。空statusとT単独statusは保持する。既存REQ137/138制約内の入力完全性検証で、旧test/spec/期待値と品質設定は変えない。
+[original]: https://github.com/loomake/loomake/blob/3b3b6d7e2f68fd8c71a888a7302f28e6ef91c291/openspec/changes/validate-engine-json-result/trace.md
 
 
 ### Windows literal pathspec修正の本体技術採用（2026-10-31）

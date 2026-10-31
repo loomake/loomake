@@ -1,9 +1,9 @@
 # validate-engine-json-result / PR #185
 
-1. やったこと：[PR #185](https://github.com/loomake/loomake/pull/185)のtask2.5で、独立設計W-GIT-01〜04の本体技術採用に従い、literal指定をbatchOutputの子envへ移した。1200fileの26/28/8192+152の期待値を保って観測方法を移し、両群・元env・実Gitの正負を追加検査した。
-2. verify：今回の対象106件、REQ-297の元4件、型・lint・strict・spec-onlyが成功した（Linux、REQ-297以外10件は名前filterの対象外）。通常full1813成功/失敗0/既存skip8はname-status補正前の履歴であり、今回の最終source全体と実3OSはpush後のCIで確認する。
-3. 残る事項：19taskのうち13済/6未で、3.5の実3OS、旧4.2〜4.4/5.1/5.2、実CLI採集0/4、P6拒否、doneと最終受入は未達。external-budgetの元4case・19.5/39.5秒・既存上限・保持役待ち・retry・全assertを変えず、今回のLinux成功をWindows修理完了へ数えない。
-4. 次：小commitを本体へ返し、pushとCI/3OSの調整・独立最終受入へ引き継ぐ。[旧作業記録](https://github.com/loomake/loomake/blob/62c983a15c44e4dc7554096790c112333b82ab35/docs/worklog/2026-10-31/change-validate-engine-json-result-adoption.md)・[採集前の記録](https://github.com/loomake/loomake/blob/62c983a15c44e4dc7554096790c112333b82ab35/docs/worklog/2026-10-31.md)は履歴として保持し、合成/Gitfixtureを実CLI採集へ数えない。
+1. やったこと：[PR #185](https://github.com/loomake/loomake/pull/185)の現在採用77条件をdesignへ集約し、trace旧82表行と6004のW-GIT設計/技術採用追記を完全保持して圧縮案を適用した。過去の詳細・失敗/検証は[3b3bの作業記録](https://github.com/loomake/loomake/blob/3b3b6d7e2f68fd8c71a888a7302f28e6ef91c291/docs/worklog/2026-10-31/change-validate-engine-json-result-adoption.md)へ固定参照する。
+2. verify：8 Requirement/41 Scenario/Source・19task全文/13済6未・製品sourceは不変で、strict/spec-only・diffcheck・文書の推敲を確認した。6004はLinux対象106件とREQ-297元4件・型lint成功だけで、通常full1813はname-status補正前の履歴、今回の文書圧縮では再試験/モデル起動なし。
+3. 残る事項：3b実CIのWindows偽git入口失敗とMac timeoutを、6004のLinux成功で解消扱いにしない。実CLI採集0/4・P6拒否、3.5/4.2〜4.4/5.1/5.2・done/必須最終受入、fixture投影の新literal候補未採用/未実装を保つ。
+4. 次：文書だけの別commitを本体へ返し、親control同期とpush後の必須CI/実3OS・独立最終受入へ引き継ぐ。全77境界と元assert/timeout/skip/19.5/39.5秒を保持し、先行分割や合成/Gitfixtureを親完成/実採集へ数えない。
 
 | PR | 設計待ち | 実装 | CI待ち | レビュー往復回数 | マージまで |
 |---|---|---|---|---|---|
