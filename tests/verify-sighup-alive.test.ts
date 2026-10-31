@@ -160,7 +160,9 @@ describe('Linux の proc-stat ESRCH の再確認', () => {
     const kill = vi.fn();
     const entries: Record<string, unknown>[] = [];
     const alive = createProcessAlive({ platform: 'linux', kill, readStat: () => { throw failure; }, onProbe: (entry) => entries.push(entry) });
-    expect(() => alive(123)).toThrow(failure);
+    let caught: unknown;
+    try { alive(123); } catch (failure) { caught = failure; }
+    expect(caught).toBe(failure);
     expect(kill.mock.calls).toEqual([[123, 0], [123, 0]]);
     expect(entries.at(-1)).toEqual({ time: expect.any(Number), pid: 123, source: 'kill-recheck', result: 'present' });
   });
@@ -170,7 +172,9 @@ describe('Linux の proc-stat ESRCH の再確認', () => {
     const kill = vi.fn().mockImplementationOnce(() => undefined).mockImplementationOnce(() => { throw failure; });
     const entries: Record<string, unknown>[] = [];
     const alive = createProcessAlive({ platform: 'linux', kill, readStat: () => { throw error('ESRCH'); }, onProbe: (entry) => entries.push(entry) });
-    expect(() => alive(123)).toThrow(failure);
+    let caught: unknown;
+    try { alive(123); } catch (failure) { caught = failure; }
+    expect(caught).toBe(failure);
     expect(kill.mock.calls).toEqual([[123, 0], [123, 0]]);
     expect(entries.at(-1)).toEqual({ time: expect.any(Number), pid: 123, source: 'kill-recheck', result: 'error', code });
   });
