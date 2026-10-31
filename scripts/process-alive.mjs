@@ -34,6 +34,7 @@ export function createProcessAlive(options = {}) {
       catch (error) {
         record(pid, 'proc-stat', { result: error.code === 'ENOENT' ? 'missing' : 'error', code: error.code });
         if (error.code === 'ENOENT') return false;
+        if (error.code === 'ESRCH' && !exists(pid, 'kill-recheck')) return false;
         throw error;
       }
       const zombie = /\) Z /.test(stat);

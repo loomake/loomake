@@ -135,3 +135,71 @@ describe('SIGHUP smoke の identity 記録', () => {
     expect(recorder.identities).toMatchObject([{ pid: 123, phase: 'ready', command: 'fixture', starttime: '100' }, { pid: 123, phase: 'failure', command: 'replacement', starttime: '999' }]);
   });
 });
+
+
+describe('Linux の proc-stat ESRCH の再確認', () => {
+  it('readStat と再 kill の両方が ESRCH のときだけ停止とする', () => {
+    const entries: Record<string, unknown>[] = [];
+    const kill = vi.fn().mockImplementationOnce(() => undefined).mockImplementationOnce(() => { throw error('ESRCH'); });
+    const readStat = vi.fn(() => { throw error('ESRCH'); });
+    const alive = createProcessAlive({ platform: 'linux', kill, readStat, onProbe: (entry) => entries.push(entry) });
+    expect(alive(123)).toBe(false);
+    expect(kill.mock.calls).toEqual([[123, 0], [123, 0]]);
+    expect(readStat.mock.calls).toEqual([[123]]);
+    expect(entries).toEqual([
+      { time: expect.any(Number), pid: 123, source: 'kill', result: 'present' },
+      { time: expect.any(Number), pid: 123, source: 'proc-stat', result: 'error', code: 'ESRCH' },
+      { time: expect.any(Number), pid: 123, source: 'kill-recheck', result: 'missing', code: 'ESRCH' },
+    ]);
+    expect(kill.mock.invocationCallOrder[0]).toBeLessThan(readStat.mock.invocationCallOrder[0]!);
+    expect(readStat.mock.invocationCallOrder[0]).toBeLessThan(kill.mock.invocationCallOrder[1]!);
+  });
+
+  it('再 kill で存在したときは元の readStat ESRCH をそのまま投げる', () => {
+    const failure = error('ESRCH');
+    const kill = vi.fn();
+    const entries: Record<string, unknown>[] = [];
+    const alive = createProcessAlive({ platform: 'linux', kill, readStat: () => { throw failure; }, onProbe: (entry) => entries.push(entry) });
+    let caught: unknown;
+    try { alive(123); } catch (failure) { caught = failure; }
+    expect(caught).toBe(failure);
+    expect(kill.mock.calls).toEqual([[123, 0], [123, 0]]);
+    expect(entries.at(-1)).toEqual({ time: expect.any(Number), pid: 123, source: 'kill-recheck', result: 'present' });
+  });
+
+  it.each(['EPERM', 'EIO'])('再 kill の %s を停止とみなさず、再確認の例外を返す', (code) => {
+    const failure = error(code);
+    const kill = vi.fn().mockImplementationOnce(() => undefined).mockImplementationOnce(() => { throw failure; });
+    const entries: Record<string, unknown>[] = [];
+    const alive = createProcessAlive({ platform: 'linux', kill, readStat: () => { throw error('ESRCH'); }, onProbe: (entry) => entries.push(entry) });
+    let caught: unknown;
+    try { alive(123); } catch (failure) { caught = failure; }
+    expect(caught).toBe(failure);
+    expect(kill.mock.calls).toEqual([[123, 0], [123, 0]]);
+    expect(entries.at(-1)).toEqual({ time: expect.any(Number), pid: 123, source: 'kill-recheck', result: 'error', code });
+  });
+
+  it.each(['EACCES', 'EIO'])('readStat の %s では kill を再試行しない', (code) => {
+    const failure = error(code);
+    const kill = vi.fn();
+    expect(() => createProcessAlive({ platform: 'linux', kill, readStat: () => { throw failure; } })(123)).toThrow(failure);
+    expect(kill.mock.calls).toEqual([[123, 0]]);
+  });
+
+  it('readStat の ENOENT は従来どおり再 kill なしで停止とする', () => {
+    const kill = vi.fn();
+    expect(createProcessAlive({ platform: 'linux', kill, readStat: () => { throw error('ENOENT'); } })(123)).toBe(false);
+    expect(kill.mock.calls).toEqual([[123, 0]]);
+  });
+
+  it('readStat ESRCH を注入し、回収済みの実子 PID を実 kill で再確認する', () => {
+    const child = spawnSync(process.execPath, ['-e', ''], { encoding: 'utf8' });
+    expect(child.error).toBeUndefined();
+    expect(child.status).toBe(0);
+    expect(child.pid).toBeGreaterThan(1);
+    const kill = vi.fn().mockImplementationOnce(() => undefined).mockImplementation((pid: number, signal: 0) => process.kill(pid, signal));
+    const alive = createProcessAlive({ platform: 'linux', kill, readStat: () => { throw error('ESRCH'); } });
+    expect(alive(child.pid)).toBe(false);
+    expect(kill.mock.calls).toEqual([[child.pid, 0], [child.pid, 0]]);
+  });
+});
