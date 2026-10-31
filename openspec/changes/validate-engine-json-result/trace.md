@@ -175,9 +175,9 @@ G-Q1/2/3/5/7とH-Qの採否はdesign10へ集約した。旧表示連結/stdout�
 
 <a id="s4-acceptance-current"></a>
 
-## S4 の段階受入を S2 へ記録（2026-11-01）
+## S4 の段階受入を S2 へ記録（2026-11-01、S2受入時点の履歴）
 
-管理役は指定統合先へ受け入れた [PR #261](https://github.com/loomake/loomake/pull/261) の同 head の全 3 OS・専用 Windows・独立レビューと gate の実出力を確認した。S2 で task 3.5 の受入を記録し、既存 S2 の 6 task と合わせて 12 済・7 未とする。task 本文・配分・全仕様・実 0/4・P6・最終受入は維持する。
+管理役は指定統合先へ受け入れた [PR #261](https://github.com/loomake/loomake/pull/261) の同 head の全 3 OS・専用 Windows・独立レビューと gate の実出力を確認した。S2 で task 3.5 の受入を記録し、既存 S2 の 6 task と合わせて、S2受入時点は12済・7未だった。最新のS3状態は末尾のS3節とtasks.mdに記す。task 本文・配分・全仕様・実 0/4・P6・最終受入は維持する。
 
 運用には main へ反映済みの [採用 ADR 0006](https://github.com/loomake/loomake/blob/620550a26fc39dff92b19d1d5289ab7742b85f88/docs/adr/0006-standing-approval-for-autonomous-delivery.md) を使う。この stage の古い規約ファイルを採用版へ更新したとは扱わず、main の製品差分も取り込んでいない。
 
@@ -190,4 +190,4 @@ G-Q1/2/3/5/7とH-Qの採否はdesign10へ集約した。旧表示連結/stdout�
 |---|---|---|---|---|---|---|---|---|
 | E3-S3-01 | REQ-099・REQ-100・REQ-204・REQ-330・REQ-331・REQ-340・REQ-341 | S3を現S2へどう移植するか | A：既存試験の追加部分だけ移植／B：旧ファイル全体を置換 | A。現S2の強化済みassertと製品コードを保つ | yes | A。追加describe5件とfixture66件だけを移植し、製品src・保存許可集合・元prefixを保持する。task3.3/3.4の全回帰後だけ完了印を付け、P6・実0/4・3.5・同期は残す | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
 
-保存fixture66件は合成したメモリ内の入力による対照で、CLIの実観測ではない。3.3は追加5件だけでなく、現在のrunner全体と新旧の変異試験で既存Scenario・停止優先・C001を回帰した。全19taskの本文・8 Requirement・41 Scenario・Sourceは保持し、現在13済6未である。残る3.5・4.2〜4.4・5.1/5.2と最終受入は未達で、規則案#260の未承認状態を受入の免除に使わない。
+保存fixture66件は合成したメモリ内の入力による対照で、CLIの実観測ではない。3.3は追加5件だけでなく、現在のrunner全体と新旧の変異試験で既存Scenario・停止優先・C001を回帰した。全19taskの本文・8 Requirement・41 Scenario・Sourceは保持する。旧S3時点の13済6未は履歴で、指定統合先の受入済みS2を通常mergeし、現在は3.5の受入記録を含む14済5未である。残る4.2〜4.4・5.1/5.2、実CLI0/4・P6・最終受入は未達である。採用済みADR0006による段階受入の条件は新headの証跡で確認し、古い規約や旧headの成功で代用しない。
