@@ -7,7 +7,7 @@
 ## 2. 探索境界の修理
 
 - [x] 2.1 `[REQ-359]` を持つ直接試験と CLI/API の独立回帰を追加し、repo 外の sentinel、子プロジェクト、nested repo・linked worktree、Git 不明・不一致、root と runner のリンクを確かめる。既存 fixture の既定を保ち、修理前の負例の RED と正例の現況を保存する。
-- [ ] 2.2 `findProducer` の探索位置を Git 作業ツリー内へ限定し、不明時は root だけに止める。既存の監視役・優先順・reader・receipt 型を保ち、JSDoc に境界を記す。2.1 の全正負例と既存の品質受入試験を成功させ、元 assert・timeout・skip・設定の不変を確認する。
+- [x] 2.2 `findProducer` の探索位置を Git 作業ツリー内へ限定し、不明時は root だけに止める。既存の監視役・優先順・reader・receipt 型を保ち、JSDoc に境界を記す。2.1 の全正負例と既存の品質受入試験を成功させ、元 assert・timeout・skip・設定の不変を確認する。
 
 ## 3. 統合検証
 
