@@ -1,10 +1,11 @@
 import { existsSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { runExternal } from '@loomake/kit';
-import { EVIDENCE_V2_SCHEMA_VERSION, type EvidenceV2, type VerifyResult, type VerifyScope } from '@loomake/core';
+import type { VerifyResult, VerifyScope, Evidence } from '@loomake/core';
 import { RuntimeFailure, UsageError, assertChangeId, isAbortedResult, loadConfig, runVerify, verifyAbortedResult, verifyExitCode } from '@loomake/kit';
 import { changedDocuments, readDocuments } from './documents.js';
 
+import { EVIDENCE_SCHEMA_VERSION } from './schema.js';
 import { serializeEvidence } from './serialization.js';
 import { publishEvidence } from './publication.js';
 export { EVIDENCE_SCHEMA_VERSION } from './schema.js';
@@ -92,9 +93,8 @@ export function runRecord(options: RecordOptions): number {
     return 1;
   }
   const recordedAt = now();
-  // Evidence 2 で書き出す。証拠の現行の名前（Evidence・EVIDENCE_SCHEMA_VERSION）の切替は 2b-2 で行う（REQ-315）
-  const evidence: EvidenceV2 = {
-    schemaVersion: EVIDENCE_V2_SCHEMA_VERSION,
+  const evidence: Evidence = {
+    schemaVersion: EVIDENCE_SCHEMA_VERSION,
     change: changeId,
     sha,
     committedAt,
