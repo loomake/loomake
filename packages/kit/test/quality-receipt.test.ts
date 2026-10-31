@@ -150,7 +150,8 @@ describe('bounded producer search', () => {
 
   it.each(['\n', '\r\n'])('[REQ-359] preserves spaces in the Git top while removing its final line ending %j', (ending) => {
     const outer = directory();
-    const top = child(outer, 'top with trailing space ');
+    // Win32 normal paths do not preserve trailing spaces in directory names.
+    const top = child(outer, process.platform === 'win32' ? 'top with spaces' : 'top with trailing space ');
     actualRunner(top);
     const root = child(top, 'app');
     vi.spyOn(external, 'runExternal').mockReturnValue({ status: 0, signal: null, stdout: top + ending, stderr: '' });

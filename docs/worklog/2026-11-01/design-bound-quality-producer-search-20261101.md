@@ -1,10 +1,10 @@
-# [Issue #238](https://github.com/loomake/loomake/issues/238)：ランナー探索上限の計画
+# [Issue #238](https://github.com/loomake/loomake/issues/238)：ランナー探索の境界
 
-1. やったこと：`bound-quality-producer-search` の task 1.1 として、予約済み REQ-359 の ADDED、4 Scenario、proposal・design・tasks・trace を記録した。管理役が Opus 設計の推奨 A/A/A/A/B を採用し、既存 REQ-319 と Q-03 の原文を保持した。
-2. verify の結果：OpenSpec strict と正規の仕様ゲートは exit 0。製品・試験・設定は変更せず、完了ゲートと CI は実行していない。要件 ID の重複・予約と引用原文、日本語を照合した。
-3. 残っている確認事項・仮定：ブロッキングの未回答と新しい仮定はない。修理前の RED、Windows の短縮名、製品実装・要件対応試験・完了ゲート・3 OS・独立最終レビューは未達で、Issue と親 C001 の完了を宣言しない。
-4. 次にやること：計画を管理役へ渡し、実装は別の apply 作業で task 2.1 の負例の RED から始める。既存の期待値・timeout・skip・品質設定を保持する。
+1. やったこと：`bound-quality-producer-search` の task 1.1・2.1・2.2・3.1 として、REQ-359 の計画と試験を追加し、探索位置を Git 作業ツリー内へ限定した。最上位不明時はルートだけを調べ、外部実体へのリンクと既存の優先順を保ち、kit の patch changeset を加えた。
+2. verify の結果：仕様ゲート・OpenSpec strict・lint・型検査・changeset status は成功し、回帰試験は修理前の 13 失敗・12 成功から 25 成功になった。全体試験の初回は未 commit の changeset が原因で 1 件失敗し、commit 後は 2,208 成功・既存の 8 skip で成功した。task 3.2 の通常のローカル完了ゲートはこれから確認する。
+3. 残っている確認事項・仮定：未回答と新しい仮定はなく、既存の REQ-319・Q-03、期待値・timeout・skip・品質設定は保持した。Windows の実行、同 head の必須 CI・3 OS・独立最終レビューと archive は未実施で、Issue と親 C001 の完了は宣言しない。
+4. 次にやること：task 3.2 のローカル完了ゲートを通し、実行記録と全差分を管理役へ渡す。通常の L3 条件で CI と独立レビューを確認し、本 change 経由の仕様同期と archive へ進む。
 
-| 対象 | 設計待ち | 実装 | CI待ち | レビュー往復回数 | マージまで |
+| PR | 設計待ち | 実装 | CI 待ち | レビュー往復回数 | マージまで |
 |---|---|---|---|---|---|
-| Issue #238・PR未作成 | 設計実行202.237秒（返答待ち全体は未計測） | 対象外（計画のみ） | 未実施 | 未実施 | 未実施 |
+| PR 未作成（Issue #238） | 設計実行 202.237 秒（返答待ち全体は未測定） | 進行中 | 未実施 | 未実施 | 未実施 |
