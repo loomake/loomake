@@ -5,16 +5,18 @@
 
 統合枝への計画移植では、元枝の完了印を履歴として保存し、実装が統合枝へ受け入れられるまで2節を未完了とする。元枝での検証を取り消すものではない。参照：Q-98。
 
+2026-11-01、指定統合枝へ PR252・253・264 の基盤を受け入れた。受入後の独立棚卸しに従い、2.2・2.3・2.5・2.6 の実装を完了へ反映し、統合枝の印は6/21とする。2.4の測定、2.7のR4とoracle、2.8・2.9・2.10の残る確認、親の完了ゲートと必須受入は未完了のまま保つ。旧実装枝の8/21へ一括で戻さない。
+
 # 2. 先行できる独立実装（C2〜C5・監査・C1前提対応）
 
 凍結した179診断の吸収先との統合境界・重複・順序の確定と当初未設計10fileの残設計はcase本体分割の前提であり、この節の独立実装の前提ではない。C2〜C5は基点085aと採用済み62abaの範囲で先行し、統合後にfresh差分と検証を繰り返す。追加2.5は995e対象のcd321d46に従う独立な監査・宣言inventoryであり、残9fileの設計3.2と並行できる。実caseの本体分割・OS割当は含めず、実registryは空に保つ。
 
 - [ ] 2.1 ci.ymlのnode20ジョブを削除し、node22/3OS Node24を保つ。docs/dev/ci.mdと互換性文書、docs/quality/scenarios.jsonのREQ-144対応、monorepo/package-workflows/ci-test-diagnostics-workflowの照合を実在境界検査付きで更新する
-- [ ] 2.2 root globalSetup/provideとpackage/slow injectを実装し、build/pack共有1回、unit-only/file選択の費用、inject欠落のfallback拒否、実build失敗/正常cleanup/watchを独立依存で検証する
-- [ ] 2.3 純粋split helperとnamed slowの足場を作り、未測定のOS割当やcase本体の分割を加えず、空集合・未知ID/OS・PR判定とファイル選択を検査する。reporter/outputFile/coverage/ci-gate/verifyを保つ
+- [x] 2.2 root globalSetup/provideとpackage/slow injectを実装し、build/pack共有1回、unit-only/file選択の費用、inject欠落のfallback拒否、実build失敗/正常cleanup/watchを独立依存で検証する
+- [x] 2.3 純粋split helperとnamed slowの足場を作り、未測定のOS割当やcase本体の分割を加えず、空集合・未知ID/OS・PR判定とファイル選択を検査する。reporter/outputFile/coverage/ci-gate/verifyを保つ
 - [ ] 2.4 REQ-161の元13条件を実際に検出する独立fast試験とrunnerのonly選択を追加し、未知/重複拒否、baseline/検出/未検出/エラー/元source-test-report不変を確認する。既定13条件の元全体試験も残す。fastの確定は統合後3OS各3sampleで行う
 
-- [ ] 2.5 REQ-347差分・traceのQ-19〜Q-30・scopeを確認し、spec-only exit 0の後、cd321d46に従う監査/宣言inventoryとdocsを同じPRで実装する。[REQ-347]付きで登録済みC→S、rawFile/inputs、登録外Cのraw保持、不正/欠落registry・不正Cのerror/成果物なし、status/Source/hash、同名別入力行とoverlapのSet、複数block欠測、既存状態/旧形式/migrate条件を検査し、raw report・レビュー表・元3Scenarioを保つ。独立ASTで下記の移動後baselineと合成fixture全error codeを確かめ、alias/動的title/未知の動的行/壊れた宣言を除外しない。AST実測が想定と違えば設計へ戻す。将来mainでcase移動/count変更があれば期待値を実装へ合わせず、移動前後の保持を示す別の承認済み証拠とbaselineを再照合する。実registry/本体/既存scanner・partition・Vitest規則は変えず、既存監査全試験を通す
+- [x] 2.5 REQ-347差分・traceのQ-19〜Q-30・scopeを確認し、spec-only exit 0の後、cd321d46に従う監査/宣言inventoryとdocsを同じPRで実装する。[REQ-347]付きで登録済みC→S、rawFile/inputs、登録外Cのraw保持、不正/欠落registry・不正Cのerror/成果物なし、status/Source/hash、同名別入力行とoverlapのSet、複数block欠測、既存状態/旧形式/migrate条件を検査し、raw report・レビュー表・元3Scenarioを保つ。独立ASTで下記の移動後baselineと合成fixture全error codeを確かめ、alias/動的title/未知の動的行/壊れた宣言を除外しない。AST実測が想定と違えば設計へ戻す。将来mainでcase移動/count変更があれば期待値を実装へ合わせず、移動前後の保持を示す別の承認済み証拠とbaselineを再照合する。実registry/本体/既存scanner・partition・Vitest規則は変えず、既存監査全試験を通す
 
 2.5にはG-B Q-G2の通常const fixture helperと非call参照のbinding分類を含め、test alias拒否を保つ。guards37/52/40とrun-no-change12/13/25のモデル静的値を独立ASTで実測する。実登録/prefix/隔離解除は含めない。
 
@@ -22,7 +24,7 @@
 
 2.5の現行guards基準は、受入済みmain d04e212f（PR235）取込後の22be0369で39宣言/54候補/42展開行とする。3d664093の37/52/40は履歴として残す。旧37宣言の本文多重集合保持とREQ-348の追加2宣言だけであることを独立照合した根拠に従い、追加2件の正確な試験名も検査する。run58/60/68・run-timeout2/3/2・run-no-change12/13/25と既存assertを保ち、計画追記後のspec-only成功をlive inventory編集前の条件とする。
 
-- [ ] 2.6 Q-34〜Q-37とC1設計を確認し、spec-only exit 0の後、private inventoryに同fileの非export const・TEST_FUNCTION名・it/test.runIf/skipIfの1引数factory分類を追加する。宣言名と初期値の候補をnonCallとして残し、実呼出しは宣言として検査する。let/export/規則外名/不正引数/aliasの負fixtureとit/test×runIf/skipIfの正fixture、既存fixture-helper/namespace/test alias拒否を照合する。モデル未実測16宣言/22候補/19行は履歴に残し、独立nativeの25候補（propertyKey3漏れの訂正）と元16blockのbyte保持を根拠に最初のscopeを照合する。factory分類後の16宣言/19行は別に確認し、違えばsource保持証拠と設計へ戻す。signalのas constを含むas/satisfies/括弧/!の型だけを示すwrapperをunwrapし、spreadなしliteral配列の行数を数える。変数/spread tableはdynamicRowsを保つ正負fixtureも追加する。コード実行・値評価はしない。external-budget-deadlineもlive inventoryへ加え、独立probeの3宣言/4候補/元3本文保持に照合し、wrapper対応後の6行は別確認する。C2の残設計/実登録/OS割当は含めない。同時にmetadataの旧15必須fileの順序・包含を保ちrun-timeoutとexternal-budget-deadlineを加えた17fileの包含・新2file各欠落negativeと対象外fileも含む全採集の保持を独立fixtureでred/green検査し、全case/raw/失敗sampleを保つ。対象はtest-declarations本体/試験、ci-measure-metadata本体とtests/ci-measure.test.ts、docs/dev/ci.mdとする。実registry・元signal factory・元本文・scanner/partition/Vitest規則を変えず、実登録/OS割当/production合格を含めない。V1は技術前提の観測であり本タスクの完了証拠へ代用しない
+- [x] 2.6 Q-34〜Q-37とC1設計を確認し、spec-only exit 0の後、private inventoryに同fileの非export const・TEST_FUNCTION名・it/test.runIf/skipIfの1引数factory分類を追加する。宣言名と初期値の候補をnonCallとして残し、実呼出しは宣言として検査する。let/export/規則外名/不正引数/aliasの負fixtureとit/test×runIf/skipIfの正fixture、既存fixture-helper/namespace/test alias拒否を照合する。モデル未実測16宣言/22候補/19行は履歴に残し、独立nativeの25候補（propertyKey3漏れの訂正）と元16blockのbyte保持を根拠に最初のscopeを照合する。factory分類後の16宣言/19行は別に確認し、違えばsource保持証拠と設計へ戻す。signalのas constを含むas/satisfies/括弧/!の型だけを示すwrapperをunwrapし、spreadなしliteral配列の行数を数える。変数/spread tableはdynamicRowsを保つ正負fixtureも追加する。コード実行・値評価はしない。external-budget-deadlineもlive inventoryへ加え、独立probeの3宣言/4候補/元3本文保持に照合し、wrapper対応後の6行は別確認する。C2の残設計/実登録/OS割当は含めない。同時にmetadataの旧15必須fileの順序・包含を保ちrun-timeoutとexternal-budget-deadlineを加えた17fileの包含・新2file各欠落negativeと対象外fileも含む全採集の保持を独立fixtureでred/green検査し、全case/raw/失敗sampleを保つ。対象はtest-declarations本体/試験、ci-measure-metadata本体とtests/ci-measure.test.ts、docs/dev/ci.mdとする。実registry・元signal factory・元本文・scanner/partition/Vitest規則を変えず、実登録/OS割当/production合格を含めない。V1は技術前提の観測であり本タスクの完了証拠へ代用しない
 
 - [ ] 2.7 Q-45〜Q-52のrow設計とspec-only成功後、最初に専有V2でR1〜R8の手書きnative基準を実行し、不一致なら期待値を変えず設計へ戻す。旧V2の停止原本を保持し、Q-58〜Q-60の一次sourceによる設計訂正に従うV2bを新16行（事前予測R4b追加）で実行する。exit/signal/rawを照合前に保存し、元7callはbyte保持、実Vitest5.0.5/引用chunkの同一性と全期待を独立照合する。%%は既存scanner限界の注記だけとし新しい行登録制限を加えない。管理役が報告全文を読みLinux合成の技術前提だけを限定採用した状態を保ち、checker/oracle/実production/3OS/coverage/実期限の未受入を完了印へ変えない。literal表だけのeachRows/selectRows、partの共有入口、rowBinding/rowIds/rowTexts・shadowedTest・行数/対応形/ID/describe guardの全正負fixture、helperから独立したraw多重集合oracleと負fixtureを実装し、既存fixtureと元call/table/body/値評価回数・参照/arity/名前/%#/%$/timeout/options/statusを保つ。全fast/混在/全slow/空part/未知OSと同名行・欠測/重複/status/順序/sample/shardを検証する。factory/runIf.each/tagged/.for/動的表・実行時名は対応せず混在なら未登録未達。実registry・caseprefix・OS割当・既存scanner/partition/監査/製品srcを変えない。deadline実登録後の候補4→5はrowBinding1増、宣言3/行6/元3本文不変という事前内訳を保持する
 
