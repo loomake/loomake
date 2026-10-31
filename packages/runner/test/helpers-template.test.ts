@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { makeRepo, type Repo } from './helpers.js';
 
@@ -12,13 +13,16 @@ const bare = (repo: Repo, ...args: string[]) => {
   return r.stdout.trim();
 };
 
-// .git の木（パスと mode）。中身が試験ごとに変わる objects・logs・index・COMMIT_EDITMSG は除く
+// .git の木（パスと mode と、通常ファイルなら中身の SHA-256）。中身が試験ごとに変わる objects・logs・index・COMMIT_EDITMSG は除く。
+// .git/config には origin の絶対パスが入るので、中身は base（と HEAD のコミットの SHA）を伏せてからハッシュする
 const SKIPPED = new Set(['objects', 'logs', 'index', 'COMMIT_EDITMSG']);
-function gitTree(dir: string, path = ''): [string, number][] {
+function gitTree(dir: string, hide: (text: string) => string, path = ''): [string, number, string?][] {
   return readdirSync(join(dir, path)).sort().filter((name) => !(path === '' && SKIPPED.has(name))).flatMap((name) => {
     const child = join(path, name);
     const stat = statSync(join(dir, child));
-    return [[child, stat.mode] as [string, number], ...(stat.isDirectory() ? gitTree(dir, child) : [])];
+    if (stat.isDirectory()) return [[child, stat.mode] as [string, number], ...gitTree(dir, hide, child)];
+    const hash = createHash('sha256').update(hide(readFileSync(join(dir, child), 'utf8'))).digest('hex');
+    return [[child, stat.mode, hash] as [string, number, string]];
   });
 }
 
@@ -28,6 +32,9 @@ function gitState(repo: Repo) {
   const once = JSON.stringify(repo.base).slice(1, -1);
   const forms = [JSON.stringify(once).slice(1, -1), once, repo.base];
   const hide = (text: string) => forms.reduce((value, form) => value.split(form).join('<base>'), text);
+  // refs/heads/main などに入るコミットの SHA は、コミットの時刻で試験ごとに変わる。.git の木の中身では <head> に伏せる
+  const headSha = repo.git('rev-parse', 'HEAD');
+  const hideRepo = (text: string) => hide(text).split(headSha).join('<head>');
   const files = repo.git('ls-tree', '-r', '--name-only', 'HEAD').split('\n');
   return {
     head: repo.git('symbolic-ref', 'HEAD'),
@@ -40,8 +47,8 @@ function gitState(repo: Repo) {
     branches: repo.git('branch', '--format=%(refname)'),
     config: hide(repo.git('config', '--local', '--list')),
     url: hide(repo.git('config', '--get', 'remote.origin.url')),
-    gitTree: gitTree(join(repo.root, '.git')),
-    originTree: gitTree(join(repo.base, 'origin.git')),
+    gitTree: gitTree(join(repo.root, '.git'), hideRepo),
+    originTree: gitTree(join(repo.base, 'origin.git'), hideRepo),
     hooks: readdirSync(join(repo.root, '.git/hooks')).sort().map((hook) => [hook, statSync(join(repo.root, '.git/hooks', hook)).mode]),
     originBare: bare(repo, 'rev-parse', '--is-bare-repository'),
     originHead: bare(repo, 'symbolic-ref', 'HEAD'),
