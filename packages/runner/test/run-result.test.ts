@@ -136,3 +136,55 @@ describe('終了コード0の異常な結果で止まる', () => {
     expect(repo.prs()).toEqual([]);
   }));
 });
+
+describe('正常な結果と部分完了の履歴を保つ', () => {
+  it.each([
+    { subtype: 'success', is_error: false },
+    { type: 'assistant', subtype: 'success_partial', is_error: false, unknown: { value: 1 } },
+    { result: '' },
+  ])('[REQ-099][REQ-100][REQ-330] 正常な結果は従来どおりcommit・NoChange・完了ゲートへ進む %j', (resultFields) => withRepo(async (repo) => {
+    repo.plan([
+      { write: { 'impl.txt': 'completed' }, resultFields },
+      { output: 'LOOMAKE-NOCHANGE: 検査済み', resultFields: { subtype: 'success_partial', is_error: false } },
+    ]);
+    const result = await run(repo);
+    expect(result.code, result.stdout).toBe(0);
+    expect(repo.calls()).toHaveLength(2);
+    const tasks = readFileSync(join(repo.root, tasksPath), 'utf8');
+    expect(tasks).toContain('- [x] 1.1');
+    expect(tasks).toContain('- [x] 1.2');
+    expect(tasks).toContain('- [x] 3.1');
+    expect(repo.git('log', '--format=%s')).toContain('run(c1): 1.1');
+    expect(repo.git('log', '--format=%s')).toContain('run(c1): 1.2');
+    expect(summary(repo).status).toBe('completed');
+  }));
+
+  it('[REQ-099][REQ-340] 後続タスクが失敗の結果でも完了済みcommitを保つ', () => withRepo(async (repo) => {
+    repo.plan([{ write: { 'a.txt': 'first' } }, { write: { 'b.txt': 'unfinished' }, resultFields: failure }]);
+    const result = await run(repo);
+    expect(result.code).toBe(1);
+    expect(repo.calls()).toHaveLength(2);
+    expect(summary(repo).doneTasks).toHaveLength(1);
+    expect(summary(repo).reason).toContain(join(runDir(repo), '02-output.json'));
+    expect(repo.git('log', '--format=%s')).toContain('run(c1): 1.1');
+    expect(repo.git('log', '--format=%s')).not.toContain('run(c1): 1.2');
+    const tasks = readFileSync(join(repo.root, tasksPath), 'utf8');
+    expect(tasks).toContain('- [x] 1.1'); expect(tasks).toContain('- [ ] 1.2');
+    expect(readFileSync(join(repo.root, 'b.txt'), 'utf8')).toBe('unfinished');
+    expect(repo.git('diff', '--cached', '--name-only')).toBe('');
+  }));
+
+  it('[REQ-340][REQ-100][REQ-112] 直しで結果異常と禁止変更が重なっても差分と案内を表示する', () => withRepo(async (repo) => {
+    repo.plan([{ write: { 'a.txt': 'a' } }, { write: { 'b.txt': 'b' } }, { write: { 'vitest.config.ts': 'export default {};\n' }, resultFields: failure }]);
+    const result = await run(repo);
+    expect(result.code).toBe(1);
+    expect(repo.calls()).toHaveLength(3);
+    expect(summary(repo).reason).toMatch(/^エンジンが失敗の結果を返しました/);
+    expect(summary(repo).reason).toContain('。不正な直し方を見つけました');
+    expect(result.stdout).toContain('diff --git a/vitest.config.ts');
+    expect(result.stdout).toContain('承認');
+    expect(repo.git('log', '--format=%s')).not.toContain('完了ゲートの直し');
+    expect(repo.git('diff', '--cached', '--name-only')).toBe('');
+    expect(readdirSync(runDir(repo)).filter((name) => name.includes('-verify'))).toHaveLength(1);
+  }));
+});
