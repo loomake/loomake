@@ -171,3 +171,9 @@ Vitest からの読み込みは namespace か `expect` だけの named import �
 PR で slow を実行しないと、その試験を選ぶ根拠が監査で `invalid` になる場合があります。別の report の合流や判定の緩和で補わず、main push の全件実行と最終受入で確認します。失敗・skip・todo、必要な Source、本文や旧形式のファイル全体のハッシュ、旧形式の移行条件は引き続き検査します。複数の本文ブロックの一部欠測はブロック集合のハッシュで検出できますが、同じ `it.each` 内の行欠測まで証明するものではありません。全 parameter と正当な同名行の保持は、後続タスク4.3・5.1で raw 全 case の多重集合を独立して比較します。
 
 `tests/test-declarations.test.ts` は TypeScript AST で宣言を独立して集め、既存 scanner の候補と突き合わせます。対象は `run.test.ts` と、受入済みmainで移動した `run-timeout.test.ts`、追加設計で照合した `guards.test.ts`・`run-no-change.test.ts`、分割一覧に登録した元ファイルです。import の識別子と object のキーを宣言から区別し、壊れた宣言・別名・動的な試験名・未知の表の行数を黙って除外しません。未知の展開数や未対応の `describe.each` 内の宣言は、展開数を確定せず `dynamicRows` として報告します。Vitest の namespace や別名も診断し、companion 自身の宣言は構造で拒否します。同じファイルの通常の `const` helper は、宣言名と呼出し先でない参照を binding で分類します。別スコープの同名変数や test 関数の別名には、この分類を適用しません。登録済みファイルでは ID の漏れ・重複・対象ファイル・空になる describe のガードも検査し、全 companion が一覧に登録されていることを別に確認します。実際の case 登録と OS 割当は後続タスクに残ります。
+
+## 全件の所要時間を測る
+
+`measure-slow-tests.yml` は `ci/measure-*` への push で、3 OS・各3 sampleの同じheadを測る。既存のPR品質検査や必須statusは変えない。
+
+測定workflowはファイルや名前を指定せず、`pnpm test`で全件を実行する。新しく加わった試験も対象にし、元15fileと期限試験の移動先2fileは最低限の包含確認に残す。保存する測定用metadataは`schemaVersion: 2`・`selection: all`で、`requiredFiles`に元15fileと`run-timeout`・`external-budget-deadline`の計17file、`files`に保存したraw reportの実suite一覧を持つ。同じsuite名の重複は残し、`missingRequiredFiles`で元対象の欠落を示す。reportがなければ`collectionState: missing`、読めないかrepo外のsuiteを含めば`invalid`とし、どちらも一覧を`null`にする。`recorded`は一覧を読めた状態で、全件成功や包含済みを意味しない。旧schemaVersion 1の15file測定は履歴として保持し、最新headの全件測定に流用しない。
