@@ -1,7 +1,8 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs';
-import { isAbsolute, relative, resolve } from 'node:path';
+import { closeSync, fsyncSync, mkdirSync, openSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs';
+import { basename, isAbsolute, relative, resolve } from 'node:path';
+import { StringDecoder } from 'node:string_decoder';
 import { pathToFileURL } from 'node:url';
 
 const ROLES = ['design', 'second-opinion', 'review'];
@@ -16,7 +17,7 @@ export function parseArgs(args) {
   const values = {};
   for (let i = 0; i < args.length; i += 2) {
     const key = args[i];
-    if (!['--role', '--request', '--head', '--timeout-min'].includes(key) || values[key] !== undefined || !args[i + 1]) {
+    if (!['--role', '--request', '--head', '--timeout-min', '--prior'].includes(key) || values[key] !== undefined || !args[i + 1]) {
       throw new Error('引数が不正です。--role、--request、--head、必要なら --timeout-min を指定してください。');
     }
     values[key] = args[i + 1];
@@ -26,16 +27,26 @@ export function parseArgs(args) {
       !Number.isInteger(timeoutMin) || timeoutMin < 1 || timeoutMin > 60) {
     throw new Error('工程・依頼ファイル・40桁のhead・1〜60分の上限を指定してください。');
   }
-  return { role: values['--role'], request: values['--request'], head: values['--head'], timeoutMs: timeoutMin * 60_000 };
+  if (values['--prior'] !== undefined && values['--role'] !== 'second-opinion') throw new Error('--priorはsecond-opinionだけに指定できます。');
+  return { role: values['--role'], request: values['--request'], head: values['--head'], timeoutMs: timeoutMin * 60_000,
+    ...(values['--prior'] !== undefined ? { prior: values['--prior'] } : {}) };
 }
 
-export function buildClaudeArgs(sessionId, requestDir) {
-  return ['--print', '--model', 'opus', '--permission-mode', 'plan',
+export function buildClaudeArgs(sessionId, requestDir, prior = false) {
+  const args = ['--print', '--model', 'opus', '--permission-mode', 'plan',
     '--tools', TOOLS.join(','), '--allowedTools', 'Read(./**)',
     '--setting-sources', '', '--settings', '{"disableAllHooks":true,"autoMemoryEnabled":false,"permissions":{"blockReadsOutsideWorkingDirectories":true}}',
     '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}',
     '--no-session-persistence', '--session-id', sessionId,
     '--add-dir', requestDir, '--output-format', 'stream-json', '--verbose'];
+  if (prior) {
+    const index = args.indexOf('--settings') + 1;
+    const settings = JSON.parse(args[index]);
+    settings.permissions.deny = ['Read(./.loomake/prior/**)'];
+    args[index] = JSON.stringify(settings);
+    args.push('--input-format', 'stream-json');
+  }
+  return args;
 }
 
 export function evaluateEvents(raw, sessionId) {
@@ -72,6 +83,66 @@ export function evaluateEvents(raw, sessionId) {
   return { result: result.result, models, responseModels, helperModels, tools: init.tools, mcpServers: init.mcp_servers,
     authenticationSource: init.apiKeySource ?? '不明', sessionId, permissionDenials: 0,
     durationMs: result.duration_ms ?? null, costUsd: result.total_cost_usd ?? null };
+}
+
+function priorEvents(raw, sessionId) {
+  let events;
+  try { events = raw.trim().split('\n').map((line) => JSON.parse(line)); }
+  catch { throw new Error('Claudeの応答をJSONとして読めませんでした。'); }
+  if (events.some((event) => event?.session_id !== undefined && event.session_id !== sessionId)) {
+    throw new Error('Claudeのセッションが指定した新規セッションと一致しません。');
+  }
+  return events;
+}
+
+function rejectPriorAccess(events, prior, cwd) {
+  const markers = ['.loomake/prior', basename(prior)];
+  const calls = new Map();
+  for (const event of events) {
+    for (const block of event?.message?.content ?? []) {
+      if (block?.type !== 'tool_use' && block?.type !== 'tool_result') continue;
+      if (block.type === 'tool_use' && typeof block.id === 'string') calls.set(block.id, block);
+      if (block.type === 'tool_use' && block.name === 'Read' && typeof block.input?.file_path === 'string') {
+        let target = resolve(cwd, block.input.file_path);
+        try { target = realpathSync(target); } catch { /* 存在しないRead対象も字面で確認する。 */ }
+        const path = target.replaceAll('\\', '/');
+        if (target === prior || path.includes('/.loomake/prior/') || path.endsWith('/.loomake/prior')) {
+          throw new Error('独立見解の保存前に先行仮説を参照しました。');
+        }
+        continue;
+      }
+      const source = block.type === 'tool_result' ? calls.get(block.tool_use_id) : undefined;
+      // 許可された別ファイルのRead本文にある使用例は、仮説ファイルの参照とは区別する。
+      if (source?.name === 'Read' && typeof source.input?.file_path === 'string') continue;
+      const value = JSON.stringify(block.type === 'tool_use' ? block.input : block.content).replaceAll('\\\\', '/');
+      if (markers.some((marker) => value.includes(marker))) throw new Error('独立見解の保存前に先行仮説を参照しました。');
+    }
+  }
+}
+
+export function evaluatePriorEvents(raw, sessionId) {
+  const events = priorEvents(raw, sessionId);
+  const ends = events.flatMap((event, index) => event?.type === 'result' ? [index] : []);
+  if (ends.length !== 2) throw new Error('Claudeの2段階の最終結果が不足・重複しています。');
+  const encode = (items) => items.map((event) => JSON.stringify(event)).join('\n');
+  const first = evaluateEvents(encode(events.slice(0, ends[0] + 1)), sessionId);
+  const second = evaluateEvents(encode(events.slice(ends[0] + 1)), sessionId);
+  const inits = events.filter((event) => event?.type === 'system' && event.subtype === 'init');
+  if (inits[0].model !== inits[1].model || JSON.stringify([...first.tools].sort()) !== JSON.stringify([...second.tools].sort())) {
+    throw new Error('Claudeの2段階でモデルまたは実行ツールが変わりました。');
+  }
+  return { ...second, independentResult: first.result, turns: 2 };
+}
+
+function saveIndependentView(dir, content, sync = fsyncSync) {
+  const fd = openSync(resolve(dir, 'independent-view.md'), 'wx', 0o600);
+  try { writeFileSync(fd, content, 'utf8'); sync(fd); }
+  finally { closeSync(fd); }
+  if (process.platform !== 'win32') {
+    const directory = openSync(dir, 'r');
+    try { sync(directory); }
+    finally { closeSync(directory); }
+  }
 }
 
 function git(cwd, args) {
@@ -136,6 +207,32 @@ async function invoke(cwd, prompt, args, options) {
     const sizes = { stdout: 0, stderr: 0 };
     let reason = '';
     let killTimer;
+    const decoder = new StringDecoder('utf8');
+    let pending = '';
+    const phase = [];
+    let results = 0;
+    function receive(text) {
+      pending += text;
+      let index;
+      while ((index = pending.indexOf('\n')) !== -1 && !reason) {
+        const line = pending.slice(0, index);
+        pending = pending.slice(index + 1);
+        if (!line.trim()) continue;
+        let event;
+        try { event = JSON.parse(line); }
+        catch { stop('Claudeの応答をJSONとして読めませんでした。'); return; }
+        try {
+          phase.push(event);
+          if (event?.type === 'result') {
+            results += 1;
+            if (results === 1) {
+              const next = prompt.onFirstResult(phase.map((item) => JSON.stringify(item)).join('\n'));
+              if (!reason) child.stdin.end(JSON.stringify({ type: 'user', message: { role: 'user', content: next } }) + '\n');
+            } else if (results > 2) throw new Error('Claudeの2段階の最終結果が不足・重複しています。');
+          }
+        } catch (error) { stop(error.code ? '独立見解を保存できませんでした。' : error.message); }
+      }
+    }
     function stop(message) {
       if (reason) return;
       reason = message;
@@ -151,11 +248,14 @@ async function invoke(cwd, prompt, args, options) {
         sizes[stream] += chunk.length;
         if (sizes[stream] > (stream === 'stdout' ? (options.maxOutputBytes ?? MAX_OUTPUT) : 64 * 1024)) {
           stop('Claudeの出力が上限に達しました。');
-        } else chunks[stream].push(chunk);
+        } else {
+          chunks[stream].push(chunk);
+          if (stream === 'stdout' && typeof prompt !== 'string' && !reason) receive(decoder.write(chunk));
+        }
       });
     }
     child.on('error', () => { reason = 'Claude Codeを起動できませんでした。既存のインストールと認証を確認してください。'; });
-    child.stdin.on('error', () => {});
+    child.stdin.on('error', () => { if (typeof prompt !== 'string') stop('Claudeへ先行仮説を送信できませんでした。'); });
     child.on('close', (exitCode) => {
       clearTimeout(timer);
       clearTimeout(killTimer);
@@ -163,11 +263,12 @@ async function invoke(cwd, prompt, args, options) {
       process.removeListener('SIGTERM', interrupt);
       resolvePromise({ exitCode, reason, stdout: Buffer.concat(chunks.stdout).toString('utf8'), stderr: Buffer.concat(chunks.stderr).toString('utf8') });
     });
-    child.stdin.end(prompt);
+    if (typeof prompt === 'string') child.stdin.end(prompt);
+    else child.stdin.write(JSON.stringify({ type: 'user', message: { role: 'user', content: prompt.first } }) + '\n');
   });
 }
 
-// executable/prefixArgsと短い上限は偽プロセスによる試験用。CLIから任意の実行コマンドは渡せない。
+// executable/prefixArgs・短い上限・syncIndependentViewは偽プロセスや保存失敗による試験用。CLIからは指定できない。
 export async function askOpus(input, options = {}) {
   const cwd = resolve(options.cwd ?? process.cwd());
   let dir;
@@ -175,6 +276,7 @@ export async function askOpus(input, options = {}) {
   const sessionId = randomUUID();
   try {
     if (!ROLES.includes(input.role) || !/^[a-f0-9]{40}$/.test(input.head)) throw new Error('工程またはheadが不正です。');
+    if (input.prior !== undefined && input.role !== 'second-opinion') throw new Error('--priorはsecond-opinionだけに指定できます。');
     checkTree(cwd, input.head);
     const root = realpathSync(cwd);
     const requestRoot = realpathSync(resolve(cwd, '.loomake'));
@@ -193,6 +295,21 @@ export async function askOpus(input, options = {}) {
     const content = readFileSync(request, 'utf8');
     if (!content.trim()) throw new Error('依頼ファイルが空です。');
     checkRequestSize(input.role, content);
+    let prior;
+    let priorContent;
+    if (input.prior !== undefined) {
+      prior = realpathSync(resolve(cwd, input.prior));
+      const priorRoot = realpathSync(resolve(requestRoot, 'prior'));
+      if (!inside(requestRoot, priorRoot) || !inside(priorRoot, prior) || prior === request) {
+        throw new Error('先行仮説は依頼とは別の.loomake/prior/配下の通常ファイルにしてください。');
+      }
+      const priorStat = statSync(prior);
+      if (!priorStat.isFile()) throw new Error('先行仮説には通常ファイルを指定してください。');
+      if (priorStat.size > MAX_REQUEST) throw new Error('先行仮説が200KiBを超えています。');
+      priorContent = readFileSync(prior, 'utf8');
+      if (!priorContent.trim()) throw new Error('先行仮説が空です。');
+      if (Buffer.byteLength(priorContent, 'utf8') > MAX_REQUEST) throw new Error('先行仮説が200KiBを超えています。');
+    }
     const outputRoot = resolve(requestRoot, 'claude');
     let realOutputRoot;
     try { realOutputRoot = realpathSync(outputRoot); }
@@ -206,16 +323,42 @@ export async function askOpus(input, options = {}) {
     if (ignored.status !== 0) throw new Error('成果物の保存先がGitの除外対象か確認できませんでした。');
     mkdirSync(outputDir, { recursive: true, mode: 0o700 });
     dir = outputDir;
-    const prompt = `担当工程: ${input.role}\n対象コミット: ${input.head}\n` +
+    let prompt = `担当工程: ${input.role}\n対象コミット: ${input.head}\n` +
       '最初にAGENTS.mdとdocs/dev/agent-workflow.mdを読んでください。Read/Glob/Grepだけで依頼を処理してください。計画ファイルの作成、編集、ExitPlanMode、承認・投稿はしないでください。成果物は最終メッセージの本文で返してください。\n\n' + content;
     writeFileSync(resolve(dir, 'request.md'), prompt, { mode: 0o600 });
-    execution = await invoke(cwd, prompt, buildClaudeArgs(sessionId, dir), { ...options, timeoutMs: input.timeoutMs });
+    let independentViewSavedAt;
+    let priorSentAt;
+    if (prior) {
+      prompt += '\n先行仮説はまだ渡していません。.loomake/prior/は読まず、検索・一覧にも含めないでください。このターンでは独立見解だけを最終メッセージで返してください。比較と設計は次の入力後に行います。';
+      writeFileSync(resolve(dir, 'request.md'), prompt, { mode: 0o600 });
+    }
+    const invocation = prior ? {
+      first: prompt,
+      onFirstResult: (raw) => {
+        const first = evaluateEvents(raw, sessionId);
+        rejectPriorAccess(priorEvents(raw, sessionId), prior, cwd);
+        checkTree(cwd, input.head);
+        try { saveIndependentView(dir, first.result, options.syncIndependentView); }
+        catch { throw new Error('独立見解を保存できませんでした。'); }
+        independentViewSavedAt = new Date().toISOString();
+        priorSentAt = new Date().toISOString();
+        return '独立見解の保存が完了しました。以下は先行担当の仮説です。ファイルから読み直さず、独立見解との合意点・相違点・相違を見分ける検証を比較し、原因と修正方針を設計してください。\n\n' + priorContent;
+      },
+    } : prompt;
+    execution = await invoke(cwd, invocation, buildClaudeArgs(sessionId, dir, Boolean(prior)), { ...options, timeoutMs: input.timeoutMs });
     writeFileSync(resolve(dir, 'events.jsonl'), execution.stdout, { mode: 0o600 });
     writeFileSync(resolve(dir, 'stderr.txt'), execution.stderr, { mode: 0o600 });
     if (execution.reason) throw new Error(execution.reason);
     if (execution.exitCode !== 0) throw new Error('Claude Codeが成功以外の終了コードを返しました。');
     checkTree(cwd, input.head);
-    const evidence = evaluateEvents(execution.stdout, sessionId);
+    const evidence = prior ? evaluatePriorEvents(execution.stdout, sessionId) : evaluateEvents(execution.stdout, sessionId);
+    if (prior) {
+      if (!independentViewSavedAt || readFileSync(resolve(dir, 'independent-view.md'), 'utf8') !== evidence.independentResult) {
+        throw new Error('独立見解の保存が確認できませんでした。');
+      }
+      delete evidence.independentResult;
+      Object.assign(evidence, { independentViewSavedAt, priorSentAt });
+    }
     writeFileSync(resolve(dir, 'result.md'), evidence.result, { mode: 0o600 });
     const { result: _result, ...metadata } = evidence;
     const summary = { ok: true, status: '実施済み', role: input.role, head: input.head, ...metadata, dir };
