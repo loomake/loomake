@@ -24,7 +24,9 @@ const originalMeasureFiles = [
   'tests/domain-mutations-conditions.test.ts',
 ] as const;
 const movedMeasureFiles = ['packages/runner/test/run-timeout.test.ts', 'packages/runner/test/external-budget-deadline.test.ts'] as const;
-const requiredMeasureFiles = [...originalMeasureFiles, ...movedMeasureFiles];
+const previousMeasureFiles = [...originalMeasureFiles, ...movedMeasureFiles];
+const schemaMeasureFiles = ['tests/schema-compatibility.test.ts', 'tests/schema-version-contract.test.ts'] as const;
+const requiredMeasureFiles = [...previousMeasureFiles, ...schemaMeasureFiles];
 
 const root = join(import.meta.dirname, '..');
 const directories: string[] = [];
@@ -81,7 +83,7 @@ describe('速度対策の測定metadata', () => {
     expect(existsSync(join(original, 'metadata.json'))).toBe(false);
   });
 
-  it('全件の実suiteと旧15file・移動先2fileの包含を記録し、新suiteと同名の多重度を失わない', () => {
+  it('全件の実suiteと旧17file・schema2fileの包含を記録し、新suiteと同名の多重度を失わない', () => {
     const repo = repository(); const directory = fixture();
     const files = [...requiredMeasureFiles, 'tests/test-partition-integration.test.ts', 'tests/claude-result-timer-validation.test.ts', originalMeasureFiles[0]];
     mkdirSync(join(repo, '.loomake'));
@@ -92,7 +94,8 @@ describe('速度対策の測定metadata', () => {
     expect(result.files!.filter((file: string) => file === MEASURE_TEST_FILES[0])).toHaveLength(2);
     expect(MEASURE_TEST_FILES.slice(0, 15)).toEqual(originalMeasureFiles);
     expect(MEASURE_TEST_FILES).toEqual(requiredMeasureFiles);
-    expect(MEASURE_TEST_FILES).toHaveLength(17);
+    expect(MEASURE_TEST_FILES.slice(0, 17)).toEqual(previousMeasureFiles);
+    expect(MEASURE_TEST_FILES).toHaveLength(19);
   });
 
   it.each(movedMeasureFiles)('旧15fileがすべてあっても移動先の欠落を記録する: %s', (missing) => {
@@ -103,6 +106,18 @@ describe('速度対策の測定metadata', () => {
     writeFileSync(join(repo, '.loomake/test-report.json'), raw);
     const result = saveMeasureMetadata(repo, directory, 2, 'failure');
     expect(result).toMatchObject({ schemaVersion: 2, selection: 'all', sample: 2, collectionState: 'recorded', files, missingRequiredFiles: [missing], testOutcome: 'failure', reportPresent: true });
+    expect(readFileSync(join(directory, 'test-report.json'), 'utf8')).toBe(raw);
+  });
+
+  it.each(schemaMeasureFiles)('旧17fileがすべてあってもschemaの各欠落を記録し、失敗rawと全suiteを保持する: %s', (missing) => {
+    const repo = repository(); const directory = fixture();
+    const files = [...requiredMeasureFiles.filter((file) => file !== missing), 'tests/additional-schema-observer.test.ts', originalMeasureFiles[0]];
+    const raw = JSON.stringify({ success: false, testResults: files.map((file) => ({ name: join(repo, file), assertionResults: [{ fullName: 'failed sample', status: 'failed' }] })) }) + '\r\n';
+    mkdirSync(join(repo, '.loomake'));
+    writeFileSync(join(repo, '.loomake/test-report.json'), raw);
+    const result = saveMeasureMetadata(repo, directory, 3, 'failure');
+    expect(result).toMatchObject({ schemaVersion: 2, selection: 'all', sample: 3, requiredFiles: requiredMeasureFiles, collectionState: 'recorded', files, missingRequiredFiles: [missing], testOutcome: 'failure', reportPresent: true });
+    expect(result.files!.filter((file: string) => file === originalMeasureFiles[0])).toHaveLength(2);
     expect(readFileSync(join(directory, 'test-report.json'), 'utf8')).toBe(raw);
   });
 
@@ -159,7 +174,7 @@ describe('速度対策の測定経路', () => {
     expect(new Set(os.flatMap((value) => samples.map((sample) => `${value}-${sample}`))).size).toBe(9);
     expect(stepOf('node-version:')).toContain('node-version: 24');
     expect(stepOf('actions/checkout@')).toContain('ref: ${{ github.sha }}');
-    expect(new Set(MEASURE_TEST_FILES).size).toBe(17);
+    expect(new Set(MEASURE_TEST_FILES).size).toBe(19);
     expect(MEASURE_TEST_FILES).toEqual(requiredMeasureFiles);
     expect(MEASURE_TEST_FILES.every((file) => existsSync(join(root, file)))).toBe(true);
     expect(workflow).not.toContain('MEASURE_FILES');
