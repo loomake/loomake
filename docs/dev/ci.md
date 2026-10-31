@@ -36,6 +36,8 @@ change のない L1 の PR では `verify` を呼ばないため、`tests/doc-li
 
 `ci:all-os` ラベルを L3 の PR で必須にする検査は、3 OS の試験の時間切れが直るまで入れていない。時間切れする試験は、下の「時間切れする試験の隔離」で一時的に外している。
 
+L2 の PR のラベルを確かめる自動の検査もない。そのため、管理役がマージ前に確かめる規則として、試験（`tests/`・`packages/*/test/`）・ルートの `scripts/`・`.github/workflows/` を変える L2 の PR には `ci:all-os` ラベルを付け、Windows・macOS の CI も成功してからマージする（delivery スキルの「マージと証跡」）。
+
 ## 開発の台本
 
 - `scripts/clean-merged-worktrees.sh`：ブランチを head にした PR が GitHub で merged になっている clean な worktree を消す（`gh pr list --state merged` で確かめる。gh を使えなければ何も消さない）。detached HEAD、dirty、`.loomake/`・`node_modules/`・`dist/`・`coverage/` 以外の無視ファイルがあるものは残す。`--dry-run` で一覧と判定理由だけを表示し、`--keep <name>` で残すものを指定する。各 worktree の `.loomake/` は `.loomake/archive/worktree-loomake-<日付>/` に退避する。ブランチは消さない

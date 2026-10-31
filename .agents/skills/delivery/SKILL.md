@@ -50,6 +50,8 @@ Goal操作ツールが使えない、またはGoal作成が失敗した場合は
 
 管理役は1セッションに固定し、依存を確認して実装・独立レビューを分担する。担当の重複や未コミット作業は `git worktree list`・既存PR・Issueの記録と照合する。実装担当ごとにworktreeを分け、同じIssue・changeへ重複着手しない。同時に進める本数と配分は ADR 0006 に従い、ほかのセッションも数に含める。既存の変更があるフォルダでブランチを切り替えない。既存の PR ブランチは worktree で扱い、新しい作業は `git fetch` したあとの origin/main から専用 worktree を作る。ルートの作業ツリーが main と一致するまで、ルートの規約は読まず、自分の worktree の規約を読む。マージされた PR の worktree は当日中に消す。削除は `scripts/clean-merged-worktrees.sh --dry-run` で一覧を確かめてから引数なしで実行する。各 worktree の `.loomake/` は `.loomake/archive/worktree-loomake-<日付>/` に退避される。
 
+サブエージェントの下書きや一時ファイルは、scratchpad の担当別フォルダ（`scratchpad/<担当>/`。例：`scratchpad/w5/`）に置く。scratchpad 直下の同じ名前のファイルを担当どうしで共用しない。
+
 リポジトリ全体で開いている PR のうち、作成から 24 時間以上たち、まだマージ条件を満たしていないもの（Draft か Ready かを問わない）が 2 本以上あるときは、新しい L3 PR を起こさない。先にそのどれかを受け入れる（マージかクローズ）か、分割する。
 
 担当を変えるときは、前の担当の作業を止めたことを確かめ、引き継ぎ（どこまで済んだか、未 push の作業があるか）を `trace.md` か作業記録に書いてから始める。
@@ -113,6 +115,8 @@ Opus の行は工程ごとに複数書いてよい。空欄の書き方は「対
 acceptance.json、CI 成果物のハッシュ照合、検査 merge の tree 照合、handoff 文書ごとの yomiyasu ログは作らない。GitHub の status が同じ head を保証している。
 
 段階ごとのマージ条件と「往復」の数え方は ADR 0006 のレビュー規則に従う。条件を満たした PR は管理役がマージする。差分を変えたら新しい head で証跡ブロックを書き直す。回数を使い切っても重大な指摘が残るときは、ADR 0006 に従って PR を分割するか、Issue に記録して人の判断を仰ぐ。
+
+試験（`tests/`・`packages/*/test/`）・ルートの `scripts/`・`.github/workflows/` を変える L2 の PR には `ci:all-os` ラベルを付け、Windows・macOS の CI も成功してからマージする。必須チェックの試験は ubuntu でしか流れないため、改行コードなどの OS 差はこのラベルがないと確かめられない。
 
 `@codex review` の依頼文には、変更した Requirement の ID と Scenario、見てほしい観点（境界値・エラー経路・OS 差）を書く。
 
