@@ -30,7 +30,11 @@
     "./schema/tasks.schema.json": "./schema/tasks.schema.json",
     "./schema/quality-report.schema.json": "./schema/quality-report.schema.json",
     "./schema/evidence.schema.json": "./schema/evidence.schema.json",
-    "./schema/report.schema.json": "./schema/report.schema.json"
+    "./schema/report.schema.json": "./schema/report.schema.json",
+    "./schema/versions/verify-result-1.0.0.schema.json": "./schema/versions/verify-result-1.0.0.schema.json",
+    "./schema/versions/verify-result-2.0.0.schema.json": "./schema/versions/verify-result-2.0.0.schema.json",
+    "./schema/versions/evidence-1.schema.json": "./schema/versions/evidence-1.schema.json",
+    "./schema/versions/evidence-2.schema.json": "./schema/versions/evidence-2.schema.json"
   },
   "files": [
     "dist",
@@ -50,7 +54,11 @@
       "./schema/tasks.schema.json": "./schema/tasks.schema.json",
       "./schema/quality-report.schema.json": "./schema/quality-report.schema.json",
       "./schema/evidence.schema.json": "./schema/evidence.schema.json",
-      "./schema/report.schema.json": "./schema/report.schema.json"
+      "./schema/report.schema.json": "./schema/report.schema.json",
+      "./schema/versions/verify-result-1.0.0.schema.json": "./schema/versions/verify-result-1.0.0.schema.json",
+      "./schema/versions/verify-result-2.0.0.schema.json": "./schema/versions/verify-result-2.0.0.schema.json",
+      "./schema/versions/evidence-1.schema.json": "./schema/versions/evidence-1.schema.json",
+      "./schema/versions/evidence-2.schema.json": "./schema/versions/evidence-2.schema.json"
     },
     "provenance": true
   },
