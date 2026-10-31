@@ -2,7 +2,8 @@
 // packages/core/schema/verify-result.schema.json と schema/versions/ のファイルは、このスキーマから書き出す（REQ-276）。
 // CLI の起動で zod を読まないように、@loomake/core の入口からは loadVerifyResultSchemas() で遅れて読む
 import { z } from 'zod';
-import { LEGACY_VERIFY_RESULT_SCHEMA_VERSION, VERIFY_RESULT_SCHEMA_VERSION, VERIFY_RESULT_V2_SCHEMA_VERSION } from './verify-result.js';
+import { VERIFY_RESULT_SCHEMA_VERSION } from './verify-result.js';
+import { LEGACY_VERIFY_RESULT_SCHEMA_VERSION, VERIFY_RESULT_V2_SCHEMA_VERSION } from './verify-result-versions.js';
 import { preserveUnknownFields } from './preserve-unknown-fields.js';
 import { qualityResultSchema } from './quality-result-schema.js';
 
