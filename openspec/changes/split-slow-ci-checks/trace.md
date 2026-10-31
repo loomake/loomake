@@ -14,6 +14,7 @@
 | V0 REPORT.md・旧全件測定run41181009660 | 8dのLinux隔離fixtureと3OS9sample（7成功/2失敗・未受入） | 2026-10-31 |
 | Opus cd321d46-844b-438a-bd15-2d0841611d27 | head995e6325・AUDIT-347/REGISTRY-INVENTORY・Q-A1〜Q-A6 | 2026-10-31 |
 | 管理役の設計採用・ADR0006 | Q-R2 B/Q-R3 B、Q-R1元file内方式、Q-A1〜Q-A6 A採用 | 2026-10-31 |
+| 受入済みmain PR231の期限試験移動 | main d799ea4f取込後の本文block/selector/native AST照合 | 2026-10-31 |
 
 原資料の全文・hashは専用treeの`.loomake/ci-formal-adoption/inputs/`と索引に保存した。Q01〜Q10の元おすすめはreadiness/manager-questions.json、採用回答はci-manager-decisions.md、Q-N1〜Q-N5の元案はOpus結果§7にある。旧資料の未採用という状態はその観測時点の記録であり、下表の管理役回答が今回の採用である。1 change/1 PRと配布第3枠は管理役が指定した。
 
@@ -100,3 +101,13 @@ Q-01〜Q-30の採用と条件は管理役がADR0006に基づき記録する。Q-
 追加2.5は独立な監査/宣言inventory先行で、残9fileの個別設計3.2と並行できる。REQ-347差分・本trace・scope・spec-only成功を実装前の条件とし、実registryと元本体は変えない。4.3の本体分割は3.1〜3.3・2.5・4.2の受入後に行う。元15番号/6完了印と必須受入3件を保持し、追加後は6/16＋必須受入3件未達とする。
 
 複数blockの一部欠測はblock集合hashで検知するが、同一it.eachのparameter行欠測まで検知したとは記録しない。元全parameterと正当な同名17行を含むraw全caseの独立多重集合比較は4.3/5.1に残す。旧レビュー表/旧形式行を勝手に移行・昇格させず、REQ-189/190/346/347の原契約、REQ-144、REQ-297、全診断・coverage・local/release全件・人のnode20-only ruleset操作・同PRマージとsync/archiveを保持する。
+
+## 2026-10-31 受入済みmainの移動後baseline
+
+main d799ea4fを取込済みとし、995eのrun60宣言/62raw候補/70展開行は当時の記録として残す。現行run58宣言/60raw候補/68行と、PR231がREQ-105の2宣言を移したrun-timeout2宣言/3raw候補/2行を、2.5の元scopeとして合わせて検査する。raw候補計63は移動先importの非call1が増えた結果であり、有効宣言計60/展開計70と区別する。
+
+native比較で旧run60＝現run58＋run-timeout2、旧external-budget11＝現8＋external-budget-deadline3の本文block文字列多重集合がbyte同一だった。現行run/timeoutはASTとscannerの有効宣言位置・本文範囲も一致した。旧run58selector＝現run56＋timeout2で、file以外のレビュー行ID/contains/hashScope/sha256など全fieldも一致した。別担当が受入済みmainで行った移動の保持証拠であり、assert/timeoutの弱化や新しい機能追加ではない。
+
+A-01の995eでの前提は履歴として残し、現行2fileを合わせたAST/scanner/展開数をnativeで再照合した。独立inventory全error codeや実行後のraw全case受入は2.5/4.3/5.1に残る。非literalなeach表はprivateな開発用診断dynamicRowsで展開未確定を示し、宣言を保持する方針を管理役が採用した。dynamicTitleとは区別し、新しいREQや製品仕様は追加しない。
+
+REQ-347差分、監査source、実registryは変更しない。6/16と必須受入3件未達、4.2/4.5の別測定と全受入条件は維持する。
