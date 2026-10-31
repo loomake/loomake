@@ -1,6 +1,7 @@
 import { lstatSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import { parseDocument } from 'yaml';
+import type { parseDocument as ParseDocument } from 'yaml';
 import type { Quality, VerifyRunError } from '@loomake/core';
 import { createInputReader, type InputReader } from '../runtime/input.js';
 
@@ -39,6 +40,11 @@ const MINIMAL_HINT = `リポジトリ直下に最小の quality.yaml（version: 
 const errorOf = (kind: VerifyRunError['kind'], message: string, next: string): QualityReadResult =>
   ({ status: 'error', error: { kind, target: QUALITY_FILE, message, next } });
 
+// yaml は quality.yaml を読むときに初めて読む。CLI の起動や、quality.yaml を読まない処理では読まない
+let yamlParser: typeof ParseDocument | undefined;
+const loadParseDocument = (): typeof ParseDocument =>
+  (yamlParser ??= (createRequire(import.meta.url)('yaml') as { parseDocument: typeof ParseDocument }).parseDocument);
+
 const codeOf = (error: unknown) => (error as NodeJS.ErrnoException | undefined)?.code;
 const isPermission = (text: string) => /\b(EACCES|EPERM)\b/.test(text);
 
@@ -70,7 +76,7 @@ export function readQualityFile(options: QualityReadOptions): QualityReadResult 
       ? errorOf('permission', 'quality.yaml を読む権限がありません', 'quality.yaml の読み取り権限を確認してください')
       : errorOf('runtime', `quality.yaml を読めません（${message}）`, 'ファイルの種類と大きさを確認してください。シンボリックリンクと 1 MiB を超えるファイルは読みません');
   }
-  const document = parseDocument(text, { prettyErrors: false });
+  const document = loadParseDocument()(text, { prettyErrors: false });
   if (document.errors.length) {
     const first = document.errors[0];
     const line = first.linePos?.[0].line;
