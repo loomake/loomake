@@ -41,16 +41,6 @@ describe('完了ゲートの観測値から次の段階を決める', () => {
   ] as const)('[REQ-205] %s', (_name, patch, expected) => {
     expect(decideAfterGate(Object.freeze({ ...gate, ...patch }))).toEqual(expected);
   });
-
-  it('[REQ-317] 完了ゲートに scope:ci の結果が来たら、修正回数が残っていても直しに進まず、ci の PASS を完了にもしない。aborted は ci より先、要判断は ci より後', () => {
-    const ci = decideAfterGate(Object.freeze({ ...gate, scope: 'ci' as const, ok: false, fixes: 0 }));
-    expect(ci.kind).toBe('stop');
-    expect((ci as { reason: string }).reason).toContain('scope:ci');
-    expect(decideAfterGate(Object.freeze({ ...gate, scope: 'ci' as const, ok: true }))).toEqual(ci);
-    expect(decideAfterGate(Object.freeze({ ...gate, scope: 'ci' as const, decisionReasons: ['仮定の承認'] }))).toEqual(ci);
-    expect((decideAfterGate(Object.freeze({ ...gate, scope: 'ci' as const, aborted: 'runtime：x' })) as { reason: string }).reason).toContain('実行エラー');
-    expect(decideAfterGate(Object.freeze({ ...gate, scope: 'local' as const, ok: true }))).toEqual({ kind: 'passed' });
-  });
 });
 
 it('[REQ-206] 観測値を変えず同じ判断を繰り返し返す', () => {

@@ -67,6 +67,20 @@ describe('完了ゲートの純粋判断', () => {
   });
 });
 
+describe('完了ゲートに ci の結果が来たときの純粋判断', () => {
+  it('[REQ-317] scope:ci なら、修正回数が残っていても直しに進まず、ci の PASS を完了にもしない。aborted は ci より先、要判断は ci より後に見る', () => {
+    const stop = decideAfterGate({ ...base, scope: 'ci' });
+    expect(stop.kind).toBe('stop');
+    expect((stop as { reason: string }).reason).toContain('scope:ci');
+    expect(decideAfterGate({ ...base, scope: 'ci', ok: true })).toEqual(stop);
+    expect(decideAfterGate({ ...base, scope: 'ci', decisionReasons: ['仮定の承認'] })).toEqual(stop);
+    expect((decideAfterGate({ ...base, scope: 'ci', aborted: 'runtime：x' }) as { reason: string }).reason).toContain('実行エラー');
+    expect(decideAfterGate({ ...base, scope: 'local', ok: true })).toEqual({ kind: 'passed' });
+    expect(gateObservation(ci()).scope).toBe('ci');
+    expect(gateObservation(local()).scope).toBe('local');
+  });
+});
+
 describe('run の完了ゲートと仕様ゲートで 2.0.0 を読む', () => {
   // 完了ゲートの最初の検査だけを 2.0.0 にする。証拠の記録はいまの書き出し（1.0.0）で行う
   function mockFirstDone(result: VerifyResultV2) {
