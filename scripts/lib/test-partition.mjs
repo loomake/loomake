@@ -53,7 +53,10 @@ export function loadPartition(root) {
   return validatePartition(data, { exists: (file) => existsSync(join(root, file)) && statSync(join(root, file)).isFile() });
 }
 
-/** 登録した case を fast と slow のどちらへ登録するか。未知の実行 OS は fast。 */
+/**
+ * 登録した case を fast と slow のどちらへ登録するか。未知の実行 OS は fast。
+ * @param {string} platform
+ */
 export function includeCase(registry, file, part, id, platform = process.platform) {
   if (part !== 'fast' && part !== 'slow') throw new PartitionError(`試験の分割先が不正です：${part}`);
   if (!Object.hasOwn(registry.files, file) || !Object.hasOwn(registry.files[file].cases, id)) throw new PartitionError(`試験の分割一覧に未登録の case です：${file} / ${id}`);
@@ -61,7 +64,10 @@ export function includeCase(registry, file, part, id, platform = process.platfor
   return part === 'slow' ? slow : !slow;
 }
 
-/** @param {Partition} registry */
+/**
+ * @param {Partition} registry
+ * @param {string} platform
+ */
 export function partitionFiles(registry, platform = process.platform) {
   const companions = [], fastExclude = [], slowInclude = [];
   for (const [file, { cases }] of Object.entries(registry.files)) {
