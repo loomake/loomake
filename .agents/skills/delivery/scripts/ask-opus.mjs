@@ -117,6 +117,8 @@ export function extractDiff(content) {
 // 差分の区切りがない依頼とreview以外の工程は、安全側として依頼全体に掛ける。
 // 別に、全工程で読む前に依頼全体へ1MiBの安全弁を掛ける（差分を区切り行の外に貼る抜け道への天井）。
 export function checkRequestSize(role, content) {
+  // 読む前のファイルサイズに加え、読んだ内容にも1MiBを掛ける（不正なUTF-8の置換で大きくなる場合を含む）。
+  if (Buffer.byteLength(content, 'utf8') > MAX_FILE) throw new Error('依頼ファイルが1MiBを超えています。');
   const diff = role === 'review' ? extractDiff(content) : null;
   if (diff === null) {
     if (Buffer.byteLength(content, 'utf8') > MAX_REQUEST) throw new Error('依頼ファイルが200KiBを超えています。');

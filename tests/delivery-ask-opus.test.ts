@@ -354,6 +354,26 @@ describe('deliveryのClaude起動', () => {
       expect(existsSync(join(cwd, '.loomake/called'))).toBe(true);
     });
   });
+  it('reviewで差分が200KiB以内でも、依頼全体がちょうど1MiB+1バイトなら起動前に拒む', async () => {
+    await withRepo('success', async ({ cwd, input, options }) => {
+      const base = Buffer.byteLength(reviewRequest('+'));
+      const content = reviewRequest('+', 'x'.repeat(1024 * 1024 + 1 - base));
+      expect(Buffer.byteLength(content)).toBe(1024 * 1024 + 1);
+      writeFileSync(input.request, content);
+      expect(await askOpus({ ...input, role: 'review' }, options)).toMatchObject({ ok: false, dir: null, reason: '依頼ファイルが1MiBを超えています。' });
+      expect(existsSync(join(cwd, '.loomake/called'))).toBe(false);
+    });
+  });
+  it('1MiB以内のファイルでも、不正なUTF-8の置換で読んだ内容が1MiBを超えれば起動前に拒む', async () => {
+    await withRepo('success', async ({ cwd, input, options }) => {
+      const file = Buffer.concat([Buffer.from(reviewRequest('+')), Buffer.alloc(400 * 1024, 0xff)]);
+      expect(file.length).toBeLessThanOrEqual(1024 * 1024);
+      expect(Buffer.byteLength(file.toString('utf8'))).toBeGreaterThan(1024 * 1024);
+      writeFileSync(input.request, file);
+      expect(await askOpus({ ...input, role: 'review' }, options)).toMatchObject({ ok: false, dir: null, reason: '依頼ファイルが1MiBを超えています。' });
+      expect(existsSync(join(cwd, '.loomake/called'))).toBe(false);
+    });
+  });
   it('reviewでCRLFの差分は改行のCRも数え、生のバイト数が200KiBを超えれば拒む', async () => {
     await withRepo('success', async ({ cwd, input, options }) => {
       const diff = `${'+'.repeat(limit - 2)}\r\n+`;
