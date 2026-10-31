@@ -1,10 +1,10 @@
 # 速度対策1-1（PR184）
 
-1. `split-slow-ci-checks`の先行実装2.1〜2.4を保持し、追加のOpus設計に従ってREQ-347の差分、proposal・design・tasks・traceを更新した。元のRequirement本文・3つのScenario・Sourceと既存15タスクを残し、監査・登録宣言検査を未完了の2.5として追加した。本文を元testに残す方式を採り、実registryは空のままとした。
-2. 期限試験の移動を含む最新mainの取込後、元本文・selector/hashの保持を照合して2.5のbaselineを追記し、`verify --spec-only`とchangeのstrict検査は成功した。前段のmain統合後は関連108試験・build・型・lintが成功した。前段headのCIはUbuntu・macOS・Node22・CodeQL・隔離試験が成功したが、Windowsの夜間変異試験2件と未完了タスクによるgateは失敗した。Windowsの同じ改行差を修理したPR230はmainへ受入済みであり、今回の取込後の実行結果は別に確認する。
-3. 分割前の全件測定9本は7成功・Windows2失敗で、測定の受入は未完了である。元の15file限定測定やLinuxの隔離fixtureの成功を、最新headの全件・3OS・監査の合格へ流用しない。同名実行行の多重度を保持し、同じit.each内のparameter欠測は本文hashだけでは証明せず、独立した全case比較へ残す。
-4. 進捗は6/16、完了ゲート後の必須受入3件も未達である。最新mainの取込と別担当による期限試験の移動前後の照合を終え、次に2.5の実装と残9fileの設計を進める。旧run60宣言は現run58＋移動先2宣言で保持し、raw候補数と宣言数を区別する。元case・parameter・assert・timeout・skip、coverage、REQ-297の時間上下限と時計、local/release全件、人のnode20-only規則操作、独立レビュー・マージ・sync/archiveの条件を保つ。
+1. `split-slow-ci-checks`のタスク2.5として、登録済みcompanionの実結果を元sourceへ結ぶ監査と、独立ASTによる宣言・登録検査を実装した。元REQ-347の本文・3つのScenario・Source、raw report・レビュー表、既存scanner・partition・Vitestと実registry空を保った。追加G-B設計に従い、通常fixture helperをbindingで分類し、namespaceやalias経由の自身の宣言を見逃す問題も回帰試験とともに修正した。
+2. 関連177件、spec-only、build、型検査、lint、差分検査が成功した。別Codexの独立点検も139件が成功し、未解決の重大・軽微指摘はゼロだった。main取込後の前段CIは全3OS・Node22・CodeQLが成功したが、gateは未完了タスクで失敗し、隔離WindowsにはTemp導入の既存120秒timeoutが残った。この失敗はIssue181に保存し、再実行や条件変更はしていない。
+3. 分割前の旧全件測定9本は7成功・Windows2失敗で未受入である。元の15file限定測定、Linux隔離fixture、同じit.each内の本文hashを、最新全件・3OS・全parameterの保持の証明へ流用しない。G-Bの静的候補数の見積の誤りは、元sourceを変えず独立実測で訂正し、通常helperや同名実行行を除外して帳尻を合わせていない。
+4. 進捗は7/16、完了ゲート後の必須受入3件も未達である。次にGit読取集約を含む最新mainを実装ブランチへ取り込み、旧guards全本文と新しい2宣言の保持を照合して再検証する。残設計、実case分割、全PRのslow不実施、最終測定、REQ-297の時間上下限と時計、coverage、local/release全件、人のnode20-only規則操作、独立最終レビュー・マージ・sync/archiveを残す。
 
 | PR | 設計待ち | 実装 | CI待ち | レビュー往復回数 | マージまで |
 |---|---|---|---|---|---|
-| [184](https://github.com/loomake/loomake/pull/184) | 残9fileと既存設計の統合照合 | 進行中（6/16） | main取込済み・統合後の実行検証待ち | 最終レビュー未実施 | 必須受入未達・未マージ |
+| [184](https://github.com/loomake/loomake/pull/184) | 残設計と最新mainの追加試験照合 | 進行中（7/16） | 次のコードheadで検証 | 最終レビュー未実施 | 必須受入未達・未マージ |

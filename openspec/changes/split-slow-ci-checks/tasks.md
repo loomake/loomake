@@ -12,7 +12,9 @@
 - [x] 2.3 純粋split helperとnamed slowの足場を作り、未測定のOS割当やcase本体の分割を加えず、空集合・未知ID/OS・PR判定とファイル選択を検査する。reporter/outputFile/coverage/ci-gate/verifyを保つ
 - [x] 2.4 REQ-161の元13条件を実際に検出する独立fast試験とrunnerのonly選択を追加し、未知/重複拒否、baseline/検出/未検出/エラー/元source-test-report不変を確認する。既定13条件の元全体試験も残す。fastの確定は統合後3OS各3sampleで行う
 
-- [ ] 2.5 REQ-347差分・traceのQ-19〜Q-30・scopeを確認し、spec-only exit 0の後、cd321d46に従う監査/宣言inventoryとdocsを同じPRで実装する。[REQ-347]付きで登録済みC→S、rawFile/inputs、登録外Cのraw保持、不正/欠落registry・不正Cのerror/成果物なし、status/Source/hash、同名別入力行とoverlapのSet、複数block欠測、既存状態/旧形式/migrate条件を検査し、raw report・レビュー表・元3Scenarioを保つ。独立ASTで下記の移動後baselineと合成fixture全error codeを確かめ、alias/動的title/未知の動的行/壊れた宣言を除外しない。AST実測が想定と違えば設計へ戻す。将来mainでcase移動/count変更があれば期待値を実装へ合わせず、移動前後の保持を示す別の承認済み証拠とbaselineを再照合する。実registry/本体/既存scanner・partition・Vitest規則は変えず、既存監査全試験を通す
+- [x] 2.5 REQ-347差分・traceのQ-19〜Q-30・scopeを確認し、spec-only exit 0の後、cd321d46に従う監査/宣言inventoryとdocsを同じPRで実装する。[REQ-347]付きで登録済みC→S、rawFile/inputs、登録外Cのraw保持、不正/欠落registry・不正Cのerror/成果物なし、status/Source/hash、同名別入力行とoverlapのSet、複数block欠測、既存状態/旧形式/migrate条件を検査し、raw report・レビュー表・元3Scenarioを保つ。独立ASTで下記の移動後baselineと合成fixture全error codeを確かめ、alias/動的title/未知の動的行/壊れた宣言を除外しない。AST実測が想定と違えば設計へ戻す。将来mainでcase移動/count変更があれば期待値を実装へ合わせず、移動前後の保持を示す別の承認済み証拠とbaselineを再照合する。実registry/本体/既存scanner・partition・Vitest規則は変えず、既存監査全試験を通す
+
+2.5にはG-B Q-G2の通常const fixture helperと非call参照のbinding分類を含め、test alias拒否を保つ。guards37/52/40とrun-no-change12/13/25のモデル静的値を独立ASTで実測する。実登録/prefix/隔離解除は含めない。
 
 2.5の995e基点run60宣言/62候補/70展開行は履歴として残す。受入済みmain PR231の移動後はlive run58宣言/60候補/68行とrun-timeout2宣言/3候補/2行を合わせ、元60宣言/70行のscopeを保持する。raw候補計63は追加importの非call1増であり、宣言数には数えない。本文blockとselector/hashの独立保持照合に基づくbaseline更新とし、既存期待を実装へ合わせて変えない。非literalなeach表の展開未確定はdynamicRowsで明示し、宣言を除外せずdynamicTitleも流用しない。
 

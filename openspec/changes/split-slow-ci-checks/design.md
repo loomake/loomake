@@ -53,7 +53,7 @@ native scannerで995eのrun60本文blockと現行run58＋run-timeout2の文字�
 
 旧runの58selectorは現行run56＋run-timeout2へ移り、レビュー行ID・contains・hashScope・sha256などfile以外の全fieldは同一だった。REQ-347差分と監査sourceは変えず、2.5のlive inventoryはrunと移動先run-timeoutの2宣言を合わせて元scopeを保持する。既存期待を実装へ合わせる変更ではなく、受入済みmainの移動と独立した本文/selector保持の照合を根拠にbaselineを更新する。残る登録済みfileの検査、実registry空、監査/品質/全受入の条件は保つ。
 
-非literalなeach表などで展開行数を確定できない場合はprivateな開発用診断code dynamicRowsで未確定を示し、宣言自体を保持する。文字列でない試験名を表すdynamicTitleは流用しない。
+非literalなeach表などで展開行数を確定できない場合はprivateな開発用診断code dynamicRowsで未確定を示し、宣言自体を保持する。文字列でない試験名を表すdynamicTitleは流用しない。 親のdescribe.eachなどで実行回数が変わる未対応構造も、行数を1と確定せずdynamicRowsとする。Vitestのnamespace参照やその別名を未分類のまま除外せず、独立inventoryはaliasとして拒否する。companionの自身の宣言なしという条件はscanner候補0だけでは証明せず、namespace・別名経由の標準Vitest宣言も独立した構造検査で拒否する。重なる不正条件の診断は抑制せず、負のfixtureで期待するcode集合を確認する。
 
 ## 保持と欠測を確かめる範囲
 
@@ -66,6 +66,14 @@ V0は8d・Linux・Node24.21.0・Vitest5.0.5の隔離fixtureの証拠である。
 ## 2.5の変更対象と確認
 
 scripts/scenario-audit.mjs、tests/scenario-audit-scope.test.ts、新しいscripts/lib/test-declarations.mjsとtests/test-declarations.test.ts、docs/dev/ci.mdを対象にする。scope testのprepareは空registryを既定で用意し、既存assertを弱めない。AUDIT-347の11fixture群（正常・status/Source不一致・登録外・一覧/C不正・本文/Cコメント変更・複数block欠測・同名別行・overlap・既存状態・migrate）をREQ-347付きで検査し、raw bytes/レビュー表/旧形式移行条件を保持する。開発用inventory試験には虚偽REQタグを付けない。既存scenario-audit全試験も実行する。
+
+# guards・run-no-changeの追加設計（5753a1af）
+
+G-Bの元test内prefixとcompanion方式を採用する。本文を変えず、実registry登録とprefix追加は測定後の同じ4.3で行う。guardsの37宣言/52候補/40行、run-no-changeの12宣言/13候補/25行はモデルの静的読取値であり、実装担当が独立ASTで照合する。モデルは候補44と数えたが、同じ3d664のsourceを管理役と実装担当が独立実測し、52候補＝37宣言＋import1＋propertyKey8＋通常helper6と確認した。本文を変更せず、未実測だった静的見積の漏れを訂正し、宣言37/展開40は一致した。
+
+Q-G1は推奨Cとし、each行の閾値混在が実測されるまで追加のwrapperや本文変更を実装しない。混在があれば未割当のまま具体設計を追加し、fast行を表ごとslowへ送らない。Q-G2は推奨Aを採用し、同fileのconstで定義された通常fixture helperの宣言名・非call参照をbindingに基づいて非宣言と分類する。withTest6候補を検査対象から消さず、テスト関数を指す初期値やそのaliasは拒否する。元run/timeoutの検査を保持し、2.5でこの2fileと正負fixtureも独立照合する。Q-G3は推奨Aの条件付き採用とし、最新測定でWindows隔離中の3試験が成功した場合だけ4.3の登録と同じcommitで隔離を解除する。失敗時はBの未登録・未達を保ち、隔離/分割の重複拒否を変更しない。
+
+モデルはADR本文未読と明記した。AGENTSとworkflowのRead、actual Opus5-5/read-only/拒否0と管理役の全文読了を確認し、管理役はADRのおすすめ回答・品質維持・人の操作の境界を照合した。3規約のRead済みや新しい人のレビューとは記録しない。異なる不正条件が重なる場合の診断は抑制せず、負のfixtureで全code集合を確認する。独立全case比較は有効な登録対応だけでCからSへ戻し、名前の推測mappingを採用しない。
 
 # Vitestと共有build
 
