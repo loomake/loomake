@@ -1,5 +1,6 @@
 import { parseTestReport, type Quality, type QualityMeasure } from '@loomake/core';
 import type { QualityObservation } from './quality-conditions.js';
+import { sha256Hex } from './sha256.js';
 
 /** テストのレポートを出どころにする品質の source */
 export const TEST_REPORT_SOURCE = 'ci.test_report';
@@ -58,12 +59,21 @@ function judge(receipt: TestReportReceipt | null, target: string | undefined): F
   if (!receipt.target.before || !receipt.target.after) return { status: 'unverified', evidence, detail: '対象のコミットを確かめられません' };
   if (receipt.target.before !== receipt.target.after) return { status: 'stale', evidence, detail: '実行中に対象のコミットが変わりました' };
   if (receipt.basis.before !== receipt.basis.after) return { status: 'stale', evidence, detail: '実行中に基準（quality.yaml・仕様・trace.md）が変わりました' };
+  if (sha256Hex(report.text) !== report.sha256) {
+    return { status: 'unverified', evidence, detail: 'レポートの hash が本文と一致しません' };
+  }
   if (!invocation.clearedBefore) return { status: 'unverified', evidence, detail: '前回のレポートを消してから実行していません' };
   const parsed = parseTestReport(report.path, report.text);
   if (parsed.errors.length > 0) return { status: 'unverified', evidence, detail: `レポートを読めません（${parsed.errors[0].message}）` };
-  const { startTime, tests } = parsed.value;
+  const { startTime, tests, files } = parsed.value;
   if (startTime === null) return { status: 'unverified', evidence, detail: 'レポートに開始時刻がありません' };
   if (startTime < invocation.startedAt || startTime > invocation.finishedAt) return { status: 'stale', evidence, detail: 'この実行で作られたレポートではありません' };
+  // 読み込みに失敗したファイルはテストが 0 件になり、失敗を数えられない。数えた値を信頼できないので未照合にする
+  const broken = files.find((f) => f.status === 'failed' && f.tests === 0);
+  if (broken) {
+    const reason = broken.message ? `：${broken.message.split('\n')[0].slice(0, 200)}` : '';
+    return { status: 'unverified', evidence, detail: `テストを実行できなかったファイルがあります（${broken.file}${reason}）` };
+  }
 
   const required = new Set(receipt.required);
   const executed = new Set<string>();
@@ -93,7 +103,8 @@ type Item = { evidence: QualityMeasure[]; applicability?: string };
 /**
  * ci.test_report の adapter（REQ-319）。quality の適用対象のうち、source が ci.test_report で
  * metric が required_subjects_with_failed_tests の必須証拠ごとに観測を 1 つ返す。
- * producer と版・対象のコミット・基準の hash・同じ実行で作られたレポートかを照合し、通らなければ measured にしない。
+ * producer と版・対象のコミット・基準の hash・レポートの hash・同じ実行で作られたレポートか・テストを実行できなかったファイルがないかを照合し、
+ * 通らなければ measured にしない。
  * receipt が null なら未実施にする。入力を変えず、I/O・環境・時計を読まない
  */
 export function observeTestReport(quality: Quality, receipt: TestReportReceipt | null): QualityObservation[] {

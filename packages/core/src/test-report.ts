@@ -9,12 +9,18 @@ export type TestCaseStatus = 'passed' | 'failed' | 'skipped' | 'todo' | 'pending
 /** レポートにある 1 件のテスト。requirements は fullName にある要件 ID（重複なし・昇順） */
 export type TestCase = { file: string; fullName: string; status: TestCaseStatus; requirements: string[] };
 
-/** テストのレポートの中身。startTime はレポートの最上位にある開始時刻（エポックからのミリ秒）。なければ null */
-export type TestReport = { startTime: number | null; tests: TestCase[] };
+/** レポートにある 1 つのテストファイル。status と message はファイル単位の結果（文字列でなければ null）。tests はそのファイルのテストの数 */
+export type TestFileResult = { file: string; status: string | null; message: string | null; tests: number };
+
+/**
+ * テストのレポートの中身。startTime はレポートの最上位にある開始時刻（エポックからのミリ秒）。なければ null。
+ * files はファイル単位の結果で、読み込みに失敗してテストが 1 件もないファイルもここで分かる
+ */
+export type TestReport = { startTime: number | null; tests: TestCase[]; files: TestFileResult[] };
 
 // Vitest の json レポーター（Jest と同じ形式）のうち、読む部分だけ
 type Report = {
-  testResults: { name: string; assertionResults: { fullName: string; status: string }[] }[];
+  testResults: { name: string; status?: unknown; message?: unknown; assertionResults: { fullName: string; status: string }[] }[];
 };
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -83,15 +89,17 @@ export function extractTestRequirements(file: string, reportText: string): Parse
 
 /**
  * テストランナー（Vitest・Jest と同じ形式）の JSON レポートから、すべてのテストの file・fullName・status・要件 ID と、
- * 最上位の startTime を読む（REQ-319）。status が passed・failed・skipped・todo・pending 以外なら other にする。
+ * ファイル単位の status・message、最上位の startTime を読む（REQ-319）。status が passed・failed・skipped・todo・pending 以外なら other にする。
  * 読めないときや形が違うときは、空の結果とエラーを返す。extractTestRequirements の結果は変えない
  */
 export function parseTestReport(file: string, reportText: string): ParseResult<TestReport> {
   const read = readReport(file, reportText);
-  if ('errors' in read) return { value: { startTime: null, tests: [] }, errors: read.errors };
+  if ('errors' in read) return { value: { startTime: null, tests: [], files: [] }, errors: read.errors };
   const { startTime } = read.report;
   const tests = read.report.testResults.flatMap((r) =>
     r.assertionResults.map((a) => ({ file: r.name, fullName: a.fullName, status: toStatus(a.status), requirements: requirementIds(a.fullName) })),
   );
-  return { value: { startTime: typeof startTime === 'number' && Number.isFinite(startTime) ? startTime : null, tests }, errors: [] };
+  const text = (v: unknown) => (typeof v === 'string' ? v : null);
+  const files = read.report.testResults.map((r) => ({ file: r.name, status: text(r.status), message: text(r.message), tests: r.assertionResults.length }));
+  return { value: { startTime: typeof startTime === 'number' && Number.isFinite(startTime) ? startTime : null, tests, files }, errors: [] };
 }

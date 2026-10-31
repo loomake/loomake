@@ -18,10 +18,12 @@
 | target | 品質コマンドの前後の `git rev-parse HEAD` | 両方あり、同じ。取れなければ未照合、違えば古い |
 | basis | 前後の基準のhash（quality.yaml・差分仕様・trace.md） | 同じ。違えば古い |
 | invocation | 品質コマンドの開始と終了の時刻、レポートを事前に消したか | レポートの `startTime` が開始から終了の間にある。事前に消していない、`startTime` がない、範囲外は古いか未照合 |
-| report | パス、本文、sha256 | 不在は未実施、読めない・形が違うは未照合 |
+| report | パス、本文、sha256 | 不在は未実施。本文から計算したsha256が渡されたsha256と違えば未照合。読めない・形が違う、テストが0件でファイル単位のstatusがfailedのファイル（読み込みの失敗）があるときも未照合 |
 | required | 必須の要件ID（差分仕様のADDED・MODIFIEDのSource） | 空なら取得不能 |
 
 metricは `required_subjects_with_failed_tests` だけを扱う。値は「必須の要件のうち、実施されたfailedのテストを持つものの数」。samplesは必須の要件を名前に持つpassedかfailedのテストの、重複のない数（観測の識別は report hash・ファイル・fullName）。skip・todo・pendingは実施に数えない。必須の要件のどれかに実施されたテストがなければ incomplete（不足）にする。ただし、すでに数えたfailedだけで目標の違反が確定するとき（`<=`・`==` で値が上限を超える、`<` で上限以上）は、その値で measured を返し、既存の判定がFAILを優先する。ほかのmetricと、quality.yamlにないsourceの観測は作らない（判定は「観測がありません」の不足になる）。
+
+adapterは本文のsha256を自前の純関数（`policy/sha256.ts`）で計算する。判定関数は `node:*` を読めない（eslintの純粋性の補助検査）ため、`node:crypto` は使わない。同じ値になることは試験で `node:crypto` と比べて確かめる。
 
 観測のevidenceには `report:sha256:…`・`basis:sha256:…`・`target:<SHA>`・`producer:<名前>@<版>` を入れる。適格でない理由は `detail` に書き、checkのreasonに出す。
 

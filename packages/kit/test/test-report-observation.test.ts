@@ -1,5 +1,7 @@
+import { createHash } from 'node:crypto';
 import { describe, it, expect } from 'vitest';
 import { loadQualitySchema, type Quality } from '@loomake/core';
+import { sha256Hex } from '../src/verify/policy/sha256.js';
 import { FAILED_SUBJECTS_METRIC, TEST_REPORT_SOURCE, evaluateQualityConditions, observeTestReport, type TestReportReceipt } from '../src/index.js';
 
 const { qualitySchema } = await loadQualitySchema();
@@ -16,12 +18,15 @@ const START = 1_000_000;
 const reportText = (tests: [string, string][], startTime: number | null = START + 10) =>
   JSON.stringify({ ...(startTime === null ? {} : { startTime }), testResults: [{ name: '/p/a.test.ts', assertionResults: tests.map(([fullName, status]) => ({ fullName, status })) }] });
 
+const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
+const reportOf = (text: string, path = '.loomake/test-report.json') => ({ path, text, sha256: sha256(text) });
+
 const receipt = (over: Partial<TestReportReceipt> = {}, tests: [string, string][] = [['[REQ-012] 成功', 'passed']]): TestReportReceipt => ({
   producer: { name: 'vitest', version: '5.0.5' },
   target: { before: SHA, after: SHA },
   basis: { before: 'b1', after: 'b1' },
   invocation: { startedAt: START, finishedAt: START + 100, clearedBefore: true },
-  report: { path: '.loomake/test-report.json', text: reportText(tests), sha256: 'r1' },
+  report: reportOf(reportText(tests)),
   required: ['REQ-012'],
   ...over,
 });
@@ -48,7 +53,7 @@ describe('ci.test_report の adapter', () => {
         status: 'measured',
         value: 0,
         samples: 1,
-        evidence: ['report:sha256:r1', 'basis:sha256:b1', `target:${SHA}`, 'producer:vitest@5.0.5'],
+        evidence: [`report:sha256:${sha256(reportText([['[REQ-012] 成功', 'passed']]))}`, 'basis:sha256:b1', `target:${SHA}`, 'producer:vitest@5.0.5'],
       },
     ]);
     expect(evaluateQualityConditions(quality(), observations)[0].result).toBe('PASS');
@@ -115,7 +120,7 @@ describe('ci.test_report の adapter', () => {
   it('[REQ-319] 置き残したレポート（事前に消していない、開始時刻がない・実行の範囲外）を measured にしない', () => {
     expect(status(receipt({ invocation: { startedAt: START, finishedAt: START + 100, clearedBefore: false } }))).toBe('unverified');
     const base = receipt();
-    const withStart = (startTime: number | null) => ({ ...base, report: { ...base.report!, text: reportText([['[REQ-012] 成功', 'passed']], startTime) } });
+    const withStart = (startTime: number | null) => ({ ...base, report: reportOf(reportText([['[REQ-012] 成功', 'passed']], startTime)) });
     expect(status(withStart(null))).toBe('unverified');
     expect(status(withStart(START - 1))).toBe('stale');
     expect(status(withStart(START + 101))).toBe('stale');
@@ -125,9 +130,44 @@ describe('ci.test_report の adapter', () => {
 
   it('[REQ-319] レポートがなければ未実施、読めなければ未照合、receipt がなければ未実施、必須の要件がなければ取得不能にする', () => {
     expect(status(receipt({ report: null }))).toBe('not_run');
-    expect(status(receipt({ report: { path: 'r.json', text: '{', sha256: 'x' } }))).toBe('unverified');
+    expect(status(receipt({ report: reportOf('{', 'r.json') }))).toBe('unverified');
     expect(status(null)).toBe('not_run');
     expect(status(receipt({ required: [] }))).toBe('unavailable');
+  });
+
+  it('[REQ-319] レポートの照合に使う SHA-256 は node:crypto と同じ値を返す', () => {
+    for (const text of ['', 'abc', 'あいう😀', 'x'.repeat(55), 'x'.repeat(56), 'y'.repeat(64), 'z'.repeat(1000), reportText([['[REQ-012] 成功', 'passed']])]) {
+      expect(sha256Hex(text)).toBe(sha256(text));
+    }
+  });
+
+  it('[REQ-319] レポートの hash が本文と一致しなければ未照合にする', () => {
+    const base = receipt();
+    const [observation] = observe({ ...base, report: { ...base.report!, sha256: 'f'.repeat(64) } });
+    expect(observation.status).toBe('unverified');
+    expect(observation.detail).toContain('hash');
+  });
+
+  it('[REQ-319] テストを実行できなかった（ファイル単位で failed、テストが 0 件の）ファイルがあれば、ほかが成功でも measured 0 にしない', () => {
+    const text = JSON.stringify({
+      startTime: START + 10,
+      testResults: [
+        { name: '/p/a.test.ts', status: 'passed', assertionResults: [{ fullName: '[REQ-012] 成功', status: 'passed' }] },
+        { name: '/p/broken.test.ts', status: 'failed', message: 'SyntaxError: Unexpected token\n    at x', assertionResults: [] },
+      ],
+    });
+    const [observation] = observe(receipt({ report: reportOf(text) }));
+    expect(observation.status).toBe('unverified');
+    expect(observation.detail).toBe('テストを実行できなかったファイルがあります（/p/broken.test.ts：SyntaxError: Unexpected token）');
+    expect(evaluateQualityConditions(quality(), [observation])[0].result).not.toBe('PASS');
+  });
+
+  it('[REQ-319] ファイル単位で failed でも、テストがあればテストごとの結果で数える', () => {
+    const text = JSON.stringify({
+      startTime: START + 10,
+      testResults: [{ name: '/p/a.test.ts', status: 'failed', assertionResults: [{ fullName: '[REQ-012] 失敗', status: 'failed' }] }],
+    });
+    expect(observe(receipt({ report: reportOf(text) }))[0]).toMatchObject({ status: 'measured', value: 1 });
   });
 
   it('[REQ-319] ほかの source・metric と対象外の項目には観測を作らない', () => {

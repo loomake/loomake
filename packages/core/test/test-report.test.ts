@@ -83,8 +83,25 @@ describe('parseTestReport', () => {
     expect(parseTestReport('r.json', JSON.stringify({ startTime: '1', testResults: [] })).value.startTime).toBeNull();
   });
 
+  it('[REQ-319] ファイル単位の status・message とテストの数を返す', () => {
+    const text = JSON.stringify({
+      testResults: [
+        { name: '/repo/a.test.ts', status: 'passed', assertionResults: [{ fullName: '[REQ-012] a', status: 'passed' }] },
+        { name: '/repo/broken.test.ts', status: 'failed', message: 'SyntaxError', assertionResults: [] },
+        { name: '/repo/c.test.ts', status: 1, message: null, assertionResults: [] },
+      ],
+    });
+    const { value, errors } = parseTestReport('r.json', text);
+    expect(errors).toEqual([]);
+    expect(value.files).toEqual([
+      { file: '/repo/a.test.ts', status: 'passed', message: null, tests: 1 },
+      { file: '/repo/broken.test.ts', status: 'failed', message: 'SyntaxError', tests: 0 },
+      { file: '/repo/c.test.ts', status: null, message: null, tests: 0 },
+    ]);
+  });
+
   it('[REQ-319] 読めない・形が違うときは空の結果とエラーを返し、extractTestRequirements の結果は変えない', () => {
-    expect(parseTestReport('r.json', '{').value).toEqual({ startTime: null, tests: [] });
+    expect(parseTestReport('r.json', '{').value).toEqual({ startTime: null, tests: [], files: [] });
     expect(parseTestReport('r.json', '{').errors[0].file).toBe('r.json');
     expect(parseTestReport('r.json', '{"testResults": [{"name": 1}]}').errors).toHaveLength(1);
     const text = report([

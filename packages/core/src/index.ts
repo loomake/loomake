@@ -11,7 +11,7 @@ export { parseTasks } from './tasks.js';
 export type { Task } from './tasks.js';
 export { TRACE_SCHEMA_VERSION, SPEC_SCHEMA_VERSION, TASKS_SCHEMA_VERSION, loadParserSchemas } from './parser-contracts.js';
 export { extractTestRequirements, parseTestReport } from './test-report.js';
-export type { TestCase, TestCaseStatus, TestReport, TestRequirements } from './test-report.js';
+export type { TestCase, TestCaseStatus, TestFileResult, TestReport, TestRequirements } from './test-report.js';
 export { createTraceTemplate } from './template.js';
 export { VERIFY_RESULT_SCHEMA_VERSION, LEGACY_VERIFY_RESULT_SCHEMA_VERSION, VERIFY_RESULT_V2_SCHEMA_VERSION, loadVerifyResultSchemas } from './verify-result.js';
 export type { VerifyMode, VerifyCheckResult, VerifyResult, LegacyVerifyResult, LegacyVerifyCheckResult } from './verify-result.js';
