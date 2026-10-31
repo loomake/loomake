@@ -21,3 +21,5 @@ export { evaluateTestCoverage } from './verify/policy/coverage-policy.js';
 export type { TestCoverageDecision } from './verify/policy/coverage-policy.js';
 export { aggregateCiVerdict } from './verify/policy/quality-verdict.js';
 export { verifyExitCode } from './verify/exit-code.js';
+export { readQualityFile, QUALITY_FILE, MINIMAL_QUALITY_YAML } from './verify/quality-input.js';
+export type { QualityReadOptions, QualityReadResult, QualitySchemaLike } from './verify/quality-input.js';
