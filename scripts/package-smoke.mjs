@@ -152,14 +152,16 @@ export async function check(target) {
   // 証拠・リリースレポートの公開契約は core と従来の trace の両方から使える（REQ-303・REQ-304）。
   const traceSchemas = await core.loadTraceSchemas();
   const tracePackage = await import(pathToFileURL(require.resolve('@loomake/trace')).href);
-  assert.equal(core.EVIDENCE_SCHEMA_VERSION, 1);
+  assert.equal(core.EVIDENCE_SCHEMA_VERSION, 2);
+  assert.equal(core.LEGACY_EVIDENCE_SCHEMA_VERSION, 1);
   assert.equal(core.REPORT_SCHEMA_VERSION, 2);
   assert.equal(tracePackage.EVIDENCE_SCHEMA_VERSION, core.EVIDENCE_SCHEMA_VERSION);
   assert.equal(tracePackage.REPORT_SCHEMA_VERSION, core.REPORT_SCHEMA_VERSION);
-  const evidenceContract = { schemaVersion: 1, change: 'sample', sha: '', committedAt: '', recordedAt: '', verify: { schemaVersion: '1.0.0', mode: 'done', change: 'sample', ok: true, results: [] } };
-  // trace record は Evidence 2 で書き出す。Evidence 2 は別の名前のスキーマで読む（証拠の現行の名前の切替は 2b-2）
-  const evidenceV2Contract = { schemaVersion: 2, change: 'sample', sha: '', committedAt: '', recordedAt: '', verify: { schemaVersion: '2.0.0', change: 'sample', run: { status: 'completed', errors: [] }, scope: 'local', checks: [], summary: { fail: 0, insufficient: 0, not_applicable: 0, evaluated: 0, pending: 0 }, decision: { required: false, reasons: [] } } };
-  assert.deepEqual(traceSchemas.evidenceV2Schema.parse(evidenceV2Contract), evidenceV2Contract);
+  const legacyEvidenceContract = { schemaVersion: 1, change: 'sample', sha: '', committedAt: '', recordedAt: '', verify: { schemaVersion: '1.0.0', mode: 'done', change: 'sample', ok: true, results: [] } };
+  const evidenceContract = { schemaVersion: 2, change: 'sample', sha: '', committedAt: '', recordedAt: '', verify: { schemaVersion: '2.0.0', change: 'sample', run: { status: 'completed', errors: [] }, scope: 'local', checks: [], summary: { fail: 0, insufficient: 0, not_applicable: 0, evaluated: 0, pending: 0 }, decision: { required: false, reasons: [] } } };
+  // 履歴の Evidence 1 は、別の名前のスキーマで閲覧できる。現行のスキーマは受け付けない（REQ-318）
+  assert.deepEqual(traceSchemas.legacyEvidenceSchema.parse(legacyEvidenceContract), legacyEvidenceContract);
+  assert.equal(traceSchemas.evidenceSchema.safeParse(legacyEvidenceContract).success, false);
   const reportContract = { schemaVersion: 2, change: 'sample', evidence: { recordedAt: '', sha: '', committedAt: '', ok: true, documents: false }, attention: { noPassingTests: [], pending: [], changedDocuments: [], failedChecks: [] }, rows: [], questions: [], assumptions: [], warnings: [] };
   for (const [name, value] of [['evidence', evidenceContract], ['report', reportContract]]) {
     assert.deepEqual(traceSchemas[`${name}Schema`].parse(value), value);

@@ -24,14 +24,12 @@
 
 ## 4. CLIと既存利用側の一体移行
 
-旧タスク4.3の版別の投影は子change `verify-v2-shape` のタスク1.9へ移した。runnerの純粋判断（REQ-205）と仕様ゲートのaborted（REQ-093）の読み取りは、子change `verify-v2-readers`（2a/6）へ移した。旧タスク4.1・4.2・4.4のうちverifyの書き出しの切替（REQ-040・041・100・311・315）と、旧4.6・4.7、4.9のrunVerifyの保証、4.11の --scope local の固定は、子change `verify-v2-wiring`（2b-1/6）へ移した。
+旧タスク4.3の版別の投影は子change `verify-v2-shape` のタスク1.9へ移した。runnerの純粋判断（REQ-205）と仕様ゲートのaborted（REQ-093）の読み取りは、子change `verify-v2-readers`（2a/6）へ移した。旧タスク4.1・4.2・4.4のうちverifyの書き出しの切替（REQ-040・041・100・311・315）と、旧4.6・4.7、4.9のrunVerifyの保証、4.11の --scope local の固定は、子change `verify-v2-wiring`（2b-1/6）へ移した。旧4.3（reportのEvidence 2の受付と、未対応版・形の違う記録の拒否）と旧4.8（Evidenceの現行名、互換性の文書、root quality.yaml、`--skip-commands` のhelpと基準の差分）は、子change `verify-v2-evidence`（2b-2/6）へ移した（REQ-073・324）。
 
 - [ ] 4.1 runVerify・formatter・CLIをv2へ移し、scope既定値、JSON引数エラー、stderr、CI=1非対話、API/CLIの0〜3一致をID付き試験で確認する。承認済みR01 Aのbare verify品質専用経路を保持する。REQ-323〜325に従いargs.tsの共通定義・help/usage・docs/guide/3.reference/5.cli.mdを同じ改版で更新し、生成器 --checkを通す。reference-cli-baseline.jsonの旧46例は原本を残し、新契約で変わる出力/追加scope例を具体差分としてR05方針承認とは別の個別承認へ出す。1.2で確定したREQ-135に従い、verify/trace recordヘルプの --scope local|ci・受理値/既定値とskip不足/coverage省略の説明を実装し、helpでは検査せずstdout/0を保つことと全既存Scenarioを試験する。REQ-050のCLI呼出し/不足1とレポート抽出の処理量保持、REQ-040の正常coverageとskip省略を承認後に試験する（REQ-040・041・050・135・311・312・323〜325）
 - [ ] 4.2 trace recordをEvidence 2へ移し、scopeと終了コード、aborted、文書snapshot・未コミット・検査前後変化・追記専用・同期性とserializationのJSON前後検査・publicationの上書き禁止を既存回帰とID付き試験で確認する（REQ-066・315）
-- [ ] 4.3 trace reportのCLIでEvidence 2を受け付け、子changeの投影をつなぐ。旧版に履歴閲覧専用の警告が付くことと、未対応版・形の違う記録の拒否をID付き試験で確かめる。既存試験の期待値の変更は具体差分の個別承認を得てから行う（REQ-073）
 - [ ] 4.4 runnerの準備・local完了・decision停止・記録をv2へ追従し、reuse/pr/prompt/recorderも含む型・表示・再利用を追従し、RunSummary外形・中断/予算/変更保持と要判断+FAILで止まる試験を確認する。REQ-100の既存5 Scenarioを保持してverify --done --scope localと同じ検査へ追従し、REQ-205の判断順を保つ。1.2で確定したREQ-093に従いspec-only不合格1とaborted 2/3の停止を実装・試験し、実装ブランチを作らずエンジンを呼ばないことと全既存Scenarioを確認する。REQ-114/115のPR本文はlocal完了0とCI最終未確認を分け、REQ-164/315はEvidence 2/localの同一状態再試行と旧版非再利用を同じ試験で確認する。REQ-203の未承認警告用語もv2の案内/不足へ合わせる。agreement/doctorへverify限定のエラー分類を漏らさない（REQ-205・317）
 - [ ] 4.5 ci-gateと関連workflowの利用経路をv2/ciへ移し、local・旧形式・skip/neutral・全NAを合格にしない統合試験、R-C001-04がAの場合だけnormal self-ciがS1判定moduleを直接使うことと、fresh Tを基準としたexact 2.0.0解析・S/T一致を確認し、採用したbare verify品質経路を確認する（REQ-312・318）
-- [ ] 4.8 2b-2：Evidenceの現行名（Evidence・evidenceSchema・EVIDENCE_SCHEMA_VERSION・evidence.schema.json）を2へ切り替え、reportが壊れたEvidence 2の不正箇所（版の混在や状態別の必須欄の欠け）を示す。互換性の文書とroot quality.yamlを置く（REQ-073）
 - [ ] 4.9 2c：evidenceProblemで、localのpendingがinsufficient以上であることを確かめる
 - [ ] 4.10 2c：ci-gateを実行の流れにつなぎ、2.0.0のmodeとchangeで判定し、1.0.0・spec-only・全件NOT_APPLICABLEを合格にしない
 - [ ] 4.11 2c：runの完了ゲートにciの結果が来たら停止する

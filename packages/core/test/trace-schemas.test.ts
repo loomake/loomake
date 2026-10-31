@@ -1,13 +1,14 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { z } from 'zod';
 import { EVIDENCE_SCHEMA_VERSION, REPORT_SCHEMA_VERSION, loadTraceSchemas, type Evidence, type EvidenceDocument, type Report, type ReportRow } from '../src/index.js';
-import { evidenceValue, reportValue } from './fixtures/trace-contract-values.js';
+// いまの書き出しは Evidence 2。履歴の Evidence 1 は evidence-v2-schema.test.ts で確かめる
+import { evidenceV2Value as evidenceValue, reportValue } from './fixtures/trace-contract-values.js';
 
 const { evidenceSchema, evidenceDocumentSchema, reportSchema, reportRowSchema } = await loadTraceSchemas();
 
 describe('証拠とリリースレポートの構造', () => {
   it('[REQ-302] 既存の任意フィールド・版の型・日本語結果を保持する', () => {
-    expect([EVIDENCE_SCHEMA_VERSION, REPORT_SCHEMA_VERSION]).toEqual([1, 2]);
+    expect([EVIDENCE_SCHEMA_VERSION, REPORT_SCHEMA_VERSION]).toEqual([2, 2]);
     const old = evidenceValue();
     expect(evidenceSchema.parse(old)).toEqual(old);
     expect(evidenceSchema.parse(old)).not.toHaveProperty('documents');
@@ -29,7 +30,7 @@ describe('証拠とリリースレポートの構造', () => {
     const old = evidenceValue();
     expect(evidenceSchema.safeParse({ ...old, sha: 1 }).success).toBe(false);
     expect(evidenceSchema.safeParse({ ...old, documents: null }).success).toBe(false);
-    expect(evidenceSchema.safeParse({ ...old, verify: { ...old.verify, ok: 'true' } }).success).toBe(false);
+    expect(evidenceSchema.safeParse({ ...old, verify: { ...old.verify, verdict: 'true' } }).success).toBe(false);
     const report = reportValue();
     expect(reportSchema.safeParse({ ...report, warnings: null }).success).toBe(false);
     expect(reportSchema.safeParse({ ...report, evidence: { ...report.evidence, documents: undefined } }).success).toBe(false);
@@ -40,7 +41,7 @@ describe('証拠とリリースレポートの構造', () => {
 
   it('[REQ-302] 全 object 階層の未知フィールドを残す', () => {
     const old = evidenceValue();
-    const value = { ...old, extra: [1], verify: { ...old.verify, extra: { note: 'x' }, results: [{ ...old.verify.results[0], extra: null }] }, documents: [{ path: '', sha256: '', content: '', extra: { nested: true } }] };
+    const value = { ...old, extra: [1], verify: { ...old.verify, extra: { note: 'x' }, checks: [{ ...old.verify.checks[0], extra: null }] }, documents: [{ path: '', sha256: '', content: '', extra: { nested: true } }] };
     expect(evidenceSchema.parse(value)).toEqual(value);
     const report = reportValue();
     const reportExtra = { ...report, extra: true, evidence: { ...report.evidence, extra: [1] }, attention: { ...report.attention, extra: 'x' }, rows: [{ ...report.rows[0], extra: null }], questions: [{ ...report.questions[0], extra: {} }], assumptions: [{ ...report.assumptions[0], extra: [false] }] };

@@ -49,7 +49,7 @@ describe('JSON Schema の書き出し', () => {
   it('[REQ-304] Evidence/Report の JSON は構造・任意フィールド・未知キーを Zod と同じに公開する', () => {
     const pkg = JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf8'));
     const cases = [
-      ['evidence', evidenceSchema, evidenceValue(), { ...evidenceValue(), documents: null }],
+      ['evidence', evidenceSchema, evidenceV2Value(), { ...evidenceV2Value(), documents: null }],
       ['report', reportSchema, reportValue(), { ...reportValue(), warnings: null }],
     ] as const;
     for (const [name, zodSchema, value, invalid] of cases) {
@@ -82,10 +82,11 @@ describe('JSON Schema の書き出し', () => {
       for (const schema of schemas) expect(registry.getSchema(schema.$id), schema.$id).toEqual(expect.any(Function));
       const evidence = registry.getSchema('https://loomake.dev/schema/evidence.schema.json')!;
       const verify = registry.getSchema('https://loomake.dev/schema/verify-result.schema.json')!;
-      expect(evidence(evidenceValue()), JSON.stringify(evidence.errors)).toBe(true);
+      expect(evidence(evidenceV2Value()), JSON.stringify(evidence.errors)).toBe(true);
       expect(verify(evidenceV2Value().verify), JSON.stringify(verify.errors)).toBe(true);
+      // 版付きでない verify-result.schema は現行の 2.0.0 だけを受け、履歴の 1.0.0 を拒む
       expect(verify(evidenceValue().verify)).toBe(false);
-      expect(evidence({ ...evidenceValue(), verify: { ...evidenceValue().verify, ok: 1 } })).toBe(false);
+      expect(evidence({ ...evidenceV2Value(), verify: { ...evidenceV2Value().verify, verdict: 1 } })).toBe(false);
     }
   });
 

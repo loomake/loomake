@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { SCOPE_NOTE, buildReport, runReport, type Evidence, type Report } from '@loomake/trace';
+import { SCOPE_NOTE, buildReport, runReport, type LegacyEvidence as Evidence, type Report } from '@loomake/trace';
 import { main } from '../../cli/src/main.js';
 import { readDocuments } from '../src/documents.js';
 import { CHANGE, ledgerRow, requirement, specMd, traceMd } from '../../kit/test/project.js';
@@ -21,6 +21,15 @@ const evidence = (e: Partial<Evidence> = {}): Evidence => ({
   verify: { schemaVersion: '1.0.0', mode: 'done', change: CHANGE, ok: true, results: [], coverage: { 'REQ-012': ['tests/x.test.ts'] } },
   ...e,
 });
+
+// いまの書き出しの Evidence 2（verify 2.0.0・ci・PASS）。ほかの記録は履歴の Evidence 1（REQ-073）
+const ciPass = {
+  schemaVersion: '2.0.0', change: CHANGE, run: { status: 'completed', errors: [] }, scope: 'ci',
+  checks: [{ id: 'command: test', result: 'PASS', reason: '', evidence: [] }],
+  summary: { fail: 0, insufficient: 0, not_applicable: 0, evaluated: 1 }, decision: { required: false, reasons: [] }, verdict: 'PASS',
+  coverage: { 'REQ-012': ['tests/x.test.ts'] },
+};
+const CURRENT = { schemaVersion: 2, verify: ciPass } as unknown as Partial<Evidence>;
 
 /** 一時ディレクトリに change と証拠の記録を置いて fn を実行し、終わったら消す。fn が Promise を返したら、終わるのを待つ */
 function withProject<T>({ trace = traceMd(), spec = specMd(), evidence: records = [{}], archived = false }: Project, fn: (root: string) => T): T {
@@ -81,7 +90,7 @@ const renameEvidence = (root: string, names: string[]) =>
 
 describe('要件ごとの結果の表', () => {
   it('[REQ-301] quality-report追加後も既存のschemaVersion:2のJSONをそのまま出す', () => {
-    withProject({ spec: specMd(requirement('既存の形式')) }, (root) => {
+    withProject({ spec: specMd(requirement('既存の形式')), evidence: [CURRENT] }, (root) => {
       const result = markdown(root, 'json');
       const expected = {
         schemaVersion: 2,
@@ -300,10 +309,10 @@ describe('読めない証拠の記録', () => {
   const file = `.loomake/evidence/${CHANGE}/0.json`;
 
   it('[REQ-073] schemaVersion が読める版でない記録があれば、そのファイルと版を日本語で示し、終了コード 2 を返す', () =>
-    withProject({ evidence: [{ schemaVersion: 2 }] }, async (root) => {
+    withProject({ evidence: [{ schemaVersion: 3 }] }, async (root) => {
       const r = await cli(root);
       expect(r.code).toBe(2);
-      expect(r.stderr).toContain(`証拠の記録 ${file} は、この版の loomake では読めない形式です（schemaVersion 2。読めるのは 1）`);
+      expect(r.stderr).toContain(`証拠の記録 ${file} は、この版の loomake では読めない形式です（schemaVersion 3。読めるのは 1 と 2）`);
     }));
 
   it('[REQ-073] verify.results のない記録があれば、そのファイルと欄を日本語で示し、スタックトレースを出さずに終了コード 2 を返す', () =>
@@ -406,7 +415,7 @@ describe('確認事項と仮定の一覧', () => {
 describe('合意の欄が空のときの警告', () => {
   it('[REQ-079] 回答はあるが回答者が空の確認事項を警告する', () => {
     const trace = agreementTrace('| Q-02 | REQ-012 | 何回ですか | 3 / 5 | 5 | yes | 5 回 |  | 2026-10-23 |', '| A-01 | REQ-012 | 内容 | 理由 |  |  |  |');
-    withProject({ trace }, (root) => {
+    withProject({ trace, evidence: [CURRENT] }, (root) => {
       expect(report(root).warnings).toEqual(['Q-02：回答者が空です']);
       expect(markdown(root).text).toContain('- Q-02：回答者が空です');
     });
@@ -414,14 +423,14 @@ describe('合意の欄が空のときの警告', () => {
 
   it('[REQ-079] 列のない古い trace.md でもレポートを作り、回答のある確認事項の回答者と回答日が空だと警告する', () => {
     const trace = traceMd({ questions: ['| Q-01 | REQ-012 | 何回ですか | 3 / 5 | 5 | yes | 5 回 |'], assumptions: ['| A-01 | REQ-012 | 内容 | 理由 | 承認（2026-10-23） |'] });
-    withProject({ trace }, (root) => {
+    withProject({ trace, evidence: [CURRENT] }, (root) => {
       expect(report(root).warnings).toEqual(['Q-01：回答者が空です', 'Q-01：回答日が空です', 'A-01：承認者が空です', 'A-01：承認日が空です']);
     });
   });
 
   it('[REQ-079] 回答が空の確認事項と承認が空の仮定は、警告の対象にしない', () => {
     const trace = traceMd({ questions: ['| Q-03 | REQ-012 | 何回ですか | 3 / 5 | 5 | yes | |'], assumptions: ['| A-02 | REQ-012 | 内容 | 理由 | |'] });
-    withProject({ trace }, (root) => {
+    withProject({ trace, evidence: [CURRENT] }, (root) => {
       expect(report(root).warnings).toEqual([]);
     });
   });

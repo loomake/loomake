@@ -1,6 +1,6 @@
 // 証拠・リリースレポートの構造。証拠の整合性の検査は trace の同期関数が行う（REQ-302・REQ-303）。
 import { z } from 'zod';
-import { legacyVerifyResultSchema, verifyResultV2Schema } from './verify-result-schema.js';
+import { legacyVerifyResultSchema, verifyResultSchema, verifyResultV2Schema } from './verify-result-schema.js';
 import { preserveUnknownFields } from './preserve-unknown-fields.js';
 
 export const evidenceDocumentSchema = preserveUnknownFields(z.looseObject({ path: z.string(), sha256: z.string(), content: z.string() }));
@@ -18,12 +18,8 @@ const evidenceShape = <V extends z.ZodType, S extends z.ZodType>(schemaVersion: 
   documents: z.array(evidenceDocumentSchema).optional(),
 });
 
-/**
- * 現行の名前の証拠（EVIDENCE_SCHEMA_VERSION = 1）。verify 1.0.0 を埋め込む。
- * verify の現行の名前は 2.0.0 に切り替えたが、証拠の現行の名前の切替は次の段階（verify-v2-wiring の 2b-2）で行う。
- * trace record は Evidence 2（evidenceV2Schema）で書き出す
- */
-export const evidenceSchema = preserveUnknownFields(evidenceShape(z.number(), embedded(legacyVerifyResultSchema))
+/** いまの書き出しの版（EVIDENCE_SCHEMA_VERSION = 2）の証拠。verify 2.0.0 を埋め込む。版の値は number のまま受け、適合性は trace が検査する（REQ-302・REQ-315） */
+export const evidenceSchema = preserveUnknownFields(evidenceShape(z.number(), embedded(verifyResultSchema))
   .meta({ $id: 'https://loomake.dev/schema/evidence.schema.json', title: 'Loomake evidence' }));
 
 /** 履歴の Evidence 1（verify 1.0.0 を埋め込む）。閲覧だけに使う（REQ-302） */
