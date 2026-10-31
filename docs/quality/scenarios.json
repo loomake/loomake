@@ -3054,13 +3054,13 @@
       "id": "SCN-d31a4872ae040eb68a4e",
       "status": "unreviewed",
       "scenarioSha256": "e57173a186be84ff3746c8576e8e5104cd3590b301b59e9da9cca51f0de459ec",
-      "reason": "今の試験は docs/usage.md だけの変更を段階 L1 として lint と文書のリンクの試験だけを呼び verify を呼ばないことを確かめており、主仕様の Scenario の「--change なしで品質コマンドだけが実行される」とは結果が違う。"
+      "reason": "基準：THEN の文言どおりに読む。THEN は「--change なしで品質コマンドだけが実行される」だが、今の試験は docs/usage.md だけの変更を L1 として lint と文書のリンクの試験だけを呼ぶことを確かめており、品質コマンド（lint・typecheck・test）を実行する THEN は成り立たない。"
     },
     {
       "id": "SCN-711b5333ddc017bf8f8a",
       "status": "unreviewed",
       "scenarioSha256": "feb21eb733a07e2ba5c0b8774d25516efc16706bb9d57a437c79240f7b90082c",
-      "reason": "今の試験は archive の PR を段階 L1 として lint と文書のリンクの試験だけを呼ぶことを確かめており、主仕様の Scenario の「--change なしで品質コマンドだけが実行される」とは結果が違う。"
+      "reason": "基準：THEN の文言どおりに読む。THEN は「--change なしで品質コマンドだけが実行される」だが、今の試験は archive の PR を L1 として lint と文書のリンクの試験だけを呼ぶことを確かめており、品質コマンド（lint・typecheck・test）を実行する THEN は成り立たない。"
     },
     {
       "id": "SCN-92a3ac86378cabd507ba",
@@ -3104,20 +3104,9 @@
     },
     {
       "id": "SCN-149eab9b65181496a38e",
-      "status": "reviewed",
+      "status": "unreviewed",
       "scenarioSha256": "87df447744acde0596df8d5e12095743dc78ec97c0b3bb4098cf638eaae1f024",
-      "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。c2ブランチとc2/tasks.mdの変更があっても、本文のc1を優先し、verifyはc1の完了ゲートだけを呼ぶ（変更が文書だけの段階L1なので、その前にlintと文書のリンクの試験も呼ぶ）。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。",
-      "sources": [
-        "REQ-132"
-      ],
-      "tests": [
-        {
-          "file": "tests/ci-gate-process.test.ts",
-          "contains": "明示した選択を変更ファイルとブランチの選択より優先する",
-          "sha256": "fe30b929e851995d6641e806b0e4a9acf07b1c368462100cbe5078e2d5805e55",
-          "hashScope": "block"
-        }
-      ]
+      "reason": "基準：THEN の文言どおりに読む。THEN は「verify --change c1 --done だけが実行される」とコマンド全般を限定しているが、今の試験の呼び出し一覧は lint・文書のリンクの試験・c1 の --done であり、THEN は成り立たない。"
     },
     {
       "id": "SCN-366e01b502420cbcda61",
@@ -3129,7 +3118,7 @@
       "id": "SCN-2f7149cce94ed98f34a7",
       "status": "unreviewed",
       "scenarioSha256": "cd8f10cba9ead3192b929b6a9e175124be7b1c33f4eb59feb28066e381a883ae",
-      "reason": "今の試験は README.md と .changeset/x.md だけの変更を段階 L1 として lint と文書のリンクの試験だけを呼び verify を呼ばないことを確かめており、主仕様の Scenario の「--change なしで品質コマンドだけが実行される」とは結果が違う。"
+      "reason": "基準：THEN の文言どおりに読む。THEN は「--change なしで品質コマンドだけが実行される」だが、今の試験は README.md と .changeset/x.md だけの変更を L1 として lint と文書のリンクの試験だけを呼ぶことを確かめており、品質コマンド（lint・typecheck・test）を実行する THEN は成り立たない。"
     },
     {
       "id": "SCN-abcce1ac255f52f2ec1d",
@@ -5075,20 +5064,9 @@
     },
     {
       "id": "SCN-5fbdd67cf1f0d15de3b6",
-      "status": "reviewed",
+      "status": "unreviewed",
       "scenarioSha256": "cf7d7064283cf8bf504ad7dbccc4be61ab2fdd59e54b5f34ecbea91f80fbf691",
-      "reason": "REQ-090を既存仕様で充足とした台帳で、構造化レポートの行にID・状態が残り、反映済の合格と区別した結果nullになることをassertする。",
-      "sources": [
-        "REQ-071"
-      ],
-      "tests": [
-        {
-          "file": "packages/trace/test/report.test.ts",
-          "contains": "範囲外と既存仕様で充足の要件も",
-          "sha256": "742d17bc0fa5d215cdf2b8a6ceb5d2d0285ca8111b8ecc7fa9d98c076bc01c61",
-          "hashScope": "block"
-        }
-      ]
+      "reason": "Markdown の表の行を確かめる assertion がない（REQ-090 の状態は構造化レポートの rows だけで確かめている）。PR-B で試験を足して再確認する。"
     },
     {
       "id": "SCN-a03a7b3ae0d44a6d41c6",
