@@ -70,7 +70,7 @@ CI の完了ゲートは、決めた段階に応じて次のとおり動く MUST
 - L2：「完了ゲートの対象の決め方」で change を決め、change ごとに `verify` を実行する。change がなければ「対象の change がない PR の扱い」に従う
 - L3：L2 と同じ。`loomake-change: none` の明示と、change を特定できないときは失敗させる
 
-`verify` は `--change <id> --done`。tasks.md に完了した印がない change は `--spec-only`。段階と理由を `loomake-tier: <段階>（<理由>）` の形で標準出力に 1 行書き、`GITHUB_OUTPUT` があれば `tier` と `tier_line` も書く SHALL。
+`verify` は `--change <id> --done`。L1 で tasks.md に完了した印がない change だけ `--spec-only`。段階と理由を `loomake-tier: <段階>（<理由>）` の形で標準出力に書き、`GITHUB_OUTPUT` があれば `tier` と `tier_line` も書く SHALL。
 
 Source: REQ-343
 
@@ -111,8 +111,12 @@ Source: REQ-343
 - **THEN** `verify --change c1 --done` が実行され、標準出力に `loomake-tier: L3（packages/kit/src/a.ts）` の行が書かれる
 
 #### Scenario: 提案だけの change
-- **WHEN** `openspec/changes/c1/proposal.md` と、完了した印が 1 つもない `openspec/changes/c1/tasks.md` を足した PR で CI が動く
+- **WHEN** `openspec/changes/c1/proposal.md` と、完了した印が 1 つもない `openspec/changes/c1/tasks.md` を足しただけ（段階 L1）の PR で CI が動く
 - **THEN** `verify --change c1 --spec-only` が実行され、`--done` は実行されない
+
+#### Scenario: L2・L3 は完了した印がなくても --done
+- **WHEN** `packages/kit/src/a.ts` と、完了した印が 1 つもない `openspec/changes/c1/tasks.md` を変えた PR で CI が動く
+- **THEN** `verify --change c1 --done` が実行される
 
 #### Scenario: 理由の件数
 - **WHEN** 4 つのファイルが段階を決めた PR で CI が動く

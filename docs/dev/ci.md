@@ -20,7 +20,7 @@
 
 gate ジョブは PR の段階（AGENTS.md 2 章の L1・L2・L3）を先に決め、段階に応じて検査を変える。段階の決め方は monorepo の仕様の「工程の段階の判定」（REQ-342）、段階ごとの動作は「段階ごとの完了ゲートの動作」（REQ-343）にある。判定の実装は `scripts/ci-tier.mjs` で、quality ジョブの docs_only の判定（`scripts/ci-docs-only.mjs`）も同じ関数を使う。「文書だけ」と「段階 L1」は同じ意味になる。
 
-- L1（文書だけ）：lint と `tests/doc-links.test.ts` を実行する。対象の change があれば `verify --change <id> --done` も実行し、なければ `verify` は呼ばない。tasks.md に完了した印が 1 つもない change（提案だけの PR）は、段階によらず `--done` ではなく `--spec-only` で検査する。quality ジョブは品質コマンドを飛ばすので、文書を読むテストを実行するのは gate の doc-links だけになる
+- L1（文書だけ）：lint と `tests/doc-links.test.ts` を実行する。対象の change があれば `verify --change <id> --done` も実行し、なければ `verify` は呼ばない。L1 で、かつ tasks.md に完了した印が 1 つもない change（提案だけの PR）は、`--done` ではなく `--spec-only` で検査する。L2・L3 は完了数によらず常に `--done`。quality ジョブは品質コマンドを飛ばすので、文書を読むテストを実行するのは gate の doc-links だけになる
 - L2（試験・CI・開発基盤）：これまでどおり、対象の change があれば `verify --change <id> --done`、なければ `verify`（品質コマンドだけ）を実行する
 - L3（製品コードと Requirement の変更）：change が必須。`loomake-change: none` や change を特定できない PR は失敗する
 

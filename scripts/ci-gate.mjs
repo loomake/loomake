@@ -61,8 +61,12 @@ export function selectChanges({ ref = '', body = '', files = [], changesDir, cha
   };
 }
 
-/** change の tasks.md に完了した印（- [x]）が 1 つもなければ提案だけの change なので、--done ではなく --spec-only（仕様ゲート）で検査する */
-export function gateArgs(changesDir, id) {
+/**
+ * change ごとの verify の引数。段階が L1 で、tasks.md に完了した印（- [x]）が 1 つもなければ提案だけの change なので
+ * --done ではなく --spec-only（仕様ゲート）で検査する。L2・L3 は完了数によらず常に --done（REQ-343）
+ */
+export function gateArgs(changesDir, id, tier) {
+  if (tier !== 'L1') return ['--change', id, '--done'];
   const tasksPath = join(changesDir, id, 'tasks.md');
   const checked = existsSync(tasksPath) ? readFileSync(tasksPath, 'utf8').split('\n').filter((line) => /^\s*[-*]\s+\[[xX]\]/.test(line)).length : 1;
   return ['--change', id, checked ? '--done' : '--spec-only'];
@@ -110,9 +114,17 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       specDiff = d.stdout ?? '';
     }
   }
-  // 変更行が属する節を見るため、変更前（ベース）と変更後（HEAD）の spec.md を読む
+  // 変更行が属する節を見るため、変更前と変更後（HEAD）の spec.md を読む。
+  // 変更前は、差分（base...HEAD）と同じ起点になるよう、ベースと HEAD の merge-base のファイルを読む
+  let mergeBase;
   const readSpec = (side, path) => {
-    const r = git(['show', `${side === 'new' ? 'HEAD' : `refs/remotes/origin/${base}`}:${path}`]);
+    if (side === 'old' && mergeBase === undefined) {
+      const m = git(['merge-base', `refs/remotes/origin/${base}`, 'HEAD']);
+      mergeBase = m.status === 0 ? m.stdout.trim() : '';
+    }
+    const ref = side === 'new' ? 'HEAD' : mergeBase;
+    if (!ref) return undefined;
+    const r = git(['show', `${ref}:${path}`]);
     return r.status === 0 ? r.stdout : undefined;
   };
   const files = [...new Set(entries.flatMap((entry) => entry.paths))];
@@ -165,7 +177,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     process.exit(verify([]));
   }
   for (const id of selected.changes) {
-    const args = gateArgs(join('openspec', 'changes'), id);
+    const args = gateArgs(join('openspec', 'changes'), id, decided.tier);
     console.error(`ci-gate: branch=${branch || '(なし)'} 段階 ${decided.tier} → verify ${args.join(' ')}`);
     if (verify(args) !== 0) status = 1;
   }

@@ -65,8 +65,7 @@ process.exit(JSON.parse(process.env.CI_STATUSES)[id] ?? 0);
       dir,
       git,
       commitFiles(files) {
-        // tasks.md は完了した印を残して変える（印が 1 つもない change は --spec-only で検査されるため）
-        const entries = Array.isArray(files) ? files.map((file) => [file, file.endsWith('tasks.md') ? '- [x] changed\n' : 'changed\n'] as const) : Object.entries(files);
+        const entries = Array.isArray(files) ? files.map((file) => [file, 'changed\n'] as const) : Object.entries(files);
         for (const [file, content] of entries) {
           mkdirSync(dirname(join(dir, file)), { recursive: true });
           writeFileSync(join(dir, file), content);
@@ -101,6 +100,8 @@ process.exit(JSON.parse(process.env.CI_STATUSES)[id] ?? 0);
 }
 
 const done = (id: string) => ['verify', '--change', id, '--done'];
+// L1 で、tasks.md に完了した印がない change は仕様ゲートで検査する（commitFiles が tasks.md を書き換えると印がなくなる）
+const specOnly = (id: string) => ['verify', '--change', id, '--spec-only'];
 const lintOnly = [['lint'], ['pnpm', 'exec', 'vitest', 'run', 'tests/doc-links.test.ts']];
 
 describe('実際のCIゲートの子プロセスの契約', () => {
@@ -212,7 +213,8 @@ describe('実際のCIゲートの子プロセスの契約', () => {
 
   it('[REQ-342][REQ-343] Requirement の本文を変えた spec.md は L3 で、change があれば --done を呼び stdout に段階の行を書く', () => {
     withProject(({ commitFiles, run }) => {
-      commitFiles({ 'openspec/changes/c1/specs/x/spec.md': '### Requirement: 新しい振る舞い\n- 本文の箇条書き\n', 'openspec/changes/c1/tasks.md': '- [x] 1.1\n- [ ] 2.1\n' });
+      // L3 なので、tasks.md に完了した印がなくても --done
+      commitFiles({ 'openspec/changes/c1/specs/x/spec.md': '### Requirement: 新しい振る舞い\n- 本文の箇条書き\n', 'openspec/changes/c1/tasks.md': '- [ ] 1.1\n- [ ] 2.1\n' });
       const result = run('fix-x');
       expect(result.stdout).toContain('loomake-tier: L3（openspec/changes/c1/specs/x/spec.md）');
       expect(result.output).toContain('tier=L3\n');
@@ -294,7 +296,8 @@ describe('実際のCIゲートの子プロセスの契約', () => {
     withProject(({ commitFiles, run }) => {
       commitFiles(['openspec/changes/c1/tasks.md']);
       const result = run('c2');
-      expect(result.calls).toEqual([...lintOnly, done('c1'), done('c2')]);
+      // c1 の tasks.md は印のない内容に書き換わるので仕様ゲート、c2 は印が残るので完了ゲート
+      expect(result.calls).toEqual([...lintOnly, specOnly('c1'), done('c2')]);
       expect(result.status).toBe(0);
     });
   });
@@ -304,20 +307,31 @@ describe('実際のCIゲートの子プロセスの契約', () => {
       commitFiles(['openspec/changes/c2/tasks.md']);
       const result = run('c2', '', { lint: 5 });
       expect(result.stdout).toContain('loomake-tier: L1（openspec/changes/c2/tasks.md）');
-      expect(result.calls).toEqual([...lintOnly, done('c2')]);
+      expect(result.calls).toEqual([...lintOnly, specOnly('c2')]);
       expect(result.status).toBe(5);
     });
   });
 
-  it('[REQ-343] tasks.md に完了した印がない change（提案だけの PR）は --done ではなく --spec-only で検査する', () => {
+  it('[REQ-343] L1 で tasks.md に完了した印がない change（提案だけの PR）は --done ではなく --spec-only で検査する', () => {
     withProject(({ commitFiles, run }) => {
       commitFiles({ 'openspec/changes/c1/tasks.md': '- [ ] 1.1 仕様を書く\n- [ ] 2.1 実装する\n', 'openspec/changes/c1/proposal.md': '# Proposal\n' });
       const result = run('c1');
-      expect(result.calls).toEqual([...lintOnly, ['verify', '--change', 'c1', '--spec-only']]);
+      expect(result.stdout).toContain('loomake-tier: L1（');
+      expect(result.calls).toEqual([...lintOnly, specOnly('c1')]);
       expect(result.status).toBe(0);
       // 1 つでも完了していれば --done
       commitFiles({ 'openspec/changes/c1/tasks.md': '- [x] 1.1 仕様を書く\n- [ ] 2.1 実装する\n' });
       expect(run('c1').calls.at(-1)).toEqual(done('c1'));
+    });
+  });
+
+  it.each([{ tier: 'L3', file: 'packages/kit/src/a.ts' }, { tier: 'L2', file: 'scripts/x.mjs' }])('[REQ-343] $tier では tasks.md に完了した印がなくても --done で検査する', ({ tier, file }) => {
+    withProject(({ commitFiles, run }) => {
+      commitFiles({ 'openspec/changes/c1/tasks.md': '- [ ] 1.1 仕様を書く\n', [file]: 'changed\n' });
+      const result = run('fix-x');
+      expect(result.stdout).toContain(`loomake-tier: ${tier}（`);
+      expect(result.calls).toEqual([done('c1')]);
+      expect(result.status).toBe(0);
     });
   });
 

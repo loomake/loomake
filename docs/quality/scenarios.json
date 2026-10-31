@@ -1614,7 +1614,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-043]",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -1630,7 +1630,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-044]",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -1646,7 +1646,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-045]",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -1662,7 +1662,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-055] 見出しと本文",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -3069,7 +3069,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-025] 入力が",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -3085,7 +3085,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-025] .docx",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -3101,7 +3101,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-026] 1 文ずつ",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -3117,7 +3117,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-026] REQ は",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -3133,7 +3133,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-026] Q・A は",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -3149,7 +3149,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-027] 曖昧さチェックリスト",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -3165,7 +3165,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-027] 要件書の未決事項",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -3181,7 +3181,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-028]",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -3197,7 +3197,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-029] 1 change",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -3213,7 +3213,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-029] 複数の change",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -3229,7 +3229,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-030]",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -3245,7 +3245,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-031] 範囲外の要件",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -3261,7 +3261,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-031] 後のフェーズ",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -3277,7 +3277,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-032]",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -3293,7 +3293,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-033]",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -3309,7 +3309,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-059] kit のコード",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -3325,7 +3325,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-059] Skill に",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -3341,7 +3341,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-055] SKILL.md",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -3357,7 +3357,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-136]",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -7734,7 +7734,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-288] 報告の形の節に、作業したブランチごとのファイルに記録し",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },
@@ -7750,7 +7750,7 @@
         {
           "file": "tests/kit-assets.test.ts",
           "contains": "[REQ-288] 報告の形の節に、作業記録は作業の PR に含め",
-          "sha256": "9dfbb3610167a7df3ff0a976567345c7370b5412d0e71c7daeb9a7348750f9ac"
+          "sha256": "bf83872cf6894b033c14bca79835cb95d3f6dc89121591c597d1b5bd787c63aa"
         }
       ]
     },

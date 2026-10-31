@@ -7,7 +7,7 @@
 
 | PR | 設計待ち | 実装 | CI 待ち | レビュー往復回数 | マージまで |
 |---|---|---|---|---|---|
-| change/tier-ci-gate | 未測定（設計メモは着手前に受領） | 約 20 分（最初のコミット 08:48 JST から完了ゲート成功 09:05 JST まで。change の起草は含まない） | 未 | 1 | 未 |
+| change/tier-ci-gate | 未測定（設計メモは着手前に受領） | 約 20 分（最初のコミット 08:48 JST から完了ゲート成功 09:05 JST まで。change の起草は含まない） | 未 | 2 | 未 |
 
 ## 独立 Opus レビュー（初回）への対応
 
@@ -15,3 +15,10 @@
 2. verify の結果：仕様ゲートと `pnpm -s verify --change tier-ci-gate --done` は exit 0。追加した試験は節の判定（箇条書きの変更 → L3、Scenario に MUST → L1、読めなければ安全側）、archive の M だけ → L3、提案だけの change → `--spec-only`、GITHUB_OUTPUT の heredoc。
 3. 残っている確認事項・仮定：A-01 は「節で判定」に書き換え、A-05 と Q-04 を足した。PR #187 の worktree（rules-consolidation-20261031）は `__pycache__/` の無視ファイルで「残す」になるので、消すときは手で無視ファイルを消してから流す。
 4. 次にやること：修正後の head の CI・Codex・独立 Opus の再レビュー（往復 1 回目）を管理役が確かめてマージする。
+
+## 独立 Opus 再レビュー（2 回目）への対応
+
+1. やったこと：head 5675f8f の再レビュー（重大 1・軽微 2）を管理役の決定どおり直した。`--spec-only` への切り替えは段階 L1 で完了した印がない change だけにし、L2・L3 は常に `--done`（A-05 を更新）。消した行の節判定はベースと HEAD の merge-base のファイルで読む。worktree の削除はマージ済み PR の head と同じか origin/main に含まれる HEAD だけにし、進んだ HEAD は「残す」と表示する。`delivery-metrics.sh` に時間切れ Issue の flaky.csv を戻し、1 回実行して 6 つの CSV ができることを確かめた。`docs/quality/scenarios.json` の `tests/kit-assets.test.ts` の sha256（25 件）を今回のファイルに更新した。
+2. verify の結果：仕様ゲートと `pnpm -s verify --change tier-ci-gate --done` は exit 0。追加した試験は「L1 ＋ 印なし → --spec-only」「L2・L3 ＋ 印なし → --done」。`clean-merged-worktrees.sh --dry-run` の結果は前回と同じ（消す予定 0 件、detached 2 件は残す）。
+3. 残っている確認事項・仮定：なし。以降の差分は指摘の修正だけで、3 回目は差分だけの確認（管理役の例外）。
+4. 次にやること：管理役が CI と差分の確認を終えてマージし、archive する。

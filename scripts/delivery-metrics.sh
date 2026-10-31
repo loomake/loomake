@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 配布ワークフロー改善ダッシュボードの指標を集める。PR の段階・所要時間・Codex の指摘数、Issue #121 の投稿量、worklog の量、CI の実行時間を CSV にする。
+# 配布ワークフロー改善ダッシュボードの指標を集める。PR の段階・所要時間・Codex の指摘数、Issue #121 の投稿量、worklog の量、CI の実行時間、時間切れの Issue を CSV にする。
 # 使い方: scripts/delivery-metrics.sh <出力ディレクトリ>   （gh と git と node と python3 が要る。リポジトリ根で実行）
 # 出力は一時ディレクトリに書き、すべて成功したら出力ディレクトリへ移す。gh に失敗したら前のファイルを残して非ゼロで終わる。
 # PR の段階は scripts/ci-tier.mjs の classifyPath で決める（パスだけで判定し、spec.md の Requirement の変更は見ない）。
@@ -64,6 +64,18 @@ for l in sys.stdin:
     d[k]["runs"]+=1; d[k]["failed"]+= conc=="failure"; d[k]["minutes"]+=(ud-cd).total_seconds()/60
 w=csv.writer(open(f"{S}/ci.csv","w")); w.writerow(["day","runs","failed","avg_minutes"])
 for k in sorted(d): w.writerow([k,d[k]["runs"],d[k]["failed"],round(d[k]["minutes"]/d[k]["runs"],1)])' "$TMP"
+# 時間切れ・タイムアウトの Issue（題名で検索した 2 つの和集合）
+{ gh issue list --state all --limit 200 --search "時間切れ in:title" --json number,title,state,createdAt,closedAt; gh issue list --state all --limit 200 --search "タイムアウト in:title" --json number,title,state,createdAt,closedAt; } | python3 -c '
+import sys,json,csv
+S=sys.argv[1]; seen={}
+dec=json.JSONDecoder(); text=sys.stdin.read(); pos=0
+while pos < len(text):
+    while pos < len(text) and text[pos].isspace(): pos+=1
+    if pos >= len(text): break
+    items,pos=dec.raw_decode(text,pos)
+    for i in items: seen[i["number"]]=i
+w=csv.writer(open(f"{S}/flaky.csv","w")); w.writerow(["number","title","state","created","closed"])
+for n in sorted(seen): i=seen[n]; w.writerow([n,i["title"],i["state"],i["createdAt"][:10],(i.get("closedAt") or "")[:10]])' "$TMP"
 mkdir -p "$OUT"
-mv -f "$TMP"/prs.jsonl "$TMP"/prs.csv "$TMP"/issue121.csv "$TMP"/worklog.csv "$TMP"/ci.csv "$OUT"/
+mv -f "$TMP"/prs.jsonl "$TMP"/prs.csv "$TMP"/issue121.csv "$TMP"/worklog.csv "$TMP"/ci.csv "$TMP"/flaky.csv "$OUT"/
 ls -la "$OUT"

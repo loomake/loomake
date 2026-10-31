@@ -7,7 +7,8 @@
 #   scripts/clean-merged-worktrees.sh [--dry-run] [--keep <name>]...
 #
 # 残すもの：detached HEAD、dirty なもの、.loomake/・node_modules/・dist/・coverage/ 以外の無視ファイルがあるもの、
-# HEAD が origin/main と同じもの、マージ済み PR のないブランチ、いま自分がいる worktree、--keep で指定したもの。
+# HEAD が origin/main と同じもの、マージ済み PR のないブランチ、マージ後に HEAD が進んだもの（PR の head と違い、origin/main にも含まれない）、
+# いま自分がいる worktree、--keep で指定したもの。
 # gh が使えなければ（未導入・未認証・API の失敗）何も消さず、判定だけを表示して終了コード 1 で終わる。
 # 最後に git worktree prune と df -h / を表示する。
 set -euo pipefail
@@ -63,26 +64,29 @@ stray_ignored() {
   git -C "$1" status --porcelain --ignored 2>/dev/null | sed -n 's/^!! //p' | grep -Ev '^(\.loomake/|(.*/)?(node_modules|dist|coverage)/)' || true
 }
 
-# マージ済み PR の番号。なければ空
+# マージ済み PR の「番号 headRefOid」。なければ空
 merged_pr() {
-  gh pr list --head "$1" --state merged --json number --jq '.[0].number // empty' 2>/dev/null
+  gh pr list --head "$1" --state merged --json number,headRefOid --jq '.[0] | select(. != null) | "\(.number) \(.headRefOid)"' 2>/dev/null
 }
 
 decide() {
   # 出力：keep <理由> か remove <理由>
-  local d=$1 n head branch pr
+  local d=$1 n head branch pr pr_number pr_head
   n=$(basename "$d")
   if is_kept "$n"; then echo "keep --keep の指定"; return; fi
   if [ "$d" = "$self" ]; then echo "keep いまいる worktree"; return; fi
   if ! branch=$(git -C "$d" symbolic-ref --short -q HEAD); then echo "keep detached"; return; fi
   if [ -n "$(git -C "$d" status --porcelain 2>/dev/null)" ]; then echo "keep dirty"; return; fi
-  if [ -n "$(stray_ignored "$d")" ]; then echo "keep 無視ファイルあり：$(stray_ignored "$d" | head -3 | paste -sd '、' -)"; return; fi
+  if [ -n "$(stray_ignored "$d")" ]; then echo "keep 無視ファイルあり"; return; fi
   head=$(git -C "$d" rev-parse HEAD)
   if [ "$head" = "$main" ]; then echo "keep HEAD が origin/main と同じ"; return; fi
   if ! $gh_ok; then echo "keep gh を使えないので判定できない（ブランチ $branch）"; return; fi
   if ! pr=$(merged_pr "$branch"); then echo "keep gh pr list に失敗（ブランチ $branch）"; return; fi
   if [ -z "$pr" ]; then echo "keep PR なし（ブランチ $branch はマージ済み PR の head ではない）"; return; fi
-  echo "remove PR #$pr merged（ブランチ $branch）"
+  pr_number=${pr%% *}; pr_head=${pr#* }
+  # マージ後に進んだ HEAD（未 push の作業）は消さない。PR の head と同じか、origin/main に含まれるときだけ消す
+  if [ "$head" != "$pr_head" ] && ! git merge-base --is-ancestor "$head" "$main"; then echo "keep PR #$pr_number merged だが HEAD が進んでいる（ブランチ $branch）"; return; fi
+  echo "remove PR #$pr_number merged（ブランチ $branch）"
 }
 
 removed=0
@@ -106,7 +110,10 @@ for base in .codex/worktrees .claude/worktrees; do
         git worktree remove --force "$abs"
         echo "消した: $d（${verdict#remove }）"
         removed=$((removed + 1)) ;;
-      keep*) echo "残す: $d（${verdict#keep }）" ;;
+      keep*)
+        echo "残す: $d（${verdict#keep }）"
+        # 無視ファイルは 1 行に 1 件、3 件まで表示する
+        if [ "$verdict" = "keep 無視ファイルあり" ]; then stray_ignored "$abs" | head -3 | sed 's/^/    /'; fi ;;
     esac
   done
 done

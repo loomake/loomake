@@ -113,8 +113,16 @@ export function decideDocsOnly({ eventName = '', baseRef = '', git }) {
     specDiff = d.stdout ?? '';
   }
   // PR 本文は読まない（quality ジョブは本文を読む権限を持たない。tier-ci-gate の仮定 A-03）
+  // 消した行の節は、差分と同じ起点（ベースと HEAD の merge-base）のファイルで判定する
+  let mergeBase;
   const readSpec = (side, path) => {
-    const r = git(['show', `${side === 'new' ? 'HEAD' : `refs/remotes/origin/${baseRef}`}:${path}`]);
+    if (side === 'old' && mergeBase === undefined) {
+      const m = git(['merge-base', `refs/remotes/origin/${baseRef}`, 'HEAD']);
+      mergeBase = m.status === 0 ? (m.stdout ?? '').trim() : '';
+    }
+    const ref = side === 'new' ? 'HEAD' : mergeBase;
+    if (!ref) return undefined;
+    const r = git(['show', `${ref}:${path}`]);
     return r.status === 0 ? r.stdout : undefined;
   };
   const decided = decideTier({ entries, specDiff, readSpec });
