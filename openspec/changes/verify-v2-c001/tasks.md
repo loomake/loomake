@@ -18,8 +18,8 @@
 
 旧タスク3.2・3.4と3.1の読取部は子change `verify-v2-shape` のタスク1.7・1.8へ移した。
 
-- [ ] 3.1 `verify-v2-shape` で追加したquality.yamlの予算付き読取をverifyへ接続し、最小入力・YAML不正・型/版不正・不在・権限の終了コードをCLIで確かめる。承認済みR-C001-07 Aに従いv2切替前にroot quality.yamlを配置し、詳細候補のci.test_report 1必須項目と各changeの承認済みREQ集合へのplanを準備し、進行中changeのspec-onlyとdone/ciを確認する。切替当日の全open PRを棚卸し、実装済みPRはmain取込・対象headの新鮮な証拠・新ゲート成功を確認する。計画Draftは仕様待ち失敗を維持し、未移行/証拠未取得のPRはマージを止める。手動配置の最小例と構文2/読取3の移行説明を追加する（REQ-310）
-- [ ] 3.3 R-C001-03と04で決めた範囲の最小接続を満たし、producer/version・実効script/config/lock/tool・承認済みspec/REQ集合・対象SHA・環境・同一invocation鮮度・基準と証拠hashを正常PASS例で照合する。failedとmissing/skip/todoを分け、古い結果・PRのREQ削除・exit 0だけの偽陽性と最小接続のpartial/abortedを試験する（REQ-313・319）
+旧タスク3.1・3.3は子change `verify-v2-quality` へ移した。3.3のうち、method（script・config・lock・toolのhash）・verification.yamlのplan・PRのREQ削除は1.3（S1）へ。
+
 旧タスク3.4（R-C001-08のゲート別warn対応・localのOpenSpec不在NA・ciの不足、REQ-191のskip-commands不足1、R-C001-10のspec-only品質計数。REQ-036・037・038・039・191）は、子change `verify-v2-gates`（3/6）へ移した。同じ子changeでREQ-203の未承認警告の用語（trace-agreementの差分仕様）も確定した。
 
 ## 4. CLIと既存利用側の一体移行
@@ -36,4 +36,4 @@
 
 - [ ] 5.1 core/kit/trace/CLIのminorとrunnerのpatch changeset、形式版と利用側の移行案内を追加し、実tarball・公開型・JSON・CLI/API・旧fixture閲覧を検証する。1.2で採用したR-C001-06に従いAGENTS.md・packages/kit/templates/AGENTS.md・guide・PRテンプレートのローカルDoD/CI合格のコマンドと説明を同時に更新する。CONTRIBUTING.md、README.md、README.en.md、packages/cli/README.md、docs/flow.md、.agents/skills/delivery/SKILL.mdと、雛形文面を固定しているtests/kit-assets.test.ts:251も移行対象とする。kit-assetsの期待値は具体差分の個別承認を得てから変更し、R06の方針承認だけで変更しない。req-to-openspecのtasks雛形2箇所（packages/kit/templates/skills/req-to-openspec/references/openspec-format.md、.agents/skills/req-to-openspec/references/openspec-format.md）も対象にする。1.2で確定したREQ-136と採用コマンドを両雛形へ反映し、印を付ける既存Scenarioと完了ゲートの印を保持する試験を行う。Scenario変更後にREQ-190の監査をやり直し、docs/quality/scenarios.jsonのScenario hash・対応テスト・理由を実際の最新試験へ照合して更新する。旧レビューのhashだけを書き換えて済ませず、不足/無効の残りも記録する。CLI共通定義・生成ページ・新旧基準fixtureが同じ受理/出力を表すことを検査し、基準差分の個別承認を照合する。既存試験・設定を緩めずlint・typecheckと全体試験を通す（REQ-308〜319）
 - [ ] 5.2 正常PASS・abortedの2/3・不足1のCLI/API統合、全要件のID付きテストと独立レビューを確認し、R-C001-06の回答に従い最終headのローカルDoDとci完了ゲート・必須CI成功を記録する。Aならローカルは `--done --scope local` の0、最終CIは `--done --scope ci` のreal v2/PASS・要判断なし・0を両方必要とする。R-C001-04がAなら独立trusted checkも追加条件として確認し、Bなら採用した信頼基準を検証する。C-003へ残る全provider/host隔離/広い取得経路と#61/63/64全体の未完了を明記する（REQ-319） <!-- loomake:gate=done -->
-注：archiveは6/6（受入）のマージのあとに、verify-v2-shape・verify-v2-readers・verify-v2-wiring・verify-v2-evidence・verify-v2-strict・verify-v2-gates・verify-v2-c001を順に行う
+注：archiveは6/6（受入）のマージのあとに、verify-v2-shape・verify-v2-readers・verify-v2-wiring・verify-v2-evidence・verify-v2-strict・verify-v2-gates・verify-v2-scope・verify-v2-quality・verify-v2-c001を順に行う
