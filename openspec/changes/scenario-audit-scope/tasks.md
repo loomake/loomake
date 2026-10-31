@@ -15,7 +15,7 @@
 
 ## 4. CI と文書
 
-- [ ] 4.1 `.github/workflows/ci.yml`：quality（ubuntu）の build のあとに監査を `continue-on-error: true` で実行し、出力を artifact に保存する
+- [x] 4.1 `.github/workflows/ci.yml`：quality の ubuntu が保存した全体試験のレポートで監査する警告のジョブ `scenario-audit` を足し、監査のステップを `continue-on-error: true` にして出力を artifact に保存する（quality のステップは REQ-214・REQ-291 の試験が固定しているため別ジョブにする）
 - [ ] 4.2 `docs/guide/2.guides/4.scenario-audit.md` を更新し、`docs/quality/scenario-audit.md` に古い記録である旨を注記する
 
 ## 5. 確認
