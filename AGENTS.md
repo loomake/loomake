@@ -29,7 +29,7 @@
 1. 要件書・仕様書を渡されたら、`req-to-openspec` スキルで change を作る
 2. 実装に入る前に **仕様ゲート** `pnpm -s verify --change <change-id> --spec-only` を通す。ブロッキングな確認事項が未回答なら失敗する。ADR 0006 に従っておすすめ案を回答として記録し、ゲートが成功するまで実装に進まない
 3. `tasks.md` の順に実装する。1 タスクごとに小さくコミットし、終わったタスクは `- [x]` にする。1 つの PR は 1 日以内にマージできる大きさ（目安は commit 10 個以内）にし、大きい change は `tasks.md` の区切りで PR を分ける。main をブランチに取り込むのは、競合したときとマージの直前だけにする
-4. change があれば、完了したら **完了ゲート** `pnpm -s verify --change <change-id> --done` を通す
+4. change があれば、完了したら **完了ゲート** `pnpm -s verify --change <change-id> --done --scope local` を通す。最終の合格は PR の CI（gate ジョブの `--done`、scope は既定の ci）と必須チェックで確かめる
 5. レビュー・修正・検証・記録のような実作業はサブエージェントに分けて任せ、本体は計画と調整に集中する。担当は 1 つの change につき 1 つ。同時に進める本数、マージ条件、レビューの回数は ADR 0006 と delivery スキルに従う
    - サブエージェント 1 本は 100 ターン以内に収める。CI 待ちのような長い待機は、文脈の大きいサブエージェントの中で行わない。100 ターンで終わらないときは、進み具合を `.loomake/handoff/` に書き残し、新しいサブエージェントに同じ change を引き継がせる
    - PR 1 本か change 1 つが終わったら新しいセッションにする（Claude Code は `/clear`、Codex は `/new`）。別の作業を同じセッションで続けない
@@ -40,7 +40,8 @@
 
 change を持つ作業は、次をすべて満たすまで「完了」と報告しない。change のない L1・L2 の作業は、段階の必須の検査とレビューが済んだときに完了とする。
 
-- `pnpm -s verify --change <change-id> --done` が exit 0
+- `pnpm -s verify --change <change-id> --done --scope local` が exit 0（ローカルの完了）
+- 最終の合格：CI の gate ジョブで `verify --change <change-id> --done --scope ci` 相当（scope 省略時の既定）が exit 0。gate が JSON の 2.0.0・scope ci・run.status completed・errors 空・verdict PASS・要判断なしを確かめる。加えて必須 5 チェックが成功している。ローカルの完了だけで完了と報告しない
 - change 内の各 Requirement に、対応するテストが 1 つ以上ある
   - テスト名に要件 ID を入れる：`it('[REQ-012] 未ログインのとき 401 を返す', ...)`
   - 1 つのテストが複数の要件を確かめる場合は `[REQ-012][REQ-013]` と並べる

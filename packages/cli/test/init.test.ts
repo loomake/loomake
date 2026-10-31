@@ -435,3 +435,24 @@ describe('使っているテストランナーの設定例', () => {
     expect(r.stdout).toContain('Jest（package.json の test スクリプト）');
   });
 });
+
+
+describe('生成したローカルの完了と最終の合格の案内', () => {
+  it('[REQ-136] init の両 Skill に local の印と最終 CI の注記があり、AGENTS も両者を分ける', async () => {
+    const r = await runInit(['--codex']);
+    expect(r.code).toBe(0);
+    const agents = r.files['AGENTS.md'];
+    expect(agents).toContain('--done --scope local` が exit 0（ローカルの完了）');
+    expect(agents).toContain('--done --scope ci` が exit 0（判定 PASS・要判断なし）');
+    expect(agents).toContain('必須チェックが成功している');
+    for (const base of ['.claude', '.agents']) {
+      const format = r.files[`${base}/skills/req-to-openspec/references/openspec-format.md`];
+      const match = /## tasks\.md\s+```markdown\n([\s\S]*?)\n```/.exec(format);
+      expect(match).not.toBeNull();
+      const lines = match![1].split('\n');
+      expect(lines.filter((line) => line.includes('<!-- loomake:gate=done -->'))).toEqual(['- [ ] 3.1 `npx loomake verify --change <change-id> --done --scope local` を通す <!-- loomake:gate=done -->']);
+      expect(lines.filter((line) => /^- \[/.test(line) && line.includes('--scope ci'))).toEqual([]);
+      expect(lines.filter((line) => line.trim()).at(-1)).toBe('注：3.1 はローカルの完了。最終の合格には、CI で `npx loomake verify --change <change-id> --done --scope ci` が exit 0（判定 PASS・要判断なし）になることと、必須 CI の成功が別に要る。これはタスクにしない');
+    }
+  });
+});

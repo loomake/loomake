@@ -14,7 +14,8 @@ Loomake は、品質駆動開発のツール群として、自社プロダクト
 npx loomake init                                  # AGENTS.md・設定・Skill を置く
 npx loomake doctor                                # 導入状態を調べ、足りない設定と直し方を出す
 npx loomake verify --change <id> --spec-only      # 仕様ゲート：実装に入ってよいか
-npx loomake verify --change <id> --done           # 完了ゲート：要件ごとのテスト・品質コマンド
+npx loomake verify --change <id> --done --scope local # 完了ゲート（ローカル）：要件ごとのテスト・品質コマンド
+npx loomake verify --change <id> --done               # 完了ゲート（最終。既定は --scope ci）
 npx loomake run --change <id>                     # 実装から PR までを AI に任せる
 npx loomake trace record --change <id>            # 証拠を記録する
 npx loomake trace report --change <id>            # リリースレポートを出す
@@ -71,7 +72,7 @@ pnpm build
 
 ```sh
 pnpm -s verify --change <id> --spec-only
-pnpm -s verify --change <id> --done
+pnpm -s verify --change <id> --done --scope local
 ```
 
 change の進め方は [docs/flow.md](docs/flow.md)、テスト名と完了の決まりは [AGENTS.md](AGENTS.md) にある。
@@ -107,7 +108,7 @@ skills-lock.json                  npx skills で入れたスキルの出所と�
 ### CI とリリース
 
 - PR では ubuntu だけで、main への push と毎日 1 回の定期実行では ubuntu・macos・windows の 3 つで、lint・typecheck・test・build を実行する。PR に `ci:all-os` ラベルを付けると、その PR でも 3 つの OS で実行する。macOS か Windows に関わる変更をする PR では、このラベルを付ける。Node 22.12 でも、ビルドした CLI が動くかを確かめる
-- gate ジョブは、対象の change ごとに `verify --change <id> --done` を実行する。対象は、PR 本文に `loomake-change: <id>` の行があればその change とし、なければ PR で変えた `openspec/changes/<id>/` の下のファイルと、ブランチ名（`loomake/` で始まるときは、それを除いた名前）から決める
+- gate ジョブは、対象の change ごとに `verify --change <id> --done` を実行する。対象は、PR 本文に `loomake-change: <id>` の行があればその change とし、なければ PR で変えた `openspec/changes/<id>/` の下のファイルと、ブランチ名（`loomake/` で始まるときは、それを除いた名前）から決める（scope は既定の ci。ローカルの結果は合格にしない）
 - 対象の change がなく、文書（`.md`、`docs/`・`openspec/`・`.changeset/` の下）だけを変えた PR と archive の PR は、品質コマンドだけを実行する。コードを変える PR で change がないときは、本文に `loomake-change: none` と書く。書かないと gate ジョブは失敗する
 - gate ジョブは PR 本文を実行のたびに読む。本文を書き直したら、gate ジョブを再実行する
 - archive で反映したあとの仕様の誤りは、change ごとの完了ゲートでは見つからない。そのため gate ジョブは、PR の種類によらず、いまの仕様（`openspec/specs/`）に `openspec validate --specs --strict` も実行する
