@@ -125,3 +125,9 @@ export const alive = (pid: number) => {
     return false;
   }
 };
+
+/**
+ * 今回の test コマンドとして、用意したレポート（report-src.json）を tests.report に書き出すコマンド。
+ * verify は前回のレポートを消してから品質コマンドを実行するので、今回の実行で書き出したレポートだけが証拠になる（REQ-040）
+ */
+export const COPY_REPORT = `node -e "require('fs').mkdirSync('.loomake',{recursive:true});require('fs').copyFileSync('report-src.json','.loomake/test-report.json')"`;

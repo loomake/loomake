@@ -26,7 +26,7 @@ describe('生成した証拠と読み取り側の整合性', () => {
   it('[REQ-174] 64MiBを超える生成結果は証拠ファイルを作らず止まる', () => {
     const repo = doneRepo();
     try {
-      expect(() => runRecord({ root: repo.root, changeId: CHANGE, stdout: () => {}, onVerify: (result) => { result.results[0].detail = 'x'.repeat(64 * 1024 * 1024); } })).toThrow(/証拠.*上限.*67108864/);
+      expect(() => runRecord({ root: repo.root, changeId: CHANGE, stdout: () => {}, onVerify: (result) => { if ('checks' in result && result.checks) result.checks[0].reason = 'x'.repeat(64 * 1024 * 1024); } })).toThrow(/証拠.*上限.*67108864/);
       expect(existsSync(join(repo.root, '.loomake/evidence', CHANGE))).toBe(false);
       expect(repo.git('status', '--porcelain')).toBe('');
     } finally { repo.cleanup(); }

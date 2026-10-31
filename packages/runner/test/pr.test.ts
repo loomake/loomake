@@ -189,7 +189,8 @@ describe('gh CLI で PR を作る', () => {
         { args: ['auth', 'status'], status: 0 },
         { args: ['auth', 'status'], status: 1 },
       ]);
-      expect(out.join('\n')).toContain('最後の検査結果：合格');
+      // ローカルの完了を最終合格と呼ばない（REQ-311・REQ-317）
+      expect(out.join('\n')).toContain('最後の検査結果：ローカルの項目はすべて完了（CI の最終合格は未確認）');
       expect(out.join('\n')).toContain('gh auth login');
       expect(existsSync(join(repo.root, '.loomake/evidence'))).toBe(false);
       expect(remoteHas(repo, 'loomake/c1')).toBe(false);

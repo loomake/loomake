@@ -3,7 +3,7 @@ import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { runRecord } from '@loomake/trace';
 import { remainingProcessTime, ProcessLimitError, INTERRUPTED, TIMED_OUT, UsageError, runVerify, createInputReader, isAbortedResult, isVerifyResultV2, verifyExitCode } from '@loomake/kit';
-import type { VerifyResult, VerifyResultV2 } from '@loomake/core';
+import type { LegacyVerifyResult, VerifyResult } from '@loomake/core';
 import { runClaude } from '../engine.js';
 import { git, gitConfig } from '../git.js';
 import { APPROVAL_GUIDE, findEngineMove, findInternalsChange, findViolations, gitInternals, headState } from '../guards.js';
@@ -17,7 +17,7 @@ import { decideAfterEngine, decideAfterGate, decideAfterChanges, type GateObserv
 import type { Recorder, RunContext, RunSummary, Stop } from './types.js';
 
 /** 完了ゲートの検査のうち、理由（1.0.0 の detail、2.0.0 の reason）が reason と一致するものがあるか。aborted は検査を持たない */
-function hasReason(result: VerifyResult | VerifyResultV2 | null, reason: string): boolean {
+function hasReason(result: LegacyVerifyResult | VerifyResult | null, reason: string): boolean {
   if (!result) return false;
   if (!isVerifyResultV2(result)) return result.results.some((r) => r.detail === reason);
   return !isAbortedResult(result) && result.checks.some((c) => c.reason === reason);
@@ -27,7 +27,7 @@ function hasReason(result: VerifyResult | VerifyResultV2 | null, reason: string)
  * 完了ゲートの結果から、純粋判断に渡す観測を作る（REQ-205）。1.0.0 は ok をそのまま使う。
  * 2.0.0 は scope:local で終了コード 0 の結果だけを完了とし、要判断と aborted を観測に入れる。ci の PASS は完了とみなさない
  */
-export function gateObservation(result: VerifyResult | VerifyResultV2): Pick<GateObservation, 'ok' | 'interrupted' | 'timedOut' | 'aborted' | 'decisionReasons'> {
+export function gateObservation(result: LegacyVerifyResult | VerifyResult): Pick<GateObservation, 'ok' | 'interrupted' | 'timedOut' | 'aborted' | 'decisionReasons'> {
   const interrupted = hasReason(result, INTERRUPTED);
   const timedOut = hasReason(result, TIMED_OUT);
   if (!isVerifyResultV2(result)) return { ok: result.ok, interrupted, timedOut };
@@ -147,7 +147,8 @@ export async function runGate(ctx: RunContext, rec: Recorder): Promise<Stop | un
     let beforeVerify;
     try {
       beforeVerify = headState(root, env);
-      rec.lastVerify = runVerify({ root, changeId, gate: 'done', progress: ctx.progress, timeoutMs: left });
+      // run の完了ゲートは verify --done --scope local と同じ検査（REQ-100）
+      rec.lastVerify = runVerify({ root, changeId, gate: 'done', scope: 'local', progress: ctx.progress, timeoutMs: left });
     } catch (error) {
       restore();
       throw error;
@@ -202,8 +203,9 @@ export async function recordAndOpenPr(ctx: RunContext, rec: Recorder): Promise<n
   if (left <= 0) return rec.finish('stopped', '実行時間の上限に達しました', []);
   let evidence = reusableEvidence(root, env, changeId, ctx.changeDir);
   if (!evidence) {
+    // 記録するのはローカルの完了（scope:local）。最終 CI の合格ではない（REQ-100・REQ-315）
     const recorded = runRecord({
-      root, changeId, stdout: ctx.stdout, progress: ctx.progress, now: ctx.now, timeoutMs: left,
+      root, changeId, scope: 'local', stdout: ctx.stdout, progress: ctx.progress, now: ctx.now, timeoutMs: left,
       onVerify: (result) => { rec.lastVerify = result; },
     });
     if (recorded !== 0) {

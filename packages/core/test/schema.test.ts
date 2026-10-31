@@ -3,17 +3,23 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { VERIFY_RESULT_SCHEMA_VERSION } from '../src/index.js';
 
-type Schema = { required?: string[]; properties?: Record<string, Schema>; items?: Schema; const?: string };
+type Schema = { required?: string[]; properties?: Record<string, Schema>; items?: Schema; const?: string; anyOf?: Schema[] };
 
 const schemaPath = join(import.meta.dirname, '..', 'schema', 'verify-result.schema.json');
 // 公開した版のスキーマ。破壊的変更をしたら、新しい版をここに足す
 const historyDir = join(import.meta.dirname, 'fixtures', 'schema-history');
 const readSchema = (p: string): Schema => JSON.parse(readFileSync(p, 'utf8'));
 const major = (v: string) => Number(v.split('.')[0]);
-const versionOf = (s: Schema) => s.properties?.schemaVersion?.const ?? '';
+// 2.0.0 からは scope と実行状態で形を分ける anyOf になる。1.0.0 のような単一の形は 1 つの枝として扱う
+const branches = (s: Schema): Schema[] => s.anyOf ?? [s];
+const versionOf = (s: Schema) => {
+  const versions = [...new Set(branches(s).map((b) => b.properties?.schemaVersion?.const ?? ''))];
+  return versions.length === 1 ? versions[0] : '';
+};
 
-// 必須プロパティを、入れ子を含めたパス（results[].check など）で返す
+// 必須プロパティを、入れ子を含めたパス（results[].check など）で返す。入れ子の anyOf は、どれかの枝で必須のパスを合わせる
 function requiredPaths(s: Schema, prefix = ''): string[] {
+  if (s.anyOf) return [...new Set(s.anyOf.flatMap((b) => requiredPaths(b, prefix)))];
   const own = (s.required ?? []).map((r) => prefix + r);
   const nested = Object.entries(s.properties ?? {}).flatMap(([k, v]) => [
     ...requiredPaths(v, `${prefix}${k}.`),
@@ -22,10 +28,32 @@ function requiredPaths(s: Schema, prefix = ''): string[] {
   return [...own, ...nested];
 }
 
+// 最上位の枝を、scope と run.status の組ごとに分ける。run が anyOf なら、run の枝ごとに 1 つの形にする。1.0.0 のような単一の形は '-/-' の 1 つ
+function shapes(s: Schema): Map<string, Schema> {
+  const out = new Map<string, Schema>();
+  for (const branch of branches(s)) {
+    const run = branch.properties?.run;
+    for (const r of run?.anyOf ?? [run]) {
+      const key = `${branch.properties?.scope?.const ?? '-'}/${r?.properties?.status?.const ?? '-'}`;
+      out.set(key, r ? { ...branch, properties: { ...branch.properties, run: r } } : branch);
+    }
+  }
+  return out;
+}
+
+// 前の版の形ごとに、今の版の同じ形から消えた必須パスを返す（REQ-053）。形そのものが消えたら、その形の必須パスをすべて消えたとみなす
+function removedPaths(old: Schema, current: Schema): string[] {
+  const now = shapes(current);
+  return [...shapes(old)].flatMap(([key, shape]) => {
+    const kept = requiredPaths(now.get(key) ?? {});
+    return requiredPaths(shape).filter((p) => !kept.includes(p)).map((p) => `${key}:${p}`);
+  });
+}
+
 describe('verify 結果の JSON スキーマ', () => {
   it('[REQ-016] schemaVersion を必須プロパティとして定義し、型の版と一致する', () => {
     const schema = readSchema(schemaPath);
-    expect(schema.required).toContain('schemaVersion');
+    for (const branch of branches(schema)) expect(branch.required).toContain('schemaVersion');
     expect(versionOf(schema)).toBe(VERIFY_RESULT_SCHEMA_VERSION);
     expect(VERIFY_RESULT_SCHEMA_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
   });
@@ -41,7 +69,7 @@ describe('verify 結果の JSON スキーマ', () => {
     const history = readdirSync(historyDir).map((f) => readSchema(join(historyDir, f)));
     expect(history.length).toBeGreaterThan(0);
     for (const old of history) {
-      const removed = requiredPaths(old).filter((p) => !requiredPaths(current).includes(p));
+      const removed = removedPaths(old, current);
       if (removed.length > 0) expect(major(versionOf(current)), `削除・改名した必須プロパティ：${removed.join(', ')}`).toBeGreaterThan(major(versionOf(old)));
       else expect(major(versionOf(current))).toBeGreaterThanOrEqual(major(versionOf(old)));
     }
@@ -50,7 +78,15 @@ describe('verify 結果の JSON スキーマ', () => {
   it('[REQ-053] 必須プロパティを削除したスキーマは、メジャー番号を上げないと検出される', () => {
     const old = readSchema(join(historyDir, '1.0.0.json'));
     const broken: Schema = { ...old, required: old.required?.filter((r) => r !== 'ok') };
-    const removed = requiredPaths(old).filter((p) => !requiredPaths(broken).includes(p));
-    expect(removed).toEqual(['ok']);
+    expect(removedPaths(old, broken)).toEqual(['-/-:ok']);
+  });
+
+  it('[REQ-053] ci の枝だけから decision を消すと、ほかの枝に残っていても検出する', () => {
+    const old = readSchema(join(historyDir, '2.0.0.json'));
+    const broken: Schema = structuredClone(old);
+    const ci = broken.anyOf!.find((b) => b.properties?.scope?.const === 'ci')!;
+    ci.required = ci.required!.filter((r) => r !== 'decision');
+    expect(removedPaths(old, broken)).toEqual(['ci/completed:decision', 'ci/partial:decision']);
+    expect(removedPaths(old, old)).toEqual([]);
   });
 });

@@ -8,7 +8,9 @@ import { evidenceValue, reportValue } from './fixtures/trace-contract-values.js'
 
 const parser = await loadParserSchemas();
 const quality = await loadQualitySchema();
-const verify = await loadVerifyResultSchemas();
+// このファイルは公開した 1.0.0 の形を確かめる。現行の 2.0.0 は unknown-fields-v2.test.ts で確かめる
+const loaded = await loadVerifyResultSchemas();
+const verify = { ...loaded, verifyResultSchema: loaded.legacyVerifyResultSchema, verifyCheckResultSchema: loaded.legacyVerifyCheckResultSchema };
 const report = await loadQualityReportSchema();
 const trace = await loadTraceSchemas();
 

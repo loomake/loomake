@@ -123,7 +123,10 @@ export async function check(target) {
   assert.equal(Object.hasOwn(core, 'evaluateTestCoverage'), false);
   assert.deepEqual(kit.evaluateAgreement(core.createAgreement('trace.md', { ledger: [], questions: [], assumptions: [] }).value), { blockingQuestions: [], pendingRequirements: [], unapprovedAssumptions: [], missingSources: [] });
   assert.deepEqual(kit.evaluateTestCoverage(['REQ-149'], {}), { coverage: { 'REQ-149': [] }, missing: ['REQ-149'] });
-  assert.equal(json(require.resolve('@loomake/core/schema/verify-result.schema.json')).properties.schemaVersion.const, core.VERIFY_RESULT_SCHEMA_VERSION);
+  // 版付きでないパスは現行の 2.0.0、1.0.0 は版付きのパスで読む（REQ-318）
+  assert.equal(core.VERIFY_RESULT_SCHEMA_VERSION, '2.0.0');
+  assert.deepEqual([...new Set(json(require.resolve('@loomake/core/schema/verify-result.schema.json')).anyOf.map((branch) => branch.properties.schemaVersion.const))], [core.VERIFY_RESULT_SCHEMA_VERSION]);
+  assert.equal(json(require.resolve('@loomake/core/schema/versions/verify-result-1.0.0.schema.json')).properties.schemaVersion.const, core.LEGACY_VERIFY_RESULT_SCHEMA_VERSION);
   const { qualityReportSchema } = await core.loadQualityReportSchema();
   assert.equal(core.QUALITY_REPORT_SCHEMA_VERSION, 1);
   assert.deepEqual(qualityReportSchema.parse({ version: 1 }), { version: 1 });
@@ -154,6 +157,9 @@ export async function check(target) {
   assert.equal(tracePackage.EVIDENCE_SCHEMA_VERSION, core.EVIDENCE_SCHEMA_VERSION);
   assert.equal(tracePackage.REPORT_SCHEMA_VERSION, core.REPORT_SCHEMA_VERSION);
   const evidenceContract = { schemaVersion: 1, change: 'sample', sha: '', committedAt: '', recordedAt: '', verify: { schemaVersion: '1.0.0', mode: 'done', change: 'sample', ok: true, results: [] } };
+  // trace record は Evidence 2 で書き出す。Evidence 2 は別の名前のスキーマで読む（証拠の現行の名前の切替は 2b-2）
+  const evidenceV2Contract = { schemaVersion: 2, change: 'sample', sha: '', committedAt: '', recordedAt: '', verify: { schemaVersion: '2.0.0', change: 'sample', run: { status: 'completed', errors: [] }, scope: 'local', checks: [], summary: { fail: 0, insufficient: 0, not_applicable: 0, evaluated: 0, pending: 0 }, decision: { required: false, reasons: [] } } };
+  assert.deepEqual(traceSchemas.evidenceV2Schema.parse(evidenceV2Contract), evidenceV2Contract);
   const reportContract = { schemaVersion: 2, change: 'sample', evidence: { recordedAt: '', sha: '', committedAt: '', ok: true, documents: false }, attention: { noPassingTests: [], pending: [], changedDocuments: [], failedChecks: [] }, rows: [], questions: [], assumptions: [], warnings: [] };
   for (const [name, value] of [['evidence', evidenceContract], ['report', reportContract]]) {
     assert.deepEqual(traceSchemas[`${name}Schema`].parse(value), value);
@@ -189,7 +195,7 @@ export async function check(target) {
   command('doctor');
   command('verify', '--change', 'sample', '--spec-only');
   const verified = JSON.parse(command('verify', '--change', 'sample', '--done', '--json'));
-  assert.equal(verified.ok, true);
+  assert.deepEqual([verified.schemaVersion, verified.scope, verified.run.status, verified.decision.required, verified.verdict], ['2.0.0', 'ci', 'completed', false, 'PASS']);
   assert.equal(Object.keys(verified.coverage).length, 25);
   command('trace', 'record', '--change', 'sample');
   const report = JSON.parse(command('trace', 'report', '--change', 'sample', '--format', 'json'));

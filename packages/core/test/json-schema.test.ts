@@ -2,13 +2,13 @@ import { describe, it, expect } from 'vitest';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { qualitySchema } from '../src/quality-schema.js';
 import { evidenceSchema, reportSchema } from '../src/trace-schemas.js';
-import { evidenceValue, reportValue } from './fixtures/trace-contract-values.js';
+import { evidenceV2Value, evidenceValue, reportValue } from './fixtures/trace-contract-values.js';
 import { createTraceTemplate, parseTrace, parseSpec, parseTasks } from '../src/index.js';
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { renderJsonSchemas } from '../src/json-schema.js';
+import { renderJsonSchemas, renderVersionedJsonSchemas } from '../src/json-schema.js';
 
 const pkgDir = join(import.meta.dirname, '..');
 const schemaDir = join(pkgDir, 'schema');
@@ -83,14 +83,16 @@ describe('JSON Schema の書き出し', () => {
       const evidence = registry.getSchema('https://loomake.dev/schema/evidence.schema.json')!;
       const verify = registry.getSchema('https://loomake.dev/schema/verify-result.schema.json')!;
       expect(evidence(evidenceValue()), JSON.stringify(evidence.errors)).toBe(true);
-      expect(verify(evidenceValue().verify), JSON.stringify(verify.errors)).toBe(true);
+      expect(verify(evidenceV2Value().verify), JSON.stringify(verify.errors)).toBe(true);
+      expect(verify(evidenceValue().verify)).toBe(false);
       expect(evidence({ ...evidenceValue(), verify: { ...evidenceValue().verify, ok: 1 } })).toBe(false);
     }
   });
 
   it('[REQ-276] 書き出した verify 結果の JSON Schema が、移す前の必須プロパティと値を持つ', () => {
-    const schema = JSON.parse(renderJsonSchemas()['verify-result.schema.json']);
-    expect(schema.$id).toBe('https://loomake.dev/schema/verify-result.schema.json');
+    // 2.0.0 へ切り替えたあと、1.0.0 は版付きのパスで公開する（REQ-276・REQ-304）
+    const schema = JSON.parse(renderVersionedJsonSchemas()['verify-result-1.0.0.schema.json']);
+    expect(schema.$id).toBe('https://loomake.dev/schema/versions/verify-result-1.0.0.schema.json');
     expect(schema.required).toEqual(['schemaVersion', 'mode', 'change', 'ok', 'results']);
     expect(schema.properties.schemaVersion.const).toBe('1.0.0');
     expect(schema.properties.mode.enum).toEqual(['quality', 'spec-only', 'done']);

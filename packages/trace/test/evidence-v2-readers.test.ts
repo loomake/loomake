@@ -28,12 +28,14 @@ function withRecorded(fn: (root: string, evidence: Record<string, unknown>, file
 describe('Evidence 2 を読む', () => {
   it('正しい Evidence 2 を受け付け、版と埋め込みの verify の版の混在と、状態別の必須欄の欠けを拒否する', () => {
     withRecorded((_root, evidence) => {
-      expect(evidence.schemaVersion).toBe(1);
+      // 書き出しを Evidence 2 に切り替えた（verify-v2-wiring、REQ-315）
+      expect(evidence.schemaVersion).toBe(2);
+      const legacyVerify = { schemaVersion: '1.0.0', mode: 'done', change: CHANGE, ok: true, results: [] };
       const v2 = { ...evidence, schemaVersion: 2, verify: ciPass };
       expect(evidenceProblem(v2, CHANGE)).toBeUndefined();
       expect(evidenceProblem({ ...v2, verify: localDone }, CHANGE)).toBeUndefined();
-      expect(evidenceProblem({ ...v2, verify: evidence.verify }, CHANGE)).toEqual(expect.any(String));
-      expect(evidenceProblem({ ...evidence, verify: ciPass }, CHANGE)).toEqual(expect.any(String));
+      expect(evidenceProblem({ ...v2, verify: legacyVerify }, CHANGE)).toEqual(expect.any(String));
+      expect(evidenceProblem({ ...evidence, schemaVersion: 1, verify: ciPass }, CHANGE)).toEqual(expect.any(String));
       for (const verify of [{ ...ciPass, checks: undefined }, { ...ciPass, run: { status: 'partial', errors: [] } }, { ...localDone, verdict: 'PASS' }, { schemaVersion: '2.0.0', change: CHANGE, run: { status: 'aborted', errors: [] } }]) {
         expect(evidenceProblem({ ...v2, verify }, CHANGE), JSON.stringify(verify)).toEqual(expect.any(String));
       }

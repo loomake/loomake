@@ -1,5 +1,7 @@
 // @loomake/kit：要件書の取り込み・共通ルール・検証ゲート
-export { runVerify, INTERRUPTED, TIMED_OUT } from './verify/run.js';
+export { runVerify, INTERRUPTED, TIMED_OUT, COMMANDS_SKIPPED, REQUIREMENTS_NOT_RUN, NOTICE } from './verify/run.js';
+export { assembleVerifyResult, verifyAbortedResult, RUN_ERRORS_CHECK } from './verify/result.js';
+export type { VerifyResultParts } from './verify/result.js';
 export type { VerifyOptions } from './verify/run.js';
 export { CHANGE_ID, KNOWN_CONFIG_KEYS, assertChangeId, loadConfig, RuntimeFailure, UsageError, DEFAULT_TEST_REPORT } from './verify/config.js';
 export type { LoomakeConfig } from './verify/config.js';

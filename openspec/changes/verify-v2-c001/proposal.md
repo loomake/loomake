@@ -58,3 +58,5 @@ C-001は3つのPRに分けて受け入れる。1本目は子change `verify-v2-sh
 Requirementは既存のIDのまま、重複させずに移す。新しいREQ-IDは作らない。REQ-183・274〜276・302〜310・313・314・316・322の17件は `verify-v2-shape` へ移した。REQ-274にあった書き出しの版を2.0.0にする文は、REQ-311へ移した。REQ-073は既存の試験の期待値を変えずには1本目で満たせないため、この親に残した。archiveは3本目のあとに、子change・親の順に行う。分け方の採否は`verify-v2-shape` のtraceの確認事項S8-01〜03に記録した。
 
 2本目は、読む側の対応（`verify-v2-readers`）と書く側の切り替え（`verify-v2-wiring`）の2つのPRに分けた。PRの差分がOpusへの依頼の上限（200KiB）を超えたための管理役の決定（2026-10-31）である。`verify-v2-readers` へREQ-093・205を移した。REQ-093は承認済みR-C001-05 AのMODIFIEDとして子changeで確定した。
+
+書く側はさらに3つに分けた（管理役の決定、2026-10-31）。全体は6本で、1/6 `verify-v2-shape`、2a/6 `verify-v2-readers`、2b-1/6 `verify-v2-wiring`（verifyの書き出しの切替。REQ-040・041・100・311・315）、2b-2/6（Evidenceの現行名の切替とreport。REQ-073の予定）、2c/6（旧形式の不合格。REQ-164・317・318の予定）、6/6はこの親で受入を行う。

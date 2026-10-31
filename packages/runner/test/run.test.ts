@@ -475,7 +475,7 @@ describe('実行の記録', () => {
       expect(readdirSync(dir)).toEqual(expect.arrayContaining(['01-output.json', '01-prompt.md', '01-verify.json', 'summary.json']));
       expect(readFileSync(join(dir, '01-prompt.md'), 'utf8')).toBe(repo.calls()[0].prompt);
       expect(JSON.parse(readFileSync(join(dir, '01-output.json'), 'utf8')).result).toBe('終えました');
-      expect(JSON.parse(readFileSync(join(dir, '01-verify.json'), 'utf8')).ok).toBe(true);
+      expect(JSON.parse(readFileSync(join(dir, '01-verify.json'), 'utf8'))).toMatchObject({ schemaVersion: '2.0.0', scope: 'local', summary: { fail: 0, pending: 0 } });
       expect(summary(repo).status).toBe('completed');
     }, { tasks: '- [ ] 1.1 一つ目のタスク（REQ-012）\n- [ ] 3.1 品質確認 <!-- loomake:gate=done -->\n' }));
 

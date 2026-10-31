@@ -23,11 +23,12 @@ describe('共有する品質判定の4値', () => {
     }
   });
 
-  it('[REQ-305] verify 1.0.0 と既存8形式の JSON だけを保持する', async () => {
-    expect(VERIFY_RESULT_SCHEMA_VERSION).toBe('1.0.0');
-    const { verifyResultSchema } = await loadVerifyResultSchemas();
+  it('[REQ-305] 現行の verify 2.0.0 と履歴の 1.0.0 を区別し、既存8形式の JSON だけを保持する', async () => {
+    expect(VERIFY_RESULT_SCHEMA_VERSION).toBe('2.0.0');
+    const { verifyResultSchema, legacyVerifyResultSchema } = await loadVerifyResultSchemas();
     const legacy = { schemaVersion: '1.0.0', mode: 'done', change: 'sample', ok: true, results: [] };
-    expect(verifyResultSchema.parse(legacy)).toEqual(legacy);
+    expect(legacyVerifyResultSchema.parse(legacy)).toEqual(legacy);
+    expect(verifyResultSchema.safeParse(legacy).success).toBe(false);
     expect(Object.keys(renderJsonSchemas()).sort()).toEqual(['evidence.schema.json', 'quality-report.schema.json', 'quality.schema.json', 'report.schema.json', 'spec.schema.json', 'tasks.schema.json', 'trace.schema.json', 'verify-result.schema.json']);
   });
 });
