@@ -175,6 +175,7 @@ Q-01〜Q-100の採用と条件は管理役がADR0006に基づき記録する。Q
 | Q-111 | Issue258・H1〜H3 | 依存hash | A：inputs.companionDependencies追加／B：記録なし | A。受理が依存する補助本文を追跡する | yes | Aを採用 | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
 | Q-112 | Issue258・H1〜H3 | helper本文の動的読込 | A：追加検査なし／B：全関数本文も閉じる | A。companionから届く本文と評価時は呼出しなし、元source経路は対象外 | yes | Aを採用 | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
 | Q-113 | Issue258・H1〜H3 | 仕様の場所 | A：12番条件と限界のみ改訂し13/14追加／B：短いSHALL変更 | A。498文字本文・Source・先頭11Scenarioをbyte保持する | yes | Aを採用 | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
+| Q-114 | Issue258・H2 | 未参照ImportEqualsの依存 | A：型専用でないImportEqualsもH2起点／B：ImportEquals全拒否 | A。verbatimで実行される別helperを両入口で閉じ、純粋APIと既存正例を保つ | yes | Aを採用 | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
 
 ## 仮定
 
@@ -344,3 +345,7 @@ R4/C1・一般oracle・実登録・OS割当は未設計/未達のまま。PR253�
 ## helper依存の部分修理（Q-103〜Q-113）
 
 設計3ac31242のH1〜H3を管理役が採用した。OpusはADR・delivery未読と述べたため、管理役が現規約・品質維持・承認範囲を照合した技術設計として記録する。全規約Read済みや利用者本人の個別レビューとは扱わない。検証・保持・未達条件は差分仕様・design・tasksで追跡する。
+
+## 未参照ImportEqualsの依存（Q-114）
+
+管理役がOpus設計274875d1のAを採用した。型専用でないImportEqualsのrequire先も位置を問わずH2の起点とする。verbatim設定で実行される依存を閉じ、純粋API・既存の診断順・型専用の読込除外を保つため、この仮定を管理役が承認する。

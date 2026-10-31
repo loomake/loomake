@@ -384,3 +384,5 @@ pure companionLinksのAPI、読み取り対象、scanner/hash/migrate/registry/c
 許可するAST条件と両入口の受入は差分仕様の第12〜14Scenario、選択と理由はtraceのQ-103〜Q-113に定める。companionLinksの第3引数readModuleは任意とし、純粋APIにはH1だけ、partitionInputsから通る監査・移行にはH1〜H3を適用する。依存hashはinputs.companionDependenciesへ記録する。元sourceのhelper本文は対象外で、knownbadの免除にはしない。
 
 元helper-one・能力返却・実canonicalをnative対照とし、仕様ゲート後にtest-firstで実装する。既存447期待・SHALL・Source・先頭11Scenario・task/registry/configと未完了条件を保つ。
+
+Q-114：companionの型専用でないImportEqualsのrequire先も位置を問わずH2の起点とし、H1〜H3と依存hashを適用する。純粋APIの範囲と既存期待は保つ。
