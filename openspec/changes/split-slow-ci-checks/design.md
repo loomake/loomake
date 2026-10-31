@@ -103,7 +103,7 @@ ruleset mainの変更案はrequired_status_checksからnode20 contextだけを�
 
 内部工程はtasksに従い、Q-38の段階的PRで受け入れる。change全体の完成は最後のPR184とマージ後の必須受入まで保留する。管理役はC2のNode20削除、C3のroot共有準備、C4の空registryを用いる純粋helper/slow足場、C5の実13条件試験を先行可能と指定した。これらは採用済み62abaの範囲に限定し、未測定のOS割当や未設計case本体を加えない。凍結head `3571c208` の診断を引き継ぐ吸収先との統合境界・重複・順序の確定と残9fileの個別設計と14fileの対応再照合は、case本体分割と最終同head測定の前提として残す。統合後に元caseを固定し、先行実装もfresh差分・測定・完了ゲート・独立レビューで再検証する。C001/S1/E3の既存treeと担当は保持する。本文やfixtureの重複は最新差分と担当の統合順で解決し、未測定・未設計を完成としない。
 
-独立した監査・宣言inventory対応2.5とC1 factory分類・17file包含の2.6は実装・関連検証済みである。現在の8完了を保ち、行登録の未完了2.7を加えて実装・検証は8/18とする。5.3〜5.5の元の必須受入3件に、マージ後の実診断5.6を加えて全22件を追跡する。完了ゲートは18タスクを判定し、ゲート後の4件は別に未達を保持する。ゲート後の出来事をゲートの前提へ含めない構造は維持し、レビューと証跡の運用だけを利用者が採用した2026-10-31の改訂規約へ合わせる。人のruleset操作は維持する。マージとsync/archiveの受入までchangeを完了としない。対象headの証跡はPR #184末尾の1ブロックに記録する。head変更時は必要な完了ゲート・CIを再検証し、独立Opusの回数・重大指摘ゼロ・軽微指摘のIssue化・reviewed-headとの対応は改訂ADR 0006に従う。無制限の全重大度ゼロとCodex必須をマージ条件へ戻さない。
+独立した監査・宣言inventory対応2.5とC1 factory分類・17file包含の2.6は実装・関連検証済みである。現在の8完了を保ち、行登録の未完了2.7とschema測定・inventoryの未完了2.8を加えて実装・検証は8/19とする。5.3〜5.5の元の必須受入3件に、マージ後の実診断5.6を加えて全23件を追跡する。完了ゲートは19タスクを判定し、ゲート後の4件は別に未達を保持する。ゲート後の出来事をゲートの前提へ含めない構造は維持し、レビューと証跡の運用だけを利用者が採用した2026-10-31の改訂規約へ合わせる。人のruleset操作は維持する。マージとsync/archiveの受入までchangeを完了としない。対象headの証跡はPR #184末尾の1ブロックに記録する。head変更時は必要な完了ゲート・CIを再検証し、独立Opusの回数・重大指摘ゼロ・軽微指摘のIssue化・reviewed-headとの対応は改訂ADR 0006に従う。無制限の全重大度ゼロとCodex必須をマージ条件へ戻さない。
 
 # 2026-10-31の再編決定
 
@@ -150,7 +150,7 @@ Q-37（Q-C4 A）はPR231の移動先2fileを必須包含へ追加する。`ci-me
 
 初回negativeはfilter不一致で4skipとなり、対照成功の根拠にしない。探索中のbundle loaderによる所有dir外の一時config生成とHOME上書きも報告に残る。最終実行はnative config loaderと所有cache/TMPDIRを使い、HOME上書きを取り除いた。これらの履歴を最終成功で消さない。V1はmock/importの技術前提の観測に限り、2.6の実装完了、元のproduction case・3OS・long deadline・cleanup・coverage・正式OS割当の合格ではない。今後production条件でmockが効かなければscenario-timeout-evidenceを未登録・未達に保ち、設計へ戻す。
 
-4.3の登録は3.1〜3.3・2.5・2.6・2.7・4.2の受入後に行い、prefix・companion・実registryを同じcommitで追加する。Q-38の中間PRではslowも実行し、全PRのslow除外結線はNode20削除とともに最後のPR184で有効にする。profilerの元source/companion対象更新は登録より前又は同じcommitに置く（Q-57）。4.2の各OS3sampleで、行の失敗・欠測・skipが一つでもあれば割り当てない。各行の最大が10000ms超ならslow、each全行が超える場合だけ表全体をslow、全行以下ならfastとする。混在時は、2.7で受け入れたliteral表だけ行ごとに分け、未対応なら未割当・未達を保ち追加設計へ戻す。Windowsのsignalの8skip行を時間0やslow合格へ変えない。
+4.3の登録は3.1〜3.3・2.5・2.6・2.7・2.8・4.2の受入後に行い、prefix・companion・実registryを同じcommitで追加する。Q-38の中間PRではslowも実行し、全PRのslow除外結線はNode20削除とともに最後のPR184で有効にする。profilerの元source/companion対象更新は登録より前又は同じcommitに置く（Q-57）。4.2の各OS3sampleで、行の失敗・欠測・skipが一つでもあれば割り当てない。各行の最大が10000ms超ならslow、each全行が超える場合だけ表全体をslow、全行以下ならfastとする。混在時は、2.7で受け入れたliteral表だけ行ごとに分け、未対応なら未割当・未達を保ち追加設計へ戻す。Windowsのsignalの8skip行を時間0やslow合格へ変えない。
 
 Q-36（Q-C3 A）により、ubuntuでfastだけのcoverageが94/89/96/97を下回るなら該当caseのLinux割当を行わず未達を残し、不足範囲を補う新しいfast試験を別Issueで設計する。閾値は下げない。登録後の3OSで元19行とfast＋slowの`(元file, fullName, status)`の多重集合をpartition helperから独立に比較し、macOS/Windowsは全shardを合わせる。12selectorは変えず、main全件の監査で元の状態・理由を照合し、PRのslow未実行によるinvalidは正直に記録する。timeoutの上下限・実時計・cleanup、全fast/混在/全slowの空describe/file、PR全経路とlocal/release/main/scheduleの選択は4.3〜5.1で検証する。
 
@@ -180,7 +180,7 @@ Q-40では重複prototypeを後続で外し、PR判定を既存test-partitionへ
 
 # 行単位登録2.7（Q-45〜Q-52）
 
-同worktree内の全文保存先は`.loomake/scratchpad/speed-plan-reconcile-282/row-design-result.md`（head65f98fcb、actual claude-opus-5-5、Read/Glob/Grep、拒否0、3規約Read）。管理役は全文を読み推奨Aを採った。traceはモデルの部分読取で、Q番号との対応は管理役が行う。モデルの進捗7/18は現在の2.6完了を反映しないため使わず、8/18とする。製品Requirement・registry形式・scanner/partition規則は変えない。
+同worktree内の全文保存先は`.loomake/scratchpad/speed-plan-reconcile-282/row-design-result.md`（head65f98fcb、actual claude-opus-5-5、Read/Glob/Grep、拒否0、3規約Read）。管理役は全文を読み推奨Aを採った。traceはモデルの部分読取で、Q番号との対応は管理役が行う。モデルの進捗7/18は現在の2.6完了と後続2.8追加を反映しないため使わず、現在は8/19とする。製品Requirement・registry形式・scanner/partition規則は変えない。
 
 元の`it.each(...)`から閉じ括弧までをインデントも含めbyte不変で保ち、裸Blockの先頭に`const it = eachRows(has, [葉ID...])`、末尾に閉じ括弧だけを足す。`selectRows`は元表を一度sliceし、表全体のlength/every判定・行の参照・元indexを保つown forEachだけで選択行へcallbackを渡す。Vitest本来のformatter/parseArgumentsを通し、名前・%#/%$・arity・評価回数・timeout/options/statusを保つ。単純なfilter、Proxy、globalな差し替え、内部taskの削除は使わない。Vitest5.0.5のforEach使用への依存は、独立したnative fixtureで検出する。
 
@@ -202,4 +202,48 @@ inventoryはrowBindingをnonCallとして残し、rowIds/rowTextsを位置で対
 
 このモデルは既存publication-retry-diagnostics試験とchecker本文を全文未読であり、producerの出力形式と既存試験への互換を実装前に確認する。producer互換・25ラベル/25展開行と共有contextの独立照合・正負fixture・起動条件の真偽表・旧job無変更を4.4のマージ前条件とする。実運用の受入は5.6で、最後のPR184のマージ後最初のmain pushから3artifactを取得し、同checkout・実Node・3sample・source/companion・固定caseId/区間/worker/process・時計/保存/失敗の扱いを確認する。fixture成功だけで5.6を完了とせず、欠測や未解決の異常が残ればchangeを未完了に保ち、sync/archiveへ進まない。
 
-V2初回はnative15raw行の試験成功に対し、手書きfullNameの1件で不一致を観測し、期待値を変えず停止して追加設計へ戻した。これは計画どおりの受入前停止であり、2.7の正式実装や実登録は未実施である。新候補orphansのimportされた*Test helperをinventoryが誤認する可能性も残設計で確認し、現在のcountや診断を実装へ合わせて固定しない。
+V2初回はnative15raw行の試験成功に対し、手書きfullNameの1件で不一致を観測し、期待値を変えず停止して追加設計へ戻した。これは計画どおりの受入前停止であり、後続設計のV2bへ進む。管理役はV2b報告全文を読みLinux合成の技術前提として限定採用したが、2.7のchecker/oracle実装完了や実登録とはしない。新候補orphansのimportされた*Test helperをinventoryが誤認する可能性も残設計で確認し、現在のcountや診断を実装へ合わせて固定しない。
+
+
+# V2b補足設計（Q-58〜Q-60）
+
+同worktree内の全文は`.loomake/scratchpad/speed-plan-reconcile-282/followup66/row-v2b-result.md`、セッションdd40a790-7051-44f2-bf4a-655fe28cfef0・head65f98fcb・actual claude-opus-5-5である。管理役と計画担当が全文を読み、manifestのok/exit0/read-only/拒否0と3規約のReadイベントを確認した。旧V2のR4不一致は、wrapperを使わないnative基準でも起きる、前回設計の導出誤りと分かった。
+
+Vitest5.0.5のrun chunk3004行は%の文字数をcountし、3035行は%%も含む置換ごとにitemsを消費する。display chunk77/117行により、`p %s %% [.*+?]`の['x']は`rows p x % undefined [.*+?]`になる。旧期待・raw・停止記録は上書きせず残す。これは合成実験の誤った設計期待を一次ソースで訂正するもので、productionの試験・既存期待値・時間・assertを実装へ合わせる変更ではない。
+
+V2bでは期待・call・driverを実行前に別版で固定し、旧7callはbyte不変、未実行のR4b `it.each([['x','y']])('q %s %% z',...)`を加える。予測は`rows q x % y z`、argc2・値['x','y']、mixedでは葉ID r4-pair-xyをslowにする。新しい16行・mixedSlow8行をnative基準から新規に実行し、元index/全table判定/参照/arity/名前/多重度/timeout/status/失敗文を確かめる。exit/signal/stdout/stderr/rawは照合前に保存し、すべての照合差分を記録して止める。実Vitest5.0.5と引用4chunkの同一性を事前確認し、旧rawをV2b成功の代わりにしない。
+
+%%に対するscannerの既存の固定%扱いは、表全体の登録でも起きる制限である。Q-58によりdocsへ注記するだけで、行登録へ新しいunsupported制限や名前の正規化を加えない。production deadlineの名前は%sだけで影響しない。管理役と計画担当はV2b最終報告（同followup66配下のREPORT.v2b.md）を全文読了し、Linux/Node24.21.0/Vitest5.0.5の合成技術前提として限定採用した。native16processはexit0が8本・期待したexit1が8本、208比較は差分0、16行native基準と混在8+8/全fast/全slow・R4b予測・arity/参照/重複/timeout/error/不正形を照合した。元7call byteと旧V2全37fileを保持し、実Vitest版と引用4chunkも一致した。Opusが許可したのではなく一次sourceに基づく設計訂正を管理役がADR0006の範囲で採用した。2.7のchecker/oracle実装は未チェックを維持し、4.2/4.3/production/3OS/coverage/実期限上下限の成功に代用しない。一般oracleのsample/shard/複数file負fixtureは未実施である。
+
+# schema2fileの個別登録と独立2.8（Q-61・Q-62）
+
+全文保存先は同じfollowup66配下の`schema-two-result.md`、セッション2043c3b2-d322-401e-8dea-379cdc29a1d8・head65f98fcb・actual Opus5-5である。管理役・計画担当の全文読了、ok/exit0/read-only/拒否0と3規約Readを確認した。proposal、blockDigest、partition-fixtureの全文未読、coverage・PRのpassed対応は静的な見込みというモデルの限界を保持する。
+
+各targetは1宣言/2候補/1行/importSpecifier1/errors0で、case IDはschema-contract-trialsとschema-version-contract-trialsである。最後のimport直後に共通part/loadPartition/includeCase/registry/hasだけを足し、includeCase第2引数は元source pathのliteral、rootはjoin(import.meta.dirname,'..')を使う。describeがないためhasAnyは加えない。元itから閉じ括弧までの本文をbyte不変にし、3行companion（setPart import/slow設定/元.jsのliteral dynamic import）へ登録する。実registryとprefixは4.3の同commit、個別fileの全fast/全slow・他OSだけslowを独立した期待で収集検査し、0試験fileを選ばない。全slow時の個別起動は元fileでなくcompanionを指定することを文書へ記す。
+
+元callback2件は全15trial（current8/branch1/version6）を各々実行し、schema-compatibilityの同一targetへの2回目の拒否も保つ。試験260000ms、子script240000ms、同一target再実行10000ms、内側各15000ms、UUID出力先・junction依存・cleanup/引数/cwd/Node・元assert・元scriptの全trialを変更しない。beforeAllへの移動、trialの共有/省略、直列化、retry追加は行わない。外側は各1行のまま、入れ子trial行をrawの外側行に加算しない。
+
+Q-61により旧17fileの順序・包含を保ってschema2fileを足す19fileを必須包含とし、新2file各々の欠測negativeを独立に追加する。Q-62により上記の2file live inventoryを接頭辞より前のcommitで追加し、元本文と宣言位置を独立に照合する。新しい未完了2.8で行い、2.6完了を戻さず、252/253の先行基盤受入後に実装してよい。19fileは全収集の下限であり、全file/case/raw/失敗sampleを保持する。登録後は有効なCだけSへ包含対応し、全slowのSを誤欠測にしない。282b計測の必須17・155file・7成功2失敗という実績は変えず、新19file検査の成功へ読み替えない。
+
+既存schema-compatibilityのblock形式レビュー行は変更せず、schema-version-contractに新しいレビュー行を捏造しない。元blockの前後照合・raw各1行・全shardを独立比較し、PRのinvalidを別reportで補わない。fast coverage94/89/96/97とlive Sourceの実passed対応を測り、不足ならLinux割当を行わず未達を残す。子processがcoverageへ寄与しないという静的見込みで合格を宣言しない。schema2fileを固定profilerの対象に加えず、元のai/deadlineの4pathを保つ。
+
+# A2とguards追加2宣言の個別設計（Q-63〜Q-66）
+
+全文保存先はfollowup66の`a2-guards-result.md`、セッション585f3bb1-8ef3-4b52-ba6a-0ad02256ad12・head65f98fcb・actual Opus5-5である。管理役・計画担当の全文読了、ok/exit0/read-only/拒否0と3規約Readを確認した。A2の14宣言と既存G-B以後のREQ-348追加2宣言をin-placeで具体化し、旧37guardsは再設計・再採番しない。
+
+| 元file | 元宣言順のcase IDとdescribe guard |
+|---|---|
+| evidence-storage | storage-create-failure-resume（describe内1件）、cleanup-failure-recover（top-level1件）。describeは前者だけhasAny |
+| auth-prompts | push-auth-prompt-guide、push-unrelated-failure。同describeに両ID |
+| pr | pass-commit-push-pr/evidence-last-commit、resume-on-change-branch/unknown-base-stops、pr-body-order、gh-create-args/gh-auth-fail-no-evidence/gh-auth-fail-no-engine/dry-run-skips-gh/gh-logout-during-run。4describeに各組をhasAny |
+| guards追加分 | boundary-engine-reads、boundary-gate-readsを追加describeのhasAnyへ。旧37のIDと同じ見出し/registry/companionを共有 |
+
+各fileは既存import直後に共通5行、各宣言とdescribeへprefixだけを加え、includeCaseは元source literalを使う。元it/describe本文・hook/mock/config/clock/timeout/fixture/finallyを変えない。companionは3行としmockを重複しない。A2 live baselineは2/3/2・2/3/2・10/11/10（宣言/候補/行）、import1/errors0を接頭辞前commitで追加する（Q-65）。guards39/54/42と追加2件の正確な試験名の既存照合は保持する。登録後も同じ数と元blockを独立照合し、不一致なら期待を合わせず設計へ戻す。
+
+Q-63は旧Q-33の隔離解除条件を強める。pr/guardsのWindows隔離は、最新同headのWindows独立3sampleで、隔離一覧の対象だけでなくfile全行（guards新2件を含む）がpassed・欠測/skipなしのときだけ、実登録と同commitで解除する。条件不成立ならfileは未登録・未達、隔離/partitionの重複拒否は変えない。Q-64により失敗・欠測・skip等で1caseでも判定不能ならfile全体を未登録に保ち、[]をfast確定の代わりに書かない。現状の実行範囲を保持することと、全PRslow不実施の最終受入を満たすことを区別し、未判定を完成にしない。
+
+Q-66により、進行中changeのSourceを満たす唯一の根拠がLinuxのslowへ移るなら、その割当を行わず未達を残し、独立した新fast試験の設計へ戻す。verifyのPRだけ全件を復活させたり、虚偽タグ/古いreport/期待変更で補わない。prのREQ-114/115等は実際の全対応を検証し、Grepだけで唯一と断定しない。この条件は他のC1等も確認する。coverage未達もQ-36のまま保つ。
+
+F-A2は未実施でありV1からの類推を実証へ変えない。専有native fixtureでevidence-storage型のnode:fs partial mock/vi.fn/afterEach/timeoutとdescribe+top-levelを全fast/混在両方向/全slowで試し、mockだけを外した対照で同じassertが失敗することを確認する。pr型の4describe/空describeとcompanion timeoutも確かめる。所有config/cache/TMPDIRを用いHOMEを変えず、productionでmockが効かなければ未登録・未達を保つ。技術fixtureをproduction/3OS/割当の合格にしない。
+
+モデルは監査selectorをGrepで12件（evidence3/pr9）と数えただけで、全文と旧形式を検証していない。trace本文・partition-integration・ci-quarantine・quality-quarantineも全文未読である。実装前に全selector/旧形式・producer/quarantineの境界を読み、状態/理由・raw/レビュー表・旧Sourceを保持する。12を未検証の受入期待へ固定しない。モデルの『PR slow除外結線ができるまで登録不可』は古い単一PR前提なので採用しない。後のQ-38を優先し、中間登録PRではfast+slow全件を実行、最後184でNode20削除と全PRslow不実施を同時に有効化する。
