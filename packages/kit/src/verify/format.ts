@@ -1,17 +1,19 @@
-import type { VerifyResult, VerifyResultV2, VerifyResultV2Aborted } from '@loomake/core';
+import type { LegacyVerifyResult, VerifyResultV2, VerifyResultV2Aborted } from '@loomake/core';
 import { verifyExitCode } from './exit-code.js';
 
 const ICON = { pass: '✔', fail: '✖', warn: '!', skip: '-' } as const;
+/** 案内つきの合格の reason の先頭（run.ts の NOTICE と同じ） */
+const NOTICE = '案内：';
 const ICON_V2 = { PASS: '✔', FAIL: '✖', INSUFFICIENT_EVIDENCE: '?', NOT_APPLICABLE: '-' } as const;
 
 /** verify の結果が 2.0.0 か。1.0.0 は mode と results を持つ */
-export const isVerifyResultV2 = (result: VerifyResult | VerifyResultV2): result is VerifyResultV2 => result.schemaVersion === '2.0.0';
+export const isVerifyResultV2 = (result: LegacyVerifyResult | VerifyResultV2): result is VerifyResultV2 => result.schemaVersion === '2.0.0';
 
 /** 2.0.0 の結果が aborted か。aborted は checks・summary・decision・verdict を持たない */
 export const isAbortedResult = (result: VerifyResultV2): result is VerifyResultV2Aborted => result.run.status === 'aborted';
 
-/** verify の結果を、人が読む文章にする。合格以外の検査は詳細を字下げして添える。1.0.0 と 2.0.0 の両方を読む */
-export function formatVerifyResult(result: VerifyResult | VerifyResultV2): string {
+/** verify の結果を、人が読む文章にする。合格以外の検査は詳細を字下げして添える。いまの 2.0.0 と履歴の 1.0.0 の両方を読む */
+export function formatVerifyResult(result: LegacyVerifyResult | VerifyResultV2): string {
   if (isVerifyResultV2(result)) return formatV2(result);
   const failed = result.results.filter((r) => r.status === 'fail').length;
   const lines = [`Loomake verify  mode=${result.mode}${result.change ? `  change=${result.change}` : ''}`, ''];
@@ -33,8 +35,10 @@ function formatV2(result: VerifyResultV2): string {
     return lines.join('\n');
   }
   for (const c of result.checks) {
-    lines.push(`${ICON_V2[c.result]} ${c.id}`);
-    if (c.reason && c.result !== 'PASS') lines.push(c.reason.replace(/^/gm, '    '));
+    // 案内つきの合格（1.0.0 の warn、仮定 A-02）は「!」で示し、案内を添える
+    const notice = c.result === 'PASS' && c.reason.startsWith(NOTICE);
+    lines.push(`${notice ? '!' : ICON_V2[c.result]} ${c.id}`);
+    if (c.reason && (c.result !== 'PASS' || notice)) lines.push((notice ? c.reason.slice(NOTICE.length) : c.reason).replace(/^/gm, '    '));
   }
   for (const e of result.run.errors) lines.push(`! 実行エラー（${e.kind}）${e.target}：${e.message}`);
   const { fail } = result.summary;
@@ -48,6 +52,7 @@ function formatV2(result: VerifyResultV2): string {
       : result.decision.required ? '人の判断待ち'
         : !passed ? `不合格（${result.scope === 'ci' ? result.verdict : '未完了'}）`
           : result.scope === 'ci' ? '合格' : 'ローカルの項目はすべて完了（CI の最終合格ではありません）';
-  lines.push('', `${verdict}${decision}`);
+  const skipped = result.checks.some((c) => c.id === '品質コマンド' && c.result === 'INSUFFICIENT_EVIDENCE') ? '（品質コマンドを実行していません）' : '';
+  lines.push('', `${verdict}${skipped}${decision}`);
   return lines.join('\n');
 }

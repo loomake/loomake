@@ -22,9 +22,9 @@ const withReport = <T>(fn: (root: string) => T) =>
   });
 
 describe('品質コマンドを省いたことの表示', () => {
-  it('[REQ-191] --json でも、results に品質コマンドの skip の項目が含まれる', async () => {
+  it('[REQ-191] --json でも、checks に品質コマンドの不足の項目が含まれる', async () => {
     const r = await withReport((root) => run(root, 'verify', '--change', CHANGE, '--done', '--skip-commands', '--json'));
-    expect(JSON.parse(r.stdout).results).toContainEqual(expect.objectContaining({ check: '品質コマンド', status: 'skip' }));
+    expect(JSON.parse(r.stdout).checks).toContainEqual(expect.objectContaining({ id: '品質コマンド', result: 'INSUFFICIENT_EVIDENCE' }));
   });
 });
 

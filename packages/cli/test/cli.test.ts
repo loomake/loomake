@@ -3,7 +3,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { main } from '../src/main.js';
-import { CHANGE, ledgerRow, reportJson, requirement, traceMd, withProject } from '../../kit/test/project.js';
+import { CHANGE, COPY_REPORT, ledgerRow, reportJson, requirement, traceMd, withProject } from '../../kit/test/project.js';
 
 // git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
 vi.setConfig({ testTimeout: 60_000 });
@@ -30,7 +30,7 @@ describe('JSON 出力', () => {
       return run(root, 'verify', '--change', CHANGE, '--done', '--json');
     });
     const out = JSON.parse(r.stdout);
-    expect(out.schemaVersion).toBe('1.0.0');
+    expect(out.schemaVersion).toBe('2.0.0');
     const validate = new Ajv2020({ strict: false }).compile(readJson('packages/core/schema/verify-result.schema.json'));
     expect(validate(out), JSON.stringify(validate.errors)).toBe(true);
     // 進捗は標準エラーに出す
@@ -38,11 +38,23 @@ describe('JSON 出力', () => {
   });
 
   it('[REQ-040] 要件ごとのテストファイルの一覧を出す', async () => {
+    // 今回の test コマンドが書き出したレポートで数える。--skip-commands では coverage を出さない（REQ-040）
+    const r = await withProject({ config: { openspecValidate: false, commands: { test: COPY_REPORT } } }, (root) => {
+      writeFileSync(join(root, 'report-src.json'), reportJson(root, { 'tests/a.test.ts': [['[REQ-012] 動く', 'passed']] }));
+      return run(root, 'verify', '--change', CHANGE, '--done', '--json');
+    });
+    expect(JSON.parse(r.stdout).coverage).toEqual({ 'REQ-012': ['tests/a.test.ts'] });
+  });
+
+  it('[REQ-040] 前回の成功レポートがあっても、--skip-commands の --json は coverage を出さず、不足で終了コード 1', async () => {
     const r = await withProject({}, (root) => {
       writeReport(root, { 'tests/a.test.ts': [['[REQ-012] 動く', 'passed']] });
       return run(root, 'verify', '--change', CHANGE, '--done', '--json', '--skip-commands');
     });
-    expect(JSON.parse(r.stdout).coverage).toEqual({ 'REQ-012': ['tests/a.test.ts'] });
+    const out = JSON.parse(r.stdout);
+    expect(out).not.toHaveProperty('coverage');
+    expect(out).toMatchObject({ scope: 'ci', verdict: 'INSUFFICIENT_EVIDENCE' });
+    expect(r.code).toBe(1);
   });
 });
 
@@ -129,8 +141,10 @@ describe('change の省略', () => {
   it('[REQ-042] loomake verify を引数なしで実行すると、commands だけを実行する', async () => {
     const r = await withProject({ config: { commands: { test: 'node -e ""' } } }, (root) => run(root, 'verify', '--json'));
     const out = JSON.parse(r.stdout);
-    expect(out.mode).toBe('quality');
-    expect(out.results.map((x: { check: string }) => x.check)).toEqual(['command: test']);
+    expect(out).toMatchObject({ schemaVersion: '2.0.0', change: null, scope: 'local' });
+    expect(out).not.toHaveProperty('verdict');
+    expect(out.checks.map((x: { id: string }) => x.id)).toEqual(['command: test']);
+    expect(r.code).toBe(0);
   });
 });
 
@@ -165,7 +179,9 @@ describe('verify の性能', () => {
       const result = await run(root, 'verify', '--change', CHANGE, '--done', '--skip-commands', '--json');
       return { ...result, ms: performance.now() - start };
     });
-    expect(r.code, r.stdout).toBe(0);
+    // --skip-commands は品質コマンドの不足で 1（REQ-040）。不足は品質コマンドと要件ごとのテストの 2 件だけ
+    expect(r.code, r.stdout).toBe(1);
+    expect(JSON.parse(r.stdout).checks.filter((c: { result: string }) => c.result !== 'PASS').map((c: { id: string }) => c.id)).toEqual(['品質コマンド', '要件ごとのテスト']);
     expect(r.ms).toBeLessThan(3000);
   }, 30_000);
 });
