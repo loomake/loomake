@@ -34,7 +34,7 @@ describe('SIGHUP smoke の生存確認', () => {
     expect(() => createProcessAlive({ platform: 'darwin', kill: vi.fn(), ps: () => ({ stdout, status: 0 }) })(123)).toThrow();
   });
 
-  it.each([2, null])('ps の未知の終了状態 %s を停止とみなさない', (status) => {
+  it.each([1, 2, null])('ps の未知の終了状態 %s を停止とみなさない', (status) => {
     expect(() => createProcessAlive({ platform: 'darwin', kill: vi.fn(), ps: () => psResult('S', status) })(123)).toThrow();
   });
 
@@ -67,6 +67,18 @@ describe('SIGHUP smoke の生存確認', () => {
 
   it.each([['Z', false], ['S', true]] as const)('Linux の状態 %s を確かめる', (state, expected) => {
     expect(createProcessAlive({ platform: 'linux', kill: vi.fn(), readStat: () => `123 (fixture) ${state} 1 123 123` })(123)).toBe(expected);
+  });
+
+  it('ps が空になる前後の確認を同じ PID の時刻付き記録に残す', () => {
+    const entries: Record<string, unknown>[] = [];
+    const kill = vi.fn().mockImplementationOnce(() => undefined).mockImplementationOnce(() => { throw error('ESRCH'); });
+    const alive = createProcessAlive({ platform: 'darwin', kill, ps: () => psResult('', 1), onProbe: (entry) => entries.push(entry) });
+    expect(alive(123)).toBe(false);
+    expect(entries).toEqual([
+      { time: expect.any(Number), pid: 123, source: 'kill', result: 'present' },
+      { time: expect.any(Number), pid: 123, source: 'ps', status: 1, raw: '', code: undefined },
+      { time: expect.any(Number), pid: 123, source: 'kill-recheck', result: 'missing', code: 'ESRCH' },
+    ]);
   });
 
   it('存在しない ps 相当コマンドの実 spawnSync は error と利用できない出力を返す', () => {

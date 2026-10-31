@@ -5,6 +5,7 @@ import { delimiter, join, resolve } from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { once } from 'node:events';
 import { setTimeout as delay } from 'node:timers/promises';
+import { createProcessAlive } from './process-alive.mjs';
 
 assert.notEqual(process.platform, 'win32', 'この検証はPOSIXのSIGHUPを対象にしています');
 assert.ok(process.argv[2], 'package-smokeで準備した検証先を指定してください');
@@ -38,13 +39,33 @@ const child = spawn(process.execPath, [join(consumer, 'node_modules/loomake/dist
 const closed = once(child, 'close');
 let stdout = ''; let stderr = ''; let pids = [];
 child.stdout.on('data', (data) => { stdout += data; }); child.stderr.on('data', (data) => { stderr += data; });
-function alive(pid) {
+const probes = { platform: process.platform, identities: [], events: [], dropped: 0 };
+function recordProbe(entry) {
+  const event = { ...entry };
+  for (const [key, value] of Object.entries(event)) {
+    if (typeof value === 'string' && value.length > 4096) {
+      event[key] = value.slice(0, 4096);
+      event[`${key}Truncated`] = true;
+    }
+  }
+  if (probes.events.length === 512) { probes.events.shift(); probes.dropped += 1; }
+  probes.events.push(event);
+}
+const alive = createProcessAlive({ onProbe: recordProbe });
+function captureIdentity(pid) {
+  const identity = { time: Date.now(), pid };
   try {
-    process.kill(pid, 0);
-    if (process.platform === 'linux') return !/\) Z /.test(readFileSync(`/proc/${pid}/stat`, 'utf8'));
-    if (process.platform === 'darwin') return !/^Z/.test(spawnSync('ps', ['-o', 'stat=', '-p', String(pid)], { encoding: 'utf8' }).stdout.trim());
-    return true;
-  } catch { return false; }
+    if (process.platform === 'linux') {
+      const stat = readFileSync(`/proc/${pid}/stat`, 'utf8');
+      const end = stat.lastIndexOf(')');
+      const fields = stat.slice(end + 2).split(' ');
+      Object.assign(identity, { command: stat.slice(stat.indexOf('(') + 1, end), stat: fields[0], ppid: fields[1], pgid: fields[2], starttime: fields[19] });
+    } else {
+      const result = spawnSync('ps', ['-ww', '-o', 'ppid=,pgid=,stat=,lstart=,command=', '-p', String(pid)], { encoding: 'utf8', timeout: 1000, maxBuffer: 8192, killSignal: 'SIGKILL' });
+      Object.assign(identity, { status: result.status, raw: result.stdout?.slice(0, 4096), truncated: (result.stdout?.length ?? 0) > 4096, error: result.error?.code });
+    }
+  } catch (error) { Object.assign(identity, { error: error.code ?? error.message }); }
+  probes.identities.push(identity);
 }
 async function waitFor(check, timeout) {
   const until = Date.now() + timeout;
@@ -62,6 +83,7 @@ try {
     pids = value;
     return true;
   }, 15000), `openspecの準備が時間切れ：${stdout}\n${stderr}`);
+  pids.forEach(captureIdentity);
   process.kill(-child.pid, 'SIGHUP');
   assert.ok(await waitFor(() => pids.every((pid) => !alive(pid)), 3000), 'SIGHUP後にopenspecまたは子が残りました');
   const [code, signal] = await closed;
@@ -77,5 +99,6 @@ try {
   await closed;
   const targetPid = existsSync(leader) ? Number(readFileSync(leader, 'utf8')) : pids[0];
   if (targetPid) { try { process.kill(-targetPid, 'SIGKILL'); } catch { /* 停止済み */ } }
+  writeFileSync(join(results, 'probes.json'), JSON.stringify(probes, null, 2) + '\n');
   writeFileSync(join(results, 'stdout.txt'), stdout); writeFileSync(join(results, 'stderr.txt'), stderr);
 }
