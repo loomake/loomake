@@ -1,5 +1,5 @@
 // run のテスト用に、一時ディレクトリに git のリポジトリと偽の claude コマンドを作る
-import { chmodSync, copyFileSync, existsSync, linkSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, existsSync, linkSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { delimiter, dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -107,15 +107,80 @@ export type Repo = {
   cleanup: () => void;
 };
 
+/** git init（main）。makeRepo の従来の作り方と雛形で同じものを使う */
+function initGitRepo(base: string, env: NodeJS.ProcessEnv) {
+  const r = spawnSync('git', ['init', '-q', '-b', 'main'], { cwd: join(base, 'repo'), env, encoding: 'utf8' });
+  if (r.status !== 0) throw new Error(r.stderr);
+}
+
+/** origin は一時ディレクトリの bare リポジトリ */
+function addOrigin(base: string, env: NodeJS.ProcessEnv) {
+  spawnSync('git', ['init', '-q', '--bare', join(base, 'origin.git')], { env });
+  const r = spawnSync('git', ['remote', 'add', 'origin', join(base, 'origin.git')], { cwd: join(base, 'repo'), env, encoding: 'utf8' });
+  if (r.status !== 0) throw new Error(r.stderr);
+}
+
+// makeRepo の雛形：git init と remote add を済ませた repo/ と、空の bare の origin.git/。試験ファイル（モジュール）ごとに 1 回だけ作って
+// 中身（ディレクトリ・ファイルの内容と権限）をメモリに読み、一時ディレクトリはすぐ消す。makeRepo は git を起動する代わりにこれを書き出す。
+// ファイルの書き込み・add・commit は今までどおり試験ごとに行う
+type TemplateEntry = { path: string; mode: number; data?: Buffer };
+let template: TemplateEntry[] | undefined;
+function readTree(root: string, path = ''): TemplateEntry[] {
+  const entries: TemplateEntry[] = [];
+  for (const entry of readdirSync(join(root, path), { withFileTypes: true })) {
+    const child = join(path, entry.name);
+    const mode = statSync(join(root, child)).mode & 0o777;
+    if (entry.isDirectory()) entries.push({ path: child, mode }, ...readTree(root, child));
+    else if (entry.isFile()) entries.push({ path: child, mode, data: readFileSync(join(root, child)) });
+    else throw new Error(`雛形に通常のファイルとディレクトリ以外があります：${child}`);
+  }
+  return entries;
+}
+function gitTemplate(): TemplateEntry[] {
+  if (template) return template;
+  const base = mkdtempSync(join(tmpdir(), 'loomake-run-template-'));
+  try {
+    const env = { ...process.env, LOOMAKE_SANDBOX: undefined };
+    mkdirSync(join(base, 'repo'));
+    initGitRepo(base, env);
+    addOrigin(base, env);
+    template = readTree(base);
+  } finally { rmSync(base, { recursive: true, force: true }); }
+  return template;
+}
+
+/** git の設定ファイルの値の書き方（git config が書くときと同じく \\ と " を逃がす） */
+const gitConfigValue = (value: string) => {
+  const escaped = value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  return /^\s|\s$|[;#]/.test(value) ? `"${escaped}"` : escaped;
+};
+
+/** 雛形を base に書き出し、origin の URL を複製先の origin.git に向け直す */
+function copyGitTemplate(base: string) {
+  for (const entry of gitTemplate()) {
+    const target = join(base, entry.path);
+    if (entry.data) writeFileSync(target, entry.data, { mode: entry.mode });
+    else mkdirSync(target, { mode: entry.mode });
+  }
+  const config = join(base, 'repo', '.git', 'config');
+  const text = readFileSync(config, 'utf8');
+  const urls = text.match(/^\s*url = .*$/gm) ?? [];
+  if (urls.length !== 1) throw new Error(`雛形の .git/config に origin の url が 1 行ではありません：${urls.length} 行`);
+  writeFileSync(config, text.replace(/^(\s*url = ).*$/m, (_line, prefix: string) => prefix + gitConfigValue(join(base, 'origin.git'))));
+}
+
 /**
  * change c1 を持つ git のリポジトリを作ってコミットする。
  * test コマンドは impl.txt があれば [REQ-012] の合格したテストを、なければ空のレポートを書き出す（完了ゲートの合否をエンジンの変更で決める）
+ * fresh を付けると、雛形を使わず git init からやり直す（雛形の複製が従来の作り方と同じになることを確かめる試験で使う）
  */
-export function makeRepo({ trace = traceMd(), tasks = TASKS, run }: { trace?: string; tasks?: string; run?: object } = {}): Repo {
+export function makeRepo({ trace = traceMd(), tasks = TASKS, run, fresh = false }: { trace?: string; tasks?: string; run?: object; fresh?: boolean } = {}): Repo {
   const base = mkdtempSync(join(tmpdir(), 'loomake-run-'));
   const root = join(base, 'repo');
   const bin = join(base, 'bin');
-  mkdirSync(root);
+  // 雛形を書き出しても、git init と remote add を済ませた空のリポジトリと、空の bare の origin が置かれるだけで、作ったあとの状態は同じ
+  if (fresh) mkdirSync(root);
+  else copyGitTemplate(base);
   mkdirSync(bin);
   writeFileSync(join(bin, 'claude'), FAKE_CLAUDE);
   chmodSync(join(bin, 'claude'), 0o755);
@@ -161,12 +226,10 @@ export function makeRepo({ trace = traceMd(), tasks = TASKS, run }: { trace?: st
   write(`openspec/changes/${CHANGE}/tasks.md`, tasks);
   write(`openspec/changes/${CHANGE}/trace.md`, trace);
   write(`openspec/changes/${CHANGE}/specs/x/spec.md`, specMd());
-  gitRun('init', '-q', '-b', 'main');
+  if (fresh) initGitRepo(base, env);
   gitRun('add', '-A');
   gitRun('commit', '-q', '-m', 'init');
-  // origin は一時ディレクトリの bare リポジトリ
-  spawnSync('git', ['init', '-q', '--bare', join(base, 'origin.git')], { env });
-  gitRun('remote', 'add', 'origin', join(base, 'origin.git'));
+  if (fresh) addOrigin(base, env);
   return {
     root,
     env,
