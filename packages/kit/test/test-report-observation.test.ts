@@ -25,7 +25,7 @@ const receipt = (over: Partial<TestReportReceipt> = {}, tests: [string, string][
   producer: { name: 'vitest', version: '5.0.5' },
   target: { before: SHA, after: SHA },
   basis: { before: 'b1', after: 'b1' },
-  invocation: { startedAt: START, finishedAt: START + 100, clearedBefore: true },
+  invocation: { startedAt: START, finishedAt: START + 100, clearedBefore: true, exitCode: 0 },
   report: reportOf(reportText(tests)),
   required: ['REQ-012'],
   ...over,
@@ -118,7 +118,7 @@ describe('ci.test_report の adapter', () => {
   });
 
   it('[REQ-319] 置き残したレポート（事前に消していない、開始時刻がない・実行の範囲外）を measured にしない', () => {
-    expect(status(receipt({ invocation: { startedAt: START, finishedAt: START + 100, clearedBefore: false } }))).toBe('unverified');
+    expect(status(receipt({ invocation: { startedAt: START, finishedAt: START + 100, clearedBefore: false, exitCode: 0 } }))).toBe('unverified');
     const base = receipt();
     const withStart = (startTime: number | null) => ({ ...base, report: reportOf(reportText([['[REQ-012] 成功', 'passed']], startTime)) });
     expect(status(withStart(null))).toBe('unverified');
@@ -126,6 +126,16 @@ describe('ci.test_report の adapter', () => {
     expect(status(withStart(START + 101))).toBe('stale');
     expect(status(withStart(START))).toBe('measured');
     expect(status(withStart(START + 100))).toBe('measured');
+  });
+
+  it('[REQ-319] 品質コマンドの終了コードが 0 以外か、終わらなかった（null）なら、成功のレポートでも未照合にする。0 なら measured', () => {
+    const withExit = (exitCode: number | null) => receipt({ invocation: { startedAt: START, finishedAt: START + 100, clearedBefore: true, exitCode } });
+    for (const exitCode of [1, 2, null]) {
+      const [observation] = observe(withExit(exitCode));
+      expect(observation.status, String(exitCode)).toBe('unverified');
+      expect(observation.detail).toBe('品質コマンドが非 0 で終わりました');
+    }
+    expect(status(withExit(0))).toBe('measured');
   });
 
   it('[REQ-319] レポートがなければ未実施、読めなければ未照合、receipt がなければ未実施、必須の要件がなければ取得不能にする', () => {

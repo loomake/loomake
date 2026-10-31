@@ -16,7 +16,7 @@
 ## 4. 接続（2本目）
 
 - [x] 4.1 kit：`runVerify` に `qualitySchema` を足し、changeがあるとき品質コマンドとopenspec validateより前にquality.yamlを読む。doneのciでは必須（不在はaborted 3、誤りは2、権限は3）、ほかのゲートではあれば形だけを確かめる。`loadVerifyQualitySchema()` を公開する（REQ-319）
-- [x] 4.2 kit：doneのciで、品質コマンドの前に対象SHAと基準のhashを取り、レポートを消してから実行し、producerと版・前後のSHAとhash・レポートの本文とsha256（`verify/hash.ts` の `sha256Hex`）・実行の時刻をreceiptにまとめる。`--skip-commands` ではreceiptを作らない。`quality:subjects` と `quality:<ID>` のcheckを足す（REQ-319）
+- [x] 4.2 kit：doneのciで、品質コマンドの前に対象SHAと基準のhashを取り、レポートを消してから実行し、producerと版・前後のSHAとhash・レポートの本文とsha256（`verify/hash.ts` の `sha256Hex`）・実行の時刻・品質コマンドの終了コードをreceiptにまとめ、終了コードが非 0 なら未照合にする（Q-09 A）。`--skip-commands` ではreceiptを作らない。`quality:subjects` と `quality:<ID>` のcheckを足す（REQ-319）
 - [x] 4.3 cli・runner・trace：`verify`・`loomake run`・`trace record` からquality.yamlのスキーマを渡す（REQ-319）
 - [x] 4.4 既存試験：期待値を変えず、doneのciを使う試験の準備にquality.yaml・git・producer（実際のVitest）・`startTime` 付きのレポートを足す。配布物の試験とAIシナリオ試験の利用先にも足す
 

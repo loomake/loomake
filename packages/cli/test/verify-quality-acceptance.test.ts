@@ -149,7 +149,8 @@ describe('C-001 の成功経路と不足拒否', () => {
         expect(code).toBe(1);
         expect(verdictOf(result)).toBe('FAIL');
         expect(resultOf(result, 'command: test')).toBe('FAIL');
-        // quality:PQ-900 の観測が終了状態を見るかは確認事項 Q-09 で扱う。ここでは全体が PASS にならないことを確かめる
+        // 0 以外で終わった実行のレポートは適格な証跡に数えない（Q-09 A）
+        expect(resultOf(result, 'quality:PQ-900')).toBe('INSUFFICIENT_EVIDENCE');
       }
     });
   });

@@ -129,7 +129,7 @@ export function runVerify(options: VerifyOptions): VerifyResult {
       const clearedBefore = !existsSync(reportPath);
       const targetBefore = quality && !skipCommands ? gitHead(root) : null;
       const startedAt = Date.now();
-      runCommands(root, config, skipCommands, record, fail, progress, options.timeoutMs);
+      const exitCode = runCommands(root, config, skipCommands, record, fail, progress, options.timeoutMs);
       const finishedAt = Date.now();
       // 品質コマンドを省いたときは、前回のレポートを今回の成功の一覧に使わず、coverage を出さない（REQ-040）
       if (skipCommands) record('要件ごとのテスト', 'insufficient', REQUIREMENTS_NOT_RUN);
@@ -139,7 +139,7 @@ export function runVerify(options: VerifyOptions): VerifyResult {
           producer: findProducer(root),
           target: { before: targetBefore, after: gitHead(root) },
           basis: { before: basisBefore, after: basisHash(root, changeDir) },
-          invocation: { startedAt, finishedAt, clearedBefore },
+          invocation: { startedAt, finishedAt, clearedBefore, exitCode },
           report: readReport(reportPath, config.tests.report),
           required: [...new Set(spec.live.flatMap((r) => r.sources))].sort(),
         };
@@ -406,13 +406,21 @@ export const COMMANDS_SKIPPED = '--skip-commands で実行していません。�
 /** --skip-commands で省いたときの「要件ごとのテスト」の reason。前回のレポートは今回の証拠にしない（REQ-040） */
 export const REQUIREMENTS_NOT_RUN = '品質コマンドを実行していないので、要件ごとの成功したテストを確かめていません。--skip-commands を付けずに実行してください';
 
+/**
+ * 品質コマンドを順に実行する。すべて 0 で終わったら 0、そうでなければ最初の 0 以外の終了コードを返す。
+ * 終わらなかった（時間切れ・中断・起動の失敗）コマンドがあれば null を返す（REQ-319 の receipt）
+ */
 function runCommands(
   root: string, config: LoomakeConfig, skip: boolean, record: Recorder, fail: RunErrorRecorder, progress: (m: string) => void, timeoutMs?: number,
-) {
+): number | null {
+  let exitCode: number | null = 0;
+  const failed = (status: number | null) => {
+    if (exitCode === 0) exitCode = status;
+  };
   // 省いたことを証拠の不足として残し、品質コマンドを実行した合格と見分けられるようにする（REQ-191・REQ-040）
   if (skip) {
     record('品質コマンド', 'insufficient', COMMANDS_SKIPPED);
-    return;
+    return null;
   }
   // Windows の保持役の準備を待った時間は、品質コマンドの合計の予算に含めない（REQ-257）
   const now = () => Date.now() - holderWaitTime();
@@ -424,6 +432,7 @@ function runCommands(
     const left = deadline === undefined ? undefined : deadline - now();
     if (left !== undefined && left <= 0) {
       fail(`command: ${name}`, TIMED_OUT);
+      failed(null);
       continue;
     }
     progress(`… ${name}: ${cmd}`);
@@ -436,12 +445,15 @@ function runCommands(
       if (!(error instanceof ProcessLimitError)) throw error;
       const reason = error.kind === 'interrupted' ? (error.reason ? `${INTERRUPTED}（${error.reason}）` : INTERRUPTED) : error.message;
       fail(`command: ${name}`, error.kind === 'timeout' ? TIMED_OUT : reason);
+      failed(null);
       // 共有予算では後続の外部操作も起動せず拒否し、各項目に未実行の理由を残す。
-      if (error.kind === 'interrupted' && !hasProcessBudget()) return;
+      if (error.kind === 'interrupted' && !hasProcessBudget()) return exitCode;
       continue;
     }
     // spawnSync は起動に失敗すると、型に反して stdout・stderr が null になる
     const out = `${(r.stdout as string | null) ?? ''}${(r.stderr as string | null) ?? ''}`.trim();
     record(`command: ${name}`, r.status === 0 ? 'pass' : 'fail', r.status === 0 ? '' : out.split('\n').slice(-30).join('\n'));
+    if (r.status !== 0) failed(r.status);
   }
+  return exitCode;
 }
