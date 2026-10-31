@@ -20,7 +20,7 @@
 
 ## 外部操作の期限の試験の偽の CLI
 
-外部操作の期限を確かめる試験（`packages/runner/test/external-budget.test.ts`）は、どの OS でも、偽の CLI（git・gh・OpenSpec CLI）を製品と同じ起動の仕方で呼ばせる。git は shell なしで、gh と OpenSpec CLI は Windows では shell 経由で起動する。偽の CLI は `packages/runner/test/helpers.ts` が作る。
+外部操作の期限を確かめる試験（`packages/runner/test/external-budget.test.ts` と、実時間の期限まで待つ試験を分けた `packages/runner/test/external-budget-deadline.test.ts`）は、どの OS でも、偽の CLI（git・gh・OpenSpec CLI）を製品と同じ起動の仕方で呼ばせる。git は shell なしで、gh と OpenSpec CLI は Windows では shell 経由で起動する。偽の CLI は `packages/runner/test/helpers.ts` が作る。
 
 - 試験は偽の CLI が狙った操作で止まった印と、それより前の本物への転送が起動に失敗していないことを、先に確かめる。そのあとで、期限・終了コード・停止の理由・後続の処理を確かめる。偽の git が呼ばれずに本物の git が動いたときは、狙った段階に届いていないとして失敗させ、期限と終了コードだけで合格にしない
 - 準備の外部操作だけで共有予算を使い切り、狙った操作に届かないときも、合格にしない

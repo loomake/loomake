@@ -16,6 +16,8 @@ export type QualityObservation = {
   samples?: number;
   /** 根拠への参照。check の evidence へ写す */
   evidence?: readonly string[];
+  /** measured にしなかった理由の詳細。check の reason に添える */
+  detail?: string;
 };
 
 const STATUS_REASON: Record<Exclude<QualityObservation['status'], 'measured'>, string> = {
@@ -43,7 +45,7 @@ function evaluateMeasure(subject: string, measure: QualityMeasure, minDefault: n
   if (matched.length > 1) return insufficient('同じ指標の観測が複数あり、照合できません', matched.flatMap((o) => o.evidence ?? []));
   const [observation] = matched;
   const evidence = observation.evidence ?? [];
-  if (observation.status !== 'measured') return insufficient(STATUS_REASON[observation.status], evidence);
+  if (observation.status !== 'measured') return insufficient(STATUS_REASON[observation.status] + (observation.detail ? `（${observation.detail}）` : ''), evidence);
   if (typeof observation.value !== 'number' || !Number.isFinite(observation.value)) return insufficient('有限の数値がありません', evidence);
   const min = measure.min_samples ?? minDefault;
   if (min !== undefined && !(typeof observation.samples === 'number' && observation.samples >= min)) {

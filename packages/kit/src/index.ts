@@ -27,3 +27,6 @@ export { readQualityFile, QUALITY_FILE, MINIMAL_QUALITY_YAML } from './verify/qu
 export type { QualityReadOptions, QualityReadResult, QualitySchemaLike } from './verify/quality-input.js';
 export { evaluateQualityConditions, qualitySubjectsGuard, summarizeVerifyChecks } from './verify/policy/quality-conditions.js';
 export type { QualityObservation, ChecksSummary, CiSummary } from './verify/policy/quality-conditions.js';
+export { FAILED_SUBJECTS_METRIC, TEST_REPORT_SOURCE, observeTestReport } from './verify/policy/test-report-observation.js';
+export type { TestReportOptions, TestReportReceipt } from './verify/policy/test-report-observation.js';
+export { sha256Hex } from './verify/hash.js';
