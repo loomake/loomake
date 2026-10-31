@@ -21,7 +21,7 @@ S2-Q01の採用により、2.5と3.5をS4として先行し、その後S2の2.1�
 
 - [x] 3.1 REQ-341全Scenarioの直接試験と、失敗優先/理由順を逆にしたコピーをassertion失敗で検出する試験を追加する（REQ-341）
 - [x] 3.2 REQ-340全Scenario、元raw分類と秘密置換、違反guardとの重なり、短い/長いパス、分類後summary/stop保存失敗と分類前output保存失敗を回帰する（REQ-340・REQ-179）
-- [ ] 3.3 正常経路と旧全Scenario、HEAD/branch/Git内部変更・中断・上限・質問・非ゼロ終了の優先を維持し、a1のREQ-100追加Scenarioも回帰する（REQ-099・REQ-100・REQ-204・REQ-330・REQ-331）
+- [x] 3.3 正常経路と旧全Scenario、HEAD/branch/Git内部変更・中断・上限・質問・非ゼロ終了の優先を維持し、a1のREQ-100追加Scenarioも回帰する（REQ-099・REQ-100・REQ-204・REQ-330・REQ-331）
 - [ ] 3.4 保存許可表・例・schema、4種の出所、元の型を保つ置換、表示可否/分類の保持、追加欄拒否と未収集の扱いを検査する。metarecordから生成した入力を実観測と呼ばない（REQ-340・REQ-341）
 
 - [ ] 3.5 群内/群間の偽対応、特殊パス、型とdir置換、argvと起動回数、stdout/stderr合計予算・UTF8末尾・hunk完全性・glob/dir混入・rename・区切り不一致を追加試験し、既存全試験・1200file・60秒を変えず3OS回帰を確認する（REQ-109・REQ-110・REQ-111・REQ-112・REQ-137・REQ-138・REQ-179・REQ-180・REQ-201・REQ-340）
