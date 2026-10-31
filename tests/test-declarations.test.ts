@@ -333,3 +333,102 @@ describe('行単位の登録宣言', () => {
     expect(registration(imported + rows(), { a: [], b: [], c: [] })).toEqual(['missingId']);
   });
 });
+
+
+// ROW-BOUNDARY: Q-91〜Q-93。元335行の正負期待は上にそのまま残す。
+import { lstatSync } from 'node:fs';
+
+describe('行登録の閉じた import と祖先', () => {
+  const row = "{ const it = eachRows(has, ['a','b']); it.each(['x','y'])('row %s', () => {}); }";
+  const header = "import { eachRows } from './helpers/partition-part.js';";
+  const cases = { a: [], b: [] };
+  const inventoryRejected = ['shadowedTest', 'unclassifiedCandidate', 'unsupportedRowForm'];
+  const registrationRejected = ['missingId', 'unprefixed', 'unsupportedRowForm'];
+  const both = (source: string, path = file, ids: Record<string, string[]> = cases) => ({
+    inventory: [...new Set(inventoryDeclarations(source, path).errors.map((error: { code: string }) => error.code))].sort(),
+    registration: [...new Set(checkRegistration(path, source, ids).map((error: { code: string }) => error.code))].sort(),
+  });
+  const grouped = (body = row) => `if(hasAny(['a','b'])) describe('g', () => { ${body} });`;
+
+  it.each([
+    ['tests/sub/x.test.ts', '../helpers/partition-part.js'],
+    ['packages/runner/test/x.test.ts', '../../../tests/helpers/partition-part.js'],
+  ])('P1/P2: sourceの階層からcanonical helperを一意に照合する: %s', (path, specifier) => {
+    const source = `import { eachRows } from '${specifier}';` + row;
+    expect(both(source, path)).toEqual({ inventory: [], registration: [] });
+    const inventory = inventoryDeclarations(source, path);
+    expect(inventory.nonCall.filter((item: { kind: string }) => item.kind === 'rowBinding')).toHaveLength(1);
+    expect(inventory.expandedRows).toBe(2);
+  });
+  it('P3/P4: plainな入れ子describeとvitest named importを受理する', () => {
+    for (const source of [
+      header + grouped(`describe('inner', function () { ${row} });`),
+      "import { describe } from 'vitest';" + header + grouped(),
+    ]) expect(both(source)).toEqual({ inventory: [], registration: [] });
+  });
+  it.each([
+    './wrong/partition-part.js', 'untrusted/partition-part.js',
+    './helpers/partition-part.ts', './helpers/partition-part',
+    './helpers/../helpers/partition-part.js', './helpers/partition-part.js?x',
+    './helpers/partition-part.js#x', '/tests/helpers/partition-part.js',
+  ])('N1/N2: canonicalでないhelperをordinary helperへ落とさない: %s', (specifier) => {
+    expect(both(`import { eachRows } from '${specifier}';` + row)).toEqual({ inventory: inventoryRejected, registration: registrationRejected });
+  });
+  it.each(['/tests/fixture.test.ts', '../tests/fixture.test.ts', 'tests/../tests/fixture.test.ts', 'C:/tests/fixture.test.ts'])('絶対pathと..を含むsource fileを受理しない: %s', (path) => {
+    expect(both(header + row, path)).toEqual({ inventory: inventoryRejected, registration: registrationRejected });
+  });
+  it.each([
+    ['for', `for (const n of [1,2]) { ${grouped()} }`],
+    ['while', `while (flag) { ${grouped()} }`],
+    ['do', `do { ${grouped()} } while (flag);`],
+    ['other if', `if (flag) { ${grouped()} }`],
+    ['false if', `if (false) { ${grouped()} }`],
+    ['function', `function register() { ${grouped()} }`],
+    ['class', `class Container { register() { ${grouped()} } }`],
+    ['try', `try { ${grouped()} } catch {}`],
+    ['switch', `switch (flag) { case true: ${grouped()} break; }`],
+    ['label', `label: { ${grouped()} }`],
+  ])('N3: describeの外側まで閉じた祖先を要求する: %s', (_, body) => {
+    expect(both(header + body)).toEqual({ inventory: inventoryRejected, registration: ['guardMismatch', ...registrationRejected] });
+  });
+  it('N3: else付きifはguardにせず行登録を拒否する', () => {
+    for (const body of [
+      `if(hasAny(['a','b'])) describe('g', () => { ${row} }); else other();`,
+      `if(hasAny(['a','b'])) { describe('g', () => { ${row} }); } else other();`,
+    ]) {
+      const source = header + body;
+      expect(both(source)).toEqual({ inventory: inventoryRejected, registration: ['missingId', 'unguardedDescribe', 'unprefixed', 'unsupportedRowForm'] });
+      const inventory = inventoryDeclarations(source, file);
+      expect(inventory.errors.filter((error: { code: string }) => error.code === 'unsupportedRowForm').map((error: { message: string }) => error.message)).toEqual(['行単位の登録の構造を検査できません']);
+      expect(inventory.nonCall.filter((item: { kind: string }) => item.kind === 'rowBinding')).toHaveLength(0);
+      expect(both(source.replace('else other();', ''))).toEqual({ inventory: [], registration: [] });
+    }
+  });
+  it.each([
+    ['local', `const describe=()=>{}; ${grouped()}`],
+    ['foreign', `import { describe } from './x.js'; ${grouped()}`],
+    ['skip', grouped().replace("describe('g'", "describe.skip('g'")],
+    ['only', grouped().replace("describe('g'", "describe.only('g'")],
+    ['concurrent', grouped().replace("describe('g'", "describe.concurrent('g'")],
+  ])('N4: 偽束縛と装飾describeを拒否する: %s', (_, body) => {
+    expect(both(header + body)).toEqual({ inventory: inventoryRejected, registration: ['guardMismatch', ...registrationRejected] });
+  });
+  it('N4: it callbackに入れたdescribeも行登録の祖先にしない', () => {
+    const source = header + `if(has('outer')) it('container', () => { ${grouped()} });`;
+    expect(both(source, file, { ...cases, outer: [] })).toEqual({ inventory: inventoryRejected, registration: ['guardMismatch', ...registrationRejected] });
+  });
+  it('N5: 空IDsを実helperと同じ非空境界で拒否する', () => {
+    const source = header + "{ const it=eachRows(has,[]); it.each([])('empty %s',()=>{}); } if(has('a')) it('ordinary',()=>{});";
+    expect(both(source, file, { a: [] })).toEqual({ inventory: ['unsupportedRowForm'], registration: ['unsupportedRowForm'] });
+    expect(inventoryDeclarations(source, file).errors.map((error: { message: string }) => error.message)).toEqual(['行単位の登録には1件以上の行が必要です']);
+  });
+  it('非空IDsと空表の既存rowIdsMismatchを変えない', () => {
+    const source = header + row.replace("['x','y']", '[]');
+    expect(both(source)).toEqual({ inventory: ['rowIdsMismatch'], registration: ['rowIdsMismatch'] });
+  });
+  it('実registryが空でもcanonical helper自体は通常fileでsymlinkではない', () => {
+    const helper = lstatSync('tests/helpers/partition-part.ts');
+    expect(helper.isFile()).toBe(true);
+    expect(helper.isSymbolicLink()).toBe(false);
+  });
+});

@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { posix } from 'node:path';
 import { extractTestBlocks } from '../scenario-audit.mjs';
 import { includeCase, PARTITION_PLATFORMS } from './test-partition.mjs';
 
@@ -127,8 +128,34 @@ function partitionRowsSource(node) {
   const path = literal(node.parent.parent.parent.moduleSpecifier);
   return path !== undefined && /(?:^|\/)partition-part\.js$/.test(path);
 }
-function partitionRowsImport(node) {
-  return partitionRowsSource(node) && !node.isTypeOnly && !node.parent.parent.isTypeOnly && !node.propertyName;
+function partitionRowsImport(node, file) {
+  if (!partitionRowsSource(node) || node.isTypeOnly || node.parent.parent.isTypeOnly || node.propertyName) return false;
+  if (posix.isAbsolute(file) || /^[A-Za-z]:/.test(file) || file.includes('\\') || file.split('/').includes('..')) return false;
+  const relative = posix.relative(posix.dirname(file), 'tests/helpers/partition-part.js');
+  const expected = relative.startsWith('.') ? relative : `./${relative}`;
+  return literal(node.parent.parent.parent.moduleSpecifier) === expected;
+}
+
+// Only an unconditional chain of plain describe callbacks can contain a row block.
+// hasAny guards may select a group, but arbitrary control flow cannot multiply it.
+function rowContainer(container, bindings) {
+  if (ts.isSourceFile(container)) return true;
+  if (!ts.isBlock(container)) return false;
+  const callback = container.parent;
+  if (!(ts.isArrowFunction(callback) || ts.isFunctionExpression(callback)) || callback.body !== container) return false;
+  const call = callback.parent;
+  if (!namedCall(call, 'describe') || call.arguments[1] !== callback || literal(call.arguments[0]) === undefined) return false;
+  const declaration = bindings.declarationOf(call.expression);
+  if (declaration && !(ts.isImportSpecifier(declaration) && !declaration.propertyName && !declaration.isTypeOnly && !declaration.parent.parent.isTypeOnly && literal(declaration.parent.parent.parent.moduleSpecifier) === 'vitest')) return false;
+  const statement = call.parent;
+  if (!ts.isExpressionStatement(statement)) return false;
+  const guard = guardOf(statement);
+  if (guard) {
+    if (!namedCall(guard, 'hasAny') || guard.arguments.length !== 1 || !arrayIds(guard.arguments[0])) return false;
+    const branch = ts.isBlock(statement.parent) ? statement.parent.parent : statement.parent;
+    return rowContainer(branch.parent, bindings);
+  }
+  return rowContainer(statement.parent, bindings);
 }
 
 // Both entry points use the same closed structural rule. A rejected shape remains an error,
@@ -138,7 +165,7 @@ function rowBindings(ast, bindings, error) {
   walk(ast, (node) => {
     if (!ts.isCallExpression(node)) return;
     const expression = node.expression;
-    const imported = ts.isIdentifier(expression) && partitionRowsImport(bindings.declarationOf(expression));
+    const imported = ts.isIdentifier(expression) && partitionRowsImport(bindings.declarationOf(expression), ast.fileName);
     const helperReference = (item) => ts.isIdentifier(item) ? item.text === 'eachRows' || partitionRowsSource(bindings.declarationOf(item)) : ts.isPropertyAccessExpression(item) ? item.name.text === 'eachRows' || helperReference(item.expression) : false;
     const attempted = helperReference(expression);
     if (!attempted) return;
@@ -146,10 +173,6 @@ function rowBindings(ast, bindings, error) {
     const list = ts.isVariableDeclaration(declaration) ? declaration.parent : undefined;
     const statement = list && ts.isVariableDeclarationList(list) ? list.parent : undefined;
     const block = statement && ts.isVariableStatement(statement) ? statement.parent : undefined;
-    const callback = block && ts.isBlock(block) && ts.isBlock(block.parent) ? block.parent.parent : undefined;
-    const groupCall = callback && (ts.isArrowFunction(callback) || ts.isFunctionExpression(callback)) ? callback.parent : undefined;
-    const atRoot = block && ts.isBlock(block) && ts.isSourceFile(block.parent);
-    const inGroup = groupCall && ts.isCallExpression(groupCall) && rootName(groupCall) === 'describe' && groupCall.arguments.includes(callback);
     const callStatement = block && ts.isBlock(block) ? block.statements[1] : undefined;
     const call = callStatement && ts.isExpressionStatement(callStatement) ? callStatement.expression : undefined;
     const each = call && ts.isCallExpression(call) && ts.isCallExpression(call.expression) ? call.expression : undefined;
@@ -158,13 +181,14 @@ function rowBindings(ast, bindings, error) {
     const references = [];
     if (name) walk(block ?? ast, (item) => { if (ts.isIdentifier(item) && item !== name && bindings.declarationOf(item) === declaration) references.push(item); });
     const constBinding = name && ['it', 'test'].includes(name.text) && list && (list.flags & ts.NodeFlags.Const) && list.declarations.length === 1 && statement && !statement.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword);
-    const barePair = block && ts.isBlock(block) && block.statements.length === 2 && block.statements[0] === statement && (atRoot || inGroup);
+    const barePair = block && ts.isBlock(block) && block.statements.length === 2 && block.statements[0] === statement && rowContainer(block.parent, bindings);
     const rowArguments = node.arguments.length === 2 && ts.isIdentifier(node.arguments[0]) && node.arguments[0].text === 'has';
     const directEach = each && access && access.name.text === 'each' && ts.isIdentifier(access.expression) && name && access.expression.text === name.text && each.arguments.length === 1 && references.length === 1 && references[0] === access.expression;
     const valid = imported && constBinding && barePair && rowArguments && directEach && !parameterizedGroup(call);
     if (!valid) { error('unsupportedRowForm', node, '行単位の登録の構造を検査できません'); return; }
     const ids = arrayIds(node.arguments[1]);
     if (!ids) error('dynamicGuard', node, '行単位の ID を一覧と照合できません');
+    if (ids?.length === 0) error('unsupportedRowForm', node, '行単位の登録には1件以上の行が必要です');
     const table = unwrap(each.arguments[0]);
     const literalTable = table && ts.isArrayLiteralExpression(table) && table.elements.every(literalRow);
     const count = rowCount(call);
