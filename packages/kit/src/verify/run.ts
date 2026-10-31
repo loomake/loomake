@@ -31,7 +31,7 @@ export type VerifyOptions = {
   changeId?: string;
   /** --spec-only なら 'spec-only'、--done なら 'done'。changeId を省略したときは使わない */
   gate?: 'spec-only' | 'done';
-  /** commands を実行しない。完了ゲートでは、すでにあるテストのレポートを読む */
+  /** commands を実行せず、テストのレポートも読まない。品質コマンドの項目（完了ゲートでは要件ごとのテストも）を不足（INSUFFICIENT_EVIDENCE）にするので、終了コードは 1 になる（REQ-040） */
   skipCommands?: boolean;
   /** 進捗の表示先。--json のときも標準出力を汚さないよう、CLI は標準エラーを渡す */
   progress?: (message: string) => void;
