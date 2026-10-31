@@ -56,6 +56,39 @@ describe('HEAD と git の場所のまとめた読み取り', () => {
       }));
   }
 
+  // 偽の git が、まとめた呼び出し（--abbrev-ref と、ほかの引数を持つ rev-parse）だけ本物の出力を変えて返す。
+  // 項目ごとの呼び出し（rev-parse --abbrev-ref HEAD は引数 3 つ）とほかの呼び出しは本物へ転送する。
+  // 書き出しは process.exit の前に終わるよう fs.writeSync で行う
+  const malformed: [string, string][] = [
+    ['余計な行がある', String.raw`r.stdout+'extra\n'`],
+    ['最後の行が欠ける', String.raw`r.stdout.replace(/[^\n]*\r?\n$/,'')`],
+  ];
+  for (const [name, output] of malformed) {
+    it(`[REQ-349][REQ-348][REQ-126] まとめた読み取りが終了コード 0 でも出力の${name}とき、項目ごとの呼び出しに戻して同じ値を返す`, () =>
+      withRepo(() => {}, (repo) => {
+        const expected = separateReads(repo);
+        const cli = fakeCli(repo, 'git', {
+          when: `args[0]==='rev-parse'&&args.length>3&&args.includes('--abbrev-ref')&&(()=>{const r=cp.spawnSync(S.original,args,{encoding:'utf8'});event('forward-end',{status:r.status});fs.writeSync(1,${output});process.exit(0);})()`,
+        });
+        try {
+          expect(readHead(repo.root, repo.env, true)).toEqual(expected);
+          expect(readHead(repo.root, repo.env)).toEqual({ sha: expected.sha, branch: expected.branch });
+          // 場所つき：まとめた 1 回 + HEAD 2 回 + 場所 1 回。場所なし：まとめた 1 回 + HEAD 2 回
+          expect(revParses(cli)).toEqual([
+            ['rev-parse', '--git-path', 'config', '--git-path', 'hooks', 'HEAD', '--abbrev-ref', 'HEAD'],
+            ['rev-parse', '--verify', '-q', 'HEAD'],
+            ['rev-parse', '--abbrev-ref', 'HEAD'],
+            ['rev-parse', '--git-path', 'config', '--git-path', 'hooks'],
+            ['rev-parse', 'HEAD', '--abbrev-ref', 'HEAD'],
+            ['rev-parse', '--verify', '-q', 'HEAD'],
+            ['rev-parse', '--abbrev-ref', 'HEAD'],
+          ]);
+        } finally {
+          cli.restore();
+        }
+      }));
+  }
+
   it('[REQ-349][REQ-180] まとめた読み取りが 1 操作の期限に達したら、項目ごとの呼び出しを起動せずに止まる', () =>
     withRepo(() => {}, (repo) => {
       const cli = fakeCli(repo, 'git', { when: "args[0] === 'rev-parse'" });
