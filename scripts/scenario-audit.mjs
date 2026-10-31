@@ -1,8 +1,10 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { existsSync, lstatSync, mkdirSync, realpathSync, statSync, writeFileSync } from 'node:fs';
+import { basename, dirname, isAbsolute, join, posix, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import ts from 'typescript';
+import { companionOf, validatePartition } from './lib/test-partition.mjs';
 
 export const sha256 = (text) => createHash('sha256').update(text).digest('hex');
 const required = (condition, message) => { if (!condition) throw new Error(message); };
@@ -258,7 +260,7 @@ export function auditScenarios(scenarios, reviews, executions, testSources, pend
         if (!Array.isArray(sources) || !sources.length || sources.some((source) => !row.sources.includes(source))) result = invalid('確認するSourceが不正です');
         else if (!Array.isArray(entry.tests) || !entry.tests.length) result = invalid('対応する試験がありません');
         else {
-          const selected = []; let error;
+          const selected = new Set(); let error;
           for (const selector of entry.tests) {
             if (!object(selector) || typeof selector.file !== 'string' || typeof selector.contains !== 'string' || !selector.contains.trim()) { error = '試験の選択条件が不正です'; break; }
             if (selector.hashScope !== undefined && selector.hashScope !== 'block') { error = `試験のハッシュの範囲が不正です：${selector.file}`; break; }
@@ -272,10 +274,10 @@ export function auditScenarios(scenarios, reviews, executions, testSources, pend
               if (digest !== selector.sha256) { error = `選んだ試験の本文が変更されています：${selector.file} ${selector.contains}`; break; }
             }
             if (found.some((test) => test.status !== 'passed')) { error = '選んだ試験に失敗または未実行があります'; break; }
-            selected.push(...found);
+            for (const test of found) selected.add(test);
           }
-          if (!error && sources.some((source) => !selected.some((test) => test.fullName.includes(`[${source}]`)))) error = '対応する試験に必要なSourceがありません';
-          result = error ? invalid(error) : { status: 'reviewed', reason: entry.reason, reviewSources: sources, tests: selected };
+          if (!error && sources.some((source) => ![...selected].some((test) => test.fullName.includes(`[${source}]`)))) error = '対応する試験に必要なSourceがありません';
+          result = error ? invalid(error) : { status: 'reviewed', reason: entry.reason, reviewSources: sources, tests: [...selected] };
         }
       }
     }
@@ -296,7 +298,7 @@ export function renderAudit(report, prefix = '') {
   return ['# Scenarioと試験の対応', '', `確認済み ${report.counts.reviewed}、置換 ${report.counts.superseded}、未確認 ${report.counts.unreviewed}、無効 ${report.counts.invalid} / 全${report.counts.total}件`, '', ...pendingLines,
     'REQ-IDの一致は候補です。対応理由はレビュー上の判断で、試験内容の十分さや外部環境の成功を自動で保証しません。', '',
     ...report.issues.map((issue) => `- ${cell(issue)}`), '', '| 仕様の場所 | Requirement / Scenario | 状態 | 理由と対応試験 |', '|---|---|---|---|',
-    ...report.rows.map((row) => `| [${cell(row.file)}:${row.line}](${prefix}${row.file}#L${row.line}) | ${cell(row.requirement)} / ${cell(row.scenario)} | ${row.status} | ${cell(row.reason)}<br>${row.tests.length ? row.tests.map((test) => cell(test.file + ': ' + test.fullName)).join('<br>') : `候補 ${row.candidates.length} 件`} |`), '',
+    ...report.rows.map((row) => `| [${cell(row.file)}:${row.line}](${prefix}${row.file}#L${row.line}) | ${cell(row.requirement)} / ${cell(row.scenario)} | ${row.status} | ${cell(row.reason)}<br>${row.tests.length ? row.tests.map((test) => cell(test.file + (test.rawFile && test.rawFile !== test.file ? `（${test.rawFile}）` : '') + ': ' + test.fullName)).join('<br>') : `候補 ${row.candidates.length} 件`} |`), '',
   ].join('\n');
 }
 
@@ -319,11 +321,372 @@ export function inventoryRepository(entries) {
   return { inventory, pending };
 }
 
+/** 登録済み companion が元ファイルだけを動的に読み込むことを構造で確かめる。 */
+export function companionLinks(registry, readText, readModule) {
+  const links = new Map();
+  const unwrap = (node) => {
+    while (ts.isParenthesizedExpression(node) || ts.isAsExpression(node) || ts.isSatisfiesExpression(node) || ts.isNonNullExpression(node)) node = node.expression;
+    return node;
+  };
+  for (const source of Object.keys(registry.files)) {
+    const companion = companionOf(source);
+    required(!links.has(companion), `companionの対応が重複しています：${companion}`);
+    const text = readText(companion);
+    required(extractTestBlocks(text).length === 0, `companionに試験の宣言があります：${companion}`);
+    const ast = ts.createSourceFile(companion, text, ts.ScriptTarget.Latest, true);
+    const imports = []; const namespaces = new Set(); const testFunctions = new Set();
+    let staticTest = false; let declaresTest = false; let unverifiedBinding = false;
+    const importedBindings = (node) => {
+      if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier) && node.moduleSpecifier.text === 'vitest') {
+        const bindings = node.importClause?.namedBindings;
+        if (bindings && ts.isNamespaceImport(bindings)) namespaces.add(bindings.name.text);
+        if (bindings && ts.isNamedImports(bindings)) for (const item of bindings.elements) if (['it', 'test'].includes((item.propertyName ?? item.name).text)) testFunctions.add(item.name.text);
+      }
+      ts.forEachChild(node, importedBindings);
+    };
+    importedBindings(ast);
+    const namespaceExpression = (node) => {
+      const base = unwrap(node);
+      return ts.isIdentifier(base) && namespaces.has(base.text);
+    };
+    const propertyKey = (node) => {
+      if (ts.isComputedPropertyName(node)) {
+        const value = unwrap(node.expression);
+        return ts.isStringLiteralLike(value) || ts.isNumericLiteral(value) ? value.text : undefined;
+      }
+      return ts.isIdentifier(node) || ts.isStringLiteralLike(node) || ts.isNumericLiteral(node) ? node.text : undefined;
+    };
+    const testExpression = (node) => {
+      node = unwrap(node);
+      if (ts.isIdentifier(node)) return testFunctions.has(node.text);
+      if (ts.isPropertyAccessExpression(node)) return (namespaceExpression(node.expression) && ['it', 'test'].includes(node.name.text)) || testExpression(node.expression);
+      if (ts.isElementAccessExpression(node)) {
+        const key = node.argumentExpression && unwrap(node.argumentExpression);
+        const keyName = key && (ts.isStringLiteralLike(key) || ts.isNumericLiteral(key)) ? key.text : undefined;
+        if (namespaceExpression(node.expression) && keyName === undefined) unverifiedBinding = true;
+        return (namespaceExpression(node.expression) && ['it', 'test'].includes(keyName)) || testExpression(node.expression);
+      }
+      if (ts.isCallExpression(node)) return testExpression(node.expression);
+      if (ts.isTaggedTemplateExpression(node)) return testExpression(node.tag);
+      return false;
+    };
+    const bindingNames = (name, namespace, testFunction) => {
+      if (!namespace && !testFunction) return;
+      if (ts.isIdentifier(name)) {
+        if (namespace) namespaces.add(name.text);
+        if (testFunction) testFunctions.add(name.text);
+      } else if (ts.isObjectBindingPattern(name)) {
+        for (const element of name.elements) {
+          if (element.dotDotDotToken) { bindingNames(element.name, namespace, testFunction); continue; }
+          const keyName = propertyKey(element.propertyName ?? element.name);
+          if (namespace && keyName === undefined) unverifiedBinding = true;
+          bindingNames(element.name, false, testFunction || (namespace && ['it', 'test'].includes(keyName)));
+        }
+      } else if (ts.isObjectLiteralExpression(name)) {
+        for (const property of name.properties) {
+          if (ts.isSpreadAssignment(property)) { bindingNames(unwrap(property.expression), namespace, testFunction); continue; }
+          if (!ts.isPropertyAssignment(property) && !ts.isShorthandPropertyAssignment(property)) { unverifiedBinding = true; continue; }
+          const keyName = propertyKey(property.name);
+          if (namespace && keyName === undefined) unverifiedBinding = true;
+          const target = ts.isPropertyAssignment(property) ? unwrap(property.initializer) : property.name;
+          bindingNames(target, false, testFunction || (namespace && ['it', 'test'].includes(keyName)));
+        }
+      } else {
+        unverifiedBinding = true;
+      }
+    };
+    const collectBindings = (node) => {
+      if (ts.isVariableDeclaration(node) && node.initializer) bindingNames(node.name, namespaceExpression(node.initializer), testExpression(node.initializer));
+      if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken) bindingNames(unwrap(node.left), namespaceExpression(node.right), testExpression(node.right));
+      ts.forEachChild(node, collectBindings);
+    };
+    // 関数本体の参照が別名の宣言より前に現れても、束縛を集めてから呼出しを検査する。
+    let previousBindings;
+    do {
+      previousBindings = namespaces.size + testFunctions.size;
+      collectBindings(ast);
+    } while (previousBindings !== namespaces.size + testFunctions.size);
+    const visit = (node) => {
+      if (ts.isCallExpression(node) && testExpression(node.expression)) declaresTest = true;
+      if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) imports.push(node);
+      if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier) && /\.test\.[jt]s$/.test(node.moduleSpecifier.text)) staticTest = true;
+      ts.forEachChild(node, visit);
+    };
+    visit(ast);
+    required(!unverifiedBinding, `companionの試験関数の束縛を静的に確認できません：${companion}`);
+    required(!declaresTest, `companionに試験の宣言があります：${companion}`);
+    const expected = './' + basename(source).replace(/\.ts$/, '.js');
+    required(ast.parseDiagnostics.length === 0 && !staticTest && imports.length === 1 && imports[0].arguments.length === 1 && ts.isStringLiteral(imports[0].arguments[0]) && imports[0].arguments[0].text === expected, `companionが元ファイルだけを読み込んでいません：${companion}`);
+    // 既存の拒否順序と文言を保ったあとで、Vitest の値を扱える構文を閉じる。
+    const allowedNames = new Set(['expect']);
+    const bindingError = `companionの試験関数の束縛を静的に確認できません：${companion}`;
+    const allowedDestructure = (node) => {
+      node = unwrap(node);
+      if (ts.isObjectBindingPattern(node)) return node.elements.every((element) => !element.dotDotDotToken && allowedNames.has(propertyKey(element.propertyName ?? element.name)));
+      if (ts.isObjectLiteralExpression(node)) return node.properties.every((property) =>
+        (ts.isPropertyAssignment(property) || ts.isShorthandPropertyAssignment(property)) && allowedNames.has(propertyKey(property.name)));
+      return false;
+    };
+    const typePosition = (node) => {
+      for (let current = node.parent; current; current = current.parent) if (ts.isTypeNode(current)) return true;
+      return false;
+    };
+    const namespacePosition = (node) => {
+      if (typePosition(node)) return true;
+      let expression = node;
+      while (expression.parent && (ts.isParenthesizedExpression(expression.parent) || ts.isAsExpression(expression.parent) || ts.isSatisfiesExpression(expression.parent) || ts.isNonNullExpression(expression.parent)) && expression.parent.expression === expression) expression = expression.parent;
+      const parent = expression.parent;
+      if (ts.isNamespaceImport(parent) && parent.name === expression) return true;
+      if (ts.isPropertyAccessExpression(parent)) return parent.name === expression || (parent.expression === expression && allowedNames.has(parent.name.text));
+      if (ts.isElementAccessExpression(parent) && parent.expression === expression) {
+        const key = parent.argumentExpression && unwrap(parent.argumentExpression);
+        return key && ts.isStringLiteralLike(key) && allowedNames.has(key.text);
+      }
+      if (ts.isVariableDeclaration(parent)) {
+        const statement = parent.parent?.parent;
+        if (statement && ts.isVariableStatement(statement) && statement.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)) return false;
+        if (ts.isIdentifier(parent.name) && parent.initializer && namespaceExpression(parent.initializer)) return true;
+        return parent.initializer === expression && allowedDestructure(parent.name);
+      }
+      if (ts.isBinaryExpression(parent) && parent.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
+        return parent.right === expression && allowedDestructure(parent.left);
+      }
+      // プロパティの固定名は namespace の値を参照しない。shorthand は値なので除外しない。
+      if ((ts.isPropertyAssignment(parent) || ts.isBindingElement(parent)) && (parent.propertyName ?? parent.name) === expression && !ts.isComputedPropertyName(expression)) return true;
+      return false;
+    };
+    const relativeModule = (text) => /^(?:\.\/|(?:\.\.\/)+)(?:[A-Za-z0-9_-][\w.-]*\/)*[A-Za-z0-9_-][\w.-]*\.(?:js|ts|mjs|mts|cjs|cts|jsx|tsx)$/.test(text) && !/\.(?:test|spec)(?:\.|$)/i.test(text.slice(text.lastIndexOf('/') + 1));
+    const readingError = `companionの読み込み先を静的に確認できません：${companion}`;
+    const importEquals = [];
+    const closedSyntax = (node) => {
+      required(!(ts.isMetaProperty(node) && node.keywordToken === ts.SyntaxKind.ImportKeyword) && !(ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'require'), readingError);
+      let module;
+      if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) module = node.moduleSpecifier;
+      if (ts.isImportEqualsDeclaration(node)) {
+        required(ts.isExternalModuleReference(node.moduleReference), `companionの読み込み先を静的に確認できません：${companion}`);
+        module = node.moduleReference.expression;
+        importEquals.push(node);
+      }
+      if (module) {
+        required(ts.isStringLiteral(module) && (module.text === 'vitest' || relativeModule(module.text)), readingError);
+        if (module.text === 'vitest' && (ts.isImportDeclaration(node) || ts.isImportEqualsDeclaration(node))) {
+          required(ts.isImportDeclaration(node) && !node.importClause?.name, bindingError);
+          const bindings = node.importClause?.namedBindings;
+          required(bindings && (ts.isNamespaceImport(bindings) || (ts.isNamedImports(bindings) && bindings.elements.every((item) => allowedNames.has((item.propertyName ?? item.name).text)))), bindingError);
+        }
+      }
+      if (ts.isIdentifier(node) && namespaces.has(node.text)) required(namespacePosition(node), bindingError);
+      ts.forEachChild(node, closedSyntax);
+    };
+    closedSyntax(ast);
+    // 型を消した後にも存在する、同じ字句 scope の値だけを認める。
+    const options = { noLib: true, noResolve: true };
+    const host = ts.createCompilerHost(options);
+    host.getSourceFile = (file) => file === companion ? ast : undefined;
+    host.writeFile = () => {};
+    const checker = ts.createProgram([companion], options, host).getTypeChecker();
+    const ambient = (node) => {
+      for (let current = node; current && current !== ast; current = current.parent) {
+        if ((current.flags & ts.NodeFlags.Ambient) || current.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.DeclareKeyword)) return true;
+      }
+      return false;
+    };
+    const runtimeDeclaration = (node) => {
+      if (node.getSourceFile() !== ast || ambient(node)) return false;
+      if (ts.isVariableDeclaration(node) || ts.isParameter(node) || ts.isBindingElement(node) || ts.isClassDeclaration(node)) return true;
+      if (ts.isFunctionDeclaration(node)) return Boolean(node.body);
+      if (ts.isImportSpecifier(node)) return !node.isTypeOnly && !node.parent.parent.isTypeOnly;
+      if (ts.isNamespaceImport(node)) return !node.parent.isTypeOnly;
+      return ts.isImportClause(node) && !node.isTypeOnly;
+    };
+    const runtimeTypePosition = (node) => {
+      for (let current = node.parent; current; current = current.parent) {
+        // 値の型引数指定と class の extends 式は、式そのものが実行される。
+        if (ts.isExpressionWithTypeArguments(current)) {
+          const heritage = current.parent;
+          if (!ts.isHeritageClause(heritage) || (heritage.token === ts.SyntaxKind.ExtendsKeyword && ts.isClassLike(heritage.parent))) continue;
+        }
+        if (ts.isTypeNode(current)) return true;
+      }
+      return false;
+    };
+    const valueReference = (node) => {
+      if (runtimeTypePosition(node)) return false;
+      const parent = node.parent;
+      if (ts.isShorthandPropertyAssignment(parent)) return true;
+      if (ts.isExportSpecifier(parent)) return !parent.isTypeOnly && !parent.parent.parent.isTypeOnly && (parent.propertyName ?? parent.name) === node;
+      if (ts.isImportSpecifier(parent) || ts.isImportClause(parent) || ts.isNamespaceImport(parent)) return false;
+      if (ts.isPropertyAccessExpression(parent) && parent.name === node) return false;
+      if ((ts.isPropertyAssignment(parent) || ts.isBindingElement(parent)) && parent.propertyName === node) return false;
+      if (parent.name === node) return false;
+      if ((ts.isLabeledStatement(parent) || ts.isBreakStatement(parent) || ts.isContinueStatement(parent)) && parent.label === node) return false;
+      return true;
+    };
+    const bindingDeclarations = (node) => {
+      const parent = node.parent;
+      const symbol = ts.isShorthandPropertyAssignment(parent) ? checker.getShorthandAssignmentValueSymbol(parent)
+        : ts.isExportSpecifier(parent) ? checker.getExportSpecifierLocalTargetSymbol(parent) : checker.getSymbolAtLocation(node);
+      return symbol?.declarations ?? [];
+    };
+    const forbiddenProperties = new Set(['constructor', '__proto__', 'prototype']);
+    const literalKey = (node) => {
+      node = unwrap(node);
+      return ts.isStringLiteralLike(node) || ts.isNumericLiteral(node) ? node.text : undefined;
+    };
+    const helperCalls = [];
+    const closedRuntime = (node) => {
+      if (ts.isIdentifier(node) && valueReference(node)) {
+        const declarations = bindingDeclarations(node);
+        required(declarations.some(runtimeDeclaration) || (node.text === 'undefined' && declarations.length === 0), readingError);
+        for (const declaration of declarations) {
+          if (!ts.isImportSpecifier(declaration) && !ts.isImportClause(declaration) && !ts.isNamespaceImport(declaration)) continue;
+          let imported = declaration.parent;
+          while (imported && !ts.isImportDeclaration(imported)) imported = imported.parent;
+          if (!imported || imported.moduleSpecifier.text === 'vitest') continue;
+          required(ts.isCallExpression(node.parent) && node.parent.expression === node && ts.isExpressionStatement(node.parent.parent), readingError);
+          helperCalls.push({ module: imported.moduleSpecifier.text, name: ts.isImportSpecifier(declaration) ? (declaration.propertyName ?? declaration.name).text : undefined });
+        }
+      }
+      // 型位置以外のthisは、最上位やarrowを通じて大域の値へ届く。
+      if (node.kind === ts.SyntaxKind.ThisKeyword) required(runtimeTypePosition(node), readingError);
+      if (ts.isPropertyAccessExpression(node)) required(!forbiddenProperties.has(node.name.text), readingError);
+      if (ts.isElementAccessExpression(node)) {
+        const key = node.argumentExpression && literalKey(node.argumentExpression);
+        required(key !== undefined && !forbiddenProperties.has(key), readingError);
+      }
+      if (ts.isComputedPropertyName(node)) {
+        const key = literalKey(node.expression);
+        required(key !== undefined && !forbiddenProperties.has(key), readingError);
+      }
+      if ((ts.isPropertyAssignment(node) || ts.isShorthandPropertyAssignment(node) || ts.isMethodDeclaration(node) || ts.isGetAccessor(node) || ts.isSetAccessor(node) || ts.isPropertyDeclaration(node)) && node.name) {
+        required(!forbiddenProperties.has(propertyKey(node.name)), readingError);
+      }
+      if (ts.isBindingElement(node) && ts.isObjectBindingPattern(node.parent)) required(!forbiddenProperties.has(propertyKey(node.propertyName ?? node.name)), readingError);
+      ts.forEachChild(node, closedRuntime);
+    };
+    closedRuntime(ast);
+    if (readModule) {
+      const modules = new Map();
+      const literal = (node) => ts.isLiteralExpression(node) || [ts.SyntaxKind.TrueKeyword, ts.SyntaxKind.FalseKeyword, ts.SyntaxKind.NullKeyword].includes(node.kind);
+      const decorated = (node) => Boolean(ts.canHaveDecorators(node) && ts.getDecorators(node)?.length);
+      const inertClass = (node) => !decorated(node)
+        && (node.heritageClauses ?? []).every((clause) => clause.types.every((type) => ts.isIdentifier(type.expression)))
+        && node.members.every((member) => !decorated(member)
+          && !ts.isComputedPropertyName(member.name ?? member) && !ts.isClassStaticBlockDeclaration(member)
+          && !(ts.isPropertyDeclaration(member) && member.initializer && member.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.StaticKeyword))
+          && !(member.parameters ?? []).some(decorated));
+      const inert = (expression) => {
+        const node = unwrap(expression);
+        if (literal(node) || ts.isIdentifier(node) || ts.isArrowFunction(node) || ts.isFunctionExpression(node)) return true;
+        if (ts.isPrefixUnaryExpression(node)) return node.operator === ts.SyntaxKind.MinusToken && ts.isNumericLiteral(node.operand);
+        if (ts.isClassExpression(node)) return inertClass(node);
+        if (ts.isArrayLiteralExpression(node)) return node.elements.every((element) => !ts.isSpreadElement(element) && inert(element));
+        if (ts.isObjectLiteralExpression(node)) return node.properties.every((property) => !ts.isSpreadAssignment(property)
+          && !ts.isComputedPropertyName(property.name ?? property)
+          && (ts.isPropertyAssignment(property) ? inert(property.initializer)
+            : ts.isShorthandPropertyAssignment(property) || ts.isMethodDeclaration(property) || ts.isGetAccessor(property) || ts.isSetAccessor(property)));
+        return false;
+      };
+      const candidates = (from, specifier) => {
+        const file = posix.normalize(posix.join(posix.dirname(from), specifier));
+        required(!posix.isAbsolute(file) && file !== '..' && !file.startsWith('../'), readingError);
+        const mapped = file.replace(/\.(js|mjs|cjs|jsx)$/, (_, extension) => '.' + ({ js: 'ts', mjs: 'mts', cjs: 'cts', jsx: 'tsx' })[extension]);
+        const found = [];
+        for (const candidate of new Set([file, mapped])) {
+          if (modules.has(candidate)) { found.push(modules.get(candidate)); continue; }
+          let text;
+          try { text = readModule(candidate); } catch { throw new Error(readingError); }
+          if (text === undefined) continue;
+          const parsed = ts.createSourceFile(candidate, text, ts.ScriptTarget.Latest, true);
+          required(parsed.parseDiagnostics.length === 0, readingError);
+          modules.set(candidate, parsed); found.push(parsed);
+          for (const statement of parsed.statements) {
+            if (ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement)) {
+              readDependency(candidate, statement); continue;
+            }
+            const valid = ts.isFunctionDeclaration(statement) ? Boolean(statement.body)
+              : ts.isClassDeclaration(statement) ? inertClass(statement)
+              : ts.isVariableStatement(statement) ? statement.declarationList.declarations.every((item) => ts.isIdentifier(item.name) && (!item.initializer || inert(item.initializer)))
+              : ts.isExportAssignment(statement) ? !statement.isExportEquals && inert(statement.expression)
+              : ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement) || ts.isEmptyStatement(statement);
+            required(valid, readingError);
+          }
+        }
+        required(found.length > 0, readingError);
+        return found;
+      };
+      const readDependency = (from, node) => {
+        const module = ts.isImportEqualsDeclaration(node) ? node.moduleReference.expression : node.moduleSpecifier;
+        if (node.isTypeOnly || node.importClause?.isTypeOnly || !module) return;
+        required(ts.isStringLiteral(module), readingError);
+        const specifier = module.text;
+        required(specifier === 'vitest' || /^node:[a-z_]+(?:\/[a-z_]+)*$/.test(specifier) || relativeModule(specifier), readingError);
+        if (relativeModule(specifier)) candidates(from, specifier);
+      };
+      for (const statement of ast.statements) if (ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement)) readDependency(companion, statement);
+      for (const node of importEquals) readDependency(companion, node);
+      for (const call of helperCalls) {
+        required(call.name !== undefined, readingError);
+        for (const parsed of candidates(companion, call.module)) {
+          const named = [];
+          const mutable = new Set();
+          for (const statement of parsed.statements) {
+            if (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) { if (statement.name?.text === call.name) named.push(statement); }
+            if (ts.isVariableStatement(statement)) for (const item of statement.declarationList.declarations) {
+              if (ts.isIdentifier(item.name) && item.name.text === call.name) named.push(item);
+              if (ts.isIdentifier(item.name) && !(statement.declarationList.flags & ts.NodeFlags.Const)) mutable.add(item.name.text);
+            }
+            if (ts.isImportDeclaration(statement)) {
+              const clause = statement.importClause; const bindings = clause?.namedBindings;
+              for (const name of [clause?.name, ...(bindings && ts.isNamedImports(bindings) ? bindings.elements.map((item) => item.name) : bindings && ts.isNamespaceImport(bindings) ? [bindings.name] : [])]) if (name?.text === call.name) named.push(name);
+            }
+            if (ts.isExportDeclaration(statement) && statement.exportClause && ts.isNamedExports(statement.exportClause)) for (const item of statement.exportClause.elements) if (item.name.text === call.name) named.push(item);
+          }
+          const fn = named[0]; const modifiers = fn?.modifiers ?? [];
+          required(named.length === 1 && ts.isFunctionDeclaration(fn) && fn.body && !fn.asteriskToken && modifiers.some((item) => item.kind === ts.SyntaxKind.ExportKeyword) && !modifiers.some((item) => [ts.SyntaxKind.AsyncKeyword, ts.SyntaxKind.DefaultKeyword].includes(item.kind)), readingError);
+          required(fn.parameters.every((item) => ts.isIdentifier(item.name) && !item.initializer && !item.dotDotDotToken && !decorated(item)), readingError);
+          const parameters = new Set(fn.parameters.map((item) => item.name.text));
+          for (const statement of fn.body.statements) {
+            const assignment = ts.isExpressionStatement(statement) && statement.expression;
+            required(assignment && ts.isBinaryExpression(assignment) && assignment.operatorToken.kind === ts.SyntaxKind.EqualsToken && ts.isIdentifier(assignment.left) && mutable.has(assignment.left.text) && !parameters.has(assignment.left.text), readingError);
+            const value = unwrap(assignment.right);
+            required(literal(value) || (ts.isIdentifier(value) && parameters.has(value.text)), readingError);
+          }
+        }
+      }
+    }
+    links.set(companion, source);
+  }
+  return links;
+}
+
+function partitionInputs(root, jsonReader, reader) {
+  try {
+    const text = jsonReader.read(join(root, 'tests/test-partition.json'));
+    const registry = validatePartition(JSON.parse(text), { exists: (file) => existsSync(join(root, file)) && statSync(join(root, file)).isFile() });
+    /** @type {Record<string, string>} */
+    const companions = {};
+    const companionDependencies = {};
+    const links = companionLinks(registry, (file) => {
+      const source = reader.read(join(root, file)); companions[file] = sha256(source); return source;
+    }, (file) => {
+      const path = join(root, file);
+      let info;
+      try { info = lstatSync(path); } catch (error) { if (['ENOENT', 'ENOTDIR'].includes(error.code)) return undefined; throw error; }
+      const location = relative(realpathSync(root), realpathSync(path));
+      required(info.isFile() && !info.isSymbolicLink() && location !== '..' && !location.startsWith('..' + (process.platform === 'win32' ? '\\' : '/')) && !isAbsolute(location), '補助moduleの配置が不正です');
+      const text = reader.read(path); companionDependencies[file] = sha256(text); return text;
+    });
+    return { links, partitionSha256: sha256(text), companions, companionDependencies };
+  } catch (error) { throw new Error(`試験の分割一覧を読めません：${error.message}`, { cause: error }); }
+}
+
 const loadKit = () => import('../packages/kit/dist/index.js');
 
 export async function auditRepository(root, output, reviewFile = 'docs/quality/scenarios.json', reportFile, kit) {
   const { createInputReader, JSON_LIMITS, loadConfig } = kit ?? await loadKit();
   const reader = createInputReader(); const jsonReader = createInputReader(JSON_LIMITS);
+  const partition = partitionInputs(root, jsonReader, reader);
   const read = (file) => reader.read(join(root, file));
   const posix = (file) => relative(root, file).split('\\').join('/');
   const files = reader.walk(join(root, 'openspec/specs')).filter((file) => /[/\\]spec\.md$/.test(file));
@@ -335,13 +698,13 @@ export async function auditRepository(root, output, reviewFile = 'docs/quality/s
   const { inventory, pending } = inventoryRepository([...texts].map(([file, text]) => ({ file, text })));
   const reportPath = resolve(root, reportFile ?? loadConfig(root).tests.report);
   const reportText = jsonReader.read(reportPath); const input = JSON.parse(reportText);
-  const executions = readExecutions(root, input);
+  const executions = readExecutions(root, input, partition.links);
   const reviewText = existsSync(join(root, reviewFile)) ? jsonReader.read(join(root, reviewFile)) : undefined;
   const review = reviewText ? JSON.parse(reviewText) : { schemaVersion: 1, reviews: [] };
   required(object(review) && review.schemaVersion === 1 && Array.isArray(review.reviews), 'レビュー表の形式かschemaVersionが不正です');
   const sources = Object.fromEntries([...new Set(executions.map((test) => test.file))].map((file) => [file, read(file)]));
-  const result = auditScenarios(inventory, review.reviews, executions, sources, pending);
-  result.inputs = { specs: Object.fromEntries([...texts].sort(([a], [b]) => a < b ? -1 : 1).map(([file, text]) => [file, sha256(text)])), testSources: Object.fromEntries(Object.entries(sources).map(([file, text]) => [file, sha256(text)])), testReportSha256: sha256(reportText), reviewSha256: reviewText ? sha256(reviewText) : null, scriptSha256: sha256(read('scripts/scenario-audit.mjs')) };
+  const inputs = { partitionSha256: partition.partitionSha256, companions: partition.companions, companionDependencies: partition.companionDependencies, specs: Object.fromEntries([...texts].sort(([a], [b]) => a < b ? -1 : 1).map(([file, text]) => [file, sha256(text)])), testSources: Object.fromEntries(Object.entries(sources).map(([file, text]) => [file, sha256(text)])), testReportSha256: sha256(reportText), reviewSha256: reviewText ? sha256(reviewText) : null, scriptSha256: sha256(read('scripts/scenario-audit.mjs')) };
+  const result = { ...auditScenarios(inventory, review.reviews, executions, sources, pending), inputs };
   mkdirSync(dirname(output), { recursive: true });
   mkdirSync(output);
   writeFileSync(join(output, 'audit.json'), JSON.stringify(result, null, 2) + '\n');
@@ -412,8 +775,9 @@ export function gitHistory(root) {
 export async function migrateRepository(root, { dryRun = false, reviewFile = 'docs/quality/scenarios.json', reportFile, kit, history } = {}) {
   const { createInputReader, JSON_LIMITS, loadConfig } = kit ?? await loadKit();
   const reader = createInputReader(); const jsonReader = createInputReader(JSON_LIMITS);
+  const partition = partitionInputs(root, jsonReader, reader);
   const input = JSON.parse(jsonReader.read(resolve(root, reportFile ?? loadConfig(root).tests.report)));
-  const executions = readExecutions(root, input);
+  const executions = readExecutions(root, input, partition.links);
   const review = JSON.parse(jsonReader.read(join(root, reviewFile)));
   required(object(review) && review.schemaVersion === 1 && Array.isArray(review.reviews), 'レビュー表の形式かschemaVersionが不正です');
   const sources = Object.fromEntries([...new Set(executions.map((test) => test.file))].flatMap((file) => existsSync(join(root, file)) ? [[file, reader.read(join(root, file))]] : []));
@@ -422,13 +786,13 @@ export async function migrateRepository(root, { dryRun = false, reviewFile = 'do
   return { dryRun, counts: result.counts };
 }
 
-function readExecutions(root, input) {
+function readExecutions(root, input, links = new Map()) {
   required(object(input) && Array.isArray(input.testResults), '試験レポートにtestResultsがありません');
   return input.testResults.flatMap((suite) => {
     required(object(suite) && typeof suite.name === 'string' && Array.isArray(suite.assertionResults), '試験レポートのsuiteが不正です');
     const file = relative(root, resolve(root, suite.name)).split('\\').join('/');
     required(!file.startsWith('../') && !isAbsolute(file), 'リポジトリ外の試験レポートは扱えません');
-    return suite.assertionResults.map((test) => ({ file, fullName: test.fullName, status: test.status }));
+    return suite.assertionResults.map((test) => ({ file: links.get(file) ?? file, rawFile: file, fullName: test.fullName, status: test.status }));
   });
 }
 
