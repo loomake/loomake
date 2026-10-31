@@ -71,9 +71,10 @@ describe('夜間の変異試験のジョブ', () => {
   });
 
   it.skipIf(!hasTools)('生き残った変異と試行のエラーだけを survived.json と要約に書く', () => {
-    const { survived, summary } = runSurvived({ ok: false, baseline: { status: 'passed', tests: [] }, mutations: [mutation('m1', 'killed'), mutation('m2', 'survived'), mutation('m3', 'error'), mutation('m4', 'survived')] });
+    const { survived, summary } = runSurvived({ ok: false, originalsUnchanged: true, baseline: { status: 'passed', tests: [] }, mutations: [mutation('m1', 'killed'), mutation('m2', 'survived'), mutation('m3', 'error'), mutation('m4', 'survived')] });
     expect(survived).toEqual({
       ok: false,
+      originalsUnchanged: true,
       baseline: 'passed',
       survived: 2,
       errors: 1,
@@ -81,6 +82,8 @@ describe('夜間の変異試験のジョブ', () => {
     });
     expect(summary).toBe([
       '## 変異試験（夜間）',
+      '',
+      'ok：false、元ファイルが変わっていない（originalsUnchanged）：true',
       '',
       '生き残った変異：2 件、試行のエラー：1 件（基準の試験：passed）',
       '',
@@ -92,8 +95,8 @@ describe('夜間の変異試験のジョブ', () => {
   });
 
   it.skipIf(!hasTools)('基準の試験の前で止まった結果（baseline が null）でも要約を書く', () => {
-    const { survived, summary } = runSurvived({ ok: false, baseline: null, mutations: [] });
-    expect(survived).toEqual({ ok: false, baseline: '未実施', survived: 0, errors: 0, mutations: [] });
-    expect(summary).toBe('## 変異試験（夜間）\n\n生き残った変異：0 件、試行のエラー：0 件（基準の試験：未実施）\n\n');
+    const { survived, summary } = runSurvived({ ok: false, originalsUnchanged: false, baseline: null, mutations: [] });
+    expect(survived).toEqual({ ok: false, originalsUnchanged: false, baseline: '未実施', survived: 0, errors: 0, mutations: [] });
+    expect(summary).toBe('## 変異試験（夜間）\n\nok：false、元ファイルが変わっていない（originalsUnchanged）：false\n\n生き残った変異：0 件、試行のエラー：0 件（基準の試験：未実施）\n\n');
   });
 });

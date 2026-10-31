@@ -11,3 +11,10 @@
 2. verify の結果：`pnpm lint`・`pnpm typecheck`・`pnpm test` を流して通った。
 3. 残っている確認事項・仮定：jq の試験は bash と jq があるときだけ動く。GitHub の ubuntu の実行環境には両方とも入っているので、CI では毎回動く。
 4. 次にやること：独立の Opus レビューに出す。
+
+### 独立レビューへの対応
+
+1. やったこと：独立レビュー（Claude Opus 5.5、1cded378）の軽微 1 件を直した。夜間の変異試験が赤くなったときに原因を分けられるよう、survived の段階で `originalsUnchanged` を `survived.json` に書き、概要に `ok` と並べて出す。jq の試験の期待値にもこの項目を足した。`docs/dev/ci.md` には、`domain-mutations` と `plan` が失敗する場合を並べ、それ以外は `results.json` とログを見ることを書いた。
+2. verify の結果：`pnpm lint`・`pnpm typecheck`・`pnpm test` を流して通った。
+3. 残っている確認事項・仮定：なし。
+4. 次にやること：管理役に新しい head を伝える。

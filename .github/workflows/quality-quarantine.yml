@@ -79,9 +79,11 @@ jobs:
         if: ${{ !cancelled() && hashFiles('.loomake/quality/domain-mutations-nightly/results.json') != '' }}
         run: |
           results=.loomake/quality/domain-mutations-nightly/results.json
-          jq '{ok: .ok, baseline: (.baseline.status // "未実施"), survived: ([.mutations[] | select(.status == "survived")] | length), errors: ([.mutations[] | select(.status == "error")] | length), mutations: [.mutations[] | select(.status != "killed") | {id: .id, label: .label, file: .file, status: .status}]}' "$results" > .loomake/quality/domain-mutations-nightly/survived.json
+          jq '{ok: .ok, originalsUnchanged: .originalsUnchanged, baseline: (.baseline.status // "未実施"), survived: ([.mutations[] | select(.status == "survived")] | length), errors: ([.mutations[] | select(.status == "error")] | length), mutations: [.mutations[] | select(.status != "killed") | {id: .id, label: .label, file: .file, status: .status}]}' "$results" > .loomake/quality/domain-mutations-nightly/survived.json
           {
             echo "## 変異試験（夜間）"
+            echo
+            jq -r '"ok：\(.ok)、元ファイルが変わっていない（originalsUnchanged）：\(.originalsUnchanged)"' .loomake/quality/domain-mutations-nightly/survived.json
             echo
             jq -r '"生き残った変異：\(.survived) 件、試行のエラー：\(.errors) 件（基準の試験：\(.baseline)）"' .loomake/quality/domain-mutations-nightly/survived.json
             echo
