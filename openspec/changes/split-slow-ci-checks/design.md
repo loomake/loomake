@@ -275,7 +275,7 @@ live inventoryを実prefix前に追加し元blockと選択経路を独立照合�
 
 Q-77の必須包含は、モデルの旧17を採らず、2.8の未完了19fileを基準にする。v2-readers登録と同commitで末尾へ加えて20fileにし、旧19の順序/包含と追加file独立欠測negativeを保つ。17実装済み→2.8で19→登録同commit後20という時点を分け、全採集file/case/raw/失敗をどの段階でも保持する。Q-78により分割後のfixture初回costがfast別caseへ移って新たな10秒超が出たら、実3OS各3sampleで未達を記録して設計へ戻す。beforeAll/cache/helper共有で隠さない。Q-38の中間PRは全件、最後184でPRslow除外とNode20削除を同時に有効にする。
 
-現在4.3の前提は3.1〜3.3・2.5〜2.10・4.2の受入で、実registryは空のまま。先行PR253はdefault initializer経由の重大1が未修理で最終Opus0回、難しいバグの独立調査・設計は下節で採用したが実装と再検証は未完了である。PR252は独立Opus重大0/軽微1をIssue254へ残し、Ubuntu coverage待ちで受入前である。どちらも準備や計画更新をmain受入・1-1完成へ読み替えない。
+現在4.3の前提は3.1〜3.3・2.5〜2.10・4.2の受入で、実registryは空のまま。先行PR253はdefault initializer経由の重大1が未修理で最終Opus0回、難しいバグの独立調査・設計は下節で採用したが実装と再検証は未完了である。PR252は独立Opus重大0/軽微1をIssue254へ残し、同headの必須5・全3OS成功後にmainへ受け入れた。初回Ubuntuのrunner通信断・ログ404と根因未確定を保持する。PR253候補は旧228+新41成功後もquery/fragment付きの別試験読込を静的受理し、nativeの追加行成功・auditの出力作成・移行正常returnを確認したため、追加設計が未達である。PR252の先行基盤の受入と準備・計画更新を1-1完成へ読み替えない。
 
 # PR253の重大修理（Q-79〜Q-83、新2.10）
 
