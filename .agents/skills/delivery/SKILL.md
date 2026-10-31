@@ -48,7 +48,7 @@ Goal操作ツールが使えない、またはGoal作成が失敗した場合は
 
 作業・受入条件・依存は既存のWBS Issue、段階の出口と日程の見直しは #121 を正本とする。進捗表や残作業の一覧をスキルやローカル文書へ複製しない。Projectsの設定を待たずに進める。
 
-管理役は1セッションに固定し、依存を確認して実装・独立レビューを分担する。担当の重複や未コミット作業は `git worktree list`・既存PR・Issueの記録と照合する。実装担当ごとにworktreeを分け、同じIssue・changeへ重複着手しない。同時に進める本数と配分は ADR 0006 に従い、ほかのセッションも数に含める。既存の変更があるフォルダでブランチを切り替えず、最新mainから専用worktreeを用意する。マージされた PR の worktree は当日中に消す。
+管理役は1セッションに固定し、依存を確認して実装・独立レビューを分担する。担当の重複や未コミット作業は `git worktree list`・既存PR・Issueの記録と照合する。実装担当ごとにworktreeを分け、同じIssue・changeへ重複着手しない。同時に進める本数と配分は ADR 0006 に従い、ほかのセッションも数に含める。既存の変更があるフォルダでブランチを切り替えず、最新mainから専用worktreeを用意する。マージされた PR の worktree は当日中に消す。削除は `scripts/clean-merged-worktrees.sh --dry-run` で一覧を確かめてから引数なしで実行する。各 worktree の `.loomake/` は `.loomake/archive/worktree-loomake-<日付>/` に退避される。
 
 担当を変えるときは、前の担当の作業を止めたことを確かめ、引き継ぎ（どこまで済んだか、未 push の作業があるか）を `trace.md` か作業記録に書いてから始める。
 
@@ -95,6 +95,7 @@ Opusの設計がまだなければ自動で依頼する。Codexから起動で�
 
 ```text
 head: <マージ対象の 40 桁 SHA>
+tier: <gate の出力行。例 loomake-tier: L2（scripts/ci-gate.mjs）>
 ci: <必須 CI の run URL>
 codex-review: <Codex 自動レビューが受領した head の SHA（参考。マージ条件ではない）。なければ「未実施」>
 reviewed-head: <Opus がレビューした head の SHA。L1 なら「対象外（L1）」、まだなら「未実施」>

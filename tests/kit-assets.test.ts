@@ -82,7 +82,7 @@ describe('AGENTS.md のテンプレート', () => {
     expect(isMostlyJapanese(agents)).toBe(true);
   });
 
-  it('[REQ-273] 報告の形の節に、作業したブランチごとのファイルに記録し、/ を - に置き換え、あれば追記すると書いてある', () => {
+  it('[REQ-288] 報告の形の節に、作業したブランチごとのファイルに記録し、/ を - に置き換え、あれば追記すると書いてある', () => {
     const report = section(agents, /報告の形/);
     expect(report).toContain('作業したブランチごとのファイル `docs/worklog/<日本時間の日付>/<ブランチ名>.md`');
     expect(report).toContain('ブランチ名の `/` は `-` に置き換える');
@@ -92,7 +92,7 @@ describe('AGENTS.md のテンプレート', () => {
     expect(report).not.toContain('2026-10-27 までの日付ごとのファイル');
   });
 
-  it('[REQ-273] 報告の形の節に、作業記録は作業の PR に含め、マージ後の記録は次の作業のブランチのファイルに書くと書いてある', () => {
+  it('[REQ-288] 報告の形の節に、作業記録は作業の PR に含め、マージ後の記録は次の作業のブランチのファイルに書くと書いてある', () => {
     const report = section(agents, /報告の形/);
     expect(report).toContain('作業記録はその作業の PR に含め、作業記録だけの PR は作らない');
     expect(report).toMatch(/PR のマージ後に記録を足すとき[^。]*は、次の作業のブランチのファイルに書き、その PR に含める/);

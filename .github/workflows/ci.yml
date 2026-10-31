@@ -167,8 +167,9 @@ jobs:
       - run: python3 scripts/deny-network.py node scripts/runtime-compatibility.mjs "$RUNNER_TEMP/loomake-offline" "$RUNNER_TEMP/loomake-runtime-results" 22.12.0
         shell: bash
 
-  # PR ごとの完了ゲート（REQ-010, REQ-054, REQ-132）。PR 本文・変えたファイル・ブランチ名から決めた change を --done で検査する
-  # 文書だけの PR（REQ-270）でテストを実行するのは、このジョブの verify だけになる。テストを飛ばす変更の前に docs/dev/ci.md を読むこと
+  # PR ごとの完了ゲート（REQ-010, REQ-054, REQ-132）。先に PR の段階を変えたファイルと spec の差分から決め（REQ-342）、段階ごとに検査を変える（REQ-343）。
+  # L1（文書だけ）は lint と文書のリンクの試験だけで verify を呼ばない。L2 は PR 本文・変えたファイル・ブランチ名から決めた change を --done で検査し、
+  # L3 は change を必須にする。段階と理由はステップの出力 tier・tier_line に入る。段階の決め方は docs/dev/ci.md
   gate:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -194,7 +195,8 @@ jobs:
       # archive で反映したあとの仕様は、change ごとの完了ゲートでは検査されない（REQ-010）
       - run: openspec validate --specs --strict
       - run: pnpm build
-      - run: node scripts/ci-gate.mjs "$HEAD_REF"
+      - id: gate
+        run: node scripts/ci-gate.mjs "$HEAD_REF"
         env:
           HEAD_REF: ${{ github.head_ref }}
           BASE_REF: ${{ github.base_ref }}

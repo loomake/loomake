@@ -16,11 +16,26 @@
 
 この決まりは以前、monorepo の仕様の Requirement「PR の古い CI 実行の取り消し」（REQ-215）だった。change move-dev-mechanics-to-docs で仕様から外した。
 
-## 文書だけの PR でテストを実行するジョブ
+## PR の段階と gate ジョブ
 
-文書だけの PR（REQ-270）では、quality ジョブは品質コマンドを飛ばす。このとき、文書を読むテスト（`tests/doc-links.test.ts` など）を実行するのは、gate ジョブの `verify` だけになる。
+gate ジョブは PR の段階（AGENTS.md 2 章の L1・L2・L3）を先に決め、段階に応じて検査を変える。段階の決め方は monorepo の仕様の「工程の段階の判定」（REQ-342）、段階ごとの動作は「段階ごとの完了ゲートの動作」（REQ-343）にある。判定の実装は `scripts/ci-tier.mjs` で、quality ジョブの docs_only の判定（`scripts/ci-docs-only.mjs`）も同じ関数を使う。「文書だけ」と「段階 L1」は同じ意味になる。
 
-gate ジョブでテストを実行しないようにする変更（change shorten-ci-wall-clock の確認事項 Q-08 の案 E など）では、文書だけの PR でテストを実行するジョブがなくなる。その change では、REQ-270 との組み合わせを見直す。たとえば、文書だけの PR では gate でテストを実行するか、REQ-270 の文書の範囲を狭める（Issue #42 の 4、change close-docs-only-gaps）。
+- L1（文書だけ）：lint と `tests/doc-links.test.ts` を実行する。対象の change があれば `verify --change <id> --done` も実行し、なければ `verify` は呼ばない。L1 で、かつ tasks.md に完了した印が 1 つもない change（提案だけの PR）は、`--done` ではなく `--spec-only` で検査する。L2・L3 は完了数によらず常に `--done`。quality ジョブは品質コマンドを飛ばすので、文書を読むテストを実行するのは gate の doc-links だけになる
+- L2（試験・CI・開発基盤）：これまでどおり、対象の change があれば `verify --change <id> --done`、なければ `verify`（品質コマンドだけ）を実行する
+- L3（製品コードと Requirement の変更）：change が必須。`loomake-change: none` や change を特定できない PR は失敗する
+
+段階は PR 本文の `loomake-tier:` の行で上げる方向にだけ上書きできる。gate は決めた段階と理由を標準出力に `loomake-tier: L2（scripts/ci-gate.mjs）` の形で 1 行書き、ステップの出力 `tier`・`tier_line` にも入れる。この行を PR 本文の証跡ブロックの `tier:` に写す。
+
+Requirement の変更は、`openspec/specs/` と `openspec/changes/<id>/specs/` の `spec.md` で、変更した行が属する節で見る。`git diff -U0` のハンクの行番号から、足した行は HEAD の、消した行はベースのファイルを読み、直前の見出しが `### Requirement:` なら Requirement の変更（L3）とする。`#### Scenario:` の配下や Purpose の文言だけなら、RFC 2119 の語を足しても L1 のまま。archive の PR（`openspec/changes/archive/` にファイルを足すか移す）は Requirement を主仕様に写すが、実装 PR の `--done` で検査済みなので L1 として扱う。
+
+change のない L1 の PR では `verify` を呼ばないため、`tests/doc-links.test.ts` を gate で直接実行している。gate からこの試験を外すときは、文書だけの PR で文書を読むテストを実行する場がなくなることを確かめる。
+
+`ci:all-os` ラベルを L3 の PR で必須にする検査は、3 OS の試験の時間切れが直るまで入れていない。
+
+## 開発の台本
+
+- `scripts/clean-merged-worktrees.sh`：ブランチを head にした PR が GitHub で merged になっている clean な worktree を消す（`gh pr list --state merged` で確かめる。gh を使えなければ何も消さない）。detached HEAD、dirty、`.loomake/`・`node_modules/`・`dist/`・`coverage/` 以外の無視ファイルがあるものは残す。`--dry-run` で一覧と判定理由だけを表示し、`--keep <name>` で残すものを指定する。各 worktree の `.loomake/` は `.loomake/archive/worktree-loomake-<日付>/` に退避する。ブランチは消さない
+- `scripts/delivery-metrics.sh <出力ディレクトリ>`：配布ワークフロー改善ダッシュボードの指標（PR の段階と所要時間、Issue #121 の投稿量、worklog の量、CI の実行時間）を CSV に集める。段階は `ci-tier.mjs` の `classifyPath` で決める。一時ディレクトリに書いてから移すので、gh に失敗しても前のファイルは残る。gh・git・node・python3 が要る
 
 ## まだ仕様にあるもの
 

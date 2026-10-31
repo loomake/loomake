@@ -39,6 +39,7 @@ loomake-tier: L1|L2|L3
 
 ```text
 head: <マージ対象の 40 桁 SHA>
+tier: <gate の出力行。例 loomake-tier: L2（scripts/ci-gate.mjs）>
 ci: <必須 CI の run URL>
 codex-review: <Codex 自動レビューが受領した head の SHA（参考。マージ条件ではない）。なければ「未実施」>
 reviewed-head: <Opus がレビューした head の SHA。L1 なら「対象外（L1）」、まだなら「未実施」>
