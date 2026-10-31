@@ -3,10 +3,10 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 
 const root = join(import.meta.dirname, '..');
-// 利用者と開発者が読む文書。日付つきの記録（docs/review.md・docs/worklog/）は、書いた時点のリンクを残すので対象にしない
+// 利用者と開発者が読む文書。日付つきの記録（docs/worklog/）は、書いた時点のリンクを残すので対象にしない
 const documents = [
   'README.md', 'README.en.md', 'CONTRIBUTING.md', 'SECURITY.md', 'SUPPORT.md', 'CODE_OF_CONDUCT.md', 'AGENTS.md',
-  ...readdirSync(join(root, 'docs')).filter((f) => f.endsWith('.md') && f !== 'review.md').map((f) => `docs/${f}`),
+  ...readdirSync(join(root, 'docs')).filter((f) => f.endsWith('.md')).map((f) => `docs/${f}`),
   ...readdirSync(join(root, 'docs/quality')).filter((f) => f.endsWith('.md')).map((f) => `docs/quality/${f}`),
   // 使い方の文書（loomake.dev の /docs にも載る）。章ごとのフォルダの下も含める
   ...readdirSync(join(root, 'docs/guide'), { recursive: true, encoding: 'utf8' })
