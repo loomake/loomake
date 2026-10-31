@@ -15,7 +15,7 @@
 
 ## 4. trace
 
-- [ ] 4.1 `evidenceProblem`：localのsummary.pendingがinsufficient以上であることを確かめる（REQ-164）
+- [x] 4.1 `evidenceProblem`：localのsummary.pendingがinsufficient以上であることを確かめる（REQ-164）
 
 ## 5. 受入
 
