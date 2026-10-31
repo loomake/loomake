@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { markPhase } from '../scripts/ci-heartbeat.mjs';
+import { currentBaseline } from '../packages/cli/test/cli-baseline.js';
 
 const root = join(import.meta.dirname, '..');
 const base = mkdtempSync(join(tmpdir(), 'loomake artifacts '));
@@ -31,7 +32,9 @@ describe('実際に配るパッケージ', () => {
     const argsUrl = pathToFileURL(join(cliTarget, 'consumer/node_modules/loomake/dist/args.js')).href;
     const mainUrl = pathToFileURL(join(cliTarget, 'consumer/node_modules/loomake/dist/main.js')).href;
     const generatorUrl = pathToFileURL(generator).href;
-    const baselinePath = join(root, 'packages/cli/test/fixtures/reference-cli-baseline.json');
+    // 原本に、改版の change で承認した具体差分を当てた期待値（REQ-324）
+    const baselinePath = join(base, 'reference-cli-baseline-current.json');
+    writeFileSync(baselinePath, JSON.stringify({ cases: currentBaseline() }));
     markPhase('package-reference', 'compare-start');
     const packed = spawnSync(process.execPath, ['--input-type=module', '-e', `
 import { readFileSync } from 'node:fs';
@@ -43,7 +46,7 @@ for (const item of baseline.cases) {
   const stdout = [], stderr = [];
   const code = await main(item.argv, { cwd: process.cwd(), stdout: (text) => stdout.push(text), stderr: (text) => stderr.push(text) });
   if (JSON.stringify({ code, stdout, stderr }) !== JSON.stringify({ code: item.code, stdout: item.stdout, stderr: item.stderr })) {
-    throw new Error('packしたCLIが原本と異なります：' + JSON.stringify(item.argv));
+    throw new Error('packしたCLIが基準と異なります：' + JSON.stringify(item.argv));
   }
 }
 process.exitCode = await runCliReference({ definition: CLI_REFERENCE, check: true });

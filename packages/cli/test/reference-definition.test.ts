@@ -6,10 +6,11 @@ import * as runner from '@loomake/runner';
 import * as trace from '@loomake/trace';
 import { CLI_COMMANDS, SHARED_OPERATIONS, commandDefinition, helpOptions, optionSpec, parseOptions, suggest, traceOperation, type CliCommand } from '../src/args.js';
 import { main } from '../src/main.js';
+import { baselineChanges, currentBaseline, originalBaseline } from './cli-baseline.js';
 
 const root = resolve(import.meta.dirname, '../../..');
-type BaselineCase = { argv: string[]; code: number; stdout: string[]; stderr: string[] };
-const baseline = JSON.parse(readFileSync(new URL('./fixtures/reference-cli-baseline.json', import.meta.url), 'utf8')) as { source: string; cases: BaselineCase[] };
+// 原本に、改版の change で承認した具体差分を当てた期待値（REQ-324）
+const baseline = { cases: currentBaseline() };
 const io = () => {
   const stdout: string[] = [], stderr: string[] = [];
   return { cwd: root, stdout: (text: string) => stdout.push(text), stderr: (text: string) => stderr.push(text), output: stdout, errors: stderr };
@@ -22,6 +23,20 @@ describe('変更前のCLI原本', () => {
     expect(output.output).toEqual(item.stdout);
     expect(output.errors).toEqual(item.stderr);
   });
+});
+
+it('[REQ-324] 原本は書き換えず、改版の差分は承認元つきで、対象の行だけを変える', () => {
+  const original = originalBaseline();
+  expect(original.source).toContain('8d2d7ce');
+  expect(original.cases).toHaveLength(46);
+  const changes = baselineChanges();
+  expect(changes.map((item) => [item.change, item.requirement])).toEqual([['verify-v2-evidence', 'REQ-040']]);
+  for (const item of changes) expect(item.approval).not.toBe('');
+  const current = currentBaseline();
+  const changed = current.filter((item, index) => JSON.stringify(item) !== JSON.stringify(original.cases[index])).map((item) => item.argv);
+  expect(changed).toEqual([['verify', '--help'], ['verify', '-h'], ['verify', '--change', '--help']]);
+  const line = (text: string) => text.split('\n').find((l) => l.startsWith('  --skip-commands'));
+  expect(line(current[original.cases.findIndex((c) => c.argv.join(' ') === 'verify --help')].stdout[0])).toBe('  --skip-commands     品質コマンドを実行せず、テストのレポートも読まずに、その項目を証拠不足にする（終了コード 1）');
 });
 
 it('[REQ-324] versionは先頭だけで扱い、その後のhelpをコマンドのhelpとして扱わない', async () => {

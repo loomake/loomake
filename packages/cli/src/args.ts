@@ -83,7 +83,7 @@ export const CLI_COMMANDS = [
       { name: '--spec-only', kind: 'flag', label: '--spec-only', description: '仕様ゲート：実装に入ってよいかを検査する', required: '条件付き必須', defaultValue: 'false', condition: '--change指定時は--doneとのどちらか片方が必須。--changeなしでは指定不可' },
       { name: '--done', kind: 'flag', label: '--done', description: '完了ゲート：仕様ゲートに加え、タスク・要件ごとのテスト・品質コマンドを検査する', required: '条件付き必須', defaultValue: 'false', condition: '--change指定時は--spec-onlyとのどちらか片方が必須。--changeなしでは指定不可' },
       { name: '--json', kind: 'flag', label: '--json', description: '結果を JSON で標準出力に出す（進捗は標準エラー）', required: '任意', defaultValue: 'false' },
-      { name: '--skip-commands', kind: 'flag', label: '--skip-commands', description: '品質コマンドを実行せず、すでにあるテストのレポートを読む', required: '任意', defaultValue: 'false' },
+      { name: '--skip-commands', kind: 'flag', label: '--skip-commands', description: '品質コマンドを実行せず、テストのレポートも読まずに、その項目を証拠不足にする（終了コード 1）', required: '任意', defaultValue: 'false' },
     ],
   },
   {

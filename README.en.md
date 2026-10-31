@@ -35,7 +35,7 @@ Options that take a value accept both `--change <id>` and `--change=<id>`. Run `
 | 2 | Usage or configuration error |
 | 3 | Runtime failure: an external command (git, OpenSpec CLI, gh, …) hit a time or output limit, or was interrupted |
 
-`verify --json` prints a result that follows the JSON schema in `@loomake/core`. With `--skip-commands`, the quality commands are not run; the result then contains a `skip` entry named `品質コマンド` ("quality commands"), and such a result must not be used to claim that a change is done.
+`verify --json` prints a result that follows the JSON schema in `@loomake/core`. With `--skip-commands`, the quality commands are not run and no test report is read; the `品質コマンド` ("quality commands") check (and, in the done gate, the per-requirement test check) becomes `INSUFFICIENT_EVIDENCE` and verify exits with 1. Such a result must not be used to claim that a change is done.
 
 ### What the done gate does and does not prove
 
