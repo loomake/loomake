@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # 配布ワークフロー改善ダッシュボードの指標を集める。PR の段階・所要時間・Codex の指摘数、Issue #121 の投稿量、worklog の量、CI の実行時間、時間切れの Issue、利用者の判断待ちの項目を CSV にする。
 # 使い方: scripts/delivery-metrics.sh <出力ディレクトリ>   （gh と git と node と pnpm と python3 が要る。リポジトリ根で実行）
+# gh は REST（gh api）だけを使う。Claude Code のクラウドのセッションでは GitHub の GraphQL が 403 になり、gh pr list・gh issue list が使えないため。
 # node_modules がなければ pnpm install --frozen-lockfile を流すので、そのときはネットワークにつながっている必要がある。
 # trace.md は origin/main から読む。ここでは origin/main を fetch するが、pending-approvals.mjs 自体は fetch しない。
 # 出力は一時ディレクトリに書き、成功したら出力ディレクトリへ移す。判断待ちの段より前で gh に失敗したら、前のファイルをすべて残して非ゼロで終わる。
@@ -11,9 +12,30 @@ OUT=${1:?出力ディレクトリ}
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 
-gh pr list --state all --limit 200 --json number,title,createdAt,mergedAt,state,additions,deletions,changedFiles,files,comments --jq '
-  .[] | select(.number>=100) | {number,title,createdAt,mergedAt,state,additions,deletions,changedFiles,
-   codex_comments: ([.comments[]|select(.author.login|test("codex"))]|length), paths: ([.files[].path]|join("|"))}' > "$TMP/prs.jsonl"
+# PR の一覧には行数・ファイル・コメントが含まれないので、PR ごとに 3 つの API を呼ぶ（8 本並べて呼ぶ）
+gh api "repos/loomake/loomake/pulls?state=all&per_page=100" --paginate --jq '.[]|select(.number>=100)|.number' > "$TMP/pr-numbers.txt"
+python3 - "$TMP" <<'EOF'
+import json,subprocess,sys,time
+from concurrent.futures import ThreadPoolExecutor
+S=sys.argv[1]; R="repos/loomake/loomake"
+# 一時的な 5xx に備えて 3 回まで試す（二次レート制限の長い待ちには対応しない。毎時の次の回でやり直す）。最後も失敗したら gh の stderr を出して止める
+def api(path,jq):
+    for i in range(3):
+        r=subprocess.run(["gh","api",path,"--paginate","--jq",jq],capture_output=True,text=True)
+        if r.returncode==0: return r.stdout.split("\n")
+        if i<2: time.sleep(5*(i+1))
+    sys.stderr.write(f"gh api {path} が失敗した: {r.stderr.strip()}\n")
+    raise SystemExit(1)
+def fetch(n):
+    pr=json.loads(api(f"{R}/pulls/{n}",'{number,title,createdAt:.created_at,mergedAt:.merged_at,state:(if .merged_at then "MERGED" elif .state=="closed" then "CLOSED" else "OPEN" end),additions,deletions,changedFiles:.changed_files}')[0])
+    pr["codex_comments"]=sum(int(x) for x in api(f"{R}/issues/{n}/comments?per_page=100",'[.[]|select(.user.login|test("codex"))]|length') if x)
+    pr["paths"]="|".join(x for x in api(f"{R}/pulls/{n}/files?per_page=100",'.[].filename') if x)
+    return pr
+nums=[int(x) for x in open(f"{S}/pr-numbers.txt").read().split()]
+with ThreadPoolExecutor(8) as ex: prs=list(ex.map(fetch,nums))
+with open(f"{S}/prs.jsonl","w") as f:
+    for pr in prs: f.write(json.dumps(pr,ensure_ascii=False)+"\n")
+EOF
 # 段階は ci-tier.mjs と同じ関数で決める（規則を二重に持たない）
 node --input-type=module -e '
 import { readFileSync, writeFileSync } from "node:fs";
@@ -68,15 +90,14 @@ for l in sys.stdin:
 w=csv.writer(open(f"{S}/ci.csv","w")); w.writerow(["day","runs","failed","avg_minutes"])
 for k in sorted(d): w.writerow([k,d[k]["runs"],d[k]["failed"],round(d[k]["minutes"]/d[k]["runs"],1)])' "$TMP"
 # 時間切れ・タイムアウトの Issue（題名で検索した 2 つの和集合）
-{ gh issue list --state all --limit 200 --search "時間切れ in:title" --json number,title,state,createdAt,closedAt; gh issue list --state all --limit 200 --search "タイムアウト in:title" --json number,title,state,createdAt,closedAt; } | python3 -c '
+# gh issue list --search と同じく、Issue だけを検索 API で探す（PR は除く）
+for word in 時間切れ タイムアウト; do
+  gh api -X GET search/issues -f q="repo:loomake/loomake is:issue in:title $word" -f per_page=100 --paginate --jq '.items[]|{number,title,state:(.state|ascii_upcase),createdAt:.created_at,closedAt:.closed_at}'
+done | python3 -c '
 import sys,json,csv
 S=sys.argv[1]; seen={}
-dec=json.JSONDecoder(); text=sys.stdin.read(); pos=0
-while pos < len(text):
-    while pos < len(text) and text[pos].isspace(): pos+=1
-    if pos >= len(text): break
-    items,pos=dec.raw_decode(text,pos)
-    for i in items: seen[i["number"]]=i
+for l in sys.stdin:
+    if l.strip(): i=json.loads(l); seen[i["number"]]=i
 w=csv.writer(open(f"{S}/flaky.csv","w")); w.writerow(["number","title","state","created","closed"])
 for n in sorted(seen): i=seen[n]; w.writerow([n,i["title"],i["state"],i["createdAt"][:10],(i.get("closedAt") or "")[:10]])' "$TMP"
 mkdir -p "$OUT"
@@ -87,7 +108,8 @@ mv -f "$TMP"/prs.jsonl "$TMP"/prs.csv "$TMP"/issue121.csv "$TMP"/worklog.csv "$T
 # if の条件の中では set -e が効かないので、各行を && でつなぐ
 pending_approvals() {
   gh api "repos/loomake/loomake/issues/121/comments?per_page=100" --paginate --jq '.[]|{login: .user.login, body, created_at, html_url, via_app: (if .performed_via_github_app then (.performed_via_github_app.slug // "unknown") else null end)}' > "$TMP/issue121-comments.jsonl" &&
-  gh pr list --state open --limit 200 --json number,title,url,body,createdAt > "$TMP/open-prs.json" &&
+  gh api "repos/loomake/loomake/pulls?state=open&per_page=100" --paginate --jq '.[]|{number,title,url: .html_url,body: (.body // ""),createdAt: .created_at}' |
+    python3 -c 'import sys,json; json.dump([json.loads(l) for l in sys.stdin if l.strip()], open(sys.argv[1], "w"), ensure_ascii=False)' "$TMP/open-prs.json" &&
   { [ -d node_modules ] || pnpm install --frozen-lockfile >&2; } &&
   pnpm -s --filter @loomake/core --filter @loomake/kit build >&2 &&
   node scripts/pending-approvals.mjs "$TMP/issue121-comments.jsonl" "$TMP/open-prs.json" "$TMP/pending-approvals.csv" origin/main
