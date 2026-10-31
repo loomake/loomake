@@ -26,6 +26,6 @@ C-001（親change `verify-v2-c001`）の2本目を、読む側の対応と書く
 
 ## Impact
 
-対象は `packages/runner`・`packages/trace` の `evidence.ts`・`packages/kit` の `format.ts` と `scripts/ci-gate.mjs`。既存の公開名・試験の期待値・書き出しは変えない。changesetはkit・trace・runnerのpatch（追加だけ）。
+対象は `packages/runner`・`packages/trace` の `evidence.ts`・`packages/kit` の `format.ts` と `scripts/ci-gate.mjs`。既存の公開名・試験の期待値・書き出しは変えない。changesetはkitのminor（新しいAPIを足す）とtrace・runnerのpatch。振る舞いで変わるのは、runの仕様ゲートが例外で止まったときに元のブランチへ戻すことだけ。
 
 Requirementは親から既存IDのまま移した。新しいREQ-IDは作らない。archiveは3本目のPRのあとに行う。

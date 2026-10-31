@@ -77,7 +77,7 @@ R05/06/08は3回目レビューでは保留だったが、[追加回答](https:/
 
 2026-10-30にfetchしたmain `d5aa30d7a9326be44ea4eac5145b5fa95529efce` を通常mergeで取り込んだ。[PR #155](https://github.com/loomake/loomake/pull/155)はこのmainでmerge済みで、add-cli-reference-generationとfix-quality-reference-source-linksの同期/archiveも受入済みである。REQ-323〜325とREQ-322のURL文/4 Scenarioは主仕様にあり、C-001のMODIFIEDの比較元もこの正本へ更新した。[短縮文面の明示承認](https://github.com/loomake/loomake/pull/155#issuecomment-6510874679)と、受入元head `758b0182c107b43827c4c40e1780df76cf97e995` を参照する。以前の751a8a1/候補tree比較は過去の検証であり、現在のarchive待ちではない。
 
-C-001は共通定義args.ts・生成ページ・reference-cli-baseline.jsonへ追従する。旧46例は互換原本として保持し、新契約で変わる例はR05の方針採否と別に具体差分の個別承認を得る。REQ-323/324のMUST範囲、100のlocal、306の非接続範囲、322の生成/check単独への限定はR05 Aで承認された。承認回答に従い093/135/136の規範差分をtasks 1.2で確定し、全差分を一時コピーでarchiveした主仕様のstrictと全MODIFIEDの500字制限を照合する。C-001自体は製品DoD達成前にarchiveしない。
+C-001は共通定義args.ts・生成ページ・reference-cli-baseline.jsonへ追従する。旧46例は互換原本として保持し、新契約で変わる例はR05の方針採否と別に具体差分の個別承認を得る。REQ-323/324のMUST範囲、100のlocal、306の非接続範囲、322の生成/check単独への限定はR05 Aで承認された。承認回答に従い135/136の規範差分をtasks 1.2で確定し（093は子change `verify-v2-readers` で確定済み）、全差分を一時コピーでarchiveした主仕様のstrictと全MODIFIEDの500字制限を照合する。C-001自体は製品DoD達成前にarchiveしない。
 
 ## 仮定
 

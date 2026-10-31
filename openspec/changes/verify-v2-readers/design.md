@@ -29,4 +29,4 @@ kitの `isVerifyResultV2` は `schemaVersion` が `2.0.0` かで見分ける。r
 ## Risks / Trade-offs
 
 - 2.0.0を返す `runVerify` はまだないので、runnerの試験は `runVerify` をモックして2.0.0を与える
-- reportは、版が2で埋め込みのverifyが1.0.0の記録に、これまでどおり「読めるのは 1」と表示する。文言の修正はREQ-073として後半で行う
+- reportは、Evidence 2のすべての不正（版が2で埋め込みのverifyが1.0.0の記録や、状態別の必須欄が欠けた記録など）に、これまでどおり「読めるのは 1」と表示する。壊れたEvidence 2の不正箇所を示す修正はREQ-073として後半で行う

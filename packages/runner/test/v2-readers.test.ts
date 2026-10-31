@@ -209,3 +209,39 @@ describe('2.0.0 の結果の文', () => {
   });
 });
 
+
+describe('仕様ゲートの例外とブランチ', () => {
+  it('[REQ-093] 既存の change のブランチへ切り替えたあと、仕様ゲートが例外で止まったら、元のブランチへ戻して終了コード 2 を返す', async () => {
+    const repo = makeRepo();
+    const real = kit.runVerify;
+    const spy = vi.spyOn(kit, 'runVerify').mockImplementation((o) => {
+      if (o.gate === 'spec-only') throw new kit.UsageError('使い方が違います');
+      return real(o);
+    });
+    const saved = { ...process.env };
+    Object.assign(process.env, repo.env);
+    try {
+      const start = repo.git('rev-parse', '--abbrev-ref', 'HEAD');
+      repo.git('branch', 'loomake/c1');
+      const exit = await main(['run', '--change', CHANGE], { cwd: repo.root, stdout: () => {}, stderr: () => {} });
+      expect(exit).toBe(2);
+      expect(repo.git('rev-parse', '--abbrev-ref', 'HEAD')).toBe(start);
+      expect(start).not.toBe('loomake/c1');
+      expect(repo.calls()).toEqual([]);
+    } finally {
+      for (const k of Object.keys(process.env)) if (!(k in saved)) delete process.env[k];
+      Object.assign(process.env, saved);
+      spy.mockRestore();
+      repo.cleanup();
+    }
+  });
+});
+
+describe('2.0.0 の local の未完了の文', () => {
+  it('scope:local・completed で pending があれば、fail が 0 でも完了と表示しない', () => {
+    const pendingLocal = { ...local(), summary: { fail: 0, insufficient: 0, not_applicable: 0, evaluated: 1, pending: 2 } } as VerifyResultV2;
+    const last = kit.formatVerifyResult(pendingLocal).split('\n').at(-1);
+    expect(last).toBe('未完了（2 件）');
+    expect(last).not.toContain('完了（CI');
+  });
+});

@@ -1,4 +1,5 @@
 import type { VerifyResult, VerifyResultV2, VerifyResultV2Aborted } from '@loomake/core';
+import { verifyExitCode } from './exit-code.js';
 
 const ICON = { pass: '✔', fail: '✖', warn: '!', skip: '-' } as const;
 const ICON_V2 = { PASS: '✔', FAIL: '✖', INSUFFICIENT_EVIDENCE: '?', NOT_APPLICABLE: '-' } as const;
@@ -36,14 +37,16 @@ function formatV2(result: VerifyResultV2): string {
     if (c.reason && c.result !== 'PASS') lines.push(c.reason.replace(/^/gm, '    '));
   }
   for (const e of result.run.errors) lines.push(`! 実行エラー（${e.kind}）${e.target}：${e.message}`);
-  const { fail, insufficient } = result.summary;
+  const { fail } = result.summary;
+  // local の未完了は pending、ci の不足は insufficient で数える
+  const insufficient = result.scope === 'local' ? result.summary.pending : result.summary.insufficient;
   const short = result.scope === 'local' ? '未完了' : '証拠不足';
   const decision = result.decision.required ? `。人の判断が必要です：${result.decision.reasons.map((r) => r.message).join(' / ') || '理由の記載なし'}` : '';
-  const passed = result.scope === 'ci' ? result.verdict === 'PASS' : fail === 0 && insufficient === 0;
+  const passed = verifyExitCode(result) === 0;
   const verdict = fail ? `不合格（${fail} 件${insufficient ? `・${short} ${insufficient} 件` : ''}）`
     : insufficient ? `${short}（${insufficient} 件）`
-      : !passed ? `不合格（${result.scope === 'ci' ? result.verdict : ''}）`
-        : result.decision.required ? '人の判断待ち'
+      : result.decision.required ? '人の判断待ち'
+        : !passed ? `不合格（${result.scope === 'ci' ? result.verdict : '未完了'}）`
           : result.scope === 'ci' ? '合格' : 'ローカルの項目はすべて完了（CI の最終合格ではありません）';
   lines.push('', `${verdict}${decision}`);
   return lines.join('\n');
