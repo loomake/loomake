@@ -17,36 +17,36 @@ const blockReview = (source = file(), tests = run(), contains = '条件を検査
 const audit = (review: unknown, source: string, tests = run()) => auditScenarios(rows(), [review], tests, { [testFile]: source });
 
 describe('試験の本文ブロックのハッシュ', () => {
-  it('[REQ-189] 同じファイルの別の試験が変わっても、選んだ試験の対応は有効のまま', () => {
+  it('[REQ-347] 同じファイルの別の試験が変わっても、選んだ試験の対応は有効のまま', () => {
     const changed = file(target, other.replace('toBe(1)', 'toBe(2)') + "\n  it('[REQ-099] 追加した試験', () => {});");
     const result = audit(blockReview(), changed);
     expect(result.rows[0].status).toBe('reviewed');
     expect(result.ok).toBe(true);
   });
-  it('[REQ-189] 選んだ試験の本文が変われば無効にする', () => {
+  it('[REQ-347] 選んだ試験の本文が変われば無効にする', () => {
     const result = audit(blockReview(), file(target.replace('toBe(true)', 'toBe(false)')));
     expect(result.rows[0].status).toBe('invalid');
     expect(result.rows[0].reason).toContain('本文が変更されています');
   });
-  it('[REQ-189] it.each の表が変われば無効にし、%s の置換を試験名に当てる', () => {
+  it('[REQ-347] it.each の表が変われば無効にし、%s の置換を試験名に当てる', () => {
     const each = (rows: string) => `  it.each([${rows}])('[REQ-012] %s で条件を検査する', (value) => {\n    expect(value).toBeTruthy();\n  });`;
     const tests = run('群 [REQ-012] a で条件を検査する');
     const review = blockReview(file(each("'a'")), tests, 'a で条件を検査する');
     expect(audit(review, file(each("'a'")), tests).rows[0].status).toBe('reviewed');
     expect(audit(review, file(each("'a', 'b'")), tests).rows[0].status).toBe('invalid');
   });
-  it('[REQ-189] テンプレート文字列の式と $name を任意の文字列として当てる', () => {
+  it('[REQ-347] テンプレート文字列の式と $name を任意の文字列として当てる', () => {
     const source = "for (const name of ['甲']) {\n  it(`[REQ-012] ${name} の条件を検査する`, () => {});\n}\nit.each([{ who: '乙' }])('[REQ-012] $who を検査する', () => {});\n";
     expect(blockDigest(source, [{ file: testFile, fullName: '[REQ-012] 甲 の条件を検査する', status: 'passed' }])).toBeTypeOf('string');
     expect(blockDigest(source, [{ file: testFile, fullName: '[REQ-012] 乙 を検査する', status: 'passed' }])).toBeTypeOf('string');
   });
-  it('[REQ-189] 同じ名前のブロックが複数あれば、どれが変わっても無効にする', () => {
+  it('[REQ-347] 同じ名前のブロックが複数あれば、どれが変わっても無効にする', () => {
     const twice = file(target, target.replace('expect(value)', 'expect(second)'));
     const review = blockReview(twice);
     expect(audit(review, twice).rows[0].status).toBe('reviewed');
     expect(audit(review, file(target, target.replace('expect(value)', 'expect(third)'))).rows[0].status).toBe('invalid');
   });
-  it('[REQ-189] 文字列・コメント・正規表現の括弧と、型引数・別名の試験関数を読み違えない', () => {
+  it('[REQ-347] 文字列・コメント・正規表現の括弧と、型引数・別名の試験関数を読み違えない', () => {
     const tricky = "  it('[REQ-012] 条件を検査する', () => {\n    const pattern = /\\(/; // )\n    expect(')').toMatch(pattern); /* ( */\n    expect(`${'('}`).toBe('(');\n  });";
     const [block] = extractTestBlocks(file(tricky, ''));
     expect(block.text.endsWith('})')).toBe(true);
@@ -58,13 +58,13 @@ describe('試験の本文ブロックのハッシュ', () => {
     ['括弧が閉じていない', "describe('群', () => {\n  it('[REQ-012] 条件を検査する', () => {\n    expect(value).toBe(true);\n"],
     ['試験名がリテラルでない', "describe('群', () => {\n  it(title, () => {});\n});\n"],
     ['名前に合うブロックがない', file(other, '')],
-  ])('[REQ-189] 本文ブロックを特定できないとき（%s）は無効にする', (_, source) => {
+  ])('[REQ-347] 本文ブロックを特定できないとき（%s）は無効にする', (_, source) => {
     const review = blockReview();
     const result = audit(review, source);
     expect(result.rows[0].status).toBe('invalid');
     expect(result.rows[0].reason).toContain('本文ブロックを特定できません');
   });
-  it('[REQ-189] ヘルパー経由の本物の試験と it(`${n}`) が同じファイルにあるとき、本物の本文の変更で無効になる', () => {
+  it('[REQ-347] ヘルパー経由の本物の試験と it(`${n}`) が同じファイルにあるとき、本物の本文の変更で無効になる', () => {
     const helper = (assertion: string) => `const check = (name: string) => it(name, () => { expect(${assertion}).toBe(true); });\ncheck('[REQ-012] 条件を検査する');\nfor (const n of ['a']) it(\`\${n}\`, () => {});\n`;
     const tests = [{ file: testFile, fullName: '[REQ-012] 条件を検査する', status: 'passed' }];
     expect(blockDigest(helper('value'), tests)).toBeUndefined();
@@ -73,13 +73,13 @@ describe('試験の本文ブロックのハッシュ', () => {
     expect(result.rows[0].status).toBe('invalid');
     expect(result.rows[0].reason).toContain('本文ブロックを特定できません');
   });
-  it("[REQ-189] '%s' だけのブロックの変更が別の試験を無効にしない", () => {
+  it("[REQ-347] '%s' だけのブロックの変更が別の試験を無効にしない", () => {
     const each = (value: string) => `  it.each(['x'])('%s', (v) => { expect(v).toBe('${value}'); });`;
     const review = blockReview(file(target, each('x')));
     const result = audit(review, file(target, each('y')));
     expect(result.rows[0].status).toBe('reviewed');
   });
-  it('[REQ-189] 不明な hashScope と、旧形式のファイル全体のハッシュの違いを無効にする', () => {
+  it('[REQ-347] 不明な hashScope と、旧形式のファイル全体のハッシュの違いを無効にする', () => {
     const review = blockReview();
     expect(audit({ ...review, tests: [{ ...review.tests[0], hashScope: 'line' }] }, file()).rows[0].status).toBe('invalid');
     const legacy = { ...review, tests: [{ file: testFile, contains: '条件を検査する', sha256: sha256(file()) }] };

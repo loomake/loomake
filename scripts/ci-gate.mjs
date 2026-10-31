@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // CI の完了ゲート。先に PR の段階（L1・L2・L3）を変えたファイルと spec の差分から決め（REQ-342、ci-tier.mjs）、
 // 段階ごとに検査を変える（REQ-343）。L1 は lint と文書のリンクの試験を実行し、change がなければ verify を呼ばない。
-// change があれば段階を問わず --done を通す。L2・L3 は対象の change を、PR 本文の「loomake-change:」の行、PR で変えたファイル、ブランチ名から決め、
+// change があれば段階を問わず verify を呼ぶ（L2・L3 は --done、L1 は tasks.md に完了した印がない change だけ --spec-only）。L2・L3 は対象の change を、PR 本文の「loomake-change:」の行、PR で変えたファイル、ブランチ名から決め、
 // それぞれに --change <id> --done を実行する（REQ-010・REQ-132）。L3 では change が必須。
 // loomake run が作る loomake/<id> のブランチは、先頭の loomake/ を除いて比べる（fix-review-findings の仮定 A-01）
 //

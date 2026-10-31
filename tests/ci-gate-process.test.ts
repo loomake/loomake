@@ -292,7 +292,7 @@ describe('実際のCIゲートの子プロセスの契約', () => {
     });
   });
 
-  it('[REQ-132][REQ-343] 変更ファイルとブランチの選択を合わせて両方のゲートを呼ぶ。L1 でも change があれば --done を呼ぶ', () => {
+  it('[REQ-132][REQ-343] 変更ファイルとブランチの選択を合わせて両方のゲートを呼ぶ。L1 では完了した印のない change を --spec-only、印のある change を --done で呼ぶ', () => {
     withProject(({ commitFiles, run }) => {
       commitFiles(['openspec/changes/c1/tasks.md']);
       const result = run('c2');

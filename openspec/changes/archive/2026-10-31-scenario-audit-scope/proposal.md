@@ -12,11 +12,11 @@ Scenario 監査（`scripts/scenario-audit.mjs`、REQ-188〜190）のレビュー
 
 ## What Changes
 
-- 試験のハッシュを、`contains` で選んだ試験の本文ブロック（`it(`・`test(` から対応する閉じ括弧まで）の sha256 に変える。新しい形式の選択条件には `hashScope: "block"` を付ける。`hashScope` のない旧形式は従来どおりファイル全体のハッシュで照合する。本文ブロックを特定できないときは無効にする（REQ-189）。
+- 試験のハッシュを、`contains` で選んだ試験の本文ブロック（`it(`・`test(` から対応する閉じ括弧まで）の sha256 に変える。新しい形式の選択条件には `hashScope: "block"` を付ける。`hashScope` のない旧形式は従来どおりファイル全体のハッシュで照合する。本文ブロックを特定できないときは無効にする（REQ-189・REQ-347。archive 前に REQ-189 を 500 字以内に分けた）。
 - 監査の対象を主仕様（`openspec/specs/`）に限る。archive していない change の Scenario は「未着手」として change ごとに件数だけを出し、終了コードに含めない。未着手の Scenario へのレビューは、未知の参照として扱わない（REQ-188・REQ-190）。
 - `node scripts/scenario-audit.mjs --migrate [--dry-run]` を足す。旧形式の選択条件のうち、本文ブロックが記録時から変わっていないと git の履歴で確かめられたものだけを、ブロックのハッシュに書き換える（REQ-346）。この PR ではレビュー表の移行を実行しない（3.2 章の PR-A で行う）。
 - `.github/workflows/ci.yml` に警告のジョブ `scenario-audit` を足す。quality の ubuntu が保存した全体試験のレポートを受け取って監査し、監査のステップは `continue-on-error: true` にする。出力は artifact に保存する。設計メモは quality の test のあとに置く案だったが、quality のステップの並びと条件は既存の試験（REQ-144・REQ-214・REQ-289〜291）が固定しているため、別のジョブにした。
-- 手順書 `docs/guide/2.guides/4.scenario-audit.md` を新しい対象とハッシュに合わせ、古い一覧 `docs/quality/scenario-audit.md` に「490 件時点の記録」と注記する。
+- 手順書 `docs/guide/2.guides/4.scenario-audit.md` を新しい対象とハッシュに合わせ、古い一覧 `docs/quality/scenario-audit.md` に「490 件時点の記録」と注記する（このファイルは #191 で削除済み）。
 
 ## Capabilities
 
@@ -26,8 +26,8 @@ Scenario 監査（`scripts/scenario-audit.mjs`、REQ-188〜190）のレビュー
 
 ### Modified Capabilities
 
-- `scenario-evidence-audit`：「Scenarioの一覧と同一性」（REQ-188）、「対応のレビューと成功の根拠」（REQ-189）、「不足と更新の報告」（REQ-190）を変える。「旧形式の対応の移行」（REQ-346）を足す。
+- `scenario-evidence-audit`：「Scenarioの一覧と同一性」（REQ-188）、「対応のレビューと成功の根拠」（REQ-189）、「不足と更新の報告」（REQ-190）を変える。「試験の本文ブロックのハッシュ」（REQ-347、REQ-189 から分割）と「旧形式の対応の移行」（REQ-346）を足す。
 
 ## Impact
 
-`scripts/scenario-audit.mjs`・`.github/workflows/ci.yml`・`docs/guide/2.guides/4.scenario-audit.md`・`docs/quality/scenario-audit.md` と、新しい試験 `tests/scenario-audit-scope.test.ts` を変える。既存の `tests/scenario-audit.test.ts` は変えない（旧形式の照合は残す）。製品のコード、公開 API、配布するパッケージは変えないので、changeset は足さない。レビュー表 `docs/quality/scenarios.json` は変えない。
+`scripts/scenario-audit.mjs`・`.github/workflows/ci.yml`・`docs/guide/2.guides/4.scenario-audit.md`・`docs/quality/scenario-audit.md`（#191 で削除済み）と、新しい試験 `tests/scenario-audit-scope.test.ts` を変える。既存の `tests/scenario-audit.test.ts` は変えない（旧形式の照合は残す）。製品のコード、公開 API、配布するパッケージは変えないので、changeset は足さない。レビュー表 `docs/quality/scenarios.json` は変えない。
