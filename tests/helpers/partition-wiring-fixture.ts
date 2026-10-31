@@ -1,5 +1,5 @@
-import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs';
-import { basename, join } from 'node:path';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { removeWithRetry } from './partition-fixture.js';
 import type { RowReport, RowMarker } from './partition-rows-fixture.js';
@@ -147,9 +147,8 @@ export function partitionWiringFixture() {
       const result = spawnSync(process.execPath, [join(root, 'node_modules/vitest/vitest.mjs'), 'run', '--config', config, '--configLoader', 'native'], { cwd: root, encoding: 'utf8', timeout: 30000, env: { ...process.env, TMPDIR: join(root, 'tmp'), TMP: join(root, 'tmp'), TEMP: join(root, 'tmp') } });
       writeFileSync(join(output, 'process.json'), JSON.stringify({ status: result.status, signal: result.signal, error: result.error?.message, stdout: result.stdout, stderr: result.stderr }));
       const readback = readFileSync(join(root, file), 'utf8'); writeFileSync(join(output, 'source.ts'), readback);
-      // Keep receipt bytes before assertions and before removing the disposable fixture.
-      const receipt = join(repository, '.loomake/design-r4-impl/native', basename(root), id);
-      mkdirSync(receipt, { recursive: true }); cpSync(output, receipt, { recursive: true });
+      // Receipt readbacks share the disposable output and are removed by cleanup.
+      const receipt = output;
       for (const [path, name] of [['tests/helpers/partition-part.ts','partition-part.ts'],['scripts/lib/test-partition.mjs','test-partition.mjs'],['tests/canonical.slow.test.ts','companion.ts']]) copyFileSync(join(root,path!),join(receipt,name!));
       return { ...result, source: readback, file, calls, ids, receipt, report: existsSync(reportPath) ? JSON.parse(readFileSync(reportPath, 'utf8')) as RowReport : undefined, markers: existsSync(marker) ? readFileSync(marker, 'utf8').trim().split('\n').filter(Boolean).map(line => JSON.parse(line) as WiringMarker) : [] };
     },

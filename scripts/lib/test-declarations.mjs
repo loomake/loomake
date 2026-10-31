@@ -377,6 +377,13 @@ export function checkPartitionWiring(file, source) {
     if (!ts.isIdentifier(node)) return false;
     for (let parent = node.parent; parent && parent !== ast; parent = parent.parent) if (ts.isTypeNode(parent)) return false;
     const parent = node.parent;
+    if ((ts.isLabeledStatement(parent) || ts.isBreakStatement(parent) || ts.isContinueStatement(parent)) && parent.label === node) return false;
+    if ((ts.isImportSpecifier(parent) || ts.isBindingElement(parent)) && parent.propertyName === node) return false;
+    if (ts.isExportSpecifier(parent)) {
+      const exported = parent.parent.parent;
+      if (parent.isTypeOnly || exported.isTypeOnly || exported.moduleSpecifier || (parent.propertyName && parent.name === node)) return false;
+    }
+    if ((ts.isTypeElement(parent) || ts.isGetAccessorDeclaration(parent) || ts.isSetAccessorDeclaration(parent) || ts.isEnumMember(parent)) && parent.name === node) return false;
     if (ts.isShorthandPropertyAssignment(parent)) return true;
     if (ts.isPropertyAccessExpression(parent) && parent.name === node) return false;
     if ((ts.isPropertyAssignment(parent) || ts.isMethodDeclaration(parent) || ts.isPropertyDeclaration(parent) || ts.isBindingElement(parent)) && parent.name === node) return false;

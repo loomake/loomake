@@ -449,7 +449,6 @@ describe('行登録の閉じた import と祖先', () => {
 });
 
 
-import { mkdirSync, writeFileSync } from 'node:fs';
 
 describe('正規 partition wiring の独立検査', () => {
   const file = 'tests/x.test.ts';
@@ -465,18 +464,15 @@ const hasAny=(ids: readonly string[])=>ids.some(has);
   const tail = `if(hasAny(['a','b'])) describe('rows',()=>{${row}});`;
   const source = header()+tail;
   const codes = (errors: {code: string}[]) => [...new Set(errors.map(e=>e.code))].sort();
-  const observations: {id: string; inventory: unknown; registration: unknown; wiring: unknown}[] = [];
+  const observe = (id: string, input: string, path = file) => ({id, inventory: inventoryDeclarations(input, path).errors, registration: checkRegistration(path, input, {a:[],b:['linux']}), wiring: checkPartitionWiring(path,input)});
   const check = (id: string, input: string, expected: string[], path = file) => {
-    const inventory = inventoryDeclarations(input, path).errors;
-    const registration = checkRegistration(path, input, {a:[],b:['linux']});
-    const wiring=checkPartitionWiring(path,input);
-    observations.push({id,inventory,registration,wiring});
+    const {inventory,registration,wiring}=observe(id,input,path);
     expect(codes(wiring)).toEqual([...expected].sort());
     if (id === 'I3' || id.startsWith('H1')) {
       expect(inventory).toEqual([]); expect(registration).toEqual([]);
     }
   };
-  it.each([
+  const positives: [string,string,string][] = [
     ['A1',source,file],
     ['A2',header().replace(/const hasAny=.*;\n/,'')+row,file],
     ['A3',header('packages/runner/test/x.test.ts','../../..','../../../tests/helpers/partition-part.js','../../../scripts/lib/test-partition.mjs')+tail,'packages/runner/test/x.test.ts'],
@@ -485,7 +481,8 @@ const hasAny=(ids: readonly string[])=>ids.some(has);
     ['A6',header().replace('currentPart,eachRows','currentPart')+"if(has('a')) it('direct',()=>{});",file],
     ['A7',source.replace('{join}', '{dirname,join}')+"join('a','b');",file],
     ['A8',source+"vi.mock('x'); const map=new Map();map.has('a');",file],
-  ])('%s のheaderを受理する', (id,input,path) => check(id,input,[],path));
+  ];
+  it.each(positives)('%s のheaderを受理する', (id,input,path) => check(id,input,[],path));
   const variants: [string,string,string[]][] = [];
   for (const [name,line] of [['partition',"import {includeCase,loadPartition} from '../scripts/lib/test-partition.mjs';\n"],['helper',"import {currentPart,eachRows} from './helpers/partition-part.js';\n"],['join',"import {join} from 'node:path';\n"]]) variants.push(['I1-'+name,source.replace(line!,''),['wiringImport']]);
   for (const [from,to] of [['../scripts/lib/test-partition.mjs','test-partition.mjs'],['./helpers/partition-part.js','./helpers/partition-part.ts'],['./helpers/partition-part.js','./helpers/partition-part.js?x'],['./helpers/partition-part.js','../tests/helpers/partition-part.js'],['node:path','path']]) variants.push(['I2-'+to,source.replace(from!,to!),['wiringImport']]);
@@ -536,5 +533,37 @@ const hasAny=(ids: readonly string[])=>ids.some(has);
   );
   it.each(variants)('%s を設計の診断集合で拒否する', (id,input,expected) => check(id,input,expected));
   it.each(['/tests/x.test.ts','tests/../x.test.ts'])('I7 %s を拒否する',path=>check('I7',source,['wiringImport'],path));
-  it('matrixで旧2APIの結果も観測する', () => { expect(observations.length).toBeGreaterThan(40); mkdirSync('.loomake/design-r4-impl',{recursive:true}); writeFileSync('.loomake/design-r4-impl/matrix-observations.json',JSON.stringify(observations,null,2)); });
+  const nonvalues = [
+    ['label-break', 'NAME: {break NAME;}', false],
+    ['label-continue', 'NAME: while(false){continue NAME;}', false],
+    ['import-origin', "import {NAME as importedValue} from './other.js';", true],
+    ['binding-key', 'const {NAME: extracted}=object;', false],
+    ['export-alias', 'const value=1;export {value as NAME};', false],
+    ['re-export-origin', "export {NAME as external} from './other.js';", false],
+    ['re-export-alias', "export {other as NAME} from './other.js';", false],
+    ['type-export', 'export type {NAME};', false],
+    ['interface-method', 'interface Shape {NAME():boolean;}', false],
+    ['interface-property', 'interface Shape {NAME:boolean;}', false],
+    ['type-member', 'type Shape={NAME():boolean};', false],
+    ['getter-name', 'const object={get NAME(){return true;}};', false],
+    ['setter-name', 'const object={set NAME(value){void value;}};', false],
+    ['enum-member', 'enum Flags {NAME=1}', false],
+  ] as const;
+  const nonvalueCases = nonvalues.flatMap(([id,snippet,prefix]) => ['has','hasAny'].map(name => [id+'-'+name, prefix ? snippet.replaceAll('NAME',name)+source : source+snippet.replaceAll('NAME',name)] as const));
+  it.each(nonvalueCases)('M1 %s の非value名を受理する', (id,input) => check('M1-'+id,input,[]));
+  const realReferences = [
+    ['export-local-alias', 'export {NAME as leaked};'],
+    ['export-local-direct', 'export {NAME};'],
+    ['getter-body', 'const object={get NAME(){return NAME;}};'],
+    ['setter-body', 'const object={set NAME(value){const alias=NAME;}};'],
+    ['enum-initializer', 'enum Flags {value=Number(NAME)}'],
+    ['computed-key', 'const object={[NAME]:true};'],
+    ['interface-computed-key', 'interface Shape {[NAME]:boolean;}'],
+  ];
+  const realReferenceCases = realReferences.flatMap(([id,snippet]) => ['has','hasAny'].map(name => [id+'-'+name, source+snippet!.replaceAll('NAME',name)] as const));
+  it.each(realReferenceCases)('M1 %s の実値参照を拒否する', (id,input) => check('M1-value-'+id,input,['wiringBinding']));
+  it('matrixで旧2APIの結果も観測する', () => {
+    const observations = [...positives.map(([id,input,path])=>observe(id,input,path)),...variants.map(([id,input])=>observe(id,input)),...['/tests/x.test.ts','tests/../x.test.ts'].map(path=>observe('I7',source,path)),...nonvalueCases.map(([id,input])=>observe('M1-'+id,input)),...realReferenceCases.map(([id,input])=>observe('M1-value-'+id,input))];
+    expect(observations.length).toBeGreaterThan(40);
+  });
 });
