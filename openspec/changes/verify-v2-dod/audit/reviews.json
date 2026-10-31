@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "scope": "child delta only; not yet synced or archived",
+  "canonicalPath": "openspec/specs/req-to-openspec-skill/spec.md",
+  "deltaPath": "openspec/changes/verify-v2-dod/specs/req-to-openspec-skill/spec.md",
+  "reviews": [
+    {
+      "id": "SCN-0c9a8c1de5d86a559154",
+      "status": "reviewed",
+      "scenarioSha256": "37fb8ea2893a414abcb882d99f833979e59ebd6bec56514e5a08e792636d1f8b",
+      "reason": "旧ScenarioのSourceと本文を保持した。既存it名とSKILL指示のassertを残し、利用者が個別承認したlocalコマンド1行でtasks雛形の行末の印をassertする。これにより旧の印とSKILL指示の対応を新契約でも確認した。",
+      "sources": [
+        "REQ-136"
+      ],
+      "tests": [
+        {
+          "file": "tests/kit-assets.test.ts",
+          "contains": "[REQ-136] Skill の tasks.md の雛形で、完了ゲートのタスクの行末に印があり、SKILL.md が印を付けるよう指示している",
+          "sha256": "01fbf7d73876e79c470cc7aeca1b5828d0a4a8abf01003fd5ef279e83be640b5",
+          "hashScope": "block"
+        }
+      ]
+    },
+    {
+      "id": "SCN-982d48814ac96beeda6a",
+      "status": "reviewed",
+      "scenarioSha256": "37a9771fe2d91cdd8e8480a48fb56a99b21d4e13ec0d53ef74918b0557006060",
+      "reason": "tasks雛形のfenceを抽出し、印付き行が明示localの1行だけで、ciのcheckboxが無いことを比較する。実init後のClaude/Codex両配置ファイルにも同じ条件があることを確認した。",
+      "sources": [
+        "REQ-136"
+      ],
+      "tests": [
+        {
+          "file": "tests/kit-assets.test.ts",
+          "contains": "[REQ-136] 印のあるタスクはローカルの完了ゲートで、ci のタスクは無い",
+          "sha256": "e254c230c19af4098e0b2e156bcb14301aab2267187846e04bb24dcfb3df75a1",
+          "hashScope": "block"
+        },
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "[REQ-136] init の両 Skill に local の印と最終 CI の注記があり、AGENTS も両者を分ける",
+          "sha256": "b7823fa7e396a2ee268c26002c9eeb1c6321b4b792d940d3c69eb8011faa8da2",
+          "hashScope": "block"
+        }
+      ]
+    },
+    {
+      "id": "SCN-2df2342425e3b29289d4",
+      "status": "reviewed",
+      "scenarioSha256": "fb0f10eacc75f46304a0469e265461ba030d0756b708c513b06ca252ac62df4f",
+      "reason": "tasks雛形の末尾の空でない行が非checkboxの注記であり、明示ci・exit 0・PASS・要判断なし・必須CIを含むことをassertする。実initで生成した両Skillも同じ末尾全文を比較するため、ローカル完了だけで最終合格にならない条件を確認した。",
+      "sources": [
+        "REQ-136"
+      ],
+      "tests": [
+        {
+          "file": "tests/kit-assets.test.ts",
+          "contains": "[REQ-136] 雛形の末尾に、最終の合格を区別するチェックボックスでない注記がある",
+          "sha256": "5df62a37e6936073809023facdffbba16e07c2f64e1b4c6ce75d0d6d2635adee",
+          "hashScope": "block"
+        },
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "[REQ-136] init の両 Skill に local の印と最終 CI の注記があり、AGENTS も両者を分ける",
+          "sha256": "b7823fa7e396a2ee268c26002c9eeb1c6321b4b792d940d3c69eb8011faa8da2",
+          "hashScope": "block"
+        }
+      ]
+    }
+  ]
+}

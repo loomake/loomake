@@ -40,3 +40,7 @@ R05 A・R08 Bも親traceと同じ[承認元](https://github.com/loomake/loomake/
 ## 設計の補正
 
 監査用のcanonical hashはRequirement本文とScenario本文を含む（scripts/scenario-audit.mjs）。元ScenarioとSourceのバイト保持と、旧canonical hashの据置きは別である。管理役はこの事実確認を採用した。元ScenarioのIDは同じだが、新契約のhashは再計算し、旧hashを新契約の監査済みの根拠に流用しない。静的な計算候補は proposed/scenario-plan.json に planned として記録し、実働の監査結果は変更しない。
+
+## 実装時の監査区分
+
+正規repository監査は進行中のdeltaをpendingに分類するため、管理役は主仕様canonical pathとdelta全文を正規関数へ渡す子側の実監査を採用した。audit/ に旧1件と新2件の実対応を記録し、主仕様への適用とは区別する。主仕様の旧Scenarioは旧契約hashのまま内容を再レビューし、既存itの試験ブロックと理由だけを更新する。本番同期後のrepository適用・全体再監査は親6/6後に残す。設定・完成条件・範囲は変更しない。

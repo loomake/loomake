@@ -34,7 +34,7 @@ R06 A は local DoD・最終 ci の区別と、AGENTS・README・CONTRIBUTING・
 
 ### 5. Scenario 監査
 
-既存 SCN-0c9a8c1de5d86a559154 の Scenario 本文と Source を保持する。監査用の canonical hash は Requirement 本文も含むため、契約が変わったあとに再計算する。旧 hash を新しい契約の監査済みの根拠として流用しない。承認後の実試験を確認してから、対応するテストブロックの hash と理由を更新し、新 Scenario 2件を監査する。この提案では scenarios.json を変えず、実行前の監査を reviewed にしない。生成・再照合の方法は proposed/approval-request.md に記す。
+既存 SCN-0c9a8c1de5d86a559154 の Scenario 本文と Source を保持する。監査用の canonical hash は Requirement 本文も含むため、契約が変わったあとに再計算する。旧 hash を新しい契約の監査済みの根拠として流用しない。承認後の実試験を確認してから、対応するテストブロックの hash と理由を更新し、新 Scenario 2件を監査する。実試験後の子delta3件は、主仕様canonical pathとdelta全文を正規の監査関数へ渡し、audit/ に実監査の表・結果・再照合手順を保存する。repository監査上のchangeは引き続きpendingである。主仕様の旧Scenarioは旧契約のhashを保ち、旧Scenarioと新しい既存itの内容を再レビューしたうえで、対応する試験ブロックと理由だけを更新する。本番同期後のrepository適用と再監査は親6/6後のfollow-upとして保持する。
 
 ## Risks / Trade-offs
 

@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario-evidence-audit",
+  "ok": true,
+  "counts": {
+    "total": 3,
+    "reviewed": 3,
+    "superseded": 0,
+    "unreviewed": 0,
+    "invalid": 0
+  },
+  "pending": {
+    "total": 0,
+    "byChange": {},
+    "unreadable": []
+  },
+  "issues": [],
+  "rows": [
+    {
+      "id": "SCN-0c9a8c1de5d86a559154",
+      "file": "openspec/specs/req-to-openspec-skill/spec.md",
+      "requirement": "完了ゲートのタスクの印",
+      "scenario": "雛形に印がある",
+      "sources": [
+        "REQ-136"
+      ],
+      "line": 8,
+      "sha256": "37fb8ea2893a414abcb882d99f833979e59ebd6bec56514e5a08e792636d1f8b",
+      "body": "#### Scenario: 雛形に印がある\n- **WHEN** Skill テンプレートの書式の参照ファイルの tasks.md の雛形を読む\n- **THEN** 完了ゲートのタスクの行末に `<!-- loomake:gate=done -->` があり、SKILL.md がこの印を付けるよう指示している",
+      "status": "reviewed",
+      "reason": "旧ScenarioのSourceと本文を保持した。既存it名とSKILL指示のassertを残し、利用者が個別承認したlocalコマンド1行でtasks雛形の行末の印をassertする。これにより旧の印とSKILL指示の対応を新契約でも確認した。",
+      "reviewSources": [
+        "REQ-136"
+      ],
+      "tests": [
+        {
+          "file": "tests/kit-assets.test.ts",
+          "fullName": "完了ゲートのタスクの印 [REQ-136] Skill の tasks.md の雛形で、完了ゲートのタスクの行末に印があり、SKILL.md が印を付けるよう指示している",
+          "status": "passed"
+        }
+      ],
+      "candidates": [
+        {
+          "file": "tests/kit-assets.test.ts",
+          "fullName": "完了ゲートのタスクの印 [REQ-136] Skill の tasks.md の雛形で、完了ゲートのタスクの行末に印があり、SKILL.md が印を付けるよう指示している",
+          "status": "passed"
+        },
+        {
+          "file": "tests/kit-assets.test.ts",
+          "fullName": "ローカルの完了と最終の合格 [REQ-136] 印のあるタスクはローカルの完了ゲートで、ci のタスクは無い",
+          "status": "passed"
+        },
+        {
+          "file": "tests/kit-assets.test.ts",
+          "fullName": "ローカルの完了と最終の合格 [REQ-136] 雛形の末尾に、最終の合格を区別するチェックボックスでない注記がある",
+          "status": "passed"
+        },
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "fullName": "生成したローカルの完了と最終の合格の案内 [REQ-136] init の両 Skill に local の印と最終 CI の注記があり、AGENTS も両者を分ける",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "SCN-982d48814ac96beeda6a",
+      "file": "openspec/specs/req-to-openspec-skill/spec.md",
+      "requirement": "完了ゲートのタスクの印",
+      "scenario": "印のタスクはローカルの完了ゲート",
+      "sources": [
+        "REQ-136"
+      ],
+      "line": 12,
+      "sha256": "37a9771fe2d91cdd8e8480a48fb56a99b21d4e13ec0d53ef74918b0557006060",
+      "body": "#### Scenario: 印のタスクはローカルの完了ゲート\n- **WHEN** Skill テンプレートの tasks.md の雛形で、印のあるタスクを読む\n- **THEN** そのタスクのコマンドは `verify --change <change-id> --done --scope local` で、印のあるタスクは 1 つだけであり、`--scope ci` を含むタスク（チェックボックス）は無い",
+      "status": "reviewed",
+      "reason": "tasks雛形のfenceを抽出し、印付き行が明示localの1行だけで、ciのcheckboxが無いことを比較する。実init後のClaude/Codex両配置ファイルにも同じ条件があることを確認した。",
+      "reviewSources": [
+        "REQ-136"
+      ],
+      "tests": [
+        {
+          "file": "tests/kit-assets.test.ts",
+          "fullName": "ローカルの完了と最終の合格 [REQ-136] 印のあるタスクはローカルの完了ゲートで、ci のタスクは無い",
+          "status": "passed"
+        },
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "fullName": "生成したローカルの完了と最終の合格の案内 [REQ-136] init の両 Skill に local の印と最終 CI の注記があり、AGENTS も両者を分ける",
+          "status": "passed"
+        }
+      ],
+      "candidates": [
+        {
+          "file": "tests/kit-assets.test.ts",
+          "fullName": "完了ゲートのタスクの印 [REQ-136] Skill の tasks.md の雛形で、完了ゲートのタスクの行末に印があり、SKILL.md が印を付けるよう指示している",
+          "status": "passed"
+        },
+        {
+          "file": "tests/kit-assets.test.ts",
+          "fullName": "ローカルの完了と最終の合格 [REQ-136] 印のあるタスクはローカルの完了ゲートで、ci のタスクは無い",
+          "status": "passed"
+        },
+        {
+          "file": "tests/kit-assets.test.ts",
+          "fullName": "ローカルの完了と最終の合格 [REQ-136] 雛形の末尾に、最終の合格を区別するチェックボックスでない注記がある",
+          "status": "passed"
+        },
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "fullName": "生成したローカルの完了と最終の合格の案内 [REQ-136] init の両 Skill に local の印と最終 CI の注記があり、AGENTS も両者を分ける",
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "SCN-2df2342425e3b29289d4",
+      "file": "openspec/specs/req-to-openspec-skill/spec.md",
+      "requirement": "完了ゲートのタスクの印",
+      "scenario": "最終の合格を区別する注記",
+      "sources": [
+        "REQ-136"
+      ],
+      "line": 16,
+      "sha256": "fb0f10eacc75f46304a0469e265461ba030d0756b708c513b06ca252ac62df4f",
+      "body": "#### Scenario: 最終の合格を区別する注記\n- **WHEN** Skill テンプレートの tasks.md の雛形の末尾を読む\n- **THEN** チェックボックスでない注記に、`--done --scope ci` の合格と必須 CI の成功が最終の合格に要り、印のタスクの完了だけでは最終の合格にならないことが書かれている",
+      "status": "reviewed",
+      "reason": "tasks雛形の末尾の空でない行が非checkboxの注記であり、明示ci・exit 0・PASS・要判断なし・必須CIを含むことをassertする。実initで生成した両Skillも同じ末尾全文を比較するため、ローカル完了だけで最終合格にならない条件を確認した。",
+      "reviewSources": [
+        "REQ-136"
+      ],
+      "tests": [
+        {
+          "file": "tests/kit-assets.test.ts",
+          "fullName": "ローカルの完了と最終の合格 [REQ-136] 雛形の末尾に、最終の合格を区別するチェックボックスでない注記がある",
+          "status": "passed"
+        },
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "fullName": "生成したローカルの完了と最終の合格の案内 [REQ-136] init の両 Skill に local の印と最終 CI の注記があり、AGENTS も両者を分ける",
+          "status": "passed"
+        }
+      ],
+      "candidates": [
+        {
+          "file": "tests/kit-assets.test.ts",
+          "fullName": "完了ゲートのタスクの印 [REQ-136] Skill の tasks.md の雛形で、完了ゲートのタスクの行末に印があり、SKILL.md が印を付けるよう指示している",
+          "status": "passed"
+        },
+        {
+          "file": "tests/kit-assets.test.ts",
+          "fullName": "ローカルの完了と最終の合格 [REQ-136] 印のあるタスクはローカルの完了ゲートで、ci のタスクは無い",
+          "status": "passed"
+        },
+        {
+          "file": "tests/kit-assets.test.ts",
+          "fullName": "ローカルの完了と最終の合格 [REQ-136] 雛形の末尾に、最終の合格を区別するチェックボックスでない注記がある",
+          "status": "passed"
+        },
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "fullName": "生成したローカルの完了と最終の合格の案内 [REQ-136] init の両 Skill に local の印と最終 CI の注記があり、AGENTS も両者を分ける",
+          "status": "passed"
+        }
+      ]
+    }
+  ],
+  "scope": "Child delta only, evaluated with its future canonical main-spec path; repository pending is unchanged.",
+  "repositoryApplied": false,
+  "inputs": {
+    "deltaPath": "openspec/changes/verify-v2-dod/specs/req-to-openspec-skill/spec.md",
+    "canonicalPath": "openspec/specs/req-to-openspec-skill/spec.md",
+    "deltaSha256": "80e35e96fbd705260f8161d4ebb63e19481d2f0328b67b1ec17ccb8e650ac3a2",
+    "testReportSha256": "0acaea7f59595f3fd3fec8a870e284db0dc647e4219edc37fe78d00a0f8e0689",
+    "reviewSha256": "9a47261cce6db79d3eaeb634a142740410acedb39436e52ffe11769ae46fc534",
+    "scriptSha256": "12aca3fb1712c8bf5cec2edf42a914351e453fa0351f34ec9882734137492e3c"
+  }
+}

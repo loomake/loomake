@@ -16,7 +16,7 @@
 ## 3. 試験と監査
 
 - [x] 3.1 kit-assets:251を承認済み全文へ変更し、既存it名・他のexpect・印・SKILL指示・repo一致を保持する。追加のkit-assets/init/tarball試験を実行して成功と確認し、既存試験を削除・skip・緩和していないことを差分で確認する（REQ-136）
-- [ ] 3.2 元ScenarioとSourceのバイトを保持し、契約を含むcanonical hashを再計算して、実試験を確認してから既存1件の対応試験hashと理由、新2件のScenario監査を更新する。正規の監査コマンドと独立レビューで対応関係を確認する（REQ-136）
+- [x] 3.2 元ScenarioとSourceのバイトを保持し、契約を含むcanonical hashを再計算して、実試験を確認してから既存1件の対応試験hashと理由、新2件のScenario監査を更新する。正規の監査コマンドと独立レビューで対応関係を確認する（REQ-136）
 
 ## 4. ローカルの完了
 
