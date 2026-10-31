@@ -149,8 +149,8 @@ describe('C-001 の成功経路と不足拒否', () => {
     }
   });
 
-  it.each(['timeout', 'output', 'interrupted'] as const)('[REQ-359][REQ-180][REQ-192] API propagates producer Git %s instead of returning PASS', async (kind) => {
-    await withProject({ ...vitestProject, quality: true }, (root) => {
+  it.each(['timeout', 'output', 'interrupted'] as const)('[REQ-359][REQ-180][REQ-192] API propagates producer Git %s instead of returning PASS', (kind) => {
+    withProject({ ...vitestProject, quality: true }, (root) => {
       const original = external.runExternal;
       const failure = new external.ProcessLimitError(kind, 'git');
       let injected = 0;
