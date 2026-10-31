@@ -17,14 +17,17 @@ const REQ_ID = /REQ-\d{3,}/g;
 const FROM = /^\s*[-*+]?\s*FROM:\s*`?###\s*Requirement:\s*(.+?)`?\s*$/;
 const TO = /^\s*[-*+]?\s*TO:\s*`?###\s*Requirement:\s*(.+?)`?\s*$/;
 
-/** spec.md から Requirement ごとの操作（主仕様は null）・名前・Source の REQ ID を取り出す。コードブロックの中は読まない */
+/**
+ * spec.md から Requirement ごとの操作（主仕様は null）・名前・Source の REQ ID を取り出す。コードブロックの中は読まない。
+ * 読み方は packages/core/src/spec.ts の parseSpec にそろえる。行末は CRLF・CR を LF にそろえ、Requirement は次の `### Requirement:` か `## ` の見出しまで続く
+ */
 export function parseRequirements(text) {
   const items = [];
   let op = null;
   let cur = null;
   let from = null;
   let fence = null;
-  for (const line of text.split(/\r?\n/)) {
+  for (const line of text.replace(/\r\n?/g, '\n').split('\n')) {
     const mark = line.match(/^\s*(`{3,}|~{3,})/);
     if (fence !== null) {
       if (mark && mark[1][0] === fence[0] && mark[1].length >= fence.length) fence = null;
@@ -51,7 +54,6 @@ export function parseRequirements(text) {
       items.push(cur);
       continue;
     }
-    if (/^#{1,3} /.test(line)) { cur = null; continue; }
     const src = cur && line.match(/^\**Source\**:\**\s*(.+)$/);
     if (src) cur.sources.push(...(src[1].match(REQ_ID) ?? []));
   }
@@ -107,7 +109,13 @@ export function findDuplicates(requirements) {
 export function readKnown(root = '.') {
   const file = join(root, KNOWN_PATH);
   if (!existsSync(file)) return [];
-  const known = JSON.parse(readFileSync(file, 'utf8')).known;
+  let data;
+  try {
+    data = JSON.parse(readFileSync(file, 'utf8'));
+  } catch {
+    throw new Error(`${KNOWN_PATH} を JSON として読めませんでした。構文を直してください`);
+  }
+  const known = data?.known;
   if (!Array.isArray(known) || !known.every((entry) => typeof entry?.id === 'string' && Array.isArray(entry.requirements) && entry.requirements.every((key) => typeof key === 'string'))) {
     throw new Error(`${KNOWN_PATH} の known は { id, requirements: [...] } の配列にしてください`);
   }

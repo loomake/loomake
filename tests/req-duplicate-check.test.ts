@@ -78,6 +78,26 @@ describe('REQ ID の重複検査', () => {
     });
   });
 
+  it('Requirement は次の Requirement か ## の見出しまで続き、### 補足 の下の Source も読む', () => {
+    withFiles({
+      'openspec/specs/a/spec.md': '## Requirements\r\r### Requirement: 一つ目\r本文 SHALL。\r\r### 補足\r\rSource: REQ-001\r\r### Requirement: 二つ目\r本文 SHALL。\r\rSource: REQ-001\r',
+    }, (dir) => {
+      expect(checkReqDuplicates(dir).problems).toEqual([{ id: 'REQ-001', requirements: ['a: 一つ目', 'a: 二つ目'] }]);
+    });
+  });
+
+  it.each([
+    ['構文の誤り', '{ "known": [', 'scripts/req-duplicate-known.json を JSON として読めませんでした'],
+    ['null', 'null', 'scripts/req-duplicate-known.json の known は { id, requirements: [...] } の配列にしてください'],
+  ])('既知の一覧が%sのときは、日本語の理由を出して終了コード 1 で終わる', (_, known, message) => {
+    withFiles({ 'openspec/specs/a/spec.md': main(requirement('一つ目', 'REQ-001')), 'scripts/req-duplicate-known.json': known }, (dir) => {
+      const cli = spawnSync(process.execPath, [script], { cwd: dir, encoding: 'utf8' });
+      expect(cli.status).toBe(1);
+      expect(cli.stderr).toContain(`REQ ID の重複を調べられませんでした：${message}`);
+      expect(cli.stderr).not.toMatch(/TypeError|SyntaxError|Cannot read/);
+    });
+  });
+
   it('既知の一覧のうち今の重複と一致しない項目は、失敗にせず警告を標準エラーに出す', () => {
     withFiles({
       'openspec/specs/a/spec.md': main(requirement('一つ目', 'REQ-001'), requirement('二つ目', 'REQ-001'), requirement('三つ目', 'REQ-002')),
