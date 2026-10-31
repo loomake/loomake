@@ -41,7 +41,7 @@ npx loomake trace report --change <id>            # リリースレポートを�
 | [docs/requirements/](docs/requirements/) | このリポジトリを開発する人 | 要件定義書。現在の正本は [loomake-v0.11.md](docs/requirements/loomake-v0.11.md)。これまでの正本（core・kit は [mvp-v0.7.md](docs/requirements/mvp-v0.7.md)、trace は [trace-v0.1.md](docs/requirements/trace-v0.1.md)、run は [runner-v0.1.md](docs/requirements/runner-v0.1.md)）は trace.md の出典として残している |
 | [GitHub Issues（wbs ラベル）](https://github.com/loomake/loomake/issues?q=label%3Awbs)・[docs/wbs/baseline-v1.4.md](docs/wbs/baseline-v1.4.md)・[docs/requirements-matrix.md](docs/requirements-matrix.md) | このリポジトリを開発する人 | 完成までの作業項目（Issues が正本、WBS は移行時点の固定版）と、要件 ID と作業 ID の対応表 |
 | [docs/notes/](docs/notes/) | このリポジトリを開発する人 | 参考資料。SDD ツールの比較、要件モデルの試行、要求・要件のまとめ方 |
-| [docs/review.md](docs/review.md)・[docs/worklog/](docs/worklog/) | このリポジトリを開発する人 | レビューと作業の記録 |
+| [docs/worklog/](docs/worklog/) | このリポジトリを開発する人 | 作業の記録。2026-10-22 時点のレビューの記録（docs/review.md）は git 履歴の [cc5df0f](https://github.com/loomake/loomake/blob/cc5df0f85a29158512f45d5ff5517ff38a0b0aa7/docs/review.md) を参照 |
 
 ## パッケージ
 
