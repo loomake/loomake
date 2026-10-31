@@ -8,6 +8,24 @@ export type FixtureReport = { numPassedTests: number; numFailedTests: number; te
 export type Marker = { event: string; dir?: string; project?: string };
 export type WatchPhase = { phase: string; builds: string[]; exists: boolean[]; error?: string };
 
+const retryableRemoveCodes = new Set(['EPERM', 'EACCES', 'EBUSY', 'ENOTEMPTY']);
+
+// Windows では、子プロセスの終了直後やウイルス対策ソフトの走査中にファイルを消すと EPERM などになることがある（#229）。
+// rmSync の maxRetries には頼らず、ここで間隔を空けてやり直す。CI は node-version: 24 でマイナー版を固定しておらず、古い 24 系の rmSync は
+// Windows の「Permission denied」の EPERM を再試行しない。また Linux・macOS では、100 ミリ秒の待ちが 0 秒に切り捨てられる。
+export function removeWithRetry(path: string, attempts = 10, delay = 100) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      rmSync(path, { recursive: true, force: true });
+      return;
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code;
+      if (attempt >= attempts || !code || !retryableRemoveCodes.has(code)) throw error;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, delay * attempt);
+    }
+  }
+}
+
 export function relevantSpecifications(root: string, quarantine: string[], profileDirectory: string, driverRoot: string) {
   const driver = join(driverRoot, 'partition-collect.mjs');
   writeFileSync(driver, `import {createVitest} from 'vitest/node';const ctx=await createVitest('test',{root:${JSON.stringify(root)},config:${JSON.stringify(join(root, 'vitest.config.ts'))},watch:false});try{const specs=await ctx.getRelevantTestSpecifications();console.log('PARTITION_SPECS='+JSON.stringify(specs.map(s=>({project:s.project.name,file:s.moduleId}))));}finally{await ctx.close();}`);
@@ -58,7 +76,7 @@ export function register(file,part){const registry=loadPartition(import.meta.dir
   const setRegistry = () => writeFileSync(join(root, 'tests/test-partition.json'), JSON.stringify(registry));
   setRegistry();
   const markers = (): Marker[] => existsSync(marker) ? readFileSync(marker, 'utf8').split('\n').filter(Boolean).map((line) => JSON.parse(line) as Marker) : [];
-  const reset = () => rmSync(marker, { force: true });
+  const reset = () => removeWithRetry(marker);
   const environment = (overrides: NodeJS.ProcessEnv) => {
     const inherited = { ...process.env };
     delete inherited.LOOMAKE_TEST_QUARANTINE_EXCLUDE;
@@ -66,7 +84,7 @@ export function register(file,part){const registry=loadPartition(import.meta.dir
   };
   const run = (args: string[] = [], overrides: NodeJS.ProcessEnv = {}) => {
     const reportPath = join(root, '.loomake/test-report.json');
-    rmSync(reportPath, { force: true });
+    removeWithRetry(reportPath);
     const result = spawnSync(process.execPath, [join(repository, 'node_modules/vitest/vitest.mjs'), 'run', '--config', join(root, 'vitest.config.ts'), ...args], { cwd: root, env: environment(overrides), encoding: 'utf8', timeout: 60000 });
     const report = existsSync(reportPath) ? JSON.parse(readFileSync(reportPath, 'utf8')) as FixtureReport : undefined;
     return { ...result, report, markers: markers() };
@@ -97,5 +115,5 @@ console.log('PARTITION_WATCH='+JSON.stringify(phases));
     const line = result.stdout.split('\n').find((line) => line.startsWith('PARTITION_WATCH='));
     return { ...result, phases: line ? JSON.parse(line.slice('PARTITION_WATCH='.length)) as WatchPhase[] : undefined };
   };
-  return { root, registry, setRegistry, markers, marker, reset, run, watch, cleanup: () => rmSync(root, { recursive: true, force: true }) };
+  return { root, registry, setRegistry, markers, marker, reset, run, watch, cleanup: () => removeWithRetry(root) };
 }
