@@ -8,7 +8,9 @@ import { evidenceValue, reportValue } from './fixtures/trace-contract-values.js'
 
 const parser = await loadParserSchemas();
 const quality = await loadQualitySchema();
-const verify = await loadVerifyResultSchemas();
+// このファイルは公開した 1.0.0 の形を確かめる。現行の 2.0.0 は unknown-fields-v2.test.ts で確かめる
+const loaded = await loadVerifyResultSchemas();
+const verify = { ...loaded, verifyResultSchema: loaded.legacyVerifyResultSchema, verifyCheckResultSchema: loaded.legacyVerifyCheckResultSchema };
 const report = await loadQualityReportSchema();
 const trace = await loadTraceSchemas();
 
@@ -44,8 +46,8 @@ function expectFields(output: unknown, input: Record<string, unknown>) {
 const verifyValue = { schemaVersion: '1.0.0', mode: 'done', change: null, ok: true, results: [] };
 const cases: { name: string; schema: z.ZodType; value: Record<string, unknown> }[] = [
   { name: 'quality-report', schema: report.qualityReportSchema, value: { version: 1 } },
-  { name: 'verify', schema: verify.legacyVerifyResultSchema, value: verifyValue },
-  { name: 'verify check', schema: verify.legacyVerifyCheckResultSchema, value: { check: 'x', status: 'pass', detail: '' } },
+  { name: 'verify', schema: verify.verifyResultSchema, value: verifyValue },
+  { name: 'verify check', schema: verify.verifyCheckResultSchema, value: { check: 'x', status: 'pass', detail: '' } },
   { name: 'trace', schema: parser.traceSchema, value: { ledger: [], questions: [], assumptions: [] } },
   { name: 'ledger row', schema: parser.ledgerRowSchema, value: row(LEDGER_COLUMNS) },
   { name: 'question row', schema: parser.questionRowSchema, value: row(QUESTION_COLUMNS) },
@@ -57,7 +59,7 @@ const cases: { name: string; schema: z.ZodType; value: Record<string, unknown> }
   { name: 'objective', schema: quality.qualityObjectiveSchema, value: { characteristic: 'x' } },
   { name: 'product', schema: quality.qualityProductSchema, value: { characteristic: 'x' } },
   { name: 'policy', schema: quality.qualityEvidencePolicySchema, value: {} },
-  { name: 'evidence', schema: trace.legacyEvidenceSchema, value: evidenceValue() },
+  { name: 'evidence', schema: trace.evidenceSchema, value: evidenceValue() },
   { name: 'evidence document', schema: trace.evidenceDocumentSchema, value: { path: '', sha256: '', content: '' } },
   { name: 'release report', schema: trace.reportSchema, value: reportValue() },
   { name: 'release report row', schema: trace.reportRowSchema, value: reportValue().rows[0] },
@@ -93,7 +95,7 @@ describe('未知キーの own property を安全に保持する', () => {
 
   it('[REQ-307] verify と Markdown の検証する配列要素にも同じ保持規則を適用する', () => {
     const check = marked({ check: 'x', status: 'pass', detail: '' });
-    expectFields(verify.legacyVerifyResultSchema.parse({ ...verifyValue, results: [check] }).results[0], check);
+    expectFields(verify.verifyResultSchema.parse({ ...verifyValue, results: [check] }).results[0], check);
     const ledger = marked(row(LEDGER_COLUMNS));
     const question = marked(row(QUESTION_COLUMNS));
     const assumption = marked(row(ASSUMPTION_COLUMNS));
@@ -140,7 +142,7 @@ describe('未知キーの own property を安全に保持する', () => {
     }
     expect(quality.qualitySchema.safeParse(marked({ version: 2, model: 'x', evidence: { access: 'invalid' } })).success).toBe(false);
     expect(report.qualityReportSchema.safeParse(marked({ version: '1' })).success).toBe(false);
-    expect(verify.legacyVerifyResultSchema.safeParse(marked({ ...verifyValue, results: [{ check: 'x', detail: '' }] })).success).toBe(false);
+    expect(verify.verifyResultSchema.safeParse(marked({ ...verifyValue, results: [{ check: 'x', detail: '' }] })).success).toBe(false);
   });
 
   it('[REQ-307] 非同期の解析を並行しても別の入力の値を混ぜない', async () => {
@@ -156,7 +158,7 @@ describe('未知キーの own property を安全に保持する', () => {
 
   it('[REQ-307] 制約付き record の特殊キーを未知許容オブジェクトのキーとして復元しない', () => {
     const coverage = JSON.parse('{"__proto__":[],"REQ-001":[]}');
-    const verified = verify.legacyVerifyResultSchema.parse({ ...verifyValue, coverage });
+    const verified = verify.verifyResultSchema.parse({ ...verifyValue, coverage });
     expect(verified.coverage).toEqual({ 'REQ-001': [] });
     expect(Object.hasOwn(verified.coverage!, '__proto__')).toBe(false);
     const objectives = JSON.parse('{"__proto__":{"characteristic":"x"},"UQ-001":{"characteristic":"x"}}');
@@ -165,7 +167,7 @@ describe('未知キーの own property を安全に保持する', () => {
     expect(Object.keys(output.objectives)).toEqual(['UQ-001']);
     expect(Object.keys(output.product)).toEqual(['PQ-001']);
     for (const key of ['constructor', 'prototype', 'invalid']) {
-      expect(verify.legacyVerifyResultSchema.safeParse({ ...verifyValue, coverage: { [key]: [] } }).success).toBe(false);
+      expect(verify.verifyResultSchema.safeParse({ ...verifyValue, coverage: { [key]: [] } }).success).toBe(false);
       expect(quality.qualitySchema.safeParse({ version: 2, model: 'x', objectives: { [key]: { characteristic: 'x' } } }).success).toBe(false);
     }
   });
@@ -255,7 +257,7 @@ describe('未知キーの own property を安全に保持する', () => {
     const input = marked({ ...value, verify: verifyValue, documents: [document] });
     const original = structuredClone(input);
     freeze(input);
-    for (const output of [trace.legacyEvidenceSchema.parse(input), await trace.legacyEvidenceSchema.parseAsync(input)]) {
+    for (const output of [trace.evidenceSchema.parse(input), await trace.evidenceSchema.parseAsync(input)]) {
       expectFields(output, input);
       expectFields(output.verify, verifyValue);
       expectFields(output.verify.results[0], check);

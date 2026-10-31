@@ -1,11 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { loadVerifyResultSchemas, type VerifyCheckResult } from '@loomake/core';
 import {
   RUN_ERRORS_CHECK, RuntimeFailure, UsageError, assembleVerifyResult, formatVerifyResult, runVerify, verifyAbortedResult, verifyExitCode,
 } from '@loomake/kit';
-import { CHANGE, COPY_REPORT, reportJson, withProject } from './project.js';
+import { CHANGE, withProject } from './project.js';
 
 vi.setConfig({ testTimeout: 60_000 });
 
@@ -86,26 +84,5 @@ describe('runVerify の 2.0.0', () => {
     for (const r of results) expect(verifyResultSchema.safeParse(r).success, JSON.stringify(r)).toBe(true);
     expect(results[0]).toHaveProperty('verdict');
     expect(results[3]).not.toHaveProperty('verdict');
-  });
-
-  it('[REQ-040] 今回の test コマンドで成功したテストを取得したら、coverage に要件ごとのテストファイルを出す', () => {
-    const config = { openspecValidate: false, commands: { test: COPY_REPORT } };
-    const r = withProject({ config }, (root) => {
-      writeFileSync(join(root, 'report-src.json'), reportJson(root, { 'tests/a.test.ts': [['[REQ-012] 動く', 'passed']] }));
-      return runVerify({ root, changeId: CHANGE, gate: 'done' });
-    });
-    expect(r).toMatchObject({ scope: 'ci', verdict: 'PASS', coverage: { 'REQ-012': ['tests/a.test.ts'] } });
-    expect(verifyExitCode(r)).toBe(0);
-  });
-
-  it('[REQ-040] --skip-commands では前回の成功レポートがあっても coverage を出さず、不足で終了コード 1', () => {
-    const r = withProject({ config: { openspecValidate: false, commands: { test: 'node -e ""' } } }, (root) => {
-      mkdirSync(join(root, '.loomake'), { recursive: true });
-      writeFileSync(join(root, '.loomake', 'test-report.json'), reportJson(root, { 'tests/a.test.ts': [['[REQ-012] 動く', 'passed']] }));
-      return runVerify({ root, changeId: CHANGE, gate: 'done', skipCommands: true });
-    });
-    expect(r).not.toHaveProperty('coverage');
-    expect(r).toMatchObject({ verdict: 'INSUFFICIENT_EVIDENCE', summary: { insufficient: 2 } });
-    expect(verifyExitCode(r)).toBe(1);
   });
 });

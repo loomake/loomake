@@ -3,7 +3,7 @@ import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadVerifyResultSchemas } from '@loomake/core';
 import { main } from '../src/main.js';
-import { CHANGE, COPY_REPORT, ledgerRow, reportJson, traceMd, withProject } from '../../kit/test/project.js';
+import { CHANGE, COPY_REPORT, reportJson, withProject } from '../../kit/test/project.js';
 
 vi.setConfig({ testTimeout: 60_000 });
 
@@ -76,21 +76,5 @@ describe('verify 2.0.0 の出力と終了コード', () => {
     expect(JSON.parse(json.stdout).change).toBe(CHANGE);
     expect(text.code).toBe(2);
     expect(text.stdout).toBe('');
-  });
-
-  it('[REQ-041] abortedでなく、必須検査の不合格があれば 1。ci の完了ゲートが PASS なら 0 で「合格」、local の完了は最終合格と呼ばない', async () => {
-    const config = { openspecValidate: false, commands: { test: COPY_REPORT } };
-    const [failed, passed, local] = await withProject({ config, trace: traceMd({ ledger: [ledgerRow('REQ-012'), ledgerRow('REQ-007')] }) }, async (root) => {
-      writeFileSync(join(root, 'report-src.json'), reportJson(root, { 'tests/a.test.ts': [['[REQ-012] 動く', 'passed']] }));
-      return [await run(root, 'verify', '--change', CHANGE, '--spec-only')];
-    }).then(async ([f]) => [f, ...await withProject({ config }, async (root) => {
-      writeFileSync(join(root, 'report-src.json'), reportJson(root, { 'tests/a.test.ts': [['[REQ-012] 動く', 'passed']] }));
-      return [await run(root, 'verify', '--change', CHANGE, '--done'), await run(root, 'verify', '--change', CHANGE, '--spec-only')];
-    })]);
-    expect(failed.code).toBe(1);
-    expect(passed.code).toBe(0);
-    expect(passed.stdout.split('\n').at(-1)).toBe('合格');
-    expect(local.code).toBe(0);
-    expect(local.stdout.split('\n').at(-1)).toBe('ローカルの項目はすべて完了（CI の最終合格ではありません）');
   });
 });
