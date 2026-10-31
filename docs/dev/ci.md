@@ -178,4 +178,6 @@ PR で slow を実行しないと、その試験を選ぶ根拠が監査で `inv
 
 `measure-slow-tests.yml` は `ci/measure-*` への push で、3 OS・各3 sampleの同じheadを測る。既存のPR品質検査や必須statusは変えない。
 
-測定workflowはファイルや名前を指定せず、`pnpm test`で全件を実行する。新しく加わった試験も対象にし、元15fileと期限試験の移動先2fileは最低限の包含確認に残す。保存する測定用metadataは`schemaVersion: 2`・`selection: all`で、`requiredFiles`に元15fileと`run-timeout`・`external-budget-deadline`の計17file、`files`に保存したraw reportの実suite一覧を持つ。同じsuite名の重複は残し、`missingRequiredFiles`で元対象の欠落を示す。reportがなければ`collectionState: missing`、読めないかrepo外のsuiteを含めば`invalid`とし、どちらも一覧を`null`にする。`recorded`は一覧を読めた状態で、全件成功や包含済みを意味しない。旧schemaVersion 1の15file測定は履歴として保持し、最新headの全件測定に流用しない。
+測定workflowはファイルや名前を指定せず、`pnpm test`で全件を実行する。新しく加わった試験も対象にし、元15file、期限試験の移動先2file、schema2fileは最低限の包含確認に残す。保存する測定用metadataは`schemaVersion: 2`・`selection: all`で、`requiredFiles`に元15file、`run-timeout`・`external-budget-deadline`、`schema-compatibility`・`schema-version-contract`の計19file、`files`に保存したraw reportの実suite一覧を持つ。同じsuite名の重複は残し、`missingRequiredFiles`で元対象の欠落を示す。reportがなければ`collectionState: missing`、読めないかrepo外のsuiteを含めば`invalid`とし、どちらも一覧を`null`にする。`recorded`は一覧を読めた状態で、全件成功や包含済みを意味しない。旧schemaVersion 1の15file測定は履歴として保持し、最新headの全件測定に流用しない。
+
+schema2fileは接頭辞を加える前に、それぞれ1宣言・2候補・1展開行・import由来の非call1件・エラーなしを独立ASTと照合した。元の試験本文と15のtrialは変更しない。必須17fileだった過去の測定を、新しい19fileの包含や最新3OS測定の成功に読み替えない。

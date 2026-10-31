@@ -22,6 +22,20 @@ describe('独立した試験宣言 inventory', () => {
     expect(inventory.nonCall.map((item: { kind: string }) => item.kind)).toEqual(nonCall);
     if (path.endsWith('/run.test.ts')) expect(inventory.declarations.reduce((counts: Record<string, number>, item: { kind: string }) => ({ ...counts, [item.kind]: (counts[item.kind] ?? 0) + 1 }), {})).toEqual({ direct: 55, runIf: 1, each: 2 });
   });
+  it.each([
+    ['tests/schema-compatibility.test.ts', '[REQ-053] 実際のスキーマ検査が削除・改名・minorだけの変更を拒否し、majorの変更を許可する'],
+    ['tests/schema-version-contract.test.ts', '[REQ-276] 版付きの 2.0.0 の JSON Schema への削除・改名・版の変更を実際の検査が拒否し、既存の 8 試行も保つ'],
+  ] as const)('接頭辞前のschema各1宣言・全2候補・1展開行を保持する: %s', (path, title) => {
+    const source = readFileSync(path, 'utf8');
+    const result = inventoryDeclarations(source, path);
+    expect(result.errors).toEqual([]);
+    expect(result.declarations).toHaveLength(1);
+    expect(result.scannerCandidates).toHaveLength(2);
+    expect(result.expandedRows).toBe(1);
+    expect(result.nonCall).toEqual([{ start: 17, line: 1, kind: 'importSpecifier' }]);
+    expect(result.declarations[0]).toMatchObject({ start: 210, line: 7, kind: 'direct', rows: 1 });
+    expect(result.declarations[0].text.startsWith(`it('${title}', () => {`)).toBe(true);
+  });
   // 3d664093: 37/52/40。PR235の旧37本文保持＋REQ-348の2宣言追加を照合済み（22be0369）。
   it.each([
     ['packages/runner/test/guards.test.ts', 39, 54, 42, 1, 8, 6],

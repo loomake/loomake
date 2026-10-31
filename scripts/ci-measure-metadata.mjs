@@ -5,7 +5,7 @@ import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
 import { isMain } from './lib/is-main.mjs';
 
-// 旧測定の15fileと期限試験の移動先2file。全件実行でも、この対象の欠落を見落とさない。
+// 旧測定の15file、期限試験の移動先2file、schema2file。全件実行でも、この対象の欠落を見落とさない。
 export const MEASURE_TEST_FILES = Object.freeze([
   'packages/runner/test/external-budget.test.ts',
   'tests/ai-journeys.test.ts',
@@ -24,6 +24,8 @@ export const MEASURE_TEST_FILES = Object.freeze([
   'tests/domain-mutations-conditions.test.ts',
   'packages/runner/test/run-timeout.test.ts',
   'packages/runner/test/external-budget-deadline.test.ts',
+  'tests/schema-compatibility.test.ts',
+  'tests/schema-version-contract.test.ts',
 ]);
 
 /** @param {string} root @param {string} report */
