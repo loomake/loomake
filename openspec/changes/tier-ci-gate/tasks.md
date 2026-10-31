@@ -23,4 +23,4 @@
 
 ## 5. 確認
 
-- [ ] 5.1 `pnpm -s verify --change tier-ci-gate --done` を通し、tasks をすべてチェックする。archive は管理役 <!-- loomake:gate=done -->
+- [x] 5.1 `pnpm -s verify --change tier-ci-gate --done` を通し、tasks をすべてチェックする。archive は管理役 <!-- loomake:gate=done -->
