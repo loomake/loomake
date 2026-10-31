@@ -61,9 +61,10 @@ describe('証拠の記録', () => {
       const files = evidenceFiles(repo.root);
       expect(files).toEqual([`20261023T010203Z-${sha.slice(0, 12)}.json`]);
       const e = readEvidence(repo.root, files[0]);
-      expect(e).toMatchObject({ schemaVersion: 1, change: CHANGE, sha, recordedAt: '2026-10-23T01:02:03.456Z' });
+      expect(e).toMatchObject({ schemaVersion: 2, change: CHANGE, sha, recordedAt: '2026-10-23T01:02:03.456Z' });
       expect(e.committedAt).toBe(gitRun(repo.root, 'show', '-s', '--format=%cI', 'HEAD'));
-      expect(e.verify).toMatchObject({ mode: 'done', change: CHANGE, ok: true });
+      // Evidence 2 には verify 2.0.0 の完了ゲート（scope を省くと ci）を入れる（REQ-315）
+      expect(e.verify).toMatchObject({ schemaVersion: '2.0.0', change: CHANGE, scope: 'ci', verdict: 'PASS' });
     } finally {
       repo.cleanup();
     }
@@ -88,7 +89,7 @@ describe('証拠の記録', () => {
       expect(r.code).toBe(1);
       const files = evidenceFiles(repo.root);
       expect(files).toHaveLength(1);
-      expect(readEvidence(repo.root, files[0]).verify.ok).toBe(false);
+      expect(readEvidence(repo.root, files[0]).verify).toMatchObject({ scope: 'ci', verdict: 'FAIL' });
     } finally {
       repo.cleanup();
     }

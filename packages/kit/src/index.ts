@@ -1,9 +1,11 @@
 // @loomake/kit：要件書の取り込み・共通ルール・検証ゲート
-export { runVerify, INTERRUPTED, TIMED_OUT } from './verify/run.js';
+export { runVerify, INTERRUPTED, TIMED_OUT, COMMANDS_SKIPPED, REQUIREMENTS_NOT_RUN, NOTICE } from './verify/run.js';
+export { assembleVerifyResult, verifyAbortedResult, RUN_ERRORS_CHECK } from './verify/result.js';
+export type { VerifyResultParts } from './verify/result.js';
 export type { VerifyOptions } from './verify/run.js';
 export { CHANGE_ID, KNOWN_CONFIG_KEYS, assertChangeId, loadConfig, RuntimeFailure, UsageError, DEFAULT_TEST_REPORT } from './verify/config.js';
 export type { LoomakeConfig } from './verify/config.js';
-export { formatVerifyResult } from './verify/format.js';
+export { formatVerifyResult, isAbortedResult, isVerifyResultV2 } from './verify/format.js';
 export { runInit, initFiles, configJson, availableCommands, detectPackageManager } from './init/init.js';
 export { findChangeDir, specFiles, toPosix } from './runtime/change-files.js';
 export type { InitOptions, InitFile, PackageManager } from './init/init.js';
@@ -20,3 +22,8 @@ export type { AgreementDecision } from './verify/policy/agreement.js';
 export { evaluateTestCoverage } from './verify/policy/coverage-policy.js';
 export type { TestCoverageDecision } from './verify/policy/coverage-policy.js';
 export { aggregateCiVerdict } from './verify/policy/quality-verdict.js';
+export { verifyExitCode } from './verify/exit-code.js';
+export { readQualityFile, QUALITY_FILE, MINIMAL_QUALITY_YAML } from './verify/quality-input.js';
+export type { QualityReadOptions, QualityReadResult, QualitySchemaLike } from './verify/quality-input.js';
+export { evaluateQualityConditions, qualitySubjectsGuard, summarizeVerifyChecks } from './verify/policy/quality-conditions.js';
+export type { QualityObservation, ChecksSummary, CiSummary } from './verify/policy/quality-conditions.js';

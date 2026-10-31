@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
+import { markPhase } from '../scripts/ci-heartbeat.mjs';
 
 const root = join(import.meta.dirname, '..');
 const base = mkdtempSync(join(tmpdir(), 'loomake artifacts '));
@@ -16,16 +17,22 @@ afterAll(() => rmSync(base, { recursive: true, force: true }));
 describe('実際に配るパッケージ', () => {
   it('[REQ-324][REQ-325] ビルド済み生成入口とpackしたCLIの共通定義・help・usageが一致する', () => {
     const cliTarget = join(base, 'cli-reference');
+    // 時間切れの段階を見分けるため、LOOMAKE_CI_HEARTBEAT_DIR があるときだけ段階を記録する（REQ-345、Issue #183）
+    markPhase('package-reference', 'prepare-start');
     const prepared = spawnSync(process.execPath, ['scripts/package-smoke.mjs', 'prepare', cliTarget], { cwd: root, encoding: 'utf8', env });
+    markPhase('package-reference', 'prepare-end');
     expect(prepared.status, prepared.stdout + prepared.stderr).toBe(0);
     const generator = join(root, 'scripts/generate-cli-reference.mjs');
     // cwdを変えてもスクリプト自身の場所を基準に生成済みページを照合する。
+    markPhase('package-reference', 'check-start');
     const checked = spawnSync(process.execPath, [generator, '--check'], { cwd: cliTarget, encoding: 'utf8' });
+    markPhase('package-reference', 'check-end');
     expect(checked.status, checked.stdout + checked.stderr).toBe(0);
     const argsUrl = pathToFileURL(join(cliTarget, 'consumer/node_modules/loomake/dist/args.js')).href;
     const mainUrl = pathToFileURL(join(cliTarget, 'consumer/node_modules/loomake/dist/main.js')).href;
     const generatorUrl = pathToFileURL(generator).href;
     const baselinePath = join(root, 'packages/cli/test/fixtures/reference-cli-baseline.json');
+    markPhase('package-reference', 'compare-start');
     const packed = spawnSync(process.execPath, ['--input-type=module', '-e', `
 import { readFileSync } from 'node:fs';
 import { CLI_REFERENCE } from ${JSON.stringify(argsUrl)};
@@ -41,6 +48,7 @@ for (const item of baseline.cases) {
 }
 process.exitCode = await runCliReference({ definition: CLI_REFERENCE, check: true });
 `], { cwd: cliTarget, encoding: 'utf8' });
+    markPhase('package-reference', 'compare-end');
     expect(packed.status, packed.stdout + packed.stderr).toBe(0);
   }, 60000);
 
@@ -146,11 +154,15 @@ process.exitCode = await runCliReference({ definition: CLI_REFERENCE, check: tru
     const types = (name: string) => spawnSync(process.execPath, ['scripts/check-public-types.mjs', target, join(base, name)], { cwd: root, encoding: 'utf8', timeout: 70000 });
     const healthy = types('types-healthy');
     expect(healthy.status, healthy.stdout + healthy.stderr).toBe(0);
-    const declaration = join(target, 'consumer/node_modules/@loomake/core/dist/verify-result-schema.d.ts');
+    // 現行の verify 2.0.0 の公開型（要判断の required）を壊し、利用側のコンパイルで検出する（REQ-318）
+    const declaration = join(target, 'consumer/node_modules/@loomake/core/dist/verify-result-v2-schema.d.ts');
     const original = readFileSync(declaration, 'utf8');
     try {
-      expect(original.split('ok: z.ZodBoolean')).toHaveLength(2);
-      writeFileSync(declaration, original.replace('ok: z.ZodBoolean', 'ok: z.ZodString'));
+      const marker = 'export declare const verifyDecisionSchema';
+      expect(original.split(marker)).toHaveLength(2);
+      const at = original.indexOf(marker);
+      expect(original.slice(at).indexOf('required: z.ZodBoolean')).toBeLessThan(original.slice(at).indexOf('reasons:'));
+      writeFileSync(declaration, original.slice(0, at) + original.slice(at).replace('required: z.ZodBoolean', 'required: z.ZodString'));
       const broken = types('types-broken');
       expect(broken.status).toBe(1);
       expect(broken.stdout).toContain('error TS2322');

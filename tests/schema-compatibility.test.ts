@@ -17,6 +17,8 @@ it('[REQ-053] 実際のスキーマ検査が削除・改名・minorだけの変�
     for (const trial of result.trials.filter((trial: { expected: string }) => trial.expected === 'rejected')) {
       expect(trial.failedTests).toEqual([expect.stringContaining('[REQ-053] 必須プロパティを削除・改名したら')]);
     }
+    expect(result.branchTrials.map((trial: { id: string; status: string }) => [trial.id, trial.status])).toEqual([['branch-remove-ci', 'rejected']]);
+    expect(result.branchTrials[0].failedTests).toEqual([expect.stringContaining('[REQ-053] 必須プロパティを削除・改名したら')]);
     const repeated = spawnSync(process.execPath, ['scripts/schema-contract-check.mjs', target], { cwd: root, encoding: 'utf8', timeout: 10000 });
     expect(repeated.status).toBe(1);
     expect(JSON.parse(readFileSync(join(target, 'results.json'), 'utf8'))).toEqual(result);

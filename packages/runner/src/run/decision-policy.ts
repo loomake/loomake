@@ -40,7 +40,14 @@ export type EngineObservation = Readonly<{
   resultFault?: Readonly<{ fault: ResultFault; outputPath: string }>;
 }>;
 export type EngineDecision = { kind: 'continue' } | { kind: 'hold'; reason: string } | { kind: 'stop'; status: 'stopped' | 'interrupted'; reason: string };
-export type GateObservation = Readonly<{ stateChanged: boolean; ok: boolean; interrupted?: boolean; timedOut: boolean; fixes: number; maxFixes: number }>;
+/**
+ * 完了ゲートの観測。ok は完了ゲートの完了（2.0.0 では scope:local の項目がすべて完了したこと。最終 CI の合格ではない）。
+ * aborted は実行エラーの説明、decisionReasons は人の判断が要る理由（1 件以上なら要判断）（REQ-205）
+ */
+export type GateObservation = Readonly<{
+  stateChanged: boolean; ok: boolean; interrupted?: boolean; timedOut: boolean; fixes: number; maxFixes: number;
+  aborted?: string; decisionReasons?: readonly string[];
+}>;
 export type GateDecision = { kind: 'passed' | 'repair' } | { kind: 'stop' | 'interrupted'; reason: string };
 
 /** 変更の理由を先に示し、中断の状態は保持する（REQ-204）。 */
@@ -70,9 +77,12 @@ export function decideAfterGuard(value: GuardObservation): GuardDecision {
   return reasons.length ? { kind: 'stop', reason: reasons.join('。') } : { kind: 'continue' };
 }
 
-/** 検証中の変更、合格、期限、修正回数の順に判断する（REQ-205）。 */
+/** 検証中の変更、実行エラーと要判断、完了、中断、期限、修正回数の順に判断する（REQ-205）。 */
 export function decideAfterGate(value: GateObservation): GateDecision {
   if (value.stateChanged) return { kind: 'stop', reason: '検証のあいだにHEADかブランチが変わりました。変更を取り消していません。Gitの状態を確認してから、もう一度実行してください。' };
+  // 実行エラーと人の判断は、エンジンに直させても解けないので、修正回数が残っていても止まる
+  if (value.aborted !== undefined) return { kind: 'stop', reason: `完了ゲートが実行エラーで中止されました（${value.aborted}）。直しに進みません。原因を確かめてから、もう一度実行してください。` };
+  if (value.decisionReasons?.length) return { kind: 'stop', reason: `人の判断が必要です（${value.decisionReasons.join(' / ')}）。直しに進みません。判断を記録してから、もう一度実行してください。` };
   if (value.ok) return { kind: 'passed' };
   if (value.interrupted) return { kind: 'interrupted', reason: '中断されました' };
   if (value.timedOut) return { kind: 'stop', reason: '実行時間の上限に達しました' };

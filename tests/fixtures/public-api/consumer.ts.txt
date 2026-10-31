@@ -1,15 +1,18 @@
 import {
   createAgreement, parseTrace, parseTasks, parseSpec, extractTestRequirements, VERIFY_RESULT_SCHEMA_VERSION, loadParserSchemas, TRACE_SCHEMA_VERSION, SPEC_SCHEMA_VERSION, TASKS_SCHEMA_VERSION, loadTraceSchemas, type Evidence as CoreEvidence, type EvidenceDocument as CoreEvidenceDocument, type Report as CoreReport, type ReportRow as CoreReportRow,
   QUALITY_REPORT_SCHEMA_VERSION, loadQualityReportSchema, type QualityReport,
-  type ParseError, type Trace, type LedgerRow, type QuestionRow, type AssumptionRow, type SpecOperation, type SpecRequirement, type Task, type VerifyResult, type VerifyCheckResult,
+  type ParseError, type Trace, type LedgerRow, type QuestionRow, type AssumptionRow, type SpecOperation, type SpecRequirement, type Task, type VerifyResult, type VerifyCheckResult, type VerifyDecision,
+  LEGACY_VERIFY_RESULT_SCHEMA_VERSION, type LegacyVerifyResult, type LegacyVerifyCheckResult, type EvidenceV2,
 } from '@loomake/core';
-import { evaluateAgreement, evaluateTestCoverage, type AgreementDecision, type TestCoverageDecision, runVerify, formatVerifyResult, UsageError, type VerifyOptions } from '@loomake/kit';
+import { evaluateAgreement, evaluateTestCoverage, type AgreementDecision, type TestCoverageDecision, runVerify, formatVerifyResult, verifyExitCode, UsageError, type VerifyOptions } from '@loomake/kit';
 import { runRecord, runReport, buildReport, EVIDENCE_SCHEMA_VERSION, type Evidence, type EvidenceDocument, type Report, type ReportRow } from '@loomake/trace';
 import { runRun, maskSecrets, type RunOptions, type RunSummary } from '@loomake/runner';
 
 type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
 type Assert<T extends true> = T;
-export type StatusContract = Assert<Equal<VerifyCheckResult['status'], 'pass' | 'fail' | 'warn' | 'skip'>>;
+// REQ-318: 現行の verify 2.0.0 の検査は共有の 4 値、履歴の 1.0.0 は従来の 4 状態
+export type StatusContract = Assert<Equal<VerifyCheckResult['result'], 'PASS' | 'FAIL' | 'INSUFFICIENT_EVIDENCE' | 'NOT_APPLICABLE'>>;
+export type LegacyStatusContract = Assert<Equal<LegacyVerifyCheckResult['status'], 'pass' | 'fail' | 'warn' | 'skip'>>;
 
 // 型チェックだけに使う利用側の例。呼び出してファイルやGitを変更しない。
 export function consumePublicApi(root: string) {
@@ -19,12 +22,18 @@ export function consumePublicApi(root: string) {
   const checked: boolean = tasks[0].checked;
   const specs = parseSpec('spec.md', '').value;
   const ids: Record<string, string[]> = extractTestRequirements('report.json', '{}').value;
-  const verification: VerifyResult = { schemaVersion: VERIFY_RESULT_SCHEMA_VERSION, mode: 'done', change: 'sample', ok: true, results: [] };
-  const ok: boolean = verification.ok;
+  const decision: VerifyDecision = { required: false, reasons: [] };
+  const verification: VerifyResult = {
+    schemaVersion: VERIFY_RESULT_SCHEMA_VERSION, change: 'sample', run: { status: 'completed', errors: [] }, scope: 'local', checks: [],
+    summary: { fail: 0, insufficient: 0, not_applicable: 0, evaluated: 0, pending: 0 }, decision,
+  };
+  const ok: boolean = verifyExitCode(verification) === 0;
+  const legacy: LegacyVerifyResult = { schemaVersion: LEGACY_VERIFY_RESULT_SCHEMA_VERSION, mode: 'done', change: 'sample', ok: true, results: [] };
+  const recordedEvidence: EvidenceV2 = { schemaVersion: 2, change: 'sample', sha: 'a', committedAt: '', recordedAt: '', verify: verification };
   const options: VerifyOptions = { root, changeId: 'sample', gate: 'spec-only' };
   const verified: VerifyResult = runVerify(options);
   const text: string = formatVerifyResult(verified);
-  const oldEvidence: Evidence = { schemaVersion: EVIDENCE_SCHEMA_VERSION, change: 'sample', sha: 'a', committedAt: '', recordedAt: '', verify: verification };
+  const oldEvidence: Evidence = { schemaVersion: EVIDENCE_SCHEMA_VERSION, change: 'sample', sha: 'a', committedAt: '', recordedAt: '', verify: legacy };
   const recorded: number = runRecord({ root, changeId: 'sample', stdout: () => {} });
   const reported: number = runReport({ root, changeId: 'sample', format: 'json', stdout: () => {} });
   const report: Report | undefined = buildReport(root, 'sample');
@@ -32,7 +41,7 @@ export function consumePublicApi(root: string) {
   const running: Promise<number> = runRun(runOptions);
   const summary: RunSummary = { change: 'sample', status: 'interrupted', reason: '', doneTasks: [], remainingTasks: [], lastVerify: null };
   const masked: string = maskSecrets(text);
-  return { trace, checked, specs, ids, ok, oldEvidence, recorded, reported, report, running, summary, masked, error: new UsageError('設定の確認') };
+  return { trace, checked, specs, ids, ok, oldEvidence, recordedEvidence, recorded, reported, report, running, summary, masked, error: new UsageError('設定の確認') };
 }
 
 // @ts-expect-error REQ-148: coreでは判定関数と結果型を公開しない。
