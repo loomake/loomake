@@ -11,7 +11,7 @@
 
 - [x] 2.1 承認後、両format・両SKILLのlocalの印・末尾注記を反映し、kit-assetsの既存印試験と追加2Scenarioの試験、repo/配布の一致試験が成功することを確認する（REQ-136）
 - [x] 2.2 root/配布AGENTS・PRテンプレート・CONTRIBUTING・README両言語・cli README・flow・delivery・guide4箇所へ承認済み文を反映する。凍結箇所の照合と、AGENTSのDoD・init生成物・package-smokeの追加検査が成功することを確認する
-- [ ] 2.3 kitとloomakeのpatch changesetを追加し、配布物の案内とtasks雛形が明示localになり、最終CIも別に必要と読めることを実tarballで確認する
+- [x] 2.3 kitとloomakeのpatch changesetを追加し、配布物の案内とtasks雛形が明示localになり、最終CIも別に必要と読めることを実tarballで確認する
 
 ## 3. 試験と監査
 
