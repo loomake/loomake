@@ -417,6 +417,63 @@ export function companionLinks(registry, readText) {
     required(!declaresTest, `companionに試験の宣言があります：${companion}`);
     const expected = './' + basename(source).replace(/\.ts$/, '.js');
     required(ast.parseDiagnostics.length === 0 && !staticTest && imports.length === 1 && imports[0].arguments.length === 1 && ts.isStringLiteral(imports[0].arguments[0]) && imports[0].arguments[0].text === expected, `companionが元ファイルだけを読み込んでいません：${companion}`);
+    // 既存の拒否順序と文言を保ったあとで、Vitest の値を扱える構文を閉じる。
+    const allowedNames = new Set(['expect']);
+    const bindingError = `companionの試験関数の束縛を静的に確認できません：${companion}`;
+    const allowedDestructure = (node) => {
+      node = unwrap(node);
+      if (ts.isObjectBindingPattern(node)) return node.elements.every((element) => !element.dotDotDotToken && allowedNames.has(propertyKey(element.propertyName ?? element.name)));
+      if (ts.isObjectLiteralExpression(node)) return node.properties.every((property) =>
+        (ts.isPropertyAssignment(property) || ts.isShorthandPropertyAssignment(property)) && allowedNames.has(propertyKey(property.name)));
+      return false;
+    };
+    const typePosition = (node) => {
+      for (let current = node.parent; current; current = current.parent) if (ts.isTypeNode(current)) return true;
+      return false;
+    };
+    const namespacePosition = (node) => {
+      if (typePosition(node)) return true;
+      let expression = node;
+      while (expression.parent && (ts.isParenthesizedExpression(expression.parent) || ts.isAsExpression(expression.parent) || ts.isSatisfiesExpression(expression.parent) || ts.isNonNullExpression(expression.parent)) && expression.parent.expression === expression) expression = expression.parent;
+      const parent = expression.parent;
+      if (ts.isNamespaceImport(parent) && parent.name === expression) return true;
+      if (ts.isPropertyAccessExpression(parent)) return parent.name === expression || (parent.expression === expression && allowedNames.has(parent.name.text));
+      if (ts.isElementAccessExpression(parent) && parent.expression === expression) {
+        const key = parent.argumentExpression && unwrap(parent.argumentExpression);
+        return key && ts.isStringLiteralLike(key) && allowedNames.has(key.text);
+      }
+      if (ts.isVariableDeclaration(parent)) {
+        const statement = parent.parent?.parent;
+        if (statement && ts.isVariableStatement(statement) && statement.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)) return false;
+        if (ts.isIdentifier(parent.name) && parent.initializer && namespaceExpression(parent.initializer)) return true;
+        return parent.initializer === expression && allowedDestructure(parent.name);
+      }
+      if (ts.isBinaryExpression(parent) && parent.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
+        return parent.right === expression && allowedDestructure(parent.left);
+      }
+      // プロパティの固定名は namespace の値を参照しない。shorthand は値なので除外しない。
+      if ((ts.isPropertyAssignment(parent) || ts.isBindingElement(parent)) && (parent.propertyName ?? parent.name) === expression && !ts.isComputedPropertyName(expression)) return true;
+      return false;
+    };
+    const closedSyntax = (node) => {
+      let module;
+      if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) module = node.moduleSpecifier;
+      if (ts.isImportEqualsDeclaration(node)) {
+        required(ts.isExternalModuleReference(node.moduleReference), `companionの読み込み先を静的に確認できません：${companion}`);
+        module = node.moduleReference.expression;
+      }
+      if (module) {
+        required(ts.isStringLiteral(module) && (module.text === 'vitest' || (/^\.\.?\//.test(module.text) && !/\.test\.[jt]s$/.test(module.text))), `companionの読み込み先を静的に確認できません：${companion}`);
+        if (module.text === 'vitest' && (ts.isImportDeclaration(node) || ts.isImportEqualsDeclaration(node))) {
+          required(ts.isImportDeclaration(node) && !node.importClause?.name, bindingError);
+          const bindings = node.importClause?.namedBindings;
+          required(bindings && (ts.isNamespaceImport(bindings) || (ts.isNamedImports(bindings) && bindings.elements.every((item) => allowedNames.has((item.propertyName ?? item.name).text)))), bindingError);
+        }
+      }
+      if (ts.isIdentifier(node) && namespaces.has(node.text)) required(namespacePosition(node), bindingError);
+      ts.forEachChild(node, closedSyntax);
+    };
+    closedSyntax(ast);
     links.set(companion, source);
   }
   return links;

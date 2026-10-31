@@ -162,6 +162,10 @@ Vitest 5.0.5 の実 fixture では、全件とファイルの明示選択で準�
 
 PR184 のタスク2.5では登録済み companion の実行結果を、元の `.test.ts` の本文ブロックと照合するようにしました。本文は元ファイルに残し、companion は元ファイルの `.js` だけを動的に import します。監査と旧形式の移行は、`tests/test-partition.json` と登録済み companion の構造を先に検査します。一覧の欠落・不正、試験を宣言する companion、別の試験の読み込みはエラーになり、監査の出力先を作りません。コメントや整形の違いは許容します。Vitest の namespace や試験関数から分割代入した別名も追跡します。非literalな namespace のキーや未対応の代入先など、試験関数との対応を静的に確認できない束縛は、値を評価せずエラーにします。
 
+Vitest からの読み込みは namespace か `expect` だけの named import に限ります。static import・export・import equals の読み込み先は `vitest`、または `./`・`../` で始まり `.test.[jt]s` で終わらない補助 module だけです。namespace とその別名は `expect` の取得、Identifier への別名の初期化、全キーが literal の `expect` で rest のない分割代入の右辺だけに置けます。引数・既定値・object や array の値・spread・条件式・戻り値・export など、それ以外の位置は拒否します。型の位置は除き、shadowing は区別せず同名を検査します。既存の拒否検査と元 source の import 形の検査を先に行い、以前から拒否していた形の診断を保ちます。
+
+この検査は companion 本体の構文を調べます。読み込んだ補助 module の中身と実行時の反射は静的に検証せず、Vitest の `globals` が無効であることを前提にしています。これは静的検査の技術上の限界で、既知の不正な companion を受理する免除にはしません。実行時の反射を使った宣言が安全である、または受入済みであるとは扱いません。
+
 監査の各実行行には照合先の `file` と実行時の `rawFile` を残します。JSON の `inputs` には一覧の `partitionSha256` と companion ごとのハッシュを加え、Markdown には元ファイルと companion の両方を表示します。元の raw report とレビュー表のバイト列は変えません。登録外の `.slow.test.ts` は自身のファイルとして扱い、名前から対応を推測しません。同名でも異なる入力行は残し、同じ入力行が複数の選択条件に一致しても一度だけ数えます。
 
 PR で slow を実行しないと、その試験を選ぶ根拠が監査で `invalid` になる場合があります。別の report の合流や判定の緩和で補わず、main push の全件実行と最終受入で確認します。失敗・skip・todo、必要な Source、本文や旧形式のファイル全体のハッシュ、旧形式の移行条件は引き続き検査します。複数の本文ブロックの一部欠測はブロック集合のハッシュで検出できますが、同じ `it.each` 内の行欠測まで証明するものではありません。全 parameter と正当な同名行の保持は、後続タスク4.3・5.1で raw 全 case の多重集合を独立して比較します。
