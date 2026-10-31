@@ -113,8 +113,8 @@
     {
       "id": "SCN-71353d5c77bed179f5eb",
       "status": "reviewed",
-      "scenarioSha256": "bfe7c04591feff08e1ba5971f8082e752bd1d275381a449ca7a52f44815ab637",
-      "reason": "実プロセスのstdout超過で、SIGTERMを無視するエンジンと子の停止、保持・転送バイト数と所要時間をassertする。",
+      "scenarioSha256": "6e9f79191cb2610211e365a72700bf234caf2793449fedf71998776c79263070",
+      "reason": "maxOutputBytes:64を渡した実プロセスのstdout超過で、outputLimitExceeded、保持と転送の合計が64バイト以内、5秒未満で戻ること、SIGTERMを無視するエンジンと子が停止していることをassertする。",
       "sources": [
         "REQ-151"
       ],
@@ -130,8 +130,8 @@
     {
       "id": "SCN-8f3f1dffee69860f9bce",
       "status": "reviewed",
-      "scenarioSha256": "62d84125c9aebf0b2f8ccaac94908b2cf8d78f0fe858d478ef70289f01aa2a57",
-      "reason": "実プロセスのstderr超過でもエンジンと子の停止、保持・転送バイト数をassertする。",
+      "scenarioSha256": "f8467da52d68caa5201c72a13bc43093406a4e3a402feac3dd9d3f8e484f473a",
+      "reason": "maxOutputBytes:64を渡した実プロセスのstderr超過で、outputLimitExceeded、rawと転送したstderrの合計が64バイト以内、エンジンと子の停止をassertする。",
       "sources": [
         "REQ-151"
       ],
@@ -147,8 +147,8 @@
     {
       "id": "SCN-d3754584527602e891c5",
       "status": "reviewed",
-      "scenarioSha256": "619d62292205d74159ac5c551a3e24c051d720b1712bc3dbf3604df94416776d",
-      "reason": "UTF-8の途中で切れる出力から不完全な文字を除き、バイト上限内になることをassertする。",
+      "scenarioSha256": "f4809e5f94c883aa48b1f5efa78e05ccd64517674c72be9cced0d3c31e2cb1c3",
+      "reason": "上限64バイトで「あ」を100文字出力し、outputLimitExceededと、rawが完全な「あ」21文字（63バイト）で置換文字を含まないことをassertする。",
       "sources": [
         "REQ-151"
       ],
@@ -295,7 +295,7 @@
     {
       "id": "SCN-5e003f73a8c2a62143cb",
       "status": "reviewed",
-      "scenarioSha256": "c3a19b2477440dbe764a094e32021c10b0111078ba09ae1a622396511e1775e2",
+      "scenarioSha256": "85cfcbaf3816a952cb612fc2a4a7644a75136f466fff8ce238dbc5f226b7baf9",
       "reason": "日本語あいの2文字を6バイトの上限ちょうどで読み取り、5バイトの上限では拒否することをassertする。",
       "sources": [
         "REQ-171"
@@ -312,7 +312,7 @@
     {
       "id": "SCN-65f51c8eec943aac88bf",
       "status": "reviewed",
-      "scenarioSha256": "c6fa40b9710c9cdd41c3c5dade1981d34d57982a3538f14964220382bf4f80a5",
+      "scenarioSha256": "ae892184a94b6fa54b48b2e0155b342684d1c05394c2e8599c00cecaac8a35ba",
       "reason": "4バイトと5バイトの2ファイルを同じreaderで読み、8バイトの合計上限で2つ目を拒否して合計と上限を示すことをassertする。",
       "sources": [
         "REQ-171"
@@ -338,7 +338,8 @@
         {
           "file": "tests/input-boundaries.test.ts",
           "contains": "通常runでも過大な",
-          "sha256": "f70946322ef3cbcf47b80b16ac5d6d40f1ce58c2bebddd2d8d2e0cc98ada3930"
+          "sha256": "e96d7e2943bd9a96d960b44fa71dadb654d0cb5e96aa4c6d22c38bad11cab24c",
+          "hashScope": "block"
         },
         {
           "file": "tests/input-boundaries.test.ts",
@@ -350,25 +351,9 @@
     },
     {
       "id": "SCN-bef2a7c042d8803de34c",
-      "status": "reviewed",
+      "status": "unreviewed",
       "scenarioSha256": "ce2de649955f72cd5bf2734e2c42c419b54b2916bbab742114425e4a134a1159",
-      "reason": "64MiBを超える疎な証拠と、各45MiBで合計128MiBを超える3つの証拠を与え、runReportがそれぞれ個別・合計上限の例外で止まり、合格レポートを返さないことをassertする。",
-      "sources": [
-        "REQ-172"
-      ],
-      "tests": [
-        {
-          "file": "tests/input-boundaries.test.ts",
-          "contains": "[REQ-172] JSONの証拠も64MiB",
-          "sha256": "1dc19750ba6b8a00d5e8af431b9edd1233762712538e9af2f1a236319a0ce7ab",
-          "hashScope": "block"
-        },
-        {
-          "file": "tests/input-boundaries.test.ts",
-          "contains": "[REQ-172] 個別には64MiB以内でも証拠の合計",
-          "sha256": "f70946322ef3cbcf47b80b16ac5d6d40f1ce58c2bebddd2d8d2e0cc98ada3930"
-        }
-      ]
+      "reason": "読み取り合計の上限を確かめていた試験が、trace report が最新の証拠だけを読む変更（#50）で消え、今の試験は個別の証拠のサイズ上限しか確かめていない。"
     },
     {
       "id": "SCN-762eea79c2bdc036757f",
@@ -382,7 +367,8 @@
         {
           "file": "tests/input-boundaries.test.ts",
           "contains": "通常runで巨大な検証失敗を指示へ加える前に止まり、エンジンを起動しない",
-          "sha256": "f70946322ef3cbcf47b80b16ac5d6d40f1ce58c2bebddd2d8d2e0cc98ada3930"
+          "sha256": "62db3ab8cbebd6e9feb5fe26f363905b71669b22180ea4080cdd731abd2f8004",
+          "hashScope": "block"
         }
       ]
     },
@@ -672,7 +658,8 @@
         {
           "file": "tests/ai-journeys.test.ts",
           "contains": "で導入・通常操作・失敗と復旧を実行し、操作結果を記録する",
-          "sha256": "5d1934a2891224bd9ade78232509f9f529e8e6c36c3bf115843bb56e9a3f11f2"
+          "sha256": "eec2392d29b5ead9f3c56484558d83c9fa0cea5dc840dae8b5f11a17f5dd91b3",
+          "hashScope": "block"
         }
       ]
     },
@@ -688,7 +675,8 @@
         {
           "file": "tests/ai-journeys.test.ts",
           "contains": "で導入・通常操作・失敗と復旧を実行し、操作結果を記録する",
-          "sha256": "5d1934a2891224bd9ade78232509f9f529e8e6c36c3bf115843bb56e9a3f11f2"
+          "sha256": "eec2392d29b5ead9f3c56484558d83c9fa0cea5dc840dae8b5f11a17f5dd91b3",
+          "hashScope": "block"
         }
       ]
     },
@@ -704,7 +692,8 @@
         {
           "file": "tests/ai-journeys.test.ts",
           "contains": "で導入・通常操作・失敗と復旧を実行し、操作結果を記録する",
-          "sha256": "5d1934a2891224bd9ade78232509f9f529e8e6c36c3bf115843bb56e9a3f11f2"
+          "sha256": "eec2392d29b5ead9f3c56484558d83c9fa0cea5dc840dae8b5f11a17f5dd91b3",
+          "hashScope": "block"
         }
       ]
     },
@@ -810,7 +799,7 @@
       "id": "SCN-6d9261c3408f3ab5cc30",
       "status": "reviewed",
       "scenarioSha256": "82d7d74c4949136f704f853d4e1495ccef4c0e5009ae7fb83a6ec4b0e8dbc6a3",
-      "reason": "期限500msと経過1800ms未満の既存条件に加え、実際に起動した親子のPIDを取得し、runClaudeから戻った時点の親の消滅と子の停止（消滅またはLinuxのzombie）をassertする。状態は試験自身のfinallyによる後片付け前に採取する。zombieは停止の根拠であり、OSによる回収の完了を保証しない。",
+      "reason": "期限500msと経過1800ms未満の既存条件に加え、実際に起動した親子のPIDを取得し、runClaudeから戻った時点の親の消滅と子の停止（消滅、Linuxのzombie、またはSIGKILLが保留中かアドレス空間を手放した終了途中のexiting）をassertする。状態は試験自身のfinallyによる後片付け前に採取する。zombieとexitingは停止の根拠であり、OSによる回収の完了を保証しない。",
       "sources": [
         "REQ-139"
       ],
@@ -818,7 +807,8 @@
         {
           "file": "packages/runner/test/engine-safety.test.ts",
           "contains": "出力を継承した子も時間切れで停止する",
-          "sha256": "c81de480ab541307036c963d9722124f617e75111f91245e408d386a2fd28980"
+          "sha256": "46dffb48baad12c8552de5ad9d03d65d18c5dc3a3ad4bcf887c608644571f281",
+          "hashScope": "block"
         }
       ]
     },
@@ -868,7 +858,8 @@
         {
           "file": "packages/runner/test/scenario-timeout-evidence.test.ts",
           "contains": "2回目を停止して",
-          "sha256": "bf20a82752f6905c1dea23450828c827072ba1ec7078f37bc7b2cbaee438d67f"
+          "sha256": "15db2516396940e53d8fc630e2a5500e42e2f5884e17a4f1d06d4ecfbf66acc5",
+          "hashScope": "block"
         }
       ]
     },
@@ -1039,7 +1030,8 @@
         {
           "file": "packages/runner/test/diagnostic-redactor.test.ts",
           "contains": "[REQ-153]",
-          "sha256": "bc1d89cd9d21bc9079f3626cd0c06eb26f9e7036483b6c3f5c09b2d0414704d4"
+          "sha256": "8ba6e5e42af8cb80b62bab2bc0688a2620dd63bcf08884e00a0e255c0d145c65",
+          "hashScope": "block"
         }
       ]
     },
@@ -1055,7 +1047,8 @@
         {
           "file": "packages/runner/test/diagnostic-redactor.test.ts",
           "contains": "[REQ-153]",
-          "sha256": "bc1d89cd9d21bc9079f3626cd0c06eb26f9e7036483b6c3f5c09b2d0414704d4"
+          "sha256": "8ba6e5e42af8cb80b62bab2bc0688a2620dd63bcf08884e00a0e255c0d145c65",
+          "hashScope": "block"
         }
       ]
     },
@@ -1071,7 +1064,8 @@
         {
           "file": "packages/runner/test/diagnostic-redactor.test.ts",
           "contains": "[REQ-153]",
-          "sha256": "bc1d89cd9d21bc9079f3626cd0c06eb26f9e7036483b6c3f5c09b2d0414704d4"
+          "sha256": "8ba6e5e42af8cb80b62bab2bc0688a2620dd63bcf08884e00a0e255c0d145c65",
+          "hashScope": "block"
         }
       ]
     },
@@ -1233,25 +1227,28 @@
       "id": "SCN-520afb964a4265f49d56",
       "status": "reviewed",
       "scenarioSha256": "772bbe5fcab3fe99f0da5bb4caa7ef0395a1e121beb79870df29f9fbe9564f87",
+      "reason": "ローカルbare originのpush失敗、見本ghの作成前・作成後の失敗から再試行し、正常終了とHEAD・証拠数・証拠全文の不変、エンジン2回のまま、必要な作成回数を確認する。今回の品質ゲートを不合格にすると進めない別試験も併用する。実際のGitHub接続の成功ではない。",
       "sources": [
         "REQ-164"
       ],
-      "reason": "ローカルbare originのpush失敗、見本ghの作成前・作成後の失敗から再試行し、正常終了とHEAD・証拠数・証拠全文の不変、エンジン2回のまま、必要な作成回数を確認する。今回の品質ゲートを不合格にすると進めない別試験も併用する。実際のGitHub接続の成功ではない。",
       "tests": [
         {
           "file": "packages/runner/test/publication-retry.test.ts",
           "contains": "作成の",
-          "sha256": "46f182b3a3e27a7883d40fee4d6e057418dae84608f7afd85bb64c5a8b7fef7e"
+          "sha256": "0b201a5d87801dbce1f53d4ff045512fb7bce0147285925c95d3a4f21c3d2fbe",
+          "hashScope": "block"
         },
         {
           "file": "packages/runner/test/publication-retry.test.ts",
           "contains": "push失敗後に同じ証拠を再利用して送信する",
-          "sha256": "46f182b3a3e27a7883d40fee4d6e057418dae84608f7afd85bb64c5a8b7fef7e"
+          "sha256": "515b92ab815d5a782bb1634a84f3cecd4717ee247aef5e9363fae50dcf08ff50",
+          "hashScope": "block"
         },
         {
           "file": "packages/runner/test/publication-retry.test.ts",
           "contains": "今回の検証に不合格なら過去の証拠を代用しない",
-          "sha256": "46f182b3a3e27a7883d40fee4d6e057418dae84608f7afd85bb64c5a8b7fef7e"
+          "sha256": "f429834393f216476c8faba6accdf91802f22a339e4c8ac0fa679bf12ea84cd6",
+          "hashScope": "block"
         }
       ]
     },
@@ -1259,15 +1256,16 @@
       "id": "SCN-798ef6eec89c203fa332",
       "status": "reviewed",
       "scenarioSha256": "ec97daaa9fbfed5fc0d3fa42ace52abb125b06aaea1d9beb229fa07e1f6fd989",
+      "reason": "json・SHA・change・全体不合格・結果のfail・内容ハッシュ・文書snapshot・旧形式の8候補を証拠だけのコミットへ入れ、再試行を終了1で停止させる。理由の表示、HEAD、証拠全文と数、PR作成呼び出し数の不変をassertする。",
       "sources": [
         "REQ-164"
       ],
-      "reason": "json・SHA・change・全体不合格・結果のfail・内容ハッシュ・文書snapshot・旧形式の8候補を証拠だけのコミットへ入れ、再試行を終了1で停止させる。理由の表示、HEAD、証拠全文と数、PR作成呼び出し数の不変をassertする。",
       "tests": [
         {
           "file": "packages/runner/test/publication-retry.test.ts",
           "contains": "の証拠は消さず増やさず停止する",
-          "sha256": "46f182b3a3e27a7883d40fee4d6e057418dae84608f7afd85bb64c5a8b7fef7e"
+          "sha256": "34b961d3188d0c7c70f51ea361efba74016b968a0c4c4983a080525e9bc580fa",
+          "hashScope": "block"
         }
       ]
     },
@@ -1275,15 +1273,16 @@
       "id": "SCN-a80f45fe68c7186b0f58",
       "status": "reviewed",
       "scenarioSha256": "697b3e9342a457555613eeadd280ae428eae0038542961a7d8911a68ffb4ccae",
+      "reason": "証拠コミットの後でimplを変更してコミットし、再試行成功・証拠2個・新しい証拠の対象SHAが変更後のコミットであること・古い証拠全文の不変を確認する。",
       "sources": [
         "REQ-164"
       ],
-      "reason": "証拠コミットの後でimplを変更してコミットし、再試行成功・証拠2個・新しい証拠の対象SHAが変更後のコミットであること・古い証拠全文の不変を確認する。",
       "tests": [
         {
           "file": "packages/runner/test/publication-retry.test.ts",
           "contains": "証拠の後に実装を変えたら新しい対象SHAの証拠を作る",
-          "sha256": "46f182b3a3e27a7883d40fee4d6e057418dae84608f7afd85bb64c5a8b7fef7e"
+          "sha256": "087c46f4fc2d6c5f71839f757a7fcc80ae9128cc98814e133218eb934e96b721",
+          "hashScope": "block"
         }
       ]
     },
@@ -1291,20 +1290,22 @@
       "id": "SCN-1009fcbe6e97219df063",
       "status": "reviewed",
       "scenarioSha256": "8583768795ee6a09def702211d5c08a7e79f23909cf5178ccb2920284f09c1bd",
+      "reason": "見本ghがPRを作ってから失敗する入力の再試行で、終了0・既存PRの案内・同じHEADと証拠全文・作成呼び出し1回を確認する。完了後の再実行でも作成が増えず検索だけが2回となる試験を併用する。実GitHubの応答喪失試験ではない。",
       "sources": [
         "REQ-165"
       ],
-      "reason": "見本ghがPRを作ってから失敗する入力の再試行で、終了0・既存PRの案内・同じHEADと証拠全文・作成呼び出し1回を確認する。完了後の再実行でも作成が増えず検索だけが2回となる試験を併用する。実GitHubの応答喪失試験ではない。",
       "tests": [
         {
           "file": "packages/runner/test/publication-retry.test.ts",
           "contains": "作成のafterで失敗した後も同じ証拠とコミットを使う",
-          "sha256": "46f182b3a3e27a7883d40fee4d6e057418dae84608f7afd85bb64c5a8b7fef7e"
+          "sha256": "0b201a5d87801dbce1f53d4ff045512fb7bce0147285925c95d3a4f21c3d2fbe",
+          "hashScope": "block"
         },
         {
           "file": "packages/runner/test/publication-retry.test.ts",
           "contains": "完了後も再実行で証拠・コミット・PRを増やさない",
-          "sha256": "46f182b3a3e27a7883d40fee4d6e057418dae84608f7afd85bb64c5a8b7fef7e"
+          "sha256": "97cc7f8cf6c9ddd370a4e1b45b00b0060e6ab504a6f81e2551da417add236f8b",
+          "hashScope": "block"
         }
       ]
     },
@@ -1312,15 +1313,16 @@
       "id": "SCN-c377da1a340269f308e2",
       "status": "reviewed",
       "scenarioSha256": "ecbf4c50aac52c98bb633ac9eff46de3396f12b12c78d450818a20db594c1537",
+      "reason": "検索エラー・壊れたJSON・配列以外・不正scheme・資格情報付きURL・別head・別リポジトリ・複数候補の8入力で、終了1・PR作成なし・証拠1個を確認する。検索は見本ghであり、実GitHubの状態ではない。",
       "sources": [
         "REQ-165"
       ],
-      "reason": "検索エラー・壊れたJSON・配列以外・不正scheme・資格情報付きURL・別head・別リポジトリ・複数候補の8入力で、終了1・PR作成なし・証拠1個を確認する。検索は見本ghであり、実GitHubの状態ではない。",
       "tests": [
         {
           "file": "packages/runner/test/publication-retry.test.ts",
           "contains": "検索結果",
-          "sha256": "46f182b3a3e27a7883d40fee4d6e057418dae84608f7afd85bb64c5a8b7fef7e"
+          "sha256": "0b21dd1ea3c352a8a84a047a2eb13661cb13efe3230a5c7074c7fdbd280cba30",
+          "hashScope": "block"
         }
       ]
     },
@@ -1328,15 +1330,16 @@
       "id": "SCN-251479fc1e751b7f836a",
       "status": "reviewed",
       "scenarioSha256": "d17579ee7e35ac1cd711d0500aa6c1a42c4514556ea40ecada1c68879b708c97",
+      "reason": "初回の証拠と作成失敗を用意し、再試行の品質コマンドが不合格レポートを作る条件で、終了1・HEADと証拠数の不変・検索とPR作成が増えないことを確認する。実Gitを呼ぶ関数のspyで初回pushを確認して履歴を消し、再試行にはpushがないこともassertする。不合格でもpushする変異を検出した。",
       "sources": [
         "REQ-166"
       ],
-      "reason": "初回の証拠と作成失敗を用意し、再試行の品質コマンドが不合格レポートを作る条件で、終了1・HEADと証拠数の不変・検索とPR作成が増えないことを確認する。実Gitを呼ぶ関数のspyで初回pushを確認して履歴を消し、再試行にはpushがないこともassertする。不合格でもpushする変異を検出した。",
       "tests": [
         {
           "file": "packages/runner/test/publication-retry.test.ts",
           "contains": "今回の検証に不合格なら過去の証拠を代用しない",
-          "sha256": "46f182b3a3e27a7883d40fee4d6e057418dae84608f7afd85bb64c5a8b7fef7e"
+          "sha256": "f429834393f216476c8faba6accdf91802f22a339e4c8ac0fa679bf12ea84cd6",
+          "hashScope": "block"
         }
       ]
     },
@@ -1344,20 +1347,22 @@
       "id": "SCN-b23b3f5de51d0e388763",
       "status": "reviewed",
       "scenarioSha256": "74f880394def561d9109432c04bfc134d1682ac1c9a0fc9717714162fa18ee9b",
+      "reason": "再試行の品質コマンドがHEAD・ブランチ・作業ファイルを変える3条件で、終了1と理由を確認し、HEADを元へ戻さず、変更したブランチやファイルを保つことをassertする。初回pushの正の対照を取ったspyで、再試行にはpushがなく、検索・作成と証拠も増えないことを確認する。",
       "sources": [
         "REQ-166"
       ],
-      "reason": "再試行の品質コマンドがHEAD・ブランチ・作業ファイルを変える3条件で、終了1と理由を確認し、HEADを元へ戻さず、変更したブランチやファイルを保つことをassertする。初回pushの正の対照を取ったspyで、再試行にはpushがなく、検索・作成と証拠も増えないことを確認する。",
       "tests": [
         {
           "file": "packages/runner/test/publication-retry.test.ts",
           "contains": "を変えたら取り消さず外部操作を止める",
-          "sha256": "46f182b3a3e27a7883d40fee4d6e057418dae84608f7afd85bb64c5a8b7fef7e"
+          "sha256": "de5c7c66236d33620995e68cc13e250cff9efdd22dfaefd7d854e2ba7fb7d6ac",
+          "hashScope": "block"
         },
         {
           "file": "packages/runner/test/publication-retry.test.ts",
           "contains": "検証が作業ファイルを変えたら、その変更を残して停止する",
-          "sha256": "46f182b3a3e27a7883d40fee4d6e057418dae84608f7afd85bb64c5a8b7fef7e"
+          "sha256": "0550f7332ac717b4200bf1bafe2655604810970a246805784343a3aea4e1306d",
+          "hashScope": "block"
         }
       ]
     },
@@ -1387,32 +1392,34 @@
     {
       "id": "SCN-235cf33a91b3bc64bd8e",
       "status": "reviewed",
-      "scenarioSha256": "9c6d46b8aabd19d9daece27cad8266ca31a12194ff8d5b7fe6baab5c1c381279",
+      "scenarioSha256": "b99e4720780f50cc3762838195084f49431d31711e8716e3debf0454284d5600",
+      "reason": "未回答YES・未回答no・回答済みyesの3質問を含むモデルをkitのevaluateAgreementに渡し、未回答YESのQ-01だけが停止条件となり、未承認A-01を含む結果全体と入力の不変性をassertする。",
       "sources": [
         "REQ-148"
       ],
-      "reason": "YES・no・回答済みyesの3質問を含むモデルで、未回答YESのQ-01だけが停止条件となり、未承認A-01を含む結果全体と入力の不変性をassertする。",
       "tests": [
         {
-          "file": "packages/core/test/agreement.test.ts",
+          "file": "packages/kit/test/agreement.test.ts",
           "contains": "未回答のブロッキング質問だけを停止条件にする",
-          "sha256": "68e212efdfe32dce2a259b982260a1cc26e7a78551886f8628e05cd1604acbbf"
+          "sha256": "ba195030679190610bc1d8abc4f6e41cd6fe0eeda7b91a4dd57e602f444907bc",
+          "hashScope": "block"
         }
       ]
     },
     {
       "id": "SCN-b032f8d7214e4e772a48",
       "status": "reviewed",
-      "scenarioSha256": "6d1205ad7eef97d9a9c7a915c02afe60a8ccd0ba737fead3d95d85e30f681d64",
+      "scenarioSha256": "3cdd049259877c4ad255194d62d976b61bf58f5cbcabd9fab868d9820ec24bbf",
+      "reason": "要件IDとテスト内IDの重複、2ファイル、不要なREQ-999、不足2件をkitのevaluateTestCoverageに入力し、昇順・一意の対応、空配列、不足一覧を全文一致でassertする。structuredCloneした入力も不変である。",
       "sources": [
         "REQ-149"
       ],
-      "reason": "要件IDとテスト内IDの重複、2ファイル、不要なREQ-999、不足2件を入力し、昇順・一意の対応、空配列、不足一覧を全文一致で確認する。structuredCloneした入力も不変である。",
       "tests": [
         {
-          "file": "packages/core/test/coverage-policy.test.ts",
+          "file": "packages/kit/test/coverage-policy.test.ts",
           "contains": "重複を除いて昇順にし、不足した要件にも空の配列を返す",
-          "sha256": "61add31ac1281ad2949cfda26529bfe7ec102b34fb8c06bf2d5d40c90ee32bb8"
+          "sha256": "b224fbbed683906d2c6c0ca18febb1e982a5feb44cce076869c61c0d922b513c",
+          "hashScope": "block"
         }
       ]
     },
@@ -1554,7 +1561,8 @@
         {
           "file": "tests/domain-mutations.test.ts",
           "contains": "正常な実装と13条件を実行",
-          "sha256": "2b753f35a5ce2e4372d760077ca03f77e50004ea50e5a650bb9cffe1aa16a15b"
+          "sha256": "81e17c07cdfe0c0164294f40eba78763a4137fd465d7eefc63e41317e0d75102",
+          "hashScope": "block"
         }
       ]
     },
@@ -1587,7 +1595,8 @@
         {
           "file": "tests/domain-mutations.test.ts",
           "contains": "[REQ-162]",
-          "sha256": "2b753f35a5ce2e4372d760077ca03f77e50004ea50e5a650bb9cffe1aa16a15b"
+          "sha256": "d4cf6085ad61f0674c9e99133106bf6927954aa472cb902cfde132d5328b8c15",
+          "hashScope": "block"
         }
       ]
     },
@@ -1603,7 +1612,8 @@
         {
           "file": "tests/domain-mutations.test.ts",
           "contains": "正常な実装と13条件を実行",
-          "sha256": "2b753f35a5ce2e4372d760077ca03f77e50004ea50e5a650bb9cffe1aa16a15b"
+          "sha256": "81e17c07cdfe0c0164294f40eba78763a4137fd465d7eefc63e41317e0d75102",
+          "hashScope": "block"
         }
       ]
     },
@@ -1619,7 +1629,8 @@
         {
           "file": "tests/domain-mutations.test.ts",
           "contains": "正常な実装と13条件を実行",
-          "sha256": "2b753f35a5ce2e4372d760077ca03f77e50004ea50e5a650bb9cffe1aa16a15b"
+          "sha256": "81e17c07cdfe0c0164294f40eba78763a4137fd465d7eefc63e41317e0d75102",
+          "hashScope": "block"
         }
       ]
     },
@@ -1642,24 +1653,9 @@
     },
     {
       "id": "SCN-bf2080219544eaef1205",
-      "status": "reviewed",
+      "status": "unreviewed",
       "scenarioSha256": "395c2352d5ed137ee1713aa9265940e535f7a5120f3386ce175cb10d1f772791",
-      "sources": [
-        "REQ-144"
-      ],
-      "reason": "Node24でビルドとpackを行い、2つの検証先に導入した。そのあと公式のNode20.19.0に切り替え、通信を拒否した状態で、公開APIと主要コマンド（--version・--help・init・doctor・verify・trace record・trace report）の成功をassertした。Node20.19.0の側ではpnpmとnpmを実行しない。CI設定の試験では、node20ジョブが、Node24で配布物を準備してからNode20.19.0に切り替えて検査する順序をassertする。宣言する下限Node22.12.0での確認は、このScenarioでは扱わない。",
-      "tests": [
-        {
-          "file": "scripts/runtime-compatibility.mjs",
-          "contains": "指定したNodeの配布物で主要コマンドと公開APIを検証する",
-          "sha256": "bb5ff35747797fa281637b2689669017a6e9a9f999b974d79f3f53068f05079d"
-        },
-        {
-          "file": "tests/package-workflows.test.ts",
-          "contains": "[REQ-144] 3OSの品質ジョブとNode下限ジョブで配布物を検査する",
-          "sha256": "c82be3653a952f37c8e5ad976fe0d00aa2028fef9d3ef16eca6a75e8450622bf"
-        }
-      ]
+      "reason": "Node20.19.0 で主要コマンドを確かめる検査は scripts/runtime-compatibility.mjs の CI の node20 ジョブでの実行で、vitest の実行結果になく、残る試験は CI 設定の順序しか確かめていない。"
     },
     {
       "id": "SCN-ba93b05041bc568cc7d7",
@@ -1671,10 +1667,10 @@
       "id": "SCN-232e41d6b34829afe26a",
       "status": "reviewed",
       "scenarioSha256": "96d6151a4d22651edc1f47911d363e5fdb96dba4187659087149c549185ff578",
+      "reason": "4ライブラリの開発source条件が実際にsrc/index.tsへ解決することを確認する。公開物はsource条件なしで実在するexports先を使い、公開型のconsumerコンパイルが成功、ok型をbooleanからstringへ壊すとTS2322、復元後成功をassertする。",
       "sources": [
         "REQ-146"
       ],
-      "reason": "4ライブラリの開発source条件が実際にsrc/index.tsへ解決することを確認する。公開物はsource条件なしで実在するexports先を使い、公開型のconsumerコンパイルが成功、ok型をbooleanからstringへ壊すとTS2322、復元後成功をassertする。",
       "tests": [
         {
           "file": "tests/package-artifacts.test.ts",
@@ -1691,7 +1687,8 @@
         {
           "file": "tests/public-source-exports.test.ts",
           "contains": "ワークスペースのsource条件は4ライブラリのsrcを実際に解決する",
-          "sha256": "3668c02f7537b0e4abbfdd8a0c2e3daa2b36f62b2cdb56079fe83658ae5b2e77"
+          "sha256": "d01672833f17aec8ba6ac287486f9e368eee150c0ac0ceecfc7f5cab23453de4",
+          "hashScope": "block"
         }
       ]
     },
@@ -1868,8 +1865,8 @@
     {
       "id": "SCN-a007476c8dfc5b1cdd35",
       "status": "reviewed",
-      "scenarioSha256": "3a9aa0a218fd70ae4f84f9eb78c1a4fafdc019879c1bee9324bd6d9a07a3fb38",
-      "reason": "合意列を追加した入力で回答者・回答日・承認者・承認日の実値と解析エラーなしをassertする。",
+      "scenarioSha256": "ad934a4908290712e0a893773b89f13a76e6bdb61eea204a11dac40333d052e0",
+      "reason": "合意列を追加した入力で、回答者プロダクト責任者・回答日2026-10-23、承認者開発リーダー・承認日2026-10-23の実値と解析エラーなしをassertする。",
       "sources": [
         "REQ-011",
         "REQ-077",
@@ -1879,7 +1876,8 @@
         {
           "file": "packages/core/test/trace.test.ts",
           "contains": "確認事項の回答者・回答日と、仮定の承認者・承認日を読む",
-          "sha256": "de2c6c0bac454830bd525678cba0b44caed1036c5d5228c326a811516913bf40"
+          "sha256": "2a35307f583c43342046a4c8544a7820a1cf8c2646bf5145ff50df0aca7e23f9",
+          "hashScope": "block"
         }
       ]
     },
@@ -2155,15 +2153,16 @@
       "id": "SCN-fc6bf78522c427af6179",
       "status": "reviewed",
       "scenarioSha256": "54f27ec563775199e2cbd1bcd215fd55beb5d704dcc473a3d9b0f3192faa8e37",
+      "reason": "既存のschema.test.tsをそのままコピーして実行し、ルートと配列要素の削除・改名、minorだけの変更がREQ-053のassertionで失敗し、major更新を伴う変更は全試験が成功することを8ケースで確認する。元ファイルの不変と同名の実行結果も比較する。対象は必須プロパティと版の契約である。",
       "sources": [
         "REQ-053"
       ],
-      "reason": "既存のschema.test.tsをそのままコピーして実行し、ルートと配列要素の削除・改名、minorだけの変更がREQ-053のassertionで失敗し、major更新を伴う変更は全試験が成功することを8ケースで確認する。元ファイルの不変と同名の実行結果も比較する。対象は必須プロパティと版の契約である。",
       "tests": [
         {
           "file": "tests/schema-compatibility.test.ts",
           "contains": "実際のスキーマ検査が削除・改名・minorだけの変更を拒否し",
-          "sha256": "bdb7f3bb6d55a56df0ce3d1f0fa0c31a6a4bb3dcd670c1ba18c7a31d4ec6e0da"
+          "sha256": "a8f245bcb2a1092446aeb077ab39c8b3b5b08da1e48b986a6b47265f7332eaa5",
+          "hashScope": "block"
         }
       ]
     },
@@ -2854,57 +2853,25 @@
       ]
     },
     {
-      "id": "SCN-5a16e42923e6ae95f549",
-      "status": "reviewed",
-      "scenarioSha256": "637a34d6f1753eb425b689571e0850fb8e7ac257969bce06caae198d01703c24",
-      "sources": [
-        "REQ-004"
-      ],
-      "reason": "devcontainer.jsonから抽出したpostCreateCommandにOpenSpecのパッケージ名があることをassertする。コンテナ作成の実行結果ではない。",
-      "tests": [
-        {
-          "file": "tests/monorepo.test.ts",
-          "contains": "postCreateCommand で OpenSpec CLI を入れる",
-          "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
-        }
-      ]
-    },
-    {
-      "id": "SCN-52a7b7629b2c8a2d7dff",
-      "status": "reviewed",
-      "scenarioSha256": "1cd88a9c34bbdb1dee247db4484ce1429aaba6e420e5ffa4e20d5ba55988a7bb",
-      "sources": [
-        "REQ-061"
-      ],
-      "reason": "devcontainer.jsonのimageがtypescript-nodeのNode24系指定であることをassertする。コンテナの起動成功は主張しない。",
-      "tests": [
-        {
-          "file": "tests/monorepo.test.ts",
-          "contains": "Node 24 系のイメージを使う",
-          "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
-        }
-      ]
-    },
-    {
       "id": "SCN-4f6502862cd00e397701",
-      "status": "superseded",
-      "scenarioSha256": "408fe2a62ed6258c4c95fc983de040209390ddd681608c347e39dced3a9cdce7",
-      "replacement": "SCN-ab468be9128795302438",
-      "reason": "Node20.19の版宣言はrequire-node-22の全5パッケージ>=22.12.0へ変更された。宣言の置換のみで、古いNode20実行Scenarioを合格扱いにはしない。"
+      "status": "unreviewed",
+      "scenarioSha256": "7c36d3d64c53db8afebc283aed7be4140a9ccdcc4fdec74da260aa4f58a4e10c",
+      "reason": "置換先のScenario（SCN-ab468be9128795302438）は主仕様から消え、このScenario自体が>=22.12.0の宣言に変わったため、置換を保てない。"
     },
     {
       "id": "SCN-4a7b5a2f65584f2c1953",
       "status": "reviewed",
-      "scenarioSha256": "b8d234c14dec090f614eb424aaeab85b00fd3c25aa70a022676bbc9fb6094e71",
+      "scenarioSha256": "0a255684e1644892f3a440586af7fcd466afc91bcd97d119b373523c64f7ce56",
+      "reason": "ci.ymlのqualityジョブのマトリクスでOSを決める式の行に、ubuntu-latest・macos-latest・windows-latestが含まれることと、その式をpushとscheduleで評価すると3つのOSのジョブに展開されることをassertする。",
       "sources": [
         "REQ-049"
       ],
-      "reason": "ci.ymlの3OSマトリクス・runs-onのmatrix.osとpnpm testの記述をassertする。このScenarioはワークフローを読む条件であり、3OS実行成功の根拠ではない。",
       "tests": [
         {
           "file": "tests/monorepo.test.ts",
-          "contains": "ubuntu・macos・windows の 3 つで pnpm test を実行する",
-          "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          "contains": "[REQ-049] main への push と定期実行では、quality ジョブを ubuntu・macos・windows の 3 つで実行し",
+          "sha256": "b2b90d0960b246773ebaf9080cc2bc34583d27d154c6a05e81cf3451bada22f4",
+          "hashScope": "block"
         }
       ]
     },
@@ -3012,7 +2979,7 @@
       "id": "SCN-76f138277acbd8c119e5",
       "status": "reviewed",
       "scenarioSha256": "89e600aba360921b438fb958b11c2b5666c306b4f2efe9b55a3c37ecc20b9aac",
-      "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。packages/a.tsを実際にコミットし、noneの指定でverifyだけを呼ぶことを確認する。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
+      "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。packages/a.tsを実際にコミットし、noneの指定で段階L2の行を出し、verifyだけを呼んで終了コード0になることを確認する。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
       "sources": [
         "REQ-010",
         "REQ-054",
@@ -3021,8 +2988,9 @@
       "tests": [
         {
           "file": "tests/ci-gate-process.test.ts",
-          "contains": "noneの明示があればコードの変更でも品質コマンドだけを呼ぶ",
-          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
+          "contains": "L2 で none の明示があれば、コードの変更でも品質コマンドだけを呼ぶ",
+          "sha256": "60c35235843cb38f4c93387116d59ff70609de714c1944a3b72081d29aa73365",
+          "hashScope": "block"
         },
         {
           "file": "tests/monorepo.test.ts",
@@ -3046,7 +3014,8 @@
         {
           "file": "tests/ci-gate-process.test.ts",
           "contains": "変更したchangeのファイルから完了ゲートを選ぶ",
-          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
+          "sha256": "98c64efbb4a11358c86ae0fec656672f2de68dac12f67ebe2c213640ef7f1c0e",
+          "hashScope": "block"
         },
         {
           "file": "tests/monorepo.test.ts",
@@ -3070,7 +3039,8 @@
         {
           "file": "tests/ci-gate-process.test.ts",
           "contains": "対象未指定のコードファイル [ 'packages/a.ts' ] があればverifyを呼ぶ前に止まる",
-          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
+          "sha256": "d8af059555db5700f2ac1dc3512ba72ac7a69cfa5e6184bc79ca3c3757d9c894",
+          "hashScope": "block"
         },
         {
           "file": "tests/monorepo.test.ts",
@@ -3082,51 +3052,15 @@
     },
     {
       "id": "SCN-d31a4872ae040eb68a4e",
-      "status": "reviewed",
+      "status": "unreviewed",
       "scenarioSha256": "e57173a186be84ff3746c8576e8e5104cd3590b301b59e9da9cca51f0de459ec",
-      "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。docs/usage.mdだけを変更したfix-typoではverifyだけを呼ぶ。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
-      "sources": [
-        "REQ-010",
-        "REQ-054",
-        "REQ-132"
-      ],
-      "tests": [
-        {
-          "file": "tests/ci-gate-process.test.ts",
-          "contains": "文書ファイル [ 'docs/usage.md' ] の変更では品質コマンドだけを呼ぶ",
-          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
-        },
-        {
-          "file": "tests/monorepo.test.ts",
-          "contains": "PR ごとに完了ゲートを実行する",
-          "sha256": "09866b0c5a59db83eba29ef4f5c2918e437479ce526b8f9dc2de55404d40ee92",
-          "hashScope": "block"
-        }
-      ]
+      "reason": "今の試験は docs/usage.md だけの変更を段階 L1 として lint と文書のリンクの試験だけを呼び verify を呼ばないことを確かめており、主仕様の Scenario の「--change なしで品質コマンドだけが実行される」とは結果が違う。"
     },
     {
       "id": "SCN-711b5333ddc017bf8f8a",
-      "status": "reviewed",
+      "status": "unreviewed",
       "scenarioSha256": "feb21eb733a07e2ba5c0b8774d25516efc16706bb9d57a437c79240f7b90082c",
-      "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。c1を削除しarchiveとspecを追加したGit差分でverifyだけを呼ぶ。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。 既存のワークフロー設定試験でCIからci-gate.mjsを呼ぶ接続も確認する。リモートCIの実行成功は含めない。",
-      "sources": [
-        "REQ-010",
-        "REQ-054",
-        "REQ-132"
-      ],
-      "tests": [
-        {
-          "file": "tests/ci-gate-process.test.ts",
-          "contains": "archive時の削除とarchive・specの追加では品質コマンドだけを呼ぶ",
-          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
-        },
-        {
-          "file": "tests/monorepo.test.ts",
-          "contains": "PR ごとに完了ゲートを実行する",
-          "sha256": "09866b0c5a59db83eba29ef4f5c2918e437479ce526b8f9dc2de55404d40ee92",
-          "hashScope": "block"
-        }
-      ]
+      "reason": "今の試験は archive の PR を段階 L1 として lint と文書のリンクの試験だけを呼ぶことを確かめており、主仕様の Scenario の「--change なしで品質コマンドだけが実行される」とは結果が違う。"
     },
     {
       "id": "SCN-92a3ac86378cabd507ba",
@@ -3172,7 +3106,7 @@
       "id": "SCN-149eab9b65181496a38e",
       "status": "reviewed",
       "scenarioSha256": "87df447744acde0596df8d5e12095743dc78ec97c0b3bb4098cf638eaae1f024",
-      "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。c2ブランチとc2の変更があっても、本文のc1の完了ゲートだけを呼ぶ。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。",
+      "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。c2ブランチとc2/tasks.mdの変更があっても、本文のc1を優先し、verifyはc1の完了ゲートだけを呼ぶ（変更が文書だけの段階L1なので、その前にlintと文書のリンクの試験も呼ぶ）。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。",
       "sources": [
         "REQ-132"
       ],
@@ -3180,41 +3114,22 @@
         {
           "file": "tests/ci-gate-process.test.ts",
           "contains": "明示した選択を変更ファイルとブランチの選択より優先する",
-          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
+          "sha256": "fe30b929e851995d6641e806b0e4a9acf07b1c368462100cbe5078e2d5805e55",
+          "hashScope": "block"
         }
       ]
     },
     {
       "id": "SCN-366e01b502420cbcda61",
-      "status": "reviewed",
+      "status": "unreviewed",
       "scenarioSha256": "8e437ceb7be7459c03352a63eb01b5d3aee70cd842d6d7b277dafe7c1d437aeb",
-      "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。c1の変更とc2のブランチから両方の完了ゲートを呼ぶ。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。",
-      "sources": [
-        "REQ-132"
-      ],
-      "tests": [
-        {
-          "file": "tests/ci-gate-process.test.ts",
-          "contains": "変更ファイルとブランチの選択を合わせて両方のゲートを呼ぶ",
-          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
-        }
-      ]
+      "reason": "今の試験は c1 を --spec-only、c2 を --done で呼ぶことを assert しており、Scenario の「verify --change c1 --done と verify --change c2 --done が実行される」を確かめていない。"
     },
     {
       "id": "SCN-2f7149cce94ed98f34a7",
-      "status": "reviewed",
+      "status": "unreviewed",
       "scenarioSha256": "cd8f10cba9ead3192b929b6a9e175124be7b1c33f4eb59feb28066e381a883ae",
-      "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用CLIへの引数と終了コードをassertする。READMEとchangesetだけの実際のGit差分でverifyだけを呼ぶ。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。",
-      "sources": [
-        "REQ-132"
-      ],
-      "tests": [
-        {
-          "file": "tests/ci-gate-process.test.ts",
-          "contains": "文書ファイル [ 'README.md', '.changeset/x.md' ] の変更では品質コマンドだけを呼ぶ",
-          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
-        }
-      ]
+      "reason": "今の試験は README.md と .changeset/x.md だけの変更を段階 L1 として lint と文書のリンクの試験だけを呼び verify を呼ばないことを確かめており、主仕様の Scenario の「--change なしで品質コマンドだけが実行される」とは結果が違う。"
     },
     {
       "id": "SCN-abcce1ac255f52f2ec1d",
@@ -3228,7 +3143,8 @@
         {
           "file": "tests/ci-gate-process.test.ts",
           "contains": "対象未指定のコードファイル [ 'docs/usage.md', 'packages/a.ts' ] があればverifyを呼ぶ前に止まる",
-          "sha256": "dad87f5bab327a75a9628b4ed8140aefe5014f7b2a5e255ec2bcdc44bb8931ec"
+          "sha256": "d8af059555db5700f2ac1dc3512ba72ac7a69cfa5e6184bc79ca3c3757d9c894",
+          "hashScope": "block"
         }
       ]
     },
@@ -3354,8 +3270,8 @@
     {
       "id": "SCN-6da3e34efb5c09b4a3ca",
       "status": "reviewed",
-      "scenarioSha256": "ddefa11e1a838890148fa751a82a04d27e651012d106419169c00cc6ca4b03fa",
-      "reason": "曖昧さを洗い出す節の仮定禁止・必ずブロッキングの指示と、列挙した6分類の配列が仕様と一致することをassertする。",
+      "scenarioSha256": "fd460f3348e3e959bc2d1b79650ce3e9d27691e3ffa0a48397f635cec3137662",
+      "reason": "曖昧さを洗い出す節の仮定禁止・必ずブロッキングの指示と、列挙した6分類（お金・個人情報・権限・データ削除・外部連携・受け入れの数値）の配列が仕様と一致することをassertする。",
       "sources": [
         "REQ-028"
       ],
@@ -3371,8 +3287,8 @@
     {
       "id": "SCN-db13885e68906873a021",
       "status": "reviewed",
-      "scenarioSha256": "0cc9778ffde1beb0bdbca9e962e0adaa639a05dda97f01e7474e027a7e1a55ef",
-      "reason": "1changeをリリース・検収単位とすること、分割案を人へ示して合意を取ることをassertする。",
+      "scenarioSha256": "932201ee865e5dfc90e5e185c59c79902a673b7dcf11c002b2b60f147f7c81e4",
+      "reason": "change に分割する節に「リリースされる単位」「分割案」「人に示し、合意を取る」があることをassertする。",
       "sources": [
         "REQ-029"
       ],
@@ -3388,7 +3304,7 @@
     {
       "id": "SCN-719c8683f9e86204a1ec",
       "status": "reviewed",
-      "scenarioSha256": "6ca0536eb972cd064fddef7edfb09f6d7e989b766bfc3b9f3ae2394c92239dbf",
+      "scenarioSha256": "d966ce3ed40c668817085b694150760a3768f93402928d4aa5fc2a0b42042d14",
       "reason": "関係する各changeのtrace.mdへ同じ番号・同じ内容の行を載せ、同一質問の参照例もあることをassertする。",
       "sources": [
         "REQ-029"
@@ -3473,8 +3389,8 @@
     {
       "id": "SCN-aed887ae49f2aa9b3c99",
       "status": "reviewed",
-      "scenarioSha256": "2ac46aede76280d55cab102a4a79aed9fe58272528ebddebd88f2c0a8d30a4ba",
-      "reason": "報告の節に、ブロッキング確認事項を顧客へそのまま送れる文面で出す指示があることをassertする。",
+      "scenarioSha256": "8668baa77abdcd0af50e5b4ee8b25b8319444e63ad16a616ac1a3905ae5d6a0e",
+      "reason": "報告の節に、ブロッキング確認事項を要件を出した人へそのまま送れる文面で出す指示の行があることをassertする。",
       "sources": [
         "REQ-033"
       ],
@@ -5035,7 +4951,7 @@
     {
       "id": "SCN-c9b71bf8810044e47e98",
       "status": "reviewed",
-      "scenarioSha256": "439e2b7066d1ca84d46f1b4bbb0fa012698496f2e2c9ec2218faa0319aab7b41",
+      "scenarioSha256": "f9f7118d55155d6d1b01b56897b6b08a87fc0fc97d3ee641e8ce9e871104b672",
       "reason": "仕様例と同じREQ-070・表の出力・tests/report.test.tsを持つ文書と証拠を作り、出典・状態・要約・Requirement名・テスト・合格の全列を構造化行とMarkdown行で完全一致でassertする。",
       "sources": [
         "REQ-070"
@@ -5052,8 +4968,8 @@
     {
       "id": "SCN-42972ca81bd9c3611153",
       "status": "reviewed",
-      "scenarioSha256": "901b6124fe59f313d7a7a777c548c11db0b40ab83fa6741052a59bcb44d5a957",
-      "reason": "日時の異なる2証拠を与え、新しいSHAと合格結果、tests/latest.test.tsが選ばれ、古い不合格や空のcoverageが混ざらないことをassertする。",
+      "scenarioSha256": "a2712b204c257f26c9bea13c6985d566b77affe9ad2d9e8d22d2209c3340db07",
+      "reason": "記録した日時の異なる2証拠を与え、新しいSHAと合格結果、tests/latest.test.tsが選ばれ、古い不合格や空のcoverageが混ざらないことをassertする。ファイル名の順を日時どおりにした2証拠でも新しいSHAが選ばれることをassertする。",
       "sources": [
         "REQ-070"
       ],
@@ -5067,30 +4983,32 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "記録した日時がいちばん新しい記録を使う",
-          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+          "sha256": "3eefdafedfe99a236daf5fcb5e8d75eb7f53b113e56d5561209911c3238c63d0",
+          "hashScope": "block"
         }
       ]
     },
     {
       "id": "SCN-2254680e42079f95b639",
       "status": "reviewed",
-      "scenarioSha256": "7ebb595f6652b316d531fe4122b5585b1ff516c76733f8ac1d9a0e0e0fb03fc3",
-      "reason": "進行中ディレクトリを作らずarchive/2026-10-23-c1だけを作り、保存した文書の表の出力というRequirement名がレポート行に出ることをassertする。",
+      "scenarioSha256": "8623a36d8f34e8b1e0f61ba8ff64aab2bb5f780720b373e31738b8d3788445b4",
+      "reason": "進行中ディレクトリを作らずarchive/2026-10-23-c1だけを作り、その文書を保存した証拠から、表の出力というRequirement名がレポート行に出ることをassertする。",
       "sources": [
-        "REQ-070"
+        "REQ-213"
       ],
       "tests": [
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "archive した change でも",
-          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+          "sha256": "437a2428a639f2336c24b0fc97970c5c7c6435040f36991c89c4a652300496ea",
+          "hashScope": "block"
         }
       ]
     },
     {
       "id": "SCN-7a7b55772e9a9816c80c",
       "status": "reviewed",
-      "scenarioSha256": "d60b59d9dfe7c22970be0156f51fd65aab0f0b5a3d9d4fe6e1c8d03c5310d6ed",
+      "scenarioSha256": "d07e37f0d10a650ec2271a017b0e7e0109cf45fbc6c449510cd923911c883c33",
       "reason": "証拠を空にした入力でrunReportの終了コード1と、先に実行するloomake trace record --change c1の案内をassertする。",
       "sources": [
         "REQ-070"
@@ -5107,23 +5025,24 @@
     {
       "id": "SCN-76f869d7d7e1767bae80",
       "status": "reviewed",
-      "scenarioSha256": "6db380f0d699ab43d1d9ab4d486e5ff5b65cdfaef0b571b347e405aff52e7dfd",
-      "reason": "CLIへ../c1を渡し、終了コード2とパスの区切りを含めないよう求める日本語をassertする。",
+      "scenarioSha256": "332fe0db59a70d81a65188164a3b6d0a62d313b41497a2b75f80aaafb20a4529",
+      "reason": "CLIへ../c1を渡し、終了コード2と、パスの区切りを含めないよう求める日本語をassertする。",
       "sources": [
-        "REQ-070"
+        "REQ-213"
       ],
       "tests": [
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "change-id にパスの区切りを含めると",
-          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+          "sha256": "dc628ad78e8b7ae8f8ce27f693a00456e9e549edc965c855329ff7d724852dbf",
+          "hashScope": "block"
         }
       ]
     },
     {
       "id": "SCN-44a756307dceb3884d0d",
       "status": "reviewed",
-      "scenarioSha256": "e808c857187708d4f2c3c7856a00238f33afa9a8293fdc363cb1be50ae6c3603",
+      "scenarioSha256": "1dc39144d176a085da862f95cdee79e4d6a5fc066fcaa067912dbdde0b984c20",
       "reason": "REQ-070の保存した要約を持つ証拠を用意した後で作業ツリーの要約を変更し、全列が元の行のまま、changedDocumentsがtrace.mdだけ、変更後の要約がMarkdownに出ないことをassertする。",
       "sources": [
         "REQ-070"
@@ -5140,8 +5059,8 @@
     {
       "id": "SCN-595bc3a27f4cb872e4ab",
       "status": "reviewed",
-      "scenarioSha256": "0378b179e0895d889cefb1cea4fbe231a0c81bf9eecab18759fd5c974ae8550e",
-      "reason": "REQ-075を範囲外とした台帳で、行のID・状態・結果nullとMarkdownの範囲外の行をassertする。",
+      "scenarioSha256": "34beffb7134c2b5ee78a0477a6818227d18b1a5dcaf49eeea3dbe5182cd84177",
+      "reason": "REQ-075を範囲外とした台帳で、構造化レポートの行のID・状態・結果nullと、Markdownの範囲外の行をassertする。",
       "sources": [
         "REQ-071"
       ],
@@ -5157,7 +5076,7 @@
     {
       "id": "SCN-5fbdd67cf1f0d15de3b6",
       "status": "reviewed",
-      "scenarioSha256": "4d6106bf57ed48d70fbd08e676d21c25cee3e98b1faab3d40dfdb562dcc3584e",
+      "scenarioSha256": "cf7d7064283cf8bf504ad7dbccc4be61ab2fdd59e54b5f34ecbea91f80fbf691",
       "reason": "REQ-090を既存仕様で充足とした台帳で、構造化レポートの行にID・状態が残り、反映済の合格と区別した結果nullになることをassertする。",
       "sources": [
         "REQ-071"
@@ -5209,7 +5128,7 @@
       "id": "SCN-3d6b99e302f285ab4982",
       "status": "reviewed",
       "scenarioSha256": "37d2f197ed3ed2f579bf73b217274eeb956dc3b3f70a0a0b8669d084138473de",
-      "reason": "CLIのmd指定で終了コード0と検収レポートの見出しをassertし、同じMarkdown出力経路で仕様例の全列を持つ実際の表の行もassertする。",
+      "reason": "CLIのmd指定で終了コード0とリリースレポートの見出しをassertし、同じMarkdown出力経路で仕様例の全列を持つ実際の表の行もassertする。",
       "sources": [
         "REQ-074"
       ],
@@ -5217,7 +5136,8 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "--format md で Markdown を出し",
-          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+          "sha256": "7ff61633cf70b4e6248c0b27379b7963dec790958a9b6b741052bb8c9766fac8",
+          "hashScope": "block"
         },
         {
           "file": "packages/trace/test/report.test.ts",
@@ -5299,7 +5219,7 @@
       "id": "SCN-1038977605831c5c0ed5",
       "status": "reviewed",
       "scenarioSha256": "6f7ed0d1b8393e23688f11c5d6accd7abd55b110f21fe7e25926a18c639d708a",
-      "reason": "Markdownの主要な日本語の見出し7つと、出典・状態・要約・最後の検査結果などを含む表の列名の行をassertする。",
+      "reason": "Markdownの日本語の見出し7つ（# リリースレポート、## 要注意の要件、## 使った証拠、## 要件ごとの結果、## 確認事項、## 仮定、## 合意の記録の警告）と、出典・状態・要約・最後の検査結果などを含む表の列名の行をassertする。",
       "sources": [
         "REQ-088"
       ],
@@ -5307,7 +5227,8 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "レポートの見出しと表の列名は日本語",
-          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+          "sha256": "a77a3f964b5803eb56bc6b56bdc2adcf336d4f21df48cc2552d815df95cd96cc",
+          "hashScope": "block"
         }
       ]
     },
@@ -5332,7 +5253,7 @@
       "id": "SCN-7449d308e912d8d7c67f",
       "status": "reviewed",
       "scenarioSha256": "f2a78cb07d315f0f45d76fc2965337ecb6dbf048638216dae063aa6626acf363",
-      "reason": "REQ-070に合格したテストがない証拠でnoPassingTestsがREQ-070だけとなり、Markdownの注意が要件表より前に出ることをassertする。",
+      "reason": "REQ-070に合格したテストがない証拠でnoPassingTestsがREQ-070だけとなり、Markdownの注意が要件表（## 要件ごとの結果）より前に出ることをassertする。",
       "sources": [
         "REQ-072"
       ],
@@ -5340,7 +5261,8 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "反映済で合格したテストのない要件を",
-          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+          "sha256": "c3e2fbfaacdafa527279300efc5839183e19b18784ff6a4e1a394b36787be1eb",
+          "hashScope": "block"
         }
       ]
     },
@@ -5381,8 +5303,8 @@
     {
       "id": "SCN-db7d38fb9c4206f9fb81",
       "status": "reviewed",
-      "scenarioSha256": "8dbc6bd541bcad383ec072d1d78b183233353e329486bdc03b462d929ad4f72d",
-      "reason": "回答済みのQ-01を与え、ID・質問・回答・顧客PM・回答日を構造化レポートとMarkdownの行で完全一致でassertする。",
+      "scenarioSha256": "d4e5e8974c19eb4aadeceaba62bf3199737c864a9beb5d909384df8704337955",
+      "reason": "回答済みのQ-01を与え、ID・質問・回答・プロダクト責任者・回答日を構造化レポートとMarkdownの行で完全一致でassertする。",
       "sources": [
         "REQ-077"
       ],
@@ -5390,7 +5312,8 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "確認事項ごとに、ID・質問・回答・回答者・回答日を並べる",
-          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+          "sha256": "c319fc24a9c6c2a315eee13011900bd4da6d2bb28e207b0d5cda068ee943cbab",
+          "hashScope": "block"
         }
       ]
     },
@@ -5533,16 +5456,17 @@
     {
       "id": "SCN-fc8d3b636e2393b5bd4d",
       "status": "reviewed",
-      "scenarioSha256": "6bd9ef4d5450440c2257743a745cba84fed19a0aeaafbd27437cbcf925b86ac5",
-      "reason": "仕様で定めた説明文の全文と、Markdownでその説明が実際に現れ、要件表より前に置かれることをassertする。",
+      "scenarioSha256": "7745bcdbbed81e911fd41c9a5db5a3d9850c974c6a6ffa8e82eeb9d099a92a3f",
+      "reason": "仕様で定めた説明文の全文と、Markdownでその説明が実際に現れ、「## 要件ごとの結果」の見出しより前に置かれることをassertする。",
       "sources": [
         "REQ-131"
       ],
       "tests": [
         {
           "file": "packages/trace/test/report.test.ts",
-          "contains": "要件ごとの検収の表より前に、検査の範囲の説明を載せる",
-          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+          "contains": "要件ごとの結果の表より前に、検査の範囲の説明を載せる",
+          "sha256": "ffc489c3e4c0e83e2877267c2492c7df58b9ce7f3e798a33017d324a95ad4d92",
+          "hashScope": "block"
         }
       ]
     },
@@ -6326,22 +6250,20 @@
     },
     {
       "id": "SCN-ad5cf50a9bb3641f5884",
-      "status": "superseded",
-      "scenarioSha256": "3c6d596b0f999e4f304093eb4caafdf12dfff093f6748f794f986f15ef1cbd3e",
-      "reason": "relax-commit-push-budgetで1操作の期限の例外を変更した。変更後の共有予算の規則と同じ停止条件を、明示した差分仕様のScenarioで確認する。",
-      "replacement": "SCN-913c922eba379cbde67e"
+      "status": "unreviewed",
+      "scenarioSha256": "59feb6134dbf85e418141def230ec70fab40b99f2628e38677cf1d3dd3775d6e",
+      "reason": "置換先のScenario（SCN-913c922eba379cbde67e）は差分仕様のarchiveで主仕様から消えたため、置換を保てない。"
     },
     {
       "id": "SCN-418897b6484b2b6e8eff",
-      "status": "superseded",
-      "scenarioSha256": "2cbc0be109d261ce6dae599b455281001b3e5b86b98fe5de974e9c92d39f0ed0",
-      "reason": "relax-commit-push-budgetで1操作の期限の例外を変更した。変更後の共有予算の規則と同じ停止条件を、明示した差分仕様のScenarioで確認する。",
-      "replacement": "SCN-d145be14bb46d8431d90"
+      "status": "unreviewed",
+      "scenarioSha256": "96b1d12fe51b905d80bc18007b9d24b8d0e1dd24a082303deb396e37a1c0fa68",
+      "reason": "置換先のScenario（SCN-d145be14bb46d8431d90）は差分仕様のarchiveで主仕様から消えたため、置換を保てない。"
     },
     {
       "id": "SCN-8fe96410ddc145f6b382",
       "status": "reviewed",
-      "scenarioSha256": "06c2a9fe4bbdbc705cea34b749ca9e03e277418a8b7f58a23c4db8dd1d6f45c2",
+      "scenarioSha256": "52f33c3191890d46e47c7efaf99f9862823a2cc78ef96f6ce3967b6a83c7f3b7",
       "reason": "実品質プロセスが一時的なゲート完了印を読んだ合図とPIDを確認し、共有予算後の停止、タスク全文の復元、実装とHEAD、公開なしをassertする。実supervisor経由のGit起動を透過観測し、品質コマンド開始前の起動を正の対照に、開始後にGitが起動していないことも確認する。",
       "sources": [
         "REQ-182"
@@ -6681,7 +6603,7 @@
     {
       "id": "SCN-248da42702f5e3845934",
       "status": "reviewed",
-      "scenarioSha256": "bf607833c8a30f24306aa31e6804ef50fc614d62e49a030f931d4d0a2fe64739",
+      "scenarioSha256": "3bd7425f12d67b7a52d2efd2c4e1dda0608f8774cf1e6887c589e03923bc4861",
       "reason": "合格や期限超過と検証中の状態変更が重なっても、状態変更の理由で停止することをassertする。",
       "sources": [
         "REQ-205"
@@ -6698,7 +6620,7 @@
     {
       "id": "SCN-49a0bbaa0c78a779a507",
       "status": "reviewed",
-      "scenarioSha256": "2a0624efac012e670b4377b9bc8d0adf5b826707218082ef3250940f173ed659",
+      "scenarioSha256": "4adfb8f57089511c384c5c692caf465be0ebda4eb2f04b8a75d583f5b0da7439",
       "reason": "修正回数が直前・一致・超過の場合と上限0を試し、期限と重なる場合の優先順位もassertする。",
       "sources": [
         "REQ-205"
@@ -6715,7 +6637,7 @@
     {
       "id": "SCN-7aaf0324d092f7f29813",
       "status": "reviewed",
-      "scenarioSha256": "2e914a20169dc359484207494898c937ef1a12301a59db3782e8da70246df95a",
+      "scenarioSha256": "2b56629518f652cb1cafef2ea80766fb84638a396d2330b99c3c53d708bd6cfd",
       "reason": "状態が変わらず合格した場合は、回数と期限の記録があってもpassedをassertする。",
       "sources": [
         "REQ-205"
@@ -6765,24 +6687,21 @@
     },
     {
       "id": "SCN-87b304fc0911532a0b69",
-      "status": "superseded",
-      "scenarioSha256": "186f3ee90b19f128abdd0bc39b06f944aeaab8142192bc1a82bd6bf5186a1889",
-      "replacement": "SCN-83f9b26580280ca6219a",
-      "reason": "assertionの数え方からimportとコメントを除く後続の差分仕様へ置き換えた。置換先の条件と現在の試験を今回読み直した。"
+      "status": "unreviewed",
+      "scenarioSha256": "6e57f302628d63330fc5d22a6e8c16ae7d09d578aa52a453d4207ef450d1d970",
+      "reason": "置換先のScenario（SCN-83f9b26580280ca6219a）は差分仕様のarchiveで主仕様から消えたため、置換を保てない。"
     },
     {
       "id": "SCN-48f6a4fd26b21b19b555",
-      "status": "superseded",
-      "scenarioSha256": "d5b450ea94916b8a316dfb1bb672519d7d3eb7cce0fec2c0ab8de94df32cbd31",
-      "replacement": "SCN-14aafad9db2f8528741e",
-      "reason": "assertionの数え方からimportとコメントを除く後続の差分仕様へ置き換えた。置換先の条件と現在の試験を今回読み直した。"
+      "status": "unreviewed",
+      "scenarioSha256": "e1b58c2e6f105dc48f7c8484196a6b8c60a64299f1456f66c308d5327d1d3b6d",
+      "reason": "置換先のScenario（SCN-14aafad9db2f8528741e）は差分仕様のarchiveで主仕様から消えたため、置換を保てない。"
     },
     {
       "id": "SCN-f7b1249c3270b37a9782",
-      "status": "superseded",
-      "scenarioSha256": "c36aae93f2dc63145ec94f071f38365a44a27c2792f673f37825590448fcd895",
-      "replacement": "SCN-2385d9f8ede89a87b766",
-      "reason": "assertionの数え方からimportとコメントを除く後続の差分仕様へ置き換えた。置換先の条件と現在の試験を今回読み直した。"
+      "status": "unreviewed",
+      "scenarioSha256": "b0e5c1f4378e19ee36ff6a8c69f8e4d3d71fd368d073163f07ad073d8f0bde94",
+      "reason": "置換先のScenario（SCN-2385d9f8ede89a87b766）は差分仕様のarchiveで主仕様から消えたため、置換を保てない。"
     },
     {
       "id": "SCN-896157c166b6c8ff573a",
@@ -6861,16 +6780,17 @@
     {
       "id": "SCN-468dd0a0c65faccb82a5",
       "status": "reviewed",
-      "scenarioSha256": "3330c3bb7c051c0c26683dac9e1c1c6bd0fd5d7d46ad46435a8b405db14a589f",
+      "scenarioSha256": "5101dfeacfff2bbade5e41a37376d07eedf0c8cfa589a7d714eaeb3f54608376",
+      "reason": "CLIから仕様例のQ-01に5 回・担当者・2026-10-24を書き、行と終了コード0をassertする。別のQ-02を持つ文書では対象行だけを置換した全文との一致、LF/CRLFの保持、区切り文字のエスケープ、仕様ゲート案内をassertする。core試験でも対象外の全行の保持を確認する。",
       "sources": [
         "REQ-202"
       ],
-      "reason": "CLIから仕様例のQ-01に5 回・顧客担当・2026-10-24を書き、行と終了コード0をassertする。別のQ-02を持つ文書では対象行だけを置換した全文との一致、LF/CRLFの保持、区切り文字のエスケープ、仕様ゲート案内をassertする。既存のcore試験でも対象外の全行の保持を確認する。",
       "tests": [
         {
           "file": "packages/cli/test/trace-agreement.test.ts",
           "contains": "回答・回答者・回答日を書き、仕様ゲートが通る",
-          "sha256": "003cf20521ab1362372f1ce93cbbc046ea71a9bfcfd4b401b652509aadab9636"
+          "sha256": "e54cc96dd6a9e89d1878c915010454cf578941b730e7376e2aab5cebe210aaa6",
+          "hashScope": "block"
         },
         {
           "file": "packages/cli/test/trace-agreement.test.ts",
@@ -6881,7 +6801,8 @@
         {
           "file": "packages/core/test/trace-edit.test.ts",
           "contains": "ID の行の列に値を書き、ほかの行は変えない",
-          "sha256": "db99961acc8021a96ae61c6d5e78f76fda0e8383a25958bdf00e975f7e00d98d"
+          "sha256": "7fc5a1c4bdfdf7b24c8d7052325227ee1c95fe4cad9aab394752c50c48e49b85",
+          "hashScope": "block"
         }
       ]
     },
@@ -7089,7 +7010,7 @@
       "id": "SCN-891b8690239995656268",
       "status": "reviewed",
       "scenarioSha256": "570f2d0867ead2052dd93c249a79d28bdb934089187a2e5fb9c163caa5d5bec3",
-      "reason": "全要件のcoverageはあるがlint不合格の証拠を与え、failedChecksがcommand: lintだけ、注意が要件表より前、要注意なしの表示がないことをassertする。",
+      "reason": "全要件のcoverageはあるがlint不合格の証拠を与え、failedChecksがcommand: lintだけ、注意が要件表（## 要件ごとの結果）より前、要注意なしの表示がないことをassertする。",
       "sources": [
         "REQ-072"
       ],
@@ -7097,7 +7018,8 @@
         {
           "file": "packages/trace/test/report.test.ts",
           "contains": "証拠の検査が不合格なら、冒頭に不合格の検査を挙げ",
-          "sha256": "97b97fdb42412caef05adca8b6bc0587f752857f8ab5c35dcb749cc92f03187e"
+          "sha256": "5488bb27bc075339f9a805202ec0d8af32d40a63e22bb67cba1c4bb342965721",
+          "hashScope": "block"
         }
       ]
     },
@@ -7383,8 +7305,8 @@
     {
       "id": "SCN-17944c2151150fd5768f",
       "status": "reviewed",
-      "scenarioSha256": "80d9e91db2879c6bf61027df895bb28067c3cceb21dfaacfa546ddd0bc03ac95",
-      "reason": "子の起動とPIDを確認し、runClaudeが戻った時点の停止状態と、戻ってから1100ms後も遅延ファイルがないことを、試験自身の回収前にassertする。",
+      "scenarioSha256": "a1d58797fdb8ab7494d4c9768d21183970c3ac8f9dcdc0a81fefc608cc5f6924",
+      "reason": "標準入出力を共有しない子の起動とPIDを確認し、runClaudeが戻った時点の子が消滅・ゾンビ・終了途中のいずれかであること、戻った時点と1100ms後に遅延ファイルがないことを、試験自身の回収前にassertする。",
       "sources": [
         "REQ-212"
       ],
@@ -7392,15 +7314,16 @@
         {
           "file": "packages/runner/test/engine-normal-exit.test.ts",
           "contains": "戻る前に 標準入出力を共有しない子 を停止し、遅延書き込みを防ぐ",
-          "sha256": "c377d1e5b4056133480c80e8bcecd3bb6deb5a9ff1810b9a644b2baccaecb701"
+          "sha256": "d759d2d102de9bd2d4f477c9a06ee2153b96304de40776fde17c80c06082c79b",
+          "hashScope": "block"
         }
       ]
     },
     {
       "id": "SCN-1ff909d2ccb596609687",
       "status": "reviewed",
-      "scenarioSha256": "019dabba35c3566a34e6b6fe79c967af5340b4c48593da06b3878bec5c7b5575",
-      "reason": "SIGTERMの受信後も終了しない子を、標準出力を共有しない場合と継承する場合で起動し、戻り時点の停止と遅延書き込みなし、親の出力と終了コード・フラグの保持をassertする。",
+      "scenarioSha256": "caf6d6a36f7b06966e88e028cdc6bd819ee00124606f0cc1c6cec5539231dc9e",
+      "reason": "SIGTERMを無視する子を、標準入出力を共有しない場合と出力を共有する場合で起動し、戻り時点の停止、遅延書き込みなし、親の出力と終了コード・フラグの保持をassertする。共有しない場合は、戻った時点で子が終了途中ではなく消滅かゾンビであることもassertする。",
       "sources": [
         "REQ-212"
       ],
@@ -7408,20 +7331,28 @@
         {
           "file": "packages/runner/test/engine-normal-exit.test.ts",
           "contains": "戻る前に SIGTERMを無視し標準入出力を共有しない子 を停止し、遅延書き込みを防ぐ",
-          "sha256": "c377d1e5b4056133480c80e8bcecd3bb6deb5a9ff1810b9a644b2baccaecb701"
+          "sha256": "d759d2d102de9bd2d4f477c9a06ee2153b96304de40776fde17c80c06082c79b",
+          "hashScope": "block"
         },
         {
           "file": "packages/runner/test/engine-normal-exit.test.ts",
           "contains": "戻る前に SIGTERMを無視し出力を共有する子 を停止し、遅延書き込みを防ぐ",
-          "sha256": "c377d1e5b4056133480c80e8bcecd3bb6deb5a9ff1810b9a644b2baccaecb701"
+          "sha256": "d759d2d102de9bd2d4f477c9a06ee2153b96304de40776fde17c80c06082c79b",
+          "hashScope": "block"
+        },
+        {
+          "file": "packages/runner/test/engine-normal-exit.test.ts",
+          "contains": "戻った時点でSIGTERMを無視する子は終了途中ではなく、消滅かゾンビになっている",
+          "sha256": "eb5228e5567254b21fb47da21865d99ea6ec37ef6baf089b036a6abe553f9676",
+          "hashScope": "block"
         }
       ]
     },
     {
       "id": "SCN-6d4bc1799cc7e8100a56",
       "status": "reviewed",
-      "scenarioSha256": "7503b8f02a947f1484c403bf515744f9382428f97fa19639b964256f4962ebe4",
-      "reason": "通常のJSON出力と終了コード0、本文と元の出力、時間切れ・中断・出力上限の各falseをassertする。",
+      "scenarioSha256": "39df6251f0e415509e3df5ff01870d16c6087503ebc46e712549d2ef74c6c8e8",
+      "reason": "通常のJSON出力と終了コード0を返すエンジンで、終了コード0、本文と元の出力、時間切れ・中断・出力上限の各falseをassertする。",
       "sources": [
         "REQ-212"
       ],
@@ -7429,14 +7360,15 @@
         {
           "file": "packages/runner/test/engine-normal-exit.test.ts",
           "contains": "通常のJSON出力と終了コード0を保ち、停止フラグを付けない",
-          "sha256": "c377d1e5b4056133480c80e8bcecd3bb6deb5a9ff1810b9a644b2baccaecb701"
+          "sha256": "ac5f50379f6501fe9877ee9e6c1a095e405589e16aba9f706436cbbf211b032d",
+          "hashScope": "block"
         }
       ]
     },
     {
       "id": "SCN-794cb4aa059d0afe857e",
       "status": "reviewed",
-      "scenarioSha256": "ea5b40938cebc86adff43d3755202f516930771f228d76a8d1c3750ef0ab0690",
+      "scenarioSha256": "41afec722968918822ab2a9e2823f397991f4d4dc3a4da20a343a3a1816702a7",
       "reason": "非ゼロ終了と通常出力を渡し、終了コード1と出力を保ち、中断や時間切れ・出力上限にしないことをassertする。",
       "sources": [
         "REQ-212"
@@ -7445,14 +7377,15 @@
         {
           "file": "packages/runner/test/engine-normal-exit.test.ts",
           "contains": "非ゼロの終了コードと生の出力を保ち、停止フラグを付けない",
-          "sha256": "c377d1e5b4056133480c80e8bcecd3bb6deb5a9ff1810b9a644b2baccaecb701"
+          "sha256": "2f8c7c35f62ff162e5164596b929f51f4df4a675eb82fdeda57fcb04774ed439",
+          "hashScope": "block"
         }
       ]
     },
     {
       "id": "SCN-17ed57f6933098635f86",
       "status": "reviewed",
-      "scenarioSha256": "efcfcad984cc22ce3fa357cd84bcafbe1fa8469ea8d2554072a4a47d098b89c5",
+      "scenarioSha256": "62515f2c07b9b8e48867cc22b5f053bf5e6dbdbd661d9ed0b1721f9ac1d4358d",
       "reason": "外側の期限付き子で実runnerソースの通常runを呼び、FIFOを読まずcode1と日本語の対象・理由を返すこと、エンジン0回、HEADとタスク全文の不変、FIFOの保持、停止summaryと公開なしをassertする。",
       "sources": [
         "REQ-224"
@@ -7469,7 +7402,7 @@
     {
       "id": "SCN-642da6a86db62483f925",
       "status": "reviewed",
-      "scenarioSha256": "a64e8e088f17635f88f8479afdae0969f4d4b334bcbd65710946dd99ee77a0fa",
+      "scenarioSha256": "cc80af3b251a9de58a721305eee8395729054c5fefd6ca3eec67c86dfa97ef9d",
       "reason": "試験用エンジンが実装とFIFOを作る通常runで、code1と日本語の対象・理由、エンジン1回、HEADとタスク全文の不変、実装とFIFOの保持、停止summaryと公開なしをassertする。",
       "sources": [
         "REQ-224"
@@ -7486,7 +7419,7 @@
     {
       "id": "SCN-e3bcdf4624324853a751",
       "status": "reviewed",
-      "scenarioSha256": "8b725cf3957d51f00ba77590eab0e96c89d74a8852fbcb5584b17d6b59731cc2",
+      "scenarioSha256": "c7a89959d0d9ef3ef249fde373809959e9f582ccdfe623fcb001559a50360b9c",
       "reason": "実post-commitフックを配置し、通常runの成功、タスク完了と実装コミット、フックが作る記録をassertする。",
       "sources": [
         "REQ-224"
@@ -7503,7 +7436,7 @@
     {
       "id": "SCN-cf6cbc34d3dd51cd7358",
       "status": "reviewed",
-      "scenarioSha256": "fcab9138ddcabf9de712ee75e09cb688b51032421391e5fa07047f4cc4b4a5a4",
+      "scenarioSha256": "92a2bf7c29f22a00a2162610a190edde6d0f01fb171545e873e32cabaea90970",
       "reason": "リンク先のないリンクと、FIFOを含むディレクトリへのリンクで通常runを呼び、リンク先を読まず成功し、実装とタスクをコミットしてリンクを保つことをassertする。",
       "sources": [
         "REQ-224"
@@ -7526,8 +7459,8 @@
     {
       "id": "SCN-de2839e10f38c0fc9d00",
       "status": "reviewed",
-      "scenarioSha256": "0f443f7d69ab434219cc0a7b1fddf1bb7e210a1286b0ba303171c23d0b323503",
-      "reason": "セキュリティ文書を読み、リンク先と呼び出すコードの検査対象外、利用者の権限、内容と依存先を信頼して確認することを明記した文をassertする。",
+      "scenarioSha256": "a2d7774763f4c44a26d0b06b02689e7ac44d5224eb71ee7a949902090ffe6edf",
+      "reason": "セキュリティ文書を読み、リンク先と呼び出すコードの検査対象外、利用者の権限での実行、内容と依存先を信頼して確認することを明記した文をassertする。",
       "sources": [
         "REQ-225"
       ],
@@ -7535,15 +7468,16 @@
         {
           "file": "tests/security-boundaries-docs.test.ts",
           "contains": "フックのリンク先と呼び出すコード、実行する権限を明記する",
-          "sha256": "f3db0357b9913eee2ee5893e859d2cfcd774eddc3f57c69ff2397ff43f866c12"
+          "sha256": "e4a7f5f895ff00f85ac4627b8ce51f1dbf3e22850c907d947b3448777117a551",
+          "hashScope": "block"
         }
       ]
     },
     {
       "id": "SCN-cd2d5c54891eb75f861e",
       "status": "reviewed",
-      "scenarioSha256": "9c90564078af2d2d24f0a5477063ca47b23b69b4b2067d4f9f4a9f9d540f932e",
-      "reason": "文書に同じPOSIXグループを対象とすること、別セッションへ離脱した子とWindowsの同等保証を含めないこと、未実行環境や実接続の成功を主張しないことをassertする。",
+      "scenarioSha256": "8e394bc8db1fa00bc24041441320d9c1ce6bd501b9f7b0e3bca8fcce0bb668ab",
+      "reason": "セキュリティ文書に同じPOSIXプロセスグループが対象であること、別セッションへ離脱した子とWindowsの同等保証を含めないこと、未実行環境や実接続の成功の根拠にしないことを明記した文をassertする。",
       "sources": [
         "REQ-225"
       ],
@@ -7551,7 +7485,8 @@
         {
           "file": "tests/security-boundaries-docs.test.ts",
           "contains": "同じPOSIXグループと離脱した子、Windowsの保証範囲を明記する",
-          "sha256": "f3db0357b9913eee2ee5893e859d2cfcd774eddc3f57c69ff2397ff43f866c12"
+          "sha256": "9ed58ff0f14bccdbbd4fdda7dcd2d0acc252c2a07ca590402b2efa87048fe40e",
+          "hashScope": "block"
         }
       ]
     },
@@ -7616,7 +7551,7 @@
       "id": "SCN-b4d3f0c6d21b55f499d0",
       "status": "reviewed",
       "scenarioSha256": "3913cebf5d66ee13f00e024702ac9da4b34b2060d5805d51c406924ac714d6f4",
-      "reason": "監視役の起動時間を引いた共有予算で実PIDの対象が停止することと、途中の時間を二度引いて早く止めない対照をassertする。untilDeadlineは短い操作期限を超え、共有予算だけを使う。",
+      "reason": "監視役の起動時間を引いた共有予算で実PIDの対象が停止することをassertする。対照として、準備に2秒（Windowsは4秒）かけても予算5秒（Windowsは9秒）の残りで2秒の対象が終了コード7で終わり、boot に started と finished が書かれることをassertし、準備の時間を二度引いて早く止めないことを確かめる。untilDeadlineは短い操作期限を超え、共有予算だけを使う。",
       "sources": [
         "REQ-180"
       ],
@@ -7630,7 +7565,8 @@
         {
           "file": "packages/kit/test/process-startup.test.ts",
           "contains": "準備の経過時間を二度引かない",
-          "sha256": "f457c92aefb291c88f868a5e9526d1b0a71df1e58536b06d3ff08a8a8bb8c00a"
+          "sha256": "5406c0fc01d92158bb9b54b354379f41ea034a278456863fdc07c563f177614f",
+          "hashScope": "block"
         }
       ]
     },
@@ -7795,392 +7731,6 @@
       ]
     },
     {
-      "id": "SCN-5debade2334fd0735ab2",
-      "status": "reviewed",
-      "scenarioSha256": "43ef8b8bfa40f8ae7f41d86215d7d0395c8eaec1ab443fcb4d74868a8f6ac53a",
-      "reason": "実際の ci.yml のマトリクスに ubuntu-latest・macos-latest・windows-latest の 3 つがあり、runs-on がマトリクスの OS を使い、pnpm test を実行するステップがあることを assert する。文書だけの PR の例外（REQ-270）は、この試験では扱わない。",
-      "sources": [
-        "REQ-049"
-      ],
-      "tests": [
-        {
-          "file": "tests/monorepo.test.ts",
-          "contains": "[REQ-049] ubuntu・macos・windows の 3 つで pnpm test を実行する",
-          "sha256": "ed68565fdbc3265f7b0030692b3b17d99275eaf6bf6265ebfd93f1ac41694d04"
-        }
-      ]
-    },
-    {
-      "id": "SCN-574c7e0de3b3d5645c72",
-      "status": "reviewed",
-      "scenarioSha256": "b8cb91d0e48e21d08f99b94be2405e3419bafabfcb9fb1b9c5d206a6992c929d",
-      "reason": "実際の ci.yml の quality ジョブのマトリクスが、ubuntu を除いた macOS と Windows に 1/2 と 2/2 のシャードを持つことと、シャードのあるジョブで pnpm test --shard=${{ matrix.shard }} を実行するステップ（条件は matrix.shard と文書だけでないこと）を assert する。シャードで変わる条件がテストの 2 つだけで、ほかの条件は文書だけの PR の条件だけであることも assert する。",
-      "sources": [
-        "REQ-214"
-      ],
-      "tests": [
-        {
-          "file": "tests/monorepo.test.ts",
-          "contains": "[REQ-214] macOS と Windows ではテストを 2 つのシャードに分け",
-          "sha256": "ed68565fdbc3265f7b0030692b3b17d99275eaf6bf6265ebfd93f1ac41694d04"
-        }
-      ]
-    },
-    {
-      "id": "SCN-e393dd8e1403ce3b49f0",
-      "status": "reviewed",
-      "scenarioSha256": "68b02cbad5f4a30613e00a2502fd33e96879c7636931e81cc3bf57e9c367fecc",
-      "reason": "実際の ci.yml の quality ジョブで、すべてのテストを実行するステップが --shard と --coverage の 2 つだけであること、--coverage のステップの条件が !matrix.shard と文書だけでないことであること、test:coverage がないことを assert する。",
-      "sources": [
-        "REQ-214"
-      ],
-      "tests": [
-        {
-          "file": "tests/monorepo.test.ts",
-          "contains": "[REQ-214] macOS と Windows ではテストを 2 つのシャードに分け",
-          "sha256": "ed68565fdbc3265f7b0030692b3b17d99275eaf6bf6265ebfd93f1ac41694d04"
-        }
-      ]
-    },
-    {
-      "id": "SCN-8128e6d413d17d69ca8d",
-      "status": "reviewed",
-      "scenarioSha256": "c3138fc643574aaed95e878a364ea6acaa91097d11610897c345186e7c68ee27",
-      "reason": "同じ 3 つのファイル（作業記録・change の tasks.md・changeset）の差分で、判定の関数が文書だけとすること、一時的な git のリポジトリでスクリプトが GITHUB_OUTPUT に docs_only=true を書くことを assert する。ci.yml では、判定より後のステップ（lint・typecheck・test・build・配布物の検査を含む）がすべて docs_only が true でないときだけ動くことを assert する。GitHub Actions での実際の実行は、この試験の範囲外。",
-      "sources": [
-        "REQ-270"
-      ],
-      "tests": [
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] 変えたファイルがすべて文書なら、文書だけと判定する",
-          "sha256": "2891cf1d215816a0b5389f5b69943af7b040741c162c1747f2d23831cceb191b",
-          "hashScope": "block"
-        },
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] 文書だけの PR では docs_only=true を書く",
-          "sha256": "9ecf1fbc783da662e9cbc473315c76698ea7bdfdb50d509976d98734323d7615",
-          "hashScope": "block"
-        },
-        {
-          "file": "tests/monorepo.test.ts",
-          "contains": "[REQ-270] 文書だけかの判定は、paths フィルタではなく",
-          "sha256": "6c934a24ef0ad32b655510d4658e88289b5c30c49bed1b2109902fc4d565dcb7",
-          "hashScope": "block"
-        }
-      ]
-    },
-    {
-      "id": "SCN-029692d0ae5b59e7c317",
-      "status": "reviewed",
-      "scenarioSha256": "a5345b4b13201e8e7cdea8e2d70b443812fab5b7b224ed665ff154d9a933c238",
-      "reason": "実際の ci.yml に paths・paths-ignore がなく、quality ジョブに条件がないこと、id: changes のステップが同梱のスクリプトをイベントの種類と向き先のブランチを渡して実行し、外部の Action を使わないこと、判定より前のステップに条件がなく、後のステップがすべて文書だけでないときだけ動くことを assert する。",
-      "sources": [
-        "REQ-270"
-      ],
-      "tests": [
-        {
-          "file": "tests/monorepo.test.ts",
-          "contains": "[REQ-270] 文書だけかの判定は、paths フィルタではなく",
-          "sha256": "6c934a24ef0ad32b655510d4658e88289b5c30c49bed1b2109902fc4d565dcb7",
-          "hashScope": "block"
-        }
-      ]
-    },
-    {
-      "id": "SCN-dba1cdd46b727172efb0",
-      "status": "reviewed",
-      "scenarioSha256": "006dba33f82623a70854a197de3be3b75b1331fd63749beaef34ed00ac2a53a3",
-      "reason": "イベントの種類が push のとき、判定の関数が git を呼ばずに文書だけとしないこと、文書だけのコミットのリポジトリでもスクリプトが docs_only=false を書くことを assert する。ci.yml の on が pull_request と main への push だけで、条件が「true でない」の形なので、false のときにすべてのステップが動くことも assert する。",
-      "sources": [
-        "REQ-270"
-      ],
-      "tests": [
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] main への push では、差分によらず文書だけと判定しない",
-          "sha256": "c13546ccd569569a3633e15b4d586ba31ae095769f369777fee2dc125eceb573",
-          "hashScope": "block"
-        },
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] main への push では docs_only=false を書く",
-          "sha256": "c4f1177adeb6ca8401f0a1b828fc1c0cf7455d2ff1267a577e1d9a5dca3cd3e5",
-          "hashScope": "block"
-        },
-        {
-          "file": "tests/monorepo.test.ts",
-          "contains": "[REQ-270] main への push では、判定が docs_only=false になり",
-          "sha256": "ed68565fdbc3265f7b0030692b3b17d99275eaf6bf6265ebfd93f1ac41694d04"
-        }
-      ]
-    },
-    {
-      "id": "SCN-3e5c76d0a427cd900322",
-      "status": "reviewed",
-      "scenarioSha256": "5d91420188b9d188dcd970e89bc29b6c69a3045ec7be864e73d119cf6abd17e7",
-      "reason": "packages/kit/src/verify/run.ts を文書として扱わないこと、文書と一緒にこのファイルを変えた差分を文書だけとせず、理由にこのパスを出すことを assert する。",
-      "sources": [
-        "REQ-270"
-      ],
-      "tests": [
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] コードと配布する Markdown は文書として扱わない",
-          "sha256": "77f2d467c816ad48bb489b668157d7141ab59572b35947ebf637cab7eaba32f1",
-          "hashScope": "block"
-        },
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
-          "sha256": "8940d8d923e2676b977fc2b075456efc5c6a53f8e08d7f55059cef20e1bf50cb",
-          "hashScope": "block"
-        }
-      ]
-    },
-    {
-      "id": "SCN-aa5e45dcd0fff9dd6861",
-      "status": "reviewed",
-      "scenarioSha256": "4149020a88bf42f3079df3abb37056a6b398da48b938391a80e02567355990dc",
-      "reason": "packages/kit/templates/AGENTS.md と packages/cli/README.md を文書として扱わないこと、templates の .md を含む差分を文書だけとしないことを assert する。",
-      "sources": [
-        "REQ-270"
-      ],
-      "tests": [
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] コードと配布する Markdown は文書として扱わない",
-          "sha256": "77f2d467c816ad48bb489b668157d7141ab59572b35947ebf637cab7eaba32f1",
-          "hashScope": "block"
-        },
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
-          "sha256": "8940d8d923e2676b977fc2b075456efc5c6a53f8e08d7f55059cef20e1bf50cb",
-          "hashScope": "block"
-        }
-      ]
-    },
-    {
-      "id": "SCN-ec8e9319aac195da27fe",
-      "status": "reviewed",
-      "scenarioSha256": "55b3302f8d9fc8c9f18430cb82bcc9cf85a6091785cb938c51fd2ba6064b6e98",
-      "reason": ".changeset/config.json・openspec/config.yaml・docs/wbs/initial-status.yaml・scripts/ci-gate.mjs のそれぞれを文書として扱わないこと、docs/ の下の .md と一緒にどれか 1 つを変えた差分を文書だけとせず、理由にそのパスを出すことを assert する。",
-      "sources": [
-        "REQ-270"
-      ],
-      "tests": [
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] 設定と実行用のファイルは、文書の置き場所にあっても",
-          "sha256": "2d3a707691dcdf574c905f77faedd9862ba77ef63742d4c2490da86bc7d412f9",
-          "hashScope": "block"
-        },
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
-          "sha256": "8940d8d923e2676b977fc2b075456efc5c6a53f8e08d7f55059cef20e1bf50cb",
-          "hashScope": "block"
-        }
-      ]
-    },
-    {
-      "id": "SCN-02eaf485f9e94642eef8",
-      "status": "reviewed",
-      "scenarioSha256": "105a435511be8a7b7d5d6826dac5254bcd291bbe3173456b68f5c953a7449f0f",
-      "reason": "tests/fixtures/verify-project/openspec/changes/sample/tasks.md と tests/fixtures/README.md を文書として扱わないこと、fixture の .md を含む差分を文書だけとしないことを assert する。",
-      "sources": [
-        "REQ-270"
-      ],
-      "tests": [
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] tests/ の下の試験用データは",
-          "sha256": "4c2e36336834d432e9c88292b328d176a6dc091994db1f043648d5b5711c59ff",
-          "hashScope": "block"
-        },
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
-          "sha256": "8940d8d923e2676b977fc2b075456efc5c6a53f8e08d7f55059cef20e1bf50cb",
-          "hashScope": "block"
-        }
-      ]
-    },
-    {
-      "id": "SCN-43e463f4ebf23c4404ee",
-      "status": "reviewed",
-      "scenarioSha256": "6fd86897ec8edec5d32be5987c2443456e4ac3ae074be63553cc7d1599e45f84",
-      "reason": "scripts/ci-docs-only.mjs と .github/workflows/ci.yml を文書として扱わないこと、それぞれを docs/ の下の .md と一緒に変えた差分を文書だけとせず、理由にそのパスを出すことを assert する。PR に入っている版のスクリプトで判定する点は、許可リストの外であることで扱い、判定のロジックは足していない。",
-      "sources": [
-        "REQ-270"
-      ],
-      "tests": [
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] 判定のスクリプトとワークフローを変えた PR は、文書だけと判定しない",
-          "sha256": "d942a35d1f153046ee4d9263d99bbf1901a39a310a21112ad7e3c271852d03e4",
-          "hashScope": "block"
-        }
-      ]
-    },
-    {
-      "id": "SCN-3f31d2e11b2834b07e87",
-      "status": "reviewed",
-      "scenarioSha256": "f3b6813774710495699450ed35692a58fc59fc484f2d5a57bc6bd3a352b855f5",
-      "reason": "docs/ の下の .json と .yml・.yaml、.github/ の下の .md、openspec/changes/archive/ の下の .mjs を、1 つずつ文書として扱わないことを assert する。",
-      "sources": [
-        "REQ-270"
-      ],
-      "tests": [
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] 設定と実行用のファイルは、文書の置き場所にあっても",
-          "sha256": "2d3a707691dcdf574c905f77faedd9862ba77ef63742d4c2490da86bc7d412f9",
-          "hashScope": "block"
-        }
-      ]
-    },
-    {
-      "id": "SCN-b1013e579b7995de0343",
-      "status": "reviewed",
-      "scenarioSha256": "d4c2df1ced2164ea39fe4ae1b1be0495b4337a033ef97b9f0fc635e1ad3d17a0",
-      "reason": "一時的な git のリポジトリで、1 つ目のコミットで packages/kit/src/a.ts を変え、2 つ目のコミットで docs/notes.md だけを変えたとき、スクリプトが docs_only=false を書き、理由に packages/kit/src/a.ts を出すことを assert する。2 つのコミットのあいだに、ベースと同じ名前のタグ（refs/tags/origin/main）やブランチ（refs/heads/origin/main）を作っても、スクリプトがベースとの差分で判定して docs_only=false を書き、理由に packages/kit/src/a.ts を出すことも assert する。判定の関数が refs/remotes/origin/<base>...HEAD の差分を -M 付きで読むことも別の試験で assert している。",
-      "sources": [
-        "REQ-270"
-      ],
-      "tests": [
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] 前のコミットでコードを変えた PR では",
-          "sha256": "f46ad64683479a8390dda7810b63be12aceb0c0d0ba78fd2c9a1721b7bdee34f",
-          "hashScope": "block"
-        },
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] ベースと同じ名前の参照",
-          "sha256": "b00cc784d8ec36040409ddab871e1a77a142ceb9d0c30c9973c3efa06b9c984e",
-          "hashScope": "block"
-        }
-      ]
-    },
-    {
-      "id": "SCN-52d13b01d8a78323c886",
-      "status": "reviewed",
-      "scenarioSha256": "c2e63bce7f4072d441b7cde856209c9e961fb880b3249e4cf6aca65d0eb8d82f",
-      "reason": "R と C の差分の行から変更前と変更後の両方のパスを取り出すこと、scripts/notes.md から docs/notes.md への名前の変更を文書だけとしないこと、一時的な git のリポジトリで git mv した差分でスクリプトが docs_only=false を書き、理由に変更前のパスを出すことを assert する。",
-      "sources": [
-        "REQ-270"
-      ],
-      "tests": [
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] 名前を変えたファイルは、変更前のパスも判定する",
-          "sha256": "ab9877fa70d42b72044b6d23c16cb44817653d55ecb19feeec7d16792f19f729",
-          "hashScope": "block"
-        },
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] 名前を変えたファイルは、変更前のパスが文書でなければ",
-          "sha256": "8bad23a1070020ad19dfc594ad39bef6f409145baf5475570b04c018295c3eec",
-          "hashScope": "block"
-        }
-      ]
-    },
-    {
-      "id": "SCN-355ffa6c8b4e84de765c",
-      "status": "reviewed",
-      "scenarioSha256": "be78ad71b64243013ee33137387d152dea4014d2fab9e0a6d1522321ca6d2d47",
-      "reason": "git が 0 以外で終わるとき、起動できないとき、向き先のブランチの名前がないとき、-z でない出力・知らない状態・衝突・パスの足りない名前の変更・NUL で終わらない出力・空の出力のとき、判定の関数が文書だけとしないことを assert する。一時的な git のリポジトリから origin/main を消したとき、スクリプトが終了コード 0 で docs_only=false を書き、調べられなかったと出すことも assert する。",
-      "sources": [
-        "REQ-270"
-      ],
-      "tests": [
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] 差分を取れないときは、文書だけと判定しない",
-          "sha256": "f0fcb9772a1a369287d282f66c17f9b99cd2f242d4d31a1a282ef645da044627",
-          "hashScope": "block"
-        },
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] 差分を解釈できないときは、文書だけと判定しない",
-          "sha256": "4bbafd0fe18c01b41ebd2e556d899d2f04e0355c471c100bcce41865e09ede4e",
-          "hashScope": "block"
-        },
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] 差分を取れないときは、失敗にせず docs_only=false を書く",
-          "sha256": "a180721c2d26fb3ba0a8a868c4e04210ea4b6a65b5ef2bb1a6d6bd21ac56ce12",
-          "hashScope": "block"
-        }
-      ]
-    },
-    {
-      "id": "SCN-312be9964769f05485d3",
-      "status": "reviewed",
-      "scenarioSha256": "d5cc883bca8f347c0a214a93b562b08071cf18da03f2fb069a01888dbacda73a",
-      "reason": "マージ先が feature-x のとき、判定の関数が git を呼ばずに文書だけとせず、理由にマージ先の名前を出すことを assert する。一時的な git のリポジトリでは、docs/notes.md だけを変えた同じ差分が、マージ先が main なら docs_only=true、feature-x なら docs_only=false になることを assert する。",
-      "sources": [
-        "REQ-270"
-      ],
-      "tests": [
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] PR のマージ先が main でないときは、差分によらず文書だけと判定しない",
-          "sha256": "7562868ab0f1c1d3e914e845c23116bc686343ad48100c2e0f1de21d70963b0f",
-          "hashScope": "block"
-        },
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] マージ先が main でない PR では docs_only=false を書く",
-          "sha256": "d496dd3f0f8d4b4fe38704ab7276a79d85b397b8ba8819f06ad1dc1edb2b87dc",
-          "hashScope": "block"
-        }
-      ]
-    },
-    {
-      "id": "SCN-af0412a0fc52c20e81d3",
-      "status": "reviewed",
-      "scenarioSha256": "3927de825c142b1aafcdedb496a0d70305341595a30f533df367026f7e02e2c4",
-      "reason": "一時的な git のリポジトリで、PR のブランチが docs/notes.md だけを変え、そのあと main に packages/kit/src/a.ts の変更が入り、HEAD を main に PR のブランチをマージしたコミット（CI のマージコミットと同じ形）にしたとき、スクリプトが docs_only=true を書くこと、つまり main で変わったファイルを判定に含めないことを assert する。",
-      "sources": [
-        "REQ-270"
-      ],
-      "tests": [
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] main が進んだあとのマージコミットでは、PR の変更分だけで判定する",
-          "sha256": "67ea7ad1bdd0c7470c3006feb581e33c344c26605dcb9a2c2c0aa1be01b4cca6",
-          "hashScope": "block"
-        }
-      ]
-    },
-    {
-      "id": "SCN-0bbf551970f3ff9815ef",
-      "status": "reviewed",
-      "scenarioSha256": "1b877a639f2a7567ffeb3d95880317ad1131d196182df967a6079d90a5292991",
-      "reason": "D の差分の行の packages/kit/src/a.ts を判定に含め、文書だけとせず理由にそのパスを出すことを assert する。一時的な git のリポジトリで git rm したファイルと docs/notes.md の変更でも、スクリプトが docs_only=false を書くことを assert する。",
-      "sources": [
-        "REQ-270"
-      ],
-      "tests": [
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] コードのファイルを消した PR は、文書だけと判定しない",
-          "sha256": "f0ff9149ebeb78892124b27203f674b7043d0a2e486efa68e2ecabefc80195af",
-          "hashScope": "block"
-        },
-        {
-          "file": "tests/ci-docs-only.test.ts",
-          "contains": "[REQ-270] コードのファイルを消した PR では docs_only=false を書く",
-          "sha256": "b72a9b369d44af7766d5d8a96d4a2c342da3691175447a8233d7e4f7689d3631",
-          "hashScope": "block"
-        }
-      ]
-    },
-    {
       "id": "SCN-b4aa7d284a164ad27829",
       "status": "reviewed",
       "scenarioSha256": "6d4d679da998e108053142a87b6a9bf076c07fbafddf5c7e093c8ecb1f967d6f",
@@ -8199,37 +7749,15 @@
     },
     {
       "id": "SCN-a470663d48eb55390e75",
-      "status": "reviewed",
+      "status": "unreviewed",
       "scenarioSha256": "71777ba0dadfaf84e64667faee6a9008160ea799fd243b6daf26aeec91587ebe",
-      "reason": "配る packages/kit/templates/AGENTS.md の報告の形の節を読み、作業したブランチごとのファイル docs/worklog/<日本時間の日付>/<ブランチ名>.md に記録すること、ブランチ名の / を - に置き換えること、同じ日・同じブランチのファイルがあれば末尾に追記することが書いてあると assert する。あわせて、<作業した日> が節になく、docs/worklog/<作業した日>.md がファイル全体にないこと、このリポジトリの移行のための「2026-10-27 までの日付ごとのファイル」の文が節にないことを assert する。日付ごとのファイルに書く元の文に戻すと失敗する。",
-      "sources": [
-        "REQ-288"
-      ],
-      "tests": [
-        {
-          "file": "tests/kit-assets.test.ts",
-          "contains": "[REQ-288] 報告の形の節に、作業したブランチごとのファイルに記録し",
-          "sha256": "211a06b1305975fd8d043f05f04ff03029a1945bd608adcd178df4c8a208c79d",
-          "hashScope": "block"
-        }
-      ]
+      "reason": "仕様の Source は REQ-273 だが、この節を確かめる試験の名前は [REQ-288] だけを持ち、[REQ-273] を持つ試験はこの Scenario を確かめていない。"
     },
     {
       "id": "SCN-625576c9f4194ed54eff",
-      "status": "reviewed",
+      "status": "unreviewed",
       "scenarioSha256": "92954538955d2ce39553b94c9cc2c022406f9affc0a90f63b8045f82487096ee",
-      "reason": "配る packages/kit/templates/AGENTS.md の報告の形の節を読み、作業記録はその作業の PR に含め、作業記録だけの PR は作らないという文と、PR のマージ後に記録を足すときは次の作業のブランチのファイルに書き、その PR に含めるという文があると assert する。どちらかの文を消すと失敗する。",
-      "sources": [
-        "REQ-288"
-      ],
-      "tests": [
-        {
-          "file": "tests/kit-assets.test.ts",
-          "contains": "[REQ-288] 報告の形の節に、作業記録は作業の PR に含め",
-          "sha256": "39d4d1a2c2560c2a36ea85e8f23ddf7ab37012f68407b6d8530eb8ca06017cb9",
-          "hashScope": "block"
-        }
-      ]
+      "reason": "仕様の Source は REQ-273 だが、この節を確かめる試験の名前は [REQ-288] だけを持ち、[REQ-273] を持つ試験はこの Scenario を確かめていない。"
     },
     {
       "id": "SCN-136b85e237b8cd4090d3",
@@ -8456,7 +7984,8 @@
         {
           "file": "packages/kit/test/process.test.ts",
           "contains": "[REQ-333] 監視役へのSIGHUP",
-          "sha256": "9a4917d04666f238df72dbbf9996bbfb4c62c644fbe9f0d6f256fae249a8a9bb"
+          "sha256": "1a1cb47a6816b306bef5fb34ca003e60f3819d115dc9eae98a2e67c3a4df2fe0",
+          "hashScope": "block"
         }
       ]
     },
