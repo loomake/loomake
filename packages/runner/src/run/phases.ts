@@ -6,7 +6,7 @@ import { remainingProcessTime, ProcessLimitError, INTERRUPTED, TIMED_OUT, UsageE
 import type { LegacyVerifyResult, VerifyResult } from '@loomake/core';
 import { runClaude } from '../engine.js';
 import { git, gitConfig } from '../git.js';
-import { APPROVAL_GUIDE, findEngineMove, findInternalsChange, findViolations, gitInternals, headState } from '../guards.js';
+import { APPROVAL_GUIDE, engineBaseline, findEngineMove, findInternalsChange, findViolations, headState } from '../guards.js';
 import { createPr, findOpenPr, ghLoggedIn, prBody } from '../pr.js';
 import { maskSecrets } from '../mask.js';
 import { reusableEvidence } from '../reuse.js';
@@ -52,8 +52,8 @@ async function callEngine(ctx: RunContext, rec: Recorder, prompt: string): Promi
   rec.save(`${n}-prompt.md`, prompt);
   const timeoutMs = Math.min(rec.deadline - ctx.now().getTime(), remainingProcessTime() ?? Infinity);
   if (timeoutMs <= 0) return { kind: 'stop', status: 'stopped', reason: '実行時間の上限に達しました' };
-  const before = headState(root, env);
-  const internals = gitInternals(root, env);
+  // 呼ぶ前の HEAD と git の設定・フックを、この境目で読み直す（REQ-348）
+  const { head: before, internals } = engineBaseline(root, env);
   const result = await runClaude({
     cwd: root,
     env,
@@ -146,6 +146,7 @@ export async function runGate(ctx: RunContext, rec: Recorder): Promise<Stop | un
     };
     let beforeVerify;
     try {
+      // 検証の前と後で HEAD を 1 回ずつ読む。直しのエンジンの前は callEngine が読み直し、ここで読んだ値を使い回さない（REQ-348）
       beforeVerify = headState(root, env);
       // run の完了ゲートは verify --done --scope local と同じ検査（REQ-100）
       rec.lastVerify = runVerify({ root, changeId, gate: 'done', scope: 'local', progress: ctx.progress, timeoutMs: left });
