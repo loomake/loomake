@@ -3,6 +3,7 @@
 // 段階ごとに検査を変える（REQ-343）。L1 は lint と文書のリンクの試験を実行し、change がなければ verify を呼ばない。
 // change があれば段階を問わず verify を呼ぶ（L2・L3 は --done、L1 は tasks.md に完了した印がない change だけ --spec-only）。L2・L3 は対象の change を、PR 本文の「loomake-change:」の行、PR で変えたファイル、ブランチ名から決め、
 // それぞれに --change <id> --done を実行する（REQ-010・REQ-132）。L3 では change が必須。
+// どの段階でも、REQ ID の重複（scripts/req-duplicate-check.mjs）を調べ、あれば失敗にする。
 // change のゲートは --json で実行し、終了コードではなく 2.0.0 の結果の JSON（対象の change・scope ci・completed・要判断なし・verdict PASS・
 // 完了ゲートの検査あり）で合格を決める。履歴の 1.0.0・local・証拠不足・全件 NOT_APPLICABLE は合格にしない（REQ-318、ciGateProblem）。
 // loomake run が作る loomake/<id> のブランチは、先頭の loomake/ を除いて比べる（fix-review-findings の仮定 A-01）
@@ -18,6 +19,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { parseRawDiff } from './ci-docs-only.mjs';
 import { decideTier, formatTierLine, isDocumentPath, isSpecPath } from './ci-tier.mjs';
+import { checkReqDuplicates, formatProblems, formatStale } from './req-duplicate-check.mjs';
 
 // change は changes/ の直下のディレクトリだけ。changes/archive/ は完了した change の置き場で、change ではない
 const isChangeName = (name) => /^[^/\\.][^/\\]*$/.test(name) && name !== 'archive';
@@ -196,6 +198,20 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   // 複数行の値と同じ形（heredoc）で書く。区切りの語が値に現れないよう、改行と % は先に除いてある
   if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `tier=${decided.tier}\ntier_line<<LOOMAKE_TIER_EOF\n${tierLine}\nLOOMAKE_TIER_EOF\n`);
 
+  let status = 0;
+  // REQ ID の重複は段階を問わず調べる（scripts/req-duplicate-check.mjs）。ファイルを読むだけの軽い検査で、失敗しても後の検査は続ける
+  try {
+    const { problems, stale } = checkReqDuplicates();
+    if (stale.length) console.error(`ci-gate: ${formatStale(stale)}`);
+    if (problems.length) {
+      console.error(`ci-gate: ${formatProblems(problems)}`);
+      status = 1;
+    }
+  } catch (error) {
+    console.error(`ci-gate: REQ ID の重複を調べられませんでした（${error.message}）`);
+    status = 1;
+  }
+
   const run = (cmd) => spawnSync(cmd, { shell: true, stdio: 'inherit' }).status ?? 1;
   // loomake verify は先に pnpm build しておく（CI の gate ジョブ）
   const verify = (args, options = {}) => spawnSync(process.execPath, ['packages/cli/dist/cli.js', 'verify', ...args], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, ...options });
@@ -213,7 +229,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     if (problem) console.error(`ci-gate: ${id} の${gate === 'done' ? '完了' : '仕様'}ゲートを合格にしません：${problem}`);
     return problem === undefined;
   };
-  let status = 0;
   if (decided.tier === 'L1') {
     // L1 は lint と文書のリンクの試験を実行する（REQ-343）。
     // 文書だけの PR では quality ジョブが品質コマンドを飛ばすので、文書を読む試験を回すのはここだけになる（docs/dev/ci.md）
@@ -236,7 +251,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       process.exit(1);
     }
     console.error(`ci-gate: branch=${branch || '(なし)'} 段階 ${decided.tier} → verify（品質コマンドのみ。${selected.qualityOnly}）`);
-    process.exit(verify([], { stdio: 'inherit' }).status ?? 1);
+    const code = verify([], { stdio: 'inherit' }).status ?? 1;
+    process.exit(code || status);
   }
   for (const id of selected.changes) {
     const args = gateArgs(join('openspec', 'changes'), id, decided.tier);

@@ -30,6 +30,8 @@ change のゲート（`--done`・`--spec-only`）は `--json` で実行し、ver
 
 Requirement の変更は、`openspec/specs/` と `openspec/changes/<id>/specs/` の `spec.md` で、変更した行が属する節で見る。`git diff -U0` のハンクの行番号から、足した行は HEAD の、消した行はベースのファイルを読み、直前の見出しが `### Requirement:` なら Requirement の変更（L3）とする。`#### Scenario:` の配下や Purpose の文言だけなら、RFC 2119 の語を足しても L1 のまま。archive の PR（`openspec/changes/archive/` にファイルを足すか移す）は Requirement を主仕様に写すが、実装 PR の `--done` で検査済みなので L1 として扱う。
 
+gate は段階によらず、REQ ID の重複も調べる（`scripts/req-duplicate-check.mjs`）。主仕様に進行中の change の差分仕様を当てた後で、同じ REQ ID が 2 つ以上の Requirement の Source に付いていたら、一覧を出して失敗にする。同じ Requirement を MODIFIED した差分は重複に数えない。意図して共有している ID と、2026-10-31 に main にあった 22 件（見直しは Issue #213）は `scripts/req-duplicate-known.json` に書いてある。一覧のキーは `<capability>: <Requirement 名>` の形で書く。一覧にある Requirement を RENAMED したら、同じ PR で一覧のキーも直す。新しく ID を共有するときは、意図した共有であることを PR 本文で説明してから一覧に足す。一覧のうち今の重複と一致しない項目は、失敗にせず警告を出す。手元では `node scripts/req-duplicate-check.mjs` で確かめられる。
+
 change のない L1 の PR では `verify` を呼ばないため、`tests/doc-links.test.ts` を gate で直接実行している。gate からこの試験を外すときは、文書だけの PR で文書を読むテストを実行する場がなくなることを確かめる。
 
 `ci:all-os` ラベルを L3 の PR で必須にする検査は、3 OS の試験の時間切れが直るまで入れていない。時間切れする試験は、下の「時間切れする試験の隔離」で一時的に外している。
