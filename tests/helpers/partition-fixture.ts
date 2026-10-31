@@ -11,7 +11,8 @@ export type WatchPhase = { phase: string; builds: string[]; exists: boolean[]; e
 const retryableRemoveCodes = new Set(['EPERM', 'EACCES', 'EBUSY', 'ENOTEMPTY']);
 
 // Windows では、子プロセスの終了直後やウイルス対策ソフトの走査中にファイルを消すと EPERM などになることがある（#229）。
-// Node 24 の rmSync の maxRetries は「Permission denied」の EPERM を再試行しないので、ここで間隔を空けてやり直す。
+// rmSync の maxRetries には頼らず、ここで間隔を空けてやり直す。CI は node-version: 24 でマイナー版を固定しておらず、古い 24 系の rmSync は
+// Windows の「Permission denied」の EPERM を再試行しない。また Linux・macOS では、100 ミリ秒の待ちが 0 秒に切り捨てられる。
 export function removeWithRetry(path: string, attempts = 10, delay = 100) {
   for (let attempt = 1; ; attempt++) {
     try {
