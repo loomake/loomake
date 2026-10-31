@@ -10,6 +10,10 @@
 | Opus62aba81d-e041-42f8-b68d-df78bf959be6 | main085a・claude-opus-5-5・ok:true・拒否0 | 2026-10-30 |
 | 管理役ci-followup-adoption.mdとrelease適用範囲 | Q-N1〜Q-N5と診断2本のmanual撤去の限定 | 2026-10-30 |
 | 利用者が採用した実装ワークフロー再編計画・改訂ADR 0006 | 手順5・7、レビュー規則の改訂、管理役のPR184計画更新委任 | 2026-10-31 |
+| Opus a3bf248b-a66e-4442-9e06-c5ed823e14bc | head8d8587aa・in-place登録構造・V0前提 | 2026-10-31 |
+| V0 REPORT.md・旧全件測定run41181009660 | 8dのLinux隔離fixtureと3OS9sample（7成功/2失敗・未受入） | 2026-10-31 |
+| Opus cd321d46-844b-438a-bd15-2d0841611d27 | head995e6325・AUDIT-347/REGISTRY-INVENTORY・Q-A1〜Q-A6 | 2026-10-31 |
+| 管理役の設計採用・ADR0006 | Q-R2 B/Q-R3 B、Q-R1元file内方式、Q-A1〜Q-A6 A採用 | 2026-10-31 |
 
 原資料の全文・hashは専用treeの`.loomake/ci-formal-adoption/inputs/`と索引に保存した。Q01〜Q10の元おすすめはreadiness/manager-questions.json、採用回答はci-manager-decisions.md、Q-N1〜Q-N5の元案はOpus結果§7にある。旧資料の未採用という状態はその観測時点の記録であり、下表の管理役回答が今回の採用である。1 change/1 PRと配布第3枠は管理役が指定した。
 
@@ -26,12 +30,13 @@
 | REQ-162 | main domain-mutation-check・Q06 | 制約 | 検出/未検出/試験エラーと全体の不合格を保つ | 既存仕様で充足 | openspec/specs/domain-mutation-check/spec.md |
 | REQ-163 | main domain-mutation-check・Q06 | 制約 | 各条件の結果/ハッシュと保存先保護、元ファイル不変を保つ | 既存仕様で充足 | openspec/specs/domain-mutation-check/spec.md |
 | REQ-297 | main ci-deadline-clock-alignment・Q02/Q-N5 | 制約 | 元4caseと時計の実時間/予算上下限/待ち差分/retry/assertを保持する | 既存仕様で充足 | openspec/specs/ci-deadline-clock-alignment/spec.md |
+| REQ-347 | main scenario-evidence-audit全文・a3bf Q-R1b・cd321d46 AUDIT-347 | 制約 | 原本文/元3Scenario/Sourceを保持し、登録済みCの実結果を元Sで照合する。登録外はraw保持、不正一覧/Cはerror、raw多重度と既存状態/移行条件を保つ | 反映済 | specs/scenario-evidence-audit/spec.md MODIFIED・tasks2.5/4.3/5.1 |
 
 反映済は差分仕様への反映であり、実装や受入の完了ではない。REQ-270/273が複数契約を持つことを理由に他の契約を削らない。新しいREQの採番・予約は行わない。
 
 ## 確認事項
 
-全項目は管理役がADR0006に基づき回答した。回答者は包括承認の表記であり、利用者本人が各資料をレビューしたという意味ではない。選択肢とおすすめの採用理由を残す。旧Q番号Q01〜Q10は下表Q-01〜Q-10、Q-N1〜Q-N5はQ-11〜Q-15に対応する。Q-01〜Q-16は当時の決定として残し、PR179先行受入と旧レビュー条件に関する現行の決定はQ-17・Q-18を優先する。
+Q-01〜Q-30の採用と条件は管理役がADR0006に基づき記録する。Q-19〜Q-24はR系と行閾値/宣言分類、Q-25〜Q-30はcd321d46のQ-A1〜Q-A6に対応する。未完了の個別設計・測定・実装は回答済みという理由で受入済みにしない。回答日・承認日は日本時間である。回答者は包括承認の表記であり、利用者本人が各資料をレビューしたという意味ではない。選択肢とおすすめの採用理由を残す。旧Q番号Q01〜Q10は下表Q-01〜Q-10、Q-N1〜Q-N5はQ-11〜Q-15に対応する。Q-01〜Q-16は当時の決定として残し、PR179先行受入と旧レビュー条件に関する現行の決定はQ-17・Q-18を優先する。
 
 | ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |
 |---|---|---|---|---|---|---|---|---|
@@ -53,13 +58,26 @@
 | Q-16 | REQ-049・REQ-214 | manual撤去はreleaseにも及ぶか | A：診断profiler2本のみ／B：release品質ゲートも縮小 | A。PR軽量化を公開検査縮小へ広げない | yes | Aを管理役が明示採用。診断profiler2本のmanualだけを撤去し、既存release manual dispatch品質ゲートとlocal fullは全件を維持する。人のrelease操作を実行したとは記録しない（root追加回答） | 利用者（ADR 0006 の包括承認） | 2026-10-30 |
 | Q-17 | REQ-214・REQ-297・tasks3.1 | 凍結PR179診断の依存経路をどうするか | A：stabilizeへ吸収／B：179単独受入を先行 | A。利用者採用の再編手順5・7と重複回避を整合する | yes | 凍結head `3571c208` をstabilize-cross-os-testsへ引き継ぐ。吸収先との境界・重複・順序を管理役が確定し、最新mainで元case/parameter/assert/timeout・診断対象/companionを照合するまでcase本体分割は進めない | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 | Q-18 | REQ-144・tasks5.3 | 旧全指摘ゼロ・Codex必須を維持するか | A：改訂ADR適用／B：旧無制限を維持 | A。利用者が再編計画のレビュー規則を採用済み | yes | 段階別のOpus回数・重大ゼロ・軽微Issue化・head対応は改訂ADRに従う。Codexは参考としPR末尾へ記録する。必要なCI・done・要件対応テスト・測定と人のruleset操作は保持する | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-19 | REQ-347・tasks2.5/4.3 | 元本文をcases.tsへ移すか（Q-R1） | A：元test内prefix＋動的import／B：carrierへ移動 | A。原it本文blockを保持し、V0と独立ASTで登録を検査する | yes | Aを採用。V0成立とcd321d46方針を反映しin-place方式とする。実本体分割は3.1〜3.3・2.5・4.2受入後 | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-20 | REQ-347・REQ-189・tasks2.5 | companionの実結果を元sourceへ結ぶか（Q-R1b） | A：登録済みC→S／B：selectorをCへ変更 | A。原sourceのblockhashと実passed対応を保つ | yes | Aを採用。cd321d46の入口検査・links・rawFile・行identity Set・migrate対応を採る。REQ-347差分とspec-onlyを実装前に通す | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-21 | tasks4.3・1change/1PR | carrierの先行PRを作るか（Q-R2） | A：別PR／B：PR184内 | B。利用者の1-1を保つ | yes | Bを採用。Node20削除とslow有効化は同じPR184。独立2.5も同PRで扱い別carrier PRは作らない | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-22 | tasks2.5/4.2/4.3 | OS割当前に実registryへ全fast登録するか（Q-R3） | A：先に登録／B：割当まで空 | B。実割当前のファイル隔離経路を保持する | yes | Bを採用。2.5は合成fixtureとrun読取検査で進め、実registryはOS割当まで空に保つ | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-23 | 10秒超caseだけ・tasks3.2/4.3 | it.each行の閾値が異なる場合の登録単位は何か | A：全表一括slow／B：全行の実測閾値と原blockを保持 | B。run12行の8d旧9sampleは全passed・最大5268.1718ms。他fileへ広げない | yes | B。run2表は旧8d観測のuniform fast条件だけを確認。残9file・最新headの行閾値は3.2/4.2で確認し、混在行を一括slowにしない | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-24 | tasks2.5・cd REGISTRY-INVENTORY | 62scanner候補と壊れた宣言をどう分類するか | A：全候補prefix/単純filter／B：ASTで独立分類 | B。非call2と有効60宣言を区別し壊れた宣言を隠さない | yes | Bを採用。cd設計のAST宣言とscanner突合、非call許可親2種、alias/dynamicTitle/syntax拒否を採る。AST未実測の一致は2.5で確認し、違えば設計へ戻す | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-25 | REQ-347・tasks2.5 | 監査rootに一覧がない場合（Q-A1） | A：error／B：空とみなす | A。実repoのVitestも一覧を必須にする | yes | Aを採用。一覧の欠落/不正は出力作成前にerror。scope fixtureは空registryを既定で作り、既存assertを弱めない | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-26 | REQ-347・tasks2.5 | 登録外Cがreportにある場合（Q-A2） | A：自身のrawfileのまま／B：監査issue追加 | A。推測mappingをせず既存の判定を保つ | yes | Aを採用。登録外Cだけで一覧errorにせずrawfileで照合する。repo内の登録外Cは独立inventoryが検出する | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-27 | REQ-346/347・tasks2.5 | migrateもcompanion対応するか（Q-A3） | A：対応／B：対応しない | A。実行済みをnotExecutedへ誤分類しない | yes | Aを採用。migrateRepository入口もlinksを渡し、migrateReviews/REQ-346の移行条件・dry-run・既存block形式は変えない | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-28 | REQ-189/190・PR監査・tasks2.5/4.3 | PRでslow未実行の根拠がinvalidになる場合（Q-A4） | A：正直な結果を記載／B：別扱いを設計 | A。欠測を成功で補わずmain全件を別に確認する | yes | Aを採用。PRでinvalidになり得ることをci.mdへ記し、旧report合流や判定緩和をせず、main push全件の監査と最終受入を確認する | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-29 | tasks2.5・cd REGISTRY-INVENTORY | 実fileのinventory範囲（Q-A5） | A：runと登録済みfile／B：repo全test | A。未調査fileへ検査範囲を広げない | yes | Aを採用。run60宣言/62候補/非call2/展開70を確認し、他fileは登録時に検査する。全slow fileの登録対応は独立に照合する | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-30 | REQ-347・tasks2.5 | companionの形の検査（Q-A6） | A：構造／B：雛形完全一致 | A。整形差を許し別testの混入を拒否する | yes | Aを採用。宣言なし・元Sへのliteral dynamic importが1つ・別testの静的fromなし・一意なCを検査する | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 
 ## 仮定
 
 | ID | 関連 | 仮定の内容 | 理由 | 承認 | 承認者 | 承認日 |
 |---|---|---|---|---|---|---|
+| A-01 | tasks2.5・cd REGISTRY-INVENTORY | 995eのrunでAST60宣言とscannerの有効60候補が一致する | OpusはV0の位置から推定し未実測。既存scannerを変更せず、最初のscope実測で違えば設計へ戻す | 条件付き承認 | 管理役 | 2026-10-31 |
 
-新しい仮定は置いていない。未設計10file、実cleanup/watch、診断吸収先/E3との統合境界確定後の同head測定は未完了taskとして残す。必要な判断は管理役が元資料とおすすめ理由を確認して記録し、ゲート前に解消する。
+管理役が確認する実装上の仮定は上表で管理し、利用者本人の新しいレビューとはしない。当初未設計10fileのうち残9file、実cleanup/watch、診断吸収先/E3との統合境界確定後の同head測定は未完了taskとして残す。必要な判断は管理役が元資料とおすすめ理由を確認して記録し、ゲート前に解消する。
 
 ## 独立実装の依存順
 
@@ -72,3 +90,13 @@
 利用者が再編計画に合わせると回答し、管理役がPR184の計画整合を委任した。上記の旧「179最終統合」は当時の経緯であり、Q-17により凍結head `3571c208` の診断をstabilize-cross-os-testsへ引き継ぐ経路へ変更した。吸収先/C001/E3との重複・統合順序と最新mainでのcase/assert/timeout/companion対応の確認はtasks3.1の未完了条件として保持する。
 
 5.3はQ-18により改訂ADR 0006のレビュー規則へ合わせた。旧5.3〜5.5移動時の番号・順序と、実装15タスク＋必須受入3件の範囲は維持する。Node20削除とslow分離の同一PR、残10file設計・actualcase/fastの3OS測定、REQ-297、他4required保持と人のnode20-only操作、マージとsync/archiveは省かない。今回の計画更新ではmain統合・case分割・測定・実装・受入を実施済みにしない。
+
+## 2026-10-31 登録構造・監査の追加採用
+
+管理役はa3bf248bのin-place案を、V0成立と995e対象のcd321d46の監査/独立inventory方針で具体化した。Q-R2 B・Q-R3 B、Q-A1〜Q-A6 Aを採用した。出典のモデルはtrace未読と明記しており、管理役がQ-19〜Q-30へ対応付けた。モデルがtraceや正当な同名17行のraw実データを読んだとは記録しない。
+
+8dのV0はLinux/Node24.21.0/Vitest5.0.5の隔離fixtureであり、file/fullName、timeout80ms（実測83.8045ms、設定なし5011.0856ms）、混在/全fast/全slow各7件の一度だけ登録、既定module隔離、空describe guard、元60block本文一致を確認した。8dの旧9sampleは7成功/Windows2失敗、Node patch混在・自己PID/hostname差があり4.2未受入。run12行のuniform fastはこの旧観測だけの確認である。PR220はmainに受入済みである。関連10file108試験はb98取込head bc8ba80で成功し、995eはmain acce34fb（PR228）を取り込んだ文書変更のheadで、検査対象11sourceがbc8ba80とbyte同一であることを管理役が確認した。これは統合の確認であり、実装後の全件/3OS/58selector監査の成功へ流用しない。
+
+追加2.5は独立な監査/宣言inventory先行で、残9fileの個別設計3.2と並行できる。REQ-347差分・本trace・scope・spec-only成功を実装前の条件とし、実registryと元本体は変えない。4.3の本体分割は3.1〜3.3・2.5・4.2の受入後に行う。元15番号/6完了印と必須受入3件を保持し、追加後は6/16＋必須受入3件未達とする。
+
+複数blockの一部欠測はblock集合hashで検知するが、同一it.eachのparameter行欠測まで検知したとは記録しない。元全parameterと正当な同名17行を含むraw全caseの独立多重集合比較は4.3/5.1に残す。旧レビュー表/旧形式行を勝手に移行・昇格させず、REQ-189/190/346/347の原契約、REQ-144、REQ-297、全診断・coverage・local/release全件・人のnode20-only ruleset操作・同PRマージとsync/archiveを保持する。

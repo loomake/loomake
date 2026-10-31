@@ -8,16 +8,22 @@
 - REQ-144はNode20追加検査だけを外し、3OS Node24とNode22.12.0の下限検査を保つ。
 - ADR0005に従い、049/214の開発運用をdocs/dev/ci.mdへ移す。元の全文・8 Scenario・Source・旧試験名を保存し、利用者のPR軽量化に対応した運用を同文書へ記録する。主仕様の反映はchange経由のsync/archiveで行う。
 - 最新headの3OS各3sampleで最大10秒超のcaseをOS別にslowへ分ける。PRの全経路でslowを実行せず、main push・scheduleとローカルの全件実行を保つ。releaseの既存manual dispatch品質ゲートも全件を保つ。
+- case 本文は元の `x.test.ts` に残し、宣言直前の分岐と companion の動的 import で登録先を分ける。`x.cases.ts` への本文移動は採用しない。a3bf248bの構造案とV0を、995e対象のcd321d46の監査・独立宣言検査の設計で補う。他9fileの個別設計と実OS割当は未完了のまま残す。
+- 登録された companion の実行結果を元 source の本文ブロックへ対応付けるため、REQ-347 の MODIFIED を同じ change に追加する。raw report と既存レビュー表の根拠は保持する。登録外のcompanionは自身のfileのまま扱い、不正・欠落した一覧や不正な登録済みcompanionは成果物を作る前に監査エラーにする。
 - named slow projectとroot globalSetupの共有build/pack、実際の13条件を検査するREQ-161のfast試験、元全caseと診断profilerの保持を、採用済みの設計に沿って実装する。
 
 # Non-goals
 
 テストの弱化、skip、期待値・時間上下限・予算・coverage閾値の緩和、製品の完成範囲縮小は行わない。REQ-297は退役させず、元4caseと全assertを保つ。旧108keyや過去の3OS観測は最新headの性能合格には使わない。
 
-この起案時点ではCI・Vitest・製品実装を変えない。未設計10file、新fastの実測、PR179の受入後統合、実build/cleanup/watch検証、rulesetの人の操作は未完了である。新REQの採番、C001/S1/E3の契約の先取り、REQ-273の履歴衝突の解決、releaseの実行は含めない。
+今回の計画改訂だけでは実装・実測・受入を完了へ進めない。当初未設計10fileのうちrun以外の9fileの設計受入と、採用済み4fileを含む14fileの監査・登録対応の再照合、元caseと新fastの最新測定、凍結PR179診断の吸収先との統合照合、先行実装の統合後検証、rulesetの人の操作は未完了である。新REQの採番、C001/S1/E3の契約の先取り、REQ-273の履歴衝突の解決、releaseの実行は含めない。
+
+# Capabilities
+
+新しい capability は追加しない。既存の `monorepo` で REQ-144 の変更と REQ-049/REQ-214 の移管を扱い、既存の `scenario-evidence-audit` で REQ-347 に登録済み companion の対応条件を追加する。新しい差分ファイルは既存 capability の変更であり、Purpose は追加しない。
 
 # Impact
 
-対象はmonorepoの差分仕様、docs/dev/ci.md、後続実装のci.yml・Vitest config/setup・分割対象のテストと対応するworkflow照合試験・profiler・測定経路である。REQ-161の選択条件に必要な開発用mutation runnerの変更も同じPRで扱う。具体範囲と残設計はdesign/tasksを正本とする。
+対象はmonorepoとscenario-evidence-auditの差分仕様、docs/dev/ci.md、後続実装のci.yml・Vitest config/setup・分割対象のテストと対応するworkflow照合試験・profiler・測定経路である。REQ-161の選択条件に必要な開発用mutation runnerの変更も同じPRで扱う。監査の実行結果と元 source の対応、独立した登録宣言の検査とfixtureも対象に含める。具体範囲と残設計はdesign/tasksを正本とする。
 
 配布第3枠として管理役が割り当てた専用treeを使い、C001/S1と品質E3の既存所有を保つ。ruleset変更はnode20 contextだけの具体案を用意し、管理役がIssue121で人に依頼する。補助は規則を変更しない。
