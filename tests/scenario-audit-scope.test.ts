@@ -806,6 +806,75 @@ describe('companionが読むhelperの評価とsetterを閉じる', () => {
     expect((await migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).counts.migrated.unchangedFile).toBe(1);
   });
 
+  it.each([
+    "import side = require('./foreign.helper.js');",
+    "export import side = require('./foreign.helper.js');",
+    "namespace Local { import side = require('./foreign.helper.js'); }",
+    "import side = require('./missing.js');",
+  ])('[REQ-347] 未参照ImportEqualsの全位置の依存を両入口で拒否: %s', async (prefix) => {
+    expect(companionLinks(registry, () => `${prefix} await import('./fixture.test.js');`)).toEqual(new Map([[companion, testFile]]));
+    await reject(prepare(prefix, { 'tests/foreign.helper.js': "import { it } from 'vitest'; it('群 [REQ-012] 条件を検査する', () => {});" }));
+  });
+  it.each([
+    ["import side = require('./helper.js');", { 'tests/helper.js': 'export const helper = true;' }, ['tests/helper.js']],
+    ["import type side = require('./foreign.helper.js');", { 'tests/foreign.helper.js': "import { it } from 'vitest'; it('own case', () => {});" }, []],
+  ] as const)('[REQ-347] 安全なImportEqualsと型専用の読込除外を保つ: %s', async (prefix, files, dependencies) => {
+    const dir = prepare(prefix, files);
+    expect(companionLinks(registry, () => `${prefix} await import('./fixture.test.js');`)).toEqual(new Map([[companion, testFile]]));
+    const result = await auditRepository(dir, join(dir, 'out'), undefined, 'report.json', kit);
+    expect(result.rows[0].status).toBe('reviewed');
+    expect(result.inputs.companionDependencies).toEqual(Object.fromEntries(dependencies.map((path) => [path, sha256(readFileSync(join(dir, path), 'utf8'))])));
+    if (dependencies.length === 0) {
+      const reads: string[] = [];
+      expect(companionLinks(registry, () => `${prefix} await import('./fixture.test.js');`, (path: string) => { reads.push(path); return undefined; })).toEqual(new Map([[companion, testFile]]));
+      expect(reads).toEqual([]);
+    }
+    expect((await migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).counts.alreadyBlock).toBe(1);
+  });
+  it('[REQ-347] ImportEqualsの実行と型専用除去を隔離verbatimのnative1起動で照合する', async () => {
+    const dir = prepare('', {});
+    rmSync(join(dir, companion)); symlinkSync(realpathSync('node_modules'), join(dir, 'node_modules'), 'junction'); mkdirSync(join(dir, 'tmp'));
+    writeFileSync(join(dir, 'package.json'), '{"type":"module"}');
+    writeFileSync(join(dir, 'tsconfig.json'), '{"compilerOptions":{"verbatimModuleSyntax":true}}');
+    const sourceText = "import {it,expect}from'vitest'; it('[REQ-012] 条件を検査する',()=>{expect(true).toBe(true)});";
+    const foreign = "import {it}from'vitest'; it('own case',()=>{});";
+    const cases = [
+      ['equals', "import side = require('./foreign.helper.js');", foreign, true],
+      ['type-only', "import type side = require('./foreign.helper.js');", foreign, false],
+      ['safe', "import side = require('./foreign.helper.js');", 'export const helper = true;', false],
+    ] as const;
+    const inputs = cases.map(([id, prefix, helper, bad]) => {
+      const source = `tests/${id}/source.test.ts`; const c = `tests/${id}/source.slow.test.ts`;
+      mkdirSync(join(dir, source, '..'), { recursive: true });
+      writeFileSync(join(dir, source), sourceText); writeFileSync(join(dir, c), `${prefix} await import('./source.test.js');`); writeFileSync(join(dir, source, '../foreign.helper.js'), helper);
+      return { id, source, companion: c, prefix, helper, bad };
+    });
+    const config = "export default { cacheDir: './cache', test: { include: ['tests/**/*.slow.test.ts'], globals: false, maxWorkers: 1, fileParallelism: false, reporters: ['json'], outputFile: './native-report.json' } };";
+    writeFileSync(join(dir, 'vitest.config.mjs'), config);
+    const native = spawnSync(process.execPath, [join(realpathSync('node_modules/vitest'), 'vitest.mjs'), 'run', '--configLoader', 'native', '--config', join(dir, 'vitest.config.mjs')], { cwd: dir, encoding: 'utf8', timeout: 60000, env: { ...process.env, TMPDIR: join(dir, 'tmp'), TMP: join(dir, 'tmp'), TEMP: join(dir, 'tmp') } });
+    const evidence = '.loomake/scratchpad/fix-ci-import-equals/native'; mkdirSync(evidence, { recursive: true });
+    writeFileSync(join(evidence, 'process.json'), JSON.stringify({ status: native.status, signal: native.signal, stdout: native.stdout, stderr: native.stderr }));
+    writeFileSync(join(evidence, 'inputs.json'), JSON.stringify({ config, sourceText, inputs, verbatimModuleSyntax: true }));
+    if (existsSync(join(dir, 'native-report.json'))) writeFileSync(join(evidence, 'report.json'), readFileSync(join(dir, 'native-report.json')));
+    expect(native.status, native.stderr + native.stdout).toBe(0); expect(native.signal).toBeNull();
+    const report = JSON.parse(readFileSync(join(dir, 'native-report.json'), 'utf8')) as { numPassedTests: number; numFailedTests: number; testResults: { name: string; assertionResults: { fullName: string; status: string }[] }[] };
+    expect(report.numPassedTests).toBe(4); expect(report.numFailedTests).toBe(0); expect(report.testResults).toHaveLength(3);
+    writeFileSync(join(dir, 'report.json'), readFileSync(join(dir, 'native-report.json')));
+    for (const item of inputs) {
+      const suite = report.testResults.find((row) => row.name.replaceAll('\\', '/').endsWith('/' + item.companion));
+      expect(suite?.assertionResults.map((row) => [row.fullName, row.status])).toEqual(item.bad ? [['own case', 'passed'], ['[REQ-012] 条件を検査する', 'passed']] : [['[REQ-012] 条件を検査する', 'passed']]);
+      const selection = { files: { [item.source]: { cases: { a: ['linux'] } } } };
+      writeFileSync(join(dir, 'tests/test-partition.json'), JSON.stringify(selection));
+      const review = { ...blockReview(), tests: [{ file: item.source, contains: '条件を検査する', sha256: sha256(sourceText) }] };
+      writeFileSync(join(dir, 'docs/quality/scenarios.json'), JSON.stringify({ schemaVersion: 1, reviews: [review] }));
+      expect(companionLinks(selection, () => `${item.prefix} await import('./source.test.js');`)).toEqual(new Map([[item.companion, item.source]]));
+      if (item.bad) await reject(dir);
+      else {
+        expect((await auditRepository(dir, join(dir, 'out-' + item.id), undefined, 'report.json', kit)).rows[0].status).toBe('reviewed');
+        expect((await migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).counts.migrated.unchangedFile).toBe(1);
+      }
+    }
+  }, 90000);
   it('[REQ-347] helper readerの失敗を元文言へ揃え成功に補わない', () => {
     expect(() => companionLinks(registry, () => `${body} await import('./fixture.test.js');`, () => { throw new Error('unreadable'); })).toThrow(readingError);
   });

@@ -457,6 +457,7 @@ export function companionLinks(registry, readText, readModule) {
     };
     const relativeModule = (text) => /^(?:\.\/|(?:\.\.\/)+)(?:[A-Za-z0-9_-][\w.-]*\/)*[A-Za-z0-9_-][\w.-]*\.(?:js|ts|mjs|mts|cjs|cts|jsx|tsx)$/.test(text) && !/\.(?:test|spec)(?:\.|$)/i.test(text.slice(text.lastIndexOf('/') + 1));
     const readingError = `companionの読み込み先を静的に確認できません：${companion}`;
+    const importEquals = [];
     const closedSyntax = (node) => {
       required(!(ts.isMetaProperty(node) && node.keywordToken === ts.SyntaxKind.ImportKeyword) && !(ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'require'), readingError);
       let module;
@@ -464,6 +465,7 @@ export function companionLinks(registry, readText, readModule) {
       if (ts.isImportEqualsDeclaration(node)) {
         required(ts.isExternalModuleReference(node.moduleReference), `companionの読み込み先を静的に確認できません：${companion}`);
         module = node.moduleReference.expression;
+        importEquals.push(node);
       }
       if (module) {
         required(ts.isStringLiteral(module) && (module.text === 'vitest' || relativeModule(module.text)), readingError);
@@ -612,13 +614,15 @@ export function companionLinks(registry, readText, readModule) {
         return found;
       };
       const readDependency = (from, node) => {
-        if (node.isTypeOnly || node.importClause?.isTypeOnly || !node.moduleSpecifier) return;
-        required(ts.isStringLiteral(node.moduleSpecifier), readingError);
-        const specifier = node.moduleSpecifier.text;
+        const module = ts.isImportEqualsDeclaration(node) ? node.moduleReference.expression : node.moduleSpecifier;
+        if (node.isTypeOnly || node.importClause?.isTypeOnly || !module) return;
+        required(ts.isStringLiteral(module), readingError);
+        const specifier = module.text;
         required(specifier === 'vitest' || /^node:[a-z_]+(?:\/[a-z_]+)*$/.test(specifier) || relativeModule(specifier), readingError);
         if (relativeModule(specifier)) candidates(from, specifier);
       };
       for (const statement of ast.statements) if (ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement)) readDependency(companion, statement);
+      for (const node of importEquals) readDependency(companion, node);
       for (const call of helperCalls) {
         required(call.name !== undefined, readingError);
         for (const parsed of candidates(companion, call.module)) {
