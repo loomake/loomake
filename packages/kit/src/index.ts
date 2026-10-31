@@ -1,5 +1,5 @@
 // @loomake/kit：要件書の取り込み・共通ルール・検証ゲート
-export { runVerify, INTERRUPTED, TIMED_OUT, COMMANDS_SKIPPED, REQUIREMENTS_NOT_RUN, NOTICE } from './verify/run.js';
+export { runVerify, INTERRUPTED, TIMED_OUT, COMMANDS_SKIPPED, REQUIREMENTS_NOT_RUN, NOTICE, OPENSPEC_NA_CONFIRMER } from './verify/run.js';
 export { assembleVerifyResult, verifyAbortedResult, RUN_ERRORS_CHECK } from './verify/result.js';
 export type { VerifyResultParts } from './verify/result.js';
 export type { VerifyOptions } from './verify/run.js';

@@ -15,6 +15,7 @@ import {
   type SpecRequirement,
   type Trace,
   type VerifyCheckResult,
+  type VerifyDecision,
   type VerifyResult,
   type VerifyRunError,
   type VerifyScope,
@@ -80,13 +81,14 @@ export function runVerify(options: VerifyOptions): VerifyResult {
   // 知らないキーは、打ち間違いに気づけるよう案内にする。新しい版の設定でも止まらないよう、不合格にはしない（REQ-039）
   if (config.unknownKeys.length) record('loomake.config.json', 'warn', `知らないキー：${config.unknownKeys.join('、')}（打ち間違いなら直してください）`);
   let coverage: Record<string, string[]> | undefined;
+  const approvals: ApprovalNeed[] = [];
 
   if (!changeId) {
     runCommands(root, config, skipCommands, record, fail, progress, options.timeoutMs);
   } else {
-    const spec = checkSpec(root, config, changeId, record, rel);
+    const spec = checkSpec(root, config, changeId, gate ?? 'spec-only', scope, record, rel, approvals);
     if (spec && gate === 'done') {
-      checkTasksAndPending(spec, record);
+      checkTasksAndPending(spec, record, approvals);
       // 前回のレポートで合格させないよう、commands を実行する前に消す
       const reportPath = resolve(root, config.tests.report);
       if (!skipCommands) rmSync(reportPath, { force: true });
@@ -97,18 +99,25 @@ export function runVerify(options: VerifyOptions): VerifyResult {
     }
   }
 
-  return assembleVerifyResult({ change: changeId ?? null, scope, checks: checks.map(toCheck), errors, coverage });
+  return assembleVerifyResult({ change: changeId ?? null, scope, checks: checks.map(toCheck), errors, coverage, decision: decisionOf(approvals) });
 }
 
 /** 1 つの検査の観測。warn は案内つきの合格、insufficient は証拠の不足（仮定 A-02・A-03） */
-type GateCheck = { check: string; status: 'pass' | 'fail' | 'warn' | 'insufficient'; detail: string };
+type GateCheck = { check: string; status: 'pass' | 'fail' | 'warn' | 'insufficient' | 'na'; detail: string };
+
+/** doneで人の承認が足りない対象（未承認の仮定・確認待ちの要件）。decision.reasons になる（REQ-036・038） */
+type ApprovalNeed = { target: string; message: string };
+const decisionOf = (needs: readonly ApprovalNeed[]): VerifyDecision => ({
+  required: needs.length > 0,
+  reasons: needs.map((n) => ({ code: 'APPROVAL_REQUIRED' as const, target: n.target, message: n.message })),
+});
 
 /** 案内つきの合格の reason の先頭（formatVerifyResult が「!」で示す） */
 export const NOTICE = '案内：';
 
 const toCheck = ({ check, status, detail }: GateCheck): VerifyCheckResult => ({
   id: check,
-  result: status === 'fail' ? 'FAIL' : status === 'insufficient' ? 'INSUFFICIENT_EVIDENCE' : 'PASS',
+  result: status === 'fail' ? 'FAIL' : status === 'insufficient' ? 'INSUFFICIENT_EVIDENCE' : status === 'na' ? 'NOT_APPLICABLE' : 'PASS',
   reason: status === 'warn' ? `${NOTICE}${detail}` : detail,
   evidence: [],
 });
@@ -121,7 +130,9 @@ type SpecState = { reader: InputReader; changeDir: string; trace: Trace; live: S
 const formatErrors = (errors: ParseError[]) => errors.map((e) => `${e.file}:${e.line} ${e.message}`).join('\n');
 
 // ---------- 仕様ゲート ----------
-function checkSpec(root: string, config: LoomakeConfig, changeId: string, record: Recorder, rel: (p: string) => string): SpecState | null {
+function checkSpec(
+  root: string, config: LoomakeConfig, changeId: string, gate: 'spec-only' | 'done', scope: VerifyScope, record: Recorder, rel: (p: string) => string, approvals: ApprovalNeed[],
+): SpecState | null {
   const reader = createInputReader();
   const changeDir = resolve(root, config.openspecDir, 'changes', changeId);
   if (!existsSync(changeDir) || !statSync(changeDir).isDirectory()) {
@@ -167,10 +178,14 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   checkSharedQuestions(root, config, changeId, questions, record, reader);
 
   const unapproved = assumptions.filter((a) => decision.unapprovedAssumptions.includes(a.ID));
-  if (unapproved.length) record('仮定の承認', 'warn', `未承認：${unapproved.map((a) => `${a.ID} ${a['仮定の内容']}`).join(' / ')}`);
+  // spec-only は案内つきの合格（0）、done は不足と要判断（1）にする（REQ-036・R-C001-08 B）。確認待ちの要件は done の「確認待ちが残っていない」が示す
+  if (unapproved.length) {
+    record('仮定の承認', gate === 'done' ? 'insufficient' : 'warn', `未承認：${unapproved.map((a) => `${a.ID} ${a['仮定の内容']}`).join(' / ')}`);
+    if (gate === 'done') approvals.push(...unapproved.map((a) => ({ target: a.ID, message: `仮定 ${a.ID} が未承認です` })));
+  }
 
   const pending = ledger.filter((r) => decision.pendingRequirements.some((id) => id === r.ID));
-  if (pending.length) record('確認待ちの要件', 'warn', pending.map((r) => r.ID).join(', '));
+  if (pending.length && gate === 'spec-only') record('確認待ちの要件', 'warn', pending.map((r) => r.ID).join(', '));
 
   // specs
   const specs = specFiles(changeDir, reader);
@@ -201,7 +216,7 @@ function checkSpec(root: string, config: LoomakeConfig, changeId: string, record
   const orphan = ledger.filter((r) => r['状態'] === '反映済' && !referenced.has(r.ID));
   record('反映済の要件が仕様にある', orphan.length ? 'fail' : 'pass', orphan.map((r) => r.ID).join(', '));
 
-  checkOpenspecValidate(root, config, changeId, record);
+  checkOpenspecValidate(root, config, changeId, scope, record);
   return { reader, changeDir, trace, live, decision };
 }
 
@@ -241,8 +256,12 @@ function checkSharedQuestions(root: string, config: LoomakeConfig, changeId: str
   else record('同じ確認事項の回答', 'pass', shared ? `${shared} 件が参照先と一致` : 'ほかの change と同じ確認事項なし');
 }
 
-// openspec validate（REQ-037）。CLI が無いときは、openspecValidate が auto なら警告、true なら不合格にする
-function checkOpenspecValidate(root: string, config: LoomakeConfig, changeId: string, record: Recorder) {
+/** OpenSpec CLI が無いときの NOT_APPLICABLE の確認者。人ではなく、設定による自動判定である（trace S9-02） */
+export const OPENSPEC_NA_CONFIRMER = 'loomake verify（openspecValidate: auto の自動判定）';
+const OPENSPEC_MISSING = 'OpenSpec CLI が見つかりません（npm install -g @fission-ai/openspec）';
+
+// openspec validate（REQ-037）。CLI が無いときは、true なら不合格、auto なら local は理由と確認者つきの対象外、ci は不足にする
+function checkOpenspecValidate(root: string, config: LoomakeConfig, changeId: string, scope: VerifyScope, record: Recorder) {
   if (config.openspecValidate === false) return;
   let r;
   try { r = runExternal('openspec', ['validate', changeId, '--strict'], {
@@ -257,17 +276,20 @@ function checkOpenspecValidate(root: string, config: LoomakeConfig, changeId: st
   // Windows では shell 経由で起動するので、CLI が無いと ENOENT ではなくシェルが終了コード 1 を返す
   const missing = r.error?.code === 'ENOENT' || (process.platform === 'win32' && /is not recognized|認識されていません/.test(r.stderr));
   if (missing) {
-    record('openspec validate', config.openspecValidate === 'auto' ? 'warn' : 'fail', 'OpenSpec CLI が見つかりません（npm install -g @fission-ai/openspec）');
+    if (config.openspecValidate !== 'auto') record('openspec validate', 'fail', OPENSPEC_MISSING);
+    else if (scope === 'ci') record('openspec validate', 'insufficient', `${OPENSPEC_MISSING}。validate を実行していません`);
+    else record('openspec validate', 'na', `対象外：${OPENSPEC_MISSING}ため、validate を実行していません（確認者：${OPENSPEC_NA_CONFIRMER}）`);
   } else {
     record('openspec validate', r.status === 0 ? 'pass' : 'fail', r.status === 0 ? '' : `${r.stdout}${r.stderr}`.trim().slice(0, 2000));
   }
 }
 
 // ---------- 完了ゲート ----------
-function checkTasksAndPending(spec: SpecState, record: Recorder) {
-  // 完了時に確認待ちの要件が残っていてはいけない
+function checkTasksAndPending(spec: SpecState, record: Recorder, approvals: ApprovalNeed[]) {
+  // 完了時に確認待ちの要件が残っていてはいけない。不足にして、人の判断が要ることを decision に残す（REQ-038）
   const pending = spec.trace.ledger.filter((r) => spec.decision.pendingRequirements.some((id) => id === r.ID));
-  record('確認待ちが残っていない', pending.length ? 'fail' : 'pass', pending.map((r) => r.ID).join(', '));
+  record('確認待ちが残っていない', pending.length ? 'insufficient' : 'pass', pending.map((r) => r.ID).join(', '));
+  approvals.push(...pending.map((r) => ({ target: r.ID, message: `要件 ${r.ID} が確認待ちです` })));
 
   const tasksPath = join(spec.changeDir, 'tasks.md');
   if (existsSync(tasksPath)) {

@@ -1,6 +1,7 @@
 import { Buffer } from 'node:buffer';
 import { projectResultTransport } from './claude-result-collector.mjs';
 
+const TIMER_MAX_MS = 2147483647;
 const LIMITS = Object.freeze({ stdout: 1048576, stderr: 65536, timeoutMs: 300000, killAfterMs: 5000, groupWaitMs: 1000, closeGraceMs: 1000 });
 const OPTIONS = Object.freeze({ shell: false, detached: true, stdio: Object.freeze(['pipe', 'pipe', 'pipe']) });
 const SIGNALS = ['SIGINT', 'SIGTERM', 'SIGHUP'];
@@ -21,7 +22,8 @@ export function driveResultProcess(deps, request) {
   if (deps.platform === 'win32') return Promise.resolve(early('lifecycle-platform-unsupported'));
   const limits = { ...LIMITS, ...request?.limits };
   if (!request || typeof request.input !== 'string' || !request.metadata || typeof request.metadata !== 'object' ||
-    Object.keys(limits).some((key) => !Object.hasOwn(LIMITS, key) || !Number.isSafeInteger(limits[key]) || limits[key] <= 0)) {
+    Object.keys(limits).some((key) => !Object.hasOwn(LIMITS, key) || !Number.isSafeInteger(limits[key]) || limits[key] <= 0 || limits[key] > TIMER_MAX_MS) ||
+    limits.killAfterMs + limits.groupWaitMs + limits.closeGraceMs > TIMER_MAX_MS) {
     return Promise.resolve(early('lifecycle-request-invalid'));
   }
   if (request.signal && (typeof request.signal.addEventListener !== 'function' || typeof request.signal.removeEventListener !== 'function')) {
