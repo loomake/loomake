@@ -12,3 +12,10 @@
 2. M1は修理前26失敗・235成功から修理後261/261成功となり、matrix単独実行も成功した。spec-only・lint・typecheck・限定271件・通常156 file（2621 passed・既存8 skipped）はexit 0で、作業用の一度きりの手順が11 native process・153824 bytesとmatrix103件を別保存し、通常実行前後の旧作業領域398 fileはbytes・hash・mtime・一覧とも不変だった。
 3. 旧assert248呼出し・旧診断表・元call/timeout・旧API・旧153747 bytesのraw・旧matrix・空registry・設定と規約を保持した。M4のpartition系mock/dynamic import/setPart差替えは未採用の追加設計として[Issue #241](https://github.com/loomake/loomake/issues/241#issuecomment-6549607787)で管理役が追跡し、既存A8を変えず、実registry適用0回・親7/21・一般oracle5.1と2.7全体の未達を保つ。
 4. 管理役の第1再レビューと最終CI・指定統合受入へ渡す。補助担当はpush・GH・Opus・Goal・他agent操作を行っておらず、修理後のレビューやCIの成功を先取りしない。
+
+## PR #283 の P2 指摘と生成sourceの修理
+
+1. `split-slow-ci-checks` task2.7の部分修理として、クラスのextends式にある実値参照と、export specifierから流出するローカル束縛を拒否した。型だけのextends・implements・型引数は受理し、生成headerのfile引数はJSON.stringifyで単一の文字列値に保つ。既存writerの7d7c030cから別worktreeで作業した。
+2. 実装前後のspec-only・lint・typecheckはexit 0。最終回帰16件は元実装で12失敗・4成功、修理後は16成功。既存native対照を含む関連287件と、通常156 file・2637件成功・既存skip8件・失敗0件を確認した。生成文字列はASTで元の値へ復元して照合した。
+3. 元のdeclarations試験・rows試験・旧fixture・helper・registry・設定・監査・tasks・traceをbyte単位で保持し、旧wiring試験は新import以外の全文を保持した。親7/21とtask2.7全体・実registry適用0回・一般oracle・OS割当の未達を保つ。CodeQLの修理案はローカル確認済みだが、警告の解消は新headのCodeQL実行で確認する。
+4. 本体が修理差分をレビューし、remoteと既存writerのHEADを照合してからPRブランチへ渡す。CI・独立再レビュー・指定統合受入は未実施で、補助担当はpushや親完了の宣言を行っていない。

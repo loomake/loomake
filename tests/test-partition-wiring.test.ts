@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import ts from 'typescript';
 import { inventoryDeclarations, checkRegistration, checkPartitionWiring } from '../scripts/lib/test-declarations.mjs';
 import { expectedRowMarkers, expectedRowNames, mixedSlowIds, rowIds, type RowReport } from './helpers/partition-rows-fixture.js';
 import { canonicalCalls, canonicalWiringSource, directCall, nonliteralCall, partitionWiringFixture, type WiringMarker } from './helpers/partition-wiring-fixture.js';
@@ -85,4 +86,48 @@ describe('正規sourceとnativeの配線対照', () => {
       }
     } finally {fixture.cleanup();}
   },120000);
+});
+
+describe('配線の実値参照と生成sourceの境界', () => {
+  const file = 'tests/canonical.test.ts';
+  const source = canonicalWiringSource(file, canonicalCalls.filter(call => call.group === 'success'), 'marker').source;
+  const wiringCodes = (extra: string) => [...new Set(checkPartitionWiring(file, source + extra).map((error: {code: string}) => error.code))];
+
+  it.each([
+    ['class-declaration', 'class X extends (registry.files = {}, Object) {}'],
+    ['class-expression', 'const X=class extends (registry.files = {}, Object) {};'],
+    ['extends-call', 'class X extends (currentPart(), Object) {}'],
+    ['extends-alias', 'class X extends factory(has) {}'],
+  ])('%s の継承式にある実値参照を拒否する', (_, extra) => {
+    expect(wiringCodes(extra!)).toEqual(['wiringBinding']);
+  });
+
+  it.each([
+    'interface Shape extends registry {}',
+    'class X implements registry {}',
+    'class X extends Base<typeof registry> {}',
+    'interface Shape extends Base<typeof currentPart> {}',
+  ])('型として消去される参照を受理する: %s', extra => {
+    expect(wiringCodes(extra)).toEqual([]);
+  });
+
+  it.each(['registry', 'includeCase', 'loadPartition', 'currentPart', 'eachRows'])('%s の直接exportと別名exportを拒否し型exportを区別する', name => {
+    expect(wiringCodes(`export {${name}};`)).toEqual(['wiringBinding']);
+    expect(wiringCodes(`export {${name} as leaked};`)).toEqual(['wiringBinding']);
+    expect(wiringCodes(`export type {${name}};`)).toEqual([]);
+  });
+
+  it.each(["tests/quote'name.test.ts", 'tests/back\\slash.test.ts', 'tests/line\nbreak.test.ts'])('生成headerのfileを単一の文字列値に保つ: %s', path => {
+    const generated = canonicalWiringSource(path, [], 'marker').source;
+    const ast = ts.createSourceFile(file, generated, ts.ScriptTarget.Latest, true);
+    let target: ts.Expression | undefined;
+    const visit = (node: ts.Node) => {
+      if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'includeCase') target = node.arguments[1];
+      ts.forEachChild(node, visit);
+    };
+    visit(ast);
+    expect(target && ts.isStringLiteral(target)).toBe(true);
+    expect((target as ts.StringLiteral).text).toBe(path);
+    expect(inventoryDeclarations(generated, file).errors.filter((error: {code: string}) => error.code === 'syntax')).toEqual([]);
+  });
 });

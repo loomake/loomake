@@ -74,7 +74,7 @@ function localBindings(ast, file) {
   host.writeFile = () => {};
   const checker = ts.createProgram([file], options, host).getTypeChecker();
   const declarationOf = (node) => {
-    const symbol = ts.isShorthandPropertyAssignment(node.parent) && node.parent.name === node ? checker.getShorthandAssignmentValueSymbol(node.parent) : checker.getSymbolAtLocation(node);
+    const symbol = ts.isShorthandPropertyAssignment(node.parent) && node.parent.name === node ? checker.getShorthandAssignmentValueSymbol(node.parent) : ts.isExportSpecifier(node.parent) ? checker.getExportSpecifierLocalTargetSymbol(node.parent) : checker.getSymbolAtLocation(node);
     return symbol?.valueDeclaration ?? symbol?.declarations?.[0];
   };
   const namespace = (node, seen = new Set()) => {
@@ -375,7 +375,13 @@ export function checkPartitionWiring(file, source) {
   if (ordered.some((declaration, index) => declaration && top[lastImport + 1 + index] !== statementOf(declaration))) error('wiringHeader', registry ?? has);
   const valueIdentifier = node => {
     if (!ts.isIdentifier(node)) return false;
-    for (let parent = node.parent; parent && parent !== ast; parent = parent.parent) if (ts.isTypeNode(parent)) return false;
+    for (let parent = node.parent; parent && parent !== ast; parent = parent.parent) {
+      if (!ts.isTypeNode(parent)) continue;
+      const heritage = parent.parent;
+      // A class extends expression runs; its type arguments remain erased.
+      const classExtends = ts.isExpressionWithTypeArguments(parent) && ts.isHeritageClause(heritage) && heritage.token === ts.SyntaxKind.ExtendsKeyword && (ts.isClassDeclaration(heritage.parent) || ts.isClassExpression(heritage.parent));
+      if (!classExtends) return false;
+    }
     const parent = node.parent;
     if ((ts.isLabeledStatement(parent) || ts.isBreakStatement(parent) || ts.isContinueStatement(parent)) && parent.label === node) return false;
     if ((ts.isImportSpecifier(parent) || ts.isBindingElement(parent)) && parent.propertyName === node) return false;
