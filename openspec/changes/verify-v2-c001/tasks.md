@@ -1,13 +1,15 @@
 # Tasks
 
-本PRは計画のみ。#60/REQ-307はPR #140・#141で受入済み。保留のR-C001-05/06/08と仕様ゲートが実装停止の理由である。以下は回答後に更新して実行する作業案であり、[部分承認と残るA案の具体化](design-candidate-a.md)を無条件に実装しない。
+当初のPR #139は計画のみを受け入れた。#60/REQ-307はPR #140・#141で受入済みであり、R-C001-05 A・06 A・08 Bも[追加回答](https://github.com/loomake/loomake/pull/139#issuecomment-6511434324)で回答済みである。以下のチェック付きタスク本文は原計画と受入範囲を保持するため変更していない。「保留」「回答後」「Aなら/Bなら」は当時の記述として読み、現在は採用済みA/A/Bを適用する。回答待ちを現在の停止理由にはせず、親1.2の残確認と1.3以降を進める。[旧全A候補](design-candidate-a.md)の比較は履歴として保持し、R08 Aだけに依存する記述は採用しない。印は1/9のままで、親全体は未完了である。
 
 ## 1. 仕様と依存の確定
 
 - [x] 1.1 proposal・差分仕様・design・tasks・traceを準備し、出典・公開側/利用側・未回答の停止範囲をレビューできる資料にする。OpenSpec strictの成功と、仕様ゲートが未回答で失敗することを記録する
 - [ ] 1.2 承認済みR01/02/03/04/07/09/10のAを保持し、保留のR05/06/08の採否と承認元を記録する。#60受入済みの事実を踏まえ、採用するsource/metric・plan・最小適格性・正常PASS例・REQ-036/037/038/039/040/042/050/055/073/093/114/115/135/136/164/183/191/203/275/276/305/307/322とC1〜C5の具体的assertion差分を整理する。R05/R06の回答後、このタスクでREQ-135・136のMODIFIEDを確定する。REQ-093のMODIFIED（spec-only不合格1とusage/config aborted 2・その他aborted 3を分け、実装ブランチ作成/エンジン呼出しを止める）は、子change `verify-v2-readers` で確定済み。135もR05 Aなら全オプション説明義務の本文を保持し、既存verify/trace recordヘルプScenarioへscopeを加える。136はR06 Aなら完了ゲート本文を明示localへ変更し、最終ci確認と区別して印と既存Scenarioを保持する。Bなら136本文と雛形の既定ciコマンドを保持する。全回答後、規範文から候補・質問ID・未決選択肢を除いて採用した振る舞いだけへ確定し、台帳を更新する。PR #155でCLI/URL両changeが同期/archiveされ、main d5aa30dのREQ-323〜325とREQ-322のURL/4 Scenarioへ入ったことを確認する。REQ-323/324のMUSTを生成/集約単独へ限定する差分、REQ-100の明示local、REQ-306の非接続範囲もR05の採否へ含め、全既存Scenario/Sourceを保持する。最新mainは通常merge済みであり、採否確定後のstrictと仕様ゲートexit 0を確認する。全C-001差分を一時コピーでarchiveして全capabilityの主仕様strictを通し、全MODIFIEDの本文字数をOpenSpecのパーサで測って500以内と確認する。上限に近いREQ-322・114と短縮した306は文言確定後に再計測する。本番archiveは製品DoD達成後とし、保護された期待値変更は具体差分の個別承認を得る
 
-移管追記（5b）：REQ-136 の MODIFIED は子 `verify-v2-dod` で確定する。REQ-135 は子 `verify-v2-scope` で確定済み。上の旧本文と残る strict・500字計測・一時archiveの受入は保持する。R05 A・R06 A・R08 B は回答済みで再質問しない。規則移行とkit-assets:251の具体的な期待値差分は承認済みで、子task1.2とpatch適用・ローカル完了は済んだ。最終CI・独立最終レビュー・子の受入は未達である。
+移管追記（5b）：REQ-136 の MODIFIED は子 `verify-v2-dod` で確定する。REQ-135 は子 `verify-v2-scope` で確定済み。上の旧本文と親1.2全体の受入条件は保持する。R05 A・R06 A・R08 B は回答済みで再質問しない。規則移行とkit-assets:251の具体的な期待値差分は別々に明示承認済みで、子8/8・local/ci完了ゲートexit 0・必須CI成功・独立最終レビュー重大0を満たした。子は[PR #269](https://github.com/loomake/loomake/pull/269)のhead `27b8295fa7b276bc659aefb88004742667312c23` をmain `6fa36825` で受入済みである。
+
+検証追記（1.2の一部）：main `620550a` の一時コピーで指定10changeをarchiveし、各段の全30capability strictは実exit 0だった。35MODIFIED本文は500 UTF-16以内（最大REQ-322の498、REQ-114は496）、Scenario703→752・欠落0、Source欠落0、期待本文不一致0、Purpose保持を確認した。正式archiveではなく、規範全体・1.2の他条件・S1具体化/独立受入は未完了のため、1.2の印は変えない。
 - [ ] 1.3 1.2後、承認済みR-C001-04 Aに従い、R05/06/08の採否後にS1内部基準準備を具体化する。承認済みanchor/spec/必須REQ集合・quality/plan/method/tool/version/hashを固定し、環境の記録・照合も S1 で扱う（Q-08 A）。private handoff・base-built判定module・S2自己ゲートとの一致検査を準備する。先行受入するS1は独立change・その範囲のDoD/REQ対応試験/通常done 0で受け入れ同期archive後にS2へ進む候補とし、新change/IDは採否後の担当・既用ID・枠確認まで作らない。親doneを緩めず、S1をC-001完了とせず、設定・公開操作は別途の具体的承認まで行わない（REQ-313・319）
 
 ## 2. 公開形式と履歴の分離
@@ -38,6 +40,6 @@
 
 - [ ] 5.1 core/kit/trace/CLIのminorとrunnerのpatch changeset、形式版と利用側の移行案内を追加し、実tarball・公開型・JSON・CLI/API・旧fixture閲覧を検証する。1.2で採用したR-C001-06に従いAGENTS.md・packages/kit/templates/AGENTS.md・guide・PRテンプレートのローカルDoD/CI合格のコマンドと説明を同時に更新する。CONTRIBUTING.md、README.md、README.en.md、packages/cli/README.md、docs/flow.md、.agents/skills/delivery/SKILL.mdと、雛形文面を固定しているtests/kit-assets.test.ts:251も移行対象とする。kit-assetsの期待値は具体差分の個別承認を得てから変更し、R06の方針承認だけで変更しない。req-to-openspecのtasks雛形2箇所（packages/kit/templates/skills/req-to-openspec/references/openspec-format.md、.agents/skills/req-to-openspec/references/openspec-format.md）も対象にする。1.2で確定したREQ-136と採用コマンドを両雛形へ反映し、印を付ける既存Scenarioと完了ゲートの印を保持する試験を行う。Scenario変更後にREQ-190の監査をやり直し、docs/quality/scenarios.jsonのScenario hash・対応テスト・理由を実際の最新試験へ照合して更新する。旧レビューのhashだけを書き換えて済ませず、不足/無効の残りも記録する。CLI共通定義・生成ページ・新旧基準fixtureが同じ受理/出力を表すことを検査し、基準差分の個別承認を照合する。既存試験・設定を緩めずlint・typecheckと全体試験を通す（REQ-308〜319）
 
-移管追記（5b）：DoD・配布文書・両tasks雛形・kit-assets:251とREQ-136のScenario監査を子 `verify-v2-dod` へ移した。上の旧本文と残るchangeset・実tarball・公開型・形式移行・CLI基準・その他のREQ-190監査は保持する。guideの旧1.0 JSONと古いusageは親5.1の残りとする。
+移管追記（5b）：DoD・配布文書・両tasks雛形・kit-assets:251とREQ-136のScenario監査を子 `verify-v2-dod` へ移した。上の旧本文と残るchangeset・実tarball・公開型・形式移行・CLI基準・その他のREQ-190監査は保持する。guideのscope説明は[PR #289](https://github.com/loomake/loomake/pull/289)のhead `30a331abaf4ba8ec9edb29d513063e043e417a86` をmain `8a5f3659` で受入済みで、基準main `620550a` には2.0.0 JSON例もある。これらを未移行の残作業には数えず、親5.1全体の検証とREQ-190監査の残りを保持する。
 - [ ] 5.2 正常PASS・abortedの2/3・不足1のCLI/API統合、全要件のID付きテストと独立レビューを確認し、R-C001-06の回答に従い最終headのローカルDoDとci完了ゲート・必須CI成功を記録する。Aならローカルは `--done --scope local` の0、最終CIは `--done --scope ci` のreal v2/PASS・要判断なし・0を両方必要とする。R-C001-04がAなら独立trusted checkも追加条件として確認し、Bなら採用した信頼基準を検証する。C-003へ残る全provider/host隔離/広い取得経路と#61/63/64全体の未完了を明記する（REQ-319） <!-- loomake:gate=done -->
 注：archiveは6/6（受入）のマージのあとに、verify-v2-shape・verify-v2-readers・verify-v2-wiring・verify-v2-evidence・verify-v2-strict・verify-v2-gates・verify-v2-scope・verify-v2-quality・verify-v2-dod・verify-v2-c001を順に行う。evidence→scope→quality→dod→parent の整合と、S1 の先行受入・同期・archive を保つ
