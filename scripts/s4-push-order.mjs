@@ -69,7 +69,7 @@ export function analyzeOrder(fake) {
       else { shim.forward.end = e; shim.forward.endIndex = index; shim.forward = null; shim.forwarded = true; }
     } else if (e.event === 'shim-end') {
       if (shim.forward) reasons.add('pid-unpaired-start');
-      if (shim.stalled || !shim.forwarded || e.code !== 0) reasons.add('pid-unpaired-end');
+      if (shim.stalled || !shim.forwarded || !integer(e.code)) reasons.add('pid-unpaired-end');
       open.delete(e.pid);
     } else if (e.event === 'stall-start') {
       if (shim.forward || shim.stalled || !isPush(e)) reasons.add('pid-ambiguous');

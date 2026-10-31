@@ -53,6 +53,10 @@ describe('S4 content diff と push stall の操作順序', () => {
       expect(result.lastContentDiffEndIndex).toBeLessThan(result.pushStallIndex!);
     }
   });
+  it('差分の有無を終了コード1で知らせる別操作は、正常なcontent diffと区別する', () => {
+    const probe = call(30, 1, ['diff', '--quiet']); probe[2].status = 1; probe[3].code = 1;
+    expect(analyzeOrder([...probe, ...call(10, 5), ...stalled(10)])).toMatchObject({ state: 'confirmed', contentDiffCalls: 1, contentDiffSucceeded: 1 });
+  });
   const cases: [string, (rows: Event[]) => Event[], string][] = [
     ['PID不一致', (r) => { r[2].pid = 99; return r; }, 'pid-unpaired-end'],
     ['start欠損', (r) => r.filter((_, i) => i !== 1), 'pid-unpaired-end'],
@@ -141,12 +145,30 @@ describe('S4 の一時contextと公開要約', () => {
     expect(collectOrder({ cwd, rawDir: raw, outputDir: output, reportPath, metadata })).toEqual({ verified: false, exitCode: 2 });
     expect(readdirSync(raw)).toEqual([]); expect(existsSync(reportPath)).toBe(false);
   });
+  it('rawと公開先の重なりを拒否し、生データの混在を公開しない', () => {
+    for (const nested of [false, true]) {
+      const raw = fixture(), cwd = fixture(), reportPath = join(cwd, 'report.json');
+      writeFileSync(join(raw, 'context.json'), context()); writeFileSync(reportPath, report());
+      expect(collectOrder({ cwd, rawDir: raw, outputDir: nested ? join(raw, 'export') : raw, reportPath, metadata })).toEqual({ verified: false, exitCode: 2 });
+      expect(readdirSync(raw)).toEqual([]); expect(existsSync(reportPath)).toBe(false);
+    }
+  });
+  it('CLIの公開検証失敗はexit2でmarkerを出さず、自由なエラーを表示しない', () => {
+    const raw = fixture(), output = fixture(), cwd = fixture();
+    writeFileSync(join(raw, 'context.json'), context()); writeFileSync(join(raw, 'test-output.log'), 'PRIVATE_CAPTURE');
+    writeFileSync(join(output, 'extra'), 'PRIVATE_CAPTURE');
+    const githubOutput = join(cwd, 'github-output');
+    const child = spawnSync(process.execPath, [join(import.meta.dirname, '../scripts/s4-push-order.mjs')], { cwd, encoding: 'utf8', env: { ...process.env, S4_ORDER_RAW_DIR: raw, S4_ORDER_OUT_DIR: output, S4_TEST_OUTCOME: 'success', GITHUB_OUTPUT: githubOutput, GITHUB_STEP_SUMMARY: '' } });
+    expect(child.status).toBe(2); expect(existsSync(githubOutput)).toBe(false);
+    expect(child.stdout + child.stderr).toBe('S4 の公開要約を検証できませんでした。\n');
+    expect(readdirSync(raw)).toEqual([]);
+  });
   it('CLIは元test失敗をexit1として残し、公開可能な不足要約だけmarkerで許可する', () => {
     const raw = fixture(), output = fixture(), cwd = fixture();
     writeFileSync(join(raw, 'context.json'), context()); writeFileSync(join(raw, 'test-output.log'), 'PRIVATE_CAPTURE');
     const reportPath = join(cwd, '.loomake'); mkdirSync(reportPath); writeFileSync(join(reportPath, 'test-report.json'), report('failed'));
     const githubOutput = join(cwd, 'github-output');
-    const child = spawnSync(process.execPath, [join(import.meta.dirname, '../scripts/s4-push-order.mjs')], { cwd, encoding: 'utf8', env: { ...process.env, S4_ORDER_RAW_DIR: raw, S4_ORDER_OUT_DIR: output, S4_TEST_OUTCOME: 'failure', GITHUB_OUTPUT: githubOutput } });
+    const child = spawnSync(process.execPath, [join(import.meta.dirname, '../scripts/s4-push-order.mjs')], { cwd, encoding: 'utf8', env: { ...process.env, S4_ORDER_RAW_DIR: raw, S4_ORDER_OUT_DIR: output, S4_TEST_OUTCOME: 'failure', GITHUB_OUTPUT: githubOutput, GITHUB_STEP_SUMMARY: '' } });
     expect(child.status, child.stderr).toBe(1);
     expect(readFileSync(githubOutput, 'utf8')).toBe('verified=true\n');
     expect(JSON.parse(readFileSync(join(output, 'summary.json'), 'utf8')).result).toBe('test-failed');
