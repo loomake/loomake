@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { EVIDENCE_V2_SCHEMA_VERSION, type LegacyEvidence, type VerifyResult } from '@loomake/core';
+import { EVIDENCE_V2_SCHEMA_VERSION, type EvidenceV2, type VerifyResultV2 } from '@loomake/core';
 import { UsageError, createInputReader, JSON_LIMITS, isAbortedResult, verifyExitCode } from '@loomake/kit';
 import { changedDocuments, evidenceProblem, readDocuments, type Evidence } from '@loomake/trace';
 import { dirtyFiles, git } from './git.js';
@@ -24,15 +24,15 @@ export function reusableEvidence(root: string, env: NodeJS.ProcessEnv, change: s
   }
   const problem = evidenceProblem(value, change);
   if (problem) return stop(problem);
-  const evidence = value as LegacyEvidence | Evidence;
+  const evidence = value as Evidence | EvidenceV2;
   if (evidence.schemaVersion === EVIDENCE_V2_SCHEMA_VERSION) {
     // Evidence 2 は scope:local の完了で、不合格や不足の検査がないものだけを再利用する（REQ-205）
-    const verify = evidence.verify as VerifyResult;
+    const verify = evidence.verify as VerifyResultV2;
     if (isAbortedResult(verify) || verify.scope !== 'local' || verifyExitCode(verify) !== 0 || verify.checks.some((c) => c.result === 'FAIL' || c.result === 'INSUFFICIENT_EVIDENCE')) {
       return stop('ローカルの項目がすべて完了した証拠（scope:local）ではありません');
     }
   } else {
-    const verify = (evidence as LegacyEvidence).verify;
+    const verify = (evidence as Evidence).verify;
     if (!verify.ok || verify.results.some((result) => result.status === 'fail')) return stop('合格した証拠ではありません');
   }
   if (evidence.sha !== parents[0] || !file.endsWith(`-${evidence.sha.slice(0, 12)}.json`)) return stop('対象SHAが直前の親コミットと一致しません');

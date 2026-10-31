@@ -1,11 +1,8 @@
 import { join, relative, resolve } from 'node:path';
-import { EVIDENCE_V2_SCHEMA_VERSION, LEGACY_EVIDENCE_SCHEMA_VERSION, VERIFY_RESULT_V2_SCHEMA_VERSION, parseSpec, parseTrace, REPORT_SCHEMA_VERSION } from '@loomake/core';
+import { parseSpec, parseTrace, REPORT_SCHEMA_VERSION } from '@loomake/core';
 import type { EvidenceV2, LegacyEvidence, Report, ReportRow } from '@loomake/core';
 import { UsageError, assertChangeId, loadConfig, findChangeDir, toPosix, createInputReader, JSON_LIMITS, type InputReader } from '@loomake/kit';
-import { EVIDENCE_DIR, EVIDENCE_SCHEMA_VERSION } from './record.js';
-
-/** レポートが読む証拠の記録。履歴の Evidence 1 と、いまの Evidence 2 */
-type Evidence = LegacyEvidence | EvidenceV2;
+import { EVIDENCE_DIR, EVIDENCE_SCHEMA_VERSION, type Evidence } from './record.js';
 import { changedDocuments, readDocuments, type EvidenceDocument } from './documents.js';
 import { evidenceProblem } from './evidence.js';
 import { projectEvidence } from './projection.js';
@@ -28,38 +25,17 @@ const isString = (v: unknown): v is string => typeof v === 'string';
 const isDate = (v: unknown) => isString(v) && !Number.isNaN(Date.parse(v));
 const isArrayOf = (v: unknown, item: (x: unknown) => boolean) => Array.isArray(v) && v.every(item);
 
-const RESULTS = ['PASS', 'FAIL', 'INSUFFICIENT_EVIDENCE', 'NOT_APPLICABLE'];
-
-/** Evidence 2 の verify 2.0.0 で、レポートと PR 本文が使う欄。実行状態ごとに必須の欄が違う（REQ-073） */
-function v2Fields(verify: Record<string, unknown> | undefined): [string, boolean][] {
-  const run = isObject(verify?.run) ? verify.run : undefined;
-  const evaluated = run?.status === 'completed' || run?.status === 'partial';
-  return [
-    ['verify.schemaVersion', verify?.schemaVersion === VERIFY_RESULT_V2_SCHEMA_VERSION],
-    ['verify.run', run !== undefined && (evaluated || run.status === 'aborted') && Array.isArray(run.errors)],
-    ...(evaluated ? [
-      ['verify.scope', verify?.scope === 'ci' || verify?.scope === 'local'],
-      ['verify.checks', isArrayOf(verify?.checks, (c) => isObject(c) && isString(c.id) && RESULTS.includes(String(c.result)) && isString(c.reason))],
-      ['verify.summary', isObject(verify?.summary)],
-      ['verify.decision', isObject(verify?.decision) && typeof verify.decision.required === 'boolean'],
-    ] as [string, boolean][] : []),
-  ];
-}
-
-/** レポートと PR 本文が使う欄の形が違えば、その欄の名前を返す（validate-evidence-records の仮定 A-01・REQ-073） */
+/** レポートと PR 本文が使う欄の形が違えば、その欄の名前を返す（validate-evidence-records の仮定 A-01） */
 function wrongField(e: Record<string, unknown>): string | undefined {
   const verify = isObject(e.verify) ? e.verify : undefined;
-  const v2 = e.schemaVersion === EVIDENCE_V2_SCHEMA_VERSION;
   const checks: [string, boolean][] = [
     ['change', isString(e.change)],
     ['sha', isString(e.sha) && /^[0-9a-f]{40}$/.test(e.sha)],
     ['committedAt', isDate(e.committedAt)],
     ['recordedAt', isDate(e.recordedAt)],
     ['verify', verify !== undefined],
-    ...(v2 ? v2Fields(verify) : [
-      ['verify.ok', typeof verify?.ok === 'boolean'],
-      ['verify.results', isArrayOf(verify?.results, (r) => isObject(r) && isString(r.check) && isString(r.status))],
-    ] as [string, boolean][]),
+    ['verify.ok', typeof verify?.ok === 'boolean'],
+    ['verify.results', isArrayOf(verify?.results, (r) => isObject(r) && isString(r.check) && isString(r.status))],
     ['verify.coverage', verify?.coverage === undefined || (isObject(verify.coverage) && Object.values(verify.coverage).every((f) => isArrayOf(f, isString)))],
     ['documents', e.documents === undefined || isArrayOf(e.documents, (d) => isObject(d) && isString(d.path) && isString(d.sha256) && isString(d.content))],
   ];
@@ -67,7 +43,7 @@ function wrongField(e: Record<string, unknown>): string | undefined {
 }
 
 // 読めない記録があれば、どのファイルかを示して止める
-function readEvidence(root: string, file: string, change: string, reader: InputReader): LegacyEvidence | EvidenceV2 {
+function readEvidence(root: string, file: string, change: string, reader: InputReader): Evidence {
   let value: unknown;
   try {
     value = JSON.parse(reader.read(file));
@@ -79,15 +55,13 @@ function readEvidence(root: string, file: string, change: string, reader: InputR
   if (problem) {
     const name = `証拠の記録 ${toPosix(relative(root, file))}`;
     if (!isObject(value)) throw new UsageError(`${name} は JSON のオブジェクトではありません`);
-    if (value.schemaVersion !== LEGACY_EVIDENCE_SCHEMA_VERSION && value.schemaVersion !== EVIDENCE_V2_SCHEMA_VERSION) {
-      throw new UsageError(`${name} は、この版の loomake では読めない形式です（schemaVersion ${JSON.stringify(value.schemaVersion)}。読めるのは ${LEGACY_EVIDENCE_SCHEMA_VERSION} と ${EVIDENCE_V2_SCHEMA_VERSION}）`);
-    }
+    if (value.schemaVersion !== EVIDENCE_SCHEMA_VERSION) throw new UsageError(`${name} は、この版の loomake では読めない形式です（schemaVersion ${JSON.stringify(value.schemaVersion)}。読めるのは ${EVIDENCE_SCHEMA_VERSION}）`);
     const field = wrongField(value);
     if (field) throw new UsageError(`${name} の ${field} の形が違います`);
     if (value.change !== change) throw new UsageError(`${name} は、ほかの change（${String(value.change)}）の記録です`);
     throw new UsageError(`${name} が不正です：${problem}`);
   }
-  return value as LegacyEvidence | EvidenceV2;
+  return value as Evidence;
 }
 
 // 証拠のファイル名の日時の部分。日時の形でない名前は、名前全体を日時の代わりに使う

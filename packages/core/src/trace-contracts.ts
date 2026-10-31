@@ -1,8 +1,8 @@
 import type { z } from 'zod';
 import type { evidenceDocumentSchema, evidenceSchema, evidenceV2Schema, legacyEvidenceSchema, reportRowSchema, reportSchema } from './trace-schemas.js';
 
-/** いま書き出す証拠の記録の形式の版（verify 2.0.0 を埋め込む）。適合性の検査は trace が行う（REQ-315）。 */
-export const EVIDENCE_SCHEMA_VERSION = 2;
+/** 証拠の記録の形式の版。適合性の検査は trace が行う。 */
+export const EVIDENCE_SCHEMA_VERSION = 1;
 /** 履歴の証拠の版（verify 1.0.0 を埋め込む）。閲覧だけに使う。 */
 export const LEGACY_EVIDENCE_SCHEMA_VERSION = 1;
 /** verify 2.0.0 を埋め込む証拠の版。 */
@@ -10,7 +10,7 @@ export const EVIDENCE_V2_SCHEMA_VERSION = 2;
 /** リリースレポートの JSON の版。 */
 export const REPORT_SCHEMA_VERSION = 2;
 
-/** いま書き出す 1 回分の証拠の記録（Evidence 2）。古い記録の documents は省略される。 */
+/** 1 回分の証拠の記録。古い記録の documents は省略される。 */
 export type Evidence = z.output<typeof evidenceSchema>;
 export type LegacyEvidence = z.output<typeof legacyEvidenceSchema>;
 export type EvidenceV2 = z.output<typeof evidenceV2Schema>;

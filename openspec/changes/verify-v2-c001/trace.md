@@ -35,6 +35,7 @@ Issue参照：[契約 #61](https://github.com/loomake/loomake/issues/61)、[判�
 | REQ-039 | 現行verify「品質コマンドの実行」・追加レビュー重大1 | 既存変更 | 未知キーのwarnを理由付きPASSの案内へ移し、コマンド失敗は保つ | 確認待ち | specs/verify/spec.md |
 | REQ-191 | 現行verify「品質コマンドを省いたことの表示」・追加レビュー重大2 | 既存変更 | skip-commandsをchecksの不足として1にし、未実施と再実行を案内する候補 | 確認待ち | specs/verify/spec.md |
 | REQ-066 | 現行trace-record「証拠の記録」、WBS W1-5 | 既存変更 | v2結果と同じ終了コードで追記記録する。未コミット・change不正の停止は保持する | 確認待ち | specs/trace-record/spec.md |
+| REQ-073 | 現行trace-report「使った証拠の記載」・レビュー指摘2 | 既存変更 | Evidence 1/v1とEvidence 2/v2の対応版を受け付け未対応版・不正構造は拒否する | 確認待ち | specs/trace-report/spec.md |
 | REQ-312 | 要件7.3・FR-12、現行REQ-042、WBS W1-5 | 機能 | bare verify維持はR01 A採用。scope既定とR06 A/R08 BのDoD/警告分類の規範反映を確認する | 確認待ち | specs/verify/spec.md |
 | REQ-317 | 要件7.3・FR-12、architecture0.5、WBS同時追従 | 機能 | runnerはdecisionで停止し、local完了と最終CI合格を分ける | 確認待ち | specs/run-decision-policy/spec.md |
 | REQ-318 | WBS5章同時追従・J03、architecture0.4、互換性文書 | 移行 | 配布された型・CLI/API・Schemaとci-gateの版別受理が一致する | 確認待ち | specs/monorepo/spec.md |
@@ -44,7 +45,7 @@ R01〜10の方針回答を記録した。R05/R06はA、R08はBが追加承認さ
 
 REQ-305/306はPR #138、REQ-307は#60保持修正の既存IDである。305・307は今回その既存要件をMODIFIEDとし、別の振る舞いへ再割当しない。既存REQ-042のbare verify品質専用はR01 Aで維持し、別の品質専用操作へ変更したと扱わない。
 
-2本目は読む側の対応（子change `verify-v2-readers`）と書く側の切り替え（子change `verify-v2-wiring`）の2つのPRに分けた。`verify-v2-wiring` へはREQ-040・041・073・100・311・315の6件を移した。書く側はさらに、書き出しの切替（2b/5）と旧形式の不合格（2c/5）に分け、受入を5本目とする（管理役の決定、2026-10-31）（管理役の決定、2026-10-31）。`verify-v2-readers` へREQ-093・205の2件を移した。
+2本目は読む側の対応（子change `verify-v2-readers`）と書く側の切り替え（子change `verify-v2-wiring`）の2つのPRに分けた。`verify-v2-wiring` へはREQ-040・041・100・311・315の5件を移した。書く側はさらに、verifyの書き出しの切替（2b-1/6）、Evidenceの現行名の切替とreport（2b-2/6）、旧形式の不合格（2c/6）に分け、受入を6/6とする（管理役の決定、2026-10-31）（管理役の決定、2026-10-31）。`verify-v2-readers` へREQ-093・205の2件を移した。
 
 ## 確認事項
 

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createHash } from 'node:crypto';
 import { UsageError } from '@loomake/kit';
 import { serializeEvidence } from '../src/serialization.js';
-import type { LegacyEvidence as Evidence } from '@loomake/core';
+import type { Evidence } from '../src/record.js';
 import { traceMd } from '../../kit/test/project.js';
 
 function value(): Evidence {

@@ -22,14 +22,15 @@ describe('版付きの JSON Schema の書き出し', () => {
     }
   });
 
-  it('[REQ-304][REQ-305][REQ-318] 版付きでない 8 ファイルの verify・evidence は 2.0.0 と Evidence 2 を表し、版付きの 2.0.0・Evidence 2 と同じ構造になる', () => {
+  it('[REQ-304][REQ-305][REQ-318] 版付きでない 8 ファイルの verify は 2.0.0、evidence はまだ Evidence 1 を表し、版付きのファイルと同じ構造になる', () => {
     const current = renderJsonSchemas();
     expect(Object.keys(current)).toHaveLength(8);
     const strip = (text: string) => ({ ...JSON.parse(text), $id: undefined, title: undefined, description: undefined });
     const versioned = renderVersionedJsonSchemas();
     expect(strip(versioned['verify-result-2.0.0.schema.json'])).toEqual(strip(current['verify-result.schema.json']));
     const verifyOf = (text: string) => ({ ...JSON.parse(text).properties.verify, title: undefined, description: undefined });
-    expect(verifyOf(current['evidence.schema.json'])).toEqual(verifyOf(versioned['evidence-2.schema.json']));
+    // 証拠の現行の名前の切替は 2b-2 で行う。それまで evidence.schema.json は Evidence 1（verify 1.0.0）を表す
+    expect(verifyOf(current['evidence.schema.json'])).toEqual(verifyOf(versioned['evidence-1.schema.json']));
     const versions = JSON.parse(current['verify-result.schema.json']).anyOf.map((branch: { properties: { schemaVersion: { const: string } } }) => branch.properties.schemaVersion.const);
     expect(new Set(versions)).toEqual(new Set(['2.0.0']));
   });

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { qualitySchema } from '../src/quality-schema.js';
 import { evidenceSchema, reportSchema } from '../src/trace-schemas.js';
-import { evidenceV2Value, reportValue } from './fixtures/trace-contract-values.js';
+import { evidenceV2Value, evidenceValue, reportValue } from './fixtures/trace-contract-values.js';
 import { createTraceTemplate, parseTrace, parseSpec, parseTasks } from '../src/index.js';
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -49,7 +49,7 @@ describe('JSON Schema の書き出し', () => {
   it('[REQ-304] Evidence/Report の JSON は構造・任意フィールド・未知キーを Zod と同じに公開する', () => {
     const pkg = JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf8'));
     const cases = [
-      ['evidence', evidenceSchema, evidenceV2Value(), { ...evidenceV2Value(), documents: null }],
+      ['evidence', evidenceSchema, evidenceValue(), { ...evidenceValue(), documents: null }],
       ['report', reportSchema, reportValue(), { ...reportValue(), warnings: null }],
     ] as const;
     for (const [name, zodSchema, value, invalid] of cases) {
@@ -82,9 +82,10 @@ describe('JSON Schema の書き出し', () => {
       for (const schema of schemas) expect(registry.getSchema(schema.$id), schema.$id).toEqual(expect.any(Function));
       const evidence = registry.getSchema('https://loomake.dev/schema/evidence.schema.json')!;
       const verify = registry.getSchema('https://loomake.dev/schema/verify-result.schema.json')!;
-      expect(evidence(evidenceV2Value()), JSON.stringify(evidence.errors)).toBe(true);
+      expect(evidence(evidenceValue()), JSON.stringify(evidence.errors)).toBe(true);
       expect(verify(evidenceV2Value().verify), JSON.stringify(verify.errors)).toBe(true);
-      expect(evidence({ ...evidenceV2Value(), verify: { ...evidenceV2Value().verify, verdict: 1 } })).toBe(false);
+      expect(verify(evidenceValue().verify)).toBe(false);
+      expect(evidence({ ...evidenceValue(), verify: { ...evidenceValue().verify, ok: 1 } })).toBe(false);
     }
   });
 

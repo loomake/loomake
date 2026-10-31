@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { EVIDENCE_SCHEMA_VERSION as CORE_EVIDENCE_VERSION, REPORT_SCHEMA_VERSION as CORE_REPORT_VERSION, loadTraceSchemas, type Evidence as CoreEvidence, type EvidenceDocument as CoreDocument, type Report as CoreReport, type ReportRow as CoreRow } from '@loomake/core';
 import { EVIDENCE_SCHEMA_VERSION, REPORT_SCHEMA_VERSION, buildReport, runReport, evidenceProblem, readDocuments, type Evidence, type EvidenceDocument, type Report, type ReportRow } from '../src/index.js';
 import { serializeEvidence } from '../src/serialization.js';
-import { evidenceV2Value, evidenceValue } from '../../core/test/fixtures/trace-contract-values.js';
+import { evidenceValue } from '../../core/test/fixtures/trace-contract-values.js';
 import { withProject } from '../../kit/test/project.js';
 
 const { evidenceSchema, reportSchema } = await loadTraceSchemas();
@@ -19,16 +19,15 @@ describe('trace の公開元と同期境界', () => {
     expectTypeOf<ReturnType<typeof buildReport>>().toEqualTypeOf<Report | undefined>();
     expectTypeOf<ReturnType<typeof serializeEvidence>>().toEqualTypeOf<string>();
     expect([EVIDENCE_SCHEMA_VERSION, REPORT_SCHEMA_VERSION]).toEqual([CORE_EVIDENCE_VERSION, CORE_REPORT_VERSION]);
-    expect([EVIDENCE_SCHEMA_VERSION, REPORT_SCHEMA_VERSION]).toEqual([2, 2]);
+    expect([EVIDENCE_SCHEMA_VERSION, REPORT_SCHEMA_VERSION]).toEqual([1, 2]);
   });
 
   it('[REQ-303] 構造スキーマが受ける不適合な証拠を従来の意味検証が拒否する', () => {
-    // いまの書き出しの Evidence 2 を元にする。版の値は構造では number のまま受け、意味の検証で拒否する
-    const base = evidenceV2Value();
+    const base = evidenceValue();
     const document = { path: 'trace.md', content: '', sha256: createHash('sha256').update('').digest('hex') };
     const inputs = [
-      { ...base, schemaVersion: 3 }, { ...base, sha: 'wrong' }, { ...base, committedAt: '' }, { ...base, recordedAt: 'wrong' }, { ...base, change: 'other' },
-      { ...base, verify: { ...base.verify, change: 'other' } }, { ...base, verify: { ...base.verify, change: null } },
+      { ...base, schemaVersion: 2 }, { ...base, sha: 'wrong' }, { ...base, committedAt: '' }, { ...base, recordedAt: 'wrong' }, { ...base, change: 'other' },
+      { ...base, verify: { ...base.verify, change: 'other' } }, { ...base, verify: { ...base.verify, mode: 'quality' } },
       { ...base, documents: [{ path: 'trace.md', content: '', sha256: 'wrong' }] },
       { ...base, documents: [{ path: '', content: '', sha256: '' }] },
       { ...base, documents: [document, document] },
