@@ -11,7 +11,7 @@
 
 ## 3. 試験
 
-- [ ] 3.1 `tests/scenario-audit-scope.test.ts` を足す（REQ-188・REQ-189・REQ-190・REQ-346）。既存の `tests/scenario-audit.test.ts` は変えずに通す
+- [x] 3.1 `tests/scenario-audit-scope.test.ts` を足す（REQ-188・REQ-189・REQ-190・REQ-346）。既存の `tests/scenario-audit.test.ts` は変えずに通す
 
 ## 4. CI と文書
 
