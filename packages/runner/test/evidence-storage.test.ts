@@ -81,7 +81,8 @@ it('[REQ-176] 公開後の片付け失敗は確認・一時名の削除・証拠
     const json = names.find((name) => name.endsWith('.json'))!;
     expect(names).toHaveLength(2);
     const completed = readFileSync(join(dir, json), 'utf8');
-    expect(JSON.parse(completed).verify.ok).toBe(true);
+    // run の記録は scope:local の完了（REQ-164・REQ-315）
+    expect(JSON.parse(completed).verify).toMatchObject({ scope: 'local', run: { status: 'completed' }, summary: { fail: 0, pending: 0 } });
     expect(runReport({ root: repo.root, changeId: CHANGE, stdout: () => {} })).toBe(0);
     expect(JSON.parse(completed).sha).toBe(repo.git('rev-parse', 'HEAD'));
     vi.mocked(unlinkSync).mockImplementation(actual.unlinkSync);

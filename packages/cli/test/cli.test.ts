@@ -2,6 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Ajv2020 } from 'ajv/dist/2020.js';
+import { extractTestRequirements } from '@loomake/core';
+import { evaluateTestCoverage } from '@loomake/kit';
 import { main } from '../src/main.js';
 import { CHANGE, COPY_REPORT, ledgerRow, reportJson, requirement, traceMd, withProject } from '../../kit/test/project.js';
 
@@ -177,8 +179,14 @@ describe('verify の性能', () => {
       writeReport(root, tests);
       const start = performance.now();
       const result = await run(root, 'verify', '--change', CHANGE, '--done', '--skip-commands', '--json');
-      return { ...result, ms: performance.now() - start };
+      // --skip-commands では前回のレポートを読まないので（REQ-040）、同じレポートの抽出と要件の対応の判定を続けて測り、処理量を保つ
+      const extracted = extractTestRequirements('.loomake/test-report.json', readFileSync(join(root, '.loomake', 'test-report.json'), 'utf8'));
+      const decided = evaluateTestCoverage(ids, extracted.value);
+      return { ...result, ms: performance.now() - start, errors: extracted.errors, decided };
     });
+    expect(r.errors).toEqual([]);
+    expect(r.decided.missing).toEqual([]);
+    expect(Object.values(r.decided.coverage).every((files) => files.length === 2)).toBe(true);
     // --skip-commands は品質コマンドの不足で 1（REQ-040）。不足は品質コマンドと要件ごとのテストの 2 件だけ
     expect(r.code, r.stdout).toBe(1);
     expect(JSON.parse(r.stdout).checks.filter((c: { result: string }) => c.result !== 'PASS').map((c: { id: string }) => c.id)).toEqual(['品質コマンド', '要件ごとのテスト']);

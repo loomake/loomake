@@ -1,0 +1,15 @@
+# Loomake 自身の品質基準（verify-v2-c001 の承認済み R-C001-07 A の初期内容）。
+# ci.test_report の必須 1 項目だけを置く。verify の判定への接続は verify-v2-c001（3 本目）で行う
+version: 2
+model: iso-iec-25010-2011
+product:
+  PQ-900:
+    characteristic: functional_suitability
+    subcharacteristic: functional_correctness
+    blocking: true
+    applicability: applicable
+    evidence:
+      - source: ci.test_report
+        metric: required_subjects_with_failed_tests
+        target: "== 0"
+        min_samples: 1
