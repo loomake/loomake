@@ -44,9 +44,21 @@ node .agents/skills/delivery/scripts/ask-opus.mjs \
 
 `--role` は `design`、`second-opinion`、`review` のいずれか。難しいバグの独立調査には `second-opinion` を使い、先行担当の仮説や推奨修正を依頼に含めない。独立調査から設計を同じ担当が続ける既定は維持する。PR #152 の AUTO-152-02（独立調査の保存成果物を別の新規セッションへ渡す案）は、規則の変更が決まるまで適用しない。スクリプトは毎回新しいセッションIDを作り、`--resume` や `--continue` を使わない。既存のClaude認証をそのまま使い、APIキーの追加や認証設定の書き換えは行わない。
 
+難しいバグで先行見解と比較して設計するときは、Codexの仮説を `.loomake/prior/` 配下の通常ファイルに分け、`--prior` で渡す。依頼本文には仕様・コード・再現手順・入力・観測ログを載せ、先行仮説や推奨修正を含めない。`--prior` は `second-opinion` でだけ使える。仮説ファイルは空ではない200KiB以内のファイルとし、依頼ファイルとは別にする。
+
+```sh
+node .agents/skills/delivery/scripts/ask-opus.mjs \
+  --role second-opinion --request .loomake/second-opinion-request.md \
+  --prior .loomake/prior/codex-hypothesis.md --head <40桁の対象SHA>
+```
+
+この呼び出しでは、1つの新しいOpusセッションへ2回入力する。最初の入力には独立調査の資料だけを渡し、`.loomake/prior/` の読み取りを拒否する。補助は最初の回答とモデル・権限・対象headを確認し、独立見解を `independent-view.md` に新規保存して同期する。保存が完了してから、同じプロセスの2回目の入力に先行仮説を渡し、比較と設計を求める。先読み、保存の失敗、どちらかの回答の異常は未実施とし、保存前や最初の回答に異常があるときは先行仮説を送らない。時間と出力量の上限は2回の入力を合わせた実行全体に適用する。
+
 起動時は `--model opus`、読取ツールのRead/Glob/Grep、`Read(./**)` の範囲付き許可、`permissions.blockReadsOutsideWorkingDirectories:true`、hook無効、自動メモリ無効、MCPなしを固定する。[Claude公式の読取拒否設定](https://code.claude.com/docs/en/settings-reference#permissions-blockreadsoutsideworkingdirectories)は2.1.257以降が必要。Windowsのnpm版 `claude.cmd` は `shell:false` で起動できないため未対応とし、未実施を返す。時間上限は既定20分で、`--timeout-min` に1〜60の整数を指定できる。stdoutは8MiB、stderrは64KiBを上限とし、上限到達は未実施として停止する。
 
 標準出力は1行のJSON要約とし、成果物はGitの除外対象である `.loomake/claude/<session-id>/` へ保存する（`request.md`、`events.jsonl`、`stderr.txt`、`result.md`、`manifest.json`）。生ログには入力やコードが含まれるため、そのまま公開しない。終了コード0かつ `ok:true` の結果だけを実施済みとして扱う。開始情報のモデルとすべてのassistantイベントの応答モデルがOpusであること、権限拒否0件、読取専用ツールとMCPなしを確認できなければ、終了コード1で未実施を返す。引数の誤りは終了コード2とする。管理役はセッションIDと結果（重大・軽微・情報の件数）を PR 本文の証跡ブロックへ転記する。
+
+`--prior` を使ったときは、独立見解と比較設計の両方を同じセッションの成果物として残し、要約とmanifestに入力回数・独立見解の保存時刻・先行仮説の送信時刻を記録する。時刻が同じミリ秒になることもあるため、時刻の大小だけで順序を判定しない。保存完了後にだけ2回目の入力を送る処理と、その順序を確かめる試験を根拠にする。過去の工程は、その実行時の成果物と承認元を保ったまま評価する。
 
 ## 3. すべての担当が守る4つの原則
 
