@@ -4,7 +4,7 @@ Loomake の開発で使ったトークンの量を、日本時間の日付・ツ
 
 ## 置き場所
 
-CSV は、データ専用のブランチ `metrics-data` の `tokens.csv` にあります。main には入れません。main に入れると、データを更新するたびに PR と段階の判定が要るためです。
+CSV は、データ専用のブランチ `metrics-data` の `tokens.csv` にあります。main には入れません。main に入れると、データを更新するたびに PR と段階の判定が要るためです。リポジトリは公開されているので、`metrics-data` の CSV（日付・ツール・モデル名・トークン数）も誰でも読めます。
 
 次のどちらかで読めます。
 
@@ -34,7 +34,7 @@ curl -fsSL https://raw.githubusercontent.com/loomake/loomake/metrics-data/tokens
 
 `metrics-data` の CSV を更新するときは、開発機のリポジトリで `bash scripts/metrics-tokens-push.sh` を実行します。CSV を一時ファイルに作り、`metrics-data` の `tokens.csv` と違うときだけ、その 1 ファイルを差し替えたコミットを `metrics-data` に直接 push します。PR は作りません。作業ツリーにも書き込みません。`metrics-data` がまだ無いときは、新しく作ります。
 
-`--dry-run` を付けると、CSV の生成と比較だけを行い、差分の有無と予定のコミットを表示して止まります。`--no-generate <path>` を付けると、ログを集計せずに、指定した CSV をそのまま使います。
+`--dry-run` を付けると、CSV の生成と比較だけを行い、差分の有無と予定のコミットを表示して止まります。`--no-generate <path>` を付けると、ログを集計せずに、指定した CSV をそのまま使います。指定した CSV の 1 行目が列の見出し（`day,tool,model,input,cache_write,cache_read,output,requests`）と違うときは、取り違えを防ぐため終了コード 2 で止まり、push しません。
 
 初回の CSV も、利用者が開発機でこのスクリプトを実行して入れます。Claude のサブエージェントに任せると、手元のログの読み取りが自動モードの権限で拒否されるためです。
 

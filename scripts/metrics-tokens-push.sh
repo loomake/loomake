@@ -3,14 +3,17 @@
 # main には入れず、PR も作らない（データを更新するたびに PR と段階の判定が要らないようにするため）。
 # 使い方: scripts/metrics-tokens-push.sh [--dry-run] [--no-generate <path>]   （git と python3 が要る。リポジトリの中で実行）
 #   --dry-run             CSV の生成と比較だけを行い、差分の有無と予定のコミットを表示して止まる。コミットも push もしない
-#   --no-generate <path>  scripts/metrics-tokens.py を動かさず、指定した CSV を使う
+#   --no-generate <path>  scripts/metrics-tokens.py を動かさず、指定した CSV を使う（1 行目が列の見出しでなければ exit 2）
 # CSV は一時ファイルに作るので、作業ツリーには何も書かない。
 # コミットは git の下位コマンド（hash-object・mktree・commit-tree）で作るので、worktree もブランチも手元に作らない。
+# git のオブジェクトと refs/remotes/origin/metrics-data は更新される（--dry-run でも fetch で更新される）。
+# origin に届かないなど git ls-remote が失敗したときは exit 1 で止める。
 # origin に metrics-data が無ければ、親の無いコミット（orphan）として作る。後始末は trap で一時ディレクトリを消す。
 set -euo pipefail
 
 DATA_BRANCH=metrics-data
 DATA_FILE=tokens.csv
+HEADER=day,tool,model,input,cache_write,cache_read,output,requests
 DRY=0
 SRC=
 usage() { echo "使い方: scripts/metrics-tokens-push.sh [--dry-run] [--no-generate <path>]" >&2; exit 2; }
@@ -33,14 +36,28 @@ if [ -z "$SRC" ]; then
 elif [ ! -f "$SRC" ]; then
   echo "$SRC がありません" >&2
   exit 1
+else
+  # 取り違えたファイルを公開ブランチに push しないよう、1 行目が列の見出しと同じかを確かめる
+  if [ "$(head -n 1 -- "$SRC" | tr -d '\r')" != "$HEADER" ]; then
+    echo "$SRC の 1 行目が $HEADER ではありません" >&2
+    exit 2
+  fi
 fi
 
 REF="refs/remotes/origin/$DATA_BRANCH"
-if git ls-remote --exit-code --heads origin "$DATA_BRANCH" >/dev/null 2>&1; then
+# --exit-code の 2 は「ref が無い」。それ以外の失敗（ネットワーク・認証など）は止める
+set +e
+git ls-remote --exit-code --heads origin "$DATA_BRANCH" >/dev/null
+RC=$?
+set -e
+if [ "$RC" -eq 0 ]; then
   git fetch --quiet origin "+refs/heads/$DATA_BRANCH:$REF"
   PARENT=$(git rev-parse "$REF")
-else
+elif [ "$RC" -eq 2 ]; then
   PARENT=
+else
+  echo "origin の $DATA_BRANCH を確かめられませんでした（git ls-remote の終了コード $RC）" >&2
+  exit 1
 fi
 
 if [ -n "$PARENT" ] && git cat-file -e "$PARENT:$DATA_FILE" 2>/dev/null \
