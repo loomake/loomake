@@ -24,7 +24,10 @@ function gitTree(dir: string, path = ''): [string, number][] {
 
 /** base の絶対パスを伏せた git の状態。2 つの作り方で同じになるはずのもの */
 function gitState(repo: Repo) {
-  const hide = (text: string) => text.split(repo.base).join('<base>');
+  // write-report.mjs の中のパスは JSON で 2 回逃がしてある（Windows ではパスの区切りが逃がされて形が変わる）。逃がした形も伏せる
+  const once = JSON.stringify(repo.base).slice(1, -1);
+  const forms = [JSON.stringify(once).slice(1, -1), once, repo.base];
+  const hide = (text: string) => forms.reduce((value, form) => value.split(form).join('<base>'), text);
   const files = repo.git('ls-tree', '-r', '--name-only', 'HEAD').split('\n');
   return {
     head: repo.git('symbolic-ref', 'HEAD'),

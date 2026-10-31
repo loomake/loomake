@@ -11,3 +11,10 @@
 2. verify の結果：change を持たない PR なので verify は対象外。`pnpm lint`・`pnpm typecheck` と雛形の試験は通った。`ci:all-os` のラベルを付け、Windows と macOS の CI でも流す。
 3. 残っている確認事項・仮定：なし。
 4. 次にやること：Windows と macOS の CI の結果を確かめ、Opus の独立レビューに出す。
+
+## Windows の CI での失敗への対応（PR #220）
+
+1. やったこと：Windows で雛形の試験 2 件が落ちた原因は、試験の比べ方にあった。write-report.mjs の中のパスは JSON で 2 回逃がしてあり、Windows では区切りの形が変わるので、そのままの形のパスを伏せるだけでは伏せきれなかった。逃がした形のパスも伏せるように直し、比べるキーは外していない。origin/main（#225 を含む）を取り込んだ。
+2. verify の結果：change を持たない PR なので verify は対象外。手元で `pnpm lint`・`pnpm typecheck` と雛形の試験は通った。Windows と macOS は CI で確かめる。
+3. 残っている確認事項・仮定：なし。
+4. 次にやること：全 OS の CI の結果を確かめ、Opus の独立レビューに出す。
