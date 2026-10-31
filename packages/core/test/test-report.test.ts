@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractTestRequirements } from '../src/index.js';
+import { extractTestRequirements, parseTestReport } from '../src/index.js';
 
 const report = (tests: { fullName: string; status: string }[], name = '/repo/tests/a.test.ts') =>
   JSON.stringify({ testResults: [{ name, assertionResults: tests }] });
@@ -44,5 +44,53 @@ describe('extractTestRequirements', () => {
     const { value, errors } = extractTestRequirements('report.json', '{"testResults": [{"name": 1}]}');
     expect(value).toEqual({});
     expect(errors[0]).toMatchObject({ file: 'report.json', line: 1 });
+  });
+});
+
+describe('parseTestReport', () => {
+  it('[REQ-319] すべてのテストの file・fullName・status・要件 ID と startTime を返す', () => {
+    const text = JSON.stringify({
+      startTime: 1_700_000_000_000,
+      testResults: [
+        {
+          name: '/repo/a.test.ts',
+          assertionResults: [
+            { fullName: '[REQ-012][REQ-012] 成功', status: 'passed' },
+            { fullName: '[REQ-013] 失敗', status: 'failed' },
+            { fullName: '[REQ-014] skip', status: 'skipped' },
+            { fullName: '名前なし todo', status: 'todo' },
+            { fullName: '[REQ-015] pending', status: 'pending' },
+            { fullName: '[REQ-016] 知らない状態', status: 'disabled' },
+          ],
+        },
+      ],
+    });
+    const { value, errors } = parseTestReport('report.json', text);
+    expect(errors).toEqual([]);
+    expect(value.startTime).toBe(1_700_000_000_000);
+    expect(value.tests).toEqual([
+      { file: '/repo/a.test.ts', fullName: '[REQ-012][REQ-012] 成功', status: 'passed', requirements: ['REQ-012'] },
+      { file: '/repo/a.test.ts', fullName: '[REQ-013] 失敗', status: 'failed', requirements: ['REQ-013'] },
+      { file: '/repo/a.test.ts', fullName: '[REQ-014] skip', status: 'skipped', requirements: ['REQ-014'] },
+      { file: '/repo/a.test.ts', fullName: '名前なし todo', status: 'todo', requirements: [] },
+      { file: '/repo/a.test.ts', fullName: '[REQ-015] pending', status: 'pending', requirements: ['REQ-015'] },
+      { file: '/repo/a.test.ts', fullName: '[REQ-016] 知らない状態', status: 'other', requirements: ['REQ-016'] },
+    ]);
+  });
+
+  it('[REQ-319] startTime がない・数でないときは null にする', () => {
+    expect(parseTestReport('r.json', report([{ fullName: '[REQ-012] a', status: 'passed' }])).value.startTime).toBeNull();
+    expect(parseTestReport('r.json', JSON.stringify({ startTime: '1', testResults: [] })).value.startTime).toBeNull();
+  });
+
+  it('[REQ-319] 読めない・形が違うときは空の結果とエラーを返し、extractTestRequirements の結果は変えない', () => {
+    expect(parseTestReport('r.json', '{').value).toEqual({ startTime: null, tests: [] });
+    expect(parseTestReport('r.json', '{').errors[0].file).toBe('r.json');
+    expect(parseTestReport('r.json', '{"testResults": [{"name": 1}]}').errors).toHaveLength(1);
+    const text = report([
+      { fullName: '[REQ-012] 成功', status: 'passed' },
+      { fullName: '[REQ-013] 失敗', status: 'failed' },
+    ]);
+    expect(extractTestRequirements('r.json', text).value).toEqual({ '/repo/tests/a.test.ts': ['REQ-012'] });
   });
 });
