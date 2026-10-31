@@ -16,7 +16,7 @@
 
 ## S1の統合方針（2026-10-31）
 
-Issue #243と分割設計（Opus `d8cc219c-81a8-4e8a-bf5a-1802b1c4c513`、対象 `d822e540`）を引き継ぐ。統合先の基点はmain `248c89b6`、ブランチは `integration/e3-result-20261031` とする。既存の古いローカルrefと元PR #185は保持した。仕様本文・Source・Scenarioは元headと同一で、コードのない2.1〜3.4の印を戻す。以下の元表は当時の判断の履歴で、実採集0/4と残る受入条件を省かない。表の外の本文にある13済/6未・旧5task・「状態は変更しない」もd822e540の履歴であり、現在は4済/15未である。旧実装・試験を確定形で記した箇所もd822e540の履歴であり、この統合ブランチへの実装・試験の受入証明ではない。
+Issue #243と分割設計（Opus `d8cc219c-81a8-4e8a-bf5a-1802b1c4c513`、対象 `d822e540`）を引き継ぐ。統合先の基点はmain `248c89b6`、ブランチは `integration/e3-result-20261031` とする。既存の古いローカルrefと元PR #185は保持した。仕様本文・Source・Scenarioは元headと同一で、コードのない2.1〜3.4の印を戻す。以下の元表は当時の判断の履歴で、実採集0/4と残る受入条件を省かない。表の外の本文にある13済/6未・旧5task・「状態は変更しない」もd822e540の履歴であり、S1作成時は4済/15未だった。現在の状態は[末尾のS4受入記録](#s4-acceptance-current)に記す。旧実装・試験を確定形で記した箇所もd822e540の履歴であり、この統合ブランチへの実装・試験の受入証明ではない。
 
 REQ-100は進行中のverify-v2-wiringと重なるため[Issue #259](https://github.com/loomake/loomake/issues/259)で追跡し、現mainのREQ-331による変更なし停止、C001のlocal完了の区別、E3の異常停止をすべて保持して最終統合前に全文を再照合する。S1では元の仕様本文をbyte単位で変更しない。
 
@@ -154,9 +154,9 @@ D01〜D05に新仮定なし。C001/S1の契約を推測で混ぜない。各設�
 
 G-Q1/2/3/5/7とH-Qの採否はdesign10へ集約した。旧表示連結/stdout単独課金を不採用とし、返却UTF8 bytesとwireを同一視しない。U+FFFD境界/完全hunk/EOF/極小roomの拒否、constant textconvのM0、name-status終端/ペア/空項目/decoded重複の管理補正を保持する。旧git caller/kit protocol/品質設定/元1200fileと60秒/全旧assertは不変。
 
-## 現在の未受入
+## S4受入前の未受入事項（履歴）
 
-実CLI起動0・実4件0/4、P6と親の旧5task/3.5/done/最終受入は未達。fixture投影の新literal候補は未採用/未実装である。原raw/元値hash非保存、保護維持、native/設定源/managed/hook/plugin/診断/stateの資格未成立、実OS/live/保存台帳の未実装を残す。採集制御の先行分割は親完成や元Source/Scenarioの削減にしない。
+この節はS4受入前の履歴で、当時は実CLI起動0・実4件0/4、P6と親の旧5task/3.5/done/最終受入が未達だった。task 3.5の現在の受入状況と残る7taskは[末尾のS4受入記録](#s4-acceptance-current)とtasks.mdに記す。fixture投影の新literal候補は未採用/未実装である。原raw/元値hash非保存、保護維持、native/設定源/managed/hook/plugin/診断/stateの資格未成立、実OS/live/保存台帳の未実装を残す。採集制御の先行分割は親完成や元Source/Scenarioの削減にしない。
 
 [original]: https://github.com/loomake/loomake/blob/3b3b6d7e2f68fd8c71a888a7302f28e6ef91c291/openspec/changes/validate-engine-json-result/trace.md
 
@@ -171,3 +171,12 @@ G-Q1/2/3/5/7とH-Qの採否はdesign10へ集約した。旧表示連結/stdout�
 | W-GIT-02 | REQ-109・REQ-180 | literal群の呼出観測をどう移行するか | a：子envで選択し検査強化／b：旧flag選択を維持 | a。数値期待と検査強度を保持 | yes | a。本体技術採用。26/28/8192+152期待は不変、全群の先頭diff/flag不在と残2件のadd/name-status diffを追加確認。期待値緩和ではない | 本体root（技術採用） | 2026-10-31 |
 | W-GIT-03 | REQ-137・REQ-138 | flag/envの等価性をどう確認するか | 公式と実Git／Git sourceを新規取得 | 公式と実Git。正負を実証 | yes | 本体技術採用。公式等価記述とW2でGLOB/ICASE衝突、NOGLOB、既存LITERAL=0、元env不変を確認する | 本体root（技術採用） | 2026-10-31 |
 | W-GIT-04 | REQ-297 | push試験へdiff転送assertを追加するか | 追加しないでCI診断／追加する | 追加なし。既存試験を保持 | yes | 本体技術採用。external-budgetは変更せず、diffのshim/転送成功がpush停止前にあることを本体がCIで確認する。実3OSは未達 | 本体root（技術採用） | 2026-10-31 |
+
+
+<a id="s4-acceptance-current"></a>
+
+## S4 の段階受入を S2 へ記録（2026-11-01）
+
+管理役は指定統合先へ受け入れた [PR #261](https://github.com/loomake/loomake/pull/261) の同 head の全 3 OS・専用 Windows・独立レビューと gate の実出力を確認した。S2 で task 3.5 の受入を記録し、既存 S2 の 6 task と合わせて 12 済・7 未とする。task 本文・配分・全仕様・実 0/4・P6・最終受入は維持する。
+
+運用には main へ反映済みの [採用 ADR 0006](https://github.com/loomake/loomake/blob/620550a26fc39dff92b19d1d5289ab7742b85f88/docs/adr/0006-standing-approval-for-autonomous-delivery.md) を使う。この stage の古い規約ファイルを採用版へ更新したとは扱わず、main の製品差分も取り込んでいない。

@@ -129,7 +129,7 @@ CD-1〜5は8章/9.3の限定手順。診断は固定名/接頭辞のset/nonempty
 
 ### 9.2 完了ゲートと最終受入
 
-以下の「件数はContext」はContextのS1注記にある現在の4済/15未を指し、13済/6未はd822e540の履歴である。
+以下の「件数はContext」はContextのS1注記にある4済/15未の移植時点の記録を指し、13済/6未はd822e540の履歴である。現在のS2後の件数は12章に記録する。
 
 92ea61a2の5.3非checkbox化、5.2/未採集checkboxと必須受入1未達を保持（件数はContext）。L3=必須CI/runner3OS/done/独立Opus重大ゼロ・最大2往復、Codex参考。head差/指摘修正限定/回数は管理役がADR0006で判定しPR末尾1証跡へ。旧規則は固定元に保持し、実4件/tasks/完成範囲を免除しない。
 
@@ -205,4 +205,14 @@ public API、git/gitMeasuredのsignature、runtime/監視役protocol、群化・
 
 S2-Q01/02の管理役採用により、S1の次はS4（tasks2.5/3.5）を先行し、S2（2.1〜2.4/3.1/3.2全6task・71件候補）をその上へ重ねる。S2の範囲を純粋classifierだけへ縮めず、1200file・60秒・全assertとrunner3OSの受入を保持する。旧d822のファイル全体を移す方法は採らず、currentのGit読み取り集約・C001 local/CI・qualitySchema・helperを保持する。旧S4設計と実関数の適合確認が製品実装の前提で、新しい判断を要する差があればその部分だけ設計へ戻す。 再利用した設計と適合確認の結果は [PR #261](https://github.com/loomake/loomake/pull/261) の証跡を参照する。
 
-計画採用時点では19taskのID・本文・受入と4済15未の印を保持した。S4のローカル実装・回帰後は2.5だけを完了とし、現在5済14未である。3.5はrunner3OSとWindowsのpush期限順の受入まで未完了とする。S4の先行は依存上必要な順序の変更だけで、S1 gate/merge未達、全体done未達と実4件0/4・P6未成立を免除しない。REQ100本文の統合はIssue259でF前に再照合する。
+計画採用時点では19taskのID・本文・受入と4済15未の印を保持した。S4のローカル実装・回帰時点では2.5だけを完了とし、5済14未であった。3.5はrunner3OSとWindowsのpush期限順の受入まで未完了とする。S4の先行は依存上必要な順序の変更だけで、S1 gate/merge未達、全体done未達と実4件0/4・P6未成立を免除しない。REQ100本文の統合はIssue259でF前に再照合する。
+
+## 12. S2の局所実装と現在の受入境界（2026-11-01）
+
+管理役が採用したOpus設計5f6412e0（実モデルclaude-opus-5-5）を再利用した。元設計の前像とS4後のdecision-policy・phases・helpers・recorder・logs・log-policy・engineの7fileがbyte単位で同一であることを実装前に確認し、仕様ゲートを通した。設計原本と実行情報、採用判断、保持照合と実検証は、この枝の`.loomake/s2-implementation/`に保存した。
+
+製品変更はdecision-policyとphasesだけである。元rawの分類、構造化faultとhold、task/repair共通のAfterGuardを接続し、既存guardの検査・表示・resetと先行停止を保った。正常経路ではGit呼出しを増やさず、currentのlocal/CI判定・qualitySchema・engineBaselineと、既存recorderを保持した。helpersはresultFields/stdoutの型と偽engineの出力部分だけを追加した。
+
+直接53件・統合11件・保存6件・新変異1件の計71件を実行した。統合試験には、異常時の出力パスと読めない理由、本文を含めない場合の分類とパスのassertも追加した。初期実装時の556件は履歴であり、S4追加4試験を取り込んだ旧S2最終headでは全runnerと新旧変異を含む回帰560件が成功・失敗0・skip0だった。新3変異と既存6変異を同じ直接試験のassertion失敗で検出した。1200file・60秒・既存の期待値と品質設定は保持した。この結果はmacOS/Windowsの成功や実CLIの観測を意味しない。
+
+S2の2.1〜2.4・3.1・3.2の6taskは完了済みである。受入済みS4を通常mergeし、このS2枝でS4の3.5の受入を記録したため、19taskのID・本文を変えず現在12済7未である。3.3・3.4、4.2〜4.4、5.1/5.2と新headのCI・独立レビュー・実4件0/4・P6未成立を残す。8 Requirement・41 Scenario・Sourceは変更せず、REQ-100の全文統合はIssue259でF前に再照合する。部分実装を親の完了ゲート成功や段階PRのマージ承認へ読み替えない。
