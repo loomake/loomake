@@ -6,8 +6,8 @@
 
 ## 2. 監査の本体
 
-- [ ] 2.1 `scripts/scenario-audit.mjs`：本文ブロックの抽出（`extractTestBlocks`・`blockDigest`）と `hashScope: "block"` の照合、主仕様だけを対象にして change を未着手として数える `inventoryRepository`、JSON と Markdown の未着手の件数（REQ-188・REQ-189・REQ-190）
-- [ ] 2.2 `scripts/scenario-audit.mjs --migrate [--dry-run]`：`migrateReviews`・`gitHistory`・`migrateRepository`（REQ-346）。台帳には実行しない
+- [x] 2.1 `scripts/scenario-audit.mjs`：本文ブロックの抽出（`extractTestBlocks`・`blockDigest`）と `hashScope: "block"` の照合、主仕様だけを対象にして change を未着手として数える `inventoryRepository`、JSON と Markdown の未着手の件数（REQ-188・REQ-189・REQ-190）
+- [x] 2.2 `scripts/scenario-audit.mjs --migrate [--dry-run]`：`migrateReviews`・`gitHistory`・`migrateRepository`（REQ-346）。台帳には実行しない
 
 ## 3. 試験
 
