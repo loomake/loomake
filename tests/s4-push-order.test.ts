@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -109,15 +109,15 @@ describe('S4 の一時contextと公開要約', () => {
     }
   });
   it.each([
-    ['top追加key', (v: Record<string, any>) => { v.stdout = 'private'; }],
-    ['nested追加key', (v: Record<string, any>) => { v.order.pid = 123; }],
-    ['NaN', (v: Record<string, any>) => { v.context.bytes = Number.NaN; }],
-    ['Infinity', (v: Record<string, any>) => { v.order.endToStallMs = Infinity; }],
-    ['数値文字列', (v: Record<string, any>) => { v.order.eventCount = '6'; }],
-    ['未知enum', (v: Record<string, any>) => { v.order.state = 'secret'; }],
-    ['偽confirmed', (v: Record<string, any>) => { v.selection.state = 'none'; }],
-    ['未知reason', (v: Record<string, any>) => { v.order.reasons = ['private']; }],
-    ['rawmetadata', (v: Record<string, any>) => { v.node = 'C:/Users/private'; }],
+    ['top追加key', (v: Record<string, unknown>) => { v.stdout = 'private'; }],
+    ['nested追加key', (v: Record<string, unknown>) => { (v.order as Record<string, unknown>).pid = 123; }],
+    ['NaN', (v: Record<string, unknown>) => { (v.context as Record<string, unknown>).bytes = Number.NaN; }],
+    ['Infinity', (v: Record<string, unknown>) => { (v.order as Record<string, unknown>).endToStallMs = Infinity; }],
+    ['数値文字列', (v: Record<string, unknown>) => { (v.order as Record<string, unknown>).eventCount = '6'; }],
+    ['未知enum', (v: Record<string, unknown>) => { (v.order as Record<string, unknown>).state = 'secret'; }],
+    ['偽confirmed', (v: Record<string, unknown>) => { (v.selection as Record<string, unknown>).state = 'none'; }],
+    ['未知reason', (v: Record<string, unknown>) => { (v.order as Record<string, unknown>).reasons = ['private']; }],
+    ['rawmetadata', (v: Record<string, unknown>) => { v.node = 'C:/Users/private'; }],
   ])('%s は公開schemaの検証を通らない', (_, change) => {
     const value = structuredClone(summary()); change(value);
     expect(validateSummary(value)).toBe(false);
@@ -144,7 +144,7 @@ describe('S4 の一時contextと公開要約', () => {
   it('CLIは元test失敗をexit1として残し、公開可能な不足要約だけmarkerで許可する', () => {
     const raw = fixture(), output = fixture(), cwd = fixture();
     writeFileSync(join(raw, 'context.json'), context()); writeFileSync(join(raw, 'test-output.log'), 'PRIVATE_CAPTURE');
-    const reportPath = join(cwd, '.loomake'); requireDirectory(reportPath); writeFileSync(join(reportPath, 'test-report.json'), report('failed'));
+    const reportPath = join(cwd, '.loomake'); mkdirSync(reportPath); writeFileSync(join(reportPath, 'test-report.json'), report('failed'));
     const githubOutput = join(cwd, 'github-output');
     const child = spawnSync(process.execPath, [join(import.meta.dirname, '../scripts/s4-push-order.mjs')], { cwd, encoding: 'utf8', env: { ...process.env, S4_ORDER_RAW_DIR: raw, S4_ORDER_OUT_DIR: output, S4_TEST_OUTCOME: 'failure', GITHUB_OUTPUT: githubOutput } });
     expect(child.status, child.stderr).toBe(1);
@@ -154,8 +154,3 @@ describe('S4 の一時contextと公開要約', () => {
   });
 });
 
-function requireDirectory(path: string) {
-  // fixture内のreport保存先だけを作る。
-  const child = spawnSync(process.execPath, ['-e', 'require("node:fs").mkdirSync(process.argv[1])', path]);
-  expect(child.status).toBe(0);
-}
