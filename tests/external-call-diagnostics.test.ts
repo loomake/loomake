@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { classifyCall, summarizeExternalCalls, preparePublicDiagnostics, publicDiagnosticsProblem, exportExternalDiagnostics } from '../scripts/external-call-diagnostics.mjs';
 
-const row = (extra: Record<string, unknown> = {}) => ({ event: 'call', callId: '1-1', pid: 1, op: 'gh-pr-list', mode: 'normal',
+const row = (extra: Record<string, unknown> = {}) => ({ event: 'call', callId: '1-1', pid: 1, op: 'gh-pr-list', mode: 'normal', timeoutRequested: false,
   t0: 100, t1: 101, R: 5000, Rclamped: false, hw0: 10, hw1: 10, tx: 2200,
   spawned: true, spawnCount: 1, result: 'threw', limitKind: 'timeout', reasonPresent: false,
   internalTimeoutMs: null, timeoutIntervalMs: [1998, 2000],
@@ -142,4 +142,82 @@ describe('外部操作診断の分類と欠損', () => {
     } finally { rmSync(dir, { recursive: true, force: true }); }
   });
 
+});
+
+
+describe('外部操作の中断と時計窓の補正', () => {
+  it.each([false, true])('先行欠損の後の起動前中断を自call欠損と分ける reason=%s', (reasonPresent) => {
+    const summary = summarizeExternalCalls([
+      row({ callId: '1-1', limitKind: 'interrupted', reasonPresent: true }),
+      row({ callId: '1-2', spawned: false, spawn: null, spawnCount: 0, limitKind: 'interrupted', reasonPresent }),
+    ], report);
+    expect(summary.calls.map((call: { classification: string }) => call.classification)).toEqual(['missing-result', 'pre-spawn-interrupted']);
+  });
+  it('spawn不明や複数spawnの中断を自callの結果欠損と断定しない', () => {
+    const unknown = classifyCall(row({ spawned: null, limitKind: 'interrupted', reasonPresent: true }));
+    expect(unknown.classification).toBe('undetermined');
+    expect(unknown.reasons).toContain('spawn-state-unavailable');
+    const multiple = classifyCall(row({ spawnCount: 2, limitKind: 'interrupted', reasonPresent: true }));
+    expect(multiple.classification).toBe('undetermined');
+    expect(multiple.reasons).toContain('spawn-count-mismatch');
+  });
+  it.each([
+    [5097.5, 'normal', false, 'shared-deadline', true, undefined],
+    [5089, 'normal', false, 'shared-deadline', true, undefined],
+    [5088.999, 'normal', false, 'operation-limit', false, undefined],
+    [5088.999, 'untilDeadline', false, 'undetermined', false, 'deadline-before-shared-interval'],
+    [5088.999, 'quality', true, 'undetermined', false, 'requested-timeout-possible'],
+    [5088.999, 'normal', true, 'undetermined', false, 'requested-timeout-possible'],
+    [5088.999, 'normal', undefined, 'undetermined', false, 'timeout-option-unavailable'],
+    [5097.5, 'untilDeadline', false, 'shared-deadline', false, undefined],
+    [5097.5, 'quality', true, 'shared-deadline', true, undefined],
+    [5097.5, 'normal', undefined, 'shared-deadline', true, undefined],
+    [5102, 'normal', false, 'shared-deadline', true, undefined],
+    [5102.001, 'normal', false, 'undetermined', false, 'deadline-after-shared-interval'],
+  ] as const)('未観測遅延を含むD=%s mode=%s timeout=%sを区別する', (D, mode, timeoutRequested, classification, coincidentOperationPossible, reason) => {
+    const actual = classifyCall(row({ mode, timeoutRequested, spawn: { ts: 111, D, outcomeKind: 'timeout', invalid: false } }));
+    expect(actual).toMatchObject({ classification, coincidentOperationPossible, sharedDeadlineIntervalMs: [5100, 5101] });
+    if (reason) expect(actual.reasons).toContain(reason);
+    else expect(actual.reasons).toEqual([]);
+  });
+  it('保持役待ちを未観測遅延から引き、十分離れた実1操作上限を保持する', () => {
+    expect(classifyCall(row({ hw1: 1010, spawn: { ts: 1111, D: 6000, outcomeKind: 'timeout', invalid: false } }))).toMatchObject({ classification: 'operation-limit' });
+    expect(classifyCall(row())).toMatchObject({ classification: 'operation-limit' });
+  });
+  it.each([
+    [null, 'spawn-start-unavailable'], [Infinity, 'spawn-start-unavailable'], [50, 'observation-order-invalid'],
+  ] as const)('spawn時計%sの欠測や逆転を未確定にする', (ts, reason) => {
+    const actual = classifyCall(row({ spawn: { ts, D: 5100, outcomeKind: 'timeout', invalid: false } }));
+    expect(actual.classification).toBe('undetermined'); expect(actual.reasons).toContain(reason);
+  });
+  it('mode不明なら遠いdeadlineも操作上限と断定しない', () => {
+    const actual = classifyCall(row({ mode: null }));
+    expect(actual.classification).toBe('undetermined'); expect(actual.reasons).toContain('mode-unavailable');
+  });
+  it('旧rawの明示timeout欠落はunknownへ投影し、版2と公開schemaで区別する', () => {
+    const legacy: Record<string, unknown> = row(); delete legacy.timeoutRequested;
+    const payload = preparePublicDiagnostics([legacy], report);
+    expect(payload.summary.version).toBe(2);
+    expect(payload.calls[0]).toMatchObject({ timeoutRequested: null, classification: 'undetermined' });
+    expect(payload.calls[0].reasons).toContain('timeout-option-unavailable');
+    expect(publicDiagnosticsProblem(payload)).toBeNull();
+    const oldVersion = structuredClone(payload); oldVersion.summary.version = 1;
+    expect(publicDiagnosticsProblem(oldVersion)).toBe('invalid-summary-schema');
+    for (const mutation of ['missing', 'string', 'unknown'] as const) {
+      const invalid = structuredClone(payload);
+      if (mutation === 'missing') delete invalid.calls[0].timeoutRequested;
+      else if (mutation === 'string') invalid.calls[0].timeoutRequested = 'private-value';
+      else invalid.calls[0].unknown = 'private-value';
+      expect(publicDiagnosticsProblem(invalid)).toBe('invalid-call-schema');
+    }
+  });
+  it('公開Markdownで同時上限の可能性と理由・欠損、別々の保存上限を示す', () => {
+    const payload = preparePublicDiagnostics([row({ R: null, spawn: null })], report);
+    expect(payload.markdown).toContain('| call | 操作 | mode | 判定 | 同時上限の可能性 |');
+    expect(payload.markdown).toContain('| 理由 | 欠損 |');
+    expect(payload.markdown).toContain('shared-deadline-unavailable');
+    expect(payload.markdown).toContain('64KiB'); expect(payload.markdown).toContain('1MiB');
+    expect(payload.markdown).toContain('256KiB'); expect(payload.markdown).toContain('2KiB');
+    expect(publicDiagnosticsProblem({ ...payload, markdown: payload.markdown + 'altered' })).toBe('markdown-mismatch');
+  });
 });
