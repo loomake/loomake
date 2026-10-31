@@ -13,7 +13,10 @@ const CASES = ['success', 'error_max_turns'];
 const CHILD_ENVIRONMENT = Object.freeze({ DISABLE_AUTOUPDATER: '1', CLAUDE_CODE_DISABLE_AUTO_MEMORY: '1' });
 const BASE_ARGV = ['-p', '--output-format', 'json', '--tools', 'Read', '--disallowedTools', 'mcp__*', '--no-session-persistence'];
 
-/** A proposed invocation is data only; this module does not spawn a real CLI. */
+/**
+ * A proposed invocation is data only; this module does not spawn a real CLI.
+ * The plan contains the caller environment, which may contain secrets: never log or persist it.
+ */
 export function resultCollectionPlan(version, resultCase, attempt, environment = process.env) {
   if (!Object.hasOwn(RESULT_NATIVE_SHA256, version) || !CASES.includes(resultCase) || ![1, 2].includes(attempt)) return undefined;
   return {
@@ -48,7 +51,9 @@ export async function refuseUnprovedResultCollection({ environment = process.env
 }
 
 /**
- * Consume an already-created process stream. Tests use fake processes, never real CLI observations.
+ * Consume an already-created synthetic process stream for compatibility tests only.
+ * @deprecated Do not add live callers. driveResultProcess owns the reviewed lifecycle;
+ * this harness cannot establish owned-tree cleanup or qualify a CLI observation.
  * @param {object} child
  * @param {object} metadata
  * @param {{ stdoutLimit?: number, stderrLimit?: number, timeoutMs?: number, killAfterMs?: number, signal?: AbortSignal }} [limits]
@@ -59,8 +64,8 @@ export async function inspectResultProcess(child, metadata, { stdoutLimit = 1048
   const stop = (code) => {
     if (reason) return;
     reason = code;
-    child.kill('SIGTERM');
-    escalation = setTimeout(() => child.kill('SIGKILL'), killAfterMs);
+    try { child.kill('SIGTERM'); } catch { /* A synthetic kill error never exposes its message. */ }
+    escalation = setTimeout(() => { try { child.kill('SIGKILL'); } catch { /* Same synthetic boundary. */ } }, killAfterMs);
     escalation.unref?.();
   };
   const abort = () => stop('interrupted');
@@ -78,16 +83,20 @@ export async function inspectResultProcess(child, metadata, { stdoutLimit = 1048
   child.stderr.on('data', onStderr);
   signal?.addEventListener('abort', abort, { once: true });
   if (signal?.aborted) abort();
-  let exit;
+  let exit, onError, onClose;
   try {
     exit = await new Promise((resolve) => {
-      child.once('error', () => { reason ??= 'spawn-failed'; resolve({ code: null, signal: null }); });
-      child.once('close', (code, exitSignal) => resolve({ code, signal: exitSignal }));
+      onError = () => { stop('spawn-failed'); resolve({ code: null, signal: null }); };
+      onClose = (code, exitSignal) => resolve({ code, signal: exitSignal });
+      child.once('error', onError);
+      child.once('close', onClose);
     });
   } finally {
     clearTimeout(timer);
     if (escalation) clearTimeout(escalation);
     signal?.removeEventListener('abort', abort);
+    child.removeListener('error', onError);
+    child.removeListener('close', onClose);
     child.stdout.removeListener('data', onStdout);
     child.stderr.removeListener('data', onStderr);
   }
