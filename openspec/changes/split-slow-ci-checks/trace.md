@@ -19,7 +19,12 @@
 | V1 REPORT.md・管理役の限定採用 | Linux/Node24.21.0/Vitest5.0.5の最終native合成fixture観測 | 2026-10-31 |
 | 統合境界監査・管理役の採用 | PR190のA-07と後継隔離診断、17file包含、現行main236受入後の再照合 | 2026-10-31 |
 
-原資料の全文・hashは専用treeの`.loomake/ci-formal-adoption/inputs/`と索引に保存した。Q01〜Q10の元おすすめはreadiness/manager-questions.json、採用回答はci-manager-decisions.md、Q-N1〜Q-N5の元案はOpus結果§7にある。旧資料の未採用という状態はその観測時点の記録であり、下表の管理役回答が今回の採用である。1 change/1 PRと配布第3枠は管理役が指定した。
+| Opus 分割設計とIssue #239〜#242・管理役採用 | 3d664の原設計を282bの実装済み2.5/2.6と17fileへ照合・Q-38〜Q-44 | 2026-10-31 |
+| Opus 行登録設計58b1ebb7・管理役採用 | head65f98fcb・actual Opus5-5/read-only/拒否0・Q-E1〜Q-E8 | 2026-10-31 |
+| Opus A1-route設計effd2731・管理役採用 | headd465f317・actual Opus5-5/read-only/拒否0・後継選択と実3sample受入 | 2026-10-31 |
+| 最新全件9sampleとV2初回の観測 | 282bの7成功/2失敗、V2手書き基準不一致で停止・未受入 | 2026-10-31 |
+
+原資料の全文・hashは専用treeの`.loomake/ci-formal-adoption/inputs/`と索引に保存した。Q01〜Q10の元おすすめはreadiness/manager-questions.json、採用回答はci-manager-decisions.md、Q-N1〜Q-N5の元案はOpus結果§7にある。旧資料の未採用という状態はその観測時点の記録であり、下表の管理役回答が今回の採用である。1 change/1 PRと配布第3枠は管理役の当初指定である。後の200KiB分割規則に従う現行のPR構成はQ-38〜Q-44で記録する。
 
 ## 要件台帳
 
@@ -40,7 +45,7 @@
 
 ## 確認事項
 
-Q-01〜Q-37の採用と条件は管理役がADR0006に基づき記録する。Q-19〜Q-24はR系と行閾値/宣言分類、Q-25〜Q-30はcd321d46のQ-A1〜Q-A6に対応する。未完了の個別設計・測定・実装は回答済みという理由で受入済みにしない。回答日・承認日は日本時間である。回答者は包括承認の表記であり、利用者本人が各資料をレビューしたという意味ではない。選択肢とおすすめの採用理由を残す。旧Q番号Q01〜Q10は下表Q-01〜Q-10、Q-N1〜Q-N5はQ-11〜Q-15に対応する。Q-01〜Q-16は当時の決定として残し、PR179先行受入と旧レビュー条件に関する現行の決定はQ-17・Q-18を優先する。
+Q-01〜Q-57の採用と条件は管理役がADR0006に基づき記録する。Q-19〜Q-24はR系と行閾値/宣言分類、Q-25〜Q-30はcd321d46のQ-A1〜Q-A6に対応する。未完了の個別設計・測定・実装は回答済みという理由で受入済みにしない。回答日・承認日は日本時間である。回答者は包括承認の表記であり、利用者本人が各資料をレビューしたという意味ではない。選択肢とおすすめの採用理由を残す。旧Q番号Q01〜Q10は下表Q-01〜Q-10、Q-N1〜Q-N5はQ-11〜Q-15に対応する。Q-01〜Q-16は当時の決定として残し、PR179先行受入と旧レビュー条件に関する現行の決定はQ-17・Q-18を優先する。Q-21の同一PR限定は後の200KiB分割決定を適用するQ-38で更新し、Node20削除と全PRslow不実施の同時有効化を維持する。
 
 | ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |
 |---|---|---|---|---|---|---|---|---|
@@ -81,6 +86,26 @@ Q-01〜Q-37の採用と条件は管理役がADR0006に基づき記録する。Q-
 | Q-35 | tasks3.2/4.3・C1 Q-C2 | companionでmockが効かない場合 | A：未登録・未達で設計へ戻す／B：mock重複 | A。元moduleだけの読込と本文を保つ | yes | Aを採用。V1の最終native合成fixtureでmock維持と同一assertのnegative失敗を観測した。Linuxの技術前提に限り、production/3OS/OS割当の合格や2.6完了へ流用しない。production条件で不成立なら未登録・未達で設計へ戻す（V1報告・C1設計・管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 | Q-36 | tasks4.3/5.1・C1 Q-C3 | fast coverageが閾値を下回った場合 | A：未割当・未達と新fast設計／B：閾値低下 | A。品質を保つ | yes | Aを採用。ubuntu fastが94/89/96/97未達なら該当caseのLinux割当を行わず未達を残し、不足を補うfast試験を別Issueで設計する。閾値は下げない（C1設計・管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 | Q-37 | tasks2.6/4.2・C1 Q-C4 | PR231の移動先を必須測定包含へ加えるか | A：旧15＋移動先2で17file／B：旧15のまま | A。移動後の元case欠落を検出する | yes | Aを採用。run-timeoutとexternal-budget-deadlineを必須包含へ追加し、全採集file/全case/raw/失敗sampleを保持する。17fileだけへ測定対象を限定せず、旧結果を最新9sampleへ流用しない（C1設計・境界監査・管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-38 | tasks/PR239〜242・分割Q-S1 | 1 change/1 PRをどう分割するか | A：1 change複数PR／B：単一PR | A。後の200KiB分割規則と小PR方針に従う | yes | A。L2部分PRはnone/planning-change/Refsで範囲を明示し、Node20削除と全PRslow不実施は最後184で同時に有効化。旧Q-21をこの範囲で更新し全受入を保つ（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-39 | REQ-347・分割Q-S2 | 主仕様同期前に2.5基盤を受け入れるか | A：spec-only後L2先行／B：最後184 | A。採用済み差分に従う開発基盤を独立受入できる | yes | A。進行中REQ-347差分と仕様ゲートを前提に監査+inventoryを同一PRへ。実registry空と原3Scenario/raw/移行条件を保ち、製品src・配布APIを追加しない（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-40 | tasks2.3・分割Q-S3 | 重複test-split prototypeをどうするか | A：外して既存partitionへ集約／B：保持 | A。一覧の正本を二重にしない | yes | A。後続で整理しPR判定は最後184の既存partitionへ集約。2.3検証範囲はPR204と最後184で保持し完了印を変えない。今回は計画だけ（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-41 | tasks4.2・分割Q-S4 | 測定headと実登録基点の同一性は何か | A：同SHA又は非実行差分のみ実証／B：常に再測定 | A。実行条件が同じ場合に限り再採集を避ける | yes | A。元case/runtime/config/depsに差分なしを管理役が実証できるときだけ同基準。触れれば再測定。282b9本の7成功2失敗は未受入で救済せず、失敗/欠測を保持する（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-42 | tasks5.4・分割Q-S5 | AGENTSのnode20規約をいつ直すか | A：5.4と別L2案を人へ／B：最後184へ混在 | A。規則変更は人の操作である | yes | A。具体ruleset案と別L2規約PR案をIssue121の@rrr-wwwへ示し人の判断を待つ。管理役は規則を変更しない。古い宛先表記は現行ADRに合わせる（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-43 | tasks2.6/4.2・分割Q-S6 | 必須測定包含へ移動先2fileを足すか | A：旧15+2／B：旧15固定 | A。移動したcaseの欠落を検出する | yes | A。Q-37どおり17file。2.6で実装/独立検証済みの旧順序・包含と各追加file欠測negativeを維持し、全採集file/case/rawを保持する（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-44 | PR184差分・分割Q-S7 | 最後184も200KiBを超える場合 | A：移管原文節だけL1先行／B：設計要点+原本保存先 | Bを既定、なお超過ならA。条件を削らない | yes | Bを既定に採用。native全diffを実測し超過が残るときAを検討。Requirement/Scenario/Source・受入・正負fixtureを削って収めず、原本の正確な保存先を残す（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-45 | tasks2.7/4.3・row Q-E1 | 行選択APIの形は何か | A：裸Blockの局所it束縛／B：IIFE／C：一時差替え／D：内部task削除 | A。元call不変で効く範囲が字面で閉じる | yes | A。const it/test=eachRowsの2文Blockだけを認め元call/bodyをbyte保持。rowBindingを非callに分類し、元本体/registry/実割当は2.7で変えない（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-46 | tasks2.7・row Q-E2 | 表をどうVitestへ渡すか | A：コピー+own forEach／B：Proxy／C：filter配列 | A。全tableのeveryと元indexを保つ | yes | A。元表の評価1回・値参照/arity/名前/timeoutを維持。Vitest5.0.5依存をV2で検出し、手書きnative全fast基準不一致なら期待を変えず設計へ戻す（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-47 | tasks2.7/4.3・row Q-E3 | registryの行をどう表すか | A：葉IDとliteral位置／B：rows形式追加 | A。既存schema/partition/監査規則を保つ | yes | A。葉IDを一意に登録しrowIds/rowTextsと表位置を照合する。describe guardも葉ID集合へ展開。hashだけでparameter欠測を証明しない（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-48 | tasks2.7/4.3・row Q-E4 | 対応するeach表の範囲は何か | A：直接it/testのliteral表／B：factory/動的表へ拡張 | A。最初のdeadlineの形で足りる | yes | A。factory/runIf.each/tagged/.for/関数呼出し/変数・spread表は範囲外。ai-journeys/signal/packageの混在は必要なら追加設計し、それまで未登録未達を保つ（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-49 | tasks2.7・row Q-E5 | 試験関数名を通常constで隠す形はどうするか | A：shadowedTest拒否／B：保持 | A。rowBindingを抜け道にしない | yes | A。rowBinding以外のit/test変数を通常helperへ回さず拒否。元live baselineが不成立なら期待を変えず設計へ戻り、既存alias/namespace診断も保つ（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-50 | tasks2.7/4.3・row Q-E6 | deadline登録後の候補4→5をどう扱うか | A：内訳を事前固定／B：実装時に決める | A。実装に合わせた期待値変更を避ける | yes | A。増加はrowBinding1件、宣言3/行6/元3本文は不変。nonCallはimport1+rowBinding1。raw多重集合と元call byteも別に確認する（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-51 | tasks2.7/5.1・row Q-E7 | 実行時に変わる名前を正規化するか | A：正確な一致のみ／B：正規化 | A。未検証の推測対応を避ける | yes | A。PID/host/tmpdirを含む表は行登録対象外、rawを原文保持する。基準とsplitのOS/sample別多重度・順序・全shardを独立oracleで比較する（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-52 | tasks2.7・row Q-E8 | 行登録基盤をどこで行うか | A：2.7先行／B：4.3へ混在 | A。V2受入を実登録の前提にできる | yes | A。未完了2.7を追加し実registryは空。現在8完了を保ち8/18とする。モデルの7/18は現在進捗に使わず、V2/基盤受入をproduction/3OS合格へ代用しない（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-53 | tasks4.4/5.6・route Q-S1 | 実運用3sampleをどこで受け入れるか | A：最後184マージ後初回mainpush／B：measure branchでも起動 | A。mainpush/scheduleという経路を守る | yes | A。5.6を追加必須受入にし、5.5マージ後に実3artifactを確認してからsync/archive。fixture成功で代用せず未達があればchange未完了を保つ（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-54 | tasks4.4・route Q-S2 | 隔離中の診断重複をどうするか | A：既存隔離+診断3sample／B：隔離側から除外 | A。REQ-344の一覧出力を保つ | yes | A。隔離job/一覧を変えず固定診断選択を独立追加。解除までは重複実行を受け入れ、対象成功などQ-33の条件が整うまで隔離解除/実登録をしない（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-55 | tasks4.4・route Q-S3 | case/worker/process対応付けを実装するか | A：cases.json処理／B：rawのみで手作業 | A。対応付けを正負fixtureで検査する | yes | A。固定label/context/区間/repo/worker/processで結び、曖昧・欠測・時計/上限異常を固定codeで残す。producer/既存試験の全文互換確認を実装前に行い、秘密やrawを追加記録しない（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-56 | tasks4.4・route Q-S4 | Windows診断にheartbeatを起動するか | A：起動／B：省略 | A。停止区間の観測を保つ | yes | A。既存Windows診断と同様に起動/停止/失敗後保存しubuntuへ追加しない。3独立job・7日保持・元timeout/clock/worker/TEMP条件とprivacyを保つ（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-57 | tasks4.3/4.4・C2 Q-D3 | profiler対象更新と実登録の順序は何か | A：登録前又は同commit／B：登録後 | A。push/createが未計測になる窓を作らない | yes | A。profile-slow-testsとpublication後継のsource/companion対応更新を登録前又は同commitに行う。PR/manual撤去は最後184。Q-D4の旧15固定はQ-37/43と衝突し不採用（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 
 ## 仮定
 
@@ -148,3 +173,18 @@ C1のengine-long-deadline・scenario-timeout-evidence・signal-during-sync・run
 管理役は後続C2設計Q-D1 Aの型だけのwrapper対応を2.6へ採用し、Q-D4 Bの旧15file固定は既採用C1 Q-C4 Aと衝突するため採らなかった。旧15fileの順序・包含と新2file欠測negativeのred/greenを保つ。C2の残る個別設計の採用は後続へ分離し、別Codexの`speed-factory-measure-impl/c2-baseline-probe.json`（同scratchpad配下）は3宣言/4候補/元3本文保持を確認した。管理役がC2 live inventoryを2.6へ追加し、wrapper対応後の6行を別確認とした。C2の全個別設計や実登録/OS割当の受入とはしない。
 
 元16タスクのID・完了印7件と必須受入3件を保ち、未完了2.6を追加した現在の進捗は7/17＋必須受入3件未達である。4.3は3.1〜3.3・2.5・2.6・4.2とPRのslow除外結線の受入後とする。4.2の元case/新fastと4.5の最新実装後の各9sample、raw全case/parameter/正当な同名行の多重集合、58selector、REQ-297、coverage、local/release全件、人のruleset操作と同PRのマージ/sync/archiveを保持する。今回の計画更新と仕様ゲートはこれらの完了を表さない。
+
+
+## 2026-10-31 段階的PR・行登録・後継診断の採用
+
+管理役は共有分割設計とIssue #239〜#242を最新main/担当へ照合し、Q-38〜Q-44を採用した。分割設計の対象3d664の2.5未実装/旧15fileは履歴として残し、282bの2.5/2.6実装済み・17file包含に合わせた。独立checkerだけの未push準備は#240へ吸収し、監査と同一PRという2.5の条件を保つ。元の1-1完成単位はNode20削除と全PRslow不実施を同時に有効にする最後184に残す。部分PRはchange全体のdoneや完成を宣言しない。
+
+行設計58b1ebb7とA1-route effd2731は管理役が全文を読み、actual Opus5-5/read-only/拒否0/3規約Readを確認した。設計用tree内の各`.loomake/claude/<session>/result.md`が全文原本で、要点と未確認はdesignに記録した。rowのtraceは部分読取、routeのproducer試験/checker本文は全文未読という限界を保持し、モデルの読了を広げない。Q-45〜Q-52は2.7のV2先行とliteral行登録/独立oracle、Q-53〜Q-56は既存quality-quarantineの独立固定診断経路、Q-57は登録前のprofiler結線順である。管理役はおすすめの採用として記録し、利用者本人の新しい資料レビューとは扱わない。
+
+Q-D4の旧15file固定は既採用Q-C4 Aと衝突するため不採用、旧15順序+新2各欠測negativeを保つ17fileを維持する。C2の未完了個別設計/実登録とA1-carrier/追加fileの残設計は未受入である。V2はnative手書き基準が違えば期待を変えず設計へ戻し、未知の表やruntime名は未登録未達に保つ。
+
+最新282bの全9sampleは7成功/Windows2失敗。構造上の155file・17必須・全raw・同名多重度の保持と、実試験の成功/性能を分ける。AI Tempとdeadline準備/pushの失敗を保存し、再実行成功やQ-41のhead同一性で受入へ変えない。4.2/実OS割当/3.1〜3.3は未完了。新たなschema2file・orphans・v2-readersの10秒超も残設計対象から落とさない。
+
+現在8完了を保持し、新2.7を未完了で加え8/18とする。元5.3〜5.5にマージ後初回mainpushの実診断5.6を加え、18タスク+必須受入4件の全22件を追跡する。旧進捗と元受入は履歴として残し、5.6前にsync/archiveやchange完成へ進めない。要件台帳・全Requirement/Scenario/Source・旧選択肢/回答・clock/timeout/coverage/全case/人のruleset操作は保持し、この計画更新で実装や受入を完了にしない。
+
+V2初回のnative基準は15raw行の試験自体が成功したが、R4の手書き期待名と実際のformatter結果が1件異なった。管理役は未変更の期待値を保持して停止し追加設計へ戻した。V2成功・2.7完了とは扱わず、後続設計の受入まで正式実装を保留する。orphansのimportされた*Test helperの誤認候補も見つかり、未検証のcountを固定せず3.2で個別設計とinventoryの適用範囲を確認する。
