@@ -5,6 +5,8 @@
 
 登録済みcompanionの実結果は、raw reportと元sourceの本文ブロック・実行行の多重度を保ち、一意で有効な対応だけを根拠に使う SHALL。
 
+companionは閉じた構文で検査する SHALL。
+
 Source: REQ-347
 
 #### Scenario: 同じファイルの別の試験が変わる
@@ -50,3 +52,7 @@ Source: REQ-347
 #### Scenario: 旧形式の移行でも登録されたcompanionの実行を参照する
 - **WHEN** 登録されたcompanionでだけ実行された試験について旧形式の対応を移行する
 - **THEN** 元ファイルの実行として既存の移行条件を検査し、実行ファイル名がcompanionであることだけを理由に未実行としない。移行の条件・dry-runの不変性・既存block形式を変更しない
+
+#### Scenario: companionの試験関数の扱いを静的に確かめられない
+- **WHEN** 登録されたcompanionが、次の閉じた構文の条件を満たさない。読み込み先を持つImportDeclaration・ExportDeclaration・ImportEqualsDeclarationでは、`vitest`か、`./`または`../`で始まり`.test.[jt]s`で終わらない相対パスのmoduleだけを認める。既存の元sourceだけをliteralのdynamic importで一度読む条件も保つ。vitestのimportはnamespaceか`expect`だけのnamed importに限り、defaultや他の名前は認めない。namespace名とその別名は、import句、`ns.expect`またはliteralの`ns['expect']`、Identifierを束縛する初期化式、全キーがliteralの`expect`でrestのない分割代入の右辺（宣言・代入式）の位置だけに認め、Identifierの別名も同じnamespaceとして追跡する。型の位置は除き、shadowingは区別せず同名を検査する。それ以外の引数・オブジェクトや配列の値・要素の既定値・spread・条件式・return・shorthand・export・非literalキー等の位置でnamespaceを扱うことを認めない
+- **THEN** 監査と旧形式の移行をともにエラーにし、出力先を作らず、raw reportと既存レビュー表をbyte単位で変更しない。既存の拒否検査とimport形の検査を先に適用し、既存の拒否文言を保つ。追加の読込先違反には`companionの読み込み先を静的に確認できません：${companion}`、追加のnamespace位置違反には`companionの試験関数の束縛を静的に確認できません`を使う。既存の試験でない4件の受理と、補助moduleを読む構造・コメント・整形の許容を保つ。検査はcompanion本体の構文を対象とし、依存moduleの中身と実行時の反射を静的検証しないこと、Vitestのglobals無効を前提とすることは既存の静的検査の技術限界として明記する。この限界を既知の不正companionの受理の免除や完成範囲の縮小に使わず、実行時の反射を受入済みの安全な動作と主張しない

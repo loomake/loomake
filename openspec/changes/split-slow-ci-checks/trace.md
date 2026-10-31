@@ -132,6 +132,11 @@ Q-01〜Q-78の採用と条件は管理役がADR0006に基づき記録する。Q-
 | Q-76 | tasks4.3・v2-reader Q-V3 | 非literal3row eachで閾値が混在した場合 | A：file未登録未達/追加設計／B：そのIDだけfast | A。対応しない形の行を成功扱いしない | yes | A。関数式/呼出しを含む3行表は2.7行登録の対象外。混在・失敗/欠測ならfile全体未登録未達、原each/内側2modeを変えず追加設計へ戻す（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 | Q-77 | tasks2.8/4.3・v2-reader Q-V4 | 必須包含へいつ追加するか | A：登録同commit／B：全収集だけ | A。登録後の欠測を独立に検出する | yes | A。2.8未実装19を基準とし、v2-readers登録と同commitで20へ。旧19順序/包含・追加file欠測negativeを保ち、全file/case/rawの採集を狭めない（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 | Q-78 | tasks4.5・v2-reader Q-V5 | 初回fixture費用が別fastへ移り10秒超ならどうするか | A：未達/設計へ戻す／B：割当を連続修正 | A。測定の受入を一度ずつ確かめる | yes | A。実3OS各3sampleで移動後の費用を残し、新10秒超は未達として設計へ戻す。beforeAll/cache/helper共有で隠さず、未検証の連続割当を完成にしない（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-79 | tasks2.10・PR253 Q-B1 | 規則の方式をどうするか | A：純粋な全構文許可／B′：既存拒否後に閉じたvitest規則／C：個別拒否追加 | B′。4正例と既存文言を保ち同族の値の流れを閉じる | yes | B′。R1〜R3を既存検査の後へ追加し、228期待と4件の受理を固定。修理は同253の新2.10未完へ、既存2.5完了を保持する（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-80 | REQ-347・PR253 Q-B2 | 仕様の明確化をどこへ書くか | A：SHALL+第12Scenario／B：SHALLだけ／C：文書だけ | A。原文11Scenarioを保ち検査の参照先を作る | yes | A。本文500文字以内の短SHALLと新ScenarioへR1〜R3/両入口/error前不変性を追記。元本文/11Scenario/Sourceはbyte保持しspec-only後に実装する（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-81 | tasks2.10・PR253 Q-B3 | vitestの許可名は何か | A：expectだけ／B：vi等も含む | A。既存正例に必要な集合へ閉じる | yes | A。ALLOWEDはexpectのみ。namespace/aliasの位置を閉じ、4件の非試験正例・相対helperと整形許容を保持する。拡張は別の仕様改訂（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-82 | tasks2.10・PR253 Q-B4 | 読み込み先をどう制限するか | A：vitest+相対非test module／B：nodeも許可／C：無制限 | A。createRequire等の別入口を閉じる | yes | A。R1でnode:module/vitest/*/@vitest/runner等を拒否。companion本体だけの静的検査/依存module・反射非検証/globals無効は技術限界として記し、不正受理の免除にしない（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-83 | tasks2.10・PR253 Q-B5 | native比較試験をどこで起動するか | A：scope内一回の集団実行／B：別試験 | A。正負対照を保ちながら起動費用をまとめる | yes | A。T1〜T5、同族負とnative original/fallback/objectCarrier/parameter/正例、偽reviewed red-green、228固定を受入とする。10秒超なら候補として残し隠さない（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 
 ## 仮定
 
@@ -241,3 +246,12 @@ orphansはimport元の限定static検査とreadModuleのpath/実path/isFile/構�
 v2-readersの2Windows ID案は4.2全受入後に限る。7describe全guard、元16/17/18と非literal3row/内側2modeを保持し、行閾値混在ならfile未登録未達を残す。必須包含は現在実装済み17、未完2.8で19、v2-readers登録同commit後20と時点を区別する。orphansは19へ追加せず登録source/Cの欠測を独立比較で検出する。全採集/rawと失敗原本は常に保持する。
 
 現在は8/20+ゲート後4必須未達（全24件）、Q78/A02で、2.7/2.8/2.9を未チェックとする。元Q66・19タスクのID/完了印・全Requirement/Scenario/Sourceは保持し、4.3の現在前提に2.9を加える。PR253の重大1/default initializer未解決・最終Opus0回・独立調査中、PR252の重大0/軽微1Issue254・CI未完という先行受入の境界を保持する。いずれもこの計画更新で受入済みへ変更せず、人の規則操作・3OS/全case/clock/coverage/唯一Source・診断5.6・merge/sync/archiveは未完了のままである。
+
+
+## 2026-10-31 PR253独立調査・修理設計の採用
+
+原本・第一段階所見全文・manifest・規約3本Readと独立所見先行の順序証拠は`.loomake/scratchpad/speed-plan-reconcile-282/followup83/`に保存した。管理役と計画担当が両段階を全文読了し、actual5-5/ok/exit0/read-only/MCPなし/拒否0を確認した。1始まりevent186（0始まり185）の独立所見がevent187（同186）のdeferred見解Readより先である。Q-79〜Q-83はADR0006に基づく管理役のおすすめ採用で、モデルによる権限承認ではない。設計とT1〜T5の全受入はdesignのPR253節を参照する。
+
+REQ-347の元本文・Sourceと全11Scenarioをbyte保持して短SHALLと新第12Scenarioを先行追記し、仕様ゲート後に同じPR253で重大修理2.10を行う。既存2.5の完了印・228期待/4正例・旧拒否文言・scanner/blockDigest/migrateReviewsの元契約・全raw/旧レビュー表/ledgerとregistry空は保持する。companion本体だけの静的検査、依存module中身と反射の非検証・globals無効は既存検査の技術限界であり、不正受理の免除/完成範囲縮小や反射の安全宣言ではない。objectCarrier/parameterのnativeと両入口・偽reviewedのredは未観測として残し、受入へ補わない。
+
+2.9追加時点の8/20+4未達（全24件）とQ78を履歴に残し、現在は新2.10未完を加え8/21+4必須未達（全25件）、Q83とする。全4.3の現在前提へ2.10を加え、旧Q/選択肢/Source/Scenarioと全task範囲を減らさない。PR253は重大1未修理・独立調査/設計採用済み・独立Opus最終0回で、PR252は独立Opus重大0/軽微1Issue254・Ubuntu coverage待ちである。実装は別の新Codexへ渡し、計画更新をmain受入や1-1完成とは扱わない。

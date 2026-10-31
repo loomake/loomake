@@ -10,6 +10,7 @@
 - 最新headの3OS各3sampleで最大10秒超のcaseをOS別にslowへ分ける。PRの全経路でslowを実行せず、main push・scheduleとローカルの全件実行を保つ。releaseの既存manual dispatch品質ゲートも全件を保つ。
 - case 本文は元の `x.test.ts` に残し、宣言直前の分岐と companion の動的 import で登録先を分ける。`x.cases.ts` への本文移動は採用しない。a3bf248bの構造案とV0を、995e対象のcd321d46の監査・独立宣言検査の設計で補う。G-Bに続き、C1のengine-long-deadline・scenario-timeout-evidence・signal-during-sync・run-timeoutの登録設計を採用する。残る個別設計と実OS割当は未完了のまま残す。
 - 登録された companion の実行結果を元 source の本文ブロックへ対応付けるため、REQ-347 の MODIFIED を同じ change に追加する。raw report と既存レビュー表の根拠は保持する。登録外のcompanionは自身のfileのまま扱い、不正・欠落した一覧や不正な登録済みcompanionは成果物を作る前に監査エラーにする。
+- PR253のdefault initializer経由の重大不整合は、独立調査のQ-79〜Q-83に従う閉じたVitest namespace/読込先検査で修理する。REQ-347の元全文・11Scenario・Sourceを保ち、短いSHALLと第12Scenarioを先行追記してから、新2.10を同じPR253で実装する。既存228件の期待・4件の受理・旧文言・raw/レビュー表を固定し、未実装の修理を完了へ数えない。
 - C1のfactory宣言とliteral配列の型だけを示すwrapperを独立inventoryで分類し、PR231の移動先run-timeout・external-budget-deadlineを必須測定包含へ加える独立タスク2.6を追加する。実registryと元本文は変えず、旧15fileに2fileを加えた17fileに加え、採集された全file・全case・raw・失敗sampleを保持する。
 - 行閾値が混在するliteral表は、元のit.each呼出しを保つ局所bindingと表全体のforEachで行だけを選ぶ設計を2.7へ加える。旧V2は停止記録を保ち、一次ソースから訂正したV2bの新16行の手書きnative基準を先に確かめる。技術観測の受入と本番・3OSの受入を分け、未対応の表や実行時の名前は未登録・未達のまま残す。
 - schema2fileの個別登録設計を採用し、旧17＋schema2の19file必須包含と各欠落negative、接頭辞前の独立inventoryを未完了2.8へ加える。全採集を19fileへ限定せず、2.6の実装完了も保持する。A2の3fileとguards追加2宣言の設計を採用し、全fileの成功に基づく隔離解除、未判定ならfile未登録、唯一Sourceの根拠をPRから失わない条件を追加する。
