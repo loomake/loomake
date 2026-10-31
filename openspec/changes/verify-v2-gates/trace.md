@@ -33,8 +33,8 @@
 |---|---|---|---|---|---|---|---|---|
 | R-C001-08 | REQ-036〜039・191・203 | warnとskipをゲート/scope別にどう移行するか | 親traceのとおり | B | no | B。[承認元](https://github.com/loomake/loomake/pull/139#issuecomment-6511434324) | rrr-xxx（rrr-www名義・Claude Code代筆） | 2026-10-30 |
 | R-C001-10 | REQ-036 | localのspec-onlyで品質項目を数えるか | 親traceのとおり | A | no | A。[承認元](https://github.com/loomake/loomake/pull/139#issuecomment-6510041693) | rrr-xxx（rrr-www名義・Claude Code代筆） | 2026-10-30 |
-| S9-02 | REQ-037 | OpenSpec CLI不在のNOT_APPLICABLEの確認者に何を書くか。人が確認する項目ではない | A: `loomake verify（openspecValidate: auto の自動判定）` / B: 設定者の名前を設定に足す（新しい設定キーが要る） | A。新しい設定を足さず、対象外の理由と確認者を欠かさない | no | | | |
-| S9-01 | REQ-036〜039・191・203 | 変わる試験の期待値（旧→新）の個別承認。PR本文の表を見て承認する | A: 表のとおり承認 / B: 差し戻し | A。R08 Bの規範どおりの変更だけを表にしている | no | | | |
+| S9-02 | REQ-037 | OpenSpec CLI不在のNOT_APPLICABLEの確認者に何を書くか。人が確認する項目ではない | A: `loomake verify（openspecValidate: auto の自動判定）` / B: 設定者の名前を設定に足す（新しい設定キーが要る） | A。新しい設定を足さず、対象外の理由と確認者を欠かさない | no | A を採用。2026-10-31 利用者が Claude Code セッションで承認（PR #214） | 利用者 | 2026-10-31 |
+| S9-01 | REQ-036〜039・191・203 | 変わる試験の期待値（旧→新）の個別承認。PR本文の表を見て承認する | A: 表のとおり承認 / B: 差し戻し | A。R08 Bの規範どおりの変更だけを表にしている | no | 承認。REQ-038 fail→insufficient、REQ-037 warn→NOT_APPLICABLE の 2 件とも承認。2026-10-31 利用者が Claude Code セッションで承認（PR #214） | 利用者 | 2026-10-31 |
 
 ## 仮定
 
