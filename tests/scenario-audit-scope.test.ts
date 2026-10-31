@@ -1,9 +1,10 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import * as kit from '../packages/kit/src/index.js';
 import { afterEach, describe, expect, it } from 'vitest';
-import { auditRepository, auditScenarios, blockDigest, extractTestBlocks, inventoryRepository, inventoryScenarios, migrateRepository, migrateReviews, renderAudit, sha256 } from '../scripts/scenario-audit.mjs';
+import { auditRepository, auditScenarios, blockDigest, companionLinks, extractTestBlocks, inventoryRepository, inventoryScenarios, migrateRepository, migrateReviews, renderAudit, sha256 } from '../scripts/scenario-audit.mjs';
 
 const spec = (scenario = '条件', rule = '規則を守る SHALL。') => `### Requirement: 振る舞い\n${rule}\nSource: REQ-012\n#### Scenario: ${scenario}\n- **WHEN** 条件\n- **THEN** 結果\n`;
 const rows = () => inventoryScenarios('openspec/specs/x/spec.md', spec());
@@ -150,12 +151,12 @@ describe('旧形式の対応の移行', () => {
 describe('リポジトリでの実行', () => {
   let root: string | undefined;
   afterEach(() => { if (root) rmSync(root, { recursive: true, force: true }); root = undefined; });
-  const prepare = (reviews: unknown[]) => {
+  const prepare = (reviews: unknown[], options: { registry?: string; files?: Record<string, string>; report?: { name: string; assertionResults: { fullName: string; status: string }[] }[] } = {}) => {
     root = mkdtempSync(join(tmpdir(), 'scenario-audit-'));
-    for (const [path, text] of [['openspec/specs/x/spec.md', spec()], ['openspec/changes/c1/specs/x/spec.md', '## ADDED Requirements\n' + spec('変更中')], [testFile, file()], ['scripts/scenario-audit.mjs', readFileSync('scripts/scenario-audit.mjs', 'utf8')]]) {
+    for (const [path, text] of [['openspec/specs/x/spec.md', spec()], ['openspec/changes/c1/specs/x/spec.md', '## ADDED Requirements\n' + spec('変更中')], [testFile, file()], ['tests/test-partition.json', options.registry ?? JSON.stringify({ files: {} })], ...Object.entries(options.files ?? {}), ['scripts/scenario-audit.mjs', readFileSync('scripts/scenario-audit.mjs', 'utf8')]]) {
       mkdirSync(join(root, path, '..'), { recursive: true }); writeFileSync(join(root, path), text);
     }
-    writeFileSync(join(root, 'report.json'), JSON.stringify({ testResults: [{ name: testFile, assertionResults: run() }] }));
+    writeFileSync(join(root, 'report.json'), JSON.stringify({ testResults: options.report ?? [{ name: testFile, assertionResults: run() }] }));
     mkdirSync(join(root, 'docs/quality'), { recursive: true });
     writeFileSync(join(root, 'docs/quality/scenarios.json'), JSON.stringify({ schemaVersion: 1, reviews }));
     return root;
@@ -176,4 +177,813 @@ describe('リポジトリでの実行', () => {
     expect(result.counts.total).toBe(1);
     expect(JSON.parse(readFileSync(join(dir, 'out/audit.json'), 'utf8')).pending).toEqual({ total: 1, byChange: { c1: 1 }, unreadable: [] });
   });
+  const companion = 'tests/fixture.slow.test.ts';
+  const companionText = "// 整形やコメントがあっても元fileだけを読む\nawait import( './fixture.test.js' );\n";
+  const registered = JSON.stringify({ files: { [testFile]: { cases: { a: [], b: ['linux'] } } } });
+  const routed = (tests = run(), source = file(), text = companionText) => ({ registry: registered, files: { [testFile]: source, [companion]: text }, report: [{ name: companion, assertionResults: tests }] });
+  const execute = (dir: string, out = 'out') => auditRepository(dir, join(dir, out), undefined, 'report.json', kit);
+
+  it('[REQ-347] 登録済みcompanionを元本文で照合しraw入力・レビュー表と追跡用hashを保つ', async () => {
+    const dir = prepare([blockReview()], routed());
+    const raw = readFileSync(join(dir, 'report.json'), 'utf8'); const ledger = readFileSync(join(dir, 'docs/quality/scenarios.json'), 'utf8');
+    const result = await execute(dir);
+    expect(result.rows[0].status).toBe('reviewed');
+    expect(result.rows[0].tests).toEqual([{ ...run()[0], rawFile: companion }]);
+    expect(result.inputs).toMatchObject({ partitionSha256: sha256(registered), companions: { [companion]: sha256(companionText) }, testReportSha256: sha256(raw), reviewSha256: sha256(ledger) });
+    expect(result.inputs.testSources[testFile]).toBe(sha256(file()));
+    expect(renderAudit(result)).toContain(`${testFile}（${companion}）: ${run()[0].fullName}`);
+    expect(readFileSync(join(dir, 'report.json'), 'utf8')).toBe(raw);
+    expect(readFileSync(join(dir, 'docs/quality/scenarios.json'), 'utf8')).toBe(ledger);
+    writeFileSync(join(dir, companion), companionText + '// comment\n');
+    const commented = await execute(dir, 'commented');
+    expect(commented.rows[0].status).toBe('reviewed');
+    expect(commented.inputs.companions[companion]).not.toBe(result.inputs.companions[companion]);
+    writeFileSync(join(dir, testFile), file(target.replace('toBe(true)', 'toBe(false)')));
+    expect((await execute(dir, 'changed')).rows[0]).toMatchObject({ status: 'invalid', reason: expect.stringContaining('本文が変更') });
+  });
+  it.each(['failed', 'skipped', 'todo'])('[REQ-347] 元fileの成功でcompanionの%sを覆わない', async (status) => {
+    const options = routed(run(undefined, status)); options.report.unshift({ name: testFile, assertionResults: run() });
+    const result = await execute(prepare([blockReview()], options));
+    expect(result.rows[0]).toMatchObject({ status: 'invalid', reason: '選んだ試験に失敗または未実行があります' });
+  });
+  it('[REQ-347] companion対応後も必要なSourceを欠く実行は無効にする', async () => {
+    const source = file(target.replace('[REQ-012] ', ''));
+    const tests = run('群 条件を検査する');
+    const result = await execute(prepare([blockReview(source, tests)], routed(tests, source)));
+    expect(result.rows[0]).toMatchObject({ status: 'invalid', reason: '対応する試験に必要なSourceがありません' });
+  });
+  it('[REQ-347] 登録外companionはrawfileを保ち名前から元fileへ対応させない', async () => {
+    const dir = prepare([blockReview()], { files: { [companion]: file() }, report: [{ name: companion, assertionResults: run() }] });
+    const result = await execute(dir);
+    expect(result.rows[0]).toMatchObject({ status: 'invalid', reason: expect.stringContaining('ソースが変更されたか存在しません') });
+    expect(result.rows[0].candidates).toEqual([{ ...run()[0], file: companion, rawFile: companion }]);
+    expect(result.inputs.companions).toEqual({});
+  });
+  it.each([
+    ['壊れたJSON', '{'],
+    ['未知key', JSON.stringify({ files: {}, extra: true })],
+    ['不正path', JSON.stringify({ files: { '../fixture.test.ts': { cases: { a: [] } } } })],
+  ])('[REQ-347] 不正な一覧（%s）は出力作成前に拒否する', async (_, registry) => {
+    const dir = prepare([blockReview()], { registry });
+    await expect(execute(dir)).rejects.toThrow('試験の分割一覧を読めません');
+    expect(existsSync(join(dir, 'out'))).toBe(false);
+  });
+  it('[REQ-347] 欠落した一覧・companionを監査と移行の両入口で拒否する', async () => {
+    const dir = prepare([blockReview()], routed());
+    rmSync(join(dir, companion));
+    await expect(execute(dir)).rejects.toThrow('ファイルがありません');
+    await expect(migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).rejects.toThrow('ファイルがありません');
+    writeFileSync(join(dir, 'tests/test-partition.json'), JSON.stringify({ files: {} }));
+    rmSync(join(dir, 'tests/test-partition.json'));
+    await expect(execute(dir)).rejects.toThrow('試験の分割一覧を読めません');
+    await expect(migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).rejects.toThrow('試験の分割一覧を読めません');
+    expect(existsSync(join(dir, 'out'))).toBe(false);
+  });
+  it.each([
+    "it('own case', () => {}); await import('./fixture.test.js');",
+    "await import('./other.test.js');",
+    "await import('./fixture.test.js'); await import('./fixture.test.js');",
+    "import './other.test.js'; await import('./fixture.test.js');",
+    "import { helper } from './other.test.ts'; await import('./fixture.test.js');",
+    "await import(target);",
+    "import * as v from 'vitest'; (v).it('own case', () => {}); await import('./fixture.test.js');",
+    "import * as v from 'vitest'; (v as typeof v).test('own case', () => {}); await import('./fixture.test.js');",
+    "import * as v from 'vitest'; const namespace = (v); const check = namespace.it; check('own case', () => {}); await import('./fixture.test.js');",
+    "import * as v from 'vitest'; const namespace = v as typeof v; const check = namespace.test; check('own case', () => {}); await import('./fixture.test.js');",
+    "import * as v from 'vitest'; const check = (v.it); check('own case', () => {}); await import('./fixture.test.js');",
+    "import * as v from 'vitest'; const check = v.test as typeof v.test; check('own case', () => {}); await import('./fixture.test.js');",
+    "import * as v from 'vitest'; const namespace = v; const check = namespace.it; check('own case', () => {}); await import('./fixture.test.js');",
+    "import * as v from 'vitest'; v['test']('own case', () => {}); await import('./fixture.test.js');",
+    "import * as vitest from 'vitest'; vitest.it('own case', () => {}); await import('./fixture.test.js');",
+    "import * as v from 'vitest'; const check = v.test; check('own case', () => {}); await import('./fixture.test.js');",
+    "import * as v from 'vitest'; v.test.each([1])('own %j', () => {}); await import('./fixture.test.js');",
+    "await import('./fixture.test.js'",
+  ])('[REQ-347] 不正なcompanionを出力作成前に拒否する: %s', async (text) => {
+    const dir = prepare([blockReview()], routed(run(), file(), text));
+    await expect(execute(dir)).rejects.toThrow('companion');
+    await expect(migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).rejects.toThrow('companion');
+    expect(existsSync(join(dir, 'out'))).toBe(false);
+  });
+  it.each(['it', 'test'].flatMap((name) => [
+    [name, '文字列key', `const { '${name}': check } = v; check('own case', () => {});`],
+    [name, '識別子key', `const { ${name}: check } = v; check('own case', () => {});`],
+    [name, 'computed literal key', `const { ['${name}']: check } = v; check('own case', () => {});`],
+    [name, 'namespace別名と型wrapper', `const namespace = ((v as typeof v) satisfies typeof v)!; const { '${name}': check } = namespace; check('own case', () => {});`],
+    [name, '取り出した関数の別名', `const { '${name}': base } = v; const check = (base as typeof base)!; check('own case', () => {});`],
+    [name, 'nested bind', `const { '${name}': { 'bind': bindFn } } = v; const check = bindFn.call(v.${name}, v.${name}); check('own case', () => {});`],
+    [name, '関数からbindを取得', `const { 'bind': bindFn } = v.${name}; const check = bindFn.call(v.${name}, v.${name}); check('own case', () => {});`],
+    [name, 'named importのbind', `import { ${name} as base } from 'vitest'; const { 'bind': bindFn } = base; const check = bindFn.call(base, base); check('own case', () => {});`],
+    [name, '関数内の先行参照', `function declareOwn() { check('own case', () => {}); } const { '${name}': check } = v; declareOwn();`],
+    [name, 'namespace rest', `const { ...namespace } = v; namespace['${name}']('own case', () => {});`],
+    [name, '分割代入式', `let check; ({ '${name}': check } = v); check('own case', () => {});`],
+    [name, 'namespaceの代入と型wrapper', `let namespace; namespace = (v as typeof v)!; let check; ({ '${name}': check } = namespace); check('own case', () => {});`],
+    [name, '試験関数の代入', `let check; check = v['${name}']; check('own case', () => {});`],
+  ]))('[REQ-347] companionの分割代入した%sの宣言を監査と移行で拒否する: %s', async (_, __, body) => {
+    const text = `import * as v from 'vitest'; ${body} await import('./fixture.test.js');`;
+    const dir = prepare([blockReview()], routed(run(), file(), text));
+    const raw = readFileSync(join(dir, 'report.json'));
+    const ledger = readFileSync(join(dir, 'docs/quality/scenarios.json'));
+    await expect(execute(dir)).rejects.toThrow('companionに試験の宣言があります');
+    await expect(migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).rejects.toThrow('companionに試験の宣言があります');
+    expect(existsSync(join(dir, 'out'))).toBe(false);
+    expect(readFileSync(join(dir, 'report.json'))).toEqual(raw);
+    expect(readFileSync(join(dir, 'docs/quality/scenarios.json'))).toEqual(ledger);
+  });
+  it.each(['it', 'test'].flatMap((name) => [
+    [name, '非literalな分割代入key', `const key = '${name}'; const { [key]: check } = v; check('own case', () => {});`],
+    [name, '非literalなnamespace参照', `const key = '${name}'; const check = v[key]; check('own case', () => {});`],
+    [name, '非literalな分割代入式key', `const key = '${name}'; let check; ({ [key]: check } = v); check('own case', () => {});`],
+    [name, '未対応の代入先', `const holder = {}; holder.check = v['${name}']; holder.check('own case', () => {});`],
+  ]))('[REQ-347] companionの%s由来の未確定な束縛は推測で許可しない: %s', async (_, __, body) => {
+    const dir = prepare([blockReview()], routed(run(), file(), `import * as v from 'vitest'; ${body} await import('./fixture.test.js');`));
+    await expect(execute(dir)).rejects.toThrow('companionの試験関数の束縛を静的に確認できません');
+    await expect(migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).rejects.toThrow('companionの試験関数の束縛を静的に確認できません');
+    expect(existsSync(join(dir, 'out'))).toBe(false);
+  });
+  it.each([
+    "import * as v from 'vitest'; const { 'expect': assert } = v; assert(true).toBe(true);",
+    "import * as v from 'vitest'; const { ['expect']: assert } = v; assert(true).toBe(true);",
+    "import * as v from 'vitest'; let assert; ({ 'expect': assert } = v); assert(true).toBe(true);",
+    "const { 'test': check } = { 'test': () => {} }; check();",
+  ])('[REQ-347] 試験関数でない分割代入をcompanionの宣言と推測しない: %s', (body) => {
+    expect(companionLinks(JSON.parse(registered), () => `${body} await import('./fixture.test.js');`)).toEqual(new Map([[companion, testFile]]));
+  });
+  const closedBindings = [
+    ['bindingの既定値', "const { 'test': check = v['test'] } = {}; check('own case', () => {});"],
+    ['代入bindingの既定値', "let check; ({ 'test': check = v['test'] } = {}); check('own case', () => {});", 'companionに試験の宣言があります'],
+    ['引数bindingの既定値', "function own({ 'test': check = v['test'] } = {}) { check('own case', () => {}); } own();"],
+    ['object carrier', "const holder = { check: v['test'] }; holder.check('own case', () => {});"],
+    ['parameter carrier', "function own(check) { check('own case', () => {}); } own(v['test']);"],
+    ['array carrier', "const [check] = [v['test']]; check('own case', () => {});"],
+    ['条件式', "const check = true ? v['test'] : undefined; check('own case', () => {});"],
+    ['カンマ式', "const check = (0, v['test']); check('own case', () => {});"],
+    ['論理式', "const check = true && v['test']; check('own case', () => {});"],
+    ['戻り値', "function take() { return v['test']; } const check = take(); check('own case', () => {});"],
+    ['namespace引数', "function own(ns) { ns['test']('own case', () => {}); } own(v);"],
+    ['namespace既定引数', "function own(ns = v) { ns['test']('own case', () => {}); } own();"],
+    ['namespace object', "const holder = { namespace: v }; holder.namespace['test']('own case', () => {});"],
+    ['namespace array', "const [ns] = [v]; ns['test']('own case', () => {});"],
+    ['namespace spread', "const ns = { ...v }; ns['test']('own case', () => {});"],
+    ['namespace shorthand', "const holder = { v }; holder.v['test']('own case', () => {});"],
+    ['namespace条件式', "const ns = true ? v : undefined; ns['test']('own case', () => {});"],
+    ['namespace戻り値', "function take() { return v; } take()['test']('own case', () => {});"],
+    ['Reflect.get', "const check = Reflect.get(v, 'test'); check('own case', () => {});"],
+    ['Object.values', "const values = Object.values(v);"],
+    ['namespace export', "export { v };"],
+    ['namespaceのexport付き初期化', "export const ns = v;"],
+    ['namespace別名のcarrier', "const ns = (v as typeof v)!; const holder = { namespace: ns };"],
+    ['許可外のproperty', "const value = v.describe;"],
+    ['許可外のliteral key', "const value = v['describe'];"],
+  ];
+  const closedImports = [
+    ['createRequire', "import { createRequire } from 'node:module'; createRequire(import.meta.url)('vitest');"],
+    ['vitest subpath', "import * as runner from 'vitest/suite';"],
+    ['Vitest runner package', "import * as runner from '@vitest/runner';"],
+    ['external export', "export { createRequire } from 'node:module';"],
+    ['external import equals', "import module = require('node:module');"],
+  ];
+  it.each([
+    ...closedBindings.map(([label, body, message]) => [label, `import * as v from 'vitest'; ${body}`, message ?? 'companionの試験関数の束縛を静的に確認できません']),
+    ...closedImports.map(([label, body]) => [label, body, `companionの読み込み先を静的に確認できません：${companion}`]),
+    ['named bench', "import { bench } from 'vitest';", 'companionの試験関数の束縛を静的に確認できません'],
+    ['default import', "import v from 'vitest';", 'companionの試験関数の束縛を静的に確認できません'],
+    ['import equals vitest', "import v = require('vitest');", 'companionの試験関数の束縛を静的に確認できません'],
+  ])('[REQ-347] 閉じたcompanion構文に反する%sを両入口で拒否して入力を保つ', async (_, body, message) => {
+    const dir = prepare([blockReview()], routed(run(), file(), `${body} await import('./fixture.test.js');`));
+    const raw = readFileSync(join(dir, 'report.json'));
+    const ledger = readFileSync(join(dir, 'docs/quality/scenarios.json'));
+    await expect(execute(dir)).rejects.toThrow(message);
+    await expect(migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).rejects.toThrow(message);
+    expect(existsSync(join(dir, 'out'))).toBe(false);
+    expect(readFileSync(join(dir, 'report.json'))).toEqual(raw);
+    expect(readFileSync(join(dir, 'docs/quality/scenarios.json'))).toEqual(ledger);
+  });
+  it('[REQ-189][REQ-347] companion自身の同名宣言を元sourceのreviewedへ昇格しない', async () => {
+    const text = "import * as v from 'vitest'; const { 'test': check = v['test'] } = {}; check('群 [REQ-012] 条件を検査する', () => {}); await import('./fixture.test.js');";
+    const dir = prepare([blockReview()], routed(run(), file(), text));
+    const raw = readFileSync(join(dir, 'report.json'));
+    const ledger = readFileSync(join(dir, 'docs/quality/scenarios.json'));
+    await expect(execute(dir)).rejects.toThrow('companionの試験関数の束縛を静的に確認できません');
+    await expect(migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).rejects.toThrow('companionの試験関数の束縛を静的に確認できません');
+    expect(existsSync(join(dir, 'out'))).toBe(false);
+    expect(readFileSync(join(dir, 'report.json'))).toEqual(raw);
+    expect(readFileSync(join(dir, 'docs/quality/scenarios.json'))).toEqual(ledger);
+  });
+  it.each([
+    "import * as v from 'vitest'; const ns = (v as typeof v)!; ns.expect(true).toBe(true);",
+    "import * as v from 'vitest'; const { expect: assert = () => {} } = v; assert(true);",
+    "import * as v from 'vitest'; v['expect'](true).toBe(true);",
+    "import { expect as assert } from 'vitest'; assert(true).toBe(true);",
+    "import { setPart } from './helpers/partition-part.js'; setPart('slow');",
+    "import * as v from 'vitest'; type Namespace = typeof v; const { ['expect']: assert } = v; assert(true).toBe(true);",
+  ])('[REQ-347] 閉じた構文のexpect・別名・型・setPartは受理する: %s', (body) => {
+    expect(companionLinks(JSON.parse(registered), () => `${body} await import('./fixture.test.js');`)).toEqual(new Map([[companion, testFile]]));
+  });
+  it('[REQ-347] native1起動の自前宣言と正例の実行行を静的な拒否と対照する', () => {
+    const dir = prepare([]);
+    symlinkSync(realpathSync('node_modules'), join(dir, 'node_modules'), 'junction');
+    mkdirSync(join(dir, 'tmp'));
+    mkdirSync(join(dir, 'tests/helpers'), { recursive: true });
+    writeFileSync(join(dir, 'package.json'), '{"type":"module"}');
+    writeFileSync(join(dir, 'tests/helpers/partition-part.js'), "export function setPart(part) { if (part !== 'slow') throw new Error('part'); }");
+    const cases = [
+      ['original', "import * as v from 'vitest'; const { test: check } = v; check('own case', () => {});", true],
+      ['fallback', "import * as v from 'vitest'; const { test: check = v['test'] } = {}; check('own case', () => {});", true],
+      ['object', "import * as v from 'vitest'; const holder = { check: v['test'] }; holder.check('own case', () => {});", true],
+      ['parameter', "import * as v from 'vitest'; function own(check) { check('own case', () => {}); } own(v['test']);", true],
+      ['comment', "/* import('./other.test.js') */", false],
+      ['helper', "import { setPart } from './helpers/partition-part.js'; setPart('slow');", false],
+      ['expect', "import * as v from 'vitest'; const { 'expect': assert } = v; assert(true).toBe(true);", false],
+      ['local', "const { 'test': check } = { 'test': () => {} }; check();", false],
+    ] as const;
+    const texts = new Map<string, string>();
+    for (const [id, body] of cases) {
+      const source = `tests/${id}.test.ts`;
+      const companionFile = `tests/${id}.slow.test.ts`;
+      writeFileSync(join(dir, source), "import { it, expect } from 'vitest'; it('source case', () => { expect(true).toBe(true); });");
+      const text = `${body}\nawait import( './${id}.test.js' );`;
+      texts.set(companionFile, text);
+      writeFileSync(join(dir, companionFile), text);
+    }
+    writeFileSync(join(dir, 'vitest.config.mjs'), `export default { cacheDir: './cache', test: { include: ['tests/*.slow.test.ts'], globals: false, maxWorkers: 1, fileParallelism: false, reporters: ['json'], outputFile: './native-report.json' } };`);
+    const native = spawnSync(process.execPath, [join(realpathSync('node_modules/vitest'), 'vitest.mjs'), 'run', '--configLoader', 'native', '--config', join(dir, 'vitest.config.mjs')], {
+      cwd: dir, encoding: 'utf8', timeout: 60000,
+      env: { ...process.env, TMPDIR: join(dir, 'tmp'), TMP: join(dir, 'tmp'), TEMP: join(dir, 'tmp') },
+    });
+    expect(native.status, native.stderr + native.stdout).toBe(0);
+    expect(native.signal).toBeNull();
+    const report = JSON.parse(readFileSync(join(dir, 'native-report.json'), 'utf8')) as { numPassedTests: number; numFailedTests: number; testResults: { name: string; assertionResults: { fullName: string; status: string }[] }[] };
+    expect(report.numPassedTests).toBe(12);
+    expect(report.numFailedTests).toBe(0);
+    expect(report.testResults).toHaveLength(8);
+    for (const [id, , declaresOwn] of cases) {
+      const companionFile = `tests/${id}.slow.test.ts`;
+      const result = report.testResults.find((row) => row.name.replaceAll('\\', '/').endsWith(`/${companionFile}`));
+      expect(result?.assertionResults.map((row) => [row.fullName, row.status])).toEqual(declaresOwn ? [['own case', 'passed'], ['source case', 'passed']] : [['source case', 'passed']]);
+      const registry = { files: { [`tests/${id}.test.ts`]: { cases: { a: ['linux'] } } } };
+      const check = () => companionLinks(registry, (path: string) => texts.get(path)!);
+      if (declaresOwn) expect(check).toThrow('companion');
+      else expect(check()).toEqual(new Map([[companionFile, `tests/${id}.test.ts`]]));
+    }
+  }, 90000);
+  it('[REQ-347] rawFileのない従来の純粋関数入力も元fileで表示する', () => {
+    const markdown = renderAudit(audit(blockReview(), file()));
+    expect(markdown).toContain(`${testFile}: ${run()[0].fullName}`);
+    expect(markdown).not.toContain('undefined');
+  });
+  it('[REQ-347] companionのコメント内の偽importを無視し構造で確認する', () => {
+    expect(companionLinks(JSON.parse(registered), () => "import { helper } from './helper.js'; /* import('./other.test.js') */ await import( './fixture.test.js' );")).toEqual(new Map([[companion, testFile]]));
+  });
+  it('[REQ-347] 選んだ複数本文blockの一部欠測を成功で補わない', async () => {
+    const tests = [...run(), ...run('群 [REQ-012] 別の条件')];
+    const review = blockReview(file(), tests, '[REQ-012]');
+    const result = await execute(prepare([review], routed()));
+    expect(result.rows[0]).toMatchObject({ status: 'invalid', reason: expect.stringContaining('本文が変更') });
+  });
+  it('[REQ-347] 同名の別入力行は残し、overlap selectorによる同じ行の重複を除く', async () => {
+    const review = blockReview(); review.tests.push({ ...review.tests[0], contains: '[REQ-012]' });
+    const dir = prepare([review], routed([...run(), ...run()]));
+    const result = await execute(dir);
+    expect(result.rows[0].status).toBe('reviewed');
+    expect(result.rows[0].tests).toHaveLength(2);
+    expect(result.rows[0].tests[0]).not.toBe(result.rows[0].tests[1]);
+    writeFileSync(join(dir, 'report.json'), JSON.stringify({ testResults: [{ name: companion, assertionResults: [...run(), ...run(undefined, 'failed')] }] }));
+    expect((await execute(dir, 'failed')).rows[0].status).toBe('invalid');
+  });
+  it('[REQ-347] overlap selectorが単一入力行を選んでも一度だけ数える', async () => {
+    const review = blockReview(); review.tests.push({ ...review.tests[0], contains: '[REQ-012]' });
+    const result = await execute(prepare([review], routed()));
+    expect(result.rows[0].status).toBe('reviewed'); expect(result.rows[0].tests).toHaveLength(1);
+  });
+  it.each([
+    [{ scenarioSha256: 'old' }, 'invalid', 'ScenarioかRequirementが変更されています'],
+    [{ status: 'unreviewed', reason: '未確認のまま' }, 'unreviewed', '未確認のまま'],
+    [{ tests: [{ file: testFile, contains: '条件を検査する', sha256: sha256(file() + '// old') }] }, 'invalid', `試験のソースが変更されたか存在しません：${testFile}`],
+  ])('[REQ-347] companion登録だけで既存状態を昇格させない: %s', async (patch, status, reason) => {
+    const result = await execute(prepare([{ ...blockReview(), ...patch }], routed()));
+    expect(result.rows[0]).toMatchObject({ status, reason });
+  });
+  it('[REQ-347] companionだけで実行された旧形式も元本文で移行しdry-runとblock形式を保つ', async () => {
+    const legacy = { ...blockReview(), tests: [{ file: testFile, contains: '条件を検査する', sha256: sha256(file()) }] };
+    const dir = prepare([legacy, blockReview()], routed());
+    const before = readFileSync(join(dir, 'docs/quality/scenarios.json'), 'utf8');
+    const dry = await migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit, history: () => file() });
+    expect(dry.counts.migrated.unchangedFile).toBe(1); expect(dry.counts.alreadyBlock).toBe(1); expect(dry.counts.kept.notExecuted).toBe(0);
+    expect(readFileSync(join(dir, 'docs/quality/scenarios.json'), 'utf8')).toBe(before);
+    writeFileSync(join(dir, testFile), '// prefix\n' + file());
+    const sameBlock = await migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit, history: () => file() });
+    expect(sameBlock.counts.migrated.sameBlock).toBe(1); expect(sameBlock.counts.alreadyBlock).toBe(1);
+    const prefixed = auditScenarios(rows(), [legacy], [{ ...run()[0], rawFile: companion }], { [testFile]: '// prefix\n' + file() });
+    expect(prefixed.rows[0]).toMatchObject({ status: 'invalid', reason: expect.stringContaining('ソースが変更されたか存在しません') });
+    writeFileSync(join(dir, testFile), file(target.replace('toBe(true)', 'toBe(false)')));
+    const changed = await migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit, history: () => file() });
+    expect(changed.counts.kept.blockChanged).toBe(1); expect(changed.counts.kept.notExecuted).toBe(0);
+    expect(readFileSync(join(dir, 'docs/quality/scenarios.json'), 'utf8')).toBe(before);
+  });
+
+});
+
+describe('companionの閉じたmodule読込', () => {
+  const companion = 'tests/fixture.slow.test.ts';
+  const registry = JSON.stringify({ files: { [testFile]: { cases: { a: [], b: ['linux'] } } } });
+  const readingError = `companionの読み込み先を静的に確認できません：${companion}`;
+  let root: string | undefined;
+  afterEach(() => { if (root) rmSync(root, { recursive: true, force: true }); root = undefined; });
+  const prepare = (text: string) => {
+    root = mkdtempSync(join(realpathSync(tmpdir()), 'scenario-module-'));
+    const contents = {
+      'openspec/specs/x/spec.md': spec(),
+      [testFile]: file(),
+      [companion]: `${text}\nawait import('./fixture.test.js');`,
+      'tests/test-partition.json': registry,
+      'docs/quality/scenarios.json': JSON.stringify({ schemaVersion: 1, reviews: [blockReview()] }),
+      'report.json': JSON.stringify({ testResults: [{ name: companion, assertionResults: run() }] }),
+      'scripts/scenario-audit.mjs': readFileSync('scripts/scenario-audit.mjs', 'utf8'),
+    };
+    for (const [path, body] of Object.entries(contents)) {
+      mkdirSync(join(root, path, '..'), { recursive: true }); writeFileSync(join(root, path), body);
+    }
+    return root;
+  };
+  it.each([
+    "import './other.test.js?probe';",
+    "import './other.test.js#probe';",
+    "import './other%2etest.js';",
+    "export * from './other.test.js?x';",
+    "import './other.test';",
+    "import './other.test.mts';",
+    "import './other.spec.ts';",
+    "import './other.TEST.ts';",
+    "import.meta.glob('./other.test.ts', { eager: true });",
+    'const here = import.meta.url;',
+    "require('./other.test.js');",
+    "import './helpers/.hidden.js';",
+    "import './a b.js';",
+    "import './helper.js\\n';",
+    "import './helper.js\\r';",
+    "import './helper.js\\r\\n';",
+    "import './helpers/../helper.js';",
+    "import '././helper.js';",
+    "import './補助.js';",
+    "import './helpers\\\\helper.js';",
+    "import './helper.mjsx';",
+    "import './helper.mtsx';",
+    "import './helper.cjsx';",
+    "import './helper.ctsx';",
+    "import './helper.json';",
+  ])('[REQ-347] module解決を曖昧にする構文を両入口で出力前に拒否する: %s', async (body) => {
+    const dir = prepare(body);
+    const raw = readFileSync(join(dir, 'report.json'));
+    const ledger = readFileSync(join(dir, 'docs/quality/scenarios.json'));
+    await expect(auditRepository(dir, join(dir, 'out'), undefined, 'report.json', kit)).rejects.toThrow(readingError);
+    await expect(migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).rejects.toThrow(readingError);
+    expect(existsSync(join(dir, 'out'))).toBe(false);
+    expect(readFileSync(join(dir, 'report.json'))).toEqual(raw);
+    expect(readFileSync(join(dir, 'docs/quality/scenarios.json'))).toEqual(ledger);
+  });
+  it.each([
+    ...['js', 'ts', 'mjs', 'mts', 'cjs', 'cts', 'jsx', 'tsx'].map((extension) => `./helper.${extension}`),
+    '../helpers/x.js', '../../helpers/x.cts', './a-b_c.helper.mjs', './helpers/a..helper.js',
+  ])('[REQ-347] 閉じた相対pathと8種の明示拡張子の補助moduleを受理する: %s', (path) => {
+    const text = `import '${path}'; await import('./fixture.test.js');`;
+    expect(companionLinks(JSON.parse(registry), () => text)).toEqual(new Map([[companion, testFile]]));
+  });
+  it('[REQ-189][REQ-347] query経由の別試験の自前行だけで元sourceをreviewedにしない', async () => {
+    const dir = prepare("import './foreign.test.js?probe';");
+    const raw = readFileSync(join(dir, 'report.json'));
+    const ledger = readFileSync(join(dir, 'docs/quality/scenarios.json'));
+    await expect(auditRepository(dir, join(dir, 'out'), undefined, 'report.json', kit)).rejects.toThrow(readingError);
+    await expect(migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).rejects.toThrow(readingError);
+    expect(existsSync(join(dir, 'out'))).toBe(false);
+    expect(readFileSync(join(dir, 'report.json'))).toEqual(raw);
+    expect(readFileSync(join(dir, 'docs/quality/scenarios.json'))).toEqual(ledger);
+  });
+  it('[REQ-347] queryとfragmentのnative追加行を正規helperの対照と1起動で照合する', () => {
+    const dir = prepare('');
+    symlinkSync(realpathSync('node_modules'), join(dir, 'node_modules'), 'junction');
+    mkdirSync(join(dir, 'tmp'));
+    mkdirSync(join(dir, 'tests/helpers'), { recursive: true });
+    writeFileSync(join(dir, 'package.json'), '{"type":"module"}');
+    writeFileSync(join(dir, 'tests/helpers/partition-part.js'), "export function setPart(part) { if (part !== 'slow') throw new Error('part'); }");
+    writeFileSync(join(dir, 'tests/helper.js'), 'export const helper = true;');
+    writeFileSync(join(dir, 'tests/other.test.js'), "import { it } from 'vitest'; it('own case', () => {});");
+    const cases = [
+      ['query', "import './other.test.js?probe';", true],
+      ['fragment', "import './other.test.js#probe';", true],
+      ['setpart', "import { setPart } from './helpers/partition-part.js'; setPart('slow');", false],
+      ['plain', "import './helper.js';", false],
+    ] as const;
+    const texts = new Map<string, string>();
+    for (const [id, body] of cases) {
+      const source = `tests/${id}.test.ts`;
+      const companionFile = `tests/${id}.slow.test.ts`;
+      writeFileSync(join(dir, source), "import { it } from 'vitest'; it('source case', () => {});");
+      const text = `${body}\nawait import('./${id}.test.js');`;
+      texts.set(companionFile, text);
+      writeFileSync(join(dir, companionFile), text);
+    }
+    rmSync(join(dir, companion));
+    const config = "export default { cacheDir: './cache', test: { include: ['tests/*.slow.test.ts'], globals: false, maxWorkers: 1, fileParallelism: false, reporters: ['json'], outputFile: './native-report.json' } };";
+    writeFileSync(join(dir, 'vitest.config.mjs'), config);
+    const native = spawnSync(process.execPath, [join(realpathSync('node_modules/vitest'), 'vitest.mjs'), 'run', '--configLoader', 'native', '--config', join(dir, 'vitest.config.mjs')], {
+      cwd: dir, encoding: 'utf8', timeout: 60000,
+      env: { ...process.env, TMPDIR: join(dir, 'tmp'), TMP: join(dir, 'tmp'), TEMP: join(dir, 'tmp') },
+    });
+    const evidence = '.loomake/scratchpad/companion-module-grammar-impl/native-current';
+    mkdirSync(evidence, { recursive: true });
+    writeFileSync(join(evidence, 'process.json'), JSON.stringify({ status: native.status, signal: native.signal, stdout: native.stdout, stderr: native.stderr }));
+    writeFileSync(join(evidence, 'inputs.json'), JSON.stringify({ cases, config, companions: [...texts] }));
+    if (existsSync(join(dir, 'native-report.json'))) writeFileSync(join(evidence, 'report.json'), readFileSync(join(dir, 'native-report.json')));
+    expect(native.status, native.stderr + native.stdout).toBe(0);
+    expect(native.signal).toBeNull();
+    const report = JSON.parse(readFileSync(join(dir, 'native-report.json'), 'utf8')) as { numPassedTests: number; numFailedTests: number; testResults: { name: string; assertionResults: { fullName: string; status: string }[] }[] };
+    expect(report.numPassedTests).toBe(6);
+    expect(report.numFailedTests).toBe(0);
+    expect(report.testResults).toHaveLength(4);
+    for (const [id, , declaresOwn] of cases) {
+      const companionFile = `tests/${id}.slow.test.ts`;
+      const result = report.testResults.find((row) => row.name.replaceAll('\\', '/').endsWith(`/${companionFile}`));
+      expect(result?.assertionResults.map((row) => [row.fullName, row.status])).toEqual(declaresOwn ? [['own case', 'passed'], ['source case', 'passed']] : [['source case', 'passed']]);
+      const selection = { files: { [`tests/${id}.test.ts`]: { cases: { a: ['linux'] } } } };
+      const check = () => companionLinks(selection, (path: string) => texts.get(path)!);
+      if (declaresOwn) expect(check).toThrow('companionの読み込み先を静的に確認できません');
+      else expect(check()).toEqual(new Map([[companionFile, `tests/${id}.test.ts`]]));
+    }
+  }, 90000);
+});
+
+describe('companion本体の実行時束縛と反射キー', () => {
+  const companion = 'tests/fixture.slow.test.ts';
+  const registry = { files: { [testFile]: { cases: { a: ['linux'] } } } };
+  const readingError = `companionの読み込み先を静的に確認できません：${companion}`;
+  const roots: string[] = [];
+  afterEach(() => { for (const dir of roots.splice(0)) rmSync(dir, { recursive: true, force: true }); });
+  const text = (body: string) => `${body}\nawait import('./fixture.test.js');`;
+  const prepare = (body: string) => {
+    const dir = mkdtempSync(join(realpathSync(tmpdir()), 'companion-bindings-'));
+    roots.push(dir);
+    const contents = {
+      'openspec/specs/x/spec.md': spec(), [testFile]: file(), [companion]: text(body),
+      'tests/test-partition.json': JSON.stringify(registry),
+      'docs/quality/scenarios.json': JSON.stringify({ schemaVersion: 1, reviews: [blockReview()] }),
+      'report.json': JSON.stringify({ testResults: [{ name: companion, assertionResults: run() }] }),
+      'scripts/scenario-audit.mjs': readFileSync('scripts/scenario-audit.mjs', 'utf8'),
+    };
+    for (const [path, body] of Object.entries(contents)) {
+      mkdirSync(join(dir, path, '..'), { recursive: true }); writeFileSync(join(dir, path), body);
+    }
+    return dir;
+  };
+  it.each([
+    ['括弧付きrequire', "(require)('./foreign.test.js');"],
+    ['型assertion付きrequire', "(require as any)('./foreign.test.js');"],
+    ['process builtin', "process.getBuiltinModule('module').createRequire(process.cwd() + '/probe.cjs')('./tests/foreign.test.js');"],
+    ['global process', "globalThis.process.getBuiltinModule('module').createRequire(process.cwd() + '/probe.cjs')('./tests/foreign.test.js');"],
+    ['direct eval', "eval('require')('./foreign.test.js');"],
+    ['Function builtin', 'Function("return process.getBuiltinModule(\'module\').createRequire(process.cwd() + \'/probe.cjs\')")()(\'./tests/foreign.test.js\');'],
+    ['eval builtin', 'eval("process.getBuiltinModule(\'module\').createRequire(process.cwd() + \'/probe.cjs\')")(\'./tests/foreign.test.js\');'],
+    ['型専用default import', "import type process from './helper.js'; process();"],
+    ['型専用named import', "import { type X as process } from './helper.js'; process();"],
+    ['ambient変数', 'declare const process: any; process();'],
+    ['ambient関数', 'declare function eval(value: string): any; eval("require");'],
+    ['ambient undefined', 'declare const undefined: any; void undefined;'],
+    ['class継承式の大域値', 'class Local extends process.Base {}'],
+    ['generic値のeval', "const take = eval<string>; take('require')('./foreign.test.js');"],
+    ['generic値のFunction', "const take = Function<string>; take('return process')();"],
+    ['class継承式のeval', "class Local extends (eval('require')('./foreign.test.js'), class {}) {}"],
+    ['本文のないoverload', 'function take(value: string): any; take("x");'],
+    ['enumの値', 'enum Value { a }; void Value;'],
+    ['namespaceの値', 'namespace Value { export const a = 1; }; void Value;'],
+    ['ImportEqualsの値', "import helper = require('./helper.js'); helper();"],
+    ['引数scopeの外', 'function local(process: unknown) { return process; } void process;'],
+    ['block scopeの外', '{ const process = true; } void process;'],
+    ['catch scopeの外', 'try {} catch (process) { void process; } void process;'],
+    ['未束縛shorthand', 'const holder = { process };'],
+    ['ambient shorthand', 'declare const process: any; const holder = { process };'],
+    ['型専用export', "import type { X } from './helper.js'; export { X };"],
+    ['function constructor', 'const local = () => {}; local.constructor("return process")();'],
+    ['literal constructor', "const local = () => {}; local['constructor']('return process')();"],
+    ['template constructor', 'const local = () => {}; local[`constructor`]("return process")();'],
+    ['prototype', 'const local = () => {}; void local.prototype;'],
+    ['__proto__', 'const local = {}; void local.__proto__;'],
+    ['object固定key', 'const holder = { constructor: () => {} };'],
+    ['分割代入key', 'const holder = {}; const { constructor: take } = holder;'],
+    ['element動的key', "const key = 'constructor'; const holder = {}; void holder[key];"],
+    ['object動的key', "const key = 'constructor'; const holder = { [key]: () => {} };"],
+    ['computed固定key', "const holder = { ['constructor']: () => {} };"],
+    ['最上位this', "this.process.getBuiltinModule('module').createRequire(this.process.cwd() + '/probe.cjs')('./tests/foreign.test.js');"],
+    ['最上位arrowのthis', "(() => this)().process.getBuiltinModule('module').createRequire((() => this)().process.cwd() + '/probe.cjs')('./tests/foreign.test.js');"],
+    ['class継承式のthis', 'class Local extends (this.process, class {}) {}'],
+    ['関数内のthis', 'function local() { return this; } local();'],
+    ['methodのthis', 'const holder = { read() { return this; } }; holder.read();'],
+    ['class fieldのthis', 'class Local { value = this; }; void new Local();'],
+  ])('[REQ-347] 静的な値参照・反射の違反を両入口で拒否して入力を保つ: %s', async (_, body) => {
+    const dir = prepare(body);
+    const raw = readFileSync(join(dir, 'report.json'));
+    const ledger = readFileSync(join(dir, 'docs/quality/scenarios.json'));
+    await expect(auditRepository(dir, join(dir, 'out'), undefined, 'report.json', kit)).rejects.toThrow(readingError);
+    await expect(migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).rejects.toThrow(readingError);
+    expect(existsSync(join(dir, 'out'))).toBe(false);
+    expect(readFileSync(join(dir, 'report.json'))).toEqual(raw);
+    expect(readFileSync(join(dir, 'docs/quality/scenarios.json'))).toEqual(ledger);
+  });
+  it.each([
+    'function local(process: unknown) { return process; } local(true);',
+    '{ const process = true; void process; }',
+    'try {} catch (process) { void process; }',
+    'const { process } = { process: true }; void process;',
+    'const process = true; const holder = { process }; void holder;',
+    'const local = true; export { local };',
+    'const process = true; void ({ process });',
+    'class Local {}; void new Local();',
+    'class Base {}; class Local extends Base {}; void Local;',
+    'interface Local extends process.Base {}',
+    'class Base<T> {}; class Local extends Base<string> {}; void Local;',
+    'function local(this: unknown) { return undefined; } local();',
+    'class Local { self(): this { return undefined as never; } }; void Local;',
+    'void undefined;',
+    'function local(undefined: unknown) { return undefined; } local(true);',
+    'type process = string; const local: process = "x"; void local;',
+    'const holder = { safe: true }; void holder.safe; void holder["safe"];',
+    "import { setPart } from './helpers/partition-part.js'; setPart('slow');",
+  ])('[REQ-347] 実行時の局所束縛・型の位置・安全な固定keyを受理する: %s', (body) => {
+    expect(companionLinks(registry, () => text(body))).toEqual(new Map([[companion, testFile]]));
+  });
+});
+
+describe('companionが読むhelperの評価とsetterを閉じる', () => {
+  const companion = 'tests/fixture.slow.test.ts';
+  const registry = { files: { [testFile]: { cases: { a: ['linux'] } } } };
+  const readingError = 'companionの読み込み先を静的に確認できません';
+  const roots: string[] = [];
+  afterEach(() => { for (const dir of roots.splice(0)) rmSync(dir, { recursive: true, force: true }); });
+  const setter = "export let part = 'fast'; export function setPart(value) { part = value; }";
+  const body = "import { setPart } from './helper.js'; setPart('slow');";
+  const prepare = (prefix = body, files: Record<string, string> = { 'tests/helper.js': setter }) => {
+    const dir = mkdtempSync(join(realpathSync(tmpdir()), 'companion-helper-'));
+    roots.push(dir);
+    const contents = { 'openspec/specs/x/spec.md': spec(), [testFile]: file(), [companion]: `${prefix}\nawait import('./fixture.test.js');`, 'tests/test-partition.json': JSON.stringify(registry), 'report.json': JSON.stringify({ testResults: [{ name: companion, assertionResults: run() }] }), 'docs/quality/scenarios.json': JSON.stringify({ schemaVersion: 1, reviews: [blockReview()] }), 'scripts/scenario-audit.mjs': readFileSync('scripts/scenario-audit.mjs', 'utf8'), ...files };
+    for (const [path, text] of Object.entries(contents)) { mkdirSync(join(dir, path, '..'), { recursive: true }); writeFileSync(join(dir, path), text); }
+    return dir;
+  };
+  const reject = async (dir: string) => {
+    const raw = readFileSync(join(dir, 'report.json')); const ledger = readFileSync(join(dir, 'docs/quality/scenarios.json'));
+    await expect(auditRepository(dir, join(dir, 'out'), undefined, 'report.json', kit)).rejects.toThrow(readingError);
+    await expect(migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).rejects.toThrow(readingError);
+    expect(existsSync(join(dir, 'out'))).toBe(false);
+    expect(readFileSync(join(dir, 'report.json'))).toEqual(raw);
+    expect(readFileSync(join(dir, 'docs/quality/scenarios.json'))).toEqual(ledger);
+  };
+  it.each([
+    'const t = setPart(); t();', 'setPart()();', 'const alias = setPart;', 'setPart.call(null);',
+    'void setPart();', 'await setPart();', '[setPart];', '({ setPart });', 'export { setPart };',
+    '(setPart)();', 'new setPart();', 'setPart`x`;',
+  ])('[REQ-347] helperの能力を式文callee以外へ渡さない: %s', async (usage) => {
+    const prefix = `import { setPart } from './helper.js'; ${usage}`;
+    expect(() => companionLinks(registry, () => `${prefix} await import('./fixture.test.js');`)).toThrow(readingError);
+    await reject(prepare(prefix));
+  });
+  it.each([
+    "import { it } from 'vitest'; it('own',()=>{});", 'new Set();', 'const value = String.raw`x`;',
+    'const value = `x${1}`;', 'const value = 1 + 2;', 'const value = Object.create;',
+    'const value = [...[]];', 'const { value } = {};', 'await Promise.resolve();',
+    'class Value { static {} }', 'class Value { static value = 1; }', 'class Value { ["x"]() {} }', 'class Value { @mark method() {} }',
+    '@decorator class Value {}', 'class Value extends makeBase() {}', 'enum Value { x }',
+    'namespace Value {}', 'if (true) {}', "import 'external-package';", "import 'vitest/suite';",
+    "import './other.test.js';", "import equal = require('./other.js');", 'export = {};',
+  ])('[REQ-347] helperの評価時の呼出しと規則外構文を両入口で拒否: %s', async (helper) => {
+    await reject(prepare("import './helper.js';", { 'tests/helper.js': helper }));
+  });
+  it.each([
+    'return it;', 'return ()=>it();', 'part = it;', 'part = ()=>it();', 'it("own",()=>{});',
+    'missing = value;', 'fixed = value;', 'part = value; return;',
+  ])('[REQ-347] 呼ぶsetterの能力返却・呼出し・規則外代入を拒否: %s', async (statement) => {
+    await reject(prepare(body, { 'tests/helper.js': `import { it } from 'vitest'; let part; const fixed = 1; export function setPart(value) { ${statement} }` }));
+  });
+  it.each([
+    'export const setPart = () => {};', "export { it as setPart } from 'vitest';",
+    'export async function setPart(value) {}', 'export function* setPart(value) {}',
+    'export function setPart(value = 1) {}', 'export function setPart({value}) {}',
+    'export function setPart(...value) {}', 'export function setPart(value: string): void; export function setPart(value: unknown) {}',
+    'export function setPart(value) {} var setPart;', 'function setPart(value) {}', 'export let part; export function setPart(part) { part = part; }',
+  ])('[REQ-347] 呼ぶ名前は唯一の単純なexport functionだけを認める: %s', async (helper) => {
+    await reject(prepare(body, { 'tests/helper.js': helper }));
+  });
+  it('[REQ-347] defaultとnamespaceのcalleeを入口で拒否する', async () => {
+    await reject(prepare("import setPart from './helper.js'; setPart('slow');", { 'tests/helper.js': 'export default function setPart(value) {}' }));
+    await reject(prepare("import * as helper from './helper.js'; helper.setPart('slow');"));
+  });
+  it('[REQ-347] 2段目と存在するTS対応候補も調べ欠落を成功にしない', async () => {
+    const variants: Record<string, string>[] = [{}, { 'tests/helper.js': "import './nested.js';", 'tests/nested.js': 'call();' }, { 'tests/helper.js': setter, 'tests/helper.ts': 'call();' }];
+    for (const files of variants) await reject(prepare(body, files));
+    await reject(prepare("import '../../../outside.js';", {}));
+  });
+  it('[REQ-347] helperのfile symlinkとrepo外へのdirectory linkを拒否する', async () => {
+    const dir = prepare();
+    writeFileSync(join(dir, 'tests/actual.js'), setter); rmSync(join(dir, 'tests/helper.js'));
+    symlinkSync(join(dir, 'tests/actual.js'), join(dir, 'tests/helper.js'), 'file');
+    await reject(dir);
+    const outside = mkdtempSync(join(realpathSync(tmpdir()), 'companion-helper-outside-')); roots.push(outside);
+    writeFileSync(join(outside, 'helper.js'), setter);
+    const otherDir = prepare("import './linked/helper.js';", {});
+    symlinkSync(outside, join(otherDir, 'tests/linked'), 'junction'); await reject(otherDir);
+  });
+  it.each([
+    ["import { helper } from './helper.js';", { 'tests/helper.js': 'export const helper = true;' }],
+    ["import './helper.mjs';", { 'tests/helper.mjs': 'export const helper = true;' }],
+    ["import './helper.js';", { 'tests/helper.js': "import './nested.js'; export const helper = true;", 'tests/nested.js': "import './helper.js'; export const nested = [];" }],
+    [body, { 'tests/helper.js': setter }],
+  ] as const)('[REQ-347] 非試験helper・循環・正規setterの構造を保つ: %s', async (prefix, files) => {
+    const dir = prepare(prefix, files);
+    expect((await auditRepository(dir, join(dir, 'out'), undefined, 'report.json', kit)).rows[0].status).toBe('reviewed');
+    expect((await migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).counts.alreadyBlock).toBe(1);
+  });
+  it.each(['tests/fixture.test.ts', 'packages/runner/test/fixture.test.ts'])('[REQ-347] 実canonicalとnode組込を持つ依存を無変更で受理: %s', async (source) => {
+    const dir = prepare(); const helper = readFileSync('tests/helpers/partition-part.ts', 'utf8'); const dependency = readFileSync('scripts/lib/test-partition.mjs', 'utf8');
+    for (const [path, text] of [['tests/helpers/partition-part.ts', helper], ['scripts/lib/test-partition.mjs', dependency], [source, file()]]) { mkdirSync(join(dir, path, '..'), { recursive: true }); writeFileSync(join(dir, path), text); }
+    const prefix = source.startsWith('packages/') ? '../../../tests/helpers/partition-part.js' : './helpers/partition-part.js';
+    const c = source.replace('.test.ts', '.slow.test.ts'); writeFileSync(join(dir, c), `import { setPart } from '${prefix}'; setPart('slow'); await import('./fixture.test.js');`);
+    writeFileSync(join(dir, 'tests/test-partition.json'), JSON.stringify({ files: { [source]: { cases: { a: ['linux'] } } } }));
+    writeFileSync(join(dir, 'report.json'), JSON.stringify({ testResults: [{ name: c, assertionResults: run() }] }));
+    const review = { ...blockReview(), tests: [{ file: source, contains: '条件を検査する', sha256: sha256(file()) }] };
+    writeFileSync(join(dir, 'docs/quality/scenarios.json'), JSON.stringify({ schemaVersion: 1, reviews: [review] }));
+    const result = await auditRepository(dir, join(dir, 'out'), undefined, 'report.json', kit);
+    expect(result.rows[0].status).toBe('reviewed');
+    expect(result.inputs.companionDependencies).toEqual({ 'tests/helpers/partition-part.ts': sha256(helper), 'scripts/lib/test-partition.mjs': sha256(dependency) });
+    expect([helper.includes('chosen[index]'), helper.includes('Object.freeze'), dependency.includes('node:fs'), dependency.includes('extends Error')]).toEqual([true, true, true, true]);
+    expect((await migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).counts.migrated.unchangedFile).toBe(1);
+  });
+
+  it.each([
+    "import side = require('./foreign.helper.js');",
+    "export import side = require('./foreign.helper.js');",
+    "namespace Local { import side = require('./foreign.helper.js'); }",
+    "import side = require('./missing.js');",
+  ])('[REQ-347] 未参照ImportEqualsの全位置の依存を両入口で拒否: %s', async (prefix) => {
+    expect(companionLinks(registry, () => `${prefix} await import('./fixture.test.js');`)).toEqual(new Map([[companion, testFile]]));
+    await reject(prepare(prefix, { 'tests/foreign.helper.js': "import { it } from 'vitest'; it('群 [REQ-012] 条件を検査する', () => {});" }));
+  });
+  it.each([
+    ["import side = require('./helper.js');", { 'tests/helper.js': 'export const helper = true;' }, ['tests/helper.js']],
+    ["import type side = require('./foreign.helper.js');", { 'tests/foreign.helper.js': "import { it } from 'vitest'; it('own case', () => {});" }, []],
+  ] as const)('[REQ-347] 安全なImportEqualsと型専用の読込除外を保つ: %s', async (prefix, files, dependencies) => {
+    const dir = prepare(prefix, files);
+    expect(companionLinks(registry, () => `${prefix} await import('./fixture.test.js');`)).toEqual(new Map([[companion, testFile]]));
+    const result = await auditRepository(dir, join(dir, 'out'), undefined, 'report.json', kit);
+    expect(result.rows[0].status).toBe('reviewed');
+    expect(result.inputs.companionDependencies).toEqual(Object.fromEntries(dependencies.map((path) => [path, sha256(readFileSync(join(dir, path), 'utf8'))])));
+    if (dependencies.length === 0) {
+      const reads: string[] = [];
+      expect(companionLinks(registry, () => `${prefix} await import('./fixture.test.js');`, (path: string) => { reads.push(path); return undefined; })).toEqual(new Map([[companion, testFile]]));
+      expect(reads).toEqual([]);
+    }
+    expect((await migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).counts.alreadyBlock).toBe(1);
+  });
+  it('[REQ-347] ImportEqualsの実行と型専用除去を隔離verbatimのnative1起動で照合する', async () => {
+    const dir = prepare('', {});
+    rmSync(join(dir, companion)); symlinkSync(realpathSync('node_modules'), join(dir, 'node_modules'), 'junction'); mkdirSync(join(dir, 'tmp'));
+    writeFileSync(join(dir, 'package.json'), '{"type":"module"}');
+    writeFileSync(join(dir, 'tsconfig.json'), '{"compilerOptions":{"verbatimModuleSyntax":true}}');
+    const sourceText = "import {it,expect}from'vitest'; it('[REQ-012] 条件を検査する',()=>{expect(true).toBe(true)});";
+    const foreign = "import {it}from'vitest'; it('own case',()=>{});";
+    const cases = [
+      ['equals', "import side = require('./foreign.helper.js');", foreign, true],
+      ['type-only', "import type side = require('./foreign.helper.js');", foreign, false],
+      ['safe', "import side = require('./foreign.helper.js');", 'export const helper = true;', false],
+    ] as const;
+    const inputs = cases.map(([id, prefix, helper, bad]) => {
+      const source = `tests/${id}/source.test.ts`; const c = `tests/${id}/source.slow.test.ts`;
+      mkdirSync(join(dir, source, '..'), { recursive: true });
+      writeFileSync(join(dir, source), sourceText); writeFileSync(join(dir, c), `${prefix} await import('./source.test.js');`); writeFileSync(join(dir, source, '../foreign.helper.js'), helper);
+      return { id, source, companion: c, prefix, helper, bad };
+    });
+    const config = "export default { cacheDir: './cache', test: { include: ['tests/**/*.slow.test.ts'], globals: false, maxWorkers: 1, fileParallelism: false, reporters: ['json'], outputFile: './native-report.json' } };";
+    writeFileSync(join(dir, 'vitest.config.mjs'), config);
+    const native = spawnSync(process.execPath, [join(realpathSync('node_modules/vitest'), 'vitest.mjs'), 'run', '--configLoader', 'native', '--config', join(dir, 'vitest.config.mjs')], { cwd: dir, encoding: 'utf8', timeout: 60000, env: { ...process.env, TMPDIR: join(dir, 'tmp'), TMP: join(dir, 'tmp'), TEMP: join(dir, 'tmp') } });
+    const evidence = '.loomake/scratchpad/fix-ci-import-equals/native'; mkdirSync(evidence, { recursive: true });
+    writeFileSync(join(evidence, 'process.json'), JSON.stringify({ status: native.status, signal: native.signal, stdout: native.stdout, stderr: native.stderr }));
+    writeFileSync(join(evidence, 'inputs.json'), JSON.stringify({ config, sourceText, inputs, verbatimModuleSyntax: true }));
+    if (existsSync(join(dir, 'native-report.json'))) writeFileSync(join(evidence, 'report.json'), readFileSync(join(dir, 'native-report.json')));
+    expect(native.status, native.stderr + native.stdout).toBe(0); expect(native.signal).toBeNull();
+    const report = JSON.parse(readFileSync(join(dir, 'native-report.json'), 'utf8')) as { numPassedTests: number; numFailedTests: number; testResults: { name: string; assertionResults: { fullName: string; status: string }[] }[] };
+    expect(report.numPassedTests).toBe(4); expect(report.numFailedTests).toBe(0); expect(report.testResults).toHaveLength(3);
+    writeFileSync(join(dir, 'report.json'), readFileSync(join(dir, 'native-report.json')));
+    for (const item of inputs) {
+      const suite = report.testResults.find((row) => row.name.replaceAll('\\', '/').endsWith('/' + item.companion));
+      expect(suite?.assertionResults.map((row) => [row.fullName, row.status])).toEqual(item.bad ? [['own case', 'passed'], ['[REQ-012] 条件を検査する', 'passed']] : [['[REQ-012] 条件を検査する', 'passed']]);
+      const selection = { files: { [item.source]: { cases: { a: ['linux'] } } } };
+      writeFileSync(join(dir, 'tests/test-partition.json'), JSON.stringify(selection));
+      const review = { ...blockReview(), tests: [{ file: item.source, contains: '条件を検査する', sha256: sha256(sourceText) }] };
+      writeFileSync(join(dir, 'docs/quality/scenarios.json'), JSON.stringify({ schemaVersion: 1, reviews: [review] }));
+      expect(companionLinks(selection, () => `${item.prefix} await import('./source.test.js');`)).toEqual(new Map([[item.companion, item.source]]));
+      if (item.bad) await reject(dir);
+      else {
+        expect((await auditRepository(dir, join(dir, 'out-' + item.id), undefined, 'report.json', kit)).rows[0].status).toBe('reviewed');
+        expect((await migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).counts.migrated.unchangedFile).toBe(1);
+      }
+    }
+  }, 90000);
+  it('[REQ-347] 最上位thisとarrowのthisをnative1起動で両入口へ照合する', async () => {
+    const dir = prepare('', {});
+    rmSync(join(dir, companion)); symlinkSync(realpathSync('node_modules'), join(dir, 'node_modules'), 'junction'); mkdirSync(join(dir, 'tmp'));
+    writeFileSync(join(dir, 'package.json'), '{"type":"module"}');
+    const sourceFalse = "import {it,expect}from'vitest'; if(false) it('[REQ-012] 条件を検査する',()=>{expect(false).toBe(true)});";
+    const cases = [
+      ['top', "this.process.getBuiltinModule('module').createRequire(this.process.cwd() + '/probe.cjs')('./tests/top/foreign.test.js');", true],
+      ['arrow', "(() => this)().process.getBuiltinModule('module').createRequire((() => this)().process.cwd() + '/probe.cjs')('./tests/arrow/foreign.test.js');", true],
+      ['canonical', "import {setPart} from '../helpers/partition-part.js'; setPart('slow');", false],
+    ] as const;
+    // 元反例との違いはrequire先のケース別pathだけ。元sourceのfalse条件と期待は保つ。
+    for (const [path, text] of [['tests/helpers/partition-part.ts', readFileSync('tests/helpers/partition-part.ts', 'utf8')], ['scripts/lib/test-partition.mjs', readFileSync('scripts/lib/test-partition.mjs', 'utf8')]]) {
+      mkdirSync(join(dir, path, '..'), { recursive: true }); writeFileSync(join(dir, path), text);
+    }
+    const inputs = cases.map(([id, prefix, bad]) => {
+      const source = `tests/${id}/source.test.ts`; const c = `tests/${id}/source.slow.test.ts`;
+      const text = bad ? sourceFalse : "import {it,expect}from'vitest'; import {currentPart} from '../helpers/partition-part.js'; it('[REQ-012] 条件を検査する',()=>{expect(currentPart()).toBe('slow')});";
+      mkdirSync(join(dir, source, '..'), { recursive: true }); writeFileSync(join(dir, source), text);
+      writeFileSync(join(dir, c), `${prefix} await import('./source.test.js');`);
+      writeFileSync(join(dir, source, '../foreign.test.js'), "import {it}from'vitest'; it('[REQ-012] 条件を検査する',()=>{});");
+      return { id, source, companion: c, text, prefix, bad };
+    });
+    writeFileSync(join(dir, 'vitest.config.mjs'), "export default { cacheDir: './cache', test: { include: ['tests/**/*.slow.test.ts'], globals: false, maxWorkers: 1, fileParallelism: false, reporters: ['json'], outputFile: './native-report.json' } };");
+    const native = spawnSync(process.execPath, [join(realpathSync('node_modules/vitest'), 'vitest.mjs'), 'run', '--configLoader', 'native', '--config', join(dir, 'vitest.config.mjs')], { cwd: dir, encoding: 'utf8', timeout: 60000, env: { ...process.env, TMPDIR: join(dir, 'tmp'), TMP: join(dir, 'tmp'), TEMP: join(dir, 'tmp') } });
+    expect(native.status, native.stderr + native.stdout).toBe(0); expect(native.signal).toBeNull();
+    const report = JSON.parse(readFileSync(join(dir, 'native-report.json'), 'utf8')) as { numPassedTests: number; numFailedTests: number; testResults: { name: string; assertionResults: { fullName: string; status: string }[] }[] };
+    expect(report.numPassedTests).toBe(3); expect(report.numFailedTests).toBe(0); expect(report.testResults).toHaveLength(3);
+    writeFileSync(join(dir, 'report.json'), readFileSync(join(dir, 'native-report.json')));
+    for (const item of inputs) {
+      const suite = report.testResults.find((row) => row.name.replaceAll('\\', '/').endsWith('/' + item.companion));
+      expect(suite?.assertionResults.map((row) => [row.fullName, row.status])).toEqual([['[REQ-012] 条件を検査する', 'passed']]);
+      const selection = { files: { [item.source]: { cases: { a: ['linux'] } } } };
+      writeFileSync(join(dir, 'tests/test-partition.json'), JSON.stringify(selection));
+      const review = { ...blockReview(), tests: [{ file: item.source, contains: '条件を検査する', sha256: sha256(item.text) }] };
+      writeFileSync(join(dir, 'docs/quality/scenarios.json'), JSON.stringify({ schemaVersion: 1, reviews: [review] }));
+      if (item.bad) {
+        expect(() => companionLinks(selection, () => `${item.prefix} await import('./source.test.js');`)).toThrow(readingError);
+        await reject(dir);
+      } else {
+        expect((await auditRepository(dir, join(dir, 'out-' + item.id), undefined, 'report.json', kit)).rows[0].status).toBe('reviewed');
+        expect((await migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).counts.migrated.unchangedFile).toBe(1);
+      }
+    }
+  }, 90000);
+  it('[REQ-347] helper readerの失敗を元文言へ揃え成功に補わない', () => {
+    expect(() => companionLinks(registry, () => `${body} await import('./fixture.test.js');`, () => { throw new Error('unreadable'); })).toThrow(readingError);
+  });
+  it('[REQ-347] 原helper-oneと能力返却の派生と実canonicalをnative1起動で両入口へ照合する', async () => {
+    const dir = prepare('', {});
+    rmSync(join(dir, companion)); symlinkSync(realpathSync('node_modules'), join(dir, 'node_modules'), 'junction'); mkdirSync(join(dir, 'tmp'));
+    writeFileSync(join(dir, 'package.json'), '{"type":"module"}');
+    const sourceFalse = "import {it,expect}from'vitest'; if(false) it('[REQ-012] 条件を検査する',()=>{expect(false).toBe(true)});";
+    const cases = [
+      ['helper-one', 'paren', "import './foreign.helper.js'; await import('./paren.test.js');", "import {it}from'vitest'; it('[REQ-012] 条件を検査する',()=>{});", true],
+      ['identifier', 'source', "import {getTest} from './foreign.helper.js'; const t = getTest(); t('[REQ-012] 条件を検査する',()=>{}); await import('./source.test.js');", "import {it} from 'vitest'; export function getTest(){ return it; }", true],
+      ['arrow', 'source', "import {getTest} from './foreign.helper.js'; getTest()(); await import('./source.test.js');", "import {it} from 'vitest'; export function getTest(){ return ()=>it('[REQ-012] 条件を検査する',()=>{}); }", true],
+      ['take-identifier', 'source', "import {take} from './foreign.helper.js'; const t = take(); t('[REQ-012] 条件を検査する',()=>{}); await import('./source.test.js');", "import {it} from 'vitest'; export function take(){ return it; }", true],
+      ['take-arrow', 'source', "import {take} from './foreign.helper.js'; take()(); await import('./source.test.js');", "import {it} from 'vitest'; export function take(){ return ()=>it('[REQ-012] 条件を検査する',()=>{}); }", true],
+      ['called', 'source', "import {setPart} from './foreign.helper.js'; setPart('slow'); await import('./source.test.js');", "import {it} from 'vitest'; export function setPart(value){ it('[REQ-012] 条件を検査する',()=>{}); }", true],
+      ['canonical', 'source', "import {setPart} from '../helpers/partition-part.js'; setPart('slow'); await import('./source.test.js');", '', false],
+    ] as const;
+    const helper = readFileSync('tests/helpers/partition-part.ts', 'utf8'); const dependency = readFileSync('scripts/lib/test-partition.mjs', 'utf8');
+    for (const [path, text] of [['tests/helpers/partition-part.ts', helper], ['scripts/lib/test-partition.mjs', dependency]]) { mkdirSync(join(dir, path, '..'), { recursive: true }); writeFileSync(join(dir, path), text); }
+    const inputs: { id: string; source: string; companion: string; text: string; prefix: string; helper: string; bad: boolean }[] = [];
+    for (const [id, stem, prefix, content, bad] of cases) {
+      const source = `tests/${id}/${stem}.test.ts`; const c = `tests/${id}/${stem}.slow.test.ts`;
+      const text = bad ? sourceFalse : "import {it,expect}from'vitest'; import {currentPart} from '../helpers/partition-part.js'; it('[REQ-012] 条件を検査する',()=>{expect(currentPart()).toBe('slow')});";
+      mkdirSync(join(dir, source, '..'), { recursive: true }); writeFileSync(join(dir, source), text); writeFileSync(join(dir, c), prefix); writeFileSync(join(dir, source, '../foreign.helper.js'), content);
+      inputs.push({ id, source, companion: c, text, prefix, helper: content, bad });
+    }
+    const config = "export default { cacheDir: './cache', test: { include: ['tests/**/*.slow.test.ts'], globals: false, maxWorkers: 1, fileParallelism: false, reporters: ['json'], outputFile: './native-report.json' } };";
+    writeFileSync(join(dir, 'vitest.config.mjs'), config);
+    const native = spawnSync(process.execPath, [join(realpathSync('node_modules/vitest'), 'vitest.mjs'), 'run', '--configLoader', 'native', '--config', join(dir, 'vitest.config.mjs')], { cwd: dir, encoding: 'utf8', timeout: 60000, env: { ...process.env, TMPDIR: join(dir, 'tmp'), TMP: join(dir, 'tmp'), TEMP: join(dir, 'tmp') } });
+    const evidence = '.loomake/scratchpad/ci-helper-closure/native'; mkdirSync(evidence, { recursive: true });
+    writeFileSync(join(evidence, 'process.json'), JSON.stringify({ status: native.status, signal: native.signal, stdout: native.stdout, stderr: native.stderr }));
+    writeFileSync(join(evidence, 'inputs.json'), JSON.stringify({ config, inputs, derived: 'identifier/arrow change only the companion filename and source dynamic import extension from the preserved original runtime probes' }));
+    if (existsSync(join(dir, 'native-report.json'))) writeFileSync(join(evidence, 'report.json'), readFileSync(join(dir, 'native-report.json')));
+    expect(native.status, native.stderr + native.stdout).toBe(0); expect(native.signal).toBeNull();
+    const report = JSON.parse(readFileSync(join(dir, 'native-report.json'), 'utf8')) as { numPassedTests: number; numFailedTests: number; testResults: { name: string; assertionResults: { fullName: string; status: string }[] }[] };
+    expect(report.numPassedTests).toBe(7); expect(report.numFailedTests).toBe(0); expect(report.testResults).toHaveLength(7);
+    writeFileSync(join(dir, 'report.json'), readFileSync(join(dir, 'native-report.json')));
+    const observations: { id: string; bad: boolean; error?: string; status?: string; migrateError?: string; migrated?: number; outCreated: boolean; rawUnchanged: boolean; ledgerUnchanged: boolean }[] = [];
+    for (const item of inputs) {
+      const suite = report.testResults.find((row) => row.name.replaceAll('\\', '/').endsWith('/' + item.companion));
+      expect(suite?.assertionResults.map((row) => [row.fullName, row.status])).toEqual([['[REQ-012] 条件を検査する', 'passed']]);
+      writeFileSync(join(dir, 'tests/test-partition.json'), JSON.stringify({ files: { [item.source]: { cases: { a: ['linux'] } } } }));
+      const review = { ...blockReview(), tests: [{ file: item.source, contains: '条件を検査する', sha256: sha256(item.text) }] };
+      writeFileSync(join(dir, 'docs/quality/scenarios.json'), JSON.stringify({ schemaVersion: 1, reviews: [review] }));
+      const raw = readFileSync(join(dir, 'report.json')); const ledger = readFileSync(join(dir, 'docs/quality/scenarios.json'));
+      let error: string | undefined; let status: string | undefined; let migrateError: string | undefined; let migrated: number | undefined;
+      try { status = (await auditRepository(dir, join(dir, 'out-' + item.id), undefined, 'report.json', kit)).rows[0].status; } catch (problem) { error = String(problem); }
+      try { migrated = (await migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).counts.migrated.unchangedFile; } catch (problem) { migrateError = String(problem); }
+      observations.push({ id: item.id, bad: item.bad, error, status, migrateError, migrated, outCreated: existsSync(join(dir, 'out-' + item.id)), rawUnchanged: readFileSync(join(dir, 'report.json')).equals(raw), ledgerUnchanged: readFileSync(join(dir, 'docs/quality/scenarios.json')).equals(ledger) });
+    }
+    writeFileSync(join(evidence, 'observations.json'), JSON.stringify(observations));
+    for (const item of observations) {
+      if (item.bad) {
+        const diagnostic = ['identifier', 'arrow'].includes(item.id) ? 'companionに試験の宣言があります' : readingError;
+        expect(item.error, item.id).toContain(diagnostic); expect(item.migrateError, item.id).toContain(diagnostic); expect(item.outCreated, item.id).toBe(false);
+      } else { expect(item.status).toBe('reviewed'); expect(item.migrated).toBe(1); }
+      expect(item.rawUnchanged, item.id).toBe(true); expect(item.ledgerUnchanged, item.id).toBe(true);
+    }
+  }, 90000);
 });

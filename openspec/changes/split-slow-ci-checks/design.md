@@ -370,3 +370,24 @@ spec-only成功後だけ修理へ進み、2.10/PR253は未受入のまま残す�
 # N3予測表の訂正（Q-99・Q-100）
 
 原OpusのR2規則はelseなしのguardOfだけを認めるが、N3表はelseにもguardMismatchを一律予測していた。追加設計5f83ae6cの技術所見と元else規則を管理役が照合し、elseだけunguardedDescribeへ訂正する。元guardOf/checkRegistration・321回帰・元335行の期待を保持し、else2形のunsupportedRowForm/unguardedDescribe/missingId/unprefixed完全一致、inventoryの完全一致、行Bindingゼロ、固定文言とelse除去正常対照を追加する。設計値が再び異なれば期待を合わせず設計へ戻す。抜粋の対象head誤表示と独立所見事前保存未確認はtraceの訂正記録を参照。R1〜R3の部分修理だけであり、R4/C1・一般oracle・実登録の受入は未達である。
+
+# 2026-11-01 companion本体の字句束縛と反射property（Q-101・Q-102）
+
+Issue258に対し、Opus 41523a05のR4′/R5′と厳格独立調査f41a7a1eのA1/A2が一致する本体部分だけを管理役が採用した。既存closedSyntaxを最後まで実行した後、noLib/noResolveの単一ファイルTS checkerで値のIdentifierを解決する。型の位置、宣言名、固定property名、importのpropertyName、bindingのpropertyName、labelは値参照に含めない。shorthandはgetShorthandAssignmentValueSymbol、export specifierはgetExportSpecifierLocalTargetSymbolで解決する。
+
+同fileのambientでないVariableDeclaration・Parameter・BindingElement、本文付きFunctionDeclaration、ClassDeclaration、型専用でないImportSpecifier・NamespaceImport・ImportClauseだけを実行時の宣言として認める。未束縛のundefinedだけを許し、ambient/type-only/本文なし関数/enum/namespace/ImportEqualsや宣言のない値は拒否する。constructor・__proto__・prototypeの固定property/keyと、literalでないelement/computed keyも拒否する。追加違反は既存readingErrorを使う。
+
+pure companionLinksのAPI、読み取り対象、scanner/hash/migrate/registry/configと既存395件の期待を保つ。実証したwrapped require2形、QBの5経路、型だけ・ambientの負例、字句shadowingの正負対照、反射propertyを追加試験で先にREDにする。新たなnativeは別工程であり、静的fixtureをnative実証とは呼ばない。helper検査R6/R7と入口B層、相対import値の直接callee限定は未採用で今回は実装しない。helper-oneの不正と親の全受入が残るため、2.10・2.7全体のcheckboxを変えない。
+
+# helperの評価時と呼出し時の閉包（Q-103〜Q-113）
+
+許可するAST条件と両入口の受入は差分仕様の第12〜14Scenario、選択と理由はtraceのQ-103〜Q-113に定める。companionLinksの第3引数readModuleは任意とし、純粋APIにはH1だけ、partitionInputsから通る監査・移行にはH1〜H3を適用する。依存hashはinputs.companionDependenciesへ記録する。元sourceのhelper本文は対象外で、knownbadの免除にはしない。
+
+元helper-one・能力返却・実canonicalをnative対照とし、仕様ゲート後にtest-firstで実装する。既存447期待・SHALL・Source・先頭11Scenario・task/registry/configと未完了条件を保つ。
+
+Q-114：companionの型専用でないImportEqualsのrequire先も位置を問わずH2の起点とし、H1〜H3と依存hashを適用する。純粋APIの範囲と既存期待は保つ。
+
+
+### companionのthis（Q-116）
+
+型位置以外のThisKeywordを、局所の関数・method・class内も含め既存readingErrorで拒否する。closedSyntaxと既存拒否順・純粋APIと両入口の条件を保ち、元正例・型位置・nativeと入力不変を回帰する。Opus設計のADR・delivery未読は管理役が現規約を照合し技術設計として採用した。

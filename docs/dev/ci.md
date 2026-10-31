@@ -158,6 +158,22 @@ Vitest 5.0.5 の実 fixture では、全件とファイルの明示選択で準�
 
 この基盤では PR の slow 除外を結線しません。Node20 の削除、実 case の OS 別割当と移動、隔離と分割の両立、PR の実行範囲、元の時計と全件の測定、required context の人の操作を含む速度対策1-1の受入は PR184 に残ります。合成 fixture の成功を実 case の独立性や速度対策の完成には数えません。
 
+## companion の実行結果と Scenario 監査
+
+PR184 のタスク2.5では登録済み companion の実行結果を、元の `.test.ts` の本文ブロックと照合するようにしました。本文は元ファイルに残し、companion は元ファイルの `.js` だけを動的に import します。監査と旧形式の移行は、`tests/test-partition.json` と登録済み companion の構造を先に検査します。一覧の欠落・不正、試験を宣言する companion、別の試験の読み込みはエラーになり、監査の出力先を作りません。コメントや整形の違いは許容します。Vitest の namespace や試験関数から分割代入した別名も追跡します。非literalな namespace のキーや未対応の代入先など、試験関数との対応を静的に確認できない束縛は、値を評価せずエラーにします。
+
+Vitest からの読み込みは namespace か `expect` だけの named import に限ります。static import・export・import equals の読み込み先は `vitest`、または閉じた相対パスの補助 module だけです。相対パスは `./` か、1個以上連続する `../` で始まり、その先の各要素は ASCII 英数字・`_`・`-` で始まる ASCII 英数字・`_`・`-`・`.` の並びに限ります。query・fragment・percent 符号・バックスラッシュ・空白・隠し要素は認めません。拡張子は `.js`・`.ts`・`.mjs`・`.mts`・`.cjs`・`.cts`・`.jsx`・`.tsx` の8種を明示し、最終要素に大文字小文字を問わず `.test.`・`.spec.` を含むものは拒否します。`import.meta` の参照と、callee が Identifier の `require` である呼び出しも拒否します。namespace とその別名は `expect` の取得、Identifier への別名の初期化、全キーが literal の `expect` で rest のない分割代入の右辺だけに置けます。引数・既定値・object や array の値・spread・条件式・戻り値・export など、それ以外の位置は拒否します。型の位置は除き、shadowing は区別せず同名を検査します。既存の拒否検査と元 source の import 形の検査を先に行い、以前から拒否していた形の診断を保ちます。
+
+相対 import の値は式文の直接の呼び出しに限り、戻り値を使わせません。監査と移行では補助 module の通常ファイル・実パス内包・非 symlink と、ImportEqualsを含む推移的な読み込み先・評価時の閉じた構文・呼ぶ setter の本文を検査し、補助本文の hash も記録します。元 source から呼ばれる補助関数の本文と実行時の反射は静的に検証せず、Vitest の `globals` が無効であることを前提にしています。これは静的検査の技術上の限界で、既知の不正な companion を受理する免除にはしません。実行時の反射を使った宣言が安全である、または受入済みであるとは扱いません。
+
+未参照のImportEqualsも、コンパイラー設定による除去に頼らず依存を検査します。`verbatimModuleSyntax`が有効な隔離fixtureでは、型専用でないImportEqualsが補助moduleを実行することを確認します。既定設定で試験が0件のsuite errorになった観測は、受理の安全性や偽reviewedの実証には数えません。
+
+監査の各実行行には照合先の `file` と実行時の `rawFile` を残します。JSON の `inputs` には一覧の `partitionSha256` と companion ごとのハッシュを加え、Markdown には元ファイルと companion の両方を表示します。元の raw report とレビュー表のバイト列は変えません。登録外の `.slow.test.ts` は自身のファイルとして扱い、名前から対応を推測しません。同名でも異なる入力行は残し、同じ入力行が複数の選択条件に一致しても一度だけ数えます。
+
+PR で slow を実行しないと、その試験を選ぶ根拠が監査で `invalid` になる場合があります。別の report の合流や判定の緩和で補わず、main push の全件実行と最終受入で確認します。失敗・skip・todo、必要な Source、本文や旧形式のファイル全体のハッシュ、旧形式の移行条件は引き続き検査します。複数の本文ブロックの一部欠測はブロック集合のハッシュで検出できますが、同じ `it.each` 内の行欠測まで証明するものではありません。全 parameter と正当な同名行の保持は、後続タスク4.3・5.1で raw 全 case の多重集合を独立して比較します。
+
+`tests/test-declarations.test.ts` は TypeScript AST で宣言を独立して集め、既存 scanner の候補と突き合わせます。対象は `run.test.ts` と、受入済みmainで移動した `run-timeout.test.ts`、追加設計で照合した `guards.test.ts`・`run-no-change.test.ts`、分割一覧に登録した元ファイルです。import の識別子と object のキーを宣言から区別し、壊れた宣言・別名・動的な試験名・未知の表の行数を黙って除外しません。未知の展開数や未対応の `describe.each` 内の宣言は、展開数を確定せず `dynamicRows` として報告します。Vitest の namespace や別名も診断し、companion 自身の宣言は構造で拒否します。同じファイルの通常の `const` helper は、宣言名と呼出し先でない参照を binding で分類します。別スコープの同名変数や test 関数の別名には、この分類を適用しません。登録済みファイルでは ID の漏れ・重複・対象ファイル・空になる describe のガードも検査し、全 companion が一覧に登録されていることを別に確認します。実際の case 登録と OS 割当は後続タスクに残ります。
+
 ## 全件の所要時間を測る
 
 `measure-slow-tests.yml` は `ci/measure-*` への push で、3 OS・各3 sampleの同じheadを測る。既存のPR品質検査や必須statusは変えない。
