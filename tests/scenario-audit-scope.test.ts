@@ -611,3 +611,94 @@ describe('companionの閉じたmodule読込', () => {
     }
   }, 90000);
 });
+
+describe('companion本体の実行時束縛と反射キー', () => {
+  const companion = 'tests/fixture.slow.test.ts';
+  const registry = { files: { [testFile]: { cases: { a: ['linux'] } } } };
+  const readingError = `companionの読み込み先を静的に確認できません：${companion}`;
+  const roots: string[] = [];
+  afterEach(() => { for (const dir of roots.splice(0)) rmSync(dir, { recursive: true, force: true }); });
+  const text = (body: string) => `${body}\nawait import('./fixture.test.js');`;
+  const prepare = (body: string) => {
+    const dir = mkdtempSync(join(realpathSync(tmpdir()), 'companion-bindings-'));
+    roots.push(dir);
+    const contents = {
+      'openspec/specs/x/spec.md': spec(), [testFile]: file(), [companion]: text(body),
+      'tests/test-partition.json': JSON.stringify(registry),
+      'docs/quality/scenarios.json': JSON.stringify({ schemaVersion: 1, reviews: [blockReview()] }),
+      'report.json': JSON.stringify({ testResults: [{ name: companion, assertionResults: run() }] }),
+      'scripts/scenario-audit.mjs': readFileSync('scripts/scenario-audit.mjs', 'utf8'),
+    };
+    for (const [path, body] of Object.entries(contents)) {
+      mkdirSync(join(dir, path, '..'), { recursive: true }); writeFileSync(join(dir, path), body);
+    }
+    return dir;
+  };
+  it.each([
+    ['括弧付きrequire', "(require)('./foreign.test.js');"],
+    ['型assertion付きrequire', "(require as any)('./foreign.test.js');"],
+    ['process builtin', "process.getBuiltinModule('module').createRequire(process.cwd() + '/probe.cjs')('./tests/foreign.test.js');"],
+    ['global process', "globalThis.process.getBuiltinModule('module').createRequire(process.cwd() + '/probe.cjs')('./tests/foreign.test.js');"],
+    ['direct eval', "eval('require')('./foreign.test.js');"],
+    ['Function builtin', 'Function("return process.getBuiltinModule(\'module\').createRequire(process.cwd() + \'/probe.cjs\')")()(\'./tests/foreign.test.js\');'],
+    ['eval builtin', 'eval("process.getBuiltinModule(\'module\').createRequire(process.cwd() + \'/probe.cjs\')")(\'./tests/foreign.test.js\');'],
+    ['型専用default import', "import type process from './helper.js'; process();"],
+    ['型専用named import', "import { type X as process } from './helper.js'; process();"],
+    ['ambient変数', 'declare const process: any; process();'],
+    ['ambient関数', 'declare function eval(value: string): any; eval("require");'],
+    ['ambient undefined', 'declare const undefined: any; void undefined;'],
+    ['class継承式の大域値', 'class Local extends process.Base {}'],
+    ['generic値のeval', "const take = eval<string>; take('require')('./foreign.test.js');"],
+    ['generic値のFunction', "const take = Function<string>; take('return process')();"],
+    ['class継承式のeval', "class Local extends (eval('require')('./foreign.test.js'), class {}) {}"],
+    ['本文のないoverload', 'function take(value: string): any; take("x");'],
+    ['enumの値', 'enum Value { a }; void Value;'],
+    ['namespaceの値', 'namespace Value { export const a = 1; }; void Value;'],
+    ['ImportEqualsの値', "import helper = require('./helper.js'); helper();"],
+    ['引数scopeの外', 'function local(process: unknown) { return process; } void process;'],
+    ['block scopeの外', '{ const process = true; } void process;'],
+    ['catch scopeの外', 'try {} catch (process) { void process; } void process;'],
+    ['未束縛shorthand', 'const holder = { process };'],
+    ['ambient shorthand', 'declare const process: any; const holder = { process };'],
+    ['型専用export', "import type { X } from './helper.js'; export { X };"],
+    ['function constructor', 'const local = () => {}; local.constructor("return process")();'],
+    ['literal constructor', "const local = () => {}; local['constructor']('return process')();"],
+    ['template constructor', 'const local = () => {}; local[`constructor`]("return process")();'],
+    ['prototype', 'const local = () => {}; void local.prototype;'],
+    ['__proto__', 'const local = {}; void local.__proto__;'],
+    ['object固定key', 'const holder = { constructor: () => {} };'],
+    ['分割代入key', 'const holder = {}; const { constructor: take } = holder;'],
+    ['element動的key', "const key = 'constructor'; const holder = {}; void holder[key];"],
+    ['object動的key', "const key = 'constructor'; const holder = { [key]: () => {} };"],
+    ['computed固定key', "const holder = { ['constructor']: () => {} };"],
+  ])('[REQ-347] 静的な値参照・反射の違反を両入口で拒否して入力を保つ: %s', async (_, body) => {
+    const dir = prepare(body);
+    const raw = readFileSync(join(dir, 'report.json'));
+    const ledger = readFileSync(join(dir, 'docs/quality/scenarios.json'));
+    await expect(auditRepository(dir, join(dir, 'out'), undefined, 'report.json', kit)).rejects.toThrow(readingError);
+    await expect(migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).rejects.toThrow(readingError);
+    expect(existsSync(join(dir, 'out'))).toBe(false);
+    expect(readFileSync(join(dir, 'report.json'))).toEqual(raw);
+    expect(readFileSync(join(dir, 'docs/quality/scenarios.json'))).toEqual(ledger);
+  });
+  it.each([
+    'function local(process: unknown) { return process; } local(true);',
+    '{ const process = true; void process; }',
+    'try {} catch (process) { void process; }',
+    'const { process } = { process: true }; void process;',
+    'const process = true; const holder = { process }; void holder;',
+    'const local = true; export { local };',
+    'const process = true; void ({ process });',
+    'class Local {}; void new Local();',
+    'class Base {}; class Local extends Base {}; void Local;',
+    'interface Local extends process.Base {}',
+    'class Base<T> {}; class Local extends Base<string> {}; void Local;',
+    'void undefined;',
+    'function local(undefined: unknown) { return undefined; } local(true);',
+    'type process = string; const local: process = "x"; void local;',
+    'const holder = { safe: true }; void holder.safe; void holder["safe"];',
+    "import { setPart } from './helpers/partition-part.js'; setPart('slow');",
+  ])('[REQ-347] 実行時の局所束縛・型の位置・安全な固定keyを受理する: %s', (body) => {
+    expect(companionLinks(registry, () => text(body))).toEqual(new Map([[companion, testFile]]));
+  });
+});

@@ -477,6 +477,79 @@ export function companionLinks(registry, readText) {
       ts.forEachChild(node, closedSyntax);
     };
     closedSyntax(ast);
+    // 型を消した後にも存在する、同じ字句 scope の値だけを認める。
+    const options = { noLib: true, noResolve: true };
+    const host = ts.createCompilerHost(options);
+    host.getSourceFile = (file) => file === companion ? ast : undefined;
+    host.writeFile = () => {};
+    const checker = ts.createProgram([companion], options, host).getTypeChecker();
+    const ambient = (node) => {
+      for (let current = node; current && current !== ast; current = current.parent) {
+        if ((current.flags & ts.NodeFlags.Ambient) || current.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.DeclareKeyword)) return true;
+      }
+      return false;
+    };
+    const runtimeDeclaration = (node) => {
+      if (node.getSourceFile() !== ast || ambient(node)) return false;
+      if (ts.isVariableDeclaration(node) || ts.isParameter(node) || ts.isBindingElement(node) || ts.isClassDeclaration(node)) return true;
+      if (ts.isFunctionDeclaration(node)) return Boolean(node.body);
+      if (ts.isImportSpecifier(node)) return !node.isTypeOnly && !node.parent.parent.isTypeOnly;
+      if (ts.isNamespaceImport(node)) return !node.parent.isTypeOnly;
+      return ts.isImportClause(node) && !node.isTypeOnly;
+    };
+    const runtimeTypePosition = (node) => {
+      for (let current = node.parent; current; current = current.parent) {
+        // 値の型引数指定と class の extends 式は、式そのものが実行される。
+        if (ts.isExpressionWithTypeArguments(current)) {
+          const heritage = current.parent;
+          if (!ts.isHeritageClause(heritage) || (heritage.token === ts.SyntaxKind.ExtendsKeyword && ts.isClassLike(heritage.parent))) continue;
+        }
+        if (ts.isTypeNode(current)) return true;
+      }
+      return false;
+    };
+    const valueReference = (node) => {
+      if (runtimeTypePosition(node)) return false;
+      const parent = node.parent;
+      if (ts.isShorthandPropertyAssignment(parent)) return true;
+      if (ts.isExportSpecifier(parent)) return !parent.isTypeOnly && !parent.parent.parent.isTypeOnly && (parent.propertyName ?? parent.name) === node;
+      if (ts.isImportSpecifier(parent) || ts.isImportClause(parent) || ts.isNamespaceImport(parent)) return false;
+      if (ts.isPropertyAccessExpression(parent) && parent.name === node) return false;
+      if ((ts.isPropertyAssignment(parent) || ts.isBindingElement(parent)) && parent.propertyName === node) return false;
+      if (parent.name === node) return false;
+      if ((ts.isLabeledStatement(parent) || ts.isBreakStatement(parent) || ts.isContinueStatement(parent)) && parent.label === node) return false;
+      return true;
+    };
+    const runtimeBinding = (node) => {
+      const parent = node.parent;
+      const symbol = ts.isShorthandPropertyAssignment(parent) ? checker.getShorthandAssignmentValueSymbol(parent)
+        : ts.isExportSpecifier(parent) ? checker.getExportSpecifierLocalTargetSymbol(parent) : checker.getSymbolAtLocation(node);
+      const declarations = symbol?.declarations ?? [];
+      return declarations.some(runtimeDeclaration) || (node.text === 'undefined' && declarations.length === 0);
+    };
+    const forbiddenProperties = new Set(['constructor', '__proto__', 'prototype']);
+    const literalKey = (node) => {
+      node = unwrap(node);
+      return ts.isStringLiteralLike(node) || ts.isNumericLiteral(node) ? node.text : undefined;
+    };
+    const closedRuntime = (node) => {
+      if (ts.isIdentifier(node) && valueReference(node)) required(runtimeBinding(node), readingError);
+      if (ts.isPropertyAccessExpression(node)) required(!forbiddenProperties.has(node.name.text), readingError);
+      if (ts.isElementAccessExpression(node)) {
+        const key = node.argumentExpression && literalKey(node.argumentExpression);
+        required(key !== undefined && !forbiddenProperties.has(key), readingError);
+      }
+      if (ts.isComputedPropertyName(node)) {
+        const key = literalKey(node.expression);
+        required(key !== undefined && !forbiddenProperties.has(key), readingError);
+      }
+      if ((ts.isPropertyAssignment(node) || ts.isShorthandPropertyAssignment(node) || ts.isMethodDeclaration(node) || ts.isGetAccessor(node) || ts.isSetAccessor(node) || ts.isPropertyDeclaration(node)) && node.name) {
+        required(!forbiddenProperties.has(propertyKey(node.name)), readingError);
+      }
+      if (ts.isBindingElement(node) && ts.isObjectBindingPattern(node.parent)) required(!forbiddenProperties.has(propertyKey(node.propertyName ?? node.name)), readingError);
+      ts.forEachChild(node, closedRuntime);
+    };
+    closedRuntime(ast);
     links.set(companion, source);
   }
   return links;
