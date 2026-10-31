@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { copyFileSync, existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
-import { isAbsolute, join, relative, resolve } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
 import { isMain } from './lib/is-main.mjs';
 
@@ -55,8 +55,14 @@ export function saveMeasureMetadata(root, directory, sample, testOutcome) {
   if (git.status !== 0 || !/^[a-f0-9]{40}$/.test(checkoutSha)) throw new Error('実際の checkout SHA を取得できません');
   const source = join(root, '.loomake/test-report.json');
   const reportPresent = existsSync(source);
-  mkdirSync(directory, { recursive: true });
   const target = join(directory, 'test-report.json');
+  const sourceParent = dirname(resolve(source));
+  const targetParent = dirname(resolve(target));
+  const sameParent = existsSync(sourceParent) && existsSync(targetParent) && realpathSync(sourceParent) === realpathSync(targetParent);
+  if (resolve(source) === resolve(target) || sameParent || (reportPresent && existsSync(target) && realpathSync(source) === realpathSync(target))) {
+    throw new Error('計測結果の保存先は元レポートと別にしてください');
+  }
+  mkdirSync(directory, { recursive: true });
   rmSync(target, { force: true });
   if (reportPresent) copyFileSync(source, target);
   // metadataの一覧は、保存したraw reportの実suiteから取る。欠損・不正を空集合にしない。
