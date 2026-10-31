@@ -176,3 +176,36 @@ describe('CodeQL の生成コード用リテラル', () => {
     }
   });
 });
+
+
+describe('instantiation expression の実値と型の境界', () => {
+  const file = 'tests/canonical.test.ts';
+  const source = canonicalWiringSource(file, canonicalCalls.filter(call => call.group === 'success'), 'marker').source;
+  const codes = (extra: string) => [...new Set(checkPartitionWiring(file, source + extra).map((error: {code: string}) => error.code))];
+
+  it.each([
+    'const h=has<string>;',
+    'fn(has<never>);',
+    'const p=currentPart<never>;',
+    'export default registry<never>;',
+    'class X extends (has<string>) {}',
+    'fn(hasAny<string>);',
+    'const factory=eachRows<string>;',
+    'const loader=loadPartition<string>;',
+    'const include=includeCase<string>;',
+    'const list=[has<never>,currentPart<never>];',
+  ])('instantiation expression の実値参照を拒否する: %s', extra => {
+    expect(codes(extra)).toEqual(['wiringBinding']);
+  });
+
+  it.each([
+    'type T=typeof has<string>;',
+    'type T=typeof currentPart<never>;',
+    'const factory=knownFactory<typeof has>;',
+    'class X extends (knownFactory<typeof has>) {}',
+    'interface X extends knownFactory<typeof registry> {}',
+    'class X implements knownFactory<typeof currentPart> {}',
+  ])('instantiation expression でも型として消去される参照を受理する: %s', extra => {
+    expect(codes(extra)).toEqual([]);
+  });
+});

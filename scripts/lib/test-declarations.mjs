@@ -375,12 +375,13 @@ export function checkPartitionWiring(file, source) {
   if (ordered.some((declaration, index) => declaration && top[lastImport + 1 + index] !== statementOf(declaration))) error('wiringHeader', registry ?? has);
   const valueIdentifier = node => {
     if (!ts.isIdentifier(node)) return false;
-    for (let parent = node.parent; parent && parent !== ast; parent = parent.parent) {
+    for (let child = node, parent = node.parent; parent && parent !== ast; child = parent, parent = parent.parent) {
       if (!ts.isTypeNode(parent)) continue;
       const heritage = parent.parent;
-      // A class extends expression runs; its type arguments remain erased.
-      const classExtends = ts.isExpressionWithTypeArguments(parent) && ts.isHeritageClause(heritage) && heritage.token === ts.SyntaxKind.ExtendsKeyword && (ts.isClassDeclaration(heritage.parent) || ts.isClassExpression(heritage.parent));
-      if (!classExtends) return false;
+      // Instantiation expressions run; interface/implements and type arguments erase.
+      const erasedHeritage = ts.isHeritageClause(heritage) && (heritage.token === ts.SyntaxKind.ImplementsKeyword || ts.isInterfaceDeclaration(heritage.parent));
+      const valueExpression = ts.isExpressionWithTypeArguments(parent) && parent.expression === child && !erasedHeritage;
+      if (!valueExpression) return false;
     }
     const parent = node.parent;
     if ((ts.isLabeledStatement(parent) || ts.isBreakStatement(parent) || ts.isContinueStatement(parent)) && parent.label === node) return false;
