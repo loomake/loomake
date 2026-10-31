@@ -6,7 +6,7 @@
 
 ## 2. ci-gate
 
-- [ ] 2.1 `scripts/ci-gate.mjs`：`ciGateProblem` に対象のchangeとゲートを渡し、`verify --json` の結果で判定する。1.0.0・local・skip・要判断・partial・aborted・全件NOT_APPLICABLE・完了ゲートの検査を含まない結果・別のchangeの結果を合格にしない。子プロセスの試験で、それぞれを不合格にすることを確かめる（REQ-318）
+- [x] 2.1 `scripts/ci-gate.mjs`：`ciGateProblem` に対象のchangeとゲートを渡し、`verify --json` の結果で判定する。1.0.0・local・skip・要判断・partial・aborted・全件NOT_APPLICABLE・完了ゲートの検査を含まない結果・別のchangeの結果を合格にしない。子プロセスの試験で、それぞれを不合格にすることを確かめる（REQ-318）
 
 ## 3. runner
 
