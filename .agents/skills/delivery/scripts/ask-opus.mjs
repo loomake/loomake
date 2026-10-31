@@ -1,5 +1,5 @@
 import { spawn, spawnSync } from 'node:child_process';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { closeSync, fsyncSync, mkdirSync, openSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 import { basename, isAbsolute, relative, resolve } from 'node:path';
 import { StringDecoder } from 'node:string_decoder';
@@ -18,7 +18,7 @@ export function parseArgs(args) {
   for (let i = 0; i < args.length; i += 2) {
     const key = args[i];
     if (!['--role', '--request', '--head', '--timeout-min', '--prior'].includes(key) || values[key] !== undefined || !args[i + 1]) {
-      throw new Error('引数が不正です。--role、--request、--head、必要なら --timeout-min を指定してください。');
+      throw new Error('引数が不正です。--role、--request、--head、必要なら --timeout-min、second-opinionでは --prior を指定してください。');
     }
     values[key] = args[i + 1];
   }
@@ -220,6 +220,7 @@ async function invoke(cwd, prompt, args, options) {
     let pending = '';
     const phase = [];
     let results = 0;
+    let sendingPrior = false;
     function receive(text) {
       pending += text;
       let index;
@@ -236,7 +237,10 @@ async function invoke(cwd, prompt, args, options) {
             results += 1;
             if (results === 1) {
               const next = prompt.onFirstResult(phase.map((item) => JSON.stringify(item)).join('\n'));
-              if (!reason) child.stdin.end(JSON.stringify({ type: 'user', message: { role: 'user', content: next } }) + '\n');
+              if (!reason) {
+                sendingPrior = true;
+                child.stdin.end(JSON.stringify({ type: 'user', message: { role: 'user', content: next } }) + '\n');
+              }
             } else if (results > 2) throw new Error('Claudeの2段階の最終結果が不足・重複しています。');
           }
         } catch (error) { stop(error.code ? '独立見解を保存できませんでした。' : error.message); }
@@ -264,7 +268,9 @@ async function invoke(cwd, prompt, args, options) {
       });
     }
     child.on('error', () => { reason = 'Claude Codeを起動できませんでした。既存のインストールと認証を確認してください。'; });
-    child.stdin.on('error', () => { if (typeof prompt !== 'string') stop('Claudeへ先行仮説を送信できませんでした。'); });
+    child.stdin.on('error', () => {
+      if (typeof prompt !== 'string') stop(sendingPrior ? 'Claudeへ先行仮説を送信できませんでした。' : '独立調査の依頼を送信できませんでした。');
+    });
     child.on('close', (exitCode) => {
       clearTimeout(timer);
       clearTimeout(killTimer);
@@ -367,7 +373,8 @@ export async function askOpus(input, options = {}) {
         throw new Error('独立見解の保存が確認できませんでした。');
       }
       delete evidence.independentResult;
-      Object.assign(evidence, { independentViewSavedAt, priorSentAt });
+      Object.assign(evidence, { independentViewSavedAt, priorSentAt, priorPath: relative(root, prior).replaceAll('\\', '/'),
+        priorSha256: createHash('sha256').update(priorContent, 'utf8').digest('hex') });
     }
     writeFileSync(resolve(dir, 'result.md'), evidence.result, { mode: 0o600 });
     const { result: _result, ...metadata } = evidence;

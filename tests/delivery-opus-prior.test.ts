@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync, fsyncSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { askOpus, buildClaudeArgs, evaluatePriorEvents, parseArgs } from '../.agents/skills/delivery/scripts/ask-opus.mjs';
 
 const independent = '独立した観測結果です。\n比較前の見解。';
@@ -19,6 +21,11 @@ const assistant=(model='claude-opus-test')=>({type:'assistant',session_id:id,mes
 const result=(text)=>({type:'result',subtype:'success',is_error:false,session_id:id,result:text,modelUsage:{'claude-opus-test':{}},permission_denials:[]});
 const send=items=>process.stdout.write(items.map(item=>JSON.stringify(item)).join('\n')+'\n');
 writeFileSync('.loomake/called','yes');
+if(!args.includes('--input-format')) {
+ for await(const chunk of process.stdin) { void chunk; }
+ send([init(),assistant(),result(view)]);
+ process.exit(0);
+}
 let turn=0;
 for await(const line of createInterface({input:process.stdin})) {
  const input=JSON.parse(line); turn++;
@@ -36,6 +43,8 @@ for await(const line of createInterface({input:process.stdin})) {
   if(mode==='first-model') events[1].message.model='claude-sonnet-test';
   if(mode==='first-session') events[1].session_id='wrong-session';
   if(mode==='first-usage') events[2].modelUsage={};
+  if(mode==='glob-prior') events.splice(2,0,{type:'assistant',session_id:id,message:{model:'claude-opus-test',content:[{type:'tool_use',name:'Glob',input:{pattern:'**/*',path:'.loomake/prior'}}]}});
+  if(mode==='grep-prior') events.splice(2,0,{type:'assistant',session_id:id,message:{model:'claude-opus-test',content:[{type:'tool_use',name:'Grep',input:{pattern:'hypothesis.md',path:'.'}}]}});
   if(mode==='prior-first') events.splice(2,0,{type:'assistant',session_id:id,message:{model:'claude-opus-test',content:[{type:'tool_use',name:'Read',input:{file_path:'.loomake/prior/hypothesis.md'}}]}});
   if(mode==='windows-prior-directory') events.splice(2,0,{type:'assistant',session_id:id,message:{model:'claude-opus-test',content:[{type:'tool_use',name:'Read',input:{file_path:'.loomake\\prior\\other.md'}}]}});
   if(mode==='common-name') events.splice(2,0,{type:'assistant',session_id:id,message:{model:'claude-opus-test',content:[{type:'tool_use',id:'agents-read',name:'Read',input:{file_path:'AGENTS.md'}}]}},{type:'user',session_id:id,message:{content:[{type:'tool_result',tool_use_id:'agents-read',content:'規約本文です。'}]}});
@@ -54,6 +63,7 @@ for await(const line of createInterface({input:process.stdin})) {
   const file=join(dir,'independent-view.md');
   writeFileSync('.loomake/order-ok',String(existsSync(file)&&readFileSync(file,'utf8')===view));
   writeFileSync('.loomake/second-prompt',input.message.content);
+  if(mode==='prior-overwritten') writeFileSync('.loomake/prior/hypothesis.md','CHANGED_AFTER_SEND');
   if(mode==='timeout-second') {setInterval(()=>{},1000);continue;}
   const events=[init(),assistant(),result('比較と修正方針です。')];
   if(mode==='second-order') [events[0],events[1]]=[events[1],events[0]];
@@ -102,6 +112,7 @@ describe('独立見解の保存後に同じOpusへ先行仮説を渡す', () => 
     expect(parseArgs(args)).toMatchObject({ role: 'second-opinion', prior: 'prior' });
     for (const role of ['design', 'review']) expect(() => parseArgs(['--role', role, ...args.slice(2)])).toThrow('second-opinion');
     expect(() => parseArgs([...args, '--prior', 'other'])).toThrow();
+    expect(() => parseArgs(['--unknown', 'value'])).toThrow('--prior');
   });
 
   it('prior時だけstream入力とpriorディレクトリのRead拒否を加える', () => {
@@ -130,8 +141,65 @@ describe('独立見解の保存後に同じOpusへ先行仮説を渡す', () => 
     });
   });
 
+  it('受信後に元ファイルが変わっても、実際に送った仮説本文のhashを記録する', async () => {
+    await withPrior('prior-overwritten', async ({ cwd, input, options }) => {
+      const result = await askOpus(input, options);
+      const expected = { priorPath: '.loomake/prior/hypothesis.md', priorSha256: createHash('sha256').update(prior, 'utf8').digest('hex') };
+      expect(result).toMatchObject({ ok: true, ...expected });
+      expect(JSON.parse(readFileSync(join(result.dir!, 'manifest.json'), 'utf8'))).toMatchObject(expected);
+      expect(readFileSync(join(cwd, input.prior), 'utf8')).toBe('CHANGED_AFTER_SEND');
+      expect(readFileSync(join(cwd, '.loomake/second-prompt'), 'utf8')).toContain(prior);
+      expect(JSON.stringify(result)).not.toContain(prior);
+    });
+  });
+
+  it('cwdがsymlinkでも実際のworktreeからの相対パスを記録する', async () => {
+    await withPrior('success', async ({ cwd, input, options }) => {
+      const alias = join(cwd, '.loomake/cwd-link');
+      symlinkSync(cwd, alias, 'junction');
+      expect(await askOpus(input, { ...options, cwd: alias })).toMatchObject({ ok: true, priorPath: '.loomake/prior/hypothesis.md' });
+    });
+  });
+
+  it('priorを省略した成功結果には仮説metadataを追加しない', async () => {
+    await withPrior('success', async ({ input, options }) => {
+      const result = await askOpus({ role: 'design', request: input.request, head: input.head, timeoutMs: input.timeoutMs }, options);
+      expect(result).toMatchObject({ ok: true });
+      expect(result).not.toHaveProperty('priorPath');
+      expect(result).not.toHaveProperty('priorSha256');
+      expect(result).not.toHaveProperty('turns');
+      expect(JSON.parse(readFileSync(join(result.dir!, 'manifest.json'), 'utf8'))).not.toHaveProperty('priorSha256');
+    });
+  });
+
+  it.each(['first', 'second'])('%s入力のstdin失敗を区別して未実施にする', async (phase) => {
+    await withPrior('success', async ({ cwd, input, options }) => {
+      const modulePath = pathToFileURL(resolve(import.meta.dirname, '../.agents/skills/delivery/scripts/ask-opus.mjs')).href;
+      const method = phase === 'first' ? 'write' : 'end';
+      // 注入は別Nodeプロセスに限定し、他の試験のspawnや実行時の設定を変えない。
+      const code = `import childProcess from 'node:child_process';
+import {syncBuiltinESMExports} from 'node:module';
+const originalSpawn=childProcess.spawn;
+childProcess.spawn=(...args)=>{
+ const child=originalSpawn(...args);
+ const original=child.stdin[${JSON.stringify(method)}].bind(child.stdin);
+ child.stdin[${JSON.stringify(method)}]=(...values)=>{
+  process.nextTick(()=>child.stdin.emit('error',new Error('injected stdin failure')));
+  return original(...values);
+ };
+ return child;
+};
+syncBuiltinESMExports();
+const {askOpus}=await import(${JSON.stringify(modulePath)});
+console.log(JSON.stringify(await askOpus(${JSON.stringify(input)},${JSON.stringify({ ...options, env: undefined })})));`;
+      const output = execFileSync(process.execPath, ['--input-type=module', '-e', code], { cwd, env: options.env, encoding: 'utf8', timeout: 10000 });
+      const expected = phase === 'first' ? '独立調査の依頼を送信できませんでした。' : 'Claudeへ先行仮説を送信できませんでした。';
+      expect(JSON.parse(output)).toMatchObject({ ok: false, reason: expected });
+    });
+  });
+
   it.each([
-    ['prior-first', '先行仮説'], ['windows-prior-directory', '先行仮説'], ['glob-leak', '先行仮説'], ['first-error', '成功結果'], ['first-denied', '権限拒否'],
+    ['prior-first', '先行仮説'], ['glob-prior', '先行仮説'], ['grep-prior', '先行仮説'], ['windows-prior-directory', '先行仮説'], ['glob-leak', '先行仮説'], ['first-error', '成功結果'], ['first-denied', '権限拒否'],
     ['first-model', 'Opus以外'], ['first-order', '開始情報'], ['first-session', 'セッション'], ['first-usage', 'modelUsage'], ['save-fail', '保存'],
     ['dirty', '未コミット'], ['invalid-json', 'JSON'],
   ])('%s: 第一段階で失敗したら仮説を送らない', async (mode, reason) => {
