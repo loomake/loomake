@@ -11,6 +11,8 @@
 
 ## 3. 接続
 
+差分が90 KiBを超えるため、3・4・5は2本目のPRで行う（1本目はadapterと仕様だけ）。途中の接続はブランチ `change/verify-v2-quality-wiring` にある。
+
 - [ ] 3.1 `runVerify` がquality.yamlを読む。`qualitySchema` と `loadVerifyQualitySchema()` を足し、不正はconfig 2、不在・読取不能はruntime 3、権限はpermission 3のabortedを結果で返す。CLI・runner・trace recordからスキーマを渡す（REQ-319）
 - [ ] 3.2 doneのciで、品質コマンドの前後にHEAD・基準のhash・レポートを集めてadapterに渡し、`quality:subjects` と `quality:<ID>` をchecksに足す。既存試験の準備にquality.yaml・git・producerを足し、期待値は変えない（REQ-319）
 
