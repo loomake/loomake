@@ -31,13 +31,14 @@ async function cli(root: string, ...argv: string[]) {
   }
 }
 
-const api = (root: string, gate: 'done' | 'spec-only' = 'done', extra: { skipCommands?: boolean } = {}) => {
+const api = (root: string, gate: 'done' | 'spec-only' = 'done', extra: { skipCommands?: boolean; scope?: 'local' | 'ci' } = {}) => {
   const result = runVerify({ root, qualitySchema, changeId: CHANGE, gate, ...extra });
   expect(verifyResultSchema.safeParse(result).success, JSON.stringify(result)).toBe(true);
   return { code: verifyExitCode(result), result };
 };
 
 const resultOf = (r: VerifyResult, id: string) => ('checks' in r ? r.checks?.find((c) => c.id === id)?.result : undefined);
+const reasonOf = (r: VerifyResult, id: string) => ('checks' in r ? r.checks?.find((c) => c.id === id)?.reason : undefined);
 const verdictOf = (r: VerifyResult) => ('verdict' in r ? r.verdict : undefined);
 const errorKinds = (r: VerifyResult) => r.run.errors.map((e) => e.kind);
 
@@ -68,9 +69,12 @@ describe('C-001 の成功経路と不足拒否', () => {
     });
   });
 
-  it('[REQ-319] quality.yaml の誤りは aborted の 2、不在は aborted の 3。仕様ゲートでも誤りは 2 になる', async () => {
+  it('[REQ-319] quality.yaml の誤りは aborted の 2、不在は aborted の 3。仕様ゲートとローカルの完了ゲートでも誤りは 2 になる', async () => {
     await withProject({ ...vitestProject, quality: 'version: 2\nproduct: [\n' }, async (root) => {
-      for (const { code, result } of [api(root), await cli(root, '--done'), api(root, 'spec-only'), await cli(root, '--spec-only')]) {
+      for (const { code, result } of [
+        api(root), await cli(root, '--done'), api(root, 'spec-only'), await cli(root, '--spec-only'),
+        api(root, 'done', { scope: 'local' }), await cli(root, '--done', '--scope', 'local'),
+      ]) {
         expect(code).toBe(2);
         expect(result.run.status).toBe('aborted');
         expect(errorKinds(result)).toEqual(['config']);
@@ -89,11 +93,14 @@ describe('C-001 の成功経路と不足拒否', () => {
     });
   });
 
-  it.runIf(canDenyRead)('[REQ-319] quality.yaml を読む権限がなければ aborted の 3 を返す', async () => {
+  it.runIf(canDenyRead)('[REQ-319] quality.yaml を読む権限がなければ、CI とローカルの完了ゲートと仕様ゲートのどれでも aborted の 3 を返す', async () => {
     await withProject({ ...vitestProject, quality: true }, async (root) => {
       chmodSync(join(root, 'quality.yaml'), 0o000);
       try {
-        for (const { code, result } of [api(root), await cli(root, '--done')]) {
+        for (const { code, result } of [
+          api(root), await cli(root, '--done'), api(root, 'spec-only'), await cli(root, '--spec-only'),
+          api(root, 'done', { scope: 'local' }), await cli(root, '--done', '--scope', 'local'),
+        ]) {
           expect(code).toBe(3);
           expect(errorKinds(result)).toEqual(['permission']);
         }
@@ -126,10 +133,12 @@ describe('C-001 の成功経路と不足拒否', () => {
       // 対象のコミットを変える
       writeFileSync(join(root, 'notes.txt'), '別の変更\n');
       commitAll(root, '対象を変える');
+      // 対象と基準の前後は同じ 1 回の実行の前後で比べるので、実行の前に変えたときは、レポートの開始時刻で拒否する
       for (const { code, result } of [api(root), await cli(root, '--done')]) {
         expect(code).toBe(1);
         expect(verdictOf(result)).toBe('INSUFFICIENT_EVIDENCE');
         expect(resultOf(result, 'quality:PQ-900')).toBe('INSUFFICIENT_EVIDENCE');
+        expect(reasonOf(result, 'quality:PQ-900')).toContain('この実行で作られたレポートではありません');
       }
       // 必須の仕様（差分仕様の Requirement）を変える
       writeFileSync(join(root, 'openspec', 'changes', CHANGE, 'specs', 'x', 'spec.md'), specMd(requirement('書き換えた振る舞い')));
@@ -138,8 +147,30 @@ describe('C-001 の成功経路と不足拒否', () => {
         expect(code).toBe(1);
         expect(verdictOf(result)).toBe('INSUFFICIENT_EVIDENCE');
         expect(resultOf(result, 'quality:PQ-900')).toBe('INSUFFICIENT_EVIDENCE');
+        expect(reasonOf(result, 'quality:PQ-900')).toContain('この実行で作られたレポートではありません');
       }
     });
+  });
+
+  it('[REQ-319] 品質コマンドの実行中に対象のコミットや基準が変われば、成功のレポートでも ci の PASS を返さない', async () => {
+    const cases: [string, string][] = [
+      // 実行中にコミットする。対象のコミットは実行の前とあとで別々に取る
+      ['git -c user.name=loomake-test -c user.email=test@example.invalid -c commit.gpgsign=false commit -q --allow-empty -m during', '実行中に対象のコミットが変わりました'],
+      // 実行中に差分仕様を書き換える。基準の hash は実行の前とあとで別々に取る
+      [`node -e "require('fs').appendFileSync('openspec/changes/${CHANGE}/specs/x/spec.md', 'x')"`, '実行中に基準（quality.yaml・仕様・trace.md）が変わりました'],
+    ];
+    for (const [during, reason] of cases) {
+      const config = { openspecValidate: false, commands: { test: `${vitestCommand()} && ${during}` } };
+      await withProject({ ...vitestProject, config, quality: true }, async (root) => {
+        for (const { code, result } of [api(root), await cli(root, '--done')]) {
+          expect(code, reason).toBe(1);
+          expect(resultOf(result, 'command: test')).toBe('PASS');
+          expect(verdictOf(result)).toBe('INSUFFICIENT_EVIDENCE');
+          expect(resultOf(result, 'quality:PQ-900')).toBe('INSUFFICIENT_EVIDENCE');
+          expect(reasonOf(result, 'quality:PQ-900')).toContain(reason);
+        }
+      });
+    }
   });
 
   it('[REQ-319] 品質コマンドが 0 以外で終わったら、テストのレポートが成功でも ci の PASS を返さない', async () => {
