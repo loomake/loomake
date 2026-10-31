@@ -26,7 +26,7 @@
 | REQ-311 | 親 trace、要件7.3の終了コードの表 | 機能 | APIとCLIで共通の0〜3、JSONだけの標準出力、標準エラーの診断、非対話 | 反映済 | specs/verify/spec.md |
 | REQ-315 | 親 trace、要件7.3、WBS J03 | 機能 | Evidence 2で2.0.0を保存し、旧1.0.0を自動で再利用しない | 反映済 | specs/trace-record/spec.md |
 
-REQ-315の「旧1.0.0を自動で再利用しない」は、2a/5でrunnerがEvidence 2を読めるようにしてあり、この子changeで書き出しをEvidence 2にすることで、runnerが新しく記録するのはEvidence 2になる。再利用の候補からEvidence 1を外す変更（REQ-164）は2c/6で行う。recordはEvidence 2を `EVIDENCE_V2_SCHEMA_VERSION` で書き出し、Evidenceの現行の名前の切替は2b-2/6で行う。
+REQ-315の旧Evidence 1を再利用しないこと（REQ-164）と、Evidenceの現行の名前の切替は、2c/6と2b-2/6で行う。
 
 管理役承認（2026-10-31）の逸脱：(1) REQ-066は、MODIFIEDのScenarioが `trace record --scope` のフラグを使うため親に残す。(2) REQ-073は子changeで扱い、2b-2/6に置く（Evidenceの現行の名前を2にすると、reportの未対応の版の判定と文言が変わるため）。(3) root `quality.yaml` は置くだけで（2b-2/6）、verifyへの接続は6/6で行う。
 
@@ -42,7 +42,7 @@ REQ-315の「旧1.0.0を自動で再利用しない」は、2a/5でrunnerがEvid
 
 | ID | 関連 | 仮定の内容 | 理由 | 承認 | 承認者 | 承認日 |
 |---|---|---|---|---|---|---|
-| A-01 | REQ-311 | 1.0.0の検査名（「change の存在」「command: test」など）を、2.0.0のcheckのidにそのまま使う | 7.3はidの値を決めていない。表示と既存の試験の観測を保てる | 管理役承認（2026-10-31） | 管理役（Claude Fable 5.1） | 2026-10-31 |
-| A-02 | REQ-311 | 1.0.0でwarnだった項目（未承認の仮定、確認待ちの要件、未知の設定キー、openspecValidate:autoでのCLI不在）は、REQ-036〜039を実装するまで案内つきのPASSにする | いまの終了コードを保つ。分類の見直しは親に残したREQ-036〜039 | 管理役承認（2026-10-31） | 管理役（Claude Fable 5.1） | 2026-10-31 |
-| A-03 | REQ-040・311 | 品質コマンドが時間・出力の上限や中断で止まったときは、その項目を不足にし、run.errorsにruntimeを足してpartialにする | 対象が決まったあとの取得不足はpartial・不足（design-candidate-a.mdの受入例） | 管理役承認（2026-10-31） | 管理役（Claude Fable 5.1） | 2026-10-31 |
-| A-04 | REQ-311・041 | `runVerify` は使い方と設定の誤りでこれまでどおりUsageErrorを投げ、CLIとtrace recordは `verifyAbortedResult` でabortedの結果に変える | 関数APIの例外の契約（REQ-041と既存の入力境界の試験）を保ち、終了コードとJSONをAPIとCLIで同じ判定にできる | 管理役承認（2026-10-31） | 管理役（Claude Fable 5.1） | 2026-10-31 |
+| A-01 | REQ-311 | 1.0.0の検査名（「change の存在」「command: test」など）を、2.0.0のcheckのidにそのまま使う | 7.3にidの定めがない | 管理役承認（2026-10-31） | 管理役（Claude Fable 5.1） | 2026-10-31 |
+| A-02 | REQ-311 | 1.0.0でwarnだった項目（未承認の仮定、確認待ちの要件、未知の設定キー、openspecValidate:autoでのCLI不在）は、REQ-036〜039を実装するまで案内つきのPASSにする | 終了コードを保つ | 管理役承認（2026-10-31） | 管理役（Claude Fable 5.1） | 2026-10-31 |
+| A-03 | REQ-040・311 | 品質コマンドが時間・出力の上限や中断で止まったときは、その項目を不足にし、run.errorsにruntimeを足してpartialにする | design-candidate-a.mdの受入例 | 管理役承認（2026-10-31） | 管理役（Claude Fable 5.1） | 2026-10-31 |
+| A-04 | REQ-311・041 | `runVerify` は使い方と設定の誤りでこれまでどおりUsageErrorを投げ、CLIとtrace recordは `verifyAbortedResult` でabortedの結果に変える | REQ-041の例外の契約を保つ | 管理役承認（2026-10-31） | 管理役（Claude Fable 5.1） | 2026-10-31 |

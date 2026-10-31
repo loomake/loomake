@@ -29,4 +29,4 @@ C-001（親change `verify-v2-c001`）を6つのPRに分けた2b-1/6。2a/6 `veri
 
 ## Impact
 
-対象はcore・kit・trace・CLIとrunnerの完了ゲート、配布物の検査。既存試験の期待値は、JSONの形・終了コード・Evidenceの版を変える箇所だけを変え、根拠のREQをPR本文の表に書く。Requirementは親から既存IDのまま移した。REQ-042は本文を変えずに満たす。archiveは6/6のあとに行う。
+既存試験の期待値は、JSONの形・終了コード・Evidenceの版を変える箇所だけを変える。Requirementは親から既存IDのまま移した。archiveは6/6のあとに行う。
