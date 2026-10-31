@@ -30,6 +30,14 @@
 
 反映済はこの差分仕様への反映を示す。製品実装・実4caseの採集・完了ゲートの成功を示さない。Source204の別契約とSource330の二つの見出しを混同しない。340/341以外の採番や予約は行わない。
 
+| REQ-109 | main run-guards「テストの削除とskip・todo」「宣言書換え」 | 制約 | 群化後もfile内の削除/skip/宣言検出と順序を保持する | 既存仕様で充足 | openspec/specs/run-guards/spec.md |
+| REQ-110 | main run-guards「設定の変更の検出」 | 制約 | config/package scripts検出を保持する | 既存仕様で充足 | openspec/specs/run-guards/spec.md |
+| REQ-111 | main run-guards「仕様とtrace.mdの変更の検出」 | 制約 | spec/change文書変更の検出を保持する | 既存仕様で充足 | openspec/specs/run-guards/spec.md |
+| REQ-137 | main run「実行中の失敗」 | 制約 | Git失敗を既存の停止/保存経路へ返す | 既存仕様で充足 | openspec/specs/run/spec.md |
+| REQ-138 | main run-guards「特殊文字を含むパスのガード」 | 制約 | 日本語/空白/tab/newlineを分断せず検出する | 既存仕様で充足 | openspec/specs/run-guards/spec.md |
+| REQ-180 | main external-process-budget「期限と出力を監視する外部操作」 | 制約 | 各操作30秒とstdout/stderr合計64MiBを維持する | 既存仕様で充足 | openspec/specs/external-process-budget/spec.md |
+| REQ-201 | main run-guards「テストの検査を弱める変更の検出」 | 制約 | 検査削減/自明assertをfile単位で検出する | 既存仕様で充足 | openspec/specs/run-guards/spec.md |
+
 ## 確認事項
 
 以下はすべて管理役がADR0006の包括承認で回答した。管理役の判断を利用者本人のレビューとして扱わない。元の選択肢・おすすめは残し、修正したおすすめの理由を回答欄とdesignに記録した。Q3の後続回答は元案の`error_`後ろ1〜64字を維持するという管理役の明示決定である。
@@ -145,3 +153,21 @@ task4.1として、公式2版のwrapper/nativeを独立prefixへignore-scripts�
 公開nativeの既知3経路だけを読むprobe、固定argv/環境計画、秘密を返さない合成stream検査を追加した。実readonly probeは固定booleanと理由だけを保存し、user設定内のhook/plugin/envはfalseでも未知欄があり、診断環境はset/nonempty=trueだった。managed/他設定源・CLI stateの非永続化は未証明のままで、実起動口は作らず拒否を維持した。自己作成cwdの設定不在は全設定源不在の証明ではなく、git非ゼロもgit外の証明へ数えていない。
 
 新規36件と既存fixture66件の合成回帰、eslintとtypecheckは成功した。実prompt0・実4件0/4、task4.2〜4.4未チェックを維持する。採集資格の証拠adapter・実起動・永続化・試行履歴と全done/同head最終受入は残っている。
+
+
+### 1200file guard設計と追補の採用（2026-10-31）
+
+独立Opus設計ecb3f21cと追補08fff24dを管理役が全文確認し、actual/responseはclaude-opus-5-5、ok=true・deny=0を確認した。G-Q1/2/3/5とG-Q7のmulti-file8192/single-over例外を採用し、G-Q4/R3はH-Qで置換する。旧表示連結/旧stdout単独累計おすすめと不採用理由をdesign10章へ残した。G-Q6の差分spec不要は要求振舞いを保つ範囲に限定する。
+
+| ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |
+|---|---|---|---|---|---|---|---|---|
+| G-BUDGET | REQ-180 | 表示群の出力予算をどう維持するか | stdout単独累計／返却stdout+stderr累計／kit protocolでwire計測 | 返却stdout+stderr。kitを変えず旧合計予算を保つ | yes | H-Q2=Aと管理補正採用。bytesは返却UTF8の値。末尾3byte以内はroomへ安全側課金。返却textのU+FFFDが同境界にあればbatchだけoutput停止し、不完全hunkも成功にしない | 利用者（ADR0006包括承認、管理役採用） | 2026-10-31 |
+| G-DISPLAY | REQ-112・REQ-138 | 表示群で対象fileだけをどう保つか | 旧連結／literalだけ／literal+固定形式+file境界選別 | 最後。literalだけではdir子削除を含む | yes | H-Q1=B'・H-Q3=A no-renames・H-Q4=A固定を採用。filter前の全stdout/stderrを課金する | 利用者（ADR0006包括承認、管理役採用） | 2026-10-31 |
+
+owned Git2.56のT/dir/quotePath/color観測と1200path純粋計算はdesign10.3へ記録。後者は製品成功実測でなく、24回や一般ceil(W/C)を上限へ採用しない。固定形式/renameで旧byte列が変わる例外を明示する。追補の「不正UTF8置換は常に減らない」は採用せず、返却UTF8・安全側課金・hunk完全性検査に置き換える。資料sources未読という先行モデルの自己申告を全8Req/41Scenario確認済みへ換算しない。新task2.5/3.5は実検証に応じて完了し、旧17行は状態ごと保持する。実0/4/P6拒否と最終受入未達も維持する。
+
+root追加補正：hasReplacementCharacterは返却textにU+FFFDがある合図だけで、invalid UTF8と断定しない。正規U+FFFDの境界近傍も停止し、完全prefixの後hunk欠落・極小room全落ち・正常UTF8 exact境界と余裕あるU+FFFDを新試験で区別する。旧git() callerとkit protocolは変えない。
+
+管理役追加採用（2026-10-31）：owned constant textconvでM/正常0headerを実証したため、M=1固定を訂正する。非曖昧なbatch成功のconsumerだけM0空entryを許し旧挙動を保持、parser既定strictとA/D/T等は不変。room<=3の空stdoutは曖昧としてoutput拒否する。旧/新content/display等価・混合群・strict missing拒否を新試験で確認し、既存Req内の設定保持として扱う。
+
+管理役最終補正（2026-10-31）：name-statusをMapへ入れる前にNUL終端/ペア/空項目/復号後path重複を検証し、不正な上書きをGitErrorで拒否する。空statusとT単独statusは保持する。既存REQ137/138制約内の入力完全性検証で、旧test/spec/期待値と品質設定は変えない。

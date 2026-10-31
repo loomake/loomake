@@ -304,3 +304,60 @@ settleは一度だけとし、timer/親signal/abort/data listenerを回収しown
 
 
 lifecycleの先行実装は全依存fakeの48試験で、依存欠落/中断済み/不正PID/不完全pipe、元code/flags、group停止と期限、stream error、close未到達/不一致、UTF-8、marker非漏出とlistener/timer/pipe回収を確認する。判定後半だけをprojectResultTransportへ抽出し、旧inspectResultProcessのcaptureと既存36件は保持する。旧captureが実OS接続に適格になったとは扱わず、新driverもcollectorの実行入口へ接続しない。
+
+
+## 10. 1200file guard回帰の修理設計（2026-10-31）
+
+### 10.1 独立設計と管理役の採用方向
+
+独立設計ecb3f21c-c1f6-44af-994f-ff17fd46be9eはhead0b8aを対象とし、実モデル/回答モデルclaude-opus-5-5、ok=true・deny=0を管理役が確認した。モデルはsources.md本文の未読を明記しており、全Requirement/Scenarioを読了したレビューとは扱わない。これは設計であり最終受入ではない。
+
+| 項目 | 旧案を含む選択肢と理由 | 現在の管理判断 |
+|---|---|---|
+| G-Q1 | 内容diffのliteral pathspec／従来glob。file間の行混入を防ぐ | literalの方向採用 |
+| G-Q2 | no-color/no-ext-diff/submodule short/a-b prefix/no-renames固定／従来設定。区切り照合を安定させる | 内容diffの固定方向採用。algorithm/textconvは現行維持 |
+| G-Q3 | output超過だけ二分再取得／群単位で停止 | 前者の方向採用。singleton超過は従来同様output停止 |
+| G-Q4 | 旧optionの表示を群で連結／literalだけ／literal・固定形式とfile境界選別／単一呼出維持 | H-Q1=B'を採用。literalだけでもdir子削除が付くため境界選別を行う |
+| G-Q5 | timeout/中断で再取得しない／二分する | 再取得しない方向採用。30秒/共有期限は延長しない |
+| G-Q6 | 差分specなし／run-guards差分を追加 | 同じ要求振舞いを保てる範囲でのみ前者。表示/予算に実質変更が残れば仕様案へ戻す |
+| G-Q7 | 8192／16384／payloadごとの算定 | multi-file群はJSON.stringify(path).length+1合計8192。single-overは単独群で旧失敗境界を保持し、全argvが常に8192以下とは主張しない |
+| R-3 | stdoutだけ累計（元おすすめ）／stdout+stderr累計 | 前者は旧1操作合計64MiBと両立せず不採用。H-Q2=Aの返却stdout+stderr UTF8 byte数を累計する |
+
+### 10.2 追補採用と内部API
+
+内容diffはstatus順の連続群で取得し、完全一致かC quote復号でfileへ照合する。Tは2区切り、A/Mは1区切りを要求し、未知/欠落/余分な区切りはGitErrorとしてREQ137の既存経路へ返す。D配下の扱いは型とdir置換の実出力に一致させる。既存guard判定の本文とfindings挿入順は変えず、別fileの追加/削除行を対応させない。群は使用後に破棄する。
+
+追補08fff24d-3e4d-4a76-af24-74050eb6187dを管理役が全文確認し、実モデル/回答モデルclaude-opus-5-5、ok=true・deny=0を確認した。H-Q1=B'（literal・固定形式・file境界選別）、H-Q2=A（返却stdout+stderr bytes）、H-Q3=A（no-renames）、H-Q4=A（固定形式）を採用した。回答者は利用者のADR0006包括承認、採用者は管理役、2026-10-31である。
+
+git.tsに非index-exportのgitMeasured(root,env,args,options?:{maxBuffer?:number}):{stdout:string,bytes:number}を置き、既存git()は同関数のstdoutを返す。env/共有期限/GitError/対話案内は共用する。bytesは成功時に返ったstdoutとstderr両方のUTF-8 byte数を合計し、wire元byte数とは呼ばない。表示はfilter前のraw全群を課金し、次呼出にroom=64MiB-usedを渡す。room<=0は起動せずProcessLimitError outputにし、UsageErrorへ変えない。表示はoutput/timeout/interruptedの再取得をしない。内容はoutputだけ二分し、singletonは同じoutputで止める。
+
+管理補正として「不正UTF8の置換は旧より常に厳しい」という追補元の説明は採用しない。runtimeのutf8PrefixはStringDecoder.writeの末尾不完全文字を最大3byte保持し得るため、表示の返却bytesがroomとの差3byte以内ならroomへ安全側に課金する。課金はBuffer/StringDecoderの境界合成試験で検証する。kit/監視役のprotocolは変えない。
+
+追加の管理補正として、完結hunkのprefixでも後続hunkの切断を一般には区別できないため、gitMeasuredへhasReplacementCharacterを返却text中のU+FFFD有無だけのbooleanとして追加する。invalid UTF8だったという断定には使わない。batch consumerだけがbytes>=room-3かつflagで「上限近傍で差分の完全性を確認できない」としてoutput停止し、内容はoutput限定の二分/単独停止、表示は非再取得とする。正規U+FFFDでも境界近傍では停止する制約を明示する。ASCII/通常UTF8の完全な最終群はexact境界で成功でき、U+FFFDも十分な余裕があれば通す。極小roomでreplacement全落ちのstdoutは区切り/完全性検査で拒否し、stderr側の未知tailはroom飽和で後群を拒否する。既存git()の他callerへ新しい拒否は広げない。
+
+
+パッチは末尾newlineと全hunkのold/new行数、context/add/deleteによる消費、hunk/次headerへの遷移を検証し、未知/不完全ならGitErrorで止める。header数だけを根拠に途中で切れたパッチを成功へ補わない。型/空file/mode/binary等は実Git fixtureで必要な完結形式を確かめる。
+
+表示もno-renames/no-color/no-ext-diff/submodule short/a-b prefixを固定し、literalの取得後にstatusで照合する。群外は既知のdescendantだけを捨て、それ以外はGitError。内容側で捨てられるdescendantはDだけ、表示側はstatusにあるもの。捨てる部分も先に予算へ計上する。旧表示とのbyte一致は既定設定・非rename・混入なしの場合に限り、renameは削除と追加へ固定し、色/prefix/extdiff設定の反映はなくなることを明示する。GIT_GLOB_PATHSPECS/GIT_ICASE_PATHSPECS等の競合はenvを改変せず既存GitError経路へ返す。
+
+### 10.3 owned Git実出力と群数計算
+
+Linux Git2.56のowned小fixtureでT(file→symlink)は同一file2headerと確認した。file→dirはD親/A子、dir→fileはA親/D子で、literal親pathspecも子のdiffを含む。quotePath true/false・color.diff=always・noprefix/mnemonicPrefixの下でも採用内容optionはANSIなしa/b prefixとなった。glob名は従来表示だと別fileも含み、literalで除けるが、eslint.config.js旧dir→同名通常fileの子削除はliteralだけでは除けなかった。これは自作Git出力の実測で、Mac/Windowsの実出力証明ではない。
+
+元1200pathをGit字句順に並べた純粋計算は総weight98,490、各80〜83、8192基準で13群。二分やpackage showなしの理論呼出はadd/status+内容13+表示13=28であり、元案の約24回を採用しない。ceil(total/cap)は一般上限でない（cap10・6/6/6は3群）。一般には隣接2群のweight合計がcap超からmin(file数,ceil(2W/cap))を独立上限にできる。oversizeなしなら満杯群used>=cap-maxWeight+1からceil(total/(cap-maxWeight+1))も独立上限にできる。今回の値は13で一致した。修理後の起動回数/argv/所要時間は未実測で、G3を成功扱いにしない。
+
+### 10.4 タスクと検証の維持
+
+task2.5/3.5を追加し、旧17行と状態は保持する。2.5の実装とローカル新旧回帰の成功により13済/6未となり、3.5の実3OSと必須受入5.3は未達である。既存8差分Requirement/41Scenario、全期待値、1200file/60秒/品質設定は変更しない。新試験は群内/群間の偽対応、quote/pathspec、T/dir置換、未知区切り、stderrを含む予算、output限定再取得、timeout/中断の非再取得を意味ある否定条件で検証する。要求された検出・停止・対象file表示・予算境界は既存REQの範囲で維持するため差分specは追加しない。strict/spec-only成功の後にtasks順で実装する。実4件0/4・P6拒否・4.2〜5.2/最終受入未完了は維持する。
+
+内容の二分取得はgeneratorで次の成功群だけを保持する。各操作30秒は群単位のままで、全表示群が旧1操作30秒以内という保証は追加しない。runの共有期限は全群へ引き継ぐ。
+
+
+### 10.5 constant textconvのM0境界（実観測による補正）
+
+owned Git2.56でraw blobはMだが旧新textconvが同じ固定文字列の場合、旧per-file/content固定/display固定すべて正常終了・0headerとなると確認した。管理役はこの事実に基づき、モデルのM=1固定という仮定を訂正し、非曖昧なbatchOutput成功からのconsumerだけM0を許す案を採用した（利用者ADR0006包括承認、2026-10-31）。byPathにM0の空entryを置いて群消費順を保ち、旧同様の空linesへ戻す。parser単体は既定strictのまま、A/D/T・未知header・不完全hunkを緩めない。room<=3かつ空stdoutはreplacement全落ちと区別できないためoutput拒否する。これらの拒否理由は「上限近傍で差分の完全性を確認できない」とし、wire超過を観測したとは書かない。旧設定を保つ修正として、新Req/specは追加しない。
+
+
+### 10.6 status一覧の終端・ペア・復号後重複
+
+管理役の最終diff確認に基づき、codes Map構築前にname-statusのNUL終端とペア完全性、空code/path、復号後の重複pathを検証する（REQ137・REQ138）。欠損や同名上書きはGitErrorで閉じ、空statusだけは正規の変更なしとして許可する。Tのstatusは単独項目のまま、内容patchのT=2区切りとは区別する。新しいmissing-terminal/duplicate-decoded-path等の否定試験と既存guard55件・型lint/spec-onlyで確認し、通常full1813成功はこの小補正前の結果として保持する。最終source全体は次の実CIで確認する。
