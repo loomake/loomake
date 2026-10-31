@@ -33,3 +33,10 @@ export const verifyResultSchema = preserveUnknownFields(z
     title: 'Loomake verify result',
     description: 'verify --json が出力する結果。破壊的変更を入れるときは schemaVersion のメジャー番号を上げる（REQ-053）',
   }));
+
+// 履歴の 1.0.0 と、要件定義 7.3 の 2.0.0 のスキーマ。loadVerifyResultSchemas() から一緒に読めるようにする
+export { legacyVerifyCheckResultSchema, legacyVerifyResultSchema } from './verify-result-legacy-schema.js';
+export {
+  verifyScopeSchema, verifyRunErrorSchema, verifyCheckV2Schema, verifyDecisionSchema, verifyCiSummarySchema, verifyLocalSummarySchema,
+  verifyResultV2CiSchema, verifyResultV2LocalSchema, verifyResultV2AbortedSchema, verifyResultV2Schema,
+} from './verify-result-v2-schema.js';

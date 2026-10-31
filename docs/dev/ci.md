@@ -240,3 +240,28 @@ Source: REQ-214, REQ-270
 ### Node20追加ジョブの削除
 
 配布物のengines.nodeは`>=22.12.0`であるため、宣言範囲より古いNode20の追加ジョブを削除した。下限はNode22.12.0のnode22ジョブで確認し、準備はNode24で行う。3OSのNode24品質ジョブ、node22・gate・CodeQLは維持した。main rulesetのnode20 required contextはまだ変更しておらず、ready時に人へ具体差分を渡す。slow分離と最新headの3OS計測は後続taskであり、この削除だけを1-1の完成としない。
+
+### main取り込み時の移管元原文：CI のテストの分割
+
+PR #195のarchive後、REQ-214は隔離のジョブを含む本文と3つのScenarioになった。上の085aの2つのScenarioは当時の原文として残し、移管対象の現行全文・Source・全3Scenarioを次に保存する。REQ-049の全文・Source・全6Scenarioは085aから変更がない。
+
+取得：`openspec/specs/monorepo/spec.md` @ `7359d89dad5d0ec05d649cdad1f261bc059f4439`（2026-10-31）。
+
+````markdown
+### Requirement: CI のテストの分割
+CI の quality ジョブは、macOS と Windows では `pnpm test` を `--shard` で 2 つのシャードに分け、別々のジョブで実行する SHALL。2 つのシャードと、隔離のジョブ（「試験の隔離一覧」）を合わせて、すべてのテストを実行する MUST。macOS と Windows のシャードは、隔離一覧でその OS に指定したファイルだけを除く SHALL。ubuntu では隔離一覧を読まず、`pnpm test` を 1 回だけ、カバレッジ付き（`--coverage`）で実行し、カバレッジが閾値を下回ったらジョブを失敗させる SHALL。どのジョブでも、lint・typecheck・build・配布物の検査を実行する MUST。ただし、「文書だけの PR の品質ジョブ」に当てはまる PR では、これらのステップを実行しなくてよい。
+
+Source: REQ-214, REQ-270
+
+#### Scenario: macOS と Windows のシャード
+- **WHEN** `.github/workflows/ci.yml` を読む
+- **THEN** quality ジョブのマトリクスで、macos-latest と windows-latest のそれぞれにシャード `1/2` と `2/2` があり、`pnpm test --shard=` にシャードを渡すステップがある
+
+#### Scenario: ubuntu ではカバレッジ付きで 1 回だけ実行する
+- **WHEN** `.github/workflows/ci.yml` を読む
+- **THEN** ubuntu-latest にはシャードがなく、`pnpm test --coverage` のステップがあり、ほかにすべてのテストを実行するステップ（`pnpm test:coverage` など）はない
+
+#### Scenario: macOS と Windows のシャードから隔離一覧のファイルを除く
+- **WHEN** `.github/workflows/ci.yml` を読む
+- **THEN** シャードのあるジョブだけに、`scripts/ci-quarantine.mjs` に OS を渡して一覧を検査するステップがあり、その出力をシャードのテストのステップに渡している。ubuntu のテストのステップには渡していない
+````

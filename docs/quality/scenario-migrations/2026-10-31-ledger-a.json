@@ -1,0 +1,689 @@
+{
+  "schemaVersion": 1,
+  "kind": "scenario-review-removal",
+  "base": "0dccf6292ec93a4a749c44743ad9286c82c4a3df",
+  "ledgerBeforeSha256": "2cd0e5c8de33369156425c0245600ea0fffde5efa26a0238b721473536ad8297",
+  "ledgerAfterSha256": "82ee4d1ee33c2d4b4e327a1805e06926504e03a07ccf9388d2b77bd10c0aa576",
+  "newReviewsCreated": 0,
+  "scope": "主仕様にないIDのレビュー行を台帳から消した。statusや試験は新しいIDへ引き継がず、記録だけを残す",
+  "entries": [
+    {
+      "oldId": "SCN-5a16e42923e6ae95f549",
+      "newId": null,
+      "oldFile": "openspec/specs/monorepo/spec.md",
+      "requirement": "devcontainer",
+      "scenario": "devcontainer の定義がある",
+      "scenarioSha256": "637a34d6f1753eb425b689571e0850fb8e7ac257969bce06caae198d01703c24",
+      "auditStatusBeforeMigration": "unknown-reference",
+      "disposition": "removed",
+      "candidateNewId": null,
+      "candidateScenarioSha256Matches": false,
+      "note": "主仕様から Requirement が消えた（devcontainer）。対応する Scenario はない",
+      "originalRecord": {
+        "id": "SCN-5a16e42923e6ae95f549",
+        "status": "reviewed",
+        "scenarioSha256": "637a34d6f1753eb425b689571e0850fb8e7ac257969bce06caae198d01703c24",
+        "sources": [
+          "REQ-004"
+        ],
+        "reason": "devcontainer.jsonから抽出したpostCreateCommandにOpenSpecのパッケージ名があることをassertする。コンテナ作成の実行結果ではない。",
+        "tests": [
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "postCreateCommand で OpenSpec CLI を入れる",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-52a7b7629b2c8a2d7dff",
+      "newId": null,
+      "oldFile": "openspec/specs/monorepo/spec.md",
+      "requirement": "devcontainer",
+      "scenario": "Node 24 のイメージ",
+      "scenarioSha256": "1cd88a9c34bbdb1dee247db4484ce1429aaba6e420e5ffa4e20d5ba55988a7bb",
+      "auditStatusBeforeMigration": "unknown-reference",
+      "disposition": "removed",
+      "candidateNewId": null,
+      "candidateScenarioSha256Matches": false,
+      "note": "主仕様から Requirement が消えた（devcontainer）。対応する Scenario はない",
+      "originalRecord": {
+        "id": "SCN-52a7b7629b2c8a2d7dff",
+        "status": "reviewed",
+        "scenarioSha256": "1cd88a9c34bbdb1dee247db4484ce1429aaba6e420e5ffa4e20d5ba55988a7bb",
+        "sources": [
+          "REQ-061"
+        ],
+        "reason": "devcontainer.jsonのimageがtypescript-nodeのNode24系指定であることをassertする。コンテナの起動成功は主張しない。",
+        "tests": [
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "Node 24 系のイメージを使う",
+            "sha256": "644eb416bddb2b584e61f227306501e78f2dff058aacc1b24faf51afac881eb6"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-5debade2334fd0735ab2",
+      "newId": null,
+      "oldFile": "openspec/changes/shorten-ci-wall-clock/specs/monorepo/spec.md",
+      "requirement": "3 つの OS での CI",
+      "scenario": "ワークフローが 3 OS を指定している",
+      "scenarioSha256": "43ef8b8bfa40f8ae7f41d86215d7d0395c8eaec1ab443fcb4d74868a8f6ac53a",
+      "auditStatusBeforeMigration": "unknown-reference",
+      "disposition": "removed",
+      "candidateNewId": "SCN-4a7b5a2f65584f2c1953",
+      "candidateScenarioSha256Matches": false,
+      "note": "未archiveの差分仕様のIDのまま残っていた。主仕様の同名Scenarioは別IDで、台帳では未確認のまま（PR-B/C で再確認する）",
+      "originalRecord": {
+        "id": "SCN-5debade2334fd0735ab2",
+        "status": "reviewed",
+        "scenarioSha256": "43ef8b8bfa40f8ae7f41d86215d7d0395c8eaec1ab443fcb4d74868a8f6ac53a",
+        "reason": "実際の ci.yml のマトリクスに ubuntu-latest・macos-latest・windows-latest の 3 つがあり、runs-on がマトリクスの OS を使い、pnpm test を実行するステップがあることを assert する。文書だけの PR の例外（REQ-270）は、この試験では扱わない。",
+        "sources": [
+          "REQ-049"
+        ],
+        "tests": [
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "[REQ-049] ubuntu・macos・windows の 3 つで pnpm test を実行する",
+            "sha256": "ed68565fdbc3265f7b0030692b3b17d99275eaf6bf6265ebfd93f1ac41694d04"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-574c7e0de3b3d5645c72",
+      "newId": null,
+      "oldFile": "openspec/changes/shorten-ci-wall-clock/specs/monorepo/spec.md",
+      "requirement": "CI のテストの分割",
+      "scenario": "macOS と Windows のシャード",
+      "scenarioSha256": "b8cb91d0e48e21d08f99b94be2405e3419bafabfcb9fb1b9c5d206a6992c929d",
+      "auditStatusBeforeMigration": "unknown-reference",
+      "disposition": "removed",
+      "candidateNewId": "SCN-1e746b9bf5219a2c52f4",
+      "candidateScenarioSha256Matches": true,
+      "note": "未archiveの差分仕様のIDのまま残っていた。主仕様の同名Scenarioは別IDで、台帳では未確認のまま（PR-B/C で再確認する）",
+      "originalRecord": {
+        "id": "SCN-574c7e0de3b3d5645c72",
+        "status": "reviewed",
+        "scenarioSha256": "b8cb91d0e48e21d08f99b94be2405e3419bafabfcb9fb1b9c5d206a6992c929d",
+        "reason": "実際の ci.yml の quality ジョブのマトリクスが、ubuntu を除いた macOS と Windows に 1/2 と 2/2 のシャードを持つことと、シャードのあるジョブで pnpm test --shard=${{ matrix.shard }} を実行するステップ（条件は matrix.shard と文書だけでないこと）を assert する。シャードで変わる条件がテストの 2 つだけで、ほかの条件は文書だけの PR の条件だけであることも assert する。",
+        "sources": [
+          "REQ-214"
+        ],
+        "tests": [
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "[REQ-214] macOS と Windows ではテストを 2 つのシャードに分け",
+            "sha256": "ed68565fdbc3265f7b0030692b3b17d99275eaf6bf6265ebfd93f1ac41694d04"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-e393dd8e1403ce3b49f0",
+      "newId": null,
+      "oldFile": "openspec/changes/shorten-ci-wall-clock/specs/monorepo/spec.md",
+      "requirement": "CI のテストの分割",
+      "scenario": "ubuntu ではカバレッジ付きで 1 回だけ実行する",
+      "scenarioSha256": "68b02cbad5f4a30613e00a2502fd33e96879c7636931e81cc3bf57e9c367fecc",
+      "auditStatusBeforeMigration": "unknown-reference",
+      "disposition": "removed",
+      "candidateNewId": "SCN-5139217ac2a0924cbdfb",
+      "candidateScenarioSha256Matches": true,
+      "note": "未archiveの差分仕様のIDのまま残っていた。主仕様の同名Scenarioは別IDで、台帳では未確認のまま（PR-B/C で再確認する）",
+      "originalRecord": {
+        "id": "SCN-e393dd8e1403ce3b49f0",
+        "status": "reviewed",
+        "scenarioSha256": "68b02cbad5f4a30613e00a2502fd33e96879c7636931e81cc3bf57e9c367fecc",
+        "reason": "実際の ci.yml の quality ジョブで、すべてのテストを実行するステップが --shard と --coverage の 2 つだけであること、--coverage のステップの条件が !matrix.shard と文書だけでないことであること、test:coverage がないことを assert する。",
+        "sources": [
+          "REQ-214"
+        ],
+        "tests": [
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "[REQ-214] macOS と Windows ではテストを 2 つのシャードに分け",
+            "sha256": "ed68565fdbc3265f7b0030692b3b17d99275eaf6bf6265ebfd93f1ac41694d04"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-8128e6d413d17d69ca8d",
+      "newId": null,
+      "oldFile": "openspec/changes/shorten-ci-wall-clock/specs/monorepo/spec.md",
+      "requirement": "文書だけの PR の品質ジョブ",
+      "scenario": "文書だけの PR",
+      "scenarioSha256": "c3138fc643574aaed95e878a364ea6acaa91097d11610897c345186e7c68ee27",
+      "auditStatusBeforeMigration": "unknown-reference",
+      "disposition": "removed",
+      "candidateNewId": "SCN-161bc1c52fc63f52b285",
+      "candidateScenarioSha256Matches": true,
+      "note": "未archiveの差分仕様のIDのまま残っていた。主仕様の同名Scenarioは別IDで、台帳では未確認のまま（PR-B/C で再確認する）",
+      "originalRecord": {
+        "id": "SCN-8128e6d413d17d69ca8d",
+        "status": "reviewed",
+        "scenarioSha256": "c3138fc643574aaed95e878a364ea6acaa91097d11610897c345186e7c68ee27",
+        "reason": "同じ 3 つのファイル（作業記録・change の tasks.md・changeset）の差分で、判定の関数が文書だけとすること、一時的な git のリポジトリでスクリプトが GITHUB_OUTPUT に docs_only=true を書くことを assert する。ci.yml では、判定より後のステップ（lint・typecheck・test・build・配布物の検査を含む）がすべて docs_only が true でないときだけ動くことを assert する。GitHub Actions での実際の実行は、この試験の範囲外。",
+        "sources": [
+          "REQ-270"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] 変えたファイルがすべて文書なら、文書だけと判定する",
+            "sha256": "2891cf1d215816a0b5389f5b69943af7b040741c162c1747f2d23831cceb191b",
+            "hashScope": "block"
+          },
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] 文書だけの PR では docs_only=true を書く",
+            "sha256": "9ecf1fbc783da662e9cbc473315c76698ea7bdfdb50d509976d98734323d7615",
+            "hashScope": "block"
+          },
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "[REQ-270] 文書だけかの判定は、paths フィルタではなく",
+            "sha256": "6c934a24ef0ad32b655510d4658e88289b5c30c49bed1b2109902fc4d565dcb7",
+            "hashScope": "block"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-029692d0ae5b59e7c317",
+      "newId": null,
+      "oldFile": "openspec/changes/shorten-ci-wall-clock/specs/monorepo/spec.md",
+      "requirement": "文書だけの PR の品質ジョブ",
+      "scenario": "判定をジョブの中で行う",
+      "scenarioSha256": "a5345b4b13201e8e7cdea8e2d70b443812fab5b7b224ed665ff154d9a933c238",
+      "auditStatusBeforeMigration": "unknown-reference",
+      "disposition": "removed",
+      "candidateNewId": "SCN-748d80d81bb18f693d5a",
+      "candidateScenarioSha256Matches": true,
+      "note": "未archiveの差分仕様のIDのまま残っていた。主仕様の同名Scenarioは別IDで、台帳では未確認のまま（PR-B/C で再確認する）",
+      "originalRecord": {
+        "id": "SCN-029692d0ae5b59e7c317",
+        "status": "reviewed",
+        "scenarioSha256": "a5345b4b13201e8e7cdea8e2d70b443812fab5b7b224ed665ff154d9a933c238",
+        "reason": "実際の ci.yml に paths・paths-ignore がなく、quality ジョブに条件がないこと、id: changes のステップが同梱のスクリプトをイベントの種類と向き先のブランチを渡して実行し、外部の Action を使わないこと、判定より前のステップに条件がなく、後のステップがすべて文書だけでないときだけ動くことを assert する。",
+        "sources": [
+          "REQ-270"
+        ],
+        "tests": [
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "[REQ-270] 文書だけかの判定は、paths フィルタではなく",
+            "sha256": "6c934a24ef0ad32b655510d4658e88289b5c30c49bed1b2109902fc4d565dcb7",
+            "hashScope": "block"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-dba1cdd46b727172efb0",
+      "newId": null,
+      "oldFile": "openspec/changes/shorten-ci-wall-clock/specs/monorepo/spec.md",
+      "requirement": "文書だけの PR の品質ジョブ",
+      "scenario": "main への push",
+      "scenarioSha256": "006dba33f82623a70854a197de3be3b75b1331fd63749beaef34ed00ac2a53a3",
+      "auditStatusBeforeMigration": "unknown-reference",
+      "disposition": "removed",
+      "candidateNewId": "SCN-286e6acb1256dab7e16d",
+      "candidateScenarioSha256Matches": true,
+      "note": "未archiveの差分仕様のIDのまま残っていた。主仕様の同名Scenarioは別IDで、台帳では未確認のまま（PR-B/C で再確認する）",
+      "originalRecord": {
+        "id": "SCN-dba1cdd46b727172efb0",
+        "status": "reviewed",
+        "scenarioSha256": "006dba33f82623a70854a197de3be3b75b1331fd63749beaef34ed00ac2a53a3",
+        "reason": "イベントの種類が push のとき、判定の関数が git を呼ばずに文書だけとしないこと、文書だけのコミットのリポジトリでもスクリプトが docs_only=false を書くことを assert する。ci.yml の on が pull_request と main への push だけで、条件が「true でない」の形なので、false のときにすべてのステップが動くことも assert する。",
+        "sources": [
+          "REQ-270"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] main への push では、差分によらず文書だけと判定しない",
+            "sha256": "c13546ccd569569a3633e15b4d586ba31ae095769f369777fee2dc125eceb573",
+            "hashScope": "block"
+          },
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] main への push では docs_only=false を書く",
+            "sha256": "c4f1177adeb6ca8401f0a1b828fc1c0cf7455d2ff1267a577e1d9a5dca3cd3e5",
+            "hashScope": "block"
+          },
+          {
+            "file": "tests/monorepo.test.ts",
+            "contains": "[REQ-270] main への push では、判定が docs_only=false になり",
+            "sha256": "ed68565fdbc3265f7b0030692b3b17d99275eaf6bf6265ebfd93f1ac41694d04"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-3e5c76d0a427cd900322",
+      "newId": null,
+      "oldFile": "openspec/changes/shorten-ci-wall-clock/specs/monorepo/spec.md",
+      "requirement": "文書として扱うファイル",
+      "scenario": "コードを含む PR",
+      "scenarioSha256": "5d91420188b9d188dcd970e89bc29b6c69a3045ec7be864e73d119cf6abd17e7",
+      "auditStatusBeforeMigration": "unknown-reference",
+      "disposition": "removed",
+      "candidateNewId": "SCN-19d49fa8b4f4c95e4ea7",
+      "candidateScenarioSha256Matches": true,
+      "note": "未archiveの差分仕様のIDのまま残っていた。主仕様の同名Scenarioは別IDで、台帳では未確認のまま（PR-B/C で再確認する）",
+      "originalRecord": {
+        "id": "SCN-3e5c76d0a427cd900322",
+        "status": "reviewed",
+        "scenarioSha256": "5d91420188b9d188dcd970e89bc29b6c69a3045ec7be864e73d119cf6abd17e7",
+        "reason": "packages/kit/src/verify/run.ts を文書として扱わないこと、文書と一緒にこのファイルを変えた差分を文書だけとせず、理由にこのパスを出すことを assert する。",
+        "sources": [
+          "REQ-270"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] コードと配布する Markdown は文書として扱わない",
+            "sha256": "77f2d467c816ad48bb489b668157d7141ab59572b35947ebf637cab7eaba32f1",
+            "hashScope": "block"
+          },
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
+            "sha256": "8940d8d923e2676b977fc2b075456efc5c6a53f8e08d7f55059cef20e1bf50cb",
+            "hashScope": "block"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-aa5e45dcd0fff9dd6861",
+      "newId": null,
+      "oldFile": "openspec/changes/shorten-ci-wall-clock/specs/monorepo/spec.md",
+      "requirement": "文書として扱うファイル",
+      "scenario": "配布する Markdown を含む PR",
+      "scenarioSha256": "4149020a88bf42f3079df3abb37056a6b398da48b938391a80e02567355990dc",
+      "auditStatusBeforeMigration": "unknown-reference",
+      "disposition": "removed",
+      "candidateNewId": "SCN-d40854b6d64b86294105",
+      "candidateScenarioSha256Matches": true,
+      "note": "未archiveの差分仕様のIDのまま残っていた。主仕様の同名Scenarioは別IDで、台帳では未確認のまま（PR-B/C で再確認する）",
+      "originalRecord": {
+        "id": "SCN-aa5e45dcd0fff9dd6861",
+        "status": "reviewed",
+        "scenarioSha256": "4149020a88bf42f3079df3abb37056a6b398da48b938391a80e02567355990dc",
+        "reason": "packages/kit/templates/AGENTS.md と packages/cli/README.md を文書として扱わないこと、templates の .md を含む差分を文書だけとしないことを assert する。",
+        "sources": [
+          "REQ-270"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] コードと配布する Markdown は文書として扱わない",
+            "sha256": "77f2d467c816ad48bb489b668157d7141ab59572b35947ebf637cab7eaba32f1",
+            "hashScope": "block"
+          },
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
+            "sha256": "8940d8d923e2676b977fc2b075456efc5c6a53f8e08d7f55059cef20e1bf50cb",
+            "hashScope": "block"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-ec8e9319aac195da27fe",
+      "newId": null,
+      "oldFile": "openspec/changes/shorten-ci-wall-clock/specs/monorepo/spec.md",
+      "requirement": "文書として扱うファイル",
+      "scenario": "設定と実行用のファイルを含む PR",
+      "scenarioSha256": "55b3302f8d9fc8c9f18430cb82bcc9cf85a6091785cb938c51fd2ba6064b6e98",
+      "auditStatusBeforeMigration": "unknown-reference",
+      "disposition": "removed",
+      "candidateNewId": "SCN-022e3a584f7c56ce9bfa",
+      "candidateScenarioSha256Matches": true,
+      "note": "未archiveの差分仕様のIDのまま残っていた。主仕様の同名Scenarioは別IDで、台帳では未確認のまま（PR-B/C で再確認する）",
+      "originalRecord": {
+        "id": "SCN-ec8e9319aac195da27fe",
+        "status": "reviewed",
+        "scenarioSha256": "55b3302f8d9fc8c9f18430cb82bcc9cf85a6091785cb938c51fd2ba6064b6e98",
+        "reason": ".changeset/config.json・openspec/config.yaml・docs/wbs/initial-status.yaml・scripts/ci-gate.mjs のそれぞれを文書として扱わないこと、docs/ の下の .md と一緒にどれか 1 つを変えた差分を文書だけとせず、理由にそのパスを出すことを assert する。",
+        "sources": [
+          "REQ-270"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] 設定と実行用のファイルは、文書の置き場所にあっても",
+            "sha256": "2d3a707691dcdf574c905f77faedd9862ba77ef63742d4c2490da86bc7d412f9",
+            "hashScope": "block"
+          },
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
+            "sha256": "8940d8d923e2676b977fc2b075456efc5c6a53f8e08d7f55059cef20e1bf50cb",
+            "hashScope": "block"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-02eaf485f9e94642eef8",
+      "newId": null,
+      "oldFile": "openspec/changes/shorten-ci-wall-clock/specs/monorepo/spec.md",
+      "requirement": "文書として扱うファイル",
+      "scenario": "試験用データを含む PR",
+      "scenarioSha256": "105a435511be8a7b7d5d6826dac5254bcd291bbe3173456b68f5c953a7449f0f",
+      "auditStatusBeforeMigration": "unknown-reference",
+      "disposition": "removed",
+      "candidateNewId": "SCN-e55e41eaebf62902e8f0",
+      "candidateScenarioSha256Matches": true,
+      "note": "未archiveの差分仕様のIDのまま残っていた。主仕様の同名Scenarioは別IDで、台帳では未確認のまま（PR-B/C で再確認する）",
+      "originalRecord": {
+        "id": "SCN-02eaf485f9e94642eef8",
+        "status": "reviewed",
+        "scenarioSha256": "105a435511be8a7b7d5d6826dac5254bcd291bbe3173456b68f5c953a7449f0f",
+        "reason": "tests/fixtures/verify-project/openspec/changes/sample/tasks.md と tests/fixtures/README.md を文書として扱わないこと、fixture の .md を含む差分を文書だけとしないことを assert する。",
+        "sources": [
+          "REQ-270"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] tests/ の下の試験用データは",
+            "sha256": "4c2e36336834d432e9c88292b328d176a6dc091994db1f043648d5b5711c59ff",
+            "hashScope": "block"
+          },
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] コード・配布する Markdown・設定・試験用データを 1 つでも含めば",
+            "sha256": "8940d8d923e2676b977fc2b075456efc5c6a53f8e08d7f55059cef20e1bf50cb",
+            "hashScope": "block"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-43e463f4ebf23c4404ee",
+      "newId": null,
+      "oldFile": "openspec/changes/shorten-ci-wall-clock/specs/monorepo/spec.md",
+      "requirement": "文書として扱うファイル",
+      "scenario": "判定のスクリプトとワークフローを変えた PR",
+      "scenarioSha256": "6fd86897ec8edec5d32be5987c2443456e4ac3ae074be63553cc7d1599e45f84",
+      "auditStatusBeforeMigration": "unknown-reference",
+      "disposition": "removed",
+      "candidateNewId": "SCN-f5c56ccbb261fb277360",
+      "candidateScenarioSha256Matches": true,
+      "note": "未archiveの差分仕様のIDのまま残っていた。主仕様の同名Scenarioは別IDで、台帳では未確認のまま（PR-B/C で再確認する）",
+      "originalRecord": {
+        "id": "SCN-43e463f4ebf23c4404ee",
+        "status": "reviewed",
+        "scenarioSha256": "6fd86897ec8edec5d32be5987c2443456e4ac3ae074be63553cc7d1599e45f84",
+        "reason": "scripts/ci-docs-only.mjs と .github/workflows/ci.yml を文書として扱わないこと、それぞれを docs/ の下の .md と一緒に変えた差分を文書だけとせず、理由にそのパスを出すことを assert する。PR に入っている版のスクリプトで判定する点は、許可リストの外であることで扱い、判定のロジックは足していない。",
+        "sources": [
+          "REQ-270"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] 判定のスクリプトとワークフローを変えた PR は、文書だけと判定しない",
+            "sha256": "d942a35d1f153046ee4d9263d99bbf1901a39a310a21112ad7e3c271852d03e4",
+            "hashScope": "block"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-3f31d2e11b2834b07e87",
+      "newId": null,
+      "oldFile": "openspec/changes/shorten-ci-wall-clock/specs/monorepo/spec.md",
+      "requirement": "文書として扱うファイル",
+      "scenario": "文書の置き場所にある設定と実行用のファイル",
+      "scenarioSha256": "f3b6813774710495699450ed35692a58fc59fc484f2d5a57bc6bd3a352b855f5",
+      "auditStatusBeforeMigration": "unknown-reference",
+      "disposition": "removed",
+      "candidateNewId": "SCN-f708fcffac493599dd9b",
+      "candidateScenarioSha256Matches": true,
+      "note": "未archiveの差分仕様のIDのまま残っていた。主仕様の同名Scenarioは別IDで、台帳では未確認のまま（PR-B/C で再確認する）",
+      "originalRecord": {
+        "id": "SCN-3f31d2e11b2834b07e87",
+        "status": "reviewed",
+        "scenarioSha256": "f3b6813774710495699450ed35692a58fc59fc484f2d5a57bc6bd3a352b855f5",
+        "reason": "docs/ の下の .json と .yml・.yaml、.github/ の下の .md、openspec/changes/archive/ の下の .mjs を、1 つずつ文書として扱わないことを assert する。",
+        "sources": [
+          "REQ-270"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] 設定と実行用のファイルは、文書の置き場所にあっても",
+            "sha256": "2d3a707691dcdf574c905f77faedd9862ba77ef63742d4c2490da86bc7d412f9",
+            "hashScope": "block"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-b1013e579b7995de0343",
+      "newId": null,
+      "oldFile": "openspec/changes/shorten-ci-wall-clock/specs/monorepo/spec.md",
+      "requirement": "文書だけかの判定に使う差分",
+      "scenario": "前のコミットでコードを変えた PR",
+      "scenarioSha256": "d4c2df1ced2164ea39fe4ae1b1be0495b4337a033ef97b9f0fc635e1ad3d17a0",
+      "auditStatusBeforeMigration": "unknown-reference",
+      "disposition": "removed",
+      "candidateNewId": "SCN-b517a7fd44eb50fcbe39",
+      "candidateScenarioSha256Matches": true,
+      "note": "未archiveの差分仕様のIDのまま残っていた。主仕様の同名Scenarioは別IDで、台帳では未確認のまま（PR-B/C で再確認する）",
+      "originalRecord": {
+        "id": "SCN-b1013e579b7995de0343",
+        "status": "reviewed",
+        "scenarioSha256": "d4c2df1ced2164ea39fe4ae1b1be0495b4337a033ef97b9f0fc635e1ad3d17a0",
+        "reason": "一時的な git のリポジトリで、1 つ目のコミットで packages/kit/src/a.ts を変え、2 つ目のコミットで docs/notes.md だけを変えたとき、スクリプトが docs_only=false を書き、理由に packages/kit/src/a.ts を出すことを assert する。2 つのコミットのあいだに、ベースと同じ名前のタグ（refs/tags/origin/main）やブランチ（refs/heads/origin/main）を作っても、スクリプトがベースとの差分で判定して docs_only=false を書き、理由に packages/kit/src/a.ts を出すことも assert する。判定の関数が refs/remotes/origin/<base>...HEAD の差分を -M 付きで読むことも別の試験で assert している。",
+        "sources": [
+          "REQ-270"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] 前のコミットでコードを変えた PR では",
+            "sha256": "f46ad64683479a8390dda7810b63be12aceb0c0d0ba78fd2c9a1721b7bdee34f",
+            "hashScope": "block"
+          },
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] ベースと同じ名前の参照",
+            "sha256": "b00cc784d8ec36040409ddab871e1a77a142ceb9d0c30c9973c3efa06b9c984e",
+            "hashScope": "block"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-52d13b01d8a78323c886",
+      "newId": null,
+      "oldFile": "openspec/changes/shorten-ci-wall-clock/specs/monorepo/spec.md",
+      "requirement": "文書だけかの判定に使う差分",
+      "scenario": "名前を変えたファイル",
+      "scenarioSha256": "c2e63bce7f4072d441b7cde856209c9e961fb880b3249e4cf6aca65d0eb8d82f",
+      "auditStatusBeforeMigration": "unknown-reference",
+      "disposition": "removed",
+      "candidateNewId": "SCN-1a301ca56ae2eeaf95b5",
+      "candidateScenarioSha256Matches": true,
+      "note": "未archiveの差分仕様のIDのまま残っていた。主仕様の同名Scenarioは別IDで、台帳では未確認のまま（PR-B/C で再確認する）",
+      "originalRecord": {
+        "id": "SCN-52d13b01d8a78323c886",
+        "status": "reviewed",
+        "scenarioSha256": "c2e63bce7f4072d441b7cde856209c9e961fb880b3249e4cf6aca65d0eb8d82f",
+        "reason": "R と C の差分の行から変更前と変更後の両方のパスを取り出すこと、scripts/notes.md から docs/notes.md への名前の変更を文書だけとしないこと、一時的な git のリポジトリで git mv した差分でスクリプトが docs_only=false を書き、理由に変更前のパスを出すことを assert する。",
+        "sources": [
+          "REQ-270"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] 名前を変えたファイルは、変更前のパスも判定する",
+            "sha256": "ab9877fa70d42b72044b6d23c16cb44817653d55ecb19feeec7d16792f19f729",
+            "hashScope": "block"
+          },
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] 名前を変えたファイルは、変更前のパスが文書でなければ",
+            "sha256": "8bad23a1070020ad19dfc594ad39bef6f409145baf5475570b04c018295c3eec",
+            "hashScope": "block"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-355ffa6c8b4e84de765c",
+      "newId": null,
+      "oldFile": "openspec/changes/shorten-ci-wall-clock/specs/monorepo/spec.md",
+      "requirement": "文書だけかの判定に使う差分",
+      "scenario": "差分を取れない、または解釈できない",
+      "scenarioSha256": "be78ad71b64243013ee33137387d152dea4014d2fab9e0a6d1522321ca6d2d47",
+      "auditStatusBeforeMigration": "unknown-reference",
+      "disposition": "removed",
+      "candidateNewId": "SCN-e5f77f27f70782d937c2",
+      "candidateScenarioSha256Matches": true,
+      "note": "未archiveの差分仕様のIDのまま残っていた。主仕様の同名Scenarioは別IDで、台帳では未確認のまま（PR-B/C で再確認する）",
+      "originalRecord": {
+        "id": "SCN-355ffa6c8b4e84de765c",
+        "status": "reviewed",
+        "scenarioSha256": "be78ad71b64243013ee33137387d152dea4014d2fab9e0a6d1522321ca6d2d47",
+        "reason": "git が 0 以外で終わるとき、起動できないとき、向き先のブランチの名前がないとき、-z でない出力・知らない状態・衝突・パスの足りない名前の変更・NUL で終わらない出力・空の出力のとき、判定の関数が文書だけとしないことを assert する。一時的な git のリポジトリから origin/main を消したとき、スクリプトが終了コード 0 で docs_only=false を書き、調べられなかったと出すことも assert する。",
+        "sources": [
+          "REQ-270"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] 差分を取れないときは、文書だけと判定しない",
+            "sha256": "f0fcb9772a1a369287d282f66c17f9b99cd2f242d4d31a1a282ef645da044627",
+            "hashScope": "block"
+          },
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] 差分を解釈できないときは、文書だけと判定しない",
+            "sha256": "4bbafd0fe18c01b41ebd2e556d899d2f04e0355c471c100bcce41865e09ede4e",
+            "hashScope": "block"
+          },
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] 差分を取れないときは、失敗にせず docs_only=false を書く",
+            "sha256": "a180721c2d26fb3ba0a8a868c4e04210ea4b6a65b5ef2bb1a6d6bd21ac56ce12",
+            "hashScope": "block"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-312be9964769f05485d3",
+      "newId": null,
+      "oldFile": "openspec/changes/shorten-ci-wall-clock/specs/monorepo/spec.md",
+      "requirement": "文書だけかの判定に使う差分",
+      "scenario": "マージ先が main でない PR",
+      "scenarioSha256": "d5cc883bca8f347c0a214a93b562b08071cf18da03f2fb069a01888dbacda73a",
+      "auditStatusBeforeMigration": "unknown-reference",
+      "disposition": "removed",
+      "candidateNewId": "SCN-deb5b7f30b8b8e69ed62",
+      "candidateScenarioSha256Matches": true,
+      "note": "未archiveの差分仕様のIDのまま残っていた。主仕様の同名Scenarioは別IDで、台帳では未確認のまま（PR-B/C で再確認する）",
+      "originalRecord": {
+        "id": "SCN-312be9964769f05485d3",
+        "status": "reviewed",
+        "scenarioSha256": "d5cc883bca8f347c0a214a93b562b08071cf18da03f2fb069a01888dbacda73a",
+        "reason": "マージ先が feature-x のとき、判定の関数が git を呼ばずに文書だけとせず、理由にマージ先の名前を出すことを assert する。一時的な git のリポジトリでは、docs/notes.md だけを変えた同じ差分が、マージ先が main なら docs_only=true、feature-x なら docs_only=false になることを assert する。",
+        "sources": [
+          "REQ-270"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] PR のマージ先が main でないときは、差分によらず文書だけと判定しない",
+            "sha256": "7562868ab0f1c1d3e914e845c23116bc686343ad48100c2e0f1de21d70963b0f",
+            "hashScope": "block"
+          },
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] マージ先が main でない PR では docs_only=false を書く",
+            "sha256": "d496dd3f0f8d4b4fe38704ab7276a79d85b397b8ba8819f06ad1dc1edb2b87dc",
+            "hashScope": "block"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-af0412a0fc52c20e81d3",
+      "newId": null,
+      "oldFile": "openspec/changes/shorten-ci-wall-clock/specs/monorepo/spec.md",
+      "requirement": "文書だけかの判定に使う差分",
+      "scenario": "main が進んだあとのマージコミット",
+      "scenarioSha256": "3927de825c142b1aafcdedb496a0d70305341595a30f533df367026f7e02e2c4",
+      "auditStatusBeforeMigration": "unknown-reference",
+      "disposition": "removed",
+      "candidateNewId": "SCN-45d1eae655a18eed3dd5",
+      "candidateScenarioSha256Matches": true,
+      "note": "未archiveの差分仕様のIDのまま残っていた。主仕様の同名Scenarioは別IDで、台帳では未確認のまま（PR-B/C で再確認する）",
+      "originalRecord": {
+        "id": "SCN-af0412a0fc52c20e81d3",
+        "status": "reviewed",
+        "scenarioSha256": "3927de825c142b1aafcdedb496a0d70305341595a30f533df367026f7e02e2c4",
+        "reason": "一時的な git のリポジトリで、PR のブランチが docs/notes.md だけを変え、そのあと main に packages/kit/src/a.ts の変更が入り、HEAD を main に PR のブランチをマージしたコミット（CI のマージコミットと同じ形）にしたとき、スクリプトが docs_only=true を書くこと、つまり main で変わったファイルを判定に含めないことを assert する。",
+        "sources": [
+          "REQ-270"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] main が進んだあとのマージコミットでは、PR の変更分だけで判定する",
+            "sha256": "67ea7ad1bdd0c7470c3006feb581e33c344c26605dcb9a2c2c0aa1be01b4cca6",
+            "hashScope": "block"
+          }
+        ]
+      }
+    },
+    {
+      "oldId": "SCN-0bbf551970f3ff9815ef",
+      "newId": null,
+      "oldFile": "openspec/changes/shorten-ci-wall-clock/specs/monorepo/spec.md",
+      "requirement": "文書だけかの判定に使う差分",
+      "scenario": "コードのファイルを消した PR",
+      "scenarioSha256": "1b877a639f2a7567ffeb3d95880317ad1131d196182df967a6079d90a5292991",
+      "auditStatusBeforeMigration": "unknown-reference",
+      "disposition": "removed",
+      "candidateNewId": "SCN-c65080501d8a24a7cbe5",
+      "candidateScenarioSha256Matches": true,
+      "note": "未archiveの差分仕様のIDのまま残っていた。主仕様の同名Scenarioは別IDで、台帳では未確認のまま（PR-B/C で再確認する）",
+      "originalRecord": {
+        "id": "SCN-0bbf551970f3ff9815ef",
+        "status": "reviewed",
+        "scenarioSha256": "1b877a639f2a7567ffeb3d95880317ad1131d196182df967a6079d90a5292991",
+        "reason": "D の差分の行の packages/kit/src/a.ts を判定に含め、文書だけとせず理由にそのパスを出すことを assert する。一時的な git のリポジトリで git rm したファイルと docs/notes.md の変更でも、スクリプトが docs_only=false を書くことを assert する。",
+        "sources": [
+          "REQ-270"
+        ],
+        "tests": [
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] コードのファイルを消した PR は、文書だけと判定しない",
+            "sha256": "f0ff9149ebeb78892124b27203f674b7043d0a2e486efa68e2ecabefc80195af",
+            "hashScope": "block"
+          },
+          {
+            "file": "tests/ci-docs-only.test.ts",
+            "contains": "[REQ-270] コードのファイルを消した PR では docs_only=false を書く",
+            "sha256": "b72a9b369d44af7766d5d8a96d4a2c342da3691175447a8233d7e4f7689d3631",
+            "hashScope": "block"
+          }
+        ]
+      }
+    }
+  ]
+}
