@@ -18,8 +18,8 @@
 
 旧タスク3.2・3.4と3.1の読取部は子change `verify-v2-shape` のタスク1.7・1.8へ移した。
 
-- [ ] 3.1 `verify-v2-shape` で追加したquality.yamlの予算付き読取をverifyへ接続し、最小入力・YAML不正・型/版不正・不在・権限の終了コードをCLIで確かめる。承認済みR-C001-07 Aに従いv2切替前にroot quality.yamlを配置し、詳細候補のci.test_report 1必須項目と各changeの承認済みREQ集合へのplanを準備し、進行中changeのspec-onlyとdone/ciを確認する。切替当日の全open PRを棚卸し、実装済みPRはmain取込・対象headの新鮮な証拠・新ゲート成功を確認する。計画Draftは仕様待ち失敗を維持し、未移行/証拠未取得のPRはマージを止める。手動配置の最小例と構文2/読取3の移行説明を追加する（REQ-310）
-- [ ] 3.3 R-C001-03と04で決めた範囲の最小接続を満たし、producer/version・実効script/config/lock/tool・承認済みspec/REQ集合・対象SHA・環境・同一invocation鮮度・基準と証拠hashを正常PASS例で照合する。failedとmissing/skip/todoを分け、古い結果・PRのREQ削除・exit 0だけの偽陽性と最小接続のpartial/abortedを試験する（REQ-313・319）
+- [ ] 3.1 `verify-v2-shape` で追加したquality.yamlの予算付き読取をverifyへ接続し、最小入力・YAML不正・型/版不正・不在・権限の終了コードをCLIで確かめる。承認済みR-C001-07 Aに従いv2切替前にroot quality.yamlを配置し、詳細候補のci.test_report 1必須項目と各changeの承認済みREQ集合へのplanを準備し、進行中changeのspec-onlyとdone/ciを確認する。切替当日の全open PRを棚卸し、実装済みPRはmain取込・対象headの新鮮な証拠・新ゲート成功を確認する。計画Draftは仕様待ち失敗を維持し、未移行/証拠未取得のPRはマージを止める。手動配置の最小例と構文2/読取3の移行説明を追加する（REQ-310）（子change `verify-v2-quality` へ移した）
+- [ ] 3.3 R-C001-03と04で決めた範囲の最小接続を満たし、producer/version・実効script/config/lock/tool・承認済みspec/REQ集合・対象SHA・環境・同一invocation鮮度・基準と証拠hashを正常PASS例で照合する。failedとmissing/skip/todoを分け、古い結果・PRのREQ削除・exit 0だけの偽陽性と最小接続のpartial/abortedを試験する（REQ-313・319）（子change `verify-v2-quality` へ移した）
 旧タスク3.4（R-C001-08のゲート別warn対応・localのOpenSpec不在NA・ciの不足、REQ-191のskip-commands不足1、R-C001-10のspec-only品質計数。REQ-036・037・038・039・191）は、子change `verify-v2-gates`（3/6）へ移した。同じ子changeでREQ-203の未承認警告の用語（trace-agreementの差分仕様）も確定した。
 
 ## 4. CLIと既存利用側の一体移行
