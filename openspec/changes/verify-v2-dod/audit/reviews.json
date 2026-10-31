@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "scope": "child delta only; not yet synced or archived",
+  "canonicalPath": "openspec/specs/req-to-openspec-skill/spec.md",
+  "deltaPath": "openspec/changes/verify-v2-dod/specs/req-to-openspec-skill/spec.md",
+  "reviews": [
+    {
+      "id": "SCN-0c9a8c1de5d86a559154",
+      "status": "reviewed",
+      "scenarioSha256": "37fb8ea2893a414abcb882d99f833979e59ebd6bec56514e5a08e792636d1f8b",
+      "reason": "旧ScenarioのSourceと本文を保持した。既存it名とSKILL指示のassertを残し、利用者が個別承認したlocalコマンド1行でtasks雛形の行末の印をassertする。これにより旧の印とSKILL指示の対応を新契約でも確認した。",
+      "sources": [
+        "REQ-136"
+      ],
+      "tests": [
+        {
+          "file": "tests/kit-assets.test.ts",
+          "contains": "[REQ-136] Skill の tasks.md の雛形で、完了ゲートのタスクの行末に印があり、SKILL.md が印を付けるよう指示している",
+          "sha256": "01fbf7d73876e79c470cc7aeca1b5828d0a4a8abf01003fd5ef279e83be640b5",
+          "hashScope": "block"
+        }
+      ]
+    },
+    {
+      "id": "SCN-982d48814ac96beeda6a",
+      "status": "reviewed",
+      "scenarioSha256": "37a9771fe2d91cdd8e8480a48fb56a99b21d4e13ec0d53ef74918b0557006060",
+      "reason": "tasks雛形のfenceを抽出し、印付き行が明示localの1行だけで、ciのcheckboxが無いことを比較する。実init後のClaude/Codex両配置ファイルにも同じ条件があることを確認した。 CRLF修理後も旧assertionの全文と条件を保ち、抽出前に改行を正規化して同じ行配列を得る。実配布formatのLF/CRLF回帰が、行配列の一致・CR不在・印1件・ci checkbox不在・末尾注記全文を検査し成功したことを確認した。",
+      "sources": [
+        "REQ-136"
+      ],
+      "tests": [
+        {
+          "file": "tests/kit-assets.test.ts",
+          "contains": "[REQ-136] 印のあるタスクはローカルの完了ゲートで、ci のタスクは無い",
+          "sha256": "65bb39d8727ebe6aa773c60802301c25dc72308db394cf004c6d53795e0175cd",
+          "hashScope": "block"
+        },
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "[REQ-136] init の両 Skill に local の印と最終 CI の注記があり、AGENTS も両者を分ける",
+          "sha256": "1f6286f681c39d1112c1406b37564b0f0b53ac0df73ff638235610c144297d4c",
+          "hashScope": "block"
+        },
+        {
+          "file": "tests/kit-assets.test.ts",
+          "contains": "[REQ-136] 実配布の雛形は LF と CRLF で同じタスク行と末尾注記になる",
+          "sha256": "33c88a93febaba0ce4fbc7ae9120a264019e9d9623980f36224a436cf64d9afc",
+          "hashScope": "block"
+        }
+      ]
+    },
+    {
+      "id": "SCN-2df2342425e3b29289d4",
+      "status": "reviewed",
+      "scenarioSha256": "fb0f10eacc75f46304a0469e265461ba030d0756b708c513b06ca252ac62df4f",
+      "reason": "tasks雛形の末尾の空でない行が非checkboxの注記であり、明示ci・exit 0・PASS・要判断なし・必須CIを含むことをassertする。実initで生成した両Skillも同じ末尾全文を比較するため、ローカル完了だけで最終合格にならない条件を確認した。 CRLF修理後も旧assertionの全文と条件を保ち、抽出前に改行を正規化して同じ行配列を得る。実配布formatのLF/CRLF回帰が、行配列の一致・CR不在・印1件・ci checkbox不在・末尾注記全文を検査し成功したことを確認した。",
+      "sources": [
+        "REQ-136"
+      ],
+      "tests": [
+        {
+          "file": "tests/kit-assets.test.ts",
+          "contains": "[REQ-136] 雛形の末尾に、最終の合格を区別するチェックボックスでない注記がある",
+          "sha256": "d3f7ea64b150864d359c9e5fbbd879cab612b7d2683c7aeb808727eb58af2cd0",
+          "hashScope": "block"
+        },
+        {
+          "file": "packages/cli/test/init.test.ts",
+          "contains": "[REQ-136] init の両 Skill に local の印と最終 CI の注記があり、AGENTS も両者を分ける",
+          "sha256": "1f6286f681c39d1112c1406b37564b0f0b53ac0df73ff638235610c144297d4c",
+          "hashScope": "block"
+        },
+        {
+          "file": "tests/kit-assets.test.ts",
+          "contains": "[REQ-136] 実配布の雛形は LF と CRLF で同じタスク行と末尾注記になる",
+          "sha256": "33c88a93febaba0ce4fbc7ae9120a264019e9d9623980f36224a436cf64d9afc",
+          "hashScope": "block"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "base": "77aabfb98bff8e90938732bbeb8da2dda8faa5c4",
+  "proposalOnly": true,
+  "patchApplied": false,
+  "patchBytes": 36732,
+  "patchSha256": "258a599353e3afa43b20409b20db0396d7dad3b200b88c08cf4415aae80dc275",
+  "checks": {
+    "specOnly": {
+      "command": "pnpm -s verify --change verify-v2-dod --spec-only",
+      "exit": 0,
+      "recheckedWithBuiltCLI": true
+    },
+    "strictChild": 0,
+    "strictParent": 0,
+    "gitApplyCheck": 0,
+    "canonicalParser": {
+      "deltas": 1,
+      "operation": "MODIFIED",
+      "requirement": "REQ-136",
+      "utf16IncludingSource": 270,
+      "scenarios": 3
+    },
+    "originalSourceScenarioBytesPreserved": true,
+    "operationalProtectedFilesUnchanged": 26,
+    "mainDiagnosticPreimagesAllMatch": true,
+    "inMemoryPatchAllAfterHashesMatch": 20,
+    "yomiyasuRunAndVerify": 10
+  },
+  "tasks": {
+    "done": 1,
+    "pending": 7,
+    "approval12": "pending"
+  },
+  "notRun": [
+    "patch application",
+    "implementation tests",
+    "init/tarball proposed content checks",
+    "scenario reviewed audit",
+    "done",
+    "CI",
+    "independent final review"
+  ],
+  "productAcceptance": "not achieved",
+  "approval": "R06 normative migration already approved; only tests/kit-assets.test.ts:251 exact old-to-new expectation approval pending"
+}

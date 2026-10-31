@@ -6,6 +6,18 @@ import { holderWaitTime, withProcessBudget } from '../../kit/src/runtime/process
 import { makeRepo, noChange, CHANGE, fakeCli } from './helpers.js';
 import { CLOCK_SLACK_MS, OPERATION_MS, STALL_MS, STOP_GRACE_MS, diagnosticContext, diagnosticEvent, expectStalled, expectStoppedSoon, run, summary } from './external-budget-helpers.js';
 
+// 診断envがあるときだけ許可欄を記録する。元の関数を同じ引数で一度だけ呼ぶ。
+vi.mock('node:child_process', async (original) => {
+  const cp = await original<typeof import('node:child_process')>();
+  const { observeSpawnSync } = await import('./process-diagnostics.js');
+  return { ...cp, spawnSync: observeSpawnSync(cp) };
+});
+vi.mock('../../kit/src/runtime/process.js', async (original) => {
+  const real = await original<typeof import('../../kit/src/runtime/process.js')>();
+  const { observeRunExternal } = await import('./process-diagnostics.js');
+  return { ...real, runExternal: observeRunExternal(real) };
+});
+
 // external-budget.test.ts から、実時間の期限まで待つ試験を分けた（共有期限・エンジンの予算・フックの待ち）。
 // 待ちが長い試験を別ファイルにして、CI のシャードで他のファイルの試験と並べて動かせるようにする
 // git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある

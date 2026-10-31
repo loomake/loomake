@@ -1,6 +1,6 @@
 import { packedTarballsEnv } from './packed-tarballs.js';
 import { afterAll, describe, expect, inject, it } from 'vitest';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -106,8 +106,10 @@ process.exitCode = await runCliReference({ definition: CLI_REFERENCE, check: tru
     const prepared = spawnSync(process.execPath, ['scripts/package-smoke.mjs', 'prepare', verifyTarget], { cwd: root, encoding: 'utf8', env });
     expect(prepared.status, prepared.stdout + prepared.stderr).toBe(0);
     const checked = spawnSync(process.execPath, ['scripts/verify-sighup-smoke.mjs', verifyTarget, ...(splitReady ? ['--split-ready'] : [])], { cwd: root, encoding: 'utf8', timeout: 30000 });
-    expect(checked.status, checked.stdout + checked.stderr).toBe(0);
-    expect(JSON.parse(readFileSync(join(verifyTarget, 'verify-sighup-results/results.json'), 'utf8'))).toEqual({ requirement: 'REQ-333', ok: true, exit: { code: null, signal: 'SIGHUP' }, remaining: [] });
+    const probesPath = join(verifyTarget, 'verify-sighup-results/probes.json');
+    const diagnostics = checked.stdout + checked.stderr + (existsSync(probesPath) ? readFileSync(probesPath, 'utf8') : '');
+    expect(checked.status, diagnostics).toBe(0);
+    expect(JSON.parse(readFileSync(join(verifyTarget, 'verify-sighup-results/results.json'), 'utf8')), diagnostics).toEqual({ requirement: 'REQ-333', ok: true, exit: { code: null, signal: 'SIGHUP' }, remaining: [] });
   }, 60_000);
 
   it('[REQ-124] POSIXの配布物を実際のSIGINTで中断する。Windowsでは検証対象外を明示する', () => {

@@ -18,7 +18,8 @@ Loomake is a toolkit for AI-driven development that starts from requirement docu
 npx loomake init                                  # place AGENTS.md, the config file and the skill
 npx loomake doctor                                # check the setup and print what is missing
 npx loomake verify --change <id> --spec-only      # spec gate: may implementation start?
-npx loomake verify --change <id> --done           # done gate: tests per requirement and quality commands
+npx loomake verify --change <id> --done --scope local # done gate (local): tests per requirement and quality commands
+npx loomake verify --change <id> --done               # done gate (final; defaults to --scope ci)
 npx loomake run --change <id>                     # let the AI engine implement the change and open a PR
 npx loomake trace record --change <id>            # record evidence
 npx loomake trace report --change <id>            # produce the release report
@@ -65,7 +66,7 @@ pnpm lint
 pnpm typecheck
 pnpm test             # pnpm test:coverage also checks the coverage thresholds
 pnpm build
-pnpm -s verify --change <id> --done
+pnpm -s verify --change <id> --done --scope local
 ```
 
 The rules for contributors, including AI agents, are in [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) (Japanese). Report vulnerabilities as described in [SECURITY.md](SECURITY.md).

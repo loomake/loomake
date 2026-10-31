@@ -17,7 +17,8 @@ loomake-tier: L1|L2|L3
 
 ## 実行したゲートとテスト
 
-- [ ] `pnpm -s verify --change <change-id> --done` が exit 0（change を持つ PR。L3 は change が必須）
+- [ ] `pnpm -s verify --change <change-id> --done --scope local` が exit 0（ローカル。change を持つ PR。L3 は change が必須）
+- [ ] gate ジョブの完了ゲート（scope ci）と必須チェックが成功（マージ前に確認する）
 - [ ] `pnpm lint`・`pnpm typecheck`・`pnpm test`
 
 ## 確認事項・仮定と決定の記録

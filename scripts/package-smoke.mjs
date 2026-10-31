@@ -224,6 +224,19 @@ export async function check(target) {
   const initRoot = mkdtempSync(join(target, 'init-'));
   run(process.execPath, [cli, 'init', '--codex', '--devcontainer'], initRoot);
   for (const file of ['AGENTS.md', '.agents/skills/req-to-openspec/SKILL.md', '.devcontainer/devcontainer.json']) assert.ok(existsSync(join(initRoot, file)), file);
+  const initAgents = readFileSync(join(initRoot, 'AGENTS.md'), 'utf8');
+  assert.ok(initAgents.includes('--done --scope local` が exit 0（ローカルの完了）'));
+  assert.ok(initAgents.includes('--done --scope ci` が exit 0（判定 PASS・要判断なし）'));
+  assert.ok(initAgents.includes('必須チェックが成功している'));
+  for (const base of ['.claude', '.agents']) {
+    const format = readFileSync(join(initRoot, base, 'skills/req-to-openspec/references/openspec-format.md'), 'utf8');
+    const match = /## tasks\.md\s+```markdown\n([\s\S]*?)\n```/.exec(format.replace(/\r\n/g, '\n'));
+    assert.ok(match, `${base}: tasks.md の雛形がありません`);
+    const lines = match[1].split('\n');
+    assert.deepEqual(lines.filter((line) => line.includes('<!-- loomake:gate=done -->')), ['- [ ] 3.1 `npx loomake verify --change <change-id> --done --scope local` を通す <!-- loomake:gate=done -->']);
+    assert.deepEqual(lines.filter((line) => /^- \[/.test(line) && line.includes('--scope ci')), []);
+    assert.equal(lines.filter((line) => line.trim()).at(-1), '注：3.1 はローカルの完了。最終の合格には、CI で `npx loomake verify --change <change-id> --done --scope ci` が exit 0（判定 PASS・要判断なし）になることと、必須 CI の成功が別に要る。これはタスクにしない');
+  }
   command('doctor');
   command('verify', '--change', 'sample', '--spec-only');
   const verified = JSON.parse(command('verify', '--change', 'sample', '--done', '--json'));

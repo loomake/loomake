@@ -21,14 +21,16 @@
 3. `tasks.md` の順に実装する。1タスクごとに小さくコミットし、終わったタスクは `- [x]` にする
 4. 完了したら **完了ゲート** を通す
    ```sh
-   npx loomake verify --change <change-id> --done
+   npx loomake verify --change <change-id> --done --scope local
    ```
+   最終の合格は CI で `--done --scope ci` を確かめる
 
 ## 3. 完了の定義（DoD）
 
 次をすべて満たすまで「完了」と報告しない。
 
-- `npx loomake verify --change <change-id> --done` が exit 0
+- `npx loomake verify --change <change-id> --done --scope local` が exit 0（ローカルの完了）
+- 最終の合格：CI で `npx loomake verify --change <change-id> --done --scope ci` が exit 0（判定 PASS・要判断なし）で、マージを止める必須チェックが成功している
 - change 内の各 Requirement に、対応するテストが 1 つ以上ある
   - テスト名に要件 ID を入れる：`it('[REQ-012] 未ログインのとき 401 を返す', ...)`
   - 1 つのテストが複数の要件を確かめる場合は `[REQ-012][REQ-013]` と並べる
