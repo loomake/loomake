@@ -1,11 +1,13 @@
 // C-001 の 5/6 の受入（REQ-319）。git の一時リポジトリで実際の Vitest を動かし、同じ CLI と関数 API の結果を比べる。
 // 成功例に手書きの ok:true や適格の印を使わず、Vitest が書き出したレポートと verify が集めた事実だけで判定させる
 import { describe, it, expect, vi } from 'vitest';
-import { chmodSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { loadVerifyResultSchemas, type VerifyResult } from '@loomake/core';
 import { loadVerifyQualitySchema, runVerify, verifyExitCode } from '@loomake/kit';
 import { main } from '../src/main.js';
+import * as external from '../../kit/src/runtime/process.js';
 import { CHANGE, commitAll, requirement, specMd, vitestCommand, withProject } from '../../kit/test/project.js';
 
 vi.setConfig({ testTimeout: 120_000 });
@@ -123,6 +125,72 @@ describe('C-001 の成功経路と不足拒否', () => {
         expect(code).toBe(1);
         expect(verdictOf(result)).toBe('INSUFFICIENT_EVIDENCE');
         expect(resultOf(result, 'quality:PQ-900')).toBe('INSUFFICIENT_EVIDENCE');
+      }
+    });
+  });
+
+  it('[REQ-359][REQ-319] CLI and API reject an outside runner despite a fresh successful test report', async () => {
+    const base = mkdtempSync(join(tmpdir(), 'loomake-outside-runner-'));
+    try {
+      mkdirSync(join(base, 'node_modules', 'vitest'), { recursive: true });
+      // Negative-only sentinel: it must never provide admissible evidence.
+      writeFileSync(join(base, 'node_modules', 'vitest', 'package.json'), JSON.stringify({ name: 'vitest', version: '9.9.9' }));
+      await withProject({ ...vitestProject, quality: true, base }, async (root) => {
+        rmSync(join(root, 'node_modules', 'vitest'), { recursive: true, force: true });
+        for (const { code, result } of [api(root), await cli(root, '--done')]) {
+          expect(code, JSON.stringify(result)).toBe(1);
+          expect(verdictOf(result)).toBe('INSUFFICIENT_EVIDENCE');
+          expect(resultOf(result, 'command: test')).toBe('PASS');
+          expect(resultOf(result, 'quality:PQ-900')).toBe('INSUFFICIENT_EVIDENCE');
+        }
+      });
+    } finally {
+      rmSync(base, { recursive: true, force: true });
+    }
+  });
+
+  it.each(['timeout', 'output', 'interrupted'] as const)('[REQ-359][REQ-180][REQ-192] API propagates producer Git %s instead of returning PASS', (kind) => {
+    withProject({ ...vitestProject, quality: true }, (root) => {
+      const original = external.runExternal;
+      const failure = new external.ProcessLimitError(kind, 'git');
+      let injected = 0;
+      const spy = vi.spyOn(external, 'runExternal').mockImplementation((command, args, options) => {
+        if (command === 'git' && args[0] === 'rev-parse' && args[1] === '--show-toplevel') {
+          injected++;
+          throw failure;
+        }
+        return original(command, args, options);
+      });
+      try {
+        expect(() => api(root)).toThrow(failure);
+        expect(injected).toBe(1);
+      } finally {
+        spy.mockRestore();
+      }
+    });
+  });
+
+  it.each(['timeout', 'output', 'interrupted'] as const)('[REQ-359][REQ-180][REQ-192] CLI reports producer Git %s as aborted runtime/3', async (kind) => {
+    await withProject({ ...vitestProject, quality: true }, async (root) => {
+      const original = external.runExternal;
+      const failure = new external.ProcessLimitError(kind, 'git');
+      let injected = 0;
+      const spy = vi.spyOn(external, 'runExternal').mockImplementation((command, args, options) => {
+        if (command === 'git' && args[0] === 'rev-parse' && args[1] === '--show-toplevel') {
+          injected++;
+          throw failure;
+        }
+        return original(command, args, options);
+      });
+      try {
+        const { code, result } = await cli(root, '--done');
+        expect(code, JSON.stringify(result)).toBe(3);
+        expect(result.run.status).toBe('aborted');
+        expect(errorKinds(result)).toEqual(['runtime']);
+        expect(result.run.errors[0]?.message).toBe(failure.message);
+        expect(injected).toBe(1);
+      } finally {
+        spy.mockRestore();
       }
     });
   });
