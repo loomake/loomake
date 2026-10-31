@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { chmodSync, existsSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { findViolations, runRun } from '@loomake/runner';
-import { CHANGE, makeRepo, noChange, type FakeStep, type Repo } from './helpers.js';
+import { CHANGE, fakeCli, makeRepo, noChange, type FakeStep, type Repo } from './helpers.js';
 
 // git・node・verify のコマンドを何度も起動するので、Windows では 1 件に 10 秒を超えることがある
 vi.setConfig({ testTimeout: 60_000 });
@@ -450,4 +450,52 @@ describe('検査の行の数え方', () => {
       expect(readFileSync(join(r.repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [x] 1.1');
       expect(r.repo.git('log', '--format=%s', '--', 'tests/add.test.ts')).toContain('run(c1): 1.1 一つ目のタスク（REQ-012）');
     }));
+});
+
+describe('境目ごとの Git の読み取り', () => {
+  // エンジンの境目の印。偽のエンジンが git で実行し、偽の git の記録に残る
+  const MARK = ['config', '--get', 'loomake.engine-mark'];
+  const isMark = (args: string[]) => args.join(' ') === MARK.join(' ');
+  const isRead = (args: string[]) =>
+    (args[0] === 'rev-parse' && (args.includes('HEAD') || args.includes('--git-path'))) || (args[0] === 'config' && args.includes('--list'));
+  /** 印の直前（dir = -1）か直後（dir = 1）に続けて実行した、HEAD・場所・設定の読み取り */
+  const readsAround = (calls: string[][], at: number, dir: -1 | 1) => {
+    const reads: string[][] = [];
+    for (let i = at + dir; i >= 0 && i < calls.length && isRead(calls[i]); i += dir) reads.push(calls[i]);
+    return dir < 0 ? reads.reverse() : reads;
+  };
+  const count = (reads: string[][]) => ({
+    revParse: reads.filter((a) => a[0] === 'rev-parse').length,
+    configList: reads.filter((a) => a[0] === 'config').length,
+  });
+
+  /** 偽の git で run の git の呼び出しを記録し、エンジンを呼んだ境目ごとに、前後の読み取りを返す */
+  async function boundaries(steps: FakeStep[]) {
+    const repo = makeRepo();
+    const cli = fakeCli(repo, 'git', { when: 'false' });
+    try {
+      repo.plan(steps);
+      const out: string[] = [];
+      const code = await runRun({ root: repo.root, changeId: CHANGE, interactive: false, confirm: async () => false, stdout: (t) => out.push(t), env: repo.env, fileExists: () => false });
+      const calls = cli.events().filter((e) => e.event === 'shim-start').map((e) => e.args);
+      const marks = calls.flatMap((args, i) => (isMark(args) ? [{ before: readsAround(calls, i, -1), after: readsAround(calls, i, 1) }] : []));
+      return { code, stdout: out.join('\n'), marks };
+    } finally {
+      cli.restore();
+      repo.cleanup();
+    }
+  }
+
+  it('[REQ-348][REQ-126][REQ-198][REQ-204] エンジンの前後で、rev-parse と config --list を 1 回ずつ読む', async () => {
+    const r = await boundaries([{ write: { 'impl.txt': '実装\n' }, git: [MARK] }, { ...noChange, git: [MARK] }]);
+    expect(r.code, r.stdout).toBe(0);
+    expect(r.marks).toHaveLength(2);
+    for (const { before, after } of r.marks) {
+      expect(count(before)).toEqual({ revParse: 1, configList: 1 });
+      expect(count(after)).toEqual({ revParse: 1, configList: 1 });
+      // 前の読み取りは HEAD と設定ファイル・フックの場所を 1 回で読み、後は呼ぶ前と同じ場所を使う
+      expect(before[0]).toEqual(['rev-parse', '--git-path', 'config', '--git-path', 'hooks', 'HEAD', '--abbrev-ref', 'HEAD']);
+      expect(after[0]).toEqual(['rev-parse', 'HEAD', '--abbrev-ref', 'HEAD']);
+    }
+  });
 });

@@ -7,7 +7,7 @@
 ## 2. 実装
 
 - [x] 2.1 `packages/runner/src/git.ts` に、HEAD の SHA・ブランチ名と、必要なら `--git-path config`・`--git-path hooks` を 1 回の `git rev-parse` で読む補助を足す。1 回の呼び出しが 0 以外で終わるか行の数が合わないときは、今と同じ別々の呼び出しに戻す。期限や出力の上限による例外はそのまま渡す。単体試験を足す：通常・detached・unborn・`HEAD` という名前のファイルがある場合に、今の `headState`・`gitPath` と同じ値を返すこと（`[REQ-348][REQ-126][REQ-198]`）。まとめた呼び出しが期限に達したら、項目ごとの呼び出しを起動せずに止まる試験も足す（`[REQ-348][REQ-180]`）
-- [ ] 2.2 `packages/runner/src/guards.ts` の `headState`・`gitInternals` を 2.1 の補助で読み、`callEngine` のエンジンの前の読み取りを `rev-parse` 1 回と `config --list` 1 回に、後の読み取りを `rev-parse` 1 回と `config --list` 1 回にする。試験を足す：エンジンの前後でそれぞれ `rev-parse` と `config --list` が 1 回ずつであること、HEAD の変化・ブランチの切り替え・設定とフックの変更を今と同じく見つけること（`[REQ-348][REQ-126][REQ-198][REQ-204]`）。guards.test.ts・guards-special-files.test.ts の既存の試験は期待値を変えずに通す
+- [x] 2.2 `packages/runner/src/guards.ts` の `headState`・`gitInternals` を 2.1 の補助で読み、`callEngine` のエンジンの前の読み取りを `rev-parse` 1 回と `config --list` 1 回に、後の読み取りを `rev-parse` 1 回と `config --list` 1 回にする。試験を足す：エンジンの前後でそれぞれ `rev-parse` と `config --list` が 1 回ずつであること、HEAD の変化・ブランチの切り替え・設定とフックの変更を今と同じく見つけること（`[REQ-348][REQ-126][REQ-198][REQ-204]`）。guards.test.ts・guards-special-files.test.ts の既存の試験は期待値を変えずに通す
 - [ ] 2.3 `packages/runner/src/run/phases.ts` の完了ゲートの前後の読み取りを `rev-parse` 1 回ずつにする。境目をまたいで値を使い回さないことを確かめる試験を足す：検証のあいだに HEAD かブランチが変わったら今と同じく止まること、直しのエンジンの前で HEAD を読み直すこと（`[REQ-348][REQ-205][REQ-126]`）。run.test.ts・pr.test.ts・publication-retry.test.ts・external-budget.test.ts の既存の試験は期待値を変えずに通す
 
 ## 3. 計測と確認
