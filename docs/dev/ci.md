@@ -36,7 +36,7 @@ change のない L1 の PR では `verify` を呼ばないため、`tests/doc-li
 
 `ci:all-os` ラベルを L3 の PR で必須にする検査は、3 OS の試験の時間切れが直るまで入れていない。時間切れする試験は、下の「時間切れする試験の隔離」で一時的に外している。
 
-この自動検査とは別に、管理役がマージ前に確かめる規則として、試験（`tests/`・`packages/*/test/`）・`scripts/`・`.github/workflows/` を変える L2 の PR には `ci:all-os` ラベルを付け、Windows・macOS の CI も成功してからマージする（delivery スキルの「マージと証跡」）。
+L2 の PR のラベルを確かめる自動の検査もない。そのため、管理役がマージ前に確かめる規則として、試験（`tests/`・`packages/*/test/`）・ルートの `scripts/`・`.github/workflows/` を変える L2 の PR には `ci:all-os` ラベルを付け、Windows・macOS の CI も成功してからマージする（delivery スキルの「マージと証跡」）。
 
 ## 開発の台本
 
