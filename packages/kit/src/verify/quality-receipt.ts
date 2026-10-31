@@ -3,6 +3,7 @@ import { existsSync, realpathSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { createInputReader, JSON_LIMITS } from '../runtime/input.js';
 import { runExternal } from '../runtime/process.js';
+import { RuntimeFailure } from '../runtime/errors.js';
 import { specFiles, toPosix } from '../runtime/change-files.js';
 import { QUALITY_FILE } from './quality-input.js';
 import { sha256Hex } from './hash.js';
@@ -57,7 +58,8 @@ function searchTop(root: string): string {
     const top = realpathSync.native(output);
     const inside = relative(top, root);
     return inside === '' || (inside !== '..' && !inside.startsWith(`..${sep}`) && !isAbsolute(inside)) ? top : root;
-  } catch {
+  } catch (error) {
+    if (error instanceof RuntimeFailure) throw error;
     return root;
   }
 }
@@ -70,7 +72,8 @@ export function findProducer(root: string): TestReportReceipt['producer'] {
   try {
     start = realpathSync.native(root);
     top = searchTop(start);
-  } catch {
+  } catch (error) {
+    if (error instanceof RuntimeFailure) throw error;
     // An unresolved root cannot justify searching any parent.
   }
   for (let dir = start; ; dir = dirname(dir)) {

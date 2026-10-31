@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os';
 import { loadVerifyResultSchemas, type VerifyResult } from '@loomake/core';
 import { loadVerifyQualitySchema, runVerify, verifyExitCode } from '@loomake/kit';
 import { main } from '../src/main.js';
+import * as external from '../../kit/src/runtime/process.js';
 import { CHANGE, commitAll, requirement, specMd, vitestCommand, withProject } from '../../kit/test/project.js';
 
 vi.setConfig({ testTimeout: 120_000 });
@@ -146,6 +147,52 @@ describe('C-001 の成功経路と不足拒否', () => {
     } finally {
       rmSync(base, { recursive: true, force: true });
     }
+  });
+
+  it.each(['timeout', 'output', 'interrupted'] as const)('[REQ-359][REQ-180][REQ-192] API propagates producer Git %s instead of returning PASS', async (kind) => {
+    await withProject({ ...vitestProject, quality: true }, (root) => {
+      const original = external.runExternal;
+      const failure = new external.ProcessLimitError(kind, 'git');
+      let injected = 0;
+      const spy = vi.spyOn(external, 'runExternal').mockImplementation((command, args, options) => {
+        if (command === 'git' && args[0] === 'rev-parse' && args[1] === '--show-toplevel') {
+          injected++;
+          throw failure;
+        }
+        return original(command, args, options);
+      });
+      try {
+        expect(() => api(root)).toThrow(failure);
+        expect(injected).toBe(1);
+      } finally {
+        spy.mockRestore();
+      }
+    });
+  });
+
+  it.each(['timeout', 'output', 'interrupted'] as const)('[REQ-359][REQ-180][REQ-192] CLI reports producer Git %s as aborted runtime/3', async (kind) => {
+    await withProject({ ...vitestProject, quality: true }, async (root) => {
+      const original = external.runExternal;
+      const failure = new external.ProcessLimitError(kind, 'git');
+      let injected = 0;
+      const spy = vi.spyOn(external, 'runExternal').mockImplementation((command, args, options) => {
+        if (command === 'git' && args[0] === 'rev-parse' && args[1] === '--show-toplevel') {
+          injected++;
+          throw failure;
+        }
+        return original(command, args, options);
+      });
+      try {
+        const { code, result } = await cli(root, '--done');
+        expect(code, JSON.stringify(result)).toBe(3);
+        expect(result.run.status).toBe('aborted');
+        expect(errorKinds(result)).toEqual(['runtime']);
+        expect(result.run.errors[0]?.message).toBe(failure.message);
+        expect(injected).toBe(1);
+      } finally {
+        spy.mockRestore();
+      }
+    });
   });
 
   it('[REQ-319] 正常に実行したあとで対象のコミットや必須の仕様を変え、前回の成功のレポートだけを置いても、ci の PASS を返さない', async () => {

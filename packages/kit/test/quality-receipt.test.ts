@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { findProducer } from '../src/verify/quality-receipt.js';
 import * as external from '../src/runtime/process.js';
+import { RuntimeFailure } from '../src/runtime/errors.js';
 import { commitAll } from './project.js';
 
 const realVitest = dirname(createRequire(import.meta.url).resolve('vitest/package.json'));
@@ -127,6 +128,14 @@ describe('bounded producer search', () => {
     expect(findProducer(root)).toBeNull();
     actualRunner(root);
     expect(findProducer(root)).toEqual(producer);
+  });
+
+  it.each(['timeout', 'output', 'interrupted', 'runtime'] as const)('[REQ-359][REQ-180][REQ-192] propagates producer Git runtime failures: %s', (kind) => {
+    const root = directory();
+    actualRunner(root);
+    const failure = kind === 'runtime' ? new RuntimeFailure('unavailable runtime') : new external.ProcessLimitError(kind, 'git');
+    vi.spyOn(external, 'runExternal').mockImplementation(() => { throw failure; });
+    expect(() => findProducer(root)).toThrow(failure);
   });
 
   it('[REQ-359] canonicalizes a linked root before walking to the Git top', () => {
