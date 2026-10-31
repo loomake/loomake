@@ -115,7 +115,8 @@ function initGitRepo(base: string, env: NodeJS.ProcessEnv) {
 
 /** origin は一時ディレクトリの bare リポジトリ */
 function addOrigin(base: string, env: NodeJS.ProcessEnv) {
-  spawnSync('git', ['init', '-q', '--bare', join(base, 'origin.git')], { env });
+  const bare = spawnSync('git', ['init', '-q', '--bare', join(base, 'origin.git')], { env, encoding: 'utf8' });
+  if (bare.status !== 0) throw new Error(bare.stderr);
   const r = spawnSync('git', ['remote', 'add', 'origin', join(base, 'origin.git')], { cwd: join(base, 'repo'), env, encoding: 'utf8' });
   if (r.status !== 0) throw new Error(r.stderr);
 }
@@ -180,7 +181,10 @@ export function makeRepo({ trace = traceMd(), tasks = TASKS, run, fresh = false 
   const bin = join(base, 'bin');
   // 雛形を書き出しても、git init と remote add を済ませた空のリポジトリと、空の bare の origin が置かれるだけで、作ったあとの状態は同じ
   if (fresh) mkdirSync(root);
-  else copyGitTemplate(base);
+  else {
+    // 書き出しに失敗したら、作りかけの base を残さない
+    try { copyGitTemplate(base); } catch (error) { rmSync(base, { recursive: true, force: true }); throw error; }
+  }
   mkdirSync(bin);
   writeFileSync(join(bin, 'claude'), FAKE_CLAUDE);
   chmodSync(join(bin, 'claude'), 0o755);

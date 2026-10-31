@@ -12,6 +12,16 @@ const bare = (repo: Repo, ...args: string[]) => {
   return r.stdout.trim();
 };
 
+// .git の木（パスと mode）。中身が試験ごとに変わる objects・logs・index・COMMIT_EDITMSG は除く
+const SKIPPED = new Set(['objects', 'logs', 'index', 'COMMIT_EDITMSG']);
+function gitTree(dir: string, path = ''): [string, number][] {
+  return readdirSync(join(dir, path)).sort().filter((name) => !(path === '' && SKIPPED.has(name))).flatMap((name) => {
+    const child = join(path, name);
+    const stat = statSync(join(dir, child));
+    return [[child, stat.mode] as [string, number], ...(stat.isDirectory() ? gitTree(dir, child) : [])];
+  });
+}
+
 /** base の絶対パスを伏せた git の状態。2 つの作り方で同じになるはずのもの */
 function gitState(repo: Repo) {
   const hide = (text: string) => text.split(repo.base).join('<base>');
@@ -27,6 +37,8 @@ function gitState(repo: Repo) {
     branches: repo.git('branch', '--format=%(refname)'),
     config: hide(repo.git('config', '--local', '--list')),
     url: hide(repo.git('config', '--get', 'remote.origin.url')),
+    gitTree: gitTree(join(repo.root, '.git')),
+    originTree: gitTree(join(repo.base, 'origin.git')),
     hooks: readdirSync(join(repo.root, '.git/hooks')).sort().map((hook) => [hook, statSync(join(repo.root, '.git/hooks', hook)).mode]),
     originBare: bare(repo, 'rev-parse', '--is-bare-repository'),
     originHead: bare(repo, 'symbolic-ref', 'HEAD'),
