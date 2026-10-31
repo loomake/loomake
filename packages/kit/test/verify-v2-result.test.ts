@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
+import { join } from 'node:path';
 import { loadVerifyResultSchemas, type VerifyCheckResult } from '@loomake/core';
 import {
-  RUN_ERRORS_CHECK, RuntimeFailure, UsageError, assembleVerifyResult, formatVerifyResult, runVerify, verifyAbortedResult, verifyExitCode,
+  RUN_ERRORS_CHECK, RuntimeFailure, UsageError, assembleVerifyResult, formatVerifyResult, qualitySubjectsGuard, readQualityFile, runVerify, verifyAbortedResult, verifyExitCode,
 } from '@loomake/kit';
 import { CHANGE, withProject } from './project.js';
 
@@ -84,5 +85,23 @@ describe('runVerify の 2.0.0', () => {
     for (const r of results) expect(verifyResultSchema.safeParse(r).success, JSON.stringify(r)).toBe(true);
     expect(results[0]).toHaveProperty('verdict');
     expect(results[3]).not.toHaveProperty('verdict');
+  });
+});
+
+describe('リポジトリ直下の quality.yaml', () => {
+  it('[REQ-310] 承認済みの初期内容（ci.test_report の必須 1 項目）を、予算付きの読取とスキーマで読める', async () => {
+    const { loadQualitySchema } = await import('@loomake/core');
+    const { qualitySchema } = await loadQualitySchema();
+    const root = join(import.meta.dirname, '..', '..', '..');
+    const read = readQualityFile({ root, gate: 'done', schema: qualitySchema });
+    expect(read.status).toBe('loaded');
+    if (read.status !== 'loaded') return;
+    expect(Object.keys(read.quality.product ?? {})).toEqual(['PQ-900']);
+    expect(read.quality.objectives ?? {}).toEqual({});
+    expect(read.quality.product?.['PQ-900']).toMatchObject({
+      blocking: true, applicability: 'applicable',
+      evidence: [{ source: 'ci.test_report', metric: 'required_subjects_with_failed_tests', target: '== 0', min_samples: 1 }],
+    });
+    expect(qualitySubjectsGuard(read.quality).result).toBe('PASS');
   });
 });
