@@ -8,12 +8,12 @@ export type FixtureReport = { numPassedTests: number; numFailedTests: number; te
 export type Marker = { event: string; dir?: string; project?: string };
 export type WatchPhase = { phase: string; builds: string[]; exists: boolean[]; error?: string };
 
-export function relevantSpecifications(root: string, quarantine: string[], profileDirectory: string) {
-  const driver = join(root, '.loomake/partition-collect.mjs');
+export function relevantSpecifications(root: string, quarantine: string[], profileDirectory: string, driverRoot: string) {
+  const driver = join(driverRoot, 'partition-collect.mjs');
   writeFileSync(driver, `import {createVitest} from 'vitest/node';const ctx=await createVitest('test',{root:${JSON.stringify(root)},config:${JSON.stringify(join(root, 'vitest.config.ts'))},watch:false});try{const specs=await ctx.getRelevantTestSpecifications();console.log('PARTITION_SPECS='+JSON.stringify(specs.map(s=>({project:s.project.name,file:s.moduleId}))));}finally{await ctx.close();}`);
   const result = spawnSync(process.execPath, [driver], { cwd: root, encoding: 'utf8', timeout: 60000, env: { ...process.env, LOOMAKE_TEST_QUARANTINE_EXCLUDE: JSON.stringify(quarantine), LOOMAKE_TEST_PHASE_PROFILE_DIR: profileDirectory } });
   const line = result.stdout.split('\n').find((line) => line.startsWith('PARTITION_SPECS='));
-  return { ...result, specs: line ? JSON.parse(line.slice('PARTITION_SPECS='.length)) as { project: string; file: string }[] : undefined };
+  return { ...result, driver, specs: line ? JSON.parse(line.slice('PARTITION_SPECS='.length)) as { project: string; file: string }[] : undefined };
 }
 
 export function partitionFixture() {
@@ -59,10 +59,15 @@ export function register(file,part){const registry=loadPartition(import.meta.dir
   setRegistry();
   const markers = (): Marker[] => existsSync(marker) ? readFileSync(marker, 'utf8').split('\n').filter(Boolean).map((line) => JSON.parse(line) as Marker) : [];
   const reset = () => rmSync(marker, { force: true });
-  const run = (args: string[] = [], env: NodeJS.ProcessEnv = process.env) => {
+  const environment = (overrides: NodeJS.ProcessEnv) => {
+    const inherited = { ...process.env };
+    delete inherited.LOOMAKE_TEST_QUARANTINE_EXCLUDE;
+    return { ...inherited, ...overrides, LOOMAKE_TEST_PHASE_PROFILE_DIR: join(root, '.loomake/profile') };
+  };
+  const run = (args: string[] = [], overrides: NodeJS.ProcessEnv = {}) => {
     const reportPath = join(root, '.loomake/test-report.json');
     rmSync(reportPath, { force: true });
-    const result = spawnSync(process.execPath, [join(repository, 'node_modules/vitest/vitest.mjs'), 'run', '--config', join(root, 'vitest.config.ts'), ...args], { cwd: root, env: { ...env, LOOMAKE_TEST_PHASE_PROFILE_DIR: join(root, '.loomake/profile') }, encoding: 'utf8', timeout: 60000 });
+    const result = spawnSync(process.execPath, [join(repository, 'node_modules/vitest/vitest.mjs'), 'run', '--config', join(root, 'vitest.config.ts'), ...args], { cwd: root, env: environment(overrides), encoding: 'utf8', timeout: 60000 });
     const report = existsSync(reportPath) ? JSON.parse(readFileSync(reportPath, 'utf8')) as FixtureReport : undefined;
     return { ...result, report, markers: markers() };
   };
@@ -88,7 +93,7 @@ try{
 }finally{await ctx.close();save('closed');}
 console.log('PARTITION_WATCH='+JSON.stringify(phases));
 `);
-    const result = spawnSync(process.execPath, [driver], { cwd: root, env: { ...process.env, LOOMAKE_TEST_PHASE_PROFILE_DIR: join(root, '.loomake/profile') }, encoding: 'utf8', timeout: 60000 });
+    const result = spawnSync(process.execPath, [driver], { cwd: root, env: environment({}), encoding: 'utf8', timeout: 60000 });
     const line = result.stdout.split('\n').find((line) => line.startsWith('PARTITION_WATCH='));
     return { ...result, phases: line ? JSON.parse(line.slice('PARTITION_WATCH='.length)) as WatchPhase[] : undefined };
   };

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { existsSync, globSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { partitionFixture, relevantSpecifications, type FixtureReport } from './helpers/partition-fixture.js';
@@ -6,7 +6,7 @@ import { configDefaults } from 'vitest/config';
 
 const fixtures: ReturnType<typeof partitionFixture>[] = [];
 const fixture = () => { const f = partitionFixture(); fixtures.push(f); return f; };
-afterEach(() => { for (const f of fixtures.splice(0)) f.cleanup(); });
+afterEach(() => { vi.unstubAllEnvs(); for (const f of fixtures.splice(0)) f.cleanup(); });
 const names = (report: FixtureReport | undefined) => report?.testResults.flatMap((file) => file.assertionResults.map((a) => [a.fullName, a.status])).sort();
 
 describe('実Vitestによる共通partition', () => {
@@ -17,7 +17,7 @@ describe('実Vitestによる共通partition', () => {
     const quarantine = JSON.parse(readFileSync(join(root, 'tests/quarantine.json'), 'utf8')) as { entries: { file: string; os: string[] }[] };
     for (const excluded of [[], quarantine.entries.filter((e) => e.os.includes('windows-latest')).map((e) => e.file)]) {
       const profileDirectory = join(f.root, 'collection-profile');
-      const result = relevantSpecifications(root, excluded, profileDirectory);
+      const result = relevantSpecifications(root, excluded, profileDirectory, f.root);
       expect(result.status, result.stderr + result.stdout).toBe(0);
       const packages = ['tests/ai-journeys.test.ts', 'tests/package-artifacts.test.ts'];
       const expected = globSync(['tests/**/*.test.ts', 'packages/*/test/**/*.test.ts'], { cwd: root, exclude: configDefaults.exclude })
@@ -30,6 +30,39 @@ describe('実Vitestによる共通partition', () => {
     expect(f.markers()).toEqual([]);
     expect(process.env.LOOMAKE_TEST_PHASE_PROFILE_DIR).toBe(before);
   }, 120000);
+
+  it('同じcheckoutを列挙してもdriverは各fixture内に置き、cleanupで消す', () => {
+    const root = join(import.meta.dirname, '..');
+    const first = fixture(), second = fixture();
+    const results = [first, second].map((f, i) => relevantSpecifications(root, i ? ['tests/package-artifacts.test.ts'] : [], join(f.root, 'profile'), f.root));
+    for (const [i, f] of [first, second].entries()) {
+      expect(results[i].status, results[i].stderr).toBe(0);
+      expect(results[i].driver).toBe(join(f.root, 'partition-collect.mjs'));
+      expect(existsSync(results[i].driver)).toBe(true);
+    }
+    expect(new Set(results.map((r) => r.driver)).size).toBe(2);
+    expect(results[0].specs?.some((s) => s.file.replaceAll('\\', '/').endsWith('/tests/package-artifacts.test.ts'))).toBe(true);
+    expect(results[1].specs?.some((s) => s.file.replaceAll('\\', '/').endsWith('/tests/package-artifacts.test.ts'))).toBe(false);
+    first.cleanup(); second.cleanup();
+    for (const result of results) expect(existsSync(result.driver)).toBe(false);
+  }, 120000);
+
+  it('親の隔離envをrun/watchへ漏らさず、明示した重なりだけは拒否する', () => {
+    const inherited = '["tests/package-artifacts.test.ts","tests/ai-journeys.test.ts"]';
+    vi.stubEnv('LOOMAKE_TEST_QUARANTINE_EXCLUDE', inherited);
+    const f = fixture();
+    const run = f.run();
+    expect(run.status, run.stderr + run.stdout).toBe(0);
+    expect(run.report?.numPassedTests).toBe(7);
+    f.reset();
+    const watch = f.watch();
+    expect(watch.status, watch.stderr + watch.stdout).toBe(0);
+    expect(watch.phases?.map((p) => p.phase)).toEqual(['initial', 'unit', 'package', 'failed', 'closed']);
+    const explicit = f.run([], { LOOMAKE_TEST_QUARANTINE_EXCLUDE: '["tests/routed.test.ts"]' });
+    expect(explicit.status).not.toBe(0);
+    expect(explicit.stdout + explicit.stderr).toContain('隔離できません');
+    expect(process.env.LOOMAKE_TEST_QUARANTINE_EXCLUDE).toBe(inherited);
+  }, 180000);
 
   it('非空のOS別割当を実callerで実行し、fastとslowの和が全fastの多重集合と一致する', () => {
     const f = fixture();
