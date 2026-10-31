@@ -3138,7 +3138,7 @@
     {
       "id": "SCN-149eab9b65181496a38e",
       "status": "reviewed",
-      "scenarioSha256": "278d9252ae83d29a8c043ac2e544153bfc78c56071fb0cd3e63ed5e3f19b7bc9",
+      "scenarioSha256": "ecdb9f136287d591ccd948f4fb0fc1315ea491c40d0b9e1a9ba4f2de6e176f3f",
       "reason": "実際のci-gate.mjsを一時Gitリポジトリで起動し、記録用のlint・pnpm・CLIへの呼び出しと終了コードをassertする。c2ブランチでc2のtasks.mdを変え、本文にloomake-change: c1がある場合の呼び出しが、L1のlintと文書のリンクの試験のあとにverify --change c1 --doneの1回だけであることを確かめる（verifyの呼び出しはc1の完了ゲートだけ）。spec-fixups-1031のarchive後のScenarioのハッシュで記録する。これはローカルでのスクリプト試験であり、GitHubのジョブ実行は未確認。",
       "sources": [
         "REQ-132"
@@ -3164,7 +3164,7 @@
         {
           "file": "tests/ci-gate-process.test.ts",
           "contains": "変更ファイルとブランチの選択を合わせて両方のゲートを呼ぶ",
-          "sha256": "723943b03a56302793e4313926213a5c44f68c078ebcc6f0fc125535ea3b0e58",
+          "sha256": "a31b4ddfbdb5c4b02a89956fe4e9bd185bfa2fb10be0c72754e664d950ce3aa4",
           "hashScope": "block"
         }
       ]

@@ -11,7 +11,7 @@ CI の完了ゲートは、対象の change を次の順に決める MUST。
 Source: REQ-132
 
 #### Scenario: 明示を優先する
-- **WHEN** `openspec/changes/c1` と `openspec/changes/c2` があり、ブランチ名 `c2` で、`openspec/changes/c2/tasks.md` を変え、本文に `loomake-change: c1` の行がある PR で CI が動く
+- **WHEN** `openspec/changes/c1` と `openspec/changes/c2` があり、c1 の tasks.md に完了した印があり、ブランチ名 `c2` で、`openspec/changes/c2/tasks.md` を変え、本文に `loomake-change: c1` の行がある PR で CI が動く
 - **THEN** verify の呼び出しは `verify --change c1 --done` だけになる
 
 #### Scenario: 変えたファイルとブランチ名を合わせる
