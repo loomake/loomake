@@ -200,3 +200,9 @@ bytes>=room-3はroomへ飽和し、同境界+U+FFFDまたはroom<=3+空stdoutは
 1200file試験の観測を子envへ移し、26件・合計28回・8192+152の期待値を保つ。26件すべてが先頭diff・flag不在で、残る2件がliteral設定なしのaddとname-status diffであることを追加検査する。W1で内容/表示の両群と呼出元env不変、W2で実Gitの正負とliteral名の混入防止を確かめる。既存のraw flag版とのbyte比較、特殊path・textconv・予算・二分・timeout・中断のassertionは変えない。
 
 public API、git/gitMeasuredのsignature、runtime/監視役protocol、群化・照合・表示・課金・共有期限は不変である。GitErrorに含むargvは`git --literal-pathspecs diff`から`git diff`へ変わる。external-budgetの元4case・19.5/39.5秒下限/既存上限・保持役待ち差分・retry・全assertを変更せず、Windowsでdiff転送成功がpushの停止より前にあることは本体がCI診断で確認する。今回の修正だけで実3OS回帰・実4件0/4・残6task・最終受入を完了としない。
+
+## 11. S4先行の統合順（2026-11-01）
+
+S2-Q01/02の管理役採用により、S1の次はS4（tasks2.5/3.5）を先行し、S2（2.1〜2.4/3.1/3.2全6task・71件候補）をその上へ重ねる。S2の範囲を純粋classifierだけへ縮めず、1200file・60秒・全assertとrunner3OSの受入を保持する。旧d822のファイル全体を移す方法は採らず、currentのGit読み取り集約・C001 local/CI・qualitySchema・helperを保持する。旧S4設計と実関数の適合確認が製品実装の前提で、新しい判断を要する差があればその部分だけ設計へ戻す。
+
+19taskのID・本文・受入・現在4済15未の印は変更しない。S4の先行は依存上必要な順序の変更だけで、S1 gate/merge未達、全体done未達と実4件0/4・P6未成立を免除しない。REQ100本文の統合はIssue259でF前に再照合する。
