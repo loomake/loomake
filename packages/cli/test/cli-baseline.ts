@@ -4,7 +4,11 @@ import { join, resolve } from 'node:path';
 import { parseTrace } from '@loomake/core';
 
 export type BaselineCase = { argv: string[]; code: number; stdout: string[]; stderr: string[] };
-export type BaselineChange = { change: string; requirement: string; approval: string; reason: string; argv: string[][]; stream: 'stdout'; from: string; to: string };
+/**
+ * 原本への具体差分。from は 1 行で、to は 1 行以上（旧文の 1 行を、新文の 1 行以上に置き換える）。
+ * stream が stderr のときは、何番目の出力かを entry で示す。stdout で出力が 1 回だけなら entry は要らない
+ */
+export type BaselineChange = { change: string; requirement: string; approval: string; reason: string; argv: string[][]; stream: 'stdout' | 'stderr'; entry?: number; from: string; to: string };
 
 const repoRoot = resolve(import.meta.dirname, '../../..');
 const fixture = (name: string) => new URL(`./fixtures/${name}`, import.meta.url);
@@ -30,11 +34,11 @@ export function baselineChangeProblems(changes: unknown[], root = repoRoot): str
     for (const key of ['change', 'requirement', 'approval', 'reason', 'from', 'to']) {
       if (!filled(item[key])) problems.push(`${at} の ${key} が空です`);
     }
-    if (item.stream !== 'stdout') problems.push(`${at} の stream は stdout だけです`);
+    if (item.stream !== 'stdout' && item.stream !== 'stderr') problems.push(`${at} の stream は stdout か stderr です`);
+    if (item.entry !== undefined && !(Number.isInteger(item.entry) && (item.entry as number) >= 0)) problems.push(`${at} の entry は 0 以上の整数です`);
     if (!Array.isArray(item.argv) || item.argv.length === 0 || !item.argv.every((a) => Array.isArray(a) && a.every(filled))) problems.push(`${at} の argv が不正です`);
     if (filled(item.requirement) && !/^REQ-\d{3,}$/.test(item.requirement)) problems.push(`${at} の requirement が REQ-ID ではありません`);
     if (filled(item.from) && item.from.includes('\n')) problems.push(`${at} の from は 1 行です`);
-    if (filled(item.to) && item.to.includes('\n')) problems.push(`${at} の to は 1 行です`);
     if (!filled(item.change) || !filled(item.approval)) return;
     const changesDir = join(root, 'openspec/changes');
     const dir = existsSync(join(changesDir, item.change, 'trace.md')) ? join(changesDir, item.change) : findArchived(changesDir, item.change);
@@ -64,11 +68,15 @@ export function applyBaselineChanges(original: BaselineCase[], changes: Baseline
       const where = `${JSON.stringify(argv)}（${change.change}）`;
       const target = cases.find((item) => JSON.stringify(item.argv) === JSON.stringify(argv));
       if (!target) throw new Error(`基準の差分の対象がありません：${where}`);
-      if (target[change.stream].length !== 1) throw new Error(`基準の差分は 1 回の出力だけに当てます：${where}`);
-      const lines = target[change.stream][0].split('\n');
+      // entry を省くのは、出力が 1 回だけのとき。複数回の出力に当てるときは何番目かを示す
+      const entry = change.entry ?? 0;
+      if (change.entry === undefined ? target[change.stream].length !== 1 : target[change.stream][entry] === undefined) throw new Error(`基準の差分は 1 回の出力だけに当てます：${where}`);
+      const text = target[change.stream][entry];
+      const lines = text.split('\n');
       if (lines.filter((line) => line === change.from).length !== 1) throw new Error(`基準の差分の旧文が 1 行だけではありません：${where}`);
-      if (lines.includes(change.to)) throw new Error(`基準の差分の新文がすでにあります：${where}`);
-      target[change.stream] = [lines.map((line) => (line === change.from ? change.to : line)).join('\n')];
+      // 新文が複数行のときは、旧文を含むことがあるので、文全体がすでにあるかで調べる
+      if (change.to.includes('\n') ? text.includes(change.to) : lines.includes(change.to)) throw new Error(`基準の差分の新文がすでにあります：${where}`);
+      target[change.stream] = target[change.stream].map((value, index) => (index === entry ? lines.map((line) => (line === change.from ? change.to : line)).join('\n') : value));
     }
   }
   return cases;

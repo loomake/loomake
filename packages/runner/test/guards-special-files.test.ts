@@ -29,7 +29,7 @@ function compileTree(source: string, target: string, accept: (name: string, dire
 // guards.tsを含む現在のrunnerのソースを読み込む。
 type ProbeKind = 'snapshot' | 'run';
 function executableRunner(base: string, kind: ProbeKind): string {
-  const output = join(base, 'runner-probe');
+  const output = join(base, `runner-probe-${kind}`);
   mkdirSync(output);
   writeFileSync(join(output, 'package.json'), '{"type":"module"}');
   compileTree(runnerSource, output, (name, directory) => directory ? kind === 'run' : name.endsWith('.ts') && (kind === 'run' || ['guards.ts', 'git.ts'].includes(name)));
@@ -62,6 +62,10 @@ const targetReason = (value: { code: number; output: string[] }, file: string) =
   expect(value.output.join('\n')).toMatch(/特殊ファイル|通常のファイル/);
 };
 
+// 変換した runner は子 node が読むだけで書き換えないので、beforeAll で種類ごとに 1 回だけ作り、ファイル内の試験で共有する。
+// 作業ディレクトリ（makeRepo）は今までどおり試験ごとに作る。
+const runners = {} as Record<ProbeKind, string>;
+
 // 実際のPOSIXのFIFOとUnixソケットを使う。Windowsでの動作を示す試験ではない。
 describe.runIf(process.platform !== 'win32')('フック内の特殊ファイルの実プロセス検査', () => {
   beforeAll(() => {
@@ -78,6 +82,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル�
       const modules = join(packages, name, 'node_modules');
       if (existsSync(modules)) symlinkSync(modules, join(dependencies, name, 'node_modules'), 'junction');
     }
+    for (const kind of ['snapshot', 'run'] as const) runners[kind] = executableRunner(dependencies, kind);
   });
   afterAll(() => { if (dependencies) rmSync(dependencies, { recursive: true, force: true }); });
 
@@ -85,7 +90,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル�
     const repo = makeRepo();
     try {
       repo.write('.git/hooks/probe-entry', 'ordinary hook\n');
-      const result = probe(repo, executableRunner(repo.base, 'snapshot'), 'snapshot', snapshotAction, 3000);
+      const result = probe(repo, runners.snapshot, 'snapshot', snapshotAction, 3000);
       expect(result.kind).toBe('snapshot');
       expect(result.snapshot.digest).toMatch(/^[a-f0-9]{64}$/);
     } finally { repo.cleanup(); }
@@ -96,7 +101,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル�
     try {
       const file = join(repo.root, '.git/hooks/probe-entry');
       fifo(file);
-      const result = probe(repo, executableRunner(repo.base, 'snapshot'), 'snapshot', snapshotAction, 3000);
+      const result = probe(repo, runners.snapshot, 'snapshot', snapshotAction, 3000);
       expect(result).toMatchObject({ kind: 'rejected', usageError: true });
       expect(result.message).toContain(file);
       expect(result.message).toMatch(/特殊ファイル|通常のファイル/);
@@ -111,7 +116,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル�
       const file = join(repo.root, '.git/hooks/probe-entry');
       await new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(file, resolve); });
       expect(lstatSync(file).isSocket()).toBe(true);
-      const result = probe(repo, executableRunner(repo.base, 'snapshot'), 'snapshot', snapshotAction, 3000);
+      const result = probe(repo, runners.snapshot, 'snapshot', snapshotAction, 3000);
       expect(result).toMatchObject({ kind: 'rejected', usageError: true });
       expect(result.message).toContain(file);
       expect(result.message).toMatch(/特殊ファイル|通常のファイル/);
@@ -133,7 +138,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル�
       }
       const head = repo.git('rev-parse', 'HEAD');
       const tasks = readFileSync(join(repo.root, 'openspec/changes/c1/tasks.md'), 'utf8');
-      const result = probe(repo, executableRunner(repo.base, 'run'), 'run', runAction, 10_000);
+      const result = probe(repo, runners.run, 'run', runAction, 10_000);
       targetReason(result, file);
       expect(repo.calls()).toHaveLength(stage === 'before' ? 0 : 1);
       expect(repo.git('rev-parse', 'HEAD')).toBe(head);
@@ -163,7 +168,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル�
         symlinkSync(target, hook);
       }
       repo.plan([{ write: { 'impl.txt': 'implementation\n' } }, noChange]);
-      const result = probe(repo, executableRunner(repo.base, 'run'), 'run', runAction, 10_000);
+      const result = probe(repo, runners.run, 'run', runAction, 10_000);
       expect(result.code, result.output.join('\n')).toBe(0);
       expect(result.output.join('\n')).not.toContain('特殊ファイル');
       expect(readFileSync(join(repo.root, 'openspec/changes/c1/tasks.md'), 'utf8')).not.toContain('- [ ]');

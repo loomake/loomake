@@ -40,12 +40,17 @@ describe('基準の原本と改版の差分', () => {
     expect(baselineChangeProblems(changes)).toEqual([]);
     const current = currentBaseline();
     const changed = current.filter((item, index) => JSON.stringify(item) !== JSON.stringify(original.cases[index]));
-    expect(changed.map((item) => item.argv)).toEqual(changes.flatMap((item) => item.argv));
+    expect(changed.map((item) => JSON.stringify(item.argv)).sort()).toEqual([...new Set(changes.flatMap((c) => c.argv).map((a) => JSON.stringify(a)))].sort());
+    // 差分を当てた行以外は、原本のまま。独立に、行ごとに置き換えて照合する
     for (const item of changed) {
       const index = current.indexOf(item);
-      const before = original.cases[index].stdout[0].split('\n'), after = item.stdout[0].split('\n');
-      const diff = before.map((line, n) => [line, after[n]]).filter(([a, b]) => a !== b);
-      expect(diff).toEqual(changes.filter((c) => c.argv.some((a) => JSON.stringify(a) === JSON.stringify(item.argv))).map((c) => [c.from, c.to]));
+      const key = JSON.stringify(item.argv);
+      const expected = { stdout: [...original.cases[index].stdout], stderr: [...original.cases[index].stderr] };
+      for (const c of changes.filter((c) => c.argv.some((a) => JSON.stringify(a) === key))) {
+        const at = c.entry ?? 0;
+        expected[c.stream][at] = expected[c.stream][at].split('\n').flatMap((line) => (line === c.from ? c.to.split('\n') : [line])).join('\n');
+      }
+      expect({ stdout: item.stdout, stderr: item.stderr }).toEqual(expected);
     }
   });
 
@@ -60,9 +65,12 @@ describe('基準の原本と改版の差分', () => {
     }
     expect(baselineChangeProblems([{ ...real, change: 'no-such-change' }]).join()).toContain('openspec/changes にありません');
     expect(baselineChangeProblems([{ ...real, approval: 'S8-99（なし）' }]).join()).toContain('S8-99 の回答が verify-v2-evidence の trace にありません');
-    expect(baselineChangeProblems([{ ...real, stream: 'stderr' as 'stdout' }]).join()).toContain('stream は stdout だけです');
+    expect(baselineChangeProblems([{ ...real, stream: 'stdin' as 'stdout' }]).join()).toContain('stream は stdout か stderr です');
+    expect(baselineChangeProblems([{ ...real, entry: -1 }]).join()).toContain('entry は 0 以上の整数です');
     expect(baselineChangeProblems([{ ...real, argv: [] }]).join()).toContain('argv が不正です');
-    expect(baselineChangeProblems([{ ...real, to: 'a\nb' }]).join()).toContain('to は 1 行です');
+    expect(baselineChangeProblems([{ ...real, from: 'a\nb' }]).join()).toContain('from は 1 行です');
+    // 新文は複数行でもよい（旧文の 1 行を、新文の 複数行に置き換える）
+    expect(baselineChangeProblems([{ ...real, to: 'a\nb' }])).toEqual([]);
   });
 
   it('[REQ-324] 旧文がない・2 行ある・新文がすでにある・出力が 1 回でない・対象の例がないときは差分を当てずに例外にする', () => {
@@ -73,6 +81,13 @@ describe('基準の原本と改版の差分', () => {
     expect(() => applyBaselineChanges(sample(['old', 'x']), [change()])).toThrow('1 回の出力だけに当てます');
     expect(() => applyBaselineChanges(sample([]), [change()])).toThrow('1 回の出力だけに当てます');
     expect(() => applyBaselineChanges(sample(), [change({ argv: [['y']] })])).toThrow('対象がありません');
+  });
+
+  it('[REQ-324] stderr の entry を指定でき、新文は複数行にできる', () => {
+    const cases: BaselineCase[] = [{ argv: ['x'], code: 2, stdout: [], stderr: ['e0', 'a\nold\nb'] }];
+    const [applied] = applyBaselineChanges(cases, [change({ argv: [['x']], stream: 'stderr', entry: 1, to: 'n1\nn2' })]);
+    expect(applied.stderr).toEqual(['e0', 'a\nn1\nn2\nb']);
+    expect(applied.stdout).toEqual([]);
   });
 });
 
@@ -91,11 +106,11 @@ it('[REQ-323][REQ-324] 全コマンド・操作の受理名と解析順を明示
   expect(commandDefinition('trace').operations?.map((command) => command.name)).toEqual(['record', 'report', 'answer', 'approve']);
   const names = (name: 'init' | 'verify' | 'run' | 'doctor') => optionSpec(commandDefinition(name));
   expect(names('init')).toEqual({ values: [], flags: ['--codex', '--devcontainer'] });
-  expect(names('verify')).toEqual({ values: ['--change'], flags: ['--spec-only', '--done', '--json', '--skip-commands'] });
+  expect(names('verify')).toEqual({ values: ['--change', '--scope'], flags: ['--spec-only', '--done', '--json', '--skip-commands'] });
   expect(names('run')).toEqual({ values: ['--change', '--engine'], flags: ['--dry-run', '--skip-permissions'] });
   expect(names('doctor')).toEqual({ values: [], flags: [] });
   expect(commandDefinition('trace').operations?.map(optionSpec)).toEqual([
-    { values: ['--change'], flags: [] },
+    { values: ['--change', '--scope'], flags: [] },
     { values: ['--change', '--format'], flags: [] },
     { values: ['--change', '--question', '--by', '--date', '--answer'], flags: [] },
     { values: ['--change', '--assumption', '--by', '--date'], flags: [] },

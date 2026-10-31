@@ -24,12 +24,16 @@ export type CliCommand = {
   operations?: readonly CliCommand[];
 };
 
+/** --scope の受理値。verify と trace record が同じ定義を使う（REQ-312・REQ-135） */
+export const SCOPES = ['local', 'ci'] as const;
+
 const traceOperations = [
   {
-    name: 'record', usage: 'loomake trace record --change <id>',
+    name: 'record', usage: 'loomake trace record --change <id> [--scope local|ci]',
     description: 'verify --done を実行し、結果をコミットの SHA と合わせて .loomake/evidence/<change-id>/ に記録する。未コミットの変更があれば記録しない。',
     options: [
       { name: '--change', kind: 'value', choices: '英小文字・数字と、間に1つずつのハイフンで表すchange-id', label: '--change <id>', description: '記録する change', required: '必須', defaultValue: 'なし' },
+      { name: '--scope', kind: 'value', choices: SCOPES.join(' / '), label: '--scope local|ci', description: '記録する verify の範囲。省くと ci。local の記録は最終 CI の合格ではない', required: '任意', defaultValue: 'ci' },
     ],
   },
   {
@@ -75,7 +79,7 @@ export const CLI_COMMANDS = [
     ],
   },
   {
-    name: 'verify', usage: 'loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands]',
+    name: 'verify', usage: 'loomake verify [--change <id> (--spec-only | --done)] [--json] [--skip-commands] [--scope local|ci]',
     summary: '仕様ゲートと完了ゲートで、仕様・確認事項・テストを検査する',
     description: '仕様ゲートと完了ゲートで、仕様・確認事項・テストを検査する。--change を省くと、品質コマンドだけを実行する。終了コードは合格 0・不合格 1・使い方の誤り 2・実行時の失敗 3。',
     options: [
@@ -83,7 +87,8 @@ export const CLI_COMMANDS = [
       { name: '--spec-only', kind: 'flag', label: '--spec-only', description: '仕様ゲート：実装に入ってよいかを検査する', required: '条件付き必須', defaultValue: 'false', condition: '--change指定時は--doneとのどちらか片方が必須。--changeなしでは指定不可' },
       { name: '--done', kind: 'flag', label: '--done', description: '完了ゲート：仕様ゲートに加え、タスク・要件ごとのテスト・品質コマンドを検査する', required: '条件付き必須', defaultValue: 'false', condition: '--change指定時は--spec-onlyとのどちらか片方が必須。--changeなしでは指定不可' },
       { name: '--json', kind: 'flag', label: '--json', description: '結果を JSON で標準出力に出す（進捗は標準エラー）', required: '任意', defaultValue: 'false' },
-      { name: '--skip-commands', kind: 'flag', label: '--skip-commands', description: '品質コマンドを実行せず、テストのレポートも読まずに、その項目を証拠不足にする（終了コード 1）', required: '任意', defaultValue: 'false' },
+      { name: '--skip-commands', kind: 'flag', label: '--skip-commands', description: '品質コマンドを実行せず、テストのレポートも読まずに、その項目を証拠不足にする（終了コード 1）。coverage は出さない', required: '任意', defaultValue: 'false' },
+      { name: '--scope', kind: 'value', choices: SCOPES.join(' / '), label: '--scope local|ci', description: '結果の範囲。省くと --done は ci、--spec-only と --change なしは local', required: '任意', defaultValue: '--done は ci、--spec-only と --change なしは local', condition: '環境変数 CI では既定値を変えない' },
     ],
   },
   {

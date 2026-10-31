@@ -1,0 +1,173 @@
+{
+  "$comment": "2026-10-31 の main で、2 つ以上の Requirement の Source に付いていた REQ ID。意図した共有と振り直しが要る衝突が混ざっている。見直しは Issue #213 で行い、直したら一覧から消す。新しく共有するときは、意図した共有であることを PR で説明してから足す（scripts/req-duplicate-check.mjs）",
+  "known": [
+    {
+      "id": "REQ-034",
+      "requirements": [
+        "verify: ブロッキング確認事項の検査",
+        "verify: 同じ確認事項の回答の照合"
+      ]
+    },
+    {
+      "id": "REQ-041",
+      "requirements": [
+        "cli: オプションの書き方と知らないコマンド",
+        "verify: 終了コード"
+      ]
+    },
+    {
+      "id": "REQ-055",
+      "requirements": [
+        "agents-rules: AGENTS.md の日本語提供",
+        "init: 日本語のメッセージ",
+        "req-to-openspec-skill: Skill の日本語提供",
+        "verify: 日本語のメッセージ"
+      ]
+    },
+    {
+      "id": "REQ-077",
+      "requirements": [
+        "core-parsers: trace.md の 3 つの表の読み取り",
+        "core-parsers: trace.md のテンプレート生成",
+        "trace-report: 確認事項の一覧"
+      ]
+    },
+    {
+      "id": "REQ-078",
+      "requirements": [
+        "core-parsers: trace.md の 3 つの表の読み取り",
+        "core-parsers: trace.md のテンプレート生成",
+        "trace-report: 仮定の一覧"
+      ]
+    },
+    {
+      "id": "REQ-083",
+      "requirements": [
+        "trace-record: trace の実行時依存",
+        "trace-report: trace report の実行時依存"
+      ]
+    },
+    {
+      "id": "REQ-084",
+      "requirements": [
+        "trace-record: オフラインでの動作",
+        "trace-report: オフラインでの動作"
+      ]
+    },
+    {
+      "id": "REQ-109",
+      "requirements": [
+        "run-guards: アサーションとテストの宣言の書き換えの検出",
+        "run-guards: テストの削除と skip・todo の検出"
+      ]
+    },
+    {
+      "id": "REQ-132",
+      "requirements": [
+        "monorepo: プルリクエストごとの完了ゲート",
+        "monorepo: 完了ゲートの対象の決め方",
+        "monorepo: 対象の change がない PR の扱い"
+      ]
+    },
+    {
+      "id": "REQ-134",
+      "requirements": [
+        "doctor: 導入状態の診断",
+        "doctor: 設定の知らないキーの診断",
+        "doctor: 診断する項目"
+      ]
+    },
+    {
+      "id": "REQ-138",
+      "requirements": [
+        "monorepo: 公開するパッケージのメタデータ",
+        "run-guards: 特殊文字を含むパスのガード"
+      ]
+    },
+    {
+      "id": "REQ-139",
+      "requirements": [
+        "monorepo: パッケージの README",
+        "run: エンジンの子プロセスの停止"
+      ]
+    },
+    {
+      "id": "REQ-140",
+      "requirements": [
+        "monorepo: release ワークフローの品質検査と同時実行の制限",
+        "run: 証拠記録の再検証の時間制限"
+      ]
+    },
+    {
+      "id": "REQ-141",
+      "requirements": [
+        "monorepo: release ワークフローの認証",
+        "run: run設定の形の検証"
+      ]
+    },
+    {
+      "id": "REQ-142",
+      "requirements": [
+        "monorepo: Node.js のバージョン宣言",
+        "run: Node.js の下限",
+        "trace-record: Node.js の下限",
+        "trace-report: Node.js の下限",
+        "trace-report: 証拠の実行時検証"
+      ]
+    },
+    {
+      "id": "REQ-143",
+      "requirements": [
+        "monorepo: release ワークフローの action の固定",
+        "monorepo: release ワークフローの権限の分離",
+        "monorepo: 配布物からの主要コマンドの検証"
+      ]
+    },
+    {
+      "id": "REQ-204",
+      "requirements": [
+        "run-decision-policy: エンジン終了後の純粋な判断",
+        "run-guards: git の設定の比較の範囲"
+      ]
+    },
+    {
+      "id": "REQ-252",
+      "requirements": [
+        "external-process-budget: Windowsで対象のPIDを保持する",
+        "external-process-budget: Windowsで監視役が結果を書かずに終わったときの子孫の識別"
+      ]
+    },
+    {
+      "id": "REQ-270",
+      "requirements": [
+        "monorepo: 3 つの OS での CI",
+        "monorepo: CI のテストの分割",
+        "monorepo: 文書だけかの判定に使う差分",
+        "monorepo: 文書だけの PR の品質ジョブ",
+        "monorepo: 文書として扱うファイル"
+      ]
+    },
+    {
+      "id": "REQ-330",
+      "requirements": [
+        "run: 変更が要らないタスクの合図",
+        "run: 変更を残さずに終えたタスク"
+      ]
+    },
+    {
+      "id": "REQ-342",
+      "requirements": [
+        "monorepo: 工程の段階の判定",
+        "monorepo: 文書だけの PR の品質ジョブ"
+      ]
+    },
+    {
+      "id": "REQ-343",
+      "requirements": [
+        "monorepo: プルリクエストごとの完了ゲート",
+        "monorepo: 対象の change がない PR の扱い",
+        "monorepo: 段階ごとの完了ゲートの動作"
+      ]
+    }
+  ]
+}

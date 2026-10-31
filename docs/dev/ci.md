@@ -30,6 +30,8 @@ change のゲート（`--done`・`--spec-only`）は `--json` で実行し、ver
 
 Requirement の変更は、`openspec/specs/` と `openspec/changes/<id>/specs/` の `spec.md` で、変更した行が属する節で見る。`git diff -U0` のハンクの行番号から、足した行は HEAD の、消した行はベースのファイルを読み、直前の見出しが `### Requirement:` なら Requirement の変更（L3）とする。`#### Scenario:` の配下や Purpose の文言だけなら、RFC 2119 の語を足しても L1 のまま。archive の PR（`openspec/changes/archive/` にファイルを足すか移す）は Requirement を主仕様に写すが、実装 PR の `--done` で検査済みなので L1 として扱う。
 
+gate は段階によらず、REQ ID の重複も調べる（`scripts/req-duplicate-check.mjs`）。主仕様に進行中の change の差分仕様を当てた後で、同じ REQ ID が 2 つ以上の Requirement の Source に付いていたら、一覧を出して失敗にする。同じ Requirement を MODIFIED した差分は重複に数えない。意図して共有している ID と、2026-10-31 に main にあった 22 件（見直しは Issue #213）は `scripts/req-duplicate-known.json` に書いてある。一覧のキーは `<capability>: <Requirement 名>` の形で書く。一覧にある Requirement を RENAMED したら、同じ PR で一覧のキーも直す。新しく ID を共有するときは、意図した共有であることを PR 本文で説明してから一覧に足す。一覧のうち今の重複と一致しない項目は、失敗にせず警告を出す。手元では `node scripts/req-duplicate-check.mjs` で確かめられる。
+
 change のない L1 の PR では `verify` を呼ばないため、`tests/doc-links.test.ts` を gate で直接実行している。gate からこの試験を外すときは、文書だけの PR で文書を読むテストを実行する場がなくなることを確かめる。
 
 `ci:all-os` ラベルを L3 の PR で必須にする検査は、3 OS の試験の時間切れが直るまで入れていない。時間切れする試験は、下の「時間切れする試験の隔離」で一時的に外している。
@@ -66,6 +68,8 @@ quality ジョブの macOS・Windows のシャードでは、`scripts/ci-quarant
 
 外した試験は別のワークフロー `.github/workflows/quality-quarantine.yml` で流します。main への push・定期実行・`ci:all-os` ラベルの PR・手動実行で動きます。plan ジョブが `ci-quarantine.mjs --matrix` で OS ごとの matrix を作り、`quality-quarantine` ジョブが一覧のファイルだけをシャードに分けずに実行します。このジョブは `continue-on-error: true` なので、失敗しても run の成否には数えません。一覧が空なら、このジョブは飛ばされます。ci.yml の中に置かないのは、ci.yml の既存の試験（`ci:all-os` の式が 1 か所であること、gate が最後のジョブであることなど）を変えないためです。
 
+同じワークフローには、変異試験（`scripts/domain-mutations.mjs`、[testing.md](../testing.md)）を流す `domain-mutations` ジョブもあります。定期実行と手動実行のときだけ動き、PR と main への push では動きません。ほかのジョブとは独立しているので、変異が生き残って失敗しても隔離の試験は止まりません。生き残った変異の数と一覧は実行の概要と `survived.json` に書き、`results.json` とあわせて `domain-mutations-<run>-<attempt>` の artifact に 30 日保存します。
+
 隔離のジョブでは publication-retry の段階と外部操作の記録（[test-phase-profiling.md](test-phase-profiling.md)）、ai-journeys の区間の記録、心拍を有効にします。それらと vitest の JSON レポートを `quality-quarantine-<run>-<attempt>-<os>-<sample>` の artifact に 7 日保存します。
 
 手動実行では計測のためにだけ次を選べます。既定はどちらも変えません（stabilize-cross-os-tests の Q-03）。
@@ -74,7 +78,7 @@ quality ジョブの macOS・Windows のシャードでは、`scripts/ci-quarant
 - `temp`：Windows の `TEMP`・`TMP` を `RUNNER_TEMP` に向けるか
 - `max_workers`：vitest の並列度を 1 にするか
 
-隔離一覧の期限切れは、macOS・Windows のシャードと `quality-quarantine` の plan ジョブで失敗します。どちらも必須チェックではないので、`ci:all-os` ラベルのない PR は緑のまま通ります。夜間実行の失敗は管理役が毎朝確かめ、期限までに直すか、理由を書いて期限を延ばす PR（L2）を出します。延長は 1 回につき 14 日までです。
+隔離一覧の期限切れは、macOS・Windows のシャードと `quality-quarantine` の plan ジョブで失敗します。どちらも必須チェックではないので、`ci:all-os` ラベルのない PR は緑のまま通ります。夜間実行の失敗は管理役が毎朝確かめ、期限までに直すか、理由を書いて期限を延ばす PR（L2）を出します。延長は 1 回につき 14 日までです。夜間実行が赤いときは、失敗したジョブの名前で原因を分けてください。`plan` が失敗するのは、隔離一覧の期限切れか一覧の誤りのときです。`domain-mutations` が失敗するのは、生き残った変異があるとき、試行がエラーになったとき、基準の試験が error のとき、元ファイルが変わったとき（`originalsUnchanged: false`）、`results.json` を書く前に落ちたとき（install の失敗など）です。それ以外の原因は、`results.json` とログを見て確かめてください。
 
 手動実行は既定ブランチにあるワークフローだけが対象です。一覧から外すときは、そのファイルが `quality-quarantine` と夜間実行で安定して通ることを確かめてから、エントリを消してください。
 

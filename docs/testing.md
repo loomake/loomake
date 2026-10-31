@@ -2,6 +2,8 @@
 
 開発環境はNode.js 24とpnpmを使う。依存を`pnpm install --frozen-lockfile`で導入し、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm build`を実行する。変更の実装前と完了時には、AGENTS.mdに従って対象changeの仕様ゲートと完了ゲートを通す。
 
+全体の試験の前に手元で速く確かめるときは、`pnpm test:changed`を実行する。origin/mainとの分岐点（`git merge-base origin/main HEAD`）から変えたファイルに関係する試験だけを、`vitest run --changed`で流す。コミット前の変更も対象にし、変更がなければ何もせずに成功する。全体の試験の代わりにはならないので、PRを出す前には`pnpm test`も実行する。
+
 不具合修正では、問題を再現するテストが修正前に失敗することを確認する。失敗理由、修正後の成功、関連する既存テストの結果をchangeのtdd.mdへ残す。テストが失敗したときは、期待値を実装へ合わせる前に、差分仕様・出典・失敗理由を確認する。
 
 ## 配布物と操作試験
@@ -45,6 +47,8 @@ node scripts/domain-mutations.mjs .loomake/quality/domain-mutations-trial
 最初に変更のない実装が成功することを確認する。その後、同じ名前と件数のテストを実行し、終了コード1かつAssertionErrorによる失敗がある条件だけを`killed`と記録する。全テストが成功した条件は`survived`、構文エラー・読み込み失敗・タイムアウト・レポートの欠損や矛盾などは`error`になる。各試行の上限は30秒、出力は4MiBとする。
 
 results.jsonには条件の変更内容、元と変更後のハッシュ、失敗したテスト名、終了コード、所要時間、元ファイルの不変性を記録する。試行ごとのreport.jsonとstdout.txt・stderr.txt、変更後のmutation.txtも残す。実行用のコピーと一時設定は試行後に取り除く。
+
+CIでは、`.github/workflows/quality-quarantine.yml`の`domain-mutations`ジョブがこの検査を毎晩（日本時間の3:00）mainで実行し、生き残った変異の数と一覧（`survived.json`）を`results.json`とともに30日保存する。PRの必須チェックには入れない。
 
 未検出やエラーがあれば検査全体は終了コード1になる。未検出の場合は、その条件の意味と対応する仕様を確認し、必要な正常・異常・境界のテストを追加する。エラーの場合はログを読み、試験の成立条件を直す。対象の文字列が一意に見つからない場合は、コードの変更を確認して条件の一覧を見直す。
 
