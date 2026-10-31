@@ -116,7 +116,7 @@ acceptance.json、CI 成果物のハッシュ照合、検査 merge の tree 照�
 
 段階ごとのマージ条件と「往復」の数え方は ADR 0006 のレビュー規則に従う。条件を満たした PR は管理役がマージする。差分を変えたら新しい head で証跡ブロックを書き直す。回数を使い切っても重大な指摘が残るときは、ADR 0006 に従って PR を分割するか、Issue に記録して人の判断を仰ぐ。
 
-試験・scripts・workflow を変える L2 の PR には `ci:all-os` ラベルを付け、Windows・macOS の CI も成功してからマージする。必須チェックの試験は ubuntu でしか流れないため、改行コードなどの OS 差はこのラベルがないと確かめられない。
+試験（`tests/`・`packages/*/test/`）・`scripts/`・`.github/workflows/` を変える L2 の PR には `ci:all-os` ラベルを付け、Windows・macOS の CI も成功してからマージする。必須チェックの試験は ubuntu でしか流れないため、改行コードなどの OS 差はこのラベルがないと確かめられない。
 
 `@codex review` の依頼文には、変更した Requirement の ID と Scenario、見てほしい観点（境界値・エラー経路・OS 差）を書く。
 
