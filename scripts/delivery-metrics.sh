@@ -23,7 +23,11 @@ ghall() {
     gh api "$path&page=$page" > "$TMP/page.json" || return 1
     jq -rc "$arr[]|$each" "$TMP/page.json" || return 1
     n=$(jq "$arr|length" "$TMP/page.json") || return 1
-    { [ "$n" -lt 100 ] || [ "$page" -ge "$max" ]; } && return 0
+    [ "$n" -lt 100 ] && return 0
+    if [ "$page" -ge "$max" ]; then
+      echo "警告：$path を $max ページで打ち切りました。取りこぼしがあるかもしれません" >&2
+      return 0
+    fi
     page=$((page+1))
   done
 }
@@ -115,7 +119,7 @@ for l in sys.stdin:
     d[k]["runs"]+=1; d[k]["failed"]+= conc=="failure"; d[k]["minutes"]+=(ud-cd).total_seconds()/60
 w=csv.writer(open(f"{S}/ci.csv","w")); w.writerow(["day","runs","failed","avg_minutes"])
 for k in sorted(d): w.writerow([k,d[k]["runs"],d[k]["failed"],round(d[k]["minutes"]/d[k]["runs"],1)])' "$TMP"
-# 時間切れ・タイムアウトの Issue（題名で検索した 2 つの和集合）
+# 時間切れ・タイムアウトの Issue（全 Issue を題名の正規表現で絞る）
 # 検索 API はクラウドの中継が断るので、Issue を全件取って題名で絞る（PR は除く）
 ghall "repos/loomake/loomake/issues?state=all&per_page=100" . 'select((.pull_request|not) and (.title|test("時間切れ|タイムアウト")))|{number,title,state:(.state|ascii_upcase),createdAt:.created_at,closedAt:.closed_at}' | python3 -c '
 import sys,json,csv
