@@ -1,4 +1,5 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import * as kit from '../packages/kit/src/index.js';
@@ -307,6 +308,124 @@ describe('リポジトリでの実行', () => {
   ])('[REQ-347] 試験関数でない分割代入をcompanionの宣言と推測しない: %s', (body) => {
     expect(companionLinks(JSON.parse(registered), () => `${body} await import('./fixture.test.js');`)).toEqual(new Map([[companion, testFile]]));
   });
+  const closedBindings = [
+    ['bindingの既定値', "const { 'test': check = v['test'] } = {}; check('own case', () => {});"],
+    ['代入bindingの既定値', "let check; ({ 'test': check = v['test'] } = {}); check('own case', () => {});", 'companionに試験の宣言があります'],
+    ['引数bindingの既定値', "function own({ 'test': check = v['test'] } = {}) { check('own case', () => {}); } own();"],
+    ['object carrier', "const holder = { check: v['test'] }; holder.check('own case', () => {});"],
+    ['parameter carrier', "function own(check) { check('own case', () => {}); } own(v['test']);"],
+    ['array carrier', "const [check] = [v['test']]; check('own case', () => {});"],
+    ['条件式', "const check = true ? v['test'] : undefined; check('own case', () => {});"],
+    ['カンマ式', "const check = (0, v['test']); check('own case', () => {});"],
+    ['論理式', "const check = true && v['test']; check('own case', () => {});"],
+    ['戻り値', "function take() { return v['test']; } const check = take(); check('own case', () => {});"],
+    ['namespace引数', "function own(ns) { ns['test']('own case', () => {}); } own(v);"],
+    ['namespace既定引数', "function own(ns = v) { ns['test']('own case', () => {}); } own();"],
+    ['namespace object', "const holder = { namespace: v }; holder.namespace['test']('own case', () => {});"],
+    ['namespace array', "const [ns] = [v]; ns['test']('own case', () => {});"],
+    ['namespace spread', "const ns = { ...v }; ns['test']('own case', () => {});"],
+    ['namespace shorthand', "const holder = { v }; holder.v['test']('own case', () => {});"],
+    ['namespace条件式', "const ns = true ? v : undefined; ns['test']('own case', () => {});"],
+    ['namespace戻り値', "function take() { return v; } take()['test']('own case', () => {});"],
+    ['Reflect.get', "const check = Reflect.get(v, 'test'); check('own case', () => {});"],
+    ['Object.values', "const values = Object.values(v);"],
+    ['namespace export', "export { v };"],
+    ['namespaceのexport付き初期化', "export const ns = v;"],
+    ['namespace別名のcarrier', "const ns = (v as typeof v)!; const holder = { namespace: ns };"],
+    ['許可外のproperty', "const value = v.describe;"],
+    ['許可外のliteral key', "const value = v['describe'];"],
+  ];
+  const closedImports = [
+    ['createRequire', "import { createRequire } from 'node:module'; createRequire(import.meta.url)('vitest');"],
+    ['vitest subpath', "import * as runner from 'vitest/suite';"],
+    ['Vitest runner package', "import * as runner from '@vitest/runner';"],
+    ['external export', "export { createRequire } from 'node:module';"],
+    ['external import equals', "import module = require('node:module');"],
+  ];
+  it.each([
+    ...closedBindings.map(([label, body, message]) => [label, `import * as v from 'vitest'; ${body}`, message ?? 'companionの試験関数の束縛を静的に確認できません']),
+    ...closedImports.map(([label, body]) => [label, body, `companionの読み込み先を静的に確認できません：${companion}`]),
+    ['named bench', "import { bench } from 'vitest';", 'companionの試験関数の束縛を静的に確認できません'],
+    ['default import', "import v from 'vitest';", 'companionの試験関数の束縛を静的に確認できません'],
+    ['import equals vitest', "import v = require('vitest');", 'companionの試験関数の束縛を静的に確認できません'],
+  ])('[REQ-347] 閉じたcompanion構文に反する%sを両入口で拒否して入力を保つ', async (_, body, message) => {
+    const dir = prepare([blockReview()], routed(run(), file(), `${body} await import('./fixture.test.js');`));
+    const raw = readFileSync(join(dir, 'report.json'));
+    const ledger = readFileSync(join(dir, 'docs/quality/scenarios.json'));
+    await expect(execute(dir)).rejects.toThrow(message);
+    await expect(migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).rejects.toThrow(message);
+    expect(existsSync(join(dir, 'out'))).toBe(false);
+    expect(readFileSync(join(dir, 'report.json'))).toEqual(raw);
+    expect(readFileSync(join(dir, 'docs/quality/scenarios.json'))).toEqual(ledger);
+  });
+  it('[REQ-189][REQ-347] companion自身の同名宣言を元sourceのreviewedへ昇格しない', async () => {
+    const text = "import * as v from 'vitest'; const { 'test': check = v['test'] } = {}; check('群 [REQ-012] 条件を検査する', () => {}); await import('./fixture.test.js');";
+    const dir = prepare([blockReview()], routed(run(), file(), text));
+    const raw = readFileSync(join(dir, 'report.json'));
+    const ledger = readFileSync(join(dir, 'docs/quality/scenarios.json'));
+    await expect(execute(dir)).rejects.toThrow('companionの試験関数の束縛を静的に確認できません');
+    await expect(migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).rejects.toThrow('companionの試験関数の束縛を静的に確認できません');
+    expect(existsSync(join(dir, 'out'))).toBe(false);
+    expect(readFileSync(join(dir, 'report.json'))).toEqual(raw);
+    expect(readFileSync(join(dir, 'docs/quality/scenarios.json'))).toEqual(ledger);
+  });
+  it.each([
+    "import * as v from 'vitest'; const ns = (v as typeof v)!; ns.expect(true).toBe(true);",
+    "import * as v from 'vitest'; const { expect: assert = () => {} } = v; assert(true);",
+    "import * as v from 'vitest'; v['expect'](true).toBe(true);",
+    "import { expect as assert } from 'vitest'; assert(true).toBe(true);",
+    "import { setPart } from './helpers/partition-part.js'; setPart('slow');",
+    "import * as v from 'vitest'; type Namespace = typeof v; const { ['expect']: assert } = v; assert(true).toBe(true);",
+  ])('[REQ-347] 閉じた構文のexpect・別名・型・setPartは受理する: %s', (body) => {
+    expect(companionLinks(JSON.parse(registered), () => `${body} await import('./fixture.test.js');`)).toEqual(new Map([[companion, testFile]]));
+  });
+  it('[REQ-347] native1起動の自前宣言と正例の実行行を静的な拒否と対照する', () => {
+    const dir = prepare([]);
+    symlinkSync(realpathSync('node_modules'), join(dir, 'node_modules'), 'junction');
+    mkdirSync(join(dir, 'tmp'));
+    mkdirSync(join(dir, 'tests/helpers'), { recursive: true });
+    writeFileSync(join(dir, 'package.json'), '{"type":"module"}');
+    writeFileSync(join(dir, 'tests/helpers/partition-part.js'), "export function setPart(part) { if (part !== 'slow') throw new Error('part'); }");
+    const cases = [
+      ['original', "import * as v from 'vitest'; const { test: check } = v; check('own case', () => {});", true],
+      ['fallback', "import * as v from 'vitest'; const { test: check = v['test'] } = {}; check('own case', () => {});", true],
+      ['object', "import * as v from 'vitest'; const holder = { check: v['test'] }; holder.check('own case', () => {});", true],
+      ['parameter', "import * as v from 'vitest'; function own(check) { check('own case', () => {}); } own(v['test']);", true],
+      ['comment', "/* import('./other.test.js') */", false],
+      ['helper', "import { setPart } from './helpers/partition-part.js'; setPart('slow');", false],
+      ['expect', "import * as v from 'vitest'; const { 'expect': assert } = v; assert(true).toBe(true);", false],
+      ['local', "const { 'test': check } = { 'test': () => {} }; check();", false],
+    ] as const;
+    const texts = new Map<string, string>();
+    for (const [id, body] of cases) {
+      const source = `tests/${id}.test.ts`;
+      const companionFile = `tests/${id}.slow.test.ts`;
+      writeFileSync(join(dir, source), "import { it, expect } from 'vitest'; it('source case', () => { expect(true).toBe(true); });");
+      const text = `${body}\nawait import( './${id}.test.js' );`;
+      texts.set(companionFile, text);
+      writeFileSync(join(dir, companionFile), text);
+    }
+    writeFileSync(join(dir, 'vitest.config.mjs'), `export default { cacheDir: './cache', test: { include: ['tests/*.slow.test.ts'], globals: false, maxWorkers: 1, fileParallelism: false, reporters: ['json'], outputFile: './native-report.json' } };`);
+    const native = spawnSync(process.execPath, [join(realpathSync('node_modules/vitest'), 'vitest.mjs'), 'run', '--configLoader', 'native', '--config', join(dir, 'vitest.config.mjs')], {
+      cwd: dir, encoding: 'utf8', timeout: 60000,
+      env: { ...process.env, TMPDIR: join(dir, 'tmp'), TMP: join(dir, 'tmp'), TEMP: join(dir, 'tmp') },
+    });
+    expect(native.status, native.stderr + native.stdout).toBe(0);
+    expect(native.signal).toBeNull();
+    const report = JSON.parse(readFileSync(join(dir, 'native-report.json'), 'utf8')) as { numPassedTests: number; numFailedTests: number; testResults: { name: string; assertionResults: { fullName: string; status: string }[] }[] };
+    expect(report.numPassedTests).toBe(12);
+    expect(report.numFailedTests).toBe(0);
+    expect(report.testResults).toHaveLength(8);
+    for (const [id, , declaresOwn] of cases) {
+      const companionFile = `tests/${id}.slow.test.ts`;
+      const result = report.testResults.find((row) => row.name.replaceAll('\\', '/').endsWith(`/${companionFile}`));
+      expect(result?.assertionResults.map((row) => [row.fullName, row.status])).toEqual(declaresOwn ? [['own case', 'passed'], ['source case', 'passed']] : [['source case', 'passed']]);
+      const registry = { files: { [`tests/${id}.test.ts`]: { cases: { a: ['linux'] } } } };
+      const check = () => companionLinks(registry, (path: string) => texts.get(path)!);
+      if (declaresOwn) expect(check).toThrow('companion');
+      else expect(check()).toEqual(new Map([[companionFile, `tests/${id}.test.ts`]]));
+    }
+  }, 90000);
   it('[REQ-347] rawFileのない従来の純粋関数入力も元fileで表示する', () => {
     const markdown = renderAudit(audit(blockReview(), file()));
     expect(markdown).toContain(`${testFile}: ${run()[0].fullName}`);
