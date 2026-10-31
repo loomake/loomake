@@ -198,3 +198,93 @@ describe('速度対策の測定経路', () => {
     expect(upload).toContain('if-no-files-found: warn');
   });
 });
+
+const caseProbe = fixture();
+writeFileSync(join(caseProbe, 'case-probe'), 'probe');
+const measureCaseInsensitive = existsSync(join(caseProbe, 'CASE-PROBE'));
+const githubActions = process.env.GITHUB_ACTIONS === 'true';
+
+const shortDirectory = (directory: string) => {
+  if (process.platform !== 'win32') return { path: null, available: false, status: null };
+  const result = spawnSync('cmd.exe', ['/d', '/v:off', '/s', '/c', `for %I in ("${directory}") do @echo %~sI`], {
+    encoding: 'utf8', windowsVerbatimArguments: true,
+  });
+  const path = result.stdout?.trim() ?? '';
+  const available = result.status === 0 && /~[0-9]/.test(path) && existsSync(path) &&
+    path.replaceAll('/', '\\').toLowerCase() !== directory.replaceAll('/', '\\').toLowerCase();
+  return { path: available ? path : null, available, status: result.status };
+};
+
+const shortProbe = join(fixture(), 'loomake-long-directory-for-short-name');
+mkdirSync(shortProbe);
+const measureShortName = shortDirectory(shortProbe);
+console.info('measure-report-alias-capabilities', JSON.stringify({
+  platform: process.platform, caseInsensitive: measureCaseInsensitive,
+  shortNameAvailable: measureShortName.available, shortNameProbeStatus: measureShortName.status,
+}));
+
+const originalReport = () => {
+  const repo = repository(); const original = join(repo, '.loomake');
+  mkdirSync(original);
+  const raw = Buffer.from('{"testResults":[],"success":false}\r\n');
+  const source = join(original, 'test-report.json');
+  writeFileSync(source, raw);
+  return { repo, original, source, raw };
+};
+
+const expectAliasRefused = (kind: 'case' | 'short-name', report: ReturnType<typeof originalReport>, directory: string) => {
+  expect(readFileSync(join(directory, 'test-report.json'))).toEqual(report.raw);
+  let error: unknown;
+  try { saveMeasureMetadata(report.repo, directory, 2, 'failure'); } catch (caught) { error = caught; }
+  const sourcePresent = existsSync(report.source);
+  const observation = {
+    kind, platform: process.platform, caseInsensitive: measureCaseInsensitive,
+    shortNameAvailable: measureShortName.available, sourcePresent,
+    rawUnchanged: sourcePresent && readFileSync(report.source).equals(report.raw),
+    metadataPresent: existsSync(join(report.original, 'metadata.json')),
+    errorCode: error instanceof Error ? (error as NodeJS.ErrnoException).code ?? null : null,
+  };
+  // 拒否のassertより先に、元reportが消えた場合も観測結果をCIログへ残す。
+  console.info('measure-report-alias-observation', JSON.stringify(observation));
+  expect(error).toBeInstanceOf(Error);
+  expect((error as Error).message).toContain('元レポートと別');
+  expect(observation.sourcePresent).toBe(true);
+  expect(observation.rawUnchanged).toBe(true);
+  expect(observation.metadataPresent).toBe(false);
+  expect(readdirSync(report.original).sort()).toEqual(['test-report.json']);
+};
+
+describe('測定metadataの保存先の別名と元reportの保持（Issue #254）', () => {
+  it.runIf(measureCaseInsensitive)('大小文字違いで同じ保存先を指すとき、削除前に拒否しCRLF付き原本を保つ', () => {
+    const report = originalReport();
+    expectAliasRefused('case', report, join(report.repo, '.LOOMAKE'));
+  });
+
+  it.runIf(!measureCaseInsensitive)('大小文字違いが別の保存先になるとき、原本を保って通常保存できる', () => {
+    const report = originalReport(); const directory = join(report.repo, '.LOOMAKE');
+    mkdirSync(directory);
+    const result = saveMeasureMetadata(report.repo, directory, 2, 'failure');
+    expect(result).toMatchObject({ collectionState: 'recorded', reportPresent: true, testOutcome: 'failure' });
+    expect(readFileSync(report.source)).toEqual(report.raw);
+    expect(readFileSync(join(directory, 'test-report.json'))).toEqual(report.raw);
+    expect(readdirSync(report.original).sort()).toEqual(['test-report.json']);
+    expect(readdirSync(directory).sort()).toEqual(['metadata.json', 'test-report.json']);
+  });
+
+  it.runIf(githubActions)('CIで必要な大小文字の条件を実FSで確かめ、別名の未検査を成功にしない', () => {
+    expect(measureCaseInsensitive).toBe(process.platform !== 'linux');
+  });
+
+  it.runIf(process.platform === 'win32' && measureShortName.available)('Windowsの実短名が同じ保存先を指すとき、削除前に拒否し原本を保つ', () => {
+    const report = originalReport(); const short = shortDirectory(report.original);
+    expect(short.status).toBe(0);
+    expect(short.available).toBe(true);
+    expect(short.path).not.toBeNull();
+    expectAliasRefused('short-name', report, short.path!);
+  });
+
+  it.runIf(process.platform === 'win32' && githubActions)('Windows CIの8.3短名の利用可否を確認し、不成立を免除しない', () => {
+    expect(measureShortName.status).toBe(0);
+    expect(measureShortName.available).toBe(true);
+  });
+});
