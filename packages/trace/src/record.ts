@@ -2,7 +2,7 @@ import { existsSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { runExternal } from '@loomake/kit';
 import type { VerifyResult, VerifyScope, Evidence } from '@loomake/core';
-import { RuntimeFailure, UsageError, assertChangeId, isAbortedResult, loadConfig, runVerify, verifyAbortedResult, verifyExitCode } from '@loomake/kit';
+import { RuntimeFailure, UsageError, assertChangeId, type QualitySchemaLike, isAbortedResult, loadConfig, runVerify, verifyAbortedResult, verifyExitCode } from '@loomake/kit';
 import { changedDocuments, readDocuments } from './documents.js';
 
 import { EVIDENCE_SCHEMA_VERSION } from './schema.js';
@@ -27,6 +27,8 @@ export type RecordOptions = {
   onVerify?: (result: VerifyResult) => void;
   /** verify の scope。省略すると ci。local の記録は最終 CI の合格を表さない（REQ-315） */
   scope?: VerifyScope;
+  /** quality.yaml のスキーマ。`await loadVerifyQualitySchema()` の結果を渡す。ci の記録では必須（REQ-319） */
+  qualitySchema?: QualitySchemaLike;
 };
 
 export const EVIDENCE_DIR = '.loomake/evidence';
@@ -72,7 +74,7 @@ export function runRecord(options: RecordOptions): number {
   const scope = options.scope ?? 'ci';
   let result: VerifyResult;
   try {
-    result = runVerify({ root, changeId, gate: 'done', scope, progress, timeoutMs: options.timeoutMs });
+    result = runVerify({ root, changeId, gate: 'done', scope, progress, timeoutMs: options.timeoutMs, qualitySchema: options.qualitySchema });
   } catch (error) {
     // change が確定したあとの実行時の失敗は、aborted として記録する。使い方の誤りは記録しない（REQ-315）
     if (!(error instanceof RuntimeFailure)) throw error;

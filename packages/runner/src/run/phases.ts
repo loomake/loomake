@@ -2,7 +2,7 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { runRecord } from '@loomake/trace';
-import { remainingProcessTime, ProcessLimitError, INTERRUPTED, TIMED_OUT, UsageError, runVerify, createInputReader, isAbortedResult, isVerifyResultV2, verifyExitCode } from '@loomake/kit';
+import { remainingProcessTime, ProcessLimitError, INTERRUPTED, TIMED_OUT, UsageError, loadVerifyQualitySchema, runVerify, createInputReader, isAbortedResult, isVerifyResultV2, verifyExitCode } from '@loomake/kit';
 import type { LegacyVerifyResult, VerifyResult } from '@loomake/core';
 import { runClaude } from '../engine.js';
 import { git, gitConfig } from '../git.js';
@@ -132,6 +132,7 @@ async function interrupted(ctx: RunContext): Promise<boolean> {
 export async function runGate(ctx: RunContext, rec: Recorder): Promise<Stop | undefined> {
   const { root, env, changeId, gateTasks, tasksRel } = ctx;
   const stopped = (reason: string): Stop => ({ status: 'stopped', reason, remaining: gateTasks });
+  const qualitySchema = await loadVerifyQualitySchema();
   for (let fixes = 0; ; fixes++) {
     if (ctx.options.signal?.aborted) return { status: 'interrupted', reason: '中断されました', remaining: gateTasks };
     const left = Math.min(rec.deadline - ctx.now().getTime(), remainingProcessTime() ?? Infinity);
@@ -148,7 +149,7 @@ export async function runGate(ctx: RunContext, rec: Recorder): Promise<Stop | un
     try {
       beforeVerify = headState(root, env);
       // run の完了ゲートは verify --done --scope local と同じ検査（REQ-100）
-      rec.lastVerify = runVerify({ root, changeId, gate: 'done', scope: 'local', progress: ctx.progress, timeoutMs: left });
+      rec.lastVerify = runVerify({ root, changeId, gate: 'done', scope: 'local', progress: ctx.progress, timeoutMs: left, qualitySchema });
     } catch (error) {
       restore();
       throw error;
@@ -205,7 +206,7 @@ export async function recordAndOpenPr(ctx: RunContext, rec: Recorder): Promise<n
   if (!evidence) {
     // 記録するのはローカルの完了（scope:local）。最終 CI の合格ではない（REQ-100・REQ-315）
     const recorded = runRecord({
-      root, changeId, scope: 'local', stdout: ctx.stdout, progress: ctx.progress, now: ctx.now, timeoutMs: left,
+      root, changeId, scope: 'local', stdout: ctx.stdout, progress: ctx.progress, now: ctx.now, timeoutMs: left, qualitySchema: await loadVerifyQualitySchema(),
       onVerify: (result) => { rec.lastVerify = result; },
     });
     if (recorded !== 0) {
