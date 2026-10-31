@@ -366,3 +366,7 @@ queryとfragmentはnativeで他test行とsource行が各2passedとなり、現�
 | T5 | 既存docs/dev/ci.mdへ技術限界を追記する。文書が存在しないとのモデル発言はGrep不足であり、新規文書は作らない |
 
 spec-only成功後だけ修理へ進み、2.10/PR253は未受入のまま残す。rowのQ91〜94は別scope、R4完全設計とC1のstatic/native対応・一般oracle重大3は未採用で、実registry空・8/21+必須4未達・独立最終/全3OS/全体done/人ruleset/merge/sync/archiveの残受入を保持する。
+
+# N3予測表の訂正（Q-99・Q-100）
+
+原OpusのR2規則はelseなしのguardOfだけを認めるが、N3表はelseにもguardMismatchを一律予測していた。追加設計5f83ae6cの技術所見と元else規則を管理役が照合し、elseだけunguardedDescribeへ訂正する。元guardOf/checkRegistration・321回帰・元335行の期待を保持し、else2形のunsupportedRowForm/unguardedDescribe/missingId/unprefixed完全一致、inventoryの完全一致、行Bindingゼロ、固定文言とelse除去正常対照を追加する。設計値が再び異なれば期待を合わせず設計へ戻す。抜粋の対象head誤表示と独立所見事前保存未確認はtraceの訂正記録を参照。R1〜R3の部分修理だけであり、R4/C1・一般oracle・実登録の受入は未達である。
