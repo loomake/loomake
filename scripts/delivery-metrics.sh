@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
-# 配布ワークフロー改善ダッシュボードの指標を集める。PR の段階・所要時間・Codex の指摘数、Issue #121 の投稿量、worklog の量、CI の実行時間、時間切れの Issue を CSV にする。
-# 使い方: scripts/delivery-metrics.sh <出力ディレクトリ>   （gh と git と node と python3 が要る。リポジトリ根で実行）
-# 出力は一時ディレクトリに書き、すべて成功したら出力ディレクトリへ移す。gh に失敗したら前のファイルを残して非ゼロで終わる。
+# 配布ワークフロー改善ダッシュボードの指標を集める。PR の段階・所要時間・Codex の指摘数、Issue #121 の投稿量、worklog の量、CI の実行時間、時間切れの Issue、利用者の判断待ちの項目を CSV にする。
+# 使い方: scripts/delivery-metrics.sh <出力ディレクトリ>   （gh と git と node と pnpm と python3 が要る。リポジトリ根で実行）
+# node_modules がなければ pnpm install --frozen-lockfile を流すので、そのときはネットワークにつながっている必要がある。
+# trace.md は origin/main から読む。ここでは origin/main を fetch するが、pending-approvals.mjs 自体は fetch しない。
+# 出力は一時ディレクトリに書き、成功したら出力ディレクトリへ移す。判断待ちの段より前で gh に失敗したら、前のファイルをすべて残して非ゼロで終わる。
+# 判断待ちの段だけが失敗したときは、ほかの CSV を移したうえで前の pending-approvals.csv を残し、非ゼロで終わる。
 # PR の段階は scripts/ci-tier.mjs の classifyPath で決める（パスだけで判定し、spec.md の Requirement の変更は見ない）。
 set -euo pipefail
 OUT=${1:?出力ディレクトリ}
@@ -78,4 +81,24 @@ w=csv.writer(open(f"{S}/flaky.csv","w")); w.writerow(["number","title","state","
 for n in sorted(seen): i=seen[n]; w.writerow([n,i["title"],i["state"],i["createdAt"][:10],(i.get("closedAt") or "")[:10]])' "$TMP"
 mkdir -p "$OUT"
 mv -f "$TMP"/prs.jsonl "$TMP"/prs.csv "$TMP"/issue121.csv "$TMP"/worklog.csv "$TMP"/ci.csv "$TMP"/flaky.csv "$OUT"/
+# 利用者の判断待ち（Issue #121 の呼びかけ・判断待ちの節に中身がある開いている PR・origin/main の trace.md の未回答のブロッキングな確認事項）。
+# 判定は scripts/pending-approvals.mjs。trace.md の未回答は verify と同じ core・kit の関数で決めるので、先に 2 つを build する。
+# この段は失敗してもほかの CSV を巻き込まない。失敗したら前の pending-approvals.csv を残し、標準エラーを pending-approvals.err に書いて、最後に非ゼロで終わる。
+# if の条件の中では set -e が効かないので、各行を && でつなぐ
+pending_approvals() {
+  gh api "repos/loomake/loomake/issues/121/comments?per_page=100" --paginate --jq '.[]|{login: .user.login, body, created_at, html_url, via_app: (if .performed_via_github_app then (.performed_via_github_app.slug // "unknown") else null end)}' > "$TMP/issue121-comments.jsonl" &&
+  gh pr list --state open --limit 200 --json number,title,url,body,createdAt > "$TMP/open-prs.json" &&
+  { [ -d node_modules ] || pnpm install --frozen-lockfile >&2; } &&
+  pnpm -s --filter @loomake/core --filter @loomake/kit build >&2 &&
+  node scripts/pending-approvals.mjs "$TMP/issue121-comments.jsonl" "$TMP/open-prs.json" "$TMP/pending-approvals.csv" origin/main
+}
+fail=0
+if pending_approvals 2>"$OUT/pending-approvals.err"; then
+  mv -f "$TMP/pending-approvals.csv" "$OUT"/
+  rm -f "$OUT/pending-approvals.err"
+else
+  echo "警告: 利用者の判断待ちの一覧を作れませんでした。前の pending-approvals.csv を残します（原因は $OUT/pending-approvals.err）" >&2
+  fail=1
+fi
 ls -la "$OUT"
+exit "$fail"
