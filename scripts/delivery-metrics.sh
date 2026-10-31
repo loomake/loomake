@@ -15,11 +15,17 @@ trap 'rm -rf "$TMP"' EXIT
 # PR の一覧には行数・ファイル・コメントが含まれないので、PR ごとに 3 つの API を呼ぶ（8 本並べて呼ぶ）
 gh api "repos/loomake/loomake/pulls?state=all&per_page=100" --paginate --jq '.[]|select(.number>=100)|.number' > "$TMP/pr-numbers.txt"
 python3 - "$TMP" <<'EOF'
-import json,subprocess,sys
+import json,subprocess,sys,time
 from concurrent.futures import ThreadPoolExecutor
 S=sys.argv[1]; R="repos/loomake/loomake"
+# 一時的な 5xx や二次レート制限に備えて 3 回まで試す。最後も失敗したら gh の stderr を出して止める
 def api(path,jq):
-    return subprocess.run(["gh","api",path,"--paginate","--jq",jq],check=True,capture_output=True,text=True).stdout.split("\n")
+    for i in range(3):
+        r=subprocess.run(["gh","api",path,"--paginate","--jq",jq],capture_output=True,text=True)
+        if r.returncode==0: return r.stdout.split("\n")
+        if i<2: time.sleep(5*(i+1))
+    sys.stderr.write(f"gh api {path} が失敗した: {r.stderr.strip()}\n")
+    raise SystemExit(1)
 def fetch(n):
     pr=json.loads(api(f"{R}/pulls/{n}",'{number,title,createdAt:.created_at,mergedAt:.merged_at,state:(if .merged_at then "MERGED" elif .state=="closed" then "CLOSED" else "OPEN" end),additions,deletions,changedFiles:.changed_files}')[0])
     pr["codex_comments"]=sum(int(x) for x in api(f"{R}/issues/{n}/comments?per_page=100",'[.[]|select(.user.login|test("codex"))]|length') if x)
