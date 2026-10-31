@@ -171,3 +171,15 @@ root追加補正：hasReplacementCharacterは返却textにU+FFFDがある合図�
 管理役追加採用（2026-10-31）：owned constant textconvでM/正常0headerを実証したため、M=1固定を訂正する。非曖昧なbatch成功のconsumerだけM0空entryを許し旧挙動を保持、parser既定strictとA/D/T等は不変。room<=3の空stdoutは曖昧としてoutput拒否する。旧/新content/display等価・混合群・strict missing拒否を新試験で確認し、既存Req内の設定保持として扱う。
 
 管理役最終補正（2026-10-31）：name-statusをMapへ入れる前にNUL終端/ペア/空項目/復号後path重複を検証し、不正な上書きをGitErrorで拒否する。空statusとT単独statusは保持する。既存REQ137/138制約内の入力完全性検証で、旧test/spec/期待値と品質設定は変えない。
+
+
+### Windows literal pathspec修正の本体技術採用（2026-10-31）
+
+出典は独立Opus設計8afb8b0d-5775-47d6-81f7-cce858c5916eの全文と、本体rootの本会話での技術採用である。以下は利用者本人の新しい直接回答ではなく、既存設計のtask2.5内の修正判断として記録する。
+
+| ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |
+|---|---|---|---|---|---|---|---|---|
+| W-GIT-01 | REQ-137・REQ-138 | Windows偽gitの先頭flag拒否をどう修理するか | A：batchOutput子envでliteral／B：native launcher | A。公式の等価指定で差分を限定 | yes | A。本体技術採用。子envだけにGIT_LITERAL_PATHSPECS=1を足し2argsの先頭flagを外す。元env・他caller・期限は不変 | 本体root（技術採用） | 2026-10-31 |
+| W-GIT-02 | REQ-109・REQ-180 | literal群の呼出観測をどう移行するか | a：子envで選択し検査強化／b：旧flag選択を維持 | a。数値期待と検査強度を保持 | yes | a。本体技術採用。26/28/8192+152期待は不変、全群の先頭diff/flag不在と残2件のadd/name-status diffを追加確認。期待値緩和ではない | 本体root（技術採用） | 2026-10-31 |
+| W-GIT-03 | REQ-137・REQ-138 | flag/envの等価性をどう確認するか | 公式と実Git／Git sourceを新規取得 | 公式と実Git。正負を実証 | yes | 本体技術採用。公式等価記述とW2でGLOB/ICASE衝突、NOGLOB、既存LITERAL=0、元env不変を確認する | 本体root（技術採用） | 2026-10-31 |
+| W-GIT-04 | REQ-297 | push試験へdiff転送assertを追加するか | 追加しないでCI診断／追加する | 追加なし。既存試験を保持 | yes | 本体技術採用。external-budgetは変更せず、diffのshim/転送成功がpush停止前にあることを本体がCIで確認する。実3OSは未達 | 本体root（技術採用） | 2026-10-31 |

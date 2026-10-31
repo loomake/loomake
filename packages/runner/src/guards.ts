@@ -170,7 +170,7 @@ function* stagedContentDiff(
 ): Generator<Map<string, string[]>> {
   let output: string | undefined;
   try {
-    output = batchOutput(root, env, ['--literal-pathspecs', 'diff', '--cached', '-U0', ...PATCH_OPTIONS, '--', ...files], limits.maxOutputBytes).stdout;
+    output = batchOutput(root, env, ['diff', '--cached', '-U0', ...PATCH_OPTIONS, '--', ...files], limits.maxOutputBytes).stdout;
   }
   catch (error) {
     if (!(error instanceof ProcessLimitError) || error.kind !== 'output' || files.length === 1) throw error;
@@ -193,7 +193,7 @@ export function chargedOutputBytes(bytes: number, room: number): number {
 }
 
 function batchOutput(root: string, env: NodeJS.ProcessEnv, args: string[], room: number): ReturnType<typeof gitMeasured> {
-  const result = gitMeasured(root, env, args, { maxBuffer: room });
+  const result = gitMeasured(root, { ...env, GIT_LITERAL_PATHSPECS: '1' }, args, { maxBuffer: room });
   // U+FFFD は正常な本文にも存在する。上限近傍では復号後の切断と区別できないため停止する。
   if ((result.bytes >= room - 3 && result.hasReplacementCharacter) || (room <= 3 && result.stdout === '')) {
     throw new ProcessLimitError('output', 'git', '', '', '上限近傍で差分の完全性を確認できない');
@@ -209,7 +209,7 @@ export function stagedDisplayDiff(
   for (const group of groupPaths(files, limits.maxPathspecChars)) {
     const room = limits.maxOutputBytes - used;
     if (room <= 0) throw new ProcessLimitError('output', 'git');
-    const result = batchOutput(root, env, ['--literal-pathspecs', 'diff', '--cached', ...PATCH_OPTIONS, '--', ...group], room);
+    const result = batchOutput(root, env, ['diff', '--cached', ...PATCH_OPTIONS, '--', ...group], room);
     used += chargedOutputBytes(result.bytes, room);
     const extra = (path: string) => codes.has(path) && group.some((file) => path.startsWith(`${file}/`));
     const patch = splitStagedPatch(result.stdout, group, codes, extra, true);

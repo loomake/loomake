@@ -361,3 +361,14 @@ owned Git2.56でraw blobはMだが旧新textconvが同じ固定文字列の場�
 ### 10.6 status一覧の終端・ペア・復号後重複
 
 管理役の最終diff確認に基づき、codes Map構築前にname-statusのNUL終端とペア完全性、空code/path、復号後の重複pathを検証する（REQ137・REQ138）。欠損や同名上書きはGitErrorで閉じ、空statusだけは正規の変更なしとして許可する。Tのstatusは単独項目のまま、内容patchのT=2区切りとは区別する。新しいmissing-terminal/duplicate-decoded-path等の否定試験と既存guard55件・型lint/spec-onlyで確認し、通常full1813成功はこの小補正前の結果として保持する。最終source全体は次の実CIで確認する。
+
+
+### 10.7 Windows偽gitとliteral子環境（task2.5の修正）
+
+独立Opus設計8afb8b0d-5775-47d6-81f7-cce858c5916e（head3b3b、実モデル/回答モデルclaude-opus-5-5、ok=true・deny=0）を本体rootが全文確認し、W-GIT-01=A、02=a、03=公式資料と実Git、04=追加assertなしのCI診断を技術採用した。これは本体による既存設計内の採用判断であり、利用者本人の新しい直接回答ではない。
+
+`batchOutput`だけが`{ ...env, GIT_LITERAL_PATHSPECS: '1' }`を子へ渡し、内容と表示の2つのargsから先頭の`--literal-pathspecs`を外す。[Git公式](https://git-scm.com/docs/git#Documentation/git.txt---literal-pathspecs)は両指定が等価と説明している。呼出元env・process.env・ほかのGIT変数は変えない。実GitでもGLOB/ICASEとの衝突は同じGit失敗、NOGLOB=1と既存LITERAL=0は同じ出力となることを確認した。R-5の衝突停止を保ち、部分的な自作pathspecやnative launcherは追加しない。
+
+1200file試験の観測を子envへ移し、26件・合計28回・8192+152の期待値を保つ。26件すべてが先頭diff・flag不在で、残る2件がliteral設定なしのaddとname-status diffであることを追加検査する。W1で内容/表示の両群と呼出元env不変、W2で実Gitの正負とliteral名の混入防止を確かめる。既存のraw flag版とのbyte比較、特殊path・textconv・予算・二分・timeout・中断のassertionは変えない。
+
+public API、git/gitMeasuredのsignature、runtime/監視役protocol、群化・照合・表示・課金・共有期限は不変である。GitErrorに含むargvは`git --literal-pathspecs diff`から`git diff`へ変わる。external-budgetの元4case・19.5/39.5秒下限/既存上限・保持役待ち差分・retry・全assertを変更せず、Windowsでdiff転送成功がpushの停止より前にあることは本体がCI診断で確認する。今回の修正だけで実3OS回帰・実4件0/4・残6task・最終受入を完了としない。

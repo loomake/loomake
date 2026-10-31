@@ -131,6 +131,38 @@ describe('群の完全性と予算の直接検査', () => {
 });
 
 describe('実Gitでの群化と対象file境界', () => {
+  it('[REQ-112][REQ-138] 内容と表示の両群だけでliteral子envを渡し、先頭をdiffに保つ', () => {
+    const r = repo(); const before = { ...r.env };
+    r.write('tests/a.test.ts', "it.skip('synthetic',()=>{});\n");
+    findViolationsWithLimits(r.root, r.env);
+    const calls = vi.mocked(gitMeasured).mock.calls;
+    expect(calls).toHaveLength(2);
+    expect(calls.map((call) => call[2].includes('-U0'))).toEqual([true, false]);
+    for (const [, env, args] of calls) {
+      expect(args[0]).toBe('diff'); expect(args).not.toContain('--literal-pathspecs');
+      expect(env.GIT_LITERAL_PATHSPECS).toBe('1'); expect(env).not.toBe(r.env);
+    }
+    expect(r.env).toEqual(before);
+  });
+  it.each([
+    ['GIT_GLOB_PATHSPECS', '1', true], ['GIT_ICASE_PATHSPECS', '1', true],
+    ['GIT_NOGLOB_PATHSPECS', '1', false], ['GIT_LITERAL_PATHSPECS', '0', false],
+  ] as const)('[REQ-112][REQ-137][REQ-138] 実Gitの%s=%sの正負と元envを保持する', (key, value, conflict) => {
+    const r = repo();
+    r.write('tests/[a].test.ts', 'before\n'); r.write('tests/a.test.ts', 'before\n'); commit(r);
+    r.write('tests/[a].test.ts', "it.skip('synthetic',()=>{});\n"); r.write('tests/a.test.ts', 'outside_marker\n');
+    const env = { ...r.env, [key]: value }; const before = { ...env };
+    if (conflict) expect(() => findViolationsWithLimits(r.root, env)).toThrow(GitError);
+    else {
+      const result = findViolationsWithLimits(r.root, env);
+      expect(result.findings.map((finding) => finding.file)).toEqual(['tests/[a].test.ts']);
+      expect(result.diff).not.toContain('outside_marker');
+      expect(result.diff).toBe(raw(r, ['--literal-pathspecs', 'diff', '--cached', ...options, '--', 'tests/[a].test.ts']));
+    }
+    expect(gitMeasured).toHaveBeenCalled();
+    expect(vi.mocked(gitMeasured).mock.calls.every((call) => call[1].GIT_LITERAL_PATHSPECS === '1')).toBe(true);
+    expect(env).toEqual(before);
+  });
   it.each([8192, 30])('[REQ-109][REQ-201] 同群と別群%sで隣fileの追加を削除行へ偽対応しない', (cap) => {
     const r = repo(); r.write('tests/a.test.ts', 'expect(value).toBe(1);\n'); r.write('tests/b.test.ts', 'before\n'); commit(r);
     r.write('tests/a.test.ts', 'after\n'); r.write('tests/b.test.ts', 'expect(value).toBe(1);\n');
@@ -146,9 +178,16 @@ describe('実Gitでの群化と対象file境界', () => {
     expect(result.findings.map((f) => f.file)).toEqual(files);
     expect(groupPaths(files)).toHaveLength(13);
     expect(vi.mocked(git).mock.calls.length + vi.mocked(gitMeasured).mock.calls.length).toBe(28);
-    const calls = [...vi.mocked(git).mock.calls, ...vi.mocked(gitMeasured).mock.calls].filter((call) => call[2][0] === '--literal-pathspecs');
+    const allCalls = [...vi.mocked(git).mock.calls, ...vi.mocked(gitMeasured).mock.calls];
+    const calls = allCalls.filter((call) => call[1]?.GIT_LITERAL_PATHSPECS === '1');
     expect(Math.max(...calls.map((call) => JSON.stringify(call[2]).length))).toBeLessThanOrEqual(8192 + 152);
     expect(calls).toHaveLength(26);
+    expect(calls.every((call) => call[2][0] === 'diff' && !call[2].includes('--literal-pathspecs'))).toBe(true);
+    const otherCalls = allCalls.filter((call) => call[1]?.GIT_LITERAL_PATHSPECS !== '1');
+    expect(otherCalls).toHaveLength(2);
+    expect(otherCalls.every((call) => call[1]?.GIT_LITERAL_PATHSPECS === undefined)).toBe(true);
+    expect(otherCalls.some((call) => call[2][0] === 'add')).toBe(true);
+    expect(otherCalls.some((call) => call[2][0] === 'diff' && call[2].includes('--name-status'))).toBe(true);
   });
   const names = process.platform === 'win32' ? ['日本語 空白', '[a]'] : ['日本語 空白', 'tab\tname', 'line\nname', 'quote"name', 'slash\\name', '*', '?', ':magic'];
   it.each(names)('[REQ-138][REQ-112] %jをquotePath両設定とカラー固定で正しく照合する', (name) => {
