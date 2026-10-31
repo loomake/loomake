@@ -20,8 +20,9 @@ import re
 import sys
 
 HEADER = "day,tool,model,input,cache_write,cache_read,output,requests\n"
-# CSV に本文や区切り文字が紛れ込まないよう、モデル名はこの形のものだけを出す
-MODEL_RE = re.compile(r"^[A-Za-z0-9._:\-\[\]/@]+$")
+# CSV に本文や区切り文字が紛れ込まないよう、モデル名はこの形のものだけを出す。
+# 表計算ソフトで数式と読まれないよう、先頭は英字に限る（-・@・=・+ で始まる名前は出さない）
+MODEL_RE = re.compile(r"^[A-Za-z][A-Za-z0-9._:\-\[\]/@]*$")
 
 
 def jst_day(ts):
@@ -30,7 +31,8 @@ def jst_day(ts):
 
 
 def num(v):
-    return v if isinstance(v, int) and not isinstance(v, bool) else 0
+    # 整数でない値は 0、負の値も 0 に丸める
+    return max(v, 0) if isinstance(v, int) and not isinstance(v, bool) else 0
 
 
 def lines(path):
@@ -65,7 +67,7 @@ def collect(home):
             if not isinstance(m, dict):
                 continue
             u, mid, ts = m.get("usage"), m.get("id"), d.get("timestamp")
-            if not isinstance(u, dict) or not mid or mid in seen or not isinstance(ts, str):
+            if not isinstance(u, dict) or not isinstance(mid, str) or not mid or mid in seen or not isinstance(ts, str):
                 continue
             model = m.get("model") or ""
             if not isinstance(model, str) or model.startswith("<"):
@@ -102,7 +104,7 @@ def collect(home):
                     key = (jst_day(ts), "codex", model)
                 except ValueError:
                     continue
-                add(key, num(u.get("input_tokens")) - c, num(u.get("cache_write_input_tokens")),
+                add(key, max(num(u.get("input_tokens")) - c, 0), num(u.get("cache_write_input_tokens")),
                     c, num(u.get("output_tokens")))
     return agg
 
