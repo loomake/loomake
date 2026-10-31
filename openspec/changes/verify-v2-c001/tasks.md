@@ -24,7 +24,7 @@
 
 ## 4. CLIと既存利用側の一体移行
 
-旧タスク4.3の版別の投影は子change `verify-v2-shape` のタスク1.9へ移した。
+旧タスク4.3の版別の投影は子change `verify-v2-shape` のタスク1.9へ移した。runnerの純粋判断（REQ-205）と仕様ゲートのaborted（REQ-093）の読み取りは、子change `verify-v2-readers` へ移した。
 
 - [ ] 4.1 runVerify・formatter・CLIをv2へ移し、scope既定値、JSON引数エラー、stderr、CI=1非対話、API/CLIの0〜3一致をID付き試験で確認する。承認済みR01 Aのbare verify品質専用経路を保持する。REQ-323〜325に従いargs.tsの共通定義・help/usage・docs/guide/3.reference/5.cli.mdを同じ改版で更新し、生成器 --checkを通す。reference-cli-baseline.jsonの旧46例は原本を残し、新契約で変わる出力/追加scope例を具体差分としてR05方針承認とは別の個別承認へ出す。1.2で確定したREQ-135に従い、verify/trace recordヘルプの --scope local|ci・受理値/既定値とskip不足/coverage省略の説明を実装し、helpでは検査せずstdout/0を保つことと全既存Scenarioを試験する。REQ-050のCLI呼出し/不足1とレポート抽出の処理量保持、REQ-040の正常coverageとskip省略を承認後に試験する（REQ-040・041・050・135・311・312・323〜325）
 - [ ] 4.2 trace recordをEvidence 2へ移し、scopeと終了コード、aborted、文書snapshot・未コミット・検査前後変化・追記専用・同期性とserializationのJSON前後検査・publicationの上書き禁止を既存回帰とID付き試験で確認する（REQ-066・315）
