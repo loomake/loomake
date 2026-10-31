@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 
 const LIMIT = 64 * 1024;
 const RESERVE = 160;
-const CASE_LABELS = new Set(['publication-retry', 'create-before', 'create-after', 'push-retry', 'repeat', 'new-source', 'json', 'sha', 'change', 'failed', 'fail-result', 'hash', 'snapshot', 'legacy', 'lookup-fail', 'lookup-invalid', 'verify-fail', 'verify-head', 'verify-branch', 'verify-dirty', 'lookup-broken-json', 'lookup-object', 'lookup-bad-url', 'lookup-credentials', 'lookup-wrong-head', 'lookup-cross-repo', 'lookup-multiple']);
+const CASE_LABELS = new Set(['publication-retry', 'shared-first-run', 'create-before', 'create-after', 'push-retry', 'repeat', 'new-source', 'json', 'sha', 'change', 'failed', 'fail-result', 'hash', 'snapshot', 'legacy', 'lookup-fail', 'lookup-invalid', 'verify-fail', 'verify-head', 'verify-branch', 'verify-dirty', 'lookup-broken-json', 'lookup-object', 'lookup-bad-url', 'lookup-credentials', 'lookup-wrong-head', 'lookup-cross-repo', 'lookup-multiple']);
 const PHASES = new Set(['case-start', 'repo-ready', 'run-start', 'run-end', 'mutate-end', 'amend-end', 'cleanup-start', 'cleanup-end', 'case-end']);
 type Phase = 'case-start' | 'repo-ready' | 'run-start' | 'run-end' | 'mutate-end' | 'amend-end' | 'cleanup-start' | 'cleanup-end' | 'case-end';
 type Details = { n?: number; code?: number; expectedReason?: boolean; completed?: boolean };

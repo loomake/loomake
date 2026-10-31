@@ -39,6 +39,8 @@ PR #179 の診断を取り込んだものです。`LOOMAKE_EXTERNAL_TEST_DIAGNOS
 
 publication-retry の 25 ケースは、それぞれ固有の ID と固定のラベルで `*.phases.jsonl` に段階を記録します。段階は case-start、repo-ready、run-start・run-end、証拠を壊す 8 ケースの mutate-end・amend-end、cleanup-start・cleanup-end、case-end です。run-end には run の番号、終了コード、出力に「作成前に失敗」を含むかどうかを残します。検索結果の不正 7 種類は元の入力を保存せず、固定のラベル（`lookup-broken-json` など）に分けます。
 
+「作成前に失敗する 1 回目の run」が同じ形の 10 ケース（`create-before`、`new-source`、証拠を壊す 8 ケース）は、1 回目の run を `shared-first-run` のラベルの記録で 1 回だけ流します。10 ケースの記録には 1 回目の run-start・run-end がなく、2 回目の run だけを n=2 で残します。repo-ready は、保存した 1 回目の結果を作業ディレクトリへ戻し終えた時点です。
+
 `makeRepo` は preload を `repo.env.NODE_OPTIONS` に足します。preload は `argv[1]` のファイル名が `supervisor.cjs`・`claude`・`gh` の Node プロセスだけについて、entry と exit を `*.processes.jsonl` に記録します。ファイル名にはリポジトリの basename、PID、preload の起動ごとの UUID を入れます。PID が再利用されても、別の起動の記録を混ぜません。監視役の行には操作の分類（`git-commit`・`gh-pr-create` など）と、期限までの残り時間 `remainingMs` を残します。
 
 記録は 1 ファイル 64KiB を上限とし、上限に達したら `truncated` の行を 1 つ残して止まります。記録の準備や書き込みに失敗しても、元の試験には例外を返さず、記録が欠けるだけです。生の stdout・stderr、引数、環境変数の値、認証情報は保存しません。
