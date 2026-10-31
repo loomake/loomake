@@ -31,11 +31,11 @@ R05 A・R08 Bも親traceと同じ[承認元](https://github.com/loomake/loomake/
 | ID | 関連 | 仮定の内容 | 理由 | 承認 | 承認者 | 承認日 |
 |---|---|---|---|---|---|---|
 
-## 個別の承認事項
+## 既承認と個別承認の区別
 
-- 規則文：AGENTS.md・delivery SKILLの具体的な旧→新全文は proposed/approval-request.md と implementation.patch に提示。人の承認は未済。
-- 保護された期待値：tests/kit-assets.test.ts:251の具体的な旧→新全文は同じ資料に提示。人の承認は未済。
-- 実働ファイルへの適用・実装後の試験・Scenario監査・doneは未実施。task1.2を未完了とする。技術回答の包括承認を個別承認の代わりにしない。
+- 規則移行：R-C001-06 Aで承認済み。上表の承認元を保持し、AGENTS・README・CONTRIBUTING・delivery・guide・両雛形・REQ-136の移行を再承認待ちにしない。具体的な旧→新全文は proposed/approval-request.md と implementation.patch に照合資料として残す。
+- 新たな人の判断：tests/kit-assets.test.ts:251の具体的な旧→新 expect だけ。全文は同じ資料に提示し、個別承認は未済。
+- 実働の一式への適用・実装後の試験・Scenario監査・doneは未実施。251行の期待値の承認待ちなのでtask1.2を未完了とする。R06の既承認と、この期待値の個別承認を区別する。
 
 ## 設計の補正
 

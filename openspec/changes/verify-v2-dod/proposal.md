@@ -8,7 +8,7 @@ C001 の明示 scope へ移行した実装に対し、ローカルで通す完�
 
 - 親 `verify-v2-c001` のタスク1.2の REQ-136 と、5.1の DoD・配布文書・両雛形・保護された期待値・REQ-136 の Scenario 監査を、この子へ移す。
 - REQ-136 の元の Scenario と Source を保持し、local の印と最終 CI 注記の Scenario を加える。新しい要件 ID は作らない。
-- 規則文と保護された期待値の具体案を `proposed/implementation.patch` に保存する。この段階では適用せず、人の承認後に実装・試験・監査・CI へ進む。
+- [R-C001-06 A の承認元](https://github.com/loomake/loomake/pull/139#issuecomment-6511434324)を照合し、既承認の規則移行と期待値の具体案を `proposed/implementation.patch` に保存する。新たな人の判断は `tests/kit-assets.test.ts:251` の旧→新 expect だけである。一式は未適用とし、この期待値の承認後に実装・試験・監査・CI へ進む。
 
 ## Capabilities
 

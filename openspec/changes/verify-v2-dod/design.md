@@ -18,9 +18,11 @@ tasks 雛形の印付きチェックボックスは `--done --scope local` と�
 
 両 format は `pnpm -s verify` と `npx loomake verify` だけが違う状態を保つ。REQ-136 の元 Scenario と Source をそのまま残し、local と注記の新 Scenario を2件加える。元 Scenario を書き換える案は採らない。
 
-### 2. 承認前は未適用パッチ
+### 2. 期待値の承認まで一式を未適用にする
 
-`proposed/implementation.patch` はデータであり、実働ファイルへ適用しない。`proposed/approval-request.md` に規則文・保護された expect の旧→新全文と凍結行を示す。人の承認後、採否と対象 patch の hash を trace へ記録して初めて実装へ進む。包括承認による技術回答を、新しい規則文と保護された期待値の個別承認に流用しない。
+R06 A は local DoD・最終 ci の区別と、AGENTS・README・CONTRIBUTING・delivery・guide・両雛形・REQ-136への規則移行を承認済みである。[R-C001-06 A の承認元](https://github.com/loomake/loomake/pull/139#issuecomment-6511434324)を保持し、規則移行を再承認待ちにしない。
+
+`proposed/implementation.patch` はデータであり、一式を実働ファイルへ適用しない。新たな人の判断は `tests/kit-assets.test.ts:251` の旧→新 expect だけである。`proposed/approval-request.md` にはこの差分と、既承認の移行を照合する規則全文・凍結行を示す。期待値の採否と承認元、対象 patch の hash を trace へ記録してから一式の実装へ進む。
 
 ### 3. 行ごとの分類
 
@@ -36,14 +38,14 @@ tasks 雛形の印付きチェックボックスは `--done --scope local` と�
 
 ## Risks / Trade-offs
 
-- 規則と雛形だけが先に適用される危険 → patch を未適用のまま提示し、人の承認後に試験と一緒に適用する。
+- 規則と雛形だけが先に適用される危険 → patch 一式を未適用のまま提示し、251行の期待値の承認後に試験と一緒に適用する。
 - local の成功を最終合格と取り違える危険 → checkbox の外に最終 CI の必須条件を明記し、追加試験でも区別を検査する。
 - 元資料の取り違え → immutable head の preimage hash と凍結箇所を記録し、適用直前にも照合する。
 
 ## Migration Plan
 
-1. この計画と patch を独立レビューし、規則文と保護された期待値の具体的承認を得る。タスク1.2は承認まで未完了とする。
-2. 承認済み patch を適用し、追加試験・init・tarball・Scenario 監査を実行する。未承認の修正が必要なら具体差分を改めて提示する。
+1. この計画と patch を独立レビューし、R06 の既承認範囲を照合して、251行の具体的な期待値差分の承認を得る。タスク1.2はこの承認まで未完了とする。
+2. 251行の期待値の承認後に patch 一式を適用し、追加試験・init・tarball・Scenario 監査を実行する。個別承認が必要な期待値の追加修正があれば、具体差分を改めて提示する。
 3. lint・typecheck・全体試験と local 完了ゲートを通す。最終の ci ゲート、必須5チェック、3 OS、独立レビューの成功を別に記録してから子を受け入れる。
 4. 親6/6受入後に evidence→scope→quality→dod→parent の整合を保って同期・archiveする。S1 は親6/6に先立ち受入・同期・archiveする。
 

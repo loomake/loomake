@@ -41,5 +41,5 @@
     "independent final review"
   ],
   "productAcceptance": "not achieved",
-  "approval": "human approval of exact normative wording and protected expectation pending"
+  "approval": "R06 normative migration already approved; only tests/kit-assets.test.ts:251 exact old-to-new expectation approval pending"
 }

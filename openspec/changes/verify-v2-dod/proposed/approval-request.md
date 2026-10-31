@@ -1,10 +1,12 @@
 # 具体的な承認依頼案
 
-この文書は管理役が Issue #121 へ提示する資料である。承認は未済。implementation.patch は適用しておらず、実働の規則・雛形・保護された期待値は変更していない。
+この文書は管理役が Issue #121 へ提示する資料である。R06の規則移行は既承認で、新たな人の判断は tests/kit-assets.test.ts:251 の具体的な旧→新 expect だけである。この期待値の承認は未済。implementation.patch 一式は適用しておらず、実働の規則・雛形・保護された期待値は変更していない。
 
 ## 採否を求める対象
 
-AGENTS と delivery の下記の具体文、保護された expect の旧→新全文、および同じ patch に含む雛形・案内・追加試験を承認対象とする。R05 A・R06 A・R08 B の方針と DOD-Q1 A・DOD-Q2 A は回答済みであり、再承認の対象ではない。
+採否を求めるのは、下記 tests/kit-assets.test.ts の元251行目の旧→新 expect だけである。[R-C001-06 A の承認元](https://github.com/loomake/loomake/pull/139#issuecomment-6511434324)は local DoD・最終ciの区別と規則・案内・両雛形・REQ-136の移行を承認済みで、個別承認を要するものをこの期待値の具体差分としている。
+
+周辺の AGENTS・delivery の全文と、雛形・案内・追加試験を含む全 patch は、既承認の移行との整合をレビューできる資料として残す。これらを新たな承認対象にはしない。R05 A・R08 B と DOD-Q1 A・DOD-Q2 A も回答済みである。
 
 ## AGENTS.md
 
@@ -127,8 +129,8 @@ source-integrity.json の frozen に行範囲・全文・sha256 を記録した�
 
 ## 未達の受入と残作業
 
-規則文と期待値の具体的な承認は未済。task1.2と全実装タスクを未チェックにし、done・製品の完成を主張しない。親5.1の形式移行・tarball・公開型・CLI 基準・REQ-190 の残りと、S1・親6/6は引き続き必要である。docs/flow.md:164 の誤りは管理役が別 Issue へ記録し、guide の旧 JSON/usage は親5.1に残す。
+R06の規則移行は既承認である。251行の期待値の具体的な承認は未済なので、task1.2と全実装タスクを未チェックにし、一式を未適用のまま保つ。done・製品の完成を主張しない。親5.1の形式移行・tarball・公開型・CLI 基準・REQ-190 の残りと、S1・親6/6は引き続き必要である。docs/flow.md:164 の誤りは管理役が別 Issue へ記録し、guide の旧 JSON/usage は親5.1に残す。
 
 ## 適用前の照合
 
-source-integrity.json の base と各 preimage を照合し、承認された patch の sha256 を trace に記録する。main の診断変更を取り込む必要があれば、同じ preimage を確認してから通常の手順で取り込む。新しい差分を未確認でこの承認に含めない。
+source-integrity.json の base と各 preimage、R06の既承認出典を照合し、251行の期待値の承認元と対象 patch の sha256 を trace に記録する。main の診断変更を取り込む必要があれば、同じ preimage を確認してから通常の手順で取り込む。新しい差分を未確認でこの承認に含めない。
