@@ -216,6 +216,9 @@ describe('外部操作の中断と時計窓の補正', () => {
     expect(payload.markdown).toContain('| call | 操作 | mode | 判定 | 同時上限の可能性 |');
     expect(payload.markdown).toContain('| 理由 | 欠損 |');
     expect(payload.markdown).toContain('shared-deadline-unavailable');
+    const shared = { ts: 111, D: 5097.5, outcomeKind: 'timeout', invalid: false };
+    expect(preparePublicDiagnostics([row({ spawn: shared })], report).markdown).toContain('| yes |');
+    expect(preparePublicDiagnostics([row({ mode: 'untilDeadline', spawn: shared })], report).markdown).toContain('| no |');
     expect(payload.markdown).toContain('64KiB'); expect(payload.markdown).toContain('1MiB');
     expect(payload.markdown).toContain('256KiB'); expect(payload.markdown).toContain('2KiB');
     expect(publicDiagnosticsProblem({ ...payload, markdown: payload.markdown + 'altered' })).toBe('markdown-mismatch');

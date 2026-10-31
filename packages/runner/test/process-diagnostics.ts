@@ -2,6 +2,7 @@ import { appendFileSync, existsSync, mkdirSync, statSync, writeFileSync } from '
 import { basename, join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { spawnSync } from 'node:child_process';
+import { types as utilTypes } from 'node:util';
 import { UsageError } from '../../kit/src/runtime/errors.js';
 
 const LIMIT = 64 * 1024;
@@ -157,6 +158,16 @@ function operation(command: string, args: readonly string[]): string {
     + (name === 'gh' && operations.has(first) && operations.has(second) ? '-' + second : '');
 }
 
+/** getterやProxyを追加評価せず、明示timeoutの有無だけを観測する。 */
+function timeoutRequested(options: Parameters<ProcessRuntime['runExternal']>[2]): boolean | null {
+  if (options == null) return false;
+  if (utilTypes.isProxy(options)) return null;
+  const descriptor = Object.getOwnPropertyDescriptor(options, 'timeoutMs');
+  if (descriptor) return 'value' in descriptor ? descriptor.value !== undefined && descriptor.value !== null : null;
+  const prototype = Object.getPrototypeOf(options);
+  return prototype === null || prototype === Object.prototype && !Object.hasOwn(prototype, 'timeoutMs') ? false : null;
+}
+
 /** 試験専用。元関数の引数・返値・例外をそのまま通し、許可した観測値だけを残す。 */
 export function observeRunExternal(real: ProcessRuntime): ProcessRuntime['runExternal'] {
   readSupervisorReport = real.readReport;
@@ -185,6 +196,7 @@ export function observeRunExternal(real: ProcessRuntime): ProcessRuntime['runExt
         const repo = options?.cwd ? basename(resolve(options.cwd, '..')) : '';
         writeCall({ event: 'call', at: Date.now(), pid: process.pid, seq, callId: call.callId,
           ...(/^loomake-run-[a-zA-Z0-9_-]{1,80}$/.test(repo) ? { repo } : {}),
+          timeoutRequested: timeoutRequested(options),
           op: operation(args[0], args[1]), mode: options?.qualityCommand ? 'quality' : options?.untilDeadline ? 'untilDeadline' : 'normal',
           ...start, hw0: finite(start.hw0), hw1, tx: finite(tx), Rclamped: start.R === 0,
           spawned: call.spawns.length > 0, spawnCount: call.spawns.length, spawn,

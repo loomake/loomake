@@ -34,12 +34,14 @@ export function classifyCall(row) {
     if (interval.every(finite)) sharedDeadlineIntervalMs = interval;
   }
   if (row?.spawned === false && row?.limitKind === 'timeout') classification = row.R === null ? 'pre-spawn-undetermined' : 'pre-spawn-timeout';
-  else if (row?.limitKind === 'interrupted' && row?.reasonPresent === true) classification = 'missing-result';
+  else if (row?.spawned === false && row?.limitKind === 'interrupted') classification = 'pre-spawn-interrupted';
+  else if (row?.spawned === true && row?.spawnCount === 1 && row?.limitKind === 'interrupted' && row?.reasonPresent === true) classification = 'missing-result';
   else if (!kinds.has(row?.limitKind)) {
     if (row?.result === 'returned') classification = 'completed';
     else reasons.push('non-limit-error');
   }
   else {
+    if (row?.limitKind === 'interrupted' && typeof row?.spawned !== 'boolean') reasons.push('spawn-state-unavailable');
     if (!sharedDeadlineIntervalMs) reasons.push('shared-deadline-unavailable');
     if (!spawn || !finite(spawn.D)) reasons.push('deadline-unavailable');
     if (row?.spawnCount !== 1) reasons.push('spawn-count-mismatch');
@@ -47,12 +49,22 @@ export function classifyCall(row) {
     if (spawn?.outcomeKind !== row?.limitKind) reasons.push('outcome-kind-mismatch');
     if (row?.limitKind !== 'timeout') reasons.push('non-timeout-limit');
     if (reasons.length === 0) {
-      const [lo, hi] = sharedDeadlineIntervalMs;
-      if (spawn.D >= lo - 1 && spawn.D <= hi + 1) {
-        classification = row.op === 'gh-pr-create' ? 'create-shared-deadline' : 'shared-deadline';
-        coincidentOperationPossible = row.mode === 'normal';
-      } else if (spawn.D < lo - 1) classification = 'operation-limit';
-      else reasons.push('deadline-after-shared-interval');
+      if (!finite(spawn.ts)) reasons.push('spawn-start-unavailable');
+      if (!['normal', 'untilDeadline', 'quality'].includes(row.mode)) reasons.push('mode-unavailable');
+      // startedAt→timeLeft の遅れは実測していない。保持役待ちを除く観測窓だけを上限にする。
+      const delayBound = spawn.ts - row.t1 - (row.hw1 - row.hw0);
+      if (finite(spawn.ts) && (!finite(delayBound) || delayBound < -1)) reasons.push('observation-order-invalid');
+      if (reasons.length === 0) {
+        const [lo, hi] = sharedDeadlineIntervalMs;
+        const requested = typeof row.timeoutRequested === 'boolean' ? row.timeoutRequested : null;
+        if (spawn.D > hi + 1) reasons.push('deadline-after-shared-interval');
+        else if (spawn.D >= lo - Math.max(0, delayBound) - 1) {
+          classification = row.op === 'gh-pr-create' ? 'create-shared-deadline' : 'shared-deadline';
+          coincidentOperationPossible = row.mode === 'normal' || requested !== false;
+        } else if (requested !== false) reasons.push(requested === null ? 'timeout-option-unavailable' : 'requested-timeout-possible');
+        else if (row.mode !== 'normal') reasons.push('deadline-before-shared-interval');
+        else classification = 'operation-limit';
+      }
     }
   }
   if (classification === 'pre-spawn-undetermined') reasons.push('shared-budget-unavailable');
@@ -63,6 +75,7 @@ function projectCall(row) {
   const spawn = row.spawn;
   const fields = { callId: typeof row.callId === 'string' && /^\d+-\d+$/.test(row.callId) ? row.callId : null,
     op: safeOperation(row.op), mode: ['normal', 'untilDeadline', 'quality'].includes(row.mode) ? row.mode : null,
+    timeoutRequested: typeof row.timeoutRequested === 'boolean' ? row.timeoutRequested : null,
     t0: nullable(row.t0), t1: nullable(row.t1), R: nullable(row.R), Rclamped: row.Rclamped === true,
     hw0: nullable(row.hw0), hw1: nullable(row.hw1), tx: nullable(row.tx),
     spawned: typeof row.spawned === 'boolean' ? row.spawned : null, spawnCount: nullable(row.spawnCount),
@@ -92,7 +105,7 @@ export function summarizeExternalCalls(rows, report, diagnostics = {}) {
     .filter((test) => ['passed', 'failed'].includes(test?.status));
   const matched = executed.filter((test) => typeof test.fullName === 'string' && test.fullName.includes(selector));
   const spawnCount = calls.reduce((sum, row) => sum + (Number.isSafeInteger(row.spawnCount) && row.spawnCount > 0 ? row.spawnCount : 0), 0);
-  return { version: 1, selector: matched.length === 1 && executed.length === 1 ? 'matched' : 'selector-mismatch',
+  return { version: 2, selector: matched.length === 1 && executed.length === 1 ? 'matched' : 'selector-mismatch',
     selectedCount: matched.length, executedCount: executed.length,
     selectedOutcome: matched.length === 1 ? matched[0].status : null,
     reachability: calls.length && spawnCount ? 'observed' : 'unreachable', callCount: calls.length, spawnCount,
@@ -139,17 +152,20 @@ export function renderExternalCallSummary(summary) {
     `選択: ${summary.selector}（対象${summary.selectedCount}件・実行${summary.executedCount}件）`,
     `到達: ${summary.reachability}（call ${summary.callCount}件・spawn ${summary.spawnCount}件）`,
     `診断不足: 読めない行 ${summary.unreadable}件、上限到達 ${summary.truncated}`, '',
-    '| call | 操作 | 判定 | 入口共有残予算ms | 実deadline | 不足 |', '|---|---|---|---|---|---|',
-    ...summary.calls.map((row) => `| ${row.callId ?? '-'} | ${row.op} | ${row.classification} | ${row.R ?? '-'} | ${row.spawn?.D ?? '-'} | ${[...row.reasons, ...row.missingFields].join(', ')} |`), '',
-    '内部timeoutの厳密値は未取得（null）。観測区間と共有期限区間はsummary.jsonに記録する。', ''].join('\n');
+    '| call | 操作 | mode | 判定 | 同時上限の可能性 | 入口共有残予算ms | 実deadline | 理由 | 欠損 |', '|---|---|---|---|---|---|---|---|---|',
+    ...summary.calls.map((row) => `| ${row.callId ?? '-'} | ${row.op} | ${row.mode ?? '-'} | ${row.classification} | ${row.coincidentOperationPossible ? 'yes' : 'no'} | ${row.R ?? '-'} | ${row.spawn?.D ?? '-'} | ${row.reasons.join(', ')} | ${row.missingFields.join(', ')} |`), '',
+    '内部timeoutの厳密値は未取得（null）。観測区間と共有期限区間はsummary.jsonに記録する。',
+    '同時上限の可能性がyesなら、1操作上限または明示timeoutが共有期限の窓に重なり得るため、原因を断定しない。',
+    '共有期限の窓は、spawn直前までの未観測の遅れの上限（ts−t1−保持役待ち）だけ前へ広げる。窓より前のdeadlineだけを、明示timeoutのないnormalの1操作上限とする。',
+    '保存上限：raw診断は各64KiB（最大128ファイル・512行）。公開calls/summary JSONは各1MiB、summary.mdは256KiB、heartbeat.jsonは2KiB。', ''].join('\n');
 }
 
-const publicCallKeys = ['event', 'callId', 'op', 'mode', 't0', 't1', 'R', 'Rclamped', 'hw0', 'hw1', 'tx', 'spawned', 'spawnCount', 'limitKind', 'result', 'reasonPresent', 'internalTimeoutMs', 'timeoutIntervalMs', 'spawn', 'missingFields', 'classification', 'reasons', 'sharedDeadlineIntervalMs', 'coincidentOperationPossible'];
+const publicCallKeys = ['event', 'callId', 'op', 'mode', 'timeoutRequested', 't0', 't1', 'R', 'Rclamped', 'hw0', 'hw1', 'tx', 'spawned', 'spawnCount', 'limitKind', 'result', 'reasonPresent', 'internalTimeoutMs', 'timeoutIntervalMs', 'spawn', 'missingFields', 'classification', 'reasons', 'sharedDeadlineIntervalMs', 'coincidentOperationPossible'];
 const publicSpawnKeys = ['ts', 'te', 'D', 'supervisorStatus', 'outcomeKind', 'outcomeStatus', 'invalid'];
 const publicHeartbeatKeys = ['available', 'beats', 'maxGapMs', 'gapsOverThreshold', 'maxTempWriteMs', 'maxRunnerTempWriteMs', 'maxNodeSpawnMs', 'maxGitSpawnMs', 'truncated', 'unreadable'];
 const summaryKeys = ['version', 'selector', 'selectedCount', 'executedCount', 'selectedOutcome', 'reachability', 'callCount', 'spawnCount', 'truncated', 'unreadable', 'calls', 'heartbeat', 'caveat'];
-const classifications = new Set(['undetermined', 'completed', 'pre-spawn-undetermined', 'pre-spawn-timeout', 'missing-result', 'shared-deadline', 'create-shared-deadline', 'operation-limit']);
-const reasonCodes = new Set(['shared-deadline-unavailable', 'deadline-unavailable', 'spawn-count-mismatch', 'report-invalid-or-missing', 'outcome-kind-mismatch', 'non-timeout-limit', 'deadline-after-shared-interval', 'shared-budget-unavailable', 'non-limit-error']);
+const classifications = new Set(['undetermined', 'completed', 'pre-spawn-undetermined', 'pre-spawn-timeout', 'pre-spawn-interrupted', 'missing-result', 'shared-deadline', 'create-shared-deadline', 'operation-limit']);
+const reasonCodes = new Set(['shared-deadline-unavailable', 'deadline-unavailable', 'spawn-count-mismatch', 'report-invalid-or-missing', 'outcome-kind-mismatch', 'non-timeout-limit', 'deadline-after-shared-interval', 'shared-budget-unavailable', 'non-limit-error', 'spawn-state-unavailable', 'spawn-start-unavailable', 'mode-unavailable', 'observation-order-invalid', 'timeout-option-unavailable', 'requested-timeout-possible', 'deadline-before-shared-interval']);
 const missingCodes = new Set(['t0', 't1', 'R', 'hw0', 'hw1', 'tx', 'spawn', 'spawn.ts', 'spawn.te', 'spawn.D', 'spawn.outcomeKind']);
 const exactKeys = (value, keys) => value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key));
 const nullableNumber = (value) => value === null || finite(value);
@@ -167,6 +183,7 @@ function publicHeartbeat(value) {
 function validPublicCall(row) {
   if (!exactKeys(row, publicCallKeys) || row.event !== 'call' || typeof row.callId !== 'string' || !/^call-[1-9]\d{0,2}$/.test(row.callId)
       || safeOperation(row.op) !== row.op || !enumOrNull(row.mode, ['normal', 'untilDeadline', 'quality'])
+      || !nullableBoolean(row.timeoutRequested)
       || !['t0', 't1', 'R', 'hw0', 'hw1', 'tx', 'spawnCount'].every((key) => nullableNumber(row[key]))
       || typeof row.Rclamped !== 'boolean' || !nullableBoolean(row.spawned) || !enumOrNull(row.limitKind, [...kinds])
       || !enumOrNull(row.result, ['returned', 'returned-error', 'threw']) || !nullableBoolean(row.reasonPresent) || row.internalTimeoutMs !== null
@@ -184,7 +201,7 @@ export function publicDiagnosticsProblem(payload) {
   if (!exactKeys(payload, ['calls', 'summary', 'heartbeat', 'markdown'])) return 'invalid-payload-keys';
   if (!Array.isArray(payload.calls) || payload.calls.length > MAX_RECORDS || !payload.calls.every(validPublicCall)) return 'invalid-call-schema';
   const summary = payload.summary;
-  if (!exactKeys(summary, summaryKeys) || summary.version !== 1 || !['matched', 'selector-mismatch'].includes(summary.selector)
+  if (!exactKeys(summary, summaryKeys) || summary.version !== 2 || !['matched', 'selector-mismatch'].includes(summary.selector)
       || !['selectedCount', 'executedCount', 'callCount', 'spawnCount', 'unreadable'].every((key) => Number.isSafeInteger(summary[key]) && summary[key] >= 0)
       || !enumOrNull(summary.selectedOutcome, ['passed', 'failed']) || !['observed', 'unreachable'].includes(summary.reachability)
       || typeof summary.truncated !== 'boolean' || summary.caveat !== caveat || !Array.isArray(summary.calls) || !summary.calls.every(validPublicCall)) return 'invalid-summary-schema';
