@@ -12,6 +12,7 @@ import { appendFileSync, existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isMain } from './lib/is-main.mjs';
+import { assertNotPartitioned, loadPartition, PartitionError } from './lib/test-partition.mjs';
 
 export const QUARANTINE_OS = ['macos-latest', 'windows-latest'];
 export const MAX_DAYS = 14;
@@ -95,7 +96,13 @@ export function loadQuarantine(root, today) {
   const path = join(root, 'tests/quarantine.json');
   let data;
   try { data = JSON.parse(readFileSync(path, 'utf8')); } catch (error) { throw new QuarantineError(`tests/quarantine.json を読めません：${error.message}`); }
-  return validateQuarantine(data, { today, exists: (file) => existsSync(join(root, file)) && statSync(join(root, file)).isFile() });
+  const entries = validateQuarantine(data, { today, exists: (file) => existsSync(join(root, file)) && statSync(join(root, file)).isFile() });
+  try { assertNotPartitioned(entries.map((entry) => entry.file), loadPartition(root)); }
+  catch (error) {
+    if (!(error instanceof PartitionError)) throw error;
+    throw new QuarantineError(error.message);
+  }
+  return entries;
 }
 
 function output(lines) {
