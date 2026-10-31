@@ -3,7 +3,7 @@
 - [x] 1.1 管理役の1 change/1 PR指定とQ01〜Q10・Q-N1〜Q-N5・release適用範囲の回答をtraceへ記録し、REM049/214とMOD144を起案する
 - [x] 1.2 049/214の全文・全8Scenario・Source・旧試験名をdocs/dev/ci.mdへ保存し、主仕様と実装を変えずstrict/spec-onlyを検証する
 
-# 2. 先行できる独立実装（C2〜C5と監査対応）
+# 2. 先行できる独立実装（C2〜C5・監査・C1前提対応）
 
 凍結した179診断の吸収先との統合境界・重複・順序の確定と当初未設計10fileの残設計はcase本体分割の前提であり、この節の独立実装の前提ではない。C2〜C5は基点085aと採用済み62abaの範囲で先行し、統合後にfresh差分と検証を繰り返す。追加2.5は995e対象のcd321d46に従う独立な監査・宣言inventoryであり、残9fileの設計3.2と並行できる。実caseの本体分割・OS割当は含めず、実registryは空に保つ。
 
@@ -20,17 +20,19 @@
 
 2.5の現行guards基準は、受入済みmain d04e212f（PR235）取込後の22be0369で39宣言/54候補/42展開行とする。3d664093の37/52/40は履歴として残す。旧37宣言の本文多重集合保持とREQ-348の追加2宣言だけであることを独立照合した根拠に従い、追加2件の正確な試験名も検査する。run58/60/68・run-timeout2/3/2・run-no-change12/13/25と既存assertを保ち、計画追記後のspec-only成功をlive inventory編集前の条件とする。
 
+- [ ] 2.6 Q-34〜Q-37とC1設計を確認し、spec-only exit 0の後、private inventoryに同fileの非export const・TEST_FUNCTION名・it/test.runIf/skipIfの1引数factory分類を追加する。宣言名と初期値の候補をnonCallとして残し、実呼出しは宣言として検査する。let/export/規則外名/不正引数/aliasの負fixtureとit/test×runIf/skipIfの正fixture、既存fixture-helper/namespace/test alias拒否を照合する。モデル未実測16宣言/22候補/19行は履歴に残し、独立nativeの25候補（propertyKey3漏れの訂正）と元16blockのbyte保持を根拠に最初のscopeを照合する。factory分類後の16宣言/19行は別に確認し、違えばsource保持証拠と設計へ戻す。signalのas constを含むas/satisfies/括弧/!の型だけを示すwrapperをunwrapし、spreadなしliteral配列の行数を数える。変数/spread tableはdynamicRowsを保つ正負fixtureも追加する。コード実行・値評価はしない。external-budget-deadlineもlive inventoryへ加え、独立probeの3宣言/4候補/元3本文保持に照合し、wrapper対応後の6行は別確認する。C2の残設計/実登録/OS割当は含めない。同時にmetadataの旧15必須fileの順序・包含を保ちrun-timeoutとexternal-budget-deadlineを加えた17fileの包含・新2file各欠落negativeと対象外fileも含む全採集の保持を独立fixtureでred/green検査し、全case/raw/失敗sampleを保つ。対象はtest-declarations本体/試験、ci-measure-metadata本体とtests/ci-measure.test.ts、docs/dev/ci.mdとする。実registry・元signal factory・元本文・scanner/partition/Vitest規則を変えず、実登録/OS割当/production合格を含めない。V1は技術前提の観測であり本タスクの完了証拠へ代用しない
+
 # 3. 統合と残設計
 
-- [ ] 3.1 head `3571c208` で凍結したPR179診断をstabilize-cross-os-testsへ引き継ぎ、その統合境界と最新mainを基準にfresh差分・元case/parameter/assert/timeout・診断対象/companionを照合する。case本体分割の前に吸収先/C001/E3との重複と統合順序を管理役が確定する
-- [ ] 3.2 当初未設計10fileのうちrun以外の9fileの全文・fixture/hook/callerと関連Requirement全文をそろえ、管理役がOpusの具体設計を確認する。a3bf248bのin-place登録構造とcd321d46の監査/inventory設計は採用済みとして保持し、採用済み4fileを含む14fileの本文位置・名前/parameter/assert/timeout・監査/登録対応を再照合する。出版診断companion/shardと、他fileで行閾値が混在する場合に10秒超caseだけslowへ分ける設計を決める。2.5の独立実装はこの残設計と並行できる
+- [ ] 3.1 head `3571c208` で凍結したPR179診断をstabilize-cross-os-testsへ引き継ぎ、その統合境界と最新mainを基準にfresh差分・元case/parameter/assert/timeout・診断対象/companionを照合する。case本体分割の前に吸収先/C001/E3との重複と統合順序を管理役が確定する。179の診断を吸収した190に専用2本目profilerはなく、現行後継はWindows隔離全fileのunsharded診断である。A1で隔離解除後の経路・main push/schedule・独立3sample・元case/companion・失敗後保存/privacy/時計を具体化するまで未完了とし、旧179workflowの復活や4.4範囲縮小を決定済みにしない。main236のfixture/quality receipt受入後の再照合と最新測定を残す
+- [ ] 3.2 当初未設計10fileのうちrun以外の9fileの全文・fixture/hook/callerと関連Requirement全文をそろえ、管理役がOpusの具体設計を確認する。a3bf248bのin-place登録構造、cd321d46の監査/inventory、G-BとC1の個別設計は採用済みとして保持し、残る個別設計を受け入れる。C1のV1はLinux合成fixtureの前提観測としてのみ採用し、全case/3OS/coverage/OS割当合格へ代用せず、採用済み4fileを含む14fileの本文位置・名前/parameter/assert/timeout・監査/登録対応を再照合する。出版診断companion/shardと、他fileで行閾値が混在する場合に10秒超caseだけslowへ分ける設計を決める。2.5と追加2.6の独立実装はこの残設計と並行できる
 - [ ] 3.3 残る数値・外部連携・失敗境界と各fileの判断をtraceへ反映し、仕様ゲートを再実行する。REQ-347の原文/元3Scenario/SourceとQ-R系・Q-A系の採用を保持し、残設計3.2と実OS割当の前提がそろっていることを確認してspec-onlyをexit 0にする。2.5着手前の仕様ゲートをこの後続ゲートで代用しない
 
 # 4. case分割と実測
 
-- [ ] 4.2 push ci/measure-*専用の同head3OS×3sample測定を用意し、新required statusを加えず最新headの元caseと新fastを測る。main取込前や旧headの測定を最新の9sampleへ代用せず、checkout SHA/Node版/3OS各3sample/全case数/失敗/欠測を照合して受け入れる。8dの旧full測定9sampleは7成功/2失敗で未受入であり、995eや実装後の最新headの測定へ流用せず、この計画改訂で4.2を完了にしない
-- [ ] 4.3 3.1〜3.3・2.5・4.2の受入後、本文を元testに残す採用済みの個別設計に従い、各OSの最大10秒超caseだけをslowへ分ける。元名/parameter/assert/timeoutとfast+slowの多重集合、空file選択、未知ID/OSと全PR経路のslow不実施、local/releaseの全件を検査する。実OS割当と登録をここで行い、宣言内の本文ブロックを変えず、fast/slow双方の実レポートから元sourceへの対応と一度だけの登録を検証する。it.each表全体1IDで閾値混在を一括slowにしない。hashだけで同一it.each内の行欠測を証明したとは扱わず、独立したraw全case比較で全parameterと正当な同名caseの多重度を保持する
-- [ ] 4.4 両診断profilerをmain push/schedule・companion含む4pathへ更新し、PR/手動起動の撤去、元caseId/3sample/失敗後保存/未計測を照合する。release manual dispatch品質ゲートは全件保持する
+- [ ] 4.2 push ci/measure-*専用の同head3OS×3sample測定を用意し、新required statusを加えず最新headの元caseと新fastを測る。main取込前や旧headの測定を最新の9sampleへ代用せず、checkout SHA/Node版/3OS各3sample/全case数/失敗/欠測を照合して受け入れる。旧15file＋移動先2fileの17必須fileを包含し、全採集file/全case/raw/失敗sampleを保存する。8dの旧full測定9sampleは7成功/2失敗で未受入であり、995eや実装後の最新headの測定へ流用せず、この計画改訂で4.2を完了にしない
+- [ ] 4.3 3.1〜3.3・2.5・2.6・4.2の受入後、本文を元testに残す採用済みの個別設計に従い、各OSの最大10秒超caseだけをslowへ分ける。元名/parameter/assert/timeoutとfast+slowの多重集合、空file選択、未知ID/OSと全PR経路のslow不実施、local/releaseの全件を検査する。実OS割当と登録をここで行い、宣言内の本文ブロックを変えず、fast/slow双方の実レポートから元sourceへの対応と一度だけの登録を検証する。it.each表全体1IDで閾値混在を一括slowにしない。hashだけで同一it.each内の行欠測を証明したとは扱わず、独立したraw全case比較で全parameterと正当な同名caseの多重度を保持する。C1の本文16block・19行・12selectorを独立照合し、Windowsの8skip行はWindowsの割当対象にせずfastのskipを保つ。coverage未達・mock失敗は該当する割当を行わず未達として設計へ戻す。coverageを補う新fast試験は別に設計し、閾値を下げない
+- [ ] 4.4 診断2本分の受入意図を保ち、profile-slow-testsと3.1/A1で設計するpublication診断後継をmain push/schedule・companion含む4pathへ更新し、PR/手動起動の撤去、元caseId/3sample/失敗後保存/未計測を照合する。release manual dispatch品質ゲートは全件保持する
 - [ ] 4.5 最新実装headで3OS各3sampleを再取得し、checkout SHA/Node版/全case数/時間/失敗を保存する。REQ-297の4case・19.5/39.5秒下限・既存上限/clock/retry/assertと全診断契約を保持する
 
 # 5. 受入と人の操作
@@ -46,4 +48,4 @@
 - 5.4 管理役がrulesetのfresh beforeとnode20 contextだけの差分・証跡をIssue121で@rrr-xxxへ渡し、人の操作後fresh afterで他4checkと全fieldを照合する。規則を補助や管理役が書き換えない
 - 5.5 残存required成功後に管理役が同じ1-1 PRをマージし、対応スキルでsync/archiveの受入へ続く。旧Source/試験対応と273衝突のB1引継ぎを保持する
 
-既存18件の範囲はすべて残し、新たな未完了2.5を加えて実装・検証16タスクと本節の必須受入3件の全19件とする。既存の完了印6件を増やさず、追加時点の進捗は6/16とする。4.2の元case・新fastの測定受入と、最終分割後の4.5の全測定は別に保持する。最終レビュー等で修正が必要になったら5.2より前に修正タスクを追加し、新headで必要な完了ゲート・CIを再検証する。独立Opusの再レビュー要否と回数は改訂ADR 0006に従い、無制限の全重大度ゼロやCodex必須という旧条件は適用しない。仕様・測定・要件対応テスト・人のruleset操作・マージとsync/archiveの残受入は保持する。
+既存16タスクの番号・範囲と完了印7件をすべて残し、新たな未完了2.6を加えて実装・検証17タスクと本節の必須受入3件の全20件とする。追加時点の進捗は7/17、必須受入3件は未達とする。4.2の元case・新fastの測定受入と、最終分割後の4.5の全測定は別に保持する。最終レビュー等で修正が必要になったら5.2より前に修正タスクを追加し、新headで必要な完了ゲート・CIを再検証する。独立Opusの再レビュー要否と回数は改訂ADR 0006に従い、無制限の全重大度ゼロやCodex必須という旧条件は適用しない。仕様・測定・要件対応テスト・人のruleset操作・マージとsync/archiveの残受入は保持する。

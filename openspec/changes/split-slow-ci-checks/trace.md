@@ -15,6 +15,9 @@
 | Opus cd321d46-844b-438a-bd15-2d0841611d27 | head995e6325・AUDIT-347/REGISTRY-INVENTORY・Q-A1〜Q-A6 | 2026-10-31 |
 | 管理役の設計採用・ADR0006 | Q-R2 B/Q-R3 B、Q-R1元file内方式、Q-A1〜Q-A6 A採用 | 2026-10-31 |
 | 受入済みmain PR231の期限試験移動 | main d799ea4f取込後の本文block/selector/native AST照合 | 2026-10-31 |
+| Opus C1設計・管理役の全文採用 | 5b4ee366・actual Opus5-5/read-only/拒否0・Q-C1〜Q-C4 A | 2026-10-31 |
+| V1 REPORT.md・管理役の限定採用 | Linux/Node24.21.0/Vitest5.0.5の最終native合成fixture観測 | 2026-10-31 |
+| 統合境界監査・管理役の採用 | PR190のA-07と後継隔離診断、17file包含、現行main236受入後の再照合 | 2026-10-31 |
 
 原資料の全文・hashは専用treeの`.loomake/ci-formal-adoption/inputs/`と索引に保存した。Q01〜Q10の元おすすめはreadiness/manager-questions.json、採用回答はci-manager-decisions.md、Q-N1〜Q-N5の元案はOpus結果§7にある。旧資料の未採用という状態はその観測時点の記録であり、下表の管理役回答が今回の採用である。1 change/1 PRと配布第3枠は管理役が指定した。
 
@@ -37,7 +40,7 @@
 
 ## 確認事項
 
-Q-01〜Q-33の採用と条件は管理役がADR0006に基づき記録する。Q-19〜Q-24はR系と行閾値/宣言分類、Q-25〜Q-30はcd321d46のQ-A1〜Q-A6に対応する。未完了の個別設計・測定・実装は回答済みという理由で受入済みにしない。回答日・承認日は日本時間である。回答者は包括承認の表記であり、利用者本人が各資料をレビューしたという意味ではない。選択肢とおすすめの採用理由を残す。旧Q番号Q01〜Q10は下表Q-01〜Q-10、Q-N1〜Q-N5はQ-11〜Q-15に対応する。Q-01〜Q-16は当時の決定として残し、PR179先行受入と旧レビュー条件に関する現行の決定はQ-17・Q-18を優先する。
+Q-01〜Q-37の採用と条件は管理役がADR0006に基づき記録する。Q-19〜Q-24はR系と行閾値/宣言分類、Q-25〜Q-30はcd321d46のQ-A1〜Q-A6に対応する。未完了の個別設計・測定・実装は回答済みという理由で受入済みにしない。回答日・承認日は日本時間である。回答者は包括承認の表記であり、利用者本人が各資料をレビューしたという意味ではない。選択肢とおすすめの採用理由を残す。旧Q番号Q01〜Q10は下表Q-01〜Q-10、Q-N1〜Q-N5はQ-11〜Q-15に対応する。Q-01〜Q-16は当時の決定として残し、PR179先行受入と旧レビュー条件に関する現行の決定はQ-17・Q-18を優先する。
 
 | ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |
 |---|---|---|---|---|---|---|---|---|
@@ -74,6 +77,10 @@ Q-01〜Q-33の採用と条件は管理役がADR0006に基づき記録する。Q-
 | Q-31 | tasks3.2/4.3・G-B Q-G1 | each行の閾値混在時にどうするか | A：行wrapper／B：本文を分割／C：未割当を保持 | C。実測で混在を確認してから具体設計し、fast行をslowへ隠さない | yes | Cを採用。最新4.2で混在が判明した宣言は未割当・未達を保ち、本文保持と行別条件を両立する追加設計を得る | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 | Q-32 | tasks2.5/4.3・G-B Q-G2 | withTestの通常helper候補をどう分類するか | A：constと非call参照をbindingで分類／B：rename／C：検査除外 | A。元本文と検査範囲を保持する | yes | Aを採用。通常fixture helperのconst宣言名と非call参照を非宣言として分類し、初期値がテスト関数やaliasなら拒否する。2.5で実2fileと正負fixtureを照合する | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 | Q-33 | tasks4.2/4.3・G-B Q-G3 | Windowsの隔離と登録の重複をどう解消するか | A：最新3試験成功後同commit解除／B：隔離中は未登録 | A。失敗をslowへ移して隠さず重複拒否を保つ | yes | 条件付きA。最新測定で対象3試験が成功したときだけ4.3登録と同commitで隔離を解除し、失敗時はBの未登録・未達。今回の計画更新で解除しない | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-34 | tasks2.6/4.3・C1 Q-C1 | signalのposixIt factoryをどう分類するか | A：const factoryを独立分類／B：本文変更／C：未登録 | A。元本文を保ち候補を除外しない | yes | Aを採用。非export const・既存名規則・it/test.runIf/skipIfの1引数をfactoryとし、名前/初期値をnonCall、呼出しを宣言にする。不正名/let/export/引数/aliasと既存診断を保つ。型だけのwrapperを外しspreadなしliteral配列だけ数え、変数/spread表はdynamicRows。モデル22候補はpropertyKey3漏れでnative25へ訂正、元16本文保持を根拠とし宣言16/行19は2.6で別確認（C1・別Codex・管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-35 | tasks3.2/4.3・C1 Q-C2 | companionでmockが効かない場合 | A：未登録・未達で設計へ戻す／B：mock重複 | A。元moduleだけの読込と本文を保つ | yes | Aを採用。V1の最終native合成fixtureでmock維持と同一assertのnegative失敗を観測した。Linuxの技術前提に限り、production/3OS/OS割当の合格や2.6完了へ流用しない。production条件で不成立なら未登録・未達で設計へ戻す（V1報告・C1設計・管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-36 | tasks4.3/5.1・C1 Q-C3 | fast coverageが閾値を下回った場合 | A：未割当・未達と新fast設計／B：閾値低下 | A。品質を保つ | yes | Aを採用。ubuntu fastが94/89/96/97未達なら該当caseのLinux割当を行わず未達を残し、不足を補うfast試験を別Issueで設計する。閾値は下げない（C1設計・管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-37 | tasks2.6/4.2・C1 Q-C4 | PR231の移動先を必須測定包含へ加えるか | A：旧15＋移動先2で17file／B：旧15のまま | A。移動後の元case欠落を検出する | yes | Aを採用。run-timeoutとexternal-budget-deadlineを必須包含へ追加し、全採集file/全case/raw/失敗sampleを保持する。17fileだけへ測定対象を限定せず、旧結果を最新9sampleへ流用しない（C1設計・境界監査・管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 
 ## 仮定
 
@@ -126,3 +133,18 @@ G-Bのguards候補数44はモデルの未実測値であり、管理役と実装
 2026-10-31、受入済みmain d04e212f（PR235）を取り込んだhead 22be0369を照合した。3d664093のguards37宣言は本文の文字列多重集合をbyte同一で保持し、追加はrunner-git-reads-batchのREQ-348に対応する通常itの2宣言だけだった。現行guardsは39宣言/54候補/42展開行で、import1・propertyKey8・通常helper6は変わらない。旧37/52/40は当時の基準として残し、live inventoryでは現行の正確な数と追加2件の正確な試験名を検査する。run58/60/68、run-timeout2/3/2、run-no-change12/13/25と全既存assertは保持する。実registry・元本文・製品コード・Requirementは変更しない。
 
 出典は受入済みPR235のdesign.md・specs/run-guards/spec.md（Source: REQ-348）と、3d664093から22be0369への独立AST/本文多重集合比較である。追加2宣言はエンジン前後の読取回数と、完了ゲート前後・直しの前のHEAD読直しを確かめる。現行guardsは受入済みmainとbyte同一で、inventoryのerrorsは空だった。管理役が既存2.5の基準照合として採用した範囲であり、新しいRequirementやcase個別設計を追加しない。7/16と必須受入3件未達を保持し、最新全件測定や最終受入の証拠へ流用しない。
+
+
+## 2026-10-31 C1設計・V1・独立2.6の採用
+
+管理役は`.loomake/scratchpad/speed-deadline-design-adoption/result.md`を全文読み、Opus C1のQ-C1〜Q-C4のおすすめAをQ-34〜Q-37へ対応付けた。モデルのactual Opus5-5・read-only・拒否0、AGENTS/ADR/workflowの3規約Readを確認した。モデルはtraceを一部だけ読み、全traceへの対応付けは管理役が行った。判断はADR 0006の包括承認に基づく採用であり、新しい人のレビューや規則の変更ではない。private factory分類に新しい製品REQは設けず、REQ-347差分と元Scenario/Sourceは変えない。
+
+C1のengine-long-deadline・scenario-timeout-evidence・signal-during-sync・run-timeoutはin-place prefixと5describe guard・4companionを採用する。モデル静的値16宣言/22候補/19行は未実測の履歴として残す。別Codexの独立native照合（`.loomake/scratchpad/speed-factory-measure-impl/c1-baseline-probe.json`）は25候補（5+4+13+3）と元16有効blockのbyte保持を確認し、scenarioのpropertyKey test 1件とsignalの同2件の見積もり漏れを管理役が訂正として採用した。factory分類後の宣言16/行19は2.6で別に確認する。signalのas constを含むas/satisfies/括弧/!の型だけを示すwrapperを外しspreadなしliteral配列のみ数える最小対応を2.6へ含め、変数/spread表はdynamicRowsを保ち、コード実行/値評価はしない。違えばsource保持証拠と設計を再照合し、期待値を実装へ合わせて変えない。signalの元factoryと通常const fixture helper・namespace/test alias拒否は保持する。C1/G-Bのhas内includeCaseは元source path literalを直接使い、モデル例のFILE参照に合わせてincludeCaseTarget規則を緩めない。2.6では実registry・元本文・scanner/partition/Vitest規則とOS割当を変更しない。
+
+管理役は`speed-mock-v1-probe/REPORT.md`の最終native実行を限定採用した（同scratchpad配下）。Linux/実Node24.21.0/Vitest5.0.5の合成fixtureで全fast/混在/全slow各5行と分離2＋3行、mockを外した対照で未変更monitor assertの失敗、timer/listener復元、全45 PID不在を観測した。初回negativeのfilter不一致4skipと探索時bundle一時file/HOME上書きの履歴を保持し、最終nativeでの修正と区別する。productionの実case・3OS・coverage・正式OS割当と2.6完了は未検証である。
+
+`speed-integration-boundary-audit/report.md`のPR190吸収とsource保持を採用するが、A1の診断後継設計は残る。旧profile-publication-retryは190 A-07で採られず現行mainに存在しない。後継はWindows全fileのunsharded隔離診断である。隔離解除後のmain push/schedule・独立3sample・元case/companion・失敗後保存/privacy/時計を設計するまで3.1を未チェックとし、4.4の診断2本分の受入意図を縮めず、旧179workflowを復活させない。監査時点で未マージだったPR236は、その後main7099でfixture/quality receiptを受入済みである。現行sourceの保持と最新全件測定を別に再確認し、性能受入済みへ読み替えない。
+
+管理役は後続C2設計Q-D1 Aの型だけのwrapper対応を2.6へ採用し、Q-D4 Bの旧15file固定は既採用C1 Q-C4 Aと衝突するため採らなかった。旧15fileの順序・包含と新2file欠測negativeのred/greenを保つ。C2の残る個別設計の採用は後続へ分離し、別Codexの`speed-factory-measure-impl/c2-baseline-probe.json`（同scratchpad配下）は3宣言/4候補/元3本文保持を確認した。管理役がC2 live inventoryを2.6へ追加し、wrapper対応後の6行を別確認とした。C2の全個別設計や実登録/OS割当の受入とはしない。
+
+元16タスクのID・完了印7件と必須受入3件を保ち、未完了2.6を追加した現在の進捗は7/17＋必須受入3件未達である。4.3は3.1〜3.3・2.5・2.6・4.2とPRのslow除外結線の受入後とする。4.2の元case/新fastと4.5の最新実装後の各9sample、raw全case/parameter/正当な同名行の多重集合、58selector、REQ-297、coverage、local/release全件、人のruleset操作と同PRのマージ/sync/archiveを保持する。今回の計画更新と仕様ゲートはこれらの完了を表さない。

@@ -95,7 +95,7 @@ coverageの94/89/96/97、local full done、選択changeのADDED/MODIFIED live So
 
 後続実装でci.ymlのnode20ジョブを削り、node22の下限検査とquality/gate/CodeQLを残す。workflow文字照合はnode22とgateなどの実在する境界を先に検査してからsliceし、`indexOf=-1`の誤成功を防ぐ。診断記録の非対象ジョブ、prepare→指定runtime→offline check、continue-on-error禁止を保つ。REQ-144の旧Scenarioを参照するdocs/quality/scenarios.jsonも正式MODIFIEDの2Scenarioとの対応を確認し、必要なmigrationを同じPRで行う。
 
-profile-slow-testsとprofile-publication-retryの2本は、元ファイルとcompanionの4pathを明記してmain push/scheduleだけで起動する。元のcaseId集合と3独立sample、診断のprivacy/保存上限/失敗時保存を保つ。Q04/N3の手動起動撤去はこの2本に限る。既存releaseのmanual dispatchは公開に必要な全件品質ゲートとして残す。これは利用者のPR軽量化をrelease検査縮小へ広げないための管理役の包括承認による明示判断であり、release実行の証拠ではない。
+診断2本分の受入意図は保持するが、profile-publication-retryはPR190のA-07で採用されず、現行mainには存在しない。後継quality-quarantineはWindowsのpublication-retry全fileをunshardedで選び、診断とraw reportの保存を試みる。隔離解除後の診断先、main push/scheduleの起動、独立3sample、元case/companionの選択と保存・privacy・時計の具体設計はA1の未完了条件として3.1に残す。旧179のworkflowを復活させると決めず、4.4の受入範囲も縮めない。profile-slow-testsとpublication診断の後継経路では、元ファイルとcompanionの4pathを選ぶ意図とmain push/scheduleだけで起動する条件を保つ。元のcaseId集合と3独立sample、診断のprivacy/保存上限/失敗時保存を保つ。Q04/N3の手動起動撤去はこの2本に限る。既存releaseのmanual dispatchは公開に必要な全件品質ゲートとして残す。これは利用者のPR軽量化をrelease検査縮小へ広げないための管理役の包括承認による明示判断であり、release実行の証拠ではない。
 
 ruleset mainの変更案はrequired_status_checksからnode20 contextだけを除く。他のgate、quality (ubuntu-latest)、CodeQL、node22と全rule/parameterを保つ。実装headのローカル受入と他4check、改訂ADR 0006の段階別レビュー条件をそろえ、廃止したnode20だけが期待どおり未成立であることを分けて示す。管理役がfresh GETと具体差分をIssue121の@rrr-xxxへ渡し、人の操作後のfresh GETで保持条件を照合し、全残存required成功の後にマージする。dummy check、管理役のPUT、保護の迂回は行わない。Codexは参考としてPR末尾の証跡ブロックへ記録し、必須条件には加えない。
 
@@ -103,10 +103,59 @@ ruleset mainの変更案はrequired_status_checksからnode20 contextだけを�
 
 内部工程はtasksに従い、すべて1-1の同じPRで受け入れる。管理役はC2のNode20削除、C3のroot共有準備、C4の空registryを用いる純粋helper/slow足場、C5の実13条件試験を先行可能と指定した。これらは採用済み62abaの範囲に限定し、未測定のOS割当や未設計case本体を加えない。凍結head `3571c208` の診断を引き継ぐ吸収先との統合境界・重複・順序の確定と残9fileの個別設計と14fileの対応再照合は、case本体分割と最終同head測定の前提として残す。統合後に元caseを固定し、先行実装もfresh差分・測定・完了ゲート・独立レビューで再検証する。C001/S1/E3の既存treeと担当は保持する。本文やfixtureの重複は最新差分と担当の統合順で解決し、未測定・未設計を完成としない。
 
-独立した監査・宣言inventory対応を2.5として追加し、5.2の完了ゲートは実装・検証の16タスクを判定する案とする。5.3〜5.5はtasks.mdの「完了ゲート後の必須受入」で追跡する。既存18件の作業範囲・番号・順序・担当は保持し、追加2.5を含む全19件を追跡する。ゲート後の出来事をゲートの前提へ含めない構造は維持し、レビューと証跡の運用だけを利用者が採用した2026-10-31の改訂規約へ合わせる。人のruleset操作は維持する。マージとsync/archiveの受入までchangeを完了としない。対象headの証跡はPR #184末尾の1ブロックに記録する。head変更時は必要な完了ゲート・CIを再検証し、独立Opusの回数・重大指摘ゼロ・軽微指摘のIssue化・reviewed-headとの対応は改訂ADR 0006に従う。無制限の全重大度ゼロとCodex必須をマージ条件へ戻さない。
+独立した監査・宣言inventory対応2.5に続き、C1 factory分類と17fileの測定包含検査を2.6として追加する。5.2の完了ゲートは実装・検証の17タスクを判定する。5.3〜5.5はtasks.mdの「完了ゲート後の必須受入」で追跡する。既存18件の作業範囲・番号・順序・担当は保持し、追加2.5・2.6を含む全20件を追跡する。7件の完了印を保ち、進捗は7/17と必須受入3件未達とする。ゲート後の出来事をゲートの前提へ含めない構造は維持し、レビューと証跡の運用だけを利用者が採用した2026-10-31の改訂規約へ合わせる。人のruleset操作は維持する。マージとsync/archiveの受入までchangeを完了としない。対象headの証跡はPR #184末尾の1ブロックに記録する。head変更時は必要な完了ゲート・CIを再検証し、独立Opusの回数・重大指摘ゼロ・軽微指摘のIssue化・reviewed-headとの対応は改訂ADR 0006に従う。無制限の全重大度ゼロとCodex必須をマージ条件へ戻さない。
 
 # 2026-10-31の再編決定
 
 当初のmain085a基点・PR179を先に受け入れる計画は出典として保持するが、現行の依存は上記のstabilize-cross-os-testsへの引継ぎと統合境界の確定に置き換えた。利用者が採用した再編計画の手順5・7と改訂ADR 0006を適用した計画更新であり、PR179の受入・マージ、吸収先の設計完了やcase実装を宣言するものではない。
 
 Node20削除とslow分離は同じ1-1 PRで受け入れる。REQ-297の4case・下限/上限・clock/retry/assert、全case・coverage・3OS各3sample測定・release/local全件・人のnode20-only ruleset操作を保持する。今回の計画改訂では、main acce34fb取込後の995eを前提にするが、未完了taskと受入3件を完了へ進めない。PRの段階は改訂AGENTSに従って管理役が確認し、その段階のゲート・独立レビューを適用する。
+
+
+# C1期限・信号試験の登録設計（2026-10-31採用）
+
+管理役はOpus C1設計（5b4ee366）の全文を読み、Q-C1〜Q-C4のおすすめAを採用した。出典は`.loomake/scratchpad/speed-deadline-design-adoption/result.md`、V1の観測は`speed-mock-v1-probe/REPORT.md`、診断と移動の照合は`speed-integration-boundary-audit/report.md`（いずれも同じscratchpad配下）である。モデルのactual Opus5-5・read-only・拒否0と3規約のReadを確認した。モデルのtrace読取は一部であり、全traceへの対応付けとADR 0006の範囲の採用判断は管理役が行った。
+
+## C1の宣言と登録単位
+
+対象はrunnerのengine-long-deadline・scenario-timeout-evidence・signal-during-sync・run-timeoutの4file。元のit/test呼出しから閉じ括弧までの本文ブロックを保ち、各宣言に`if (has(id))`、5つのdescribeに子孫の全IDを列挙した`if (hasAny(ids))`を足す。import直後にpartition helper・FILE・registry・has/hasAnyを追加する。has内のincludeCase第2引数は、既存includeCaseTarget検査に従い元source pathの文字列literalを直接書く。モデル例のFILE変数参照は使わず、checker規則を緩めない。G-Bの同じprefix方式もこのliteral条件に従う。宣言間の定数・ヘルパー、`vi.setConfig`・`vi.hoisted`・元の`vi.mock`・実時計とfinallyは変えない。共有`tests/helpers/partition-part.ts`と各3行のcompanion（setPart import、`setPart('slow')`、元fileだけのliteral dynamic import）を使い、companionへmockを重複配置しない。
+
+| 元file（packages/runner/test/） | 宣言 | scanner候補 | 展開行 | case ID（元宣言順） |
+|---|---|---|---|---|
+| engine-long-deadline.test.ts | 4 | 5 | 4 | timer-limit-keeps-result、split-wait-rearms、short-deadline-rearms、run-timeout-minutes-over-limit |
+| scenario-timeout-evidence.test.ts | 2 | 4 | 2 | shared-deadline-restores-gate-mark、second-verify-timeout |
+| signal-during-sync.test.ts | 8 | 13 | 11 | abort-during-gate-quality、abort-during-evidence-quality、abort-during-pr-lookup、supervisor-signal-task-commit、supervisor-signal-evidence-push、supervisor-signal-pr-operation、supervisor-killed-stopped、quality-supervisor-killed |
+| run-timeout.test.ts | 2 | 3 | 2 | engine-timeout-stop、gate-test-timeout-stop |
+| 合計 | 16 | 25 | 19 | eachは元の表全体に1 ID |
+
+モデルの16宣言/22候補/19行は未実測の見積もりとして履歴に残す。別Codexの独立native照合（`.loomake/scratchpad/speed-factory-measure-impl/c1-baseline-probe.json`）は25候補（5+4+13+3）と元16有効block本文のbyte同一を確認した。scenarioのpropertyKey test 1件とsignalの同2件がモデルの数え漏れだった。管理役がこのsource保持証拠に基づく訂正をADR 0006の範囲で採用した。上表の宣言16・展開19はfactory分類後のinventoryでは未確認であり、2.6で候補の非call分類、宣言位置・本文範囲、each全行を独立に測る。違えばsourceの保持証拠と設計を再照合し、期待値を実装へ合わせて変えない。本文多重集合は元4+2+8+2を保持し、登録時はscannerの有効blockと独立ASTの両方で確かめる。
+
+## 2.6の独立実装範囲
+
+Q-34（Q-C1 A）はprivateな開発用inventoryの分類追加であり、新しい製品Requirementや規則の変更ではない。同じfileの非exportなconstで、宣言名が既存TEST_FUNCTION規則に一致し、初期値が`it`または`test`の`.runIf`または`.skipIf`を1引数で呼ぶ形だけをfactoryとする。宣言名と初期値のscanner候補は両方ともnonCallに分類し、候補を捨てない。bindingを照合し、そのfactoryを呼ぶ`posixIt(...)`と`posixIt.each(...)`は通常の試験宣言として検査する。
+
+let・export・引数数不正・別名経由のfactoryは許可せず、規則外の宣言名もaliasとして拒否する。既存の通常const fixture helperのbinding分類、test alias・Vitest namespace参照とその別名の拒否、壊れた宣言など全既存診断を保持する。正fixtureはit/test×runIf/skipIfと実signalの形、負fixtureは上記の拒否条件を確かめ、宣言・候補・nonCallとerror codeを個別に照合する。元signalの`const posixIt = it.runIf(process.platform !== 'win32')`は変更しない。
+
+独立照合でsignalのliteral配列2表を包む`as const`が既存rowCountのdynamicRowsになることも確認した。2.6ではas/satisfies/括弧/!の型だけを示す構文wrapperをunwrapし、内側がspreadなしliteral配列なら静的に行数を数える。変数tableはunwrapしてもliteralでないためdynamicRowsを維持し、コード実行や値の評価はしない。正fixtureにliteral配列のas const、負fixtureに変数tableと未確定行を含め、全parameter保持という既目的を具体化する。新しい製品Requirement・設定・規則の変更ではない。管理役は後続C2設計のQ-D1 Aも同じ限定として採用した。Q-D4 Bの旧15file固定は採用済みC1 Q-C4 Aと衝突するため採らず、旧15fileの順序・包含を保ち新2fileの欠測negativeを追加する17file案を維持する。既存試験を弱めずred/greenを確認する。
+
+管理役は同じrowCount修正を使うexternal-budget-deadlineのlive inventoryも2.6へ加えた。別Codexの`.loomake/scratchpad/speed-factory-measure-impl/c2-baseline-probe.json`は3宣言/4候補と元3本文blockのbyte保持を確認し、as constのため行数はdynamicRowsだった。型だけのwrapper対応後の6行は2.6で別に独立確認する。C2の残る個別設計・実登録・OS割当はこの追加に含めない。
+
+Q-37（Q-C4 A）はPR231の移動先2fileを必須包含へ追加する。`ci-measure-metadata`の旧15fileを削らず、run-timeoutとexternal-budget-deadlineを加えた17fileの欠落を検出する。これは全件の採集範囲を17fileへ限定する変更ではない。17file以外も含むcollectedFiles・全case・raw report・失敗/欠測sampleと実outcomeを保持する。追加各fileの欠落を独立fixtureで検査する。後の4.3では有効な登録済みcompanionだけを元sourceとして包含照合し、全slowの元fileを誤ってmissingRequiredFilesへ入れない検査も行う。
+
+変更先はscripts/lib/test-declarations.mjsとその試験、scripts/ci-measure-metadata.mjsとtests/ci-measure.test.ts、docs/dev/ci.mdである。2.6では実registry・元case本文・scanner・partition・Vitest規則を変えず、実case登録とOS割当を行わない。2.5の完了印は保ち、2.6は独立した未完了タスクとする。
+
+## V1の採用範囲と残る受入
+
+管理役はQ-35（Q-C2 A）とV1の最終native実行を採用した。Linux・実Node24.21.0・Vitest5.0.5の合成fixtureで、all-fast・mixed・all-slow各5行、別実行mixed-unit 2行＋mixed-slow 3行が独立した期待多重集合に一致した。元moduleのvi.hoistedとchild_processのpartial mockはcompanionからも有効であり、mockだけを外した対照は同じ未変更のmonitor assertで失敗した。timer/警告listenerの復元、moduleの隔離と全45 PIDの不在も観測した。
+
+初回negativeはfilter不一致で4skipとなり、対照成功の根拠にしない。探索中のbundle loaderによる所有dir外の一時config生成とHOME上書きも報告に残る。最終実行はnative config loaderと所有cache/TMPDIRを使い、HOME上書きを取り除いた。これらの履歴を最終成功で消さない。V1はmock/importの技術前提の観測に限り、2.6の実装完了、元のproduction case・3OS・long deadline・cleanup・coverage・正式OS割当の合格ではない。今後production条件でmockが効かなければscenario-timeout-evidenceを未登録・未達に保ち、設計へ戻す。
+
+4.3の登録は3.1〜3.3・2.5・2.6・4.2の受入とPRのslow除外結線がそろってから行い、prefix・companion・実registryを同じcommitで追加する。4.2の各OS3sampleで、行の失敗・欠測・skipが一つでもあれば割り当てない。各行の最大が10000ms超ならslow、each全行が超える場合だけ表全体をslow、全行以下ならfastとする。混在時は未割当・未達を保ち追加設計へ戻す。Windowsのsignalの8skip行を時間0やslow合格へ変えない。
+
+Q-36（Q-C3 A）により、ubuntuでfastだけのcoverageが94/89/96/97を下回るなら該当caseのLinux割当を行わず未達を残し、不足範囲を補う新しいfast試験を別Issueで設計する。閾値は下げない。登録後の3OSで元19行とfast＋slowの`(元file, fullName, status)`の多重集合をpartition helperから独立に比較し、macOS/Windowsは全shardを合わせる。12selectorは変えず、main全件の監査で元の状態・理由を照合し、PRのslow未実行によるinvalidは正直に記録する。timeoutの上下限・実時計・cleanup、全fast/混在/全slowの空describe/file、PR全経路とlocal/release/main/scheduleの選択は4.3〜5.1で検証する。
+
+## 現行mainとA1の未完了条件
+
+PR236のfixture・quality receiptはmain7099へ受入済みで、現在のtreeに取り込まれている。境界監査の「236未マージ」は監査時点の記録として扱う。fixture/呼出し先・元case/parameter/assert/timeoutの保持を現行sourceで再照合し、性能と最新全件測定は別に未受入とする。C001/E3の担当を移さず、同じsourceへの重複writerを避ける。
+
+PR179診断のPR190への吸収は確認できたが、publicationの診断は現在Windows隔離全fileのunsharded実行であり、隔離一覧とcompanion登録は重複拒否される。shared-first-runで共有した初回runと各caseの再試行、case時刻による対応、REQ-297の時計・予算・retry、診断privacyと保存上限を保つ。隔離解除後も元対象を独立3sampleでmain push/scheduleから診断・保存できる後継経路はA1の設計待ちである。3.1は未チェックのまま、4.4の診断2本分の対象・sample・失敗後保存・未計測の受入意図を保持する。
