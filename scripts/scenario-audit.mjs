@@ -1,8 +1,10 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs';
+import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import ts from 'typescript';
+import { companionOf, validatePartition } from './lib/test-partition.mjs';
 
 export const sha256 = (text) => createHash('sha256').update(text).digest('hex');
 const required = (condition, message) => { if (!condition) throw new Error(message); };
@@ -258,7 +260,7 @@ export function auditScenarios(scenarios, reviews, executions, testSources, pend
         if (!Array.isArray(sources) || !sources.length || sources.some((source) => !row.sources.includes(source))) result = invalid('確認するSourceが不正です');
         else if (!Array.isArray(entry.tests) || !entry.tests.length) result = invalid('対応する試験がありません');
         else {
-          const selected = []; let error;
+          const selected = new Set(); let error;
           for (const selector of entry.tests) {
             if (!object(selector) || typeof selector.file !== 'string' || typeof selector.contains !== 'string' || !selector.contains.trim()) { error = '試験の選択条件が不正です'; break; }
             if (selector.hashScope !== undefined && selector.hashScope !== 'block') { error = `試験のハッシュの範囲が不正です：${selector.file}`; break; }
@@ -272,10 +274,10 @@ export function auditScenarios(scenarios, reviews, executions, testSources, pend
               if (digest !== selector.sha256) { error = `選んだ試験の本文が変更されています：${selector.file} ${selector.contains}`; break; }
             }
             if (found.some((test) => test.status !== 'passed')) { error = '選んだ試験に失敗または未実行があります'; break; }
-            selected.push(...found);
+            for (const test of found) selected.add(test);
           }
-          if (!error && sources.some((source) => !selected.some((test) => test.fullName.includes(`[${source}]`)))) error = '対応する試験に必要なSourceがありません';
-          result = error ? invalid(error) : { status: 'reviewed', reason: entry.reason, reviewSources: sources, tests: selected };
+          if (!error && sources.some((source) => ![...selected].some((test) => test.fullName.includes(`[${source}]`)))) error = '対応する試験に必要なSourceがありません';
+          result = error ? invalid(error) : { status: 'reviewed', reason: entry.reason, reviewSources: sources, tests: [...selected] };
         }
       }
     }
@@ -296,7 +298,7 @@ export function renderAudit(report, prefix = '') {
   return ['# Scenarioと試験の対応', '', `確認済み ${report.counts.reviewed}、置換 ${report.counts.superseded}、未確認 ${report.counts.unreviewed}、無効 ${report.counts.invalid} / 全${report.counts.total}件`, '', ...pendingLines,
     'REQ-IDの一致は候補です。対応理由はレビュー上の判断で、試験内容の十分さや外部環境の成功を自動で保証しません。', '',
     ...report.issues.map((issue) => `- ${cell(issue)}`), '', '| 仕様の場所 | Requirement / Scenario | 状態 | 理由と対応試験 |', '|---|---|---|---|',
-    ...report.rows.map((row) => `| [${cell(row.file)}:${row.line}](${prefix}${row.file}#L${row.line}) | ${cell(row.requirement)} / ${cell(row.scenario)} | ${row.status} | ${cell(row.reason)}<br>${row.tests.length ? row.tests.map((test) => cell(test.file + ': ' + test.fullName)).join('<br>') : `候補 ${row.candidates.length} 件`} |`), '',
+    ...report.rows.map((row) => `| [${cell(row.file)}:${row.line}](${prefix}${row.file}#L${row.line}) | ${cell(row.requirement)} / ${cell(row.scenario)} | ${row.status} | ${cell(row.reason)}<br>${row.tests.length ? row.tests.map((test) => cell(test.file + (test.rawFile && test.rawFile !== test.file ? `（${test.rawFile}）` : '') + ': ' + test.fullName)).join('<br>') : `候補 ${row.candidates.length} 件`} |`), '',
   ].join('\n');
 }
 
@@ -319,11 +321,79 @@ export function inventoryRepository(entries) {
   return { inventory, pending };
 }
 
+/** 登録済み companion が元ファイルだけを動的に読み込むことを構造で確かめる。 */
+export function companionLinks(registry, readText) {
+  const links = new Map();
+  const unwrap = (node) => {
+    while (ts.isParenthesizedExpression(node) || ts.isAsExpression(node) || ts.isSatisfiesExpression(node) || ts.isNonNullExpression(node)) node = node.expression;
+    return node;
+  };
+  for (const source of Object.keys(registry.files)) {
+    const companion = companionOf(source);
+    required(!links.has(companion), `companionの対応が重複しています：${companion}`);
+    const text = readText(companion);
+    required(extractTestBlocks(text).length === 0, `companionに試験の宣言があります：${companion}`);
+    const ast = ts.createSourceFile(companion, text, ts.ScriptTarget.Latest, true);
+    const imports = []; const namespaces = new Set(); const testFunctions = new Set();
+    let staticTest = false; let declaresTest = false;
+    const importedBindings = (node) => {
+      if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier) && node.moduleSpecifier.text === 'vitest') {
+        const bindings = node.importClause?.namedBindings;
+        if (bindings && ts.isNamespaceImport(bindings)) namespaces.add(bindings.name.text);
+        if (bindings && ts.isNamedImports(bindings)) for (const item of bindings.elements) if (['it', 'test'].includes((item.propertyName ?? item.name).text)) testFunctions.add(item.name.text);
+      }
+      ts.forEachChild(node, importedBindings);
+    };
+    importedBindings(ast);
+    const namespaceExpression = (node) => {
+      const base = unwrap(node);
+      return ts.isIdentifier(base) && namespaces.has(base.text);
+    };
+    const testExpression = (node) => {
+      node = unwrap(node);
+      if (ts.isIdentifier(node)) return testFunctions.has(node.text);
+      if (ts.isPropertyAccessExpression(node)) return (namespaceExpression(node.expression) && ['it', 'test'].includes(node.name.text)) || testExpression(node.expression);
+      if (ts.isElementAccessExpression(node)) return (namespaceExpression(node.expression) && ts.isStringLiteral(node.argumentExpression) && ['it', 'test'].includes(node.argumentExpression.text)) || testExpression(node.expression);
+      if (ts.isCallExpression(node)) return testExpression(node.expression);
+      if (ts.isTaggedTemplateExpression(node)) return testExpression(node.tag);
+      return false;
+    };
+    const visit = (node) => {
+      if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer && namespaceExpression(node.initializer)) namespaces.add(node.name.text);
+      if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer && testExpression(node.initializer)) testFunctions.add(node.name.text);
+      if (ts.isCallExpression(node) && testExpression(node.expression)) declaresTest = true;
+      if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) imports.push(node);
+      if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier) && /\.test\.[jt]s$/.test(node.moduleSpecifier.text)) staticTest = true;
+      ts.forEachChild(node, visit);
+    };
+    visit(ast);
+    required(!declaresTest, `companionに試験の宣言があります：${companion}`);
+    const expected = './' + basename(source).replace(/\.ts$/, '.js');
+    required(ast.parseDiagnostics.length === 0 && !staticTest && imports.length === 1 && imports[0].arguments.length === 1 && ts.isStringLiteral(imports[0].arguments[0]) && imports[0].arguments[0].text === expected, `companionが元ファイルだけを読み込んでいません：${companion}`);
+    links.set(companion, source);
+  }
+  return links;
+}
+
+function partitionInputs(root, jsonReader, reader) {
+  try {
+    const text = jsonReader.read(join(root, 'tests/test-partition.json'));
+    const registry = validatePartition(JSON.parse(text), { exists: (file) => existsSync(join(root, file)) && statSync(join(root, file)).isFile() });
+    /** @type {Record<string, string>} */
+    const companions = {};
+    const links = companionLinks(registry, (file) => {
+      const source = reader.read(join(root, file)); companions[file] = sha256(source); return source;
+    });
+    return { links, partitionSha256: sha256(text), companions };
+  } catch (error) { throw new Error(`試験の分割一覧を読めません：${error.message}`, { cause: error }); }
+}
+
 const loadKit = () => import('../packages/kit/dist/index.js');
 
 export async function auditRepository(root, output, reviewFile = 'docs/quality/scenarios.json', reportFile, kit) {
   const { createInputReader, JSON_LIMITS, loadConfig } = kit ?? await loadKit();
   const reader = createInputReader(); const jsonReader = createInputReader(JSON_LIMITS);
+  const partition = partitionInputs(root, jsonReader, reader);
   const read = (file) => reader.read(join(root, file));
   const posix = (file) => relative(root, file).split('\\').join('/');
   const files = reader.walk(join(root, 'openspec/specs')).filter((file) => /[/\\]spec\.md$/.test(file));
@@ -335,13 +405,13 @@ export async function auditRepository(root, output, reviewFile = 'docs/quality/s
   const { inventory, pending } = inventoryRepository([...texts].map(([file, text]) => ({ file, text })));
   const reportPath = resolve(root, reportFile ?? loadConfig(root).tests.report);
   const reportText = jsonReader.read(reportPath); const input = JSON.parse(reportText);
-  const executions = readExecutions(root, input);
+  const executions = readExecutions(root, input, partition.links);
   const reviewText = existsSync(join(root, reviewFile)) ? jsonReader.read(join(root, reviewFile)) : undefined;
   const review = reviewText ? JSON.parse(reviewText) : { schemaVersion: 1, reviews: [] };
   required(object(review) && review.schemaVersion === 1 && Array.isArray(review.reviews), 'レビュー表の形式かschemaVersionが不正です');
   const sources = Object.fromEntries([...new Set(executions.map((test) => test.file))].map((file) => [file, read(file)]));
-  const result = auditScenarios(inventory, review.reviews, executions, sources, pending);
-  result.inputs = { specs: Object.fromEntries([...texts].sort(([a], [b]) => a < b ? -1 : 1).map(([file, text]) => [file, sha256(text)])), testSources: Object.fromEntries(Object.entries(sources).map(([file, text]) => [file, sha256(text)])), testReportSha256: sha256(reportText), reviewSha256: reviewText ? sha256(reviewText) : null, scriptSha256: sha256(read('scripts/scenario-audit.mjs')) };
+  const inputs = { partitionSha256: partition.partitionSha256, companions: partition.companions, specs: Object.fromEntries([...texts].sort(([a], [b]) => a < b ? -1 : 1).map(([file, text]) => [file, sha256(text)])), testSources: Object.fromEntries(Object.entries(sources).map(([file, text]) => [file, sha256(text)])), testReportSha256: sha256(reportText), reviewSha256: reviewText ? sha256(reviewText) : null, scriptSha256: sha256(read('scripts/scenario-audit.mjs')) };
+  const result = { ...auditScenarios(inventory, review.reviews, executions, sources, pending), inputs };
   mkdirSync(dirname(output), { recursive: true });
   mkdirSync(output);
   writeFileSync(join(output, 'audit.json'), JSON.stringify(result, null, 2) + '\n');
@@ -412,8 +482,9 @@ export function gitHistory(root) {
 export async function migrateRepository(root, { dryRun = false, reviewFile = 'docs/quality/scenarios.json', reportFile, kit, history } = {}) {
   const { createInputReader, JSON_LIMITS, loadConfig } = kit ?? await loadKit();
   const reader = createInputReader(); const jsonReader = createInputReader(JSON_LIMITS);
+  const partition = partitionInputs(root, jsonReader, reader);
   const input = JSON.parse(jsonReader.read(resolve(root, reportFile ?? loadConfig(root).tests.report)));
-  const executions = readExecutions(root, input);
+  const executions = readExecutions(root, input, partition.links);
   const review = JSON.parse(jsonReader.read(join(root, reviewFile)));
   required(object(review) && review.schemaVersion === 1 && Array.isArray(review.reviews), 'レビュー表の形式かschemaVersionが不正です');
   const sources = Object.fromEntries([...new Set(executions.map((test) => test.file))].flatMap((file) => existsSync(join(root, file)) ? [[file, reader.read(join(root, file))]] : []));
@@ -422,13 +493,13 @@ export async function migrateRepository(root, { dryRun = false, reviewFile = 'do
   return { dryRun, counts: result.counts };
 }
 
-function readExecutions(root, input) {
+function readExecutions(root, input, links = new Map()) {
   required(object(input) && Array.isArray(input.testResults), '試験レポートにtestResultsがありません');
   return input.testResults.flatMap((suite) => {
     required(object(suite) && typeof suite.name === 'string' && Array.isArray(suite.assertionResults), '試験レポートのsuiteが不正です');
     const file = relative(root, resolve(root, suite.name)).split('\\').join('/');
     required(!file.startsWith('../') && !isAbsolute(file), 'リポジトリ外の試験レポートは扱えません');
-    return suite.assertionResults.map((test) => ({ file, fullName: test.fullName, status: test.status }));
+    return suite.assertionResults.map((test) => ({ file: links.get(file) ?? file, rawFile: file, fullName: test.fullName, status: test.status }));
   });
 }
 
