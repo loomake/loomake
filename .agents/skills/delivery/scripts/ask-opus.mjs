@@ -7,6 +7,9 @@ import { pathToFileURL } from 'node:url';
 const ROLES = ['design', 'second-opinion', 'review'];
 const TOOLS = ['Read', 'Glob', 'Grep'];
 const MAX_OUTPUT = 8 * 1024 * 1024;
+const MAX_REQUEST = 200 * 1024;
+const DIFF_BEGIN = '<!-- ask-opus:diff-begin -->';
+const DIFF_END = '<!-- ask-opus:diff-end -->';
 
 export function parseArgs(args) {
   const values = {};
@@ -90,6 +93,27 @@ function stopChild(child, signal) {
   } catch { child.kill(signal); }
 }
 
+// レビュー依頼で上限を数える差分の部分を返す。区切り行が1組だけ、begin・endの順にない場合はnull。
+// 差分の行は先頭に空白・+・-が付くため、行全体が区切りと一致するのはテンプレートの区切り行だけ。
+export function extractDiff(content) {
+  const lines = content.split('\n').map((line) => line.replace(/\r$/, ''));
+  const begins = lines.flatMap((line, index) => (line === DIFF_BEGIN ? [index] : []));
+  const ends = lines.flatMap((line, index) => (line === DIFF_END ? [index] : []));
+  if (begins.length !== 1 || ends.length !== 1 || begins[0] > ends[0]) return null;
+  return lines.slice(begins[0] + 1, ends[0]).join('\n');
+}
+
+// 上限はADR 0006のレビュー規則（2026-10-31 Q1）に従い、reviewでは差分だけに掛ける。
+// 差分の区切りがない依頼とreview以外の工程は、安全側として依頼全体に掛ける。
+export function checkRequestSize(role, content) {
+  const diff = role === 'review' ? extractDiff(content) : null;
+  if (diff === null) {
+    if (Buffer.byteLength(content, 'utf8') > MAX_REQUEST) throw new Error('依頼ファイルが200KiBを超えています。');
+  } else if (Buffer.byteLength(diff, 'utf8') > MAX_REQUEST) {
+    throw new Error('依頼に貼った差分が200KiBを超えています。PRを分けてください。');
+  }
+}
+
 async function invoke(cwd, prompt, args, options) {
   return new Promise((resolvePromise) => {
     const child = spawn(options.executable ?? 'claude', [...(options.prefixArgs ?? []), ...args], {
@@ -151,9 +175,10 @@ export async function askOpus(input, options = {}) {
     }
     const requestStat = statSync(request);
     if (!requestStat.isFile()) throw new Error('依頼ファイルには通常ファイルを指定してください。');
-    if (requestStat.size > 200 * 1024) throw new Error('依頼ファイルが200KiBを超えています。');
+    if (input.role !== 'review' && requestStat.size > MAX_REQUEST) throw new Error('依頼ファイルが200KiBを超えています。');
     const content = readFileSync(request, 'utf8');
     if (!content.trim()) throw new Error('依頼ファイルが空です。');
+    checkRequestSize(input.role, content);
     const outputRoot = resolve(requestRoot, 'claude');
     let realOutputRoot;
     try { realOutputRoot = realpathSync(outputRoot); }

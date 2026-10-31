@@ -5,7 +5,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, existsSync
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { askOpus, buildClaudeArgs, evaluateEvents, parseArgs } from '../.agents/skills/delivery/scripts/ask-opus.mjs';
+import { askOpus, buildClaudeArgs, evaluateEvents, extractDiff, parseArgs } from '../.agents/skills/delivery/scripts/ask-opus.mjs';
 
 const session = 'test-session';
 function events() {
@@ -312,6 +312,55 @@ describe('deliveryのClaude起動', () => {
       expect(await askOpus(input, options)).toMatchObject({ ok: false, dir: null, reason: expect.stringContaining(reason) });
       expect(existsSync(join(cwd, '.loomake/called'))).toBe(false);
     });
+  });
+  // ADR 0006 のレビュー規則（2026-10-31 利用者決定 Q1）：review の 200KiB の上限は、依頼に貼った差分だけに掛ける。
+  const limit = 200 * 1024;
+  const reviewRequest = (diff: string, rest = '') =>
+    `# Opus へのレビュー依頼\n\n${rest}\n## base から head までの全差分\n\n<!-- ask-opus:diff-begin -->\n${diff}\n<!-- ask-opus:diff-end -->\n`;
+  it('reviewでは差分が200KiB以内なら、ID一覧や定型文で依頼全体が200KiBを超えても拒まない', async () => {
+    await withRepo('success', async ({ cwd, input, options }) => {
+      const content = reviewRequest('+'.repeat(limit), 'REQ-001 '.repeat(limit / 8));
+      expect(Buffer.byteLength(content)).toBeGreaterThan(limit);
+      expect(Buffer.byteLength(extractDiff(content)!)).toBe(limit);
+      writeFileSync(input.request, content);
+      expect(await askOpus({ ...input, role: 'review' }, options)).toMatchObject({ ok: true, role: 'review' });
+      expect(existsSync(join(cwd, '.loomake/called'))).toBe(true);
+    });
+  });
+  it('reviewでも差分が200KiBを超えれば起動前に拒む', async () => {
+    await withRepo('success', async ({ cwd, input, options }) => {
+      writeFileSync(input.request, reviewRequest('+'.repeat(limit + 1)));
+      expect(await askOpus({ ...input, role: 'review' }, options)).toMatchObject({
+        ok: false, dir: null, reason: '依頼に貼った差分が200KiBを超えています。PRを分けてください。' });
+      expect(existsSync(join(cwd, '.loomake/called'))).toBe(false);
+    });
+  });
+  it.each(['design', 'second-opinion'])('%sでは差分の区切りがあっても依頼全体が200KiBを超えれば拒む', async (role) => {
+    await withRepo('success', async ({ cwd, input, options }) => {
+      writeFileSync(input.request, reviewRequest('+', 'x'.repeat(limit)));
+      expect(await askOpus({ ...input, role }, options)).toMatchObject({ ok: false, dir: null, reason: '依頼ファイルが200KiBを超えています。' });
+      expect(existsSync(join(cwd, '.loomake/called'))).toBe(false);
+    });
+  });
+  it.each([
+    ['区切りがない', 'x'.repeat(limit + 1)],
+    ['beginが重複する', `<!-- ask-opus:diff-begin -->\n${reviewRequest('+', 'x'.repeat(limit))}`],
+    ['endがbeginより前にある', `<!-- ask-opus:diff-end -->\n${'x'.repeat(limit)}\n<!-- ask-opus:diff-begin -->\n`],
+  ])('reviewで差分の%s依頼は、依頼全体が200KiBを超えれば拒む', async (_name, content) => {
+    await withRepo('success', async ({ cwd, input, options }) => {
+      expect(extractDiff(content)).toBeNull();
+      writeFileSync(input.request, content);
+      expect(await askOpus({ ...input, role: 'review' }, options)).toMatchObject({ ok: false, dir: null, reason: '依頼ファイルが200KiBを超えています。' });
+      expect(existsSync(join(cwd, '.loomake/called'))).toBe(false);
+    });
+  });
+  it('差分の区切りは行全体の一致だけを数え、差分の行に含まれる区切りの文字列やCRLFで誤らない', () => {
+    expect(extractDiff('a\r\n<!-- ask-opus:diff-begin -->\r\n+<!-- ask-opus:diff-end -->\r\n <!-- ask-opus:diff-begin -->\r\n-x\r\n<!-- ask-opus:diff-end -->\r\nb'))
+      .toBe('+<!-- ask-opus:diff-end -->\n <!-- ask-opus:diff-begin -->\n-x');
+  });
+  it('review-request.mdテンプレートの差分欄は区切り行1組で囲まれている', () => {
+    const template = readFileSync(resolve(import.meta.dirname, '../.agents/skills/delivery/templates/review-request.md'), 'utf8');
+    expect(extractDiff(template)).toBe('```diff\n{{base から head までの全差分}}\n```');
   });
   it('通常ファイルではないディレクトリの依頼を読取前に拒む', async () => {
     await withRepo('success', async ({ cwd, input, options }) => {
