@@ -106,6 +106,7 @@ describe('外部操作の試験用観測', () => {
     const dir = directory(); vi.stubEnv('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR', dir);
     expect(() => withProcessBudget({ timeoutMs: 600 }, () => runExternal(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { untilDeadline: true }))).toThrow(ProcessLimitError);
     expect(classifyCall(records(dir).find((r) => r.event === 'call')!)).toMatchObject({ classification: 'shared-deadline' });
+    expect(classifyCall(records(dir).find((r) => r.event === 'call')!)).toHaveProperty('coincidentOperationPossible', false);
     withProcessBudget({ timeoutMs: 1 }, () => {
       Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5);
       expect(() => runExternal(process.execPath, ['-e', ''])).toThrow(ProcessLimitError);
@@ -113,4 +114,48 @@ describe('外部操作の試験用観測', () => {
     expect(records(dir).at(-1)).toMatchObject({ spawned: false, spawn: null, limitKind: 'timeout', Rclamped: true });
     expect(classifyCall(records(dir).at(-1)!)).toMatchObject({ classification: 'pre-spawn-timeout' });
   }, 15_000);
+});
+
+
+describe('明示timeoutの副作用を増やさない観測', () => {
+  it.each([
+    [{ timeoutMs: 1 }, true], [{}, false], [undefined, false],
+  ] as const)('plain options %jの有無だけを記録し返値と引数を保持する', (options, timeoutRequested) => {
+    const dir = directory(); vi.stubEnv('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR', dir);
+    const args = ['pr', 'list']; const value = { status: 0, signal: null, stdout: '', stderr: '' } as const;
+    const calls: unknown[][] = [];
+    const real = { ...runtime, runExternal: (...input: Parameters<typeof runExternal>) => { calls.push(input); return value; } };
+    expect(observeRunExternal(real)('gh', args, options)).toBe(value);
+    expect(calls).toHaveLength(1); expect(calls[0][1]).toBe(args); expect(calls[0][2]).toBe(options);
+    expect(records(dir)[0]).toMatchObject({ timeoutRequested, internalTimeoutMs: null });
+  });
+  it.each(['accessor', 'inherited', 'proxy'] as const)('%sではtimeoutを追加評価せずunknownとし、元getter回数と例外を保持する', (kind) => {
+    const dir = directory(); vi.stubEnv('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR', dir);
+    let reads = 0; let reflectionTraps = 0;
+    const accessor = { get timeoutMs() { reads++; return 1; } };
+    const options = kind === 'accessor' ? accessor : kind === 'inherited' ? Object.create(accessor) : new Proxy(accessor, {
+      getOwnPropertyDescriptor(target, key) { reflectionTraps++; return Reflect.getOwnPropertyDescriptor(target, key); },
+      getPrototypeOf(target) { reflectionTraps++; return Reflect.getPrototypeOf(target); },
+    });
+    const args = ['pr', 'list']; const value = { status: 0, signal: null, stdout: '', stderr: '' } as const;
+    const calls: unknown[][] = [];
+    const real = { ...runtime, runExternal: (...input: Parameters<typeof runExternal>) => { calls.push(input); void input[2]?.timeoutMs; return value; } };
+    expect(observeRunExternal(real)('gh', args, options)).toBe(value);
+    expect(reads).toBe(1); expect(reflectionTraps).toBe(0);
+    expect(calls).toHaveLength(1); expect(calls[0][1]).toBe(args); expect(calls[0][2]).toBe(options);
+    expect(records(dir)[0]).toMatchObject({ timeoutRequested: null });
+    const error = new ProcessLimitError('timeout', 'original');
+    let caught: unknown;
+    try { observeRunExternal({ ...real, runExternal: (...input: Parameters<typeof runExternal>) => { void input[2]?.timeoutMs; throw error; } })('gh', args, options); }
+    catch (actual) { caught = actual; }
+    expect(caught).toBe(error); expect(reads).toBe(2); expect(reflectionTraps).toBe(0);
+    expect(records(dir).at(-1)).toMatchObject({ timeoutRequested: null });
+  });
+  it('own dataのnullはtimeout指定なしとして記録する', () => {
+    const dir = directory(); vi.stubEnv('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR', dir);
+    const options = { timeoutMs: null } as unknown as Parameters<typeof runExternal>[2];
+    const value = { status: 0, signal: null, stdout: '', stderr: '' } as const;
+    expect(observeRunExternal({ ...runtime, runExternal: () => value })('gh', [], options)).toBe(value);
+    expect(records(dir)[0]).toMatchObject({ timeoutRequested: false });
+  });
 });
