@@ -7,7 +7,7 @@
 ## 2. adapter（純関数）
 
 - [x] 2.1 core：`parseTestReport` を足し、テストごとのstatus・要件ID・`startTime` を返す。`extractTestRequirements` の結果は変えない（REQ-319）
-- [ ] 2.2 kit：`observeTestReport` を足す。producerと版・対象SHA・基準と証跡のhash・同じ実行の鮮度を照合し、`ci.test_report` の `required_subjects_with_failed_tests` の観測を返す。I/O・環境・時計を読まない（REQ-319）
+- [x] 2.2 kit：`observeTestReport` を足す。producerと版・対象SHA・基準と証跡のhash・同じ実行の鮮度を照合し、`ci.test_report` の `required_subjects_with_failed_tests` の観測を返す。I/O・環境・時計を読まない（REQ-319）
 
 ## 3. 接続
 
