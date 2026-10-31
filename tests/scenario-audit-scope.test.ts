@@ -482,3 +482,129 @@ describe('リポジトリでの実行', () => {
   });
 
 });
+
+describe('companionの閉じたmodule読込', () => {
+  const companion = 'tests/fixture.slow.test.ts';
+  const registry = JSON.stringify({ files: { [testFile]: { cases: { a: [], b: ['linux'] } } } });
+  const readingError = `companionの読み込み先を静的に確認できません：${companion}`;
+  let root: string | undefined;
+  afterEach(() => { if (root) rmSync(root, { recursive: true, force: true }); root = undefined; });
+  const prepare = (text: string) => {
+    root = mkdtempSync(join(realpathSync(tmpdir()), 'scenario-module-'));
+    const contents = {
+      'openspec/specs/x/spec.md': spec(),
+      [testFile]: file(),
+      [companion]: `${text}\nawait import('./fixture.test.js');`,
+      'tests/test-partition.json': registry,
+      'docs/quality/scenarios.json': JSON.stringify({ schemaVersion: 1, reviews: [blockReview()] }),
+      'report.json': JSON.stringify({ testResults: [{ name: companion, assertionResults: run() }] }),
+      'scripts/scenario-audit.mjs': readFileSync('scripts/scenario-audit.mjs', 'utf8'),
+    };
+    for (const [path, body] of Object.entries(contents)) {
+      mkdirSync(join(root, path, '..'), { recursive: true }); writeFileSync(join(root, path), body);
+    }
+    return root;
+  };
+  it.each([
+    "import './other.test.js?probe';",
+    "import './other.test.js#probe';",
+    "import './other%2etest.js';",
+    "export * from './other.test.js?x';",
+    "import './other.test';",
+    "import './other.test.mts';",
+    "import './other.spec.ts';",
+    "import './other.TEST.ts';",
+    "import.meta.glob('./other.test.ts', { eager: true });",
+    'const here = import.meta.url;',
+    "require('./other.test.js');",
+    "import './helpers/.hidden.js';",
+    "import './a b.js';",
+    "import './helpers/../helper.js';",
+    "import '././helper.js';",
+    "import './補助.js';",
+    "import './helpers\\\\helper.js';",
+    "import './helper.mjsx';",
+    "import './helper.mtsx';",
+    "import './helper.cjsx';",
+    "import './helper.ctsx';",
+    "import './helper.json';",
+  ])('[REQ-347] module解決を曖昧にする構文を両入口で出力前に拒否する: %s', async (body) => {
+    const dir = prepare(body);
+    const raw = readFileSync(join(dir, 'report.json'));
+    const ledger = readFileSync(join(dir, 'docs/quality/scenarios.json'));
+    await expect(auditRepository(dir, join(dir, 'out'), undefined, 'report.json', kit)).rejects.toThrow(readingError);
+    await expect(migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).rejects.toThrow(readingError);
+    expect(existsSync(join(dir, 'out'))).toBe(false);
+    expect(readFileSync(join(dir, 'report.json'))).toEqual(raw);
+    expect(readFileSync(join(dir, 'docs/quality/scenarios.json'))).toEqual(ledger);
+  });
+  it.each([
+    ...['js', 'ts', 'mjs', 'mts', 'cjs', 'cts', 'jsx', 'tsx'].map((extension) => `./helper.${extension}`),
+    '../helpers/x.js', '../../helpers/x.cts', './a-b_c.helper.mjs', './helpers/a..helper.js',
+  ])('[REQ-347] 閉じた相対pathと8種の明示拡張子の補助moduleを受理する: %s', (path) => {
+    const text = `import '${path}'; await import('./fixture.test.js');`;
+    expect(companionLinks(JSON.parse(registry), () => text)).toEqual(new Map([[companion, testFile]]));
+  });
+  it('[REQ-189][REQ-347] query経由の別試験の自前行だけで元sourceをreviewedにしない', async () => {
+    const dir = prepare("import './foreign.test.js?probe';");
+    const raw = readFileSync(join(dir, 'report.json'));
+    const ledger = readFileSync(join(dir, 'docs/quality/scenarios.json'));
+    await expect(auditRepository(dir, join(dir, 'out'), undefined, 'report.json', kit)).rejects.toThrow(readingError);
+    await expect(migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).rejects.toThrow(readingError);
+    expect(existsSync(join(dir, 'out'))).toBe(false);
+    expect(readFileSync(join(dir, 'report.json'))).toEqual(raw);
+    expect(readFileSync(join(dir, 'docs/quality/scenarios.json'))).toEqual(ledger);
+  });
+  it('[REQ-347] queryとfragmentのnative追加行を正規helperの対照と1起動で照合する', () => {
+    const dir = prepare('');
+    symlinkSync(realpathSync('node_modules'), join(dir, 'node_modules'), 'junction');
+    mkdirSync(join(dir, 'tmp'));
+    mkdirSync(join(dir, 'tests/helpers'), { recursive: true });
+    writeFileSync(join(dir, 'package.json'), '{"type":"module"}');
+    writeFileSync(join(dir, 'tests/helpers/partition-part.js'), "export function setPart(part) { if (part !== 'slow') throw new Error('part'); }");
+    writeFileSync(join(dir, 'tests/helper.js'), 'export const helper = true;');
+    writeFileSync(join(dir, 'tests/other.test.js'), "import { it } from 'vitest'; it('own case', () => {});");
+    const cases = [
+      ['query', "import './other.test.js?probe';", true],
+      ['fragment', "import './other.test.js#probe';", true],
+      ['setpart', "import { setPart } from './helpers/partition-part.js'; setPart('slow');", false],
+      ['plain', "import './helper.js';", false],
+    ] as const;
+    const texts = new Map<string, string>();
+    for (const [id, body] of cases) {
+      const source = `tests/${id}.test.ts`;
+      const companionFile = `tests/${id}.slow.test.ts`;
+      writeFileSync(join(dir, source), "import { it } from 'vitest'; it('source case', () => {});");
+      const text = `${body}\nawait import('./${id}.test.js');`;
+      texts.set(companionFile, text);
+      writeFileSync(join(dir, companionFile), text);
+    }
+    rmSync(join(dir, companion));
+    const config = "export default { cacheDir: './cache', test: { include: ['tests/*.slow.test.ts'], globals: false, maxWorkers: 1, fileParallelism: false, reporters: ['json'], outputFile: './native-report.json' } };";
+    writeFileSync(join(dir, 'vitest.config.mjs'), config);
+    const native = spawnSync(process.execPath, [join(realpathSync('node_modules/vitest'), 'vitest.mjs'), 'run', '--configLoader', 'native', '--config', join(dir, 'vitest.config.mjs')], {
+      cwd: dir, encoding: 'utf8', timeout: 60000,
+      env: { ...process.env, TMPDIR: join(dir, 'tmp'), TMP: join(dir, 'tmp'), TEMP: join(dir, 'tmp') },
+    });
+    const evidence = '.loomake/scratchpad/companion-module-grammar-impl/native-current';
+    mkdirSync(evidence, { recursive: true });
+    writeFileSync(join(evidence, 'process.json'), JSON.stringify({ status: native.status, signal: native.signal, stdout: native.stdout, stderr: native.stderr }));
+    writeFileSync(join(evidence, 'inputs.json'), JSON.stringify({ cases, config, companions: [...texts] }));
+    if (existsSync(join(dir, 'native-report.json'))) writeFileSync(join(evidence, 'report.json'), readFileSync(join(dir, 'native-report.json')));
+    expect(native.status, native.stderr + native.stdout).toBe(0);
+    expect(native.signal).toBeNull();
+    const report = JSON.parse(readFileSync(join(dir, 'native-report.json'), 'utf8')) as { numPassedTests: number; numFailedTests: number; testResults: { name: string; assertionResults: { fullName: string; status: string }[] }[] };
+    expect(report.numPassedTests).toBe(6);
+    expect(report.numFailedTests).toBe(0);
+    expect(report.testResults).toHaveLength(4);
+    for (const [id, , declaresOwn] of cases) {
+      const companionFile = `tests/${id}.slow.test.ts`;
+      const result = report.testResults.find((row) => row.name.replaceAll('\\', '/').endsWith(`/${companionFile}`));
+      expect(result?.assertionResults.map((row) => [row.fullName, row.status])).toEqual(declaresOwn ? [['own case', 'passed'], ['source case', 'passed']] : [['source case', 'passed']]);
+      const selection = { files: { [`tests/${id}.test.ts`]: { cases: { a: ['linux'] } } } };
+      const check = () => companionLinks(selection, (path: string) => texts.get(path)!);
+      if (declaresOwn) expect(check).toThrow('companionの読み込み先を静的に確認できません');
+      else expect(check()).toEqual(new Map([[companionFile, `tests/${id}.test.ts`]]));
+    }
+  }, 90000);
+});
