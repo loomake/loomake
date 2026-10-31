@@ -15,6 +15,7 @@
 - 行閾値が混在するliteral表は、元のit.each呼出しを保つ局所bindingと表全体のforEachで行だけを選ぶ設計を2.7へ加える。旧V2は停止記録を保ち、一次ソースから訂正したV2bの新16行の手書きnative基準を先に確かめる。技術観測の受入と本番・3OSの受入を分け、未対応の表や実行時の名前は未登録・未達のまま残す。
 - schema2fileの個別登録設計を採用し、旧17＋schema2の19file必須包含と各欠落negative、接頭辞前の独立inventoryを未完了2.8へ加える。全採集を19fileへ限定せず、2.6の実装完了も保持する。A2の3fileとguards追加2宣言の設計を採用し、全fileの成功に基づく隔離解除、未判定ならfile未登録、唯一Sourceの根拠をPRから失わない条件を追加する。
 - orphansのimported helper分類を新2.9で先行し、実証後の33宣言/34行とv2-readersの16宣言/18行を保つ個別登録設計を採用する。実割当は全sample受入後に限り、v2-readers登録と同commitで必須包含を2.8の19fileから20fileへ増やす。分割後に起動費用が他caseへ移って10秒を超えれば未達として再設計し、hookやgroup全体への移動で隠さない。
+- publicationは共有初回runの10行を各OSで同part、非literal lookup8行はwhole IDとし、閾値mixedならfile全体を未登録未達に保つ（Q-84〜Q-90）。18ID/25raw行と26診断contextを独立照合し、producer/既存試験不変、合成F-P・production変種・Windows全行3sampleと全raw/selectorの受入を既存タスクに残す。
 - publication診断の後継は、既存quality-quarantineへ隔離一覧と独立の固定選択・Windows3sampleを追加する。main push/scheduleでの実運用の確認は、最後のPR184のマージ後・sync/archive前の必須受入に残す。
 - named slow projectとroot globalSetupの共有build/pack、実際の13条件を検査するREQ-161のfast試験、元全caseと診断profilerの保持を、採用済みの設計に沿って実装する。
 

@@ -298,3 +298,27 @@ REQ-347は元全文/Source/11Scenarioのbyteを保持し、本文500文字以内
 | T5 | docs/dev/ci.mdへ技術限界を正確に記し、依存module/反射の意味を無条件に証明したと書かない。モデル未読のci文書/inventory136〜152全文、未存在partition-part実物とVitest export情報の必要範囲を実装前に確認し、不明は設計へ戻す |
 
 修理担当は新しいCodexへ切り替え、scenario-audit本体/同scope試験/docsだけを実装する。親計画とREQ-347は本更新で先行し、製品src・scanner・hash/migrateの元契約・元試験本文・registryは変えない。Q-38の段階的PRと最後184の結線順序も維持する。現在8/21+ゲート後4件未達（全25件）、Q83であり、2.7〜2.10・3OS測定/全case/clock/coverage/唯一Source・診断5.6・人ruleset・merge/sync/archiveは未達のままである。
+
+# publicationのcarrierと診断対応（Q-84〜Q-90）
+
+原本は`.loomake/scratchpad/speed-plan-reconcile-282/followup90/result.md`（bfc72c35-b601-45cf-876e-5de32b72712f、head65f98fcb）に全文保存した。管理役・計画担当は全文を読み、manifestのactual claude-opus-5-5/ok/exit0/Read・Glob・Grepのみ/MCPなし/拒否0と、0始まりevent5/6/9で規約3本のoffset/limitなしReadを確認した。おすすめの採用は管理役がADR0006に従って行う。原本の確認表にはQ-P3がないため、Q-86は§3.3のlookup表の条件を独立に記録し、モデルがQ-P3を提示したとは書かない。
+
+元9宣言/10候補/25行（importSpecifier1/errors0）、18IDと登録後rowBinding3増による13候補はモデルの静的予測で、実測ではない。接頭辞前のcommitでpublicationのlive baselineを追加し、独立AST/scanner/9本文blockのbyte多重集合と元11selectorのshaを照合する。不一致なら期待を実装へ合わせず設計へ戻す。18IDは原本§3.1の元順序（create-before/create-after、push-retry/repeat/new-source、json/sha/change/failed/fail-result/hash/snapshot/legacy、lookup-results、verify-fail、verify-head/verify-branch、verify-dirty）を実sourceと再照合して採用する。実registryは今は空のままである。
+
+登録の形は元9本文・名前/表/parameter/assert/60秒/retry/fixture/worker/TMPDIR/clock/cleanupをbyteで保つin-placeと3行companionで、mockをCへ複製しない。最後のimport直後/vi.mock前へ既存共通header、4describe全部へ子孫全IDのhasAny、3literal表へ2.7受入後の局所eachRowsのBlockだけを足す。その他の単独宣言とlookup表全体はhas(ID)で囲む。元hook/vi.mock/vi.setConfig/遅延sharedFirstRunと巻上げhelperは変えない。原本のheader/BlockはV2bから推した形なので、未読のrow原本を読了とせず、2.7で受け入れるAPI・Q79〜83のcompanion検査と実装前に照合する。
+
+共有初回runを使うGの10行（create-before/new-source/8証拠行）はOSごとに同じpartへ置く。最新同head各3sampleの行ごとの最大Mが全行10000ms超ならslow、全行以下ならfast、mixedならfile全体を未登録・未達にして追加設計へ戻す。lookup-resultsはJSON.stringify等を含む非literal8行表なのでwhole IDとし、同じ基準でmixedならfile全体を未登録未達にする。グループ最大だけでfast行までslowへ送らず、[]を判定不能のfast確定に使わない。他の7IDは各行で判定する。Linuxのcoverage94/89/96/97と唯一live Source（REQ-164の他file根拠も含む）を別途確認し、満たさなければ割り当てない。
+
+Windowsの隔離解除は元25行すべてが同head3sampleでPASS、欠測/skipなしの場合だけ行い、未達なら全OSでfile未登録を保つ。他fileの失敗を含む4.2全体の受入も独立に残す。prefix/C/registry/隔離entry削除/DIAGNOSTIC_TARGETSへのC追加は4.3の同commitとし、profilerのsource/C更新も先行又は同commitで行う。Q-38どおり中間PRはfast+slow全件、最後184でNode20削除と全PRslow不実施を同時に有効にし、local/release/main/schedule全件と初回main診断5.6を保つ。
+
+診断producerのprocess-diagnostics.tsと既存publication-retry-diagnostics試験はbyte不変とする。追加する固定PUBLICATION_TOPOLOGYは25case labelsとshared-first-runの26contexts、共有一回n=[1]・共有10行n=[2]・他7行n=[1,2]・lookup8行n=[1]を定め、18ID→label集合とregistryPartを対応付ける。case-startにはrepoがなくtruncatedにはid/labelもないのでphaseファイル単位で束ね、後続repo/有限区間/pid/workerでprocessを相関させる。同repoだけや試験名から推測せず、同ms境界の曖昧なprocess対応を拒否する。共有は同pid/worker・end≤consumer start・共有利用partだけ一回、利用なしpartは零回を検査する。新code runSequence/unexpectedLabelを既存codeへ足し、予備labelへの落下・共有欠測/重複/後着・lookup欠測・idなしtruncated・区間外/重複境界・非有限/逆行時計を正負fixtureで検出する。異常をexit1で保持し、argv/env/stdout/stderr/試験名/parameterは新成果物へ書かず、上限/heartbeat/失敗後保存/保存期間の既存契約を保つ。
+
+| 前提・受入 | 実施時点と成功の条件 |
+|---|---|
+| F-P | 3.2で専有Linux native合成fixtureを実施する。別名/推移importを通るpartial mock・vi.fn(actual)・beforeEach mockClear・vi.setConfig・遅延Promise・afterAll cleanupを元と同じassertで検査する。全fast/mixed両方向/全slowと空describeを照合し、mock除去で同assert失敗・config除去でtimeout失敗のnegative actual callを示す。共有初期化は利用part一回/非利用part零回、cleanup残0。所有config/cache/TMPDIRを使いHOMEを変えず、技術前提だけの成功をproductionや3OS成功へ流用しない |
+| production変種 | 4.3候補commitの専用実験worktreeでtracked tests/test-partition.jsonだけを未commit一時変更し、手順/rawはignored所有folderに保存する。env overrideを加えず、全fast/全slow/G+lookup fast/G slow/describe空をS+C・unit/package・slowの経路で実行する。元25raw行の多重集合・26context/n列・共有一回・loomake-run-*残りの差分0を独立oracleで照合し、最後にregistryを元bytesへ復元してcleanを確認する。現canonical/本作業PRのregistryは空を保持し、一時変更の実行経路はまだ未実証とする |
+| partition選択 | test-partition-integrationの空registry前提は登録時に失敗する見込みである。4.3より先に独立expected sourceから選択を検査する設計を得て、旧14試験と元経路表をすべて保持する。実装へ期待を合わせず、この設計が未成立なら登録しない。未知OSはunit/V2bだけの確認で、production未検証を明記する |
+| 監査 | 元11publication selectorと全selectorをmain/local全rawで独立に再受入し、元状態/理由・Source・raw/ledgerを保持する。SCN省略ID520afb/798ef6/b23b3f等の対応は全文で再照合しdocs/PRへ記す。本文block hashだけでは元each表内の行欠測を検出できない既知限界があるため、PRのconfirmedを全row保存やこれらの受入根拠にしない。失敗/欠測・既知bad companionの受理の免除や完成範囲縮小にも使わない |
+| 診断実運用 | 4.4では合成26context/二partとcreateCaseDiagnosticsの実label対応を検査する。5.6は最後184のmerge後最初のmain pushの同headWindows独立3artifactで25raw/26context・n列・process相関/privacy/上限/失敗後保存を受け入れ、未達ならsync/archiveと完成を保留する |
+
+原本でproposal/row原本は未読、trace/監査/test-declarations試験/selectorは部分読取で、実コマンドは未実行である。この限界を保持し、実装前の現source/checkerと関連規約・全selector・producer/既存試験の読取と独立実証を必須にする。3.1/3.2/4.3/4.4/5.1/5.6の具体条件であり新taskは足さず、現在8/21+必須4未達、Q90とする。REQ-347全文/12Scenario、Q83以前と全既存task/完了印、2.10重大修理・最新測定・人ruleset・merge/sync/archiveの未受入を保持する。

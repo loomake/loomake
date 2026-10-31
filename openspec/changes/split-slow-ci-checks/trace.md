@@ -50,7 +50,7 @@
 
 ## 確認事項
 
-Q-01〜Q-78の採用と条件は管理役がADR0006に基づき記録する。Q-19〜Q-24はR系と行閾値/宣言分類、Q-25〜Q-30はcd321d46のQ-A1〜Q-A6に対応する。未完了の個別設計・測定・実装は回答済みという理由で受入済みにしない。回答日・承認日は日本時間である。回答者は包括承認の表記であり、利用者本人が各資料をレビューしたという意味ではない。選択肢とおすすめの採用理由を残す。旧Q番号Q01〜Q10は下表Q-01〜Q-10、Q-N1〜Q-N5はQ-11〜Q-15に対応する。Q-01〜Q-16は当時の決定として残し、PR179先行受入と旧レビュー条件に関する現行の決定はQ-17・Q-18を優先する。Q-21の同一PR限定は後の200KiB分割決定を適用するQ-38で更新し、Node20削除と全PRslow不実施の同時有効化を維持する。
+Q-01〜Q-90の採用と条件は管理役がADR0006に基づき記録する。Q-19〜Q-24はR系と行閾値/宣言分類、Q-25〜Q-30はcd321d46のQ-A1〜Q-A6に対応する。未完了の個別設計・測定・実装は回答済みという理由で受入済みにしない。回答日・承認日は日本時間である。回答者は包括承認の表記であり、利用者本人が各資料をレビューしたという意味ではない。選択肢とおすすめの採用理由を残す。旧Q番号Q01〜Q10は下表Q-01〜Q-10、Q-N1〜Q-N5はQ-11〜Q-15に対応する。Q-01〜Q-16は当時の決定として残し、PR179先行受入と旧レビュー条件に関する現行の決定はQ-17・Q-18を優先する。Q-21の同一PR限定は後の200KiB分割決定を適用するQ-38で更新し、Node20削除と全PRslow不実施の同時有効化を維持する。
 
 | ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |
 |---|---|---|---|---|---|---|---|---|
@@ -137,6 +137,13 @@ Q-01〜Q-78の採用と条件は管理役がADR0006に基づき記録する。Q-
 | Q-81 | tasks2.10・PR253 Q-B3 | vitestの許可名は何か | A：expectだけ／B：vi等も含む | A。既存正例に必要な集合へ閉じる | yes | A。ALLOWEDはexpectのみ。namespace/aliasの位置を閉じ、4件の非試験正例・相対helperと整形許容を保持する。拡張は別の仕様改訂（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 | Q-82 | tasks2.10・PR253 Q-B4 | 読み込み先をどう制限するか | A：vitest+相対非test module／B：nodeも許可／C：無制限 | A。createRequire等の別入口を閉じる | yes | A。R1でnode:module/vitest/*/@vitest/runner等を拒否。companion本体だけの静的検査/依存module・反射非検証/globals無効は技術限界として記し、不正受理の免除にしない（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 | Q-83 | tasks2.10・PR253 Q-B5 | native比較試験をどこで起動するか | A：scope内一回の集団実行／B：別試験 | A。正負対照を保ちながら起動費用をまとめる | yes | A。T1〜T5、同族負とnative original/fallback/objectCarrier/parameter/正例、偽reviewed red-green、228固定を受入とする。10秒超なら候補として残し隠さない（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-84 | tasks3.2/4.3・publication Q-P1 | 共有10行の閾値が混在したらどうするか | A：同part不可ならfile未登録未達／B：各行割当／C：最大で全slow | A。初回runの重複やfast行のslow移動を避ける | yes | A。各OSの行別max3sampleで全行同判定だけ採用。混在ならwhole file未登録未達/追加設計。F-Pと実変種の共有回数/元25行保持を別検証（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-85 | tasks3.2/4.3・publication Q-P2 | case IDをどう命名するか | A：診断名+lookup-results／B：別名対応表 | A。対応を直接照合できる | yes | 条件付きA。原本§3.1の18IDを元順で独立再照合。9宣言/10候補/25行→rowBinding3増/13候補は静的予測で、prefix前live baseline/AST/本文/selectorを実証してから登録（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-86 | tasks4.3・publication §3.3 | 非literal lookup8行が混在したらどうするか | A：whole IDとfile未登録未達／B：一括slow／C：未対応行を除外 | A。非literalは行登録の対象外でfastを隠さない | yes | A。lookup-results全8行の最大3sampleが全slow/全fastだけ採用し混在ならfile全体未登録未達。原本の確認表にQ-P3はなく、§3.3の採用条件を本行に記録（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-87 | tasks4.2/4.3・publication Q-P4 | Windows隔離をいつ解除するか | A：file全25行3sample成功／B：旧隔離記載表だけ成功 | A。file単位の隔離の根拠をそろえる | yes | A。同head各3PASS/欠測skipなし後だけ同commit解除/prefix/C/registry/診断対象更新。未達なら全OS未登録。他file失敗を含む4.2全体の受入は別に保持（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-88 | tasks4.4/5.6・publication Q-P5 | publication診断期待をどこへ置くか | A：固定topology+新code／B：旧codeだけ | A。再試行列と予備labelへの落下を検出する | yes | A。25labels+shared=26contexts、共有/10行/他7行/lookup8行のn列を固定。file単位区間/pid/workerで照合し同時刻曖昧拒否、runSequence/unexpectedLabel追加。producer/既存試験byte不変（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-89 | tasks3.2/4.3・publication Q-P6 | 実productionの変種をどう検査するか | A：専用treeでregistry一時変更／B：envで読取先差替え | A。不要な設定を追加しない | yes | A。専用実験treeのtracked registryだけ未commit一時変更、手順/rawはignoredへ保存し元bytes復元clean。現canonical/本PRは空、env overrideなし。全経路25raw/26context/cleanup残0は未実証（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
+| Q-90 | tasks5.1・publication Q-P7 | 部分一致selectorで行欠測をどう受け入れるか | A：既知限界と全raw独立受入／B：表全体ID | 条件付きA。hashだけで各行保存を証明しない原則を守る | yes | A。影響SCNを全文再照合しdocs/PRへ記す。PRconfirmedは全row保存の根拠にせずmain/local全rawと全selectorを必須再受入。既知bad companion/失敗/欠測の免除や完成範囲縮小にしない（管理役採用・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-10-31 |
 
 ## 仮定
 
@@ -255,3 +262,14 @@ v2-readersの2Windows ID案は4.2全受入後に限る。7describe全guard、元
 REQ-347の元本文・Sourceと全11Scenarioをbyte保持して短SHALLと新第12Scenarioを先行追記し、仕様ゲート後に同じPR253で重大修理2.10を行う。既存2.5の完了印・228期待/4正例・旧拒否文言・scanner/blockDigest/migrateReviewsの元契約・全raw/旧レビュー表/ledgerとregistry空は保持する。companion本体だけの静的検査、依存module中身と反射の非検証・globals無効は既存検査の技術限界であり、不正受理の免除/完成範囲縮小や反射の安全宣言ではない。objectCarrier/parameterのnativeと両入口・偽reviewedのredは未観測として残し、受入へ補わない。
 
 2.9追加時点の8/20+4未達（全24件）とQ78を履歴に残し、現在は新2.10未完を加え8/21+4必須未達（全25件）、Q83とする。全4.3の現在前提へ2.10を加え、旧Q/選択肢/Source/Scenarioと全task範囲を減らさない。PR253は重大1未修理・独立調査/設計採用済み・独立Opus最終0回で、PR252は独立Opus重大0/軽微1Issue254・Ubuntu coverage待ちである。実装は別の新Codexへ渡し、計画更新をmain受入や1-1完成とは扱わない。
+
+
+## 2026-10-31 publication-carrier設計の採用
+
+bfc72c35の原本全文とmanifest/規約Read証拠を`.loomake/scratchpad/speed-plan-reconcile-282/followup90/`へ保存し、管理役と計画担当が全文読了/actual5-5/ok/exit0/read-only/拒否0を確認した。Q-84〜Q-90はADR0006のお勧め採用で、原本のQ-P3欠番は§3.3のlookup条件として区別した。全設計/18ID/PC1〜8と未読資料・未実測の限界は原本とdesignのpublication節を参照する。モデルがrow原本/proposal/trace全文を読んだとは扱わない。
+
+共有10行とlookup8行は各OSのmax3sampleが一様でなければfile全体未登録未達とし、一括slowや[]で救済しない。18ID/9宣言10候補25行・登録後rowBinding3増/13候補の静的予測はprefix前の独立AST/source/checkerで実証する。producer/既存診断試験byte不変、25rawと26context/n列・file区間/pid/worker相関と曖昧拒否、新code、F-P/実variant、Windows全行3PASSと他fileを含む4.2、main/local全raw/全selectorの受入を既存taskへ具体化した。
+
+専用実験treeで変更するregistryはtracked tests/test-partition.jsonである。管理役の当初の『ignored一時registry』という表現は、実loaderの固定pathとgit ls-filesに照らして訂正し、元設計どおり未commit一時変更→元bytes復元clean、手順/rawだけignored所有folderへ保存とした。現canonical/本PRの実registryは空のまま、env overrideを追加せず、実variantは未実証とする。空registry前提のintegrationは独立expected source選択の設計を先行し旧14試験/経路表を保ち、期待を実装へ合わせない。
+
+新taskは追加せず8/21+必須4未達（全25件）、Q90。元Requirement全文/Source/12Scenario、Q83以前、21taskのIDと8完了印・全受入範囲を保持する。Q-P7はblockhashだけの行欠測限界を記録し、PRconfirmedを全row保存の根拠にせずmain/local全rawと全selectorを必須再受入する条件で採用した。既知bad companion/失敗/欠測を許す免除や完成範囲縮小ではなく、3.1/3.2/4.3/4.4/5.1/5.6と重大修理2.10・人ruleset・merge/sync/archiveは未完了のままである。
