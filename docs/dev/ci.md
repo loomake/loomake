@@ -30,7 +30,7 @@ Requirement の変更は、`openspec/specs/` と `openspec/changes/<id>/specs/` 
 
 change のない L1 の PR では `verify` を呼ばないため、`tests/doc-links.test.ts` を gate で直接実行している。gate からこの試験を外すときは、文書だけの PR で文書を読むテストを実行する場がなくなることを確かめる。
 
-`ci:all-os` ラベルを L3 の PR で必須にする検査は、3 OS の試験の時間切れが直るまで入れていない。
+`ci:all-os` ラベルを L3 の PR で必須にする検査は、3 OS の試験の時間切れが直るまで入れていない。時間切れする試験は、下の「時間切れする試験の隔離」で一時的に外している。
 
 ## 開発の台本
 
@@ -45,6 +45,45 @@ change のない L1 の PR では `verify` を呼ばないため、`tests/doc-li
 - CI のテストの分割（REQ-214）
 
 完了ゲート（gate のジョブ）と release ワークフローは、利用者や配布物にかかわるので、仕様に残す。
+
+## 時間切れする試験の隔離
+
+macOS と Windows でだけ時間切れが続く試験ファイルは、`tests/quarantine.json` に書くと、その OS の quality ジョブのシャードから一時的に外せます。決まりは monorepo の仕様の「試験の隔離一覧」（REQ-344）にあります。試験の上限時間を延ばしたり skip したりする代わりに使うものではありません。原因を調べて直すまでの、期限つきの避難です。
+
+```json
+{ "entries": [ { "file": "packages/runner/test/pr.test.ts", "tests": ["[REQ-114] …"], "os": ["windows-latest"],
+    "issue": 116, "added": "2026-10-31", "expires": "2026-11-14" } ] }
+```
+
+- 単位はファイルです。vitest は試験名で除外できず、名前で外すと skip になるためです。`tests` は記録用で、外す範囲には使いません
+- `os` には `macos-latest` か `windows-latest` だけを書けます。Ubuntu のジョブは一覧を読まず、すべての試験を実行します
+- 各エントリに、原因を追う Issue の番号を書きます。期限は追加日から 14 日以内です
+- 期限を過ぎると、macOS・Windows のシャードと `quality-quarantine` の plan ジョブが失敗します。直して一覧から外すか、Issue に理由を書いて期限を見直してください
+
+quality ジョブの macOS・Windows のシャードでは、`scripts/ci-quarantine.mjs --os <OS>` が一覧を検査し、外すファイルを JSON の配列で出力します。テストのステップはそれを環境変数 `LOOMAKE_TEST_QUARANTINE_EXCLUDE` で `vitest.config.ts` に渡し、両方のプロジェクトの `exclude` に足します。テストを実行する `run:` の行は変えていません。
+
+外した試験は別のワークフロー `.github/workflows/quality-quarantine.yml` で流します。main への push・定期実行・`ci:all-os` ラベルの PR・手動実行で動きます。plan ジョブが `ci-quarantine.mjs --matrix` で OS ごとの matrix を作り、`quality-quarantine` ジョブが一覧のファイルだけをシャードに分けずに実行します。このジョブは `continue-on-error: true` なので、失敗しても run の成否には数えません。一覧が空なら、このジョブは飛ばされます。ci.yml の中に置かないのは、ci.yml の既存の試験（`ci:all-os` の式が 1 か所であること、gate が最後のジョブであることなど）を変えないためです。
+
+隔離のジョブでは publication-retry の段階と外部操作の記録（[test-phase-profiling.md](test-phase-profiling.md)）、ai-journeys の区間の記録、心拍を有効にします。それらと vitest の JSON レポートを `quality-quarantine-<run>-<attempt>-<os>-<sample>` の artifact に 7 日保存します。
+
+手動実行では計測のためにだけ次を選べます。既定はどちらも変えません（stabilize-cross-os-tests の Q-03）。
+
+- `samples`：OS ごとのサンプル数（1〜5）
+- `temp`：Windows の `TEMP`・`TMP` を `RUNNER_TEMP` に向けるか
+- `max_workers`：vitest の並列度を 1 にするか
+
+手動実行は既定ブランチにあるワークフローだけが対象です。一覧から外すときは、そのファイルが `quality-quarantine` と夜間実行で安定して通ることを確かめてから、エントリを消してください。
+
+## 実行環境の心拍
+
+`scripts/ci-heartbeat.mjs` は実行環境が止まった区間を見つけるための記録です（ci-test-diagnostics の仕様の REQ-345）。quality ジョブの macOS・Windows のシャードと隔離のジョブで、テストの前に `start` で裏で起動し、テストのあとに `stop` で止めます。
+
+- 1 秒ごとに、時刻、前の記録からの間隔、一時ディレクトリと `RUNNER_TEMP` への 4KiB の書き込みと fsync の時間を `heartbeat.jsonl` に書きます
+- 10 秒ごとに、`node -e 0` と `git --version` の起動時間も書きます
+- 記録は 8MiB で止めます。`stop` は、記録の数、間隔の最大値、5 秒を超えた間隔の回数をジョブの要約と `summary.json` に書きます
+- 試験は `LOOMAKE_CI_HEARTBEAT_DIR` があるときだけ、`markPhase` で段階を `phases-<pid>.jsonl` に書けます。いまは package-artifacts の照合の試験と `scripts/package-smoke.mjs` が使っています
+
+心拍も止まっていれば実行環境全体が止まっていた、書き込みだけが遅ければディスク、起動だけが遅ければプロセスの生成、と見分ける手がかりにします。記録の失敗で試験とジョブの成否は変わりません。quality ジョブの記録は `ci-heartbeat-<run>-<attempt>-<os>-<shard>` の artifact に 7 日保存します。
 
 ## quality のテスト診断
 

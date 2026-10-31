@@ -37,17 +37,17 @@ Actionsの各実行から `ci-phases-<run>-<attempt>-<sample>` artifactを開い
 
 PR #179 の診断を取り込んだものです。`LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR` を指定したときだけ動きます。未指定なら、記録のファイルも preload も作りません。CI では `quality-quarantine` ワークフロー（[ci.md](ci.md) の「時間切れする試験の隔離」）が、隔離中の試験を流すときに指定します。専用のワークフローは作っていません。相対パスを指定した場合は、テストのワーカーの cwd を基準に絶対パスにします。
 
-publication-retry の 25 ケースは、それぞれ固有の ID と固定のラベルで `*.phases.jsonl` に段階を記録します。段階は case-start、repo-ready、run-start・run-end、証拠を壊す 8 ケースの mutate-end・amend-end、cleanup-start・cleanup-end、case-end です。run-end には、run の番号、終了コード、出力に「作成前に失敗」を含むかどうかを残します。検索結果の不正 7 種類は、元の入力を保存せず、固定のラベル（`lookup-broken-json` など）に分けます。
+publication-retry の 25 ケースは、それぞれ固有の ID と固定のラベルで `*.phases.jsonl` に段階を記録します。段階は case-start、repo-ready、run-start・run-end、証拠を壊す 8 ケースの mutate-end・amend-end、cleanup-start・cleanup-end、case-end です。run-end には run の番号、終了コード、出力に「作成前に失敗」を含むかどうかを残します。検索結果の不正 7 種類は元の入力を保存せず、固定のラベル（`lookup-broken-json` など）に分けます。
 
-`makeRepo` は preload を `repo.env.NODE_OPTIONS` に足します。preload は、`argv[1]` のファイル名が `supervisor.cjs`・`claude`・`gh` の Node プロセスだけについて、entry と exit を `*.processes.jsonl` に記録します。ファイル名には、リポジトリの basename、PID、preload の起動ごとの UUID を入れます。PID が再利用されても、別の起動の記録を混ぜません。監視役の行には、操作の分類（`git-commit`・`gh-pr-create` など）と、期限までの残り時間 `remainingMs` を残します。
+`makeRepo` は preload を `repo.env.NODE_OPTIONS` に足します。preload は `argv[1]` のファイル名が `supervisor.cjs`・`claude`・`gh` の Node プロセスだけについて、entry と exit を `*.processes.jsonl` に記録します。ファイル名にはリポジトリの basename、PID、preload の起動ごとの UUID を入れます。PID が再利用されても、別の起動の記録を混ぜません。監視役の行には操作の分類（`git-commit`・`gh-pr-create` など）と、期限までの残り時間 `remainingMs` を残します。
 
 記録は 1 ファイル 64KiB を上限とし、上限に達したら `truncated` の行を 1 つ残して止まります。記録の準備や書き込みに失敗しても、元の試験には例外を返さず、記録が欠けるだけです。生の stdout・stderr、引数、環境変数の値、認証情報は保存しません。
 
 読むときは次の点に注意してください。
 
 - entry だけ・exit だけの区間、`truncated`、不正な時刻は計測不足として扱います。0 秒で補ったり、成功とみなしたりしません
-- case-end の `completed` は、callback と後片付けが終わったことを表します。vitest がすでに時間切れと判定したケースを、成功に戻すものではありません
-- Windows では、テストのプロセスごとに、最初の外部操作の前に保持役の準備を最大 10 秒待ちます。この待ちは preload の記録にも `remainingMs` にも現れません
+- case-end の `completed` は callback と後片付けが終わったことを表します。vitest がすでに時間切れと判定したケースを、成功に戻すものではありません
+- Windows ではテストのプロセスごとに、最初の外部操作の前に保持役の準備を最大 10 秒待ちます。この待ちは preload の記録にも `remainingMs` にも現れません
 - 記録のファイルが多いと、I/O や Windows Defender の走査で負荷が増えることがあります。診断ありの時間を、ふだんの CI の時間と同じには扱いません
 
 心拍の記録（`scripts/ci-heartbeat.mjs`）と並べて読むと、試験の段階が止まった時刻に実行環境全体も止まっていたかを確かめられます。

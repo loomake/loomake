@@ -23,5 +23,5 @@
 
 ## 6. 文書と確認
 
-- [ ] 6.1 `docs/dev/ci.md` に隔離の手順を書く。changeset は空にする
+- [x] 6.1 `docs/dev/ci.md` に隔離の手順を書く。changeset は空にする
 - [ ] 6.2 試験の上限・assertion・skip の数が変わっていないことを `git diff origin/main -- tests packages/*/test` で確かめ、`pnpm -s verify --change stabilize-cross-os-tests --done` を通す

@@ -4,13 +4,13 @@
 
 macOS と Windows の CI では、run を動かす試験などがときどき時間切れする（Issue #116・#178・#181・#183）。再実行すると通るため、main への push、夜間実行、`ci:all-os` の PR の結果が試験の成否を表さなくなっている。設計メモ（`.loomake/handoff/design-step5-flaky-tests-2026-10-31.md`）で CI の記録を数えると、失敗した実行だけに、全ワーカーの記録が数十秒止まる区間があった。原因はまだ決まっていない。
 
-試験の上限時間を延ばしたり、試験を skip したりして緑にすることはしない。この change では、時間切れが起きる 6 ファイルを期限つきで隔離し、隔離した試験を別のジョブで毎晩流して記録を集める。どの段階で止まったかが分かる記録も合わせて取る。
+試験の上限時間を延ばしたり、試験を skip したりして緑にすることはしない。この change では時間切れが起きる 6 ファイルを期限つきで隔離し、隔離した試験を別のジョブで毎晩流して記録を集める。どの段階で止まったかが分かる記録も合わせて取る。
 
 ## What Changes
 
 - `tests/quarantine.json` を足す。macOS・Windows で時間切れが続く試験ファイルを、OS・Issue 番号・追加日・期限（最長 14 日）とともに書く。初期の一覧は Issue #116・#178・#181・#183 の 6 ファイルで、期限は 2026-11-14 とする。
 - `scripts/ci-quarantine.mjs` を足す。一覧の形式・ファイルの有無・OS・期限を検査し、quality ジョブの macOS・Windows のシャードに除外するファイルを渡す。一覧に ubuntu-latest がある場合や期限を過ぎた場合は、ジョブを失敗させる。Ubuntu のジョブは一覧を読まず、すべての試験を実行する。
-- 新しいワークフロー `quality-quarantine` で、一覧のファイルを一覧の OS ごとにシャードに分けずに流す。段階の記録と心拍を有効にし、artifact を保存する。失敗しても run 全体の成否には数えない（`continue-on-error`）。一覧が空なら試験のジョブを飛ばす。手動実行では、計測のためだけに `TEMP` の向き先と並列度を選べる。
+- 新しいワークフロー `quality-quarantine` で、一覧のファイルを一覧の OS ごとにシャードに分けずに流す。段階の記録と心拍を有効にし、artifact を保存する。失敗しても run 全体の成否には数えない（`continue-on-error`）。一覧が空なら試験のジョブを飛ばす。手動実行では計測のためだけに `TEMP` の向き先と並列度を選べる。
 - `scripts/ci-heartbeat.mjs` を足す。macOS・Windows のシャードと隔離のジョブで、試験の前に裏で起動する。1 秒ごとに時刻と一時ディレクトリへの書き込み時間を、10 秒ごとに `node` と `git` の起動時間を記録し、artifact に保存する。
 - PR #179（head 3571c20）の診断を取り込む。publication-retry の段階の記録と、監視役・偽 CLI の entry/exit を記録する preload である。PR #179 の専用ワークフロー `profile-publication-retry.yml` は作らず、隔離のジョブで同じ診断を取る。
 - `tests/package-artifacts.test.ts` と `scripts/package-smoke.mjs` に、prepare・check・照合の段階の記録を足す。
