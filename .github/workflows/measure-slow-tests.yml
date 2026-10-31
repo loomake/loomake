@@ -1,0 +1,63 @@
+name: measure-slow-tests
+
+on:
+  push:
+    branches: ['ci/measure-*']
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        sample: [1, 2, 3]
+    runs-on: ${{ matrix.os }}
+    env:
+      MEASURE_FILES: >-
+        packages/runner/test/external-budget.test.ts
+        tests/ai-journeys.test.ts
+        tests/domain-mutations.test.ts
+        tests/package-artifacts.test.ts
+        packages/runner/test/publication-retry.test.ts
+        packages/runner/test/evidence-storage.test.ts
+        packages/runner/test/auth-prompts.test.ts
+        packages/runner/test/engine-long-deadline.test.ts
+        packages/runner/test/guards.test.ts
+        packages/runner/test/pr.test.ts
+        packages/runner/test/run-no-change.test.ts
+        packages/runner/test/run.test.ts
+        packages/runner/test/scenario-timeout-evidence.test.ts
+        packages/runner/test/signal-during-sync.test.ts
+        tests/domain-mutations-conditions.test.ts
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - id: test
+        run: pnpm test $MEASURE_FILES
+        shell: bash
+      - id: metadata
+        if: ${{ !cancelled() }}
+        run: node scripts/ci-measure-metadata.mjs "$RUNNER_TEMP/loomake-ci-measure" "$MEASURE_SAMPLE" "$TEST_OUTCOME"
+        shell: bash
+        env:
+          MEASURE_SAMPLE: ${{ matrix.sample }}
+          TEST_OUTCOME: ${{ steps.test.outcome }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: ${{ !cancelled() }}
+        with:
+          name: ci-measure-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.os }}-${{ matrix.sample }}
+          path: ${{ runner.temp }}/loomake-ci-measure/
+          retention-days: 7
+          if-no-files-found: warn
