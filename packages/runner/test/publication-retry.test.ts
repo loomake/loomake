@@ -94,6 +94,8 @@ async function withFailedCreate(label: string, action: (repo: Repo, first: RunRe
     rmSync(template.base, { recursive: true, force: true });
     cpSync(snapshot, template.base, { recursive: true, preserveTimestamps: true });
     phase.bind(template.base);
+    // 注意：repo.git・calls・prs・plan は template が作られたときの元の env を参照したまま。
+    // ここで作る repo.env を書き換えても、それらには届かない（届くのは run に渡す env だけ）。
     return { repo: { ...template, env: { ...env, FAKE_GH_CREATE: 'before' } }, n: 1 };
   }, (repo) => action(repo, first));
 }
