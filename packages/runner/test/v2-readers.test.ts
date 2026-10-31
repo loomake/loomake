@@ -90,6 +90,23 @@ describe('run の完了ゲートと仕様ゲートで 2.0.0 を読む', () => {
     } finally { spy.mockRestore(); repo.cleanup(); }
   });
 
+  it('[REQ-100] run の完了ゲートは scope:local で verify を実行し、保存した結果も scope:local になる', async () => {
+    const repo = makeRepo();
+    const spy = vi.spyOn(kit, 'runVerify');
+    try {
+      repo.plan([{ write: { 'impl.txt': '実装\n' } }, noChange]);
+      const r = await run(repo);
+      expect(r.code, r.stdout).toBe(0);
+      const done = spy.mock.calls.map(([o]) => o).filter((o) => o.gate === 'done');
+      expect(done.length).toBeGreaterThan(0);
+      for (const o of done) expect(o.scope).toBe('local');
+      const dir = runDir(repo);
+      const saved = JSON.parse(readFileSync(join(dir, readdirSync(dir).find((f) => /-verify\.json$/.test(f))!), 'utf8'));
+      expect(saved).toMatchObject({ schemaVersion: '2.0.0', scope: 'local' });
+      expect(saved).not.toHaveProperty('verdict');
+    } finally { spy.mockRestore(); repo.cleanup(); }
+  });
+
   it('[REQ-205] 要判断と FAIL が同時にあれば、FAIL の内容と理由を保存し、直しのエンジンを呼ばずに止まる。RunSummary の外形は変えない', async () => {
     const repo = makeRepo();
     const spy = mockFirstDone(local([pass, failed], decision));

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join, relative, resolve, sep } from 'node:path';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { extractTestRequirements } from '@loomake/core';
 import { evaluateTestCoverage } from '@loomake/kit';
@@ -56,6 +56,15 @@ describe('JSON 出力', () => {
     const out = JSON.parse(r.stdout);
     expect(out).not.toHaveProperty('coverage');
     expect(out).toMatchObject({ scope: 'ci', verdict: 'INSUFFICIENT_EVIDENCE' });
+    expect(r.code).toBe(1);
+  });
+
+  it('[REQ-311][REQ-040] change を付けない --skip-commands は、品質コマンドを不足にして終了コード 1（1.0.0 では 0）', async () => {
+    const r = await withProject({}, (root) => run(root, 'verify', '--skip-commands', '--json'));
+    const out = JSON.parse(r.stdout);
+    expect(out).toMatchObject({ schemaVersion: '2.0.0', change: null, scope: 'local' });
+    expect(out.checks).toContainEqual(expect.objectContaining({ id: '品質コマンド', result: 'INSUFFICIENT_EVIDENCE' }));
+    expect(out.summary.pending).toBeGreaterThan(0);
     expect(r.code).toBe(1);
   });
 });
@@ -179,14 +188,18 @@ describe('verify の性能', () => {
       writeReport(root, tests);
       const start = performance.now();
       const result = await run(root, 'verify', '--change', CHANGE, '--done', '--skip-commands', '--json');
-      // --skip-commands では前回のレポートを読まないので（REQ-040）、同じレポートの抽出と要件の対応の判定を続けて測り、処理量を保つ
-      const extracted = extractTestRequirements('.loomake/test-report.json', readFileSync(join(root, '.loomake', 'test-report.json'), 'utf8'));
-      const decided = evaluateTestCoverage(ids, extracted.value);
+      // --skip-commands では前回のレポートを読まないので（REQ-040）、checkCoverage と同じく、レポートのパスの解決・抽出・テストファイルの相対パス化・要件の対応の判定を続けて測り、処理量を保つ
+      const reportPath = resolve(root, '.loomake/test-report.json');
+      if (!existsSync(reportPath)) throw new Error('テストのレポートがありません');
+      const extracted = extractTestRequirements('.loomake/test-report.json', readFileSync(reportPath, 'utf8'));
+      const byFile = Object.fromEntries(Object.entries(extracted.value).map(([file, found]) => [relative(root, resolve(root, file)).split(sep).join('/'), found]));
+      const decided = evaluateTestCoverage(ids, byFile);
       return { ...result, ms: performance.now() - start, errors: extracted.errors, decided };
     });
     expect(r.errors).toEqual([]);
     expect(r.decided.missing).toEqual([]);
     expect(Object.values(r.decided.coverage).every((files) => files.length === 2)).toBe(true);
+    expect(r.decided.coverage['REQ-001']).toEqual(['tests/t0.test.ts', 'tests/t500.test.ts']);
     // --skip-commands は品質コマンドの不足で 1（REQ-040）。不足は品質コマンドと要件ごとのテストの 2 件だけ
     expect(r.code, r.stdout).toBe(1);
     expect(JSON.parse(r.stdout).checks.filter((c: { result: string }) => c.result !== 'PASS').map((c: { id: string }) => c.id)).toEqual(['品質コマンド', '要件ごとのテスト']);
