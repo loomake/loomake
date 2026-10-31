@@ -18,3 +18,4 @@
 - NOT_APPLICABLE の確認者は、人ではなく自動判定であることを示す固定の文字列にする（trace の確認事項 S9-02。回答まではおすすめのAで実装する）
 - spec-only で品質項目を数えない：quality.yaml はまだ接続しないので、checks に `quality:` を作らないことを試験で固定する
 - `decision.reasons` の code は APPROVAL_REQUIRED、target は仮定または要件の ID にする。既存の code のうち、人の承認が足りない状態を表すのはこれだけである
+- NOT_APPLICABLE の evidence は空にする。理由と確認者は reason に書く

@@ -278,7 +278,7 @@ function checkOpenspecValidate(root: string, config: LoomakeConfig, changeId: st
   if (missing) {
     if (config.openspecValidate !== 'auto') record('openspec validate', 'fail', OPENSPEC_MISSING);
     else if (scope === 'ci') record('openspec validate', 'insufficient', `${OPENSPEC_MISSING}。validate を実行していません`);
-    else record('openspec validate', 'na', `対象外：${OPENSPEC_MISSING}ので、validate を実行していません（確認者：${OPENSPEC_NA_CONFIRMER}）`);
+    else record('openspec validate', 'na', `対象外：${OPENSPEC_MISSING}ため、validate を実行していません（確認者：${OPENSPEC_NA_CONFIRMER}）`);
   } else {
     record('openspec validate', r.status === 0 ? 'pass' : 'fail', r.status === 0 ? '' : `${r.stdout}${r.stderr}`.trim().slice(0, 2000));
   }

@@ -218,7 +218,7 @@ describe('完了ゲート', () => {
     expect(ok(r)).toBe(false);
   });
 
-  it('[REQ-038] 確認待ちの要件が残ると、その ID を出して不合格', () => {
+  it('[REQ-038] 確認待ちの要件が残ると、その ID を出して不足にする', () => {
     const trace = traceMd({ ledger: [ledgerRow('REQ-012'), ledgerRow('REQ-002', '確認待ち')] });
     const r = withReport({ trace }, (root) => done(root));
     expect(check(r, '確認待ちが残っていない')).toMatchObject({ status: 'insufficient', detail: 'REQ-002' });
@@ -512,6 +512,14 @@ describe('ゲート別の分類', () => {
     });
   });
 
+  it('[REQ-037] done の ci で OpenSpec CLI が無いと（auto）、不足になり 1 を返す', () => {
+    withoutOpenspec(() => {
+      const r = doneWith({ config: { openspecValidate: 'auto', commands: { test: COPY_REPORT } } }, 'ci');
+      expect(check(r, 'openspec validate')).toMatchObject({ status: 'insufficient' });
+      expect(verifyExitCode(r)).toBe(1);
+    });
+  });
+
   it('[REQ-037] 明示 true で OpenSpec CLI が無いと、local でも不合格のまま', () => {
     withoutOpenspec(() => {
       const r = withProject({ config: { openspecValidate: true, commands: {} } }, (root) => runVerify({ root, changeId: CHANGE, gate: 'spec-only', scope: 'local' }));
@@ -540,7 +548,7 @@ describe('ゲート別の分類', () => {
     }
   });
 
-  it('[REQ-191] --skip-commands の完了ゲートは local も ci も不足で 1 になり、spec-only は品質項目を数えない', () => {
+  it('[REQ-191] --skip-commands の完了ゲートは local も ci も不足で 1 になる', () => {
     for (const scope of ['local', 'ci'] as const) {
       const r = withProject({ config: { openspecValidate: false, commands: { test: 'node -e ""' } } }, (root) =>
         runVerify({ root, changeId: CHANGE, gate: 'done', skipCommands: true, scope }));
