@@ -99,6 +99,10 @@ export const nonliteralCall: WiringCall = {
 const repository = join(import.meta.dirname, '../..');
 export type WiringMarker = Omit<RowMarker, 'part'>;
 export const directCall = "it('direct a',()=>{expect('a').toBe('a');mark('direct',0,'a',0);});";
+// JSON string syntax alone leaves HTML delimiters and Unicode line separators intact.
+function codeLiteral(value: string | readonly string[]): string {
+  return JSON.stringify(value).replace(/[<>\u2028\u2029]/g, char => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`);
+}
 export function canonicalWiringSource(file: string, calls: readonly WiringCall[], marker: string, mode?: 'native' | 'falseHas' | 'shadow') {
   const ids = calls.flatMap(item => [...item.ids]);
   const direct = calls.some(item => item.group === 'success');
@@ -110,12 +114,12 @@ import {appendFileSync} from 'node:fs';
 import {includeCase,loadPartition} from '../scripts/lib/test-partition.mjs';
 import {currentPart,eachRows} from './helpers/partition-part.js';
 const registry=loadPartition(join(import.meta.dirname,'..'));
-const has=${mode === 'falseHas' ? '()=>true' : `(id)=>includeCase(registry,${JSON.stringify(file)},currentPart(),id)`};
+const has=${mode === 'falseHas' ? '()=>true' : `(id)=>includeCase(registry,${codeLiteral(file)},currentPart(),id)`};
 const hasAny=(ids)=>ids.some(has);
 `;
-  const mark = `const mark=(group,idx,value,argc)=>appendFileSync(${JSON.stringify(marker)},JSON.stringify({group,idx,value,argc})+'\\n');\n`;
-  const body = calls.map(item => mode === 'native' ? item.call : `{const it=eachRows(has,${JSON.stringify(item.ids)});\n${item.call}\n}`).join('\n');
-  const group = `${mode === 'native' ? '' : `if(hasAny(${JSON.stringify(ids)})) `}describe('rows',()=>{\n${mode === 'shadow' ? 'const has=()=>true;\n' : ''}${body}\n});\n`;
+  const mark = `const mark=(group,idx,value,argc)=>appendFileSync(${codeLiteral(marker)},JSON.stringify({group,idx,value,argc})+'\\n');\n`;
+  const body = calls.map(item => mode === 'native' ? item.call : `{const it=eachRows(has,${codeLiteral(item.ids)});\n${item.call}\n}`).join('\n');
+  const group = `${mode === 'native' ? '' : `if(hasAny(${codeLiteral(ids)})) `}describe('rows',()=>{\n${mode === 'shadow' ? 'const has=()=>true;\n' : ''}${body}\n});\n`;
   const leaf = !direct ? '' : mode === 'native' ? directCall : mode === 'shadow' ? `{const has=()=>true;if(has('direct-a')) ${directCall}}` : `if(has('direct-a')) ${directCall}`;
   return { source: common + header + mark + group + leaf, ids: allIds };
 }

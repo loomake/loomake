@@ -19,3 +19,11 @@
 2. 実装前後のspec-only・lint・typecheckはexit 0。最終回帰16件は元実装で12失敗・4成功、修理後は16成功。既存native対照を含む関連287件と、通常156 file・2637件成功・既存skip8件・失敗0件を確認した。生成文字列はASTで元の値へ復元して照合した。
 3. 元のdeclarations試験・rows試験・旧fixture・helper・registry・設定・監査・tasks・traceをbyte単位で保持し、旧wiring試験は新import以外の全文を保持した。親7/21とtask2.7全体・実registry適用0回・一般oracle・OS割当の未達を保つ。CodeQLの修理案はローカル確認済みだが、警告の解消は新headのCodeQL実行で確認する。
 4. 本体が修理差分をレビューし、remoteと既存writerのHEADを照合してからPRブランチへ渡す。CI・独立再レビュー・指定統合受入は未実施で、補助担当はpushや親完了の宣言を行っていない。
+
+
+## CodeQL の生成リテラルの修理
+
+1. やったこと：`split-slow-ci-checks` の task 2.7 内で、生成 source の file・marker・行 ID に、JSON 文字列化後の追加エスケープを共通で適用した。CodeQL の `js/bad-code-sanitization` の指摘に対応し、文字列の実値と元 call 本文・期待値・timeout を保持した。
+2. verify の結果：追加 7 件は修理前に 4 成功・3 失敗、修理後は全 7 件成功。既存 native 対照を含む関連 294 件、lint・型・仕様ゲートが成功し、通常の生成 source 12 通りと保護対象 14 ファイル・旧試験 prefix の不変も確認した。全体試験と親の完了ゲートは今回は繰り返していない。
+3. 残っている確認事項・仮定：CodeQL のリモート警告解消、新 head の必須 CI・3 OS・独立レビューは未確認。親は 7/21・task 2.7 未完了・実 registry 適用 0 回のままで、今回の修理を親の完成へ代用しない。
+4. 次にやること：管理役へ追加差分と検証を引き渡す。依頼資料の外部参照で未実施になったレビューの履歴を保持し、同じ新 head の正式依頼・独立確認・CI と CodeQL の警告状態を照合する。

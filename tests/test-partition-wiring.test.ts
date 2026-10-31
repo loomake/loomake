@@ -131,3 +131,48 @@ describe('配線の実値参照と生成sourceの境界', () => {
     expect(inventoryDeclarations(generated, file).errors.filter((error: {code: string}) => error.code === 'syntax')).toEqual([]);
   });
 });
+
+
+describe('CodeQL の生成コード用リテラル', () => {
+  it.each([
+    "quote'\"value",
+    'back\\slash',
+    'line\r\nbreak\tend',
+    'zero\0value',
+    '</script><script>globalThis.injected=true</script>',
+    'line\u2028separator',
+    'paragraph\u2029separator',
+  ])('file・marker・行IDの値を保ち、追加のコード境界を作らない: %s', value => {
+    for (const mode of [undefined, 'native', 'falseHas', 'shadow'] as const) {
+      const calls = [{ ...canonicalCalls[0]!, ids: [value] }];
+      const generated = canonicalWiringSource(value, calls, value, mode).source;
+      const ast = ts.createSourceFile('generated.ts', generated, ts.ScriptTarget.Latest, true);
+      const literals: { name: string; text: string; value: string | string[] }[] = [];
+      const visit = (node: ts.Node) => {
+        if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
+          const name = node.expression.text;
+          const position = name === 'includeCase' || name === 'eachRows' ? 1 : 0;
+          if (['includeCase', 'appendFileSync', 'eachRows', 'hasAny'].includes(name)) {
+            const argument = node.arguments[position]!;
+            const decoded = ts.isStringLiteral(argument) ? argument.text : ts.isArrayLiteralExpression(argument) ? argument.elements.map(element => {
+              expect(ts.isStringLiteral(element)).toBe(true);
+              return (element as ts.StringLiteral).text;
+            }) : undefined;
+            expect(decoded).toBeDefined();
+            literals.push({ name, text: argument.getText(ast), value: decoded! });
+          }
+        }
+        ts.forEachChild(node, visit);
+      };
+      visit(ast);
+      const read = (name: string) => literals.filter(literal => literal.name === name).map(literal => literal.value);
+      expect(read('includeCase')).toEqual(mode === 'native' || mode === 'falseHas' ? [] : [value]);
+      expect(read('appendFileSync')).toEqual([value]);
+      expect(read('eachRows')).toEqual(mode === 'native' ? [] : [[value]]);
+      expect(read('hasAny')).toEqual(mode === 'native' ? [] : [[value]]);
+      for (const literal of literals) expect(literal.text).not.toMatch(/[<>\u2028\u2029]/);
+      expect(generated).not.toContain('</script>');
+      expect(inventoryDeclarations(generated, 'generated.ts').errors.filter((error: {code: string}) => error.code === 'syntax')).toEqual([]);
+    }
+  });
+});
