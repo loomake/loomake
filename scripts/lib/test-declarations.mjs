@@ -74,7 +74,7 @@ function localBindings(ast, file) {
   host.writeFile = () => {};
   const checker = ts.createProgram([file], options, host).getTypeChecker();
   const declarationOf = (node) => {
-    const symbol = ts.isShorthandPropertyAssignment(node.parent) && node.parent.name === node ? checker.getShorthandAssignmentValueSymbol(node.parent) : ts.isExportSpecifier(node.parent) ? checker.getExportSpecifierLocalTargetSymbol(node.parent) : checker.getSymbolAtLocation(node);
+    const symbol = ts.isShorthandPropertyAssignment(node.parent) && node.parent.name === node ? checker.getShorthandAssignmentValueSymbol(node.parent) : checker.getSymbolAtLocation(node);
     return symbol?.valueDeclaration ?? symbol?.declarations?.[0];
   };
   const namespace = (node, seen = new Set()) => {
@@ -107,7 +107,7 @@ function localBindings(ast, file) {
     const declaration = declarationOf(node);
     return declaration && ts.isVariableDeclaration(declaration) && ts.isIdentifier(declaration.name) && declaration.initializer && ts.isVariableDeclarationList(declaration.parent) && Boolean(declaration.parent.flags & ts.NodeFlags.Const) && !testValue(declaration.initializer);
   };
-  return { ordinaryHelper, testValue, declarationOf };
+  return { ordinaryHelper, testValue, declarationOf, checker };
 }
 
 
@@ -303,6 +303,12 @@ export function checkRegistration(file, source, cases) {
 export function checkPartitionWiring(file, source) {
   const { text, ast } = parse(source, file);
   const bindings = localBindings(ast, posix.normalize(file));
+  // Export-local resolution belongs to this checker, not the legacy APIs.
+  const declarationOf = node => {
+    if (!ts.isExportSpecifier(node.parent)) return bindings.declarationOf(node);
+    const symbol = bindings.checker.getExportSpecifierLocalTargetSymbol(node.parent);
+    return symbol?.valueDeclaration ?? symbol?.declarations?.[0];
+  };
   const validFile = canonicalSpecifier(file, 'tests/helpers/partition-part.js') !== undefined;
   const errors = [];
   const messages = { syntax: '試験の構文が不正です', wiringImport: '分割の import を静的に確認できません', wiringHeader: '分割の header を静的に確認できません', wiringBinding: '分割の束縛を静的に確認できません' };
@@ -341,9 +347,9 @@ export function checkPartitionWiring(file, source) {
   const protectedNodes = new Set();
   for (const declaration of declarations.values()) walk(declaration, node => protectedNodes.add(node));
   const isName = (node, name) => node && ts.isIdentifier(node) && node.text === name;
-  const resolves = (node, declaration) => node && ts.isIdentifier(node) && bindings.declarationOf(node) === declaration;
+  const resolves = (node, declaration) => node && ts.isIdentifier(node) && declarationOf(node) === declaration;
   // Missing imports are owned by wiringImport; a real local replacement is a header violation.
-  const importedCall = (node, name, count) => node && ts.isCallExpression(node) && isName(node.expression, name) && node.arguments.length === count && (imported.has(name) ? resolves(node.expression, imported.get(name)) : bindings.declarationOf(node.expression) === undefined);
+  const importedCall = (node, name, count) => node && ts.isCallExpression(node) && isName(node.expression, name) && node.arguments.length === count && (imported.has(name) ? resolves(node.expression, imported.get(name)) : declarationOf(node.expression) === undefined);
   const statementOf = declaration => declaration?.parent?.parent;
   const singleConst = declaration => {
     const statement = statementOf(declaration);
@@ -364,7 +370,7 @@ export function checkPartitionWiring(file, source) {
   if (!singleConst(has) || !hasValid) error('wiringHeader', has);
   // A captured-part declaration used by a malformed header belongs to H3, not B6.
   if (body && ts.isCallExpression(body) && body.arguments[2] && ts.isIdentifier(body.arguments[2])) {
-    const captured = bindings.declarationOf(body.arguments[2]);
+    const captured = declarationOf(body.arguments[2]);
     if (captured && ts.isVariableDeclaration(captured) && importedCall(captured.initializer, 'currentPart', 0)) walk(captured, node => protectedNodes.add(node));
   }
   const anyArrow = arrow(hasAny); const anyBody = anyArrow?.body;
@@ -399,11 +405,11 @@ export function checkPartitionWiring(file, source) {
   };
   walk(ast, node => {
     if (!valueIdentifier(node) || protectedNodes.has(node)) return;
-    const parent = node.parent; const declaration = bindings.declarationOf(node);
+    const parent = node.parent; const declaration = declarationOf(node);
     if (node.text === 'has' || node.text === 'hasAny') {
       const expected = node.text === 'has' ? has : hasAny;
       const call = ts.isCallExpression(parent) && parent.expression === node && (node.text === 'hasAny' || parent.arguments.length === 1);
-      const row = node.text === 'has' && ts.isCallExpression(parent) && parent.arguments[0] === node && ((imported.has('eachRows') && resolves(parent.expression, imported.get('eachRows'))) || (invalidImports.has('tests/helpers/partition-part.js') && isName(parent.expression, 'eachRows') && bindings.declarationOf(parent.expression) === undefined));
+      const row = node.text === 'has' && ts.isCallExpression(parent) && parent.arguments[0] === node && ((imported.has('eachRows') && resolves(parent.expression, imported.get('eachRows'))) || (invalidImports.has('tests/helpers/partition-part.js') && isName(parent.expression, 'eachRows') && declarationOf(parent.expression) === undefined));
       if (!expected || declaration !== expected || !(call || row)) error('wiringBinding', node);
     } else if (['registry', 'includeCase', 'loadPartition', 'currentPart'].includes(node.text)) {
       const expected = node.text === 'registry' ? registry : imported.get(node.text);

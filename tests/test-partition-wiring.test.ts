@@ -209,3 +209,34 @@ describe('instantiation expression の実値と型の境界', () => {
     expect(codes(extra)).toEqual([]);
   });
 });
+
+
+describe('legacy export helper と配線exportの分離', () => {
+  it.each([
+    'const withTest=()=>{}; export {withTest};',
+    'const value=1; export {value as withTest};',
+  ])('legacy export の未分類候補を旧APIのまま保持する: %s', source => {
+    expect(inventoryDeclarations(source, 'tests/legacy.test.ts').errors.map((error: {code: string}) => error.code)).toEqual(['unclassifiedCandidate']);
+    expect(checkRegistration('tests/legacy.test.ts', source, {})).toEqual([]);
+  });
+
+  it.each([
+    'const withTest=()=>{}; fn(withTest);',
+    'const withTest=()=>{}; const options={withTest};',
+  ])('legacy export 修理後も通常helperの受理を保持する: %s', source => {
+    expect(inventoryDeclarations(source, 'tests/legacy.test.ts').errors).toEqual([]);
+    expect(checkRegistration('tests/legacy.test.ts', source, {})).toEqual([]);
+  });
+
+  it('legacy export の解決と独立して正規registryの流出を拒否する', () => {
+    const file = 'tests/canonical.test.ts';
+    const { source, ids } = canonicalWiringSource(file, canonicalCalls.filter(call => call.group === 'success'), 'marker');
+    const cases = Object.fromEntries(ids.map(id => [id, []]));
+    for (const extra of ['export {registry};', 'export {registry as leakedRegistry};']) {
+      expect(inventoryDeclarations(source + extra, file).errors).toEqual([]);
+      expect(checkRegistration(file, source + extra, cases)).toEqual([]);
+      expect(checkPartitionWiring(file, source + extra).map((error: {code: string}) => error.code)).toEqual(['wiringBinding']);
+    }
+    expect(checkPartitionWiring(file, source + 'export type {registry};')).toEqual([]);
+  });
+});
