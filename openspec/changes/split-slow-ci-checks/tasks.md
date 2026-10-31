@@ -7,6 +7,8 @@
 
 2026-11-01、指定統合枝へ PR252・253・264 の基盤を受け入れた。受入後の独立棚卸しに従い、2.2・2.3・2.5・2.6 の実装を完了へ反映し、統合枝の印は6/21とする。2.4の測定、2.7のR4とoracle、2.8・2.9・2.10の残る確認、親の完了ゲートと必須受入は未完了のまま保つ。旧実装枝の8/21へ一括で戻さない。
 
+2026-11-01、PR270通常merge fe5b1f421290b1e53a17bd87e6272b8da7a9f178で2.8の指定統合受入を確認し、2.8だけを完了へ進めて7/21とする。2.7全体は未完了のまま。旧6/21は受入前の履歴として保持する。
+
 # 2. 先行できる独立実装（C2〜C5・監査・C1前提対応）
 
 凍結した179診断の吸収先との統合境界・重複・順序の確定と当初未設計10fileの残設計はcase本体分割の前提であり、この節の独立実装の前提ではない。C2〜C5は基点085aと採用済み62abaの範囲で先行し、統合後にfresh差分と検証を繰り返す。追加2.5は995e対象のcd321d46に従う独立な監査・宣言inventoryであり、残9fileの設計3.2と並行できる。実caseの本体分割・OS割当は含めず、実registryは空に保つ。
@@ -31,7 +33,9 @@
 2.7の部分修理はQ-91〜Q-93とdesignのrow境界追加節に従い、spec-only成功後にR1〜R3だけ先行する。既存321回帰・旧74期待の全文prefix・元11callのbyteを保ち、正規相対helper import、SourceFileまでのdescribe祖先連鎖、非空IDsとcanonical helperの通常file/非symlink検査を追加する。R4はQ-94のB方向だけ採用し、完全な束縛/header/fixture契約の追加設計前に実装しない。c606のC1「生成16行sourceをstaticで全受理」はQ48/V2bの非literal境界と照合待ちで、既存期待を書き換えて通さない。a23f→7ed対象source同一性確認とhas偽束縛のnative対照も未受入のまま残す。R1〜R3の修理成功だけで2.7をcheckせず、R4/正規sourceとnativeの対応・一般oracle・3OS/最終レビュー/CIを含む元範囲を保持する。
 
 
-- [ ] 2.8 Q-61・Q-62とschema2file設計・spec-only成功後、旧17fileの順序・包含を保ちschema-compatibility/schema-version-contractを加えた19file必須包含を実装する。新2fileの各欠落を独立negativeで検出し、全採集file/case/raw/失敗sampleを保持する。2file各1宣言/2候補/1行/importSpecifier1/errors0と元本文を、接頭辞前commitのlive inventoryで独立照合する。2.6完了を維持し、本タスクは252/253先行基盤の受入後に実装してよい。実registry・元2callback/全15trial/元script/260000・240000・10000・15000ms/依存/cleanup/既存期待/製品schemaを変えず、実case登録とOS割当を含めない
+2.7のR4追加設計c0d9d49cを管理役が採用した。D1=A（direct currentPart）、D2=A（H1/B1 nativeとI3 static）をdesign/traceへ記録し、spec-only成功後に独立checker・全診断matrix・新canonical fixtureを実装する。旧2API全正負、旧11call/16行/EMPTY参照同一性と全assert/timeout、空registry、metadata19とconfigを保持する。新nativeはこの計画commitでは未実行で、実registry適用0回。一般oracle/実登録/3OSを含む2.7全体はcheckしない。
+
+- [x] 2.8 Q-61・Q-62とschema2file設計・spec-only成功後、旧17fileの順序・包含を保ちschema-compatibility/schema-version-contractを加えた19file必須包含を実装する。新2fileの各欠落を独立negativeで検出し、全採集file/case/raw/失敗sampleを保持する。2file各1宣言/2候補/1行/importSpecifier1/errors0と元本文を、接頭辞前commitのlive inventoryで独立照合する。2.6完了を維持し、本タスクは252/253先行基盤の受入後に実装してよい。実registry・元2callback/全15trial/元script/260000・240000・10000・15000ms/依存/cleanup/既存期待/製品schemaを変えず、実case登録とOS割当を含めない
 
 - [ ] 2.9 Q-67〜Q-73のorphans設計とspec-only成功後、imported product helperの限定したbinding分類をchecker/試験/docsだけへ実装する。別名なし非type相対.js named import→正規repo内packages/*/src.ts、本体付きexport function・直接call・Vitest系/非literalimport/requireなしを静的に確認する。readModule注入と既定filesystemのpath/実path内包・isFile・構文/読取の正負境界を検証し、transitive依存の非検査はA-02として限界を保つ。全72候補を保持し、元6imports+33importedHelperCall/元it33宣言34行/errors0予測を実装前の独立AST/原文照合で実証、偽66/67を基準採用せず、不一致なら期待を変えず設計へ戻す。map正例のred/greenと規則外のcode集合・既存全fixture/live baselineを保持する。実source/registry/scanner/本文hash/partition/Vitest/製品コードは変えず、実登録/OS割当を含めない
 

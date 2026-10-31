@@ -356,3 +356,12 @@ R4/C1・一般oracle・実登録・OS割当は未設計/未達のまま。PR253�
 ## companionのthis（Q-116）
 
 初回最終レビューS1をtop-exactのnative1成功と両入口の偽reviewedで確認し、管理役が局所thisも拒否する最小案Aを採用した。globalThisは既存の拒否対照であり別経路で、arrowのnative成功とlegacy受理は確認済みだが監査はEACCESで未確認である。元の反例は保存し、仕様ゲート後に派生nativeと両入口の拒否を追加する。
+
+## R4追加設計の決定（c0d9d49c）
+
+| ID | 出典箇所 | 確認事項 | 選択肢 | おすすめと理由 | ブロッキング | 回答 | 回答者 | 回答日 |
+|---|---|---|---|---|---|---|---|---|
+| R4-D1 | task2.7・design R4 | 共通partはcaptured partか | A：has内currentPart直接／B：capturedも許す | A。採用原本5b4e:91/9b89:63と一致し、FILEは既決literalを保つ | yes | A。直接呼出しだけ受理。具体契約は採用設計§3 | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
+| R4-D2 | task2.7・design R4 | 負nativeの形数 | A：H1/B1／B：I3もnative | A。2形で重複機構を観測しI3はstatic拒否を保つ | yes | A。H1とB1を新headで観測。旧APIと全probeを保持 | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
+
+仮定の承認者は管理役。採用済みheaderとの一致、旧API保持、2形nativeの機構観測と別fakeIncludeCaseの静的拒否を理由に承認した。新Requirement/SHALLなし。新native未実行・実registry適用0回を出発点とし、旧7edのnative結果を新headへ流用しない。Q94Bの方向採用は本追加設計で具体化したが、task2.7全体/一般oracle/実登録/OS/slow配線は未達。task2.8のみPR270 fe5b1f42で指定統合受入済みとして7/21へ進める。
