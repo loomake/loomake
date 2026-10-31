@@ -14,7 +14,7 @@ describe('期限試験の時計診断workflow', () => {
       expect(step(id)).toContain('          LOOMAKE_TEST_PHASE_PROFILE_DIR: ${{ runner.temp }}/loomake-test-phases');
     }
     expect(workflow.match(/LOOMAKE_TEST_BUDGET_CLOCK:/g)).toHaveLength(2);
-    expect(step('test').match(/^ {8}run: (.*)$/m)?.[1]).toBe("node node_modules/vitest/vitest.mjs run tests/ai-journeys.test.ts packages/runner/test/external-budget.test.ts -t '導入・通常操作・失敗と復旧|(?:create|push)の期限後'");
+    expect(step('test').match(/^ {8}run: (.*)$/m)?.[1]).toBe("node node_modules/vitest/vitest.mjs run tests/ai-journeys.test.ts packages/runner/test/external-budget-deadline.test.ts -t '導入・通常操作・失敗と復旧|(?:create|push)の期限後'");
     expect(workflow).toContain('sample: [1, 2, 3]');
     expect(workflow).toContain('fail-fast: false');
     expect(workflow).toContain('runs-on: windows-latest');

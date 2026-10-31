@@ -9,7 +9,8 @@ on:
       - 'tests/test-phase-profile*.test.ts'
       - 'tests/ai-journeys.test.ts'
       - 'tests/package-build.setup.ts'
-      - 'packages/runner/test/external-budget.test.ts'
+      - 'packages/runner/test/external-budget-deadline.test.ts'
+      - 'packages/runner/test/external-budget-helpers.ts'
       - 'docs/dev/test-phase-profiling.md'
       - 'openspec/changes/profile-slow-ci-tests/**'
   workflow_dispatch:
@@ -37,7 +38,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - id: test
-        run: node node_modules/vitest/vitest.mjs run tests/ai-journeys.test.ts packages/runner/test/external-budget.test.ts -t '導入・通常操作・失敗と復旧|(?:create|push)の期限後'
+        run: node node_modules/vitest/vitest.mjs run tests/ai-journeys.test.ts packages/runner/test/external-budget-deadline.test.ts -t '導入・通常操作・失敗と復旧|(?:create|push)の期限後'
         env:
           LOOMAKE_TEST_PHASE_PROFILE_DIR: ${{ runner.temp }}/loomake-test-phases
           LOOMAKE_TEST_PHASE_SAMPLE: ${{ matrix.sample }}
