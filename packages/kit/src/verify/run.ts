@@ -29,6 +29,7 @@ import { QUALITY_FILE, readQualityFile, type QualitySchemaLike } from './quality
 import { evaluateQualityConditions, qualitySubjectsGuard } from './policy/quality-conditions.js';
 import { observeTestReport, type TestReportReceipt } from './policy/test-report-observation.js';
 import { basisHash, findProducer, gitHead, readReport } from './quality-receipt.js';
+import { sha256Hex } from './hash.js';
 import { UsageError } from '../runtime/errors.js';
 import { createInputReader, JSON_LIMITS, type InputReader } from '../runtime/input.js';
 import { findChangeDir, specFiles, toPosix } from '../runtime/change-files.js';
@@ -142,7 +143,7 @@ export function runVerify(options: VerifyOptions): VerifyResult {
           report: readReport(reportPath, config.tests.report),
           required: [...new Set(spec.live.flatMap((r) => r.sources))].sort(),
         };
-        qualityChecks.push(qualitySubjectsGuard(quality), ...evaluateQualityConditions(quality, observeTestReport(quality, receipt)));
+        qualityChecks.push(qualitySubjectsGuard(quality), ...evaluateQualityConditions(quality, observeTestReport(quality, receipt, { sha256Hex })));
       }
     }
   }

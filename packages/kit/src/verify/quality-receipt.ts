@@ -1,14 +1,12 @@
 // ci の完了ゲートで、ci.test_report の adapter に渡す事実（receipt）を集める I/O（REQ-319）。照合は adapter が行う
-import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { createInputReader, JSON_LIMITS } from '../runtime/input.js';
 import { runExternal } from '../runtime/process.js';
 import { specFiles, toPosix } from '../runtime/change-files.js';
 import { QUALITY_FILE } from './quality-input.js';
+import { sha256Hex } from './hash.js';
 import type { TestReportReceipt } from './policy/test-report-observation.js';
-
-const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
 
 /**
  * 基準（quality.yaml・差分仕様・trace.md）の hash。読めないファイルは「読めない」という印で数え、
@@ -22,7 +20,7 @@ export function basisHash(root: string, changeDir: string): string {
   } catch {
     files.push(join(changeDir, 'specs'));
   }
-  const hash = createHash('sha256');
+  const lines: string[] = [];
   for (const file of files) {
     let text: string;
     try {
@@ -30,9 +28,9 @@ export function basisHash(root: string, changeDir: string): string {
     } catch {
       text = 'unreadable';
     }
-    hash.update(`${toPosix(relative(root, file))}\0${sha256(text)}\n`);
+    lines.push(`${toPosix(relative(root, file))}\0${sha256Hex(text)}\n`);
   }
-  return hash.digest('hex');
+  return sha256Hex(lines.join(''));
 }
 
 const COMMIT = /^[0-9a-f]{40}(?:[0-9a-f]{24})?$/;
@@ -77,5 +75,5 @@ export function readReport(path: string, display: string): TestReportReceipt['re
   } catch {
     // 形の誤りと同じく、照合できない証拠にする
   }
-  return { path: display, text, sha256: sha256(text) };
+  return { path: display, text, sha256: sha256Hex(text) };
 }
