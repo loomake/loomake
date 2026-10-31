@@ -93,7 +93,7 @@
       "change": "verify-v2-scope",
       "requirement": "REQ-135",
       "approval": "S8-10（利用者が27例すべて承認、2026-10-31、PR #217）",
-      "reason": "--skip-commands の説明に coverage を出さないことを足し、--scope の説明（受理値・既定値・bare verify の ci 拒否）を足す",
+      "reason": "--skip-commands の説明に coverage を出さないことを足し、--scope の説明（受理値と、省いたときの既定値）を足す",
       "argv": [
         [
           "verify",

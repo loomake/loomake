@@ -24,4 +24,4 @@
 
 ## 5. 受入
 
-- [x] 5.1 lint・typecheck・全体試験・`generate-cli-reference --check`、changeset（cli minor、kit patch）。`pnpm -s verify --change verify-v2-scope --done` を通す <!-- loomake:gate=done -->
+- [x] 5.1 lint・typecheck・全体試験・`generate-cli-reference --check`、changeset（cli minor）。`pnpm -s verify --change verify-v2-scope --done` を通す <!-- loomake:gate=done -->
