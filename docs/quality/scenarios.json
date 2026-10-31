@@ -4496,7 +4496,7 @@
       "reason": "実行中の見本エンジン自身がPIDを書いてから待機する。短い既存の期限でrunが終了1となり、時間上限の理由と従来の経過時間を確認した後、PIDファイルの存在・正の整数・そのPIDが生存しないことをassertする。試験自身の後片付けはassertion後のfinallyで行う。プロセスが起動しなかった場合は成功としない。",
       "tests": [
         {
-          "file": "packages/runner/test/run.test.ts",
+          "file": "packages/runner/test/run-timeout.test.ts",
           "contains": "実行時間が上限に達したら、エンジンを止めて",
           "sha256": "e53de1e9bd46b3b66d7e9f997b1672924d192b8d03abc128d654eb8df6d3487b",
           "hashScope": "block"
@@ -4513,7 +4513,7 @@
       "reason": "実際の品質コマンドがPIDを書いて待機し、既存の期限で停止する入力で、終了1・理由・エンジン起動2回・経過時間・ゲート未完了を維持した。PIDの存在と有効な整数、runが戻った時点のプロセス消滅もassertし、その後に試験自身の後片付けを行う。",
       "tests": [
         {
-          "file": "packages/runner/test/run.test.ts",
+          "file": "packages/runner/test/run-timeout.test.ts",
           "contains": "完了ゲートのテストが終わらないまま上限に達したら",
           "sha256": "baf9a6bd851e1038bf237bea766ea245a759ec688fbd1edf08841247c89efa25",
           "hashScope": "block"
