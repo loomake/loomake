@@ -414,7 +414,9 @@ describe('deliveryのClaude起動', () => {
   });
   it('review-request.mdテンプレートの差分欄は区切り行1組で囲まれている', () => {
     const template = readFileSync(resolve(import.meta.dirname, '../.agents/skills/delivery/templates/review-request.md'), 'utf8');
-    expect(extractDiff(template)).toBe('```diff\n{{base から head までの全差分}}\n```');
+    // Windows の checkout では行末が CRLF になる。区切り行の判定は CRLF のまま通し、比べる前だけ LF にそろえる。
+    expect(extractDiff(template)?.replace(/\r\n/g, '\n')).toBe('```diff\n{{base から head までの全差分}}\n```');
+    expect(extractDiff(template.replace(/\r?\n/g, '\r\n'))?.replace(/\r\n/g, '\n')).toBe('```diff\n{{base から head までの全差分}}\n```');
   });
   it('通常ファイルではないディレクトリの依頼を読取前に拒む', async () => {
     await withRepo('success', async ({ cwd, input, options }) => {
