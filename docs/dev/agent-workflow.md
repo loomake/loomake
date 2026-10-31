@@ -44,7 +44,7 @@ node .agents/skills/delivery/scripts/ask-opus.mjs \
 
 `--role` は `design`、`second-opinion`、`review` のいずれか。難しいバグの独立調査には `second-opinion` を使い、先行担当の仮説や推奨修正を依頼に含めない。独立調査から設計を同じ担当が続ける既定は維持する。PR #152 の AUTO-152-02（独立調査の保存成果物を別の新規セッションへ渡す案）は、規則の変更が決まるまで適用しない。スクリプトは毎回新しいセッションIDを作り、`--resume` や `--continue` を使わない。既存のClaude認証をそのまま使い、APIキーの追加や認証設定の書き換えは行わない。
 
-難しいバグで先行見解と比較して設計するときは、Codexの仮説を `.loomake/prior/` 配下の通常ファイルに分け、`--prior` で渡す。依頼本文には仕様・コード・再現手順・入力・観測ログを載せ、先行仮説や推奨修正を含めない。`--prior` は `second-opinion` でだけ使える。仮説ファイルは空ではない200KiB以内のファイルとし、依頼ファイルとは別にする。
+難しいバグで先行見解と比較して設計するときは、Codexの仮説を `.loomake/prior/` 配下の通常ファイルに分け、`--prior` で渡す。依頼本文には仕様・コード・再現手順・入力・観測ログを載せ、先行仮説や推奨修正を含めない。先行仮説や過去の比較結果の写しを、独立調査に渡す事実資料に混ぜない。`--prior` は `second-opinion` でだけ使える。仮説ファイルは空ではない200KiB以内のファイルとし、依頼ファイルとは別にする。
 
 ```sh
 node .agents/skills/delivery/scripts/ask-opus.mjs \
@@ -52,7 +52,7 @@ node .agents/skills/delivery/scripts/ask-opus.mjs \
   --prior .loomake/prior/codex-hypothesis.md --head <40桁の対象SHA>
 ```
 
-この呼び出しでは、1つの新しいOpusセッションへ2回入力する。最初の入力には独立調査の資料だけを渡し、`.loomake/prior/` の読み取りを拒否する。補助は最初の回答とモデル・権限・対象headを確認し、独立見解を `independent-view.md` に新規保存して同期する。保存が完了してから、同じプロセスの2回目の入力に先行仮説を渡し、比較と設計を求める。先読み、保存の失敗、どちらかの回答の異常は未実施とし、保存前や最初の回答に異常があるときは先行仮説を送らない。時間と出力量の上限は2回の入力を合わせた実行全体に適用する。
+この呼び出しでは、1つの新しいOpusセッションへ2回入力する。最初の入力には独立調査の資料だけを渡し、`.loomake/prior/` と過去の実行成果物がある `.loomake/claude/` の読み取りを拒否する。補助は最初の回答とモデル・権限・対象headを確認し、独立見解を `independent-view.md` に新規保存して同期する。保存が完了してから、同じプロセスの2回目の入力に先行仮説を渡し、比較と設計を求める。先読み、保存の失敗、どちらかの回答の異常は未実施とし、保存前や最初の回答に異常があるときは先行仮説を送らない。時間と出力量の上限は2回の入力を合わせた実行全体に適用する。
 
 起動時は `--model opus`、読取ツールのRead/Glob/Grep、`Read(./**)` の範囲付き許可、`permissions.blockReadsOutsideWorkingDirectories:true`、hook無効、自動メモリ無効、MCPなしを固定する。[Claude公式の読取拒否設定](https://code.claude.com/docs/en/settings-reference#permissions-blockreadsoutsideworkingdirectories)は2.1.257以降が必要。Windowsのnpm版 `claude.cmd` は `shell:false` で起動できないため未対応とし、未実施を返す。時間上限は既定20分で、`--timeout-min` に1〜60の整数を指定できる。stdoutは8MiB、stderrは64KiBを上限とし、上限到達は未実施として停止する。
 

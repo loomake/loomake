@@ -44,7 +44,7 @@ export function buildClaudeArgs(sessionId, requestDir, prior = false) {
     const settings = JSON.parse(args[index]);
     settings.permissions.deny = ['Read(./.loomake/prior/**)'];
     args[index] = JSON.stringify(settings);
-    args.push('--input-format', 'stream-json');
+    args.push('--disallowedTools', 'Read(./.loomake/claude/**)', '--input-format', 'stream-json');
   }
   return args;
 }
@@ -96,7 +96,7 @@ function priorEvents(raw, sessionId) {
 }
 
 function rejectPriorAccess(events, prior, cwd) {
-  const markers = ['.loomake/prior', basename(prior)];
+  const markers = ['.loomake/prior', '.loomake/claude', basename(prior)];
   const calls = new Map();
   for (const event of events) {
     for (const block of event?.message?.content ?? []) {
@@ -106,7 +106,8 @@ function rejectPriorAccess(events, prior, cwd) {
         let target = resolve(cwd, block.input.file_path);
         try { target = realpathSync(target); } catch { /* 存在しないRead対象も字面で確認する。 */ }
         const path = target.replaceAll('\\', '/');
-        if (target === prior || path.includes('/.loomake/prior/') || path.endsWith('/.loomake/prior')) {
+        if (target === prior || path.includes('/.loomake/prior/') || path.endsWith('/.loomake/prior') ||
+            path.includes('/.loomake/claude/') || path.endsWith('/.loomake/claude')) {
           throw new Error('独立見解の保存前に先行仮説を参照しました。');
         }
         continue;

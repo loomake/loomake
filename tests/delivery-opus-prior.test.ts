@@ -43,12 +43,20 @@ for await(const line of createInterface({input:process.stdin})) {
   if(mode==='first-model') events[1].message.model='claude-sonnet-test';
   if(mode==='first-session') events[1].session_id='wrong-session';
   if(mode==='first-usage') events[2].modelUsage={};
+  if(mode==='old-claude-read') {
+   mkdirSync('.loomake/claude/old-session',{recursive:true});
+   writeFileSync('.loomake/claude/old-session/result.md','過去の比較設計に先行仮説が含まれます。');
+   events.splice(2,0,{type:'assistant',session_id:id,message:{model:'claude-opus-test',content:[{type:'tool_use',name:'Read',input:{file_path:'.loomake/claude/old-session/result.md'}}]}});
+  }
+  if(mode==='glob-claude') events.splice(2,0,{type:'assistant',session_id:id,message:{model:'claude-opus-test',content:[{type:'tool_use',name:'Glob',input:{pattern:'**/result.md',path:'.loomake/claude'}}]}});
+  if(mode==='grep-claude') events.splice(2,0,{type:'assistant',session_id:id,message:{model:'claude-opus-test',content:[{type:'tool_use',name:'Grep',input:{pattern:'仮説',path:'.loomake/claude'}}]}});
+  if(mode==='claude-result-leak') events.splice(2,0,{type:'user',session_id:id,message:{content:[{type:'tool_result',content:'.loomake/claude/old-session/result.md'}]}});
   if(mode==='glob-prior') events.splice(2,0,{type:'assistant',session_id:id,message:{model:'claude-opus-test',content:[{type:'tool_use',name:'Glob',input:{pattern:'**/*',path:'.loomake/prior'}}]}});
   if(mode==='grep-prior') events.splice(2,0,{type:'assistant',session_id:id,message:{model:'claude-opus-test',content:[{type:'tool_use',name:'Grep',input:{pattern:'hypothesis.md',path:'.'}}]}});
   if(mode==='prior-first') events.splice(2,0,{type:'assistant',session_id:id,message:{model:'claude-opus-test',content:[{type:'tool_use',name:'Read',input:{file_path:'.loomake/prior/hypothesis.md'}}]}});
   if(mode==='windows-prior-directory') events.splice(2,0,{type:'assistant',session_id:id,message:{model:'claude-opus-test',content:[{type:'tool_use',name:'Read',input:{file_path:'.loomake\\prior\\other.md'}}]}});
   if(mode==='common-name') events.splice(2,0,{type:'assistant',session_id:id,message:{model:'claude-opus-test',content:[{type:'tool_use',id:'agents-read',name:'Read',input:{file_path:'AGENTS.md'}}]}},{type:'user',session_id:id,message:{content:[{type:'tool_result',tool_use_id:'agents-read',content:'規約本文です。'}]}});
-  if(mode==='docs-read') events.splice(2,0,{type:'assistant',session_id:id,message:{model:'claude-opus-test',content:[{type:'tool_use',id:'docs-read',name:'Read',input:{file_path:'docs/dev/agent-workflow.md'}}]}},{type:'user',session_id:id,message:{content:[{type:'tool_result',tool_use_id:'docs-read',content:'使用例: --prior .loomake/prior/hypothesis.md'}]}});
+  if(mode==='docs-read') events.splice(2,0,{type:'assistant',session_id:id,message:{model:'claude-opus-test',content:[{type:'tool_use',id:'docs-read',name:'Read',input:{file_path:'docs/dev/agent-workflow.md'}}]}},{type:'user',session_id:id,message:{content:[{type:'tool_result',tool_use_id:'docs-read',content:'使用例: --prior .loomake/prior/hypothesis.md。成果物は .loomake/claude/<old>/result.md に保存します。'}]}});
   if(mode==='glob-leak') events.splice(2,0,{type:'user',session_id:id,message:{content:[{type:'tool_result',content:'.loomake/prior/hypothesis.md'}]}});
   if(mode==='split') {
    const raw=Buffer.from(events.map(item=>JSON.stringify(item)).join('\n')+'\n');
@@ -118,6 +126,7 @@ describe('独立見解の保存後に同じOpusへ先行仮説を渡す', () => 
   it('prior時だけstream入力とpriorディレクトリのRead拒否を加える', () => {
     const args = buildClaudeArgs('session', '/request', true);
     expect(args.slice(-2)).toEqual(['--input-format', 'stream-json']);
+    expect(args[args.indexOf('--disallowedTools') + 1]).toBe('Read(./.loomake/claude/**)');
     const settings = JSON.parse(args[args.indexOf('--settings') + 1]);
     expect(settings).toEqual({ disableAllHooks: true, autoMemoryEnabled: false, permissions: { blockReadsOutsideWorkingDirectories: true, deny: ['Read(./.loomake/prior/**)'] } });
     expect(args).toContain('--no-session-persistence');
@@ -199,7 +208,7 @@ console.log(JSON.stringify(await askOpus(${JSON.stringify(input)},${JSON.stringi
   });
 
   it.each([
-    ['prior-first', '先行仮説'], ['glob-prior', '先行仮説'], ['grep-prior', '先行仮説'], ['windows-prior-directory', '先行仮説'], ['glob-leak', '先行仮説'], ['first-error', '成功結果'], ['first-denied', '権限拒否'],
+    ['prior-first', '先行仮説'], ['old-claude-read', '先行仮説'], ['glob-claude', '先行仮説'], ['grep-claude', '先行仮説'], ['claude-result-leak', '先行仮説'], ['glob-prior', '先行仮説'], ['grep-prior', '先行仮説'], ['windows-prior-directory', '先行仮説'], ['glob-leak', '先行仮説'], ['first-error', '成功結果'], ['first-denied', '権限拒否'],
     ['first-model', 'Opus以外'], ['first-order', '開始情報'], ['first-session', 'セッション'], ['first-usage', 'modelUsage'], ['save-fail', '保存'],
     ['dirty', '未コミット'], ['invalid-json', 'JSON'],
   ])('%s: 第一段階で失敗したら仮説を送らない', async (mode, reason) => {
