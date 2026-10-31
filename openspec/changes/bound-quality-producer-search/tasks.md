@@ -12,7 +12,7 @@
 ## 3. 統合検証
 
 - [x] 3.1 kit の patch changeset と同 PR の作業記録を加え、lint・型検査・全体試験と changeset status を成功させる。REQ-359 の実行済み成功試験、既存 REQ-319 の正常・不正・不足と古い結果拒否の保持を確認する。
-- [ ] 3.2 `pnpm -s verify --change bound-quality-producer-search --done --scope local` を成功させ、全タスクと要件対応試験の実結果を記録する。<!-- loomake:gate=done -->
+- [x] 3.2 `pnpm -s verify --change bound-quality-producer-search --done --scope local` を成功させ、全タスクと要件対応試験の実結果を記録する。<!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
