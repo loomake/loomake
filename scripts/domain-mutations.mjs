@@ -108,7 +108,7 @@ export function runMutations(destination, { only } = {}) {
   if (only !== undefined) {
     assert.ok(Array.isArray(only) && only.length > 0, '検査する条件は空でないIDの配列で指定してください');
     assert.equal(new Set(only).size, only.length, '検査する条件のIDは重複できません');
-    assert.ok(only.every((id) => DOMAIN_MUTATIONS.some((mutation) => mutation.id === id)), '登録されていない条件のIDがあります');
+    assert.ok(Array.from(only).every((id) => DOMAIN_MUTATIONS.some((mutation) => mutation.id === id)), '登録されていない条件のIDがあります');
   }
   const selected = only === undefined ? DOMAIN_MUTATIONS : only.map((id) => DOMAIN_MUTATIONS.find((mutation) => mutation.id === id));
   const quality = join(root, '.loomake/quality');

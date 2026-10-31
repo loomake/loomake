@@ -55,4 +55,14 @@ describe('13条件を個別に実行するmutation試験', () => {
     expect(existsSync(target)).toBe(false);
     expect(reportBytes()).toEqual(before);
   });
+
+  it('空き要素のある選択は試行や保存を始めずに拒否する', () => {
+    const target = join(root, '.loomake/quality', `sparse-domain-condition-${randomUUID()}`);
+    const before = reportBytes();
+    try {
+      expect(() => runMutations(target, { only: new Array<string>(1) })).toThrow('登録されていない条件のIDがあります');
+      expect(existsSync(target)).toBe(false);
+      expect(reportBytes()).toEqual(before);
+    } finally { rmSync(target, { recursive: true, force: true }); }
+  });
 });

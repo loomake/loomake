@@ -68,6 +68,19 @@ describe('速度対策の測定metadata', () => {
     expect(readFileSync(join(directory, 'metadata.json'), 'utf8')).not.toContain('must-not-be-copied');
   });
 
+  it.each(['direct', 'junction'] as const)('元レポートと同じ保存先を削除前に拒否する: %s', (kind) => {
+    const repo = repository();
+    const original = join(repo, '.loomake');
+    mkdirSync(original);
+    const raw = Buffer.from('{"testResults":[],"success":false}\r\n');
+    writeFileSync(join(original, 'test-report.json'), raw);
+    const directory = kind === 'direct' ? original : join(fixture(), 'report-alias');
+    if (kind === 'junction') symlinkSync(original, directory, 'junction');
+    expect(() => saveMeasureMetadata(repo, directory, 2, 'failure')).toThrow('元レポートと別');
+    expect(readFileSync(join(original, 'test-report.json'))).toEqual(raw);
+    expect(existsSync(join(original, 'metadata.json'))).toBe(false);
+  });
+
   it('全件の実suiteと旧15file・移動先2fileの包含を記録し、新suiteと同名の多重度を失わない', () => {
     const repo = repository(); const directory = fixture();
     const files = [...requiredMeasureFiles, 'tests/test-partition-integration.test.ts', 'tests/claude-result-timer-validation.test.ts', originalMeasureFiles[0]];

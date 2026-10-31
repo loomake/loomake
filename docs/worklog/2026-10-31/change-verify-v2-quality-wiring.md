@@ -11,7 +11,7 @@
 
 ## 最終レビュー（2 回目）の記録（2026-10-31 JST）
 
-1. やったこと：PR #236 の L3 最終レビュー 2 回目を、独立した Opus（claude-opus-5-5、セッション 4832d52e-33d0-45d1-b27a-6a44a2f21637）に head 9ee5a081 で依頼した。結果は重大 0・軽微 2・情報 5。軽微 M-1（design.md の判定の順に終了コードが入っていない）と情報 I-3（この作業記録の表現と計測表）はこの PR で直した。軽微 M-2（`findProducer` が git の最上位より上の node_modules まで探す）は Q-03 A の振る舞いを変えるため Issue に記録した。
-2. verify の結果：`pnpm -s verify --change verify-v2-quality --done` は exit 0。必須 CI は head 9ee5a081 で成功（scenario-audit は確認時点で実行中）。直したのは文書だけで、コードと試験は変えていない。
+1. やったこと：PR #236 の L3 最終レビュー 2 回目を、独立した Opus に依頼した。対象 head・セッション ID・モデルは [PR #236 の証跡ブロック](https://github.com/loomake/loomake/pull/236) に記録した。結果は重大 0・軽微 2・情報 5。軽微 M-1（design.md の判定の順に終了コードが入っていない）と情報 I-3（この作業記録の表現と計測表）はこの PR で直した。軽微 M-2（`findProducer` が git の最上位より上の node_modules まで探す）は Q-03 A の振る舞いを変えるため Issue に記録した。
+2. verify の結果：`pnpm -s verify --change verify-v2-quality --done` は exit 0。必須 CI は同 PR のレビュー対象 head で成功（scenario-audit は確認時点で実行中）。直したのは文書だけで、コードと試験は変えていない。
 3. 残っている確認事項・仮定：M-2 の Issue。情報 I-1（quality.yaml を読んでから基準を取るまでの隙間）、I-2（`trace record` が quality.yaml の誤りを aborted として記録し、config の誤りは記録しない扱いの差）、I-4（Q-09 の承認者は管理役のまま）、I-5（置き残したレポートの startTime の偽造は S1 の範囲）は 6/6 の受入で確かめる。実装は Opus が行った。工程表では Codex の担当だが、利用者の判断（Q3 a、2026-10-31 18:50 JST）で例外とした。
 4. 次にやること：必須 CI の通過を確かめてマージし、C001 の 6/6（verify-v2-c001 の受入）に進む。
