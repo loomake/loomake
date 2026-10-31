@@ -36,6 +36,7 @@ npx loomake trace report --change <id>            # リリースレポートを�
 | [CONTRIBUTING.md](CONTRIBUTING.md) | このリポジトリに貢献する人 | 開発の環境、change の作り方、PR の出し方 |
 | [SECURITY.md](SECURITY.md) | 脆弱性を見つけた人 | 脆弱性の報告のしかたと、`loomake run` を使うときの注意 |
 | [docs/flow.md](docs/flow.md) | このリポジトリを開発する人 | Loomake を Loomake で作る流れ |
+| [docs/plan-2026-11.md](docs/plan-2026-11.md) | このリポジトリを開発する人 | 2026 年 11 月の計画。外の案件で価値を確かめる 4 つの柱と、11/7・11 月末の判断の時点 |
 | [docs/architecture.md](docs/architecture.md) | このリポジトリを開発する人 | 全体の構成、名前、作る順番 |
 | [docs/guide/4.concepts/2.overview.md](docs/guide/4.concepts/2.overview.md) | Loomake を使う人・導入を検討する人 | 向かう先の全体像。品質駆動開発としての位置付け、4 値判定、証跡の 3 層、自動化のレベル、段階計画 |
 | [docs/requirements/](docs/requirements/) | このリポジトリを開発する人 | 要件定義書。現在の正本は [loomake-v0.11.md](docs/requirements/loomake-v0.11.md)。これまでの正本（core・kit は [mvp-v0.7.md](docs/requirements/mvp-v0.7.md)、trace は [trace-v0.1.md](docs/requirements/trace-v0.1.md)、run は [runner-v0.1.md](docs/requirements/runner-v0.1.md)）は trace.md の出典として残している |
