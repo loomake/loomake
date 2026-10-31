@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { configDefaults, defineConfig } from 'vitest/config';
+import { assertNotPartitioned, loadPartition, partitionFiles } from './scripts/lib/test-partition.mjs';
 
 const root = import.meta.dirname;
 const packageTests = ['tests/ai-journeys.test.ts', 'tests/package-artifacts.test.ts', 'tests/pending-approvals-cli.test.ts'];
@@ -17,6 +18,9 @@ const quarantined: string[] = (() => {
   }
   return files;
 })();
+const partition = loadPartition(root);
+assertNotPartitioned(quarantined, partition);
+const files = partitionFiles(partition);
 
 export default defineConfig({
   resolve: {
@@ -29,11 +33,12 @@ export default defineConfig({
     },
   },
   test: {
-    // 配布物（tarball か dist）を使う 3 ファイルは別のプロジェクトにして、そのプロジェクトの試験を流すときだけ、
-    // ワーカーを起こす前に build と pack を 1 回だけ動かす（tests/package-build.setup.ts、Issue #34）
+    // package/slow に同じ配布物を渡す。明示ファイル選択でも project が残る場合は準備を1回行う。
+    globalSetup: ['tests/package-build.setup.ts'],
     projects: [
-      { extends: true, test: { name: 'unit', include: ['tests/**/*.test.ts', 'packages/*/test/**/*.test.ts'], exclude: [...configDefaults.exclude, ...packageTests, ...quarantined] } },
-      { extends: true, test: { name: 'package', include: packageTests, exclude: [...configDefaults.exclude, ...quarantined], globalSetup: ['tests/package-build.setup.ts'] } },
+      { extends: true, test: { name: 'unit', include: ['tests/**/*.test.ts', 'packages/*/test/**/*.test.ts'], exclude: [...configDefaults.exclude, ...packageTests, ...files.companions, ...files.fastExclude, ...quarantined] } },
+      { extends: true, test: { name: 'package', include: packageTests, exclude: [...configDefaults.exclude, ...files.companions, ...files.fastExclude, ...quarantined] } },
+      ...(files.slowInclude.length ? [{ extends: true as const, test: { name: 'slow', include: files.slowInclude } }] : []),
     ],
     reporters: ['default', 'json'],
     outputFile: { json: report },

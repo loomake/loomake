@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { TestProject } from 'vitest/node';
@@ -11,14 +11,39 @@ declare module 'vitest' {
   }
 }
 
-// 配布物を使う試験のプロジェクトで、試験を始める前に build と pack を 1 回だけ動かす。
-// 試験の中で build を重ねると、tsc が空にした .d.ts をほかの build が読んで落ちる（Issue #34）。
-// 試験は tarball の場所を、LOOMAKE_PACKED_TARBALLS で scripts/package-smoke.mjs の prepare に渡す
-export default function setup(project: TestProject) {
-  const dir = mkdtempSync(join(tmpdir(), 'loomake packed '));
-  profileEvent('shared-package-build', 'package-build-start');
-  buildAndPack(dir);
-  profileEvent('shared-package-build', 'package-build-end');
-  project.provide('packedTarballs', dir);
-  return () => rmSync(dir, { recursive: true, force: true });
+const packageProjects = new Set(['package', 'slow']);
+
+// root から子 project へ同じ配布物を渡し、重なる build が .d.ts を消す競合を防ぐ。
+export function createPackageBuildSetup(build: (dir: string) => void = buildAndPack) {
+  return function setup(project: TestProject) {
+    if (!project.isRootProject() || !project.vitest.projects.some((p) => packageProjects.has(p.name))) return;
+    const dir = mkdtempSync(join(tmpdir(), 'loomake packed '));
+    const cleanup = () => rmSync(dir, { recursive: true, force: true });
+    const rebuild = () => {
+      profileEvent('shared-package-build', 'package-build-start');
+      try {
+        build(dir);
+        profileEvent('shared-package-build', 'package-build-end');
+      } catch (error) {
+        cleanup();
+        throw error;
+      }
+    };
+    try {
+      rebuild();
+      project.provide('packedTarballs', dir);
+      project.onTestsRerun((specs) => {
+        if (!specs.some((spec) => packageProjects.has(spec.project.name))) return;
+        cleanup();
+        mkdirSync(dir);
+        rebuild();
+      });
+    } catch (error) {
+      cleanup();
+      throw error;
+    }
+    return cleanup;
+  };
 }
+
+export default createPackageBuildSetup();
