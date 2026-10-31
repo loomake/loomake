@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // CI の完了ゲート。先に PR の段階（L1・L2・L3）を変えたファイルと spec の差分から決め（REQ-342、ci-tier.mjs）、
-// 段階ごとに検査を変える（REQ-343）。L1 は lint と文書のリンクの試験だけで、verify を呼ばない。
-// L2・L3 は対象の change を、PR 本文の「loomake-change:」の行、PR で変えたファイル、ブランチ名から決め、
+// 段階ごとに検査を変える（REQ-343）。L1 は lint と文書のリンクの試験を実行し、change がなければ verify を呼ばない。
+// change があれば段階を問わず --done を通す。L2・L3 は対象の change を、PR 本文の「loomake-change:」の行、PR で変えたファイル、ブランチ名から決め、
 // それぞれに --change <id> --done を実行する（REQ-010・REQ-132）。L3 では change が必須。
 // loomake run が作る loomake/<id> のブランチは、先頭の loomake/ を除いて比べる（fix-review-findings の仮定 A-01）
 //
@@ -124,25 +124,26 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `tier=${decided.tier}\ntier_line=${tierLine}\n`);
 
   const run = (cmd) => spawnSync(cmd, { shell: true, stdio: 'inherit' }).status ?? 1;
+  // loomake verify は先に pnpm build しておく（CI の gate ジョブ）
+  const verify = (args) => spawnSync(process.execPath, ['packages/cli/dist/cli.js', 'verify', ...args], { stdio: 'inherit' }).status ?? 1;
+  let status = 0;
   if (decided.tier === 'L1') {
-    // L1 は lint と文書のリンクの試験だけ。verify は呼ばない（REQ-343）。
+    // L1 は lint と文書のリンクの試験を実行する（REQ-343）。
     // 文書だけの PR では quality ジョブが品質コマンドを飛ばすので、文書を読む試験を回すのはここだけになる（docs/dev/ci.md）
-    let status = 0;
     for (const cmd of tierOneCommands()) {
       console.error(`ci-gate: branch=${branch || '(なし)'} 段階 L1 → ${cmd}`);
       const code = run(cmd);
       if (code !== 0) status = code;
     }
-    process.exit(status);
   }
   const selected = selectChanges({ ref: branch, body, files, changesDir: join('openspec', 'changes') });
   if (selected.error) {
     console.error(`ci-gate: ${selected.error}`);
     process.exit(1);
   }
-  // loomake verify は先に pnpm build しておく（CI の gate ジョブ）
-  const verify = (args) => spawnSync(process.execPath, ['packages/cli/dist/cli.js', 'verify', ...args], { stdio: 'inherit' }).status ?? 1;
   if (selected.qualityOnly) {
+    // change を持つ PR は段階を問わず --done を通す（AGENTS.md 2 章）。L1 で change がなければ verify は呼ばない
+    if (decided.tier === 'L1') process.exit(status);
     if (decided.tier === 'L3') {
       console.error(`ci-gate: L3 では change が必須です（${selected.qualityOnly}）。PR 本文に「loomake-change: <change-id>」の行を書いてください`);
       process.exit(1);
@@ -150,10 +151,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     console.error(`ci-gate: branch=${branch || '(なし)'} 段階 ${decided.tier} → verify（品質コマンドのみ。${selected.qualityOnly}）`);
     process.exit(verify([]));
   }
-  let failed = false;
   for (const id of selected.changes) {
     console.error(`ci-gate: branch=${branch || '(なし)'} 段階 ${decided.tier} → verify --change ${id} --done`);
-    if (verify(['--change', id, '--done']) !== 0) failed = true;
+    if (verify(['--change', id, '--done']) !== 0) status = 1;
   }
-  process.exit(failed ? 1 : 0);
+  process.exit(status);
 }

@@ -1,13 +1,13 @@
 ## ADDED Requirements
 
 ### Requirement: 工程の段階の判定
-CI の完了ゲートは、変えたファイルのパス（名前の変更は前後両方）と `spec.md` の差分から、PR の段階を次のうち最も高いものに決める MUST。
+CI の完了ゲートは、変えたファイルのパス（名前の変更は前後両方）と `spec.md` の差分から、段階を次のうち最も高いものに決める MUST。
 
-- L3：`packages/<name>/src/` の下。`openspec/specs/` か change の `spec.md` で `### Requirement:` の行か RFC 2119 の語を含む行の追加・削除
-- L2：`tests/`・`test/`・`.github/`・`scripts/`・`.agents/skills/`・`packages/<name>/templates/` の下、`packages/` のそのほか、`.changeset/config.json`、`openspec/config.yaml`、どれにも当たらないファイル
+- L3：`packages/<name>/src/` の下。`spec.md` で `### Requirement:` の行か RFC 2119 の語を含む行の追加・削除
+- L2：`tests/`・`test/`・`.github/`・`scripts/`・`.agents/skills/`・`packages/` の下（src 以外）、`.changeset/config.json`、`openspec/config.yaml`、規則の文書（AGENTS.md・ADR・agent-workflow.md）、どれにも当たらないもの
 - L1：「文書として扱うファイル」
 
-archive に足し、全ファイルが L1 の PR は L1 とする。本文の `loomake-tier:` は高い段階にだけ上書きでき、下げる指定と読めない値は失敗にする MUST。
+archive に足し全ファイルが L1 の PR は L1。本文の `loomake-tier:` は高い段階にだけ上書きでき、下げる指定と読めない値は失敗にする MUST。
 
 Source: REQ-342
 
@@ -20,7 +20,7 @@ Source: REQ-342
 - **THEN** 段階は L1 になる
 
 #### Scenario: 試験と開発基盤の PR
-- **WHEN** `tests/a.test.ts`・`packages/runner/test/a.test.ts`・`.github/workflows/ci.yml`・`scripts/x.mjs`・`.agents/skills/delivery/SKILL.md`・`packages/kit/templates/AGENTS.md` のどれかだけを変えた PR で CI が動く
+- **WHEN** `tests/a.test.ts`・`packages/runner/test/a.test.ts`・`.github/workflows/ci.yml`・`scripts/x.mjs`・`.agents/skills/delivery/SKILL.md`・`packages/kit/templates/AGENTS.md`・`package.json` のどれかだけを変えた PR で CI が動く
 - **THEN** 段階は L2 になる
 
 #### Scenario: 製品コードの PR
@@ -62,17 +62,25 @@ Source: REQ-342
 ### Requirement: 段階ごとの完了ゲートの動作
 CI の完了ゲートは、決めた段階に応じて次のとおり動く MUST。
 
-- L1：`loomake.config.json` の `commands.lint` と文書のリンクの試験（`tests/doc-links.test.ts`）を実行し、失敗したらジョブを失敗させる。`verify` は実行しない
-- L2：「完了ゲートの対象の決め方」で change を決め、change ごとに `verify --change <id> --done` を実行する。change がなければ「対象の change がない PR の扱い」に従う
-- L3：L2 と同じに change を決めて検査する。`loomake-change: none` の明示と、change を特定できないときは、日本語で案内して失敗させる
+- L1：`commands.lint` と文書のリンクの試験（`tests/doc-links.test.ts`）を実行する。change があれば change ごとに `verify --change <id> --done` も実行し、なければ `verify` は実行しない
+- L2：「完了ゲートの対象の決め方」で change を決め、change ごとに `--done` を実行する。change がなければ「対象の change がない PR の扱い」に従う
+- L3：L2 と同じに検査する。`loomake-change: none` の明示と、change を特定できないときは失敗させる
 
-段階と理由（パス最大 3 件と残りの件数、本文の指定）を `loomake-tier: <段階>（<理由>）` の形で標準出力に 1 行書き、`GITHUB_OUTPUT` があれば `tier` と `tier_line` も書く SHALL。
+段階と理由を `loomake-tier: <段階>（<理由>）` の形で標準出力に 1 行書き、`GITHUB_OUTPUT` があれば `tier` と `tier_line` も書く SHALL。
 
 Source: REQ-343
 
-#### Scenario: L1 の PR
+#### Scenario: L1 で change がない
 - **WHEN** `docs/usage.md` だけを変えた PR で CI が動く
 - **THEN** lint と文書のリンクの試験が実行され、`verify` は実行されない
+
+#### Scenario: L1 で change がある
+- **WHEN** ブランチ名 `c2` で、`openspec/changes/c2/tasks.md` だけを変えた PR で CI が動く
+- **THEN** lint と文書のリンクの試験と `verify --change c2 --done` が実行される
+
+#### Scenario: 規則の文書は L2
+- **WHEN** `AGENTS.md`・`docs/adr/0006-x.md`・`docs/dev/agent-workflow.md` のどれかだけを変えた PR で CI が動く
+- **THEN** 段階は L2 になる
 
 #### Scenario: L1 で lint が失敗する
 - **WHEN** `README.md` だけを変えた PR で CI が動き、lint が非ゼロで終わる
@@ -105,7 +113,7 @@ Source: REQ-343
 ## MODIFIED Requirements
 
 ### Requirement: プルリクエストごとの完了ゲート
-CI はプルリクエストごとに完了ゲートを実行し、不合格のときジョブを失敗させる SHALL。完了ゲートは先に「工程の段階の判定」で段階を決め、「段階ごとの完了ゲートの動作」に従う MUST。段階が L1 のときは `verify` を実行しない MUST。段階が L2・L3 のとき、対象の change は「完了ゲートの対象の決め方」に従って決め、対象の change ごとに `--change <id> --done` で実行し、1 つでも不合格ならジョブを失敗させる MUST。対象の change がないときは、「対象の change がない PR の扱い」に従う MUST。あわせて、PR の種類によらず、いまの仕様（`openspec/specs/`）に `openspec validate --specs --strict` を実行し、失敗したらジョブを失敗させる SHALL。
+CI はプルリクエストごとに完了ゲートを実行し、不合格のときジョブを失敗させる SHALL。完了ゲートは先に「工程の段階の判定」で段階を決め、「段階ごとの完了ゲートの動作」に従う MUST。段階が L1 で対象の change がないときは `verify` を実行しない MUST。対象の change は「完了ゲートの対象の決め方」に従って決め、対象の change ごとに `--change <id> --done` で実行し、1 つでも不合格ならジョブを失敗させる MUST。対象の change がないときは、「対象の change がない PR の扱い」に従う MUST。あわせて、PR の種類によらず、いまの仕様（`openspec/specs/`）に `openspec validate --specs --strict` を実行し、失敗したらジョブを失敗させる SHALL。
 
 Source: REQ-010, REQ-054, REQ-132, REQ-343
 
@@ -149,30 +157,8 @@ Source: REQ-010, REQ-054, REQ-132, REQ-343
 - **WHEN** archive で反映した Requirement の本文が長すぎて、`openspec validate --specs --strict` が失敗する PR で CI が動く
 - **THEN** gate ジョブが失敗する
 
-### Requirement: 完了ゲートの対象の決め方
-CI の完了ゲートは、段階が L2・L3 のとき、対象の change を次の順に決める MUST。段階が L1 のときは対象の change を決めず、`verify` を実行しない。
-
-1. PR 本文に `loomake-change: <id>` の行があれば、その change とする。`,` で区切って複数を書ける。`loomake-change: none` なら、change のない PR とする
-2. 明示がなければ、PR で変えたファイルのうち `openspec/changes/<id>/` の下にあるもの（`archive` を除き、いまディレクトリがあるもの）の change と、PR のブランチ名、またはブランチ名から先頭の `loomake/` を除いた名前と一致する `openspec/changes/<id>` の change を合わせたものとする
-
-明示した change のディレクトリがないときは、ジョブを失敗させる MUST。
-
-Source: REQ-132, REQ-343
-
-#### Scenario: 明示を優先する
-- **WHEN** `openspec/changes/c1` と `openspec/changes/c2` があり、ブランチ名 `c2` で、`openspec/changes/c2/tasks.md` と `scripts/x.mjs` を変え、本文に `loomake-change: c1` の行がある PR で CI が動く
-- **THEN** `verify --change c1 --done` だけが実行される
-
-#### Scenario: 変えたファイルとブランチ名を合わせる
-- **WHEN** `openspec/changes/c1` と `openspec/changes/c2` があり、ブランチ名 `c2` で、本文に明示がなく、`openspec/changes/c1/tasks.md` と `scripts/x.mjs` を変えた PR で CI が動く
-- **THEN** `verify --change c1 --done` と `verify --change c2 --done` が実行される
-
-#### Scenario: change の文書だけを変えた PR
-- **WHEN** ブランチ名 `c2` で、`openspec/changes/c2/tasks.md` だけを変えた PR で CI が動く
-- **THEN** 段階は L1 になり、`verify` は実行されない
-
 ### Requirement: 対象の change がない PR の扱い
-段階が L2 で対象の change がなく、`loomake-change: none` の明示があるか、PR で変えたファイルが「文書として扱うファイル」だけのときは、CI は品質コマンドだけを実行する MUST。段階が L2 で対象の change がなく、文書のほかのファイルを変えているときは、`loomake-change:` の行を書くよう日本語で案内し、ジョブを失敗させる MUST。段階が L1 のときは「段階ごとの完了ゲートの動作」に従い、品質コマンドを実行しない MUST。
+段階が L2 で対象の change がなく、`loomake-change: none` の明示があるか、PR で変えたファイルが「文書として扱うファイル」だけのときは、CI は品質コマンドだけを実行する MUST。段階が L2 で対象の change がなく、文書のほかのファイルを変えているときは、`loomake-change:` の行を書くよう日本語で案内し、ジョブを失敗させる MUST。段階が L1 で対象の change がないときは「段階ごとの完了ゲートの動作」に従い、品質コマンドを実行しない MUST。
 
 Source: REQ-132, REQ-343
 

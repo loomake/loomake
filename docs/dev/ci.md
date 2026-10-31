@@ -20,7 +20,7 @@
 
 gate ジョブは PR の段階（AGENTS.md 2 章の L1・L2・L3）を先に決め、段階に応じて検査を変える。段階の決め方は monorepo の仕様の「工程の段階の判定」（REQ-342）、段階ごとの動作は「段階ごとの完了ゲートの動作」（REQ-343）にある。判定の実装は `scripts/ci-tier.mjs` で、quality ジョブの docs_only の判定（`scripts/ci-docs-only.mjs`）も同じ関数を使う。「文書だけ」と「段階 L1」は同じ意味になる。
 
-- L1（文書だけ）：lint と `tests/doc-links.test.ts` だけを実行し、`verify` は呼ばない。quality ジョブも品質コマンドを飛ばすので、文書を読むテストを実行するのは gate の doc-links だけになる
+- L1（文書だけ）：lint と `tests/doc-links.test.ts` を実行する。対象の change があれば `verify --change <id> --done` も実行し、なければ `verify` は呼ばない。quality ジョブは品質コマンドを飛ばすので、文書を読むテストを実行するのは gate の doc-links だけになる
 - L2（試験・CI・開発基盤）：これまでどおり、対象の change があれば `verify --change <id> --done`、なければ `verify`（品質コマンドだけ）を実行する
 - L3（製品コードと Requirement の変更）：change が必須。`loomake-change: none` や change を特定できない PR は失敗する
 
@@ -28,7 +28,7 @@ gate ジョブは PR の段階（AGENTS.md 2 章の L1・L2・L3）を先に決�
 
 Requirement の本文の変更は、`openspec/specs/` と `openspec/changes/<id>/specs/` の `spec.md` で、`### Requirement:` の行か RFC 2119 の語（SHALL・MUST・SHOULD・MAY）を含む行を足すか消したかで見る。Scenario の WHEN・THEN や Purpose の文言だけなら L1 のまま。archive の PR は Requirement を主仕様に写すが、実装 PR の `--done` で検査済みなので L1 として扱う。
 
-L1 の PR で `verify` を呼ばないため、`tests/doc-links.test.ts` を gate で直接実行している。gate からこの試験を外すときは、文書だけの PR で文書を読むテストを実行する場がなくなることを確かめる。
+change のない L1 の PR では `verify` を呼ばないため、`tests/doc-links.test.ts` を gate で直接実行している。gate からこの試験を外すときは、文書だけの PR で文書を読むテストを実行する場がなくなることを確かめる。
 
 `ci:all-os` ラベルを L3 の PR で必須にする検査は、3 OS の試験の時間切れが直るまで入れていない。
 

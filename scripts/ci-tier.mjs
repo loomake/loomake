@@ -49,6 +49,8 @@ export function classifyPath(path) {
   if (/^packages\/[^/]+\/src\//.test(path)) return 'L3';
   if (/^(tests?|\.github|scripts|\.agents\/skills|packages\/[^/]+\/templates)\//.test(path)) return 'L2';
   if (path.startsWith('packages/') || path === '.changeset/config.json' || path === 'openspec/config.yaml') return 'L2';
+  // 規則の文書は docs/ の下や直下の .md でも L2（AGENTS.md 2 章。利用者の承認が要る）
+  if (path === 'AGENTS.md' || path.startsWith('docs/adr/') || path === 'docs/dev/agent-workflow.md') return 'L2';
   if (isDocumentPath(path)) return 'L1';
   return 'L2';
 }

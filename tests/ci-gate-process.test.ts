@@ -223,12 +223,12 @@ describe('実際のCIゲートの子プロセスの契約', () => {
     });
   });
 
-  it('[REQ-342] Scenario の文言だけを変えた spec.md は L1', () => {
+  it('[REQ-342][REQ-343] Scenario の文言だけを変えた spec.md は L1 で、change のファイルなので --done も呼ぶ', () => {
     withProject(({ commitFiles, run }) => {
       commitFiles({ 'openspec/changes/c1/specs/x/spec.md': '#### Scenario: 場面\n- **WHEN** 条件\n- **THEN** 結果\n' });
       const result = run('fix-x');
       expect(result.stdout).toContain('loomake-tier: L1（');
-      expect(result.calls).toEqual(lintOnly);
+      expect(result.calls).toEqual([...lintOnly, done('c1')]);
     });
   });
 
@@ -283,30 +283,40 @@ describe('実際のCIゲートの子プロセスの契約', () => {
     });
   });
 
-  it('[REQ-132] 明示した選択を変更ファイルとブランチの選択より優先する', () => {
-    withProject(({ commitFiles, run }) => {
-      commitFiles(['openspec/changes/c2/tasks.md', 'scripts/x.mjs']);
-      const result = run('c2', 'loomake-change: c1');
-      expect(result.calls).toEqual([done('c1')]);
-      expect(result.status).toBe(0);
-    });
-  });
-
-  it('[REQ-132] 変更ファイルとブランチの選択を合わせて両方のゲートを呼ぶ', () => {
-    withProject(({ commitFiles, run }) => {
-      commitFiles(['openspec/changes/c1/tasks.md', 'scripts/x.mjs']);
-      const result = run('c2');
-      expect(result.calls).toEqual([done('c1'), done('c2')]);
-      expect(result.status).toBe(0);
-    });
-  });
-
-  it('[REQ-132][REQ-343] change の文書だけを変えた PR は L1 で、ブランチ名が change と一致しても verify を呼ばない', () => {
+  it('[REQ-132][REQ-343] 明示した選択を変更ファイルとブランチの選択より優先する。L1 でも change があれば --done を呼ぶ', () => {
     withProject(({ commitFiles, run }) => {
       commitFiles(['openspec/changes/c2/tasks.md']);
-      const result = run('c2');
-      expect(result.calls).toEqual(lintOnly);
+      const result = run('c2', 'loomake-change: c1');
+      expect(result.calls).toEqual([...lintOnly, done('c1')]);
       expect(result.status).toBe(0);
+    });
+  });
+
+  it('[REQ-132][REQ-343] 変更ファイルとブランチの選択を合わせて両方のゲートを呼ぶ。L1 でも change があれば --done を呼ぶ', () => {
+    withProject(({ commitFiles, run }) => {
+      commitFiles(['openspec/changes/c1/tasks.md']);
+      const result = run('c2');
+      expect(result.calls).toEqual([...lintOnly, done('c1'), done('c2')]);
+      expect(result.status).toBe(0);
+    });
+  });
+
+  it('[REQ-343] L1 で change があり lint が失敗すれば、--done も呼んだうえで失敗を伝える', () => {
+    withProject(({ commitFiles, run }) => {
+      commitFiles(['openspec/changes/c2/tasks.md']);
+      const result = run('c2', '', { lint: 5 });
+      expect(result.stdout).toContain('loomake-tier: L1（openspec/changes/c2/tasks.md）');
+      expect(result.calls).toEqual([...lintOnly, done('c2')]);
+      expect(result.status).toBe(5);
+    });
+  });
+
+  it('[REQ-342] 規則の文書 AGENTS.md だけを変えた PR は L2', () => {
+    withProject(({ commitFiles, run }) => {
+      commitFiles(['AGENTS.md']);
+      const result = run('fix-rules', 'loomake-change: none');
+      expect(result.stdout).toContain('loomake-tier: L2（AGENTS.md）');
+      expect(result.calls).toEqual([['verify']]);
     });
   });
 

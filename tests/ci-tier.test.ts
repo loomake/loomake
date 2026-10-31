@@ -23,8 +23,13 @@ describe('パスの段階', () => {
   it('[REQ-342] packages/*/src は L3、packages/ のそのほかと設定・どれにも当たらないファイルは L2', () => {
     expect(classifyPath('packages/kit/src/verify/run.ts')).toBe('L3');
     expect(classifyPath('packages/core/src/index.ts')).toBe('L3');
-    for (const path of ['packages/runner/test/a.test.ts', 'packages/kit/package.json', 'packages/cli/README.md', '.changeset/config.json', 'openspec/config.yaml', 'package.json', 'eslint.config.js', 'docs/site.yml', 'tests/fixtures/README.md'])
+    for (const path of ['packages/runner/test/a.test.ts', 'packages/kit/package.json', 'packages/kit/schema/x.json', 'packages/cli/README.md', '.changeset/config.json', 'openspec/config.yaml', 'package.json', 'eslint.config.js', 'docs/site.yml', 'tests/fixtures/README.md'])
       expect(classifyPath(path), path).toBe('L2');
+  });
+
+  it('[REQ-342] 規則の文書（AGENTS.md・docs/adr/・agent-workflow.md）は docs/ の下や直下の .md でも L2', () => {
+    for (const path of ['AGENTS.md', 'docs/adr/0006-standing-approval-for-autonomous-delivery.md', 'docs/dev/agent-workflow.md']) expect(classifyPath(path), path).toBe('L2');
+    for (const path of ['README.md', 'docs/dev/ci.md', 'docs/adr.md']) expect(classifyPath(path), path).toBe('L1');
   });
 
   it('[REQ-342] 名前を変えたファイルは変更前と変更後の両方を判定する', () => {

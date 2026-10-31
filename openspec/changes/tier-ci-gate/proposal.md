@@ -11,7 +11,7 @@ gate が文書かどうかを決める判定（`isDocument`）は、quality ジ�
 ## What Changes
 
 - `scripts/ci-tier.mjs` を足し、変更パスと spec の差分から段階 L1・L2・L3 を決める。`loomake-tier:` の行で上げる方向にだけ上書きできる。
-- `scripts/ci-gate.mjs` を段階で分ける。L1 は lint と文書のリンクの試験だけを実行し、`verify` を呼ばない。L2 は今までどおり。L3 は change を必須にする。決めた段階と理由を標準出力の 1 行と `GITHUB_OUTPUT` に書く。gate の独自の `isDocument` を消し、quality と同じ `isDocumentPath` を使う。
+- `scripts/ci-gate.mjs` を段階で分ける。L1 は lint と文書のリンクの試験を実行し、change がなければ `verify` を呼ばない（change があれば段階を問わず `--done` を通す）。L2 は今までどおり。L3 は change を必須にする。決めた段階と理由を標準出力の 1 行と `GITHUB_OUTPUT` に書く。gate の独自の `isDocument` を消し、quality と同じ `isDocumentPath` を使う。
 - `scripts/ci-docs-only.mjs` の最終判定を「段階が L1」に変える。Requirement の本文だけを変えた spec.md の PR は、文書だけと判定しなくなる。
 - `.github/workflows/ci.yml` の gate ステップに `id: gate` を付け、コメントを段階の説明に直す。
 - PR テンプレートと delivery スキルの証跡ブロックに `tier:` の行を足す。スキルに worktree の削除の手順を 1 行足す。
@@ -26,7 +26,7 @@ gate が文書かどうかを決める判定（`isDocument`）は、quality ジ�
 
 ### Modified Capabilities
 
-- `monorepo`: 「工程の段階の判定」（REQ-342）と「段階ごとの完了ゲートの動作」（REQ-343）を足す。「プルリクエストごとの完了ゲート」「完了ゲートの対象の決め方」「対象の change がない PR の扱い」を段階に合わせて直し、「文書だけの PR の品質ジョブ」の判定を段階 L1 に変える。
+- `monorepo`: 「工程の段階の判定」（REQ-342）と「段階ごとの完了ゲートの動作」（REQ-343）を足す。「プルリクエストごとの完了ゲート」「対象の change がない PR の扱い」を段階に合わせて直し、「文書だけの PR の品質ジョブ」の判定を段階 L1 に変える。
 
 ## Impact
 
