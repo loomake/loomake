@@ -547,6 +547,8 @@ export function companionLinks(registry, readText, readModule) {
           helperCalls.push({ module: imported.moduleSpecifier.text, name: ts.isImportSpecifier(declaration) ? (declaration.propertyName ?? declaration.name).text : undefined });
         }
       }
+      // 型位置以外のthisは、最上位やarrowを通じて大域の値へ届く。
+      if (node.kind === ts.SyntaxKind.ThisKeyword) required(runtimeTypePosition(node), readingError);
       if (ts.isPropertyAccessExpression(node)) required(!forbiddenProperties.has(node.name.text), readingError);
       if (ts.isElementAccessExpression(node)) {
         const key = node.argumentExpression && literalKey(node.argumentExpression);

@@ -671,6 +671,12 @@ describe('companion本体の実行時束縛と反射キー', () => {
     ['element動的key', "const key = 'constructor'; const holder = {}; void holder[key];"],
     ['object動的key', "const key = 'constructor'; const holder = { [key]: () => {} };"],
     ['computed固定key', "const holder = { ['constructor']: () => {} };"],
+    ['最上位this', "this.process.getBuiltinModule('module').createRequire(this.process.cwd() + '/probe.cjs')('./tests/foreign.test.js');"],
+    ['最上位arrowのthis', "(() => this)().process.getBuiltinModule('module').createRequire((() => this)().process.cwd() + '/probe.cjs')('./tests/foreign.test.js');"],
+    ['class継承式のthis', 'class Local extends (this.process, class {}) {}'],
+    ['関数内のthis', 'function local() { return this; } local();'],
+    ['methodのthis', 'const holder = { read() { return this; } }; holder.read();'],
+    ['class fieldのthis', 'class Local { value = this; }; void new Local();'],
   ])('[REQ-347] 静的な値参照・反射の違反を両入口で拒否して入力を保つ: %s', async (_, body) => {
     const dir = prepare(body);
     const raw = readFileSync(join(dir, 'report.json'));
@@ -693,6 +699,8 @@ describe('companion本体の実行時束縛と反射キー', () => {
     'class Base {}; class Local extends Base {}; void Local;',
     'interface Local extends process.Base {}',
     'class Base<T> {}; class Local extends Base<string> {}; void Local;',
+    'function local(this: unknown) { return undefined; } local();',
+    'class Local { self(): this { return undefined as never; } }; void Local;',
     'void undefined;',
     'function local(undefined: unknown) { return undefined; } local(true);',
     'type process = string; const local: process = "x"; void local;',
@@ -870,6 +878,50 @@ describe('companionが読むhelperの評価とsetterを閉じる', () => {
       expect(companionLinks(selection, () => `${item.prefix} await import('./source.test.js');`)).toEqual(new Map([[item.companion, item.source]]));
       if (item.bad) await reject(dir);
       else {
+        expect((await auditRepository(dir, join(dir, 'out-' + item.id), undefined, 'report.json', kit)).rows[0].status).toBe('reviewed');
+        expect((await migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).counts.migrated.unchangedFile).toBe(1);
+      }
+    }
+  }, 90000);
+  it('[REQ-347] 最上位thisとarrowのthisをnative1起動で両入口へ照合する', async () => {
+    const dir = prepare('', {});
+    rmSync(join(dir, companion)); symlinkSync(realpathSync('node_modules'), join(dir, 'node_modules'), 'junction'); mkdirSync(join(dir, 'tmp'));
+    writeFileSync(join(dir, 'package.json'), '{"type":"module"}');
+    const sourceFalse = "import {it,expect}from'vitest'; if(false) it('[REQ-012] 条件を検査する',()=>{expect(false).toBe(true)});";
+    const cases = [
+      ['top', "this.process.getBuiltinModule('module').createRequire(this.process.cwd() + '/probe.cjs')('./tests/top/foreign.test.js');", true],
+      ['arrow', "(() => this)().process.getBuiltinModule('module').createRequire((() => this)().process.cwd() + '/probe.cjs')('./tests/arrow/foreign.test.js');", true],
+      ['canonical', "import {setPart} from '../helpers/partition-part.js'; setPart('slow');", false],
+    ] as const;
+    // 元反例との違いはrequire先のケース別pathだけ。元sourceのfalse条件と期待は保つ。
+    for (const [path, text] of [['tests/helpers/partition-part.ts', readFileSync('tests/helpers/partition-part.ts', 'utf8')], ['scripts/lib/test-partition.mjs', readFileSync('scripts/lib/test-partition.mjs', 'utf8')]]) {
+      mkdirSync(join(dir, path, '..'), { recursive: true }); writeFileSync(join(dir, path), text);
+    }
+    const inputs = cases.map(([id, prefix, bad]) => {
+      const source = `tests/${id}/source.test.ts`; const c = `tests/${id}/source.slow.test.ts`;
+      const text = bad ? sourceFalse : "import {it,expect}from'vitest'; import {currentPart} from '../helpers/partition-part.js'; it('[REQ-012] 条件を検査する',()=>{expect(currentPart()).toBe('slow')});";
+      mkdirSync(join(dir, source, '..'), { recursive: true }); writeFileSync(join(dir, source), text);
+      writeFileSync(join(dir, c), `${prefix} await import('./source.test.js');`);
+      writeFileSync(join(dir, source, '../foreign.test.js'), "import {it}from'vitest'; it('[REQ-012] 条件を検査する',()=>{});");
+      return { id, source, companion: c, text, prefix, bad };
+    });
+    writeFileSync(join(dir, 'vitest.config.mjs'), "export default { cacheDir: './cache', test: { include: ['tests/**/*.slow.test.ts'], globals: false, maxWorkers: 1, fileParallelism: false, reporters: ['json'], outputFile: './native-report.json' } };");
+    const native = spawnSync(process.execPath, [join(realpathSync('node_modules/vitest'), 'vitest.mjs'), 'run', '--configLoader', 'native', '--config', join(dir, 'vitest.config.mjs')], { cwd: dir, encoding: 'utf8', timeout: 60000, env: { ...process.env, TMPDIR: join(dir, 'tmp'), TMP: join(dir, 'tmp'), TEMP: join(dir, 'tmp') } });
+    expect(native.status, native.stderr + native.stdout).toBe(0); expect(native.signal).toBeNull();
+    const report = JSON.parse(readFileSync(join(dir, 'native-report.json'), 'utf8')) as { numPassedTests: number; numFailedTests: number; testResults: { name: string; assertionResults: { fullName: string; status: string }[] }[] };
+    expect(report.numPassedTests).toBe(3); expect(report.numFailedTests).toBe(0); expect(report.testResults).toHaveLength(3);
+    writeFileSync(join(dir, 'report.json'), readFileSync(join(dir, 'native-report.json')));
+    for (const item of inputs) {
+      const suite = report.testResults.find((row) => row.name.replaceAll('\\', '/').endsWith('/' + item.companion));
+      expect(suite?.assertionResults.map((row) => [row.fullName, row.status])).toEqual([['[REQ-012] 条件を検査する', 'passed']]);
+      const selection = { files: { [item.source]: { cases: { a: ['linux'] } } } };
+      writeFileSync(join(dir, 'tests/test-partition.json'), JSON.stringify(selection));
+      const review = { ...blockReview(), tests: [{ file: item.source, contains: '条件を検査する', sha256: sha256(item.text) }] };
+      writeFileSync(join(dir, 'docs/quality/scenarios.json'), JSON.stringify({ schemaVersion: 1, reviews: [review] }));
+      if (item.bad) {
+        expect(() => companionLinks(selection, () => `${item.prefix} await import('./source.test.js');`)).toThrow(readingError);
+        await reject(dir);
+      } else {
         expect((await auditRepository(dir, join(dir, 'out-' + item.id), undefined, 'report.json', kit)).rows[0].status).toBe('reviewed');
         expect((await migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).counts.migrated.unchangedFile).toBe(1);
       }

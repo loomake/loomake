@@ -1,23 +1,8 @@
-# [PR #253](https://github.com/loomake/loomake/pull/253)：行登録基盤の依存統合とcompanion本体の修理
+# [PR #253](https://github.com/loomake/loomake/pull/253)：companion監査と行登録基盤の局所修理
 
-2026-11-01（日本時間）の依存統合と本体の部分修理を検証した時点の記録。この記録の追加後の CI・独立レビューの結果は、PR 本文の証跡を参照する。
+2026-11-01（日本時間）。過去の検証と今回のS1修理を区別して記録する。CI・独立レビューの正本はPR本文の証跡とする。
 
-1. やったこと：split-slow-ci-checks の2.7の部分修理R1〜R3を統合し、2.10のcompanion本体とhelperの評価・setter検査を追加した。元SHALL・Source・先頭11Scenario・task本文・旧期待を保持し、新しい採用条件はtraceへ記録した。
-2. verify の結果：旧447件を含む関連512件（skip0）とlint・型検査・仕様ゲート・strictが成功し、修理前の57失敗とnativeの偽受理を保存した。native1起動の7件は全成功で、helper-one・take派生2件・呼出し時登録を両入口で拒否し、既存getTest診断と実canonicalの受理・全raw/ledgerを保った。
-3. 確認事項・仮定：tasksは2/21のままで、2.7・2.10全体・行wiring/C1/oracle・実登録/OS割当・3OS・全体doneは未達である。原getTest入力は旧APIの偽受理証拠ではなく、対応名・拡張子の補正とtakeへの改名を分けた派生を対照にした。
-4. 次にやること：管理役が差分容量・CI・独立レビューと残る登録基盤を確認する。部分修理をmainマージやchange完成とは扱わない。
-
-| PR | 設計待ち | 実装 | CI 待ち | レビュー往復回数 | マージまで |
-|---|---|---|---|---|---|
-| [#253](https://github.com/loomake/loomake/pull/253) | 採用設計に従う（PR全体は未測定） | 進行中（全体の完了ゲート未達） | 新 head は未実施 | 0（独立最終レビュー未実施） | 進行中 |
-
-2026-11-01（日本時間）、Q114 による未参照 ImportEquals の局所修理を追加した。
-
-1. やったこと：split-slow-ci-checks の2.10に対し、第13Scenarioとtrace・design・ci文書を整合させ、仕様ゲート後にcompanion内の全位置のImportEqualsを既存の依存検査へつないだ。旧R4診断、純粋API、helper側の拒否を保持した。
-2. verify の結果：旧コードでは追加7件中6件が失敗し、修理後は旧512件を含む関連519件が成功した（skip0、最終実時間11.690秒）。lint7.868秒・型検査2.518秒・ビルド込み仕様ゲート3.812秒・strict0.861秒もexit0。追加nativeは隔離verbatimで3suite・4成功行、原false-source反例も入力をbyte保持した別fixtureで1suite・1成功行を確認し、両入口の拒否・outなし・raw/ledger不変を検査した。安全なhelperは依存hashを記録し、型専用は読込0回・依存hashなしで受理した。
-3. 確認事項・仮定：Q114は利用者（ADR 0006 の包括承認）を回答者として管理役が採用した。既定設定の0行suite errorは安全性の証拠に数えない。元の仕様本文・Source・先頭11Scenario・残るScenario・旧試験・tasksをbyte比較で保持し、tasksは2/21のまま。全体done・3OS・CI・独立最終レビューは未達である。
-4. 次にやること：管理役へ局所結果と実差分容量を渡し、依存基盤のPR分割、現在headのレビューと残る完了条件を進める。この記録は部分修理のローカル検証である。
-
-| PR | 設計待ち | 実装 | CI 待ち | レビュー往復回数 | マージまで |
-|---|---|---|---|---|---|
-| [#253](https://github.com/loomake/loomake/pull/253) | 採用設計を受領（全体未測定） | 関連回帰11.690秒、実装全体は未測定 | 新 head は未実施 | 今回0（独立最終レビュー未実施） | 進行中 |
+1. やったこと：split-slow-ci-checksの2.7のR1〜R3と2.10の本体・helper・ImportEqualsを統合し、今回Q116の仕様ゲート後に型位置以外のthisを拒否した。M1の説明を文言不変で移し、M2の同日記録を1節にまとめた。元SHALL・Source・先頭11Scenario・旧期待・task本文を保持した。
+2. verifyの結果：初期helper修理は旧447を含む512件成功・修理前57失敗、native7行成功。その後Q114では新7件中6件のREDから519件成功（11.690秒）、lint7.868秒・型2.518秒・仕様ゲート3.812秒・strict0.861秒を確認した。今回S1は旧519と新9の528件中7失敗のREDを保存し、修理後528件成功・skip0（9.262秒）。新native1起動の3suite・3成功行で、false-sourceと派生の差を保ち、top/arrowの両入口拒否・出力なし・raw/台帳不変とcanonical受理を確認した。今回のlint・型・仕様ゲート・strictも成功した。
+3. 確認事項・仮定：Q116は管理役がOpus推奨Aを利用者（ADR 0006 の包括承認）の回答として採用し、局所thisも拒否する影響を記録した。元反例は再実行せず保全し、0行suite errorは成功に数えない。原getTestは旧API偽受理の証拠ではなくtake派生と区別する。tasksは2/21のまま。既存native3件の固定保存先はM3としてIssue258で追跡し、今回増やさない。
+4. 次にやること：管理役が新headの自己レビュー・独立再レビュー・CIと差分容量を確認する。旧headでは3OS品質が成功したが親gateは未完taskで失敗し、今回の新headのCIは未実施。2.7/2.10全体・wiring/C1/oracle・実登録/OS割当・全体doneは未達で、部分修理をマージやchange完成とは扱わない。
