@@ -185,7 +185,8 @@ describe('外部操作の中断と時計窓の補正', () => {
     expect(classifyCall(row())).toMatchObject({ classification: 'operation-limit' });
   });
   it.each([
-    [null, 'spawn-start-unavailable'], [Infinity, 'spawn-start-unavailable'], [50, 'observation-order-invalid'],
+    [null, 'spawn-start-unavailable'], [Infinity, 'spawn-start-unavailable'],
+    [{ valueOf: 0, toString: 0 }, 'spawn-start-unavailable'], [50, 'observation-order-invalid'],
   ] as const)('spawn時計%sの欠測や逆転を未確定にする', (ts, reason) => {
     const actual = classifyCall(row({ spawn: { ts, D: 5100, outcomeKind: 'timeout', invalid: false } }));
     expect(actual.classification).toBe('undetermined'); expect(actual.reasons).toContain(reason);

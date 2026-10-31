@@ -52,7 +52,7 @@ export function classifyCall(row) {
       if (!finite(spawn.ts)) reasons.push('spawn-start-unavailable');
       if (!['normal', 'untilDeadline', 'quality'].includes(row.mode)) reasons.push('mode-unavailable');
       // startedAt→timeLeft の遅れは実測していない。保持役待ちを除く観測窓だけを上限にする。
-      const delayBound = spawn.ts - row.t1 - (row.hw1 - row.hw0);
+      const delayBound = finite(spawn.ts) ? spawn.ts - row.t1 - (row.hw1 - row.hw0) : null;
       if (finite(spawn.ts) && (!finite(delayBound) || delayBound < -1)) reasons.push('observation-order-invalid');
       if (reasons.length === 0) {
         const [lo, hi] = sharedDeadlineIntervalMs;
@@ -157,7 +157,7 @@ export function renderExternalCallSummary(summary) {
     '内部timeoutの厳密値は未取得（null）。観測区間と共有期限区間はsummary.jsonに記録する。',
     '同時上限の可能性がyesなら、1操作上限または明示timeoutが共有期限の窓に重なり得るため、原因を断定しない。',
     '共有期限の窓は、spawn直前までの未観測の遅れの上限（ts−t1−保持役待ち）だけ前へ広げる。窓より前のdeadlineだけを、明示timeoutのないnormalの1操作上限とする。',
-    '保存上限：raw診断は各64KiB（最大128ファイル・512行）。公開calls/summary JSONは各1MiB、summary.mdは256KiB、heartbeat.jsonは2KiB。', ''].join('\n');
+    '保存上限：raw診断は各64KiB（最大128ファイル・合計512行）。公開calls/summary JSONは各1MiB、summary.mdは256KiB、heartbeat.jsonは2KiB。', ''].join('\n');
 }
 
 const publicCallKeys = ['event', 'callId', 'op', 'mode', 'timeoutRequested', 't0', 't1', 'R', 'Rclamped', 'hw0', 'hw1', 'tx', 'spawned', 'spawnCount', 'limitKind', 'result', 'reasonPresent', 'internalTimeoutMs', 'timeoutIntervalMs', 'spawn', 'missingFields', 'classification', 'reasons', 'sharedDeadlineIntervalMs', 'coincidentOperationPossible'];
