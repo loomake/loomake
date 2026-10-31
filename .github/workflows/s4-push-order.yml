@@ -1,0 +1,88 @@
+name: s4-push-order
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/s4-push-order.yml'
+      - 'scripts/s4-push-order.mjs'
+      - 'tests/s4-push-order*.test.ts'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  order:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        id: checkout
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        id: node
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - id: prepare
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { mkdirSync, rmSync } from 'node:fs';
+          import { join } from 'node:path';
+          try {
+            for (const name of ['loomake-s4-order-raw', 'loomake-s4-order']) rmSync(join(process.env.RUNNER_TEMP, name), { recursive: true, force: true });
+            mkdirSync(join(process.env.RUNNER_TEMP, 'loomake-s4-order-raw'));
+            rmSync('.loomake/test-report.json', { force: true });
+          } catch { process.stderr.write('S4 の一時領域を準備できませんでした。\n'); process.exitCode = 1; }
+          NODE
+      - id: test
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { openSync, closeSync } from 'node:fs';
+          import { spawnSync } from 'node:child_process';
+          import { join } from 'node:path';
+          let log;
+          try {
+            log = openSync(join(process.env.RUNNER_TEMP, 'loomake-s4-order-raw', 'test-output.log'), 'wx');
+            const result = spawnSync(process.execPath, ['node_modules/vitest/vitest.mjs', 'run', 'packages/runner/test/external-budget-deadline.test.ts', '-t', 'pushの期限後に先へ進まず'], { stdio: ['ignore', log, log] });
+            process.exitCode = result.status ?? 1;
+          } catch { process.stderr.write('S4 の試験を実行できませんでした。\n'); process.exitCode = 1; }
+          finally { if (log !== undefined) closeSync(log); }
+          NODE
+        env:
+          LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_FILE: ${{ runner.temp }}/loomake-s4-order-raw/context.json
+      - id: collect
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' && steps.node.outcome == 'success' }}
+        run: node scripts/s4-push-order.mjs
+        env:
+          S4_ORDER_RAW_DIR: ${{ runner.temp }}/loomake-s4-order-raw
+          S4_ORDER_OUT_DIR: ${{ runner.temp }}/loomake-s4-order
+          S4_TEST_OUTCOME: ${{ steps.test.outcome }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        id: upload
+        if: ${{ !cancelled() && steps.collect.outputs.verified == 'true' }}
+        with:
+          name: s4-push-order-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/loomake-s4-order/summary.json
+            ${{ runner.temp }}/loomake-s4-order/summary.md
+          retention-days: 7
+          if-no-files-found: error
+      - id: cleanup
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { rmSync } from 'node:fs';
+          import { join } from 'node:path';
+          let failed = false;
+          try { rmSync(join(process.env.RUNNER_TEMP, 'loomake-s4-order-raw'), { recursive: true, force: true }); } catch { failed = true; }
+          try { rmSync('.loomake/test-report.json', { force: true }); } catch { failed = true; }
+          if (failed) { process.stderr.write('S4 の一時領域を削除できませんでした。\n'); process.exitCode = 1; }
+          NODE
