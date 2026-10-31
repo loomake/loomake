@@ -27,14 +27,14 @@ describe('Windowsの区間計測workflow', () => {
     expect(triggers).toContain('  workflow_dispatch:');
     for (const path of ['.github/workflows/profile-slow-tests.yml', 'scripts/test-phase-profile.mjs', 'scripts/ai-journeys.mjs',
       'tests/test-phase-profile*.test.ts', 'tests/ai-journeys.test.ts', 'tests/package-build.setup.ts',
-      'packages/runner/test/external-budget.test.ts', 'docs/dev/test-phase-profiling.md']) expect(triggers).toContain(`'${path}'`);
+      'packages/runner/test/external-budget-deadline.test.ts', 'packages/runner/test/external-budget-helpers.ts', 'docs/dev/test-phase-profiling.md']) expect(triggers).toContain(`'${path}'`);
     expect(workflow).toContain('fail-fast: false');
     expect(workflow.match(/^ {8}sample: (.*)$/m)?.[1]).toBe('[1, 2, 3]');
     expect(workflow).toContain('runs-on: windows-latest');
     expect(stepById('node')).toContain('node-version: 24');
     expect(workflow).toContain('LOOMAKE_TEST_PHASE_PROFILE_DIR: ${{ runner.temp }}/loomake-test-phases');
     expect(workflow).toContain('LOOMAKE_TEST_PHASE_SAMPLE: ${{ matrix.sample }}');
-    expect(stepById('test').match(/^ {8}run: (.*)$/m)?.[1]).toBe("node node_modules/vitest/vitest.mjs run tests/ai-journeys.test.ts packages/runner/test/external-budget.test.ts -t '導入・通常操作・失敗と復旧|(?:create|push)の期限後'");
+    expect(stepById('test').match(/^ {8}run: (.*)$/m)?.[1]).toBe("node node_modules/vitest/vitest.mjs run tests/ai-journeys.test.ts packages/runner/test/external-budget-deadline.test.ts -t '導入・通常操作・失敗と復旧|(?:create|push)の期限後'");
     expect(workflow).not.toMatch(/continue-on-error|--retry|--repeat|--shard|--testTimeout/);
   });
 
