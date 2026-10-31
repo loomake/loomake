@@ -6,7 +6,7 @@ import * as runner from '@loomake/runner';
 import * as trace from '@loomake/trace';
 import { CLI_COMMANDS, SHARED_OPERATIONS, commandDefinition, helpOptions, optionSpec, parseOptions, suggest, traceOperation, type CliCommand } from '../src/args.js';
 import { main } from '../src/main.js';
-import { baselineChanges, currentBaseline, originalBaseline } from './cli-baseline.js';
+import { ORIGINAL_BASELINE_SHA256, applyBaselineChanges, baselineChangeProblems, baselineChanges, currentBaseline, originalBaseline, originalBaselineSha256, type BaselineCase, type BaselineChange } from './cli-baseline.js';
 
 const root = resolve(import.meta.dirname, '../../..');
 // 原本に、改版の change で承認した具体差分を当てた期待値（REQ-324）
@@ -25,18 +25,55 @@ describe('変更前のCLI原本', () => {
   });
 });
 
-it('[REQ-324] 原本は書き換えず、改版の差分は承認元つきで、対象の行だけを変える', () => {
-  const original = originalBaseline();
-  expect(original.source).toContain('8d2d7ce');
-  expect(original.cases).toHaveLength(46);
-  const changes = baselineChanges();
-  expect(changes.map((item) => [item.change, item.requirement])).toEqual([['verify-v2-evidence', 'REQ-040']]);
-  for (const item of changes) expect(item.approval).not.toBe('');
-  const current = currentBaseline();
-  const changed = current.filter((item, index) => JSON.stringify(item) !== JSON.stringify(original.cases[index])).map((item) => item.argv);
-  expect(changed).toEqual([['verify', '--help'], ['verify', '-h'], ['verify', '--change', '--help']]);
-  const line = (text: string) => text.split('\n').find((l) => l.startsWith('  --skip-commands'));
-  expect(line(current[original.cases.findIndex((c) => c.argv.join(' ') === 'verify --help')].stdout[0])).toBe('  --skip-commands     品質コマンドを実行せず、テストのレポートも読まずに、その項目を証拠不足にする（終了コード 1）');
+describe('基準の原本と改版の差分', () => {
+  const sample = (stdout: string[] = ['a\nold\nb']): BaselineCase[] => [{ argv: ['x', '--help'], code: 0, stdout, stderr: [] }];
+  const change = (patch: Partial<BaselineChange> = {}): BaselineChange => ({
+    change: 'c', requirement: 'REQ-040', approval: 'Q-01', reason: 'r', argv: [['x', '--help']], stream: 'stdout', from: 'old', to: 'new', ...patch,
+  });
+
+  it('[REQ-324] 原本は書き換えず（sha256を固定）、改版の差分は承認元つきで、対象の行だけを変える', () => {
+    expect(originalBaselineSha256()).toBe(ORIGINAL_BASELINE_SHA256);
+    const original = originalBaseline();
+    expect(original.source).toContain('8d2d7ce');
+    expect(original.cases).toHaveLength(46);
+    const changes = baselineChanges();
+    expect(baselineChangeProblems(changes)).toEqual([]);
+    const current = currentBaseline();
+    const changed = current.filter((item, index) => JSON.stringify(item) !== JSON.stringify(original.cases[index]));
+    expect(changed.map((item) => item.argv)).toEqual(changes.flatMap((item) => item.argv));
+    for (const item of changed) {
+      const index = current.indexOf(item);
+      const before = original.cases[index].stdout[0].split('\n'), after = item.stdout[0].split('\n');
+      const diff = before.map((line, n) => [line, after[n]]).filter(([a, b]) => a !== b);
+      expect(diff).toEqual(changes.filter((c) => c.argv.some((a) => JSON.stringify(a) === JSON.stringify(item.argv))).map((c) => [c.from, c.to]));
+    }
+  });
+
+  it('[REQ-324] 差分の各欄が空か、change・承認元の回答が trace になければ不正にする', () => {
+    const [real] = baselineChanges();
+    expect(baselineChangeProblems([real])).toEqual([]);
+    for (const key of ['change', 'requirement', 'approval', 'reason', 'from', 'to'] as const) {
+      expect(baselineChangeProblems([{ ...real, [key]: '' }]).join()).toContain(`の ${key} が空です`);
+      const rest: Record<string, unknown> = { ...real };
+      delete rest[key];
+      expect(baselineChangeProblems([rest]).join()).toContain(`の ${key} が空です`);
+    }
+    expect(baselineChangeProblems([{ ...real, change: 'no-such-change' }]).join()).toContain('openspec/changes にありません');
+    expect(baselineChangeProblems([{ ...real, approval: 'S8-99（なし）' }]).join()).toContain('S8-99 の回答が verify-v2-evidence の trace にありません');
+    expect(baselineChangeProblems([{ ...real, stream: 'stderr' as 'stdout' }]).join()).toContain('stream は stdout だけです');
+    expect(baselineChangeProblems([{ ...real, argv: [] }]).join()).toContain('argv が不正です');
+    expect(baselineChangeProblems([{ ...real, to: 'a\nb' }]).join()).toContain('to は 1 行です');
+  });
+
+  it('[REQ-324] 旧文がない・2 行ある・新文がすでにある・出力が 1 回でない・対象の例がないときは差分を当てずに例外にする', () => {
+    expect(applyBaselineChanges(sample(), [change()])[0].stdout).toEqual(['a\nnew\nb']);
+    expect(() => applyBaselineChanges(sample(['a\nb']), [change()])).toThrow('旧文が 1 行だけではありません');
+    expect(() => applyBaselineChanges(sample(['old\nold']), [change()])).toThrow('旧文が 1 行だけではありません');
+    expect(() => applyBaselineChanges(sample(['old\nnew']), [change()])).toThrow('新文がすでにあります');
+    expect(() => applyBaselineChanges(sample(['old', 'x']), [change()])).toThrow('1 回の出力だけに当てます');
+    expect(() => applyBaselineChanges(sample([]), [change()])).toThrow('1 回の出力だけに当てます');
+    expect(() => applyBaselineChanges(sample(), [change({ argv: [['y']] })])).toThrow('対象がありません');
+  });
 });
 
 it('[REQ-324] versionは先頭だけで扱い、その後のhelpをコマンドのhelpとして扱わない', async () => {

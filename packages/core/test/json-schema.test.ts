@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { qualitySchema } from '../src/quality-schema.js';
 import { evidenceSchema, reportSchema } from '../src/trace-schemas.js';
-import { evidenceV2Value, reportValue } from './fixtures/trace-contract-values.js';
+import { evidenceV2Value, evidenceValue, reportValue } from './fixtures/trace-contract-values.js';
 import { createTraceTemplate, parseTrace, parseSpec, parseTasks } from '../src/index.js';
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -84,6 +84,8 @@ describe('JSON Schema の書き出し', () => {
       const verify = registry.getSchema('https://loomake.dev/schema/verify-result.schema.json')!;
       expect(evidence(evidenceV2Value()), JSON.stringify(evidence.errors)).toBe(true);
       expect(verify(evidenceV2Value().verify), JSON.stringify(verify.errors)).toBe(true);
+      // 版付きでない verify-result.schema は現行の 2.0.0 だけを受け、履歴の 1.0.0 を拒む
+      expect(verify(evidenceValue().verify)).toBe(false);
       expect(evidence({ ...evidenceV2Value(), verify: { ...evidenceV2Value().verify, verdict: 1 } })).toBe(false);
     }
   });
