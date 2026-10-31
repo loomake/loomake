@@ -10,7 +10,7 @@
 
 ## 3. CI の組み込み
 
-- [ ] 3.1 `.github/workflows/ci.yml`：macOS・Windows のシャードで一覧を検査し、除外するファイルをテストのステップに渡す。`vitest.config.ts` で受け取る。`.github/workflows/quality-quarantine.yml` を足す。静的検査の試験を足し、[REQ-214] の試験の条件の一覧を直す（REQ-214・REQ-344）
+- [x] 3.1 `.github/workflows/ci.yml`：macOS・Windows のシャードで一覧を検査し、除外するファイルをテストのステップに渡す。`vitest.config.ts` で受け取る。`.github/workflows/quality-quarantine.yml` を足す。静的検査の試験を足し、[REQ-214] の試験の条件の一覧を直す（REQ-214・REQ-344）
 
 ## 4. 心拍
 

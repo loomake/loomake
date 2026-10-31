@@ -66,10 +66,20 @@ jobs:
         run: pnpm lint
       - if: steps.changes.outputs.docs_only != 'true'
         run: pnpm typecheck
-      # 2 つのシャードを合わせて、すべてのテストを実行する
+      # macOS と Windows のシャードでは、隔離一覧（tests/quarantine.json）でその OS に指定したファイルを除く。
+      # 一覧の誤りや期限切れはこのステップで失敗する。ubuntu は一覧を読まない（REQ-214・REQ-344。手順は docs/dev/ci.md）
+      - if: matrix.shard && steps.changes.outputs.docs_only != 'true'
+        id: quarantine
+        run: node scripts/ci-quarantine.mjs --os "$CI_TEST_OS"
+        shell: bash
+        env:
+          CI_TEST_OS: ${{ matrix.os }}
+      # 2 つのシャードと quality-quarantine ワークフローを合わせて、すべてのテストを実行する。除くファイルは vitest.config.ts が受け取る
       - if: matrix.shard && steps.changes.outputs.docs_only != 'true'
         run: pnpm test --shard=${{ matrix.shard }}
         id: test_shard
+        env:
+          LOOMAKE_TEST_QUARANTINE_EXCLUDE: ${{ steps.quarantine.outputs.exclude }}
       # ubuntu ではすべてのテストを 1 回だけ、カバレッジ付きで実行する。カバレッジは閾値（vitest.config.ts）を下回ったら失敗する。1 つの OS で測れば足りる
       - if: ${{ !matrix.shard && steps.changes.outputs.docs_only != 'true' }}
         run: pnpm test --coverage

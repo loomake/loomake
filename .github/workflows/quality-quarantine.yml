@@ -1,0 +1,103 @@
+name: quality-quarantine
+
+# 隔離一覧（tests/quarantine.json）の試験を、一覧の OS ごとにシャードに分けずに実行し、記録を集める（REQ-344・REQ-345）。
+# 試験のジョブは continue-on-error で、失敗しても run の成否に数えない。一覧の誤り・期限切れは plan ジョブで失敗する。
+# ci.yml と同じく、main への push・定期実行と、ci:all-os ラベルの PR で動く。手順は docs/dev/ci.md
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+  push:
+    branches: [main]
+  # ci.yml の定期実行と同じ時刻（18:00 UTC は日本時間の 3:00）
+  schedule:
+    - cron: '0 18 * * *'
+  # 原因の判別のための手動実行。TEMP の向き先と並列度は計測のためだけの一時設定で、既定は変えない（trace の Q-03）
+  workflow_dispatch:
+    inputs:
+      samples:
+        description: 'OS ごとのサンプル数（1〜5）'
+        type: choice
+        options: ['1', '2', '3', '4', '5']
+        default: '3'
+      temp:
+        description: 'Windows の TEMP・TMP の向き先（default は C: のまま、runner-temp は RUNNER_TEMP）'
+        type: choice
+        options: [default, runner-temp]
+        default: default
+      max_workers:
+        description: 'vitest の並列度（default は既定のまま）'
+        type: choice
+        options: [default, '1']
+        default: default
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-quarantine-${{ github.event_name }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  plan:
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci:all-os')
+    runs-on: ubuntu-latest
+    outputs:
+      has_entries: ${{ steps.plan.outputs.has_entries }}
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - id: plan
+        run: node scripts/ci-quarantine.mjs --matrix --samples "$SAMPLES"
+        shell: bash
+        env:
+          SAMPLES: ${{ inputs.samples || '1' }}
+
+  quality-quarantine:
+    needs: plan
+    if: needs.plan.outputs.has_entries == 'true'
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        id: checkout
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - run: git rev-parse --verify main || git branch main origin/main
+        shell: bash
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        id: node
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # 計測のための一時設定。手動実行で runner-temp を選んだ Windows のときだけ TEMP・TMP を RUNNER_TEMP に向ける
+      - if: runner.os == 'Windows' && inputs.temp == 'runner-temp'
+        run: |
+          echo "TEMP=$RUNNER_TEMP" >> "$GITHUB_ENV"
+          echo "TMP=$RUNNER_TEMP" >> "$GITHUB_ENV"
+        shell: bash
+      - id: test
+        run: pnpm test $QUARANTINE_FILES $WORKERS
+        shell: bash
+        env:
+          QUARANTINE_FILES: ${{ matrix.files }}
+          WORKERS: ${{ inputs.max_workers == '1' && '--maxWorkers=1' || '' }}
+          LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR: ${{ runner.temp }}/loomake-quarantine/processes
+          LOOMAKE_TEST_PHASE_PROFILE_DIR: ${{ runner.temp }}/loomake-quarantine/phases
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        id: upload
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' && steps.node.outcome == 'success' }}
+        with:
+          name: quality-quarantine-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.os }}-${{ matrix.sample }}
+          path: |
+            ${{ runner.temp }}/loomake-quarantine/
+            .loomake/test-report.json
+          retention-days: 7
+          if-no-files-found: warn
