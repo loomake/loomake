@@ -3,7 +3,7 @@ export { runVerify, INTERRUPTED, TIMED_OUT } from './verify/run.js';
 export type { VerifyOptions } from './verify/run.js';
 export { CHANGE_ID, KNOWN_CONFIG_KEYS, assertChangeId, loadConfig, RuntimeFailure, UsageError, DEFAULT_TEST_REPORT } from './verify/config.js';
 export type { LoomakeConfig } from './verify/config.js';
-export { formatVerifyResult } from './verify/format.js';
+export { formatVerifyResult, isAbortedResult, isVerifyResultV2 } from './verify/format.js';
 export { runInit, initFiles, configJson, availableCommands, detectPackageManager } from './init/init.js';
 export { findChangeDir, specFiles, toPosix } from './runtime/change-files.js';
 export type { InitOptions, InitFile, PackageManager } from './init/init.js';

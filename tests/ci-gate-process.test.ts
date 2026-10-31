@@ -366,3 +366,29 @@ describe('実際のCIゲートの子プロセスの契約', () => {
     });
   });
 });
+
+describe('完了ゲートの JSON を合格として受け入れるか', () => {
+  const ci = (patch: Record<string, unknown> = {}) => ({
+    schemaVersion: '2.0.0', change: 'c1', run: { status: 'completed', errors: [] }, scope: 'ci',
+    checks: [{ id: 'command: test', result: 'PASS', reason: '', evidence: [] }],
+    summary: { fail: 0, insufficient: 0, not_applicable: 0, evaluated: 1 }, decision: { required: false, reasons: [] }, verdict: 'PASS', ...patch,
+  });
+  it('2.0.0 は ci・completed・要判断なし・PASS・終了コード 0 だけを受け入れ、local・partial・要判断・不足・aborted を受け入れない。1.0.0 はこれまでどおり受け入れる', async () => {
+    const { ciGateProblem } = await import('../scripts/ci-gate.mjs');
+    const ok = (value: unknown, code = 0) => ciGateProblem(JSON.stringify(value), code);
+    expect(ok(ci())).toBeUndefined();
+    expect(ok(ci(), 1)).toMatch(/終了コードが 0 ではありません/);
+    expect(ok({ ...ci(), scope: 'local', verdict: undefined })).toMatch(/scope が ci ではありません/);
+    expect(ok(ci({ run: { status: 'partial', errors: [{ kind: 'runtime', target: 'x', message: 'y', next: 'z' }] } }))).toMatch(/一部の証拠を取得できませんでした/);
+    expect(ok(ci({ decision: { required: true, reasons: [] } }))).toMatch(/人の判断が必要です/);
+    expect(ok(ci({ verdict: 'INSUFFICIENT_EVIDENCE' }))).toMatch(/verdict が PASS ではありません/);
+    expect(ok(ci({ checks: [{ id: '品質コマンド', result: 'INSUFFICIENT_EVIDENCE', reason: 'skip', evidence: [] }] }))).toMatch(/証拠不足の検査があります（品質コマンド）/);
+    expect(ok({ schemaVersion: '2.0.0', change: 'c1', run: { status: 'aborted', errors: [{ kind: 'config', target: 'c1', message: '不正', next: '直す' }] } })).toMatch(/実行エラーで中止されました/);
+    expect(ok({ schemaVersion: '3.0.0' })).toMatch(/版に対応していません/);
+    expect(ciGateProblem('not json', 0)).toMatch(/JSON として読めません/);
+    const legacy = { schemaVersion: '1.0.0', mode: 'done', change: 'c1', ok: true, results: [{ check: 'command: test', status: 'pass', detail: '' }] };
+    expect(ok(legacy)).toBeUndefined();
+    expect(ok({ ...legacy, ok: false })).toMatch(/1\.0\.0）が合格ではありません/);
+    expect(ok(legacy, 1)).toMatch(/終了コードが 0 ではありません/);
+  });
+});

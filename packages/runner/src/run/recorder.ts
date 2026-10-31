@@ -1,5 +1,5 @@
 // 実行の記録（summary.json・stop.json）と、終わったときの表示
-import { holderWaitTime } from '@loomake/kit';
+import { holderWaitTime, isAbortedResult, isVerifyResultV2, verifyExitCode } from '@loomake/kit';
 import { maskSecrets } from '../mask.js';
 import { createLogStore } from '../logs.js';
 import { LogQuotaError } from '../log-policy.js';
@@ -27,13 +27,17 @@ export function startRecording(ctx: RunContext): Recorder {
     save: (name, text) => store.save(name, text),
     finish: (status, reason, remaining) => {
       const { lastVerify } = rec;
+      // RunSummary の外形は変えない。2.0.0 では ok を scope:local の完了とし、mode は完了ゲート（REQ-205）
+      const v2 = lastVerify && isVerifyResultV2(lastVerify) ? lastVerify : undefined;
+      const localDone = Boolean(v2 && !isAbortedResult(v2) && v2.scope === 'local' && verifyExitCode(v2) === 0);
+      const verified = lastVerify && (v2 ? { ok: localDone, mode: 'done' } : { ok: (lastVerify as { ok: boolean }).ok, mode: (lastVerify as { mode: string }).mode });
       const summary: RunSummary = {
         change: changeId,
         status,
         reason,
         doneTasks: rec.done,
         remainingTasks: remaining.map(taskLabel),
-        lastVerify: lastVerify && { ok: lastVerify.ok, mode: lastVerify.mode },
+        lastVerify: verified,
       };
       let recordingError: string | undefined;
       let saved: 'summary.json' | 'stop.json' | undefined = 'summary.json';
@@ -54,7 +58,7 @@ export function startRecording(ctx: RunContext): Recorder {
           status === 'completed' && !recordingError ? `loomake run を終えました：${reason}` : `loomake run を止めました：${recordingError ? short(reason) : reason}`,
           `終えたタスク：${recordingError ? `${summary.doneTasks.length} 件（一覧は tasks.md を確認してください）` : list(summary.doneTasks)}`,
           `残ったタスク：${recordingError ? `${summary.remainingTasks.length} 件（一覧は tasks.md を確認してください）` : list(summary.remainingTasks)}`,
-          `最後の検査結果：${lastVerify ? (lastVerify.ok ? '合格' : '不合格') : 'なし'}`,
+          `最後の検査結果：${!verified ? 'なし' : !verified.ok ? '不合格' : v2 ? 'ローカルの項目はすべて完了（CI の最終合格は未確認）' : '合格'}`,
           ...(recordingError ? [`記録を保存できません：${recordingError}`] : []),
           saved === 'summary.json' ? `記録：${RUNS_DIR}/${runId}/` : saved === 'stop.json' ? `停止情報：${RUNS_DIR}/${runId}/stop.json` : `保存先を確認してください：${RUNS_DIR}/${runId}/`,
         ].join('\n'),
