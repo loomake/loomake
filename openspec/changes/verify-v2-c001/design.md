@@ -6,13 +6,13 @@ branch作成時の基準はmain `f397109`、製品調査の基準はmain `f4e3ed
 
 共有品質4値と純粋集約はPR #138で受入済み。#60の未知フィールド保持修正（REQ-307）はbranch作成時には未受入と記録したが、PR #140・#141で修正と仕様反映・archiveを受け入れ、現在はclose済みでmain `f4e3edb`に含まれる。当時の仕様照合基準は通常mergeで取り込んだmain `d5aa30d7a9326be44ea4eac5145b5fa95529efce`。PR #155でCLI/URL両changeの同期/archiveも受入済みである。R01/02/03/04/07/09/10はA承認済みで、[追加回答](https://github.com/loomake/loomake/pull/139#issuecomment-6511434324)によるR05 A・R06 A・R08 Bも回答済みである。これらを現在の未回答による停止理由とせず、親1.2の残確認と1.3のS1具体化・独立受入を進める。既存の事前工数推定 `docs/effort/c-001.md` は変更しない。
 
-追加の全A案は[design-candidate-a.md](design-candidate-a.md)へ分離した。同文書は当初7件の承認と残る3件もAとした比較資料であり、旧候補として保持する。現在の計画はR05 A・R06 A・R08 Bを適用し、R08 Aだけに依存する候補は採用しない。S1の具体設計・実装・独立受入の完了を、この方針承認から推定しない。
+[design-candidate-a.md](design-candidate-a.md)は承認済み決定に基づくS1/S2の設計詳細であり、R03/04/07 AとR05 A・R06 A・R08 B、旧作業木で採用済みの補足R11〜13等、未実装の技術候補を区別して参照する。当時の全A比較だけを履歴として扱い、R08 Aだけに依存する候補は採用しない。承認済みR04 Aの最小適格性・固定基準・基準側controller・private handoffと独立S1準備の義務を保持し、独立changeの通常done 0と同期/archiveを経てS2へ進む。これらの採用事実と、規範への残反映・S1の具体設計・実装・独立受入の完了は区別する。
 
 ## Goals / Non-Goals
 
 C-001の正常・不正・不足の区別と自己完了ゲートを維持したまま、公開側・利用側を一体で移す。既存の合意・タスク・要件ID対応・入力予算・コマンド実行予算・中断・文書hash・追記保存を保持する。
 
-C-003へ残る全providerの取得、完全なhost隔離、広いCI成果物・再利用連鎖、最小接続以外のpartial経路と禁止フィールドの網羅試験を、この計画だけで完成扱いにしない。A案の最小接続自体の適格性・実施確認と必要なpartial分類はC-001内で成立させる候補とする。成功経路のためC-001へ先行させる最小取得範囲はR-C001-03で決める。未接続のsource/metric、参考指標、古い結果はPASSへ上げない。31副特性init、eval・telemetry・履歴の長期保管、runnerのCI取得とready化全体は範囲外。
+C-003へ残る全providerの取得、完全なhost隔離、広いCI成果物・再利用連鎖、最小接続以外のpartial経路と禁止フィールドの網羅試験を、この計画だけで完成扱いにしない。承認済みR03/04 Aの最小接続自体の適格性・実施確認と必要なpartial分類はC-001内で成立させる。成功経路のためC-001へ先行させる最小取得範囲はR-C001-03 Aで承認済みである。未接続のsource/metric、参考指標、古い結果はPASSへ上げない。31副特性init、eval・telemetry・履歴の長期保管、runnerのCI取得とready化全体は範囲外。
 
 ## Decisions
 
@@ -34,11 +34,11 @@ kitの `runVerify(options)` の名前と同期実行は維持し、戻り値を2
 
 ### 3. 実証跡と正常PASSの停止点
 
-実装範囲を不足拒否だけへ狭めない。全A案のsourceは `ci.test_report`、metricは `required_subjects_with_failed_tests`、初期target `== 0`はR03/04/07 Aの承認を反映した。source/metric、計画のversion・required_by・承認済みspec/REQ集合、producer/versionと実効method、対象SHA・環境・同一invocationの鮮度を[詳細候補](design-candidate-a.md)に示す。既存のqualityスキーマにrequired_byや適格性の意味が実装済みとは扱わない。
+実装範囲を不足拒否だけへ狭めない。承認済みR03/04/07 Aのsourceは `ci.test_report`、metricは `required_subjects_with_failed_tests`、初期target `== 0`はR03/04/07 Aの承認を反映した。source/metric、計画のversion・required_by・承認済みspec/REQ集合、producer/versionと実効method、対象SHA・環境・同一invocationの鮮度を[設計詳細](design-candidate-a.md)に示す。既存のqualityスキーマにrequired_byや適格性の意味が実装済みとは扱わない。
 
 有効な実施failedと、missing・skip・todo・未取得・未照合を分ける。比較は既存5演算子を保ち、未完の集計値や暫定0からFAIL/PASSを作らない。適格な実施違反が確立したときだけFAILを優先する。gateのPASSで品質対象0・全NA・証拠空がPASSにならないよう、REQ-314の品質対象専用guardを全checksの件数に含める案を具体化する。
 
-S1の信頼するbase-built checkerを準備し、S2のCLI/APIはその判定moduleを直接load/callする候補とする。locator/env・祖先関係・handoff内の自己申告hashでは信頼を与えない。独立したS1承認と基準側由来のexpected anchorを照合し、独立したfresh Tを権威としてtarget Sとの一致を検査する。S/Tはtrusted coreのexact `2.0.0`スキーマで解析する。採用済みR-C001-06 AではローカルDoDの `pnpm -s verify --change verify-v2-c001 --done --scope local` と、最終CIの `--done --scope ci` によるPASS・要判断なし・exit 0を両方要求する。local 0や独立checkerだけでは最終CIを代替しない。比較時のBは既定doneで同じci条件をローカルにも要求する案だった。
+承認済みR04 Aに従いS1の信頼するbase-built checkerを準備し、S2のCLI/APIはその判定moduleを直接load/callする。locator/env・祖先関係・handoff内の自己申告hashでは信頼を与えない。独立したS1承認と基準側由来のexpected anchorを照合し、独立したfresh Tを権威としてtarget Sとの一致を検査する。S/Tはtrusted coreのexact `2.0.0`スキーマで解析する。採用済みR-C001-06 AではローカルDoDの `pnpm -s verify --change verify-v2-c001 --done --scope local` と、最終CIの `--done --scope ci` によるPASS・要判断なし・exit 0を両方要求する。local 0や独立checkerだけでは最終CIを代替しない。比較時のBは既定doneで同じci条件をローカルにも要求する案だった。
 
 source/metric・verification.yaml・producer mappingのR03 Aと、S1準備/private handoffのR04 Aは明示承認された。R05 A・R06 A・R08 Bも回答済みであり、残る具体assertion差分の承認と仕様ゲートexit 0を確認して実装する。正常PASS・元のDoDを削らない。required-checkや公開・権限設定の操作は、実装・検証後の具体対象について個別承認を得るまで行わない。
 
