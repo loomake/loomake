@@ -208,9 +208,10 @@ export function observeSpawnSync(cp: Pick<typeof import('node:child_process'), '
     if (!process.env.LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR || command !== process.execPath || !Array.isArray(argv) || !argv[0]?.endsWith('supervisor.cjs')) {
       return cp.spawnSync(...args);
     }
-    const ts = mono();
+    let ts: number | null = null; let te: number | null = null;
+    try { ts = finite(mono()); } catch { /* 観測時計の不足でも元spawnを呼ぶ。 */ }
     const result = cp.spawnSync(...args);
-    const te = mono();
+    try { te = finite(mono()); } catch { /* 返値はそのまま通す。 */ }
     try {
       let D: number | null = null; let hold: SpawnObservation['hold'] = null;
       try {

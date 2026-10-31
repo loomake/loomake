@@ -233,10 +233,18 @@ export function exportExternalDiagnostics(directory, reportFile, output) {
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const directory = resolve(process.argv[2] ?? '.loomake/hook-budget/processes');
   const reportFile = resolve(process.argv[3] ?? '.loomake/test-report.json');
-  const output = join(directory, '..');
-  const summary = collectExternalCalls(directory, reportFile);
-  try { mkdirSync(output, { recursive: true }); writeFileSync(join(output, 'summary.json'), JSON.stringify(summary, null, 2) + '\n'); writeFileSync(join(output, 'summary.md'), renderExternalCallSummary(summary));
-    if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, renderExternalCallSummary(summary));
-  } catch { /* 集計保存失敗は試験結果を変更しない。 */ }
-  process.exitCode = summary.selector === 'matched' ? 0 : 1;
+  if (process.argv[4] === '--public-export' && process.argv[5]) {
+    try {
+      const payload = exportExternalDiagnostics(directory, reportFile, resolve(process.argv[5]));
+      if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, 'export_validated=true\n');
+      if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, payload.markdown);
+      process.exitCode = payload.summary.selector === 'matched' ? 0 : 1;
+    } catch { console.error('公開用の診断ファイルを作れません。入力・保存先・固定schemaを確認してください。'); process.exitCode = 1; }
+  } else {
+    const output = join(directory, '..');
+    const summary = collectExternalCalls(directory, reportFile);
+    try { mkdirSync(output, { recursive: true }); writeFileSync(join(output, 'summary.json'), JSON.stringify(summary, null, 2) + '\n'); writeFileSync(join(output, 'summary.md'), renderExternalCallSummary(summary)); }
+    catch { /* ローカル集計の保存失敗は試験結果を変更しない。 */ }
+    process.exitCode = summary.selector === 'matched' ? 0 : 1;
+  }
 }

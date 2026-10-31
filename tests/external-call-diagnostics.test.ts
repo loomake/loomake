@@ -117,4 +117,29 @@ describe('外部操作診断の分類と欠損', () => {
     expect(payload.heartbeat.available).toBe(false);
   });
 
+  it('公開CLIだけが検査済みmarkdownをStep Summaryへ出し、ローカル集計は投稿しない', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'loomake-public-cli-'));
+    try {
+      const processes = join(dir, 'processes'); mkdirSync(processes);
+      const reportFile = join(dir, 'report.json'); writeFileSync(reportFile, JSON.stringify(report));
+      writeFileSync(join(processes, 'calls.1.a.jsonl'), JSON.stringify(row({ callId: '987654321-1' })) + '\n');
+      const githubSummary = join(dir, 'step-summary.md'); writeFileSync(githubSummary, 'before\n');
+      const script = join(import.meta.dirname, '../scripts/external-call-diagnostics.mjs');
+      const githubOutput = join(dir, 'step-output.txt');
+      const env = { ...process.env, GITHUB_STEP_SUMMARY: githubSummary, GITHUB_OUTPUT: githubOutput };
+      expect(spawnSync(process.execPath, [script, processes, reportFile], { env }).status).toBe(0);
+      expect(readFileSync(githubSummary, 'utf8')).toBe('before\n');
+      const output = join(dir, 'public-export');
+      expect(spawnSync(process.execPath, [script, processes, reportFile, '--public-export', output], { env }).status).toBe(0);
+      expect(readFileSync(githubSummary, 'utf8')).toBe('before\n' + readFileSync(join(output, 'summary.md'), 'utf8'));
+      expect(readFileSync(githubSummary, 'utf8')).not.toContain('987654321');
+      expect(readFileSync(githubOutput, 'utf8')).toBe('export_validated=true\n');
+      writeFileSync(reportFile, '{}');
+      const missing = join(dir, 'selector-mismatch-export');
+      expect(spawnSync(process.execPath, [script, processes, reportFile, '--public-export', missing], { env }).status).toBe(1);
+      expect(readFileSync(githubOutput, 'utf8')).toBe('export_validated=true\nexport_validated=true\n');
+      expect(JSON.parse(readFileSync(join(missing, 'summary.json'), 'utf8')).selector).toBe('selector-mismatch');
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+
 });

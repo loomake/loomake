@@ -23,7 +23,7 @@ function directory() { const dir = mkdtempSync(join(tmpdir(), 'loomake-call-diag
 function records(dir: string): Record<string, unknown>[] {
   return readdirSync(dir).filter((f) => f.startsWith('calls.')).flatMap((f) => readFileSync(join(dir, f), 'utf8').trim().split('\n').filter(Boolean).map((line) => JSON.parse(line)));
 }
-afterEach(() => { vi.unstubAllEnvs(); for (const dir of directories.splice(0)) rmSync(dir, { recursive: true, force: true }); });
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllEnvs(); for (const dir of directories.splice(0)) rmSync(dir, { recursive: true, force: true }); });
 
 describe('外部操作の試験用観測', () => {
   it.each([false, true])('観測設定%sでも引数・返値・throwを同じまま一度だけ通す', (enabled) => {
@@ -58,6 +58,17 @@ describe('外部操作の試験用観測', () => {
     expect(observeSpawnSync(cp)('node', args, options)).toBe(value);
     expect(calls).toEqual([['node', args, options]]); expect(calls[0][1]).toBe(args); expect(calls[0][2]).toBe(options);
     expect(records(dir)).toEqual([]);
+  });
+
+  it('観測時計を読めなくても元spawnの返値を維持する', () => {
+    const dir = directory(); vi.stubEnv('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR', dir);
+    const value = { pid: 1, status: 0, signal: null, output: [null, null, null], stdout: Buffer.alloc(0), stderr: Buffer.alloc(0) };
+    let calls = 0;
+    const fn = (() => { calls++; return value; }) as unknown as typeof import('node:child_process').spawnSync;
+    vi.spyOn(process.hrtime, 'bigint').mockImplementation(() => { throw new Error('diagnostic clock unavailable'); });
+    const result = observeSpawnSync({ spawnSync: fn })(process.execPath, ['supervisor.cjs', '[]']);
+    expect(result).toBe(value); expect(calls).toBe(1);
+    expect(records(dir)[0]).toMatchObject({ event: 'spawn', spawn: { ts: null, te: null } });
   });
 
   it('保存先が使えなくても元の返値と例外を変えない', () => {
