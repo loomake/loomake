@@ -4,7 +4,7 @@
 
 ## docs/guide/2.guides/1.for-agents.md:85-97
 
-```markdown
+````markdown
 
    要件 ID は `specs/<capability>/spec.md` の各 Requirement にある `Source: REQ-xxx` 行で分かる
 
@@ -18,11 +18,11 @@
 
 <a id="guide-fix-verify-failure" name="guide-fix-verify-failure"></a>
 
-```
+````
 
 ## docs/guide/2.guides/1.for-agents.md:158-167
 
-```markdown
+````markdown
 
 ```
 openspec/changes/add-order-export の tasks.md を順に実装して。AGENTS.md に従って、タスクごとにコミット。
@@ -33,11 +33,11 @@ npx loomake verify --change add-order-export --done を通して。落ちた検�
 ```
 
 この文書は Loomake のリポジトリにあり、`loomake init` は利用者のプロジェクトに置かない。エージェントに読ませるときは、この文書の URL を渡す。
-```
+````
 
 ## docs/guide/1.getting-started/2.usage.md:205-220
 
-```markdown
+````markdown
 - 仕様に無い振る舞いが必要になると、止まって質問する。答えるか、仕様を直すかを選ぶ
 - テストを弱める、skip する、設定を緩めるといった変更は、人の承認なしにはしない
 - テスト名に要件 ID を入れる：`it('[REQ-012] 未ログインのとき 401 を返す', ...)`。1 つのテストで複数の要件を確かめるときは `[REQ-012][REQ-013]` と並べる。`describe` の名前に入れてもよい
@@ -54,11 +54,11 @@ npx loomake verify --change <change-id> --done
 - 確認待ちの要件が残っていない
 - `loomake.config.json` の品質コマンド（lint・typecheck・test）がすべて成功する
 - 仕様で参照されている要件 ID ごとに、名前にその ID を含むテストが 1 つ以上あり、実際に成功している。skip したテストや、実行されなかったテストは数えない
-```
+````
 
 ## docs/guide/1.getting-started/1.quickstart.md:59-74
 
-```markdown
+````markdown
 | 手順 | 誰が | すること |
 |---|---|---|
 | ① change を作る | AI | 「req-to-openspec スキルで docs/requirements/order-v1.0.md を change にして」と頼む。分割案に合意すると `openspec/changes/<change-id>/` ができる |
@@ -75,4 +75,4 @@ npx loomake verify --change <change-id> --done
 
 完了ゲートは要件 ID を名前に含む**成功した**テストがあるかを、要件ごとに確かめる。skip したテストや失敗したテストは数えない。
 
-```
+````
