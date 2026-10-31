@@ -171,3 +171,10 @@ G-Q1/2/3/5/7とH-Qの採否はdesign10へ集約した。旧表示連結/stdout�
 | W-GIT-02 | REQ-109・REQ-180 | literal群の呼出観測をどう移行するか | a：子envで選択し検査強化／b：旧flag選択を維持 | a。数値期待と検査強度を保持 | yes | a。本体技術採用。26/28/8192+152期待は不変、全群の先頭diff/flag不在と残2件のadd/name-status diffを追加確認。期待値緩和ではない | 本体root（技術採用） | 2026-10-31 |
 | W-GIT-03 | REQ-137・REQ-138 | flag/envの等価性をどう確認するか | 公式と実Git／Git sourceを新規取得 | 公式と実Git。正負を実証 | yes | 本体技術採用。公式等価記述とW2でGLOB/ICASE衝突、NOGLOB、既存LITERAL=0、元env不変を確認する | 本体root（技術採用） | 2026-10-31 |
 | W-GIT-04 | REQ-297 | push試験へdiff転送assertを追加するか | 追加しないでCI診断／追加する | 追加なし。既存試験を保持 | yes | 本体技術採用。external-budgetは変更せず、diffのshim/転送成功がpush停止前にあることを本体がCIで確認する。実3OSは未達 | 本体root（技術採用） | 2026-10-31 |
+
+
+## S4 の段階受入を S2 へ記録（2026-11-01）
+
+管理役は指定統合先へ受け入れた [PR #261](https://github.com/loomake/loomake/pull/261) の同 head の全 3 OS・専用 Windows・独立レビューと gate の実出力を確認した。S2 で task 3.5 の受入を記録し、既存 S2 の 6 task と合わせて 12 済・7 未とする。task 本文・配分・全仕様・実 0/4・P6・最終受入は維持する。
+
+運用には main へ反映済みの [採用 ADR 0006](https://github.com/loomake/loomake/blob/620550a26fc39dff92b19d1d5289ab7742b85f88/docs/adr/0006-standing-approval-for-autonomous-delivery.md) を使う。この stage の古い規約ファイルを採用版へ更新したとは扱わず、main の製品差分も取り込んでいない。
