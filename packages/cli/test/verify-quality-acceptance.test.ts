@@ -1,8 +1,9 @@
 // C-001 の 5/6 の受入（REQ-319）。git の一時リポジトリで実際の Vitest を動かし、同じ CLI と関数 API の結果を比べる。
 // 成功例に手書きの ok:true や適格の印を使わず、Vitest が書き出したレポートと verify が集めた事実だけで判定させる
 import { describe, it, expect, vi } from 'vitest';
-import { chmodSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { loadVerifyResultSchemas, type VerifyResult } from '@loomake/core';
 import { loadVerifyQualitySchema, runVerify, verifyExitCode } from '@loomake/kit';
 import { main } from '../src/main.js';
@@ -125,6 +126,26 @@ describe('C-001 の成功経路と不足拒否', () => {
         expect(resultOf(result, 'quality:PQ-900')).toBe('INSUFFICIENT_EVIDENCE');
       }
     });
+  });
+
+  it('[REQ-359][REQ-319] CLI and API reject an outside runner despite a fresh successful test report', async () => {
+    const base = mkdtempSync(join(tmpdir(), 'loomake-outside-runner-'));
+    try {
+      mkdirSync(join(base, 'node_modules', 'vitest'), { recursive: true });
+      // Negative-only sentinel: it must never provide admissible evidence.
+      writeFileSync(join(base, 'node_modules', 'vitest', 'package.json'), JSON.stringify({ name: 'vitest', version: '9.9.9' }));
+      await withProject({ ...vitestProject, quality: true, base }, async (root) => {
+        rmSync(join(root, 'node_modules', 'vitest'), { recursive: true, force: true });
+        for (const { code, result } of [api(root), await cli(root, '--done')]) {
+          expect(code, JSON.stringify(result)).toBe(1);
+          expect(verdictOf(result)).toBe('INSUFFICIENT_EVIDENCE');
+          expect(resultOf(result, 'command: test')).toBe('PASS');
+          expect(resultOf(result, 'quality:PQ-900')).toBe('INSUFFICIENT_EVIDENCE');
+        }
+      });
+    } finally {
+      rmSync(base, { recursive: true, force: true });
+    }
   });
 
   it('[REQ-319] 正常に実行したあとで対象のコミットや必須の仕様を変え、前回の成功のレポートだけを置いても、ci の PASS を返さない', async () => {
