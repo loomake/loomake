@@ -120,7 +120,7 @@ process: <工程ごとの状態（実施済み／未実施／再利用／省略�
 integration-target: <明示承認された統合先ブランチ名>
 stage-approval: <採用済み ADR・利用者の承認元・日付・対象分割計画>
 expected-nonpass: <実行前に宣言した検査 ID・REQ ID・残タスク ID・不足理由>
-actual-nonpass: <gate 全出力の証跡と実際の同じ集合・理由。対象 change の ciGateProblem 由来だけか確認>
+actual-nonpass: <gate 全出力の証跡と実際の同じ集合・理由。対象 change の ciGateProblem 由来だけか確認。verify の実終了コードの証跡元。gate に出ない場合は ADR の同じ head・scope ci の直接実行の stdout/stderr・JSON・実終了コードと全条件照合>
 remaining: <残タスク・要件・実観測・最終受入。親/change は未完了>
 ```
 
