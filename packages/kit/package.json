@@ -43,6 +43,7 @@
     "build": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
-    "@loomake/core": "workspace:*"
+    "@loomake/core": "workspace:*",
+    "yaml": "^2.9.1"
   }
 }

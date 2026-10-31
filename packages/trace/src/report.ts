@@ -1,10 +1,11 @@
 import { join, relative, resolve } from 'node:path';
 import { parseSpec, parseTrace, REPORT_SCHEMA_VERSION } from '@loomake/core';
-import type { Report, ReportRow } from '@loomake/core';
+import type { EvidenceV2, LegacyEvidence, Report, ReportRow } from '@loomake/core';
 import { UsageError, assertChangeId, loadConfig, findChangeDir, toPosix, createInputReader, JSON_LIMITS, type InputReader } from '@loomake/kit';
 import { EVIDENCE_DIR, EVIDENCE_SCHEMA_VERSION, type Evidence } from './record.js';
 import { changedDocuments, readDocuments, type EvidenceDocument } from './documents.js';
 import { evidenceProblem } from './evidence.js';
+import { projectEvidence } from './projection.js';
 
 export { REPORT_SCHEMA_VERSION } from '@loomake/core';
 export type { Report, ReportRow } from '@loomake/core';
@@ -156,6 +157,17 @@ export function buildReport(root: string, changeId: string): Report | undefined 
 
   const evidence = latestEvidence(root, join(root, EVIDENCE_DIR, changeId), changeId, reader);
   if (!evidence) return undefined;
+  return reportFromEvidence(changeDir, changeId, evidence);
+}
+
+/**
+ * 読んだ証拠の記録と、それに保存した trace.md・差分仕様から、レポートの中身を作る。
+ * 証拠は版ごとに projectEvidence で Report 2 の欄へ投影する（REQ-316）。writing は書き出しの証拠の版
+ */
+export function reportFromEvidence(
+  changeDir: string, changeId: string, evidence: LegacyEvidence | EvidenceV2, writing: number = EVIDENCE_SCHEMA_VERSION,
+): Report {
+  const projection = projectEvidence(evidence, writing);
 
   // 表は記録に保存した文書から作る。いまの文書は、記録のあとで変わったかを示すためだけに読む（REQ-070・REQ-129）。
   // 文書のない古い記録では、いまの文書を使い、仕様との対応は未確認と示す（REQ-130）
@@ -174,7 +186,7 @@ export function buildReport(root: string, changeId: string): Report | undefined 
     const spec = parseSpec(d.path, d.content);
     for (const r of spec.value) for (const id of r.sources) requirementsOf.set(id, [...(requirementsOf.get(id) ?? []), r.name]);
   }
-  const coverage = evidence.verify.coverage ?? {};
+  const coverage = projection.coverage;
 
   // 同じ入力からは同じレポートになるよう、行は REQ の番号順に並べる（REQ-085）
   const rows: ReportRow[] = [...parsed.value.ledger]
@@ -208,6 +220,7 @@ export function buildReport(root: string, changeId: string): Report | undefined 
   }));
   // 回答や承認があるのに、誰がいつ決めたかが空の行を警告する（REQ-079）
   const warnings = [
+    ...projection.warnings,
     ...questions
       .filter((q) => q.answer)
       .flatMap((q) => [!q.answeredBy && `${q.id}：回答者が空です`, !q.answeredAt && `${q.id}：回答日が空です`]),
@@ -219,12 +232,12 @@ export function buildReport(root: string, changeId: string): Report | undefined 
   return {
     schemaVersion: REPORT_SCHEMA_VERSION,
     change: changeId,
-    evidence: { recordedAt: evidence.recordedAt, sha: evidence.sha, committedAt: evidence.committedAt, ok: evidence.verify.ok, documents: saved },
+    evidence: { recordedAt: evidence.recordedAt, sha: evidence.sha, committedAt: evidence.committedAt, ok: projection.ok, documents: saved },
     attention: {
       noPassingTests: rows.filter((r) => r.result === '合格したテストなし').map((r) => r.id),
       pending: rows.filter((r) => r.state === '確認待ち').map((r) => r.id),
       changedDocuments: saved ? changedDocuments(documents, current) : [],
-      failedChecks: evidence.verify.results.filter((r) => r.status === 'fail').map((r) => r.check),
+      failedChecks: projection.failedChecks,
     },
     rows,
     questions,

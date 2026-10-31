@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: verify 結果の Zod スキーマと型の導出
-core は verify 結果の形を Zod スキーマで定義し、公開する SHALL。`VerifyResult`・`VerifyCheckResult`・`VerifyMode` の型はそのスキーマから導出する MUST。同じ形を手書きの型で別に定義してはならない MUST NOT。現在の書き出しは `schemaVersion: 2.0.0` とする SHALL。1.0.0の必須プロパティ・mode・status・coverageを受け付ける履歴専用スキーマと導出型も別名で公開し、現在の合格判定には使わない MUST。
+core は verify 結果の形を Zod スキーマで定義し、公開する SHALL。`VerifyResult`・`VerifyCheckResult`・`VerifyMode` の型はそのスキーマから導出する MUST。同じ形を手書きの型で別に定義してはならない MUST NOT。現行の`schemaVersion: 2.0.0`の形を公開する SHALL。1.0.0の必須プロパティ・mode・status・coverageを受け付ける履歴専用スキーマと導出型も別名で公開し、現在の合格判定には使わない MUST。
 
 Source: REQ-274
 

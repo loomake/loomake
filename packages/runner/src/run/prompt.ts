@@ -1,14 +1,14 @@
 // エンジンへの指示の組み立て
 import { existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { type VerifyResult } from '@loomake/core';
+import { type LegacyVerifyResult, type VerifyResult } from '@loomake/core';
 import { UsageError, formatVerifyResult, createInputReader, DOCUMENT_LIMITS, specFiles, toPosix } from '@loomake/kit';
 
 
 export { toPosix } from '@loomake/kit';
 
 /** エンジンへの指示（REQ-098） */
-export function buildPrompt(root: string, changeDir: string, target: string, failure?: VerifyResult): string {
+export function buildPrompt(root: string, changeDir: string, target: string, failure?: LegacyVerifyResult | VerifyResult): string {
   const reader = createInputReader();
   const read = (p: string) => (existsSync(p) ? reader.read(p) : '');
   const specs = specFiles(changeDir, reader)

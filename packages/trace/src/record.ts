@@ -1,11 +1,10 @@
 import { existsSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { runExternal } from '@loomake/kit';
-import type { VerifyResult, Evidence } from '@loomake/core';
-import { UsageError, assertChangeId, loadConfig, runVerify } from '@loomake/kit';
+import { EVIDENCE_V2_SCHEMA_VERSION, type EvidenceV2, type VerifyResult, type VerifyScope } from '@loomake/core';
+import { RuntimeFailure, UsageError, assertChangeId, isAbortedResult, loadConfig, runVerify, verifyAbortedResult, verifyExitCode } from '@loomake/kit';
 import { changedDocuments, readDocuments } from './documents.js';
 
-import { EVIDENCE_SCHEMA_VERSION } from './schema.js';
 import { serializeEvidence } from './serialization.js';
 import { publishEvidence } from './publication.js';
 export { EVIDENCE_SCHEMA_VERSION } from './schema.js';
@@ -25,6 +24,8 @@ export type RecordOptions = {
   timeoutMs?: number;
   /** 今回の検証結果を呼び出し側へ通知する。 */
   onVerify?: (result: VerifyResult) => void;
+  /** verify の scope。省略すると ci。local の記録は最終 CI の合格を表さない（REQ-315） */
+  scope?: VerifyScope;
 };
 
 export const EVIDENCE_DIR = '.loomake/evidence';
@@ -40,7 +41,10 @@ function git(root: string, args: string[]): string {
 /** 記録のファイル名の日時の部分：YYYYMMDDTHHMMSSZ */
 const stamp = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, 'Z').replace(/[-:]/g, '');
 
-/** verify --done を実行し、結果を証拠として記録する。終了コード（合格 0・不合格や中止 1）を返す（REQ-066） */
+/**
+ * verify --done を実行し、2.0.0 の結果を Evidence 2 として記録する（REQ-066・REQ-315）。終了コードは verify と同じ（verifyExitCode）。
+ * 検査を始める前の未コミットの変更と、検査のあいだの変化では記録せず 1 を返す
+ */
 export function runRecord(options: RecordOptions): number {
   const { changeId, stdout, progress = () => {}, now = () => new Date() } = options;
   const root = resolve(options.root);
@@ -64,7 +68,15 @@ export function runRecord(options: RecordOptions): number {
 
   const documents = readDocuments(changeDir);
 
-  const result = runVerify({ root, changeId, gate: 'done', progress, timeoutMs: options.timeoutMs });
+  const scope = options.scope ?? 'ci';
+  let result: VerifyResult;
+  try {
+    result = runVerify({ root, changeId, gate: 'done', scope, progress, timeoutMs: options.timeoutMs });
+  } catch (error) {
+    // change が確定したあとの実行時の失敗は、aborted として記録する。使い方の誤りは記録しない（REQ-315）
+    if (!(error instanceof RuntimeFailure)) throw error;
+    result = verifyAbortedResult(error, changeId);
+  }
   options.onVerify?.(result);
   // 検査のあいだに HEAD・作業ツリー・文書が変わったら、どの内容を検査したか分からないので記録しない（REQ-128）。
   // .gitignore で除外したテストのレポートなどは、変更とみなさない
@@ -80,8 +92,9 @@ export function runRecord(options: RecordOptions): number {
     return 1;
   }
   const recordedAt = now();
-  const evidence: Evidence = {
-    schemaVersion: EVIDENCE_SCHEMA_VERSION,
+  // Evidence 2 で書き出す。証拠の現行の名前（Evidence・EVIDENCE_SCHEMA_VERSION）の切替は 2b-2 で行う（REQ-315）
+  const evidence: EvidenceV2 = {
+    schemaVersion: EVIDENCE_V2_SCHEMA_VERSION,
     change: changeId,
     sha,
     committedAt,
@@ -96,7 +109,15 @@ export function runRecord(options: RecordOptions): number {
     stdout(`${rel} がすでにあるので、記録しませんでした。記録は書き換えません。`);
     return 1;
   }
-  stdout(`verify の結果（${result.ok ? '合格' : '不合格'}）を記録しました：${rel}`);
+  const code = verifyExitCode(result);
+  stdout(`verify の結果（${resultLabel(result, code)}）を記録しました：${rel}`);
   stdout(`このファイルを git にコミットしてください：git add ${rel} && git commit`);
-  return result.ok ? 0 : 1;
+  return code;
+}
+
+/** 記録した結果の短い説明。local の完了を最終合格と呼ばない（REQ-311） */
+function resultLabel(result: VerifyResult, code: number): string {
+  if (isAbortedResult(result)) return '中止';
+  if (result.scope === 'local') return code === 0 ? 'ローカルの項目はすべて完了。CI の最終合格は未確認' : 'ローカルの項目が未完了';
+  return code === 0 ? '合格' : '不合格';
 }

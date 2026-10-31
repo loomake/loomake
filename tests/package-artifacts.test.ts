@@ -154,11 +154,15 @@ process.exitCode = await runCliReference({ definition: CLI_REFERENCE, check: tru
     const types = (name: string) => spawnSync(process.execPath, ['scripts/check-public-types.mjs', target, join(base, name)], { cwd: root, encoding: 'utf8', timeout: 70000 });
     const healthy = types('types-healthy');
     expect(healthy.status, healthy.stdout + healthy.stderr).toBe(0);
-    const declaration = join(target, 'consumer/node_modules/@loomake/core/dist/verify-result-schema.d.ts');
+    // 現行の verify 2.0.0 の公開型（要判断の required）を壊し、利用側のコンパイルで検出する（REQ-318）
+    const declaration = join(target, 'consumer/node_modules/@loomake/core/dist/verify-result-v2-schema.d.ts');
     const original = readFileSync(declaration, 'utf8');
     try {
-      expect(original.split('ok: z.ZodBoolean')).toHaveLength(2);
-      writeFileSync(declaration, original.replace('ok: z.ZodBoolean', 'ok: z.ZodString'));
+      const marker = 'export declare const verifyDecisionSchema';
+      expect(original.split(marker)).toHaveLength(2);
+      const at = original.indexOf(marker);
+      expect(original.slice(at).indexOf('required: z.ZodBoolean')).toBeLessThan(original.slice(at).indexOf('reasons:'));
+      writeFileSync(declaration, original.slice(0, at) + original.slice(at).replace('required: z.ZodBoolean', 'required: z.ZodString'));
       const broken = types('types-broken');
       expect(broken.status).toBe(1);
       expect(broken.stdout).toContain('error TS2322');

@@ -369,3 +369,16 @@ if (found) {
 }
 `;
 }
+
+/**
+ * verify 2.0.0 の結果から、検査 id の観測（状態・説明）を読む。aborted は検査を持たない。
+ * 案内つきの合格は warn、不足は insufficient、対象外は na（verify-v2-wiring の仮定 A-01〜A-03）
+ */
+export function checkOf(result: unknown, id: string): { check: string; status: string; detail: string } | undefined {
+  const checks = (result as { checks?: { id: string; result: string; reason: string }[] }).checks ?? [];
+  const c = checks.find((x) => x.id === id);
+  if (!c) return undefined;
+  const notice = c.result === 'PASS' && c.reason.startsWith('案内：');
+  const status = notice ? 'warn' : ({ PASS: 'pass', FAIL: 'fail', INSUFFICIENT_EVIDENCE: 'insufficient', NOT_APPLICABLE: 'na' } as Record<string, string>)[c.result];
+  return { check: c.id, status, detail: notice ? c.reason.slice('案内：'.length) : c.reason };
+}

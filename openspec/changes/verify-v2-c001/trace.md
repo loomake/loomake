@@ -20,47 +20,23 @@ Issue参照：[契約 #61](https://github.com/loomake/loomake/issues/61)、[判�
 
 | ID | 出典 | 種別 | 要約（原文に忠実に） | 状態 | 反映先 |
 |---|---|---|---|---|---|
-| REQ-093 | 現行run「仕様ゲートの確認」・5回目レビュー軽微2 | 既存変更予定 | spec-only不合格1とaborted 2/3を分けるMODIFIEDを、承認済みR05/R06 Aに従いtask 1.2で確定する | 確認待ち | tasks.md 1.2（確定）・4.4（実装/試験） |
 | REQ-135 | 現行cli「ヘルプと版」・5回目レビュー軽微2 | 既存変更予定 | 本文の全オプション説明義務は保持し、既存help Scenarioへscopeを追加するMODIFIEDを、承認済みR05 Aに従いtask 1.2で確定する | 確認待ち | tasks.md 1.2（確定）・4.1（実装/試験） |
 | REQ-136 | 現行req-to-openspec-skill「完了ゲートのタスクの印」・5回目レビュー中1 | 既存変更予定 | R06 A承認を受け、task 1.2で明示localへのMODIFIEDを確定し、印と既存Scenarioを保持して両雛形を同期する | 確認待ち | tasks.md 1.2（確定）・5.1（反映/試験） |
-| REQ-100 | 現行run「完了ゲートと直し」・4回目レビュー中2 | 既存変更 | runの完了ゲートを明示localにし、純粋判断と既存5 Scenarioを保持する | 確認待ち | specs/run/spec.md |
-| REQ-306 | 現行verification-policy・4回目レビュー中3 | 既存変更 | 件数/summary/verifyへの非接続を集約定義単独の範囲へ限定する | 確認待ち | specs/verification-policy/spec.md |
 | REQ-323 | 現行reference-docs（PR155受入済み）・4回目レビュー中1 | 既存変更 | 未確定契約を追加しないMUSTをCLI生成単独の範囲へ限定し、改版後の共通定義へ従う | 確認待ち | specs/reference-docs/spec.md |
 | REQ-324 | 現行reference-docs（PR155受入済み）・4回目レビュー中1 | 既存変更 | help/usage/終了コード/8 JSON等の不変MUSTを共通定義集約単独へ限定する | 確認待ち | specs/reference-docs/spec.md |
 | REQ-036 | 現行verify「仕様ゲートの警告」・追加レビュー重大1 | 既存変更 | spec-onlyの案内PASS/0とdoneの不足/1を分けるR08 B承認を規範へ反映する | 確認待ち | specs/verify/spec.md |
 | REQ-037 | 現行verify「openspec validateの実行」・追加レビュー重大1 | 既存変更 | auto時CLI不在はlocal理由NA、ci不足とするR08 B承認を規範へ反映する | 確認待ち | specs/verify/spec.md |
 | REQ-038 | 現行verify「完了ゲート」・3回目レビュー中2 | 既存変更 | doneの確認待ちは036と同じ不足/要判断に統一。未完了tasksと実施済み失敗はFAIL | 確認待ち | specs/verify/spec.md |
 | REQ-050 | 現行verify「性能」・3回目レビュー中1 | 既存変更 | localのskip不足1とレポート解析を含む3秒条件の試験案。R05 Aの方針承認済み。具体assertion差分の承認は別途必要 | 確認待ち | specs/verify/spec.md |
-| REQ-183 | 現行external-process-budget・3回目レビュー重大1 | 既存変更 | JSON/依存の不変を予算単独変更の影響範囲へ限定する | 確認待ち | specs/external-process-budget/spec.md |
-| REQ-322 | 現行reference-docs（PR155受入済み）・3回目レビュー重大1 | 既存変更 | 公開8 JSON等の不変をqualityリファレンス生成/check単独の影響範囲へ限定する | 確認待ち | specs/reference-docs/spec.md |
 | REQ-114 | 現行run-pr・3回目レビュー軽微2 | 既存変更 | local完了からDraft PRへ進み、明示localのv2記録を先に作る | 確認待ち | specs/run-pr/spec.md |
 | REQ-115 | 現行run-pr・3回目レビュー軽微2 | 既存変更 | PR本文はlocal完了0と最終CI未確認を区別する | 確認待ち | specs/run-pr/spec.md |
 | REQ-164 | 現行run・3回目レビュー軽微2 | 既存変更 | v2/local証拠の同一状態の外部再試行と旧版非再利用を315と整合する | 確認待ち | specs/run/spec.md |
 | REQ-203 | 現行trace-agreement・3回目レビュー軽微1 | 既存変更 | 仮定承認後に未承認の案内/不足へ出ない用語へ追従する | 確認待ち | specs/trace-agreement/spec.md |
 | REQ-039 | 現行verify「品質コマンドの実行」・追加レビュー重大1 | 既存変更 | 未知キーのwarnを理由付きPASSの案内へ移し、コマンド失敗は保つ | 確認待ち | specs/verify/spec.md |
 | REQ-191 | 現行verify「品質コマンドを省いたことの表示」・追加レビュー重大2 | 既存変更 | skip-commandsをchecksの不足として1にし、未実施と再実行を案内する候補 | 確認待ち | specs/verify/spec.md |
-| REQ-040 | 現行verify「JSON 出力」、要件7.3 | 既存変更 | v2でも要件ごとの成功テストファイル一覧をcoverageに保持し、abortedに補わない | 確認待ち | specs/verify/spec.md |
-| REQ-041 | 現行verify「終了コード」、要件7.3・WBS J02 | 既存変更 | 従来の使い方2を維持しv2の共通判定REQ-311を参照する | 確認待ち | specs/verify/spec.md |
 | REQ-066 | 現行trace-record「証拠の記録」、WBS W1-5 | 既存変更 | v2結果と同じ終了コードで追記記録する。未コミット・change不正の停止は保持する | 確認待ち | specs/trace-record/spec.md |
-| REQ-205 | 現行run-decision-policy「完了ゲート後の純粋な判断」、要件7.3・FR-12 | 既存変更 | v2の要判断とabortedで止まり、local完了をDraft PRへ進む条件として扱う | 確認待ち | specs/run-decision-policy/spec.md |
-| REQ-274 | 現行core-parsers、要件7.3・WBS J03 | 既存変更 | 現行v2と旧1.0.0履歴のスキーマ・導出型を分離する | 確認待ち | specs/core-parsers/spec.md |
-| REQ-275 | 現行core-parsers「verify結果の未知のフィールド」・レビュー指摘2 | 既存変更 | 現行checksと履歴resultsの未知値を保持し、v2の既知禁止キーと区別する | 確認待ち | specs/core-parsers/spec.md |
-| REQ-276 | 現行core-parsers「JSON Schemaの書き出し」・レビュー指摘9 | 既存変更 | 旧版JSON Schemaの版付き追加公開はR09 A採用。現行形式置換の非互換範囲もR05 A承認済みで規範反映待ち | 確認待ち | specs/core-parsers/spec.md |
-| REQ-302 | 現行core-parsers、要件7.3・WBS同時追従 | 既存変更 | Evidenceを2へ移し旧1を保持、Report 2と既存の構造制約を維持する | 確認待ち | specs/core-parsers/spec.md |
-| REQ-303 | 現行core-parsers、WBS同時追従 | 既存変更 | 同期APIと整合性検査・遅延zodを維持し新旧証拠へ追従する | 確認待ち | specs/core-parsers/spec.md |
-| REQ-304 | 現行core-parsers、要件7.3・WBS J03 | 既存変更 | verify/evidenceの新形式と旧fixtureを保持し、無関係6 JSONを変えない | 確認待ち | specs/core-parsers/spec.md |
-| REQ-305 | 受入済み共有4値・レビュー指摘2 | 既存変更 | 共有4値と遅延ロードを保ち、verify/evidenceの現行形式と無関係6 JSONの保持を分ける | 確認待ち | specs/core-parsers/spec.md |
-| REQ-307 | main f4e3edbの未知キー保持・互換性照合 | 既存変更 | 現行checksと履歴resultsを保持対象にし、8 JSON不変をv2対象2本と無関係6本へ分ける | 確認待ち | specs/core-parsers/spec.md |
 | REQ-073 | 現行trace-report「使った証拠の記載」・レビュー指摘2 | 既存変更 | Evidence 1/v1とEvidence 2/v2の対応版を受け付け未対応版・不正構造は拒否する | 確認待ち | specs/trace-report/spec.md |
-| REQ-308 | 要件7.3、architecture0.5、WBS W1-2 | 機能 | v2のci/local completed/partialとaborted、未知キー許容・既知禁止キーを区別する | 確認待ち | specs/core-parsers/spec.md |
-| REQ-309 | 要件7.3実行エラー、WBS W1-2 | 機能 | change未確定nullのabortedと、構文が有効な不存在changeのREQ-055 FAIL/1を区別する | 確認待ち | specs/core-parsers/spec.md |
-| REQ-310 | 要件7.1・7.3、WBS C-001、Issue61準備調査 | 機能 | 最小quality読取・既定値と構文2/読取3、spec-only不在許容と初期必須1項目のR07 Aを反映 | 反映済 | specs/verify/spec.md |
-| REQ-311 | 要件7.3終了コード表、WBS W1-5 | 機能 | API/CLI共通の0〜3、stdout JSONのみ、stderr診断、非対話 | 確認待ち | specs/verify/spec.md |
 | REQ-312 | 要件7.3・FR-12、現行REQ-042、WBS W1-5 | 機能 | bare verify維持はR01 A採用。scope既定とR06 A/R08 BのDoD/警告分類の規範反映を確認する | 確認待ち | specs/verify/spec.md |
-| REQ-313 | 要件7.1・7.3集約の規則、WBS W1-4 | 機能 | R03/04 Aを反映し、純粋な条件判定で証跡不足・必須違反・NA・PASSを区別する | 反映済 | specs/verification-policy/spec.md |
-| REQ-314 | 要件7.3集約・件数、REQ-305/306先行受入 | 機能 | evaluatedはR02 Aの全checksを採用。NA/PASSとpending分類はR08 B承認済みで規範反映待ち | 確認待ち | specs/verification-policy/spec.md |
-| REQ-315 | 要件7.3、WBS J03・W1-5 | 機能 | Evidence 2でv2を保存し、旧1.0.0を自動再利用しない | 確認待ち | specs/trace-record/spec.md |
-| REQ-316 | WBS J03・W1-2・W1-5、現行Report 2契約 | 機能 | 新旧証拠を既存Report外形へ投影し旧版を閲覧専用にする | 確認待ち | specs/trace-report/spec.md |
 | REQ-317 | 要件7.3・FR-12、architecture0.5、WBS同時追従 | 機能 | runnerはdecisionで停止し、local完了と最終CI合格を分ける | 確認待ち | specs/run-decision-policy/spec.md |
 | REQ-318 | WBS5章同時追従・J03、architecture0.4、互換性文書 | 移行 | 配布された型・CLI/API・Schemaとci-gateの版別受理が一致する | 確認待ち | specs/monorepo/spec.md |
 | REQ-319 | WBS5章C-001正常/不正/不足、AGENTS DoD、Issue61調査 | 受入 | CLI/APIは正常PASS・不正aborted・不足を区別し、古い結果から合格を作らない | 確認待ち | specs/verify/spec.md |
@@ -68,6 +44,8 @@ Issue参照：[契約 #61](https://github.com/loomake/loomake/issues/61)、[判�
 R01〜10の方針回答を記録した。R05/R06はA、R08はBが追加承認された。REQ-310・313以外の確認待ちは人の選択回答待ちではなく、task 1.2での採用した規範文・MODIFIED・台帳の整合確認待ちを指す。今回は承認記録だけを更新し、規範や実装が未完了の行を反映済みにしない。文書の反映済みも製品実装やDoD達成を意味しない。
 
 REQ-305/306はPR #138、REQ-307は#60保持修正の既存IDである。305・307は今回その既存要件をMODIFIEDとし、別の振る舞いへ再割当しない。既存REQ-042のbare verify品質専用はR01 Aで維持し、別の品質専用操作へ変更したと扱わない。
+
+2本目は読む側の対応（子change `verify-v2-readers`）と書く側の切り替え（子change `verify-v2-wiring`）の2つのPRに分けた。`verify-v2-wiring` へはREQ-040・041・100・311・315の5件を移した。書く側はさらに、verifyの書き出しの切替（2b-1/6）、Evidenceの現行名の切替とreport（2b-2/6）、旧形式の不合格（2c/6）に分け、受入を6/6とする（管理役の決定、2026-10-31）（管理役の決定、2026-10-31）。`verify-v2-readers` へREQ-093・205の2件を移した。
 
 ## 確認事項
 
@@ -94,7 +72,7 @@ R05/06/08は3回目レビューでは保留だったが、[追加回答](https:/
 
 2026-10-30にfetchしたmain `d5aa30d7a9326be44ea4eac5145b5fa95529efce` を通常mergeで取り込んだ。[PR #155](https://github.com/loomake/loomake/pull/155)はこのmainでmerge済みで、add-cli-reference-generationとfix-quality-reference-source-linksの同期/archiveも受入済みである。REQ-323〜325とREQ-322のURL文/4 Scenarioは主仕様にあり、C-001のMODIFIEDの比較元もこの正本へ更新した。[短縮文面の明示承認](https://github.com/loomake/loomake/pull/155#issuecomment-6510874679)と、受入元head `758b0182c107b43827c4c40e1780df76cf97e995` を参照する。以前の751a8a1/候補tree比較は過去の検証であり、現在のarchive待ちではない。
 
-C-001は共通定義args.ts・生成ページ・reference-cli-baseline.jsonへ追従する。旧46例は互換原本として保持し、新契約で変わる例はR05の方針採否と別に具体差分の個別承認を得る。REQ-323/324のMUST範囲、100のlocal、306の非接続範囲、322の生成/check単独への限定はR05 Aで承認された。承認回答に従い093/135/136の規範差分をtasks 1.2で確定し、全差分を一時コピーでarchiveした主仕様のstrictと全MODIFIEDの500字制限を照合する。C-001自体は製品DoD達成前にarchiveしない。
+C-001は共通定義args.ts・生成ページ・reference-cli-baseline.jsonへ追従する。旧46例は互換原本として保持し、新契約で変わる例はR05の方針採否と別に具体差分の個別承認を得る。REQ-323/324のMUST範囲、100のlocal、306の非接続範囲、322の生成/check単独への限定はR05 Aで承認された。承認回答に従い135/136の規範差分をtasks 1.2で確定し（093は子change `verify-v2-readers` で確定済み）、全差分を一時コピーでarchiveした主仕様のstrictと全MODIFIEDの500字制限を照合する。C-001自体は製品DoD達成前にarchiveしない。
 
 ## 仮定
 

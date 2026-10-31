@@ -91,7 +91,7 @@ it('[REQ-324] 値・反復・空値・flag構文と候補同距離時の先頭�
 });
 
 it('[REQ-324] mainは既定値適用と業務の検証順を下位handlerへ引き継ぐ', async () => {
-  const verify = vi.spyOn(kit, 'runVerify').mockReturnValue({ schemaVersion: '1.0.0', mode: 'quality', change: null, ok: true, results: [], coverage: {} });
+  const verify = vi.spyOn(kit, 'runVerify').mockReturnValue({ schemaVersion: '2.0.0', change: null, run: { status: 'completed', errors: [] }, scope: 'local', checks: [], summary: { fail: 0, insufficient: 0, not_applicable: 0, evaluated: 0, pending: 0 }, decision: { required: false, reasons: [] } });
   const report = vi.spyOn(trace, 'runReport').mockReturnValue(0);
   const run = vi.spyOn(runner, 'runRun').mockResolvedValue(0);
   try {
