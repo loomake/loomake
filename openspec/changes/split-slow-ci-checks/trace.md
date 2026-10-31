@@ -164,6 +164,18 @@ Q-01〜Q-100の採用と条件は管理役がADR0006に基づき記録する。Q
 | Q-101 | tasks2.10・Issue258 R4′/A1 | companionの自由な値参照をどう閉じるか | A：TS checkerと実行時宣言の種類／B：require名だけ拒否 | A。実証したprocess/eval/Function系を同族として拒む | yes | A。同fileの字句scopeと実行時宣言を検査しambient・型専用・本文なし関数・enum・namespace・ImportEqualsを拒否。未束縛undefinedだけは危険な能力を持たない例外として許す。41523/f41の一致範囲を部分採用（管理役・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
 | Q-102 | tasks2.10・Issue258 R5′/A2 | 反射へのproperty/キーをどう扱うか | A：companionだけ閉じる／B：正規helperにも同じ文法 | A。正規helperのchosen[index]等を保つ | yes | A。constructor・__proto__・prototypeの固定property/keyと非literalキーをcompanion本体で拒否。既存closedSyntax後へ追加し既存文言・順序を保つ。helper R6/R7と入口B層は未採用、known bad免除にしない（管理役・ADR0006） | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
 
+| Q-103 | task2.10・Issue258 H1/H2/H3 | helper方式 | A：H1/H2/H3／B：canonical固定／C：H1のみ | A。任意helperの構造とcanonicalを保ち評価時・呼出時の登録を閉じる | yes | A。任意helperの構造とcanonicalを保ち評価時・呼出時の登録を閉じる。設計3ac31242を管理役が採用、ADR0006 | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
+| Q-104 | task2.10・Issue258 H1/H2/H3 | 相対import値の使い方 | A：式文の直接callee／B：call結果を使う | A。返るit・arrowを使うnative2形を両APIで拒否する | yes | A。返るit・arrowを使うnative2形を両APIで拒否する。設計3ac31242を管理役が採用、ADR0006 | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
+| Q-105 | task2.10・Issue258 H1/H2/H3 | 呼ぶhelper本文 | A：module let/varへ引数かliteralを代入、returnなし／B：inertとreturn | A。返却能力とimport値の代入を閉じ、setPartを保つ | yes | A。返却能力とimport値の代入を閉じ、setPartを保つ。設計3ac31242を管理役が採用、ADR0006 | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
+| Q-106 | task2.10・Issue258 H1/H2/H3 | 呼ぶ名前の解決 | A：唯一のexport function／B：aliasやre-exportを辿る | A。正規setterに必要な最小の解決を選ぶ | yes | A。正規setterに必要な最小の解決を選ぶ。設計3ac31242を管理役が採用、ADR0006 | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
+| Q-107 | task2.10・Issue258 H1/H2/H3 | helper読込先 | A：vitest/node組込/相対文法／B：外部packageも許す | A。正規依存を保ち外部packageとvitest下位pathを拒否する | yes | A。正規依存を保ち外部packageとvitest下位pathを拒否する。設計3ac31242を管理役が採用、ADR0006 | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
+| Q-108 | task2.10・Issue258 H1/H2/H3 | TS対応候補 | A：存在する全候補／B：指定fileだけ | A。Viteの解決先を未実測のまま推測しない | yes | A。Viteの解決先を未実測のまま推測しない。設計3ac31242を管理役が採用、ADR0006 | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
+| Q-109 | task2.10・Issue258 H1/H2/H3 | file安全性 | A：通常file/非symlink/実path内／B：名前だけ | A。欠落・symlink・repo外を出力前拒否する | yes | A。欠落・symlink・repo外を出力前拒否する。設計3ac31242を管理役が採用、ADR0006 | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
+| Q-110 | task2.10・Issue258 H1/H2/H3 | 純粋API | A：readerなしはH1まで／B：reader必須 | A。既存APIと期待を保持しrepo両入口は必ずreaderを渡す | yes | A。既存APIと期待を保持しrepo両入口は必ずreaderを渡す。設計3ac31242を管理役が採用、ADR0006 | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
+| Q-111 | task2.10・Issue258 H1/H2/H3 | 依存hash | A：inputs.companionDependencies追加／B：記録なし | A。受理が依存する補助本文を追跡する | yes | A。受理が依存する補助本文を追跡する。設計3ac31242を管理役が採用、ADR0006 | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
+| Q-112 | task2.10・Issue258 H1/H2/H3 | helper本文の動的読込 | A：追加検査なし／B：全関数本文も閉じる | A。companionから届く本文と評価時は呼出しなし、元source経路は対象外 | yes | A。companionから届く本文と評価時は呼出しなし、元source経路は対象外。設計3ac31242を管理役が採用、ADR0006 | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
+| Q-113 | task2.10・Issue258 H1/H2/H3 | 仕様の場所 | A：12番条件と限界のみ改訂し13/14追加／B：短いSHALL変更 | A。498文字本文・Source・先頭11Scenarioをbyte保持する | yes | A。498文字本文・Source・先頭11Scenarioをbyte保持する。設計3ac31242を管理役が採用、ADR0006 | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
+
 ## 仮定
 
 | ID | 関連 | 仮定の内容 | 理由 | 承認 | 承認者 | 承認日 |
@@ -328,3 +340,7 @@ R4/C1・一般oracle・実登録・OS割当は未設計/未達のまま。PR253�
 管理役は、Opus 41523a05 のR4′/R5′と、一次資料だけの独立見解保存後に先行見解を比較したf41a7a1eのA1/A2が一致する範囲を採用した。未束縛undefinedは41523の安全な例外を選ぶ。初回公開52Readは許可一次資料内、保存済み初回回答と最初のresultが一致し、実モデルはclaude-opus-5-5・ok・拒否0・Readのみだった。各技術設計は利用者本人の個別レビューではない。
 
 第12ScenarioのWHENにR4/R5本体の条件だけを加え、先頭11Scenario・短いSHALL・Sourceと既存THENを保持する。元308件とrow統合後の関連395件の期待・拒否順・文言を変更しない。helperのR6/R7と入口をcanonicalだけへ限るB層は今回採用しない。helper-oneを含む既知の未修理、native追加対照、C1/wiring/oracle、実登録、3OS、親doneを未達のまま残し、2.10も完了にしない。spec-only成功後だけ実装する。
+
+## helper依存の部分修理（Q-103〜Q-113）
+
+管理役はOpus設計3ac31242のH1〜H3を採用した。モデルがADRとdeliveryスキルを未読と明記した参照不足は保持し、管理役が現規約と品質維持・承認範囲を照合した技術設計の採用として記録する。全規約Read済みや利用者本人の個別レビューとは扱わない。helper-one原文と能力返却2形は同treeの実入力で回帰し、native成功と静的拒否を照合する。既存447期待・raw/ledger・先頭11Scenario・全task本文を保持し、2.10全体/row wiring/C1/oracle/実登録/3OS/親doneは未達に残す。

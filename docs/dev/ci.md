@@ -164,7 +164,7 @@ PR184 のタスク2.5では登録済み companion の実行結果を、元の `.
 
 Vitest からの読み込みは namespace か `expect` だけの named import に限ります。static import・export・import equals の読み込み先は `vitest`、または閉じた相対パスの補助 module だけです。相対パスは `./` か、1個以上連続する `../` で始まり、その先の各要素は ASCII 英数字・`_`・`-` で始まる ASCII 英数字・`_`・`-`・`.` の並びに限ります。query・fragment・percent 符号・バックスラッシュ・空白・隠し要素は認めません。拡張子は `.js`・`.ts`・`.mjs`・`.mts`・`.cjs`・`.cts`・`.jsx`・`.tsx` の8種を明示し、最終要素に大文字小文字を問わず `.test.`・`.spec.` を含むものは拒否します。`import.meta` の参照と、callee が Identifier の `require` である呼び出しも拒否します。namespace とその別名は `expect` の取得、Identifier への別名の初期化、全キーが literal の `expect` で rest のない分割代入の右辺だけに置けます。引数・既定値・object や array の値・spread・条件式・戻り値・export など、それ以外の位置は拒否します。型の位置は除き、shadowing は区別せず同名を検査します。既存の拒否検査と元 source の import 形の検査を先に行い、以前から拒否していた形の診断を保ちます。
 
-この検査は companion 本体の構文を調べます。読み込んだ補助 module の中身、symlink の解決先、実行時の反射は静的に検証せず、Vitest の `globals` が無効であることを前提にしています。これは静的検査の技術上の限界で、既知の不正な companion を受理する免除にはしません。実行時の反射を使った宣言が安全である、または受入済みであるとは扱いません。
+相対 import の値は式文の直接の呼び出しに限り、戻り値を使わせません。監査と移行では補助 module の通常ファイル・実パス内包・非 symlink と、推移的な読み込み先・評価時の閉じた構文・呼ぶ setter の本文を検査し、補助本文の hash も記録します。元 source から呼ばれる補助関数の本文と実行時の反射は静的に検証せず、Vitest の `globals` が無効であることを前提にしています。これは静的検査の技術上の限界で、既知の不正な companion を受理する免除にはしません。実行時の反射を使った宣言が安全である、または受入済みであるとは扱いません。
 
 監査の各実行行には照合先の `file` と実行時の `rawFile` を残します。JSON の `inputs` には一覧の `partitionSha256` と companion ごとのハッシュを加え、Markdown には元ファイルと companion の両方を表示します。元の raw report とレビュー表のバイト列は変えません。登録外の `.slow.test.ts` は自身のファイルとして扱い、名前から対応を推測しません。同名でも異なる入力行は残し、同じ入力行が複数の選択条件に一致しても一度だけ数えます。
 
