@@ -13,7 +13,7 @@ import { reusableEvidence } from '../reuse.js';
 import { baseKey } from './prepare.js';
 import { buildPrompt } from './prompt.js';
 import { checkTask, taskLabel } from './tasks.js';
-import { decideAfterEngine, decideAfterGate, decideAfterChanges, type GateObservation } from './decision-policy.js';
+import { classifyEngineResult, decideAfterEngine, decideAfterGate, decideAfterChanges, type GateObservation } from './decision-policy.js';
 import type { Recorder, RunContext, RunSummary, Stop } from './types.js';
 
 /** 完了ゲートの検査のうち、理由（1.0.0 の detail、2.0.0 の reason）が reason と一致するものがあるか。aborted は検査を持たない */
@@ -45,7 +45,7 @@ export function interruptedOperation(error: unknown): boolean {
 }
 
 /** エンジンを 1 回動かす。止まる理由があれば、その状態と文を返す */
-async function callEngine(ctx: RunContext, rec: Recorder, prompt: string): Promise<{ kind: 'continue'; text: string } | { kind: 'stop'; status: RunSummary['status']; reason: string }> {
+async function callEngine(ctx: RunContext, rec: Recorder, prompt: string): Promise<{ kind: 'continue'; text: string } | { kind: 'hold'; reason: string; text: string } | { kind: 'stop'; status: RunSummary['status']; reason: string }> {
   const { root, env, options } = ctx;
   rec.step++;
   const n = String(rec.step).padStart(2, '0');
@@ -65,13 +65,19 @@ async function callEngine(ctx: RunContext, rec: Recorder, prompt: string): Promi
     maxOutputBytes: ctx.runConfig.maxOutputBytes,
   });
   rec.save(`${n}-output.json`, result.raw);
+  const fault = classifyEngineResult(result.raw);
   // HEAD変更を見つけた場合は、Git内部を追加で読まない。
   const moved = findEngineMove(root, env, before, ctx.branch);
   const changed = moved ? undefined : findInternalsChange(root, env, internals);
   if (moved) ctx.stdout(moved.report);
   else if (changed) ctx.stdout(changed.report);
-  const decision = decideAfterEngine({ ...result, movementReason: moved?.reason, internalsReason: changed?.reason });
-  return decision.kind === 'stop' ? decision : { kind: 'continue', text: result.text };
+  const decision = decideAfterEngine({
+    aborted: result.aborted, outputLimitExceeded: result.outputLimitExceeded, timedOut: result.timedOut,
+    text: result.text, exitCode: result.exitCode, movementReason: moved?.reason, internalsReason: changed?.reason,
+    resultFault: fault ? { fault, outputPath: join(rec.runDir, `${n}-output.json`) } : undefined,
+  });
+  if (decision.kind === 'stop') return decision;
+  return { ...decision, text: result.text };
 }
 
 // コミットする前に不正な直し方を探し、見つけたら変更を作業ツリーに残して止まる理由を返す（REQ-109〜REQ-112）
