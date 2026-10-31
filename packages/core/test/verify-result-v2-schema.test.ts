@@ -21,11 +21,12 @@ describe('verify 2.0.0 の Zod スキーマ', () => {
     expect(ok({ ...ciValue(), coverage: undefined })).toBe(true);
   });
 
-  it('[REQ-274] 履歴の 1.0.0 を別名のスキーマで受け付け、いまの書き出しの版は 1.0.0 のまま', () => {
+  it('[REQ-274][REQ-311] 履歴の 1.0.0 を別名のスキーマで受け付け、いまの書き出しの版は 2.0.0', () => {
     const legacy = { schemaVersion: '1.0.0', mode: 'done', change: 'c1', ok: true, results: [{ check: 'x', status: 'warn', detail: '' }], coverage: { 'REQ-001': [] } };
     expect(legacyVerifyResultSchema.parse(legacy)).toEqual(legacy);
-    expect(verifyResultSchema.parse(legacy)).toEqual(legacy);
-    expect([VERIFY_RESULT_SCHEMA_VERSION, LEGACY_VERIFY_RESULT_SCHEMA_VERSION]).toEqual(['1.0.0', '1.0.0']);
+    expect(verifyResultSchema.safeParse(legacy).success).toBe(false);
+    for (const value of [ciValue(), localValue(), abortedValue()]) expect(verifyResultSchema.parse(value)).toEqual(value);
+    expect([VERIFY_RESULT_SCHEMA_VERSION, LEGACY_VERIFY_RESULT_SCHEMA_VERSION]).toEqual(['2.0.0', '1.0.0']);
     const withoutOk: Record<string, unknown> = { ...legacy };
     delete withoutOk.ok;
     expect(legacyVerifyResultSchema.safeParse(withoutOk).success).toBe(false);

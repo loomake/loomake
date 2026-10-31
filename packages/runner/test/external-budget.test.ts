@@ -2,13 +2,13 @@ import { appendFileSync, chmodSync, existsSync, readFileSync, readdirSync, statS
 import { basename, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { describe, expect, it, vi } from 'vitest';
-import { RuntimeFailure, UsageError, runVerify } from '@loomake/kit';
+import { RuntimeFailure, UsageError, runVerify, verifyExitCode } from '@loomake/kit';
 import { main } from '../../cli/src/main.js';
 import { profileEvent } from '../../../scripts/test-phase-profile.mjs';
 import { holderWaitTime, withProcessBudget } from '../../kit/src/runtime/process.js';
 import { runRecord } from '@loomake/trace';
 import { runRun } from '@loomake/runner';
-import { makeRepo, noChange, CHANGE, signalSupervisorScript, fakeCli, stallOf, type FakeCli, type FakeCliEvent, type Repo } from './helpers.js';
+import { checkOf, makeRepo, noChange, CHANGE, signalSupervisorScript, fakeCli, stallOf, type FakeCli, type FakeCliEvent, type Repo } from './helpers.js';
 
 // git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
 vi.setConfig({ testTimeout: 60_000 });
@@ -307,10 +307,10 @@ describe('verifyとtraceの期限', () => {
       repo.write('loomake.config.json', JSON.stringify({ openspecValidate: 'auto', commands: {} }));
       const result = budget(() => runVerify({ root: repo.root, changeId: CHANGE, gate: 'spec-only' }));
       const endedAt = Date.now();
-      const context = diagnosticContext(repo, { results: result.results }, cli);
+      const context = diagnosticContext(repo, { checks: result.run.status === 'aborted' ? [] : result.checks }, cli);
       expectStoppedSoon(expectStalled(cli, (args) => args[0] === 'validate', context), endedAt, OPERATION_MS, context);
-      expect(result.ok).toBe(false);
-      expect(result.results.find((r) => r.check === 'openspec validate')).toMatchObject({ status: 'fail', detail: expect.stringContaining('実行時間の上限') });
+      expect(verifyExitCode(result)).toBe(1);
+      expect(checkOf(result, 'openspec validate')).toMatchObject({ status: 'fail', detail: expect.stringContaining('実行時間の上限') });
     } finally { restoreEnv(); repo.cleanup(); }
   });
   it('[REQ-183][REQ-250] 品質コマンドの中断後に次のコマンドを実行しない', () => {
@@ -324,11 +324,13 @@ describe('verifyとtraceの期限', () => {
       // 祖先の一覧を Windows の PowerShell で読むと数秒かかるので、期限は中断より十分長くする。期限で止まると「中断」を含まず、この試験は落ちる
       const result = withProcessBudget({ timeoutMs: 30_000 }, () => runVerify({ root: repo.root }));
       const receipt = join(repo.root, 'interrupted.json');
-      expect(existsSync(receipt), JSON.stringify({ results: result.results })).toBe(true);
+      expect(existsSync(receipt), JSON.stringify(result)).toBe(true);
       const sent = JSON.parse(readFileSync(receipt, 'utf8')) as { pid?: number; command?: string; self?: number; error?: string };
       expect(sent).toMatchObject({ command: expect.stringMatching(/[\\/]supervisor\.cjs|^loomake: command supervisor/) });
-      expect(result.results.find((r) => r.check === 'command: lint')).toMatchObject({ status: 'fail', detail: expect.stringContaining('中断') });
-      expect(result.results.find((r) => r.check === 'command: test')).toMatchObject({ status: 'fail', detail: expect.stringContaining('中断') });
+      // 中断で止めた品質コマンドは不足と実行エラー（partial）にする（verify-v2-wiring の仮定 A-03）
+      expect(checkOf(result, 'command: lint')).toMatchObject({ status: 'insufficient', detail: expect.stringContaining('中断') });
+      expect(checkOf(result, 'command: test')).toMatchObject({ status: 'insufficient', detail: expect.stringContaining('中断') });
+      expect(result.run.status).toBe('partial');
       expect(existsSync(join(repo.root, 'after'))).toBe(false);
       // SIGINT を送った品質コマンド自身も、止めてから返す（REQ-181・REQ-250）
       expect(alive(sent.self!), JSON.stringify(sent)).toBe(false);
@@ -345,7 +347,8 @@ describe('verifyとtraceの期限', () => {
     try {
       repo.write('loomake.config.json', JSON.stringify({ openspecValidate: false, commands: { test: 'node -e "setTimeout(()=>{},3000)"' } }));
       const result = withProcessBudget({ timeoutMs: 500 }, () => runVerify({ root: repo.root }));
-      expect(result.results.find((r) => r.check === 'command: test')).toMatchObject({ status: 'fail', detail: expect.stringContaining('実行時間の上限') });
+      expect(checkOf(result, 'command: test')).toMatchObject({ status: 'insufficient', detail: expect.stringContaining('実行時間の上限') });
+      expect(result.run.status).toBe('partial');
     } finally { repo.cleanup(); }
   });
 });

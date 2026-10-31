@@ -15,11 +15,15 @@ Source: REQ-073
 
 #### Scenario: 読めない版の記録がある
 - **WHEN** `.loomake/evidence/c1/` に `schemaVersion` が1と2以外の未対応版の記録がある change に `loomake trace report --change c1` を実行する
-- **THEN** そのファイルのパスと、読める版でないことが日本語で表示され、終了コードは 2 である
+- **THEN** そのファイルのパスと、その版が読める版（1と2）でないことが日本語で表示され、終了コードは 2 である
+
+#### Scenario: 版の混在した記録がある
+- **WHEN** `.loomake/evidence/c1/` に Evidence 1にverify 2.0.0を入れた記録、またはEvidence 2にverify 1.0.0を入れた記録がある change に `loomake trace report --change c1` を実行する
+- **THEN** そのファイルのパスと、証拠の版とverifyの版が混在していることが日本語で表示され、読める版を1だけと案内せず、終了コードは 2 である
 
 #### Scenario: 形の違う記録がある
 - **WHEN** `.loomake/evidence/c1/` に Evidence 1で`verify.results`がない記録、またはEvidence 2で2.0.0の状態別必須欄がない記録がある change に `loomake trace report --change c1` を実行する
-- **THEN** そのファイルのパスと、その版のverify構造が違うことが日本語で表示され、スタックトレースは出ず、終了コードは 2 である
+- **THEN** そのファイルのパスと、形の違う欄（Evidence 2では、その`run.status`で必須の欄であること）が日本語で表示され、スタックトレースは出ず、終了コードは 2 である
 
 #### Scenario: ほかの change の記録がある
 - **WHEN** `.loomake/evidence/c1/` に `change` が c2 の記録がある change に `loomake trace report --change c1` を実行する

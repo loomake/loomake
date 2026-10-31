@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { RuntimeFailure, UsageError, formatVerifyResult, runDoctor, runInit, runVerify } from '@loomake/kit';
+import { CHANGE_ID, RuntimeFailure, UsageError, formatVerifyResult, runDoctor, runInit, runVerify, verifyAbortedResult, verifyExitCode } from '@loomake/kit';
 import { runRun } from '@loomake/runner';
 import { runAgreement, runRecord, runReport } from '@loomake/trace';
 import { COMMANDS, HELP, USAGE, commandDefinition, commandHelp, didYouMean, isHelp, isVersion, optionSpec, parseOptions, traceOperation, type Command } from './args.js';
@@ -82,25 +82,45 @@ function init(args: string[], io: Io): Promise<number> {
   });
 }
 
-function verify(args: string[], io: Io): number {
-  const { values, flags } = parseOptions(args, optionSpec(commandDefinition('verify')));
-  const changeId = values.get('--change');
-  const specOnly = flags.has('--spec-only');
-  const done = flags.has('--done');
-  if ((specOnly || done) && !changeId) throw new UsageError('--spec-only・--done には --change <id> が必要です');
-  if (specOnly && done) throw new UsageError('--spec-only と --done は同時に指定できません');
-  if (changeId && !specOnly && !done) throw new UsageError('--change を指定するときは --spec-only か --done を付けてください');
+// 値として読まれない、単独の --json。構文の誤りでも JSON で返すかを決めるのに使う（R-F15）
+const standaloneJson = (args: string[]) => args.some((arg, i) => arg === '--json' && args[i - 1] !== '--change');
 
-  const result = runVerify({
-    root: io.cwd,
-    changeId,
-    gate: done ? 'done' : 'spec-only',
-    skipCommands: flags.has('--skip-commands'),
-    // --json のとき標準出力には JSON だけを出すので、進捗は標準エラーに出す
-    progress: io.stderr,
-  });
-  io.stdout(flags.has('--json') ? JSON.stringify(result, null, 2) : `\n${formatVerifyResult(result)}`);
-  return result.ok ? 0 : 1;
+/**
+ * verify の結果を 2.0.0 で出し、終了コードを verifyExitCode で決める（REQ-311・REQ-041）。
+ * --json のときは、使い方・設定の誤りと実行時の失敗も aborted の JSON を標準出力に出す。診断は標準エラーに出す
+ */
+function verify(args: string[], io: Io): number {
+  const json = standaloneJson(args);
+  let changeId: string | undefined;
+  let result;
+  try {
+    const { values, flags } = parseOptions(args, optionSpec(commandDefinition('verify')));
+    changeId = values.get('--change');
+    const specOnly = flags.has('--spec-only');
+    const done = flags.has('--done');
+    if ((specOnly || done) && !changeId) throw new UsageError('--spec-only・--done には --change <id> が必要です');
+    if (specOnly && done) throw new UsageError('--spec-only と --done は同時に指定できません');
+    if (changeId && !specOnly && !done) throw new UsageError('--change を指定するときは --spec-only か --done を付けてください');
+
+    result = runVerify({
+      root: io.cwd,
+      changeId,
+      gate: done ? 'done' : 'spec-only',
+      skipCommands: flags.has('--skip-commands'),
+      // --json のとき標準出力には JSON だけを出すので、進捗は標準エラーに出す
+      progress: io.stderr,
+    });
+  } catch (e) {
+    if (!json || !(e instanceof UsageError || e instanceof RuntimeFailure)) throw e;
+    const known = changeId !== undefined && CHANGE_ID.test(changeId) && changeId !== 'archive' ? changeId : null;
+    const aborted = verifyAbortedResult(e, known, changeId ?? 'verify');
+    io.stdout(JSON.stringify(aborted, null, 2));
+    io.stderr(`loomake verify: ${e.message}`);
+    if (e instanceof UsageError) io.stderr(`使い方: ${commandDefinition('verify').usage}`);
+    return verifyExitCode(aborted);
+  }
+  io.stdout(json ? JSON.stringify(result, null, 2) : `\n${formatVerifyResult(result)}`);
+  return verifyExitCode(result);
 }
 
 function trace(args: string[], io: Io): number {

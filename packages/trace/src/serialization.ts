@@ -1,9 +1,10 @@
 import { JSON_LIMITS, UsageError } from '@loomake/kit';
 import { evidenceProblem } from './evidence.js';
+import type { LegacyEvidence } from '@loomake/core';
 import type { Evidence } from './record.js';
 
 /** 保存前に形式と、末尾改行を含む整形JSONのバイト数を検証する。 */
-export function serializeEvidence(evidence: Evidence, maxBytes = JSON_LIMITS.maxFileBytes): string {
+export function serializeEvidence(evidence: Evidence | LegacyEvidence, maxBytes = JSON_LIMITS.maxFileBytes): string {
   if (!Number.isSafeInteger(maxBytes) || maxBytes <= 0) throw new UsageError('証拠のサイズ上限は正の安全な整数にしてください');
   const problem = evidenceProblem(evidence, evidence.change);
   if (problem) throw new UsageError(`生成した証拠の形式が不正です：${problem}`);

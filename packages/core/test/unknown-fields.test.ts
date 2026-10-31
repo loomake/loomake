@@ -4,11 +4,13 @@ import { z } from 'zod';
 import { loadParserSchemas, loadQualityReportSchema, loadQualitySchema, loadTraceSchemas, loadVerifyResultSchemas } from '../src/index.js';
 import { ASSUMPTION_COLUMNS, LEDGER_COLUMNS, QUESTION_COLUMNS } from '../src/trace.js';
 import { preserveUnknownFields } from '../src/preserve-unknown-fields.js';
-import { evidenceValue, reportValue } from './fixtures/trace-contract-values.js';
+import { evidenceV2Value, evidenceValue, reportValue } from './fixtures/trace-contract-values.js';
 
 const parser = await loadParserSchemas();
 const quality = await loadQualitySchema();
-const verify = await loadVerifyResultSchemas();
+// このファイルは公開した 1.0.0 の形を確かめる。現行の 2.0.0 は unknown-fields-v2.test.ts で確かめる
+const loaded = await loadVerifyResultSchemas();
+const verify = { ...loaded, verifyResultSchema: loaded.legacyVerifyResultSchema, verifyCheckResultSchema: loaded.legacyVerifyCheckResultSchema };
 const report = await loadQualityReportSchema();
 const trace = await loadTraceSchemas();
 
@@ -57,7 +59,8 @@ const cases: { name: string; schema: z.ZodType; value: Record<string, unknown> }
   { name: 'objective', schema: quality.qualityObjectiveSchema, value: { characteristic: 'x' } },
   { name: 'product', schema: quality.qualityProductSchema, value: { characteristic: 'x' } },
   { name: 'policy', schema: quality.qualityEvidencePolicySchema, value: {} },
-  { name: 'evidence', schema: trace.evidenceSchema, value: evidenceValue() },
+  { name: 'evidence', schema: trace.evidenceSchema, value: evidenceV2Value() },
+  { name: 'legacy evidence', schema: trace.legacyEvidenceSchema, value: evidenceValue() },
   { name: 'evidence document', schema: trace.evidenceDocumentSchema, value: { path: '', sha256: '', content: '' } },
   { name: 'release report', schema: trace.reportSchema, value: reportValue() },
   { name: 'release report row', schema: trace.reportRowSchema, value: reportValue().rows[0] },
@@ -255,7 +258,8 @@ describe('未知キーの own property を安全に保持する', () => {
     const input = marked({ ...value, verify: verifyValue, documents: [document] });
     const original = structuredClone(input);
     freeze(input);
-    for (const output of [trace.evidenceSchema.parse(input), await trace.evidenceSchema.parseAsync(input)]) {
+    // 現行の evidenceSchema は Evidence 2。Evidence 1 の値は履歴の名前のスキーマで読む
+    for (const output of [trace.legacyEvidenceSchema.parse(input), await trace.legacyEvidenceSchema.parseAsync(input)]) {
       expectFields(output, input);
       expectFields(output.verify, verifyValue);
       expectFields(output.verify.results[0], check);

@@ -22,12 +22,16 @@ describe('版付きの JSON Schema の書き出し', () => {
     }
   });
 
-  it('[REQ-304][REQ-305] 版付きでない 8 ファイルは 1.0.0 と Evidence 1 のまま、版付きの 1.0.0 と同じ構造を表す', () => {
+  it('[REQ-304][REQ-305][REQ-318] 版付きでない 8 ファイルの verify・evidence は 2.0.0 と Evidence 2 を表し、版付きの 2.0.0・Evidence 2 と同じ構造になる', () => {
     const current = renderJsonSchemas();
     expect(Object.keys(current)).toHaveLength(8);
-    const strip = (text: string) => ({ ...JSON.parse(text), $id: undefined });
-    expect(strip(renderVersionedJsonSchemas()['verify-result-1.0.0.schema.json'])).toEqual(strip(current['verify-result.schema.json']));
-    expect(JSON.parse(current['verify-result.schema.json']).properties.schemaVersion.const).toBe('1.0.0');
+    const strip = (text: string) => ({ ...JSON.parse(text), $id: undefined, title: undefined, description: undefined });
+    const versioned = renderVersionedJsonSchemas();
+    expect(strip(versioned['verify-result-2.0.0.schema.json'])).toEqual(strip(current['verify-result.schema.json']));
+    const verifyOf = (text: string) => ({ ...JSON.parse(text).properties.verify, title: undefined, description: undefined });
+    expect(verifyOf(current['evidence.schema.json'])).toEqual(verifyOf(versioned['evidence-2.schema.json']));
+    const versions = JSON.parse(current['verify-result.schema.json']).anyOf.map((branch: { properties: { schemaVersion: { const: string } } }) => branch.properties.schemaVersion.const);
+    expect(new Set(versions)).toEqual(new Set(['2.0.0']));
   });
 
   it('[REQ-276][REQ-304][REQ-308] 新旧の JSON Schema が同じ有効・無効の入力を Zod と同じに判定し、同じ registry に登録できる', () => {

@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { parseTasks } from '@loomake/core';
 import { UsageError, assertChangeId, formatVerifyResult, isAbortedResult, isVerifyResultV2, loadConfig, runVerify, verifyExitCode, createInputReader } from '@loomake/kit';
-import type { VerifyResult, VerifyResultV2 } from '@loomake/core';
+import type { LegacyVerifyResult, VerifyResult } from '@loomake/core';
 import { DEFAULT_ALLOWED_DOMAINS, assertEngineAvailable } from '../engine.js';
 import { ghLoggedIn } from '../pr.js';
 import { branchExists, dirtyFiles, git, isIgnored } from '../git.js';
@@ -74,8 +74,8 @@ export async function prepare(options: RunOptions): Promise<RunContext | number>
   };
   // 仕様ゲートが不合格なら 1、2.0.0 の usage・config の aborted なら 2、ほかの aborted なら 3 で、ブランチを作らずに止まる（REQ-093）。
   // 例外で止まるときも、切り替えたブランチを戻してから CLI に渡す（CLI が 2・3 を返す）
-  // いまの書き出しは 1.0.0。2.0.0 の結果も読む
-  let specGate: VerifyResult | VerifyResultV2;
+  // いまの書き出しは 2.0.0。履歴の 1.0.0 も読む
+  let specGate: LegacyVerifyResult | VerifyResult;
   try {
     specGate = runVerify({ root, changeId, gate: 'spec-only', progress });
   } catch (error) {
@@ -137,7 +137,7 @@ export async function prepare(options: RunOptions): Promise<RunContext | number>
 }
 
 /** 仕様ゲートの結果の終了コード。1.0.0 は ok、2.0.0 は verifyExitCode で決める（REQ-093） */
-export function specGateOutcome(result: VerifyResult | VerifyResultV2): { code: number; aborted: boolean } {
+export function specGateOutcome(result: LegacyVerifyResult | VerifyResult): { code: number; aborted: boolean } {
   if (!isVerifyResultV2(result)) return { code: result.ok ? 0 : 1, aborted: false };
   return { code: verifyExitCode(result), aborted: isAbortedResult(result) };
 }

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import * as kit from '@loomake/kit';
 import { runRun, type RunOptions, type RunSummary } from '@loomake/runner';
 import { readDocuments } from '@loomake/trace';
-import type { VerifyCheckV2, VerifyDecision, VerifyResult, VerifyResultV2 } from '@loomake/core';
+import type { LegacyVerifyResult, VerifyCheckV2, VerifyDecision, VerifyResult, VerifyResultV2 } from '@loomake/core';
 import { main } from '../../cli/src/main.js';
 import { decideAfterGate, type GateObservation } from '../src/run/decision-policy.js';
 import { gateObservation } from '../src/run/phases.js';
@@ -62,7 +62,7 @@ describe('完了ゲートの純粋判断', () => {
     expect(gateObservation(local([pass, failed])).ok).toBe(false);
     expect(gateObservation(local([pass], decision))).toMatchObject({ ok: false, decisionReasons: ['仮定の承認が必要です（APPROVAL_REQUIRED・A-01）'] });
     expect(gateObservation(aborted('runtime'))).toMatchObject({ ok: false, aborted: 'runtime：起動できません' });
-    const legacy: VerifyResult = { schemaVersion: '1.0.0', mode: 'done', change: CHANGE, ok: true, results: [{ check: 'command: test', status: 'fail', detail: kit.TIMED_OUT }] };
+    const legacy: LegacyVerifyResult = { schemaVersion: '1.0.0', mode: 'done', change: CHANGE, ok: true, results: [{ check: 'command: test', status: 'fail', detail: kit.TIMED_OUT }] };
     expect(gateObservation(legacy)).toEqual({ ok: true, interrupted: false, timedOut: true });
   });
 });
@@ -87,6 +87,23 @@ describe('run の完了ゲートと仕様ゲートで 2.0.0 を読む', () => {
       expect(r.code, r.stdout).toBe(0);
       expect(repo.calls()).toHaveLength(2);
       expect(repo.prs()).toHaveLength(1);
+    } finally { spy.mockRestore(); repo.cleanup(); }
+  });
+
+  it('[REQ-100] run の完了ゲートは scope:local で verify を実行し、保存した結果も scope:local になる', async () => {
+    const repo = makeRepo();
+    const spy = vi.spyOn(kit, 'runVerify');
+    try {
+      repo.plan([{ write: { 'impl.txt': '実装\n' } }, noChange]);
+      const r = await run(repo);
+      expect(r.code, r.stdout).toBe(0);
+      const done = spy.mock.calls.map(([o]) => o).filter((o) => o.gate === 'done');
+      expect(done.length).toBeGreaterThan(0);
+      for (const o of done) expect(o.scope).toBe('local');
+      const dir = runDir(repo);
+      const saved = JSON.parse(readFileSync(join(dir, readdirSync(dir).find((f) => /-verify\.json$/.test(f))!), 'utf8'));
+      expect(saved).toMatchObject({ schemaVersion: '2.0.0', scope: 'local' });
+      expect(saved).not.toHaveProperty('verdict');
     } finally { spy.mockRestore(); repo.cleanup(); }
   });
 
@@ -204,7 +221,7 @@ describe('2.0.0 の結果の文', () => {
     expect(kit.formatVerifyResult(local([pass, failed]))).toContain('✖ command: lint\n    lint の出力');
     expect(kit.formatVerifyResult(local([pass], decision))).toContain('人の判断が必要です：仮定の承認が必要です');
     expect(kit.formatVerifyResult(aborted('config', '設定が不正です'))).toContain('中止しました（実行エラー。終了コード 2）');
-    const legacy: VerifyResult = { schemaVersion: '1.0.0', mode: 'done', change: CHANGE, ok: true, results: [{ check: 'x', status: 'pass', detail: '' }] };
+    const legacy: LegacyVerifyResult = { schemaVersion: '1.0.0', mode: 'done', change: CHANGE, ok: true, results: [{ check: 'x', status: 'pass', detail: '' }] };
     expect(kit.formatVerifyResult(legacy)).toBe('Loomake verify  mode=done  change=c1\n\n✔ x\n\n合格');
   });
 });

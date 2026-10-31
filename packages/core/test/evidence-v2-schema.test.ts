@@ -20,12 +20,13 @@ describe('Evidence 2 と履歴の Evidence 1', () => {
       for (const value of [v2(verify), { ...v2(verify), documents: [document] }]) {
         const parsed = evidenceV2Schema.parse(value);
         expect(parsed).toEqual(value);
+        expect(evidenceSchema.parse(value)).toEqual(value);
         expect('documents' in parsed).toBe('documents' in value);
       }
     }
     for (const value of [evidenceValue(), { ...evidenceValue(), documents: [document] }]) {
       expect(legacyEvidenceSchema.parse(value)).toEqual(value);
-      expect(evidenceSchema.parse(value)).toEqual(value);
+      expect(evidenceSchema.safeParse(value).success).toBe(false);
     }
     expect(reportSchema.parse(reportValue())).toEqual(reportValue());
   });
@@ -48,8 +49,8 @@ describe('Evidence 2 と履歴の Evidence 1', () => {
     expect(legacyEvidenceSchema.parse(legacy)).toEqual(legacy);
   });
 
-  it('[REQ-303][REQ-305] 版の定数と型は core から公開し、いまの書き出しは Evidence 1・Report 2 のまま', () => {
-    expect([EVIDENCE_SCHEMA_VERSION, LEGACY_EVIDENCE_SCHEMA_VERSION, EVIDENCE_V2_SCHEMA_VERSION, REPORT_SCHEMA_VERSION]).toEqual([1, 1, 2, 2]);
+  it('[REQ-303][REQ-305][REQ-315] 版の定数と型は core から公開し、いまの書き出しは Evidence 2・Report 2', () => {
+    expect([EVIDENCE_SCHEMA_VERSION, LEGACY_EVIDENCE_SCHEMA_VERSION, EVIDENCE_V2_SCHEMA_VERSION, REPORT_SCHEMA_VERSION]).toEqual([2, 1, 2, 2]);
     expectTypeOf<LegacyEvidence>().toEqualTypeOf<z.output<typeof legacyEvidenceSchema>>();
     expectTypeOf<EvidenceV2>().toEqualTypeOf<z.output<typeof evidenceV2Schema>>();
     expectTypeOf<Evidence>().toEqualTypeOf<z.output<typeof evidenceSchema>>();

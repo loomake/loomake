@@ -146,8 +146,9 @@ describe('不正な証拠候補を保護する', () => {
     const value = JSON.parse(readFileSync(join(repo.root, path), 'utf8'));
     if (kind === 'sha') value.sha = '0'.repeat(40);
     if (kind === 'change') value.change = 'other';
-    if (kind === 'failed') value.verify.ok = false;
-    if (kind === 'fail-result') value.verify.results[0].status = 'fail';
+    // Evidence 2 の実在する欄で、完了していない記録と FAIL の検査を作る（REQ-164）
+    if (kind === 'failed') value.verify.summary.fail = 1;
+    if (kind === 'fail-result') value.verify.checks[0].result = 'FAIL';
     if (kind === 'hash') value.documents[0].sha256 = '0'.repeat(64);
     if (kind === 'snapshot') {
       value.documents[0].content += '\n違う文書\n';

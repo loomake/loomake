@@ -1,37 +1,27 @@
-// verify 結果の Zod スキーマ（REQ-016・REQ-274）。
-// packages/core/schema/verify-result.schema.json は、このスキーマから書き出す（REQ-276）。
+// verify 結果の Zod スキーマ（REQ-016・REQ-274・REQ-311）。いま書き出す版は 2.0.0（verify-result-v2-schema.ts）。
+// packages/core/schema/verify-result.schema.json は、このファイルの verifyResultSchema から書き出す（REQ-276）。
 // CLI の起動で zod を読まないように、@loomake/core の入口からは loadVerifyResultSchemas() で遅れて読む
 import { z } from 'zod';
-import { VERIFY_RESULT_SCHEMA_VERSION } from './verify-result.js';
 import { preserveUnknownFields } from './preserve-unknown-fields.js';
+import {
+  verifyCheckV2Schema, verifyResultV2AbortedSchema, verifyResultV2CiSchema, verifyResultV2LocalSchema,
+} from './verify-result-v2-schema.js';
 
+/** 1.0.0 の mode。2.0.0 には mode がなく、履歴の結果を読むときだけ使う */
 export const verifyModeSchema = z
   .enum(['quality', 'spec-only', 'done'])
   .describe('quality = 品質コマンドだけ、spec-only = 仕様ゲート、done = 完了ゲート');
 
-// 未知のフィールドは拒否せず、解析結果にそのまま残す（REQ-275）
-export const verifyCheckResultSchema = preserveUnknownFields(z.looseObject({
-  check: z.string().describe('検査の名前'),
-  status: z.enum(['pass', 'fail', 'warn', 'skip']),
-  detail: z.string().describe('補足。無いときは空文字列'),
-}));
+/** いまの verify 結果の各検査（2.0.0 の checks の要素） */
+export const verifyCheckResultSchema = verifyCheckV2Schema;
 
+/** いま書き出す verify 結果（2.0.0）。版付きでないパスの JSON Schema はこのスキーマから書き出す（REQ-276・REQ-304） */
 export const verifyResultSchema = preserveUnknownFields(z
-  .looseObject({
-    schemaVersion: z.literal(VERIFY_RESULT_SCHEMA_VERSION).describe('このスキーマの版（MAJOR.MINOR.PATCH）'),
-    mode: verifyModeSchema,
-    change: z.string().nullable().describe('検査した change-id。--change を省略したときは null'),
-    ok: z.boolean().describe('不合格の検査が 1 つも無いとき true'),
-    results: z.array(verifyCheckResultSchema).describe('検査ごとの結果'),
-    coverage: z
-      .record(z.string().regex(/^REQ-[0-9]{3,}$/), z.array(z.string()))
-      .optional()
-      .describe('完了ゲートで、要件 ID ごとのテストファイルの一覧。テストの無い要件は空の配列'),
-  })
+  .union([verifyResultV2CiSchema, verifyResultV2LocalSchema, verifyResultV2AbortedSchema])
   .meta({
     $id: 'https://loomake.dev/schema/verify-result.schema.json',
     title: 'Loomake verify result',
-    description: 'verify --json が出力する結果。破壊的変更を入れるときは schemaVersion のメジャー番号を上げる（REQ-053）',
+    description: 'verify --json が出力する結果（2.0.0）。scope と実行状態（completed・partial・aborted）の組で形を分ける。破壊的変更を入れるときは schemaVersion のメジャー番号を上げる（REQ-053）',
   }));
 
 // 履歴の 1.0.0 と、要件定義 7.3 の 2.0.0 のスキーマ。loadVerifyResultSchemas() から一緒に読めるようにする

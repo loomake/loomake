@@ -1,8 +1,8 @@
 import { join, relative, resolve } from 'node:path';
-import { parseSpec, parseTrace, REPORT_SCHEMA_VERSION } from '@loomake/core';
+import { EVIDENCE_V2_SCHEMA_VERSION, LEGACY_EVIDENCE_SCHEMA_VERSION, LEGACY_VERIFY_RESULT_SCHEMA_VERSION, VERIFY_RESULT_V2_SCHEMA_VERSION, parseSpec, parseTrace, REPORT_SCHEMA_VERSION } from '@loomake/core';
 import type { EvidenceV2, LegacyEvidence, Report, ReportRow } from '@loomake/core';
 import { UsageError, assertChangeId, loadConfig, findChangeDir, toPosix, createInputReader, JSON_LIMITS, type InputReader } from '@loomake/kit';
-import { EVIDENCE_DIR, EVIDENCE_SCHEMA_VERSION, type Evidence } from './record.js';
+import { EVIDENCE_DIR, EVIDENCE_SCHEMA_VERSION } from './record.js';
 import { changedDocuments, readDocuments, type EvidenceDocument } from './documents.js';
 import { evidenceProblem } from './evidence.js';
 import { projectEvidence } from './projection.js';
@@ -11,6 +11,9 @@ export { REPORT_SCHEMA_VERSION } from '@loomake/core';
 export type { Report, ReportRow } from '@loomake/core';
 
 export type ReportFormat = 'md' | 'json';
+
+/** レポートが読む証拠の記録。履歴の Evidence 1 と、いまの Evidence 2 */
+type Evidence = LegacyEvidence | EvidenceV2;
 
 export type ReportOptions = {
   root: string;
@@ -25,21 +28,53 @@ const isString = (v: unknown): v is string => typeof v === 'string';
 const isDate = (v: unknown) => isString(v) && !Number.isNaN(Date.parse(v));
 const isArrayOf = (v: unknown, item: (x: unknown) => boolean) => Array.isArray(v) && v.every(item);
 
-/** レポートと PR 本文が使う欄の形が違えば、その欄の名前を返す（validate-evidence-records の仮定 A-01） */
-function wrongField(e: Record<string, unknown>): string | undefined {
+const RESULTS = ['PASS', 'FAIL', 'INSUFFICIENT_EVIDENCE', 'NOT_APPLICABLE'];
+type FieldCheck = [string, boolean, string?];
+
+/** Evidence 2 の verify 2.0.0 で、レポートと PR 本文が使う欄。実行状態ごとに必須の欄が違う（REQ-073） */
+function v2Fields(verify: Record<string, unknown> | undefined): FieldCheck[] {
+  const run = isObject(verify?.run) ? verify.run : undefined;
+  const status = run?.status;
+  const evaluated = status === 'completed' || status === 'partial';
+  const note = evaluated ? `run.status が ${status} の Evidence 2 では必須です` : undefined;
+  return [
+    ['verify.run', run !== undefined && (evaluated || status === 'aborted') && Array.isArray(run.errors), 'run.status は completed・partial・aborted のどれかです'],
+    ...(evaluated ? [
+      ['verify.scope', verify?.scope === 'ci' || verify?.scope === 'local', note],
+      ['verify.checks', isArrayOf(verify?.checks, (c) => isObject(c) && isString(c.id) && RESULTS.includes(String(c.result)) && isString(c.reason)), note],
+      ['verify.summary', isObject(verify?.summary), note],
+      ['verify.decision', isObject(verify?.decision) && typeof verify.decision.required === 'boolean', note],
+    ] as FieldCheck[] : []),
+  ];
+}
+
+/** レポートと PR 本文が使う欄の形が違えば、その欄の名前と補足を返す（validate-evidence-records の仮定 A-01・REQ-073） */
+function wrongField(e: Record<string, unknown>): FieldCheck | undefined {
   const verify = isObject(e.verify) ? e.verify : undefined;
-  const checks: [string, boolean][] = [
+  const v2 = e.schemaVersion === EVIDENCE_V2_SCHEMA_VERSION;
+  const checks: FieldCheck[] = [
     ['change', isString(e.change)],
     ['sha', isString(e.sha) && /^[0-9a-f]{40}$/.test(e.sha)],
     ['committedAt', isDate(e.committedAt)],
     ['recordedAt', isDate(e.recordedAt)],
     ['verify', verify !== undefined],
-    ['verify.ok', typeof verify?.ok === 'boolean'],
-    ['verify.results', isArrayOf(verify?.results, (r) => isObject(r) && isString(r.check) && isString(r.status))],
+    ...(v2 ? v2Fields(verify) : [
+      ['verify.ok', typeof verify?.ok === 'boolean'],
+      ['verify.results', isArrayOf(verify?.results, (r) => isObject(r) && isString(r.check) && isString(r.status))],
+    ] as FieldCheck[]),
     ['verify.coverage', verify?.coverage === undefined || (isObject(verify.coverage) && Object.values(verify.coverage).every((f) => isArrayOf(f, isString)))],
     ['documents', e.documents === undefined || isArrayOf(e.documents, (d) => isObject(d) && isString(d.path) && isString(d.sha256) && isString(d.content))],
   ];
-  return checks.find(([, ok]) => !ok)?.[0];
+  return checks.find(([, ok]) => !ok);
+}
+
+/** 証拠の版と、埋め込んだ verify の版の組が違えば、その説明を返す。Evidence 1 は verify 1.0.0、Evidence 2 は verify 2.0.0 を持つ（REQ-073） */
+function mixedVersions(e: Record<string, unknown>): string | undefined {
+  const verify = isObject(e.verify) ? e.verify : undefined;
+  if (verify === undefined || !('schemaVersion' in verify)) return undefined;
+  const expected = e.schemaVersion === EVIDENCE_V2_SCHEMA_VERSION ? VERIFY_RESULT_V2_SCHEMA_VERSION : LEGACY_VERIFY_RESULT_SCHEMA_VERSION;
+  if (verify.schemaVersion === expected) return undefined;
+  return `証拠の版と verify の版が混在しています（証拠の schemaVersion ${JSON.stringify(e.schemaVersion)} に verify の schemaVersion ${JSON.stringify(verify.schemaVersion)}。証拠 ${JSON.stringify(e.schemaVersion)} は verify ${expected} を含みます）`;
 }
 
 // 読めない記録があれば、どのファイルかを示して止める
@@ -55,9 +90,13 @@ function readEvidence(root: string, file: string, change: string, reader: InputR
   if (problem) {
     const name = `証拠の記録 ${toPosix(relative(root, file))}`;
     if (!isObject(value)) throw new UsageError(`${name} は JSON のオブジェクトではありません`);
-    if (value.schemaVersion !== EVIDENCE_SCHEMA_VERSION) throw new UsageError(`${name} は、この版の loomake では読めない形式です（schemaVersion ${JSON.stringify(value.schemaVersion)}。読めるのは ${EVIDENCE_SCHEMA_VERSION}）`);
+    if (value.schemaVersion !== LEGACY_EVIDENCE_SCHEMA_VERSION && value.schemaVersion !== EVIDENCE_V2_SCHEMA_VERSION) {
+      throw new UsageError(`${name} は、この版の loomake では読めない形式です（schemaVersion ${JSON.stringify(value.schemaVersion)}。読めるのは ${LEGACY_EVIDENCE_SCHEMA_VERSION} と ${EVIDENCE_V2_SCHEMA_VERSION}）`);
+    }
+    const mixed = mixedVersions(value);
+    if (mixed) throw new UsageError(`${name} は${mixed}`);
     const field = wrongField(value);
-    if (field) throw new UsageError(`${name} の ${field} の形が違います`);
+    if (field) throw new UsageError(`${name} の ${field[0]} の形が違います${field[2] ? `（${field[2]}）` : ''}`);
     if (value.change !== change) throw new UsageError(`${name} は、ほかの change（${String(value.change)}）の記録です`);
     throw new UsageError(`${name} が不正です：${problem}`);
   }

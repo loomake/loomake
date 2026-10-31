@@ -18,7 +18,7 @@ const evidenceShape = <V extends z.ZodType, S extends z.ZodType>(schemaVersion: 
   documents: z.array(evidenceDocumentSchema).optional(),
 });
 
-/** いまの書き出しの版（EVIDENCE_SCHEMA_VERSION）の証拠 */
+/** いまの書き出しの版（EVIDENCE_SCHEMA_VERSION = 2）の証拠。verify 2.0.0 を埋め込む。版の値は number のまま受け、適合性は trace が検査する（REQ-302・REQ-315） */
 export const evidenceSchema = preserveUnknownFields(evidenceShape(z.number(), embedded(verifyResultSchema))
   .meta({ $id: 'https://loomake.dev/schema/evidence.schema.json', title: 'Loomake evidence' }));
 
