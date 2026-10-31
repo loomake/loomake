@@ -17,6 +17,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { fileURLToPath } from 'node:url';
+import { isMain } from './lib/is-main.mjs';
 
 export const HEARTBEAT_LIMIT = 8 * 1024 * 1024;
 export const PHASE_LIMIT = 64 * 1024;
@@ -172,7 +173,7 @@ export function markPhase(label, event, details = {}, env = process.env) {
   } catch { /* 診断だけを欠く */ }
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (isMain(import.meta.url)) {
   const [mode, directory] = process.argv.slice(2);
   try {
     if (!directory) console.error('ci-heartbeat: 使い方：node scripts/ci-heartbeat.mjs start|stop <dir>');

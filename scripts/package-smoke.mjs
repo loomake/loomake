@@ -6,6 +6,7 @@ import { dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { markPhase } from './ci-heartbeat.mjs';
+import { isMain } from './lib/is-main.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const packages = ['core', 'kit', 'trace', 'runner', 'cli'];
@@ -197,7 +198,7 @@ export async function check(target) {
   console.log(`配布物の検証に合格しました：${process.version} ${process.platform}`);
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (isMain(import.meta.url)) {
   const [mode, target] = process.argv.slice(2);
   try {
     assert.ok(target && ['prepare', 'check'].includes(mode), 'prepareかcheckと、新規の検証先ディレクトリを指定してください');

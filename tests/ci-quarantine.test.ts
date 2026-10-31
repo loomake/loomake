@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -29,13 +29,14 @@ function repo(entries: unknown[]) {
   writeFileSync(join(dir, 'tests/quarantine.json'), JSON.stringify({ entries }));
   return dir;
 }
-function cli(dir: string, args: string[], today = '2026-11-01') {
+function cli(dir: string, args: string[], today = '2026-11-01', launch = dir) {
   const output = join(dir, 'github-output');
   writeFileSync(output, '');
   // スクリプトは自分の場所の 1 つ上をリポジトリとして読むので、写しを置いて動かす
-  mkdirSync(join(dir, 'scripts'), { recursive: true });
+  mkdirSync(join(dir, 'scripts/lib'), { recursive: true });
   writeFileSync(join(dir, 'scripts/ci-quarantine.mjs'), readFileSync(script));
-  const result = spawnSync(process.execPath, [join(dir, 'scripts/ci-quarantine.mjs'), ...args], {
+  writeFileSync(join(dir, 'scripts/lib/is-main.mjs'), readFileSync(join(root, 'scripts/lib/is-main.mjs')));
+  const result = spawnSync(process.execPath, [join(launch, 'scripts/ci-quarantine.mjs'), ...args], {
     encoding: 'utf8', env: { ...process.env, GITHUB_OUTPUT: output, LOOMAKE_QUARANTINE_TODAY: today },
   });
   const outputs = Object.fromEntries(readFileSync(output, 'utf8').trim().split('\n').filter(Boolean).map((line) => [line.slice(0, line.indexOf('=')), line.slice(line.indexOf('=') + 1)]));
@@ -140,6 +141,23 @@ describe('試験の隔離一覧', () => {
     expect(result.status, result.stderr).toBe(0);
     expect(JSON.parse(result.outputs.matrix!).include).toHaveLength(2);
     expect(result.outputs.has_entries).toBe('true');
+  });
+
+  it('[REQ-344] シンボリックリンク経由で起動しても一覧を検査して出力する', () => {
+    // macOS の一時ディレクトリ（/var → /private/var）と同じ形を作る。Windows では管理者権限の要らないジャンクションを使う
+    const dir = repo([entry()]);
+    const parent = mkdtempSync(join(tmpdir(), 'loomake-quarantine-link-'));
+    dirs.push(parent);
+    const link = join(parent, 'link');
+    symlinkSync(dir, link, process.platform === 'win32' ? 'junction' : 'dir');
+    expect(realpathSync(link)).toBe(realpathSync(dir));
+    expect(link).not.toBe(realpathSync(link));
+    const ok = cli(dir, ['--os', 'windows-latest'], '2026-11-14', link);
+    expect(ok.status, ok.stderr).toBe(0);
+    expect(ok.outputs).toEqual({ exclude: '["packages/runner/test/guards.test.ts"]', has_entries: 'true' });
+    const expired = cli(dir, ['--os', 'windows-latest'], '2026-11-15', link);
+    expect(expired.status).toBe(2);
+    expect(expired.stderr).toContain('期限 2026-11-14 を過ぎました');
   });
 
   it('[REQ-344] リポジトリの一覧は形式どおりで、各エントリに Issue 番号と 14 日以内の期限がある', () => {
