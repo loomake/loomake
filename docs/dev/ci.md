@@ -157,3 +157,9 @@ Vitest 5.0.5 の実 fixture では、全件とファイルの明示選択で準�
 実リポジトリの列挙試験は、現在の空一覧と独立したファイル一覧を比較しています。PR184 で実一覧を非空にするときは、case・parameter・status の多重集合まで独立した比較の基準を拡張します。期待値を実装の出力に合わせて緩めたり、同じ routing 関数だけから期待値を作ったりしません。
 
 この基盤では PR の slow 除外を結線しません。Node20 の削除、実 case の OS 別割当と移動、隔離と分割の両立、PR の実行範囲、元の時計と全件の測定、required context の人の操作を含む速度対策1-1の受入は PR184 に残ります。合成 fixture の成功を実 case の独立性や速度対策の完成には数えません。
+
+## 全件の所要時間を測る
+
+`measure-slow-tests.yml` は `ci/measure-*` への push で、3 OS・各3 sampleの同じheadを測る。既存のPR品質検査や必須statusは変えない。
+
+測定workflowはファイルや名前を指定せず、`pnpm test`で全件を実行する。新しく加わった試験も対象にし、元15fileと期限試験の移動先2fileは最低限の包含確認に残す。保存する測定用metadataは`schemaVersion: 2`・`selection: all`で、`requiredFiles`に元15fileと`run-timeout`・`external-budget-deadline`の計17file、`files`に保存したraw reportの実suite一覧を持つ。同じsuite名の重複は残し、`missingRequiredFiles`で元対象の欠落を示す。reportがなければ`collectionState: missing`、読めないかrepo外のsuiteを含めば`invalid`とし、どちらも一覧を`null`にする。`recorded`は一覧を読めた状態で、全件成功や包含済みを意味しない。旧schemaVersion 1の15file測定は履歴として保持し、最新headの全件測定に流用しない。
