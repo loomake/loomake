@@ -175,4 +175,3 @@ describe('S4 の一時contextと公開要約', () => {
     expect(child.stdout + child.stderr).not.toContain('PRIVATE_CAPTURE'); expect(readdirSync(raw)).toEqual([]);
   });
 });
-
