@@ -20,4 +20,4 @@
 
 ## 5. 確認
 
-- [ ] 5.1 全体試験を回し、新旧の監査の件数と `--migrate --dry-run` の件数を作業記録と PR に書く。`pnpm -s verify --change scenario-audit-scope --done` を通し、tasks をすべてチェックする。archive は管理役
+- [x] 5.1 全体試験を回し、新旧の監査の件数と `--migrate --dry-run` の件数を作業記録と PR に書く。`pnpm -s verify --change scenario-audit-scope --done` を通し、tasks をすべてチェックする。archive は管理役
