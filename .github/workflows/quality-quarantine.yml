@@ -3,6 +3,7 @@ name: quality-quarantine
 # 隔離一覧（tests/quarantine.json）の試験を、一覧の OS ごとにシャードに分けずに実行し、記録を集める（REQ-344・REQ-345）。
 # 試験のジョブは continue-on-error で、失敗しても run の成否に数えない。一覧の誤り・期限切れは plan ジョブで失敗する。
 # ci.yml と同じく、main への push・定期実行と、ci:all-os ラベルの PR で動く。手順は docs/dev/ci.md
+# 定期実行と手動実行では、別のジョブ domain-mutations で変異試験（scripts/domain-mutations.mjs）も流す。PR では動かず、隔離のジョブとは独立している
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled]
@@ -53,6 +54,48 @@ jobs:
         shell: bash
         env:
           SAMPLES: ${{ inputs.samples || '1' }}
+
+  # 夜間の変異試験（scripts/domain-mutations.mjs）。定期実行と手動実行のときだけ動き、PR では動かない（必須チェックにも入れない）。
+  # 生き残った変異の数と一覧を artifact に残す。ほかのジョブとは needs でつながず独立させ、失敗しても隔離の試験を止めない
+  domain-mutations:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        id: checkout
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - id: mutations
+        run: node scripts/domain-mutations.mjs .loomake/quality/domain-mutations-nightly
+      # 生き残った変異（status が survived）の数と一覧を survived.json と実行の概要に書く。試験が失敗しても書く
+      - id: survived
+        if: ${{ !cancelled() && hashFiles('.loomake/quality/domain-mutations-nightly/results.json') != '' }}
+        run: |
+          results=.loomake/quality/domain-mutations-nightly/results.json
+          jq '{ok: .ok, baseline: .baseline.status, survived: ([.mutations[] | select(.status == "survived")] | length), errors: ([.mutations[] | select(.status == "error")] | length), mutations: [.mutations[] | select(.status != "killed") | {id: .id, label: .label, file: .file, status: .status}]}' "$results" > .loomake/quality/domain-mutations-nightly/survived.json
+          {
+            echo "## 変異試験（夜間）"
+            echo
+            jq -r '"生き残った変異：\(.survived) 件、試行のエラー：\(.errors) 件（基準の試験：\(.baseline)）"' .loomake/quality/domain-mutations-nightly/survived.json
+            echo
+            jq -r '.mutations[] | "- \(.id) \(.label)（\(.file)）：\(.status)"' .loomake/quality/domain-mutations-nightly/survived.json
+          } >> "$GITHUB_STEP_SUMMARY"
+        shell: bash
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        id: upload
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
+        with:
+          name: domain-mutations-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .loomake/quality/domain-mutations-nightly/
+          retention-days: 30
+          if-no-files-found: warn
 
   quality-quarantine:
     needs: plan
