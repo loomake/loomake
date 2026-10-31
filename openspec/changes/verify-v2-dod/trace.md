@@ -52,3 +52,13 @@ R05 A・R08 Bも親traceと同じ[承認元](https://github.com/loomake/loomake/
 local doneの初回はtask4.1の未チェック行だけでexit 1となった。正規runnerが行う一時完了印と失敗時の復元に合わせて再実行し、schemaVersion 2.0.0・scope local・run.status completed・errors空・全21チェックPASS・decision.required false・exit 0を確認した。最終scope ci・必須5チェック・3 OS・Opus最終レビューは別に必要であり、この結果で免除しない。
 
 管理役が旧主仕様1件と子delta3件の対応を独立に読み、正規関数による再照合の成功を確認した。全体試験後の子監査も3件reviewed・invalid 0であるが、repository監査は392件reviewed・240件unreviewed・71件invalidで、進行中の子delta3件もpendingに残る。主仕様への本番適用・全体再監査と親の残受入を完了扱いにしない。
+
+main aeee取り込み後にも、a72d5a53で開始し親移管注記3行の訂正後の0c0a024bで終了した実検証で485 suite・2134件成功・既存pending8件・local done exit 0と、同じレポートでの子3件の監査成功を確認した。
+
+## CRLF修理後の検証
+
+[Issue #281](https://github.com/loomake/loomake/issues/281) のWindows失敗に対し、kit-assets・実init・package-smokeの抽出入力でCRLFをLFへ正規化した。実配布formatの改行だけを変える回帰は、修理前に新1件だけnull assertionで失敗し、修理後は同じ期待する全文・印1件・ci checkbox不在・末尾注記で成功した。旧87テストブロック・凍結17範囲・元SourceとScenario301 bytes、旧主仕様1件のScenario hashと試験hashを保持した。
+
+修理後の対象79件と、別のfresh consumerによるLF・CRLFの実tarball検証は成功した。同じconsumerを再利用した検証は既存証拠の未commitで終盤に失敗したため履歴に残し、成功へ読み替えていない。全体試験は487 suite・2190件成功・既存pending8件・失敗0件で、実local doneは2.0.0・local・completed・errors空・全21チェックPASS・decision.required false・exit 0だった。同じ成功レポートで子3件を再監査し、reviewed 3・invalid 0を確認した。
+
+Opus初回の軽微2件について、main取り込み後の先行成功をworklog・この節・audit READMEへ記録し、tasksの最終注記の文法を直した。初回レビューを修理後headへ流用せず、最終CI・3 OS・独立再レビューと本番同期後のrepository監査は別に必要である。

@@ -22,7 +22,7 @@
 
 - [x] 4.1 lint・typecheck・全体試験・CLI参照の生成一致を確認し、`pnpm -s verify --change verify-v2-dod --done --scope local` がexit 0になることを確認する <!-- loomake:gate=done -->
 
-注：4.1はローカルの完了だけである。最終の合格には、CIの `--done --scope ci` が exact 2.0.0・scope ci・completed・errors空・PASS・要判断なし・exit 0となり、必須5チェック・3 OSと独立レビューが成功が別に必要になる。これらはチェックボックスにしない。子の受入をC001の完成とは扱わない。
+注：4.1はローカルの完了だけである。最終の合格には、CIの `--done --scope ci` が exact 2.0.0・scope ci・completed・errors空・PASS・要判断なし・exit 0となり、必須5チェック・3 OS・独立レビューの成功が別に必要になる。これらはチェックボックスにしない。子の受入をC001の完成とは扱わない。
 
 ## Workflow follow-up
 

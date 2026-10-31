@@ -41,3 +41,13 @@ node openspec/changes/verify-v2-dod/audit/replay.mjs .loomake/test-report.json .
 local done内の全体試験は478 suiteが成功し、2093件成功・既存pending8件・失敗0件だった。同じ成功レポートで子の再照合を実行し、`result.json` を更新した。子の3件はreviewed、invalidは0件で、repositoryへの反映は引き続き行っていない。
 
 正規repository監査も同じ全体試験レポートで実行した。結果は392件reviewed・240件unreviewed・71件invalidでexit 1となり、進行中のchangeはpending161件（うちこの子3件）である。旧主仕様の元Scenarioはreviewedを確認した。子の実監査とこの全体未達を区別し、親の受入まで全体監査の条件を保持する。
+
+main aeee取り込み後にも、a72d5a53で開始し親移管注記3行の訂正後の0c0a024bで終了した実検証で485 suite・2134件成功・既存pending8件・local done exit 0と、同じレポートでの子3件の監査成功を確認した。
+
+## CRLF修理後の監査
+
+Issue #281の改行依存を修理し、LFとCRLFの実配布formatが同じ行配列・印1件・ci checkbox不在・末尾注記を満たす回帰を追加した。新2件のScenarioについて、元のassertionの条件を保つことと実init・改行回帰の成功を読み直し、必要な試験ブロックhashと対応理由だけを更新した。旧主仕様1件と子の元Scenarioのテストブロックは不変で、旧主仕様のScenario hashと試験hashを保持する。
+
+上の478 suite・2093件と485 suite・2134件の結果は、それぞれの取り込み時点の履歴である。現在の `result.json` はCRLF修理後の実成功レポートで正規関数を再実行した結果とし、以前の記録はGit履歴に保持する。子3件の対応確認をrepository全体やWindows CIの成功へ読み替えない。
+
+修理後の全体試験は487 suite・2190件成功・既存pending8件・失敗0件で、local doneはexit 0だった。この実成功レポートで正規replayを再実行し、現在の `result.json` は子3件reviewed・invalid 0・`repositoryApplied: false` を記録している。修理後headのWindowsを含むCIとOpus再レビューは別に確認する。
