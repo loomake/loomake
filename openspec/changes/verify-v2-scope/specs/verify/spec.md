@@ -16,7 +16,7 @@ Source: REQ-050
 ## ADDED Requirements
 
 ### Requirement: scopeの指定と既存ゲートの保持
-verifyはciとlocalを明示して実行できる SHALL。scope省略時、doneはci、spec-onlyはlocalを既定にする SHALL。ciの完了ゲートはCI必須項目を含む全条件で集約し、localはローカル実施項目の完了だけを返す MUST。既存の合意・仕様整合性・未完了タスク・成功したID付きテスト・品質コマンド・安全制約の検査を省略または弱化しない MUST。--skip-commandsを実施済みの証明にせず、証跡のない項目は不足とする MUST。spec-onlyは仕様/構造検査だけをchecks/summaryに数え、品質targetと品質対象guardを生成しない SHALL。changeなしのverifyはscope省略か明示localを受理し、明示ciは使い方の誤りとして終了コード2にする SHALL。
+verifyはciとlocalを明示して実行できる SHALL。scope省略時、doneはci、spec-onlyはlocalを既定にする SHALL。ciの完了ゲートはCI必須項目を含む全条件で集約し、localはローカル実施項目の完了だけを返す MUST。既存の合意・仕様整合性・未完了タスク・成功したID付きテスト・品質コマンド・安全制約の検査を省略または弱化しない MUST。--skip-commandsを実施済みの証明にせず、証跡のない項目は不足とする MUST。spec-onlyは仕様/構造検査だけをchecks/summaryに数え、品質targetと品質対象guardを生成しない SHALL。
 
 Source: REQ-312
 
@@ -24,9 +24,9 @@ Source: REQ-312
 - **WHEN** changeを指定せずbare verifyを実行する
 - **THEN** 品質コマンド専用のlocal結果をchange:null・verdictなしで返し、quality.yamlを新たに必須にしない。change必須ゲートの欠落と同一視しない
 
-#### Scenario: changeなしの明示scope
-- **WHEN** changeを指定せずに --scope local と --scope ci を別々に付けてverifyをCLI/APIで実行する
-- **THEN** localは品質コマンド専用のlocal結果を返し、ciは使い方の誤り（UsageError）として終了コード2を返す。品質コマンドは実行しない
+#### Scenario: spec-onlyの明示local
+- **WHEN** changeを指定して --spec-only --scope local でverifyをCLI/APIで実行する
+- **THEN** scopeがlocalの結果を返し、品質コマンドは実行しない
 
 #### Scenario: scopeの既定値と明示指定
 - **WHEN** scopeを省略してdoneまたはspec-onlyを実行し、別に明示scopeを渡してCLI/APIを実行する

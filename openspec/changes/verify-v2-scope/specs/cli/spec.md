@@ -11,7 +11,7 @@ Source: REQ-135
 
 #### Scenario: サブコマンドのヘルプ
 - **WHEN** `loomake verify --help` を実行する
-- **THEN** verify の使い方と、`--change`・`--spec-only`・`--done`・`--json`・`--skip-commands`・`--scope local|ci` の説明が表示される。doneの既定ci、spec-onlyとchangeなしの既定local、changeなしの明示ci拒否、skipの不足（終了コード1）とcoverage省略も読め、検査は実行されず、終了コードは 0 である
+- **THEN** verify の使い方と、`--change`・`--spec-only`・`--done`・`--json`・`--skip-commands`・`--scope local|ci` の説明が表示される。doneの既定ci、spec-onlyとchangeなしの既定local、skipの不足（終了コード1）とcoverage省略も読め、検査は実行されず、終了コードは 0 である
 
 #### Scenario: trace の record のヘルプ
 - **WHEN** `loomake trace record --help` を実行する

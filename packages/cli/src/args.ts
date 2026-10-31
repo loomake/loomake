@@ -88,7 +88,7 @@ export const CLI_COMMANDS = [
       { name: '--done', kind: 'flag', label: '--done', description: '完了ゲート：仕様ゲートに加え、タスク・要件ごとのテスト・品質コマンドを検査する', required: '条件付き必須', defaultValue: 'false', condition: '--change指定時は--spec-onlyとのどちらか片方が必須。--changeなしでは指定不可' },
       { name: '--json', kind: 'flag', label: '--json', description: '結果を JSON で標準出力に出す（進捗は標準エラー）', required: '任意', defaultValue: 'false' },
       { name: '--skip-commands', kind: 'flag', label: '--skip-commands', description: '品質コマンドを実行せず、テストのレポートも読まずに、その項目を証拠不足にする（終了コード 1）。coverage は出さない', required: '任意', defaultValue: 'false' },
-      { name: '--scope', kind: 'value', choices: SCOPES.join(' / '), label: '--scope local|ci', description: '結果の範囲。省くと --done は ci、--spec-only と --change なしは local（--change なしの ci は使えない）', required: '任意', defaultValue: '--done は ci、--spec-only と --change なしは local', condition: '--change なしで指定できるのは local だけ。環境変数 CI では既定値を変えない' },
+      { name: '--scope', kind: 'value', choices: SCOPES.join(' / '), label: '--scope local|ci', description: '結果の範囲。省くと --done は ci、--spec-only と --change なしは local', required: '任意', defaultValue: '--done は ci、--spec-only と --change なしは local', condition: '環境変数 CI では既定値を変えない' },
     ],
   },
   {

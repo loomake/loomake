@@ -28,7 +28,7 @@
     {
       "change": "verify-v2-scope",
       "requirement": "REQ-135",
-      "approval": "R-C001-05（方針の承認のみ。具体差分は PR 本文で個別承認待ち）",
+      "approval": "S8-10（利用者が27例すべて承認、2026-10-31、PR #217）",
       "reason": "verify の使い方の行に --scope local|ci を足す",
       "argv": [
         [
@@ -52,7 +52,7 @@
     {
       "change": "verify-v2-scope",
       "requirement": "REQ-135",
-      "approval": "R-C001-05（方針の承認のみ。具体差分は PR 本文で個別承認待ち）",
+      "approval": "S8-10（利用者が27例すべて承認、2026-10-31、PR #217）",
       "reason": "verify の使い方の誤りで出す使い方の行（2 回目の出力）に --scope local|ci を足す",
       "argv": [
         [
@@ -92,7 +92,7 @@
     {
       "change": "verify-v2-scope",
       "requirement": "REQ-135",
-      "approval": "R-C001-05（方針の承認のみ。具体差分は PR 本文で個別承認待ち）",
+      "approval": "S8-10（利用者が27例すべて承認、2026-10-31、PR #217）",
       "reason": "--skip-commands の説明に coverage を出さないことを足し、--scope の説明（受理値・既定値・bare verify の ci 拒否）を足す",
       "argv": [
         [
@@ -111,12 +111,12 @@
       ],
       "stream": "stdout",
       "from": "  --skip-commands     品質コマンドを実行せず、テストのレポートも読まずに、その項目を証拠不足にする（終了コード 1）",
-      "to": "  --skip-commands     品質コマンドを実行せず、テストのレポートも読まずに、その項目を証拠不足にする（終了コード 1）。coverage は出さない\n  --scope local|ci    結果の範囲。省くと --done は ci、--spec-only と --change なしは local（--change なしの ci は使えない）"
+      "to": "  --skip-commands     品質コマンドを実行せず、テストのレポートも読まずに、その項目を証拠不足にする（終了コード 1）。coverage は出さない\n  --scope local|ci    結果の範囲。省くと --done は ci、--spec-only と --change なしは local"
     },
     {
       "change": "verify-v2-scope",
       "requirement": "REQ-135",
-      "approval": "R-C001-05（方針の承認のみ。具体差分は PR 本文で個別承認待ち）",
+      "approval": "S8-10（利用者が27例すべて承認、2026-10-31、PR #217）",
       "reason": "trace record の使い方の行に --scope local|ci を足す",
       "argv": [
         [
@@ -160,7 +160,7 @@
     {
       "change": "verify-v2-scope",
       "requirement": "REQ-135",
-      "approval": "R-C001-05（方針の承認のみ。具体差分は PR 本文で個別承認待ち）",
+      "approval": "S8-10（利用者が27例すべて承認、2026-10-31、PR #217）",
       "reason": "trace の使い方の誤りで出す使い方の行（2 回目の出力。trace record の行）に --scope local|ci を足す",
       "argv": [
         [
@@ -237,7 +237,7 @@
     {
       "change": "verify-v2-scope",
       "requirement": "REQ-135",
-      "approval": "R-C001-05（方針の承認のみ。具体差分は PR 本文で個別承認待ち）",
+      "approval": "S8-10（利用者が27例すべて承認、2026-10-31、PR #217）",
       "reason": "trace record の説明に --scope の受理値と既定値（ci）を足す",
       "argv": [
         [

@@ -6,7 +6,7 @@
 
 ## 既定値はAPIが持つ
 
-`runVerify` は `scope` を省くと、doneならci、それ以外はlocalにする（2b-1/6から変わらない）。CLIは既定値を自分で補わないので、APIとCLIで結果と終了コードがずれない。環境変数 `CI` は読まない。changeなしで明示ciを渡すと、`runVerify` が `UsageError` を投げる。CLIは `UsageError` を終了コード2にし、`--json` のときはabortedのJSONを出す。
+`runVerify` は `scope` を省くと、doneならci、それ以外はlocalにする（2b-1/6から変わらない）。CLIは既定値を自分で補わないので、APIとCLIで結果と終了コードがずれない。環境変数 `CI` は読まない。明示したscopeは、changeの有無にかかわらず指定どおりに扱い、特別な拒否はしない（changeなしのciの扱いはverify-v2-gatesのREQ-037・039に従う）。
 
 ## trace record
 

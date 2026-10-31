@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { UsageError, runVerify, verifyExitCode } from '@loomake/kit';
+import { runVerify, verifyExitCode } from '@loomake/kit';
 import * as trace from '@loomake/trace';
 import { main } from '../src/main.js';
 import { CHANGE, COPY_REPORT, reportJson, withProject } from '../../kit/test/project.js';
@@ -80,37 +80,26 @@ describe('verify の --scope', () => {
     });
   });
 
-  it('[REQ-312] change を指定しない verify の明示 ci は使い方の誤りで 2。明示 local は品質コマンド専用の local 結果。API も同じ', async () => {
+  it('[REQ-312] change を指定しない verify の明示 local は品質コマンド専用の local 結果（change は null、verdict なし）。API も同じ', async () => {
     await withProject({ config: { openspecValidate: false, commands: {} } }, async (root) => {
-      const ci = await run(root, undefined, 'verify', '--scope', 'ci', '--json');
-      expect(ci.code).toBe(2);
-      expect(JSON.parse(ci.stdout).run).toMatchObject({ status: 'aborted' });
-      expect(JSON.parse(ci.stdout).run.errors[0].kind).toBe('usage');
-      expect(ci.stderr).toContain('--change を指定しない verify では --scope ci は使えません');
-      const text = await run(root, undefined, 'verify', '--scope=ci');
-      expect([text.code, text.stdout]).toEqual([2, '']);
-      expect(text.stderr).toContain('使い方: loomake verify');
       const local = await run(root, undefined, 'verify', '--scope', 'local', '--json');
       expect(local.code).toBe(0);
-      expect(JSON.parse(local.stdout)).toMatchObject({ scope: 'local', change: null });
-      expect(() => runVerify({ root, scope: 'ci' })).toThrow(UsageError);
+      const parsed = JSON.parse(local.stdout);
+      expect(parsed).toMatchObject({ scope: 'local', change: null });
+      expect(parsed).not.toHaveProperty('verdict');
       expect(runVerify({ root, scope: 'local' }).scope).toBe('local');
+      expect(runVerify({ root }).scope).toBe('local');
     });
   });
 });
 
 describe('品質コマンドは実行しない', () => {
-  it('[REQ-312] spec-only の local と、change なしの明示 ci（使い方の誤り）では、品質コマンドを動かさない', async () => {
+  it('[REQ-312] spec-only の明示 local では、品質コマンドを動かさない', async () => {
     const marker = 'ran.txt';
     const command = `node -e "require('fs').writeFileSync('${marker}','x')"`;
     await withProject({ config: { openspecValidate: false, commands: { test: command, lint: command } } }, async (root) => {
       const spec = await run(root, undefined, 'verify', '--change', CHANGE, '--spec-only', '--scope', 'local', '--json');
       expect(JSON.parse(spec.stdout).scope).toBe('local');
-      expect(existsSync(join(root, marker))).toBe(false);
-      const ci = await run(root, undefined, 'verify', '--scope', 'ci', '--json');
-      expect(ci.code).toBe(2);
-      expect(existsSync(join(root, marker))).toBe(false);
-      expect(() => runVerify({ root, scope: 'ci' })).toThrow(UsageError);
       expect(existsSync(join(root, marker))).toBe(false);
       // 対照：change なしの local は品質コマンドを動かすので、痕跡が残る
       await run(root, undefined, 'verify', '--scope', 'local', '--json');
