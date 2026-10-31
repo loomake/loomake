@@ -230,3 +230,106 @@ if (hasAny(['b'])) describe('fast group', () => { if (has('b')) it.each([1,2])('
     expect(registration(nested.replace("if (hasAny(['a'])) ", ''), cases)).toEqual(['unguardedDescribe']);
   });
 });
+
+
+describe('行単位の登録宣言', () => {
+  const imported = "import { eachRows } from './helpers/partition-part.js';";
+  const rows = (name = 'it', table = "['x', 'y']", ids = "['a', 'b']") => `{ const ${name} = eachRows(has, ${ids}); ${name}.each(${table})('row %j', () => {}); }`;
+  const allCodes = (source: string, cases = { a: [], b: [] } as Record<string, string[]>) => ({
+    inventory: [...new Set(codes(source))].sort(), registration: [...new Set(registration(source, cases))].sort(),
+  });
+  it.each(['it', 'test'])('bareBlockの%s束縛と元call/表の位置を保つ', (name) => {
+    const source = imported + rows(name);
+    const result = inventoryDeclarations(source, file);
+    expect(result.errors).toEqual([]);
+    expect(result.nonCall).toEqual([{ start: source.indexOf(`${name} =`), line: 1, kind: 'rowBinding' }]);
+    expect(result.declarations.map((item: { text: string; rows: number | undefined; rowIds?: string[]; rowTexts?: string[] }) => ({ text: item.text, rows: item.rows, ids: item.rowIds, texts: item.rowTexts }))).toEqual([
+      { text: `${name}.each(['x', 'y'])('row %j', () => {})`, rows: 2, ids: ['a', 'b'], texts: ["'x'", "'y'"] },
+    ]);
+    expect(result.expandedRows).toBe(2);
+    expect(registration(source, { a: ['linux'], b: [] })).toEqual([]);
+  });
+  it.each(["(['x', 'y'] as const)", "['x', 'y'] satisfies string[]", "[[1, -2], [true, null]]", "[{ value: 'x' }, { value: 'y' }]"])(
+    '型wrapperとliteralな全表を評価せず照合する: %s', (table) => {
+      const source = imported + rows('it', table);
+      expect(codes(source)).toEqual([]); expect(registration(source, { a: ['linux'], b: [] })).toEqual([]);
+      expect(inventoryDeclarations(source, file).expandedRows).toBe(2);
+    },
+  );
+  it('describe内で従来の直接宣言・表全体ID・factoryと共存する', () => {
+    const source = imported + `const posixIt = it.runIf(conditionMustNotRun()); if (hasAny(['a','b','c','d','e'])) describe('group', () => { ${rows()} if (has('c')) it('direct', () => {}); if (has('d')) it.each([1,2])('table %j', () => {}); if (has('e')) posixIt('factory', () => {}); });`;
+    expect(codes(source)).toEqual([]); expect(registration(source, { a: ['linux'], b: [], c: [], d: [], e: [] })).toEqual([]);
+    expect(inventoryDeclarations(source, file).expandedRows).toBe(6);
+  });
+  it.each([
+    ['length', rows('it', "['x']"), ['rowIdsMismatch'], ['rowIdsMismatch']],
+    ['dynamic ids', rows('it', "['x','y']", 'ids'), ['dynamicGuard'], ['dynamicGuard','missingId']],
+    ['spread ids', rows('it', "['x','y']", "['a',...ids]"), ['dynamicGuard'], ['dynamicGuard','missingId']],
+    ['variable table', rows('it', 'table'), ['dynamicRows','rowIdsMismatch','unsupportedRowForm'], ['rowIdsMismatch','unsupportedRowForm']],
+    ['spread table', rows('it', "['x',...table]"), ['dynamicRows','rowIdsMismatch','unsupportedRowForm'], ['rowIdsMismatch','unsupportedRowForm']],
+    ['call row', rows('it', "['x',tmpdir()]"), ['unsupportedRowForm'], ['unsupportedRowForm']],
+    ['duplicate ids', rows('it', "['x','y']", "['a','a']"), [], ['duplicateId','missingId']],
+    ['unknown ids', rows('it', "['x','y']", "['a','unknown']"), [], ['missingId','unknownId']],
+    ['invalid ids', rows('it', "['x','y']", "['a','Bad_ID']"), [], ['invalidId','missingId','unknownId']],
+  ])('行境界の診断集合を保つ: %s', (_, body, inventory, registered) => {
+    expect(allCodes(imported + body)).toEqual({ inventory: [...inventory].sort(), registration: [...registered].sort() });
+  });
+  it.each([
+    ['let', rows().replace('const it', 'let it')],
+    ['export', rows().replace('const it', 'export const it')],
+    ['extra statement', rows().replace("; it.each", "; const extra = 1; it.each")],
+    ['extra reference', rows('it', "['x','y']").replace('() => {}', '() => { fn(it); }')],
+    ['conditional block', `if (enabled) ${rows()}`],
+    ['ordinary function', `function register() { ${rows()} }`],
+    ['loop', `for (;;) ${rows()}`],
+    ['wrong has', rows().replace('eachRows(has,', 'eachRows(other,')],
+    ['factory', rows('posixIt')],
+    ['runIf', rows().replace('it.each(', 'it.runIf(true).each(')],
+    ['tagged', rows().replace("it.each(['x', 'y'])", "it.each`value\n${1}\n${2}`")],
+    ['for', rows().replace('it.each(', 'it.for(')],
+    ['local function', rows().replace('eachRows(has,', 'otherRows(has,')],
+    ['missing import', rows()],
+  ])('対応形外は通常helperとして通さない: %s', (label, body) => {
+    const source = (label === 'missing import' ? '' : imported) + body;
+    const inventory = label === 'factory' ? ['unsupportedRowForm'] : ['shadowedTest', 'unclassifiedCandidate', ...(label === 'local function' ? [] : ['unsupportedRowForm'])];
+    const registered = ['missingId', 'unprefixed', ...(label === 'local function' ? [] : ['unsupportedRowForm'])];
+    expect(allCodes(source)).toEqual({ inventory, registration: registered });
+  });
+  it.each(["const it = foo();", "const test = () => {};", "const test = it;"])('it/testの通常変数を拒否する: %s', (source) => {
+    expect([...new Set(codes(source))].sort()).toEqual([...(source === 'const test = it;' ? ['alias'] : []), 'shadowedTest', 'unclassifiedCandidate']);
+  });
+  it.each([
+    "import type { eachRows } from './helpers/partition-part.js';",
+    "import { type eachRows } from './helpers/partition-part.js';",
+    "import { eachRows } from './helpers/other.js';",
+  ])('実行時のhelper import binding以外は行登録にしない: %s', (header) => {
+    expect(codes(header + rows())).toContain('unsupportedRowForm');
+    expect(registration(header + rows(), { a: [], b: [] })).toContain('unsupportedRowForm');
+  });
+  it.each(["[{ value: callMustNotRun() }, 'y']", "[[...values], 'y']", "[{ ...values }, 'y']", "[{ [key]: 1 }, 'y']", "[{ value }, 'y']"])(
+    '表の中の動的な式を実行/推測しない: %s', (table) => {
+      expect(codes(imported + rows('it', table))).toContain('unsupportedRowForm');
+      expect(registration(imported + rows('it', table), { a: [], b: [] })).toContain('unsupportedRowForm');
+    },
+  );
+  it.each([
+    ["import { eachRows as select } from './helpers/partition-part.js';", 'select(has,'],
+    [imported, 'eachRows.call(null, has,'],
+    ["import * as parts from './helpers/partition-part.js';", 'parts.eachRows(has,'],
+  ])('helperの別名・namespace・call経由を対応形に含めない: %s', (header, initializer) => {
+    const source = header + rows().replace('eachRows(has,', initializer);
+    expect(allCodes(source)).toEqual({ inventory: ['shadowedTest', 'unclassifiedCandidate', 'unsupportedRowForm'], registration: ['missingId', 'unprefixed', 'unsupportedRowForm'] });
+  });
+  it('parameterized describe内を行登録として受理しない', () => {
+    const source = imported + `describe.each([1,2])('group %j', () => { ${rows()} });`;
+    expect(codes(source)).toContain('unsupportedRowForm');
+    expect(registration(source, { a: [], b: [] })).toContain('unsupportedRowForm');
+  });
+  it('行IDもfile全体の重複・欠測とdescribe guardへ展開する', () => {
+    const wrapped = imported + `if (hasAny(['a','b'])) describe('group', () => { ${rows()} });`;
+    expect(registration(wrapped, { a: ['linux'], b: [] })).toEqual([]);
+    expect(registration(wrapped.replace("hasAny(['a','b'])", "hasAny(['a'])"), { a: ['linux'], b: [] })).toEqual(['guardMismatch']);
+    expect(registration(imported + rows() + declared(), { a: [], b: [] })).toEqual(['duplicateId']);
+    expect(registration(imported + rows(), { a: [], b: [], c: [] })).toEqual(['missingId']);
+  });
+});
