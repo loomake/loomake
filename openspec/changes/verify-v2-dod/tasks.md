@@ -1,11 +1,11 @@
 # Tasks
 
-この change は提案段階。R06の規則移行は既承認である。一式は未適用であり、1.2の251行の期待値の具体的承認までは全実装へ進まない。
+この change は実装段階。R06の規則移行は既承認であり、元251行の期待値1行も利用者が個別承認した。承認元とpatchの照合はtraceに記録し、以下のタスク順に実装・検証する。
 
 ## 1. 仕様と承認
 
 - [x] 1.1 子の計画・REQ-136全ブロック・trace・親の移管注記・未適用patchを準備する。spec-onlyとOpenSpec strictが成功し、正規パーサの本文が500 UTF-16以内、元ScenarioとSourceが同じで、保護対象の実働ファイルが不変であることを確認する（REQ-136）
-- [ ] 1.2 R06の規則移行の既承認出典を照合し、proposed/approval-request.md と implementation.patch にある tests/kit-assets.test.ts:251 の具体的な旧→新 expect だけについて、人の個別承認を得る。対象patchのhashと、この期待値の承認元をtraceへ記録して照合する
+- [x] 1.2 R06の規則移行の既承認出典を照合し、proposed/approval-request.md と implementation.patch にある tests/kit-assets.test.ts:251 の具体的な旧→新 expect だけについて、人の個別承認を得る。対象patchのhashと、この期待値の承認元をtraceへ記録して照合する
 
 ## 2. 文書と雛形
 

@@ -18,11 +18,11 @@ tasks 雛形の印付きチェックボックスは `--done --scope local` と�
 
 両 format は `pnpm -s verify` と `npx loomake verify` だけが違う状態を保つ。REQ-136 の元 Scenario と Source をそのまま残し、local と注記の新 Scenario を2件加える。元 Scenario を書き換える案は採らない。
 
-### 2. 期待値の承認まで一式を未適用にする
+### 2. 個別承認を照合して一式を適用する
 
 R06 A は local DoD・最終 ci の区別と、AGENTS・README・CONTRIBUTING・delivery・guide・両雛形・REQ-136への規則移行を承認済みである。[R-C001-06 A の承認元](https://github.com/loomake/loomake/pull/139#issuecomment-6511434324)を保持し、規則移行を再承認待ちにしない。
 
-`proposed/implementation.patch` はデータであり、一式を実働ファイルへ適用しない。新たな人の判断は `tests/kit-assets.test.ts:251` の旧→新 expect だけである。`proposed/approval-request.md` にはこの差分と、既承認の移行を照合する規則全文・凍結行を示す。期待値の採否と承認元、対象 patch の hash を trace へ記録してから一式の実装へ進む。
+`proposed/implementation.patch` は承認時の差分データとして保持する。元251行の期待値1行は利用者が個別承認し、承認元とpatch hashをtraceへ記録した。今回の人の判断は `tests/kit-assets.test.ts:251` の旧→新 expect だけである。`proposed/approval-request.md` にはこの差分と、既承認の移行を照合する規則全文・凍結行を示す。期待値の採否と承認元、対象 patch の hash を trace へ記録してから一式の実装へ進む。
 
 ### 3. 行ごとの分類
 
@@ -44,7 +44,7 @@ R06 A は local DoD・最終 ci の区別と、AGENTS・README・CONTRIBUTING・
 
 ## Migration Plan
 
-1. この計画と patch を独立レビューし、R06 の既承認範囲を照合して、251行の具体的な期待値差分の承認を得る。タスク1.2はこの承認まで未完了とする。
+1. この計画と patch を独立レビューし、R06 の既承認範囲を照合して、251行の具体的な期待値差分の承認を得る。タスク1.2は承認元とpatch hashの照合を終えた。
 2. 251行の期待値の承認後に patch 一式を適用し、追加試験・init・tarball・Scenario 監査を実行する。個別承認が必要な期待値の追加修正があれば、具体差分を改めて提示する。
 3. lint・typecheck・全体試験と local 完了ゲートを通す。最終の ci ゲート、必須5チェック、3 OS、独立レビューの成功を別に記録してから子を受け入れる。
 4. 親6/6受入後に evidence→scope→quality→dod→parent の整合を保って同期・archiveする。S1 は親6/6に先立ち受入・同期・archiveする。

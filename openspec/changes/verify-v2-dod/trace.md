@@ -14,7 +14,7 @@
 |---|---|---|---|---|---|
 | REQ-136 | 現行req-to-openspec-skill「完了ゲートのタスクの印」、親tasks1.2・5.1、R-C001-06 A | 既存変更 | 印のタスクを明示localの完了とし、最終ciの合格と必須CIを別の注記に示す。元ScenarioとSourceを保持し、新Scenarioを2件加える | 反映済 | specs/req-to-openspec-skill/spec.md |
 
-台帳の反映済は差分仕様への記載を示し、実装・監査・人の具体的承認の完了を示さない。新しい要件IDと仮定は作らない。
+台帳の反映済は差分仕様への記載を示し、実装・監査の完了を示さない。新しい要件IDと仮定は作らない。
 
 ## 確認事項
 
@@ -34,8 +34,8 @@ R05 A・R08 Bも親traceと同じ[承認元](https://github.com/loomake/loomake/
 ## 既承認と個別承認の区別
 
 - 規則移行：R-C001-06 Aで承認済み。上表の承認元を保持し、AGENTS・README・CONTRIBUTING・delivery・guide・両雛形・REQ-136の移行を再承認待ちにしない。具体的な旧→新全文は proposed/approval-request.md と implementation.patch に照合資料として残す。
-- 新たな人の判断：tests/kit-assets.test.ts:251の具体的な旧→新 expect だけ。全文は同じ資料に提示し、個別承認は未済。
-- 実働の一式への適用・実装後の試験・Scenario監査・doneは未実施。251行の期待値の承認待ちなのでtask1.2を未完了とする。R06の既承認と、この期待値の個別承認を区別する。
+- 新たな人の判断：tests/kit-assets.test.ts:251の具体的な旧→新 expect だけ。利用者は本会話で「この1行の変更を承認する（おすすめ）」と回答した。[管理役の記録](https://github.com/loomake/loomake/pull/269#issuecomment-6549049371)を承認元として保持する。回答日は2026-11-01 JST（管理役確認2026-10-31 20:57:48 UTC／2026-11-01 05:57:48 JST）。
+- 承認対象は proposed/implementation.patch の元251行の期待値1行だけである。patchは36732 bytes、sha256 `258a599353e3afa43b20409b20db0396d7dad3b200b88c08cf4415aae80dc275`。適用前の26ファイルの前像と凍結17範囲を照合した。R06の既承認と、この期待値の個別承認を区別し、別の既存期待値の変更・試験の緩和へ広げない。実働への適用・実装後の試験・Scenario監査・doneは、task1.2後に実施する。
 
 ## 設計の補正
 

@@ -8,7 +8,7 @@ C001 の明示 scope へ移行した実装に対し、ローカルで通す完�
 
 - 親 `verify-v2-c001` のタスク1.2の REQ-136 と、5.1の DoD・配布文書・両雛形・保護された期待値・REQ-136 の Scenario 監査を、この子へ移す。
 - REQ-136 の元の Scenario と Source を保持し、local の印と最終 CI 注記の Scenario を加える。新しい要件 ID は作らない。
-- [R-C001-06 A の承認元](https://github.com/loomake/loomake/pull/139#issuecomment-6511434324)を照合し、既承認の規則移行と期待値の具体案を `proposed/implementation.patch` に保存する。新たな人の判断は `tests/kit-assets.test.ts:251` の旧→新 expect だけである。一式は未適用とし、この期待値の承認後に実装・試験・監査・CI へ進む。
+- [R-C001-06 A の承認元](https://github.com/loomake/loomake/pull/139#issuecomment-6511434324)を照合し、既承認の規則移行と期待値の具体案を `proposed/implementation.patch` に保存する。新たな人の判断は `tests/kit-assets.test.ts:251` の旧→新 expect だけである。利用者がこの1行を個別承認し、承認元とpatch hashをtraceへ記録した。実装・試験・監査・CIへ進む。
 
 ## Capabilities
 
@@ -22,7 +22,7 @@ C001 の明示 scope へ移行した実装に対し、ローカルで通す完�
 
 ## Impact
 
-変更予定は root と配布先の AGENTS、delivery・req-to-openspec の Skill、tasks 雛形、README・guide・PR テンプレート、kit-assets・init・tarball の内容確認。CI・設定・判定・公開 API の振る舞いは変更しない。この PR の実働差分は計画文書と未適用パッチだけである。
+変更予定は root と配布先の AGENTS、delivery・req-to-openspec の Skill、tasks 雛形、README・guide・PR テンプレート、kit-assets・init・tarball の内容確認。CI・設定・判定・公開 API の振る舞いは変更しない。計画と承認済みpatchに従って実働ファイルへ反映し、検証する。
 
 ## Non-goals
 
