@@ -61,4 +61,4 @@ Requirementは既存のIDのまま、重複させずに移す。新しいREQ-ID�
 
 ## 5bの移管
 
-REQ-136のMODIFIEDと、親tasks5.1のDoD・配布文書・両雛形・kit-assets:251・REQ-136のScenario監査を子 `verify-v2-dod` へ移した。R06の規則移行は既承認であり、kit-assets:251の具体的な期待値差分の承認だけが未済なので、子の提案patch一式は未適用である。親の元本文と残る受入は保持し、S1・親6/6までを完了扱いにしない。
+REQ-136のMODIFIEDと、親tasks5.1のDoD・配布文書・両雛形・kit-assets:251・REQ-136のScenario監査を子 `verify-v2-dod` へ移した。R06の規則移行とkit-assets:251の具体的な期待値差分は承認済みで、子のpatch適用・8タスク・ローカル完了ゲートは成功した。最終CI・独立最終レビュー・子の受入は未達である。親の元本文と残る受入は保持し、S1・親6/6までを完了扱いにしない。

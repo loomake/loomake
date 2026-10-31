@@ -20,7 +20,7 @@ Issue参照：[契約 #61](https://github.com/loomake/loomake/issues/61)、[判�
 
 | ID | 出典 | 種別 | 要約（原文に忠実に） | 状態 | 反映先 |
 |---|---|---|---|---|---|
-| REQ-136 | 現行req-to-openspec-skill「完了ゲートのタスクの印」・5回目レビュー中1 | 既存変更予定 | R06 A承認を受け、task 1.2で明示localへのMODIFIEDを確定し、印と既存Scenarioを保持して両雛形を同期する | 確認待ち | 子verify-v2-dodのspecs/req-to-openspec-skill/spec.mdへ移管。具体的承認と実装・監査は同子tasks1.2以降で未完了 |
+| REQ-136 | 現行req-to-openspec-skill「完了ゲートのタスクの印」・5回目レビュー中1 | 既存変更予定 | R06 A承認を受け、task 1.2で明示localへのMODIFIEDを確定し、印と既存Scenarioを保持して両雛形を同期する | 確認待ち | 子verify-v2-dodのspecs/req-to-openspec-skill/spec.mdへ移管。具体的承認・実装・子3件の実監査・ローカル完了は済んだ。最終CI・独立最終レビュー・子の受入と、本番同期後のrepository監査は未達 |
 | REQ-036 | 現行verify「仕様ゲートの警告」・追加レビュー重大1 | 既存変更 | spec-onlyの案内PASS/0とdoneの不足/1を分けるR08 B承認を規範へ反映する | 確認待ち | specs/verify/spec.md |
 | REQ-037 | 現行verify「openspec validateの実行」・追加レビュー重大1 | 既存変更 | auto時CLI不在はlocal理由NA、ci不足とするR08 B承認を規範へ反映する | 確認待ち | specs/verify/spec.md |
 | REQ-038 | 現行verify「完了ゲート」・3回目レビュー中2 | 既存変更 | doneの確認待ちは036と同じ不足/要判断に統一。未完了tasksと実施済み失敗はFAIL | 確認待ち | specs/verify/spec.md |
