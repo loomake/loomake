@@ -386,3 +386,8 @@ pure companionLinksのAPI、読み取り対象、scanner/hash/migrate/registry/c
 元helper-one・能力返却・実canonicalをnative対照とし、仕様ゲート後にtest-firstで実装する。既存447期待・SHALL・Source・先頭11Scenario・task/registry/configと未完了条件を保つ。
 
 Q-114：companionの型専用でないImportEqualsのrequire先も位置を問わずH2の起点とし、H1〜H3と依存hashを適用する。純粋APIの範囲と既存期待は保つ。
+
+
+### companionのthis（Q-116）
+
+型位置以外のThisKeywordを、局所の関数・method・class内も含め既存readingErrorで拒否する。closedSyntaxと既存拒否順・純粋APIと両入口の条件を保ち、元正例・型位置・nativeと入力不変を回帰する。Opus設計のADR・delivery未読は管理役が現規約を照合し技術設計として採用した。
