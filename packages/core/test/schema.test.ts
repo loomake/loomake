@@ -17,7 +17,7 @@ const versionOf = (s: Schema) => {
   return versions.length === 1 ? versions[0] : '';
 };
 
-// 必須プロパティを、入れ子を含めたパス（results[].check など）で返す。anyOf は、どれかの枝で必須のパスを合わせる
+// 必須プロパティを、入れ子を含めたパス（results[].check など）で返す。入れ子の anyOf は、どれかの枝で必須のパスを合わせる
 function requiredPaths(s: Schema, prefix = ''): string[] {
   if (s.anyOf) return [...new Set(s.anyOf.flatMap((b) => requiredPaths(b, prefix)))];
   const own = (s.required ?? []).map((r) => prefix + r);
@@ -26,6 +26,28 @@ function requiredPaths(s: Schema, prefix = ''): string[] {
     ...(v.items ? requiredPaths(v.items, `${prefix}${k}[].`) : []),
   ]);
   return [...own, ...nested];
+}
+
+// 最上位の枝を、scope と run.status の組ごとに分ける。run が anyOf なら、run の枝ごとに 1 つの形にする。1.0.0 のような単一の形は '-/-' の 1 つ
+function shapes(s: Schema): Map<string, Schema> {
+  const out = new Map<string, Schema>();
+  for (const branch of branches(s)) {
+    const run = branch.properties?.run;
+    for (const r of run?.anyOf ?? [run]) {
+      const key = `${branch.properties?.scope?.const ?? '-'}/${r?.properties?.status?.const ?? '-'}`;
+      out.set(key, r ? { ...branch, properties: { ...branch.properties, run: r } } : branch);
+    }
+  }
+  return out;
+}
+
+// 前の版の形ごとに、今の版の同じ形から消えた必須パスを返す（REQ-053）。形そのものが消えたら、その形の必須パスをすべて消えたとみなす
+function removedPaths(old: Schema, current: Schema): string[] {
+  const now = shapes(current);
+  return [...shapes(old)].flatMap(([key, shape]) => {
+    const kept = requiredPaths(now.get(key) ?? {});
+    return requiredPaths(shape).filter((p) => !kept.includes(p)).map((p) => `${key}:${p}`);
+  });
 }
 
 describe('verify 結果の JSON スキーマ', () => {
@@ -47,7 +69,7 @@ describe('verify 結果の JSON スキーマ', () => {
     const history = readdirSync(historyDir).map((f) => readSchema(join(historyDir, f)));
     expect(history.length).toBeGreaterThan(0);
     for (const old of history) {
-      const removed = requiredPaths(old).filter((p) => !requiredPaths(current).includes(p));
+      const removed = removedPaths(old, current);
       if (removed.length > 0) expect(major(versionOf(current)), `削除・改名した必須プロパティ：${removed.join(', ')}`).toBeGreaterThan(major(versionOf(old)));
       else expect(major(versionOf(current))).toBeGreaterThanOrEqual(major(versionOf(old)));
     }
@@ -56,7 +78,15 @@ describe('verify 結果の JSON スキーマ', () => {
   it('[REQ-053] 必須プロパティを削除したスキーマは、メジャー番号を上げないと検出される', () => {
     const old = readSchema(join(historyDir, '1.0.0.json'));
     const broken: Schema = { ...old, required: old.required?.filter((r) => r !== 'ok') };
-    const removed = requiredPaths(old).filter((p) => !requiredPaths(broken).includes(p));
-    expect(removed).toEqual(['ok']);
+    expect(removedPaths(old, broken)).toEqual(['-/-:ok']);
+  });
+
+  it('[REQ-053] ci の枝だけから decision を消すと、ほかの枝に残っていても検出する', () => {
+    const old = readSchema(join(historyDir, '2.0.0.json'));
+    const broken: Schema = structuredClone(old);
+    const ci = broken.anyOf!.find((b) => b.properties?.scope?.const === 'ci')!;
+    ci.required = ci.required!.filter((r) => r !== 'decision');
+    expect(removedPaths(old, broken)).toEqual(['ci/completed:decision', 'ci/partial:decision']);
+    expect(removedPaths(old, old)).toEqual([]);
   });
 });

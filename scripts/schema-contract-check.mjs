@@ -32,9 +32,18 @@ const versionCases = [
   { id: 'v2-version', kind: 'version', expected: 'rejected' },
 ];
 const versionedFile = 'schema/versions/verify-result-2.0.0.schema.json';
+// 1 つの枝からだけ必須項目を消す変更。ほかの枝に同じ項目が残っていても、枝ごとに比べて拒否する（REQ-053）
+const branchCases = [
+  { id: 'branch-remove-ci', kind: 'remove-ci-only', expected: 'rejected' },
+];
 
 // 版付きでない現行のファイル（2.0.0）を変える。必須項目は ci と local の両方の枝から消し、どの枝にも残らないようにする（REQ-053）
 function mutateCurrent(schema, kind) {
+  if (kind === 'remove-ci-only') {
+    const ci = schema.anyOf.find((b) => b.properties.scope?.const === 'ci');
+    ci.required = ci.required.filter((name) => name !== 'decision'); delete ci.properties.decision;
+    return;
+  }
   for (const branch of schema.anyOf.filter((b) => b.properties.checks?.items)) {
     if (kind === 'remove') { branch.required = branch.required.filter((name) => name !== 'decision'); delete branch.properties.decision; }
     if (kind === 'rename') {
@@ -86,10 +95,11 @@ export function checkSchemaContract(destination) {
   assert.ok(parent === quality || (parentPart && !parentPart.startsWith('..') && !isAbsolute(parentPart)), '検証先が専用ディレクトリの外にあります');
   mkdirSync(target);
   const sources = ['schema/verify-result.schema.json', 'src/verify-result.ts', 'test/schema.test.ts', 'test/fixtures/schema-history/1.0.0.json', 'test/fixtures/schema-history/2.0.0.json', versionedFile, 'test/schema-versions.test.ts', 'test/fixtures/schema-versions/verify-result-2.0.0.json'].map((file) => ({ file: `packages/core/${file}`, sha256: sha256(join(core, file)) }));
-  const result = { scope: 'required-property-version-gate', node: process.version, trials: [], versionTrials: [], sources, ok: false };
+  const result = { scope: 'required-property-version-gate', node: process.version, trials: [], versionTrials: [], branchTrials: [], sources, ok: false };
   let names;
   try {
-    for (const entry of cases) {
+    // 現行のファイルを 1 回変えて、schema.test.ts の結果を残す
+    const runCurrent = (entry) => {
       const trial = join(target, entry.id); mkdirSync(trial);
       copyFixture(join(core, 'src'), join(trial, 'src'));
       copyFixture(join(core, 'schema'), join(trial, 'schema'));
@@ -116,10 +126,16 @@ export function checkSchemaContract(destination) {
       if (!names) names = assertions(report).map((test) => test.fullName);
       const verdict = classifyMutation(processResult.error ? null : processResult.status, report, names);
       const status = verdict.status === 'survived' ? 'passed' : verdict.status === 'killed' ? 'rejected' : 'error';
-      result.trials.push({ ...entry, status, exitCode: processResult.status, failedTests: verdict.failedTests, schemaSha256: sha256(schemaPath) });
+      const trialResult = { ...entry, status, exitCode: processResult.status, failedTests: verdict.failedTests, schemaSha256: sha256(schemaPath) };
       for (const path of ['src', 'schema', 'test', 'package.json', 'vitest.config.mjs', 'node_modules']) rmSync(join(trial, path), { recursive: true, force: true });
-      if (entry.id === 'baseline' && status !== 'passed') break;
+      return trialResult;
+    };
+    for (const entry of cases) {
+      const trialResult = runCurrent(entry);
+      result.trials.push(trialResult);
+      if (entry.id === 'baseline' && trialResult.status !== 'passed') break;
     }
+    if (result.trials[0]?.status === 'passed') for (const entry of branchCases) result.branchTrials.push(runCurrent(entry));
     let versionNames;
     for (const entry of versionCases) {
       const trial = join(target, entry.id); mkdirSync(trial);
@@ -143,7 +159,8 @@ export function checkSchemaContract(destination) {
   } finally {
     result.originalsUnchanged = sources.every((source) => sha256(join(root, source.file)) === source.sha256);
     result.ok = result.originalsUnchanged && result.trials.length === cases.length && result.trials.every((trial) => trial.status === trial.expected)
-      && result.versionTrials.length === versionCases.length && result.versionTrials.every((trial) => trial.status === trial.expected);
+      && result.versionTrials.length === versionCases.length && result.versionTrials.every((trial) => trial.status === trial.expected)
+      && result.branchTrials.length === branchCases.length && result.branchTrials.every((trial) => trial.status === trial.expected);
     writeFileSync(join(target, 'results.json'), JSON.stringify(result, null, 2) + '\n');
   }
   return result;
@@ -153,7 +170,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   try {
     assert.ok(process.argv[2], '新しい検証先を指定してください');
     const result = checkSchemaContract(process.argv[2]);
-    console.log(`スキーマ契約の検証：${result.trials.filter((trial) => trial.status === trial.expected).length}/${cases.length}、版付きのファイル：${result.versionTrials.filter((trial) => trial.status === trial.expected).length}/${versionCases.length}`);
+    console.log(`スキーマ契約の検証：${result.trials.filter((trial) => trial.status === trial.expected).length}/${cases.length}、版付きのファイル：${result.versionTrials.filter((trial) => trial.status === trial.expected).length}/${versionCases.length}、1 つの枝だけの変更：${result.branchTrials.filter((trial) => trial.status === trial.expected).length}/${branchCases.length}`);
     if (!result.ok) process.exitCode = 1;
   } catch (error) { console.error(`スキーマ契約の検証に失敗しました：${error.message}`); process.exitCode = 1; }
 }
