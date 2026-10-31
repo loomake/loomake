@@ -30,7 +30,7 @@ function runSurvived(results: unknown) {
     const summaryFile = join(dir, 'summary.md');
     const result = spawnSync('bash', ['-e', '-c', script], { cwd: dir, encoding: 'utf8', env: { ...process.env, GITHUB_STEP_SUMMARY: summaryFile } });
     expect(result.status, result.stderr).toBe(0);
-    // Windows の Git Bash の jq は行末を CRLF で書く。確かめたいのは jq の式と要約の中身で、ジョブは ubuntu でしか動かないので、行末は LF にそろえて読む
+    // Windows の jq は標準出力の行末を CRLF で書く。確かめたいのは jq の式と要約の中身で、ジョブは ubuntu でしか動かないので、行末は LF にそろえて読む
     return { survived: JSON.parse(readFileSync(join(out, 'survived.json'), 'utf8')), summary: readFileSync(summaryFile, 'utf8').replace(/\r\n/g, '\n') };
   } finally {
     rmSync(dir, { recursive: true, force: true });
