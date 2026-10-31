@@ -3,7 +3,7 @@ import { chmodSync, copyFileSync, existsSync, linkSync, mkdirSync, mkdtempSync, 
 import { tmpdir } from 'node:os';
 import { delimiter, dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { reportJson, specMd, traceMd } from '../../kit/test/project.js';
+import { placeCiQuality, reportJson, specMd, traceMd } from '../../kit/test/project.js';
 import { attachProcessDiagnostics } from './process-diagnostics.js';
 
 export const CHANGE = 'c1';
@@ -174,8 +174,9 @@ function copyGitTemplate(base: string) {
  * change c1 を持つ git のリポジトリを作ってコミットする。
  * test コマンドは impl.txt があれば [REQ-012] の合格したテストを、なければ空のレポートを書き出す（完了ゲートの合否をエンジンの変更で決める）
  * fresh を付けると、雛形を使わず git init からやり直す（雛形の複製が従来の作り方と同じになることを確かめる試験で使う）
+ * quality を付けると、ci の完了ゲートに要る quality.yaml と node_modules/vitest（テストランナーの版）を置く（REQ-319）
  */
-export function makeRepo({ trace = traceMd(), tasks = TASKS, run, fresh = false }: { trace?: string; tasks?: string; run?: object; fresh?: boolean } = {}): Repo {
+export function makeRepo({ trace = traceMd(), tasks = TASKS, run, fresh = false, quality = false }: { trace?: string; tasks?: string; run?: object; fresh?: boolean; quality?: boolean } = {}): Repo {
   const base = mkdtempSync(join(tmpdir(), 'loomake-run-'));
   const root = join(base, 'repo');
   const bin = join(base, 'bin');
@@ -221,10 +222,12 @@ export function makeRepo({ trace = traceMd(), tasks = TASKS, run, fresh = false 
   const report = (passed: boolean) => JSON.stringify(reportJson(root, passed ? { 'tests/x.test.ts': [['[REQ-012] 確かめる', 'passed']] } : {}));
   write(
     'write-report.mjs',
-    `import { existsSync, mkdirSync, writeFileSync } from 'node:fs';\nmkdirSync('.loomake', { recursive: true });\nwriteFileSync('.loomake/test-report.json', existsSync('impl.txt') ? ${report(true)} : ${report(false)});\n`,
+    // Vitest と同じく、実行の開始時刻（startTime）を入れる（REQ-319 の同じ実行の鮮度）
+    `import { existsSync, mkdirSync, writeFileSync } from 'node:fs';\nmkdirSync('.loomake', { recursive: true });\nconst text = existsSync('impl.txt') ? ${report(true)} : ${report(false)};\nwriteFileSync('.loomake/test-report.json', JSON.stringify({ ...JSON.parse(text), startTime: Date.now() }));\n`,
   );
   write('loomake.config.json', JSON.stringify({ openspecValidate: false, commands: { test: 'node write-report.mjs' }, ...(run ? { run } : {}) }));
-  write('.gitignore', '.loomake/test-report.json\n');
+  write('.gitignore', quality ? '.loomake/test-report.json\nnode_modules/\n' : '.loomake/test-report.json\n');
+  if (quality) placeCiQuality(root);
   write('AGENTS.md', '# AGENTS.md\n\nテスト用の共通ルール。\n');
   write(`openspec/changes/${CHANGE}/proposal.md`, `# ${CHANGE}\n\n## Why\n検査用。\n\n## What Changes\n- 検査用\n`);
   write(`openspec/changes/${CHANGE}/tasks.md`, tasks);

@@ -35,7 +35,7 @@ describe('verify 2.0.0 の出力と終了コード', () => {
       [['--change', CHANGE, '--spec-only', '--done'], 2],
       [['--change', CHANGE, '--done', '--skip-commands'], 1],
     ];
-    await withProject({ config }, async (root) => {
+    await withProject({ config, quality: true }, async (root) => {
       writeFileSync(join(root, 'report-src.json'), reportJson(root, { 'tests/a.test.ts': [['[REQ-012] 動く', 'passed']] }));
       for (const [argv, code] of cases) {
         const text = await run(root, 'verify', ...argv);

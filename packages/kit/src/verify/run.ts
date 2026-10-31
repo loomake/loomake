@@ -6,12 +6,15 @@ import { spawnSync } from 'node:child_process';
 import { hasProcessBudget, holderWaitTime, ProcessLimitError, runExternal } from '../runtime/process.js';
 import {
   LEDGER_STATES,
+  VERIFY_RESULT_SCHEMA_VERSION,
+  loadQualitySchema,
   createAgreement,
   extractTestRequirements,
   parseSpec,
   parseTasks,
   parseTrace,
   type ParseError,
+  type Quality,
   type SpecRequirement,
   type Trace,
   type VerifyCheckResult,
@@ -22,6 +25,12 @@ import {
 } from '@loomake/core';
 import { assembleVerifyResult } from './result.js';
 import { assertChangeId, loadConfig, type LoomakeConfig } from './config.js';
+import { QUALITY_FILE, readQualityFile, type QualitySchemaLike } from './quality-input.js';
+import { evaluateQualityConditions, qualitySubjectsGuard } from './policy/quality-conditions.js';
+import { observeTestReport, type TestReportReceipt } from './policy/test-report-observation.js';
+import { basisHash, findProducer, gitHead, readReport } from './quality-receipt.js';
+import { sha256Hex } from './hash.js';
+import { UsageError } from '../runtime/errors.js';
 import { createInputReader, JSON_LIMITS, type InputReader } from '../runtime/input.js';
 import { findChangeDir, specFiles, toPosix } from '../runtime/change-files.js';
 
@@ -43,7 +52,17 @@ export type VerifyOptions = {
    * 省略すると、完了ゲートは ci、仕様ゲートと change なしの実行は local（REQ-311）
    */
   scope?: VerifyScope;
+  /**
+   * quality.yaml のスキーマ。kit は zod を読まないので、呼び出し側が `await loadVerifyQualitySchema()` で読んで渡す。
+   * quality.yaml を読む必要があるのに渡さなければ、使い方の誤りにする（REQ-319）
+   */
+  qualitySchema?: QualitySchemaLike;
 };
+
+/** quality.yaml のスキーマを読む。zod はここで初めて読む（REQ-284） */
+export async function loadVerifyQualitySchema(): Promise<QualitySchemaLike> {
+  return (await loadQualitySchema()).qualitySchema;
+}
 
 // 試作の verify.mjs と同じく、出力の上限を 64MB にする
 const MAX_BUFFER = 64 * 1024 * 1024;
@@ -82,24 +101,69 @@ export function runVerify(options: VerifyOptions): VerifyResult {
   if (config.unknownKeys.length) record('loomake.config.json', 'warn', `知らないキー：${config.unknownKeys.join('、')}（打ち間違いなら直してください）`);
   let coverage: Record<string, string[]> | undefined;
   const approvals: ApprovalNeed[] = [];
+  const qualityChecks: VerifyCheckResult[] = [];
 
   if (!changeId) {
     runCommands(root, config, skipCommands, record, fail, progress, options.timeoutMs);
   } else {
+    // ci の完了ゲートだけが品質の証拠を判定する。ほかのゲートは quality.yaml があれば形だけを確かめる（REQ-319・R-C001-10 A）
+    const judgeQuality = gate === 'done' && scope === 'ci';
+    const changeDir = resolve(root, config.openspecDir, 'changes', changeId);
+    let quality: Quality | undefined;
+    let basisBefore = '';
+    // change がないときは、既存の「change の存在」の不合格を返す。quality.yaml は品質コマンドや openspec validate より前に読む
+    if (existsSync(changeDir) && statSync(changeDir).isDirectory()) {
+      const read = loadQuality(root, judgeQuality, options.qualitySchema);
+      if (read.status === 'error') return { schemaVersion: VERIFY_RESULT_SCHEMA_VERSION, change: changeId, run: { status: 'aborted', errors: [read.error] } };
+      if (read.status === 'loaded' && judgeQuality) {
+        quality = read.quality;
+        basisBefore = basisHash(root, changeDir);
+      }
+    }
     const spec = checkSpec(root, config, changeId, gate ?? 'spec-only', scope, record, rel, approvals);
     if (spec && gate === 'done') {
       checkTasksAndPending(spec, record, approvals);
       // 前回のレポートで合格させないよう、commands を実行する前に消す
       const reportPath = resolve(root, config.tests.report);
       if (!skipCommands) rmSync(reportPath, { force: true });
-      runCommands(root, config, skipCommands, record, fail, progress, options.timeoutMs);
+      const clearedBefore = !existsSync(reportPath);
+      const targetBefore = quality && !skipCommands ? gitHead(root) : null;
+      const startedAt = Date.now();
+      const exitCode = runCommands(root, config, skipCommands, record, fail, progress, options.timeoutMs);
+      const finishedAt = Date.now();
       // 品質コマンドを省いたときは、前回のレポートを今回の成功の一覧に使わず、coverage を出さない（REQ-040）
       if (skipCommands) record('要件ごとのテスト', 'insufficient', REQUIREMENTS_NOT_RUN);
       else coverage = checkCoverage(root, config, spec.live, reportPath, record, rel);
+      if (quality) {
+        const receipt: TestReportReceipt | null = skipCommands ? null : {
+          producer: findProducer(root),
+          target: { before: targetBefore, after: gitHead(root) },
+          basis: { before: basisBefore, after: basisHash(root, changeDir) },
+          invocation: { startedAt, finishedAt, clearedBefore, exitCode },
+          report: readReport(reportPath, config.tests.report),
+          required: [...new Set(spec.live.flatMap((r) => r.sources))].sort(),
+        };
+        qualityChecks.push(qualitySubjectsGuard(quality), ...evaluateQualityConditions(quality, observeTestReport(quality, receipt, { sha256Hex })));
+      }
     }
   }
 
-  return assembleVerifyResult({ change: changeId ?? null, scope, checks: checks.map(toCheck), errors, coverage, decision: decisionOf(approvals) });
+  const allChecks = [...checks.map(toCheck), ...qualityChecks];
+  return assembleVerifyResult({ change: changeId ?? null, scope, checks: allChecks, errors, coverage, decision: decisionOf(approvals) });
+}
+
+/**
+ * quality.yaml を読む（REQ-319）。ci の完了ゲートでは必須で、ほかのゲートではあれば形を確かめる。
+ * 読む必要があるのにスキーマを渡されていなければ、使い方の誤りにする
+ */
+function loadQuality(root: string, required: boolean, schema: QualitySchemaLike | undefined) {
+  if (!schema) {
+    if (required || existsSync(join(root, QUALITY_FILE))) {
+      throw new UsageError('quality.yaml を読むためのスキーマが渡されていません。runVerify の qualitySchema に await loadVerifyQualitySchema() の結果を渡してください');
+    }
+    return { status: 'absent' as const };
+  }
+  return readQualityFile({ root, gate: required ? 'done' : 'spec-only', schema });
 }
 
 /** 1 つの検査の観測。warn は案内つきの合格、insufficient は証拠の不足（仮定 A-02・A-03） */
@@ -342,13 +406,21 @@ export const COMMANDS_SKIPPED = '--skip-commands で実行していません。�
 /** --skip-commands で省いたときの「要件ごとのテスト」の reason。前回のレポートは今回の証拠にしない（REQ-040） */
 export const REQUIREMENTS_NOT_RUN = '品質コマンドを実行していないので、要件ごとの成功したテストを確かめていません。--skip-commands を付けずに実行してください';
 
+/**
+ * 品質コマンドを順に実行する。すべて 0 で終わったら 0、そうでなければ最初の 0 以外の終了コードを返す。
+ * 終わらなかった（時間切れ・中断・起動の失敗）コマンドがあれば null を返す（REQ-319 の receipt）
+ */
 function runCommands(
   root: string, config: LoomakeConfig, skip: boolean, record: Recorder, fail: RunErrorRecorder, progress: (m: string) => void, timeoutMs?: number,
-) {
+): number | null {
+  let exitCode: number | null = 0;
+  const failed = (status: number | null) => {
+    if (exitCode === 0) exitCode = status;
+  };
   // 省いたことを証拠の不足として残し、品質コマンドを実行した合格と見分けられるようにする（REQ-191・REQ-040）
   if (skip) {
     record('品質コマンド', 'insufficient', COMMANDS_SKIPPED);
-    return;
+    return null;
   }
   // Windows の保持役の準備を待った時間は、品質コマンドの合計の予算に含めない（REQ-257）
   const now = () => Date.now() - holderWaitTime();
@@ -360,6 +432,7 @@ function runCommands(
     const left = deadline === undefined ? undefined : deadline - now();
     if (left !== undefined && left <= 0) {
       fail(`command: ${name}`, TIMED_OUT);
+      failed(null);
       continue;
     }
     progress(`… ${name}: ${cmd}`);
@@ -372,12 +445,15 @@ function runCommands(
       if (!(error instanceof ProcessLimitError)) throw error;
       const reason = error.kind === 'interrupted' ? (error.reason ? `${INTERRUPTED}（${error.reason}）` : INTERRUPTED) : error.message;
       fail(`command: ${name}`, error.kind === 'timeout' ? TIMED_OUT : reason);
+      failed(null);
       // 共有予算では後続の外部操作も起動せず拒否し、各項目に未実行の理由を残す。
-      if (error.kind === 'interrupted' && !hasProcessBudget()) return;
+      if (error.kind === 'interrupted' && !hasProcessBudget()) return exitCode;
       continue;
     }
     // spawnSync は起動に失敗すると、型に反して stdout・stderr が null になる
     const out = `${(r.stdout as string | null) ?? ''}${(r.stderr as string | null) ?? ''}`.trim();
     record(`command: ${name}`, r.status === 0 ? 'pass' : 'fail', r.status === 0 ? '' : out.split('\n').slice(-30).join('\n'));
+    if (r.status !== 0) failed(r.status);
   }
+  return exitCode;
 }

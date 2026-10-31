@@ -15,7 +15,7 @@ async function run(root: string, ...argv: string[]) {
 }
 
 const withReport = <T>(fn: (root: string) => T) =>
-  withProject({}, (root) => {
+  withProject({ quality: true }, (root) => {
     mkdirSync(join(root, '.loomake'), { recursive: true });
     writeFileSync(join(root, '.loomake', 'test-report.json'), reportJson(root, { 'tests/a.test.ts': [['[REQ-012] 動く', 'passed']] }));
     return fn(root);

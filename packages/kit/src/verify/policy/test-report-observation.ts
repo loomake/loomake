@@ -17,8 +17,11 @@ export type TestReportReceipt = {
   target: { before: string | null; after: string | null };
   /** 基準（quality.yaml・差分仕様・trace.md）の hash */
   basis: { before: string; after: string };
-  /** 品質コマンドの開始と終了の時刻、前回のレポートを消してから実行したか */
-  invocation: { startedAt: number; finishedAt: number; clearedBefore: boolean };
+  /**
+   * 品質コマンドの開始と終了の時刻、前回のレポートを消してから実行したか、終了コード。
+   * 終了コードは、すべての品質コマンドが 0 で終わったら 0、そうでなければ最初の 0 以外の値。終わらなかった（時間切れ・中断・起動の失敗）なら null
+   */
+  invocation: { startedAt: number; finishedAt: number; clearedBefore: boolean; exitCode: number | null };
   /** 実行のあとに読んだレポート。なければ null */
   report: { path: string; text: string; sha256: string } | null;
   /** 必須の要件 ID（差分仕様の ADDED・MODIFIED の Source） */
@@ -68,6 +71,7 @@ function judge(receipt: TestReportReceipt | null, target: string | undefined, op
     return { status: 'unverified', evidence, detail: 'レポートの hash が本文と一致しません' };
   }
   if (!invocation.clearedBefore) return { status: 'unverified', evidence, detail: '前回のレポートを消してから実行していません' };
+  if (invocation.exitCode !== 0) return { status: 'unverified', evidence, detail: '品質コマンドが非 0 で終わりました' };
   const parsed = parseTestReport(report.path, report.text);
   if (parsed.errors.length > 0) return { status: 'unverified', evidence, detail: `レポートを読めません（${parsed.errors[0].message}）` };
   const { startTime, tests, files } = parsed.value;

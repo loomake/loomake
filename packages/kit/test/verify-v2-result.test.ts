@@ -2,13 +2,15 @@ import { describe, it, expect, vi } from 'vitest';
 import { join } from 'node:path';
 import { loadVerifyResultSchemas, type VerifyCheckResult } from '@loomake/core';
 import {
-  RUN_ERRORS_CHECK, RuntimeFailure, UsageError, assembleVerifyResult, formatVerifyResult, qualitySubjectsGuard, readQualityFile, runVerify, verifyAbortedResult, verifyExitCode,
+  RUN_ERRORS_CHECK, RuntimeFailure, UsageError, assembleVerifyResult, formatVerifyResult, loadVerifyQualitySchema, qualitySubjectsGuard, readQualityFile, runVerify, verifyAbortedResult, verifyExitCode,
 } from '@loomake/kit';
 import { CHANGE, withProject } from './project.js';
 
 vi.setConfig({ testTimeout: 60_000 });
 
 const { verifyResultSchema } = await loadVerifyResultSchemas();
+// quality.yaml のスキーマ（zod）は呼び出し側が読んで渡す（REQ-319）
+const qualitySchema = await loadVerifyQualitySchema();
 const pass = (id: string): VerifyCheckResult => ({ id, result: 'PASS', reason: '', evidence: [] });
 const fail = (id: string): VerifyCheckResult => ({ id, result: 'FAIL', reason: '違反', evidence: [] });
 const na = (id: string): VerifyCheckResult => ({ id, result: 'NOT_APPLICABLE', reason: '対象外', evidence: [] });
@@ -75,11 +77,11 @@ describe('2.0.0 の結果の組み立て', () => {
 
 describe('runVerify の 2.0.0', () => {
   it('[REQ-311] scope を省くと、完了ゲートは ci、仕様ゲートと change なしは local。明示した scope はそのまま使う', () => {
-    const results = withProject({ config: { openspecValidate: false, commands: {} } }, (root) => [
-      runVerify({ root, changeId: CHANGE, gate: 'done' }),
-      runVerify({ root, changeId: CHANGE, gate: 'spec-only' }),
-      runVerify({ root }),
-      runVerify({ root, changeId: CHANGE, gate: 'done', scope: 'local' }),
+    const results = withProject({ config: { openspecValidate: false, commands: {} }, quality: true }, (root) => [
+      runVerify({ root, qualitySchema, changeId: CHANGE, gate: 'done' }),
+      runVerify({ root, qualitySchema, changeId: CHANGE, gate: 'spec-only' }),
+      runVerify({ root, qualitySchema }),
+      runVerify({ root, qualitySchema, changeId: CHANGE, gate: 'done', scope: 'local' }),
     ]);
     expect(results.map((r) => ('scope' in r ? r.scope : undefined))).toEqual(['ci', 'local', 'local', 'local']);
     for (const r of results) expect(verifyResultSchema.safeParse(r).success, JSON.stringify(r)).toBe(true);
