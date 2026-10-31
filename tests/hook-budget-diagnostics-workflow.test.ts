@@ -43,7 +43,7 @@ describe('Windowsフック期限の単独診断workflow', () => {
     expect(stepById('summarize')).toContain('--public-export');
     expect(stepById('heartbeat_stop')).toContain('stopHeartbeat(process.argv[1], {})');
   });
-  it('固定Actionとread権限を使い診断と標準レポートだけを7日保存する', () => {
+  it('固定Actionとread権限を使い検査済みの公開用4ファイルだけを7日保存する', () => {
     expect(workflow).toMatch(/^permissions:\n {2}contents: read\n/m);
     const pins = JSON.parse(read('.github/action-pins.json')).actions as { repository: string; sha: string }[];
     const actions = [...workflow.matchAll(/^ {6}- uses: (\S+)@([a-f0-9]{40})/gm)];
