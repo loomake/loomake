@@ -335,7 +335,7 @@ export function companionLinks(registry, readText) {
     required(extractTestBlocks(text).length === 0, `companionに試験の宣言があります：${companion}`);
     const ast = ts.createSourceFile(companion, text, ts.ScriptTarget.Latest, true);
     const imports = []; const namespaces = new Set(); const testFunctions = new Set();
-    let staticTest = false; let declaresTest = false;
+    let staticTest = false; let declaresTest = false; let unverifiedBinding = false;
     const importedBindings = (node) => {
       if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier) && node.moduleSpecifier.text === 'vitest') {
         const bindings = node.importClause?.namedBindings;
@@ -349,24 +349,71 @@ export function companionLinks(registry, readText) {
       const base = unwrap(node);
       return ts.isIdentifier(base) && namespaces.has(base.text);
     };
+    const propertyKey = (node) => {
+      if (ts.isComputedPropertyName(node)) {
+        const value = unwrap(node.expression);
+        return ts.isStringLiteralLike(value) || ts.isNumericLiteral(value) ? value.text : undefined;
+      }
+      return ts.isIdentifier(node) || ts.isStringLiteralLike(node) || ts.isNumericLiteral(node) ? node.text : undefined;
+    };
     const testExpression = (node) => {
       node = unwrap(node);
       if (ts.isIdentifier(node)) return testFunctions.has(node.text);
       if (ts.isPropertyAccessExpression(node)) return (namespaceExpression(node.expression) && ['it', 'test'].includes(node.name.text)) || testExpression(node.expression);
-      if (ts.isElementAccessExpression(node)) return (namespaceExpression(node.expression) && ts.isStringLiteral(node.argumentExpression) && ['it', 'test'].includes(node.argumentExpression.text)) || testExpression(node.expression);
+      if (ts.isElementAccessExpression(node)) {
+        const key = node.argumentExpression && unwrap(node.argumentExpression);
+        const keyName = key && (ts.isStringLiteralLike(key) || ts.isNumericLiteral(key)) ? key.text : undefined;
+        if (namespaceExpression(node.expression) && keyName === undefined) unverifiedBinding = true;
+        return (namespaceExpression(node.expression) && ['it', 'test'].includes(keyName)) || testExpression(node.expression);
+      }
       if (ts.isCallExpression(node)) return testExpression(node.expression);
       if (ts.isTaggedTemplateExpression(node)) return testExpression(node.tag);
       return false;
     };
+    const bindingNames = (name, namespace, testFunction) => {
+      if (!namespace && !testFunction) return;
+      if (ts.isIdentifier(name)) {
+        if (namespace) namespaces.add(name.text);
+        if (testFunction) testFunctions.add(name.text);
+      } else if (ts.isObjectBindingPattern(name)) {
+        for (const element of name.elements) {
+          if (element.dotDotDotToken) { bindingNames(element.name, namespace, testFunction); continue; }
+          const keyName = propertyKey(element.propertyName ?? element.name);
+          if (namespace && keyName === undefined) unverifiedBinding = true;
+          bindingNames(element.name, false, testFunction || (namespace && ['it', 'test'].includes(keyName)));
+        }
+      } else if (ts.isObjectLiteralExpression(name)) {
+        for (const property of name.properties) {
+          if (ts.isSpreadAssignment(property)) { bindingNames(unwrap(property.expression), namespace, testFunction); continue; }
+          if (!ts.isPropertyAssignment(property) && !ts.isShorthandPropertyAssignment(property)) { unverifiedBinding = true; continue; }
+          const keyName = propertyKey(property.name);
+          if (namespace && keyName === undefined) unverifiedBinding = true;
+          const target = ts.isPropertyAssignment(property) ? unwrap(property.initializer) : property.name;
+          bindingNames(target, false, testFunction || (namespace && ['it', 'test'].includes(keyName)));
+        }
+      } else {
+        unverifiedBinding = true;
+      }
+    };
+    const collectBindings = (node) => {
+      if (ts.isVariableDeclaration(node) && node.initializer) bindingNames(node.name, namespaceExpression(node.initializer), testExpression(node.initializer));
+      if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken) bindingNames(unwrap(node.left), namespaceExpression(node.right), testExpression(node.right));
+      ts.forEachChild(node, collectBindings);
+    };
+    // 関数本体の参照が別名の宣言より前に現れても、束縛を集めてから呼出しを検査する。
+    let previousBindings;
+    do {
+      previousBindings = namespaces.size + testFunctions.size;
+      collectBindings(ast);
+    } while (previousBindings !== namespaces.size + testFunctions.size);
     const visit = (node) => {
-      if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer && namespaceExpression(node.initializer)) namespaces.add(node.name.text);
-      if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer && testExpression(node.initializer)) testFunctions.add(node.name.text);
       if (ts.isCallExpression(node) && testExpression(node.expression)) declaresTest = true;
       if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) imports.push(node);
       if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier) && /\.test\.[jt]s$/.test(node.moduleSpecifier.text)) staticTest = true;
       ts.forEachChild(node, visit);
     };
     visit(ast);
+    required(!unverifiedBinding, `companionの試験関数の束縛を静的に確認できません：${companion}`);
     required(!declaresTest, `companionに試験の宣言があります：${companion}`);
     const expected = './' + basename(source).replace(/\.ts$/, '.js');
     required(ast.parseDiagnostics.length === 0 && !staticTest && imports.length === 1 && imports[0].arguments.length === 1 && ts.isStringLiteral(imports[0].arguments[0]) && imports[0].arguments[0].text === expected, `companionが元ファイルだけを読み込んでいません：${companion}`);

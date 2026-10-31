@@ -160,7 +160,7 @@ Vitest 5.0.5 の実 fixture では、全件とファイルの明示選択で準�
 
 ## companion の実行結果と Scenario 監査
 
-PR184 のタスク2.5では登録済み companion の実行結果を、元の `.test.ts` の本文ブロックと照合するようにしました。本文は元ファイルに残し、companion は元ファイルの `.js` だけを動的に import します。監査と旧形式の移行は、`tests/test-partition.json` と登録済み companion の構造を先に検査します。一覧の欠落・不正、試験を宣言する companion、別の試験の読み込みはエラーになり、監査の出力先を作りません。コメントや整形の違いは許容します。
+PR184 のタスク2.5では登録済み companion の実行結果を、元の `.test.ts` の本文ブロックと照合するようにしました。本文は元ファイルに残し、companion は元ファイルの `.js` だけを動的に import します。監査と旧形式の移行は、`tests/test-partition.json` と登録済み companion の構造を先に検査します。一覧の欠落・不正、試験を宣言する companion、別の試験の読み込みはエラーになり、監査の出力先を作りません。コメントや整形の違いは許容します。Vitest の namespace や試験関数から分割代入した別名も追跡します。非literalな namespace のキーや未対応の代入先など、試験関数との対応を静的に確認できない束縛は、値を評価せずエラーにします。
 
 監査の各実行行には照合先の `file` と実行時の `rawFile` を残します。JSON の `inputs` には一覧の `partitionSha256` と companion ごとのハッシュを加え、Markdown には元ファイルと companion の両方を表示します。元の raw report とレビュー表のバイト列は変えません。登録外の `.slow.test.ts` は自身のファイルとして扱い、名前から対応を推測しません。同名でも異なる入力行は残し、同じ入力行が複数の選択条件に一致しても一度だけ数えます。
 

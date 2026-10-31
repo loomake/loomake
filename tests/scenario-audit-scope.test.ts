@@ -263,6 +263,50 @@ describe('リポジトリでの実行', () => {
     await expect(migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).rejects.toThrow('companion');
     expect(existsSync(join(dir, 'out'))).toBe(false);
   });
+  it.each(['it', 'test'].flatMap((name) => [
+    [name, '文字列key', `const { '${name}': check } = v; check('own case', () => {});`],
+    [name, '識別子key', `const { ${name}: check } = v; check('own case', () => {});`],
+    [name, 'computed literal key', `const { ['${name}']: check } = v; check('own case', () => {});`],
+    [name, 'namespace別名と型wrapper', `const namespace = ((v as typeof v) satisfies typeof v)!; const { '${name}': check } = namespace; check('own case', () => {});`],
+    [name, '取り出した関数の別名', `const { '${name}': base } = v; const check = (base as typeof base)!; check('own case', () => {});`],
+    [name, 'nested bind', `const { '${name}': { 'bind': bindFn } } = v; const check = bindFn.call(v.${name}, v.${name}); check('own case', () => {});`],
+    [name, '関数からbindを取得', `const { 'bind': bindFn } = v.${name}; const check = bindFn.call(v.${name}, v.${name}); check('own case', () => {});`],
+    [name, 'named importのbind', `import { ${name} as base } from 'vitest'; const { 'bind': bindFn } = base; const check = bindFn.call(base, base); check('own case', () => {});`],
+    [name, '関数内の先行参照', `function declareOwn() { check('own case', () => {}); } const { '${name}': check } = v; declareOwn();`],
+    [name, 'namespace rest', `const { ...namespace } = v; namespace['${name}']('own case', () => {});`],
+    [name, '分割代入式', `let check; ({ '${name}': check } = v); check('own case', () => {});`],
+    [name, 'namespaceの代入と型wrapper', `let namespace; namespace = (v as typeof v)!; let check; ({ '${name}': check } = namespace); check('own case', () => {});`],
+    [name, '試験関数の代入', `let check; check = v['${name}']; check('own case', () => {});`],
+  ]))('[REQ-347] companionの分割代入した%sの宣言を監査と移行で拒否する: %s', async (_, __, body) => {
+    const text = `import * as v from 'vitest'; ${body} await import('./fixture.test.js');`;
+    const dir = prepare([blockReview()], routed(run(), file(), text));
+    const raw = readFileSync(join(dir, 'report.json'));
+    const ledger = readFileSync(join(dir, 'docs/quality/scenarios.json'));
+    await expect(execute(dir)).rejects.toThrow('companionに試験の宣言があります');
+    await expect(migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).rejects.toThrow('companionに試験の宣言があります');
+    expect(existsSync(join(dir, 'out'))).toBe(false);
+    expect(readFileSync(join(dir, 'report.json'))).toEqual(raw);
+    expect(readFileSync(join(dir, 'docs/quality/scenarios.json'))).toEqual(ledger);
+  });
+  it.each(['it', 'test'].flatMap((name) => [
+    [name, '非literalな分割代入key', `const key = '${name}'; const { [key]: check } = v; check('own case', () => {});`],
+    [name, '非literalなnamespace参照', `const key = '${name}'; const check = v[key]; check('own case', () => {});`],
+    [name, '非literalな分割代入式key', `const key = '${name}'; let check; ({ [key]: check } = v); check('own case', () => {});`],
+    [name, '未対応の代入先', `const holder = {}; holder.check = v['${name}']; holder.check('own case', () => {});`],
+  ]))('[REQ-347] companionの%s由来の未確定な束縛は推測で許可しない: %s', async (_, __, body) => {
+    const dir = prepare([blockReview()], routed(run(), file(), `import * as v from 'vitest'; ${body} await import('./fixture.test.js');`));
+    await expect(execute(dir)).rejects.toThrow('companionの試験関数の束縛を静的に確認できません');
+    await expect(migrateRepository(dir, { dryRun: true, reportFile: 'report.json', kit })).rejects.toThrow('companionの試験関数の束縛を静的に確認できません');
+    expect(existsSync(join(dir, 'out'))).toBe(false);
+  });
+  it.each([
+    "import * as v from 'vitest'; const { 'expect': assert } = v; assert(true).toBe(true);",
+    "import * as v from 'vitest'; const { ['expect']: assert } = v; assert(true).toBe(true);",
+    "import * as v from 'vitest'; let assert; ({ 'expect': assert } = v); assert(true).toBe(true);",
+    "const { 'test': check } = { 'test': () => {} }; check();",
+  ])('[REQ-347] 試験関数でない分割代入をcompanionの宣言と推測しない: %s', (body) => {
+    expect(companionLinks(JSON.parse(registered), () => `${body} await import('./fixture.test.js');`)).toEqual(new Map([[companion, testFile]]));
+  });
   it('[REQ-347] rawFileのない従来の純粋関数入力も元fileで表示する', () => {
     const markdown = renderAudit(audit(blockReview(), file()));
     expect(markdown).toContain(`${testFile}: ${run()[0].fullName}`);
