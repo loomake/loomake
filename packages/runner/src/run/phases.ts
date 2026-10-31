@@ -146,6 +146,7 @@ export async function runGate(ctx: RunContext, rec: Recorder): Promise<Stop | un
     };
     let beforeVerify;
     try {
+      // 検証の前と後で HEAD を 1 回ずつ読む。直しのエンジンの前は callEngine が読み直し、ここで読んだ値を使い回さない（REQ-348）
       beforeVerify = headState(root, env);
       // run の完了ゲートは verify --done --scope local と同じ検査（REQ-100）
       rec.lastVerify = runVerify({ root, changeId, gate: 'done', scope: 'local', progress: ctx.progress, timeoutMs: left });

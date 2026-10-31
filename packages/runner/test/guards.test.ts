@@ -498,4 +498,19 @@ describe('境目ごとの Git の読み取り', () => {
       expect(after[0]).toEqual(['rev-parse', 'HEAD', '--abbrev-ref', 'HEAD']);
     }
   });
+
+  it('[REQ-348][REQ-205][REQ-126] 完了ゲートの検証の前後で HEAD を 1 回ずつ読み、直しのエンジンの前で読み直す', async () => {
+    // 2 つのタスクは変更なしで終え、完了ゲートに落ちてから、直しで impl.txt を書く
+    const r = await boundaries([noChange, noChange, { write: { 'impl.txt': '直した\n' }, git: [MARK] }]);
+    expect(r.code, r.stdout).toBe(0);
+    expect(r.marks).toHaveLength(1);
+    // 完了ゲートの検証は偽の git を通らないので、検証の前と後の読み取りが続けて並ぶ
+    const head = ['rev-parse', 'HEAD', '--abbrev-ref', 'HEAD'];
+    expect(r.marks[0].before).toEqual([
+      head,
+      head,
+      ['rev-parse', '--git-path', 'config', '--git-path', 'hooks', 'HEAD', '--abbrev-ref', 'HEAD'],
+      ['config', '--list', '--show-origin', '-z'],
+    ]);
+  });
 });
