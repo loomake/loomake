@@ -12,6 +12,17 @@ export const RESULT_NATIVE_SHA256 = Object.freeze({
 const CASES = ['success', 'error_max_turns'];
 const CHILD_ENVIRONMENT = Object.freeze({ DISABLE_AUTOUPDATER: '1', CLAUDE_CODE_DISABLE_AUTO_MEMORY: '1' });
 const BASE_ARGV = ['-p', '--output-format', 'json', '--tools', 'Read', '--disallowedTools', 'mcp__*', '--no-session-persistence'];
+const PLAN_KEYS = ['version', 'case', 'attempt', 'nativeSha256', 'argv', 'prompt', 'note', 'environment'];
+const object = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+
+function copyStringEnvironment(environment) {
+  if (!object(environment)) return undefined;
+  try {
+    const entries = Reflect.ownKeys(environment).map((key) => [key, environment[key]]);
+    if (entries.some(([key, value]) => typeof key !== 'string' || typeof value !== 'string')) return undefined;
+    return Object.fromEntries(entries);
+  } catch { return undefined; }
+}
 
 /**
  * A proposed invocation is data only; this module does not spawn a real CLI.
@@ -19,22 +30,28 @@ const BASE_ARGV = ['-p', '--output-format', 'json', '--tools', 'Read', '--disall
  */
 export function resultCollectionPlan(version, resultCase, attempt, environment = process.env) {
   if (!Object.hasOwn(RESULT_NATIVE_SHA256, version) || !CASES.includes(resultCase) || ![1, 2].includes(attempt)) return undefined;
-  return {
+  const copied = copyStringEnvironment(environment);
+  if (!copied) return undefined;
+  return Object.freeze({
     version, case: resultCase, attempt, nativeSha256: RESULT_NATIVE_SHA256[version],
-    argv: resultCase === 'success' ? [...BASE_ARGV] : [...BASE_ARGV, '--max-turns', '1'],
+    argv: Object.freeze(resultCase === 'success' ? [...BASE_ARGV] : [...BASE_ARGV, '--max-turns', '1']),
     prompt: resultCase === 'success' ? 'Reply exactly OK. Do not access files or call tools.' : 'Read note.txt in the current working directory and then report its contents.',
-    note: 'Safe fixture note.\n', environment: { ...environment, ...CHILD_ENVIRONMENT },
-  };
+    note: 'Safe fixture note.\n', environment: Object.freeze({ ...copied, ...CHILD_ENVIRONMENT }),
+  });
 }
 
 /** Reject changed argv/prompt or any environmental difference beyond the two approved controls. */
 export function validResultCollectionPlan(plan, environment) {
-  if (!plan || typeof environment !== 'object' || environment === null) return false;
-  const expected = resultCollectionPlan(plan.version, plan.case, plan.attempt, environment);
-  if (!expected || JSON.stringify(plan.argv) !== JSON.stringify(expected.argv) || plan.prompt !== expected.prompt ||
-    plan.note !== expected.note || plan.nativeSha256 !== expected.nativeSha256 || !plan.environment ||
-    Object.keys(plan.environment).length !== Object.keys(expected.environment).length) return false;
-  return Object.keys(expected.environment).every((key) => plan.environment[key] === expected.environment[key]);
+  try {
+    if (!object(plan) || !object(environment) || Reflect.ownKeys(plan).length !== PLAN_KEYS.length || !PLAN_KEYS.every((key) => Object.hasOwn(plan, key))) return false;
+    const expected = resultCollectionPlan(plan.version, plan.case, plan.attempt, environment);
+    const copied = copyStringEnvironment(plan.environment);
+    if (!expected || !copied || !Array.isArray(plan.argv) || plan.argv.length !== expected.argv.length ||
+      !expected.argv.every((value, index) => plan.argv[index] === value) || plan.prompt !== expected.prompt ||
+      plan.note !== expected.note || plan.nativeSha256 !== expected.nativeSha256 ||
+      Reflect.ownKeys(copied).length !== Reflect.ownKeys(expected.environment).length) return false;
+    return Reflect.ownKeys(expected.environment).every((key) => Object.hasOwn(copied, key) && copied[key] === expected.environment[key]);
+  } catch { return false; }
 }
 
 /**

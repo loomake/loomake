@@ -8,6 +8,10 @@ nativeの検証対象は、固定hashを持つ2.1.307/2.1.308のlinux/arm64用�
 
 `resultCollectionPlan` は呼出元の環境をメモリに複製するため、秘密情報を含み得る。plan全体とそのenvironmentをログ、例外、証跡、fixtureへ出力・保存しない。返却するfixtureは許可されたprojectionだけで、原rawと原rawのhashは保存しない。
 
+[Issue #202](https://github.com/loomake/loomake/issues/202)のplan照合は、最上位の8欄と環境のownキー集合・文字列値を確認し、余分なcwd/shellや欠損を拒否する。返却するplan、argv、environmentは新しいコピーを凍結し、呼出元の環境は凍結・変更しない。これは実行データの照合であり、採集の資格や起動許可を与えない。
+
+lifecycleは各limitと、TERM猶予・group待機・close猶予の合計を2147483647以下に制限する。超過は依存factoryを呼ぶ前に固定の`lifecycle-request-invalid`で拒否する。上限と一致する値は受け付けるが、試験ではfake clockを使い長時間待たない。既定の容量・5分の実行期限・後処理の猶予は維持する。[Nodeのtimer仕様](https://github.com/nodejs/node/blob/v24.22.1/doc/api/timers.md#L247-L254)
+
 `inspectResultProcess` は既存の合成試験専用で、非推奨とする。実プロセスのcallerを追加しない。owned groupの後始末を扱う設計済みの部品は、依存を注入する`driveResultProcess`である。OS adapterの停止保証は未受入であり、fakeの成功を実停止の保証へ数えない。旧harnessのlistener回収や停止要求も、実プロセスツリーの後始末の証明ではない。
 
-守る試験は`tests/claude-result-collector.test.ts`、`tests/claude-result-lifecycle.test.ts`、`tests/claude-result-paths.test.ts`。秘密の非返却、拒否条件、注入したprocess/clockの終結、保存先・native・cwdの境界を、実CLIを起動せず確かめる。既存assertは維持し、OSで失敗する場合もskipや期待値の変更で通さない。
+守る試験は`tests/claude-result-collector.test.ts`、`tests/claude-result-lifecycle.test.ts`、`tests/claude-result-paths.test.ts`と、plan/timerの境界を守る`tests/claude-result-{plan,timer}-validation.test.ts`。秘密の非返却、拒否条件、注入したprocess/clockの終結、保存先・native・cwdの境界を、実CLIを起動せず確かめる。既存assertは維持し、OSで失敗する場合もskipや期待値の変更で通さない。
