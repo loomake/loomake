@@ -174,6 +174,9 @@ PR で slow を実行しないと、その試験を選ぶ根拠が監査で `inv
 
 `tests/test-declarations.test.ts` は TypeScript AST で宣言を独立して集め、既存 scanner の候補と突き合わせます。対象は `run.test.ts` と、受入済みmainで移動した `run-timeout.test.ts`、追加設計で照合した `guards.test.ts`・`run-no-change.test.ts`、分割一覧に登録した元ファイルです。import の識別子と object のキーを宣言から区別し、壊れた宣言・別名・動的な試験名・未知の表の行数を黙って除外しません。未知の展開数や未対応の `describe.each` 内の宣言は、展開数を確定せず `dynamicRows` として報告します。Vitest の namespace や別名も診断し、companion 自身の宣言は構造で拒否します。同じファイルの通常の `const` helper は、宣言名と呼出し先でない参照を binding で分類します。別スコープの同名変数や test 関数の別名には、この分類を適用しません。登録済みファイルでは ID の漏れ・重複・対象ファイル・空になる describe のガードも検査し、全 companion が一覧に登録されていることを別に確認します。実際の case 登録と OS 割当は後続タスクに残ります。
 
+
+登録sourceの配線は独立した`checkPartitionWiring(file, source)`で検査します。正規の相対module・named import、import直後のregistry/has/hasAny、`has`内の直接の`currentPart()`とfile literal、参照先の字句束縛を閉じた文法で確かめ、偽has・内側の影・偽includeCaseを拒否します。既存inventoryと登録検査の合成正負は変えず、実registryのloopと新しい正規fixtureの読み戻したsourceへ別に適用します。新fixtureは旧callのliteral14行とdirect1件、元80ms timeoutとthrowをnative基準・fast/slow各fileで比較します。非literalなEMPTYの2行と参照同一性は旧11call/16行のruntime API probeへ残し、staticではunsupportedRowFormを保持します。checkerは純粋関数で、helperの通常file/非symlink検査や新fixtureのmodule共有の観測とは分けます。実registryが空の現在は実fileへの適用が0回であり、fixtureの成功を実case登録・OS割当や一般oracleの完成とは扱いません。
+
 ## 全件の所要時間を測る
 
 `measure-slow-tests.yml` は `ci/measure-*` への push で、3 OS・各3 sampleの同じheadを測る。既存のPR品質検査や必須statusは変えない。
