@@ -19,7 +19,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { parseRawDiff } from './ci-docs-only.mjs';
 import { decideTier, formatTierLine, isDocumentPath, isSpecPath } from './ci-tier.mjs';
-import { checkReqDuplicates, formatProblems } from './req-duplicate-check.mjs';
+import { checkReqDuplicates, formatProblems, formatStale } from './req-duplicate-check.mjs';
 
 // change は changes/ の直下のディレクトリだけ。changes/archive/ は完了した change の置き場で、change ではない
 const isChangeName = (name) => /^[^/\\.][^/\\]*$/.test(name) && name !== 'archive';
@@ -201,7 +201,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   let status = 0;
   // REQ ID の重複は段階を問わず調べる（scripts/req-duplicate-check.mjs）。ファイルを読むだけの軽い検査で、失敗しても後の検査は続ける
   try {
-    const { problems } = checkReqDuplicates();
+    const { problems, stale } = checkReqDuplicates();
+    if (stale.length) console.error(`ci-gate: ${formatStale(stale)}`);
     if (problems.length) {
       console.error(`ci-gate: ${formatProblems(problems)}`);
       status = 1;

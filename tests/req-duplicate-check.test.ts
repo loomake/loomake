@@ -30,7 +30,7 @@ describe('REQ ID の重複検査', () => {
       'openspec/specs/a/spec.md': main(requirement('一つ目', 'REQ-001'), requirement('二つ目', 'REQ-002')),
       'openspec/changes/c1/specs/a/spec.md': delta('ADDED', requirement('三つ目', 'REQ-003')),
     }, (dir) => {
-      expect(checkReqDuplicates(dir)).toEqual({ duplicates: [], problems: [] });
+      expect(checkReqDuplicates(dir)).toEqual({ duplicates: [], problems: [], stale: [] });
       const result = spawnSync(process.execPath, [script], { cwd: dir, encoding: 'utf8' });
       expect(result.status, result.stderr).toBe(0);
     });
@@ -63,7 +63,7 @@ describe('REQ ID の重複検査', () => {
       // 2 つ目の change も同じ Requirement を MODIFIED する
       'openspec/changes/c2/specs/a/spec.md': delta('MODIFIED', requirement('新名', 'REQ-003'), requirement('一つ目', 'REQ-001')),
     }, (dir) => {
-      expect(checkReqDuplicates(dir)).toEqual({ duplicates: [], problems: [] });
+      expect(checkReqDuplicates(dir)).toEqual({ duplicates: [], problems: [], stale: [] });
     });
   });
 
@@ -78,7 +78,27 @@ describe('REQ ID の重複検査', () => {
     });
   });
 
-  it('コードブロックの中と Scenario の後ろの Source は読まない', () => {
+  it('既知の一覧のうち今の重複と一致しない項目は、失敗にせず警告を標準エラーに出す', () => {
+    withFiles({
+      'openspec/specs/a/spec.md': main(requirement('一つ目', 'REQ-001'), requirement('二つ目', 'REQ-001'), requirement('三つ目', 'REQ-002')),
+      // REQ-001 は一致、REQ-002 は重複でなくなった、REQ-003 は仕様にない
+      'scripts/req-duplicate-known.json': JSON.stringify({ known: [
+        { id: 'REQ-001', requirements: ['a: 一つ目', 'a: 二つ目'] },
+        { id: 'REQ-002', requirements: ['a: 三つ目', 'a: 旧名'] },
+        { id: 'REQ-003', requirements: ['a: x', 'a: y'] },
+      ] }),
+    }, (dir) => {
+      const result = checkReqDuplicates(dir);
+      expect(result.problems).toEqual([]);
+      expect(result.stale.map((entry: { id: string }) => entry.id)).toEqual(['REQ-002', 'REQ-003']);
+      const cli = spawnSync(process.execPath, [script], { cwd: dir, encoding: 'utf8' });
+      expect(cli.status, cli.stderr).toBe(0);
+      expect(cli.stderr).toContain('REQ ID の重複（警告）：scripts/req-duplicate-known.json の 2 件が今の重複と一致しません');
+      expect(cli.stderr).toContain('REQ-002：a: 三つ目 ／ a: 旧名');
+    });
+  });
+
+  it('コードブロックの中と、Requirement の外（別の ## 節）の Source は読まない', () => {
     const text = '## Requirements\n\n### Requirement: 一つ目\n本文。\n\nSource: REQ-001\n\n```md\n### Requirement: 例\nSource: REQ-002\n```\n\n## 別の節\nSource: REQ-003\n';
     expect(parseRequirements(text)).toEqual([{ op: null, name: '一つ目', sources: ['REQ-001'] }]);
   });

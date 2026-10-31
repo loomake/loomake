@@ -479,6 +479,19 @@ describe('ci-gate は終了コードではなく結果の JSON で合格を決�
 
 // REQ ID の重複検査（scripts/req-duplicate-check.mjs）は開発の仕組みなので、要件 ID は付けない（ADR 0005）
 describe('gate の REQ ID の重複検査', () => {
+  it('change のない L2 で品質コマンドが 0 を返しても、重複があれば終了コード 1 にする', () => {
+    withProject(({ dir, commitFiles, run }) => {
+      commitFiles(['scripts/x.mjs']);
+      mkdirSync(join(dir, 'openspec', 'specs', 'a'), { recursive: true });
+      writeFileSync(join(dir, 'openspec', 'specs', 'a', 'spec.md'), '## Requirements\n\n### Requirement: 一つ目\n本文 SHALL。\n\nSource: REQ-901\n\n### Requirement: 二つ目\n本文 SHALL。\n\nSource: REQ-901\n');
+      const result = run('fix-typo', 'loomake-change: none', { quality: 0 });
+      expect(result.stdout).toContain('loomake-tier: L2');
+      expect(result.calls).toEqual([['verify']]);
+      expect(result.stderr).toContain('REQ-901：a: 一つ目 ／ a: 二つ目');
+      expect(result.status).toBe(1);
+    });
+  });
+
   it('どの段階でも重複を調べ、重複があれば後の検査を続けたうえで失敗にする', () => {
     withProject(({ dir, commitFiles, run }) => {
       commitFiles(['docs/usage.md']);

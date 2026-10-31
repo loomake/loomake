@@ -122,10 +122,27 @@ export function unknownDuplicates(duplicates, known) {
   });
 }
 
-/** 検査の結果。problems が空なら合格 */
+/** 既知の一覧のうち、今の重複と一致しない項目（重複でなくなった ID か、その ID に今は付いていない Requirement を含むもの） */
+export function staleKnown(duplicates, known) {
+  return known.filter(({ id, requirements }) => {
+    const current = new Set(duplicates.find((entry) => entry.id === id)?.requirements ?? []);
+    return requirements.some((key) => !current.has(key));
+  });
+}
+
+/** 検査の結果。problems が空なら合格。stale は警告だけで、失敗にはしない */
 export function checkReqDuplicates(root = '.') {
   const duplicates = findDuplicates(collectRequirements(root));
-  return { duplicates, problems: unknownDuplicates(duplicates, readKnown(root)) };
+  const known = readKnown(root);
+  return { duplicates, problems: unknownDuplicates(duplicates, known), stale: staleKnown(duplicates, known) };
+}
+
+/** 一覧と合わなくなった既知の項目の警告。直したか名前を変えたなら、一覧から消すか直す */
+export function formatStale(stale) {
+  return [
+    `REQ ID の重複（警告）：${KNOWN_PATH} の ${stale.length} 件が今の重複と一致しません。重複を直したなら一覧から消し、Requirement の名前を変えたなら一覧も直してください`,
+    ...stale.map(({ id, requirements }) => `  ${id}：${requirements.join(' ／ ')}`),
+  ].join('\n');
 }
 
 export function formatProblems(problems) {
@@ -137,7 +154,8 @@ export function formatProblems(problems) {
 
 if (isMain(import.meta.url)) {
   try {
-    const { duplicates, problems } = checkReqDuplicates();
+    const { duplicates, problems, stale } = checkReqDuplicates();
+    if (stale.length) console.error(formatStale(stale));
     if (problems.length) {
       console.error(formatProblems(problems));
       process.exitCode = 1;
