@@ -22,13 +22,14 @@
 | REQ-040 | 親 trace、現行verify「JSON 出力」、要件7.3 | 既存変更 | 2.0.0でも要件ごとの成功テストファイル一覧をcoverageに出し、abortedとskipでは出さない | 反映済 | specs/verify/spec.md |
 | REQ-041 | 親 trace、現行verify「終了コード」、WBS J02 | 既存変更 | 使い方の誤り2を保ち、REQ-311の共通判定をAPIとCLIで使う | 反映済 | specs/verify/spec.md |
 | REQ-042 | 現行verify「change の省略」、R-C001-01 A | 既存 | changeなしのverifyはcommandsだけを実行する。2.0.0ではchange:null・local・verdictなしで返す | 既存仕様で充足 | openspec/specs/verify/spec.md（本文は変えない） |
+| REQ-073 | 親 trace、現行trace-report「使った証拠の記載」 | 既存変更 | Evidence 1/verify 1.0.0とEvidence 2/verify 2.0.0を受け付け、未対応の版と形の違う記録を拒否する | 反映済 | specs/trace-report/spec.md |
 | REQ-100 | 親 trace、現行run「完了ゲートと直し」 | 既存変更 | runの完了ゲートを明示localにし、既存5 Scenarioを保つ | 反映済 | specs/run/spec.md |
 | REQ-311 | 親 trace、要件7.3の終了コードの表 | 機能 | APIとCLIで共通の0〜3、JSONだけの標準出力、標準エラーの診断、非対話 | 反映済 | specs/verify/spec.md |
 | REQ-315 | 親 trace、要件7.3、WBS J03 | 機能 | Evidence 2で2.0.0を保存し、旧1.0.0を自動で再利用しない | 反映済 | specs/trace-record/spec.md |
 
 REQ-315の「旧1.0.0を自動で再利用しない」は、2a/5でrunnerがEvidence 2を読めるようにしてあり、この子changeで書き出しをEvidence 2にすることで、runnerが新しく記録するのはEvidence 2になる。再利用の候補からEvidence 1を外す変更（REQ-164）は2c/5で行う。
 
-管理役承認（2026-10-31）の逸脱：(1) REQ-066は、MODIFIEDのScenarioが `trace record --scope` のフラグを使うため親に残す。(2) REQ-073は子changeで扱い、2c/5に置く（壊れたEvidence 2の不正箇所の表示とあわせる）。(3) root `quality.yaml` は置くだけで、verifyへの接続は5/5で行う。
+管理役承認（2026-10-31）の逸脱：(1) REQ-066は、MODIFIEDのScenarioが `trace record --scope` のフラグを使うため親に残す。(2) REQ-073は子changeで扱い、この2b/5に置く（書き出しの版を2にすると、reportの未対応の版の判定と文言が変わるため）。(3) root `quality.yaml` は置くだけで、verifyへの接続は5/5で行う。
 
 ## 確認事項
 
