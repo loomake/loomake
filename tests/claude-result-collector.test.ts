@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events';
-import { mkdtemp, mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, realpath, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PassThrough } from 'node:stream';
@@ -8,7 +8,7 @@ import { collectionSafetyStatus, diagnosticEnvironmentSignals, probeCollectionSe
 import { inspectResultProcess, refuseUnprovedResultCollection, resultCollectionPlan, validResultCollectionPlan } from '../scripts/claude-result-collector.mjs';
 
 const roots: string[] = [];
-async function temp() { const root = await mkdtemp(join(tmpdir(), 'loomake-e3-control-')); roots.push(root); return root; }
+async function temp() { const root = await realpath(await mkdtemp(join(tmpdir(), 'loomake-e3-control-'))); roots.push(root); return root; }
 afterEach(async () => { await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true }))); });
 const metadata = () => ({ cli: { version: '2.1.308', nativeSha256: 'f'.repeat(64) }, case: 'success', attempt: 1 });
 const raw = (fields = {}) => JSON.stringify({ type: 'result', subtype: 'success', is_error: false, result: 'OK', ...fields });
