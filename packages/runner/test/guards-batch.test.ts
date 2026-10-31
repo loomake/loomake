@@ -6,7 +6,7 @@ import { StringDecoder } from 'node:string_decoder';
 import { ProcessLimitError, UsageError, withProcessBudget } from '@loomake/kit';
 import { chargedOutputBytes, findViolationsWithLimits, groupPaths, splitStagedPatch, stagedDisplayDiff } from '../src/guards.js';
 import { git, gitMeasured, GitError } from '../src/git.js';
-import { makeRepo, type Repo } from './helpers.js';
+import { fakeCli, makeRepo, type Repo } from './helpers.js';
 
 vi.setConfig({ testTimeout: 60_000 });
 vi.mock('../src/git.js', async (original) => {
@@ -328,5 +328,68 @@ describe('実textconvのstderrとoutput限定再取得', () => {
       Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 3);
       expect(() => actual.gitMeasured('', {}, ['--version'])).toThrow(ProcessLimitError);
     });
+  });
+});
+
+
+describe('S4レビューで確認した実Gitの境界', () => {
+  it('[REQ-112][REQ-137] suppressBlankEmptyの空文脈行も完全な表示差分として保つ', () => {
+    const r = repo(); const file = 'tests/blank.test.ts';
+    r.write(file, "import {expect,it} from 'vitest';\n\nit('synthetic',()=>{\n  expect(value).toBe(1);\n});\n"); commit(r);
+    r.git('config', 'diff.suppressBlankEmpty', 'true');
+    r.write(file, "import {expect,it} from 'vitest';\n\nit('synthetic',()=>{\n  expect(value).toBe(2);\n});\n"); stage(r);
+    const display = raw(r, ['diff', '--cached', ...options, '--', file]);
+    expect(display).toContain('\n\n it(');
+    const result = findViolationsWithLimits(r.root, r.env);
+    expect(result.findings.some((finding) => finding.file === file && finding.reason.includes('書き換え'))).toBe(true);
+    expect(result.diff).toBe(display);
+    expect(() => splitStagedPatch(display.replace('\n\n it(', '\n it('), [file], new Map([[file, 'M']]))).toThrow(GitError);
+  });
+  if (process.platform === 'linux') it('[REQ-109][REQ-137] 実Gitで不正UTF8名のMを空差分として成功に補わない', () => {
+    const r = repo(); r.write('tests/keep.txt', 'synthetic\n');
+    const file = Buffer.concat([Buffer.from(join(r.root, 'tests') + '/'), Buffer.from([0xff]), Buffer.from('.test.ts')]);
+    writeFileSync(file, "expect(value).toBe(1);\n"); commit(r);
+    writeFileSync(file, "expect(value).toBe(2);\n"); stage(r);
+    const status = spawnSync('git', ['diff', '--cached', '--name-status', '--no-renames', '-z'], { cwd: r.root, env: r.env });
+    expect(status.status).toBe(0); expect(status.stdout.includes(0xff)).toBe(true);
+    expect(status.stdout.toString('utf8')).toContain('M\0tests/\ufffd.test.ts\0');
+    expect(() => findViolationsWithLimits(r.root, r.env)).toThrow(GitError);
+  });
+  it('[REQ-109][REQ-137] 正規UTF8のreplacement文字を含むMは元の違反と表示を保つ', () => {
+    const r = repo(); const file = 'tests/\ufffd.test.ts';
+    r.write(file, "expect(value).toBe(1);\n"); commit(r); r.write(file, "expect(value).toBe(2);\n"); stage(r);
+    const result = findViolationsWithLimits(r.root, r.env);
+    expect(result.findings.some((finding) => finding.file === file && finding.reason.includes('書き換え'))).toBe(true);
+    expect(result.diff).toBe(raw(r, ['diff', '--cached', ...options, '--', file]));
+  });
+});
+
+
+describe('群の途中で共有予算が尽きたときの実起動', () => {
+  it('[REQ-180][REQ-112] 第1群の実Git成功後に期限を超えたら後続群の子プロセスを起動しない', () => {
+    const r = repo(); const files = ['a', 'b'];
+    for (const file of files) r.write(file, 'old\n'); commit(r);
+    for (const file of files) r.write(file, 'new\n'); stage(r);
+    const map = codes(r); const cli = fakeCli(r, 'git', { when: 'false' });
+    const now = process.hrtime.bigint; let advance = 0n;
+    const clock = vi.spyOn(process.hrtime, 'bigint').mockImplementation(() => now() + advance);
+    try {
+      vi.mocked(gitMeasured).mockImplementation((root, env, args, limits) => {
+        const result = actual.gitMeasured(root, env, args, limits);
+        // 第1群の実子が閉じた後だけ時計を進める。新しい操作のtimeoutは延長しない。
+        advance = 60_000_000_000n;
+        return result;
+      });
+      let failure: unknown;
+      try {
+        withProcessBudget({ timeoutMs: 30_000 }, () => stagedDisplayDiff(r.root, r.env, files, map, { maxPathspecChars: 1, maxOutputBytes: 65536 }));
+      } catch (error) { failure = error; }
+      expect(failure).toBeInstanceOf(ProcessLimitError); expect(failure).toMatchObject({ kind: 'timeout' });
+      // 関数への進入は2回でも、次群はrunExternalの起動前判定で止まる。
+      expect(gitMeasured).toHaveBeenCalledTimes(2);
+      const starts = cli.events().filter((event) => event.event === 'shim-start');
+      expect(starts).toHaveLength(1); expect(starts[0].args).toContain('a'); expect(starts[0].args).not.toContain('b');
+      expect(cli.events().filter((event) => event.event === 'forward-end')).toEqual([expect.objectContaining({ status: 0 })]);
+    } finally { clock.mockRestore(); cli.restore(); }
   });
 });
