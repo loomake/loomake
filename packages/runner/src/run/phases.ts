@@ -25,16 +25,16 @@ function hasReason(result: LegacyVerifyResult | VerifyResult | null, reason: str
 
 /**
  * 完了ゲートの結果から、純粋判断に渡す観測を作る（REQ-205）。1.0.0 は ok をそのまま使う。
- * 2.0.0 は scope:local で終了コード 0 の結果だけを完了とし、要判断と aborted を観測に入れる。ci の PASS は完了とみなさない
+ * 2.0.0 は scope:local で終了コード 0 の結果だけを完了とし、要判断と aborted と scope を観測に入れる。ci の PASS は完了とみなさず、純粋判断が止める（REQ-317）
  */
-export function gateObservation(result: LegacyVerifyResult | VerifyResult): Pick<GateObservation, 'ok' | 'interrupted' | 'timedOut' | 'aborted' | 'decisionReasons'> {
+export function gateObservation(result: LegacyVerifyResult | VerifyResult): Pick<GateObservation, 'ok' | 'interrupted' | 'timedOut' | 'aborted' | 'decisionReasons' | 'scope'> {
   const interrupted = hasReason(result, INTERRUPTED);
   const timedOut = hasReason(result, TIMED_OUT);
   if (!isVerifyResultV2(result)) return { ok: result.ok, interrupted, timedOut };
   if (isAbortedResult(result)) return { ok: false, interrupted, timedOut, aborted: result.run.errors.map((e) => `${e.kind}：${e.message}`).join(' / ') };
   const reasons = result.decision.reasons.map((r) => `${r.message}（${r.code}・${r.target}）`);
   return {
-    ok: result.scope === 'local' && verifyExitCode(result) === 0, interrupted, timedOut,
+    ok: result.scope === 'local' && verifyExitCode(result) === 0, interrupted, timedOut, scope: result.scope,
     decisionReasons: !result.decision.required ? [] : reasons.length ? reasons : ['理由の記載なし'],
   };
 }

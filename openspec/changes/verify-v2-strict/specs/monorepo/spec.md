@@ -12,3 +12,7 @@ Source: REQ-318
 #### Scenario: 実配布物と移行
 - **WHEN** 新しいtarballから公開型・JSON・CLIを利用し、旧fixtureの履歴閲覧も試す
 - **THEN** 配布された各利用側が動作し、verify 2.0.0/Evidence 2と履歴版を区別する。Report 2とRunSummaryの外形、無関係の6 JSONを維持する
+
+#### Scenario: 完了ゲート以外の結果と全件NOT_APPLICABLE
+- **WHEN** ci-gateが `--done` で検査したchangeに対し、別のchangeの結果、仕様ゲートや品質コマンドだけの結果、検査が0件か全件NOT_APPLICABLEの結果、終了コードは0でもverdictがPASSでない結果を受け取る
+- **THEN** 終了コードだけで合格にせず、対象のchangeと完了ゲートの検査を含む2.0.0のci・completed・要判断なし・PASSの結果を要求して失敗する

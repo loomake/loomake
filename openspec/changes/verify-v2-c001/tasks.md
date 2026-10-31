@@ -30,12 +30,10 @@
 - [ ] 4.2 trace recordをEvidence 2へ移し、scopeと終了コード、aborted、文書snapshot・未コミット・検査前後変化・追記専用・同期性とserializationのJSON前後検査・publicationの上書き禁止を既存回帰とID付き試験で確認する（REQ-066・315）
 - [ ] 4.4 runnerの準備・local完了・decision停止・記録をv2へ追従し、reuse/pr/prompt/recorderも含む型・表示・再利用を追従し、RunSummary外形・中断/予算/変更保持と要判断+FAILで止まる試験を確認する。REQ-100の既存5 Scenarioを保持してverify --done --scope localと同じ検査へ追従し、REQ-205の判断順を保つ。1.2で確定したREQ-093に従いspec-only不合格1とaborted 2/3の停止を実装・試験し、実装ブランチを作らずエンジンを呼ばないことと全既存Scenarioを確認する。REQ-114/115のPR本文はlocal完了0とCI最終未確認を分け、REQ-164/315はEvidence 2/localの同一状態再試行と旧版非再利用を同じ試験で確認する。REQ-203の未承認警告用語もv2の案内/不足へ合わせる。agreement/doctorへverify限定のエラー分類を漏らさない（REQ-205・317）
 - [ ] 4.5 ci-gateと関連workflowの利用経路をv2/ciへ移し、local・旧形式・skip/neutral・全NAを合格にしない統合試験、R-C001-04がAの場合だけnormal self-ciがS1判定moduleを直接使うことと、fresh Tを基準としたexact 2.0.0解析・S/T一致を確認し、採用したbare verify品質経路を確認する（REQ-312・318）
-- [ ] 4.9 2c：evidenceProblemで、localのpendingがinsufficient以上であることを確かめる
-- [ ] 4.10 2c：ci-gateを実行の流れにつなぎ、2.0.0のmodeとchangeで判定し、1.0.0・spec-only・全件NOT_APPLICABLEを合格にしない
-- [ ] 4.11 2c：runの完了ゲートにciの結果が来たら停止する
+旧タスク4.9（evidenceProblemのpending≥insufficient）・4.10（ci-gateを実行の流れにつなぎ、1.0.0・spec-only・全件NOT_APPLICABLEを合格にしない）・4.11（runの完了ゲートにciの結果が来たら停止する）と、4.4のREQ-164の旧版非再利用・REQ-317、4.5のREQ-318は、子change `verify-v2-strict`（2c/6）へ移した。
 
 ## 5. 配布・受入
 
 - [ ] 5.1 core/kit/trace/CLIのminorとrunnerのpatch changeset、形式版と利用側の移行案内を追加し、実tarball・公開型・JSON・CLI/API・旧fixture閲覧を検証する。1.2で採用したR-C001-06に従いAGENTS.md・packages/kit/templates/AGENTS.md・guide・PRテンプレートのローカルDoD/CI合格のコマンドと説明を同時に更新する。CONTRIBUTING.md、README.md、README.en.md、packages/cli/README.md、docs/flow.md、.agents/skills/delivery/SKILL.mdと、雛形文面を固定しているtests/kit-assets.test.ts:251も移行対象とする。kit-assetsの期待値は具体差分の個別承認を得てから変更し、R06の方針承認だけで変更しない。req-to-openspecのtasks雛形2箇所（packages/kit/templates/skills/req-to-openspec/references/openspec-format.md、.agents/skills/req-to-openspec/references/openspec-format.md）も対象にする。1.2で確定したREQ-136と採用コマンドを両雛形へ反映し、印を付ける既存Scenarioと完了ゲートの印を保持する試験を行う。Scenario変更後にREQ-190の監査をやり直し、docs/quality/scenarios.jsonのScenario hash・対応テスト・理由を実際の最新試験へ照合して更新する。旧レビューのhashだけを書き換えて済ませず、不足/無効の残りも記録する。CLI共通定義・生成ページ・新旧基準fixtureが同じ受理/出力を表すことを検査し、基準差分の個別承認を照合する。既存試験・設定を緩めずlint・typecheckと全体試験を通す（REQ-308〜319）
 - [ ] 5.2 正常PASS・abortedの2/3・不足1のCLI/API統合、全要件のID付きテストと独立レビューを確認し、R-C001-06の回答に従い最終headのローカルDoDとci完了ゲート・必須CI成功を記録する。Aならローカルは `--done --scope local` の0、最終CIは `--done --scope ci` のreal v2/PASS・要判断なし・0を両方必要とする。R-C001-04がAなら独立trusted checkも追加条件として確認し、Bなら採用した信頼基準を検証する。C-003へ残る全provider/host隔離/広い取得経路と#61/63/64全体の未完了を明記する（REQ-319） <!-- loomake:gate=done -->
-注：archiveは6/6（受入）のマージのあとに、verify-v2-shape・verify-v2-readers・verify-v2-wiring・2b-2と2cの子change・verify-v2-c001を順に行う
+注：archiveは6/6（受入）のマージのあとに、verify-v2-shape・verify-v2-readers・verify-v2-wiring・verify-v2-evidence・verify-v2-strict・verify-v2-c001を順に行う

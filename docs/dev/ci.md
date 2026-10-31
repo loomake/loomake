@@ -24,6 +24,8 @@ gate ジョブは PR の段階（AGENTS.md 2 章の L1・L2・L3）を先に決�
 - L2（試験・CI・開発基盤）：これまでどおり、対象の change があれば `verify --change <id> --done`、なければ `verify`（品質コマンドだけ）を実行する
 - L3（製品コードと Requirement の変更）：change が必須。`loomake-change: none` や change を特定できない PR は失敗する
 
+change のゲート（`--done`・`--spec-only`）は `--json` で実行し、verify の終了コードではなく 2.0.0 の結果の JSON で合格を決める（REQ-318、`scripts/ci-gate.mjs` の `ciGateProblem`）。完了ゲートは対象の change と一致し、scope が ci、run.status が completed、要判断なし、verdict が PASS、不合格や証拠不足（`--skip-commands`）の検査がなく、検査が 0 件や全件 NOT_APPLICABLE でなく、完了ゲートの検査（`tasks.md`・`要件ごとのテスト`・`command: *`）を含み、終了コードが 0 のときだけ合格にする。履歴の 1.0.0、local の結果、仕様ゲートや品質コマンドだけの結果は、終了コードが 0 でも合格にしない。結果の JSON は標準エラーに写し、標準出力には段階の行だけを書く。
+
 段階は PR 本文の `loomake-tier:` の行で上げる方向にだけ上書きできる。gate は決めた段階と理由を標準出力に `loomake-tier: L2（scripts/ci-gate.mjs）` の形で 1 行書き、ステップの出力 `tier`・`tier_line` にも入れる。この行を PR 本文の証跡ブロックの `tier:` に写す。
 
 Requirement の変更は、`openspec/specs/` と `openspec/changes/<id>/specs/` の `spec.md` で、変更した行が属する節で見る。`git diff -U0` のハンクの行番号から、足した行は HEAD の、消した行はベースのファイルを読み、直前の見出しが `### Requirement:` なら Requirement の変更（L3）とする。`#### Scenario:` の配下や Purpose の文言だけなら、RFC 2119 の語を足しても L1 のまま。archive の PR（`openspec/changes/archive/` にファイルを足すか移す）は Requirement を主仕様に写すが、実装 PR の `--done` で検査済みなので L1 として扱う。
@@ -35,7 +37,7 @@ change のない L1 の PR では `verify` を呼ばないため、`tests/doc-li
 ## 開発の台本
 
 - `scripts/clean-merged-worktrees.sh`：ブランチを head にした PR が GitHub で merged になっている clean な worktree を消す（`gh pr list --state merged` で確かめる。gh を使えなければ何も消さない）。detached HEAD、dirty、`.loomake/`・`node_modules/`・`dist/`・`coverage/` 以外の無視ファイルがあるものは残す。`--dry-run` で一覧と判定理由だけを表示し、`--keep <name>` で残すものを指定する。各 worktree の `.loomake/` は `.loomake/archive/worktree-loomake-<日付>/` に退避する。ブランチは消さない
-- `scripts/delivery-metrics.sh <出力ディレクトリ>`：配布ワークフロー改善ダッシュボードの指標（PR の段階と所要時間、Issue #121 の投稿量、worklog の量、CI の実行時間）を CSV に集める。段階は `ci-tier.mjs` の `classifyPath` で決める。一時ディレクトリに書いてから移すので、gh に失敗しても前のファイルは残る。gh・git・node・python3 が要る
+- `scripts/delivery-metrics.sh <出力ディレクトリ>`：配布ワークフロー改善ダッシュボードの指標（PR の段階と所要時間、Issue #121 の投稿量、worklog の量、CI の実行時間、利用者の判断待ちの項目）を CSV に集める。段階は `ci-tier.mjs` の `classifyPath` で決める。判断待ちの項目（`pending-approvals.csv`）は `scripts/pending-approvals.mjs` が決め、trace.md の未回答のブロッキングな確認事項は verify と同じ core・kit の関数で判定する。一時ディレクトリに書いてから移すので、gh に失敗しても前のファイルは残る。判断待ちの一覧だけが作れなかったときは、ほかの CSV を移したうえで前の `pending-approvals.csv` を残し、原因を `pending-approvals.err` に書いて非ゼロで終わる。gh・git・node・pnpm・python3 が要る。`node_modules` がなければ `pnpm install --frozen-lockfile` を流すので、ネットワークにつながっている必要がある
 
 ## まだ仕様にあるもの
 
