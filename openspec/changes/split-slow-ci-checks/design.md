@@ -391,3 +391,186 @@ Q-114：companionの型専用でないImportEqualsのrequire先も位置を問�
 ### companionのthis（Q-116）
 
 型位置以外のThisKeywordを、局所の関数・method・class内も含め既存readingErrorで拒否する。closedSyntaxと既存拒否順・純粋APIと両入口の条件を保ち、元正例・型位置・nativeと入力不変を回帰する。Opus設計のADR・delivery未読は管理役が現規約を照合し技術設計として採用した。
+
+## R4追加設計の採用（2026-11-01、c0d9d49c）
+
+管理役がOpus設計c0d9d49c-321c-4ea9-ba58-460a92ab3180の全文を読み採用した。対象headはfe5b1f421290b1e53a17bd87e6272b8da7a9f178。manifestはclaude-opus-5-5、ok、permissionDenials 0。これは既存split-slow-ci-checksのtask2.7の部分修理で、新Requirement/SHALLは追加しない（ADR0005）。旧「方向だけ採用」の記載は採用前の履歴として保つ。
+
+R4-D1=A：hasの中でcurrentPart()を直接呼ぶ。採用原本5b4ee366の91行と9b8947aeの63行はいずれも直接呼出しで、captured partではない。原本のFILE変数案は既決の本書121行でliteralへ訂正済み。R4-D2=A：偽has H1と内側の影B1を新nativeで観測し、偽includeCase I3は静的負例として保持する。回答者は利用者（ADR 0006 の包括承認）。仮定の承認者は管理役で、既採用headerとの一致、旧API保持、2形のnativeで重複機構を観測し別の偽includeCaseを静的拒否することを理由とする。
+
+採用時点では新nativeは未実行。実registryは空なので実fileへのchecker適用は0回であり、新fixtureの検証を実登録・OS割当の成功へ読み替えない。task2.8はPR270の通常merge fe5b1f42を指定統合枝で受入済みで、完了印を6/21から7/21へ進める。task2.7全体、一般oracle5.1、実registry/OS/slow配線、3OS、CI、独立最終レビューは未達のまま保持する。
+
+以下は採用した追加設計の実装契約である。期待集合が実装と違えば期待を変えず管理役へ戻す。
+
+## 3. checkPartitionWiring の設計（R4-Q1〜Q3）
+
+### 3.1 API・診断・呼出順
+- **戻り値**：`checkRegistration` と同じ形の `{ code, file, line, message }[]` です。違反ごとに AST 順で 1 件ずつ返し、短絡しません。
+- **再利用するもの**：
+  - 既存の `parse` と `localBindings(ast, file).declarationOf`（TypeChecker、noLib/noResolve。実行はしません）
+  - `literal` と `walk`
+  - transpile の構文診断（`syntax`。既存と同じ文言「試験の構文が不正です」）
+- **specifier の共通化**：`partitionRowsImport` の 133-136 行（file 検証と正規 specifier の計算）を `canonicalSpecifier(file, target)` として切り出し、両方から使います。振る舞いは同一で、既存の P1/P2/N1/N2 と絶対 path・`..` の試験が守ります。
+- **呼出順**：checker 間に順序依存はありません。試験では `inventoryDeclarations` → `checkRegistration` → `checkPartitionWiring` の順に、それぞれを独立に `toEqual([])` で検査します。
+
+新しい code は 3 つだけです。
+
+| code | 文言 | 対象 |
+|---|---|---|
+| `wiringImport` | `分割の import を静的に確認できません` | 正規 module の import の形・名前・specifier、および file path が不正で specifier を計算できない場合 |
+| `wiringHeader` | `分割の header を静的に確認できません` | registry/has/hasAny の宣言の形・位置・順序・引数・root・file literal |
+| `wiringBinding` | `分割の束縛を静的に確認できません` | 参照の解決先が違う、許されない位置での参照、宣言のない参照 |
+
+### 3.2 正規の import（閉文法）
+| module | specifier | 名前 |
+|---|---|---|
+| test-partition | `canonicalSpecifier(file,'scripts/lib/test-partition.mjs')` | 集合がちょうど {includeCase, loadPartition} |
+| helper | `canonicalSpecifier(file,'tests/helpers/partition-part.js')` | currentPart は必須、eachRows は任意。他の名前は不可 |
+| `node:path` | literal `'node:path'` | `join` を含む。他の名前の併記は可 |
+
+- 3 つとも、ImportDeclaration は module ごとに 1 つだけです。named import に限り、alias・type-only の宣言や specifier・default・namespace は認めません。
+- 実装では「`walk` で該当する ImportDeclaration を集め、ちょうど 1 件か」を確かめます。
+
+### 3.3 正規の header（最後の top-level import の直後に連続して置く）
+```ts
+const registry = loadPartition(join(import.meta.dirname, '<R>'));
+const has = (id: string) => includeCase(registry, '<file>', currentPart(), id);
+const hasAny = (ids: string[]) => ids.some(has);   // file 内で hasAny を参照するときだけ必須
+```
+- 各文は `const` の 1 宣言で、export・declare・初期化子の wrapper（as、括弧など）はありません。順序は registry → has → hasAny で、header より後に import は置けません。
+- `<R>` は `posix.relative(posix.dirname(file), '')` で計算した 1 個の literal です（例：`'..'`、`'../..'`、`'../../..'`）。callee の `join` は §3.2 の import に解決し、`import.meta.dirname` は MetaProperty の property access です。
+- `has` は concise body の非 async arrow で、引数は Identifier 1 個です。型注釈は無視します（あってもなくても可）。本体は引数がちょうど 4 個の `includeCase(...)` で、各引数は次のとおりです。
+  - registry 宣言へ解決する Identifier
+  - `file` と一致する文字列 literal
+  - 引数 0 個の `currentPart()`
+  - has 自身の引数へ解決する Identifier
+
+  第 5 引数の platform は認めません。
+- `hasAny` も同じ形の arrow で、本体は `<param>.some(has)` です。引数は 1 個で、has 宣言へ解決します。
+
+### 3.4 参照（TypeChecker の実 declaration による）
+値の位置の Identifier を全部たどります。property access の name、property key、宣言の name、型の位置は除きます。このため `set.has(x)` のような参照は対象外です。
+
+| 束縛 | 許す参照位置 | 同名の影 |
+|---|---|---|
+| has | 引数 1 個の call の callee、eachRows の第 1 引数、hasAny 本体の `.some` の引数 | 値の位置で `has` という Identifier が別の宣言や未解決へ解決したら `wiringBinding` |
+| hasAny | call の callee だけ | 同上 |
+| registry / includeCase / loadPartition / currentPart | header 内の 1 回ずつだけ | 対象外（header は top-level なので内側の影は届かない） |
+| eachRows（import した場合） | callee だけ。その call の第 1 引数は正規の has へ解決すること | rowBindings の既存規則に任せる |
+
+代入の target・shorthand・`fn(has)`・`has.call`・`const h = has` は、許されない位置としてすべて `wiringBinding` にします。
+
+### 3.5 受理と拒否の matrix（各行は正規 source から 1 点だけ変える。期待する code 集合）
+**受理（errors []）**
+- A1：tests/x と hasAny あり
+- A2：hasAny なし、describe なし（schema の形）
+- A3：packages/runner/test/x、`'../../..'`
+- A4：tests/sub/x、`'../..'`
+- A5：`id =>` と `(id: string)`、`readonly string[]`
+- A6：eachRows の有無、currentPart と eachRows を同じ import に置く
+- A7：`import { dirname, join } from 'node:path'` と、他所での join の使用
+- A8：header の後の vi.mock や任意のコード、`map.has()`
+
+**拒否**
+| ID | 変更 | 期待 |
+|---|---|---|
+| I1 | 正規 import の欠落（test-partition / helper / join のいずれか） | wiringImport |
+| I2 | specifier の別表記（basename だけ、`.ts`、`?x`、余分な `../`、`'path'`） | wiringImport |
+| I3 | `includeCase as real` と top-level の `const includeCase=()=>true`（旧 fakeIncludeCase） | wiringImport, wiringHeader |
+| I4 | `import type`、`{ type currentPart }` | wiringImport |
+| I5 | namespace import、default import、同じ module の 2 つ目の宣言 | wiringImport |
+| I6 | helper から setPart を import | wiringImport |
+| I7 | file path に絶対 path または `..` | wiringImport |
+| H1 | `has=()=>true`、`(id)=>true`（旧 hastrue） | wiringHeader |
+| H2 | FILE 定数、または別 file の literal | wiringHeader |
+| H3 | `const part=currentPart()` と part の参照 | wiringHeader |
+| H4 | 第 5 引数の platform | wiringHeader |
+| H5 | `import.meta.dirname+'/..'`、深さの違う R、`process.cwd()` | wiringHeader |
+| H6 | let・export・複数の declarator・wrapper | wiringHeader |
+| H7 | 順序の入替、import 直後でない、header 後の import | wiringHeader |
+| H8 | block body、async、既定値・分割・rest の引数 | wiringHeader |
+| H9 | `ids.some(id=>has(id))`、`ids.every(has)`、`some(has,x)` | wiringHeader |
+| B1 | describe 内の `const has=()=>true` と、それを使う guard | wiringBinding |
+| B2 | callback の引数名を has にする | wiringBinding |
+| B3 | `fn(has)`、`{has}`、`has.call`、`const h=has` | wiringBinding |
+| B4 | `has = x`、`registry.files = {}` | wiringBinding |
+| B5 | hasAny を宣言せずに参照 | wiringBinding |
+| B6 | header の外で currentPart を呼ぶ | wiringBinding |
+| S1 | 構文エラー | syntax |
+
+- 行ごとに旧 2 API の結果も記録します。I3 と H1 では旧 2 API が `[]` のままであることを assert し、旧 API の期待が変わらないことと、新 checker が隙間を埋めることを同じ試験で示します。
+- RED の判定：実装前（関数がない状態）では import 失敗の RED になります。checker 実装後に期待集合と違えば、期待を実装に合わせず設計へ戻します。
+
+## 4. 正規 source–native 対照（R4-Q4）
+
+### 4.1 新しい fixture
+- 置き場所：新 file `tests/helpers/partition-wiring-fixture.ts`
+- 作り：旧 `partitionRowsFixture` と同じ手順で作ります（`.loomake/partition-wiring-*` の tmp、helper と test-partition.mjs のコピー、node_modules の symlink、`removeWithRetry`、assert の前に process.json を書く）。旧 fixture の file は変更しません。
+- source：`tests/canonical.test.ts` に §3.3 の正規 header を書き、続けて `const mark=...` を置きます。その後に `if (hasAny([...])) describe('rows', () => { {const it = eachRows(has, ids); <call>} … })` を並べ、最後に top-level の `if (has('direct-a')) it('direct a', …)` を置きます。
+- companion：旧 fixture の 269 行と同じ 3 文の文字列を使います。
+- native 基準：header・guard・eachRows を外し、同じ call を `describe('rows')` の中に並べた source です。
+
+### 4.2 対応 matrix（旧 11 call → 正規）
+| 旧 call | 行 | 正規 | 理由 |
+|---|---|---|---|
+| R1 / R2tuple / R2scalar / R3（同名 2 行）/ R4printf / R4pair / R4object | 14 | 含める | literal 表。static と native の両方で照合する |
+| R2mixed（EMPTY） | 2 | 含めない | 非 literal の表は static では `unsupportedRowForm`。参照の同一性は旧 probe だけで確かめる |
+| numeric / options の timeout | 4 | 含める（timeout 群） | 80ms と status 1 |
+| error | 2 | 含める（error 群） | row boom |
+| invalid の 4 形、未知 OS、partの単独入口 | – | 含めない | runtime API 専用。旧 probe で保持する |
+
+試験で次を検査します。
+- **(a) byte の対応**：正規 call の文字列がそれぞれ、旧 fixture の file text に `"call": ` と JSON の形で含まれる。旧 file は変更しません。
+- **(b) 集合の対応**：正規の集合は、旧の集合から R2mixed を 1 件除いたものにちょうど一致する（欠測・余分・重複がない）。
+- **(c) EMPTY の境界**：R2mixed を正規の形にした source は `unsupportedRowForm` を返す。literal の境界は緩めません。
+- **(d) 期待行**：旧 `expectedRowNames` と `expectedRowMarkers` から mixed の 2 行を除いた 14 行に、`direct a` を足したもの。
+
+### 4.3 実行と assert（新 file `tests/test-partition-wiring.test.ts`、timeout は 120000）
+1. **static**：読み戻した bytes に対し、旧 2 API と新 checker がすべて `[]` を返す。
+2. **native 基準**：exit 0。行名と marker が §4.2(d) と一致する。
+3. **routed**：slowIds を [] / mixed / all にして fast と slow を同じ process で実行する。行と marker の多重集合が native と一致し、call 行の byte が同一。さらに report の file ごとの集合を確かめる：slow file の行はちょうど slowIds の行、元 file の行はその残り。これで companion の setPart と source の currentPart が同じ module 実体であることを実測します。
+4. **timeout / error 群**：native と routed がともに status 1、失敗の多重集合が一致、失敗文言に 80ms / row boom を含む。
+5. **負の native**：静的に拒否される 2 形を実行します。
+   - H1（`has=()=>true`）
+   - B1（内側の影）
+
+   どちらも checker の結果は wiringHeader / wiringBinding です。mixed の割当で fast+slow の多重集合が native の 2 倍になることを独立に観測します。
+
+process 数はおよそ 11 です。旧 `test-partition-rows.test.ts` の全文と旧 fixture の 11 call、EMPTY、assert は保持します。
+
+## 5. 静的検査と実体検査の分界（R4-Q5）
+- **静的（純粋関数）**：正規 specifier と実 binding で配線の形と参照を閉じます。FS・実行・module 実体には触れません。
+- **実体（試験側）**：
+  - helper の lstat（R3 で既存）
+  - 新 fixture の file ごとの行集合（同じ実体であることの必要条件を観測）
+  - companion の受理（task2.10 の既存検査。R4 の新しい依存にはしない）
+
+## 6. Requirement（R4-Q6）
+新しい ID と SHALL は追加しません。理由は 3 つです。
+- `test-declarations.mjs` は試験専用で、監査から import されない。
+- REQ-347 の現行 3 Scenario と差分の 14 Scenario は、監査・移行・補助 module・hash の判定で、今回の変更対象と重ならない。
+- ADR 0005 の docs/dev の範囲（テストの書き方の前提）にあたる。
+
+製品契約の変更は不要と判断するので、別案は出しません。
+
+## 7. 受入条件ごとの変更対象と確認方法
+| 条件 | 変更 | 確認 |
+|---|---|---|
+| R4-A1 | `test-declarations.mjs` に関数を追加し、`canonicalSpecifier` を切り出す。`test-declarations.test.ts` は既存 describe の後に matrix の describe を追加し、150 行の loop に `checkPartitionWiring` の expect を 1 行足す | 旧 448 行までの正負と期待を全部保持し、空 registry も維持 |
+| R4-A2 | §3.5 の試験 | 各行の code 集合。I3/H1 では旧 2 API が `[]` |
+| R4-A3 | 新 fixture と新試験 | §4.3 の 1〜5 |
+| R4-A4 | 旧 rows test と旧 fixture は変更なし | git diff が 0、§4.2(a)〜(c) |
+| R4-A5 | scenario-audit・companion は変更なし | §6 |
+| R4-A6 | docs/dev/ci.md:175 の後に 1 段落（新 checker・正規 fixture・EMPTY の限界・空 registry で空回りすること）。design.md R4 節・tasks の 2.7 注記・trace の Q-94 は計画 commit で更新 | metadata の 19 file・registry・config を変えない |
+
+**コマンド**（実装後）：
+- `pnpm exec vitest run tests/test-declarations.test.ts tests/test-partition-wiring.test.ts tests/test-partition-rows.test.ts`
+- `pnpm -s lint`、`pnpm -s typecheck`、`pnpm -s test`
+- `pnpm -s verify --change split-slow-ci-checks --spec-only`
+
+**到達範囲**：`--done` は未完了 task が残るので失敗が見込まれ、この部分修理の合否には使いません。2.7 には check を付けません。native の raw は試験内の process.json / report / markers で、cleanup の前に assert します。受領用の raw は、実装担当が `.loomake/design-r4-impl/` に別に保存します（追跡しません）。
+
+
+### 診断担当の具体化（管理役採用）
+
+H3のcaptured-part宣言内の参照は同じheader構造違反としてwiringHeaderへまとめる。H7も既知header候補の位置・順序違反に余分なbinding診断を重複させない。それ以外のheader外currentPartはB6のwiringBindingで拒否する。別に存在する独立違反を短絡したり隠したりしない。Opus matrixの期待集合と閉文法の拒否を変えず、同一原因の診断担当を具体化するため、管理役がおすすめを採用した。回答者は利用者（ADR 0006 の包括承認）。
