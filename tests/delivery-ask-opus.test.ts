@@ -335,6 +335,37 @@ describe('deliveryのClaude起動', () => {
       expect(existsSync(join(cwd, '.loomake/called'))).toBe(false);
     });
   });
+  it('reviewでも差分が200KiB以内で依頼全体が1MiBを超えれば起動前に拒む', async () => {
+    await withRepo('success', async ({ cwd, input, options }) => {
+      const content = reviewRequest('+', 'x'.repeat(1024 * 1024));
+      expect(Buffer.byteLength(extractDiff(content)!)).toBe(1);
+      writeFileSync(input.request, content);
+      expect(await askOpus({ ...input, role: 'review' }, options)).toMatchObject({ ok: false, dir: null, reason: '依頼ファイルが1MiBを超えています。' });
+      expect(existsSync(join(cwd, '.loomake/called'))).toBe(false);
+    });
+  });
+  it('reviewで差分が200KiB以内なら、依頼全体がちょうど1MiBでも拒まない', async () => {
+    await withRepo('success', async ({ cwd, input, options }) => {
+      const base = Buffer.byteLength(reviewRequest('+'.repeat(limit)));
+      const content = reviewRequest('+'.repeat(limit), 'x'.repeat(1024 * 1024 - base));
+      expect(Buffer.byteLength(content)).toBe(1024 * 1024);
+      writeFileSync(input.request, content);
+      expect(await askOpus({ ...input, role: 'review' }, options)).toMatchObject({ ok: true, role: 'review' });
+      expect(existsSync(join(cwd, '.loomake/called'))).toBe(true);
+    });
+  });
+  it('reviewでCRLFの差分は改行のCRも数え、生のバイト数が200KiBを超えれば拒む', async () => {
+    await withRepo('success', async ({ cwd, input, options }) => {
+      const diff = `${'+'.repeat(limit - 2)}\r\n+`;
+      expect(Buffer.byteLength(diff)).toBe(limit + 1);
+      const content = reviewRequest(diff).replaceAll(/\r?\n/g, '\r\n');
+      expect(extractDiff(content)).toBe(diff);
+      writeFileSync(input.request, content);
+      expect(await askOpus({ ...input, role: 'review' }, options)).toMatchObject({
+        ok: false, dir: null, reason: '依頼に貼った差分が200KiBを超えています。PRを分けてください。' });
+      expect(existsSync(join(cwd, '.loomake/called'))).toBe(false);
+    });
+  });
   it.each(['design', 'second-opinion'])('%sでは差分の区切りがあっても依頼全体が200KiBを超えれば拒む', async (role) => {
     await withRepo('success', async ({ cwd, input, options }) => {
       writeFileSync(input.request, reviewRequest('+', 'x'.repeat(limit)));
@@ -346,6 +377,8 @@ describe('deliveryのClaude起動', () => {
     ['区切りがない', 'x'.repeat(limit + 1)],
     ['beginが重複する', `<!-- ask-opus:diff-begin -->\n${reviewRequest('+', 'x'.repeat(limit))}`],
     ['endがbeginより前にある', `<!-- ask-opus:diff-end -->\n${'x'.repeat(limit)}\n<!-- ask-opus:diff-begin -->\n`],
+    ['endだけがある', `${'x'.repeat(limit)}\n<!-- ask-opus:diff-end -->\n`],
+    ['endが重複する', `${reviewRequest('+', 'x'.repeat(limit))}<!-- ask-opus:diff-end -->\n`],
   ])('reviewで差分の%s依頼は、依頼全体が200KiBを超えれば拒む', async (_name, content) => {
     await withRepo('success', async ({ cwd, input, options }) => {
       expect(extractDiff(content)).toBeNull();
@@ -356,7 +389,8 @@ describe('deliveryのClaude起動', () => {
   });
   it('差分の区切りは行全体の一致だけを数え、差分の行に含まれる区切りの文字列やCRLFで誤らない', () => {
     expect(extractDiff('a\r\n<!-- ask-opus:diff-begin -->\r\n+<!-- ask-opus:diff-end -->\r\n <!-- ask-opus:diff-begin -->\r\n-x\r\n<!-- ask-opus:diff-end -->\r\nb'))
-      .toBe('+<!-- ask-opus:diff-end -->\n <!-- ask-opus:diff-begin -->\n-x');
+      .toBe('+<!-- ask-opus:diff-end -->\r\n <!-- ask-opus:diff-begin -->\r\n-x');
+    expect(extractDiff('<!-- ask-opus:diff-begin -->\n<!-- ask-opus:diff-end -->')).toBe('');
   });
   it('review-request.mdテンプレートの差分欄は区切り行1組で囲まれている', () => {
     const template = readFileSync(resolve(import.meta.dirname, '../.agents/skills/delivery/templates/review-request.md'), 'utf8');

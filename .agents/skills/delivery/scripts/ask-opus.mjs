@@ -8,6 +8,7 @@ const ROLES = ['design', 'second-opinion', 'review'];
 const TOOLS = ['Read', 'Glob', 'Grep'];
 const MAX_OUTPUT = 8 * 1024 * 1024;
 const MAX_REQUEST = 200 * 1024;
+const MAX_FILE = 1024 * 1024;
 const DIFF_BEGIN = '<!-- ask-opus:diff-begin -->';
 const DIFF_END = '<!-- ask-opus:diff-end -->';
 
@@ -95,16 +96,26 @@ function stopChild(child, signal) {
 
 // レビュー依頼で上限を数える差分の部分を返す。区切り行が1組だけ、begin・endの順にない場合はnull。
 // 差分の行は先頭に空白・+・-が付くため、行全体が区切りと一致するのはテンプレートの区切り行だけ。
+// 区切り行の判定にだけ行末の\rを外し、返す差分は元の文字列（begin行の次の行の先頭から、end行の直前の改行の前まで）とする。
 export function extractDiff(content) {
-  const lines = content.split('\n').map((line) => line.replace(/\r$/, ''));
-  const begins = lines.flatMap((line, index) => (line === DIFF_BEGIN ? [index] : []));
-  const ends = lines.flatMap((line, index) => (line === DIFF_END ? [index] : []));
+  const starts = [0];
+  for (let index = content.indexOf('\n'); index !== -1; index = content.indexOf('\n', index + 1)) starts.push(index + 1);
+  const lineAt = (index) => content.slice(starts[index], index + 1 < starts.length ? starts[index + 1] - 1 : content.length).replace(/\r$/, '');
+  const begins = [];
+  const ends = [];
+  for (let index = 0; index < starts.length; index += 1) {
+    const line = lineAt(index);
+    if (line === DIFF_BEGIN) begins.push(index);
+    if (line === DIFF_END) ends.push(index);
+  }
   if (begins.length !== 1 || ends.length !== 1 || begins[0] > ends[0]) return null;
-  return lines.slice(begins[0] + 1, ends[0]).join('\n');
+  if (ends[0] === begins[0] + 1) return '';
+  return content.slice(starts[begins[0] + 1], starts[ends[0]] - 1).replace(/\r$/, '');
 }
 
 // 上限はADR 0006のレビュー規則（2026-10-31 Q1）に従い、reviewでは差分だけに掛ける。
 // 差分の区切りがない依頼とreview以外の工程は、安全側として依頼全体に掛ける。
+// 別に、全工程で読む前に依頼全体へ1MiBの安全弁を掛ける（差分を区切り行の外に貼る抜け道への天井）。
 export function checkRequestSize(role, content) {
   const diff = role === 'review' ? extractDiff(content) : null;
   if (diff === null) {
@@ -175,6 +186,7 @@ export async function askOpus(input, options = {}) {
     }
     const requestStat = statSync(request);
     if (!requestStat.isFile()) throw new Error('依頼ファイルには通常ファイルを指定してください。');
+    if (requestStat.size > MAX_FILE) throw new Error('依頼ファイルが1MiBを超えています。');
     if (input.role !== 'review' && requestStat.size > MAX_REQUEST) throw new Error('依頼ファイルが200KiBを超えています。');
     const content = readFileSync(request, 'utf8');
     if (!content.trim()) throw new Error('依頼ファイルが空です。');
