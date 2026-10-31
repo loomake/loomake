@@ -2,18 +2,22 @@
 // 型は import type だけで参照するので、このファイルを読んでも zod は読まない
 import type { z } from 'zod';
 import type {
-  legacyVerifyResultSchema, verifyCheckResultSchema, verifyCheckV2Schema, verifyDecisionSchema, verifyModeSchema, verifyResultSchema,
+  legacyVerifyCheckResultSchema, legacyVerifyResultSchema, verifyCheckResultSchema, verifyCheckV2Schema, verifyDecisionSchema,
+  verifyModeSchema, verifyResultSchema,
   verifyResultV2AbortedSchema, verifyResultV2CiSchema, verifyResultV2LocalSchema, verifyResultV2Schema, verifyRunErrorSchema, verifyScopeSchema,
 } from './verify-result-schema.js';
 
-/** verify 結果のスキーマの版（MAJOR.MINOR.PATCH）。破壊的変更ではメジャー番号を上げる（REQ-053） */
-export const VERIFY_RESULT_SCHEMA_VERSION = '1.0.0';
+/** いま書き出す verify 結果のスキーマの版（MAJOR.MINOR.PATCH）。破壊的変更ではメジャー番号を上げる（REQ-053・REQ-311） */
+export const VERIFY_RESULT_SCHEMA_VERSION = '2.0.0';
 export { LEGACY_VERIFY_RESULT_SCHEMA_VERSION, VERIFY_RESULT_V2_SCHEMA_VERSION } from './verify-result-versions.js';
 
 export type VerifyMode = z.infer<typeof verifyModeSchema>;
+/** いまの verify 結果（2.0.0）の各検査。2.0.0 の VerifyCheckV2 と同じ */
 export type VerifyCheckResult = z.infer<typeof verifyCheckResultSchema>;
+/** いまの verify 結果（2.0.0）。2.0.0 の VerifyResultV2 と同じ */
 export type VerifyResult = z.infer<typeof verifyResultSchema>;
 export type LegacyVerifyResult = z.infer<typeof legacyVerifyResultSchema>;
+export type LegacyVerifyCheckResult = z.infer<typeof legacyVerifyCheckResultSchema>;
 export type VerifyScope = z.infer<typeof verifyScopeSchema>;
 export type VerifyRunError = z.infer<typeof verifyRunErrorSchema>;
 export type VerifyCheckV2 = z.infer<typeof verifyCheckV2Schema>;

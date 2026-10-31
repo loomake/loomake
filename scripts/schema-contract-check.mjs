@@ -18,9 +18,9 @@ const cases = [
   { id: 'rename-root', kind: 'rename', expected: 'rejected' },
   { id: 'remove-item', kind: 'remove-item', expected: 'rejected' },
   { id: 'rename-item', kind: 'rename-item', expected: 'rejected' },
-  { id: 'minor-removal', kind: 'remove', version: '1.1.0', expected: 'rejected' },
-  { id: 'major-removal', kind: 'remove', version: '2.0.0', expected: 'passed' },
-  { id: 'major-rename', kind: 'rename-item', version: '2.0.0', expected: 'passed' },
+  { id: 'minor-removal', kind: 'remove', version: '2.1.0', expected: 'rejected' },
+  { id: 'major-removal', kind: 'remove', version: '3.0.0', expected: 'passed' },
+  { id: 'major-rename', kind: 'rename-item', version: '3.0.0', expected: 'passed' },
 ];
 // 版付きのファイル（schema/versions/）への変更。公開した版のファイルは、必須項目の削除・改名と版の変更を拒否する（REQ-276）
 const versionCases = [
@@ -32,6 +32,23 @@ const versionCases = [
   { id: 'v2-version', kind: 'version', expected: 'rejected' },
 ];
 const versionedFile = 'schema/versions/verify-result-2.0.0.schema.json';
+
+// 版付きでない現行のファイル（2.0.0）を変える。必須項目は ci と local の両方の枝から消し、どの枝にも残らないようにする（REQ-053）
+function mutateCurrent(schema, kind) {
+  for (const branch of schema.anyOf.filter((b) => b.properties.checks?.items)) {
+    if (kind === 'remove') { branch.required = branch.required.filter((name) => name !== 'decision'); delete branch.properties.decision; }
+    if (kind === 'rename') {
+      branch.required = branch.required.map((name) => name === 'scope' ? 'scopeV3' : name);
+      branch.properties.scopeV3 = branch.properties.scope; delete branch.properties.scope;
+    }
+    const item = branch.properties.checks.items;
+    if (kind === 'remove-item') { item.required = item.required.filter((name) => name !== 'reason'); delete item.properties.reason; }
+    if (kind === 'rename-item') {
+      item.required = item.required.map((name) => name === 'id' ? 'checkId' : name);
+      item.properties.checkId = item.properties.id; delete item.properties.id;
+    }
+  }
+}
 
 // 2.0.0 の ci の枝（anyOf[0]）と aborted の枝（anyOf[2]）を変える
 function mutateVersioned(schema, kind) {
@@ -68,7 +85,7 @@ export function checkSchemaContract(destination) {
   const parent = realpathSync(dirname(target)); const parentPart = relative(quality, parent);
   assert.ok(parent === quality || (parentPart && !parentPart.startsWith('..') && !isAbsolute(parentPart)), '検証先が専用ディレクトリの外にあります');
   mkdirSync(target);
-  const sources = ['schema/verify-result.schema.json', 'src/verify-result.ts', 'test/schema.test.ts', 'test/fixtures/schema-history/1.0.0.json', versionedFile, 'test/schema-versions.test.ts', 'test/fixtures/schema-versions/verify-result-2.0.0.json'].map((file) => ({ file: `packages/core/${file}`, sha256: sha256(join(core, file)) }));
+  const sources = ['schema/verify-result.schema.json', 'src/verify-result.ts', 'test/schema.test.ts', 'test/fixtures/schema-history/1.0.0.json', 'test/fixtures/schema-history/2.0.0.json', versionedFile, 'test/schema-versions.test.ts', 'test/fixtures/schema-versions/verify-result-2.0.0.json'].map((file) => ({ file: `packages/core/${file}`, sha256: sha256(join(core, file)) }));
   const result = { scope: 'required-property-version-gate', node: process.version, trials: [], versionTrials: [], sources, ok: false };
   let names;
   try {
@@ -83,21 +100,11 @@ export function checkSchemaContract(destination) {
       linkRuntimeDependencies(core, trial);
       const schemaPath = join(trial, 'schema/verify-result.schema.json');
       const schema = JSON.parse(readFileSync(schemaPath, 'utf8'));
-      if (entry.kind === 'remove') { schema.required = schema.required.filter((name) => name !== 'ok'); delete schema.properties.ok; }
-      if (entry.kind === 'rename') {
-        schema.required = schema.required.map((name) => name === 'mode' ? 'modeV2' : name);
-        schema.properties.modeV2 = schema.properties.mode; delete schema.properties.mode;
-      }
-      const item = schema.properties.results.items;
-      if (entry.kind === 'remove-item') { item.required = item.required.filter((name) => name !== 'detail'); delete item.properties.detail; }
-      if (entry.kind === 'rename-item') {
-        item.required = item.required.map((name) => name === 'check' ? 'label' : name);
-        item.properties.label = item.properties.check; delete item.properties.check;
-      }
+      mutateCurrent(schema, entry.kind);
       if (entry.version) {
-        schema.properties.schemaVersion.const = entry.version;
+        for (const branch of schema.anyOf) branch.properties.schemaVersion.const = entry.version;
         const source = join(trial, 'src/verify-result.ts');
-        writeFileSync(source, mutateOnce(readFileSync(source, 'utf8'), "'1.0.0'", `'${entry.version}'`));
+        writeFileSync(source, mutateOnce(readFileSync(source, 'utf8'), "'2.0.0'", `'${entry.version}'`));
       }
       writeFileSync(schemaPath, JSON.stringify(schema, null, 2) + '\n');
       writeFileSync(join(trial, 'candidate.schema.json'), readFileSync(schemaPath));
