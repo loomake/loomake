@@ -73,3 +73,10 @@ Opusの2026-11-01の分割設計§2 C1と§3 C1に従い、S1の原本読取り�
 ### archive所有先の省略形と明示形の重複
 
 自動Codex指摘4435476339を採用する。ownerBlockがarchive pathからchangeを解決し、本文・Scenarioまで照合した後で、実fileとRequirement名の組が一意か確認する。既存の入力側の重複検査や不正change拒否は残し、正規化用の別parserや公開APIを追加しない。新T-Jは明示形と省略形が各1件なら受理され、両方を同じ所有先へ並べた候補はbaselineとdigestを返さないことをREDからGREENへ確かめる。元62宣言と8実装blobを保持し、新しい拒否検査1行と新1宣言だけを加える。
+
+
+### 採否参照は識別子で一意にする
+
+所有のadoption、Scenario置換のby、句置換のbyに同じ識別子を使う。traceは種別・change・id、commentは種別・pr・id、prBodyは種別・pr・lineをキーにする。内容hashは参照の固定値であり別IDにはしない。rawとsha256:付きの表記や異なるhashでも、同じIDの2件を拒否する。入力値とcanonical digestの規則は保持し、hashをpayloadから消したり書き換えたりしない。新T-Kは3配列×4変種の12ケースで、各単一入力・異なるID2件の受理を保ち、同じIDの2件だけを拒否する。
+
+元63試験宣言と8実装blob、既存の期待値・期限・設定を保持する。私的なキー関数と3selectorをbaseline.tsへ置き、公開API・型・依存を変えない。Q06/07を回答内容不変で表内へ移し、追加Q08を含む実読取り14件も確認する。
