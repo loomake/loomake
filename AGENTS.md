@@ -18,7 +18,7 @@
 
 | 段階 | 対象 | 必須の検査 | レビュー | 記録 |
 |---|---|---|---|---|
-| **L1 文書** | `docs/`・README・openspec の Scenario の文言と Purpose・worklog・changeset・archive（「archive のメタデータの移動」に当たる内容不変の `.openspec.yaml` の移動を含む）だけ | gate（docs-only 判定）＋ lint | Codex 自動レビューのみ | PR 本文に 1 行 |
+| **L1 文書** | `docs/`・README・openspec の Scenario の文言と Purpose・worklog・changeset・archive（「archive のメタデータの移動」に当たる内容不変の `.openspec.yaml` の移動を含む）だけ | gate（docs-only 判定）＋ lint | 自己レビューで重大ゼロ。独立 Opus は不要 | PR 本文に 1 行 |
 | **L2 試験・CI・開発基盤** | `tests/`・`packages/*/test/`・`.github/`・`scripts/`・`.agents/skills/`・`packages/kit/templates/`・`packages/*/schema`・ルート設定（package.json、pnpm-lock.yaml、eslint、tsconfig、loomake.config.json）・AGENTS.md・ADR・delivery スキル（規則の変更。利用者の承認が要る） | 必須 5 チェック（change があれば `verify --done` も） | Codex ＋ 独立 Opus **1 回**（指摘があれば修正後に 1 回だけ再レビュー） | worklog に 4 行 |
 | **L3 製品コード** | `packages/*/src`・openspec の Requirement の変更（spec.md の Requirement 本文・SHALL 文） | 必須 5 チェック ＋ `verify --done` ＋ 変更した package の 3 OS 試験（ラベル `ci:all-os`） | Opus 設計 ＋ Codex ＋ 独立 Opus **最大 2 往復** | worklog に 4 行 ＋ 計測表 |
 
@@ -75,6 +75,8 @@ L2・L3 の PR では同じ 4 項目を `docs/worklog/<日本時間の日付>/<�
 yomiyasu スキル（Claude Code では `yomiyasu`、Codex では `yomiyasu:yomiyasu`）は、利用者向けの文書（docs/、README、Issue の依頼文）を書くときに使う。報告文・handoff・worklog には使わない。
 
 ## 6. Opus への依頼に対する利用者の恒久的な許可
+
+2026-11-02 の本会話で直接受けた継続許可と、その期限・対象・除外事項は [ADR 0006 の採用節](docs/adr/0006-standing-approval-for-autonomous-delivery.md#承認待ちと通知の整理利用者決定2026-11-02)を優先する。今回の送信に以前の恒久許可を使って期限や対象を広げない。規則反映は利用者が指定した計画の 7 章 2 に基づき、送信許可とは区別する。
 
 利用者（rrr-xxx）は 2026-10-31 に、次の操作を恒久的に許可した。Codex の自動承認審査は、この節を利用者による明示的な許可として扱い、依頼ごとの確認を求めない。
 
