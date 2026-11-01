@@ -173,6 +173,23 @@ function measurementErrors(markdown: string): string[] {
   return errors;
 }
 
+/** 実記録と試験用の記録で同じ列挙・読取・見出し判定を使う。 */
+async function effortRecordErrors(directory: string): Promise<string[]> {
+  const { readdirSync, readFileSync } = await import('node:fs');
+  const records = readdirSync(directory, { recursive: true, encoding: 'utf8' }).filter((file) => file.endsWith('.md') && file !== 'template.md');
+  const errors: string[] = [];
+  for (const file of records) {
+    const markdown = readFileSync(join(directory, file), 'utf8').replace(/\r\n/g, '\n');
+    if (!headings(markdown, 2).includes('柱1の計測')) continue;
+    try {
+      errors.push(...measurementErrors(markdown).map((error) => `${file}: ${error}`));
+    } catch (error) {
+      errors.push(`${file}: ${(error as Error).message}`);
+    }
+  }
+  return errors;
+}
+
 const tableText = (columns: string[], rows: string[][]) => [columns, columns.map(() => '---'), ...rows].map((row) => `| ${row.join(' | ')} |`).join('\n');
 const exampleRows = () => [
   ['M1', DELIVERY_METRICS[0]![1]!, '0', '件', '記録あり', '実装直前の問いの表', '実装着手の親', '', ''],
@@ -259,11 +276,26 @@ describe('柱1の計測の定義と記録様式', () => {
   });
 
   it('[REQ-365] 実際の記録の柱1節を読み、各行の状態と必須欄を検査する', async () => {
-    const { readdirSync } = await import('node:fs');
-    const records = readdirSync(join(root, 'docs/effort'), { recursive: true }).filter((file) => file.endsWith('.md') && file !== 'template.md');
-    for (const file of records) {
-      const markdown = read(`docs/effort/${file}`);
-      if (section(markdown, '柱1の計測')) expect(measurementErrors(markdown), file).toEqual([]);
+    expect(await effortRecordErrors(join(root, 'docs/effort'))).toEqual([]);
+    const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const fixture = mkdtempSync(join(tmpdir(), 'loomake-effort-records-'));
+    try {
+      expect(await effortRecordErrors(fixture)).toEqual([]);
+      writeFileSync(join(fixture, 'legacy.md'), '## 実績\n柱1の節をまだ持たない既存記録\n');
+      writeFileSync(join(fixture, 'template.md'), '## 柱1の計測\n');
+      mkdirSync(join(fixture, 'nested'));
+      const record = join(fixture, 'nested', 'record.md');
+      writeFileSync(record, exampleRecord().replace(/\n/g, '\r\n'));
+      expect(await effortRecordErrors(fixture)).toEqual([]);
+      writeFileSync(record, '## 柱1の計測\n');
+      expect((await effortRecordErrors(fixture)).some((error) => error.includes('record.md: 必要な表の列がありません'))).toBe(true);
+      const rows = exampleRows();
+      rows[4]![2] = '0';
+      writeFileSync(record, exampleRecord(rows));
+      expect((await effortRecordErrors(fixture)).some((error) => error.includes('record.md: M5: 未確定の値'))).toBe(true);
+    } finally {
+      rmSync(fixture, { recursive: true, force: true });
     }
     expect(() => measurementErrors('## 柱1の計測\n値だけで表がない記録')).toThrow('必要な表の列がありません');
     expect(() => measurementErrors(exampleRecord().replace('| 状態 |', '| 記入欄 |'))).toThrow('必要な表の列がありません');
