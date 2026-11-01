@@ -1,10 +1,10 @@
 # 柱1の計測項目の定義
 
-1. やったこと： [Issue #279](https://github.com/loomake/loomake/issues/279) の `define-pillar1-delivery-metrics` で、採用済み設計Bに従いREQ-364・365と6 Scenario、回答済みの確認事項8件を記録し、tasks 1.1〜4.1の定義文書・様式追記・追加試験・README参照と正常local doneを揃えた。通常の機能開発の経路を選び、既存様式・README・試験の全文を保持して追記し、追加試験の型と空の計測節の検査も修正した（PR未作成）。
+1. やったこと： [Issue #279](https://github.com/loomake/loomake/issues/279) の `define-pillar1-delivery-metrics` で、採用済み設計Bに従いREQ-364・365と6 Scenario、回答済みの確認事項8件を記録し、tasks 1.1〜4.1の定義文書・様式追記・追加試験・README参照と正常local doneを揃えた。通常の機能開発の経路を選び、既存様式・README・試験の全文を保持して追記し、追加試験の型と空の計測節の検査も修正した（[Draft PR #300](https://github.com/loomake/loomake/pull/300)）。
 2. verify の結果： strictと仕様ゲートは実exit 0・15 PASS、対象31件・文書リンク43件と修理後の型・lintが成功し、修理後の正常local doneも実exit 0・21 PASS、全件2326成功・0失敗・既存8 pending・snapshot更新0だった。初回local doneは全件試験が成功しても追加試験の型だけがFAILで実exit 1となったため、その原本と修理後の成功を別々に保存し、正常doneの全入力と最終source・spec・tasksの一致を確認した。
 3. 残っている確認事項・仮定： 採用範囲に未回答はなく、新しい仮定は置いていない。ローカルは全5taskを確認済みだが、独立レビュー・新headの必須CI・main採用・sync/archiveは未完了である。
 4. 次にやること： 管理役へ全差分・要件対応・実終了と入力保全の原本を渡し、別担当の独立Codexと新しいOpus、通常L3のCIで最終headを確認する。main採用後に正規のsync/archiveへ進め、#68へ効率表との対応を伝え、実際の計測は今回の変更と分ける。
 
 | PR | 設計待ち | 実装 | CI待ち | レビュー往復回数 | マージまで |
 |---|---|---|---|---|---|
-| 未作成（Issue #279） | 未測定（採用済み設計を再利用） | 未測定（着手時刻未記録） | 未実施 | 未実施 | 未実施 |
+| [Draft PR #300](https://github.com/loomake/loomake/pull/300) | 未測定（採用済み設計を再利用） | 未測定（着手時刻未記録） | 未実施 | 未実施 | 未実施 |
