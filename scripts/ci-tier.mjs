@@ -8,12 +8,8 @@
 const TIERS = ['L1', 'L2', 'L3'];
 const rank = (tier) => TIERS.indexOf(tier);
 
-/**
- * 文書として扱うファイルか。ここに挙げたものだけを文書とし、ほかはすべて quality の対象に残す
- * （設定・実行用のファイル・tests/ の下・packages/ の下は、拡張子が .md でも文書ではない）（REQ-270）
- * @param {string} path リポジトリの根からの、/ で区切ったパス
- */
-export function isDocumentPath(path) {
+/** Windows と POSIX の両方で扱える正規の相対パスか（REQ-281・362） */
+function isPortablePath(path) {
   if (typeof path !== 'string' || !path || path.includes('\\')) return false;
   const parts = path.split('/');
   if (parts.some((part) => part === '' || part === '.' || part === '..')) return false;
@@ -21,6 +17,16 @@ export function isDocumentPath(path) {
   // git の出力を UTF-8 として読むと、正しくないバイトは U+FFFD になる
   if (/[<>:"|?*�]/.test(path) || [...path].some((char) => char.charCodeAt(0) < 0x20)) return false;
   if (parts.some((part) => /[. ]$/.test(part) || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)/i.test(part))) return false;
+  return true;
+}
+
+/**
+ * 文書の許可リスト。設定・実行ファイル・tests/・packages/ は .md でも含めない（REQ-270）。
+ * @param {string} path リポジトリの根からの、/ で区切ったパス
+ */
+export function isDocumentPath(path) {
+  if (!isPortablePath(path)) return false;
+  const parts = path.split('/');
   const markdown = path.endsWith('.md');
   // リポジトリの直下の .md（README.md・CONTRIBUTING.md など）
   if (parts.length === 1) return markdown;
@@ -32,6 +38,68 @@ export function isDocumentPath(path) {
   if (parts[0] === 'openspec' && parts[1] === 'specs') return markdown;
   if (parts[0] === 'openspec' && parts[1] === 'changes') return markdown || parts[parts.length - 1] === 'spec-gate.txt';
   return false;
+}
+
+/** 実在する YYYY-MM-DD- prefix。0〜99 年もその年のまま検査する（REQ-362） */
+function datedPrefix(name) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})-/.exec(name);
+  if (!match) return false;
+  const [, year, month, day] = match.map(Number);
+  const date = new Date(0);
+  date.setUTCFullYear(year, month - 1, day);
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+}
+
+/** HEAD treeに大文字と小文字だけが違う別パスがあるか（REQ-281）。 */
+export function caseTwins(treePaths) {
+  const byFolded = new Map();
+  for (const path of treePaths) byFolded.set(path.toLowerCase(), [...(byFolded.get(path.toLowerCase()) ?? []), path]);
+  return (path) => (byFolded.get(path.toLowerCase()) ?? []).some((other) => other !== path);
+}
+
+/**
+ * HEAD tree確認前のmetadata移動候補（REQ-362）。qualityの事前拒否だけに使い、L1の根拠には使わない。
+ * @param {{ status: string; modes?: string[]; paths: string[] }[]} entries
+ * @param {(from: string, to: string) => boolean} sameBlob
+ * @returns {[string, string][]}
+ */
+export function archiveMetadataMoves(entries, sameBlob = () => false) {
+  const moves = [];
+  for (const entry of entries) {
+    if (entry.status !== 'R100' || entry.paths.length !== 2 || entry.modes?.length !== 2 || !entry.modes.every((mode) => mode === '100644')) continue;
+    const [from, to] = entry.paths;
+    if (!isPortablePath(from) || !isPortablePath(to)) continue;
+    const source = /^openspec\/changes\/([^/]+)\/\.openspec\.yaml$/.exec(from);
+    const target = /^openspec\/changes\/archive\/([^/]+)\/\.openspec\.yaml$/.exec(to);
+    if (!source || !target) continue;
+    const id = source[1];
+    const name = target[1];
+    if (id === 'archive' || id.startsWith('.')) continue;
+    if (/^\d{4}-\d{2}-\d{2}-/.test(id)) {
+      if (name !== id || !datedPrefix(id)) continue;
+    } else if (name.slice(11) !== id || !datedPrefix(name)) continue;
+    const archiveDir = `openspec/changes/archive/${name}/`;
+    if (!entries.some((other) => other !== entry && /^(A|R\d*)$/.test(other.status) && isDocumentPath(other.paths.at(-1)) && other.paths.at(-1).startsWith(archiveDir))) continue;
+    if (sameBlob(from, to) !== true) continue;
+    moves.push([from, to]);
+  }
+  return moves;
+}
+
+/**
+ * 完全blob同一とHEAD treeの衝突なしを証明したmetadata移動の前後パス（REQ-362）。
+ * @param {{ status: string; modes?: string[]; paths: string[] }[]} entries
+ * @param {(from: string, to: string) => boolean} sameBlob
+ * @param {() => string[] | undefined} headTree
+ * @returns {Set<string>}
+ */
+export function archiveMetadataPaths(entries, sameBlob = () => false, headTree = () => undefined) {
+  const moves = archiveMetadataMoves(entries, sameBlob);
+  if (!moves.length) return new Set();
+  const tree = headTree();
+  if (!Array.isArray(tree)) return new Set();
+  const collides = caseTwins(tree);
+  return new Set(moves.filter(([from, to]) => !collides(from) && !collides(to)).flat());
 }
 
 /** Requirement の本文の判定の対象にする spec.md か（いまの仕様と、archive でない change の差分仕様） */
@@ -139,12 +207,13 @@ export function declaredTier(body) {
 
 /**
  * PR の段階を決める。
- * @param {{ entries?: { status: string; paths: string[] }[]; specDiff?: string; body?: string; readSpec?: (side: 'old' | 'new', path: string) => string | undefined }} options
+ * @param {{ entries?: { status: string; modes?: string[]; paths: string[] }[]; sameBlob?: (from: string, to: string) => boolean; headTree?: () => string[] | undefined; specDiff?: string; body?: string; readSpec?: (side: 'old' | 'new', path: string) => string | undefined }} options
  *   entries は `git diff --raw -z -M` を parseRawDiff で読んだもの（名前の変更は変更前と変更後の両方のパスを持つ）。
  *   specDiff は spec.md に対する `git diff -U0` の出力、readSpec は変更前後の spec.md を読む関数。body は PR 本文
  * @returns {{ tier: 'L1'|'L2'|'L3'; detected: 'L1'|'L2'|'L3'; reasons: string[]; override?: { from: string; to: string }; error?: undefined } | { error: string }}
  */
-export function decideTier({ entries = [], specDiff = '', body = '', readSpec } = {}) {
+export function decideTier({ entries = [], specDiff = '', body = '', readSpec, sameBlob, headTree } = {}) {
+  const metadata = archiveMetadataPaths(entries, sameBlob, headTree);
   const paths = [...new Set(entries.flatMap((entry) => entry.paths))];
   let detected = 'L1';
   let reasons = [];
@@ -153,7 +222,7 @@ export function decideTier({ entries = [], specDiff = '', body = '', readSpec } 
     reasons = ['変えたファイルがありません'];
   } else {
     for (const path of paths) {
-      const tier = classifyPath(path);
+      const tier = metadata.has(path) ? 'L1' : classifyPath(path);
       if (rank(tier) > rank(detected)) {
         detected = tier;
         reasons = [path];

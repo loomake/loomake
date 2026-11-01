@@ -311,7 +311,11 @@ describe('完了ゲート', () => {
   });
 
   it('[REQ-038] test コマンドがレポートを書き出さないと、前回のレポートが残っていても不合格', () => {
-    const r = withReport({ config: { openspecValidate: false, commands: { test: 'node -e ""' } } }, (root) => done(root));
+    const r = withReport({ config: { openspecValidate: false, commands: { test: 'node -e ""' } } }, (root) => {
+      mkdirSync(join(root, '.loomake'), { recursive: true });
+      writeFileSync(join(root, '.loomake', 'test-report.json'), passedReport(root));
+      return done(root);
+    });
     const c = check(r, '要件ごとのテスト');
     expect(c?.status).toBe('fail');
     expect(c?.detail).toContain('テストのレポート（.loomake/test-report.json）がありません');

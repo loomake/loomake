@@ -43,7 +43,7 @@ describe('Windowsフック期限の単独診断workflow', () => {
     expect(stepById('summarize')).toContain('--public-export');
     expect(stepById('heartbeat_stop')).toContain('stopHeartbeat(process.argv[1], {})');
   });
-  it('固定Actionとread権限を使い診断と標準レポートだけを7日保存する', () => {
+  it('固定Actionとread権限を使い検査済みの公開用4ファイルだけを7日保存する', () => {
     expect(workflow).toMatch(/^permissions:\n {2}contents: read\n/m);
     const pins = JSON.parse(read('.github/action-pins.json')).actions as { repository: string; sha: string }[];
     const actions = [...workflow.matchAll(/^ {6}- uses: (\S+)@([a-f0-9]{40})/gm)];
@@ -55,5 +55,31 @@ describe('Windowsフック期限の単独診断workflow', () => {
     expect(upload.match(/path: \|\n([\s\S]*?)\n {10}retention-days:/)?.[1].trim().split('\n').map((s) => s.trim())).toEqual(['calls.jsonl', 'summary.json', 'summary.md', 'heartbeat.json'].map((f) => '${{ runner.temp }}/loomake-hook-budget/export/' + f));
     expect(upload).not.toMatch(/test-report|processes|\*|export\/\s*$/m);
     expect(read('.github/workflows/ci.yml')).not.toContain('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR');
+  });
+});
+
+describe('REQ-352 CIでの保存', () => {
+  it('[REQ-352] 元の1件と失敗を保持し検査済み固定4ファイルだけを7日保存する', () => {
+    const command = stepById('test').match(/^ {8}run: (.*)$/m)![1];
+    const selector = command.match(/-t '([^']+)'/)![1];
+    const source = ts.createSourceFile('hook-test.ts', read('packages/runner/test/external-budget-deadline.test.ts'), ts.ScriptTarget.Latest, true);
+    const matched: string[] = [];
+    const visit = (node: ts.Node): void => {
+      if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'it' && node.arguments[0] && ts.isStringLiteral(node.arguments[0]) && new RegExp(selector).test(node.arguments[0].text)) matched.push(node.arguments[0].text);
+      ts.forEachChild(node, visit);
+    };
+    visit(source);
+    expect(matched).toEqual(['[REQ-182] 1 操作の期限より遅い pre-commit・pre-push のフックがあっても、run の残り時間の中でコミット・push・PR の作成まで進む']);
+    expect(command).toBe("node node_modules/vitest/vitest.mjs run packages/runner/test/external-budget-deadline.test.ts -t 'pre-commit・pre-push のフックがあっても'");
+    expect(workflow).not.toMatch(/continue-on-error|--retry|--repeat|--testTimeout|--maxWorkers/);
+    const upload = stepById('upload');
+    expect(upload).toContain('retention-days: 7');
+    expect(upload.match(/path: \|\n([\s\S]*?)\n {10}retention-days:/)?.[1].trim().split('\n').map((line) => line.trim()))
+      .toEqual(['calls.jsonl', 'summary.json', 'summary.md', 'heartbeat.json'].map((file) => '${{ runner.temp }}/loomake-hook-budget/export/' + file));
+    const expression = upload.match(/^ {8}if: (.*)$/m)![1];
+    const context = (validated: string) => ({ cancelled: () => false, steps: { checkout: { outcome: 'success' }, node: { outcome: 'success' }, test: { outcome: 'failure' }, summarize: { outcome: 'failure', outputs: { export_validated: validated } } } });
+    expect(evaluate(expression, context('true'))).toBe(true); expect(evaluate(expression, context('false'))).toBe(false);
+    expect(stepById('summarize')).toContain('--public-export');
+    expect(upload).not.toMatch(/processes|test-report|\*/);
   });
 });
