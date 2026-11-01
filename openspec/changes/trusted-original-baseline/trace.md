@@ -52,3 +52,22 @@ C1の固定計画に対するOpus設計を全文確認した。Q-C1D-01〜03の�
 Git部品の時間予算への接続、openと各Scenarioの意味の対応、採否主体・API・新実行の検証は後続でも確認する。C1の構造成功だけではそれらを検証済みとしない。
 
 規範のSHALL段落をUTF-16で実測した結果はREQ-376が210字、REQ-377が243字だった。全10 Scenarioの全文は保持している。
+
+## 全Scenarioと実試験の対応
+
+以下の試験は`tests/`のファイルである。元109ケースのcallback・期待値・期限・入力表を保持し、追加3ケースを含む全112ケースが成功した。
+
+| 要件・Scenario | 試験ファイルと直接確かめる内容 |
+|---|---|
+| 376：固定commitから文書を読む | trusted-git-objects：dirty checkout・指定commit・replacement ref |
+| 376：不正なGit入力を拒否する | trusted-git-objects：完全SHA・path・UTF-8・mode・件数・深さ・ファイルと合計バイト予算（追加T-B） |
+| 376：JSONの情報を黙って落とさない | trusted-spec-manifest：key順・配列順・非JSON・循環・getter。trusted-baselineの376/377併記3宣言：Symbol・非列挙欄・配列追加欄・配列getter |
+| 376：仕様の境界を保持する | trusted-spec-manifest：fence・CRLF/CR・EOF・連続要件・Source・ADDED（追加T-A）・MODIFIED・REMOVED・RENAMED |
+| 376：差分仕様と主仕様を区別する | trusted-main-spec-manifest：実042の全文hash・unchanged・差分operationの拒否 |
+| 377：原commitがないcheckoutで原集合を復元する | trusted-original-snapshot：原commitがないrepository。trusted-original-contracts：47/158/46・16条件・別契約041 |
+| 377：原本の不一致を拒否する | trusted-original-snapshot：集合・path・bytes・mode・blob・BOM・CRLFの不一致と対象側の改変 |
+| 377：各所有本文と元Scenarioを照合する | trusted-baseline：所有全文・Scenario対応・index・採否参照・試験ID・archive・補完の正負例 |
+| 377：未対応を保持する | trusted-baseline：038/042 open・042 unchanged・324両所有・対応欠落の拒否とcurrentなし義務の保持 |
+| 377：構造成功と採否主体を区別する | trusted-baseline：防御的複製・凍結・adoptionsVerified false・入力と共有prototype不変（追加T-C）。trusted-original-contracts：後の復元への変更漏れなし |
+
+全体試験は2581成功・0失敗・既存8保留。build・lint・型検査は終了0。coverageは文95.06%、分岐90.43%、関数97.59%、行97.94%で、既存閾値94/89/96/97を満たした。新規9実装のblobは移管元と完全一致し、既存ファイル・公開exports・品質設定は変更していない。現在の全PR差分は200KiB以内である。CI・3OS・独立レビューは未実施である。
