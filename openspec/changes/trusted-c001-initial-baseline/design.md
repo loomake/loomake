@@ -4,17 +4,17 @@ Opus具体設計a0730601の§9・案Sを採用したC2b。C1はPR #308/#314、C2
 
 ## Goals / Non-Goals
 
-REQ-378の全5 Scenarioを保つ。主体/API・句の意味・新しい適格実行やS1以降の完成は扱わない。
+REQ-378の全5 Scenarioを保持し、残条件はproposalのImpactに従う。
 
 ## Decisions
 
 ### readerと共有原文
 
-REQ-387のcheckBaselineRecordを変更せず呼ぶ。core schema・merge禁止・閉じたroot・既定alias100・構造と15件数/digest・日本語の失敗・null/false・凍結を継承する。S1設計§3と共通7回答の全文は、案Sで先行C2aへ配分した[archiveの設計](../archive/2026-11-01-trusted-baseline-record-reader/design.md)と[trace](../archive/2026-11-01-trusted-baseline-record-reader/trace.md)に不変で保持する。以下の所有表とQ-S1-16〜24は本change自身に全文を保持する。
+REQ-387のreaderを変更せず呼ぶ。閉じたroot・core schema/merge禁止・alias100・日本語の失敗・null/false・凍結を継承する。共有S1設計§3と7回答の全文は、案Sで配分した[C2a設計](../archive/2026-11-01-trusted-baseline-record-reader/design.md)と同archiveのtrace.mdに保持する。本changeの9採否と所有表は以下に全文を残す。
 
 ### データとPIN
 
-元scalar候補をexpected_specの下へ2字下げ、anchor s28の値だけをtrusted-c001-initial-baselineへ変える。展開後に変わるのは9件のtrace.changeだけ。コード側の私的PIN定数を別モジュールに置き、対象の自己申告を使わない。件数はrows/owners/scenarioMap/currentNull/moved/renamed/superseded/open/supersessions/supersessionRefs/supplements/adoption/testRefs/uniqueTestRefs/crossの順で47/49/158/7/8/2/0/21/5/5/15/97/565/409/16。Pythonのsort_keys付きJSONとNodeのcanonical JSONを独立に測り、一致digestをコードと試験のliteralへ固定する。同じPRの定数を採否や原commitの来歴の独立証明とは呼ばない。
+元scalar候補をexpected_specの下へ2字下げ、anchor s28の値だけをtrusted-c001-initial-baselineへ変える。展開後に変わるのは9件のtrace.changeだけ。コード側の私的PIN定数を別モジュールに置き、対象の自己申告を使わない。RecordCountsの全15項目を基準側PINへ固定し、T-C2-01のliteralと照合する。Pythonのsort_keys付きJSONとNodeのcanonical JSONを独立に測り、一致digestをコードと試験のliteralへ固定する。同じPRの定数を採否や原commitの来歴の独立証明とは呼ばない。
 
 ### 全試験と参照
 
@@ -38,8 +38,8 @@ Q-S1-16〜24は、既存候補で参照が空だった9契約の所有を記録�
 
 ## Risks / Trade-offs
 
-所有本文やarchiveの変化で固定hashがずれたら、データを出力へ合わせず設計へ戻る。元scalar aliasの最大78/100と既存入力予算を保持し、原本・記録・所有文書はHEADのGit objectから読む。Windowsも既定の期限で3OS確認する。ADOPT-PR197/199の回答行と主体/APIはC3、Issue #310の統合前義務とS1・親・live・S2の全受入も残す。
+既定の入力・alias・期限を保持し、所有hashがずれたら設計へ戻る。原本・記録・所有はHEADのGit objectから読み、3OSで確認する。C3・Issue #310・S1以降の残条件もproposal記載どおり保持する。
 
 ## Migration Plan
 
-C2a archive後に仕様ゲート、元6件、全378試験のRED、記録とPINのGREEN、通常品質・完了ゲート・CI・独立レビューへ進む。全差分が200KiBを超えたら実測を添えてOpusへ設計を戻し、データ・試験・採否を削らない。受入後に同期・archiveする。
+tasks.mdの通常ゲート・品質・レビューを満たし、全差分が200KiBを超えたら実測を添えて設計へ戻る。全データ・試験・採否を保持し、受入後に同期・archiveする。

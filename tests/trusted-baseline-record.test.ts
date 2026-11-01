@@ -174,6 +174,9 @@ describe('閉じた基準記録の読取り（合成fixture・実候補の採否
     rejected(result);
     if (_name === '予算内collection参照の構造不正') expect(result.problems.join(' ')).not.toMatch(/展開できません/);
     if (_name === 'scalar101参照') expect(result.problems.join(' ')).toMatch(/展開できません/);
+    if (['merge欄', '未知欄', '欠落', '配列root', 'scalar root', 'null root', 'prototype欄'].includes(_name)) {
+      expect(result.problems.join(' ')).toMatch(/top-level/);
+    }
   });
 
   it('[REQ-387] T-C2A-03 正しい基準をYAML1.1のmergeで組み立てても受理しない', () => {
