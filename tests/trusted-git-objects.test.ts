@@ -1,10 +1,29 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { readGitDocuments } from '../packages/kit/src/verify/trusted/git-objects.js';
 import { DOCUMENT_LIMITS } from '../packages/kit/src/runtime/input.js';
+
+const metadataProbe = vi.hoisted(() => ({
+  calls: [] as { args: readonly string[]; maxBuffer: number | undefined }[],
+  shrink: null as string | null,
+}));
+vi.mock('node:child_process', async (original) => {
+  const actual = await original<typeof import('node:child_process')>();
+  return { ...actual, execFileSync: vi.fn((...args: Parameters<typeof actual.execFileSync>) => {
+    const [file, argv, options] = args;
+    if (file === 'git' && argv?.[0] === '--no-replace-objects') {
+      metadataProbe.calls.push({ args: [...argv], maxBuffer: options?.maxBuffer });
+      if (metadataProbe.shrink === argv.slice(4, 6).join(' ')) {
+        return actual.execFileSync(file, argv, { ...options, maxBuffer: 1 });
+      }
+    }
+    return actual.execFileSync(...args);
+  }) };
+});
+afterEach(() => { metadataProbe.calls.length = 0; metadataProbe.shrink = null; });
 
 const roots: string[] = [];
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); });
@@ -19,6 +38,56 @@ const fixture = () => {
 };
 
 describe('固定commitのGit object読取り', () => {
+  it.each([{ maxFileBytes: 1 }, { maxTotalBytes: 1 }, { maxFileBytes: 1, maxTotalBytes: 1 }])(
+    '[REQ-376] メタデータとは別の本文予算%jで1 byteと空文書を読める', (overrides) => {
+      const { root, git } = fixture();
+      for (const text of ['x', '']) {
+        writeFileSync(join(root, 'docs', 'spec.md'), text); git('commit', '-qam', 'tiny document');
+        const commit = git('rev-parse', 'HEAD');
+        metadataProbe.calls.length = 0;
+        expect(readGitDocuments(root, commit, 'docs', { ...DOCUMENT_LIMITS, ...overrides })).toEqual([
+          { file: 'docs/spec.md', mode: '100644', oid: git('rev-parse', `${commit}:docs/spec.md`), text },
+        ]);
+        const metadata = metadataProbe.calls.filter((call) => call.args.slice(4, 6).join(' ') !== 'cat-file blob');
+        expect(metadata.map((call) => call.args.slice(4, 6).join(' '))).toEqual(['cat-file -t', 'ls-tree -rz', 'cat-file -s']);
+        expect(metadata.every((call) => Number.isSafeInteger(call.maxBuffer) && call.maxBuffer === DOCUMENT_LIMITS.maxTotalBytes)).toBe(true);
+      }
+    },
+  );
+
+  it('[REQ-376] 1 byteのファイル上限を超える本文は読まない', () => {
+    const { root, git } = fixture();
+    writeFileSync(join(root, 'docs', 'spec.md'), 'xx'); git('commit', '-qam', 'oversized tiny file');
+    metadataProbe.calls.length = 0;
+    expect(() => readGitDocuments(root, git('rev-parse', 'HEAD'), 'docs', { ...DOCUMENT_LIMITS, maxFileBytes: 1 }))
+      .toThrow('文書のバイト上限');
+    expect(metadataProbe.calls.filter((call) => call.args.slice(4, 6).join(' ') === 'cat-file blob')).toHaveLength(0);
+  });
+
+  it('[REQ-376] 各1 byteの2文書は合計2で読み、合計1では2番目を読まない', () => {
+    const { root, git } = fixture();
+    writeFileSync(join(root, 'docs', 'spec.md'), 'x'); writeFileSync(join(root, 'docs', 'two.md'), 'y');
+    git('add', '--', 'docs/two.md'); git('commit', '-qam', 'tiny aggregate');
+    const commit = git('rev-parse', 'HEAD');
+    expect(readGitDocuments(root, commit, 'docs', { ...DOCUMENT_LIMITS, maxFileBytes: 1, maxTotalBytes: 2 }))
+      .toEqual(['spec.md', 'two.md'].map((file, position) => ({ file: `docs/${file}`, mode: '100644',
+        oid: git('rev-parse', `${commit}:docs/${file}`), text: position === 0 ? 'x' : 'y' })));
+    metadataProbe.calls.length = 0;
+    expect(() => readGitDocuments(root, commit, 'docs', { ...DOCUMENT_LIMITS, maxFileBytes: 1, maxTotalBytes: 1 }))
+      .toThrow('文書のバイト上限');
+    expect(metadataProbe.calls.filter((call) => call.args.slice(4, 6).join(' ') === 'cat-file blob')).toHaveLength(1);
+  });
+
+  it.each(['cat-file -t', 'ls-tree -rz', 'cat-file -s'])(
+    '[REQ-376] %sの実ENOBUFSをメタデータの上限として区別する', (command) => {
+      const { root, git } = fixture();
+      writeFileSync(join(root, 'docs', 'spec.md'), 'x'); git('commit', '-qam', 'metadata overflow');
+      metadataProbe.shrink = command;
+      expect(() => readGitDocuments(root, git('rev-parse', 'HEAD'), 'docs'))
+        .toThrow('Git のメタデータが読取りの上限を超えています');
+    },
+  );
+
   it('[REQ-376] ファイルと合計のバイト予算を本文の読取り前に判定する', () => {
     const { root, git } = fixture();
     writeFileSync(join(root, 'docs', 'spec.md'), 'x'.repeat(64));
