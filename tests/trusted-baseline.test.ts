@@ -150,6 +150,24 @@ describe('初回47契約の構造と所有の照合', () => {
     expect(check(f).baseline).toBeNull();
   });
 
+  it('[REQ-377] archiveのchange省略形と明示形で同じ所有先を二重に受理しない', () => {
+    const f = fixture(), row = f.baseline.rows.find((r) => r.owners[0].change === 'fixture-owner')!, owner = row.owners[0];
+    const previous = owner.file, archived = previous.replace('changes/fixture-owner/', 'changes/archive/2026-11-01-fixture-owner/');
+    f.context.anchor.push({ file: archived, text: f.context.anchor.find((doc) => doc.file === previous)!.text });
+    owner.kind = 'archived'; owner.file = archived;
+    for (const mapping of row.scenarioMap) mapping.current!.file = archived;
+    expect(check(f).problems).toEqual([]);
+    const explicit = structuredClone(owner);
+    delete owner.change;
+    expect(check(f).problems).toEqual([]);
+    row.owners.push(explicit);
+    const result = check(f);
+    expect(result.baseline).toBeNull();
+    expect(result.sha256).toBeNull();
+    expect(result.problems.length).toBeGreaterThan(0);
+    expect(result.adoptionsVerified).toBe(false);
+  });
+
   it('[REQ-377][REQ-371] 他契約のScenarioには明示した補完を要求する', () => {
     const f = fixture(), row = f.baseline.rows[0], other = f.baseline.rows.find((r) => r.key !== row.key)!;
     const scenario = other.owners[0].scenarios[0];

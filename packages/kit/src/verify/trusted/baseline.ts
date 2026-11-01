@@ -103,6 +103,7 @@ export function checkInitialBaselineStructure(input: unknown, context: {
         problems.push(`所有先の本文・Scenario・種類が一致しません：${row.key} ${owner.file}`);
       } else blocks.push(actual);
     }
+    if (!unique(blocks.map((block) => canonicalJson([block.file, block.name])))) problems.push(`照合した所有先が重複しています：${row.key}`);
     resolved.set(row.key, blocks);
     const mappings = row.scenarioMap.map((mapping) => mapping.original);
     if (!unique(mappings) || !same([...mappings].sort(), [...scenarios].sort())) problems.push(`原Scenarioの対応に欠落・追加・重複があります：${row.key}`);
