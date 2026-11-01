@@ -116,6 +116,97 @@ const done = (id: string) => ['verify', '--change', id, '--done', '--json'];
 const specOnly = (id: string) => ['verify', '--change', id, '--spec-only', '--json'];
 const lintOnly = [['lint'], ['pnpm', 'exec', 'vitest', 'run', 'tests/doc-links.test.ts']];
 
+describe('archive metadata の gate 子プロセス', () => {
+  const archived = 'openspec/changes/archive/2026-11-01-c1';
+  it.each(['', 'loomake-tier: L2', 'loomake-change: missing'])('[REQ-362][REQ-342][REQ-343] 正常 archive の対象選択と明示優先を共有する（%s）', (body) => {
+    withProject(({ dir, git, commitFiles, run }) => {
+      commitFiles({ 'openspec/changes/c1/.openspec.yaml': 'schema: spec-driven\n' });
+      git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+      mkdirSync(join(dir, archived), { recursive: true });
+      git('mv', 'openspec/changes/c1/.openspec.yaml', `${archived}/.openspec.yaml`);
+      git('mv', 'openspec/changes/c1/tasks.md', `${archived}/tasks.md`);
+      rmSync(join(dir, 'openspec/changes/c1'), { recursive: true, force: true });
+      commitFiles({ 'openspec/specs/x/spec.md': '### Requirement: 同期\n本文 SHALL。\n' });
+      const result = run('archive-c1', body);
+      if (body.includes('missing')) {
+        expect(result.status).toBe(1);
+        expect(result.stderr).toContain('書いた change がありません：missing');
+        expect(result.calls).toEqual(lintOnly);
+      } else if (body.includes('L2')) {
+        expect(result.stdout).toContain('loomake-tier: L2');
+        expect(result.status).toBe(1);
+        expect(result.stderr).toContain('PR 本文に「loomake-change: <change-id>」の行を書いてください');
+        expect(result.calls).toEqual([]);
+      } else {
+        expect(result.stdout).toContain('loomake-tier: L1');
+        expect(result.status).toBe(0);
+        expect(result.calls).toEqual(lintOnly);
+      }
+    });
+  });
+
+  it('[REQ-132][REQ-343][REQ-362] L1でもmetadata移動元のactive changeを検証する', () => {
+    withProject(({ dir, git, commitFiles, run }) => {
+      const from = 'openspec/changes/c1/.openspec.yaml';
+      commitFiles({ [from]: 'schema: spec-driven\n' });
+      git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+      mkdirSync(join(dir, archived), { recursive: true });
+      git('mv', from, `${archived}/.openspec.yaml`);
+      // 元のc1/tasks.mdを残し、metadata以外の移動元文書を差分に含めない。
+      commitFiles({ [`${archived}/tasks.md`]: '- [x] archived document\n', 'openspec/specs/x/spec.md': '### Requirement: 同期\n本文 SHALL。\n' });
+      const result = run('archive-c1');
+      expect(result.stdout).toContain('loomake-tier: L1');
+      expect(result.status).toBe(0);
+      expect(result.calls).toEqual([...lintOnly, done('c1')]);
+    });
+  });
+
+  it.each(['from', 'to'].flatMap((side) => ['', 'loomake-change: none', 'loomake-tier: L1'].map((body) => [side, body])))('[REQ-362][REQ-342][REQ-343][REQ-281] 差分外の%s衝突はL1例外を拒否する（%s）', (side, body) => {
+    withProject(({ dir, git, commitFiles, run }) => {
+      const from = 'openspec/changes/c1/.openspec.yaml';
+      commitFiles({ [from]: 'schema: spec-driven\n' });
+      const collision = side === 'from' ? 'openspec/changes/c1/.OPENSPEC.yaml' : `${archived}/.OPENSPEC.yaml`;
+      const blob = spawnSync('git', ['hash-object', '-w', '--stdin'], { cwd: dir, encoding: 'utf8', input: 'unchanged collision\n' });
+      expect(blob.status, blob.stderr).toBe(0);
+      git('update-index', '--add', '--cacheinfo', `100644,${blob.stdout.trim()},${collision}`);
+      git('commit', '-qm', 'baseline collision outside diff');
+      git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+      mkdirSync(join(dir, archived), { recursive: true });
+      git('mv', from, `${archived}/.openspec.yaml`);
+      git('mv', 'openspec/changes/c1/tasks.md', `${archived}/tasks.md`);
+      rmSync(join(dir, 'openspec/changes/c1'), { recursive: true, force: true });
+      const spec = 'openspec/specs/x/spec.md';
+      mkdirSync(dirname(join(dir, spec)), { recursive: true });
+      writeFileSync(join(dir, spec), '### Requirement: 同期\n本文 SHALL。\n');
+      git('add', spec);
+      git('commit', '-qm', 'archive keeping unchanged indexed collision');
+      const result = run('archive-c1', body);
+      if (body.includes('L1')) expect(result.stderr).toContain('判定 L3、指定 L1');
+      else expect(result.stdout).toContain('loomake-tier: L3');
+      expect(result.status).toBe(1);
+      expect(result.calls).toEqual([]);
+    });
+  });
+
+  it('[REQ-362][REQ-342][REQ-343] 別 change への metadata 移動は L3 のままで none も拒否する', () => {
+    withProject(({ dir, git, commitFiles, run }) => {
+      commitFiles({ 'openspec/changes/c1/.openspec.yaml': 'schema: spec-driven\n' });
+      git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+      const other = 'openspec/changes/archive/2026-11-01-other';
+      mkdirSync(join(dir, other), { recursive: true });
+      git('mv', 'openspec/changes/c1/.openspec.yaml', `${other}/.openspec.yaml`);
+      git('mv', 'openspec/changes/c1/tasks.md', `${other}/tasks.md`);
+      rmSync(join(dir, 'openspec/changes/c1'), { recursive: true, force: true });
+      commitFiles({ 'openspec/specs/x/spec.md': '### Requirement: 同期\n本文 SHALL。\n' });
+      const result = run('archive-c1', 'loomake-change: none');
+      expect(result.stdout).toContain('loomake-tier: L3');
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('L3 では change が必須');
+      expect(result.calls).toEqual([]);
+    });
+  });
+});
+
 describe('実際のCIゲートの子プロセスの契約', () => {
   it.each(['setup-monorepo', 'loomake/c1'])('[REQ-010][REQ-054][REQ-132] ブランチ%sで指定どおりの完了ゲートを呼び、失敗を伝える', (branch) => {
     withProject(({ run }) => {
