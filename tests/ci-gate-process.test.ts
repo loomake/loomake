@@ -115,6 +115,51 @@ const done = (id: string) => ['verify', '--change', id, '--done', '--json'];
 const specOnly = (id: string) => ['verify', '--change', id, '--spec-only', '--json'];
 const lintOnly = [['lint'], ['pnpm', 'exec', 'vitest', 'run', 'tests/doc-links.test.ts']];
 
+describe('archive metadata の gate 子プロセス', () => {
+  const archived = 'openspec/changes/archive/2026-11-01-c1';
+  it.each(['', 'loomake-tier: L2', 'loomake-change: missing'])('[REQ-362][REQ-342][REQ-343] 正常 archive の対象選択と明示優先を共有する（%s）', (body) => {
+    withProject(({ dir, git, commitFiles, run }) => {
+      commitFiles({ 'openspec/changes/c1/.openspec.yaml': 'schema: spec-driven\n' });
+      git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+      mkdirSync(join(dir, archived), { recursive: true });
+      git('mv', 'openspec/changes/c1/.openspec.yaml', `${archived}/.openspec.yaml`);
+      git('mv', 'openspec/changes/c1/tasks.md', `${archived}/tasks.md`);
+      commitFiles({ 'openspec/specs/x/spec.md': '### Requirement: 同期\n本文 SHALL。\n' });
+      const result = run('archive-c1', body);
+      if (body.includes('missing')) {
+        expect(result.status).toBe(1);
+        expect(result.stderr).toContain('書いた change がありません：missing');
+        expect(result.calls).toEqual(lintOnly);
+      } else if (body.includes('L2')) {
+        expect(result.stdout).toContain('loomake-tier: L2');
+        expect(result.status).toBe(0);
+        expect(result.calls).toEqual([['verify']]);
+      } else {
+        expect(result.stdout).toContain('loomake-tier: L1');
+        expect(result.status).toBe(0);
+        expect(result.calls).toEqual(lintOnly);
+      }
+    });
+  });
+
+  it('[REQ-362][REQ-342][REQ-343] 別 change への metadata 移動は L3 のままで none も拒否する', () => {
+    withProject(({ dir, git, commitFiles, run }) => {
+      commitFiles({ 'openspec/changes/c1/.openspec.yaml': 'schema: spec-driven\n' });
+      git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+      const other = 'openspec/changes/archive/2026-11-01-other';
+      mkdirSync(join(dir, other), { recursive: true });
+      git('mv', 'openspec/changes/c1/.openspec.yaml', `${other}/.openspec.yaml`);
+      git('mv', 'openspec/changes/c1/tasks.md', `${other}/tasks.md`);
+      commitFiles({ 'openspec/specs/x/spec.md': '### Requirement: 同期\n本文 SHALL。\n' });
+      const result = run('archive-c1', 'loomake-change: none');
+      expect(result.stdout).toContain('loomake-tier: L3');
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('L3 では change が必須');
+      expect(result.calls).toEqual([]);
+    });
+  });
+});
+
 describe('実際のCIゲートの子プロセスの契約', () => {
   it.each(['setup-monorepo', 'loomake/c1'])('[REQ-010][REQ-054][REQ-132] ブランチ%sで指定どおりの完了ゲートを呼び、失敗を伝える', (branch) => {
     withProject(({ run }) => {
