@@ -56,3 +56,21 @@
 ## 採用と保全
 
 正式本文はaa7の510 UTF-16文字から指定の最終1文だけを外した472文字で、停止対象PID禁止と9 Scenarioを保持する。自己PID許可はdesignとQ-SELFPIDに記録した。SourceはADDED REQ-363だけとする。REQ-345、元13PS行、taskkill直後のexit判定、元assert・文言・3000/5000/10000ms・skip・workflow・設定は変えない。新しい解釈や本文縮小が必要なら管理役へ戻す。
+
+## Requirementと試験の対応
+
+全9 Scenarioを次のREQ-363付き試験へ対応させた。T6とPIDのないcwdのT9は`tests/delivery-ask-opus.test.ts`、ほかは`tests/owned-cleanup-phases.test.ts`に置く。追加のPowerShellは起動しない。
+
+| Scenario | 試験 | 確かめること |
+|---|---|---|
+| 区間の解析 | T1 | S/Fの原点分離、CRLF、boot省略、印以外の情報を出さない |
+| 停止は成功し印がない | T2 | 空/nullのstdoutでも元の停止はok、解析はnone |
+| 期限切れの途中までの出力 | T3 | 途中行を捨て、timeoutと残る印を記録し、凍結resultを変えない |
+| 印の不整合 | T4 | 形式・重複・順序・Fの非負/単調性・4097文字で数値を全部捨てる |
+| 起動の値の不整合 | T5 | 負/3001msのbootだけをclockとし、Fが不正ならinvalid |
+| 停止のスクリプトの構造 | T6・T7f | 元13行順と直後の終了判定、try/Flush、最後のexit 0、同期fs/待機/hook/追加プロセス禁止 |
+| 保存の失敗と上限 | T7a/b/c/e・T8 | callback失敗/同期throw、不正行、全体48行/8KiBとend予約、実fsのcomplete・固定項目・自己PID・秘密を出さない・mkdir不能 |
+| 保存の固着と中断 | T7d/e | mkdir/appendの無通知と遅延で同時1要求、後続/endを先に書かない、同期callbackの再入と二重計上を防ぐ、end保存失敗は終わりなし |
+| 記録しない環境 | T9 | 記録先なし/非Windows/生成時のI/Oなし、PIDのないcwdへrecorderを渡しても元どおりresolve |
+
+T6はhelperをimportしない状態で、印のない元スクリプトに対する失敗を実観測してから実装した。helper不存在のmodule収集失敗は別の結果として保存し、意味あるREDの代わりにはしない。実装担当による逆変換の照合では、挿入と省略引数を外すと元のdelivery試験全体がbyte一致し、REQ-345・設定・workflowなどの保護対象も一致した。この照合を独立レビューとは扱わない。
