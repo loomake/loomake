@@ -207,7 +207,7 @@ describe('工程行の文書の整合', () => {
   const template = readFileSync(join(root, '.github', 'PULL_REQUEST_TEMPLATE.md'), 'utf8');
   const skill = readFileSync(join(root, '.agents', 'skills', 'delivery', 'SKILL.md'), 'utf8');
   const workflow = readFileSync(join(root, 'docs', 'dev', 'agent-workflow.md'), 'utf8');
-  const block = (text: string) => text.match(/```text\n(head:[\s\S]*?)\n```/)?.[1] ?? '';
+  const block = (text: string) => text.replaceAll('\r\n', '\n').match(/```text\n(head:[\s\S]*?)\n```/)?.[1] ?? '';
   const names = (text: string) => [...block(text).matchAll(/^([a-z][a-z-]*):/gm)].map((match) => match[1]);
 
   it('PR 雛形と delivery の共通欄が同じ並びで、7工程が揃っている', () => {
@@ -217,6 +217,15 @@ describe('工程行の文書の整合', () => {
     expect(names(template)).not.toContain('ci');
     expect(names(template)).not.toContain('opus-review');
     expect(names(template)).not.toContain('opus-model');
+  });
+
+  it.each([{ label: 'LF', ending: '\n' }, { label: 'CRLF', ending: '\r\n' }])('文書の改行 $label でも同じ7工程を抽出する', ({ ending }) => {
+    const withEnding = (text: string) => text.replace(/\r?\n/g, ending);
+    const templateNames = names(withEnding(template));
+    const skillNames = names(withEnding(skill));
+    expect(templateNames.filter((name) => PROCESS_LINES.includes(name))).toEqual(PROCESS_LINES);
+    expect(skillNames.filter((name) => PROCESS_LINES.includes(name))).toEqual(PROCESS_LINES);
+    expect(templateNames).toEqual(skillNames);
   });
 
   it('雛形を未記入で貼り付けた本文は通らない', () => {
