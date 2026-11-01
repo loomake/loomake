@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { askOpus, buildClaudeArgs, evaluateEvents, extractDiff, parseArgs } from '../.agents/skills/delivery/scripts/ask-opus.mjs';
+import { createOwnedCleanupSink, createOwnedCleanupRecorder, recordWindowsStop, type CleanupRecorder } from './helpers/owned-cleanup-phases.js';
 
 const session = 'test-session';
 function events() {
@@ -121,7 +122,30 @@ function readFakePid(cwd: string): number | undefined {
 }
 
 const windowsStopScript = String.raw`
+try { $loomakeWatch = [Diagnostics.Stopwatch]::StartNew() } catch { }
+try { [Console]::Out.WriteLine('LOOMAKE-PS boot ' + ([long](([DateTime]::Now - [Diagnostics.Process]::GetCurrentProcess().StartTime).TotalMilliseconds)).ToString([Globalization.CultureInfo]::InvariantCulture)); [Console]::Out.Flush() } catch { }
 $ErrorActionPreference = 'Stop'
+$targetPidValue = [uint32]::Parse($env:LOOMAKE_CLEANUP_PID)
+$expectedFixture = $env:LOOMAKE_CLEANUP_FIXTURE
+$record = Get-CimInstance -ClassName Win32_Process -Filter ('ProcessId = ' + $targetPidValue)
+try { [Console]::Out.WriteLine('LOOMAKE-PS cim ' + $loomakeWatch.ElapsedMilliseconds.ToString([Globalization.CultureInfo]::InvariantCulture)); [Console]::Out.Flush() } catch { }
+if ($null -eq $record) { exit 0 }
+if ([string]::IsNullOrWhiteSpace($record.CommandLine)) { throw 'Process command line unavailable' }
+$escapedFixture = [regex]::Escape($expectedFixture)
+$fixtureArgument = '(?:^|\s)(?:"' + $escapedFixture + '"|' + $escapedFixture + ')(?=\s|$)'
+if (-not [regex]::IsMatch($record.CommandLine, $fixtureArgument, [Text.RegularExpressions.RegexOptions]::IgnoreCase)) {
+  throw 'Process fixture argument mismatch'
+}
+try { [Console]::Out.WriteLine('LOOMAKE-PS owner ' + $loomakeWatch.ElapsedMilliseconds.ToString([Globalization.CultureInfo]::InvariantCulture)); [Console]::Out.Flush() } catch { }
+& taskkill.exe /PID $targetPidValue /F | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'Owned process termination failed' }
+try { [Console]::Out.WriteLine('LOOMAKE-PS taskkill ' + $loomakeWatch.ElapsedMilliseconds.ToString([Globalization.CultureInfo]::InvariantCulture)); [Console]::Out.Flush() } catch { }
+exit 0
+`;
+
+describe('所有fixture停止の診断契約', () => {
+  it('[REQ-363] T6 元のPS行と停止判定順を保持して固定区間だけを加える', () => {
+    const original = String.raw`$ErrorActionPreference = 'Stop'
 $targetPidValue = [uint32]::Parse($env:LOOMAKE_CLEANUP_PID)
 $expectedFixture = $env:LOOMAKE_CLEANUP_FIXTURE
 $record = Get-CimInstance -ClassName Win32_Process -Filter ('ProcessId = ' + $targetPidValue)
@@ -133,17 +157,52 @@ if (-not [regex]::IsMatch($record.CommandLine, $fixtureArgument, [Text.RegularEx
   throw 'Process fixture argument mismatch'
 }
 & taskkill.exe /PID $targetPidValue /F | Out-Null
-if ($LASTEXITCODE -ne 0) { throw 'Owned process termination failed' }
-`;
+if ($LASTEXITCODE -ne 0) { throw 'Owned process termination failed' }`;
+    const lines = windowsStopScript.trim().split('\n');
+    let previous = -1;
+    for (const line of original.split('\n')) {
+      const index = lines.indexOf(line, previous + 1);
+      expect(index, line).toBeGreaterThan(previous);
+      previous = index;
+    }
+    const kill = lines.findIndex((line) => line.startsWith('& taskkill.exe'));
+    expect(lines[kill + 1]).toBe("if ($LASTEXITCODE -ne 0) { throw 'Owned process termination failed' }");
+    for (const name of ['boot', 'cim', 'owner', 'taskkill']) {
+      const mark = lines.find((line) => line.includes(`LOOMAKE-PS ${name} `));
+      expect(mark, name).toMatch(/^try \{ .*\[Console\]::Out\.Flush\(\).*catch \{ \}$/);
+    }
+    const at = (part: string) => lines.findIndex((line) => line.includes(part));
+    expect(at('LOOMAKE-PS boot ')).toBeLessThan(at("$ErrorActionPreference = 'Stop'"));
+    expect(at('LOOMAKE-PS cim ')).toBeGreaterThan(at('$record = Get-CimInstance'));
+    expect(at('LOOMAKE-PS owner ')).toBeGreaterThan(at("throw 'Process fixture argument mismatch'"));
+    expect(at('LOOMAKE-PS owner ')).toBeLessThan(kill);
+    expect(at('LOOMAKE-PS taskkill ')).toBeGreaterThan(kill + 1);
+    expect(lines.at(-1)).toBe('exit 0');
+  });
 
-async function stopOwnedFake(cwd: string, timeoutMs: number) {
+  it('[REQ-363] T9 PIDのないcwdはrecorderがあっても元どおり停止を要求しない', async () => {
+    const { createOwnedCleanupRecorder, createOwnedCleanupSink } = await import('./helpers/owned-cleanup-phases.js');
+    const cwd = mkdtempSync(join(tmpdir(), 'loomake-cleanup-empty-'));
+    try {
+      const sink = createOwnedCleanupSink({ env: {}, platform: 'win32' });
+      const recorder = createOwnedCleanupRecorder('owned', sink);
+      await expect(stopOwnedFake(cwd, 3000, recorder)).resolves.toBeUndefined();
+      recorder.end();
+    } finally { rmSync(cwd, { recursive: true, force: true }); }
+  });
+});
+
+async function stopOwnedFake(cwd: string, timeoutMs: number, recorder?: CleanupRecorder) {
   const pid = readFakePid(cwd);
   if (pid === undefined || !alive(pid)) return;
+  recorder?.note('stop-begin');
   if (process.platform === 'win32') {
+    const stopStarted = performance.now();
     const result = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(windowsStopScript, 'utf16le').toString('base64')], {
       env: { ...process.env, LOOMAKE_CLEANUP_PID: String(pid), LOOMAKE_CLEANUP_FIXTURE: join(cwd, '.loomake/fake.mjs') },
       encoding: 'utf8', shell: false, timeout: timeoutMs, killSignal: 'SIGKILL',
     });
+    recordWindowsStop(recorder, result, performance.now() - stopStarted, timeoutMs);
     if (result.error) throw result.error;
     if (result.status !== 0) throw new Error(`所有する偽プロセスを確認・停止できませんでした。${result.stderr}`);
   } else {
@@ -153,7 +212,10 @@ async function stopOwnedFake(cwd: string, timeoutMs: number) {
   const deadline = Date.now() + timeoutMs;
   while (alive(pid) && Date.now() < deadline) await new Promise((resolvePromise) => setTimeout(resolvePromise, 25));
   if (alive(pid)) throw new Error('所有する偽プロセスが後片付け後も動いています。');
+  recorder?.note('wait-end');
 }
+
+const ownedCleanupSink = createOwnedCleanupSink();
 
 async function withRepo(mode: string, check: (fixture: { cwd: string; input: ReturnType<typeof parseArgs>; options: { cwd: string; executable: string; prefixArgs: string[]; env: NodeJS.ProcessEnv } }) => Promise<void>) {
   const cwd = mkdtempSync(join(tmpdir(), 'loomake-opus-'));
@@ -209,13 +271,16 @@ describe('deliveryのClaude起動', () => {
     await expect(withCleanup(() => {}, () => { throw removal; })).rejects.toBe(removal);
   });
   it('fixtureの所有子を停止してから削除できる', async () => {
+    const recorder = createOwnedCleanupRecorder('owned', ownedCleanupSink);
     await withRepo('timeout', async ({ cwd, input, options }) => {
+      recorder.note('repo-ready');
       const child = spawn(options.executable, options.prefixArgs, {
         cwd, env: options.env, shell: false, detached: process.platform !== 'win32', stdio: ['pipe', 'ignore', 'ignore'],
       });
       const closed = once(child, 'close');
       await withCleanup(async () => {
         await once(child, 'spawn');
+        recorder.note('child-ready');
         child.stdin!.end();
         const deadline = Date.now() + input.timeoutMs;
         while (!existsSync(join(cwd, '.loomake/called')) && Date.now() < deadline) await new Promise((resolvePromise) => setTimeout(resolvePromise, 25));
@@ -223,28 +288,36 @@ describe('deliveryのClaude起動', () => {
         const pid = readFakePid(cwd);
         expect(pid).toBe(child.pid);
         expect(alive(pid!)).toBe(true);
-        await stopOwnedFake(cwd, input.timeoutMs);
+        await stopOwnedFake(cwd, input.timeoutMs, recorder);
         await closed;
+        recorder.note('closed');
         expect(alive(pid!)).toBe(false);
       }, async () => {
         if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
         await closed;
+        recorder.note('cleanup-closed');
+        recorder.end();
       });
     });
   });
   if (process.platform === 'win32') {
     it('Windowsのfixture引数が一致しないPIDへ停止命令を出さない', async () => {
+      const recorder = createOwnedCleanupRecorder('mismatch', ownedCleanupSink);
       await withRepo('timeout', async ({ cwd, input }) => {
+        recorder.note('repo-ready');
         const child = spawn(process.execPath, ['-e', 'setInterval(()=>{},1000)'], { cwd, shell: false, stdio: 'ignore' });
         const closed = once(child, 'close');
         await withCleanup(async () => {
           await once(child, 'spawn');
+          recorder.note('child-ready');
           writeFileSync(join(cwd, '.loomake/pid'), String(child.pid));
-          await expect(stopOwnedFake(cwd, input.timeoutMs)).rejects.toThrow('所有する偽プロセスを確認・停止できませんでした。');
+          await expect(stopOwnedFake(cwd, input.timeoutMs, recorder)).rejects.toThrow('所有する偽プロセスを確認・停止できませんでした。');
           expect(alive(child.pid!)).toBe(true);
         }, async () => {
           if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
           await closed;
+          recorder.note('cleanup-closed');
+          recorder.end();
         });
       });
     });

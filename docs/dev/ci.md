@@ -103,6 +103,27 @@ quality ジョブの macOS・Windows のシャードでは、`scripts/ci-quarant
 
 心拍も止まっていれば実行環境全体が止まっていた、書き込みだけが遅ければディスク、起動だけが遅ければプロセスの生成、と見分ける手がかりにします。記録の失敗で試験とジョブの成否は変わりません。quality ジョブの記録は `ci-heartbeat-<run>-<attempt>-<os>-<shard>` の artifact に 7 日保存します。
 
+### Windowsの所有fixture停止の区間記録
+
+`tests/delivery-ask-opus.test.ts`の所有子停止・所有者不一致の既存2試験は、Windowsで`LOOMAKE_CI_HEARTBEAT_DIR`があるときだけ、同じartifactディレクトリの`owned-cleanup-<自己pid>.jsonl`へ区間を記録します（REQ-363）。ラベルは`owned-cleanup-owned`と`owned-cleanup-mismatch`です。行の`pid`とファイル名には試験プロセス自身のPIDだけを使い、停止対象のPID・引数・CommandLine・パス・出力本文・環境値は含めません。
+
+| 段階 | durationMsの原点と意味 |
+|---|---|
+| `ps-boot` | OSが記録したPowerShellの開始時刻から最初の命令までの壁時計差（S） |
+| `ps-cim`・`ps-owner`・`ps-taskkill` | 最初の命令で始めたStopwatchから、それぞれの判定後までの経過（F） |
+| `ps-return` | NodeがspawnSyncを呼んでから戻るまでの経過（N） |
+| `case-start`・`repo-ready`・`child-ready`・`stop-begin`・`wait-end`・`closed`・`cleanup-closed`・`case-end` | Nodeで記録を始めてからの経過（N） |
+
+S・F・Nの値は互いに比較せず、差し引きません。`ps-return.kind`は元の結果だけから`ok`・`timeout`・`error`・`status`に分けます。`ps-parse.kind`は印の解析だけを示し、`ok`・`none`・`invalid`・`clock`です。成功していても印がなければ`none`で、停止の成功とは別に欠測と読みます。形式・重複・順序・Fの単調性が不正、またはstdoutが4096文字を超えれば数値を全部捨てます。bootが負か3000msを超えれば`clock`としてbootだけを捨て、Fの値が正しければ残します。改行のない最後の断片は捨てます。
+
+`at`は保存時刻ではなく事象の時刻です。`case-start`は試験の期限が始まったあとに出るため、Nodeのcase-startからの経過が5000msを超えた行は期限切れ後の事象です。5000ms前後の値だけで期限との前後を決めません。
+
+記録はコールバック版fsの同時1要求で順に追記し、同期fs・追加プロセス・hookは使いません。全体48行・8KiBの予算に待ち行列と実行中の行を含め、各試験の`case-end`分を先に予約します。noteとendは保存の完了を待たずに戻り、診断の例外を外へ出しません。
+
+`case-end`の`rows`はその試験の終わりより前に受け付けた行、`saved`は保存成功の通知、`failed`は保存失敗の通知か同期例外、`dropped`は上限や不正で捨てた行の数です。終わりの行が先頭に来たときに数え、`saved=rows`・`failed=0`・`dropped=0`のときだけ`complete`、それ以外は`partial`にします。終わりの行がなければ欠測です。読めない行があれば`complete`でも`partial`として扱い、`seq`の抜けは保存されなかった行を示します。fsyncによる耐久性と、予定した全事象の発生は保証しません。
+
+共有スレッドプールを1本使う負荷が加わり、同じforkのfs・dns.lookup・zlib・cryptoが遅くなる可能性があります。初回のプール初期化・mutex・GCを含む呼出時間や、性能への影響がないことは保証しません。途中stdoutとFlushの残り方、保存の遅れ、カーネル内で固着したI/Oと終了の関係は実Windowsで未観測です。追加のPowerShell試験は起動せず、後のCIで既存2試験のartifactを確認します。診断が欠けても元の試験の失敗は失敗のまま残します。
+
 ## quality のテスト診断
 
 quality ジョブの要約には、テストステップの成否と JSON レポートの状態を別々に表示する。レポートの状態は、有効・欠損・不正・空の4つ。テストが未実行なら、そのことも明示する。レポートがないことを、成功の証拠にはしない。
