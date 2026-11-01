@@ -63,7 +63,7 @@ Git部品の時間予算への接続、openと各Scenarioの意味の対応、�
 
 ## 全Scenarioと実試験の対応
 
-以下の試験は`tests/`のファイルである。元109ケースと追加済みT-A〜Kを保持し、324のarchive両所有を新T-Lの4ケースで確認する。測定結果と修理履歴は[PR #308](https://github.com/loomake/loomake/pull/308)へ記録する。
+以下の試験は`tests/`のファイルである。元109ケースと追加T-A〜Mを保持し、324のarchive両所有はT-L、Gitメタデータと本文予算の境界はT-Mで確認する。測定結果と修理履歴は[PR #308](https://github.com/loomake/loomake/pull/308)へ記録する。
 
 | 要件・Scenario | 試験ファイルと直接確かめる内容 |
 |---|---|
