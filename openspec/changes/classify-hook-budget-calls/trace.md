@@ -54,3 +54,5 @@ F116-Q5の予約実務と原文再確認は管理役Codexが担当し、名前�
 24100ff7は空changesetだけでREQ-056の不足を直した。main3aを通常mergeしたあとも、元hook・workflow・設定・旧作業記録と診断の技術source/testsは241と同じ。正式化時点では計画文書と仕様ゲートだけで、M1の修理、ID付き追加試験、正常done、3 OS/必須CIと独立Opus最終は未実施だった。
 
 その後、利用者の包括承認に基づく管理役の仕様確認を経て、task1.1〜2.2でA′/Q6(a)の最小修理と全19 Scenarioの新しいID付き試験を追加した。旧試験の名前・本文・期待値は保持し、classifier本体・元hook・workflow・設定・製品src・製品の主仕様を変更していない。通常local doneは省略指定なしでexit0、全6タスクと19 Scenarioの成功試験を確認した。最終CI/レビューは未完了である。
+
+独立点検の軽微m1はREQ-350のgetter・継承・ProxyのScenarioのTHENだけを本文と採用D2へ整合した。cwdも取得不能の場合に由来欄を省くことを明記し、安全な自身の文字列cwdを使える本文・設計・実装は変えていない。WHEN・Requirement本文・他Scenario・source/tests/tasks/設定と、既存の通常local doneの根拠は保持し、新headのCIで再確認する。

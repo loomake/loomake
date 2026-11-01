@@ -29,7 +29,7 @@ Source: REQ-350
 
 #### Scenario: getter・継承・Proxyの設定と元の例外
 - **WHEN** timeoutMsがaccessor・継承・全trapを数えるProxyで、元関数が返すかProcessLimitErrorを投げる
-- **THEN** 明示timeoutをnullとし、観測によるgetterの評価とtrapは0回、作業ディレクトリ由来の欄を記録せず、同じ返値か同じ例外を返す
+- **THEN** 明示timeoutをnullとし、観測によるgetterの評価とtrapは0回、cwdも取得不能の場合は作業ディレクトリ由来の欄を記録せず、同じ返値か同じ例外を返す
 
 #### Scenario: 観測を指定しない
 - **WHEN** 診断の保存先を指定せず、全trapを数えるProxyの設定で呼ぶ
