@@ -30,11 +30,13 @@
 | ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |
 |---|---|---|---|---|---|---|---|---|
 | F116-Q1 | REQ-350, REQ-351, REQ-352 | コードPRでnoneを使えるか | A: 独立changeで通常完了 / B: none | A。後発Q-S1を優先する | no | A。コードPRではnoneを使わない。入力文書のQ-S1出典参照。旧L2/changeなし判断を撤回し正常doneへ戻す | 利用者（Q-S1。管理役が記録） | 2026-10-31 |
-| F116-Q2 | REQ-350 | 自己変化する設定をいつどう観測するか | A′: 事前の不活性snapshot / A: 単純事前保存 / B: 事後検知 | A′。先行getterでの変更もunknownとし追加評価を避ける | yes | A′。呼ぶ前に安全なdataだけから三値を保存し、呼んだ後との比較はしない。42a5をrootが本会話で全文確認して採用。ADR0006の包括承認に基づく | 管理役 Codex | 2026-11-01 |
-| F116-Q3 | REQ-350, REQ-351, REQ-352 | 契約をどう所有するか | A: 新capabilityに3ADDED / B: 既存診断へ追加 / C: 1件へ集約 | A。観測・分類・公開を分け、製品契約の所有を保つ | yes | A。ci-external-call-diagnosticsに3件を置く。REQ-180/182/257はMODIFIEDにしない。通常L3、例外なし。rootが本会話で採用、ADR0006参照 | 管理役 Codex | 2026-11-01 |
-| F116-Q4 | REQ-350 | modeとcwdもsnapshotへ含めるか | A: 含める / B: timeoutだけ | A。同じ追加getter/trapの問題を避ける | yes | A。finallyでoptionsを読み直さず、不明modeはnull、cwdが安全に得られなければ由来欄を省く。rootが本会話で採用、ADR0006参照 | 管理役 Codex | 2026-11-01 |
-| F116-Q5 | REQ-350, REQ-351, REQ-352 | 名前とIDの所有はどうするか | A: 中央予約の名前/IDを使う / B: 別名/再採番 | A。既存予約の所有を保つ | no | A。classify-hook-budget-calls / ci-external-call-diagnostics、REQ-350/351/352。[予約原文](https://github.com/loomake/loomake/issues/116#issuecomment-6549397212)を再確認。新規採番ではない | 管理役 Codex | 2026-11-01 |
-| F116-Q6 | REQ-350 | snapshotを取る位置はどこか | a: 診断env確認直後でt0前 / b: t1後 | a。検査時間をt1→tsへ入れて窓を広げない | no | a。42a5の追加判断をrootが本会話で採用。実装位置としてdesignへ記録し、条件や試験の緩和はしない。ADR0006参照 | 管理役 Codex | 2026-11-01 |
+| F116-Q2 | REQ-350 | 自己変化する設定をいつどう観測するか | A′: 事前の不活性snapshot / A: 単純事前保存 / B: 事後検知 | A′。先行getterでの変更もunknownとし追加評価を避ける | yes | A′。呼ぶ前に安全なdataだけから三値を保存し、呼んだ後との比較はしない。42a5をrootが本会話で全文確認して採用。ADR0006の包括承認に基づく | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
+| F116-Q3 | REQ-350, REQ-351, REQ-352 | 契約をどう所有するか | A: 新capabilityに3ADDED / B: 既存診断へ追加 / C: 1件へ集約 | A。観測・分類・公開を分け、製品契約の所有を保つ | yes | A。ci-external-call-diagnosticsに3件を置く。REQ-180/182/257はMODIFIEDにしない。通常L3、例外なし。rootが本会話で採用、ADR0006参照 | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
+| F116-Q4 | REQ-350 | modeとcwdもsnapshotへ含めるか | A: 含める / B: timeoutだけ | A。同じ追加getter/trapの問題を避ける | yes | A。finallyでoptionsを読み直さず、不明modeはnull、cwdが安全に得られなければ由来欄を省く。rootが本会話で採用、ADR0006参照 | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
+| F116-Q5 | REQ-350, REQ-351, REQ-352 | 名前とIDの所有はどうするか | A: 中央予約の名前/IDを使う / B: 別名/再採番 | A。既存予約の所有を保つ | no | A。classify-hook-budget-calls / ci-external-call-diagnostics、REQ-350/351/352。[予約原文](https://github.com/loomake/loomake/issues/116#issuecomment-6549397212)を再確認。新規採番ではない | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
+| F116-Q6 | REQ-350 | snapshotを取る位置はどこか | a: 診断env確認直後でt0前 / b: t1後 | a。検査時間をt1→tsへ入れて窓を広げない | no | a。42a5の追加判断をrootが本会話で採用。実装位置としてdesignへ記録し、条件や試験の緩和はしない。ADR0006参照 | 利用者（ADR 0006 の包括承認） | 2026-11-01 |
+
+F116-Q5の予約実務と原文再確認は管理役Codexが担当し、名前・IDを採用する決定権限は利用者のADR 0006の包括承認に基づく。
 
 採用済みの技術前提Q1B/Q2A/Q3A・D1/D2/D3Aは21fと採用記録に従う。67aaの「timeout不明は一律未確定」という草案は採用せず、窓内と窓より前を分ける42a5の全19 Scenarioを原文で記録した。
 
