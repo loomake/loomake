@@ -144,6 +144,22 @@ describe('archive metadata の gate 子プロセス', () => {
     });
   });
 
+  it('[REQ-132][REQ-343][REQ-362] L1でもmetadata移動元のactive changeを検証する', () => {
+    withProject(({ dir, git, commitFiles, run }) => {
+      const from = 'openspec/changes/c1/.openspec.yaml';
+      commitFiles({ [from]: 'schema: spec-driven\n' });
+      git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+      mkdirSync(join(dir, archived), { recursive: true });
+      git('mv', from, `${archived}/.openspec.yaml`);
+      // 元のc1/tasks.mdを残し、metadata以外の移動元文書を差分に含めない。
+      commitFiles({ [`${archived}/tasks.md`]: '- [x] archived document\n', 'openspec/specs/x/spec.md': '### Requirement: 同期\n本文 SHALL。\n' });
+      const result = run('archive-c1');
+      expect(result.stdout).toContain('loomake-tier: L1');
+      expect(result.status).toBe(0);
+      expect(result.calls).toEqual([...lintOnly, done('c1')]);
+    });
+  });
+
   it.each(['from', 'to'].flatMap((side) => ['', 'loomake-change: none', 'loomake-tier: L1'].map((body) => [side, body])))('[REQ-362][REQ-342][REQ-343][REQ-281] 差分外の%s衝突はL1例外を拒否する（%s）', (side, body) => {
     withProject(({ dir, git, commitFiles, run }) => {
       const from = 'openspec/changes/c1/.openspec.yaml';
