@@ -1,6 +1,7 @@
 // @loomake/core：trace.md・spec.md・tasks.md・テストのレポートの読み方と、verify 結果の Zod スキーマと型。
 // パーサはファイルを読まず、ファイル名とテキストを受け取って結果とエラーを返す
 export type { ParseError, ParseResult } from './parse.js';
+export { splitLines, fenceMask } from './parse.js';
 export { parseTrace, LEDGER_STATES } from './trace.js';
 export { setTraceCells } from './trace-edit.js';
 export type { EditableTable, TraceEditResult } from './trace-edit.js';

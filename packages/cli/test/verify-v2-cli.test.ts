@@ -78,3 +78,23 @@ describe('verify 2.0.0 の出力と終了コード', () => {
     expect(text.stdout).toBe('');
   });
 });
+
+describe('回答と承認の案内のJSON境界', () => {
+  it.each(['blocking', 'assumption'] as const)('[REQ-361] %sの人向け案内をJSONへ混ぜず単独の2.0.0結果と終了コードを保つ', async (kind) => {
+    const { traceMd } = await import('../../kit/test/project.js');
+    const trace = kind === 'blocking'
+      ? traceMd({ questions: ['| Q-15 | REQ-012 | 何回ですか | 3 / 5 | 5 | yes | |'] })
+      : traceMd({ assumptions: ['| A-01 | REQ-012 | 8 文字以上 | 記載なし | |'] });
+    await withProject({ trace }, async (root) => {
+      const text = await run(root, 'verify', '--change', CHANGE, '--spec-only');
+      const json = await run(root, 'verify', '--change', CHANGE, '--spec-only', '--json');
+      const expected = kind === 'blocking' ? 1 : 0;
+      expect([text.code, json.code]).toEqual([expected, expected]);
+      expect(text.stdout).toContain(kind === 'blocking' ? '回答の書き方：' : '承認の書き方：');
+      const result = JSON.parse(json.stdout);
+      expect(verifyResultSchema.safeParse(result).success).toBe(true);
+      expect(result.schemaVersion).toBe('2.0.0');
+      expect(json.stdout).not.toMatch(/回答の書き方|承認の書き方/);
+    });
+  });
+});
