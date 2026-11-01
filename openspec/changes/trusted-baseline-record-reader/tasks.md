@@ -9,7 +9,7 @@
 
 ## 3. 通常の検証
 
-- [ ] 3.1 lint・型・全体試験・build・固定coverage、既存保護対象の不変、全差分200KiB以内を確認し、作業記録を書く
-- [ ] 3.2 全タスクを確認して通常local doneを成功させる <!-- loomake:gate=done -->
+- [x] 3.1 lint・型・全体試験・build・固定coverage、既存保護対象の不変、全差分200KiB以内を確認し、作業記録を書く
+- [x] 3.2 全タスクを確認して通常local doneを成功させる <!-- loomake:gate=done -->
 
 最終の合格は同じheadのCI gate・必須5チェック・3OS・別担当自己レビュー・独立Opus・Codexで確認する。C2b・S1・親・live・S2の完了を意味しない。
