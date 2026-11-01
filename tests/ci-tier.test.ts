@@ -162,3 +162,64 @@ describe('段階の出力行', () => {
     expect(formatTierLine(decide(['docs/a.md', 'docs/b.md', 'docs/c.md']) as never)).toBe('loomake-tier: L1（docs/a.md、docs/b.md、docs/c.md）');
   });
 });
+
+describe('archive metadata の限定分類', () => {
+  const spec = 'openspec/specs/x/spec.md';
+  const from = (id: string) => `openspec/changes/${id}/.openspec.yaml`;
+  const to = (name: string) => `openspec/changes/archive/${name}/.openspec.yaml`;
+  const archiveEntries = (id = 'c1', name = '2026-11-01-c1') => [
+    entry('R100', from(id), to(name)),
+    entry('A', `openspec/changes/archive/${name}/tasks.md`),
+    entry('M', spec),
+  ];
+  const classify = (entries = archiveEntries(), sameBlob = () => true) => decideTier({
+    ...{ sameBlob }, entries, specDiff: unified(spec, ['+本文を同期 SHALL。'], { newLine: 9 }), readSpec: reader(),
+  });
+
+  it.each([
+    ['c1', '2026-11-01-c1'], ['2026-11-01-c1', '2026-11-01-c1'],
+    ['0050-01-01-c1', '0050-01-01-c1'], ['2026-1-01-c1', '2026-11-01-2026-1-01-c1'],
+    ['c1', '2024-02-29-c1'], ['c1', '2000-02-29-c1'],
+  ])('[REQ-362][REQ-342] 対応する実在日付の archive %s → %s だけを L1 にする', (id, name) => {
+    expect(classify(archiveEntries(id, name))).toMatchObject({ tier: 'L1' });
+    expect(classifyPath(from(id))).toBe('L2');
+    expect(classifyPath(to(name))).toBe('L2');
+  });
+
+  it.each([
+    ['c1', 'c1'], ['c1', '2026-11-01-other'], ['c1', '2026-02-29-c1'],
+    ['c1', '1900-02-29-c1'], ['c1', '2026-13-01-c1'], ['c1', '2026-04-31-c1'],
+    ['2026-11-01-c1', '2026-11-02-2026-11-01-c1'], ['2026-02-30-c1', '2026-02-30-c1'],
+    ['.c1', '2026-11-01-.c1'], ['archive', '2026-11-01-archive'],
+    ['sub/c1', '2026-11-01-sub/c1'], ['aux', '2026-11-01-aux'], ['c1 ', '2026-11-01-c1 '],
+    ['a:b', '2026-11-01-a:b'], ['c\\1', '2026-11-01-c\\1'], ['c1', 'nested/2026-11-01-c1'],
+  ])('[REQ-362][REQ-342] 別名・不正日・不安全パス %s → %s は従来の L3 を保つ', (id, name) => {
+    expect(classify(archiveEntries(id, name))).toMatchObject({ tier: 'L3' });
+  });
+
+  it('[REQ-362][REQ-342] R100 と完全 OID 同一の証明を両方必要とする', () => {
+    const entries = archiveEntries();
+    for (const status of ['R090', 'C100', 'A', 'M']) {
+      expect(classify([{ ...entries[0]!, status }, ...entries.slice(1)])).toMatchObject({ tier: 'L3' });
+    }
+    expect(classify(entries, () => false)).toMatchObject({ tier: 'L3' });
+    expect(decideTier({ entries })).toMatchObject({ tier: 'L2' });
+  });
+
+  it('[REQ-362][REQ-342] 両側の通常モードと同じ archive の別文書を必要とする', () => {
+    const entries = archiveEntries();
+    for (const modes of [['100755', '100644'], ['100644', '100755'], ['120000', '100644'], ['100644', '120000'], ['000000', '100644']] as [string, string][]) {
+      expect(classify([{ ...entries[0]!, modes }, ...entries.slice(1)])).toMatchObject({ tier: 'L3' });
+    }
+    expect(classify([entries[0]!, entries[2]!])).toMatchObject({ tier: 'L3' });
+    expect(classify([entries[0]!, entry('A', 'openspec/changes/archive/2026-11-01-other/tasks.md'), entries[2]!])).toMatchObject({ tier: 'L3' });
+    expect(classify([entries[0]!, entry('M', entries[1]!.paths[0]!), entries[2]!])).toMatchObject({ tier: 'L3' });
+    expect(classify([entries[0]!, entry('R087', 'openspec/changes/c1/tasks.md', entries[1]!.paths[0]!), entries[2]!])).toMatchObject({ tier: 'L1' });
+  });
+
+  it('[REQ-362][REQ-342] 他の YAML とコード混在は従来の分類を保つ', () => {
+    expect(classify([...archiveEntries(), entry('M', 'scripts/x.mjs')])).toMatchObject({ tier: 'L3' });
+    expect(classify([...archiveEntries(), entry('A', 'docs/other.yaml')])).toMatchObject({ tier: 'L3' });
+    expect(decideTier({ ...{ sameBlob: () => true }, entries: [entry('R100', 'docs/a.yaml', 'docs/b.yaml')] })).toMatchObject({ tier: 'L2' });
+  });
+});
