@@ -225,3 +225,69 @@ describe('外部操作の中断と時計窓の補正', () => {
     expect(publicDiagnosticsProblem({ ...payload, markdown: payload.markdown + 'altered' })).toBe('markdown-mismatch');
   });
 });
+
+describe('REQ-351 外部操作の停止の分類', () => {
+  it.each([false, true])('[REQ-351] 先行の結果欠損と後続の起動前中断をcallごとに分ける reason=%s', (reasonPresent) => {
+    const summary = summarizeExternalCalls([
+      row({ callId: 'first', limitKind: 'interrupted', reasonPresent: true }),
+      row({ callId: 'next', limitKind: 'interrupted', reasonPresent, spawned: false, spawnCount: 0, spawn: null }),
+    ], report);
+    expect(summary.calls.map((call: { classification: string }) => call.classification)).toEqual(['missing-result', 'pre-spawn-interrupted']);
+    expect(classifyCall(row({ spawned: false, spawnCount: 0, spawn: null, R: 0, Rclamped: true }))).toMatchObject({ classification: 'pre-spawn-timeout' });
+    expect(classifyCall(row({ spawned: false, spawnCount: 0, spawn: null, R: null }))).toMatchObject({ classification: 'pre-spawn-undetermined' });
+  });
+
+  it.each([
+    [5089, 'shared-deadline', true, []],
+    [5088.999, 'operation-limit', false, []],
+    [5102, 'shared-deadline', true, []],
+    [5102.001, 'undetermined', false, ['deadline-after-shared-interval']],
+  ] as const)('[REQ-351] 補正窓の両端と1ms許容差の境界D=%sを保持する', (D, classification, coincidentOperationPossible, reasons) => {
+    expect(classifyCall(row({ spawn: { ts: 111, D, outcomeKind: 'timeout', invalid: false } })))
+      .toMatchObject({ classification, coincidentOperationPossible, reasons, sharedDeadlineIntervalMs: [5100, 5101] });
+    expect(classifyCall(row({ hw1: 1010, spawn: { ts: 1111, D: D + 1000, outcomeKind: 'timeout', invalid: false } })))
+      .toMatchObject({ classification, coincidentOperationPossible, reasons, sharedDeadlineIntervalMs: [6100, 6101] });
+  });
+
+  it.each([
+    ['normal', null, true], ['untilDeadline', false, false], ['quality', true, true],
+  ] as const)('[REQ-351] 窓内ではmode=%s timeout=%sを共有期限とし同時上限の可能性を分ける', (mode, timeoutRequested, coincidentOperationPossible) => {
+    expect(classifyCall(row({ mode, timeoutRequested, spawn: { ts: 111, D: 5097.5, outcomeKind: 'timeout', invalid: false } })))
+      .toMatchObject({ classification: 'shared-deadline', coincidentOperationPossible, reasons: [] });
+  });
+
+  it.each([
+    ['normal', true, 'requested-timeout-possible'], ['normal', null, 'timeout-option-unavailable'], ['untilDeadline', false, 'deadline-before-shared-interval'],
+  ] as const)('[REQ-351] 窓より前のmode=%s timeout=%sを理由付き未確定にする', (mode, timeoutRequested, reason) => {
+    expect(classifyCall(row({ mode, timeoutRequested, spawn: { ts: 111, D: 5088.999, outcomeKind: 'timeout', invalid: false } })))
+      .toMatchObject({ classification: 'undetermined', coincidentOperationPossible: false, reasons: [reason] });
+  });
+
+  it.each([2101, 5097.5])('[REQ-351] mode不明なら窓の前でも内側でもD=%sを断定しない', (D) => {
+    expect(classifyCall(row({ mode: null, spawn: { ts: 111, D, outcomeKind: 'timeout', invalid: false } })))
+      .toMatchObject({ classification: 'undetermined', reasons: ['mode-unavailable'] });
+  });
+
+  it.each([
+    [null, 'spawn-start-unavailable'], [Infinity, 'spawn-start-unavailable'], [50, 'observation-order-invalid'],
+  ] as const)('[REQ-351] spawn時計%sの欠損と非有限値と逆転を理由付き未確定にする', (ts, reason) => {
+    expect(classifyCall(row({ spawn: { ts, D: 5100.5, outcomeKind: 'timeout', invalid: false } })))
+      .toMatchObject({ classification: 'undetermined', reasons: [reason] });
+  });
+
+  it('[REQ-351] gh pr createの窓内deadlineをcreate共有期限として区別する', () => {
+    expect(classifyCall(row({ op: 'gh-pr-create', spawn: { ts: 111, D: 5097.5, outcomeKind: 'timeout', invalid: false } })))
+      .toMatchObject({ classification: 'create-shared-deadline', reasons: [] });
+  });
+
+  it.each([
+    { R: null }, { t0: null }, { t1: NaN }, { hw1: 9 }, { spawnCount: 2 },
+    { spawn: { ts: 111, D: Infinity, outcomeKind: 'timeout', invalid: false } },
+    { spawn: { ts: 111, D: 5100.5, outcomeKind: 'output', invalid: false } },
+    { spawn: { ts: 111, D: 5100.5, outcomeKind: 'timeout', invalid: true } },
+    { limitKind: 'output' },
+  ])('[REQ-351] 時計や報告の前提が欠ければ共有窓で原因を断定しない %j', (extra) => {
+    const actual = classifyCall(row(extra));
+    expect(actual.classification).toBe('undetermined'); expect(actual.reasons.length).toBeGreaterThan(0);
+  });
+});
