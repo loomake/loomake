@@ -29,3 +29,8 @@ C001の独立検証器S1は、未完了のまま通常レビューの200KiB上�
 ## Impact
 
 対象は`packages/kit/src/verify/trusted/`の私的な9部品と`tests/trusted-*.test.ts`の6ファイル。元14文書はPR #306でmainへ受入済みのものを使い、原commit本文や作者情報は追加しない。通常L3としてローカル完了・必須CI・3OS・独立レビューを満たす。番号は[予約記録](https://github.com/loomake/loomake/issues/121#issuecomment-6554778264)に従う。
+
+
+## 自己レビュー後の句の一意性修理
+
+既存REQ-377の重複拒否に合わせ、置換と未対応は句を識別子として照合する。同じ句で採否やownerだけが違う2件も拒否し、T-H/Iを追加する。2要件10 Scenarioと原集合を保持し、既存の試験・期待値・期限・設定は変えない。
