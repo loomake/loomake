@@ -8,7 +8,7 @@
 
 | 試行 | Issue | 原計画の経路 | 版 | PR・状態 |
 |---|---|---|---|---|
-| 1/7 | [#285](https://github.com/loomake/loomake/issues/285) | 通常開発 | 1 | この集計時点でPR未作成。この環境のlocal項目完了、CI・独立レビュー待ち |
+| 1/7 | [#285](https://github.com/loomake/loomake/issues/285) | 通常開発 | 1 | [Draft PR #299](https://github.com/loomake/loomake/pull/299)。この環境のlocal項目完了、CI・独立レビュー待ち |
 | 未確定 | [#286](https://github.com/loomake/loomake/issues/286) | 通常開発 | 未実施 | この表では実績未取得 |
 | 未確定 | [#282](https://github.com/loomake/loomake/issues/282) | 通常開発 | 未実施 | 最新決定では調査先行。製品実装は#285のマージ後 |
 | 未確定 | [#278](https://github.com/loomake/loomake/issues/278) | 通常開発 | 未実施 | この表では実績未取得 |
@@ -22,7 +22,7 @@
 
 | PR | 設計待ち | 実装 | CI待ち | レビュー往復回数 | マージまで |
 |---|---|---|---|---|---|
-| この集計時点で#285対応PRは未作成 | 未測定（設計の実行時間だけは275.774秒） | 未測定（local項目完了） | 未実施 | 未実施 | 未実施 |
+| [Draft PR #299](https://github.com/loomake/loomake/pull/299) | 未測定（設計の実行時間だけは275.774秒） | 未測定（local項目完了） | 未実施 | 未実施 | 未実施 |
 
 | 記録項目 | 確認できた事実と未測定の範囲 |
 |---|---|
