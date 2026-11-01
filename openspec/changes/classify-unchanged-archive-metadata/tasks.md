@@ -20,7 +20,7 @@
 ## 4. gate と規則文書
 
 - [x] 4.1 `tests/ci-gate-process.test.ts` に `[REQ-362][REQ-342][REQ-343]` の実プロセス追加試験を作り、対象 change のない正常 archive で L1・lint/doc-links だけ・exit 0 となる期待の RED を記録する。別 change への移動は L3/失敗、存在しない明示 change と L3 none の拒否は保持する。
-- [ ] 4.2 gate が同じ候補集合・OID 照合を段階判定と change 選択に使うよう実装し、4.1 と既存 gate 試験を GREEN にする。Q1 で承認された `proposed/AGENTS.md.patch` の最小追記だけを実体へ反映し、承認との差分がないことを確認する。
+- [x] 4.2 gate が同じ候補集合・OID 照合を段階判定と change 選択に使うよう実装し、4.1 と既存 gate 試験を GREEN にする。Q1 で承認された `proposed/AGENTS.md.patch` の最小追記だけを実体へ反映し、承認との差分がないことを確認する。
 
 ## 5. 通常 L3 の統合検証と受入
 

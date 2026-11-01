@@ -42,10 +42,10 @@ export function declaredChanges(body) {
 /**
  * 対象の change を決める。明示があれば明示だけを、なければ変えたファイルとブランチ名から決めた change を合わせて使う（仮定 A-02）。
  * 返すのは { changes }・{ qualityOnly: 理由 }・{ error: 理由 } のどれか
- * @param {{ ref?: string; body?: string; files?: string[]; changesDir: string; changesPrefix?: string }} options
+ * @param {{ ref?: string; body?: string; files?: string[]; changesDir: string; changesPrefix?: string; isDocument?: (path: string) => boolean }} options
  * @returns {{ changes: string[]; qualityOnly?: undefined; error?: undefined } | { qualityOnly: string; changes?: undefined; error?: undefined } | { error: string; changes?: undefined; qualityOnly?: undefined }}
  */
-export function selectChanges({ ref = '', body = '', files = [], changesDir, changesPrefix = 'openspec/changes/' }) {
+export function selectChanges({ ref = '', body = '', files = [], changesDir, changesPrefix = 'openspec/changes/', isDocument = isDocumentPath }) {
   const declared = declaredChanges(body);
   if (declared) {
     if (!declared.length) return { qualityOnly: 'PR 本文で、change のない PR だと明示しています' };
@@ -57,8 +57,8 @@ export function selectChanges({ ref = '', body = '', files = [], changesDir, cha
   const fromBranch = verifyArgs(ref, changesDir)[1];
   const changes = [...new Set([...fromFiles, fromBranch].filter((id) => id && isChangeDir(changesDir, id)))].sort();
   if (changes.length) return { changes };
-  // 文書の判定は quality ジョブと同じ関数（ci-tier.mjs の isDocumentPath）。承認された metadata 移動は呼出側で除き、L1 と本文で段階を上げた文書だけの PR を扱う
-  if (files.every(isDocumentPath)) return { qualityOnly: '対象の change がなく、変えたのは文書だけです' };
+  // 文書の判定は既定で quality と同じ関数。L1 の metadata 例外は文書判定だけに使い、change 選択のパスは除かない
+  if (files.every(isDocument)) return { qualityOnly: '対象の change がなく、変えたのは文書だけです' };
   return {
     error:
       'コードを変えていますが、対象の change を特定できませんでした。PR 本文に「loomake-change: <change-id>」の行を書いてください。change のない PR なら「loomake-change: none」と書いてください',
@@ -229,7 +229,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       if (code !== 0) status = code;
     }
   }
-  const selected = selectChanges({ ref: branch, body, files: decided.tier === 'L1' ? files.filter((path) => !metadata.has(path)) : files, changesDir: join('openspec', 'changes') });
+  const selected = selectChanges({ ref: branch, body, files, changesDir: join('openspec', 'changes'), isDocument: decided.tier === 'L1' ? (path) => isDocumentPath(path) || metadata.has(path) : isDocumentPath });
   if (selected.error) {
     console.error(`ci-gate: ${selected.error}`);
     process.exit(1);
