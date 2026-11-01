@@ -22,6 +22,8 @@ archive所有先はchangeの省略形とpathに一致する明示形を同じ所
 
 324の両所有も照合後のchangeで判定し、archiveの明示形と省略形を両方受理するT-Lを追加する。
 
+- Gitメタデータの型・一覧・sizeへ既存16MiBの有限上限を使い、本文予算から分離する。本文の読取り前のsize検査を保ち、新T-Mの8ケースで正例・超過時の読取り回数・実ENOBUFSを確認する。
+
 ## Capabilities
 
 ### New Capabilities
