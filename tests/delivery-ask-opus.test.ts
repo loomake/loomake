@@ -136,6 +136,55 @@ if (-not [regex]::IsMatch($record.CommandLine, $fixtureArgument, [Text.RegularEx
 if ($LASTEXITCODE -ne 0) { throw 'Owned process termination failed' }
 `;
 
+describe('所有fixture停止の診断契約', () => {
+  it('[REQ-363] T6 元のPS行と停止判定順を保持して固定区間だけを加える', () => {
+    const original = String.raw`$ErrorActionPreference = 'Stop'
+$targetPidValue = [uint32]::Parse($env:LOOMAKE_CLEANUP_PID)
+$expectedFixture = $env:LOOMAKE_CLEANUP_FIXTURE
+$record = Get-CimInstance -ClassName Win32_Process -Filter ('ProcessId = ' + $targetPidValue)
+if ($null -eq $record) { exit 0 }
+if ([string]::IsNullOrWhiteSpace($record.CommandLine)) { throw 'Process command line unavailable' }
+$escapedFixture = [regex]::Escape($expectedFixture)
+$fixtureArgument = '(?:^|\s)(?:"' + $escapedFixture + '"|' + $escapedFixture + ')(?=\s|$)'
+if (-not [regex]::IsMatch($record.CommandLine, $fixtureArgument, [Text.RegularExpressions.RegexOptions]::IgnoreCase)) {
+  throw 'Process fixture argument mismatch'
+}
+& taskkill.exe /PID $targetPidValue /F | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'Owned process termination failed' }`;
+    const lines = windowsStopScript.trim().split('\n');
+    let previous = -1;
+    for (const line of original.split('\n')) {
+      const index = lines.indexOf(line, previous + 1);
+      expect(index, line).toBeGreaterThan(previous);
+      previous = index;
+    }
+    const kill = lines.findIndex((line) => line.startsWith('& taskkill.exe'));
+    expect(lines[kill + 1]).toBe("if ($LASTEXITCODE -ne 0) { throw 'Owned process termination failed' }");
+    for (const name of ['boot', 'cim', 'owner', 'taskkill']) {
+      const mark = lines.find((line) => line.includes(`LOOMAKE-PS ${name} `));
+      expect(mark, name).toMatch(/^try \{ .*\[Console\]::Out\.Flush\(\).*catch \{ \}$/);
+    }
+    const at = (part: string) => lines.findIndex((line) => line.includes(part));
+    expect(at('LOOMAKE-PS boot ')).toBeLessThan(at("$ErrorActionPreference = 'Stop'"));
+    expect(at('LOOMAKE-PS cim ')).toBeGreaterThan(at('$record = Get-CimInstance'));
+    expect(at('LOOMAKE-PS owner ')).toBeGreaterThan(at("throw 'Process fixture argument mismatch'"));
+    expect(at('LOOMAKE-PS owner ')).toBeLessThan(kill);
+    expect(at('LOOMAKE-PS taskkill ')).toBeGreaterThan(kill + 1);
+    expect(lines.at(-1)).toBe('exit 0');
+  });
+
+  it('[REQ-363] T9 PIDのないcwdはrecorderがあっても元どおり停止を要求しない', async () => {
+    const { createOwnedCleanupRecorder, createOwnedCleanupSink } = await import('./helpers/owned-cleanup-phases.js');
+    const cwd = mkdtempSync(join(tmpdir(), 'loomake-cleanup-empty-'));
+    try {
+      const sink = createOwnedCleanupSink({ env: {}, platform: 'win32' });
+      const recorder = createOwnedCleanupRecorder('owned', sink);
+      await expect(stopOwnedFake(cwd, 3000, recorder)).resolves.toBeUndefined();
+      recorder.end();
+    } finally { rmSync(cwd, { recursive: true, force: true }); }
+  });
+});
+
 async function stopOwnedFake(cwd: string, timeoutMs: number) {
   const pid = readFakePid(cwd);
   if (pid === undefined || !alive(pid)) return;
