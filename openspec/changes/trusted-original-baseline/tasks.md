@@ -11,8 +11,8 @@
 
 ## 3. 統合確認
 
-- [ ] 3.1 全2要件10 Scenarioと実試験の対応を記録し、元callback・保護期待値・設定の不変、通常の全体品質・型・lint・build・レイヤー検査を確認する。実PR差分が200KiB以内であることも確認する（REQ-376・377）
-- [ ] 3.2 `pnpm -s verify --change trusted-original-baseline --done --scope local`の実終了0を確認する（REQ-376・377） <!-- loomake:gate=done -->
+- [x] 3.1 全2要件10 Scenarioと実試験の対応を記録し、元callback・保護期待値・設定の不変、通常の全体品質・型・lint・build・レイヤー検査を確認する。実PR差分が200KiB以内であることも確認する（REQ-376・377）
+- [x] 3.2 `pnpm -s verify --change trusted-original-baseline --done --scope local`の実終了0を確認する（REQ-376・377） <!-- loomake:gate=done -->
 
 注：3.2はローカルの完了。最終の合格はCIの通常gateでscope ci・completed・errors空・PASS・要判断なし・終了0、必須5チェック、変更packageの3OS、独立レビューを確認する。この注記はチェックボックスにしない。
 
