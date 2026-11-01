@@ -253,3 +253,24 @@ describe('REQ-350 元関数前の不活性な観測', () => {
     expect(records(dir)[0]).toMatchObject({ timeoutRequested: true, mode: 'normal' });
   });
 });
+
+describe('REQ-350 安全な判定の境界', () => {
+  it.each([false, true])('[REQ-350] quality=%sでもuntilDeadline accessorの追加評価をせずunknownを保持する', (qualityCommand) => {
+    const dir = directory(); vi.stubEnv('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR', dir);
+    let reads = 0; let calls = 0;
+    const options = { qualityCommand, get untilDeadline() { reads++; return true; }, timeoutMs: 1 };
+    const value = { status: 0, signal: null, stdout: '', stderr: '' } as const;
+    const original = (...input: Parameters<typeof runExternal>) => { calls++; const config = input[2]; void (config?.qualityCommand || config?.untilDeadline); void config?.timeoutMs; return value; };
+    expect(observeRunExternal({ ...runtime, runExternal: original })('gh', [], options)).toBe(value);
+    expect(calls).toBe(1); expect(reads).toBe(qualityCommand ? 0 : 1);
+    expect(records(dir)[0]).toMatchObject({ timeoutRequested: null, mode: null });
+  });
+
+  it('[REQ-350] prototypeがnullなら欠けた項目を安全な指定なしとして扱う', () => {
+    const dir = directory(); vi.stubEnv('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR', dir);
+    const options = Object.assign(Object.create(null), { timeoutMs: 1 });
+    const value = { status: 0, signal: null, stdout: '', stderr: '' } as const;
+    expect(observeRunExternal({ ...runtime, runExternal: () => value })('gh', [], options)).toBe(value);
+    expect(records(dir)[0]).toMatchObject({ timeoutRequested: true, mode: 'normal' });
+  });
+});
