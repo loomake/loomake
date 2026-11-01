@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { copyFileSync, existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
@@ -47,6 +47,12 @@ function collectedFiles(root, report) {
   }
 }
 
+/** @param {string} path */
+function identity(path) {
+  const { dev, ino } = statSync(path, { bigint: true });
+  return `${dev}:${ino}`;
+}
+
 /** @param {string} root @param {string} directory @param {number} sample @param {string} testOutcome */
 export function saveMeasureMetadata(root, directory, sample, testOutcome) {
   if (![1, 2, 3].includes(sample) || !['success', 'failure', 'skipped', 'cancelled'].includes(testOutcome)) {
@@ -60,8 +66,8 @@ export function saveMeasureMetadata(root, directory, sample, testOutcome) {
   const target = join(directory, 'test-report.json');
   const sourceParent = dirname(resolve(source));
   const targetParent = dirname(resolve(target));
-  const sameParent = existsSync(sourceParent) && existsSync(targetParent) && realpathSync(sourceParent) === realpathSync(targetParent);
-  if (resolve(source) === resolve(target) || sameParent || (reportPresent && existsSync(target) && realpathSync(source) === realpathSync(target))) {
+  const sameParent = existsSync(sourceParent) && existsSync(targetParent) && identity(sourceParent) === identity(targetParent);
+  if (resolve(source) === resolve(target) || sameParent || (reportPresent && existsSync(target) && identity(source) === identity(target))) {
     throw new Error('計測結果の保存先は元レポートと別にしてください');
   }
   mkdirSync(directory, { recursive: true });
