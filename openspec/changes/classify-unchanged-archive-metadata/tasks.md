@@ -20,12 +20,12 @@
 ## 4. gate と規則文書
 
 - [x] 4.1 `tests/ci-gate-process.test.ts` に `[REQ-362][REQ-342][REQ-343]` の実プロセス追加試験を作り、対象 change のない正常 archive で L1・lint/doc-links だけ・exit 0 となる期待の RED を記録する。別 change への移動は L3/失敗、存在しない明示 change と L3 none の拒否は保持する。
-- [x] 4.2 gate が同じ候補集合・OID 照合を段階判定と change 選択に使うよう実装し、4.1 と既存 gate 試験を GREEN にする。Q1 で承認された `proposed/AGENTS.md.patch` の最小追記だけを実体へ反映し、承認との差分がないことを確認する。
+- [ ] 4.2 gate が同じ候補集合・OID 照合を段階判定と change 選択に使うよう実装し、4.1 と既存 gate 試験を GREEN にする。Q1 で承認された `proposed/AGENTS.md.patch` の最小追記だけを実体へ反映し、承認との差分がないことを確認する。
 
 ## 5. 通常 L3 の統合検証と受入
 
-- [x] 5.1 追加・既存回帰、lint・型検査・全件試験と `verify --done --scope local` を通し、REQ-362・342 に対応する試験、全タスクとゲート結果を照合する。既存試験の弱化・skip・期待値の緩和・設定緩和がない差分を確認する。
-- [x] 5.2 レビュー/CI用の全差分・要件対応・検証証跡と4項目worklogを揃え、未実施のCI・独立レビュー・main採用を区別して管理役へ引き継ぐ。
+- [ ] 5.1 追加・既存回帰、lint・型検査・全件試験と `verify --done --scope local` を通し、REQ-362・342 に対応する試験、全タスクとゲート結果を照合する。既存試験の弱化・skip・期待値の緩和・設定緩和がない差分を確認する。
+- [ ] 5.2 レビュー/CI用の全差分・要件対応・検証証跡と4項目worklogを揃え、未実施のCI・独立レビュー・main採用を区別して管理役へ引き継ぐ。
 
 ## Workflow follow-up
 

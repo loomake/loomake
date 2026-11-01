@@ -133,8 +133,9 @@ describe('archive metadata の gate 子プロセス', () => {
         expect(result.calls).toEqual(lintOnly);
       } else if (body.includes('L2')) {
         expect(result.stdout).toContain('loomake-tier: L2');
-        expect(result.status).toBe(0);
-        expect(result.calls).toEqual([['verify']]);
+        expect(result.status).toBe(1);
+        expect(result.stderr).toContain('PR 本文に「loomake-change: <change-id>」の行を書いてください');
+        expect(result.calls).toEqual([]);
       } else {
         expect(result.stdout).toContain('loomake-tier: L1');
         expect(result.status).toBe(0);
