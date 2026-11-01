@@ -44,7 +44,7 @@ function recordCounts(baseline: ApprovedBaseline): RecordCounts {
 /** Private structure and fixed-value check. Adoption actors and fresh executions remain unverified. */
 export function checkBaselineRecord(text: string, context: Context, pin: Readonly<BaselinePin>): Result {
   try {
-    const document = loadParseDocument()(text, { prettyErrors: false });
+    const document = loadParseDocument()(text, { prettyErrors: false, schema: 'core', merge: false });
     if (document.errors.length || document.warnings.length) {
       return rejected(['初回基準の記録の YAML の書き方が正しくありません']);
     }

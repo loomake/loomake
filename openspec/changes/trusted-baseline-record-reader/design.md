@@ -14,7 +14,7 @@ packages/kit/src/verify/trusted/baseline-record.tsにcheckBaselineRecord(text, c
 
 ### 読取りと失敗
 
-yamlはquality-input.tsと同じ遅延createRequireで読み、parseDocumentのprettyErrors:falseと既定YAML 1.2/core・uniqueKeys・mergeなしを使う。errorsかwarningsを拒否し、toJSのmaxAliasCount:100を維持する。rootはplain objectでexpected_specだけとし、未知欄・merge欄・自己申告PINを拒否する。非JSON・循環値を含め、例外は日本語のproblemsへ変換する。REQ-377の構造失敗はその問題を保持して返す。
+yamlはquality-input.tsと同じ遅延createRequireで読み、parseDocumentでprettyErrors:false・schema:core・merge:falseを指定し、既定のuniqueKeysを使う。YAML1.1の指示子があってもcoreとmerge禁止を維持する。errorsかwarningsを拒否し、toJSのmaxAliasCount:100を維持する。rootはplain objectでexpected_specだけとし、未知欄・merge欄・自己申告PINを拒否する。非JSON・循環値を含め、例外は日本語のproblemsへ変換する。REQ-377の構造失敗はその問題を保持して返す。
 
 ### 全15件数とdigest
 

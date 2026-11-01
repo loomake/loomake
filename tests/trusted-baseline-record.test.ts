@@ -173,6 +173,32 @@ describe('閉じた基準記録の読取り（合成fixture・実候補の採否
     rejected(checkBaselineRecord(text, f.context, pin));
   });
 
+  it('[REQ-387] T-C2A-03 正しい基準をYAML1.1のmergeで組み立てても受理しない', () => {
+    const f = fixture(), pin = pinFor(f.baseline);
+    const text = `%YAML 1.1\n---\nexpected_spec:\n  <<: ${JSON.stringify(f.baseline)}`;
+    rejected(checkBaselineRecord(text, f.context, pin));
+  });
+
+  it.each(['重複キー', '複数文書', '未解決タグ'] as const)(
+    '[REQ-387] T-C2A-03 正しい基準の%sを構文検査の理由で拒否する', (kind) => {
+      const f = fixture(), pin = pinFor(f.baseline), valid = record(f.baseline);
+      expect(checkBaselineRecord(valid, f.context, pin).problems).toEqual([]);
+      const text = kind === '重複キー' ? `expected_spec: ${JSON.stringify(f.baseline)}\nexpected_spec: ${JSON.stringify(f.baseline)}`
+        : kind === '複数文書' ? `${valid}\n---\n${valid}`
+          : `expected_spec: !unknown ${JSON.stringify(f.baseline)}`;
+      rejected(checkBaselineRecord(text, f.context, pin), /YAML の書き方が正しくありません/);
+    },
+  );
+
+  it('[REQ-387] T-C2A-03 collectionの指数的展開も既定予算で拒否する', () => {
+    const f = fixture(), pin = pinFor(f.baseline);
+    const text = 'expected_spec:\n  a: &a [x, x, x, x, x, x, x, x, x, x]\n'
+      + '  b: &b [*a, *a, *a, *a, *a, *a, *a, *a, *a, *a]\n'
+      + '  c: &c [*b, *b, *b, *b, *b, *b, *b, *b, *b, *b]\n'
+      + '  d: [*c, *c]';
+    rejected(checkBaselineRecord(text, f.context, pin), /展開できません/);
+  });
+
   it('[REQ-387] T-C2A-03 既定100のscalar展開境界を緩めず適用する', () => {
     const f = fixture(), pin = pinFor(f.baseline);
     const text = (n: number) => `expected_spec:\n  a: &a value\n  b: [${Array(n).fill('*a').join(', ')}]`;
