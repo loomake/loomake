@@ -12,6 +12,7 @@
 | 21fcbdf8の技術設計と管理役の採用記録 | `.loomake/claude/21fcbdf8-d9a3-4f56-b27a-646a68ba0f94/result.md`、`.loomake/design-classification/manager-adoption.md` | 2026-11-01 |
 | 67aa86b7の独立change化設計 | `.loomake/claude/67aa86b7-95eb-4680-aae9-5d940c256433/result.md` | 2026-11-01 |
 | 42a5d810の追加設計と今回の管理役採用 | `.loomake/claude/42a5d810-187d-47d1-ad39-d1c2480da9b7/result.md`。本会話でrootがA′/3ADDED/mode-cwd/Q6(a)を採用 | 2026-11-01 |
+| [受入前P2](https://github.com/loomake/loomake/pull/276#discussion_r4434018253)と[main受入](https://github.com/loomake/loomake/pull/276) | REQ-351の時計逆転の欠落修理、正常local/ci done・3 OS・独立最終レビュー後に受入 | 2026-11-01 |
 | 現在のmainの規約と保護契約 | main 3a54614eを通常merge。AGENTS・ADR0006・agent-workflowとREQ-180/182/257 | 2026-11-01 |
 
 ## 要件台帳
@@ -19,7 +20,7 @@
 | ID | 出典 | 種別 | 要約（原文に忠実に） | 状態 | 反映先 |
 |---|---|---|---|---|---|
 | REQ-350 | Issue #116、採用D2とF116-Q2/Q4/Q6、中央予約、42a5追加設計1章 | 非機能 | 元関数前の不活性snapshotで三値timeout・mode・cwdを観測し、getter/trapの追加評価と元実行への影響を避ける | 反映済 | specs/ci-external-call-diagnostics/spec.md |
-| REQ-351 | Issue #116、採用D1と先行中断の区別、中央予約、42a5追加設計1章 | 非機能 | 先行中断と結果欠損を分け、保持役待ちを引いた補正窓・明示timeout・modeに従って停止を分類する | 反映済 | specs/ci-external-call-diagnostics/spec.md |
+| REQ-351 | Issue #116、採用D1と先行中断の区別、中央予約、42a5追加設計1章、[受入前P2](https://github.com/loomake/loomake/pull/276#discussion_r4434018253) | 非機能 | 先行中断と結果欠損を分け、保持役待ちを引いた補正窓・明示timeout・modeに従って停止を分類する | 反映済 | specs/ci-external-call-diagnostics/spec.md |
 | REQ-352 | Issue #116、採用D3、中央予約、42a5追加設計1章 | 非機能 | 旧rawのnull投影と停止分類、版2・匿名化・閉じたschema・固定4ファイル・各上限・7日保存を維持する | 反映済 | specs/ci-external-call-diagnostics/spec.md |
 | REQ-180 | main external-process-budget、既存技術設計の保護条件 | 関連 | 製品の操作期限と停止の契約は変更しない | 範囲外 | openspec/specs/external-process-budget/spec.md |
 | REQ-182 | main external-process-budget、既存技術設計の保護条件 | 関連 | run共有予算とhook/createの期限の契約は変更しない | 範囲外 | openspec/specs/external-process-budget/spec.md |
@@ -53,6 +54,10 @@ F116-Q5の予約実務と原文再確認は管理役Codexが担当し、名前�
 
 24100ff7は空changesetだけでREQ-056の不足を直した。main3aを通常mergeしたあとも、元hook・workflow・設定・旧作業記録と診断の技術source/testsは241と同じ。正式化時点では計画文書と仕様ゲートだけで、M1の修理、ID付き追加試験、正常done、3 OS/必須CIと独立Opus最終は未実施だった。
 
-その後、利用者の包括承認に基づく管理役の仕様確認を経て、task1.1〜2.2でA′/Q6(a)の最小修理と全19 Scenarioの新しいID付き試験を追加した。旧試験の名前・本文・期待値は保持し、classifier本体・元hook・workflow・設定・製品src・製品の主仕様を変更していない。通常local doneは省略指定なしでexit0、全6タスクと19 Scenarioの成功試験を確認した。最終CI/レビューは未完了である。
+その後、利用者の包括承認に基づく管理役の仕様確認を経て、task1.1〜2.2でA′/Q6(a)の最小修理と全19 Scenarioの新しいID付き試験を追加した。このsnapshot修理の段階では旧試験の名前・本文・期待値を保持し、classifier本体・元hook・workflow・設定・製品src・製品の主仕様を変更していない。通常local doneは省略指定なしでexit0、全6タスクと19 Scenarioの成功試験を確認した。この時点では最終CI/レビューは未完了だった。
 
 独立点検の軽微m1はREQ-350のgetter・継承・ProxyのScenarioのTHENだけを本文と採用D2へ整合した。cwdも取得不能の場合に由来欄を省くことを明記し、安全な自身の文字列cwdを使える本文・設計・実装は変えていない。WHEN・Requirement本文・他Scenario・source/tests/tasks/設定と、既存の通常local doneの根拠は保持し、新headのCIで再確認する。
+
+受入前P2ではREQ-351の既存Scenario「時計の欠損と逆転」の欠落を直し、classifierへts<t1の独立判定だけを追加した。保持役待ちを差し引いたδ<−1の不整合判定と、deadline窓の前後1ms・版2は保持した。task2.1の元本文はsnapshot修理段階の記録として残し、P2の新規7境界と再開したtask2.1・3.1・4.1を通常local doneで再確認した。
+
+最終head f7ebad30は通常local done実exit0・全2309成功/失敗0・既存8pendingを満たし、CI41264055631の正常ci done23PASS・全3 OS品質・Node20/22、CodeQL41264055614と独立最終レビュー重大0を確認して、PR #276でmain 5f1b4d73へ受け入れた。診断41264055581の成功を旧Windows障害の原因解明・修理完了とは扱わず、Issue #116と全体Scenario監査の未達は残す。

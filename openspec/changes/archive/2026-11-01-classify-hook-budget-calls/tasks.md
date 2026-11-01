@@ -25,3 +25,5 @@
 - PR #276の本文をこのchangeと通常L3へ合わせる。正常CI done（2.0.0/scope ci/completed/errors空/PASS/要判断なし/exit0）、必須5チェック、ci:all-osの3 OS、作者と設計担当とは別の独立Opus最終と計測表を揃えて受け入れる。統合先への段階受入例外は使わない。
 - 同じheadの元hook診断を観測し、旧版や別headの標本と区別して記録する。単独成功をIssue #116の原因修理や完成とみなさない。
 - 正常受入後にsync/archiveし、主仕様の3 Requirement・全19 Scenarioを確認してScenario監査の対応を登録する。Issue #116は原因解明/修理未達として開いたままにする。
+
+受入後の注記：task2.1の「既存classifierの判定を保持」はA′のsnapshot修理段階を指す。受入前P2ではREQ-351の時計逆転Scenarioを満たすts<t1の独立判定だけを追加し、δ<−1と窓の前後1ms・旧試験を保持したうえで、task2.1・3.1・4.1を再開して通常local doneを通した。元のタスク本文と全6件の完了チェックは履歴として保持する。

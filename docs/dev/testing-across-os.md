@@ -40,7 +40,7 @@ node scripts/external-call-diagnostics.mjs <診断先>/processes .loomake/test-r
 
 集計は `<診断先>/summary.json` と `summary.md` を作る。版2の要約では最後のgh操作と上限で停止した操作について、観測開始時の共有残予算、監視役に渡した絶対deadline、終了kindを同じcall IDで確認できる。Markdownは「同時上限の可能性」「理由」「欠損」を別の列に示す。可能性がyesなら、1操作上限や明示timeoutが共有期限の窓と重なり得るため、原因を断定しない。内部timeoutの厳密な値は取得せずnullとし、観測した区間と区別する。
 
-spawn直前の時刻をts、共有残予算を読んだ直後をt1、保持役の累積待ちをhw0・hw1とする。共有期限の窓は未観測の遅れの上限 `max(0, ts−t1−(hw1−hw0))` だけ前へ広げる。明示timeoutのないnormal操作で、この窓より十分前のdeadlineだけを1操作上限と分類する。時計の欠損・逆転や観測の不整合は未確定とする。`timeoutRequested` は指定の有無だけを示し、値は保存しない。旧rawの欠落、getterやProxy、継承した設定はnull（不明）とし、timeoutのgetterを追加評価しない。
+spawn直前の時刻をts、共有残予算を読んだ直後をt1、保持役の累積待ちをhw0・hw1とする。共有期限の窓は未観測の遅れの上限 `max(0, ts−t1−(hw1−hw0))` に1msを足した分だけ前へ、後ろへは1ms広げる。元の観測順序 `ts<t1` は窓の許容差と独立に拒否し、保持役待ちを差し引いた `ts−t1−(hw1−hw0)<−1` の不整合判定も保つ。明示timeoutのないnormal操作で、この窓より十分前のdeadlineだけを1操作上限と分類する。時計の欠損・逆転や観測の不整合は未確定とする。`timeoutRequested` は指定の有無だけを示し、値は保存しない。旧rawの欠落、getterやProxy、継承した設定はnull（不明）とし、timeoutのgetterを追加評価しない。
 
 設定のsnapshotは診断envの確認直後、予算時計t0を読む前に一度だけ取る。元関数を呼んだあとの設定は読まない。製品がqualityCommand・untilDeadline・timeoutMsの順に設定を読むことを前提とし、3項目すべてが安全な自身のデータ値か指定なしと分かるときだけ、timeoutの有無をtrue/falseにする。どれかにgetter・Proxy・不明な継承があればnullとする。これにより、先行するqualityCommandのgetterがtimeoutを書き換える場合も、値を推測せず追加評価を避ける。qualityCommandがtrueで元の処理がuntilDeadlineを読まない場合も、3項目を安全に判定できることを条件にする。
 
