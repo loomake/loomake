@@ -117,9 +117,9 @@ export function checkInitialBaselineStructure(input: unknown, context: {
       }
     }
     if (row.supersessions?.some((entry) => !entry.by.length)) problems.push(`置換した句の採否がありません：${row.key}`);
-    if (row.supersessions && !unique(row.supersessions.map(canonicalJson))) problems.push(`置換した句が重複しています：${row.key}`);
+    if (row.supersessions && !unique(row.supersessions.map((entry) => entry.clause))) problems.push(`置換した句が重複しています：${row.key}`);
     if (row.supersessions?.some((entry) => !unique(entry.by.map(canonicalJson)))) problems.push(`置換した句の採否参照が重複しています：${row.key}`);
-    if (row.open && !unique(row.open.map(canonicalJson))) problems.push(`未対応の句が重複しています：${row.key}`);
+    if (row.open && !unique(row.open.map((entry) => entry.clause))) problems.push(`未対応の句が重複しています：${row.key}`);
   }
   for (const row of baseline.rows) {
     if (row.supplements && !unique(row.supplements.map(canonicalJson))) problems.push(`補完参照が重複しています：${row.key}`);

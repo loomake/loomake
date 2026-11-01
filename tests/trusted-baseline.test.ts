@@ -210,6 +210,31 @@ describe('初回47契約の構造と所有の照合', () => {
     expect(result.adoptionsVerified).toBe(false);
   });
 
+  it('[REQ-377] 採否が異なっても同じ句の置換を二重に受理しない', () => {
+    const f = fixture(), row = f.baseline.rows[0];
+    row.supersessions = [{ clause: 'replace original clause', by: structuredClone(by) }];
+    expect(check(f).problems).toEqual([]);
+    row.supersessions.push({ clause: row.supersessions[0].clause,
+      by: [{ trace: { change: 'fixture-owner', id: 'Q-ALTERNATIVE' } }] });
+    const result = check(f);
+    expect(result.baseline).toBeNull();
+    expect(result.sha256).toBeNull();
+    expect(result.problems.length).toBeGreaterThan(0);
+    expect(result.adoptionsVerified).toBe(false);
+  });
+
+  it('[REQ-377] 所有者が異なっても同じ未対応の句を二重に受理しない', () => {
+    const f = fixture(), row = f.baseline.rows[0];
+    row.open = [{ clause: 'unresolved original clause', owner: 'parent-1.2' }];
+    expect(check(f).problems).toEqual([]);
+    row.open.push({ clause: row.open[0].clause, owner: 'parent-1.3' });
+    const result = check(f);
+    expect(result.baseline).toBeNull();
+    expect(result.sha256).toBeNull();
+    expect(result.problems.length).toBeGreaterThan(0);
+    expect(result.adoptionsVerified).toBe(false);
+  });
+
   it('[REQ-377][REQ-371] 現対応のない元Scenarioはopenに残し、実装済みや採否検証済みにしない', () => {
     const f = fixture(), row = f.baseline.rows[0];
     row.scenarioMap[0].current = null;
