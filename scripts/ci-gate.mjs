@@ -17,8 +17,8 @@ import { appendFileSync, existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { parseRawDiff } from './ci-docs-only.mjs';
-import { decideTier, formatTierLine, isDocumentPath, isSpecPath } from './ci-tier.mjs';
+import { comparisonReaders, parseRawDiff } from './ci-docs-only.mjs';
+import { archiveMetadataPaths, decideTier, formatTierLine, isDocumentPath, isSpecPath } from './ci-tier.mjs';
 import { checkReqDuplicates, formatProblems, formatStale } from './req-duplicate-check.mjs';
 
 // change は changes/ の直下のディレクトリだけ。changes/archive/ は完了した change の置き場で、change ではない
@@ -57,7 +57,7 @@ export function selectChanges({ ref = '', body = '', files = [], changesDir, cha
   const fromBranch = verifyArgs(ref, changesDir)[1];
   const changes = [...new Set([...fromFiles, fromBranch].filter((id) => id && isChangeDir(changesDir, id)))].sort();
   if (changes.length) return { changes };
-  // 文書の判定は quality ジョブと同じ関数（ci-tier.mjs の isDocumentPath）。段階 L1 はここに来ないので、本文で段階を上げた文書だけの PR が当たる
+  // 文書の判定は quality ジョブと同じ関数（ci-tier.mjs の isDocumentPath）。承認された metadata 移動は呼出側で除き、L1 と本文で段階を上げた文書だけの PR を扱う
   if (files.every(isDocumentPath)) return { qualityOnly: '対象の change がなく、変えたのは文書だけです' };
   return {
     error:
@@ -166,17 +166,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   }
   // 変更行が属する節を見るため、変更前と変更後（HEAD）の spec.md を読む。
   // 変更前は、差分（base...HEAD）と同じ起点になるよう、ベースと HEAD の merge-base のファイルを読む
-  let mergeBase;
-  const readSpec = (side, path) => {
-    if (side === 'old' && mergeBase === undefined) {
-      const m = git(['merge-base', `refs/remotes/origin/${base}`, 'HEAD']);
-      mergeBase = m.status === 0 ? m.stdout.trim() : '';
-    }
-    const ref = side === 'new' ? 'HEAD' : mergeBase;
-    if (!ref) return undefined;
-    const r = git(['show', `${ref}:${path}`]);
-    return r.status === 0 ? r.stdout : undefined;
-  };
+  const { readSpec, sameBlob } = comparisonReaders(git, base);
+  const metadata = archiveMetadataPaths(entries, sameBlob);
   const files = [...new Set(entries.flatMap((entry) => entry.paths))];
   let body = process.env.PR_BODY ?? '';
   if (process.env.PR_BODY === undefined && process.env.PR_NUMBER) {
@@ -187,7 +178,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     }
     body = r.stdout;
   }
-  const decided = decideTier({ entries, specDiff, body, readSpec });
+  const decided = decideTier({ entries, specDiff, body, readSpec, sameBlob });
   if (decided.error) {
     console.error(`ci-gate: ${decided.error}`);
     process.exit(1);
@@ -238,7 +229,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       if (code !== 0) status = code;
     }
   }
-  const selected = selectChanges({ ref: branch, body, files, changesDir: join('openspec', 'changes') });
+  const selected = selectChanges({ ref: branch, body, files: files.filter((path) => !metadata.has(path)), changesDir: join('openspec', 'changes') });
   if (selected.error) {
     console.error(`ci-gate: ${selected.error}`);
     process.exit(1);

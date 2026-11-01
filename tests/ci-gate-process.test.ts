@@ -124,6 +124,7 @@ describe('archive metadata の gate 子プロセス', () => {
       mkdirSync(join(dir, archived), { recursive: true });
       git('mv', 'openspec/changes/c1/.openspec.yaml', `${archived}/.openspec.yaml`);
       git('mv', 'openspec/changes/c1/tasks.md', `${archived}/tasks.md`);
+      rmSync(join(dir, 'openspec/changes/c1'), { recursive: true, force: true });
       commitFiles({ 'openspec/specs/x/spec.md': '### Requirement: 同期\n本文 SHALL。\n' });
       const result = run('archive-c1', body);
       if (body.includes('missing')) {
@@ -150,6 +151,7 @@ describe('archive metadata の gate 子プロセス', () => {
       mkdirSync(join(dir, other), { recursive: true });
       git('mv', 'openspec/changes/c1/.openspec.yaml', `${other}/.openspec.yaml`);
       git('mv', 'openspec/changes/c1/tasks.md', `${other}/tasks.md`);
+      rmSync(join(dir, 'openspec/changes/c1'), { recursive: true, force: true });
       commitFiles({ 'openspec/specs/x/spec.md': '### Requirement: 同期\n本文 SHALL。\n' });
       const result = run('archive-c1', 'loomake-change: none');
       expect(result.stdout).toContain('loomake-tier: L3');

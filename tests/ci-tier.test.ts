@@ -218,6 +218,9 @@ describe('archive metadata の限定分類', () => {
   });
 
   it('[REQ-362][REQ-342] 他の YAML とコード混在は従来の分類を保つ', () => {
+    const entries = archiveEntries();
+    for (const status of ['A', 'M']) expect(classify([entry(status, entries[0]!.paths[1]!), ...entries.slice(1)])).toMatchObject({ tier: 'L3' });
+    expect(classify([entry('R100', 'openspec/changes/c1/x.yaml', 'openspec/changes/archive/2026-11-01-c1/x.yaml'), ...entries.slice(1)])).toMatchObject({ tier: 'L3' });
     expect(classify([...archiveEntries(), entry('M', 'scripts/x.mjs')])).toMatchObject({ tier: 'L3' });
     expect(classify([...archiveEntries(), entry('A', 'docs/other.yaml')])).toMatchObject({ tier: 'L3' });
     expect(decideTier({ ...{ sameBlob: () => true }, entries: [entry('R100', 'docs/a.yaml', 'docs/b.yaml')] })).toMatchObject({ tier: 'L2' });

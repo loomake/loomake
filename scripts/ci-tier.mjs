@@ -8,11 +8,7 @@
 const TIERS = ['L1', 'L2', 'L3'];
 const rank = (tier) => TIERS.indexOf(tier);
 
-/**
- * 文書として扱うファイルか。ここに挙げたものだけを文書とし、ほかはすべて quality の対象に残す
- * （設定・実行用のファイル・tests/ の下・packages/ の下は、拡張子が .md でも文書ではない）（REQ-270）
- * @param {string} path リポジトリの根からの、/ で区切ったパス
- */
+/** Windows と POSIX の両方で扱える正規の相対パスか（REQ-281・362） */
 function isPortablePath(path) {
   if (typeof path !== 'string' || !path || path.includes('\\')) return false;
   const parts = path.split('/');
@@ -24,6 +20,10 @@ function isPortablePath(path) {
   return true;
 }
 
+/**
+ * 文書の許可リスト。設定・実行ファイル・tests/・packages/ は .md でも含めない（REQ-270）。
+ * @param {string} path リポジトリの根からの、/ で区切ったパス
+ */
 export function isDocumentPath(path) {
   if (!isPortablePath(path)) return false;
   const parts = path.split('/');
