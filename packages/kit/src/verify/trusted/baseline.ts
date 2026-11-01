@@ -119,6 +119,7 @@ export function checkInitialBaselineStructure(input: unknown, context: {
     if (row.open && !unique(row.open.map(canonicalJson))) problems.push(`未対応の句が重複しています：${row.key}`);
   }
   for (const row of baseline.rows) {
+    if (row.supplements && !unique(row.supplements.map(canonicalJson))) problems.push(`補完参照が重複しています：${row.key}`);
     const available = [...(resolved.get(row.key) ?? [])];
     for (const supplement of row.supplements ?? []) {
       const matches = (resolved.get(supplement.key) ?? []).filter((owner) => owner.scenarios.includes(supplement.scenario));

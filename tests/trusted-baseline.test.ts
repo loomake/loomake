@@ -160,6 +160,19 @@ describe('初回47契約の構造と所有の照合', () => {
     expect(check(f).problems).toEqual([]);
   });
 
+  it('[REQ-377] 同じ補完参照の重複を初回基準として受理しない', () => {
+    const f = fixture(), row = f.baseline.rows[0], other = f.baseline.rows.find((entry) => entry.key !== row.key)!;
+    const supplement = { key: other.key, scenario: other.owners[0].scenarios[0] };
+    row.supplements = [supplement];
+    expect(check(f).problems).toEqual([]);
+    row.supplements.push({ ...supplement });
+    const result = check(f);
+    expect(result.baseline).toBeNull();
+    expect(result.sha256).toBeNull();
+    expect(result.problems.length).toBeGreaterThan(0);
+    expect(result.adoptionsVerified).toBe(false);
+  });
+
   it('[REQ-377][REQ-371] 現対応のない元Scenarioはopenに残し、実装済みや採否検証済みにしない', () => {
     const f = fixture(), row = f.baseline.rows[0];
     row.scenarioMap[0].current = null;
