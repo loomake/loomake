@@ -18,7 +18,7 @@
 
 ## 4. 正常完了ゲート
 
-- [ ] 4.1 3要件すべての成功したID付き試験と全タスクの完了を照合し、`pnpm -s verify --change classify-hook-budget-calls --done --scope local` を省略指定なしで通す。exit0を確認してlocal完了として記録し、CIの最終合格と区別する。 <!-- loomake:gate=done -->
+- [x] 4.1 3要件すべての成功したID付き試験と全タスクの完了を照合し、`pnpm -s verify --change classify-hook-budget-calls --done --scope local` を省略指定なしで通す。exit0を確認してlocal完了として記録し、CIの最終合格と区別する。 <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
