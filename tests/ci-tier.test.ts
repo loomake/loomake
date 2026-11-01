@@ -172,8 +172,8 @@ describe('archive metadata の限定分類', () => {
     entry('A', `openspec/changes/archive/${name}/tasks.md`),
     entry('M', spec),
   ];
-  const classify = (entries = archiveEntries(), sameBlob = () => true) => decideTier({
-    ...{ sameBlob }, entries, specDiff: unified(spec, ['+本文を同期 SHALL。'], { newLine: 9 }), readSpec: reader(),
+  const classify = (entries = archiveEntries(), sameBlob = () => true, headTree = (): string[] | undefined => entries.filter((e) => e.status !== 'D').map((e) => e.paths.at(-1)!)) => decideTier({
+    ...{ sameBlob, headTree }, entries, specDiff: unified(spec, ['+本文を同期 SHALL。'], { newLine: 9 }), readSpec: reader(),
   });
 
   it.each([
@@ -188,6 +188,7 @@ describe('archive metadata の限定分類', () => {
 
   it.each([
     ['c1', 'c1'], ['c1', '2026-11-01-other'], ['c1', '2026-02-29-c1'],
+    ['c1', '2026-11-01-2026-11-01-c1'], ['c1', '2026-11-01-c1/sub'], ['c1/sub', '2026-11-01-c1'],
     ['c1', '1900-02-29-c1'], ['c1', '2026-13-01-c1'], ['c1', '2026-04-31-c1'],
     ['2026-11-01-c1', '2026-11-02-2026-11-01-c1'], ['2026-02-30-c1', '2026-02-30-c1'],
     ['.c1', '2026-11-01-.c1'], ['archive', '2026-11-01-archive'],
@@ -195,6 +196,19 @@ describe('archive metadata の限定分類', () => {
     ['a:b', '2026-11-01-a:b'], ['c\\1', '2026-11-01-c\\1'], ['c1', 'nested/2026-11-01-c1'],
   ])('[REQ-362][REQ-342] 別名・不正日・不安全パス %s → %s は従来の L3 を保つ', (id, name) => {
     expect(classify(archiveEntries(id, name))).toMatchObject({ tier: 'L3' });
+  });
+
+  it.each(['from', 'to', 'unreadable', 'unspecified'])('[REQ-362][REQ-342][REQ-281] HEAD tree証明の%sはmetadataをL1にしない', (kind) => {
+    const entries = archiveEntries();
+    const tree = [to('2026-11-01-c1'), ...(kind === 'from' ? [from('c1').replace('.openspec.yaml', '.OPENSPEC.yaml')] : kind === 'to' ? [to('2026-11-01-c1').replace('.openspec.yaml', '.OPENSPEC.yaml')] : [])];
+    const result = kind === 'unspecified'
+      ? decideTier({ ...{ sameBlob: () => true }, entries, specDiff: unified(spec, ['+本文を同期 SHALL。'], { newLine: 9 }), readSpec: reader() })
+      : classify(entries, () => true, () => kind === 'unreadable' ? undefined : tree);
+    expect(result).toMatchObject({ tier: 'L3' });
+  });
+
+  it.each([[[]], [['docs/unchanged.md']]])('[REQ-362][REQ-342][REQ-281] 成功したtree証明には移動先存在の追加条件を課さない（%j）', (tree) => {
+    expect(classify(archiveEntries(), () => true, () => tree)).toMatchObject({ tier: 'L1' });
   });
 
   it('[REQ-362][REQ-342] R100 と完全 OID 同一の証明を両方必要とする', () => {

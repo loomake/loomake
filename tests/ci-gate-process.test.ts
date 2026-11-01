@@ -143,6 +143,33 @@ describe('archive metadata の gate 子プロセス', () => {
     });
   });
 
+  it.each(['from', 'to'].flatMap((side) => ['', 'loomake-change: none', 'loomake-tier: L1'].map((body) => [side, body])))('[REQ-362][REQ-342][REQ-343][REQ-281] 差分外の%s衝突はL1例外を拒否する（%s）', (side, body) => {
+    withProject(({ dir, git, commitFiles, run }) => {
+      const from = 'openspec/changes/c1/.openspec.yaml';
+      commitFiles({ [from]: 'schema: spec-driven\n' });
+      const collision = side === 'from' ? 'openspec/changes/c1/.OPENSPEC.yaml' : `${archived}/.OPENSPEC.yaml`;
+      const blob = spawnSync('git', ['hash-object', '-w', '--stdin'], { cwd: dir, encoding: 'utf8', input: 'unchanged collision\n' });
+      expect(blob.status, blob.stderr).toBe(0);
+      git('update-index', '--add', '--cacheinfo', `100644,${blob.stdout.trim()},${collision}`);
+      git('commit', '-qm', 'baseline collision outside diff');
+      git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+      mkdirSync(join(dir, archived), { recursive: true });
+      git('mv', from, `${archived}/.openspec.yaml`);
+      git('mv', 'openspec/changes/c1/tasks.md', `${archived}/tasks.md`);
+      rmSync(join(dir, 'openspec/changes/c1'), { recursive: true, force: true });
+      const spec = 'openspec/specs/x/spec.md';
+      mkdirSync(dirname(join(dir, spec)), { recursive: true });
+      writeFileSync(join(dir, spec), '### Requirement: 同期\n本文 SHALL。\n');
+      git('add', spec);
+      git('commit', '-qm', 'archive keeping unchanged indexed collision');
+      const result = run('archive-c1', body);
+      if (body.includes('L1')) expect(result.stderr).toContain('判定 L3、指定 L1');
+      else expect(result.stdout).toContain('loomake-tier: L3');
+      expect(result.status).toBe(1);
+      expect(result.calls).toEqual([]);
+    });
+  });
+
   it('[REQ-362][REQ-342][REQ-343] 別 change への metadata 移動は L3 のままで none も拒否する', () => {
     withProject(({ dir, git, commitFiles, run }) => {
       commitFiles({ 'openspec/changes/c1/.openspec.yaml': 'schema: spec-driven\n' });

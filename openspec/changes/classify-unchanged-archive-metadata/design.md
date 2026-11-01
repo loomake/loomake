@@ -85,3 +85,11 @@ ADDED の Source は REQ-362 だけとし、REQ-342 を重ねない。MODIFIED �
 ## 実装taskと外部受入の分離
 
 5.2はレビュー/CI用証跡と4項目worklogの準備とし、CI完了・独立レビュー・main採用はWorkflow follow-upで必須条件のまま保持する。管理役が2026-11-01本セッションでこの循環修理を承認した。ゲート前に未実施の外部受入を完了扱いにしない。
+
+## 採用したHEAD tree安全性の修理
+
+管理役は2026-11-01本セッションに上記Opus設計を採用した。詳細とQ295-TREE-01/02の判断はtraceを参照する。`archiveMetadataMoves` はOIDまで一致した候補の組で、qualityの事前拒否だけに使う。`archiveMetadataPaths(entries, sameBlob, headTree)` はHEAD treeの前後パスにcase衝突がない組だけを確定し、証明未指定・読取失敗・形式不正は例外不成立とする。`caseTwins` の比較は従来と同じtoLowerCaseである。
+
+HEAD treeはcomparisonReadersでメモ化し、qualityの既存の全パス検査、早期拒否、読取順・回数を保つ。gateは段階判定とchange選択へ同じ確定入力を渡す。Q295-TREE-02はBであり、成功した空treeは[]として受け入れ、移動先の存在を追加条件にしない。REQ本文にない新条件や実Git整合性の追加要件は作らない。
+
+回帰では差分外のcase衝突と証明不足によるL1拒否、qualityのcallcount維持、m2の独立した負例3件を確かめる。検証は対象回帰のあと通常localdone内の全件1回へまとめ、旧assert・timeout・skip・設定と外部受入を維持する。
