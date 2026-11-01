@@ -27,3 +27,11 @@
 - 予算を延ばした試験は、1 操作の期限または共有予算より長く待ったことと、期限に猶予を足した時間のうちに止まったことを確かめる
 
 外部操作の期限そのもの（run・verify・trace が守る期限と終了コード）は、製品の振る舞いなので、run と external-process-budget などの仕様に残っている。
+
+## S4 の push 停止までの操作順序
+
+`s4-push-order` workflow は Windows で既存の push 期限試験を1件だけ実行し、content diff の転送がすべて成功してから push の停止へ進んだことを調べる。試験・helper・予算・通常 CI は変えず、`LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_FILE` だけで停止前の操作列を一時保存する。時刻が同じでも記録順で前後を確かめ、呼び出しの欠損・重複・時計の逆行は証拠不足とする。
+
+元の試験の stdout・stderr と context、JSON レポートは CI 内だけで扱い、集計後と cleanup で削除する。cancel や runner の異常終了時に必ず削除できる保証はない。公開する artifact は固定 schema で検証し、読み直して照合した `summary.json` と `summary.md` の2ファイルだけで、同じリポジトリの Actions に7日保存する。argv・PID・パス・stdout・自由なエラーメッセージは要約に含めない。
+
+元の試験や選択件数が不正なら job は失敗する。順序が確認できても、試験が失敗した結果を成功へ変えない。Windows の実行と既存の3 OS回帰は管理役が別に照合し、この診断だけで E3 の task 3.5 や親 change を完了にしない。ローカル実行で取得していない run ID と試行番号は `0`、SHA と Node の未取得値は `null` として区別する。
