@@ -116,7 +116,7 @@ describe('保存の成功通知と上限', () => {
 
   it('[REQ-363] T7d 通知固着では同時1要求だけでnote/endは待たずに戻る', () => {
     const lines: string[] = [];
-    const sink = fakeSink((_file, line, _cb) => { lines.push(line); });
+    const sink = fakeSink((_file, line) => { lines.push(line); });
     const r = createOwnedCleanupRecorder('owned', sink);
     expect(r.note('repo-ready')).toBeUndefined();
     expect(r.end()).toBeUndefined();
@@ -167,6 +167,47 @@ describe('保存の成功通知と上限', () => {
     }));
     expect(r.end()).toBeUndefined();
     expect(rowsOf(lines).map((row) => row.event)).toEqual(['case-start']);
+  });
+
+  it('[REQ-363] T7e 同期通知で待ち行列を進めてもfs呼出が再入しない', () => {
+    const lines: string[] = [];
+    let depth = 0;
+    let maxDepth = 0;
+    let release: ((error: NodeJS.ErrnoException | null) => void) | undefined;
+    const sink = fakeSink((_file, line, cb) => {
+      depth++; maxDepth = Math.max(maxDepth, depth); lines.push(line);
+      if (!release) release = cb; else cb(null);
+      depth--;
+    });
+    const r = createOwnedCleanupRecorder('owned', sink, () => 0);
+    for (let i = 0; i < 60; i++) r.note('repo-ready');
+    r.end();
+    expect(lines).toHaveLength(1);
+    release!(null);
+    expect(maxDepth).toBe(1);
+    expect(rowsOf(lines).map((row) => row.seq)).toEqual(lines.map((_line, i) => i + 1));
+    expect(rowsOf(lines).at(-1)).toMatchObject({ event: 'case-end', kind: 'partial' });
+    expect(lines.length).toBeLessThanOrEqual(48);
+    expect(Buffer.byteLength(lines.join(''))).toBeLessThanOrEqual(8192);
+  });
+
+  it('[REQ-363] T7c 長い整数の行でも8KiBを先に守りendを残す', () => {
+    const lines: string[] = [];
+    let now = 0;
+    const sink = fakeSink((_file, line, cb) => { lines.push(line); cb(null); });
+    const r = createOwnedCleanupRecorder('mismatch', sink, () => now);
+    const others = [createOwnedCleanupRecorder('owned', sink, () => now), createOwnedCleanupRecorder('mismatch', sink, () => now)];
+    now = Number.MAX_SAFE_INTEGER;
+    for (let i = 0; i < 60; i++) {
+      r.note('cleanup-closed', { kind: 'timeout' });
+      for (const other of others) other.note('cleanup-closed', { kind: 'timeout' });
+    }
+    r.end();
+    for (const other of others) other.end();
+    expect(lines.length).toBeLessThan(48);
+    expect(Buffer.byteLength(lines.join(''))).toBeLessThanOrEqual(8192);
+    expect(rowsOf(lines).at(-1)).toMatchObject({ event: 'case-end', kind: 'partial' });
+    expect(rowsOf(lines).at(-1)!.dropped).toBeGreaterThan(0);
   });
 
   it('[REQ-363] T7f helperは同期fs・待機・Promise・追加プロセス・hookを使わない', () => {
