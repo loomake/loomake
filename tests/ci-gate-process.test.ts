@@ -20,7 +20,7 @@ function withProject(check: (project: {
   dir: string;
   git: (...args: string[]) => void;
   commitFiles: (files: string[] | Record<string, string>) => void;
-  run: (branch: string, body?: string, statuses?: Record<string, number>, results?: Record<string, unknown>) => { status: number | null; stdout: string; stderr: string; calls: string[][]; output: string };
+  run: (branch: string, body?: string, statuses?: Record<string, number>, results?: Record<string, unknown>, env?: Record<string, string>) => { status: number | null; stdout: string; stderr: string; calls: string[][]; output: string };
 }) => void) {
   const dir = mkdtempSync(join(tmpdir(), 'loomake-ci-process-'));
   const callsFile = join(dir, 'calls.jsonl');
@@ -82,7 +82,7 @@ process.exit(JSON.parse(process.env.CI_STATUSES)[id] ?? 0);
         git('add', '-A');
         git('commit', '-qm', 'change');
       },
-      run(branch, body = '', statuses = {}, results = {}) {
+      run(branch, body = '', statuses = {}, results = {}, env = {}) {
         rmSync(outputFile, { force: true });
         const result = spawnSync(process.execPath, [gate, branch], {
           cwd: dir,
@@ -97,6 +97,7 @@ process.exit(JSON.parse(process.env.CI_STATUSES)[id] ?? 0);
             CI_CALLS_FILE: callsFile,
             CI_STATUSES: JSON.stringify(statuses),
             CI_VERIFY_RESULTS: JSON.stringify(results),
+            ...env,
           },
         });
         const calls = existsSync(callsFile) ? readFileSync(callsFile, 'utf8').trim().split('\n').map((line) => JSON.parse(line) as string[]) : [];
@@ -114,6 +115,97 @@ const done = (id: string) => ['verify', '--change', id, '--done', '--json'];
 // L1 で、tasks.md に完了した印がない change は仕様ゲートで検査する（commitFiles が tasks.md を書き換えると印がなくなる）
 const specOnly = (id: string) => ['verify', '--change', id, '--spec-only', '--json'];
 const lintOnly = [['lint'], ['pnpm', 'exec', 'vitest', 'run', 'tests/doc-links.test.ts']];
+
+describe('archive metadata の gate 子プロセス', () => {
+  const archived = 'openspec/changes/archive/2026-11-01-c1';
+  it.each(['', 'loomake-tier: L2', 'loomake-change: missing'])('[REQ-362][REQ-342][REQ-343] 正常 archive の対象選択と明示優先を共有する（%s）', (body) => {
+    withProject(({ dir, git, commitFiles, run }) => {
+      commitFiles({ 'openspec/changes/c1/.openspec.yaml': 'schema: spec-driven\n' });
+      git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+      mkdirSync(join(dir, archived), { recursive: true });
+      git('mv', 'openspec/changes/c1/.openspec.yaml', `${archived}/.openspec.yaml`);
+      git('mv', 'openspec/changes/c1/tasks.md', `${archived}/tasks.md`);
+      rmSync(join(dir, 'openspec/changes/c1'), { recursive: true, force: true });
+      commitFiles({ 'openspec/specs/x/spec.md': '### Requirement: 同期\n本文 SHALL。\n' });
+      const result = run('archive-c1', body);
+      if (body.includes('missing')) {
+        expect(result.status).toBe(1);
+        expect(result.stderr).toContain('書いた change がありません：missing');
+        expect(result.calls).toEqual(lintOnly);
+      } else if (body.includes('L2')) {
+        expect(result.stdout).toContain('loomake-tier: L2');
+        expect(result.status).toBe(1);
+        expect(result.stderr).toContain('PR 本文に「loomake-change: <change-id>」の行を書いてください');
+        expect(result.calls).toEqual([]);
+      } else {
+        expect(result.stdout).toContain('loomake-tier: L1');
+        expect(result.status).toBe(0);
+        expect(result.calls).toEqual(lintOnly);
+      }
+    });
+  });
+
+  it('[REQ-132][REQ-343][REQ-362] L1でもmetadata移動元のactive changeを検証する', () => {
+    withProject(({ dir, git, commitFiles, run }) => {
+      const from = 'openspec/changes/c1/.openspec.yaml';
+      commitFiles({ [from]: 'schema: spec-driven\n' });
+      git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+      mkdirSync(join(dir, archived), { recursive: true });
+      git('mv', from, `${archived}/.openspec.yaml`);
+      // 元のc1/tasks.mdを残し、metadata以外の移動元文書を差分に含めない。
+      commitFiles({ [`${archived}/tasks.md`]: '- [x] archived document\n', 'openspec/specs/x/spec.md': '### Requirement: 同期\n本文 SHALL。\n' });
+      const result = run('archive-c1');
+      expect(result.stdout).toContain('loomake-tier: L1');
+      expect(result.status).toBe(0);
+      expect(result.calls).toEqual([...lintOnly, done('c1')]);
+    });
+  });
+
+  it.each(['from', 'to'].flatMap((side) => ['', 'loomake-change: none', 'loomake-tier: L1'].map((body) => [side, body])))('[REQ-362][REQ-342][REQ-343][REQ-281] 差分外の%s衝突はL1例外を拒否する（%s）', (side, body) => {
+    withProject(({ dir, git, commitFiles, run }) => {
+      const from = 'openspec/changes/c1/.openspec.yaml';
+      commitFiles({ [from]: 'schema: spec-driven\n' });
+      const collision = side === 'from' ? 'openspec/changes/c1/.OPENSPEC.yaml' : `${archived}/.OPENSPEC.yaml`;
+      const blob = spawnSync('git', ['hash-object', '-w', '--stdin'], { cwd: dir, encoding: 'utf8', input: 'unchanged collision\n' });
+      expect(blob.status, blob.stderr).toBe(0);
+      git('update-index', '--add', '--cacheinfo', `100644,${blob.stdout.trim()},${collision}`);
+      git('commit', '-qm', 'baseline collision outside diff');
+      git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+      mkdirSync(join(dir, archived), { recursive: true });
+      git('mv', from, `${archived}/.openspec.yaml`);
+      git('mv', 'openspec/changes/c1/tasks.md', `${archived}/tasks.md`);
+      rmSync(join(dir, 'openspec/changes/c1'), { recursive: true, force: true });
+      const spec = 'openspec/specs/x/spec.md';
+      mkdirSync(dirname(join(dir, spec)), { recursive: true });
+      writeFileSync(join(dir, spec), '### Requirement: 同期\n本文 SHALL。\n');
+      git('add', spec);
+      git('commit', '-qm', 'archive keeping unchanged indexed collision');
+      const result = run('archive-c1', body);
+      if (body.includes('L1')) expect(result.stderr).toContain('判定 L3、指定 L1');
+      else expect(result.stdout).toContain('loomake-tier: L3');
+      expect(result.status).toBe(1);
+      expect(result.calls).toEqual([]);
+    });
+  });
+
+  it('[REQ-362][REQ-342][REQ-343] 別 change への metadata 移動は L3 のままで none も拒否する', () => {
+    withProject(({ dir, git, commitFiles, run }) => {
+      commitFiles({ 'openspec/changes/c1/.openspec.yaml': 'schema: spec-driven\n' });
+      git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+      const other = 'openspec/changes/archive/2026-11-01-other';
+      mkdirSync(join(dir, other), { recursive: true });
+      git('mv', 'openspec/changes/c1/.openspec.yaml', `${other}/.openspec.yaml`);
+      git('mv', 'openspec/changes/c1/tasks.md', `${other}/tasks.md`);
+      rmSync(join(dir, 'openspec/changes/c1'), { recursive: true, force: true });
+      commitFiles({ 'openspec/specs/x/spec.md': '### Requirement: 同期\n本文 SHALL。\n' });
+      const result = run('archive-c1', 'loomake-change: none');
+      expect(result.stdout).toContain('loomake-tier: L3');
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('L3 では change が必須');
+      expect(result.calls).toEqual([]);
+    });
+  });
+});
 
 describe('実際のCIゲートの子プロセスの契約', () => {
   it.each(['setup-monorepo', 'loomake/c1'])('[REQ-010][REQ-054][REQ-132] ブランチ%sで指定どおりの完了ゲートを呼び、失敗を伝える', (branch) => {
@@ -506,6 +598,98 @@ describe('gate の REQ ID の重複検査', () => {
       expect(dup.stderr).toContain('REQ-901：a: 一つ目 ／ a: 二つ目');
       // 呼び出しの記録は 2 回の実行の分がたまる。重複があっても L1 の検査は最後まで呼ぶ
       expect(dup.calls).toEqual([...lintOnly, ...lintOnly]);
+    });
+  });
+});
+
+describe('gate の工程行の形の検査', () => {
+  const evidence = `
+## 証跡
+route: normal（開発基盤の機能追加）
+survey: 未実施
+second-opinion: 対象外
+design: 未実施
+implement: 実施済み by=codex
+review: 未実施
+quality: 未実施
+`;
+  const pr = { PR_NUMBER: '1' };
+
+  it('L2 の PR で工程行が欠ければ、品質コマンドも実行したうえで失敗する', () => {
+    withProject(({ commitFiles, run }) => {
+      commitFiles(['scripts/x.mjs']);
+      const result = run('fix-x', 'loomake-change: none', {}, {}, pr);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('証跡の工程行：## 証跡 がありません');
+      expect(result.calls).toEqual([['verify']]);
+    });
+  });
+
+  it('L2 の PR で妥当な工程行なら品質コマンドの成功を返す', () => {
+    withProject(({ commitFiles, run }) => {
+      commitFiles(['scripts/x.mjs']);
+      const result = run('fix-x', `loomake-change: none\n${evidence}`, {}, {}, pr);
+      expect(result.status).toBe(0);
+      expect(result.stderr).not.toContain('ci-gate: 証跡の工程行');
+      expect(result.calls).toEqual([['verify']]);
+    });
+  });
+
+  it('L3 の PR で妥当な工程行なら対象 change の完了ゲートも実行する', () => {
+    withProject(({ commitFiles, run }) => {
+      commitFiles(['packages/kit/src/a.ts', 'openspec/changes/c1/tasks.md']);
+      const result = run('fix-x', evidence, {}, {}, pr);
+      expect(result.status).toBe(0);
+      expect(result.calls).toEqual([done('c1')]);
+    });
+  });
+
+  it('L1 の PR は工程行なしで既存の検査を実行する', () => {
+    withProject(({ commitFiles, run }) => {
+      commitFiles(['README.md']);
+      const result = run('fix-x', '', {}, {}, pr);
+      expect(result.status).toBe(0);
+      expect(result.stderr).not.toContain('証跡の工程行');
+      expect(result.calls).toEqual(lintOnly);
+    });
+  });
+
+  it('PR 番号がなければ L2 の工程行を検査せず、日本語で飛ばした旨を書く', () => {
+    withProject(({ commitFiles, run }) => {
+      commitFiles(['scripts/x.mjs']);
+      const result = run('fix-x', 'loomake-change: none');
+      expect(result.status).toBe(0);
+      expect(result.stderr).toContain('PR 番号がないので工程行の形の検査を飛ばします');
+      expect(result.calls).toEqual([['verify']]);
+    });
+  });
+
+  it('工程行が妥当でも品質コマンドの失敗を成功へ変えない', () => {
+    withProject(({ commitFiles, run }) => {
+      commitFiles(['scripts/x.mjs']);
+      const result = run('fix-x', `loomake-change: none\n${evidence}`, { quality: 7 }, {}, pr);
+      expect(result.status).toBe(7);
+      expect(result.calls).toEqual([['verify']]);
+    });
+  });
+
+  it('L3 の PR で工程行がなくても、対象 change のゲートを実行して失敗を保持する', () => {
+    withProject(({ commitFiles, run }) => {
+      commitFiles(['packages/kit/src/a.ts', 'openspec/changes/c1/tasks.md']);
+      const result = run('fix-x', '', {}, {}, pr);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('証跡の工程行：## 証跡 がありません');
+      expect(result.calls).toEqual([done('c1')]);
+    });
+  });
+
+  it('旧形式の行が残れば品質コマンドの成功でも失敗する', () => {
+    withProject(({ commitFiles, run }) => {
+      commitFiles(['scripts/x.mjs']);
+      const result = run('fix-x', `loomake-change: none\n${evidence}ci: 未実施\n`, {}, {}, pr);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('ci: は旧形式の行');
+      expect(result.calls).toEqual([['verify']]);
     });
   });
 });

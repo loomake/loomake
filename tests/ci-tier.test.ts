@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { classifyPath, decideTier, declaredTier, formatTierLine, isSpecPath, requirementBodyChanged, requirementChangedSpecs, sectionOf } from '../scripts/ci-tier.mjs';
+import { archiveMetadataPaths, classifyPath, decideTier, declaredTier, formatTierLine, isSpecPath, requirementBodyChanged, requirementChangedSpecs, sectionOf } from '../scripts/ci-tier.mjs';
 
 // `git diff --raw -z -M` を parseRawDiff で読んだ形。名前の変更は変更前と変更後の両方のパスを持つ
 const entry = (status: string, ...paths: string[]) => ({ status, modes: ['100644', '100644'] as [string, string], paths });
@@ -160,5 +160,94 @@ describe('段階の出力行', () => {
     const four = decide(['scripts/a.mjs', 'scripts/b.mjs', 'scripts/c.mjs', 'scripts/d.mjs', 'docs/usage.md']);
     expect(formatTierLine(four as never)).toBe('loomake-tier: L2（scripts/a.mjs、scripts/b.mjs、scripts/c.mjs、ほか 1 件）');
     expect(formatTierLine(decide(['docs/a.md', 'docs/b.md', 'docs/c.md']) as never)).toBe('loomake-tier: L1（docs/a.md、docs/b.md、docs/c.md）');
+  });
+});
+
+describe('archive metadata の限定分類', () => {
+  const spec = 'openspec/specs/x/spec.md';
+  const from = (id: string) => `openspec/changes/${id}/.openspec.yaml`;
+  const to = (name: string) => `openspec/changes/archive/${name}/.openspec.yaml`;
+  const archiveEntries = (id = 'c1', name = '2026-11-01-c1') => [
+    entry('R100', from(id), to(name)),
+    entry('A', `openspec/changes/archive/${name}/tasks.md`),
+    entry('M', spec),
+  ];
+  const classify = (entries = archiveEntries(), sameBlob = () => true, headTree = (): string[] | undefined => entries.filter((e) => e.status !== 'D').map((e) => e.paths.at(-1)!)) => decideTier({
+    ...{ sameBlob, headTree }, entries, specDiff: unified(spec, ['+本文を同期 SHALL。'], { newLine: 9 }), readSpec: reader(),
+  });
+
+  it.each([
+    ['c1', '2026-11-01-c1'], ['2026-11-01-c1', '2026-11-01-c1'],
+    ['0050-01-01-c1', '0050-01-01-c1'], ['2026-1-01-c1', '2026-11-01-2026-1-01-c1'],
+    ['c1', '2024-02-29-c1'], ['c1', '2000-02-29-c1'],
+  ])('[REQ-362][REQ-342] 対応する実在日付の archive %s → %s だけを L1 にする', (id, name) => {
+    expect(classify(archiveEntries(id, name))).toMatchObject({ tier: 'L1' });
+    expect(classifyPath(from(id))).toBe('L2');
+    expect(classifyPath(to(name))).toBe('L2');
+  });
+
+  it.each([
+    ['c1', 'c1'], ['c1', '2026-11-01-other'], ['c1', '2026-02-29-c1'],
+    ['c1', '2026-11-01-2026-11-01-c1'], ['c1', '2026-11-01-c1/sub'], ['c1/sub', '2026-11-01-c1'],
+    ['c1', '1900-02-29-c1'], ['c1', '2026-13-01-c1'], ['c1', '2026-04-31-c1'],
+    ['2026-11-01-c1', '2026-11-02-2026-11-01-c1'], ['2026-02-30-c1', '2026-02-30-c1'],
+    ['.c1', '2026-11-01-.c1'], ['archive', '2026-11-01-archive'],
+    ['sub/c1', '2026-11-01-sub/c1'], ['aux', '2026-11-01-aux'], ['c1 ', '2026-11-01-c1 '],
+    ['a:b', '2026-11-01-a:b'], ['c\\1', '2026-11-01-c\\1'], ['c1', 'nested/2026-11-01-c1'],
+  ])('[REQ-362][REQ-342] 別名・不正日・不安全パス %s → %s は従来の L3 を保つ', (id, name) => {
+    expect(classify(archiveEntries(id, name))).toMatchObject({ tier: 'L3' });
+  });
+
+  it.each(['from', 'to', 'unreadable', 'unspecified'])('[REQ-362][REQ-342][REQ-281] HEAD tree証明の%sはmetadataをL1にしない', (kind) => {
+    const entries = archiveEntries();
+    const tree = [to('2026-11-01-c1'), ...(kind === 'from' ? [from('c1').replace('.openspec.yaml', '.OPENSPEC.yaml')] : kind === 'to' ? [to('2026-11-01-c1').replace('.openspec.yaml', '.OPENSPEC.yaml')] : [])];
+    const result = kind === 'unspecified'
+      ? decideTier({ ...{ sameBlob: () => true }, entries, specDiff: unified(spec, ['+本文を同期 SHALL。'], { newLine: 9 }), readSpec: reader() })
+      : classify(entries, () => true, () => kind === 'unreadable' ? undefined : tree);
+    expect(result).toMatchObject({ tier: 'L3' });
+  });
+
+  it.each([[[]], [['docs/unchanged.md']]])('[REQ-362][REQ-342][REQ-281] 成功したtree証明には移動先存在の追加条件を課さない（%j）', (tree) => {
+    expect(classify(archiveEntries(), () => true, () => tree)).toMatchObject({ tier: 'L1' });
+  });
+
+  it('[REQ-362][REQ-281] tree証明は候補なし・OID不一致では読まず複数候補でも1回だけ読む', () => {
+    let calls = 0;
+    const headTree = () => { calls++; return []; };
+    expect(archiveMetadataPaths([], () => true, headTree).size).toBe(0);
+    expect(archiveMetadataPaths(archiveEntries(), () => false, headTree).size).toBe(0);
+    expect(calls).toBe(0);
+    const entries = [...archiveEntries(), ...archiveEntries('c2', '2026-11-01-c2')];
+    expect(archiveMetadataPaths(entries, () => true, headTree).size).toBe(4);
+    expect(calls).toBe(1);
+  });
+
+  it('[REQ-362][REQ-342] R100 と完全 OID 同一の証明を両方必要とする', () => {
+    const entries = archiveEntries();
+    for (const status of ['R090', 'C100', 'A', 'M']) {
+      expect(classify([{ ...entries[0]!, status }, ...entries.slice(1)])).toMatchObject({ tier: 'L3' });
+    }
+    expect(classify(entries, () => false)).toMatchObject({ tier: 'L3' });
+    expect(decideTier({ entries })).toMatchObject({ tier: 'L2' });
+  });
+
+  it('[REQ-362][REQ-342] 両側の通常モードと同じ archive の別文書を必要とする', () => {
+    const entries = archiveEntries();
+    for (const modes of [['100755', '100644'], ['100644', '100755'], ['120000', '100644'], ['100644', '120000'], ['000000', '100644']] as [string, string][]) {
+      expect(classify([{ ...entries[0]!, modes }, ...entries.slice(1)])).toMatchObject({ tier: 'L3' });
+    }
+    expect(classify([entries[0]!, entries[2]!])).toMatchObject({ tier: 'L3' });
+    expect(classify([entries[0]!, entry('A', 'openspec/changes/archive/2026-11-01-other/tasks.md'), entries[2]!])).toMatchObject({ tier: 'L3' });
+    expect(classify([entries[0]!, entry('M', entries[1]!.paths[0]!), entries[2]!])).toMatchObject({ tier: 'L3' });
+    expect(classify([entries[0]!, entry('R087', 'openspec/changes/c1/tasks.md', entries[1]!.paths[0]!), entries[2]!])).toMatchObject({ tier: 'L1' });
+  });
+
+  it('[REQ-362][REQ-342] 他の YAML とコード混在は従来の分類を保つ', () => {
+    const entries = archiveEntries();
+    for (const status of ['A', 'M']) expect(classify([entry(status, entries[0]!.paths[1]!), ...entries.slice(1)])).toMatchObject({ tier: 'L3' });
+    expect(classify([entry('R100', 'openspec/changes/c1/x.yaml', 'openspec/changes/archive/2026-11-01-c1/x.yaml'), ...entries.slice(1)])).toMatchObject({ tier: 'L3' });
+    expect(classify([...archiveEntries(), entry('M', 'scripts/x.mjs')])).toMatchObject({ tier: 'L3' });
+    expect(classify([...archiveEntries(), entry('A', 'docs/other.yaml')])).toMatchObject({ tier: 'L3' });
+    expect(decideTier({ ...{ sameBlob: () => true }, entries: [entry('R100', 'docs/a.yaml', 'docs/b.yaml')] })).toMatchObject({ tier: 'L2' });
   });
 });
