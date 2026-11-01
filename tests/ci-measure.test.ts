@@ -207,7 +207,7 @@ const githubActions = process.env.GITHUB_ACTIONS === 'true';
 const shortDirectory = (directory: string) => {
   if (process.platform !== 'win32') return { path: null, available: false, status: null };
   const result = spawnSync('cmd.exe', ['/d', '/v:off', '/s', '/c', `for %I in ("${directory}") do @echo %~sI`], {
-    encoding: 'utf8', windowsVerbatimArguments: true,
+    encoding: 'utf8', windowsVerbatimArguments: true, timeout: 10_000,
   });
   const path = result.stdout?.trim() ?? '';
   const available = result.status === 0 && /~[0-9]/.test(path) && existsSync(path) &&
