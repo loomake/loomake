@@ -166,8 +166,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   }
   // 変更行が属する節を見るため、変更前と変更後（HEAD）の spec.md を読む。
   // 変更前は、差分（base...HEAD）と同じ起点になるよう、ベースと HEAD の merge-base のファイルを読む
-  const { readSpec, sameBlob } = comparisonReaders(git, base);
-  const metadata = archiveMetadataPaths(entries, sameBlob);
+  const { readSpec, sameBlob, headTree } = comparisonReaders(git, base);
+  const metadata = archiveMetadataPaths(entries, sameBlob, headTree);
   const files = [...new Set(entries.flatMap((entry) => entry.paths))];
   let body = process.env.PR_BODY ?? '';
   if (process.env.PR_BODY === undefined && process.env.PR_NUMBER) {
@@ -178,7 +178,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     }
     body = r.stdout;
   }
-  const decided = decideTier({ entries, specDiff, body, readSpec, sameBlob });
+  const decided = decideTier({ entries, specDiff, body, readSpec, sameBlob, headTree });
   if (decided.error) {
     console.error(`ci-gate: ${decided.error}`);
     process.exit(1);
