@@ -5,7 +5,7 @@
 ## 1. 承認と仕様ゲート
 
 - [x] 1.1 Q1 の具体案（quality の省略範囲、Q2〜Q5 の構成、未適用 AGENTS パッチ）への新しい承認を得て trace に出典・承認者・JST 日付を記録し、回答と全 artifact の一致を確認する。#260 の承認は使わない。
-- [ ] 1.2 `openspec validate classify-unchanged-archive-metadata --strict` と `pnpm -s verify --change classify-unchanged-archive-metadata --spec-only` を実行し、どちらも exit 0 と要判断なしを確認してから実装を始める。
+- [x] 1.2 `openspec validate classify-unchanged-archive-metadata --strict` と `pnpm -s verify --change classify-unchanged-archive-metadata --spec-only` を実行し、どちらも exit 0 と要判断なしを確認してから実装を始める。
 
 ## 2. 純粋な段階判定
 
