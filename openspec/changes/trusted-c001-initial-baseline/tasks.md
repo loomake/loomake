@@ -10,8 +10,8 @@
 
 ## 3. 統合
 
-- [ ] 3.1 全体品質・固定coverage・レイヤー・元試験/期待値/期限/設定不変・全409参照の各1成功・全差分200KiBを確認し記録する。超過なら受入を削らず設計へ戻る
-- [ ] 3.2 通常local doneの実終了0を確認する <!-- loomake:gate=done -->
+- [x] 3.1 全体品質・固定coverage・レイヤー・元試験/期待値/期限/設定不変・全409参照の各1成功・全差分200KiBを確認し記録する。超過なら受入を削らず設計へ戻る
+- [x] 3.2 通常local doneの実終了0を確認する <!-- loomake:gate=done -->
 
 最終の合格は同じheadのCI scope ci・verdict PASS・completed・errors空・要判断なし、必須5チェック・3OS・別担当自己レビュー・独立Opus・Codexで確認する。
 
