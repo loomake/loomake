@@ -12,7 +12,7 @@ import { appendFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { decideTier, formatTierLine, isDocumentPath, isSpecPath } from './ci-tier.mjs';
+import { archiveMetadataPaths, decideTier, formatTierLine, isDocumentPath, isSpecPath } from './ci-tier.mjs';
 
 // 文書として扱うファイルの判定は、完了ゲートの段階の判定と共有する（ci-tier.mjs）。ここからも同じ名前で使えるようにする
 export { isDocumentPath } from './ci-tier.mjs';
@@ -45,6 +45,45 @@ export function parseRawDiff(text) {
     entries.push({ status, modes: [src, dst], paths });
   }
   return entries;
+}
+
+/**
+ * 差分と同じ merge-base の spec と、候補の完全 blob OID を遅延して読む（REQ-362）。
+ * gate と quality は同じ読取と失敗時の判定を使う。
+ * @param {(args: string[]) => { status: number | null; stdout?: string }} git
+ * @param {string} baseRef
+ */
+export function comparisonReaders(git, baseRef) {
+  let mergeBase;
+  const base = () => {
+    if (mergeBase === undefined) {
+      const result = git(['merge-base', `refs/remotes/origin/${baseRef}`, 'HEAD']);
+      mergeBase = result.status === 0 ? (result.stdout ?? '').trim() : '';
+    }
+    return mergeBase;
+  };
+  const readSpec = (side, path) => {
+    const ref = side === 'new' ? 'HEAD' : base();
+    if (!ref) return undefined;
+    const result = git(['show', `${ref}:${path}`]);
+    return result.status === 0 ? result.stdout : undefined;
+  };
+  const blobs = new Map();
+  const sameBlob = (from, to) => {
+    const key = `${from}\0${to}`;
+    if (!blobs.has(key)) {
+      const ref = base();
+      let equal = false;
+      if (ref) {
+        const result = git(['rev-parse', `${ref}:${from}`, `HEAD:${to}`]);
+        const ids = (result.stdout ?? '').replace(/\r?\n$/, '').split(/\r?\n/);
+        equal = result.status === 0 && ids.length === 2 && /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(ids[0]) && ids[0] === ids[1];
+      }
+      blobs.set(key, equal);
+    }
+    return blobs.get(key);
+  };
+  return { readSpec, sameBlob };
 }
 
 // 文書として扱うのは通常のファイル（100644）だけ。ファイルがない側（足したファイルの変更前、消したファイルの変更後）は 000000（REQ-282）
@@ -81,8 +120,10 @@ export function decideDocsOnly({ eventName = '', baseRef = '', git }) {
   }
   // 変えたファイルが 1 つもない差分は、解釈できない差分と同じに扱う
   if (!entries.length) return { docsOnly: false, reason: 'PR で変えたファイルが見つからなかったので、すべてのステップを実行します' };
+  const { readSpec, sameBlob } = comparisonReaders(git, baseRef);
+  const metadata = archiveMetadataPaths(entries, sameBlob);
   const paths = entries.flatMap((entry) => entry.paths);
-  const others = [...new Set(paths.filter((path) => !isDocumentPath(path)))];
+  const others = [...new Set(paths.filter((path) => !isDocumentPath(path) && !metadata.has(path)))];
   if (others.length) return { docsOnly: false, reason: `文書ではないファイルを変えているので、すべてのステップを実行します：${list(others)}` };
   const irregular = entries.filter((entry) => !entry.modes.every(isRegularOrAbsent) || entry.modes.every((mode) => mode === '000000'));
   if (irregular.length) {
@@ -114,18 +155,7 @@ export function decideDocsOnly({ eventName = '', baseRef = '', git }) {
   }
   // PR 本文は読まない（quality ジョブは本文を読む権限を持たない。tier-ci-gate の仮定 A-03）
   // 消した行の節は、差分と同じ起点（ベースと HEAD の merge-base）のファイルで判定する
-  let mergeBase;
-  const readSpec = (side, path) => {
-    if (side === 'old' && mergeBase === undefined) {
-      const m = git(['merge-base', `refs/remotes/origin/${baseRef}`, 'HEAD']);
-      mergeBase = m.status === 0 ? (m.stdout ?? '').trim() : '';
-    }
-    const ref = side === 'new' ? 'HEAD' : mergeBase;
-    if (!ref) return undefined;
-    const r = git(['show', `${ref}:${path}`]);
-    return r.status === 0 ? r.stdout : undefined;
-  };
-  const decided = decideTier({ entries, specDiff, readSpec });
+  const decided = decideTier({ entries, specDiff, readSpec, sameBlob });
   if (decided.error) return { docsOnly: false, reason: `段階を決められなかったので、すべてのステップを実行します（${decided.error}）` };
   if (decided.tier !== 'L1') return { docsOnly: false, reason: `段階が ${decided.tier} なので、すべてのステップを実行します（${formatTierLine(decided)}）` };
   return { docsOnly: true, reason: `変えたファイル（${paths.length} 件）はすべて文書（段階 L1）なので、品質コマンドを飛ばします` };

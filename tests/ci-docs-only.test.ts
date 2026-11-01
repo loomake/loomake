@@ -505,7 +505,7 @@ describe('archive metadata と quality の共有判定', () => {
   it('[REQ-362][REQ-270] OID の失敗・空・不正・行数違い・不一致と merge-base 失敗は品質検査を残す', () => {
     for (const oidResult of [
       { status: 128, stdout: '' }, { status: 0, stdout: '' }, { status: 0, stdout: 'base\nbase\n' },
-      { status: 0, stdout: `${oid}\n` }, { status: 0, stdout: `${oid}\n${oid}\n${oid}\n` },
+      { status: 0, stdout: `${oid}\n` }, { status: 0, stdout: `${oid}\n${oid}\n${oid}\n` }, { status: 0, stdout: `${oid}\n${oid}\n\n` },
       { status: 0, stdout: `${oid}\n${'b'.repeat(40)}\n` }, { status: 0, stdout: `${oid.slice(0, 7)}\n${oid.slice(0, 7)}\n` },
     ]) expect(run({ oidResult }).result.docsOnly, JSON.stringify(oidResult)).toBe(false);
     const failed = run({ mergeStatus: 128 });
@@ -520,7 +520,7 @@ describe('archive metadata と quality の共有判定', () => {
     expect(run({ tree: to }).result.docsOnly).toBe(false);
   });
 
-  it('[REQ-362][REQ-270] main 以外と main push は照合も省略せず品質検査を残す', () => {
+  it('[REQ-362][REQ-270] main 以外と main push は照合せず品質検査を残す', () => {
     for (const options of [{ baseRef: 'integration/e3' }, { eventName: 'push' }]) {
       const { result, calls } = run(options);
       expect(result.docsOnly).toBe(false);

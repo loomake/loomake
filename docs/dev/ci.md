@@ -30,6 +30,10 @@ change のゲート（`--done`・`--spec-only`）は `--json` で実行し、ver
 
 Requirement の変更は、`openspec/specs/` と `openspec/changes/<id>/specs/` の `spec.md` で、変更した行が属する節で見る。`git diff -U0` のハンクの行番号から、足した行は HEAD の、消した行はベースのファイルを読み、直前の見出しが `### Requirement:` なら Requirement の変更（L3）とする。`#### Scenario:` の配下や Purpose の文言だけなら、RFC 2119 の語を足しても L1 のまま。archive の PR（`openspec/changes/archive/` にファイルを足すか移す）は Requirement を主仕様に写すが、実装 PR の `--done` で検査済みなので L1 として扱う。
 
+archive の `.openspec.yaml` は単独では文書に含めない。REQ-362「archive のメタデータの移動」の条件をすべて満たすときだけ、PR の文脈で L1 と数える。R100、merge-base の旧パスと HEAD の新パスの完全 blob ID 一致、前後 100644、安全なパスと同一 change の正しい実在日付の archive 名、同じ archive への別文書の追加か移動を必要とする。OID を読めない場合や、metadata 単独・内容変更・ほかの YAML は例外にしない。quality と gate の段階判定、gate の change 選択で同じ判定を使い、全パスのモード・名前衝突・ツリー検査を維持する。
+
+この規則は具体案の明示承認だけでは適用せず、通常 L3 の実装・3 OS CI・独立レビューを経て main に採用したあとから適用する。対象のない L1 の gate は lint と文書リンク検査を行い、PR quality の品質コマンドを省略する。main push の全品質、主仕様 strict、REQ ID の重複検査、元の change の DoD は維持する。
+
 gate は段階によらず、REQ ID の重複も調べる（`scripts/req-duplicate-check.mjs`）。主仕様に進行中の change の差分仕様を当てた後で、同じ REQ ID が 2 つ以上の Requirement の Source に付いていたら、一覧を出して失敗にする。同じ Requirement を MODIFIED した差分は重複に数えない。意図して共有している ID と、2026-10-31 に main にあった 22 件（見直しは Issue #213）は `scripts/req-duplicate-known.json` に書いてある。一覧のキーは `<capability>: <Requirement 名>` の形で書く。一覧にある Requirement を RENAMED したら、同じ PR で一覧のキーも直す。新しく ID を共有するときは、意図した共有であることを PR 本文で説明してから一覧に足す。一覧のうち今の重複と一致しない項目は、失敗にせず警告を出す。手元では `node scripts/req-duplicate-check.mjs` で確かめられる。
 
 change のない L1 の PR では `verify` を呼ばないため、`tests/doc-links.test.ts` を gate で直接実行している。gate からこの試験を外すときは、文書だけの PR で文書を読むテストを実行する場がなくなることを確かめる。
