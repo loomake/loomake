@@ -1,7 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -176,6 +176,9 @@ describe('C001 の原文書を通常の Git checkout に供給する', () => {
     const clone = join(newRoot(), 'clone');
     execFileSync('git', ['-c', 'core.autocrlf=true', 'clone', '--depth', '1', '--no-local', '--no-hardlinks', pathToFileURL(repository).href, clone], { stdio: ['ignore', 'pipe', 'pipe'] });
     expect(git(clone, 'rev-parse', '--is-shallow-repository').toString('utf8').trim()).toBe('true');
+    const workingFile = readFileSync(join(clone, prefix, documents[0].file));
+    expect(workingFile.includes('\r\n')).toBe(true);
+    expect(workingFile.equals(blob(root, head, documents[0].file))).toBe(false);
     const ref = git(clone, 'rev-parse', 'HEAD').toString('utf8').trim();
     expect(spawnSync('git', ['-C', clone, 'cat-file', '-e', `${originalRef}^{commit}`], { stdio: 'pipe' }).status).not.toBe(0);
     expectOriginal(clone, ref);
