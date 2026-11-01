@@ -23,8 +23,8 @@ Issue #116 の単独診断では先行する中断と自callの結果欠損、�
 
 ## Impact
 
-対象は `packages/runner/test/process-diagnostics.ts` と対応試験、`tests/external-call-diagnostics.test.ts`・`tests/hook-budget-diagnostics-workflow.test.ts` への追加試験、`docs/dev/testing-across-os.md` と作業記録。既存classifier本体は採用済みの時計窓・版2を保持し、主仕様、製品src、元hook、workflow、設定・予算を変更しない。
+対象は `packages/runner/test/process-diagnostics.ts` と対応試験、`tests/external-call-diagnostics.test.ts`・`tests/hook-budget-diagnostics-workflow.test.ts` への追加試験、`docs/dev/testing-across-os.md` と作業記録。A′のsnapshot修理時点ではclassifier本体を変えず、受入前P2でts<t1の独立判定だけを追加した。採用済みの時計窓の前後1ms・δ<−1の判定と版2を保持し、主仕様、製品src、元hook、workflow、設定・予算を変更しない。
 
 Requirementの追加を含むため通常L3で進める。仕様ゲートの成功後に修理へ入り、全19 Scenarioの対応、正常done、3 OS、必須5チェック、作者と設計担当とは別のOpus最終を満たしてから受け入れる。#260の段階受入例外は適用しない。Issue #116の原因解明・修理完了・closeはこのchangeの成果に含めない。
 
-正式化後、M1の修理とID付き追加試験を実施した。正常local doneはexit0となった。最終CI/レビューは未完了。
+正式化後、M1と受入前P2の修理・ID付き追加試験を実施し、通常local doneはexit0となった。その後、[新headのCI](https://github.com/loomake/loomake/actions/runs/41264055631)の正常ci done・全3 OS・必須チェックと独立最終レビューを満たし、[PR #276](https://github.com/loomake/loomake/pull/276)でmainへ受け入れた。仕様同期・archiveとScenario登録は後続作業であり、元のWindows障害の原因修理を示さない。
