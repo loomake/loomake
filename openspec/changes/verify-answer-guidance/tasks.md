@@ -3,7 +3,7 @@
 ## 1. 正式文書の再構成
 
 - [x] 1.1 採用478設計と公開移管記録を出典にproposal/specs/design/traceを再構成し、REQ-360/361の全7 Scenarioと全AC、18入力の最新差分、Mac成果未取得と試行1/7（版1）の扱いを照合する。
-- [ ] 1.2 strictと `pnpm -s verify --change verify-answer-guidance --spec-only` の実exit0を確認してから実装へ進む。
+- [x] 1.2 strictと `pnpm -s verify --change verify-answer-guidance --spec-only` の実exit0を確認してから実装へ進む。
 
 ## 2. 意味のあるREDと最小実装
 
