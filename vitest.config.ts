@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { configDefaults, defineConfig } from 'vitest/config';
 import { assertNotPartitioned, loadPartition, partitionFiles } from './scripts/lib/test-partition.mjs';
+import { CiTestSequencer } from './scripts/lib/ci-test-sequencer.mjs';
 
 const root = import.meta.dirname;
 const packageTests = ['tests/ai-journeys.test.ts', 'tests/package-artifacts.test.ts', 'tests/pending-approvals-cli.test.ts'];
@@ -33,6 +34,7 @@ export default defineConfig({
     },
   },
   test: {
+    sequence: { sequencer: CiTestSequencer },
     // package/slow に同じ配布物を渡す。明示ファイル選択でも project が残る場合は準備を1回行う。
     globalSetup: ['tests/package-build.setup.ts'],
     projects: [
