@@ -400,7 +400,7 @@ export function checkPartitionWiring(file, source) {
     if (ts.isShorthandPropertyAssignment(parent)) return true;
     if (ts.isPropertyAccessExpression(parent) && parent.name === node) return false;
     if ((ts.isPropertyAssignment(parent) || ts.isMethodDeclaration(parent) || ts.isPropertyDeclaration(parent) || ts.isBindingElement(parent)) && parent.name === node) return false;
-    if ((ts.isVariableDeclaration(parent) || ts.isParameter(parent) || ts.isFunctionDeclaration(parent) || ts.isFunctionExpression(parent) || ts.isClassDeclaration(parent) || ts.isImportSpecifier(parent) || ts.isImportClause(parent) || ts.isNamespaceImport(parent)) && parent.name === node) return false;
+    if ((ts.isVariableDeclaration(parent) || ts.isParameter(parent) || ts.isFunctionDeclaration(parent) || ts.isFunctionExpression(parent) || ts.isClassDeclaration(parent) || ts.isClassExpression(parent) || ts.isImportSpecifier(parent) || ts.isImportClause(parent) || ts.isNamespaceImport(parent)) && parent.name === node) return false;
     return true;
   };
   walk(ast, node => {

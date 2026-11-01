@@ -567,3 +567,26 @@ const hasAny=(ids: readonly string[])=>ids.some(has);
     expect(observations.length).toBeGreaterThan(40);
   });
 });
+
+describe('partition wiring class expression names', () => {
+  const path = 'tests/x.test.ts';
+  const header = `import {it,describe} from 'vitest';
+import {join} from 'node:path';
+import {includeCase,loadPartition} from '../scripts/lib/test-partition.mjs';
+import {currentPart,eachRows} from './helpers/partition-part.js';
+const registry=loadPartition(join(import.meta.dirname,'..'));
+const has=(id: string)=>includeCase(registry,'tests/x.test.ts',currentPart(),id);
+const hasAny=(ids: readonly string[])=>ids.some(has);
+`;
+  it.each(['has', 'hasAny'])('accepts %s as a class expression declaration name', (name) => {
+    expect(checkPartitionWiring(path, header + `const C=class ${name} {};`)).toEqual([]);
+  });
+  const references = ['static value = NAME;', '[NAME]() {}', 'method() { return NAME; }'];
+  const cases = ['has', 'hasAny'].flatMap(name => references.map(body => [name, body] as const));
+  it.each(cases)('rejects real %s references in a named class body: %s', (name, body) => {
+    const source = header + `const C=class ${name} {\n${body.replaceAll('NAME', name)}\n};`;
+    const errors = checkPartitionWiring(path, source);
+    expect(errors.map((error: { code: string }) => error.code)).toEqual(['wiringBinding']);
+    expect(errors[0]?.line).toBe(header.split('\n').length + 1);
+  });
+});
