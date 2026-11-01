@@ -17,7 +17,7 @@
 
 ## 4. 正常local完了
 
-- [ ] 4.1 旧試験と設定の保持、全7 Scenarioの成功したID付き試験、lint/typecheck/文書リンクと `pnpm -s verify --change verify-answer-guidance --done --scope local` の実exit0を確認する。全件は管理役と重い実行を調整して一回へまとめ、dirty入力・実終了・最終headとの対応を保存する。 <!-- loomake:gate=done -->
+- [x] 4.1 旧試験と設定の保持、全7 Scenarioの成功したID付き試験、lint/typecheck/文書リンクと `pnpm -s verify --change verify-answer-guidance --done --scope local` の実exit0を確認する。全件は管理役と重い実行を調整して一回へまとめ、dirty入力・実終了・最終headとの対応を保存する。 <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
