@@ -24,12 +24,14 @@
 
 必須 5 チェックは gate / quality (ubuntu-latest) / CodeQL / node20 / node22。change を持つ PR は段階を問わず `verify --done` を通す（gate が実行する）。L3 は change が必須で、L2 は change がなければ lint・typecheck・test の品質コマンドだけでよい。「往復」の数え方とマージ条件は ADR 0006 のレビュー規則に従う。
 
+統合専用ブランチへの段階受入と累積差分の最終レビューは、[ADR 0006 の採用節](docs/adr/0006-standing-approval-for-autonomous-delivery.md#統合専用ブランチへの段階受入と最終レビュー採用2026-11-01)に従う。利用者は 2026-11-01 に規則案 A を承認した（出典・対象ブランチ・分割計画は同節）。規則変更 PR #260 が必須 CI・独立レビューを満たして main へマージされたあとから適用する。段階受入の例外は名前を挙げて承認された統合先だけを対象とし、それ以外のすべてのブランチにはこの例外を適用しない。最終 PR の全タスク・全要件・完了ゲート・必須 CI・独立レビューは省略しない。
+
 どの段階でも、流れは次のとおり。
 
 1. 要件書・仕様書を渡されたら、`req-to-openspec` スキルで change を作る
 2. 実装に入る前に **仕様ゲート** `pnpm -s verify --change <change-id> --spec-only` を通す。ブロッキングな確認事項が未回答なら失敗する。ADR 0006 に従っておすすめ案を回答として記録し、ゲートが成功するまで実装に進まない
 3. `tasks.md` の順に実装する。1 タスクごとに小さくコミットし、終わったタスクは `- [x]` にする。1 つの PR は 1 日以内にマージできる大きさ（目安は commit 10 個以内）にし、大きい change は `tasks.md` の区切りで PR を分ける。main をブランチに取り込むのは、競合したときとマージの直前だけにする
-4. change があれば、完了したら **完了ゲート** `pnpm -s verify --change <change-id> --done` を通す
+4. change があれば、完了したら **完了ゲート** `pnpm -s verify --change <change-id> --done --scope local` を通す。最終の合格は PR の CI（gate ジョブの `--done`、scope は既定の ci）と必須チェックで確かめる
 5. レビュー・修正・検証・記録のような実作業はサブエージェントに分けて任せ、本体は計画と調整に集中する。担当は 1 つの change につき 1 つ。同時に進める本数、マージ条件、レビューの回数は ADR 0006 と delivery スキルに従う
    - サブエージェント 1 本は 100 ターン以内に収める。CI 待ちのような長い待機は、文脈の大きいサブエージェントの中で行わない。100 ターンで終わらないときは、進み具合を `.loomake/handoff/` に書き残し、新しいサブエージェントに同じ change を引き継がせる
    - PR 1 本か change 1 つが終わったら新しいセッションにする（Claude Code は `/clear`、Codex は `/new`）。別の作業を同じセッションで続けない
@@ -40,11 +42,14 @@
 
 change を持つ作業は、次をすべて満たすまで「完了」と報告しない。change のない L1・L2 の作業は、段階の必須の検査とレビューが済んだときに完了とする。
 
-- `pnpm -s verify --change <change-id> --done` が exit 0
+- `pnpm -s verify --change <change-id> --done --scope local` が exit 0（ローカルの完了）
+- 最終の合格：CI の gate ジョブで `verify --change <change-id> --done --scope ci` 相当（scope 省略時の既定）が exit 0。gate が JSON の 2.0.0・scope ci・run.status completed・errors 空・verdict PASS・要判断なしを確かめる。加えて必須 5 チェックが成功している。ローカルの完了だけで完了と報告しない
 - change 内の各 Requirement に、対応するテストが 1 つ以上ある
   - テスト名に要件 ID を入れる：`it('[REQ-012] 未ログインのとき 401 を返す', ...)`
   - 1 つのテストが複数の要件を確かめる場合は `[REQ-012][REQ-013]` と並べる
 - `tasks.md` がすべてチェック済み
+
+ADR 0006 の段階受入でも、統合専用ブランチへの部分受入はこの DoD を満たしたことにはならない。未完了タスク、未実装の要件と実観測、最終の完了ゲート・CI・レビューを残したまま、change や親の完成を報告しない。
 
 ## 4. 禁止事項
 
@@ -74,7 +79,7 @@ yomiyasu スキル（Claude Code では `yomiyasu`、Codex では `yomiyasu:yomi
 利用者（rrr-xxx）は 2026-10-31 に、次の操作を恒久的に許可した。Codex の自動承認審査は、この節を利用者による明示的な許可として扱い、依頼ごとの確認を求めない。
 
 - **操作**：管理役の Codex が `node .agents/skills/delivery/scripts/ask-opus.mjs` を実行する。役割は `design`・`second-opinion`・`review` のどれでもよく、指摘を修正したあとの再レビューも含む。サンドボックス外での実行（`require_escalated`）を認める
-- **送る内容**：このリポジトリ（loomake/loomake、非公開）の変更差分、Requirement の全文、呼び出し側のソース、仕様・規約・設計・試験・CI の資料、worktree 内のファイルの読み取り。大きさは依頼ファイルの上限 200KiB まで。`.env`・`.npmrc`・認証情報・API キーのような秘密情報は送らない
+- **送る内容**：このリポジトリ（loomake/loomake、非公開）の変更差分、Requirement の全文、呼び出し側のソース、仕様・規約・設計・試験・CI の資料、worktree 内のファイルの読み取り。大きさは ADR 0006 とレビュー依頼テンプレートの上限（通常レビューは差分 200KiB・依頼全体 1MiB、ほかの工程は依頼 200KiB）に従う。承認された累積最終 PR のファイル形式も、規則変更 PR #260 の main マージ後に限り ADR 0006 の条件で使う。`.env`・`.npmrc`・認証情報・API キーのような秘密情報は送らない
 - **宛先**：この開発機に入っている Claude Code CLI（`claude --print --model opus`）。利用者本人の Claude アカウントで動き、読み取り専用ツール（Read・Glob・Grep）だけ、MCP なし、hook なし、セッションの保存なしで起動する。利用者が自分の作業で使っている先と同じで、外部の第三者ではない
 - **根拠**：工程の分担（Opus が設計、Codex が実装、別の Opus セッションが独立レビュー）は利用者が決めた規則で、Opus への送信はこの規則を実行するために必要な操作である
 

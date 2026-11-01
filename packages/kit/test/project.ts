@@ -6,6 +6,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
 export type ProjectFiles = {
+  /** Optional parent for an isolated fixture; defaults to the OS temporary directory. */
+  base?: string;
   /** loomake.config.json の中身。既定は OpenSpec の検証をしない、commands が空の設定 */
   config?: object;
   trace?: string;
@@ -109,7 +111,7 @@ export function placeCiQuality(root: string, quality: string = QUALITY_YAML): vo
 
 /** プロジェクトを作って fn を実行し、終わったら消す。fn が Promise を返したら、終わるのを待ってから消す */
 export function withProject<T>(files: ProjectFiles, fn: (root: string) => T): T {
-  const root = mkdtempSync(join(tmpdir(), 'loomake-kit-'));
+  const root = mkdtempSync(join(files.base ?? tmpdir(), 'loomake-kit-'));
   const cleanup = () => rmSync(root, { recursive: true, force: true });
   let result: T;
   try {

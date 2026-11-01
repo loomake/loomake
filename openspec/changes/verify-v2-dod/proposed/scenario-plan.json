@@ -1,0 +1,30 @@
+{
+  "scope": "static in-memory inventory only; not reviewed, not applied, no tests",
+  "old": [
+    {
+      "id": "SCN-0c9a8c1de5d86a559154",
+      "sha256": "a87d8729c33e2d095a74de3c8dacc6adeabf51a0695054c6b91b50f5fd18113e"
+    }
+  ],
+  "planned": [
+    {
+      "id": "SCN-0c9a8c1de5d86a559154",
+      "scenario": "雛形に印がある",
+      "sha256": "37fb8ea2893a414abcb882d99f833979e59ebd6bec56514e5a08e792636d1f8b",
+      "status": "planned"
+    },
+    {
+      "id": "SCN-982d48814ac96beeda6a",
+      "scenario": "印のタスクはローカルの完了ゲート",
+      "sha256": "37a9771fe2d91cdd8e8480a48fb56a99b21d4e13ec0d53ef74918b0557006060",
+      "status": "planned"
+    },
+    {
+      "id": "SCN-2df2342425e3b29289d4",
+      "scenario": "最終の合格を区別する注記",
+      "sha256": "fb0f10eacc75f46304a0469e265461ba030d0756b708c513b06ca252ac62df4f",
+      "status": "planned"
+    }
+  ],
+  "oldScenarioBodyUnchanged": true
+}

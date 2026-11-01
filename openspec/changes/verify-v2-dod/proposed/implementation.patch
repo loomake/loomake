@@ -1,0 +1,417 @@
+diff --git a/AGENTS.md b/AGENTS.md
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -29,7 +29,7 @@
+ 1. 要件書・仕様書を渡されたら、`req-to-openspec` スキルで change を作る
+ 2. 実装に入る前に **仕様ゲート** `pnpm -s verify --change <change-id> --spec-only` を通す。ブロッキングな確認事項が未回答なら失敗する。ADR 0006 に従っておすすめ案を回答として記録し、ゲートが成功するまで実装に進まない
+ 3. `tasks.md` の順に実装する。1 タスクごとに小さくコミットし、終わったタスクは `- [x]` にする。1 つの PR は 1 日以内にマージできる大きさ（目安は commit 10 個以内）にし、大きい change は `tasks.md` の区切りで PR を分ける。main をブランチに取り込むのは、競合したときとマージの直前だけにする
+-4. change があれば、完了したら **完了ゲート** `pnpm -s verify --change <change-id> --done` を通す
++4. change があれば、完了したら **完了ゲート** `pnpm -s verify --change <change-id> --done --scope local` を通す。最終の合格は PR の CI（gate ジョブの `--done`、scope は既定の ci）と必須チェックで確かめる
+ 5. レビュー・修正・検証・記録のような実作業はサブエージェントに分けて任せ、本体は計画と調整に集中する。担当は 1 つの change につき 1 つ。同時に進める本数、マージ条件、レビューの回数は ADR 0006 と delivery スキルに従う
+    - サブエージェント 1 本は 100 ターン以内に収める。CI 待ちのような長い待機は、文脈の大きいサブエージェントの中で行わない。100 ターンで終わらないときは、進み具合を `.loomake/handoff/` に書き残し、新しいサブエージェントに同じ change を引き継がせる
+    - PR 1 本か change 1 つが終わったら新しいセッションにする（Claude Code は `/clear`、Codex は `/new`）。別の作業を同じセッションで続けない
+@@ -40,7 +40,8 @@
+
+ change を持つ作業は、次をすべて満たすまで「完了」と報告しない。change のない L1・L2 の作業は、段階の必須の検査とレビューが済んだときに完了とする。
+
+-- `pnpm -s verify --change <change-id> --done` が exit 0
++- `pnpm -s verify --change <change-id> --done --scope local` が exit 0（ローカルの完了）
++- 最終の合格：CI の gate ジョブで `verify --change <change-id> --done --scope ci` 相当（scope 省略時の既定）が exit 0。gate が JSON の 2.0.0・scope ci・run.status completed・errors 空・verdict PASS・要判断なしを確かめる。加えて必須 5 チェックが成功している。ローカルの完了だけで完了と報告しない
+ - change 内の各 Requirement に、対応するテストが 1 つ以上ある
+   - テスト名に要件 ID を入れる：`it('[REQ-012] 未ログインのとき 401 を返す', ...)`
+   - 1 つのテストが複数の要件を確かめる場合は `[REQ-012][REQ-013]` と並べる
+diff --git a/packages/kit/templates/AGENTS.md b/packages/kit/templates/AGENTS.md
+--- a/packages/kit/templates/AGENTS.md
++++ b/packages/kit/templates/AGENTS.md
+@@ -21,14 +21,16 @@
+ 3. `tasks.md` の順に実装する。1タスクごとに小さくコミットし、終わったタスクは `- [x]` にする
+ 4. 完了したら **完了ゲート** を通す
+    ```sh
+-   npx loomake verify --change <change-id> --done
++   npx loomake verify --change <change-id> --done --scope local
+    ```
++   最終の合格は CI で `--done --scope ci` を確かめる
+
+ ## 3. 完了の定義（DoD）
+
+ 次をすべて満たすまで「完了」と報告しない。
+
+-- `npx loomake verify --change <change-id> --done` が exit 0
++- `npx loomake verify --change <change-id> --done --scope local` が exit 0（ローカルの完了）
++- 最終の合格：CI で `npx loomake verify --change <change-id> --done --scope ci` が exit 0（判定 PASS・要判断なし）で、マージを止める必須チェックが成功している
+ - change 内の各 Requirement に、対応するテストが 1 つ以上ある
+   - テスト名に要件 ID を入れる：`it('[REQ-012] 未ログインのとき 401 を返す', ...)`
+   - 1 つのテストが複数の要件を確かめる場合は `[REQ-012][REQ-013]` と並べる
+diff --git a/CONTRIBUTING.md b/CONTRIBUTING.md
+--- a/CONTRIBUTING.md
++++ b/CONTRIBUTING.md
+@@ -24,7 +24,7 @@
+ 4. 仕様を確かめるテストを先に書き、不具合修正では修正前の失敗を確認する。テスト名にREQ-IDを入れ、RedとGreenをchangeのtdd.mdに残す。
+ 5. タスクごとに実装とテストを確認し、小さくコミットしてtasks.mdをチェックする。
+ 6. 利用者に影響するパッケージにはchangesetを追加し、文書を実装と揃える。文書や開発用ツールだけの場合は、空のchangesetで公開対象がないことを示す。
+-7. 全タスクと全Requirementのテスト対応を確認し、`pnpm -s verify --change <id> --done`を通す。
++7. 全タスクと全Requirementのテスト対応を確認し、`pnpm -s verify --change <id> --done --scope local`を通す。最終の合格は PR の gate ジョブ（scope ci）と必須チェックで確かめる。
+
+ 現行仕様を直接書き換えない。完了したchangeの差分は、archiveの手順で反映する。文書だけの修正で新しい製品の振る舞いがない場合は、そのためだけに製品のRequirementを作らない。
+
+diff --git a/README.md b/README.md
+--- a/README.md
++++ b/README.md
+@@ -14,7 +14,8 @@
+ npx loomake init                                  # AGENTS.md・設定・Skill を置く
+ npx loomake doctor                                # 導入状態を調べ、足りない設定と直し方を出す
+ npx loomake verify --change <id> --spec-only      # 仕様ゲート：実装に入ってよいか
+-npx loomake verify --change <id> --done           # 完了ゲート：要件ごとのテスト・品質コマンド
++npx loomake verify --change <id> --done --scope local # 完了ゲート（ローカル）：要件ごとのテスト・品質コマンド
++npx loomake verify --change <id> --done               # 完了ゲート（最終。既定は --scope ci）
+ npx loomake run --change <id>                     # 実装から PR までを AI に任せる
+ npx loomake trace record --change <id>            # 証拠を記録する
+ npx loomake trace report --change <id>            # リリースレポートを出す
+@@ -71,7 +72,7 @@
+
+ ```sh
+ pnpm -s verify --change <id> --spec-only
+-pnpm -s verify --change <id> --done
++pnpm -s verify --change <id> --done --scope local
+ ```
+
+ change の進め方は [docs/flow.md](docs/flow.md)、テスト名と完了の決まりは [AGENTS.md](AGENTS.md) にある。
+@@ -107,7 +108,7 @@
+ ### CI とリリース
+
+ - PR では ubuntu だけで、main への push と毎日 1 回の定期実行では ubuntu・macos・windows の 3 つで、lint・typecheck・test・build を実行する。PR に `ci:all-os` ラベルを付けると、その PR でも 3 つの OS で実行する。macOS か Windows に関わる変更をする PR では、このラベルを付ける。Node 22.12 でも、ビルドした CLI が動くかを確かめる
+-- gate ジョブは、対象の change ごとに `verify --change <id> --done` を実行する。対象は、PR 本文に `loomake-change: <id>` の行があればその change とし、なければ PR で変えた `openspec/changes/<id>/` の下のファイルと、ブランチ名（`loomake/` で始まるときは、それを除いた名前）から決める
++- gate ジョブは、対象の change ごとに `verify --change <id> --done` を実行する。対象は、PR 本文に `loomake-change: <id>` の行があればその change とし、なければ PR で変えた `openspec/changes/<id>/` の下のファイルと、ブランチ名（`loomake/` で始まるときは、それを除いた名前）から決める（scope は既定の ci。ローカルの結果は合格にしない）
+ - 対象の change がなく、文書（`.md`、`docs/`・`openspec/`・`.changeset/` の下）だけを変えた PR と archive の PR は、品質コマンドだけを実行する。コードを変える PR で change がないときは、本文に `loomake-change: none` と書く。書かないと gate ジョブは失敗する
+ - gate ジョブは PR 本文を実行のたびに読む。本文を書き直したら、gate ジョブを再実行する
+ - archive で反映したあとの仕様の誤りは、change ごとの完了ゲートでは見つからない。そのため gate ジョブは、PR の種類によらず、いまの仕様（`openspec/specs/`）に `openspec validate --specs --strict` も実行する
+diff --git a/README.en.md b/README.en.md
+--- a/README.en.md
++++ b/README.en.md
+@@ -18,7 +18,8 @@
+ npx loomake init                                  # place AGENTS.md, the config file and the skill
+ npx loomake doctor                                # check the setup and print what is missing
+ npx loomake verify --change <id> --spec-only      # spec gate: may implementation start?
+-npx loomake verify --change <id> --done           # done gate: tests per requirement and quality commands
++npx loomake verify --change <id> --done --scope local # done gate (local): tests per requirement and quality commands
++npx loomake verify --change <id> --done               # done gate (final; defaults to --scope ci)
+ npx loomake run --change <id>                     # let the AI engine implement the change and open a PR
+ npx loomake trace record --change <id>            # record evidence
+ npx loomake trace report --change <id>            # produce the release report
+@@ -65,7 +66,7 @@
+ pnpm typecheck
+ pnpm test             # pnpm test:coverage also checks the coverage thresholds
+ pnpm build
+-pnpm -s verify --change <id> --done
++pnpm -s verify --change <id> --done --scope local
+ ```
+
+ The rules for contributors, including AI agents, are in [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md) (Japanese). Report vulnerabilities as described in [SECURITY.md](SECURITY.md).
+diff --git a/packages/cli/README.md b/packages/cli/README.md
+--- a/packages/cli/README.md
++++ b/packages/cli/README.md
+@@ -12,7 +12,8 @@
+ npx loomake init                                  # AGENTS.md・設定・Skill を置く
+ npx loomake doctor                                # 導入の状態を調べる
+ npx loomake verify --change <id> --spec-only      # 仕様ゲート：実装に入ってよいか
+-npx loomake verify --change <id> --done           # 完了ゲート：要件ごとのテストと品質コマンド
++npx loomake verify --change <id> --done --scope local # 完了ゲート（ローカル）：要件ごとのテスト・品質コマンド
++npx loomake verify --change <id> --done               # 完了ゲート（最終。既定は --scope ci）
+ npx loomake run --change <id>                     # 実装から PR までを AI に任せる
+ npx loomake trace record --change <id>            # 証拠を記録する
+ npx loomake trace report --change <id>            # リリースレポートを出す
+diff --git a/docs/flow.md b/docs/flow.md
+--- a/docs/flow.md
++++ b/docs/flow.md
+@@ -41,10 +41,10 @@
+   loop タスクごと
+     A->>A: 実装・テスト・コミット
+   end
+-  A->>V: --done
++  A->>V: --done --scope local
+   V-->>A: 不合格なら直して再実行
+   A->>G: PR を出す
+-  G-->>H: CI（gate ジョブでも --done）
++  G-->>H: CI（gate ジョブで --done --scope ci）
+   H->>G: レビューしてマージ
+   H->>A: archive して
+   A->>A: openspec archive
+@@ -119,11 +119,11 @@
+ 仕様に無い判断が必要になると、AI は止まって質問してくる（AGENTS.md の規則）。答えるか、仕様を直すかを選ぶ。実装が終わったら次を実行する。
+
+ ```sh
+-pnpm -s verify --change setup-monorepo --done
++pnpm -s verify --change setup-monorepo --done --scope local
+ gh pr create --fill
+ ```
+
+-GitHub Actions の gate ジョブは、対象の change ごとに完了ゲートを実行する。対象は、PR 本文に `loomake-change: <id>` の行があればその change とし、なければ PR で変えた `openspec/changes/<id>/` の下のファイルと、ブランチ名から決める（例：ブランチ `setup-monorepo` → `openspec/changes/setup-monorepo/`）。`loomake run` が作る `loomake/<change-id>` のブランチは、先頭の `loomake/` を除いて比べる。対象の change がなく、文書だけを変えた PR と archive の PR は、品質コマンドだけを実行する。コードを変える PR で change がないときは、本文に `loomake-change: none` と書く。本文を書き直したら、gate ジョブを再実行する。gate ジョブは、PR の種類によらず、いまの仕様に `openspec validate --specs --strict` も実行する。設定は `setup-monorepo` で導入済み。マージを止めるための必須チェックの設定は、人が GitHub 上で行う（setup-monorepo の仮定 A-03）。
++GitHub Actions の gate ジョブは、対象の change ごとに完了ゲートを実行する。対象は、PR 本文に `loomake-change: <id>` の行があればその change とし、なければ PR で変えた `openspec/changes/<id>/` の下のファイルと、ブランチ名から決める（例：ブランチ `setup-monorepo` → `openspec/changes/setup-monorepo/`）。`loomake run` が作る `loomake/<change-id>` のブランチは、先頭の `loomake/` を除いて比べる。対象の change がなく、文書だけを変えた PR と archive の PR は、品質コマンドだけを実行する。コードを変える PR で change がないときは、本文に `loomake-change: none` と書く。本文を書き直したら、gate ジョブを再実行する。gate ジョブは、PR の種類によらず、いまの仕様に `openspec validate --specs --strict` も実行する。設定は `setup-monorepo` で導入済み。マージを止めるための必須チェックの設定は、人が GitHub 上で行う（setup-monorepo の仮定 A-03）。完了ゲートは scope ci で実行し、ローカルの完了の結果を合格にしない。
+
+ ## 6. マージ後：仕様に取り込む
+
+diff --git a/.agents/skills/delivery/SKILL.md b/.agents/skills/delivery/SKILL.md
+--- a/.agents/skills/delivery/SKILL.md
++++ b/.agents/skills/delivery/SKILL.md
+@@ -82,14 +82,14 @@
+
+ 管理役は、ある項目を Codex が実装している間に、次の独立した項目の Opus 設計を先に依頼する。同時本数と既存担当の範囲を確認し、設計の対象・元コミット・依存を記録する。設計成果物を確認し、その項目に必要な仕様ゲートが成功してから実装へ引き継ぐ。
+
+-完了ゲートが必要な作業は、対象 head での成功を確認する。独立レビューは必須 CI の完了を待たずに始めてよい。CI が失敗したら原因を修正して再検証し、変更後の head を段階の回数の範囲で再レビューする。差分を変えずに再実行する場合も、原因と再検証の結果を記録する。変更範囲外の原因は Issue に記録し、必須 CI の成功を確認するまで対象 PR を保留する。
++完了ゲートが必要な作業は、対象 head でローカルの完了（`--done --scope local`）と、gate ジョブの完了ゲート（scope ci）の成功を確認する。独立レビューは必須 CI の完了を待たずに始めてよい。CI が失敗したら原因を修正して再検証し、変更後の head を段階の回数の範囲で再レビューする。差分を変えずに再実行する場合も、原因と再検証の結果を記録する。変更範囲外の原因は Issue に記録し、必須 CI の成功を確認するまで対象 PR を保留する。
+
+ ### Issueの処理
+
+ 1. 依存が完了したIssueから、段階の出口につながる作業を選ぶ。担当・branch・change・次の確認点をIssue本文の運用記録に追記し、既存の受入条件や移行時の記録を保持する。依存の一部だけが解けた場合は、先行範囲と受入条件を合意してから切り出す。
+ 2. changeのspecs・trace・tasksを読み、製品の実装前に仕様ゲートを通す。必要なchangeがなければ、Opusへ仕様・設計・出典の整理を依頼し、その成果物を対応するOpenSpecスキルの形式で記録する。Codexが未決の設計を代わりに埋めない。確認事項と仮定の回答は ADR 0006 に従い、決定を trace と PR に記録してから実装する。
+ 3. Opusの設計成果物・対象範囲・未決事項と仕様ゲートの結果を確認してから、Codexがtasksの順に実装してタスクごとにコミットし、1日以内のマージを目安にPRを分割する。Requirementに対応するID付きテストを残す。公開APIやJSONを変えるときは、利用側も同じ変更単位で追従させる。
+-4. 完了ゲート、tasksの完了、Requirementとテストの対応を確認し、段階に応じた独立レビューを依頼する。changeの一部を出すPRでは、その範囲の検証と残作業を明記し、change全体の完了を宣言しない。
++4. ローカルの完了ゲート（`--done --scope local`）、tasksの完了、Requirementとテストの対応を確認し、段階に応じた独立レビューを依頼する。changeの一部を出すPRでは、その範囲の検証と残作業を明記し、change全体の完了を宣言しない。
+ 5. 対応 Issue を参照して PR を作る。PR 本文の先頭に `loomake-change:` と `loomake-tier:` を書き、末尾に証跡ブロックを置く（下の「マージと証跡」）。マージ条件は ADR 0006 に従う。Issue 全体の受入条件を満たしたときだけ close し、部分 PR は `Refs #番号` とする。
+ 6. 各Issueに成果・検証・未決事項・次の作業を反映する。作業記録はAGENTS.mdの形で、その作業のPRに含める。1件ごとに「続けて」を求めず、CI待ち・回答待ちには担当上限内で独立した作業へ進む。待ちがある場合は「承認待ちでも継続する」に従う。
+
+@@ -122,7 +122,7 @@
+
+ ### マージ後に仕様を反映して archive する
+
+-管理役は実装 PR のマージ時に、対応する change の全タスク・完了ゲート・要件対応テスト・レビューの完了と、実装が main に入ったことを確認し、[仕様同期](../openspec-sync-specs/SKILL.md)と [archive](../openspec-archive-change/SKILL.md) の手順へ続けて進む。一部だけを受け入れた change は、残りを完了扱いにしない。
++管理役は実装 PR のマージ時に、対応する change の全タスク・CI の完了ゲート（scope ci）・要件対応テスト・レビューの完了と、実装が main に入ったことを確認し、[仕様同期](../openspec-sync-specs/SKILL.md)と [archive](../openspec-archive-change/SKILL.md) の手順へ続けて進む。一部だけを受け入れた change は、残りを完了扱いにしない。
+
+ 両スキルに従って delta と現在の主仕様を比べ、必要な差分を同期する。同期を完了し、主仕様へ全差分が反映されたことを確かめてから、その change を archive する。同じ capability の同期は順に進め、反映済みのほかの要件や Scenario を保持する。`openspec/specs/` の変更はこの change 経由の同期で行い、直接編集の例外は AGENTS.md にある archive 直後の Purpose 修正だけとする。
+
+diff --git a/.github/PULL_REQUEST_TEMPLATE.md b/.github/PULL_REQUEST_TEMPLATE.md
+--- a/.github/PULL_REQUEST_TEMPLATE.md
++++ b/.github/PULL_REQUEST_TEMPLATE.md
+@@ -17,7 +17,8 @@
+
+ ## 実行したゲートとテスト
+
+-- [ ] `pnpm -s verify --change <change-id> --done` が exit 0（change を持つ PR。L3 は change が必須）
++- [ ] `pnpm -s verify --change <change-id> --done --scope local` が exit 0（ローカル。change を持つ PR。L3 は change が必須）
++- [ ] gate ジョブの完了ゲート（scope ci）と必須チェックが成功（マージ前に確認する）
+ - [ ] `pnpm lint`・`pnpm typecheck`・`pnpm test`
+
+ ## 確認事項・仮定と決定の記録
+diff --git a/.agents/skills/req-to-openspec/references/openspec-format.md b/.agents/skills/req-to-openspec/references/openspec-format.md
+--- a/.agents/skills/req-to-openspec/references/openspec-format.md
++++ b/.agents/skills/req-to-openspec/references/openspec-format.md
+@@ -88,9 +88,11 @@
+ - [ ] 2.1 各 Scenario に対応するテストを書く。テスト名に [REQ-xxx] を入れる
+
+ ## 3. 確認
+-- [ ] 3.1 `pnpm -s verify --change <change-id> --done` を通す <!-- loomake:gate=done -->
++- [ ] 3.1 `pnpm -s verify --change <change-id> --done --scope local` を通す <!-- loomake:gate=done -->
++
++注：3.1 はローカルの完了。最終の合格には、CI で `pnpm -s verify --change <change-id> --done --scope ci` が exit 0（判定 PASS・要判断なし）になることと、必須 CI の成功が別に要る。これはタスクにしない
+ ```
+
+-★ 完了ゲートのタスク（`verify --done` を通すタスク）の行末には `<!-- loomake:gate=done -->` を付ける。`loomake run` はこの印のあるタスクをエンジンに渡さず、完了ゲートに合格したときに完了にする。
++★ ローカルの完了ゲートのタスク（`verify --done --scope local` を通すタスク）の行末には `<!-- loomake:gate=done -->` を付ける。`loomake run` はこの印のあるタスクをエンジンに渡さず、ローカルの完了ゲートに合格したときに完了にする。末尾の注記はチェックボックスにしない。
+
+ ★ タスクの末尾に関係する REQ ID を書いておくと、runner（`loomake run`）がタスクとテストを結び付けやすくなる。
+diff --git a/.agents/skills/req-to-openspec/SKILL.md b/.agents/skills/req-to-openspec/SKILL.md
+--- a/.agents/skills/req-to-openspec/SKILL.md
++++ b/.agents/skills/req-to-openspec/SKILL.md
+@@ -79,7 +79,7 @@
+ | `proposal.md` | なぜ（背景）・何を変えるか・範囲外（Non-goals）・影響範囲 |
+ | `specs/<capability>/spec.md` | `## ADDED / MODIFIED / REMOVED Requirements` の差分仕様 |
+ | `design.md` | 技術判断が要るときだけ。選択肢と決定理由 |
+-| `tasks.md` | 実装チェックリスト。最後に「テスト」「verify」のタスクを必ず入れ、verify のタスクの行末に `<!-- loomake:gate=done -->` を付ける |
++| `tasks.md` | 実装チェックリスト。最後に「テスト」「verify」のタスクを必ず入れ、verify のタスクの行末に `<!-- loomake:gate=done -->` を付ける。このタスクは `--done --scope local` のローカルの完了で、最終の合格（`--scope ci` と必須 CI）は書式の注記に従う |
+ | `trace.md` | 要件台帳・確認事項・仮定（[templates/trace.md](templates/trace.md)） |
+
+ 各 Requirement には次の 3 つを必ず入れる。1 つでも欠けた Requirement は書かない。
+diff --git a/packages/kit/templates/skills/req-to-openspec/references/openspec-format.md b/packages/kit/templates/skills/req-to-openspec/references/openspec-format.md
+--- a/packages/kit/templates/skills/req-to-openspec/references/openspec-format.md
++++ b/packages/kit/templates/skills/req-to-openspec/references/openspec-format.md
+@@ -88,9 +88,11 @@
+ - [ ] 2.1 各 Scenario に対応するテストを書く。テスト名に [REQ-xxx] を入れる
+
+ ## 3. 確認
+-- [ ] 3.1 `npx loomake verify --change <change-id> --done` を通す <!-- loomake:gate=done -->
++- [ ] 3.1 `npx loomake verify --change <change-id> --done --scope local` を通す <!-- loomake:gate=done -->
++
++注：3.1 はローカルの完了。最終の合格には、CI で `npx loomake verify --change <change-id> --done --scope ci` が exit 0（判定 PASS・要判断なし）になることと、必須 CI の成功が別に要る。これはタスクにしない
+ ```
+
+-★ 完了ゲートのタスク（`verify --done` を通すタスク）の行末には `<!-- loomake:gate=done -->` を付ける。`loomake run` はこの印のあるタスクをエンジンに渡さず、完了ゲートに合格したときに完了にする。
++★ ローカルの完了ゲートのタスク（`verify --done --scope local` を通すタスク）の行末には `<!-- loomake:gate=done -->` を付ける。`loomake run` はこの印のあるタスクをエンジンに渡さず、ローカルの完了ゲートに合格したときに完了にする。末尾の注記はチェックボックスにしない。
+
+ ★ タスクの末尾に関係する REQ ID を書いておくと、runner（`loomake run`）がタスクとテストを結び付けやすくなる。
+diff --git a/packages/kit/templates/skills/req-to-openspec/SKILL.md b/packages/kit/templates/skills/req-to-openspec/SKILL.md
+--- a/packages/kit/templates/skills/req-to-openspec/SKILL.md
++++ b/packages/kit/templates/skills/req-to-openspec/SKILL.md
+@@ -79,7 +79,7 @@
+ | `proposal.md` | なぜ（背景）・何を変えるか・範囲外（Non-goals）・影響範囲 |
+ | `specs/<capability>/spec.md` | `## ADDED / MODIFIED / REMOVED Requirements` の差分仕様 |
+ | `design.md` | 技術判断が要るときだけ。選択肢と決定理由 |
+-| `tasks.md` | 実装チェックリスト。最後に「テスト」「verify」のタスクを必ず入れ、verify のタスクの行末に `<!-- loomake:gate=done -->` を付ける |
++| `tasks.md` | 実装チェックリスト。最後に「テスト」「verify」のタスクを必ず入れ、verify のタスクの行末に `<!-- loomake:gate=done -->` を付ける。このタスクは `--done --scope local` のローカルの完了で、最終の合格（`--scope ci` と必須 CI）は書式の注記に従う |
+ | `trace.md` | 要件台帳・確認事項・仮定（[templates/trace.md](templates/trace.md)） |
+
+ 各 Requirement には次の 3 つを必ず入れる。1 つでも欠けた Requirement は書かない。
+diff --git a/docs/guide/2.guides/1.for-agents.md b/docs/guide/2.guides/1.for-agents.md
+--- a/docs/guide/2.guides/1.for-agents.md
++++ b/docs/guide/2.guides/1.for-agents.md
+@@ -88,8 +88,10 @@
+ 4. 完了ゲートを通す
+
+    ```sh
+-   npx loomake verify --change <change-id> --done
++   npx loomake verify --change <change-id> --done --scope local
+    ```
++
++   最終の合格には、CI で `--done --scope ci` が exit 0（判定 PASS・要判断なし）になることと、必須 CI の成功が別に要る。
+
+ 5. 合格したら、`AGENTS.md` の「報告の形」で報告する
+
+@@ -161,7 +163,9 @@
+ ```
+
+ ```
+-npx loomake verify --change add-order-export --done を通して。落ちた検査は、出力の詳細に沿って直して。テストと設定は緩めないで。
++npx loomake verify --change add-order-export --done --scope local を通して。落ちた検査は、出力の詳細に沿って直して。テストと設定は緩めないで。
+ ```
+
++最終の合格には、CI で `--done --scope ci` が exit 0（判定 PASS・要判断なし）になることと、必須 CI の成功が別に要る。
++
+ この文書は Loomake のリポジトリにあり、`loomake init` は利用者のプロジェクトに置かない。エージェントに読ませるときは、この文書の URL を渡す。
+diff --git a/docs/guide/1.getting-started/2.usage.md b/docs/guide/1.getting-started/2.usage.md
+--- a/docs/guide/1.getting-started/2.usage.md
++++ b/docs/guide/1.getting-started/2.usage.md
+@@ -209,8 +209,10 @@
+ ### 4.4 完了ゲートを通して PR を出す
+
+ ```sh
+-npx loomake verify --change <change-id> --done
+-```
++npx loomake verify --change <change-id> --done --scope local
++```
++
++最終の合格には、CI で `--done --scope ci` が exit 0（判定 PASS・要判断なし）になることと、必須 CI の成功が別に要る。
+
+ 仕様ゲートの検査に加えて、次を確かめる。
+
+diff --git a/docs/guide/1.getting-started/1.quickstart.md b/docs/guide/1.getting-started/1.quickstart.md
+--- a/docs/guide/1.getting-started/1.quickstart.md
++++ b/docs/guide/1.getting-started/1.quickstart.md
+@@ -62,9 +62,11 @@
+ | ② 確認事項に答える | 人 | `trace.md` の確認事項に回答を、仮定に承認を書く（回答者・承認者と日付も） |
+ | ③ 仕様ゲート | verify | `npx loomake verify --change <change-id> --spec-only` が合格するまで②に戻る |
+ | ④ 実装する | AI | change-id と同じ名前のブランチで「tasks.md を順に実装して。タスクごとにコミット」と頼む |
+-| ⑤ 完了ゲート | verify | `npx loomake verify --change <change-id> --done` が合格するまで④に戻る |
++| ⑤ 完了ゲート | verify | `npx loomake verify --change <change-id> --done --scope local` が合格するまで④に戻る |
+ | ⑥ PR とマージ | 人 | PR をレビューしてマージする |
+ | ⑦ archive | 人 | `openspec archive <change-id>` を実行してコミットする |
++
++最終の合格には、CI で `--done --scope ci` が exit 0（判定 PASS・要判断なし）になることと、必須 CI の成功が別に要る。
+
+ ④と⑤は `npx loomake run --change <change-id>` で AI に任せられる。run は完了ゲートが通るまで直させ、証拠を記録して PR を作る。初めは `--dry-run` で、渡すタスクと指示を確かめる。
+
+diff --git a/tests/kit-assets.test.ts b/tests/kit-assets.test.ts
+--- a/tests/kit-assets.test.ts
++++ b/tests/kit-assets.test.ts
+@@ -248,7 +248,40 @@
+ describe('完了ゲートのタスクの印', () => {
+   it('[REQ-136] Skill の tasks.md の雛形で、完了ゲートのタスクの行末に印があり、SKILL.md が印を付けるよう指示している', () => {
+     const format = read(join(skillDir, 'references/openspec-format.md'));
+-    expect(format).toContain('- [ ] 3.1 `npx loomake verify --change <change-id> --done` を通す <!-- loomake:gate=done -->');
++    expect(format).toContain('- [ ] 3.1 `npx loomake verify --change <change-id> --done --scope local` を通す <!-- loomake:gate=done -->');
+     expect(read(join(skillDir, 'SKILL.md'))).toContain('verify のタスクの行末に `<!-- loomake:gate=done -->` を付ける');
+   });
+ });
++
++
++describe('ローカルの完了と最終の合格', () => {
++  const taskLines = () => {
++    const match = /## tasks\.md\s+```markdown\n([\s\S]*?)\n```/.exec(format);
++    expect(match).not.toBeNull();
++    return match![1].split('\n');
++  };
++
++  it('[REQ-136] 印のあるタスクはローカルの完了ゲートで、ci のタスクは無い', () => {
++    const lines = taskLines();
++    const marked = lines.filter((line) => line.includes('<!-- loomake:gate=done -->'));
++    expect(marked).toEqual(['- [ ] 3.1 `npx loomake verify --change <change-id> --done --scope local` を通す <!-- loomake:gate=done -->']);
++    expect(lines.filter((line) => /^- \[/.test(line) && line.includes('--scope ci'))).toEqual([]);
++  });
++
++  it('[REQ-136] 雛形の末尾に、最終の合格を区別するチェックボックスでない注記がある', () => {
++    const last = taskLines().filter((line) => line.trim()).at(-1)!;
++    expect(last).toMatch(/^注：/);
++    expect(last).not.toMatch(/^- \[/);
++    expect(last).toContain('CI で `npx loomake verify --change <change-id> --done --scope ci` が exit 0（判定 PASS・要判断なし）');
++    expect(last).toContain('必須 CI の成功が別に要る');
++    expect(last).toContain('これはタスクにしない');
++  });
++
++  it('AGENTS.md のテンプレートの完了の定義は、ローカルの完了と最終の合格を分ける', () => {
++    const dod = section(agents, /完了の定義/);
++    expect(dod).toContain('--done --scope local` が exit 0（ローカルの完了）');
++    expect(dod).toContain('--done --scope ci` が exit 0（判定 PASS・要判断なし）');
++    expect(dod).toContain('必須チェックが成功している');
++    expect(dod).not.toContain('--done`');
++  });
++});
+diff --git a/packages/cli/test/init.test.ts b/packages/cli/test/init.test.ts
+--- a/packages/cli/test/init.test.ts
++++ b/packages/cli/test/init.test.ts
+@@ -435,3 +435,24 @@
+     expect(r.stdout).toContain('Jest（package.json の test スクリプト）');
+   });
+ });
++
++
++describe('生成したローカルの完了と最終の合格の案内', () => {
++  it('[REQ-136] init の両 Skill に local の印と最終 CI の注記があり、AGENTS も両者を分ける', async () => {
++    const r = await runInit(['--codex']);
++    expect(r.code).toBe(0);
++    const agents = r.files['AGENTS.md'];
++    expect(agents).toContain('--done --scope local` が exit 0（ローカルの完了）');
++    expect(agents).toContain('--done --scope ci` が exit 0（判定 PASS・要判断なし）');
++    expect(agents).toContain('必須チェックが成功している');
++    for (const base of ['.claude', '.agents']) {
++      const format = r.files[`${base}/skills/req-to-openspec/references/openspec-format.md`];
++      const match = /## tasks\.md\s+```markdown\n([\s\S]*?)\n```/.exec(format);
++      expect(match).not.toBeNull();
++      const lines = match![1].split('\n');
++      expect(lines.filter((line) => line.includes('<!-- loomake:gate=done -->'))).toEqual(['- [ ] 3.1 `npx loomake verify --change <change-id> --done --scope local` を通す <!-- loomake:gate=done -->']);
++      expect(lines.filter((line) => /^- \[/.test(line) && line.includes('--scope ci'))).toEqual([]);
++      expect(lines.filter((line) => line.trim()).at(-1)).toBe('注：3.1 はローカルの完了。最終の合格には、CI で `npx loomake verify --change <change-id> --done --scope ci` が exit 0（判定 PASS・要判断なし）になることと、必須 CI の成功が別に要る。これはタスクにしない');
++    }
++  });
++});
+diff --git a/scripts/package-smoke.mjs b/scripts/package-smoke.mjs
+--- a/scripts/package-smoke.mjs
++++ b/scripts/package-smoke.mjs
+@@ -224,6 +224,19 @@
+   const initRoot = mkdtempSync(join(target, 'init-'));
+   run(process.execPath, [cli, 'init', '--codex', '--devcontainer'], initRoot);
+   for (const file of ['AGENTS.md', '.agents/skills/req-to-openspec/SKILL.md', '.devcontainer/devcontainer.json']) assert.ok(existsSync(join(initRoot, file)), file);
++  const initAgents = readFileSync(join(initRoot, 'AGENTS.md'), 'utf8');
++  assert.ok(initAgents.includes('--done --scope local` が exit 0（ローカルの完了）'));
++  assert.ok(initAgents.includes('--done --scope ci` が exit 0（判定 PASS・要判断なし）'));
++  assert.ok(initAgents.includes('必須チェックが成功している'));
++  for (const base of ['.claude', '.agents']) {
++    const format = readFileSync(join(initRoot, base, 'skills/req-to-openspec/references/openspec-format.md'), 'utf8');
++    const match = /## tasks\.md\s+```markdown\n([\s\S]*?)\n```/.exec(format);
++    assert.ok(match, `${base}: tasks.md の雛形がありません`);
++    const lines = match[1].split('\n');
++    assert.deepEqual(lines.filter((line) => line.includes('<!-- loomake:gate=done -->')), ['- [ ] 3.1 `npx loomake verify --change <change-id> --done --scope local` を通す <!-- loomake:gate=done -->']);
++    assert.deepEqual(lines.filter((line) => /^- \[/.test(line) && line.includes('--scope ci')), []);
++    assert.equal(lines.filter((line) => line.trim()).at(-1), '注：3.1 はローカルの完了。最終の合格には、CI で `npx loomake verify --change <change-id> --done --scope ci` が exit 0（判定 PASS・要判断なし）になることと、必須 CI の成功が別に要る。これはタスクにしない');
++  }
+   command('doctor');
+   command('verify', '--change', 'sample', '--spec-only');
+   const verified = JSON.parse(command('verify', '--change', 'sample', '--done', '--json'));
+diff --git a/.changeset/verify-v2-dod.md b/.changeset/verify-v2-dod.md
+new file mode 100644
+--- /dev/null
++++ b/.changeset/verify-v2-dod.md
+@@ -0,0 +1,6 @@
++---
++"@loomake/kit": patch
++"loomake": patch
++---
++
++配布する AGENTS と tasks 雛形で、ローカルの完了を明示 local にし、最終 CI の合格と区別する。

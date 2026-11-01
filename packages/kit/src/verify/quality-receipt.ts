@@ -1,8 +1,9 @@
 // ci の完了ゲートで、ci.test_report の adapter に渡す事実（receipt）を集める I/O（REQ-319）。照合は adapter が行う
-import { existsSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { existsSync, realpathSync } from 'node:fs';
+import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { createInputReader, JSON_LIMITS } from '../runtime/input.js';
 import { runExternal } from '../runtime/process.js';
+import { RuntimeFailure } from '../runtime/errors.js';
 import { specFiles, toPosix } from '../runtime/change-files.js';
 import { QUALITY_FILE } from './quality-input.js';
 import { sha256Hex } from './hash.js';
@@ -48,10 +49,34 @@ export function gitHead(root: string): string | null {
 
 const PRODUCERS = ['vitest', 'jest'];
 
-/** ルートから親へたどって、node_modules にあるテストランナーの名前と版を探す。見つからなければ null */
+/** The current Git worktree bounds lookup positions (REQ-359); an unknown or unrelated top permits only root. */
+function searchTop(root: string): string {
+  try {
+    const result = runExternal('git', ['rev-parse', '--show-toplevel'], { cwd: root, maxBuffer: 1024 * 1024 });
+    const output = result.status === 0 ? result.stdout.replace(/\r?\n$/, '') : '';
+    if (!output || !isAbsolute(output)) return root;
+    const top = realpathSync.native(output);
+    const inside = relative(top, root);
+    return inside === '' || (inside !== '..' && !inside.startsWith(`..${sep}`) && !isAbsolute(inside)) ? top : root;
+  } catch (error) {
+    if (error instanceof RuntimeFailure) throw error;
+    return root;
+  }
+}
+
+/** Search from the real root through its inclusive Git top; runner links may point outside that boundary (REQ-359). */
 export function findProducer(root: string): TestReportReceipt['producer'] {
   const reader = createInputReader();
-  for (let dir = root; ; dir = dirname(dir)) {
+  let start = root;
+  let top = root;
+  try {
+    start = realpathSync.native(root);
+    top = searchTop(start);
+  } catch (error) {
+    if (error instanceof RuntimeFailure) throw error;
+    // An unresolved root cannot justify searching any parent.
+  }
+  for (let dir = start; ; dir = dirname(dir)) {
     for (const name of PRODUCERS) {
       const file = join(dir, 'node_modules', name, 'package.json');
       if (!existsSync(file)) continue;
@@ -62,7 +87,7 @@ export function findProducer(root: string): TestReportReceipt['producer'] {
         // シンボリックリンクなど、読めないものは使わない
       }
     }
-    if (dirname(dir) === dir) return null;
+    if (relative(dir, top) === '' || dirname(dir) === dir) return null;
   }
 }
 
