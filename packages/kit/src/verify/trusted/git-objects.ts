@@ -24,7 +24,7 @@ export function readGitDocuments(repository: string, commit: string, prefix: str
     try { return decode(git(args, GIT_METADATA_BYTES)); }
     catch (error) {
       if (error !== null && typeof error === 'object' && 'code' in error && error.code === 'ENOBUFS') {
-        throw new Error('Git のメタデータが読取りの上限を超えています');
+        throw new Error('Git のメタデータが読取りの上限を超えています', { cause: error });
       }
       throw error;
     }
