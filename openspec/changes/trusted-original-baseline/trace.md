@@ -60,7 +60,7 @@ Git部品の時間予算への接続、openと各Scenarioの意味の対応、�
 
 ## 全Scenarioと実試験の対応
 
-以下の試験は`tests/`のファイルである。元109ケースのcallback・期待値・期限・入力表を保持し、T-A〜Jの追加10件を含む全119ケースが成功した。初回112件などの過去の実結果は後の履歴へ区別して記録する。
+以下の試験は`tests/`のファイルである。元109ケースのcallback・期待値・期限・入力表を保持し、T-A〜Jの10件とT-Kの12ケースを含む全131ケースが成功した。初回112件などの過去の実結果は後の履歴へ区別して記録する。
 
 | 要件・Scenario | 試験ファイルと直接確かめる内容 |
 |---|---|
@@ -71,7 +71,7 @@ Git部品の時間予算への接続、openと各Scenarioの意味の対応、�
 | 376：差分仕様と主仕様を区別する | trusted-main-spec-manifest：実042の全文hash・unchanged・差分operationの拒否 |
 | 377：原commitがないcheckoutで原集合を復元する | trusted-original-snapshot：原commitがないrepository。trusted-original-contracts：47/158/46・16条件・別契約041 |
 | 377：原本の不一致を拒否する | trusted-original-snapshot：集合・path・bytes・mode・blob・BOM・CRLFの不一致と対象側の改変 |
-| 377：各所有本文と元Scenarioを照合する | trusted-baseline：所有全文・Scenario対応・index・採否参照・試験ID・archive・補完の正負例、重複T-D〜Gと句の識別子T-H、archive省略形の同一性T-J |
+| 377：各所有本文と元Scenarioを照合する | trusted-baseline：所有全文・Scenario対応・index・採否参照・試験ID・archive・補完の正負例、重複T-D〜Gと句の識別子T-H、archive省略形の同一性T-J、採否IDの同一性T-K（12ケース） |
 | 377：未対応を保持する | trusted-baseline：038/042 open・042 unchanged・324両所有・対応欠落の拒否とcurrentなし義務の保持、同じ句の異なるownerの拒否T-I |
 | 377：構造成功と採否主体を区別する | trusted-baseline：防御的複製・凍結・adoptionsVerified false・入力と共有prototype不変（追加T-C）。trusted-original-contracts：後の復元への変更漏れなし |
 
@@ -127,3 +127,10 @@ T-H/Iは修理前に既存41成功・新2失敗となり、2つの句の識別�
 自己レビューbf3d2f0aは重大0・軽微2で、Q-C1D-06/07が地の文の後ろにあり表として読まれない点と、同じ採否IDのhash表記/値違いを重複拒否できない点を指摘した。旧ゲート実終了0・21PASSは実結果だが、解析した確認事項は11件で、記録に書いた13行すべてを検査したものではなかった。2行をQ05の直後へ内容不変で移し、Q08も同じ表に置く。新仕様ゲートでは14件の実読取りを明示して確認する。
 
 Q08の修理は既存REQ-377の採否参照集合の重複拒否である。元63宣言と8実装blobを保持し、T-Kの1宣言で3配列×4種類、計12ケースを追加する。hashのprefix違いと異なるhashで同じIDの二重記録を拒否し、各単一入力と異なるID2件は受理する。hashや返却するpayloadは書き換えず、主体・APIの検証済みとはしない。
+
+
+## 採否参照と確認事項表の修理後の実検証
+
+T-Kの12ケースは旧実装で既存44成功・新12失敗となり、修理後は関連131成功だった。各単一参照と異なるIDの2参照を受理し、hash表記/値でpayloadを変更せず、同じIDの2件を拒否した。最新全体は2600成功・失敗0・既存保留8、build・lint・型は終了0、coverage95.20/90.93/97.74/98.01%で固定閾値を満たした。独立fixture32箇所とレイヤー19件が成功し、8実装blob・既存63宣言のcallback・入力表・期待値・期限を保持した。新規はT-Kの1宣言だけである。
+
+Q06/07の回答を内容不変で同じ表へ移し、新Q08を加えた後、通常仕様ゲートとlocal doneが実際に全14件・未回答0として読んだことを確認した。旧edの実JSONは11件であり、13件すべてを検査済みとする解釈を訂正する。最新の通常local doneは実終了0・全21検査PASS・completed・errors空・要判断なし、全5タスクと2要件の対応試験を確認した。最新headの自己レビューと別の最終Opus、CI・3OSとマージは残る。旧edのWindows原文書試験の5000ms失敗はIssue #116のコメント6557932843へ記録し、期限や期待値を変更せず、新しい成功を原因修理へ数えない。
