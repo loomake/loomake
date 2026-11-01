@@ -59,7 +59,7 @@ function fixture() {
   return { baseline, context: { original, anchor, sha256Hex } };
 }
 
-const { stringify } = createRequire(new URL('../packages/kit/package.json', import.meta.url))('yaml') as typeof import('yaml');
+const { stringify } = createRequire(new URL('../packages/kit/package.json', import.meta.url))('yaml') as { stringify(value: unknown, options: { aliasDuplicateObjects: boolean }): string };
 const counts: RecordCounts = { rows: 47, owners: 48, scenarioMap: 158, currentNull: 0, moved: 0,
   renamed: 0, superseded: 0, open: 2, supersessions: 0, supersessionRefs: 0, supplements: 0,
   adoption: 47, testRefs: 63, uniqueTestRefs: 47, cross: 16 };
