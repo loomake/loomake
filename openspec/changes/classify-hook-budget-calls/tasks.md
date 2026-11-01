@@ -4,7 +4,7 @@
 
 ## 1. 試験用観測の修理
 
-- [ ] 1.1 `packages/runner/test/process-diagnostics.test.ts` に `[REQ-350]` の新しいitで全6 Scenarioを追加する。自己変化getter・選択後のdata変更・先行qualityCommandのgetter・全trapのProxyは修理前のREDを記録し、診断envなし・固定plain・元throwも確認してから、A′とQ6(a)でobserverを直してGREENを確認する。既存の120〜161行相当のit・describe・期待値は保持する。
+- [x] 1.1 `packages/runner/test/process-diagnostics.test.ts` に `[REQ-350]` の新しいitで全6 Scenarioを追加する。自己変化getter・選択後のdata変更・先行qualityCommandのgetter・全trapのProxyは修理前のREDを記録し、診断envなし・固定plain・元throwも確認してから、A′とQ6(a)でobserverを直してGREENを確認する。既存の120〜161行相当のit・describe・期待値は保持する。
 - [ ] 1.2 `docs/dev/testing-across-os.md` に取得時点・mode/cwdと観測限界を反映し、REQ-350の試験と文書リンク検査が成功すること、元の引数・同期1回・返値/throw・診断envなしの保護が保たれることを確認する。
 
 ## 2. 分類と公開制限のID付き追加試験

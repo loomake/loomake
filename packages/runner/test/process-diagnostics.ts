@@ -158,14 +158,32 @@ function operation(command: string, args: readonly string[]): string {
     + (name === 'gh' && operations.has(first) && operations.has(second) ? '-' + second : '');
 }
 
-/** getterやProxyを追加評価せず、明示timeoutの有無だけを観測する。 */
-function timeoutRequested(options: Parameters<ProcessRuntime['runExternal']>[2]): boolean | null {
-  if (options == null) return false;
-  if (utilTypes.isProxy(options)) return null;
-  const descriptor = Object.getOwnPropertyDescriptor(options, 'timeoutMs');
-  if (descriptor) return 'value' in descriptor ? descriptor.value !== undefined && descriptor.value !== null : null;
+type OwnData = { known: boolean; value?: unknown };
+type OptionsSnapshot = { timeoutRequested: boolean | null; mode: 'normal' | 'quality' | 'untilDeadline' | null; cwd?: string };
+
+function ownData(options: NonNullable<Parameters<ProcessRuntime['runExternal']>[2]>, key: string): OwnData {
+  const descriptor = Object.getOwnPropertyDescriptor(options, key);
+  if (descriptor) return 'value' in descriptor ? { known: true, value: descriptor.value } : { known: false };
   const prototype = Object.getPrototypeOf(options);
-  return prototype === null || prototype === Object.prototype && !Object.hasOwn(prototype, 'timeoutMs') ? false : null;
+  return { known: prototype === null || prototype === Object.prototype && !Object.hasOwn(prototype, key) };
+}
+
+/** 製品がqualityCommand→untilDeadline→timeoutMsを読む前に、不活性なdataだけを保存する。 */
+function snapshotOptions(options: Parameters<ProcessRuntime['runExternal']>[2]): OptionsSnapshot {
+  if (options == null) return { timeoutRequested: false, mode: 'normal' };
+  const unknown: OptionsSnapshot = { timeoutRequested: null, mode: null };
+  try {
+    if (utilTypes.isProxy(options)) return unknown;
+    const quality = ownData(options, 'qualityCommand');
+    const until = ownData(options, 'untilDeadline');
+    const timeout = ownData(options, 'timeoutMs');
+    const cwd = ownData(options, 'cwd');
+    return {
+      timeoutRequested: quality.known && until.known && timeout.known ? timeout.value !== undefined && timeout.value !== null : null,
+      mode: quality.known && until.known ? quality.value ? 'quality' : until.value ? 'untilDeadline' : 'normal' : null,
+      ...(cwd.known && typeof cwd.value === 'string' ? { cwd: cwd.value } : {}),
+    };
+  } catch { return unknown; }
 }
 
 /** 試験専用。元関数の引数・返値・例外をそのまま通し、許可した観測値だけを残す。 */
@@ -173,6 +191,7 @@ export function observeRunExternal(real: ProcessRuntime): ProcessRuntime['runExt
   readSupervisorReport = real.readReport;
   return (...args) => {
     if (!process.env.LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR) return real.runExternal(...args);
+    const snapshot = snapshotOptions(args[2]);
     let start: { t0: number; R: number | null; t1: number; hw0: number };
     try {
       const t0 = mono(); const R = finite(real.remainingProcessTime()); const t1 = mono();
@@ -189,15 +208,14 @@ export function observeRunExternal(real: ProcessRuntime): ProcessRuntime['runExt
     finally {
       currentCall = previous;
       try {
-        const options = args[2];
         const tx = mono(); const hw1 = finite(real.holderWaitTime());
         const spawn = call.spawns.length === 1 ? call.spawns[0] : null;
         const error = thrown instanceof real.ProcessLimitError ? thrown : undefined;
-        const repo = options?.cwd ? basename(resolve(options.cwd, '..')) : '';
+        const repo = snapshot.cwd ? basename(resolve(snapshot.cwd, '..')) : '';
         writeCall({ event: 'call', at: Date.now(), pid: process.pid, seq, callId: call.callId,
           ...(/^loomake-run-[a-zA-Z0-9_-]{1,80}$/.test(repo) ? { repo } : {}),
-          timeoutRequested: timeoutRequested(options),
-          op: operation(args[0], args[1]), mode: options?.qualityCommand ? 'quality' : options?.untilDeadline ? 'untilDeadline' : 'normal',
+          timeoutRequested: snapshot.timeoutRequested,
+          op: operation(args[0], args[1]), mode: snapshot.mode,
           ...start, hw0: finite(start.hw0), hw1, tx: finite(tx), Rclamped: start.R === 0,
           spawned: call.spawns.length > 0, spawnCount: call.spawns.length, spawn,
           result: didThrow ? 'threw' : returned?.error ? 'returned-error' : 'returned',
