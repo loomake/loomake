@@ -12,6 +12,7 @@
 //
 // PR 本文は、実行のたびに gh で読む。本文を書き直したら、gate のジョブを再実行すれば反映される（make-ci-change-selection-explicit の仮定 A-03）。
 // PR_BODY を渡せば、gh を使わずにその文を本文として使う
+// L2・L3 の PR は工程行の形も検査する。担当や実行記録の照合は行わない（Issue #256）。
 
 import { appendFileSync, existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
@@ -20,6 +21,7 @@ import { fileURLToPath } from 'node:url';
 import { parseRawDiff } from './ci-docs-only.mjs';
 import { decideTier, formatTierLine, isDocumentPath, isSpecPath } from './ci-tier.mjs';
 import { checkReqDuplicates, formatProblems, formatStale } from './req-duplicate-check.mjs';
+import { processEvidenceProblems, formatProcessProblems } from './process-evidence.mjs';
 
 // change は changes/ の直下のディレクトリだけ。changes/archive/ は完了した change の置き場で、change ではない
 const isChangeName = (name) => /^[^/\\.][^/\\]*$/.test(name) && name !== 'archive';
@@ -199,6 +201,15 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `tier=${decided.tier}\ntier_line<<LOOMAKE_TIER_EOF\n${tierLine}\nLOOMAKE_TIER_EOF\n`);
 
   let status = 0;
+  if (decided.tier !== 'L1') {
+    if (process.env.PR_NUMBER) {
+      const problems = processEvidenceProblems(body);
+      if (problems.length) {
+        console.error(`ci-gate: 証跡の工程行：${formatProcessProblems(problems)}`);
+        status = 1;
+      }
+    } else console.error('ci-gate: PR 番号がないので工程行の形の検査を飛ばします');
+  }
   // REQ ID の重複は段階を問わず調べる（scripts/req-duplicate-check.mjs）。ファイルを読むだけの軽い検査で、失敗しても後の検査は続ける
   try {
     const { problems, stale } = checkReqDuplicates();
