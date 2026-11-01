@@ -45,3 +45,7 @@ curl -fsSL https://raw.githubusercontent.com/loomake/loomake/metrics-data/tokens
 ## 注意
 
 出典は、スクリプトを実行した開発機にある Claude Code（`~/.claude/projects` のうち loomake のもの）と Codex（`~/.codex/sessions`）のログだけです。ほかの端末やクラウドのセッションで使った分は含みません。CSV には日付・ツール名・モデル名・数値だけを書きます。セッションの本文やファイルのパスは書きません。
+
+## 柱1の5項目
+
+changeごとの確認事項・仕様ゲートの停止・手戻り・時間・AIコストは、[計測項目の定義](delivery-metrics.md)と[手書きの記録様式](../effort/template.md)を使います。日次トークン集計をchangeごとの費用には流用しません。`--effort` と効率の表の生成・欄の追加は [Issue #68](https://github.com/loomake/loomake/issues/68)の範囲であり、この定義の追加では実装しません。
