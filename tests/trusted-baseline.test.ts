@@ -253,6 +253,40 @@ describe('初回47契約の構造と所有の照合', () => {
     expect(result.adoptionsVerified).toBe(false);
   });
 
+  it.each((['adoption', 'scenario', 'supersession'] as const).flatMap((target) =>
+    (['comment-prefix', 'comment-conflict', 'prBody-prefix', 'prBody-conflict'] as const).map((kind) => [target, kind] as const),
+  ))('[REQ-377] %sの採否参照で%sの同じ識別子を二重に受理しない', (target, kind) => {
+    const hash = 'a'.repeat(64), alternate = kind.endsWith('prefix') ? `sha256:${hash}` : 'b'.repeat(64);
+    const first: AdoptionRef = kind.startsWith('comment')
+      ? { comment: { id: 1, pr: 2, bodySha256: hash } }
+      : { prBody: { pr: 2, line: 3, sha256: hash } };
+    const second = structuredClone(first);
+    if ('comment' in second) second.comment.bodySha256 = alternate;
+    if ('prBody' in second) second.prBody.sha256 = alternate;
+    const distinct = structuredClone(second);
+    if ('comment' in distinct) distinct.comment.id = 2;
+    if ('prBody' in distinct) distinct.prBody.line = 4;
+    const f = fixture(), row = f.baseline.rows[0], refs: AdoptionRef[] = [first];
+    if (target === 'adoption') row.adoption = refs;
+    else if (target === 'scenario') {
+      const mapping = row.scenarioMap[0];
+      mapping.status = 'superseded'; mapping.current = null; mapping.by = refs;
+    } else row.supersessions = [{ clause: 'replace original clause', by: refs }];
+    const single = check(f);
+    expect(single.problems).toEqual([]);
+    expect(single.baseline).toEqual(f.baseline);
+    refs.push(distinct);
+    const multiple = check(f);
+    expect(multiple.problems).toEqual([]);
+    expect(multiple.baseline).toEqual(f.baseline);
+    refs[1] = second;
+    const result = check(f);
+    expect(result.baseline).toBeNull();
+    expect(result.sha256).toBeNull();
+    expect(result.problems.length).toBeGreaterThan(0);
+    expect(result.adoptionsVerified).toBe(false);
+  });
+
   it('[REQ-377][REQ-371] 現対応のない元Scenarioはopenに残し、実装済みや採否検証済みにしない', () => {
     const f = fixture(), row = f.baseline.rows[0];
     row.scenarioMap[0].current = null;

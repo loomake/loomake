@@ -1,7 +1,7 @@
 import { parseSpec } from '@loomake/core';
 import { canonicalJson, isSafeRepoPath } from './canonical.js';
 import { decodeInitialBaseline } from './baseline-shape.js';
-import type { ApprovedBaseline, BaselineOwner, BaselineRow, TestRef } from './baseline-types.js';
+import type { AdoptionRef, ApprovedBaseline, BaselineOwner, BaselineRow, TestRef } from './baseline-types.js';
 import { reconstructOriginalContracts } from './original-contracts.js';
 import { reconstructOriginalScope } from './original-cross-conditions.js';
 import { buildMainSpecManifest, buildSpecManifest } from './spec-manifest.js';
@@ -11,6 +11,9 @@ type OwnerBlock = { file: string; name: string; block: string; scenarios: string
 type Hash = (text: string) => string;
 const same = (a: unknown, b: unknown) => canonicalJson(a) === canonicalJson(b);
 const identity = (ref: TestRef) => canonicalJson([ref.file, ref.name]);
+const adoptionIdentity = (ref: AdoptionRef) => canonicalJson('trace' in ref
+  ? ['trace', ref.trace.change, ref.trace.id]
+  : 'comment' in ref ? ['comment', ref.comment.pr, ref.comment.id] : ['prBody', ref.prBody.pr, ref.prBody.line]);
 const unique = (values: string[]) => new Set(values).size === values.length;
 
 function ownerBlock(owner: BaselineOwner, text: string, hash: Hash): OwnerBlock | null {
@@ -87,7 +90,7 @@ export function checkInitialBaselineStructure(input: unknown, context: {
     if (!row) continue;
     const { ref, path, line, name, scenarios } = contract.original;
     if (!same(row.original, { ref, path, line, name, scenarios })) problems.push(`原契約の記録が変わっています：${row.key}`);
-    if (!row.adoption.length || !unique(row.adoption.map(canonicalJson))) problems.push(`所有内容の採否が空か重複しています：${row.key}`);
+    if (!row.adoption.length || !unique(row.adoption.map(adoptionIdentity))) problems.push(`所有内容の採否が空か重複しています：${row.key}`);
     if (!row.tests.length || !unique(row.tests.map(identity))
       || !contract.original.sources.every((source) => row.tests.some((test) => test.name.includes(`[${source}]`)))) {
       problems.push(`要件ID付きの試験が無いか試験参照が重複しています：${row.key}`);
@@ -109,7 +112,7 @@ export function checkInitialBaselineStructure(input: unknown, context: {
     if (!unique(mappings) || !same([...mappings].sort(), [...scenarios].sort())) problems.push(`原Scenarioの対応に欠落・追加・重複があります：${row.key}`);
     for (const mapping of row.scenarioMap) {
       if (mapping.status === 'superseded' && !mapping.by?.length) problems.push(`置換したScenarioの採否がありません：${row.key} ${mapping.original}`);
-      if (mapping.by && !unique(mapping.by.map(canonicalJson))) problems.push(`置換したScenarioの採否参照が重複しています：${row.key} ${mapping.original}`);
+      if (mapping.by && !unique(mapping.by.map(adoptionIdentity))) problems.push(`置換したScenarioの採否参照が重複しています：${row.key} ${mapping.original}`);
       if (mapping.current === null && mapping.status !== 'superseded' && !(mapping.status === 'kept' && row.open?.length)) {
         problems.push(`現Scenario・置換の採否・保持する未対応のいずれもありません：${row.key} ${mapping.original}`);
       }
@@ -119,7 +122,7 @@ export function checkInitialBaselineStructure(input: unknown, context: {
     }
     if (row.supersessions?.some((entry) => !entry.by.length)) problems.push(`置換した句の採否がありません：${row.key}`);
     if (row.supersessions && !unique(row.supersessions.map((entry) => entry.clause))) problems.push(`置換した句が重複しています：${row.key}`);
-    if (row.supersessions?.some((entry) => !unique(entry.by.map(canonicalJson)))) problems.push(`置換した句の採否参照が重複しています：${row.key}`);
+    if (row.supersessions?.some((entry) => !unique(entry.by.map(adoptionIdentity)))) problems.push(`置換した句の採否参照が重複しています：${row.key}`);
     if (row.open && !unique(row.open.map((entry) => entry.clause))) problems.push(`未対応の句が重複しています：${row.key}`);
   }
   for (const row of baseline.rows) {
