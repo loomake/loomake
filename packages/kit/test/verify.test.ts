@@ -584,3 +584,128 @@ describe('ゲート別の分類', () => {
     expect(verifyExitCode(r)).toBe(0);
   });
 });
+
+describe('回答の反映と書き方の案内（#285）', () => {
+  const qrow = (id: string, related: string, answer = '', blocking = 'no') =>
+    `| ${id} | ${related} | 何回ですか | 3 / 5 | 5 | ${blocking} | ${answer} |`;
+  const pending = (id: string) => ledgerRow(id, '確認待ち');
+
+  it('[REQ-360] 確認待ちの要件に対応するQを示し、案内だけではpendingと要判断を立てない', () => {
+    const trace = traceMd({ ledger: [ledgerRow('REQ-012'), pending('REQ-027')], questions: [qrow('Q-15', 'REQ-027')] });
+    const r = withProject({ trace }, specOnly);
+    expect(check(r, '確認待ちの要件')).toMatchObject({ status: 'warn', detail: 'REQ-027（Q-15）' });
+    expect(formatVerifyResult(r)).toContain('! 確認待ちの要件\n    REQ-027（Q-15）');
+    expect(r).toMatchObject({ decision: { required: false, reasons: [] }, summary: { pending: 0 } });
+    expect(verifyExitCode(r)).toBe(0);
+  });
+
+  it('[REQ-360] 複数の関連IDと重複を表の順で一度だけ表示する', () => {
+    const trace = traceMd({ ledger: [ledgerRow('REQ-012'), pending('REQ-027'), pending('REQ-029'), pending('REQ-002')], questions: [
+      qrow('Q-17', 'REQ-029, REQ-027・REQ-027'), qrow('Q-15', 'REQ-027・REQ-029'), qrow('Q-17', 'REQ-029'),
+    ] });
+    const r = withProject({ trace }, specOnly);
+    expect(check(r, '確認待ちの要件')?.detail).toBe('REQ-027（Q-17・Q-15）, REQ-029（Q-17・Q-15）, REQ-002');
+    expect(verifyExitCode(r)).toBe(0);
+  });
+
+  it('[REQ-360] 長いREQ IDや前に英字のある参照を別の要件へ部分一致させない', () => {
+    const trace = traceMd({ ledger: [ledgerRow('REQ-012'), pending('REQ-027')], questions: [qrow('Q-15', 'REQ-0270, XREQ-027')] });
+    expect(withProject({ trace }, (root) => check(specOnly(root), '確認待ちの要件')?.detail)).toBe('REQ-027');
+  });
+
+  it('[REQ-360] 関連するQのない確認待ちは従来のREQ IDだけを示す', () => {
+    const trace = traceMd({ ledger: [ledgerRow('REQ-012'), pending('REQ-002')] });
+    const r = withProject({ trace }, specOnly);
+    expect(check(r, '確認待ちの要件')?.detail).toBe('REQ-002');
+    expect(verifyExitCode(r)).toBe(0);
+  });
+
+  it.each(['yes', 'no'])('[REQ-360] 回答済みQの関連要件が確認待ちならblocking=%sでも案内つき合格にする', (blocking) => {
+    const trace = traceMd({ ledger: [ledgerRow('REQ-012'), pending('REQ-029')], questions: [qrow('Q-15', 'REQ-029', ' 5 回 ', blocking)] });
+    const r = withProject({ trace }, specOnly);
+    expect(check(r, '回答済みの確認事項の反映')).toMatchObject({ status: 'warn', detail: 'Q-15（回答済み）：REQ-029 が確認待ちです' });
+    expect(r).toMatchObject({ decision: { required: false, reasons: [] }, summary: { pending: 0 } });
+    expect(verifyExitCode(r)).toBe(0);
+  });
+
+  it.each([
+    { answer: '   ', state: '確認待ち' }, { answer: '5 回', state: '反映済' },
+  ])('[REQ-360] 未回答または関連要件が反映済みなら反映漏れを案内しない %j', ({ answer, state }) => {
+    const trace = traceMd({ ledger: [ledgerRow('REQ-012'), ledgerRow('REQ-029', state)], questions: [qrow('Q-15', 'REQ-029', answer)] });
+    const spec = specMd(requirement('元の要件'), requirement('対象の要件', { source: 'Source: REQ-029' }));
+    const r = withProject({ trace, spec }, specOnly);
+    expect(check(r, '回答済みの確認事項の反映')).toBeUndefined();
+    expect(verifyExitCode(r)).toBe(0);
+  });
+
+  it('[REQ-360] CRLFの差分仕様に残る回答済みQをファイル名と行の順で案内する', () => {
+    const trace = traceMd({ questions: [qrow('Q-15', 'REQ-012', '5 回'), qrow('Q-17', 'REQ-012', '3 回')] });
+    const base = specMd(); const line = base.split('\n').length + 1;
+    const spec = `${base}\nQ-17の回答を反映する\nQ-15の回答を反映する\n`.replace(/\n/g, '\r\n');
+    const r = withProject({ trace, spec }, specOnly);
+    expect(check(r, '回答済みの確認事項の参照')).toMatchObject({ status: 'warn', detail: `specs/x/spec.md:${line} Q-17\nspecs/x/spec.md:${line + 1} Q-15` });
+    expect(verifyExitCode(r)).toBe(0);
+  });
+
+  it('[REQ-360] 未回答と未知Qと長いQと英字境界と両種コードブロック内を参照案内に含めない', () => {
+    const trace = traceMd({ questions: [qrow('Q-15', 'REQ-012', '5 回'), qrow('Q-16', 'REQ-012')] });
+    const spec = `${specMd()}\nQ-16 Q-19 Q-150 AQ-15\n\`\`\`text\nQ-15\n\`\`\`\n~~~\nQ-15\n~~~\n`;
+    const r = withProject({ trace, spec }, specOnly);
+    expect(check(r, '回答済みの確認事項の参照')).toBeUndefined();
+    expect(verifyExitCode(r)).toBe(0);
+  });
+
+  it('[REQ-360] 複数の差分仕様の参照はファイル順で示す', () => {
+    const trace = traceMd({ questions: [qrow('Q-15', 'REQ-012', '5 回')] });
+    const base = specMd(); const line = base.split('\n').length + 1;
+    const r = withProject({ trace, spec: `${base}\nQ-15\n`, files: { [`openspec/changes/${CHANGE}/specs/a/spec.md`]: `${base}\nQ-15\n` } }, specOnly);
+    expect(check(r, '回答済みの確認事項の参照')?.detail).toBe(`specs/a/spec.md:${line} Q-15\nspecs/x/spec.md:${line} Q-15`);
+  });
+
+  it('[REQ-360] doneは回答後の案内を追加せず従来の確認待ちの不足と終了1を保つ', () => {
+    const trace = traceMd({ ledger: [ledgerRow('REQ-012'), pending('REQ-029')], questions: [qrow('Q-15', 'REQ-029', '5 回')] });
+    const r = withProject({ trace, spec: `${specMd()}\nQ-15\n`, quality: true }, done);
+    expect(check(r, '確認待ちの要件')).toBeUndefined();
+    expect(check(r, '回答済みの確認事項の反映')).toBeUndefined();
+    expect(check(r, '回答済みの確認事項の参照')).toBeUndefined();
+    expect(check(r, '確認待ちが残っていない')).toMatchObject({ status: 'insufficient', detail: 'REQ-029' });
+    expect(verifyExitCode(r)).toBe(1);
+  });
+
+  it('[REQ-361] blockingの元詳細の直後に回答者とtrace回答欄とCLIの書き方を一行で示す', () => {
+    const r = withProject({ trace: traceMd({ questions: [qrow('Q-15', 'REQ-012', '', 'yes')] }) }, specOnly);
+    expect(check(r, 'ブロッキング確認事項')).toEqual({ check: 'ブロッキング確認事項', status: 'fail', detail: 'Q-15（REQ-012）何回ですか' });
+    const text = formatVerifyResult(r);
+    expect(text).toContain('    Q-15（REQ-012）何回ですか\n    回答の書き方：');
+    expect(text).toContain('change c1 の trace.md「確認事項」の表');
+    expect(text).toContain('回答を決めた人');
+    expect(text).toContain('loomake trace answer --change c1 --question <Q-ID> --answer <回答> --by <回答者>');
+    expect(text.split('\n').at(-1)).toBe('不合格（1 件）');
+    expect(JSON.stringify(r)).not.toContain('回答の書き方');
+    expect(verifyExitCode(r)).toBe(1);
+  });
+
+  it.each(['spec-only', 'done'] as const)('[REQ-361] 未承認の詳細直後へ承認欄とCLIの書き方を示しgate=%sの判定を保つ', (gate) => {
+    const trace = traceMd({ assumptions: ['| A-01 | REQ-012 | 8 文字以上 | 記載なし | |'] });
+    const r = withProject({ trace, quality: gate === 'done' }, (root) => runVerify({ root, qualitySchema, changeId: CHANGE, gate }));
+    expect(check(r, '仮定の承認')).toMatchObject({ status: gate === 'done' ? 'insufficient' : 'warn', detail: '未承認：A-01 8 文字以上' });
+    const text = formatVerifyResult(r);
+    expect(text).toContain(`${gate === 'done' ? '?' : '!'} 仮定の承認\n    未承認：A-01 8 文字以上\n    承認の書き方：`);
+    expect(text).toContain('「仮定」の表の該当する行の「承認」に「承認」');
+    expect(text).toContain('loomake trace approve --change c1 --assumption <A-ID> --by <承認者>');
+    expect(JSON.stringify(r)).not.toContain('承認の書き方');
+    expect(verifyExitCode(r)).toBe(gate === 'done' ? 1 : 0);
+  });
+
+  it('[REQ-361] 未回答blockingと未承認仮定がなければ書き方案内を出さない', () => {
+    const trace = traceMd({ questions: [qrow('Q-15', 'REQ-012', '5 回', 'yes')], assumptions: ['| A-01 | REQ-012 | 8 文字以上 | 記載なし | 承認 |'] });
+    const r = withProject({ trace }, specOnly);
+    expect(formatVerifyResult(r)).not.toMatch(/回答の書き方|承認の書き方/);
+    expect(verifyExitCode(r)).toBe(0);
+  });
+
+  it('[REQ-361] 履歴の1.0.0表示へ新しい案内を追加しない', () => {
+    const legacy = { schemaVersion: '1.0.0' as const, mode: 'spec-only' as const, change: CHANGE, results: [{ check: 'ブロッキング確認事項', status: 'fail' as const, detail: 'Q-15（REQ-012）何回ですか' }] };
+    expect(formatVerifyResult(legacy)).toBe('Loomake verify  mode=spec-only  change=c1\n\n✖ ブロッキング確認事項\n    Q-15（REQ-012）何回ですか\n\n不合格（1 件）');
+  });
+});
