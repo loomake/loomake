@@ -39,9 +39,9 @@ export function copyFixture(source, target) {
   }
 }
 
-/** リポジトリの 5 パッケージを build し、pack した tarball を destination に書き出す。 */
-export function buildAndPack(destination) {
-  run('pnpm', ['-r', 'build'], root);
+/** 5 パッケージを pack する。直前に build した CI は、その重複だけを明示指定で省く。 */
+export function buildAndPack(destination, { skipBuild = false } = {}) {
+  if (!skipBuild) run('pnpm', ['-r', 'build'], root);
   for (const name of packages) run('pnpm', ['pack', '--pack-destination', destination, '--silent'], join(root, 'packages', name));
 }
 
@@ -85,7 +85,7 @@ export function placeCiQuality(project) {
 }
 
 /** 既存のディレクトリを上書きせず、配布物と独立した利用先を準備する。 */
-export function prepare(target) {
+export function prepare(target, { skipBuild = false } = {}) {
   mkdirSync(target);
   const tarballs = join(target, 'tarballs');
   const consumer = join(target, 'consumer');
@@ -95,7 +95,7 @@ export function prepare(target) {
   // その tarball の場所を渡す。試験の中で build を重ねると、tsc が空にした .d.ts をほかの build が読んで落ちる（Issue #34）
   const packed = process.env.LOOMAKE_PACKED_TARBALLS;
   if (packed) for (const file of readdirSync(packed).filter((name) => name.endsWith('.tgz'))) copyFileSync(join(packed, file), join(tarballs, file));
-  else buildAndPack(tarballs);
+  else buildAndPack(tarballs, { skipBuild });
   const files = readdirSync(tarballs).filter((name) => name.endsWith('.tgz'));
   assert.equal(files.length, 5);
   // 外部の実行時依存（core の zod など）は、ワークスペースに入っている版を npm の cache に入れてから、オフラインで入れる
@@ -250,11 +250,12 @@ export async function check(target) {
 }
 
 if (isMain(import.meta.url)) {
-  const [mode, target] = process.argv.slice(2);
+  const [mode, target, ...options] = process.argv.slice(2);
   try {
     assert.ok(target && ['prepare', 'check'].includes(mode), 'prepareかcheckと、新規の検証先ディレクトリを指定してください');
+    assert.ok(options.length === 0 || (mode === 'prepare' && options.length === 1 && options[0] === '--skip-build'), '追加オプションは prepare の検証先の後ろに --skip-build を 1 回だけ指定してください');
     markPhase('package-smoke', `${mode}-start`);
-    if (mode === 'prepare') prepare(resolve(target));
+    if (mode === 'prepare') prepare(resolve(target), { skipBuild: options[0] === '--skip-build' });
     else await check(resolve(target));
     markPhase('package-smoke', `${mode}-end`);
   } catch (error) {
