@@ -12,14 +12,14 @@ Opusの2026-11-01の分割設計§2 C1と§3 C1に従い、S1の原本読取り�
 
 ## Decisions
 
-### 私的部品を本文不変で移す
+### 元の本文を保って移管する
 
 | 要件 | 実装 | 試験 |
 |---|---|---|
 | REQ-376 | canonical.ts・git-objects.ts・spec-manifest.ts | trusted-git-objects・trusted-spec-manifest・trusted-main-spec-manifest |
 | REQ-377 | original-snapshot.ts・original-contracts.ts・original-cross-conditions.ts・baseline-types.ts・baseline-shape.ts・baseline.ts | trusted-original-snapshot・trusted-original-contracts・trusted-baseline |
 
-実装は`packages/kit/src/verify/trusted/`、試験は`tests/`に置く。packageの公開exportsへは追加しない。元S1版から全実装blobと各試験callback本文を照合し、試験名には新しい要件番号だけを加える。元の370/371タグ、期待値、期限、skip条件を保持する。既存109件のcallbackは不変とし、バイト上限・ADDED・入力不変を直接確認する3試験（T-A/B/C）を追加する。baselineのJSON境界3宣言には376タグも加える。未登録タグを理由に元タグを置き換える案は採らない。
+実装は`packages/kit/src/verify/trusted/`、試験は`tests/`に置く。packageの公開exportsへは追加しない。初回移管では元S1版から全実装blobと各試験callback本文を照合し、試験名には新しい要件番号だけを加える。元の370/371タグ、期待値、期限、skip条件を保持する。既存109件のcallbackは不変とし、バイト上限・ADDED・入力不変を直接確認する3試験（T-A/B/C）を追加する。baselineのJSON境界3宣言には376タグも加える。未登録タグを理由に元タグを置き換える案は採らない。
 
 ### 原本と所有の根拠を分ける
 
@@ -36,6 +36,12 @@ Opusの2026-11-01の分割設計§2 C1と§3 C1に従い、S1の原本読取り�
 ### 通常の受入を使う
 
 この子だけを`loomake-change: trusted-original-baseline`として宣言し、通常のlocal done、ci gate、必須5チェック、3OS、別担当の自己レビューと独立Opusを通す。親C001のtasks・記録とS1の規範はこのPRで変更しない。同期とarchiveの段階は実差分で判定し、L1と決めつけない。
+
+### 公開レビューで見つかった既存仕様の漏れを直す
+
+自動Codexの指摘4435217459を採用し、REQ-377の集合重複拒否へ合わせる。`baseline.ts`に補完参照の一意性検査を加え、同じ有効参照1件は受理し、同じ参照2件は拒否する追加回帰T-DでREDからGREENを確かめる。8実装のblobと既存53宣言のcallback・入力表・期待値・期限は保持し、`baseline.ts`だけの修理差分を別に照合する。最初の3追加試験も保持し、全113ケースで検証する。
+
+2要件・全10 Scenarioと原集合は変えない。Opusの元設計にある集合の重複拒否という受入条件を再利用し、私的部品の境界や入出力は追加しない。旧headのCI・レビューは履歴として保持し、修理後のheadで通常検証と必要なレビューを行う。統合前の別の残条件は[Issue #310](https://github.com/loomake/loomake/issues/310)で追跡する。
 
 ## Risks / Trade-offs
 
