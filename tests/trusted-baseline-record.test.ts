@@ -97,6 +97,31 @@ describe('閉じた基準記録の読取り（合成fixture・実候補の採否
     expect(text).toBe(stringify({ expected_spec: before }, { aliasDuplicateObjects: false }));
   });
 
+  it('[REQ-387] T-C2A-01 置換・改名・移動・補完を含む非ゼロ件数も照合する', () => {
+    const f = fixture(), [a, b, c] = f.baseline.rows;
+    a.scenarioMap[0].status = 'moved';
+    b.scenarioMap[0].status = 'renamed';
+    c.scenarioMap[0] = { ...c.scenarioMap[0], current: null, status: 'superseded', by: structuredClone(by) };
+    a.open = [{ clause: 'Synthetic unresolved clause', owner: 'parent-1.3' }];
+    a.supersessions = [{ clause: 'Synthetic replaced clause', by: [
+      { trace: { change: 'fixture-owner', id: 'Q-CLAUSE-1' } },
+      { trace: { change: 'fixture-owner', id: 'Q-CLAUSE-2' } },
+    ] }];
+    a.supplements = [{ key: b.key, scenario: b.original.scenarios[0] }];
+    a.adoption.push({ trace: { change: 'fixture-owner', id: 'Q-ADDITIONAL' } });
+    a.tests.push({ file: 'tests/extra.test.ts', name: '[REQ-194] extra' });
+    const pin: BaselinePin = { sha256: pinFor(f.baseline).sha256, counts: {
+      rows: 47, owners: 48, scenarioMap: 158, currentNull: 1, moved: 1, renamed: 1, superseded: 1,
+      open: 3, supersessions: 1, supersessionRefs: 2, supplements: 1, adoption: 48,
+      testRefs: 64, uniqueTestRefs: 48, cross: 16,
+    } };
+    expect(checkInitialBaselineStructure(f.baseline, f.context).problems).toEqual([]);
+    const result = checkBaselineRecord(record(f.baseline), f.context, pin);
+    expect(result.problems).toEqual([]);
+    expect(result.sha256).toBe(pin.sha256);
+    expect(result.adoptionsVerified).toBe(false);
+  });
+
   it.each(Object.keys(counts) as (keyof RecordCounts)[])('[REQ-387] T-C2A-02 固定件数の%sも省略せず照合する', (key) => {
     const f = fixture(), pin = pinFor(f.baseline);
     pin.counts[key]++;
