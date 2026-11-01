@@ -6,7 +6,7 @@ Opusの2026-11-01の分割設計§2 C1と§3 C1に従い、S1の原本読取り�
 
 ## Goals / Non-Goals
 
-この子は、固定入力から返すmanifest・復元集合・候補の構造照合を完成させる。REQ-376/377を満たしても、S1の6要件・28 Scenario・14タスク、親C001の全契約、T PASS・live・S2の受入は完了しない。
+この子は固定入力から返すmanifest・復元集合・候補の構造照合を完成させる。REQ-376/377を満たしても、S1の6要件・28 Scenario・14タスク、親C001の全契約、T PASS・live・S2の受入は完了しない。
 
 具体的なC001初回候補の公開と採否主体・API・連鎖・有効基準の検証は後続で行う。既存の公開API・JSON・CLI・run.ts・依存・品質設定・保護期待値は変えない。
 
@@ -19,7 +19,7 @@ Opusの2026-11-01の分割設計§2 C1と§3 C1に従い、S1の原本読取り�
 | REQ-376 | canonical.ts・git-objects.ts・spec-manifest.ts | trusted-git-objects・trusted-spec-manifest・trusted-main-spec-manifest |
 | REQ-377 | original-snapshot.ts・original-contracts.ts・original-cross-conditions.ts・baseline-types.ts・baseline-shape.ts・baseline.ts | trusted-original-snapshot・trusted-original-contracts・trusted-baseline |
 
-実装は`packages/kit/src/verify/trusted/`、試験は`tests/`に置く。packageの公開exportsへは追加しない。元S1版から全実装blobと各試験callback本文を照合し、試験名には新しい要件番号だけを加える。元の370/371タグ、期待値、期限、skip条件を保持する。未登録タグを理由に元タグを置き換える案は採らない。
+実装は`packages/kit/src/verify/trusted/`、試験は`tests/`に置く。packageの公開exportsへは追加しない。元S1版から全実装blobと各試験callback本文を照合し、試験名には新しい要件番号だけを加える。元の370/371タグ、期待値、期限、skip条件を保持する。既存109件のcallbackは不変とし、バイト上限・ADDED・入力不変を直接確認する3試験（T-A/B/C）を追加する。baselineのJSON境界3宣言には376タグも加える。未登録タグを理由に元タグを置き換える案は採らない。
 
 ### 原本と所有の根拠を分ける
 
@@ -38,6 +38,8 @@ Opusの2026-11-01の分割設計§2 C1と§3 C1に従い、S1の原本読取り�
 この子だけを`loomake-change: trusted-original-baseline`として宣言し、通常のlocal done、ci gate、必須5チェック、3OS、別担当の自己レビューと独立Opusを通す。親C001のtasks・記録とS1の規範はこのPRで変更しない。同期とarchiveの段階は実差分で判定し、L1と決めつけない。
 
 ## Risks / Trade-offs
+
+- Git読取りはC1では試験からだけ呼ぶ未接続の部品である。verify・CLIへ統合する前にREQ-180/183の期限・出力予算へ接続し、不正UTF-8の拒否も保持する。既存規範の免除や統合済みという意味ではない。
 
 - 構造成功が承認済みと誤読されるおそれがあるため、戻り値と試験に未検証の主体を明記する。
 - callbackのタグ追加でfullNameは変わるため、後続の初回データは新しい全体reportから参照を確認する。旧reportを新headの適格な実行とは記録しない。
