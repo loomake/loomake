@@ -10,6 +10,8 @@ import {
   loadQualitySchema,
   createAgreement,
   extractTestRequirements,
+  fenceMask,
+  splitLines,
   parseSpec,
   parseTasks,
   parseTrace,
@@ -249,19 +251,45 @@ function checkSpec(
   }
 
   const pending = ledger.filter((r) => decision.pendingRequirements.some((id) => id === r.ID));
-  if (pending.length && gate === 'spec-only') record('確認待ちの要件', 'warn', pending.map((r) => r.ID).join(', '));
+  const relatedIds = (related: string): string[] => related.match(/(?<![A-Za-z0-9])REQ-\d{3,}/g) ?? [];
+  const answered = questions.filter((q) => q['回答']);
+  if (gate === 'spec-only') {
+    if (pending.length) record('確認待ちの要件', 'warn', pending.map((r) => {
+      const ids = [...new Set(questions.filter((q) => relatedIds(q['関連']).includes(r.ID)).map((q) => q.ID))];
+      return `${r.ID}${ids.length ? `（${ids.join('・')}）` : ''}`;
+    }).join(', '));
+    const unreflected = answered.flatMap((q) => {
+      const ids = pending.filter((r) => relatedIds(q['関連']).includes(r.ID)).map((r) => r.ID);
+      return ids.length ? [`${q.ID}（回答済み）：${ids.join('・')} が確認待ちです`] : [];
+    });
+    if (unreflected.length) record('回答済みの確認事項の反映', 'warn', unreflected.join('\n'));
+  }
 
   // specs
   const specs = specFiles(changeDir, reader);
   if (specs.length === 0) record('差分仕様', 'fail', 'specs/<capability>/spec.md がありません');
   const specErrors: ParseError[] = [];
+  const answerReferences: string[] = [];
+  const answeredIds = new Set(answered.map((q) => q.ID));
   const reqs = specs.flatMap((f) => {
     const file = toPosix(relative(changeDir, f));
-    const spec = parseSpec(file, reader.read(f));
+    const body = reader.read(f);
+    const spec = parseSpec(file, body);
+    if (gate === 'spec-only') {
+      const lines = splitLines(body);
+      const fenced = fenceMask(lines);
+      lines.forEach((line, index) => {
+        if (fenced[index]) return;
+        for (const match of line.matchAll(/(?<![A-Za-z0-9-])Q-\d+(?!\d)/g)) {
+          if (answeredIds.has(match[0])) answerReferences.push(`${file}:${index + 1} ${match[0]}`);
+        }
+      });
+    }
     specErrors.push(...spec.errors);
     return spec.value.map((r) => ({ ...r, file }));
   });
   if (specs.length) record('spec.md の解析', specErrors.length ? 'fail' : 'pass', formatErrors(specErrors));
+  if (answerReferences.length) record('回答済みの確認事項の参照', 'warn', answerReferences.join('\n'));
 
   const ledgerIds = new Set(ledger.map((r) => r.ID));
   const live = reqs.filter((r) => r.op === 'ADDED' || r.op === 'MODIFIED');

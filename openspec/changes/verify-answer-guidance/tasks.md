@@ -8,7 +8,7 @@
 ## 2. 意味のあるREDと最小実装
 
 - [x] 2.1 旧it/assert/期待値/期限/設定を変えず、新しい `[REQ-360]` と `[REQ-361]` の試験でAC285-1〜6と全7 Scenario・境界を追加し、依存の収集失敗ではない意味のあるREDを確認する。Mac側10件の回収・再現とは扱わない。
-- [ ] 2.2 coreのsplitLines/fenceMaskをexportし、kitのspec-onlyへ関連Qの対応、回答済みQに関連する確認待ち、コードブロック外の回答済みQ参照の案内を最小実装する。REQ-360のGREEN、doneの既存判定/出力とJSON2.0.0の保持を確認する。
+- [x] 2.2 coreのsplitLines/fenceMaskをexportし、kitのspec-onlyへ関連Qの対応、回答済みQに関連する確認待ち、コードブロック外の回答済みQ参照の案内を最小実装する。REQ-360のGREEN、doneの既存判定/出力とJSON2.0.0の保持を確認する。
 - [ ] 2.3 人向けformatV2へ回答/承認の書き方だけを追加し、REQ-361とCLI JSONのGREENを確認する。旧blocking詳細・✔✖!・終了コード・legacy1.0.0・既存の検査とassertを保持する。
 
 ## 3. 配布と試行記録
