@@ -165,12 +165,15 @@ describe('閉じた基準記録の読取り（合成fixture・実候補の採否
     ['欠落', '{}'], ['配列root', '[]'], ['scalar root', 'abc'], ['null root', 'null'],
     ['NaN', 'expected_spec: {version: .nan}'], ['Infinity', 'expected_spec: {version: .inf}'],
     ['循環alias', 'expected_spec: &a {self: *a}'],
-    ['collection増幅', 'expected_spec:\n  a: &a [x, x, x, x, x, x, x, x, x, x]\n  b: &b [*a, *a, *a, *a, *a, *a, *a, *a, *a, *a]\n  c: [*b, *b]'],
+    ['予算内collection参照の構造不正', 'expected_spec:\n  a: &a [x, x, x, x, x, x, x, x, x, x]\n  b: &b [*a, *a, *a, *a, *a, *a, *a, *a, *a, *a]\n  c: [*b, *b]'],
     ['scalar101参照', 'expected_spec:\n  a: &a value\n  b: [' + Array(101).fill('*a').join(', ') + ']'],
     ['prototype欄', 'expected_spec: {}\n__proto__: {}'],
   ])('[REQ-387] T-C2A-03 %sを日本語で拒否し例外を投げない', (_name, text) => {
     const f = fixture(), pin = pinFor(f.baseline);
-    rejected(checkBaselineRecord(text, f.context, pin));
+    const result = checkBaselineRecord(text, f.context, pin);
+    rejected(result);
+    if (_name === '予算内collection参照の構造不正') expect(result.problems.join(' ')).not.toMatch(/展開できません/);
+    if (_name === 'scalar101参照') expect(result.problems.join(' ')).toMatch(/展開できません/);
   });
 
   it('[REQ-387] T-C2A-03 正しい基準をYAML1.1のmergeで組み立てても受理しない', () => {
