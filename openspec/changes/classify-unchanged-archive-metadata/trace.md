@@ -48,7 +48,9 @@ Q1は利用者本人の具体承認を記録した。Q2〜Q6は承認した具�
 
 archive 案の `.openspec.yaml` は前後とも完全 blob ID `25002a8e8151998b10d369d4a0ccd578f8ba97f9`、モード100644、R100 と確認した。これは対象例の事実確認であり、Q1 の承認でも CI の成功でもない。
 
-要件本文の字数、strict と仕様ゲートの結果は `.loomake/handoff/archive-metadata-proposal-2026-11-01.md` に記録する。実装と回帰試験は未着手のまま残す。
+【提案時点の記録】要件本文の字数、strict と仕様ゲートの結果は `.loomake/handoff/archive-metadata-proposal-2026-11-01.md` に記録する。実装と回帰試験は未着手のまま残す。
+
+現在は[Draft PR #295](https://github.com/loomake/loomake/pull/295)で実装・回帰試験と通常のローカル完了ゲートを済ませている。新しいCI・独立Opusレビュー・main採用は未完了であり、採用前は他PRへ適用しない。
 
 ## 完了ゲートと外部受入の分離
 

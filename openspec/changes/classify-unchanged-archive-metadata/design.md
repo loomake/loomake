@@ -42,7 +42,7 @@ quality はこの集合だけを文書外パスの事前拒否から除き、モ
 
 ### Q4：AGENTS の対象行に最小限の追記をする案
 
-`proposed/AGENTS.md.patch` は L1 の対象セルだけへの追記で、未適用。限定条件は REQ-362 を参照し、一般の YAML や metadata の内容変更は対象にしない。Q1 で規則変更を承認されたあとに通常の実装差分へ含める。
+【提案時点の記録】`proposed/AGENTS.md.patch` は L1 の対象セルだけへの追記で、未適用。限定条件は REQ-362 を参照し、一般の YAML や metadata の内容変更は対象にしない。Q1 で規則変更を承認されたあとに通常の実装差分へ含める。
 
 ### Q5：既存の日付命名規則と一致させる案
 
@@ -74,7 +74,9 @@ ADDED の Source は REQ-362 だけとし、REQ-342 を重ねない。MODIFIED �
 
 - archive 案 `da72cf88` の metadata は基準 main と同じ完全 blob ID `25002a8e8151998b10d369d4a0ccd578f8ba97f9`。raw diff は前後 100644、R100 である。OID の一致は今回の読取確認であり、規則の承認ではない。
 - `tests/ci-gate-process.test.ts` の `withProject` は `dir` と `git` を渡す。追加 case 内で metadata をベースへコミットし、origin/main を更新してから移動できる。既存 case の期待値は変えない。
-- `docs/dev/ci.md` は docs_only と段階 L1 の共通判定を説明している。採用後に限定例外と REQ-362 の参照を補う文書更新を候補にするが、現時点では変更しない。
+- 【提案時点の記録】`docs/dev/ci.md` は docs_only と段階 L1 の共通判定を説明している。採用後に限定例外と REQ-362 の参照を補う文書更新を候補にするが、現時点では変更しない。
+
+現在は承認済みAGENTSパッチと `docs/dev/ci.md` の追記を実装差分へ反映し、実装・回帰試験と通常のローカル完了ゲートを済ませている。新しいCI・独立Opusレビュー・main採用は未完了であり、採用前は他PRへ適用しない。
 
 ## Open Questions
 
