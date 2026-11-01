@@ -17,7 +17,7 @@
 
 ## 4. 正常完了ゲート
 
-- [ ] 4.1 管理役が他担当の重い実行との重複を避けて開始を調整したあと、省略指定なしの `pnpm -s verify --change define-pillar1-delivery-metrics --done --scope local --json` を1回実行する。lint・型・全件試験をこのdoneへ統合し、実exitを即保存して、6 Scenarioの成功試験と全task、実行時入力から最終source/spec/tasksへの対応を照合する。 <!-- loomake:gate=done -->
+- [x] 4.1 管理役が他担当の重い実行との重複を避けて開始を調整したあと、省略指定なしの `pnpm -s verify --change define-pillar1-delivery-metrics --done --scope local --json` を1回実行する。lint・型・全件試験をこのdoneへ統合し、実exitを即保存して、6 Scenarioの成功試験と全task、実行時入力から最終source/spec/tasksへの対応を照合する。 <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
