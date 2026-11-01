@@ -705,7 +705,7 @@ describe('回答の反映と書き方の案内（#285）', () => {
   });
 
   it('[REQ-361] 履歴の1.0.0表示へ新しい案内を追加しない', () => {
-    const legacy = { schemaVersion: '1.0.0' as const, mode: 'spec-only' as const, change: CHANGE, results: [{ check: 'ブロッキング確認事項', status: 'fail' as const, detail: 'Q-15（REQ-012）何回ですか' }] };
+    const legacy = { schemaVersion: '1.0.0' as const, ok: false, mode: 'spec-only' as const, change: CHANGE, results: [{ check: 'ブロッキング確認事項', status: 'fail' as const, detail: 'Q-15（REQ-012）何回ですか' }] };
     expect(formatVerifyResult(legacy)).toBe('Loomake verify  mode=spec-only  change=c1\n\n✖ ブロッキング確認事項\n    Q-15（REQ-012）何回ですか\n\n不合格（1 件）');
   });
 });
