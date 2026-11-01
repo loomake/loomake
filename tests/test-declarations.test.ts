@@ -589,4 +589,11 @@ const hasAny=(ids: readonly string[])=>ids.some(has);
     expect(errors.map((error: { code: string }) => error.code)).toEqual(['wiringBinding']);
     expect(errors[0]?.line).toBe(header.split('\n').length + 1);
   });
+  it.each(['has', 'hasAny'])('rejects calls resolved to the inner %s class name', (name) => {
+    const argument = name === 'has' ? "'a'" : "['a']";
+    const source = header + `const C=class ${name} {\nstatic value = ${name}(${argument});\n};`;
+    const errors = checkPartitionWiring(path, source);
+    expect(errors.map((error: { code: string }) => error.code)).toEqual(['wiringBinding']);
+    expect(errors[0]?.line).toBe(header.split('\n').length + 1);
+  });
 });
