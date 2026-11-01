@@ -229,7 +229,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       if (code !== 0) status = code;
     }
   }
-  const selected = selectChanges({ ref: branch, body, files: files.filter((path) => !metadata.has(path)), changesDir: join('openspec', 'changes') });
+  const selected = selectChanges({ ref: branch, body, files: decided.tier === 'L1' ? files.filter((path) => !metadata.has(path)) : files, changesDir: join('openspec', 'changes') });
   if (selected.error) {
     console.error(`ci-gate: ${selected.error}`);
     process.exit(1);
