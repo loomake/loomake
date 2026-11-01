@@ -196,7 +196,7 @@ describe('保存の成功通知と上限', () => {
     let now = 0;
     const sink = fakeSink((_file, line, cb) => { lines.push(line); cb(null); });
     const r = createOwnedCleanupRecorder('mismatch', sink, () => now);
-    const others = [createOwnedCleanupRecorder('owned', sink, () => now), createOwnedCleanupRecorder('mismatch', sink, () => now)];
+    const others = Array.from({ length: 8 }, (_, i) => createOwnedCleanupRecorder(i % 2 === 0 ? 'owned' : 'mismatch', sink, () => now));
     now = Number.MAX_SAFE_INTEGER;
     for (let i = 0; i < 60; i++) {
       r.note('cleanup-closed', { kind: 'timeout' });
