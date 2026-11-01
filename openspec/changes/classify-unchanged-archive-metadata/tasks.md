@@ -1,10 +1,10 @@
 # Tasks: classify-unchanged-archive-metadata
 
-状態：UNAPPROVED。以下は Q1 の明示承認後に行う予定の作業で、まだ着手していない。提案文書の作成を実装完了には数えない。
+状態：Q1の具体案は2026-11-01に利用者が明示承認。承認記録と仕様ゲートを先に確認し、以下の順に実装する。main採用前は未適用。
 
 ## 1. 承認と仕様ゲート
 
-- [ ] 1.1 Q1 の具体案（quality の省略範囲、Q2〜Q5 の構成、未適用 AGENTS パッチ）への新しい承認を得て trace に出典・承認者・JST 日付を記録し、回答と全 artifact の一致を確認する。#260 の承認は使わない。
+- [x] 1.1 Q1 の具体案（quality の省略範囲、Q2〜Q5 の構成、未適用 AGENTS パッチ）への新しい承認を得て trace に出典・承認者・JST 日付を記録し、回答と全 artifact の一致を確認する。#260 の承認は使わない。
 - [ ] 1.2 `openspec validate classify-unchanged-archive-metadata --strict` と `pnpm -s verify --change classify-unchanged-archive-metadata --spec-only` を実行し、どちらも exit 0 と要判断なしを確認してから実装を始める。
 
 ## 2. 純粋な段階判定
@@ -25,9 +25,13 @@
 ## 5. 通常 L3 の統合検証と受入
 
 - [ ] 5.1 追加・既存回帰、lint・型検査・全件試験と `verify --done --scope local` を通し、REQ-362・342 に対応する試験、全タスクとゲート結果を照合する。既存試験の弱化・skip・期待値の緩和・設定緩和がない差分を確認する。
-- [ ] 5.2 `ci:all-os` と必須 5 チェック、CI の完了ゲート、独立 Opus レビューと指摘対応を通常の L3 規則で完了し、証跡と 4 項目 worklog を揃える。人の規則承認とすべての受入条件を確認して main に採用する。
+- [ ] 5.2 レビュー/CI用の全差分・要件対応・検証証跡と4項目worklogを揃え、未実施のCI・独立レビュー・main採用を区別して管理役へ引き継ぐ。
 
 ## Workflow follow-up
+
+以下は必須の外部受入であり、ゲート前taskの完了へ代用しない。元5.2の条件を保持する：
+
+- `ci:all-os` と必須 5 チェック、CI の完了ゲート、独立 Opus レビューと指摘対応を通常の L3 規則で完了し、証跡と 4 項目 worklog を揃える。人の規則承認とすべての受入条件を確認して main に採用する。
 
 - main 採用後にこの change を正規の sync/archive 手順で反映し、主仕様 strict と原文保持を確認する。
 - #238 の archive 案を採用後の main へ取り込み直し、REQ-359 の原文同期・元の6ファイル保存と移動・CI の L1 を確認する。採用前に本文強制や metadata 削除で迂回しない。

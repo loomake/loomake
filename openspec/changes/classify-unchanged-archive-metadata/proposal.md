@@ -1,6 +1,6 @@
 # Proposal: classify-unchanged-archive-metadata
 
-状態：UNAPPROVED。規則変更の提案であり、承認・実装・適用はしていない。
+状態：具体案とAGENTS最小追記は2026-11-01に利用者が明示承認。実装・CI・独立レビュー・main採用を経るまで未適用。承認出典はtrace.mdのQ1。
 
 ## Why
 
