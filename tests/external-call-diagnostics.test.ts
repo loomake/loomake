@@ -291,3 +291,81 @@ describe('REQ-351 外部操作の停止の分類', () => {
     expect(actual.classification).toBe('undetermined'); expect(actual.reasons.length).toBeGreaterThan(0);
   });
 });
+
+describe('REQ-352 公開する外部操作診断', () => {
+  it.each([
+    [2101, 'undetermined', false, ['timeout-option-unavailable']],
+    [5100.5, 'shared-deadline', true, []],
+    [5102.001, 'undetermined', false, ['deadline-after-shared-interval']],
+  ] as const)('[REQ-352] 旧rawの欠けたtimeoutをnullへ投影しD=%sの位置で分類する', (D, classification, coincidentOperationPossible, reasons) => {
+    const legacy: Record<string, unknown> = row({ spawn: { ts: 103, D, outcomeKind: 'timeout', invalid: false } });
+    delete legacy.timeoutRequested;
+    const payload = preparePublicDiagnostics([legacy], report);
+    expect(payload.calls[0]).toMatchObject({ timeoutRequested: null, mode: 'normal', classification, coincidentOperationPossible, reasons, internalTimeoutMs: null });
+    expect(payload.summary.version).toBe(2); expect(publicDiagnosticsProblem(payload)).toBeNull();
+  });
+
+  it('[REQ-352] 旧rawの不正modeをnormalに補完せずnullと理由付き未確定へ投影する', () => {
+    const legacy: Record<string, unknown> = row({ mode: 'private-mode', spawn: { ts: 103, D: 5100.5, outcomeKind: 'timeout', invalid: false } });
+    delete legacy.timeoutRequested;
+    const payload = preparePublicDiagnostics([legacy], report);
+    expect(payload.calls[0]).toMatchObject({ mode: null, timeoutRequested: null, classification: 'undetermined', reasons: ['mode-unavailable'] });
+    expect(payload.summary.version).toBe(2); expect(publicDiagnosticsProblem(payload)).toBeNull();
+    expect(JSON.stringify(payload)).not.toContain('private-mode');
+  });
+
+  it.each(['version-one', 'missing-timeout', 'string-timeout', 'unknown-key'] as const)('[REQ-352] 公開schemaで版と型と閉じたキーを検査する %s', (mutation) => {
+    const payload = preparePublicDiagnostics([row()], report);
+    if (mutation === 'version-one') payload.summary.version = 1;
+    else if (mutation === 'missing-timeout') delete payload.calls[0].timeoutRequested;
+    else if (mutation === 'string-timeout') payload.calls[0].timeoutRequested = 'true';
+    else payload.calls[0].privateKey = 'private-token';
+    expect(publicDiagnosticsProblem(payload)).toBe(mutation === 'version-one' ? 'invalid-summary-schema' : 'invalid-call-schema');
+  });
+
+  it('[REQ-352] rawのPIDと自由な秘密と未知キーを固定4ファイルへの再投影で除く', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'loomake-req352-public-'));
+    try {
+      const processes = join(dir, 'processes'); mkdirSync(processes);
+      const reportFile = join(dir, 'report.json'); writeFileSync(reportFile, JSON.stringify({ ...report, privateKey: 'private-token' }));
+      const input = row({ pid: 987654321, callId: 'private-call', timeoutMs: 123456789, args: ['private-args'], env: { SECRET: 'private-env' }, stdout: 'private-output', message: 'private-error', privateKey: 'private-token',
+        spawn: { ts: 103, D: 2101, outcomeKind: 'timeout', invalid: false, supervisorPid: 987654321, unknown: 'private-spawn' } });
+      writeFileSync(join(processes, 'calls.1.a.jsonl'), JSON.stringify(input) + '\n');
+      writeFileSync(join(processes, 'arbitrary.txt'), 'private-file');
+      const output = join(dir, 'export'); const payload = exportExternalDiagnostics(processes, reportFile, output);
+      expect(readdirSync(output).sort()).toEqual(['calls.jsonl', 'heartbeat.json', 'summary.json', 'summary.md']);
+      const files = Object.fromEntries(readdirSync(output).map((file) => [file, readFileSync(join(output, file), 'utf8')]));
+      expect(Object.values(files).join('\n')).not.toMatch(/private|987654321|123456789|supervisorPid|SECRET|stdout|message/);
+      expect(payload.calls[0]).toMatchObject({ callId: 'call-1', internalTimeoutMs: null, classification: 'operation-limit' });
+      expect(payload.summary.version).toBe(2); expect(publicDiagnosticsProblem(payload)).toBeNull();
+      expect(Buffer.byteLength(files['calls.jsonl'])).toBeLessThanOrEqual(1024 * 1024);
+      expect(Buffer.byteLength(files['summary.json'])).toBeLessThanOrEqual(1024 * 1024);
+      expect(Buffer.byteLength(files['summary.md'])).toBeLessThanOrEqual(256 * 1024);
+      expect(Buffer.byteLength(files['heartbeat.json'])).toBeLessThanOrEqual(2048);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+
+  it('[REQ-352] 空でないexport先は変更せずに拒否する', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'loomake-req352-not-empty-'));
+    try {
+      const processes = join(dir, 'processes'); mkdirSync(processes);
+      const reportFile = join(dir, 'report.json'); writeFileSync(reportFile, JSON.stringify(report));
+      writeFileSync(join(processes, 'calls.1.a.jsonl'), JSON.stringify(row()) + '\n');
+      const output = join(dir, 'export'); mkdirSync(output); writeFileSync(join(output, 'existing.txt'), 'keep-exactly');
+      expect(() => exportExternalDiagnostics(processes, reportFile, output)).toThrow('export-directory-not-empty');
+      expect(readdirSync(output)).toEqual(['existing.txt']); expect(readFileSync(join(output, 'existing.txt'), 'utf8')).toBe('keep-exactly');
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+
+  it('[REQ-352] 閉じたschemaを保つ大きすぎるJSONとMarkdownは公開検査で拒否する', async () => {
+    const { renderExternalCallSummary } = await import('../scripts/external-call-diagnostics.mjs');
+    for (const target of ['calls', 'summary', 'markdown'] as const) {
+      const payload = preparePublicDiagnostics([row()], report);
+      if (target === 'calls') payload.calls[0].reasons = Array<string>(70_000).fill('mode-unavailable');
+      if (target === 'summary') payload.summary.calls[0].reasons = Array<string>(70_000).fill('mode-unavailable');
+      if (target === 'markdown') payload.summary.calls[0].reasons = Array<string>(16_000).fill('mode-unavailable');
+      payload.markdown = renderExternalCallSummary(payload.summary);
+      expect(publicDiagnosticsProblem(payload), target).toBe('payload-limit');
+    }
+  });
+});

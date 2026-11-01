@@ -10,7 +10,7 @@
 ## 2. 分類と公開制限のID付き追加試験
 
 - [x] 2.1 `tests/external-call-diagnostics.test.ts` の新しいdescribeへ `[REQ-351]` の全7 Scenarioを追加する。先行中断、補正窓の両端と1ms、窓内のnull/false/true、窓より前の3理由、mode不明、時計の欠損/逆転、gh-pr-createの別名をassertし、既存classifierの判定を保持して成功することを確認する。
-- [ ] 2.2 同じファイルと `tests/hook-budget-diagnostics-workflow.test.ts` に `[REQ-352]` の全6 Scenarioを追加する。旧rawのnull投影と位置別の分類、mode不正、版/型/未知キー拒否、秘密の除去、空でないexport先の拒否、固定4ファイル/7日/元1件選択/失敗保持を検査し、既存itとworkflowのassertを変更せず成功することを確認する。
+- [x] 2.2 同じファイルと `tests/hook-budget-diagnostics-workflow.test.ts` に `[REQ-352]` の全6 Scenarioを追加する。旧rawのnull投影と位置別の分類、mode不正、版/型/未知キー拒否、秘密の除去、空でないexport先の拒否、固定4ファイル/7日/元1件選択/失敗保持を検査し、既存itとworkflowのassertを変更せず成功することを確認する。
 
 ## 3. 記録と保持の照合
 
