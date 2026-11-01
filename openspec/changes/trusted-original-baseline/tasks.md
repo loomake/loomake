@@ -6,7 +6,7 @@
 
 ## 2. 部品と試験
 
-- [ ] 2.1 canonical・Git object読取り・差分/主仕様manifestの3部品と3試験を元S1版から移す。本文のblobとcallbackを保持し、追加376タグのID付き試験でGit安全性・JSON境界・fence/CRLF/EOF/変更種別を確認する（REQ-376）
+- [x] 2.1 canonical・Git object読取り・差分/主仕様manifestの3部品と3試験を元S1版から移す。本文のblobとcallbackを保持し、追加376タグのID付き試験でGit安全性・JSON境界・fence/CRLF/EOF/変更種別を確認する（REQ-376）
 - [ ] 2.2 原文書・原契約・横断条件・初回候補の構造照合の6部品と3試験を移す。原47/158/46/16、原本不一致、所有/Scenario/補完/置換/openの負例、主体未検証と防御的結果を追加377タグの試験で確認する（REQ-377）
 
 ## 3. 統合確認
