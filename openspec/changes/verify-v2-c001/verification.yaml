@@ -1,0 +1,3899 @@
+# C001の初回基準。採否主体と新しい試験実行は未検証（REQ-378）。
+expected_spec:
+  version: 1
+  originalIndexSha256: &s1 sha256:5fdcf896738f28bfbaee94ebeaf0a5ec19cfae82a01632b30d0441acd1b6eeaf
+  counts:
+    contracts: 47
+    scenarios: 158
+    uniqueSources: 46
+    cross: 16
+  rows:
+    - key: &s2 cli/modified/REQ-041
+      original:
+        ref: &s3 bb88fe238ab0254e34d25dd8caeb19e8d0155cc4
+        path: &s4 openspec/changes/verify-v2-c001/specs/cli/spec.md
+        line: 37
+        name: &s5 オプションの書き方と知らないコマンド
+        scenarios:
+          - = でつないだ値
+          - 知らないコマンド
+      owners:
+        - kind: delta
+          change: &s6 verify-v2-scope
+          file: &s7 openspec/changes/verify-v2-scope/specs/cli/spec.md
+          name: *s5
+          block: &s8 sha256:23576154373764822ced1c5508440f5f35d1b10e05d52558d6b28147e6442bdb
+          scenarios:
+            - = でつないだ値
+            - 知らないコマンド
+      scenarioMap:
+        - original: = でつないだ値
+          current:
+            file: *s7
+            name: *s5
+            scenario: = でつないだ値
+          status: kept
+        - original: 知らないコマンド
+          current:
+            file: *s7
+            name: *s5
+            scenario: 知らないコマンド
+          status: kept
+      adoption:
+        - trace:
+            change: &s9 verify-v2-c001
+            id: R-C001-05
+      tests:
+        - file: &s10 packages/cli/test/cli.test.ts
+          name: &s11 終了コード [REQ-041] --change=<id> の形を、--change <id> と同じに扱う
+        - file: *s10
+          name: &s12 終了コード [REQ-041] 知らないコマンドを指定すると、その名前を挙げて知らないと表示し、2 を返す
+    - key: &s13 cli/modified/REQ-135
+      original:
+        ref: *s3
+        path: *s4
+        line: 3
+        name: ヘルプと版
+        scenarios:
+          - 全体のヘルプ
+          - サブコマンドのヘルプ
+          - &s14 trace の record のヘルプ
+          - 版
+      owners:
+        - kind: delta
+          change: *s6
+          file: *s7
+          name: ヘルプと版
+          block: &s15 sha256:68230c22b95d538a577479fe439a031ff4e8d1e61e8a4ae60ba770e2f0980de7
+          scenarios:
+            - 全体のヘルプ
+            - サブコマンドのヘルプ
+            - *s14
+            - 版
+      scenarioMap:
+        - original: 全体のヘルプ
+          current:
+            file: *s7
+            name: ヘルプと版
+            scenario: 全体のヘルプ
+          status: kept
+        - original: サブコマンドのヘルプ
+          current:
+            file: *s7
+            name: ヘルプと版
+            scenario: サブコマンドのヘルプ
+          status: kept
+        - original: *s14
+          current:
+            file: *s7
+            name: ヘルプと版
+            scenario: *s14
+          status: kept
+        - original: 版
+          current:
+            file: *s7
+            name: ヘルプと版
+            scenario: 版
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: R-C001-05
+        - trace:
+            change: *s6
+            id: S8-10
+      tests:
+        - file: *s10
+          name: &s16 ヘルプと版 [REQ-135] loomake --help と -h は、サブコマンドの一覧と説明を標準出力に出し、終了コード 0 を返す
+        - file: *s10
+          name: &s17 ヘルプと版 [REQ-135] loomake verify --help は verify の使い方と各オプションの説明を出し、検査を実行せずに終了コード 0 を返す
+        - file: *s10
+          name: &s18 ヘルプと版 [REQ-135] trace record --help と trace report --help は、それぞれの使い方を出す
+        - file: &s19 packages/cli/test/scope.test.ts
+          name: &s20 trace record の --scope [REQ-135] help は検査も記録もせず、--scope の受理値と既定値を標準出力に出して 0
+        - file: *s10
+          name: &s21 ヘルプと版 [REQ-135] loomake --version と -v は、package.json の version を出して終了コード 0 を返す
+      supersessions:
+        - clause: &s22 help の明示ci拒否の表示
+          by:
+            - prBody:
+                pr: 217
+                line: 13
+                sha256: &s23 sha256:75b2854edeeabe82697542e88868ad3728571c86f8c9d7462f94d4d0595d556b
+        - clause: &s24 help の具体文（27例）
+          by:
+            - trace:
+                change: *s6
+                id: S8-10
+    - key: &s25 cli/modified/REQ-194
+      original:
+        ref: *s3
+        path: *s4
+        line: 24
+        name: &s26 値をとるオプションの書き方
+        scenarios:
+          - 等号で値を渡す
+          - 値が空
+      owners:
+        - kind: delta
+          change: *s6
+          file: *s7
+          name: *s26
+          block: &s27 sha256:a3952e18f3ff74a70fb883ace7bebfd773654c2d00292629b34668c7958dabbd
+          scenarios:
+            - 等号で値を渡す
+            - 値が空
+            - scopeの値
+      scenarioMap:
+        - original: 等号で値を渡す
+          current:
+            file: *s7
+            name: *s26
+            scenario: 等号で値を渡す
+          status: kept
+        - original: 値が空
+          current:
+            file: *s7
+            name: *s26
+            scenario: 値が空
+          status: kept
+      adoption:
+        - trace:
+            change: &s28 trusted-c001-initial-baseline
+            id: Q-S1-16
+      tests:
+        - file: &s29 packages/cli/test/arguments.test.ts
+          name: &s30 値をとるオプションの書き方 [REQ-194] --change=<id> は --change <id> と同じ結果になる
+        - file: *s29
+          name: &s31 値をとるオプションの書き方 [REQ-194] --change= のように値が空なら、値を続けるよう示して終了コード 2
+        - file: *s19
+          name: &s32 --scope の書き方 [REQ-194][REQ-041] --scope local と --scope=local は同じ結果。空と不正な値は使い方の誤りで 2
+        - file: *s19
+          name: &s33 trace record の --scope [REQ-135][REQ-194] trace record の不正・空の --scope は使い方の誤りで 2。記録は始めない
+      supplements:
+        - key: *s25
+          scenario: scopeの値
+    - key: &s34 core-parsers/added/REQ-308
+      original:
+        ref: *s3
+        path: &s35 openspec/changes/verify-v2-c001/specs/core-parsers/spec.md
+        line: 131
+        name: &s36 verify 2.0.0の状態とscope
+        scenarios:
+          - &s37 completedとabortedの最小契約
+          - &s38 partialの構造と未完了範囲
+          - 未知キーと公開型
+      owners:
+        - kind: delta
+          change: &s39 verify-v2-shape
+          file: &s40 openspec/changes/verify-v2-shape/specs/core-parsers/spec.md
+          name: *s36
+          block: &s41 sha256:4147b29aa81ba05c57023f2d198808c3f475a5e885dd763078b59d401bbbcc11
+          scenarios:
+            - *s37
+            - *s38
+            - 未知キーと公開型
+      scenarioMap:
+        - original: *s37
+          current:
+            file: *s40
+            name: *s36
+            scenario: *s37
+          status: kept
+        - original: *s38
+          current:
+            file: *s40
+            name: *s36
+            scenario: *s38
+          status: kept
+        - original: 未知キーと公開型
+          current:
+            file: *s40
+            name: *s36
+            scenario: 未知キーと公開型
+          status: kept
+      adoption:
+        - trace:
+            change: *s28
+            id: Q-S1-18
+      tests:
+        - file: &s42 packages/core/test/verify-result-v2-schema.test.ts
+          name: &s43 verify 2.0.0 の Zod スキーマ [REQ-308] completed と aborted の必須項目を検査し、禁止キーを拒否する
+        - file: *s42
+          name: &s44 verify 2.0.0 の Zod スキーマ [REQ-274][REQ-308] ci・local の completed と aborted を受け付け、版で 1.0.0 と区別する
+        - file: *s42
+          name: &s45 verify 2.0.0 の Zod スキーマ [REQ-308] ci・local の partial は 1 件以上の実行エラーを持ち、scope ごとの必須項目を受け付ける
+        - file: &s46 packages/core/test/unknown-fields-v2.test.ts
+          name: &s47 verify 2.0.0 の未知キーと禁止キー [REQ-275][REQ-307][REQ-308] 2.0.0 の各階層の未知キー（__proto__ を含む）を、値とプロトタイプを変えずに保持する
+        - file: *s46
+          name: &s48 verify 2.0.0 の未知キーと禁止キー [REQ-275][REQ-308] 未知キーは通し、既知の禁止キーだけを拒否する
+        - file: *s42
+          name: &s49 verify 2.0.0 の Zod スキーマ [REQ-274][REQ-308] 型はスキーマから導出する
+        - file: &s50 packages/core/test/json-schema-versions.test.ts
+          name: &s51 版付きの JSON Schema の書き出し [REQ-276][REQ-304][REQ-308] 新旧の JSON Schema が同じ有効・無効の入力を Zod と同じに判定し、同じ registry に登録できる
+    - key: &s52 core-parsers/added/REQ-309
+      original:
+        ref: *s3
+        path: *s35
+        line: 148
+        name: &s53 verifyの実行エラー
+        scenarios:
+          - &s54 changeが確定しない
+          - 不正設定と読取失敗
+      owners:
+        - kind: delta
+          change: *s39
+          file: *s40
+          name: *s53
+          block: &s55 sha256:3735ef0f17262df9f71b34a98b1d8d0be4a95d8513215187405af628b03a6935
+          scenarios:
+            - *s54
+            - 不正設定と読取失敗
+      scenarioMap:
+        - original: *s54
+          current:
+            file: *s40
+            name: *s53
+            scenario: *s54
+          status: kept
+        - original: 不正設定と読取失敗
+          current:
+            file: *s40
+            name: *s53
+            scenario: 不正設定と読取失敗
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: R-C001-01
+      tests:
+        - file: *s42
+          name: &s56 verify 2.0.0 の Zod スキーマ [REQ-309] 実行エラーは種別・対象・日本語の message・next を持ち、change が確定しないときは null と元の入力を残す
+        - file: &s57 packages/cli/test/verify-v2-cli.test.ts
+          name: &s58 verify 2.0.0 の出力と終了コード [REQ-311][REQ-041] 使い方の誤りは --json でも aborted を出して 2。change-id が確定しないときは change を null にし、入力を target に残す
+        - file: *s19
+          name: &s59 verify の --scope [REQ-312] change を指定しない verify の明示 local は品質コマンド専用の local 結果（change は null、verdict なし）。API も同じ
+        - file: &s60 packages/kit/test/quality-input.test.ts
+          name: &s61 quality.yaml の最小読取 [REQ-310] YAML の構文・型・版・対象外の必須値の誤りは config で、終了コード 2 になる
+        - file: *s60
+          name: &s62 quality.yaml の最小読取 [REQ-310] 完了ゲートでの不在は runtime、権限不足は permission で、終了コード 3 になり、次の操作を示す
+        - file: &s63 packages/kit/test/exit-code.test.ts
+          name: &s64 verify 2.0.0 の終了コード [REQ-309] aborted は usage・config なら 2、ほかの種別なら 3 で、品質の FAIL として扱わない
+        - file: &s65 packages/cli/test/verify-quality-acceptance.test.ts
+          name: &s66 C-001 の成功経路と不足拒否 [REQ-319] quality.yaml を読む権限がなければ、CI とローカルの完了ゲートと仕様ゲートのどれでも aborted の 3 を返す
+    - key: &s67 core-parsers/modified/REQ-274
+      original:
+        ref: *s3
+        path: *s35
+        line: 3
+        name: &s68 verify 結果の Zod スキーマと型の導出
+        scenarios:
+          - &s69 いまの verify 結果を受け付ける
+          - &s70 履歴の1.0.0を受け付ける
+          - &s71 形の違う verify 結果を拒否する
+          - &s72 入力モードと出力を混ぜない
+      owners:
+        - kind: delta
+          change: *s39
+          file: *s40
+          name: *s68
+          block: &s73 sha256:66dbcdf1cd73d4acc36dad7c7ab5bd7703b3861d19b9262c4ed2dc2c2a809557
+          scenarios:
+            - *s69
+            - *s70
+            - *s71
+      scenarioMap:
+        - original: *s69
+          current:
+            file: *s40
+            name: *s68
+            scenario: *s69
+          status: kept
+        - original: *s70
+          current:
+            file: *s40
+            name: *s68
+            scenario: *s70
+          status: kept
+        - original: *s71
+          current:
+            file: *s40
+            name: *s68
+            scenario: *s71
+          status: kept
+        - original: *s72
+          current: null
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: &s74 ADOPT-PR197-01
+        - trace:
+            change: *s9
+            id: &s75 ADOPT-PR197-06
+      tests:
+        - file: *s42
+          name: *s44
+        - file: *s42
+          name: &s76 verify 2.0.0 の Zod スキーマ [REQ-274][REQ-311] 履歴の 1.0.0 を別名のスキーマで受け付け、いまの書き出しの版は 2.0.0
+        - file: &s77 packages/core/test/verify-result-schema.test.ts
+          name: &s78 verify 結果の Zod スキーマ [REQ-274] いまの verify 結果を受け付ける
+        - file: *s77
+          name: &s79 verify 結果の Zod スキーマ [REQ-274] 形の違う verify 結果を拒否する
+        - file: *s77
+          name: &s80 verify 結果の Zod スキーマ [REQ-274] 型はスキーマから導出し、手書きの型を別に定義しない
+        - file: *s42
+          name: *s49
+      open:
+        - clause: O6
+          owner: parent-1.2
+    - key: &s81 core-parsers/modified/REQ-275
+      original:
+        ref: *s3
+        path: *s35
+        line: 67
+        name: &s82 verify 結果の未知のフィールド
+        scenarios:
+          - 未知のフィールドを残す
+      owners:
+        - kind: delta
+          change: *s39
+          file: *s40
+          name: *s82
+          block: &s83 sha256:a361dec6bdad2df16364a825bd5cedab9a00d5be47dead92b0e911997561c912
+          scenarios:
+            - 未知のフィールドを残す
+      scenarioMap:
+        - original: 未知のフィールドを残す
+          current:
+            file: *s40
+            name: *s82
+            scenario: 未知のフィールドを残す
+          status: kept
+      adoption:
+        - trace:
+            change: *s28
+            id: Q-S1-17
+      tests:
+        - file: *s77
+          name: &s84 verify 結果の Zod スキーマ [REQ-275] 未知のフィールドを拒否せず、値を変えずに残す
+        - file: *s46
+          name: *s47
+        - file: *s46
+          name: &s85 verify 2.0.0 の未知キーと禁止キー [REQ-275][REQ-307] 入れ子の checks・run・errors・decision.reasons・summary の未知キーも残る
+    - key: &s86 core-parsers/modified/REQ-276
+      original:
+        ref: *s3
+        path: *s35
+        line: 76
+        name: &s87 JSON Schema の書き出し
+        scenarios:
+          - &s88 書き出した内容とファイルが一致する
+          - &s89 書き出しのコマンドでファイルを作り直せる
+      owners:
+        - kind: delta
+          change: *s39
+          file: *s40
+          name: *s87
+          block: &s90 sha256:cbb578e5a8c4652be58e8609ae8e30a860dbf2ed3d030197c8443cd39d191500
+          scenarios:
+            - *s88
+            - *s89
+      scenarioMap:
+        - original: *s88
+          current:
+            file: *s40
+            name: *s87
+            scenario: *s88
+          status: kept
+        - original: *s89
+          current:
+            file: *s40
+            name: *s87
+            scenario: *s89
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: &s91 ADOPT-PR197-04
+        - trace:
+            change: *s9
+            id: &s92 ADOPT-PR197-05
+        - trace:
+            change: *s9
+            id: &s93 ADOPT-PR197-07
+      tests:
+        - file: &s94 packages/core/test/json-schema.test.ts
+          name: &s95 JSON Schema の書き出し [REQ-276][REQ-287][REQ-300][REQ-301][REQ-304] Zod スキーマから書き出した内容と packages/core/schema/ のファイルが一致する
+        - file: *s50
+          name: &s96 版付きの JSON Schema の書き出し [REQ-276][REQ-304] Zod から書き出した内容と schema/versions/ のファイルが一致し、exports から公開する
+        - file: &s97 packages/core/test/schema-versions.test.ts
+          name: &s98 版付きの verify 結果の JSON Schema [REQ-276][REQ-304] 版付きのファイルは公開した写しの必須プロパティと版をすべて保つ
+        - file: *s94
+          name: &s99 JSON Schema の書き出し [REQ-276][REQ-287][REQ-300][REQ-301][REQ-304] 書き出しのコマンドで schema/ のファイルを作り直せる
+        - file: &s100 tests/schema-version-contract.test.ts
+          name: &s101 "[REQ-276] 版付きの 2.0.0 の JSON Schema への削除・改名・版の変更を実際の検査が拒否し、既存の 8 試行も保つ"
+    - key: &s102 core-parsers/modified/REQ-302
+      original:
+        ref: *s3
+        path: *s35
+        line: 24
+        name: &s103 証拠とリリースレポートの構造スキーマ
+        scenarios:
+          - &s104 既存の証拠とレポートを解析する
+          - 型と構造の互換性
+          - &s105 未知のフィールドを保持する
+      owners:
+        - kind: delta
+          change: *s39
+          file: *s40
+          name: *s103
+          block: &s106 sha256:8c05ebd97977cbd131e3a48b14a8d437b7ab7e0342e107a03fbf9c165110cbfe
+          scenarios:
+            - *s104
+            - 型と構造の互換性
+            - *s105
+      scenarioMap:
+        - original: *s104
+          current:
+            file: *s40
+            name: *s103
+            scenario: *s104
+          status: kept
+        - original: 型と構造の互換性
+          current:
+            file: *s40
+            name: *s103
+            scenario: 型と構造の互換性
+          status: kept
+        - original: *s105
+          current:
+            file: *s40
+            name: *s103
+            scenario: *s105
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: &s107 ADOPT-PR199-04
+      tests:
+        - file: &s108 packages/core/test/evidence-v2-schema.test.ts
+          name: &s109 Evidence 2 と履歴の Evidence 1 [REQ-302] documents のある・ない Evidence 2 と履歴 Evidence 1 を、版ごとのスキーマで解析して入力を保持する
+        - file: &s110 packages/core/test/trace-schemas.test.ts
+          name: &s111 証拠とリリースレポートの構造 [REQ-302] 既存の任意フィールド・版の型・日本語結果を保持する
+        - file: *s108
+          name: &s112 Evidence 2 と履歴の Evidence 1 [REQ-302] 履歴の構造は任意の number の版と文字列の日時・SHA を受け付け、Evidence 2 は版と埋め込みの verify で区別する
+        - file: *s110
+          name: &s113 証拠とリリースレポートの構造 [REQ-302] 必須の型・配列・nullable の区別を検証する
+        - file: *s108
+          name: &s114 Evidence 2 と履歴の Evidence 1 [REQ-302][REQ-307] 各階層の未知のフィールドを保持する
+        - file: *s110
+          name: &s115 証拠とリリースレポートの構造 [REQ-302] 全 object 階層の未知フィールドを残す
+    - key: &s116 core-parsers/modified/REQ-303
+      original:
+        ref: *s3
+        path: *s35
+        line: 41
+        name: &s117 trace の既存公開元と同期実行の維持
+        scenarios:
+          - &s118 同期 API と整合性検査
+          - &s119 起動時の読み込みと公開型
+      owners:
+        - kind: delta
+          change: *s39
+          file: *s40
+          name: *s117
+          block: &s120 sha256:08852e4d16f1348c4f0a6e8812146a227cb8c80031aa6ac1526245a85478a5e2
+          scenarios:
+            - *s118
+            - *s119
+      scenarioMap:
+        - original: *s118
+          current:
+            file: *s40
+            name: *s117
+            scenario: *s118
+          status: kept
+        - original: *s119
+          current:
+            file: *s40
+            name: *s117
+            scenario: *s119
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: &s121 ADOPT-PR199-01
+        - trace:
+            change: *s9
+            id: &s122 ADOPT-PR199-06
+      tests:
+        - file: &s123 packages/trace/test/schema-contracts.test.ts
+          name: &s124 trace の公開元と同期境界 [REQ-303] 従来の公開元が core と同じ型と版を公開する
+        - file: *s123
+          name: &s125 trace の公開元と同期境界 [REQ-303] 構造スキーマが受ける不適合な証拠を従来の意味検証が拒否する
+        - file: *s123
+          name: &s126 trace の公開元と同期境界 [REQ-303] 保存とレポート生成は同期のまま JSON 整形・末尾改行・省略を保持する
+        - file: &s127 packages/cli/test/startup-zod.test.ts
+          name: &s128 CLI の起動で zod を読まない [REQ-050][REQ-284][REQ-301][REQ-303][REQ-305] CLI の入口から静的にたどれる範囲で zod を読まない
+        - file: &s129 packages/trace/test/evidence-versions.test.ts
+          name: &s130 trace の公開元の新旧の証拠の型 [REQ-303][REQ-315] 従来の公開元から新旧の型と版を再エクスポートし、いまの書き出しの版は 2
+    - key: &s131 core-parsers/modified/REQ-304
+      original:
+        ref: *s3
+        path: *s35
+        line: 54
+        name: &s132 証拠とレポートの JSON Schema の生成と公開
+        scenarios:
+          - 生成結果と公開物の一致
+          - &s133 既存 JSON Schema の保持
+      owners:
+        - kind: delta
+          change: *s39
+          file: *s40
+          name: *s132
+          block: &s134 sha256:faa43ed74344e9cedd14f85116e861e982c83e9f5a9c744c41d8dbcd3520bd9f
+          scenarios:
+            - 生成結果と公開物の一致
+            - *s133
+      scenarioMap:
+        - original: 生成結果と公開物の一致
+          current:
+            file: *s40
+            name: *s132
+            scenario: 生成結果と公開物の一致
+          status: kept
+        - original: *s133
+          current:
+            file: *s40
+            name: *s132
+            scenario: *s133
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: &s135 ADOPT-PR197-02
+        - trace:
+            change: *s9
+            id: *s91
+        - trace:
+            change: *s9
+            id: &s136 ADOPT-PR199-02
+        - trace:
+            change: *s9
+            id: &s137 ADOPT-PR199-03
+      tests:
+        - file: *s50
+          name: *s96
+        - file: *s94
+          name: *s95
+        - file: *s94
+          name: &s138 JSON Schema の書き出し [REQ-304] Evidence/Report の JSON は構造・任意フィールド・未知キーを Zod と同じに公開する
+        - file: *s50
+          name: &s139 版付きの JSON Schema の書き出し [REQ-304][REQ-305][REQ-318] 版付きでない 8 ファイルの verify・evidence は 2.0.0 と Evidence 2 を表し、版付きの 2.0.0・Evidence 2 と同じ構造になる
+        - file: *s108
+          name: &s140 Evidence 2 と履歴の Evidence 1 [REQ-304] 公開した 1.0.0 のスキーマ履歴はバイト単位で変わらない
+        - file: *s97
+          name: *s98
+        - file: &s141 tests/trusted-original-public-json.test.ts
+          name: &s142 Original C001 public JSON preservation [REQ-371][REQ-304][REQ-305][REQ-307] preserves the original quality-report schema bytes
+        - file: *s141
+          name: &s143 Original C001 public JSON preservation [REQ-371][REQ-304][REQ-305][REQ-307] preserves the original quality schema bytes
+        - file: *s141
+          name: &s144 Original C001 public JSON preservation [REQ-371][REQ-304][REQ-305][REQ-307] preserves the original report schema bytes
+        - file: *s141
+          name: &s145 Original C001 public JSON preservation [REQ-371][REQ-304][REQ-305][REQ-307] preserves the original spec schema bytes
+        - file: *s141
+          name: &s146 Original C001 public JSON preservation [REQ-371][REQ-304][REQ-305][REQ-307] preserves the original tasks schema bytes
+        - file: *s141
+          name: &s147 Original C001 public JSON preservation [REQ-371][REQ-304][REQ-305][REQ-307] preserves the original trace schema bytes
+    - key: &s148 core-parsers/modified/REQ-305
+      original:
+        ref: *s3
+        path: *s35
+        line: 89
+        name: 品質判定の共有4値
+        scenarios:
+          - 4値の読み取り
+          - 公開型と既存形式
+      owners:
+        - kind: delta
+          change: *s39
+          file: *s40
+          name: 品質判定の共有4値
+          block: &s149 sha256:c8ab8d5173325c92b2aa713c753a4da338fcbea20b0aac20362992c424be783a
+          scenarios:
+            - 4値の読み取り
+            - 公開型と既存形式
+      scenarioMap:
+        - original: 4値の読み取り
+          current:
+            file: *s40
+            name: 品質判定の共有4値
+            scenario: 4値の読み取り
+          status: kept
+        - original: 公開型と既存形式
+          current:
+            file: *s40
+            name: 品質判定の共有4値
+            scenario: 公開型と既存形式
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: *s135
+        - trace:
+            change: *s9
+            id: &s150 ADOPT-PR197-03
+        - trace:
+            change: *s9
+            id: *s121
+        - trace:
+            change: *s9
+            id: *s136
+      tests:
+        - file: &s151 packages/core/test/quality-result-schema.test.ts
+          name: &s152 共有する品質判定の4値 [REQ-305] 公開 loader は Promise でスキーマを取得し、4値をそのまま返す
+        - file: *s151
+          name: &s153 共有する品質判定の4値 [REQ-305] 未知の値と文字列以外を拒否する
+        - file: *s151
+          name: &s154 共有する品質判定の4値 [REQ-305] 現行の verify 2.0.0 と履歴の 1.0.0 を区別し、既存8形式の JSON だけを保持する
+        - file: &s155 tests/package-artifacts.test.ts
+          name: &s156 実際に配るパッケージ [REQ-057][REQ-138][REQ-139][REQ-143][REQ-146][REQ-169][REQ-304][REQ-305][REQ-306] packした5パッケージだけで主要コマンドと公開APIを使える
+        - file: *s50
+          name: *s139
+        - file: *s141
+          name: *s142
+        - file: *s141
+          name: *s143
+        - file: *s141
+          name: *s144
+        - file: *s141
+          name: *s145
+        - file: *s141
+          name: *s146
+        - file: *s141
+          name: *s147
+    - key: &s157 core-parsers/modified/REQ-307
+      original:
+        ref: *s3
+        path: *s35
+        line: 103
+        name: &s158 未知キーをプロトタイプを変えずに保持する
+        scenarios:
+          - &s159 最上位の未知キーを保持する
+          - &s160 検証する入れ子と配列要素のキーを保持する
+          - &s161 入力とプロトタイプを変更しない
+          - &s162 既知項目の検証と既定値を保つ
+          - &s163 配布スキーマと遅延ロードを保つ
+      owners:
+        - kind: delta
+          change: *s39
+          file: *s40
+          name: *s158
+          block: &s164 sha256:4616732e1ee9fcc1d4f3df33da1ba2a9d1461071e1bcdc5a920c05067ff82c44
+          scenarios:
+            - *s159
+            - *s160
+            - *s161
+            - *s162
+            - *s163
+      scenarioMap:
+        - original: *s159
+          current:
+            file: *s40
+            name: *s158
+            scenario: *s159
+          status: kept
+        - original: *s160
+          current:
+            file: *s40
+            name: *s158
+            scenario: *s160
+          status: kept
+        - original: *s161
+          current:
+            file: *s40
+            name: *s158
+            scenario: *s161
+          status: kept
+        - original: *s162
+          current:
+            file: *s40
+            name: *s158
+            scenario: *s162
+          status: kept
+        - original: *s163
+          current:
+            file: *s40
+            name: *s158
+            scenario: *s163
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: *s75
+        - trace:
+            change: *s9
+            id: &s165 ADOPT-PR199-05
+      tests:
+        - file: &s166 packages/core/test/unknown-fields.test.ts
+          name: &s167 未知キーの own property を安全に保持する [REQ-307] quality-report の parse と safeParse は特殊キーと未知値を保持する
+        - file: *s166
+          name: &s168 未知キーの own property を安全に保持する [REQ-307] verify の parse と safeParse は特殊キーと未知値を保持する
+        - file: *s166
+          name: &s169 未知キーの own property を安全に保持する [REQ-307] verify check の parse と safeParse は特殊キーと未知値を保持する
+        - file: *s166
+          name: &s170 未知キーの own property を安全に保持する [REQ-307] trace の parse と safeParse は特殊キーと未知値を保持する
+        - file: *s166
+          name: &s171 未知キーの own property を安全に保持する [REQ-307] ledger row の parse と safeParse は特殊キーと未知値を保持する
+        - file: *s166
+          name: &s172 未知キーの own property を安全に保持する [REQ-307] question row の parse と safeParse は特殊キーと未知値を保持する
+        - file: *s166
+          name: &s173 未知キーの own property を安全に保持する [REQ-307] assumption row の parse と safeParse は特殊キーと未知値を保持する
+        - file: *s166
+          name: &s174 未知キーの own property を安全に保持する [REQ-307] spec row の parse と safeParse は特殊キーと未知値を保持する
+        - file: *s166
+          name: &s175 未知キーの own property を安全に保持する [REQ-307] task row の parse と safeParse は特殊キーと未知値を保持する
+        - file: *s166
+          name: &s176 未知キーの own property を安全に保持する [REQ-307] quality.yaml の parse と safeParse は特殊キーと未知値を保持する
+        - file: *s166
+          name: &s177 未知キーの own property を安全に保持する [REQ-307] measure の parse と safeParse は特殊キーと未知値を保持する
+        - file: *s166
+          name: &s178 未知キーの own property を安全に保持する [REQ-307] objective の parse と safeParse は特殊キーと未知値を保持する
+        - file: *s166
+          name: &s179 未知キーの own property を安全に保持する [REQ-307] product の parse と safeParse は特殊キーと未知値を保持する
+        - file: *s166
+          name: &s180 未知キーの own property を安全に保持する [REQ-307] policy の parse と safeParse は特殊キーと未知値を保持する
+        - file: *s166
+          name: &s181 未知キーの own property を安全に保持する [REQ-307] evidence の parse と safeParse は特殊キーと未知値を保持する
+        - file: *s166
+          name: &s182 未知キーの own property を安全に保持する [REQ-307] legacy evidence の parse と safeParse は特殊キーと未知値を保持する
+        - file: *s166
+          name: &s183 未知キーの own property を安全に保持する [REQ-307] evidence document の parse と safeParse は特殊キーと未知値を保持する
+        - file: *s166
+          name: &s184 未知キーの own property を安全に保持する [REQ-307] release report の parse と safeParse は特殊キーと未知値を保持する
+        - file: *s166
+          name: &s185 未知キーの own property を安全に保持する [REQ-307] release report row の parse と safeParse は特殊キーと未知値を保持する
+        - file: *s46
+          name: *s47
+        - file: *s166
+          name: &s186 未知キーの own property を安全に保持する [REQ-307] verify と Markdown の検証する配列要素にも同じ保持規則を適用する
+        - file: *s46
+          name: *s85
+        - file: *s166
+          name: &s187 未知キーの own property を安全に保持する [REQ-307] quality.yaml の検証する入れ子と既定値を保持し、未知値を変更しない
+        - file: *s166
+          name: &s188 未知キーの own property を安全に保持する [REQ-307] 証拠の metadata 設定後の verify と検証結果・文書を保持する
+        - file: *s166
+          name: &s189 未知キーの own property を安全に保持する [REQ-307] リリースレポートの全 object 階層と配列要素を保持する
+        - file: *s166
+          name: &s190 未知キーの own property を安全に保持する [REQ-307] __proto__ の値 {} をプロトタイプの変更として扱わない
+        - file: *s166
+          name: &s191 未知キーの own property を安全に保持する [REQ-307] __proto__ の値 [] をプロトタイプの変更として扱わない
+        - file: *s166
+          name: &s192 未知キーの own property を安全に保持する [REQ-307] __proto__ の値 null をプロトタイプの変更として扱わない
+        - file: *s166
+          name: &s193 未知キーの own property を安全に保持する [REQ-307] __proto__ の値 text をプロトタイプの変更として扱わない
+        - file: *s166
+          name: &s194 未知キーの own property を安全に保持する [REQ-307] __proto__ の値 1 をプロトタイプの変更として扱わない
+        - file: *s166
+          name: &s195 未知キーの own property を安全に保持する [REQ-307] __proto__ の値 false をプロトタイプの変更として扱わない
+        - file: *s166
+          name: &s196 未知キーの own property を安全に保持する [REQ-307] __proto__ の値 undefined をプロトタイプの変更として扱わない
+        - file: *s166
+          name: &s197 未知キーの own property を安全に保持する [REQ-307] 元の検証の診断と既知フィールドの拒否を維持する
+        - file: *s46
+          name: &s198 verify 2.0.0 の未知キーと禁止キー [REQ-307] 非同期の解析でも未知キーを保持する
+        - file: &s199 packages/core/test/unknown-fields-json.test.ts
+          name: &s200 保持アダプターと JSON Schema [REQ-307] 配布する全 JSON のバイトを変えない
+        - file: *s127
+          name: *s128
+        - file: *s141
+          name: *s142
+        - file: *s141
+          name: *s143
+        - file: *s141
+          name: *s144
+        - file: *s141
+          name: *s145
+        - file: *s141
+          name: *s146
+        - file: *s141
+          name: *s147
+    - key: &s201 external-process-budget/modified/REQ-183
+      original:
+        ref: *s3
+        path: &s202 openspec/changes/verify-v2-c001/specs/external-process-budget/spec.md
+        line: 3
+        name: &s203 verifyとtraceの接続と互換性
+        scenarios:
+          - &s204 OpenSpecの検証が終わらない
+      owners:
+        - kind: delta
+          change: *s39
+          file: &s205 openspec/changes/verify-v2-shape/specs/external-process-budget/spec.md
+          name: *s203
+          block: &s206 sha256:b25468a518f1b124d5f853540d3091c48ba82d30d817afa9d8e276bfb710eeae
+          scenarios:
+            - *s204
+      scenarioMap:
+        - original: *s204
+          current:
+            file: *s205
+            name: *s203
+            scenario: *s204
+          status: kept
+      adoption:
+        - trace:
+            change: *s28
+            id: Q-S1-19
+      tests:
+        - file: &s207 packages/runner/test/external-budget.test.ts
+          name: &s208 verifyとtraceの期限 [REQ-183] OpenSpec検証の時間切れをCLI不存在と区別する
+        - file: &s209 packages/kit/test/process.test.ts
+          name: &s210 同期外部操作の監視 [REQ-180][REQ-183] 実行ファイルの不存在を制限と区別する
+      open:
+        - clause: D2
+          owner: parent-1.2
+    - key: &s211 monorepo/added/REQ-318
+      original:
+        ref: *s3
+        path: &s212 openspec/changes/verify-v2-c001/specs/monorepo/spec.md
+        line: 3
+        name: &s213 v2移行の同時追従と配布検証
+        scenarios:
+          - &s214 旧結果とlocalをゲートへ渡す
+          - 実配布物と移行
+      owners:
+        - kind: delta
+          change: &s215 verify-v2-strict
+          file: &s216 openspec/changes/verify-v2-strict/specs/monorepo/spec.md
+          name: *s213
+          block: &s217 sha256:1229b466c944107a994fe4792990a99a7cbb596eb0c02fa365c43fbed80be7a2
+          scenarios:
+            - *s214
+            - 実配布物と移行
+            - &s218 完了ゲート以外の結果と全件NOT_APPLICABLE
+      scenarioMap:
+        - original: *s214
+          current:
+            file: *s216
+            name: *s213
+            scenario: *s214
+          status: kept
+        - original: 実配布物と移行
+          current:
+            file: *s216
+            name: *s213
+            scenario: 実配布物と移行
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: R-C001-04
+        - trace:
+            change: *s215
+            id: A-03
+      tests:
+        - file: &s219 tests/ci-gate-process.test.ts
+          name: &s220 完了ゲートの JSON を合格として受け入れるか [REQ-318] 完了ゲートは、対象の change の 2.0.0 で ci・completed・要判断なし・PASS・完了ゲートの検査あり・終了コード 0 だけを受け入れる
+        - file: *s219
+          name: &s221 完了ゲートの JSON を合格として受け入れるか [REQ-318] local・1.0.0・証拠不足（skip）・仕様ゲートの結果・全件 NOT_APPLICABLE・別の change・verdict が PASS 以外は、終了コードが 0 でも合格にしない
+        - file: *s219
+          name: &s222 ci-gate は終了コードではなく結果の JSON で合格を決める [REQ-318] local の結果は、verify の終了コードが 0 でも完了ゲートを合格にしない
+        - file: *s219
+          name: &s223 ci-gate は終了コードではなく結果の JSON で合格を決める [REQ-318] 1.0.0 の結果は、verify の終了コードが 0 でも完了ゲートを合格にしない
+        - file: *s219
+          name: &s224 ci-gate は終了コードではなく結果の JSON で合格を決める [REQ-318] skip の結果は、verify の終了コードが 0 でも完了ゲートを合格にしない
+        - file: *s219
+          name: &s225 ci-gate は終了コードではなく結果の JSON で合格を決める [REQ-318] spec-only の結果は、verify の終了コードが 0 でも完了ゲートを合格にしない
+        - file: *s219
+          name: &s226 ci-gate は終了コードではなく結果の JSON で合格を決める [REQ-318] NOT_APPLICABLE の結果は、verify の終了コードが 0 でも完了ゲートを合格にしない
+        - file: *s219
+          name: &s227 ci-gate は終了コードではなく結果の JSON で合格を決める [REQ-318] 別の change の結果は、verify の終了コードが 0 でも完了ゲートを合格にしない
+        - file: *s219
+          name: &s228 ci-gate は終了コードではなく結果の JSON で合格を決める [REQ-318] verdict FAIL の結果は、verify の終了コードが 0 でも完了ゲートを合格にしない
+        - file: *s155
+          name: *s156
+        - file: *s50
+          name: *s139
+      supplements:
+        - key: *s211
+          scenario: *s218
+    - key: &s229 reference-docs/modified/REQ-322
+      original:
+        ref: *s3
+        path: &s230 openspec/changes/verify-v2-c001/specs/reference-docs/spec.md
+        line: 3
+        name: &s231 生成ページの導線と既存契約の保持
+        scenarios:
+          - 入口と既存ページ
+          - 生成の影響範囲
+          - 文字列の表示
+          - &s232 GitHubとサイトでの生成元リンク
+      owners:
+        - kind: delta
+          change: *s39
+          file: &s233 openspec/changes/verify-v2-shape/specs/reference-docs/spec.md
+          name: *s231
+          block: &s234 sha256:769e0a616903e1c6083ff3a75c5fca2cca91103dbdb9daaac15e9c5b4ef540bf
+          scenarios:
+            - 入口と既存ページ
+            - 生成の影響範囲
+            - 文字列の表示
+            - *s232
+      scenarioMap:
+        - original: 入口と既存ページ
+          current:
+            file: *s233
+            name: *s231
+            scenario: 入口と既存ページ
+          status: kept
+        - original: 生成の影響範囲
+          current:
+            file: *s233
+            name: *s231
+            scenario: 生成の影響範囲
+          status: kept
+        - original: 文字列の表示
+          current:
+            file: *s233
+            name: *s231
+            scenario: 文字列の表示
+          status: kept
+        - original: *s232
+          current:
+            file: *s233
+            name: *s231
+            scenario: *s232
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: R-C001-05
+      tests:
+        - file: &s235 tests/quality-reference.test.ts
+          name: &s236 実ページと文書導線 [REQ-322] title/description・生成元と再生成方法を持ち、既存3ページとともに入口から辿れる
+        - file: *s235
+          name: &s237 qualityリファレンスの生成/check [REQ-321][REQ-322] 生成は対象だけを書き、繰り返して同一内容になる
+        - file: *s235
+          name: &s238 quality.yamlの生成リファレンス [REQ-320][REQ-322] スキーマにない意味を追加せず特殊文字を表の文字として表示する
+        - file: *s235
+          name: &s239 quality生成元リンクの掲載先に依存しない解決 [REQ-322] renderer の2リンクはラベルと完全URLが各1回ずつ一致する
+        - file: *s235
+          name: &s240 quality生成元リンクの掲載先に依存しない解決 [REQ-322] 保存済みページ の2リンクはラベルと完全URLが各1回ずつ一致する
+        - file: *s235
+          name: &s241 quality生成元リンクの掲載先に依存しない解決 [REQ-322] renderer の生成元URLはリポジトリ内の2つの通常ファイルを指す
+        - file: *s235
+          name: &s242 quality生成元リンクの掲載先に依存しない解決 [REQ-322] 保存済みページ の生成元URLはリポジトリ内の2つの通常ファイルを指す
+        - file: *s235
+          name: &s243 quality生成元リンクの掲載先に依存しない解決 [REQ-322] renderer はbase https://github.com/loomake/loomake/blob/main/docs/guide/3.reference/4.quality-yaml.mdから同じ生成元URLへ解決する
+        - file: *s235
+          name: &s244 quality生成元リンクの掲載先に依存しない解決 [REQ-322] renderer はbase https://site.example.invalid/guide/reference/quality-yamlから同じ生成元URLへ解決する
+        - file: *s235
+          name: &s245 quality生成元リンクの掲載先に依存しない解決 [REQ-322] renderer はbase https://site.example.invalid/guide/reference/quality-yaml/から同じ生成元URLへ解決する
+        - file: *s235
+          name: &s246 quality生成元リンクの掲載先に依存しない解決 [REQ-322] 保存済みページ はbase https://github.com/loomake/loomake/blob/main/docs/guide/3.reference/4.quality-yaml.mdから同じ生成元URLへ解決する
+        - file: *s235
+          name: &s247 quality生成元リンクの掲載先に依存しない解決 [REQ-322] 保存済みページ はbase https://site.example.invalid/guide/reference/quality-yamlから同じ生成元URLへ解決する
+        - file: *s235
+          name: &s248 quality生成元リンクの掲載先に依存しない解決 [REQ-322] 保存済みページ はbase https://site.example.invalid/guide/reference/quality-yaml/から同じ生成元URLへ解決する
+    - key: &s249 reference-docs/modified/REQ-323
+      original:
+        ref: *s3
+        path: *s230
+        line: 24
+        name: &s250 現行CLIの全コマンドとオプションのリファレンス
+        scenarios:
+          - コマンドと操作の列挙
+          - &s251 必須条件と省略時の振る舞い
+          - 共通操作と境界
+      owners:
+        - kind: delta
+          change: *s6
+          file: &s252 openspec/changes/verify-v2-scope/specs/reference-docs/spec.md
+          name: *s250
+          block: &s253 sha256:5ee5886f5fd732ef8c87b1a393e8aefd80337795a63b0f981b4519452214d0a2
+          scenarios:
+            - コマンドと操作の列挙
+            - *s251
+            - 共通操作と境界
+      scenarioMap:
+        - original: コマンドと操作の列挙
+          current:
+            file: *s252
+            name: *s250
+            scenario: コマンドと操作の列挙
+          status: kept
+        - original: *s251
+          current:
+            file: *s252
+            name: *s250
+            scenario: *s251
+          status: kept
+        - original: 共通操作と境界
+          current:
+            file: *s252
+            name: *s250
+            scenario: 共通操作と境界
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: R-C001-05
+      tests:
+        - file: &s254 tests/cli-reference.test.ts
+          name: &s255 "[REQ-323] 入力の必須性・相互条件・動的既定値と受理値を表に残す"
+        - file: *s254
+          name: &s256 "[REQ-323][REQ-325] ソース定義から全コマンド・操作と既存ページを再生成できる"
+        - file: &s257 packages/cli/test/reference-definition.test.ts
+          name: &s258 "[REQ-323][REQ-324] 全コマンド・操作の受理名と解析順を明示値と照合する"
+        - file: *s257
+          name: &s259 "[REQ-323] 必須・条件・動的既定値を現在のhandlerと対応づける"
+        - file: *s257
+          name: &s260 "[REQ-324] versionは先頭だけで扱い、その後のhelpをコマンドのhelpとして扱わない"
+    - key: &s261 reference-docs/modified/REQ-324
+      original:
+        ref: *s3
+        path: *s230
+        line: 41
+        name: &s262 共通定義への集約で既存CLIを保つ
+        scenarios:
+          - &s263 ヘルプとusageの保持
+          - 解析と候補順の保持
+          - &s264 handlerの条件と診断の保持
+      owners:
+        - kind: delta
+          change: &s265 verify-v2-evidence
+          file: &s266 openspec/changes/verify-v2-evidence/specs/reference-docs/spec.md
+          name: *s262
+          block: &s267 sha256:3e25bd9a7a38e5d3ea3bbd1afc55af0da2661bd211dcd286fb76b0055e703aa0
+          scenarios:
+            - *s263
+            - 解析と候補順の保持
+            - *s264
+            - 改版での基準の差分
+        - kind: delta
+          change: *s6
+          file: *s252
+          name: *s262
+          block: &s268 sha256:dafdd81f702038ff50670c202efc138adf3c97da8ed2eaed473356f82737665a
+          scenarios:
+            - *s263
+            - 解析と候補順の保持
+            - *s264
+            - 改版での基準の差分
+      scenarioMap:
+        - original: *s263
+          current:
+            file: *s266
+            name: *s262
+            scenario: *s263
+          status: kept
+        - original: 解析と候補順の保持
+          current:
+            file: *s266
+            name: *s262
+            scenario: 解析と候補順の保持
+          status: kept
+        - original: *s264
+          current:
+            file: *s266
+            name: *s262
+            scenario: *s264
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: &s269 ADOPT-PR199-10
+        - trace:
+            change: *s9
+            id: &s270 ADOPT-PR197-17
+        - trace:
+            change: *s6
+            id: S8-09
+        - trace:
+            change: *s6
+            id: S8-10
+        - trace:
+            change: *s9
+            id: R-C001-05
+      tests:
+        - file: *s257
+          name: &s271 基準の原本と改版の差分 [REQ-324] 原本は書き換えず（sha256を固定）、改版の差分は承認元つきで、対象の行だけを変える
+        - file: *s257
+          name: &s272 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ '--help' ]"
+        - file: *s257
+          name: &s273 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ '-h' ]"
+        - file: *s257
+          name: &s274 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'init', '--help' ]"
+        - file: *s257
+          name: &s275 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'init', '-h' ]"
+        - file: *s257
+          name: &s276 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'verify', '--help' ]"
+        - file: *s257
+          name: &s277 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'verify', '-h' ]"
+        - file: *s257
+          name: &s278 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'trace', '--help' ]"
+        - file: *s257
+          name: &s279 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'trace', '-h' ]"
+        - file: *s257
+          name: &s280 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'trace', 'record', '--help' ]"
+        - file: *s257
+          name: &s281 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'trace', 'record', '-h' ]"
+        - file: *s257
+          name: &s282 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'trace', 'report', '--help' ]"
+        - file: *s257
+          name: &s283 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'trace', 'report', '-h' ]"
+        - file: *s257
+          name: &s284 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'trace', 'answer', '--help' ]"
+        - file: *s257
+          name: &s285 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'trace', 'answer', '-h' ]"
+        - file: *s257
+          name: &s286 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'trace', 'approve', '--help' ]"
+        - file: *s257
+          name: &s287 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'trace', 'approve', '-h' ]"
+        - file: *s257
+          name: &s288 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'run', '--help' ]"
+        - file: *s257
+          name: &s289 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'run', '-h' ]"
+        - file: *s257
+          name: &s290 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'doctor', '--help' ]"
+        - file: *s257
+          name: &s291 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'doctor', '-h' ]"
+        - file: *s257
+          name: &s292 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'verify', '--change', '--help' ]"
+        - file: *s257
+          name: &s293 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'trace', 'constructor', '--help' ]"
+        - file: *s257
+          name: &s294 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'trace', 'toString', '--help' ]"
+        - file: *s257
+          name: &s295 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'trace', 'nothing', '--help' ]"
+        - file: *s257
+          name: &s296 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: []"
+        - file: *s257
+          name: &s297 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'init', '--bad' ]"
+        - file: *s257
+          name: &s298 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'doctor', '--bad' ]"
+        - file: *s257
+          name: &s299 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'verify', '--spec-only' ]"
+        - file: *s257
+          name: &s300 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'verify', '--change', 'x' ]"
+        - file: *s257
+          name: &s301 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'verify', '--change', 'x', …(2) ]"
+        - file: *s257
+          name: &s302 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'trace' ]"
+        - file: *s257
+          name: &s303 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'trace', 'recrd' ]"
+        - file: *s257
+          name: &s304 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'trace', 'record' ]"
+        - file: *s257
+          name: &s305 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'trace', 'report' ]"
+        - file: *s257
+          name: &s306 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'trace', 'answer' ]"
+        - file: *s257
+          name: &s307 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'trace', 'answer', '--change', …(3) ]"
+        - file: *s257
+          name: &s308 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'trace', 'answer', '--change', …(5) ]"
+        - file: *s257
+          name: &s309 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'trace', 'approve' ]"
+        - file: *s257
+          name: &s310 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'trace', 'approve', '--change', …(3) ]"
+        - file: *s257
+          name: &s311 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'run' ]"
+        - file: *s257
+          name: &s312 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'verfy' ]"
+        - file: *s257
+          name: &s313 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'verify', '--chnage' ]"
+        - file: *s257
+          name: &s314 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'verify', '--change=' ]"
+        - file: *s257
+          name: &s315 "変更前のCLI原本 [REQ-324] 基準mainの全文・終了コードを保つ: [ 'verify', '--json=true' ]"
+        - file: *s155
+          name: &s316 実際に配るパッケージ [REQ-324][REQ-325] ビルド済み生成入口とpackしたCLIの共通定義・help・usageが一致する
+        - file: *s257
+          name: &s317 "[REQ-324] 値・反復・空値・flag構文と候補同距離時の先頭優先を保つ"
+        - file: *s257
+          name: *s258
+        - file: *s257
+          name: &s318 "[REQ-324] mainは既定値適用と業務の検証順を下位handlerへ引き継ぐ"
+        - file: *s257
+          name: *s260
+        - file: *s257
+          name: *s259
+        - file: *s257
+          name: &s319 基準の原本と改版の差分 [REQ-324] 差分の各欄が空か、change・承認元の回答が trace になければ不正にする
+        - file: *s257
+          name: &s320 基準の原本と改版の差分 [REQ-324] 旧文がない・2 行ある・新文がすでにある・出力が 1 回でない・対象の例がないときは差分を当てずに例外にする
+        - file: *s257
+          name: &s321 基準の原本と改版の差分 [REQ-324] stderr の entry を指定でき、新文は複数行にできる
+      open:
+        - clause: &s322 DUP-324：html と xml の 2 例を一意に参照できない
+          owner: parent-1.2
+    - key: &s323 req-to-openspec-skill/modified/REQ-136
+      original:
+        ref: *s3
+        path: &s324 openspec/changes/verify-v2-c001/specs/req-to-openspec-skill/spec.md
+        line: 3
+        name: 完了ゲートのタスクの印
+        scenarios:
+          - 雛形に印がある
+      owners:
+        - kind: delta
+          change: &s325 verify-v2-dod
+          file: &s326 openspec/changes/verify-v2-dod/specs/req-to-openspec-skill/spec.md
+          name: 完了ゲートのタスクの印
+          block: &s327 sha256:ec10dce1c0d32d4537c2ad76c12a172d760dbfbee58b3e8644b1d6f53d67c257
+          scenarios:
+            - 雛形に印がある
+            - &s328 印のタスクはローカルの完了ゲート
+            - &s329 最終の合格を区別する注記
+      scenarioMap:
+        - original: 雛形に印がある
+          current:
+            file: *s326
+            name: 完了ゲートのタスクの印
+            scenario: 雛形に印がある
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: R-C001-06
+        - trace:
+            change: *s325
+            id: DOD-Q1
+        - trace:
+            change: *s325
+            id: DOD-Q2
+      tests:
+        - file: &s330 tests/kit-assets.test.ts
+          name: &s331 完了ゲートのタスクの印 [REQ-136] Skill の tasks.md の雛形で、完了ゲートのタスクの行末に印があり、SKILL.md が印を付けるよう指示している
+        - file: *s330
+          name: &s332 ローカルの完了と最終の合格 [REQ-136] 印のあるタスクはローカルの完了ゲートで、ci のタスクは無い
+        - file: *s330
+          name: &s333 ローカルの完了と最終の合格 [REQ-136] 雛形の末尾に、最終の合格を区別するチェックボックスでない注記がある
+        - file: *s330
+          name: &s334 ローカルの完了と最終の合格 [REQ-136] 実配布の雛形は LF と CRLF で同じタスク行と末尾注記になる
+        - file: &s335 packages/cli/test/init.test.ts
+          name: &s336 生成したローカルの完了と最終の合格の案内 [REQ-136] init の両 Skill に local の印と最終 CI の注記があり、AGENTS も両者を分ける
+      supplements:
+        - key: *s323
+          scenario: *s328
+        - key: *s323
+          scenario: *s329
+    - key: &s337 run-decision-policy/added/REQ-317
+      original:
+        ref: *s3
+        path: &s338 openspec/changes/verify-v2-c001/specs/run-decision-policy/spec.md
+        line: 47
+        name: &s339 runnerのv2判定追従
+        scenarios:
+          - 要判断とFAIL
+          - &s340 localの完了と旧証拠
+      owners:
+        - kind: delta
+          change: *s215
+          file: &s341 openspec/changes/verify-v2-strict/specs/run-decision-policy/spec.md
+          name: *s339
+          block: &s342 sha256:34396b4d000a358c3f8802e1ce645ac0b0a71cbedade10d13a63bfbd70ea2351
+          scenarios:
+            - 要判断とFAIL
+            - *s340
+            - &s343 完了ゲートにciの結果が来る
+      scenarioMap:
+        - original: 要判断とFAIL
+          current:
+            file: *s341
+            name: *s339
+            scenario: 要判断とFAIL
+          status: kept
+        - original: *s340
+          current:
+            file: *s341
+            name: *s339
+            scenario: *s340
+          status: kept
+      adoption:
+        - trace:
+            change: *s28
+            id: Q-S1-21
+      tests:
+        - file: &s344 packages/runner/test/v2-readers.test.ts
+          name: &s345 完了ゲートに ci の結果が来たときの純粋判断 [REQ-317] scope:ci なら、修正回数が残っていても直しに進まず、ci の PASS を完了にもしない。aborted は ci より先、要判断は ci より後に見る
+        - file: *s344
+          name: &s346 run の完了ゲートと仕様ゲートで 2.0.0 を読む [REQ-205] 要判断と FAIL が同時にあれば、FAIL の内容と理由を保存し、直しのエンジンを呼ばずに止まる。RunSummary の外形は変えない
+        - file: *s344
+          name: &s347 run の完了ゲートと仕様ゲートで 2.0.0 を読む [REQ-205] 2.0.0 の local の完了なら、直しを呼ばずに Draft PR へ進む
+        - file: *s344
+          name: &s348 証拠の再利用と PR 本文で Evidence 2 を読む [REQ-164] Evidence 1 の合格証拠は再利用せず、不正としても止まらず、ファイルを残したまま新しい検証と記録に進む
+        - file: *s344
+          name: &s349 証拠の再利用と PR 本文で Evidence 2 を読む Evidence 2 の local の完了は再利用し、PR 本文に最終 CI の合格と書かない
+        - file: *s344
+          name: &s350 run の完了ゲートと仕様ゲートで 2.0.0 を読む [REQ-317] 完了ゲートに scope:ci の PASS が来たら、直しのエンジンを呼ばず、Draft PR も作らずに理由を記録して止まる
+    - key: &s351 run-decision-policy/modified/REQ-205
+      original:
+        ref: *s3
+        path: *s338
+        line: 3
+        name: &s352 完了ゲート後の純粋な判断
+        scenarios:
+          - 合格と状態変更
+          - 修正回数と期限
+          - 合格の優先
+          - 品質コマンドの中断
+          - &s353 abortedでは自動修正しない
+          - &s354 既存優先順位と観測を保持する
+          - &s355 予算終了後に作業状態を観測できない
+          - &s356 監視異常とabortedの競合
+          - &s357 不正な結果とciは停止する
+      owners:
+        - kind: delta
+          change: &s358 verify-v2-readers
+          file: &s359 openspec/changes/verify-v2-readers/specs/run-decision-policy/spec.md
+          name: *s352
+          block: &s360 sha256:890136632959a3ede00a6f36e25982c095540e5c4a119073c8a710b0bc7a48cf
+          scenarios:
+            - 合格と状態変更
+            - 修正回数と期限
+            - 合格の優先
+            - 品質コマンドの中断
+            - *s353
+      scenarioMap:
+        - original: 合格と状態変更
+          current:
+            file: *s359
+            name: *s352
+            scenario: 合格と状態変更
+          status: kept
+        - original: 修正回数と期限
+          current:
+            file: *s359
+            name: *s352
+            scenario: 修正回数と期限
+          status: kept
+        - original: 合格の優先
+          current:
+            file: *s359
+            name: *s352
+            scenario: 合格の優先
+          status: kept
+        - original: 品質コマンドの中断
+          current:
+            file: *s359
+            name: *s352
+            scenario: 品質コマンドの中断
+          status: kept
+        - original: *s353
+          current:
+            file: *s359
+            name: *s352
+            scenario: *s353
+          status: kept
+        - original: *s354
+          current: null
+          status: kept
+        - original: *s355
+          current: null
+          status: kept
+        - original: *s356
+          current: null
+          status: kept
+        - original: *s357
+          current:
+            file: *s341
+            name: *s339
+            scenario: *s343
+          status: moved
+      adoption:
+        - trace:
+            change: *s28
+            id: Q-S1-20
+      tests:
+        - file: &s361 packages/runner/test/decision-policy.test.ts
+          name: &s362 完了ゲートの観測値から次の段階を決める [REQ-205] 上限の直前は修正
+        - file: *s361
+          name: &s363 完了ゲートの観測値から次の段階を決める [REQ-205] 上限と一致したら停止
+        - file: *s361
+          name: &s364 完了ゲートの観測値から次の段階を決める [REQ-205] 上限超過でも停止
+        - file: *s361
+          name: &s365 完了ゲートの観測値から次の段階を決める [REQ-205] 上限0では修正しない
+        - file: *s361
+          name: &s366 完了ゲートの観測値から次の段階を決める [REQ-205] 期限は回数より優先
+        - file: *s361
+          name: &s367 完了ゲートの観測値から次の段階を決める [REQ-205] 状態変更は合格より優先
+        - file: *s361
+          name: &s368 完了ゲートの観測値から次の段階を決める [REQ-205] 状態変更は期限より優先
+        - file: *s361
+          name: &s369 完了ゲートの観測値から次の段階を決める [REQ-205] 通常の合格
+        - file: *s361
+          name: &s370 完了ゲートの観測値から次の段階を決める [REQ-205] 合格は回数と期限の記録より優先
+        - file: *s344
+          name: &s371 完了ゲートの純粋判断 [REQ-205] 状態の変更を最初に、次に aborted と要判断で止まり、修正回数が残っていても直しに進まない。ローカル完了は回数・期限より優先する
+        - file: *s361
+          name: &s372 "[REQ-205][REQ-124] 不合格の中断は期限と回数より優先する"
+        - file: *s361
+          name: &s373 "[REQ-205][REQ-124] 検証中の状態変更を中断より先に確認する"
+        - file: *s361
+          name: &s374 "[REQ-205][REQ-124] 状態が変わらない合格は中断の記録より優先する"
+        - file: *s344
+          name: *s347
+        - file: *s344
+          name: &s375 run の完了ゲートと仕様ゲートで 2.0.0 を読む [REQ-205] 完了ゲートが aborted なら、修正回数が残っていてもエンジンを呼ばずに理由を記録して止まる
+        - file: *s344
+          name: *s345
+        - file: *s344
+          name: *s350
+      open:
+        - clause: O1
+          owner: parent-1.2
+        - clause: O2
+          owner: parent-1.2
+        - clause: O3
+          owner: parent-1.2
+      supplements:
+        - key: *s337
+          scenario: *s343
+    - key: &s376 run-pr/modified/REQ-114
+      original:
+        ref: *s3
+        path: &s377 openspec/changes/verify-v2-c001/specs/run-pr/spec.md
+        line: 3
+        name: &s378 証拠を記録してから PR を作る
+        scenarios:
+          - &s379 合格して PR まで進む
+          - 記録が PR より先
+          - &s380 実装ブランチの上で再開する
+          - 向き先が分からない
+          - &s381 local結果とCI最終合格の区別
+      owners:
+        - kind: delta
+          change: *s9
+          file: *s377
+          name: *s378
+          block: &s382 sha256:61feb1c79ba089d03c0fbb2803ef86c105fca4e742361a6f839be86ff30a09a4
+          scenarios:
+            - *s379
+            - 記録が PR より先
+            - *s380
+            - 向き先が分からない
+            - *s381
+      scenarioMap:
+        - original: *s379
+          current:
+            file: *s377
+            name: *s378
+            scenario: *s379
+          status: kept
+        - original: 記録が PR より先
+          current:
+            file: *s377
+            name: *s378
+            scenario: 記録が PR より先
+          status: kept
+        - original: *s380
+          current:
+            file: *s377
+            name: *s378
+            scenario: *s380
+          status: kept
+        - original: 向き先が分からない
+          current:
+            file: *s377
+            name: *s378
+            scenario: 向き先が分からない
+          status: kept
+        - original: *s381
+          current:
+            file: *s377
+            name: *s378
+            scenario: *s381
+          status: kept
+      adoption:
+        - trace:
+            change: *s28
+            id: Q-S1-22
+      tests:
+        - file: &s383 packages/runner/test/pr.test.ts
+          name: &s384 証拠を記録してから PR を作る [REQ-114] 合格したら、証拠の記録をコミットし、ブランチを origin に送り、始めたブランチに向けた PR を作って終了コード 0 を返す
+        - file: *s383
+          name: &s385 証拠を記録してから PR を作る [REQ-114] PR を作る時点で、ブランチの最後のコミットに証拠の記録が入っている
+        - file: *s383
+          name: &s386 再開したときの PR の向き先 [REQ-114] 止まったあと loomake/<change-id> の上で再開しても、最初に始めたブランチに向けた PR を作る
+        - file: *s383
+          name: &s387 再開したときの PR の向き先 [REQ-114] 人が作った loomake/<change-id> の上で始めて向き先が分からなければ、証拠を記録せずに止まる
+        - file: *s344
+          name: *s349
+        - file: *s383
+          name: &s388 PR の本文 [REQ-115] 本文に、proposal の Why と What Changes、完了ゲートの結果、要件ごとのテスト、証拠の記録のパスを含める
+      open:
+        - clause: &s389 "existing-114-draft: current Scenario still requires Draft; producer and protected REQ116 argv lack --draft. No S1 assertion rewrite."
+          owner: parent-1.2
+    - key: &s390 run-pr/modified/REQ-115
+      original:
+        ref: *s3
+        path: *s377
+        line: 28
+        name: PR の本文
+        scenarios:
+          - 本文の中身
+      owners:
+        - kind: delta
+          change: *s9
+          file: *s377
+          name: PR の本文
+          block: &s391 sha256:80dec94565bb0240ec921bbead40dd1e332ad763f17c107c7092e4a66545bea8
+          scenarios:
+            - 本文の中身
+      scenarioMap:
+        - original: 本文の中身
+          current:
+            file: *s377
+            name: PR の本文
+            scenario: 本文の中身
+          status: kept
+      adoption:
+        - trace:
+            change: *s28
+            id: Q-S1-23
+      tests:
+        - file: *s383
+          name: *s388
+        - file: *s344
+          name: *s349
+    - key: &s392 run/modified/REQ-093
+      original:
+        ref: *s3
+        path: &s393 openspec/changes/verify-v2-c001/specs/run/spec.md
+        line: 53
+        name: 仕様ゲートの確認
+        scenarios:
+          - 仕様ゲートに不合格
+          - 仕様ゲートに合格
+          - 仕様ゲートの実行エラー
+      owners:
+        - kind: delta
+          change: *s358
+          file: &s394 openspec/changes/verify-v2-readers/specs/run/spec.md
+          name: 仕様ゲートの確認
+          block: &s395 sha256:bcfc89458e209aa78f8f01f486c0616eaec21863e882ac02501fbd1b0e6c6dff
+          scenarios:
+            - 仕様ゲートに不合格
+            - 仕様ゲートに合格
+            - &s396 仕様ゲートがabortedになる
+            - &s397 既存のブランチで仕様ゲートが例外になる
+      scenarioMap:
+        - original: 仕様ゲートに不合格
+          current:
+            file: *s394
+            name: 仕様ゲートの確認
+            scenario: 仕様ゲートに不合格
+          status: kept
+        - original: 仕様ゲートに合格
+          current:
+            file: *s394
+            name: 仕様ゲートの確認
+            scenario: 仕様ゲートに合格
+          status: kept
+        - original: 仕様ゲートの実行エラー
+          current:
+            file: *s394
+            name: 仕様ゲートの確認
+            scenario: *s396
+          status: renamed
+      adoption:
+        - trace:
+            change: *s9
+            id: R-C001-05
+      tests:
+        - file: &s398 packages/runner/test/run.test.ts
+          name: &s399 実行前の確認 [REQ-093] 仕様ゲートに不合格なら、内容を表示し、ブランチを作らず、エンジンを呼ばずに終了コード 1 を返す
+        - file: *s398
+          name: &s400 実行前の確認 [REQ-093] 仕様ゲートに合格すれば、実装に進む
+        - file: *s344
+          name: &s401 run の完了ゲートと仕様ゲートで 2.0.0 を読む [REQ-093] 仕様ゲートが usage の実行エラーなら、ブランチを作らずエンジンを呼ばずに終了コード 2
+        - file: *s344
+          name: &s402 run の完了ゲートと仕様ゲートで 2.0.0 を読む [REQ-093] 仕様ゲートが config の実行エラーなら、ブランチを作らずエンジンを呼ばずに終了コード 2
+        - file: *s344
+          name: &s403 run の完了ゲートと仕様ゲートで 2.0.0 を読む [REQ-093] 仕様ゲートが runtime の実行エラーなら、ブランチを作らずエンジンを呼ばずに終了コード 3
+        - file: *s344
+          name: &s404 run の完了ゲートと仕様ゲートで 2.0.0 を読む [REQ-093] 仕様ゲートの結果は、1.0.0 は ok で、2.0.0 は不合格 1・usage と config の aborted 2・ほかの aborted 3 で決める
+        - file: *s19
+          name: &s405 verify の --scope [REQ-312] scope を省くと done は ci、spec-only と change なしは local。環境変数 CI の有無で変わらない
+        - file: *s344
+          name: &s406 仕様ゲートの例外とブランチ [REQ-093] 既存の change のブランチへ切り替えたあと、仕様ゲートが例外で止まったら、元のブランチへ戻して終了コード 2 を返す
+    - key: &s407 run/modified/REQ-100
+      original:
+        ref: *s3
+        path: *s393
+        line: 28
+        name: 完了ゲートと直し
+        scenarios:
+          - 直して合格する
+          - &s408 完了ゲートのタスクはエンジンに渡さない
+          - 印のあるタスク
+          - 旧書式のタスク
+          - &s409 印は指示とメッセージに含めない
+      owners:
+        - kind: delta
+          change: &s410 verify-v2-wiring
+          file: &s411 openspec/changes/verify-v2-wiring/specs/run/spec.md
+          name: 完了ゲートと直し
+          block: &s412 sha256:78f90eb88b4e05c75a8d2218bc1abb3ea3b3b87c6be60e38c4d6f1813bfaaa58
+          scenarios:
+            - 直して合格する
+            - *s408
+            - 印のあるタスク
+            - 旧書式のタスク
+            - *s409
+        - kind: &s413 main-unchanged
+          file: &s414 openspec/specs/run/spec.md
+          name: &s415 変更を残さない完了ゲートの直し
+          block: &s416 sha256:7d3f4430865f8e453203eae34858d2f104da2fe33809949b71c755203c79c3e6
+          scenarios:
+            - 直しで何も変えない
+            - &s417 直しで変更が要らないと合図する
+            - 直しの指示
+            - &s418 直しで止まるときの記録の場所
+      scenarioMap:
+        - original: 直して合格する
+          current:
+            file: *s411
+            name: 完了ゲートと直し
+            scenario: 直して合格する
+          status: kept
+        - original: *s408
+          current:
+            file: *s411
+            name: 完了ゲートと直し
+            scenario: *s408
+          status: kept
+        - original: 印のあるタスク
+          current:
+            file: *s411
+            name: 完了ゲートと直し
+            scenario: 印のあるタスク
+          status: kept
+        - original: 旧書式のタスク
+          current:
+            file: *s411
+            name: 完了ゲートと直し
+            scenario: 旧書式のタスク
+          status: kept
+        - original: *s409
+          current:
+            file: *s411
+            name: 完了ゲートと直し
+            scenario: *s409
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: &s419 ADOPT-PR197-21
+        - trace:
+            change: *s9
+            id: &s420 ADOPT-PR197-22
+        - trace:
+            change: *s9
+            id: &s421 ADOPT-PR197-24
+        - trace:
+            change: *s9
+            id: R-C001-05
+        - trace:
+            change: *s9
+            id: R-C001-06
+      tests:
+        - file: *s398
+          name: &s422 完了ゲートと直し [REQ-100] 完了ゲートのタスクはエンジンに渡さない
+        - file: *s398
+          name: &s423 完了ゲートと直し [REQ-100][REQ-111] 不合格なら内容をエンジンに渡して直させ、直しをコミットし、合格したら完了ゲートのタスクを完了にする。run が完了にしたタスクは不正な直し方とみなさない
+        - file: *s398
+          name: &s424 完了ゲートのタスクの印 [REQ-100][REQ-136] 印のあるタスクは、文に verify と --done がなくてもエンジンに渡さず、合格したときに完了にする
+        - file: *s398
+          name: &s425 完了ゲートのタスクの印 [REQ-100] 印のない旧書式のタスクもエンジンに渡さず、印を付けるよう案内する
+        - file: *s398
+          name: &s426 完了ゲートのタスクの印 [REQ-100] 残ったタスクの表示と summary.json には、印を含めない
+        - file: &s427 packages/runner/test/run-no-change.test.ts
+          name: &s428 変更を残さないエンジン [REQ-331][REQ-100] 直しが合図なしで変更なしなら再検証せず止まり直しの指示に合図の決まりを含めない
+        - file: *s427
+          name: &s429 変更を残さないエンジン [REQ-331][REQ-100] 直しが合図ありで変更なしなら再検証せず止まり直しの指示に合図の決まりを含めない
+        - file: *s344
+          name: &s430 run の完了ゲートと仕様ゲートで 2.0.0 を読む [REQ-100] run の完了ゲートは scope:local で verify を実行し、保存した結果も scope:local になる
+        - file: *s427
+          name: &s431 変更を残さないエンジン [REQ-331] 直しが合図なしで変更なしなら停止理由に出力記録の具体パスを示す
+        - file: *s427
+          name: &s432 変更を残さないエンジン [REQ-331] 直しが合図ありで変更なしなら停止理由に出力記録の具体パスを示す
+    - key: &s433 run/modified/REQ-164
+      original:
+        ref: *s3
+        path: *s393
+        line: 3
+        name: &s434 検証済み証拠の安全な再利用
+        scenarios:
+          - &s435 pushやPR作成の失敗後に再実行する
+          - 不正な証拠が直前にある
+          - &s436 証拠の後で実装を変更した
+          - 旧証拠しかない
+          - &s437 正常v2でも再利用条件に合わない
+      owners:
+        - kind: delta
+          change: *s215
+          file: &s438 openspec/changes/verify-v2-strict/specs/run/spec.md
+          name: *s434
+          block: &s439 sha256:7ce7e591ed774a8d52f417e0c0cb67267f5f45bab1e9faffaaf0197ae8fe04ca
+          scenarios:
+            - *s435
+            - 不正な証拠が直前にある
+            - *s436
+            - 旧証拠しかない
+      scenarioMap:
+        - original: *s435
+          current:
+            file: *s438
+            name: *s434
+            scenario: *s435
+          status: kept
+        - original: 不正な証拠が直前にある
+          current:
+            file: *s438
+            name: *s434
+            scenario: 不正な証拠が直前にある
+          status: kept
+        - original: *s436
+          current:
+            file: *s438
+            name: *s434
+            scenario: *s436
+          status: kept
+        - original: 旧証拠しかない
+          current:
+            file: *s438
+            name: *s434
+            scenario: 旧証拠しかない
+          status: kept
+        - original: *s437
+          current:
+            file: *s438
+            name: *s434
+            scenario: 不正な証拠が直前にある
+          status: moved
+      adoption:
+        - trace:
+            change: *s9
+            id: &s440 ADOPT-PR197-23
+      tests:
+        - file: &s441 packages/runner/test/publication-retry.test.ts
+          name: &s442 証拠とPRの再試行 [REQ-164] push失敗後に同じ証拠を再利用して送信する
+        - file: *s441
+          name: &s443 証拠とPRの再試行 [REQ-164][REQ-165] 作成のbeforeで失敗した後も同じ証拠とコミットを使う
+        - file: *s441
+          name: &s444 証拠とPRの再試行 [REQ-164][REQ-165] 作成のafterで失敗した後も同じ証拠とコミットを使う
+        - file: *s441
+          name: &s445 証拠とPRの再試行 [REQ-164][REQ-165] 完了後も再実行で証拠・コミット・PRを増やさない
+        - file: *s441
+          name: &s446 不正な証拠候補を保護する [REQ-164] jsonの証拠は消さず増やさず停止する
+        - file: *s441
+          name: &s447 不正な証拠候補を保護する [REQ-164] shaの証拠は消さず増やさず停止する
+        - file: *s441
+          name: &s448 不正な証拠候補を保護する [REQ-164] changeの証拠は消さず増やさず停止する
+        - file: *s441
+          name: &s449 不正な証拠候補を保護する [REQ-164] failedの証拠は消さず増やさず停止する
+        - file: *s441
+          name: &s450 不正な証拠候補を保護する [REQ-164] fail-resultの証拠は消さず増やさず停止する
+        - file: *s441
+          name: &s451 不正な証拠候補を保護する [REQ-164] hashの証拠は消さず増やさず停止する
+        - file: *s441
+          name: &s452 不正な証拠候補を保護する [REQ-164] snapshotの証拠は消さず増やさず停止する
+        - file: *s441
+          name: &s453 不正な証拠候補を保護する [REQ-164] legacyの証拠は消さず増やさず停止する
+        - file: *s441
+          name: &s454 証拠とPRの再試行 [REQ-164] 証拠の後に実装を変えたら新しい対象SHAの証拠を作る
+        - file: *s344
+          name: *s348
+        - file: *s344
+          name: &s455 証拠の再利用と PR 本文で Evidence 2 を読む Evidence 2 の ci の PASS・要判断・FAIL・aborted は、ローカルの完了ではないので再利用せずに止まる
+        - file: *s344
+          name: *s349
+      open:
+        - clause: O3
+          owner: parent-1.2
+      supplements:
+        - key: *s433
+          scenario: 不正な証拠が直前にある
+    - key: &s456 trace-agreement/modified/REQ-203
+      original:
+        ref: *s3
+        path: &s457 openspec/changes/verify-v2-c001/specs/trace-agreement/spec.md
+        line: 3
+        name: 仮定を承認する
+        scenarios:
+          - 仮定を承認する
+      owners:
+        - kind: delta
+          change: &s458 verify-v2-gates
+          file: &s459 openspec/changes/verify-v2-gates/specs/trace-agreement/spec.md
+          name: 仮定を承認する
+          block: &s460 sha256:a506da4f6f4f22eaa79634c40368c1e2c24e758b2beea7d63fbee53122bbc6af
+          scenarios:
+            - 仮定を承認する
+      scenarioMap:
+        - original: 仮定を承認する
+          current:
+            file: *s459
+            name: 仮定を承認する
+            scenario: 仮定を承認する
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: R-C001-08
+        - trace:
+            change: *s458
+            id: S9-01
+      tests:
+        - file: &s461 packages/cli/test/trace-agreement.test.ts
+          name: &s462 仮定を承認する [REQ-203] 承認・承認者・承認日を書き、未承認の警告が消える
+        - file: &s463 packages/kit/test/verify.test.ts
+          name: &s464 ゲート別の分類 [REQ-203] 仮定を承認すると、spec-only の案内と done の不足・要判断理由から未承認が消える
+        - file: &s465 packages/core/test/trace-edit.test.ts
+          name: &s466 trace.md の表の行を書く [REQ-203] 仮定の行にも書ける
+    - key: &s467 trace-record/added/REQ-315
+      original:
+        ref: *s3
+        path: &s468 openspec/changes/verify-v2-c001/specs/trace-record/spec.md
+        line: 31
+        name: &s469 v2証拠の記録と旧版の非再利用
+        scenarios:
+          - &s470 v2の結果をそのまま記録する
+          - scopeの既定値
+          - 旧版と変更検知
+          - &s471 不正scopeで記録しない
+      owners:
+        - kind: delta
+          change: *s410
+          file: &s472 openspec/changes/verify-v2-wiring/specs/trace-record/spec.md
+          name: *s469
+          block: &s473 sha256:d753f12f779bbe8ff628c5a470d3f3d8625f9e2d82a079f8e83dbadaf71077a2
+          scenarios:
+            - *s470
+            - scopeの既定値
+            - 旧版と変更検知
+      scenarioMap:
+        - original: *s470
+          current:
+            file: *s472
+            name: *s469
+            scenario: *s470
+          status: kept
+        - original: scopeの既定値
+          current:
+            file: *s472
+            name: *s469
+            scenario: scopeの既定値
+          status: kept
+        - original: 旧版と変更検知
+          current:
+            file: *s472
+            name: *s469
+            scenario: 旧版と変更検知
+          status: kept
+        - original: *s471
+          current:
+            file: *s7
+            name: *s26
+            scenario: scopeの値
+          status: moved
+      adoption:
+        - trace:
+            change: *s9
+            id: &s474 ADOPT-PR197-18
+        - trace:
+            change: *s9
+            id: &s475 ADOPT-PR197-19
+        - trace:
+            change: *s9
+            id: &s476 ADOPT-PR197-20
+        - trace:
+            change: *s9
+            id: *s121
+        - trace:
+            change: *s9
+            id: &s477 ADOPT-PR199-11
+      tests:
+        - file: &s478 packages/trace/test/evidence-v2-record.test.ts
+          name: &s479 Evidence 2 の記録 [REQ-315] scope を省くと ci で verify を実行し、2.0.0 の結果をそのまま Evidence 2 に保存して verify と同じ終了コードを返す
+        - file: *s478
+          name: &s480 Evidence 2 の記録 [REQ-315] change が確定したあとの実行時の失敗は aborted として checks を足さずに記録し、終了コード 3。旧ファイルは上書きしない
+        - file: *s478
+          name: &s481 Evidence 2 の記録 [REQ-315] 明示した local は local のまま記録し、ローカルの完了を最終 CI の合格に変えない
+        - file: *s478
+          name: &s482 記録と report の往復 [REQ-073][REQ-315] trace record が書いた Evidence 2 を、trace report が読んで JSON のレポートを出す（終了コード 0）
+        - file: *s344
+          name: *s348
+        - file: *s19
+          name: *s33
+      open:
+        - clause: O1
+          owner: parent-1.2
+        - clause: O4
+          owner: parent-1.2
+      supplements:
+        - key: *s25
+          scenario: scopeの値
+    - key: &s483 trace-record/modified/REQ-066
+      original:
+        ref: *s3
+        path: *s468
+        line: 3
+        name: 証拠の記録
+        scenarios:
+          - 合格した結果を記録する
+          - コミットを案内する
+          - 不合格の結果も記録する
+          - &s484 存在しない change
+          - &s485 パスの区切りを含む change-id
+      owners:
+        - kind: delta
+          change: *s9
+          file: *s468
+          name: 証拠の記録
+          block: &s486 sha256:9ac73eddad1922c2fbe542b00c784dfcdc8f1b14bdc5d29f662d830e5b702253
+          scenarios:
+            - 合格した結果を記録する
+            - コミットを案内する
+            - 不合格の結果も記録する
+            - *s484
+            - *s485
+      scenarioMap:
+        - original: 合格した結果を記録する
+          current:
+            file: *s468
+            name: 証拠の記録
+            scenario: 合格した結果を記録する
+          status: kept
+        - original: コミットを案内する
+          current:
+            file: *s468
+            name: 証拠の記録
+            scenario: コミットを案内する
+          status: kept
+        - original: 不合格の結果も記録する
+          current:
+            file: *s468
+            name: 証拠の記録
+            scenario: 不合格の結果も記録する
+          status: kept
+        - original: *s484
+          current:
+            file: *s468
+            name: 証拠の記録
+            scenario: *s484
+          status: kept
+        - original: *s485
+          current:
+            file: *s468
+            name: 証拠の記録
+            scenario: *s485
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: *s474
+      tests:
+        - file: &s487 packages/trace/test/record.test.ts
+          name: &s488 証拠の記録 [REQ-066] 完了ゲートに合格した結果を、SHA・コミットの日時・記録した日時と合わせて保存し、終了コード 0 を返す
+        - file: *s478
+          name: *s479
+        - file: *s487
+          name: &s489 証拠の記録 [REQ-066] 記録したファイルのパスと、git にコミットするよう促す案内を表示する
+        - file: *s487
+          name: &s490 証拠の記録 [REQ-066] 完了ゲートに不合格でも結果を記録し、終了コード 1 を返す
+        - file: *s487
+          name: &s491 証拠の記録 [REQ-066] 存在しない change では何も記録せず、日本語のエラーを出して終了コード 2 を返す
+        - file: *s487
+          name: &s492 証拠の記録 [REQ-066] change-id にパスの区切りを含めると、何も記録せず、日本語のエラーを出して終了コード 2 を返す
+        - file: *s487
+          name: &s493 証拠の記録 [REQ-066] change-id が change 名の形でないか archive なら、何も記録せず、終了コード 2 を返す
+    - key: &s494 trace-report/added/REQ-316
+      original:
+        ref: *s3
+        path: &s495 openspec/changes/verify-v2-c001/specs/trace-report/spec.md
+        line: 34
+        name: &s496 新旧証拠の閲覧と既存レポート外形
+        scenarios:
+          - 旧fixtureの閲覧
+          - 新しい実施結果の投影
+      owners:
+        - kind: delta
+          change: *s39
+          file: &s497 openspec/changes/verify-v2-shape/specs/trace-report/spec.md
+          name: *s496
+          block: &s498 sha256:0c523dce8c80211496f881899373acbc93a054c118f2bc6f8aed5e075fd35a56
+          scenarios:
+            - 旧fixtureの閲覧
+            - 新しい実施結果の投影
+      scenarioMap:
+        - original: 旧fixtureの閲覧
+          current:
+            file: *s497
+            name: *s496
+            scenario: 旧fixtureの閲覧
+          status: kept
+        - original: 新しい実施結果の投影
+          current:
+            file: *s497
+            name: *s496
+            scenario: 新しい実施結果の投影
+          status: kept
+      adoption:
+        - trace:
+            change: *s28
+            id: Q-S1-24
+      tests:
+        - file: &s499 packages/trace/test/projection.test.ts
+          name: &s500 新旧の証拠の Report 2 への投影 [REQ-316] 旧 Evidence 1 は従来の行・ok・失敗した検査を保ち、書き出しの版が新しいときだけ履歴閲覧専用の警告を先頭に加える
+        - file: *s478
+          name: &s501 Evidence 1 と Evidence 2 の読み分け [REQ-073] Evidence 2 を受け付け、Evidence 1 は履歴閲覧専用の警告を付けて読む
+        - file: *s499
+          name: &s502 新旧の証拠の Report 2 への投影 [REQ-316] 投影は入力を変えず、旧証拠を新しい形へ書き換えない
+        - file: *s499
+          name: &s503 新旧の証拠の Report 2 への投影 [REQ-316] v2 の ci・PASS・要判断なしだけを ok にし、成功したテストの対応を写す
+        - file: *s499
+          name: &s504 新旧の証拠の Report 2 への投影 [REQ-316] v2 の ci の FAIL・不足は ok にせず、FAIL と不足の検査を分けて理由を残す
+        - file: *s499
+          name: &s505 新旧の証拠の Report 2 への投影 [REQ-316] local の完了は ok にせず、最終 CI の合格を確かめていないことを警告し、失敗した検査を作らない
+        - file: *s499
+          name: &s506 新旧の証拠の Report 2 への投影 [REQ-316] aborted は ok にせず、存在しない checks や成功したテストを作らずに中止の理由を残す
+    - key: &s507 trace-report/modified/REQ-073
+      original:
+        ref: *s3
+        path: *s495
+        line: 3
+        name: 使った証拠の記載
+        scenarios:
+          - 記録の情報が載る
+          - 読めない記録がある
+          - 読めない版の記録がある
+          - 形の違う記録がある
+          - &s508 ほかの change の記録がある
+          - &s509 新旧形式を混ぜた証拠を拒否する
+      owners:
+        - kind: delta
+          change: *s265
+          file: &s510 openspec/changes/verify-v2-evidence/specs/trace-report/spec.md
+          name: 使った証拠の記載
+          block: &s511 sha256:620f9db91cc23ce6e52ac299ec7ea0b4d709661182d7a9621c86e11ad8dd26e7
+          scenarios:
+            - 記録の情報が載る
+            - 読めない記録がある
+            - 読めない版の記録がある
+            - 版の混在した記録がある
+            - 形の違う記録がある
+            - *s508
+      scenarioMap:
+        - original: 記録の情報が載る
+          current:
+            file: *s510
+            name: 使った証拠の記載
+            scenario: 記録の情報が載る
+          status: kept
+        - original: 読めない記録がある
+          current:
+            file: *s510
+            name: 使った証拠の記載
+            scenario: 読めない記録がある
+          status: kept
+        - original: 読めない版の記録がある
+          current:
+            file: *s510
+            name: 使った証拠の記載
+            scenario: 読めない版の記録がある
+          status: kept
+        - original: 形の違う記録がある
+          current:
+            file: *s510
+            name: 使った証拠の記載
+            scenario: 形の違う記録がある
+          status: kept
+        - original: *s508
+          current:
+            file: *s510
+            name: 使った証拠の記載
+            scenario: *s508
+          status: kept
+        - original: *s509
+          current:
+            file: *s510
+            name: 使った証拠の記載
+            scenario: 版の混在した記録がある
+          status: renamed
+      adoption:
+        - trace:
+            change: *s9
+            id: &s512 ADOPT-PR199-08
+        - trace:
+            change: *s9
+            id: &s513 ADOPT-PR199-09
+        - trace:
+            change: *s9
+            id: *s476
+      tests:
+        - file: &s514 packages/trace/test/report.test.ts
+          name: &s515 使った証拠の記載 [REQ-073] 使った記録の、記録した日時・SHA・コミットの日時を載せる
+        - file: *s514
+          name: &s516 読めない証拠の記録 [REQ-073] JSON として壊れた記録があれば、そのファイルを日本語で示し、スタックトレースを出さずに終了コード 2 を返す
+        - file: *s514
+          name: &s517 読めない証拠の記録 [REQ-073] schemaVersion が読める版でない記録があれば、そのファイルと版を日本語で示し、終了コード 2 を返す
+        - file: *s478
+          name: &s518 Evidence 1 と Evidence 2 の読み分け [REQ-073] 未対応の版、版と verify の混在、Evidence 2 の状態別の必須欄がない記録は、ファイルと不正箇所を示して終了コード 2 で拒否する
+        - file: *s514
+          name: &s519 読めない証拠の記録 [REQ-073] verify.results のない記録があれば、そのファイルと欄を日本語で示し、スタックトレースを出さずに終了コード 2 を返す
+        - file: *s514
+          name: &s520 読めない証拠の記録 [REQ-073] change がほかの change の記録があれば、そのファイルを日本語で示し、終了コード 2 を返す
+        - file: *s478
+          name: *s501
+    - key: &s521 verification-policy/added/REQ-313
+      original:
+        ref: *s3
+        path: &s522 openspec/changes/verify-v2-c001/specs/verification-policy/spec.md
+        line: 33
+        name: &s523 限定した品質条件の純粋判定
+        scenarios:
+          - 比較条件と最低サンプル
+          - 証拠の欠落と対象外
+          - 純粋性
+      owners:
+        - kind: delta
+          change: *s39
+          file: &s524 openspec/changes/verify-v2-shape/specs/verification-policy/spec.md
+          name: *s523
+          block: &s525 sha256:4696cfc75631bbf230157002dd66a227d9d22daac7a3cffceae08706303de0e0
+          scenarios:
+            - 比較条件と最低サンプル
+            - 証拠の欠落と対象外
+            - 純粋性
+      scenarioMap:
+        - original: 比較条件と最低サンプル
+          current:
+            file: *s524
+            name: *s523
+            scenario: 比較条件と最低サンプル
+          status: kept
+        - original: 証拠の欠落と対象外
+          current:
+            file: *s524
+            name: *s523
+            scenario: 証拠の欠落と対象外
+          status: kept
+        - original: 純粋性
+          current:
+            file: *s524
+            name: *s523
+            scenario: 純粋性
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: R-C001-03
+        - trace:
+            change: *s9
+            id: R-C001-04
+      tests:
+        - file: &s526 packages/kit/test/quality-conditions.test.ts
+          name: &s527 限定した品質条件の純粋判定 [REQ-313] 5 つの比較演算子の境界・境界外を、必須条件の充足と違反に分ける
+        - file: *s526
+          name: &s528 限定した品質条件の純粋判定 [REQ-313] 最低サンプル数に満たない観測は不足にし、measure の値を defaults より優先する
+        - file: *s526
+          name: &s529 "限定した品質条件の純粋判定 [REQ-313] 適格な必須条件の違反と別の不足が同時にあれば FAIL を優先し、blocking: false でも違反を相殺しない"
+        - file: *s526
+          name: &s530 限定した品質条件の純粋判定 [REQ-313] 未実施・取得不能・古い・適格性未確認・未照合・未完の集計・target なし・観測なしを不足にする
+        - file: *s526
+          name: &s531 限定した品質条件の純粋判定 [REQ-313] 合格証拠が空の対象と、参考指標だけを満たす対象を PASS にしない
+        - file: *s526
+          name: &s532 限定した品質条件の純粋判定 [REQ-313] 理由と確認者のある対象外は NOT_APPLICABLE にし、理由を残す
+        - file: *s526
+          name: &s533 限定した品質条件の純粋判定 [REQ-313] freeze した同じ入力を繰り返し渡しても、入力と順序を変えず同じ結果を返す
+    - key: &s534 verification-policy/added/REQ-314
+      original:
+        ref: *s3
+        path: *s522
+        line: 50
+        name: 集約値と件数の一貫性
+        scenarios:
+          - 集約と件数
+          - localの未完了
+          - &s535 構造NAと品質NAを混ぜない
+      owners:
+        - kind: delta
+          change: *s39
+          file: *s524
+          name: 集約値と件数の一貫性
+          block: &s536 sha256:4ed8745f6833ca835aba3f5efcad59b501a25a3dff2306cff3adceb8ecd5587a
+          scenarios:
+            - 集約と件数
+            - localの未完了
+      scenarioMap:
+        - original: 集約と件数
+          current:
+            file: *s524
+            name: 集約値と件数の一貫性
+            scenario: 集約と件数
+          status: kept
+        - original: localの未完了
+          current:
+            file: *s524
+            name: 集約値と件数の一貫性
+            scenario: localの未完了
+          status: kept
+        - original: *s535
+          current:
+            file: &s537 openspec/changes/verify-v2-gates/specs/verify/spec.md
+            name: &s538 openspec validate の実行
+            scenario: &s539 OpenSpec CLI が無い
+          status: moved
+      adoption:
+        - trace:
+            change: *s9
+            id: R-C001-02
+        - trace:
+            change: *s9
+            id: R-C001-10
+      tests:
+        - file: *s526
+          name: &s540 集約値と件数の一貫性 [REQ-314][REQ-306] FAIL・不足・PASS の順で集約し、件数と evaluated が checks と一致する
+        - file: *s526
+          name: &s541 集約値と件数の一貫性 [REQ-314] local では不足を pending、FAIL を fail に数え、verdict を返さない
+        - file: *s463
+          name: &s542 ゲート別の分類 [REQ-037] auto で OpenSpec CLI が無いと、local は理由と確認者つきの対象外、ci は不足になる
+        - file: *s463
+          name: &s543 ゲート別の分類 [REQ-036] spec-only は local でも ci でも品質項目（quality:）を checks に作らない
+        - file: *s526
+          name: &s544 集約値と件数の一貫性 [REQ-314] quality:subjects は対象 0・全 NA・証拠の定義なしを不足にし、ゲートの PASS で相殺せず evaluated に数える
+        - file: *s526
+          name: &s545 集約値と件数の一貫性 [REQ-310][REQ-314] 最小の quality.yaml（対象なし）は、完了ゲートの PASS にならない
+      open:
+        - clause: D1
+          owner: parent-1.2
+      supplements:
+        - key: &s546 verify/modified/REQ-037
+          scenario: *s539
+    - key: &s547 verification-policy/modified/REQ-306
+      original:
+        ref: *s3
+        path: *s522
+        line: 3
+        name: &s548 評価済み品質結果のCI集約
+        scenarios:
+          - FAILが優先する
+          - 証跡不足が優先する
+          - PASSがある
+          - 対象がない
+          - 順序・重複・入力保持
+      owners:
+        - kind: delta
+          change: *s39
+          file: *s524
+          name: *s548
+          block: &s549 sha256:7d5fca40b519da0f22e0b314969fba75531d66a3bd344853298f6df8ff4ce5e4
+          scenarios:
+            - FAILが優先する
+            - 証跡不足が優先する
+            - PASSがある
+            - 対象がない
+            - 順序・重複・入力保持
+      scenarioMap:
+        - original: FAILが優先する
+          current:
+            file: *s524
+            name: *s548
+            scenario: FAILが優先する
+          status: kept
+        - original: 証跡不足が優先する
+          current:
+            file: *s524
+            name: *s548
+            scenario: 証跡不足が優先する
+          status: kept
+        - original: PASSがある
+          current:
+            file: *s524
+            name: *s548
+            scenario: PASSがある
+          status: kept
+        - original: 対象がない
+          current:
+            file: *s524
+            name: *s548
+            scenario: 対象がない
+          status: kept
+        - original: 順序・重複・入力保持
+          current:
+            file: *s524
+            name: *s548
+            scenario: 順序・重複・入力保持
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: R-C001-05
+      tests:
+        - file: &s550 packages/kit/test/quality-verdict.test.ts
+          name: &s551 評価済み結果の CI verdict [REQ-306] [] の集約は INSUFFICIENT_EVIDENCE
+        - file: *s550
+          name: &s552 評価済み結果の CI verdict [REQ-306] [ 'NOT_APPLICABLE' ] の集約は INSUFFICIENT_EVIDENCE
+        - file: *s550
+          name: &s553 評価済み結果の CI verdict [REQ-306] [ 'NOT_APPLICABLE', 'NOT_APPLICABLE' ] の集約は INSUFFICIENT_EVIDENCE
+        - file: *s550
+          name: &s554 評価済み結果の CI verdict [REQ-306] [ 'PASS' ] の集約は PASS
+        - file: *s550
+          name: &s555 評価済み結果の CI verdict [REQ-306] [ 'PASS', 'PASS', 'NOT_APPLICABLE' ] の集約は PASS
+        - file: *s550
+          name: &s556 評価済み結果の CI verdict [REQ-306] [ 'INSUFFICIENT_EVIDENCE' ] の集約は INSUFFICIENT_EVIDENCE
+        - file: *s550
+          name: &s557 評価済み結果の CI verdict [REQ-306] [ 'PASS', 'NOT_APPLICABLE', …(1) ] の集約は INSUFFICIENT_EVIDENCE
+        - file: *s550
+          name: &s558 評価済み結果の CI verdict [REQ-306] [ 'FAIL' ] の集約は FAIL
+        - file: *s550
+          name: &s559 評価済み結果の CI verdict [REQ-306] [ 'PASS', 'FAIL', …(2) ] の集約は FAIL
+        - file: *s550
+          name: &s560 評価済み結果の CI verdict [REQ-306] 4値の全16部分集合で順序・重複を変えても規則どおり返す
+        - file: *s550
+          name: &s561 評価済み結果の CI verdict [REQ-306] 読み取り専用の共有型を受け取り値だけを返す
+    - key: &s562 verify/added/REQ-310
+      original:
+        ref: *s3
+        path: &s563 openspec/changes/verify-v2-c001/specs/verify/spec.md
+        line: 186
+        name: &s564 quality.yamlの最小読取
+        scenarios:
+          - 最小入力と未知キー
+          - 不正・不在・権限エラー
+          - &s565 仕様ゲートにquality.yamlがない
+      owners:
+        - kind: delta
+          change: *s39
+          file: &s566 openspec/changes/verify-v2-shape/specs/verify/spec.md
+          name: *s564
+          block: &s567 sha256:9a329dd60c454b59facd1a995e129e0492c024e46eea2e1745db5780a8328fca
+          scenarios:
+            - 最小入力と未知キー
+            - 不正・不在・権限エラー
+            - *s565
+      scenarioMap:
+        - original: 最小入力と未知キー
+          current:
+            file: *s566
+            name: *s564
+            scenario: 最小入力と未知キー
+          status: kept
+        - original: 不正・不在・権限エラー
+          current:
+            file: *s566
+            name: *s564
+            scenario: 不正・不在・権限エラー
+          status: kept
+        - original: *s565
+          current:
+            file: *s566
+            name: *s564
+            scenario: *s565
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: R-C001-07
+      tests:
+        - file: *s60
+          name: &s568 quality.yaml の最小読取 [REQ-310] version と model だけの最小の quality.yaml に既定値を補い、未知のキーを残す
+        - file: *s526
+          name: *s545
+        - file: *s60
+          name: *s61
+        - file: *s60
+          name: *s62
+        - file: *s65
+          name: &s569 C-001 の成功経路と不足拒否 [REQ-319] quality.yaml の誤りは aborted の 2、不在は aborted の 3。仕様ゲートとローカルの完了ゲートでも誤りは 2 になる
+        - file: *s65
+          name: *s66
+        - file: *s60
+          name: &s570 quality.yaml の最小読取 [REQ-310] spec-only では quality.yaml の不在を許し、品質の構造検査を対象外にする
+    - key: &s571 verify/added/REQ-311
+      original:
+        ref: *s3
+        path: *s563
+        line: 204
+        name: &s572 v2出力と終了コードの一貫性
+        scenarios:
+          - 優先順の契約
+          - JSONと非対話
+          - 型付きの制限観測
+          - &s573 正規partialのlocal完了
+          - &s574 制限で止まった検査のv2記録
+      owners:
+        - kind: delta
+          change: *s410
+          file: &s575 openspec/changes/verify-v2-wiring/specs/verify/spec.md
+          name: *s572
+          block: &s576 sha256:958b26dba1774cbd69720f24017da030b5177da9619c4c0c2952f6eca06e4e60
+          scenarios:
+            - 優先順の契約
+            - JSONと非対話
+      scenarioMap:
+        - original: 優先順の契約
+          current:
+            file: *s575
+            name: *s572
+            scenario: 優先順の契約
+          status: kept
+        - original: JSONと非対話
+          current:
+            file: *s575
+            name: *s572
+            scenario: JSONと非対話
+          status: kept
+        - original: 型付きの制限観測
+          current: null
+          status: kept
+        - original: *s573
+          current: null
+          status: kept
+        - original: *s574
+          current: null
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: *s74
+        - trace:
+            change: *s9
+            id: &s577 ADOPT-PR197-08
+        - trace:
+            change: *s9
+            id: *s421
+        - trace:
+            change: *s410
+            id: A-03
+      tests:
+        - file: *s57
+          name: &s578 verify 2.0.0 の出力と終了コード [REQ-311] CI=1 で、正常と不正の入力の終了コードは --json の有無によらず一致し、--json の標準出力は単独の JSON
+        - file: *s63
+          name: &s579 verify 2.0.0 の終了コード [REQ-309] 要判断・ci の FAIL と不足・local の未完了は 1、ci の PASS と local の完了は 0
+        - file: &s580 packages/kit/test/verify-v2-result.test.ts
+          name: &s581 2.0.0 の結果の組み立て [REQ-311] 要判断と FAIL が同時にあれば、どちらも保持して終了コード 1。local の完了は最終合格と表示しない
+        - file: *s580
+          name: &s582 2.0.0 の結果の組み立て [REQ-311][REQ-041] 例外を aborted にする。使い方と設定の誤りは 2、実行時の失敗は 3
+        - file: *s580
+          name: &s583 2.0.0 の結果の組み立て [REQ-311] partial の ci では PASS を出さず、実行エラーを不足の check として数える
+      open:
+        - clause: O1
+          owner: parent-1.2
+        - clause: O3
+          owner: parent-1.2
+        - clause: D2
+          owner: parent-1.2
+    - key: &s584 verify/added/REQ-312
+      original:
+        ref: *s3
+        path: *s563
+        line: 229
+        name: &s585 scopeの指定と既存ゲートの保持
+        scenarios:
+          - &s586 bare verifyの品質専用経路
+          - &s587 scopeの既定値と明示指定
+          - 未回答の仕様ゲート
+          - &s588 local結果の持ち込み
+          - 仕様ゲートの件数
+          - &s589 bareと不正scope
+          - &s590 bareのskipとコマンド未設定
+      owners:
+        - kind: delta
+          change: *s6
+          file: &s591 openspec/changes/verify-v2-scope/specs/verify/spec.md
+          name: *s585
+          block: &s592 sha256:8ac01b7d39b820a9be08937ae879193e4f4383af68b016f78cd712c331781748
+          scenarios:
+            - *s586
+            - &s593 spec-onlyの明示local
+            - *s587
+            - 未回答の仕様ゲート
+            - *s588
+            - 仕様ゲートの件数
+      scenarioMap:
+        - original: *s586
+          current:
+            file: *s591
+            name: *s585
+            scenario: *s586
+          status: kept
+        - original: *s587
+          current:
+            file: *s591
+            name: *s585
+            scenario: *s587
+          status: kept
+        - original: 未回答の仕様ゲート
+          current:
+            file: *s591
+            name: *s585
+            scenario: 未回答の仕様ゲート
+          status: kept
+        - original: *s588
+          current:
+            file: *s591
+            name: *s585
+            scenario: *s588
+          status: kept
+        - original: 仕様ゲートの件数
+          current:
+            file: *s591
+            name: *s585
+            scenario: 仕様ゲートの件数
+          status: kept
+        - original: *s589
+          current:
+            file: *s7
+            name: *s26
+            scenario: scopeの値
+          status: moved
+        - original: *s590
+          current:
+            file: *s591
+            name: *s585
+            scenario: *s586
+          status: moved
+      adoption:
+        - trace:
+            change: *s9
+            id: R-C001-01
+        - trace:
+            change: *s9
+            id: R-C001-06
+        - trace:
+            change: *s9
+            id: R-C001-10
+      tests:
+        - file: *s19
+          name: *s405
+        - file: *s19
+          name: *s59
+        - file: *s19
+          name: &s594 verify の --scope [REQ-312] 明示した local と ci はそのまま使う。local の完了は ci の verdict を持たず、最終合格と表示しない
+        - file: *s580
+          name: &s595 runVerify の 2.0.0 [REQ-311] scope を省くと、完了ゲートは ci、仕様ゲートと change なしは local。明示した scope はそのまま使う
+        - file: *s398
+          name: *s399
+        - file: *s19
+          name: &s596 verify の --scope [REQ-312] 関数 API と CLI は、同じ入力で同じ scope と終了コードになる（local の結果を ci に使えない）
+        - file: *s219
+          name: *s221
+        - file: *s219
+          name: *s222
+        - file: *s219
+          name: *s223
+        - file: *s219
+          name: *s224
+        - file: *s219
+          name: *s225
+        - file: *s219
+          name: *s226
+        - file: *s219
+          name: *s227
+        - file: *s219
+          name: *s228
+        - file: *s19
+          name: &s597 品質コマンドは実行しない [REQ-312] spec-only の明示 local では、品質コマンドを動かさない
+        - file: *s463
+          name: *s543
+        - file: *s19
+          name: *s32
+        - file: *s57
+          name: *s58
+        - file: *s10
+          name: &s598 JSON 出力 [REQ-311][REQ-040] change を付けない --skip-commands は、品質コマンドを不足にして終了コード 1（1.0.0 では 0）
+      open:
+        - clause: O4
+          owner: parent-1.2
+        - clause: &s599 existing-042
+          owner: parent-1.2
+        - clause: O7
+          owner: parent-1.2
+      supersessions:
+        - clause: &s600 bare の明示ciを拒否する
+          by:
+            - prBody:
+                pr: 217
+                line: 13
+                sha256: *s23
+      supplements:
+        - key: *s584
+          scenario: *s593
+        - key: *s25
+          scenario: scopeの値
+        - key: *s584
+          scenario: *s586
+    - key: &s601 verify/added/REQ-319
+      original:
+        ref: *s3
+        path: *s563
+        line: 262
+        name: &s602 C-001の成功経路と不足拒否
+        scenarios:
+          - 正常・不正・不足の受入
+          - &s603 置き残した成功結果を拒否する
+      owners:
+        - kind: delta
+          change: &s604 verify-v2-quality
+          file: &s605 openspec/changes/verify-v2-quality/specs/verify/spec.md
+          name: *s602
+          block: &s606 sha256:6c96d0c580d9e160fc4142a152019ad6d0b3cf50e5fe20454d814cc55bd6d23e
+          scenarios:
+            - 正常・不正・不足の受入
+            - *s603
+      scenarioMap:
+        - original: 正常・不正・不足の受入
+          current:
+            file: *s605
+            name: *s602
+            scenario: 正常・不正・不足の受入
+          status: kept
+        - original: *s603
+          current:
+            file: *s605
+            name: *s602
+            scenario: *s603
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: R-C001-03
+        - trace:
+            change: *s9
+            id: R-C001-04
+        - trace:
+            change: *s9
+            id: R-C001-07
+        - trace:
+            change: *s604
+            id: Q-01
+      tests:
+        - file: *s65
+          name: &s607 C-001 の成功経路と不足拒否 [REQ-319] 最小の quality.yaml と実際の Vitest の結果から、CLI と関数 API はともに ci の PASS と終了コード 0 を返す
+        - file: *s65
+          name: *s569
+        - file: *s65
+          name: *s66
+        - file: *s65
+          name: &s608 C-001 の成功経路と不足拒否 [REQ-319] 品質コマンドを省いた・テストランナーを確かめられないときは、INSUFFICIENT_EVIDENCE と終了コード 1 を返す
+        - file: *s65
+          name: &s609 C-001 の成功経路と不足拒否 [REQ-319] 正常に実行したあとで対象のコミットや必須の仕様を変え、前回の成功のレポートだけを置いても、ci の PASS を返さない
+        - file: *s65
+          name: &s610 C-001 の成功経路と不足拒否 [REQ-319] 品質コマンドの実行中に対象のコミットや基準が変われば、成功のレポートでも ci の PASS を返さない
+        - file: *s65
+          name: &s611 C-001 の成功経路と不足拒否 [REQ-319] 品質コマンドが 0 以外で終わったら、テストのレポートが成功でも ci の PASS を返さない
+    - key: &s612 verify/modified/REQ-036
+      original:
+        ref: *s3
+        path: *s563
+        line: 3
+        name: 仕様ゲートの警告
+        scenarios:
+          - 警告のみ
+          - doneに未承認が残る
+      owners:
+        - kind: delta
+          change: *s458
+          file: *s537
+          name: 仕様ゲートの警告
+          block: &s613 sha256:36a20acfbb6c5262cb3286fbe8ad64d224b24cf9d723d42e53cf452b4abc571f
+          scenarios:
+            - 警告のみ
+            - doneに未承認が残る
+      scenarioMap:
+        - original: 警告のみ
+          current:
+            file: *s537
+            name: 仕様ゲートの警告
+            scenario: 警告のみ
+          status: kept
+        - original: doneに未承認が残る
+          current:
+            file: *s537
+            name: 仕様ゲートの警告
+            scenario: doneに未承認が残る
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: R-C001-08
+        - trace:
+            change: *s458
+            id: S9-01
+      tests:
+        - file: *s463
+          name: &s614 仕様ゲートの警告 [REQ-036] 未承認の仮定と確認待ちの要件は警告になり、合格のまま
+        - file: *s463
+          name: &s615 ゲート別の分類 [REQ-036] spec-only の未承認の仮定と確認待ちは、案内つきの合格で、pending も要判断も立てず 0
+        - file: *s463
+          name: &s616 ゲート別の分類 [REQ-036][REQ-038] done の未承認の仮定と確認待ちは、不足と要判断理由になり、local も ci も 1
+    - key: *s546
+      original:
+        ref: *s3
+        path: *s563
+        line: 16
+        name: *s538
+        scenarios:
+          - &s617 validate が失敗する
+          - *s539
+          - &s618 ciでOpenSpec CLIが無い
+          - 構造NAの限定例外
+      owners:
+        - kind: delta
+          change: *s458
+          file: *s537
+          name: *s538
+          block: &s619 sha256:0653066ce38263e694a2b66593eb3a8cb3ec7e785cc2c1f67eca855948d37c9c
+          scenarios:
+            - *s617
+            - *s539
+            - *s618
+      scenarioMap:
+        - original: *s617
+          current:
+            file: *s537
+            name: *s538
+            scenario: *s617
+          status: kept
+        - original: *s539
+          current:
+            file: *s537
+            name: *s538
+            scenario: *s539
+          status: kept
+        - original: *s618
+          current:
+            file: *s537
+            name: *s538
+            scenario: *s618
+          status: kept
+        - original: 構造NAの限定例外
+          current:
+            file: *s537
+            name: *s538
+            scenario: *s539
+          status: moved
+      adoption:
+        - trace:
+            change: *s458
+            id: S9-01
+        - trace:
+            change: *s458
+            id: S9-02
+        - trace:
+            change: *s9
+            id: R-C001-08
+      tests:
+        - file: *s463
+          name: &s620 openspec validate の実行 [REQ-037] openspec validate --strict が失敗すると、出力を詳細に入れて不合格
+        - file: *s463
+          name: &s621 openspec validate の実行 [REQ-037] OpenSpec CLI が見つからず openspecValidate が auto なら、local は理由と確認者つきの対象外にして不合格にしない
+        - file: *s463
+          name: *s542
+        - file: *s463
+          name: &s622 ゲート別の分類 [REQ-037] done の ci で OpenSpec CLI が無いと（auto）、不足になり 1 を返す
+        - file: *s463
+          name: &s623 ゲート別の分類 [REQ-037] 明示 true で OpenSpec CLI が無いと、local でも不合格のまま
+        - file: *s463
+          name: *s543
+      open:
+        - clause: &s624 D1（設定出典を reason に残すこと。run.errors が空であることの assertion もない）
+          owner: parent-1.2
+      supersessions:
+        - clause: 確認者なしの構造NA
+          by:
+            - trace:
+                change: *s458
+                id: S9-02
+      supplements:
+        - key: *s546
+          scenario: *s539
+    - key: &s625 verify/modified/REQ-038
+      original:
+        ref: *s3
+        path: *s563
+        line: 46
+        name: 完了ゲート
+        scenarios:
+          - 未完了タスクがある
+          - タスクが無い
+          - 確認待ちが残っている
+          - テストの無い要件
+          - skip されたテスト
+          - &s626 修飾子が続く skip の中のテスト
+          - &s627 テスト名以外の文字列にだけある要件 ID
+          - &s628 テストランナーが実行しないファイル
+          - &s629 レポートが書き出されない
+      owners:
+        - kind: delta
+          change: *s458
+          file: *s537
+          name: 完了ゲート
+          block: &s630 sha256:95db66289079a5363d95bf4d07b4ef127854c2f69fe2774c6d6fe381b06e068b
+          scenarios:
+            - 未完了タスクがある
+            - タスクが無い
+            - 確認待ちが残っている
+            - テストの無い要件
+            - skip されたテスト
+            - *s626
+            - *s627
+            - *s628
+            - *s629
+      scenarioMap:
+        - original: 未完了タスクがある
+          current:
+            file: *s537
+            name: 完了ゲート
+            scenario: 未完了タスクがある
+          status: kept
+        - original: タスクが無い
+          current:
+            file: *s537
+            name: 完了ゲート
+            scenario: タスクが無い
+          status: kept
+        - original: 確認待ちが残っている
+          current:
+            file: *s537
+            name: 完了ゲート
+            scenario: 確認待ちが残っている
+          status: kept
+        - original: テストの無い要件
+          current:
+            file: *s537
+            name: 完了ゲート
+            scenario: テストの無い要件
+          status: kept
+        - original: skip されたテスト
+          current:
+            file: *s537
+            name: 完了ゲート
+            scenario: skip されたテスト
+          status: kept
+        - original: *s626
+          current:
+            file: *s537
+            name: 完了ゲート
+            scenario: *s626
+          status: kept
+        - original: *s627
+          current:
+            file: *s537
+            name: 完了ゲート
+            scenario: *s627
+          status: kept
+        - original: *s628
+          current:
+            file: *s537
+            name: 完了ゲート
+            scenario: *s628
+          status: kept
+        - original: *s629
+          current:
+            file: *s537
+            name: 完了ゲート
+            scenario: *s629
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: &s631 ADOPT-PR197-10
+      tests:
+        - file: *s463
+          name: &s632 完了ゲート [REQ-038] 未完了のタスクがあると、その行を出して不合格
+        - file: *s463
+          name: &s633 完了ゲート [REQ-038] tasks.md にタスクが 1 つも無いと、タスクが無いことを出して不合格
+        - file: *s463
+          name: &s634 完了ゲート [REQ-038] 確認待ちの要件が残ると、その ID を出して不足にする
+        - file: *s463
+          name: *s616
+        - file: *s463
+          name: &s635 完了ゲート [REQ-038] 仕様で参照される要件を名前に含むテストが無いと不合格
+        - file: *s463
+          name: &s636 完了ゲート [REQ-038] it.skip のテストだけなら、テストが無い要件として不合格
+        - file: *s463
+          name: &s637 完了ゲート [REQ-038] describe.skip.each の中にだけあるテストは数えない
+        - file: *s463
+          name: &s638 完了ゲート [REQ-038] テスト名以外の文字列にだけある要件 ID は数えない
+        - file: *s463
+          name: &s639 完了ゲート [REQ-038] テストランナーが実行しないファイルのテストは数えない
+        - file: *s463
+          name: &s640 完了ゲート [REQ-038] test コマンドがレポートを書き出さないと、前回のレポートが残っていても不合格
+      open:
+        - clause: &s641 existing-038
+          owner: parent-1.2
+    - key: &s642 verify/modified/REQ-039
+      original:
+        ref: *s3
+        path: *s563
+        line: 87
+        name: 品質コマンドの実行
+        scenarios:
+          - コマンドが失敗する
+          - すべて成功する
+          - 知らないキーがある
+      owners:
+        - kind: delta
+          change: *s458
+          file: *s537
+          name: 品質コマンドの実行
+          block: &s643 sha256:3ad1986f2047c7de1b813c3e8c10f4df48f529b9511696dd41f5bb7254c8a7d0
+          scenarios:
+            - コマンドが失敗する
+            - すべて成功する
+            - 知らないキーがある
+      scenarioMap:
+        - original: コマンドが失敗する
+          current:
+            file: *s537
+            name: 品質コマンドの実行
+            scenario: コマンドが失敗する
+          status: kept
+        - original: すべて成功する
+          current:
+            file: *s537
+            name: 品質コマンドの実行
+            scenario: すべて成功する
+          status: kept
+        - original: 知らないキーがある
+          current:
+            file: *s537
+            name: 品質コマンドの実行
+            scenario: 知らないキーがある
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: R-C001-08
+      tests:
+        - file: *s463
+          name: &s644 品質コマンドの実行 [REQ-039] コマンドが失敗すると、出力の末尾を詳細に入れて不合格
+        - file: *s463
+          name: &s645 "品質コマンドの実行 [REQ-039] 3 つのコマンドがすべて成功すると、command: の検査はすべて合格"
+        - file: *s463
+          name: &s646 品質コマンドの実行 [REQ-039] loomake.config.json に知らないキーがあれば、そのキーを警告にし、不合格にはしない
+        - file: *s463
+          name: &s647 ゲート別の分類 [REQ-039] 未知キーは spec-only・done・change なしの local/ci で、理由つきの合格の案内になり、それだけでは 0
+    - key: &s648 verify/modified/REQ-040
+      original:
+        ref: *s3
+        path: *s563
+        line: 125
+        name: JSON 出力
+        scenarios:
+          - スキーマに沿った出力
+          - &s649 要件ごとのテストファイル
+          - &s650 コマンド省略時のcoverage
+      owners:
+        - kind: delta
+          change: *s410
+          file: *s575
+          name: JSON 出力
+          block: &s651 sha256:e96e197536bfc2dee52000a45a8f5fd5140dbef2e09c77a1e07b03a4263c1daa
+          scenarios:
+            - スキーマに沿った出力
+            - *s649
+            - *s650
+      scenarioMap:
+        - original: スキーマに沿った出力
+          current:
+            file: *s575
+            name: JSON 出力
+            scenario: スキーマに沿った出力
+          status: kept
+        - original: *s649
+          current:
+            file: *s575
+            name: JSON 出力
+            scenario: *s649
+          status: kept
+        - original: *s650
+          current:
+            file: *s575
+            name: JSON 出力
+            scenario: *s650
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: &s652 ADOPT-PR197-12
+        - trace:
+            change: *s9
+            id: &s653 ADOPT-PR197-13
+        - trace:
+            change: *s9
+            id: &s654 ADOPT-PR197-09
+      tests:
+        - file: *s10
+          name: &s655 JSON 出力 [REQ-040] --json の標準出力は JSON だけで、schemaVersion を含み、core のスキーマで検証できる
+        - file: *s10
+          name: &s656 JSON 出力 [REQ-040] 要件ごとのテストファイルの一覧を出す
+        - file: *s10
+          name: &s657 JSON 出力 [REQ-040] 前回の成功レポートがあっても、--skip-commands の --json は coverage を出さず、不足で終了コード 1
+    - key: &s658 verify/modified/REQ-041
+      original:
+        ref: *s3
+        path: *s563
+        line: 142
+        name: 終了コード
+        scenarios:
+          - 合格
+          - 不合格
+          - 使い方の誤り
+          - *s485
+          - &s659 change 名の形でない change-id
+          - &s660 archive を change-id にする
+      owners:
+        - kind: delta
+          change: *s410
+          file: *s575
+          name: 終了コード
+          block: &s661 sha256:b97aa0255eb0a31067363024960515c7a80e4511ba443df41d158961a7c570ee
+          scenarios:
+            - 合格
+            - 不合格
+            - 使い方の誤り
+            - *s485
+            - *s659
+            - *s660
+      scenarioMap:
+        - original: 合格
+          current:
+            file: *s575
+            name: 終了コード
+            scenario: 合格
+          status: kept
+        - original: 不合格
+          current:
+            file: *s575
+            name: 終了コード
+            scenario: 不合格
+          status: kept
+        - original: 使い方の誤り
+          current:
+            file: *s575
+            name: 終了コード
+            scenario: 使い方の誤り
+          status: kept
+        - original: *s485
+          current:
+            file: *s575
+            name: 終了コード
+            scenario: *s485
+          status: kept
+        - original: *s659
+          current:
+            file: *s575
+            name: 終了コード
+            scenario: *s659
+          status: kept
+        - original: *s660
+          current:
+            file: *s575
+            name: 終了コード
+            scenario: *s660
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: R-C001-05
+      tests:
+        - file: *s10
+          name: &s662 終了コード [REQ-041] すべて合格か警告なら 0
+        - file: *s63
+          name: *s579
+        - file: *s10
+          name: &s663 終了コード [REQ-041] 1 つ以上の検査が不合格なら 1
+        - file: *s10
+          name: &s664 終了コード [REQ-041][REQ-055][REQ-192] --change を付けずに --spec-only を指定すると、日本語の使い方を出して 2
+        - file: *s10
+          name: &s665 終了コード [REQ-041] --change の値にパスの区切りを含めると、日本語で表示して 2
+        - file: *s10
+          name: &s666 終了コード [REQ-041] --change の値が change 名の形でなければ、openspec validate を呼ばずに日本語で表示して 2
+        - file: &s667 packages/cli/test/verify-boundaries.test.ts
+          name: &s668 "[REQ-041] 不正なchange-idはOpenSpecを含む外部操作を呼ばずに終了コード2を返す"
+        - file: *s10
+          name: &s669 終了コード [REQ-041] archive を --change に渡すと、日本語で表示して 2
+    - key: &s670 verify/modified/REQ-042
+      original:
+        ref: *s3
+        path: *s563
+        line: 37
+        name: change の省略
+        scenarios:
+          - commands のみ
+      owners:
+        - kind: *s413
+          file: &s671 openspec/specs/verify/spec.md
+          name: change の省略
+          block: &s672 sha256:9480c8bd5583d1b0a7699ed7e9c4accaf9bedfce2c41ace7465c3ed7fbda4b61
+          scenarios:
+            - commands のみ
+      scenarioMap:
+        - original: commands のみ
+          current:
+            file: *s671
+            name: change の省略
+            scenario: commands のみ
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: &s673 ADOPT-PR197-11
+        - trace:
+            change: *s9
+            id: &s674 ADOPT-PR197-14
+        - trace:
+            change: *s9
+            id: R-C001-01
+      tests:
+        - file: *s463
+          name: &s675 change の省略 [REQ-042] change を省略すると commands だけを実行し、仕様の検査はしない
+        - file: *s10
+          name: &s676 change の省略 [REQ-042] loomake verify を引数なしで実行すると、commands だけを実行する
+        - file: *s19
+          name: *s59
+        - file: *s10
+          name: *s598
+        - file: *s19
+          name: *s32
+      open:
+        - clause: *s599
+          owner: parent-1.2
+      supersessions:
+        - clause: &s677 明示ciの拒否（復活させない）
+          by:
+            - prBody:
+                pr: 217
+                line: 13
+                sha256: *s23
+      supplements:
+        - key: *s584
+          scenario: *s586
+        - key: *s25
+          scenario: scopeの値
+    - key: &s678 verify/modified/REQ-050
+      original:
+        ref: *s3
+        path: *s563
+        line: 171
+        name: verify の性能
+        scenarios:
+          - &s679 1,000 ファイル・500 要件
+          - &s680 テスト対応解析を含む処理量の保持
+      owners:
+        - kind: delta
+          change: *s6
+          file: *s591
+          name: verify の性能
+          block: &s681 sha256:81450c39dea378ea6b7ca6d7cca94e78608570252087645ff5082316043f4898
+          scenarios:
+            - *s679
+            - *s680
+      scenarioMap:
+        - original: *s679
+          current:
+            file: *s591
+            name: verify の性能
+            scenario: *s679
+          status: kept
+        - original: *s680
+          current:
+            file: *s591
+            name: verify の性能
+            scenario: *s680
+          status: kept
+      adoption:
+        - trace:
+            change: *s9
+            id: &s682 ADOPT-PR197-15
+      tests:
+        - file: *s10
+          name: &s683 verify の性能 [REQ-050] 要件 500 件・テストファイル 1,000 個の --scope local の --done --skip-commands が 3 秒以内に終わる
+        - file: *s10
+          name: &s684 verify の性能 [REQ-050] 要件 500 件・テストファイル 1,000 個の scope 省略（ci）の --done --skip-commands が 3 秒以内に終わる
+    - key: &s685 verify/modified/REQ-191
+      original:
+        ref: *s3
+        path: *s563
+        line: 104
+        name: &s686 品質コマンドを省いたことの表示
+        scenarios:
+          - &s687 完了ゲートで品質コマンドを省く
+          - &s688 JSON で品質コマンドを省く
+          - 品質コマンドを実行する
+          - &s689 bareで品質コマンドを省く
+      owners:
+        - kind: delta
+          change: *s458
+          file: *s537
+          name: *s686
+          block: &s690 sha256:6f31111bd3c233b0ea05b0e23440df492f1058293bced89f588e201c4d0aa669
+          scenarios:
+            - *s687
+            - *s688
+            - 品質コマンドを実行する
+      scenarioMap:
+        - original: *s687
+          current:
+            file: *s537
+            name: *s686
+            scenario: *s687
+          status: kept
+        - original: *s688
+          current:
+            file: *s537
+            name: *s686
+            scenario: *s688
+          status: kept
+        - original: 品質コマンドを実行する
+          current:
+            file: *s537
+            name: *s686
+            scenario: 品質コマンドを実行する
+          status: kept
+        - original: *s689
+          current:
+            file: *s591
+            name: *s585
+            scenario: *s586
+          status: moved
+      adoption:
+        - trace:
+            change: *s9
+            id: *s654
+        - trace:
+            change: *s9
+            id: &s691 ADOPT-PR197-16
+        - trace:
+            change: *s9
+            id: &s692 ADOPT-PR197-27
+        - trace:
+            change: *s9
+            id: R-C001-08
+      tests:
+        - file: *s463
+          name: &s693 品質コマンドを省いたことの表示 [REQ-191][REQ-040] --skip-commands の完了ゲートは、品質コマンドの不足の項目と最後の行で省いたことを示し、前回のレポートを使わない
+        - file: *s463
+          name: &s694 ゲート別の分類 [REQ-191] --skip-commands の完了ゲートは local も ci も不足で 1 になる
+        - file: *s29
+          name: &s695 品質コマンドを省いたことの表示 [REQ-191] --json でも、checks に品質コマンドの不足の項目が含まれる
+        - file: *s10
+          name: *s657
+        - file: *s463
+          name: &s696 品質コマンドを省いたことの表示 [REQ-191] 品質コマンドを実行するときは、skip の項目を加えない
+        - file: *s10
+          name: *s598
+      open:
+        - clause: O7
+          owner: parent-1.2
+      supplements:
+        - key: *s584
+          scenario: *s586
+  cross:
+    - no: 1
+      title: &s697 具体別承認/生成基準/過去回答
+      group: G1
+      rows:
+        - *s13
+        - *s25
+        - *s2
+        - *s67
+        - *s102
+        - *s116
+        - *s131
+        - *s81
+        - *s86
+        - *s148
+        - *s157
+        - *s34
+        - *s52
+        - *s201
+        - *s211
+        - *s229
+        - *s249
+        - *s261
+        - *s323
+      tests:
+        - file: *s257
+          name: *s271
+        - file: *s257
+          name: *s319
+        - file: *s257
+          name: *s320
+        - file: *s94
+          name: *s95
+        - file: *s50
+          name: *s96
+        - file: *s100
+          name: *s101
+    - no: 2
+      title: 正常旧証拠/破損と記録
+      group: G2
+      rows:
+        - *s433
+        - *s407
+        - *s392
+        - *s351
+        - *s337
+        - *s376
+        - *s390
+        - *s456
+        - *s467
+        - *s571
+      tests:
+        - file: *s344
+          name: *s348
+        - file: *s478
+          name: *s501
+        - file: *s499
+          name: *s500
+        - file: *s441
+          name: *s446
+        - file: *s441
+          name: *s447
+        - file: *s441
+          name: *s448
+        - file: *s441
+          name: *s449
+        - file: *s441
+          name: *s450
+        - file: *s441
+          name: *s451
+        - file: *s441
+          name: *s452
+        - file: *s441
+          name: *s453
+    - no: 3
+      title: &s698 構造NAと品質NA/guard
+      group: G4
+      rows:
+        - *s52
+        - *s211
+        - *s467
+        - *s547
+        - *s521
+        - *s534
+        - *s612
+        - *s546
+        - *s670
+        - *s625
+        - *s642
+        - *s685
+        - *s648
+        - *s658
+        - *s678
+        - *s562
+        - *s571
+        - *s584
+        - *s601
+      tests:
+        - file: *s463
+          name: *s542
+        - file: *s463
+          name: *s543
+        - file: *s526
+          name: *s544
+        - file: *s526
+          name: *s545
+    - no: 4
+      title: &s699 bare/scopeとusage境界
+      group: G4
+      rows:
+        - *s52
+        - *s211
+        - *s467
+        - *s547
+        - *s521
+        - *s534
+        - *s612
+        - *s546
+        - *s670
+        - *s625
+        - *s642
+        - *s685
+        - *s648
+        - *s658
+        - *s678
+        - *s562
+        - *s571
+        - *s584
+        - *s601
+      tests:
+        - file: *s19
+          name: *s59
+        - file: *s19
+          name: *s32
+        - file: *s57
+          name: *s58
+        - file: *s10
+          name: *s598
+    - no: 5
+      title: &s700 scopeとtrace記録
+      group: G4
+      rows:
+        - *s52
+        - *s211
+        - *s467
+        - *s547
+        - *s521
+        - *s534
+        - *s612
+        - *s546
+        - *s670
+        - *s625
+        - *s642
+        - *s685
+        - *s648
+        - *s658
+        - *s678
+        - *s562
+        - *s571
+        - *s584
+        - *s601
+      tests:
+        - file: *s478
+          name: *s479
+        - file: *s478
+          name: *s481
+        - file: *s19
+          name: *s33
+        - file: *s19
+          name: *s20
+    - no: 6
+      title: 独立S1/実証跡/受入
+      group: G4
+      rows:
+        - *s52
+        - *s211
+        - *s467
+        - *s547
+        - *s521
+        - *s534
+        - *s612
+        - *s546
+        - *s670
+        - *s625
+        - *s642
+        - *s685
+        - *s648
+        - *s658
+        - *s678
+        - *s562
+        - *s571
+        - *s584
+        - *s601
+      tests:
+        - file: *s65
+          name: *s607
+        - file: *s65
+          name: *s608
+        - file: *s65
+          name: *s609
+        - file: *s219
+          name: *s220
+    - no: 7
+      title: &s701 typed観測と純粋判断
+      group: G2
+      rows:
+        - *s433
+        - *s407
+        - *s392
+        - *s351
+        - *s337
+        - *s376
+        - *s390
+        - *s456
+        - *s467
+        - *s571
+      tests:
+        - file: *s361
+          name: *s362
+        - file: *s361
+          name: *s363
+        - file: *s361
+          name: *s364
+        - file: *s361
+          name: *s365
+        - file: *s361
+          name: *s366
+        - file: *s361
+          name: *s367
+        - file: *s361
+          name: *s368
+        - file: *s361
+          name: *s369
+        - file: *s361
+          name: *s370
+        - file: *s344
+          name: *s371
+        - file: &s702 packages/runner/test/guards.test.ts
+          name: &s703 境目ごとの Git の読み取り [REQ-348][REQ-205][REQ-126] 完了ゲートの検証の前後で HEAD を 1 回ずつ読み、直しのエンジンの前で読み直す
+    - no: 8
+      title: &s704 正常local完了/停止とrunner射影
+      group: G2
+      rows:
+        - *s433
+        - *s407
+        - *s392
+        - *s351
+        - *s337
+        - *s376
+        - *s390
+        - *s456
+        - *s467
+        - *s571
+      tests:
+        - file: *s344
+          name: *s347
+        - file: *s344
+          name: *s346
+        - file: *s344
+          name: *s349
+    - no: 9
+      title: &s705 REQ205とREQ-105保持
+      group: G2
+      rows:
+        - *s433
+        - *s407
+        - *s392
+        - *s351
+        - *s337
+        - *s376
+        - *s390
+        - *s456
+        - *s467
+        - *s571
+      tests:
+        - file: *s361
+          name: *s362
+        - file: *s361
+          name: *s363
+        - file: *s361
+          name: *s364
+        - file: *s361
+          name: *s365
+        - file: *s361
+          name: *s366
+        - file: *s361
+          name: *s367
+        - file: *s361
+          name: *s368
+        - file: *s361
+          name: *s369
+        - file: *s361
+          name: *s370
+        - file: &s706 packages/runner/test/run-timeout.test.ts
+          name: &s707 完了ゲートと直し [REQ-105] 実行時間が上限に達したら、エンジンを止めて止まる
+        - file: *s706
+          name: &s708 完了ゲートと直し [REQ-105] 完了ゲートのテストが終わらないまま上限に達したら、テストを止めて止まる
+    - no: 10
+      title: &s709 REQ205とREQ-124保持
+      group: G2
+      rows:
+        - *s433
+        - *s407
+        - *s392
+        - *s351
+        - *s337
+        - *s376
+        - *s390
+        - *s456
+        - *s467
+        - *s571
+      tests:
+        - file: *s361
+          name: *s372
+        - file: *s361
+          name: *s373
+        - file: *s361
+          name: *s374
+        - file: *s155
+          name: &s710 実際に配るパッケージ [REQ-124] POSIXの配布物を実際のSIGINTで中断する。Windowsでは検証対象外を明示する
+        - file: *s463
+          name: &s711 中断されたときの品質コマンド [REQ-124] 時間の上限つきの品質コマンドの途中で中断されたら、子のプロセスまで止め、中断で止めたと記録し、残りのコマンドを実行しない
+        - file: *s398
+          name: &s712 中断 [REQ-124] 2 つ目のタスクの途中で中断されたら、1 つ目のコミットを残し、summary.json に中断を書く
+        - file: *s398
+          name: &s713 中断 [REQ-124] 完了ゲートの品質コマンドの途中で中断されたら、コマンドを止め、エンジンを呼ばずに summary.json に中断を書く
+    - no: 11
+      title: &s714 REQ205とREQ-182保持
+      group: G2
+      rows:
+        - *s433
+        - *s407
+        - *s392
+        - *s351
+        - *s337
+        - *s376
+        - *s390
+        - *s456
+        - *s467
+        - *s571
+      tests:
+        - file: *s361
+          name: *s362
+        - file: *s361
+          name: *s363
+        - file: *s361
+          name: *s364
+        - file: *s361
+          name: *s365
+        - file: *s361
+          name: *s366
+        - file: *s361
+          name: *s367
+        - file: *s361
+          name: *s368
+        - file: *s361
+          name: *s369
+        - file: *s361
+          name: *s370
+        - file: &s715 packages/kit/test/process-long-deadline.test.ts
+          name: &s716 タイマーの上限を超える有限の期限 [REQ-180][REQ-182] qualityCommandで上限を超える残り時間を短縮せず、通常の結果を保つ
+        - file: *s715
+          name: &s717 タイマーの上限を超える有限の期限 [REQ-180][REQ-182] untilDeadlineで上限を超える残り時間を短縮せず、通常の結果を保つ
+        - file: *s715
+          name: &s718 タイマーの上限を超える有限の期限 [REQ-180][REQ-182] 分割した待機が期限前に発火しても、残り時間を確認して待ち直す
+        - file: &s719 packages/kit/test/process-startup.test.ts
+          name: &s720 監視役の起動時間と外部操作の予算 [REQ-180][REQ-182] 監視役の起動中にoperationの期限を過ぎたら対象を起動しない
+        - file: *s719
+          name: &s721 監視役の起動時間と外部操作の予算 [REQ-180][REQ-182] 監視役の起動中にsharedの期限を過ぎたら対象を起動しない
+        - file: *s719
+          name: &s722 監視役の起動時間と外部操作の予算 [REQ-180][REQ-181][REQ-182] 共有予算の残り時間だけを使い、起動した対象を停止する
+        - file: *s719
+          name: &s723 監視役の起動時間と外部操作の予算 [REQ-180][REQ-182] 共有期限から準備の経過時間を二度引かない
+        - file: *s209
+          name: &s724 同期外部操作の監視 [REQ-180][REQ-182] 操作間で残り時間を共有し、期限後は起動しない
+        - file: *s209
+          name: &s725 同期外部操作の監視 [REQ-182] ネストで外側の期限を延ばさず、並行するスコープへ漏らさない
+        - file: *s209
+          name: &s726 同期外部操作の監視 [REQ-181][REQ-182] 中断後に同じ共有予算で別の操作を始めない
+        - file: *s209
+          name: &s727 1 操作の期限を使わない外部操作 [REQ-182] untilDeadline の操作は 1 操作の期限を超えても止めず、共有の期限で止める
+        - file: &s728 packages/runner/test/external-budget-deadline.test.ts
+          name: &s729 runから外部操作までの期限 [REQ-182] 準備で使った時間を含めてエンジンの期限を制限する
+        - file: *s728
+          name: &s730 runから外部操作までの期限 [REQ-182][REQ-297] pushの期限後に先へ進まず、再実行で重複させない
+        - file: *s728
+          name: &s731 runから外部操作までの期限 [REQ-182][REQ-297] authの期限後に先へ進まず、再実行で重複させない
+        - file: *s728
+          name: &s732 runから外部操作までの期限 [REQ-182][REQ-297] listの期限後に先へ進まず、再実行で重複させない
+        - file: *s728
+          name: &s733 runから外部操作までの期限 [REQ-182][REQ-297] createの期限後に先へ進まず、再実行で重複させない
+        - file: *s728
+          name: &s734 フックを動かす git の操作の期限 [REQ-182] 1 操作の期限より遅い pre-commit・pre-push のフックがあっても、run の残り時間の中でコミット・push・PR の作成まで進む
+        - file: *s207
+          name: &s735 runから外部操作までの期限 [REQ-182] ロック取得のGitが止まったら変更と記録を作らない
+        - file: *s207
+          name: &s736 runから外部操作までの期限 [REQ-182] 検証がtasks.mdを変えたら上書きせず停止する
+        - file: *s207
+          name: &s737 runから外部操作までの期限 [REQ-116][REQ-182] 事前の認証確認が期限切れなら実装も記録も始めない
+        - file: *s207
+          name: &s738 実行時の失敗の終了コード [REQ-192][REQ-182] run の準備中に git が時間の上限で止まると、使い方を出さずに終了コード 3 を返す
+        - file: &s739 packages/runner/test/scenario-timeout-evidence.test.ts
+          name: &s740 品質コマンドの時間切れの直接検証 [REQ-182] 共有期限後にGitを起動せず、一時的なゲート完了印を戻す
+    - no: 12
+      title: &s741 NoChangeとlocal再gate
+      group: G2
+      rows:
+        - *s433
+        - *s407
+        - *s392
+        - *s351
+        - *s337
+        - *s376
+        - *s390
+        - *s456
+        - *s467
+        - *s571
+      tests:
+        - file: *s427
+          name: *s428
+        - file: *s427
+          name: *s429
+        - file: *s427
+          name: *s431
+        - file: *s427
+          name: *s432
+    - no: 13
+      title: &s742 REQ205とREQ-204保持
+      group: G2
+      rows:
+        - *s433
+        - *s407
+        - *s392
+        - *s351
+        - *s337
+        - *s376
+        - *s390
+        - *s456
+        - *s467
+        - *s571
+      tests:
+        - file: *s361
+          name: *s362
+        - file: *s361
+          name: *s363
+        - file: *s361
+          name: *s364
+        - file: *s361
+          name: *s365
+        - file: *s361
+          name: *s366
+        - file: *s361
+          name: *s367
+        - file: *s361
+          name: *s368
+        - file: *s361
+          name: *s369
+        - file: *s361
+          name: *s370
+        - file: *s361
+          name: &s743 エンジンの観測値から次の段階を決める [REQ-204] 正常終了
+        - file: *s361
+          name: &s744 エンジンの観測値から次の段階を決める [REQ-204] 中断がすべてに優先
+        - file: *s361
+          name: &s745 エンジンの観測値から次の段階を決める [REQ-204] 出力上限が期限に優先
+        - file: *s361
+          name: &s746 エンジンの観測値から次の段階を決める [REQ-204] 期限が質問に優先
+        - file: *s361
+          name: &s747 エンジンの観測値から次の段階を決める [REQ-204] 質問が終了コードに優先
+        - file: *s361
+          name: &s748 エンジンの観測値から次の段階を決める [REQ-204] 最初の質問を使う
+        - file: *s361
+          name: &s749 エンジンの観測値から次の段階を決める [REQ-204] 行頭でない印は質問にしない
+        - file: *s361
+          name: &s750 エンジンの観測値から次の段階を決める [REQ-204] 非ゼロ終了
+        - file: *s361
+          name: &s751 エンジンの観測値から次の段階を決める [REQ-204] 不明な終了コード
+        - file: *s361
+          name: &s752 エンジンの観測値から次の段階を決める [REQ-204] HEAD変更だけでも停止
+        - file: *s361
+          name: &s753 エンジンの観測値から次の段階を決める [REQ-204] Git内部変更だけでも停止
+        - file: *s361
+          name: &s754 エンジンの観測値から次の段階を決める [REQ-204] HEAD変更を内部変更より先にする
+        - file: *s361
+          name: &s755 エンジンの観測値から次の段階を決める [REQ-204] HEAD変更でも中断状態を保つ
+        - file: *s361
+          name: &s756 エンジンの観測値から次の段階を決める [REQ-204] Git内部変更でも中断状態を保つ
+        - file: &s757 packages/runner/test/guards-special-files.test.ts
+          name: &s758 フック内の特殊ファイルの実プロセス検査 [REQ-224][REQ-204] regularの既存フックを保ち、通常runでタスクをコミットする
+        - file: *s757
+          name: &s759 フック内の特殊ファイルの実プロセス検査 [REQ-224][REQ-204] danglingの既存フックを保ち、通常runでタスクをコミットする
+        - file: *s757
+          name: &s760 フック内の特殊ファイルの実プロセス検査 [REQ-224][REQ-204] directoryの既存フックを保ち、通常runでタスクをコミットする
+        - file: *s702
+          name: &s761 git の設定の比較の範囲 [REQ-204] include の先の設定に core.fsmonitor を書いたら、コミットせずに止まる
+        - file: *s702
+          name: &s762 git の設定の比較の範囲 [REQ-204] リンク先のないフックがあっても、落ちずにタスクを完了にする
+        - file: *s702
+          name: &s763 境目ごとの Git の読み取り [REQ-348][REQ-126][REQ-198][REQ-204] エンジンの前後で、rev-parse と config --list を 1 回ずつ読む
+    - no: 14
+      title: &s764 REQ205とREQ-208保持
+      group: G2
+      rows:
+        - *s433
+        - *s407
+        - *s392
+        - *s351
+        - *s337
+        - *s376
+        - *s390
+        - *s456
+        - *s467
+        - *s571
+      tests:
+        - file: *s361
+          name: *s372
+        - file: *s361
+          name: *s373
+        - file: *s361
+          name: *s374
+        - file: *s155
+          name: &s765 実際に配るパッケージ [REQ-208] POSIXの配布物を実際のSIGTERMで中断し、エンジンを残さない
+        - file: *s155
+          name: &s766 実際に配るパッケージ [REQ-208] POSIXの配布物を実際のSIGHUPで中断し、エンジンを残さない
+        - file: &s767 packages/runner/test/signal-during-sync.test.ts
+          name: &s768 同期の処理のあいだに届いた中断 [REQ-208] 完了ゲートの品質コマンドのあいだに届いた中断で、証拠の記録・push・PR の作成に進まない
+        - file: *s767
+          name: &s769 同期の処理のあいだに届いた中断 [REQ-208] 証拠の記録の品質コマンドのあいだに届いた中断で、push と PR の作成に進まない
+        - file: *s767
+          name: &s770 同期の処理のあいだに届いた中断 [REQ-208] 既存の PR の検索のあいだに届いた中断で、PR を作らない
+    - no: 15
+      title: &s771 REQ205とREQ-250保持
+      group: G2
+      rows:
+        - *s433
+        - *s407
+        - *s392
+        - *s351
+        - *s337
+        - *s376
+        - *s390
+        - *s456
+        - *s467
+        - *s571
+      tests:
+        - file: *s207
+          name: &s772 verifyとtraceの期限 [REQ-183][REQ-250] 品質コマンドの中断後に次のコマンドを実行しない
+        - file: &s773 packages/kit/test/orphans.test.ts
+          name: &s774 監視役の行の読み取り [REQ-250][REQ-252] 起動の直前の行・PID と作成時刻の行・保持を確かめられない行・結果を読む
+        - file: *s773
+          name: &s775 保持役の後片付けの判定 [REQ-250][REQ-254] 停止を確認できない中断は、停止を確認できた中断と理由で区別する
+        - file: *s773
+          name: &s776 差し替えた保持役との順序 [REQ-255][REQ-250][REQ-253] 監視役が結果を書かずに終わったら、保持したまま後片付けを頼み、後片付けの上限を渡す。親は先に解放しない
+        - file: *s209
+          name: &s777 同期外部操作の監視 [REQ-181][REQ-250][REQ-337] 監視役が結果を書かずに終わったら、子孫を止め、理由を含む中断として返し、同じ予算で次を始めない
+        - file: *s209
+          name: &s778 "[REQ-250][REQ-337] 利用者の中断のあとの後続の拒否はreasonを持たない"
+    - no: 16
+      title: &s779 REQ205とREQ-337保持
+      group: G2
+      rows:
+        - *s433
+        - *s407
+        - *s392
+        - *s351
+        - *s337
+        - *s376
+        - *s390
+        - *s456
+        - *s467
+        - *s571
+      tests:
+        - file: *s361
+          name: *s372
+        - file: *s361
+          name: *s373
+        - file: *s361
+          name: *s374
+        - file: *s209
+          name: *s777
+        - file: *s209
+          name: *s778
+        - file: *s767
+          name: &s780 外部操作の監視役が受けた中断 [REQ-337] タスクのコミットのgitのあいだに監視役がSIGINTを受けたら、interruptedにする
+        - file: *s767
+          name: &s781 外部操作の監視役が受けた中断 [REQ-337] タスクのコミットのgitのあいだに監視役がSIGTERMを受けたら、interruptedにする
+        - file: *s767
+          name: &s782 外部操作の監視役が受けた中断 [REQ-337] 証拠のpushのあいだの中断で、証拠のコミットを保ちinterruptedにする
+        - file: *s767
+          name: &s783 外部操作の監視役が受けた中断 [REQ-337] PRのlistのあいだに監視役がSIGINTを受けたら、証拠とpushを保ちinterruptedにする
+        - file: *s767
+          name: &s784 外部操作の監視役が受けた中断 [REQ-337] PRのcreateのあいだに監視役がSIGTERMを受けたら、証拠とpushを保ちinterruptedにする
+        - file: *s767
+          name: &s785 外部操作の監視役が受けた中断 [REQ-337] 監視役が結果を書かずに終わったときは、利用者の中断と区別してstoppedのままにする
+        - file: *s767
+          name: &s786 "外部操作の監視役が受けた中断 [REQ-337] 品質コマンドの監視役の異常終了後は理由を保ちstoppedにする（後続の品質コマンド: true）"
+        - file: *s767
+          name: &s787 "外部操作の監視役が受けた中断 [REQ-337] 品質コマンドの監視役の異常終了後は理由を保ちstoppedにする（後続の品質コマンド: false）"
