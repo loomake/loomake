@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { classifyPath, decideTier, declaredTier, formatTierLine, isSpecPath, requirementBodyChanged, requirementChangedSpecs, sectionOf } from '../scripts/ci-tier.mjs';
+import { archiveMetadataPaths, classifyPath, decideTier, declaredTier, formatTierLine, isSpecPath, requirementBodyChanged, requirementChangedSpecs, sectionOf } from '../scripts/ci-tier.mjs';
 
 // `git diff --raw -z -M` を parseRawDiff で読んだ形。名前の変更は変更前と変更後の両方のパスを持つ
 const entry = (status: string, ...paths: string[]) => ({ status, modes: ['100644', '100644'] as [string, string], paths });
@@ -209,6 +209,17 @@ describe('archive metadata の限定分類', () => {
 
   it.each([[[]], [['docs/unchanged.md']]])('[REQ-362][REQ-342][REQ-281] 成功したtree証明には移動先存在の追加条件を課さない（%j）', (tree) => {
     expect(classify(archiveEntries(), () => true, () => tree)).toMatchObject({ tier: 'L1' });
+  });
+
+  it('[REQ-362][REQ-281] tree証明は候補なし・OID不一致では読まず複数候補でも1回だけ読む', () => {
+    let calls = 0;
+    const headTree = () => { calls++; return []; };
+    expect(archiveMetadataPaths([], () => true, headTree).size).toBe(0);
+    expect(archiveMetadataPaths(archiveEntries(), () => false, headTree).size).toBe(0);
+    expect(calls).toBe(0);
+    const entries = [...archiveEntries(), ...archiveEntries('c2', '2026-11-01-c2')];
+    expect(archiveMetadataPaths(entries, () => true, headTree).size).toBe(4);
+    expect(calls).toBe(1);
   });
 
   it('[REQ-362][REQ-342] R100 と完全 OID 同一の証明を両方必要とする', () => {

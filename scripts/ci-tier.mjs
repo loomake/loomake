@@ -50,15 +50,21 @@ function datedPrefix(name) {
   return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
 }
 
+/** HEAD treeに大文字と小文字だけが違う別パスがあるか（REQ-281）。 */
+export function caseTwins(treePaths) {
+  const byFolded = new Map();
+  for (const path of treePaths) byFolded.set(path.toLowerCase(), [...(byFolded.get(path.toLowerCase()) ?? []), path]);
+  return (path) => (byFolded.get(path.toLowerCase()) ?? []).some((other) => other !== path);
+}
+
 /**
- * 同じ archive の文書を伴い、完全 blob 同一が証明された metadata 移動の前後パス（REQ-362）。
- * 単独のパスの文書分類は変えず、この PR の文脈でだけ使う。
+ * HEAD tree確認前のmetadata移動候補（REQ-362）。qualityの事前拒否だけに使い、L1の根拠には使わない。
  * @param {{ status: string; modes?: string[]; paths: string[] }[]} entries
  * @param {(from: string, to: string) => boolean} sameBlob
- * @returns {Set<string>}
+ * @returns {[string, string][]}
  */
-export function archiveMetadataPaths(entries, sameBlob = () => false) {
-  const paths = new Set();
+export function archiveMetadataMoves(entries, sameBlob = () => false) {
+  const moves = [];
   for (const entry of entries) {
     if (entry.status !== 'R100' || entry.paths.length !== 2 || entry.modes?.length !== 2 || !entry.modes.every((mode) => mode === '100644')) continue;
     const [from, to] = entry.paths;
@@ -75,10 +81,25 @@ export function archiveMetadataPaths(entries, sameBlob = () => false) {
     const archiveDir = `openspec/changes/archive/${name}/`;
     if (!entries.some((other) => other !== entry && /^(A|R\d*)$/.test(other.status) && isDocumentPath(other.paths.at(-1)) && other.paths.at(-1).startsWith(archiveDir))) continue;
     if (sameBlob(from, to) !== true) continue;
-    paths.add(from);
-    paths.add(to);
+    moves.push([from, to]);
   }
-  return paths;
+  return moves;
+}
+
+/**
+ * 完全blob同一とHEAD treeの衝突なしを証明したmetadata移動の前後パス（REQ-362）。
+ * @param {{ status: string; modes?: string[]; paths: string[] }[]} entries
+ * @param {(from: string, to: string) => boolean} sameBlob
+ * @param {() => string[] | undefined} headTree
+ * @returns {Set<string>}
+ */
+export function archiveMetadataPaths(entries, sameBlob = () => false, headTree = () => undefined) {
+  const moves = archiveMetadataMoves(entries, sameBlob);
+  if (!moves.length) return new Set();
+  const tree = headTree();
+  if (!Array.isArray(tree)) return new Set();
+  const collides = caseTwins(tree);
+  return new Set(moves.filter(([from, to]) => !collides(from) && !collides(to)).flat());
 }
 
 /** Requirement の本文の判定の対象にする spec.md か（いまの仕様と、archive でない change の差分仕様） */
@@ -186,13 +207,13 @@ export function declaredTier(body) {
 
 /**
  * PR の段階を決める。
- * @param {{ entries?: { status: string; modes?: string[]; paths: string[] }[]; sameBlob?: (from: string, to: string) => boolean; specDiff?: string; body?: string; readSpec?: (side: 'old' | 'new', path: string) => string | undefined }} options
+ * @param {{ entries?: { status: string; modes?: string[]; paths: string[] }[]; sameBlob?: (from: string, to: string) => boolean; headTree?: () => string[] | undefined; specDiff?: string; body?: string; readSpec?: (side: 'old' | 'new', path: string) => string | undefined }} options
  *   entries は `git diff --raw -z -M` を parseRawDiff で読んだもの（名前の変更は変更前と変更後の両方のパスを持つ）。
  *   specDiff は spec.md に対する `git diff -U0` の出力、readSpec は変更前後の spec.md を読む関数。body は PR 本文
  * @returns {{ tier: 'L1'|'L2'|'L3'; detected: 'L1'|'L2'|'L3'; reasons: string[]; override?: { from: string; to: string }; error?: undefined } | { error: string }}
  */
-export function decideTier({ entries = [], specDiff = '', body = '', readSpec, sameBlob } = {}) {
-  const metadata = archiveMetadataPaths(entries, sameBlob);
+export function decideTier({ entries = [], specDiff = '', body = '', readSpec, sameBlob, headTree } = {}) {
+  const metadata = archiveMetadataPaths(entries, sameBlob, headTree);
   const paths = [...new Set(entries.flatMap((entry) => entry.paths))];
   let detected = 'L1';
   let reasons = [];
