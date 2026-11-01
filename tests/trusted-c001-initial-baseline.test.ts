@@ -28,7 +28,8 @@ beforeAll(() => {
   text = readGitDocuments(process.cwd(), head, C001_VERIFICATION_FILE)[0].text;
   baseline = parseDocument(text).toJS({ maxAliasCount: 100 }).expected_spec;
   const files = [...new Set(baseline.rows.flatMap(r => r.owners.map(o => o.file)))];
-  const anchor = files.flatMap(file => readGitDocuments(process.cwd(), head, file));
+  const anchor = files.map(file => ({ file, text: new TextDecoder('utf-8', { fatal: true }).decode(
+    execFileSync('git', ['--no-replace-objects', 'show', `${head}:${file}`])) }));
   context = { original: original.documents!, anchor, sha256Hex };
 });
 const targets: [string, (b: ApprovedBaseline) => unknown[]][] = [
