@@ -36,17 +36,21 @@ loomake-tier: L1|L2|L3
 
 ## 証跡
 
-<!-- マージ対象 head ごとに、このブロック 1 つだけを書く。差分を変えたら書き直す。形は delivery スキル「マージと証跡」。Opus の行は工程ごとに複数書いてよい -->
+<!-- マージ対象 head ごとに、この節のブロック 1 つだけを書く。差分を変えたら書き直す。文法の正本は delivery スキル「マージと証跡」。L1 は工程行を書かなくてよい。review は回ごとに 1 行。レビュー前・CI 前は review: 未実施、quality: 未実施とし、未確認の結果を実施済みにしない。<…> を実値に置き換える。 -->
 
 ```text
 head: <マージ対象の 40 桁 SHA>
 tier: <gate の出力行。例 loomake-tier: L2（scripts/ci-gate.mjs）>
-ci: <必須 CI の run URL>
+route: <normal|hard-bug>（経路を選んだ理由）
+survey: 実施済み by=opus session=<36字UUID> model=<実際のモデル識別子>
+second-opinion: 対象外
+design: 実施済み by=opus session=<36字UUID> model=<実際のモデル識別子>
+implement: 実施済み by=codex
+review: 実施済み round=1 by=opus session=<36字UUID> model=<実際のモデル識別子> head=<40桁SHA> critical=0 minor=0 info=0
+reviewed-head: <Opus が最後にレビューした head の SHA。L1 なら「対象外（L1）」、まだなら「未実施」>
+quality: 実施済み verify=<pass|fail|対象外> ci=<必須CIのrun-URL>（verifyが対象外なら理由）
 codex-review: <Codex 自動レビューが受領した head の SHA（参考。マージ条件ではない）。なければ「未実施」>
-reviewed-head: <Opus がレビューした head の SHA。L1 なら「対象外（L1）」、まだなら「未実施」>
-opus-review: <工程（設計／最終 1 回目／最終 2 回目）: セッション ID（重大 N・軽微 N・情報 N）。工程ごとに 1 行ずつ書く>
-opus-model: <実際のモデル識別子（例 claude-opus-5-5）。L1 なら「対象外（L1）」、確認できなければ「未実施」>
-process: <工程ごとの状態（実施済み／未実施／再利用／省略／代替）。省略・代替はその承認元も書く。L2・L3 は自己レビューを self-review=<実施者・重大件数> の形で書く>
+process: self-review=<実施者・重大件数>（ほかの欄にない補足）
 ```
 
 AI のレビュー・CI の成功・マージ・返答がないことを、利用者の新しい承認とは扱わない。
