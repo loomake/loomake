@@ -168,6 +168,30 @@ describe('初回47契約の構造と所有の照合', () => {
     expect(result.adoptionsVerified).toBe(false);
   });
 
+  it.each([0, 1, 2, 3])('[REQ-377] 324のarchive両所有をchange省略mask=%iでも照合する', (mask) => {
+    const f = fixture(), row = find(f.baseline, 'reference-docs/modified/REQ-324');
+    row.owners.forEach((owner, position) => {
+      const previous = owner.file;
+      const archived = previous.replace(`changes/${owner.change}/`, `changes/archive/2026-11-01-${owner.change}/`);
+      f.context.anchor.push({ file: archived, text: f.context.anchor.find((doc) => doc.file === previous)!.text });
+      owner.kind = 'archived'; owner.file = archived;
+      for (const mapping of row.scenarioMap) if (mapping.current?.file === previous) mapping.current.file = archived;
+      if (mask & (1 << position)) delete owner.change;
+    });
+    const result = check(f);
+    expect(result.problems).toEqual([]);
+    expect(result.baseline).toEqual(f.baseline);
+    expect(result.sha256).toMatch(/^sha256:[a-f0-9]{64}$/);
+    expect(result.adoptionsVerified).toBe(false);
+    const missing = { baseline: structuredClone(f.baseline), context: f.context };
+    find(missing.baseline, row.key).owners.pop();
+    const rejected = check(missing);
+    expect(rejected.baseline).toBeNull();
+    expect(rejected.sha256).toBeNull();
+    expect(rejected.problems.length).toBeGreaterThan(0);
+    expect(rejected.adoptionsVerified).toBe(false);
+  });
+
   it('[REQ-377][REQ-371] 他契約のScenarioには明示した補完を要求する', () => {
     const f = fixture(), row = f.baseline.rows[0], other = f.baseline.rows.find((r) => r.key !== row.key)!;
     const scenario = other.owners[0].scenarios[0];

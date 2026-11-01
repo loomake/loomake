@@ -7,7 +7,7 @@ import { reconstructOriginalScope } from './original-cross-conditions.js';
 import { buildMainSpecManifest, buildSpecManifest } from './spec-manifest.js';
 
 type Document = { file: string; text: string };
-type OwnerBlock = { file: string; name: string; block: string; scenarios: string[] };
+type OwnerBlock = { file: string; change: string | null; name: string; block: string; scenarios: string[] };
 type Hash = (text: string) => string;
 const same = (a: unknown, b: unknown) => canonicalJson(a) === canonicalJson(b);
 const identity = (ref: TestRef) => canonicalJson([ref.file, ref.name]);
@@ -48,7 +48,7 @@ function ownerBlock(owner: BaselineOwner, text: string, hash: Hash): OwnerBlock 
     else if (/^#### Scenario:/.test(lines[i])) scenarios.push(lines[i].slice('#### Scenario:'.length).trim());
   }
   if (scenarios.length !== block.scenarios || !unique(scenarios) || scenarios.some((scenario) => !scenario)) return null;
-  return { file, name: block.name, block: `sha256:${block.sha256}`, scenarios };
+  return { file, change: name ?? null, name: block.name, block: `sha256:${block.sha256}`, scenarios };
 }
 
 function freeze<T>(value: T): T {
@@ -146,7 +146,7 @@ export function checkInitialBaselineStructure(input: unknown, context: {
   const unchanged = rows.get('verify/modified/REQ-042')?.owners;
   if (unchanged?.length !== 1 || unchanged[0].kind !== 'main-unchanged'
     || unchanged[0].file !== 'openspec/specs/verify/spec.md') problems.push('REQ-042のunchanged所有先が保持されていません');
-  const dual = rows.get('reference-docs/modified/REQ-324')?.owners;
+  const dual = resolved.get('reference-docs/modified/REQ-324');
   if (dual?.length !== 2 || !same(dual.map((owner) => owner.change).sort(), ['verify-v2-evidence', 'verify-v2-scope'])) {
     problems.push('REQ-324のscope・evidenceの両所有先が保持されていません');
   }
