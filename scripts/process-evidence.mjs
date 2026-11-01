@@ -75,7 +75,7 @@ function parseValue(value) {
 }
 
 function lineProblems(name, value) {
-  const parsed = parseValue(value);
+  const parsed = parseValue(value.trimEnd());
   if (parsed.error) return [parsed.error];
   const { state, fields, reason } = parsed;
   const problems = [];

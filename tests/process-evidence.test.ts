@@ -30,6 +30,18 @@ describe('PR 証跡の工程行の形', () => {
     expect(STATES).toEqual(['実施済み', '未実施', '対象外', '再利用', '省略', '代替']);
   });
 
+  it.each([' ', '\t', ' \t '])('理由付き route・quality の行末空白 %j を受け入れる', (suffix) => {
+    const padded = rows.map((line) => /^(route|quality):/.test(line) ? line + suffix : line);
+    expect(processEvidenceProblems(body(padded))).toEqual([]);
+  });
+
+  it.each([' ', '\t', ' \t '])('行末空白 %j があっても理由や項目の不正を拒否する', (suffix) => {
+    expect(problems('route', 'normal' + suffix).join(' / ')).toContain('理由');
+    expect(problems('route', 'normal（理由）（補足）' + suffix)).not.toEqual([]);
+    expect(problems('quality', `実施済み verify=対象外 ci=${run}` + suffix).join(' / ')).toContain('理由');
+    expect(problems('quality', `実施済み verify=pass ci=${run} unknown=x（理由）` + suffix).join(' / ')).toContain('対応していません');
+  });
+
   it('hard-bug への経路切り替え、記録の場所、独立見解の有無と複数回のレビューを表せる', () => {
     const hard = rows.map((line) => {
       if (line.startsWith('route:')) return 'route: hard-bug from=normal（実行順序に依存する再現を確認）';
