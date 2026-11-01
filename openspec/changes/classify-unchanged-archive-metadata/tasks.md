@@ -14,8 +14,8 @@
 
 ## 3. quality の呼び出し側
 
-- [ ] 3.1 `tests/ci-docs-only.test.ts` に `[REQ-362][REQ-270][REQ-281][REQ-282]` の偽 git と実 git の追加試験を作り、正常 R100 の docsOnly が false になる RED を記録する。OID の失敗・空・不正出力・不一致、mode 不正、名前衝突、ツリー読取失敗、main 以外の base、main push の負例を確認する。
-- [ ] 3.2 merge-base と完全 OID の遅延照合を共有し、候補集合だけを文書外パスの事前拒否から除く。全パスの mode・名前・ツリー検査と既存呼出数の期待値を維持して 3.1 を GREEN にし、REQ-362 の限定条件と main 採用後の適用を `docs/dev/ci.md` に記載して文書リンク検査を通す。
+- [x] 3.1 `tests/ci-docs-only.test.ts` に `[REQ-362][REQ-270][REQ-281][REQ-282]` の偽 git と実 git の追加試験を作り、正常 R100 の docsOnly が false になる RED を記録する。OID の失敗・空・不正出力・不一致、mode 不正、名前衝突、ツリー読取失敗、main 以外の base、main push の負例を確認する。
+- [x] 3.2 merge-base と完全 OID の遅延照合を共有し、候補集合だけを文書外パスの事前拒否から除く。全パスの mode・名前・ツリー検査と既存呼出数の期待値を維持して 3.1 を GREEN にし、REQ-362 の限定条件と main 採用後の適用を `docs/dev/ci.md` に記載して文書リンク検査を通す。
 
 ## 4. gate と規則文書
 
