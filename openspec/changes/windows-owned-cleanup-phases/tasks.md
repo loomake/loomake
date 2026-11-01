@@ -12,7 +12,7 @@
 ## 3. 統合検証
 
 - [x] 3.1 docs/dev/ci.mdへ区間・原点・case-endの読み方と性能の未確定を記載し、文書リンク検査を通す。T1〜T9と全9 Scenarioの対応、既存原文と設定の保全、4項目worklogとL3計測表を準備する。
-- [ ] 3.2 管理役と重い実行を調整してから、lint・typecheck・全件を通常verify --done --scope localの1回へ統合し、実exit 0と元レポートを確認する。dirty入力と最終headの対応を保存し、未実施の外部受入を区別して管理役へ渡す。
+- [x] 3.2 管理役と重い実行を調整してから、lint・typecheck・全件を通常verify --done --scope localの1回へ統合し、実exit 0と元レポートを確認する。dirty入力と最終headの対応を保存し、未実施の外部受入を区別して管理役へ渡す。
 
 ## Workflow follow-up
 
