@@ -38,7 +38,15 @@ pnpm exec vitest run --project unit packages/runner/test/external-budget-deadlin
 node scripts/external-call-diagnostics.mjs <診断先>/processes .loomake/test-report.json
 ```
 
-集計は `<診断先>/summary.json` と `summary.md` を作る。最後のgh操作と上限で停止した操作について、入口の共有残予算、監視役に渡した絶対deadline、終了kind、欠けた欄を同じcall IDで確認できる。内部timeoutの厳密な値は取得せずnullとし、観測時刻から求めた区間と区別する。共有期限と1操作の上限が近い場合や観測が欠けた場合は、原因を未確定として扱う。診断ファイルごとに64KiBの上限を設け、上限到達と読めない行も集計する。
+集計は `<診断先>/summary.json` と `summary.md` を作る。版2の要約では最後のgh操作と上限で停止した操作について、観測開始時の共有残予算、監視役に渡した絶対deadline、終了kindを同じcall IDで確認できる。Markdownは「同時上限の可能性」「理由」「欠損」を別の列に示す。可能性がyesなら、1操作上限や明示timeoutが共有期限の窓と重なり得るため、原因を断定しない。内部timeoutの厳密な値は取得せずnullとし、観測した区間と区別する。
+
+spawn直前の時刻をts、共有残予算を読んだ直後をt1、保持役の累積待ちをhw0・hw1とする。共有期限の窓は未観測の遅れの上限 `max(0, ts−t1−(hw1−hw0))` だけ前へ広げる。明示timeoutのないnormal操作で、この窓より十分前のdeadlineだけを1操作上限と分類する。時計の欠損・逆転や観測の不整合は未確定とする。`timeoutRequested` は指定の有無だけを示し、値は保存しない。旧rawの欠落、getterやProxy、継承した設定はnull（不明）とし、timeoutのgetterを追加評価しない。
+
+設定のsnapshotは診断envの確認直後、予算時計t0を読む前に一度だけ取る。元関数を呼んだあとの設定は読まない。製品がqualityCommand・untilDeadline・timeoutMsの順に設定を読むことを前提とし、3項目すべてが安全な自身のデータ値か指定なしと分かるときだけ、timeoutの有無をtrue/falseにする。どれかにgetter・Proxy・不明な継承があればnullとする。これにより、先行するqualityCommandのgetterがtimeoutを書き換える場合も、値を推測せず追加評価を避ける。qualityCommandがtrueで元の処理がuntilDeadlineを読まない場合も、3項目を安全に判定できることを条件にする。
+
+modeはqualityCommandとuntilDeadlineを同じ方法で求め、不明ならnullとする。作業ディレクトリも安全に得られた自身の文字列だけを使い、不明なら由来を示すrepo欄を省く。timeoutの値そのものや作業ディレクトリのパスは記録しない。診断envなしではsnapshotも取らない。[観測の追加試験](../../packages/runner/test/process-diagnostics.test.ts)で、自己変化する設定・副作用・取得時点と元の同期1回の呼出を確かめている。
+
+起動前に中断された後続操作は `pre-spawn-interrupted`、実spawn1回で監視役の結果が欠けた操作は `missing-result` と分ける。ただしspawn観測の行自体が書けなかった場合は、実際に起動していても起動前と分類される可能性が残る。診断入力は1ファイル64KiB、最大128ファイル・合計512行までとし、上限到達と読めない行も集計する。公開schemaの検査上限はcalls・summaryのJSONが各1MiB、summary.mdが256KiB、heartbeat.jsonが2KiBで、rawの上限とは分けている。旧版1の単独sampleを版2での実行結果とは扱わない。
 
 観測では、元の関数を同じ引数で一度だけ呼び、返値とthrowをそのまま返す。生の引数・環境値・出力・例外messageは記録しない。保存に失敗しても元の試験結果を変えないが、観測のI/Oとpreloadは実行時間や失敗頻度に影響しうる。単独実行の成功を、mainの並行実行での失敗の再現や修理完了とは扱わない。
 

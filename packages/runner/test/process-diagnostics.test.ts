@@ -106,6 +106,7 @@ describe('外部操作の試験用観測', () => {
     const dir = directory(); vi.stubEnv('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR', dir);
     expect(() => withProcessBudget({ timeoutMs: 600 }, () => runExternal(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { untilDeadline: true }))).toThrow(ProcessLimitError);
     expect(classifyCall(records(dir).find((r) => r.event === 'call')!)).toMatchObject({ classification: 'shared-deadline' });
+    expect(classifyCall(records(dir).find((r) => r.event === 'call')!)).toHaveProperty('coincidentOperationPossible', false);
     withProcessBudget({ timeoutMs: 1 }, () => {
       Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5);
       expect(() => runExternal(process.execPath, ['-e', ''])).toThrow(ProcessLimitError);
@@ -113,4 +114,163 @@ describe('外部操作の試験用観測', () => {
     expect(records(dir).at(-1)).toMatchObject({ spawned: false, spawn: null, limitKind: 'timeout', Rclamped: true });
     expect(classifyCall(records(dir).at(-1)!)).toMatchObject({ classification: 'pre-spawn-timeout' });
   }, 15_000);
+});
+
+
+describe('明示timeoutの副作用を増やさない観測', () => {
+  it.each([
+    [{ timeoutMs: 1 }, true], [{}, false], [undefined, false],
+  ] as const)('plain options %jの有無だけを記録し返値と引数を保持する', (options, timeoutRequested) => {
+    const dir = directory(); vi.stubEnv('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR', dir);
+    const args = ['pr', 'list']; const value = { status: 0, signal: null, stdout: '', stderr: '' } as const;
+    const calls: unknown[][] = [];
+    const real = { ...runtime, runExternal: (...input: Parameters<typeof runExternal>) => { calls.push(input); return value; } };
+    expect(observeRunExternal(real)('gh', args, options)).toBe(value);
+    expect(calls).toHaveLength(1); expect(calls[0][1]).toBe(args); expect(calls[0][2]).toBe(options);
+    expect(records(dir)[0]).toMatchObject({ timeoutRequested, internalTimeoutMs: null });
+  });
+  it.each(['accessor', 'inherited', 'proxy'] as const)('%sではtimeoutを追加評価せずunknownとし、元getter回数と例外を保持する', (kind) => {
+    const dir = directory(); vi.stubEnv('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR', dir);
+    let reads = 0; let reflectionTraps = 0;
+    const accessor = { get timeoutMs() { reads++; return 1; } };
+    const options = kind === 'accessor' ? accessor : kind === 'inherited' ? Object.create(accessor) : new Proxy(accessor, {
+      getOwnPropertyDescriptor(target, key) { reflectionTraps++; return Reflect.getOwnPropertyDescriptor(target, key); },
+      getPrototypeOf(target) { reflectionTraps++; return Reflect.getPrototypeOf(target); },
+    });
+    const args = ['pr', 'list']; const value = { status: 0, signal: null, stdout: '', stderr: '' } as const;
+    const calls: unknown[][] = [];
+    const real = { ...runtime, runExternal: (...input: Parameters<typeof runExternal>) => { calls.push(input); void input[2]?.timeoutMs; return value; } };
+    expect(observeRunExternal(real)('gh', args, options)).toBe(value);
+    expect(reads).toBe(1); expect(reflectionTraps).toBe(0);
+    expect(calls).toHaveLength(1); expect(calls[0][1]).toBe(args); expect(calls[0][2]).toBe(options);
+    expect(records(dir)[0]).toMatchObject({ timeoutRequested: null });
+    const error = new ProcessLimitError('timeout', 'original');
+    let caught: unknown;
+    try { observeRunExternal({ ...real, runExternal: (...input: Parameters<typeof runExternal>) => { void input[2]?.timeoutMs; throw error; } })('gh', args, options); }
+    catch (actual) { caught = actual; }
+    expect(caught).toBe(error); expect(reads).toBe(2); expect(reflectionTraps).toBe(0);
+    expect(records(dir).at(-1)).toMatchObject({ timeoutRequested: null });
+  });
+  it('own dataのnullはtimeout指定なしとして記録する', () => {
+    const dir = directory(); vi.stubEnv('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR', dir);
+    const options = { timeoutMs: null } as unknown as Parameters<typeof runExternal>[2];
+    const value = { status: 0, signal: null, stdout: '', stderr: '' } as const;
+    expect(observeRunExternal({ ...runtime, runExternal: () => value })('gh', [], options)).toBe(value);
+    expect(records(dir)[0]).toMatchObject({ timeoutRequested: false });
+  });
+});
+
+// REQ-350 の追加契約。上の既存試験は変更せず、元関数の評価と観測の評価を分ける。
+describe('REQ-350 元関数前の不活性な観測', () => {
+  const value = { status: 0, signal: null, stdout: '', stderr: '' } as const;
+
+  it('[REQ-350] 選択中に自身を変えるtimeout getterを再評価せずunknownで保持する', () => {
+    const dir = directory(); vi.stubEnv('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR', dir);
+    let reads = 0;
+    const options = { get timeoutMs() { reads++; Object.defineProperty(this, 'timeoutMs', { value: null, configurable: true }); return 1; } };
+    const args = ['pr', 'list']; const inputs: unknown[][] = []; let selected: number | undefined;
+    const original = (...input: Parameters<typeof runExternal>) => { inputs.push(input); selected = input[2]?.timeoutMs; return value; };
+    expect(observeRunExternal({ ...runtime, runExternal: original })('gh', args, options)).toBe(value);
+    expect(selected).toBe(1); expect(reads).toBe(1); expect(inputs).toHaveLength(1);
+    expect(inputs[0][1]).toBe(args); expect(inputs[0][2]).toBe(options);
+    expect(records(dir)[0]).toMatchObject({ timeoutRequested: null, mode: 'normal' });
+  });
+
+  it('[REQ-350] 選択後のdata変更より前のtimeoutとmodeとcwdを保持する', () => {
+    const dir = directory(); vi.stubEnv('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR', dir);
+    const options = { timeoutMs: 1, qualityCommand: false, untilDeadline: true, cwd: join(tmpdir(), 'loomake-run-snapshot', 'project') };
+    let selected: number | undefined; let calls = 0;
+    const original = (...input: Parameters<typeof runExternal>) => {
+      calls++; selected = input[2]?.timeoutMs; options.timeoutMs = null as unknown as number;
+      options.qualityCommand = true; options.untilDeadline = false; options.cwd = 'private-path'; return value;
+    };
+    expect(observeRunExternal({ ...runtime, runExternal: original })('gh', [], options)).toBe(value);
+    expect(selected).toBe(1); expect(calls).toBe(1);
+    expect(records(dir)[0]).toMatchObject({ timeoutRequested: true, mode: 'untilDeadline', repo: 'loomake-run-snapshot' });
+  });
+
+  it('[REQ-350] 先行qualityCommand getterがtimeoutを変えても追加評価せず両方をunknownにする', () => {
+    const dir = directory(); vi.stubEnv('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR', dir);
+    let reads = 0; let selected: number | null | undefined;
+    const options = { timeoutMs: null as number | null, get qualityCommand() { reads++; this.timeoutMs = 1; return false; } };
+    const original = (...input: Parameters<typeof runExternal>) => {
+      const config = input[2]; void (config?.qualityCommand || config?.untilDeadline); selected = config?.timeoutMs; return value;
+    };
+    expect(observeRunExternal({ ...runtime, runExternal: original })('gh', [], options as Parameters<typeof runExternal>[2])).toBe(value);
+    expect(reads).toBe(1); expect(selected).toBe(1);
+    expect(records(dir)[0]).toMatchObject({ timeoutRequested: null, mode: null });
+  });
+
+  it.each([
+    [{ timeoutMs: 1 }, true], [{}, false], [undefined, false], [{ timeoutMs: null }, false],
+  ] as const)('[REQ-350] 固定plain設定%jを三値とnormalへ投影する', (options, timeoutRequested) => {
+    const dir = directory(); vi.stubEnv('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR', dir);
+    let calls = 0;
+    const original = (...input: Parameters<typeof runExternal>) => { calls++; expect(input[2]).toBe(options); return value; };
+    expect(observeRunExternal({ ...runtime, runExternal: original })('gh', [], options as Parameters<typeof runExternal>[2])).toBe(value);
+    expect(calls).toBe(1); expect(records(dir)[0]).toMatchObject({ timeoutRequested, mode: 'normal' });
+  });
+
+  it.each(['accessor', 'inherited', 'proxy'] as const)('[REQ-350] %sの全追加評価を避け、同じ返値と元ProcessLimitErrorを保持する', (kind) => {
+    const dir = directory(); vi.stubEnv('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR', dir);
+    let reads = 0; let cwdReads = 0;
+    const traps: Record<string, number> = {};
+    const target = { get timeoutMs() { reads++; return 1; }, get cwd() { cwdReads++; return 'private-cwd'; } };
+    const handler = Object.fromEntries(['apply', 'construct', 'defineProperty', 'deleteProperty', 'get', 'getOwnPropertyDescriptor', 'getPrototypeOf', 'has', 'isExtensible', 'ownKeys', 'preventExtensions', 'set', 'setPrototypeOf'].map((key) => [key, (...args: unknown[]) => {
+      traps[key] = (traps[key] ?? 0) + 1;
+      return (Reflect[key as keyof typeof Reflect] as (...args: unknown[]) => unknown)(...args);
+    }])) as ProxyHandler<typeof target>;
+    const options = kind === 'accessor' ? target : kind === 'inherited' ? Object.create(target) : new Proxy(target, handler);
+    const args = ['pr', 'list']; let calls = 0;
+    const original = (...input: Parameters<typeof runExternal>) => { calls++; expect(input[1]).toBe(args); expect(input[2]).toBe(options); void input[2]?.timeoutMs; return value; };
+    expect(observeRunExternal({ ...runtime, runExternal: original })('gh', args, options)).toBe(value);
+    expect(calls).toBe(1); expect(reads).toBe(1); expect(cwdReads).toBe(0);
+    expect(traps).toEqual(kind === 'proxy' ? { get: 1 } : {});
+    expect(records(dir)[0]).toMatchObject({ timeoutRequested: null }); expect(records(dir)[0]).not.toHaveProperty('repo');
+    const error = new ProcessLimitError('timeout', 'private-message'); let caught: unknown;
+    try { observeRunExternal({ ...runtime, runExternal: (...input: Parameters<typeof runExternal>) => { original(...input); throw error; } })('gh', args, options); }
+    catch (actual) { caught = actual; }
+    expect(caught).toBe(error); expect(calls).toBe(2); expect(reads).toBe(2); expect(cwdReads).toBe(0);
+    expect(traps).toEqual(kind === 'proxy' ? { get: 2 } : {});
+    expect(records(dir).at(-1)).toMatchObject({ timeoutRequested: null }); expect(records(dir).at(-1)).not.toHaveProperty('repo');
+  });
+
+  it('[REQ-350] 診断envなしではProxy設定を検査せず記録しない', () => {
+    const dir = directory(); vi.stubEnv('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR', '');
+    let traps = 0; let calls = 0;
+    const handler = Object.fromEntries(['apply', 'construct', 'defineProperty', 'deleteProperty', 'get', 'getOwnPropertyDescriptor', 'getPrototypeOf', 'has', 'isExtensible', 'ownKeys', 'preventExtensions', 'set', 'setPrototypeOf'].map((key) => [key, () => { traps++; throw new Error(key); }])) as ProxyHandler<object>;
+    const options = new Proxy({}, handler); const args = ['pr', 'list'];
+    const original = (...input: Parameters<typeof runExternal>) => { calls++; expect(input[1]).toBe(args); expect(input[2]).toBe(options); return value; };
+    expect(observeRunExternal({ ...runtime, runExternal: original })('gh', args, options)).toBe(value);
+    expect(calls).toBe(1); expect(traps).toBe(0); expect(readdirSync(dir)).toEqual([]);
+  });
+
+  it('[REQ-350] snapshotを診断env確認直後かつ予算時計の観測前に取る', () => {
+    const dir = directory(); vi.stubEnv('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR', dir);
+    const options = { timeoutMs: 1 };
+    const real = { ...runtime, remainingProcessTime: () => { options.timeoutMs = null as unknown as number; return 5000; }, runExternal: () => value };
+    expect(observeRunExternal(real)('gh', [], options)).toBe(value);
+    expect(records(dir)[0]).toMatchObject({ timeoutRequested: true, mode: 'normal' });
+  });
+});
+
+describe('REQ-350 安全な判定の境界', () => {
+  it.each([false, true])('[REQ-350] quality=%sでもuntilDeadline accessorの追加評価をせずunknownを保持する', (qualityCommand) => {
+    const dir = directory(); vi.stubEnv('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR', dir);
+    let reads = 0; let calls = 0;
+    const options = { qualityCommand, get untilDeadline() { reads++; return true; }, timeoutMs: 1 };
+    const value = { status: 0, signal: null, stdout: '', stderr: '' } as const;
+    const original = (...input: Parameters<typeof runExternal>) => { calls++; const config = input[2]; void (config?.qualityCommand || config?.untilDeadline); void config?.timeoutMs; return value; };
+    expect(observeRunExternal({ ...runtime, runExternal: original })('gh', [], options)).toBe(value);
+    expect(calls).toBe(1); expect(reads).toBe(qualityCommand ? 0 : 1);
+    expect(records(dir)[0]).toMatchObject({ timeoutRequested: null, mode: null });
+  });
+
+  it('[REQ-350] prototypeがnullなら欠けた項目を安全な指定なしとして扱う', () => {
+    const dir = directory(); vi.stubEnv('LOOMAKE_EXTERNAL_TEST_DIAGNOSTIC_DIR', dir);
+    const options = Object.assign(Object.create(null), { timeoutMs: 1 });
+    const value = { status: 0, signal: null, stdout: '', stderr: '' } as const;
+    expect(observeRunExternal({ ...runtime, runExternal: () => value })('gh', [], options)).toBe(value);
+    expect(records(dir)[0]).toMatchObject({ timeoutRequested: true, mode: 'normal' });
+  });
 });
