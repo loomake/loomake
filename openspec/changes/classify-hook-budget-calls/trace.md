@@ -51,4 +51,6 @@ F116-Q5の予約実務と原文再確認は管理役Codexが担当し、名前�
 
 診断コードはaeeeを基点に59eeまで独立changeより先に実装され、PR #276をL2/changeなしとした。後発Q-S1の再照合でその解釈を訂正した。旧履歴と技術検証ログは保持するが、空change・他changeへの便乗・noneで正常doneを代用しない。
 
-24100ff7は空changesetだけでREQ-056の不足を直した。main3aを通常mergeしたあとも、元hook・workflow・設定・旧作業記録と診断の技術source/testsは241と同じ。今回は計画文書の正式化と仕様ゲートだけで、M1の修理、ID付き追加試験、正常done、3 OS/必須CIと独立Opus最終は未実施である。
+24100ff7は空changesetだけでREQ-056の不足を直した。main3aを通常mergeしたあとも、元hook・workflow・設定・旧作業記録と診断の技術source/testsは241と同じ。正式化時点では計画文書と仕様ゲートだけで、M1の修理、ID付き追加試験、正常done、3 OS/必須CIと独立Opus最終は未実施だった。
+
+その後、利用者の包括承認に基づく管理役の仕様確認を経て、task1.1〜2.2でA′/Q6(a)の最小修理と全19 Scenarioの新しいID付き試験を追加した。旧試験の名前・本文・期待値は保持し、classifier本体・元hook・workflow・設定・製品src・製品の主仕様を変更していない。正常doneと最終CI/レビューは未完了である。
