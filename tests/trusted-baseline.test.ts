@@ -173,6 +173,43 @@ describe('初回47契約の構造と所有の照合', () => {
     expect(result.adoptionsVerified).toBe(false);
   });
 
+  it('[REQ-377] 同じ置換レコードの重複を初回基準として受理しない', () => {
+    const f = fixture(), row = f.baseline.rows[0];
+    const replacement = { clause: 'replace original clause', by: structuredClone(by) };
+    row.supersessions = [replacement];
+    expect(check(f).problems).toEqual([]);
+    row.supersessions.push(structuredClone(replacement));
+    const result = check(f);
+    expect(result.baseline).toBeNull();
+    expect(result.sha256).toBeNull();
+    expect(result.problems.length).toBeGreaterThan(0);
+    expect(result.adoptionsVerified).toBe(false);
+  });
+
+  it('[REQ-377] Scenario置換の採否参照の重複を初回基準として受理しない', () => {
+    const f = fixture(), mapping = f.baseline.rows[0].scenarioMap[0];
+    mapping.status = 'superseded'; mapping.current = null; mapping.by = structuredClone(by);
+    expect(check(f).problems).toEqual([]);
+    mapping.by.push(structuredClone(mapping.by[0]));
+    const result = check(f);
+    expect(result.baseline).toBeNull();
+    expect(result.sha256).toBeNull();
+    expect(result.problems.length).toBeGreaterThan(0);
+    expect(result.adoptionsVerified).toBe(false);
+  });
+
+  it('[REQ-377] 句置換の採否参照の重複を初回基準として受理しない', () => {
+    const f = fixture(), row = f.baseline.rows[0];
+    row.supersessions = [{ clause: 'replace original clause', by: structuredClone(by) }];
+    expect(check(f).problems).toEqual([]);
+    row.supersessions[0].by.push(structuredClone(row.supersessions[0].by[0]));
+    const result = check(f);
+    expect(result.baseline).toBeNull();
+    expect(result.sha256).toBeNull();
+    expect(result.problems.length).toBeGreaterThan(0);
+    expect(result.adoptionsVerified).toBe(false);
+  });
+
   it('[REQ-377][REQ-371] 現対応のない元Scenarioはopenに残し、実装済みや採否検証済みにしない', () => {
     const f = fixture(), row = f.baseline.rows[0];
     row.scenarioMap[0].current = null;

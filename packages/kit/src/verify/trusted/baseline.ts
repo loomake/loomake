@@ -108,6 +108,7 @@ export function checkInitialBaselineStructure(input: unknown, context: {
     if (!unique(mappings) || !same([...mappings].sort(), [...scenarios].sort())) problems.push(`原Scenarioの対応に欠落・追加・重複があります：${row.key}`);
     for (const mapping of row.scenarioMap) {
       if (mapping.status === 'superseded' && !mapping.by?.length) problems.push(`置換したScenarioの採否がありません：${row.key} ${mapping.original}`);
+      if (mapping.by && !unique(mapping.by.map(canonicalJson))) problems.push(`置換したScenarioの採否参照が重複しています：${row.key} ${mapping.original}`);
       if (mapping.current === null && mapping.status !== 'superseded' && !(mapping.status === 'kept' && row.open?.length)) {
         problems.push(`現Scenario・置換の採否・保持する未対応のいずれもありません：${row.key} ${mapping.original}`);
       }
@@ -116,6 +117,8 @@ export function checkInitialBaselineStructure(input: unknown, context: {
       }
     }
     if (row.supersessions?.some((entry) => !entry.by.length)) problems.push(`置換した句の採否がありません：${row.key}`);
+    if (row.supersessions && !unique(row.supersessions.map(canonicalJson))) problems.push(`置換した句が重複しています：${row.key}`);
+    if (row.supersessions?.some((entry) => !unique(entry.by.map(canonicalJson)))) problems.push(`置換した句の採否参照が重複しています：${row.key}`);
     if (row.open && !unique(row.open.map(canonicalJson))) problems.push(`未対応の句が重複しています：${row.key}`);
   }
   for (const row of baseline.rows) {
