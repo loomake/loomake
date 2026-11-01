@@ -369,3 +369,23 @@ describe('REQ-352 公開する外部操作診断', () => {
     }
   });
 });
+
+describe('REQ-351 原観測の逆転と補正後の時計窓', () => {
+  it.each([0.5, 1, 1.001])('[REQ-351] 原観測ts=t1−%smsをdeadlineの1ms許容差とは別に拒否する', (reversal) => {
+    const actual = classifyCall(row({ spawn: { ts: 101 - reversal, D: 5100.5, outcomeKind: 'timeout', invalid: false } }));
+    expect(actual).toMatchObject({ classification: 'undetermined', reasons: ['observation-order-invalid'], coincidentOperationPossible: false });
+  });
+
+  it.each([101, 101.5])('[REQ-351] 原観測ts=%sがt1と一致するか後なら共有期限を保持する', (ts) => {
+    expect(classifyCall(row({ spawn: { ts, D: 5100.5, outcomeKind: 'timeout', invalid: false } })))
+      .toMatchObject({ classification: 'shared-deadline', reasons: [], coincidentOperationPossible: true });
+  });
+
+  it.each([
+    [1, 'shared-deadline', []],
+    [1.001, 'undetermined', ['observation-order-invalid']],
+  ] as const)('[REQ-351] 原観測が正順でも保持役補正後δ=−%smsの既存境界を保持する', (holderWait, classification, reasons) => {
+    expect(classifyCall(row({ hw0: 0, hw1: holderWait, spawn: { ts: 101, D: 5101.5, outcomeKind: 'timeout', invalid: false } })))
+      .toMatchObject({ classification, reasons });
+  });
+});

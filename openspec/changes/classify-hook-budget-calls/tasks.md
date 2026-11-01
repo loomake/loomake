@@ -14,11 +14,11 @@
 
 ## 3. 記録と保持の照合
 
-- [x] 3.1 docsとworklogを修理後の事実へ更新し、none/正常done対象外という旧記録を履歴として保持したうえで現在の受入条件を明記する。基点・正式化前head・修理後headで元hook・workflow・設定・予算・旧it本文をバイト照合し、製品src・REQ-180/182/257の差分がないことを確認する。
+- [ ] 3.1 docsとworklogを修理後の事実へ更新し、none/正常done対象外という旧記録を履歴として保持したうえで現在の受入条件を明記する。基点・正式化前head・修理後headで元hook・workflow・設定・予算・旧it本文をバイト照合し、製品src・REQ-180/182/257の差分がないことを確認する。
 
 ## 4. 正常完了ゲート
 
-- [x] 4.1 3要件すべての成功したID付き試験と全タスクの完了を照合し、`pnpm -s verify --change classify-hook-budget-calls --done --scope local` を省略指定なしで通す。exit0を確認してlocal完了として記録し、CIの最終合格と区別する。 <!-- loomake:gate=done -->
+- [ ] 4.1 3要件すべての成功したID付き試験と全タスクの完了を照合し、`pnpm -s verify --change classify-hook-budget-calls --done --scope local` を省略指定なしで通す。exit0を確認してlocal完了として記録し、CIの最終合格と区別する。 <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 

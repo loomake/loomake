@@ -26,6 +26,8 @@ observerのTS、集計のmjs、公開schema版2と公開物の安全性にまた
 
 共有期限の区間Sは入口のt0/t1・共有残予算R・保持役の累積待ちhw0/hw1から求める。startedAtからtimeLeftまでの遅れは実測していないため、上限δmax=ts−t1−(hw1−hw0)だけを使い、順序の検査を通ったときに前端をmax(0,δmax)+1ms、後端を1ms広げる。保持役待ちを差し引かない案は、Windowsの最初の待ちを重ねて窓へ入れるため採らない。
 
+元の観測順序ts≥t1と、保持役待ちを差し引いたδmax≥−1msは別々に検査する。ts<t1は窓の1ms許容差によらずobservation-order-invalidの未確定とし、δmax<−1msを拒否する既存の補正後不整合判定も保持する。[自動レビューのP2](https://github.com/loomake/loomake/pull/276#discussion_r4434018253)で見つかった境界の欠落を、REQ-351の時計逆転Scenarioどおりに直す。
+
 有効なmode・時計・spawnと報告がそろい、deadlineが窓内なら、明示timeoutがnullでも共有期限とする。同時上限の可能性はnormalか明示timeoutがfalseでないときに残す。窓より前のnormalかつ明示falseだけを1操作上限とし、未来側や欠損は理由付き未確定にする。mode不明は窓と比べる前に未確定へ戻す。67aaのnullを一律未確定とした草案は採用せず、42a5のREQ-351・352に訂正した。
 
 ### D2：A′による事前snapshotとQ6(a)

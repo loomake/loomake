@@ -53,7 +53,7 @@ export function classifyCall(row) {
       if (!['normal', 'untilDeadline', 'quality'].includes(row.mode)) reasons.push('mode-unavailable');
       // startedAt→timeLeft の遅れは実測していない。保持役待ちを除く観測窓だけを上限にする。
       const delayBound = finite(spawn.ts) ? spawn.ts - row.t1 - (row.hw1 - row.hw0) : null;
-      if (finite(spawn.ts) && (!finite(delayBound) || delayBound < -1)) reasons.push('observation-order-invalid');
+      if (finite(spawn.ts) && (spawn.ts < row.t1 || !finite(delayBound) || delayBound < -1)) reasons.push('observation-order-invalid');
       if (reasons.length === 0) {
         const [lo, hi] = sharedDeadlineIntervalMs;
         const requested = typeof row.timeoutRequested === 'boolean' ? row.timeoutRequested : null;
