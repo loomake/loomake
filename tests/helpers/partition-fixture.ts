@@ -39,7 +39,7 @@ export function partitionFixture() {
   const root = realpathSync(mkdtempSync(join(repository, '.loomake/partition-fixture-')));
   for (const path of ['tests', 'scripts/lib', 'packages']) mkdirSync(join(root, path), { recursive: true });
   symlinkSync(join(repository, 'node_modules'), join(root, 'node_modules'), process.platform === 'win32' ? 'junction' : 'dir');
-  for (const path of ['vitest.config.ts', 'loomake.config.json', 'scripts/lib/test-partition.mjs', 'scripts/test-phase-profile.mjs', 'tests/packed-tarballs.ts']) copyFileSync(join(repository, path), join(root, path));
+  for (const path of ['vitest.config.ts', 'loomake.config.json', 'scripts/lib/test-partition.mjs', 'scripts/lib/ci-test-sequencer.mjs', 'scripts/lib/ci-test-durations.json', 'scripts/test-phase-profile.mjs', 'tests/packed-tarballs.ts']) copyFileSync(join(repository, path), join(root, path));
   copyFileSync(join(repository, 'tests/package-build.setup.ts'), join(root, 'tests/package-build.factory.ts'));
   writeFileSync(join(root, 'package.json'), '{"type":"module"}');
   writeFileSync(join(root, 'scripts/package-smoke.mjs'), 'export function buildAndPack(){throw new Error("fixtureは注入したbuildを使う")}');
