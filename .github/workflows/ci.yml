@@ -196,6 +196,16 @@ jobs:
         shell: bash
       - run: python3 scripts/deny-network.py node scripts/runtime-compatibility.mjs "$RUNNER_TEMP/loomake-offline" "$RUNNER_TEMP/loomake-runtime-results" 22.12.0
         shell: bash
+      # 既存の配布物検査後に、同じ run の build 済み core/kit を渡す。未保存時は監査側で build する
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        id: audit_dist_upload
+        with:
+          name: scenario-audit-dist-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            packages/core/dist
+            packages/kit/dist
+          retention-days: 1
+          if-no-files-found: error
 
   # PR ごとの完了ゲート（REQ-010, REQ-054, REQ-132）。先に PR の段階を変えたファイルと spec の差分から決め（REQ-342）、段階ごとに検査を変える（REQ-343）。
   # L1（文書だけ）は lint と文書のリンクの試験だけで verify を呼ばない。L2 は PR 本文・変えたファイル・ブランチ名から決めた change を --done で検査し、
@@ -263,8 +273,16 @@ jobs:
           cache: pnpm
       - if: steps.report.outcome == 'success'
         run: pnpm install --frozen-lockfile
-      # 監査は packages/kit/dist を読む
-      - if: steps.report.outcome == 'success'
+      # upload の共通親 packages からの相対パス（core/dist・kit/dist）を、元の位置へ戻す
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        id: audit_dist
+        if: steps.report.outcome == 'success'
+        continue-on-error: true
+        with:
+          name: scenario-audit-dist-${{ github.run_id }}-${{ github.run_attempt }}
+          path: packages
+      # 監査は core/kit dist を読む。取得できなかった場合は、従来どおり build してから監査する
+      - if: steps.report.outcome == 'success' && steps.audit_dist.outcome != 'success'
         run: pnpm build
       - id: audit
         if: steps.report.outcome == 'success'
