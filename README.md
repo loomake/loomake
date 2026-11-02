@@ -23,14 +23,14 @@ npx loomake trace report --change <id>            # リリースレポートを�
 
 `npx loomake --help` でコマンドの一覧を、`npx loomake <コマンド> --help` でそれぞれの使い方を表示する。
 
-`loomake` はまだ npm に公開していない。今の導入方法は [未公開の tarball から導入する](docs/guide/1.getting-started/3.unpublished-install.md) を参照する。英語の概要は [README.en.md](README.en.md) にある。
+`loomake` はまだ npm に公開していない。今の導入から最初の change までの道筋は [クイックスタート](docs/guide/1.getting-started/1.quickstart.md)、tarball の作り方は [未公開の tarball から導入する](docs/guide/1.getting-started/3.unpublished-install.md) にある。英語の概要は [README.en.md](README.en.md) にある。
 
 ## ドキュメント
 
 | 文書 | 読む人 | 中身 |
 |---|---|---|
-| [docs/guide/1.getting-started/1.quickstart.md](docs/guide/1.getting-started/1.quickstart.md) | 初めて Loomake を使う人 | 導入から 1 つの change を終えるまでと、ほかの道具との連携を 1 ページにまとめたもの |
-| [docs/guide/1.getting-started/2.usage.md](docs/guide/1.getting-started/2.usage.md) | Loomake を使う人 | 導入、1 つの change の進め方、verify と設定のリファレンス（図つき） |
+| [docs/guide/1.getting-started/1.quickstart.md](docs/guide/1.getting-started/1.quickstart.md) | 初めて Loomake を使う人 | 公開前の導入（tarball）から、1 つの change を終えて `verify --done` が exit 0 になるまでの唯一の道筋。ほかの道具との連携も載せる |
+| [docs/guide/1.getting-started/2.usage.md](docs/guide/1.getting-started/2.usage.md) | Loomake を使う人 | quickstart の各手順の詳細（`init` の配置物、change の進め方）と、verify・設定のリファレンス（図つき） |
 | [docs/guide/4.concepts/1.positioning.md](docs/guide/4.concepts/1.positioning.md) | Loomake を使う人・導入を検討する人 | 一般的な開発の流れ（要件定義から運用まで）の中での、Loomake・OpenSpec・AI エージェント・テストランナー・CI の受け持ち |
 | [docs/guide/2.guides/1.for-agents.md](docs/guide/2.guides/1.for-agents.md) | Loomake を入れたプロジェクトで働く AI エージェント | 状況ごとの手順、verify が不合格のときの直し方、終了コードと JSON |
 | [AGENTS.md](AGENTS.md) | AI エージェント・開発者 | このリポジトリで AI が従うルール |
