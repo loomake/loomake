@@ -1,4 +1,4 @@
-import { accessSync, constants, existsSync, statSync } from 'node:fs';
+import { accessSync, constants, existsSync, lstatSync, statSync } from 'node:fs';
 import { delimiter, isAbsolute, join, resolve } from 'node:path';
 import { createInputReader } from '../runtime/input.js';
 import { runExternal, withProcessBudget } from '../runtime/process.js';
@@ -78,6 +78,11 @@ function diagnoseProject(root: string, path: string): DoctorCheck[] {
     let manifest: Record<string, unknown> | undefined;
     let manifestError: string | undefined;
     let reportedManifestError = false;
+    const missingScripts: { command: string; script: string }[] = [];
+    const missingManifest = () => {
+      try { return lstatSync(join(root, 'package.json'), { throwIfNoEntry: false }) === undefined; }
+      catch { return false; }
+    };
     const scripts = () => {
       if (manifest || manifestError) return manifest;
       try {
@@ -111,6 +116,7 @@ function diagnoseProject(root: string, path: string): DoctorCheck[] {
       }
       ok(`${name} のコマンド（${cmd}）の ${exe} が見つかります`);
       if (plan.kind !== 'script') continue;
+      if (missingManifest()) { missingScripts.push({ command: name, script: plan.script }); continue; }
       const entries = scripts();
       if (!entries) {
         if (!reportedManifestError) error(manifestError ?? 'package.json を読めません', 'package.json の形式・容量・読み取り権限を確認してください');
@@ -121,6 +127,11 @@ function diagnoseProject(root: string, path: string): DoctorCheck[] {
       if (typeof script === 'string' && script.trim()) ok(`${name} の package.json の scripts.${plan.script} を確認しました（存在の確認のみ）`);
       else if (plan.manager === 'yarn') warn(`${name} の Yarn の解決先は未確認です。ルートの scripts.${plan.script} に空でない文字列がありません`, 'package.json と依存のバイナリ・workspaceの設定を確認してください');
       else error(`${name} の package.json の scripts.${plan.script} に空でない文字列がありません`, `package.json の scripts.${plan.script} と commands.${name} を確認してください`);
+    }
+    if (missingScripts.length) {
+      const commands = missingScripts.map((item) => `commands.${item.command}`).join('・');
+      const scripts = [...new Set(missingScripts.map((item) => `scripts.${item.script}`))].join('・');
+      error(`package.json がありません。${commands} の script を確かめられません`, `loomake.config.json の commands をこのプロジェクトで使うコマンドに書き換えるか、package.json を作って ${scripts} を書いてください`);
     }
   }
 
