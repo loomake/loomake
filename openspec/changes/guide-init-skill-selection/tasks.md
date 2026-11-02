@@ -7,4 +7,4 @@
 
 ## 3. 記録と完了
 - [x] 3.1 kit patch changesetをcommitし、日別worklogへ判断と結果を短く追記する。
-- [ ] 3.2 通常のlocal完了ゲートでlint・型・全試験・要件対応と全taskを確認する。最終受入は別担当確認・新独立Opus・必須CI・3OSと直前head照合で行う。 <!-- loomake:gate=done -->
+- [x] 3.2 通常のlocal完了ゲートでlint・型・全試験・要件対応と全taskを確認する。最終受入は別担当確認・新独立Opus・必須CI・3OSと直前head照合で行う。 <!-- loomake:gate=done -->
