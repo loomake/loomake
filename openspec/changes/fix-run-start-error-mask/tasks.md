@@ -11,7 +11,7 @@
 
 ## 3. 完了ゲート
 
-- [ ] 3.1 通常localdoneを全品質込みで実行し、実tasks入力・JSON・exitを保存する。成功後だけ完了を確定する（REQ-154）。 <!-- loomake:gate=done -->
+- [x] 3.1 通常localdoneを全品質込みで実行し、実tasks入力・JSON・exitを保存する。成功後だけ完了を確定する（REQ-154）。 <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
