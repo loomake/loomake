@@ -12,6 +12,6 @@
 ## 3. 受入
 
 - [x] 3.1 既存試験/期待値/期限/設定不変・公開exports/依存不変と全差分約300行を確認し記録する。超過時は受入を削らず設計へ戻る
-- [ ] 3.2 全体品質を含む通常local doneの終了0を確認し記録する（REQ-388） <!-- loomake:gate=done -->
+- [x] 3.2 全体品質を含む通常local doneの終了0を確認し記録する（REQ-388） <!-- loomake:gate=done -->
 
 最終受入は同じheadのCI gateがscope ci・completed・errors空・verdict PASS・要判断なし・終了0で、必須5チェック・3OS・別担当自己レビューと独立Opus重大0を満たすこと。軽微はIssueへ記録し、未実施を合格としない。
