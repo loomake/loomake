@@ -30,6 +30,26 @@ function snapshot(root: string): Record<string, string> {
 }
 
 describe('品質コマンドと診断範囲', () => {
+  it.each([
+    { commands: { test: 'npm test' }, commandNames: 'commands.test', scriptNames: 'scripts.test' },
+    { commands: { lint: 'npm run lint', typecheck: 'pnpm run typecheck', test: 'npm test' }, commandNames: 'commands.lint・commands.typecheck・commands.test', scriptNames: 'scripts.lint・scripts.typecheck・scripts.test' },
+    { commands: { test: 'pnpm run check' }, commandNames: 'commands.test', scriptNames: 'scripts.check' },
+  ])('[REQ-184] package.json不在時に$commandNamesと$scriptNamesの用意を1件にまとめる', ({ commands, commandNames, scriptNames }) => fixture((root, bin) => {
+    writeFileSync(join(root, 'loomake.config.json'), JSON.stringify({ openspecValidate: false, commands }));
+    rmSync(join(root, 'package.json'));
+    const result = run(root, bin);
+    expect(result.code).toBe(1); expect(result.text).toContain('問題 1 件');
+    expect(result.text).toContain(`✖ package.json がありません。${commandNames} の script を確かめられません`);
+    expect(result.text).toContain(`loomake.config.json の commands をこのプロジェクトで使うコマンドに書き換えるか、package.json を作って ${scriptNames} を書いてください`);
+    expect(result.text).not.toContain('形式・容量・読み取り権限');
+  }));
+  it('[REQ-184] package.jsonのJSON不正では旧形式エラーと直し方を維持する', () => fixture((root, bin) => {
+    writeFileSync(join(root, 'package.json'), '{');
+    const result = run(root, bin);
+    expect(result.code).toBe(1); expect(result.text).toContain('問題 1 件');
+    expect(result.text).toContain('package.json を確認できません：package.json のJSON形式が不正です');
+    expect(result.text).toContain('package.json の形式・容量・読み取り権限を確認してください');
+  }));
   it.each(['npm test', 'npm run test', 'pnpm test', 'pnpm run test'])('[REQ-184] %sのscript欠落を検出する', (command) => fixture((root, bin) => {
     config(root, command); writeFileSync(join(root, 'package.json'), JSON.stringify({ scripts: { lint: 'x', typecheck: 'x' } }));
     const result = run(root, bin); expect(result.code).toBe(1); expect(result.text).toContain('scripts.test'); expect(result.text).toContain('空でない文字列');
