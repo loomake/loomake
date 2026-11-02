@@ -10,7 +10,7 @@
 |---|---|---|---|---|
 | 1/7 | [#285](https://github.com/loomake/loomake/issues/285) | 通常開発 | 1 | [Draft PR #299](https://github.com/loomake/loomake/pull/299)。この環境のlocal項目完了、CI・独立レビュー待ち |
 | 未確定 | [#286](https://github.com/loomake/loomake/issues/286) | 通常開発 | 未実施 | この表では実績未取得 |
-| 3/7 | [#282](https://github.com/loomake/loomake/issues/282) | 通常開発 | 1 | 項目1の関連120試験成功。#299受入後に実装、全件・CI・独立レビューは未実施 |
+| 3/7 | [#282](https://github.com/loomake/loomake/issues/282) | 通常開発 | 1 | 項目1のlocaldone終了0・全体2765成功、CI・独立レビューは未実施 |
 | 未確定 | [#278](https://github.com/loomake/loomake/issues/278) | 通常開発 | 未実施 | この表では実績未取得 |
 | 未確定 | [#277](https://github.com/loomake/loomake/issues/277) | 通常開発 | 未実施 | この表では実績未取得 |
 | 未確定 | [#209](https://github.com/loomake/loomake/issues/209) | 難しいバグ | 未実施 | 最初の組から変更。この表では実績未取得 |
@@ -49,5 +49,5 @@
 | 記録項目 | 現在の値と未取得の範囲 |
 |---|---|
 | 人の操作・判断／返答待ち・主工程全セッション／費用 | 未測定。旧担当の時間や費用を推定しない |
-| 実装／CI／独立レビュー／マージ／14日観測 | 実装進行中。ほかは未実施、観測は未開始 |
+| 実装／CI／独立レビュー／マージ／14日観測 | localdone終了0・21検査PASS・全体2765成功/0失敗/既存保留8。時間は旧担当分を含め未測定、ほかは未実施・観測未開始 |
 | Opusレビュー起動／正常終了／往復／指摘 | いずれも未実施。試験のREDをレビュー指摘に数えない |
