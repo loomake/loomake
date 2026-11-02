@@ -1,13 +1,14 @@
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { beforeAll, describe, expect, expectTypeOf, it } from 'vitest';
+import { DOCUMENT_LIMITS } from '../packages/kit/src/runtime/input.js';
 import { sha256Hex } from '../packages/kit/src/verify/hash.js';
 import { checkAnchoredC001Record, checkAnchoredInitialBaseline } from '../packages/kit/src/verify/trusted/anchored-baseline.js';
 import { checkInitialBaselineStructure } from '../packages/kit/src/verify/trusted/baseline.js';
 import { checkBaselineRecord } from '../packages/kit/src/verify/trusted/baseline-record.js';
 import type { ApprovedBaseline } from '../packages/kit/src/verify/trusted/baseline-types.js';
 import { C001_INITIAL_BASELINE_PIN as pin, C001_VERIFICATION_FILE } from '../packages/kit/src/verify/trusted/c001-baseline.js';
-import { readGitDocuments, type GitDocument } from '../packages/kit/src/verify/trusted/git-objects.js';
+import type { GitDocument } from '../packages/kit/src/verify/trusted/git-objects.js';
 import { ORIGINAL_C001_SNAPSHOT_DIR, verifyOriginalSnapshot } from '../packages/kit/src/verify/trusted/original-snapshot.js';
 import { reconstructOriginalContracts } from '../packages/kit/src/verify/trusted/original-contracts.js';
 
@@ -17,13 +18,43 @@ const { parseDocument } = createRequire(new URL('../packages/kit/package.json', 
 let raw: GitDocument[], text: string, baseline: ApprovedBaseline;
 let context: Parameters<typeof checkInitialBaselineStructure>[1];
 beforeAll(() => {
-  const head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-  const read = (file: string) => readGitDocuments(process.cwd(), head, file);
-  raw = read(ORIGINAL_C001_SNAPSHOT_DIR);
+  const git = (args: string[], input?: string) => execFileSync('git', ['--no-replace-objects', '--literal-pathspecs', ...args],
+    { input, stdio: ['pipe', 'pipe', 'pipe'], maxBuffer: DOCUMENT_LIMITS.maxTotalBytes });
+  const decode = (bytes: Buffer) => new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
+  const head = decode(git(['rev-parse', 'HEAD'])).trim(); expect(head).toMatch(/^[a-f0-9]{40}$/);
+  const record = decode(git(['cat-file', 'blob', `${head}:${C001_VERIFICATION_FILE}`]));
+  baseline = parseDocument(record).toJS({ maxAliasCount: 100 }).expected_spec;
+  const owners = [...new Set(baseline.rows.flatMap(row => row.owners.map(owner => owner.file)))];
+  const paths = [ORIGINAL_C001_SNAPSHOT_DIR, C001_VERIFICATION_FILE, ...owners];
+  const listing = decode(git(['ls-tree', '-rz', '--full-tree', head, '--', ...paths]));
+  expect(listing.endsWith('\0')).toBe(true);
+  const rows = listing.slice(0, -1).split('\0').map(row => {
+    const match = /^(100644|100755) blob ([a-f0-9]{40})\t(.+)$/.exec(row); expect(match).not.toBeNull();
+    const [, mode, oid, file] = match!;
+    expect(paths.some(path => file === path || file.startsWith(`${path}/`))).toBe(true);
+    expect(file.split('/').length - 1).toBeLessThanOrEqual(DOCUMENT_LIMITS.maxDepth);
+    return { file, oid, mode: mode as GitDocument['mode'] };
+  });
+  expect(rows.length).toBeLessThanOrEqual(DOCUMENT_LIMITS.maxEntries);
+  expect(new Set(rows.map(row => row.file)).size).toBe(rows.length);
+  const output = git(['cat-file', '--batch'], rows.map(row => row.oid).join('\n') + '\n');
+  let offset = 0, total = 0;
+  const documents = rows.map(row => {
+    const newline = output.indexOf(10, offset); expect(newline).toBeGreaterThanOrEqual(offset);
+    const header = /^([a-f0-9]{40}) blob (\d+)$/.exec(output.subarray(offset, newline).toString('ascii'));
+    expect(header).not.toBeNull(); expect(header![1]).toBe(row.oid);
+    const size = Number(header![2]), start = newline + 1, end = start + size;
+    expect(Number.isSafeInteger(size)).toBe(true); expect(size).toBeLessThanOrEqual(DOCUMENT_LIMITS.maxFileBytes);
+    total += size; expect(total).toBeLessThanOrEqual(DOCUMENT_LIMITS.maxTotalBytes);
+    expect(end).toBeLessThan(output.length); expect(output[end]).toBe(10); offset = end + 1;
+    return { ...row, text: decode(output.subarray(start, end)) };
+  });
+  expect(offset).toBe(output.length);
+  const find = (file: string) => { const value = documents.find(document => document.file === file); expect(value).toBeDefined(); return value!; };
+  raw = documents.filter(document => document.file.startsWith(`${ORIGINAL_C001_SNAPSHOT_DIR}/`));
   const original = verifyOriginalSnapshot(raw, sha256Hex); expect(original.problems).toEqual([]);
-  text = read(C001_VERIFICATION_FILE)[0].text;
-  baseline = parseDocument(text).toJS({ maxAliasCount: 100 }).expected_spec;
-  const anchor = [...new Set(baseline.rows.flatMap(row => row.owners.map(owner => owner.file)))].map(file => ({ file, text: read(file)[0].text }));
+  text = find(C001_VERIFICATION_FILE).text; expect(text).toBe(record);
+  const anchor = owners.map(file => ({ file, text: find(file).text }));
   context = { original: original.documents!, anchor, sha256Hex };
 });
 const rejected = (result: ReturnType<typeof checkAnchoredInitialBaseline>) => {
