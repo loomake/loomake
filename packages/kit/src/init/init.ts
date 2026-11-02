@@ -232,6 +232,7 @@ export async function runInit(options: InitOptions): Promise<number> {
   if (!existsSync(join(root, 'openspec'))) {
     stdout('\nopenspec/ がありません。OpenSpec の仕様と change を置くために、openspec init を実行してください。');
   }
+  stdout('\n要件書から change を作るときは req-to-openspec、作成済み change の調査・更新・実装・archive には OpenSpec が配置する openspec-* の Skill を使ってください。');
   stdout(`\n${reportExamples(root).join('\n')}`);
 
   // scripts にない品質コマンドは commands に書かなかったので、足すときの手順を示す（REQ-196）
