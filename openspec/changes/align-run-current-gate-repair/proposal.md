@@ -6,7 +6,7 @@ Issue [#259](https://github.com/loomake/loomake/issues/259) の REQ-100 は、�
 
 ## What Changes
 
-- REQ-100 の本文を、Source 込み485文字の Tc に整合する。既存の全5 Scenario と `Source: REQ-100` はそのまま残す。
+- REQ-100 の本文を、Source 込み493文字の Tc に整合する。既存の全5 Scenario と `Source: REQ-100` はそのまま残す。
 - 新しい停止規則・製品コード・試験・設定は追加しない。既存の実 run 回帰を、対応表に従って実行する計画にする。
 - #259 は2子に分けたまま未完とする。REQ-340 と第6 Scenario を持つ T の子は、E3 最終統合 F の前に正式 change で確定する義務を残す。
 
