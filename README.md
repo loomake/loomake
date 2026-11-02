@@ -23,7 +23,7 @@ npx loomake trace report --change <id>            # リリースレポートを�
 
 `npx loomake --help` でコマンドの一覧を、`npx loomake <コマンド> --help` でそれぞれの使い方を表示する。
 
-`loomake` はまだ npm に公開していない。英語の概要は [README.en.md](README.en.md) にある。
+`loomake` はまだ npm に公開していない。今の導入方法は [未公開の tarball から導入する](docs/guide/1.getting-started/3.unpublished-install.md) を参照する。英語の概要は [README.en.md](README.en.md) にある。
 
 ## ドキュメント
 
