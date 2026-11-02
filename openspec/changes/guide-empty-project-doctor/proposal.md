@@ -20,7 +20,4 @@
 
 ## Impact
 
-- capability: doctor（REQ-184）、init（REQ-024）。どちらも MODIFIED のみ。
-- 製品コード: `packages/kit/src/doctor/doctor.ts`、`packages/kit/src/init/init.ts`。
-- テスト: `packages/cli/test/doctor.test.ts`、`packages/cli/test/init.test.ts` と init → doctor の統合テスト。
-- 段階: L3。製品コードの実装は #285 の PR のマージ後に始める。
+capability は doctor（REQ-184）と init（REQ-024）の MODIFIED のみ。製品コードは `packages/kit/src/doctor/doctor.ts` と `packages/kit/src/init/init.ts`、試験は `packages/cli/test/doctor.test.ts`・`packages/cli/test/init.test.ts` と init → doctor の統合テスト。段階は L3 で、実装は #285 の PR のマージ後に始める。
