@@ -25,7 +25,7 @@
 REQ-391の全5 Scenarioと全sourceを照合する。既存parser・exports・依存・原文保存経路・入力/prototypeを保持し、真正性・鮮度・適格性・合否を保証しない。TEST/PINと設定を変更しない。
 
 ## Scope budget
-計画実数114行、parser/型60・既存export等4・全正負試験68・fixture20・consumer4・changeset/記録13の配分で計283行を見込む。src/test未作成で実数成立は未認定。超過時は正負条件を削らず管理役へ戻す。
+計画実数118行、実装・試験・fixture・consumer・changeset等139行、記録12行でarchive前269行。主仕様への同期26行込み295行を見込む。条件を削らず、実数が超過するときは管理役へ戻す。
 
 ## Risks / Trade-offs
 自己申告を保証へ読み替える危険があるため、入力にない値を補わず、取得・結付け・適格性は後続へ明示して残す。
