@@ -45,7 +45,7 @@ function checkShape(report: unknown): string | null {
 }
 
 // JSON.parse のエラーメッセージにある位置から、行番号を求める
-function errorLine(text: string, message: string): number {
+export function errorLine(text: string, message: string): number {
   const line = message.match(/line (\d+)/);
   if (line) return Number(line[1]);
   const pos = message.match(/position (\d+)/);
