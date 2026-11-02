@@ -12,7 +12,7 @@
 
 ## 3. 完了ゲート
 
-- [ ] 3.1 `pnpm -s verify --change align-run-current-gate-repair --done --scope local` を通す。実行時のtasks入力・実exit・品質結果を保存し、成功後だけ完了として確定する（REQ-100）。 <!-- loomake:gate=done -->
+- [x] 3.1 `pnpm -s verify --change align-run-current-gate-repair --done --scope local` を通す。実行時のtasks入力・実exit・品質結果を保存し、成功後だけ完了として確定する（REQ-100）。 <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
