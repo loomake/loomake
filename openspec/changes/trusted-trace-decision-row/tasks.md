@@ -11,6 +11,6 @@ Q-ROW-01の本人回答Aを反映し、仕様ゲート成功後に最小5aだけ
 
 ## 3. 全体確認
 - [x] 3.1 保持表、既存trusted試験、全差分300行目安と作業記録を確認する（REQ-390）
-- [ ] 3.2 `pnpm -s verify --change trusted-trace-decision-row --done --scope local` の実exit0を確認する（REQ-390） <!-- loomake:gate=done -->
+- [x] 3.2 `pnpm -s verify --change trusted-trace-decision-row --done --scope local` の実exit0を確認する（REQ-390） <!-- loomake:gate=done -->
 
 最終受入はCI done・必須5チェック・必要3OS・独立Opus最終レビューで別に確認する。子の受入を親/S1の完成に数えない。
