@@ -7,7 +7,7 @@ import { reconstructOriginalScope } from './original-cross-conditions.js';
 import { buildMainSpecManifest, buildSpecManifest } from './spec-manifest.js';
 
 type Document = { file: string; text: string };
-type OwnerBlock = { file: string; change: string | null; name: string; block: string; scenarios: string[] };
+type OwnerBlock = { file: string; logical: string; sources: string[]; change: string | null; name: string; block: string; scenarios: string[] };
 type Hash = (text: string) => string;
 const same = (a: unknown, b: unknown) => canonicalJson(a) === canonicalJson(b);
 const identity = (ref: TestRef) => canonicalJson([ref.file, ref.name]);
@@ -16,7 +16,7 @@ const adoptionIdentity = (ref: AdoptionRef) => canonicalJson('trace' in ref
   : 'comment' in ref ? ['comment', ref.comment.pr, ref.comment.id] : ['prBody', ref.prBody.pr, ref.prBody.line]);
 const unique = (values: string[]) => new Set(values).size === values.length;
 
-function ownerBlock(owner: BaselineOwner, text: string, hash: Hash): OwnerBlock | null {
+export function ownerBlock(owner: BaselineOwner, text: string, hash: Hash): OwnerBlock | null {
   const { file, kind, change } = owner;
   let logical = file, name = change;
   if (kind === 'main-unchanged') {
@@ -48,7 +48,7 @@ function ownerBlock(owner: BaselineOwner, text: string, hash: Hash): OwnerBlock 
     else if (/^#### Scenario:/.test(lines[i])) scenarios.push(lines[i].slice('#### Scenario:'.length).trim());
   }
   if (scenarios.length !== block.scenarios || !unique(scenarios) || scenarios.some((scenario) => !scenario)) return null;
-  return { file, change: name ?? null, name: block.name, block: `sha256:${block.sha256}`, scenarios };
+  return { file, logical, sources: block.sources, change: name ?? null, name: block.name, block: `sha256:${block.sha256}`, scenarios };
 }
 
 function freeze<T>(value: T): T {

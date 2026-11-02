@@ -104,6 +104,26 @@ const git = (repository: string, ...args: string[]) => execFileSync('git', ['--n
 let head: string;
 beforeAll(() => { head = git(root, 'rev-parse', 'HEAD').toString('utf8').trim(); });
 const blob = (repository: string, ref: string, file: string) => git(repository, 'cat-file', 'blob', `${ref}:${prefix}/${file}`);
+function readOriginalBlobs(repository: string, ref: string): { data: Buffer; oid: string }[] {
+  const input = documents.map(document => `${ref}:${prefix}/${document.file}`).join('\n') + '\n';
+  const output = execFileSync('git', ['--no-replace-objects', '--literal-pathspecs', '-C', repository, 'cat-file', '--batch'],
+    { input, stdio: ['pipe', 'pipe', 'pipe'], maxBuffer: 512 * 1024 });
+  let offset = 0;
+  const result = documents.map(() => {
+    const newline = output.indexOf(10, offset);
+    expect(newline).toBeGreaterThanOrEqual(offset);
+    const header = /^([a-f0-9]{40}) blob (\d+)$/.exec(output.subarray(offset, newline).toString('ascii'));
+    expect(header).not.toBeNull();
+    const size = Number(header![2]), start = newline + 1, end = start + size;
+    expect(Number.isSafeInteger(size)).toBe(true);
+    expect(end).toBeLessThan(output.length);
+    expect(output[end]).toBe(10);
+    offset = end + 1;
+    return { data: output.subarray(start, end), oid: header![1] };
+  });
+  expect(offset).toBe(output.length);
+  return result;
+}
 const newRoot = () => { const result = mkdtempSync(join(tmpdir(), 'loomake-c001-original-')); temporaryRoots.push(result); return result; };
 const fixture = () => {
   const repository = newRoot();
@@ -114,19 +134,21 @@ const fixture = () => {
   git(repository, 'config', 'core.autocrlf', 'false');
   const hooks = join(repository, '.empty-hooks'); mkdirSync(hooks);
   git(repository, 'config', 'core.hooksPath', hooks);
-  for (const document of documents) {
+  const originals = readOriginalBlobs(root, head);
+  for (const [index, document] of documents.entries()) {
     const file = join(repository, prefix, document.file); mkdirSync(dirname(file), { recursive: true });
-    writeFileSync(file, blob(root, head, document.file));
+    writeFileSync(file, originals[index].data);
   }
   git(repository, 'add', '--', prefix); git(repository, 'commit', '-qm', 'original documents');
   return { repository, ref: git(repository, 'rev-parse', 'HEAD').toString('utf8').trim() };
 };
 const expectOriginal = (repository: string, ref: string) => {
-  for (const document of documents) {
-    const data = blob(repository, ref, document.file);
+  const originals = readOriginalBlobs(repository, ref);
+  for (const [index, document] of documents.entries()) {
+    const { data, oid } = originals[index];
     expect(data.length).toBe(document.bytes);
     expect(createHash('sha256').update(data).digest('hex')).toBe(document.sha256);
-    expect(git(repository, 'rev-parse', `${ref}:${prefix}/${document.file}`).toString('utf8').trim()).toBe(document.blob);
+    expect(oid).toBe(document.blob);
   }
 };
 

@@ -240,6 +240,35 @@ describe('devcontainer の配置', () => {
 });
 
 describe('OpenSpec 初期化の案内', () => {
+  const guidance = '要件書から change を作るときは req-to-openspec、作成済み change の調査・更新・実装・archive には OpenSpec が配置する openspec-* の Skill を使ってください。';
+
+  it.each([
+    { codex: false, openspec: false, decline: false }, { codex: true, openspec: false, decline: false },
+    { codex: false, openspec: true, decline: false }, { codex: true, openspec: true, decline: false },
+    { codex: false, openspec: false, decline: true },
+  ])('[REQ-023] 成功時に使い分けを1回だけ案内し既存の配置とcommandsを保つ %j', async ({ codex, openspec, decline }) => {
+    const files: Record<string, string> = {};
+    if (openspec) files['openspec/project.md'] = '# project\n';
+    if (decline) files['AGENTS.md'] = MINE;
+    const r = await runInit(codex ? ['--codex'] : [], { files, ...(decline ? { answers: ['n'] } : {}) });
+    expect(r.code).toBe(0);
+    expect(r.stdout.split('\n').filter((line) => line === guidance)).toHaveLength(1);
+    expect(r.stdout.indexOf(guidance)).toBeLessThan(r.stdout.indexOf('loomake を開発用の依存に足してください'));
+    expect(config(r).commands).toEqual({ lint: 'npm run lint', typecheck: 'npm run typecheck', test: 'npm test' });
+    expect(Object.keys(r.files).some((path) => path.includes('/skills/openspec-'))).toBe(false);
+    expect(r.files['AGENTS.md']).toBe(decline ? MINE : template('AGENTS.md'));
+    if (openspec) expect(r.stdout).not.toContain('openspec init');
+  });
+
+  it.each(['conflict', 'unsafe', 'usage'] as const)('[REQ-023] 中止と使い方の誤りでは使い分けを案内しない %s', async (kind) => {
+    const r = kind === 'conflict' ? await runInit([], { files: { 'AGENTS.md': MINE } })
+      : kind === 'unsafe' ? await runInit([], { setup: (root) => symlinkSync(tmpdir(), join(root, '.claude'), 'dir') })
+        : await runInit(['--force']);
+    expect(r.code).toBe(kind === 'usage' ? 2 : 1);
+    expect(r.stdout).not.toContain(guidance);
+    expect(r.files['loomake.config.json']).toBeUndefined();
+  });
+
   it('[REQ-023] openspec/ が無ければ、openspec init の実行を案内する', async () => {
     const r = await runInit();
     expect(r.stdout).toContain('openspec init を実行してください');
@@ -281,11 +310,13 @@ describe('package.json がないときの案内', () => {
     const r = await runInit();
     expect(config(r).commands).toEqual({ lint: 'npm run lint', typecheck: 'npm run typecheck', test: 'npm test' });
     expect(r.stdout).toContain('package.json がありません。loomake.config.json の commands');
+    expect(r.stdout).toContain('書き換えるまで、loomake doctor は test の script を確かめられず問題として出します');
   });
 
   it('[REQ-024] package.json があれば、commands の書き換えを案内しない', async () => {
     const r = await runInit([], { files: { 'package.json': '{}' } });
     expect(r.stdout).not.toContain('package.json がありません');
+    expect(r.stdout).not.toContain('書き換えるまで、loomake doctor');
   });
 });
 

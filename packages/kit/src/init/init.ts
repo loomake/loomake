@@ -232,6 +232,7 @@ export async function runInit(options: InitOptions): Promise<number> {
   if (!existsSync(join(root, 'openspec'))) {
     stdout('\nopenspec/ がありません。OpenSpec の仕様と change を置くために、openspec init を実行してください。');
   }
+  stdout('\n要件書から change を作るときは req-to-openspec、作成済み change の調査・更新・実装・archive には OpenSpec が配置する openspec-* の Skill を使ってください。');
   stdout(`\n${reportExamples(root).join('\n')}`);
 
   // scripts にない品質コマンドは commands に書かなかったので、足すときの手順を示す（REQ-196）
@@ -244,7 +245,7 @@ export async function runInit(options: InitOptions): Promise<number> {
 
   // package.json がなければ commands は npm の既定値のままなので、書き換えを促す
   if (!existsSync(join(root, 'package.json'))) {
-    stdout('\npackage.json がありません。loomake.config.json の commands（lint・typecheck・test）を、このプロジェクトで使うコマンドに書き換えてください。');
+    stdout('\npackage.json がありません。loomake.config.json の commands（lint・typecheck・test）を、このプロジェクトで使うコマンドに書き換えてください。書き換えるまで、loomake doctor は test の script を確かめられず問題として出します。');
   }
   // 検査に使う版を固定するため、プロジェクトに入れるよう促す。package.json は書き換えない
   if (!hasLoomake(root)) {
