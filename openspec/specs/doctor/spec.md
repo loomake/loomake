@@ -55,7 +55,7 @@ Source: REQ-134
 - **THEN** claude と gh が注意として表示され、終了コードは 0 である
 
 ### Requirement: 品質scriptの静的な確認
-単純なnpm run・run-scriptとnpm test、pnpm run・run-scriptとpnpm test・lint・typecheckの呼び出しは、ルートのpackage.jsonを予算つきで読み、scriptsに対象の空でない文字列があるか確認する SHALL。ない場合やpackage.jsonの形が不正な場合は問題とし、対象と直し方を示す SHALL。scriptの本文は実行しない MUST。scriptがある場合も、本文の成功や引数の正しさを保証しない SHALL。runの後のscript名は通常の英数字・ハイフン・アンダースコア・ドット・コロンに限り、正規表現の指定やオプションで対象が変わる呼び出しは未対応として扱う SHALL。npm run envの組み込み処理とYarnのrun-script表記も、scriptを推測せず未対応とする SHALL。
+次を満たす SHALL。単純なnpmのrun・run-script・testとpnpmのrun・run-script・test・lint・typecheckは、ルートpackage.jsonを予算内で読み、scriptsの対象が空でない文字列か確認し、不一致なら対象と直し方を問題にする。scriptは実行しない MUST。存在しても本文の成功・引数の正しさを保証しない。run後の名は英数字・-_.:に限り、正規表現・対象変更オプション・npm run env組込み・Yarn run-scriptを推測せず未対応とする。package.json不在は該当commands/script名だけで問題1件とし、loomake.config.jsonのcommandsを本プロジェクトのコマンドへ直すか、package.jsonと対象scriptsを作る両案を示す。既存package.jsonの読取不可・形式/容量不正は原因を問題とし「package.json を確認できません」、案内「package.json の形式・容量・読み取り権限を確認してください」を示す。
 
 Source: REQ-184
 
@@ -66,6 +66,26 @@ Source: REQ-184
 #### Scenario: scriptの本文がある
 - **WHEN** 単純な呼び出しに対応する空でないscriptがある
 - **THEN** 存在を合格とし、品質コマンドを実行しない
+
+#### Scenario: package.json がない
+- **WHEN** commands.test が `npm test` で、実行ファイルは見つかるがルートに package.json がなく、ほかの診断項目は整っている
+- **THEN** 「package.json がありません。commands.test の script を確かめられません」を問題として 1 件だけ表示し、「loomake.config.json の commands をこのプロジェクトで使うコマンドに書き換えるか、package.json を作って scripts.test を書いてください」と案内し、終了コードは 1 である
+
+#### Scenario: 複数の commands に対応する package.json がない
+- **WHEN** commands.lint が `npm run lint`、commands.typecheck が `pnpm run typecheck`、commands.test が `npm test` で、実行ファイルはすべて見つかるがルートに package.json がなく、ほかの診断項目は整っている
+- **THEN** commands.lint・commands.typecheck・commands.test の script を確かめられないことを問題として 1 件だけ表示し、commands の書き換えか、package.json と scripts.lint・scripts.typecheck・scripts.test の用意を案内し、終了コードは 1 である
+
+#### Scenario: commands の名前と script の名前が異なる
+- **WHEN** commands.test が `pnpm run check` で、実行ファイルは見つかるがルートに package.json がなく、ほかの診断項目は整っている
+- **THEN** commands.test の script を確かめられないことを問題として 1 件だけ表示し、commands の書き換えか、package.json と scripts.check の用意を案内し、終了コードは 1 である
+
+#### Scenario: package.json の JSON が不正
+- **WHEN** commands.test が `npm test` で、実行ファイルは見つかるが package.json の JSON が不正で、ほかの診断項目は整っている
+- **THEN** 「package.json を確認できません」と原因を問題として 1 件だけ表示し、「package.json の形式・容量・読み取り権限を確認してください」と案内し、終了コードは 1 である
+
+#### Scenario: 空のプロジェクトで init のあと doctor を実行する
+- **WHEN** git init 済みで npm があり、openspec/ と package.json がない新しいディレクトリで `loomake init` のあとに `loomake doctor` を実行する
+- **THEN** doctor の問題は「openspec/ がありません」と、package.json がなく commands.lint・commands.typecheck・commands.test の script を確かめられないことの 2 件であり、それぞれ直し方を表示し、終了コードは 1 である
 
 ### Requirement: 解釈範囲と未確認の表示
 doctorは単純な引用付きの先頭実行ファイルを扱い、連結・リダイレクト・変数展開・コマンド置換などのシェル構文は推測で解釈しない SHALL。未対応の構文は注意とし、実行ファイル不存在の問題にしない SHALL。Yarnはscriptが存在すれば確認するが、存在しない場合はバイナリやworkspaceの解決があり得るため、script欠落の問題と断定せず注意にする SHALL。出力には静的な確認範囲と、品質コマンドの成功・レポート生成・認証・ネットワーク接続が未確認であることを表示する SHALL。
