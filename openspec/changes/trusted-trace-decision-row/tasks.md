@@ -7,7 +7,7 @@ Q-ROW-01の本人回答Aを反映し、仕様ゲート成功後に最小5aだけ
 
 ## 2. 実装と試験
 - [x] 2.1 新規T-ROW-01〜06を先に書き、ID完全一致・重複・空回答/承認・記録値保持・凍結のREDを保存する。Q回答による追加Scenarioも含める（REQ-390）
-- [ ] 2.2 私的部品を実装して新規試験をGREENにし、常時false・既存parser/exports/依存不変を確認、kit patch changesetを付ける（REQ-390）
+- [x] 2.2 私的部品を実装して新規試験をGREENにし、常時false・既存parser/exports/依存不変を確認、kit patch changesetを付ける（REQ-390）
 
 ## 3. 全体確認
 - [ ] 3.1 保持表、既存trusted試験、全差分300行目安と作業記録を確認する（REQ-390）
