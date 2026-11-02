@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { classifyCall, summarizeExternalCalls, preparePublicDiagnostics, publicDiagnosticsProblem, exportExternalDiagnostics } from '../scripts/external-call-diagnostics.mjs';
 
-const row = (extra: Record<string, unknown> = {}) => ({ event: 'call', callId: '1-1', pid: 1, op: 'gh-pr-list', mode: 'normal',
+const row = (extra: Record<string, unknown> = {}) => ({ event: 'call', callId: '1-1', pid: 1, op: 'gh-pr-list', mode: 'normal', timeoutRequested: false,
   t0: 100, t1: 101, R: 5000, Rclamped: false, hw0: 10, hw1: 10, tx: 2200,
   spawned: true, spawnCount: 1, result: 'threw', limitKind: 'timeout', reasonPresent: false,
   internalTimeoutMs: null, timeoutIntervalMs: [1998, 2000],
@@ -142,4 +142,250 @@ describe('外部操作診断の分類と欠損', () => {
     } finally { rmSync(dir, { recursive: true, force: true }); }
   });
 
+});
+
+
+describe('外部操作の中断と時計窓の補正', () => {
+  it.each([false, true])('先行欠損の後の起動前中断を自call欠損と分ける reason=%s', (reasonPresent) => {
+    const summary = summarizeExternalCalls([
+      row({ callId: '1-1', limitKind: 'interrupted', reasonPresent: true }),
+      row({ callId: '1-2', spawned: false, spawn: null, spawnCount: 0, limitKind: 'interrupted', reasonPresent }),
+    ], report);
+    expect(summary.calls.map((call: { classification: string }) => call.classification)).toEqual(['missing-result', 'pre-spawn-interrupted']);
+  });
+  it('spawn不明や複数spawnの中断を自callの結果欠損と断定しない', () => {
+    const unknown = classifyCall(row({ spawned: null, limitKind: 'interrupted', reasonPresent: true }));
+    expect(unknown.classification).toBe('undetermined');
+    expect(unknown.reasons).toContain('spawn-state-unavailable');
+    const multiple = classifyCall(row({ spawnCount: 2, limitKind: 'interrupted', reasonPresent: true }));
+    expect(multiple.classification).toBe('undetermined');
+    expect(multiple.reasons).toContain('spawn-count-mismatch');
+  });
+  it.each([
+    [5097.5, 'normal', false, 'shared-deadline', true, undefined],
+    [5089, 'normal', false, 'shared-deadline', true, undefined],
+    [5088.999, 'normal', false, 'operation-limit', false, undefined],
+    [5088.999, 'untilDeadline', false, 'undetermined', false, 'deadline-before-shared-interval'],
+    [5088.999, 'quality', true, 'undetermined', false, 'requested-timeout-possible'],
+    [5088.999, 'normal', true, 'undetermined', false, 'requested-timeout-possible'],
+    [5088.999, 'normal', undefined, 'undetermined', false, 'timeout-option-unavailable'],
+    [5097.5, 'untilDeadline', false, 'shared-deadline', false, undefined],
+    [5097.5, 'quality', true, 'shared-deadline', true, undefined],
+    [5097.5, 'normal', undefined, 'shared-deadline', true, undefined],
+    [5102, 'normal', false, 'shared-deadline', true, undefined],
+    [5102.001, 'normal', false, 'undetermined', false, 'deadline-after-shared-interval'],
+  ] as const)('未観測遅延を含むD=%s mode=%s timeout=%sを区別する', (D, mode, timeoutRequested, classification, coincidentOperationPossible, reason) => {
+    const actual = classifyCall(row({ mode, timeoutRequested, spawn: { ts: 111, D, outcomeKind: 'timeout', invalid: false } }));
+    expect(actual).toMatchObject({ classification, coincidentOperationPossible, sharedDeadlineIntervalMs: [5100, 5101] });
+    if (reason) expect(actual.reasons).toContain(reason);
+    else expect(actual.reasons).toEqual([]);
+  });
+  it('保持役待ちを未観測遅延から引き、十分離れた実1操作上限を保持する', () => {
+    expect(classifyCall(row({ hw1: 1010, spawn: { ts: 1111, D: 6000, outcomeKind: 'timeout', invalid: false } }))).toMatchObject({ classification: 'operation-limit' });
+    expect(classifyCall(row())).toMatchObject({ classification: 'operation-limit' });
+  });
+  it.each([
+    [null, 'spawn-start-unavailable'], [Infinity, 'spawn-start-unavailable'],
+    [{ valueOf: 0, toString: 0 }, 'spawn-start-unavailable'], [50, 'observation-order-invalid'],
+  ] as const)('spawn時計%sの欠測や逆転を未確定にする', (ts, reason) => {
+    const actual = classifyCall(row({ spawn: { ts, D: 5100, outcomeKind: 'timeout', invalid: false } }));
+    expect(actual.classification).toBe('undetermined'); expect(actual.reasons).toContain(reason);
+  });
+  it('mode不明なら遠いdeadlineも操作上限と断定しない', () => {
+    const actual = classifyCall(row({ mode: null }));
+    expect(actual.classification).toBe('undetermined'); expect(actual.reasons).toContain('mode-unavailable');
+  });
+  it('旧rawの明示timeout欠落はunknownへ投影し、版2と公開schemaで区別する', () => {
+    const legacy: Record<string, unknown> = row(); delete legacy.timeoutRequested;
+    const payload = preparePublicDiagnostics([legacy], report);
+    expect(payload.summary.version).toBe(2);
+    expect(payload.calls[0]).toMatchObject({ timeoutRequested: null, classification: 'undetermined' });
+    expect(payload.calls[0].reasons).toContain('timeout-option-unavailable');
+    expect(publicDiagnosticsProblem(payload)).toBeNull();
+    const oldVersion = structuredClone(payload); oldVersion.summary.version = 1;
+    expect(publicDiagnosticsProblem(oldVersion)).toBe('invalid-summary-schema');
+    for (const mutation of ['missing', 'string', 'unknown'] as const) {
+      const invalid = structuredClone(payload);
+      if (mutation === 'missing') delete invalid.calls[0].timeoutRequested;
+      else if (mutation === 'string') invalid.calls[0].timeoutRequested = 'private-value';
+      else invalid.calls[0].unknown = 'private-value';
+      expect(publicDiagnosticsProblem(invalid)).toBe('invalid-call-schema');
+    }
+  });
+  it('公開Markdownで同時上限の可能性と理由・欠損、別々の保存上限を示す', () => {
+    const payload = preparePublicDiagnostics([row({ R: null, spawn: null })], report);
+    expect(payload.markdown).toContain('| call | 操作 | mode | 判定 | 同時上限の可能性 |');
+    expect(payload.markdown).toContain('| 理由 | 欠損 |');
+    expect(payload.markdown).toContain('shared-deadline-unavailable');
+    const shared = { ts: 111, D: 5097.5, outcomeKind: 'timeout', invalid: false };
+    expect(preparePublicDiagnostics([row({ spawn: shared })], report).markdown).toContain('| yes |');
+    expect(preparePublicDiagnostics([row({ mode: 'untilDeadline', spawn: shared })], report).markdown).toContain('| no |');
+    expect(payload.markdown).toContain('64KiB'); expect(payload.markdown).toContain('1MiB');
+    expect(payload.markdown).toContain('256KiB'); expect(payload.markdown).toContain('2KiB');
+    expect(publicDiagnosticsProblem({ ...payload, markdown: payload.markdown + 'altered' })).toBe('markdown-mismatch');
+  });
+});
+
+describe('REQ-351 外部操作の停止の分類', () => {
+  it.each([false, true])('[REQ-351] 先行の結果欠損と後続の起動前中断をcallごとに分ける reason=%s', (reasonPresent) => {
+    const summary = summarizeExternalCalls([
+      row({ callId: 'first', limitKind: 'interrupted', reasonPresent: true }),
+      row({ callId: 'next', limitKind: 'interrupted', reasonPresent, spawned: false, spawnCount: 0, spawn: null }),
+    ], report);
+    expect(summary.calls.map((call: { classification: string }) => call.classification)).toEqual(['missing-result', 'pre-spawn-interrupted']);
+    expect(classifyCall(row({ spawned: false, spawnCount: 0, spawn: null, R: 0, Rclamped: true }))).toMatchObject({ classification: 'pre-spawn-timeout' });
+    expect(classifyCall(row({ spawned: false, spawnCount: 0, spawn: null, R: null }))).toMatchObject({ classification: 'pre-spawn-undetermined' });
+  });
+
+  it.each([
+    [5089, 'shared-deadline', true, []],
+    [5088.999, 'operation-limit', false, []],
+    [5102, 'shared-deadline', true, []],
+    [5102.001, 'undetermined', false, ['deadline-after-shared-interval']],
+  ] as const)('[REQ-351] 補正窓の両端と1ms許容差の境界D=%sを保持する', (D, classification, coincidentOperationPossible, reasons) => {
+    expect(classifyCall(row({ spawn: { ts: 111, D, outcomeKind: 'timeout', invalid: false } })))
+      .toMatchObject({ classification, coincidentOperationPossible, reasons, sharedDeadlineIntervalMs: [5100, 5101] });
+    expect(classifyCall(row({ hw1: 1010, spawn: { ts: 1111, D: D + 1000, outcomeKind: 'timeout', invalid: false } })))
+      .toMatchObject({ classification, coincidentOperationPossible, reasons, sharedDeadlineIntervalMs: [6100, 6101] });
+  });
+
+  it.each([
+    ['normal', null, true], ['untilDeadline', false, false], ['quality', true, true],
+  ] as const)('[REQ-351] 窓内ではmode=%s timeout=%sを共有期限とし同時上限の可能性を分ける', (mode, timeoutRequested, coincidentOperationPossible) => {
+    expect(classifyCall(row({ mode, timeoutRequested, spawn: { ts: 111, D: 5097.5, outcomeKind: 'timeout', invalid: false } })))
+      .toMatchObject({ classification: 'shared-deadline', coincidentOperationPossible, reasons: [] });
+  });
+
+  it.each([
+    ['normal', true, 'requested-timeout-possible'], ['normal', null, 'timeout-option-unavailable'], ['untilDeadline', false, 'deadline-before-shared-interval'],
+  ] as const)('[REQ-351] 窓より前のmode=%s timeout=%sを理由付き未確定にする', (mode, timeoutRequested, reason) => {
+    expect(classifyCall(row({ mode, timeoutRequested, spawn: { ts: 111, D: 5088.999, outcomeKind: 'timeout', invalid: false } })))
+      .toMatchObject({ classification: 'undetermined', coincidentOperationPossible: false, reasons: [reason] });
+  });
+
+  it.each([2101, 5097.5])('[REQ-351] mode不明なら窓の前でも内側でもD=%sを断定しない', (D) => {
+    expect(classifyCall(row({ mode: null, spawn: { ts: 111, D, outcomeKind: 'timeout', invalid: false } })))
+      .toMatchObject({ classification: 'undetermined', reasons: ['mode-unavailable'] });
+  });
+
+  it.each([
+    [null, 'spawn-start-unavailable'], [Infinity, 'spawn-start-unavailable'], [50, 'observation-order-invalid'],
+  ] as const)('[REQ-351] spawn時計%sの欠損と非有限値と逆転を理由付き未確定にする', (ts, reason) => {
+    expect(classifyCall(row({ spawn: { ts, D: 5100.5, outcomeKind: 'timeout', invalid: false } })))
+      .toMatchObject({ classification: 'undetermined', reasons: [reason] });
+  });
+
+  it('[REQ-351] gh pr createの窓内deadlineをcreate共有期限として区別する', () => {
+    expect(classifyCall(row({ op: 'gh-pr-create', spawn: { ts: 111, D: 5097.5, outcomeKind: 'timeout', invalid: false } })))
+      .toMatchObject({ classification: 'create-shared-deadline', reasons: [] });
+  });
+
+  it.each([
+    { R: null }, { t0: null }, { t1: NaN }, { hw1: 9 }, { spawnCount: 2 },
+    { spawn: { ts: 111, D: Infinity, outcomeKind: 'timeout', invalid: false } },
+    { spawn: { ts: 111, D: 5100.5, outcomeKind: 'output', invalid: false } },
+    { spawn: { ts: 111, D: 5100.5, outcomeKind: 'timeout', invalid: true } },
+    { limitKind: 'output' },
+  ])('[REQ-351] 時計や報告の前提が欠ければ共有窓で原因を断定しない %j', (extra) => {
+    const actual = classifyCall(row(extra));
+    expect(actual.classification).toBe('undetermined'); expect(actual.reasons.length).toBeGreaterThan(0);
+  });
+});
+
+describe('REQ-352 公開する外部操作診断', () => {
+  it.each([
+    [2101, 'undetermined', false, ['timeout-option-unavailable']],
+    [5100.5, 'shared-deadline', true, []],
+    [5102.001, 'undetermined', false, ['deadline-after-shared-interval']],
+  ] as const)('[REQ-352] 旧rawの欠けたtimeoutをnullへ投影しD=%sの位置で分類する', (D, classification, coincidentOperationPossible, reasons) => {
+    const legacy: Record<string, unknown> = row({ spawn: { ts: 103, D, outcomeKind: 'timeout', invalid: false } });
+    delete legacy.timeoutRequested;
+    const payload = preparePublicDiagnostics([legacy], report);
+    expect(payload.calls[0]).toMatchObject({ timeoutRequested: null, mode: 'normal', classification, coincidentOperationPossible, reasons, internalTimeoutMs: null });
+    expect(payload.summary.version).toBe(2); expect(publicDiagnosticsProblem(payload)).toBeNull();
+  });
+
+  it('[REQ-352] 旧rawの不正modeをnormalに補完せずnullと理由付き未確定へ投影する', () => {
+    const legacy: Record<string, unknown> = row({ mode: 'private-mode', spawn: { ts: 103, D: 5100.5, outcomeKind: 'timeout', invalid: false } });
+    delete legacy.timeoutRequested;
+    const payload = preparePublicDiagnostics([legacy], report);
+    expect(payload.calls[0]).toMatchObject({ mode: null, timeoutRequested: null, classification: 'undetermined', reasons: ['mode-unavailable'] });
+    expect(payload.summary.version).toBe(2); expect(publicDiagnosticsProblem(payload)).toBeNull();
+    expect(JSON.stringify(payload)).not.toContain('private-mode');
+  });
+
+  it.each(['version-one', 'missing-timeout', 'string-timeout', 'unknown-key'] as const)('[REQ-352] 公開schemaで版と型と閉じたキーを検査する %s', (mutation) => {
+    const payload = preparePublicDiagnostics([row()], report);
+    if (mutation === 'version-one') payload.summary.version = 1;
+    else if (mutation === 'missing-timeout') delete payload.calls[0].timeoutRequested;
+    else if (mutation === 'string-timeout') payload.calls[0].timeoutRequested = 'true';
+    else payload.calls[0].privateKey = 'private-token';
+    expect(publicDiagnosticsProblem(payload)).toBe(mutation === 'version-one' ? 'invalid-summary-schema' : 'invalid-call-schema');
+  });
+
+  it('[REQ-352] rawのPIDと自由な秘密と未知キーを固定4ファイルへの再投影で除く', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'loomake-req352-public-'));
+    try {
+      const processes = join(dir, 'processes'); mkdirSync(processes);
+      const reportFile = join(dir, 'report.json'); writeFileSync(reportFile, JSON.stringify({ ...report, privateKey: 'private-token' }));
+      const input = row({ pid: 987654321, callId: 'private-call', timeoutMs: 123456789, args: ['private-args'], env: { SECRET: 'private-env' }, stdout: 'private-output', message: 'private-error', privateKey: 'private-token',
+        spawn: { ts: 103, D: 2101, outcomeKind: 'timeout', invalid: false, supervisorPid: 987654321, unknown: 'private-spawn' } });
+      writeFileSync(join(processes, 'calls.1.a.jsonl'), JSON.stringify(input) + '\n');
+      writeFileSync(join(processes, 'arbitrary.txt'), 'private-file');
+      const output = join(dir, 'export'); const payload = exportExternalDiagnostics(processes, reportFile, output);
+      expect(readdirSync(output).sort()).toEqual(['calls.jsonl', 'heartbeat.json', 'summary.json', 'summary.md']);
+      const files = Object.fromEntries(readdirSync(output).map((file) => [file, readFileSync(join(output, file), 'utf8')]));
+      expect(Object.values(files).join('\n')).not.toMatch(/private|987654321|123456789|supervisorPid|SECRET|stdout|message/);
+      expect(payload.calls[0]).toMatchObject({ callId: 'call-1', internalTimeoutMs: null, classification: 'operation-limit' });
+      expect(payload.summary.version).toBe(2); expect(publicDiagnosticsProblem(payload)).toBeNull();
+      expect(Buffer.byteLength(files['calls.jsonl'])).toBeLessThanOrEqual(1024 * 1024);
+      expect(Buffer.byteLength(files['summary.json'])).toBeLessThanOrEqual(1024 * 1024);
+      expect(Buffer.byteLength(files['summary.md'])).toBeLessThanOrEqual(256 * 1024);
+      expect(Buffer.byteLength(files['heartbeat.json'])).toBeLessThanOrEqual(2048);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+
+  it('[REQ-352] 空でないexport先は変更せずに拒否する', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'loomake-req352-not-empty-'));
+    try {
+      const processes = join(dir, 'processes'); mkdirSync(processes);
+      const reportFile = join(dir, 'report.json'); writeFileSync(reportFile, JSON.stringify(report));
+      writeFileSync(join(processes, 'calls.1.a.jsonl'), JSON.stringify(row()) + '\n');
+      const output = join(dir, 'export'); mkdirSync(output); writeFileSync(join(output, 'existing.txt'), 'keep-exactly');
+      expect(() => exportExternalDiagnostics(processes, reportFile, output)).toThrow('export-directory-not-empty');
+      expect(readdirSync(output)).toEqual(['existing.txt']); expect(readFileSync(join(output, 'existing.txt'), 'utf8')).toBe('keep-exactly');
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+
+  it('[REQ-352] 閉じたschemaを保つ大きすぎるJSONとMarkdownは公開検査で拒否する', async () => {
+    const { renderExternalCallSummary } = await import('../scripts/external-call-diagnostics.mjs');
+    for (const target of ['calls', 'summary', 'markdown'] as const) {
+      const payload = preparePublicDiagnostics([row()], report);
+      if (target === 'calls') payload.calls[0].reasons = Array<string>(70_000).fill('mode-unavailable');
+      if (target === 'summary') payload.summary.calls[0].reasons = Array<string>(70_000).fill('mode-unavailable');
+      if (target === 'markdown') payload.summary.calls[0].reasons = Array<string>(16_000).fill('mode-unavailable');
+      payload.markdown = renderExternalCallSummary(payload.summary);
+      expect(publicDiagnosticsProblem(payload), target).toBe('payload-limit');
+    }
+  });
+});
+
+describe('REQ-351 原観測の逆転と補正後の時計窓', () => {
+  it.each([0.5, 1, 1.001])('[REQ-351] 原観測ts=t1−%smsをdeadlineの1ms許容差とは別に拒否する', (reversal) => {
+    const actual = classifyCall(row({ spawn: { ts: 101 - reversal, D: 5100.5, outcomeKind: 'timeout', invalid: false } }));
+    expect(actual).toMatchObject({ classification: 'undetermined', reasons: ['observation-order-invalid'], coincidentOperationPossible: false });
+  });
+
+  it.each([101, 101.5])('[REQ-351] 原観測ts=%sがt1と一致するか後なら共有期限を保持する', (ts) => {
+    expect(classifyCall(row({ spawn: { ts, D: 5100.5, outcomeKind: 'timeout', invalid: false } })))
+      .toMatchObject({ classification: 'shared-deadline', reasons: [], coincidentOperationPossible: true });
+  });
+
+  it.each([
+    [1, 'shared-deadline', []],
+    [1.001, 'undetermined', ['observation-order-invalid']],
+  ] as const)('[REQ-351] 原観測が正順でも保持役補正後δ=−%smsの既存境界を保持する', (holderWait, classification, reasons) => {
+    expect(classifyCall(row({ hw0: 0, hw1: holderWait, spawn: { ts: 101, D: 5101.5, outcomeKind: 'timeout', invalid: false } })))
+      .toMatchObject({ classification, reasons });
+  });
 });

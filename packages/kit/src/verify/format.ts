@@ -4,6 +4,9 @@ import { verifyExitCode } from './exit-code.js';
 const ICON = { pass: '✔', fail: '✖', warn: '!', skip: '-' } as const;
 /** 案内つきの合格の reason の先頭（run.ts の NOTICE と同じ） */
 const NOTICE = '案内：';
+// 検査 ID は run.ts と同じ
+const BLOCKING_QUESTIONS = 'ブロッキング確認事項';
+const ASSUMPTION_APPROVAL = '仮定の承認';
 const ICON_V2 = { PASS: '✔', FAIL: '✖', INSUFFICIENT_EVIDENCE: '?', NOT_APPLICABLE: '-' } as const;
 
 /** verify の結果が 2.0.0 か。1.0.0 は mode と results を持つ */
@@ -39,6 +42,12 @@ function formatV2(result: VerifyResultV2): string {
     const notice = c.result === 'PASS' && c.reason.startsWith(NOTICE);
     lines.push(`${notice ? '!' : ICON_V2[c.result]} ${c.id}`);
     if (c.reason && (c.result !== 'PASS' || notice)) lines.push((notice ? c.reason.slice(NOTICE.length) : c.reason).replace(/^/gm, '    '));
+    if (c.id === BLOCKING_QUESTIONS && c.result === 'FAIL') {
+      lines.push(`    回答の書き方：change ${result.change} の trace.md「確認事項」の表で、該当する行の「回答」に回答を決めた人が書きます（loomake trace answer --change ${result.change} --question <Q-ID> --answer <回答> --by <回答者>）`);
+    }
+    if (c.id === ASSUMPTION_APPROVAL) {
+      lines.push(`    承認の書き方：trace.md「仮定」の表の該当する行の「承認」に「承認」と書きます（loomake trace approve --change ${result.change} --assumption <A-ID> --by <承認者>）`);
+    }
   }
   for (const e of result.run.errors) lines.push(`! 実行エラー（${e.kind}）${e.target}：${e.message}`);
   const { fail } = result.summary;

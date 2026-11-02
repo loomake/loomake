@@ -12,7 +12,7 @@ import { appendFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { decideTier, formatTierLine, isDocumentPath, isSpecPath } from './ci-tier.mjs';
+import { archiveMetadataMoves, caseTwins, decideTier, formatTierLine, isDocumentPath, isSpecPath } from './ci-tier.mjs';
 
 // 文書として扱うファイルの判定は、完了ゲートの段階の判定と共有する（ci-tier.mjs）。ここからも同じ名前で使えるようにする
 export { isDocumentPath } from './ci-tier.mjs';
@@ -45,6 +45,59 @@ export function parseRawDiff(text) {
     entries.push({ status, modes: [src, dst], paths });
   }
   return entries;
+}
+
+/**
+ * 差分と同じ merge-base の spec と、候補の完全 blob OID を遅延して読む（REQ-362）。
+ * gate と quality は同じ読取と失敗時の判定を使う。
+ * @param {(args: string[]) => { status: number | null; stdout?: string; stderr?: string; error?: Error }} git
+ * @param {string} baseRef
+ */
+export function comparisonReaders(git, baseRef) {
+  let mergeBase;
+  const base = () => {
+    if (mergeBase === undefined) {
+      const result = git(['merge-base', `refs/remotes/origin/${baseRef}`, 'HEAD']);
+      mergeBase = result.status === 0 ? (result.stdout ?? '').trim() : '';
+    }
+    return mergeBase;
+  };
+  const readSpec = (side, path) => {
+    const ref = side === 'new' ? 'HEAD' : base();
+    if (!ref) return undefined;
+    const result = git(['show', `${ref}:${path}`]);
+    return result.status === 0 ? result.stdout : undefined;
+  };
+  const blobs = new Map();
+  const sameBlob = (from, to) => {
+    const key = `${from}\0${to}`;
+    if (!blobs.has(key)) {
+      const ref = base();
+      let equal = false;
+      if (ref) {
+        const result = git(['rev-parse', `${ref}:${from}`, `HEAD:${to}`]);
+        const ids = (result.stdout ?? '').replace(/\r?\n$/, '').split(/\r?\n/);
+        equal = result.status === 0 && ids.length === 2 && /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(ids[0]) && ids[0] === ids[1];
+      }
+      blobs.set(key, equal);
+    }
+    return blobs.get(key);
+  };
+  let treeResult;
+  const headTreeResult = () => {
+    if (treeResult === undefined) {
+      const result = git(['ls-tree', '-r', '-z', '--name-only', 'HEAD']);
+      const text = result.stdout ?? '';
+      if (result.status !== 0) {
+        const detail = (result.stderr || result.error?.message || '').trim();
+        treeResult = { detail: detail || `終了コード ${result.status}` };
+      } else if (text && !text.endsWith('\0')) treeResult = { invalid: true };
+      else treeResult = { paths: text.split('\0').filter(Boolean) };
+    }
+    return treeResult;
+  };
+  const headTree = () => headTreeResult().paths;
+  return { readSpec, sameBlob, headTreeResult, headTree };
 }
 
 // 文書として扱うのは通常のファイル（100644）だけ。ファイルがない側（足したファイルの変更前、消したファイルの変更後）は 000000（REQ-282）
@@ -81,8 +134,10 @@ export function decideDocsOnly({ eventName = '', baseRef = '', git }) {
   }
   // 変えたファイルが 1 つもない差分は、解釈できない差分と同じに扱う
   if (!entries.length) return { docsOnly: false, reason: 'PR で変えたファイルが見つからなかったので、すべてのステップを実行します' };
+  const { readSpec, sameBlob, headTreeResult, headTree } = comparisonReaders(git, baseRef);
+  const metadata = new Set(archiveMetadataMoves(entries, sameBlob).flat());
   const paths = entries.flatMap((entry) => entry.paths);
-  const others = [...new Set(paths.filter((path) => !isDocumentPath(path)))];
+  const others = [...new Set(paths.filter((path) => !isDocumentPath(path) && !metadata.has(path)))];
   if (others.length) return { docsOnly: false, reason: `文書ではないファイルを変えているので、すべてのステップを実行します：${list(others)}` };
   const irregular = entries.filter((entry) => !entry.modes.every(isRegularOrAbsent) || entry.modes.every((mode) => mode === '000000'));
   if (irregular.length) {
@@ -90,16 +145,12 @@ export function decideDocsOnly({ eventName = '', baseRef = '', git }) {
     return { docsOnly: false, reason: `通常のファイルでないものを変えているので、すべてのステップを実行します：${list(shown)}` };
   }
   // macOS と Windows の checkout では、大文字と小文字だけが違うパスは 1 つのファイルに重なる（REQ-281）
-  const tree = git(['ls-tree', '-r', '-z', '--name-only', 'HEAD']);
-  if (tree.status !== 0) {
-    const detail = (tree.stderr || tree.error?.message || '').trim();
-    return { docsOnly: false, reason: `PR の先頭のファイルの一覧を読めなかったので、すべてのステップを実行します（${detail || `終了コード ${tree.status}`}）` };
+  const tree = headTreeResult();
+  if (tree.detail !== undefined) {
+    return { docsOnly: false, reason: `PR の先頭のファイルの一覧を読めなかったので、すべてのステップを実行します（${tree.detail}）` };
   }
-  const treeText = tree.stdout ?? '';
-  if (treeText && !treeText.endsWith('\0')) return { docsOnly: false, reason: 'PR の先頭のファイルの一覧を解釈できなかったので、すべてのステップを実行します（NUL で終わっていません）' };
-  const byFolded = new Map();
-  for (const path of treeText.split('\0').filter(Boolean)) byFolded.set(path.toLowerCase(), [...(byFolded.get(path.toLowerCase()) ?? []), path]);
-  const colliding = [...new Set(paths.filter((path) => (byFolded.get(path.toLowerCase()) ?? []).some((other) => other !== path)))];
+  if (tree.invalid) return { docsOnly: false, reason: 'PR の先頭のファイルの一覧を解釈できなかったので、すべてのステップを実行します（NUL で終わっていません）' };
+  const colliding = [...new Set(paths.filter(caseTwins(tree.paths)))];
   if (colliding.length) return { docsOnly: false, reason: `大文字と小文字だけが違う別のパスがあるので、すべてのステップを実行します：${list(colliding)}` };
   // Requirement の本文を変えた spec.md は文書だけと扱わない（段階 L3）。spec.md の差分だけを -U0 で読む（REQ-342）
   let specDiff = '';
@@ -114,18 +165,7 @@ export function decideDocsOnly({ eventName = '', baseRef = '', git }) {
   }
   // PR 本文は読まない（quality ジョブは本文を読む権限を持たない。tier-ci-gate の仮定 A-03）
   // 消した行の節は、差分と同じ起点（ベースと HEAD の merge-base）のファイルで判定する
-  let mergeBase;
-  const readSpec = (side, path) => {
-    if (side === 'old' && mergeBase === undefined) {
-      const m = git(['merge-base', `refs/remotes/origin/${baseRef}`, 'HEAD']);
-      mergeBase = m.status === 0 ? (m.stdout ?? '').trim() : '';
-    }
-    const ref = side === 'new' ? 'HEAD' : mergeBase;
-    if (!ref) return undefined;
-    const r = git(['show', `${ref}:${path}`]);
-    return r.status === 0 ? r.stdout : undefined;
-  };
-  const decided = decideTier({ entries, specDiff, readSpec });
+  const decided = decideTier({ entries, specDiff, readSpec, sameBlob, headTree });
   if (decided.error) return { docsOnly: false, reason: `段階を決められなかったので、すべてのステップを実行します（${decided.error}）` };
   if (decided.tier !== 'L1') return { docsOnly: false, reason: `段階が ${decided.tier} なので、すべてのステップを実行します（${formatTierLine(decided)}）` };
   return { docsOnly: true, reason: `変えたファイル（${paths.length} 件）はすべて文書（段階 L1）なので、品質コマンドを飛ばします` };

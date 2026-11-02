@@ -28,7 +28,15 @@ change のゲート（`--done`・`--spec-only`）は `--json` で実行し、ver
 
 段階は PR 本文の `loomake-tier:` の行で上げる方向にだけ上書きできる。gate は決めた段階と理由を標準出力に `loomake-tier: L2（scripts/ci-gate.mjs）` の形で 1 行書き、ステップの出力 `tier`・`tier_line` にも入れる。この行を PR 本文の証跡ブロックの `tier:` に写す。
 
+L2・L3 で PR 番号があるときは、`scripts/process-evidence.mjs` で `## 証跡` 節の 7 工程行の形も調べる。節や行の欠落、重複、不正な状態語・値、旧形式の `ci:`・`opus-review:`・`opus-model:` があれば gate を失敗にし、後続の検査は続ける。L1 は対象外で、PR 番号のないローカル実行は飛ばした旨を標準エラーに書く。gate ジョブ自体は PR でだけ動くため、main への push と定期実行ではこの検査をしない。
+
+文法の正本は [delivery の「マージと証跡」](../../.agents/skills/delivery/SKILL.md#マージと証跡)。形の検査は工程表への適合や実際の実行記録を判定せず、`review: 未実施`・`quality: 未実施` も受け付ける。未実施の工程を完了扱いにはせず、管理役が必須 CI とレビューの条件を別に確かめる。PR 本文の編集だけでは CI は起動しないので、L2・L3 の最後の編集後は管理役が本文を `node scripts/process-evidence.mjs` の標準入力に渡して形を確認する。新しい検査コードを使う次の CI から開いている PR にも適用し、規則のマージより前にマージ済みの PR は書き直さない。
+
 Requirement の変更は、`openspec/specs/` と `openspec/changes/<id>/specs/` の `spec.md` で、変更した行が属する節で見る。`git diff -U0` のハンクの行番号から、足した行は HEAD の、消した行はベースのファイルを読み、直前の見出しが `### Requirement:` なら Requirement の変更（L3）とする。`#### Scenario:` の配下や Purpose の文言だけなら、RFC 2119 の語を足しても L1 のまま。archive の PR（`openspec/changes/archive/` にファイルを足すか移す）は Requirement を主仕様に写すが、実装 PR の `--done` で検査済みなので L1 として扱う。
+
+archive の `.openspec.yaml` は単独では文書に含めない。REQ-362「archive のメタデータの移動」の条件をすべて満たすときだけ、PR の文脈で L1 と数える。R100、merge-base の旧パスと HEAD の新パスの完全 blob ID 一致、前後 100644、安全なパスと同一 change の正しい実在日付の archive 名、同じ archive への別文書の追加か移動を必要とする。OID を読めない場合や、metadata 単独・内容変更・ほかの YAML は例外にしない。quality と gate の段階判定、gate の change 選択で同じ判定を使い、全パスのモード・名前衝突・ツリー検査を維持する。
+
+この規則は具体案の明示承認だけでは適用せず、通常 L3 の実装・3 OS CI・独立レビューを経て main に採用したあとから適用する。対象のない L1 の gate は lint と文書リンク検査を行い、PR quality の品質コマンドを省略する。main push の全品質、主仕様 strict、REQ ID の重複検査、元の change の DoD は維持する。
 
 gate は段階によらず、REQ ID の重複も調べる（`scripts/req-duplicate-check.mjs`）。主仕様に進行中の change の差分仕様を当てた後で、同じ REQ ID が 2 つ以上の Requirement の Source に付いていたら、一覧を出して失敗にする。同じ Requirement を MODIFIED した差分は重複に数えない。意図して共有している ID と、2026-10-31 に main にあった 22 件（見直しは Issue #213）は `scripts/req-duplicate-known.json` に書いてある。一覧のキーは `<capability>: <Requirement 名>` の形で書く。一覧にある Requirement を RENAMED したら、同じ PR で一覧のキーも直す。新しく ID を共有するときは、意図した共有であることを PR 本文で説明してから一覧に足す。一覧のうち今の重複と一致しない項目は、失敗にせず警告を出す。手元では `node scripts/req-duplicate-check.mjs` で確かめられる。
 

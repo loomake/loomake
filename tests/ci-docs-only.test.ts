@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { decideDocsOnly, isDocumentPath, parseRawDiff } from '../scripts/ci-docs-only.mjs';
+import { comparisonReaders, decideDocsOnly, isDocumentPath, parseRawDiff } from '../scripts/ci-docs-only.mjs';
 
 const script = join(import.meta.dirname, '..', 'scripts', 'ci-docs-only.mjs');
 
@@ -450,10 +450,123 @@ describe('文書だけかの判定（git の差分から）', () => {
     });
   });
 
+  it('[REQ-362][REQ-270][REQ-281][REQ-282] 実 git の archive metadata は完全 blob 同一の R100 と同行文書でだけ省略する', () => {
+    withRepo((repo) => {
+      const old = 'openspec/changes/c1/.openspec.yaml';
+      const archived = 'openspec/changes/archive/2026-11-01-c1/.openspec.yaml';
+      repo.commit({ [old]: 'schema: spec-driven\n', 'openspec/changes/c1/tasks.md': '- [x] done\n' });
+      repo.git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+      repo.commit({ 'openspec/specs/x/spec.md': '### Requirement: 同期\n本文 SHALL。\n' }, [
+        [old, archived], ['openspec/changes/c1/tasks.md', 'openspec/changes/archive/2026-11-01-c1/tasks.md'],
+      ]);
+      expect(repo.run()).toMatchObject({ status: 0, output: 'docs_only=true\n' });
+      repo.commit({ [archived]: 'schema: changed\n' });
+      expect(repo.run()).toMatchObject({ status: 0, output: 'docs_only=false\n' });
+    });
+  });
+
   it('[REQ-270] main への push では docs_only=false を書く', () => {
     withRepo((repo) => {
       repo.commit({ 'docs/a.md': '文書\n' });
       expect(repo.run({ EVENT_NAME: 'push', BASE_REF: '' })).toMatchObject({ status: 0, output: 'docs_only=false\n' });
     });
+  });
+});
+
+describe('archive metadata と quality の共有判定', () => {
+  const from = 'openspec/changes/c1/.openspec.yaml';
+  const to = 'openspec/changes/archive/2026-11-01-c1/.openspec.yaml';
+  const task = 'openspec/changes/archive/2026-11-01-c1/tasks.md';
+  const spec = 'openspec/specs/x/spec.md';
+  const oid = 'a'.repeat(40);
+  const run = ({ oidResult = { status: 0, stdout: `${oid}\n${oid}\n` }, modes = '100644 100644', treeStatus = 0, tree = `${to}\0${task}\0${spec}\0`, eventName = 'pull_request', baseRef = 'main', mergeStatus = 0, rawSuffix = '' } = {}) => {
+    const calls: string[][] = [];
+    const git = (args: string[]) => {
+      calls.push(args);
+      if (args[0] === 'merge-base') return { status: mergeStatus, stdout: 'base\n' };
+      if (args[0] === 'rev-parse') return oidResult;
+      if (args[0] === 'ls-tree') return { status: treeStatus, stdout: tree };
+      if (args.includes('-U0')) return { status: 0, stdout: `diff --git a/${spec} b/${spec}\n@@ -0,0 +1,2 @@\n+### Requirement: 同期\n+本文 SHALL。\n` };
+      if (args[0] === 'show') return { status: 0, stdout: '### Requirement: 同期\n本文 SHALL。\n' };
+      return { status: 0, stdout: rawEntry(modes, 'R100', from, to) + nameStatus(['A', task], ['M', spec]) + rawSuffix };
+    };
+    return { result: decideDocsOnly({ eventName, baseRef, git }), calls };
+  };
+
+  it('[REQ-362][REQ-270][REQ-342] 完全 blob 同一の正常 R100 は quality を省略し、照合を遅延して1回だけ行う', () => {
+    const { result, calls } = run();
+    expect(result.docsOnly).toBe(true);
+    expect(calls.filter((args) => args[0] === 'merge-base')).toEqual([['merge-base', 'refs/remotes/origin/main', 'HEAD']]);
+    expect(calls.filter((args) => args[0] === 'rev-parse')).toEqual([['rev-parse', `base:${from}`, `HEAD:${to}`]]);
+    expect(calls.filter((args) => args[0] === 'ls-tree')).toEqual([['ls-tree', '-r', '-z', '--name-only', 'HEAD']]);
+    expect(isDocumentPath(from)).toBe(false);
+    expect(isDocumentPath(to)).toBe(false);
+  });
+
+  it('[REQ-362][REQ-270][REQ-281][REQ-282] 事前拒否とモード拒否はtree読取より先に行う', () => {
+    for (const rawSuffix of [nameStatus(['M', 'scripts/x.mjs']), rawEntry('100644 100755', 'M', 'docs/executable.md')]) {
+      const { result, calls } = run({ rawSuffix });
+      expect(result.docsOnly).toBe(false);
+      expect(calls.some((args) => args[0] === 'ls-tree')).toBe(false);
+    }
+  });
+
+  it('[REQ-362][REQ-281] 移動元の衝突も検査し成功した空treeは従来どおり扱う', () => {
+    expect(run({ tree: `${to}\0${from.replace('.openspec.yaml', '.OPENSPEC.yaml')}\0${task}\0` }).result.docsOnly).toBe(false);
+    expect(run({ tree: '' }).result.docsOnly).toBe(true);
+  });
+
+  it('[REQ-362][REQ-270] OID の失敗・空・不正・行数違い・不一致と merge-base 失敗は品質検査を残す', () => {
+    for (const oidResult of [
+      { status: 128, stdout: '' }, { status: 0, stdout: '' }, { status: 0, stdout: 'base\nbase\n' },
+      { status: 0, stdout: `${oid}\n` }, { status: 0, stdout: `${oid}\n${oid}\n${oid}\n` }, { status: 0, stdout: `${oid}\n${oid}\n\n` },
+      { status: 0, stdout: `${oid}\n${'b'.repeat(40)}\n` }, { status: 0, stdout: `${oid.slice(0, 7)}\n${oid.slice(0, 7)}\n` },
+    ]) expect(run({ oidResult }).result.docsOnly, JSON.stringify(oidResult)).toBe(false);
+    const failed = run({ mergeStatus: 128 });
+    expect(failed.result.docsOnly).toBe(false);
+    expect(failed.calls.some((args) => args[0] === 'rev-parse')).toBe(false);
+  });
+
+  it('[REQ-362][REQ-281][REQ-282] 全パスのモード・衝突・ツリー検査を残す', () => {
+    for (const modes of ['100755 100644', '100644 120000']) expect(run({ modes }).result.docsOnly).toBe(false);
+    expect(run({ treeStatus: 128 }).result.docsOnly).toBe(false);
+    expect(run({ tree: `${to}\0${to.toUpperCase()}\0${task}\0` }).result.docsOnly).toBe(false);
+    expect(run({ tree: to }).result.docsOnly).toBe(false);
+  });
+
+  it('[REQ-362][REQ-270] main 以外と main push は照合せず品質検査を残す', () => {
+    for (const options of [{ baseRef: 'integration/e3' }, { eventName: 'push' }]) {
+      const { result, calls } = run(options);
+      expect(result.docsOnly).toBe(false);
+      expect(calls).toEqual([]);
+    }
+  });
+});
+
+describe('共有するHEAD tree読取', () => {
+  it.each([
+    [{ status: 128, stdout: '', stderr: 'tree failed' }, 'tree failed'],
+    [{ status: null, stdout: '', error: new Error('spawn failed') }, 'spawn failed'],
+    [{ status: 128, stdout: '' }, '終了コード 128'],
+  ])('[REQ-362][REQ-281] tree読取失敗の詳細を保持して例外を成立させない（%j）', (result, detail) => {
+    const calls: string[][] = [];
+    const readers = comparisonReaders((args: string[]) => { calls.push(args); return result; }, 'main');
+    expect(readers.headTree()).toBeUndefined();
+    expect(readers.headTreeResult()).toEqual({ detail });
+    expect(readers.headTree()).toBeUndefined();
+    expect(calls).toEqual([['ls-tree', '-r', '-z', '--name-only', 'HEAD']]);
+  });
+
+  it.each(['', 'docs/a.md\0docs/b.md\0', 'docs/no-nul.md'])('[REQ-362][REQ-281] treeの空・正常・形式不正を区別して1回だけ読む（%j）', (stdout) => {
+    const calls: string[][] = [];
+    const readers = comparisonReaders((args: string[]) => { calls.push(args); return { status: 0, stdout }; }, 'main');
+    if (stdout && !stdout.endsWith('\0')) {
+      expect(readers.headTree()).toBeUndefined();
+      expect(readers.headTreeResult()).toEqual({ invalid: true });
+    } else {
+      expect(readers.headTree()).toEqual(stdout.split('\0').filter(Boolean));
+      expect(readers.headTreeResult()).toEqual({ paths: stdout.split('\0').filter(Boolean) });
+    }
+    expect(calls).toEqual([['ls-tree', '-r', '-z', '--name-only', 'HEAD']]);
   });
 });

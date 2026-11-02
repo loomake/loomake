@@ -126,7 +126,7 @@ jobs:
       - if: steps.changes.outputs.docs_only != 'true'
         run: pnpm build
       - if: steps.changes.outputs.docs_only != 'true'
-        run: node scripts/package-smoke.mjs prepare "$RUNNER_TEMP/loomake-package"
+        run: node scripts/package-smoke.mjs prepare "$RUNNER_TEMP/loomake-package" --skip-build
         shell: bash
       - if: steps.changes.outputs.docs_only != 'true'
         run: node scripts/package-smoke.mjs check "$RUNNER_TEMP/loomake-package"
@@ -147,9 +147,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - run: node scripts/package-smoke.mjs prepare "$RUNNER_TEMP/loomake-package"
+      - run: node scripts/package-smoke.mjs prepare "$RUNNER_TEMP/loomake-package" --skip-build
         shell: bash
-      - run: node scripts/package-smoke.mjs prepare "$RUNNER_TEMP/loomake-offline"
+      - run: node scripts/package-smoke.mjs prepare "$RUNNER_TEMP/loomake-offline" --skip-build
         shell: bash
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
@@ -179,9 +179,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - run: node scripts/package-smoke.mjs prepare "$RUNNER_TEMP/loomake-package"
+      - run: node scripts/package-smoke.mjs prepare "$RUNNER_TEMP/loomake-package" --skip-build
         shell: bash
-      - run: node scripts/package-smoke.mjs prepare "$RUNNER_TEMP/loomake-offline"
+      - run: node scripts/package-smoke.mjs prepare "$RUNNER_TEMP/loomake-offline" --skip-build
         shell: bash
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
