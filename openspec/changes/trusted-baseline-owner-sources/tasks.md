@@ -6,7 +6,7 @@
 ## 2. 実装
 
 - [x] 2.1 新しいT-C3A-01〜06を先に書き、モジュール不在のREDを保存する
-- [ ] 2.2 ownerBlockへexportとlogical・sourcesだけを足し、既存trusted試験を無変更で通す
+- [x] 2.2 ownerBlockへexportとlogical・sourcesだけを足し、既存trusted試験を無変更で通す
 - [ ] 2.3 C001専用入口と深く凍結した固定例外を実装し、全6 Scenarioの正負例をGREENにする
 
 ## 3. 受入
