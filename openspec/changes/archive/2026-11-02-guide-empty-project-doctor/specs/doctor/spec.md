@@ -1,9 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: 品質scriptの静的な確認
-単純なnpm run・run-scriptとnpm test、pnpm run・run-scriptとpnpm test・lint・typecheckの呼び出しは、ルートのpackage.jsonを予算つきで読み、scriptsに対象の空でない文字列があるか確認する SHALL。ない場合やpackage.jsonの形が不正な場合は問題とし、対象と直し方を示す SHALL。scriptの本文は実行しない MUST。scriptがある場合も、本文の成功や引数の正しさを保証しない SHALL。runの後のscript名は通常の英数字・ハイフン・アンダースコア・ドット・コロンに限り、正規表現の指定やオプションで対象が変わる呼び出しは未対応として扱う SHALL。npm run envの組み込み処理とYarnのrun-script表記も、scriptを推測せず未対応とする SHALL。
-
-ルートに package.json がない場合は、該当する commands の名前を挙げて問題とし、報告を 1 件にまとめる SHALL。直し方には loomake.config.json の commands をこのプロジェクトで使うコマンドに書き換える方法と、package.json を作って対象の scripts を書く方法の両方を示す SHALL。commands と scripts の名前はそれぞれ該当する設定名と呼び出し先の script 名だけを挙げる SHALL。package.json があるが読み取れない場合や形式・容量が不正な場合は、従来どおり「package.json を確認できません」と原因を問題として示し、「package.json の形式・容量・読み取り権限を確認してください」と案内する SHALL。
+次を満たす SHALL。単純なnpmのrun・run-script・testとpnpmのrun・run-script・test・lint・typecheckは、ルートpackage.jsonを予算内で読み、scriptsの対象が空でない文字列か確認し、不一致なら対象と直し方を問題にする。scriptは実行しない MUST。存在しても本文の成功・引数の正しさを保証しない。run後の名は英数字・-_.:に限り、正規表現・対象変更オプション・npm run env組込み・Yarn run-scriptを推測せず未対応とする。package.json不在は該当commands/script名だけで問題1件とし、loomake.config.jsonのcommandsを本プロジェクトのコマンドへ直すか、package.jsonと対象scriptsを作る両案を示す。既存package.jsonの読取不可・形式/容量不正は原因を問題とし「package.json を確認できません」、案内「package.json の形式・容量・読み取り権限を確認してください」を示す。
 
 Source: REQ-184
 
