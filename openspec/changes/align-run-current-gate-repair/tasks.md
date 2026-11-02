@@ -3,7 +3,7 @@
 ## 1. 規範と原文の照合
 
 - [x] 1.1 正規parserでREQ-100のSource込み485文字・500以下・Source1行・既存全5 Scenarioのbyte一致を確認し、`openspec validate align-run-current-gate-repair --strict` と `pnpm -s verify --change align-run-current-gate-repair --spec-only` を通す（REQ-100）。
-- [ ] 1.2 designの全条件を基準mainの規範/src/既存試験に照合し、原W/E3/S1・C00114原文/PIN・旧it/assert/期待/期限/設定の差分0を確認する。未成立条件があれば新コードを足さず停止する（REQ-100・205・317・331）。
+- [x] 1.2 designの全条件を基準mainの規範/src/既存試験に照合し、原W/E3/S1・C00114原文/PIN・旧it/assert/期待/期限/設定の差分0を確認する。未成立条件があれば新コードを足さず停止する（REQ-100・205・317・331）。
 
 ## 2. 既存の実run回帰
 
