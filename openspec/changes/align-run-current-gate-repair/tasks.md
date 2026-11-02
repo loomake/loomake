@@ -17,7 +17,7 @@
 ## 4. 独立レビューM-1の修正
 
 - [x] 4.1 新Tcに「変更があるとき」を明示して短文化/guardの全条件同値をdesign/traceへ記録する。正規parserでSource込み493文字・500以下・全5Scenario/Source100と元W/E3/S1/PIN/src/旧試験/期待/設定不変を照合し、strict/spec-onlyを通す（REQ-100・205・317・331、#346）。
-- [ ] 4.2 修正した新入力で通常 `pnpm -s verify --change align-run-current-gate-repair --done --scope local` を1回通し、実head/入力/JSON/exitを保持する。成功後だけ最終tasksと結果記録を確定し、別担当確認・独立Opus再レビューへ返す（REQ-100）。 <!-- loomake:gate=done -->
+- [x] 4.2 修正した新入力で通常 `pnpm -s verify --change align-run-current-gate-repair --done --scope local` を1回通し、実head/入力/JSON/exitを保持する。成功後だけ最終tasksと結果記録を確定し、別担当確認・独立Opus再レビューへ返す（REQ-100）。 <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
