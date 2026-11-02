@@ -1,0 +1,31 @@
+# Design
+
+## Context
+固定writerは11項目を出し、metadata v1には実施日時・runner版・本文hashがない。実artifactのZIP digest一致は完全性だけを示す。
+
+## Goals / Non-Goals
+公開の中立変換だけを通常受入し、収集・判定・親の受入は含めない。
+
+## Decisions
+- 公開parseCiTestMetadata(file,text)は同期・I/Oなし。CiTestMetadataV1とParseResultをexportし、既存APIは変えない。独立した公開変換とconsumer試験で受け入れる。
+- 数値1の版、空を許す7文字列、2列挙、6counts安全整数、未知項目projectionはQ-C003-02=Aの本人回答による。writerの出力例を外部入力の拒否契約と同一視しない。
+- JSONの行番号は既存test-report.tsのerrorLineを内部exportして共用する。新runtime依存・取得・時計・判定・ログを追加しない。
+- 正常入力は既知項目を新規objectへ取り出す。countsも新規にし、__proto__等の未知項目をspreadしない案。原本文の保存経路には触れない。
+
+## Test mapping
+| Scenario | 新規試験で確認する範囲 |
+|---|---|
+| 実例/既定値 | 固定metadata、空7文字列、not_run/missing、全0件、成功に昇格しない |
+| JSON/版 | syntax・null・配列、版の欠落/2/文字列1、file/line/message |
+| 文字列/列挙 | 全7キーの欠落/型違い、2列挙の欠落/未知値 |
+| counts | object/6キー、0/安全上限の正例、欠落/負/小数/文字列/null/Infinity/上限超過の負例 |
+| unknown/public | 最上位/countsの__proto__・未知項目、入力不変、公開consumer |
+
+## Independent review criteria
+REQ-391の全5 Scenarioと全sourceを照合する。既存parser・exports・依存・原文保存経路・入力/prototypeを保持し、真正性・鮮度・適格性・合否を保証しない。TEST/PINと設定を変更しない。
+
+## Scope budget
+計画実数114行、parser/型60・既存export等4・全正負試験68・fixture20・consumer4・changeset/記録13の配分で計283行を見込む。src/test未作成で実数成立は未認定。超過時は正負条件を削らず管理役へ戻す。
+
+## Risks / Trade-offs
+自己申告を保証へ読み替える危険があるため、入力にない値を補わず、取得・結付け・適格性は後続へ明示して残す。
