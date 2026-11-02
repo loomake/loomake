@@ -181,3 +181,19 @@ describe('診断する項目', () => {
     }
   });
 });
+
+it('[REQ-024][REQ-184] 空のプロジェクトのinit後は不足2件と次の操作を示す', async () => {
+  const base = mkdtempSync(join(tmpdir(), 'loomake-empty-init-doctor-')); const root = join(base, 'repo'); mkdirSync(root);
+  try {
+    spawnSync('git', ['init', '-q'], { cwd: root });
+    const initOutput: string[] = []; const doctorOutput: string[] = [];
+    expect(await main(['init'], { cwd: root, stdout: (t) => initOutput.push(t), stderr: () => {} })).toBe(0);
+    expect(JSON.parse(readFileSync(join(root, 'loomake.config.json'), 'utf8')).commands).toEqual({ lint: 'npm run lint', typecheck: 'npm run typecheck', test: 'npm test' });
+    const code = runDoctor({ root, path: makeBin(base, ['npm', 'openspec', 'claude', 'gh']), stdout: (t) => doctorOutput.push(t) });
+    const text = doctorOutput.join('\n'); expect(code).toBe(1); expect(text).toContain('問題 2 件、注意 0 件');
+    expect(text.split('\n').filter((line) => line.startsWith('✖'))).toEqual(['✖ openspec/ がありません', '✖ package.json がありません。commands.lint・commands.typecheck・commands.test の script を確かめられません']);
+    expect(text).toContain('→ openspec init を実行してください');
+    expect(text).toContain('package.json を作って scripts.lint・scripts.typecheck・scripts.test を書いてください');
+    expect(initOutput.join('\n')).toContain('書き換えるまで、loomake doctor は test の script を確かめられず問題として出します');
+  } finally { rmSync(base, { recursive: true, force: true }); }
+});

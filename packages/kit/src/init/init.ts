@@ -244,7 +244,7 @@ export async function runInit(options: InitOptions): Promise<number> {
 
   // package.json がなければ commands は npm の既定値のままなので、書き換えを促す
   if (!existsSync(join(root, 'package.json'))) {
-    stdout('\npackage.json がありません。loomake.config.json の commands（lint・typecheck・test）を、このプロジェクトで使うコマンドに書き換えてください。');
+    stdout('\npackage.json がありません。loomake.config.json の commands（lint・typecheck・test）を、このプロジェクトで使うコマンドに書き換えてください。書き換えるまで、loomake doctor は test の script を確かめられず問題として出します。');
   }
   // 検査に使う版を固定するため、プロジェクトに入れるよう促す。package.json は書き換えない
   if (!hasLoomake(root)) {

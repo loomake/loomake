@@ -281,11 +281,13 @@ describe('package.json がないときの案内', () => {
     const r = await runInit();
     expect(config(r).commands).toEqual({ lint: 'npm run lint', typecheck: 'npm run typecheck', test: 'npm test' });
     expect(r.stdout).toContain('package.json がありません。loomake.config.json の commands');
+    expect(r.stdout).toContain('書き換えるまで、loomake doctor は test の script を確かめられず問題として出します');
   });
 
   it('[REQ-024] package.json があれば、commands の書き換えを案内しない', async () => {
     const r = await runInit([], { files: { 'package.json': '{}' } });
     expect(r.stdout).not.toContain('package.json がありません');
+    expect(r.stdout).not.toContain('書き換えるまで、loomake doctor');
   });
 });
 
