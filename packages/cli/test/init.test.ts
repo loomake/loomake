@@ -261,12 +261,17 @@ describe('OpenSpec 初期化の案内', () => {
   });
 
   it.each(['conflict', 'unsafe', 'usage'] as const)('[REQ-023] 中止と使い方の誤りでは使い分けを案内しない %s', async (kind) => {
-    const r = kind === 'conflict' ? await runInit([], { files: { 'AGENTS.md': MINE } })
-      : kind === 'unsafe' ? await runInit([], { setup: (root) => symlinkSync(tmpdir(), join(root, '.claude'), 'dir') })
-        : await runInit(['--force']);
-    expect(r.code).toBe(kind === 'usage' ? 2 : 1);
-    expect(r.stdout).not.toContain(guidance);
-    expect(r.files['loomake.config.json']).toBeUndefined();
+    const outside = mkdtempSync(join(tmpdir(), 'loomake-outside-'));
+    try {
+      const r = kind === 'conflict' ? await runInit([], { files: { 'AGENTS.md': MINE } })
+        : kind === 'unsafe' ? await runInit([], { setup: (root) => symlinkSync(outside, join(root, '.claude'), 'dir') })
+          : await runInit(['--force']);
+      expect(r.code).toBe(kind === 'usage' ? 2 : 1);
+      expect(r.stdout).not.toContain(guidance);
+      expect(r.files['loomake.config.json']).toBeUndefined();
+    } finally {
+      rmSync(outside, { recursive: true, force: true });
+    }
   });
 
   it('[REQ-023] openspec/ が無ければ、openspec init の実行を案内する', async () => {
