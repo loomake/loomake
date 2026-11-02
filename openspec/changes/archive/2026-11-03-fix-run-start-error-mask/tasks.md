@@ -15,4 +15,4 @@
 
 ## Workflow follow-up
 
-- 新L3 PR作成は本数条件で保留。CI・別担当自己/独立最終レビュー・merge/archiveは後続。ローカル完了を#65/C003や親の完成とは呼ばない。
+- 設計時は本数条件で新L3 PR作成を保留した。[R351=A](https://github.com/loomake/loomake/issues/121#issuecomment-6590095928)で修理1本の例外が承認され、[PR #352](https://github.com/loomake/loomake/pull/352)を受け入れた。CI・別担当自己/独立最終レビュー・mergeは確認済みで、主仕様同期とarchiveを今回行う。ローカル完了を#65/C003や親の完成とは呼ばない。

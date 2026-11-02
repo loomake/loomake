@@ -22,4 +22,4 @@
 
 ## Impact
 
-runnerの2行と追加試験が対象。公開API・CLI・設定・依存・旧試験を変えない。#65/W1-6・C003は着手/受入せず、依存未完を保持する。新L3 PRは本数条件で保留し、今回はローカル準備だけを行う。
+runnerの2行と追加試験が対象。公開API・CLI・設定・依存・旧試験を変えない。#65/W1-6・C003は着手/受入せず、依存未完を保持する。設計時は本数条件で新L3 PRを保留し、ローカル準備に限った。[R351=A](https://github.com/loomake/loomake/issues/121#issuecomment-6590095928)で修理1本の例外が承認され、[PR #352](https://github.com/loomake/loomake/pull/352)を受け入れた。

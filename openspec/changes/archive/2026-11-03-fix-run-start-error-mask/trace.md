@@ -30,4 +30,4 @@
 
 ## 保持する範囲
 
-#65/W1-6の依存#62とC003は未完。collector/共通形式/鮮度/保存へ進まない。REQ-070/127の原文・hash、C001/E3/S1/PIN、既存it/assert/期待/期限/skip/設定/依存を保持する。日別worklogと常時yomiyasuは今回の利用者直接指示を優先し、新規則の採用としない。新L3 PRは本数条件で保留し、local完了をCI/独立最終/merge/archiveや親の受入とは呼ばない。
+#65/W1-6の依存#62とC003は未完。collector/共通形式/鮮度/保存へ進まない。REQ-070/127の原文・hash、C001/E3/S1/PIN、既存it/assert/期待/期限/skip/設定/依存を保持する。日別worklogと常時yomiyasuは今回の利用者直接指示を優先し、新規則の採用としない。設計時は本数条件で新L3 PRを保留した。[R351=A](https://github.com/loomake/loomake/issues/121#issuecomment-6590095928)で修理1本の例外が承認され、[PR #352](https://github.com/loomake/loomake/pull/352)を受け入れた。local完了とCI・独立最終・merge・archiveの確認を区別し、親の受入とは呼ばない。
