@@ -7,8 +7,9 @@ Loomake を導入してから日常的に使うまでの文書をまとめる。
 
 ## はじめに
 
-- [クイックスタート](1.getting-started/1.quickstart.md)：導入から 1 つの change を終えるまで
-- [使い方](1.getting-started/2.usage.md)：各手順の詳しい説明とオプション
+- [クイックスタート](1.getting-started/1.quickstart.md)：公開前の導入から、1 つの change を終えて完了ゲートが通るまでの唯一の道筋
+- [未公開の tarball から導入する](1.getting-started/3.unpublished-install.md)：クイックスタートの 1 章から参照する、tarball の詳細手順
+- [使い方](1.getting-started/2.usage.md)：クイックスタートの各手順の詳細と、verify・設定のリファレンス
 
 ## ガイド
 
