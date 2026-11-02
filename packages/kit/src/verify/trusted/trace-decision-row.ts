@@ -24,6 +24,7 @@ export function findParsedTraceDecision(
   if (!source[decision]) return rejected(table === 'questions' ? `確認事項「${id}」の回答が空です` : `仮定「${id}」の承認が空です`);
   const columns = table === 'questions' ? QUESTION_CELLS : ASSUMPTION_CELLS;
   const cells = Object.freeze(Object.fromEntries(columns.map(key => [key, source[key]])));
-  const row = Object.freeze({ table, line: source.line, cells, decision: cells[decision], actorLabel: cells[actor], date: cells[date] }) as ParsedTraceDecisionRow;
+  const row = Object.freeze({ table, line: source.line, cells,
+    decision: cells[decision], actorLabel: cells[actor], date: cells[date] }) as ParsedTraceDecisionRow;
   return { row, adoptionsVerified: false, problems: [] };
 }
