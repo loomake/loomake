@@ -38,7 +38,7 @@
 | AC-01 | REQ-184 | doctor-diagnostics.test.ts の不在・集約・対象名・2つの直し方・終了コード・旧案内除外 | 3ケースRED、修理後の関連71試験GREEN |
 | AC-02 | REQ-184 | 不正JSONの旧診断と直し方を追加検証、型・容量・読み取り権限の既存経路を維持 | 新旧関連71試験GREEN |
 | AC-03 | REQ-024 | init.test.ts の既存2試験へ新しいassertionだけを追加 | 追記前RED1件、全48件GREEN。npm既定値と既存期待は不変 |
-| AC-04 | REQ-024, REQ-184 | `[REQ-024][REQ-184]` を付けた init → doctor の統合テスト。PATH を固定し問題 2 件・終了コード 1 を確認 | #285 のマージ待ち、RED → GREEN は未実施 |
+| AC-04 | REQ-024, REQ-184 | doctor.test.ts の新しい統合試験。PATHを固定してinit → doctorを実行 | 修理前doctor原文でRED1件、修理後の関連全120試験GREEN |
 | AC-05 | 既存 REQ-134 | doctor.test.ts のファイル不変更のテストと、品質コマンド不実行・ネットワーク不接続を維持 | 既存テストを変更しない。この change では要件を変更しない |
 
 ## 工程分担の記録
