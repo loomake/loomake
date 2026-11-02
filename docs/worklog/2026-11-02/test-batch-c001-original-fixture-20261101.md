@@ -1,6 +1,6 @@
 # C001原文入力のGit一括読取り
 
-1. [PR #323](https://github.com/loomake/loomake/pull/323) で既存19試験のGit読取りを一括化した。原文書14件、全バイト・sha256・実Git blob・mode、試験の宣言・本文・期待値・期限とGitの512KiB上限を保持し、main取込みではC2bの記録を残して日別記録の競合だけを解消した。
-2. 取込み前の前後19件・全体2662件と固定coverageが成功し、同じshimでGit起動205回から85回への削減を実測した。取込み前の必須5チェック・3 OS・CodeQLが成功し、Windows第2脚の初回4失敗と一度の再検証1522成功・失敗0はIssue #275へ保持した。
-3. 取込み前の別担当自己レビューと独立最終レビューは、それぞれ重大0・軽微1・情報4だった。確定結果の補記は[Issue #326](https://github.com/loomake/loomake/issues/326)で追跡し、変更後headの品質・CI・レビューを再確認する。scenario-auditジョブは成功扱いだが本体はartifact未取得でskipされており、監査の実施成功には数えない。
-4. 変更後headで通常の検査とレビューを満たしてから受け入れる。Issue #321と#275の根本原因は未確定のまま残し、この起動削減だけで閉じない。
+1. [PR #323](https://github.com/loomake/loomake/pull/323) の日別記録の競合を解消し、mainを取り込んだ。原文入力試験と原文書14件のGitオブジェクトは、独立レビュー済みのheadと同一だった。
+2. 取り込み後の通常verify（build・lint・typecheck・test）は終了0、原文入力19試験も成功した。必須CIと3 OSは、この記録の時点では再確認待ち。
+3. 元headの独立レビューは重大0、軽微1件は[Issue #326](https://github.com/loomake/loomake/issues/326)で追跡している。Issue #321・#275の根本原因は未確定で、過去のWindows失敗とscenario-audit本体のskipを保持する。
+4. 同じheadの独立差分レビュー、必須CI、3 OSを確認してから受け入れる。C001全体・S1・live・S2は未完了。
