@@ -11,7 +11,7 @@
 - `REQ-362` として、R100・前後の完全な blob ID の一致・前後 100644・対応する archive 名・安全なパス・同じ archive への文書追加をすべて満たす移動だけ、前後のパスを L1 と数える案を追加する。
 - `REQ-342` は L1 の対象の行だけを変更し、本文のほかの行と既存 13 Scenario を保持する。`.openspec.yaml` を一般の文書の許可リストには加えない。
 - この案の採用後は、ほかの全パスが既存 L1 に当たる archive PR で、quality の lint・typecheck・test・build・配布物検査が省略され、対象 change がない gate は lint と文書リンク検査だけを実行する。main push の品質検査、主仕様 strict、REQ ID 重複検査、archive 前の元の DoD は維持する。
-- AGENTS.md の L1 対象行へ最小の追記を提案する。未適用パッチを `proposed/AGENTS.md.patch` に置く。
+- AGENTS.md の L1 対象行へ最小の追記を提案する。未適用パッチを `proposed/AGENTS.patch.md` に置く。
 - 任意の YAML、内容変更、単独の追加・移動、不一致・不正な日付・不安全なパス・通常以外のモード・OID 不明は例外にしない。ほかの未知パスは L2 のまま。
 
 ## Capabilities
