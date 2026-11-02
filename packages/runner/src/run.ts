@@ -39,7 +39,7 @@ async function runWithinBudget(options: RunOptions): Promise<number> {
       options.stdout(error.message);
       return 1;
     }
-    if (error instanceof GitError) throw new UsageError(error.message);
+    if (error instanceof GitError) throw new UsageError(maskSecrets(error.message));
     throw error;
   }
   try { return await runLocked(options); }
@@ -52,7 +52,7 @@ async function runLocked(options: RunOptions): Promise<number> {
   try {
     ctx = await prepare(options);
   } catch (e) {
-    if (e instanceof GitError) throw new UsageError(e.message);
+    if (e instanceof GitError) throw new UsageError(maskSecrets(e.message));
     throw e;
   }
   if (typeof ctx === 'number') return ctx;
