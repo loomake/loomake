@@ -1,21 +1,23 @@
-import { copyFileSync, lstatSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { lstatSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { createInputReader, type InputReader } from '../runtime/input.js';
+import { UsageError } from '../runtime/errors.js';
+import { createInputReader, DOCUMENT_LIMITS, type InputReader } from '../runtime/input.js';
 
-function copyInput(source: string, target: string, reader: InputReader): void {
+function copyInput(source: string, target: string, reader: InputReader, depth = 0): void {
   let stats;
   try { stats = lstatSync(source); } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') return;
     throw error;
   }
   if (stats.isDirectory()) {
+    if (depth > DOCUMENT_LIMITS.maxDepth) throw new UsageError(`入力を読み取れません：探索の深さの上限は${DOCUMENT_LIMITS.maxDepth}です（${source}）`);
     mkdirSync(target, { recursive: true });
-    for (const entry of reader.entries(source)) copyInput(join(source, entry.name), join(target, entry.name), reader);
+    for (const entry of reader.entries(source)) copyInput(join(source, entry.name), join(target, entry.name), reader, depth + 1);
   } else {
-    reader.read(source);
+    const text = reader.read(source);
     mkdirSync(dirname(target), { recursive: true });
-    copyFileSync(source, target);
+    writeFileSync(target, text);
   }
 }
 

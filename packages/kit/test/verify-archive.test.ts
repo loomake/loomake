@@ -1,7 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { isAbortedResult, loadVerifyQualitySchema, runExternal, runVerify, UsageError, verifyExitCode } from '@loomake/kit';
+import * as inputModule from '../src/runtime/input.js';
+import { createArchiveInput } from '../src/verify/archive-input.js';
 import { resolveChangeDir } from '../src/runtime/change-files.js';
 import { CHANGE, commitAll, QUALITY_YAML, vitestCommand, withProject } from './project.js';
 
@@ -66,6 +68,35 @@ describe('archive verification', () => {
       expect(verifyExitCode(result)).toBe(expected === 'PASS' ? 0 : 1); expect(readdirSync(stage)).toEqual([]);
     });
   }));
+  it('[REQ-394] stages the checked text without reopening a replaced source', () => withProject({ tasks: '## 1. Tasks\r\n- [x] 1.1 原文\r\n' }, root => {
+    const path = archive(root), source = join(path, 'tasks.md'), checkedText = readFileSync(source, 'utf8'), create = inputModule.createInputReader;
+    const spy = vi.spyOn(inputModule, 'createInputReader').mockImplementation(options => {
+      const reader = create(options); return { ...reader, read: file => {
+        const text = reader.read(file); if (file === source) writeFileSync(source, 'x'.repeat(1024 * 1024 + 1)); return text;
+      } };
+    });
+    let staged: ReturnType<typeof createArchiveInput> | undefined;
+    try {
+      staged = createArchiveInput(root, path, CHANGE);
+      expect(readFileSync(join(staged.cwd, 'openspec/changes', CHANGE, 'tasks.md'), 'utf8')).toBe(checkedText);
+      expect(runExternal('openspec', ['validate', CHANGE, '--strict'], { cwd: staged.cwd }).status).toBe(0);
+    } finally { spy.mockRestore(); staged?.cleanup(); }
+  }));
+  it.each(['change', 'specs', 'schemas'])('[REQ-394][REQ-170] preserves directory depth 32/33 for %s and cleans stages', kind => {
+    for (const depth of [32, 33]) withProject({}, root => {
+      const path = archive(root), source = kind === 'change' ? path : join(root, 'openspec', kind), nested = Array(depth).fill('d').join('/');
+      mkdirSync(join(source, nested), { recursive: true }); writeFileSync(join(source, nested, 'input.md'), '原文');
+      isolatedStage(root, stage => {
+        if (depth === 33) expect(() => createArchiveInput(root, path, CHANGE)).toThrow(/探索の深さ.*32/);
+        else {
+          const input = createArchiveInput(root, path, CHANGE);
+          try { expect(readFileSync(join(input.cwd, 'openspec', kind === 'change' ? 'changes/' + CHANGE : kind, nested, 'input.md'), 'utf8')).toBe('原文'); }
+          finally { input.cleanup(); }
+        }
+        expect(readdirSync(stage)).toEqual([]);
+      });
+    });
+  });
   it.each(['budget', 'link', 'missing-cli'])('[REQ-394] does not pass %s failures and removes staged inputs', kind => withProject({ config: strict }, root => {
     const path = archive(root);
     isolatedStage(root, stage => {

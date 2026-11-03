@@ -11,6 +11,8 @@ CI/verify/strictを一つの必要修理PRにし、最終headで自身のarchive
 - runVerifyで一度解決し、checkSpec・quality読込み・tasks・specs・basis/receiptは元repoの実pathを共有する。HEAD・commands・report・producerのrootも変えない。
 - 外部strictだけ、対象全体・現行主仕様・config両形式・project schemasを同CLI用tempへ複写する。項目/入力予算とリンク拒否を保ち、原文を変えず、Git/quality/node_modulesを移さない。診断にarchive実対象と隔離入力を示しfinallyで片付ける。未発見CLI等の既存分類は保つ。
 
+- 再openを避け、readerで検査したUTF-8テキストだけを隔離先へ書く。コピー開始tree（change・main specs・schemas）を深さ0とし、directory訪問だけ既存DOCUMENT_LIMITS.maxDepthで数える。深さ32のdirectory内fileは受け入れ、33のdirectoryを拒否してcleanupする。activeの探索は変えない。
+
 ## Risks / Trade-offs
 標準外の新archiveは不合格、activeは不変。CLI1.14.3はCI固定・1.15.0は開発用で、版を取り違えない。全必要入力や失敗処理を削らず、Source/試験/公開API回帰を確認する。
 
