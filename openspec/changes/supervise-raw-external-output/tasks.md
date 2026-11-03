@@ -2,7 +2,7 @@
 
 ## 1. 私的raw入口
 
-- [ ] 1.1 `pnpm -s verify --change supervise-raw-external-output --spec-only` のexit 0を再確認してから、REQ-412の4Scenarioに対応する試験を既存process.test.tsへ追加し、旧sourceで意味のあるREDを保存する。共通engine・私的型・raw wrapper・公開wrapperを実装し、元Buffer、capture予約、安全な加算、共有状態、非公開barrelを追加試験と既存process試験で確認する。
+- [x] 1.1 `pnpm -s verify --change supervise-raw-external-output --spec-only` のexit 0を再確認してから、REQ-412の4Scenarioに対応する試験を既存process.test.tsへ追加し、旧sourceで意味のあるREDを保存する。共通engine・私的型・raw wrapper・公開wrapperを実装し、元Buffer、capture予約、安全な加算、共有状態、非公開barrelを追加試験と既存process試験で確認する。
 - [ ] 1.2 `pnpm -s lint`、`pnpm -s typecheck` と影響範囲の関連試験を通す。旧runExternalのfull suiteを同条件で通し、既存assertion・設定・timeout・skipに変更がないことをdiffで確認する。
 - [ ] 1.3 同じ実装PRへchangesetと作業日のJST日誌を含め、判断・結果・残る確認・次の作業だけを記録する。計画実数を含む追加削除の合計を再計算し、明確な300行超過や試験不足は管理役へ戻す。
 

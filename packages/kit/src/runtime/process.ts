@@ -396,8 +396,27 @@ export function missingResultError(
 function utf8Prefix(text: string, bytes: number): string {
   return new StringDecoder('utf8').write(Buffer.from(text).subarray(0, bytes));
 }
+type ExternalBytesOptions = Pick<ExternalOptions, 'cwd' | 'env' | 'timeoutMs'> & { maxBuffer: number };
+type ExternalBytesResult = Omit<ExternalResult, 'stdout' | 'stderr'> & { stdout: Buffer; stderr: Buffer };
+type CapturedResult = { text: ExternalResult; stdout: Buffer; stderr: Buffer };
+const CONTROL_RESERVE_BYTES = 64 * 1024;
+
 /** 引数を配列のまま渡し、期限・合計出力と子グループを監視する。 */
 export function runExternal(command: string, args: readonly string[], options: ExternalOptions = {}): ExternalResult {
+  return runExternalEngine(command, args, options).text;
+}
+
+/** 原文を必要とする内部の呼出しだけへ、文字列化する前のBufferを返す。 */
+export function runExternalBytes(command: string, args: readonly string[], options: ExternalBytesOptions): ExternalBytesResult {
+  const maxBuffer = (options as Partial<ExternalBytesOptions> | undefined)?.maxBuffer;
+  if (typeof maxBuffer !== 'number' || !Number.isSafeInteger(maxBuffer) || maxBuffer <= 0 || !Number.isSafeInteger(maxBuffer + CONTROL_RESERVE_BYTES)) {
+    throw new UsageError('外部操作の出力予算は正の安全な整数にしてください');
+  }
+  const { text, ...bytes } = runExternalEngine(command, args, options, maxBuffer + CONTROL_RESERVE_BYTES);
+  return { ...text, ...bytes };
+}
+
+function runExternalEngine(command: string, args: readonly string[], options: ExternalOptions, captureBytes?: number): CapturedResult {
   const budget = budgets.getStore();
   if (budget?.state.interrupted) throw new ProcessLimitError('interrupted', command, '', '', budget.state.reason);
   // 品質コマンドは 1 操作の上限を使わず、明示した残り時間と共有予算だけで止める
@@ -421,20 +440,21 @@ export function runExternal(command: string, args: readonly string[], options: E
   let hold: { pipe: string; id: string; expiresAt: number } | { unavailable: string } | null = null;
   if (prepared && holdId) hold = 'pipe' in prepared ? { pipe: prepared.pipe, id: holdId, expiresAt: holdExpiry(Date.now(), timeout) } : prepared;
   const result = spawnSync(process.execPath, [SUPERVISOR, JSON.stringify([command, args, options.shell ?? false, startedAt + timeout, maxBuffer, hold])], {
-    cwd: options.cwd, env: options.env, stdio: ['ignore', 'pipe', 'pipe', 'pipe'], maxBuffer: Math.max(maxBuffer, 64 * 1024),
+    cwd: options.cwd, env: options.env, stdio: ['ignore', 'pipe', 'pipe', 'pipe'], maxBuffer: captureBytes ?? Math.max(maxBuffer, 64 * 1024),
   });
   // 不正なUTF-8の置換で文字列のバイト数が増えても、公開する文字列の合計は予算以内にする。
   // 起動に失敗すると、型に反して stdout・stderr が null になる
   const output = result as { stdout: Buffer | null; stderr: Buffer | null; output: (Buffer | null)[] | null };
-  const stdout = utf8Prefix(output.stdout?.toString('utf8') ?? '', maxBuffer);
-  const stderr = utf8Prefix(output.stderr?.toString('utf8') ?? '', maxBuffer - Buffer.byteLength(stdout));
+  const bytes = { stdout: output.stdout ?? Buffer.alloc(0), stderr: output.stderr ?? Buffer.alloc(0) };
+  const stdout = utf8Prefix(bytes.stdout.toString('utf8'), maxBuffer);
+  const stderr = utf8Prefix(bytes.stderr.toString('utf8'), maxBuffer - Buffer.byteLength(stdout));
   const report = readReport(output.output?.[3]?.toString('utf8') ?? '');
   const usesHolder = hold !== null && 'pipe' in hold ? holdId : undefined;
   const outcome = report.outcome;
   if (result.error) {
     if (!outcome) stopTree(report.target, holdId, holder);
     else if (usesHolder) holder?.release(usesHolder);
-    return { status: null, signal: result.signal, stdout, stderr, error: result.error };
+    return { text: { status: null, signal: result.signal, stdout, stderr, error: result.error }, ...bytes };
   }
   if (!outcome) {
     // 外からの強制終了（Windows の process.kill(pid, 'SIGINT') など）や異常終了で、監視役が結果を書かなかった。
@@ -453,5 +473,5 @@ export function runExternal(command: string, args: readonly string[], options: E
     throw new ProcessLimitError(outcome.kind, command, stdout, stderr);
   }
   const error = outcome.error && Object.assign(new Error(outcome.error.message), { code: outcome.error.code });
-  return { status: outcome.status, signal: outcome.signal, stdout, stderr, ...(error ? { error } : {}) };
+  return { text: { status: outcome.status, signal: outcome.signal, stdout, stderr, ...(error ? { error } : {}) }, ...bytes };
 }
