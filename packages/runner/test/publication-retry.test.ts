@@ -126,6 +126,15 @@ function lookupDiagnosticLabel(value: string): string {
 
 
 describe('証拠とPRの再試行', () => {
+  it.each([false, true])('[REQ-165] 既存PRのDraft=%sを変えずに再利用する', isDraft => withRepo(`draft-${isDraft}`, async repo => {
+    repo.env.FAKE_GH_RESULT = JSON.stringify([{ ...row, isDraft }]);
+    const result = await run(repo);
+    expect(result.code, result.stdout).toBe(0);
+    expect(result.stdout).toContain(`既存のPRを確認しました：${row.url}`);
+    expect(repo.prs()).toEqual([]);
+    expect(lookupCount(repo)).toBe(1);
+  }));
+
   it.each(['before', 'after'])('[REQ-164][REQ-165] 作成の%sで失敗した後も同じ証拠とコミットを使う', (failure) => (failure === 'before'
     ? withFailedCreate('create-before', (repo, first) => retryAfterCreateFailure(failure, repo, first))
     : withRepo('create-after', async (repo) => {
