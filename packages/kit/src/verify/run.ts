@@ -34,7 +34,8 @@ import { basisHash, findProducer, gitHead, readReport } from './quality-receipt.
 import { sha256Hex } from './hash.js';
 import { InputReadFailure, RuntimeFailure, UsageError } from '../runtime/errors.js';
 import { createInputReader, JSON_LIMITS, type InputReader } from '../runtime/input.js';
-import { findChangeDir, specFiles, toPosix } from '../runtime/change-files.js';
+import { findChangeDir, resolveChangeDir, specFiles, toPosix, type ChangeLocation } from '../runtime/change-files.js';
+import { createArchiveInput } from './archive-input.js';
 
 export type VerifyOptions = {
   /** プロジェクトのルート（loomake.config.json のあるディレクトリ） */
@@ -114,11 +115,12 @@ export function runVerify(options: VerifyOptions): VerifyResult {
   } else {
     // ci の完了ゲートだけが品質の証拠を判定する。ほかのゲートは quality.yaml があれば形だけを確かめる（REQ-319・R-C001-10 A）
     const judgeQuality = gate === 'done' && scope === 'ci';
-    const changeDir = resolve(root, config.openspecDir, 'changes', changeId);
+    const location = resolveChangeDir(resolve(root, config.openspecDir, 'changes'), changeId);
+    const changeDir = 'dir' in location ? location.dir : undefined;
     let quality: Quality | undefined;
     let basisBefore = '';
     // change がないときは、既存の「change の存在」の不合格を返す。quality.yaml は品質コマンドや openspec validate より前に読む
-    if (existsSync(changeDir) && statSync(changeDir).isDirectory()) {
+    if (changeDir && (location.kind !== 'archived' || config.openspecDir === 'openspec') && existsSync(changeDir) && statSync(changeDir).isDirectory()) {
       const read = loadQuality(root, judgeQuality, options.qualitySchema);
       if (read.status === 'error') return { schemaVersion: VERIFY_RESULT_SCHEMA_VERSION, change: changeId, run: { status: 'aborted', errors: [read.error] } };
       if (read.status === 'loaded' && judgeQuality) {
@@ -126,7 +128,7 @@ export function runVerify(options: VerifyOptions): VerifyResult {
         basisBefore = basisHash(root, changeDir);
       }
     }
-    const spec = checkSpec(root, config, changeId, gate ?? 'spec-only', scope, record, rel, approvals);
+    const spec = checkSpec(root, config, changeId, location, gate ?? 'spec-only', scope, record, rel, approvals);
     if (spec && gate === 'done') {
       checkTasksAndPending(spec, record, approvals);
       // 前回のレポートで合格させないよう、commands を実行する前に消す
@@ -144,7 +146,7 @@ export function runVerify(options: VerifyOptions): VerifyResult {
         const receipt: TestReportReceipt | null = skipCommands ? null : {
           producer: findProducer(root),
           target: { before: targetBefore, after: gitHead(root) },
-          basis: { before: basisBefore, after: basisHash(root, changeDir) },
+          basis: { before: basisBefore, after: basisHash(root, spec.changeDir) },
           invocation: { startedAt, finishedAt, clearedBefore, exitCode },
           report: readReport(reportPath, config.tests.report),
           required: [...new Set(spec.live.flatMap((r) => r.sources))].sort(),
@@ -201,10 +203,16 @@ const formatErrors = (errors: ParseError[]) => errors.map((e) => `${e.file}:${e.
 
 // ---------- 仕様ゲート ----------
 function checkSpec(
-  root: string, config: LoomakeConfig, changeId: string, gate: 'spec-only' | 'done', scope: VerifyScope, record: Recorder, rel: (p: string) => string, approvals: ApprovalNeed[],
+  root: string, config: LoomakeConfig, changeId: string, location: ChangeLocation,
+  gate: 'spec-only' | 'done', scope: VerifyScope, record: Recorder, rel: (p: string) => string, approvals: ApprovalNeed[],
 ): SpecState | null {
   const reader = createInputReader();
-  const changeDir = resolve(root, config.openspecDir, 'changes', changeId);
+  const changeDir = 'dir' in location ? location.dir : resolve(root, config.openspecDir, 'changes', changeId);
+  if (location.kind === 'ambiguous' || (location.kind === 'archived' && config.openspecDir !== 'openspec')) {
+    const reason = 'dirs' in location ? `archive候補が複数あります。最新は選びません：${location.dirs.map(rel).join('、')}` : 'archive検査はopenspecDirがopenspecの標準rootだけに対応しています';
+    record('change の存在', 'fail', reason);
+    return null;
+  }
   if (!existsSync(changeDir) || !statSync(changeDir).isDirectory()) {
     record('change の存在', 'fail', `${rel(changeDir)} がありません。change-id を確かめてください`);
     return null;
@@ -317,7 +325,7 @@ function checkSpec(
   const orphan = ledger.filter((r) => r['状態'] === '反映済' && !referenced.has(r.ID));
   record('反映済の要件が仕様にある', orphan.length ? 'fail' : 'pass', orphan.map((r) => r.ID).join(', '));
 
-  checkOpenspecValidate(root, config, changeId, scope, record);
+  checkOpenspecValidate(root, config, changeId, location, scope, record);
   return { reader, changeDir, trace, live, decision };
 }
 
@@ -362,26 +370,29 @@ export const OPENSPEC_NA_CONFIRMER = 'loomake verify（openspecValidate: auto �
 const OPENSPEC_MISSING = 'OpenSpec CLI が見つかりません（npm install -g @fission-ai/openspec）';
 
 // openspec validate（REQ-037）。CLI が無いときは、true なら不合格、auto なら local は理由と確認者つきの対象外、ci は不足にする
-function checkOpenspecValidate(root: string, config: LoomakeConfig, changeId: string, scope: VerifyScope, record: Recorder) {
+function checkOpenspecValidate(root: string, config: LoomakeConfig, changeId: string, location: ChangeLocation, scope: VerifyScope, record: Recorder) {
   if (config.openspecValidate === false) return;
+  const archived = location.kind === 'archived' && 'dir' in location ? location.dir : undefined;
+  const note = archived ? `archive実対象 ${toPosix(relative(root, archived))} の隔離複写をstrictの入力に使います。\n` : '';
+  const input = archived ? createArchiveInput(root, archived, changeId) : undefined;
   let r;
   try { r = runExternal('openspec', ['validate', changeId, '--strict'], {
-    cwd: root,
+    cwd: input?.cwd ?? root,
     shell: process.platform === 'win32',
     maxBuffer: MAX_BUFFER,
   }); } catch (error) {
     if (!(error instanceof ProcessLimitError)) throw error;
-    record('openspec validate', 'fail', error.message);
+    record('openspec validate', 'fail', note + error.message);
     return;
-  }
+  } finally { input?.cleanup(); }
   // Windows では shell 経由で起動するので、CLI が無いと ENOENT ではなくシェルが終了コード 1 を返す
   const missing = r.error?.code === 'ENOENT' || (process.platform === 'win32' && /is not recognized|認識されていません/.test(r.stderr));
   if (missing) {
-    if (config.openspecValidate !== 'auto') record('openspec validate', 'fail', OPENSPEC_MISSING);
-    else if (scope === 'ci') record('openspec validate', 'insufficient', `${OPENSPEC_MISSING}。validate を実行していません`);
-    else record('openspec validate', 'na', `対象外：${OPENSPEC_MISSING}ため、validate を実行していません（確認者：${OPENSPEC_NA_CONFIRMER}）`);
+    if (config.openspecValidate !== 'auto') record('openspec validate', 'fail', note + OPENSPEC_MISSING);
+    else if (scope === 'ci') record('openspec validate', 'insufficient', `${note}${OPENSPEC_MISSING}。validate を実行していません`);
+    else record('openspec validate', 'na', `${note}対象外：${OPENSPEC_MISSING}ため、validate を実行していません（確認者：${OPENSPEC_NA_CONFIRMER}）`);
   } else {
-    record('openspec validate', r.status === 0 ? 'pass' : 'fail', r.status === 0 ? '' : `${r.stdout}${r.stderr}`.trim().slice(0, 2000));
+    record('openspec validate', r.status === 0 ? 'pass' : 'fail', note + (r.status === 0 ? '' : `${r.stdout}${r.stderr}`.trim().slice(0, 2000)));
   }
 }
 
