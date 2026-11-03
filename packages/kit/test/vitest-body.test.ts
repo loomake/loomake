@@ -25,7 +25,7 @@ it('[REQ-393] 公開取得器が52境界の原観測を保ち元のstatusと終�
   expect(recorded).toHaveLength(52);
   expect(reports[1].status).toBe(reports[0].status);
   expect(recorded.map(t => [t.fullName, t.status])).toEqual(plain.map(t => [t.fullName, t.status]));
-  const byId = Object.fromEntries(recorded.map(t => [t.fullName.match(/\[P\d+\]/)?.[0], t]));
+  const byId = Object.fromEntries(recorded.map(t => [t.fullName.match(/\[P\d+\]/)?.[0] ?? t.fullName, t] as const));
   const attempt = (id: string) => byId[id].meta.loomakeBody!.attempts;
   for (const id of ['P01','P02','P03','P07','P09','P10','P14','P21','P22','P36']) expect(attempt(`[${id}]`)[0].calls).toEqual({});
   for (const id of ['P04','P08','P11','P12','P13','P29','P31','P33']) expect(attempt(`[${id}]`)[0].calls).toEqual({toBe:1});
