@@ -662,6 +662,57 @@ describe('回答の反映と書き方の案内（#285）', () => {
     expect(check(r, '回答済みの確認事項の参照')?.detail).toBe(`specs/a/spec.md:${line} Q-15\nspecs/x/spec.md:${line} Q-15`);
   });
 
+  it('[REQ-360] ID全体を日本語・インラインコード・リンクから照合しCRLFと両フェンス除外を保つ', () => {
+    const trace = traceMd({ questions: [qrow('Q-285-01', 'REQ-012', '5 回')] });
+    const base = specMd(); const line = base.split('\n').length + 1;
+    const spec = `${base}\nQ-285-01の回答\n\`Q-285-01\`\n[Q-285-01](./trace.md)\n\`\`\`text\nQ-285-01\n\`\`\`\n~~~\nQ-285-01\n~~~\n`.replace(/\n/g, '\r\n');
+    const r = withProject({ trace, spec }, specOnly);
+    expect(check(r, '回答済みの確認事項の参照')).toEqual({ check: '回答済みの確認事項の参照', status: 'warn', detail: [0, 1, 2].map((offset) => `specs/x/spec.md:${line + offset} Q-285-01`).join('\n') });
+    expect(r).toMatchObject({ schemaVersion: '2.0.0', decision: { required: false, reasons: [] }, summary: { pending: 0 } });
+    expect(verifyExitCode(r)).toBe(0);
+  });
+
+  it.each([false, true])('[REQ-360] 短いIDを未知または未回答の長いIDの一部として案内しない known=%s', (known) => {
+    const trace = traceMd({ questions: [qrow('Q-285', 'REQ-012', '5 回'), ...(known ? [qrow('Q-285-01', 'REQ-012')] : [])] });
+    const r = withProject({ trace, spec: `${specMd()}\nQ-285-01\n` }, specOnly);
+    expect(check(r, '回答済みの確認事項の参照')).toBeUndefined();
+    expect(verifyExitCode(r)).toBe(0);
+  });
+
+  it('[REQ-360] 文字列IDの記号を正規表現にせずQ-以外の形も照合する', () => {
+    const ids = ['Q279-00', 'Q2', 'Q.1', 'Q(A)'];
+    const trace = traceMd({ questions: ids.map((id) => qrow(id, 'REQ-012', '5 回')) });
+    const base = specMd(); const line = base.split('\n').length + 1;
+    const r = withProject({ trace, spec: `${base}\nQ279-00 Q2 QX1 Q.1 QA Q(A)\n` }, specOnly);
+    expect(check(r, '回答済みの確認事項の参照')?.detail).toBe(ids.map((id) => `specs/x/spec.md:${line} ${id}`).join('\n'));
+    expect(verifyExitCode(r)).toBe(0);
+  });
+
+  it('[REQ-360] IDの前後にASCII英数字やハイフンが続くと案内しない', () => {
+    const trace = traceMd({ questions: [qrow('Q-285-01', 'REQ-012', '5 回')] });
+    const spec = `${specMd()}\nXQ-285-01 9Q-285-01 -Q-285-01 Q-285-010 Q-285-01A Q-285-01-2\n`;
+    const r = withProject({ trace, spec }, specOnly);
+    expect(check(r, '回答済みの確認事項の参照')).toBeUndefined();
+    expect(verifyExitCode(r)).toBe(0);
+  });
+
+  it.each(['', '5 回'])('[REQ-360] 長いIDを先に採り短いIDの順序と繰り返しを保つ answer=%s', (answer) => {
+    const trace = traceMd({ questions: [qrow('Q2', 'REQ-012', '5 回'), qrow('Q2.1', 'REQ-012', answer)] });
+    const base = specMd(); const line = base.split('\n').length + 1;
+    const r = withProject({ trace, spec: `${base}\nQ2.1 と Q2、Q2\n` }, specOnly);
+    const ids = [...(answer ? ['Q2.1'] : []), 'Q2', 'Q2'];
+    expect(check(r, '回答済みの確認事項の参照')?.detail).toBe(ids.map((id) => `specs/x/spec.md:${line} ${id}`).join('\n'));
+    expect(verifyExitCode(r)).toBe(0);
+  });
+
+  it('[REQ-360] 長い回答済みIDが残ってもdoneの判定と出力を変えない', () => {
+    const trace = traceMd({ ledger: [ledgerRow('REQ-012'), pending('REQ-029')], questions: [qrow('Q-285-01', 'REQ-029', '5 回')] });
+    const r = withProject({ trace, spec: `${specMd()}\nQ-285-01\n`, quality: true }, done);
+    expect(check(r, '回答済みの確認事項の参照')).toBeUndefined();
+    expect(check(r, '確認待ちが残っていない')).toMatchObject({ status: 'insufficient', detail: 'REQ-029' });
+    expect(verifyExitCode(r)).toBe(1);
+  });
+
   it('[REQ-360] doneは回答後の案内を追加せず従来の確認待ちの不足と終了1を保つ', () => {
     const trace = traceMd({ ledger: [ledgerRow('REQ-012'), pending('REQ-029')], questions: [qrow('Q-15', 'REQ-029', '5 回')] });
     const r = withProject({ trace, spec: `${specMd()}\nQ-15\n`, quality: true }, done);
