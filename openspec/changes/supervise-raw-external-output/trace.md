@@ -13,7 +13,7 @@
 
 | ID | 出典 | 種別 | 要約（原文に忠実に） | 状態 | 反映先 |
 |---|---|---|---|---|---|
-| REQ-412 | #310のC3・既存外部操作監視・委任されたX1 | 追加 | 原文Bufferを保持する私的な同期入口を既存監視と共有し、公開APIを保つ | 反映済 | specs/external-process-budget/spec.md、designの4Scenario試験表 |
+| REQ-412 | #310のC3・既存外部操作監視・委任されたX1 | 機能 | 原文Bufferを保持する私的な同期入口を既存監視と共有し、公開APIを保つ | 反映済 | specs/external-process-budget/spec.md、designの4Scenario試験表 |
 
 「反映済」は差分仕様への反映を示し、実装と受入は未完了である。REQ-402〜411は再利用しない。採番前にmainと169作業木のopenspec、GitHub code/issuesでREQ-412の一致なしを確認した。C3全接続やstderr上限の採用をこの行の完了に含めない。
 

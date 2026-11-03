@@ -39,9 +39,9 @@ Requirement一覧はREQ-412のみ。追加テスト名に `[REQ-412]` を付け�
 
 | 対象 | 行数 |
 |---|---:|
-| 計画6ファイル | 140 |
+| 計画6ファイル | 141 |
 | 主仕様同期（差分ヘッダを除く） | 20 |
 | source・test・日誌・changeset | 123 |
-| 合計 | 283 |
+| 合計 | 284 |
 
-300行を明確に超える見込みや4Scenarioの試験不足が判明したら、実装を広げず管理役へ戻す。normal local done、同じ実装PRでの主仕様同期とarchive、archive後のdone再確認まで行う。最終headで必須CI5件とkitのLinux/macOS/Windows、非作者レビューと独立Opus最終レビュー重大0・軽微Issue化を確認し、mainへのsquash直前にheadを照合する。照合後のpushは全条件を再確認する。
+300行を明確に超える見込みや4Scenarioの試験不足が判明したら、実装を広げず管理役へ戻す。normal local doneと、同じ実装PRでの主仕様同期とarchiveを行う。文書だけの同期・archive後はstrictとspec-only、source/testの木の不変を確認し、通常のfull qualityを重複実行しない。sourceが変わればnormal local doneを再実行する。非作者レビューは独立Opus最終レビューの前に同じレビュー依頼で実施し、local doneの成功で代替しない。最終headで通常のscope ci archiveゲート、必須CI5件とkitのLinux/macOS/Windows、独立Opus最終レビュー重大0・軽微Issue化を確認し、mainへのsquash直前にheadを照合する。照合後のpushは全条件を再確認する。

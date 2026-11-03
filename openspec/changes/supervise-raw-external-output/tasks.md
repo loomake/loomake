@@ -8,9 +8,10 @@
 
 ## 2. 統合確認
 
-- [ ] 2.1 `pnpm -s verify --change supervise-raw-external-output --done` を省略なしのnormal localで通し、4Scenarioの実試験、tasks全完了、非作者レビューの重大0を確認する。
+- [ ] 2.1 `pnpm -s verify --change supervise-raw-external-output --done --scope local` を省略なしのnormal localで通し、4Scenarioの実試験とtasks全完了を確認する。 <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
-- 同じ実装PRで主仕様へ同期してarchiveし、archive後の通常doneを確認する。X2/X3a/X3bとC3/S1/C001の完了は別に確認する。
-- 最終headで必須CI5件、kitの3OS、独立Opus最終レビュー重大0と軽微Issue化を確認する。squash merge直前にheadを照合し、その後にpushがあれば全条件を再確認する。
+- 同じ実装PRで主仕様へ同期してarchiveする。文書だけの同期・archive後はstrictとspec-only、source/testの木が不変であることを確認する。sourceが変わればnormal local doneを再実行する。X2/X3a/X3bとC3/S1/C001の完了は別に確認する。
+- 非作者レビュー重大0を、独立Opus最終レビューの前に同じレビュー依頼で確認する。local doneの成功を未実施レビューの完了と扱わない。
+- 最終headで通常のscope ci archiveゲート、必須CI5件、kitの3OS、独立Opus最終レビュー重大0と軽微Issue化を確認する。squash merge直前にheadを照合し、その後にpushがあれば全条件を再確認する。
