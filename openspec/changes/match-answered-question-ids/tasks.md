@@ -12,7 +12,11 @@
 
 ## 3. 統合検証
 
-- [ ] 3.1 要件ID付き試験と全タスク完了を確かめ、ローカル完了ゲートのexit 0を確認する。
+- [x] 3.1 要件ID付き試験・全体の品質コマンドの成功と、既存Scenario・試験の保持を確認する。
+
+## 完了条件
+
+全タスクの確認後、`pnpm -s verify --change match-answered-question-ids --done --scope local`のexit 0を必須とする。タスク自身の未完了との自己参照を避けるため、完了ゲートはタスク進捗と分けて実行する。
 
 ## Workflow follow-up
 
