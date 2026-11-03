@@ -56,6 +56,32 @@ product:
         min_samples: 1
 ```
 
+### 合意した更新と保持の例
+
+変更部分の YAML 抜粋であり、完成した quality.yaml の例ではない。合意した変更は PQ-900 の linked_requirements に REQ-034 を追加することだけとする。custom は既存の未知キーであり、新しい未知キーの提案ではない。
+
+#### 変更前
+
+```yaml
+product:
+  PQ-900:
+    # 既存のコメント
+    blocking: true
+    linked_requirements: [REQ-313]
+    custom: 1
+```
+
+#### 変更後
+
+```yaml
+product:
+  PQ-900:
+    # 既存のコメント
+    blocking: true
+    linked_requirements: [REQ-313, REQ-034]
+    custom: 1
+```
+
 ## specs/<capability>/spec.md（差分）
 
 ```markdown
