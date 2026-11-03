@@ -298,7 +298,7 @@ Source: REQ-359
 - **THEN** 検証ルートの実パスに基づいて探索位置を比べ、範囲内の有効なpackage.jsonを使う。リンク先実体の照合はこの要件では行わない
 
 ### Requirement: 回答の反映漏れの案内
-spec-onlyは、確認待ちの要件の案内で、確認事項の「関連」の列にその要件IDと完全に一致するIDを持つ確認事項のIDを、確認事項の表の順に重複なく要件IDのあとへ示す SHALL。関連する確認事項がない要件は要件IDだけを示す SHALL。回答が空でない確認事項の「関連」にある要件が確認待ちのときと、changeの差分仕様のコードブロックの外に回答が空でない確認事項のIDが残っているときは、それぞれを案内つきの合格として示す SHALL。これらの案内だけでは不合格・pending・要判断を立てず終了コードを変えない MUST。doneの判定と出力は変えない MUST。
+spec-onlyは、確認待ちの要件の案内で、確認事項の「関連」の列にその要件IDと完全に一致するIDを持つ確認事項のIDを、確認事項の表の順に重複なく要件IDのあとへ示す SHALL。関連する確認事項がない要件は要件IDだけを示す SHALL。回答が空でない確認事項の「関連」にある要件が確認待ちのときと、changeの差分仕様のコードブロックの外に回答が空でない確認事項のIDが、前後にASCII英数字やハイフンが続かず、より長い確認事項のIDの一部でもない形で、ID全体として残っているときは、それぞれを案内つきの合格として示す SHALL。これらの案内だけでは不合格・pending・要判断を立てず終了コードを変えない MUST。doneの判定と出力は変えない MUST。
 
 Source: REQ-360
 
@@ -317,6 +317,16 @@ Source: REQ-360
 #### Scenario: 未回答のQの参照
 - **WHEN** 回答が空のQ-15だけを差分仕様で参照するchangeに--spec-onlyを実行する
 - **THEN** 参照の案内は出ない
+
+#### Scenario: ハイフンを含むIDの全体を照合する
+- **WHEN** 回答のあるQ-285-01を、差分仕様のコードブロックの外で参照するchangeに--spec-onlyを実行する
+- **THEN** そのファイル名・行番号・Q-285-01が案内つきの合格で出て、終了コードは0である
+#### Scenario: 短いIDを長いIDの一部として示さない
+- **WHEN** 回答のあるQ-285があり、差分仕様にはQ-285-01だけがあるchangeに--spec-onlyを実行する
+- **THEN** Q-285の参照の案内は出ない
+#### Scenario: Q-の形でないIDも照合する
+- **WHEN** 回答のあるQ279-00を、差分仕様のコードブロックの外で参照するchangeに--spec-onlyを実行する
+- **THEN** そのファイル名・行番号・Q279-00が案内つきの合格で出る
 
 ### Requirement: 回答と承認の書き方の案内
 人が読むverifyの表示は、ブロッキング確認事項の不合格の詳細のあとに、changeのtrace.mdの「確認事項」の表の該当する行の「回答」に回答を決めた人が書くことと `loomake trace answer` の書き方を一行で示す SHALL。未承認の仮定の詳細のあとに、「仮定」の表の「承認」に `承認` と書くことと `loomake trace approve` の書き方を一行で示す SHALL。この案内はJSONの結果に含めず、検査の分類・詳細・終了コードを変えない MUST。
@@ -344,3 +354,18 @@ Source: REQ-394
 #### Scenario: strictの入力と失敗
 - **WHEN** 同期前後4種の差分、Scenario欠落・metadata/task不正・copy/外部実行失敗を検査する
 - **THEN** 必要入力と診断を失わず同CLI strictへ渡し、失敗をPASSにしない。root/HEAD/commands/qualityを隔離先へ移さず、一時入力を片付ける
+
+### Requirement: verify設定の読取不能の分類
+verifyは、存在するloomake.config.jsonのOS由来の読取失敗を実行時の失敗として扱い、CLIのJSON出力ではruntimeのabortedと終了コード3を返すMUST。JSON構文・設定内容の誤りと、入力予算・リンク・通常ファイル以外の拒否はconfigのabortedと2、設定省略時は既存の既定値を保つMUST。JSONの形、入力予算・リンク拒否とverify以外の共有設定読取の契約を変えないMUST。
+
+Source: REQ-395
+
+#### Scenario: 存在する設定を読めない
+- **WHEN** 設定の読取りがOSのエラーで失敗し、verifyをJSONあり/なしで実行する
+- **THEN** どちらも3で、JSONだけをstdoutへ出しruntimeのabortedにする。APIの例外も共通分類で3となり、使い方を表示しない
+#### Scenario: 構文・内容の誤りと不在
+- **WHEN** 不正JSON・不正な設定内容・設定の不在でverifyを実行する
+- **THEN** 不正入力はconfigのaborted/2、不在は既存の既定値となり、内容不正を実行時の失敗へ変えない
+#### Scenario: 共有読取と入力制約
+- **WHEN** 同じ読取不能を共有loadConfigの利用側へ渡すか、入力予算超過やリンクを設定として渡す
+- **THEN** verify以外のUsageError契約と入力拒否を維持し、入力の拒否はverifyでもconfig/2を保つ
