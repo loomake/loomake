@@ -18,7 +18,9 @@ it('[REQ-393] 公開取得器が52境界の原観測を保ち元のstatusと終�
     'body-cases.test.mjs': fixture,
     'body.mjs': `import { chai } from 'vitest';import { createBodyRecorder as real } from ${JSON.stringify(api)};export const createBodyRecorder = ${JSON.stringify(mode)}==='identity'?()=> (_ctx,fn)=>fn():real;export const body=createBodyRecorder(chai);`,
   } }, root => {
-    const run = spawnSync(process.execPath, [vitestBin, 'run', 'body-cases.test.mjs', '--reporter=json', '--outputFile=.loomake/test-report.json', ...(filter ? ['-t', filter] : [])], { cwd: root, encoding: 'utf8' });
+    const run = spawnSync(process.execPath, [vitestBin, 'run', 'body-cases.test.mjs', '--reporter=json', '--outputFile=.loomake/test-report.json', ...(filter ? ['-t', filter] : [])], { cwd: root, encoding: 'utf8', timeout: 45_000 });
+    expect(run.error).toBeUndefined();
+    expect(run.signal).toBeNull();
     return { status: run.status, report: JSON.parse(readFileSync(join(root, '.loomake/test-report.json'), 'utf8')) as Report };
   });
   const reports = ['identity', 'adapter'].map(mode => collect(mode));
