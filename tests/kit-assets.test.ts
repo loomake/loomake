@@ -375,6 +375,7 @@ describe('品質 YAML の具体案と分割合意', () => {
 
 describe('合意した品質 YAML の反映と報告', () => {
   const apply = section(skill, /合意した品質 YAML の反映/);
+  const report = section(skill, /品質 YAML の反映結果/);
   it('[REQ-410] 合意前は書かず、合意した既存更新と対象外の保持を分ける', () => {
     for (const text of ['合意前には quality.yaml を書かず', '具体的に合意した差分だけ', '合意した既存値・ID の更新', '合意対象外の値・コメント・未知キー・順序・ID は保持']) expect(apply, text).toContain(text);
   });
@@ -383,5 +384,11 @@ describe('合意した品質 YAML の反映と報告', () => {
   });
   it('[REQ-410] 不在時は合意済み全文で新規作成し、上書きinitを使わない', () => {
     for (const text of ['不在時は合意した全文を新しく書き', '既存を上書きする init は使わない']) expect(apply, text).toContain(text);
+  });
+  it('[REQ-411] 反映IDと関連要件・未観測証拠と不足対象・未反映Qを番号付きで報告する', () => {
+    for (const text of ['反映した UQ/PQ の ID と関連要件', 'まだ観測できない必須証拠と証拠不足になる対象', '反映できず確認事項にした要件']) expect(report).toMatch(new RegExp(`^\\d+\\. .*${text}`, 'm'));
+  });
+  it('[REQ-411] 旧報告四項目と次の一手を残す', () => {
+    for (const text of ['change 一覧', '台帳の集計', 'ブロッキング確認事項', '未承認の仮定', '次の一手']) expect(section(skill, /報告する/)).toMatch(new RegExp(`^\\d+\\. .*${text}`, 'm'));
   });
 });
