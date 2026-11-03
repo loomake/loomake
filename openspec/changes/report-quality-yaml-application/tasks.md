@@ -3,7 +3,7 @@
 ## 1. 反映結果の報告
 
 - [x] 1.1 Apply の実装最終 head を local 親に固定し、元 checkpoint 13e9817e の REQ-411 root 二ケースを同じ describe へ全文移管する。追加報告の RED と旧報告互換の PASS を確認し、両 Skill Step 7 の各六行と guide を追加して二件 GREEN・Apply 四件と旧 assert 成功を確かめる。
-- [ ] 1.2 strict/spec-only・全量と固定親基準の自身の差分を確認する。親の日誌 prefix を保持して子の判断結果を四項目へ短く追記し、kit patch changeset を含める。format・kit 試験・元 B2 branch は変更しない。
+- [x] 1.2 strict/spec-only・全量と固定親基準の自身の差分を確認する。親の日誌 prefix を保持して子の判断結果を四項目へ短く追記し、kit patch changeset を含める。format・kit 試験・元 B2 branch は変更しない。
 
 ## 2. 統合確認
 
