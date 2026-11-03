@@ -14,7 +14,7 @@
 
 ## 3. 完了と受入
 
-- [ ] 3.1 通常doneを終了0にし、全要件のREQ-ID試験と全tasksを確認する。
+- [x] 3.1 通常doneを終了0にし、全要件のREQ-ID試験と全tasksを確認する。
 
 ## Workflow follow-up
 
