@@ -27,3 +27,4 @@ export { EVIDENCE_SCHEMA_VERSION, LEGACY_EVIDENCE_SCHEMA_VERSION, EVIDENCE_V2_SC
 export type { Evidence, LegacyEvidence, EvidenceV2, EvidenceDocument, Report, ReportRow } from './trace-contracts.js';
 export { loadQualityResultSchema } from './quality-result.js';
 export type { QualityResult } from './quality-result.js';
+export { BODY_EVIDENCE_KEY, type BodyAttempt, type BodyEvidence } from './body-evidence.js';
