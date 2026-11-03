@@ -52,7 +52,7 @@ npx loomake trace report --change <id>            # リリースレポートを�
 | パッケージ | 場所 | 役割 |
 |---|---|---|
 | `@loomake/core` | `packages/core/` | trace.md・spec.md・tasks.md・テストレポートの読み取りと、verify 結果の JSON スキーマ（外部の実行時依存として許すのは `zod` だけ） |
-| `@loomake/kit` | `packages/kit/` | verify・init・doctor の本体、配布するテンプレート（Skill・AGENTS.md・CLAUDE.md・devcontainer） |
+| `@loomake/kit` | `packages/kit/` | verify・init・doctor の本体、配布するテンプレート（Skill・AGENTS.md・CLAUDE.md・品質雛形のquality.yaml・自動実行されないworkflow見本・devcontainer） |
 | `@loomake/trace` | `packages/trace/` | 証拠の記録（`trace record`）とリリースレポート（`trace report`） |
 | `@loomake/runner` | `packages/runner/` | tasks を AI のエンジンに実装させ、完了ゲートが通るまで回して PR を出す（`run`） |
 | `loomake` | `packages/cli/` | CLI 本体（`loomake init`・`loomake verify`・`loomake trace`・`loomake run`・`loomake doctor`） |
