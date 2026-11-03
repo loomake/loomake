@@ -207,6 +207,16 @@ describe('archive metadata の gate 子プロセス', () => {
   });
 });
 
+it.each(['L1', 'L2', 'L3'])('[REQ-132] 本文明示archiveとactiveの通常doneを%sでも呼び、失敗を保持する', tier => withProject(({ dir, git, commitFiles, run }) => {
+  const target = 'openspec/changes/archive/2026-11-03-c1'; mkdirSync(join(dir, target), { recursive: true });
+  git('mv', 'openspec/changes/c1/tasks.md', `${target}/tasks.md`);
+  rmSync(join(dir, 'openspec/changes/c1'), { recursive: true, force: true });
+  commitFiles([tier === 'L1' ? 'docs/change.md' : tier === 'L2' ? 'scripts/change.mjs' : 'packages/kit/src/change.ts']);
+  const result = run('archive-c1', 'loomake-change: c1, c2', { c1: 1 });
+  expect(result.stdout).toContain(`loomake-tier: ${tier}`); expect(result.status).toBe(1);
+  expect(result.calls).toEqual([...(tier === 'L1' ? lintOnly : []), done('c1'), done('c2')]);
+}));
+
 describe('実際のCIゲートの子プロセスの契約', () => {
   it.each(['setup-monorepo', 'loomake/c1'])('[REQ-010][REQ-054][REQ-132] ブランチ%sで指定どおりの完了ゲートを呼び、失敗を伝える', (branch) => {
     withProject(({ run }) => {

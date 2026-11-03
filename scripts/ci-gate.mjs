@@ -14,7 +14,7 @@
 // PR_BODY を渡せば、gh を使わずにその文を本文として使う
 // L2・L3 の PR は工程行の形も検査する。担当や実行記録の照合は行わない（Issue #256）。
 
-import { appendFileSync, existsSync, readFileSync, statSync } from 'node:fs';
+import { appendFileSync, existsSync, lstatSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -26,6 +26,16 @@ import { processEvidenceProblems, formatProcessProblems } from './process-eviden
 // change は changes/ の直下のディレクトリだけ。changes/archive/ は完了した change の置き場で、change ではない
 const isChangeName = (name) => /^[^/\\.][^/\\]*$/.test(name) && name !== 'archive';
 const isChangeDir = (changesDir, name) => isChangeName(name) && existsSync(join(changesDir, name)) && statSync(join(changesDir, name)).isDirectory();
+
+// 本文明示だけarchiveを補う。active entryがあれば、不完全でもarchiveを選ばない。
+function declaredCandidateCount(changesDir, id) {
+  if (!isChangeName(id)) return 0;
+  if (isChangeDir(changesDir, id)) return 1;
+  try { lstatSync(join(changesDir, id)); return 0; } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  const archive = join(changesDir, 'archive');
+  return existsSync(archive) ? readdirSync(archive, { withFileTypes: true }).filter((entry) =>
+    entry.isDirectory() && /^\d{4}-\d{2}-\d{2}-/.test(entry.name) && entry.name.slice(11) === id).length : 0;
+}
 
 /** ブランチ名から決めた verify の引数。一致する change がなければ空 */
 export function verifyArgs(ref, changesDir) {
@@ -51,7 +61,10 @@ export function selectChanges({ ref = '', body = '', files = [], changesDir, cha
   const declared = declaredChanges(body);
   if (declared) {
     if (!declared.length) return { qualityOnly: 'PR 本文で、change のない PR だと明示しています' };
-    const missing = declared.filter((id) => !isChangeDir(changesDir, id));
+    const counts = declared.map((id) => [id, declaredCandidateCount(changesDir, id)]);
+    const ambiguous = counts.filter(([, count]) => count > 1).map(([id]) => id);
+    if (ambiguous.length) return { error: `PR 本文明示idのarchive候補が複数あります：${ambiguous.join('、')}` };
+    const missing = counts.filter(([, count]) => count === 0).map(([id]) => id);
     if (missing.length) return { error: `PR 本文の loomake-change: に書いた change がありません：${missing.join('、')}` };
     return { changes: declared };
   }
