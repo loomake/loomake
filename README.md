@@ -11,7 +11,7 @@ Loomake は、品質駆動開発のツール群として、自社プロダクト
 - tasks を AI に実装させ、完了ゲートが通るまで直させて、PR を出す（`loomake run`）
 
 ```sh
-npx loomake init                                  # AGENTS.md・設定・Skill を置く
+npx loomake init                                  # 共通ルール・設定・Skill・品質雛形・workflow 見本を置く
 npx loomake doctor                                # 導入状態を調べ、足りない設定と直し方を出す
 npx loomake verify --change <id> --spec-only      # 仕様ゲート：実装に入ってよいか
 npx loomake verify --change <id> --done --scope local # 完了ゲート（ローカル）：要件ごとのテスト・品質コマンド
@@ -22,6 +22,8 @@ npx loomake trace report --change <id>            # リリースレポートを�
 ```
 
 `npx loomake --help` でコマンドの一覧を、`npx loomake <コマンド> --help` でそれぞれの使い方を表示する。
+
+`init` は品質目標未設定の `quality.yaml`（version 2）と、`.github/loomake/workflow.example.yml` も置く。品質の対象と合格に必要な証拠は導入後に設定する。workflow は自動実行されない見本で、呼出し先・入出力の契約・固定 ref は未提供のため、利用前に置き換えて実稼働を確かめる。
 
 `loomake` はまだ npm に公開していない。今の導入から最初の change までの道筋は [クイックスタート](docs/guide/1.getting-started/1.quickstart.md)、tarball の作り方は [未公開の tarball から導入する](docs/guide/1.getting-started/3.unpublished-install.md) にある。英語の概要は [README.en.md](README.en.md) にある。
 
