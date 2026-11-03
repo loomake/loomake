@@ -71,7 +71,7 @@ jobs:
           const r = JSON.parse(readFileSync('queue-spec.json', 'utf8'));
           if (r.schemaVersion !== '2.0.0' || r.change !== process.env.CHANGE_ID ||
               r.run?.status !== 'completed' || !Array.isArray(r.run.errors) || r.run.errors.length ||
-              r.decision?.required !== false || r.verdict !== 'PASS' ||
+              r.decision?.required !== false ||
               !Array.isArray(r.checks) || !r.checks.length ||
               r.checks.some(c => !['PASS', 'NOT_APPLICABLE'].includes(c.result)) ||
               !r.checks.some(c => c.result === 'PASS')) {
@@ -79,6 +79,8 @@ jobs:
           }
           JS
 ```
+
+この例のspec-only（既定のscope local）のJSONには`verdict`がありません。終了コードと、検査の完了・要判断なし・各検査の結果で成功を確かめます。
 
 権限は`contents: read`だけです。対象がない・未回答がある・コマンドが失敗した・JSONを取得できない場合はjobが失敗します。Issueやラベルを書き換えず、不合格でもラベルを付ける操作自体は防ぎません。
 
