@@ -1,3 +1,4 @@
+import { parseCiTestMetadata, type CiTestMetadataV1, type ParseResult } from '@loomake/core';
 import {
   createAgreement, parseTrace, parseTasks, parseSpec, extractTestRequirements, VERIFY_RESULT_SCHEMA_VERSION, loadParserSchemas, TRACE_SCHEMA_VERSION, SPEC_SCHEMA_VERSION, TASKS_SCHEMA_VERSION, loadTraceSchemas, type Evidence as CoreEvidence, type EvidenceDocument as CoreEvidenceDocument, type Report as CoreReport, type ReportRow as CoreReportRow,
   QUALITY_REPORT_SCHEMA_VERSION, loadQualityReportSchema, type QualityReport,
@@ -16,6 +17,9 @@ export type LegacyStatusContract = Assert<Equal<LegacyVerifyCheckResult['status'
 
 // 型チェックだけに使う利用側の例。呼び出してファイルやGitを変更しない。
 export function consumePublicApi(root: string) {
+  const metadata: ParseResult<CiTestMetadataV1 | null> = parseCiTestMetadata('metadata.json', '{}');
+  const metadataVersion: 1 | undefined = metadata.value?.schemaVersion;
+  void metadataVersion; // REQ-391: packaged public parser and type
   const error: ParseError = { file: 'trace.md', line: 1, message: '入力の確認' };
   const trace: Trace = parseTrace(error.file, '').value;
   const tasks: Task[] = parseTasks('tasks.md', '- [ ] task').value;

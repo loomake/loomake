@@ -1,0 +1,17 @@
+# gate・run・evaluate・propose を呼び出す構成の見本です。
+# 呼出し先の共通 workflow・入出力の契約・固定 ref は未提供です。
+# @v1 は未提供の仮参照です。このままでは 4 ジョブの実稼働を受け入れられません。
+# .github/loomake/ は GitHub Actions の自動実行対象ではありません。
+# 利用前に提供済みの契約と固定 ref へ置き換え、実稼働を別途確認してください。
+name: Loomake workflow example
+on:
+  workflow_dispatch:
+jobs:
+  gate:
+    uses: loomake/loomake/.github/workflows/gate.yml@v1
+  run:
+    uses: loomake/loomake/.github/workflows/run.yml@v1
+  evaluate:
+    uses: loomake/loomake/.github/workflows/evaluate.yml@v1
+  propose:
+    uses: loomake/loomake/.github/workflows/propose.yml@v1
