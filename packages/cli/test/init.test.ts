@@ -3,7 +3,8 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { unifiedDiff } from '@loomake/kit';
+import { loadQualitySchema } from '@loomake/core';
+import { initFiles, qualitySubjectsGuard, readQualityFile, runInit as runInitApi, unifiedDiff } from '@loomake/kit';
 import { main } from '../src/main.js';
 
 // git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
@@ -490,5 +491,134 @@ describe('生成したローカルの完了と最終の合格の案内', () => {
       expect(lines.filter((line) => /^- \[/.test(line) && line.includes('--scope ci'))).toEqual([]);
       expect(lines.filter((line) => line.trim()).at(-1)).toBe('注：3.1 はローカルの完了。最終の合格には、CI で `npx loomake verify --change <change-id> --done --scope ci` が exit 0（判定 PASS・要判断なし）になることと、必須 CI の成功が別に要る。これはタスクにしない');
     }
+  });
+});
+
+
+describe('プレビュー導入の雛形', () => {
+  it('[REQ-396] 空のプロジェクトに品質目標未設定の quality.yaml を置き、作成一覧と設定案内を出す', async () => {
+    const r = await runInit();
+    expect(r.code).toBe(0);
+    expect(r.files['quality.yaml']).toContain('version: 2');
+    expect(r.files['quality.yaml']).toContain('objectives: {}');
+    expect(r.files['quality.yaml']).toContain('product: {}');
+    expect(r.stdout).toContain('作成：quality.yaml');
+    expect(r.stdout).toContain('品質目標未設定');
+    expect(r.stdout).toContain('証拠');
+    expect(config(r)).not.toHaveProperty('quality');
+  });
+
+  it('[REQ-397] 4ジョブの未提供参照を明記した見本だけを配置する', async () => {
+    const r = await runInit();
+    const sample = r.files['.github/loomake/workflow.example.yml'];
+    expect(r.code).toBe(0);
+    expect(sample).toBeDefined();
+    expect(sample).toContain('未提供');
+    for (const job of ['gate', 'run', 'evaluate', 'propose']) {
+      expect(sample).toContain(`uses: loomake/loomake/.github/workflows/${job}.yml@v1`);
+    }
+    expect(sample).not.toContain('steps:');
+    expect(Object.keys(r.files).some((p) => p.startsWith('.github/workflows/'))).toBe(false);
+    expect(r.stdout).toContain('作成：.github/loomake/workflow.example.yml');
+  });
+});
+
+
+describe('品質雛形と見本の保護', () => {
+  const targets = [
+    ['REQ-396', 'quality.yaml', 'quality.yaml'],
+    ['REQ-397', '.github/loomake/workflow.example.yml', 'workflow.example.yml'],
+  ] as const;
+
+  for (const [req, path, source] of targets) {
+    it(`[${req}][REQ-020] ${path} が同じ内容なら変更せず、確認しない`, async () => {
+      const r = await runInit([], { files: { [path]: template(source).replace(/\n/g, '\r\n') } });
+      expect(r.code).toBe(0);
+      expect(r.files[path]).toBe(template(source).replace(/\n/g, '\r\n'));
+      expect(r.prompts).toEqual([]);
+      expect(r.stdout).toContain(`変更なし：${path}`);
+      if (path === 'quality.yaml') expect(r.stdout).not.toContain('quality.yaml は品質目標未設定');
+    });
+
+    it(`[${req}][REQ-020] ${path} の上書きを拒否すると既存内容を守る`, async () => {
+      const r = await runInit([], { files: { [path]: MINE }, answers: ['n'] });
+      expect(r.code).toBe(0);
+      expect(r.files[path]).toBe(MINE);
+      expect(r.prompts).toEqual([`${path} を上書きしますか [y/N] `]);
+      expect(r.stdout).toContain(`--- ${path}`);
+      if (path === 'quality.yaml') expect(r.stdout).not.toContain('quality.yaml は品質目標未設定');
+    });
+
+    it(`[${req}][REQ-020] ${path} の上書きを承諾すると一覧と必要な案内を出す`, async () => {
+      const r = await runInit([], { files: { [path]: MINE }, answers: ['y'] });
+      expect(r.code).toBe(0);
+      expect(r.files[path]).toBe(template(source));
+      expect(r.stdout).toContain(`上書き：${path}`);
+      if (path === 'quality.yaml') expect(r.stdout).toContain('quality.yaml は品質目標未設定');
+    });
+
+    it(`[${req}][REQ-020] ${path} が異なる非TTYでは他のファイルも置かない`, async () => {
+      const r = await runInit([], { files: { [path]: MINE } });
+      expect(r.code).toBe(1);
+      expect(r.files).toEqual({ [path]: MINE });
+      expect(r.prompts).toEqual([]);
+      expect(r.stdout).not.toContain('quality.yaml は品質目標未設定');
+    });
+  }
+
+  for (const path of ['quality.yaml', '.github/loomake/workflow.example.yml', '.github', '.github/loomake']) {
+    for (const dangling of [false, true]) {
+      it(`[REQ-396][REQ-397][REQ-020] ${path} の${dangling ? 'リンク先なし' : '外部'}リンクは内容を読まず全配置を中止する`, async () => {
+        const outside = mkdtempSync(join(tmpdir(), 'loomake-init-outside-'));
+        try {
+          const target = join(outside, 'secret');
+          if (!dangling) {
+            if (path === '.github' || path === '.github/loomake') mkdirSync(target);
+            else writeFileSync(target, 'OUTSIDE-SECRET');
+          }
+          const r = await runInit([], { setup: (root) => {
+            mkdirSync(dirname(join(root, path)), { recursive: true });
+            symlinkSync(target, join(root, path), path === '.github' || path === '.github/loomake' ? 'dir' : 'file');
+          } });
+          expect(r.code).toBe(1);
+          expect(r.files).toEqual({});
+          expect(r.stdout).not.toContain('OUTSIDE-SECRET');
+          expect(r.stdout).not.toContain('--- ');
+          expect(r.prompts).toEqual([]);
+          if (dangling) expect(existsSync(target)).toBe(false);
+          else if (path.endsWith('.yaml') || path.endsWith('.yml')) expect(readFileSync(target, 'utf8')).toBe('OUTSIDE-SECRET');
+          else expect(readdirSync(target)).toEqual([]);
+        } finally { rmSync(outside, { recursive: true, force: true }); }
+      });
+    }
+  }
+
+  it('[REQ-397][REQ-020] 見本の祖先が内部ディレクトリへのリンクなら既存の配置動作を保つ', async () => {
+    const r = await runInit([], { setup: (root) => {
+      mkdirSync(join(root, 'internal'));
+      symlinkSync('internal', join(root, '.github'), 'dir');
+    } });
+    expect(r.code).toBe(0);
+    expect(r.files['internal/loomake/workflow.example.yml']).toBe(template('workflow.example.yml'));
+    expect(r.stdout).toContain('作成：.github/loomake/workflow.example.yml');
+  });
+
+  it('[REQ-396][REQ-397] 公開APIの配置一覧とrunInitも雛形を配り、v2で読める空対象を合格にしない', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'loomake-init-api-'));
+    try {
+      const paths = initFiles({ root }).map((file) => file.path);
+      expect(paths).toEqual(expect.arrayContaining(['quality.yaml', '.github/loomake/workflow.example.yml']));
+      const out: string[] = [];
+      expect(await runInitApi({ root, interactive: false, confirm: async () => false, stdout: (text) => out.push(text) })).toBe(0);
+      const { qualitySchema } = await loadQualitySchema();
+      const result = readQualityFile({ root, gate: 'done', schema: qualitySchema });
+      expect(result.status).toBe('loaded');
+      if (result.status !== 'loaded') throw new Error('品質雛形を読み取れません');
+      expect(result.quality).toMatchObject({ version: 2, model: 'iso-iec-25010-2011', objectives: {}, product: {} });
+      expect(qualitySubjectsGuard(result.quality)).toMatchObject({ result: 'INSUFFICIENT_EVIDENCE' });
+      const stdout = out.join('\n');
+      expect(stdout.indexOf('quality.yaml は品質目標未設定')).toBeGreaterThan(stdout.indexOf('Jest（package.json'));
+      expect(stdout.indexOf('quality.yaml は品質目標未設定')).toBeLessThan(stdout.indexOf('loomake を開発用'));
+    } finally { rmSync(root, { recursive: true, force: true }); }
   });
 });
