@@ -45,11 +45,17 @@ function checkShape(report: unknown): string | null {
 }
 
 // JSON.parse のエラーメッセージにある位置から、行番号を求める
-function errorLine(text: string, message: string): number {
-  const line = message.match(/line (\d+)/);
-  if (line) return Number(line[1]);
-  const pos = message.match(/position (\d+)/);
-  return pos ? text.slice(0, Number(pos[1])).split('\n').length : 1;
+export function errorLine(text: string, message: string): number {
+  const lines = text.split(/\r\n|\r|\n/);
+  const line = message.match(/\(line (\d+) column (\d+)\)$/);
+  if (line) {
+    const row = Number(line[1]); const column = Number(line[2]);
+    return Number.isSafeInteger(row) && row > 0 && row <= lines.length
+      && Number.isSafeInteger(column) && column > 0 && column <= lines[row - 1].length + 1 ? row : 1;
+  }
+  const pos = message.match(/(?:^| at )position (\d+)$/);
+  const offset = Number(pos?.[1]);
+  return Number.isSafeInteger(offset) && offset >= 0 && offset <= text.length ? text.slice(0, offset).split(/\r\n|\r|\n/).length : 1;
 }
 
 // JSON として読み、形を確かめる。extractTestRequirements と parseTestReport で共通にする

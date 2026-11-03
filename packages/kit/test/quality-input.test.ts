@@ -119,3 +119,36 @@ describe('quality.yaml の最小読取', () => {
     });
   });
 });
+
+
+it('[REQ-398] 不在案内は読取の最小と完了合格の対象・証拠を区別し、runtime/3を保つ', () => {
+  withRoot(undefined, (root) => {
+    const error = errorOf(read(root));
+    expect(error.kind).toBe('runtime');
+    expect(exitOf(error)).toBe(3);
+    expect(error.next).toContain('最小の quality.yaml');
+    expect(error.next).toContain('読取');
+    expect(error.next).toContain('品質の対象');
+    expect(error.next).toContain('証拠');
+  });
+});
+
+
+it('[REQ-398][REQ-310] 2行の公開定数と未知キーの互換、config/2とpermission/3を維持する', () => {
+  expect(MINIMAL_QUALITY_YAML).toBe('version: 2\nmodel: iso-iec-25010-2011\n');
+  withRoot(`${MINIMAL_QUALITY_YAML}future: preserved\n`, (root) => {
+    expect(read(root)).toMatchObject({ status: 'loaded', quality: { future: 'preserved', objectives: {}, product: {} } });
+    const denied = { ...createInputReader(), read: () => { throw new Error('EACCES: permission denied'); } };
+    const error = errorOf(read(root, 'done', denied));
+    expect(error.kind).toBe('permission');
+    expect(exitOf(error)).toBe(3);
+    expect(error.next).toContain('権限');
+  });
+  for (const content of ['version: 2\nmodel: [\n', 'version: "2"\nmodel: x\n', 'version: 3\nmodel: x\n']) {
+    withRoot(content, (root) => {
+      const error = errorOf(read(root));
+      expect(error.kind).toBe('config');
+      expect(exitOf(error)).toBe(2);
+    });
+  }
+});
