@@ -8,7 +8,7 @@
 ## 2. 記録と統合確認
 
 - [x] 2.1 d649 の日誌七行を同日 A prefix の後へそのまま保持して X 結果を追記する。旧誤根拠不採用→7ff 分割採用、B2 160c の六 Scenario/spec15、C3 監視 audit（#310/REQ180183 の raw byte・別上限・既存監視接続欠落）と通常設計中、DOC3 質問未投稿、main7d・JST closed0（root 01:39 観測）を必要な判断結果だけ四項目へ集約し、長い経過や session/SHA 羅列を日誌へ書かない。
-- [ ] 2.2 `pnpm -s verify --change propose-quality-yaml --done --scope local` を通常実行で通す。 <!-- loomake:gate=done -->
+- [x] 2.2 `pnpm -s verify --change propose-quality-yaml --done --scope local` を通常実行で通す。 <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
