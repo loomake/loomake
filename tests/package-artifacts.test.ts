@@ -1,6 +1,6 @@
 import { packedTarballsEnv } from './packed-tarballs.js';
 import { afterAll, describe, expect, inject, it } from 'vitest';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -195,3 +195,60 @@ console.log(JSON.stringify({ output, heapUsed: process.memoryUsage().heapUsed })
     expect(result.heapUsed).toBeLessThan(32 * 1024 * 1024);
   }, 36000);
 });
+
+
+it('[REQ-396][REQ-397][REQ-398] tarballの実CLIが空Gitへ雛形と見本を配置し、不在時は読取最小と合格条件を案内する', () => {
+  const previewTarget = join(base, 'init-preview');
+  const prepared = spawnSync(process.execPath, ['scripts/package-smoke.mjs', 'prepare', previewTarget], { cwd: root, encoding: 'utf8', env });
+  expect(prepared.status, prepared.stdout + prepared.stderr).toBe(0);
+  const installed = join(previewTarget, 'consumer/node_modules');
+  const cli = join(installed, 'loomake/dist/cli.js');
+  const kitTemplates = join(installed, '@loomake/kit/templates');
+  const samplePath = '.github/loomake/workflow.example.yml';
+  const files = ['AGENTS.md', 'CLAUDE.md', 'loomake.config.json', 'quality.yaml', samplePath, '.claude/skills/req-to-openspec/SKILL.md'];
+  for (const optIn of [false, true]) {
+    const project = join(previewTarget, optIn ? 'empty-git-opt-in' : 'empty-git');
+    mkdirSync(project);
+    const git = spawnSync('git', ['init', '-q'], { cwd: project, encoding: 'utf8' });
+    expect(git.status, git.stderr).toBe(0);
+    const init = spawnSync(process.execPath, [cli, 'init', ...(optIn ? ['--codex', '--devcontainer'] : [])], { cwd: project, encoding: 'utf8' });
+    expect(init.status, init.stdout + init.stderr).toBe(0);
+    for (const file of files) {
+      expect(existsSync(join(project, file)), file).toBe(true);
+      expect(init.stdout).toContain(`作成：${file}`);
+    }
+    expect(readFileSync(join(project, 'quality.yaml'), 'utf8')).toBe(readFileSync(join(kitTemplates, 'quality.yaml'), 'utf8'));
+    expect(readFileSync(join(project, 'quality.yaml'), 'utf8')).toContain('objectives: {}\nproduct: {}');
+    expect(readFileSync(join(project, 'quality.yaml'), 'utf8')).not.toContain('PQ-900');
+    expect(init.stdout).toContain('品質目標未設定');
+    const sample = readFileSync(join(project, samplePath), 'utf8');
+    expect(sample).toContain('未提供');
+    for (const job of ['gate', 'run', 'evaluate', 'propose']) expect(sample).toContain(`uses: loomake/loomake/.github/workflows/${job}.yml@v1`);
+    expect(existsSync(join(project, '.github/workflows'))).toBe(false);
+    expect(existsSync(join(project, '.agents/skills/req-to-openspec/SKILL.md'))).toBe(optIn);
+    expect(existsSync(join(project, '.devcontainer/devcontainer.json'))).toBe(optIn);
+    const config = JSON.parse(readFileSync(join(project, 'loomake.config.json'), 'utf8'));
+    expect(config.commands).toEqual({ lint: 'npm run lint', typecheck: 'npm run typecheck', test: 'npm test' });
+    expect(config).not.toHaveProperty('quality');
+    expect(readFileSync(join(project, '.gitignore'), 'utf8')).toContain('.loomake/test-report.json');
+  }
+  const consumer = join(previewTarget, 'consumer');
+  rmSync(join(consumer, 'quality.yaml'));
+  const missing = spawnSync(process.execPath, [cli, 'verify', '--change', 'sample', '--done', '--scope', 'ci', '--json'], { cwd: consumer, encoding: 'utf8' });
+  expect(missing.status, missing.stdout + missing.stderr).toBe(3);
+  const result = JSON.parse(missing.stdout);
+  expect(result.run.status).toBe('aborted');
+  expect(result.run.errors).toEqual([expect.objectContaining({ kind: 'runtime', target: 'quality.yaml', next: expect.stringMatching(/最小の quality.yaml.*読取.*品質の対象.*証拠/) })]);
+  for (const source of ['quality.yaml', 'workflow.example.yml']) {
+    const path = join(kitTemplates, source);
+    const content = readFileSync(path, 'utf8');
+    rmSync(path);
+    try {
+      const project = mkdtempSync(join(previewTarget, 'missing-template-'));
+      const broken = spawnSync(process.execPath, [cli, 'init'], { cwd: project, encoding: 'utf8' });
+      expect(broken.status).not.toBe(0);
+      expect(broken.stderr).toContain(source);
+      expect(existsSync(join(project, 'AGENTS.md'))).toBe(false);
+    } finally { writeFileSync(path, content); }
+  }
+}, 60_000);
