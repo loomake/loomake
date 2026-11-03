@@ -1,22 +1,28 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { closeSync, mkdirSync, rmSync, symlinkSync, truncateSync } from 'node:fs';
+import { closeSync, mkdirSync, realpathSync, rmSync, symlinkSync, truncateSync, type PathLike } from 'node:fs';
 import { join } from 'node:path';
 import { loadVerifyResultSchemas } from '@loomake/core';
-import { loadConfig, runVerify, RuntimeFailure, UsageError, verifyAbortedResult, verifyExitCode, type VerifyOptions } from '@loomake/kit';
+import { loadConfig, loadVerifyQualitySchema, runVerify, RuntimeFailure, UsageError, verifyAbortedResult, verifyExitCode, type VerifyOptions } from '@loomake/kit';
 import { main } from '../src/main.js';
 import { loadRunConfig } from '../../runner/src/run/prepare.js';
 import { CHANGE, withProject } from '../../kit/test/project.js';
 
-const denied = vi.hoisted(() => ({ file: '' }));
+const denied = vi.hoisted(() => ({ file: '', query: '', code: 'EACCES' }));
 vi.mock('node:fs', async original => {
   const fs = await original<typeof import('node:fs')>();
-  return { ...fs, closeSync: vi.fn(fs.closeSync), openSync: vi.fn((...args: Parameters<typeof fs.openSync>) => {
-    if (String(args[0]) === denied.file) throw Object.assign(new Error('EACCES: test read denied'), { code: 'EACCES' });
+  return { ...fs, closeSync: vi.fn(fs.closeSync), existsSync: vi.fn((path: PathLike) =>
+    denied.query && String(path) === denied.query ? false : fs.existsSync(path)),
+    lstatSync: vi.fn(((...args: Parameters<typeof fs.lstatSync>) => {
+      if (denied.query && String(args[0]) === denied.query) throw Object.assign(new Error(`${denied.code}: test query denied`), { code: denied.code });
+      return fs.lstatSync(...args);
+    }) as typeof fs.lstatSync), openSync: vi.fn((...args: Parameters<typeof fs.openSync>) => {
+    if (String(args[0]) === denied.file) throw Object.assign(new Error(`${denied.code}: test read denied`), { code: denied.code });
     return fs.openSync(...args);
   }) };
 });
-afterEach(() => { denied.file = ''; vi.clearAllMocks(); });
+afterEach(() => { denied.file = ''; denied.query = ''; denied.code = 'EACCES'; vi.clearAllMocks(); });
 const { verifyResultSchema } = await loadVerifyResultSchemas();
+const qualitySchema = await loadVerifyQualitySchema();
 const modes = ['bare', 'spec-only', 'done'] as const;
 type Mode = typeof modes[number];
 const options = (root: string, mode: Mode): VerifyOptions => ({ root, ...(mode === 'bare' ? {} : { changeId: CHANGE, gate: mode }) });
@@ -32,14 +38,14 @@ async function cli(root: string, args: string[]) {
 }
 
 it.each(modes)('[REQ-395] %s APIのOS読取失敗だけをruntime/3に分ける', mode => withProject({}, root => {
-  denied.file = join(root, 'loomake.config.json');
+  denied.file = join(realpathSync(root), 'loomake.config.json');
   const error = thrown(() => runVerify(options(root, mode)));
   expect(error).toBeInstanceOf(RuntimeFailure); expect(error).not.toBeInstanceOf(UsageError);
   const result = verifyAbortedResult(error, mode === 'bare' ? null : CHANGE);
   expect(result.run.errors[0].kind).toBe('runtime'); expect(verifyExitCode(result)).toBe(3);
 }));
 it.each(modes)('[REQ-395][REQ-311] %s CLIのJSON/textはOS読取失敗3で使い方を出さない', mode => withProject({}, async root => {
-  denied.file = join(root, 'loomake.config.json');
+  denied.file = join(realpathSync(root), 'loomake.config.json');
   const json = await cli(root, [...argv(mode), '--json']), text = await cli(root, argv(mode));
   expect([json.code, text.code]).toEqual([3, 3]); expect(text.stdout).toBe('');
   const result = JSON.parse(json.stdout);
@@ -81,3 +87,36 @@ it('[REQ-395] readのfinallyで起こるcloseSync例外の既存分類を保つ'
     expect(result.run.errors[0].kind).toBe('config'); expect(verifyExitCode(result)).toBe(2);
   });
 });
+
+const query = (root: string, code = 'EACCES') => { denied.query = join(realpathSync(root), 'loomake.config.json'); denied.code = code; };
+it.each(modes)('[REQ-395][REQ-311] %s 設定の存在確認のOS失敗もAPIとCLIのJSON/textで3にする', mode => withProject({ quality: true }, async root => {
+  query(root);
+  const error = thrown(() => runVerify({ ...options(root, mode), qualitySchema }));
+  expect(error).toBeInstanceOf(RuntimeFailure); expect(error).not.toBeInstanceOf(UsageError);
+  expect(verifyExitCode(verifyAbortedResult(error, mode === 'bare' ? null : CHANGE))).toBe(3);
+  const json = await cli(root, [...argv(mode), '--json']), text = await cli(root, argv(mode));
+  expect([json.code, text.code]).toEqual([3, 3]); expect(text.stdout).toBe('');
+  expect(JSON.parse(json.stdout).run).toMatchObject({ status: 'aborted', errors: [{ kind: 'runtime' }] });
+  for (const output of [json, text]) { expect(output.stderr).toContain('loomake.config.json を読めません'); expect(output.stderr).not.toContain('使い方:'); }
+}));
+it('[REQ-395] 存在確認のENOTDIRは不在として既定値の0を保つ', () => withProject({}, root => {
+  query(root, 'ENOTDIR'); expect(verifyExitCode(runVerify({ root }))).toBe(0);
+}));
+it('[REQ-395] 存在確認の失敗でも共有loadConfig・runnerの既定値を保つ', () => withProject({}, root => {
+  query(root); const real = realpathSync(root);
+  expect(loadConfig(real).openspecValidate).toBe('auto'); expect(() => loadRunConfig(real)).not.toThrow();
+}));
+it.each(['race', 'dangling'])('[REQ-395][REQ-172] 設定のリンク%sの拒否はconfig/2を保つ', kind => withProject({}, async root => {
+  const file = join(root, 'loomake.config.json');
+  if (kind === 'race') { denied.file = join(realpathSync(root), 'loomake.config.json'); denied.code = 'ELOOP'; }
+  else { rmSync(file); symlinkSync(join(root, 'missing'), file, process.platform === 'win32' ? 'junction' : 'dir'); }
+  const error = thrown(() => runVerify({ root })); expect(error).toBeInstanceOf(UsageError);
+  const result = verifyAbortedResult(error, null); expect(result.run.errors[0].kind).toBe('config'); expect(verifyExitCode(result)).toBe(2);
+  const output = await cli(root, ['verify', '--json']); expect(output.code).toBe(2); expect(JSON.parse(output.stdout).run.errors[0].kind).toBe('config');
+}));
+it('[REQ-395] リンクを通るrootでも実パスの設定の読取失敗を3にする', () => withProject({}, async root => {
+  const alias = join(root, 'alias'); symlinkSync(root, alias, process.platform === 'win32' ? 'junction' : 'dir');
+  denied.file = join(realpathSync(root), 'loomake.config.json');
+  expect(thrown(() => runVerify({ root: alias }))).toBeInstanceOf(RuntimeFailure);
+  expect((await cli(alias, ['verify', '--json'])).code).toBe(3);
+}));
