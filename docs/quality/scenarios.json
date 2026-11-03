@@ -3988,12 +3988,12 @@
       "sources": [
         "REQ-116"
       ],
-      "reason": "代替ghの受け取った引数全体を、pr create、base main、head loomake/c1、title c1、body-fileの順で確かめる。body-fileの名前がpr-body.mdで、実際に読める内容と渡された本文が等しいことも確かめる。GitHubへの実接続は含めない。",
+      "reason": "代替ghの引数全体をpr create・base main・head loomake/c1・title c1・body-file・--draftの順で完全一致比較する。body-file名と実際の本文も確認する。新仕様に先行した期待でREDを確認し、実装後に成功。実GitHub接続は含めない。",
       "tests": [
         {
           "file": "packages/runner/test/pr.test.ts",
           "contains": "gh pr create に、タイトル・本文・向き先のブランチを渡す",
-          "sha256": "0cbe58586426d869dbf51dd65323465c192cd6142c9bb147f0730647f37175b4",
+          "sha256": "5de70f37ce2880758926c75542c738e6486c1b3a6f464572f74212efb4dffe21",
           "hashScope": "block"
         }
       ]

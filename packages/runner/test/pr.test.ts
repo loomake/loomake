@@ -118,13 +118,29 @@ describe('PR の本文', () => {
 });
 
 describe('gh CLI で PR を作る', () => {
+  it('[REQ-116] 新規PRは--draftを1つ渡して1回だけ作る', () => withPassingRun((repo, result) => {
+    expect(result.code).toBe(0);
+    expect(repo.prs()).toHaveLength(1);
+    expect(repo.prs()[0].args.filter(arg => arg === '--draft')).toHaveLength(1);
+    expect(result.stdout).toContain('PR を作りました：');
+  }));
+
+  it('[REQ-116] Draft作成失敗はReadyへ切り替えず証拠のコミットを保って止まる', () => withPassingRun((repo, result) => {
+    expect(result.code).toBe(1);
+    expect(repo.prs()).toHaveLength(1);
+    expect(repo.prs()[0].args).toContain('--draft');
+    expect(repo.git('log', '--format=%s', '-1')).toBe('evidence(c1): 証拠を記録する');
+    expect(remoteHas(repo, 'loomake/c1')).toBe(true);
+    expect(result.stdout).toContain('PRの公開を完了できませんでした');
+  }, repo => { repo.env.FAKE_GH_CREATE = 'before'; }));
+
   it('[REQ-116] gh pr create に、タイトル・本文・向き先のブランチを渡す', () =>
     withPassingRun((repo) => {
       const [pr] = repo.prs();
       expect(pr.args.slice(0, 2)).toEqual(['pr', 'create']);
       expect(pr.args).toContain('--body-file');
       expect(pr.body).toContain('## Why');
-      expect(pr.args).toEqual(['pr', 'create', '--base', 'main', '--head', 'loomake/c1', '--title', 'c1', '--body-file', pr.args[9]]);
+      expect(pr.args).toEqual(['pr', 'create', '--base', 'main', '--head', 'loomake/c1', '--title', 'c1', '--body-file', pr.args[9], '--draft']);
       expect(pr.args[9]).toMatch(/(?:^|[/\\])pr-body\.md$/);
       expect(readFileSync(pr.args[9], 'utf8')).toBe(pr.body);
     }));
