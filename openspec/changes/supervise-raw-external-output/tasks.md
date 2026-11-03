@@ -8,7 +8,7 @@
 
 ## 2. 統合確認
 
-- [ ] 2.1 `pnpm -s verify --change supervise-raw-external-output --done --scope local` を省略なしのnormal localで通し、4Scenarioの実試験とtasks全完了を確認する。 <!-- loomake:gate=done -->
+- [x] 2.1 `pnpm -s verify --change supervise-raw-external-output --done --scope local` を省略なしのnormal localで通し、4Scenarioの実試験とtasks全完了を確認する。 <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
