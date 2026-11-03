@@ -36,7 +36,7 @@ Source: REQ-115
 - **THEN** 本文に、proposal.md の Why と What Changes、完了ゲートが合格したこと、REQ-012 と tests/x.test.ts の行、証拠の記録のパスが含まれる
 
 ### Requirement: gh CLI で PR を作る
-`loomake run` は PR を gh CLI（`gh pr create`）で作る SHALL。gh CLI がないか、ログインしていないときは、エンジンを呼ぶ前に、実装を始めずに止まり、理由を表示して終了コード 1 を返す SHALL。`--dry-run` では gh CLI を確かめない SHALL。完了ゲートに合格したあとも、証拠を記録する前に gh CLI を確かめ、使えなければ証拠を記録せずに止まり、理由を表示して終了コード 1 を返す SHALL。
+`loomake run` は PR を gh CLI（`gh pr create`）で作る SHALL。新しく作るPRは`--draft`を渡してDraft PRとする SHALL。gh CLI がないか、ログインしていないときは、エンジンを呼ぶ前に、実装を始めずに止まり、理由を表示して終了コード 1 を返す SHALL。`--dry-run` では gh CLI を確かめない SHALL。完了ゲートに合格したあとも、証拠を記録する前に gh CLI を確かめ、使えなければ証拠を記録せずに止まり、理由を表示して終了コード 1 を返す SHALL。
 
 Source: REQ-116
 
@@ -55,6 +55,15 @@ Source: REQ-116
 #### Scenario: 実行のあいだに gh からログアウトした
 - **WHEN** 始めたときは `gh auth status` が成功し、完了ゲートに合格したときには失敗する
 - **THEN** 証拠は記録されず、ブランチも送られず、gh にログインするよう表示され、終了コードは 1 である
+
+
+#### Scenario: 新しいPRはDraftで作る
+- **WHEN** 同じbase/headのopen PRがなく、完了ゲートに合格したrunが新しいPRを作る
+- **THEN** 向き先・タイトル・本文に加えて--draftを1つ渡して1回だけ作り、終了コード0で終える
+
+#### Scenario: Draft作成の失敗時にReadyへ切り替えない
+- **WHEN** gh pr create --draftが失敗する
+- **THEN** --draftなしの再作成はせず、証拠のコミットを保って既存の失敗経路で終了コード1を返す
 
 ### Requirement: 認証や署名の入力による失敗の案内
 `loomake run` は、git を `GIT_TERMINAL_PROMPT=0` で動かし、端末での入力を求めない SHALL。git の commit・push が、認証や署名の入力が要るために失敗したとき（標準エラーに `could not read Username`・`terminal prompts disabled`・`Permission denied (publickey)`・`passphrase`・`gpg failed to sign` などを含むとき）は、git のエラーに加えて、run は端末での入力ができないので、ssh-agent・credential helper（`gh auth setup-git` など）・gpg-agent を使って入力なしで動くように設定する案内を、止まった理由に添える SHALL。

@@ -30,3 +30,4 @@ export type { QualityObservation, ChecksSummary, CiSummary } from './verify/poli
 export { FAILED_SUBJECTS_METRIC, TEST_REPORT_SOURCE, observeTestReport } from './verify/policy/test-report-observation.js';
 export type { TestReportOptions, TestReportReceipt } from './verify/policy/test-report-observation.js';
 export { sha256Hex } from './verify/hash.js';
+export { createBodyRecorder, type BodyContext, type ChaiLike } from './evidence/vitest-body.js';

@@ -59,7 +59,7 @@ process.exitCode = await runCliReference({ definition: CLI_REFERENCE, check: tru
     expect(packed.status, packed.stdout + packed.stderr).toBe(0);
   }, 60000);
 
-  it('[REQ-057][REQ-138][REQ-139][REQ-143][REQ-146][REQ-169][REQ-304][REQ-305][REQ-306] packした5パッケージだけで主要コマンドと公開APIを使える', () => {
+  it('[REQ-057][REQ-138][REQ-139][REQ-143][REQ-146][REQ-169][REQ-304][REQ-305][REQ-306][REQ-393] packした5パッケージだけで主要コマンドと公開APIを使える', () => {
     const prepared = run('prepare');
     expect(prepared.status, prepared.stdout + prepared.stderr).toBe(0);
     const checked = run('check');
