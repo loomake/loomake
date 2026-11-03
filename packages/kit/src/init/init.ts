@@ -121,6 +121,8 @@ export function initFiles(options: Pick<InitOptions, 'root' | 'codex' | 'devcont
     { path: 'AGENTS.md', content: template('AGENTS.md') },
     { path: 'CLAUDE.md', content: template('CLAUDE.md') },
     { path: 'loomake.config.json', content: configJson(detectPackageManager(options.root), availableCommands(options.root)) },
+    { path: 'quality.yaml', content: template('quality.yaml') },
+    { path: '.github/loomake/workflow.example.yml', content: template('workflow.example.yml') },
     ...skill('.claude/skills'),
     ...(options.codex ? skill('.agents/skills') : []),
     ...(options.devcontainer ? [{ path: '.devcontainer/devcontainer.json', content: template('devcontainer/devcontainer.json') }] : []),
@@ -234,6 +236,11 @@ export async function runInit(options: InitOptions): Promise<number> {
   }
   stdout('\n要件書から change を作るときは req-to-openspec、作成済み change の調査・更新・実装・archive には OpenSpec が配置する openspec-* の Skill を使ってください。');
   stdout(`\n${reportExamples(root).join('\n')}`);
+
+  const wroteQuality = lines.some((line) => /^ {2}(作成|上書き)：quality\.yaml$/.test(line));
+  if (wroteQuality) {
+    stdout('\nquality.yaml は品質目標未設定の雛形です。ci の完了ゲートの前に、案件の品質の対象と合格に必要な証拠（evidence）を設定してください。');
+  }
 
   // scripts にない品質コマンドは commands に書かなかったので、足すときの手順を示す（REQ-196）
   const available = availableCommands(root);
