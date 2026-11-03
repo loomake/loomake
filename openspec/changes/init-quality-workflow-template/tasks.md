@@ -9,7 +9,7 @@
 ## 2. 採用済み仕様の実装と回帰
 
 - [x] 2.1 REQ-396/397の雛形・見本・配置一覧と案内を実装し、CLI/API・schema・REQ-020の正負保護試験を成功させる。配置一覧と目標設定・見本の導入文書も更新する。
-- [ ] 2.2 REQ-398のquality不在案内と導入文書を修理し、CLI/APIでci doneの不在runtime/3・2行と未知キーの読取互換・不正/権限・spec-onlyとlocal doneの不在許容・ciの空対象/証拠不足の回帰を成功させる。
+- [x] 2.2 REQ-398のquality不在案内と導入文書を修理し、CLI/APIでci doneの不在runtime/3・2行と未知キーの読取互換・不正/権限・spec-onlyとlocal doneの不在許容・ciの空対象/証拠不足の回帰を成功させる。
 - [ ] 2.3 tarballから空Gitリポジトリへの配置と一覧を実CLIで確かめ、既存配置・opt-in・commands等の回帰と新3要件のREQ-ID試験を成功させる。changesetと実行記録を揃える。
 
 ## 3. 完了と受入

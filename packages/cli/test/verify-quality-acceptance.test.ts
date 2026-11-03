@@ -2,12 +2,13 @@
 // 成功例に手書きの ok:true や適格の印を使わず、Vitest が書き出したレポートと verify が集めた事実だけで判定させる
 import { describe, it, expect, vi } from 'vitest';
 import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { loadVerifyResultSchemas, type VerifyResult } from '@loomake/core';
-import { loadVerifyQualitySchema, runVerify, verifyExitCode } from '@loomake/kit';
+import { MINIMAL_QUALITY_YAML, loadVerifyQualitySchema, runInit, runVerify, verifyExitCode } from '@loomake/kit';
 import { main } from '../src/main.js';
 import * as external from '../../kit/src/runtime/process.js';
+import * as input from '../../kit/src/runtime/input.js';
 import { CHANGE, commitAll, requirement, specMd, vitestCommand, withProject } from '../../kit/test/project.js';
 
 vi.setConfig({ testTimeout: 120_000 });
@@ -252,5 +253,89 @@ describe('C-001 の成功経路と不足拒否', () => {
         expect(resultOf(result, 'quality:PQ-900')).toBe('INSUFFICIENT_EVIDENCE');
       }
     });
+  });
+});
+
+
+describe('プレビュー導入の品質入力境界', () => {
+  it('[REQ-398] CLI/API の ci done 不在は読取最小と対象・証拠を案内し、spec-only/local doneは不在を許す', async () => {
+    await withProject({ ...vitestProject, quality: true }, async (root) => {
+      rmSync(join(root, 'quality.yaml'));
+      commitAll(root, 'remove quality');
+      for (const { code, result } of [api(root), await cli(root, '--done', '--scope', 'ci')]) {
+        expect(code).toBe(3);
+        expect(result.run.status).toBe('aborted');
+        expect(errorKinds(result)).toEqual(['runtime']);
+        expect(result.run.errors[0]?.next).toMatch(/最小の quality.yaml.*読取.*品質の対象.*証拠/);
+      }
+      for (const { code, result } of [
+        api(root, 'spec-only'), await cli(root, '--spec-only'),
+        api(root, 'done', { scope: 'local' }), await cli(root, '--done', '--scope', 'local'),
+      ]) {
+        expect(code, JSON.stringify(result)).toBe(0);
+        expect(errorKinds(result)).toEqual([]);
+      }
+    });
+  });
+
+  it('[REQ-396][REQ-398] init生成雛形の空対象だけで ci done を不足にし、他条件の成功でも相殺しない', async () => {
+    await withProject({ ...vitestProject, quality: true }, async (root) => {
+      rmSync(join(root, 'quality.yaml'));
+      expect(await runInit({ root, interactive: true, confirm: async () => false, stdout: () => {} })).toBe(0);
+      commitAll(root, 'init quality template');
+      for (const { code, result } of [api(root), await cli(root, '--done', '--scope', 'ci')]) {
+        expect(code, JSON.stringify(result)).toBe(1);
+        expect(result.run.status).toBe('completed');
+        expect(verdictOf(result)).toBe('INSUFFICIENT_EVIDENCE');
+        expect(resultOf(result, 'quality:subjects')).toBe('INSUFFICIENT_EVIDENCE');
+        if (!('checks' in result)) throw new Error('判定項目がありません');
+        expect(result.checks?.filter((check) => check.id !== 'quality:subjects').every((check) => check.result === 'PASS')).toBe(true);
+      }
+    });
+  });
+
+  it('[REQ-398] CLI/API は2行と未知キーを読み、対象があっても証拠の定義がなければ ci done を合格にしない', async () => {
+    for (const quality of [MINIMAL_QUALITY_YAML + 'future: preserved\n', MINIMAL_QUALITY_YAML + 'product:\n  PQ-001:\n    characteristic: functional_suitability\n']) {
+      await withProject({ ...vitestProject, quality }, async (root) => {
+        for (const { code, result } of [api(root), await cli(root, '--done')]) {
+          expect(code).toBe(1);
+          expect(result.run.status).toBe('completed');
+          expect(errorKinds(result)).toEqual([]);
+          expect(verdictOf(result)).toBe('INSUFFICIENT_EVIDENCE');
+          expect(resultOf(result, 'quality:subjects')).toBe('INSUFFICIENT_EVIDENCE');
+        }
+      });
+    }
+  });
+});
+
+
+it('[REQ-398] CLI/API の構文・型・版不正は config/2、読取権限不足は permission/3を維持する', async () => {
+  for (const quality of ['version: 2\nmodel: [\n', 'version: "2"\nmodel: x\n', 'version: 3\nmodel: x\n']) {
+    await withProject({ ...vitestProject, quality }, async (root) => {
+      for (const { code, result } of [api(root), await cli(root, '--done')]) {
+        expect(code).toBe(2);
+        expect(result.run.status).toBe('aborted');
+        expect(errorKinds(result)).toEqual(['config']);
+      }
+    });
+  }
+  await withProject({ ...vitestProject, quality: true }, async (root) => {
+    const original = input.createInputReader;
+    const spy = vi.spyOn(input, 'createInputReader').mockImplementation((limits) => {
+      const reader = original(limits);
+      return { ...reader, read: (path) => {
+        if (basename(path) === 'quality.yaml') throw new Error('EACCES: permission denied');
+        return reader.read(path);
+      } };
+    });
+    try {
+      for (const { code, result } of [api(root), await cli(root, '--done')]) {
+        expect(code).toBe(3);
+        expect(result.run.status).toBe('aborted');
+        expect(errorKinds(result)).toEqual(['permission']);
+        expect(result.run.errors[0]?.next).toContain('権限');
+      }
+    } finally { spy.mockRestore(); }
   });
 });
