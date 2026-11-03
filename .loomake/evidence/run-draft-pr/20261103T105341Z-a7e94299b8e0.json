@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 2,
+  "change": "run-draft-pr",
+  "sha": "a7e94299b8e0941d0633fbfca2d9fd5dc38f30bc",
+  "committedAt": "2026-11-03T10:44:10Z",
+  "recordedAt": "2026-11-03T10:53:41.512Z",
+  "verify": {
+    "schemaVersion": "2.0.0",
+    "change": "run-draft-pr",
+    "run": {
+      "status": "completed",
+      "errors": []
+    },
+    "checks": [
+      {
+        "id": "change の存在",
+        "result": "PASS",
+        "reason": "openspec/changes/run-draft-pr",
+        "evidence": []
+      },
+      {
+        "id": "proposal.md の存在",
+        "result": "PASS",
+        "reason": "",
+        "evidence": []
+      },
+      {
+        "id": "tasks.md の存在",
+        "result": "PASS",
+        "reason": "",
+        "evidence": []
+      },
+      {
+        "id": "trace.md の存在",
+        "result": "PASS",
+        "reason": "",
+        "evidence": []
+      },
+      {
+        "id": "要件モデルの整合性",
+        "result": "PASS",
+        "reason": "",
+        "evidence": []
+      },
+      {
+        "id": "trace.md の解析",
+        "result": "PASS",
+        "reason": "",
+        "evidence": []
+      },
+      {
+        "id": "要件台帳",
+        "result": "PASS",
+        "reason": "2 件",
+        "evidence": []
+      },
+      {
+        "id": "ブロッキング確認事項",
+        "result": "PASS",
+        "reason": "未回答 0 件（全 0 件）",
+        "evidence": []
+      },
+      {
+        "id": "同じ確認事項の回答",
+        "result": "PASS",
+        "reason": "ほかの change と同じ確認事項なし",
+        "evidence": []
+      },
+      {
+        "id": "spec.md の解析",
+        "result": "PASS",
+        "reason": "",
+        "evidence": []
+      },
+      {
+        "id": "Requirement の Source",
+        "result": "PASS",
+        "reason": "",
+        "evidence": []
+      },
+      {
+        "id": "Source が台帳にある",
+        "result": "PASS",
+        "reason": "",
+        "evidence": []
+      },
+      {
+        "id": "Scenario の有無",
+        "result": "PASS",
+        "reason": "",
+        "evidence": []
+      },
+      {
+        "id": "反映済の要件が仕様にある",
+        "result": "PASS",
+        "reason": "",
+        "evidence": []
+      },
+      {
+        "id": "openspec validate",
+        "result": "PASS",
+        "reason": "",
+        "evidence": []
+      },
+      {
+        "id": "確認待ちが残っていない",
+        "result": "PASS",
+        "reason": "",
+        "evidence": []
+      },
+      {
+        "id": "tasks.md",
+        "result": "PASS",
+        "reason": "4 件すべて完了",
+        "evidence": []
+      },
+      {
+        "id": "command: lint",
+        "result": "PASS",
+        "reason": "",
+        "evidence": []
+      },
+      {
+        "id": "command: typecheck",
+        "result": "PASS",
+        "reason": "",
+        "evidence": []
+      },
+      {
+        "id": "command: test",
+        "result": "PASS",
+        "reason": "",
+        "evidence": []
+      },
+      {
+        "id": "要件ごとのテスト",
+        "result": "PASS",
+        "reason": "2 件すべてにテストあり（テストファイル 153 個）",
+        "evidence": []
+      }
+    ],
+    "decision": {
+      "required": false,
+      "reasons": []
+    },
+    "scope": "local",
+    "summary": {
+      "fail": 0,
+      "insufficient": 0,
+      "not_applicable": 0,
+      "evaluated": 21,
+      "pending": 0
+    },
+    "coverage": {
+      "REQ-116": [
+        "packages/runner/test/external-budget.test.ts",
+        "packages/runner/test/pr.test.ts"
+      ],
+      "REQ-165": [
+        "packages/runner/test/publication-retry.test.ts"
+      ]
+    }
+  },
+  "documents": [
+    {
+      "path": "trace.md",
+      "sha256": "68eb52c266b533c0f14cd98dc2183d96443f8d91a82c0ee59bf89afc45b98002",
+      "content": "# Trace: run-draft-pr\n\n## 入力文書\n| 文書 | 版 | 日付 |\n|---|---|---|\n| [#80](https://github.com/loomake/loomake/issues/80)・WBS v1.4 W3-2 | Draft PR完了条件 | 2026-11-03 |\n| [本人施策2/5](https://github.com/loomake/loomake/issues/121#issuecomment-6591563998)・[枠C](https://github.com/loomake/loomake/issues/121#issuecomment-6591671700) | 自身条件テストmain+CI、DoD維持、並行 | 2026-11-03 |\n| verify-v2-shape/trace.md R-F12=A | 新規だけDraft・既存は状態不変再利用。原回答者は利用者（ADR0006包括承認）、PR180 | 2026-10-31 |\n| Opus458b3bffと管理役assessment | 新規Draft最小案のみ採用。未観測やarchive阻害を保持 | 2026-11-03 |\n\n## 要件台帳\n| ID | 出典 | 種別 | 要約（原文に忠実に） | 状態 | 反映先 |\n|---|---|---|---|---|---|\n| REQ-116 | #80/W3-2・既存run-pr | 既存変更 | 新規PRへ--draft、失敗経路と認証を保持 | 反映済 | specs/run-pr/spec.md |\n| REQ-165 | R-F12=A・既存run | 既存変更 | 既存PRの状態を変えず再利用 | 反映済 | specs/run/spec.md |\n\n## 確認事項\n| ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |\n|---|---|---|---|---|---|---|---|---|\n\n## 仮定\n| ID | 関連 | 仮定の内容 | 理由 | 承認 | 承認者 | 承認日 |\n|---|---|---|---|---|---|---|\n\n新たな仮定は置かない。規範配置と既存失敗経路の維持は管理役の技術判断。実GitHub/実engine成功は未観測で、コード受入と区別する。親C001・#80全受入は未完。\n"
+    },
+    {
+      "path": "specs/run-pr/spec.md",
+      "sha256": "64a392a5d3716fefef4bb6fcedb40ac86569e55a972d1d1a0e0db3e5ca7f6c9c",
+      "content": "## MODIFIED Requirements\n\n### Requirement: gh CLI で PR を作る\n`loomake run` は PR を gh CLI（`gh pr create`）で作る SHALL。新しく作るPRは`--draft`を渡してDraft PRとする SHALL。gh CLI がないか、ログインしていないときは、エンジンを呼ぶ前に、実装を始めずに止まり、理由を表示して終了コード 1 を返す SHALL。`--dry-run` では gh CLI を確かめない SHALL。完了ゲートに合格したあとも、証拠を記録する前に gh CLI を確かめ、使えなければ証拠を記録せずに止まり、理由を表示して終了コード 1 を返す SHALL。\n\nSource: REQ-116\n\n#### Scenario: gh で作る\n- **WHEN** 完了ゲートに合格した run が PR を作る\n- **THEN** `gh pr create` が、タイトル・本文・向き先のブランチを渡して呼ばれる\n\n#### Scenario: gh にログインしていない\n- **WHEN** `gh auth status` が失敗する環境で `loomake run --change c1` を実行する\n- **THEN** エンジンは呼ばれず、`loomake/c1` のブランチも作られず、gh にログインするよう表示され、終了コードは 1 である\n\n#### Scenario: 予定だけの表示では gh を確かめない\n- **WHEN** `gh auth status` が失敗する環境で `loomake run --change c1 --dry-run` を実行する\n- **THEN** エンジンに渡す予定のタスクが表示され、終了コードは 0 である\n\n#### Scenario: 実行のあいだに gh からログアウトした\n- **WHEN** 始めたときは `gh auth status` が成功し、完了ゲートに合格したときには失敗する\n- **THEN** 証拠は記録されず、ブランチも送られず、gh にログインするよう表示され、終了コードは 1 である\n\n\n#### Scenario: 新しいPRはDraftで作る\n- **WHEN** 同じbase/headのopen PRがなく、完了ゲートに合格したrunが新しいPRを作る\n- **THEN** 向き先・タイトル・本文に加えて--draftを1つ渡して1回だけ作り、終了コード0で終える\n\n#### Scenario: Draft作成の失敗時にReadyへ切り替えない\n- **WHEN** gh pr create --draftが失敗する\n- **THEN** --draftなしの再作成はせず、証拠のコミットを保って既存の失敗経路で終了コード1を返す\n"
+    },
+    {
+      "path": "specs/run/spec.md",
+      "sha256": "5da2b1286b2aec99b5ce36f1af81e8c6e610f8515b74656463470db35197b194",
+      "content": "## MODIFIED Requirements\n\n### Requirement: 既存PRを確認した上での再試行\npush後に同じリポジトリの同じbase/headのopen PRを検索する SHALL。一意に存在する場合は新規作成せず、既存のURLを表示して終了コード0で終える SHALL。既存PRがDraftかどうかによらず状態を変えない SHALL。存在しない場合だけ作成する SHALL。検索失敗・不正な結果・複数の候補では新規作成せず、理由を記録して終了コード1で止まる SHALL。PRのURLは認証情報を含まないHTTPSのpullリクエストURLとして検証する SHALL。\n\nSource: REQ-165\n\n#### Scenario: 作成の応答だけが失われた\n- **WHEN** 前回の作成でPRが作られたが失敗として終了し、そのまま再実行する\n- **THEN** 既存PRを見つけ、PRを重複作成せず完了する\n\n#### Scenario: PR検索の結果を判断できない\n- **WHEN** 検索が失敗するか、結果が壊れているか、一意に決まらない\n- **THEN** 新規作成へ進まず、証拠を保って停止する\n\n\n#### Scenario: 既存PRの状態を変えない\n- **WHEN** 同じbase/headのopen PRがDraftまたはReadyで一意に存在する\n- **THEN** 新規作成や状態変更をせず、既存URLを表示して終了コード0で終える\n"
+    }
+  ]
+}
