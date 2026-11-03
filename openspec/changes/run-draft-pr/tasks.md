@@ -3,4 +3,4 @@
 - [x] 1.1 本人出典・設計・全差分仕様を確定し、仕様ゲートを通す
 - [x] 2.1 REQ-116/165の正負回帰と新仕様の完全一致期待を先に追加し、REDを確認する
 - [x] 2.2 createPrに--draftを渡し、関連試験・local/ci・記録順の既存条件を確認する
-- [ ] 3.1 usage・changeset・日別記録を揃え、通常localdoneを通す
+- [x] 3.1 usage・changeset・日別記録を揃え、通常localdoneを通す
