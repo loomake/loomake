@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { isAbortedResult, loadVerifyQualitySchema, runExternal, runVerify, UsageError, verifyExitCode } from '@loomake/kit';
 import * as inputModule from '../src/runtime/input.js';
@@ -47,10 +47,11 @@ describe('archive verification', () => {
     tasks: kind === 'tasks' ? '## 1. Tasks\n- [ ] 1.1 pending\n' : undefined,
     config: { openspecValidate: true, commands: { test: vitestCommand() } },
     files: { 'tests/a.test.ts': `import {writeFileSync} from 'node:fs';it('[${kind === 'coverage' ? 'REQ-999' : 'REQ-012'}] real test',()=>{writeFileSync('observed-cwd.txt',process.cwd());expect(true).toBe(true)});` },
-  }, root => {
+  }, givenRoot => {
+    const root = realpathSync(givenRoot);
     const path = archive(root), sha = commitAll(root); mkdirSync(join(root, '.loomake'), { recursive: true });
     writeFileSync(join(root, '.loomake/test-report.json'), '{"old":true}');
-    const result = runVerify({ root, changeId: CHANGE, gate: 'done', qualitySchema: schema });
+    const result = runVerify({ root: givenRoot, changeId: CHANGE, gate: 'done', qualitySchema: schema });
     expect(verifyExitCode(result)).toBe(kind === 'pass' ? 0 : 1);
     if (kind === 'pass') expect(result).toMatchObject({ scope: 'ci', verdict: 'PASS', coverage: { 'REQ-012': ['tests/a.test.ts'] } });
     else expect(checked(result, kind === 'tasks' ? 'tasks.md' : kind === 'coverage' ? '要件ごとのテスト' : 'quality:PQ-900')?.result).toBe('FAIL');
@@ -79,7 +80,7 @@ describe('archive verification', () => {
     try {
       staged = createArchiveInput(root, path, CHANGE);
       expect(readFileSync(join(staged.cwd, 'openspec/changes', CHANGE, 'tasks.md'), 'utf8')).toBe(checkedText);
-      expect(runExternal('openspec', ['validate', CHANGE, '--strict'], { cwd: staged.cwd }).status).toBe(0);
+      expect(runExternal('openspec', ['validate', CHANGE, '--strict'], { cwd: staged.cwd, shell: process.platform === 'win32' }).status).toBe(0);
     } finally { spy.mockRestore(); staged?.cleanup(); }
   }));
   it.each(['change', 'specs', 'schemas'])('[REQ-394][REQ-170] preserves directory depth 32/33 for %s and cleans stages', kind => {
