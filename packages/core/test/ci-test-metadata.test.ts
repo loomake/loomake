@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { parseCiTestMetadata } from '../src/index.js';
+import { extractTestRequirements, parseCiTestMetadata, parseTestReport } from '../src/index.js';
 import { errorLine } from '../src/test-report.js';
 
 // Public CI run 41431688151, metadata only; SHA256 4d0188f2b16ae7ca10645bb072bf34303604af23569c93195ba6eba5c89e1213.
@@ -36,6 +36,23 @@ describe('parseCiTestMetadata', () => {
     const text = '{\n "schemaVersion": 1,\n bad\n}'; rejected(text);
     expect(parseCiTestMetadata('metadata.json', text).errors[0].line).toBe(3);
     expect(errorLine('a\nb\nc', 'position 4')).toBe(3); expect(errorLine('', 'no location')).toBe(1);
+  });
+  it.each(['line 0', 'line 900', 'position 99\n\n', '(line 2 column 1)'])('[REQ-391] ignores location-like quoted input %j in every shared parser', (text) => {
+    rejected(text);
+    for (const parser of [parseCiTestMetadata, parseTestReport, extractTestRequirements]) {
+      expect(parser('input.json', text).errors[0]).toMatchObject({ file: 'input.json', line: 1 });
+    }
+  });
+  it('[REQ-391] accepts only bounded diagnostic suffix locations', () => {
+    expect(errorLine('a\nb\nc', 'invalid at position 4')).toBe(3);
+    expect(errorLine('a\nb\nc', 'invalid at position 4 (line 3 column 1)')).toBe(3);
+    for (const newline of ['\n', '\r', '\r\n']) {
+      expect(parseCiTestMetadata('input.json', `{${newline} bad${newline}}`).errors[0].line).toBe(2);
+      expect(errorLine(`a${newline}b`, `invalid at position ${1 + newline.length}`)).toBe(2);
+    }
+    for (const message of ['(line 2 column 0)', '(line 2 column 3)', '(line 2 column 9007199254740992)', 'position 6', 'position 9007199254740992', '(line 0 column 1)', '(line 4 column 1)', '(line 9007199254740992 column 1)']) {
+      expect(errorLine('a\nb\nc', message)).toBe(1);
+    }
   });
   it.each(strings)('[REQ-391] rejects absent and non-string %s without authenticating string contents', (key) => {
     for (const bad of [undefined, null, 1, false, [], {}]) rejected(JSON.stringify({ ...fixture, [key]: bad }));
