@@ -7,7 +7,7 @@
 
 ## 2. 統合確認
 
-- [ ] 2.1 `pnpm -s verify --change present-quality-yaml-diff --done --scope local` を通常実行で通す。 <!-- loomake:gate=done -->
+- [x] 2.1 `pnpm -s verify --change present-quality-yaml-diff --done --scope local` を通常実行で通す。 <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
