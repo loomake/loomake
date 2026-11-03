@@ -364,4 +364,10 @@ describe('品質 YAML の具体案と分割合意', () => {
   it('[REQ-408] contextは実定義への参照で、短文・ID・traceパスの追加だけで代用しない', () => {
     for (const text of ['context は利用状況の実際の定義', '入力文書・Issue', '単なる短文や要件 ID だけ', 'trace のパスを機械的に足して定義参照の代用にしない', '新しい Context 表・未知の root key は追加しない']) expect(proposal, text).toContain(text);
   });
+  it('[REQ-409] 具体差分または新規全文とモデルを既存の分割合意へ含める', () => {
+    for (const text of ['追加 ID と値', '既存項目への変更', 'linked_requirements の追加', '具体差分', '不在時の新規全文', 'model も具体的な合意対象', '既存の分割案と一緒に', '新しい承認手順は増やさない']) expect(proposal, text).toContain(text);
+  });
+  it('[REQ-409] 未観測の必須証拠とCIの証拠不足を提案に添える', () => {
+    for (const text of ['まだ観測できない必須証拠', 'CI の完了ゲートが証拠不足', '案に添える']) expect(proposal, text).toContain(text);
+  });
 });
