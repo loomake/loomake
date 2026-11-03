@@ -11,7 +11,7 @@ type Report = { testResults: { assertionResults: Case[] }[] };
 const vitestBin = join(dirname(createRequire(import.meta.url).resolve('vitest/package.json')), 'vitest.mjs');
 // 実Vitestを4回起動するため、外部実行試験と同じ60秒枠を使う。fixtureのtimeoutは変えない。
 it('[REQ-393] 公開取得器が52境界の原観測を保ち元のstatusと終了値を変えない', { timeout: 60_000 }, () => {
-  const fixture = readFileSync(new URL('./fixtures/vitest-body-cases.mjs.txt', import.meta.url), 'utf8');
+  const fixture = readFileSync(new URL('../../../tests/fixtures/vitest-body-cases.mjs.txt', import.meta.url), 'utf8');
   const api = pathToFileURL(join(import.meta.dirname, '../src/index.ts')).href;
   const collect = (mode: string, filter?: string) => withProject({ quality: true, files: {
     'body-cases.test.mjs': fixture,
