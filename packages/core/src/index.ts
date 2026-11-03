@@ -14,6 +14,8 @@ export { TRACE_SCHEMA_VERSION, SPEC_SCHEMA_VERSION, TASKS_SCHEMA_VERSION, loadPa
 export { extractTestRequirements, parseTestReport } from './test-report.js';
 export { parseCiTestMetadata } from './ci-test-metadata.js';
 export type { CiTestMetadataV1 } from './ci-test-metadata.js';
+export { parseCiTestArtifact } from './ci-test-artifact.js';
+export type { CiTestArtifactInput, CiTestArtifact } from './ci-test-artifact.js';
 export type { TestCase, TestCaseStatus, TestFileResult, TestReport, TestRequirements } from './test-report.js';
 export { createTraceTemplate } from './template.js';
 export { VERIFY_RESULT_SCHEMA_VERSION, LEGACY_VERIFY_RESULT_SCHEMA_VERSION, VERIFY_RESULT_V2_SCHEMA_VERSION, loadVerifyResultSchemas } from './verify-result.js';

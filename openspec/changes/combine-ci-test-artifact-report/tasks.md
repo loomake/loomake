@@ -4,7 +4,7 @@
 - [x] 1.1 M1の受入・同期とQ-C003-01〜03の回答・REQ392予約を確認し、strict/spec-only終了0を確認する（REQ-392）。
 
 ## 2. 実装と試験
-- [ ] 2.1 組の公開変換と型・公開consumer・core changeset・全4 ScenarioのID付き正負試験を加える。関連parser試験と配布物の公開型検査の終了0、既存parser/設定不変を確認する（REQ-392）。
+- [x] 2.1 組の公開変換と型・公開consumer・core changeset・全4 ScenarioのID付き正負試験を加える。関連parser試験と配布物の公開型検査の終了0、既存parser/設定不変を確認する（REQ-392）。
 
 ## 3. 完了ゲート
 - [ ] 3.1 通常localdoneの全品質・実JSON・実exit0を確認する（REQ-392）。 <!-- loomake:gate=done -->
