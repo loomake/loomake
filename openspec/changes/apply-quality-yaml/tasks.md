@@ -7,7 +7,7 @@
 
 ## 2. 記録と統合確認
 
-- [ ] 2.1 strict/spec-only・全量と固定親基準の差分を確認する。Y の日誌 prefix と元 checkpoint の判断結果七行を保持して子の結果を四項目へ短く追記し、kit patch changeset を含める。元 branch の全六試験・履歴は削除/reset しない。
+- [x] 2.1 strict/spec-only・全量と固定親基準の差分を確認する。Y の日誌 prefix と元 checkpoint の判断結果七行を保持して子の結果を四項目へ短く追記し、kit patch changeset を含める。元 branch の全六試験・履歴は削除/reset しない。
 - [ ] 2.2 `pnpm -s verify --change apply-quality-yaml --done --scope local` を通常実行で通す。 <!-- loomake:gate=done -->
 
 ## Workflow follow-up
