@@ -532,9 +532,10 @@ describe('品質雛形と見本の保護', () => {
 
   for (const [req, path, source] of targets) {
     it(`[${req}][REQ-020] ${path} が同じ内容なら変更せず、確認しない`, async () => {
-      const r = await runInit([], { files: { [path]: template(source).replace(/\n/g, '\r\n') } });
+      const crlf = template(source).replace(/\r?\n/g, '\r\n');
+      const r = await runInit([], { files: { [path]: crlf } });
       expect(r.code).toBe(0);
-      expect(r.files[path]).toBe(template(source).replace(/\n/g, '\r\n'));
+      expect(r.files[path]).toBe(crlf);
       expect(r.prompts).toEqual([]);
       expect(r.stdout).toContain(`変更なし：${path}`);
       if (path === 'quality.yaml') expect(r.stdout).not.toContain('quality.yaml は品質目標未設定');
