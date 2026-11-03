@@ -9,7 +9,7 @@
 ## 2. 自己レビューC1/C2/m1の修理
 - [x] 2.1 補足Opus設計と再開した差分仕様・design・tasksで仕様ゲートの終了0を保存する
 - [x] 2.2 実パスへの注入準備と追加8例で、REDと既存15例の保持を保存する
-- [ ] 2.3 verify用の存在確認とELOOPのリンク拒否を実装し、新旧試験・型・lintとLinux実probeを成功させる
+- [x] 2.3 verify用の存在確認とELOOPのリンク拒否を実装し、新旧試験・型・lintとLinux実probeを成功させる
 - [ ] 2.4 移行説明を更新し、仕様同期/archive後の通常local完了ゲートを通す <!-- loomake:gate=done -->
 
 ## Workflow follow-up

@@ -26,7 +26,7 @@ import {
   type VerifyScope,
 } from '@loomake/core';
 import { assembleVerifyResult } from './result.js';
-import { assertChangeId, loadConfig, type LoomakeConfig } from './config.js';
+import { assertChangeId, loadVerifyConfig, type LoomakeConfig } from './config.js';
 import { QUALITY_FILE, readQualityFile, type QualitySchemaLike } from './quality-input.js';
 import { evaluateQualityConditions, qualitySubjectsGuard } from './policy/quality-conditions.js';
 import { observeTestReport, type TestReportReceipt } from './policy/test-report-observation.js';
@@ -87,7 +87,7 @@ export function runVerify(options: VerifyOptions): VerifyResult {
   const givenRoot = resolve(options.root);
   const root = existsSync(givenRoot) ? realpathSync(givenRoot) : givenRoot;
   let config: LoomakeConfig;
-  try { config = loadConfig(root); } catch (error) {
+  try { config = loadVerifyConfig(root); } catch (error) {
     if (error instanceof InputReadFailure) throw new RuntimeFailure(error.message, { cause: error });
     throw error;
   }

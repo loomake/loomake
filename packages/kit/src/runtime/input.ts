@@ -64,7 +64,9 @@ export function createInputReader(overrides: Partial<InputLimits> = {}): InputRe
         return Buffer.concat(chunks, size).toString('utf8');
       } catch (error) {
         if (error instanceof UsageError) throw error;
-        return fail(file, (error as Error).message, InputReadFailure, error);
+        // O_NOFOLLOWがリンクへの差し替えをELOOPで拒否した場合も、入力拒否の分類を保つ。
+        const Failure = (error as NodeJS.ErrnoException).code === 'ELOOP' ? UsageError : InputReadFailure;
+        return fail(file, (error as Error).message, Failure, error);
       } finally { if (fd !== undefined) closeSync(fd); }
     },
     readHead(file, maxBytes) {

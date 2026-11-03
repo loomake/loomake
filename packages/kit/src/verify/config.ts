@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, lstatSync } from 'node:fs';
 import { join } from 'node:path';
 import { createInputReader } from '../runtime/input.js';
 
@@ -46,9 +46,24 @@ const unknownKeys = (c: Record<string, unknown>): string[] =>
 
 /** root の loomake.config.json を読み、既定値と合わせて返す。OS読取失敗は内部InputReadFailure、形が正しくないときはUsageErrorを投げる */
 export function loadConfig(root: string): LoomakeConfig {
+  return readConfig(root, existsSync);
+}
+
+/** verifyだけ存在照会のOS失敗も区別する。共有利用側の不在判定は変えず、indexからexportしない（REQ-395）。 */
+export function loadVerifyConfig(root: string): LoomakeConfig {
+  return readConfig(root, (p) => {
+    try { lstatSync(p); return true; } catch (e) {
+      const code = (e as NodeJS.ErrnoException).code;
+      if (code === 'ENOENT' || code === 'ENOTDIR') return false;
+      throw new InputReadFailure(`loomake.config.json を読めません（${(e as Error).message}）`, { cause: e });
+    }
+  });
+}
+
+function readConfig(root: string, present: (path: string) => boolean): LoomakeConfig {
   const base: LoomakeConfig = { openspecDir: 'openspec', openspecValidate: 'auto', tests: { report: DEFAULT_TEST_REPORT }, commands: {}, unknownKeys: [] };
   const p = join(root, 'loomake.config.json');
-  if (!existsSync(p)) return base;
+  if (!present(p)) return base;
   let text: string;
   try { text = createInputReader().read(p); } catch (e) {
     const Failure = e instanceof InputReadFailure ? InputReadFailure : UsageError;
