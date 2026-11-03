@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
@@ -404,6 +404,18 @@ describe('CI の対象の change の決め方', () => {
       rmSync(dir, { recursive: true, force: true });
     }
   };
+
+  it.each(['unique', 'ambiguous', 'undated', 'file', 'dangling', 'active'])('[REQ-132] 明示archiveの%sを保守的に解決する', kind => withChanges(changesDir => {
+    const active = join(changesDir, 'c1'), archive = join(changesDir, 'archive');
+    if (kind !== 'active') rmSync(active, { recursive: true });
+    mkdirSync(join(archive, kind === 'undated' ? 'c1' : '2026-99-99-c1'));
+    if (kind === 'ambiguous') mkdirSync(join(archive, '2026-11-04-c1'));
+    if (kind === 'file') writeFileSync(active, 'invalid active');
+    if (kind === 'dangling') symlinkSync(join(changesDir, 'missing'), active, process.platform === 'win32' ? 'junction' : 'dir');
+    const result = selectChanges({ body: 'loomake-change: c1, c2', changesDir });
+    if (kind === 'unique' || kind === 'active') expect(result).toEqual({ changes: ['c1', 'c2'] });
+    else expect(result).toHaveProperty('error', expect.stringContaining(kind === 'ambiguous' ? '複数' : 'ありません'));
+  }));
 
   it('[REQ-132] gate のジョブに、向き先のブランチと PR の番号と、PR 本文を読む権限を渡す', () => {
     const ci = read('.github/workflows/ci.yml');
