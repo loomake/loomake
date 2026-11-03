@@ -7,6 +7,9 @@ import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { markPhase } from '../scripts/ci-heartbeat.mjs';
 import { currentBaseline } from '../packages/cli/test/cli-baseline.js';
+import { loadVerifyResultSchemas, type VerifyResult } from '../packages/core/src/index.js';
+import { loadVerifyQualitySchema, runVerify, verifyExitCode } from '../packages/kit/src/index.js';
+import { CHANGE, commitAll, traceMd, vitestCommand, withProject } from '../packages/kit/test/project.js';
 
 const root = join(import.meta.dirname, '..');
 const base = mkdtempSync(join(tmpdir(), 'loomake artifacts '));
@@ -194,4 +197,119 @@ console.log(JSON.stringify({ output, heapUsed: process.memoryUsage().heapUsed })
     expect(result.output).toBe('*** next 日本語\n');
     expect(result.heapUsed).toBeLessThan(32 * 1024 * 1024);
   }, 36000);
+});
+
+// #64: REQ-311/312/319の既存契約を、main関数の呼出だけでなく実CLI入口でも確かめる。
+describe('CI=1でのverify APIと実CLIの判定一致', () => {
+  type Case = {
+    name: string; mode: 'done' | 'spec-only' | 'bare'; scope?: 'local' | 'ci';
+    skip?: boolean; failed?: boolean; approval?: boolean; quality?: 'invalid' | 'missing';
+    exit: number; verdict?: 'PASS' | 'FAIL' | 'INSUFFICIENT_EVIDENCE'; pending?: boolean;
+  };
+  const cases: Case[] = [
+    { name: 'ci PASS', mode: 'done', exit: 0, verdict: 'PASS' },
+    { name: 'ci FAIL', mode: 'done', failed: true, exit: 1, verdict: 'FAIL' },
+    { name: 'ci不足', mode: 'done', skip: true, exit: 1, verdict: 'INSUFFICIENT_EVIDENCE' },
+    { name: '要判断とFAIL併存', mode: 'done', failed: true, approval: true, exit: 1, verdict: 'FAIL' },
+    { name: 'local完了', mode: 'done', scope: 'local', exit: 0 },
+    { name: 'local未完了', mode: 'done', scope: 'local', skip: true, pending: true, exit: 1 },
+    { name: '既定localの仕様ゲート', mode: 'spec-only', exit: 0 },
+    { name: '明示ciの仕様ゲート', mode: 'spec-only', scope: 'ci', exit: 0, verdict: 'PASS' },
+    { name: 'changeなしの品質検査', mode: 'bare', exit: 0 },
+    { name: 'quality設定不正', mode: 'done', quality: 'invalid', exit: 2 },
+    { name: '必須quality不在', mode: 'done', quality: 'missing', exit: 3 },
+  ];
+  // 実行ごとに変わるレポートの時刻・hash・receiptではなく、公開された判定を比較する。
+  const judgment = (result: VerifyResult) => ({
+    schemaVersion: result.schemaVersion, change: result.change,
+    run: { status: result.run.status, errors: result.run.errors.map(({ kind, target }) => ({ kind, target })) },
+    ...(result.scope === undefined ? {} : {
+      scope: result.scope,
+      hasVerdict: Object.hasOwn(result, 'verdict'),
+      verdict: 'verdict' in result ? result.verdict : undefined,
+      checks: result.checks.map(({ id, result }) => ({ id, result })),
+      summary: result.summary,
+      decision: result.decision,
+    }),
+  });
+
+  it.each(cases)('[REQ-311][REQ-312][REQ-319] $name: APIと子プロセスの判定・exitが一致し入力を待たない', async (item) => {
+    const qualitySchema = await loadVerifyQualitySchema();
+    const { verifyResultSchema } = await loadVerifyResultSchemas();
+    const command = `${vitestCommand()} && node -e "require('fs').writeFileSync('command-ran','yes')"`;
+    const trace = item.approval
+      ? traceMd({ assumptions: ['| A-01 | REQ-012 | 8文字以上 | 記載なし | |'] }) : traceMd();
+    withProject({
+      config: { openspecValidate: false, commands: { test: command } }, trace,
+      quality: item.quality === 'invalid' ? 'version: 2\nproduct: [\n' : true,
+      files: { 'tests/a.test.ts': `it('[REQ-012] 実際のassertion', () => { expect(1).toBe(${item.failed ? 2 : 1}); });\n` },
+    }, (project) => {
+      if (item.quality === 'missing') {
+        rmSync(join(project, 'quality.yaml'));
+        commitAll(project, '必須qualityを除く');
+      }
+      const argv = ['verify'];
+      if (item.mode !== 'bare') argv.push('--change', CHANGE, `--${item.mode}`);
+      if (item.scope) argv.push('--scope', item.scope);
+      if (item.skip) argv.push('--skip-commands');
+      const savedCi = process.env.CI;
+      let api: VerifyResult;
+      try {
+        process.env.CI = '1';
+        api = runVerify({ root: project, qualitySchema,
+          ...(item.mode === 'bare' ? {} : { changeId: CHANGE, gate: item.mode }),
+          ...(item.scope ? { scope: item.scope } : {}), skipCommands: item.skip });
+      } finally {
+        if (savedCi === undefined) delete process.env.CI;
+        else process.env.CI = savedCi;
+      }
+      const executes = item.mode !== 'spec-only' && !item.skip && !item.quality && !item.failed;
+      expect(existsSync(join(project, 'command-ran'))).toBe(executes);
+      rmSync(join(project, 'command-ran'), { force: true });
+      const child = spawnSync(process.execPath, [join(root, 'packages/cli/dist/cli.js'), ...argv, '--json'], {
+        cwd: project, encoding: 'utf8', env: { ...process.env, CI: '1' },
+        stdio: ['ignore', 'pipe', 'pipe'], timeout: 15_000,
+      });
+      expect(child.error, child.stderr).toBeUndefined();
+      expect(child.signal, child.stderr).toBeNull();
+      expect(child.status, child.stdout + child.stderr).toBe(item.exit);
+      expect(existsSync(join(project, 'command-ran'))).toBe(executes);
+      const cli: VerifyResult = JSON.parse(child.stdout);
+      for (const result of [api, cli]) {
+        expect(verifyResultSchema.safeParse(result).success, JSON.stringify(result)).toBe(true);
+        expect(verifyExitCode(result)).toBe(item.exit);
+        expect(result.schemaVersion).toBe('2.0.0');
+        expect(result.change).toBe(item.mode === 'bare' ? null : CHANGE);
+        if (item.quality) {
+          expect(result.run.status).toBe('aborted');
+          expect(result.run.errors.map(({ kind }) => kind)).toEqual([item.quality === 'invalid' ? 'config' : 'runtime']);
+          for (const key of ['scope', 'checks', 'summary', 'verdict', 'decision']) expect(result).not.toHaveProperty(key);
+          continue;
+        }
+        expect(result.run.status).toBe('completed');
+        expect(result.run.errors).toEqual([]);
+        if (result.scope === undefined) throw new Error('completedにはscopeとchecksが必要です');
+        expect(result.scope).toBe(item.scope ?? (item.mode === 'done' ? 'ci' : 'local'));
+        if (item.verdict) expect(result).toHaveProperty('verdict', item.verdict);
+        else expect(result).not.toHaveProperty('verdict');
+        expect(result.decision.required).toBe(item.approval === true);
+        expect(result.decision.reasons).toEqual(item.approval
+          ? [{ code: 'APPROVAL_REQUIRED', target: 'A-01', message: '仮定 A-01 が未承認です' }] : []);
+        if (item.failed) {
+          expect(result.checks.some((check) => check.result === 'FAIL')).toBe(true);
+          expect(result.summary.fail).toBeGreaterThan(0);
+        }
+        if (result.scope === 'local') {
+          expect(result.summary.fail).toBe(0);
+          if (item.pending) expect(result.summary.pending).toBeGreaterThan(0);
+          else expect(result.summary.pending).toBe(0);
+        }
+        if (item.mode === 'spec-only') {
+          expect(result.checks.some(({ id }) => id.startsWith('quality:'))).toBe(false);
+        }
+      }
+      expect(judgment(cli)).toEqual(judgment(api));
+      expect(child.status).toBe(verifyExitCode(api));
+    });
+  }, 30_000);
 });
