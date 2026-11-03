@@ -149,6 +149,20 @@ export async function check(target) {
   const core = await import(pathToFileURL(require.resolve('@loomake/core')).href);
   assert.equal(core.parseTasks('tasks.md', '- [x] done').value[0].checked, true);
   const kit = await import(pathToFileURL(require.resolve('@loomake/kit')).href);
+  const prototype = { toBe() {}, toEqual() {}, toMatchObject() {} };
+  const chai = { Assertion: { prototype }, util: {
+    flag: () => undefined,
+    overwriteMethod: (target, name, wrap) => { target[name] = wrap(target[name]); },
+  } };
+  const body = kit.createBodyRecorder(chai);
+  let finished;
+  const context = { task: { meta: {}, fails: false, result: { state: 'pass', repeatCount: 0, retryCount: 0 } }, onTestFinished: fn => { finished = fn; } };
+  assert.equal(await body(context, () => { prototype.toBe(); return 42; }), 42);
+  finished();
+  assert.deepEqual(context.task.meta.loomakeBody.attempts[0], { repeat: 0, retry: 0, expectedFailure: false, state: 'pass', calls: { toBe: 1 } });
+  const missing = { task: { meta: {} }, onTestFinished() {} };
+  assert.equal(await body(missing, () => 43), 43);
+  assert.equal(Object.hasOwn(missing.task.meta, 'loomakeBody'), false);
   assert.equal(Object.hasOwn(core, 'evaluateAgreement'), false);
   assert.equal(Object.hasOwn(core, 'evaluateTestCoverage'), false);
   assert.deepEqual(kit.evaluateAgreement(core.createAgreement('trace.md', { ledger: [], questions: [], assumptions: [] }).value), { blockingQuestions: [], pendingRequirements: [], unapprovedAssumptions: [], missingSources: [] });
