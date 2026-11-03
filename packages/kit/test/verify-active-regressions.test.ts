@@ -5,7 +5,7 @@ import { isAbortedResult, runVerify, verifyExitCode } from '@loomake/kit';
 import { CHANGE, withProject } from './project.js';
 import { copyChangeToArchive, verifyContextCases } from './verify-context-fixtures.js';
 
-it.each(['valid', 'empty', 'file', 'dangling', 'outward', 'outward-valid'])('[REQ-037][REQ-055] active %s wins over a valid archive', kind =>
+it.each(['valid', 'empty', 'file', 'dangling', 'outward', 'outward-valid'])('[REQ-037] active %s wins over a valid archive', kind =>
   withProject({ config: { openspecValidate: true, commands: {} } }, root => {
     const archived = copyChangeToArchive(root), active = join(root, 'openspec/changes', CHANGE), outside = join(root, '..', basename(root) + '-outside');
     try {
