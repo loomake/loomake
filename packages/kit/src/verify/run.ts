@@ -271,6 +271,7 @@ function checkSpec(
   const specErrors: ParseError[] = [];
   const answerReferences: string[] = [];
   const answeredIds = new Set(answered.map((q) => q.ID));
+  const questionIds = [...new Set(questions.map((q) => q.ID).filter((id) => id.length > 0))].sort((a, b) => b.length - a.length);
   const reqs = specs.flatMap((f) => {
     const file = toPosix(relative(changeDir, f));
     const body = reader.read(f);
@@ -280,8 +281,12 @@ function checkSpec(
       const fenced = fenceMask(lines);
       lines.forEach((line, index) => {
         if (fenced[index]) return;
-        for (const match of line.matchAll(/(?<![A-Za-z0-9-])Q-\d+(?!\d)/g)) {
-          if (answeredIds.has(match[0])) answerReferences.push(`${file}:${index + 1} ${match[0]}`);
+        for (let offset = 0; offset < line.length;) {
+          if (offset > 0 && /[A-Za-z0-9-]/.test(line[offset - 1])) { offset++; continue; }
+          const id = questionIds.find((id) => line.startsWith(id, offset) && !/[A-Za-z0-9-]/.test(line[offset + id.length] ?? ''));
+          if (!id) { offset++; continue; }
+          if (answeredIds.has(id)) answerReferences.push(`${file}:${index + 1} ${id}`);
+          offset += id.length;
         }
       });
     }
