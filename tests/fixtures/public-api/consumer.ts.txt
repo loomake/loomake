@@ -1,4 +1,4 @@
-import { parseCiTestMetadata, type CiTestMetadataV1, type ParseResult } from '@loomake/core';
+import { parseCiTestArtifact, type CiTestArtifactInput, type CiTestArtifact, parseCiTestMetadata, type CiTestMetadataV1, type ParseResult } from '@loomake/core';
 import {
   createAgreement, parseTrace, parseTasks, parseSpec, extractTestRequirements, VERIFY_RESULT_SCHEMA_VERSION, loadParserSchemas, TRACE_SCHEMA_VERSION, SPEC_SCHEMA_VERSION, TASKS_SCHEMA_VERSION, loadTraceSchemas, type Evidence as CoreEvidence, type EvidenceDocument as CoreEvidenceDocument, type Report as CoreReport, type ReportRow as CoreReportRow,
   QUALITY_REPORT_SCHEMA_VERSION, loadQualityReportSchema, type QualityReport,
@@ -11,6 +11,9 @@ import { runRun, maskSecrets, type RunOptions, type RunSummary } from '@loomake/
 
 type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
 type Assert<T extends true> = T;
+export function consumeCiTestArtifact(input: CiTestArtifactInput): ParseResult<CiTestArtifact> {
+  return parseCiTestArtifact(input);
+}
 // REQ-318: 現行の verify 2.0.0 の検査は共有の 4 値、履歴の 1.0.0 は従来の 4 状態
 export type StatusContract = Assert<Equal<VerifyCheckResult['result'], 'PASS' | 'FAIL' | 'INSUFFICIENT_EVIDENCE' | 'NOT_APPLICABLE'>>;
 export type LegacyStatusContract = Assert<Equal<LegacyVerifyCheckResult['status'], 'pass' | 'fail' | 'warn' | 'skip'>>;
