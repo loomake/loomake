@@ -5,7 +5,7 @@ import { formatVerifyResult, isAbortedResult, loadVerifyQualitySchema, runVerify
 import type { VerifyResult } from '@loomake/core';
 import * as input from '../src/runtime/input.js';
 import * as process from '../src/runtime/process.js';
-import { CHANGE, COPY_REPORT, commitAll, reportJson, traceMd, withProject } from './project.js';
+import { CHANGE, COPY_REPORT, commitAll, ledgerRow, reportJson, requirement, specMd, traceMd, withProject } from './project.js';
 const qualitySchema = await loadVerifyQualitySchema();
 const name = '依存する成果物';
 const row = ['D-01', 'REQ-012', 'change', 'producer', '', '', ''];
@@ -25,6 +25,10 @@ it.each(['local', 'ci'] as const)('[REQ-401] all three declarations are ordered 
   expect(!isAbortedResult(r) && r.decision.required).toBe(false);
   expect(formatVerifyResult(r)).toContain('! 依存する成果物');
 }));
+it('[REQ-401] preserves the declared order of multiple related requirements', () => withProject({
+  trace: traceMd({ ledger: [ledgerRow('REQ-012'), ledgerRow('REQ-013')] }) + section([['D-01', 'REQ-013, REQ-012', ...row.slice(2)]]),
+  spec: specMd(requirement('first'), requirement('second', { source: 'Source: REQ-013' })),
+}, root => { expect(check(run(root))?.reason).toBe('案内：REQ-013・REQ-012 ← D-01 change producer（未確認）'); }));
 it.each(['local', 'ci'] as const)('[REQ-401] all three dependencies turn an otherwise successful done/%s into pending evidence', scope => withProject(ready, root => {
   prepare(root); commitAll(root); expect(verifyExitCode(run(root, 'done', scope))).toBe(0);
   writeFileSync(tracePath(root), traceMd() + section()); commitAll(root);
@@ -44,8 +48,8 @@ it.each(invalid.flatMap(body => (['spec-only', 'done'] as const).map(gate => ({ 
   const r = run(root, gate); expect(check(r)?.result).toBe('FAIL'); expect(verifyExitCode(r)).toBe(1);
   expect(check(r)?.reason).toMatch(/trace\.md:\d+ /); expect(check(r)?.reason).not.toContain('未確認');
 }));
-it.each(['', '\n## 依存と技術確認\n' + section().replace('## 依存する成果物', 'old'), '\n```md\n' + section() + '\n```'])('[REQ-401] absent declarations preserve the entire result, text and exit %#', suffix => withProject({}, root => {
-  const before = run(root); writeFileSync(tracePath(root), traceMd() + suffix); const after = run(root);
+it.each(['', '\n## 依存と技術確認\n' + section().replace('## 依存する成果物', 'old'), '\n```md\n' + section() + '\n```'].flatMap(suffix => (['spec-only', 'done'] as const).map(gate => ({ suffix, gate }))))('[REQ-401] absent declarations preserve the entire result, text and exit ($gate) %#', ({ suffix, gate }) => withProject({}, root => {
+  const before = run(root, gate); writeFileSync(tracePath(root), traceMd() + suffix); const after = run(root, gate);
   expect(after).toEqual(before); expect(formatVerifyResult(after)).toBe(formatVerifyResult(before)); expect(verifyExitCode(after)).toBe(verifyExitCode(before));
 }));
 it.each(['question', 'assumption'] as const)('[REQ-401] dependency evidence preserves existing %s decisions and other failures', kind => withProject({ trace: kind === 'question'
@@ -53,8 +57,8 @@ it.each(['question', 'assumption'] as const)('[REQ-401] dependency evidence pres
   : traceMd({ assumptions: ['| A-01 | REQ-012 | assumption | reason | |'] }) }, root => {
   const before = run(root, 'done'); writeFileSync(tracePath(root), readFileSync(tracePath(root), 'utf8') + section()); const after = run(root, 'done');
   expect(check(after)?.result).toBe('INSUFFICIENT_EVIDENCE'); expect(after.run).toEqual(before.run);
-  expect(afte!isAbortedResult(r) && !isAbortedResult(before) && after.decision).toEqual(!isAbortedResult(before) && before.decision);
-  expect(afte!isAbortedResult(r) && after.checks.filter(c => c.id !== name)).toEqual(!isAbortedResult(before) && before.checks);
+  expect(!isAbortedResult(after) && !isAbortedResult(before) && after.decision).toEqual(!isAbortedResult(before) && before.decision);
+  expect(!isAbortedResult(after) && after.checks.filter(c => c.id !== name)).toEqual(!isAbortedResult(before) && before.checks);
 }));
 it('[REQ-401] reuses the trace read and adds no reads or external calls for declarations', () => withProject({}, root => {
   const original = input.createInputReader, paths: string[] = [];

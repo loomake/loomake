@@ -2,7 +2,7 @@
 - [x] 1.1 未受入#387の固定C1aを専用WTへ積み、REQ-400契約を確認し、全5Scenario・保持REQ・見積を確定してstrict/spec-onlyの実終了0を確認する。
 ## 2. 接続と試験
 - [x] 2.1 REQ-401の全分類・混在エラー優先（#386）・宣言なし完全互換・既存判断併存・入力境界と実CLI/JSONの新規試験を先に追加し、意味あるREDを保存する。
-- [ ] 2.2 一度読んだtrace本文で内部readerを接続し、新規試験と既存回帰・lint/typecheckを通す。UsageError/abort・4 callers・旧assert/期待/期限/設定を保持し、changesetと説明を同じ作業に含める。
+- [x] 2.2 一度読んだtrace本文で内部readerを接続し、新規試験と既存回帰・lint/typecheckを通す。UsageError/abort・4 callers・旧assert/期待/期限/設定を保持し、changesetと説明を同じ作業に含める。
 ## 3. 完了ゲート
 - [ ] 3.1 通常localdoneの全品質・全REQ対応試験・全task・実JSON・実終了0を確認する。 <!-- loomake:gate=done -->
 ## Workflow follow-up
