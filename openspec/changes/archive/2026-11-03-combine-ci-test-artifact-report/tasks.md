@@ -7,7 +7,7 @@
 - [x] 2.1 組の公開変換と型・公開consumer・core changeset・全4 ScenarioのID付き正負試験を加える。関連parser試験と配布物の公開型検査の終了0、既存parser/設定不変を確認する（REQ-392）。
 
 ## 3. 完了ゲート
-- [ ] 3.1 通常localdoneの全品質・実JSON・実exit0を確認する（REQ-392）。 <!-- loomake:gate=done -->
+- [x] 3.1 通常localdoneの全品質・実JSON・実exit0を確認する（REQ-392）。 <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 - 自身の差分仕様を同期・archiveし、同じ実装PRで全4 Scenario/既存正文の保持とCI通常doneを確認する。同期/archiveだけのPRは作らない。
