@@ -1,9 +1,6 @@
 import { expect, it } from 'vitest';
 
-const modulePath = '../src/verify/dependencies.js';
-const { readDependencies } = await import(modulePath).catch(() => ({
-  readDependencies: () => { throw new Error('readDependencies is not implemented'); },
-}));
+import { readDependencies } from '../src/verify/dependencies.js';
 const header = '| ID | 関連 | 種類 | 依存先 | 提供元 | 期待blob | CI |';
 const separator = '| --- | --- | --- | --- | --- | --- | --- |';
 const row = ['D-01', 'REQ-400', 'change', 'add-x', '', '', ''];
@@ -55,4 +52,11 @@ it.each([
 ])('[REQ-400] Issue/pathの形: %s %s %s %s', (kind, target, provider, blob, reason) => {
   expect(read(table([['D-01', 'REQ-400', kind, target, provider, blob, '']])).errors)
     .toContainEqual({ file: 'trace.md', line: 4, id: 'D-01', message: expect.stringContaining(reason) });
+});
+it('[REQ-400] フェンス外の実節とセルの空白を読み、次節の表を含めない', () => {
+  const body = ['```md', table(), '```', table([row.map((value) => ` ${value} `)]), '## 次節', table()].join('\n');
+  expect(read(body)).toEqual({ present: true, errors: [], declarations: [{ id: 'D-01', related: ['REQ-400'], kind: 'change', target: 'add-x', provider: '', expectedBlob: '', ci: [], line: 10 }] });
+});
+it('[REQ-400] 次節にしか表がなければ元の見出しで表欠落を返す', () => {
+  expect(read('## 依存する成果物\n## 次節\n' + table())).toEqual({ present: true, declarations: [], errors: [{ file: 'trace.md', line: 1, id: undefined, message: expect.any(String) }] });
 });
