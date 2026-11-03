@@ -7,7 +7,7 @@
 
 ## 2. 統合確認
 
-- [ ] 2.1 strict と spec-only を実行し、日誌に判断・結果を記録し、kit の patch changeset を追加する。全差分の行数を確認し、固定した Issue 子の最終 head をローカル依存として自身の差分を固定する。
+- [x] 2.1 strict と spec-only を実行し、日誌に判断・結果を記録し、kit の patch changeset を追加する。全差分の行数を確認し、固定した Issue 子の最終 head をローカル依存として自身の差分を固定する。
 - [ ] 2.2 `pnpm -s verify --change requirement-quality-questions --done --scope local` を通す。 <!-- loomake:gate=done -->
 
 ## Workflow follow-up

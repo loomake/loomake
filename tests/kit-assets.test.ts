@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { parseTrace } from '@loomake/core';
+import { parseTrace } from '../packages/core/src/index.js';
 
 const root = join(import.meta.dirname, '..');
 const templates = join(root, 'packages/kit/templates');
