@@ -15,7 +15,8 @@ describe('Issue 出典と既存仕様ゲートの互換', () => {
       questions: [`| Q-01 | REQ-012 | 何回ですか | 3 / 5 | 5 | yes | ${answer} |`] });
     const result = withProject({ trace }, (root) => runVerify({ root, qualitySchema, changeId: CHANGE, gate: 'spec-only' }));
     expect(result.run.status).toBe('completed');
-    expect('checks' in result && result.checks.find((check) => check.id === '要件台帳')).toMatchObject({ result: 'PASS' });
+    if (!('checks' in result) || !result.checks) throw new Error('仕様ゲートの checks がありません');
+    expect(result.checks.find((check) => check.id === '要件台帳')).toMatchObject({ result: 'PASS' });
     expect(verifyExitCode(result)).toBe(expected);
   });
 });
