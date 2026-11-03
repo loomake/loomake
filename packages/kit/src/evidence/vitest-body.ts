@@ -52,8 +52,8 @@ export function createBodyRecorder(chai: ChaiLike) {
         const observed = entry;
         finished(() => { try {
           if (!incomplete.has(observed)) observed.state = task.result?.state ?? null;
-          for (const open of observed.scopes) open.open = false;
-        } catch { /* 記録の失敗で利用側の結果を変えない。 */ } });
+        } catch { /* 記録の失敗で利用側の結果を変えない。 */ }
+        finally { for (const open of observed.scopes) open.open = false; } });
         Object.defineProperty(entry, 'scopes', { value: [], enumerable: false });
       }
       scope = { task, entry, open: true };

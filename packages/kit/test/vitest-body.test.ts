@@ -1,4 +1,5 @@
-import { it, expect } from 'vitest';
+import { chai, it, expect } from 'vitest';
+import { createBodyRecorder } from '@loomake/kit';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { createRequire } from 'node:module';
@@ -43,4 +44,20 @@ it('[REQ-393] 公開取得器が52境界の原観測を保ち元のstatusと終�
     expect(clean.status).toBe(0);
     expect(clean.report.testResults.flatMap(file => file.assertionResults).filter(t => t.status === 'passed')).toHaveLength(10);
   }
+});
+
+it('[REQ-393] finishedのstate読取が失敗しても範囲を閉じ、元の戻り値を保つ', async () => {
+  let unreadable = false, finished: () => void = () => { throw new Error('finished未登録'); };
+  let release: () => void = () => { throw new Error('待機未登録'); };
+  const wait = new Promise<void>(resolve => { release = resolve; });
+  const task = { meta: {} as { loomakeBody?: BodyEvidence }, get result() {
+    if (unreadable) throw new Error('finished state unreadable');
+    return { repeatCount: 0, retryCount: 0, state: 'pass' };
+  } };
+  const pending = createBodyRecorder(chai)({ task, onTestFinished(callback) { finished = callback; } }, async () => {
+    await wait; expect(1).toBe(1); return 42;
+  });
+  unreadable = true; finished(); release();
+  expect(await pending).toBe(42);
+  expect(task.meta.loomakeBody?.attempts).toEqual([{ repeat: 0, retry: 0, expectedFailure: null, state: null, calls: {} }]);
 });
