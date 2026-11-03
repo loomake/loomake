@@ -53,6 +53,6 @@ it('[REQ-393][P46] sync throw identity',async ctx=>{const error=new Error('origi
 it('[REQ-393][P47] async reject identity',async ctx=>{const error=new Error('original');let seen,n=0;try{await body(ctx,async()=>{n++;throw error;});}catch(e){seen=e;}expect(seen).toBe(error);expect(n).toBe(1);});
 it('[REQ-393][P48] invalid context return',async()=>{let n=0;expect(await body(undefined,()=>{n++;return 9;})).toBe(9);expect(n).toBe(1);});
 it('[REQ-393][P49] context getter error',async()=>{let n=0;const ctx={get task(){throw Error('unreadable');}};expect(await body(ctx,()=>{n++;return 7;})).toBe(7);expect(n).toBe(1);});
-it('[REQ-393][P50] frozen metadata',async()=>{let n=0;const ctx={task:{meta:Object.freeze({})},onTestFinished(){}};expect(await body(ctx,()=>{n++;return 5;})).toBe(5);expect(n).toBe(1);});
-it('[REQ-393][P51] registration throws',async()=>{let n=0;const ctx={task:{meta:{}},onTestFinished(){throw Error('registration');}};expect(await body(ctx,()=>{n++;return 3;})).toBe(3);expect(n).toBe(1);});
+it('[REQ-393][P50] frozen metadata',async()=>{let n=0;const ctx={task:{meta:Object.freeze({}),result:{repeatCount:0,retryCount:0}},onTestFinished(){}};expect(await body(ctx,()=>{n++;return 5;})).toBe(5);expect(n).toBe(1);});
+it('[REQ-393][P51] registration throws',async()=>{let n=0;const ctx={task:{meta:{},result:{repeatCount:0,retryCount:0}},onTestFinished(){throw Error('registration');}};expect(await body(ctx,()=>{n++;return 3;})).toBe(3);expect(n).toBe(1);});
 it('[REQ-393][P52] recording write error',ctx=>body(ctx,()=>{if(ctx.task.meta.loomakeBody)Object.freeze(ctx.task.meta.loomakeBody.attempts[0].calls);expect(1).toBe(1);}));

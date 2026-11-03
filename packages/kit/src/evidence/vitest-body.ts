@@ -30,15 +30,18 @@ export function createBodyRecorder(chai: ChaiLike) {
     });
   }
   return function body<T>(ctx: BodyContext | null | undefined, fn: () => T | Promise<T>): T | Promise<T> {
-    let task: BodyContext['task'] | undefined, finished: BodyContext['onTestFinished'] | undefined;
-    try { task = ctx?.task; finished = ctx?.onTestFinished.bind(ctx); } catch { return fn(); }
-    if (!task || typeof finished !== 'function') return fn();
+    let task: BodyContext['task'] | undefined, finished: BodyContext['onTestFinished'] | undefined, repeat: number | undefined, retry: number | undefined;
+    try {
+      task = ctx?.task; finished = ctx?.onTestFinished.bind(ctx);
+      repeat = task?.result?.repeatCount; retry = task?.result?.retryCount;
+    } catch { return fn(); }
+    if (!task || typeof finished !== 'function' || repeat === undefined || retry === undefined) return fn();
     const nested = scopes.getStore();
     if (nested?.open && nested.task === task) return fn();
     let scope: Scope;
     try {
       const meta = task.meta as Record<string, unknown>;
-      const repeat = task.result?.repeatCount ?? 0, retry = task.result?.retryCount ?? 0, key = `${repeat}:${retry}`;
+      const key = `${repeat}:${retry}`;
       let map = records.get(task);
       if (!map) { map = new Map(); records.set(task, map); meta[BODY_EVIDENCE_KEY] = { format: 1, attempts: [] }; }
       let entry = map.get(key);
