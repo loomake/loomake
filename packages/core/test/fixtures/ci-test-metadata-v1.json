@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "runUrl": "https://github.com/loomake/loomake/actions/runs/41431688151",
+  "runId": "41431688151",
+  "runAttempt": "1",
+  "checkoutSha": "fc0f17b992ad2fe56bc2fb6cc10e1c7128f01516",
+  "os": "ubuntu-latest",
+  "node": "v24.22.1",
+  "shard": "all",
+  "testOutcome": "success",
+  "reportState": "valid",
+  "counts": {
+    "passed": 2801,
+    "failed": 0,
+    "pending": 0,
+    "skipped": 8,
+    "todo": 0,
+    "disabled": 0
+  }
+}
