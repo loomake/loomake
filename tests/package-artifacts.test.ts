@@ -104,6 +104,18 @@ process.exitCode = await runCliReference({ definition: CLI_REFERENCE, check: tru
     expect(broken.stderr).toContain('AGENTS.md');
   }, 120000);
 
+  it('[REQ-393] tarballの公開入口からVitest runnerを導入し未設定の移行影響も確かめる', () => {
+    const consumerTarget = join(base, 'body-consumer');
+    const prepared = spawnSync(process.execPath, ['scripts/package-smoke.mjs', 'prepare', consumerTarget], { cwd: root, encoding: 'utf8', env });
+    expect(prepared.status, prepared.stdout + prepared.stderr).toBe(0);
+    const checked = spawnSync(process.execPath, ['scripts/check-body-consumer.mjs', consumerTarget, join(base, 'body-consumer-results')], { cwd: root, encoding: 'utf8', timeout: 60_000 });
+    expect(checked.error, checked.stderr).toBeUndefined();
+    expect(checked.status, checked.stdout + checked.stderr).toBe(0);
+    const result = JSON.parse(readFileSync(join(base, 'body-consumer-results/results.json'), 'utf8'));
+    expect(result.ok).toBe(true);
+    expect(result.results.map((entry: { mode: string }) => entry.mode)).toEqual(['identity', 'standard', 'custom', 'unconfigured']);
+  }, 90_000);
+
   it.runIf(process.platform !== 'win32').each([false, true])('[REQ-333] packしたCLIと監視役を同じSIGHUPで終わらせてもopenspecと孫を残さない（分割ready=%s）', (splitReady) => {
     const verifyTarget = join(base, splitReady ? 'verify-sighup-split-ready' : 'verify-sighup');
     const prepared = spawnSync(process.execPath, ['scripts/package-smoke.mjs', 'prepare', verifyTarget], { cwd: root, encoding: 'utf8', env });

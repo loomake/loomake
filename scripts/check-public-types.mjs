@@ -15,6 +15,7 @@ const scratch = mkdtempSync(join(consumer, '.public-types-'));
 try {
   writeFileSync(join(scratch, 'consumer.ts'), readFileSync(join(root, 'tests/fixtures/public-api/consumer.ts.txt')));
   writeFileSync(join(scratch, 'tsconfig.json'), JSON.stringify({ compilerOptions: { target: 'ES2022', module: 'NodeNext', moduleResolution: 'NodeNext', strict: true, noEmit: true, skipLibCheck: false, types: ['node'], typeRoots: [join(root, 'node_modules/@types')], customConditions: [] }, files: ['consumer.ts'] }));
+  for (const name of ['consumer.ts', 'tsconfig.json']) writeFileSync(join(output, name), readFileSync(join(scratch, name)));
   const result = spawnSync(process.execPath, [join(root, 'node_modules/typescript/bin/tsc'), '-p', join(scratch, 'tsconfig.json'), '--pretty', 'false'], { encoding: 'utf8', timeout: 30000, maxBuffer: 1024 * 1024 });
   writeFileSync(join(output, 'stdout.txt'), result.stdout ?? ''); writeFileSync(join(output, 'stderr.txt'), result.stderr ?? '');
   writeFileSync(join(output, 'results.json'), JSON.stringify({ ok: result.status === 0 && !result.error, exitCode: result.status, compiler: JSON.parse(readFileSync(join(root, 'node_modules/typescript/package.json'), 'utf8')).version, nodeTypes: JSON.parse(readFileSync(join(root, 'node_modules/@types/node/package.json'), 'utf8')).version, scope: 'selected-public-api-types', sourceConditions: false }, null, 2) + '\n');

@@ -157,7 +157,15 @@ export async function check(target) {
   const body = kit.createBodyRecorder(chai);
   let finished;
   const context = { task: { meta: {}, fails: false, result: { state: 'pass', repeatCount: 0, retryCount: 0 } }, onTestFinished: fn => { finished = fn; } };
-  assert.equal(await body(context, () => { prototype.toBe(); return 42; }), 42);
+  context.task.context = context;
+  class ExistingRunner {
+    extendTaskContext(ctx) { return ctx; }
+    runTask(task) { return body(task.context, () => { prototype.toBe(); return 42; }); }
+  }
+  const BodyRunner = kit.createBodyRunner(ExistingRunner);
+  const bodyRunner = new BodyRunner();
+  bodyRunner.extendTaskContext(context);
+  assert.equal(await bodyRunner.runTask(context.task), 42);
   finished();
   assert.deepEqual(context.task.meta.loomakeBody.attempts[0], { repeat: 0, retry: 0, expectedFailure: false, state: 'pass', calls: { toBe: 1 } });
   const missing = { task: { meta: {} }, onTestFinished() {} };
