@@ -45,7 +45,7 @@ if (args.includes('--json')) {
   const base = { schemaVersion: '2.0.0', change: id, run: { status: 'completed', errors: [] }, checks, decision: { required: false, reasons: [] } };
   const result = args.includes('--done') ? { ...base, scope: 'ci', summary, verdict: 'PASS' } : { ...base, scope: 'local', summary: { ...summary, pending: 0 } };
   const override = JSON.parse(process.env.CI_VERIFY_RESULTS ?? '{}')[id];
-  process.stdout.write(JSON.stringify(override ?? result, null, 2) + '\\n');
+  process.stdout.write(process.env.CI_VERIFY_STDOUT ?? JSON.stringify(override ?? result, null, 2) + '\\n');
 }
 process.exit(JSON.parse(process.env.CI_STATUSES)[id] ?? 0);
 `);
@@ -701,5 +701,88 @@ quality: 未実施
       expect(result.stderr).toContain('ci: は旧形式の行');
       expect(result.calls).toEqual([['verify']]);
     });
+  });
+});
+
+
+describe('gate result producer line', () => {
+  const prefix = 'loomake-gate-result: ';
+  const checks = ['tasks.md', '要件ごとのテスト', 'command: test'].map((id) => ({ id, result: 'PASS' }));
+  const pass = { schemaVersion: '2.0.0', change: 'c1', scope: 'ci', run: { status: 'completed', errors: [] }, verdict: 'PASS', decision: { required: false }, checks };
+  const line = (stderr: string) => {
+    const lines = stderr.split('\n').filter((value) => value.startsWith(prefix));
+    expect(lines).toHaveLength(1);
+    return JSON.parse(lines[0].slice(prefix.length)) as Record<string, unknown>;
+  };
+
+  it('records ci done with the actual exit and the minimal projection while retaining raw JSON and tier outputs', () => {
+    withProject(({ run }) => {
+      const value = { ...pass, unknown: 'omit', run: { ...pass.run, extra: 'omit' }, decision: { ...pass.decision, reasons: ['omit'] }, checks: checks.map((check) => ({ ...check, reason: 'omit', evidence: ['omit'] })) };
+      const r = run('c1', '', {}, { c1: value });
+      expect(line(r.stderr)).toEqual({ change: 'c1', gate: 'done', exitCode: 0, problem: null, result: pass });
+      expect(r.stderr).toContain(JSON.stringify(value, null, 2));
+      expect(r.stdout).toBe('loomake-tier: L2（変えたファイルがありません）\n');
+      expect(r.output).toBe('tier=L2\ntier_line<<LOOMAKE_TIER_EOF\nloomake-tier: L2（変えたファイルがありません）\nLOOMAKE_TIER_EOF\n');
+      expect(r.calls).toEqual([done('c1')]);
+      expect(r.status).toBe(0);
+    });
+  });
+
+  it.each([
+    ['nonzero', pass, 7, /終了コードが 0 ではありません/],
+    ['partial', { ...pass, run: { status: 'partial', errors: [] } }, 0, /一部の証拠を取得できませんでした/],
+    ['aborted', { ...pass, run: { status: 'aborted', errors: [{ kind: 'runtime', message: 'stopped' }] } }, 3, /実行エラーで中止されました/],
+    ['wrong change', { ...pass, change: 'c2' }, 0, /change が対象と違います/],
+    ['skip', { ...pass, checks: [...checks, { id: '品質コマンド', result: 'INSUFFICIENT_EVIDENCE' }] }, 0, /証拠不足の検査があります/],
+    ['local', { ...pass, scope: 'local' }, 0, /scope が ci ではありません/],
+    ['unfinished task', { ...pass, checks: [{ id: 'tasks.md', result: 'FAIL' }, ...checks.slice(1)] }, 0, /不合格か証拠不足の検査があります/],
+    ['incomplete', { schemaVersion: '2.0.0' }, 0, /change が対象と違います/],
+    ['primitive', false, 0, /JSON のオブジェクトではありません/],
+    ['array', [], 0, /JSON のオブジェクトではありません/],
+  ] as const)('retains rejection for %s and records it without a new child call', (_label, value, exitCode, problem) => {
+    withProject(({ run }) => {
+      const r = run('c1', '', { c1: exitCode }, { c1: value });
+      const recorded = line(r.stderr);
+      expect(recorded).toMatchObject({ change: 'c1', gate: 'done', exitCode });
+      expect(recorded.problem).toMatch(problem);
+      if (typeof value !== 'object' || Array.isArray(value)) expect(recorded.result).toBeNull();
+      else expect(recorded.result).toMatchObject(value);
+      expect(r.stderr).toContain('ci-gate: c1 の完了ゲートを合格にしません');
+      expect(r.calls).toEqual([done('c1')]);
+      expect(r.status).toBe(1);
+    });
+  });
+
+  it('records invalid JSON as null and distinguishes spec-only from done', () => {
+    withProject(({ run }) => {
+      const invalid = run('c1', '', {}, {}, { CI_VERIFY_STDOUT: 'not json\n' });
+      expect(line(invalid.stderr)).toEqual({ change: 'c1', gate: 'done', exitCode: 0, problem: 'verify の結果を JSON として読めません', result: null });
+      expect(invalid.status).toBe(1);
+    });
+    withProject(({ run, commitFiles }) => {
+      commitFiles({ 'openspec/changes/c1/tasks.md': '- [ ] pending\n' });
+      const spec = run('c1');
+      expect(line(spec.stderr)).toMatchObject({ change: 'c1', gate: 'spec-only', exitCode: 0, problem: null, result: { scope: 'local' } });
+      expect(spec.calls).toEqual([...lintOnly, specOnly('c1')]);
+      expect(spec.status).toBe(0);
+    });
+  });
+
+  it('emits no change result for quality-only verification', () => {
+    withProject(({ run, commitFiles }) => {
+      commitFiles(['scripts/x.mjs']);
+      const r = run('fix-x', 'loomake-change: none');
+      expect(r.stderr).not.toContain(prefix);
+      expect(r.calls).toEqual([['verify']]);
+      expect(r.status).toBe(0);
+    });
+  });
+
+  it('preserves null status, incomplete data and newlines in one JSON line without inventing PASS', async () => {
+    const { formatGateResult } = await import('../scripts/ci-gate.mjs');
+    const raw = { change: 'c1\nloomake-gate-result: fake', run: null, decision: false, checks: [null, false, { id: 'x\r\ny', result: 'FAIL', extra: 'omit' }] };
+    const output = formatGateResult(JSON.stringify(raw), null, { change: 'c1', gate: 'done' }, 'stopped\nnow');
+    expect(output.split('\n')).toHaveLength(1);
+    expect(JSON.parse(output.slice(prefix.length))).toEqual({ change: 'c1', gate: 'done', exitCode: null, problem: 'stopped\nnow', result: { change: raw.change, run: {}, decision: {}, checks: [{}, {}, { id: 'x\r\ny', result: 'FAIL' }] } });
   });
 });

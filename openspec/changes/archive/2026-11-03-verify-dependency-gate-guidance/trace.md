@@ -5,7 +5,7 @@
 |---|---|---|
 | [Issue #285](https://github.com/loomake/loomake/issues/285) | 元6項目とQ境界は受入済み、追加依存検査が残る | 2026-11-03 |
 | [依存の質問](https://github.com/loomake/loomake/issues/121#issuecomment-6576621797) | archive存在や依存元の今回の試験を提供元DoDの代わりにしない | 2026-11-02 |
-| [本人回答](https://github.com/loomake/loomake/issues/121#issuecomment-6591068404) | Q-DEP-01=B/02=C/03=B/04=A | 2026-11-02 |
+| [本人回答](https://github.com/loomake/loomake/issues/121#issuecomment-6591068404) | Q-DEP-01=B/02=C/03=B/04=A | 2026-11-03 |
 | Opus設計3380f500 | actual opus5.5、exit0、旧head3b572c22、result.md §3.4/3.5/4.1 | 2026-11-03 |
 | 管理役の分割 | C1a REQ-400内部reader、C1b REQ-401 CLI接続。C1a #387固定cf4309ddは未受入 | 2026-11-03 |
 
