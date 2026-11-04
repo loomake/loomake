@@ -60,3 +60,33 @@ it('[REQ-400] フェンス外の実節とセルの空白を読み、次節の表
 it('[REQ-400] 次節にしか表がなければ元の見出しで表欠落を返す', () => {
   expect(read('## 依存する成果物\n## 次節\n' + table())).toEqual({ present: true, declarations: [], errors: [{ file: 'trace.md', line: 1, id: undefined, message: expect.any(String) }] });
 });
+
+it.each([
+  '|-|-|-|-|-|-|-|', '|:-:|:-:|:-:|:-:|:-:|:-:|:-:|',
+  ...['-', '--', ':-', '-:', ':-:', ':--:'].map((cell) => `| ${Array(7).fill(cell).join(' | ')} |`),
+  '| - | :-- | --: | :-: | --- | -- | :- |',
+])('[REQ-400] 短い有効な区切り行で値と位置を保持する: %s', (sep) => {
+  expect(read(table([row], header, sep))).toEqual({ present: true, errors: [], declarations: [
+    { id: 'D-01', related: ['REQ-400'], kind: 'change', target: 'add-x', provider: '', expectedBlob: '', ci: [], line: 4 },
+  ] });
+});
+it.each(['\r\n', '\r'])('[REQ-400] 混在する短い区切りと改行で全3種の順序と位置を保持する: %j', (eol) => {
+  const rows = [row, ['D-02', 'REQ-400, REQ-401', 'issue', '#123', 'producer', '', '12/34, 56/78'],
+    ['D-003', 'REQ-401', 'path', 'src/a..b\\|c.ts', 'producer', 'aB'.repeat(32), '']];
+  const body = table(rows, header, '| - | :-- | --: | :-: | --- | -- | :- |').replace(/\n/g, eol);
+  expect(read(body)).toEqual({ present: true, errors: [], declarations: [
+    { id: 'D-01', related: ['REQ-400'], kind: 'change', target: 'add-x', provider: '', expectedBlob: '', ci: [], line: 4 },
+    { id: 'D-02', related: ['REQ-400', 'REQ-401'], kind: 'issue', target: '#123', provider: 'producer', expectedBlob: '', ci: ['12/34', '56/78'], line: 5 },
+    { id: 'D-003', related: ['REQ-401'], kind: 'path', target: 'src/a..b|c.ts', provider: 'producer', expectedBlob: 'aB'.repeat(32), ci: [], line: 6 },
+  ] });
+});
+it.each(['', ':', '::', '- -', '-=-', '=', 'a', ':-:-', '+-'])('[REQ-400] 区切りでないセルを拒否する: %j', (cell) => {
+  const sep = `| ${[...Array(6).fill('-'), cell].join(' | ')} |`;
+  expect(read(table([row], header, sep))).toEqual({ present: true, declarations: [],
+    errors: [{ file: 'trace.md', line: 2, id: undefined, message: expect.stringContaining('区切り行') }] });
+});
+it.each([6, 8])('[REQ-400] 短い区切り行でも7列以外を拒否する: %i', (count) => {
+  const sep = `| ${Array(count).fill('-').join(' | ')} |`;
+  expect(read(table([row], header, sep))).toEqual({ present: true, declarations: [],
+    errors: [{ file: 'trace.md', line: 2, id: undefined, message: expect.stringContaining('区切り行') }] });
+});
