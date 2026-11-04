@@ -93,7 +93,9 @@ describe('宣言した CI job の 1 回の内部取得', () => {
       { result: { kind: 'unavailable', job: '4', reason: 'json' }, bytes: 0 },
     ]);
     // 既存の読み取りと同じ復号で、文字列の中の不正な UTF-8 は置換文字になる
-    expect(fetchJob(root, '5').result).toEqual({ kind: 'fetched', job: '5', value: { a: '\ufffd' } });
+    const replaced = fetchJob(root, '5');
+    expect(replaced.result).toEqual({ kind: 'fetched', job: '5', value: { a: '\ufffd' } });
+    expect(replaced.bytes).toBe(9);
     const empty = join(root, 'empty');
     mkdirSync(empty);
     vi.stubEnv('PATH', empty);

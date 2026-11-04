@@ -40,5 +40,6 @@ export function fetchJob(root: string, digits: string, limit = JSON_LIMITS.maxFi
   const output = runExternalBytes(...ghCommand(job), { cwd: root, env, maxBuffer: Math.min(JSON_LIMITS.maxFileBytes, limit) });
   // 制御用の領域も超えた native の受信は、取得不能にせず出力の上限として止める
   if (output.error?.code === 'ENOBUFS') throw new ProcessLimitError('output', 'gh');
-  return { result: classify(job, output), bytes: output.stdout.length + output.stderr.length };
+  const bytes = output.stdout.length + output.stderr.length;
+  return { result: classify(job, output), bytes };
 }
