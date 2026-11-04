@@ -11,6 +11,11 @@ const read = (p: string) => readFileSync(join(root, p), 'utf8');
 const readJson = (p: string) => JSON.parse(read(p));
 // Windows のチェックアウトでは行末が CRLF になるので、行の正規表現で読むファイルは LF にそろえる
 const readLf = (p: string) => read(p).replace(/\r\n/g, '\n');
+const gateJob = (workflow: string) => {
+  const gate = workflow.match(/^ {2}gate:\r?\n(?: {4}[^\r\n]*(?:\r?\n|$)|\r?\n)*/m)?.[0];
+  expect(gate).toBeDefined();
+  return gate!;
+};
 const run = (cmd: string) => spawnSync(cmd, { cwd: root, shell: true, encoding: 'utf8' });
 
 const packageJsons = ['package.json', 'packages/core/package.json', 'packages/kit/package.json', 'packages/cli/package.json'];
@@ -211,7 +216,7 @@ describe('CI', () => {
     const jobs = {
       node20: lf.slice(lf.indexOf('\n  node20:'), lf.indexOf('\n  node22:')),
       node22: lf.slice(lf.indexOf('\n  node22:'), lf.indexOf('\n  gate:')),
-      gate: lf.slice(lf.indexOf('\n  gate:')),
+      gate: gateJob(lf),
     };
     for (const [name, job] of Object.entries(jobs)) {
       expect(job, name).toMatch(/^ {4}runs-on: ubuntu-latest$/m);
@@ -225,6 +230,14 @@ describe('CI', () => {
     expect(jobs.gate).toMatch(/^ {4}if: github\.event_name == 'pull_request'$/m);
     // OS の切り替えの式は、quality ジョブの os の行の 1 か所だけ
     expect(lf.replace(/^ *#.*\n/gm, '').match(/ci:all-os/g)).toHaveLength(1);
+  });
+
+  it('gateのruns-on不足を後続ジョブで補わない', () => {
+    const workflow = readLf('.github/workflows/ci.yml');
+    const gate = gateJob(workflow);
+    const withoutRunner = workflow.replace(gate, gate.replace(/^ {4}runs-on: ubuntu-latest\n/m, ''));
+    expect(withoutRunner.slice(withoutRunner.indexOf('\n  scenario-audit:'))).toMatch(/^ {4}runs-on: ubuntu-latest$/m);
+    expect(gateJob(withoutRunner)).not.toMatch(/^ {4}runs-on: ubuntu-latest$/m);
   });
 
   it('[REQ-214] macOS と Windows ではテストを 2 つのシャードに分け、ubuntu ではカバレッジ付きで 1 回だけ実行する', () => {
@@ -362,13 +375,14 @@ describe('CI', () => {
   });
 
   it('[REQ-010][REQ-054] PR ごとに完了ゲートを実行する', () => {
+    const ci = gateJob(read('.github/workflows/ci.yml'));
     expect(ci).toMatch(/if: github\.event_name == 'pull_request'/);
     expect(ci).toContain('node scripts/ci-gate.mjs "$HEAD_REF"');
     expect(ci).toContain('${{ github.head_ref }}');
   });
 
   it('[REQ-010] PR ごとに、change の完了ゲートより前に、いまの仕様を openspec validate --specs --strict で検証する', () => {
-    const gate = ci.slice(ci.indexOf('\n  gate:'));
+    const gate = gateJob(ci);
     const validate = gate.indexOf('- run: openspec validate --specs --strict');
     expect(validate).toBeGreaterThan(gate.indexOf('npm install -g @fission-ai/openspec@'));
     expect(validate).toBeLessThan(gate.indexOf('node scripts/ci-gate.mjs'));
@@ -418,7 +432,7 @@ describe('CI の対象の change の決め方', () => {
   }));
 
   it('[REQ-132] gate のジョブに、向き先のブランチと PR の番号と、PR 本文を読む権限を渡す', () => {
-    const ci = read('.github/workflows/ci.yml');
+    const ci = gateJob(read('.github/workflows/ci.yml'));
     expect(ci).toContain('BASE_REF: ${{ github.base_ref }}');
     expect(ci).toContain('PR_NUMBER: ${{ github.event.pull_request.number }}');
     expect(ci).toMatch(/pull-requests: read/);
