@@ -12,7 +12,7 @@
 
 ## 3. 受入
 
-- [ ] 3.1 同PRの主仕様同期/archive・kit patch changeset・日別worklogを含め全量を再計数し、ローカルlint・型・全試験とlocal doneの実終了0を確認する。
+- [x] 3.1 同PRの主仕様同期/archive・kit patch changeset・日別worklogを含め全量を再計数し、ローカルlint・型・全試験とlocal doneの実終了0を確認する。
 
 ## Workflow follow-up
 
