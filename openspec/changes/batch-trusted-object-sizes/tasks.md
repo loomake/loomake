@@ -6,7 +6,7 @@
 
 ## 2. 同一PRの実装と回帰
 
-- [ ] 2.1 新規専用ファイルに現376のbaseline試験と共有fixture/spyを作り、既存sourceでPASSを記録する。別PR/main受入を依存にしない。
+- [x] 2.1 新規専用ファイルに現376のbaseline試験と共有fixture/spyを作り、既存sourceでPASSを記録する。別PR/main受入を依存にしない。
 - [ ] 2.2 baselineの期待を保持して418タグと全5Scenarioのbatch直接assertを追加し、source変更前の専用REDを保存する。既定16MiB等値/+1・fallback/停止を省かない。
 - [ ] 2.3 純粋判定・一括size・厳密応答検査・限定fallbackを実装し、新試験GREENと既存15試験・原文関連17例の無変更成功を確認する。
 
