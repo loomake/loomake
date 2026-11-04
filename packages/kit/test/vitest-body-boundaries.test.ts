@@ -50,6 +50,32 @@ it('[REQ-393] missing, invalid and closed tokens run callbacks once before mutab
   expect(callbacks).toBe(5);
 });
 
+it('[REQ-393] an open foreign-task token alone runs callbacks once without evidence or mutable task reads', async () => {
+  const h = harness(), meta = h.task.meta, original = new Error('foreign-task callback error');
+  const foreign = newAttempt({ result: { repeatCount: 0, retryCount: 0 } })!;
+  expect(foreign).toMatchObject({ version: 1, repeat: 0, retry: 0, open: true });
+  expect(foreign).not.toBe(h.token); expect(foreign.task).not.toBe(h.task);
+  let reads = 0, callbacks = 0;
+  Object.defineProperty(h.task, 'meta', { get() { reads++; throw new Error('metadata must not be read'); } });
+  Object.defineProperty(h.task, 'result', { get() { reads++; throw new Error('counters must not be read'); } });
+  expect(h.channel.run(foreign, () => h.body(h.context, () => { callbacks++; return h.assertion.toBe(); }))).toBe(h.originalResult);
+  expect(callbacks).toBe(1);
+  let seen: unknown;
+  try { void h.channel.run(foreign, () => h.body(h.context, () => { callbacks++; throw original; })); }
+  catch (error) { seen = error; }
+  expect(seen).toBe(original); expect(callbacks).toBe(2);
+  expect(await h.channel.run(foreign, () => h.body(h.context, async () => {
+    callbacks++; await Promise.resolve(); return h.assertion.toBe();
+  }))).toBe(h.originalResult);
+  expect(callbacks).toBe(3);
+  await expect(h.channel.run(foreign, () => h.body(h.context, async () => {
+    callbacks++; await Promise.resolve(); throw original;
+  }))).rejects.toBe(original);
+  expect(callbacks).toBe(4); expect(h.matcherCalls).toBe(2);
+  expect(reads).toBe(0); expect(meta.loomakeBody).toBeUndefined(); expect(h.finished).toHaveLength(0);
+  expect(foreign.open).toBe(true);
+});
+
 it('[REQ-393] ledger uses token identity, retains history and original counters, and factories never double count', async () => {
   const h = harness(), secondBody = createBodyRecorder(h.chai);
   Object.defineProperty(h.task, 'result', { get() { throw new Error('mutable counters unreadable'); } });
