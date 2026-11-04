@@ -427,3 +427,49 @@ Source: REQ-307
 #### Scenario: 配布スキーマと遅延ロードを保つ
 - **WHEN** 対象スキーマから JSON Schema を生成し、公開 loader と core・CLI の入口を検査する
 - **THEN** 配布 JSON の内容と公開する導出型が維持され、core・CLI の静的な入口から zod が読み込まれない
+
+### Requirement: CI診断metadata v1の中立変換
+coreは取得済みJSON本文をparseCiTestMetadata(file,text)でCiTestMetadataV1へ変換してParseResultで公開するSHALL。schemaVersionは数値1、runUrl/runId/runAttempt/checkoutSha/os/node/shardは空を許す文字列、testOutcomeはsuccess/failure/not_run、reportStateはvalid/empty/missing/invalid、countsのpassed/failed/pending/skipped/todo/disabledは0以上の安全整数を要求するMUST。不正時は値nullとfile・1始まりのline・messageを返すSHALL。正常時は既知項目を新しい値として返し、未知項目を出力せず入力とprototypeを変えないMUST。取得・時計・合否判定・SHA/URL/環境の真正性や鮮度の照合は行わず、実施日時など入力にない値を補わないMUST。
+
+Source: REQ-391
+
+#### Scenario: 実metadataと既定値の変換
+- **WHEN** 固定実metadata、または7文字列が空・not_run・missing・全countsが0のmetadataを渡す
+- **THEN** 11既知項目が同じ値で返り、errorsは空になる。successや0件を合格へ変換しない
+
+#### Scenario: JSONと版の不正
+- **WHEN** 構文不正JSON、null、配列、またはschemaVersionが欠落・2・文字列1の本文を渡す
+- **THEN** 値nullとfile・正のline・日本語messageを返す。JSONの行・位置の診断が得られれば対応するline、得られなければ1とする
+
+#### Scenario: 必須文字列と列挙の不正
+- **WHEN** 7文字列のいずれかが欠落・非文字列、またはtestOutcome/reportStateが欠落・未知値の本文を渡す
+- **THEN** 値nullと解析エラーを返す。SHA・URL等の文字列の実在性は確かめない
+
+#### Scenario: countsの境界
+- **WHEN** countsが欠落・非object、6キーの欠落、負数・小数・数値でない値・無限大・安全整数上限超過を含む本文を渡す
+- **THEN** 値nullと解析エラーを返す。0と安全整数上限は同じ値で受け付ける
+
+#### Scenario: 未知項目と公開入口
+- **WHEN** 最上位/countsに__proto__を含む未知項目がある本文を公開入口から変換し、公開consumerを型検査する
+- **THEN** 既知項目だけが返り、prototypeと入力を変えず、公開関数と型が利用できる
+
+### Requirement: CI診断metadataとテスト本文の中立な組合せ
+coreはparseCiTestArtifactでmetadataのfile/textと、reportのfile/textまたはnullを受け、metadataとreportを持つParseResultを公開するSHALL。metadataはparseCiTestMetadata、report本文は既存parseTestReportを使って独立に変換するMUST。不在reportはnullでエラーなし、不正な側はnullとそのfile・1始まりのline・日本語messageつき解析エラーを返し、正常な側の値を保持するSHALL。両側不正なら両方nullと両側のエラーを返すMUST。metadataの申告状態・件数をreportに代入せず、両側の一致・真正性・鮮度・実施充足・合格を認定しないMUST。
+
+Source: REQ-392
+
+#### Scenario: 両側正常とreport不在
+- **WHEN** 正常metadataと、正常な空/非空reportまたはnullを渡す
+- **THEN** 空のreportも各parserと同じ値になり、不在だけreport=nullが返り、errorsは空で、公開consumerから関数と型を使える
+
+#### Scenario: 片側不正と両側不正
+- **WHEN** metadataだけ、reportだけ、または両方がJSON/形の不正を含む
+- **THEN** 不正側はnull、正常側はそのparserの値になり、不正側ごとのfile・line・messageが返る
+
+#### Scenario: 申告と本文が一致しない
+- **WHEN** metadataがsuccess/valid/全0件で、report本文が失敗・skip・その他status・開始時刻を持つ
+- **THEN** 両側を変更せず返し、REQ-319のstatus/REQ対応/開始時刻を維持し、一致や合格を認定しない
+
+#### Scenario: 入力・既存parser・公開APIの保持
+- **WHEN** 組の入力をfreezeして変換し、同じreportをparseTestReportにも渡す
+- **THEN** 入力を変えずreportは既存結果と一致し、既存exports・REQ-015/319の結果を変えない

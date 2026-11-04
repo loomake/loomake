@@ -35,7 +35,7 @@ export type QualityReadResult =
   | { status: 'absent' }
   | { status: 'error'; error: VerifyRunError };
 
-const MINIMAL_HINT = `リポジトリ直下に最小の quality.yaml（version: 2 と model の 2 行）を手で作成してください`;
+const MINIMAL_HINT = `リポジトリ直下に最小の quality.yaml（version: 2 と model の 2 行）を作成するか、loomake init で品質目標未設定の雛形を配置してください。2 行は読取の最小構成です。ci の完了ゲートに合格するには、案件の品質の対象と合格に必要な証拠（evidence）を設定してください`;
 
 const errorOf = (kind: VerifyRunError['kind'], message: string, next: string): QualityReadResult =>
   ({ status: 'error', error: { kind, target: QUALITY_FILE, message, next } });
