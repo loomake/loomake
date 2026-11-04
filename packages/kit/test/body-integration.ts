@@ -19,7 +19,7 @@ function fixture(name: string): string {
   return readFileSync(join(repository, 'tests/fixtures', `vitest-body-${name}.mjs.txt`), 'utf8');
 }
 const customBase = `
-import { event, sleep } from './observe.mjs';
+import { event } from './observe.mjs';
 class Custom extends TestRunner {
   constructor(...args) { super(...args); if (own) { this.runTask = task => this.execute(task); this.extendTaskContext = ctx => this.extend(ctx); } }
   extend(ctx) { event('Base', 0, 'context', ctx); return ctx; }
@@ -30,11 +30,14 @@ class Custom extends TestRunner {
     const token = ctx[Symbol.for('loomake.body.attempt.v1')]?.();
     const invocation = task.result.retryCount;
     const captured = () => ({ caseName: task.name, ...(token ? { originalOpen: token.open, originalRetry: token.retry } : {}) });
+    const cleanup = task.name.includes('[K01]') && invocation === 0
+      ? { started: Promise.withResolvers(), bodyDone: Promise.withResolvers() } : undefined;
+    if (cleanup) ctx[Symbol.for('loomake.fixture.cleanup.v1')] = cleanup;
     event('Base', invocation, 'delegate-start', ctx, captured());
     try { return await TestRunner.getTestFn(task)(); }
     finally {
       event('Base', invocation, 'wrapper-settled', ctx, captured());
-      if (task.name.includes('[K01]') && invocation === 0) await sleep(140);
+      if (cleanup) { cleanup.started.resolve(); await cleanup.bodyDone.promise; }
       event('Base', invocation, 'delegate-ending', ctx, captured());
       setTimeout(() => event('Base', invocation, 'delegate-settled', ctx, captured()), 0);
     }
@@ -80,7 +83,7 @@ try {
     const run = spawnSync(process.execPath, args, { cwd: root, encoding: 'utf8', timeout: 45_000 });
     const read = (name: string) => existsSync(join(root, name)) ? readFileSync(join(root, name), 'utf8') : '';
     const reports = options.rerun ? [read('report-0.json'), read('report-1.json')] : [read('report.json')];
-    const rawRoot = join(repository, '.loomake/collector-376-integration');
+    const rawRoot = process.env.LOOMAKE_BODY_INTEGRATION_ARTIFACT_DIR || join(root, '.loomake/body-integration');
     mkdirSync(rawRoot, { recursive: true });
     const raw = mkdtempSync(join(rawRoot, `${options.fixture}-${options.mode}-`));
     const outcome = { options, command: [process.execPath, ...args], status: run.status, signal: run.signal,

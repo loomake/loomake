@@ -57,29 +57,29 @@ let r1 = 0;
 it('[REQ-393][R01] late first body while retry has empty body', { timeout: 200, retry: 1 }, async ctx => {
   const invocation = r1++;
   const b = observe('R01', invocation, ctx);
-  if (invocation === 0) { await sleep(350); await waitFor('R01-retry'); await b(() => expect(1).toBe(1), 'late'); signal('R01-late'); }
-  else await b(async () => { signal('R01-retry'); await sleep(180); await waitFor('R01-late'); }, 'retry');
+  if (invocation === 0) { await waitFor('R01-retry'); await b(() => expect(1).toBe(1), 'late'); signal('R01-late'); }
+  else await b(async () => { signal('R01-retry'); await waitFor('R01-late'); }, 'retry');
 });
 let r2 = 0;
 it('[REQ-393][R02] late second body while retry has empty body', { timeout: 200, retry: 1 }, async ctx => {
   const invocation = r2++;
   const b = observe('R02', invocation, ctx);
-  if (invocation === 0) { await b(() => {}, 'first'); await sleep(350); await waitFor('R02-retry'); await b(() => expect(1).toBe(1), 'late'); signal('R02-late'); }
-  else await b(async () => { signal('R02-retry'); await sleep(180); await waitFor('R02-late'); }, 'retry');
+  if (invocation === 0) { await b(() => {}, 'first'); await waitFor('R02-retry'); await b(() => expect(1).toBe(1), 'late'); signal('R02-late'); }
+  else await b(async () => { signal('R02-retry'); await waitFor('R02-late'); }, 'retry');
 });
 let r3 = 0;
 it('[REQ-393][R03] late first body while retry has no body', { timeout: 200, retry: 1 }, async ctx => {
   const invocation = r3++;
   const b = observe('R03', invocation, ctx);
-  if (invocation === 0) { await sleep(350); await waitFor('R03-retry'); await b(() => expect(1).toBe(1), 'late'); signal('R03-late'); }
-  else { signal('R03-retry'); await sleep(180); await waitFor('R03-late'); event('R03', invocation, 'retry-without-body-done', ctx); }
+  if (invocation === 0) { await waitFor('R03-retry'); await b(() => expect(1).toBe(1), 'late'); signal('R03-late'); }
+  else { signal('R03-retry'); await waitFor('R03-late'); event('R03', invocation, 'retry-without-body-done', ctx); }
 });
 let r4 = 0;
 it('[REQ-393][R04] late second body while retry has no body', { timeout: 200, retry: 1 }, async ctx => {
   const invocation = r4++;
   const b = observe('R04', invocation, ctx);
-  if (invocation === 0) { await b(() => {}, 'first'); await sleep(350); await waitFor('R04-retry'); await b(() => expect(1).toBe(1), 'late'); signal('R04-late'); }
-  else { signal('R04-retry'); await sleep(180); await waitFor('R04-late'); event('R04', invocation, 'retry-without-body-done', ctx); }
+  if (invocation === 0) { await b(() => {}, 'first'); await waitFor('R04-retry'); await b(() => expect(1).toBe(1), 'late'); signal('R04-late'); }
+  else { signal('R04-retry'); await waitFor('R04-late'); event('R04', invocation, 'retry-without-body-done', ctx); }
 });
 it('[REQ-393][N01] late second body with no retry', { timeout: 200 }, async ctx => {
   const b = observe('N01', 0, ctx);
@@ -97,12 +97,13 @@ let control = 0;
 it('[REQ-393][C01] entered body excludes a matcher after its timeout', { timeout: 100, retry: 1 }, async ctx => {
   const invocation = control++, b = observe('C01', invocation, ctx);
   await b(async () => {
-    await sleep(invocation === 0 ? 140 : 70);
     if (invocation === 0) {
+      await waitFor('C01-retry');
       event('C01', invocation, 'before-late-matcher', ctx);
       expect(1).toBe(1);
       event('C01', invocation, 'after-late-matcher', ctx);
-    }
+      signal('C01-late');
+    } else { signal('C01-retry'); await waitFor('C01-late'); }
   });
 });
 it('[REQ-393][D01] direct return keeps async completion and double factories', ctx => {

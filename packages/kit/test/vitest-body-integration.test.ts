@@ -33,6 +33,11 @@ for (const isolate of [undefined, false]) {
     const product = runBodyIntegration({ mode: 'product', fixture: 'late-cases', isolate });
     paired(plain, product); expect(product.status).toBe(1);
     expect(product.cases[0]).toHaveLength(18);
+    for (const label of ['R01', 'R02', 'R03', 'R04', 'C01']) {
+      expect(product.cases[0].find(test => test.fullName.includes(`[${label}]`))?.status).toBe('passed');
+      expect(event(product, label, 'finished').state).toBe('fail');
+      expect(event(product, label, 'callback-start', 1).retry).toBe(1);
+    }
     for (const label of ['R01', 'R02', 'R03', 'R04', 'N01']) {
       const before = event(product, label, 'late-before'), after = event(product, label, 'late-after');
       expect(after.evidence).toEqual(before.evidence);
@@ -52,6 +57,8 @@ for (const isolate of [undefined, false]) {
     expect(evidence(product, 'N01')).toEqual(event(product, 'N01', 'late-after').evidence);
     expect(event(product, 'C01', 'before-late-matcher').evidence).toEqual(event(product, 'C01', 'after-late-matcher').evidence);
     expect(event(product, 'C01', 'before-late-matcher').token).toMatchObject({ retry: 0, open: false });
+    expect(event(product, 'C01', 'before-late-matcher').activeTokenOpen).toBe(true);
+    expect(event(product, 'C01', 'before-late-matcher').retry).toBe(1);
     expect(events(product, 'C01', 'body-after')).toHaveLength(2);
     expect(evidence(product, 'C01')?.attempts.map(attempt => [attempt.retry, attempt.calls])).toEqual([[0, {}], [1, {}]]);
     for (const [label, calls] of [['A02', 1], ['A03', 2], ['A04', 2], ['A07a', 1], ['A07b', 1], ['A08', 1], ['D01', 1]] as const) {
