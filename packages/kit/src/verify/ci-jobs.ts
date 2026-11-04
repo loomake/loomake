@@ -19,14 +19,14 @@ function ghCommand(job: string): [string, string[]] {
   const path = `repos/{owner}/{repo}/actions/jobs/${job}`;
   if (process.platform !== 'win32') return ['gh', ['api', path]];
   // 従来の gh.cmd も呼べるよう、Node の shell と同じ cmd へ、固定の文字と検証済みの数字だけの文字列を渡す
-  return [process.env.ComSpec ?? 'cmd.exe', ['/d', '/s', '/c', `gh api ${path}`]];
+  return [process.env.ComSpec ?? 'cmd.exe', ['/d', '/s', '/c', `gh api ${path} & exit /b`]];
 }
 
 function classify(job: string, result: ReturnType<typeof runExternalBytes>): JobFetch {
   const unavailable = (reason: JobUnavailableReason): JobFetch => ({ kind: 'unavailable', job, reason });
   if (result.error) return unavailable(result.error.code === 'ENOENT' ? 'missing' : 'spawn');
   if (result.signal) return unavailable('signal');
-  // cmd が gh を見つけられないと 9009 で終わる。gh 自身が 9009 で終わった場合とは区別できない
+  // 末尾の exit /b で cmd 内部の終了コードを保つ。gh 自身の 9009 とは区別できない
   if (result.status !== 0) return unavailable(process.platform === 'win32' && result.status === WINDOWS_NOT_FOUND ? 'missing' : 'exit');
   // 既存の読み取りと同じく UTF-8 の文字列にしてから解析し、値を検証しない
   try { return { kind: 'fetched', job, value: JSON.parse(result.stdout.toString('utf8')) as unknown }; } catch { return unavailable('json'); }

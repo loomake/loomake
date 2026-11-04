@@ -1,5 +1,4 @@
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
-import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -106,31 +105,11 @@ describe('宣言した CI job の 1 回の内部取得', () => {
     const output = captured?.type === 'return' ? captured.value : undefined;
     const call = raw.mock.calls.at(-1);
     const env = call?.[2].env ?? {};
-    const matchesMissing = absent.result.kind === 'unavailable' && absent.result.job === '1' && absent.result.reason === 'missing';
-    const nativeProbes = call && process.platform === 'win32' && !matchesMissing ? ([
-      ['missing', ['/d', '/s', '/c', '__loomake_req415_missing_command__']],
-      ['explicit-exit', ['/d', '/s', '/c', '__loomake_req415_missing_command__ & exit /b']],
-      ['internal-errorlevel', ['/d', '/s', '/v:on', '/c', '__loomake_req415_missing_command__ & echo !errorlevel!']],
-      ['exit-one-control', ['/d', '/s', '/c', 'exit /b 1']],
-    ] as const).map(([id, args]) => {
-      const native = spawnSync(call[0], [...args], {
-        cwd: call[2].cwd, env: call[2].env, shell: false, timeout: 5_000, maxBuffer: 64 * 1024,
-      });
-      const text = id === 'internal-errorlevel' ? native.stdout?.toString('utf8') ?? '' : '';
-      const numeric = /^[ \t\r\n]*[0-9]+[ \t\r\n]*$/.test(text) ? Number(text) : NaN;
-      return {
-        id, status: native.status, signal: native.signal, errno: (native.error as NodeJS.ErrnoException | undefined)?.code ?? null,
-        stdoutBytes: native.stdout?.length ?? null, stderrBytes: native.stderr?.length ?? null,
-        cmdNotRecognized: /is not recognized as an internal or external command/i.test(native.stderr?.toString('utf8') ?? ''),
-        errorlevel: Number.isSafeInteger(numeric) ? numeric : null,
-      };
-    }) : [];
     expect(absent.result, JSON.stringify({
       status: output?.status ?? null, signal: output?.signal ?? null, errno: output?.error?.code ?? null,
       stdoutBytes: output?.stdout.length ?? null, stderrBytes: output?.stderr.length ?? null,
       pathKeys: Object.keys(env).filter((key) => key.toUpperCase() === 'PATH'),
       cmdGhNotRecognized: /'gh' is not recognized as an internal or external command/i.test(output?.stderr.toString('utf8') ?? ''),
-      nativeProbes,
     })).toEqual({ kind: 'unavailable', job: '1', reason: 'missing' });
   }));
   it('[REQ-415] 起動の失敗とシグナルの終了を取得不能にし、native の受信の上限超えを出力の上限として投げる', () => {
