@@ -32,7 +32,7 @@ Source: REQ-393
 
 #### Scenario: 利用側と既存動作を保つ
 - **WHEN** kit tarballを直接導入したconsumerで公開入口を使い、同じfixtureを恒等版と取得器版で実行する
-- **THEN** 公開APIを解決でき、各fullNameのstatusと各実終了コードが一致する。外部runtime依存・既存API・C001品質観測・CLI main/bin/subpathは変えない
+- **THEN** 公開APIを解決でき、同じhost設定の恒等版と統合版で各fullNameのstatusと実終了コードが一致する。createBodyRecorder(chai)とbody(ctx, fn)の呼出しsignature、統合済みcallbackの挙動、外部runtime依存・C001品質観測・CLI main/bin/subpathを保つ。未設定時の証拠出力は、本仕様の証拠なし・設定移行案内に従う
 
 #### Scenario: 初期化した試行へ初回body前のawaitと並行分岐を帰属させる
 - **WHEN** createBodyRunner(Base)を設定した利用側で、初回body前にawaitし、Promise.allの枝・連続body・retry/repeat・concurrentを実行する
