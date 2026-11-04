@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { ORIGINAL_C001_DOCUMENTS, ORIGINAL_C001_SNAPSHOT_DIR, originalDocumentsDigest, verifyOriginalSnapshot } from '../packages/kit/src/verify/trusted/original-snapshot.js';
@@ -21,8 +21,7 @@ const changedFirst = (edit: (file: GitDocument) => GitDocument) => [edit({ ...do
 const fixture = () => {
   const repository = mkdtempSync(join(tmpdir(), 'loomake-trusted-original-')); temporaryRoots.push(repository);
   git(repository, 'init', '-q');
-  git(repository, 'config', 'user.name', 'Loomake fixture'); git(repository, 'config', 'user.email', 'fixture@loomake.invalid');
-  git(repository, 'config', 'commit.gpgsign', 'false'); git(repository, 'config', 'core.autocrlf', 'false');
+  appendFileSync(join(repository, '.git', 'config'), '\n[user]\n\tname = Loomake fixture\n\temail = fixture@loomake.invalid\n[commit]\n\tgpgsign = false\n[core]\n\tautocrlf = false\n', 'utf8');
   const hooks = join(repository, '.empty-hooks'); mkdirSync(hooks); git(repository, 'config', 'core.hooksPath', hooks);
   for (const document of documents) {
     const file = join(repository, document.file); mkdirSync(dirname(file), { recursive: true }); writeFileSync(file, document.text);
