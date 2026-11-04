@@ -26,6 +26,7 @@ import {
   type VerifyScope,
 } from '@loomake/core';
 import { assembleVerifyResult } from './result.js';
+import { readDependencies } from './dependencies.js';
 import { assertChangeId, loadVerifyConfig, type LoomakeConfig } from './config.js';
 import { QUALITY_FILE, readQualityFile, type QualitySchemaLike } from './quality-input.js';
 import { evaluateQualityConditions, qualitySubjectsGuard } from './policy/quality-conditions.js';
@@ -226,7 +227,8 @@ function checkSpec(
 
   // trace.md
   const tracePath = join(changeDir, 'trace.md');
-  const parsed = parseTrace('trace.md', existsSync(tracePath) ? reader.read(tracePath) : '');
+  const traceText = existsSync(tracePath) ? reader.read(tracePath) : '';
+  const parsed = parseTrace('trace.md', traceText);
   const trace = parsed.value;
   const { ledger, questions, assumptions } = trace;
   const model = createAgreement('trace.md', trace);
@@ -254,6 +256,14 @@ function checkSpec(
   }
 
   checkSharedQuestions(root, config, changeId, questions, record, reader);
+
+  const dependencies = readDependencies(traceText, ledger.map(row => row.ID), changeId);
+  if (dependencies.present) {
+    if (dependencies.errors.length) record('依存する成果物', 'fail', dependencies.errors.map(error =>
+      `${error.file}:${error.line} ${error.id ? `${error.id} ` : ''}${error.message}`).join('\n'));
+    else record('依存する成果物', gate === 'done' ? 'insufficient' : 'warn', dependencies.declarations.map(item =>
+      `${item.related.join('・')} ← ${item.id} ${item.kind} ${item.target}（未確認）`).join('\n'));
+  }
 
   const unapproved = assumptions.filter((a) => decision.unapprovedAssumptions.includes(a.ID));
   // spec-only は案内つきの合格（0）、done は不足と要判断（1）にする（REQ-036・R-C001-08 B）。確認待ちの要件は done の「確認待ちが残っていない」が示す

@@ -26,6 +26,10 @@ gate ジョブは PR の段階（AGENTS.md 2 章の L1・L2・L3）を先に決�
 
 change のゲート（`--done`・`--spec-only`）は `--json` で実行し、verify の終了コードではなく 2.0.0 の結果の JSON で合格を決める（REQ-318、`scripts/ci-gate.mjs` の `ciGateProblem`）。完了ゲートは対象の change と一致し、scope が ci、run.status が completed、要判断なし、verdict が PASS、不合格や証拠不足（`--skip-commands`）の検査がなく、検査が 0 件や全件 NOT_APPLICABLE でなく、完了ゲートの検査（`tasks.md`・`要件ごとのテスト`・`command: *`）を含み、終了コードが 0 のときだけ合格にする。履歴の 1.0.0、local の結果、仕様ゲートや品質コマンドだけの結果は、終了コードが 0 でも合格にしない。結果の JSON は標準エラーに写し、標準出力には段階の行だけを書く。
 
+change のゲートを実行するたび、既存の判定後に標準エラーへ `loomake-gate-result: <JSON>` を1行書く。JSON は `change`・`gate`（`done` または `spec-only`）・`exitCode`・`problem`・`result` を持つ。`exitCode` は verify 子プロセスの実終了状態で、`null` もそのまま記録する。`problem` は既存の不合格理由で、理由がなければ `null` とする。
+
+`result` には `schemaVersion`・`change`・`scope`・`run`（`status`・`errors`）・`verdict`・`decision.required`・`checks`（各検査の `id`・`result`）だけを写す。JSON として読めないかオブジェクトでなければ `null` とし、部分的な結果の不足項目を PASS で補わない。仕様ゲートの行は完了ゲートの成功を示さず、change のない品質コマンドだけの実行では結果行を書かない。元の整形 JSON の転記、標準出力の段階行、合否判定は変えない。
+
 段階は PR 本文の `loomake-tier:` の行で上げる方向にだけ上書きできる。gate は決めた段階と理由を標準出力に `loomake-tier: L2（scripts/ci-gate.mjs）` の形で 1 行書き、ステップの出力 `tier`・`tier_line` にも入れる。この行を PR 本文の証跡ブロックの `tier:` に写す。
 
 L2・L3 で PR 番号があるときは、`scripts/process-evidence.mjs` で `## 証跡` 節の 7 工程行の形も調べる。節や行の欠落、重複、不正な状態語・値、旧形式の `ci:`・`opus-review:`・`opus-model:` があれば gate を失敗にし、後続の検査は続ける。L1 は対象外で、PR 番号のないローカル実行は飛ばした旨を標準エラーに書く。gate ジョブ自体は PR でだけ動くため、main への push と定期実行ではこの検査をしない。

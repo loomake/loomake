@@ -1,9 +1,11 @@
-import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { describe, expect, it, vi } from 'vitest';
 import { ProcessLimitError, runExternal, withProcessBudget } from '../src/runtime/process.js';
+import * as processRuntime from '../src/runtime/process.js';
+import * as kit from '../src/index.js';
 import { RuntimeFailure, UsageError } from '../src/runtime/errors.js';
 
 // git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
@@ -192,5 +194,76 @@ describe('1 操作の期限を使わない外部操作', () => {
     withProcessBudget({ timeoutMs: 300, maxOperationMs: 200 }, () => {
       expect(() => runExternal(process.execPath, wait(2_000), { untilDeadline: true })).toThrow(ProcessLimitError);
     });
+  });
+});
+
+
+type RawRun = (...args: Parameters<typeof runExternal>) => Omit<ReturnType<typeof runExternal>, 'stdout' | 'stderr'> & { stdout: Buffer; stderr: Buffer };
+function raw(...args: Parameters<typeof runExternal>) {
+  const execute = Reflect.get(processRuntime, 'runExternalBytes') as RawRun;
+  expect(execute).toBeTypeOf('function');
+  return execute(...args);
+}
+describe('私的な同期外部操作の原文', () => {
+  it('[REQ-412] stdoutとstderrのBOM・不正UTF-8を元のBufferで返す', () => {
+    const bytes = [0xef, 0xbb, 0xbf, 0xff, 0xc3, 0x28, 0x00];
+    const result = raw(process.execPath, ['-e', `process.stdout.write(Buffer.from(${JSON.stringify(bytes)}));process.stderr.write(Buffer.from(${JSON.stringify(bytes.slice().reverse())}))`], { maxBuffer: 65536 });
+    expect(Buffer.isBuffer(result.stdout) && Buffer.isBuffer(result.stderr)).toBe(true);
+    expect(result.stdout).toEqual(Buffer.from(bytes));
+    expect(result.stderr).toEqual(Buffer.from(bytes.slice().reverse()));
+  });
+  it('[REQ-412] 合計上限ちょうどは成功し、1バイト超は監視役の出力制限になる', () => {
+    const output = (extra: number) => ['-e', `process.stdout.write(Buffer.alloc(32768));process.stderr.write(Buffer.alloc(${32768 + extra}))`];
+    const result = raw(process.execPath, output(0), { maxBuffer: 65536 });
+    expect(result.status).toBe(0);
+    expect(result.stdout.length + result.stderr.length).toBe(65536);
+    expect(result).not.toHaveProperty('error');
+    let error: unknown;
+    try { raw(process.execPath, output(1), { maxBuffer: 65536 }); } catch (caught) { error = caught; }
+    expect(error).toBeInstanceOf(ProcessLimitError);
+    expect((error as ProcessLimitError).kind).toBe('output');
+  });
+  it.each([undefined, 0, -1, 1.5, NaN, Infinity, Number.MAX_SAFE_INTEGER - 65535, Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER + 1])('[REQ-412] 不正または制御予約を加算できない上限 %s は起動前に拒否する', (maxBuffer) => fixture((dir) => {
+    const file = join(dir, 'started');
+    expect(() => raw(process.execPath, ['-e', `require('node:fs').writeFileSync(${JSON.stringify(file)},'x')`], { maxBuffer })).toThrow(UsageError);
+    expect(existsSync(file)).toBe(false);
+  }));
+  it('[REQ-412] 制御予約を超えるnative ENOBUFSを結果のerrorとして保つ', () => fixture((dir) => {
+    const preload = join(dir, 'control.cjs');
+    writeFileSync(preload, "if(process.argv[1]?.endsWith('supervisor.cjs'))require('node:fs').writeFileSync(3,Buffer.alloc(262144))");
+    const result = raw(process.execPath, ['-e', ''], { maxBuffer: 65536, env: { ...process.env, NODE_OPTIONS: `--require=${JSON.stringify(preload)}` } });
+    expect(result.error?.code).toBe('ENOBUFS');
+    expect(result.status).toBeNull();
+    expect(Buffer.isBuffer(result.stdout) && Buffer.isBuffer(result.stderr)).toBe(true);
+  }));
+  it('[REQ-412] 共有期限切れのあとは対象を起動しない', () => fixture((dir) => {
+    const file = join(dir, 'started');
+    withProcessBudget({ timeoutMs: 1 }, () => {
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 10);
+      let error: unknown;
+      try { raw(process.execPath, ['-e', `require('node:fs').writeFileSync(${JSON.stringify(file)},'x')`], { maxBuffer: 65536 }); } catch (caught) { error = caught; }
+      expect(error).toBeInstanceOf(ProcessLimitError);
+      expect((error as ProcessLimitError).kind).toBe('timeout');
+      expect(existsSync(file)).toBe(false);
+    });
+  }));
+  it('[REQ-412] 公開操作による共有中断のあとは対象を起動しない', () => fixture((dir) => {
+    const file = join(dir, 'started');
+    withProcessBudget({ timeoutMs: 3000 }, () => {
+      expect(() => call("process.kill(process.ppid,'SIGINT');setInterval(()=>{},100)")).toThrow(ProcessLimitError);
+      let error: unknown;
+      try { raw(process.execPath, ['-e', `require('node:fs').writeFileSync(${JSON.stringify(file)},'x')`], { maxBuffer: 65536 }); } catch (caught) { error = caught; }
+      expect(error).toBeInstanceOf(ProcessLimitError);
+      expect((error as ProcessLimitError).kind).toBe('interrupted');
+      expect(existsSync(file)).toBe(false);
+    });
+  }));
+  it('[REQ-412] ENOENT・通常非0終了・公開結果とbarrelの範囲を保つ', () => {
+    expect(raw('loomake-missing-executable-req412', [], { maxBuffer: 65536 }).error?.code).toBe('ENOENT');
+    const result = raw(process.execPath, ['-e', 'process.stdout.write("out");process.stderr.write("err");process.exitCode=7'], { maxBuffer: 65536 });
+    expect(result).toEqual({ status: 7, signal: null, stdout: Buffer.from('out'), stderr: Buffer.from('err') });
+    expect(call('process.stdout.write("out");process.stderr.write("err");process.exitCode=7')).toEqual({ status: 7, signal: null, stdout: 'out', stderr: 'err' });
+    expect(call('')).toEqual({ status: 0, signal: null, stdout: '', stderr: '' });
+    expect(Reflect.has(kit, 'runExternalBytes')).toBe(false);
   });
 });
