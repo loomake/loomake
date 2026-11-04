@@ -1,0 +1,73 @@
+# Design
+
+## Context
+
+動機と範囲はproposal.md、契約はspecs/test-body-evidence/spec.mdに置く。現行取得器はbody呼出し時の可変counterを読むため、timeout後の継続を次のretryへ帰属させる。Vitest 5.0.5の公開TestRunnerはrunTaskを持たないが、公開static getTestFnから既存のtimeout・cancel・async assertion・fixture wrapperを取得できる。
+
+既定のisolateではrunnerとテストのローカルmoduleが別に評価され得る。実観測では、runnerがcontextへ置いた読取関数を通すと元の試行の識別情報を取得できた。これはNode 24.21.0 / Linuxでの診断結果であり、完成した取得器・配布物・custom Baseの互換性証明ではない。設計の出典と利用者の2回答はtrace.mdに記録する。
+
+## Goals / Non-Goals
+
+**Goals:** callback開始前の試行識別、終了後の全閉鎖、合法なawait/returnと既存の原観測・callback動作の保持を、一つの修理として確かめる。
+
+**Non-Goals:** 部分修理だけでIssue #376を閉じること、#278のreader/gate接続、initテンプレート追加、core形式変更、公開・リリース、規則・品質設定・既存fixtureの期限やskipの変更。
+
+## Decisions
+
+### 公開runner合成と導入
+
+kitのroot exportへ`createBodyRunner(Base)`を追加し、利用側がVitest 5.0.5のTestRunnerまたは既存の対応Baseを渡す。利用側が持つrunnerファイルを`test.runner`へ設定する。kitはVitestを実行時importせず、private chunk・setter・monkeypatchを使わない。Baseのconstructor引数と公開instance型を推論して保ち、`any[]`を写した型やlint緩和に頼らず、実際の公開d.ts consumerで検証する。
+
+BaseにrunTaskがあれば元のthisで一度だけ委譲する。なければBaseの公開getTestFnで元のwrapperを取得して一度だけ実行する。関数がない場合はVitest既定の失敗経路を保つ。super.runTaskが標準Baseにも存在するとは仮定しない。既存extendTaskContextも呼び、その戻り値・公開動作を保つ。
+
+単純なaroundEach追加は自動fixtureのsetupを元のtestTimeoutから外す実反例があるため採らない。signalのabortだけで除外する方法は正当なretryを落とし、最初のbodyでenterWithした印の衝突をnullにする方法は合法なPromise.allを落とす。いずれも代替修理として採らない。
+
+### runner所有の不透明tokenとcontext reader
+
+runnerのrunTaskごとに、task・その時点の原repeat/retry・open状態を持つtokenを作り、runner所有のAsyncLocalStorage.runで元のwrapperまたはBase.runTaskを囲む。runTaskの開始はVitestのrepeatCount更新後なので、試行値はここで保持できる。元の呼出しがsettleしたらfinallyでtokenを閉じる。callbackがtimeout後も続いていても、古い非同期文脈には閉じた元tokenが残る。
+
+extendTaskContextで、非列挙の`Symbol.for('loomake.body.attempt.v1')`による読取関数をcontextへ置く。関数はrunner側storeを読むclosureで、テスト側moduleのstore同一性に頼らない。bodyは`ctx.task.context`経由で読むため、P07/P08の`{task, onTestFinished}`にも届く。Symbolやtokenをformat:1のJSONへ出さない。
+
+readerの取得・呼出し・property定義が失敗しても、利用側のcallbackやBaseのcontext拡張を失敗させない。同じprotocolの再初期化でreaderを競合上書きせず、二重合成でもcallbackの実行回数を増やさない。互換性のないreaderや不正tokenは証拠に使わない。tokenのtask一致、open、原counterの妥当性を検査する。これらは非公開の実装不変条件として単体・複数factory試験で確かめる。
+
+### bodyの判定と例外境界
+
+判定・記録準備のtry内では利用側fnを実行しない。reader/tokenの有効性と終了状態をcounterやmetadataの操作より先に確認する。未設定・無効・別task・終了済みなら記録もfinished登録もせず、tryの外でfnを一度だけ実行する。元の例外を記録用catchへ落として再実行する経路を作らない。
+
+token、attempt entry、matcher scopeは別の状態として持つ。入れ子を再利用する条件には同じtaskだけでなく同じtokenを含める。明示bodyの間だけ狭いmatcher scopeを開き、matcherはscope.open・entry未閉鎖・token.openが揃うときだけ加算する。runnerの広いtoken範囲だけでfixtureやhookのmatcherを数えない。
+
+### 履歴集約と閉鎖
+
+task単位で一つのevidence ledgerを持ち、初期化は一度だけとする。tokenごとのWeakMap entryをledgerのattemptsへ一度ずつappendし、新しいretry/repeatで前の履歴をresetしない。P23/P25/P26の原counter、同じ試行の連続・並行body、factory二重作成を保持する。
+
+entry初回のfinished登録で観測時点stateを読む。読取や計数が失敗した場合は証拠なしまたはstate:nullとし、snapshot読取に失敗してもfinallyでentryとその全scopeを閉じる。tokenのwrapper終了とfinishedの両経路から後の加算を防ぐ。token閉鎖でstateを先に最終値へ書き換えず、it.failsの反転や後のhook失敗をsnapshotで保証しない。
+
+### 受入の根拠と対照条件
+
+既存52件のfixture・期待値・全fullName/status・実exit・native parserの44pass/6fail/1skip/1todoを保持する。新境界は別fixtureへ追加する。P35/P37/P41/P27/P28の厳密attempts値は、製品実装前に元の登録順・状態遷移を保ったnative lifecycleイベントとadapterの原snapshotを実測して確定する。identityにはloomakeBodyがないため、identity JSONだけをattemptsのoracleにしない。ソース由来の予想値を期待値へ固定しない。
+
+R01〜R04・N01・C01ではレポートだけでなく終了前後のmetaを保存し、遅い初回・2回目が旧記録や次のretryを変えないことを確かめる。A04の枝・A07のconcurrent・A08の遅いawait、P07/P08のtask.context、P43〜P52の1回実行と値/例外、state getter失敗を保持する。
+
+自動fixture AF01の対照は同じhost設定の恒等版と統合版で組む。aroundEachなしの組と、利用側aroundEachありの組を別に比較し、異なるhost設定の全4条件が同じstatusになるとは要求しない。各組で元のtestTimeout・fixture順・fullName/status・実exitを保つ。
+
+既定isolateとisolate:false、同一workerの複数ファイル・再実行、標準Baseと既存runTask/extendTaskContextを持つBase、kitのtarball導入と公開d.ts consumerを検証する。isolateを無効にした結果だけで既定条件の代用をしない。
+
+## Risks / Trade-offs
+
+- module再評価とreader競合でtokenが届かない → context reader・task照合を実装し、既定分離・複数ファイル・二重factory・配布物で確かめる。
+- token閉鎖後も開いたscopeが残る → matcher側でもtokenとentryを確認し、finishedの例外時finallyを試験する。
+- custom Baseの任意の挙動を一般化する → 元のBase実行を一度だけ委譲し、runTask/context拡張を持つ対照で確認する。未確認のrunnerまで互換と報告しない。
+- snapshot予想と実観測が違う → 実装前taskでoracleを確定し、既存assertを実装へ合わせて書き換えない。要件の矛盾が出たら計画の確認事項へ戻す。
+- 未設定の旧consumerが証拠を失う → 利用者が選んだ変更として案内し、設定済みと未設定の両契約を独立に試験する。
+
+## Migration Plan
+
+利用側はkitを更新し、自分のrunnerファイルで`createBodyRunner(Base)`をexportし、そのファイルをtest.runnerへ設定する。既存runnerを黙って置換せず、利用中のBaseを合成する。テスト本体のcreateBodyRecorder(chai)とreturn/awaitしたbody(ctx, fn)は保つ。設定済みでも合法な遅い初回bodyを対象外にはしない。
+
+未設定時はfnを保ち証拠を出さない。これはQ-376-02の直接決定であり、偽ctxの旧consumerにも適用する。既存の偽ctx単体・package smokeは有効なreaderを用意する設定移行を行い、従来の記録期待値を保持する。別の未設定回帰で証拠が作られないことを確かめ、期待値の弱体化で移行を隠さない。
+
+互換性ガイドにrunner設定・既存Base合成・未設定の影響・移行確認を記載し、changesetで公開APIと移行を示す。導入を戻す場合は以前のpackageと利用側設定を揃えて戻す。新packageのまま統合だけ外すと証拠がなくなるため、有効な証拠を得る復旧とは扱わない。
+
+## 検証待ちの事実
+
+製品判断の未回答はない。m1のsnapshot原値、Node下限と3 OS、tarball、型、custom Baseと複数ファイルの成立性は後続taskで検証する。ここで未確認事項を互換性保証や完成報告へ置き換えない。
