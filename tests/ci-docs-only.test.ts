@@ -270,10 +270,19 @@ describe('文書だけかの判定（git の差分から）', () => {
       // Windows の git は、既定（core.protectNTFS=true）で Windows で扱えない名前をコミットさせない。
       // ほかの OS で作られた PR と同じ状態を作るため、一時的なリポジトリでだけ外す
       appendFileSync(join(dir, '.git', 'config'), '\n[user]\n\tname = Loomake Test\n\temail = test@example.invalid\n[core]\n\tprotectNTFS = false\n', 'utf8');
-      write({ 'README.md': 'base\n', 'scripts/notes.md': '名前を変える前の文書\n'.repeat(20), 'packages/kit/src/a.ts': 'export const a = 1;\n' });
-      git('add', '-A');
-      git('commit', '-qm', 'base');
-      git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+      const seedFiles = { 'README.md': 'base\n', 'scripts/notes.md': '名前を変える前の文書\n'.repeat(20), 'packages/kit/src/a.ts': 'export const a = 1;\n' };
+      write(seedFiles);
+      // base と remote を Git の同じ入力で作り、実体ファイルを変えずに索引を合わせる。
+      const imported = spawnSync('git', ['fast-import', '--quiet', '--date-format=now'], {
+        cwd: dir,
+        input: Buffer.concat([
+          Buffer.from('commit HEAD\nmark :1\ncommitter Loomake Test <test@example.invalid> now\ndata 5\nbase\n\n'),
+          ...Object.entries(seedFiles).map(([path, text]) => Buffer.from(`M 100644 inline ${path}\ndata ${Buffer.byteLength(text)}\n${text}\n`)),
+          Buffer.from('\nreset refs/remotes/origin/main\nfrom :1\n\n'),
+        ]),
+      });
+      expect(imported.status, imported.stderr?.toString()).toBe(0);
+      git('read-tree', 'HEAD');
       check({
         git,
         commit(files, renames = []) {
