@@ -8,7 +8,7 @@
 
 システムは公開関数createBodyRunner(Base)で利用側のVitest runnerを拡張し、設定されたrunnerが各試行のcallbackを実行する前に、その実行に属する不透明な識別情報を与える SHALL。bodyはこの識別情報で帰属を決め、変化するtaskのcounterだけから試行を選ばない MUST。統合済みの合法なreturn/await、初回body前のawait、並行分岐・連続・入れ子・retry/repeatでも正しい記録を保つ MUST。
 
-試行の記録範囲はrunnerが呼ぶ元のcallback wrapperが完了・失敗・timeoutでsettleした時点で閉じ、finished callbackでも試行の記録と全計数範囲を閉じる MUST。閉じた試行から遅れて初めてbodyを呼ぶ場合も再度呼ぶ場合もfnは実行するが、記録の作成・再開・加算・別試行への転記をしない MUST。同じtaskの各試行はattemptsへ一度ずつ追加し、後の試行が先の履歴を消さない MUST。
+試行の記録範囲は、標準Baseでは公開getTestFnで得た元のcallback wrapper、既存runTaskを持つBaseでは一度だけ委譲したBase.runTaskが完了・失敗でsettleした時点と、finished callbackの早い方で閉じる MUST。標準Baseのtimeoutは元wrapperのsettlementとして扱い、custom Baseの後処理中は同じ元試行の識別情報と原counterを保つ MUST。閉じた試行から遅れて初めてbodyを呼ぶ場合も再度呼ぶ場合もfnは実行するが、記録の作成・再開・加算・別試行への転記をしない MUST。finishedでは試行の記録と全計数範囲を閉じ、同じtaskの各試行はattemptsへ一度ずつ追加して先の履歴を消さない MUST。
 
 runner統合が未設定、または識別情報が欠落・無効・別task・終了済みの場合は、fnを一度だけ実行して元の値・例外・非同期完了を保ち、その呼出しの証拠を新たに作らない MUST。記録準備や計数の失敗でも元のfnを保ち、証拠なしまたはstate:nullとする MUST。設定・移行案内にはrunnerファイルと設定の導入方法、既存runnerの合成、未設定の旧利用側が証拠を出さなくなる影響を明記する SHALL。旧記録へ未検証flagを加える別形式は導入しない MUST。
 
@@ -52,7 +52,7 @@ Source: REQ-393
 
 #### Scenario: 既存Baseと元のfixture時間境界を保つ
 - **WHEN** 標準Baseまたは既存runTask・extendTaskContextを持つBaseを渡し、自動fixtureと利用側aroundEachを含む同じhost設定で恒等版と統合版を比較する
-- **THEN** Baseの実行を一度だけ委譲し、同じhost設定の各fullName/statusと実終了コードを保つ。元のfixture/timeout境界を変えず、既存runnerを黙って置換しない
+- **THEN** Baseの実行を一度だけ委譲し、同じhost設定の各fullName/statusと実終了コードを保つ。custom Baseの後処理中の遅い初回bodyは同じ元試行へ帰属させ、委譲終了後や次retryでは元の閉じた識別情報で加算を防ぐ。元のfixture/timeout境界を変えず、既存runnerを黙って置換しない
 
 #### Scenario: snapshot読取と記録の失敗時にも閉鎖する
 - **WHEN** finishedでstateの読取が失敗するか、context・reader・metadata・計数の操作に失敗する

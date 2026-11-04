@@ -26,7 +26,9 @@ BaseのrunTask・extendTaskContextはprototype methodとconstructor由来のown 
 
 ### runner所有の不透明tokenとcontext reader
 
-runnerのrunTaskごとに、task・その時点の原repeat/retry・open状態を持つtokenを作り、runner所有のAsyncLocalStorage.runで元のwrapperまたはBase.runTaskを囲む。runTaskの開始はVitestのrepeatCount更新後なので、試行値はここで保持できる。元の呼出しがsettleしたらfinallyでtokenを閉じる。callbackがtimeout後も続いていても、古い非同期文脈には閉じた元tokenが残る。
+runnerのrunTaskごとに、task・その時点の原repeat/retry・open状態を持つtokenを作り、runner所有のAsyncLocalStorage.runで元のwrapperまたはBase.runTaskを囲む。runTaskの開始はVitestのrepeatCount更新後なので、試行値はここで保持できる。標準Baseは公開getTestFnで得た既存wrapper、custom Baseは一度だけ委譲したBase.runTaskのsettlementをfinallyで閉じ境界とし、finishedが先ならそこで閉じる。
+
+標準Baseではtimeoutした元wrapperのsettlementで閉じる。custom Baseがそのwrapperをawaitした後もfinallyの後処理を続ける場合は、委譲が終わるまで同じ元token・原counterを保つ。その間の遅い初回bodyも元試行へだけ帰属させ、全custom Baseでnative timeoutと同時に閉じるとは保証しない。VitestはrunTask全体をawaitした後にfinishedを処理してretry counterを進めるため、次のretryへ進む前には元tokenが閉じる。範囲を閉じた後も続くcallbackには閉じた元tokenが残る。
 
 extendTaskContextで、非列挙の`Symbol.for('loomake.body.attempt.v1')`による読取関数をcontextへ置く。関数はrunner側storeを読むclosureで、テスト側moduleのstore同一性に頼らない。bodyは`ctx.task.context`経由で読むため、P07/P08の`{task, onTestFinished}`にも届く。Symbolやtokenをformat:1のJSONへ出さない。
 
@@ -38,11 +40,15 @@ readerの取得・呼出し・property定義が失敗しても、利用側のcal
 
 token、attempt entry、matcher scopeは別の状態として持つ。入れ子を再利用する条件には同じtaskだけでなく同じtokenを含める。明示bodyの間だけ狭いmatcher scopeを開き、matcherはscope.open・entry未閉鎖・token.openが揃うときだけ加算する。runnerの広いtoken範囲だけでfixtureやhookのmatcherを数えない。
 
+matcher側のtoken/entry読取も記録用tryに含め、読取・計数の失敗を元のmatcher・callback・host statusへ漏らさない。記録に失敗しても元matcherを一度だけ呼ぶ。終了状態は内部WeakSetなど、公開JSONのproperty書込みに依存しない形でも管理できる。
+
 ### 履歴集約と閉鎖
 
 task単位で一つのevidence ledgerを持ち、初期化は一度だけとする。tokenごとのWeakMap entryをledgerのattemptsへ一度ずつappendし、新しいretry/repeatで前の履歴をresetしない。P23/P25/P26の原counter、同じ試行の連続・並行body、factory二重作成を保持する。
 
-entry初回のfinished登録で観測時点stateを読む。読取や計数が失敗した場合は証拠なしまたはstate:nullとし、snapshot読取に失敗してもfinallyでentryとその全scopeを閉じる。tokenのwrapper終了とfinishedの両経路から後の加算を防ぐ。token閉鎖でstateを先に最終値へ書き換えず、it.failsの反転や後のhook失敗をsnapshotで保証しない。
+entry初回のfinished登録で観測時点stateを読む。読取や計数が失敗した場合は証拠なしまたはstate:nullとし、snapshot読取に失敗してもfinallyで所有token・entryとその全scopeを閉じる。標準wrapperまたはcustom Baseへの委譲終了とfinishedの両経路から後の加算を防ぐ。token閉鎖でstateを先に最終値へ書き換えず、it.failsの反転や後のhook失敗をsnapshotで保証しない。
+
+凍結されたmetadataや終了flagへの書込み失敗で、finallyの残りの閉鎖を飛ばさない。所有token・entry・各scopeの閉鎖を独立して完了できる内部状態にし、終了処理の例外で元のcallback結果を置換しない。state getter失敗・凍結・throwing getterを組み合わせた対照で確認する。
 
 ### 受入の根拠と対照条件
 
@@ -52,7 +58,7 @@ R01〜R04・N01・C01ではレポートだけでなく終了前後のmetaを保�
 
 自動fixture AF01の対照は同じhost設定の恒等版と統合版で組む。aroundEachなしの組と、利用側aroundEachありの組を別に比較し、異なるhost設定の全4条件が同じstatusになるとは要求しない。各組で元のtestTimeout・fixture順・fullName/status・実exitを保つ。
 
-既定isolateとisolate:false、同一workerの複数ファイル・再実行、標準Baseと既存runTask/extendTaskContextを持つBase、kitのtarball導入と公開d.ts consumerを検証する。isolateを無効にした結果だけで既定条件の代用をしない。
+既定isolateとisolate:false、同一workerの複数ファイル・再実行、標準Baseと既存runTask/extendTaskContextを持つBase、kitのtarball導入と公開d.ts consumerを検証する。custom Baseの遅延finallyは同じBase構成のkitなし・統合ありを対照とし、後処理中の遅い初回body、委譲終了後、次retryの実callback回数・state・metaイベントを保存する。原counterと元試行の帰属を確認し、snapshot stateは実測前に固定しない。isolateを無効にした結果だけで既定条件の代用をしない。
 
 ## Risks / Trade-offs
 
@@ -68,7 +74,7 @@ R01〜R04・N01・C01ではレポートだけでなく終了前後のmetaを保�
 
 未設定時はfnを保ち証拠を出さない。これはQ-376-02の直接決定であり、偽ctxの旧consumerにも適用する。既存の偽ctx単体・package smokeは有効なreaderを用意する設定移行を行い、従来の記録期待値を保持する。別の未設定回帰で証拠が作られないことを確かめ、期待値の弱体化で移行を隠さない。
 
-互換性ガイドにrunner設定・既存Base合成・未設定の影響・移行確認を記載し、changesetで公開APIと移行を示す。導入を戻す場合は以前のpackageと利用側設定を揃えて戻す。新packageのまま統合だけ外すと証拠がなくなるため、有効な証拠を得る復旧とは扱わない。
+互換性ガイドにrunner設定・既存Base合成・未設定の影響・移行確認を記載し、changesetで公開APIと移行を示す。閉じる時点は標準wrapper/custom Baseへの委譲のsettlementとfinishedの早い方であり、custom Baseの後処理中は同じ元試行であることも案内する。導入を戻す場合は以前のpackageと利用側設定を揃えて戻す。新packageのまま統合だけ外すと証拠がなくなるため、有効な証拠を得る復旧とは扱わない。
 
 ## 検証待ちの事実
 

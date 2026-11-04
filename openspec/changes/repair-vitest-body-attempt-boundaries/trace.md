@@ -27,3 +27,4 @@
 - 管理役の補正：`/tmp/loomake-376-followup-design-assessment.md`。例外時の全閉鎖、token単位の入れ子、task単位の履歴保持、実観測oracle、同じhost設定での対照、偽ctxの設定移行をdesign/tasksへ反映する。
 - Q-376-02はOpus結果の未決Q1を解消した直接回答。未検証の旧形式flagは採らず、`format:1`を保つ。initテンプレート追加は対象外。
 - 診断はNode 24.21.0 / Vitest 5.0.5 / Linuxでの観測。Node下限・3 OS・tarball・custom Base合成の受入は後続taskで確かめる。実装済み・互換性確認済みとは扱わない。
+- 独立計画レビューの補正：閉じ境界を標準wrapper/custom Baseへの一度の委譲のsettlementとfinishedの早い方へ明確化した。根拠はVitest engineのrunTask待機3900→finished3915/3928→retry更新3977。custom後処理中は同じ元試行・原counterを保つ。既存の原帰属・閉鎖後除外を保つ技術的明確化であり、新しい本人回答や対応範囲の縮小ではない。出典：`/tmp/loomake-376-formal-plan-review.md`と管理役の同補正指示。
