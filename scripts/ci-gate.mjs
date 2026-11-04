@@ -137,6 +137,29 @@ export function ciGateProblem(stdout, exitCode, expected) {
   return undefined;
 }
 
+/**
+ * CI ログ用の結果行。終了状態と既存の判定をそのまま記録し、結果は必要な項目だけ写す。
+ * @param {string} stdout
+ * @param {number | null} exitCode
+ * @param {{ change: string; gate: 'done' | 'spec-only' }} expected
+ * @param {string | undefined} problem
+ */
+export function formatGateResult(stdout, exitCode, expected, problem) {
+  let result = null;
+  try {
+    const value = JSON.parse(stdout);
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      result = {
+        schemaVersion: value.schemaVersion, change: value.change, scope: value.scope,
+        run: { status: value.run?.status, errors: value.run?.errors },
+        verdict: value.verdict, decision: { required: value.decision?.required },
+        checks: Array.isArray(value.checks) ? value.checks.map((check) => ({ id: check?.id, result: check?.result })) : undefined,
+      };
+    }
+  } catch { /* 解析不能な出力も、元の判定とともに記録する */ }
+  return `loomake-gate-result: ${JSON.stringify({ ...expected, exitCode, problem: problem ?? null, result })}`;
+}
+
 /** L1 で実行する検査。lint は loomake.config.json の commands.lint（既定 pnpm lint）、文書のリンクの試験は vitest で 1 ファイルだけ */
 export function tierOneCommands(configPath = 'loomake.config.json') {
   let lint = 'pnpm lint';
@@ -241,6 +264,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     const stdout = r.stdout ?? '';
     if (stdout.trim()) console.error(stdout.trimEnd());
     const problem = ciGateProblem(stdout, r.status ?? 1, { change: id, gate });
+    console.error(formatGateResult(stdout, r.status, { change: id, gate }, problem));
     if (problem) console.error(`ci-gate: ${id} の${gate === 'done' ? '完了' : '仕様'}ゲートを合格にしません：${problem}`);
     return problem === undefined;
   };
