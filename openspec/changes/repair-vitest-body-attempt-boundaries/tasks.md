@@ -16,8 +16,15 @@
 
 ## 3. 統合受入
 
-- [ ] 3.1 全5既存Scenarioと追加Scenarioの要件ID付き試験、52件/native parser・公開API・依存境界を照合し、通常のlocal完了ゲートと品質コマンドを終了0にする。結果と未完事項を日誌へ記録する（REQ-393）。
-- [ ] 3.2 最終差分の独立レビュー、同headの必須5 CI・CI完了ゲート・kitの3 OSを満たし、受入証跡を確認する（REQ-393）。
+- [ ] 3.1 全5既存Scenarioと追加Scenarioの要件ID付き試験、52件/native parser・公開API・依存境界を照合し、品質コマンドを終了0にする。結果と未完事項を日誌へ記録する（REQ-393）。
+
+## 必須の最終受入
+
+以下は全実装タスクの完了後に確認する受入条件であり、1つでも未達ならchangeは未受入とする。ゲートが全タスクの完了を検査するため、ゲート自身やCIの成功を待つ工程は実装のチェックボックスから分けて記録する。検査・レビュー・マージ条件は維持する。
+
+- 通常の`pnpm -s verify --change repair-vitest-body-attempt-boundaries --done --scope local`が終了0となる。
+- 最終差分の独立レビュー、同headの必須5 CI・CI完了ゲート・kitの3 OSを満たし、受入証跡を確認する（REQ-393、旧タスク3.2）。独立レビューの回数上限・重大指摘ゼロ・対象headの条件を維持する。
+- CIのgateでscope ciの完了ゲートが終了0となり、必須5チェックとkitの3 OSが成功するまで、changeやIssue #376を完了と報告しない。
 
 ## Workflow follow-up
 
