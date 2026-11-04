@@ -9,7 +9,7 @@
 - 導入の状態を調べ、足りない設定と直し方を表示する（`loomake doctor`）
 
 ```sh
-npx loomake init                                  # AGENTS.md・設定・Skill を置く
+npx loomake init                                  # 共通ルール・設定・Skill・品質雛形・workflow 見本を置く
 npx loomake doctor                                # 導入の状態を調べる
 npx loomake verify --change <id> --spec-only      # 仕様ゲート：実装に入ってよいか
 npx loomake verify --change <id> --done --scope local # 完了ゲート（ローカル）：要件ごとのテスト・品質コマンド
@@ -20,6 +20,8 @@ npx loomake trace report --change <id>            # リリースレポートを�
 ```
 
 各コマンドの使い方は `npx loomake <コマンド> --help` で表示する。
+
+`init` は品質目標未設定の `quality.yaml`（version 2）と、`.github/loomake/workflow.example.yml` も置く。品質の対象と合格に必要な証拠は導入後に設定する。workflow は自動実行されない見本で、呼出し先・入出力の契約・固定 ref は未提供のため、利用前に置き換えて実稼働を確かめる。
 
 ## 必要なもの
 

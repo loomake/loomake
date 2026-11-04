@@ -15,7 +15,7 @@ Loomake is a toolkit for AI-driven development that starts from requirement docu
 ## Commands
 
 ```sh
-npx loomake init                                  # place AGENTS.md, the config file and the skill
+npx loomake init                                  # place rules, config, skill, quality skeleton and workflow sample
 npx loomake doctor                                # check the setup and print what is missing
 npx loomake verify --change <id> --spec-only      # spec gate: may implementation start?
 npx loomake verify --change <id> --done --scope local # done gate (local): tests per requirement and quality commands
@@ -26,6 +26,10 @@ npx loomake trace report --change <id>            # produce the release report
 ```
 
 Options that take a value accept both `--change <id>` and `--change=<id>`. Run `npx loomake --help` or `npx loomake <command> --help` for details.
+
+`init` also places a version 2 `quality.yaml` with no quality targets set, and `.github/loomake/workflow.example.yml`, an inactive four-job workflow sample. Set project-specific quality targets and the evidence required to pass before the final done gate; the skeleton alone cannot pass. The sample does not run automatically. Its workflow targets, input/output contracts and pinned ref are not yet available, so replace the placeholder references and verify the workflow before enabling it.
+
+If either added file already differs from the template, non-interactive `init` exits with 1 without placing any files. Run it from a terminal and decline overwriting to keep existing contents.
 
 ### Exit codes
 
