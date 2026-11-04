@@ -12,8 +12,8 @@
 
 ## 3. 受入
 
-- [ ] 3.1 全source/test/6文書/同期/log/changesetを再計数し、lint・型・全試験・local done終了0、非起草自己レビュー・独立Opus重大0/軽微追跡・必須5チェック・3OSの同じheadを確認する。
+- [ ] 3.1 同PRの主仕様同期/archive・kit patch changeset・日別worklogを含め全量を再計数し、ローカルlint・型・全試験とlocal doneの実終了0を確認する。
 
 ## Workflow follow-up
 
-- 同PRで主仕様同期/archive・kit patch changeset・日別worklogを含め、旧376/377と全5Scenarioを保持する。archive後verifyとpush後の最終head条件を管理役が照合する。
+- 旧376/377と全5Scenarioを保持し、非起草自己レビュー・別Opus重大0/軽微追跡・必須5チェック・3OSを必須とする。archive後verifyとpush後の最終headを管理役が照合し、同じheadの受入条件を満たすまでマージしない。
