@@ -8,7 +8,7 @@
 
 ## 2. 統合確認
 
-- [ ] 2.1 `pnpm -s verify --change read-dependency-ci-jobs --done --scope local` を省略なしのnormal localで通し、5Scenarioの実試験とtasksの全完了を確かめる。 <!-- loomake:gate=done -->
+- [x] 2.1 `pnpm -s verify --change read-dependency-ci-jobs --done --scope local` を省略なしのnormal localで通し、5Scenarioの実試験とtasksの全完了を確かめる。 <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
