@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { comparisonReaders, decideDocsOnly, isDocumentPath, parseRawDiff } from '../scripts/ci-docs-only.mjs';
@@ -267,11 +267,9 @@ describe('文書だけかの判定（git の差分から）', () => {
     };
     try {
       git('init', '-q');
-      git('config', 'user.name', 'Loomake Test');
-      git('config', 'user.email', 'test@example.invalid');
       // Windows の git は、既定（core.protectNTFS=true）で Windows で扱えない名前をコミットさせない。
       // ほかの OS で作られた PR と同じ状態を作るため、一時的なリポジトリでだけ外す
-      git('config', 'core.protectNTFS', 'false');
+      appendFileSync(join(dir, '.git', 'config'), '\n[user]\n\tname = Loomake Test\n\temail = test@example.invalid\n[core]\n\tprotectNTFS = false\n', 'utf8');
       write({ 'README.md': 'base\n', 'scripts/notes.md': '名前を変える前の文書\n'.repeat(20), 'packages/kit/src/a.ts': 'export const a = 1;\n' });
       git('add', '-A');
       git('commit', '-qm', 'base');
