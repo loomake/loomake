@@ -1,0 +1,7 @@
+import { it, expect } from 'vitest';
+import { observe, sleep } from './observe.mjs';
+it('[REQ-393][M01] same worker files and reruns retain distinct task ownership', async ctx => {
+  const b = observe('M01', 0, ctx);
+  await sleep(5);
+  await Promise.all([b(() => expect(1).toBe(1), 'one'), b(() => expect(2).toBe(2), 'two')]);
+});

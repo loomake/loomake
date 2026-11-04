@@ -30,6 +30,16 @@ it('[REQ-393] 公開取得器が52境界の原観測を保ち元のstatusと終�
   const reports = ['identity', 'adapter'].map(mode => collect(mode));
   const [plain, recorded] = reports.map(({ report }) => report.testResults.flatMap(file => file.assertionResults));
   expect(recorded).toHaveLength(52);
+  const oracle = JSON.parse(readFileSync(new URL('../../../tests/fixtures/vitest-body-attempt-oracle.json', import.meta.url), 'utf8')) as {
+    cases: Record<string, { fullName: string; attempts: BodyEvidence['attempts']; finalStatus: string }>;
+  };
+  for (const expected of Object.values(oracle.cases)) {
+    const matches = recorded.filter(test => test.fullName === expected.fullName);
+    expect(matches).toHaveLength(1);
+    expect(matches[0].meta.loomakeBody?.attempts).toEqual(expected.attempts);
+    expect(matches[0].status).toBe(expected.finalStatus);
+  }
+
   expect(reports[1].status).toBe(reports[0].status);
   expect(recorded.map(t => [t.fullName, t.status])).toEqual(plain.map(t => [t.fullName, t.status]));
   const byId = Object.fromEntries(recorded.map(t => [t.fullName.match(/\[P\d+\]/)?.[0] ?? t.fullName, t] as const));
