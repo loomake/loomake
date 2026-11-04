@@ -1,0 +1,51 @@
+import { appendFileSync, readFileSync } from 'node:fs';
+import { threadId } from 'node:worker_threads';
+import { randomUUID } from 'node:crypto';
+import { body, secondBody } from './body.mjs';
+const moduleId = randomUUID(), ids = new WeakMap();
+let next = 0;
+const latches = new Map(), active = new WeakMap();
+function latch(key) {
+  if (!latches.has(key)) { let resolve; const promise = new Promise(yes => { resolve = yes; }); latches.set(key, { promise, resolve }); }
+  return latches.get(key);
+}
+export const signal = key => latch(key).resolve();
+export const waitFor = key => latch(key).promise;
+const id = value => {
+  if (!value) return null;
+  if (!ids.has(value)) ids.set(value, `${moduleId}:${++next}`);
+  return ids.get(value);
+};
+export const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const copy = value => value === undefined ? null : JSON.parse(JSON.stringify(value));
+export function event(label, invocation, kind, ctx, extra = {}) {
+  const token = ctx?.task?.context?.[Symbol.for('loomake.body.attempt.v1')]?.();
+  appendFileSync('trace.jsonl', JSON.stringify({ label, invocation, kind, pid: process.pid, threadId,
+    phase: JSON.parse(readFileSync('phase.json', 'utf8')), file: ctx?.task?.file?.filepath ?? null,
+    task: id(ctx?.task), retry: ctx?.task?.result?.retryCount ?? null, repeat: ctx?.task?.result?.repeatCount ?? null,
+    state: ctx?.task?.result?.state ?? null, evidence: copy(ctx?.task?.meta?.loomakeBody),
+    token: token ? { id: id(token), task: id(token.task), retry: token.retry, repeat: token.repeat, open: token.open } : null,
+    activeTokenOpen: active.get(ctx?.task)?.open ?? null, ...extra }) + '\n');
+}
+export function observe(label, invocation, ctx) {
+  const token = ctx.task.context?.[Symbol.for('loomake.body.attempt.v1')]?.();
+  if (token) active.set(ctx.task, token);
+  event(label, invocation, 'callback-start', ctx);
+  ctx.onTestFinished(() => event(label, invocation, 'finished', ctx));
+  let bodies = 0;
+  return async (fn, kind = 'body') => {
+    event(label, invocation, `${kind}-before`, ctx);
+    let calls = 0;
+    try {
+      const result = await (bodies++ % 2 ? secondBody : body)(ctx, () => {
+        calls++; event(label, invocation, `${kind}-fn-enter`, ctx); return fn();
+      });
+      event(label, invocation, `${kind}-after`, ctx, { fnCalls: calls,
+        value: result === null || ['number', 'string', 'boolean'].includes(typeof result) ? result : null });
+      return result;
+    } catch (error) {
+      event(label, invocation, `${kind}-throw`, ctx, { fnCalls: calls, error: String(error) });
+      throw error;
+    }
+  };
+}

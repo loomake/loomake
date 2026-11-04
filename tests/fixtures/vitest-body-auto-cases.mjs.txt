@@ -1,0 +1,28 @@
+import { test, it, expect, afterAll, aroundEach } from 'vitest';
+import { appendFileSync, writeFileSync } from 'node:fs';
+import { hookEnabled } from './mode.mjs';
+import { body } from './body.mjs';
+writeFileSync('events.jsonl', '');
+const clock = Date.now();
+const event = kind => appendFileSync('events.jsonl', JSON.stringify({ kind, ms: Date.now() - clock }) + '\n');
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+if (hookEnabled) aroundEach(async run => await run());
+const extended = test.extend({
+  unusedSlow: [async ({}, use) => {
+    event('auto-fixture-setup-start');
+    await sleep(300);
+    event('auto-fixture-setup-done');
+    await use('unused-value');
+    event('auto-fixture-teardown');
+  }, { auto: true }],
+});
+extended('[REQ-393][AF01] unused auto fixture exceeds test timeout', { timeout: 100 }, async ({ task, onTestFinished }) => {
+  event('test-body');
+  return body({ task, onTestFinished }, () => { event('body-fn'); expect(1).toBe(1); });
+});
+it('[REQ-393][Z99] settle pending fixture setup', { timeout: 1000 }, async () => {
+  event('settle-start');
+  await sleep(500);
+  event('settle-done');
+});
+afterAll(() => event('after-all'));

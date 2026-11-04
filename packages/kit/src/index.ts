@@ -31,3 +31,4 @@ export { FAILED_SUBJECTS_METRIC, TEST_REPORT_SOURCE, observeTestReport } from '.
 export type { TestReportOptions, TestReportReceipt } from './verify/policy/test-report-observation.js';
 export { sha256Hex } from './verify/hash.js';
 export { createBodyRecorder, type BodyContext, type ChaiLike } from './evidence/vitest-body.js';
+export { createBodyRunner } from './evidence/vitest-runner.js';

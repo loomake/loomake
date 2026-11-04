@@ -98,3 +98,34 @@ export async function consumeQualityVerdict(input: readonly import('@loomake/cor
   const verdict: import('@loomake/core').QualityResult = qualityResultSchema.parse(aggregateCiVerdict(input));
   return verdict;
 }
+
+// REQ-393: installed declarations preserve the actual Vitest Base and a custom runner.
+import { TestRunner, type RunnerTestCase, type TestContext, chai } from 'vitest';
+import { defineConfig } from 'vitest/config';
+import { createBodyRunner, createBodyRecorder, type BodyContext } from '@loomake/kit';
+export const BodyRunner = createBodyRunner(TestRunner);
+export const bodyConfig = defineConfig({ test: { runner: './runner.ts' } });
+export function consumeBodyRunner(config: ConstructorParameters<typeof TestRunner>[0], context: BodyContext) {
+  const runner: TestRunner = new BodyRunner(config);
+  const getTestFn: typeof TestRunner.getTestFn = BodyRunner.getTestFn;
+  const body = createBodyRecorder(chai);
+  const value: number | Promise<number> = body(context, () => 42);
+  // @ts-expect-error the public Vitest constructor still requires its configuration
+  new BodyRunner();
+  // @ts-expect-error the public constructor configuration is not a string
+  new BodyRunner('invalid');
+  class ExistingRunner extends TestRunner {
+    constructor(settings: ConstructorParameters<typeof TestRunner>[0], readonly extra: string) { super(settings); }
+    runTask = async (task: RunnerTestCase): Promise<void> => { await TestRunner.getTestFn(task)?.(); };
+    override extendTaskContext = (ctx: TestContext): TestContext => ctx;
+    literal = 'preserved' as const;
+  }
+  const Composed = createBodyRunner(ExistingRunner);
+  const custom: ExistingRunner = new Composed(config, 'extra');
+  const literal: 'preserved' = custom.literal;
+  // @ts-expect-error the original custom constructor's second argument remains required
+  new Composed(config);
+  // @ts-expect-error readonly instance members remain readonly
+  custom.extra = 'changed';
+  return { runner, getTestFn, custom, literal, value };
+}

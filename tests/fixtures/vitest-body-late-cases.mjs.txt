@@ -1,0 +1,117 @@
+import { it, expect } from 'vitest';
+import { body, secondBody } from './body.mjs';
+import { event, observe, sleep, signal, waitFor } from './observe.mjs';
+it('[REQ-393][A01] synchronous callback value and exception', async ctx => {
+  const b = observe('A01', 0, ctx);
+  expect(await b(() => 37, 'value')).toBe(37);
+  try { await b(() => { throw new Error('sentinel-A01'); }, 'throw'); }
+  catch (e) { expect(e.message).toBe('sentinel-A01'); }
+});
+it('[REQ-393][A02] legal first body after await', async ctx => {
+  const b = observe('A02', 0, ctx);
+  await sleep(5);
+  event('A02', 0, 'after-outer-await', ctx);
+  await b(() => expect(1).toBe(1));
+  event('A02', 0, 'after-body-await', ctx);
+});
+it('[REQ-393][A03] sequential bodies', async ctx => {
+  const b = observe('A03', 0, ctx);
+  await b(() => expect(1).toBe(1), 'first');
+  event('A03', 0, 'between-bodies', ctx);
+  await b(() => expect(2).toBe(2), 'second');
+});
+it('[REQ-393][A04] Promise.all branches after and before await', async ctx => {
+  const b = observe('A04', 0, ctx);
+  await Promise.all([
+    (async () => { await sleep(5); event('A04', 0, 'branch-delayed', ctx); await b(() => expect(1).toBe(1), 'branch-one'); })(),
+    (async () => { await b(() => expect(2).toBe(2), 'branch-two'); })(),
+  ]);
+});
+let a5 = 0;
+it('[REQ-393][A05] normal retry', { retry: 1 }, async ctx => {
+  const invocation = a5++;
+  const b = observe('A05', invocation, ctx);
+  await b(() => expect(invocation).toBe(1));
+});
+let a6 = 0;
+it('[REQ-393][A06] normal repeats', { repeats: 2 }, async ctx => {
+  const invocation = a6++;
+  const b = observe('A06', invocation, ctx);
+  await b(() => expect(1).toBe(1));
+});
+it.concurrent('[REQ-393][A07a] concurrent delayed', async ctx => {
+  const b = observe('A07a', 0, ctx);
+  await sleep(8);
+  await b(async () => { await sleep(5); expect(1).toBe(1); });
+});
+it.concurrent('[REQ-393][A07b] concurrent immediate', async ctx => {
+  const b = observe('A07b', 0, ctx);
+  await b(async () => { await sleep(8); expect(1).toBe(1); });
+});
+it('[REQ-393][A08] legal slow awaited body', { timeout: 200 }, async ctx => {
+  const b = observe('A08', 0, ctx);
+  await sleep(40);
+  await b(async () => { await sleep(60); expect(1).toBe(1); });
+});
+let r1 = 0;
+it('[REQ-393][R01] late first body while retry has empty body', { timeout: 200, retry: 1 }, async ctx => {
+  const invocation = r1++;
+  const b = observe('R01', invocation, ctx);
+  if (invocation === 0) { await waitFor('R01-retry'); await b(() => expect(1).toBe(1), 'late'); signal('R01-late'); }
+  else await b(async () => { signal('R01-retry'); await waitFor('R01-late'); }, 'retry');
+});
+let r2 = 0;
+it('[REQ-393][R02] late second body while retry has empty body', { timeout: 200, retry: 1 }, async ctx => {
+  const invocation = r2++;
+  const b = observe('R02', invocation, ctx);
+  if (invocation === 0) { await b(() => {}, 'first'); await waitFor('R02-retry'); await b(() => expect(1).toBe(1), 'late'); signal('R02-late'); }
+  else await b(async () => { signal('R02-retry'); await waitFor('R02-late'); }, 'retry');
+});
+let r3 = 0;
+it('[REQ-393][R03] late first body while retry has no body', { timeout: 200, retry: 1 }, async ctx => {
+  const invocation = r3++;
+  const b = observe('R03', invocation, ctx);
+  if (invocation === 0) { await waitFor('R03-retry'); await b(() => expect(1).toBe(1), 'late'); signal('R03-late'); }
+  else { signal('R03-retry'); await waitFor('R03-late'); event('R03', invocation, 'retry-without-body-done', ctx); }
+});
+let r4 = 0;
+it('[REQ-393][R04] late second body while retry has no body', { timeout: 200, retry: 1 }, async ctx => {
+  const invocation = r4++;
+  const b = observe('R04', invocation, ctx);
+  if (invocation === 0) { await b(() => {}, 'first'); await waitFor('R04-retry'); await b(() => expect(1).toBe(1), 'late'); signal('R04-late'); }
+  else { signal('R04-retry'); await waitFor('R04-late'); event('R04', invocation, 'retry-without-body-done', ctx); }
+});
+it('[REQ-393][N01] late second body with no retry', { timeout: 200 }, async ctx => {
+  const b = observe('N01', 0, ctx);
+  await b(() => {}, 'first');
+  await sleep(350);
+  await b(() => expect(1).toBe(1), 'late');
+});
+it('[REQ-393][Z99] settle delayed work and next-test token', { timeout: 1000 }, async ctx => {
+  const b = observe('Z99', 0, ctx);
+  await sleep(500);
+  await b(() => expect(1).toBe(1));
+});
+
+let control = 0;
+it('[REQ-393][C01] entered body excludes a matcher after its timeout', { timeout: 100, retry: 1 }, async ctx => {
+  const invocation = control++, b = observe('C01', invocation, ctx);
+  await b(async () => {
+    if (invocation === 0) {
+      await waitFor('C01-retry');
+      event('C01', invocation, 'before-late-matcher', ctx);
+      expect(1).toBe(1);
+      event('C01', invocation, 'after-late-matcher', ctx);
+      signal('C01-late');
+    } else { signal('C01-retry'); await waitFor('C01-late'); }
+  });
+});
+it('[REQ-393][D01] direct return keeps async completion and double factories', ctx => {
+  observe('D01', 0, ctx);
+  return body(ctx, async () => {
+    event('D01', 0, 'fn-enter', ctx);
+    await sleep(5);
+    return secondBody(ctx, () => { event('D01', 0, 'nested-fn-enter', ctx); expect(1).toBe(1); return 17; });
+  });
+});
+it('[REQ-393][Z100] settle positive control', { timeout: 1000 }, async () => { await sleep(180); });

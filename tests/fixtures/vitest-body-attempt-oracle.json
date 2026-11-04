@@ -1,0 +1,593 @@
+{
+  "requirement": "REQ-393",
+  "purpose": "Pre-implementation native-lifecycle oracle; statuses are final results, attempt states are snapshots at the registered collector hook position.",
+  "provenance": {
+    "sourceHead": "966edb1bb37ccfcca42f97d72e140131edee0474",
+    "node": "v24.21.0",
+    "vitest": "5.0.5",
+    "platform": "linux",
+    "architecture": "arm64",
+    "fixturePath": "tests/fixtures/vitest-body-cases.mjs.txt",
+    "fixtureSha256": "3034afb3e15b3558850dc664fa4489c6ec6399ed5afe94f3e3a135bd4b03b9a1",
+    "collectorPath": "packages/kit/src/evidence/vitest-body.ts",
+    "collectorSha256": "41a1656c67a53cffb0bd3b91e222f92bb3b485b70a0c8b295795f11fac416128",
+    "observedConditions": [
+      "clean-identity",
+      "clean-adapter",
+      "observed-identity",
+      "observed-adapter"
+    ],
+    "caseCountPerCondition": 52,
+    "actualExitCodePerCondition": 1,
+    "allFullNameStatusesEqual": true,
+    "originalAdapterSnapshotsEqualNativeSentinel": true,
+    "rawEvidenceDirectory": ".loomake/collector-376-oracle/run-02",
+    "rawEvidenceIsLocalOnly": true,
+    "diagnosticScopeNote": "native.jsonl counted/scopeOpen describe the independent observer scope, not the product recorder. In observed-adapter P35, the diagnostic counted the late actual call while live product evidence.calls remained empty. The adapter condition adds no finished callback; identity adds one sentinel at the original adapter registration position."
+  },
+  "cases": {
+    "P27": {
+      "fullName": "[REQ-393][P27] fails matcher",
+      "attempts": [
+        {
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": true,
+          "state": "fail",
+          "calls": {
+            "toBe": 1
+          }
+        }
+      ],
+      "finalStatus": "passed",
+      "nativeSnapshot": {
+        "repeat": 0,
+        "retry": 0,
+        "expectedFailure": true,
+        "state": "fail",
+        "calls": {
+          "toBe": 1
+        }
+      },
+      "adapterLifecycle": [
+        {
+          "kind": "finished-register",
+          "index": 1,
+          "state": "run",
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": true,
+          "evidence": {
+            "format": 1,
+            "attempts": [
+              {
+                "repeat": 0,
+                "retry": 0,
+                "expectedFailure": true,
+                "state": null,
+                "calls": {}
+              }
+            ]
+          }
+        },
+        {
+          "kind": "finished-enter",
+          "index": 1,
+          "state": "fail",
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": true,
+          "evidence": {
+            "format": 1,
+            "attempts": [
+              {
+                "repeat": 0,
+                "retry": 0,
+                "expectedFailure": true,
+                "state": null,
+                "calls": {
+                  "toBe": 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "finished-return",
+          "index": 1,
+          "state": "fail",
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": true,
+          "evidence": {
+            "format": 1,
+            "attempts": [
+              {
+                "repeat": 0,
+                "retry": 0,
+                "expectedFailure": true,
+                "state": "fail",
+                "calls": {
+                  "toBe": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "P28": {
+      "fullName": "[REQ-393][P28] fails unexpected pass",
+      "attempts": [
+        {
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": true,
+          "state": "pass",
+          "calls": {
+            "toBe": 1
+          }
+        }
+      ],
+      "finalStatus": "failed",
+      "nativeSnapshot": {
+        "repeat": 0,
+        "retry": 0,
+        "expectedFailure": true,
+        "state": "pass",
+        "calls": {
+          "toBe": 1
+        }
+      },
+      "adapterLifecycle": [
+        {
+          "kind": "finished-register",
+          "index": 1,
+          "state": "run",
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": true,
+          "evidence": {
+            "format": 1,
+            "attempts": [
+              {
+                "repeat": 0,
+                "retry": 0,
+                "expectedFailure": true,
+                "state": null,
+                "calls": {}
+              }
+            ]
+          }
+        },
+        {
+          "kind": "finished-enter",
+          "index": 1,
+          "state": "pass",
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": true,
+          "evidence": {
+            "format": 1,
+            "attempts": [
+              {
+                "repeat": 0,
+                "retry": 0,
+                "expectedFailure": true,
+                "state": null,
+                "calls": {
+                  "toBe": 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "finished-return",
+          "index": 1,
+          "state": "pass",
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": true,
+          "evidence": {
+            "format": 1,
+            "attempts": [
+              {
+                "repeat": 0,
+                "retry": 0,
+                "expectedFailure": true,
+                "state": "pass",
+                "calls": {
+                  "toBe": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "P35": {
+      "fullName": "[REQ-393][P35] timeout",
+      "attempts": [
+        {
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": null,
+          "state": "fail",
+          "calls": {}
+        }
+      ],
+      "finalStatus": "failed",
+      "nativeSnapshot": {
+        "repeat": 0,
+        "retry": 0,
+        "expectedFailure": null,
+        "state": "fail",
+        "calls": {}
+      },
+      "adapterLifecycle": [
+        {
+          "kind": "finished-register",
+          "index": 1,
+          "state": "run",
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": null,
+          "evidence": {
+            "format": 1,
+            "attempts": [
+              {
+                "repeat": 0,
+                "retry": 0,
+                "expectedFailure": null,
+                "state": null,
+                "calls": {}
+              }
+            ]
+          }
+        },
+        {
+          "kind": "finished-enter",
+          "index": 1,
+          "state": "fail",
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": null,
+          "evidence": {
+            "format": 1,
+            "attempts": [
+              {
+                "repeat": 0,
+                "retry": 0,
+                "expectedFailure": null,
+                "state": null,
+                "calls": {}
+              }
+            ]
+          }
+        },
+        {
+          "kind": "finished-return",
+          "index": 1,
+          "state": "fail",
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": null,
+          "evidence": {
+            "format": 1,
+            "attempts": [
+              {
+                "repeat": 0,
+                "retry": 0,
+                "expectedFailure": null,
+                "state": "fail",
+                "calls": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "P37": {
+      "fullName": "[REQ-393][P37] finished throws",
+      "attempts": [
+        {
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": null,
+          "state": "fail",
+          "calls": {
+            "toBe": 1
+          }
+        }
+      ],
+      "finalStatus": "failed",
+      "nativeSnapshot": {
+        "repeat": 0,
+        "retry": 0,
+        "expectedFailure": null,
+        "state": "fail",
+        "calls": {
+          "toBe": 1
+        }
+      },
+      "adapterLifecycle": [
+        {
+          "kind": "finished-register",
+          "index": 1,
+          "state": "run",
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": null,
+          "evidence": {
+            "format": 1,
+            "attempts": [
+              {
+                "repeat": 0,
+                "retry": 0,
+                "expectedFailure": null,
+                "state": null,
+                "calls": {}
+              }
+            ]
+          }
+        },
+        {
+          "kind": "finished-register",
+          "index": 2,
+          "state": "run",
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": null,
+          "evidence": {
+            "format": 1,
+            "attempts": [
+              {
+                "repeat": 0,
+                "retry": 0,
+                "expectedFailure": null,
+                "state": null,
+                "calls": {
+                  "toBe": 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "finished-enter",
+          "index": 2,
+          "state": "pass",
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": null,
+          "evidence": {
+            "format": 1,
+            "attempts": [
+              {
+                "repeat": 0,
+                "retry": 0,
+                "expectedFailure": null,
+                "state": null,
+                "calls": {
+                  "toBe": 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "finished-throw",
+          "index": 2,
+          "state": "pass",
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": null,
+          "evidence": {
+            "format": 1,
+            "attempts": [
+              {
+                "repeat": 0,
+                "retry": 0,
+                "expectedFailure": null,
+                "state": null,
+                "calls": {
+                  "toBe": 1
+                }
+              }
+            ]
+          },
+          "error": "finished-failure"
+        },
+        {
+          "kind": "finished-enter",
+          "index": 1,
+          "state": "fail",
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": null,
+          "evidence": {
+            "format": 1,
+            "attempts": [
+              {
+                "repeat": 0,
+                "retry": 0,
+                "expectedFailure": null,
+                "state": null,
+                "calls": {
+                  "toBe": 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "finished-return",
+          "index": 1,
+          "state": "fail",
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": null,
+          "evidence": {
+            "format": 1,
+            "attempts": [
+              {
+                "repeat": 0,
+                "retry": 0,
+                "expectedFailure": null,
+                "state": "fail",
+                "calls": {
+                  "toBe": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "P41": {
+      "fullName": "[REQ-393][P41] finished registered before body",
+      "attempts": [
+        {
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": null,
+          "state": "pass",
+          "calls": {
+            "toBe": 1
+          }
+        }
+      ],
+      "finalStatus": "failed",
+      "nativeSnapshot": {
+        "repeat": 0,
+        "retry": 0,
+        "expectedFailure": null,
+        "state": "pass",
+        "calls": {
+          "toBe": 1
+        }
+      },
+      "adapterLifecycle": [
+        {
+          "kind": "finished-register",
+          "index": 1,
+          "state": "run",
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": null,
+          "evidence": null
+        },
+        {
+          "kind": "finished-register",
+          "index": 2,
+          "state": "run",
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": null,
+          "evidence": {
+            "format": 1,
+            "attempts": [
+              {
+                "repeat": 0,
+                "retry": 0,
+                "expectedFailure": null,
+                "state": null,
+                "calls": {}
+              }
+            ]
+          }
+        },
+        {
+          "kind": "finished-enter",
+          "index": 2,
+          "state": "pass",
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": null,
+          "evidence": {
+            "format": 1,
+            "attempts": [
+              {
+                "repeat": 0,
+                "retry": 0,
+                "expectedFailure": null,
+                "state": null,
+                "calls": {
+                  "toBe": 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "finished-return",
+          "index": 2,
+          "state": "pass",
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": null,
+          "evidence": {
+            "format": 1,
+            "attempts": [
+              {
+                "repeat": 0,
+                "retry": 0,
+                "expectedFailure": null,
+                "state": "pass",
+                "calls": {
+                  "toBe": 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "finished-enter",
+          "index": 1,
+          "state": "pass",
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": null,
+          "evidence": {
+            "format": 1,
+            "attempts": [
+              {
+                "repeat": 0,
+                "retry": 0,
+                "expectedFailure": null,
+                "state": "pass",
+                "calls": {
+                  "toBe": 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "finished-throw",
+          "index": 1,
+          "state": "pass",
+          "repeat": 0,
+          "retry": 0,
+          "expectedFailure": null,
+          "evidence": {
+            "format": 1,
+            "attempts": [
+              {
+                "repeat": 0,
+                "retry": 0,
+                "expectedFailure": null,
+                "state": "pass",
+                "calls": {
+                  "toBe": 1
+                }
+              }
+            ]
+          },
+          "error": "finished-before"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,17 @@
+import { it, expect } from 'vitest';
+import { observe, event, sleep, signal, waitFor } from './observe.mjs';
+let calls = 0;
+it('[REQ-393][K01] custom cleanup retains origin until delegation settlement', { timeout: 100, retry: 1 }, async ctx => {
+  const invocation = calls++, b = observe('K01', invocation, ctx);
+  if (invocation === 0) {
+    const cleanup = ctx.task.context[Symbol.for('loomake.fixture.cleanup.v1')];
+    await cleanup.started.promise;
+    ctx.onTestFinished(() => event('K01', invocation, 'native-snapshot', ctx));
+    await b(() => expect(1).toBe(1), 'cleanup-first');
+    cleanup.bodyDone.resolve();
+    await waitFor('K01-retry');
+    await b(() => expect(1).toBe(1), 'after-delegation');
+    signal('K01-late');
+  } else await b(async () => { signal('K01-retry'); await waitFor('K01-late'); }, 'retry');
+});
+it('[REQ-393][Z99] settle custom cleanup callbacks', { timeout: 1000 }, async () => { await sleep(400); });

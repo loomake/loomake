@@ -1,5 +1,7 @@
 import { chai, it, expect } from 'vitest';
 import { createBodyRecorder } from '@loomake/kit';
+import { AsyncLocalStorage } from 'node:async_hooks';
+import { installAttemptReader, newAttempt, type AttemptToken } from '../src/evidence/vitest-attempt.js';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { createRequire } from 'node:module';
@@ -16,6 +18,8 @@ it('[REQ-393] 公開取得器が52境界の原観測を保ち元のstatusと終�
   const api = pathToFileURL(join(import.meta.dirname, '../src/index.ts')).href;
   const collect = (mode: string, filter?: string) => withProject({ quality: true, files: {
     'body-cases.test.mjs': fixture,
+    'runner.mjs': `import { TestRunner } from 'vitest';import { createBodyRunner } from ${JSON.stringify(api)};export default createBodyRunner(TestRunner);`,
+    'vitest.config.mjs': mode === 'adapter' ? "export default { test: { runner: './runner.mjs' } };" : 'export default {};',
     'body.mjs': `import { chai } from 'vitest';import { createBodyRecorder as real } from ${JSON.stringify(api)};export const createBodyRecorder = ${JSON.stringify(mode)}==='identity'?()=> (_ctx,fn)=>fn():real;export const body=createBodyRecorder(chai);`,
   } }, root => {
     const run = spawnSync(process.execPath, [vitestBin, 'run', 'body-cases.test.mjs', '--reporter=json', '--outputFile=.loomake/test-report.json', ...(filter ? ['-t', filter] : [])], { cwd: root, encoding: 'utf8', timeout: 45_000 });
@@ -26,6 +30,16 @@ it('[REQ-393] 公開取得器が52境界の原観測を保ち元のstatusと終�
   const reports = ['identity', 'adapter'].map(mode => collect(mode));
   const [plain, recorded] = reports.map(({ report }) => report.testResults.flatMap(file => file.assertionResults));
   expect(recorded).toHaveLength(52);
+  const oracle = JSON.parse(readFileSync(new URL('../../../tests/fixtures/vitest-body-attempt-oracle.json', import.meta.url), 'utf8')) as {
+    cases: Record<string, { fullName: string; attempts: BodyEvidence['attempts']; finalStatus: string }>;
+  };
+  for (const expected of Object.values(oracle.cases)) {
+    const matches = recorded.filter(test => test.fullName === expected.fullName);
+    expect(matches).toHaveLength(1);
+    expect(matches[0].meta.loomakeBody?.attempts).toEqual(expected.attempts);
+    expect(matches[0].status).toBe(expected.finalStatus);
+  }
+
   expect(reports[1].status).toBe(reports[0].status);
   expect(recorded.map(t => [t.fullName, t.status])).toEqual(plain.map(t => [t.fullName, t.status]));
   const byId = Object.fromEntries(recorded.map(t => [t.fullName.match(/\[P\d+\]/)?.[0] ?? t.fullName, t] as const));
@@ -56,9 +70,14 @@ it('[REQ-393] finishedのstate読取が失敗しても範囲を閉じ、元の�
     if (unreadable) throw new Error('finished state unreadable');
     return { repeatCount: 0, retryCount: 0, state: 'pass' };
   } };
-  const pending = createBodyRecorder(chai)({ task, onTestFinished(callback) { finished = callback; } }, async () => {
+  const context = { task, onTestFinished(callback: () => void) { finished = callback; } };
+  Object.defineProperty(task, 'context', { value: context });
+  const channel = new AsyncLocalStorage<AttemptToken | undefined>();
+  installAttemptReader(context, channel);
+  const token = newAttempt(task);
+  const pending = channel.run(token, () => createBodyRecorder(chai)(context, async () => {
     await wait; expect(1).toBe(1); return 42;
-  });
+  }));
   unreadable = true; finished(); release();
   expect(await pending).toBe(42);
   expect(task.meta.loomakeBody?.attempts).toEqual([{ repeat: 0, retry: 0, expectedFailure: null, state: null, calls: {} }]);
