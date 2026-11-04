@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { appendFileSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { readGitDocuments } from '../packages/kit/src/verify/trusted/git-objects.js';
@@ -30,7 +30,8 @@ afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: 
 const fixture = () => {
   const root = mkdtempSync(join(tmpdir(), 'loomake-trusted-git-')); roots.push(root);
   const git = (...args: string[]) => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
-  git('init', '-q'); git('config', 'user.name', 'fixture'); git('config', 'user.email', 'fixture@example.invalid'); git('config', 'core.autocrlf', 'false');
+  git('init', '-q');
+  appendFileSync(join(root, '.git', 'config'), '\n[user]\n\tname = fixture\n\temail = fixture@example.invalid\n[core]\n\tautocrlf = false\n', 'utf8');
   mkdirSync(join(root, 'docs'));
   const body = '基準\n'; writeFileSync(join(root, 'docs', 'spec.md'), body);
   git('add', '--', 'docs/spec.md'); git('commit', '-qm', 'fixture');
