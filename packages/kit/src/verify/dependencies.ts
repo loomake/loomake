@@ -30,7 +30,7 @@ export function readDependencies(text: string, requirementIds: readonly string[]
     return result;
   }
   if (table[0].values.length !== columns.length || table[0].values.some((value, i) => value !== columns[i]) ||
-      table[1].values.length !== columns.length || table[1].values.some((value) => !/^:?-{3,}:?$/.test(value))) {
+      table[1].values.length !== columns.length || table[1].values.some((value) => !/^:?-+:?$/.test(value))) {
     fail(table[0].line, '列名・順序・列数または区切り行が不正です');
     return result;
   }
