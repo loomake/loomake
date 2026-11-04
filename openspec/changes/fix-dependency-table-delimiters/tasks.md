@@ -5,7 +5,7 @@
 
 ## 2. 修理
 - [x] 2.1 旧58例を一切変えずREQ-400の22例を追加し、旧sourceで受付/改行のassertion REDと拒否例成功を保存する。
-- [ ] 2.2 区切り正規表現1行だけを修理し、追加22＋旧58の全80例GREENを実exit0で確認しkit patch changesetを付ける。
+- [x] 2.2 区切り正規表現1行だけを修理し、追加22＋旧58の全80例GREENを実exit0で確認しkit patch changesetを付ける。
 - [ ] 2.3 旧archive traceの8/9行の日付だけを11/3へ直し、7行目と全残余が不変と原回答本文へ照合する。
 
 ## Workflow follow-up

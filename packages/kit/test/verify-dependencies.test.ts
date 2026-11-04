@@ -72,7 +72,7 @@ it.each([
 });
 it.each(['\r\n', '\r'])('[REQ-400] 混在する短い区切りと改行で全3種の順序と位置を保持する: %j', (eol) => {
   const rows = [row, ['D-02', 'REQ-400, REQ-401', 'issue', '#123', 'producer', '', '12/34, 56/78'],
-    ['D-003', 'REQ-401', 'path', 'src/a..b\|c.ts', 'producer', 'aB'.repeat(32), '']];
+    ['D-003', 'REQ-401', 'path', 'src/a..b\\|c.ts', 'producer', 'aB'.repeat(32), '']];
   const body = table(rows, header, '| - | :-- | --: | :-: | --- | -- | :- |').replace(/\n/g, eol);
   expect(read(body)).toEqual({ present: true, errors: [], declarations: [
     { id: 'D-01', related: ['REQ-400'], kind: 'change', target: 'add-x', provider: '', expectedBlob: '', ci: [], line: 4 },
