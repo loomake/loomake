@@ -70,12 +70,14 @@ const traceOperations = [
 /** CLIの受理名・候補順とヘルプ・リファレンスの生成元。配列順は解析候補の優先順。 */
 export const CLI_COMMANDS = [
   {
-    name: 'init', usage: 'loomake init [--codex] [--devcontainer]',
+    name: 'init', usage: 'loomake init [--codex] [--devcontainer] [--yes | --keep-existing]',
     summary: 'AGENTS.md・CLAUDE.md・loomake.config.json・Skill をプロジェクトに置く',
     description: 'AGENTS.md・CLAUDE.md・loomake.config.json・Skill をプロジェクトに置く。内容の違う同名のファイルは、確かめてから上書きする。',
     options: [
       { name: '--codex', kind: 'flag', label: '--codex', description: 'Skill を .agents/skills/ にも置く（Codex 用）', required: '任意', defaultValue: 'false' },
       { name: '--devcontainer', kind: 'flag', label: '--devcontainer', description: '.devcontainer/devcontainer.json を置く', required: '任意', defaultValue: 'false' },
+      { name: '--yes', kind: 'flag', label: '--yes', description: '内容の違う同名のファイルを、確かめずにすべて上書きする', required: '任意', defaultValue: 'false', condition: '--keep-existingと同時に指定不可' },
+      { name: '--keep-existing', kind: 'flag', label: '--keep-existing', description: '既存の配置対象ファイルを残し、不足ファイルだけ置く', required: '任意', defaultValue: 'false', condition: '--yesと同時に指定不可' },
     ],
   },
   {

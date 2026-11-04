@@ -105,7 +105,7 @@ it('[REQ-323][REQ-324] 全コマンド・操作の受理名と解析順を明示
   expect(CLI_COMMANDS.map((command) => command.name)).toEqual(['init', 'verify', 'trace', 'run', 'doctor']);
   expect(commandDefinition('trace').operations?.map((command) => command.name)).toEqual(['record', 'report', 'answer', 'approve']);
   const names = (name: 'init' | 'verify' | 'run' | 'doctor') => optionSpec(commandDefinition(name));
-  expect(names('init')).toEqual({ values: [], flags: ['--codex', '--devcontainer'] });
+  expect(names('init')).toEqual({ values: [], flags: ['--codex', '--devcontainer', '--yes', '--keep-existing'] });
   expect(names('verify')).toEqual({ values: ['--change', '--scope'], flags: ['--spec-only', '--done', '--json', '--skip-commands'] });
   expect(names('run')).toEqual({ values: ['--change', '--engine'], flags: ['--dry-run', '--skip-permissions'] });
   expect(names('doctor')).toEqual({ values: [], flags: [] });

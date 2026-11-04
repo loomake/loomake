@@ -17,7 +17,9 @@ export type InitOptions = {
   codex?: boolean;
   /** .devcontainer/devcontainer.json を置く（REQ-022） */
   devcontainer?: boolean;
-  /** 確認を受け付けられるか（標準入力が TTY か）。false のとき同名ファイルがあれば中止する（REQ-020） */
+  /** 内容の異なる同名ファイルの扱い。省略時は確認する（REQ-419・REQ-420） */
+  existingFiles?: 'ask' | 'overwrite' | 'keep';
+  /** 確認を受け付けられるか（標準入力が TTY か）。ask で false のとき差分があれば中止する（REQ-020） */
   interactive: boolean;
   /** 質問を出し、承諾されたら true を返す */
   confirm: (question: string) => Promise<boolean>;
@@ -185,6 +187,7 @@ function unsafeTarget(root: string, path: string): string | null {
 /** AGENTS.md・CLAUDE.md・loomake.config.json・Skill を置く。終了コード（成功 0・中止 1）を返す */
 export async function runInit(options: InitOptions): Promise<number> {
   const { root, stdout } = options;
+  const existingFiles = options.existingFiles ?? 'ask';
   const files = initFiles(options);
   // プロジェクトの外を読み書きしないよう、既存ファイルを読む前に調べ、1 つでもあれば何も置かずに中止する
   const unsafe = [...files.map((f) => f.path), '.gitignore'].map((p) => unsafeTarget(root, p)).filter((r): r is string => r !== null);
@@ -202,17 +205,17 @@ export async function runInit(options: InitOptions): Promise<number> {
   const showDiff = (f: InitFile) => stdout(unifiedDiff(f.path, readFileSync(join(root, f.path), 'utf8'), f.content));
 
   // 確認できない環境では、一部だけ置かれた状態を避けるため何も置かない（Q-06 の回答）
-  if (conflicts.length && !options.interactive) {
+  if (conflicts.length && existingFiles === 'ask' && !options.interactive) {
     for (const f of conflicts) showDiff(f);
     stdout(`\n同名で内容の異なるファイルが ${conflicts.length} 個あります：${conflicts.map((f) => f.path).join('、')}`);
-    stdout('確認を受け付けられない環境なので、どのファイルも置かずに中止しました。端末から loomake init を実行し、上書きするかを答えてください。');
+    stdout('確認を受け付けられない環境なので、どのファイルも置かずに中止しました。すべて上書きするときは --yes、既存の配置対象を残して不足ファイルだけ置くときは --keep-existing を付けて、loomake init をもう一度実行してください。ファイルごとに選ぶときは端末から実行してください。');
     return 1;
   }
 
   const overwrite = new Set<string>();
   for (const f of conflicts) {
     showDiff(f);
-    if (await options.confirm(`${f.path} を上書きしますか [y/N] `)) overwrite.add(f.path);
+    if (existingFiles === 'overwrite' || (existingFiles === 'ask' && await options.confirm(`${f.path} を上書きしますか [y/N] `))) overwrite.add(f.path);
   }
 
   const lines: string[] = [];
