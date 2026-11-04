@@ -5,8 +5,8 @@
 |---|---|---|
 | [Issue #285](https://github.com/loomake/loomake/issues/285) | 元6項目は#299/#335、ID境界は#327/#364で受入。全3種依存検査が残る | 2026-11-03 |
 | [依存の質問](https://github.com/loomake/loomake/issues/121#issuecomment-6576621797) | archive存在・依存元の今回の試験だけでは提供元DoDにならない | 2026-11-02 |
-| [本人の回答](https://github.com/loomake/loomake/issues/121#issuecomment-6591068404) | Q-DEP-01=B、02=C、03=B、04=A | 2026-11-02 |
-| [完了条件の整理](https://github.com/loomake/loomake/issues/121#issuecomment-6591563998) | 自身の完了条件・mainの試験・必須CI。条件外のSHA/blob/byte証明を足さない | 2026-11-02 |
+| [本人の回答](https://github.com/loomake/loomake/issues/121#issuecomment-6591068404) | Q-DEP-01=B、02=C、03=B、04=A | 2026-11-03 |
+| [完了条件の整理](https://github.com/loomake/loomake/issues/121#issuecomment-6591563998) | 自身の完了条件・mainの試験・必須CI。条件外のSHA/blob/byte証明を足さない | 2026-11-03 |
 | Opus設計3380f500 | `.loomake/claude/3380f500-70d2-466b-8b7d-a6fafd6a6157/result.md` §4.1。actual opus5.5、exit0、旧head3b572c22 | 2026-11-03 |
 | 今回の分割判断 | readerの全3種構文REQ-400をC1a、CLI接続REQ-401をC1bに分離。計画だけのPRは作らない | 2026-11-03 |
 
