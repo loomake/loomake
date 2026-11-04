@@ -1,7 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -128,10 +128,7 @@ const newRoot = () => { const result = mkdtempSync(join(tmpdir(), 'loomake-c001-
 const fixture = () => {
   const repository = newRoot();
   git(repository, 'init', '-q');
-  git(repository, 'config', 'user.name', 'Loomake fixture');
-  git(repository, 'config', 'user.email', 'fixture@loomake.invalid');
-  git(repository, 'config', 'commit.gpgsign', 'false');
-  git(repository, 'config', 'core.autocrlf', 'false');
+  appendFileSync(join(repository, '.git', 'config'), '\n[user]\n\tname = Loomake fixture\n\temail = fixture@loomake.invalid\n[commit]\n\tgpgsign = false\n[core]\n\tautocrlf = false\n', 'utf8');
   const hooks = join(repository, '.empty-hooks'); mkdirSync(hooks);
   git(repository, 'config', 'core.hooksPath', hooks);
   const originals = readOriginalBlobs(root, head);
