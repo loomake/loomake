@@ -5,7 +5,7 @@ import { runRun } from '@loomake/runner';
 import { CHANGE, makeRepo } from './helpers.js';
 
 vi.setConfig({ testTimeout: 60_000 });
-const names = process.platform === 'win32' ? ['日本語 空白'] : ['日本語 空白', 'tab\tname', 'line\nname'];
+const names = process.platform === 'win32' ? ['日本語 空白'] : ['日本語 空白', 'tab\tname', 'line\nname', ':(top)name'];
 
 it.each(names)('[REQ-138] %jの違反でrun全体が停止し、コミットとタスクを進めない', async (name) => {
   const repo = makeRepo();
