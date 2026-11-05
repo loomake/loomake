@@ -37,3 +37,5 @@ export type { StaticCommandResult, StaticMetricsReceipt } from './verify/policy/
 
 export { InputReadFailure } from './runtime/errors.js';
 export { basisHash } from './verify/quality-receipt.js';
+export { checkArtifactBody, artifactRetention } from './verify/artifact-body.js';
+export type { ArtifactBodyCheck, ArtifactRetentionResult } from './verify/artifact-body.js';

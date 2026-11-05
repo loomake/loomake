@@ -133,5 +133,16 @@ export function consumeBodyRunner(config: ConstructorParameters<typeof TestRunne
 // [REQ-462] 元bytesとOS不読の公開型。fixtureはコンパイルだけを行う。
 import { readInputBytes, InputReadFailure } from '@loomake/kit';
 const summaryRawBytes: Buffer = readInputBytes('report.json');
-const summaryInputFailure: Error = new InputReadFailure('読取り失敗');
+const summaryInputFailure: UsageError = new InputReadFailure('読取り失敗');
 void [summaryRawBytes, summaryInputFailure];
+
+// [REQ-460][REQ-463] 新公開契約は旧Evidence/Report型の比較とは独立に利用する。
+import { loadSummarySchemas, type EvidenceSummary, type SummaryArtifact } from '@loomake/core';
+import { checkArtifactBody, artifactRetention, type ArtifactBodyCheck, type ArtifactRetentionResult } from '@loomake/kit';
+export type SummaryVersionContract = Assert<Equal<EvidenceSummary['summaryVersion'], 1>>;
+export function consumeSummaryArtifact(artifact: SummaryArtifact, bytes: Uint8Array) {
+  const checked: ArtifactBodyCheck = checkArtifactBody(artifact, bytes);
+  const retention: ArtifactRetentionResult = artifactRetention(artifact, '90d', new Date('2026-11-05T00:00:00Z'));
+  const schemas: ReturnType<typeof loadSummarySchemas> = loadSummarySchemas();
+  return { checked, retention, schemas };
+}
