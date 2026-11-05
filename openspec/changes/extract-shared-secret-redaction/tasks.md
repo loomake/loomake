@@ -23,6 +23,6 @@
 
 ## 4. ローカルの完了
 
-- [ ] 4.1 `pnpm -s verify --change extract-shared-secret-redaction --done --scope local` を通す（REQ-447・REQ-207） <!-- loomake:gate=done -->
+- [x] 4.1 `pnpm -s verify --change extract-shared-secret-redaction --done --scope local` を通す（REQ-447・REQ-207） <!-- loomake:gate=done -->
 
 4.1はローカルの完了だけである。最終受入には同一headのCI完了ゲート（scope ci）、必須5チェック、変更packageの3OS、非著者Codexと独立Opusのレビューが別途必要。通常L3の全条件を満たすまでP1を完了扱いせず、P2/P3の完了前に#65を閉じない。仕様同期とarchiveは実装のmainマージ後に管理役が別PRで行う。
