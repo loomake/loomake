@@ -543,7 +543,7 @@ CI の完了ゲートは、決めた段階に応じて次のとおり動く MUST
 
 - L1：`commands.lint` と `tests/doc-links.test.ts` を実行する。change があれば change ごとに `verify` も実行し、なければ実行しない
 - L2：「完了ゲートの対象の決め方」で change を決め、change ごとに `verify` を実行する。change がなければ「対象の change がない PR の扱い」に従う
-- L3：L2 と同じ。`loomake-change: none` の明示と、change を特定できないときは失敗させる
+- L3：L2 と同じ。仕様適合の修正を除き、`loomake-change: none` の明示や change 未特定は失敗させる
 
 `verify` は `--change <id> --done`。L1 で tasks.md に完了した印がない change だけ `--spec-only`。段階と理由を `loomake-tier: <段階>（<理由>）` の形で標準出力に書き、`GITHUB_OUTPUT` があれば `tier` と `tier_line` も書く SHALL。
 
@@ -596,6 +596,38 @@ Source: REQ-343
 #### Scenario: 理由の件数
 - **WHEN** 4 つのファイルが段階を決めた PR で CI が動く
 - **THEN** 理由にはパスが 3 件と「ほか 1 件」が書かれる
+
+#### Scenario: 仕様適合の修正を受け付ける
+- **WHEN** 主仕様の Requirement の Source に `REQ-010` があり、`packages/kit/src/a.ts` と、`[REQ-010]` で始まる名前の試験を足した `tests/a.test.ts` を変え、本文に `loomake-change: none`・`loomake-route: spec-fix`・`loomake-req: REQ-010` の行がある PR で CI が動く
+- **THEN** `--change` なしで品質コマンドだけが実行され、ジョブはその終了コードで終わる
+
+#### Scenario: 仕様適合の修正で openspec を変えた
+- **WHEN** 「仕様適合の修正を受け付ける」と同じ PR で、`openspec/changes/c1/tasks.md` も変えている
+- **THEN** L3 では change が必須だという案内に、`openspec/` の下を変えたという理由が添えられ、`verify` を実行せずにジョブが失敗する
+
+#### Scenario: 仕様適合の修正で主仕様にない REQ ID を書いた
+- **WHEN** 「仕様適合の修正を受け付ける」と同じ PR で、本文の `loomake-req:` に主仕様のどの Source にもない `REQ-999` も書いている
+- **THEN** L3 では change が必須だという案内に、`REQ-999` が主仕様の Source にないという理由が添えられ、`verify` を実行せずにジョブが失敗する
+
+#### Scenario: 仕様適合の修正で REQ ID の試験を変えていない
+- **WHEN** 「仕様適合の修正を受け付ける」と同じ印があり、`[REQ-010]` を名前に入れた試験を足しも変えもしていない PR で CI が動く
+- **THEN** L3 では change が必須だという案内に、`REQ-010` の試験を足すか変えていないという理由が添えられ、`verify` を実行せずにジョブが失敗する
+
+#### Scenario: 複数の要件を宣言する
+- **WHEN** `loomake-req:` を複数行とカンマ区切りで宣言し、各値が `REQ-` と3桁以上の数字で、重複を除いた全 ID が主仕様と変更した試験の名前にある
+- **THEN** すべての ID を確認し、ほかの条件も満たすときだけ仕様適合の修正を受け付ける。空値や形式の誤りがあれば理由付きで失敗する
+
+#### Scenario: 宣言した経路が食い違う
+- **WHEN** L3 の `loomake-change: none` に複数の `loomake-route:` 行があり、大文字小文字を区別せずに見ても spec-fix でない値が含まれる
+- **THEN** 受け付けない値を理由に示し、仕様適合の修正として受け付けない
+
+#### Scenario: 試験の本文を変更する
+- **WHEN** vitest の対象である `tests/**/*.test.ts` または `packages/*/test/**/*.test.ts` の試験で、名前の `[REQ-010]` を保ったまま呼出の本文を変える
+- **THEN** `REQ-010` の試験を変更したと数える。名前の変更だけのファイル移動、試験の削除、コメントや文字列内の呼出例は数えない
+
+#### Scenario: 実行しない試験を足す
+- **WHEN** 名前に `[REQ-010]` がある呼出に skip・todo・skipIf・runIf の修飾子が直接付き、ほかに `REQ-010` の試験を足しも変えもしていない
+- **THEN** 試験の不足を理由に示し、仕様適合の修正として受け付けない
 
 ### Requirement: 試験の隔離一覧
 macOS と Windows で時間切れが続く試験ファイルは、`tests/quarantine.json` に書いて、その OS のシャードから一時的に外してよい。各エントリは試験ファイル（`tests/` か `packages/<name>/test/` の下の `.test.ts`）、OS（`macos-latest`・`windows-latest`）、Issue 番号、追加日、期限を持ち、期限は追加日から 14 日以内とする MUST。形式の誤り・ファイルがない・重複・対象外の OS・14 日を超える期限・期限切れ（日本時間）のどれかなら、CI は理由を日本語で示して失敗する MUST。ワークフロー `quality-quarantine` は、main への push・定期実行・手動実行・`ci:all-os` の PR で、一覧のファイルを一覧の OS ごとにシャードに分けず実行する SHALL。その失敗は run の成否に数えない。一覧が空なら試験のジョブを飛ばす SHALL。
