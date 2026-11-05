@@ -34,3 +34,5 @@ export { checkFixedSummary } from './verify/summary-integrity.js';
 export type { SummaryTrustAnchor, FixedSummaryProblemCode, FixedSummaryCheck } from './verify/summary-integrity.js';
 export { createBodyRecorder, type BodyContext, type ChaiLike } from './evidence/vitest-body.js';
 export { createBodyRunner } from './evidence/vitest-runner.js';
+export { observeStaticMetrics } from './verify/policy/static-observation.js';
+export type { StaticCommandResult, StaticMetricsReceipt } from './verify/policy/static-observation.js';
