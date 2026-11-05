@@ -115,10 +115,10 @@ it('[REQ-466] 内部公開状態はlink前後を区別し旧wrapperのmessageと
   expect((caught as PublicationFailure).linked).toBe(true);
   expect(readFileSync(file, 'utf8')).toBe('complete'); expect(readdirSync(root)).toHaveLength(2);
   vi.mocked(mkdirSync).mockImplementationOnce(() => { throw original; });
-  try { publishEvidenceState(join(root, 'other.json'), 'complete'); } catch (error) {
-    expect(error).toBeInstanceOf(PublicationFailure); expect((error as PublicationFailure).linked).toBe(false);
-    expect((error as Error).cause).toBe(original);
-  }
+  let beforeLink: unknown;
+  try { publishEvidenceState(join(root, 'other.json'), 'complete'); } catch (error) { beforeLink = error; }
+  expect(beforeLink).toBeInstanceOf(PublicationFailure); expect((beforeLink as PublicationFailure).linked).toBe(false);
+  expect((beforeLink as Error).cause).toBe(original);
   vi.mocked(mkdirSync).mockImplementationOnce(() => { throw original; });
   let legacy: unknown;
   try { publishEvidence(join(root, 'other.json'), 'complete'); } catch (error) { legacy = error; }

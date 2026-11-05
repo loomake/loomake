@@ -2,7 +2,7 @@
 
 ### Requirement: 人の実作業時間の独立した記録
 
-`loomake trace record --change <id> --effort <時間>` と同期APIは以下の入力・境界・保存契約を満たす人の実績をEffort 1へ追記する SHALL。自由記述と入力由来の診断には共通の秘密置換を適用する MUST。verifyと検証文書のsnapshotを作らず、品質合格の証拠としない MUST。未コミット拒否・追記専用・オフラインのREQ-067・068・084を維持する MUST。既存record、Evidence 1/2、Report 2、公開JSON Schema12本、依存、同期実行を保持する MUST。recordedAtは秒を含むISO 8601とし、同期validatorと構造スキーマで受理する精度を一致させる MUST。保存前の失敗は固定の日本語の区分（入力・サイズ・change・git・保存）で記録していないことを示し、最終名の公開後に一時ファイルの片付けまたは出力が失敗した場合は、保存済みの相対パスを示すRuntimeFailureとし、保存失敗と報告しない MUST。
+`loomake trace record --change <id> --effort <時間>` と同期APIは以下の入力・境界・保存契約を満たす人の実績をEffort 1へ追記する SHALL。自由記述と入力由来の診断には共通の秘密置換を適用する MUST。verifyと検証文書のsnapshotを作らず、品質合格の証拠としない MUST。未コミット拒否・追記専用・オフラインのREQ-067・068・084を維持する MUST。既存record、Evidence 1/2、Report 2、依存、同期実行を保持する MUST。Effort専用のJSON Schemaを追加せず、既存の公開JSON Schemaの内容を保持する MUST。recordedAtは秒を含むISO 8601とし、同期validatorと構造スキーマで受理する精度を一致させる MUST。保存前の失敗は固定の日本語の区分（入力・サイズ・change・git・保存）で記録していないことを示し、最終名の公開後に一時ファイルの片付けまたは出力が失敗した場合は、保存済みの相対パスを示すRuntimeFailureとし、保存失敗と報告しない MUST。
 
 Source: REQ-466
 
@@ -84,7 +84,7 @@ Source: REQ-466
 
 #### Scenario: 既存の証拠選択と再利用
 - **WHEN** 正しいeffortサブディレクトリと既存Evidence 1/2が同じchangeの証拠ディレクトリにある
-- **THEN** release reportとrunnerはeffortをverify証拠や再利用候補にせず、既存の結果とJSON外形を保つ。公開JSON Schema12本と旧fixture、既存の同期API・依存・遅延ロードを保持する
+- **THEN** release reportとrunnerはeffortをverify証拠や再利用候補にせず、既存の結果とJSON外形を保つ。Effort専用のJSON Schemaを追加せず、既存の公開JSON Schemaの内容と旧fixture、既存の同期API・依存・遅延ロードを保持する
 
 #### Scenario: オフラインと既存record
 - **WHEN** ネットワークがない環境で時間を記録する、または `--effort` を指定せず既存のrecordを使う

@@ -17,7 +17,7 @@ export function publishEvidence(file: string, content: string): boolean {
   }
 }
 
-/** 完全な一時ファイルを最終名へ公開する。既存名は上書きせずfalseを返す。 */
+/** 完全な一時ファイルを最終名へ公開する。既存名は上書きせずcollisionを返す。 */
 export function publishEvidenceState(file: string, content: string): 'published' | 'collision' {
   const directory = dirname(file);
   const temporary = join(directory, `.loomake-evidence-${process.pid}-${randomUUID()}.tmp`);
