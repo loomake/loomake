@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseSpec } from '../src/index.js';
+import { fenceMask, splitLines } from '../src/parse.js';
 
 const spec = `## ADDED Requirements
 
@@ -73,4 +74,30 @@ describe('parseSpec', () => {
     const text = '## ADDED Requirements\n\n```md\n### Requirement: 例\n```\n\n### Requirement: 本物\nSource: REQ-001\n';
     expect(parseSpec('spec.md', text).value.map((r) => r.name)).toEqual(['本物']);
   });
+});
+
+
+describe('Markdown の境界', () => {
+  it.each(['```', '~~~'])('[REQ-013] info string 付きの %s ではフェンスを閉じない', (fence) => {
+    const text = [fence + 'markdown', fence + 'js', '## ADDED Requirements', '### Requirement: 内側', 'Source: REQ-001', '#### Scenario: 内側', fence, '## ADDED Requirements', '### Requirement: 外側', 'Source: REQ-002', '#### Scenario: 外側'].join('\n');
+    expect(parseSpec('spec.md', text).value.map((r) => r.name)).toEqual(['外側']);
+  });
+
+  it('[REQ-013][REQ-051] 先頭 BOM の後の操作を読み行番号を保つ', () => {
+    const plain = parseSpec('spec.md', spec);
+    expect(parseSpec('spec.md', '\uFEFF' + spec)).toEqual(plain);
+  });
+
+  it('[REQ-013] Source ID の重複を初出順で除く', () => {
+    const text = '## ADDED Requirements\n### Requirement: x\nSource: REQ-002, REQ-001, REQ-002\nSource: REQ-003, REQ-001\n#### Scenario: x';
+    expect(parseSpec('spec.md', text).value[0].sources).toEqual(['REQ-002', 'REQ-001', 'REQ-003']);
+  });
+});
+
+it('[REQ-013][REQ-051] splitLines は先頭 BOM を一つだけ除き内部の BOM を保つ', () => {
+  expect(splitLines('\uFEFF\uFEFFhead\r\ninner\uFEFF\rtail')).toEqual(['\uFEFFhead', 'inner\uFEFF', 'tail']);
+});
+
+it('[REQ-013] 同じ記号の長いフェンスと末尾の空白で閉じる', () => {
+  expect(fenceMask(['````md', '```', '~~~~', '````js', '内部', '`````  \t', '外側'])).toEqual([true, true, true, true, true, true, false]);
 });

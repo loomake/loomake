@@ -10,6 +10,8 @@ import { CHANGE, ledgerRow, requirement, specMd, traceMd } from '../../kit/test/
 // git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
 vi.setConfig({ testTimeout: 60_000 });
 
+const fixtureEvidenceName = (index: number) => `20261023T010000Z-${index.toString(16).padStart(12, '0')}.json`;
+
 type Project = { trace?: string; spec?: string; evidence?: Partial<Evidence>[]; archived?: boolean };
 
 const evidence = (e: Partial<Evidence> = {}): Evidence => ({
@@ -47,7 +49,7 @@ function withProject<T>({ trace = traceMd(), spec = specMd(), evidence: records 
     write(`${dir}/specs/x/spec.md`, spec);
     // 記録には、書いた trace.md と差分仕様を保存しておく。r に documents: undefined を渡すと、文書のない古い形式になる
     const documents = readDocuments(join(root, dir));
-    records.forEach((r, i) => write(`.loomake/evidence/${CHANGE}/${i}.json`, JSON.stringify(evidence({ documents, ...r }))));
+    records.forEach((r, i) => write(`.loomake/evidence/${CHANGE}/${fixtureEvidenceName(i)}`, JSON.stringify(evidence({ documents, ...r }))));
     result = fn(root);
   } catch (e) {
     cleanup();
@@ -80,13 +82,13 @@ const agreementTrace = (question: string, assumption: string) =>
 
 // 証拠の i 番目のファイルの先頭に、項目を足して書き直す（JSON の項目の順を変える）
 const prependField = (root: string, i: number, field: Record<string, unknown>) => {
-  const file = join(root, `.loomake/evidence/${CHANGE}/${i}.json`);
+  const file = join(root, `.loomake/evidence/${CHANGE}/${fixtureEvidenceName(i)}`);
   writeFileSync(file, JSON.stringify({ ...field, ...JSON.parse(readFileSync(file, 'utf8')) }, null, 2));
 };
 
 // 実際の証拠のファイル名は、記録した日時と SHA から作る。最新はファイル名の日時で決める（REQ-209）
 const renameEvidence = (root: string, names: string[]) =>
-  names.forEach((name, i) => renameSync(join(root, `.loomake/evidence/${CHANGE}/${i}.json`), join(root, `.loomake/evidence/${CHANGE}/${name}`)));
+  names.forEach((name, i) => renameSync(join(root, `.loomake/evidence/${CHANGE}/${fixtureEvidenceName(i)}`), join(root, `.loomake/evidence/${CHANGE}/${name}`)));
 
 describe('要件ごとの結果の表', () => {
   it('[REQ-301] quality-report追加後も既存のschemaVersion:2のJSONをそのまま出す', () => {
@@ -299,14 +301,14 @@ describe('使った証拠の記載', () => {
 describe('読めない証拠の記録', () => {
   it('[REQ-073] JSON として壊れた記録があれば、そのファイルを日本語で示し、スタックトレースを出さずに終了コード 2 を返す', () =>
     withProject({}, async (root) => {
-      writeFileSync(join(root, `.loomake/evidence/${CHANGE}/broken.json`), '{ 壊れた');
+      writeFileSync(join(root, `.loomake/evidence/${CHANGE}/20261024T010000Z-badbadbadbad.json`), '{ 壊れた');
       const r = await cli(root);
       expect(r.code).toBe(2);
-      expect(r.stderr).toContain(`証拠の記録 .loomake/evidence/${CHANGE}/broken.json を JSON として読めません`);
+      expect(r.stderr).toContain(`証拠の記録 .loomake/evidence/${CHANGE}/20261024T010000Z-badbadbadbad.json を JSON として読めません`);
       expect(r.stderr).not.toContain('    at ');
     }));
 
-  const file = `.loomake/evidence/${CHANGE}/0.json`;
+  const file = `.loomake/evidence/${CHANGE}/20261023T010000Z-000000000000.json`;
 
   it('[REQ-073] schemaVersion が読める版でない記録があれば、そのファイルと版を日本語で示し、終了コード 2 を返す', () =>
     withProject({ evidence: [{ schemaVersion: 3 }] }, async (root) => {
@@ -558,12 +560,12 @@ describe('証拠の実行時検証', () => {
   ];
   it.each(invalid)('[REQ-142] $name はファイル名を示す日本語の使い方エラーになる', ({ mutate }) =>
     withProject({}, async (root) => {
-      const file = join(root, '.loomake/evidence', CHANGE, '0.json');
+      const file = join(root, '.loomake/evidence', CHANGE, '20261023T010000Z-000000000000.json');
       const saved = JSON.parse(readFileSync(file, 'utf8')) as Evidence;
       writeFileSync(file, JSON.stringify(mutate(saved)));
       const result = await cli(root);
       expect(result.code).toBe(2);
-      expect(result.stderr).toContain('.loomake/evidence/c1/0.json');
+      expect(result.stderr).toContain('.loomake/evidence/c1/20261023T010000Z-000000000000.json');
       expect(result.stderr).toContain('証拠');
     }),
   );
@@ -573,4 +575,44 @@ describe('証拠の実行時検証', () => {
       expect(report(root).evidence.documents).toBe(false);
       expect(report(root).rows[0].result).toBe('合格（仕様との対応は未確認）');
     }));
+});
+
+
+describe('正規名の証拠候補', () => {
+  it('[REQ-423] 壊れたメモを読まず正規名の証拠を使う', () => withProject({}, (root) => {
+    writeFileSync(join(root, `.loomake/evidence/${CHANGE}/notes.json`), '{ 壊れた');
+    expect(report(root).change).toBe(CHANGE);
+  }));
+
+  it.each(['notes.json', '20261024T000000Z-ABC.json', '20261024T000000Z-abc.json.bak', '20261024T000000Z-.json', '20261024T000000Z-ghij.json'])('[REQ-423] 候補が %s だけなら証拠なし', (name) => withProject({ evidence: [] }, (root) => {
+    mkdirSync(join(root, `.loomake/evidence/${CHANGE}`), { recursive: true });
+    writeFileSync(join(root, `.loomake/evidence/${CHANGE}/${name}`), '{ 壊れた');
+    expect(buildReport(root, CHANGE)).toBeUndefined();
+    expect(markdown(root).code).toBe(1);
+  }));
+
+  it('[REQ-423] 壊れた最新候補から古い証拠やメモへ戻らない', () => withProject({}, async (root) => {
+    const name = '20261024T000000Z-abcdef.json';
+    writeFileSync(join(root, `.loomake/evidence/${CHANGE}/${name}`), '{ 壊れた');
+    writeFileSync(join(root, `.loomake/evidence/${CHANGE}/notes.json`), '{}');
+    const result = await cli(root);
+    expect(result.code).toBe(2);
+    expect(result.stderr).toContain(name);
+    expect(result.stderr).toContain('JSON として読めません');
+    expect(result.stderr).not.toContain('    at ');
+  }));
+});
+
+describe('SHA の検査と診断', () => {
+  it.each(['A'.repeat(40), 'b'.repeat(64), 'C'.repeat(64)])('[REQ-073] 正しい SHA %s を受理する', (sha) => withProject({ evidence: [{ sha }] }, async (root) => {
+    expect((await cli(root)).code).toBe(0);
+    expect(report(root).evidence.sha).toBe(sha);
+  }));
+
+  it.each(['A'.repeat(40), 'b'.repeat(64), 'C'.repeat(64)])('[REQ-073] 正しい SHA %s と不正な日時では日時を示す', (sha) => withProject({ evidence: [{ sha, committedAt: 'invalid' }] }, async (root) => {
+    const result = await cli(root);
+    expect(result.code).toBe(2);
+    expect(result.stderr).toContain('committedAt の形が違います');
+    expect(result.stderr).not.toContain('sha の形が違います');
+  }));
 });
