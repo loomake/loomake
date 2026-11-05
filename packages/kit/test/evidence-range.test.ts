@@ -1,4 +1,4 @@
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -97,6 +97,20 @@ it('[REQ-473] 打ち消し合うコミットと置換参照でも原本を判定
     const good = f.commit();
     f.git('replace', bad, good);
     expect(readEvidenceRange({ repository: f.root, source: f.source, target: bad, changeId: 'sample' })).toMatchObject({ allowed: false, reasons: ['ENTRY_NOT_ADDED', 'ENTRY_MODE', 'ENTRY_PATH_NOT_ALLOWED'].map((code) => expect.objectContaining({ code, path: 'base', commit: bad })) });
+});
+it.each([false, true])('[REQ-473] graftsでも隠れた製品変更を原本で拒否する（環境指定=%s）', (external) => {
+    const f = fixture();
+    f.write('product.ts', 'changed');
+    const added = f.commit();
+    f.git('rm', 'product.ts');
+    f.write(path, '{}');
+    const target = f.commit();
+    const graft = external ? '.git/external-grafts' : '.git/info/grafts';
+    f.write(graft, `${target} ${f.source}\n`);
+    vi.stubEnv('GIT_GRAFT_FILE', external ? join(f.root, graft) : undefined);
+    try {
+        expect(f.range()).toMatchObject({ allowed: false, reasons: expect.arrayContaining([added, target].map((commit) => expect.objectContaining({ code: 'ENTRY_PATH_NOT_ALLOWED', path: 'product.ts', commit }))) });
+    } finally { vi.unstubAllEnvs(); }
 });
 it('[REQ-473] 共有予算と厳密なdecode、通常treeだけの照会', () => {
     const f = fixture();

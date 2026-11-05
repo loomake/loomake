@@ -20,7 +20,7 @@ const SHA = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/;
 const META = 16 * 1024 * 1024;
 const decode = (bytes: Uint8Array) => new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
 function git(repository: string, args: string[], maxBuffer = META) {
-  const r = runExternalBytes('git', ['--no-replace-objects', '--literal-pathspecs', '-C', repository, ...args], { maxBuffer });
+  const r = runExternalBytes('git', ['--no-replace-objects', '--literal-pathspecs', '-C', repository, ...args], { maxBuffer, env: { ...process.env, GIT_GRAFT_FILE: '' } });
   if (r.error) throw new UsageError('git を起動できません。Git を利用できるリポジトリで実行してください');
   return r;
 }

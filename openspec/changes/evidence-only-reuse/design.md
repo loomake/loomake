@@ -125,7 +125,7 @@ export function runReuse(options: ReuseOptions): ReuseResult;
 
 ### Git の操作
 
-すべて `runExternalBytes('git', ['--no-replace-objects','--literal-pathspecs','-C', repo, ...], { maxBuffer: 16MiB })` で行います。1 操作の期限は既定の 30 秒です。分類は次のとおりです。
+すべて `runExternalBytes('git', ['--no-replace-objects','--literal-pathspecs','-C', repo, ...], { maxBuffer: 16MiB })` で行います。Git原本の履歴を読むため、各操作の環境は継承し、`GIT_GRAFT_FILE` だけ空にしてgraftsを無効化します。1 操作の期限は既定の 30 秒です。分類は次のとおりです。
 
 - `ProcessLimitError`
   - 種類が `output`：その段階の `RANGE_TOO_LARGE`
