@@ -11,3 +11,6 @@ export { evidenceProblem } from './evidence.js';
 export { readDocuments, changedDocuments } from './documents.js';
 export { runAgreement } from './agreement.js';
 export type { AgreementOptions } from './agreement.js';
+
+export { summaryProblem } from './summary.js';
+export type { EvidenceSummary, SummaryArtifact, SummaryGap } from '@loomake/core';

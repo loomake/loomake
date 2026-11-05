@@ -5,7 +5,7 @@
 
 ## 2. 構造と同期検証
 - [x] 2.1 coreへ要約拡張版1の型・遅延構造スキーマ・独立したJSON Schema生成と公開を追加し、既存12Schema/固定集合/全旧assertを保持する（REQ-460）。
-- [ ] 2.2 traceへsummaryVersionの同期意味検証と既知nullable欄のgaps検査を追加し、旧Evidence1/2・未知storage・own __proto__・同期API・旧閲覧を保持する（REQ-460・461）。
+- [x] 2.2 traceへsummaryVersionの同期意味検証と既知nullable欄のgaps検査を追加し、旧Evidence1/2・未知storage・own __proto__・同期API・旧閲覧を保持する（REQ-460・461）。
 
 ## 3. 観測した実行事実と参照
 - [ ] 3.0 既存readの安全性/予算/文面/型を保つreadInputBytesを追加し、symlink/FIFO/差替え/64MiB境界/不正UTF8のraw保持を確認する（REQ-462）。
