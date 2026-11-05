@@ -39,3 +39,12 @@ P1 Q69-15はrawコマンドを新保存しない参照方式を採用済みで�
 - REQ470〜472はorigin/main b2b3f824のSourceに衝突なし（実git grep exit1/no match）を確認して採番した。REQ466〜469は#68用で本件に使わない。
 
 Q69-14Aのraw入力とQ69-15B/Q21のコマンド参照はP1の決定済み仕様へ反映した。既存verify detailsのsecret保護は#65 P3残債として保持し、新規欄だけの変更で全privacy保証を宣言しない。
+
+## PR #452 の独立レビューから引き継ぐ修理
+
+非起草Codexの再確認は重大0・軽微0・情報0、独立Opusの初回は重大0・軽微2・情報1だった。CIと3 OSの最終受入は管理役が別に確認し、以下の軽微2件を[Issue #454](https://github.com/loomake/loomake/issues/454)で追跡し、同じ親#69のW1後続で解決する。
+
+- 静的指標との接続前に、`summary-observation.ts` のハッシュ照合を `tests.report` の出典に限定する。現状は全checkの `report:sha256:` を集めるため、将来カバレッジの観測が混ざると正しいテスト本体を不一致として拒否し得る。別出典のハッシュが混ざっても拒否しない回帰試験を残す。
+- release要約の受入前に、本体参照が0件の `role:'release'` と、範囲外の `artifacts[N].*` を指すgapを拒否する。PR1のwriterはreleaseを生成しないが、後続REQ464で公開validatorを使う前に、規範の不足箇所もchangeで明確にする。
+
+情報1件は `summary-record.test.ts` の2試験がdescribeの外にあるという指摘で、どちらも実行され要件IDを持つ。今回の文書反映では試験の構造や検証内容を変更していない。
