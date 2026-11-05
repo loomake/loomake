@@ -11,8 +11,8 @@
 
 ## 3. 統合確認
 
-- [ ] 3.1 全ScenarioとREQテストを照合し、lint・型検査と関連試験で回帰がなく、仕様ゲートも成功することを確認する（REQ-455・REQ-456）。
-- [ ] 3.2 `pnpm -s verify --change expose-quality-command-outcomes --done --scope local` を通す（REQ-455・REQ-456）。 <!-- loomake:gate=done -->
+- [x] 3.1 全ScenarioとREQテストを照合し、lint・型検査と関連試験で回帰がなく、仕様ゲートも成功することを確認する（REQ-455・REQ-456）。
+- [x] 3.2 `pnpm -s verify --change expose-quality-command-outcomes --done --scope local` を通す（REQ-455・REQ-456）。 <!-- loomake:gate=done -->
 
 最終の合格はPRのCIでscope ciの完了ゲートと必須5チェック、kitの3 OS試験、独立レビューの条件を満たしたときに判断する。ローカル成功だけで完了としない。
 

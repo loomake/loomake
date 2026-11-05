@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { realpathSync } from 'node:fs';
 import { formatVerifyResult, runVerify, UsageError, verifyExitCode, type QualityCommandOutcome, type VerifyOptions } from '@loomake/kit';
 import * as runtime from '../src/runtime/process.js';
 import type { ExternalResult } from '../src/runtime/process.js';
@@ -152,8 +153,8 @@ it('[REQ-456] retains the existing deadline and shared-budget execution options'
   const without = execute(), notified = execute(() => {});
   expect(notified).toEqual(without);
   expect(notified.calls.map(([, , options]) => options)).toEqual([
-    { cwd: root, shell: true, timeoutMs: 800, qualityCommand: true, maxBuffer: 64 * 1024 * 1024 },
-    { cwd: root, shell: true, timeoutMs: 600, qualityCommand: true, maxBuffer: 64 * 1024 * 1024 },
+    { cwd: realpathSync(root), shell: true, timeoutMs: 800, qualityCommand: true, maxBuffer: 64 * 1024 * 1024 },
+    { cwd: realpathSync(root), shell: true, timeoutMs: 600, qualityCommand: true, maxBuffer: 64 * 1024 * 1024 },
   ]);
   clock.mockRestore();
   vi.mocked(runtime.hasProcessBudget).mockReturnValue(true);
