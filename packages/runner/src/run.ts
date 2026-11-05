@@ -69,9 +69,16 @@ async function runLocked(options: RunOptions): Promise<number> {
     return await recordAndOpenPr(ctx, rec);
   } catch (e) {
     // 始めたあとの git と証拠の記録の失敗は、実行中の失敗として記録に残して止まる（REQ-137）
-    if (!(e instanceof GitError) && !(e instanceof UsageError) && !(e instanceof RuntimeFailure)) throw e;
     const { engineTasks, gateTasks } = ctx;
     const remaining = [...engineTasks, ...gateTasks].filter((t) => !rec.done.includes(taskLabel(t)));
-    return rec.finish(interruptedOperation(e) ? 'interrupted' : 'stopped', e.message, remaining);
+    if (e instanceof GitError || e instanceof UsageError || e instanceof RuntimeFailure) {
+      return rec.finish(interruptedOperation(e) ? 'interrupted' : 'stopped', e.message, remaining);
+    }
+    let reason = `実行中に想定外のエラーが起きました：${maskSecrets(e instanceof Error ? e.message : String(e))}`;
+    try { rec.finish('stopped', reason, remaining); }
+    catch (error) {
+      reason += `。記録を保存できません：${maskSecrets(error instanceof Error ? error.message : String(error))}`;
+    }
+    throw new RuntimeFailure(reason);
   }
 }
