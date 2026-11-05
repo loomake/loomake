@@ -1,0 +1,5 @@
+{
+  "suites": [{"title":"example.test.ts","file":"example.test.ts","specs":[],"suites":[{"title":"group [REQ-010]","file":"example.test.ts","specs":[{"title":"case [REQ-448][REQ-010]","file":"example.test.ts","tests":[{"status":"expected","expectedStatus":"passed","projectName":"chromium","results":[{"retry":0}]}]}]}]}],
+  "errors": [],
+  "stats": {"expected":1,"unexpected":0,"flaky":0,"skipped":0}
+}

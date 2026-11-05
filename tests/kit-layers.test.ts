@@ -37,7 +37,7 @@ describe('kit の中の依存の向き', () => {
     for (const file of runtime) expect(forbiddenImports(file, read(file)), relative(src, file)).toEqual([]);
   });
 
-  it.each(['verify', 'init', 'doctor'])('[REQ-207] %s/ は、自分のディレクトリ・runtime/・verify/config.ts だけを import する', (feature) => {
+  it.each(['verify', 'init', 'doctor', 'collect'])('[REQ-207] %s/ は、自分のディレクトリ・runtime/・verify/config.ts だけを import する', (feature) => {
     const files = filesIn(join(src, feature));
     expect(files.length).toBeGreaterThan(0);
     for (const file of files) expect(forbiddenImports(file, read(file)), relative(src, file)).toEqual([]);

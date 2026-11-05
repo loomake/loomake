@@ -7,7 +7,7 @@ export { CHANGE_ID, KNOWN_CONFIG_KEYS, assertChangeId, loadConfig, RuntimeFailur
 export type { LoomakeConfig } from './verify/config.js';
 export { formatVerifyResult, isAbortedResult, isVerifyResultV2 } from './verify/format.js';
 export { runInit, initFiles, configJson, availableCommands, detectPackageManager } from './init/init.js';
-export { findChangeDir, specFiles, toPosix } from './runtime/change-files.js';
+export { findChangeDir, resolveChangeDir, specFiles, toPosix } from './runtime/change-files.js';
 export type { InitOptions, InitFile, PackageManager } from './init/init.js';
 export { unifiedDiff } from './init/diff.js';
 export { runDoctor, diagnose } from './doctor/doctor.js';
@@ -46,3 +46,7 @@ export type { ArtifactBodyCheck, ArtifactRetentionResult } from './verify/artifa
 
 export { checkBodyReceipt } from './verify/body-receipt.js';
 export type { BodyReceiptCheck } from './verify/body-receipt.js';
+
+export { collectToolOutput } from './collect/collect.js';
+export type { CollectRequest, CollectExit, Collected } from './collect/collect.js';
+export { ghPrChecksArgs, biomeArgs, playwrightTestArgs } from './collect/args.js';

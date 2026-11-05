@@ -110,7 +110,7 @@ it('[REQ-323][REQ-324] 全コマンド・操作の受理名と解析順を明示
   expect(names('run')).toEqual({ values: ['--change', '--engine'], flags: ['--dry-run', '--skip-permissions'] });
   expect(names('doctor')).toEqual({ values: [], flags: [] });
   expect(commandDefinition('trace').operations?.map(optionSpec)).toEqual([
-    { values: ['--change', '--scope'], flags: [] },
+    { values: ['--change', '--scope', '--effort', '--decisions', '--attempts', '--cost', '--note'], flags: [] },
     { values: ['--change', '--format'], flags: [] },
     { values: ['--change', '--question', '--by', '--date', '--answer'], flags: [] },
     { values: ['--change', '--assumption', '--by', '--date'], flags: [] },
