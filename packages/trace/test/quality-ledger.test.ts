@@ -52,6 +52,18 @@ describe('評価結果とPQ/UQの独立集約', () => {
     expect(Object.hasOwn(parsed, '__proto__')).toBe(true); expect(parsed.future).toEqual({ enabled: true });
     expect(JSON.stringify(parsed)).toContain('"__proto__":{"kept":true}');
   });
+  it.each([
+    ['commands', 'result', 'passed'], ['observations', 'status', 'measured'], ['subjects', 'id', 'PQ-001'],
+  ] as const)('[REQ-433][REQ-440] %s.%sは文字列変換せず型を検査する', (collection, field, valid) => {
+    for (const invalid of [[valid], [[valid]], Object(valid), { toString: null }, { valueOf: valid }, null, 1]) {
+      const value = evaluation();
+      (value[collection][0] as unknown as Record<string, unknown>)[field] = invalid;
+      expect(qualityEvaluationProblem(value)).toEqual(expect.any(String));
+      // Boxed strings serialize to strings; all JSON-representable invalid shapes must also fail ledger parsing.
+      if (typeof invalid === 'object' && invalid !== null && Object.getPrototypeOf(invalid) === String.prototype) continue;
+      expect(() => ledgers([accepted(), started()], [value])).toThrow(UsageError);
+    }
+  });
   it.each(['2026-12-31T23:59:59.999Z', '2027-01-01T00:00:00.000Z', '2028-02-29T13:00:00.000Z'])('[REQ-441][REQ-432] UTC暦日を使う: %s', (when) => {
     const period = utcDayPeriod(when); expect(period.start).toBe(`${when.slice(0, 10)}T00:00:00.000Z`);
     expect(Date.parse(period.end) - Date.parse(period.start)).toBe(86_400_000);

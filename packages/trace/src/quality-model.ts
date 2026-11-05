@@ -73,17 +73,17 @@ export function qualityEvaluationProblem(value: unknown): string | undefined {
   let period: QualityEvaluation['period'];
   try { period = utcDayPeriod(value.evaluatedAt); } catch { return '評価の観測期間を表せません'; }
   if (!qualityObject(value.period) || value.period.kind !== period.kind || value.period.start !== period.start || value.period.end !== period.end) return '評価の観測期間が観測時刻のUTC暦日と一致しません';
-  if (!Array.isArray(value.commands) || !value.commands.every((entry) => qualityObject(entry) && text(entry.name) && ['passed', 'failed', 'not_configured'].includes(String(entry.result)))) return '評価のコマンド結果が不正です';
+  if (!Array.isArray(value.commands) || !value.commands.every((entry) => qualityObject(entry) && text(entry.name) && typeof entry.result === 'string' && ['passed', 'failed', 'not_configured'].includes(entry.result))) return '評価のコマンド結果が不正です';
   if (new Set((value.commands as StaticCommandResult[]).map((entry) => entry.name)).size !== value.commands.length) return '評価のコマンド名が重複しています';
   if (!Array.isArray(value.observations) || !value.observations.every((entry) => qualityObject(entry)
     && text(entry.subject) && text(entry.source) && text(entry.metric)
-    && statuses.includes(String(entry.status)) && qualityIsoDate(entry.observedAt)
+    && typeof entry.status === 'string' && statuses.includes(entry.status) && qualityIsoDate(entry.observedAt)
     && (entry.value === undefined || (typeof entry.value === 'number' && Number.isFinite(entry.value)))
     && (entry.status !== 'measured' || (typeof entry.value === 'number' && Number.isFinite(entry.value)))
     && (entry.samples === undefined || nonnegativeInteger(entry.samples)) && (entry.evidence === undefined || strings(entry.evidence))
     && (entry.detail === undefined || typeof entry.detail === 'string'))) return '評価の観測の形が不正です';
   if (!Array.isArray(value.subjects) || !value.subjects.every((entry) => qualityObject(entry)
-    && ((entry.kind === 'product' && /^PQ-\d{3,}$/.test(String(entry.id))) || (entry.kind === 'usage' && /^UQ-\d{3,}$/.test(String(entry.id))))
+    && typeof entry.id === 'string' && ((entry.kind === 'product' && /^PQ-\d{3,}$/.test(entry.id)) || (entry.kind === 'usage' && /^UQ-\d{3,}$/.test(entry.id)))
     && text(entry.characteristic) && (entry.subcharacteristic === undefined || text(entry.subcharacteristic)) && typeof entry.blocking === 'boolean'
     && result(entry.result) && typeof entry.reason === 'string' && strings(entry.evidence))) return '評価の品質別判定が不正です';
   if (new Set((value.subjects as EvaluationSubject[]).map((subject) => subject.id)).size !== value.subjects.length) return '評価の品質IDが重複しています';
