@@ -1,30 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { loadQualitySchema, loadQualityReportSchema, type Quality } from '@loomake/core';
 import { observeStaticMetrics, sha256Hex, UsageError, type StaticMetricsReceipt } from '@loomake/kit';
 import { buildQualityEvaluation, qualityEvaluationProblem, utcDayPeriod, type QualityEvaluation } from '../src/quality-model.js';
-import { foldRequests, nextQualityAttempt, parseQualityLines, unresolvedQualityAttempts, validateQualityLedgers, requestEventProblem, failedAttemptProblem, QUALITY_FAILURES, type FailedAttempt, type RequestEvent } from '../src/quality-ledger.js';
+import { foldRequests, nextQualityAttempt, parseQualityLines, unresolvedQualityAttempts, requestEventProblem, failedAttemptProblem, QUALITY_FAILURES, type RequestEvent } from '../src/quality-ledger.js';
 
-const schema = (await loadQualitySchema()).qualitySchema;
-const reportSchema = (await loadQualityReportSchema()).qualityReportSchema;
-const at = '2026-11-05T12:00:00.000Z';
-const commit = 'a'.repeat(40), hash = 'b'.repeat(64);
-const uuid = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
-const target = { commit, committedAt: at }, basis = { qualitySha256: hash, qualityVersion: 2 as const, model: 'iso-iec-25010-2011' };
-const quality = (): Quality => schema.parse({ version: 2, model: basis.model, product: {
-  'PQ-001': { characteristic: 'maintainability', blocking: true, evidence: [{ source: 'ci.test_report', metric: 'tests_failed', target: '== 0' }] },
-} });
-function evaluation(n = 1, attempt = n, when = at): QualityEvaluation {
-  return buildQualityEvaluation({ quality: quality(), observations: [{ subject: 'PQ-001', source: 'ci.test_report', metric: 'tests_failed', status: 'measured', value: 0 }],
-    commands: [{ name: 'test', result: 'passed' }], runId: uuid(100 + n), attempt, evaluatedAt: when, evaluatorVersion: '0.0.0', target, basis,
-    request: { id: uuid(n), requestedAt: at, source: 'manual-cli' } });
-}
-const accepted = (n = 1, when = at): RequestEvent => ({ version: 1, event: 'accepted', requestId: uuid(n), at: when, source: 'manual-cli', pid: 42, target: { commit }, basis: { qualitySha256: hash } });
-const started = (n = 1, attempt = n, run = 100 + n): RequestEvent => ({ version: 1, event: 'started', requestId: uuid(n), at, runId: uuid(run), attempt });
-const event = (name: 'evaluated' | 'reevaluated' | 'failed', n = 1, attempt = n, run = 100 + n): RequestEvent => ({ version: 1, event: name, requestId: uuid(n), at, runId: uuid(run), attempt, ...(name === 'failed' ? { failure: 'timeout' as const } : {}) }) as RequestEvent;
-const failed = (n = 1, attempt = n): FailedAttempt => ({ version: 1, runId: uuid(100 + n), attempt, requestId: uuid(n), target: { commit }, basis: { qualitySha256: hash },
-  startedAt: at, endedAt: at, detectedAt: at, result: 'failed', failure: 'timeout', summary: `reports/quality/requests.jsonl#${uuid(n)}` });
-const lines = (rows: readonly unknown[]) => rows.map((row) => `${JSON.stringify(row)}\n`).join('');
-const ledgers = (requests: RequestEvent[], history: QualityEvaluation[] = [], attempts: FailedAttempt[] = []) => validateQualityLedgers({ requests: lines(requests), history: lines(history), attempts: lines(attempts) });
+import { schema, reportSchema, at, commit, hash, uuid, target, basis, quality, evaluation, accepted, started, event, failed, lines, ledgers } from './quality-test-fixtures.js';
 
 function staticReceipt(): StaticMetricsReceipt {
   const text = JSON.stringify({ startTime: 1500, testResults: [{ name: 'unit.test.ts', status: 'passed', assertionResults: [{ fullName: 'one', status: 'passed' }] }] });
