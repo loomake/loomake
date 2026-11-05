@@ -3,7 +3,7 @@ import { closeSync, existsSync, fsyncSync, linkSync, mkdirSync, mkdtempSync, ope
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { UsageError } from '@loomake/kit';
-import { publishEvidence } from '../src/publication.js';
+import { publishEvidence, publishEvidenceState, PublicationFailure } from '../src/publication.js';
 
 vi.mock('node:fs', async (original) => {
   const fs = await original<typeof import('node:fs')>();
@@ -105,3 +105,24 @@ describe('上書きしない証拠の公開', () => {
     expect(readdirSync(root)).toHaveLength(2);
   }));
 });
+
+it('[REQ-466] 内部公開状態はlink前後を区別し旧wrapperのmessageとcauseを保持する', () => fixture((root, file) => {
+  const original = failure('EACCES');
+  vi.mocked(unlinkSync).mockImplementationOnce(() => { throw original; });
+  let caught: unknown;
+  try { publishEvidenceState(file, 'complete'); } catch (error) { caught = error; }
+  expect(caught).toBeInstanceOf(PublicationFailure);
+  expect((caught as PublicationFailure).linked).toBe(true);
+  expect(readFileSync(file, 'utf8')).toBe('complete'); expect(readdirSync(root)).toHaveLength(2);
+  vi.mocked(mkdirSync).mockImplementationOnce(() => { throw original; });
+  try { publishEvidenceState(join(root, 'other.json'), 'complete'); } catch (error) {
+    expect(error).toBeInstanceOf(PublicationFailure); expect((error as PublicationFailure).linked).toBe(false);
+    expect((error as Error).cause).toBe(original);
+  }
+  vi.mocked(mkdirSync).mockImplementationOnce(() => { throw original; });
+  let legacy: unknown;
+  try { publishEvidence(join(root, 'other.json'), 'complete'); } catch (error) { legacy = error; }
+  expect(legacy).toBeInstanceOf(UsageError); expect(legacy).not.toBeInstanceOf(PublicationFailure);
+  expect((legacy as Error).cause).toBe(original);
+  expect((legacy as Error).message).toBe(`証拠を保存できません：${join(root, 'other.json')}（test EACCES）。保存先と作業状態を確認してから、もう一度実行してください。`);
+}));

@@ -1,11 +1,19 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync, existsSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { spawnSync, spawn } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
-import { UsageError } from '@loomake/kit';
+import { UsageError, RuntimeFailure, runExternal } from '@loomake/kit';
 import { runEffortRecord } from '../src/index.js';
+vi.mock('node:fs', async (original) => {
+  const fs = await original<typeof import('node:fs')>();
+  return { ...fs, mkdirSync: vi.fn(fs.mkdirSync), unlinkSync: vi.fn(fs.unlinkSync) };
+});
+vi.mock('@loomake/kit', async (original) => {
+  const kit = await original<typeof import('@loomake/kit')>();
+  return { ...kit, runExternal: vi.fn(kit.runExternal) };
+});
 const roots: string[] = [];
 afterEach(() => { vi.restoreAllMocks(); for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); });
 const git = (root: string, ...args: string[]) => {
@@ -104,4 +112,42 @@ it('[REQ-466] 同じEffort名へ同時公開して成功1件と衝突1件を返�
   expect((await Promise.all(results)).sort()).toEqual([0, 1]);
   expect(['first', 'second']).toContain(readFileSync(file, 'utf8'));
   expect(readdirSync(r.dir)).toEqual(['20261106T000000Z-aaaaaaaaaaaa.json']);
+});
+
+const thrown = (action: () => unknown): Error => {
+  try { action(); } catch (error) { return error as Error; }
+  throw new Error('expected rejection');
+};
+it('[REQ-466] 保存前の入力・サイズ・change・git・保存を固定文とcauseなしで区別する', () => {
+  const r = repo(); const token = 'sk-' + 'a'.repeat(20);
+  const cases: [() => unknown, string][] = [
+    [() => r.record({ effort: token }), '実作業時間の入力が不正です。時間・区分・回数・費用・メモの書式を確認してください。'],
+    [() => r.record({ changeId: 'x'.repeat(65536) }), '実績記録の上限は65536バイトです。記録していません。'],
+    [() => r.record({ changeId: 'missing' }), 'change が見つからないか、archive で一意に決まりません。記録していません。'],
+    [() => { vi.mocked(runExternal).mockImplementationOnce(() => { throw new UsageError(token, { cause: new Error(token) }); }); return r.record(); }, 'git の状態を確認できません。記録していません。'],
+    [() => { vi.mocked(mkdirSync).mockImplementationOnce(() => { throw new UsageError(token, { cause: new Error(token) }); }); return r.record(); }, '実績を保存できませんでした。保存先と作業状態を確認してから、もう一度実行してください。'],
+    [() => r.record({ cost: [] }), '実作業時間の入力が不正です。時間・区分・回数・費用・メモの書式を確認してください。'],
+  ];
+  for (const [action, message] of cases) {
+    const error = thrown(action); expect(error).toBeInstanceOf(UsageError); expect(error.message).toBe(message);
+    expect(error.message).not.toContain(token); expect(error.cause).toBeUndefined(); expect(r.files()).toEqual([]);
+  }
+});
+it.each(['cleanup', 'stdout'] as const)('[REQ-466] 保存後%sの失敗は完全なファイルを残し再実行しないRuntimeFailureにする', (phase) => {
+  const r = repo(); const token = 'sk-' + 'a'.repeat(20);
+  if (phase === 'cleanup') vi.mocked(unlinkSync).mockImplementationOnce(() => { throw new UsageError(token, { cause: new Error(token) }); });
+  const error = thrown(() => r.record(phase === 'stdout' ? { stdout: () => { throw new UsageError(token, { cause: new Error(token) }); } } : {}));
+  expect(error).toBeInstanceOf(RuntimeFailure); expect(error).not.toBeInstanceOf(UsageError); expect(error.cause).toBeUndefined();
+  const files = r.files(); const final = files.find((name) => name.endsWith('.json'))!;
+  expect(JSON.parse(readFileSync(join(r.dir, final), 'utf8')).totalMinutes).toBe(90);
+  expect(error.message).toBe(`実績は保存しました：.loomake/evidence/add-x/effort/${final}。${phase === 'cleanup' ? '一時ファイルの片付け' : '結果の表示'}に失敗しました。もう一度記録せず、このファイルを git にコミットしてください。`);
+  expect(error.message).not.toContain(token); expect(error.message).not.toContain(r.root);
+  expect(files).toHaveLength(phase === 'cleanup' ? 2 : 1);
+});
+it.each([UsageError, RuntimeFailure])('[REQ-466] 保存していないdirty通知失敗は元のUsageErrorやcauseを外へ再送しない（%s）', (ErrorType) => {
+  const r = repo(); r.write('dirty', ''); const token = 'sk-' + 'a'.repeat(20);
+  const error = thrown(() => r.record({ stdout: () => { throw new ErrorType(token, { cause: new Error(token) }); } }));
+  expect(error).toBeInstanceOf(UsageError); expect(error).not.toBeInstanceOf(RuntimeFailure);
+  expect(error.message).toBe('実績を記録できません。入力、change の所在、git と保存先の作業状態を確認してください。');
+  expect(error.cause).toBeUndefined(); expect(r.files()).toEqual([]);
 });
