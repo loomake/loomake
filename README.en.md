@@ -29,7 +29,7 @@ Options that take a value accept both `--change <id>` and `--change=<id>`. Run `
 
 `init` also places a version 2 `quality.yaml` with no quality targets set, and `.github/loomake/workflow.example.yml`, an inactive four-job workflow sample. Set project-specific quality targets and the evidence required to pass before the final done gate; the skeleton alone cannot pass. The sample does not run automatically. Its workflow targets, input/output contracts and pinned ref are not yet available, so replace the placeholder references and verify the workflow before enabling it.
 
-If either added file already differs from the template, non-interactive `init` exits with 1 without placing any files. Run it from a terminal and decline overwriting to keep existing contents.
+If either added file already differs from the template, non-interactive `init` exits with 1 without placing any files. Run it from a terminal and decline overwriting to keep existing contents, or pass `--yes` to overwrite the differing files with the templates, or `--keep-existing` to keep them and place only the missing files (neither asks for input; passing both exits with 2).
 
 ### Exit codes
 

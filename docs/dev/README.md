@@ -20,6 +20,10 @@
 | [compatibility-changes.md](compatibility-changes.md) | 公開契約の変更理由、移行方法、旧fixtureをPRへ記録する手順 | 文書リンクと既存のPRテンプレートの契約を確認 |
 | [reference-generation.md](reference-generation.md) | quality.yamlリファレンスの生成と読み取り専用check | `tests/quality-reference.test.ts` と既存のスキーマ一致・文書リンク試験 |
 | [testing-across-os.md](testing-across-os.md) | 3 つの OS で同じ期待値を使うためのテストの前提と、外部操作の期限の試験の偽の CLI | 各ファイルに書いた試験 |
+| [delivery-sigint-ci-repair.md](delivery-sigint-ci-repair.md) | delivery補助のSIGINT試験を修復する計画 | `tests/delivery-ask-opus.test.ts` |
+| [implementation-queue-spec-check.md](implementation-queue-spec-check.md) | 実装キューへ入れた時点で仕様ゲートを確認するCIの例 | 文書リンクを確認 |
+| [test-phase-profiling.md](test-phase-profiling.md) | 遅い試験の区間計測 | `tests/test-phase-profile-workflow.test.ts` |
+| [workflow-trial-2026-11.md](workflow-trial-2026-11.md) | 工程分担の試行集計（2026年11月） | 文書リンクを確認 |
 | [c001-original-input.md](c001-original-input.md) | C001 原14文書の照合用入力 | `tests/c001-original-input.test.ts` |
 | [e3-result-collection.md](e3-result-collection.md) | E3の開発用採集制御。現在は拒否のみで実CLI起動は0回 | `tests/claude-result-{collector,lifecycle,paths}.test.ts` |
 

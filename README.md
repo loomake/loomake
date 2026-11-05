@@ -57,7 +57,7 @@ npx loomake trace report --change <id>            # リリースレポートを�
 | `@loomake/runner` | `packages/runner/` | tasks を AI のエンジンに実装させ、完了ゲートが通るまで回して PR を出す（`run`） |
 | `loomake` | `packages/cli/` | CLI 本体（`loomake init`・`loomake verify`・`loomake trace`・`loomake run`・`loomake doctor`） |
 
-いまの仕様は `openspec/specs/` に、capability ごとのディレクトリで置いている（24 個。`ls openspec/specs` で一覧できる）。CLI の操作は cli・verify・init・doctor・trace-record・trace-report・trace-agreement、run は run・run-guards・run-pr・run-decision-policy、資源の上限は bounded-input・external-process-budget・run-record-budget にある。証拠の書き出しは evidence-publication、テストが誤りを見つけるかの確かめ方は domain-mutation-check と scenario-evidence-audit にある。
+いまの仕様は `openspec/specs/` に、capability ごとのディレクトリで置いている（件数は増えるので、一覧は `ls openspec/specs` で見る）。主なものは次のとおり。CLI の操作は cli・verify・init・doctor・trace-record・trace-report・trace-agreement、run は run・run-guards・run-pr・run-decision-policy、資源の上限は bounded-input・external-process-budget・run-record-budget にある。証拠の書き出しは evidence-publication、テストが誤りを見つけるかの確かめ方は domain-mutation-check と scenario-evidence-audit にある。
 
 ## 開発
 

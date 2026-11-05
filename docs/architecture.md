@@ -121,10 +121,10 @@ trace: 要件台帳 × 検証結果 → リリース記録・リリースレポ�
 公開条件を確認して公開（A1・A2 は人が判断、A3 で自動化）                     │
    │                                                                     │
    ▼                                                                     │
-trace: eval（本番計測 + Issue / Discussion で定期評価）→ report --status（週次）│
+trace: eval（本番計測 + Issue / Discussion で定期評価。計画）→ report --status（週次。計画）│
    │  未達                                                               │
    ▼                                                                     │
-trace: propose（証跡を添えた proposal の下書き PR）── 人がマージ ─────────┘
+trace: propose（証跡を添えた proposal の下書き PR。計画）── 人がマージ ─────────┘
 ```
 
 上の 5 段が「作って証明する」、下の 2 段が「測って戻す」。戻りは常に OpenSpec change を経由し、評価が直接コードを変えることはない。
@@ -137,7 +137,7 @@ trace: propose（証跡を添えた proposal の下書き PR）── 人がマ�
 |---|---|
 | リポジトリ | `loomake/loomake`（モノレポ）、`loomake/site`（Docus） |
 | npm | `@loomake/core` `@loomake/kit` `@loomake/trace` `@loomake/runner` `loomake` |
-| CLI | `loomake init` / `loomake verify` / `loomake run` / `loomake trace <record|report|eval|propose>` |
+| CLI | `loomake init` / `loomake verify` / `loomake run` / `loomake doctor` / `loomake trace <record|report|answer|approve>`（`eval`・`propose` は計画） |
 | サイト | loomake.dev |
 
 CLI は本体パッケージ `loomake` を 1 つ作り、各サブコマンドを束ねる（`npx loomake init` だけで始められる）。引数の解釈は標準 `parseArgs`、サブコマンドは小さなコマンド表（名前 → 関数）で振り分ける。
@@ -145,12 +145,14 @@ CLI は本体パッケージ `loomake` を 1 つ作り、各サブコマンド�
 | サブコマンド | パッケージ | 役割 |
 |---|---|---|
 | `init` | kit | テンプレートと quality.yaml の雛形、案件側の薄いワークフローを導入 |
-| `verify --spec-only / --done` | kit | 完了ゲート |
+| `verify --spec-only / --done` | kit | 仕様ゲートと完了ゲート |
+| `doctor` | kit | 導入先の状態を読み取り専用で点検する |
 | `run <change>` | runner | エージェントに実装させ、ローカル verify → Draft PR → CI verify の結果で修正を回し、レビュー可能にする |
-| `trace record` | trace | 証跡の記録。利用者評価の取り込み（`--observation <file>`）もここ |
-| `trace report` | trace | リリースレポート（既定）。`--status` で品質状況レポート（週次） |
-| `trace eval` | trace | 定期評価。quality.yaml の目標と証跡を照らして 4 値で判定し、history.jsonl に追記 |
-| `trace propose` | trace | 未達から proposal の下書き PR |
+| `trace record` | trace | 証跡の記録。利用者評価の取り込み（`--observation <file>`）は計画で、いまは未実装 |
+| `trace report` | trace | リリースレポート。`--status` による品質状況レポート（週次）は計画で、いまは未実装 |
+| `trace answer` / `trace approve` | trace | trace.md の確認事項への回答と仮定の承認を書く |
+| `trace eval`（計画・未実装） | trace | 定期評価。quality.yaml の目標と証跡を照らして 4 値で判定し、history.jsonl に追記 |
+| `trace propose`（計画・未実装） | trace | 未達から proposal の下書き PR |
 
 `@loomake` スコープが npm で取れるか、商標と重ならないかは未確認（要件定義の未決事項 O13）。
 
