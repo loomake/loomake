@@ -34,7 +34,7 @@ function assertInlineGate(gate: GateJob) {
 }
 
 describe('完了ゲートの実行契約', () => {
-  it('[REQ-010][REQ-022][REQ-054] CI・devcontainer・開発依存・配布テンプレートの OpenSpec の版が一致する', () => {
+  it('[REQ-010][REQ-054] CI・devcontainer・開発依存・配布テンプレートの OpenSpec の版が一致する', () => {
     const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
     const version = pkg.devDependencies['@fission-ai/openspec'];
     expect(version).toMatch(/^\d+\.\d+\.\d+$/);
