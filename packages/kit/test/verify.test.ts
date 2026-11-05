@@ -780,3 +780,22 @@ it('[REQ-422] 回答済み質問の ID 重複でも仕様ゲートを不合格�
   expect(check(result, 'trace.md の解析')?.detail).toContain('Q-01');
   expect(check(result, 'ブロッキング確認事項')?.status).toBe('pass');
 });
+
+describe('品質の定義と仕様ゲートの互換', () => {
+  it.each([{ answer: '', code: 1 }, { answer: '入力の受け入れ条件を採用する', code: 0 }])('[REQ-407] 品質表の関連Qは回答=$answerでexit$codeになる', ({ answer, code }) => {
+    const q = `| Q-QUALITY-01 | REQ-012 | 受け入れ条件と合否を決める計測方法を教えてください | 入力の定義を採用 / 定義を追加 | 定義を追加 | yes | ${answer} | ${answer ? '要件担当者' : ''} | ${answer ? '2026-11-04' : ''} |`;
+    const trace = traceMd({ ledger: [ledgerRow('REQ-012', '確認待ち')], questions: [q] })
+      .replace('| ブロッキング | 回答 |', '| ブロッキング | 回答 | 回答者 | 回答日 |')
+      .replace('|---|---|---|---|---|---|---|', '|---|---|---|---|---|---|---|---|---|') + [
+        '## 品質の定義', '',
+        '| 要件 | 目的 | 利用状況 | 受け入れ条件 | 計測方法 | 副特性 | 出典・確認事項 |',
+        '|---|---|---|---|---|---|---|',
+        '| REQ-012 | Q-QUALITY-01 | Q-QUALITY-01 | Q-QUALITY-01 | Q-QUALITY-01 | Q-QUALITY-01 | 要件書 §1・Q-QUALITY-01 |', '',
+      ].join('\n');
+    const result = withProject({ trace }, specOnly);
+    expect(verifyExitCode(result)).toBe(code);
+    expect(check(result, 'trace.md の解析')?.status).toBe('pass');
+    expect(check(result, 'ブロッキング確認事項')?.status).toBe(code === 1 ? 'fail' : 'pass');
+    if (code === 1) expect(check(result, 'ブロッキング確認事項')?.detail).toContain('Q-QUALITY-01（REQ-012）');
+  });
+});
