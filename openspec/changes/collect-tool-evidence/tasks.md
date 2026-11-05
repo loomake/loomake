@@ -6,7 +6,7 @@
 
 ## 2. core の中立変換
 
-- [ ] 2.1 中立型・共通読取り・gh parser と REQ-448 試験、gh fixture の出典を追加し、対象試験を通す。
+- [x] 2.1 中立型・共通読取り・gh parser と REQ-448 試験、gh fixture の出典を追加し、対象試験を通す。
 - [ ] 2.2 Claude parser と REQ-448 試験、合成 fixture の限界を追加し、対象試験を通す。
 - [ ] 2.3 Codex parser と REQ-448 試験、fixture の出典を追加し、対象試験を通す。
 - [ ] 2.4 Biome parser と REQ-448 試験、fixture の出典を追加し、対象試験を通す。

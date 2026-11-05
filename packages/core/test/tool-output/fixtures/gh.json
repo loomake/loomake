@@ -1,0 +1,4 @@
+[
+  {"name":"unit","bucket":"pass","workflow":"quality","link":"https://example.test/check/1"},
+  {"name":"review","bucket":"pending","workflow":"","link":""}
+]

@@ -35,3 +35,6 @@ export { BODY_EVIDENCE_KEY, type BodyAttempt, type BodyEvidence } from './body-e
 
 export { SUMMARY_VERSION, loadSummarySchemas } from './summary-contracts.js';
 export type { EvidenceSummary, SummaryArtifact, SummaryGap } from './summary-contracts.js';
+
+export { parseGhChecks } from './tool-output/gh.js';
+export type { ToolName, GhCheckBucket, GhCheck, AgentCause, AgentResult, ToolFinding, BiomeSummary, PlaywrightTestCase, PlaywrightError, ToolObservation } from './tool-output/types.js';
