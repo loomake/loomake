@@ -18,7 +18,7 @@
 ## 4. 統合の確認
 
 - [x] 4.1 lint・型・全試験・主仕様 strict・REQ 重複検査を通し、作業記録を残す（REQ-343）
-- [ ] 4.2 `pnpm -s verify --change accept-spec-fix-ci-route --done --scope local` を通す（REQ-343） <!-- loomake:gate=done -->
+- [x] 4.2 `pnpm -s verify --change accept-spec-fix-ci-route --done --scope local` を通す（REQ-343） <!-- loomake:gate=done -->
 
 最終の合格は PR の scope ci 完了ゲート・必須 CI・3 OS・独立レビューで確かめる。
 
