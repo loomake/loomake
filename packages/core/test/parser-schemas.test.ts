@@ -7,8 +7,8 @@ const { assumptionRowSchema, ledgerRowSchema, questionRowSchema, specOperationSc
 
 const fixture = join(import.meta.dirname, 'fixtures/openspec-project/openspec/changes/add-x');
 const traceText = readFileSync(join(fixture, 'trace.md'), 'utf8')
-  .replace('\n## 仮定', '\n| Q-01 | REQ-001 | 質問 | A / B | A | no | A |\n\n## 仮定')
-  + '\n| A-01 | REQ-001 | 仮定 | 理由 | 承認 |\n';
+  .replace('|---|---|---|---|---|---|---|\n', '|---|---|---|---|---|---|---|\n| Q-01 | REQ-001 | 質問 | A / B | A | no | A |\n')
+  .replace(/^\|---\|---\|---\|---\|---\|$/m, '|---|---|---|---|---|\n| A-01 | REQ-001 | 仮定 | 理由 | 承認 |');
 
 const specText = `### Requirement: outside
 Source: REQ-001

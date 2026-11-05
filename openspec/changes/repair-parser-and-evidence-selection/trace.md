@@ -16,7 +16,6 @@
 | REQ-073 | Issue #418 5-7・既存仕様 | 機能 | SHA の誤診断を直す | 既存仕様で充足 | specs/trace-report/spec.md |
 | REQ-422 | Issue #418 5-4・既存仕様 | 機能 | 表内 ID の重複を行番号つきエラーにする | 反映済 | specs/core-parsers/spec.md |
 | REQ-423 | Issue #418 5-6・既存仕様 | 機能 | 正規名だけを証拠候補にする | 反映済 | specs/trace-report/spec.md |
-
 | REQ-077 | 既存 core-parsers 規範 | 機能 | 合意の列を保持する | 反映済 | specs/core-parsers/spec.md |
 | REQ-078 | 既存 core-parsers 規範 | 機能 | 古い省略列を保持する | 反映済 | specs/core-parsers/spec.md |
 
@@ -25,6 +24,7 @@
 | ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |
 |---|---|---|---|---|---|---|---|---|
 | Q41801 | REQ-423 | 既存 fixture と期待パスを正規名へ移してよいか | A: 提示した 2 ファイル・24 例だけ移す / B: 保留 | A。壊れた候補の同じ検査を保つ | yes | A。会話で利用者が明示承認。[質問と具体差分](https://github.com/loomake/loomake/issues/418#issuecomment-6647935099)、[管理役の回答記録](https://github.com/loomake/loomake/issues/418#issuecomment-6649006001)。fallback は採用しない | 利用者 | 2026-11-05 |
+| Q41802 | REQ-011, REQ-422 | 空行終端と重複 ID 検出に衝突した追加 4 ファイルの fixture を修理してよいか | A: 提示差分で既存 assertion を維持 / B: 保留 | A。既存検査の入力を表内へ移し、合成モデルは正常な単一行を複製、案内検査では一意な質問 ID にする | no | 技術点検で全 assertion・期待値を保つ fixture 案へ解消した。利用者への追加質問は行っていない | 管理役 | 2026-11-05 |
 
 ## 仮定
 

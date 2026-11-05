@@ -97,7 +97,7 @@ export function runJourneys(target) {
     const traceFile = join(failed.project, 'openspec/changes/sample/trace.md');
     const trace = readFileSync(traceFile, 'utf8');
     const unanswered = '| Q-01 | REQ-001 | 試験用の確認 | はい | はい | yes | |\n\n';
-    writeFileSync(traceFile, trace.replace('## 仮定', `${unanswered}## 仮定`));
+    writeFileSync(traceFile, trace.replace('|---|---|---|---|---|---|---|\n', `|---|---|---|---|---|---|---|\n${unanswered}`));
     assert.ok(failed.run(['verify', '--change', 'sample', '--spec-only'], 1).includes('Q-01'));
     writeFileSync(traceFile, readFileSync(traceFile, 'utf8').replace('| yes | |', '| yes | 試験用の回答 |'));
     failed.run(['verify', '--change', 'sample', '--spec-only']);

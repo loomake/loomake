@@ -601,7 +601,7 @@ describe('回答の反映と書き方の案内（#285）', () => {
 
   it('[REQ-360] 複数の関連IDと重複を表の順で一度だけ表示する', () => {
     const trace = traceMd({ ledger: [ledgerRow('REQ-012'), pending('REQ-027'), pending('REQ-029'), pending('REQ-002')], questions: [
-      qrow('Q-17', 'REQ-029, REQ-027・REQ-027'), qrow('Q-15', 'REQ-027・REQ-029'), qrow('Q-17', 'REQ-029'),
+      qrow('Q-17', 'REQ-029, REQ-027・REQ-027'), qrow('Q-15', 'REQ-027・REQ-029'), qrow('Q-18', 'REQ-012'),
     ] });
     const r = withProject({ trace }, specOnly);
     expect(check(r, '確認待ちの要件')?.detail).toBe('REQ-027（Q-17・Q-15）, REQ-029（Q-17・Q-15）, REQ-002');
