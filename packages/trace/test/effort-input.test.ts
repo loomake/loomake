@@ -4,7 +4,7 @@ import { effortProblem, serializeEffort } from '../src/effort-input.js';
 const base = { schemaVersion: 1, kind: 'loomake-effort', change: 'add-x', sha: 'a'.repeat(40), recordedAt: '2026-11-06T00:00:00.000Z', totalMinutes: 0 };
 it('[REQ-466] 時間を整数分へ正確に変換し数値と字句の境界を検査する', () => {
   for (const [text, value] of [['0m', 0], ['0h', 0], ['100000m', 100000], ['1.5h', 90], ['0.05h', 3]] as const) expect(parseDuration(text)).toBe(value);
-  for (const text of ['', '01m', '01h', '100001m', '999999m', '0.01h', '9999h', '1e2m', '-1m', '+1m', '１m', ' 9m', '9m ', '9', 'NaN', 'Infinity', '1.000h', '1分']) expect(() => parseDuration(text), text).toThrow();
+  for (const text of ['', '01m', '01h', '100001m', '999999m', '0.01h', '9999h', '1e2m', '-1m', '+1m', '１m', ' 9m', '9m ', '9', 'NaN', 'Infinity', '1.000h', '1分', '1h\n', '1m\n']) expect(() => parseDuration(text), text).toThrow();
 });
 it('[REQ-466] 総計と区分・内数を分け、欠測を0で補わない', () => {
   expect(parseEffortOption('90m')).toEqual({ totalMinutes: 90 });
@@ -16,7 +16,7 @@ it('[REQ-466] USDのcentsとtokensを正確に分け、不正費用を拒否す�
   expect(parseCost('actual-usd:1.25,estimated-usd:0.50,tokens:12000')).toEqual([{ kind: 'actual-usd', cents: 125 }, { kind: 'estimated-usd', cents: 50 }, { kind: 'tokens', count: 12000 }]);
   expect(parseCost('actual-usd:0,tokens:9007199254740991')).toEqual([{ kind: 'actual-usd', cents: 0 }, { kind: 'tokens', count: Number.MAX_SAFE_INTEGER }]);
   expect(parseCost('actual-usd:90071992547409.91')[0]).toEqual({ kind: 'actual-usd', cents: Number.MAX_SAFE_INTEGER });
-  for (const text of ['', 'actual-usd:1,actual-usd:2', 'monthly:1', 'actual-usd:-1', 'actual-usd:1e2', 'actual-usd:1.001', 'actual-usd:90071992547409.92', 'tokens:1.0', 'tokens:9007199254740992', 'tokens: 1', 'tokens:1,']) expect(() => parseCost(text), text).toThrow();
+  for (const text of ['', 'actual-usd:1,actual-usd:2', 'monthly:1', 'actual-usd:-1', 'actual-usd:1e2', 'actual-usd:1.001', 'actual-usd:90071992547409.92', 'tokens:1.0', 'tokens:9007199254740992', 'tokens: 1', 'tokens:1,', 'tokens:1\n', 'actual-usd:1.25\n']) expect(() => parseCost(text), text).toThrow();
 });
 it('[REQ-466] 最終置換してから構造・Unicode文字・UTF-8 bytesを検査する', () => {
   const token = 'sk-' + 'a'.repeat(20);
@@ -24,7 +24,7 @@ it('[REQ-466] 最終置換してから構造・Unicode文字・UTF-8 bytesを検
   expect(serializeEffort(value)).toContain('"note": "***"');
   expect(value.note).toBe(token);
   expect(serializeEffort({ ...base, note: '😀'.repeat(500) })).toContain('😀');
-  for (const extra of [{ note: '😀'.repeat(501) }, { note: 'line\nnext' }, { note: '\u0000' }, { note: '\u2028' }, { minutes: { review: 1 } }, { decisions: NaN }, { attempts: -1 }, { cost: [{ kind: 'tokens', count: Infinity }] }, { extra: true }]) expect(effortProblem({ ...base, ...extra })).not.toBeNull();
+  for (const extra of [{ note: '😀'.repeat(501) }, { note: 'line\nnext' }, { note: '\u0000' }, { note: '\u2028' }, { note: token.repeat(22) }, { recordedAt: '2026-02-31T00:00:00Z' }, { recordedAt: '2026-11-06T24:00:00Z' }, { minutes: { review: 1 } }, { decisions: NaN }, { attempts: -1 }, { cost: [{ kind: 'tokens', count: Infinity }] }, { extra: true }]) expect(effortProblem({ ...base, ...extra })).not.toBeNull();
   expect(effortProblem(base)).toBeNull();
   const size = Buffer.byteLength(serializeEffort(base));
   expect(serializeEffort(base, size)).toBe(JSON.stringify(base, null, 2) + '\n');

@@ -42,6 +42,10 @@ it('[REQ-466] helpは全新オプションを示し、未知引数と位置引�
   for (const name of ['--effort', '--decisions', '--attempts', '--cost', '--note']) expect(p.out.join('\n')).toContain(name);
   for (const name of ['--unknown', '--decision', '--decisions-extra', '--decisions.extra']) expect(await p.run(['--effort=1m', name])).toBe(2);
   expect(await p.run(['--effort=1m', 'extra'])).toBe(2);
+  const token = 'sk-' + 'a'.repeat(20);
+  expect(await p.run(['--effort=1m', token])).toBe(2);
+  expect(p.err.join('\n')).not.toContain(token);
+  expect(p.err.join('\n')).toContain('***');
   expect(loadVerifyQualitySchema).not.toHaveBeenCalled();
 });
 it('[REQ-466] dirtyは1、missing/change誤りは2を維持する', async () => {

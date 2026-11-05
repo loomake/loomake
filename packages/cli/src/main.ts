@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { CHANGE_ID, RuntimeFailure, UsageError, formatVerifyResult, loadVerifyQualitySchema, runDoctor, runInit, runVerify, verifyAbortedResult, verifyExitCode } from '@loomake/kit';
+import { CHANGE_ID, RuntimeFailure, UsageError, maskValue, formatVerifyResult, loadVerifyQualitySchema, runDoctor, runInit, runVerify, verifyAbortedResult, verifyExitCode } from '@loomake/kit';
 import { runRun } from '@loomake/runner';
 import { parseCost, runEffortRecord, runAgreement, runRecord, runReport } from '@loomake/trace';
 import { COMMANDS, HELP, SCOPES, USAGE, commandDefinition, commandHelp, didYouMean, isHelp, isVersion, optionSpec, parseOptions, traceOperation, type Command } from './args.js';
@@ -147,7 +147,14 @@ async function trace(args: string[], io: Io): Promise<number> {
   if (sub !== 'record' && sub !== 'report') {
     throw new UsageError(sub ? `知らないサブコマンドです：${sub}${didYouMean(sub, subs)}` : 'record・report・answer・approve のどれかを指定してください');
   }
-  const { values } = parseOptions(rest, optionSpec(traceOperation(sub) ?? commandDefinition('trace')));
+  let values: Map<string, string>;
+  try { values = parseOptions(rest, optionSpec(traceOperation(sub) ?? commandDefinition('trace'))).values; }
+  catch (error) {
+    if (sub === 'record' && rest.some((arg) => /^--(?:effort|decisions|attempts|cost|note)(?:=|$)/.test(arg))) {
+      throw new UsageError(maskValue(error instanceof Error ? error.message : '実績記録の引数が不正です'));
+    }
+    throw error;
+  }
   const changeId = values.get('--change');
   const format = values.get('--format');
   if (!changeId) throw new UsageError('--change <id> が必要です');

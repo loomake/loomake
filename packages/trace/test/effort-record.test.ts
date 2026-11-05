@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { spawnSync, spawn } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
+import { UsageError } from '@loomake/kit';
 import { runEffortRecord } from '../src/index.js';
 const roots: string[] = [];
 afterEach(() => { vi.restoreAllMocks(); for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); });
@@ -28,6 +29,7 @@ function repo(archived = false) {
 }
 it('[REQ-466][REQ-066][REQ-127][REQ-128] 独立したEffort 1だけを書き品質や文書を作らない', () => {
   const r = repo();
+  const network = vi.spyOn(globalThis, 'fetch').mockImplementation(() => { throw new Error('offline'); });
   const now = '2026-11-06T00:00:00.000Z';
   expect(r.record({ decisions: 0, attempts: 2, cost: [{ kind: 'tokens', count: 10 }], note: '再開' })).toBe(0);
   const [file] = r.files(); expect(file).toBe(`20261106T000000Z-${git(r.root, 'rev-parse', 'HEAD').slice(0, 12)}.json`);
@@ -38,12 +40,15 @@ it('[REQ-466][REQ-066][REQ-127][REQ-128] 独立したEffort 1だけを書き品�
   expect(r.outputs.join('\n')).toContain('git にコミットしてください');
   expect(r.outputs.join('\n')).not.toMatch(/合格|ローカル完了/);
   expect(readdirSync(join(r.root, '.loomake'))).toEqual(['evidence']);
+  expect(network).not.toHaveBeenCalled();
 });
 it('[REQ-466] 欠測を補わず0と内数を保存し、再オープン後の旧記録を保つ', () => {
   const r = repo();
   expect(r.record({ effort: 'review=0m' })).toBe(0);
   const [first] = r.files(); const original = readFileSync(join(r.dir, first), 'utf8');
-  expect(JSON.parse(original).minutes).toEqual({ review: 0 });
+  const firstValue = JSON.parse(original);
+  expect(firstValue.minutes).toEqual({ review: 0 });
+  for (const key of ['totalMinutes', 'cost', 'decisions', 'attempts', 'note']) expect(firstValue).not.toHaveProperty(key);
   expect(r.record()).toBe(1);
   git(r.root, 'add', '.'); git(r.root, 'commit', '-qm', 'effort');
   expect(r.record({ effort: 'instruct=30m,review=20m,rework=0m,run=10m,wait=5m,search=8m', now: () => new Date('2026-11-06T00:00:01Z') })).toBe(0);
@@ -69,7 +74,7 @@ it('[REQ-466] active/archive優先・missing・ambiguous・不正idを既存探�
   git(r.root, 'add', '.'); git(r.root, 'commit', '-qm', 'archives'); expect(r.record()).toBe(0);
   git(r.root, 'add', '.'); git(r.root, 'commit', '-qm', 'effort'); rmSync(join(r.root, 'openspec/changes/add-x'), { recursive: true }); git(r.root, 'add', '.'); git(r.root, 'commit', '-qm', 'remove active');
   expect(() => r.record()).toThrow();
-  for (const changeId of ['missing', 'archive', '../add-x', '']) expect(() => r.record({ changeId })).toThrow();
+  for (const changeId of ['missing', 'archive', '../add-x', '', 'add-x\n']) expect(() => r.record({ changeId })).toThrow();
 });
 it('[REQ-466] raw入力やcauseを残さず共有置換し、元のnoteの長さも検査する', () => {
   const r = repo(); const token = 'sk-' + 'a'.repeat(20);
@@ -77,7 +82,7 @@ it('[REQ-466] raw入力やcauseを残さず共有置換し、元のnoteの長さ
   expect(readFileSync(join(r.dir, r.files()[0]), 'utf8')).toContain('"note": "***"');
   for (const options of [{ effort: token }, { note: token.repeat(22) }, { note: 'line\nnext' }, { decisions: -1 }, { attempts: Infinity }, { cost: [{ kind: 'tokens' as const, count: 1.5 }] }]) {
     try { r.record(options); throw new Error('expected rejection'); } catch (error) {
-      expect(error).toBeInstanceOf(Error); expect((error as Error).message).not.toContain(token); expect((error as Error).cause).toBeUndefined();
+      expect(error).toBeInstanceOf(UsageError); expect((error as Error).message).not.toContain(token); expect((error as Error).cause).toBeUndefined();
     }
   }
   git(r.root, 'add', '.'); git(r.root, 'commit', '-qm', 'effort'); r.write(token, 'dirty'); expect(r.record()).toBe(1);

@@ -20,11 +20,11 @@
 ## 5. 互換性と配布
 
 - [x] 5.1 effortサブディレクトリを既存証拠と混在させる追加試験で、release reportとrunnerの候補/出力が変わらないこと、旧Evidence1/2・Report2・全既存Scenario・同期APIと依存が不変（新オプションの基準追加は4.1に従う）なことを確認し、tdd.mdへ実際のRed/Greenを記録する（REQ-466, REQ-066, REQ-127, REQ-128）
-- [ ] 5.2 core・trace・CLIの非破壊追加のpatch changesetと利用者向け説明を添え、tarballから新入口・help・既存公開元を追加試験で確かめる。原本欠測・親#68未完・PR2/3の残義務も文書に保持する（REQ-466）
+- [x] 5.2 core・trace・CLIの非破壊追加のpatch changesetと利用者向け説明を添え、tarballから新入口・help・既存公開元を追加試験で確かめる。原本欠測・親#68未完・PR2/3の残義務も文書に保持する（REQ-466）
 
 ## 6. ローカルの完了
 
-- [ ] 6.1 全ScenarioとREQ試験対応、全実装タスクの完了を確認し、`pnpm -s verify --change effort-record --done --scope local` を通す（REQ-466, REQ-066, REQ-127, REQ-128） <!-- loomake:gate=done -->
+- [x] 6.1 全ScenarioとREQ試験対応、全実装タスクの完了を確認し、`pnpm -s verify --change effort-record --done --scope local` を通す（REQ-466, REQ-066, REQ-127, REQ-128） <!-- loomake:gate=done -->
 
 注：チェック済みのタスクまで実施した。ローカル完了は最終合格ではなく、CIのdone（scope ci）と必須5チェック、変更packageの3OS、Codexと独立Opusの通常L3レビューを別途満たす。
 

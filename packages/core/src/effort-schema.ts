@@ -12,8 +12,8 @@ export const effortCostSchema = z.union([
 ]);
 const common = {
   schemaVersion: z.literal(1), kind: z.literal('loomake-effort'),
-  change: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).refine((value) => value !== 'archive'),
-  sha: z.string().regex(/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/i), recordedAt: z.iso.datetime({ offset: true }),
+  change: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).refine((value) => value !== 'archive' && !/\s/.test(value)),
+  sha: z.string().regex(/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/i).refine((value) => [40, 64].includes(value.length)), recordedAt: z.iso.datetime({ offset: true }),
   decisions: count.optional(), attempts: count.optional(),
   cost: z.array(effortCostSchema).max(3).refine((value) => new Set(value.map((item) => item.kind)).size === value.length).optional(),
   note: z.string().refine((value) => Array.from(value).length <= 500 && !/[\p{Cc}\p{Zl}\p{Zp}]/u.test(value)).optional(),
