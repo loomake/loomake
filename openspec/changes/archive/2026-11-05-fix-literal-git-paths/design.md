@@ -28,3 +28,9 @@ runner の patch changeset として配る。CLI オプション、公開 JSON�
 ## 確認済みの互換処理
 
 Q-414-01 は 2026-11-05 の利用者の回答で A が承認された。[提示差分](https://github.com/loomake/loomake/issues/414#issuecomment-6647986907) に従う。Git 2.56.0 では check-ignore に GIT_LITERAL_PATHSPECS=1 を渡すと終了コード 128 になる。承認された A はコピーした環境で通常経路を literal=1・GLOB/NOGLOB/ICASE=0 に固定し、check-ignore だけ literal=0 にして先頭コロンの名前へ ./ を付ける。普通の名前、4 種の魔法構文、角括弧、空白、改行、不存在のレポートと root 限定の除外を一時リポジトリで比較し、30 ケースの結果を .loomake/check-ignore-414-results.json に保存した。この処理で元の環境を変えずに実ファイル名を判定する。
+
+## 独立レビュー C-1 の修理
+
+REQ-198 の既存フックを保つため、`RUNS_HOOKS` の commit・push だけは元の環境をコピーして `GIT_TERMINAL_PROMPT=0` を加える。pathspec の 4 変数は元の値と未設定の状態を保つ。両操作の引数はコミットのメッセージや ref であり、pathspec を含まない。ガードとファイルの登録には従来のリテラル処理を適用する。最初の「全 git 呼び出し」の設計がフックにも継承される点を見落としていたため、既存規範を守るこの例外を加える。
+
+pre-commit と pre-push に実フックを置き、フック内の `git ls-files -- '*.ts'` が対象を返すこと、pathspec 環境の 4 変数が元の値または未設定のままであること、prompt=0 を検証する。M-1 にはアサーション削除で run 全体が止まる試験を加え、M-2 の確認事項表の空行も除く。

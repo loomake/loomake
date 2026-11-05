@@ -14,11 +14,12 @@
 | REQ-109 | Issue #414「関係する spec」「足すテスト」、現行 run-guards の検出規範 | 機能 | pathspec の名前でも skip と既存アサーションの削除を検出して止まり、対象の差分を出す | 反映済 | specs/run-guards/spec.md |
 | REQ-138 | Issue #414「直し方」「足すテスト」、現行 run-guards の特殊文字パス | 制約 | ファイル名を pathspec の式にせず扱い、既存の特殊文字パスの検出も保つ | 反映済 | specs/run-guards/spec.md |
 
+| REQ-198 | 現行 run-guards「git の設定とフックの変更の検出」、独立レビュー C-1 | 制約 | run 開始前からあるフックは、これまでどおりコミットで動く | 反映済 | specs/run-guards/spec.md |
+
 ## 確認事項
 
 | ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |
 |---|---|---|---|---|---|---|---|---|
-
 | Q-414-01 | REQ-109・REQ-138 | Git 2.56.0 の check-ignore は literal=1 を拒否する。git 環境の固定と check-ignore だけの互換処理を採用するか | A: 通常経路は literal=1 と他の pathspec 環境 3 種を 0、check-ignore だけ literal=0 と先頭コロンへの ./ 接頭辞 / B: 保留して別案を検討 | A。元の環境を変更せず、実ファイル名の判定と既存の除外判定を両立できる。30 ケースで比較済み | yes | A を承認。通常経路は literal=1、他の pathspec 環境 3 種は 0。check-ignore だけ literal=0、先頭コロンへ ./ を付ける。[提示差分](https://github.com/loomake/loomake/issues/414#issuecomment-6647986907)、[回答記録](https://github.com/loomake/loomake/issues/414#issuecomment-6649004978) | 利用者（今回の回答） | 2026-11-05 |
 
 ## 仮定
@@ -27,3 +28,7 @@
 |---|---|---|---|---|---|---|
 
 Issue の明記した設計を再利用し、既存の動作を満たす回帰 Scenario で確かめる。git の glob に依存する呼び出しは見つからなかった。新しい製品要件と未承認の仮定はない。check-ignore の互換処理は Q-414-01 で利用者の承認を得た。
+
+## 独立レビュー後の技術点検
+
+独立レビュー R1（session `cc1dab57-cf05-4899-b723-190f36c83a4e`、実モデル `claude-opus-5-5`）の C-1 は、commit・push が固定した pathspec 環境を既存フックへ渡す問題を指摘した。REQ-198 は開始前からあるフックの従来の動作を求める。runner 自身の commit・push の引数には pathspec がないため、両操作は元の pathspec 環境を保ち、端末入力の禁止だけを指定する。これは Q-414-01 の利用者回答を書き換えるものではなく、修理で壊した既存規範を戻す措置である。

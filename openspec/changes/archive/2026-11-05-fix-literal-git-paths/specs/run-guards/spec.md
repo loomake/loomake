@@ -66,3 +66,24 @@ Source: REQ-109
 #### Scenario: pathspec の名前にあるアサーションを消す
 - **WHEN** エンジンが `:(glob)`・`:!`・`:/` などで始まる名前の既存テストファイルからアサーションの行を消して終える
 - **THEN** run はそのファイル名と消した行、対象の差分を表示し、変更をコミットせず終了コード 1 で止まる
+
+### Requirement: git の設定とフックの変更の検出
+`loomake run` は、エンジンを呼ぶ前後で、git の設定ファイル（`git rev-parse --git-path config`）の中身と、フックのディレクトリ（`git rev-parse --git-path hooks`。`core.hooksPath` を反映する）にあるファイルの相対パスと中身を比べる SHALL。変わっていたら、`git add`・`git commit` を実行せず、タスクを完了にせずに、エンジンが git の設定かフックを変えたことと確かめる場所を表示して、終了コード 1 で止まる SHALL。run は書き換えを戻さない SHALL。run を始める前からあるフックは、これまでどおり run のコミットで動く SHALL。
+
+Source: REQ-198
+
+#### Scenario: エンジンがフックを足す
+- **WHEN** エンジンが `.git/hooks/pre-commit` を書く
+- **THEN** run はコミットせず、そのフックを実行せず、タスクは未完了のまま、エンジンが git の設定かフックを変えたことを表示して終了コード 1 で止まる
+
+#### Scenario: エンジンが git の設定を変える
+- **WHEN** エンジンが `git config core.hooksPath` を設定する
+- **THEN** run はコミットせず、エンジンが git の設定かフックを変えたことを表示して終了コード 1 で止まる
+
+#### Scenario: 前からあるフック
+- **WHEN** run を始める前から `.git/hooks/post-commit` があり、エンジンはフックも設定も変えない
+- **THEN** run はタスクを完了にしてコミットし、そのフックが動く
+
+#### Scenario: 既存フックの glob と環境を保つ
+- **WHEN** 開始前からある pre-commit または pre-push が `git ls-files -- '*.ts'` で対象を選ぶ
+- **THEN** runner の commit・push は pathspec 環境の 4 変数を元の値または未設定のまま渡し、フックは従来の対象を検査できる

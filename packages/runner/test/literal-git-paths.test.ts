@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { chmodSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { findViolations, runRun } from '@loomake/runner';
 import { branchExists, git, gitConfig, isIgnored, readHead } from '../src/git.js';
@@ -85,6 +85,69 @@ describe('git の名前をリテラルに扱うガード', () => {
       expect(repo.env.GIT_ICASE_PATHSPECS).toBe('1');
     } finally {
       cli.restore();
+      repo.cleanup();
+    }
+  });
+
+  it.each([
+    ['commit', 'pre-commit', undefined], ['push', 'pre-push', undefined],
+    ['commit', 'pre-commit', '0'], ['push', 'pre-push', '0'],
+  ] as const)('[REQ-198] %s の既存 %s へ元の pathspec 環境 %j を渡す', (command, hook, setting) => {
+    const repo = makeRepo();
+    try {
+      repo.write('hook-target.ts', 'export const answer = 42;\n');
+      repo.git('add', '-A');
+      repo.git('commit', '-qm', 'hook target');
+      const snapshot = join(repo.base, 'hook-environment.jsonl');
+      repo.env.HOOK_SNAPSHOT = snapshot;
+      for (const key of ['GIT_LITERAL_PATHSPECS', 'GIT_GLOB_PATHSPECS', 'GIT_NOGLOB_PATHSPECS', 'GIT_ICASE_PATHSPECS']) {
+        if (setting === undefined) delete repo.env[key];
+        else repo.env[key] = setting;
+      }
+      repo.env.GIT_TERMINAL_PROMPT = '1';
+      repo.write('.git/hooks/check-pathspec.mjs', `import { appendFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+const names = spawnSync('git', ['ls-files', '--', '*.ts'], { encoding: 'utf8' });
+appendFileSync(process.env.HOOK_SNAPSHOT, JSON.stringify({ files: names.stdout, status: names.status,
+  pathspec: ['GIT_LITERAL_PATHSPECS', 'GIT_GLOB_PATHSPECS', 'GIT_NOGLOB_PATHSPECS', 'GIT_ICASE_PATHSPECS'].map(key => process.env[key] ?? null),
+  prompt: process.env.GIT_TERMINAL_PROMPT }) + String.fromCharCode(10));
+if (names.status !== 0 || !names.stdout.includes('hook-target.ts')) process.exit(1);
+`);
+      repo.write(`.git/hooks/${hook}`, '#!/bin/sh\nnode .git/hooks/check-pathspec.mjs\n');
+      chmodSync(join(repo.root, `.git/hooks/${hook}`), 0o755);
+      const args = command === 'commit' ? ['commit', '--allow-empty', '-qm', 'hook check'] : ['push', '-u', 'origin', 'main'];
+      expect(() => git(repo.root, repo.env, args)).not.toThrow();
+      const observed = JSON.parse(readFileSync(snapshot, 'utf8').trim()) as { files: string; status: number; pathspec: (string | null)[]; prompt: string };
+      expect(observed.files).toContain('hook-target.ts');
+      expect(observed.status).toBe(0);
+      expect(observed.pathspec).toEqual(Array(4).fill(setting ?? null));
+      expect(observed.prompt).toBe('0');
+      expect(repo.env.GIT_TERMINAL_PROMPT).toBe('1');
+    } finally {
+      repo.cleanup();
+    }
+  });
+
+  it('[REQ-138][REQ-109] アサーション削除で run が停止し、HEAD と未完了タスクを保つ', async () => {
+    const repo = makeRepo();
+    const file = process.platform === 'win32' ? 'brackets[magic].test.ts' : ':(top)x.test.ts';
+    try {
+      repo.write(file, "it('case', () => {\n  expect(answer()).toBe(42);\n});\n");
+      repo.git('add', '-A');
+      repo.git('commit', '-qm', 'assertion');
+      const before = repo.git('rev-parse', 'HEAD');
+      const tasks = readFileSync(join(repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8');
+      repo.plan([{ write: { [file]: "it('case', () => {\n});\n" } }]);
+      const out: string[] = [];
+      const code = await runRun({ root: repo.root, changeId: CHANGE, env: repo.env, interactive: false,
+        confirm: async () => false, stdout: (text) => out.push(text), fileExists: () => false });
+      expect(code, out.join('\n')).toBe(1);
+      expect(out.join('\n')).toContain(`${file}：アサーションかテストを消すか書き換えました`);
+      expect(out.join('\n')).toContain('-  expect(answer()).toBe(42);');
+      expect(repo.calls()).toHaveLength(1);
+      expect(repo.git('rev-parse', 'HEAD')).toBe(before);
+      expect(readFileSync(join(repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toBe(tasks);
+    } finally {
       repo.cleanup();
     }
   });
