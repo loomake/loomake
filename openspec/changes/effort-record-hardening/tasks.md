@@ -22,4 +22,4 @@
 
 ## 受入済み main との統合
 
-- [ ] 12.1 PR #460 の受入済み main を一度取り込み、公開 API・元の試験・26 Scenario・13 Schemaを保持して、cleanな通常local完了ゲートと配布物の共存を確認する。 <!-- loomake:gate=done -->
+- [x] 12.1 PR #460 の受入済み main を一度取り込み、公開 API・元の試験・26 Scenario・13 Schemaを保持して、cleanな通常local完了ゲートと配布物の共存を確認する。 <!-- loomake:gate=done -->
