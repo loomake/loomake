@@ -93,7 +93,7 @@ Q70-25に従いfailed/abandonedを真の終端と混同しない。acceptedよ�
 1. config・quality.yamlと保存先/lockの種類を検査し、不正なら2で止める。既存のloadConfig・品質読取り・安全入力の境界を使い、新しい設定を加えない。
 2. runId/requestIdをUUIDで作り、{runId,requestId,pid,createdAt}を持つeval.lockをwx/0o600で作る。EEXISTなら未受付の3で、台帳・既存lockの内容/mtimeを変えない。実行中か残存かを推測せず、日本語で未受付と手動確認を案内する。
 3. requests・attempts・history・索引の改行/JSON/構造/組の一意性を先に検査する。不正なら何も書かず2、自tokenだけを片付ける。履歴にない索引、読めない索引は上書きしない。
-4. 自分のattempt採番前に、実行権を持つ者だけが残存要求を回収する。startedに終端がなくhistoryに同runIdがあればevaluatedを補い、historyへ再登録しない。historyになければcrashed（endedAt:null、detectedAt:現在）とabandoned(running)を追記する。acceptedだけならabandoned(waiting)とする。再評価待ちの対象/基準が現在と違えばunrecoverableを追記する。欠落または古い索引はhistory末尾から復旧して評価を続ける。
+4. 自分のattempt採番前に、実行権を持つ者だけが残存要求を回収する。startedに終端がなくhistoryに同runIdがあればevaluatedを補い、historyへ再登録しない。historyになく、同じ組のattemptがすでにあればそのrequestId/対象/基準とstartedの一致を確かめ、分類・時刻・行bytesを保持してabandoned(running)だけを補う。両方に未記録のときだけcrashed（endedAt:null、detectedAt:現在）を新規追記する。不整合な既存参照は先の構造検査で2とし、回収を続けない。acceptedだけならabandoned(waiting)とする。再評価待ちの対象/基準が現在と違えばunrecoverableを追記する。欠落または古い索引はhistory末尾から復旧して評価を続ける。
 5. 同コミットのhistory行数+attempts行数+1でattemptを採番する。acceptedとstartedを1回の追記・fsyncで書き、失敗時は自分が加えた部分だけ元の長さに戻して2を返す。
 6. 下記許可リストで作業ツリーを検査する。汚れならdirtyとfailedを記録して1を返す。
 7. 前回のテストreportと固定coverage-summaryを消し、開始時刻を得てから`runVerify({root,progress,onCommand})`を一度だけ実行する。終了時刻を得て`await setImmediate()`で溜まった信号を処理する。実行順/期限/予算の分岐をtraceへ複製せず、runExternalのInfinity経路を作らない。
