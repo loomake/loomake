@@ -20,7 +20,7 @@ requests.jsonlは要求イベント、attempts.jsonlは開始後の失敗、hist
 
 1. 既存loadConfig・品質読取り・安全入力を使いconfig/quality.yamlと保存先/lockの種類を検査。不正は2。途中のリンク・特殊ファイルにも入らない。
 2. UUIDのrunId/requestIdで実行権を取る。EEXISTは未受付3で、既存lockの内容/mtimeと全台帳を保つ。時刻/PIDで自動削除せず日本語で手動確認を案内する。
-3. 台帳の改行/JSON/構造/一意性と索引の由来を先に検査。不正は何も書かず2、自tokenだけ片付ける。出どころ不明・読めない索引は上書きしない。
+3. 台帳の改行/JSON/構造/一意性と索引の由来を先に検査。既知の文字列欄は変換せず文字列型を検査し、未知の追加欄は保持する。不正は何も書かず2、自tokenだけ片付ける。出どころ不明・読めない索引は上書きしない。
 4. 自attempt採番前に残存要求を回収する。startedに対応するhistoryがあればevaluatedだけ補う。同組のattemptがあればrequestId/対象/基準の一致を先に確かめ、分類/日時/bytesを保持してabandoned(running)だけ補う。両方未記録だけcrashed（endedAt:null、detectedAt:現在）を追記する。acceptedだけならabandoned(waiting)。再評価待ちの対象/基準が現在と違えばunrecoverable。欠落/古い索引は末尾から復旧して評価を続ける。
 5. 自attemptを採番しaccepted/startedを1回の追記・fsyncで保存する。失敗は自分の末尾だけ戻して2。
 6. 下記の作業ツリー検査で汚れならdirty/failedを記録して1。
@@ -36,9 +36,9 @@ requests.jsonlは要求イベント、attempts.jsonlは開始後の失敗、hist
 
 git status --porcelain=v1 -z --untracked-files=allを使う。自lockの??、3つのjsonlの??/空白MかつHEAD版raw blobを同一prefixに持つ追記、構造検査済み索引の??/空白Mだけ許可する。staged/削除/改名/モード変更/他パス（週次Markdownを含む）は1。ignoredでもpath/ownerを検査し、unignoredでも正規own lockの??を許可する。gitignoreは変えない。コマンド前後の4帳簿の存在と全bytesを比較し、stage/commitしない。
 
-C1 observeStaticMetricsとkitの四値集約を使いPQ/UQとblockingUnmetを保持する。設定済み全コマンドのexited通知が必要で、testの終了0だけで完了とはしない。正常失敗の条件Eは実測済みVitest5.0.5に限る。今回のproducer/版を照合し、JSON object/testResults、success:false、全5整数カウンタとassertionsの一致、runtime error未指定/0、wasInterrupted非true、全ファイルpassed/failedかつassertion1件以上、全assertion passed/failedを必要とする。skip/pending/todo/未知状態は失敗側では拒否する。
+C1 observeStaticMetricsとkitの四値集約を使いPQ/UQとblockingUnmetを保持する。設定済み全コマンドのexited通知が必要で、testの終了0だけで完了とはしない。正常失敗の条件Eは実測済みVitest5.0.5に限る。今回のproducer/版を照合し、JSON object/testResults、success:false、全5整数カウンタとassertionsの一致、runtime error未指定/0、wasInterrupted非true、全ファイルpassed/failedかつassertion1件以上、全assertion passed/failedを必要とする。skip/pending/todo/未知状態は終了コードと成否にかかわらず拒否する。
 
-終了0でもfailed/runtime error/interrupted/件数不整合等の明示的不完全性を拒否する。整合した通常成功の意図したskipはC1どおり除外する。通常失敗/ラッパー0は実件数と実終了のcommands成否を保持する。lint/typecheck非0も数値終了を保持し、error_countを捏造しない。
+終了0でも保留・failed/runtime error/interrupted/件数不整合等の明示的不完全性を拒否する。保留を含む成功レポートもreceipt:nullとし、test/coverageを値なしnot_runにする。C1の純粋関数が保留を実施件数から除く契約と、collectorが完了を照合してreceiptを渡す条件を区別する。通常失敗/ラッパー0は実件数と実終了のcommands成否を保持する。lint/typecheck非0も数値終了を保持し、error_countを捏造しない。
 
 bail/部分/未確認はreceipt:null、test/coverageは値なしnot_runとし、detailだけ「途中で止まった可能性を否定できないため、件数を測定していません（reason）」へ差し替える。C1のstatus/evidence/APIは変えない。P1実測は固定旧treeの.loomake/c2-plan/p1/を参照（同じ3ファイル6件の通常失敗5/1とbail1、各wrapper0）。pending/空ファイルでこのbailを拒否できた事実に限り、全hidden bailを排除したとはしない。Jest未導入/未実測、未知producer/版の失敗は昇格しない。旧79bのVerifyResultのみ・4dの0完了推定は不採用。
 
