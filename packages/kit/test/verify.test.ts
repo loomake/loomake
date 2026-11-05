@@ -760,3 +760,12 @@ describe('回答の反映と書き方の案内（#285）', () => {
     expect(formatVerifyResult(legacy)).toBe('Loomake verify  mode=spec-only  change=c1\n\n✖ ブロッキング確認事項\n    Q-15（REQ-012）何回ですか\n\n不合格（1 件）');
   });
 });
+
+
+it('[REQ-422] 回答済み質問の ID 重複でも仕様ゲートを不合格にする', () => {
+  const result = withProject({ trace: traceMd({ questions: [question('Q-01', 'yes', '5 回'), question('Q-01', 'yes', '5 回')] }) }, specOnly);
+  expect(ok(result)).toBe(false);
+  expect(check(result, 'trace.md の解析')?.status).toBe('fail');
+  expect(check(result, 'trace.md の解析')?.detail).toContain('Q-01');
+  expect(check(result, 'ブロッキング確認事項')?.status).toBe('pass');
+});
