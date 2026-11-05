@@ -62,7 +62,7 @@ export function parseCost(text: string): EffortCost[] {
 }
 function dateValid(value: unknown): boolean {
   if (typeof value !== 'string' || value.trim() !== value) return false;
-  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/.exec(value);
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.exec(value);
   if (!match || !Number.isFinite(Date.parse(value))) return false;
   const year = Number(match[1]), month = Number(match[2]), day = Number(match[3]);
   if (Number(match[4]) > 23 || Number(match[5]) > 59 || Number(match.at(6) ?? '0') > 59) return false;
@@ -89,7 +89,7 @@ function problem(value: unknown): string | null {
   }
   for (const key of ['decisions', 'attempts']) if (value[key] !== undefined && !count(value[key])) return '回数は非負の安全な整数にしてください';
   if (value.cost !== undefined) {
-    if (!Array.isArray(value.cost) || value.cost.length > 3) return '費用は配列にしてください';
+    if (!Array.isArray(value.cost) || value.cost.length === 0 || value.cost.length > 3) return '費用は配列にしてください';
     const kinds = new Set<string>();
     for (const item of value.cost as unknown[]) {
       if (!object(item) || typeof item.kind !== 'string' || kinds.has(item.kind)) return '費用の区分が不正です';
