@@ -13,7 +13,7 @@ const expectedSteps = [
   { uses: 'pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1' },
   { uses: 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020', with: { 'node-version': 24, cache: 'pnpm' } },
   { run: 'pnpm install --frozen-lockfile' },
-  { run: 'npm install -g @fission-ai/openspec@1.14.3' },
+  { run: 'npm install -g @fission-ai/openspec@1.15.0' },
   { run: 'openspec validate --specs --strict' },
   { run: 'pnpm build' },
   { id: 'gate', run: 'node scripts/ci-gate.mjs "$HEAD_REF"', env: {
@@ -34,6 +34,16 @@ function assertInlineGate(gate: GateJob) {
 }
 
 describe('完了ゲートの実行契約', () => {
+  it('[REQ-010][REQ-054] CI・devcontainer・開発依存・配布テンプレートの OpenSpec の版が一致する', () => {
+    const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+    const version = pkg.devDependencies['@fission-ai/openspec'];
+    expect(version).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(inlineGate().steps).toContainEqual({ run: `npm install -g @fission-ai/openspec@${version}` });
+    for (const path of ['../.devcontainer/devcontainer.json', '../packages/kit/templates/devcontainer/devcontainer.json']) {
+      const devcontainer = readFileSync(new URL(path, import.meta.url), 'utf8');
+      expect(devcontainer.match(/@fission-ai\/openspec@([^\s"\\]+)(?: |")/)?.[1], path).toBe(version);
+    }
+  });
   it('[REQ-010][REQ-054][REQ-132][REQ-168][REQ-273] 9steps・引数・順序・権限・条件が一致する', () => {
     assertInlineGate(inlineGate());
   });
