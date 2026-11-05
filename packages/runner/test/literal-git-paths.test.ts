@@ -43,16 +43,17 @@ describe('git の名前をリテラルに扱うガード', () => {
     }
   });
 
-  it('[REQ-138][REQ-109] git の全経路にリテラル指定を渡し、tasks と証拠のパスをそのまま登録する', () => {
+  it('[REQ-138][REQ-109] pathspec を扱う git の経路へリテラル指定を渡し、tasks と証拠のパスをそのまま登録する', () => {
     const repo = makeRepo();
     const snapshot = join(repo.base, 'git-environment.jsonl');
+    repo.env.LOOMAKE_TEST_GIT_ENV_SNAPSHOT = snapshot;
     repo.env.GIT_LITERAL_PATHSPECS = '0';
     repo.env.GIT_TERMINAL_PROMPT = '1';
     repo.env.GIT_GLOB_PATHSPECS = '1';
     repo.env.GIT_NOGLOB_PATHSPECS = '1';
     repo.env.GIT_ICASE_PATHSPECS = '1';
     const cli = fakeCli(repo, 'git', {
-      when: `(()=>{fs.appendFileSync(${JSON.stringify(snapshot)},JSON.stringify({args,literal:process.env.GIT_LITERAL_PATHSPECS,prompt:process.env.GIT_TERMINAL_PROMPT,glob:process.env.GIT_GLOB_PATHSPECS,noglob:process.env.GIT_NOGLOB_PATHSPECS,icase:process.env.GIT_ICASE_PATHSPECS})+String.fromCharCode(10));return false;})()`,
+      when: '(()=>{fs.appendFileSync(process.env.LOOMAKE_TEST_GIT_ENV_SNAPSHOT,JSON.stringify({args,literal:process.env.GIT_LITERAL_PATHSPECS,prompt:process.env.GIT_TERMINAL_PROMPT,glob:process.env.GIT_GLOB_PATHSPECS,noglob:process.env.GIT_NOGLOB_PATHSPECS,icase:process.env.GIT_ICASE_PATHSPECS})+String.fromCharCode(10));return false;})()',
     });
     try {
       const evidence = `.loomake/evidence/${CHANGE}/evidence[one].json`;
