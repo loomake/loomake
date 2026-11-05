@@ -2,7 +2,7 @@ import { existsSync, lstatSync, realpathSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative, sep } from 'node:path';
 import { createInputReader } from '../runtime/input.js';
 
-import { UsageError } from '../runtime/errors.js';
+import { InputReadFailure, UsageError } from '../runtime/errors.js';
 export { RuntimeFailure, UsageError } from '../runtime/errors.js';
 
 export type LoomakeConfig = {
@@ -44,15 +44,33 @@ const unknownKeys = (c: Record<string, unknown>): string[] =>
     return known && isObject(value) ? Object.keys(value).filter((k) => !known.includes(k)).map((k) => `${key}.${k}`) : [];
   });
 
-/** root の loomake.config.json を読み、既定値と合わせて返す。形が正しくないときは UsageError を投げる */
+/** root の loomake.config.json を読み、既定値と合わせて返す。OS読取失敗は内部InputReadFailure、形が正しくないときはUsageErrorを投げる */
 export function loadConfig(root: string): LoomakeConfig {
+  return readConfig(root, existsSync);
+}
+
+/** verifyだけ存在照会のOS失敗も区別する。共有利用側の不在判定は変えず、indexからexportしない（REQ-395）。 */
+export function loadVerifyConfig(root: string): LoomakeConfig {
+  return readConfig(root, (p) => {
+    try { lstatSync(p); return true; } catch (e) {
+      const code = (e as NodeJS.ErrnoException).code;
+      if (code === 'ENOENT' || code === 'ENOTDIR') return false;
+      throw new InputReadFailure(`loomake.config.json を読めません（${(e as Error).message}）`, { cause: e });
+    }
+  });
+}
+
+function readConfig(root: string, present: (path: string) => boolean): LoomakeConfig {
   const base: LoomakeConfig = { openspecDir: 'openspec', openspecValidate: 'auto', tests: { report: DEFAULT_TEST_REPORT }, commands: {}, unknownKeys: [] };
   const p = join(root, 'loomake.config.json');
-  if (!existsSync(p)) { assertReportTarget(root, base.tests.report); return base; }
+  if (!present(p)) { assertReportTarget(root, base.tests.report); return base; }
+  let text: string;
+  try { text = createInputReader().read(p); } catch (e) {
+    const Failure = e instanceof InputReadFailure ? InputReadFailure : UsageError;
+    throw new Failure(`loomake.config.json を読めません（${(e as Error).message}）`, { cause: e });
+  }
   let c: unknown;
-  try {
-    c = JSON.parse(createInputReader().read(p));
-  } catch (e) {
+  try { c = JSON.parse(text); } catch (e) {
     throw new UsageError(`loomake.config.json を読めません（${(e as Error).message}）`, { cause: e });
   }
   if (!isObject(c)) throw new UsageError('loomake.config.json は JSON のオブジェクトにしてください');
