@@ -53,3 +53,7 @@ Q19の自己運用changeでは埋込verifyがFAILでもその事実を保存し�
 ## P1のコマンド訪問順は未観測
 
 現P1は訪問順を専用に観測する手段を追加せず、recordのcommands.nameRefsはnullとunverified gapにする。設定のObject.keysは実訪問ではなく、既存checksも本計画では厳密な訪問証拠に読み替えない。未受入の品質コマンド通知APIを使わず、配列形を検証できる公開構造と、P1で観測して保存する事実を分ける。設定raw hash/sourceは維持するので元定義への参照は失わない。
+
+## 動的fixtureと新runtime assetの追従
+
+通常fullで、newwriterから旧Evidence1を生成する入力にsummaryVersionが残る不整合と、Sourceから組む子プロセス束にtrace/package.jsonがない不整合を観測した。Q69-23を管理役が採用し、この2つの入力生成だけを追従する。全既存assert・期待値・条件・期限、固定版1/2JSON fixtureと12Schemaは変えない。実package.jsonを版の正本とし、記録しないimportでmetadataを読まず、実record時に遅延して読む。版の偽造・固定fallback・新build機構は導入しない。

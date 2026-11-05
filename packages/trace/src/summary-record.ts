@@ -5,7 +5,7 @@ import type { EvidenceSummary, SummaryGap, VerifyResult } from '@loomake/core';
 import { basisHash, readInputBytes } from '@loomake/kit';
 
 type SummaryExtension = Pick<EvidenceSummary, 'summaryVersion' | 'role' | 'ci' | 'execution' | 'artifacts' | 'request' | 'observation' | 'gaps'>;
-const version = (JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }).version;
+const version = () => (JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }).version;
 export const gap = (field: string, reason: string, kind: SummaryGap['kind'] = 'unverified'): SummaryGap => ({ field, kind, reason });
 export const rawHash = (bytes: Uint8Array): string => createHash('sha256').update(bytes).digest('hex');
 
@@ -32,7 +32,7 @@ export function executionSummary(
   if (commands.sha256 === null) gaps.push(gap('execution.commands.sha256', '設定ファイルを省略した既定値です', 'not_applicable'));
   gaps.push(gap('artifacts', '本体の観測を確認できません'));
   return { summaryVersion: 1, role: 'development', ci,
-    execution: { id: randomUUID(), origin: github ? 'github-actions' : 'local', evaluator: { name: '@loomake/trace', version },
+    execution: { id: randomUUID(), origin: github ? 'github-actions' : 'local', evaluator: { name: '@loomake/trace', version: version() },
       basisSha256: basisHash(root, changeDir), environment: { node: process.version, platform: process.platform, arch: process.arch },
       commands, producer, startedAt: new Date(started).toISOString(), finishedAt: new Date(finished).toISOString(), verification: 'executed' },
     artifacts: [], request: null, observation: null, gaps };

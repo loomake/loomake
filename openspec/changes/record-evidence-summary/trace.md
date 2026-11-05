@@ -53,6 +53,8 @@
 
 | Q69-22 | REQ-462 | OS不読と入力拒否を公開APIでどう識別するか | A:既存InputReadFailureをnamed export / B:constructor名等を推測 | A。instanceofで旧分類を保つ | yes | A。既存class/分類は不変、OS不読だけgap、入力拒否はthrow。管理役がADR0006に従い採用 | 管理役 | 2026-11-05 |
 
+| Q69-23 | REQ-460・REQ-461 | 新markerとruntime assetに既存の動的入力生成をどう追従するか | A:legacy生成のmarker除去と子bundleへの実package.json同梱 / B:旧assertや新契約を緩める | A。旧形式の入力とmetadata源を正しく再現する | yes | A。管理役採用。生成2件だけ追従、全旧assert/期待/期限と固定版1/2JSONは保持し、版読取は実record時へ遅延する（ADR0006） | 管理役 | 2026-11-05 |
+
 Q69-04/Q69-07は本PRの実装で解消したとはしない。親69の未完了としてparent-handoffに全義務を保つ。取得済み補足設計を採用したが、索引・手動CI・実運用は未実装である。Q69-14/15/21は補足設計と管理判断で回答済み。rawとhash表現・新文字列の保存をここで確定し、親のQ69-07は未回答のまま保持する。
 
 ## 仮定

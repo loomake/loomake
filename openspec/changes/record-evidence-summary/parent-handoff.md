@@ -4,7 +4,7 @@ PR1の要約拡張と参照検証APIだけで親#69は完成しない。以下�
 
 | 義務 | 予定先 | 現在の事実 | 完成として確かめること |
 |---|---|---|---|
-| 既存Evidence1/2と未知欄の閲覧・不変 | PR1 REQ460 | 計画のみ | 全旧fixture/12Schema/同期API/元assert保持 |
+| 既存Evidence1/2と未知欄の閲覧・不変 | PR1 REQ460 | 計画のみ | 固定版1/2JSON・12Schema・同期API・元assert保持。Q69-23の動的入力生成2件だけ追従 |
 | 実行条件・CI識別・未確認・本体の観測照合 | PR1 REQ461/462 | 計画のみ | 実行回数/旧結果/失敗保存を保ち、未確認nullと不一致拒否 |
 | 本体bytes/hash・実保持期間/現在状態のAPI | PR1 REQ463 | 計画のみ | 既知/不足/未確認/失効、raw bytesとstrict decodeの区別 |
 | quality.yamlのevidence既定値 | PR1 REQ396 | 計画のみ | 旧雛形保護・品質未設定のまま既定値を明記 |
