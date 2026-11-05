@@ -36,24 +36,24 @@ describe('仕様適合の修正の条件', () => {
   it('[REQ-343] routeの食い違いと空値を拒む', () => {
     for (const value of ['', 'normal']) {
       const result = specFixDecision({ body: `${body}\nloomake-route: ${value}`, entries: [entry()], sourceIds, readFile: reader() });
-      expect(result.problems.join(' ')).toContain('loomake-route:');
+      expect(result.problems!.join(' ')).toContain('loomake-route:');
     }
   });
   it('[REQ-343] 不足する条件をすべて示す', () => {
     const result = specFixDecision({ body: body.replace('REQ-010', 'REQ-999'), entries: [entry('D', ['openspec/changes/c1/tasks.md'])], sourceIds, readFile: reader() });
-    expect(result.problems.join(' ')).toContain('openspec/');
-    expect(result.problems.join(' ')).toContain('Source');
-    expect(result.problems.join(' ')).toContain('REQ-999');
-    expect(result.problems.length).toBeGreaterThanOrEqual(3);
+    expect(result.problems!.join(' ')).toContain('openspec/');
+    expect(result.problems!.join(' ')).toContain('Source');
+    expect(result.problems!.join(' ')).toContain('REQ-999');
+    expect(result.problems!.length).toBeGreaterThanOrEqual(3);
   });
   it.each([
     entry('R100', ['openspec/specs/x/spec.md', 'docs/copied.md']),
     entry('R100', ['docs/a.md', 'openspec/specs/x/spec.md']),
   ])('[REQ-343] openspecの名前変更は変更前後の両パスで拒む（%j）', (change) => {
-    expect(specFixDecision({ body, entries: [change, entry()], sourceIds, readFile: reader() }).problems.join(' ')).toContain('openspec/');
+    expect(specFixDecision({ body, entries: [change, entry()], sourceIds, readFile: reader() }).problems!.join(' ')).toContain('openspec/');
   });
   it('[REQ-343] REQ宣言がなければ拒む', () => {
-    expect(specFixDecision({ body: 'loomake-route: spec-fix', entries: [entry()], sourceIds, readFile: reader() }).problems.join(' ')).toContain('REQ ID');
+    expect(specFixDecision({ body: 'loomake-route: spec-fix', entries: [entry()], sourceIds, readFile: reader() }).problems!.join(' ')).toContain('REQ ID');
   });
 });
 
@@ -101,7 +101,7 @@ describe('名前にREQを持つ変更した試験', () => {
   });
   it('[REQ-343] 変更前の内容を読めないMと変更後を読めないAを拒む', () => {
     for (const [change, readFile] of [[entry(), reader(undefined, changed)], [entry('A'), reader(undefined, undefined)]] as const) {
-      expect(changedTestReqIds([change], readFile).problems.join(' ')).toContain('読めません');
+      expect(changedTestReqIds([change], readFile).problems!.join(' ')).toContain('読めません');
     }
   });
 });
