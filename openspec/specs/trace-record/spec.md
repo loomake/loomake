@@ -6,7 +6,7 @@
 ## Requirements
 
 ### Requirement: 証拠の記録
-`loomake trace record --change <id>` は、その change に `verify --done` を実行し、結果を検査したコミットの SHA・コミットの日時・記録した日時と合わせて、`.loomake/evidence/<change-id>/` に JSON のファイルとして保存する SHALL。verify が不合格でも記録し、終了コードは verify と同じにする SHALL。記録したあとは、記録のファイルを git にコミットするよう日本語で案内する SHALL。change-id が OpenSpec の change 名の形でないときと、`archive` のときは、何も記録せず、使い方の誤りとして終了コード 2 を返す SHALL。
+`loomake trace record --change <id>` は、その change に `verify --done` を実行し、結果を検査したコミットの SHA・コミットの日時・記録した日時と合わせて、`.loomake/evidence/<change-id>/` に JSON のファイルとして保存する SHALL。verify が不合格でも記録し、終了コードは verify と同じにする SHALL。記録したあとは、記録のファイルを git にコミットするよう日本語で案内する SHALL。change-id が OpenSpec の change 名の形でないときと、`archive` のときは、何も記録せず、使い方の誤りとして終了コード 2 を返す SHALL。 `--effort` を指定したときは verify を実行せず、REQ-466 の人の実績の記録だけを行う SHALL。
 
 Source: REQ-066
 
@@ -79,7 +79,7 @@ Source: REQ-083
 - **THEN** `@loomake/core` と `@loomake/kit` 以外が含まれない
 
 ### Requirement: 検証した時点の文書の保存
-`loomake trace record` は、verify を実行する前に、その change の trace.md と差分仕様（`specs/` の下の `spec.md`）を読み、それぞれの change のディレクトリからのパス・内容・SHA-256 のハッシュを、証拠の記録の `documents` に保存する SHALL。
+`--effort` を指定しない `loomake trace record` は、verify を実行する前に、その change の trace.md と差分仕様（`specs/` の下の `spec.md`）を読み、それぞれの change のディレクトリからのパス・内容・SHA-256 のハッシュを、証拠の記録の `documents` に保存する SHALL。
 
 Source: REQ-127
 
@@ -88,7 +88,7 @@ Source: REQ-127
 - **THEN** 記録の `documents` に、`trace.md` と `specs/x/spec.md` のパス・そのときの内容・内容の SHA-256 が入る
 
 ### Requirement: 検査のあいだの変更
-`loomake trace record` は、verify を実行する前と後で、HEAD のコミット、作業ツリーの未コミットの変更（`.gitignore` で除外したファイルを含まない）、保存する文書のハッシュを比べる SHALL。どれかが変わっていれば、記録せずに、変わったことを日本語で表示し、終了コード 1 を返す SHALL。
+`--effort` を指定しない `loomake trace record` は、verify を実行する前と後で、HEAD のコミット、作業ツリーの未コミットの変更（`.gitignore` で除外したファイルを含まない）、保存する文書のハッシュを比べる SHALL。どれかが変わっていれば、記録せずに、変わったことを日本語で表示し、終了コード 1 を返す SHALL。
 
 Source: REQ-128
 
