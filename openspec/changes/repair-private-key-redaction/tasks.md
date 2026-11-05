@@ -6,7 +6,7 @@
 
 ## 2. 全体の確認
 
-- [ ] 2.1 `pnpm -s verify --change repair-private-key-redaction --done --scope local` を終了 0 にし、要件とテストの対応と全タスクの完了を確認する <!-- loomake:gate=done -->
+- [x] 2.1 `pnpm -s verify --change repair-private-key-redaction --done --scope local` を終了 0 にし、要件とテストの対応と全タスクの完了を確認する <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
