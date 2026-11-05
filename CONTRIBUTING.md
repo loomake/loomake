@@ -34,7 +34,7 @@ PRには、変更する問題と結果の動作、対象change、実行したゲ
 
 既存テストの削除・skip・期待値の変更、品質設定の緩和は承認なしに行わない。テストが要件に合っていないと思う場合も、実装へ合わせて書き換える前に、仕様と変更理由を示す。日本語の文書はyomiyasuで推敲する。
 
-PR本文には対象を `loomake-change: <change-id>` の行で明示する。対象がなければ `loomake-change: none` と書く。CIはUbuntu・macOS・Windowsで検査する。
+PR本文には対象を `loomake-change: <change-id>` の行で明示する。対象がなければ `loomake-change: none` と書く。CIはPRではUbuntuだけで検査し、main への push、毎日の定期実行、PRのラベル `ci:all-os` ではUbuntu・macOS・Windowsで検査する。
 
 ## 版と互換性
 
