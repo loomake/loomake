@@ -17,3 +17,9 @@ Claude Code 2.1.308 で観測したのは stream-json の result メッセージ
 ## codex.jsonl
 
 Codex rust-v0.166.0 の [exec_events.rs](https://github.com/openai/codex/blob/rust-v0.166.0/codex-rs/exec/src/exec_events.rs#L8-L141) の event と payload の型を基に合成した。usage の欄は object であることだけを検査し、値は返さない。最後の turn の text と errors だけを残す契約は最終補足設計 §3.5 に従う。
+
+## biome.json
+
+Biome 2.6.5 の [json.rs](https://github.com/biomejs/biome/blob/%40biomejs%2Fbiome%402.6.5/crates/biome_cli/src/reporter/json.rs#L15-L228) と [summary](https://github.com/biomejs/biome/blob/%40biomejs%2Fbiome%402.6.5/crates/biome_cli/src/reporter/mod.rs#L36-L131) を基に合成した。duration は debug build で省略されるため必須にしない。位置の 0/0 はファイル単位の診断で、通常の位置は 1 始まりである（json.rs:306–307、345–351）。
+
+診断は severity と verbose で絞られる（json.rs:280–290）。JSON reporter への max-diagnostics 適用と、GitHub Actions 上の ci mode の stdout が JSON だけになるかは未確認である。summary.diagnosticsNotPrinted は値をそのまま残し、全件取得を保証しない。

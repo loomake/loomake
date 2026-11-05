@@ -1,0 +1,5 @@
+{
+  "summary": {"errors":1,"warnings":0,"infos":0,"diagnosticsNotPrinted":3},
+  "diagnostics": [{"severity":"error","message":"合成の診断","category":"lint/suspicious/noDoubleEquals","location":{"path":"src/example.ts","start":{"line":2,"column":3},"end":{"line":2,"column":5}},"advices":[]}],
+  "command":"lint"
+}
