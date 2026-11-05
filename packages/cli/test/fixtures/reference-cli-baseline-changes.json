@@ -331,6 +331,133 @@
       "stream": "stdout",
       "from": "  --devcontainer      .devcontainer/devcontainer.json を置く",
       "to": "  --devcontainer      .devcontainer/devcontainer.json を置く\n  --yes               内容の違う同名のファイルを、確かめずにすべて上書きする\n  --keep-existing     既存の配置対象ファイルを残し、不足ファイルだけ置く"
+    },
+    {
+      "change": "trace-static-evaluation",
+      "requirement": "REQ-437",
+      "approval": "Q70-08（管理役採用、ADR0006）",
+      "reason": "既存操作とオプションを保持しevalを最後へ追加する",
+      "argv": [
+        [
+          "trace",
+          "--help"
+        ],
+        [
+          "trace",
+          "-h"
+        ],
+        [
+          "trace",
+          "constructor",
+          "--help"
+        ],
+        [
+          "trace",
+          "toString",
+          "--help"
+        ],
+        [
+          "trace",
+          "nothing",
+          "--help"
+        ]
+      ],
+      "stream": "stdout",
+      "from": "  --date YYYY-MM-DD   承認日。省くと今日の日付",
+      "to": "  --date YYYY-MM-DD   承認日。省くと今日の日付\n\n使い方: loomake trace eval\n既存の品質コマンドを手動で実行し、品質評価と要求・試行の履歴を保存する。",
+      "entry": 0
+    },
+    {
+      "change": "trace-static-evaluation",
+      "requirement": "REQ-437",
+      "approval": "Q70-08（管理役採用、ADR0006）",
+      "reason": "既存操作とオプションを保持しevalを最後へ追加する",
+      "argv": [
+        [
+          "trace"
+        ],
+        [
+          "trace",
+          "recrd"
+        ],
+        [
+          "trace",
+          "record"
+        ],
+        [
+          "trace",
+          "report"
+        ],
+        [
+          "trace",
+          "report",
+          "--change",
+          "x",
+          "--format",
+          "html"
+        ],
+        [
+          "trace",
+          "report",
+          "--change",
+          "x",
+          "--format",
+          "xml"
+        ],
+        [
+          "trace",
+          "answer"
+        ],
+        [
+          "trace",
+          "answer",
+          "--change",
+          "x",
+          "--question",
+          "Q-01"
+        ],
+        [
+          "trace",
+          "answer",
+          "--change",
+          "x",
+          "--question",
+          "Q-01",
+          "--by",
+          "x"
+        ],
+        [
+          "trace",
+          "approve"
+        ],
+        [
+          "trace",
+          "approve",
+          "--change",
+          "x",
+          "--assumption",
+          "A-01"
+        ]
+      ],
+      "stream": "stderr",
+      "from": "       loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]",
+      "to": "       loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]\n       loomake trace eval",
+      "entry": 1
+    },
+    {
+      "change": "trace-static-evaluation",
+      "requirement": "REQ-437",
+      "approval": "Q70-08（管理役採用、ADR0006）",
+      "reason": "既存操作とオプションを保持しevalを最後へ追加する",
+      "argv": [
+        [
+          "trace"
+        ]
+      ],
+      "stream": "stderr",
+      "from": "loomake trace: record・report・answer・approve のどれかを指定してください",
+      "to": "loomake trace: record・report・answer・approve・eval のどれかを指定してください",
+      "entry": 0
     }
   ]
 }

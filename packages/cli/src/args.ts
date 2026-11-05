@@ -65,6 +65,7 @@ const traceOperations = [
       { name: '--date', kind: 'value', label: '--date YYYY-MM-DD', description: '承認日。省くと今日の日付', required: '任意', defaultValue: '実行環境のローカル日付', choices: 'YYYY-MM-DDの実在する日' },
     ],
   },
+  { name: 'eval', usage: 'loomake trace eval', description: '既存の品質コマンドを手動で実行し、品質評価と要求・試行の履歴を保存する。', options: [] },
 ] as const satisfies readonly CliCommand[];
 
 /** CLIの受理名・候補順とヘルプ・リファレンスの生成元。配列順は解析候補の優先順。 */
@@ -96,7 +97,7 @@ export const CLI_COMMANDS = [
   {
     name: 'trace', usage: traceOperations.map((operation) => operation.usage).join('\n       '),
     summary: '証拠を記録し（record）、リリースレポートを出す（report）。確認事項の回答（answer）と仮定の承認（approve）を書く',
-    description: 'record・report・answer・approveの操作を指定する。', options: [], operations: traceOperations,
+    description: 'record・report・answer・approve・evalの操作を指定する。', options: [], operations: traceOperations,
   },
   {
     name: 'run', usage: 'loomake run --change <id> [--engine claude-code] [--dry-run] [--skip-permissions]',
