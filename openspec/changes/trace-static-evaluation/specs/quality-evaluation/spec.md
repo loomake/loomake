@@ -3,7 +3,7 @@
 ## ADDED Requirements
 
 ### Requirement: 手動の品質評価の実行
-`loomake trace eval` は quality.yaml と設定済みの品質コマンドを読み、前回のテストレポートと `.loomake/coverage/coverage-summary.json` を消してからコマンドを一度実行する SHALL。REQ-442で許可する帳簿とロック以外に未コミットの変更があるとき、実行中に HEAD・基準・作業ツリーが変わるときは保存せず1を返す MUST。時間切れ・中断・実行不能は3、品質ファイルの誤りは2を返す MUST。履歴には保存せず、開始済みの失敗試行はREQ-441で記録する SHALL。
+`loomake trace eval` は quality.yaml と設定済みの品質コマンドを読み、前回のテストレポートと `.loomake/coverage/coverage-summary.json` を消してからコマンドを一度実行する SHALL。REQ-442で許可する帳簿とロック以外に未コミットの変更があるとき、実行中に HEAD・基準・作業ツリーが変わるときは保存せず1を返す MUST。品質コマンドの終わり方を実行経路から受け取り、正常に終わらない実行のreceiptを作らない MUST。失敗したtestの件数は実測済みproducer/版の既存レポートで全件実行を照合できた場合だけ測定し、途中停止や未確認はコマンド成否を残して未評価とする SHALL。終了0も明示的な不完全性を拒否する MUST。時間切れ・中断・実行不能は3、品質ファイルの誤りは2を返す MUST。履歴には保存せず、開始済みの失敗試行はREQ-441で記録する SHALL。
 
 Source: REQ-429
 
@@ -20,8 +20,16 @@ Source: REQ-429
 - **THEN** 日本語の診断を出して2を返し、品質コマンドを実行せず保存しない
 
 #### Scenario: コマンドを実行しきれない
-- **WHEN** 品質コマンドが時間切れ・中断・起動失敗になる
+- **WHEN** 品質コマンドが時間切れ・中断・起動失敗・signal・出力上限・通知欠落で正常に終わらない
 - **THEN** 3を返しhistoryと索引を変えず、開始済みの試行をattemptsへ失敗の分類とともに残す。未実施を成功した測定にしない
+
+#### Scenario: 正常に終わったテストの失敗を数える
+- **WHEN** testが非0、またはshellラッパーにより0で終了して失敗を報告し、実測済みVitest5.0.5の今回のレポートが全件実行と件数整合の条件Eを満たす
+- **THEN** コマンドの実終了に基づく成否と実際のtests_failedを保持し、保存成功なら0を返す。ラッパーの0を失敗件数0へ置き換えない
+
+#### Scenario: 途中停止または不完全性を否定できない
+- **WHEN** testのレポートにbail・保留・件数不整合・runtime error・wasInterrupted等がある、レポートがない、または失敗側のproducer/版が未実測である
+- **THEN** 終了0でも明示的な不完全性を拒否し、receiptはnull、testとcoverageはnot_run・値なしで未評価とし、コマンド成否を保存して0を返す。終了コードから件数を作らず、全hidden bailを排除したとは扱わない
 
 ### Requirement: 品質判定と利用時品質の分離
 評価は kit の既存の四値判定と集約を使い、合格に必要な証拠と参考指標を分ける SHALL。製品品質から利用時品質の観測や PASS を推論せず、両者を別々に集計する MUST。blocking が true で PASS・NOT_APPLICABLE でない項目は blockingUnmet に残し、ほかの合格で相殺しない SHALL。

@@ -30,3 +30,7 @@ traceの評価・帳簿・要求状態、CLIの共通定義・信号処理・ル
 ## Non-goals and transfer
 
 C1 REQ-430は既存仕様で充足。C3のstatusはc3-transfer.mdに原文と未実装タスクを残し、C2受入後に別changeとして進める。定期起動、Actions一覧照合、外部計測、利用者評価、工数自動推定、Issue/PR取得・投稿、履歴切り出しと長期保管を含めない。固定WBSは変更せず、C2だけで#70を閉じない。
+
+## Prerequisite
+
+品質コマンドの任意通知APIは独立した`expose-quality-command-outcomes`（REQ-455/456）を先に通常L3で受け入れる。C2はそのmain受入・同期archiveまでQ70-21で実装を止める。元の全要件・全Scenarioを保持し、前提の完了をC2の部分受入として扱わない。

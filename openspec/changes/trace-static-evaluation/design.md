@@ -105,10 +105,11 @@ Issue #70は既存品質コマンドの値だけを手動で評価する。追�
    - qualitySha が違えば、`unrecoverable(basis-changed)` で 1。
 6. started（runId と attempt を採番）を追記し、eval.lock の token に runId を書き込みます。
 7. **作業ツリーの検査**（3.6 の許可リスト）。汚れていれば attempts に `dirty`、requests に `failed` を書いて 1。
-8. テストのレポートとカバレッジを消してから `runVerify({root})` を実行します。その直後に `await setImmediate`（`node:timers/promises`）で、溜まっていた信号の処理を走らせます。
+8. テストのレポートとカバレッジを消し、開始時刻を記録してから `runVerify({root, progress, onCommand})` を一度だけ実行し、終わり方を受け取ります。終了時刻を取り、直後に `await setImmediate`（`node:timers/promises`）で溜まっていた信号の処理を走らせます。前提APIは別change `expose-quality-command-outcomes` の受入後に使います。
 9. **事後の検査**：
    - 中断（`signal.aborted`）なら `interrupted`、その要求は `cancelled(phase:running)` にして **3**。
-   - 時間切れ・起動失敗なら `timeout` か `launch`、`failed` にして 3。
+   - 通知のsignal・interrupted・timeoutは中断または時間切れ、error・output・通知欠落はlaunchとし、開始済みの失敗試行とfailedを残して3。receiptはnullです。
+   - すべて数値終了でも、testの完全性は下記の条件Eで別に照合します。bail・部分レポート・未確認ならreceipt=nullとし、コマンドの成否を保持して未評価の結果を保存します。
    - HEAD・基準・作業ツリー・帳簿のバイト列が変わっていれば `changed`、`failed` にして 1。
    - どの場合も history には書きません。
 10. **保存**：
@@ -195,6 +196,30 @@ C1のStaticMetricReceiptは完了済みの品質実行からだけ作る。comma
 
 C2は採用済み設計の140〜175KB見込みを基礎に、計画と実装・境界試験を含め200KiB以内の通常PRとする。要件・試験・DoDを削らず、超過が見込まれれば管理役へ分割を提案する。C3の原文保存は製品のstatus実装を含まない。既存の公開JSON、品質設定、assert・skip・期限は変更しない。
 
-## 実装前に見つかった完了判定の確認事項
+## 完了通知とレポートの完全性（4d721b5d・P1・管理役採用）
 
-Q70-20は未回答であり、製品実装を止める。現行runVerifyのcommand checkは、spawnSyncのstatus:nullを通常の非0終了と同じFAILに畳む場合があり、返されたcompletedだけでは実行完了を裏づけられない。またbailと正常な検査未達の区別は通常の終了コードだけではできない。C1の未完了receipt=null契約を守るため、既存verifyへ完了通知を足すか、C2収集側が公開runExternalのstatus/signal/errorを取得して完了を照合するかを管理役へ提示した。未決の案を採用済み設計へ読み替えない。
+Q70-20はA′のrunVerify任意onCommand、Q70-20cはlaunch分類を採用した。前提`expose-quality-command-outcomes`を通常L3で先に受け入れ、同期archive後にC2を再開する。Q70-21はその確認まで未回答とし、C2仕様ゲートは不合格のまま製品実装を止める。実行順・期限・共有予算の分岐をtraceへ複製せず、期限なしrunExternalのInfinityを使わない。
+
+### 条件E
+
+管理役はQ70-20bのaを採用した。正常な失敗の件数を取得するには、実測済みのVitest5.0.5で次をすべて満たす必要がある。
+
+1. JSONオブジェクトでtestResults配列があり、失敗側ではsuccess:falseである。
+2. numTotalTests・numPassedTests・numFailedTests・numPendingTests・numTodoTestsが安全な整数で、assertionから数えた件数とすべて一致する。
+3. numRuntimeErrorTestSuitesは存在しないか0で、wasInterrupted:trueを含まない。
+4. assertionはpassed/failedのみ、各ファイルもpassed/failedかつ1件以上のassertionを持つ。skip/pending/todo/未知状態を含まない。
+5. producerと版を今回の実行で照合でき、P1実測済みのvitest5.0.5である。未知producer・未実測版・Jestの非0は未確認とする。
+
+exit0だけでは完全実行としない。success:false・failed>0・runtime error・wasInterrupted・件数不整合等があれば上記相当の照合を行い、不完全を拒否する。正常0にも明示的な不完全性を許さず、通常の整合した成功で意図してskipした試験はC1の件数規則どおり除外する。
+
+P1の通常失敗は6件（成功5・失敗1）でEを満たし、bail1はpendingと空ファイルがあるため不成立だった。shellの`|| true`では両方0になった。同じ3ファイルに対するこの実測は全hidden bail排除の証明ではなく、検出済みと称しない。Jestは未導入のためP2未実測で、正常0でも明示的な不完全性は拒否する。
+
+### receiptと履歴
+
+すべての設定済みコマンドにexited通知があり、testが正常0か条件Eを満たす正常失敗ならreceiptを作る。正常失敗はcommandsのfailedと実際のtests_failedを保持し、保存成功なら0。lint/typecheckの数値非0を実行不能と混同せず、error_countは取得不能なら未評価である。
+
+testがbail/部分/未確認ならreceipt=nullとし、commandsの事実を残して未評価を保存する。観測のdetailだけを「途中で止まった可能性を否定できないため、件数を測定していません（reason）」に差し替え、C1のstatus・値なし・evidence・公開APIは変えない。coverageも不完全なreceiptから採用しない。signal・timeout・interrupted・spawn error・output・通知欠落は失敗試行に残し、history/索引を保存しない。実collectorからC1へ渡るreceipt=nullを回帰試験で確認する。
+
+### 旧方針の失効と分割
+
+79b4d2aa §3.5手順8〜9のVerifyResultだけによる完了推定は本節で置き換える。4d721b5dの「終了0ならbailなし」はP1の反例から採用しない。通知APIはREQ-455/456の独立前提が所有し、C2親の全12要件・元35 Scenario・C3移管原文と未完タスクを保持する。C2の実装・完了ゲート・CI・独立レビューを前提changeの合格で代用しない。
