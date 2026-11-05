@@ -23,6 +23,8 @@ gate ジョブは PR の段階（AGENTS.md 2 章の L1・L2・L3）を先に決�
 - L1（文書だけ）：lint と `tests/doc-links.test.ts` を実行する。対象の change があれば `verify --change <id> --done` も実行し、なければ `verify` は呼ばない。L1 で、かつ tasks.md に完了した印が 1 つもない change（提案だけの PR）は、`--done` ではなく `--spec-only` で検査する。L2・L3 は完了数によらず常に `--done`。quality ジョブは品質コマンドを飛ばすので、文書を読むテストを実行するのは gate の doc-links だけになる
 - L2（試験・CI・開発基盤）：これまでどおり、対象の change があれば `verify --change <id> --done`、なければ `verify`（品質コマンドだけ）を実行する
 - L3（製品コードと Requirement の変更）：change が必須。`loomake-change: none` や change を特定できない PR は失敗する
+- L3 の例外「仕様適合の修正」：既存の Requirement どおりに直すだけのバグ修正は、ADR 0006 の 5 条件（既存 Requirement に書かれた振る舞い、対象の REQ ID を名前に入れた修正前失敗・修正後成功のテスト、`openspec/` を変えない、公開契約を変えない、PR 本文に印を書く）をすべて満たすときだけ、change なしで進められる。PR 本文には `loomake-change: none`・`loomake-route: spec-fix`・`loomake-req: REQ-xxx` を書く。独立 Opus レビューは 1 回で、`verify --done` は対象外。正本は ADR 0006 の「完成を早めるための規則変更」
+  - 注意：CI がこの経路を受け付けるのは、REQ-343 を変更する change（Issue #427）がマージされてからである。それまでは `spec-fix` を宣言しても ci-gate は通常の L3 として扱い、上の `loomake-change: none` の失敗になる
 
 change のゲート（`--done`・`--spec-only`）は `--json` で実行し、verify の終了コードではなく 2.0.0 の結果の JSON で合格を決める（REQ-318、`scripts/ci-gate.mjs` の `ciGateProblem`）。完了ゲートは対象の change と一致し、scope が ci、run.status が completed、要判断なし、verdict が PASS、不合格や証拠不足（`--skip-commands`）の検査がなく、検査が 0 件や全件 NOT_APPLICABLE でなく、完了ゲートの検査（`tasks.md`・`要件ごとのテスト`・`command: *`）を含み、終了コードが 0 のときだけ合格にする。履歴の 1.0.0、local の結果、仕様ゲートや品質コマンドだけの結果は、終了コードが 0 でも合格にしない。結果の JSON は標準エラーに写し、標準出力には段階の行だけを書く。
 
