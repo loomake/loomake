@@ -6,7 +6,7 @@
 |---|---|---|
 | [Issue #427](https://github.com/loomake/loomake/issues/427) と [L3 の決定](https://github.com/loomake/loomake/issues/427#issuecomment-6651349025) | PR #429 マージ後 | 2026-11-05 |
 | [ADR 0006](../../../docs/adr/0006-standing-approval-for-autonomous-delivery.md) | 施策 A〜D | 2026-11-05 |
-| 本会話の利用者の直接選択 | 指定 W1 案件の起票制限の一時除外・A20 の手動範囲と定期起動の後段への移動 | 2026-11-05 |
+| [本会話の利用者の直接選択（記録）](https://github.com/loomake/loomake/issues/121#issuecomment-6653027069) | 指定 W1 案件の起票制限の一時除外・A20 の手動範囲と定期起動の後段への移動 | 2026-11-05 |
 
 ## 要件台帳
 

@@ -56,7 +56,7 @@ Goal操作ツールが使えない、またはGoal作成が失敗した場合は
 
 リポジトリ全体で開いている PR のうち、作成から 24 時間以上たち、まだマージ条件を満たしていないもの（Draft か Ready かを問わない）が 2 本以上あるときは、新しい L3 PR を起こさない。先にそのどれかを受け入れる（マージかクローズ）か、分割する。 ただし、2026-11-05 に利用者が直接指定した W1 案件の一時除外は、[ADR 0006 の「W1 の起票制限の一時除外と A20 の扱い」](../../../docs/adr/0006-standing-approval-for-autonomous-delivery.md)に従う。
 
-仕様どおりに直すだけのバグ修正の経路（仕様適合の修正）は、条件と手続きを ADR 0006 の「完成を早めるための規則変更」に従う。CI が受け付けるのは Issue #427 のマージ後なので、それまでは使わない。 証跡ブロックの `route:` には `normal` とし、`design:` は `省略 approval=docs/adr/0006-standing-approval-for-autonomous-delivery.md#完成を早めるための規則変更利用者決定2026-11-05` と書く。品質判定が終わる前は `quality: 未実施`、終わったら `quality: 実施済み verify=対象外 ci=<必須CIのrun-URL>（change なし）` と書く。`ci=` には `https://github.com/<owner>/<repo>/actions/runs/<数字>` の形の URL を使う。証跡の経路と PR 本文の `loomake-route: spec-fix` は別の欄である。
+仕様どおりに直すだけのバグ修正の経路（仕様適合の修正）は、条件と手続きを ADR 0006 の「完成を早めるための規則変更」に従う。CI が受け付けるのは Issue #427 のマージ後なので、それまでは使わない。 証跡ブロックの `route:` には `normal（仕様適合の修正）` とし、`design:` は `省略 approval=docs/adr/0006-standing-approval-for-autonomous-delivery.md#完成を早めるための規則変更利用者決定2026-11-05` と書く。品質判定が終わる前は `quality: 未実施`、終わったら `quality: 実施済み verify=対象外 ci=<必須CIのrun-URL>（change なし）` と書く。`ci=` には `https://github.com/<owner>/<repo>/actions/runs/<数字>` の形の URL を使う。証跡の経路と PR 本文の `loomake-route: spec-fix` は別の欄である。
 
 担当を変えるときは、前の担当の作業を止めたことを確かめ、引き継ぎ（どこまで済んだか、未 push の作業があるか）を `trace.md` か作業記録に書いてから始める。
 
