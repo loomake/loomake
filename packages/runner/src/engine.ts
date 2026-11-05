@@ -109,6 +109,21 @@ export function runClaude(call: EngineCall): Promise<EngineResult> {
     let timedOut = false;
     let aborted = false;
     let stopping: Promise<void> | undefined;
+    let closed = false;
+    let releaseRequested = false;
+    let outputTimer: NodeJS.Timeout | undefined;
+    // 離脱した子が pipe を持っていても、停止の後処理と猶予のあとに読み口を閉じる。
+    const releaseOutput = () => {
+      if (releaseRequested) return;
+      releaseRequested = true;
+      void (stopping ?? Promise.resolve()).then(() => {
+        if (closed) return;
+        outputTimer = setTimeout(() => {
+          child.stdout.destroy();
+          child.stderr.destroy();
+        }, 250);
+      });
+    };
     let outputBytes = 0;
     let outputLimitExceeded = false;
     const accept = (data: string, sink: (text: string) => void) => {
@@ -122,6 +137,7 @@ export function runClaude(call: EngineCall): Promise<EngineResult> {
       if (bytes.length > left) {
         outputLimitExceeded = true;
         stopping ??= stop(child);
+        releaseOutput();
       }
     };
     const diagnostics = createDiagnosticRedactor(call.onStderr ?? ((text) => { process.stderr.write(text); }));
@@ -136,6 +152,7 @@ export function runClaude(call: EngineCall): Promise<EngineResult> {
       if (!(left > 0)) {
         timedOut = true;
         stopping ??= stop(child);
+        releaseOutput();
         return;
       }
       timer = setTimeout(watchDeadline, Math.min(left, maxTimerMs));
@@ -144,6 +161,7 @@ export function runClaude(call: EngineCall): Promise<EngineResult> {
     const onAbort = () => {
       aborted = true;
       stopping ??= stop(child);
+      releaseOutput();
     };
     call.signal?.addEventListener('abort', onAbort, { once: true });
     const finishMonitoring = () => {
@@ -154,10 +172,13 @@ export function runClaude(call: EngineCall): Promise<EngineResult> {
       if (isWindows) return;
       finishMonitoring();
       stopping ??= stop(child, true);
+      releaseOutput();
     });
     child.on('error', () => {});
     if (call.signal?.aborted) onAbort();
     child.on('close', (code) => void (async () => {
+      closed = true;
+      clearTimeout(outputTimer);
       finishMonitoring();
       await stopping;
       diagnostics.end();
