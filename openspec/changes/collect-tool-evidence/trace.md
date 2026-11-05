@@ -58,3 +58,9 @@ Claude --output-format json の実 fixture は未観測で、stream-json の res
 管理役 root は 2026-11-06 JST に、独立 Opus R1（ffa05896-bf6e-4b61-b54b-546f7ce18345、actual claude-opus-5-5、head 651f53ff、重大 0・軽微 1・情報 4）の軽微 M1 を P3 より前に修理すると決定した。既存 REQ-450 の全返却文字列の保証に従い、stderr 全文の置換後に UTF-16 を分断せず末尾 4096 文字を取り、切り口で新たに一致する既知の形も再置換する。規範・公開型・受理形式・30 Scenario は変更しない。
 
 情報 I1 は非公開 helper 2 名を独立した型エラーで検査するよう強化する。I2 の共有期限・timeout・予算・品質設定は変えず、実際の 3 OS CI を管理役が確認する。I3 の Codex 最後の turn の扱いは現仕様どおりで P3 の注意点に残し、I4 の object でない request は列挙した入力検査の範囲外として変更しない。初回 R1 の原記録を保持し、製品修理後は通常の完了検証、別担当の自己レビュー、Opus R2 を行う。
+
+## PR #460 の CI fixture 保守
+
+管理役 root は 2026-11-06 JST に ADR 0005 の開発基盤保守として、ci-gate-process の初期 Git リポジトリを一度だけ作り、ケースごとに .git を含めてファイル単位でコピーする方針を採用した。trusted-git-objects の後始末も既存の removeWithRetry を使う。実際の gate・Git・検証 CLI の子プロセス、全ケースの入力・期待値・制限時間は保つ。製品コード・仕様・30 Scenario・設定は変更しない。
+
+初回 Windows CI の EPERM と、同じ head の再試行で起きた 4 件の 15000 ms 超過は別々の観測として残す。今回の保守が Windows の時間内に収まるかは、次の実 CI で確認する。根本原因を特定したとは扱わない。独立調査は .loomake/ci-blocker460/independent.md に保持する。

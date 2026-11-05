@@ -32,3 +32,5 @@
 - [x] 5.1 REQ-450 の stderr 切り口で既知の形が現れる回帰試験の失敗を確認し、全文の置換・4096 文字の上限・UTF-16 境界を保って切り出し後も置換する。
 - [x] 5.2 公開 consumer の requirementIds・errorLine の非公開検査を別々にし、型・対象試験・pack した配布物を確認する。
 - [x] 5.3 通常の `pnpm -s verify --change collect-tool-evidence --done --scope local --json` を clean head で通し、R1 の修理と検証を同じ journal・PR 本文案へ記録する。 <!-- loomake:gate=done -->
+- [x] 5.4 PR #460 の試験 fixture を保守し、各ケースを独立した Git リポジトリへコピーする。既存の入力・期待値・制限時間を保ち、後始末に既存の有界再試行を使う。
+- [ ] 5.5 fixture の独立性・全 94 ケース・REQ-376・型・lint を確認し、clean head で通常の完了ゲートを通す。 <!-- loomake:gate=done -->
