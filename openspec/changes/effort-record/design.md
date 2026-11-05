@@ -37,7 +37,7 @@ traceは同期の `effortProblem` と `serializeEffort` で保存する値を検
 
 noteは入力も最終置換後もUnicode codepointで500文字以内とし、改行とUnicodeの制御文字を拒否する。原文の501文字を置換で短くして受理することはしない。CLIの値付きオプションの両構文と最後の値を使う規則は既存parseOptionsを使う。`--scope` の併用やeffortなしの付帯オプションは、外部操作の前に拒否する。
 
-CLIリファレンスは `args.ts` の同じ表から `pnpm build && node scripts/generate-cli-reference.mjs` で再生成し、`--check` と既存 `tests/cli-reference.test.ts` で照合する。CLI基準原本・全旧assertは保持する。新5オプションのため、既存の承認済み差分台帳へREQ-466・Q-09の具体的help差分を追記し、オプション総数の検査は旧27と新5を明示して32へ更新する。未知decisionの禁止検査は正確な新トークン `--decisions` だけを除いた投影へ維持し、新トークンの存在も検査する。これは追加契約の整合であり、旧オプションを削らない。受理名の固定配列にも同じ新5個だけを追加し、単語境界を持つ正確な `--decisions` 以外の類似名は拒否する。
+CLIリファレンスは `args.ts` の同じ表から `pnpm build && node scripts/generate-cli-reference.mjs` で再生成し、`--check` と既存 `tests/cli-reference.test.ts` で照合する。CLI基準原本・全旧assertは保持する。新5オプションのため、既存の承認済み差分台帳へREQ-466・Q-09の具体的help差分を追記し、オプション総数の検査は旧27と新5を明示して32へ更新する。未知decisionの禁止検査は正確な新トークン `--decisions` だけを除いた投影へ維持し、新トークンの存在も検査する。これは追加契約の整合であり、旧オプションを削らない。旧CLIのrecord usage全文検査にも同じ新5個のsuffixだけを追加する。受理名の固定配列にも同じ新5個だけを追加し、単語境界を持つ正確な `--decisions` 以外の類似名は拒否する。
 
 ### Opus案の不整合をどう整理したか
 
