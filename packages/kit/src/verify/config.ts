@@ -126,7 +126,7 @@ export function assertReportTarget(root: string, report: string): void {
 
 /** gitignore のパターン文字を引用し、ルートの一つのファイルを除外する。 */
 export function reportIgnoreLine(report: string): string {
-  let line = report.replace(/[\\*?[]/g, '\\$&').replace(/^[#!]/, '\\$&').replace(/^ +| +$/g, (spaces) => spaces.replace(/ /g, '\\ '));
+  let line = report.replace(/[\\*?[]/g, '\\$&').replace(/^[#!]/, '\\$&').replace(/^ +| +$/g, (spaces) => '\\ '.repeat(spaces.length));
   if (!report.includes('/')) line = `/${line}`;
   return line;
 }
