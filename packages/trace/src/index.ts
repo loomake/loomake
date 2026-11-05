@@ -17,3 +17,7 @@ export type { EvidenceSummary, SummaryArtifact, SummaryGap } from '@loomake/core
 export { parseDuration, parseEffortOption, parseCost } from './effort-input.js';
 export { runEffortRecord } from './effort-record.js';
 export type { EffortRecordOptions } from './effort-record.js';
+export { runReuse } from './reuse.js';
+export type { ReuseOptions, ReuseResult, ReuseOutcome, ReuseReason, ReuseReasonCode } from './reuse.js';
+export { REUSE_RECORD_VERSION, reuseRecordProblem } from './reuse-record.js';
+export type { ReuseRecord } from './reuse-record.js';

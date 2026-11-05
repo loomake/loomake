@@ -153,3 +153,22 @@ export function consumeSummaryArtifact(artifact: SummaryArtifact, bytes: Uint8Ar
   const schemas: ReturnType<typeof loadSummarySchemas> = loadSummarySchemas();
   return { checked, retention, schemas };
 }
+
+// REQ-473/475/476: 配布した宣言だけから追加の全型と関数を使う。
+import { readEvidenceRange, createGitEvidenceReader, type EvidenceRangeEntry, type EvidenceRangeReasonCode, type EvidenceRangeReason, type EvidenceRangeOptions, type EvidenceRange, type GitTreeLookup, type GitBlobText, type GitEvidenceReader } from '@loomake/kit';
+import { runReuse, reuseRecordProblem, REUSE_RECORD_VERSION, type ReuseOptions, type ReuseResult, type ReuseOutcome, type ReuseReason, type ReuseReasonCode, type ReuseRecord } from '@loomake/trace';
+export type EvidenceRangeReturn = Assert<Equal<ReturnType<typeof readEvidenceRange>, EvidenceRange>>;
+export type EvidenceRangeArgument = Assert<Equal<Parameters<typeof readEvidenceRange>[0], EvidenceRangeOptions>>;
+export type GitEvidenceReaderReturn = Assert<Equal<ReturnType<typeof createGitEvidenceReader>, GitEvidenceReader>>;
+export type GitTreeReturn = Assert<Equal<ReturnType<GitEvidenceReader['treeEntry']>, GitTreeLookup>>;
+export type GitBlobReturn = Assert<Equal<ReturnType<GitEvidenceReader['readText']>, GitBlobText>>;
+export type EvidenceEntryContract = Assert<Equal<Extract<EvidenceRange, { allowed: true }>['entries'][number], EvidenceRangeEntry>>;
+export type EvidenceReasonContract = Assert<Equal<Extract<EvidenceRange, { allowed: false }>['reasons'][number], EvidenceRangeReason>>;
+export type EvidenceReasonCodeContract = Assert<Equal<EvidenceRangeReason['code'], EvidenceRangeReasonCode>>;
+export type ReuseReturn = Assert<Equal<ReturnType<typeof runReuse>, ReuseResult>>;
+export type ReuseArgument = Assert<Equal<Parameters<typeof runReuse>[0], ReuseOptions>>;
+export type ReuseProblemReturn = Assert<Equal<ReturnType<typeof reuseRecordProblem>, string | undefined>>;
+export type ReuseOutcomeContract = Assert<Equal<ReuseResult['outcome'], ReuseOutcome>>;
+export type ReuseReasonContract = Assert<Equal<ReuseResult['reasons'][number], ReuseReason>>;
+export type ReuseReasonCodeContract = Assert<Equal<ReuseReason['code'], ReuseReasonCode>>;
+export type ReuseVersionContract = Assert<Equal<ReuseRecord['reuseVersion'], typeof REUSE_RECORD_VERSION>>;

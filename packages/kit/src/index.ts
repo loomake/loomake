@@ -43,3 +43,5 @@ export { InputReadFailure } from './runtime/errors.js';
 export { basisHash } from './verify/quality-receipt.js';
 export { checkArtifactBody, artifactRetention } from './verify/artifact-body.js';
 export type { ArtifactBodyCheck, ArtifactRetentionResult } from './verify/artifact-body.js';
+export { readEvidenceRange, createGitEvidenceReader } from './verify/trusted/evidence-range.js';
+export type { EvidenceRangeEntry, EvidenceRangeReasonCode, EvidenceRangeReason, EvidenceRangeOptions, EvidenceRange, GitTreeLookup, GitBlobText, GitEvidenceReader } from './verify/trusted/evidence-range.js';

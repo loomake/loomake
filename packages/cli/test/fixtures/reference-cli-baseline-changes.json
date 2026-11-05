@@ -543,6 +543,150 @@
       "entry": 1,
       "from": "使い方: loomake trace record --change <id> [--scope local|ci]",
       "to": "使い方: loomake trace record --change <id> [--scope local|ci] [--effort <時間> [--decisions <n>] [--attempts <n>] [--cost <区分:値,...>] [--note <文>]]"
+    },
+    {
+      "change": "evidence-only-reuse",
+      "requirement": "REQ-476",
+      "approval": "Q-08（ADR 0006、管理役採用、2026-11-06 JST）",
+      "reason": "trace reuse の公開入口を追加する。既存の行を保ち5つのオプションを表示する",
+      "argv": [
+        [
+          "trace"
+        ],
+        [
+          "trace",
+          "recrd"
+        ],
+        [
+          "trace",
+          "record"
+        ],
+        [
+          "trace",
+          "report"
+        ],
+        [
+          "trace",
+          "report",
+          "--change",
+          "x",
+          "--format",
+          "html"
+        ],
+        [
+          "trace",
+          "report",
+          "--change",
+          "x",
+          "--format",
+          "xml"
+        ],
+        [
+          "trace",
+          "answer"
+        ],
+        [
+          "trace",
+          "answer",
+          "--change",
+          "x",
+          "--question",
+          "Q-01"
+        ],
+        [
+          "trace",
+          "answer",
+          "--change",
+          "x",
+          "--question",
+          "Q-01",
+          "--by",
+          "x"
+        ],
+        [
+          "trace",
+          "approve"
+        ],
+        [
+          "trace",
+          "approve",
+          "--change",
+          "x",
+          "--assumption",
+          "A-01"
+        ]
+      ],
+      "from": "       loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]",
+      "to": "       loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]\n       loomake trace reuse --change <id> --summary <path> --anchor <file> [--scope local|ci] [--json]",
+      "stream": "stderr",
+      "entry": 1
+    },
+    {
+      "change": "evidence-only-reuse",
+      "requirement": "REQ-476",
+      "approval": "Q-08（ADR 0006、管理役採用、2026-11-06 JST）",
+      "reason": "trace reuse の公開入口を追加する。既存の行を保ち5つのオプションを表示する",
+      "argv": [
+        [
+          "trace",
+          "--help"
+        ],
+        [
+          "trace",
+          "-h"
+        ],
+        [
+          "trace",
+          "constructor",
+          "--help"
+        ],
+        [
+          "trace",
+          "toString",
+          "--help"
+        ],
+        [
+          "trace",
+          "nothing",
+          "--help"
+        ]
+      ],
+      "from": "  --date YYYY-MM-DD   承認日。省くと今日の日付",
+      "to": "  --date YYYY-MM-DD   承認日。省くと今日の日付\n\n使い方: loomake trace reuse --change <id> --summary <path> --anchor <file> [--scope local|ci] [--json]\n証跡だけの差分なら、外部の信頼値で照合した要約を品質コマンドなしで再利用して .loomake/evidence/<change-id>/reuse/ に記録する。混在や環境の違いは再検証し、要約の改変は人へ差し戻す。\n\nオプション:\n  --change <id>       対象の change\n  --summary <path>    target時点の要約のrepo相対パス（.loomake/evidence/<id>/<日時>-<12桁>.json）\n  --anchor <file>     repo外で凍結した信頼値JSON。真正性は確かめない\n  --scope local|ci    再検証するときのverifyの範囲\n  --json              結果のJSONだけを標準出力へ出す",
+      "stream": "stdout",
+      "entry": 0
+    },
+    {
+      "change": "evidence-only-reuse",
+      "requirement": "REQ-476",
+      "approval": "Q-08（ADR 0006、管理役採用、2026-11-06 JST）",
+      "reason": "trace reuse の公開入口を追加する。既存の行を保ち5つのオプションを表示する",
+      "argv": [
+        [
+          "--help"
+        ],
+        [
+          "-h"
+        ]
+      ],
+      "from": "  trace    証拠を記録し（record）、リリースレポートを出す（report）。確認事項の回答（answer）と仮定の承認（approve）を書く",
+      "to": "  trace    証拠を記録し（record）、リリースレポートを出す（report）。確認事項の回答（answer）と仮定の承認（approve）を書く。証跡だけの差分なら要約を再利用する（reuse）",
+      "stream": "stdout"
+    },
+    {
+      "change": "evidence-only-reuse",
+      "requirement": "REQ-476",
+      "approval": "Q-08（ADR 0006、管理役採用、2026-11-06 JST）",
+      "reason": "trace reuse の公開入口を追加する。既存の行を保ち5つのオプションを表示する",
+      "argv": [
+        [
+          "trace"
+        ]
+      ],
+      "from": "loomake trace: record・report・answer・approve のどれかを指定してください",
+      "to": "loomake trace: record・report・answer・approve・reuse のどれかを指定してください",
+      "stream": "stderr",
+      "entry": 0
     }
   ]
 }

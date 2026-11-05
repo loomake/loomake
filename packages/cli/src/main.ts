@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { CHANGE_ID, RuntimeFailure, UsageError, maskValue, formatVerifyResult, loadVerifyQualitySchema, runDoctor, runInit, runVerify, verifyAbortedResult, verifyExitCode } from '@loomake/kit';
 import { runRun } from '@loomake/runner';
-import { parseCost, runEffortRecord, runAgreement, runRecord, runReport } from '@loomake/trace';
+import { parseCost, runReuse, runEffortRecord, runAgreement, runRecord, runReport } from '@loomake/trace';
 import { COMMANDS, HELP, SCOPES, USAGE, commandDefinition, commandHelp, didYouMean, isHelp, isVersion, optionSpec, parseOptions, traceOperation, type Command } from './args.js';
 
 export type Io = {
@@ -143,9 +143,10 @@ async function verify(args: string[], io: Io): Promise<number> {
 async function trace(args: string[], io: Io): Promise<number> {
   const [sub, ...rest] = args;
   const subs = commandDefinition('trace').operations?.map((operation) => operation.name) ?? [];
+  if (sub === 'reuse') return reuse(rest, io);
   if (sub === 'answer' || sub === 'approve') return agreement(sub, rest, io);
   if (sub !== 'record' && sub !== 'report') {
-    throw new UsageError(sub ? `知らないサブコマンドです：${sub}${didYouMean(sub, subs)}` : 'record・report・answer・approve のどれかを指定してください');
+    throw new UsageError(sub ? `知らないサブコマンドです：${sub}${didYouMean(sub, subs)}` : 'record・report・answer・approve・reuse のどれかを指定してください');
   }
   let values: Map<string, string>;
   try { values = parseOptions(rest, optionSpec(traceOperation(sub) ?? commandDefinition('trace'))).values; }
@@ -211,4 +212,16 @@ function run(args: string[], io: Io): Promise<number> {
     progress: io.stderr,
     signal: io.signal,
   });
+}
+
+async function reuse(args: string[], io: Io): Promise<number> {
+  const { values, flags } = parseOptions(args, optionSpec(traceOperation('reuse') ?? commandDefinition('trace')));
+  const changeId = values.get('--change');
+  const summaryPath = values.get('--summary');
+  const anchorPath = values.get('--anchor');
+  if (!changeId) throw new UsageError('--change <id> が必要です');
+  if (!summaryPath) throw new UsageError('--summary <path> が必要です');
+  if (!anchorPath) throw new UsageError('--anchor <file> が必要です');
+  return runReuse({ root: io.cwd, changeId, summaryPath, anchorPath, scope: scopeOption(values), json: flags.has('--json'),
+    qualitySchema: await loadVerifyQualitySchema(), stdout: io.stdout, progress: io.stderr }).exitCode;
 }

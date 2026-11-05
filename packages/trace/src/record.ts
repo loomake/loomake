@@ -53,6 +53,11 @@ const stamp = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, 'Z').replace(/[-
  * 検査を始める前の未コミットの変更と、検査のあいだの変化では記録せず 1 を返す
  */
 export function runRecord(options: RecordOptions): number {
+  return recordEvidence(options).code;
+}
+
+/** 内部の再検証呼出しへ記録先と実行の有無を返す。公開APIは変えない。 */
+export function recordEvidence(options: RecordOptions): { code: number; path?: string; verified: boolean } {
   const { changeId, stdout, progress = () => {}, now = () => new Date() } = options;
   const root = resolve(options.root);
   const config = loadConfig(root);
@@ -68,7 +73,7 @@ export function runRecord(options: RecordOptions): number {
   if (dirty.length) {
     stdout('作業ツリーに未コミットの変更があるので、記録しませんでした。コミットしてから、もう一度実行してください。');
     stdout(dirty.map((l) => `  ${l}`).join('\n'));
-    return 1;
+    return { code: 1, verified: false };
   }
   const sha = git(root, ['rev-parse', 'HEAD']).trim();
   const committedAt = git(root, ['show', '-s', '--format=%cI', 'HEAD']).trim();
@@ -98,12 +103,12 @@ export function runRecord(options: RecordOptions): number {
     stdout(`検査のあいだに${changed.join('・')}が変わったので、記録しませんでした。変わった理由を確かめてから、もう一度実行してください。`);
     const after = dirtyFiles();
     if (after.length) stdout(after.map((l) => `  ${l}`).join('\n'));
-    return 1;
+    return { code: 1, verified: true };
   }
   const observation = summaryObservation(root, config.tests.report, result, startedAt, finishedAt);
   if (observation.mismatch) {
     stdout('検証時と記録時で本体のハッシュが一致しないので、記録しませんでした。');
-    return 1;
+    return { code: 1, verified: true };
   }
   const extension = executionSummary(root, changeDir, result, startedAt, finishedAt, options.env ?? process.env);
   extension.artifacts = observation.artifacts;
@@ -124,12 +129,12 @@ export function runRecord(options: RecordOptions): number {
   const rel = `${EVIDENCE_DIR}/${changeId}/${stamp(recordedAt)}-${sha.slice(0, 12)}.json`;
   if (!publishEvidence(join(root, rel), json)) {
     stdout(`${rel} がすでにあるので、記録しませんでした。記録は書き換えません。`);
-    return 1;
+    return { code: 1, verified: true };
   }
   const code = verifyExitCode(result);
   stdout(`verify の結果（${resultLabel(result, code)}）を記録しました：${rel}`);
   stdout(`このファイルを git にコミットしてください：git add ${rel} && git commit`);
-  return code;
+  return { code, path: rel, verified: true };
 }
 
 /** 記録した結果の短い説明。local の完了を最終合格と呼ばない（REQ-311） */
