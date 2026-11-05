@@ -291,6 +291,8 @@ Source: REQ-143
 ### Requirement: kit の中の依存の向き
 `@loomake/kit` の実行の基盤（外部プロセスの監視・入力の上限・エラーの型など）は `packages/kit/src/runtime/` に置き、`node:` のモジュール・`@loomake/core`・`yaml`・`runtime/` の中のファイルだけを import する SHALL。機能（`verify/`・`init/`・`doctor/`）は、自分のディレクトリ・`runtime/`・設定の読み込み（`verify/config.ts`）だけを import し、ほかの機能を import しない SHALL。kit の外部のパッケージとして import してよいのは、`node:` のモジュール・`@loomake/core`・`yaml` だけとする SHALL。`@loomake/kit`（自分の公開の入口）やほかのパッケージを経由して import しない MUST。
 
+共通の既知の秘密の置換処理も runtime/ の責務に含め、同じ import の許可・禁止を適用する SHALL。
+
 Source: REQ-207
 
 #### Scenario: 基盤が機能を import しない
