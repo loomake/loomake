@@ -27,13 +27,13 @@ import {
 } from '@loomake/core';
 import { assembleVerifyResult } from './result.js';
 import { readDependencies } from './dependencies.js';
-import { assertReportTarget, assertChangeId, loadConfig, type LoomakeConfig } from './config.js';
+import { assertReportTarget, assertChangeId, loadVerifyConfig, type LoomakeConfig } from './config.js';
 import { QUALITY_FILE, readQualityFile, type QualitySchemaLike } from './quality-input.js';
 import { evaluateQualityConditions, qualitySubjectsGuard } from './policy/quality-conditions.js';
 import { observeTestReport, type TestReportReceipt } from './policy/test-report-observation.js';
 import { basisHash, findProducer, gitHead, readReport } from './quality-receipt.js';
 import { sha256Hex } from './hash.js';
-import { UsageError } from '../runtime/errors.js';
+import { InputReadFailure, RuntimeFailure, UsageError } from '../runtime/errors.js';
 import { createInputReader, JSON_LIMITS, type InputReader } from '../runtime/input.js';
 import { findChangeDir, resolveChangeDir, specFiles, toPosix, type ChangeLocation } from '../runtime/change-files.js';
 import { createArchiveInput } from './archive-input.js';
@@ -77,7 +77,7 @@ export const INTERRUPTED = '中断されたので止めました';
 
 
 /**
- * verify を実行して 2.0.0 の結果を返す（REQ-311）。使い方と設定の誤りは UsageError を投げる。
+ * verify を実行して 2.0.0 の結果を返す（REQ-311）。使い方と設定の誤りはUsageError、設定のOS読取失敗はRuntimeFailureを投げる。
  * 終了コードは verifyExitCode で決め、例外は verifyAbortedResult で aborted の結果にできる
  */
 export function runVerify(options: VerifyOptions): VerifyResult {
@@ -87,7 +87,11 @@ export function runVerify(options: VerifyOptions): VerifyResult {
   // 実パスのルートで動かし、相対パスはどちらのルートの中にあるかで作る
   const givenRoot = resolve(options.root);
   const root = existsSync(givenRoot) ? realpathSync(givenRoot) : givenRoot;
-  const config = loadConfig(root);
+  let config: LoomakeConfig;
+  try { config = loadVerifyConfig(root); } catch (error) {
+    if (error instanceof InputReadFailure) throw new RuntimeFailure(error.message, { cause: error });
+    throw error;
+  }
   const gate = changeId ? (options.gate ?? 'spec-only') : undefined;
   const scope: VerifyScope = options.scope ?? (gate === 'done' ? 'ci' : 'local');
   const checks: GateCheck[] = [];

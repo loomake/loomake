@@ -1,7 +1,7 @@
 import { StringDecoder } from 'node:string_decoder';
 import { closeSync, constants, fstatSync, lstatSync, openSync, opendirSync, readSync } from 'node:fs';
 import { join } from 'node:path';
-import { UsageError } from './errors.js';
+import { InputReadFailure, UsageError } from './errors.js';
 
 // Windows には O_NOFOLLOW・O_NONBLOCK がない。型は number だが、実行時は undefined になる
 const optionalFlag = (name: 'O_NOFOLLOW' | 'O_NONBLOCK'): number => (constants as Partial<Record<string, number>>)[name] ?? 0;
@@ -31,7 +31,7 @@ export function createInputReader(overrides: Partial<InputLimits> = {}): InputRe
   }
   let bytes = 0;
   let visited = 0;
-  const fail = (path: string, reason: string): never => { throw new UsageError(`入力を読み取れません：${reason}（${path}）`); };
+  const fail = (path: string, reason: string, Failure = UsageError, cause?: unknown): never => { throw new Failure(`入力を読み取れません：${reason}（${path}）`, cause === undefined ? undefined : { cause }); };
   const regular = (path: string, stats: NonNullable<ReturnType<typeof lstatSync>>, directory = false) => {
     if (stats.isSymbolicLink()) fail(path, 'シンボリックリンクは扱えません');
     if (directory ? !stats.isDirectory() : !stats.isFile()) fail(path, directory ? '通常のディレクトリではありません' : '通常のファイルではありません');
@@ -64,7 +64,9 @@ export function createInputReader(overrides: Partial<InputLimits> = {}): InputRe
         return Buffer.concat(chunks, size).toString('utf8');
       } catch (error) {
         if (error instanceof UsageError) throw error;
-        return fail(file, (error as Error).message);
+        // O_NOFOLLOWがリンクへの差し替えをELOOPで拒否した場合も、入力拒否の分類を保つ。
+        const Failure = (error as NodeJS.ErrnoException).code === 'ELOOP' ? UsageError : InputReadFailure;
+        return fail(file, (error as Error).message, Failure, error);
       } finally { if (fd !== undefined) closeSync(fd); }
     },
     readHead(file, maxBytes) {
