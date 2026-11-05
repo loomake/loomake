@@ -4,7 +4,7 @@
 
 ## 2. 修理
 
-- [ ] 2.1 runner の git 呼び出しをリテラルなパスの環境にそろえ、回帰・git 読み取り・証拠配置・既存ガードの試験を成功させる。runner の patch changeset を追加する（REQ-109・REQ-138）
+- [x] 2.1 runner の git 呼び出しをリテラルなパスの環境にそろえ、回帰・git 読み取り・証拠配置・既存ガードの試験を成功させる。runner の patch changeset を追加する（REQ-109・REQ-138）
 
 ## 3. 確認
 

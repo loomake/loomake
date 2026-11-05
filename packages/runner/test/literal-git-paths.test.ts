@@ -47,8 +47,11 @@ describe('git の名前をリテラルに扱うガード', () => {
     const snapshot = join(repo.base, 'git-environment.jsonl');
     repo.env.GIT_LITERAL_PATHSPECS = '0';
     repo.env.GIT_TERMINAL_PROMPT = '1';
+    repo.env.GIT_GLOB_PATHSPECS = '1';
+    repo.env.GIT_NOGLOB_PATHSPECS = '1';
+    repo.env.GIT_ICASE_PATHSPECS = '1';
     const cli = fakeCli(repo, 'git', {
-      when: `(()=>{fs.appendFileSync(${JSON.stringify(snapshot)},JSON.stringify({args,literal:process.env.GIT_LITERAL_PATHSPECS,prompt:process.env.GIT_TERMINAL_PROMPT})+String.fromCharCode(10));return false;})()`,
+      when: `(()=>{fs.appendFileSync(${JSON.stringify(snapshot)},JSON.stringify({args,literal:process.env.GIT_LITERAL_PATHSPECS,prompt:process.env.GIT_TERMINAL_PROMPT,glob:process.env.GIT_GLOB_PATHSPECS,noglob:process.env.GIT_NOGLOB_PATHSPECS,icase:process.env.GIT_ICASE_PATHSPECS})+String.fromCharCode(10));return false;})()`,
     });
     try {
       const evidence = `.loomake/evidence/${CHANGE}/evidence[one].json`;
@@ -66,17 +69,41 @@ describe('git の名前をリテラルに扱うガード', () => {
       expect(engineBaseline(repo.root, repo.env).head.branch).toBe('main');
       git(repo.root, repo.env, ['checkout', '-q', '--orphan', 'empty']);
       expect(readHead(repo.root, repo.env, true).sha).toBe('');
-      const calls = readFileSync(snapshot, 'utf8').trim().split('\n').map((line) => JSON.parse(line) as { args: string[]; literal: string; prompt: string });
+      const calls = readFileSync(snapshot, 'utf8').trim().split('\n').map((line) => JSON.parse(line) as { args: string[]; literal: string; prompt: string; glob: string; noglob: string; icase: string });
       expect(calls.length).toBeGreaterThanOrEqual(10);
-      for (const call of calls) expect(call).toMatchObject({ literal: '1', prompt: '0' });
+      for (const call of calls) expect(call).toMatchObject({
+        literal: call.args[0] === 'check-ignore' ? '0' : '1', prompt: '0', glob: '0', noglob: '0', icase: '0',
+      });
       expect(calls.some((call) => call.args[0] === 'check-ignore')).toBe(true);
       expect(calls.some((call) => call.args[0] === 'show')).toBe(true);
       expect(calls.some((call) => call.args[0] === 'config' && call.args.includes('--list'))).toBe(true);
       expect(calls.some((call) => call.args[0] === 'rev-parse' && call.args.includes('--verify'))).toBe(true);
       expect(repo.env.GIT_LITERAL_PATHSPECS).toBe('0');
       expect(repo.env.GIT_TERMINAL_PROMPT).toBe('1');
+      expect(repo.env.GIT_GLOB_PATHSPECS).toBe('1');
+      expect(repo.env.GIT_NOGLOB_PATHSPECS).toBe('1');
+      expect(repo.env.GIT_ICASE_PATHSPECS).toBe('1');
     } finally {
       cli.restore();
+      repo.cleanup();
+    }
+  });
+
+  it('[REQ-138] check-ignore は実名を判定し、pathspec の名前で別のファイルを選ばない', () => {
+    const repo = makeRepo();
+    try {
+      // check-ignore は存在しない名前も判定するため、Windows でもコロンを含む引数を検証できる。
+      repo.write('.gitignore', '/x.txt\n/plain.json\n/brackets[[]one].json\n/space name.json\n*ignored.json\n');
+      const ignored = ['x.txt', 'plain.json', 'brackets[one].json', 'space name.json',
+        ':(top)ignored.json', ':(glob)ignored.json', ':!ignored.json', ':/ignored.json'];
+      const allowed = ['other.txt', 'brackets[two].json', ':(top)x.txt', ':(glob)x.txt', ':!x.txt', ':/x.txt'];
+      repo.env.GIT_LITERAL_PATHSPECS = '1';
+      repo.env.GIT_GLOB_PATHSPECS = '1';
+      repo.env.GIT_NOGLOB_PATHSPECS = '1';
+      repo.env.GIT_ICASE_PATHSPECS = '1';
+      for (const file of ignored) expect(isIgnored(repo.root, repo.env, file), file).toBe(true);
+      for (const file of allowed) expect(isIgnored(repo.root, repo.env, file), file).toBe(false);
+    } finally {
       repo.cleanup();
     }
   });

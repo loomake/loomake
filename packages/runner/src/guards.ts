@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, lstatSync, readFileSync, readdirSync, readlinkSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { runExternal, UsageError } from '@loomake/kit';
-import { dirtyFiles, git, gitPlaces, readHead, type GitPlaces, type HeadRead } from './git.js';
+import { dirtyFiles, git, gitEnvironment, gitPlaces, readHead, type GitPlaces, type HeadRead } from './git.js';
 
 /** 不正な直し方として見つけたもの */
 export type GuardFinding = { file: string; reason: string };
@@ -41,7 +41,7 @@ const openspecPrefix = (dir: string) => `${dir.replace(/\\/g, '/').replace(/^\.\
 const isPackageJson = (f: string) => f.split('/').pop() === 'package.json';
 
 const scriptsOf = (root: string, env: NodeJS.ProcessEnv, rev: string, file: string): string => {
-  const r = runExternal('git', ['show', `${rev}:${file}`], { cwd: root, env });
+  const r = runExternal('git', ['show', `${rev}:${file}`], { cwd: root, env: gitEnvironment(env) });
   if (r.status !== 0) return '{}';
   try {
     return JSON.stringify((JSON.parse(r.stdout) as { scripts?: unknown }).scripts ?? {});
@@ -172,7 +172,7 @@ export function gitInternals(root: string, env: NodeJS.ProcessEnv, places?: GitP
   const hash = createHash('sha256');
   hash.update(existsSync(config) ? readFileSync(config) : '');
   // include の先・利用者全体・システム全体・worktree の設定も含めて、git が実際に使う設定を比べる（REQ-204）
-  hash.update('\0config\0').update(runExternal('git', ['config', '--list', '--show-origin', '-z'], { cwd: root, env }).stdout);
+  hash.update('\0config\0').update(runExternal('git', ['config', '--list', '--show-origin', '-z'], { cwd: root, env: gitEnvironment(env) }).stdout);
   if (existsSync(hooks) && statSync(hooks).isDirectory()) {
     for (const file of filesUnder(hooks)) hash.update(`\0${relative(hooks, file)}\0${entryDigest(file)}`);
   }

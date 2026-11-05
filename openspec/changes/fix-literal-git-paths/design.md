@@ -6,7 +6,7 @@
 
 - 既存の検出規則・差分表示・停止後の扱いを保ち、ファイル名の解釈だけを直す。
 - `git()` と直接 `runExternal('git', ...)` を呼ぶ経路に同じ git 環境を渡す。
-- git の引数、フックが動く操作の残り時間、環境のほかの値は変えない。
+- check-ignore の先頭コロンへの接頭辞を除き git の引数を保つ。フックが動く操作の残り時間、環境のほかの値は変えない。
 
 ## Decisions
 
@@ -24,3 +24,7 @@
 ## Migration Plan
 
 runner の patch changeset として配る。CLI オプション、公開 JSON、依存、利用者の設定の移行はない。
+
+## 確認済みの互換処理
+
+Q-414-01 は 2026-11-05 の利用者の回答で A が承認された。[提示差分](https://github.com/loomake/loomake/issues/414#issuecomment-6647986907) に従う。Git 2.56.0 では check-ignore に GIT_LITERAL_PATHSPECS=1 を渡すと終了コード 128 になる。承認された A はコピーした環境で通常経路を literal=1・GLOB/NOGLOB/ICASE=0 に固定し、check-ignore だけ literal=0 にして先頭コロンの名前へ ./ を付ける。普通の名前、4 種の魔法構文、角括弧、空白、改行、不存在のレポートと root 限定の除外を一時リポジトリで比較し、30 ケースの結果を .loomake/check-ignore-414-results.json に保存した。この処理で元の環境を変えずに実ファイル名を判定する。
