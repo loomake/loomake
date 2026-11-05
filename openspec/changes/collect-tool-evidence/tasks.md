@@ -15,7 +15,7 @@
 ## 3. kit の収集
 
 - [x] 3.1 collectToolOutput・3 つの引数生成関数と REQ-449 の 5 分類・共有予算・env・入力検査の試験を追加し、対象試験を通す。
-- [ ] 3.2 REQ-450 の stdout・stderr・limited・mask 失敗・例外の漏洩試験を追加し、対象試験を通す。
+- [x] 3.2 REQ-450 の stdout・stderr・limited・mask 失敗・例外の漏洩試験を追加し、対象試験を通す。
 
 ## 4. 統合と検証
 
