@@ -30,5 +30,7 @@ export type { QualityObservation, ChecksSummary, CiSummary } from './verify/poli
 export { FAILED_SUBJECTS_METRIC, TEST_REPORT_SOURCE, observeTestReport } from './verify/policy/test-report-observation.js';
 export type { TestReportOptions, TestReportReceipt } from './verify/policy/test-report-observation.js';
 export { sha256Hex } from './verify/hash.js';
+export { checkFixedSummary } from './verify/summary-integrity.js';
+export type { SummaryTrustAnchor, FixedSummaryProblemCode, FixedSummaryCheck } from './verify/summary-integrity.js';
 export { createBodyRecorder, type BodyContext, type ChaiLike } from './evidence/vitest-body.js';
 export { createBodyRunner } from './evidence/vitest-runner.js';
