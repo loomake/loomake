@@ -27,7 +27,7 @@ const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'obj
 
 const STATUSES: readonly TestCaseStatus[] = ['passed', 'failed', 'skipped', 'todo', 'pending'];
 const toStatus = (status: string): TestCaseStatus => STATUSES.find((item) => item === status) ?? 'other';
-const requirementIds = (fullName: string) => [...new Set([...fullName.matchAll(/\[(REQ-\d{3,})\]/g)].map((m) => m[1]))].sort();
+export const requirementIds = (fullName: string) => [...new Set([...fullName.matchAll(/\[(REQ-\d{3,})\]/g)].map((m) => m[1]))].sort();
 
 function checkShape(report: unknown): string | null {
   if (!isObject(report) || !Array.isArray(report.testResults)) return 'testResults の配列がありません';

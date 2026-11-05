@@ -34,6 +34,14 @@ JSON Schema は `@loomake/core/schema/quality-report.schema.json` から取得�
 
 保持処理は各公開スキーマの clone に適用する。利用側で `.clone()`・`.meta({...})`・`.describe('...')`・`.extend({...})` によって作った派生スキーマには、この保持処理は引き継がれない。公開型、既知項目の検証・既定値・診断の設定と配布 JSON Schema は維持する。
 
+## 外部ツールの出力の中立変換
+
+`parseGhChecks(file, text)`・`parseClaudeResult(file, text)`・`parseCodexEvents(file, text)`・`parseBiomeReport(file, text)`・`parsePlaywrightReport(file, text)` は、JSON または JSONL を `ParseResult<ToolObservation | null>` に変換する同期の純粋関数である。I/O や品質判定は行わず、ツールが報告した失敗と入力形式の誤りを区別する。入力形式の誤りでは value が null、errors が安全な ParseError 1 件になる。未知の欄は捨てる。
+
+`ToolObservation` は gh の checks、Claude・Codex の agent-result、Biome の diagnostics と summary、Playwright の tests・stats・errors を表す。終了コードから合否や件数は作らない。Playwright の flaky と期待した失敗は passed にしない。parser は秘密を置換しないため、保存には kit の `collectToolOutput` か既存の置換 API を使う。
+
+受理形式は gh 2.103.0、Codex 0.166.0、Biome 2.6.5、Playwright 1.64.1 の固定版の一次資料を基に定義した。Claude の json の実 fixture は未観測で、2.1.308 の stream-json の result の欄の型と、版を固定していない公式 docs を基に合成した。実ツールや将来の版との互換性を保証するものではない。合成 fixture の出典と限界は `test/tool-output/fixtures/PROVENANCE.md` に記す。
+
 ## 人の実作業時間の構造
 
 `EFFORT_SCHEMA_VERSION` は `1`。`await loadEffortSchema()` は `effortRecordSchema`・`effortMinutesSchema`・`effortCostSchema` を読み、`EffortRecord`・`EffortMinutes`・`EffortCost` はそれぞれから導出する。入口の import では Zod を読み込まない。Effort 専用の JSON Schema は追加せず、従来の12本と受入済みの判定要約用 JSON Schema を保持する。
