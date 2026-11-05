@@ -371,3 +371,17 @@ describe('品質 YAML の具体案と分割合意', () => {
     for (const text of ['まだ観測できない必須証拠', 'CI の完了ゲートが証拠不足', '案に添える']) expect(proposal, text).toContain(text);
   });
 });
+
+
+describe('合意した品質 YAML の反映と報告', () => {
+  const apply = section(skill, /合意した品質 YAML の反映/);
+  it('[REQ-410] 合意前は書かず、合意した既存更新と対象外の保持を分ける', () => {
+    for (const text of ['合意前には quality.yaml を書かず', '具体的に合意した差分だけ', '合意した既存値・ID の更新', '合意対象外の値・コメント・未知キー・順序・ID は保持']) expect(apply, text).toContain(text);
+  });
+  it('[REQ-410] 新IDの採番と予期しない衝突・読取不良での停止を指示する', () => {
+    for (const text of ['同じ接頭辞の既存最大番号の次', '無断で振り直さない', '未合意の変更が必要', '予期しない新 ID 衝突', '読取不能や version/model 不正', '書き換えず関連 REQ つき Q', '全面再整形はしない']) expect(apply, text).toContain(text);
+  });
+  it('[REQ-410] 不在時は合意済み全文で新規作成し、上書きinitを使わない', () => {
+    for (const text of ['不在時は合意した全文を新しく書き', '既存を上書きする init は使わない']) expect(apply, text).toContain(text);
+  });
+});
