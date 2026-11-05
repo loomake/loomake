@@ -54,7 +54,7 @@ Goal操作ツールが使えない、またはGoal作成が失敗した場合は
 
 サブエージェントの下書きや一時ファイルは、scratchpad の担当別フォルダ（`scratchpad/<担当>/`。例：`scratchpad/w5/`）に置く。scratchpad 直下の同じ名前のファイルを担当どうしで共用しない。
 
-リポジトリ全体で開いている PR のうち、作成から 24 時間以上たち、まだマージ条件を満たしていないもの（Draft か Ready かを問わない）が 2 本以上あるときは、新しい L3 PR を起こさない。先にそのどれかを受け入れる（マージかクローズ）か、分割する。
+リポジトリ全体で開いている PR のうち、作成から 24 時間以上たち、まだマージ条件を満たしていないもの（Draft か Ready かを問わない）が 2 本以上あるときは、新しい L3 PR を起こさない。先にそのどれかを受け入れる（マージかクローズ）か、分割する。 ただし、2026-11-05 に利用者が直接指定した W1 案件の一時除外は、[ADR 0006 の「W1 の起票制限の一時除外と A20 の扱い」](../../../docs/adr/0006-standing-approval-for-autonomous-delivery.md)に従う。
 
 仕様どおりに直すだけのバグ修正の経路（仕様適合の修正）は、条件と手続きを ADR 0006 の「完成を早めるための規則変更」に従う。CI が受け付けるのは Issue #427 のマージ後なので、それまでは使わない。 証跡ブロックの `route:` には `spec-fix` を書かず `normal` とし、`design:` は `省略 approval=docs/adr/0006-standing-approval-for-autonomous-delivery.md`、`quality:` は `verify=対象外（change なし）` と書く（PR 本文の `loomake-route: spec-fix` とは別物）。
 
