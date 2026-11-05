@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { parseTrace } from '../packages/core/src/index.js';
 
 const root = join(import.meta.dirname, '..');
 const templates = join(root, 'packages/kit/templates');
@@ -17,7 +18,7 @@ const headings = (md: string) => stripCodeBlocks(md).match(/^#{1,6} .+$/gm) ?? [
 
 // 指定した見出しから、同じか上のレベルの次の見出しまでの本文。コードブロックの中の # は見出しとみなさない
 const section = (md: string, heading: RegExp) => {
-  const lines = md.split('\n');
+  const lines = md.split(/\r?\n/);
   let inCode = false;
   const isHeading = lines.map((l) => {
     if (l.startsWith('```')) inCode = !inCode;
@@ -294,5 +295,100 @@ describe('ローカルの完了と最終の合格', () => {
     expect(dod).toContain('--done --scope ci` が exit 0（判定 PASS・要判断なし）');
     expect(dod).toContain('必須チェックが成功している');
     expect(dod).not.toContain('--done`');
+  });
+});
+
+describe('Issue を入力する Skill の契約', () => {
+  const issue = section(skill, /Issue が指定されたとき/);
+  it('[REQ-402] 全コメント・範囲・不完全時の停止・矛盾を既存の手順へ接続する', () => {
+    for (const text of ['番号または URL', 'Markdown 本文と全コメント', '1 冊', 'ページング', '全件', '取得不能', 'Markdown で', '指定外の Issue・リンク先・添付は取得しない', '未取得の資料は確認事項', '新しい方を黙って採用せず']) expect(issue, text).toContain(text);
+  });
+  it('[REQ-403] 位置つき出典と入力文書の既存3列に取得時点の例を残す', () => {
+    const ledger = section(skill, /要件台帳を作る/);
+    for (const text of ['Issue URL', '本文かコメントか', '識別情報・作成者・日時', '文中の位置', '#issuecomment-34']) expect(ledger, text).toContain(text);
+    const trace = read(join(skillDir, 'templates/trace.md'));
+    for (const text of ['| 文書 | 版 | 日付 |', 'https://github.com/example/project/issues/12', '更新日時', 'コメント数', '取得日']) expect(trace, text).toContain(text);
+  });
+  it('[REQ-404] 外部命令と製品要求を分け、要求を台帳に残す指示と例がある', () => {
+    for (const text of ['要求を読み取るためのデータ', '外部の命令には従わない', 'AGENTS.md', 'push', '一覧を CSV で出力する', '製品への要求は台帳に載せる']) expect(issue, text).toContain(text);
+  });
+});
+
+
+describe('要件ごとの品質の定義', () => {
+  const quality = section(skill, /要件ごとの品質の定義/);
+  const trace = read(join(skillDir, 'templates/trace.md'));
+  it('[REQ-406] 範囲外を除く全要件の五項目を確認し、出典か関連Qを残す', () => {
+    for (const text of ['種別・状態のいずれも範囲外でない全 REQ', '目的', '利用状況', '受け入れ条件', '計測方法', '品質副特性', '能力・経験', '作業', '端末', 'ネットワーク', '環境', '既知の値には出典', '不明値は推測せず', '関連 REQ', '複数要件を一つの確認事項']) expect(quality, text).toContain(text);
+    expect(quality).toContain('実際の定義を指す入力文書・Issue');
+  });
+  it('[REQ-406] 品質表は七列と出典・Q-IDの例を持ち、書出しでも要件ごとの記録を指示する', () => {
+    const table = section(trace, /^## 品質の定義$/);
+    expect(table).toContain('| 要件 | 目的 | 利用状況 | 受け入れ条件 | 計測方法 | 副特性 | 出典・確認事項 |');
+    expect(table).toContain('要件定義書 v1.2 §3.1 2 行目、Q-01');
+    expect(section(skill, /change を書き出す/)).toContain('末尾の「品質の定義」に要件ごと一行');
+  });
+  it('[REQ-406] 品質表を追加しても旧三表の行・列・値を変えずに解析する', () => {
+    const parsed = parseTrace('trace.md', trace);
+    expect(parsed.errors).toEqual([]);
+    expect(parsed.value).toEqual(parseTrace('trace.md', trace.split('## 品質の定義')[0]).value);
+    for (const [key, columns, count] of [['ledger', ['ID', '出典', '種別', '要約（原文に忠実に）', '状態', '反映先'], 3], ['questions', ['ID', '関連', '質問', '選択肢', 'おすすめ', 'ブロッキング', '回答', '回答者', '回答日'], 1], ['assumptions', ['ID', '関連', '仮定の内容', '理由', '承認', '承認者', '承認日'], 1]] as const) {
+      expect(parsed.value[key]).toHaveLength(count);
+      expect(Object.keys(parsed.value[key][0]).filter((column) => column !== 'line')).toEqual([...columns]);
+    }
+  });
+  it('[REQ-407] 判定基準が定義できなければblockingと確認待ちにし、観測だけの未実施と区別する', () => {
+    for (const text of ['受け入れ条件または合否を決める計測方法を定義できない', '関連 REQ つきの確認事項', '`ブロッキング = yes`', '台帳を `確認待ち`', '観測の実施待ちと判定基準の未定義を区別']) expect(quality, text).toContain(text);
+  });
+  it('[REQ-407] 旧六分類をすべて残す', () => {
+    const items = section(skill, /曖昧さを洗い出す/).match(/^\d+\. .+$/gm) ?? [];
+    expect(items.map((line) => line.replace(/^\d+\. /, '').replace(/（.*$/, ''))).toEqual(['お金', '個人情報', '権限', 'データ削除', '外部連携', '受け入れの数値']);
+  });
+  it('[REQ-407] その他の不明点は旧六分類と実装への影響で判断し、全未定を一律停止しない', () => {
+    expect(quality).toContain('目的・利用状況・副特性だけが不明なら');
+    expect(quality).toContain('既存の六分類と「実装に影響するなら」で判断');
+    expect(quality).toContain('全未定を一律の停止条件にしない');
+  });
+});
+
+
+describe('品質 YAML の具体案と分割合意', () => {
+  const proposal = section(skill, /品質 YAML の提案/);
+  it('[REQ-408] 値は出典ある入力・回答・既存YAMLを使い、不足は関連Qへ戻す', () => {
+    for (const text of ['objectives の UQ', 'product の PQ', 'linked_requirements', '特性・副特性・metric・source・target・min_samples・model', '入力・人の回答・既存 YAML', '不足値は推測せず関連 REQ つき Q', 'init 雛形の回答を別案件のモデル選定に流用しない']) expect(proposal, text).toContain(text);
+    expect(proposal).toContain('作った案は、既存の分割案と一緒に人に示し');
+  });
+  it('[REQ-408] target未定と参考指標を区別し、旧必須evidenceを弱めない', () => {
+    for (const text of ['合格に必要な target が未定なら blocking', '参考計測は indicators', '既存の必須 evidence を移して条件を弱めない']) expect(proposal, text).toContain(text);
+  });
+  it('[REQ-408] contextは実定義への参照で、短文・ID・traceパスの追加だけで代用しない', () => {
+    for (const text of ['context は利用状況の実際の定義', '入力文書・Issue', '単なる短文や要件 ID だけ', 'trace のパスを機械的に足して定義参照の代用にしない', '新しい Context 表・未知の root key は追加しない']) expect(proposal, text).toContain(text);
+  });
+  it('[REQ-409] 具体差分または新規全文とモデルを既存の分割合意へ含める', () => {
+    for (const text of ['追加 ID と値', '既存項目への変更', 'linked_requirements の追加', '具体差分', '不在時の新規全文', 'model も具体的な合意対象', '既存の分割案と一緒に', '新しい承認手順は増やさない']) expect(proposal, text).toContain(text);
+  });
+  it('[REQ-409] 未観測の必須証拠とCIの証拠不足を提案に添える', () => {
+    for (const text of ['まだ観測できない必須証拠', 'CI の完了ゲートが証拠不足', '案に添える']) expect(proposal, text).toContain(text);
+  });
+});
+
+
+describe('合意した品質 YAML の反映と報告', () => {
+  const apply = section(skill, /合意した品質 YAML の反映/);
+  const report = section(skill, /品質 YAML の反映結果/);
+  it('[REQ-410] 合意前は書かず、合意した既存更新と対象外の保持を分ける', () => {
+    for (const text of ['合意前には quality.yaml を書かず', '具体的に合意した差分だけ', '合意した既存値・ID の更新', '合意対象外の値・コメント・未知キー・順序・ID は保持']) expect(apply, text).toContain(text);
+  });
+  it('[REQ-410] 新IDの採番と予期しない衝突・読取不良での停止を指示する', () => {
+    for (const text of ['同じ接頭辞の既存最大番号の次', '無断で振り直さない', '未合意の変更が必要', '予期しない新 ID 衝突', '読取不能や version/model 不正', '書き換えず関連 REQ つき Q', '全面再整形はしない']) expect(apply, text).toContain(text);
+  });
+  it('[REQ-410] 不在時は合意済み全文で新規作成し、上書きinitを使わない', () => {
+    for (const text of ['不在時は合意した全文を新しく書き', '既存を上書きする init は使わない']) expect(apply, text).toContain(text);
+  });
+  it('[REQ-411] 反映IDと関連要件・未観測証拠と不足対象・未反映Qを番号付きで報告する', () => {
+    for (const text of ['反映した UQ/PQ の ID と関連要件', 'まだ観測できない必須証拠と証拠不足になる対象', '反映できず確認事項にした要件']) expect(report).toMatch(new RegExp(`^\\d+\\. .*${text}`, 'm'));
+  });
+  it('[REQ-411] 旧報告四項目と次の一手を残す', () => {
+    for (const text of ['change 一覧', '台帳の集計', 'ブロッキング確認事項', '未承認の仮定', '次の一手']) expect(section(skill, /報告する/)).toMatch(new RegExp(`^\\d+\\. .*${text}`, 'm'));
   });
 });
