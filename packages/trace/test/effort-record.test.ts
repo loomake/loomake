@@ -1,11 +1,12 @@
-import { afterEach, expect, it, vi } from 'vitest';
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync, existsSync, unlinkSync } from 'node:fs';
+import { afterAll, afterEach, beforeAll, expect, it, vi } from 'vitest';
+import { chmodSync, copyFileSync, statSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync, existsSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { spawnSync, spawn } from 'node:child_process';
 import { ModuleKind, ScriptTarget, transpileModule } from 'typescript';
 import { UsageError, RuntimeFailure, runExternal } from '@loomake/kit';
 import { runEffortRecord } from '../src/index.js';
+import { removeWithRetry } from '../../../tests/helpers/partition-fixture.js';
 vi.mock('node:fs', async (original) => {
   const fs = await original<typeof import('node:fs')>();
   return { ...fs, mkdirSync: vi.fn(fs.mkdirSync), unlinkSync: vi.fn(fs.unlinkSync) };
@@ -15,7 +16,23 @@ vi.mock('@loomake/kit', async (original) => {
   return { ...kit, runExternal: vi.fn(kit.runExternal) };
 });
 const roots: string[] = [];
-afterEach(() => { vi.restoreAllMocks(); for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); });
+const baselines = new Map<boolean, string>();
+beforeAll(() => { for (const archived of [false, true]) baselines.set(archived, repo(archived).root); roots.splice(0); });
+afterAll(() => { for (const root of baselines.values()) removeWithRetry(root); });
+function copyFixture(from: string, to: string) {
+  mkdirSync(to, { recursive: true });
+  for (const entry of readdirSync(from, { withFileTypes: true })) {
+    const source = join(from, entry.name);
+    const destination = join(to, entry.name);
+    if (entry.isDirectory()) copyFixture(source, destination);
+    else {
+      copyFileSync(source, destination);
+      chmodSync(destination, statSync(source).mode);
+    }
+  }
+}
+
+afterEach(() => { vi.restoreAllMocks(); for (const root of roots.splice(0)) removeWithRetry(root); });
 const git = (root: string, ...args: string[]) => {
   const r = spawnSync('git', ['-c', 'user.name=loomake-test', '-c', 'user.email=test@example.com', ...args], { cwd: root, encoding: 'utf8' });
   if (r.status !== 0) throw new Error(r.stderr);
@@ -24,11 +41,15 @@ const git = (root: string, ...args: string[]) => {
 function repo(archived = false) {
   const root = mkdtempSync(join(tmpdir(), 'loomake-effort-')); roots.push(root);
   const write = (path: string, content: string) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); };
-  // 文書は置かず、品質コマンドには実行されたら失敗する値を置く。
-  write('loomake.config.json', JSON.stringify({ commands: { test: 'exit 99', lint: 'exit 99' } }));
-  write(`${archived ? 'openspec/changes/archive/2026-11-05-' : 'openspec/changes/'}add-x/.keep`, '');
-  write('.gitignore', '*.ignored\n');
-  git(root, 'init', '-q'); git(root, 'add', '.'); git(root, 'commit', '-qm', 'initial');
+  const baseline = baselines.get(archived);
+  if (baseline) copyFixture(baseline, root);
+  else {
+    // 文書は置かず、品質コマンドには実行されたら失敗する値を置く。
+    write('loomake.config.json', JSON.stringify({ commands: { test: 'exit 99', lint: 'exit 99' } }));
+    write(`${archived ? 'openspec/changes/archive/2026-11-05-' : 'openspec/changes/'}add-x/.keep`, '');
+    write('.gitignore', '*.ignored\n');
+    git(root, 'init', '-q'); git(root, 'add', '.'); git(root, 'commit', '-qm', 'initial');
+  }
   const dir = join(root, '.loomake/evidence/add-x/effort');
   const outputs: string[] = [];
   const record = (options: Partial<Parameters<typeof runEffortRecord>[0]> = {}) => runEffortRecord({ root, changeId: 'add-x', effort: '1.5h', stdout: (text) => outputs.push(text), now: () => new Date('2026-11-06T00:00:00.000Z'), ...options });
