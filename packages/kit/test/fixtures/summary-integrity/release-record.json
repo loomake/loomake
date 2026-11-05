@@ -1,0 +1,16 @@
+{
+  "fixtureOnly": true,
+  "role": "release",
+  "releaseId": "a16-fixed-fixture",
+  "summaries": [
+    {
+      "id": "fixed-summary",
+      "sha256": "0d77f62343780c94a606061723afcdb82e208c1a27ac30429cc35edc545718df"
+    }
+  ],
+  "ci": {
+    "runId": "42000000000",
+    "runAttempt": "1",
+    "sha": "0123456789abcdef0123456789abcdef01234567"
+  }
+}
