@@ -2,7 +2,8 @@ import { createPrivateKeyFilter } from './private-key-stream.js';
 // よく知られた API キーやトークンの形。すべての秘密情報は見分けられないので、記録する範囲も絞る
 const SECRET_PATTERNS = [
   // 他の形式の置換でBEGINやENDを壊す前に、ブロック全体を隠す。
-  /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g,
+  /-----BEGIN [A-Z ]*PRIVATE KEY(?: BLOCK)?-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY(?: BLOCK)?-----/g,
+  /-----BEGIN [A-Z ]*PRIVATE KEY(?: BLOCK)?-----[\s\S]*$/g,
   /\bsk-[A-Za-z0-9_-]{16,}/g,
   /\bgh[pousr]_[A-Za-z0-9]{20,}/g,
   /\bgithub_pat_[A-Za-z0-9_]{20,}/g,
