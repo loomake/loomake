@@ -13,7 +13,7 @@
 - 新しい `packages/kit/src/runtime/redact.ts` は runner の mask.ts の既存本文と、新しいmaskValueを持つ。既知pattern、Bearer、JSONのUnicode escapeと途中出力、streamの保留量と終端処理は変えない。
 - 新しい `packages/kit/src/runtime/private-key-stream.ts` は既存の秘密鍵filterの本文を挙動不変で持つ。redact.tsから同じruntime内の相対importを使う。
 - kit/index.tsから4関数をnamed exportする。privateなprototype判定・入力検証・複製のhelperは公開しない。
-- runner/mask.tsはkitからmaskSecrets/createDiagnosticRedactorを再exportし、runner/private-key-stream.tsはcreatePrivateKeyFilterを再exportする。runner/index.tsのmaskSecretsの既存export、runnerの直接呼出元、既存試験、pack後のdist/mask.jsは維持する。
+- runner/mask.tsはkitからmaskSecrets/createDiagnosticRedactorを再exportし、runner/private-key-stream.tsはcreatePrivateKeyFilterを再exportする。runner/index.tsのmaskSecretsの既存export、runnerの直接呼出元、既存試験の全assert・入力・上限、pack後のdist/mask.jsは維持する。
 - 外部library、SDK、新しいprocess実装、環境参照は加えない。Node標準の純粋な型判定を使う場合もI/Oは行わない。
 
 ## Q65-10：JSONに使う値の境界
@@ -44,7 +44,7 @@ numberは丸め・null化せず、負の0も保持する。objectの欠落した
 
 ## 試験と受入
 
-新しいkitの試験でREQ-447の全Scenarioを確認する。既存runnerのmask、diagnostic-redactor、private-key-redaction、run-start-maskとpackage-artifactsを無変更で実行し、元のmodule pathと配布物も確認する。test nameのREQ IDを残し、秘密には認証に使えない合成fixtureだけを使う。
+新しいkitの試験でREQ-447の全Scenarioを確認する。既存runnerのmask、diagnostic-redactor、private-key-redaction、run-start-maskとpackage-artifactsを実行し、元のmodule pathと配布物も確認する。診断メモリfixtureはrunnerの旧ソース2本だけを一時フォルダーへ複写するため、単純な再exportを解決できないという見落としが実装時に分かった。管理役はADR0005に基づき、読取元を共有redact/private-key-stream/errorsへ追従する開発基盤修理を採用した。全assert・入力・old space 32MiB・処理量64MiB・spawn 15000msと試験18000msを保ち、ほかの既存試験を変更しない。メモリ試験は従来と同じ実装層を対象とし、kit全入口やアプリ全体のメモリ保証にはしない。test nameのREQ IDを残し、秘密には認証に使えない合成fixtureだけを使う。
 
 B01の管理役分類に従うREQ-207の検査は追加2moduleも含むruntimeを走査する。元4項目、全assertion、forbiddenImports、全禁止例が保持されていることを差分でも確かめる。
 
@@ -67,4 +67,4 @@ REQ-447の規範本文は1つとし、500文字以内にまとめた。受理値
 | 循環ではない共有参照 | 出現ごとの独立clone |
 | 循環 | 自己/相互参照の拒否、入力内容を例外へ載せない |
 | keyの衝突 | cycleと衝突拒否の完全な条件、破棄/上書き禁止、message/causeの秘匿 |
-| 配布後の既存公開元 | runner再export、dist/mask.js、既存試験不変、runtime依存追加なし |
+| 配布後の既存公開元 | runner再export、dist/mask.js、既存assert・入力・上限保持、fixture読取元追従、runtime依存追加なし |

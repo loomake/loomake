@@ -33,5 +33,5 @@ Issue [#65](https://github.com/loomake/loomake/issues/65)（W1-6）は、外部�
 
 - capability：新設 `secret-redaction`（REQ-447）、`monorepo`（REQ-207 の責務の明記）。
 - 製品：kit の2モジュール・公開 export、runner の既存2モジュールの再エクスポート。runner の logs/run/recorder/phases/engine と公開 index は変更しない。
-- 試験：新しい kit の要件対応試験。runner と package-artifacts の既存試験・期待値は無変更。`tests/kit-layers.test.ts` はB01の仕様追従として2項目だけを追加し、元の依存規則と全検査を保つ。
+- 試験：新しい kit の要件対応試験。runner と package-artifacts の既存assert・入力・上限は保持し、診断メモリfixtureの読取元だけ共有runtimeへ追従する。`tests/kit-layers.test.ts` はB01の仕様追従として2項目だけを追加し、元の依存規則と全検査を保つ。
 - 配布：kit と runner の changeset、kit の共通関数の API 説明。設定、閾値、skip、timeout、依存予算は変えない。

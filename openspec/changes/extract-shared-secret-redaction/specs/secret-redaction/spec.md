@@ -64,5 +64,6 @@ Source: REQ-447
 
 #### Scenario: 配布後も既存の公開元を維持する
 - **WHEN** kitとrunnerをbuild/packし、既存のrunner公開export・直接module import・dist/mask.jsの診断ストリームを使う
-- **THEN** 新たなruntime依存やconsumer設定なしに既存と同じ関数が利用でき、既存のrunner試験とpackage-artifacts試験が無変更で成功する
+- **THEN** 新たなruntime依存やconsumer設定なしに既存と同じ関数が利用でき、既存runner試験とpackage-artifacts試験の全assert・入力・上限を保って成功する
 - **AND** runner の `mask.ts` と `private-key-stream.ts` は kit から再エクスポートし、runner の既存の公開元・直接 import・配布後の `dist/mask.js` から同じ関数と同じ結果が得られる SHALL。kit・runner の実行時依存を増やさず、core を変更しない MUST。
+- **AND** 診断ストリームのメモリ試験は、移転した実装を読むfixtureの入力元だけを共有runtimeへ追従させ、old space 32MiB・処理量64MiB・既存の時間上限と全assertを維持する。ほかの既存試験は変更しない SHALL。
