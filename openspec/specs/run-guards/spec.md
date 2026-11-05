@@ -202,6 +202,10 @@ Source: REQ-198
 - **WHEN** run を始める前から `.git/hooks/post-commit` があり、エンジンはフックも設定も変えない
 - **THEN** run はタスクを完了にしてコミットし、そのフックが動く
 
+#### Scenario: 既存フックの glob と環境を保つ
+- **WHEN** 開始前からある pre-commit または pre-push が `git ls-files -- '*.ts'` で対象を選ぶ
+- **THEN** runner の commit・push は pathspec 環境の 4 変数を元の値または未設定のまま渡し、フックは従来の対象を検査できる
+
 ### Requirement: git の設定の比較の範囲
 REQ-198 の比較では、リポジトリの設定ファイルだけでなく、git が実際に使う設定（`git config --list --show-origin` の出力。include・includeIf の先、利用者全体とシステム全体の設定、worktree の設定を含む）を、エンジンを呼ぶ前後で比べる SHALL。フックのディレクトリのシンボリックリンクは、リンク先をたどらずにリンクの文字列を比べ、リンク先がないリンクやディレクトリを指すリンクがあっても、run はエラーで落ちずに続ける SHALL。
 
