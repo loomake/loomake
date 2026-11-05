@@ -27,7 +27,7 @@ export function checkBodyReceipt(summaryBytes: Uint8Array, receipt: unknown, bod
     if (summary.change !== s.change || summary.sha !== s.sha || summary.sha !== e.checkoutSha) return mismatch('要約の対象と実checkoutが索引と一致しません');
     const summaryCi = summary.ci;
     if (![s.ci, l, e].every((v) => v.runId === summaryCi.runId && v.runAttempt === summaryCi.runAttempt)) return mismatch('要約と索引のCI実行または試行が一致しません');
-    if (summary.artifacts.filter((v) => v.sha256 === b.sha256 && v.bytes === b.bytes).length !== 1) return mismatch('本体に一致する要約の参照が一意ではありません');
+    if (summary.artifacts.filter((v: unknown) => object(v) && v.sha256 === b.sha256 && v.bytes === b.bytes).length !== 1) return mismatch('本体に一致する要約の参照が一意ではありません');
     if (a.sha256 !== a.apiDigest.slice(7)) return mismatch('ZIPのハッシュがAPIのdigestと一致しません');
     if (bodyBytes !== undefined) {
       const checked = checkArtifactBody(b, bodyBytes);

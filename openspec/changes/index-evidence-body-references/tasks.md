@@ -12,7 +12,7 @@
 - [x] 3.2 traceの明示policy/now付きresolverを追加し、本体別結果・優先順位・不正候補・矛盾・重複全path・期限/権限未確認・入力予算と安全な診断を確認する（REQ-471）。
 
 ## 4. 互換と案内
-- [ ] 4.1 全ScenarioのREQ名付き試験、公開型consumer、配布物、既存Evidence1/2・12Schema・同期report/serialize・runner再利用・固定要約不変を既存assertを弱めず確認する（REQ-470・471）。
+- [x] 4.1 全ScenarioのREQ名付き試験、公開型consumer、配布物、既存Evidence1/2・12Schema・同期report/serialize・runner再利用・固定要約不変を既存assertを弱めず確認する（REQ-470・471）。
 - [ ] 4.2 利用者文書・非破壊追加のpatch changeset・branch日誌に、索引の一致と実取得/真正性/品質合格の区別、親#69の残作業を記録する。
 
 ## 5. ローカルの完了

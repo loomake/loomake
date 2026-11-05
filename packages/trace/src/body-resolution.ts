@@ -90,7 +90,8 @@ export function resolveArtifactBody(options: BodyResolutionOptions): BodyResolut
       } catch { mark(result, 'invalid-index'); continue; }
       const receiptPath = relative(root, path).split(sep).join('/');
       result.paths.push(receiptPath);
-      result.retention.push({ path: receiptPath, ...artifactRetention({ location: { createdAt: receipt.artifact.createdAt }, expiresAt: receipt.artifact.expiresAt }, policy.artifact_retention, now) });
+      const ref = { location: { createdAt: receipt.artifact.createdAt }, expiresAt: receipt.artifact.expiresAt };
+      result.retention.push({ path: receiptPath, ...artifactRetention(ref, policy.artifact_retention, now) });
       const key = locatorKey(receipt), previous = seen.get(key) ?? [];
       for (const other of previous) {
         if (!isDeepStrictEqual(other.receipt.body, receipt.body) || !isDeepStrictEqual(other.receipt.summary, receipt.summary)

@@ -24,7 +24,7 @@ export function receiptUtc(value: unknown): value is string {
   return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 19) === value.slice(0, 19);
 }
 export function receiptRelativePath(value: unknown): value is string {
-  return text(value) && !/[\\:\u0000]/.test(value) && value.split('/').every((part) => part !== '' && part !== '.' && part !== '..');
+  return text(value) && !/[\\:]/.test(value) && !value.includes('\0') && value.split('/').every((part) => part !== '' && part !== '.' && part !== '..');
 }
 export function receiptSummaryPath(value: unknown, change?: string): value is string {
   if (!receiptRelativePath(value)) return false;
