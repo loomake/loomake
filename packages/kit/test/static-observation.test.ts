@@ -100,8 +100,15 @@ describe('今回の品質コマンドからの静的指標', () => {
     const [value] = observe(quality('ci.coverage', 'lines_pct'), r);
     expect(value.status).toBe('unverified'); expect(value).not.toHaveProperty('value');
   });
-  it.each([-1, 101, Number.POSITIVE_INFINITY])('[REQ-430] 範囲外または非有限の割合%sを使わない', (pct) => {
+  it.each([-1, 101, null])('[REQ-430] 範囲外またはnullの割合%sを使わない', (pct) => {
     const r = receipt(); r.coverage = payload('coverage-summary.json', { total: { lines: { pct, total: 10 } } });
+    const [value] = observe(quality('ci.coverage', 'lines_pct'), r);
+    expect(value.status).toBe('unavailable'); expect(value).not.toHaveProperty('value');
+  });
+  it('[REQ-430] JSON数値が非有限になる割合を使わない', () => {
+    const text = '{"total":{"lines":{"pct":1e999,"total":10}}}';
+    expect(JSON.parse(text).total.lines.pct).toBe(Number.POSITIVE_INFINITY);
+    const r = receipt(); r.coverage = { path: 'coverage-summary.json', text, sha256: sha256Hex(text) };
     const [value] = observe(quality('ci.coverage', 'lines_pct'), r);
     expect(value.status).toBe('unavailable'); expect(value).not.toHaveProperty('value');
   });
@@ -122,7 +129,10 @@ describe('今回の品質コマンドからの静的指標', () => {
     expect(observe(quality(), r)).toMatchObject([{ status: 'ineligible' }]);
   });
   it('[REQ-430] 対象外PQや未設定のtestから測定値を作らない', () => {
-    const q = schema.parse({ ...quality(), product: { 'PQ-001': { characteristic: 'maintainability', applicability: 'not_applicable', reason: '対象外の試験', confirmed_by: 'fixture' } } });
+    const q = schema.parse({ ...quality(), product: { 'PQ-001': {
+      characteristic: 'maintainability', applicability: 'not_applicable', reason: '対象外の試験', confirmed_by: 'fixture',
+      evidence: [{ source: 'ci.test_report', metric: 'tests_failed', target: '== 0' }, { source: 'ci.coverage', metric: 'lines_pct', target: '>= 80' }],
+    } } });
     expect(observe(q)).toEqual([]);
     const r = receipt(); r.commands = [{ name: 'test', result: 'not_configured' }];
     const [value] = observe(quality(), r);
