@@ -9,6 +9,26 @@ import { profileEvent } from './test-phase-profile.mjs';
 const win = process.platform === 'win32';
 const quote = (text) => `"${text.replace(/"/g, '""')}"`;
 
+/**
+ * 復旧シナリオの未回答質問を質問表に挿入する。
+ * @param {string} trace
+ * @returns {string}
+ */
+export function insertRecoveryQuestion(trace) {
+  const eol = trace.includes('\r\n') ? '\r\n' : '\n';
+  const lines = trace.split(/\r?\n/);
+  const heading = lines.findIndex((line) => line.trim() === '## 確認事項');
+  assert.ok(heading >= 0, '復旧 fixture に確認事項の節がありません');
+  let separator = -1;
+  for (let i = heading + 1; i < lines.length; i++) {
+    if (/^## /.test(lines[i])) break;
+    if (/^\|(?:[ \t]*:?-+:?[ \t]*\|)+[ \t]*$/.test(lines[i])) { separator = i; break; }
+  }
+  assert.ok(separator > heading, '復旧 fixture の確認事項の表に区切り行がありません');
+  lines.splice(separator + 1, 0, '| Q-01 | REQ-001 | 試験用の確認 | はい | はい | yes | |');
+  return lines.join(eol);
+}
+
 /** AIが作成した操作シナリオを配布物で実行する。人の利用者試験や外部接続は含めない。 */
 export function runJourneys(target) {
   const caseId = process.env.LOOMAKE_TEST_PHASE_CASE_ID;
@@ -96,8 +116,7 @@ export function runJourneys(target) {
     const originalScript = configure(recovery, failed.project);
     const traceFile = join(failed.project, 'openspec/changes/sample/trace.md');
     const trace = readFileSync(traceFile, 'utf8');
-    const unanswered = '| Q-01 | REQ-001 | 試験用の確認 | はい | はい | yes | |\n\n';
-    writeFileSync(traceFile, trace.replace('## 仮定', `${unanswered}## 仮定`));
+    writeFileSync(traceFile, insertRecoveryQuestion(trace));
     assert.ok(failed.run(['verify', '--change', 'sample', '--spec-only'], 1).includes('Q-01'));
     writeFileSync(traceFile, readFileSync(traceFile, 'utf8').replace('| yes | |', '| yes | 試験用の回答 |'));
     failed.run(['verify', '--change', 'sample', '--spec-only']);

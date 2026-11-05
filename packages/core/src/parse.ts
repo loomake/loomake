@@ -9,7 +9,7 @@ export type ParseResult<T> = { value: T; errors: ParseError[] };
 export const REQ_ID = /REQ-\d{3,}/g;
 
 /** 行末の CRLF・CR を LF にそろえて、行に分ける */
-export const splitLines = (text: string): string[] => text.replace(/\r\n?/g, '\n').split('\n');
+export const splitLines = (text: string): string[] => text.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n').split('\n');
 
 /** コードブロック（``` か ~~~ で囲んだ範囲）の中の行を true にする */
 export function fenceMask(lines: string[]): boolean[] {
@@ -20,7 +20,8 @@ export function fenceMask(lines: string[]): boolean[] {
       if (m) fence = m[1];
       return m !== null;
     }
-    if (m && m[1][0] === fence[0] && m[1].length >= fence.length) fence = null;
+    const close = line.match(/^\s*(`{3,}|~{3,})\s*$/);
+    if (close && close[1][0] === fence[0] && close[1].length >= fence.length) fence = null;
     return true;
   });
 }
@@ -48,7 +49,7 @@ export function readTable(lines: string[], heading: string): Table | null {
     if (fenced[i]) continue;
     const t = lines[i].trim();
     if (t.startsWith('|')) tableLines.push({ text: t, line: i + 1 });
-    else if (tableLines.length > 0 && t !== '') break; // 最初の表が終わった
+    else if (tableLines.length > 0) break; // 最初の表が終わった
   }
   if (tableLines.length < 2) return { line: start + 1, found: false, rows: [] };
   const header = cells(tableLines[0].text);
