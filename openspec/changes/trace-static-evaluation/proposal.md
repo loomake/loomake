@@ -33,4 +33,4 @@ C1 REQ-430は既存仕様で充足。REQ-439と434・440・442の最終全文・
 
 ## Prerequisite
 
-品質コマンドの任意通知APIは独立した`expose-quality-command-outcomes`（REQ-455/456）を先に通常L3で受け入れる。PR #446と同期archiveのPR #449はmainへ受入済みで、Q70-21に確認結果を記録する。本C2aの仕様ゲートとB0の管理確認が終わるまで製品実装を止める。元の全要件・全Scenarioを保持し、前提の完了をC2の部分受入として扱わない。
+通知APIのmain受入・同期archiveはQ70-21、分割と規模はQ70-22〜24a、実装順と完了条件はtasks.mdに記録する。
