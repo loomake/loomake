@@ -13,9 +13,18 @@ const NEEDS_PROMPT = /could not read (Username|Password)|terminal prompts disabl
 export const PROMPT_GUIDE =
   'run は git を端末なしで動かすので、端末での入力ができません。ssh-agent に鍵を登録するか、credential helper（gh auth setup-git など）や gpg-agent を設定して、入力なしで push・commit できるようにしてから、もう一度実行してください';
 
+/** runner が渡すパスを git の式にせず扱い、端末での入力も求めない（REQ-109・REQ-138・REQ-211） */
+export function gitEnvironment(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  return { ...env, GIT_TERMINAL_PROMPT: '0', GIT_LITERAL_PATHSPECS: '1',
+    GIT_GLOB_PATHSPECS: '0', GIT_NOGLOB_PATHSPECS: '0', GIT_ICASE_PATHSPECS: '0' };
+}
+
 export function git(root: string, env: NodeJS.ProcessEnv, args: string[]): string {
   // 端末での入力を求めず、すぐ失敗させる（REQ-211）
-  const r = runExternal('git', args, { cwd: root, env: { ...env, GIT_TERMINAL_PROMPT: '0' }, untilDeadline: RUNS_HOOKS.has(args[0]) });
+  const runsHooks = RUNS_HOOKS.has(args[0]);
+  // フック内の git の glob と利用者の環境を保つ。commit・push 自体に pathspec は渡さない（REQ-198）。
+  const childEnv = runsHooks ? { ...env, GIT_TERMINAL_PROMPT: '0' } : gitEnvironment(env);
+  const r = runExternal('git', args, { cwd: root, env: childEnv, untilDeadline: runsHooks });
   if (r.error || r.status !== 0) {
     const detail = (r.stderr || r.error?.message || '').trim();
     const guide = RUNS_HOOKS.has(args[0]) && NEEDS_PROMPT.test(detail) ? `。${PROMPT_GUIDE}` : '';
@@ -29,15 +38,19 @@ export const dirtyFiles = (root: string, env: NodeJS.ProcessEnv) =>
   git(root, env, ['status', '--porcelain', '--untracked-files=all']).split('\n').filter(Boolean);
 
 export const branchExists = (root: string, env: NodeJS.ProcessEnv, branch: string) =>
-  runExternal('git', ['rev-parse', '--verify', '--quiet', `refs/heads/${branch}`], { cwd: root, env }).status === 0;
+  runExternal('git', ['rev-parse', '--verify', '--quiet', `refs/heads/${branch}`], { cwd: root, env: gitEnvironment(env) }).status === 0;
 
 /** git の設定の値。なければ空の文字列 */
 export const gitConfig = (root: string, env: NodeJS.ProcessEnv, key: string) =>
-  runExternal('git', ['config', '--get', key], { cwd: root, env }).stdout.trim();
+  runExternal('git', ['config', '--get', key], { cwd: root, env: gitEnvironment(env) }).stdout.trim();
 
 /** .gitignore で除外されているか。追跡しているファイルは除外されていないとみなす */
 export const isIgnored = (root: string, env: NodeJS.ProcessEnv, path: string) =>
-  runExternal('git', ['check-ignore', '-q', '--', path], { cwd: root, env }).status === 0;
+  runExternal('git', ['check-ignore', '-q', '--', path.startsWith(':') ? `./${path}` : path], {
+    cwd: root,
+    // check-ignore は literal magic を受け付けない。先頭の : は ./ でファイル名として渡す。
+    env: { ...gitEnvironment(env), GIT_LITERAL_PATHSPECS: '0' },
+  }).status === 0;
 
 /** git の設定ファイルとフックのディレクトリの場所。`--git-path hooks` は core.hooksPath を反映する。HEAD のコミットがなくても読める */
 export type GitPlaces = { config: string; hooks: string };
@@ -61,7 +74,7 @@ export function readHead(root: string, env: NodeJS.ProcessEnv): HeadRead;
 export function readHead(root: string, env: NodeJS.ProcessEnv, withPlaces: true): HeadRead & GitPlaces;
 export function readHead(root: string, env: NodeJS.ProcessEnv, withPlaces = false): HeadRead | (HeadRead & GitPlaces) {
   const paths = withPlaces ? ['--git-path', 'config', '--git-path', 'hooks'] : [];
-  const r = runExternal('git', ['rev-parse', ...paths, 'HEAD', '--abbrev-ref', 'HEAD'], { cwd: root, env });
+  const r = runExternal('git', ['rev-parse', ...paths, 'HEAD', '--abbrev-ref', 'HEAD'], { cwd: root, env: gitEnvironment(env) });
   const lines = r.stdout.split(/\r?\n/);
   const n = paths.length / 2;
   if (!r.error && r.status === 0 && lines.length === n + 3 && lines[n + 2] === '' && SHA.test(lines[n]) && lines[n + 1]) {
@@ -70,8 +83,8 @@ export function readHead(root: string, env: NodeJS.ProcessEnv, withPlaces = fals
   }
   // 項目ごとの呼び出し。まとめる前の headState と同じく、終了コードを見ずに標準出力を使う
   const head = {
-    sha: runExternal('git', ['rev-parse', '--verify', '-q', 'HEAD'], { cwd: root, env }).stdout.trim(),
-    branch: runExternal('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: root, env }).stdout.trim(),
+    sha: runExternal('git', ['rev-parse', '--verify', '-q', 'HEAD'], { cwd: root, env: gitEnvironment(env) }).stdout.trim(),
+    branch: runExternal('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: root, env: gitEnvironment(env) }).stdout.trim(),
   };
   return withPlaces ? { ...head, ...gitPlaces(root, env) } : head;
 }
