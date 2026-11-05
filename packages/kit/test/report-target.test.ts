@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { loadConfig } from '../src/verify/config.js';
+import { loadConfig, UsageError } from '../src/verify/config.js';
 
 function project(fn: (root: string) => void) {
   const root = mkdtempSync(join(tmpdir(), 'loomake-report-target-'));
@@ -10,10 +10,10 @@ function project(fn: (root: string) => void) {
 }
 describe('report target', () => {
   it('[REQ-424][REQ-172] rejects malformed report paths before use', () => {
-    for (const report of ['../outside.json', '/absolute.json', 'C:\\report.json', './C:/outside.json', './/C:/outside.json', './C:outside.json', '.\\C:\\outside.json', 'a/../r.json', 'reports/', '.', 'a/.', 'a\n.json', '']) {
+    for (const report of ['../outside.json', '/absolute.json', 'C:\\report.json', './C:/outside.json', './/C:/outside.json', './C:outside.json', '././/C:outside.json', '\\\\server\\share\\r.json', '\\\\?\\C:\\r.json', 'a\\..\\r.json', './..\\r.json', 'a\\.', './', String.fromCharCode(0), '.\\C:\\outside.json', 'a/../r.json', 'reports/', '.', 'a/.', 'a\n.json', '']) {
       project((root) => {
         writeFileSync(join(root, 'loomake.config.json'), JSON.stringify({ tests: { report } }));
-        expect(() => loadConfig(root), JSON.stringify(report)).toThrow();
+        expect(() => loadConfig(root), JSON.stringify(report)).toThrow(UsageError);
       });
     }
   });

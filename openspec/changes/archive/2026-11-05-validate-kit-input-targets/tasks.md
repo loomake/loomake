@@ -11,7 +11,7 @@
 
 ## 3. 完了ゲート
 
-- [ ] 3.1 `pnpm -s verify --change validate-kit-input-targets --done --scope local` を通し、全要件と全タスクを確認する <!-- loomake:gate=done -->
+- [x] 3.1 `pnpm -s verify --change validate-kit-input-targets --done --scope local` を通し、全要件と全タスクを確認する <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
