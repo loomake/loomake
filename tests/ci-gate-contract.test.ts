@@ -34,13 +34,15 @@ function assertInlineGate(gate: GateJob) {
 }
 
 describe('完了ゲートの実行契約', () => {
-  it('[REQ-010][REQ-054] CI・devcontainer・開発依存の OpenSpec の版が一致する', () => {
+  it('[REQ-010][REQ-022][REQ-054] CI・devcontainer・開発依存・配布テンプレートの OpenSpec の版が一致する', () => {
     const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
     const version = pkg.devDependencies['@fission-ai/openspec'];
     expect(version).toMatch(/^\d+\.\d+\.\d+$/);
     expect(inlineGate().steps).toContainEqual({ run: `npm install -g @fission-ai/openspec@${version}` });
-    const devcontainer = readFileSync(new URL('../.devcontainer/devcontainer.json', import.meta.url), 'utf8');
-    expect(devcontainer.match(/@fission-ai\/openspec@([^\s]+) /)?.[1]).toBe(version);
+    for (const path of ['../.devcontainer/devcontainer.json', '../packages/kit/templates/devcontainer/devcontainer.json']) {
+      const devcontainer = readFileSync(new URL(path, import.meta.url), 'utf8');
+      expect(devcontainer.match(/@fission-ai\/openspec@([^\s"\\]+)(?: |")/)?.[1], path).toBe(version);
+    }
   });
   it('[REQ-010][REQ-054][REQ-132][REQ-168][REQ-273] 9steps・引数・順序・権限・条件が一致する', () => {
     assertInlineGate(inlineGate());
