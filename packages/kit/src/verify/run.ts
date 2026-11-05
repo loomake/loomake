@@ -27,7 +27,7 @@ import {
 } from '@loomake/core';
 import { assembleVerifyResult } from './result.js';
 import { readDependencies } from './dependencies.js';
-import { assertChangeId, loadConfig, type LoomakeConfig } from './config.js';
+import { assertReportTarget, assertChangeId, loadConfig, type LoomakeConfig } from './config.js';
 import { QUALITY_FILE, readQualityFile, type QualitySchemaLike } from './quality-input.js';
 import { evaluateQualityConditions, qualitySubjectsGuard } from './policy/quality-conditions.js';
 import { observeTestReport, type TestReportReceipt } from './policy/test-report-observation.js';
@@ -129,6 +129,7 @@ export function runVerify(options: VerifyOptions): VerifyResult {
     if (spec && gate === 'done') {
       checkTasksAndPending(spec, record, approvals);
       // 前回のレポートで合格させないよう、commands を実行する前に消す
+      assertReportTarget(root, config.tests.report);
       const reportPath = resolve(root, config.tests.report);
       if (!skipCommands) rmSync(reportPath, { force: true });
       const clearedBefore = !existsSync(reportPath);
@@ -498,10 +499,10 @@ function runCommands(
     } catch (error) {
       if (!(error instanceof ProcessLimitError)) throw error;
       const reason = error.kind === 'interrupted' ? (error.reason ? `${INTERRUPTED}（${error.reason}）` : INTERRUPTED) : error.message;
-      fail(`command: ${name}`, error.kind === 'timeout' ? TIMED_OUT : reason);
+      fail(`command: ${name}`, error.kind === 'timeout' ? `${TIMED_OUT}${error.reason ? `（${error.reason}）` : ''}` : reason);
       failed(null);
       // 共有予算では後続の外部操作も起動せず拒否し、各項目に未実行の理由を残す。
-      if (error.kind === 'interrupted' && !hasProcessBudget()) return exitCode;
+      if ((error.kind === 'interrupted' || error.reason) && !hasProcessBudget()) return exitCode;
       continue;
     }
     // spawnSync は起動に失敗すると、型に反して stdout・stderr が null になる

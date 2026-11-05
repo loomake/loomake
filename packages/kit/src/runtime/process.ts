@@ -41,7 +41,7 @@ export function hasProcessBudget(): boolean { return budgets.getStore() !== unde
 export type ProcessLimitKind = 'timeout' | 'output' | 'interrupted';
 export class ProcessLimitError extends RuntimeFailure {
   /**
-   * reason は、監視役が結果を書かずに終わったときなど、利用者の中断と区別する理由（REQ-250）。利用者の中断と期限・出力の上限では持たない
+   * reason は、監視役が結果を書かずに終わったときなど、利用者の中断と区別する理由（REQ-250）。利用者の中断と対象の期限・出力の上限では持たない
    */
   /**
    * cleanup は、監視役が結果を書かずに終わったときの子孫の後片付けの結果（REQ-254）。停止を確認できなかったときは confirmed が false で、reason にも理由を入れる
@@ -440,7 +440,8 @@ function runExternalEngine(command: string, args: readonly string[], options: Ex
   let hold: { pipe: string; id: string; expiresAt: number } | { unavailable: string } | null = null;
   if (prepared && holdId) hold = 'pipe' in prepared ? { pipe: prepared.pipe, id: holdId, expiresAt: holdExpiry(Date.now(), timeout) } : prepared;
   const result = spawnSync(process.execPath, [SUPERVISOR, JSON.stringify([command, args, options.shell ?? false, startedAt + timeout, maxBuffer, hold])], {
-    cwd: options.cwd, env: options.env, stdio: ['ignore', 'pipe', 'pipe', 'pipe'], maxBuffer: captureBytes ?? Math.max(maxBuffer, 64 * 1024),
+    cwd: options.cwd, env: options.env, stdio: ['ignore', 'pipe', 'pipe', 'pipe'],
+    timeout: Math.min(Math.ceil(timeout + SUPERVISOR_STOP_GRACE_MS), Number.MAX_SAFE_INTEGER), killSignal: 'SIGKILL', maxBuffer: captureBytes ?? Math.max(maxBuffer, 64 * 1024),
   });
   // 不正なUTF-8の置換で文字列のバイト数が増えても、公開する文字列の合計は予算以内にする。
   // 起動に失敗すると、型に反して stdout・stderr が null になる
@@ -451,7 +452,16 @@ function runExternalEngine(command: string, args: readonly string[], options: Ex
   const report = readReport(output.output?.[3]?.toString('utf8') ?? '');
   const usesHolder = hold !== null && 'pipe' in hold ? holdId : undefined;
   const outcome = report.outcome;
-  if (result.error) {
+  const spawnError: NodeJS.ErrnoException | undefined = result.error;
+  if (spawnError?.code === 'ETIMEDOUT' && !outcome) {
+    const cleanup = stopTree(report.target, holdId, holder);
+    const base = '監視役が対象の期限と停止猶予を過ぎても終了しません';
+    const reason = (!cleanup || cleanup.confirmed) ? base : `${base}。子孫の停止を確認できません：${cleanup.detail}`;
+    if (budget) { budget.state.interrupted = true; budget.state.reason = reason; }
+    throw new ProcessLimitError('timeout', command, stdout, stderr, reason, cleanup);
+  }
+  // 結果を書いたあとの監視役だけが停止していても、有効な結果を保つ。
+  if (result.error && !(spawnError?.code === 'ETIMEDOUT' && outcome)) {
     if (!outcome) stopTree(report.target, holdId, holder);
     else if (usesHolder) holder?.release(usesHolder);
     return { text: { status: null, signal: result.signal, stdout, stderr, error: result.error }, ...bytes };

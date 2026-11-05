@@ -1,5 +1,5 @@
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, lstatSync, realpathSync, statSync } from 'node:fs';
+import { isAbsolute, join, relative, sep } from 'node:path';
 import { createInputReader } from '../runtime/input.js';
 
 import { UsageError } from '../runtime/errors.js';
@@ -48,7 +48,7 @@ const unknownKeys = (c: Record<string, unknown>): string[] =>
 export function loadConfig(root: string): LoomakeConfig {
   const base: LoomakeConfig = { openspecDir: 'openspec', openspecValidate: 'auto', tests: { report: DEFAULT_TEST_REPORT }, commands: {}, unknownKeys: [] };
   const p = join(root, 'loomake.config.json');
-  if (!existsSync(p)) return base;
+  if (!existsSync(p)) { assertReportTarget(root, base.tests.report); return base; }
   let c: unknown;
   try {
     c = JSON.parse(createInputReader().read(p));
@@ -61,8 +61,8 @@ export function loadConfig(root: string): LoomakeConfig {
     throw new UsageError('loomake.config.json の openspecValidate は true・false・"auto" のどれかにしてください');
   }
   if (c.tests !== undefined && !isObject(c.tests)) throw new UsageError('loomake.config.json の tests はオブジェクトにしてください');
-  const report = isObject(c.tests) && c.tests.report !== undefined ? c.tests.report : DEFAULT_TEST_REPORT;
-  if (typeof report !== 'string' || report === '') throw new UsageError('loomake.config.json の tests.report は空でない文字列にしてください');
+  const report = normalizeReportPath(isObject(c.tests) && c.tests.report !== undefined ? c.tests.report : DEFAULT_TEST_REPORT);
+  assertReportTarget(root, report);
   if (c.commands !== undefined && (!isObject(c.commands) || !Object.values(c.commands).every((v) => typeof v === 'string' || v === null))) {
     throw new UsageError('loomake.config.json の commands は、値が文字列（または null）のオブジェクトにしてください');
   }
@@ -87,4 +87,46 @@ export function assertChangeId(changeId: string): void {
     throw new UsageError(`change-id「${changeId}」は、英小文字・数字と、間に 1 つずつのハイフンで書いてください（パスの区切りや大文字は使えません）`);
   }
   if (changeId === 'archive') throw new UsageError('archive は change-id に使えません。完了した change の置き場です');
+}
+
+/** report をルートからの POSIX 相対パスにそろえる。 */
+export function normalizeReportPath(value: unknown): string {
+  if (typeof value !== 'string' || value === '') throw new UsageError('loomake.config.json の tests.report は空でない文字列にしてください');
+  const path = value.replace(/\\/g, '/');
+  const parts = path.split('/');
+  const normalized = parts.filter((part) => part !== '' && part !== '.').join('/');
+  if (/\p{Cc}/u.test(path) || path.startsWith('/') || /^[a-z]:/i.test(normalized) || parts.includes('..') || ['', '.'].includes(parts.at(-1) ?? '')) {
+    throw new UsageError('loomake.config.json の tests.report は、プロジェクト内のファイルを指す相対パスにしてください');
+  }
+  return normalized;
+}
+
+/** 存在する各要素を確認する。最後の内部リンクはリンクだけを削除できる。 */
+export function assertReportTarget(root: string, report: string): void {
+  const canonicalRoot = realpathSync(root);
+  const parts = report.split('/');
+  for (let i = 0; i < parts.length; i++) {
+    const path = join(root, ...parts.slice(0, i + 1));
+    try {
+      const entry = lstatSync(path);
+      const actual = realpathSync(path);
+      const rel = relative(canonicalRoot, actual);
+      if (rel === '..' || rel.startsWith(`..${sep}`) || isAbsolute(rel)) throw new Error('プロジェクトの外を指しています');
+      const target = entry.isSymbolicLink() ? statSync(path) : entry;
+      if (i === parts.length - 1 ? !target.isFile() : !target.isDirectory()) throw new Error(i === parts.length - 1 ? '通常のファイルではありません' : '途中の要素がディレクトリではありません');
+    } catch (error) {
+      // lstat の ENOENT だけが未作成。リンク先の ENOENT は拒む。
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        try { lstatSync(path); } catch (missing) { if ((missing as NodeJS.ErrnoException).code === 'ENOENT') return; }
+      }
+      throw new UsageError(`loomake.config.json の tests.report「${report}」を使えません（${(error as Error).message}）`, { cause: error });
+    }
+  }
+}
+
+/** gitignore のパターン文字を引用し、ルートの一つのファイルを除外する。 */
+export function reportIgnoreLine(report: string): string {
+  let line = report.replace(/[\\*?[]/g, '\\$&').replace(/^[#!]/, '\\$&').replace(/^ +| +$/g, (spaces) => '\\ '.repeat(spaces.length));
+  if (!report.includes('/')) line = `/${line}`;
+  return line;
 }

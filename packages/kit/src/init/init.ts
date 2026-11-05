@@ -1,7 +1,8 @@
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { DEFAULT_TEST_REPORT } from '../verify/config.js';
+import { DEFAULT_TEST_REPORT, assertReportTarget, normalizeReportPath, reportIgnoreLine } from '../verify/config.js';
+import { UsageError } from '../runtime/errors.js';
 import { unifiedDiff } from './diff.js';
 import { toPosix } from '../runtime/change-files.js';
 
@@ -144,16 +145,17 @@ function reportExamples(root: string): string[] {
 
 /**
  * .gitignore に path の行を足し、init の結果に出す 1 行を返す（REQ-133）。
- * 既存の行は変えない。前後の空白と先頭の / を除いて同じ行があれば足さない
+ * 既存の行は変えない。引用されていない末尾空白と先頭の / を除いて同じ行があれば足さない
  */
-function ensureIgnored(root: string, path: string): string {
+function ensureIgnored(root: string, report: string): string {
+  const path = reportIgnoreLine(report);
   const p = join(root, '.gitignore');
   if (!existsSync(p)) {
     writeFileSync(p, `${path}\n`);
     return `作成：.gitignore（${path}）`;
   }
   const text = readFileSync(p, 'utf8');
-  if (text.split(/\r?\n/).some((l) => l.trim().replace(/^\//, '') === path)) return '変更なし：.gitignore';
+  if (text.split(/\r?\n/).some((l) => l.replace(/(?<!\\) +$/, '').replace(/^\//, '') === path.replace(/^\//, ''))) return '変更なし：.gitignore';
   writeFileSync(p, `${text}${text === '' || text.endsWith('\n') ? '' : '\n'}${path}\n`);
   return `追記：.gitignore（${path}）`;
 }
@@ -184,6 +186,25 @@ function unsafeTarget(root: string, path: string): string | null {
   return null;
 }
 
+/** 読み書きの前に全配置先と途中の要素の種類を確かめる。 */
+function assertFileTarget(root: string, path: string): void {
+  const parts = path.split('/');
+  for (let i = 0; i < parts.length; i++) {
+    const current = join(root, ...parts.slice(0, i + 1));
+    let entry;
+    try { entry = lstatSync(current); } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return;
+      throw new UsageError(`配置先「${path}」を調べられません`, { cause: error });
+    }
+    // 安全な内部リンクは、既存の挙動どおりリンク先の種類で判定する。
+    if (entry.isSymbolicLink()) entry = lstatSync(realpathSync(current));
+    if (i < parts.length - 1 ? !entry.isDirectory() : !entry.isFile()) {
+      const reason = entry.isDirectory() ? 'ディレクトリです' : i < parts.length - 1 ? '途中の要素がディレクトリではありません' : '通常のファイルではありません';
+      throw new UsageError(`配置先「${path}」は${reason}。この要素を移動するか削除してから、もう一度実行してください。どのファイルも置かずに中止しました`);
+    }
+  }
+}
+
 /** AGENTS.md・CLAUDE.md・loomake.config.json・Skill を置く。終了コード（成功 0・中止 1）を返す */
 export async function runInit(options: InitOptions): Promise<number> {
   const { root, stdout } = options;
@@ -196,6 +217,7 @@ export async function runInit(options: InitOptions): Promise<number> {
     stdout('プロジェクトの外のファイルを読み書きしないよう、どのファイルも置かずに中止しました。シンボリックリンクを外すか、プロジェクトの中を指すように直してください。');
     return 1;
   }
+  for (const path of [...files.map((f) => f.path), '.gitignore']) assertFileTarget(root, path);
   const status = files.map((f) => {
     const p = join(root, f.path);
     if (!existsSync(p)) return 'new' as const;
@@ -218,6 +240,18 @@ export async function runInit(options: InitOptions): Promise<number> {
     if (existingFiles === 'overwrite' || (existingFiles === 'ask' && await options.confirm(`${f.path} を上書きしますか [y/N] `))) overwrite.add(f.path);
   }
 
+  const configFile = files.find((f) => f.path === 'loomake.config.json');
+  if (!configFile) throw new Error('init の設定テンプレートがありません');
+  const retained = existsSync(join(root, configFile.path)) && !overwrite.has(configFile.path);
+  const configText = retained ? readFileSync(join(root, configFile.path), 'utf8') : configFile.content;
+  let config: unknown;
+  try { config = JSON.parse(configText); } catch (cause) { throw new UsageError('loomake.config.json を読めません', { cause }); }
+  if (typeof config !== 'object' || config === null || Array.isArray(config)) throw new UsageError('loomake.config.json は JSON のオブジェクトにしてください');
+  const tests = (config as { tests?: unknown }).tests;
+  if (tests !== undefined && (typeof tests !== 'object' || tests === null || Array.isArray(tests))) throw new UsageError('loomake.config.json の tests はオブジェクトにしてください');
+  const configuredReport = (tests as { report?: unknown } | undefined)?.report;
+  const report = normalizeReportPath(configuredReport === undefined ? DEFAULT_TEST_REPORT : configuredReport);
+  assertReportTarget(root, report);
   const lines: string[] = [];
   files.forEach((f, i) => {
     if (status[i] === 'same') return lines.push(`  変更なし：${f.path}`);
@@ -229,8 +263,6 @@ export async function runInit(options: InitOptions): Promise<number> {
   });
   // テストのレポートを git の追跡から外す。証拠の置き場（.loomake/evidence/）はコミットするので除外しない（REQ-133）。
   // 実行ログの置き場は、loomake run が自分で除外する
-  const config = readJson(join(root, 'loomake.config.json')) as { tests?: { report?: unknown } } | undefined;
-  const report = typeof config?.tests?.report === 'string' ? config.tests.report.replace(/^\.\//, '') : DEFAULT_TEST_REPORT;
   lines.push(`  ${ensureIgnored(root, report)}`);
   stdout(['', 'loomake init の結果:', ...lines].join('\n'));
 
