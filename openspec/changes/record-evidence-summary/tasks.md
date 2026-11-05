@@ -19,6 +19,6 @@
 - [x] 4.3 利用者文書とchangeset、branch日誌に独立PRの完成範囲と親#69の未完了を記録する。
 
 ## 5. ローカルの完了
-- [ ] 5.1 通常の `pnpm -s verify --change record-evidence-summary --done --scope local` を実行し、全タスク・対応試験・全検査PASSと実終了0の原本を保存する。<!-- loomake:gate=done -->
+- [x] 5.1 通常の `pnpm -s verify --change record-evidence-summary --done --scope local` を実行し、全タスク・対応試験・全検査PASSと実終了0の原本を保存する。<!-- loomake:gate=done -->
 
 最終受入は管理役が独立レビュー・CI scope ci完了・必須5チェック・変更packageの通常3 OS成功で確認する。部分受入や未アップロードを親#69完成とは扱わない。製品の受入後に同期・archiveする。
