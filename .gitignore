@@ -41,3 +41,10 @@ __pycache__/
 
 # kit を試す試験プロジェクト（別の git リポジトリ）
 .trial/
+
+# ルートに置く作業用のファイル（PR のレビュー取得・承認待ちの一覧など。コミットしない）
+/c121.json
+/notified.txt
+/pending-approvals.csv
+/prs_open.json
+/wbs-v1.4-review.md
