@@ -9,4 +9,4 @@
 
 ## 3. 検証
 - [x] 3.1 関連試験・lint・型検査を通す
-- [ ] 3.2 `pnpm -s verify --change repair-run-stop-lifecycle --done --scope local` を通す <!-- loomake:gate=done -->
+- [x] 3.2 `pnpm -s verify --change repair-run-stop-lifecycle --done --scope local` を通す <!-- loomake:gate=done -->
