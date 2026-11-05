@@ -12,7 +12,7 @@
 
 ## 4. 確認
 
-- [ ] 4.1 全 Requirement の試験、型・lint・仕様の検査を通し、日誌とレビュー依頼を整える（REQ-443・REQ-444・REQ-445）
-- [ ] 4.2 `pnpm -s verify --change detect-fixed-summary-tampering --done --scope local` を通す（REQ-443・REQ-444・REQ-445） <!-- loomake:gate=done -->
+- [x] 4.1 全 Requirement の試験、型・lint・仕様の検査を通し、日誌とレビュー依頼を整える（REQ-443・REQ-444・REQ-445）
+- [x] 4.2 `pnpm -s verify --change detect-fixed-summary-tampering --done --scope local` を通す（REQ-443・REQ-444・REQ-445） <!-- loomake:gate=done -->
 
 最終の合格には CI の scope ci 完了ゲート・必須5チェック・kit の3 OSと、独立レビューの受入が別に必要であり、この local タスクの完了だけでは満たさない。
