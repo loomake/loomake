@@ -35,6 +35,53 @@ openspec/changes/<change-id>/
 - 影響するコード：server/api/auth/*
 ```
 
+### 品質 YAML の提案
+
+UQ/PQ の案を既存の読取処理で確かめる例。Loomake 自身の quality.yaml の PQ-900 に要件 REQ-313 を関連づけたもので、別案件の目標やモデルの選定には使わない。
+
+```yaml
+version: 2
+model: iso-iec-25010-2011
+product:
+  PQ-900:
+    characteristic: functional_suitability
+    subcharacteristic: functional_correctness
+    blocking: true
+    applicability: applicable
+    linked_requirements: [REQ-313]
+    evidence:
+      - source: ci.test_report
+        metric: required_subjects_with_failed_tests
+        target: "== 0"
+        min_samples: 1
+```
+
+### 合意した更新と保持の例
+
+変更部分の YAML 抜粋であり、完成した quality.yaml の例ではない。合意した変更は PQ-900 の linked_requirements に REQ-034 を追加することだけとする。custom は既存の未知キーであり、新しい未知キーの提案ではない。
+
+#### 変更前
+
+```yaml
+product:
+  PQ-900:
+    # 既存のコメント
+    blocking: true
+    linked_requirements: [REQ-313]
+    custom: 1
+```
+
+#### 変更後
+
+```yaml
+product:
+  PQ-900:
+    # 既存のコメント
+    blocking: true
+    linked_requirements: [REQ-313, REQ-034]
+    custom: 1
+```
+
 ## specs/<capability>/spec.md（差分）
 
 ```markdown

@@ -27,16 +27,24 @@ import {
 } from '@loomake/core';
 import { assembleVerifyResult } from './result.js';
 import { readDependencies } from './dependencies.js';
-import { assertReportTarget, assertChangeId, loadConfig, type LoomakeConfig } from './config.js';
+import { assertReportTarget, assertChangeId, loadVerifyConfig, type LoomakeConfig } from './config.js';
 import { QUALITY_FILE, readQualityFile, type QualitySchemaLike } from './quality-input.js';
 import { evaluateQualityConditions, qualitySubjectsGuard } from './policy/quality-conditions.js';
 import { observeTestReport, type TestReportReceipt } from './policy/test-report-observation.js';
 import { basisHash, findProducer, gitHead, readReport } from './quality-receipt.js';
 import { sha256Hex } from './hash.js';
-import { UsageError } from '../runtime/errors.js';
+import { InputReadFailure, RuntimeFailure, UsageError } from '../runtime/errors.js';
 import { createInputReader, JSON_LIMITS, type InputReader } from '../runtime/input.js';
 import { findChangeDir, resolveChangeDir, specFiles, toPosix, type ChangeLocation } from '../runtime/change-files.js';
 import { createArchiveInput } from './archive-input.js';
+
+/** 品質コマンドの実行経路で得た終わり方。テスト全件の完了は保証しない。 */
+export type QualityCommandOutcome = { name: string } & (
+  | { kind: 'exited'; status: number }
+  | { kind: 'signal'; signal: NodeJS.Signals }
+  | { kind: 'error'; code: string | null }
+  | { kind: 'timeout' | 'interrupted' | 'output'; reason?: string }
+);
 
 export type VerifyOptions = {
   /** プロジェクトのルート（loomake.config.json のあるディレクトリ） */
@@ -49,6 +57,8 @@ export type VerifyOptions = {
   skipCommands?: boolean;
   /** 進捗の表示先。--json のときも標準出力を汚さないよう、CLI は標準エラーを渡す */
   progress?: (message: string) => void;
+  /** 品質コマンドの終わり方の同期通知。訪問時の期限切れも通知し、省略・空・未訪問は通知しない。例外は呼出元へ伝える。 */
+  onCommand?: (outcome: QualityCommandOutcome) => void;
   /** 品質コマンドの実行時間の上限（ミリ秒、すべてのコマンドの合計）。上限を過ぎたコマンドは止めて、その項目を不足にする */
   timeoutMs?: number;
   /**
@@ -77,7 +87,7 @@ export const INTERRUPTED = '中断されたので止めました';
 
 
 /**
- * verify を実行して 2.0.0 の結果を返す（REQ-311）。使い方と設定の誤りは UsageError を投げる。
+ * verify を実行して 2.0.0 の結果を返す（REQ-311）。使い方と設定の誤りはUsageError、設定のOS読取失敗はRuntimeFailureを投げる。
  * 終了コードは verifyExitCode で決め、例外は verifyAbortedResult で aborted の結果にできる
  */
 export function runVerify(options: VerifyOptions): VerifyResult {
@@ -87,7 +97,11 @@ export function runVerify(options: VerifyOptions): VerifyResult {
   // 実パスのルートで動かし、相対パスはどちらのルートの中にあるかで作る
   const givenRoot = resolve(options.root);
   const root = existsSync(givenRoot) ? realpathSync(givenRoot) : givenRoot;
-  const config = loadConfig(root);
+  let config: LoomakeConfig;
+  try { config = loadVerifyConfig(root); } catch (error) {
+    if (error instanceof InputReadFailure) throw new RuntimeFailure(error.message, { cause: error });
+    throw error;
+  }
   const gate = changeId ? (options.gate ?? 'spec-only') : undefined;
   const scope: VerifyScope = options.scope ?? (gate === 'done' ? 'ci' : 'local');
   const checks: GateCheck[] = [];
@@ -108,7 +122,7 @@ export function runVerify(options: VerifyOptions): VerifyResult {
   const qualityChecks: VerifyCheckResult[] = [];
 
   if (!changeId) {
-    runCommands(root, config, skipCommands, record, fail, progress, options.timeoutMs);
+    runCommands(root, config, skipCommands, record, fail, progress, options.timeoutMs, options.onCommand);
   } else {
     // ci の完了ゲートだけが品質の証拠を判定する。ほかのゲートは quality.yaml があれば形だけを確かめる（REQ-319・R-C001-10 A）
     const judgeQuality = gate === 'done' && scope === 'ci';
@@ -135,7 +149,7 @@ export function runVerify(options: VerifyOptions): VerifyResult {
       const clearedBefore = !existsSync(reportPath);
       const targetBefore = quality && !skipCommands ? gitHead(root) : null;
       const startedAt = Date.now();
-      const exitCode = runCommands(root, config, skipCommands, record, fail, progress, options.timeoutMs);
+      const exitCode = runCommands(root, config, skipCommands, record, fail, progress, options.timeoutMs, options.onCommand);
       const finishedAt = Date.now();
       // 品質コマンドを省いたときは、前回のレポートを今回の成功の一覧に使わず、coverage を出さない（REQ-040）
       if (skipCommands) record('要件ごとのテスト', 'insufficient', REQUIREMENTS_NOT_RUN);
@@ -467,6 +481,7 @@ export const REQUIREMENTS_NOT_RUN = '品質コマンドを実行していない�
  */
 function runCommands(
   root: string, config: LoomakeConfig, skip: boolean, record: Recorder, fail: RunErrorRecorder, progress: (m: string) => void, timeoutMs?: number,
+  onCommand?: (outcome: QualityCommandOutcome) => void,
 ): number | null {
   let exitCode: number | null = 0;
   const failed = (status: number | null) => {
@@ -488,27 +503,36 @@ function runCommands(
     if (left !== undefined && left <= 0) {
       fail(`command: ${name}`, TIMED_OUT);
       failed(null);
+      onCommand?.({ name, kind: 'timeout' });
       continue;
     }
     progress(`… ${name}: ${cmd}`);
-    let r;
+    let r!: ReturnType<typeof runExternal>;
+    let limit: ProcessLimitError | undefined;
     try {
       r = left === undefined && !hasProcessBudget()
         ? spawnSync(cmd, { cwd: root, shell: true, encoding: 'utf8', maxBuffer: MAX_BUFFER })
         : runExternal(cmd, [], { cwd: root, shell: true, timeoutMs: left, qualityCommand: true, maxBuffer: MAX_BUFFER });
     } catch (error) {
       if (!(error instanceof ProcessLimitError)) throw error;
-      const reason = error.kind === 'interrupted' ? (error.reason ? `${INTERRUPTED}（${error.reason}）` : INTERRUPTED) : error.message;
-      fail(`command: ${name}`, error.kind === 'timeout' ? `${TIMED_OUT}${error.reason ? `（${error.reason}）` : ''}` : reason);
+      limit = error;
+    }
+    if (limit) {
+      const reason = limit.kind === 'interrupted' ? (limit.reason ? `${INTERRUPTED}（${limit.reason}）` : INTERRUPTED) : limit.message;
+      fail(`command: ${name}`, limit.kind === 'timeout' ? `${TIMED_OUT}${limit.reason ? `（${limit.reason}）` : ''}` : reason);
       failed(null);
+      onCommand?.({ name, kind: limit.kind, ...(limit.reason === undefined ? {} : { reason: limit.reason }) });
       // 共有予算では後続の外部操作も起動せず拒否し、各項目に未実行の理由を残す。
-      if ((error.kind === 'interrupted' || error.reason) && !hasProcessBudget()) return exitCode;
+      if ((limit.kind === 'interrupted' || limit.reason) && !hasProcessBudget()) return exitCode;
       continue;
     }
     // spawnSync は起動に失敗すると、型に反して stdout・stderr が null になる
     const out = `${(r.stdout as string | null) ?? ''}${(r.stderr as string | null) ?? ''}`.trim();
     record(`command: ${name}`, r.status === 0 ? 'pass' : 'fail', r.status === 0 ? '' : out.split('\n').slice(-30).join('\n'));
     if (r.status !== 0) failed(r.status);
+    onCommand?.(r.error ? { name, kind: 'error', code: r.error.code ?? null }
+      : r.status !== null ? { name, kind: 'exited', status: r.status }
+        : r.signal ? { name, kind: 'signal', signal: r.signal } : { name, kind: 'error', code: null });
   }
   return exitCode;
 }

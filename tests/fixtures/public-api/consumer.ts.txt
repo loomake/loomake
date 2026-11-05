@@ -5,7 +5,7 @@ import {
   type ParseError, type Trace, type LedgerRow, type QuestionRow, type AssumptionRow, type SpecOperation, type SpecRequirement, type Task, type VerifyResult, type VerifyCheckResult, type VerifyDecision,
   LEGACY_VERIFY_RESULT_SCHEMA_VERSION, type LegacyVerifyResult, type LegacyVerifyCheckResult, type LegacyEvidence,
 } from '@loomake/core';
-import { evaluateAgreement, evaluateTestCoverage, type AgreementDecision, type TestCoverageDecision, runVerify, formatVerifyResult, verifyExitCode, UsageError, type VerifyOptions } from '@loomake/kit';
+import { evaluateAgreement, evaluateTestCoverage, type AgreementDecision, type TestCoverageDecision, runVerify, formatVerifyResult, verifyExitCode, UsageError, type VerifyOptions, type QualityCommandOutcome } from '@loomake/kit';
 import { runRecord, runReport, buildReport, EVIDENCE_SCHEMA_VERSION, type Evidence, type EvidenceDocument, type Report, type ReportRow } from '@loomake/trace';
 import { runRun, maskSecrets, type RunOptions, type RunSummary } from '@loomake/runner';
 
@@ -39,6 +39,11 @@ export function consumePublicApi(root: string) {
   const legacyEvidence: LegacyEvidence = { schemaVersion: 1, change: 'sample', sha: 'a', committedAt: '', recordedAt: '', verify: legacy };
   const options: VerifyOptions = { root, changeId: 'sample', gate: 'spec-only' };
   const verified: VerifyResult = runVerify(options);
+  // REQ-456: 元のオプション利用を残し、追加の公開型を通知側でも使う。
+  const outcomes: QualityCommandOutcome[] = [];
+  const observing: VerifyOptions = { root, onCommand: outcome => outcomes.push(outcome) };
+  const observed: VerifyResult = runVerify(observing);
+  void observed;
   const text: string = formatVerifyResult(verified);
   const oldEvidence: Evidence = { schemaVersion: EVIDENCE_SCHEMA_VERSION, change: 'sample', sha: 'a', committedAt: '', recordedAt: '', verify: verification };
   const recorded: number = runRecord({ root, changeId: 'sample', stdout: () => {} });

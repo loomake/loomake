@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { parseDocument } from 'yaml';
 import { join } from 'node:path';
 import { loadQualitySchema, type VerifyRunError } from '@loomake/core';
-import { createInputReader, readQualityFile, verifyExitCode, MINIMAL_QUALITY_YAML, QUALITY_FILE, type InputReader, type QualityReadResult } from '../src/index.js';
+import { createInputReader, evaluateQualityConditions, readQualityFile, verifyExitCode, MINIMAL_QUALITY_YAML, QUALITY_FILE, type InputReader, type QualityReadResult } from '../src/index.js';
 
 const { qualitySchema } = await loadQualitySchema();
 
@@ -151,4 +152,59 @@ it('[REQ-398][REQ-310] 2行の公開定数と未知キーの互換、config/2と
       expect(exitOf(error)).toBe(2);
     });
   }
+});
+
+
+describe('Skill の品質 YAML 例', () => {
+  const example = () => {
+    const format = readFileSync(new URL('../templates/skills/req-to-openspec/references/openspec-format.md', import.meta.url), 'utf8');
+    const match = /### 品質 YAML の提案[\s\S]*?```yaml\r?\n([\s\S]*?)\r?\n```/.exec(format);
+    expect(match).not.toBeNull();
+    return match![1];
+  };
+  it('[REQ-408] 同じ例をdoneで読み、関連REQと全必須evidenceのtargetを持つ', () => {
+    withRoot(example(), (root) => {
+      const result = read(root, 'done');
+      expect(result.status).toBe('loaded');
+      if (result.status !== 'loaded') throw new Error('品質 YAML 例を読み取れません');
+      const items = [...Object.values(result.quality.objectives), ...Object.values(result.quality.product)];
+      expect(items.length).toBeGreaterThan(0);
+      for (const item of items) {
+        expect(item.linked_requirements).toEqual(['REQ-313']);
+        expect(item.evidence.length).toBeGreaterThan(0);
+        for (const evidence of item.evidence) expect(evidence.target).toBeDefined();
+      }
+    });
+  });
+  it('[REQ-408] 同じ例は観測零件でも判定対象がありPASSにはならない', () => {
+    withRoot(example(), (root) => {
+      const result = read(root, 'done');
+      expect(result.status).toBe('loaded');
+      if (result.status !== 'loaded') throw new Error('品質 YAML 例を読み取れません');
+      const checks = evaluateQualityConditions(result.quality, []);
+      expect(checks.length).toBeGreaterThan(0);
+      expect(checks.every((check) => check.result === 'INSUFFICIENT_EVIDENCE')).toBe(true);
+      expect(checks.filter((check) => check.result === 'PASS')).toEqual([]);
+    });
+  });
+});
+
+
+it('[REQ-410] 保持例の合意更新だけが変わり、対象外の値・未知キー・コメント・行順は残る', () => {
+  const format = readFileSync(new URL('../templates/skills/req-to-openspec/references/openspec-format.md', import.meta.url), 'utf8');
+  const section = format.slice(format.indexOf('### 合意した更新と保持の例'));
+  const blocks = [...section.matchAll(/```yaml\r?\n([\s\S]*?)\r?\n```/g)].slice(0, 2);
+  expect(blocks).toHaveLength(2);
+  const docs = blocks.map((block) => parseDocument(block[1]));
+  for (const doc of docs) expect(doc.errors).toEqual([]);
+  type Fragment = { product: Record<string, { linked_requirements: string[]; blocking: boolean; custom: number }> };
+  const before = docs[0].toJS() as Fragment;
+  const after = docs[1].toJS() as Fragment;
+  expect(before.product['PQ-900'].linked_requirements).toEqual(['REQ-313']);
+  expect(after.product['PQ-900'].linked_requirements).toEqual(['REQ-313', 'REQ-034']);
+  expect(after.product['PQ-900'].custom).toBe(1);
+  expect({ ...after.product['PQ-900'], linked_requirements: before.product['PQ-900'].linked_requirements }).toEqual(before.product['PQ-900']);
+  const unchanged = blocks.map((block) => block[1].split(/\r?\n/).filter((line) => !line.trimStart().startsWith('linked_requirements:')));
+  expect(unchanged[1]).toEqual(unchanged[0]);
+  expect(unchanged[0]).toContain('    # 既存のコメント');
 });
