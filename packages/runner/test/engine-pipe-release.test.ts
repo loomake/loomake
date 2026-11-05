@@ -15,9 +15,12 @@ afterEach(() => { vi.useRealTimers(); });
 function fakeChild() {
   const child = Object.assign(new EventEmitter(), { stdin: new PassThrough(), stdout: new PassThrough(), stderr: new PassThrough() });
   let exited = false;
+  let closed = false;
   let code: number | null = null;
   const close = () => {
-    if (exited && child.stdout.destroyed && child.stderr.destroyed) child.emit('close', code);
+    if (!closed && exited && child.stdout.destroyed && child.stderr.destroyed) {
+      closed = true; child.emit('close', code);
+    }
   };
   child.once('exit', (value: number | null) => { exited = true; code = value; close(); });
   child.stdout.on('close', close); child.stderr.on('close', close);
@@ -31,7 +34,7 @@ describe('エンジンの出力読み取りの猶予', () => {
     const child = fakeChild();
     const controller = new AbortController();
     let completed = false;
-    const pending = runClaude({ cwd: '.', env: {}, prompt: 'test', commands: [], skipPermissions: false, timeoutMs: 1000, signal: controller.signal, maxOutputBytes: 100 });
+    const pending = runClaude({ cwd: '.', env: {}, prompt: 'test', commands: [], skipPermissions: false, timeoutMs: 1000, signal: controller.signal, maxOutputBytes: 100, onStderr: () => {} });
     void pending.then(() => { completed = true; });
     child.stdout.write('normal output');
     if (mode === 'normal') child.emit('exit', 0);
