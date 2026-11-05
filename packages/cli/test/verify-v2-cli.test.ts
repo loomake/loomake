@@ -65,6 +65,25 @@ describe('verify 2.0.0 の出力と終了コード', () => {
     expect(r.stderr).toContain('change-id「../../packages」');
   });
 
+  it.each([
+    { name: '仕様ゲートの change 未指定', argv: ['--spec-only', '--json'], message: '--spec-only・--done には --change <id> が必要です' },
+    { name: '完了ゲートの change 未指定', argv: ['--done', '--json'], message: '--spec-only・--done には --change <id> が必要です' },
+    { name: 'change の値欠落', argv: ['--json', '--change'], message: '--change には値を続けてください' },
+    { name: 'change の空値', argv: ['--change=', '--spec-only', '--json'], message: '--change には値を続けてください' },
+  ])('[REQ-311][REQ-041] $name は change が null の usage aborted を返し、受け取った入力の診断を残す', async ({ argv, message }) => {
+    const r = await withProject({}, (root) => run(root, 'verify', ...argv));
+    expect(r.code).toBe(2);
+    const result = JSON.parse(r.stdout);
+    expect(result).toEqual({
+      schemaVersion: '2.0.0', change: null,
+      run: { status: 'aborted', errors: [{ kind: 'usage', target: 'verify', message, next: expect.any(String) }] },
+    });
+    expect(result.run.errors[0].next).not.toBe('');
+    expect(verifyResultSchema.safeParse(result).success).toBe(true);
+    expect(r.stderr).toContain(message);
+    expect(r.stderr).toContain('使い方:');
+  });
+
   it('[REQ-311][REQ-041] loomake.config.json の誤りは config の aborted で 2。値として読まれた --json は単独の --json とみなさない', async () => {
     const files = { 'loomake.config.json': '{ "commands": [] }' };
     const [json, text] = await withProject({ files }, async (root) => [
