@@ -130,8 +130,8 @@ describe('コマンドの入力予算', () => {
     const dir = join(root, '.loomake/evidence/c1'); mkdirSync(dir, { recursive: true });
     const value = { schemaVersion: 1, change: 'c1', sha: 'a'.repeat(40), recordedAt: '2026-10-24T00:00:00Z', committedAt: '2026-10-24T00:00:00Z', verify: { schemaVersion: '1.0.0', change: 'c1', mode: 'done', ok: true, results: [], coverage: {} } };
     const whitespace = Buffer.alloc(45 * 1024 * 1024, ' ');
-    for (const name of ['a', 'b', 'c']) {
-      const file = join(dir, `20261024T000000Z-${name.repeat(12)}.json`);
+    for (const [name, day] of [['a', '20261022'], ['b', '20261023'], ['c', '20261024']]) {
+      const file = join(dir, `${day}T000000Z-${name.repeat(12)}.json`);
       writeFileSync(file, JSON.stringify(value)); appendFileSync(file, whitespace);
     }
     const out: string[] = [];

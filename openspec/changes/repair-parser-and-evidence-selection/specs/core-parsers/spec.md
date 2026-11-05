@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: trace.md の 3 つの表の読み取り
-core は trace.md の「要件台帳」「確認事項」「仮定」の 3 つの表を読み、型付きのオブジェクトとして返す SHALL。確認事項には「回答者」「回答日」を、仮定には「承認者」「承認日」を含めて返す SHALL。この 4 つの列が表にないときは、空の文字列として返し、エラーにしない SHALL。それ以外の列が表にないときは、その表と列の名前を示す解析エラーを返す SHALL。 表の読み取りは最初の表の後の空行で終え、後続の表を含めない SHALL。先頭の BOM を 1 つだけ除いて読む SHALL。
+core は trace.md の「要件台帳」「確認事項」「仮定」の 3 つの表を読み、型付きのオブジェクトとして返す SHALL。確認事項には「回答者」「回答日」を、仮定には「承認者」「承認日」を含めて返す SHALL。この 4 つの列が表にないときは、空の文字列として返し、エラーにしない SHALL。それ以外の列が表にないときは、その表と列の名前を示す解析エラーを返す SHALL。表の読み取りは最初の表の後の空行で終え、後続の表を含めない SHALL。先頭の BOM を 1 つだけ除いて読む SHALL。
 
 Source: REQ-011, REQ-077, REQ-078
 
@@ -38,7 +38,7 @@ Source: REQ-011, REQ-077, REQ-078
 - **THEN** BOM のない本文と同じ値と行番号を返す
 
 ### Requirement: 差分仕様の読み取り
-core は OpenSpec の差分仕様（spec.md）から、Requirement ごとに 操作（ADDED・MODIFIED・REMOVED・RENAMED）、名前、Source の要件 ID、Scenario 数を取り出す SHALL。OpenSpec 1.14 以上の書式を読める MUST。 閉じフェンスは開きと同じ記号で長さが以上、後続が空白だけの行に限る SHALL。先頭の BOM を 1 つだけ除き、Source ID は初出順で重複なく返す SHALL。
+core は OpenSpec の差分仕様（spec.md）から、Requirement ごとに 操作（ADDED・MODIFIED・REMOVED・RENAMED）、名前、Source の要件 ID、Scenario 数を取り出す SHALL。OpenSpec 1.14 以上の書式を読める MUST。閉じフェンスは開きと同じ記号で開きの長さ以上、後続が空白だけの行に限る SHALL。先頭の BOM を 1 つだけ除き、Source ID は初出順で重複なく返す SHALL。
 
 Source: REQ-013, REQ-051
 

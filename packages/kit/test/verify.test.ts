@@ -608,6 +608,17 @@ describe('回答の反映と書き方の案内（#285）', () => {
     expect(verifyExitCode(r)).toBe(0);
   });
 
+  it('[REQ-360][REQ-422] 重複した質問 ID の案内も表順で一度だけ示し解析を不合格にする', () => {
+    const trace = traceMd({ ledger: [ledgerRow('REQ-012'), pending('REQ-027'), pending('REQ-029'), pending('REQ-002')], questions: [
+      qrow('Q-17', 'REQ-029, REQ-027・REQ-027'), qrow('Q-15', 'REQ-027・REQ-029'), qrow('Q-17', 'REQ-029'),
+    ] });
+    const r = withProject({ trace }, specOnly);
+    expect(check(r, '確認待ちの要件')?.detail).toBe('REQ-027（Q-17・Q-15）, REQ-029（Q-17・Q-15）, REQ-002');
+    expect(check(r, 'trace.md の解析')?.status).toBe('fail');
+    expect(check(r, 'trace.md の解析')?.detail).toContain('Q-17');
+    expect(verifyExitCode(r)).toBe(1);
+  });
+
   it('[REQ-360] 長いREQ IDや前に英字のある参照を別の要件へ部分一致させない', () => {
     const trace = traceMd({ ledger: [ledgerRow('REQ-012'), pending('REQ-027')], questions: [qrow('Q-15', 'REQ-0270, XREQ-027')] });
     expect(withProject({ trace }, (root) => check(specOnly(root), '確認待ちの要件')?.detail)).toBe('REQ-027');
