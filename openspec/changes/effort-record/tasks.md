@@ -6,7 +6,7 @@
 
 ## 2. coreの構造と公開型
 
-- [ ] 2.1 Effort 1の構造スキーマ・導出型・定数・遅延loaderを追加し、排他形式・省略/0・不正値・静的zod非読込の追加試験とAPI説明で確かめる。既存12JSONの一致と依存不変も確認する（REQ-466）
+- [x] 2.1 Effort 1の構造スキーマ・導出型・定数・遅延loaderを追加し、排他形式・省略/0・不正値・静的zod非読込の追加試験とAPI説明で確かめる。既存12JSONの一致と依存不変も確認する（REQ-466）
 
 ## 3. traceの入力と記録
 
@@ -26,7 +26,7 @@
 
 - [ ] 6.1 全ScenarioとREQ試験対応、全実装タスクの完了を確認し、`pnpm -s verify --change effort-record --done --scope local` を通す（REQ-466, REQ-066, REQ-127, REQ-128） <!-- loomake:gate=done -->
 
-注：現時点では全タスク未着手。ローカル完了は最終合格ではなく、CIのdone（scope ci）と必須5チェック、変更packageの3OS、Codexと独立Opusの通常L3レビューを別途満たす。
+注：チェック済みのタスクまで実施した。ローカル完了は最終合格ではなく、CIのdone（scope ci）と必須5チェック、変更packageの3OS、Codexと独立Opusの通常L3レビューを別途満たす。
 
 ## Workflow follow-up
 
