@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
+import { Ajv2020 } from 'ajv/dist/2020.js';
 import { loadSummarySchemas, SUMMARY_VERSION } from '../src/index.js';
 import { renderSummaryJsonSchemas, renderJsonSchemas, renderVersionedJsonSchemas } from '../src/json-schema.js';
 
@@ -9,6 +10,19 @@ const sample = () => ({ schemaVersion: 2, change: 'sample', sha: 'a'.repeat(40),
   summaryVersion: 1, role: 'development', ci: null, execution: { id: 'id', origin: 'local', evaluator: { name: '@loomake/trace', version: '0.0.0' }, basisSha256: 'b'.repeat(64), environment: { node: 'v24', platform: 'linux', arch: 'x64' }, commands: { source: 'defaults', sha256: null, nameRefs: null }, producer: null, startedAt: '2026-11-05T00:00:00Z', finishedAt: '2026-11-05T00:00:01Z', verification: 'executed' }, artifacts: [], request: null, observation: null, gaps: [] });
 
 describe('要約拡張の独立した構造', () => {
+  it('[REQ-460][REQ-461] ciとlocationの試行番号は構造と生成Schemaの両方で正規文字列のsafe境界を守る', async () => {
+    const { evidenceSummarySchema, summaryArtifactSchema } = await loadSummarySchemas();
+    const schema = JSON.parse(Object.values(renderSummaryJsonSchemas())[0]);
+    const ajv = new Ajv2020({ strict: false });
+    const ci = ajv.compile(schema.properties.ci), location = ajv.compile(schema.properties.artifacts.items.properties.location);
+    for (const runAttempt of ['1', '9007199254740991', 1, '0', '01', '-1', '1e2', '1.5', ' 1', '1 ', '9007199254740992', '9999999999999999', ['1'], { toString: null }]) {
+      const expected = typeof runAttempt === 'string' && ['1', '9007199254740991'].includes(runAttempt);
+      const c = { runId: '1', runAttempt, source: 'environment' };
+      const l = { type: 'github-actions-artifact', repository: 'o/r', runId: '1', runAttempt, artifactName: 'test', entry: 'report.json', createdAt: '2026-11-05T00:00:00Z' };
+      expect(evidenceSummarySchema.shape.ci.safeParse(c).success).toBe(expected); expect(ci(c)).toBe(expected);
+      expect(summaryArtifactSchema.shape.location.safeParse(l).success).toBe(expected); expect(location(l)).toBe(expected);
+    }
+  });
   it('[REQ-460] 遅延ロードと独立JSON Schemaを公開し元12本の内容を保つ', async () => {
     const { evidenceSummarySchema } = await loadSummarySchemas();
     expect(SUMMARY_VERSION).toBe(1);

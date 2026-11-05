@@ -140,6 +140,8 @@ void [summaryRawBytes, summaryInputFailure];
 import { loadSummarySchemas, type EvidenceSummary, type SummaryArtifact } from '@loomake/core';
 import { checkArtifactBody, artifactRetention, type ArtifactBodyCheck, type ArtifactRetentionResult } from '@loomake/kit';
 export type SummaryVersionContract = Assert<Equal<EvidenceSummary['summaryVersion'], 1>>;
+export type SummaryCiAttemptContract = Assert<Equal<NonNullable<EvidenceSummary['ci']>['runAttempt'], string>>;
+export type SummaryLocationAttemptContract = Assert<Equal<NonNullable<SummaryArtifact['location']>['runAttempt'], string>>;
 export function consumeSummaryArtifact(artifact: SummaryArtifact, bytes: Uint8Array) {
   const checked: ArtifactBodyCheck = checkArtifactBody(artifact, bytes);
   const retention: ArtifactRetentionResult = artifactRetention(artifact, '90d', new Date('2026-11-05T00:00:00Z'));

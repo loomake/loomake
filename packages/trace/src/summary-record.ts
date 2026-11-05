@@ -14,9 +14,9 @@ export function executionSummary(
   root: string, changeDir: string, result: VerifyResult, started: number, finished: number, env: NodeJS.ProcessEnv,
 ): SummaryExtension {
   const github = env.GITHUB_ACTIONS === 'true';
-  const attempt = Number(env.GITHUB_RUN_ATTEMPT);
+  const attempt = env.GITHUB_RUN_ATTEMPT;
   const runId = env.GITHUB_RUN_ID;
-  const ci = github && typeof runId === 'string' && /^\d+$/.test(runId) && /^[1-9]\d*$/.test(env.GITHUB_RUN_ATTEMPT ?? '') && Number.isSafeInteger(attempt)
+  const ci = github && typeof runId === 'string' && /^\d+$/.test(runId) && typeof attempt === 'string' && /^[1-9]\d*$/.test(attempt) && Number.isSafeInteger(Number(attempt))
     ? { runId, runAttempt: attempt, source: 'environment' as const } : null;
   const evidence = (result.checks ?? []).flatMap((check) => check.evidence);
   const producers = [...new Set(evidence.filter((s) => /^producer:(vitest|jest)@.+$/.test(s)))];

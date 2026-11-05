@@ -19,11 +19,13 @@ describe('要約拡張と既存reportの互換性', () => {
       const legacy = { schemaVersion: 2, change: e.change, sha: e.sha, committedAt: e.committedAt, recordedAt: e.recordedAt, verify: e.verify, storage: { future: null } };
       write(path, JSON.stringify(legacy)); const before = buildReport(root, 'sample'); expect(before).toBeDefined();
       write(path, JSON.stringify(e)); expect(buildReport(root, 'sample')).toEqual(before);
-      write('.loomake/evidence/sample/20261105T000002Z-aaaaaaaaaaaa.json', JSON.stringify({ ...e, summaryVersion: 2 }));
-      expect(() => buildReport(root, 'sample')).toThrow('要約拡張の版');
-      const out: string[] = [], err: string[] = [];
-      expect(await main(['trace', 'report', '--change', 'sample'], { cwd: root, stdout: (s) => out.push(s), stderr: (s) => err.push(s) })).toBe(2);
-      expect(err.join('\n')).toContain('要約拡張の版'); expect(out).toEqual([]);
+      for (const [invalid, reason] of [[{ ...e, summaryVersion: 2 }, '要約拡張の版'], [{ ...e, role: ['development'] }, 'role'], [{ ...e, role: { toString: null } }, 'role']] as const) {
+        write('.loomake/evidence/sample/20261105T000002Z-aaaaaaaaaaaa.json', JSON.stringify(invalid));
+        expect(() => buildReport(root, 'sample')).toThrow(reason);
+        const out: string[] = [], err: string[] = [];
+        expect(await main(['trace', 'report', '--change', 'sample'], { cwd: root, stdout: (s) => out.push(s), stderr: (s) => err.push(s) })).toBe(2);
+        expect(err.join('\n')).toContain(reason); expect(err.join('\n')).toContain('20261105T000002Z-aaaaaaaaaaaa.json'); expect(out).toEqual([]);
+      }
     } finally { rmSync(root, { recursive: true, force: true }); }
   });
 });

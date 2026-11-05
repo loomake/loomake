@@ -33,10 +33,10 @@ beforeEach(() => {
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); });
 
 describe('recordの実行事実', () => {
-  it('[REQ-460][REQ-461] 既存verifyを1回だけ呼びCI識別・元SHA・参照hashと未観測gapを保存する', () => {
+  it.each(['2', '9007199254740991'])('[REQ-460][REQ-461] 既存verifyを1回だけ呼びCI識別・元SHA・参照hashと未観測gapを保存する: %s', (attempt) => {
     const repo = fixture(); const onVerify = vi.fn();
-    expect(runRecord({ root: repo.root, changeId: 'sample', stdout: () => {}, onVerify, env: { GITHUB_ACTIONS: 'true', GITHUB_RUN_ID: '123', GITHUB_RUN_ATTEMPT: '2' }, now: () => new Date('2026-11-05T01:00:00Z') })).toBe(0);
-    const e = saved(repo.root); expect(e).toMatchObject({ schemaVersion: 2, summaryVersion: 1, role: 'development', sha, ci: { runId: '123', runAttempt: 2, source: 'environment' }, request: null, observation: null });
+    expect(runRecord({ root: repo.root, changeId: 'sample', stdout: () => {}, onVerify, env: { GITHUB_ACTIONS: 'true', GITHUB_RUN_ID: '123', GITHUB_RUN_ATTEMPT: attempt }, now: () => new Date('2026-11-05T01:00:00Z') })).toBe(0);
+    const e = saved(repo.root); expect(e).toMatchObject({ schemaVersion: 2, summaryVersion: 1, role: 'development', sha, ci: { runId: '123', runAttempt: attempt, source: 'environment' }, request: null, observation: null });
     expect(e.execution.commands).toEqual({ source: 'loomake.config.json', sha256: createHash('sha256').update(readFileSync(join(repo.root, 'loomake.config.json'))).digest('hex'), nameRefs: null });
     expect(JSON.stringify(e)).not.toContain('PRIVATE_COMMAND_TEXT'); expect(JSON.stringify(e)).not.toContain('secretCustom');
     expect(e.execution.id).toMatch(/^[a-f0-9-]{36}$/); expect(e.execution.origin).toBe('github-actions');
@@ -53,6 +53,10 @@ describe('recordの実行事実', () => {
   it('[REQ-461] 設定省略でも既定値を受け付け空文字hashや実訪問を作らない', () => {
     const repo = fixture(false); expect(runRecord({ root: repo.root, changeId: 'sample', env: {}, stdout: () => {} })).toBe(0);
     expect(saved(repo.root).execution.commands).toEqual({ source: 'defaults', sha256: null, nameRefs: null });
+  });
+  it.each(['0', '01', '-1', '1.5', '1e2', ' 1', '1 ', '9007199254740992', 1, ['1'], { toString: null }])('[REQ-461] CI試行番号%sを正規化せずnullにする', (attempt) => {
+    const repo = fixture(); runRecord({ root: repo.root, changeId: 'sample', env: { GITHUB_ACTIONS: 'true', GITHUB_RUN_ID: '123', GITHUB_RUN_ATTEMPT: attempt } as NodeJS.ProcessEnv, stdout: () => {} });
+    expect(saved(repo.root).ci).toBeNull();
   });
 });
 
