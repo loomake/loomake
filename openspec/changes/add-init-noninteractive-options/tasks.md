@@ -8,7 +8,7 @@
 
 ## 3. 確認
 
-- [ ] 3.1 `pnpm -s verify --change add-init-noninteractive-options --done --scope local` を通し、要件とテスト、全タスクの完了を確認する <!-- loomake:gate=done -->
+- [x] 3.1 `pnpm -s verify --change add-init-noninteractive-options --done --scope local` を通し、要件とテスト、全タスクの完了を確認する <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
