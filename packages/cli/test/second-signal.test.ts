@@ -17,6 +17,7 @@ it.each(cases)('[REQ-124][REQ-208][REQ-427] $first の初回abort後に $second 
   const root = mkdtempSync(join(tmpdir(), 'loomake-second-signal-'));
   let child: ChildProcess | undefined;
   let watchdog: NodeJS.Timeout | undefined;
+  let secondSignalTimer: NodeJS.Timeout | undefined;
   try {
     writeFileSync(join(root, 'package.json'), '{"type":"module"}');
     // 製品の cli.ts そのものを型だけ除いて実行する。main は停止処理が完了しない状態を作る。
@@ -42,7 +43,10 @@ it.each(cases)('[REQ-124][REQ-208][REQ-427] $first の初回abort後に $second 
     child.on('message', (message: { phase: string; aborted?: boolean }) => {
       events.push(message);
       if (message.phase === 'ready') signal(first);
-      if (message.phase === 'aborted') signal(second);
+      if (message.phase === 'aborted') {
+        if (first === 'SIGHUP' && second === 'SIGHUP') secondSignalTimer = setTimeout(() => signal(second), 200);
+        else signal(second);
+      }
     });
     const result = await Promise.race([
       exited,
@@ -53,6 +57,7 @@ it.each(cases)('[REQ-124][REQ-208][REQ-427] $first の初回abort後に $second 
     expect(stderr).toBe('');
   } finally {
     clearTimeout(watchdog);
+    clearTimeout(secondSignalTimer);
     if (child && child.exitCode === null && child.signalCode === null) {
       const exit = new Promise(resolve => child!.once('exit', resolve));
       child.kill('SIGKILL'); await exit;
