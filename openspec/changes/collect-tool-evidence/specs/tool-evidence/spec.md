@@ -173,7 +173,7 @@ text は result（string のときだけ）、sessionId は session_id、turns �
 | 位置 | 必須 | 任意 |
 |---|---|---|
 | 最上位 | object。`summary` は object、`diagnostics` は array | `command` は捨てる |
-| summary | errors、warnings、infos、diagnosticsNotPrinted が 0 以上の安全な整数 | ほかの欄は捨てる。duration は debug build では出ないため（mod.rs:43） |
+| summary | errors、warnings、infos、diagnosticsNotPrinted が 0 以上の安全な整数 | duration など、ほかの欄は捨てる |
 | 診断 | object。severity が 5 種のどれか、`message: string` | `category: string`。`location`（無いか null なら file・line・column は null） |
 | location | `path: string`、`start{line,column}`、`end{line,column}`。値はすべて 0 以上の安全な整数。end は検査して捨てる | — |
 

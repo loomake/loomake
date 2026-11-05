@@ -20,7 +20,7 @@ Codex rust-v0.166.0 の [exec_events.rs](https://github.com/openai/codex/blob/ru
 
 ## biome.json
 
-Biome 2.6.5 の [json.rs](https://github.com/biomejs/biome/blob/%40biomejs%2Fbiome%402.6.5/crates/biome_cli/src/reporter/json.rs#L15-L228) と [summary](https://github.com/biomejs/biome/blob/%40biomejs%2Fbiome%402.6.5/crates/biome_cli/src/reporter/mod.rs#L36-L131) を基に合成した。duration は debug build で省略されるため必須にしない。位置の 0/0 はファイル単位の診断で、通常の位置は 1 始まりである（json.rs:306–307、345–351）。
+Biome 2.6.5 の [json.rs](https://github.com/biomejs/biome/blob/%40biomejs%2Fbiome%402.6.5/crates/biome_cli/src/reporter/json.rs#L15-L228) と [summary](https://github.com/biomejs/biome/blob/%40biomejs%2Fbiome%402.6.5/crates/biome_cli/src/reporter/mod.rs#L36-L131) を基に合成した。JSON reporter は summary の duration を構築するが、この parser では duration などを変換対象外とする。位置の 0/0 はファイル単位の診断で、通常の位置は 1 始まりである（json.rs:306–307、345–351）。
 
 診断は severity と verbose で絞られる（json.rs:280–290）。JSON reporter への max-diagnostics 適用と、GitHub Actions 上の ci mode の stdout が JSON だけになるかは未確認である。summary.diagnosticsNotPrinted は値をそのまま残し、全件取得を保証しない。
 
