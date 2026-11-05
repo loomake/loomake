@@ -2,7 +2,7 @@
 export { runVerify, loadVerifyQualitySchema, INTERRUPTED, TIMED_OUT, COMMANDS_SKIPPED, REQUIREMENTS_NOT_RUN, NOTICE, OPENSPEC_NA_CONFIRMER } from './verify/run.js';
 export { assembleVerifyResult, verifyAbortedResult, RUN_ERRORS_CHECK } from './verify/result.js';
 export type { VerifyResultParts } from './verify/result.js';
-export type { VerifyOptions } from './verify/run.js';
+export type { VerifyOptions, QualityCommandOutcome } from './verify/run.js';
 export { CHANGE_ID, KNOWN_CONFIG_KEYS, assertChangeId, loadConfig, RuntimeFailure, UsageError, DEFAULT_TEST_REPORT } from './verify/config.js';
 export type { LoomakeConfig } from './verify/config.js';
 export { formatVerifyResult, isAbortedResult, isVerifyResultV2 } from './verify/format.js';
