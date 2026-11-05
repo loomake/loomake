@@ -18,7 +18,7 @@
 - [x] 3.1 kit/test/redact.test.ts等に全Scenarioの[REQ-447]試験を追加し、プリミティブ・optional undefined・非finite/非plain・Array穴・accessor・Proxy・own __proto__・共有参照・循環・衝突を確かめる（REQ-447）
 - [x] 3.2 runnerのmask/private-key-redaction/diagnostic-redactor/run-start-maskとpackage-artifactsの既存試験を実行する。診断メモリfixtureの読取元だけ共有runtimeへ追従し、全assert・入力・32MiB/64MiB・既存期限と他の試験を保持する。kitとrunnerの同一関数も新試験で確かめる（REQ-447）
 - [ ] 3.3 kit-layersと依存の既存試験で、runtime責務と全禁止例・依存予算を確認する。core・verify・trace製品コードと設定・skip・timeout・閾値が不変であることを差分で確かめる（REQ-207・REQ-447）
-- [ ] 3.4 kitの公開API説明とkit/runnerのchangesetを追加し、JSON入力の制限・既知の形だけの保証・P2/P3の未完了を明記する（REQ-447）
+- [x] 3.4 kitの公開API説明とkit/runnerのchangesetを追加し、JSON入力の制限・既知の形だけの保証・P2/P3の未完了を明記する（REQ-447）
 - [ ] 3.5 lint/typecheck/build、必要な試験、要件と試験の対応を確認し、作業記録と親引継ぎを実結果に合わせる（REQ-447・REQ-207）
 
 ## 4. ローカルの完了
