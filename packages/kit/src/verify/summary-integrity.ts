@@ -26,6 +26,7 @@ const HASH = /^[a-f0-9]{64}$/;
 const SHA = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/i;
 const FIXED_SHA = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/;
 const ATTEMPT = /^[1-9]\d*$/;
+const ISOLATED_SURROGATE = /\p{Cs}/u;
 const object = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
 const nonempty = (value: unknown): value is string => typeof value === 'string' && value.length > 0;
@@ -58,7 +59,7 @@ export function checkFixedSummary(summaryText: unknown, anchor: unknown): FixedS
 
   const reasons: FixedSummaryCheck['reasons'] = [];
   const unreadable = () => result([...reasons, { code: 'SUMMARY_UNREADABLE', message: '要約を必要な欄を持つ JSON の文字列として読めません。' }]);
-  if (typeof summaryText !== 'string') return unreadable();
+  if (typeof summaryText !== 'string' || ISOLATED_SURROGATE.test(summaryText)) return unreadable();
 
   if (sha256Hex(summaryText) !== expected.summarySha256) {
     reasons.push({ code: 'SUMMARY_HASH_MISMATCH', message: '要約の SHA-256 が固定時のハッシュと一致しません。' });

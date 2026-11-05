@@ -63,6 +63,25 @@ describe('外部に固定した値で要約の改変を検出する（A16）', (
     }
   });
 
+  it.each([
+    ['high-start', '\uD800'], ['high-end', '\uDBFF'],
+    ['low-start', '\uDC00'], ['low-end', '\uDFFF'],
+  ])('[REQ-443][REQ-445] %sの孤立サロゲートは同じUTF8ハッシュでも拒否する', (_label, surrogate) => {
+    const wellFormed = original.replace('原本', '\uFFFD');
+    const trusted = Object.freeze({ ...anchor, summarySha256: sha256Hex(wellFormed) });
+    const changed = wellFormed.replace('\uFFFD', surrogate);
+    expect(changed).not.toBe(wellFormed);
+    expect(sha256Hex(changed)).toBe(trusted.summarySha256);
+    expect(checkFixedSummary(wellFormed, trusted)).toEqual({ reusable: true, result: 'PASS', returnToHuman: false, reasons: [] });
+    reject(checkFixedSummary(changed, trusted), ['SUMMARY_UNREADABLE']);
+  });
+
+  it('[REQ-443][REQ-445] 正しいサロゲートペアを正規化せず照合できる', () => {
+    const wellFormed = original.replace('原本', '\uD83D\uDE00');
+    const trusted = Object.freeze({ ...anchor, summarySha256: sha256Hex(wellFormed) });
+    expect(checkFixedSummary(wellFormed, trusted)).toEqual({ reusable: true, result: 'PASS', returnToHuman: false, reasons: [] });
+  });
+
   it('[REQ-443][REQ-444] 信頼値と要約が対応すれば64桁のSHAも完全一致で扱う', () => {
     const sha = 'a1'.repeat(32);
     const text = JSON.stringify({ sha, ci: { runId: anchor.runId, runAttempt: anchor.runAttempt } });
