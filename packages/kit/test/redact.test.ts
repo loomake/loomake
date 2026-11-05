@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { maskSecrets, maskValue } from '../src/runtime/redact.js';
 import { UsageError } from '../src/runtime/errors.js';
+import * as kit from '../src/index.js';
+import { maskSecrets as runnerMask, createDiagnosticRedactor as runnerDiagnostic } from '../../runner/src/mask.js';
+import { createPrivateKeyFilter as runnerPrivate } from '../../runner/src/private-key-stream.js';
+import { maskSecrets as runnerPublicMask } from '../../runner/src/index.js';
 
 // 認証に使えない合成文字列だけを使う。
 const token = 'ghp_' + 'x'.repeat(24);
@@ -14,6 +18,52 @@ function rejected(value: unknown): Error {
   }
   throw new Error('対象外入力が拒否されませんでした。');
 }
+
+describe('kitとrunnerの公開元の互換性', () => {
+  it('[REQ-447] 4つのnamed exportとrunnerの既存公開元が同じ関数を共有する', () => {
+    expect(kit.maskValue).toBe(maskValue);
+    expect(kit.maskSecrets).toBe(runnerMask);
+    expect(runnerPublicMask).toBe(runnerMask);
+    expect(kit.createDiagnosticRedactor).toBe(runnerDiagnostic);
+    expect(kit.createPrivateKeyFilter).toBe(runnerPrivate);
+  });
+
+  it('[REQ-447] 既知の形とBearer・JSON・途中出力を従来どおり置換する', () => {
+    const tokens = [
+      'sk-' + 'x'.repeat(24), token, 'github_pat_' + 'x'.repeat(24), 'AKIA' + 'X'.repeat(16),
+      'npm_' + 'x'.repeat(36), 'xoxb-' + 'x'.repeat(24), 'glpat-' + 'x'.repeat(24),
+      'AIza' + 'x'.repeat(35), ['eyJ' + 'x'.repeat(20), 'y'.repeat(20), 'z'.repeat(20)].join('.'),
+    ];
+    for (const secret of tokens) {
+      expect(kit.maskSecrets(`前 ${secret} 後`)).toBe('前 *** 後');
+      expect(JSON.parse(kit.maskSecrets(JSON.stringify({ value: secret })))).toEqual({ value: '***' });
+    }
+    expect(kit.maskSecrets(`Authorization: Bearer ${'Z'.repeat(24)}`)).toBe('Authorization: Bearer ***');
+    expect(JSON.parse(kit.maskSecrets('{"value":"\\u0067hp_' + 'x'.repeat(24) + '"}'))).toEqual({ value: '***' });
+    const partial = JSON.stringify({ value: 'before\n' + token }).slice(0, -2);
+    expect(kit.maskSecrets(partial)).not.toContain(token);
+    expect(kit.maskSecrets(partial)).toContain('***');
+    expect(kit.maskSecrets('npm_install と AIza、Bearerの方式')).toBe('npm_install と AIza、Bearerの方式');
+  });
+
+  it('[REQ-447] 秘密鍵と診断の全チャンク境界・長い保留・終端を維持する', () => {
+    const key = '-----BEGIN PGP PRIVATE KEY BLOCK-----\nDUMMY_BODY\n-----END PGP PRIVATE KEY BLOCK-----';
+    for (const create of [kit.createPrivateKeyFilter, runnerPrivate, kit.createDiagnosticRedactor, runnerDiagnostic]) {
+      const text = `before ${key} after\n`;
+      for (let at = 0; at <= text.length; at++) {
+        const output: string[] = []; const filter = create((part) => output.push(part));
+        filter.write(text.slice(0, at)); filter.write(text.slice(at)); filter.end();
+        expect(output.join('')).toBe('before *** after\n');
+      }
+      const output: string[] = []; const filter = create((part) => output.push(part));
+      filter.write('-----BEGIN PRIVATE KEY-----\nDUMMY_BODY'); filter.end();
+      expect(output.join('')).toBe('***');
+    }
+    const output: string[] = []; const filter = kit.createDiagnosticRedactor((part) => output.push(part));
+    filter.write('Q'.repeat(5000)); filter.write(' '); filter.end();
+    expect(output.join('')).toBe('*** ');
+  });
+});
 
 describe('共有の構造化データの置換', () => {
   it.each([null, true, false, 0, -0, 1.25, '', '通常の文'])('[REQ-447] プリミティブ %s の値と種類を保つ', (value) => {
