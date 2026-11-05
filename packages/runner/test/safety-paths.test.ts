@@ -7,7 +7,7 @@ import { makeRepo } from './helpers.js';
 // git やコマンドのプロセスを何度も起動するので、マシンの負荷が高いと既定の 5 秒を超えることがある
 vi.setConfig({ testTimeout: 60_000 });
 
-const names = process.platform === 'win32' ? ['日本語 空白'] : ['日本語 空白', 'tab\tname', 'line\nname'];
+const names = process.platform === 'win32' ? ['日本語 空白'] : ['日本語 空白', 'tab\tname', 'line\nname', ':(top)name'];
 
 describe('Gitの表示形式から独立したパスの検査', () => {
   it.each(names)('[REQ-138] %j の仕様変更とテスト削除を検出する', (name) => {
