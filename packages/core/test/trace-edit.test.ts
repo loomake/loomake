@@ -60,3 +60,11 @@ describe('trace.md の表の行を書く', () => {
     expect(parseTrace('trace.md', r.text ?? '').value.assumptions[0]).toMatchObject({ 承認: '承認', 承認者: 'PM', 承認日: '2026-10-24' });
   });
 });
+
+
+it('[REQ-202] BOM と CRLF を保ち指定行以外を変えない', () => {
+  const original = '\uFEFF' + trace().replace(/\n/g, '\r\n');
+  const result = setTraceCells(original, 'questions', 'Q-01', { 回答: '5' });
+  expect(result.error).toBeUndefined();
+  expect(result.text).toBe(original.replace('| yes | | | |', '| yes | 5 |  |  |'));
+});

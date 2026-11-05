@@ -151,3 +151,16 @@ describe('createTraceTemplate', () => {
     }
   });
 });
+
+
+describe('trace の表の境界', () => {
+  it('[REQ-011] 空行の後の二つ目の表を読まない', () => {
+    const second = '\n| ID | 出典 | 種別 | 要約（原文に忠実に） | 状態 | 反映先 |\n|---|---|---|---|---|---|\n| REQ-999 | 別表 | 機能 | 別表 | 反映済 | x |\n';
+    const text = trace.replace('\n## 確認事項', second + '\n## 確認事項');
+    expect(parseTrace('trace.md', text).value.ledger.map((r) => r.ID)).toEqual(['REQ-001', 'REQ-002']);
+  });
+
+  it('[REQ-011] BOM 付き trace も同じ値と行番号を返す', () => {
+    expect(parseTrace('trace.md', '\uFEFF' + trace)).toEqual(parseTrace('trace.md', trace));
+  });
+});
