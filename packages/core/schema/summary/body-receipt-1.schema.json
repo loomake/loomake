@@ -1,0 +1,268 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "indexVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "body": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "test-report"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "kind",
+        "sha256",
+        "bytes"
+      ],
+      "additionalProperties": {}
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "change": {
+          "type": "string"
+        },
+        "sha": {
+          "type": "string",
+          "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$"
+        },
+        "ci": {
+          "type": "object",
+          "properties": {
+            "runId": {
+              "type": "string",
+              "pattern": "^\\d+$"
+            },
+            "runAttempt": {
+              "type": "string",
+              "pattern": "^(?:[1-9][0-9]{0,14}|[1-8][0-9]{15}|900[0-6][0-9]{12}|90070[0-9]{11}|90071[0-8][0-9]{10}|900719[0-8][0-9]{9}|9007199[0-1][0-9]{8}|90071992[0-4][0-9]{7}|900719925[0-3][0-9]{6}|9007199254[0-6][0-9]{5}|90071992547[0-3][0-9]{4}|9007199254740[0-8][0-9]{2}|90071992547409[0-8][0-9]{1}|9007199254740990|9007199254740991)$"
+            }
+          },
+          "required": [
+            "runId",
+            "runAttempt"
+          ],
+          "additionalProperties": {}
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "bytes",
+        "change",
+        "sha",
+        "ci"
+      ],
+      "additionalProperties": {}
+    },
+    "locator": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "github-actions-artifact"
+        },
+        "repository": {
+          "type": "string"
+        },
+        "artifactId": {
+          "type": "string",
+          "pattern": "^\\d+$"
+        },
+        "artifactName": {
+          "type": "string"
+        },
+        "entry": {
+          "type": "string"
+        },
+        "runId": {
+          "type": "string",
+          "pattern": "^\\d+$"
+        },
+        "runAttempt": {
+          "type": "string",
+          "pattern": "^(?:[1-9][0-9]{0,14}|[1-8][0-9]{15}|900[0-6][0-9]{12}|90070[0-9]{11}|90071[0-8][0-9]{10}|900719[0-8][0-9]{9}|9007199[0-1][0-9]{8}|90071992[0-4][0-9]{7}|900719925[0-3][0-9]{6}|9007199254[0-6][0-9]{5}|90071992547[0-3][0-9]{4}|9007199254740[0-8][0-9]{2}|90071992547409[0-8][0-9]{1}|9007199254740990|9007199254740991)$"
+        }
+      },
+      "required": [
+        "type",
+        "repository",
+        "artifactId",
+        "artifactName",
+        "entry",
+        "runId",
+        "runAttempt"
+      ],
+      "additionalProperties": {}
+    },
+    "archive": {
+      "type": "object",
+      "properties": {
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "apiDigest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "sha256",
+        "bytes",
+        "apiDigest"
+      ],
+      "additionalProperties": {}
+    },
+    "execution": {
+      "type": "object",
+      "properties": {
+        "checkoutSha": {
+          "type": "string",
+          "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$"
+        },
+        "workflowHeadSha": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "runId": {
+          "type": "string",
+          "pattern": "^\\d+$"
+        },
+        "runAttempt": {
+          "type": "string",
+          "pattern": "^(?:[1-9][0-9]{0,14}|[1-8][0-9]{15}|900[0-6][0-9]{12}|90070[0-9]{11}|90071[0-8][0-9]{10}|900719[0-8][0-9]{9}|9007199[0-1][0-9]{8}|90071992[0-4][0-9]{7}|900719925[0-3][0-9]{6}|9007199254[0-6][0-9]{5}|90071992547[0-3][0-9]{4}|9007199254740[0-8][0-9]{2}|90071992547409[0-8][0-9]{1}|9007199254740990|9007199254740991)$"
+        }
+      },
+      "required": [
+        "checkoutSha",
+        "workflowHeadSha",
+        "runId",
+        "runAttempt"
+      ],
+      "additionalProperties": {}
+    },
+    "artifact": {
+      "type": "object",
+      "properties": {
+        "createdAt": {
+          "type": "string"
+        },
+        "expiresAt": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "createdAt",
+        "expiresAt"
+      ],
+      "additionalProperties": {}
+    },
+    "retrieval": {
+      "type": "object",
+      "properties": {
+        "retrievedAt": {
+          "type": "string"
+        },
+        "method": {
+          "type": "string",
+          "const": "github-api-authenticated-read"
+        },
+        "accessPolicy": {
+          "type": "string",
+          "const": "project-members"
+        },
+        "policyVerified": {
+          "type": "boolean",
+          "const": false
+        }
+      },
+      "required": [
+        "retrievedAt",
+        "method",
+        "accessPolicy",
+        "policyVerified"
+      ],
+      "additionalProperties": {}
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "unverified",
+              "not_applicable"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "kind",
+          "reason"
+        ],
+        "additionalProperties": {}
+      }
+    }
+  },
+  "required": [
+    "indexVersion",
+    "body",
+    "summary",
+    "locator",
+    "archive",
+    "execution",
+    "artifact",
+    "retrieval",
+    "gaps"
+  ],
+  "additionalProperties": {},
+  "$id": "https://loomake.dev/schema/summary/body-receipt-1.schema.json",
+  "title": "Loomake body receipt 1"
+}

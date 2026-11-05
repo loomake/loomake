@@ -35,3 +35,6 @@ export { BODY_EVIDENCE_KEY, type BodyAttempt, type BodyEvidence } from './body-e
 
 export { SUMMARY_VERSION, loadSummarySchemas } from './summary-contracts.js';
 export type { EvidenceSummary, SummaryArtifact, SummaryGap } from './summary-contracts.js';
+
+export { BODY_RECEIPT_VERSION } from './summary-contracts.js';
+export type { BodyReceipt } from './summary-contracts.js';

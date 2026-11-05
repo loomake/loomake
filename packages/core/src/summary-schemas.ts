@@ -31,3 +31,21 @@ export const evidenceSummarySchema = preserveUnknownFields(z.looseObject({
   }),
   artifacts: z.array(summaryArtifactSchema), request: z.null(), observation: z.null(), gaps: z.array(summaryGapSchema),
 }).meta({ $id: 'https://loomake.dev/schema/summary/evidence-summary-1.schema.json', title: 'Loomake evidence summary extension 1' }));
+
+/** 本体参照索引の独立した構造。同期の意味検証はtraceが担う（REQ-470）。 */
+export const bodyReceiptSchema = preserveUnknownFields(z.looseObject({
+  indexVersion: z.literal(1),
+  body: object({ kind: z.literal('test-report'), sha256: z.string().regex(/^[a-f0-9]{64}$/), bytes: count }),
+  summary: object({ path: z.string(), sha256: z.string().regex(/^[a-f0-9]{64}$/), bytes: count,
+    change: z.string(), sha: z.string().regex(/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/i),
+    ci: object({ runId: z.string().regex(/^\d+$/), runAttempt: attempt }) }),
+  locator: object({ type: z.literal('github-actions-artifact'), repository: z.string(), artifactId: z.string().regex(/^\d+$/),
+    artifactName: z.string(), entry: z.string(), runId: z.string().regex(/^\d+$/), runAttempt: attempt }),
+  archive: object({ sha256: z.string().regex(/^[a-f0-9]{64}$/), bytes: count, apiDigest: z.string().regex(/^sha256:[a-f0-9]{64}$/) }),
+  execution: object({ checkoutSha: z.string().regex(/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/i),
+    workflowHeadSha: z.string().regex(/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/i).nullable(), runId: z.string().regex(/^\d+$/), runAttempt: attempt }),
+  artifact: object({ createdAt: z.string(), expiresAt: z.string() }),
+  retrieval: object({ retrievedAt: z.string(), method: z.literal('github-api-authenticated-read'),
+    accessPolicy: z.literal('project-members'), policyVerified: z.literal(false) }),
+  gaps: z.array(summaryGapSchema),
+}).meta({ $id: 'https://loomake.dev/schema/summary/body-receipt-1.schema.json', title: 'Loomake body receipt 1' }));
