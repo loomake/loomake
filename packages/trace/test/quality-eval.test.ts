@@ -69,7 +69,14 @@ describe('手動評価の実行と完了証拠', () => {
     for (const unknown of [null, { name: 'jest', version: '5.0.5' }, { name: 'vitest', version: '5.0.6' }]) expect(testRunIncomplete(payload(report(true)), unknown, 1)).toBeTypeOf('string');
     expect(testRunIncomplete(payload(report(true)), producer, 1)).toBeUndefined(); expect(testRunIncomplete(payload(report(true)), producer, 0)).toBeUndefined();
     const skip = report(); skip.numPendingTests = 1; skip.numTotalTests = 2; skip.testResults[0].assertionResults.push({ fullName: 'skip', status: 'pending' });
-    expect(testRunIncomplete(payload(skip), producer, 0)).toBeUndefined();
+    // REQ-429の保留Scenarioは終了0にも適用する（Q70-31）。既存の成功pending入力を保持する。
+    expect(testRunIncomplete(payload(skip), producer, 0)).toBeTypeOf('string');
+  });
+  it.each(['pending', 'skipped', 'todo'])('[REQ-429][REQ-430] 成功レポートの%sも終了0で完了証拠にしない', (status) => {
+    const value = report(); value.numTotalTests = 2;
+    if (status === 'todo') value.numTodoTests = 1; else value.numPendingTests = 1;
+    value.testResults[0].assertionResults.push({ fullName: status, status });
+    expect(testRunIncomplete(payload(value), producer, 0)).toBeTypeOf('string');
   });
   it('[REQ-434] 競合は既存lock bytes/mtimeと台帳を変えず未受付3', async () => {
     const f = fixture(); mkdirSync(join(f.root, '.loomake/quality'), { recursive: true });

@@ -91,6 +91,7 @@ export function testRunIncomplete(report: StaticMetricsReceipt['report'], produc
   const expected = { numPassedTests: counts.passed, numFailedTests: counts.failed, numPendingTests: counts.pending,
     numTodoTests: counts.todo, numTotalTests: counts.passed + counts.failed + counts.pending + counts.todo };
   for (const [key, count] of Object.entries(expected)) if (!nonnegativeInteger(data[key]) || data[key] !== count) return '件数不整合';
+  if (counts.pending || counts.todo || data.testResults.some((file: unknown) => qualityObject(file) && file.status !== 'passed' && file.status !== 'failed')) return '保留を含むレポート';
   const failed = exitStatus !== 0 || counts.failed > 0 || data.success === false;
   if (failed) {
     if (producer?.name !== 'vitest' || producer.version !== '5.0.5') return '未実測のproducer/版';
