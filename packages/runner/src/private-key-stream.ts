@@ -2,6 +2,8 @@
 const BEGIN = '-----BEGIN ';
 const END = '-----END ';
 const KEY = 'PRIVATE KEY';
+const KEY_BLOCK = 'PRIVATE KEY BLOCK';
+const privateTail = (tail: string) => tail.endsWith(KEY) || tail.endsWith(KEY_BLOCK);
 
 function prefixTail(text: string, prefix: string): string {
   let size = Math.min(text.length, prefix.length);
@@ -17,8 +19,8 @@ export function createPrivateKeyFilter(sink: (text: string) => void) {
   const resetEnd = () => { endPrefix = ''; endSeen = false; endTail = ''; endDashes = 0; };
   const privateChar = (char: string) => {
     if (endSeen) {
-      if (/[A-Z ]/.test(char) && !endDashes) { endTail = (endTail + char).slice(-KEY.length); return false; }
-      if (char === '-' && endTail === KEY) {
+      if (/[A-Z ]/.test(char) && !endDashes) { endTail = (endTail + char).slice(-KEY_BLOCK.length); return false; }
+      if (char === '-' && privateTail(endTail)) {
         endDashes++;
         if (endDashes === 5) { resetEnd(); return true; }
         return false;
@@ -49,7 +51,7 @@ export function createPrivateKeyFilter(sink: (text: string) => void) {
         const char = text[at++];
         if (mode === 'private') { if (privateChar(char)) mode = 'normal'; continue; }
         if (/[A-Z ]/.test(char) && !headerDashes) {
-          headerTail = (headerTail + char).slice(-KEY.length);
+          headerTail = (headerTail + char).slice(-KEY_BLOCK.length);
           if (!omitted) {
             header += char;
             if (header.length > 4096) { emit('***'); header = ''; omitted = true; }
@@ -57,7 +59,7 @@ export function createPrivateKeyFilter(sink: (text: string) => void) {
         } else if (char === '-') {
           headerDashes++;
           if (headerDashes === 5) {
-            const secret = headerTail === KEY;
+            const secret = privateTail(headerTail);
             if (!omitted) emit(secret ? '***' : BEGIN + header + '-----');
             mode = secret ? 'private' : 'normal'; resetEnd();
           }
