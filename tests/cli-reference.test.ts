@@ -26,7 +26,8 @@ it('[REQ-323][REQ-325] ソース定義から全コマンド・操作と既存ペ
   expect(rendered).toContain('先頭引数として指定する');
   expect(rendered).toContain('## loomake doctor\n\n使い方: loomake doctor\n');
   expect(rendered).toContain('固有オプションなし。');
-  expect(rendered.split('\n').filter((line) => line.startsWith('| --'))).toHaveLength(27);
+  expect(rendered.split('\n').filter((line) => line.startsWith('| --'))).toHaveLength(32);
+  for (const option of ['--effort', '--decisions', '--attempts', '--cost', '--note']) expect(rendered).toContain(`| ${option} `);
   expect(rendered).toContain('| --yes |');
   expect(rendered).toContain('| --keep-existing |');
   expect(rendered).toMatch(/^title: \S/m);
@@ -155,7 +156,8 @@ it('[REQ-323] 入力の必須性・相互条件・動的既定値と受理値を
   // verify と trace record に --scope local|ci がある（REQ-312・135）
   expect(rendered.split('\n').filter((line) => line.startsWith('| --scope'))).toHaveLength(2);
   expect(rendered).toContain('local / ci');
-  expect(rendered).not.toContain('decision');
+  expect(rendered.replace(/--decisions(?=\s|$)/g, '')).not.toContain('decision');
+  expect(rendered).toContain('| --decisions &lt;n&gt; |');
 });
 
 it('[REQ-325] 定義の変更を期待生成内容へ反映し時刻や絶対パスを含めない', () => {

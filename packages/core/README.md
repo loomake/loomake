@@ -42,6 +42,12 @@ JSON Schema は `@loomake/core/schema/quality-report.schema.json` から取得�
 
 受理形式は gh 2.103.0、Codex 0.166.0、Biome 2.6.5、Playwright 1.64.1 の固定版の一次資料を基に定義した。Claude の json の実 fixture は未観測で、2.1.308 の stream-json の result の欄の型と、版を固定していない公式 docs を基に合成した。実ツールや将来の版との互換性を保証するものではない。合成 fixture の出典と限界は `test/tool-output/fixtures/PROVENANCE.md` に記す。
 
+## 人の実作業時間の構造
+
+`EFFORT_SCHEMA_VERSION` は `1`。`await loadEffortSchema()` は `effortRecordSchema`・`effortMinutesSchema`・`effortCostSchema` を読み、`EffortRecord`・`EffortMinutes`・`EffortCost` はそれぞれから導出する。入口の import では Zod を読み込まない。Effort 専用の JSON Schema は追加せず、従来の12本と受入済みの判定要約用 JSON Schema を保持する。
+
+Effort 1 は総計 `totalMinutes` と区分 `minutes` のどちらか一方を持ち、指定しなかった区分は欠測のまま省略する。構造の検査は品質検証の実行や合格を意味しない。記録には trace の同期 API を使う。
+
 ## ライセンス
 
 MIT

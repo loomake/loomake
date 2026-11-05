@@ -42,3 +42,5 @@ export { parseClaudeResult } from './tool-output/claude.js';
 export { parseCodexEvents } from './tool-output/codex.js';
 export { parseBiomeReport } from './tool-output/biome.js';
 export { parsePlaywrightReport } from './tool-output/playwright.js';
+export { EFFORT_SCHEMA_VERSION, loadEffortSchema } from './effort.js';
+export type { EffortRecord, EffortMinutes, EffortCost } from './effort.js';

@@ -234,7 +234,7 @@ describe('ヘルプと版', () => {
   it('[REQ-135] trace record --help と trace report --help は、それぞれの使い方を出す', async () => {
     const record = await run(repo, 'trace', 'record', '--help');
     expect(record.code).toBe(0);
-    expect(record.stdout.split('\n')[0]).toBe('使い方: loomake trace record --change <id> [--scope local|ci]');
+    expect(record.stdout.split('\n')[0]).toBe('使い方: loomake trace record --change <id> [--scope local|ci] [--effort <時間> [--decisions <n>] [--attempts <n>] [--cost <区分:値,...>] [--note <文>]]');
     expect(record.stdout).toMatch(/^ {2}--scope local\|ci +記録する verify の範囲。省くと ci/m);
     expect(record.stdout).not.toContain('--format');
     const report = await run(repo, 'trace', 'report', '-h');

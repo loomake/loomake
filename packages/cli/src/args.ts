@@ -29,11 +29,16 @@ export const SCOPES = ['local', 'ci'] as const;
 
 const traceOperations = [
   {
-    name: 'record', usage: 'loomake trace record --change <id> [--scope local|ci]',
-    description: 'verify --done を実行し、結果をコミットの SHA と合わせて .loomake/evidence/<change-id>/ に記録する。未コミットの変更があれば記録しない。',
+    name: 'record', usage: 'loomake trace record --change <id> [--scope local|ci] [--effort <時間> [--decisions <n>] [--attempts <n>] [--cost <区分:値,...>] [--note <文>]]',
+    description: 'verify --done を実行し、結果をコミットの SHA と合わせて .loomake/evidence/<change-id>/ に記録する。未コミットの変更があれば記録しない。--effort 指定時は品質検証を行わず、人の実作業時間だけを追記する。',
     options: [
       { name: '--change', kind: 'value', choices: '英小文字・数字と、間に1つずつのハイフンで表すchange-id', label: '--change <id>', description: '記録する change', required: '必須', defaultValue: 'なし' },
       { name: '--scope', kind: 'value', choices: SCOPES.join(' / '), label: '--scope local|ci', description: '記録する verify の範囲。省くと ci。local の記録は最終 CI の合格ではない', required: '任意', defaultValue: 'ci' },
+      { name: '--effort', kind: 'value', label: '--effort <時間>', description: '単位つき総計または区分の実作業時間を追記する（90m・1.5h・review=20m）', required: '任意', defaultValue: 'なし', condition: '--scopeと同時に指定不可。各値0〜100000整数分、省略は欠測' },
+      { name: '--decisions', kind: 'value', label: '--decisions <n>', description: '自己申告の判断要求回数（非負の安全な整数）', required: '任意', defaultValue: 'なし', condition: '--effort指定時だけ使用可' },
+      { name: '--attempts', kind: 'value', label: '--attempts <n>', description: '自己申告の試行回数（非負の安全な整数）', required: '任意', defaultValue: 'なし', condition: '--effort指定時だけ使用可' },
+      { name: '--cost', kind: 'value', label: '--cost <区分:値,...>', description: 'actual-usd・estimated-usd・tokensを区別して記録する', required: '任意', defaultValue: 'なし', condition: '--effort指定時だけ使用可。USD小数最大2桁、tokens整数、同区分の反復不可' },
+      { name: '--note', kind: 'value', label: '--note <文>', description: '改行・制御文字を含まない500文字以内のメモ。秘密情報・個人情報は入力しない', required: '任意', defaultValue: 'なし', condition: '--effort指定時だけ使用可。既知の秘密の形だけを共通置換する' },
     ],
   },
   {

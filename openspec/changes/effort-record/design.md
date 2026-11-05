@@ -1,0 +1,72 @@
+# effort-record の設計
+
+## Context
+
+動機と範囲は proposal.md を参照する。設計時の基準 main は b2b3f824、実装の基準 main は db893f01 である。実際の Opus 設計は `af787f62-4bed-4598-a940-1ee213a76ae4`（claude-opus-5-5、exit 0、ok true、対象head b2b3f824a8ec45bee4df50c5fafb6d004fff848d）。原本は `.loomake/claude/<session-id>/result.md` と manifest に保存してある。
+
+実装後、判定要約を受け入れた main deaf02d7（PR #452）との公開入口の競合を解消した。coreとtraceの両側のnamed exportを保持し、要約と実績の本体・試験・構造契約は変えていない。統合後の検証と独立再レビューは、統合前の実績と分けて受け入れる。
+
+管理役は2026-11-05に、PR1→PR2→PR3の通常L3分割、Q-01〜12の採用、下記の不整合の整理と秘密置換への依存を決定した。これは通常設計のおすすめ採用であり、新しい利用者の承認を作るものではない。計画の引渡し時点では全実装タスクが未着手だった。
+
+## Goals / Non-Goals
+
+PR1 は同期の実績記録とCLIの入口までを実装する計画である。手書きの読取・集計・状況レポート接続や、実記録の運用受入をこの PR の成功へ含めない。親 #68 の残義務は trace.md に分けて残す。
+
+## Decisions
+
+### 独立した保存形式と入口
+
+`runRecord` は変更せず、trace に `runEffortRecord` を置く。CLIは `--effort` の有無をquality schemaのロードより前に分岐し、通常recordでは従来の呼出を使う。runnerの `recordAndOpenPr` も変更しない。effort側はconfigとchangeの所在、git status、HEAD、記録時刻だけを使い、verifyやtrace/spec本文を取得しない。
+
+保存は `.loomake/evidence/<change-id>/effort/`。この配下は既存gitignoreで追跡でき、reportとrunnerが直下の正規の日時名を探す処理に混ざらない。別の保存先とgitignore変更は不要である。kit内部の既存 `resolveChangeDir` をnamed exportへ追加して公開し、activeを優先する同関数を使い、一意なarchiveも受け付け、missing/ambiguousはUsageErrorにする。既存recordのactive限定は維持する。
+
+最終レコードは次の排他的な形とする。必須は `schemaVersion: 1`、`kind: "loomake-effort"`、change、sha、recordedAtと、下のどちらか一方である。任意はdecisions・attempts・cost・noteで、省略値を作らない。
+
+- 総計：`totalMinutes: number`。`minutes` とsearchは持たない。
+- 区分：`minutes` にinstruct/review/rework/run/waitのうち1つ以上を持ち、searchは任意。省略した区分を0にしない。searchは既知5区分の和以下の内数である。
+
+coreは新しい構造スキーマからEffortRecord・EffortMinutes・EffortCost等の型を導出し、定数と遅延loaderを公開する。coreの入口にzodを静的に読み込まず、取得・時計・判定を加えない。既存Evidence/Report型とJSON Schema生成対象・exports12本は変更しない。新形式の公開JSON Schemaは増やさない。
+
+traceは同期の `effortProblem` と `serializeEffort` で保存する値を検査し、既存 `publishEvidence` を使って最終名へ原子的に公開する。整形は2字下げ・末尾改行、最終UTF-8 bytesは64KiB以下である。既存名への公開はfalseとして1を返し、保存前の不正値や保存失敗はUsageErrorとする。日時名のUTC秒とSHA先頭12文字は既存記録に合わせる。
+
+### 公開APIと入力
+
+新しいtrace公開APIは `runEffortRecord(options)`、`parseEffortOption(text)`、`parseCost(text)`、CLI用の `parseDuration(text)` とし、すべてnamed exportの同期関数とする。writerのoptionsはroot・changeId・effort（CLIと同じ文字列）・stdout、任意のdecisions/attempts（number）・cost（導出型の配列）・note（string）・now（Dateを返す関数）を受ける。使い方の不正はUsageErrorとし、CLIが終了コード2へ変換する。
+
+時間は字句検査と数値検査を両方行う。hの十進値を整数で分へ変換し、小数の分を丸めて受理しない。各値の上限は100000分で、正規表現に一致しても100001mや999999mは拒否する。手書きの `分`・`時間` の読取はPR2のREQ-467で定義し、PR1で未仕様の日本語入力を追加しない。
+
+費用は `kind:value` のカンマ区切りで、actual-usd/estimated-usdはUSD十進値から安全整数centsへ正確に変換し、tokensは安全整数countにする。USD値は数字列と任意の小数1〜2桁、tokensは数字列だけとし、符号・指数・空白を受け付けない。同じkindの反復を拒否し、別kindを合計しない。判断要求・試行も非負safe整数とする。M1/M2から回数を作らず、自己申告の費用だけでM5の取得範囲・単価出典と日付・トークン内訳を満たしたことにしない。M5の原文と手書きの詳細記録は保持する。
+
+noteは入力も最終置換後もUnicode codepointで500文字以内とし、改行とUnicodeの制御文字を拒否する。原文の501文字を置換で短くして受理することはしない。CLIの値付きオプションの両構文と最後の値を使う規則は既存parseOptionsを使う。`--scope` の併用やeffortなしの付帯オプションは、外部操作の前に拒否する。
+
+CLIリファレンスは `args.ts` の同じ表から `pnpm build && node scripts/generate-cli-reference.mjs` で再生成し、`--check` と既存 `tests/cli-reference.test.ts` で照合する。CLI基準原本・全旧assertは保持する。新5オプションのため、既存の承認済み差分台帳へREQ-466・Q-09の具体的help差分を追記し、オプション総数の検査は旧27と新5を明示して32へ更新する。未知decisionの禁止検査は正確な新トークン `--decisions` だけを除いた投影へ維持し、新トークンの存在も検査する。これは追加契約の整合であり、旧オプションを削らない。旧CLIのrecord usage全文検査にも同じ新5個のsuffixだけを追加する。受理名の固定配列にも同じ新5個だけを追加し、単語境界を持つ正確な `--decisions` 以外の類似名は拒否する。
+
+### Opus案の不整合をどう整理したか
+
+Q-13〜17を管理役が採用した。字句regexの桁数を数値上限と取り違えず、両方を条件にする。OpusのJSON例に同時にあったminutesとtotalMinutesは、本文の排他規則を優先し、例のtotalMinutesを採用しない。総計モードにsearchの置場を新設しない。未コミット拒否は同時操作のlockではないため、同じ出力名の衝突拒否を超える直列化やexactly-onceは保証しない。費用文法とnote文字数は、受入試験で判定できる形へ具体化した。
+
+### NFR-09と受入済みの共有置換
+
+Opus #68 の設計には秘密置換の記載がない。noteをそのまま保存してよいと解釈せず、要件定義L215のNFR-09と、#65 P1の既存Opus設計（7e9d5568-6df5-4ee8-9b3c-aaf939953f20、REQ-447）の共有APIを根拠に、管理役がQ-18のAを採用した。#68のOpusで秘密情報の扱いまでレビュー済みとは報告しない。
+
+最終レコードにはkitの共有 `maskValue` を適用し、その後に構造・文字数・UTF-8 bytesを再検査する。入力を含み得る診断も同じ共有処理を使い、原文をmessage/cause・stdout/stderr・一時ファイルへ残さない。独自pattern、runnerからのコピー、traceからrunnerへの逆依存は作らない。任意の秘密・個人情報の検出を保証せず、入力しない案内を置く。元の申告値は入力不変で扱い、既存の古い記録を置換して書き直さない。
+
+#65 P1は PR #450（実装）と PR #453（仕様同期・archive）で main に受入済みである。受入 CI 42046155583 の必須5チェック・通常3 OS・scope ciの23検査は成功した。基準 db893f01 で kit が `maskValue<T>(value: T): T` を公開し、入力不変の同期処理と日本語 UsageError を持つことを確認した。Q-19 に根拠を記録し、strict と仕様ゲートが成功してから着手する。B01 は管理役が不要な確認として撤回済みであり、承認待ちとしない。
+
+## Risks / Trade-offs
+
+- 同時に異なる保存名を作る操作は直列化されない。未コミット検査をlockと説明せず、追記の再試行を自動で重ねない。
+- C-001の作業単位は複数changeにまたがる。推定の24〜58時間と「未作成」を変えず、実績を勝手に対応付けない。
+- C-002/C-003の原本の所在は利用者へ質問済みで未回答。これは親の実データ受入の未決であり、PR1の追加blockingにはしない。原本未取得をplaceholderで完了へ変換しない。
+- 費用や判断要求は自己申告であり、M5の詳細や人力実測との比較を自動的に証明しない。後続の表は欠測を0で補わない。
+- 秘密置換は既知の形に限る。入力しない案内と最終置換・再検査を用い、診断へ入力を複写しない。
+
+## Migration Plan
+
+共有置換の受入後に、core→trace→CLI→追加試験・リファレンス→changesetの順で小さく実装する。既存データの移行や削除、CLI基準原本の変更は行わない。新オプションの具体差分台帳だけを追記する。既存recordの呼出と同期性を保持し、追加機能の取り消しでも保存済みの実績は削除しない。PR1の通常DoDとCI・独立レビューを満たした後も、親#68の実記録受入とPR2/3は別に追跡する。
+
+## 実装後レビューの引継ぎ
+
+初回の独立Opusレビューは重大0・軽微2・情報7だった。軽微指摘は[Issue #456](https://github.com/loomake/loomake/issues/456)で追跡し、公開後の通知失敗を保存失敗と混同する診断と、distへ依存した同時公開試験を後続で整える。秘密を含み得る例外をそのまま再送出せず、現在の秘匿保証と検査を維持する。
+
+非起草Codexの情報指摘では、分までのISO時刻に対する私的同期validatorと公開Zodの受理精度に差があった。現在のwriterは秒を含む `Date.toISOString()` を使うため生成物に影響しないが、PR2で保存済み実績を読む前に対応精度を統一する。この統合では両指摘の製品修理を行わず、PR2のREQ-467・468、PR3のREQ-469、実原本と実出力の親受入を残す。
