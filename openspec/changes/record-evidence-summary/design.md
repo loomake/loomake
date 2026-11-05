@@ -12,7 +12,7 @@ traceのsummaryProblemはI/Oのない同期関数とし、evidenceProblemの既�
 
 ## 実行事実
 
-runRecordは実行対象SHAを既存の検証前HEADから保ち、実行idをrandomUUIDで生成する。環境値はRecordOptions.env（省略時process.env）から受け、CI識別を最上位ciにだけ置く。runAttemptは正のsafe整数、local/欠損/不正はci:nullと理由を持つ。evaluatorはtrace packageの版、環境はNode/platform/arch、commandsは解決したconfig、basisは既存basisHashの計算を使う。追加コマンドや新認証を作らない。
+runRecordは実行対象SHAを既存の検証前HEADから保ち、実行idをrandomUUIDで生成する。環境値はRecordOptions.env（省略時process.env）から受け、CI識別を最上位ciにだけ置く。runAttemptは正のsafe整数、local/欠損/不正はci:nullと理由を持つ。evaluatorはtrace packageの版、環境はNode/platform/arch、commandsはconfigのraw hash/sourceとnameRefsだけ、basisは既存basisHashの計算を使う。追加コマンドや新認証を作らない。
 
 producerはcheckのproducer evidenceを確認できたときだけ採用し、未確認ならnullとする。開始/終了は同じverify前後の実時刻を採る。新しい記録で既存now注入の意味、onVerifyの回数と呼出位置、変更検知と旧失敗の保存を変えない。
 
@@ -22,7 +22,9 @@ producerはcheckのproducer evidenceを確認できたときだけ採用し、�
 
 本PRの書き手はlocation/expiresAt/retrievalをnull、availabilityをnot-uploadedとする。本体のbytesを要約・Gitへコピーしない。親Q69-04の補足設計で、固定summary→小さなhash-key索引→取得照合済み本体、または生成時の検証済みlocatorを比較する。この接続を未実装のまま親を閉じない。
 
-元bytesとdecoded textのUTF8の関係はQ69-14で確認する。推奨はcheckArtifactBodyがraw Uint8Array/Bufferを受け、件数parserだけstrict UTF8を使う案である。共通readerが置換decodeする事実を隠してrawの同一性を保証しない。補足設計で必要な新経路だけに安全性を定め、旧verifyやreader全般の動作へ広げない。
+補足設計271b9d31-e5b0-4cc3-a015-00b6d1f5eb76と管理判断で、raw bytesを本体の正本とするQ69-14Aを採用した。readInputBytesは既存readのprivate buffer処理を共有し、InputReader型を足さず、旧readの置換decode/予算/エラーを保つ。新raw入口は毎回JSON_LIMITS等の独立予算で複製Bufferを返す。新しいcheckArtifactBodyはUint8Array（Bufferを含む）のview範囲を直接hash/bytes照合する。
+
+rawがstrict UTF8として有効なときだけcheckの文字列由来hashと比較し、不一致を拒否する。不正UTF8ならhash表現が異なるため同じ比較とはせずunverified/counts:null/gapとして元verify結果を保存する。checkが空文字列hashでrawが空でない場合は、読取不整合として拒否する。件数だけstrict decodeしたtextをparserへ渡す。共通sha256Hexや既存reader/verifyの型・分類・期待値は変更しない。
 
 ## 本体・期限の純粋関数
 
@@ -38,4 +40,12 @@ init雛形のevidence既定値は既存REQ285の値を明記するだけで、�
 
 #71はmain b2b3f824へ受入・同期archive済みとなり、純粋APIの製品原文は当初candidate7f173acと同一とgit objectで照合した。このbranchはまだ統合していない。元の設計・材料の取得時点は変更しない。
 
-新しいexecution.commands等の文字列保存もNFR09の対象であり、#65共有方針との接続をQ69-15へ残す。既知の秘密形を素通ししないが、本担当が新しい独自patternや元の共通hash/readerを変更して埋めることもしない。
+Q69-15B/Q69-21を管理判断で採用し、execution.commandsはsource（loomake.config.json/defaults）、sha256（raw config hash/null）、nameRefsだけとする。nameRefsは確認できた訪問順にnameSha256を保存し、lint/typecheck/testと完全一致するときだけknownNameを任意で持つ。raw本文・raw custom name・本文hashや推測した実行結果は保存しない。config省略はdefaults/sha256:nullとgapで既定値経路を受け付ける。訪問順を得られないaborted等はnameRefs:nullとgapにし、確認した訪問なしの空配列と分ける。
+
+この変更だけで既存のverify reasonsや保存文書など全入力の秘密形を保護したとは主張しない。既知の入力由来のsecretの扱いは#65 P3の残債として親に残す。独自patternと追加依存は導入しない。
+
+## 通常W1で残りを実装する計画
+
+補足設計のQ16Aは、_index/body以下の1receipt1fileをpublishEvidenceで上書きせず保存する案として採用した。Q17は実際に取得できたactorの範囲とpolicyVerified:false/gapを分け、全memberの権限を証明しない。Q18の限定手動workflowの実装・dispatchは利用者deliveryのCI検証権限に含まれるとの管理判断で、新たな人の承認待ちにはしない。権限write・公開・新認証は伴わない。本担当はまだ実装/起動しない。
+
+Q19の自己運用changeでは埋込verifyがFAILでもその事実を保存し、本体参照の一致と品質の合格を分ける。受入PR自体の最終DoDを飛ばしてよいという意味ではない。REQ470〜472はmain Source衝突なしを確認して、receipt・resolver・限定手動CI/実運用の別通常PRへ採番した。466〜469は#68の予約なので使わない。

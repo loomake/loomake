@@ -41,7 +41,7 @@ Source: REQ-461
 #### Scenario: 実行事実を記録する
 - **WHEN** recordが既存の検証を1回実施する
 - **THEN** executionはid（新規UUID）、origin（localまたはgithub-actions）、evaluator（name:@loomake/traceとpackageのversion）、basisSha256、environment（node/platform/arch）、commands、producerまたはnull、startedAt/finishedAt、verification:executedを持つ
-- **AND** basisSha256は既存basisHashと同じ入力・手順、commandsは解決済みの設定、実施時刻はその検証の前後に得た時刻で、追加の外部コマンドを起動しない
+- **AND** basisSha256は既存basisHashと同じ入力・手順、commandsは設定のrawハッシュと名前参照だけを持ち、実施時刻はその検証の前後に得た時刻で、追加の外部コマンドを起動しない
 
 #### Scenario: CIの環境値がそろう
 - **WHEN** GITHUB_ACTIONSがtrue、GITHUB_RUN_IDが空でない数字列、GITHUB_RUN_ATTEMPTが正の安全な整数を表す文字列である
@@ -60,10 +60,20 @@ Source: REQ-461
 #### Scenario: gapsの対応が不正
 - **WHEN** 既知のnull欄のgapがない・同じfieldで重複する・値がある既知欄にgapを付ける
 - **THEN** 拡張の意味検証が拒否する
-- **AND** canonicalなfieldはci、execution.producer、request、observation、artifacts、artifacts[0].counts等の既知配列要素の欄で、未知のnullable欄はそのまま保つ
+- **AND** canonicalなfieldはci、execution.producer、execution.commands.sha256、execution.commands.nameRefs、request、observation、artifacts、artifacts[0].counts等の既知配列要素の欄で、未知のnullable欄はそのまま保つ
+
+#### Scenario: コマンド本文を新しい欄へ保存しない
+- **WHEN** 設定ファイルがある実行のcommands参照を保存する
+- **THEN** commandsはsource:loomake.config.json、設定のraw SHA-256であるsha256、nameRefsを持ち、コマンド本文とraw custom nameを保存しない
+- **AND** nameRefsは確認できた既存の品質コマンド訪問順の配列で、各要素はraw nameのUTF8 SHA-256であるnameSha256と、名前が完全一致した場合だけ任意のknownName（lint/typecheck/test）を持つ。本文hashや実行結果として扱わない
+
+#### Scenario: 設定省略と観測できない訪問順
+- **WHEN** 設定ファイルを省いた従来の既定値経路、またはaborted等で訪問順を観測できない実行を記録する
+- **THEN** 省略時はcommands.sourceをdefaults、sha256をnullと対応するgapにし、従来の既定値経路を受け付ける。訪問なしを確認できた場合のnameRefsは空配列、観測できない場合はnullとunverified gapにする
+- **AND** 空文字列の設定hashを捏造せず、既存verify details全体の秘密情報保護をこの新欄だけで保証しない
 
 ### Requirement: 本体の参照と同じ実行の観測照合
-recordはverifyを再実行せず、既存の変更検知後に本体を読んでcheckのreportハッシュと照合する SHALL。不一致なら記録せず1を返す MUST。未確認や既知の部分出力はcounts:nullとgapを持ち、同じ実行を照合したverifiedは全件完了・真正性・品質合格を意味しない MUST。元のonVerifyの回数・順序、入力安全性とUsageErrorの分類、失敗の保存、期限・品質コマンドの回数を保つ SHALL。
+recordはverifyを再実行せず、既存の変更検知後に本体のraw bytesを安全に読み、表現を比較できるcheckハッシュと照合する SHALL。既知の不整合は記録せず1を返す MUST。未確認や既知の部分出力はcounts:nullとgapを持ち、同じ実行を照合したverifiedは全件完了・真正性・品質合格を意味しない MUST。元のonVerifyの回数・順序、入力安全性とUsageErrorの分類、失敗の保存、期限・品質コマンドの回数を保つ SHALL。
 
 Source: REQ-462
 
@@ -73,8 +83,18 @@ Source: REQ-462
 - **AND** tests_total（passed+failed）と区別し、未知の未実行試験を0補完しない
 
 #### Scenario: 本体の既知ハッシュが違う
-- **WHEN** checkが示すreportハッシュと、記録時に読んだ元raw本体のハッシュが違う
+- **WHEN** rawがstrict UTF8として有効でcheckが示すreportハッシュとraw SHA-256が違う、またはcheckが空文字列のhashでrawが空でない
 - **THEN** gapで握り潰さず、新しい要約と一時ファイルを公開せず1を返し、既存記録は書き換えない
+
+#### Scenario: 不正なUTF8とハッシュ表現
+- **WHEN** 元の本体がstrict UTF8として解析できない
+- **THEN** raw SHA-256とbytesを保持したままsameRunをunverified、countsをnullと理由付きgapにする。置換decode後文字列のcheck hashとの表現差を既知のraw不一致だとは扱わず、元verifyの失敗等の保存を保つ
+- **AND** valid UTF8のときだけstrict decodeしたtextを件数parserへ渡し、共通sha256Hex・従来readerのdecode・旧verify結果は変更しない
+
+#### Scenario: 安全なraw入力の公開
+- **WHEN** readInputBytesへ通常の入力ファイルと既存のJSON_LIMITS等を渡す
+- **THEN** 元のraw bytesの複製を返し、lstat・nofollow/nonblock付きopen・fstat・実読取り量の予算・通常ファイル/リンク拒否とエラー分類を既存どおり適用する
+- **AND** InputReader型の既存メンバーは不変で、従来readの文面・予算・置換decode・ELOOP分類を維持し、64MiBちょうど/超過・リンク差替え・FIFO・ディレクトリ・不正UTF8を区別する
 
 #### Scenario: 同一実行を確認できない
 - **WHEN** localでcheckのハッシュがない、出力が古い、実行が失敗・中断した、開始時刻を確認できない、またはbail等の部分出力だと分かる

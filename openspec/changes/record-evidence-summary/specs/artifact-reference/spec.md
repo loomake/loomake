@@ -10,9 +10,9 @@ kitは取得済み本体のraw SHA-256とbytesを参照に照合する純粋関�
 Source: REQ-463
 
 #### Scenario: 本文を参照へ照合する
-- **WHEN** checkArtifactBodyへ取得済み本体と、そのraw SHA-256・bytesを持つ参照を渡す
+- **WHEN** checkArtifactBody(ref, bytes:Uint8Array)へ取得済みraw本体と、そのraw SHA-256・bytesを持つ参照を渡す
 - **THEN** 両方が一致したときだけ一致を返し、本文1文字・bytes1バイト・ハッシュ・参照型が違えば不一致を日本語の理由付きで返し、入力を変更しない
-- **AND** raw Uint8Array/Bufferを受ける案と、strict UTF8と元bytes一致を前提にしたtext入力案の選択はQ69-14で確定する
+- **AND** BufferもUint8Arrayとして受け、viewのoffsetとlengthの範囲だけを照合し、型が違えば不一致を返す。textへ再encodeして元bytesと呼ばない
 
 #### Scenario: 実保持期間が方針を満たす
 - **WHEN** artifactRetentionへ実createdAtとexpiresAt、方針期間、明示したnowを渡す
@@ -27,3 +27,7 @@ Source: REQ-463
 #### Scenario: 暦年と日週の境界
 - **WHEN** 閏日のcreatedAtへyの期間を加算するか、dまたはwの期間を比較する
 - **THEN** UTCの移動先月末へ丸め、日週は24時間と7日を使い、境界ちょうどで当時の充足と現在の失効をそれぞれ評価する
+
+#### Scenario: Unicode表現とbyte view
+- **WHEN** BOM・U+FFFD・不正な継続byte・途中のマルチbyte、またはoffset/lengthの違うUint8Array viewを照合する
+- **THEN** 元raw bytesの範囲とSHA-256で同一性を判定し、strict decodeと件数の解釈は本体照合の一致と別に扱い、入力bytesを変更しない
