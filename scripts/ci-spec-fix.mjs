@@ -72,7 +72,7 @@ export function changedTestReqIds(entries, readFile) {
     }
     const unchanged = new Set(extractTestBlocks(before).map((block) => block.text));
     for (const block of extractTestBlocks(after)) {
-      if (block.end < 0 || !block.pattern || unchanged.has(block.text)) continue;
+      if (block.end < 0 || !block.pattern || unchanged.has(block.text) || !/^(?:it|test)\b/.test(block.text)) continue;
       const modifiers = block.text.slice(0, block.text.indexOf('('));
       if (/\.\s*(?:skip|todo|skipIf|runIf)\b/.test(modifiers)) continue;
       for (const match of block.pattern.matchAll(/\\\[(REQ-\d{3,})\\\]/g)) ids.add(match[1]);

@@ -62,7 +62,7 @@ describe('主仕様のRequirement Source', () => {
     const root = mkdtempSync(join(tmpdir(), 'loomake-spec-fix-source-'));
     const write = (path: string, text: string) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), text); };
     try {
-      write('openspec/specs/x/spec.md', 'Source: REQ-099\n### Requirement: real\n本文 SHALL。\nSource: REQ-010\n```markdown\n### Requirement: example\nSource: REQ-011\n```\n');
+      write('openspec/specs/x/spec.md', 'Source: REQ-099\n### Requirement: real\n本文 SHALL。\nSource: REQ-010\n```markdown\n### Requirement: example\nSource: REQ-011\n```js\n### Requirement: still-example\nSource: REQ-012\n```\n');
       write('openspec/changes/c1/specs/x/spec.md', '## ADDED Requirements\n### Requirement: delta\n本文 SHALL。\nSource: REQ-012\n');
       expect([...mainSpecSourceIds(join(root, 'openspec/specs'))]).toEqual(['REQ-010']);
     } finally { rmSync(root, { recursive: true, force: true }); }
@@ -86,6 +86,7 @@ describe('名前にREQを持つ変更した試験', () => {
     ['削除', entry('D'), original, undefined],
     ['コメント内の偽宣言', entry('A'), undefined, `// ${changed}`],
     ['文字列内の偽宣言', entry('A'), undefined, JSON.stringify(changed)],
+    ['試験でない呼出', entry('A'), undefined, changed.replace('it(', 'fakeIt(')],
     ['本文にだけREQ', entry('A'), undefined, "it('other', () => { const value = '[REQ-010]'; });"],
     ['include範囲外', entry('A', ['scripts/a.test.ts']), undefined, changed],
     ['skip', entry('A'), undefined, changed.replace('it(', 'it.skip(')],

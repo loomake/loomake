@@ -11,9 +11,9 @@
 ## Decisions
 
 - `loomake-route:` は全行を読み、すべてが spec-fix のときに受け付ける。大文字小文字は既存 none と同じく区別しない。`loomake-req:` は全行をカンマで分け、前後の空白を除き、完全一致する REQ ID を重複なく集める。空値や不正値は理由付きで拒む。
-- 主仕様の `spec.md` にある Requirement の Source だけを読む。進行中の差分仕様やフェンス内の記載は数えない。既存 `parseRequirements` を再利用する。
+- 主仕様の `spec.md` にある Requirement の Source だけを読む。進行中の差分仕様やフェンス内の記載は数えない。閉じフェンスの info string を正しく除いてから既存 `parseRequirements` を再利用する。
 - git の raw diff が返す変更前後のパスを読む。削除を含め `openspec/` が一つでもあれば拒む。test の対象は vitest が実行する `tests/**/*.test.ts` と `packages/*/test/**/*.test.ts`。
-- 既存 `extractTestBlocks` で test 呼出の名前と本文を読む。追加または変更された呼出に含む名前の `[REQ-xxx]` だけを数える。ファイルの名前を変えただけ、コメントや文字列内の偽の呼出、削除は数えない。直接の skip・todo・skipIf・runIf は除く。
+- 既存 `extractTestBlocks` で it/test 呼出の名前と本文を読む。追加または変更された呼出に含む名前の `[REQ-xxx]` だけを数える。ファイルの名前を変えただけ、コメントや文字列内の偽の呼出、削除は数えない。直接の skip・todo・skipIf・runIf は除く。
 - 基準は同じ PR の merge-base と HEAD の git blob。M/R/T で変更前を読めなければ失敗とする。コメントだけに REQ ID があっても通さない。主仕様や試験の読取失敗も通さない。
 - 各不足理由をすべて返し、既存の L3 change 必須メッセージに添える。条件成立時は既存 L2 と同じ品質コマンドを実行し、品質の終了コードと工程検査の失敗を保つ。
 - REQ-343 の既存 Scenario は全文保持する。本文は L3 の一文だけを変更し、細かい条件を Scenario へ置いて 500 字以内に保つ。
