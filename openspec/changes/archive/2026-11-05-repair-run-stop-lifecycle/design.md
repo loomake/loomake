@@ -14,3 +14,7 @@ Issue #416（2026-11-05 全体レビュー）と、独立 Opus 設計（claude-o
 ## 再現
 
 偽 claude が別 PGID・SID の孫へ出力を継承して exit 0 した場合、200ms の期限と 250ms 後の abort は、ともに外側の 1500ms watchdog まで返らなかった。所有 PID だけを清掃した。正常終了を保つ修理後は、これらを後処理だけで timedOut/aborted へ変えない。
+
+## R1 M-2 の説明
+
+dry-runの復帰git switch自体が失敗すると、そのGitErrorが元の例外を置き換え、開始前のgit失敗として終了コード2になる。元のOpus設計と既存の仕様ゲートの例外経路と同じ扱いを保ち、例外の合成や終了値の変更は加えない。重複SIGHUPの規範変更と回答は、後続のcoalesce-run-hangup-signalsに置く。
