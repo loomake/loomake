@@ -7,7 +7,7 @@
 ## 2. 実装
 
 - [x] 2.1 既存の静的観測成果とnamed exportを移し、REQ-430の要件ID付き試験を通す。古い出力・実行ゼロ・件数未取得を測定値にしない。
-- [ ] 2.2 静的source/metricと呼出側の前提のガイド、changesetと作業記録を追加する。lint・typecheck・公開JSONと依存契約を確認する。
+- [x] 2.2 静的source/metricと呼出側の前提のガイド、changesetと作業記録を追加する。lint・typecheck・公開JSONと依存契約を確認する。
 
 ## 3. 確認
 
