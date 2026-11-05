@@ -15,8 +15,12 @@ Windows の CI では、生成された CRLF の質問表に LF 固定の置換�
 
 ## 最終レビューの互換比較と artifact の作成方法
 
-元の core parser（5c15baf0）と現 parser に、現存する 147 trace の同じ原文を渡した。各表の行数と ID 配列は全件で一致し、双方の解析エラーは 0 件。各原文の SHA と表ごとの結果は作業証跡に保存した。
+R2 修理時点では、元の core parser（5c15baf0）と現 parser に、main 873d47a9 と本 change にある 147 trace の同じ原文を渡した。各表の行数と ID 配列は全件で一致し、双方の解析エラーは 0 件。各原文の SHA と表ごとの結果は作業証跡に保存した。
 
 この change は root を確認してから proposal・specs・design・tasks・trace を直接生成し、`openspec new change` は使っていない。そのため `.openspec.yaml` は作成時から存在せず、archive でも生成されなかった。schema は既存の `openspec/config.yaml` に従い spec-driven として解決しており、空の metadata を後付けしない。
 
 schema の試験 fixture は読み込み後の CRLF/CR を LF にそろえてから表内へ Q/A 行を挿入する。製品のパーサー・原本 hash 用 decode・Git の autocrlf・CI 設定は変えず、LF/CRLF/CR と EOF の有無を同じ Linux 試験で確かめる。
+
+## main の統合後の確認
+
+R3 依頼前に main edd4ca20 の #414 を取り込み、対象は 148 trace になった。同じ 148 原文を旧 parser と現 parser に渡した比較でも、各表の行数・ID 配列の差と双方の解析エラーは 0 件だった。統合前後の本 PR の製品・試験・仕様・changeset の差分は一致し、追加の製品変更は行っていない。
