@@ -33,4 +33,3 @@ Source: REQ-199
 #### Scenario: PGP の公開鍵を記録する
 - **WHEN** 記録に PGP PUBLIC KEY BLOCK が含まれる
 - **THEN** 平文とストリームの両経路で公開鍵のブロックをそのまま残す
-
