@@ -10,11 +10,14 @@ export const gap = (field: string, reason: string, kind: SummaryGap['kind'] = 'u
 export const rawHash = (bytes: Uint8Array): string => createHash('sha256').update(bytes).digest('hex');
 
 /** 設定本文もコマンド名も複製せず、参照と実際に取得した事実だけを保存する。 */
-export function executionSummary(root: string, changeDir: string, result: VerifyResult, started: number, finished: number, env: NodeJS.ProcessEnv): SummaryExtension {
+export function executionSummary(
+  root: string, changeDir: string, result: VerifyResult, started: number, finished: number, env: NodeJS.ProcessEnv,
+): SummaryExtension {
   const github = env.GITHUB_ACTIONS === 'true';
   const attempt = Number(env.GITHUB_RUN_ATTEMPT);
-  const ci = github && /^\d+$/.test(env.GITHUB_RUN_ID ?? '') && /^[1-9]\d*$/.test(env.GITHUB_RUN_ATTEMPT ?? '') && Number.isSafeInteger(attempt)
-    ? { runId: env.GITHUB_RUN_ID!, runAttempt: attempt, source: 'environment' as const } : null;
+  const runId = env.GITHUB_RUN_ID;
+  const ci = github && typeof runId === 'string' && /^\d+$/.test(runId) && /^[1-9]\d*$/.test(env.GITHUB_RUN_ATTEMPT ?? '') && Number.isSafeInteger(attempt)
+    ? { runId, runAttempt: attempt, source: 'environment' as const } : null;
   const evidence = (result.checks ?? []).flatMap((check) => check.evidence);
   const producers = [...new Set(evidence.filter((s) => /^producer:(vitest|jest)@.+$/.test(s)))];
   const match = producers.length === 1 ? /^producer:(vitest|jest)@(.+)$/.exec(producers[0]) : null;

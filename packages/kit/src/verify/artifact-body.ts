@@ -19,7 +19,10 @@ export function checkArtifactBody(ref: unknown, bytes: Uint8Array): ArtifactBody
   return { matches: true, reason: '本体のハッシュとバイト数が参照に一致しました' };
 }
 
-const daysInMonth = (year: number, month: number) => [31, year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month];
+const daysInMonth = (year: number, month: number) => {
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  return [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month];
+};
 function instant(value: unknown): number | undefined {
   if (typeof value !== 'string') return undefined;
   const match = /^(\d{4})-(\d{2})-(\d{2})T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/.exec(value);

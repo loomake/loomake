@@ -30,7 +30,7 @@ export function summaryProblem(value: unknown): string | undefined {
   if (!object(c) || !['loomake.config.json', 'defaults'].includes(String(c.source)) || (c.sha256 !== null && !hash(c.sha256))) return '要約のコマンド参照が不正です';
   if (c.source === 'defaults' ? c.sha256 !== null : !hash(c.sha256)) return '要約の設定出典とハッシュが合いません';
   if (c.nameRefs !== null && (!Array.isArray(c.nameRefs) || !c.nameRefs.every((n) => object(n) && hash(n.nameSha256)
-    && (n.knownName === undefined || (['lint', 'typecheck', 'test'].includes(String(n.knownName)) && createHash('sha256').update(String(n.knownName)).digest('hex') === n.nameSha256))))) return '要約のコマンド名参照が不正です';
+    && (n.knownName === undefined || (typeof n.knownName === 'string' && ['lint', 'typecheck', 'test'].includes(n.knownName) && createHash('sha256').update(n.knownName).digest('hex') === n.nameSha256))))) return '要約のコマンド名参照が不正です';
   nullable.set('execution.commands.sha256', c.sha256);
   nullable.set('execution.commands.nameRefs', c.nameRefs);
   if (!Array.isArray(value.artifacts)) return '要約の本体参照が配列ではありません';
