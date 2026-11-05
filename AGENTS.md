@@ -26,7 +26,7 @@
 
 統合専用ブランチへの段階受入と累積差分の最終レビューは、[ADR 0006 の採用節](docs/adr/0006-standing-approval-for-autonomous-delivery.md#統合専用ブランチへの段階受入と最終レビュー採用2026-11-01)に従う。利用者は 2026-11-01 に規則案 A を承認した（出典・対象ブランチ・分割計画は同節）。規則変更 PR #260 が必須 CI・独立レビューを満たして main へマージされたあとから適用する。段階受入の例外は名前を挙げて承認された統合先だけを対象とし、それ以外のすべてのブランチにはこの例外を適用しない。最終 PR の全タスク・全要件・完了ゲート・必須 CI・独立レビューは省略しない。
 
-L3 の例外として、既存の Requirement どおりに直すだけのバグ修正は、5 つの条件をすべて満たすときに限り change なしの「仕様適合の修正」で進められる（PR 本文に `loomake-change: none`・`loomake-route: spec-fix`・`loomake-req: REQ-xxx` を書く）。この場合は Opus 設計を省き、独立 Opus レビューは 1 回、完了は品質コマンドと 3 OS の CI、REQ テストの失敗から成功への証拠、レビューの重大ゼロで判断する（`verify --done` は対象外）。仕様が曖昧なときや仕様にない振る舞いを決めるときは使えない。条件と手続きは [ADR 0006](docs/adr/0006-standing-approval-for-autonomous-delivery.md) の「完成を早めるための規則変更」と `docs/dev/ci.md` に従う。CI が受け付けるのは Issue #427 のマージ後で、それまでは使えない。
+L3 の例外として、既存の Requirement どおりに直すだけのバグ修正は、5 つの条件をすべて満たすときに限り change なしの「仕様適合の修正」で進められる（PR 本文に `loomake-change: none`・`loomake-route: spec-fix`・`loomake-req: REQ-xxx` を書く）。この場合は Opus 設計を省き、独立 Opus レビューは 1 回、完了は品質コマンドと 3 OS の CI、REQ テストの失敗から成功への証拠、レビューの重大ゼロで判断する（`verify --done` は対象外）。仕様が曖昧なときや仕様にない振る舞いを決めるときは使えない。条件と手続きは [ADR 0006](docs/adr/0006-standing-approval-for-autonomous-delivery.md) の「完成を早めるための規則変更」と `docs/dev/ci.md` に従う。CI は [PR #436](https://github.com/loomake/loomake/pull/436) のマージからこの経路を受け付ける。
 
 どの段階でも、流れは次のとおり。
 
