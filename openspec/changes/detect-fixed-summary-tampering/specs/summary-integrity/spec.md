@@ -5,7 +5,7 @@
 ## ADDED Requirements
 
 ### Requirement: 外部の信頼値による固定済み要約の照合
-kit は固定済み要約の本文と、要約とは別に渡された信頼値（固定時の SHA-256、CI の実行 ID・試行番号・対象 SHA）を受け取る named export `checkFixedSummary` を公開する SHALL。本文の UTF-8 の SHA-256 を信頼値のハッシュと完全一致で照合し、要約の中や付随するファイルにあるハッシュは照合に使わない MUST。ハッシュ関数を引数に取らず、I/O・時計・環境を参照せず、入力を変更しない SHALL。
+kit は固定済み要約の本文と、要約とは別に渡された信頼値（固定時の SHA-256、CI の実行 ID・試行番号・対象 SHA）を受け取る named export `checkFixedSummary` を公開する SHALL。本文は孤立した UTF-16 サロゲートを含まない文字列に限り、置換文字に正規化せず、UTF-8 の SHA-256 を信頼値のハッシュと完全一致で照合する MUST。要約の中や付随するファイルにあるハッシュは照合に使わない MUST。ハッシュ関数を引数に取らず、I/O・時計・環境を参照せず、入力を変更しない SHALL。
 
 Source: REQ-443
 
@@ -39,7 +39,7 @@ Source: REQ-444
 - **THEN** 対象 SHA の不一致を理由に FAIL を返す
 
 ### Requirement: 照合の失敗を拒否と差し戻しで返す
-照合関数は、理由が 1 件でもあれば `reusable: false`・`result: FAIL`・`returnToHuman: true` と、空でない日本語の理由 `reasons` を返す SHALL。信頼値がない・形が違う、要約が文字列でない・JSON として読めない・照合する欄の形が違うときも、例外を投げずに同じ失敗を返す MUST。理由が 0 件のときだけ `reusable: true`・`result: PASS`・`returnToHuman: false`・`reasons: []` を返す SHALL。
+照合関数は、理由が 1 件でもあれば `reusable: false`・`result: FAIL`・`returnToHuman: true` と、空でない日本語の理由 `reasons` を返す SHALL。信頼値がない・形が違う、要約が文字列でない・孤立した UTF-16 サロゲートを含む・JSON として読めない・照合する欄の形が違うときも、例外を投げずに同じ失敗を返す MUST。理由が 0 件のときだけ `reusable: true`・`result: PASS`・`returnToHuman: false`・`reasons: []` を返す SHALL。
 
 Source: REQ-445
 
@@ -54,3 +54,7 @@ Source: REQ-445
 #### Scenario: 照合する欄の形式
 - **WHEN** 信頼値または要約の照合する欄を検査する
 - **THEN** 信頼値は `summarySha256` が小文字64桁の16進、`runId` が空でない文字列、`runAttempt` が1以上の整数を先頭ゼロなしで表す文字列、`sha` が小文字40桁または64桁の16進である。要約は `sha` が40桁または64桁の16進、`ci.runId` が空でない文字列、`ci.runAttempt` が同じ試行番号形式の JSON オブジェクトであり、形式が違えば失敗を返す
+
+#### Scenario: 孤立サロゲートを含む要約を拒否する
+- **WHEN** 正しい置換文字 U+FFFD を含む要約の写しで、その文字を孤立した UTF-16 サロゲートに変え、UTF-8 変換後のハッシュが元と一致している
+- **THEN** ハッシュが一致しても正規化して受け入れず、SUMMARY_UNREADABLE を理由に再利用不可・FAIL・人への差し戻しを返す。正しいサロゲートペアや U+FFFD 自体は、この理由では拒否しない
