@@ -32,5 +32,8 @@ export type { Evidence, LegacyEvidence, EvidenceV2, EvidenceDocument, Report, Re
 export { loadQualityResultSchema } from './quality-result.js';
 export type { QualityResult } from './quality-result.js';
 export { BODY_EVIDENCE_KEY, type BodyAttempt, type BodyEvidence } from './body-evidence.js';
+
+export { SUMMARY_VERSION, loadSummarySchemas } from './summary-contracts.js';
+export type { EvidenceSummary, SummaryArtifact, SummaryGap } from './summary-contracts.js';
 export { EFFORT_SCHEMA_VERSION, loadEffortSchema } from './effort.js';
 export type { EffortRecord, EffortMinutes, EffortCost } from './effort.js';

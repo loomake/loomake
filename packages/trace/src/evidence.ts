@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { summaryProblem } from './summary.js';
 import { EVIDENCE_V2_SCHEMA_VERSION, LEGACY_EVIDENCE_SCHEMA_VERSION, LEGACY_VERIFY_RESULT_SCHEMA_VERSION, VERIFY_RESULT_V2_SCHEMA_VERSION } from '@loomake/core';
 
 export const EVIDENCE_SHA = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/i;
@@ -72,7 +73,7 @@ export function evidenceProblem(value: unknown, change: string): string | undefi
   const problem = value.schemaVersion === EVIDENCE_V2_SCHEMA_VERSION ? verifyV2Problem(verify, change) : legacyVerifyProblem(verify, change);
   if (problem) return problem;
   if (verify.coverage !== undefined && (!object(verify.coverage) || !Object.values(verify.coverage).every(strings))) return 'coverageの形が不正です';
-  if (value.documents === undefined) return undefined;
+  if (value.documents === undefined) return summaryProblem(value);
   if (!Array.isArray(value.documents)) return 'documentsは配列である必要があります';
   const paths = new Set<string>();
   for (const d of value.documents) {
@@ -84,5 +85,5 @@ export function evidenceProblem(value: unknown, change: string): string | undefi
     if (createHash('sha256').update(d.content).digest('hex') !== d.sha256) return `保存した文書のハッシュが一致しません：${d.path}`;
   }
   if (!paths.has('trace.md')) return '保存した文書にtrace.mdがありません';
-  return undefined;
+  return summaryProblem(value);
 }

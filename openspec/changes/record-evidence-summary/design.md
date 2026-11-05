@@ -1,0 +1,59 @@
+# Design: record-evidence-summary
+
+## 採用した入力と分割
+
+実Opus設計84f0136e-9521-4c01-ad3a-e94be632621dはmain71c9019aを対象にRead/Glob/Grepで実claude-opus-5-5・exit0・ok:trueだった。管理役が通常PR1のREQ460〜463と、親を閉じない分割を採用した。本PRは独立したDoDを満たす通常L3で、段階受入の例外を使わない。親の索引・共有本体への到達・PR2・整理はparent-handoff.mdへ保持する。
+
+## 公開構造と同期の意味検証
+
+coreにsummary-contracts.ts（型・定数・loadSummarySchemas）とsummary-schemas.tsを置く。既存evidence系の構造を改変せず、新拡張だけをschema/summary/へ生成する。通常とpublishConfigのexportsを対応させ、既存CONTRACT_SCHEMASの8件・VERSIONEDの4件を変えない。入口からZodを静的に読まない。preserveUnknownFieldsと既存の型公開/依存方向を保つ。
+
+traceのsummaryProblemはI/Oのない同期関数とし、evidenceProblemの既存検証後に目印summaryVersionがある入力だけへ適用する。目印なしの旧storage等は解釈しない。1は新契約、他の値とEvidence1の目印は拒否する。既知のnullable欄にだけgapを対応させ、未知欄を拒否しない。元のreader予算・公開時の64MiB制限・同期serializeを変更しない。
+
+## 実行事実
+
+runRecordは実行対象SHAを既存の検証前HEADから保ち、実行idをrandomUUIDで生成する。環境値はRecordOptions.env（省略時process.env）から受け、CI識別を最上位ciにだけ置く。runAttemptは先頭0のない正のsafe整数の十進文字列を元のまま保存し、locationも同じ型とする。local/欠損/不正はci:nullと理由を持つ。evaluatorはtrace packageの版、環境はNode/platform/arch、commandsはconfigのraw hash/sourceとnameRefsだけ、basisは既存basisHashの計算を使う。追加コマンドや新認証を作らない。
+
+producerはcheckのproducer evidenceを確認できたときだけ採用し、未確認ならnullとする。開始/終了は同じverify前後の実時刻を採る。新しい記録で既存now注入の意味、onVerifyの回数と呼出位置、変更検知と旧失敗の保存を変えない。
+
+## 本体の観測照合
+
+既存の変更検知を通過したあとに設定済みtests.reportを安全な予算内で読む。checkに示されたreport:sha256と違えば拒否する。照合でき、時刻・品質command・parser・ファイル状態が条件を満たす分だけsameRun verifiedと観測6件数を付ける。verifiedは同一実行の観測照合の意味で、全件完了や真正性の意味を持たない。既知部分出力・不読・未取得・localのreceipt不足はnullと理由を保持し、未知の実施をゼロにしない。
+
+本PRの書き手はlocation/expiresAt/retrievalをnull、availabilityをnot-uploadedとする。本体のbytesを要約・Gitへコピーしない。親Q69-04の補足設計で、固定summary→小さなhash-key索引→取得照合済み本体、または生成時の検証済みlocatorを比較する。この接続を未実装のまま親を閉じない。
+
+補足設計271b9d31-e5b0-4cc3-a015-00b6d1f5eb76と管理判断で、raw bytesを本体の正本とするQ69-14Aを採用した。readInputBytesは既存readのprivate buffer処理を共有し、InputReader型を足さず、旧readの置換decode/予算/エラーを保つ。新raw入口は毎回JSON_LIMITS等の独立予算で複製Bufferを返す。新しいcheckArtifactBodyはUint8Array（Bufferを含む）のview範囲を直接hash/bytes照合する。
+
+rawがstrict UTF8として有効なときだけcheckの文字列由来hashと比較し、不一致を拒否する。不正UTF8ならhash表現が異なるため同じ比較とはせずunverified/counts:null/gapとして元verify結果を保存する。checkが空文字列hashでrawが空でない場合は、読取不整合として拒否する。件数だけstrict decodeしたtextをparserへ渡す。共通sha256Hexや既存reader/verifyの型・分類・期待値は変更しない。
+
+## 本体・期限の純粋関数
+
+kitのcheckArtifactBodyは渡された参照と本文を照合する。artifactRetentionは実createdAt/expiresAtから当時の保持充足、明示nowから現在のexpired等を別々に返す。policy期間は要求する下限の比較にだけ使い、実際のexpiresAtを生成しない。d/wは日数、yはUTC暦年、閏日は移動先月末へ丸め、nowとexpiresAtが等しければexpiredとする。availableは期限だけの状態で、取得権限や存在を保証しない。
+
+## 互換と検証
+
+旧Evidence1/2の閲覧結果、未知欄とown __proto__、旧12Schemaのbytes、遅延読み込みと型consumer、全既存assertを保つ。runnerの要約1件だけのcommit再利用、正規名による最新選択、不正な最新からのfallback禁止、失敗の保存、原子的公開・上書き禁止・入力拒否/予算を回帰で確認する。#65 P3のrecord/serialization変更と競合し得るので、管理役がmain統合をまとめる。
+
+init雛形のevidence既定値は既存REQ285の値を明記するだけで、承認済みroot quality.yamlも現CI retention7dも変更しない。7dと90dの差は事実として記録し、充足したと偽装しない。
+
+## 最新の受入と接続前の確認
+
+#71はmain b2b3f824へ受入・同期archive済みとなり、純粋APIの製品原文は当初candidate7f173acと同一とgit objectで照合した。このbranchはまだ統合していない。元の設計・材料の取得時点は変更しない。
+
+Q69-15B/Q69-21を管理判断で採用し、execution.commandsはsource（loomake.config.json/defaults）、sha256（raw config hash/null）、nameRefsだけとする。nameRefsは確認できた訪問順にnameSha256を保存し、lint/typecheck/testと完全一致するときだけknownNameを任意で持つ。raw本文・raw custom name・本文hashや推測した実行結果は保存しない。config省略はdefaults/sha256:nullとgapで既定値経路を受け付ける。訪問順を得られないaborted等はnameRefs:nullとgapにし、確認した訪問なしの空配列と分ける。
+
+この変更だけで既存のverify reasonsや保存文書など全入力の秘密形を保護したとは主張しない。既知の入力由来のsecretの扱いは#65 P3の残債として親に残す。独自patternと追加依存は導入しない。
+
+## 通常W1で残りを実装する計画
+
+補足設計のQ16Aは、_index/body以下の1receipt1fileをpublishEvidenceで上書きせず保存する案として採用した。Q17は実際に取得できたactorの範囲とpolicyVerified:false/gapを分け、全memberの権限を証明しない。Q18の限定手動workflowの実装・dispatchは利用者deliveryのCI検証権限に含まれるとの管理判断で、新たな人の承認待ちにはしない。権限write・公開・新認証は伴わない。本担当はまだ実装/起動しない。
+
+Q19の自己運用changeでは埋込verifyがFAILでもその事実を保存し、本体参照の一致と品質の合格を分ける。受入PR自体の最終DoDを飛ばしてよいという意味ではない。REQ470〜472はmain Source衝突なしを確認して、receipt・resolver・限定手動CI/実運用の別通常PRへ採番した。466〜469は#68の予約なので使わない。
+
+## P1のコマンド訪問順は未観測
+
+現P1は訪問順を専用に観測する手段を追加せず、recordのcommands.nameRefsはnullとunverified gapにする。設定のObject.keysは実訪問ではなく、既存checksも本計画では厳密な訪問証拠に読み替えない。未受入の品質コマンド通知APIを使わず、配列形を検証できる公開構造と、P1で観測して保存する事実を分ける。設定raw hash/sourceは維持するので元定義への参照は失わない。
+
+## 動的fixtureと新runtime assetの追従
+
+通常fullで、newwriterから旧Evidence1を生成する入力にsummaryVersionが残る不整合と、Sourceから組む子プロセス束にtrace/package.jsonがない不整合を観測した。Q69-23を管理役が採用し、この2つの入力生成だけを追従する。全既存assert・期待値・条件・期限、固定版1/2JSON fixtureと12Schemaは変えない。実package.jsonを版の正本とし、記録しないimportでmetadataを読まず、実record時に遅延して読む。版の偽造・固定fallback・新build機構は導入しない。

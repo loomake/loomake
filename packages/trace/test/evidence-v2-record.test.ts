@@ -95,7 +95,8 @@ describe('Evidence 1 と Evidence 2 の読み分け', () => {
   it('[REQ-073] Evidence 2 を受け付け、Evidence 1 は履歴閲覧専用の警告を付けて読む', () => {
     withRecorded((root, evidence, file) => {
       expect(report(root).code).toBe(0);
-      const legacy = { ...evidence, schemaVersion: 1, verify: { schemaVersion: '1.0.0', mode: 'done', change: CHANGE, ok: true, results: [], coverage: {} } };
+      const legacy: Record<string, unknown> = { ...evidence, schemaVersion: 1, verify: { schemaVersion: '1.0.0', mode: 'done', change: CHANGE, ok: true, results: [], coverage: {} } };
+      delete legacy.summaryVersion; // 新writerの目印を除き、本物の旧形式入力を再現する。
       writeFileSync(file, JSON.stringify(legacy));
       const r = report(root);
       expect(r.code).toBe(0);

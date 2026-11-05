@@ -8,6 +8,8 @@ import { changedDocuments, readDocuments } from './documents.js';
 import { EVIDENCE_SCHEMA_VERSION } from './schema.js';
 import { serializeEvidence } from './serialization.js';
 import { publishEvidence } from './publication.js';
+import { executionSummary } from './summary-record.js';
+import { summaryObservation } from './summary-observation.js';
 export { EVIDENCE_SCHEMA_VERSION } from './schema.js';
 
 export type { Evidence } from '@loomake/core';
@@ -29,6 +31,8 @@ export type RecordOptions = {
   scope?: VerifyScope;
   /** quality.yaml のスキーマ。`await loadVerifyQualitySchema()` の結果を渡す。ci の記録では必須（REQ-319） */
   qualitySchema?: QualitySchemaLike;
+  /** 実行元の事実。省略時はprocess.env。CIの真正性は保証しない。 */
+  env?: NodeJS.ProcessEnv;
 };
 
 export const EVIDENCE_DIR = '.loomake/evidence';
@@ -73,6 +77,7 @@ export function runRecord(options: RecordOptions): number {
 
   const scope = options.scope ?? 'ci';
   let result: VerifyResult;
+  const startedAt = Date.now();
   try {
     result = runVerify({ root, changeId, gate: 'done', scope, progress, timeoutMs: options.timeoutMs, qualitySchema: options.qualitySchema });
   } catch (error) {
@@ -80,6 +85,7 @@ export function runRecord(options: RecordOptions): number {
     if (!(error instanceof RuntimeFailure)) throw error;
     result = verifyAbortedResult(error, changeId);
   }
+  const finishedAt = Date.now();
   options.onVerify?.(result);
   // 検査のあいだに HEAD・作業ツリー・文書が変わったら、どの内容を検査したか分からないので記録しない（REQ-128）。
   // .gitignore で除外したテストのレポートなどは、変更とみなさない
@@ -94,6 +100,14 @@ export function runRecord(options: RecordOptions): number {
     if (after.length) stdout(after.map((l) => `  ${l}`).join('\n'));
     return 1;
   }
+  const observation = summaryObservation(root, config.tests.report, result, startedAt, finishedAt);
+  if (observation.mismatch) {
+    stdout('検証時と記録時で本体のハッシュが一致しないので、記録しませんでした。');
+    return 1;
+  }
+  const extension = executionSummary(root, changeDir, result, startedAt, finishedAt, options.env ?? process.env);
+  extension.artifacts = observation.artifacts;
+  extension.gaps = [...extension.gaps.filter((g) => g.field !== 'artifacts'), ...observation.gaps];
   const recordedAt = now();
   const evidence: Evidence = {
     schemaVersion: EVIDENCE_SCHEMA_VERSION,
@@ -103,6 +117,7 @@ export function runRecord(options: RecordOptions): number {
     recordedAt: recordedAt.toISOString(),
     verify: result,
     documents,
+    ...extension,
   };
 
   const json = serializeEvidence(evidence);
