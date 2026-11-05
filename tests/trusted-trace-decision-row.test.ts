@@ -28,7 +28,9 @@ describe('合成モデルの行照合（実C001の採否成功ではない）', 
   });
   it('[REQ-390] T-ROW-03 同表・表間の重複を空欄判定より先に件数付きで拒否する', () => {
     for (const [qs, as] of [[2, 0], [0, 2], [1, 1]]) {
-      const m = model(Array.from({ length: qs }, () => question('dup', '')), Array.from({ length: as }, () => assumption('dup', '')));
+      const m = model();
+      m.questions = Array.from({ length: qs }, () => ({ ...model([question('dup', '')]).questions[0] }));
+      m.assumptions = Array.from({ length: as }, () => ({ ...model([], [assumption('dup', '')]).assumptions[0] }));
       expect(findParsedTraceDecision(m, 'dup')).toEqual({ row: null, adoptionsVerified: false, problems: [`ID「dup」の行が確認事項${qs}件・仮定${as}件あります`] });
     }
   });

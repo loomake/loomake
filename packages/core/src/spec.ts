@@ -61,7 +61,11 @@ export function parseSpec(file: string, text: string): ParseResult<SpecRequireme
     const c: SpecRequirement = cur;
     if (/^#### Scenario:/.test(line)) c.scenarios++;
     const src = line.match(/^\**Source\**:\**\s*(.+)$/);
-    if (src) c.sources.push(...(src[1].match(REQ_ID) ?? []));
+    if (src) {
+      for (const id of src[1].match(REQ_ID) ?? []) {
+        if (!c.sources.includes(id)) c.sources.push(id);
+      }
+    }
   });
   dropPending();
   return { value, errors };

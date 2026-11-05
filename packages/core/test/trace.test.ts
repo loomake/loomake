@@ -151,3 +151,42 @@ describe('createTraceTemplate', () => {
     }
   });
 });
+
+
+describe('trace の表の境界', () => {
+  it('[REQ-011] 空行の後の二つ目の表を読まない', () => {
+    const second = '\n| ID | 出典 | 種別 | 要約（原文に忠実に） | 状態 | 反映先 |\n|---|---|---|---|---|---|\n| REQ-999 | 別表 | 機能 | 別表 | 反映済 | x |\n';
+    const text = trace.replace('\n## 確認事項', second + '\n## 確認事項');
+    expect(parseTrace('trace.md', text).value.ledger.map((r) => r.ID)).toEqual(['REQ-001', 'REQ-002']);
+  });
+
+  it('[REQ-011] BOM 付き trace も同じ値と行番号を返す', () => {
+    expect(parseTrace('trace.md', '\uFEFF' + trace)).toEqual(parseTrace('trace.md', trace));
+  });
+});
+
+
+describe('表内 ID の重複', () => {
+  it.each([
+    ['ledger', '要件台帳', 'REQ-001'],
+    ['questions', '確認事項', 'Q-01'],
+    ['assumptions', '仮定', 'A-01'],
+  ] as const)('[REQ-422][REQ-018] %s の重複を行番号つきで返し全行を残す', (key, heading, id) => {
+    const lines = trace.split('\n');
+    const first = lines.findIndex((l) => l.startsWith('| ' + id + ' |'));
+    lines.splice(first + 1, 0, lines[first], lines[first]);
+    const parsed = parseTrace('duplicate.md', lines.join('\n'));
+    expect(parsed.errors).toEqual([first + 2, first + 3].map((line) => ({
+      file: 'duplicate.md', line,
+      message: `「${heading}」の表で ID「${id}」が重複しています（最初は ${first + 1} 行目）`,
+    })));
+    expect(parsed.value[key].filter((r) => r.ID === id)).toHaveLength(3);
+  });
+
+  it('[REQ-422] 表をまたぐ同じ ID と空の ID は重複にしない', () => {
+    const text = trace.replace('| Q-01 |', '| REQ-001 |').replace('| A-01 |', '| REQ-001 |');
+    expect(parseTrace('trace.md', text).errors).toEqual([]);
+    const row = '|  | REQ-001 | 質問 | a | a | no | a |';
+    expect(parseTrace('trace.md', trace.replace('| Q-01 | REQ-002 | 何回ですか | 3 / 5 | 5 | yes | |', row + '\n' + row)).errors).toEqual([]);
+  });
+});

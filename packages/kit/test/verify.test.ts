@@ -601,11 +601,22 @@ describe('回答の反映と書き方の案内（#285）', () => {
 
   it('[REQ-360] 複数の関連IDと重複を表の順で一度だけ表示する', () => {
     const trace = traceMd({ ledger: [ledgerRow('REQ-012'), pending('REQ-027'), pending('REQ-029'), pending('REQ-002')], questions: [
-      qrow('Q-17', 'REQ-029, REQ-027・REQ-027'), qrow('Q-15', 'REQ-027・REQ-029'), qrow('Q-17', 'REQ-029'),
+      qrow('Q-17', 'REQ-029, REQ-027・REQ-027'), qrow('Q-15', 'REQ-027・REQ-029'), qrow('Q-18', 'REQ-012'),
     ] });
     const r = withProject({ trace }, specOnly);
     expect(check(r, '確認待ちの要件')?.detail).toBe('REQ-027（Q-17・Q-15）, REQ-029（Q-17・Q-15）, REQ-002');
     expect(verifyExitCode(r)).toBe(0);
+  });
+
+  it('[REQ-360][REQ-422] 重複した質問 ID の案内も表順で一度だけ示し解析を不合格にする', () => {
+    const trace = traceMd({ ledger: [ledgerRow('REQ-012'), pending('REQ-027'), pending('REQ-029'), pending('REQ-002')], questions: [
+      qrow('Q-17', 'REQ-029, REQ-027・REQ-027'), qrow('Q-15', 'REQ-027・REQ-029'), qrow('Q-17', 'REQ-029'),
+    ] });
+    const r = withProject({ trace }, specOnly);
+    expect(check(r, '確認待ちの要件')?.detail).toBe('REQ-027（Q-17・Q-15）, REQ-029（Q-17・Q-15）, REQ-002');
+    expect(check(r, 'trace.md の解析')?.status).toBe('fail');
+    expect(check(r, 'trace.md の解析')?.detail).toContain('Q-17');
+    expect(verifyExitCode(r)).toBe(1);
   });
 
   it('[REQ-360] 長いREQ IDや前に英字のある参照を別の要件へ部分一致させない', () => {
@@ -759,4 +770,13 @@ describe('回答の反映と書き方の案内（#285）', () => {
     const legacy = { schemaVersion: '1.0.0' as const, ok: false, mode: 'spec-only' as const, change: CHANGE, results: [{ check: 'ブロッキング確認事項', status: 'fail' as const, detail: 'Q-15（REQ-012）何回ですか' }] };
     expect(formatVerifyResult(legacy)).toBe('Loomake verify  mode=spec-only  change=c1\n\n✖ ブロッキング確認事項\n    Q-15（REQ-012）何回ですか\n\n不合格（1 件）');
   });
+});
+
+
+it('[REQ-422] 回答済み質問の ID 重複でも仕様ゲートを不合格にする', () => {
+  const result = withProject({ trace: traceMd({ questions: [question('Q-01', 'yes', '5 回'), question('Q-01', 'yes', '5 回')] }) }, specOnly);
+  expect(ok(result)).toBe(false);
+  expect(check(result, 'trace.md の解析')?.status).toBe('fail');
+  expect(check(result, 'trace.md の解析')?.detail).toContain('Q-01');
+  expect(check(result, 'ブロッキング確認事項')?.status).toBe('pass');
 });

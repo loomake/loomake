@@ -43,5 +43,5 @@ export function setTraceCells(text: string, table: EditableTable, id: string, va
   lines[row.line - 1] = `| ${cells.join(' | ')} |`;
   // 元の改行コードにそろえる
   const eol = text.includes('\r\n') ? '\r\n' : '\n';
-  return { text: lines.join(eol), missingColumns: Object.keys(values).filter((c) => !names.includes(c)) };
+  return { text: (text.startsWith('\uFEFF') ? '\uFEFF' : '') + lines.join(eol), missingColumns: Object.keys(values).filter((c) => !names.includes(c)) };
 }
