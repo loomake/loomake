@@ -129,3 +129,9 @@ export function consumeBodyRunner(config: ConstructorParameters<typeof TestRunne
   custom.extra = 'changed';
   return { runner, getTestFn, custom, literal, value };
 }
+
+// [REQ-462] 元bytesとOS不読の公開型。fixtureはコンパイルだけを行う。
+import { readInputBytes, InputReadFailure } from '@loomake/kit';
+const summaryRawBytes: Buffer = readInputBytes('report.json');
+const summaryInputFailure: Error = new InputReadFailure('読取り失敗');
+void [summaryRawBytes, summaryInputFailure];

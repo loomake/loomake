@@ -12,7 +12,7 @@ export type { InitOptions, InitFile, PackageManager } from './init/init.js';
 export { unifiedDiff } from './init/diff.js';
 export { runDoctor, diagnose } from './doctor/doctor.js';
 export type { DoctorCheck, DoctorLevel, DoctorOptions } from './doctor/doctor.js';
-export { createInputReader, DOCUMENT_LIMITS, JSON_LIMITS } from './runtime/input.js';
+export { createInputReader, readInputBytes, DOCUMENT_LIMITS, JSON_LIMITS } from './runtime/input.js';
 export type { InputLimits, InputEntry, InputReader } from './runtime/input.js';
 export { runExternal, withProcessBudget, remainingProcessTime, hasProcessBudget, holderWaitTime, ProcessLimitError, EXTERNAL_TIMEOUT_MS, EXTERNAL_OUTPUT_BYTES } from './runtime/process.js';
 export type { ExternalOptions, ExternalResult, ProcessBudget, ProcessLimitKind } from './runtime/process.js';
@@ -34,3 +34,5 @@ export { createBodyRecorder, type BodyContext, type ChaiLike } from './evidence/
 export { createBodyRunner } from './evidence/vitest-runner.js';
 export { observeStaticMetrics } from './verify/policy/static-observation.js';
 export type { StaticCommandResult, StaticMetricsReceipt } from './verify/policy/static-observation.js';
+
+export { InputReadFailure } from './runtime/errors.js';

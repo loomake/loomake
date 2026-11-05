@@ -51,6 +51,8 @@
 | Q69-20 | REQ-470・REQ-471・REQ-472 | 補足設計の追加REQを採番できるか | A:470〜472を予約 / B:他番号を調べる | A。466〜469は68予約と重なる | no | A。main b2b3f824のSource衝突なしを実検査し470〜472を別通常PRへ採番。P1には新定義を足さない（管理判断） | 管理役 | 2026-11-05 |
 | Q69-21 | REQ-461 | config省略と任意command名をどう保存するか | A:省略null/gap・全名hashと任意known enum / B:raw custom名を保存 | A。元定義を追い秘密形を新保存しない | yes | A。config省略はdefaults/null、確認済名はUTF8 hashと任意knownName。現P1は専用観測なしでnameRefs:null/gap、設定順やchecksから推測しない（管理判断） | 管理役 | 2026-11-05 |
 
+| Q69-22 | REQ-462 | OS不読と入力拒否を公開APIでどう識別するか | A:既存InputReadFailureをnamed export / B:constructor名等を推測 | A。instanceofで旧分類を保つ | yes | A。既存class/分類は不変、OS不読だけgap、入力拒否はthrow。管理役がADR0006に従い採用 | 管理役 | 2026-11-05 |
+
 Q69-04/Q69-07は本PRの実装で解消したとはしない。親69の未完了としてparent-handoffに全義務を保つ。取得済み補足設計を採用したが、索引・手動CI・実運用は未実装である。Q69-14/15/21は補足設計と管理判断で回答済み。rawとhash表現・新文字列の保存をここで確定し、親のQ69-07は未回答のまま保持する。
 
 ## 仮定

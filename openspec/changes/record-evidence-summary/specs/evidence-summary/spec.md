@@ -100,6 +100,7 @@ Source: REQ-462
 - **WHEN** readInputBytesへ通常の入力ファイルと既存のJSON_LIMITS等を渡す
 - **THEN** 元のraw bytesの複製を返し、lstat・nofollow/nonblock付きopen・fstat・実読取り量の予算・通常ファイル/リンク拒否とエラー分類を既存どおり適用する
 - **AND** InputReader型の既存メンバーは不変で、従来readの文面・予算・置換decode・ELOOP分類を維持し、64MiBちょうど/超過・リンク差替え・FIFO・ディレクトリ・不正UTF8を区別する
+- **AND** kitは既存のInputReadFailureも公開し、OS不読だけを未確認のgapへ変換できる。リンク・予算・ELOOP等の入力拒否は握り潰さず、既存classと分類を変えない
 
 #### Scenario: 同一実行を確認できない
 - **WHEN** localでcheckのハッシュがない、出力が古い、実行が失敗・中断した、開始時刻を確認できない、またはbail等の部分出力だと分かる
