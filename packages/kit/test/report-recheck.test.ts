@@ -3,7 +3,7 @@ import { it, expect, vi } from 'vitest';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { runExternal } from '../src/runtime/process.js';
+import { ProcessLimitError, runExternal } from '../src/runtime/process.js';
 import { runVerify } from '../src/verify/run.js';
 import { withProject, CHANGE } from './project.js';
 const qualitySchema = await loadVerifyQualitySchema();
@@ -29,5 +29,14 @@ it('[REQ-424][REQ-038] removes only a safe internal final link', () => {
     runVerify({ root, qualitySchema, changeId: CHANGE, gate: 'done', scope: 'local' });
     expect(readFileSync(join(root, 'target.json'), 'utf8')).toBe('untouched');
     expect(() => readFileSync(join(root, 'report.json'))).toThrow();
+  });
+});
+it('[REQ-428][REQ-250] stops standalone quality commands after a supervisor timeout with a reason', () => {
+  withProject({ config: { openspecValidate: false, commands: { test: 'first', after: 'second' } } }, (root) => {
+    vi.mocked(runExternal).mockClear();
+    vi.mocked(runExternal).mockImplementationOnce(() => { throw new ProcessLimitError('timeout', 'first', '', '', '監視役が停止猶予を過ぎました'); });
+    const result = runVerify({ root, scope: 'local', timeoutMs: 10000 });
+    expect(runExternal).toHaveBeenCalledTimes(1);
+    expect(JSON.stringify(result)).toContain('監視役が停止猶予を過ぎました');
   });
 });

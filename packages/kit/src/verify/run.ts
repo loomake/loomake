@@ -500,10 +500,10 @@ function runCommands(
     } catch (error) {
       if (!(error instanceof ProcessLimitError)) throw error;
       const reason = error.kind === 'interrupted' ? (error.reason ? `${INTERRUPTED}（${error.reason}）` : INTERRUPTED) : error.message;
-      fail(`command: ${name}`, error.kind === 'timeout' ? TIMED_OUT : reason);
+      fail(`command: ${name}`, error.kind === 'timeout' ? `${TIMED_OUT}${error.reason ? `（${error.reason}）` : ''}` : reason);
       failed(null);
       // 共有予算では後続の外部操作も起動せず拒否し、各項目に未実行の理由を残す。
-      if (error.kind === 'interrupted' && !hasProcessBudget()) return exitCode;
+      if ((error.kind === 'interrupted' || error.reason) && !hasProcessBudget()) return exitCode;
       continue;
     }
     // spawnSync は起動に失敗すると、型に反して stdout・stderr が null になる
