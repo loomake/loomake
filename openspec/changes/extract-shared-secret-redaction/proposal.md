@@ -12,7 +12,7 @@ Issue [#65](https://github.com/loomake/loomake/issues/65)（W1-6）は、外部�
 - runner の既存 `mask.ts`・`private-key-stream.ts` を kit からの再エクスポートにし、runner の公開元、既存 import、配布された `dist/mask.js` を維持する。
 - `maskValue` は、JSON に使う値と object の省略可能な undefined の範囲を明示して深く複製する。文字列の値と own key を既存の形だけで置換する。循環、キー衝突、対象外の値は、入力値を含まない日本語の UsageError にする。
 - REQ-207 の runtime の責務に既知の秘密の置換を明記する。依存の許可・禁止と既存4 Scenario は維持する。
-- runtime の固定一覧の試験に2ファイルを加える具体案を用意する。B01 の直接承認が得られるまでは、実際の試験・期待値・製品コードを変更しない。
+- runtime の固定一覧に、採用仕様の2ファイルだけを追加する。管理役はB01を依存検査を緩めない仕様追従と分類し、追加承認が必要との先の解釈を訂正した。仕様ゲート成功後に実装する。
 
 ## Non-goals
 
@@ -33,5 +33,5 @@ Issue [#65](https://github.com/loomake/loomake/issues/65)（W1-6）は、外部�
 
 - capability：新設 `secret-redaction`（REQ-447）、`monorepo`（REQ-207 の責務の明記）。
 - 製品：kit の2モジュール・公開 export、runner の既存2モジュールの再エクスポート。runner の logs/run/recorder/phases/engine と公開 index は変更しない。
-- 試験：新しい kit の要件対応試験。runner と package-artifacts の既存試験・期待値は無変更。`tests/kit-layers.test.ts` の具体案だけが B01 の直接承認待ち。
+- 試験：新しい kit の要件対応試験。runner と package-artifacts の既存試験・期待値は無変更。`tests/kit-layers.test.ts` はB01の仕様追従として2項目だけを追加し、元の依存規則と全検査を保つ。
 - 配布：kit と runner の changeset、kit の共通関数の API 説明。設定、閾値、skip、timeout、依存予算は変えない。

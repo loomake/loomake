@@ -15,7 +15,7 @@
 | ID | 出典 | 種別 | 要約（原文に忠実に） | 状態 | 反映先 |
 |---|---|---|---|---|---|
 | REQ-447 | Issue65 W1-6、NFR-09、Opus設計3章、Q65-03/04/10 | 機能 | 既知の秘密の置換をkitへ挙動不変で移しrunner公開元を保つ。maskValueは明示したJSONデータとown optional undefinedを安全に深く複製・置換する | 反映済 | specs/secret-redaction/spec.md |
-| REQ-207 | 現行monorepo「kit の中の依存の向き」、B01 | 制約 | runtimeの責務に共通の秘密置換を明記し、既存の依存方向と全禁止例を維持する。固定一覧の実変更はB01承認後 | 反映済 | specs/monorepo/spec.md |
+| REQ-207 | 現行monorepo「kit の中の依存の向き」、B01 | 制約 | runtimeの責務に共通の秘密置換を明記し、既存の依存方向と全禁止例を維持する。一覧の追従はB01の管理役分類に従う | 反映済 | specs/monorepo/spec.md |
 | REQ-118 | 現行run「記録に秘密情報を含めない」 | 制約 | 既知の秘密の置換の既存挙動を保つ | 既存仕様で充足 | openspec/specs/run/spec.md |
 | REQ-199 | 現行run「置換する秘密情報の形」 | 制約 | 既知pattern・Bearer・秘密鍵・JSON・streamの既存結果を保つ | 既存仕様で充足 | openspec/specs/run/spec.md |
 | REQ-047 | 現行verify「実行時依存の範囲」 | 制約 | kitに新たな実行時依存を追加しない | 既存仕様で充足 | openspec/specs/verify/spec.md |
@@ -34,7 +34,7 @@
 | Q65-03 | REQ-447 | 共通の置換処理をどこへ置くか | A:kit runtimeへ移しrunnerは再export / B:coreへ置く | A。収集の責務と依存方向を保つ | yes | A。kitのredact.ts/private-key-stream.tsへ移し既存公開元を保つ。管理役がOpus設計を採用。ADR 0006「決定」 | 利用者（ADR 0006 の包括承認） | 2026-11-05 |
 | Q65-04 | REQ-447 | W1で秘密を見分ける範囲をどうするか | A:既存既知patternのみ / B:キー推定や明示値の収集も追加 | A。任意の秘密を検出できると保証しない | yes | A。REQ-118/199のみで新たなkey推定や秘密値収集を加えない。管理役がOpus設計を採用。ADR 0006「決定」 | 利用者（ADR 0006 の包括承認） | 2026-11-05 |
 | Q65-10 | REQ-447 | maskValueでoptional undefinedをどう扱うか | A:plain objectのown enumerable data値だけ保持、root/Array undefined等は拒否 / B:strict JSONのみでundefinedを全拒否 | A。Verify/Evidence/Reportのoptional/unknown値を失わずJSONの範囲を明示できる | yes | A。管理役が直接採用。NaN/Infinity・非plain・配列穴・accessor等の拒否、own/prototype/共有参照/循環もspecへ明記。ADR 0006「決定」 | 利用者（ADR 0006 の包括承認） | 2026-11-05 |
-| B01 | REQ-207 | kit-layersの固定4一覧へruntime/private-key-stream.tsとruntime/redact.tsだけを加える実変更を認めるか。未適用差分はdesign.md参照 | A:元4項目と全禁止依存検査を維持して2項目だけ追加 / B:認めずP1実装を止める | A。runtimeの責務に沿い、元の検査を残せる。ただし期待値変更なので直接判断が必要 | yes | | | |
+| B01 | REQ-207 | 固定一覧への2項目追加は、依存検査を緩めず採用仕様へ追従する変更か | A:元4項目と全禁止検査を保って2項目追加 / B:検査を緩める必要があれば実装しない | A。REQ-207は件数を固定せず、新2moduleにも同じ検査が掛かる | yes | A。独立確認に基づき管理役が仕様追従と分類し、追加承認必須との先の解釈を訂正。未回答を利用者の新承認へ置換しない（ADR0006） | 管理役（通常L3の仕様追従と分類） | 2026-11-05 |
 | Q65-01 | REQ-448 | 五vendorの対応payloadと中立型をどこまで確定するか | Opus設計4章のA案 / 調査後に再設計 | A案をP2の版固定一次資料で確認 | no | P2準備段階。P1では採用・実装しない | 管理役 | 2026-11-05 |
 | Q65-02 | REQ-449 | JSON/JSONLの終端と収集失敗をどう分類するか | parsed/unreadable/not_found/spawn_error/limited / 再設計 | 5分類案をP2の仕様で確定 | no | P2準備段階。P1では採用・実装しない | 管理役 | 2026-11-05 |
 | Q65-05 | REQ-452 | 秘密形の文書とsnapshot/hashをどう両立するか | A:秘密形があれば記録拒否 / B:新しいsource hash契約 | A。既存契約を保てるが影響調査が必要 | no | 管理役がAをP3向け暫定採用。既存openspec全spec/traceへのreadonly影響調査を管理役が行い、P3着手時に確定 | 管理役 | 2026-11-05 |
@@ -43,7 +43,7 @@
 | Q65-08 | REQ-449 | 未導入・未対応時にどうするか | A:不足の分類と理由を返す / B:導入・認証へ進む | A。導入と認証は範囲外 | no | P2の入力・版・error契約で確定 | 管理役 | 2026-11-05 |
 | Q65-09 | REQ-448・REQ-449・REQ-453 | W1でどの公開入口を届けるか | A:core変換・kit収集・trace接続 / B:新CLIも追加 | A。CLIは範囲外 | no | P2/P3で残りを実装する。P1ではkit共通関数だけ追加し#65を閉じない | 管理役 | 2026-11-05 |
 
-B01はAGENTS.mdの期待値変更の禁止に直接当たり、ほかのQへの包括承認で埋めない。管理役が具体案を利用者へ提示する。既存4項目と禁止例の維持だけで承認済みとは扱わない。
+B01は当初、期待値を変更する事実だけから直接承認が必要と解釈した。2026-11-05に管理役は独立確認を照合し、REQ-207の依存方向・未知ファイル拒否・元4項目を保ち、新2moduleにも同じ検査を掛ける通常の仕様追従と分類した。追加確認は取り下げたが、新たな利用者承認があったとは記録しない。検査弱体化の許可や規則変更ではない。
 
 ## 仮定
 

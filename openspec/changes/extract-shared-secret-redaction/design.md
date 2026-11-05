@@ -40,13 +40,13 @@ numberは丸め・null化せず、負の0も保持する。objectの欠落した
 
 `tests/kit-layers.test.ts:36`の正確な一覧には2ファイルを足す必要がある。実ファイルは未変更で、管理役用の未適用差分は `.loomake/design65/p1-approval.patch`。変更案は既存4項目をすべて残してprivate-key-stream.tsとredact.tsだけを足す1行であり、同じtoEqual・forbiddenImports・全禁止例を維持する。
 
-ただしAGENTS.mdの期待値変更の禁止に当たるため、管理役はB01を包括承認で埋めず、利用者の直接判断に提示する。承認前はspecgateを失敗のまま記録し、製品と既存試験を変更しない。別ディレクトリへの移動による検査の回避も行わない。
+当初は期待値が変わるという理由だけで追加承認を要求したが、管理役は独立確認後にその解釈を訂正した。REQ-207はファイル数を固定しておらず、元4項目・全禁止依存・未知ファイル拒否を保ち、新2moduleにも同じ検査を適用する仕様追従である。通常L3の採用仕様とADR0006に基づき進め、新たな利用者承認があったとは扱わない。別ディレクトリへの移動や検査の弱体化は行わない。独立確認の事実は `.loomake/design65/inventory-independent-audit.md` に保持する。
 
 ## 試験と受入
 
 新しいkitの試験でREQ-447の全Scenarioを確認する。既存runnerのmask、diagnostic-redactor、private-key-redaction、run-start-maskとpackage-artifactsを無変更で実行し、元のmodule pathと配布物も確認する。test nameのREQ IDを残し、秘密には認証に使えない合成fixtureだけを使う。
 
-B01承認後のREQ-207の検査は追加2moduleも含むruntimeを走査する。元4項目、全assertion、forbiddenImports、全禁止例が保持されていることを差分でも確かめる。
+B01の管理役分類に従うREQ-207の検査は追加2moduleも含むruntimeを走査する。元4項目、全assertion、forbiddenImports、全禁止例が保持されていることを差分でも確かめる。
 
 仕様ゲート成功後に実装し、全tasks、local done、CI done、必須5チェック、変更packageの3OS、非著者Codexと独立Opusのレビューを通す。実装のmainマージ後の仕様同期/archiveは管理役が続けて扱う。
 

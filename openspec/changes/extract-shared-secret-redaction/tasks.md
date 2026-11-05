@@ -3,15 +3,15 @@
 ## 1. 計画と着手条件
 
 - [x] 1.1 P1の仕様・設計・trace・親引継ぎを管理役が確認し、Q65-03/04/10の回答を記録する（REQ-447）
-- [ ] 1.2 B01の具体的な一覧追加に利用者の直接承認を得て、承認元・対象・日付をtraceとPRへ記録する。未承認の間は製品と既存試験を編集しない（REQ-207）
-- [ ] 1.3 `openspec validate extract-shared-secret-redaction --strict` と `pnpm -s verify --change extract-shared-secret-redaction --spec-only` の成功を確認してから製品の実装へ進む（REQ-447・REQ-207）
+- [x] 1.2 B01の独立確認と管理役による仕様追従の分類をtraceへ記録し、追加承認必須との先の解釈を訂正する。利用者の新承認とは扱わず、元の依存規則と全検査を保つ（REQ-207）
+- [x] 1.3 `openspec validate extract-shared-secret-redaction --strict` と `pnpm -s verify --change extract-shared-secret-redaction --spec-only` の成功を確認してから製品の実装へ進む（REQ-447・REQ-207）
 
 ## 2. 共有実装と互換層
 
 - [ ] 2.1 runnerのmask.ts/private-key-stream.tsをkitのruntime/redact.ts/runtime/private-key-stream.tsへ挙動不変で移す。既知の形とstream状態・保留量・JSON処理は変えない（REQ-447）
 - [ ] 2.2 kitへmaskValueの入力検証・安全な深い複製・置換・衝突/循環拒否を追加する。getter/toJSONを実行せず、own undefined・__proto__とprototypeを定義どおり保つ（REQ-447）
 - [ ] 2.3 kitのnamed exportとrunner2moduleの再exportを追加し、runner index・呼出元・既存試験・配布importを維持する（REQ-447）
-- [ ] 2.4 B01承認の範囲内で、kit-layersの固定一覧に2ファイルだけを加える。元4項目・全assertion・禁止importの解析と全禁止例は維持する（REQ-207）
+- [ ] 2.4 B01の管理役分類に従い、kit-layersの固定一覧に2ファイルだけを加える。元4項目・全assertion・禁止importの解析と全禁止例は維持する（REQ-207）
 
 ## 3. 試験と配布文書
 
