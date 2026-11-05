@@ -24,7 +24,7 @@ gate ジョブは PR の段階（AGENTS.md 2 章の L1・L2・L3）を先に決�
 - L2（試験・CI・開発基盤）：これまでどおり、対象の change があれば `verify --change <id> --done`、なければ `verify`（品質コマンドだけ）を実行する
 - L3（製品コードと Requirement の変更）：change が必須。`loomake-change: none` や change を特定できない PR は失敗する
 - L3 の例外「仕様適合の修正」：既存の Requirement どおりに直すだけのバグ修正は、ADR 0006 の 5 条件（既存 Requirement に書かれた振る舞い、対象の REQ ID を名前に入れた修正前失敗・修正後成功のテスト、`openspec/` を変えない、公開契約を変えない、PR 本文に印を書く）をすべて満たすときだけ、change なしで進められる。PR 本文には `loomake-change: none`・`loomake-route: spec-fix`・`loomake-req: REQ-xxx` を書く。独立 Opus レビューは 1 回で、`verify --done` は対象外。正本は ADR 0006 の「完成を早めるための規則変更」
-  - 注意：CI がこの経路を受け付けるのは、REQ-343 を変更する change（Issue #427）がマージされてからである。それまでは `spec-fix` を宣言しても ci-gate は通常の L3 として扱い、上の `loomake-change: none` の失敗になる
+  - CI 対応は REQ-343 を変更する通常 L3 change（Issue #427）で行い、[PR #436](https://github.com/loomake/loomake/pull/436) のマージから使える。以下の宣言と確認条件に従う
 
 ### 仕様適合の修正で CI が調べる条件
 
@@ -33,6 +33,8 @@ gate ジョブは PR の段階（AGENTS.md 2 章の L1・L2・L3）を先に決�
 1. PR の差分に `openspec/` 配下の変更がない。削除や名前の変更は、変更前後のパスも対象にする。
 2. `loomake-req:` に書いたすべての ID が、主仕様の Requirement の `Source:` にある。進行中の change とコードフェンス内の記載は数えない。
 3. 各 ID を `[REQ-xxx]` の形で名前に含む試験を足すか変えている。対象は `tests/**/*.test.ts` と `packages/*/test/**/*.test.ts`。コメント内の呼出例、削除、ファイルの名前だけの変更、直接 `skip`・`todo`・`skipIf`・`runIf` を付けた試験は数えない。
+
+仕様適合の修正で対応する試験は、名前に固定の REQ ID がある `it`・`test` の呼出しで確認する。`test.extend` で作った `myTest` のように `it`・`test` 以外の名前の呼出しや、`it.each` の表から REQ ID を名前へ差し込む形は数えず、対応試験がなければ失敗する。
 
 `loomake-req:` はカンマ区切りでも複数行でも書ける。重複は一つにまとめ、空の値や `REQ-` と3桁以上の数字に一致しない値は失敗にする。`loomake-route:` が複数行なら、すべての値が大文字小文字を区別せず `spec-fix` に一致する必要がある。条件が足りなければ「L3 では change が必須です」に不足理由を添える。例えば、対応する試験がなければ「REQ-012 を名前に含むテストの追加・変更が差分にありません」と表示する。
 
@@ -82,8 +84,6 @@ L2 の PR のラベルを確かめる自動の検査もない。そのため、�
 
 macOS と Windows でだけ時間切れが続く試験ファイルは、`tests/quarantine.json` に書くと、その OS の quality ジョブのシャードから一時的に外せます。決まりは monorepo の仕様の「試験の隔離一覧」（REQ-344）にあります。試験の上限時間を延ばしたり skip したりする代わりに使うものではありません。原因を調べて直すまでの、期限つきの避難です。
 
-[Issue #430](https://github.com/loomake/loomake/issues/430) の文言の修理として、次の単発の事実も併せて記録する。2026-11-05 の利用者決定 D では、PR #425 の Windows CI で一度だけ時間切れになった `delivery-opus-prior` の試験も隔離の対象として承認された。時間切れが繰り返されたという実測はない。対象・期限・ファイル全体が外れる範囲は Issue #428 に記録する。
-
 ```json
 { "entries": [ { "file": "packages/runner/test/pr.test.ts", "tests": ["[REQ-114] …"], "os": ["windows-latest"],
     "issue": 116, "added": "2026-10-31", "expires": "2026-11-14" } ] }
@@ -93,6 +93,8 @@ macOS と Windows でだけ時間切れが続く試験ファイルは、`tests/q
 - `os` には `macos-latest` か `windows-latest` だけを書けます。Ubuntu のジョブは一覧を読まず、すべての試験を実行します
 - 各エントリに、原因を追う Issue の番号を書きます。期限は追加日から 14 日以内です
 - 期限を過ぎると、macOS・Windows のシャードと `quality-quarantine` の plan ジョブが失敗します。直して一覧から外すか、Issue に理由を書いて期限を見直してください
+
+[Issue #430](https://github.com/loomake/loomake/issues/430) の文言の修理として、次の単発の事実も併せて記録する。2026-11-05 の利用者決定 D では、PR #425 の Windows CI で一度だけ時間切れになった `delivery-opus-prior` の試験も隔離の対象として承認された。時間切れが繰り返されたという実測はない。対象・期限・ファイル全体が外れる範囲は Issue #428 に記録する。
 
 quality ジョブの macOS・Windows のシャードでは、`scripts/ci-quarantine.mjs --os <OS>` が一覧を検査し、外すファイルを JSON の配列で出力します。テストのステップはそれを環境変数 `LOOMAKE_TEST_QUARANTINE_EXCLUDE` で `vitest.config.ts` に渡し、両方のプロジェクトの `exclude` に足します。テストを実行する `run:` の行は変えていません。
 
