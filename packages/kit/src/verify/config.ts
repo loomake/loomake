@@ -94,10 +94,11 @@ export function normalizeReportPath(value: unknown): string {
   if (typeof value !== 'string' || value === '') throw new UsageError('loomake.config.json の tests.report は空でない文字列にしてください');
   const path = value.replace(/\\/g, '/');
   const parts = path.split('/');
-  if (Array.from(path).some((char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127) || path.startsWith('/') || /^[a-z]:/i.test(path) || parts.includes('..') || ['', '.'].includes(parts.at(-1) ?? '')) {
+  const normalized = parts.filter((part) => part !== '' && part !== '.').join('/');
+  if (Array.from(path).some((char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127) || path.startsWith('/') || /^[a-z]:/i.test(normalized) || parts.includes('..') || ['', '.'].includes(parts.at(-1) ?? '')) {
     throw new UsageError('loomake.config.json の tests.report は、プロジェクト内のファイルを指す相対パスにしてください');
   }
-  return parts.filter((part) => part !== '' && part !== '.').join('/');
+  return normalized;
 }
 
 /** 存在する各要素を確認する。最後の内部リンクはリンクだけを削除できる。 */

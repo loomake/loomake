@@ -10,7 +10,7 @@ function project(fn: (root: string) => void) {
 }
 describe('report target', () => {
   it('[REQ-424][REQ-172] rejects malformed report paths before use', () => {
-    for (const report of ['../outside.json', '/absolute.json', 'C:\\report.json', 'a/../r.json', 'reports/', '.', 'a/.', 'a\n.json', '']) {
+    for (const report of ['../outside.json', '/absolute.json', 'C:\\report.json', './C:/outside.json', './/C:/outside.json', './C:outside.json', '.\\C:\\outside.json', 'a/../r.json', 'reports/', '.', 'a/.', 'a\n.json', '']) {
       project((root) => {
         writeFileSync(join(root, 'loomake.config.json'), JSON.stringify({ tests: { report } }));
         expect(() => loadConfig(root), JSON.stringify(report)).toThrow();
