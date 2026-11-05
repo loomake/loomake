@@ -400,4 +400,3 @@ collectToolOutput は、observation に maskValue を掛け、stderr の全文�
 #### Scenario: args の秘密
 - **WHEN** args にトークンを入れて、各分類と UsageError を起こす
 - **THEN** 結果にも例外の message と cause にも、そのトークンは出ない
-
