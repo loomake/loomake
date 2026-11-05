@@ -100,6 +100,8 @@ context は利用状況の実際の定義を指す入力文書・Issue 等の出
 
 作った案は、既存の分割案と一緒に人に示し、同じ合意の中で確かめる。
 
+案は、追加 ID と値、既存項目への変更（linked_requirements の追加を含む）の具体差分、または quality.yaml の不在時の新規全文で示す。新規全文の model も具体的な合意対象にする。まだ観測できない必須証拠と、CI の完了ゲートが証拠不足になることを案に添える。新しい承認手順は増やさない。
+
 ### 5. change を書き出す
 
 `openspec/changes/<change-id>/` に次を作る。書式は [references/openspec-format.md](references/openspec-format.md) を参照。
