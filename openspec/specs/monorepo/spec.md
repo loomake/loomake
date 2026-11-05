@@ -142,12 +142,12 @@ CI の完了ゲートは、対象の change を次の順に決める MUST。
 Source: REQ-132
 
 #### Scenario: 明示を優先する
-- **WHEN** `openspec/changes/c1` と `openspec/changes/c2` があり、ブランチ名 `c2` で、`openspec/changes/c2/tasks.md` を変え、本文に `loomake-change: c1` の行がある PR で CI が動く
-- **THEN** `verify --change c1 --done` だけが実行される
+- **WHEN** `openspec/changes/c1` と `openspec/changes/c2` があり、c1 の tasks.md に完了した印があり、ブランチ名 `c2` で、`openspec/changes/c2/tasks.md` を変え、本文に `loomake-change: c1` の行がある PR で CI が動く
+- **THEN** verify の呼び出しは `verify --change c1 --done` だけになる
 
 #### Scenario: 変えたファイルとブランチ名を合わせる
-- **WHEN** `openspec/changes/c1` と `openspec/changes/c2` があり、ブランチ名 `c2` で、本文に明示がなく、`openspec/changes/c1/tasks.md` を変えた PR で CI が動く
-- **THEN** `verify --change c1 --done` と `verify --change c2 --done` が実行される
+- **WHEN** `openspec/changes/c1` と `openspec/changes/c2` があり、c2 の tasks.md に完了した印があり、ブランチ名 `c2` で、本文に明示がなく、`openspec/changes/c1/tasks.md` を完了した印のない内容に変えた PR で CI が動く
+- **THEN** lint と文書のリンクの試験のあとに、`verify --change c1 --spec-only` と `verify --change c2 --done` が実行される
 
 #### Scenario: 本文明示のarchive
 - **WHEN** 本文明示idのactiveがなく、日付付きarchiveが唯一か、不在/複数である
