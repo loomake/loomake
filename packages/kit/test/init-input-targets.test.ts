@@ -30,7 +30,7 @@ describe('init input targets', () => {
     });
   });
   it('[REQ-426][REQ-133] ignores normalized literal names and remains idempotent', async () => {
-    for (const report of ['#r.json', '!r.json', '!d/r.json', ' lead.json', 'tail.json ', 'a[1]*?.json', './a\\b//./r.json']) await project(async (root) => {
+    for (const report of [' ', '  ', '#r.json', '!r.json', '!d/r.json', ' lead.json', 'tail.json ', 'a[1]*?.json', './a\\b//./r.json']) await project(async (root) => {
       execFileSync('git', ['init', '--quiet'], { cwd: root });
       writeFileSync(join(root, 'loomake.config.json'), JSON.stringify({ tests: { report } }));
       expect(await init(root)).toBe(0);
