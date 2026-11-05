@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "a16-fixture-1",
+  "sha": "0123456789abcdef0123456789abcdef01234567",
+  "ci": {
+    "runId": "42000000000",
+    "runAttempt": "1"
+  },
+  "note": "固定した要約の原本"
+}
