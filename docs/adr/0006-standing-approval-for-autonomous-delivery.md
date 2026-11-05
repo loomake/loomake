@@ -96,7 +96,7 @@ AGENTS.md（6 章の送信範囲を含む）、delivery SKILL.md、レビュー�
 
 手続きは通常の L3 から次の点だけを変える。品質コマンドと 3 OS の CI は通常どおり通す。Opus 設計は省く。change がないので `verify --done` は対象外で、完了は、品質コマンド（lint・typecheck・test）と 3 OS の CI の成功、対象の REQ ID を名前に入れたテストが修正前に失敗し修正後に通った証拠（PR 本文）、独立 Opus レビューで重大な指摘がゼロ、の 3 つがそろったときとする。独立 Opus レビューは L2 と同じく 1 回とし、重大な指摘があれば修正後に 1 回だけ再レビューする。changeset は通常どおり付ける。仕様が曖昧なときや、仕様にない振る舞いを決める必要があるときは、この経路を使わない。AGENTS.md 1 章の「仕様に書かれていない振る舞いは実装しない」と DoD は変えない。
 
-CI がこの経路を受け付けるのは、[Issue #427](https://github.com/loomake/loomake/issues/427)（`openspec/specs/monorepo/spec.md` の REQ-343「段階ごとの完了ゲートの動作」を MODIFIED する change。L3 として Codex が対応）がマージされてからである。それまでは文書上の決定だけが先に入り、`loomake-route: spec-fix` を宣言しても ci-gate は通常の L3 として扱い、`loomake-change: none` を失敗にする。この経路はそれまで使えない。
+CI 対応は [Issue #427](https://github.com/loomake/loomake/issues/427) の通常 L3 change `accept-spec-fix-ci-route`（REQ-343 の変更）で行い、[PR #436](https://github.com/loomake/loomake/pull/436) で main に入った。このマージから `loomake-route: spec-fix` を受け付ける。それ以前は文書上の決定だけが先に入り、ci-gate は `loomake-change: none` を失敗にしていた。
 
 **B. W1 の範囲の絞り込み。** 「完成範囲を縮めること」の禁止（決定の 5 項目め）に対する承認として、次を記録する。
 
@@ -107,7 +107,6 @@ CI がこの経路を受け付けるのは、[Issue #427](https://github.com/loo
 **C. 同時に進める change の増枠。** 全セッション合計 4 本を 5 本に増やし、配布 4・品質 1 に配分する。増えた 1 枠は W1 に充てる。
 
 **D. 時間切れのテストの隔離。** 今回の変更と関係なく Windows で時間切れになるテストは、既存の隔離の仕組み（`tests/quarantine.json`）に載せてよい。対象は `tests/delivery-opus-prior.test.ts` の「first-error: 第一段階で失敗したら仮説を送らない」（PR #425 の CI で 5007ms の時間切れ）で、載せる作業は [Issue #428](https://github.com/loomake/loomake/issues/428) で扱う。隔離の仕組みは試験ファイル単位で外すので、載せるとこのファイルの試験が Windows の quality ジョブからすべて外れる。1 件だけ外す方法（試験の分割など）にするか、ファイル単位で外すかは #428 で決め、分割するときもテストの削除や期待値の変更にしない。隔離には期限と Issue を必ず付け、テストの削除と期待値の変更はしない。
-
 
 #### W1 の起票制限の一時除外と A20 の扱い（利用者決定・2026-11-05）
 
