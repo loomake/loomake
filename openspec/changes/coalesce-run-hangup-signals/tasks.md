@@ -7,7 +7,7 @@
 
 ## 3. 検証
 - [x] 3.1 最新の統合候補で両changeの対応試験と既存Source・Scenarioの保持を確認する
-- [x] 3.2 完了ゲートを通す <!-- loomake:gate=done -->
+- [ ] 3.2 完了ゲートを通す <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 - 正式CLIで同期archiveし、主仕様strictとarchive後の仕様ゲートを確認する。
