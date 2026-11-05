@@ -8,6 +8,7 @@ import { changedDocuments, readDocuments } from './documents.js';
 import { EVIDENCE_SCHEMA_VERSION } from './schema.js';
 import { serializeEvidence } from './serialization.js';
 import { publishEvidence } from './publication.js';
+import { executionSummary } from './summary-record.js';
 export { EVIDENCE_SCHEMA_VERSION } from './schema.js';
 
 export type { Evidence } from '@loomake/core';
@@ -29,6 +30,8 @@ export type RecordOptions = {
   scope?: VerifyScope;
   /** quality.yaml のスキーマ。`await loadVerifyQualitySchema()` の結果を渡す。ci の記録では必須（REQ-319） */
   qualitySchema?: QualitySchemaLike;
+  /** 実行元の事実。省略時はprocess.env。CIの真正性は保証しない。 */
+  env?: NodeJS.ProcessEnv;
 };
 
 export const EVIDENCE_DIR = '.loomake/evidence';
@@ -73,6 +76,7 @@ export function runRecord(options: RecordOptions): number {
 
   const scope = options.scope ?? 'ci';
   let result: VerifyResult;
+  const startedAt = Date.now();
   try {
     result = runVerify({ root, changeId, gate: 'done', scope, progress, timeoutMs: options.timeoutMs, qualitySchema: options.qualitySchema });
   } catch (error) {
@@ -80,6 +84,7 @@ export function runRecord(options: RecordOptions): number {
     if (!(error instanceof RuntimeFailure)) throw error;
     result = verifyAbortedResult(error, changeId);
   }
+  const finishedAt = Date.now();
   options.onVerify?.(result);
   // 検査のあいだに HEAD・作業ツリー・文書が変わったら、どの内容を検査したか分からないので記録しない（REQ-128）。
   // .gitignore で除外したテストのレポートなどは、変更とみなさない
@@ -103,6 +108,7 @@ export function runRecord(options: RecordOptions): number {
     recordedAt: recordedAt.toISOString(),
     verify: result,
     documents,
+    ...executionSummary(root, changeDir, result, startedAt, finishedAt, options.env ?? process.env),
   };
 
   const json = serializeEvidence(evidence);

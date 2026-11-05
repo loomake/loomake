@@ -36,3 +36,4 @@ export { observeStaticMetrics } from './verify/policy/static-observation.js';
 export type { StaticCommandResult, StaticMetricsReceipt } from './verify/policy/static-observation.js';
 
 export { InputReadFailure } from './runtime/errors.js';
+export { basisHash } from './verify/quality-receipt.js';
