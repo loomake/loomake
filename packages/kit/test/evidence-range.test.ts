@@ -3,6 +3,9 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { createHash } from 'node:crypto';
+import { deflateSync } from 'node:zlib';
+import { createGitEvidenceReader as publicReader, UsageError } from '../src/index.js';
 import { readEvidenceRange, createGitEvidenceReader, classifyEvidenceRange } from '../src/verify/trusted/evidence-range.js';
 const roots: string[] = [];
 afterEach(() => { for (const root of roots.splice(0))
@@ -74,9 +77,12 @@ it('[REQ-473] 読めない範囲・shallow・entry上限を理由付きで返す
     writeFileSync(join(f.root, '.git/shallow'), f.source + '\n');
     expect(f.range()).toMatchObject({ allowed: false, reasons: [expect.objectContaining({ code: 'SHALLOW_REPOSITORY' })] });
     rmSync(join(f.root, '.git/shallow'));
-    for (let i = 0; i < 4097; i++)
-        f.write(`too-many/${i}`, 'x');
-    f.commit();
+    // 同じ4097件の本文とpathをGitへ直接渡し、OSのファイル作成コストを避ける。
+    execFileSync('git', ['-C', f.root, 'fast-import', '--quiet'], { input: [
+        'blob', 'mark :1', 'data 1', 'x', `commit ${f.git('symbolic-ref', 'HEAD')}`,
+        'committer Test <test@example.invalid> 0 +0000', 'data 7', 'fixture', `from ${f.git('rev-parse', 'HEAD')}`,
+        ...Array.from({ length: 4097 }, (_, i) => `M 100644 :1 too-many/${i}`), '', '',
+    ].join('\n') });
     expect(f.range()).toMatchObject({ allowed: false, reasons: [expect.objectContaining({ code: 'RANGE_TOO_LARGE' })] });
 });
 it('[REQ-473] 打ち消し合うコミットと置換参照でも原本を判定する', () => {
@@ -145,4 +151,40 @@ it('[REQ-473] メタデータとコミット4097件の上限はRANGE_TOO_LARGE�
     const commits = vi.spyOn(runtime, 'runExternalBytes').mockImplementation((cmd, args, options) => args.includes('rev-list') ? { status: 0, signal: null, stdout: Buffer.from(`${target} ${f.source}\n`.repeat(4097)), stderr: Buffer.alloc(0) } : original(cmd, args, options));
     expect(readEvidenceRange({ repository: f.root, source: f.source, target, changeId: 'sample' })).toMatchObject({ allowed: false, reasons: [expect.objectContaining({ code: 'RANGE_TOO_LARGE' })] });
     commits.mockRestore();
+});
+
+it('[REQ-473] 失敗した実Git本文も共有予算を消費し後の読取りを止める', () => {
+    const f = fixture();
+    const loose = (size: number, body: number) => {
+        const raw = Buffer.concat([Buffer.from(`blob ${size}\0`), Buffer.alloc(body, 97)]);
+        const oid = createHash('sha1').update(raw).digest('hex');
+        f.write(`.git/objects/${oid.slice(0, 2)}/${oid.slice(2)}`, deflateSync(raw));
+        return oid;
+    };
+    f.write('valid', 'b'.repeat(8192));
+    f.write('padding'.repeat(20), 'x');
+    f.commit();
+    const valid = f.git('rev-parse', 'HEAD:valid');
+    for (const [oid, code] of [[loose(8192, 4096), 'BLOB_UNREADABLE'], [f.git('rev-parse', 'HEAD^{tree}'), 'BLOB_UNREADABLE'], [loose(1, 4096), 'BLOB_TOO_LARGE']] as const) {
+        const reader = publicReader(f.root, { maxFileBytes: 8192, maxTotalBytes: 8192, maxEntries: 4, maxDepth: 5 });
+        expect(reader.readText(oid)).toEqual({ ok: false, code });
+        for (let i = 0; i < 3; i++) expect(reader.readText(valid)).toEqual({ ok: false, code: 'BLOB_TOO_LARGE' });
+    }
+    const repeated = publicReader(f.root, { maxFileBytes: 8192, maxTotalBytes: 8192, maxEntries: 4, maxDepth: 5 });
+    const bad = loose(8192, 4096);
+    expect(repeated.readText(bad)).toEqual({ ok: false, code: 'BLOB_UNREADABLE' });
+    for (const oid of [bad, bad, loose(8192, 4095)]) expect(repeated.readText(oid)).toEqual({ ok: false, code: 'BLOB_TOO_LARGE' });
+    const exact = publicReader(f.root, { maxFileBytes: 8192, maxTotalBytes: 16384, maxEntries: 4, maxDepth: 5 });
+    for (let i = 0; i < 2; i++) expect(exact.readText(valid)).toMatchObject({ ok: true, bytes: 8192 });
+    expect(exact.readText(valid)).toEqual({ ok: false, code: 'BLOB_TOO_LARGE' });
+});
+it('[REQ-473] readerは変換せず不正な実行時引数をUsageErrorにする', () => {
+    const f = fixture();
+    const reader = publicReader(f.root);
+    const sha = f.source;
+    for (const value of [[sha], Object(sha), { toString() { throw new Error('must not coerce'); } }, null, 1]) {
+        expect(() => Reflect.apply(reader.readText, reader, [value])).toThrow(UsageError);
+        expect(() => Reflect.apply(reader.treeEntry, reader, [value, 'base'])).toThrow(UsageError);
+        expect(() => Reflect.apply(reader.treeEntry, reader, [sha, value])).toThrow(UsageError);
+    }
 });

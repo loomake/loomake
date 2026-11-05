@@ -106,7 +106,7 @@ export function createGitEvidenceReader(repository: string, limits: Readonly<Inp
   let total = 0;
   return {
     treeEntry(commit, path) {
-      if (!SHA.test(commit) || !isSafeRepoPath(path)) throw new UsageError('Git の読取りには完全な SHA と安全なパスを指定してください');
+      if (typeof commit !== 'string' || typeof path !== 'string' || !SHA.test(commit) || !isSafeRepoPath(path)) throw new UsageError('Git の読取りには完全な SHA と安全なパスを指定してください');
       try {
         const r = git(repository, ['ls-tree', '-z', '--full-tree', commit, '--', path]);
         if (r.status !== 0) return { kind: 'unreadable' };
@@ -121,20 +121,28 @@ export function createGitEvidenceReader(repository: string, limits: Readonly<Inp
       }
     },
     readText(oid) {
-      if (!SHA.test(oid)) throw new UsageError('blob の読取りには完全な小文字の oid を指定してください');
+      if (typeof oid !== 'string' || !SHA.test(oid)) throw new UsageError('blob の読取りには完全な小文字の oid を指定してください');
+      let readingBody = false;
       try {
+        if (total >= limits.maxTotalBytes) return { ok: false, code: 'BLOB_TOO_LARGE' };
         const sizeResult = git(repository, ['cat-file', '-s', oid]);
         if (sizeResult.status !== 0) return { ok: false, code: 'BLOB_UNREADABLE' };
         const sizeText = decode(sizeResult.stdout).trim();
         const size = Number(sizeText);
         if (!/^(0|[1-9]\d*)$/.test(sizeText) || !Number.isSafeInteger(size)) return { ok: false, code: 'BLOB_UNREADABLE' };
         if (size > limits.maxFileBytes || total + size > limits.maxTotalBytes) return { ok: false, code: 'BLOB_TOO_LARGE' };
-        const r = git(repository, ['cat-file', 'blob', oid], Math.max(1, size));
-        if (r.status !== 0 || r.stdout.length !== size) return { ok: false, code: 'BLOB_UNREADABLE' };
+        // 不正なobjectや途中の失敗でも、試みた本文の予算は返さない。
         total += size;
+        readingBody = true;
+        const r = git(repository, ['cat-file', 'blob', oid], Math.max(1, size));
+        total += Math.max(0, r.stdout.length - size);
+        if (r.status !== 0 || r.stdout.length !== size) return { ok: false, code: 'BLOB_UNREADABLE' };
+        readingBody = false;
         try { return { ok: true, text: decode(r.stdout), bytes: size }; }
         catch { return { ok: false, code: 'BLOB_NOT_UTF8' }; }
       } catch (error) {
+        // 途中で投げられた場合は読取り量を確定できないので残りも消費する。
+        if (readingBody) total = limits.maxTotalBytes;
         if (error instanceof ProcessLimitError) {
           if (error.kind === 'output') return { ok: false, code: 'BLOB_TOO_LARGE' };
           throw error;
