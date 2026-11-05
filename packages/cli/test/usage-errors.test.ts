@@ -29,7 +29,7 @@ describe('CLI の使い方の誤り', () => {
     ['--spec-only と --done を両方付ける', ['verify', '--change', CHANGE, '--spec-only', '--done'], '--spec-only と --done は同時に指定できません'],
     ['--change だけでゲートを付けない', ['verify', '--change', CHANGE], '--change を指定するときは --spec-only か --done を付けてください'],
     ['trace の知らない形式', ['trace', 'report', '--change', CHANGE, '--format', 'xml'], '--format は md か json にしてください：xml'],
-    ['trace のサブコマンドがない', ['trace'], 'record・report・answer・approve のどれかを指定してください'],
+    ['trace のサブコマンドがない', ['trace'], 'record・report・answer・approve・reuse のどれかを指定してください'],
     ['trace の知らないサブコマンド', ['trace', 'recrd'], 'もしかして：record'],
     ['trace answer の ID がない', ['trace', 'answer', '--change', CHANGE], '--change <id> と --question <ID> が必要です'],
   ])('[REQ-041] %sと、理由を日本語で示して終了コード 2', async (_name, argv, message) => {
