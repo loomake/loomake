@@ -127,8 +127,12 @@ describe('診断ストリームの置換', () => {
     const fixture = mkdtempSync(join(tmpdir(), 'loomake-redactor-module-'));
     try {
       writeFileSync(join(fixture, 'package.json'), '{"type":"module"}');
-      for (const name of ['mask', 'private-key-stream']) {
-        const source = readFileSync(join(import.meta.dirname, '../src', `${name}.ts`), 'utf8');
+      for (const [name, sourceFile] of [
+        ['mask', '../../kit/src/runtime/redact.ts'],
+        ['private-key-stream', '../../kit/src/runtime/private-key-stream.ts'],
+        ['errors', '../../kit/src/runtime/errors.ts'],
+      ]) {
+        const source = readFileSync(join(import.meta.dirname, sourceFile), 'utf8');
         writeFileSync(join(fixture, `${name}.js`), ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText);
       }
     const module = pathToFileURL(join(fixture, 'mask.js')).href;
