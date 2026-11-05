@@ -4,7 +4,7 @@ import type { EvidenceV2, LegacyEvidence, Report, ReportRow } from '@loomake/cor
 import { UsageError, assertChangeId, loadConfig, findChangeDir, toPosix, createInputReader, JSON_LIMITS, type InputReader } from '@loomake/kit';
 import { EVIDENCE_DIR, EVIDENCE_SCHEMA_VERSION } from './record.js';
 import { changedDocuments, readDocuments, type EvidenceDocument } from './documents.js';
-import { evidenceProblem } from './evidence.js';
+import { EVIDENCE_SHA, evidenceProblem } from './evidence.js';
 import { projectEvidence } from './projection.js';
 
 export { REPORT_SCHEMA_VERSION } from '@loomake/core';
@@ -54,7 +54,7 @@ function wrongField(e: Record<string, unknown>): FieldCheck | undefined {
   const v2 = e.schemaVersion === EVIDENCE_V2_SCHEMA_VERSION;
   const checks: FieldCheck[] = [
     ['change', isString(e.change)],
-    ['sha', isString(e.sha) && /^[0-9a-f]{40}$/.test(e.sha)],
+    ['sha', isString(e.sha) && EVIDENCE_SHA.test(e.sha)],
     ['committedAt', isDate(e.committedAt)],
     ['recordedAt', isDate(e.recordedAt)],
     ['verify', verify !== undefined],
@@ -103,9 +103,9 @@ function readEvidence(root: string, file: string, change: string, reader: InputR
   return value as Evidence;
 }
 
-// 証拠のファイル名の日時の部分。日時の形でない名前は、名前全体を日時の代わりに使う
-const STAMPED = /^(\d{8}T\d{6}Z)-/;
-const timeKey = (name: string) => STAMPED.exec(name)?.[1] ?? name;
+// 正規の証拠名だけを候補にする。日時部分の辞書順は時刻順と一致する
+const STAMPED = /^(\d{8}T\d{6}Z)-[0-9a-f]+\.json$/;
+const timeKey = (name: string) => name.slice(0, 16);
 
 // 同じ秒の候補を比べるために読む、証拠の先頭の量。loomake が書く証拠では、記録した日時（recordedAt）は先頭の数行にある
 const HEAD_BYTES = 4096;
@@ -156,7 +156,7 @@ export function topLevelString(text: string, key: string): string | undefined {
 function latestEvidence(root: string, dir: string, change: string, reader: InputReader): Evidence | undefined {
   let newest: string[] = [];
   for (const entry of reader.entries(dir)) {
-    if (entry.kind !== 'file' || !entry.name.endsWith('.json')) continue;
+    if (entry.kind !== 'file' || !STAMPED.test(entry.name)) continue;
     const key = timeKey(entry.name);
     const current = newest.length ? timeKey(newest[0]) : undefined;
     if (current === undefined || key > current) newest = [entry.name];
