@@ -41,3 +41,4 @@ export type { ToolName, GhCheckBucket, GhCheck, AgentCause, AgentResult, ToolFin
 export { parseClaudeResult } from './tool-output/claude.js';
 export { parseCodexEvents } from './tool-output/codex.js';
 export { parseBiomeReport } from './tool-output/biome.js';
+export { parsePlaywrightReport } from './tool-output/playwright.js';

@@ -6,41 +6,49 @@ export function isObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
+export type OutputPath = string | { parent: OutputPath; part: string };
+export function childPath(parent: OutputPath, part: string): OutputPath { return { parent, part }; }
+function pathText(path: OutputPath): string {
+  const parts: string[] = [];
+  while (typeof path !== 'string') { parts.push(path.part); path = path.parent; }
+  parts.push(path); return parts.reverse().join('');
+}
+
 /** 入力由来の値や key を診断へ入れず、最初の誤りだけを残す。 */
 export class OutputReader {
   readonly errors: ParseError[] = [];
   constructor(readonly file: string, readonly line = 1) {}
 
-  fail(path: string, message = '出力の形が違います'): void {
-    if (!this.errors.length) this.errors.push({ file: this.file, line: this.line, message: `${message}：${path}` });
+  fail(path: OutputPath, message = '出力の形が違います'): void {
+    if (!this.errors.length) this.errors.push({ file: this.file, line: this.line, message: `${message}：${pathText(path)}` });
   }
 
-  object(value: unknown, path: string): Record<string, unknown> {
+  object(value: unknown, path: OutputPath): Record<string, unknown> {
     if (isObject(value)) return value;
     this.fail(path); return {};
   }
 
-  array(value: unknown, path: string, optional = false): unknown[] {
+  array(value: unknown, path: OutputPath, optional = false): unknown[] {
     if (optional && value == null) return [];
     if (Array.isArray(value)) return value as unknown[];
     this.fail(path); return [];
   }
 
-  string(value: unknown, path: string): string {
+  string(value: unknown, path: OutputPath): string {
     if (typeof value === 'string') return value;
     this.fail(path); return '';
   }
 
-  optionalString(value: unknown, path: string): string | null {
+  optionalString(value: unknown, path: OutputPath): string | null {
     return value == null ? null : this.string(value, path);
   }
 
-  integer(value: unknown, path: string): number {
+  integer(value: unknown, path: OutputPath): number {
     if (typeof value === 'number' && Number.isSafeInteger(value) && value >= 0) return value;
     this.fail(path); return 0;
   }
 
-  enumValue<T extends string>(value: unknown, allowed: readonly T[], path: string): T {
+  enumValue<T extends string>(value: unknown, allowed: readonly T[], path: OutputPath): T {
     const found = allowed.find((item) => item === value);
     if (found !== undefined) return found;
     this.fail(path); return allowed[0];

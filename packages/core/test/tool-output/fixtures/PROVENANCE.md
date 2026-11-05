@@ -23,3 +23,9 @@ Codex rust-v0.166.0 の [exec_events.rs](https://github.com/openai/codex/blob/ru
 Biome 2.6.5 の [json.rs](https://github.com/biomejs/biome/blob/%40biomejs%2Fbiome%402.6.5/crates/biome_cli/src/reporter/json.rs#L15-L228) と [summary](https://github.com/biomejs/biome/blob/%40biomejs%2Fbiome%402.6.5/crates/biome_cli/src/reporter/mod.rs#L36-L131) を基に合成した。duration は debug build で省略されるため必須にしない。位置の 0/0 はファイル単位の診断で、通常の位置は 1 始まりである（json.rs:306–307、345–351）。
 
 診断は severity と verbose で絞られる（json.rs:280–290）。JSON reporter への max-diagnostics 適用と、GitHub Actions 上の ci mode の stdout が JSON だけになるかは未確認である。summary.diagnosticsNotPrinted は値をそのまま残し、全件取得を保証しない。
+
+## playwright.json
+
+Playwright v1.64.1 の [testReporter.d.ts:267–350](https://github.com/microsoft/playwright/blob/v1.64.1/packages/playwright/types/testReporter.d.ts#L267-L350) と [json.ts:164–247](https://github.com/microsoft/playwright/blob/v1.64.1/packages/playwright/src/reporters/json.ts#L164-L247) を基に合成した。root suite の title は fullName に含めない。最終補足設計 §3.6 の優先順位に従い、flaky と期待した失敗は passed にしない。
+
+[base.ts:663–677](https://github.com/microsoft/playwright/blob/v1.64.1/packages/playwright/src/reporters/base.ts#L663-L677) の 3 つの env は collector が子への複製から除く。config の outputFile は変更せず、stdout が空なら unreadable とする。
