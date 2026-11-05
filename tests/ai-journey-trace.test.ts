@@ -21,7 +21,7 @@ describe('復旧シナリオの質問挿入', () => {
   for (const eol of ['\n', '\r\n']) {
     for (const trailing of [false, true]) {
       for (const columns of [7, 9]) {
-        it(`[REQ-155][REQ-156][REQ-157] ${JSON.stringify(eol)}・EOF改行${trailing}・${columns}列でも質問を表内へ挿入する`, () => {
+        it(`[REQ-157] ${JSON.stringify(eol)}・EOF改行${trailing}・${columns}列でも質問を表内へ挿入する`, () => {
           const header = '| ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 |' + (columns === 9 ? ' 回答者 | 回答日 |' : '');
           const lines = [...prefix, header, '|' + '---|'.repeat(columns), ...(trailing ? [''] : [])];
           const result = insertRecoveryQuestion(lines.join(eol));
@@ -35,7 +35,7 @@ describe('復旧シナリオの質問挿入', () => {
     }
   }
 
-  it('[REQ-155][REQ-156][REQ-157] 質問表がなければ黙って続けず挿入失敗を示す', () => {
+  it('[REQ-157] 質問表がなければ黙って続けず挿入失敗を示す', () => {
     expect(() => insertRecoveryQuestion(prefix.slice(0, -1).join('\n'))).toThrow('確認事項');
   });
 });
