@@ -11,8 +11,10 @@
 
 ## 3. 完了ゲート
 
-- [ ] 3.1 `pnpm -s verify --change validate-kit-input-targets --done --scope local` を通し、全要件と全タスクを確認する <!-- loomake:gate=done -->
+- [x] 3.1 `pnpm -s verify --change validate-kit-input-targets --done --scope local` を通し、全要件と全タスクを確認する <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
 同期・archive は同じPRに含める。最終headのCI完了ゲート・必須チェック・3OS・独立レビューは本体が確認する。
+
+完了ゲート自身のタスクは、ほかの実装・試験・記録が済んで実行条件が整った時点で事前にチェックする。ゲートが失敗した場合は未完了に戻し、失敗の証拠を保存して修理する。

@@ -1,4 +1,3 @@
-import { assertReportTarget } from '../runtime/report-target.js';
 import { evaluateAgreement, type AgreementDecision } from './policy/agreement.js';
 import { evaluateTestCoverage } from './policy/coverage-policy.js';
 import { existsSync, realpathSync, rmSync, statSync } from 'node:fs';
@@ -28,7 +27,7 @@ import {
 } from '@loomake/core';
 import { assembleVerifyResult } from './result.js';
 import { readDependencies } from './dependencies.js';
-import { assertChangeId, loadConfig, type LoomakeConfig } from './config.js';
+import { assertReportTarget, assertChangeId, loadConfig, type LoomakeConfig } from './config.js';
 import { QUALITY_FILE, readQualityFile, type QualitySchemaLike } from './quality-input.js';
 import { evaluateQualityConditions, qualitySubjectsGuard } from './policy/quality-conditions.js';
 import { observeTestReport, type TestReportReceipt } from './policy/test-report-observation.js';

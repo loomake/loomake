@@ -1,8 +1,7 @@
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { DEFAULT_TEST_REPORT } from '../verify/config.js';
-import { assertReportTarget, normalizeReportPath, reportIgnoreLine } from '../runtime/report-target.js';
+import { DEFAULT_TEST_REPORT, assertReportTarget, normalizeReportPath, reportIgnoreLine } from '../verify/config.js';
 import { UsageError } from '../runtime/errors.js';
 import { unifiedDiff } from './diff.js';
 import { toPosix } from '../runtime/change-files.js';
@@ -146,7 +145,7 @@ function reportExamples(root: string): string[] {
 
 /**
  * .gitignore に path の行を足し、init の結果に出す 1 行を返す（REQ-133）。
- * 既存の行は変えない。前後の空白と先頭の / を除いて同じ行があれば足さない
+ * 既存の行は変えない。引用されていない末尾空白と先頭の / を除いて同じ行があれば足さない
  */
 function ensureIgnored(root: string, report: string): string {
   const path = reportIgnoreLine(report);

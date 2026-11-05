@@ -1,10 +1,9 @@
-import { reportIgnoreLine } from '../runtime/report-target.js';
 import { accessSync, constants, existsSync, lstatSync, statSync } from 'node:fs';
 import { delimiter, isAbsolute, join, resolve } from 'node:path';
 import { createInputReader } from '../runtime/input.js';
 import { runExternal, withProcessBudget } from '../runtime/process.js';
 import { classifyCommand } from './command.js';
-import { DEFAULT_TEST_REPORT, RuntimeFailure, UsageError, loadConfig, type LoomakeConfig } from '../verify/config.js';
+import { DEFAULT_TEST_REPORT, reportIgnoreLine, RuntimeFailure, UsageError, loadConfig, type LoomakeConfig } from '../verify/config.js';
 
 export type DoctorLevel = 'ok' | 'warn' | 'error';
 
