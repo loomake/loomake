@@ -90,6 +90,16 @@ description: 社内外から受け取った Markdown（.md）の要件定義書�
 - 書き出す前に、分割案（change-id・含める REQ・分けた理由）を人に示し、合意を取る。合意が取れるまで次へ進まない
 - 複数の change にかかわる要件（非機能要件など）と確認事項は、かかわる change それぞれの trace.md に、同じ番号・同じ内容の行で載せる。同じ確認事項を載せるときは、質問の末尾に「（<change-id> の Q-01 と同じ質問）」と書く
 
+#### 品質 YAML の提案
+
+受け入れ条件と計測方法を定義できた要件ごとに、objectives の UQ または product の PQ の具体案を作り、linked_requirements に要件 ID を入れる。特性・副特性・metric・source・target・min_samples・model は入力・人の回答・既存 YAML に根拠のある値だけを使い、不足値は推測せず関連 REQ つき Q にする。init 雛形の回答を別案件のモデル選定に流用しない。
+
+合格に必要な target が未定なら blocking の確認事項に残す。参考計測は indicators の案にできるが、既存の必須 evidence を移して条件を弱めない。
+
+context は利用状況の実際の定義を指す入力文書・Issue 等の出典への参照にする。単なる短文や要件 ID だけで足りるとせず、定義が見つからなければ関連 Q にする。既存 trace のパスを機械的に足して定義参照の代用にしない。新しい Context 表・未知の root key は追加しない。
+
+作った案は、既存の分割案と一緒に人に示し、同じ合意の中で確かめる。
+
 ### 5. change を書き出す
 
 `openspec/changes/<change-id>/` に次を作る。書式は [references/openspec-format.md](references/openspec-format.md) を参照。

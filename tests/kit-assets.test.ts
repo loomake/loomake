@@ -350,3 +350,18 @@ describe('要件ごとの品質の定義', () => {
     expect(quality).toContain('全未定を一律の停止条件にしない');
   });
 });
+
+
+describe('品質 YAML の具体案と分割合意', () => {
+  const proposal = section(skill, /品質 YAML の提案/);
+  it('[REQ-408] 値は出典ある入力・回答・既存YAMLを使い、不足は関連Qへ戻す', () => {
+    for (const text of ['objectives の UQ', 'product の PQ', 'linked_requirements', '特性・副特性・metric・source・target・min_samples・model', '入力・人の回答・既存 YAML', '不足値は推測せず関連 REQ つき Q', 'init 雛形の回答を別案件のモデル選定に流用しない']) expect(proposal, text).toContain(text);
+    expect(proposal).toContain('作った案は、既存の分割案と一緒に人に示し');
+  });
+  it('[REQ-408] target未定と参考指標を区別し、旧必須evidenceを弱めない', () => {
+    for (const text of ['合格に必要な target が未定なら blocking', '参考計測は indicators', '既存の必須 evidence を移して条件を弱めない']) expect(proposal, text).toContain(text);
+  });
+  it('[REQ-408] contextは実定義への参照で、短文・ID・traceパスの追加だけで代用しない', () => {
+    for (const text of ['context は利用状況の実際の定義', '入力文書・Issue', '単なる短文や要件 ID だけ', 'trace のパスを機械的に足して定義参照の代用にしない', '新しい Context 表・未知の root key は追加しない']) expect(proposal, text).toContain(text);
+  });
+});
