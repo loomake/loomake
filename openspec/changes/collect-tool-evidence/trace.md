@@ -64,3 +64,9 @@ Claude --output-format json の実 fixture は未観測で、stream-json の res
 管理役 root は 2026-11-06 JST に ADR 0005 の開発基盤保守として、ci-gate-process の初期 Git リポジトリを一度だけ作り、ケースごとに .git を含めてファイル単位でコピーする方針を採用した。trusted-git-objects の後始末も既存の removeWithRetry を使う。実際の gate・Git・検証 CLI の子プロセス、全ケースの入力・期待値・制限時間は保つ。製品コード・仕様・30 Scenario・設定は変更しない。
 
 初回 Windows CI の EPERM と、同じ head の再試行で起きた 4 件の 15000 ms 超過は別々の観測として残す。今回の保守が Windows の時間内に収まるかは、次の実 CI で確認する。根本原因を特定したとは扱わない。独立調査は .loomake/ci-blocker460/independent.md に保持する。
+
+## PR #460 の runner fixture 保守
+
+管理役 root は 2026-11-06 JST に ADR 0005・0006 に基づき、run-unexpected-failure の 4 ケースで、既存 makeRepo による実リポジトリの準備だけを beforeEach へ移すと決定した。元の callback 本文、Git 操作、環境の復元、finally の後始末、製品処理と期待値は保つ。製品処理は従来どおり 5000 ms のケース内で実行し、hook の制限時間と設定も変えない。
+
+Windows CI の 5915 ms・9240 ms の時間切れを記録し、Linux の準備・本体・後始末の計測と区別する。今回の分離はケースの計測範囲を変えるため、経過時間が従来と同じとは扱わない。Windows の根本原因と修理の有効性は未確定で、管理役が次の実 CI で確認する。テストの隔離は行わない。既存の設計・独立レビュー・完了ゲートの原記録は保持する。
