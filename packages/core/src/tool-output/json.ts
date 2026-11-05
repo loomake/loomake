@@ -53,7 +53,7 @@ export class OutputReader {
 
 export function readJson(file: string, text: string, line?: number): { reader: OutputReader; value: unknown } {
   const reader = new OutputReader(file, line);
-  const input = text.replace(/^\uFEFF/, '');
+  const input = line === undefined ? text.replace(/^\uFEFF/, '') : text;
   if (!input.trim()) {
     reader.errors.push({ file, line: line ?? 1, message: '出力が空です' });
     return { reader, value: null };

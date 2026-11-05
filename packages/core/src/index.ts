@@ -39,3 +39,4 @@ export type { EvidenceSummary, SummaryArtifact, SummaryGap } from './summary-con
 export { parseGhChecks } from './tool-output/gh.js';
 export type { ToolName, GhCheckBucket, GhCheck, AgentCause, AgentResult, ToolFinding, BiomeSummary, PlaywrightTestCase, PlaywrightError, ToolObservation } from './tool-output/types.js';
 export { parseClaudeResult } from './tool-output/claude.js';
+export { parseCodexEvents } from './tool-output/codex.js';
