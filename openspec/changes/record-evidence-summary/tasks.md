@@ -9,7 +9,7 @@
 
 ## 3. 観測した実行事実と参照
 - [ ] 3.0 既存readの安全性/予算/文面/型を保つreadInputBytesを追加し、symlink/FIFO/差替え/64MiB境界/不正UTF8のraw保持を確認する（REQ-462）。
-- [ ] 3.1 runRecordへ実行条件・CI識別・実施時刻の事実、config raw hashとnameRefsによるコマンド参照、未確認理由を追加し、basisHashの既存入口を公開する。追加外部コマンドなしで既存onVerify/verify/期限/失敗保存を保つ（REQ-461）。
+- [ ] 3.1 runRecordへ実行条件・CI識別・実施時刻の事実、config raw hashとnameRefsによるコマンド参照、未確認理由を追加し、現P1の訪問順は専用観測なしのnameRefs:null/gapに固定する。basisHashの既存入口を公開する。追加外部コマンドなしで既存onVerify/verify/期限/失敗保存を保つ（REQ-461）。
 - [ ] 3.2 同じ実行のraw bytesと表現を比較できるcheckハッシュを照合し、不一致拒否・未確認null・既知部分出力・6分類の観測件数・未アップロードを実装する（REQ-462）。
 - [ ] 3.3 kitの本体照合・保持期間/失効の純粋関数を実装し、UTC閏日と境界、不正入力・権限未確認を検証する（REQ-463）。
 

@@ -49,9 +49,9 @@
 | Q69-18 | REQ-472 | 限定手動CIのdispatchと90dをどう扱うか | A:delivery範囲で通常実装検証 / B:起動しない | A。実在参照を実証する | no | A。利用者deliveryのCI検証権限に含み新承認不要。write権限/公開/認証新設はせず実expiresAtを別記する（管理判断） | 管理役 | 2026-11-05 |
 | Q69-19 | REQ-472 | 運用でどのchangeを記録するか | A:受入PR自身 / B:既存active | A。対象SHAの存在を明確にする | no | A。自己運用changeを使い、埋込FAIL等を品質合格へ読み替えず、最終DoDは別に満たす（ADR0006） | 利用者（ADR0006の包括承認、管理役記録） | 2026-11-05 |
 | Q69-20 | REQ-470・REQ-471・REQ-472 | 補足設計の追加REQを採番できるか | A:470〜472を予約 / B:他番号を調べる | A。466〜469は68予約と重なる | no | A。main b2b3f824のSource衝突なしを実検査し470〜472を別通常PRへ採番。P1には新定義を足さない（管理判断） | 管理役 | 2026-11-05 |
-| Q69-21 | REQ-461 | config省略と任意command名をどう保存するか | A:省略null/gap・全名hashと任意known enum / B:raw custom名を保存 | A。元定義を追い秘密形を新保存しない | yes | A。commands.source/sha256/nameRefs、config省略はdefaults/null、名のUTF8 hashと任意knownNameだけで実行結果にしない（管理判断） | 管理役 | 2026-11-05 |
+| Q69-21 | REQ-461 | config省略と任意command名をどう保存するか | A:省略null/gap・全名hashと任意known enum / B:raw custom名を保存 | A。元定義を追い秘密形を新保存しない | yes | A。config省略はdefaults/null、確認済名はUTF8 hashと任意knownName。現P1は専用観測なしでnameRefs:null/gap、設定順やchecksから推測しない（管理判断） | 管理役 | 2026-11-05 |
 
-Q69-04/Q69-07は本PRの実装で解消したとはしない。親69の未完了としてparent-handoffに全義務を保ち、補足設計を取得する。Q69-14/15/21は補足設計と管理判断で回答済み。rawとhash表現・新文字列の保存をここで確定し、親のQ69-07は未回答のまま保持する。
+Q69-04/Q69-07は本PRの実装で解消したとはしない。親69の未完了としてparent-handoffに全義務を保つ。取得済み補足設計を採用したが、索引・手動CI・実運用は未実装である。Q69-14/15/21は補足設計と管理判断で回答済み。rawとhash表現・新文字列の保存をここで確定し、親のQ69-07は未回答のまま保持する。
 
 ## 仮定
 

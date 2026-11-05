@@ -49,3 +49,7 @@ Q69-15B/Q69-21を管理判断で採用し、execution.commandsはsource（loomak
 補足設計のQ16Aは、_index/body以下の1receipt1fileをpublishEvidenceで上書きせず保存する案として採用した。Q17は実際に取得できたactorの範囲とpolicyVerified:false/gapを分け、全memberの権限を証明しない。Q18の限定手動workflowの実装・dispatchは利用者deliveryのCI検証権限に含まれるとの管理判断で、新たな人の承認待ちにはしない。権限write・公開・新認証は伴わない。本担当はまだ実装/起動しない。
 
 Q19の自己運用changeでは埋込verifyがFAILでもその事実を保存し、本体参照の一致と品質の合格を分ける。受入PR自体の最終DoDを飛ばしてよいという意味ではない。REQ470〜472はmain Source衝突なしを確認して、receipt・resolver・限定手動CI/実運用の別通常PRへ採番した。466〜469は#68の予約なので使わない。
+
+## P1のコマンド訪問順は未観測
+
+現P1は訪問順を専用に観測する手段を追加せず、recordのcommands.nameRefsはnullとunverified gapにする。設定のObject.keysは実訪問ではなく、既存checksも本計画では厳密な訪問証拠に読み替えない。未受入の品質コマンド通知APIを使わず、配列形を検証できる公開構造と、P1で観測して保存する事実を分ける。設定raw hash/sourceは維持するので元定義への参照は失わない。

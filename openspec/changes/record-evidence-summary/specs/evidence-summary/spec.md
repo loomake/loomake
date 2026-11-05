@@ -65,12 +65,17 @@ Source: REQ-461
 #### Scenario: コマンド本文を新しい欄へ保存しない
 - **WHEN** 設定ファイルがある実行のcommands参照を保存する
 - **THEN** commandsはsource:loomake.config.json、設定のraw SHA-256であるsha256、nameRefsを持ち、コマンド本文とraw custom nameを保存しない
-- **AND** nameRefsは確認できた既存の品質コマンド訪問順の配列で、各要素はraw nameのUTF8 SHA-256であるnameSha256と、名前が完全一致した場合だけ任意のknownName（lint/typecheck/test）を持つ。本文hashや実行結果として扱わない
+- **AND** nameRefsを値として受けるのは専用の観測で確認した品質コマンド訪問順の配列だけで、各要素はraw nameのUTF8 SHA-256であるnameSha256と、名前が完全一致した場合だけ任意のknownName（lint/typecheck/test）を持つ。本文hashや実行結果として扱わない
 
 #### Scenario: 設定省略と観測できない訪問順
 - **WHEN** 設定ファイルを省いた従来の既定値経路、またはaborted等で訪問順を観測できない実行を記録する
 - **THEN** 省略時はcommands.sourceをdefaults、sha256をnullと対応するgapにし、従来の既定値経路を受け付ける。訪問なしを確認できた場合のnameRefsは空配列、観測できない場合はnullとunverified gapにする
 - **AND** 空文字列の設定hashを捏造せず、既存verify details全体の秘密情報保護をこの新欄だけで保証しない
+
+#### Scenario: P1では未観測の訪問順を推測しない
+- **WHEN** 本P1のrecordがcommands参照を保存する
+- **THEN** 訪問順の専用観測を導入していないためnameRefs:nullとunverified gapを保存し、Object.keysの設定順や既存checksから実訪問を推測しない
+- **AND** 未受入の通知APIへ依存せず、確認済み配列を受ける構造契約を実記録で観測した事実とは扱わない
 
 ### Requirement: 本体の参照と同じ実行の観測照合
 recordはverifyを再実行せず、既存の変更検知後に本体のraw bytesを安全に読み、表現を比較できるcheckハッシュと照合する SHALL。既知の不整合は記録せず1を返す MUST。未確認や既知の部分出力はcounts:nullとgapを持ち、同じ実行を照合したverifiedは全件完了・真正性・品質合格を意味しない MUST。元のonVerifyの回数・順序、入力安全性とUsageErrorの分類、失敗の保存、期限・品質コマンドの回数を保つ SHALL。
