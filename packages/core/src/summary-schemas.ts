@@ -14,7 +14,7 @@ export const summaryArtifactSchema = object({
   availability: z.enum(['not-uploaded', 'uploaded', 'retrieved']), expiresAt: z.string().nullable(),
   retrieval: object({ checkedAt: z.string(), access: z.enum(['project-members', 'owner']), sha256Matched: z.literal(true) }).nullable(),
 });
-export const evidenceSummarySchema = object({
+export const evidenceSummarySchema = preserveUnknownFields(z.looseObject({
   ...evidenceV2Schema.shape,
   summaryVersion: z.literal(1), role: z.enum(['development', 'release']),
   ci: object({ runId: z.string(), runAttempt: count, source: z.literal('environment') }).nullable(),
@@ -28,4 +28,4 @@ export const evidenceSummarySchema = object({
     startedAt: z.string(), finishedAt: z.string(), verification: z.literal('executed'),
   }),
   artifacts: z.array(summaryArtifactSchema), request: z.null(), observation: z.null(), gaps: z.array(summaryGapSchema),
-}).meta({ $id: 'https://loomake.dev/schema/summary/evidence-summary-1.schema.json', title: 'Loomake evidence summary extension 1' });
+}).meta({ $id: 'https://loomake.dev/schema/summary/evidence-summary-1.schema.json', title: 'Loomake evidence summary extension 1' }));
