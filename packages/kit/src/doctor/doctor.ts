@@ -1,3 +1,4 @@
+import { reportIgnoreLine } from '../runtime/report-target.js';
 import { accessSync, constants, existsSync, lstatSync, statSync } from 'node:fs';
 import { delimiter, isAbsolute, join, resolve } from 'node:path';
 import { createInputReader } from '../runtime/input.js';
@@ -135,7 +136,7 @@ function diagnoseProject(root: string, path: string): DoctorCheck[] {
     }
   }
 
-  const report = (config?.tests.report ?? DEFAULT_TEST_REPORT).replace(/^\.\//, '');
+  const report = config?.tests.report ?? DEFAULT_TEST_REPORT;
   try {
     const version = git(root, ['--version']);
     if (version.error?.code === 'ENOENT') error('git が見つかりません', 'git を入れてください');
@@ -144,7 +145,7 @@ function diagnoseProject(root: string, path: string): DoctorCheck[] {
       const repository = git(root, ['rev-parse', '--is-inside-work-tree']);
       if (repository.error || repository.status !== 0) throw new UsageError('リポジトリの状態を確認できません');
       if (isIgnored(root, report)) ok(`テストのレポート（${report}）は .gitignore で除外されています`);
-      else error(`テストのレポート（${report}）が .gitignore で除外されていません。loomake run が始められません`, `.gitignore に ${report} の行を足してください`);
+      else error(`テストのレポート（${report}）が .gitignore で除外されていません。loomake run が始められません`, `.gitignore に ${reportIgnoreLine(report)} の行を足してください`);
       if (!isIgnored(root, '.loomake/evidence/doctor-check.json')) ok('証拠の記録（.loomake/evidence/）をコミットできます');
       else error('証拠の記録（.loomake/evidence/）が .gitignore で除外されていて、コミットできません', '.gitignore で .loomake/ を除外しているなら、.loomake/* と !.loomake/evidence/ の 2 行に分けてください');
     }
