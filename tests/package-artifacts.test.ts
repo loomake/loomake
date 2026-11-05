@@ -469,3 +469,25 @@ void [result, location, loadEffortSchema];
   const checked = spawnSync(process.execPath, [join(root, 'node_modules/typescript/bin/tsc'), '--ignoreConfig', '--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--module', 'nodenext', '--types', 'node', '--typeRoots', join(root, 'node_modules/@types'), types], { cwd: consumer, encoding: 'utf8' });
   expect(checked.status, checked.stdout + checked.stderr).toBe(0);
 }, 60000);
+
+it('[REQ-473][REQ-475][REQ-476] tarballのreuse公開入口と5オプションのhelpを利用できる', () => {
+  const destination = join(base, 'evidence-reuse');
+  const prepared = spawnSync(process.execPath, ['scripts/package-smoke.mjs', 'prepare', destination], { cwd: root, encoding: 'utf8', env });
+  expect(prepared.status, prepared.stdout + prepared.stderr).toBe(0);
+  const code = `
+import assert from 'node:assert/strict';
+import { readEvidenceRange, createGitEvidenceReader } from '@loomake/kit';
+import { runReuse, reuseRecordProblem, REUSE_RECORD_VERSION } from '@loomake/trace';
+import { main } from './node_modules/loomake/dist/main.js';
+for (const fn of [readEvidenceRange, createGitEvidenceReader, runReuse, reuseRecordProblem]) assert.equal(typeof fn, 'function');
+assert.equal(REUSE_RECORD_VERSION, 1);
+assert.equal(typeof reuseRecordProblem({}, 'sample'), 'string');
+const stdout = []; const stderr = [];
+assert.equal(await main(['trace', 'reuse', '--help'], { cwd: '/not-a-repository', stdout: t => stdout.push(t), stderr: t => stderr.push(t) }), 0);
+assert.equal(stdout.length, 1); assert.deepEqual(stderr, []);
+for (const option of ['--change', '--summary', '--anchor', '--scope', '--json']) assert.ok(stdout[0].includes(option));
+assert.ok(stdout[0].includes('真正性は確かめない'));
+`;
+  const executed = spawnSync(process.execPath, ['--input-type=module', '-e', code], { cwd: join(destination, 'consumer'), encoding: 'utf8' });
+  expect(executed.status, executed.stdout + executed.stderr).toBe(0);
+}, 60000);
