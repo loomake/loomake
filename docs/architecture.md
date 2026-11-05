@@ -110,21 +110,21 @@ Loomake は**品質駆動開発のツール群**。構想や Issue から入り�
 構想・Issue・ロードマップ（Markdown の要件メモを含む）
    │  kit: req-to-openspec Skill（目的・利用状況・受け入れ条件を自分で答えて quality.yaml にも反映）
    ▼
-OpenSpec change（proposal / specs / tasks + trace.md）◀────────────────┐
-   │  kit: verify --spec-only（ブロッキング確認事項があれば止まる）          │
-   ▼                                                                     │
-runner: tasks を実装 → ローカル verify（local 項目） → Draft PR → CI verify → 修正 │
-   │  kit: verify --done --json（4 値判定・証跡の適格性。最終合格は ci 項目を含む全条件）│
-   ▼                                                                     │
-trace: 要件台帳 × 検証結果 → リリース記録・リリースレポート                 │
-   ▼                                                                     │
-公開条件を確認して公開（A1・A2 は人が判断、A3 で自動化）                     │
-   │                                                                     │
-   ▼                                                                     │
+OpenSpec change（proposal / specs / tasks + trace.md）◀─────────────────────────────────────┐
+   │  kit: verify --spec-only（ブロッキング確認事項があれば止まる）                         │
+   ▼                                                                                        │
+runner: tasks を実装 → ローカル verify（local 項目） → Draft PR → CI verify → 修正          │
+   │  kit: verify --done --json（4 値判定・証跡の適格性。最終合格は ci 項目を含む全条件）   │
+   ▼                                                                                        │
+trace: 要件台帳 × 検証結果 → リリース記録・リリースレポート                                 │
+   ▼                                                                                        │
+公開条件を確認して公開（A1・A2 は人が判断、A3 で自動化）                                    │
+   │                                                                                        │
+   ▼                                                                                        │
 trace: eval（本番計測 + Issue / Discussion で定期評価。計画）→ report --status（週次。計画）│
-   │  未達                                                               │
-   ▼                                                                     │
-trace: propose（証跡を添えた proposal の下書き PR。計画）── 人がマージ ─────────┘
+   │  未達                                                                                  │
+   ▼                                                                                        │
+trace: propose（証跡を添えた proposal の下書き PR。計画）── 人がマージ ─────────────────────┘
 ```
 
 上の 5 段が「作って証明する」、下の 2 段が「測って戻す」。戻りは常に OpenSpec change を経由し、評価が直接コードを変えることはない。
