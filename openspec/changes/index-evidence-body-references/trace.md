@@ -37,7 +37,7 @@
 
 | QRef-30 | REQ-470・REQ-471 | gapの欄名と未知field、reasonの日本語、receipt候補名の形式をどう確定するか | A:accessPolicy/workflowHeadSha・未知保持・日本語1字以上・正規名grammar / B:未定のまま停止 | A。P1の拡張と重複全pathを保つ | yes | A。管理役が本会話で採用。既知2field/未知保持、日本語文字1字、実在UTC名とsuffix/hash整合。候補名時刻とretrievedAtは一致不要で、取得事実はreceiptだけから読む（ADR0006） | 管理役root | 2026-11-06 |
 
-| QRef-31 | REQ-471 | 複数locatorの保持判定と結果の対応をどう返すか | A:receipt別の保持配列とlocator別全path / B:単一値へ集約 | A。異なる実期限の事実を落とさない | yes | | | |
+| QRef-31 | REQ-471 | 複数locatorの保持判定と結果の対応をどう返すか | A:receipt別の保持配列とlocator別全path / B:単一値へ集約 | A。異なる実期限の事実を落とさない | yes | A。locatorsはstable locatorで集約、paths/retentionは全receipt別に保持。1 traversalと残量付きraw読取り、例外後は消費量不明のため残量0。後続未読はinvalid-index（本会話・ADR0006） | 管理役root | 2026-11-06 |
 
 QRef27/28は2026-11-06（日本時間）に実mainの受入・同期archiveと公開ソースを照合した。#65の固定一覧追加に新しい人の承認が必要との以前の解釈は管理役が訂正・取下げ済みで、本件は共有実装の未受入だけを依存として残す。
 

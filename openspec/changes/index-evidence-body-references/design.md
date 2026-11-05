@@ -74,3 +74,5 @@ retentionはP1のartifactRetentionで当時の充足と現在の期限を別々�
 実装基点は5a9ec513。PR #452/#457でP1が、PR #450/#453で共通maskが受入・同期archive済み。coreのEvidenceSummary・loadSummarySchemas、kitのreadInputBytes・checkArtifactBody・artifactRetention・maskValueを実ファイルで照合した。元の未受入という記述は計画時点の事実として保持する。既存13 Schema（旧12とP1要約1）は不変に保つ。
 
 QRef30を管理役rootが採用した。gapの既知fieldと日本語文字の構造条件、resolverの候補名の時刻・suffix・bodyhash検査をspecへ明記した。同内容の別pathを保持するため、候補名のprefixとretrievedAtの一致は求めず、取得事実はreceiptの原retrievedAtからだけ読む。
+
+QRef31は2026-11-06 JSTに管理役rootが採用。locatorsはstable locatorで集約し、pathsとretentionはreceipt別に保持して順序と対応を失わない。raw読取失敗の消費量は不明なので、残量0として後続をinvalid-indexにする。保持状態の集約規則は作らない。

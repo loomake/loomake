@@ -9,7 +9,7 @@
 
 ## 3. 照合と参照解決
 - [x] 3.1 kitへ入力不変の7項目の純粋照合を追加し、strict UTF8・CI3箇所・checkout・bodyとZIP・byte view・外部anchorの境界を検証する（REQ-471）。
-- [ ] 3.2 traceの明示policy/now付きresolverを追加し、本体別結果・優先順位・不正候補・矛盾・重複全path・期限/権限未確認・入力予算と安全な診断を確認する（REQ-471）。
+- [x] 3.2 traceの明示policy/now付きresolverを追加し、本体別結果・優先順位・不正候補・矛盾・重複全path・期限/権限未確認・入力予算と安全な診断を確認する（REQ-471）。
 
 ## 4. 互換と案内
 - [ ] 4.1 全ScenarioのREQ名付き試験、公開型consumer、配布物、既存Evidence1/2・12Schema・同期report/serialize・runner再利用・固定要約不変を既存assertを弱めず確認する（REQ-470・471）。

@@ -117,3 +117,16 @@ describe('immutable receiptの同期検証と公開', () => {
     expect(existsSync(join(root, '.loomake/evidence'))).toBe(false);
   }));
 });
+
+it('[REQ-470] 公開の直前に別writerが同名を取得した競合でも一方だけ残す', async () => {
+  const actual = await vi.importActual<typeof import('node:fs')>('node:fs');
+  fixture((root) => {
+    const r = receiptFixture().receipt, other = { ...r, future: 'concurrent' }; let second: boolean | undefined;
+    vi.mocked(linkSync).mockImplementationOnce((source, target) => {
+      second = appendBodyReceipt(root, other); actual.linkSync(source, target);
+    });
+    expect(appendBodyReceipt(root, r)).toBe(false); expect(second).toBe(true);
+    expect(JSON.parse(readFileSync(join(root, receiptPath(r)), 'utf8')).future).toBe('concurrent');
+    expect(readdirSync(dirname(join(root, receiptPath(r))))).toEqual([receiptPath(r).split('/').at(-1)]);
+  });
+});

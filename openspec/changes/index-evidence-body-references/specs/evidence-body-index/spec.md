@@ -92,12 +92,12 @@ Source: REQ-471
 #### Scenario: 複数の本体の参照解決
 - **WHEN** resolveArtifactBodyへroot・summaryPath・保持方針policy・明示nowを渡し、要約に複数の本体参照がある
 - **THEN** artifactsの元の順序で本体ごとの結果配列を返し、各hashの_index/body/<hash>/を既存入力予算内で読む
-- **AND** 各結果はstatus・locator一覧・receiptのpaths・retention・access:unverifiedと理由を持ち、全体statusはinvalid-index、mismatch、not-indexed、resolvedの順で優先する
+- **AND** 各結果はbody（kind・sha256・bytes）・status・locators（BodyReceiptのlocator配列）・全receiptの正規path配列paths・retention（pathとP1 ArtifactRetentionResultの各欄を持つreceipt別配列）・access:unverified・理由を持ち、全体もstatus・理由・artifactsを持つ。全体statusはinvalid-index、mismatch、not-indexed、resolvedの順で優先する。保持状態を本体単位の単一値へ集約しない
 
 #### Scenario: 同じ要約のpathと共有の読取り予算
 - **WHEN** 本体参照を解決する
 - **THEN** summaryPathとreceipt.summary.pathが一致することをresolver側で照合し、各file64MiB・summaryと全receipt合計128MiB・4096項目・深さ32の既存予算を共有する
-- **AND** summaryのraw読取り分を残予算から引き、残量を超えるreceipt読取りを起動しない。pure照合へpathやI/Oを持ち込まない
+- **AND** 1つのtraversal readerで全探索の項目と深さを共有し、raw読取りへ残合計量を渡し、成功した実byte数だけ残量から引く。残量を超える読取りは開始せず、読取例外のあとは消費量が不明なので残量を0とし、後続の未読候補をinvalid-indexにする。pure照合へpathやI/Oを持ち込まない
 
 #### Scenario: 本体や索引がない
 - **WHEN** 有効な要約のartifactsが空か、ある本体に対応するreceiptがない
@@ -120,8 +120,8 @@ Source: REQ-471
 
 #### Scenario: 同一内容の重複を集約する
 - **WHEN** 同じ内容のreceiptが異なる正規pathにある
-- **THEN** locatorの重複はまとめるが、すべてのreceipt pathを履歴として返す
-- **AND** 同じ入力からは同じ順序の結果となり、索引を削除・上書きしない
+- **THEN** 矛盾検査のあとにrepository・artifactId・entryが同じlocatorをまとめるが、すべてのreceipt pathとreceipt別retentionを履歴として返す。内容全体が同じでない場合も、body・expiresAt・summaryの矛盾がなければlocatorだけをまとめる
+- **AND** 各本体の候補を正規pathの辞書順で読み、pathsとretentionをその順序、locatorsをその最初の出現順に返す。入力が同じなら結果の順序も同じで、索引を削除・上書きしない
 
 #### Scenario: 当時と現在の保持状態
 - **WHEN** 実createdAt/expiresAtと明示policy/nowで期限を判定する

@@ -17,3 +17,5 @@ export type { EvidenceSummary, SummaryArtifact, SummaryGap } from '@loomake/core
 
 export { bodyReceiptProblem, appendBodyReceipt } from './body-receipt.js';
 export type { BodyReceipt } from '@loomake/core';
+export { resolveArtifactBody } from './body-resolution.js';
+export type { BodyResolution, BodyResolutionOptions, BodyResolutionStatus, BodyArtifactResolution } from './body-resolution.js';
