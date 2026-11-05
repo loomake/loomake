@@ -64,3 +64,5 @@
 ## 自己レビュー R1 の修正方針
 
 管理役 root は 2026-11-06 JST に ADR 0006 に従い、既存要件に沿う SR-458-01〜04 の修正と工程証跡の移動を採用した。個別の人によるレビューではない。規範句と全33 Scenarioは変えない。構造照合の正本は上記PR記録（SHA-256 `a3af1d60a774b18388fb3e2314d89240850aeef2dfff5e5ad32f85533342e2d3`）。旧ファイルは7c974edに保存され、worktreeの `.loomake/review458/contract-structure-proof.json` も同じ原文を保持する。
+
+初回CIのCodeQL HIGHは動的正規表現を除いて修正し、Windowsの新規REQ-473試験は同じ4097件をGitへ直接渡す。既存の期待値・入力内容・期限は維持する。

@@ -242,3 +242,16 @@ it('[REQ-475] 範囲の記録の既知欄に秘密の形があれば値を変え
     expect(readFileSync(file, 'utf8')).toBe(bytes);
     expect(p.counts()).toEqual(['lint', 'typecheck', 'test']);
 });
+
+it('[REQ-474] 証跡追加だけでもpartialの一次要約は実際に再検証する', () => {
+    const p = project();
+    p.mutate(s => { s.verify.run = { status: 'partial', errors: [{ kind: 'runtime', target: 'test', message: 'fixture', next: 'retry' }] }; });
+    p.git('reset', '--soft', p.source);
+    p.commit();
+    p.resetCounts();
+    expect(kit.readEvidenceRange({ repository: p.root, source: p.source, target: p.git('rev-parse', 'HEAD'), changeId: p.changeId }).allowed).toBe(true);
+    const r = p.run().result;
+    expect(r).toMatchObject({ outcome: 'revalidated', exitCode: 0, verifyExitCode: 0, record: { path: expect.any(String) } });
+    expect(r.reasons.map(x => x.code)).toEqual(['SUMMARY_NOT_PASSING']);
+    expect(p.counts()).toEqual(['lint', 'typecheck', 'test']);
+});

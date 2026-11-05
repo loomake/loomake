@@ -58,12 +58,14 @@ function knownRecord(value: unknown, change: string): ReuseRecord {
     environment: { node: text(environment, 'node'), platform: text(environment, 'platform'), arch: text(environment, 'arch') }, checkedAt: text(value, 'checkedAt'),
   };
   const s = record.source; const t = record.target; const commits = record.range.commits; const entries = record.range.entries;
-  const pattern = new RegExp(`^\\.loomake/evidence/${change}/(?:reuse/)?\\d{8}T\\d{6}Z-[a-f0-9]{12}\\.json$`);
+  const prefix = `.loomake/evidence/${change}/`;
+  const pathAllowed = (path: string) => path.startsWith(prefix) && /^(?:reuse\/)?\d{8}T\d{6}Z-[a-f0-9]{12}\.json$/.test(path.slice(prefix.length));
   if (record.change !== change
     || s.sha === t.sha || s.sha.length !== t.sha.length || !commits.length || new Set(commits).size !== commits.length || commits.at(-1) !== t.sha
     || commits.some((c) => c.length !== s.sha.length) || !entries.length || new Set(entries.map((e) => e.path)).size !== entries.length
-    || entries.some((e) => !commits.includes(e.commit) || !pattern.test(e.path) || e.oid.length !== s.sha.length)
-    || s.summary.oid.length !== s.sha.length || !new RegExp(`^\\.loomake/evidence/${change}/\\d{8}T\\d{6}Z-${s.sha.slice(0, 12)}\\.json$`).test(s.summary.path)
+    || entries.some((e) => !commits.includes(e.commit) || !pathAllowed(e.path) || e.oid.length !== s.sha.length)
+    || s.summary.oid.length !== s.sha.length || !s.summary.path.startsWith(prefix)
+    || !/^\d{8}T\d{6}Z-[a-f0-9]{12}\.json$/.test(s.summary.path.slice(prefix.length)) || !s.summary.path.endsWith(`-${s.sha.slice(0, 12)}.json`)
     || !entries.some((e) => e.path === s.summary.path && e.oid === s.summary.oid)
     || !/^[a-f0-9]{64}$/.test(s.summary.sha256) || !/^\d+$/.test(s.summary.runId)
     || !/^[1-9]\d*$/.test(s.summary.runAttempt) || !Number.isSafeInteger(Number(s.summary.runAttempt))

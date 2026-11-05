@@ -48,3 +48,25 @@ it('[REQ-476] 外部操作の期限は実行時の失敗3でJSONと記録を出�
     expect(r.stderr.join('\n')).toContain('実行時間の上限');
     expect(p.counts()).toEqual([]);
 });
+
+it.each([false, true])('[REQ-475][REQ-476] 再検証の全表示は秘密の形のpathをマスクする: json=%s', async (json) => {
+    const secret = 'sk-' + 'a'.repeat(20);
+    const p = reuseProject(secret);
+    projects.push(p);
+    p.write('mixed.ts', 'mixed');
+    p.commit();
+    const out: string[] = [];
+    const stderr: string[] = [];
+    const code = await main(['trace', 'reuse', '--change', secret, '--summary', p.summaryPath, '--anchor', p.anchorPath, ...(json ? ['--json'] : [])], { cwd: p.root, stdout: s => out.push(s), stderr: s => stderr.push(s) });
+    expect(code).toBe(0);
+    expect(p.counts()).toEqual(['lint', 'typecheck', 'test']);
+    expect([...out, ...stderr].join('\n')).not.toContain(secret);
+    const display = (json ? stderr : out).join('\n');
+    expect(display).toContain('verify の結果');
+    expect(display).toContain('git add');
+    expect(display).toContain('.loomake/evidence/***/');
+    if (json) {
+        expect(out).toHaveLength(1);
+        expect(JSON.parse(out[0])).toMatchObject({ outcome: 'revalidated', record: { path: expect.stringContaining('***') } });
+    }
+});

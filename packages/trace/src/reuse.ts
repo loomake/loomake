@@ -60,7 +60,8 @@ export function runReuse(options: ReuseOptions): ReuseResult {
   const { changeId, summaryPath } = options; const root = resolve(options.root);
   assertChangeId(changeId); const config = loadConfig(root); const changeDir = resolve(root, config.openspecDir, 'changes', changeId);
   if (!existsSync(changeDir) || !statSync(changeDir).isDirectory()) throw new UsageError('対象の active な change がありません');
-  if (typeof summaryPath !== 'string' || !new RegExp(`^\\.loomake/evidence/${changeId}/\\d{8}T\\d{6}Z-[a-f0-9]{12}\\.json$`).test(summaryPath)) throw new UsageError('--summary には対象 change の正規名の要約のパスを指定してください');
+  const prefix = `.loomake/evidence/${changeId}/`;
+  if (typeof summaryPath !== 'string' || !summaryPath.startsWith(prefix) || !/^\d{8}T\d{6}Z-[a-f0-9]{12}\.json$/.test(summaryPath.slice(prefix.length))) throw new UsageError('--summary には対象 change の正規名の要約のパスを指定してください');
   if (typeof options.anchorPath !== 'string' || options.anchorPath.length === 0) throw new UsageError('--anchor <file> が必要です');
   const target = git(root, ['rev-parse', 'HEAD']); if (!SHA.test(target)) throw new UsageError('HEAD の完全な小文字の SHA を確認できません');
   const top = realpathSync.native(git(root, ['rev-parse', '--show-toplevel']));
@@ -102,7 +103,8 @@ export function runReuse(options: ReuseOptions): ReuseResult {
   if (!summaryPath.endsWith(`-${source.slice(0, 12)}.json`)) return human(reason('PRIMARY_NAME_MISMATCH', '要約のファイル名とsourceのSHAが違います'));
   if (reader.treeEntry(source, summaryPath).kind === 'found') return human(reason('PRIMARY_IN_SOURCE', '要約はsourceに既にあります'));
   const reasons: ReuseReason[] = [];
-  if (isAbortedResult(summary.verify) || summary.verify.scope !== 'ci' || verifyExitCode(summary.verify) !== 0) reasons.push(reason('SUMMARY_NOT_PASSING', '要約はciの最終合格ではありません'));
+  if (summary.verify.run.status !== 'completed' || summary.verify.run.errors.length !== 0 || summary.verify.scope !== 'ci'
+    || summary.verify.verdict !== 'PASS' || summary.verify.decision.required || verifyExitCode(summary.verify) !== 0) reasons.push(reason('SUMMARY_NOT_PASSING', '要約はciの最終合格ではありません'));
   const range = readEvidenceRange({ repository: root, source, target, changeId });
   if (!range.allowed) reasons.push(...range.reasons);
   else {
@@ -153,7 +155,8 @@ export function runReuse(options: ReuseOptions): ReuseResult {
     emitReasons(reasons);
     let verifyCode: number | null = null;
     const record = recordEvidence({ root, changeId, scope: options.scope, qualitySchema: options.qualitySchema,
-      env: options.env, now: options.now, stdout: options.json ? progress : options.stdout, progress, onVerify: (v) => { verifyCode = verifyExitCode(v); } });
+      env: options.env, now: options.now, stdout: (text) => (options.json ? progress : options.stdout)(maskSecrets(text)),
+      progress: (text) => progress(maskSecrets(text)), onVerify: (v) => { verifyCode = verifyExitCode(v); } });
     return finish('revalidated', reasons, record.code, record.path ? { path: record.path } : null, record.verified ? verifyCode : null);
   }
   if (!range.allowed) throw new UsageError('再利用の範囲を確認できません');
