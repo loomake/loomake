@@ -1,6 +1,6 @@
 ## 実装
 
-- [ ] 1. kit の evidence-range と公開型を追加し、REQ-473 の実 Git・予算・期限・置換参照の試験を通す。
+- [x] 1. kit の evidence-range と公開型を追加し、REQ-473 の実 Git・予算・期限・置換参照の試験を通す。
 - [ ] 2. ReuseRecord の型・例外を出さない validator・既知欄だけの serialize を追加し、REQ-475 の型・秘密・CI識別の境界を試験する。
 - [ ] 3. record の内部を分離し、runReuse の照合・分岐・状態保護・実際の再検証・保存と REQ-474/475 の全 Scenario を実装する。
 - [ ] 4. CLI の reuse と5つのオプション・JSON・help、承認済み基準差分・生成ページを追加し、REQ-476 と REQ-323 を試験する。
