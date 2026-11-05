@@ -18,7 +18,7 @@ const headings = (md: string) => stripCodeBlocks(md).match(/^#{1,6} .+$/gm) ?? [
 
 // 指定した見出しから、同じか上のレベルの次の見出しまでの本文。コードブロックの中の # は見出しとみなさない
 const section = (md: string, heading: RegExp) => {
-  const lines = md.split('\n');
+  const lines = md.split(/\r?\n/);
   let inCode = false;
   const isHeading = lines.map((l) => {
     if (l.startsWith('```')) inCode = !inCode;
