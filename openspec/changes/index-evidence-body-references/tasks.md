@@ -16,6 +16,6 @@
 - [x] 4.2 利用者文書・非破壊追加のpatch changeset・branch日誌に、索引の一致と実取得/真正性/品質合格の区別、親#69の残作業を記録する。
 
 ## 5. ローカルの完了
-- [ ] 5.1 通常の `pnpm -s verify --change index-evidence-body-references --done --scope local` を実行し、全tasks・対応試験と全検査PASS・実終了0を確認する。<!-- loomake:gate=done -->
+- [x] 5.1 通常の `pnpm -s verify --change index-evidence-body-references --done --scope local` を実行し、全tasks・対応試験と全検査PASS・実終了0を確認する。<!-- loomake:gate=done -->
 
 最終受入は管理役が、非起草Codexの同一依頼による自己レビュー、独立Opus、CI scope ci完了、必須5チェックと変更packageの通常3 OS成功を確認する。未実装の親受入や実取得を、本changeの試験で済ませたとはしない。
