@@ -31,7 +31,7 @@ describe('run の未分類例外', () => {
       repo.git('branch', `loomake/${CHANGE}`);
       const error = new Error('合成の指示エラー');
       Object.assign(fault, { enabled: true, value: error });
-      await expect(runRun({ root: repo.root, changeId: CHANGE, dryRun: true, env: repo.env, stdout: () => {}, confirm: async () => false })).rejects.toBe(error);
+      await expect(runRun({ root: repo.root, changeId: CHANGE, dryRun: true, interactive: false, env: repo.env, stdout: () => {}, confirm: async () => false })).rejects.toBe(error);
       expect(repo.git('branch', '--show-current')).toBe('main');
       expect(existsSync(join(repo.root, '.loomake/runs'))).toBe(false);
       expect(repo.calls()).toEqual([]);
