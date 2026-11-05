@@ -4,3 +4,9 @@ version: 2
 model: iso-iec-25010-2011
 objectives: {}
 product: {}
+evidence:
+  artifact_retention: 90d
+  long_term_store: github-release
+  long_term_retention: 5y
+  access: project-members
+  delete_policy: owner-approval

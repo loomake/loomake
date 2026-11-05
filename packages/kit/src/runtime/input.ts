@@ -24,7 +24,7 @@ export type InputReader = {
 };
 
 /** 1つの入力処理で共有し、実際に読んだバイト数と探索の訪問数を制限する。 */
-export function createInputReader(overrides: Partial<InputLimits> = {}): InputReader {
+function buildInputReader(overrides: Partial<InputLimits>): { reader: InputReader; readBuffer: (file: string) => Buffer } {
   const limits = { ...DOCUMENT_LIMITS, ...overrides };
   for (const [key, value] of Object.entries(limits)) {
     if (!Number.isSafeInteger(value) || value < (key === 'maxDepth' ? 0 : 1)) throw new UsageError(`入力予算の${key}は${key === 'maxDepth' ? '0以上' : '正'}の安全な整数にしてください`);
@@ -36,39 +36,40 @@ export function createInputReader(overrides: Partial<InputLimits> = {}): InputRe
     if (stats.isSymbolicLink()) fail(path, 'シンボリックリンクは扱えません');
     if (directory ? !stats.isDirectory() : !stats.isFile()) fail(path, directory ? '通常のディレクトリではありません' : '通常のファイルではありません');
   };
+  const readBuffer = (file: string): Buffer => {
+    let fd: number | undefined;
+    let size = 0;
+    const chunks: Buffer[] = [];
+    const budget = (length: number) => {
+      if (length > limits.maxFileBytes) fail(file, `ファイルの上限は${limits.maxFileBytes}バイトです`);
+      if (bytes + length > limits.maxTotalBytes) fail(file, `読み取り合計の上限は${limits.maxTotalBytes}バイトです`);
+    };
+    try {
+      regular(file, lstatSync(file));
+      fd = openSync(file, constants.O_RDONLY | optionalFlag('O_NOFOLLOW') | optionalFlag('O_NONBLOCK'));
+      const stats = fstatSync(fd);
+      regular(file, stats);
+      budget(stats.size);
+      const available = Math.min(limits.maxFileBytes, limits.maxTotalBytes - bytes);
+      const buffer = Buffer.alloc(Math.min(64 * 1024, available + 1));
+      for (;;) {
+        const length = readSync(fd, buffer, 0, Math.min(buffer.length, available - size + 1), null);
+        if (length === 0) break;
+        size += length;
+        budget(size);
+        chunks.push(Buffer.from(buffer.subarray(0, length)));
+      }
+      bytes += size;
+      return Buffer.concat(chunks, size);
+    } catch (error) {
+      if (error instanceof UsageError) throw error;
+      // O_NOFOLLOWがリンクへの差し替えをELOOPで拒否した場合も、入力拒否の分類を保つ。
+      const Failure = (error as NodeJS.ErrnoException).code === 'ELOOP' ? UsageError : InputReadFailure;
+      return fail(file, (error as Error).message, Failure, error);
+    } finally { if (fd !== undefined) closeSync(fd); }
+  };
   const reader: InputReader = {
-    read(file) {
-      let fd: number | undefined;
-      let size = 0;
-      const chunks: Buffer[] = [];
-      const budget = (length: number) => {
-        if (length > limits.maxFileBytes) fail(file, `ファイルの上限は${limits.maxFileBytes}バイトです`);
-        if (bytes + length > limits.maxTotalBytes) fail(file, `読み取り合計の上限は${limits.maxTotalBytes}バイトです`);
-      };
-      try {
-        regular(file, lstatSync(file));
-        fd = openSync(file, constants.O_RDONLY | optionalFlag('O_NOFOLLOW') | optionalFlag('O_NONBLOCK'));
-        const stats = fstatSync(fd);
-        regular(file, stats);
-        budget(stats.size);
-        const available = Math.min(limits.maxFileBytes, limits.maxTotalBytes - bytes);
-        const buffer = Buffer.alloc(Math.min(64 * 1024, available + 1));
-        for (;;) {
-          const length = readSync(fd, buffer, 0, Math.min(buffer.length, available - size + 1), null);
-          if (length === 0) break;
-          size += length;
-          budget(size);
-          chunks.push(Buffer.from(buffer.subarray(0, length)));
-        }
-        bytes += size;
-        return Buffer.concat(chunks, size).toString('utf8');
-      } catch (error) {
-        if (error instanceof UsageError) throw error;
-        // O_NOFOLLOWがリンクへの差し替えをELOOPで拒否した場合も、入力拒否の分類を保つ。
-        const Failure = (error as NodeJS.ErrnoException).code === 'ELOOP' ? UsageError : InputReadFailure;
-        return fail(file, (error as Error).message, Failure, error);
-      } finally { if (fd !== undefined) closeSync(fd); }
-    },
+    read(file) { return readBuffer(file).toString('utf8'); },
     readHead(file, maxBytes) {
       if (!Number.isSafeInteger(maxBytes) || maxBytes <= 0) throw new UsageError('先頭の読み取りの上限は正の安全な整数にしてください');
       let fd: number | undefined;
@@ -137,5 +138,15 @@ export function createInputReader(overrides: Partial<InputLimits> = {}): InputRe
       return files;
     },
   };
-  return reader;
+  return { reader, readBuffer };
+}
+
+/** 同じ安全I/Oと予算を共有し、従来の文字列readerの型を変えない。 */
+export function createInputReader(overrides: Partial<InputLimits> = {}): InputReader {
+  return buildInputReader(overrides).reader;
+}
+
+/** 元bytesを置換decodeせず独立したBufferへ複製する（REQ-462）。 */
+export function readInputBytes(file: string, limits: Partial<InputLimits> = JSON_LIMITS): Buffer {
+  return Buffer.from(buildInputReader(limits).readBuffer(file));
 }
