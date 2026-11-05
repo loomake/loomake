@@ -190,7 +190,7 @@ export function runReuse(options: ReuseOptions): ReuseResult;
 | 5 | `checkFixedSummary(text, anchorValue)` | FAIL なら reason をそのまま付けて差し戻し（信頼値での照合を、形の確認より先に行う） |
 | 6 | 形を確かめる（`value = JSON.parse(text)`）。<br>・`value.change` が対象の change と違う<br>・`evidenceProblem(value, change)` に通らない、または own の `summaryVersion` がない<br>・`role` が development でない<br>・ファイル名の 12 桁が `anchor.sha.slice(0, 12)` と違う | 順に `PRIMARY_OTHER_CHANGE`、`PRIMARY_INVALID`、`PRIMARY_ROLE`（Q6）、`PRIMARY_NAME_MISMATCH`。どれも差し戻し |
 | 7 | `treeEntry(source, summaryPath)` | ・found → `PRIMARY_IN_SOURCE`（差し戻し）<br>・absent → 次へ<br>・unreadable → 次へ（8 で `SOURCE_UNAVAILABLE` になる） |
-| 8 | 要約が合格の ci であることを確かめる（`!isAbortedResult(v)`、`v.scope === 'ci'`、`verifyExitCode(v) === 0`） | 満たさなければ再検証の理由 `SUMMARY_NOT_PASSING` |
+| 8 | 要約が合格の ci であることを確かめる（`v.run.status === 'completed'`、`v.run.errors.length === 0`、`v.scope === 'ci'`、`v.verdict === 'PASS'`、`v.decision.required === false`、`verifyExitCode(v) === 0`） | 満たさなければ再検証の理由 `SUMMARY_NOT_PASSING` |
 | 9 | `readEvidenceRange({ repository: root, source, target, changeId })` | ・allowed でなければ、kit の reasons を再検証の理由にする。本文は読まない<br>・allowed なら、一次要約の oid も entry にあることを確かめる（ない場合は `PRIMARY_MISSING` で差し戻し）<br>・ほかの entry を、範囲の順に 1 件ずつ `readText` で読む（下の表） |
 | 10 | 環境と基準を照合する（下の表） | 違えば再検証の理由 |
 | 11 | 終了時の状態を確かめる。<br>・HEAD、未コミットの変更、文書、`commandsReference`<br>・`basisHash`（10 で求めた値）<br>・anchor を読み直した生 bytes の SHA-256 | 2' からどれかが変わっていれば stopped `STATE_CHANGED`（1）。記録も再検証もしない |
@@ -534,3 +534,5 @@ options:
 REQ-475 の保存は内部で構築した既知欄だけを対象とする。未知欄を解釈せず保持する validator の互換契約は、未知欄を判定根拠や新規保存データに取り込むことを意味しない。
 
 公開kit型の列挙は8件である。出典の「型9つ」は実数の誤記として扱い、列挙にない型を追加しない。
+
+構造照合の工程証跡は trace.md の PR 固定記録を正本とする。R1修正では失敗した本文読取りも共有予算へ算入し、再検証の全表示を runReuse で maskSecrets に通す。既存 runRecord と呼出側 callback の例外は変えない。

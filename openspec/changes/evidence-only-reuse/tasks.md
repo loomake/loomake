@@ -7,3 +7,10 @@
 - [x] 5. kit・trace の公開型 consumer と配布物の試験を追加する。
 - [x] 6. 利用者向け説明、3パッケージの patch changeset、worklog と計測表を記録する。
 - [x] 7. lint・typecheck・全体試験・生成リファレンス照合を通し、全タスクをチェックした状態で verify --change evidence-only-reuse --done --json --scope local を通す。最終合格は CI の scope ci と必須5チェック・3 OS・独立レビューで判断する。 <!-- loomake:gate=done -->
+
+## 自己レビュー R1 の修正
+
+- [x] 8. 構造照合の証跡を PR の固定記録へ移し、既存証跡を保存する。
+- [ ] 9. REQ-473 の失敗した本文読取りの共有予算と引数検査を RED→GREEN で修正する。
+- [ ] 10. REQ-474/475/476 の一次要約の完了条件と再検証表示を RED→GREEN で修正する。
+- [ ] 11. 既存試験・全33 Scenarioを保って品質検査とクリーンなローカル完了ゲートを通し、修正証跡を別名で保存する。 <!-- loomake:gate=done -->

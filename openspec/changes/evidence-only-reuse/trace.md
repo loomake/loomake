@@ -39,7 +39,7 @@
 | Q-14 | REQ-473, REQ-474, REQ-475, REQ-476 | CI識別の条件（a20fc407 §7） | summary.tsと同じ／runId先頭0禁止 | summary.tsと同じ。要約と保存で受理を揃える | yes | summary.tsと同じ（ADR 0006） | 利用者（ADR 0006 の包括承認） | 2026-11-06 |
 | Q-15 | REQ-473, REQ-474, REQ-475, REQ-476 | 既知欄の読み方（a20fc407 §7） | own data・plain・typeof先／通常参照 | own data・plain・typeof先。getterを呼ばず変換を拒否する | yes | own data・plain・typeof先（ADR 0006） | 利用者（ADR 0006 の包括承認） | 2026-11-06 |
 | Q-16 | REQ-473, REQ-474, REQ-475, REQ-476 | 未知欄の秘密検査（a20fc407 §7） | 行わない／行う | 行わない。未知欄は解釈せず保持する | yes | 行わない（ADR 0006） | 利用者（ADR 0006 の包括承認） | 2026-11-06 |
-| Q-17 | REQ-473, REQ-474, REQ-475, REQ-476 | strictの500字制約に合わせる構造整理 | 同じREQ内の共通条件Scenarioへ移動／長文のまま | 原文の規範句・既存26Scenarioを保持して移動。新しい振る舞いは決めない | yes | 共通条件Scenarioへ移動。contract-structure-proof.jsonで前後照合（ADR 0006） | 利用者（ADR 0006 の包括承認） | 2026-11-06 |
+| Q-17 | REQ-473, REQ-474, REQ-475, REQ-476 | strictの500字制約に合わせる構造整理 | 同じREQ内の共通条件Scenarioへ移動／長文のまま | 原文の規範句・既存26Scenarioを保持して移動。新しい振る舞いは決めない | yes | 共通条件Scenarioへ移動。[PR記録](https://github.com/loomake/loomake/pull/463#issuecomment-6666537168)で前後照合（ADR 0006） | 利用者（ADR 0006 の包括承認） | 2026-11-06 |
 
 管理役 root が上のおすすめを ADR 0006 に従って採用した。個別の人による再レビューを記録したものではない。分割は割り当て済み W1 の5 change 内の本 change 1件であり、追加の第6 change ではない。
 
@@ -60,3 +60,7 @@
 | REQ-475 | 整合性を保って重複検査を減らす | 4851 §1・§9 の開発者CLI、実Git、外部凍結anchor | 差分仕様の全Scenarioを満たす | 実Git・実プロセスのカウンタ0/各1・境界試験・公開型とpack試験 | 正確性・互換性・秘密の保護 | 4851 §8〜9、a20fc407 §4・§6、Q-01〜16 |
 | REQ-476 | 整合性を保って重複検査を減らす | 4851 §1・§9 の開発者CLI、実Git、外部凍結anchor | 差分仕様の全Scenarioを満たす | 実Git・実プロセスのカウンタ0/各1・境界試験・公開型とpack試験 | 正確性・互換性・秘密の保護 | 4851 §8〜9、a20fc407 §4・§6、Q-01〜16 |
 | REQ-323 | 整合性を保って重複検査を減らす | 4851 §1・§9 の開発者CLI、実Git、外部凍結anchor | 差分仕様の全Scenarioを満たす | 実Git・実プロセスのカウンタ0/各1・境界試験・公開型とpack試験 | 正確性・互換性・秘密の保護 | 4851 §8〜9、a20fc407 §4・§6、Q-01〜16 |
+
+## 自己レビュー R1 の修正方針
+
+管理役 root は 2026-11-06 JST に ADR 0006 に従い、既存要件に沿う SR-458-01〜04 の修正と工程証跡の移動を採用した。個別の人によるレビューではない。規範句と全33 Scenarioは変えない。構造照合の正本は上記PR記録（SHA-256 `a3af1d60a774b18388fb3e2314d89240850aeef2dfff5e5ad32f85533342e2d3`）。旧ファイルは7c974edに保存され、worktreeの `.loomake/review458/contract-structure-proof.json` も同じ原文を保持する。
