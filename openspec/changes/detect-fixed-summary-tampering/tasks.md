@@ -8,7 +8,7 @@
 
 ## 3. 利用案内
 
-- [ ] 3.1 kit README と minor changeset に API と信頼値の取得責任、#69・W5 の未実施範囲を記録する（REQ-443・REQ-444・REQ-445）
+- [x] 3.1 kit README と minor changeset に API と信頼値の取得責任、#69・W5 の未実施範囲を記録する（REQ-443・REQ-444・REQ-445）
 
 ## 4. 確認
 
