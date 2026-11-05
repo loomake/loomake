@@ -24,7 +24,7 @@ gate ジョブは PR の段階（AGENTS.md 2 章の L1・L2・L3）を先に決�
 - L2（試験・CI・開発基盤）：これまでどおり、対象の change があれば `verify --change <id> --done`、なければ `verify`（品質コマンドだけ）を実行する
 - L3（製品コードと Requirement の変更）：change が必須。`loomake-change: none` や change を特定できない PR は失敗する
 - L3 の例外「仕様適合の修正」：既存の Requirement どおりに直すだけのバグ修正は、ADR 0006 の 5 条件（既存 Requirement に書かれた振る舞い、対象の REQ ID を名前に入れた修正前失敗・修正後成功のテスト、`openspec/` を変えない、公開契約を変えない、PR 本文に印を書く）をすべて満たすときだけ、change なしで進められる。PR 本文には `loomake-change: none`・`loomake-route: spec-fix`・`loomake-req: REQ-xxx` を書く。独立 Opus レビューは 1 回で、`verify --done` は対象外。正本は ADR 0006 の「完成を早めるための規則変更」
-  - 注意：CI がこの経路を受け付けるのは、REQ-343 を変更する change（Issue #427）がマージされてからである。それまでは `spec-fix` を宣言しても ci-gate は通常の L3 として扱い、上の `loomake-change: none` の失敗になる
+  - CI 対応は REQ-343 を変更する通常 L3 change（Issue #427）で行い、[PR #436](https://github.com/loomake/loomake/pull/436) のマージから使える。以下の宣言と確認条件に従う
 
 ### 仕様適合の修正で CI が調べる条件
 
@@ -64,6 +64,9 @@ change のない L1 の PR では `verify` を呼ばないため、`tests/doc-li
 
 L2 の PR のラベルを確かめる自動の検査もない。そのため、管理役がマージ前に確かめる規則として、試験（`tests/`・`packages/*/test/`）・ルートの `scripts/`・`.github/workflows/` を変える L2 の PR には `ci:all-os` ラベルを付け、Windows・macOS の CI も成功してからマージする（delivery スキルの「マージと証跡」）。
 
+対応する試験は、名前に固定の REQ ID がある `it`・`test` の呼出しで確認する。`test.extend` で作った独自関数や、`it.each` の表から REQ ID を名前へ差し込む形は数えず、対応試験がなければ失敗する。
+
+
 ## 開発の台本
 
 - `scripts/clean-merged-worktrees.sh`：ブランチを head にした PR が GitHub で merged になっている clean な worktree を消す（`gh pr list --state merged` で確かめる。gh を使えなければ何も消さない）。detached HEAD、dirty、`.loomake/`・`node_modules/`・`dist/`・`coverage/` 以外の無視ファイルがあるものは残す。`--dry-run` で一覧と判定理由だけを表示し、`--keep <name>` で残すものを指定する。各 worktree の `.loomake/` は `.loomake/archive/worktree-loomake-<日付>/` に退避する。ブランチは消さない
@@ -82,12 +85,12 @@ L2 の PR のラベルを確かめる自動の検査もない。そのため、�
 
 macOS と Windows でだけ時間切れが続く試験ファイルは、`tests/quarantine.json` に書くと、その OS の quality ジョブのシャードから一時的に外せます。決まりは monorepo の仕様の「試験の隔離一覧」（REQ-344）にあります。試験の上限時間を延ばしたり skip したりする代わりに使うものではありません。原因を調べて直すまでの、期限つきの避難です。
 
-[Issue #430](https://github.com/loomake/loomake/issues/430) の文言の修理として、次の単発の事実も併せて記録する。2026-11-05 の利用者決定 D では、PR #425 の Windows CI で一度だけ時間切れになった `delivery-opus-prior` の試験も隔離の対象として承認された。時間切れが繰り返されたという実測はない。対象・期限・ファイル全体が外れる範囲は Issue #428 に記録する。
-
 ```json
 { "entries": [ { "file": "packages/runner/test/pr.test.ts", "tests": ["[REQ-114] …"], "os": ["windows-latest"],
     "issue": 116, "added": "2026-10-31", "expires": "2026-11-14" } ] }
 ```
+
+[Issue #430](https://github.com/loomake/loomake/issues/430) の文言の修理として、次の単発の事実も併せて記録する。2026-11-05 の利用者決定 D では、PR #425 の Windows CI で一度だけ時間切れになった `delivery-opus-prior` の試験も隔離の対象として承認された。時間切れが繰り返されたという実測はない。対象・期限・ファイル全体が外れる範囲は Issue #428 に記録する。
 
 - 単位はファイルです。vitest は試験名で除外できず、名前で外すと skip になるためです。`tests` は記録用で、外す範囲には使いません
 - `os` には `macos-latest` か `windows-latest` だけを書けます。Ubuntu のジョブは一覧を読まず、すべての試験を実行します
