@@ -26,6 +26,19 @@ gate ジョブは PR の段階（AGENTS.md 2 章の L1・L2・L3）を先に決�
 - L3 の例外「仕様適合の修正」：既存の Requirement どおりに直すだけのバグ修正は、ADR 0006 の 5 条件（既存 Requirement に書かれた振る舞い、対象の REQ ID を名前に入れた修正前失敗・修正後成功のテスト、`openspec/` を変えない、公開契約を変えない、PR 本文に印を書く）をすべて満たすときだけ、change なしで進められる。PR 本文には `loomake-change: none`・`loomake-route: spec-fix`・`loomake-req: REQ-xxx` を書く。独立 Opus レビューは 1 回で、`verify --done` は対象外。正本は ADR 0006 の「完成を早めるための規則変更」
   - 注意：CI がこの経路を受け付けるのは、REQ-343 を変更する change（Issue #427）がマージされてからである。それまでは `spec-fix` を宣言しても ci-gate は通常の L3 として扱い、上の `loomake-change: none` の失敗になる
 
+
+### 仕様適合の修正で CI が調べる条件
+
+`loomake-route: spec-fix` は、L3 で `loomake-change: none` を明示したときだけ評価する。gate は次の三つをすべて確認し、満たすときは change を指定せず品質コマンドを実行する。
+
+1. PR の差分に `openspec/` 配下の変更がない。削除や名前の変更は、変更前後のパスも対象にする。
+2. `loomake-req:` に書いたすべての ID が、主仕様の Requirement の `Source:` にある。進行中の change とコードフェンス内の記載は数えない。
+3. 各 ID を `[REQ-xxx]` の形で名前に含む試験を足すか変えている。対象は `tests/**/*.test.ts` と `packages/*/test/**/*.test.ts`。コメント内の呼出例、削除、ファイルの名前だけの変更、直接 `skip`・`todo`・`skipIf`・`runIf` を付けた試験は数えない。
+
+`loomake-req:` はカンマ区切りでも複数行でも書ける。重複は一つにまとめ、空の値や `REQ-` と3桁以上の数字に一致しない値は失敗にする。`loomake-route:` が複数行なら、すべての値が大文字小文字を区別せず `spec-fix` に一致する必要がある。条件が足りなければ「L3 では change が必須です」に不足理由を添える。例えば、対応する試験がなければ「REQ-012 を名前に含むテストの追加・変更が差分にありません」と表示する。
+
+機械の検査だけで修正の受け入れは決まらない。独立 Opus と管理役は、CLI のフラグ・終了コード・JSON の形式・設定キーという公開契約を変えていないことと、PR 本文に記した各 REQ 試験の修正前失敗・修正後成功の証拠をレビューで確かめる。`describe.skip` など親の条件による未実行や、空白・コメントだけの試験変更、既存試験のコピーも確認する。必須の品質コマンドと3 OS の CI、独立レビューの重大ゼロを満たしてからマージする。
+
 change のゲート（`--done`・`--spec-only`）は `--json` で実行し、verify の終了コードではなく 2.0.0 の結果の JSON で合格を決める（REQ-318、`scripts/ci-gate.mjs` の `ciGateProblem`）。完了ゲートは対象の change と一致し、scope が ci、run.status が completed、要判断なし、verdict が PASS、不合格や証拠不足（`--skip-commands`）の検査がなく、検査が 0 件や全件 NOT_APPLICABLE でなく、完了ゲートの検査（`tasks.md`・`要件ごとのテスト`・`command: *`）を含み、終了コードが 0 のときだけ合格にする。履歴の 1.0.0、local の結果、仕様ゲートや品質コマンドだけの結果は、終了コードが 0 でも合格にしない。結果の JSON は標準エラーに写し、標準出力には段階の行だけを書く。
 
 change のゲートを実行するたび、既存の判定後に標準エラーへ `loomake-gate-result: <JSON>` を1行書く。JSON は `change`・`gate`（`done` または `spec-only`）・`exitCode`・`problem`・`result` を持つ。`exitCode` は verify 子プロセスの実終了状態で、`null` もそのまま記録する。`problem` は既存の不合格理由で、理由がなければ `null` とする。
@@ -69,6 +82,8 @@ L2 の PR のラベルを確かめる自動の検査もない。そのため、�
 ## 時間切れする試験の隔離
 
 macOS と Windows でだけ時間切れが続く試験ファイルは、`tests/quarantine.json` に書くと、その OS の quality ジョブのシャードから一時的に外せます。決まりは monorepo の仕様の「試験の隔離一覧」（REQ-344）にあります。試験の上限時間を延ばしたり skip したりする代わりに使うものではありません。原因を調べて直すまでの、期限つきの避難です。
+
+2026-11-05 の利用者決定 D では、PR #425 の Windows CI で一度だけ時間切れになった `delivery-opus-prior` の試験も隔離の対象として承認された。時間切れが繰り返されたという実測はない。対象・期限・ファイル全体が外れる範囲は Issue #428 に記録する。
 
 ```json
 { "entries": [ { "file": "packages/runner/test/pr.test.ts", "tests": ["[REQ-114] …"], "os": ["windows-latest"],
