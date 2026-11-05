@@ -1,10 +1,18 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, it } from 'vitest';
-import { parseTrace } from '@loomake/core';
+import { parseTrace } from '../packages/core/src/index.js';
 
 it('[REQ-470][REQ-471] 本体索引の採用済み確認事項10件を公開parseTraceで読み取る', () => {
-  const file = join(import.meta.dirname, '../openspec/changes/index-evidence-body-references/trace.md');
+  const changes = join(import.meta.dirname, '../openspec/changes');
+  const change = 'index-evidence-body-references';
+  const active = join(changes, change);
+  const archived = () => {
+    const names = readdirSync(join(changes, 'archive')).filter((name) => name.endsWith(`-${change}`));
+    expect(names).toHaveLength(1);
+    return join(changes, 'archive', names[0]);
+  };
+  const file = join(existsSync(active) ? active : archived(), 'trace.md');
   const parsed = parseTrace(file, readFileSync(file, 'utf8'));
   expect(parsed.errors).toEqual([]);
   expect(parsed.value.questions.map((q) => q.ID)).toEqual([

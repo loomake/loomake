@@ -50,7 +50,7 @@
         },
         "sha": {
           "type": "string",
-          "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$"
+          "pattern": "^(?:[a-fA-F0-9]{40}|[a-fA-F0-9]{64})$"
         },
         "ci": {
           "type": "object",
@@ -150,13 +150,13 @@
       "properties": {
         "checkoutSha": {
           "type": "string",
-          "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$"
+          "pattern": "^(?:[a-fA-F0-9]{40}|[a-fA-F0-9]{64})$"
         },
         "workflowHeadSha": {
           "anyOf": [
             {
               "type": "string",
-              "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$"
+              "pattern": "^(?:[a-fA-F0-9]{40}|[a-fA-F0-9]{64})$"
             },
             {
               "type": "null"
