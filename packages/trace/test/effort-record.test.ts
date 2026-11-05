@@ -127,7 +127,7 @@ const thrown = (action: () => unknown): Error => {
   try { action(); } catch (error) { return error as Error; }
   throw new Error('expected rejection');
 };
-it('[REQ-466] 保存前の入力・サイズ・change・git・保存を固定文とcauseなしで区別する', () => {
+it.each(['input', 'size', 'change', 'git', 'save', 'cost'] as const)('[REQ-466] 保存前%sを固定文とcauseなしで区別する', (kind) => {
   const r = repo(); const token = 'sk-' + 'a'.repeat(20);
   const cases: [() => unknown, string][] = [
     [() => r.record({ effort: token }), '実作業時間の入力が不正です。時間・区分・回数・費用・メモの書式を確認してください。'],
@@ -137,7 +137,8 @@ it('[REQ-466] 保存前の入力・サイズ・change・git・保存を固定文
     [() => { vi.mocked(mkdirSync).mockImplementationOnce(() => { throw new UsageError(token, { cause: new Error(token) }); }); return r.record(); }, '実績を保存できませんでした。保存先と作業状態を確認してから、もう一度実行してください。'],
     [() => r.record({ cost: [] }), '実作業時間の入力が不正です。時間・区分・回数・費用・メモの書式を確認してください。'],
   ];
-  for (const [action, message] of cases) {
+  const [action, message] = cases[['input', 'size', 'change', 'git', 'save', 'cost'].indexOf(kind)];
+  {
     const error = thrown(action); expect(error).toBeInstanceOf(UsageError); expect(error.message).toBe(message);
     expect(error.message).not.toContain(token); expect(error.cause).toBeUndefined(); expect(r.files()).toEqual([]);
   }

@@ -77,3 +77,9 @@ it.each(['cleanup', 'stdout-first', 'stdout-second'] as const)('[REQ-466] 保存
   expect(final).toHaveLength(1); expect(JSON.parse(readFileSync(join(dir, final[0]), 'utf8')).totalMinutes).toBe(1);
   expect(files).toHaveLength(phase === 'cleanup' ? 2 : 1); expect(loadVerifyQualitySchema).not.toHaveBeenCalled();
 });
+
+it('[REQ-466] 回数の先頭ゼロを受け付ける', async () => {
+  const p = project(); expect(await p.run(['--effort=0m', '--decisions=000', '--attempts=002'])).toBe(0);
+  const dir = join(p.root, '.loomake/evidence/add-x/effort');
+  expect(JSON.parse(readFileSync(join(dir, readdirSync(dir)[0]), 'utf8'))).toMatchObject({ decisions: 0, attempts: 2 });
+});

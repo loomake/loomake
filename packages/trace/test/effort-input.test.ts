@@ -65,3 +65,8 @@ it('[REQ-466] 空費用配列を拒否し、省略とkindを持つ実額0を区�
   expect(effortRecordSchema.safeParse({ ...base, cost: [] }).success).toBe(false);
   expect(() => serializeEffort({ ...base, cost: [] })).toThrow();
 });
+
+it('[REQ-466] 回数以外の費用の先頭ゼロと秘密形change-idの拒否を保持する', () => {
+  expect(parseCost('actual-usd:000.01,estimated-usd:00.00,tokens:0007')).toEqual([{ kind: 'actual-usd', cents: 1 }, { kind: 'estimated-usd', cents: 0 }, { kind: 'tokens', count: 7 }]);
+  expect(effortProblem({ ...base, change: 'sk-' + 'a'.repeat(20) })).not.toBeNull();
+});
