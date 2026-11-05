@@ -43,3 +43,7 @@ export { InputReadFailure } from './runtime/errors.js';
 export { basisHash } from './verify/quality-receipt.js';
 export { checkArtifactBody, artifactRetention } from './verify/artifact-body.js';
 export type { ArtifactBodyCheck, ArtifactRetentionResult } from './verify/artifact-body.js';
+
+export { collectToolOutput } from './collect/collect.js';
+export type { CollectRequest, CollectExit, Collected } from './collect/collect.js';
+export { ghPrChecksArgs, biomeArgs, playwrightTestArgs } from './collect/args.js';

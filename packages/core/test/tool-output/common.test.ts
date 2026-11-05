@@ -39,7 +39,7 @@ describe.each(parsers)('%s の共通契約', (tool, parse, fixture) => {
   });
 });
 it('[REQ-448] 通常 JSON の構文エラーは元の行番号だけを使う', () => {
-  expect(parseGhChecks('gh', '[\n{"name":"x",\n"bucket":}').errors).toEqual([
+  expect(parseGhChecks('gh', '{\n"name":1,\n}').errors).toEqual([
     { file: 'gh', line: 3, message: 'JSON として読めません' },
   ]);
 });
