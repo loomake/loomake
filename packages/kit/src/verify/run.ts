@@ -1,3 +1,4 @@
+import { assertReportTarget } from '../runtime/report-target.js';
 import { evaluateAgreement, type AgreementDecision } from './policy/agreement.js';
 import { evaluateTestCoverage } from './policy/coverage-policy.js';
 import { existsSync, realpathSync, rmSync, statSync } from 'node:fs';
@@ -129,6 +130,7 @@ export function runVerify(options: VerifyOptions): VerifyResult {
     if (spec && gate === 'done') {
       checkTasksAndPending(spec, record, approvals);
       // 前回のレポートで合格させないよう、commands を実行する前に消す
+      assertReportTarget(root, config.tests.report);
       const reportPath = resolve(root, config.tests.report);
       if (!skipCommands) rmSync(reportPath, { force: true });
       const clearedBefore = !existsSync(reportPath);

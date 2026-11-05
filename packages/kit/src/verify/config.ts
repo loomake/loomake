@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { assertReportTarget, normalizeReportPath } from '../runtime/report-target.js';
 import { createInputReader } from '../runtime/input.js';
 
 import { UsageError } from '../runtime/errors.js';
@@ -48,7 +49,7 @@ const unknownKeys = (c: Record<string, unknown>): string[] =>
 export function loadConfig(root: string): LoomakeConfig {
   const base: LoomakeConfig = { openspecDir: 'openspec', openspecValidate: 'auto', tests: { report: DEFAULT_TEST_REPORT }, commands: {}, unknownKeys: [] };
   const p = join(root, 'loomake.config.json');
-  if (!existsSync(p)) return base;
+  if (!existsSync(p)) { assertReportTarget(root, base.tests.report); return base; }
   let c: unknown;
   try {
     c = JSON.parse(createInputReader().read(p));
@@ -61,8 +62,8 @@ export function loadConfig(root: string): LoomakeConfig {
     throw new UsageError('loomake.config.json の openspecValidate は true・false・"auto" のどれかにしてください');
   }
   if (c.tests !== undefined && !isObject(c.tests)) throw new UsageError('loomake.config.json の tests はオブジェクトにしてください');
-  const report = isObject(c.tests) && c.tests.report !== undefined ? c.tests.report : DEFAULT_TEST_REPORT;
-  if (typeof report !== 'string' || report === '') throw new UsageError('loomake.config.json の tests.report は空でない文字列にしてください');
+  const report = normalizeReportPath(isObject(c.tests) && c.tests.report !== undefined ? c.tests.report : DEFAULT_TEST_REPORT);
+  assertReportTarget(root, report);
   if (c.commands !== undefined && (!isObject(c.commands) || !Object.values(c.commands).every((v) => typeof v === 'string' || v === null))) {
     throw new UsageError('loomake.config.json の commands は、値が文字列（または null）のオブジェクトにしてください');
   }
