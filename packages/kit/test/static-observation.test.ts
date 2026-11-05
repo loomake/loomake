@@ -83,4 +83,49 @@ describe('今回の品質コマンドからの静的指標', () => {
     expect(observe(q, r)).toHaveLength(1);
     expect({ q, r }).toEqual(before);
   });
+  it('[REQ-430] Jestの完了した失敗も実施件数として観測する', () => {
+    const r = receipt(); r.producer = { name: 'jest', version: '30.2.0' };
+    expect(observe(quality(), r)).toMatchObject([{ status: 'measured', value: 1, samples: 2 }]);
+  });
+  it.each(['ci.test_report', 'ci.coverage'])('[REQ-430] %sの不正JSONを測定値にしない', (source) => {
+    const r = receipt();
+    const invalid = { path: 'invalid.json', text: '{', sha256: sha256Hex('{') };
+    if (source === 'ci.test_report') r.report = invalid;
+    else r.coverage = invalid;
+    const [value] = observe(quality(source, source === 'ci.test_report' ? 'tests_failed' : 'lines_pct'), r);
+    expect(value.status).toBe('unverified'); expect(value).not.toHaveProperty('value');
+  });
+  it('[REQ-430] 前回のcoverageを消していなければ未確認にする', () => {
+    const r = receipt(); r.invocation.coverageCleared = false;
+    const [value] = observe(quality('ci.coverage', 'lines_pct'), r);
+    expect(value.status).toBe('unverified'); expect(value).not.toHaveProperty('value');
+  });
+  it.each([-1, 101, Number.POSITIVE_INFINITY])('[REQ-430] 範囲外または非有限の割合%sを使わない', (pct) => {
+    const r = receipt(); r.coverage = payload('coverage-summary.json', { total: { lines: { pct, total: 10 } } });
+    const [value] = observe(quality('ci.coverage', 'lines_pct'), r);
+    expect(value.status).toBe('unavailable'); expect(value).not.toHaveProperty('value');
+  });
+  it('[REQ-430] レポートの開始時刻がなければ未確認にする', () => {
+    const r = receipt();
+    r.report = payload('report.json', { testResults: [{ name: 'x.test.ts', status: 'passed', assertionResults: [{ fullName: 'success', status: 'passed' }] }] });
+    const [value] = observe(quality(), r);
+    expect(value.status).toBe('unverified'); expect(value).not.toHaveProperty('value');
+  });
+  it('[REQ-430] 逆転した時間範囲や対象不明を測定値にしない', () => {
+    const r = receipt(); r.invocation.finishedAt = 999;
+    expect(observe(quality(), r)).toMatchObject([{ status: 'unverified' }]);
+    r.invocation.finishedAt = 2000; r.target.before = null;
+    expect(observe(quality(), r)).toMatchObject([{ status: 'unverified' }]);
+  });
+  it('[REQ-430] ランナーの版の形式が不明なら適格にしない', () => {
+    const r = receipt(); r.producer!.version = 'latest';
+    expect(observe(quality(), r)).toMatchObject([{ status: 'ineligible' }]);
+  });
+  it('[REQ-430] 対象外PQや未設定のtestから測定値を作らない', () => {
+    const q = schema.parse({ ...quality(), product: { 'PQ-001': { characteristic: 'maintainability', applicability: 'not_applicable', reason: '対象外の試験', confirmed_by: 'fixture' } } });
+    expect(observe(q)).toEqual([]);
+    const r = receipt(); r.commands = [{ name: 'test', result: 'not_configured' }];
+    const [value] = observe(quality(), r);
+    expect(value.status).toBe('not_run'); expect(value).not.toHaveProperty('value');
+  });
 });

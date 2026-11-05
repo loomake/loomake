@@ -1,9 +1,15 @@
 import { parseTestReport, type Quality, type QualityMeasure } from '@loomake/core';
 import type { QualityObservation } from './quality-conditions.js';
 
+/** passed/failed は実行完了後の成否。中断・時間切れ・起動失敗は receipt=null で渡す。 */
 export type StaticCommandResult = { name: string; result: 'passed' | 'failed' | 'not_configured' };
 type Payload = { path: string; text: string; sha256: string };
-/** 呼出側が今回の実行から集めた事実。判定関数はI/O・時計を読まない（REQ-430）。 */
+/**
+ * 呼出側が完了済みの今回の実行から集めた事実（REQ-430）。
+ * 正常に実行を終えたテストの失敗は failed。中断・時間切れ・起動失敗や bail による
+ * 途中停止では、部分的な出力が残っていても receipt=null を渡す。
+ * 判定関数はI/O・時計を読まず、実行の完了自体は呼出側が確かめる。
+ */
 export type StaticMetricsReceipt = {
   producer: { name: string; version: string } | null;
   target: { before: string | null; after: string | null };
