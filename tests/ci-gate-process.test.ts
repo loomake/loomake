@@ -786,3 +786,121 @@ describe('gate result producer line', () => {
     expect(JSON.parse(output.slice(prefix.length))).toEqual({ change: 'c1', gate: 'done', exitCode: null, problem: 'stopped\nnow', result: { change: raw.change, run: {}, decision: {}, checks: [{}, {}, { id: 'x\r\ny', result: 'FAIL' }] } });
   });
 });
+
+const specFixBody = 'loomake-change: none\nloomake-route: spec-fix\nloomake-req: REQ-010';
+const specFixOldTest = "it('[REQ-010] 修正する', () => { expect(1).toBe(0); });\n";
+const specFixNewTest = specFixOldTest.replace('toBe(0)', 'toBe(1)');
+function prepareSpecFix(project: Parameters<Parameters<typeof withProject>[0]>[0]) {
+  project.commitFiles({
+    'openspec/specs/x/spec.md': '### Requirement: 既存仕様\n本文 SHALL。\nSource: REQ-010\n',
+    'tests/a.test.ts': specFixOldTest,
+  });
+  project.git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+}
+
+describe('仕様適合の修正の gate 子プロセス', () => {
+  it('[REQ-343] spec-fixの3条件がそろうL3では品質コマンドだけを実行する', () => {
+    withProject((project) => {
+      prepareSpecFix(project);
+      project.commitFiles({ 'packages/kit/src/a.ts': 'changed\n', 'tests/a.test.ts': specFixNewTest });
+      const result = project.run('fix-x', specFixBody);
+      expect(result.status, result.stderr).toBe(0);
+      expect(result.stdout).toContain('loomake-tier: L3');
+      expect(result.calls).toEqual([['verify']]);
+      expect(result.stderr).toContain('仕様適合の修正');
+    });
+  });
+  it('[REQ-343] spec-fixも品質コマンドの失敗を伝える', () => {
+    withProject((project) => {
+      prepareSpecFix(project);
+      project.commitFiles({ 'packages/kit/src/a.ts': 'changed\n', 'tests/a.test.ts': specFixNewTest });
+      const result = project.run('fix-x', specFixBody, { quality: 7 });
+      expect(result.status).toBe(7);
+      expect(result.calls).toEqual([['verify']]);
+    });
+  });
+  it('[REQ-343] spec-fixでopenspecも変えると理由を示して拒む', () => {
+    withProject((project) => {
+      prepareSpecFix(project);
+      project.commitFiles({ 'packages/kit/src/a.ts': 'changed\n', 'tests/a.test.ts': specFixNewTest, 'openspec/changes/c1/tasks.md': '- [x] changed\n' });
+      const result = project.run('fix-x', specFixBody);
+      expect(result.status).toBe(1);
+      expect(result.calls).toEqual([]);
+      expect(result.stderr).toContain('L3 では change が必須です');
+      expect(result.stderr).toContain('openspec/ の下');
+    });
+  });
+  it('[REQ-343] 主仕様にないIDを複数宣言の一部に書くと拒む', () => {
+    withProject((project) => {
+      prepareSpecFix(project);
+      project.commitFiles({ 'packages/kit/src/a.ts': 'changed\n', 'tests/a.test.ts': specFixNewTest.replace('[REQ-010]', '[REQ-010][REQ-999]') });
+      const result = project.run('fix-x', `${specFixBody}, REQ-999`);
+      expect(result.status).toBe(1);
+      expect(result.calls).toEqual([]);
+      expect(result.stderr).toContain('Source にない REQ ID です：REQ-999');
+    });
+  });
+  it.each([
+    ['試験の変更なし', specFixOldTest],
+    ['コメントだけ', `${specFixOldTest}// ${specFixNewTest}`],
+    ['skip', specFixNewTest.replace('it(', 'it.skip(')],
+  ])('[REQ-343] %sでは対応する試験の不足を示す', (_name, text) => {
+    withProject((project) => {
+      prepareSpecFix(project);
+      project.commitFiles({ 'packages/kit/src/a.ts': 'changed\n', 'tests/a.test.ts': text });
+      const result = project.run('fix-x', specFixBody);
+      expect(result.status).toBe(1);
+      expect(result.calls).toEqual([]);
+      expect(result.stderr).toContain('REQ-010 を名前に含むテストの追加・変更が差分にありません');
+    });
+  });
+  it('[REQ-343] routeがなければ従来のL3 change必須の案内を保つ', () => {
+    withProject((project) => {
+      prepareSpecFix(project);
+      project.commitFiles({ 'packages/kit/src/a.ts': 'changed\n', 'tests/a.test.ts': specFixNewTest });
+      const result = project.run('fix-x', specFixBody.replace('loomake-route: spec-fix\n', ''));
+      expect(result.status).toBe(1);
+      expect(result.calls).toEqual([]);
+      expect(result.stderr).toContain('L3 では change が必須です');
+      expect(result.stderr).not.toContain('仕様適合の修正');
+    });
+  });
+  it('[REQ-343] reqの複数行をすべて確認して不足するIDを示す', () => {
+    withProject((project) => {
+      prepareSpecFix(project);
+      project.commitFiles({ 'packages/kit/src/a.ts': 'changed\n', 'tests/a.test.ts': specFixNewTest });
+      const result = project.run('fix-x', `${specFixBody}\nloomake-req: REQ-999`);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('Source にない REQ ID です：REQ-999');
+      expect(result.stderr).toContain('REQ-999 を名前に含むテスト');
+      expect(result.calls).toEqual([]);
+    });
+  });
+  it('[REQ-343] 試験ファイルの名前変更だけでは受け付けない', () => {
+    withProject((project) => {
+      prepareSpecFix(project);
+      project.git('mv', 'tests/a.test.ts', 'tests/b.test.ts');
+      project.commitFiles({ 'packages/kit/src/a.ts': 'changed\n' });
+      const result = project.run('fix-x', specFixBody);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('REQ-010 を名前に含むテストの追加・変更が差分にありません');
+      expect(result.calls).toEqual([]);
+    });
+  });
+  it('[REQ-343] changeのあるL3はspec-fixの宣言があっても通常の完了ゲートを実行する', () => {
+    withProject(({ commitFiles, run }) => {
+      commitFiles(['packages/kit/src/a.ts']);
+      const result = run('fix-x', 'loomake-change: c1\nloomake-route: spec-fix');
+      expect(result.status, result.stderr).toBe(0);
+      expect(result.calls).toEqual([done('c1')]);
+    });
+  });
+  it('[REQ-343] L2のnoneはspec-fixの不正な宣言で動作を変えない', () => {
+    withProject(({ commitFiles, run }) => {
+      commitFiles(['scripts/a.mjs']);
+      const result = run('fix-x', 'loomake-change: none\nloomake-route: invalid');
+      expect(result.status, result.stderr).toBe(0);
+      expect(result.calls).toEqual([['verify']]);
+    });
+  });
+});

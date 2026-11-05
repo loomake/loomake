@@ -22,6 +22,7 @@ import { comparisonReaders, parseRawDiff } from './ci-docs-only.mjs';
 import { archiveMetadataPaths, decideTier, formatTierLine, isDocumentPath, isSpecPath } from './ci-tier.mjs';
 import { checkReqDuplicates, formatProblems, formatStale } from './req-duplicate-check.mjs';
 import { processEvidenceProblems, formatProcessProblems } from './process-evidence.mjs';
+import { declaredRoutes, mainSpecSourceIds, specFixDecision } from './ci-spec-fix.mjs';
 
 // change は changes/ の直下のディレクトリだけ。changes/archive/ は完了した change の置き場で、change ではない
 const isChangeName = (name) => /^[^/\\.][^/\\]*$/.test(name) && name !== 'archive';
@@ -285,11 +286,24 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   if (selected.qualityOnly) {
     // change を持つ PR は段階を問わず --done を通す（AGENTS.md 2 章）。L1 で change がなければ verify は呼ばない
     if (decided.tier === 'L1') process.exit(status);
+    let qualityReason = selected.qualityOnly;
     if (decided.tier === 'L3') {
-      console.error(`ci-gate: L3 では change が必須です（${selected.qualityOnly}）。PR 本文に「loomake-change: <change-id>」の行を書いてください`);
-      process.exit(1);
+      let spec = { route: false };
+      if (declaredChanges(body)?.length === 0 && declaredRoutes(body).length) {
+        try {
+          spec = specFixDecision({ body, entries, sourceIds: mainSpecSourceIds(join('openspec', 'specs')), readFile: readSpec });
+        } catch (error) {
+          spec = { route: true, problems: [`主仕様を読めませんでした：${error.message}`] };
+        }
+      }
+      if (!spec.route || spec.problems.length) {
+        const why = spec.route ? `。仕様適合の修正として受け付けません：${spec.problems.join('／')}` : '';
+        console.error(`ci-gate: L3 では change が必須です（${selected.qualityOnly}）。PR 本文に「loomake-change: <change-id>」の行を書いてください${why}`);
+        process.exit(1);
+      }
+      qualityReason = `仕様適合の修正：${spec.ids.join('、')}`;
     }
-    console.error(`ci-gate: branch=${branch || '(なし)'} 段階 ${decided.tier} → verify（品質コマンドのみ。${selected.qualityOnly}）`);
+    console.error(`ci-gate: branch=${branch || '(なし)'} 段階 ${decided.tier} → verify（品質コマンドのみ。${qualityReason}）`);
     const code = verify([], { stdio: 'inherit' }).status ?? 1;
     process.exit(code || status);
   }
