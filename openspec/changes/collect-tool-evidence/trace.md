@@ -52,3 +52,9 @@
 Claude --output-format json の実 fixture は未観測で、stream-json の result の欄の型と版を固定していない docs を基に合成する。Biome CI 上の stdout 純 JSON と JSON reporter への max-diagnostics 適用は未確認で、全件診断は保証しない。追加 AI 実行・tool install・auth は行わない。
 
 設計 §6 の全 30 Scenario は仕様に保持し、各 Requirement の Source はそれぞれ REQ-448・449・450 の単独 ID とする。テストの名前にも対応する ID を付ける。P3（REQ-451〜453・REQ-070）と親 #65 は未完了で、この change の完了と区別する。
+
+## PR #460 の Opus R1 に対する管理判断
+
+管理役 root は 2026-11-06 JST に、独立 Opus R1（ffa05896-bf6e-4b61-b54b-546f7ce18345、actual claude-opus-5-5、head 651f53ff、重大 0・軽微 1・情報 4）の軽微 M1 を P3 より前に修理すると決定した。既存 REQ-450 の全返却文字列の保証に従い、stderr 全文の置換後に UTF-16 を分断せず末尾 4096 文字を取り、切り口で新たに一致する既知の形も再置換する。規範・公開型・受理形式・30 Scenario は変更しない。
+
+情報 I1 は非公開 helper 2 名を独立した型エラーで検査するよう強化する。I2 の共有期限・timeout・予算・品質設定は変えず、実際の 3 OS CI を管理役が確認する。I3 の Codex 最後の turn の扱いは現仕様どおりで P3 の注意点に残し、I4 の object でない request は列挙した入力検査の範囲外として変更しない。初回 R1 の原記録を保持し、製品修理後は通常の完了検証、別担当の自己レビュー、Opus R2 を行う。
