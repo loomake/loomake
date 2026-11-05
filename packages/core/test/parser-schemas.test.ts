@@ -6,9 +6,11 @@ import { createTraceTemplate, loadParserSchemas, TRACE_SCHEMA_VERSION, SPEC_SCHE
 const { assumptionRowSchema, ledgerRowSchema, questionRowSchema, specOperationSchema, specRequirementSchema, specSchema, taskSchema, tasksSchema, traceSchema } = await loadParserSchemas();
 
 const fixture = join(import.meta.dirname, 'fixtures/openspec-project/openspec/changes/add-x');
-const traceText = readFileSync(join(fixture, 'trace.md'), 'utf8')
+const withAgreementRows = (text: string) => text
+  .replace(/\r\n?/g, '\n')
   .replace('|---|---|---|---|---|---|---|\n', '|---|---|---|---|---|---|---|\n| Q-01 | REQ-001 | 質問 | A / B | A | no | A |\n')
   .replace(/^\|---\|---\|---\|---\|---\|$/m, '|---|---|---|---|---|\n| A-01 | REQ-001 | 仮定 | 理由 | 承認 |');
+const traceText = withAgreementRows(readFileSync(join(fixture, 'trace.md'), 'utf8'));
 
 const specText = `### Requirement: outside
 Source: REQ-001
@@ -103,4 +105,23 @@ describe('Markdown 解析結果の Zod スキーマ', () => {
     const tasks = [{ checked: false, text: '', line: 1, future: [3] }];
     expect(tasksSchema.parse(tasks)).toEqual(tasks);
   });
+});
+
+
+describe('schema fixture の改行と EOF', () => {
+  for (const eol of ['\n', '\r\n', '\r']) {
+    for (const trailing of [false, true]) {
+      it(`[REQ-298] ${JSON.stringify(eol)}・EOF改行${trailing}でも質問と仮定を表内へ挿入する`, () => {
+        const original = readFileSync(join(fixture, 'trace.md'), 'utf8').replace(/\r\n?/g, '\n').replace(/\n$/, '');
+        const input = original.replace(/\n/g, eol) + (trailing ? eol : '');
+        const parsed = parseTrace('trace.md', withAgreementRows(input));
+        expect(parsed.errors).toEqual([]);
+        expect(traceSchema.parse(parsed.value)).toEqual(parsed.value);
+        expect(parsed.value.questions).toHaveLength(1);
+        expect(parsed.value.assumptions).toHaveLength(1);
+        expect(questionRowSchema.parse(parsed.value.questions[0])).toMatchObject({ ID: 'Q-01', 回答: 'A', 回答者: '', 回答日: '' });
+        expect(assumptionRowSchema.parse(parsed.value.assumptions[0])).toMatchObject({ ID: 'A-01', 承認: '承認', 承認者: '', 承認日: '' });
+      });
+    }
+  }
 });

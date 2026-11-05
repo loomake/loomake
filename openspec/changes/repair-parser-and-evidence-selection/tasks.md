@@ -14,3 +14,8 @@
 - [x] 3.2 AI 復旧 fixture の CRLF・EOF 挿入と置換成功を検証する
 - [x] 3.3 仕様の比較対象と作業記録を整える
 - [x] 3.4 修正後のローカル完了ゲートを通す <!-- loomake:gate=done -->
+
+## 最終レビューへの対応
+- [x] 4.1 schema fixture を改行に依存しない入力へ整え、LF・CRLF・CR と EOF を検証する
+- [x] 4.2 新旧 parser の全 trace 行・ID 比較と、調査時点・作成方法の記録を残す
+- [x] 4.3 修正後のローカル完了ゲートを通す <!-- loomake:gate=done -->
