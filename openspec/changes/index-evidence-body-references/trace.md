@@ -34,9 +34,7 @@
 | QRef-29 | REQ-470・REQ-471 | 相対参照とraw入口の合計予算をどう保つか | A:正規path一致と予算共有 / B:file別予算 | A。参照と既存上限を守る | yes | A。summary/receipt合計128MiB、残量超の読取を起動せず、purebindへpathを入れない。既存JSON_LIMITSが根拠（ADR0006） | 利用者（ADR0006の包括承認、管理役記録） | 2026-11-05 |
 | QRef-27 | REQ-470・REQ-471 | P1の要約・raw読取り・照合/期限APIはmainで使えるか | A:受入後に実契約照合 / B:未受入APIで実装 | A。通常の前提受入が必要 | yes | A。PR #452（deaf02d7）受入、PR #457（5a9ec513）同期archive済。summary型・遅延Schema、readInputBytes、checkArtifactBody、artifactRetentionの公開実装を照合（ADR0006） | 管理役root | 2026-11-06 |
 | QRef-28 | REQ-470 | #65の共通maskValueはmainで使えるか | A:受入後に共有API / B:独自pattern | A。秘密処理を重複しない | yes | A。PR #450（3f67db52）受入、PR #453（db893f01）同期archive済。kit公開maskValueのown key保持・getter/toJSON非実行・入力拒否を照合（ADR0006） | 管理役root | 2026-11-06 |
-
 | QRef-30 | REQ-470・REQ-471 | gapの欄名と未知field、reasonの日本語、receipt候補名の形式をどう確定するか | A:accessPolicy/workflowHeadSha・未知保持・日本語1字以上・正規名grammar / B:未定のまま停止 | A。P1の拡張と重複全pathを保つ | yes | A。管理役が本会話で採用。既知2field/未知保持、日本語文字1字、実在UTC名とsuffix/hash整合。候補名時刻とretrievedAtは一致不要で、取得事実はreceiptだけから読む（ADR0006） | 管理役root | 2026-11-06 |
-
 | QRef-31 | REQ-471 | 複数locatorの保持判定と結果の対応をどう返すか | A:receipt別の保持配列とlocator別全path / B:単一値へ集約 | A。異なる実期限の事実を落とさない | yes | A。locatorsはstable locatorで集約、paths/retentionは全receipt別に保持。1 traversalと残量付きraw読取り、例外後は消費量不明のため残量0。後続未読はinvalid-index（本会話・ADR0006） | 管理役root | 2026-11-06 |
 
 QRef27/28は2026-11-06（日本時間）に実mainの受入・同期archiveと公開ソースを照合した。#65の固定一覧追加に新しい人の承認が必要との以前の解釈は管理役が訂正・取下げ済みで、本件は共有実装の未受入だけを依存として残す。
