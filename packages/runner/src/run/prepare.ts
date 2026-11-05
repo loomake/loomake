@@ -89,51 +89,54 @@ export async function prepare(options: RunOptions): Promise<RunContext | number>
     return specCode;
   }
 
-  const tasksPath = join(changeDir, 'tasks.md');
-  const tasksRel = toPosix(relative(root, tasksPath));
-  const tasks = parseTasks('tasks.md', createInputReader().read(tasksPath)).value;
-  const pending = tasks.filter((t) => !t.checked);
-  const engineTasks = pending.filter((t) => !isGateTask(t));
-  const gateTasks = pending.filter(isGateTask);
-  const legacy = gateTasks.filter(isLegacyGateTask);
-  if (legacy.length) {
-    stdout(
-      `完了ゲートのタスクを、タスクの文から判定しました：${legacy.map(taskLabel).join('、')}\n` +
-        `文を変えても判定が変わらないよう、tasks.md のその行の末尾に ${GATE_MARK} を付けてください。`,
-    );
-  }
+  try {
+    const tasksPath = join(changeDir, 'tasks.md');
+    const tasksRel = toPosix(relative(root, tasksPath));
+    const tasks = parseTasks('tasks.md', createInputReader().read(tasksPath)).value;
+    const pending = tasks.filter((t) => !t.checked);
+    const engineTasks = pending.filter((t) => !isGateTask(t));
+    const gateTasks = pending.filter(isGateTask);
+    const legacy = gateTasks.filter(isLegacyGateTask);
+    if (legacy.length) {
+      stdout(
+        `完了ゲートのタスクを、タスクの文から判定しました：${legacy.map(taskLabel).join('、')}\n` +
+          `文を変えても判定が変わらないよう、tasks.md のその行の末尾に ${GATE_MARK} を付けてください。`,
+      );
+    }
 
-  if (options.dryRun) {
-    stdout(['エンジンに渡す予定のタスク：', ...engineTasks.map((t) => `  - [ ] ${taskLabel(t)}`)].join('\n'));
-    if (engineTasks[0]) stdout(`\n最初のタスクの指示：\n\n${buildPrompt(root, changeDir, `- [ ] ${taskLabel(engineTasks[0])}`)}`);
-    switchBack();
-    return 0;
-  }
+    if (options.dryRun) {
+      stdout(['エンジンに渡す予定のタスク：', ...engineTasks.map((t) => `  - [ ] ${taskLabel(t)}`)].join('\n'));
+      if (engineTasks[0]) stdout(`\n最初のタスクの指示：\n\n${buildPrompt(root, changeDir, `- [ ] ${taskLabel(engineTasks[0])}`)}`);
+      return 0;
+    }
 
-  // PRを作れない環境では、エンジンや実装ブランチを作る前に止まる（REQ-116）。
-  if (!ghLoggedIn(root, env)) {
-    switchBack();
-    stdout('gh CLI がないか、ログインしていないので、実装を始めませんでした。PR を作るために、gh auth login でログインしてください。');
-    return 1;
-  }
-
-  // コンテナの外では警告して確認する（REQ-122）
-  if (!inContainer(env, fileExists)) {
-    stdout('警告：コンテナの外で実行しようとしています。loomake run は、devcontainer か、それと同等のコンテナの中で実行してください。');
-    if (!options.interactive) {
+    // PRを作れない環境では、エンジンや実装ブランチを作る前に止まる（REQ-116）。
+    if (!ghLoggedIn(root, env)) {
       switchBack();
-      stdout('確認を受け付けられない環境なので、止めました。');
+      stdout('gh CLI がないか、ログインしていないので、実装を始めませんでした。PR を作るために、gh auth login でログインしてください。');
       return 1;
     }
-    if (!(await options.confirm('続けますか [y/N] '))) {
-      switchBack();
-      return 1;
+
+    // コンテナの外では警告して確認する（REQ-122）
+    if (!inContainer(env, fileExists)) {
+      stdout('警告：コンテナの外で実行しようとしています。loomake run は、devcontainer か、それと同等のコンテナの中で実行してください。');
+      if (!options.interactive) {
+        switchBack();
+        stdout('確認を受け付けられない環境なので、止めました。');
+        return 1;
+      }
+      if (!(await options.confirm('続けますか [y/N] '))) {
+        switchBack();
+        return 1;
+      }
     }
+    return {
+      options, root, changeId, changeDir, env, now, stdout, progress, config, runConfig,
+      branch, startBranch, hasBranch, tasksPath, tasksRel, engineTasks, gateTasks,
+    };
+  } finally {
+    if (options.dryRun) switchBack();
   }
-  return {
-    options, root, changeId, changeDir, env, now, stdout, progress, config, runConfig,
-    branch, startBranch, hasBranch, tasksPath, tasksRel, engineTasks, gateTasks,
-  };
 }
 
 /** 仕様ゲートの結果の終了コード。1.0.0 は ok、2.0.0 は verifyExitCode で決める（REQ-093） */
