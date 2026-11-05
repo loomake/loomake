@@ -8,7 +8,7 @@
 - [x] 2.2 traceの同期検証・整形とサイズ再検証・共有maskで変わる入力の拒否・非上書き原子的追加を実装し、実retrievedAt由来の名前と衝突を確認する（REQ-470）。
 
 ## 3. 照合と参照解決
-- [ ] 3.1 kitへ入力不変の7項目の純粋照合を追加し、strict UTF8・CI3箇所・checkout・bodyとZIP・byte view・外部anchorの境界を検証する（REQ-471）。
+- [x] 3.1 kitへ入力不変の7項目の純粋照合を追加し、strict UTF8・CI3箇所・checkout・bodyとZIP・byte view・外部anchorの境界を検証する（REQ-471）。
 - [ ] 3.2 traceの明示policy/now付きresolverを追加し、本体別結果・優先順位・不正候補・矛盾・重複全path・期限/権限未確認・入力予算と安全な診断を確認する（REQ-471）。
 
 ## 4. 互換と案内

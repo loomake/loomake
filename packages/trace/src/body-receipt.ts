@@ -45,7 +45,7 @@ function receiptJson(value: unknown): string {
   while (pending.length) {
     const child = pending.pop();
     if (child === undefined) throw new Error(problem);
-    if (child !== null && typeof child === 'object') pending.push(...Object.values(child));
+    if (child !== null && typeof child === 'object') for (const value of Object.values(child)) pending.push(value);
   }
   return json;
 }

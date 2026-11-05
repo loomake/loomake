@@ -43,3 +43,6 @@ export { InputReadFailure } from './runtime/errors.js';
 export { basisHash } from './verify/quality-receipt.js';
 export { checkArtifactBody, artifactRetention } from './verify/artifact-body.js';
 export type { ArtifactBodyCheck, ArtifactRetentionResult } from './verify/artifact-body.js';
+
+export { checkBodyReceipt } from './verify/body-receipt.js';
+export type { BodyReceiptCheck } from './verify/body-receipt.js';

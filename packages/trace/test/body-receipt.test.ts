@@ -36,7 +36,7 @@ describe('immutable receiptの同期検証と公開', () => {
       const missing = { ...r }; delete missing[section]; expect(bodyReceiptProblem(missing)).toBeDefined();
       expect(bodyReceiptProblem({ ...r, [section]: null })).toBeDefined();
       if (value !== null && typeof value === 'object' && !Array.isArray(value)) for (const key of Object.keys(value)) {
-        const part = { ...value }; delete part[key];
+        const part: Record<string, unknown> = { ...value }; delete part[key];
         const bad = { ...r, [section]: part }; expect(bodyReceiptProblem(bad)).toBeDefined();
         safeFailure(() => appendBodyReceipt(root, bad));
       }
