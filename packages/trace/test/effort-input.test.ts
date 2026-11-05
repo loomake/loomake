@@ -36,3 +36,37 @@ it('[REQ-466] 最終置換してから構造・Unicode文字・UTF-8 bytesを検
   expect(Buffer.byteLength(serializeEffort({ ...prefix, change: 'x'.repeat(65536 - fixed) }))).toBe(65536);
   expect(() => serializeEffort({ ...prefix, change: 'x'.repeat(65537 - fixed) })).toThrow('上限');
 });
+
+it('[REQ-466] 日時の秒・小数秒・offsetと不正日付の受理が構造スキーマと一致する', async () => {
+  const { loadEffortSchema } = await import('@loomake/core');
+  const { effortRecordSchema } = await loadEffortSchema();
+  const cases: [string, boolean][] = [
+    ['2026-11-06T00:00Z', false], ['2026-11-06T00:00+09:00', false],
+    ['2026-11-06T00:00:00Z', true], ['2026-11-06T00:00:00.123456Z', true],
+    ['2026-11-06T00:00:00+09:00', true], ['2026-11-06T00:00:00-03:30', true],
+    ['2024-02-29T23:59:59Z', true], ['2026-02-29T00:00:00Z', false],
+    ['2026-11-06T24:00:00Z', false], ['2026-11-06T00:00:60Z', false],
+    ['2026-11-06T00:00:00+25:00', false], ['2026-11-06T00:00:00+09:60', false],
+    ['2026-11-06T00:00:00', false], ['2026-11-06T00:00:00Z\n', false],
+  ];
+  for (const [recordedAt, accepted] of cases) {
+    const value = { ...base, recordedAt };
+    expect(effortRecordSchema.safeParse(value).success, recordedAt).toBe(accepted);
+    expect(effortProblem(value) === null, recordedAt).toBe(accepted);
+  }
+});
+it('[REQ-466] 空費用配列を拒否し、省略とkindを持つ実額0を区別する', async () => {
+  const { loadEffortSchema } = await import('@loomake/core');
+  const { effortRecordSchema } = await loadEffortSchema();
+  for (const value of [base, { ...base, cost: [{ kind: 'actual-usd', cents: 0 }] }]) {
+    expect(effortProblem(value)).toBeNull(); expect(effortRecordSchema.safeParse(value).success).toBe(true);
+  }
+  expect(effortProblem({ ...base, cost: [] })).not.toBeNull();
+  expect(effortRecordSchema.safeParse({ ...base, cost: [] }).success).toBe(false);
+  expect(() => serializeEffort({ ...base, cost: [] })).toThrow();
+});
+
+it('[REQ-466] 回数以外の費用の先頭ゼロと秘密形change-idの拒否を保持する', () => {
+  expect(parseCost('actual-usd:000.01,estimated-usd:00.00,tokens:0007')).toEqual([{ kind: 'actual-usd', cents: 1 }, { kind: 'estimated-usd', cents: 0 }, { kind: 'tokens', count: 7 }]);
+  expect(effortProblem({ ...base, change: 'sk-' + 'a'.repeat(20) })).not.toBeNull();
+});

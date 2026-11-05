@@ -1,13 +1,38 @@
-import { afterEach, expect, it, vi } from 'vitest';
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync, existsSync } from 'node:fs';
+import { afterAll, afterEach, beforeAll, expect, it, vi } from 'vitest';
+import { chmodSync, copyFileSync, statSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync, existsSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { spawnSync, spawn } from 'node:child_process';
-import { pathToFileURL } from 'node:url';
-import { UsageError } from '@loomake/kit';
+import { ModuleKind, ScriptTarget, transpileModule } from 'typescript';
+import { UsageError, RuntimeFailure, runExternal } from '@loomake/kit';
 import { runEffortRecord } from '../src/index.js';
+import { removeWithRetry } from '../../../tests/helpers/partition-fixture.js';
+vi.mock('node:fs', async (original) => {
+  const fs = await original<typeof import('node:fs')>();
+  return { ...fs, mkdirSync: vi.fn(fs.mkdirSync), unlinkSync: vi.fn(fs.unlinkSync) };
+});
+vi.mock('@loomake/kit', async (original) => {
+  const kit = await original<typeof import('@loomake/kit')>();
+  return { ...kit, runExternal: vi.fn(kit.runExternal) };
+});
 const roots: string[] = [];
-afterEach(() => { vi.restoreAllMocks(); for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); });
+const baselines = new Map<boolean, string>();
+beforeAll(() => { for (const archived of [false, true]) baselines.set(archived, repo(archived).root); roots.splice(0); });
+afterAll(() => { for (const root of baselines.values()) removeWithRetry(root); });
+function copyFixture(from: string, to: string) {
+  mkdirSync(to, { recursive: true });
+  for (const entry of readdirSync(from, { withFileTypes: true })) {
+    const source = join(from, entry.name);
+    const destination = join(to, entry.name);
+    if (entry.isDirectory()) copyFixture(source, destination);
+    else {
+      copyFileSync(source, destination);
+      chmodSync(destination, statSync(source).mode);
+    }
+  }
+}
+
+afterEach(() => { vi.restoreAllMocks(); for (const root of roots.splice(0)) removeWithRetry(root); });
 const git = (root: string, ...args: string[]) => {
   const r = spawnSync('git', ['-c', 'user.name=loomake-test', '-c', 'user.email=test@example.com', ...args], { cwd: root, encoding: 'utf8' });
   if (r.status !== 0) throw new Error(r.stderr);
@@ -16,11 +41,15 @@ const git = (root: string, ...args: string[]) => {
 function repo(archived = false) {
   const root = mkdtempSync(join(tmpdir(), 'loomake-effort-')); roots.push(root);
   const write = (path: string, content: string) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); };
-  // 文書は置かず、品質コマンドには実行されたら失敗する値を置く。
-  write('loomake.config.json', JSON.stringify({ commands: { test: 'exit 99', lint: 'exit 99' } }));
-  write(`${archived ? 'openspec/changes/archive/2026-11-05-' : 'openspec/changes/'}add-x/.keep`, '');
-  write('.gitignore', '*.ignored\n');
-  git(root, 'init', '-q'); git(root, 'add', '.'); git(root, 'commit', '-qm', 'initial');
+  const baseline = baselines.get(archived);
+  if (baseline) copyFixture(baseline, root);
+  else {
+    // 文書は置かず、品質コマンドには実行されたら失敗する値を置く。
+    write('loomake.config.json', JSON.stringify({ commands: { test: 'exit 99', lint: 'exit 99' } }));
+    write(`${archived ? 'openspec/changes/archive/2026-11-05-' : 'openspec/changes/'}add-x/.keep`, '');
+    write('.gitignore', '*.ignored\n');
+    git(root, 'init', '-q'); git(root, 'add', '.'); git(root, 'commit', '-qm', 'initial');
+  }
   const dir = join(root, '.loomake/evidence/add-x/effort');
   const outputs: string[] = [];
   const record = (options: Partial<Parameters<typeof runEffortRecord>[0]> = {}) => runEffortRecord({ root, changeId: 'add-x', effort: '1.5h', stdout: (text) => outputs.push(text), now: () => new Date('2026-11-06T00:00:00.000Z'), ...options });
@@ -64,7 +93,10 @@ it('[REQ-466] 同じ保存名を上書きせず衝突を1として返す', () =>
   const r = repo();
   // ignoredにした既存名を使い、dirty拒否とは別に原子的な衝突を実行する。
   writeFileSync(join(r.root, '.git/info/exclude'), '.loomake/evidence/\n');
+  const head = git(r.root, 'rev-parse', 'HEAD');
   expect(r.record()).toBe(0); const [file] = r.files(); const raw = readFileSync(join(r.dir, file), 'utf8');
+  expect(JSON.parse(raw).sha).toBe(head); expect(JSON.parse(raw).recordedAt).toBe('2026-11-06T00:00:00.000Z');
+  expect(git(r.root, 'rev-parse', 'HEAD')).toBe(head);
   expect(r.record({ effort: '5m' })).toBe(1); expect(readFileSync(join(r.dir, file), 'utf8')).toBe(raw);
   expect(r.files()).toEqual([file]);
 });
@@ -96,7 +128,13 @@ it('[REQ-466] git不在と保存失敗は日本語UsageErrorで公開しない',
 
 it('[REQ-466] 同じEffort名へ同時公開して成功1件と衝突1件を返す', async () => {
   const r = repo(); const file = join(r.dir, '20261106T000000Z-aaaaaaaaaaaa.json');
-  const module = pathToFileURL(join(import.meta.dirname, '../dist/publication.js')).href;
+  const compilerOptions = { module: ModuleKind.ESNext, target: ScriptTarget.ES2022 };
+  const errors = 'data:text/javascript;base64,' + Buffer.from(transpileModule(
+    readFileSync(join(import.meta.dirname, '../../kit/src/runtime/errors.ts'), 'utf8'), { compilerOptions },
+  ).outputText).toString('base64');
+  const module = 'data:text/javascript;base64,' + Buffer.from(transpileModule(
+    readFileSync(join(import.meta.dirname, '../src/publication.ts'), 'utf8').replace("'@loomake/kit'", JSON.stringify(errors)), { compilerOptions },
+  ).outputText).toString('base64');
   const code = `import { publishEvidence } from ${JSON.stringify(module)}; process.stdin.once('data', () => { process.exitCode = publishEvidence(process.argv[1], process.argv[2]) ? 0 : 1; });`;
   const children = ['first', 'second'].map((content) => spawn(process.execPath, ['--input-type=module', '-e', code, file, content], { stdio: ['pipe', 'pipe', 'pipe'] }));
   const results = children.map((child) => new Promise<number | null>((resolve, reject) => { child.once('error', reject); child.once('close', resolve); }));
@@ -104,4 +142,43 @@ it('[REQ-466] 同じEffort名へ同時公開して成功1件と衝突1件を返�
   expect((await Promise.all(results)).sort()).toEqual([0, 1]);
   expect(['first', 'second']).toContain(readFileSync(file, 'utf8'));
   expect(readdirSync(r.dir)).toEqual(['20261106T000000Z-aaaaaaaaaaaa.json']);
+});
+
+const thrown = (action: () => unknown): Error => {
+  try { action(); } catch (error) { return error as Error; }
+  throw new Error('expected rejection');
+};
+it.each(['input', 'size', 'change', 'git', 'save', 'cost'] as const)('[REQ-466] 保存前%sを固定文とcauseなしで区別する', (kind) => {
+  const r = repo(); const token = 'sk-' + 'a'.repeat(20);
+  const cases: [() => unknown, string][] = [
+    [() => r.record({ effort: token }), '実作業時間の入力が不正です。時間・区分・回数・費用・メモの書式を確認してください。'],
+    [() => r.record({ changeId: 'x'.repeat(65536) }), '実績記録の上限は65536バイトです。記録していません。'],
+    [() => r.record({ changeId: 'missing' }), 'change が見つからないか、archive で一意に決まりません。記録していません。'],
+    [() => { vi.mocked(runExternal).mockImplementationOnce(() => { throw new UsageError(token, { cause: new Error(token) }); }); return r.record(); }, 'git の状態を確認できません。記録していません。'],
+    [() => { vi.mocked(mkdirSync).mockImplementationOnce(() => { throw new UsageError(token, { cause: new Error(token) }); }); return r.record(); }, '実績を保存できませんでした。保存先と作業状態を確認してから、もう一度実行してください。'],
+    [() => r.record({ cost: [] }), '実作業時間の入力が不正です。時間・区分・回数・費用・メモの書式を確認してください。'],
+  ];
+  const [action, message] = cases[['input', 'size', 'change', 'git', 'save', 'cost'].indexOf(kind)];
+  {
+    const error = thrown(action); expect(error).toBeInstanceOf(UsageError); expect(error.message).toBe(message);
+    expect(error.message).not.toContain(token); expect(error.cause).toBeUndefined(); expect(r.files()).toEqual([]);
+  }
+});
+it.each(['cleanup', 'stdout'] as const)('[REQ-466] 保存後%sの失敗は完全なファイルを残し再実行しないRuntimeFailureにする', (phase) => {
+  const r = repo(); const token = 'sk-' + 'a'.repeat(20);
+  if (phase === 'cleanup') vi.mocked(unlinkSync).mockImplementationOnce(() => { throw new UsageError(token, { cause: new Error(token) }); });
+  const error = thrown(() => r.record(phase === 'stdout' ? { stdout: () => { throw new UsageError(token, { cause: new Error(token) }); } } : {}));
+  expect(error).toBeInstanceOf(RuntimeFailure); expect(error).not.toBeInstanceOf(UsageError); expect(error.cause).toBeUndefined();
+  const files = r.files(); const final = files.find((name) => name.endsWith('.json'))!;
+  expect(JSON.parse(readFileSync(join(r.dir, final), 'utf8')).totalMinutes).toBe(90);
+  expect(error.message).toBe(`実績は保存しました：.loomake/evidence/add-x/effort/${final}。${phase === 'cleanup' ? '一時ファイルの片付け' : '結果の表示'}に失敗しました。もう一度記録せず、このファイルを git にコミットしてください。`);
+  expect(error.message).not.toContain(token); expect(error.message).not.toContain(r.root);
+  expect(files).toHaveLength(phase === 'cleanup' ? 2 : 1);
+});
+it.each([UsageError, RuntimeFailure])('[REQ-466] 保存していないdirty通知失敗は元のUsageErrorやcauseを外へ再送しない（%s）', (ErrorType) => {
+  const r = repo(); r.write('dirty', ''); const token = 'sk-' + 'a'.repeat(20);
+  const error = thrown(() => r.record({ stdout: () => { throw new ErrorType(token, { cause: new Error(token) }); } }));
+  expect(error).toBeInstanceOf(UsageError); expect(error).not.toBeInstanceOf(RuntimeFailure);
+  expect(error.message).toBe('実績を記録できません。入力、change の所在、git と保存先の作業状態を確認してください。');
+  expect(error.cause).toBeUndefined(); expect(r.files()).toEqual([]);
 });

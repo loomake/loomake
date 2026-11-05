@@ -5,7 +5,10 @@ const count = (value: unknown): value is number => typeof value === 'number' && 
 const duration = (value: unknown): value is number => count(value) && value <= 100000;
 const object = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
 const noteValid = (value: unknown): value is string => typeof value === 'string' && Array.from(value).length <= 500 && !/[\p{Cc}\p{Zl}\p{Zp}]/u.test(value);
-const invalid = () => new UsageError('実作業時間の入力が不正です。時間・区分・回数・費用・メモの書式を確認してください。');
+export class EffortInputFailure extends UsageError {
+  constructor(message: string, readonly reason: 'input' | 'size') { super(message); }
+}
+const invalid = () => new EffortInputFailure('実作業時間の入力が不正です。時間・区分・回数・費用・メモの書式を確認してください。', 'input');
 const safeInteger = (digits: string): number => {
   const trimmed = digits.replace(/^0+/, '') || '0';
   if (trimmed.length > 16) throw invalid();
@@ -62,7 +65,7 @@ export function parseCost(text: string): EffortCost[] {
 }
 function dateValid(value: unknown): boolean {
   if (typeof value !== 'string' || value.trim() !== value) return false;
-  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/.exec(value);
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.exec(value);
   if (!match || !Number.isFinite(Date.parse(value))) return false;
   const year = Number(match[1]), month = Number(match[2]), day = Number(match[3]);
   if (Number(match[4]) > 23 || Number(match[5]) > 59 || Number(match.at(6) ?? '0') > 59) return false;
@@ -89,7 +92,7 @@ function problem(value: unknown): string | null {
   }
   for (const key of ['decisions', 'attempts']) if (value[key] !== undefined && !count(value[key])) return '回数は非負の安全な整数にしてください';
   if (value.cost !== undefined) {
-    if (!Array.isArray(value.cost) || value.cost.length > 3) return '費用は配列にしてください';
+    if (!Array.isArray(value.cost) || value.cost.length === 0 || value.cost.length > 3) return '費用は配列にしてください';
     const kinds = new Set<string>();
     for (const item of value.cost as unknown[]) {
       if (!object(item) || typeof item.kind !== 'string' || kinds.has(item.kind)) return '費用の区分が不正です';
@@ -121,11 +124,11 @@ export function serializeEffort(value: unknown, maxBytes = 65536): string {
     }
     if (problem(masked)) throw invalid();
     const json = JSON.stringify(masked, null, 2) + '\n';
-    if (Buffer.byteLength(json, 'utf8') > maxBytes) throw new UsageError(`実績記録の上限は${maxBytes}バイトです。記録していません。`);
+    if (Buffer.byteLength(json, 'utf8') > maxBytes) throw new EffortInputFailure(`実績記録の上限は${maxBytes}バイトです。記録していません。`, 'size');
     if (problem(JSON.parse(json))) throw invalid();
     return json;
   } catch (error) {
-    if (error instanceof UsageError && error.message.startsWith('実績記録の上限は')) throw error;
+    if (error instanceof EffortInputFailure && error.reason === 'size') throw error;
     throw invalid();
   }
 }
