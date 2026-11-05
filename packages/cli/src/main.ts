@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
-import { CHANGE_ID, RuntimeFailure, UsageError, formatVerifyResult, loadVerifyQualitySchema, runDoctor, runInit, runVerify, verifyAbortedResult, verifyExitCode } from '@loomake/kit';
+import { CHANGE_ID, RuntimeFailure, UsageError, maskValue, formatVerifyResult, loadVerifyQualitySchema, runDoctor, runInit, runVerify, verifyAbortedResult, verifyExitCode } from '@loomake/kit';
 import { runRun } from '@loomake/runner';
-import { runAgreement, runRecord, runReport } from '@loomake/trace';
+import { parseCost, runEffortRecord, runAgreement, runRecord, runReport } from '@loomake/trace';
 import { COMMANDS, HELP, SCOPES, USAGE, commandDefinition, commandHelp, didYouMean, isHelp, isVersion, optionSpec, parseOptions, traceOperation, type Command } from './args.js';
 
 export type Io = {
@@ -147,11 +147,35 @@ async function trace(args: string[], io: Io): Promise<number> {
   if (sub !== 'record' && sub !== 'report') {
     throw new UsageError(sub ? `知らないサブコマンドです：${sub}${didYouMean(sub, subs)}` : 'record・report・answer・approve のどれかを指定してください');
   }
-  const { values } = parseOptions(rest, optionSpec(traceOperation(sub) ?? commandDefinition('trace')));
-  const scope = scopeOption(values);
+  let values: Map<string, string>;
+  try { values = parseOptions(rest, optionSpec(traceOperation(sub) ?? commandDefinition('trace'))).values; }
+  catch (error) {
+    if (sub === 'record' && rest.some((arg) => /^--(?:effort|decisions|attempts|cost|note)(?:=|$)/.test(arg))) {
+      throw new UsageError(maskValue(error instanceof Error ? error.message : '実績記録の引数が不正です'));
+    }
+    throw error;
+  }
   const changeId = values.get('--change');
   const format = values.get('--format');
   if (!changeId) throw new UsageError('--change <id> が必要です');
+  if (sub === 'record') {
+    const effort = values.get('--effort');
+    const ancillary = ['--decisions', '--attempts', '--cost', '--note'];
+    if (effort === undefined && ancillary.some((name) => values.has(name))) throw new UsageError('判断要求・試行・費用・メモには --effort が必要です');
+    if (effort !== undefined) {
+      if (values.has('--scope')) throw new UsageError('--effort と --scope は同時に指定できません');
+      const count = (name: string): number | undefined => {
+        const text = values.get(name);
+        if (text === undefined) return undefined;
+        const value = Number(text);
+        if (!/^[0-9]+$/.test(text) || !Number.isSafeInteger(value) || value < 0) throw new UsageError('回数は非負の安全な整数で指定してください');
+        return value;
+      };
+      const cost = values.get('--cost');
+      return runEffortRecord({ root: io.cwd, changeId, effort, decisions: count('--decisions'), attempts: count('--attempts'), cost: cost === undefined ? undefined : parseCost(cost), note: values.get('--note'), stdout: io.stdout });
+    }
+  }
+  const scope = scopeOption(values);
   // verify の進捗は標準エラーに出す（verify と同じ）
   if (sub === 'record') return runRecord({ root: io.cwd, changeId, scope, qualitySchema: await loadVerifyQualitySchema(), stdout: io.stdout, progress: io.stderr });
   // 初版は Markdown と JSON だけ。省いたら Markdown

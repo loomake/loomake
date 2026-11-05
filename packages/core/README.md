@@ -34,6 +34,12 @@ JSON Schema は `@loomake/core/schema/quality-report.schema.json` から取得�
 
 保持処理は各公開スキーマの clone に適用する。利用側で `.clone()`・`.meta({...})`・`.describe('...')`・`.extend({...})` によって作った派生スキーマには、この保持処理は引き継がれない。公開型、既知項目の検証・既定値・診断の設定と配布 JSON Schema は維持する。
 
+## 人の実作業時間の構造
+
+`EFFORT_SCHEMA_VERSION` は `1`。`await loadEffortSchema()` は `effortRecordSchema`・`effortMinutesSchema`・`effortCostSchema` を読み、`EffortRecord`・`EffortMinutes`・`EffortCost` はそれぞれから導出する。入口の import では Zod を読み込まない。Effort 専用の JSON Schema は追加せず、従来の12本と受入済みの判定要約用 JSON Schema を保持する。
+
+Effort 1 は総計 `totalMinutes` と区分 `minutes` のどちらか一方を持ち、指定しなかった区分は欠測のまま省略する。構造の検査は品質検証の実行や合格を意味しない。記録には trace の同期 API を使う。
+
 ## ライセンス
 
 MIT

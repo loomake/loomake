@@ -331,6 +331,218 @@
       "stream": "stdout",
       "from": "  --devcontainer      .devcontainer/devcontainer.json を置く",
       "to": "  --devcontainer      .devcontainer/devcontainer.json を置く\n  --yes               内容の違う同名のファイルを、確かめずにすべて上書きする\n  --keep-existing     既存の配置対象ファイルを残し、不足ファイルだけ置く"
+    },
+    {
+      "change": "effort-record",
+      "requirement": "REQ-466",
+      "approval": "Q-09（管理役採用、2026-11-06。既存原本と全旧オプションを保持する追加契約）",
+      "reason": "品質検証を実行しないeffort入口と新5オプションを、既存recordのhelpへ追加する",
+      "argv": [
+        [
+          "trace",
+          "--help"
+        ],
+        [
+          "trace",
+          "-h"
+        ],
+        [
+          "trace",
+          "record",
+          "--help"
+        ],
+        [
+          "trace",
+          "record",
+          "-h"
+        ],
+        [
+          "trace",
+          "constructor",
+          "--help"
+        ],
+        [
+          "trace",
+          "toString",
+          "--help"
+        ],
+        [
+          "trace",
+          "nothing",
+          "--help"
+        ]
+      ],
+      "stream": "stdout",
+      "entry": 0,
+      "from": "使い方: loomake trace record --change <id> [--scope local|ci]",
+      "to": "使い方: loomake trace record --change <id> [--scope local|ci] [--effort <時間> [--decisions <n>] [--attempts <n>] [--cost <区分:値,...>] [--note <文>]]"
+    },
+    {
+      "change": "effort-record",
+      "requirement": "REQ-466",
+      "approval": "Q-09（管理役採用、2026-11-06。既存原本と全旧オプションを保持する追加契約）",
+      "reason": "品質検証を実行しないeffort入口と新5オプションを、既存recordのhelpへ追加する",
+      "argv": [
+        [
+          "trace",
+          "--help"
+        ],
+        [
+          "trace",
+          "-h"
+        ],
+        [
+          "trace",
+          "record",
+          "--help"
+        ],
+        [
+          "trace",
+          "record",
+          "-h"
+        ],
+        [
+          "trace",
+          "constructor",
+          "--help"
+        ],
+        [
+          "trace",
+          "toString",
+          "--help"
+        ],
+        [
+          "trace",
+          "nothing",
+          "--help"
+        ]
+      ],
+      "stream": "stdout",
+      "entry": 0,
+      "from": "verify --done を実行し、結果をコミットの SHA と合わせて .loomake/evidence/<change-id>/ に記録する。未コミットの変更があれば記録しない。",
+      "to": "verify --done を実行し、結果をコミットの SHA と合わせて .loomake/evidence/<change-id>/ に記録する。未コミットの変更があれば記録しない。--effort 指定時は品質検証を行わず、人の実作業時間だけを追記する。"
+    },
+    {
+      "change": "effort-record",
+      "requirement": "REQ-466",
+      "approval": "Q-09（管理役採用、2026-11-06。既存原本と全旧オプションを保持する追加契約）",
+      "reason": "品質検証を実行しないeffort入口と新5オプションを、既存recordのhelpへ追加する",
+      "argv": [
+        [
+          "trace",
+          "--help"
+        ],
+        [
+          "trace",
+          "-h"
+        ],
+        [
+          "trace",
+          "record",
+          "--help"
+        ],
+        [
+          "trace",
+          "record",
+          "-h"
+        ],
+        [
+          "trace",
+          "constructor",
+          "--help"
+        ],
+        [
+          "trace",
+          "toString",
+          "--help"
+        ],
+        [
+          "trace",
+          "nothing",
+          "--help"
+        ]
+      ],
+      "stream": "stdout",
+      "entry": 0,
+      "from": "  --scope local|ci    記録する verify の範囲。省くと ci。local の記録は最終 CI の合格ではない",
+      "to": "  --scope local|ci    記録する verify の範囲。省くと ci。local の記録は最終 CI の合格ではない\n  --effort <時間>     単位つき総計または区分の実作業時間を追記する（90m・1.5h・review=20m）\n  --decisions <n>     自己申告の判断要求回数（非負の安全な整数）\n  --attempts <n>      自己申告の試行回数（非負の安全な整数）\n  --cost <区分:値,...> actual-usd・estimated-usd・tokensを区別して記録する\n  --note <文>         改行・制御文字を含まない500文字以内のメモ。秘密情報・個人情報は入力しない"
+    },
+    {
+      "change": "effort-record",
+      "requirement": "REQ-466",
+      "approval": "Q-09（管理役採用、2026-11-06。既存原本と全旧オプションを保持する追加契約）",
+      "reason": "品質検証を実行しないeffort入口と新5オプションを、既存recordのhelpへ追加する",
+      "argv": [
+        [
+          "trace"
+        ],
+        [
+          "trace",
+          "recrd"
+        ],
+        [
+          "trace",
+          "record"
+        ],
+        [
+          "trace",
+          "report"
+        ],
+        [
+          "trace",
+          "report",
+          "--change",
+          "x",
+          "--format",
+          "html"
+        ],
+        [
+          "trace",
+          "report",
+          "--change",
+          "x",
+          "--format",
+          "xml"
+        ],
+        [
+          "trace",
+          "answer"
+        ],
+        [
+          "trace",
+          "answer",
+          "--change",
+          "x",
+          "--question",
+          "Q-01"
+        ],
+        [
+          "trace",
+          "answer",
+          "--change",
+          "x",
+          "--question",
+          "Q-01",
+          "--by",
+          "x"
+        ],
+        [
+          "trace",
+          "approve"
+        ],
+        [
+          "trace",
+          "approve",
+          "--change",
+          "x",
+          "--assumption",
+          "A-01"
+        ]
+      ],
+      "stream": "stderr",
+      "entry": 1,
+      "from": "使い方: loomake trace record --change <id> [--scope local|ci]",
+      "to": "使い方: loomake trace record --change <id> [--scope local|ci] [--effort <時間> [--decisions <n>] [--attempts <n>] [--cost <区分:値,...>] [--note <文>]]"
     }
   ]
 }
