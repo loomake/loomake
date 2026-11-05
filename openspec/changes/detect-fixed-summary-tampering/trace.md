@@ -7,6 +7,7 @@
 | docs/requirements/loomake-v0.11.md | v0.11.3 | 2026-10-29 |
 | docs/wbs/baseline-v1.4.md（W1-12） | v1.4 | 2026-10-28 |
 | [Issue #71](https://github.com/loomake/loomake/issues/71) | W1-12 の受入条件 | 2026-11-05 |
+| [Issue #69 の照合対象欄の連携記録](https://github.com/loomake/loomake/issues/69#issuecomment-6654873804) | 後続の正式保存形式と再照合する境界 | 2026-11-05 |
 | ADR 0006 | 包括承認・W1優先の直接指示 | 2026-11-05 |
 
 ## 要件台帳
