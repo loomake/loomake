@@ -19,8 +19,8 @@
 
 ## 4. 統合と検証
 
-- [ ] 4.1 公開型の consumer fixture・kit-layers の collect 検査・README・core/kit patch changeset を追加し、型・依存・文書の検査を通す。
-- [ ] 4.2 全 Scenario と要件対応テストを確認し、通常の `pnpm -s verify --change collect-tool-evidence --done --scope local --json` を通して worklog と計測表を残す。 <!-- loomake:gate=done -->
+- [x] 4.1 公開型の consumer fixture・kit-layers の collect 検査・README・core/kit patch changeset を追加し、型・依存・文書の検査を通す。
+- [x] 4.2 全 Scenario と要件対応テストを確認し、通常の `pnpm -s verify --change collect-tool-evidence --done --scope local --json` を通して worklog と計測表を残す。 <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 

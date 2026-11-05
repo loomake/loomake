@@ -153,3 +153,26 @@ export function consumeSummaryArtifact(artifact: SummaryArtifact, bytes: Uint8Ar
   const schemas: ReturnType<typeof loadSummarySchemas> = loadSummarySchemas();
   return { checked, retention, schemas };
 }
+
+// REQ-448・449: 配布された named export と中立型を消費する。
+import {
+  parseGhChecks, parseClaudeResult, parseCodexEvents, parseBiomeReport, parsePlaywrightReport,
+  type ToolName, type ToolObservation, type GhCheckBucket, type GhCheck, type AgentCause, type AgentResult,
+  type ToolFinding, type BiomeSummary, type PlaywrightTestCase, type PlaywrightError,
+} from '@loomake/core';
+import { collectToolOutput, ghPrChecksArgs, biomeArgs, playwrightTestArgs, type CollectRequest, type CollectExit, type Collected } from '@loomake/kit';
+export function consumeToolEvidence(request: CollectRequest, text: string): Collected {
+  const tool: ToolName = request.tool;
+  const observations: ParseResult<ToolObservation | null>[] = [
+    parseGhChecks('gh', text), parseClaudeResult('claude', text), parseCodexEvents('codex', text),
+    parseBiomeReport('biome', text), parsePlaywrightReport('playwright', text),
+  ];
+  const collected: Collected = collectToolOutput(request);
+  const exit: CollectExit | null = 'exit' in collected ? collected.exit : null;
+  const args: string[][] = [ghPrChecksArgs(1, { repo: 'owner/repo' }), biomeArgs('ci', ['src']), playwrightTestArgs([])];
+  void tool; void observations; void exit; void args;
+  return collected;
+}
+export type ToolEvidenceTypes = [GhCheckBucket, GhCheck, AgentCause, AgentResult, ToolFinding, BiomeSummary, PlaywrightTestCase, PlaywrightError];
+// @ts-expect-error REQ-448: 内部の共通 helper は公開しない。
+import { requirementIds as internalRequirementIds, errorLine as internalErrorLine } from '@loomake/core';

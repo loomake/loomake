@@ -37,7 +37,7 @@ describe('collectToolOutput', () => {
   });
   it('[REQ-449] 存在しない command と起動できないファイルを分類する', () => fixture(dir => {
     expect(collectToolOutput(request('', { command: join(dir, 'missing') }))).toMatchObject({ outcome: 'not_found', reason: '外部操作を起動できません。（ENOENT）' });
-    const file = join(dir, 'not-executable'); writeFileSync(file, 'invalid executable');
+    const file = join(dir, 'not-executable.exe'); writeFileSync(file, 'invalid executable');
     expect(collectToolOutput(request('', { command: file }))).toMatchObject({ outcome: 'spawn_error' });
   }));
   it('[REQ-449] timeout と output の上限を区別する', () => {
