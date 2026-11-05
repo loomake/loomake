@@ -5,7 +5,14 @@ import { main } from './main.js';
 // loomake run は SIGINT・SIGTERM・SIGHUP で、エンジンを止めて記録を書いてから止まる（REQ-124・REQ-208）。
 // ほかのサブコマンドでは、ふだんどおり止まる
 const controller = new AbortController();
-if (process.argv[2] === 'run') for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP'] as const) process.on(signal, () => controller.abort());
+if (process.argv[2] === 'run') {
+  const exitCodes = { SIGINT: 130, SIGTERM: 143, SIGHUP: 129 } as const;
+  let received = 0;
+  for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP'] as const) process.on(signal, () => {
+    if (++received > 1) process.exit(exitCodes[signal]);
+    controller.abort();
+  });
+}
 
 process.exitCode = await main(process.argv.slice(2), {
   signal: controller.signal,
