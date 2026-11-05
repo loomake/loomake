@@ -1,4 +1,6 @@
 import { createPrivateKeyFilter } from './private-key-stream.js';
+import { types } from 'node:util';
+import { UsageError } from './errors.js';
 // よく知られた API キーやトークンの形。すべての秘密情報は見分けられないので、記録する範囲も絞る
 const SECRET_PATTERNS = [
   // 他の形式の置換でBEGINやENDを壊す前に、ブロック全体を隠す。
@@ -126,4 +128,69 @@ export function createDiagnosticRedactor(sink: (text: string) => void): { write:
       pending = ''; discarding = false; discardedTail = ''; bearerWaiting = false; escapePending = false;
     },
   };
+}
+
+type MaskFrame = {
+  source: object;
+  target: object;
+  properties: [string, PropertyDescriptor][];
+  next: number;
+  array: boolean;
+  keys: Set<string>;
+};
+
+/** JSONの値とobjectのown undefinedを、入力を変えずに複製・置換する。 */
+export function maskValue<T>(value: T): T {
+  const ancestors = new Set<object>();
+  const invalid = () => new UsageError('置換できるJSONデータの形ではありません。');
+  const prepare = (input: unknown, allowUndefined: boolean): { value: unknown; frame?: MaskFrame } => {
+    if (input === undefined && allowUndefined) return { value: undefined };
+    if (input === null || typeof input === 'boolean') return { value: input };
+    if (typeof input === 'string') return { value: maskSecrets(input) };
+    if (typeof input === 'number') {
+      if (!Number.isFinite(input)) throw invalid();
+      return { value: input };
+    }
+    if (typeof input !== 'object' || types.isProxy(input)) throw invalid();
+    if (ancestors.has(input)) throw new UsageError('循環した値は置換できません。');
+    const array = Array.isArray(input);
+    const prototype: unknown = Object.getPrototypeOf(input);
+    if (array ? prototype !== Array.prototype : prototype !== Object.prototype && prototype !== null) throw invalid();
+    const properties: [string, PropertyDescriptor][] = [];
+    let length = 0;
+    for (const key of Reflect.ownKeys(input)) {
+      if (typeof key !== 'string') throw invalid();
+      const descriptor = Object.getOwnPropertyDescriptor(input, key);
+      if (!descriptor || !('value' in descriptor)) throw invalid();
+      if (array && key === 'length') {
+        length = descriptor.value as number;
+        continue;
+      }
+      if (!descriptor.enumerable || (array && key !== String(properties.length))) throw invalid();
+      properties.push([key, descriptor]);
+    }
+    if (array && properties.length !== length) throw invalid();
+    const target: object = array ? [] : Object.create(prototype as object | null) as object;
+    return { value: target, frame: { source: input, target, properties, next: 0, array, keys: new Set() } };
+  };
+  const root = prepare(value, false);
+  const stack: MaskFrame[] = [];
+  const push = (frame: MaskFrame) => { ancestors.add(frame.source); stack.push(frame); };
+  if (root.frame) push(root.frame);
+  while (stack.length) {
+    const frame = stack[stack.length - 1];
+    if (frame.next === frame.properties.length) {
+      ancestors.delete(frame.source);
+      stack.pop();
+      continue;
+    }
+    const [key, descriptor] = frame.properties[frame.next++];
+    const maskedKey = maskSecrets(key);
+    if (frame.keys.has(maskedKey)) throw new UsageError('置換後のキーが重複するため、値を返せません。');
+    frame.keys.add(maskedKey);
+    const child = prepare(descriptor.value, !frame.array);
+    Object.defineProperty(frame.target, maskedKey, { value: child.value, enumerable: true, writable: true, configurable: true });
+    if (child.frame) push(child.frame);
+  }
+  return root.value as T;
 }

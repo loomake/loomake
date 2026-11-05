@@ -9,7 +9,7 @@
 ## 2. 共有実装と互換層
 
 - [x] 2.1 runnerのmask.ts/private-key-stream.tsをkitのruntime/redact.ts/runtime/private-key-stream.tsへ挙動不変で移す。既知の形とstream状態・保留量・JSON処理は変えない（REQ-447）
-- [ ] 2.2 kitへmaskValueの入力検証・安全な深い複製・置換・衝突/循環拒否を追加する。getter/toJSONを実行せず、own undefined・__proto__とprototypeを定義どおり保つ（REQ-447）
+- [x] 2.2 kitへmaskValueの入力検証・安全な深い複製・置換・衝突/循環拒否を追加する。getter/toJSONを実行せず、own undefined・__proto__とprototypeを定義どおり保つ（REQ-447）
 - [ ] 2.3 kitのnamed exportとrunner2moduleの再exportを追加し、runner index・呼出元・既存試験・配布importを維持する（REQ-447）
 - [ ] 2.4 B01の管理役分類に従い、kit-layersの固定一覧に2ファイルだけを加える。元4項目・全assertion・禁止importの解析と全禁止例は維持する（REQ-207）
 
