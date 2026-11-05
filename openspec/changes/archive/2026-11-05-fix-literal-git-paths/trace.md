@@ -19,7 +19,7 @@
 | ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |
 |---|---|---|---|---|---|---|---|---|
 
-| Q-414-01 | REQ-109・REQ-138 | Git 2.56.0 の check-ignore は literal=1 を拒否する。git 環境の固定と check-ignore だけの互換処理を採用するか | A: 通常経路は literal=1 と他の pathspec 環境 3 種を 0、check-ignore だけ literal=0 と先頭コロンへの ./ 接頭辞 / B: 保留して別案を検討 | A。元の環境を変更せず、実ファイル名の判定と既存の除外判定を両立できる。30 ケースで比較済み | yes | A を承認。通常経路は literal=1、他の pathspec 環境 3 種は 0。check-ignore だけ literal=0、先頭コロンへ ./ を付ける。[提示差分](https://github.com/loomake/loomake/issues/414#issuecomment-6647986907) | 利用者（今回の回答） | 2026-11-05 |
+| Q-414-01 | REQ-109・REQ-138 | Git 2.56.0 の check-ignore は literal=1 を拒否する。git 環境の固定と check-ignore だけの互換処理を採用するか | A: 通常経路は literal=1 と他の pathspec 環境 3 種を 0、check-ignore だけ literal=0 と先頭コロンへの ./ 接頭辞 / B: 保留して別案を検討 | A。元の環境を変更せず、実ファイル名の判定と既存の除外判定を両立できる。30 ケースで比較済み | yes | A を承認。通常経路は literal=1、他の pathspec 環境 3 種は 0。check-ignore だけ literal=0、先頭コロンへ ./ を付ける。[提示差分](https://github.com/loomake/loomake/issues/414#issuecomment-6647986907)、[回答記録](https://github.com/loomake/loomake/issues/414#issuecomment-6649004978) | 利用者（今回の回答） | 2026-11-05 |
 
 ## 仮定
 

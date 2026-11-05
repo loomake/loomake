@@ -26,6 +26,10 @@ Source: REQ-109
 - **WHEN** エンジンがテストファイルに `it(` の行を足して終える
 - **THEN** run は止まらずにコミットする
 
+#### Scenario: pathspec の名前に skip を足す
+- **WHEN** エンジンが `:(top)x.test.ts` のように git の pathspec の魔法構文に見える名前のテストファイルに `it.skip(` を足して終える
+- **THEN** run は実際のファイル名と skip の行、対象の差分を表示し、変更をコミットせず終了コード 1 で止まる
+
 ### Requirement: 設定の変更の検出
 エンジンの変更に、loomake.config.json、`eslint.config.*`・`.eslintrc*`、`tsconfig*.json`、`vitest.config.*`・`vitest.workspace.*`・`vite.config.*`、`jest.config.*` の変更か、リポジトリの中のどの階層にある package.json でも `scripts` の値の変更があれば、`loomake run` はその変更をコミットせずに止まる SHALL。
 
@@ -131,6 +135,10 @@ Source: REQ-138
 - **WHEN** タブか改行を含むファイル名で検出対象の変更を行う
 - **THEN** パスを分断せずに違反を検出する
 
+#### Scenario: pathspec の名前を通常のファイル名として扱う
+- **WHEN** 変更したテストファイルの名前が `:(top)`・`:(glob)`・`:!`・`:/` で始まる
+- **THEN** pathspec の式として別のパスを選ばず、その名前の変更にある skip の追加とアサーションの削除を検出し、正しい名前と対象の差分を表示する
+
 ### Requirement: テストの検査を弱める変更の検出
 エンジンの変更をコミットする前に、HEAD にあるテストファイルの差分で、消した行のうち検査の行（コメントと import・require の行を除き、`expect(`・`assert(`・`assert.<名前>(` を呼ぶ行）の数が、足した行のうち検査の行の数より多いときは、不正な直し方として、そのファイルと理由を表示し、コミットせずに終了コード 1 で止まる SHALL。テストファイルに、同じリテラルどうしを比べる検査（`expect(true).toBe(true)`・`expect(1).toEqual(1)`・`assert.equal('a', 'a')` など）を足したときも、同じく止まる SHALL。止まったときの扱いは REQ-109〜REQ-112 と同じとする SHALL。
 
@@ -172,6 +180,10 @@ Source: REQ-109
 #### Scenario: テストでない呼び出しの行を書き換える
 - **WHEN** エンジンが tests/a.test.ts の `const ok = /x/.test(s);` の行を書き換えて終える
 - **THEN** run は止まらずにコミットする
+
+#### Scenario: pathspec の名前にあるアサーションを消す
+- **WHEN** エンジンが `:(glob)`・`:!`・`:/` などで始まる名前の既存テストファイルからアサーションの行を消して終える
+- **THEN** run はそのファイル名と消した行、対象の差分を表示し、変更をコミットせず終了コード 1 で止まる
 
 ### Requirement: git の設定とフックの変更の検出
 `loomake run` は、エンジンを呼ぶ前後で、git の設定ファイル（`git rev-parse --git-path config`）の中身と、フックのディレクトリ（`git rev-parse --git-path hooks`。`core.hooksPath` を反映する）にあるファイルの相対パスと中身を比べる SHALL。変わっていたら、`git add`・`git commit` を実行せず、タスクを完了にせずに、エンジンが git の設定かフックを変えたことと確かめる場所を表示して、終了コード 1 で止まる SHALL。run は書き換えを戻さない SHALL。run を始める前からあるフックは、これまでどおり run のコミットで動く SHALL。

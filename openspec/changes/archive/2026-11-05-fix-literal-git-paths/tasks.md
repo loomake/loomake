@@ -8,7 +8,7 @@
 
 ## 3. 確認
 
-- [ ] 3.1 `pnpm -s verify --change fix-literal-git-paths --done --scope local` を通し、全タスクと要件対応テストを確認する <!-- loomake:gate=done -->
+- [x] 3.1 `pnpm -s verify --change fix-literal-git-paths --done --scope local` を通し、全タスクと要件対応テストを確認する <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 
