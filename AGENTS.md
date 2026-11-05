@@ -26,6 +26,8 @@
 
 統合専用ブランチへの段階受入と累積差分の最終レビューは、[ADR 0006 の採用節](docs/adr/0006-standing-approval-for-autonomous-delivery.md#統合専用ブランチへの段階受入と最終レビュー採用2026-11-01)に従う。利用者は 2026-11-01 に規則案 A を承認した（出典・対象ブランチ・分割計画は同節）。規則変更 PR #260 が必須 CI・独立レビューを満たして main へマージされたあとから適用する。段階受入の例外は名前を挙げて承認された統合先だけを対象とし、それ以外のすべてのブランチにはこの例外を適用しない。最終 PR の全タスク・全要件・完了ゲート・必須 CI・独立レビューは省略しない。
 
+L3 の例外として、既存の Requirement どおりに直すだけのバグ修正は、5 つの条件をすべて満たすときに限り change なしの「仕様適合の修正」で進められる（PR 本文に `loomake-change: none`・`loomake-route: spec-fix`・`loomake-req: REQ-xxx` を書く）。この場合は Opus 設計を省き、独立 Opus レビューは 1 回、完了は品質コマンドと 3 OS の CI、REQ テストの失敗から成功への証拠、レビューの重大ゼロで判断する（`verify --done` は対象外）。仕様が曖昧なときや仕様にない振る舞いを決めるときは使えない。条件と手続きは [ADR 0006](docs/adr/0006-standing-approval-for-autonomous-delivery.md) の「完成を早めるための規則変更」と `docs/dev/ci.md` に従う。CI が受け付けるのは Issue #427 のマージ後で、それまでは使えない。
+
 どの段階でも、流れは次のとおり。
 
 1. 要件書・仕様書を渡されたら、`req-to-openspec` スキルで change を作る
@@ -40,7 +42,7 @@
 
 ## 3. 完了の定義（DoD）
 
-change を持つ作業は、次をすべて満たすまで「完了」と報告しない。change のない L1・L2 の作業は、段階の必須の検査とレビューが済んだときに完了とする。
+change を持つ作業は、次をすべて満たすまで「完了」と報告しない。change のない L1・L2 の作業と、L3 の「仕様適合の修正」は、段階の必須の検査とレビューが済んだときに完了とする（「仕様適合の修正」は 2 章に書いた完了条件を満たしたとき）。
 
 - `pnpm -s verify --change <change-id> --done --scope local` が exit 0（ローカルの完了）
 - 最終の合格：CI の gate ジョブで `verify --change <change-id> --done --scope ci` 相当（scope 省略時の既定）が exit 0。gate が JSON の 2.0.0・scope ci・run.status completed・errors 空・verdict PASS・要判断なしを確かめる。加えて必須 5 チェックが成功している。ローカルの完了だけで完了と報告しない
@@ -55,7 +57,7 @@ ADR 0006 の段階受入でも、統合専用ブランチへの部分受入は�
 
 - テストを弱める・skip する・期待値を実装に合わせて書き換える。承認経路は設けない。必要性が生じたら Issue に記録し、その変更は行わず独立した次の作業へ進む
 - 曖昧な要件を記録せず推測で埋める。`trace.md` の「確認事項」に選択肢・おすすめと理由を整理し、ADR 0006 に従って回答して仕様ゲートを通す
-- `loomake.config.json` や lint・型・テストの設定を緩めること、完成範囲を縮めること。承認経路は設けず、必要性が生じたら Issue に記録して独立した次の作業へ進む
+- `loomake.config.json` や lint・型・テストの設定を緩めること、完成範囲を縮めること（2026-11-05 の利用者決定 B の範囲は除く。ADR 0006）。承認経路は設けず、必要性が生じたら Issue に記録して独立した次の作業へ進む
 - 秘密情報（API キー、パスワード、個人情報）をコード・ログ・テストデータに書く
 - `openspec/specs/` を直接編集する（変更は必ず change 経由で、archive 時に反映する）。ただし、change を archive した直後に `## Purpose` を直すことだけは例外とする。新しい capability の仮の文（`TBD - created by archiving change …`）を書き換えるときと、change で Requirement の用語を変えたあとに Purpose に残る古い用語（検収レポートなど）を新しい用語に合わせるときに限る。差分仕様の Purpose は archive で反映されないため
 
