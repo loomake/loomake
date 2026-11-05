@@ -1,0 +1,102 @@
+import { describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { findViolations, runRun } from '@loomake/runner';
+import { branchExists, git, gitConfig, isIgnored, readHead } from '../src/git.js';
+import { engineBaseline } from '../src/guards.js';
+import { CHANGE, fakeCli, makeRepo } from './helpers.js';
+
+vi.setConfig({ testTimeout: 60_000 });
+
+// Windows はコロンをファイル名に使えない。そこで実在する特殊文字名と、下の git 環境の実プロセス試験を使う。
+const names = process.platform === 'win32'
+  ? ['brackets[magic].test.ts']
+  : ['brackets[magic].test.ts', ':(top)x.test.ts', ':(glob)x.test.ts', ':!x.test.ts', ':/x.test.ts'];
+
+describe('git の名前をリテラルに扱うガード', () => {
+  it.each(names)('[REQ-138][REQ-109] %j に skip を足しても検出と差分表示を回避できない', (file) => {
+    const repo = makeRepo();
+    try {
+      repo.write(file, "it.skip('case', () => {});\n");
+      const result = findViolations(repo.root, repo.env);
+      expect(result.findings).toContainEqual({ file, reason: "skip・todo を足しました：it.skip('case', () => {});" });
+      expect(result.diff).toContain("+it.skip('case', () => {});");
+    } finally {
+      repo.cleanup();
+    }
+  });
+
+  it.each(names)('[REQ-138][REQ-109] %j のアサーションを消しても検出と差分表示を回避できない', (file) => {
+    const repo = makeRepo();
+    try {
+      repo.write(file, "it('case', () => {\n  expect(answer()).toBe(42);\n});\n");
+      repo.git('add', '-A');
+      repo.git('commit', '-qm', 'assertion');
+      repo.write(file, "it('case', () => {\n});\n");
+      const result = findViolations(repo.root, repo.env);
+      expect(result.findings).toContainEqual({ file, reason: 'テストの検査を減らしました' });
+      expect(result.findings).toContainEqual({ file, reason: 'アサーションかテストを消すか書き換えました：expect(answer()).toBe(42);' });
+      expect(result.diff).toContain('-  expect(answer()).toBe(42);');
+    } finally {
+      repo.cleanup();
+    }
+  });
+
+  it('[REQ-138][REQ-109] git の全経路にリテラル指定を渡し、tasks と証拠のパスをそのまま登録する', () => {
+    const repo = makeRepo();
+    const snapshot = join(repo.base, 'git-environment.jsonl');
+    repo.env.GIT_LITERAL_PATHSPECS = '0';
+    repo.env.GIT_TERMINAL_PROMPT = '1';
+    const cli = fakeCli(repo, 'git', {
+      when: `(()=>{fs.appendFileSync(${JSON.stringify(snapshot)},JSON.stringify({args,literal:process.env.GIT_LITERAL_PATHSPECS,prompt:process.env.GIT_TERMINAL_PROMPT})+String.fromCharCode(10));return false;})()`,
+    });
+    try {
+      const evidence = `.loomake/evidence/${CHANGE}/evidence[one].json`;
+      const tasks = `openspec/changes/${CHANGE}/tasks.md`;
+      repo.write(evidence, '{}\n');
+      git(repo.root, repo.env, ['add', '--', evidence, tasks]);
+      expect(git(repo.root, repo.env, ['diff', '--cached', '--name-only', '-z'])).toContain(evidence);
+      expect(isIgnored(repo.root, repo.env, '.loomake/test-report.json')).toBe(true);
+      expect(isIgnored(repo.root, repo.env, evidence)).toBe(false);
+      expect(branchExists(repo.root, repo.env, 'main')).toBe(true);
+      expect(gitConfig(repo.root, repo.env, 'remote.origin.url')).toContain('origin.git');
+      expect(readHead(repo.root, repo.env, true).branch).toBe('main');
+      repo.write('package.json', JSON.stringify({ scripts: { test: 'node test.js' } }));
+      findViolations(repo.root, repo.env);
+      expect(engineBaseline(repo.root, repo.env).head.branch).toBe('main');
+      git(repo.root, repo.env, ['checkout', '-q', '--orphan', 'empty']);
+      expect(readHead(repo.root, repo.env, true).sha).toBe('');
+      const calls = readFileSync(snapshot, 'utf8').trim().split('\n').map((line) => JSON.parse(line) as { args: string[]; literal: string; prompt: string });
+      expect(calls.length).toBeGreaterThanOrEqual(10);
+      for (const call of calls) expect(call).toMatchObject({ literal: '1', prompt: '0' });
+      expect(calls.some((call) => call.args[0] === 'check-ignore')).toBe(true);
+      expect(calls.some((call) => call.args[0] === 'show')).toBe(true);
+      expect(calls.some((call) => call.args[0] === 'config' && call.args.includes('--list'))).toBe(true);
+      expect(calls.some((call) => call.args[0] === 'rev-parse' && call.args.includes('--verify'))).toBe(true);
+      expect(repo.env.GIT_LITERAL_PATHSPECS).toBe('0');
+      expect(repo.env.GIT_TERMINAL_PROMPT).toBe('1');
+    } finally {
+      cli.restore();
+      repo.cleanup();
+    }
+  });
+
+  it.each(names)('[REQ-138][REQ-109] %j の skip で run が停止し、コミットとタスクを進めない', async (file) => {
+    const repo = makeRepo();
+    try {
+      const before = repo.git('rev-parse', 'HEAD');
+      repo.plan([{ write: { [file]: "it.skip('case', () => {});\n" } }]);
+      const out: string[] = [];
+      const code = await runRun({ root: repo.root, changeId: CHANGE, env: repo.env, interactive: false,
+        confirm: async () => false, stdout: (text) => out.push(text), fileExists: () => false });
+      expect(code, out.join('\n')).toBe(1);
+      expect(out.join('\n')).toContain(`${file}：skip・todo を足しました`);
+      expect(out.join('\n')).toContain("+it.skip('case', () => {});");
+      expect(repo.calls()).toHaveLength(1);
+      expect(repo.git('rev-parse', 'HEAD')).toBe(before);
+      expect(readFileSync(join(repo.root, `openspec/changes/${CHANGE}/tasks.md`), 'utf8')).toContain('- [ ] 1.1');
+    } finally {
+      repo.cleanup();
+    }
+  });
+});
