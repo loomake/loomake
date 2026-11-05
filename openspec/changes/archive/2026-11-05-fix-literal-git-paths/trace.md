@@ -13,7 +13,6 @@
 |---|---|---|---|---|---|
 | REQ-109 | Issue #414「関係する spec」「足すテスト」、現行 run-guards の検出規範 | 機能 | pathspec の名前でも skip と既存アサーションの削除を検出して止まり、対象の差分を出す | 反映済 | specs/run-guards/spec.md |
 | REQ-138 | Issue #414「直し方」「足すテスト」、現行 run-guards の特殊文字パス | 制約 | ファイル名を pathspec の式にせず扱い、既存の特殊文字パスの検出も保つ | 反映済 | specs/run-guards/spec.md |
-
 | REQ-198 | 現行 run-guards「git の設定とフックの変更の検出」、独立レビュー C-1 | 制約 | run 開始前からあるフックは、これまでどおりコミットで動く | 反映済 | specs/run-guards/spec.md |
 
 ## 確認事項
