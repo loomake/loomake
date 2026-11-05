@@ -21,7 +21,10 @@ export function gitEnvironment(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
 
 export function git(root: string, env: NodeJS.ProcessEnv, args: string[]): string {
   // 端末での入力を求めず、すぐ失敗させる（REQ-211）
-  const r = runExternal('git', args, { cwd: root, env: gitEnvironment(env), untilDeadline: RUNS_HOOKS.has(args[0]) });
+  const runsHooks = RUNS_HOOKS.has(args[0]);
+  // フック内の git の glob と利用者の環境を保つ。commit・push 自体に pathspec は渡さない（REQ-198）。
+  const childEnv = runsHooks ? { ...env, GIT_TERMINAL_PROMPT: '0' } : gitEnvironment(env);
+  const r = runExternal('git', args, { cwd: root, env: childEnv, untilDeadline: runsHooks });
   if (r.error || r.status !== 0) {
     const detail = (r.stderr || r.error?.message || '').trim();
     const guide = RUNS_HOOKS.has(args[0]) && NEEDS_PROMPT.test(detail) ? `。${PROMPT_GUIDE}` : '';

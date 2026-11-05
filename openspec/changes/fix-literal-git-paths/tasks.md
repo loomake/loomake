@@ -18,5 +18,5 @@
 ## 4. 独立レビュー R1 の修正
 
 - [x] 4.1 既存の pre-commit・pre-push の glob が空振りすることを実フックで再現し、REQ-198 の仕様ゲートを通す。run 全体のアサーション削除と表の空行も直す（REQ-198・REQ-109・REQ-138）
-- [ ] 4.2 commit・push で元の pathspec 環境を保ち、対象試験・lint・型検査を通す（REQ-198）
+- [x] 4.2 commit・push で元の pathspec 環境を保ち、対象試験・lint・型検査を通す（REQ-198）
 - [ ] 4.3 `pnpm -s verify --change fix-literal-git-paths --done --scope local` を通す <!-- loomake:gate=done -->

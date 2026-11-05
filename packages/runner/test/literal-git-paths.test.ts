@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { chmodSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { findViolations, runRun } from '@loomake/runner';
+import { withProcessBudget } from '@loomake/kit';
 import { branchExists, git, gitConfig, isIgnored, readHead } from '../src/git.js';
 import { engineBaseline } from '../src/guards.js';
 import { CHANGE, fakeCli, makeRepo } from './helpers.js';
@@ -116,12 +117,14 @@ if (names.status !== 0 || !names.stdout.includes('hook-target.ts')) process.exit
       repo.write(`.git/hooks/${hook}`, '#!/bin/sh\nnode .git/hooks/check-pathspec.mjs\n');
       chmodSync(join(repo.root, `.git/hooks/${hook}`), 0o755);
       const args = command === 'commit' ? ['commit', '--allow-empty', '-qm', 'hook check'] : ['push', '-u', 'origin', 'main'];
-      expect(() => git(repo.root, repo.env, args)).not.toThrow();
+      let failure: unknown;
+      try { withProcessBudget({ timeoutMs: 30_000 }, () => git(repo.root, repo.env, args)); } catch (error) { failure = error; }
       const observed = JSON.parse(readFileSync(snapshot, 'utf8').trim()) as { files: string; status: number; pathspec: (string | null)[]; prompt: string };
       expect(observed.files).toContain('hook-target.ts');
       expect(observed.status).toBe(0);
       expect(observed.pathspec).toEqual(Array(4).fill(setting ?? null));
       expect(observed.prompt).toBe('0');
+      expect(failure).toBeUndefined();
       expect(repo.env.GIT_TERMINAL_PROMPT).toBe('1');
     } finally {
       repo.cleanup();
