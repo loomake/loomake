@@ -11,6 +11,6 @@
 
 ## 3. 確認
 
-- [ ] 3.1 管理役の全件実行枠で通常 `pnpm -s verify --change add-quality-static-observation --done --scope local` を実行し、実終了コードとJSONを確認する。失敗なら未完へ戻す。 <!-- loomake:gate=done -->
+- [x] 3.1 管理役の全件実行枠で通常 `pnpm -s verify --change add-quality-static-observation --done --scope local` を実行し、実終了コードとJSONを確認する。失敗なら未完へ戻す。 <!-- loomake:gate=done -->
 
 最終受入は同じheadの通常CI完了ゲート・必須5チェック・kitの3OS・非起草Codex自己レビューと独立Opusで確認する。C2のevalと全要求追跡、C3のstatus、#70とW1の全受入は未完のまま残す。
