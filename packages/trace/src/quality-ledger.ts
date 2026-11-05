@@ -38,9 +38,9 @@ export function requestEventProblem(value: unknown): string | undefined {
     case 'accepted': return conditions(value) && value.source === 'manual-cli' && positiveInteger(value.pid) ? undefined : '受付の対象・基準・起動元が不正です';
     case 'started': case 'evaluated': case 'reevaluated': return pair(value) ? undefined : '要求イベントの実行IDか試行番号が不正です';
     case 'failed': return pair(value) && failure(value.failure) ? undefined : '要求の失敗イベントが不正です';
-    case 'cancelled': return ['waiting', 'running'].includes(String(value.phase)) && typeof value.signal === 'string' && value.signal.length > 0 ? undefined : '要求の取消イベントが不正です';
-    case 'abandoned': return ['waiting', 'running'].includes(String(value.phase)) && uuid(value.detectedBy) ? undefined : '要求の放棄イベントが不正です';
-    case 'unrecoverable': return ['head-changed', 'basis-changed'].includes(String(value.reason)) ? undefined : '要求の回収不能イベントが不正です';
+    case 'cancelled': return (value.phase === 'waiting' || value.phase === 'running') && typeof value.signal === 'string' && value.signal.length > 0 ? undefined : '要求の取消イベントが不正です';
+    case 'abandoned': return (value.phase === 'waiting' || value.phase === 'running') && uuid(value.detectedBy) ? undefined : '要求の放棄イベントが不正です';
+    case 'unrecoverable': return (value.reason === 'head-changed' || value.reason === 'basis-changed') ? undefined : '要求の回収不能イベントが不正です';
     default: return '要求イベントの種類が不正です';
   }
 }

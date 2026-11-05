@@ -13,7 +13,7 @@
 ## 3. evalと単一実行者の要求
 
 - [x] 3.1 runEvalを既存品質コマンドとC1へ接続し、REQ-429全6Scenarioを実collectorで試験する。P1通常失敗/bail/各wrapper0のfixture、実Vitest bail、未実測/不整合/timeout/中断/起動失敗/出力超過/通知欠落のreceipt:nullと履歴保持を確認する。
-- [ ] 3.2 単一実行者の受付・取消・放棄回収を実装し、REQ-434・440・441の未受付競合3、実行中cancelled/3、二重信号後の残存lockと手動削除後回収、history後停止の補完、同日2回/翌日1回、token喪失側書込禁止、失敗を含む単調attemptを試験する。FIFO/待機2件の全未完タスクはqueue-transferに保持する。
+- [x] 3.2 単一実行者の受付・取消・放棄回収を実装し、REQ-434・440・441の未受付競合3、実行中cancelled/3、二重信号後の残存lockと手動削除後回収、history後停止の補完、同日2回/翌日1回、token喪失側書込禁止、失敗を含む単調attemptを試験する。FIFO/待機2件の全未完タスクはqueue-transferに保持する。
 
 ## 4. CLIと文書
 
