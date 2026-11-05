@@ -27,6 +27,12 @@
 | REQ-452 | NFR-09、Opus設計5章record | 範囲外 | 秘密形文書は保存拒否し、原文snapshot/hash/freshnessとtemporary前の最終検査を保つ（P1外、W1内P3で未実装） | 範囲外 | proposal.md Non-goals、parent-handoff.md P3 |
 | REQ-453 | NFR-09、Opus設計5章report | 範囲外 | 旧記録不変でReport/API/MD/JSON/診断を置換し、REQ-070の既存Scenarioを残して例外を明記（P1外、W1内P3で未実装） | 範囲外 | proposal.md Non-goals、parent-handoff.md P3 |
 
+## 配布後の公開元の試験根拠
+
+REQ-447のScenario「配布後も既存の公開元を維持する」には、既存の `tests/package-artifacts.test.ts` の `[REQ-153] 配布物の診断はold spaceを32MiBに制限して64MiBの単語を処理し通常の出力へ戻る` を試験根拠として使う。この試験はtarballのconsumerからrunnerの `dist/mask.js` を読み込み、既存の診断処理・出力・容量条件を確かめる。既存のassert・入力・上限・タグは変更していない。
+
+kitの4つのnamed exportとrunnerの配布済み関数の同一性を、REQ-447付きのtarball実行試験で追加確認する作業は [Issue #451](https://github.com/loomake/loomake/issues/451) に残す。公開型のconsumerコンパイルは型の確認として扱い、この追加実行試験は未実施とする。
+
 ## 確認事項
 
 | ID | 関連 | 質問 | 選択肢 | おすすめ | ブロッキング | 回答 | 回答者 | 回答日 |

@@ -38,7 +38,7 @@ numberは丸め・null化せず、負の0も保持する。objectの欠落した
 
 現行REQ-207はruntimeに置く責務の例を挙げており、ファイル数を4個に固定してはいない。既知の秘密の置換を責務の例に加えるMODIFIEDを提案するが、依存の許可・禁止やruntimeから機能への参照禁止は変えない。既存本文と4Scenarioを全文保持し、同じ許可・禁止が共通の置換処理にも適用される責務の文を1つ追記する。ファイル名や数の固定は製品仕様に加えない。
 
-`tests/kit-layers.test.ts:36`の正確な一覧には2ファイルを足す必要がある。実ファイルは未変更で、管理役用の未適用差分は `.loomake/design65/p1-approval.patch`。変更案は既存4項目をすべて残してprivate-key-stream.tsとredact.tsだけを足す1行であり、同じtoEqual・forbiddenImports・全禁止例を維持する。
+`tests/kit-layers.test.ts:36`の正確な一覧への2ファイル追加は適用済みである。既存4項目をすべて残してprivate-key-stream.tsとredact.tsだけを足し、同じtoEqual・forbiddenImports・全禁止例を維持した。計画時の差分は `.loomake/design65/p1-approval.patch` に保持する。
 
 当初は期待値が変わるという理由だけで追加承認を要求したが、管理役は独立確認後にその解釈を訂正した。REQ-207はファイル数を固定しておらず、元4項目・全禁止依存・未知ファイル拒否を保ち、新2moduleにも同じ検査を適用する仕様追従である。通常L3の採用仕様とADR0006に基づき進め、新たな利用者承認があったとは扱わない。別ディレクトリへの移動や検査の弱体化は行わない。独立確認の事実は `.loomake/design65/inventory-independent-audit.md` に保持する。
 
