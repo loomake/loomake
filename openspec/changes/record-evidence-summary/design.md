@@ -1,0 +1,41 @@
+# Design: record-evidence-summary
+
+## 採用した入力と分割
+
+実Opus設計84f0136e-9521-4c01-ad3a-e94be632621dはmain71c9019aを対象にRead/Glob/Grepで実claude-opus-5-5・exit0・ok:trueだった。管理役が通常PR1のREQ460〜463と、親を閉じない分割を採用した。本PRは独立したDoDを満たす通常L3で、段階受入の例外を使わない。親の索引・共有本体への到達・PR2・整理はparent-handoff.mdへ保持する。
+
+## 公開構造と同期の意味検証
+
+coreにsummary-contracts.ts（型・定数・loadSummarySchemas）とsummary-schemas.tsを置く。既存evidence系の構造を改変せず、新拡張だけをschema/summary/へ生成する。通常とpublishConfigのexportsを対応させ、既存CONTRACT_SCHEMASの8件・VERSIONEDの4件を変えない。入口からZodを静的に読まない。preserveUnknownFieldsと既存の型公開/依存方向を保つ。
+
+traceのsummaryProblemはI/Oのない同期関数とし、evidenceProblemの既存検証後に目印summaryVersionがある入力だけへ適用する。目印なしの旧storage等は解釈しない。1は新契約、他の値とEvidence1の目印は拒否する。既知のnullable欄にだけgapを対応させ、未知欄を拒否しない。元のreader予算・公開時の64MiB制限・同期serializeを変更しない。
+
+## 実行事実
+
+runRecordは実行対象SHAを既存の検証前HEADから保ち、実行idをrandomUUIDで生成する。環境値はRecordOptions.env（省略時process.env）から受け、CI識別を最上位ciにだけ置く。runAttemptは正のsafe整数、local/欠損/不正はci:nullと理由を持つ。evaluatorはtrace packageの版、環境はNode/platform/arch、commandsは解決したconfig、basisは既存basisHashの計算を使う。追加コマンドや新認証を作らない。
+
+producerはcheckのproducer evidenceを確認できたときだけ採用し、未確認ならnullとする。開始/終了は同じverify前後の実時刻を採る。新しい記録で既存now注入の意味、onVerifyの回数と呼出位置、変更検知と旧失敗の保存を変えない。
+
+## 本体の観測照合
+
+既存の変更検知を通過したあとに設定済みtests.reportを安全な予算内で読む。checkに示されたreport:sha256と違えば拒否する。照合でき、時刻・品質command・parser・ファイル状態が条件を満たす分だけsameRun verifiedと観測6件数を付ける。verifiedは同一実行の観測照合の意味で、全件完了や真正性の意味を持たない。既知部分出力・不読・未取得・localのreceipt不足はnullと理由を保持し、未知の実施をゼロにしない。
+
+本PRの書き手はlocation/expiresAt/retrievalをnull、availabilityをnot-uploadedとする。本体のbytesを要約・Gitへコピーしない。親Q69-04の補足設計で、固定summary→小さなhash-key索引→取得照合済み本体、または生成時の検証済みlocatorを比較する。この接続を未実装のまま親を閉じない。
+
+元bytesとdecoded textのUTF8の関係はQ69-14で確認する。推奨はcheckArtifactBodyがraw Uint8Array/Bufferを受け、件数parserだけstrict UTF8を使う案である。共通readerが置換decodeする事実を隠してrawの同一性を保証しない。補足設計で必要な新経路だけに安全性を定め、旧verifyやreader全般の動作へ広げない。
+
+## 本体・期限の純粋関数
+
+kitのcheckArtifactBodyは渡された参照と本文を照合する。artifactRetentionは実createdAt/expiresAtから当時の保持充足、明示nowから現在のexpired等を別々に返す。policy期間は要求する下限の比較にだけ使い、実際のexpiresAtを生成しない。d/wは日数、yはUTC暦年、閏日は移動先月末へ丸め、nowとexpiresAtが等しければexpiredとする。availableは期限だけの状態で、取得権限や存在を保証しない。
+
+## 互換と検証
+
+旧Evidence1/2の閲覧結果、未知欄とown __proto__、旧12Schemaのbytes、遅延読み込みと型consumer、全既存assertを保つ。runnerの要約1件だけのcommit再利用、正規名による最新選択、不正な最新からのfallback禁止、失敗の保存、原子的公開・上書き禁止・入力拒否/予算を回帰で確認する。#65 P3のrecord/serialization変更と競合し得るので、管理役がmain統合をまとめる。
+
+init雛形のevidence既定値は既存REQ285の値を明記するだけで、承認済みroot quality.yamlも現CI retention7dも変更しない。7dと90dの差は事実として記録し、充足したと偽装しない。
+
+## 最新の受入と接続前の確認
+
+#71はmain b2b3f824へ受入・同期archive済みとなり、純粋APIの製品原文は当初candidate7f173acと同一とgit objectで照合した。このbranchはまだ統合していない。元の設計・材料の取得時点は変更しない。
+
+新しいexecution.commands等の文字列保存もNFR09の対象であり、#65共有方針との接続をQ69-15へ残す。既知の秘密形を素通ししないが、本担当が新しい独自patternや元の共通hash/readerを変更して埋めることもしない。
