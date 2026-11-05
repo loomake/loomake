@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSyn
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { spawnSync, spawn } from 'node:child_process';
-import { pathToFileURL } from 'node:url';
+import { ModuleKind, ScriptTarget, transpileModule } from 'typescript';
 import { UsageError, RuntimeFailure, runExternal } from '@loomake/kit';
 import { runEffortRecord } from '../src/index.js';
 vi.mock('node:fs', async (original) => {
@@ -72,7 +72,10 @@ it('[REQ-466] 同じ保存名を上書きせず衝突を1として返す', () =>
   const r = repo();
   // ignoredにした既存名を使い、dirty拒否とは別に原子的な衝突を実行する。
   writeFileSync(join(r.root, '.git/info/exclude'), '.loomake/evidence/\n');
+  const head = git(r.root, 'rev-parse', 'HEAD');
   expect(r.record()).toBe(0); const [file] = r.files(); const raw = readFileSync(join(r.dir, file), 'utf8');
+  expect(JSON.parse(raw).sha).toBe(head); expect(JSON.parse(raw).recordedAt).toBe('2026-11-06T00:00:00.000Z');
+  expect(git(r.root, 'rev-parse', 'HEAD')).toBe(head);
   expect(r.record({ effort: '5m' })).toBe(1); expect(readFileSync(join(r.dir, file), 'utf8')).toBe(raw);
   expect(r.files()).toEqual([file]);
 });
@@ -104,7 +107,13 @@ it('[REQ-466] git不在と保存失敗は日本語UsageErrorで公開しない',
 
 it('[REQ-466] 同じEffort名へ同時公開して成功1件と衝突1件を返す', async () => {
   const r = repo(); const file = join(r.dir, '20261106T000000Z-aaaaaaaaaaaa.json');
-  const module = pathToFileURL(join(import.meta.dirname, '../dist/publication.js')).href;
+  const compilerOptions = { module: ModuleKind.ESNext, target: ScriptTarget.ES2022 };
+  const errors = 'data:text/javascript;base64,' + Buffer.from(transpileModule(
+    readFileSync(join(import.meta.dirname, '../../kit/src/runtime/errors.ts'), 'utf8'), { compilerOptions },
+  ).outputText).toString('base64');
+  const module = 'data:text/javascript;base64,' + Buffer.from(transpileModule(
+    readFileSync(join(import.meta.dirname, '../src/publication.ts'), 'utf8').replace("'@loomake/kit'", JSON.stringify(errors)), { compilerOptions },
+  ).outputText).toString('base64');
   const code = `import { publishEvidence } from ${JSON.stringify(module)}; process.stdin.once('data', () => { process.exitCode = publishEvidence(process.argv[1], process.argv[2]) ? 0 : 1; });`;
   const children = ['first', 'second'].map((content) => spawn(process.execPath, ['--input-type=module', '-e', code, file, content], { stdio: ['pipe', 'pipe', 'pipe'] }));
   const results = children.map((child) => new Promise<number | null>((resolve, reject) => { child.once('error', reject); child.once('close', resolve); }));

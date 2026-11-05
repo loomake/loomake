@@ -1,8 +1,12 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
+vi.mock('node:fs', async (original) => {
+  const fs = await original<typeof import('node:fs')>();
+  return { ...fs, unlinkSync: vi.fn(fs.unlinkSync) };
+});
 vi.mock('@loomake/kit', async (original) => ({ ...await original<typeof import('@loomake/kit')>(), loadVerifyQualitySchema: vi.fn(() => { throw new Error('quality schema must not load'); }) }));
 import { loadVerifyQualitySchema } from '@loomake/kit';
 import { main } from '../src/main.js';
@@ -52,4 +56,24 @@ it('[REQ-466] dirtyは1、missing/change誤りは2を維持する', async () => 
   const p = project(); writeFileSync(join(p.root, 'dirty'), ''); expect(await p.run(['--effort=0m'])).toBe(1);
   expect(await p.run(['--change=missing', '--effort=0m'])).toBe(2);
   expect(await p.run(['--change=archive', '--effort=0m'])).toBe(2);
+});
+
+it.each(['cleanup', 'stdout-first', 'stdout-second'] as const)('[REQ-466] 保存後%s失敗は3と保存済み案内を返しhelpや元の例外を表示しない', async (phase) => {
+  const p = project(); const token = 'sk-' + 'a'.repeat(20);
+  if (phase === 'cleanup') vi.mocked(unlinkSync).mockImplementationOnce(() => { throw new Error(token); });
+  let calls = 0;
+  const status = await main(['trace', 'record', '--change', 'add-x', '--effort=1m'], {
+    cwd: p.root, stderr: (text) => p.err.push(text), stdout: (text) => {
+      calls++; if (phase === 'stdout-first' || (phase === 'stdout-second' && calls === 2)) throw new Error(token);
+      p.out.push(text);
+    },
+  });
+  expect(status).toBe(3); expect(p.err).toHaveLength(1);
+  expect(p.err[0]).toContain('実績は保存しました：.loomake/evidence/add-x/effort/');
+  expect(p.err[0]).toContain('もう一度記録せず、このファイルを git にコミットしてください。');
+  expect(p.err[0]).not.toMatch(/使い方|記録できません|保存できません/); expect(p.err[0]).not.toContain(token); expect(p.err[0]).not.toContain(p.root);
+  const dir = join(p.root, '.loomake/evidence/add-x/effort');
+  const files = readdirSync(dir); const final = files.filter((name) => name.endsWith('.json'));
+  expect(final).toHaveLength(1); expect(JSON.parse(readFileSync(join(dir, final[0]), 'utf8')).totalMinutes).toBe(1);
+  expect(files).toHaveLength(phase === 'cleanup' ? 2 : 1); expect(loadVerifyQualitySchema).not.toHaveBeenCalled();
 });
