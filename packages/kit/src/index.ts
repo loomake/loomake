@@ -32,3 +32,5 @@ export type { TestReportOptions, TestReportReceipt } from './verify/policy/test-
 export { sha256Hex } from './verify/hash.js';
 export { createBodyRecorder, type BodyContext, type ChaiLike } from './evidence/vitest-body.js';
 export { createBodyRunner } from './evidence/vitest-runner.js';
+export { observeStaticMetrics } from './verify/policy/static-observation.js';
+export type { StaticCommandResult, StaticMetricsReceipt } from './verify/policy/static-observation.js';
