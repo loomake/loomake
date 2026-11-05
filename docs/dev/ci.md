@@ -89,12 +89,12 @@ macOS と Windows でだけ時間切れが続く試験ファイルは、`tests/q
     "issue": 116, "added": "2026-10-31", "expires": "2026-11-14" } ] }
 ```
 
-[Issue #430](https://github.com/loomake/loomake/issues/430) の文言の修理として、次の単発の事実も併せて記録する。2026-11-05 の利用者決定 D では、PR #425 の Windows CI で一度だけ時間切れになった `delivery-opus-prior` の試験も隔離の対象として承認された。時間切れが繰り返されたという実測はない。対象・期限・ファイル全体が外れる範囲は Issue #428 に記録する。
-
 - 単位はファイルです。vitest は試験名で除外できず、名前で外すと skip になるためです。`tests` は記録用で、外す範囲には使いません
 - `os` には `macos-latest` か `windows-latest` だけを書けます。Ubuntu のジョブは一覧を読まず、すべての試験を実行します
 - 各エントリに、原因を追う Issue の番号を書きます。期限は追加日から 14 日以内です
 - 期限を過ぎると、macOS・Windows のシャードと `quality-quarantine` の plan ジョブが失敗します。直して一覧から外すか、Issue に理由を書いて期限を見直してください
+
+[Issue #430](https://github.com/loomake/loomake/issues/430) の文言の修理として、次の単発の事実も併せて記録する。2026-11-05 の利用者決定 D では、PR #425 の Windows CI で一度だけ時間切れになった `delivery-opus-prior` の試験も隔離の対象として承認された。時間切れが繰り返されたという実測はない。対象・期限・ファイル全体が外れる範囲は Issue #428 に記録する。
 
 quality ジョブの macOS・Windows のシャードでは、`scripts/ci-quarantine.mjs --os <OS>` が一覧を検査し、外すファイルを JSON の配列で出力します。テストのステップはそれを環境変数 `LOOMAKE_TEST_QUARANTINE_EXCLUDE` で `vitest.config.ts` に渡し、両方のプロジェクトの `exclude` に足します。テストを実行する `run:` の行は変えていません。
 
