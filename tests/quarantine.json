@@ -47,6 +47,14 @@
       "issue": 183,
       "added": "2026-10-31",
       "expires": "2026-11-14"
+    },
+    {
+      "file": "tests/delivery-opus-prior.test.ts",
+      "tests": ["first-error: 第一段階で失敗したら仮説を送らない"],
+      "os": ["windows-latest"],
+      "issue": 428,
+      "added": "2026-11-05",
+      "expires": "2026-11-19"
     }
   ]
 }
