@@ -15,10 +15,10 @@
 
 ## 4. 雛形と互換性
 - [x] 4.1 initのquality.yaml雛形へ既存evidence既定値を追加し、既存配置/保護・品質目標未設定を保つ（REQ-396）。
-- [ ] 4.2 全ScenarioのREQ名付き試験・旧公開型・配布スキーマ・CLI/runner再利用・原子的保存・64MiB境界と入力拒否を確認し、最終CIで確認する範囲を記録する。Q69-23の動的入力生成2件だけを追従し、旧assert/期待/条件/期限と固定版1/2JSONを保持する。
-- [ ] 4.3 利用者文書とchangeset、branch日誌に独立PRの完成範囲と親#69の未完了を記録する。
+- [x] 4.2 全ScenarioのREQ名付き試験・旧公開型・配布スキーマ・CLI/runner再利用・原子的保存・64MiB境界と入力拒否を確認し、最終CIで確認する範囲を記録する。Q69-23の動的入力生成2件だけを追従し、旧assert/期待/条件/期限と固定版1/2JSONを保持する。
+- [x] 4.3 利用者文書とchangeset、branch日誌に独立PRの完成範囲と親#69の未完了を記録する。
 
 ## 5. ローカルの完了
-- [ ] 5.1 通常の `pnpm -s verify --change record-evidence-summary --done --scope local` を実行し、全タスク・対応試験・全検査PASSと実終了0の原本を保存する。<!-- loomake:gate=done -->
+- [x] 5.1 通常の `pnpm -s verify --change record-evidence-summary --done --scope local` を実行し、全タスク・対応試験・全検査PASSと実終了0の原本を保存する。<!-- loomake:gate=done -->
 
 最終受入は管理役が独立レビュー・CI scope ci完了・必須5チェック・変更packageの通常3 OS成功で確認する。部分受入や未アップロードを親#69完成とは扱わない。製品の受入後に同期・archiveする。
