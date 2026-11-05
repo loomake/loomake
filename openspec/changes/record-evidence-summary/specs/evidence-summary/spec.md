@@ -44,8 +44,8 @@ Source: REQ-461
 - **AND** basisSha256は既存basisHashと同じ入力・手順、commandsは設定のrawハッシュと名前参照だけを持ち、実施時刻はその検証の前後に得た時刻で、追加の外部コマンドを起動しない
 
 #### Scenario: CIの環境値がそろう
-- **WHEN** GITHUB_ACTIONSがtrue、GITHUB_RUN_IDが空でない数字列、GITHUB_RUN_ATTEMPTが正の安全な整数を表す文字列である
-- **THEN** ciはrunId・runAttempt・source:environmentを持ち、runIdとrunAttemptは最上位のciだけに保存する
+- **WHEN** GITHUB_ACTIONSがtrue、GITHUB_RUN_IDが空でない数字列、GITHUB_RUN_ATTEMPTが先頭0のない正の安全整数を表す十進文字列（[1-9][0-9]*）である
+- **THEN** ciはrunId・runAttempt・source:environmentを持ち、元の文字列を変換せず保存する。実行のCI識別は最上位のciだけに保存する
 - **AND** shaは実際に検証した元の対象であり、要約を追加したcommitへ変えない。#71の最小固定入力と同じci.runId/runAttempt・shaの位置になる
 
 #### Scenario: ローカルまたは不完全なCI環境
@@ -115,7 +115,7 @@ Source: REQ-462
 #### Scenario: 本体参照の構造
 - **WHEN** 本体をartifactとして記録する
 - **THEN** kind:test-report、configの相対path、sha256、bytes、sameRun、counts、location、availability、expiresAt、retrievalを持つ
-- **AND** locationはnullまたはgithub-actions-artifact（repository/runId/runAttempt/artifactName/entry/createdAt）で、availabilityはnot-uploaded・uploaded・retrievedを区別する
+- **AND** locationはnullまたはgithub-actions-artifact（repository/runId/runAttempt/artifactName/entry/createdAt）で、runAttemptはciと同じ正規の正の安全整数の十進文字列とする。availabilityはnot-uploaded・uploaded・retrievedを区別する
 
 #### Scenario: 現時点の書き手と参照検証の境界
 - **WHEN** 本PRのrecordが新しいdevelopment要約を保存する

@@ -12,7 +12,7 @@ traceのsummaryProblemはI/Oのない同期関数とし、evidenceProblemの既�
 
 ## 実行事実
 
-runRecordは実行対象SHAを既存の検証前HEADから保ち、実行idをrandomUUIDで生成する。環境値はRecordOptions.env（省略時process.env）から受け、CI識別を最上位ciにだけ置く。runAttemptは正のsafe整数、local/欠損/不正はci:nullと理由を持つ。evaluatorはtrace packageの版、環境はNode/platform/arch、commandsはconfigのraw hash/sourceとnameRefsだけ、basisは既存basisHashの計算を使う。追加コマンドや新認証を作らない。
+runRecordは実行対象SHAを既存の検証前HEADから保ち、実行idをrandomUUIDで生成する。環境値はRecordOptions.env（省略時process.env）から受け、CI識別を最上位ciにだけ置く。runAttemptは先頭0のない正のsafe整数の十進文字列を元のまま保存し、locationも同じ型とする。local/欠損/不正はci:nullと理由を持つ。evaluatorはtrace packageの版、環境はNode/platform/arch、commandsはconfigのraw hash/sourceとnameRefsだけ、basisは既存basisHashの計算を使う。追加コマンドや新認証を作らない。
 
 producerはcheckのproducer evidenceを確認できたときだけ採用し、未確認ならnullとする。開始/終了は同じverify前後の実時刻を採る。新しい記録で既存now注入の意味、onVerifyの回数と呼出位置、変更検知と旧失敗の保存を変えない。
 
