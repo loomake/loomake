@@ -1,5 +1,5 @@
-import { afterEach, expect, it } from 'vitest';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { afterAll, afterEach, beforeAll, expect, it } from 'vitest';
+import { chmodSync, copyFileSync, statSync, readdirSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -8,8 +8,25 @@ import { readDocuments } from '../src/documents.js';
 import { evidenceValue, evidenceV2Value } from '../../core/test/fixtures/trace-contract-values.js';
 import { traceMd, specMd } from '../../kit/test/project.js';
 import { reusableEvidence } from '../../runner/src/reuse.js';
+import { removeWithRetry } from '../../../tests/helpers/partition-fixture.js';
 const roots: string[] = [];
-afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); });
+let baselineDir: string | undefined;
+beforeAll(() => { baselineDir = project().root; roots.splice(0); });
+afterAll(() => { if (baselineDir) removeWithRetry(baselineDir); });
+function copyFixture(from: string, to: string) {
+  mkdirSync(to, { recursive: true });
+  for (const entry of readdirSync(from, { withFileTypes: true })) {
+    const source = join(from, entry.name);
+    const destination = join(to, entry.name);
+    if (entry.isDirectory()) copyFixture(source, destination);
+    else {
+      copyFileSync(source, destination);
+      chmodSync(destination, statSync(source).mode);
+    }
+  }
+}
+
+afterEach(() => { for (const root of roots.splice(0)) removeWithRetry(root); });
 const git = (root: string, ...args: string[]) => {
   const r = spawnSync('git', ['-c', 'user.name=loomake-test', '-c', 'user.email=test@example.com', ...args], { cwd: root, encoding: 'utf8' });
   if (r.status !== 0) throw new Error(r.stderr); return r.stdout.trim();
@@ -17,8 +34,11 @@ const git = (root: string, ...args: string[]) => {
 function project() {
   const root = mkdtempSync(join(tmpdir(), 'loomake-effort-compat-')); roots.push(root);
   const write = (path: string, content: string) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); };
-  write('loomake.config.json', '{}'); write('openspec/changes/c1/trace.md', traceMd()); write('openspec/changes/c1/specs/x/spec.md', specMd());
-  git(root, 'init', '-q'); git(root, 'add', '.'); git(root, 'commit', '-qm', 'initial');
+  if (baselineDir) copyFixture(baselineDir, root);
+  else {
+    write('loomake.config.json', '{}'); write('openspec/changes/c1/trace.md', traceMd()); write('openspec/changes/c1/specs/x/spec.md', specMd());
+    git(root, 'init', '-q'); git(root, 'add', '.'); git(root, 'commit', '-qm', 'initial');
+  }
   const changeDir = join(root, 'openspec/changes/c1');
   const effort = () => runEffortRecord({ root, changeId: 'c1', effort: '0m', stdout: () => {}, now: () => new Date('2026-11-06T00:00:00Z') });
   return { root, write, changeDir, effort };

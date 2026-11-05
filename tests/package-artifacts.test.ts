@@ -430,7 +430,8 @@ import assert from 'node:assert/strict';
 import { mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { EFFORT_SCHEMA_VERSION, loadEffortSchema, loadTraceSchemas, loadParserSchemas } from '@loomake/core';
-import { resolveChangeDir } from '@loomake/kit';
+import { resolveChangeDir, RuntimeFailure, UsageError } from '@loomake/kit';
+import * as traceApi from '@loomake/trace';
 import { parseDuration, parseCost, parseEffortOption, runEffortRecord, runRecord, runReport } from '@loomake/trace';
 import { main } from './node_modules/loomake/dist/main.js';
 const git = (...args) => { const r = spawnSync('git', args, { encoding: 'utf8' }); assert.equal(r.status, 0, r.stderr); return r.stdout.trim(); };
@@ -447,6 +448,16 @@ const record = () => runEffortRecord({ root: process.cwd(), changeId: 'sample', 
 assert.equal(record(), 0); const dir = '.loomake/evidence/sample/effort'; const first = readdirSync(dir)[0];
 const value = JSON.parse(readFileSync(dir + '/' + first, 'utf8')); assert.ok((await loadEffortSchema()).effortRecordSchema.safeParse(value).success);
 assert.equal(value.totalMinutes, 0); assert.ok(!('verify' in value)); assert.ok(!('documents' in value)); commit();
+const schema = (await loadEffortSchema()).effortRecordSchema;
+assert.equal(schema.safeParse({ ...value, cost: [] }).success, false);
+assert.equal(schema.safeParse({ ...value, recordedAt: '2026-11-06T00:00Z' }).success, false);
+assert.throws(() => runEffortRecord({ root: process.cwd(), changeId: 'sample', effort: '0m', cost: [], stdout: () => {} }), UsageError);
+assert.deepEqual(readdirSync(dir), [first]);
+for (const internal of ['publishEvidenceState', 'PublicationFailure', 'EffortInputFailure']) assert.ok(!(internal in traceApi));
+const secret = 'sk-' + 'a'.repeat(20);
+assert.throws(() => runEffortRecord({ root: process.cwd(), changeId: 'sample', effort: '1m', now: () => new Date('2030-01-01T00:00:00Z'), stdout: () => { throw new UsageError(secret); } }), error => error instanceof RuntimeFailure && error.cause === undefined && !error.message.includes(secret) && error.message.includes('もう一度記録せず'));
+assert.equal(readdirSync(dir).filter(name => name.endsWith('.json')).length, 2); commit();
+
 mkdirSync('openspec/changes/archive', { recursive: true }); renameSync('openspec/changes/sample', 'openspec/changes/archive/2026-11-06-sample'); commit();
 assert.equal(resolveChangeDir('openspec/changes', 'sample').kind, 'archived'); assert.equal(record(), 0); commit();
 mkdirSync('openspec/changes/archive/2026-11-05-sample'); writeFileSync('openspec/changes/archive/2026-11-05-sample/.keep', ''); commit();
