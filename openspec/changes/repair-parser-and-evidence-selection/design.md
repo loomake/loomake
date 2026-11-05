@@ -1,0 +1,8 @@
+## 設計
+Opus session b9406d29-f2e9-4d79-89c1-81cc9da676e9 の設計を採用する。ただし候補名の fallback 案は利用者回答に従い採用しない。正規名だけを候補にし、承認された fixture 名と期待パスだけを移す。
+
+閉じフェンスのみ末尾を制約する。表は空行で終える。splitLines は先頭 BOM を一つだけ除き、setTraceCells の直列化では元の BOM を戻す。Source は初出順で重複を除く。表ごとに Map で最初の ID 行を記録し、全行は保持する。
+
+SHA は既存 evidenceProblem の 40/64 桁・大小文字可の正規表現を共用する。単独で正しい SHA は既に受理されており、修理は別の不正 field を SHA と誤診断する点に限る。JSON Schema と record は変えない。
+
+修正前の実 CLI では台帳・回答済み質問・仮定の重複が spec-only exit 0。一方、後続の未回答質問は exit 1 であり、その回避は再現しなかった。145 trace の互換走査で表内重複は 0 件。過去の保存 trace に新しい解析エラーがあれば report は既存の UsageError を使う。無視した名前の警告と agreement 編集の仕様変更は加えない。
