@@ -45,3 +45,5 @@
 - REQ-323: `packages/cli/test/reference-definition.test.ts`。既存REQ-323の生成・列挙・条件・共通操作試験を維持、reuseと解析順を追加。
 
 共通契約は各要件の正常・拒否・境界試験群に分散して確認する。追加の配布試験は tests/package-artifacts.test.ts の [REQ-473][REQ-475][REQ-476] と、公開8型・2関数を含む tests/fixtures/public-api/consumer.ts.txt。実Git fixtureは runRecord(scope:ci) の実記録、repo外で凍結したanchor、実プロセスのカウンタを使う。
+
+R1回帰：失敗した実Git本文・実行時引数（K）、証跡追加だけのpartial要約（T）、再検証の全表示（C）を追加。構造照合はtrace.mdのPR固定記録を参照。
