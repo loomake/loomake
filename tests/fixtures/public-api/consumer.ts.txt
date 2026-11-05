@@ -174,5 +174,7 @@ export function consumeToolEvidence(request: CollectRequest, text: string): Coll
   return collected;
 }
 export type ToolEvidenceTypes = [GhCheckBucket, GhCheck, AgentCause, AgentResult, ToolFinding, BiomeSummary, PlaywrightTestCase, PlaywrightError];
-// @ts-expect-error REQ-448: 内部の共通 helper は公開しない。
-import { requirementIds as internalRequirementIds, errorLine as internalErrorLine } from '@loomake/core';
+// @ts-expect-error REQ-448: requirementIds は公開しない。
+import { requirementIds as internalRequirementIds } from '@loomake/core';
+// @ts-expect-error REQ-448: errorLine は公開しない。
+import { errorLine as internalErrorLine } from '@loomake/core';

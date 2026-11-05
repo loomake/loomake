@@ -30,5 +30,5 @@
 ## 5. PR #460 の Opus R1 修理
 
 - [x] 5.1 REQ-450 の stderr 切り口で既知の形が現れる回帰試験の失敗を確認し、全文の置換・4096 文字の上限・UTF-16 境界を保って切り出し後も置換する。
-- [ ] 5.2 公開 consumer の requirementIds・errorLine の非公開検査を別々にし、型・対象試験・pack した配布物を確認する。
+- [x] 5.2 公開 consumer の requirementIds・errorLine の非公開検査を別々にし、型・対象試験・pack した配布物を確認する。
 - [ ] 5.3 通常の `pnpm -s verify --change collect-tool-evidence --done --scope local --json` を clean head で通し、R1 の修理と検証を同じ journal・PR 本文案へ記録する。 <!-- loomake:gate=done -->
