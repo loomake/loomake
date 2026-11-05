@@ -5,6 +5,8 @@ const { effortRecordSchema, effortMinutesSchema, effortCostSchema } = await load
 const base = { schemaVersion: 1, kind: 'loomake-effort', change: 'add-x', sha: 'a'.repeat(40), recordedAt: '2026-11-06T00:00:00.000Z' };
 it('[REQ-466] Effort 1 の排他形式と省略/0を保つ導出型', () => {
   expect(EFFORT_SCHEMA_VERSION).toBe(1);
+  expect(effortMinutesSchema.parse({ review: 0 })).toEqual({ review: 0 });
+  expect(effortCostSchema.parse({ kind: 'tokens', count: 0 })).toEqual({ kind: 'tokens', count: 0 });
   expectTypeOf<EffortRecord>().toEqualTypeOf<z.output<typeof effortRecordSchema>>();
   expectTypeOf<EffortMinutes>().toEqualTypeOf<z.output<typeof effortMinutesSchema>>();
   expectTypeOf<EffortCost>().toEqualTypeOf<z.output<typeof effortCostSchema>>();

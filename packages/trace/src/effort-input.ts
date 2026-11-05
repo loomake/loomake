@@ -4,7 +4,7 @@ const categories = ['instruct', 'review', 'rework', 'run', 'wait'] as const;
 const count = (value: unknown): value is number => typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
 const duration = (value: unknown): value is number => count(value) && value <= 100000;
 const object = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
-const noteValid = (value: unknown): value is string => typeof value === 'string' && [...value].length <= 500 && !/[\p{Cc}\p{Zl}\p{Zp}]/u.test(value);
+const noteValid = (value: unknown): value is string => typeof value === 'string' && Array.from(value).length <= 500 && !/[\p{Cc}\p{Zl}\p{Zp}]/u.test(value);
 const invalid = () => new UsageError('実作業時間の入力が不正です。時間・区分・回数・費用・メモの書式を確認してください。');
 const safeInteger = (digits: string): number => {
   const trimmed = digits.replace(/^0+/, '') || '0';
@@ -21,7 +21,7 @@ export function parseDuration(text: string): number {
   else {
     const match = /^(0|[1-9]\d{0,3})(?:\.(\d{1,2}))?h$/.exec(text);
     if (!match) throw invalid();
-    const hundredths = Number(match[1]) * 100 + Number((match[2] ?? '').padEnd(2, '0'));
+    const hundredths = Number(match[1]) * 100 + Number((match.at(2) ?? '').padEnd(2, '0'));
     if (hundredths * 60 % 100 !== 0) throw invalid();
     value = hundredths * 60 / 100;
   }
@@ -41,7 +41,8 @@ export function parseEffortOption(text: string): EffortAmount {
     if (Object.hasOwn(minutes, category)) throw invalid();
     minutes[category] = parseDuration(match[2]);
   }
-  if (!categories.some((key) => minutes[key] !== undefined) || (minutes.search ?? 0) > categories.reduce((sum, key) => sum + (minutes[key] ?? 0), 0)) throw invalid();
+  const known = categories.reduce((sum, key) => sum + (minutes[key] ?? 0), 0);
+  if (!categories.some((key) => minutes[key] !== undefined) || (minutes.search ?? 0) > known) throw invalid();
   return { minutes };
 }
 /** USDを整数centsへ変換し、tokensと別のkindとして保持する。 */
@@ -53,10 +54,10 @@ export function parseCost(text: string): EffortCost[] {
     if (!match || kinds.has(match[1])) throw invalid();
     const kind = match[1]; kinds.add(kind);
     if (kind === 'tokens') {
-      if (match[3] !== undefined) throw invalid();
+      if (match.at(3) !== undefined) throw invalid();
       return { kind, count: safeInteger(match[2]) };
     }
-    return { kind: kind as 'actual-usd' | 'estimated-usd', cents: safeInteger(match[2] + (match[3] ?? '').padEnd(2, '0')) };
+    return { kind: kind as 'actual-usd' | 'estimated-usd', cents: safeInteger(match[2] + (match.at(3) ?? '').padEnd(2, '0')) };
   });
 }
 function problem(value: unknown): string | null {
@@ -71,7 +72,10 @@ function problem(value: unknown): string | null {
   if (Object.hasOwn(value, 'totalMinutes') && !duration(value.totalMinutes)) return '総計の範囲が不正です';
   if (Object.hasOwn(value, 'minutes')) {
     const m = value.minutes;
-    if (!object(m) || Object.keys(m).some((key) => ![...categories, 'search'].includes(key) || !duration(m[key])) || !categories.some((key) => Object.hasOwn(m, key)) || (m.search as number ?? 0) > categories.reduce((sum, key) => sum + (m[key] as number ?? 0), 0)) return '区分または内数が不正です';
+    if (!object(m) || Object.keys(m).some((key) => ![...categories, 'search'].includes(key) || !duration(m[key]))) return '区分の値が不正です';
+    if (!categories.some((key) => Object.hasOwn(m, key))) return '時間の区分を指定してください';
+    const known = categories.reduce((sum, key) => { const v = m[key]; return sum + (typeof v === 'number' ? v : 0); }, 0);
+    if (typeof m.search === 'number' && m.search > known) return 'searchが既知の合計を超えています';
   }
   for (const key of ['decisions', 'attempts']) if (value[key] !== undefined && !count(value[key])) return '回数は非負の安全な整数にしてください';
   if (value.cost !== undefined) {

@@ -15,11 +15,11 @@
 
 ## 4. CLIと使い方
 
-- [ ] 4.1 args/mainへeffortと付帯オプションを追加し、quality schemaより前の分岐、scope併用拒否、help、両構文、終了コードを追加試験で確かめる。CLIリファレンスを再生成し--checkと既存試験を無変更で通す（REQ-466）
+- [x] 4.1 args/mainへeffortと付帯オプションを追加し、quality schemaより前の分岐、scope併用拒否、help、両構文、終了コードを追加試験で確かめる。CLIリファレンスを再生成し--checkと既存基準原本・全旧assertを保持し、新5オプションの明示と総数27→32の追加契約だけを整合して通す（REQ-466）
 
 ## 5. 互換性と配布
 
-- [ ] 5.1 effortサブディレクトリを既存証拠と混在させる追加試験で、release reportとrunnerの候補/出力が変わらないこと、旧Evidence1/2・Report2・全既存Scenario・同期APIと依存が不変なことを確認し、tdd.mdへ実際のRed/Greenを記録する（REQ-466, REQ-066, REQ-127, REQ-128）
+- [ ] 5.1 effortサブディレクトリを既存証拠と混在させる追加試験で、release reportとrunnerの候補/出力が変わらないこと、旧Evidence1/2・Report2・全既存Scenario・同期APIと依存が不変（新オプションの基準追加は4.1に従う）なことを確認し、tdd.mdへ実際のRed/Greenを記録する（REQ-466, REQ-066, REQ-127, REQ-128）
 - [ ] 5.2 core・trace・CLIの非破壊追加のpatch changesetと利用者向け説明を添え、tarballから新入口・help・既存公開元を追加試験で確かめる。原本欠測・親#68未完・PR2/3の残義務も文書に保持する（REQ-466）
 
 ## 6. ローカルの完了

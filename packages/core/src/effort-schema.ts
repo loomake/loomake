@@ -16,7 +16,7 @@ const common = {
   sha: z.string().regex(/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/i), recordedAt: z.iso.datetime({ offset: true }),
   decisions: count.optional(), attempts: count.optional(),
   cost: z.array(effortCostSchema).max(3).refine((value) => new Set(value.map((item) => item.kind)).size === value.length).optional(),
-  note: z.string().refine((value) => [...value].length <= 500 && !/[\p{Cc}\p{Zl}\p{Zp}]/u.test(value)).optional(),
+  note: z.string().refine((value) => Array.from(value).length <= 500 && !/[\p{Cc}\p{Zl}\p{Zp}]/u.test(value)).optional(),
 };
 /** Effort 1 のみの構造。品質検証の証拠は含めない。 */
 export const effortRecordSchema = z.union([
