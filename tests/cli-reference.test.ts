@@ -26,7 +26,9 @@ it('[REQ-323][REQ-325] ソース定義から全コマンド・操作と既存ペ
   expect(rendered).toContain('先頭引数として指定する');
   expect(rendered).toContain('## loomake doctor\n\n使い方: loomake doctor\n');
   expect(rendered).toContain('固有オプションなし。');
-  expect(rendered.split('\n').filter((line) => line.startsWith('| --'))).toHaveLength(25);
+  expect(rendered.split('\n').filter((line) => line.startsWith('| --'))).toHaveLength(27);
+  expect(rendered).toContain('| --yes |');
+  expect(rendered).toContain('| --keep-existing |');
   expect(rendered).toMatch(/^title: \S/m);
   expect(rendered).toMatch(/^description: \S/m);
   expect(rendered).toContain('packages/cli/src/args.ts');

@@ -277,6 +277,60 @@
       "stream": "stdout",
       "from": "  --change <id>       記録する change",
       "to": "  --change <id>       記録する change\n  --scope local|ci    記録する verify の範囲。省くと ci。local の記録は最終 CI の合格ではない"
+    },
+    {
+      "change": "add-init-noninteractive-options",
+      "requirement": "REQ-419",
+      "approval": "Q-407-01（Issue #407 の実装依頼に基づく管理役記録、2026-11-05）",
+      "reason": "明示した既存ファイル方針の使い方を表示する",
+      "argv": [
+        [
+          "init",
+          "--help"
+        ],
+        [
+          "init",
+          "-h"
+        ]
+      ],
+      "stream": "stdout",
+      "from": "使い方: loomake init [--codex] [--devcontainer]",
+      "to": "使い方: loomake init [--codex] [--devcontainer] [--yes | --keep-existing]"
+    },
+    {
+      "change": "add-init-noninteractive-options",
+      "requirement": "REQ-419",
+      "approval": "Q-407-01（Issue #407 の実装依頼に基づく管理役記録、2026-11-05）",
+      "reason": "使い方の誤りでも追加した方針を表示する",
+      "argv": [
+        [
+          "init",
+          "--bad"
+        ]
+      ],
+      "stream": "stderr",
+      "entry": 1,
+      "from": "使い方: loomake init [--codex] [--devcontainer]",
+      "to": "使い方: loomake init [--codex] [--devcontainer] [--yes | --keep-existing]"
+    },
+    {
+      "change": "add-init-noninteractive-options",
+      "requirement": "REQ-419",
+      "approval": "Q-407-01（Issue #407 の実装依頼に基づく管理役記録、2026-11-05）",
+      "reason": "既存のオプション説明を保ち、明示した上書きと保持の説明を足す",
+      "argv": [
+        [
+          "init",
+          "--help"
+        ],
+        [
+          "init",
+          "-h"
+        ]
+      ],
+      "stream": "stdout",
+      "from": "  --devcontainer      .devcontainer/devcontainer.json を置く",
+      "to": "  --devcontainer      .devcontainer/devcontainer.json を置く\n  --yes               内容の違う同名のファイルを、確かめずにすべて上書きする\n  --keep-existing     既存の配置対象ファイルを残し、不足ファイルだけ置く"
     }
   ]
 }

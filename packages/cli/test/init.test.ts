@@ -145,6 +145,128 @@ describe('既存ファイルの保護', () => {
   });
 });
 
+describe('確認なしで既存ファイルの扱いを指定する', () => {
+  it('[REQ-419] 非TTYの--yesはすべて上書きしCodexとdevcontainerも配置する', async () => {
+    const r = await runInit(['--yes', '--codex', '--devcontainer'], { files: { 'AGENTS.md': MINE, 'quality.yaml': 'version: 2\n# custom quality\n' } });
+    expect(r.code).toBe(0);
+    expect(r.prompts).toEqual([]);
+    expect(r.files['AGENTS.md']).toBe(template('AGENTS.md'));
+    expect(r.files['quality.yaml']).toBe(template('quality.yaml'));
+    expect(r.files['CLAUDE.md']).toBe(template('CLAUDE.md'));
+    expect(r.files['.agents/skills/req-to-openspec/SKILL.md']).toBe(template('skills/req-to-openspec/SKILL.md'));
+    expect(r.files['.devcontainer/devcontainer.json']).toBe(template('devcontainer/devcontainer.json'));
+    expect(r.stdout).toContain('-# 自分の AGENTS.md');
+    expect(r.stdout).toContain('上書き：AGENTS.md');
+    expect(r.stdout).toContain('上書き：quality.yaml');
+    expect(r.stdout).toContain('quality.yaml は品質目標未設定');
+    expect(r.stdout.match(/要件書から change を作るときは/g)).toHaveLength(1);
+  });
+
+  it('[REQ-420] 非TTYの--keep-existingはすべて残して不足ファイルを配置する', async () => {
+    const quality = 'version: 2\n# custom quality\n';
+    const r = await runInit(['--keep-existing', '--codex', '--devcontainer'], { files: { 'AGENTS.md': MINE, 'quality.yaml': quality } });
+    expect(r.code).toBe(0);
+    expect(r.prompts).toEqual([]);
+    expect(r.files['AGENTS.md']).toBe(MINE);
+    expect(r.files['quality.yaml']).toBe(quality);
+    expect(r.files['CLAUDE.md']).toBe(template('CLAUDE.md'));
+    expect(r.files['.agents/skills/req-to-openspec/SKILL.md']).toBe(template('skills/req-to-openspec/SKILL.md'));
+    expect(r.files['.devcontainer/devcontainer.json']).toBe(template('devcontainer/devcontainer.json'));
+    expect(r.stdout).toContain('-# 自分の AGENTS.md');
+    expect(r.stdout).toContain('上書きしなかった：AGENTS.md');
+    expect(r.stdout).toContain('上書きしなかった：quality.yaml');
+    expect(r.stdout).not.toContain('quality.yaml は品質目標未設定');
+  });
+
+  it.each(['--yes', '--keep-existing'])('[REQ-419][REQ-420] TTYでも明示指定を優先して質問しない %s', async (flag) => {
+    const r = await runInit([flag], { files: { 'AGENTS.md': MINE }, answers: ['n'] });
+    expect(r.code).toBe(0);
+    expect(r.prompts).toEqual([]);
+    expect(r.files['AGENTS.md']).toBe(flag === '--yes' ? template('AGENTS.md') : MINE);
+  });
+
+  it.each(['--yes', '--keep-existing'])('[REQ-020][REQ-419][REQ-420] 同内容はCRLFも保持する %s', async (flag) => {
+    const crlf = template('AGENTS.md').replace(/\r?\n/g, '\r\n');
+    const r = await runInit([flag], { files: { 'AGENTS.md': crlf } });
+    expect(r.code).toBe(0);
+    expect(r.prompts).toEqual([]);
+    expect(r.files['AGENTS.md']).toBe(crlf);
+    expect(r.stdout).toContain('変更なし：AGENTS.md');
+  });
+
+  it('[REQ-020][REQ-421] 非TTY無指定は何も置かず両オプションの意味を案内する', async () => {
+    const r = await runInit([], { files: { 'AGENTS.md': MINE } });
+    expect(r.code).toBe(1);
+    expect(r.files).toEqual({ 'AGENTS.md': MINE });
+    expect(r.prompts).toEqual([]);
+    expect(r.stdout).toContain('-# 自分の AGENTS.md');
+    expect(r.stdout).toContain('確認を受け付けられない');
+    expect(r.stdout).toContain('すべて上書きするときは --yes');
+    expect(r.stdout).toContain('既存の配置対象を残して不足ファイルだけ置くときは --keep-existing');
+  });
+
+  it.each([['--yes', '--keep-existing'], ['--keep-existing', '--yes']])('[REQ-419] 両方を指定したら配置前に終了コード2にする %j', async (...flags) => {
+    const r = await runInit(flags, { files: { 'AGENTS.md': MINE } });
+    expect(r.code).toBe(2);
+    expect(r.prompts).toEqual([]);
+    expect(r.files).toEqual({ 'AGENTS.md': MINE });
+    expect(r.stdout).toContain('--yes と --keep-existing は同時に指定できません');
+    expect(r.stdout).toContain('使い方: loomake init');
+    expect(r.stdout).not.toContain('-# 自分の AGENTS.md');
+    expect(r.stdout).not.toContain('要件書から change を作るときは');
+  });
+
+  it.each(['--yes', '--keep-existing'])('[REQ-133][REQ-196][REQ-419][REQ-420] 設定由来の除外と案内を保つ %s', async (flag) => {
+    const original = JSON.stringify({ tests: { report: 'custom/r.json' }, commands: { test: 'custom-test' } });
+    const quality = 'version: 2\n# custom quality\n';
+    const r = await runInit([flag], { files: { 'loomake.config.json': original, 'quality.yaml': quality, '.gitignore': 'node_modules/\n', 'package.json': JSON.stringify({ scripts: { test: 'vitest run' } }) } });
+    expect(r.code).toBe(0);
+    if (flag === '--keep-existing') {
+      expect(r.files['loomake.config.json']).toBe(original);
+      expect(r.files['quality.yaml']).toBe(quality);
+      expect(r.files['.gitignore']).toBe('node_modules/\ncustom/r.json\n');
+      expect(r.stdout).not.toContain('commands に書きませんでした');
+      expect(r.stdout).not.toContain('quality.yaml は品質目標未設定');
+    } else {
+      expect(config(r).commands).toEqual({ test: 'npm test' });
+      expect(r.files['.gitignore']).toBe('node_modules/\n.loomake/test-report.json\n');
+      expect(r.stdout).toContain('commands に書きませんでした');
+      expect(r.stdout).toContain('quality.yaml は品質目標未設定');
+    }
+  });
+
+  it.each(['overwrite', 'keep'] as const)('[REQ-419][REQ-420] kit APIも非対話で方針を指定できる %s', async (existingFiles) => {
+    const root = mkdtempSync(join(tmpdir(), 'loomake-init-api-'));
+    try {
+      writeFileSync(join(root, 'AGENTS.md'), MINE);
+      const confirm = vi.fn(() => { throw new Error('確認を呼んではいけない'); });
+      expect(await runInitApi({ root, existingFiles, interactive: false, confirm, stdout: () => {} })).toBe(0);
+      expect(confirm).not.toHaveBeenCalled();
+      expect(readFileSync(join(root, 'AGENTS.md'), 'utf8')).toBe(existingFiles === 'overwrite' ? template('AGENTS.md') : MINE);
+      expect(readFileSync(join(root, 'CLAUDE.md'), 'utf8')).toBe(template('CLAUDE.md'));
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+
+  it.each(['--yes', '--keep-existing'].flatMap((flag) => ['file', 'directory', 'missing', 'gitignore'].map((kind) => ({ flag, kind }))))('[REQ-020][REQ-419][REQ-420] 明示指定でも安全でないリンクを拒む $flag $kind', async ({ flag, kind }) => {
+    const outside = mkdtempSync(join(tmpdir(), 'loomake-outside-options-'));
+    const secret = '外部ファイルの内容\n';
+    writeFileSync(join(outside, 'target.md'), secret);
+    try {
+      const r = await runInit([flag], { setup: (root) => {
+        if (kind === 'directory') symlinkSync(outside, join(root, '.claude'), 'dir');
+        else symlinkSync(join(outside, kind === 'missing' ? 'missing.md' : 'target.md'), join(root, kind === 'gitignore' ? '.gitignore' : 'AGENTS.md'), 'file');
+      } });
+      expect(r.code).toBe(1);
+      expect(r.prompts).toEqual([]);
+      expect(r.files).toEqual({});
+      expect(r.stdout).not.toContain(secret.trim());
+      expect(readFileSync(join(outside, 'target.md'), 'utf8')).toBe(secret);
+      expect(existsSync(join(outside, 'missing.md'))).toBe(false);
+      expect(readdirSync(outside)).toEqual(['target.md']);
+    } finally { rmSync(outside, { recursive: true, force: true }); }
+  });
+});
+
 describe('既存ファイルの保護：シンボリックリンク', () => {
   // プロジェクトの外の場所。テストごとに作って消す
   const withOutside = async (fn: (outside: string) => Promise<void>) => {

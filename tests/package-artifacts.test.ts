@@ -268,6 +268,43 @@ it('[REQ-396][REQ-397][REQ-398] tarballの実CLIが空Gitへ雛形と見本を�
   }
 }, 60_000);
 
+it('[REQ-419][REQ-420][REQ-421] tarballのinitは非TTYとパイプでも明示方針で完了し無指定は案内して中止する', () => {
+  const initTarget = join(base, 'init-noninteractive');
+  const prepared = spawnSync(process.execPath, ['scripts/package-smoke.mjs', 'prepare', initTarget], { cwd: root, encoding: 'utf8', env });
+  expect(prepared.status, prepared.stdout + prepared.stderr).toBe(0);
+  const installed = join(initTarget, 'consumer/node_modules');
+  const cli = join(installed, 'loomake/dist/cli.js');
+  const templates = join(installed, '@loomake/kit/templates');
+  for (const input of ['', 'y\nn\n']) {
+    for (const flag of [undefined, '--yes', '--keep-existing']) {
+      const project = mkdtempSync(join(initTarget, 'existing-'));
+      const agents = '# custom agents\n';
+      const quality = '# custom quality\n';
+      writeFileSync(join(project, 'AGENTS.md'), agents);
+      writeFileSync(join(project, 'quality.yaml'), quality);
+      const result = spawnSync(process.execPath, [cli, 'init', '--codex', '--devcontainer', ...(flag ? [flag] : [])], { cwd: project, input, encoding: 'utf8', timeout: 10000 });
+      expect(result.error, result.stdout + result.stderr).toBeUndefined();
+      expect(result.status, result.stdout + result.stderr).toBe(flag ? 0 : 1);
+      expect(result.stderr).not.toContain('AbortError');
+      expect(result.stdout).not.toContain('[y/N]');
+      expect(readFileSync(join(project, 'AGENTS.md'), 'utf8')).toBe(flag === '--yes' ? readFileSync(join(templates, 'AGENTS.md'), 'utf8') : agents);
+      expect(readFileSync(join(project, 'quality.yaml'), 'utf8')).toBe(flag === '--yes' ? readFileSync(join(templates, 'quality.yaml'), 'utf8') : quality);
+      if (flag) {
+        expect(readFileSync(join(project, 'CLAUDE.md'), 'utf8')).toBe(readFileSync(join(templates, 'CLAUDE.md'), 'utf8'));
+        expect(existsSync(join(project, '.agents/skills/req-to-openspec/SKILL.md'))).toBe(true);
+        expect(existsSync(join(project, '.devcontainer/devcontainer.json'))).toBe(true);
+        expect(result.stdout).toContain(flag === '--yes' ? '上書き：AGENTS.md' : '上書きしなかった：AGENTS.md');
+      } else {
+        expect(existsSync(join(project, 'CLAUDE.md'))).toBe(false);
+        expect(existsSync(join(project, '.gitignore'))).toBe(false);
+        expect(result.stdout).toContain('--yes');
+        expect(result.stdout).toContain('--keep-existing');
+        expect(result.stdout).toContain('どのファイルも置かずに中止');
+      }
+    }
+  }
+}, 60_000);
+
 // #64: REQ-311/312/319の既存契約を、main関数の呼出だけでなく実CLI入口でも確かめる。
 describe('CI=1でのverify APIと実CLIの判定一致', () => {
   type Case = {

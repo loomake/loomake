@@ -70,11 +70,15 @@ function doctor(args: string[], io: Io): number {
 
 function init(args: string[], io: Io): Promise<number> {
   const { flags } = parseOptions(args, optionSpec(commandDefinition('init')));
+  const yes = flags.has('--yes');
+  const keep = flags.has('--keep-existing');
+  if (yes && keep) throw new UsageError('--yes と --keep-existing は同時に指定できません');
   const { prompt } = io;
   return runInit({
     root: io.cwd,
     codex: flags.has('--codex'),
     devcontainer: flags.has('--devcontainer'),
+    existingFiles: yes ? 'overwrite' : keep ? 'keep' : 'ask',
     interactive: Boolean(io.interactive && prompt),
     // 既定は上書きしない。y か yes のときだけ承諾とみなす
     confirm: async (question) => /^y(es)?$/i.test(((await prompt?.(question)) ?? '').trim()),
