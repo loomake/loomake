@@ -34,5 +34,5 @@
 - [x] 5.3 通常の `pnpm -s verify --change collect-tool-evidence --done --scope local --json` を clean head で通し、R1 の修理と検証を同じ journal・PR 本文案へ記録する。 <!-- loomake:gate=done -->
 - [x] 5.4 PR #460 の試験 fixture を保守し、各ケースを独立した Git リポジトリへコピーする。既存の入力・期待値・制限時間を保ち、後始末に既存の有界再試行を使う。
 - [x] 5.5 fixture の独立性・全 94 ケース・REQ-376・型・lint を確認し、clean head で通常の完了ゲートを通す。 <!-- loomake:gate=done -->
-- [ ] 5.6 runner の未分類例外 4 ケースで、既存 makeRepo の準備だけを beforeEach へ移す。元のケース本文・後始末・入力・期待値・制限時間を保つ。
+- [x] 5.6 runner の未分類例外 4 ケースで、既存 makeRepo の準備だけを beforeEach へ移す。元のケース本文・後始末・入力・期待値・制限時間を保つ。
 - [ ] 5.7 ケース本文の一致、対象 4 ケースと関連するブランチ・例外・秘密の置換・復帰失敗の試験、型・lint を確認し、全タスクをチェックした clean head で通常の完了ゲートを通す。 <!-- loomake:gate=done -->
