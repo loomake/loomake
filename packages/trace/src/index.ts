@@ -12,3 +12,5 @@ export { readDocuments, changedDocuments } from './documents.js';
 export { runAgreement } from './agreement.js';
 export type { AgreementOptions } from './agreement.js';
 export { parseDuration, parseEffortOption, parseCost } from './effort-input.js';
+export { runEffortRecord } from './effort-record.js';
+export type { EffortRecordOptions } from './effort-record.js';
