@@ -115,11 +115,11 @@ describe('コマンドの入力予算', () => {
 
   it('[REQ-172] JSONの証拠も64MiBを超えたら報告しない', () => withProject({}, (root) => {
     const dir = join(root, '.loomake/evidence/c1'); mkdirSync(dir, { recursive: true });
-    sparse(join(dir, 'large.json'), 64 * 1024 * 1024 + 1);
+    sparse(join(dir, '20261024T000000Z-ffffffffffff.json'), 64 * 1024 * 1024 + 1);
     const output: string[] = [];
     const report = () => {
       try { return runReport({ root, changeId: 'c1', stdout: (text) => output.push(text) }); }
-      catch (error) { expect(String(error)).toContain(join(dir, 'large.json')); throw error; }
+      catch (error) { expect(String(error)).toContain(join(dir, '20261024T000000Z-ffffffffffff.json')); throw error; }
     };
     expect(report).toThrow(/上限.*67108864/);
     expect(output).toEqual([]);
@@ -131,7 +131,7 @@ describe('コマンドの入力予算', () => {
     const value = { schemaVersion: 1, change: 'c1', sha: 'a'.repeat(40), recordedAt: '2026-10-24T00:00:00Z', committedAt: '2026-10-24T00:00:00Z', verify: { schemaVersion: '1.0.0', change: 'c1', mode: 'done', ok: true, results: [], coverage: {} } };
     const whitespace = Buffer.alloc(45 * 1024 * 1024, ' ');
     for (const name of ['a', 'b', 'c']) {
-      const file = join(dir, `${name}.json`);
+      const file = join(dir, `20261024T000000Z-${name.repeat(12)}.json`);
       writeFileSync(file, JSON.stringify(value)); appendFileSync(file, whitespace);
     }
     const out: string[] = [];

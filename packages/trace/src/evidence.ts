@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto';
 import { EVIDENCE_V2_SCHEMA_VERSION, LEGACY_EVIDENCE_SCHEMA_VERSION, LEGACY_VERIFY_RESULT_SCHEMA_VERSION, VERIFY_RESULT_V2_SCHEMA_VERSION } from '@loomake/core';
 
+export const EVIDENCE_SHA = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/i;
+
 const object = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const date = (v: unknown) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v) && Number.isFinite(Date.parse(v));
 const strings = (v: unknown): v is string[] => Array.isArray(v) && v.every((x) => typeof x === 'string');
@@ -63,7 +65,7 @@ export function evidenceProblem(value: unknown, change: string): string | undefi
   if (!object(value)) return '証拠はオブジェクトである必要があります';
   if (value.schemaVersion !== LEGACY_EVIDENCE_SCHEMA_VERSION && value.schemaVersion !== EVIDENCE_V2_SCHEMA_VERSION) return '証拠のschemaVersionに対応していません';
   if (value.change !== change) return '証拠のchangeが対象と一致しません';
-  if (typeof value.sha !== 'string' || !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/i.test(value.sha)) return 'コミットのSHAが不正です';
+  if (typeof value.sha !== 'string' || !EVIDENCE_SHA.test(value.sha)) return 'コミットのSHAが不正です';
   if (!date(value.recordedAt) || !date(value.committedAt)) return '記録かコミットの日時が不正です';
   const verify = value.verify;
   if (!object(verify)) return '検証結果がありません';

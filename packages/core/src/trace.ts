@@ -56,8 +56,8 @@ export function parseTrace(file: string, text: string): ParseResult<Trace> {
     (value[key] as Row<typeof columns>[]) = table.rows.map((r) => toRow(columns, r));
     const firstLines = new Map<string, number>();
     for (const row of table.rows) {
-      const id = row.cells.ID ?? '';
-      if (id === '') continue;
+      const id = row.cells.ID;
+      if (!id) continue;
       const first = firstLines.get(id);
       if (first === undefined) firstLines.set(id, row.line);
       else errors.push({ file, line: row.line, message: `「${heading}」の表で ID「${id}」が重複しています（最初は ${first} 行目）` });
