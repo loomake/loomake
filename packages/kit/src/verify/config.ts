@@ -95,7 +95,7 @@ export function normalizeReportPath(value: unknown): string {
   const path = value.replace(/\\/g, '/');
   const parts = path.split('/');
   const normalized = parts.filter((part) => part !== '' && part !== '.').join('/');
-  if (Array.from(path).some((char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127) || path.startsWith('/') || /^[a-z]:/i.test(normalized) || parts.includes('..') || ['', '.'].includes(parts.at(-1) ?? '')) {
+  if (/\p{Cc}/u.test(path) || path.startsWith('/') || /^[a-z]:/i.test(normalized) || parts.includes('..') || ['', '.'].includes(parts.at(-1) ?? '')) {
     throw new UsageError('loomake.config.json の tests.report は、プロジェクト内のファイルを指す相対パスにしてください');
   }
   return normalized;

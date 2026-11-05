@@ -45,3 +45,14 @@ describe('report target', () => {
     expect(loadConfig(root).tests.report).toBe('report');
   }));
 });
+
+it('[REQ-424][REQ-172] rejects C1 control characters including NEL while preserving Unicode file names', () => {
+  for (let code = 0x80; code <= 0x9f; code++) project((root) => {
+    writeFileSync(join(root, 'loomake.config.json'), JSON.stringify({ tests: { report: `r${String.fromCharCode(code)}.json` } }));
+    expect(() => loadConfig(root), `U+${code.toString(16)}`).toThrow(UsageError);
+  });
+  project((root) => {
+    writeFileSync(join(root, 'loomake.config.json'), JSON.stringify({ tests: { report: '報告/結果.json' } }));
+    expect(loadConfig(root).tests.report).toBe('報告/結果.json');
+  });
+});
