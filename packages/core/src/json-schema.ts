@@ -6,6 +6,7 @@ import { legacyVerifyResultSchema, verifyResultSchema, verifyResultV2Schema } fr
 import { qualitySchema } from './quality-schema.js';
 import { traceSchema, specSchema, tasksSchema } from './parser-schemas.js';
 import { evidenceSchema, evidenceV2Schema, legacyEvidenceSchema, reportSchema } from './trace-schemas.js';
+import { evidenceSummarySchema } from './summary-schemas.js';
 import { qualityReportSchema } from './quality-report-schema.js';
 
 /** packages/core/schema/ に置くファイル名と、その元になる Zod スキーマ */
@@ -42,4 +43,10 @@ export function renderJsonSchemas(): Record<string, string> {
 /** versions/ のファイル名ごとに、書き出す JSON Schema の文字列を返す */
 export function renderVersionedJsonSchemas(): Record<string, string> {
   return render(VERSIONED_CONTRACT_SCHEMAS);
+}
+
+/** 既存8件・版付き4件と分けて公開する要約拡張（REQ-460）。 */
+export const SUMMARY_CONTRACT_SCHEMAS = { 'evidence-summary-1.schema.json': evidenceSummarySchema } as const;
+export function renderSummaryJsonSchemas(): Record<string, string> {
+  return render(SUMMARY_CONTRACT_SCHEMAS);
 }

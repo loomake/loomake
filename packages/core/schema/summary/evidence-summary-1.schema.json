@@ -1,0 +1,1168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 2
+    },
+    "change": {
+      "type": "string"
+    },
+    "sha": {
+      "type": "string"
+    },
+    "committedAt": {
+      "type": "string"
+    },
+    "recordedAt": {
+      "type": "string"
+    },
+    "verify": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "type": "string",
+              "const": "2.0.0"
+            },
+            "change": {
+              "description": "検査した change-id。change を指定しない品質専用の実行では null",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "run": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "const": "completed"
+                    },
+                    "errors": {
+                      "maxItems": 0,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "usage",
+                              "config",
+                              "permission",
+                              "tool",
+                              "network",
+                              "runtime"
+                            ],
+                            "description": "usage・config は終了コード 2、ほかは 3（REQ-309）"
+                          },
+                          "target": {
+                            "type": "string",
+                            "description": "対象。change が確定しないときは受け取った入力をそのまま残す"
+                          },
+                          "message": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "人向けの日本語の説明"
+                          },
+                          "next": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "次に取れる操作"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "target",
+                          "message",
+                          "next"
+                        ],
+                        "additionalProperties": {}
+                      }
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "errors"
+                  ],
+                  "additionalProperties": {}
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "const": "partial"
+                    },
+                    "errors": {
+                      "minItems": 1,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "usage",
+                              "config",
+                              "permission",
+                              "tool",
+                              "network",
+                              "runtime"
+                            ],
+                            "description": "usage・config は終了コード 2、ほかは 3（REQ-309）"
+                          },
+                          "target": {
+                            "type": "string",
+                            "description": "対象。change が確定しないときは受け取った入力をそのまま残す"
+                          },
+                          "message": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "人向けの日本語の説明"
+                          },
+                          "next": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "次に取れる操作"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "target",
+                          "message",
+                          "next"
+                        ],
+                        "additionalProperties": {}
+                      }
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "errors"
+                  ],
+                  "additionalProperties": {}
+                }
+              ]
+            },
+            "checks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "検査の ID（gate:requirements、quality:PQ-001 など）"
+                  },
+                  "result": {
+                    "type": "string",
+                    "enum": [
+                      "PASS",
+                      "FAIL",
+                      "INSUFFICIENT_EVIDENCE",
+                      "NOT_APPLICABLE"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "description": "判定の理由"
+                  },
+                  "evidence": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "判定の根拠への参照"
+                  }
+                },
+                "required": [
+                  "id",
+                  "result",
+                  "reason",
+                  "evidence"
+                ],
+                "additionalProperties": {}
+              }
+            },
+            "decision": {
+              "type": "object",
+              "properties": {
+                "required": {
+                  "type": "boolean",
+                  "description": "人の判断が要るとき true。品質判定とは別の軸"
+                },
+                "reasons": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "string",
+                        "enum": [
+                          "CRITERIA_RELAXATION",
+                          "PROTECTED_PATH",
+                          "APPROVAL_REQUIRED",
+                          "LIMIT_EXCEEDED"
+                        ]
+                      },
+                      "target": {
+                        "type": "string"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "code",
+                      "target",
+                      "message"
+                    ],
+                    "additionalProperties": {}
+                  }
+                }
+              },
+              "required": [
+                "required",
+                "reasons"
+              ],
+              "additionalProperties": {}
+            },
+            "coverage": {
+              "description": "完了ゲートで、要件 ID ごとのテストファイルの一覧。テストの無い要件は空の配列",
+              "type": "object",
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^REQ-[0-9]{3,}$"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "scope": {
+              "type": "string",
+              "const": "ci"
+            },
+            "summary": {
+              "type": "object",
+              "properties": {
+                "fail": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "insufficient": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "not_applicable": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "evaluated": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "checks の全件数"
+                },
+                "pending": {
+                  "not": {}
+                }
+              },
+              "required": [
+                "fail",
+                "insufficient",
+                "not_applicable",
+                "evaluated"
+              ],
+              "additionalProperties": {}
+            },
+            "verdict": {
+              "type": "string",
+              "enum": [
+                "PASS",
+                "FAIL",
+                "INSUFFICIENT_EVIDENCE",
+                "NOT_APPLICABLE"
+              ]
+            }
+          },
+          "required": [
+            "schemaVersion",
+            "change",
+            "run",
+            "checks",
+            "decision",
+            "scope",
+            "summary",
+            "verdict"
+          ],
+          "additionalProperties": {}
+        },
+        {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "type": "string",
+              "const": "2.0.0"
+            },
+            "change": {
+              "description": "検査した change-id。change を指定しない品質専用の実行では null",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "run": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "const": "completed"
+                    },
+                    "errors": {
+                      "maxItems": 0,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "usage",
+                              "config",
+                              "permission",
+                              "tool",
+                              "network",
+                              "runtime"
+                            ],
+                            "description": "usage・config は終了コード 2、ほかは 3（REQ-309）"
+                          },
+                          "target": {
+                            "type": "string",
+                            "description": "対象。change が確定しないときは受け取った入力をそのまま残す"
+                          },
+                          "message": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "人向けの日本語の説明"
+                          },
+                          "next": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "次に取れる操作"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "target",
+                          "message",
+                          "next"
+                        ],
+                        "additionalProperties": {}
+                      }
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "errors"
+                  ],
+                  "additionalProperties": {}
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "const": "partial"
+                    },
+                    "errors": {
+                      "minItems": 1,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "usage",
+                              "config",
+                              "permission",
+                              "tool",
+                              "network",
+                              "runtime"
+                            ],
+                            "description": "usage・config は終了コード 2、ほかは 3（REQ-309）"
+                          },
+                          "target": {
+                            "type": "string",
+                            "description": "対象。change が確定しないときは受け取った入力をそのまま残す"
+                          },
+                          "message": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "人向けの日本語の説明"
+                          },
+                          "next": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "次に取れる操作"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "target",
+                          "message",
+                          "next"
+                        ],
+                        "additionalProperties": {}
+                      }
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "errors"
+                  ],
+                  "additionalProperties": {}
+                }
+              ]
+            },
+            "checks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "検査の ID（gate:requirements、quality:PQ-001 など）"
+                  },
+                  "result": {
+                    "type": "string",
+                    "enum": [
+                      "PASS",
+                      "FAIL",
+                      "INSUFFICIENT_EVIDENCE",
+                      "NOT_APPLICABLE"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "description": "判定の理由"
+                  },
+                  "evidence": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "判定の根拠への参照"
+                  }
+                },
+                "required": [
+                  "id",
+                  "result",
+                  "reason",
+                  "evidence"
+                ],
+                "additionalProperties": {}
+              }
+            },
+            "decision": {
+              "type": "object",
+              "properties": {
+                "required": {
+                  "type": "boolean",
+                  "description": "人の判断が要るとき true。品質判定とは別の軸"
+                },
+                "reasons": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "string",
+                        "enum": [
+                          "CRITERIA_RELAXATION",
+                          "PROTECTED_PATH",
+                          "APPROVAL_REQUIRED",
+                          "LIMIT_EXCEEDED"
+                        ]
+                      },
+                      "target": {
+                        "type": "string"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "code",
+                      "target",
+                      "message"
+                    ],
+                    "additionalProperties": {}
+                  }
+                }
+              },
+              "required": [
+                "required",
+                "reasons"
+              ],
+              "additionalProperties": {}
+            },
+            "coverage": {
+              "description": "完了ゲートで、要件 ID ごとのテストファイルの一覧。テストの無い要件は空の配列",
+              "type": "object",
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^REQ-[0-9]{3,}$"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "scope": {
+              "type": "string",
+              "const": "local"
+            },
+            "summary": {
+              "type": "object",
+              "properties": {
+                "fail": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "insufficient": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "not_applicable": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "evaluated": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "checks の全件数"
+                },
+                "pending": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "未完了のローカル項目数"
+                }
+              },
+              "required": [
+                "fail",
+                "insufficient",
+                "not_applicable",
+                "evaluated",
+                "pending"
+              ],
+              "additionalProperties": {}
+            },
+            "verdict": {
+              "not": {}
+            }
+          },
+          "required": [
+            "schemaVersion",
+            "change",
+            "run",
+            "checks",
+            "decision",
+            "scope",
+            "summary"
+          ],
+          "additionalProperties": {}
+        },
+        {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "type": "string",
+              "const": "2.0.0"
+            },
+            "change": {
+              "description": "change が確定しないときは null",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "run": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "const": "aborted"
+                },
+                "errors": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "usage",
+                          "config",
+                          "permission",
+                          "tool",
+                          "network",
+                          "runtime"
+                        ],
+                        "description": "usage・config は終了コード 2、ほかは 3（REQ-309）"
+                      },
+                      "target": {
+                        "type": "string",
+                        "description": "対象。change が確定しないときは受け取った入力をそのまま残す"
+                      },
+                      "message": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "人向けの日本語の説明"
+                      },
+                      "next": {
+                        "type": "string",
+                        "minLength": 1,
+                        "description": "次に取れる操作"
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "target",
+                      "message",
+                      "next"
+                    ],
+                    "additionalProperties": {}
+                  }
+                }
+              },
+              "required": [
+                "status",
+                "errors"
+              ],
+              "additionalProperties": {}
+            },
+            "scope": {
+              "not": {}
+            },
+            "checks": {
+              "not": {}
+            },
+            "summary": {
+              "not": {}
+            },
+            "decision": {
+              "not": {}
+            },
+            "verdict": {
+              "not": {}
+            },
+            "coverage": {
+              "not": {}
+            }
+          },
+          "required": [
+            "schemaVersion",
+            "change",
+            "run"
+          ],
+          "additionalProperties": {}
+        }
+      ],
+      "title": "Loomake verify result 2.0.0",
+      "description": "verify の結果の 2.0.0。scope と実行状態（completed・partial・aborted）の組で形を分ける"
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "sha256",
+          "content"
+        ],
+        "additionalProperties": {}
+      }
+    },
+    "summaryVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "development",
+        "release"
+      ]
+    },
+    "ci": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "runId": {
+              "type": "string"
+            },
+            "runAttempt": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "source": {
+              "type": "string",
+              "const": "environment"
+            }
+          },
+          "required": [
+            "runId",
+            "runAttempt",
+            "source"
+          ],
+          "additionalProperties": {}
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "execution": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "origin": {
+          "type": "string",
+          "enum": [
+            "local",
+            "github-actions"
+          ]
+        },
+        "evaluator": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "const": "@loomake/trace"
+            },
+            "version": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "version"
+          ],
+          "additionalProperties": {}
+        },
+        "basisSha256": {
+          "type": "string"
+        },
+        "environment": {
+          "type": "object",
+          "properties": {
+            "node": {
+              "type": "string"
+            },
+            "platform": {
+              "type": "string"
+            },
+            "arch": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "node",
+            "platform",
+            "arch"
+          ],
+          "additionalProperties": {}
+        },
+        "commands": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "loomake.config.json",
+                "defaults"
+              ]
+            },
+            "sha256": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "nameRefs": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "nameSha256": {
+                        "type": "string"
+                      },
+                      "knownName": {
+                        "type": "string",
+                        "enum": [
+                          "lint",
+                          "typecheck",
+                          "test"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "nameSha256"
+                    ],
+                    "additionalProperties": {}
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "source",
+            "sha256",
+            "nameRefs"
+          ],
+          "additionalProperties": {}
+        },
+        "producer": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "version"
+              ],
+              "additionalProperties": {}
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "startedAt": {
+          "type": "string"
+        },
+        "finishedAt": {
+          "type": "string"
+        },
+        "verification": {
+          "type": "string",
+          "const": "executed"
+        }
+      },
+      "required": [
+        "id",
+        "origin",
+        "evaluator",
+        "basisSha256",
+        "environment",
+        "commands",
+        "producer",
+        "startedAt",
+        "finishedAt",
+        "verification"
+      ],
+      "additionalProperties": {}
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "test-report"
+          },
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "sameRun": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "verified",
+                  "unverified"
+                ]
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": {}
+          },
+          "counts": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "passed": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "failed": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "skipped": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "todo": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "pending": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "other": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "passed",
+                  "failed",
+                  "skipped",
+                  "todo",
+                  "pending",
+                  "other"
+                ],
+                "additionalProperties": {}
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "location": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "const": "github-actions-artifact"
+                  },
+                  "repository": {
+                    "type": "string"
+                  },
+                  "runId": {
+                    "type": "string"
+                  },
+                  "runAttempt": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "artifactName": {
+                    "type": "string"
+                  },
+                  "entry": {
+                    "type": "string"
+                  },
+                  "createdAt": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "repository",
+                  "runId",
+                  "runAttempt",
+                  "artifactName",
+                  "entry",
+                  "createdAt"
+                ],
+                "additionalProperties": {}
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "availability": {
+            "type": "string",
+            "enum": [
+              "not-uploaded",
+              "uploaded",
+              "retrieved"
+            ]
+          },
+          "expiresAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "retrieval": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "checkedAt": {
+                    "type": "string"
+                  },
+                  "access": {
+                    "type": "string",
+                    "enum": [
+                      "project-members",
+                      "owner"
+                    ]
+                  },
+                  "sha256Matched": {
+                    "type": "boolean",
+                    "const": true
+                  }
+                },
+                "required": [
+                  "checkedAt",
+                  "access",
+                  "sha256Matched"
+                ],
+                "additionalProperties": {}
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "kind",
+          "path",
+          "sha256",
+          "bytes",
+          "sameRun",
+          "counts",
+          "location",
+          "availability",
+          "expiresAt",
+          "retrieval"
+        ],
+        "additionalProperties": {}
+      }
+    },
+    "request": {
+      "type": "null"
+    },
+    "observation": {
+      "type": "null"
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "unverified",
+              "not_applicable"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "kind",
+          "reason"
+        ],
+        "additionalProperties": {}
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "change",
+    "sha",
+    "committedAt",
+    "recordedAt",
+    "verify",
+    "summaryVersion",
+    "role",
+    "ci",
+    "execution",
+    "artifacts",
+    "request",
+    "observation",
+    "gaps"
+  ],
+  "additionalProperties": {},
+  "$id": "https://loomake.dev/schema/summary/evidence-summary-1.schema.json",
+  "title": "Loomake evidence summary extension 1"
+}
