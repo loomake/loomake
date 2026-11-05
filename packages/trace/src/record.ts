@@ -9,6 +9,7 @@ import { EVIDENCE_SCHEMA_VERSION } from './schema.js';
 import { serializeEvidence } from './serialization.js';
 import { publishEvidence } from './publication.js';
 import { executionSummary } from './summary-record.js';
+import { summaryObservation } from './summary-observation.js';
 export { EVIDENCE_SCHEMA_VERSION } from './schema.js';
 
 export type { Evidence } from '@loomake/core';
@@ -99,6 +100,14 @@ export function runRecord(options: RecordOptions): number {
     if (after.length) stdout(after.map((l) => `  ${l}`).join('\n'));
     return 1;
   }
+  const observation = summaryObservation(root, config.tests.report, result, startedAt, finishedAt);
+  if (observation.mismatch) {
+    stdout('検証時と記録時で本体のハッシュが一致しないので、記録しませんでした。');
+    return 1;
+  }
+  const extension = executionSummary(root, changeDir, result, startedAt, finishedAt, options.env ?? process.env);
+  extension.artifacts = observation.artifacts;
+  extension.gaps = [...extension.gaps.filter((g) => g.field !== 'artifacts'), ...observation.gaps];
   const recordedAt = now();
   const evidence: Evidence = {
     schemaVersion: EVIDENCE_SCHEMA_VERSION,
@@ -108,7 +117,7 @@ export function runRecord(options: RecordOptions): number {
     recordedAt: recordedAt.toISOString(),
     verify: result,
     documents,
-    ...executionSummary(root, changeDir, result, startedAt, finishedAt, options.env ?? process.env),
+    ...extension,
   };
 
   const json = serializeEvidence(evidence);
