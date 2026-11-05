@@ -13,7 +13,7 @@
 
 ## 4. 互換と案内
 - [x] 4.1 全ScenarioのREQ名付き試験、公開型consumer、配布物、既存Evidence1/2・12Schema・同期report/serialize・runner再利用・固定要約不変を既存assertを弱めず確認する（REQ-470・471）。
-- [ ] 4.2 利用者文書・非破壊追加のpatch changeset・branch日誌に、索引の一致と実取得/真正性/品質合格の区別、親#69の残作業を記録する。
+- [x] 4.2 利用者文書・非破壊追加のpatch changeset・branch日誌に、索引の一致と実取得/真正性/品質合格の区別、親#69の残作業を記録する。
 
 ## 5. ローカルの完了
 - [ ] 5.1 通常の `pnpm -s verify --change index-evidence-body-references --done --scope local` を実行し、全tasks・対応試験と全検査PASS・実終了0を確認する。<!-- loomake:gate=done -->

@@ -1,9 +1,9 @@
 # 本体参照索引（Refs #69）
 
-1. `index-evidence-body-references` の計画を継承し、タスク1.1を終えた。経路はnormalで、受入済みOpus設計に従う通常L3として進める。
-2. strict・仕様ゲートは実終了0。依存する要約と共通秘密置換はmainの公開APIまで確認した。
-3. gapの具体的な欄名・候補名と取得時刻の区別を管理役の回答で仕様へ明記した。親#69の実取得・実保持・限定workflow・release/attempts・旧raw整理、#65 P3は未完了のまま残す。
-4. 仕様の確認を記録して両ゲートを通し、8タスクを順に実装する。remote・独立レビュー・CIは管理役へ渡す。
+1. `index-evidence-body-references` のタスク1.1〜4.2を実装し、receiptの公開型・同期検証と原子的追加、7項目の照合、明示policy/now付きresolverを追加した。normalの通常L3として採用済みOpus設計を継承し、旧13 Schemaと既存assertを保持した。
+2. strict・仕様ゲートは実終了0。新規65試験の個別実行、既存139試験、pack後の公開API往復、lint・型検査は成功し、タスク5.1の通常local完了ゲートはこれから行う。
+3. QRef27/28はmain受入で解消し、QRef30/31は管理役の回答で仕様を具体化した。親#69の限定workflow・実取得/実保持・release/attempts・旧raw整理、#454のM1/M2、#65 P3は未完了である。
+4. 通常のlocal完了ゲートの原本を保存し、検査headと最終headを管理役へ渡す。独立レビュー、CI scope ciの完了、必須5チェックと3 OS試験の最終受入は未実施である。
 
 | PR | 設計待ち | 実装 | CI 待ち | レビュー往復回数 | マージまで |
 |---|---|---|---|---|---|
