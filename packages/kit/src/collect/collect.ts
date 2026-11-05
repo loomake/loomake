@@ -48,7 +48,7 @@ function diagnosticsOf(text: string): string {
   let start = Math.max(0, masked.length - 4096);
   const unit = masked.charCodeAt(start);
   if (unit >= 0xDC00 && unit <= 0xDFFF) start++;
-  return masked.slice(start);
+  return maskSecrets(masked.slice(start));
 }
 
 function collect(request: CollectRequest): Collected {

@@ -71,6 +71,24 @@ describe('収集の保存前の置換', () => {
       expect(token.diagnostics.endsWith('***')).toBe(true);
     } finally { spy.mockRestore(); }
   });
+  it.each(['parsed', 'unreadable', 'not_found', 'spawn_error', 'limited'] as const)('[REQ-450] %s の stderr の切り口で新たに現れる既知の形も置換する', (outcome) => {
+    const padding = ' '.repeat(4096 - 23);
+    const stderr = 'prefix '.repeat(900) + 'task-' + 'a'.repeat(20) + padding;
+    expect(stderr).not.toMatch(known);
+    expect(stderr.slice(-4096)).toBe('sk-' + 'a'.repeat(20) + padding);
+    const spy = vi.spyOn(runtime, 'runExternal');
+    try {
+      if (outcome === 'limited') spy.mockImplementation(() => { throw new ProcessLimitError('timeout', 'node', '', stderr); });
+      else if (outcome === 'not_found' || outcome === 'spawn_error') {
+        spy.mockReturnValue({ ...result('', stderr), error: Object.assign(new Error('synthetic'), { code: outcome === 'not_found' ? 'ENOENT' : 'EACCES' }) });
+      } else spy.mockReturnValue(result(outcome === 'parsed' ? '[]' : '{', stderr));
+      const collected = collectToolOutput(request({ tool: 'gh' }));
+      expect(collected.outcome).toBe(outcome); noSecrets(collected);
+      expect(collected.diagnostics).toBe('***' + padding);
+      expect(collected.diagnostics.length).toBeLessThanOrEqual(4096);
+      expect(collected.diagnostics).not.toMatch(/^[\uDC00-\uDFFF]/);
+    } finally { spy.mockRestore(); }
+  });
   it('[REQ-450] diagnostics の境界でサロゲートペアを分断しない', () => {
     const stderr = 'prefix '.repeat(900) + '😀' + 'x '.repeat(2047) + 'x';
     const spy = vi.spyOn(runtime, 'runExternal').mockReturnValue(result('[]', stderr));
