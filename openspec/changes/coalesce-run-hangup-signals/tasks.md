@@ -6,8 +6,9 @@
 - [x] 2.2 復旧手順とレビュー説明を補い、実製品PTY・関連試験・lint・型検査を通す
 
 ## 3. 検証
-- [ ] 3.1 最新mainを統合し、両changeの対応試験と既存Source・Scenarioの保持を確認する
-- [ ] 3.2 完了ゲートを通す <!-- loomake:gate=done -->
+- [x] 3.1 最新の統合候補で両changeの対応試験と既存Source・Scenarioの保持を確認する
+- [x] 3.2 完了ゲートを通す <!-- loomake:gate=done -->
 
 ## Workflow follow-up
 - 正式CLIで同期archiveし、主仕様strictとarchive後の仕様ゲートを確認する。
+- 依存する#417のmain受入後にsquash版を取り込み、試験済み候補と製品・試験・仕様・設定・計画の同一性を確認する。異なれば再検証する。
