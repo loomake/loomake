@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { BodyReceipt, QualityEvidencePolicy } from '@loomake/core';
+import type { BodyReceipt, QualityEvidencePolicy } from '../../../packages/core/src/index.js';
 import { summaryFixture } from '../../../packages/trace/test/summary-fixture.js';
 
 export const hash = (bytes: string | Uint8Array): string => createHash('sha256').update(bytes).digest('hex');

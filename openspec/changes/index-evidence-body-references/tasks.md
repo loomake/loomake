@@ -5,7 +5,7 @@
 
 ## 2. receiptの型・保存
 - [x] 2.1 coreへ追加型・遅延構造スキーマ・schema/summaryの生成/配布を追加し、既存12Schema・入口の遅延読込み・own keyと未知欄を保つ（REQ-470）。
-- [ ] 2.2 traceの同期検証・整形とサイズ再検証・共有maskで変わる入力の拒否・非上書き原子的追加を実装し、実retrievedAt由来の名前と衝突を確認する（REQ-470）。
+- [x] 2.2 traceの同期検証・整形とサイズ再検証・共有maskで変わる入力の拒否・非上書き原子的追加を実装し、実retrievedAt由来の名前と衝突を確認する（REQ-470）。
 
 ## 3. 照合と参照解決
 - [ ] 3.1 kitへ入力不変の7項目の純粋照合を追加し、strict UTF8・CI3箇所・checkout・bodyとZIP・byte view・外部anchorの境界を検証する（REQ-471）。

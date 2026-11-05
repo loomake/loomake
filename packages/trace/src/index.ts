@@ -14,3 +14,6 @@ export type { AgreementOptions } from './agreement.js';
 
 export { summaryProblem } from './summary.js';
 export type { EvidenceSummary, SummaryArtifact, SummaryGap } from '@loomake/core';
+
+export { bodyReceiptProblem, appendBodyReceipt } from './body-receipt.js';
+export type { BodyReceipt } from '@loomake/core';
