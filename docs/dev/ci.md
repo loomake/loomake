@@ -38,11 +38,13 @@ gate ジョブは PR の段階（AGENTS.md 2 章の L1・L2・L3）を先に決�
    - 削除：`packages/*/src/` の下
    - 改名：元のパスは削除と同じ範囲、先のパスは追加と同じ範囲
    - 追加：`packages/*/src/`・`packages/*/test/`・`tests/`・`docs/`・`.changeset/` の下
+   - 状態が変更・種類の変更・削除・改名・複写・追加のどれでもないもの（`X`・`U` など）は、場所を問わず拒む
 
-   範囲の中でも、次のパスは変更・削除・改名・追加のどれも拒む。
+   範囲の中でも、次のものは変更・削除・改名・追加のどれも拒む。
    - 設定ファイル：基本名が `eslint.config.*`・`vitest.config.*`・`vite.config.*`・`vitest.workspace.*`・`tsconfig*.json`・`package.json`・`.npmrc`・`.pnpmfile.cjs`・`.gitattributes` のもの（大文字小文字は区別しない）。入れ子に置くと lint や試験の設定を差し替えられるため
-   - 途中に `node_modules/` を含むパス
-   - `docs/guide/3.reference/` の下：`tests/cli-reference.test.ts`・`tests/quality-reference.test.ts` が照合する正本のため
+   - `node_modules` という名前の要素を含むパス（`tests/node_modules` そのものも含む。大文字小文字は区別しない）
+   - `docs/guide/3.reference/` の下（大文字小文字は区別しない）：`tests/cli-reference.test.ts`・`tests/quality-reference.test.ts` が照合する正本のため
+   - 変更後がシンボリックリンク（mode `120000`）のもの：リンクで依存の解決先や照合の正本を差し替えられるため。シンボリックリンクを消すことは拒まない
 
    既存のテストファイル、テストの分け方（`scripts/lib/test-partition.mjs`）、ルートの `package.json`・`loomake.config.json`、CI の設定などは範囲の外なので、変えると拒む。
 4. 足したパス（改名なら後のパス）が、PR の先頭（HEAD）のツリーにある別のパスと、大文字小文字だけ違わない。ツリーを読めなければ満たさないものとして拒み、git の失敗の詳細か、一覧が NUL で終わっていないことを理由に添える。
