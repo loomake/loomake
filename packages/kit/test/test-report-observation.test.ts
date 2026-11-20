@@ -166,6 +166,15 @@ describe('ci.test_report の adapter', () => {
     expect(evaluateQualityConditions(quality(), [observation])[0].result).not.toBe('PASS');
   });
 
+  it('[REQ-451] 実行できなかったファイルの message は、1 行目と 200 文字へ切る前に置換し、トークンの一部も残さない', () => {
+    // 偽のトークン。200 文字の切れ目がトークンの途中に来るように置く
+    const message = `Error: ${'a'.repeat(183)} ${'ghp_' + 'x'.repeat(24)} more\n    at x`;
+    const text = JSON.stringify({ startTime: START + 10, testResults: [{ name: '/p/broken.test.ts', status: 'failed', message, assertionResults: [] }] });
+    const [observation] = observe(receipt({ report: reportOf(text) }));
+    expect(observation.status).toBe('unverified');
+    expect(observation.detail).not.toContain('ghp_');
+  });
+
   it('[REQ-319] ファイル単位で failed でも、テストがあればテストごとの結果で数える', () => {
     const text = JSON.stringify({
       startTime: START + 10,
