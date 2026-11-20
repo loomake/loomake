@@ -18,15 +18,23 @@ export const isEditablePath = (path) => EDITABLE.test(path);
 /** 既存のファイルを削除してよい場所か */
 export const isDeletablePath = (path) => DELETABLE.test(path);
 
-const summarize = (paths) => `${paths.slice(0, 3).join('、')}${paths.length > 3 ? ` ほか ${paths.length - 3} 件` : ''}`;
+const SHOWN = 3;
+const restCount = (paths) => (paths.length > SHOWN ? ` ほか ${paths.length - SHOWN} 件` : '');
+const summarize = (paths) => `${paths.slice(0, SHOWN).join('、')}${restCount(paths)}`;
+// 経路の宣言のうち refactor 以外のもの。空の宣言は「（空）」と書く
+const isOtherRoute = (value) => value.toLowerCase() !== ROUTE;
+const otherRoutes = (body) => declaredRoutes(body).filter(isOtherRoute).map((value) => value || '（空）');
 
 function routeProblems(body) {
-  const others = declaredRoutes(body).filter((value) => value.toLowerCase() !== ROUTE);
-  return others.length ? [`loomake-route: の宣言が食い違っています（refactor と ${others.map((value) => value || '（空）').join('、')}）`] : [];
+  const others = otherRoutes(body);
+  return others.length ? [`loomake-route: の宣言が食い違っています（refactor と ${others.join('、')}）`] : [];
 }
 
+const touchedPaths = (entries) => [...new Set(entries.flatMap((entry) => entry.paths))];
+const specPaths = (entries) => touchedPaths(entries).filter((path) => path.startsWith('openspec/'));
+
 function specProblems(entries) {
-  const specs = [...new Set(entries.flatMap((entry) => entry.paths).filter((path) => path.startsWith('openspec/')))];
+  const specs = specPaths(entries);
   return specs.length ? [`openspec/ の下のファイルを変えています（${summarize(specs)}）`] : [];
 }
 
@@ -37,7 +45,8 @@ const allowedChange = {
   R: (paths) => paths.every(isEditablePath),
   C: (paths) => paths.every(isEditablePath),
 };
-const isAllowedChange = ({ status, paths }) => (allowedChange[status[0]] ?? (([path]) => isEditablePath(path)))(paths);
+const editsAllowedPath = ([path]) => isEditablePath(path);
+const isAllowedChange = ({ status, paths }) => (allowedChange[status[0]] ?? editsAllowedPath)(paths);
 
 function scopeProblems(entries) {
   const touched = entries.filter((entry) => !isAllowedChange(entry)).map((entry) => entry.paths.join(' → '));
@@ -48,7 +57,8 @@ function scopeProblems(entries) {
 }
 
 // 足したパス（改名・複写なら後のパス）
-const addedPaths = (entries) => entries.filter(({ status }) => /^[ARC]/.test(status)).map(({ paths }) => paths.at(-1));
+const addsPath = ({ status }) => /^[ARC]/.test(status);
+const addedPaths = (entries) => entries.filter(addsPath).map(({ paths }) => paths.at(-1));
 
 function caseProblems(entries, headTree) {
   const added = addedPaths(entries);
@@ -59,9 +69,12 @@ function caseProblems(entries, headTree) {
   return twins.length ? [`HEAD にある別のパスと大文字小文字だけが違うパスを足しています（${summarize(twins)}）`] : [];
 }
 
+const REVIEW_DONE = /^review:[ \t]*実施済み(?:[ \t]|$)/;
+const evidenceLines = (body) => evidenceSection(body).flatMap((section) => section.split('\n'));
+
 function reviewProblems(body) {
-  const lines = evidenceSection(body).flatMap((section) => section.split('\n'));
-  return lines.some((line) => /^review:[ \t]*実施済み(?:[ \t]|$)/.test(line)) ? [] : ['## 証跡 に独立レビューの「review: 実施済み」の行がありません'];
+  if (evidenceLines(body).some((line) => REVIEW_DONE.test(line))) return [];
+  return ['## 証跡 に独立レビューの「review: 実施済み」の行がありません'];
 }
 
 /** リファクタの経路の判定。不足する条件をすべて返す */
