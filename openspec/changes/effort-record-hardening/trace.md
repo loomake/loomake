@@ -14,6 +14,8 @@
 | ID | 出典 | 種別 | 要約（原文に忠実に） | 状態 | 反映先 |
 |---|---|---|---|---|---|
 | REQ-466 | 現行仕様全文、Opus§2群6・§4・§5、Issue#456 | 機能 | 既存21 Scenarioを保持し、日時精度、空費用拒否、保存前後の固定診断、ビルド独立の試験を加える | 反映済 | specs/effort-record/spec.md |
+| REQ-480 | REQ-466のhardening追加分（recordedAtの秒精度）。strictの500文字検査とREQ重複検査のため分割 | 機能 | recordedAtは秒を含むISO 8601とし、同期validatorと構造スキーマで受理する精度を一致させる。文面はREQ-466から移しただけで変えない | 反映済 | specs/effort-record/spec.md |
+| REQ-481 | REQ-466のhardening追加分（保存前後の失敗の区別）。strictの500文字検査とREQ重複検査のため分割 | 機能 | 保存前の失敗は固定の日本語の区分で記録していないことを示し、公開後の片付け・出力の失敗は保存済みの相対パスを示すRuntimeFailureとする。文面はREQ-466から移しただけで変えない | 反映済 | specs/effort-record/spec.md |
 
 ## 確認事項
 

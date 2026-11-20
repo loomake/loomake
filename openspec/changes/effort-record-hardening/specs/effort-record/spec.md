@@ -104,7 +104,7 @@ Source: REQ-466
 
 recordedAtは秒を含むISO 8601とし、同期validatorと構造スキーマで受理する精度を一致させる MUST。
 
-Source: REQ-466
+Source: REQ-480
 
 #### Scenario: 日時の精度の一致
 - **WHEN** 秒のない `2026-11-06T00:00Z`、秒つき、小数秒つき、オフセットつきのrecordedAtを同期validatorと構造スキーマへ渡す
@@ -114,7 +114,7 @@ Source: REQ-466
 
 保存前の失敗は固定の日本語の区分（入力・サイズ・change・git・保存）で記録していないことを示し、最終名の公開後に一時ファイルの片付けまたは出力が失敗した場合は、保存済みの相対パスを示すRuntimeFailureとし、保存失敗と報告しない MUST。
 
-Source: REQ-466
+Source: REQ-481
 
 #### Scenario: 保存前の失敗の区別
 - **WHEN** サイズ超過・存在しないchange・gitの失敗・保存先の作成失敗のいずれかで記録する
