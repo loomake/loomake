@@ -167,6 +167,35 @@ it('[REQ-475] 秘密の形のchangeは保存前に固定文で拒否し新しい
     expect(existsSync(join(p.root, `.loomake/evidence/${secret}/reuse`))).toBe(false);
     expect(readFileSync(join(p.root, p.summaryPath))).toEqual(p.summaryBytes);
 });
+it('[REQ-475] 実行環境の版が秘密の形なら保存前に使い方の誤りとして止め新しいdirectoryを作らない', () => {
+    const secret = 'sk-' + 'a'.repeat(20);
+    const p = project();
+    p.mutate(s => { s.execution.environment.node = secret; });
+    p.git('reset', '--soft', p.source);
+    p.commit();
+    p.resetCounts();
+    const original = Object.getOwnPropertyDescriptor(process, 'version')!;
+    Object.defineProperty(process, 'version', { ...original, value: secret });
+    const out: string[] = [];
+    try {
+        expect(() => p.run({ stdout: s => out.push(s), progress: s => out.push(s) })).toThrow(kit.UsageError);
+        expect(() => p.run()).toThrow(/^再利用の記録を保存できません。/);
+    } finally { Object.defineProperty(process, 'version', original); }
+    expect(out.join('')).not.toContain(secret);
+    expect(p.counts()).toEqual([]);
+    expect(existsSync(join(p.root, '.loomake/evidence/c1/reuse'))).toBe(false);
+});
+it('[REQ-474][REQ-475] 数字でないrunIdは保存の前に差し戻すか照合で止まる', () => {
+    const p = project();
+    p.mutate(s => { s.ci.runId = 'run-x'; });
+    expect(p.run().result).toMatchObject({ outcome: 'returned-to-human', reasons: [expect.objectContaining({ code: 'PRIMARY_INVALID' })] });
+    const anchor = JSON.parse(readFileSync(p.anchorPath, 'utf8'));
+    p.mutate(s => { s.ci.runId = '7'; });
+    writeFileSync(p.anchorPath, JSON.stringify({ ...JSON.parse(readFileSync(p.anchorPath, 'utf8')), runId: anchor.runId }));
+    expect(p.run().result).toMatchObject({ outcome: 'returned-to-human', record: null });
+    expect(p.counts()).toEqual([]);
+    expect(existsSync(join(p.root, '.loomake/evidence/c1/reuse'))).toBe(false);
+});
 it('[REQ-476] 判定中のHEAD・作業ツリー・anchorの変化は再検証も記録もしない', () => {
     for (const what of ['head', 'worktree', 'anchor']) {
         const p = project();
