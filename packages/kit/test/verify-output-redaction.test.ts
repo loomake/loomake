@@ -63,7 +63,7 @@ it('[REQ-451] openspec validate の失敗出力を置換し、先頭 2000 文字
   const text = openspecReason(root, `bad ${token} ${'a'.repeat(3000)}`);
   expect(text).not.toContain(token);
   expect(text).toContain('bad ***');
-  expect(text.length).toBeLessThanOrEqual(2000);
+  expect(text).toHaveLength(2000);
 }));
 
 it('[REQ-451] 先頭 2000 文字の切れ目をまたぐトークンは、切る前に置換して一部も残さない', () => withProject(openspecProject, root => {
@@ -71,6 +71,7 @@ it('[REQ-451] 先頭 2000 文字の切れ目をまたぐトークンは、切る
   expect(text).not.toContain('ghp_');
 }));
 
+// 順序（置換してから切る）の確認にはならない。END 行がなくても本文を伏せることの回帰試験である
 it('[REQ-451] 先頭 2000 文字の切れ目で END 行が落ちる秘密鍵ブロックも、本文を残さない', () => withProject(openspecProject, root => {
   const key = ['-----BEGIN PRIVATE KEY-----', ...Array.from({ length: 40 }, (_, i) => `DUMMY_BODY_${i}`), '-----END PRIVATE KEY-----'].join('\n');
   const text = openspecReason(root, `${'a'.repeat(1900)}\n${key}`);
