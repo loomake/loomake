@@ -101,3 +101,37 @@ it('[REQ-013][REQ-051] splitLines は先頭 BOM を一つだけ除き内部の B
 it('[REQ-013] 同じ記号の長いフェンスと末尾の空白で閉じる', () => {
   expect(fenceMask(['````md', '```', '~~~~', '````js', '内部', '`````  \t', '外側'])).toEqual([true, true, true, true, true, true, false]);
 });
+
+describe('parseSpec の現状の振る舞い（リファクタの前に固定する）', () => {
+  it('[REQ-013] 操作でない ## 見出しのあとは操作を外し、直前の Requirement に Scenario と Source を数えない', () => {
+    const text = '## ADDED Requirements\n### Requirement: A\n## Purpose\n#### Scenario: 外\nSource: REQ-009\n### Requirement: B\n';
+    expect(parseSpec('spec.md', text).value).toEqual([
+      { op: 'ADDED', name: 'A', sources: [], scenarios: 0, line: 2 },
+      { op: null, name: 'B', sources: [], scenarios: 0, line: 6 },
+    ]);
+  });
+
+  it('[REQ-013] 最初の Requirement より前の Scenario と Source は無視し、見出しの名前の前後の空白を除く', () => {
+    const text = '#### Scenario: 前\nSource: REQ-001\n### Requirement:   名前  \n**Source:** REQ-002\n#### Scenario: s\n';
+    expect(parseSpec('spec.md', text)).toEqual({
+      value: [{ op: null, name: '名前', sources: ['REQ-002'], scenarios: 1, line: 3 }], errors: [],
+    });
+  });
+
+  it('[REQ-013] RENAMED の節では記号とバッククォートを省いた FROM・TO を読み、### Requirement の行は読まない', () => {
+    const text = '## RENAMED Requirements\nFROM: ### Requirement:  旧 \n* TO: `### Requirement: 新`\n### Requirement: 無視\n';
+    expect(parseSpec('spec.md', text)).toEqual({
+      value: [{ op: 'RENAMED', name: '新', from: '旧', sources: [], scenarios: 0, line: 2 }], errors: [],
+    });
+  });
+
+  it('[REQ-013][REQ-018] 組にならない FROM と前に FROM のない TO を、決まった文言のエラーにする', () => {
+    const text = '## RENAMED Requirements\n- TO: `### Requirement: 先`\n- FROM: `### Requirement: 残り`\n## ADDED Requirements\n- FROM: `### Requirement: 末尾`\n';
+    expect(parseSpec('spec.md', text).errors).toEqual([
+      { file: 'spec.md', line: 2, message: 'RENAMED の TO「先」の前に FROM がありません' },
+      { file: 'spec.md', line: 3, message: 'RENAMED の FROM「残り」に対応する TO がありません' },
+    ]);
+    const tail = parseSpec('x.md', '## RENAMED Requirements\n- FROM: `### Requirement: 末尾`');
+    expect(tail.errors).toEqual([{ file: 'x.md', line: 2, message: 'RENAMED の FROM「末尾」に対応する TO がありません' }]);
+  });
+});
