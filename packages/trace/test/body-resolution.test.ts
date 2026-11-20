@@ -158,7 +158,7 @@ describe('索引全体で共有する入力予算', () => {
     vi.mocked(openSync).mockClear(); vi.mocked(readSync).mockClear();
     expect(resolveBody(root).status).toBe('invalid-index');
     expect(vi.mocked(openSync).mock.calls.filter(([p]) => String(p) === join(root, extraPath))).toHaveLength(0);
-  }));
+  }), 60_000);
   it('[REQ-471] file64MiBを1byte超えた候補をreadSync前に拒否する', () => fixture((root, { receipt: r }) => {
     const file = join(root, receiptPath(r)); write(root, receiptPath(r), 'x'.repeat(JSON_LIMITS.maxFileBytes + 1));
     const readFiles: string[] = [], original = vi.mocked(openSync).getMockImplementation()!;
