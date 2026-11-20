@@ -420,7 +420,7 @@ describe('CI=1でのverify APIと実CLIの判定一致', () => {
   }, 30_000);
 });
 
-it('[REQ-466] tarballのeffort入口・導出型・help・既存公開元とarchive探索を使える', () => {
+it('[REQ-466][REQ-467][REQ-468][REQ-171] tarballのeffort入口・導出型・help・既存公開元・効率の表の入口とarchive探索を使える', () => {
   const effortTarget = join(base, 'effort-record');
   const prepared = spawnSync(process.execPath, ['scripts/package-smoke.mjs', 'prepare', effortTarget], { cwd: root, encoding: 'utf8', env });
   expect(prepared.status, prepared.stdout + prepared.stderr).toBe(0);
@@ -429,10 +429,10 @@ it('[REQ-466] tarballのeffort入口・導出型・help・既存公開元とarch
 import assert from 'node:assert/strict';
 import { mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
-import { EFFORT_SCHEMA_VERSION, loadEffortSchema, loadTraceSchemas, loadParserSchemas } from '@loomake/core';
-import { resolveChangeDir, RuntimeFailure, UsageError } from '@loomake/kit';
+import { EFFORT_SCHEMA_VERSION, loadEffortSchema, loadTraceSchemas, loadParserSchemas, readTable } from '@loomake/core';
+import { createByteInputReader, resolveChangeDir, RuntimeFailure, UsageError } from '@loomake/kit';
 import * as traceApi from '@loomake/trace';
-import { parseDuration, parseCost, parseEffortOption, runEffortRecord, runRecord, runReport } from '@loomake/trace';
+import { parseDuration, parseCost, parseEffortOption, runEffortRecord, runRecord, runReport, parseManualEffort, readEffortInputs, buildEfficiencyTable, formatEfficiencySection } from '@loomake/trace';
 import { main } from './node_modules/loomake/dist/main.js';
 const git = (...args) => { const r = spawnSync('git', args, { encoding: 'utf8' }); assert.equal(r.status, 0, r.stderr); return r.stdout.trim(); };
 const commit = () => { git('add', '-A'); git('commit', '-qm', 'effort receipt'); };
@@ -464,18 +464,29 @@ mkdirSync('openspec/changes/archive/2026-11-05-sample'); writeFileSync('openspec
 assert.equal(resolveChangeDir('openspec/changes', 'sample').kind, 'ambiguous'); assert.throws(record);
 assert.equal(resolveChangeDir('openspec/changes', 'missing').kind, 'missing');
 assert.throws(() => runEffortRecord({ root: process.cwd(), changeId: 'missing', effort: '1m', stdout: () => {} }));
+assert.equal(readTable(['## 見出し', '', '| a | b |', '|---|---|', '| 1 | 2 |'], '見出し').rows[0].size, 2);
+writeFileSync('byte-input.txt', 'x'); assert.deepEqual(createByteInputReader().readBytes('byte-input.txt'), Buffer.from('x'));
+for (const internal of ['escapeCell', 'effortProblem']) assert.ok(!(internal in traceApi));
+assert.equal(parseManualEffort('docs/effort/x.md', new Uint8Array()).change.status, 'unmapped');
+const section = formatEfficiencySection(buildEfficiencyTable(readEffortInputs(process.cwd())));
+assert.ok(section.startsWith('## 開発効率（推定との差。人力実測との比較ではない）\\n'));
+assert.ok(section.includes('sample（change があいまいです）'));
+assert.equal(formatEfficiencySection(buildEfficiencyTable(readEffortInputs(process.cwd()))), section);
+assert.equal(git('status', '--porcelain', '--', '.loomake'), '');
 `;
   const executed = spawnSync(process.execPath, ['--input-type=module', '-e', code], { cwd: consumer, encoding: 'utf8' });
   expect(executed.status, executed.stdout + executed.stderr).toBe(0);
   const types = join(consumer, 'effort-consumer.ts');
   writeFileSync(types, `import { loadEffortSchema, type EffortRecord, type EffortMinutes, type EffortCost } from '@loomake/core';
 import { resolveChangeDir } from '@loomake/kit';
-import { runEffortRecord, type EffortRecordOptions } from '@loomake/trace';
+import { runEffortRecord, readEffortInputs, buildEfficiencyTable, formatEfficiencySection, type EffortRecordOptions, type EffortInputs, type EfficiencyTable, type EfficiencyRow, type EfficiencyValue } from '@loomake/trace';
 const minutes: EffortMinutes = { review: 0 }; const cost: EffortCost = { kind: 'tokens', count: 1 };
 const value: EffortRecord = { schemaVersion: 1, kind: 'loomake-effort', change: 'sample', sha: 'a'.repeat(40), recordedAt: new Date().toISOString(), minutes, cost: [cost] };
 const options: EffortRecordOptions = { root: '.', changeId: value.change, effort: '0m', stdout: () => {} };
 const result: number = runEffortRecord(options); const location = resolveChangeDir('openspec/changes', 'sample');
-void [result, location, loadEffortSchema];
+const inputs: EffortInputs = readEffortInputs('.'); const table: EfficiencyTable = buildEfficiencyTable(inputs); const text: string = formatEfficiencySection(table);
+const rows: EfficiencyRow[] = table.rows; const status: EfficiencyValue<number>['status'] = 'missing';
+void [result, location, loadEffortSchema, text, rows, status];
 `);
   const checked = spawnSync(process.execPath, [join(root, 'node_modules/typescript/bin/tsc'), '--ignoreConfig', '--noEmit', '--strict', '--skipLibCheck', '--target', 'es2022', '--module', 'nodenext', '--types', 'node', '--typeRoots', join(root, 'node_modules/@types'), types], { cwd: consumer, encoding: 'utf8' });
   expect(checked.status, checked.stdout + checked.stderr).toBe(0);

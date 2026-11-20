@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, truncateSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { createInputReader, JSON_LIMITS, readInputBytes, InputReadFailure, UsageError } from '../src/index.js';
+import { createByteInputReader, createInputReader, JSON_LIMITS, readInputBytes, InputReadFailure, UsageError } from '../src/index.js';
 
 const interception = vi.hoisted(() => ({ loop: false, fifo: false, denied: false }));
 vi.mock('node:fs', async (original) => {
@@ -52,5 +52,26 @@ describe('元bytesを読む安全な入口', () => {
     const file = join(temporary(), 'raw'); writeFileSync(file, 'abc'); interception.loop = true;
     expect(() => readInputBytes(file)).toThrow(UsageError);
     expect(() => readInputBytes(file)).toThrow(/差替え/);
+  });
+});
+
+describe('予算を共有する bytes reader', () => {
+  it('[REQ-171] bytes と文字列の読取りが同じ合計の予算を使い、超えたら止まる', () => {
+    const root = temporary(); writeFileSync(join(root, 'a'), 'xxxxxx'); writeFileSync(join(root, 'b'), 'yyyyyy');
+    const reader = createByteInputReader({ maxTotalBytes: 10 });
+    expect(reader.readBytes(join(root, 'a')).toString()).toBe('xxxxxx');
+    expect(() => reader.read(join(root, 'b'))).toThrow(/合計の上限は10バイト/);
+  });
+  it('[REQ-171] 返す bytes は原本と一致し、書き換えても原本と次の読取りに影響しない', () => {
+    const file = join(temporary(), 'raw'); const bytes = Buffer.from([0xef, 0xbb, 0xbf, 0x80, 0xe3, 0x81]); writeFileSync(file, bytes);
+    const reader = createByteInputReader();
+    const first = reader.readBytes(file); expect(first).toEqual(bytes); first.fill(0);
+    expect(reader.readBytes(file)).toEqual(bytes);
+  });
+  it('[REQ-171] リンクと通常のファイル以外は拒否し、既存の reader の形は変えない', () => {
+    const root = temporary(); writeFileSync(join(root, 'a'), 'a'); symlinkSync(join(root, 'a'), join(root, 'link'));
+    expect(() => createByteInputReader().readBytes(join(root, 'link'))).toThrow(UsageError);
+    expect(Object.keys(createInputReader())).toEqual(['read', 'readHead', 'entries', 'walk']);
+    expect(Object.keys(createByteInputReader())).toEqual(['read', 'readHead', 'entries', 'walk', 'readBytes']);
   });
 });
