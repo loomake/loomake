@@ -18,7 +18,8 @@ vi.mock('node:child_process', async original => {
 const token = 'ghp_' + 'x'.repeat(24);
 const result = (values: Partial<ExternalResult> = {}): ExternalResult => ({ status: 0, signal: null, stdout: '', stderr: '', ...values });
 const config = (commands: Record<string, string> = { test: 'quality-test' }) => ({ openspecValidate: false, commands });
-const reasons = (verified: ReturnType<typeof runVerify>) => 'checks' in verified ? verified.checks.map(check => check.reason).join('\n') : '';
+const checksOf = (verified: ReturnType<typeof runVerify>) => ('checks' in verified ? verified.checks : undefined) ?? [];
+const reasons = (verified: ReturnType<typeof runVerify>) => checksOf(verified).map(check => check.reason).join('\n');
 
 beforeEach(() => {
   command.mockReset().mockImplementation(() => result());
@@ -54,7 +55,7 @@ it('[REQ-451] openspec validate の失敗出力を置換し、先頭 2000 文字
   vi.stubEnv('PATH', `${bin}${delimiter}${process.env.PATH ?? ''}`);
   try {
     const verified = runVerify({ root, changeId: CHANGE });
-    const text = ('checks' in verified ? verified.checks.find(check => check.id === 'openspec validate')?.reason : undefined) ?? '';
+    const text = checksOf(verified).find(check => check.id === 'openspec validate')?.reason ?? '';
     expect(text).not.toContain(token);
     expect(text).toContain('bad ***');
     expect(text.length).toBeLessThanOrEqual(2000);
