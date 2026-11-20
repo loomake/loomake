@@ -96,6 +96,11 @@ macOS と Windows でだけ時間切れが続く試験ファイルは、`tests/q
 
 [Issue #430](https://github.com/loomake/loomake/issues/430) の文言の修理として、次の単発の事実も併せて記録する。2026-11-05 の利用者決定 D では、PR #425 の Windows CI で一度だけ時間切れになった `delivery-opus-prior` の試験も隔離の対象として承認された。時間切れが繰り返されたという実測はない。対象・期限・ファイル全体が外れる範囲は Issue #428 に記録する。
 
+2026-11-20 に、利用者の承認を受けて隔離一覧を整理した。guards・pr・publication-retry・guards-special-files・delivery-opus-prior の 5 件は、11/6〜11/13 の夜間の隔離実行でほぼ通っていたため一覧から外した。現在の一覧に残るのは次の 2 件で、追加日を 2026-11-20、期限を 2026-12-04 にした（延長は 1 回 14 日まで）。外した試験がまた不安定になっても、一覧へ戻す前に利用者へ相談する。
+
+- `tests/ai-journeys.test.ts`（Windows、Issue #181）：夜間の隔離実行で、一部の試験が失敗し続けている
+- `tests/package-artifacts.test.ts`（Windows、Issue #183）：CRLF による文字列の不一致は試験側で直した。ただし、REQ-324・REQ-325 の試験が 60 秒を超える失敗が 11/6 と 11/10 に出ているため、Windows で安定して通ると確かめてから、別の PR で外す
+
 quality ジョブの macOS・Windows のシャードでは、`scripts/ci-quarantine.mjs --os <OS>` が一覧を検査し、外すファイルを JSON の配列で出力します。テストのステップはそれを環境変数 `LOOMAKE_TEST_QUARANTINE_EXCLUDE` で `vitest.config.ts` に渡し、両方のプロジェクトの `exclude` に足します。テストを実行する `run:` の行は変えていません。
 
 外した試験は別のワークフロー `.github/workflows/quality-quarantine.yml` で流します。main への push・定期実行・`ci:all-os` ラベルの PR・手動実行で動きます。plan ジョブが `ci-quarantine.mjs --matrix` で OS ごとの matrix を作り、`quality-quarantine` ジョブが一覧のファイルだけをシャードに分けずに実行します。このジョブは `continue-on-error: true` なので、失敗しても run の成否には数えません。一覧が空なら、このジョブは飛ばされます。ci.yml の中に置かないのは、ci.yml の既存の試験（`ci:all-os` の式が 1 か所であること、gate が最後のジョブであることなど）を変えないためです。
