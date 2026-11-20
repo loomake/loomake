@@ -73,7 +73,7 @@ export function runReuse(options: ReuseOptions): ReuseResult {
   const finish = (outcome: ReuseOutcome, reasons: ReuseReason[], exitCode = 1, record: ReuseResult['record'] = null, verifyCode: number | null = null): ReuseResult => {
     const result: ReuseResult = { resultVersion: 1, outcome, exitCode, reasons, source, target, record, verifyExitCode: verifyCode };
     if (options.json) options.stdout(JSON.stringify(maskValue(result)));
-    else { emitReasons(reasons); options.stdout(maskSecrets(`${outcome}${record ? `: ${record.path}` : ''}`)); if (outcome === 'reused') options.stdout('品質コマンドは実行していません。品質の合格や CI の最終合格を表しません'); }
+    else { if (outcome !== 'revalidated') emitReasons(reasons); options.stdout(maskSecrets(`${outcome}${record ? `: ${record.path}` : ''}`)); if (outcome === 'reused') options.stdout('品質コマンドは実行していません。品質の合格や CI の最終合格を表しません'); }
     return result;
   };
   const human = (r: ReuseReason) => finish('returned-to-human', [r]);

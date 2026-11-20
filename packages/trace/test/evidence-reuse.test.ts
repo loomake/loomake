@@ -65,6 +65,13 @@ it.each(['node', 'platform', 'arch', 'evaluator', 'commands', 'basis', 'document
     expect(p.counts()).toEqual(['lint', 'typecheck', 'test']);
     expect(r.result.record?.path).toMatch(/\.json$/);
 });
+it('[REQ-474] --jsonなしの再検証は理由を標準出力に1回だけ示す', () => {
+    const p = project();
+    p.mutate(s => { s.execution.evaluator.version = 'different'; });
+    const r = p.run({ json: false });
+    expect(r.result.outcome).toBe('revalidated');
+    expect(r.out.filter((line) => line.startsWith('EVALUATOR_MISMATCH:'))).toHaveLength(1);
+});
 it.each(['local', 'fail', 'insufficient', 'decision', 'aborted'])('[REQ-474] 合格でない要約は再検証する: %s', (kind) => {
     const p = project();
     p.mutate(s => { const v = s.verify; if (kind === 'local') {
