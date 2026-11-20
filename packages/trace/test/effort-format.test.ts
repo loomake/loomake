@@ -38,6 +38,12 @@ describe('開発効率の表の整形', () => {
     expect(out).toContain('| 13.0%（幅なし） |');
     expect(out).toContain('| 部分計 2以上（一部欠測） |');
   });
+  it('[REQ-468] 推定に幅があれば、削減率の下限と上限が同じでも「幅なし」と付けない', () => {
+    const out = lines([row({ actual: { status: 'value', value: { totalMinutes: 0 } }, reduction: { status: 'value', value: { lowerPermille: 1000, upperPermille: 1000 } } })])[4]!;
+    expect(out).toContain('| 1440〜3480分 |');
+    expect(out).toContain('| 100.0% |');
+    expect(out).not.toContain('幅なし');
+  });
   it('[REQ-468] 費用は区分ごとに実額・推計・トークンを書き、セントは小数の計算なしにドルへ直す', () => {
     const cost = { status: 'value' as const, value: {
       'actual-usd': { status: 'value' as const, value: 125 }, 'estimated-usd': { status: 'value' as const, value: 5 }, tokens: { status: 'partial' as const, known: 12000, reason: '一部' } } };
