@@ -8,6 +8,8 @@ import { fixture, git } from './quality-eval-fixtures.js';
 import { accepted, at, event, evaluation, failed, started, uuid, lines } from './quality-test-fixtures.js';
 
 vi.setConfig({ testTimeout: 15_000 });
+const eventsOf = (f: ReturnType<typeof fixture>, n: number) => f.storage().ledgers.requests.filter((r) => r.requestId === uuid(n)).map((r) => r.event);
+const attemptsOf = (f: ReturnType<typeof fixture>, n: number) => f.storage().ledgers.attempts.filter((r) => r.requestId === uuid(n));
 function seed(f: ReturnType<typeof fixture>, kind: 'started' | 'attempt' | 'history' | 'accepted' = 'started', otherTarget = false) {
   const target = { commit: otherTarget ? 'a'.repeat(40) : git(f.root, 'rev-parse', 'HEAD') };
   const basis = { qualitySha256: sha256Hex(f.read('quality.yaml')) };
@@ -86,6 +88,23 @@ describe('単一実行者の要求回収と原本保持', () => {
     expect(f.storage().ledgers.attempts.find((r) => r.requestId === uuid(2))?.failure).toBe('crashed');
     git(f.root, 'checkout', '--', 'quality.yaml'); expect(await f.evaluate()).toBe(0);
     expect(f.storage().ledgers.states.get(uuid(1))?.last.event).toBe('reevaluated'); expect(f.storage().ledgers.states.get(uuid(2))?.last.event).toBe('reevaluated');
+  });
+  it('[REQ-440][REQ-442] 履歴があってevaluatedのない要求は汚れた評価で決めず、きれいな評価でevaluatedだけを補う', async () => {
+    const f = fixture(); seed(f, 'history'); writeFileSync(join(f.root, 'untracked.txt'), 'dirty');
+    expect(await f.evaluate()).toBe(1); expect(eventsOf(f, 1)).toEqual(['accepted', 'started']); expect(attemptsOf(f, 1)).toEqual([]);
+    rmSync(join(f.root, 'untracked.txt')); expect(await f.evaluate()).toBe(0);
+    expect(eventsOf(f, 1)).toEqual(['accepted', 'started', 'evaluated']); expect(attemptsOf(f, 1)).toEqual([]);
+  });
+  it('[REQ-440][REQ-442] 汚れた評価を繰り返してもcrashedと放棄を重ねて書かない', async () => {
+    const f = fixture(); seed(f); writeFileSync(join(f.root, 'untracked.txt'), 'dirty');
+    for (let i = 0; i < 3; i++) expect(await f.evaluate()).toBe(1);
+    expect(eventsOf(f, 1)).toEqual(['accepted', 'started', 'abandoned']);
+    expect(attemptsOf(f, 1).map((r) => r.failure)).toEqual(['crashed']);
+  });
+  it('[REQ-440][REQ-442] 受付だけの要求は汚れた評価で放棄までに止める', async () => {
+    const f = fixture(); seed(f, 'accepted'); writeFileSync(join(f.root, 'untracked.txt'), 'dirty');
+    expect(await f.evaluate()).toBe(1); expect(eventsOf(f, 1)).toEqual(['accepted', 'abandoned']);
+    expect(attemptsOf(f, 1)).toEqual([]);
   });
   it('[REQ-440] 壊れた台帳・矛盾する既存attemptは受付前に2相当で原本保持', async () => {
     const f = fixture(); seed(f, 'attempt'); const attempts = f.read(QUALITY_FILES.attempts).replace(uuid(1), uuid(9));
