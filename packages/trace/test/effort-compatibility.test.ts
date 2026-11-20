@@ -3,7 +3,7 @@ import { chmodSync, copyFileSync, statSync, readdirSync, mkdirSync, mkdtempSync,
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { buildReport, runEffortRecord } from '../src/index.js';
+import { buildEfficiencyTable, buildReport, formatEfficiencySection, readEffortInputs, runEffortRecord } from '../src/index.js';
 import { readDocuments } from '../src/documents.js';
 import { evidenceValue, evidenceV2Value } from '../../core/test/fixtures/trace-contract-values.js';
 import { traceMd, specMd } from '../../kit/test/project.js';
@@ -59,4 +59,14 @@ it('[REQ-466] runnerはeffortコミットを再利用せず既存local証拠だ�
   p.write(file, JSON.stringify({ schemaVersion: 2, change: 'c1', sha, committedAt: '2026-11-06T00:00:00Z', recordedAt: '2026-11-06T00:00:01Z', documents: readDocuments(p.changeDir), verify: { schemaVersion: '2.0.0', change: 'c1', scope: 'local', run: { status: 'completed', errors: [] }, checks: [{ id: 'command: test', result: 'PASS', reason: '', evidence: [] }], summary: { fail: 0, insufficient: 0, not_applicable: 0, evaluated: 1, pending: 0 }, decision: { required: false, reasons: [] } } }));
   git(p.root, 'add', '.'); git(p.root, 'commit', '-qm', 'local evidence');
   expect(reusableEvidence(p.root, process.env, 'c1', p.changeDir)).toBe(file);
+});
+it('[REQ-467][REQ-468] 効率の表の読取りと整形は旧Report・原証拠・実績記録を変えず、再実行しても同じ節になる', () => {
+  const p = project(); expect(p.effort()).toBe(0); git(p.root, 'add', '.'); git(p.root, 'commit', '-qm', 'effort');
+  const snapshot = () => readdirSync(p.root, { recursive: true, withFileTypes: true }).filter((e) => e.isFile() && !e.parentPath.includes('.git'))
+    .map((e) => `${e.parentPath}/${e.name}:${statSync(join(e.parentPath, e.name)).mtimeMs}`).sort();
+  const report = buildReport(p.root, 'c1'); const before = snapshot();
+  const section = formatEfficiencySection(buildEfficiencyTable(readEffortInputs(p.root)));
+  expect(formatEfficiencySection(buildEfficiencyTable(readEffortInputs(p.root)))).toBe(section);
+  expect(section).toContain('| c1 |');
+  expect(buildReport(p.root, 'c1')).toEqual(report); expect(snapshot()).toEqual(before); expect(git(p.root, 'status', '--porcelain')).toBe('');
 });
