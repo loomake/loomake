@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { UsageError, type StaticMetricsReceipt } from '@loomake/kit';
 import { EVAL_LOCK, QUALITY_FILES } from '../src/quality-files.js';
-import { qualityExecutionFailure, testRunIncomplete } from '../src/quality-execution.js';
+import { clearQualityOutputs, qualityExecutionFailure, testRunIncomplete } from '../src/quality-execution.js';
 import { fixture, git } from './quality-eval-fixtures.js';
 
 vi.setConfig({ testTimeout: 15_000 });
@@ -85,6 +85,13 @@ describe('手動評価の実行と完了証拠', () => {
     if (status === 'todo') value.numTodoTests = 1; else value.numPendingTests = 1;
     value.testResults[0].assertionResults.push({ fullName: status, status });
     expect(testRunIncomplete(payload(value), producer, 0)).toBeTypeOf('string');
+  });
+  it('[REQ-432][REQ-442] 大文字小文字だけが違うレポート先でも帳簿と品質基準を消さずに拒否する', async () => {
+    const f = fixture(); expect(await f.evaluate()).toBe(0); const history = f.read(QUALITY_FILES.history);
+    for (const report of ['Reports/Quality/History.jsonl', 'REPORTS/quality', 'Quality.yaml']) {
+      expect(() => clearQualityOutputs(f.root, report)).toThrow(UsageError);
+    }
+    expect(f.read(QUALITY_FILES.history)).toBe(history); expect(existsSync(join(f.root, 'quality.yaml'))).toBe(true);
   });
   it('[REQ-434] 汚れによる1と時間切れ・中断による3でも自分のロックを片付ける', async () => {
     const dirty = fixture(); writeFileSync(join(dirty.root, 'untracked'), 'dirty');

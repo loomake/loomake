@@ -32,9 +32,15 @@ function outputPath(root: string, relative: string): string {
   return join(root, relative);
 }
 
+/** 大文字小文字を区別しないファイルシステムでも同じ実体を指す保護パスを拒否する。 */
+function overlapsProtected(report: string): boolean {
+  const target = report.toLowerCase();
+  const protectedFiles = ['quality.yaml', 'loomake.config.json', EVAL_LOCK, ...Object.values(QUALITY_FILES)].map((file) => file.toLowerCase());
+  return protectedFiles.some((file) => file === target || file.startsWith(`${target}/`) || target.startsWith(`${file}/`));
+}
+
 export function clearQualityOutputs(root: string, report: string): void {
-  const protectedFiles: readonly string[] = ['quality.yaml', 'loomake.config.json', EVAL_LOCK, ...Object.values(QUALITY_FILES)];
-  if (protectedFiles.some((file) => file === report || file.startsWith(`${report}/`) || report.startsWith(`${file}/`))) {
+  if (overlapsProtected(report)) {
     throw new UsageError('テストのレポート先に品質基準・設定・評価の帳簿は指定できません');
   }
   for (const file of new Set([report, COVERAGE_REPORT])) {
