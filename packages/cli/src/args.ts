@@ -70,6 +70,17 @@ const traceOperations = [
       { name: '--date', kind: 'value', label: '--date YYYY-MM-DD', description: '承認日。省くと今日の日付', required: '任意', defaultValue: '実行環境のローカル日付', choices: 'YYYY-MM-DDの実在する日' },
     ],
   },
+  {
+    name: 'reuse', usage: 'loomake trace reuse --change <id> --summary <path> --anchor <file> [--scope local|ci] [--json]',
+    description: '証跡だけの差分なら、外部の信頼値で照合した要約を品質コマンドなしで再利用して .loomake/evidence/<change-id>/reuse/ に記録する。混在や環境の違いは再検証し、要約の改変は人へ差し戻す。',
+    options: [
+      { name: '--change', kind: 'value', label: '--change <id>', description: '対象の change', required: '必須', defaultValue: 'なし', choices: '英小文字・数字と、間に1つずつのハイフンで表すchange-id' },
+      { name: '--summary', kind: 'value', label: '--summary <path>', description: 'target時点の要約のrepo相対パス（.loomake/evidence/<id>/<日時>-<12桁>.json）', required: '必須', defaultValue: 'なし' },
+      { name: '--anchor', kind: 'value', label: '--anchor <file>', description: 'repo外で凍結した信頼値JSON。真正性は確かめない', required: '必須', defaultValue: 'なし' },
+      { name: '--scope', kind: 'value', label: '--scope local|ci', description: '再検証するときのverifyの範囲', required: '任意', defaultValue: 'ci', choices: SCOPES.join(' / ') },
+      { name: '--json', kind: 'flag', label: '--json', description: '結果のJSONだけを標準出力へ出す', required: '任意', defaultValue: 'false' },
+    ],
+  },
 ] as const satisfies readonly CliCommand[];
 
 /** CLIの受理名・候補順とヘルプ・リファレンスの生成元。配列順は解析候補の優先順。 */
@@ -100,8 +111,8 @@ export const CLI_COMMANDS = [
   },
   {
     name: 'trace', usage: traceOperations.map((operation) => operation.usage).join('\n       '),
-    summary: '証拠を記録し（record）、リリースレポートを出す（report）。確認事項の回答（answer）と仮定の承認（approve）を書く',
-    description: 'record・report・answer・approveの操作を指定する。', options: [], operations: traceOperations,
+    summary: '証拠を記録し（record）、リリースレポートを出す（report）。確認事項の回答（answer）と仮定の承認（approve）を書く。証跡だけの差分なら要約を再利用する（reuse）',
+    description: 'record・report・answer・approve・reuseの操作を指定する。', options: [], operations: traceOperations,
   },
   {
     name: 'run', usage: 'loomake run --change <id> [--engine claude-code] [--dry-run] [--skip-permissions]',
