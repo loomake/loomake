@@ -37,7 +37,7 @@ it('[REQ-466] 最終置換してから構造・Unicode文字・UTF-8 bytesを検
   expect(() => serializeEffort({ ...prefix, change: 'x'.repeat(65537 - fixed) })).toThrow('上限');
 });
 
-it('[REQ-466] 日時の秒・小数秒・offsetと不正日付の受理が構造スキーマと一致する', async () => {
+it('[REQ-466][REQ-480] 日時の秒・小数秒・offsetと不正日付の受理が構造スキーマと一致する', async () => {
   const { loadEffortSchema } = await import('@loomake/core');
   const { effortRecordSchema } = await loadEffortSchema();
   const cases: [string, boolean][] = [

@@ -120,7 +120,7 @@ it('[REQ-466] raw入力やcauseを残さず共有置換し、元のnoteの長さ
   git(r.root, 'add', '.'); git(r.root, 'commit', '-qm', 'effort'); r.write(token, 'dirty'); expect(r.record()).toBe(1);
   expect(r.outputs.join('\n')).not.toContain(token); expect(r.outputs.join('\n')).toContain('***');
 });
-it('[REQ-466] git不在と保存失敗は日本語UsageErrorで公開しない', () => {
+it('[REQ-466][REQ-481] git不在と保存失敗は日本語UsageErrorで公開しない', () => {
   const r = repo(); rmSync(join(r.root, '.git'), { recursive: true }); expect(() => r.record()).toThrow(); expect(r.files()).toEqual([]);
   const p = repo(); p.write('.loomake/evidence/add-x/effort', 'file');
   writeFileSync(join(p.root, '.git/info/exclude'), '.loomake/\n'); expect(() => p.record()).toThrow(); expect(readFileSync(p.dir, 'utf8')).toBe('file');
@@ -148,7 +148,7 @@ const thrown = (action: () => unknown): Error => {
   try { action(); } catch (error) { return error as Error; }
   throw new Error('expected rejection');
 };
-it.each(['input', 'size', 'change', 'git', 'save', 'cost'] as const)('[REQ-466] 保存前%sを固定文とcauseなしで区別する', (kind) => {
+it.each(['input', 'size', 'change', 'git', 'save', 'cost'] as const)('[REQ-466][REQ-481] 保存前%sを固定文とcauseなしで区別する', (kind) => {
   const r = repo(); const token = 'sk-' + 'a'.repeat(20);
   const cases: [() => unknown, string][] = [
     [() => r.record({ effort: token }), '実作業時間の入力が不正です。時間・区分・回数・費用・メモの書式を確認してください。'],
@@ -164,7 +164,7 @@ it.each(['input', 'size', 'change', 'git', 'save', 'cost'] as const)('[REQ-466] 
     expect(error.message).not.toContain(token); expect(error.cause).toBeUndefined(); expect(r.files()).toEqual([]);
   }
 });
-it.each(['cleanup', 'stdout'] as const)('[REQ-466] 保存後%sの失敗は完全なファイルを残し再実行しないRuntimeFailureにする', (phase) => {
+it.each(['cleanup', 'stdout'] as const)('[REQ-466][REQ-481] 保存後%sの失敗は完全なファイルを残し再実行しないRuntimeFailureにする', (phase) => {
   const r = repo(); const token = 'sk-' + 'a'.repeat(20);
   if (phase === 'cleanup') vi.mocked(unlinkSync).mockImplementationOnce(() => { throw new UsageError(token, { cause: new Error(token) }); });
   const error = thrown(() => r.record(phase === 'stdout' ? { stdout: () => { throw new UsageError(token, { cause: new Error(token) }); } } : {}));

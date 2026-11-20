@@ -6,7 +6,7 @@ Issue #456 の保存前後を区別しない診断、ビルド成果物に依存
 
 ## What Changes
 
-- REQ-466だけを変更し、既存21 Scenarioを保持して5 Scenarioを加える。
+- REQ-466を変更し、REQ-480・REQ-481を追加する。既存21 Scenarioを保持して5 Scenarioを加え、うち日時の1件をREQ-480、保存前後の失敗の2件をREQ-481に置く。
 - 日時の秒を必須とし、costの空配列を拒否する。
 - 保存後の片付け・通知失敗は保存済みを示すRuntimeFailureにする。
 - core・trace・CLIのloomakeをminor更新し、API入力とCLI終了コードの移行方法を案内する。
