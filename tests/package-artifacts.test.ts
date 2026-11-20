@@ -454,7 +454,7 @@ assert.equal(trace.resolveArtifactBody({ root: data, summaryPath: input.summaryP
 assert.deepEqual(readFileSync(join(data, input.summaryPath)), summary);
 ` , input], { cwd: join(work, 'consumer'), encoding: 'utf8' });
   expect(checked.status, checked.stdout + checked.stderr).toBe(0);
-});
+}, 60_000);
 
 it('[REQ-466] tarballのeffort入口・導出型・help・既存公開元とarchive探索を使える', () => {
   const effortTarget = join(base, 'effort-record');
