@@ -14,6 +14,12 @@ export type { AgreementOptions } from './agreement.js';
 
 export { summaryProblem } from './summary.js';
 export type { EvidenceSummary, SummaryArtifact, SummaryGap } from '@loomake/core';
+
+export { bodyReceiptProblem, appendBodyReceipt } from './body-receipt.js';
+export type { BodyReceipt } from '@loomake/core';
+export { resolveArtifactBody } from './body-resolution.js';
+export type { BodyResolution, BodyResolutionOptions, BodyResolutionStatus, BodyArtifactResolution } from './body-resolution.js';
+
 export { parseDuration, parseEffortOption, parseCost } from './effort-input.js';
 export { runEffortRecord } from './effort-record.js';
 export type { EffortRecordOptions } from './effort-record.js';

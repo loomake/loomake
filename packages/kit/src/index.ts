@@ -46,6 +46,9 @@ export type { ArtifactBodyCheck, ArtifactRetentionResult } from './verify/artifa
 export { readEvidenceRange, createGitEvidenceReader } from './verify/trusted/evidence-range.js';
 export type { EvidenceRangeEntry, EvidenceRangeReasonCode, EvidenceRangeReason, EvidenceRangeOptions, EvidenceRange, GitTreeLookup, GitBlobText, GitEvidenceReader } from './verify/trusted/evidence-range.js';
 
+export { checkBodyReceipt } from './verify/body-receipt.js';
+export type { BodyReceiptCheck } from './verify/body-receipt.js';
+
 export { collectToolOutput } from './collect/collect.js';
 export type { CollectRequest, CollectExit, Collected } from './collect/collect.js';
 export { ghPrChecksArgs, biomeArgs, playwrightTestArgs } from './collect/args.js';

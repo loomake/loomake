@@ -154,6 +154,24 @@ export function consumeSummaryArtifact(artifact: SummaryArtifact, bytes: Uint8Ar
   return { checked, retention, schemas };
 }
 
+// [REQ-470][REQ-471] 新索引の公開型をcore/kit/traceの配布入口から同期で利用する。
+import { BODY_RECEIPT_VERSION, type BodyReceipt, type QualityEvidencePolicy } from '@loomake/core';
+import { checkBodyReceipt, type BodyReceiptCheck } from '@loomake/kit';
+import { appendBodyReceipt, bodyReceiptProblem, resolveArtifactBody, type BodyResolution, type BodyResolutionOptions, type BodyArtifactResolution, type BodyResolutionStatus } from '@loomake/trace';
+export type ReceiptVersionContract = Assert<Equal<BodyReceipt['indexVersion'], 1>>;
+export type LocatorAttemptContract = Assert<Equal<BodyReceipt['locator']['runAttempt'], string>>;
+export function consumeBodyIndex(root: string, receipt: BodyReceipt, summaryBytes: Uint8Array, policy: QualityEvidencePolicy) {
+  const version: 1 = BODY_RECEIPT_VERSION;
+  const check: BodyReceiptCheck = checkBodyReceipt(summaryBytes, receipt);
+  const problem: string | undefined = bodyReceiptProblem(receipt);
+  const appended: boolean = appendBodyReceipt(root, receipt);
+  const options: BodyResolutionOptions = { root, summaryPath: receipt.summary.path, policy, now: receipt.retrieval.retrievedAt };
+  const resolution: BodyResolution = resolveArtifactBody(options);
+  const artifacts: BodyArtifactResolution[] = resolution.artifacts;
+  const status: BodyResolutionStatus = resolution.status;
+  return { version, check, problem, appended, artifacts, status };
+}
+
 // REQ-473/475/476: 配布した宣言だけから追加の全型と関数を使う。
 import { readEvidenceRange, createGitEvidenceReader, type EvidenceRangeEntry, type EvidenceRangeReasonCode, type EvidenceRangeReason, type EvidenceRangeOptions, type EvidenceRange, type GitTreeLookup, type GitBlobText, type GitEvidenceReader } from '@loomake/kit';
 import { runReuse, reuseRecordProblem, REUSE_RECORD_VERSION, type ReuseOptions, type ReuseResult, type ReuseOutcome, type ReuseReason, type ReuseReasonCode, type ReuseRecord } from '@loomake/trace';
