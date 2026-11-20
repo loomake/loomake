@@ -67,3 +67,27 @@ describe('Codex events', () => {
     });
   });
 });
+
+describe('Codex events の現状の振る舞い（リファクタの前に固定する）', () => {
+  const firstError = (...events: unknown[]) => parse(...events).errors;
+  it('[REQ-448] 空の入力と、順序・終端・payload の誤りを決まった文言で返す', () => {
+    expect(parseCodexEvents('codex', '\uFEFF \n')).toEqual({ value: null, errors: [{ file: 'codex', line: 1, message: '出力が空です' }] });
+    expect(firstError(completed)).toEqual([{ file: 'codex', line: 1, message: 'イベントの順序が違います：type' }]);
+    expect(firstError(started)).toEqual([{ file: 'codex', line: 1, message: '終端のイベントがありません：type' }]);
+    expect(firstError(started, { type: 'turn.completed' })).toEqual([{ file: 'codex', line: 2, message: '出力の形が違います：usage' }]);
+    expect(firstError({ type: 'turn.failed' })).toEqual([{ file: 'codex', line: 1, message: '出力の形が違います：error' }]);
+    expect(firstError({ type: 1 })).toEqual([{ file: 'codex', line: 1, message: '出力の形が違います：type' }]);
+    expect(firstError([])).toEqual([{ file: 'codex', line: 1, message: '出力の形が違います：event' }]);
+  });
+  it('[REQ-448] 型が constructor などの名前の event も未知の event として扱う', () => {
+    expect(parse(started, { type: 'constructor' }, { type: '__proto__' }, { type: 'toString' }, completed).value).toMatchObject({
+      result: { terminal: 'success', turns: 1 },
+    });
+  });
+  it('[REQ-448] thread_id を sessionId に入れ、turn ごとに text・errors を初めから数え直す', () => {
+    const thread = { type: 'thread.started', thread_id: 't-1' };
+    expect(parse(thread, started, message('a'), error, completed, started, completed).value).toEqual({ tool: 'codex', kind: 'agent-result', result: {
+      terminal: 'success', cause: null, text: null, sessionId: 't-1', turns: 2, errors: [],
+    } });
+  });
+});
