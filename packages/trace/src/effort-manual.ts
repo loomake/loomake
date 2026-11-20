@@ -7,7 +7,7 @@ import type { ChangeRef, EffortObservation, ManualEffortRecord, ManualEstimate }
 
 type Sink = (line: number, message: string) => void;
 type Basic = { value: string; line: number };
-type Parts = { minutes: EffortMinutes; decisions?: number; attempts?: number };
+type Parts = { minutes: EffortMinutes; decisions?: number; attempts?: number; cost?: EffortObservation['cost'] };
 const CATEGORIES = ['instruct', 'review', 'rework', 'run', 'wait'] as const;
 const MINUTE_COLUMNS = Object.entries({ 指示: 'instruct', レビュー: 'review', 手直し: 'rework', 実行: 'run', 待機: 'wait', うち判断根拠を探す時間: 'search' } as const);
 const ACTUAL_COLUMNS = ['日', ...MINUTE_COLUMNS.map(([column]) => column), '判断要求', '試行', '費用'];
@@ -123,10 +123,10 @@ function readCounts(row: TableRow) {
   if (decisions === null || attempts === null) return '実績の回数を読めません';
   return { ...optional('decisions', decisions), ...optional('attempts', attempts) };
 }
-function readCost(row: TableRow, sink: Sink) {
+function readCost(row: TableRow) {
   const text = row.cells['費用'] ?? '';
   if (text === '') return {};
-  try { return { cost: parseCost(text) }; } catch { sink(row.line, '実績の費用の書式を読めません'); return {}; }
+  try { return { cost: parseCost(text) }; } catch { return '実績の費用の書式を読めません'; }
 }
 const rowFault = (table: Table, row: TableRow): string | null => {
   if (widthFault(table, row)) return '実績の列数が表と合いません';
@@ -136,13 +136,14 @@ const asFault = (value: unknown): string | null => (typeof value === 'string' ? 
 function rowParts(table: Table, row: TableRow): Parts | string {
   const minutes = readMinutes(row);
   const counts = readCounts(row);
-  const fault = rowFault(table, row) ?? asFault(minutes) ?? asFault(counts);
-  return fault ?? { minutes: minutes as EffortMinutes, ...(counts as object) };
+  const cost = readCost(row);
+  const fault = rowFault(table, row) ?? asFault(minutes) ?? asFault(counts) ?? asFault(cost);
+  return fault ?? { minutes: minutes as EffortMinutes, ...(counts as object), ...(cost as object) };
 }
 function actualRow(path: string, table: Table, row: TableRow, sink: Sink): EffortObservation | null {
   const parts = rowParts(table, row);
   if (typeof parts === 'string') { sink(row.line, parts); return null; }
-  return { source: { path, line: row.line }, ...parts, ...readCost(row, sink) };
+  return { source: { path, line: row.line }, ...parts };
 }
 function readActuals(path: string, lines: string[], sink: Sink): ManualEffortRecord['actuals'] {
   const table = readSection(lines, '実績', ACTUAL_COLUMNS, sink);
