@@ -20,9 +20,18 @@ export function qualityHeadPrefixes(root: string): Map<string, { oid: string; si
   return output;
 }
 
+/** CRLFで取り出した帳簿もHEAD版の先頭一致として比べる（A70-03）。改行以外の違いは一致しない。 */
 function hasHeadPrefix(bytes: Buffer | null, head: { oid: string; size: number } | undefined): boolean {
   if (!head) return true;
-  if (!bytes || bytes.length < head.size) return false;
+  return !!bytes && (blobPrefixMatches(bytes, head) || blobPrefixMatches(lfOnly(bytes), head));
+}
+
+function lfOnly(bytes: Buffer): Buffer {
+  return Buffer.from(bytes.toString('latin1').replaceAll('\r\n', '\n'), 'latin1');
+}
+
+function blobPrefixMatches(bytes: Buffer, head: { oid: string; size: number }): boolean {
+  if (bytes.length < head.size) return false;
   const hash = createHash(head.oid.length === 40 ? 'sha1' : 'sha256');
   hash.update(`blob ${head.size}\0`); hash.update(bytes.subarray(0, head.size));
   return hash.digest('hex') === head.oid;

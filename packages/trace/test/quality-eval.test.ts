@@ -91,6 +91,15 @@ describe('手動評価の実行と完了証拠', () => {
     const file = join(f.root, EVAL_LOCK); writeFileSync(file, 'foreign lock'); const before = readFileSync(file), mtime = statSync(file).mtimeMs;
     expect(await f.evaluate()).toBe(3); expect(readFileSync(file)).toEqual(before); expect(statSync(file).mtimeMs).toBe(mtime); expect(existsSync(join(f.root, QUALITY_FILES.requests))).toBe(false);
   });
+  it('[REQ-442] CRLFで取り出した帳簿は改行だけの違いを追記として扱い、改行以外の書き換えは汚れとする', async () => {
+    const f = fixture(); expect(await f.evaluate()).toBe(0);
+    git(f.root, 'add', 'reports/quality'); git(f.root, 'commit', '-q', '-m', 'ledgers'); git(f.root, 'config', 'core.autocrlf', 'true');
+    for (const key of ['requests', 'history'] as const) rmSync(join(f.root, QUALITY_FILES[key]));
+    git(f.root, 'checkout', '--', 'reports/quality'); expect(f.read(QUALITY_FILES.requests)).toContain('\r\n');
+    expect(await f.evaluate()).toBe(0); expect(await f.evaluate()).toBe(0); expect(f.storage().ledgers.history.map((r) => r.attempt)).toEqual([1, 1, 2]);
+    writeFileSync(join(f.root, QUALITY_FILES.requests), f.read(QUALITY_FILES.requests).replace(/"pid":\d+/, '"pid":1'));
+    expect(await f.evaluate()).toBe(1); expect(f.storage().ledgers.attempts.at(-1)?.failure).toBe('dirty');
+  });
   it('[REQ-442] 有効な未コミットの帳簿で次の実評価を続け、stage/commitしない', async () => {
     const f = fixture(); const head = git(f.root, 'rev-parse', 'HEAD'); expect(await f.evaluate()).toBe(0); const old = f.read(QUALITY_FILES.history);
     expect(await f.evaluate()).toBe(0); expect(f.read(QUALITY_FILES.history).startsWith(old)).toBe(true); expect(f.storage().ledgers.history.map((r) => r.attempt)).toEqual([1, 2]);
