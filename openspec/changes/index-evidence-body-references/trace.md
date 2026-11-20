@@ -36,6 +36,10 @@
 | QRef-28 | REQ-470 | #65の共通maskValueはmainで使えるか | A:受入後に共有API / B:独自pattern | A。秘密処理を重複しない | yes | A。PR #450（3f67db52）受入、PR #453（db893f01）同期archive済。kit公開maskValueのown key保持・getter/toJSON非実行・入力拒否を照合（ADR0006） | 管理役root | 2026-11-06 |
 | QRef-30 | REQ-470・REQ-471 | gapの欄名と未知field、reasonの日本語、receipt候補名の形式をどう確定するか | A:accessPolicy/workflowHeadSha・未知保持・日本語1字以上・正規名grammar / B:未定のまま停止 | A。P1の拡張と重複全pathを保つ | yes | A。管理役が本会話で採用。既知2field/未知保持、日本語文字1字、実在UTC名とsuffix/hash整合。候補名時刻とretrievedAtは一致不要で、取得事実はreceiptだけから読む（ADR0006） | 管理役root | 2026-11-06 |
 | QRef-31 | REQ-471 | 複数locatorの保持判定と結果の対応をどう返すか | A:receipt別の保持配列とlocator別全path / B:単一値へ集約 | A。異なる実期限の事実を落とさない | yes | A。locatorsはstable locatorで集約、paths/retentionは全receipt別に保持。1 traversalと残量付きraw読取り、例外後は消費量不明のため残量0。後続未読はinvalid-index（本会話・ADR0006） | 管理役root | 2026-11-06 |
+| QRef-32 | REQ-471 | 同じ本体を指す別の要約のreceiptが1件あると、元の要約の解決がmismatchになる。追記専用のため戻せない（body-resolution.ts:80・104）。これを仕様の意図とするか | A:summary.pathが違うreceiptを候補から外す / B:今の扱いを仕様の意図として残す | A。無関係な要約の追記で既存の解決が壊れない。ただし仕様の変更になるため、回答まで実装は今の文どおりに保つ | no |  |  |  |
+| QRef-33 | REQ-470 | 公開に成功したあと一時ファイルの片付けに失敗すると、保存済みなのに「追加できません」を返す（body-receipt.ts:106）。結果をどう返すか | A:公開済みならtrueを返し、片付けの失敗は返さない / B:今のまま例外にする | A。保存の事実と結果が食い違わない。再実行しても同名衝突でfalseになるだけ | no |  |  |  |
+| QRef-34 | REQ-470 | locator.entryに許す文字の範囲。`:`を含むentryをすべて拒否する一方、制御文字は通す（body-receipt.ts:26）。どこまで許すか | A:ZIP entry名として制御文字も拒否し、`:`の扱いを明文化する / B:今の範囲を仕様とする | A。拒否する文字の基準が一つになり、制御文字による表示の崩れも防げる | no |  |  |  |
+| QRef-35 | REQ-470・REQ-471 | rootがsymlinkのとき、appendもresolveもUsageErrorになる。既存のtrace recordはrootを検査しない。この違いをユーザーガイドに書くか | A:ガイドに制約として書く / B:書かずに今の扱いを保つ | A。挙動は安全側なので変えず、利用者が理由の分からない失敗に当たらないようにする | no |  |  |  |
 
 QRef27/28は2026-11-06（日本時間）に実mainの受入・同期archiveと公開ソースを照合した。#65の固定一覧追加に新しい人の承認が必要との以前の解釈は管理役が訂正・取下げ済みで、本件は共有実装の未受入だけを依存として残す。
 
