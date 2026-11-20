@@ -1,15 +1,15 @@
 ## ADDED Requirements
 
 ### Requirement: リファクタの経路
-CI の完了ゲートは、L3 で PR 本文に `loomake-change: none` と `loomake-route: refactor` の行があるとき、次の条件をすべて確かめる MUST。満たせば change なしで品質コマンドを実行し、その終了コードで終わる。
+CI の完了ゲートは、L3 で PR 本文に `loomake-change: none` と `loomake-route: refactor` の行があるとき、次をすべて確かめる MUST。満たせば change なしで品質コマンドを実行する。
 
-- `loomake-route:` の行がすべて `refactor`（大文字小文字は区別しない）
-- 差分に `openspec/` の下の変更がない（名前の変更は前後のパスを見る）
-- 既存のファイルの変更は `packages/*/src/` と `docs/` の下だけ（削除は `packages/*/src/` の下だけ、改名は前後とも範囲の下）
-- 追加したパスが、HEAD のツリーの別のパスと大文字小文字だけ違わない（ツリーを読めなければ満たさない）
-- 本文の `## 証跡` に `review: 実施済み` の行がある
+- `loomake-route:` の行がすべて `refactor`（大小文字は問わない）
+- `openspec/` の下を変えない
+- 変更は `packages/*/src/`・`docs/`、削除と改名の元は `packages/*/src/`、追加と改名の先はこれに `packages/*/test/`・`tests/`・`.changeset/` を足した範囲だけ。設定ファイル・`node_modules/`・`docs/guide/3.reference/` は除く
+- 足したパスが HEAD の別のパスと大文字小文字だけ違わない
+- `## 証跡` に `review: 実施済み` の行がある
 
-足りなければ、change が必須だという案内に不足する条件をすべて添え、`verify` を実行せずに失敗する SHALL。
+足りなければ、change 必須の案内に不足する条件をすべて添えて失敗する SHALL。
 
 Source: REQ-477
 
@@ -30,12 +30,24 @@ Source: REQ-477
 - **THEN** change が必須だという案内に、変えてはいけない既存のファイルを変えたという理由とそのパスが添えられ、`verify` を実行せずにジョブが失敗する
 
 #### Scenario: 範囲の外で削除・改名した
-- **WHEN** 「リファクタを受け付ける」と同じ PR で、base にある `docs/a.md` か `scripts/x.mjs` を削除している、または `packages/kit/test/a.test.ts` を `packages/kit/test/b.test.ts` に、`packages/kit/src/a.ts` を `scripts/a.mjs` に改名している
+- **WHEN** 「リファクタを受け付ける」と同じ PR で、base にある `docs/a.md` か `scripts/x.mjs` を削除している、または `packages/kit/test/a.test.ts` を `packages/kit/test/b.test.ts` に、`packages/kit/src/a.ts` を `scripts/a.mjs` に、`docs/a.md` を `packages/kit/src/a.md` に改名している
 - **THEN** change が必須だという案内に、変えてはいけない既存のファイルを変えたという理由とそのパスが添えられ、ジョブが失敗する
+
+#### Scenario: 範囲の外にファイルを足した
+- **WHEN** 「リファクタを受け付ける」と同じ PR で、`scripts/b.mjs`・`.github/workflows/x.yml`・`packages/kit/templates/x.md` のどれかを足している
+- **THEN** change が必須だという案内に、足してはいけない場所にファイルを足したという理由とそのパスが添えられ、ジョブが失敗する
+
+#### Scenario: 設定ファイルや照合の正本を変えた
+- **WHEN** 「リファクタを受け付ける」と同じ PR で、`packages/kit/src/eslint.config.js`・`tests/vitest.config.ts`・`packages/kit/test/tsconfig.json`・`docs/package.json`・`packages/kit/src/.npmrc`・`tests/node_modules/x.js`・`docs/guide/3.reference/x.md` のどれかを足しているか、`docs/guide/3.reference/` の下の既存のファイルを変えている
+- **THEN** change が必須だという案内に、その理由とパスが添えられ、ジョブが失敗する
 
 #### Scenario: 大文字小文字だけが違うパスを足した
 - **WHEN** 「リファクタを受け付ける」と同じ PR で、HEAD のツリーに `packages/kit/src/a.ts` があるのに `packages/kit/src/A.ts` を足している
 - **THEN** change が必須だという案内に、大文字小文字だけが違うパスを足したという理由とそのパスが添えられ、ジョブが失敗する
+
+#### Scenario: HEAD のツリーを読めない
+- **WHEN** 「新しいファイルを足す」と同じ PR で、HEAD のファイルの一覧を git から読めないか、一覧が NUL で終わっていない
+- **THEN** change が必須だという案内に、ツリーを読めず大文字小文字の重なりを確かめられないという理由と、読めなかった詳細が添えられ、ジョブが失敗する
 
 #### Scenario: openspec を変えた
 - **WHEN** 「リファクタを受け付ける」と同じ PR で、`openspec/changes/c1/tasks.md` も変えている
