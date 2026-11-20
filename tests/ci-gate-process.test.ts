@@ -939,6 +939,7 @@ function prepareRefactor(project: RefactorProject) {
     'packages/kit/test/a.test.ts': "it('[REQ-010] a', () => {});\n", 'packages/kit/test/fixtures/x.json': '{}\n',
     'packages/kit/src/b.ts': 'b\n', 'packages/kit/src/c.ts': 'c\n', 'docs/a.md': 'a\n', 'scripts/x.mjs': 'x\n',
     'scripts/lib/test-partition.mjs': 'partition\n', '.github/workflows/ci.yml': 'name: ci\n',
+    'docs/guide/3.reference/cli.md': 'reference\n',
   });
   project.git('update-ref', 'refs/remotes/origin/main', 'HEAD');
 }
@@ -983,6 +984,8 @@ describe('リファクタの経路の gate 子プロセス', () => {
     ['docsの削除', removeFile('docs/a.md'), 'docs/a.md'],
     ['scriptsの削除', removeFile('scripts/x.mjs'), 'scripts/x.mjs'],
     ['srcの外への改名', moveFile('packages/kit/src/b.ts', 'scripts/b.mjs'), 'packages/kit/src/b.ts'],
+    ['docsからsrcへの改名', moveFile('docs/a.md', 'packages/kit/src/a.md'), 'docs/a.md'],
+    ['照合の正本の変更', changeFile('docs/guide/3.reference/cli.md'), 'docs/guide/3.reference/cli.md'],
   ])('[REQ-477] 範囲の外の既存のファイル（%s）を理由とパスを示して拒む', (_name, touch, path) => {
     withProject((project) => {
       prepareRefactor(project);
@@ -994,6 +997,25 @@ describe('リファクタの経路の gate 子プロセス', () => {
       expect(result.stderr).toContain('L3 では change が必須です');
       expect(result.stderr).toContain('リファクタとして受け付けません');
       expect(result.stderr).toContain('変えてはいけない既存のファイル');
+      expect(result.stderr).toContain(path);
+    });
+  });
+  it.each([
+    'scripts/b.mjs',
+    'packages/kit/src/eslint.config.js',
+    'tests/vitest.config.ts',
+    'packages/kit/test/tsconfig.json',
+    'tests/node_modules/x.js',
+    'docs/guide/3.reference/x.md',
+  ])('[REQ-477] 足してはいけないファイル（%s）の追加を理由とパスを示して拒む', (path) => {
+    withProject((project) => {
+      prepareRefactor(project);
+      project.commitFiles({ 'packages/kit/src/a.ts': 'changed\n', [path]: 'added\n' });
+      const result = project.run('refactor-x', refactorBody);
+      expect(result.status).toBe(1);
+      expect(result.calls).toEqual([]);
+      expect(result.stderr).toContain('リファクタとして受け付けません');
+      expect(result.stderr).toContain('足してはいけない');
       expect(result.stderr).toContain(path);
     });
   });

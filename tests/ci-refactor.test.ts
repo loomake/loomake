@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isDeletablePath, isEditablePath, isRefactorRoute, refactorDecision } from '../scripts/ci-refactor.mjs';
+import { isAddablePath, isDeletablePath, isEditablePath, isRefactorRoute, refactorDecision } from '../scripts/ci-refactor.mjs';
 
 type Entry = { status: string; modes: [string, string]; paths: string[] };
 const entry = (status: string, ...paths: string[]): Entry => ({ status, modes: ['100644', '100644'], paths });
@@ -8,7 +8,10 @@ const evidence = (line = review) => `## 証跡\n\n\`\`\`text\nimplement: 実施�
 const body = `loomake-change: none\nloomake-route: refactor\n\n${evidence()}`;
 const src = entry('M', 'packages/kit/src/a.ts');
 const tree = ['packages/kit/src/a.ts', 'docs/a.md'];
-const decide = (entries: Entry[], text = body, headTree: () => string[] | undefined = () => [...tree, ...entries.flatMap((e) => e.paths)]) => refactorDecision({ body: text, entries, headTree });
+type TreeResult = { paths?: string[]; detail?: string; invalid?: boolean };
+const withTree = (entries: Entry[]): TreeResult => ({ paths: [...tree, ...entries.flatMap((e) => e.paths)] });
+const decide = (entries: Entry[], text = body, headTreeResult: () => TreeResult = () => withTree(entries)) =>
+  refactorDecision({ body: text, entries, headTreeResult });
 const reasons = (entries: Entry[], text = body) => decide(entries, text).problems.join(' ');
 
 describe('リファクタの経路の宣言', () => {
@@ -63,6 +66,13 @@ describe('リファクタの経路の差分の条件', () => {
     entry('R100', 'packages/kit/src/a.ts', 'scripts/a.mjs'),
     entry('R100', 'scripts/a.mjs', 'packages/kit/src/a.ts'),
     entry('R100', 'docs/a.md', 'packages/kit/test/a.md'),
+    entry('R100', 'docs/a.md', 'packages/kit/src/a.md'),
+    entry('R100', 'docs/a.md', 'docs/b/a.md'),
+    entry('M', 'docs/guide/3.reference/cli.md'),
+    entry('M', 'packages/kit/src/tsconfig.json'),
+    entry('D', 'packages/kit/src/package.json'),
+    entry('R100', 'packages/kit/src/a.ts', 'packages/kit/src/package.json'),
+    entry('R100', 'packages/kit/src/a.ts', 'docs/guide/3.reference/a.md'),
   ])('[REQ-477] 範囲の外の既存のファイルの変更・削除・改名を拒む（%j）', (change) => {
     const text = reasons([src, change]);
     expect(text).toContain('変えてはいけない既存のファイル');
@@ -78,7 +88,9 @@ describe('リファクタの経路の差分の条件', () => {
     entry('D', 'packages/kit/src/b.ts'),
     entry('R100', 'packages/kit/src/c.ts', 'packages/kit/src/c/index.ts'),
     entry('R100', 'packages/kit/src/c.ts', 'packages/core/src/c.ts'),
-    entry('R100', 'docs/a.md', 'docs/b/a.md'),
+    entry('R100', 'packages/kit/src/a.ts', 'packages/kit/test/a.ts'),
+    entry('A', 'tests/helpers/new-helper.ts'),
+    entry('A', 'docs/guide/new.md'),
   ])('[REQ-477] 追加と、範囲の中の変更・削除・改名は受け付ける（%j）', (change) => {
     expect(decide([src, change]).problems).toEqual([]);
   });
@@ -105,23 +117,68 @@ describe('リファクタの経路の差分の条件', () => {
     expect(isDeletablePath(path)).toBe(expected);
   });
   it.each([
+    'scripts/b.mjs',
+    '.github/workflows/x.yml',
+    'packages/kit/templates/x.md',
+    'packages/kit/README.md',
+    'x.md',
+    'packages/kit/src/eslint.config.js',
+    'packages/kit/src/ESLint.config.mjs',
+    'tests/vitest.config.ts',
+    'packages/kit/src/vite.config.mts',
+    'tests/vitest.workspace.ts',
+    'packages/kit/test/tsconfig.json',
+    'packages/kit/test/tsconfig.build.json',
+    'docs/package.json',
+    'packages/kit/src/.npmrc',
+    'tests/.pnpmfile.cjs',
+    'docs/.gitattributes',
+    'tests/node_modules/x.js',
+    'packages/kit/src/node_modules/y/index.js',
+    'docs/guide/3.reference/x.md',
+  ])('[REQ-477] 足してはいけない場所への追加を拒む（%s）', (path) => {
+    const text = reasons([src, entry('A', path)]);
+    expect(text).toContain('足してはいけない');
+    expect(text).toContain(path);
+  });
+  it.each([
+    ['packages/kit/src/a.ts', true],
+    ['packages/kit/test/a.test.ts', true],
+    ['tests/a.test.ts', true],
+    ['docs/a.md', true],
+    ['.changeset/x.md', true],
+    ['scripts/a.mjs', false],
+    ['packages/kit/templates/a.md', false],
+    ['openspec/changes/x/tasks.md', false],
+    ['docs/guide/3.reference/a.md', false],
+    ['packages/kit/src/eslint.config.js', false],
+  ])('[REQ-477] 足してよいファイルの範囲（%s）', (path, expected) => {
+    expect(isAddablePath(path)).toBe(expected);
+  });
+  it.each([
     ['packages/kit/src/A.ts', ['packages/kit/src/a.ts', 'packages/kit/src/A.ts']],
     ['packages/kit/SRC/b.ts', ['packages/kit/src/a.ts', 'packages/kit/SRC/b.ts', 'packages/kit/src/b.ts']],
   ])('[REQ-477] HEADの別のパスと大文字小文字だけが違うパスの追加を拒む（%s）', (path, headTree) => {
-    const text = decide([src, entry('A', path)], body, () => headTree).problems.join(' ');
+    const text = decide([src, entry('A', path)], body, () => ({ paths: headTree })).problems.join(' ');
     expect(text).toContain('大文字小文字だけが違う');
     expect(text).toContain(path);
   });
   it('[REQ-477] 改名の後のパスも大文字小文字の重なりを調べる', () => {
     const headTree = ['packages/kit/src/a.ts', 'packages/kit/src/B.ts', 'packages/kit/src/b.ts'];
-    const text = decide([src, entry('R100', 'packages/kit/src/c.ts', 'packages/kit/src/B.ts')], body, () => headTree).problems.join(' ');
+    const text = decide([src, entry('R100', 'packages/kit/src/c.ts', 'packages/kit/src/B.ts')], body, () => ({ paths: headTree })).problems.join(' ');
     expect(text).toContain('packages/kit/src/B.ts');
   });
   it('[REQ-477] HEADのツリーを読めなければ、追加のある差分を拒む', () => {
-    expect(decide([src, entry('A', 'tests/a-pin.test.ts')], body, () => undefined).problems.join(' ')).toContain('HEAD のツリー');
+    const text = decide([src, entry('A', 'tests/a-pin.test.ts')], body, () => ({ detail: 'fatal: bad object HEAD' })).problems.join(' ');
+    expect(text).toContain('HEAD のツリーを読めない');
+    expect(text).toContain('fatal: bad object HEAD');
+  });
+  it('[REQ-477] HEADのツリーの一覧がNULで終わっていなければ、そう示して拒む', () => {
+    const text = decide([src, entry('A', 'tests/a-pin.test.ts')], body, () => ({ invalid: true })).problems.join(' ');
+    expect(text).toContain('NUL で終わっていません');
   });
   it('[REQ-477] HEADのツリーを読めなくても、追加と改名のない差分は判定できる', () => {
-    expect(decide([src], body, () => undefined).problems).toEqual([]);
+    expect(decide([src], body, () => ({ detail: 'fatal: bad object HEAD' })).problems).toEqual([]);
   });
 });
 
