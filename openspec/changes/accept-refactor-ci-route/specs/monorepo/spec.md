@@ -1,11 +1,11 @@
 ## ADDED Requirements
 
 ### Requirement: リファクタの経路
-CI の完了ゲートは、L3 で PR 本文に `loomake-change: none` と `loomake-route: refactor` の行があるとき、次をすべて確かめる MUST。満たせば change なしで品質コマンドを実行する。
+CI の完了ゲートは、L3 で PR 本文に `loomake-change: none` と `loomake-route: refactor` があるとき、次をすべて確かめる MUST。満たせば change なしで品質コマンドを実行する。
 
-- `loomake-route:` の行がすべて `refactor`（大小文字は問わない）
+- `loomake-route:` がすべて `refactor`（大小文字は問わない）
 - `openspec/` の下を変えない
-- 変更は `packages/*/src/`・`docs/`、削除と改名の元は `packages/*/src/`、追加と改名の先はこれに `packages/*/test/`・`tests/`・`.changeset/` を足した範囲だけ。設定ファイル・`node_modules/`・`docs/guide/3.reference/` は除く
+- 変更は `packages/*/src/`・`docs/`、削除と改名の元は `packages/*/src/`、追加と改名の先はこれに `packages/*/test/`・`tests/`・`.changeset/` を足した範囲だけ。設定ファイル・`node_modules`・`docs/guide/3.reference/`・シンボリックリンクは除く
 - 足したパスが HEAD の別のパスと大文字小文字だけ違わない
 - `## 証跡` に `review: 実施済み` の行がある
 
@@ -40,6 +40,10 @@ Source: REQ-477
 #### Scenario: 設定ファイルや照合の正本を変えた
 - **WHEN** 「リファクタを受け付ける」と同じ PR で、`packages/kit/src/eslint.config.js`・`tests/vitest.config.ts`・`packages/kit/test/tsconfig.json`・`docs/package.json`・`packages/kit/src/.npmrc`・`tests/node_modules/x.js`・`docs/guide/3.reference/x.md` のどれかを足しているか、`docs/guide/3.reference/` の下の既存のファイルを変えている
 - **THEN** change が必須だという案内に、その理由とパスが添えられ、ジョブが失敗する
+
+#### Scenario: シンボリックリンクを足した
+- **WHEN** 「リファクタを受け付ける」と同じ PR で、`tests/node_modules` をシンボリックリンク（mode 120000）として足しているか、`packages/kit/src/link.ts` をシンボリックリンクに変えている
+- **THEN** change が必須だという案内に、シンボリックリンクを足した・変えたという理由とそのパスが添えられ、ジョブが失敗する
 
 #### Scenario: 大文字小文字だけが違うパスを足した
 - **WHEN** 「リファクタを受け付ける」と同じ PR で、HEAD のツリーに `packages/kit/src/a.ts` があるのに `packages/kit/src/A.ts` を足している
