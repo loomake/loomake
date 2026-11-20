@@ -23,3 +23,7 @@ export { buildEfficiencyTable } from './effort-table.js';
 export { formatEfficiencySection } from './effort-format.js';
 export type { EffortSource, EffortObservation, ChangeRef, ManualEstimate, ManualEffortRecord, EffortChangeRecords, EffortLocation, EffortInputs } from './effort-types.js';
 export type { EfficiencyValue, EfficiencyRow, EfficiencyTable } from './effort-table-types.js';
+export { runReuse } from './reuse.js';
+export type { ReuseOptions, ReuseResult, ReuseOutcome, ReuseReason, ReuseReasonCode } from './reuse.js';
+export { REUSE_RECORD_VERSION, reuseRecordProblem } from './reuse-record.js';
+export type { ReuseRecord } from './reuse-record.js';

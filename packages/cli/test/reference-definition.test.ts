@@ -103,7 +103,7 @@ it('[REQ-324] versionは先頭だけで扱い、その後のhelpをコマンド�
 
 it('[REQ-323][REQ-324] 全コマンド・操作の受理名と解析順を明示値と照合する', () => {
   expect(CLI_COMMANDS.map((command) => command.name)).toEqual(['init', 'verify', 'trace', 'run', 'doctor']);
-  expect(commandDefinition('trace').operations?.map((command) => command.name)).toEqual(['record', 'report', 'answer', 'approve']);
+  expect(commandDefinition('trace').operations?.map((command) => command.name)).toEqual(['record', 'report', 'answer', 'approve', 'reuse']);
   const names = (name: 'init' | 'verify' | 'run' | 'doctor') => optionSpec(commandDefinition(name));
   expect(names('init')).toEqual({ values: [], flags: ['--codex', '--devcontainer', '--yes', '--keep-existing'] });
   expect(names('verify')).toEqual({ values: ['--change', '--scope'], flags: ['--spec-only', '--done', '--json', '--skip-commands'] });
@@ -114,6 +114,7 @@ it('[REQ-323][REQ-324] 全コマンド・操作の受理名と解析順を明示
     { values: ['--change', '--format'], flags: [] },
     { values: ['--change', '--question', '--by', '--date', '--answer'], flags: [] },
     { values: ['--change', '--assumption', '--by', '--date'], flags: [] },
+    { values: ['--change', '--summary', '--anchor', '--scope'], flags: ['--json'] },
   ]);
   const answer = traceOperation('answer');
   expect(answer).toBeDefined();

@@ -10,11 +10,12 @@ import { cliReferenceText, renderCliReference, runCliReference } from '../script
 const root = resolve(import.meta.dirname, '..');
 const page = join(root, 'docs/guide/3.reference/5.cli.md');
 const render = () => renderCliReference(CLI_REFERENCE);
+const reuseSection = (rendered: string) => rendered.split(/(?=^## )/m).find((part) => part.startsWith('## loomake trace reuse\n')) ?? '';
 
 it('[REQ-323][REQ-325] ソース定義から全コマンド・操作と既存ページを再生成できる', () => {
   const rendered = render();
   expect(readFileSync(page, 'utf8').replace(/\r\n/g, '\n')).toBe(rendered);
-  for (const command of ['init', 'verify', 'trace', 'run', 'doctor', 'trace record', 'trace report', 'trace answer', 'trace approve']) {
+  for (const command of ['init', 'verify', 'trace', 'run', 'doctor', 'trace record', 'trace report', 'trace answer', 'trace approve', 'trace reuse']) {
     expect(rendered).toContain(`## loomake ${command}\n`);
   }
   for (const option of ['--codex', '--devcontainer', '--change', '--spec-only', '--done', '--json', '--skip-commands', '--format', '--question', '--answer', '--by', '--date', '--assumption', '--engine', '--dry-run', '--skip-permissions']) {
@@ -26,7 +27,15 @@ it('[REQ-323][REQ-325] ソース定義から全コマンド・操作と既存ペ
   expect(rendered).toContain('先頭引数として指定する');
   expect(rendered).toContain('## loomake doctor\n\n使い方: loomake doctor\n');
   expect(rendered).toContain('固有オプションなし。');
-  expect(rendered.split('\n').filter((line) => line.startsWith('| --'))).toHaveLength(32);
+  const reuse = reuseSection(rendered);
+  expect(rendered.replace(reuse, '').split('\n').filter((line) => line.startsWith('| --'))).toHaveLength(32);
+  expect(reuse.split('\n').filter((line) => line.startsWith('| --'))).toEqual([
+    '| --change &lt;id&gt; | 値付き | 必須 | なし | 英小文字・数字と、間に1つずつのハイフンで表すchange-id | 対象の change |',
+    '| --summary &lt;path&gt; | 値付き | 必須 | なし | 追加条件なし | target時点の要約のrepo相対パス（.loomake/evidence/&lt;id&gt;/&lt;日時&gt;-&lt;12桁&gt;.json） |',
+    '| --anchor &lt;file&gt; | 値付き | 必須 | なし | 追加条件なし | repo外で凍結した信頼値JSON。真正性は確かめない |',
+    '| --scope local&#124;ci | 値付き | 任意 | ci | local / ci | 再検証するときのverifyの範囲 |',
+    '| --json | flag（値なし） | 任意 | false | 追加条件なし | 結果のJSONだけを標準出力へ出す |',
+  ]);
   for (const option of ['--effort', '--decisions', '--attempts', '--cost', '--note']) expect(rendered).toContain(`| ${option} `);
   expect(rendered).toContain('| --yes |');
   expect(rendered).toContain('| --keep-existing |');
@@ -154,7 +163,11 @@ it('[REQ-323] 入力の必須性・相互条件・動的既定値と受理値を
   expect(rendered).toContain('英小文字・数字と、間に1つずつのハイフン');
   expect(rendered.indexOf('| --answer')).toBeLessThan(rendered.indexOf('| --by'));
   // verify と trace record に --scope local|ci がある（REQ-312・135）
-  expect(rendered.split('\n').filter((line) => line.startsWith('| --scope'))).toHaveLength(2);
+  const reuse = reuseSection(rendered);
+  expect(rendered.replace(reuse, '').split('\n').filter((line) => line.startsWith('| --scope'))).toHaveLength(2);
+  expect(reuse.split('\n').filter((line) => line.startsWith('| --scope'))).toEqual([
+    '| --scope local&#124;ci | 値付き | 任意 | ci | local / ci | 再検証するときのverifyの範囲 |',
+  ]);
   expect(rendered).toContain('local / ci');
   expect(rendered.replace(/--decisions(?=\s|$)/g, '')).not.toContain('decision');
   expect(rendered).toContain('| --decisions &lt;n&gt; |');
