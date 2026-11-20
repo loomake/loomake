@@ -46,20 +46,35 @@ it('[REQ-451] 末尾 30 行へ切る前に秘密鍵ブロックを置換し、�
   expect(reasons(runVerify({ root })).split('\n')).toEqual(plain.split('\n').slice(-30));
 }));
 
-it('[REQ-451] openspec validate の失敗出力を置換し、先頭 2000 文字の上限は変えない', () => withProject({ config: { openspecValidate: true, commands: {} } }, root => {
+/** 偽の openspec が出力を返す環境で verify を実行し、openspec validate の reason を返す */
+function openspecReason(root: string, output: string): string {
   const bin = mkdtempSync(join(tmpdir(), 'fake-openspec-'));
-  const output = `bad ${token} ${'a'.repeat(3000)}`;
   writeFileSync(join(bin, 'openspec.cjs'), `process.stdout.write(${JSON.stringify(output)}); process.exit(1);`);
   writeFileSync(join(bin, 'openspec'), `#!/bin/sh\nexec node "$(dirname "$0")/openspec.cjs"\n`, { mode: 0o755 });
   writeFileSync(join(bin, 'openspec.cmd'), '@node "%~dp0openspec.cjs"\r\n');
   vi.stubEnv('PATH', `${bin}${delimiter}${process.env.PATH ?? ''}`);
   try {
-    const verified = runVerify({ root, changeId: CHANGE });
-    const text = checksOf(verified).find(check => check.id === 'openspec validate')?.reason ?? '';
-    expect(text).not.toContain(token);
-    expect(text).toContain('bad ***');
-    expect(text.length).toBeLessThanOrEqual(2000);
+    return checksOf(runVerify({ root, changeId: CHANGE })).find(check => check.id === 'openspec validate')?.reason ?? '';
   } finally { vi.unstubAllEnvs(); rmSync(bin, { recursive: true, force: true }); }
+}
+const openspecProject = { config: { openspecValidate: true, commands: {} } };
+
+it('[REQ-451] openspec validate の失敗出力を置換し、先頭 2000 文字の上限は変えない', () => withProject(openspecProject, root => {
+  const text = openspecReason(root, `bad ${token} ${'a'.repeat(3000)}`);
+  expect(text).not.toContain(token);
+  expect(text).toContain('bad ***');
+  expect(text.length).toBeLessThanOrEqual(2000);
+}));
+
+it('[REQ-451] 先頭 2000 文字の切れ目をまたぐトークンは、切る前に置換して一部も残さない', () => withProject(openspecProject, root => {
+  const text = openspecReason(root, `${'a'.repeat(1989)} ${token} ${'b'.repeat(500)}`);
+  expect(text).not.toContain('ghp_');
+}));
+
+it('[REQ-451] 先頭 2000 文字の切れ目で END 行が落ちる秘密鍵ブロックも、本文を残さない', () => withProject(openspecProject, root => {
+  const key = ['-----BEGIN PRIVATE KEY-----', ...Array.from({ length: 40 }, (_, i) => `DUMMY_BODY_${i}`), '-----END PRIVATE KEY-----'].join('\n');
+  const text = openspecReason(root, `${'a'.repeat(1900)}\n${key}`);
+  expect(text).not.toContain('DUMMY_BODY');
 }));
 
 it('[REQ-451] 進捗に出すコマンドの文字列を置換し、コマンドは設定どおりに実行する', () => withProject({ config: config({ test: `quality-test ${token}` }) }, root => {
