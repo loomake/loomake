@@ -131,12 +131,12 @@ async function verify(args: string[], io: Io): Promise<number> {
     if (!json || !(e instanceof UsageError || e instanceof RuntimeFailure)) throw e;
     const known = changeId !== undefined && CHANGE_ID.test(changeId) && changeId !== 'archive' ? changeId : null;
     const aborted = verifyAbortedResult(e, known, changeId ?? 'verify');
-    io.stdout(JSON.stringify(aborted, null, 2));
+    io.stdout(JSON.stringify(maskValue(aborted), null, 2));
     io.stderr(maskSecrets(`loomake verify: ${e.message}`));
     if (e instanceof UsageError) io.stderr(`使い方: ${commandDefinition('verify').usage}`);
     return verifyExitCode(aborted);
   }
-  io.stdout(json ? JSON.stringify(result, null, 2) : `\n${formatVerifyResult(result)}`);
+  io.stdout(json ? JSON.stringify(maskValue(result), null, 2) : `\n${formatVerifyResult(result)}`);
   return verifyExitCode(result);
 }
 

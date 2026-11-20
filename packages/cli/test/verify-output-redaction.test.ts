@@ -31,8 +31,9 @@ it('[REQ-451] --json のとき標準出力は置換済みの単独の JSON で�
 }));
 
 it('[REQ-451] --json の標準出力に、秘密の形の change ID は残らない', () => withProject({}, async root => {
-  const { stdout } = await run(root, 'verify', '--json', '--change', token, '--spec-only');
-  expect(stdout).not.toContain(token);
+  const id = 'sk-' + 'a'.repeat(20);
+  const { stdout } = await run(root, 'verify', '--json', '--change', id, '--spec-only');
+  expect(stdout).not.toContain(id);
   expect(JSON.parse(stdout).change).toBe('***');
 }));
 

@@ -24,7 +24,7 @@ export const RUN_ERRORS_CHECK = 'run:errors';
  * ci は既存の集約で verdict を返す。0 件・全件 NOT_APPLICABLE は不足で、PASS にならない。local は verdict を返さない
  */
 export function assembleVerifyResult(parts: VerifyResultParts): Exclude<VerifyResult, VerifyResultV2Aborted> {
-  return maskValue(assemble(parts));
+  return maskExceptChange(assemble(parts));
 }
 
 function assemble(parts: VerifyResultParts): Exclude<VerifyResult, VerifyResultV2Aborted> {
@@ -42,6 +42,11 @@ function assemble(parts: VerifyResultParts): Exclude<VerifyResult, VerifyResultV
   return { ...base, scope: 'local' as const, summary: summarized.summary, ...coverage };
 }
 
+/** 結果の中身を置換する。change は呼び出し側が渡した識別子なので、渡した値のまま残す（表示の境界で置換する） */
+export function maskExceptChange<T extends { change: string | null }>(result: T): T {
+  return { ...maskValue(result), change: result.change };
+}
+
 const CONFIG_ERROR = /^loomake\.config\.json/;
 
 /**
@@ -49,7 +54,7 @@ const CONFIG_ERROR = /^loomake\.config\.json/;
  * それ以外は runtime（終了コード 3）。change は確定したときだけ渡し、確定しないときは null と、受け取った入力を target に残す
  */
 export function verifyAbortedResult(error: unknown, change: string | null, target = change ?? 'verify'): VerifyResultV2Aborted {
-  return maskValue(abortedOf(error, change, target));
+  return maskExceptChange(abortedOf(error, change, target));
 }
 
 function abortedOf(error: unknown, change: string | null, target: string): VerifyResultV2Aborted {

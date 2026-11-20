@@ -3,7 +3,7 @@ import { evaluateTestCoverage } from './policy/coverage-policy.js';
 import { existsSync, realpathSync, rmSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { maskSecrets, maskValue } from '../runtime/redact.js';
+import { maskSecrets } from '../runtime/redact.js';
 import { hasProcessBudget, holderWaitTime, ProcessLimitError, runExternal } from '../runtime/process.js';
 import {
   LEDGER_STATES,
@@ -26,7 +26,7 @@ import {
   type VerifyRunError,
   type VerifyScope,
 } from '@loomake/core';
-import { assembleVerifyResult } from './result.js';
+import { assembleVerifyResult, maskExceptChange } from './result.js';
 import { readDependencies } from './dependencies.js';
 import { assertReportTarget, assertChangeId, loadVerifyConfig, type LoomakeConfig } from './config.js';
 import { QUALITY_FILE, readQualityFile, type QualitySchemaLike } from './quality-input.js';
@@ -135,7 +135,7 @@ export function runVerify(options: VerifyOptions): VerifyResult {
     // change がないときは、既存の「change の存在」の不合格を返す。quality.yaml は品質コマンドや openspec validate より前に読む
     if (changeDir && (location.kind !== 'archived' || config.openspecDir === 'openspec') && existsSync(changeDir) && statSync(changeDir).isDirectory()) {
       const read = loadQuality(root, judgeQuality, options.qualitySchema);
-      if (read.status === 'error') return maskValue({ schemaVersion: VERIFY_RESULT_SCHEMA_VERSION, change: changeId, run: { status: 'aborted', errors: [read.error] } });
+      if (read.status === 'error') return maskExceptChange({ schemaVersion: VERIFY_RESULT_SCHEMA_VERSION, change: changeId, run: { status: 'aborted', errors: [read.error] } });
       if (read.status === 'loaded' && judgeQuality) {
         quality = read.quality;
         basisBefore = basisHash(root, changeDir);
