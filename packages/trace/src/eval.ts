@@ -56,6 +56,9 @@ function recoverRequests(lock: OwnedEvalLock, target: EvaluationTarget, basis: E
     else events.push({ ...base, event: 'unrecoverable', reason: state.accepted.target.commit !== target.commit ? 'head-changed' : 'basis-changed' });
   }
   writeEvents(lock, events);
+}
+
+function repairQualityIndex(lock: OwnedEvalLock): void {
   const storage = readQualityStorage(lock.root);
   const last = storage.ledgers.history.at(-1);
   if (storage.repairIndex && last) withLedgerWrite(lock, () => replaceQualityIndex(lock, last));
@@ -77,6 +80,7 @@ export async function runEval(options: EvalOptions): Promise<number> {
   if (!lock) { options.progress?.(`実行中の評価があります（${EVAL_LOCK}）。要求は受け付けていません。止まった実行の残りなら確かめてから消してください`); return 3; }
   try {
     recoverRequests(lock, target, basis, at);
+    repairQualityIndex(lock);
     const { ledgers } = readQualityStorage(root);
     const attempt = nextQualityAttempt(ledgers.history, ledgers.attempts, target.commit);
     const pair = { runId: lock.token.runId, attempt }, requestId = lock.token.requestId;

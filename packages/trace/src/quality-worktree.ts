@@ -31,7 +31,12 @@ function hasHeadPrefix(bytes: Buffer | null, head: { oid: string; size: number }
 /** 固定した未ステージ帳簿追記と自分のlockだけを除き、他の変更を許可しない。 */
 export function qualityWorktreeClean(lock: OwnedEvalLock, snapshot: QualitySnapshot): boolean {
   assertEvalOwner(lock);
-  if (parseQualityStorage(snapshot).repairIndex) return false;
+  return !parseQualityStorage(snapshot).repairIndex && qualityChangesAllowed(lock, snapshot);
+}
+
+/** 索引の復旧要否を除いた作業ツリー検査。 */
+export function qualityChangesAllowed(lock: OwnedEvalLock, snapshot: QualitySnapshot): boolean {
+  assertEvalOwner(lock);
   const status = qualityGit(lock.root, ['status', '--porcelain=v1', '-z', '--untracked-files=all']);
   const heads = qualityHeadPrefixes(lock.root);
   // ignoreされていてもowner/path検査は上で行う。ignore必須にはしない。
