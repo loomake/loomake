@@ -194,3 +194,8 @@ export function maskValue<T>(value: T): T {
   }
   return root.value as T;
 }
+
+/** 全文を先に置換し、切ってから、もう一度置換する。先に切ると、トークンの一部や本文だけの鍵が残る。 */
+export function maskThenCut(text: string, cut: (masked: string) => string): string {
+  return maskSecrets(cut(maskSecrets(text)));
+}

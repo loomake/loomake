@@ -3,7 +3,7 @@ import { evaluateTestCoverage } from './policy/coverage-policy.js';
 import { existsSync, realpathSync, rmSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { maskSecrets } from '../runtime/redact.js';
+import { maskSecrets, maskThenCut } from '../runtime/redact.js';
 import { hasProcessBudget, holderWaitTime, ProcessLimitError, runExternal } from '../runtime/process.js';
 import {
   LEDGER_STATES,
@@ -178,11 +178,6 @@ export function runVerify(options: VerifyOptions): VerifyResult {
  * quality.yaml を読む（REQ-319）。ci の完了ゲートでは必須で、ほかのゲートではあれば形を確かめる。
  * 読む必要があるのにスキーマを渡されていなければ、使い方の誤りにする
  */
-/** 全文を先に置換し、切ってから、もう一度置換する。先に切ると、トークンの一部や本文だけの鍵が残る。 */
-function maskThenCut(text: string, cut: (masked: string) => string): string {
-  return maskSecrets(cut(maskSecrets(text)));
-}
-
 function loadQuality(root: string, required: boolean, schema: QualitySchemaLike | undefined) {
   if (!schema) {
     if (required || existsSync(join(root, QUALITY_FILE))) {
