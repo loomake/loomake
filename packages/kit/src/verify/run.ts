@@ -3,6 +3,7 @@ import { evaluateTestCoverage } from './policy/coverage-policy.js';
 import { existsSync, realpathSync, rmSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { maskSecrets, maskThenCut } from '../runtime/redact.js';
 import { hasProcessBudget, holderWaitTime, ProcessLimitError, runExternal } from '../runtime/process.js';
 import {
   LEDGER_STATES,
@@ -25,7 +26,7 @@ import {
   type VerifyRunError,
   type VerifyScope,
 } from '@loomake/core';
-import { assembleVerifyResult } from './result.js';
+import { assembleVerifyResult, maskExceptChange } from './result.js';
 import { readDependencies } from './dependencies.js';
 import { assertReportTarget, assertChangeId, loadVerifyConfig, type LoomakeConfig } from './config.js';
 import { QUALITY_FILE, readQualityFile, type QualitySchemaLike } from './quality-input.js';
@@ -91,7 +92,8 @@ export const INTERRUPTED = '中断されたので止めました';
  * 終了コードは verifyExitCode で決め、例外は verifyAbortedResult で aborted の結果にできる
  */
 export function runVerify(options: VerifyOptions): VerifyResult {
-  const { changeId, skipCommands = false, progress = () => {} } = options;
+  const { changeId, skipCommands = false } = options;
+  const progress = (line: string) => (options.progress ?? (() => {}))(maskSecrets(line));
   if (changeId) assertChangeId(changeId);
   // ルートがシンボリックリンクを通るとき（macOS の /var → /private/var など）、レポートのパスは実パスのことも、リンクのままのこともある。
   // 実パスのルートで動かし、相対パスはどちらのルートの中にあるかで作る
@@ -133,7 +135,7 @@ export function runVerify(options: VerifyOptions): VerifyResult {
     // change がないときは、既存の「change の存在」の不合格を返す。quality.yaml は品質コマンドや openspec validate より前に読む
     if (changeDir && (location.kind !== 'archived' || config.openspecDir === 'openspec') && existsSync(changeDir) && statSync(changeDir).isDirectory()) {
       const read = loadQuality(root, judgeQuality, options.qualitySchema);
-      if (read.status === 'error') return { schemaVersion: VERIFY_RESULT_SCHEMA_VERSION, change: changeId, run: { status: 'aborted', errors: [read.error] } };
+      if (read.status === 'error') return maskExceptChange({ schemaVersion: VERIFY_RESULT_SCHEMA_VERSION, change: changeId, run: { status: 'aborted', errors: [read.error] } });
       if (read.status === 'loaded' && judgeQuality) {
         quality = read.quality;
         basisBefore = basisHash(root, changeDir);
@@ -413,7 +415,7 @@ function checkOpenspecValidate(root: string, config: LoomakeConfig, changeId: st
     else if (scope === 'ci') record('openspec validate', 'insufficient', `${note}${OPENSPEC_MISSING}。validate を実行していません`);
     else record('openspec validate', 'na', `${note}対象外：${OPENSPEC_MISSING}ため、validate を実行していません（確認者：${OPENSPEC_NA_CONFIRMER}）`);
   } else {
-    record('openspec validate', r.status === 0 ? 'pass' : 'fail', note + (r.status === 0 ? '' : `${r.stdout}${r.stderr}`.trim().slice(0, 2000)));
+    record('openspec validate', r.status === 0 ? 'pass' : 'fail', note + (r.status === 0 ? '' : maskThenCut(`${r.stdout}${r.stderr}`.trim(), text => text.slice(0, 2000))));
   }
 }
 
@@ -528,7 +530,7 @@ function runCommands(
     }
     // spawnSync は起動に失敗すると、型に反して stdout・stderr が null になる
     const out = `${(r.stdout as string | null) ?? ''}${(r.stderr as string | null) ?? ''}`.trim();
-    record(`command: ${name}`, r.status === 0 ? 'pass' : 'fail', r.status === 0 ? '' : out.split('\n').slice(-30).join('\n'));
+    record(`command: ${name}`, r.status === 0 ? 'pass' : 'fail', r.status === 0 ? '' : maskThenCut(out, text => text.split('\n').slice(-30).join('\n')));
     if (r.status !== 0) failed(r.status);
     onCommand?.(r.error ? { name, kind: 'error', code: r.error.code ?? null }
       : r.status !== null ? { name, kind: 'exited', status: r.status }

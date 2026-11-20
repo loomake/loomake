@@ -1,6 +1,7 @@
 // verify 2.0.0 の結果を組み立てる（REQ-311）。scope・実行状態・summary・verdict の整合は、ここで保証する
 import { VERIFY_RESULT_SCHEMA_VERSION, type VerifyCheckResult, type VerifyDecision, type VerifyResult, type VerifyResultV2Aborted, type VerifyRunError, type VerifyScope } from '@loomake/core';
 import { UsageError } from '../runtime/errors.js';
+import { maskValue } from '../runtime/redact.js';
 import { summarizeVerifyChecks } from './policy/quality-conditions.js';
 
 export type VerifyResultParts = {
@@ -23,6 +24,10 @@ export const RUN_ERRORS_CHECK = 'run:errors';
  * ci は既存の集約で verdict を返す。0 件・全件 NOT_APPLICABLE は不足で、PASS にならない。local は verdict を返さない
  */
 export function assembleVerifyResult(parts: VerifyResultParts): Exclude<VerifyResult, VerifyResultV2Aborted> {
+  return maskExceptChange(assemble(parts));
+}
+
+function assemble(parts: VerifyResultParts): Exclude<VerifyResult, VerifyResultV2Aborted> {
   const errors = [...(parts.errors ?? [])];
   const checks = [...parts.checks];
   if (errors.length && !checks.some((c) => c.result === 'FAIL' || c.result === 'INSUFFICIENT_EVIDENCE')) {
@@ -37,6 +42,11 @@ export function assembleVerifyResult(parts: VerifyResultParts): Exclude<VerifyRe
   return { ...base, scope: 'local' as const, summary: summarized.summary, ...coverage };
 }
 
+/** 結果の中身を置換する。change は呼び出し側が渡した識別子なので、渡した値のまま残す（表示の境界で置換する） */
+export function maskExceptChange<T extends { change: string | null }>(result: T): T {
+  return { ...maskValue(result), change: result.change };
+}
+
 const CONFIG_ERROR = /^loomake\.config\.json/;
 
 /**
@@ -44,6 +54,10 @@ const CONFIG_ERROR = /^loomake\.config\.json/;
  * それ以外は runtime（終了コード 3）。change は確定したときだけ渡し、確定しないときは null と、受け取った入力を target に残す
  */
 export function verifyAbortedResult(error: unknown, change: string | null, target = change ?? 'verify'): VerifyResultV2Aborted {
+  return maskExceptChange(abortedOf(error, change, target));
+}
+
+function abortedOf(error: unknown, change: string | null, target: string): VerifyResultV2Aborted {
   const message = error instanceof Error ? error.message : String(error);
   const kind: VerifyRunError['kind'] = error instanceof UsageError ? (CONFIG_ERROR.test(message) ? 'config' : 'usage') : 'runtime';
   const next = kind === 'usage'

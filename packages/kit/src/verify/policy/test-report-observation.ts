@@ -1,5 +1,6 @@
 import { parseTestReport, type Quality, type QualityMeasure } from '@loomake/core';
 import type { QualityObservation } from './quality-conditions.js';
+import { maskThenCut } from '../../runtime/redact.js';
 
 /** テストのレポートを出どころにする品質の source */
 export const TEST_REPORT_SOURCE = 'ci.test_report';
@@ -80,7 +81,7 @@ function judge(receipt: TestReportReceipt | null, target: string | undefined, op
   // 読み込みに失敗したファイルはテストが 0 件になり、失敗を数えられない。数えた値を信頼できないので未照合にする
   const broken = files.find((f) => f.status === 'failed' && f.tests === 0);
   if (broken) {
-    const reason = broken.message ? `：${broken.message.split('\n')[0].slice(0, 200)}` : '';
+    const reason = broken.message ? `：${maskThenCut(broken.message, (masked) => masked.split('\n')[0].slice(0, 200))}` : '';
     return { status: 'unverified', evidence, detail: `テストを実行できなかったファイルがあります（${broken.file}${reason}）` };
   }
 
