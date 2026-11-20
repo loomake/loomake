@@ -295,7 +295,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       const label = refactor ? 'リファクタ' : '仕様適合の修正';
       if (declaredChanges(body)?.length === 0 && declaredRoutes(body).length) {
         try {
-          spec = refactor ? refactorDecision({ body, entries }) : specFixDecision({ body, entries, sourceIds: mainSpecSourceIds(join('openspec', 'specs')), readFile: readSpec });
+          spec = refactor ? refactorDecision({ body, entries, headTree }) : specFixDecision({ body, entries, sourceIds: mainSpecSourceIds(join('openspec', 'specs')), readFile: readSpec });
         } catch (error) {
           spec = { route: true, problems: [`主仕様を読めませんでした：${error.message}`] };
         }
