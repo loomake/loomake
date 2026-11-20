@@ -15,4 +15,4 @@
 
 ## 4. 検証
 
-- [ ] 4.1 全 Scenario と要件対応テストを確認し、changeset を追加して `pnpm -s verify --change protect-verify-output --done` を通す。
+- [x] 4.1 全 Scenario と要件対応テストを確認し、changeset を追加して `pnpm -s verify --change protect-verify-output --done` を通す。
