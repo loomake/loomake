@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { CHANGE_ID, RuntimeFailure, UsageError, maskValue, formatVerifyResult, loadVerifyQualitySchema, runDoctor, runInit, runVerify, verifyAbortedResult, verifyExitCode } from '@loomake/kit';
+import { CHANGE_ID, RuntimeFailure, UsageError, maskSecrets, maskValue, formatVerifyResult, loadVerifyQualitySchema, runDoctor, runInit, runVerify, verifyAbortedResult, verifyExitCode } from '@loomake/kit';
 import { runRun } from '@loomake/runner';
 import { parseCost, runEffortRecord, runAgreement, runRecord, runReport } from '@loomake/trace';
 import { COMMANDS, HELP, SCOPES, USAGE, commandDefinition, commandHelp, didYouMean, isHelp, isVersion, optionSpec, parseOptions, traceOperation, type Command } from './args.js';
@@ -53,11 +53,11 @@ export async function main(argv: string[], io: Io): Promise<number> {
   } catch (e) {
     // 実行時の失敗は使い方を表示せず、終了コード 3 で使い方の誤りと区別する（REQ-192）
     if (e instanceof RuntimeFailure) {
-      io.stderr(`loomake ${cmd}: ${e.message}`);
+      io.stderr(maskSecrets(`loomake ${cmd}: ${e.message}`));
       return 3;
     }
     if (!(e instanceof UsageError)) throw e;
-    io.stderr(`loomake ${cmd}: ${e.message}`);
+    io.stderr(maskSecrets(`loomake ${cmd}: ${e.message}`));
     io.stderr(`使い方: ${commandDefinition(cmd).usage}`);
     return 2;
   }
@@ -132,7 +132,7 @@ async function verify(args: string[], io: Io): Promise<number> {
     const known = changeId !== undefined && CHANGE_ID.test(changeId) && changeId !== 'archive' ? changeId : null;
     const aborted = verifyAbortedResult(e, known, changeId ?? 'verify');
     io.stdout(JSON.stringify(aborted, null, 2));
-    io.stderr(`loomake verify: ${e.message}`);
+    io.stderr(maskSecrets(`loomake verify: ${e.message}`));
     if (e instanceof UsageError) io.stderr(`使い方: ${commandDefinition('verify').usage}`);
     return verifyExitCode(aborted);
   }
