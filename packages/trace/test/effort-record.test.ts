@@ -120,7 +120,7 @@ it('[REQ-466] raw入力やcauseを残さず共有置換し、元のnoteの長さ
   git(r.root, 'add', '.'); git(r.root, 'commit', '-qm', 'effort'); r.write(token, 'dirty'); expect(r.record()).toBe(1);
   expect(r.outputs.join('\n')).not.toContain(token); expect(r.outputs.join('\n')).toContain('***');
 });
-it('[REQ-466] git不在と保存失敗は日本語UsageErrorで公開しない', () => {
+it('[REQ-466][REQ-481] git不在と保存失敗は日本語UsageErrorで公開しない', () => {
   const r = repo(); rmSync(join(r.root, '.git'), { recursive: true }); expect(() => r.record()).toThrow(); expect(r.files()).toEqual([]);
   const p = repo(); p.write('.loomake/evidence/add-x/effort', 'file');
   writeFileSync(join(p.root, '.git/info/exclude'), '.loomake/\n'); expect(() => p.record()).toThrow(); expect(readFileSync(p.dir, 'utf8')).toBe('file');

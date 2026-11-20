@@ -8,7 +8,7 @@
 
 ### Requirement: 人の実作業時間の独立した記録
 
-`loomake trace record --change <id> --effort <時間>` と同期APIは以下の入力・境界・保存契約を満たす人の実績をEffort 1へ追記する SHALL。自由記述と入力由来の診断には共通の秘密置換を適用する MUST。verifyと検証文書のsnapshotを作らず、品質合格の証拠としない MUST。未コミット拒否・追記専用・オフラインのREQ-067・068・084を維持する MUST。既存record、Evidence 1/2、Report 2、公開JSON Schema12本、依存、同期実行を保持する MUST。
+`loomake trace record --change <id> --effort <時間>` と同期APIは以下の入力・境界・保存契約を満たす人の実績をEffort 1へ追記する SHALL。自由記述と入力由来の診断には共通の秘密置換を適用する MUST。verifyと検証文書のsnapshotを作らず、品質合格の証拠としない MUST。未コミット拒否・追記専用・オフラインのREQ-067・068・084を維持する MUST。既存record、Evidence 1/2、Report 2、依存、同期実行を保持する MUST。Effort専用のJSON Schemaを追加せず、既存の公開JSON Schemaの内容を保持する MUST。
 
 Source: REQ-466
 
@@ -42,7 +42,7 @@ Source: REQ-466
 
 #### Scenario: 費用の明示と異なる区分
 - **WHEN** `--cost actual-usd:1.25,estimated-usd:0.50,tokens:12000` を指定する
-- **THEN** `cost` の配列に実額125cents・推計50cents・tokensのcount12000をそれぞれのkindとともに保存し、区分をまたいで合算しない。USDは非負の十進値で小数最大2桁を整数centsに正確に変換し、tokensは非負の整数とする。保存する各値は安全整数以内とする
+- **THEN** `cost` の配列に実額125cents・推計50cents・tokensのcount12000をそれぞれのkindとともに保存し、区分をまたいで合算しない。USDは非負の十進値で小数最大2桁を整数centsに正確に変換し、tokensは非負の整数とする。保存する各値は安全整数以内とする。空の配列は不正とし、費用0や省略と同じに扱わない
 
 #### Scenario: 不正または欠測の費用
 - **WHEN** 費用を省略する、または未知・同一kindの反復・定額・負数・指数表記・USDの小数3桁以上・tokensの小数・安全整数を超える費用を指定する
@@ -90,8 +90,40 @@ Source: REQ-466
 
 #### Scenario: 既存の証拠選択と再利用
 - **WHEN** 正しいeffortサブディレクトリと既存Evidence 1/2が同じchangeの証拠ディレクトリにある
-- **THEN** release reportとrunnerはeffortをverify証拠や再利用候補にせず、既存の結果とJSON外形を保つ。公開JSON Schema12本と旧fixture、既存の同期API・依存・遅延ロードを保持する
+- **THEN** release reportとrunnerはeffortをverify証拠や再利用候補にせず、既存の結果とJSON外形を保つ。Effort専用のJSON Schemaを追加せず、既存の公開JSON Schemaの内容と旧fixture、既存の同期API・依存・遅延ロードを保持する
 
 #### Scenario: オフラインと既存record
 - **WHEN** ネットワークがない環境で時間を記録する、または `--effort` を指定せず既存のrecordを使う
 - **THEN** 時間の記録はネットワークなしで動作する。既存recordは従来のverify・文書保存・変更検知・終了コードと出力をそのまま保ち、runnerの呼出も変えない
+
+#### Scenario: 空の費用配列
+- **WHEN** APIへ `cost: []` を渡す、または `cost: []` を持つ値を検査する
+- **THEN** 終了コード2で何も保存せず、検査は不正を返す
+
+#### Scenario: 同じ最終名への同時公開
+- **WHEN** 同じ最終名へ2つの実績記録を同時に公開する
+- **THEN** 成功1件と衝突1件で、最終名の内容はどちらか一方の完全な内容であり、一時名は残らない
+
+### Requirement: 日時の秒精度の一致
+
+recordedAtは秒を含むISO 8601とし、同期validatorと構造スキーマで受理する精度を一致させる MUST。
+
+Source: REQ-480
+
+#### Scenario: 日時の精度の一致
+- **WHEN** 秒のない `2026-11-06T00:00Z`、秒つき、小数秒つき、オフセットつきのrecordedAtを同期validatorと構造スキーマへ渡す
+- **THEN** 両者の受理と拒否が一致し、秒のない値はどちらも拒否する
+
+### Requirement: 保存前後の失敗の区別
+
+保存前の失敗は固定の日本語の区分（入力・サイズ・change・git・保存）で記録していないことを示し、最終名の公開後に一時ファイルの片付けまたは出力が失敗した場合は、保存済みの相対パスを示すRuntimeFailureとし、保存失敗と報告しない MUST。
+
+Source: REQ-481
+
+#### Scenario: 保存前の失敗の区別
+- **WHEN** サイズ超過・存在しないchange・gitの失敗・保存先の作成失敗のいずれかで記録する
+- **THEN** 区分ごとの固定の日本語のUsageErrorとなり、記録していないことを示す。messageに入力・秘密の形・OSの詳細を含めず、causeを持たない
+
+#### Scenario: 保存後の通知や片付けの失敗
+- **WHEN** 最終名へ公開した後に一時ファイルの削除が失敗する、またはstdoutのcallbackが例外を投げる
+- **THEN** 保存したファイルは残り、保存済みの相対パスと再実行しない案内を持つRuntimeFailureとなる。CLIは使い方を表示せず終了コード3とし、causeに元の例外を含めない
