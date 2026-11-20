@@ -70,7 +70,7 @@ const separator = (): string => `|${COLUMNS.map(() => '---').join('|')}|`;
 function sourceLines(rows: EfficiencyRow[]): string[] {
   const manual = new Map(rows.flatMap((r) => r.sources.manual).map((m) => [m.path, m]));
   const text = [...manual.values()].sort((a, b) => byCode(a.path, b.path))
-    .map((m) => `- ${m.path}（SHA-256 ${m.sha256}、行 ${m.lines.join(', ')}）`);
+    .map((m) => `- ${m.path}（SHA-256 ${m.sha256}${m.lines.length > 0 ? `、行 ${m.lines.join(', ')}` : ''}）`);
   const effort = [...new Set(rows.flatMap((r) => r.sources.effort))].sort(byCode).map((p) => `- ${p}`);
   const all = [...text, ...effort].map(escapeCell);
   return all.length > 0 ? all : ['- なし'];
