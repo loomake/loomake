@@ -47,4 +47,10 @@ describe('実行通知と保存途中の失敗', () => {
     expect(f.storage().ledgers.history.map((r) => r.attempt)).toEqual([2, 3]); expect(f.storage().repairIndex).toBe(false);
     expect(existsSync(join(f.root, EVAL_LOCK))).toBe(false);
   });
+  it('[REQ-432] 索引だけを保存できないとき履歴と古い索引を保持し、再実行による索引の復旧を案内する', async () => {
+    const f = fixture(); expect(await f.evaluate()).toBe(0); const index = f.read(QUALITY_FILES.index);
+    vi.mocked(renameSync).mockImplementationOnce(() => { throw new Error('fixture rename error'); });
+    expect(await f.evaluate()).toBe(2); expect(f.read(QUALITY_FILES.index)).toBe(index); expect(f.storage().ledgers.history).toHaveLength(2);
+    expect(f.progress.join('\n')).toContain('履歴は保存しましたが最新索引を更新できません。原本を保持して再実行し、索引を復旧してください');
+  });
 });

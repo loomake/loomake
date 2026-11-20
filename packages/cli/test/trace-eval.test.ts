@@ -39,6 +39,15 @@ describe('trace evalの追加と既存契約', () => {
       expect(report).toHaveBeenLastCalledWith(expect.objectContaining({ changeId: 'old', format: 'json' }));
     } finally { report.mockRestore(); }
   });
+  it('[REQ-429] 品質ファイルの不在・不正はCLIで日本語の診断と2を返し、品質コマンドを実行しない', async () => {
+    for (const value of [null, 'version: 99\n', 'version: [', 'version: 2\nmodel: []\n']) {
+      const f = fixture("require('node:fs').writeFileSync('.loomake/command-calls','called');");
+      if (value === null) rmSync(join(f.root, 'quality.yaml')); else writeFileSync(join(f.root, 'quality.yaml'), value);
+      const result = await run(f.root, 'trace', 'eval');
+      expect(result.code).toBe(2); expect(result.err).toMatch(/[ぁ-んァ-ヶ一-龠]/); expect(result.err).toContain('quality');
+      expect(existsSync(join(f.root, '.loomake/command-calls'))).toBe(false); expect(existsSync(join(f.root, QUALITY_FILES.requests))).toBe(false);
+    }
+  });
   it.each([
     ['commands', 'result', 'passed'], ['observations', 'status', 'measured'], ['subjects', 'id', 'PQ-001'],
   ] as const)('[REQ-433][REQ-440][REQ-437] 不正な%s.%sをCLIで2にし帳簿を一切追記しない', async (collection, field, valid) => {

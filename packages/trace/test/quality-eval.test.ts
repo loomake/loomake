@@ -86,6 +86,13 @@ describe('手動評価の実行と完了証拠', () => {
     value.testResults[0].assertionResults.push({ fullName: status, status });
     expect(testRunIncomplete(payload(value), producer, 0)).toBeTypeOf('string');
   });
+  it('[REQ-434] 汚れによる1と時間切れ・中断による3でも自分のロックを片付ける', async () => {
+    const dirty = fixture(); writeFileSync(join(dirty.root, 'untracked'), 'dirty');
+    expect(await dirty.evaluate()).toBe(1); expect(existsSync(join(dirty.root, EVAL_LOCK))).toBe(false);
+    const slow = fixture('setInterval(()=>{},1000);'); expect(await slow.evaluate({ timeoutMs: 30 })).toBe(3); expect(existsSync(join(slow.root, EVAL_LOCK))).toBe(false);
+    const stopped = fixture(), controller = new AbortController(); controller.abort();
+    expect(await stopped.evaluate({ signal: controller.signal })).toBe(3); expect(existsSync(join(stopped.root, EVAL_LOCK))).toBe(false);
+  });
   it('[REQ-434] 競合は既存lock bytes/mtimeと台帳を変えず未受付3', async () => {
     const f = fixture(); mkdirSync(join(f.root, '.loomake/quality'), { recursive: true });
     const file = join(f.root, EVAL_LOCK); writeFileSync(file, 'foreign lock'); const before = readFileSync(file), mtime = statSync(file).mtimeMs;
