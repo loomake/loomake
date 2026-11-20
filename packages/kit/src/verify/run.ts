@@ -178,6 +178,11 @@ export function runVerify(options: VerifyOptions): VerifyResult {
  * quality.yaml を読む（REQ-319）。ci の完了ゲートでは必須で、ほかのゲートではあれば形を確かめる。
  * 読む必要があるのにスキーマを渡されていなければ、使い方の誤りにする
  */
+/** 全文を先に置換し、切ってから、もう一度置換する。先に切ると、トークンの一部や本文だけの鍵が残る。 */
+function maskThenCut(text: string, cut: (masked: string) => string): string {
+  return maskSecrets(cut(maskSecrets(text)));
+}
+
 function loadQuality(root: string, required: boolean, schema: QualitySchemaLike | undefined) {
   if (!schema) {
     if (required || existsSync(join(root, QUALITY_FILE))) {
@@ -415,7 +420,7 @@ function checkOpenspecValidate(root: string, config: LoomakeConfig, changeId: st
     else if (scope === 'ci') record('openspec validate', 'insufficient', `${note}${OPENSPEC_MISSING}。validate を実行していません`);
     else record('openspec validate', 'na', `${note}対象外：${OPENSPEC_MISSING}ため、validate を実行していません（確認者：${OPENSPEC_NA_CONFIRMER}）`);
   } else {
-    record('openspec validate', r.status === 0 ? 'pass' : 'fail', note + (r.status === 0 ? '' : maskSecrets(maskSecrets(`${r.stdout}${r.stderr}`.trim()).slice(0, 2000))));
+    record('openspec validate', r.status === 0 ? 'pass' : 'fail', note + (r.status === 0 ? '' : maskThenCut(`${r.stdout}${r.stderr}`.trim(), text => text.slice(0, 2000))));
   }
 }
 
@@ -530,7 +535,7 @@ function runCommands(
     }
     // spawnSync は起動に失敗すると、型に反して stdout・stderr が null になる
     const out = `${(r.stdout as string | null) ?? ''}${(r.stderr as string | null) ?? ''}`.trim();
-    record(`command: ${name}`, r.status === 0 ? 'pass' : 'fail', r.status === 0 ? '' : maskSecrets(maskSecrets(out).split('\n').slice(-30).join('\n')));
+    record(`command: ${name}`, r.status === 0 ? 'pass' : 'fail', r.status === 0 ? '' : maskThenCut(out, text => text.split('\n').slice(-30).join('\n')));
     if (r.status !== 0) failed(r.status);
     onCommand?.(r.error ? { name, kind: 'error', code: r.error.code ?? null }
       : r.status !== null ? { name, kind: 'exited', status: r.status }
