@@ -70,11 +70,22 @@ describe('手書きの効率記録の読取り', () => {
     const { actuals } = parse(doc({ rows: [row({ 日: '2026-11-06', 指示: '30分', レビュー: '0分', うち判断根拠を探す時間: '10分', 判断要求: '03', 試行: '2', 費用: 'actual-usd:1.25,tokens:100', メモ: 'x' })] }));
     expect(actuals).toEqual([{ source: { path: PATH, line: 21 }, minutes: { instruct: 30, review: 0, search: 10 }, decisions: 3, attempts: 2, cost: [{ kind: 'actual-usd', cents: 125 }, { kind: 'tokens', count: 100 }] }]);
   });
-  it('[REQ-467] 読めない費用はその行の費用だけを欠測にし、実績は保つ', () => {
-    const record = parse(doc({ rows: [row({ 日: '2026-11-06', 指示: '30分', 費用: '約 3 ドル' })] }));
-    expect(record.actuals).toMatchObject([{ minutes: { instruct: 30 } }]);
-    expect(record.actuals).not.toMatchObject([{ cost: expect.anything() }]);
+  it('[REQ-467] 読めない費用は読めない行として、行を落とさず実績全体を算出不能にする（Q-P2-07）', () => {
+    const record = parse(doc({ rows: [row({ 日: '2026-11-05', 指示: '1分' }), row({ 日: '2026-11-06', 指示: '30分', 費用: '約 3 ドル' })] }));
+    expect(record.actuals).toHaveProperty('invalid');
     expect(record.problems).toHaveLength(1);
+  });
+  it('[REQ-467] 表の構造の誤り（区切り行なし・同じ見出しの節が 2 つ・表の後に続く行）は、行を黙って落とさず問題にして実績を算出不能にする', () => {
+    const body = (r: string[][]) => table(ACTUAL_HEAD, r).split('\n');
+    const [head, , ...rows] = body([row({ 日: '2026-11-05', 指示: '1分' }), row({ 日: '2026-11-06', 指示: '2分' })]);
+    const noSeparator = doc().replace(/\| 日 .*\n\|.*\n/, `${head}\n${rows.join('\n')}\n`);
+    const twoSections = doc({ rows: [row({ 日: '2026-11-05', 指示: '1分' })] }) + `\n## 実績\n\n${body([row({ 日: '2026-11-06', 指示: '2分' })]).join('\n')}\n`;
+    const afterText = doc({ rows: [row({ 日: '2026-11-05', 指示: '1分' })] }).replace(/\n$/, '') + `\n\n補足\n${rows[1]}\n`;
+    for (const text of [noSeparator, twoSections, afterText]) {
+      const record = parse(text);
+      expect(record.actuals, text).toHaveProperty('invalid');
+      expect(record.problems.length, text).toBeGreaterThan(0);
+    }
   });
   it('[REQ-467] 不正な行が 1 つでもあれば、行を落とさず実績全体を算出不能にする', () => {
     for (const bad of [row({ 日: '2026-11-06' }), row({ 日: '2026-13-01', 指示: '1分' }), row({ 日: '2026-11-06', 指示: '1分', うち判断根拠を探す時間: '2分' }), row({ 日: '2026-11-06', 指示: '1分', 試行: '1.5' }), row({ 日: '2026-11-06', 指示: '1時' })]) {
