@@ -25,6 +25,36 @@ gate ジョブは PR の段階（AGENTS.md 2 章の L1・L2・L3）を先に決�
 - L3（製品コードと Requirement の変更）：change が必須。`loomake-change: none` や change を特定できない PR は失敗する
 - L3 の例外「仕様適合の修正」：既存の Requirement どおりに直すだけのバグ修正は、ADR 0006 の 5 条件（既存 Requirement に書かれた振る舞い、対象の REQ ID を名前に入れた修正前失敗・修正後成功のテスト、`openspec/` を変えない、公開契約を変えない、PR 本文に印を書く）をすべて満たすときだけ、change なしで進められる。PR 本文には `loomake-change: none`・`loomake-route: spec-fix`・`loomake-req: REQ-xxx` を書く。独立 Opus レビューは 1 回で、`verify --done` は対象外。正本は ADR 0006 の「完成を早めるための規則変更」
   - CI 対応は REQ-343 を変更する通常 L3 change（Issue #427）で行い、[PR #436](https://github.com/loomake/loomake/pull/436) のマージから使える。以下の宣言と確認条件に従う
+- L3 の例外「リファクタ」：振る舞いを変えない整理は、利用者が 2026-11-20 に承認した 3 条件（`openspec/` を変えない、既存のテストファイルを変更・削除しない、独立レビュー 1 回）を満たすときだけ、change なしで進められる。PR 本文には `loomake-change: none` と `loomake-route: refactor` を書く。省けるのは change と `verify --done` だけで、品質コマンド・3 OS の CI・changeset の要否などの必須検査は省かない。仕様は monorepo の「リファクタの経路」（REQ-477、change accept-refactor-ci-route）
+
+### リファクタで CI が調べる条件
+
+`loomake-route: refactor` は、spec-fix と同じく L3 で `loomake-change: none` を明示したときだけ評価する。L2 では宣言があっても判定を変えない。gate は次の五つをすべて確認し、満たすときは change を指定せず品質コマンドを実行する。
+
+1. `loomake-route:` の行がすべて `refactor`（大文字小文字は区別しない）。`spec-fix` などほかの値と同時に名乗ると、どちらの経路でも受け付けない。
+2. PR の差分に `openspec/` 配下の変更がない。削除や名前の変更は、変更前後のパスも対象にする。
+3. ファイルを変えてよい範囲（許可リスト）の外を変えていない。範囲は操作ごとに次のとおり。許可リストにした理由は change の design.md にある。
+   - 変更（内容や種類の変更）：`packages/*/src/` と `docs/` の下
+   - 削除：`packages/*/src/` の下
+   - 改名：元のパスは削除と同じ範囲、先のパスは追加と同じ範囲
+   - 追加：`packages/*/src/`・`packages/*/test/`・`tests/`・`docs/`・`.changeset/` の下
+   - 状態が変更・種類の変更・削除・改名・複写・追加のどれでもないもの（`X`・`U` など）は、場所を問わず拒む
+
+   範囲の中でも、次のものは変更・削除・改名・追加のどれも拒む。
+   - 設定ファイル：基本名が `eslint.config.*`・`vitest.config.*`・`vite.config.*`・`vitest.workspace.*`・`tsconfig*.json`・`package.json`・`.npmrc`・`.pnpmfile.cjs`・`.gitattributes` のもの（大文字小文字は区別しない）。入れ子に置くと lint や試験の設定を差し替えられるため
+   - `node_modules` という名前の要素を含むパス（`tests/node_modules` そのものも含む。大文字小文字は区別しない）
+   - `docs/guide/3.reference/` の下（大文字小文字は区別しない）：`tests/cli-reference.test.ts`・`tests/quality-reference.test.ts` が照合する正本のため
+   - 変更後がシンボリックリンク（mode `120000`）のもの：リンクで依存の解決先や照合の正本を差し替えられるため。シンボリックリンクを消すことは拒まない
+
+   既存のテストファイル、テストの分け方（`scripts/lib/test-partition.mjs`）、ルートの `package.json`・`loomake.config.json`、CI の設定などは範囲の外なので、変えると拒む。
+4. 足したパス（改名なら後のパス）が、PR の先頭（HEAD）のツリーにある別のパスと、大文字小文字だけ違わない。ツリーを読めなければ満たさないものとして拒み、git の失敗の詳細か、一覧が NUL で終わっていないことを理由に添える。
+5. PR 本文の `## 証跡` の節に、状態が `実施済み` の `review:` 行が 1 つ以上ある。
+
+条件が足りなければ「L3 では change が必須です」に「リファクタとして受け付けません：」と不足理由をすべて添える。例えば、既存の試験を変えていれば「変えてはいけない既存のファイルを変更・削除・改名しています（packages/core/test/spec.test.ts）」、範囲の外にファイルを足していれば「足してはいけない場所にファイルを足しています（scripts/b.mjs）」と表示する。
+
+機械の検査だけでリファクタの受け入れは決まらない。独立レビューは振る舞いと公開契約を変えていないこと、整理の前に今の振る舞いを新しいテストファイルで固定したこと、関数の書き方の規則（AGENTS.md の「プロジェクト固有の情報」）を確かめる。管理役は、そのレビューの重大がゼロであること、レビュー担当が実装担当と別のセッションであること、`head=` がマージする head と一致することを確かめてからマージする。既存のテストファイルに試験を足したいときは、新しいテストファイルに書くか、change を持つ通常の L3 で進める。
+
+機械では防げない抜け道もある。試験を弱める変更だけを `scripts/` などの L2 の PR に分けて先にマージし、そのあとリファクタの PR を出すと、どちらの PR も gate を通る。L2 の PR で試験や試験の設定を変えていないかは、その PR の独立レビューで確かめる。
 
 ### 仕様適合の修正で CI が調べる条件
 

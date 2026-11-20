@@ -2,7 +2,7 @@
 // CI の完了ゲート。先に PR の段階（L1・L2・L3）を変えたファイルと spec の差分から決め（REQ-342、ci-tier.mjs）、
 // 段階ごとに検査を変える（REQ-343）。L1 は lint と文書のリンクの試験を実行し、change がなければ verify を呼ばない。
 // change があれば段階を問わず verify を呼ぶ（L2・L3 は --done、L1 は tasks.md に完了した印がない change だけ --spec-only）。L2・L3 は対象の change を、PR 本文の「loomake-change:」の行、PR で変えたファイル、ブランチ名から決め、
-// それぞれに --change <id> --done を実行する（REQ-010・REQ-132）。L3 では change が必須。
+// それぞれに --change <id> --done を実行する（REQ-010・REQ-132）。L3 では change が必須（仕様適合の修正とリファクタの経路を除く。ci-spec-fix.mjs・ci-refactor.mjs）。
 // どの段階でも、REQ ID の重複（scripts/req-duplicate-check.mjs）を調べ、あれば失敗にする。
 // change のゲートは --json で実行し、終了コードではなく 2.0.0 の結果の JSON（対象の change・scope ci・completed・要判断なし・verdict PASS・
 // 完了ゲートの検査あり）で合格を決める。履歴の 1.0.0・local・証拠不足・全件 NOT_APPLICABLE は合格にしない（REQ-318、ciGateProblem）。
@@ -23,6 +23,7 @@ import { archiveMetadataPaths, decideTier, formatTierLine, isDocumentPath, isSpe
 import { checkReqDuplicates, formatProblems, formatStale } from './req-duplicate-check.mjs';
 import { processEvidenceProblems, formatProcessProblems } from './process-evidence.mjs';
 import { declaredRoutes, mainSpecSourceIds, specFixDecision } from './ci-spec-fix.mjs';
+import { isRefactorRoute, refactorDecision } from './ci-refactor.mjs';
 
 // change は changes/ の直下のディレクトリだけ。changes/archive/ は完了した change の置き場で、change ではない
 const isChangeName = (name) => /^[^/\\.][^/\\]*$/.test(name) && name !== 'archive';
@@ -205,7 +206,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   }
   // 変更行が属する節を見るため、変更前と変更後（HEAD）の spec.md を読む。
   // 変更前は、差分（base...HEAD）と同じ起点になるよう、ベースと HEAD の merge-base のファイルを読む
-  const { readSpec, sameBlob, headTree } = comparisonReaders(git, base);
+  const { readSpec, sameBlob, headTree, headTreeResult } = comparisonReaders(git, base);
   const metadata = archiveMetadataPaths(entries, sameBlob, headTree);
   const files = [...new Set(entries.flatMap((entry) => entry.paths))];
   let body = process.env.PR_BODY ?? '';
@@ -289,19 +290,24 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     let qualityReason = selected.qualityOnly;
     if (decided.tier === 'L3') {
       let spec = { route: false };
+      // 経路のどれかが refactor ならリファクタ（REQ-477）、それ以外は仕様適合の修正（REQ-343）の条件で調べる
+      const refactor = isRefactorRoute(declaredRoutes(body));
+      const label = refactor ? 'リファクタ' : '仕様適合の修正';
       if (declaredChanges(body)?.length === 0 && declaredRoutes(body).length) {
         try {
-          spec = specFixDecision({ body, entries, sourceIds: mainSpecSourceIds(join('openspec', 'specs')), readFile: readSpec });
+          spec = refactor ? refactorDecision({ body, entries, headTreeResult }) : specFixDecision({ body, entries, sourceIds: mainSpecSourceIds(join('openspec', 'specs')), readFile: readSpec });
         } catch (error) {
-          spec = { route: true, problems: [`主仕様を読めませんでした：${error.message}`] };
+          // 例外の理由。仕様適合の修正は主仕様の読み取り、リファクタは条件の判定で失敗する
+          const failure = refactor ? 'リファクタの条件を判定できませんでした' : '主仕様を読めませんでした';
+          spec = { route: true, problems: [`${failure}：${error.message}`] };
         }
       }
       if (!spec.route || spec.problems.length) {
-        const why = spec.route ? `。仕様適合の修正として受け付けません：${spec.problems.join('／')}` : '';
+        const why = spec.route ? `。${label}として受け付けません：${spec.problems.join('／')}` : '';
         console.error(`ci-gate: L3 では change が必須です（${selected.qualityOnly}）。PR 本文に「loomake-change: <change-id>」の行を書いてください${why}`);
         process.exit(1);
       }
-      qualityReason = `仕様適合の修正：${spec.ids.join('、')}`;
+      qualityReason = refactor ? 'リファクタ（振る舞いを変えない整理）' : `仕様適合の修正：${spec.ids.join('、')}`;
     }
     console.error(`ci-gate: branch=${branch || '(なし)'} 段階 ${decided.tier} → verify（品質コマンドのみ。${qualityReason}）`);
     const code = verify([], { stdio: 'inherit' }).status ?? 1;
