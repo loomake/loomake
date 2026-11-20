@@ -17,12 +17,14 @@ const ownObservations = (manual: ManualEffortRecord['actuals'] | undefined): Eff
 
 function entriesOf(records: ManualEffortRecord[], json: EffortChangeRecords | undefined): Entries {
   const manual = records.at(0)?.actuals;
-  const own = ownObservations(manual);
   if (records.length > 1) return { blocked: MULTIPLE };
   if (manual && !Array.isArray(manual)) return { blocked: manual.invalid };
-  if (own.length > 0 && json) return { blocked: DUPLICATE };
-  return json?.invalid !== undefined ? { blocked: json.invalid } : { list: own.length > 0 ? own : json?.observations ?? [] };
+  const own = ownObservations(manual);
+  return own.length > 0 && json ? { blocked: DUPLICATE } : withJson(own, json);
 }
+
+const withJson = (own: EffortObservation[], json: EffortChangeRecords | undefined): Entries =>
+  json?.invalid !== undefined ? { blocked: json.invalid } : { list: own.length > 0 ? own : json?.observations ?? [] };
 
 const whole = <T>(records: ManualEffortRecord[], pick: (r: ManualEffortRecord) => T | null): EfficiencyValue<T> => {
   if (records.length === 0) return missing(NO_MANUAL);
