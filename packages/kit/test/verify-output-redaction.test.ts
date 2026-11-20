@@ -94,6 +94,16 @@ it('[REQ-451] 実行エラーと中止の message を置換し、分類は置換
   expect(aborted.run.errors[0]?.kind).toBe('config');
 });
 
+it('[REQ-451] 秘密の形の change ID でも、戻り値の change は渡した値のままにし、整形した文字列には残さない', () => {
+  const assembled = assembleVerifyResult({ change: token, scope: 'local', checks: [{ id: 'x', result: 'FAIL', reason: `r ${token}`, evidence: [] }] });
+  expect(assembled.change).toBe(token);
+  expect(assembled.checks[0]?.reason).not.toContain(token);
+  expect(formatVerifyResult(assembled)).not.toContain(token);
+  const aborted = verifyAbortedResult(new UsageError(`bad ${token}`), token, 'verify');
+  expect(aborted.change).toBe(token);
+  expect(aborted.run.errors[0]?.message).not.toContain(token);
+});
+
 it('[REQ-451] 早期の aborted の戻り値を置換する', () => withProject({ config: config({}), quality: `a: [\n${token}` }, root => {
   const verified = runVerify({ root, changeId: CHANGE, gate: 'done', scope: 'ci', qualitySchema: { safeParse: () => ({ success: true, data: {} }) } as never });
   expect(verified.run.status).toBe('aborted');
