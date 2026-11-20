@@ -9,64 +9,94 @@ export type SpecRequirement = z.infer<typeof specRequirementSchema>;
 const FROM = /^\s*[-*+]?\s*FROM:\s*`?###\s*Requirement:\s*(.+?)`?\s*$/;
 const TO = /^\s*[-*+]?\s*TO:\s*`?###\s*Requirement:\s*(.+?)`?\s*$/;
 
+const OP_HEADING = /^## (ADDED|MODIFIED|REMOVED|RENAMED) Requirements\s*$/;
+const REQUIREMENT = /^### Requirement:\s*(.+?)\s*$/;
+const SOURCE = /^\**Source\**:\**\s*(.+)$/;
+
+type SpecLine = { text: string; line: number };
+type PendingFrom = { name: string; line: number };
+type SpecState = {
+  file: string; value: SpecRequirement[]; errors: ParseError[];
+  op: SpecOperation | null; cur: SpecRequirement | null; pendingFrom: PendingFrom | null;
+};
+
 /**
  * OpenSpec の差分仕様（spec.md）から Requirement を取り出す（REQ-013, REQ-051）。
  * コードブロックの中は読まない。RENAMED の FROM と TO が組にならないときはエラーにする
  */
 export function parseSpec(file: string, text: string): ParseResult<SpecRequirement[]> {
-  const lines = splitLines(text);
-  const fenced = fenceMask(lines);
-  const value: SpecRequirement[] = [];
-  const errors: ParseError[] = [];
-  let op: SpecOperation | null = null;
-  let cur: SpecRequirement | null = null;
-  let pendingFrom: { name: string; line: number } | null = null;
-  const dropPending = () => {
-    if (pendingFrom) errors.push({ file, line: pendingFrom.line, message: `RENAMED の FROM「${pendingFrom.name}」に対応する TO がありません` });
-    pendingFrom = null;
-  };
+  const s: SpecState = { file, value: [], errors: [], op: null, cur: null, pendingFrom: null };
+  for (const line of unfencedLines(splitLines(text))) readLine(s, line);
+  dropPending(s);
+  return { value: s.value, errors: s.errors };
+}
 
-  lines.forEach((line, i) => {
-    if (fenced[i]) return;
-    const opMatch = line.match(/^## (ADDED|MODIFIED|REMOVED|RENAMED) Requirements\s*$/);
-    if (opMatch || /^## /.test(line)) {
-      dropPending();
-      op = opMatch ? (opMatch[1] as SpecOperation) : null;
-      cur = null;
-      return;
-    }
-    if (op === 'RENAMED') {
-      const from = line.match(FROM);
-      const to = line.match(TO);
-      if (from) {
-        dropPending();
-        pendingFrom = { name: from[1].trim(), line: i + 1 };
-      } else if (to) {
-        if (pendingFrom) {
-          value.push({ op, name: to[1].trim(), from: pendingFrom.name, sources: [], scenarios: 0, line: pendingFrom.line });
-          pendingFrom = null;
-        } else {
-          errors.push({ file, line: i + 1, message: `RENAMED の TO「${to[1].trim()}」の前に FROM がありません` });
-        }
-      }
-      return;
-    }
-    const req = line.match(/^### Requirement:\s*(.+?)\s*$/);
-    if (req) {
-      cur = { op, name: req[1], sources: [], scenarios: 0, line: i + 1 };
-      value.push(cur);
-      return;
-    }
-    if (!cur) return;
-    const c: SpecRequirement = cur;
-    if (/^#### Scenario:/.test(line)) c.scenarios++;
-    const src = line.match(/^\**Source\**:\**\s*(.+)$/);
-    if (src) {
-      for (const id of src[1].match(REQ_ID) ?? []) {
-        if (!c.sources.includes(id)) c.sources.push(id);
-      }
-    }
-  });
-  dropPending();
-  return { value, errors };
+function unfencedLines(lines: string[]): SpecLine[] {
+  const fenced = fenceMask(lines);
+  return lines.map((text, i) => ({ text, line: i + 1 })).filter((_, i) => !fenced[i]);
+}
+
+function readLine(s: SpecState, { text, line }: SpecLine): void {
+  if (/^## /.test(text)) startSection(s, text);
+  else if (s.op === 'RENAMED') readRenamed(s, text, line);
+  else readRequirementLine(s, text, line);
+}
+
+/** 操作の見出しなら操作を切り替え、ほかの ## 見出しなら操作を外す */
+function startSection(s: SpecState, text: string): void {
+  dropPending(s);
+  s.op = (text.match(OP_HEADING)?.[1] as SpecOperation | undefined) ?? null;
+  s.cur = null;
+}
+
+function readRenamed(s: SpecState, text: string, line: number): void {
+  const from = text.match(FROM);
+  const to = text.match(TO);
+  if (from) startRename(s, from[1].trim(), line);
+  else if (to) finishRename(s, to[1].trim(), line);
+}
+
+function startRename(s: SpecState, name: string, line: number): void {
+  dropPending(s);
+  s.pendingFrom = { name, line };
+}
+
+function finishRename(s: SpecState, name: string, line: number): void {
+  if (s.pendingFrom) s.value.push(renamed(s.pendingFrom, name));
+  else s.errors.push({ file: s.file, line, message: `RENAMED の TO「${name}」の前に FROM がありません` });
+  s.pendingFrom = null;
+}
+
+function renamed(from: PendingFrom, name: string): SpecRequirement {
+  return { op: 'RENAMED', name, from: from.name, sources: [], scenarios: 0, line: from.line };
+}
+
+/** 組になる TO のない FROM をエラーにする */
+function dropPending(s: SpecState): void {
+  if (s.pendingFrom) s.errors.push({ file: s.file, line: s.pendingFrom.line, message: `RENAMED の FROM「${s.pendingFrom.name}」に対応する TO がありません` });
+  s.pendingFrom = null;
+}
+
+function readRequirementLine(s: SpecState, text: string, line: number): void {
+  const req = text.match(REQUIREMENT);
+  if (req) startRequirement(s, req[1], line);
+  else if (s.cur) readRequirementBody(s.cur, text);
+}
+
+function startRequirement(s: SpecState, name: string, line: number): void {
+  s.cur = { op: s.op, name, sources: [], scenarios: 0, line };
+  s.value.push(s.cur);
+}
+
+function readRequirementBody(req: SpecRequirement, text: string): void {
+  if (/^#### Scenario:/.test(text)) req.scenarios++;
+  const src = text.match(SOURCE);
+  if (src) addSources(req, src[1].match(REQ_ID) ?? []);
+}
+
+/** Source の ID を、初出順に重複なく足す */
+function addSources(req: SpecRequirement, ids: string[]): void {
+  for (const id of ids) {
+    if (!req.sources.includes(id)) req.sources.push(id);
+  }
 }
