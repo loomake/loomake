@@ -10,13 +10,13 @@ const EDITABLE = /^(?:packages\/[^/]+\/src\/|docs\/)/;
 const DELETABLE = /^packages\/[^/]+\/src\//;
 const ADDABLE = /^(?:packages\/[^/]+\/(?:src|test)\/|tests\/|docs\/|\.changeset\/)/;
 // 範囲の中でも変えない。試験が照合する正本、検査を左右する設定ファイル、パッケージの解決先
-const REFERENCE = /^docs\/guide\/3\.reference\//;
+const REFERENCE = /^docs\/guide\/3\.reference\//i;
 const CONFIG_NAMES = [
   String.raw`(?:eslint|vitest|vite)\.config\..*`, String.raw`vitest\.workspace\..*`, String.raw`tsconfig.*\.json`,
   String.raw`package\.json`, String.raw`\.npmrc`, String.raw`\.pnpmfile\.cjs`, String.raw`\.gitattributes`,
 ];
 const CONFIG_NAME = new RegExp(`^(?:${CONFIG_NAMES.join('|')})$`, 'i');
-const NODE_MODULES = /(?:^|\/)node_modules\//i;
+const NODE_MODULES = /(?:^|\/)node_modules(?:\/|$)/i;
 
 /** 経路の宣言のどれかが refactor ならリファクタの判定に進む。大文字小文字は区別しない */
 export const isRefactorRoute = (routes) => routes.some((value) => value.toLowerCase() === ROUTE);
@@ -55,21 +55,25 @@ function specProblems(entries) {
 
 // 改名・複写（R・C）は、元を削除してよい範囲、先を足してよい範囲に限る。追加（A）は addedProblems で見る
 const movable = ([from, to]) => isDeletablePath(from) && isAddablePath(to);
+const editsAllowedPath = ([path]) => isEditablePath(path);
 const allowedChange = {
   A: () => true,
+  M: editsAllowedPath,
+  T: editsAllowedPath,
   D: ([path]) => isDeletablePath(path),
   R: movable,
   C: movable,
 };
-const editsAllowedPath = ([path]) => isEditablePath(path);
-const isAllowedChange = ({ status, paths }) => (allowedChange[status[0]] ?? editsAllowedPath)(paths);
+// 知らない状態（X・U・空など）は安全な側に倒して拒む
+const rejectUnknown = () => false;
+const isAllowedChange = ({ status, paths }) => (allowedChange[status.charAt(0)] ?? rejectUnknown)(paths);
 
 function scopeProblems(entries) {
   const touched = entries.filter((entry) => !isAllowedChange(entry)).map((entry) => entry.paths.join(' → '));
   if (!touched.length) return [];
   return [`変えてはいけない既存のファイルを変更・削除・改名しています（${summarize(touched)}）。`
-    + '変更は packages/*/src/ と docs/ の下、削除と改名の元は packages/*/src/ の下に限ります'
-    + '（docs/guide/3.reference/・設定ファイル・node_modules/ は除く）。試験は新しいファイルとして足してください'];
+    + '変更は packages/*/src/ と docs/ の下、削除と改名の元は packages/*/src/ の下に限ります。改名の先は追加と同じ範囲です'
+    + '（docs/guide/3.reference/・設定ファイル・node_modules は除く）。試験は新しいファイルとして足してください'];
 }
 
 const addsOutside = ({ status, paths }) => status === 'A' && !isAddablePath(paths[0]);
@@ -79,7 +83,17 @@ function addedProblems(entries) {
   if (!outside.length) return [];
   return [`足してはいけない場所にファイルを足しています（${summarize(outside)}）。`
     + '足してよいのは packages/*/src/・packages/*/test/・tests/・docs/・.changeset/ の下です'
-    + '（docs/guide/3.reference/・設定ファイル・node_modules/ は除く）'];
+    + '（docs/guide/3.reference/・設定ファイル・node_modules は除く）'];
+}
+
+// 変更後の mode がシンボリックリンク（120000）のエントリ。削除は変更後がないので含まない
+const SYMLINK = '120000';
+const makesSymlink = ({ modes }) => modes[1] === SYMLINK;
+
+function symlinkProblems(entries) {
+  const links = entries.filter(makesSymlink).map(({ paths }) => paths.at(-1));
+  if (!links.length) return [];
+  return [`シンボリックリンクを足すか変えています（${summarize(links)}）。リファクタの経路ではシンボリックリンクを扱えません`];
 }
 
 // 足したパス（改名・複写なら後のパス）
@@ -110,7 +124,7 @@ function reviewProblems(body) {
 export function refactorDecision({ body, entries, headTreeResult }) {
   const problems = [
     ...routeProblems(body), ...specProblems(entries), ...scopeProblems(entries), ...addedProblems(entries),
-    ...caseProblems(entries, headTreeResult), ...reviewProblems(body),
+    ...symlinkProblems(entries), ...caseProblems(entries, headTreeResult), ...reviewProblems(body),
   ];
   return { route: true, problems };
 }

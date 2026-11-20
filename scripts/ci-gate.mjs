@@ -297,7 +297,9 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
         try {
           spec = refactor ? refactorDecision({ body, entries, headTreeResult }) : specFixDecision({ body, entries, sourceIds: mainSpecSourceIds(join('openspec', 'specs')), readFile: readSpec });
         } catch (error) {
-          spec = { route: true, problems: [`主仕様を読めませんでした：${error.message}`] };
+          // 例外の理由。仕様適合の修正は主仕様の読み取り、リファクタは条件の判定で失敗する
+          const failure = refactor ? 'リファクタの条件を判定できませんでした' : '主仕様を読めませんでした';
+          spec = { route: true, problems: [`${failure}：${error.message}`] };
         }
       }
       if (!spec.route || spec.problems.length) {
