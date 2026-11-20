@@ -148,7 +148,7 @@ const thrown = (action: () => unknown): Error => {
   try { action(); } catch (error) { return error as Error; }
   throw new Error('expected rejection');
 };
-it.each(['input', 'size', 'change', 'git', 'save', 'cost'] as const)('[REQ-466] 保存前%sを固定文とcauseなしで区別する', (kind) => {
+it.each(['input', 'size', 'change', 'git', 'save', 'cost'] as const)('[REQ-466][REQ-481] 保存前%sを固定文とcauseなしで区別する', (kind) => {
   const r = repo(); const token = 'sk-' + 'a'.repeat(20);
   const cases: [() => unknown, string][] = [
     [() => r.record({ effort: token }), '実作業時間の入力が不正です。時間・区分・回数・費用・メモの書式を確認してください。'],
@@ -164,7 +164,7 @@ it.each(['input', 'size', 'change', 'git', 'save', 'cost'] as const)('[REQ-466] 
     expect(error.message).not.toContain(token); expect(error.cause).toBeUndefined(); expect(r.files()).toEqual([]);
   }
 });
-it.each(['cleanup', 'stdout'] as const)('[REQ-466] 保存後%sの失敗は完全なファイルを残し再実行しないRuntimeFailureにする', (phase) => {
+it.each(['cleanup', 'stdout'] as const)('[REQ-466][REQ-481] 保存後%sの失敗は完全なファイルを残し再実行しないRuntimeFailureにする', (phase) => {
   const r = repo(); const token = 'sk-' + 'a'.repeat(20);
   if (phase === 'cleanup') vi.mocked(unlinkSync).mockImplementationOnce(() => { throw new UsageError(token, { cause: new Error(token) }); });
   const error = thrown(() => r.record(phase === 'stdout' ? { stdout: () => { throw new UsageError(token, { cause: new Error(token) }); } } : {}));
