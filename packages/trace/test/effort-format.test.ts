@@ -54,6 +54,10 @@ describe('開発効率の表の整形', () => {
     const tail = text.slice(text.indexOf('### 出典'));
     expect(tail).toBe(`### 出典\n\n- docs/effort/c-001.md（SHA-256 ${'f'.repeat(64)}、行 12, 20）\n- .loomake/evidence/add-x/effort/20261106T010203Z-aaaaaaaaaaaa.json\n`);
   });
+  it('[REQ-468] 推定行も実績行もない手書き記録の出典は、行の部分を省いて SHA-256 だけを示す（Q-P2-08）', () => {
+    const text = formatEfficiencySection(table(row({ sources: { manual: [{ path: 'docs/effort/e.md', sha256: 'e'.repeat(64), lines: [] }], effort: [] } })));
+    expect(text.slice(text.indexOf('### 出典'))).toBe(`### 出典\n\n- docs/effort/e.md（SHA-256 ${'e'.repeat(64)}）\n`);
+  });
   it('[REQ-468] 記録がなければ表の本体を空にし、出典はなしとする', () => {
     expect(formatEfficiencySection(table())).toBe(`${HEADING}\n\n${HEADER}\n|---|---|---|---|---|---|---|---|---|\n\n### 出典\n\n- なし\n`);
   });
