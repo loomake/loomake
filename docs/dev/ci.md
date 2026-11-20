@@ -25,6 +25,20 @@ gate ジョブは PR の段階（AGENTS.md 2 章の L1・L2・L3）を先に決�
 - L3（製品コードと Requirement の変更）：change が必須。`loomake-change: none` や change を特定できない PR は失敗する
 - L3 の例外「仕様適合の修正」：既存の Requirement どおりに直すだけのバグ修正は、ADR 0006 の 5 条件（既存 Requirement に書かれた振る舞い、対象の REQ ID を名前に入れた修正前失敗・修正後成功のテスト、`openspec/` を変えない、公開契約を変えない、PR 本文に印を書く）をすべて満たすときだけ、change なしで進められる。PR 本文には `loomake-change: none`・`loomake-route: spec-fix`・`loomake-req: REQ-xxx` を書く。独立 Opus レビューは 1 回で、`verify --done` は対象外。正本は ADR 0006 の「完成を早めるための規則変更」
   - CI 対応は REQ-343 を変更する通常 L3 change（Issue #427）で行い、[PR #436](https://github.com/loomake/loomake/pull/436) のマージから使える。以下の宣言と確認条件に従う
+- L3 の例外「リファクタ」：振る舞いを変えない整理は、利用者が 2026-11-20 に承認した 3 条件（`openspec/` を変えない、既存のテストファイルを変更・削除しない、独立レビュー 1 回）を満たすときだけ、change なしで進められる。PR 本文には `loomake-change: none` と `loomake-route: refactor` を書く。省けるのは change と `verify --done` だけで、品質コマンド・3 OS の CI・changeset の要否などの必須検査は省かない。仕様は monorepo の「リファクタの経路」（REQ-477、change accept-refactor-ci-route）
+
+### リファクタで CI が調べる条件
+
+`loomake-route: refactor` は、spec-fix と同じく L3 で `loomake-change: none` を明示したときだけ評価する。L2 では宣言があっても判定を変えない。gate は次の四つをすべて確認し、満たすときは change を指定せず品質コマンドを実行する。
+
+1. `loomake-route:` の行がすべて `refactor`（大文字小文字は区別しない）。`spec-fix` などほかの値と同時に名乗ると、どちらの経路でも受け付けない。
+2. PR の差分に `openspec/` 配下の変更がない。削除や名前の変更は、変更前後のパスも対象にする。
+3. 既存のテストファイルを変更・削除・改名していない。テストファイルは `tests/` と `packages/*/test/` の下のすべてのファイル（試験・補助・fixture・`tests/quarantine.json` などの一覧）と、ルートの `vitest.config.ts`。新しいファイルの追加はよい。範囲を広く取った理由は change の design.md にある。
+4. PR 本文の `## 証跡` の節に、状態が `実施済み` の `review:` 行が 1 つ以上ある。
+
+条件が足りなければ「L3 では change が必須です」に「リファクタとして受け付けません：」と不足理由をすべて添える。例えば、既存の試験を変えていれば「既存のテストファイルを変更・削除・改名しています（packages/core/test/spec.test.ts）」と表示する。
+
+機械の検査だけでリファクタの受け入れは決まらない。独立レビューは振る舞いと公開契約を変えていないこと、整理の前に今の振る舞いを新しいテストファイルで固定したこと、関数の書き方の規則（AGENTS.md の「プロジェクト固有の情報」）を確かめる。管理役は、そのレビューの重大がゼロであること、レビュー担当が実装担当と別のセッションであること、`head=` がマージする head と一致することを確かめてからマージする。既存のテストファイルに試験を足したいときは、新しいテストファイルに書くか、change を持つ通常の L3 で進める。
 
 ### 仕様適合の修正で CI が調べる条件
 
