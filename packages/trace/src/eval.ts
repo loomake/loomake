@@ -10,7 +10,7 @@ import { acquireEvalLock, appendQualityRows, assertEvalOwner, EVAL_LOCK, readQua
 import { buildQualityEvaluation, type EvaluationBasis, type EvaluationTarget, type QualityEvaluation } from './quality-model.js';
 import { nextQualityAttempt, runPairKey, sameEvaluationConditions, type FailedAttempt, type QualityFailure, type RequestEvent, type RequestState } from './quality-ledger.js';
 import { qualityChangesAllowed, qualityGit, qualityWorktreeClean } from './quality-worktree.js';
-import { clearQualityOutputs, collectQualityPayload, COVERAGE_REPORT, qualityCommands, qualityExecutionFailure,
+import { assertReportOutsideProtected, clearQualityOutputs, collectQualityPayload, COVERAGE_REPORT, qualityCommands, qualityExecutionFailure,
   qualityProducer, staticEvaluationObservations, testRunIncomplete } from './quality-execution.js';
 
 export type EvalOptions = {
@@ -70,6 +70,7 @@ function repairQualityIndex(lock: OwnedEvalLock): void {
 export async function runEval(options: EvalOptions): Promise<number> {
   const root = resolve(options.root), now = options.now ?? (() => new Date());
   const config = loadConfig(root);
+  assertReportOutsideProtected(config.tests.report);
   const loaded = readQualityFile({ root, gate: 'done', schema: (await loadQualitySchema()).qualitySchema });
   if (loaded.status !== 'loaded') throw new UsageError(loaded.status === 'error' ? loaded.error.message : 'quality.yaml がありません');
   const reader = createInputReader();

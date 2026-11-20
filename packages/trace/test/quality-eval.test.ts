@@ -93,6 +93,14 @@ describe('手動評価の実行と完了証拠', () => {
     }
     expect(f.read(QUALITY_FILES.history)).toBe(history); expect(existsSync(join(f.root, 'quality.yaml'))).toBe(true);
   });
+  it('[REQ-429][REQ-432] レポート先が帳簿や品質基準と重なる設定はロック前に拒否し、何も書かない', async () => {
+    const f = fixture(); expect(await f.evaluate()).toBe(0); const before = f.read(QUALITY_FILES.requests), attempts = f.storage().ledgers.attempts;
+    const config = JSON.parse(f.read('loomake.config.json')) as Record<string, unknown>;
+    writeFileSync(join(f.root, 'loomake.config.json'), JSON.stringify({ ...config, tests: { report: 'Reports/Quality/History.jsonl' } }));
+    git(f.root, 'commit', '-q', '-am', 'overlapping report');
+    await expect(f.evaluate()).rejects.toBeInstanceOf(UsageError);
+    expect(f.read(QUALITY_FILES.requests)).toBe(before); expect(f.storage().ledgers.attempts).toEqual(attempts); expect(existsSync(join(f.root, EVAL_LOCK))).toBe(false);
+  });
   it('[REQ-434] 汚れによる1と時間切れ・中断による3でも自分のロックを片付ける', async () => {
     const dirty = fixture(); writeFileSync(join(dirty.root, 'untracked'), 'dirty');
     expect(await dirty.evaluate()).toBe(1); expect(existsSync(join(dirty.root, EVAL_LOCK))).toBe(false);

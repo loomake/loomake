@@ -39,10 +39,13 @@ function overlapsProtected(report: string): boolean {
   return protectedFiles.some((file) => file === target || file.startsWith(`${target}/`) || target.startsWith(`${file}/`));
 }
 
+/** 設定の誤りとして、ロックを取る前に呼ぶ（design 手順 1）。 */
+export function assertReportOutsideProtected(report: string): void {
+  if (overlapsProtected(report)) throw new UsageError('テストのレポート先に品質基準・設定・評価の帳簿は指定できません');
+}
+
 export function clearQualityOutputs(root: string, report: string): void {
-  if (overlapsProtected(report)) {
-    throw new UsageError('テストのレポート先に品質基準・設定・評価の帳簿は指定できません');
-  }
+  assertReportOutsideProtected(report);
   for (const file of new Set([report, COVERAGE_REPORT])) {
     try { unlinkSync(outputPath(root, file)); }
     catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw new UsageError('前回の品質出力を消せません。出力先と権限を確認してください'); }
