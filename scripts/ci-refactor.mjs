@@ -11,7 +11,11 @@ const DELETABLE = /^packages\/[^/]+\/src\//;
 const ADDABLE = /^(?:packages\/[^/]+\/(?:src|test)\/|tests\/|docs\/|\.changeset\/)/;
 // 範囲の中でも変えない。試験が照合する正本、検査を左右する設定ファイル、パッケージの解決先
 const REFERENCE = /^docs\/guide\/3\.reference\//;
-const CONFIG_NAME = /^(?:(?:eslint|vitest|vite)\.config\..*|vitest\.workspace\..*|tsconfig.*\.json|package\.json|\.npmrc|\.pnpmfile\.cjs|\.gitattributes)$/i;
+const CONFIG_NAMES = [
+  String.raw`(?:eslint|vitest|vite)\.config\..*`, String.raw`vitest\.workspace\..*`, String.raw`tsconfig.*\.json`,
+  String.raw`package\.json`, String.raw`\.npmrc`, String.raw`\.pnpmfile\.cjs`, String.raw`\.gitattributes`,
+];
+const CONFIG_NAME = new RegExp(`^(?:${CONFIG_NAMES.join('|')})$`, 'i');
 const NODE_MODULES = /(?:^|\/)node_modules\//i;
 
 /** 経路の宣言のどれかが refactor ならリファクタの判定に進む。大文字小文字は区別しない */
@@ -68,8 +72,10 @@ function scopeProblems(entries) {
     + '（docs/guide/3.reference/・設定ファイル・node_modules/ は除く）。試験は新しいファイルとして足してください'];
 }
 
+const addsOutside = ({ status, paths }) => status === 'A' && !isAddablePath(paths[0]);
+
 function addedProblems(entries) {
-  const outside = entries.filter(({ status, paths }) => status === 'A' && !isAddablePath(paths[0])).map(({ paths }) => paths[0]);
+  const outside = entries.filter(addsOutside).map(({ paths }) => paths[0]);
   if (!outside.length) return [];
   return [`足してはいけない場所にファイルを足しています（${summarize(outside)}）。`
     + '足してよいのは packages/*/src/・packages/*/test/・tests/・docs/・.changeset/ の下です'
