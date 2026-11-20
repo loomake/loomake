@@ -111,6 +111,16 @@ it('[REQ-451] 早期の aborted の戻り値を置換する', () => withProject(
   expect(JSON.stringify(verified)).not.toContain(token);
 }));
 
+it('[REQ-451] 早期の aborted でも、秘密の形の change ID は戻り値の change に渡した値のまま残る', () => {
+  const id = 'sk-' + 'a'.repeat(20);
+  return withProject({ config: config({}), quality: `a: [\n${token}`, files: { [`openspec/changes/${id}/.keep`]: '' } }, root => {
+    const verified = runVerify({ root, changeId: id, gate: 'done', scope: 'ci', qualitySchema: { safeParse: () => ({ success: true, data: {} }) } as never });
+    expect(verified.run.status).toBe('aborted');
+    expect(verified.change).toBe(id);
+    expect(JSON.stringify(verified.run)).not.toContain(token);
+  });
+});
+
 it('[REQ-451] 整形した文字列を置換し、秘密のない文章は変えない', () => {
   const secret = assembleVerifyResult({ change: null, scope: 'local', checks: [{ id: 'x', result: 'FAIL', reason: `r ${token}`, evidence: [] }] });
   expect(formatVerifyResult(secret)).not.toContain(token);

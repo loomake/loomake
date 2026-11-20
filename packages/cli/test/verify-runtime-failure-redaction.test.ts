@@ -36,8 +36,9 @@ it('[REQ-451] --json の実行時の失敗は、標準出力が置換済みの a
 
 it('[REQ-451] --json の実行時の失敗でも、秘密の形の change ID は標準出力に残らない', () => withProject({}, async root => {
   const id = 'sk-' + 'a'.repeat(20);
-  const { code, stdout } = await run(root, 'verify', '--json', '--spec-only', '--change', id);
+  const { code, stdout, stderr } = await run(root, 'verify', '--json', '--spec-only', '--change', id);
   expect(code).toBe(3);
   expect(stdout).not.toContain(id);
+  expect(stderr).not.toContain(id);
   expect(JSON.parse(stdout).change).toBe('***');
 }));
