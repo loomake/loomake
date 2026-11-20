@@ -233,7 +233,7 @@ it('[REQ-396][REQ-397][REQ-398] tarballの実CLIが空Gitへ雛形と見本を�
       expect(init.stdout).toContain(`作成：${file}`);
     }
     expect(readFileSync(join(project, 'quality.yaml'), 'utf8')).toBe(readFileSync(join(kitTemplates, 'quality.yaml'), 'utf8'));
-    expect(readFileSync(join(project, 'quality.yaml'), 'utf8')).toContain('objectives: {}\nproduct: {}');
+    expect(readFileSync(join(project, 'quality.yaml'), 'utf8').replaceAll('\r\n', '\n')).toContain('objectives: {}\nproduct: {}');
     expect(readFileSync(join(project, 'quality.yaml'), 'utf8')).not.toContain('PQ-900');
     expect(init.stdout).toContain('品質目標未設定');
     const sample = readFileSync(join(project, samplePath), 'utf8');
