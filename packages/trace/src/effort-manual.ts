@@ -3,6 +3,7 @@ import { readTable, splitLines } from '@loomake/core';
 import type { EffortMinutes, ParseError, Table, TableRow } from '@loomake/core';
 import { CHANGE_ID } from '@loomake/kit';
 import { parseCost, parseDuration } from './effort-input.js';
+import { layoutFault, type LayoutFault } from './effort-layout.js';
 import type { ChangeRef, EffortObservation, ManualEffortRecord, ManualEstimate } from './effort-types.js';
 
 type Sink = (line: number, message: string) => void;
@@ -38,11 +39,15 @@ const sectionFault = (table: Table | null, columns: string[]): string | null => 
   if (new Set(names).size !== names.length) return 'の列が重複しています';
   return columns.every((column) => names.includes(column)) ? null : 'の必須の列が足りません';
 };
+const sectionIssue = (lines: string[], heading: string, table: Table | null, columns: string[]): LayoutFault | null => {
+  const fault = sectionFault(table, columns);
+  return fault ? { line: table?.line ?? 1, message: `「${heading}」${fault}` } : layoutFault(lines, heading);
+};
 function readSection(lines: string[], heading: string, columns: string[], sink: Sink): Table | null {
   const table = readTable(lines, heading);
-  const fault = sectionFault(table, columns);
-  if (fault) sink(table?.line ?? 1, `「${heading}」${fault}`);
-  return fault ? null : table;
+  const issue = sectionIssue(lines, heading, table, columns);
+  if (issue) sink(issue.line, issue.message);
+  return issue ? null : table;
 }
 const widthFault = (table: Table, row: TableRow): boolean => row.size !== table.header?.names.length;
 
