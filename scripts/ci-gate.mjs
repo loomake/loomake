@@ -206,7 +206,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   }
   // 変更行が属する節を見るため、変更前と変更後（HEAD）の spec.md を読む。
   // 変更前は、差分（base...HEAD）と同じ起点になるよう、ベースと HEAD の merge-base のファイルを読む
-  const { readSpec, sameBlob, headTree } = comparisonReaders(git, base);
+  const { readSpec, sameBlob, headTree, headTreeResult } = comparisonReaders(git, base);
   const metadata = archiveMetadataPaths(entries, sameBlob, headTree);
   const files = [...new Set(entries.flatMap((entry) => entry.paths))];
   let body = process.env.PR_BODY ?? '';
@@ -295,7 +295,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       const label = refactor ? 'リファクタ' : '仕様適合の修正';
       if (declaredChanges(body)?.length === 0 && declaredRoutes(body).length) {
         try {
-          spec = refactor ? refactorDecision({ body, entries, headTree }) : specFixDecision({ body, entries, sourceIds: mainSpecSourceIds(join('openspec', 'specs')), readFile: readSpec });
+          spec = refactor ? refactorDecision({ body, entries, headTreeResult }) : specFixDecision({ body, entries, sourceIds: mainSpecSourceIds(join('openspec', 'specs')), readFile: readSpec });
         } catch (error) {
           spec = { route: true, problems: [`主仕様を読めませんでした：${error.message}`] };
         }
