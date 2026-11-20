@@ -115,7 +115,7 @@ describe('効率の入力の読取り', () => {
   it('[REQ-467][REQ-468] trace record だけの証拠は、手書きの実績を重複扱いにせず、記録だけの行も作らない', () => {
     const root = temporary(); change(root, 'c1'); change(root, 'c2');
     put(root, '.loomake/evidence/c1/report.json', '{}'); put(root, '.loomake/evidence/c2/report.json', '{}');
-    put(root, 'docs/effort/a.md', MANUAL('c1').replace('| 1 時間 | 2 時間 |', '| 24 時間 | 58 時間 |') + '| 2026-11-06 | 10分 | 20分 | 0分 | 30分 | 0分 | 0分 | 1 | 2 | 不明 | |\n');
+    put(root, 'docs/effort/a.md', MANUAL('c1').replace('| 1 時間 | 2 時間 |', '| 24 時間 | 58 時間 |') + '| 2026-11-06 | 10分 | 20分 | 0分 | 30分 | 0分 | 0分 | 1 | 2 | | |\n');
     const rows = buildEfficiencyTable(readEffortInputs(root)).rows;
     expect(rows.map((r) => r.change)).toEqual(['c1']);
     expect(rows[0]?.actual).toMatchObject({ status: 'value', value: { totalMinutes: 60 } });
