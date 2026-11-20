@@ -9,7 +9,7 @@ import { acquireEvalLock, appendQualityRows, assertEvalOwner, EVAL_LOCK, readQua
   releaseOwnEvalLock, replaceQualityIndex, sameQualitySnapshot, type OwnedEvalLock } from './quality-files.js';
 import { buildQualityEvaluation, type EvaluationBasis, type EvaluationTarget, type QualityEvaluation } from './quality-model.js';
 import { nextQualityAttempt, runPairKey, sameEvaluationConditions, type FailedAttempt, type QualityFailure, type RequestEvent, type RequestState } from './quality-ledger.js';
-import { qualityGit, qualityWorktreeClean } from './quality-worktree.js';
+import { qualityChangesAllowed, qualityGit, qualityWorktreeClean } from './quality-worktree.js';
 import { clearQualityOutputs, collectQualityPayload, COVERAGE_REPORT, qualityCommands, qualityExecutionFailure,
   qualityProducer, staticEvaluationObservations, testRunIncomplete } from './quality-execution.js';
 
@@ -80,7 +80,7 @@ export async function runEval(options: EvalOptions): Promise<number> {
   if (!lock) { options.progress?.(`実行中の評価があります（${EVAL_LOCK}）。要求は受け付けていません。止まった実行の残りなら確かめてから消してください`); return 3; }
   try {
     recoverRequests(lock, target, basis, at);
-    repairQualityIndex(lock);
+    if (qualityChangesAllowed(lock, readQualitySnapshot(root))) repairQualityIndex(lock);
     const { ledgers } = readQualityStorage(root);
     const attempt = nextQualityAttempt(ledgers.history, ledgers.attempts, target.commit);
     const pair = { runId: lock.token.runId, attempt }, requestId = lock.token.requestId;

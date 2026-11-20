@@ -43,6 +43,14 @@ describe('手動評価の実行と完了証拠', () => {
       const attempts = JSON.parse(f.read(QUALITY_FILES.attempts).trim()) as { failure: string }; expect(attempts.failure).toBe('changed');
     }
   });
+  it('[REQ-429][REQ-433] 汚れた作業ツリーでは索引の復旧も書かずに1を返し、履歴と最新索引を変えない', async () => {
+    const f = fixture(); expect(await f.evaluate()).toBe(0);
+    rmSync(join(f.root, QUALITY_FILES.index)); writeFileSync(join(f.root, 'untracked'), 'dirty');
+    const history = f.read(QUALITY_FILES.history);
+    expect(await f.evaluate()).toBe(1);
+    expect(existsSync(join(f.root, QUALITY_FILES.index))).toBe(false); expect(f.read(QUALITY_FILES.history)).toBe(history);
+    expect(f.storage().ledgers.attempts.at(-1)?.failure).toBe('dirty');
+  });
   it('[REQ-429] 品質ファイルの不在・版・構文・内容不正は実行前に2相当で拒否する', async () => {
     for (const value of [null, 'version: 99\n', 'version: [', 'version: 2\nmodel: []\n']) {
       const f = fixture(); if (value === null) rmSync(join(f.root, 'quality.yaml')); else writeFileSync(join(f.root, 'quality.yaml'), value);
