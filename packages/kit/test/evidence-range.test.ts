@@ -112,6 +112,25 @@ it.each([false, true])('[REQ-473] graftsでも隠れた製品変更を原本で�
         expect(f.range()).toMatchObject({ allowed: false, reasons: expect.arrayContaining([added, target].map((commit) => expect.objectContaining({ code: 'ENTRY_PATH_NOT_ALLOWED', path: 'product.ts', commit }))) });
     } finally { vi.unstubAllEnvs(); }
 });
+it.each([true, false])('[REQ-473] submoduleのignore=allでもgitlinkの更新と追加を拒否する（.gitmodulesをコミット=%s）', (committed) => {
+    const f = fixture();
+    f.write('.gitmodules', ['sub', 'sub2'].map((name) => `[submodule "${name}"]\n\tpath = ${name}\n\turl = ./${name}\n\tignore = all\n`).join(''));
+    if (committed) f.git('add', '.gitmodules');
+    else f.write('.git/info/exclude', '.gitmodules\n');
+    const link = (name: string, oid: string) => f.git('update-index', '--add', '--cacheinfo', `160000,${oid},${name}`);
+    const commit = () => { f.git('commit', '-m', 'gitlink'); return f.git('rev-parse', 'HEAD'); };
+    link('sub', 'c'.repeat(40));
+    const source = commit();
+    link('sub', 'd'.repeat(40));
+    const updated = commit();
+    link('sub2', 'e'.repeat(40));
+    const added = commit();
+    const reasons = (commit: string, path: string, codes: string[]) => codes.map((code) => expect.objectContaining({ code, path, commit }));
+    expect(readEvidenceRange({ repository: f.root, source, target: added, changeId: 'sample' })).toMatchObject({ allowed: false, reasons: [
+        ...reasons(updated, 'sub', ['ENTRY_NOT_ADDED', 'ENTRY_MODE', 'ENTRY_PATH_NOT_ALLOWED']),
+        ...reasons(added, 'sub2', ['ENTRY_MODE', 'ENTRY_PATH_NOT_ALLOWED']),
+    ] });
+});
 it('[REQ-473] 共有予算と厳密なdecode、通常treeだけの照会', () => {
     const f = fixture();
     f.write('one', '1234');

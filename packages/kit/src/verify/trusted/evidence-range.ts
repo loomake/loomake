@@ -83,7 +83,7 @@ export function readEvidenceRange(options: EvidenceRangeOptions): EvidenceRange 
     const entries: EvidenceRangeEntry[] = [];
     const reasons: EvidenceRangeReason[] = [];
     for (const [commit, parent] of rows) {
-      r = git(repository, ['diff-tree', '-r', '-z', '--raw', '--no-renames', '--no-commit-id', '--full-index', parent, commit]);
+      r = git(repository, ['diff-tree', '--ignore-submodules=none', '-r', '-z', '--raw', '--no-renames', '--no-commit-id', '--full-index', parent, commit]);
       if (r.status !== 0) return denied('GIT_RANGE_UNREADABLE', 'コミットの差分を読めません');
       const classified = classifyEvidenceRange(commit, decode(r.stdout), changeId);
       entries.push(...classified.entries); reasons.push(...classified.reasons);
