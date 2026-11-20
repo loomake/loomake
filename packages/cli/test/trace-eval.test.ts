@@ -22,7 +22,7 @@ describe('trace evalの追加と既存契約', () => {
     expect(await run(root, 'trace', 'eval', '--help')).toMatchObject({ code: 0, out: expect.stringContaining('使い方: loomake trace eval') });
     expect(await run(root, 'trace', 'evl')).toMatchObject({ code: 2, err: expect.stringContaining('もしかして：eval') });
     for (const option of ['--x', '--change=x', '--scope=ci', '--json', 'extra']) expect(await run(root, 'trace', 'eval', option)).toMatchObject({ code: 2, err: expect.stringContaining('知らないオプション') });
-    expect(commandDefinition('trace').operations?.map((operation) => operation.name)).toEqual(['record', 'report', 'answer', 'approve', 'eval']);
+    expect(commandDefinition('trace').operations?.map((operation) => operation.name)).toEqual(['record', 'report', 'answer', 'approve', 'eval', 'reuse']);
     expect(optionSpec(traceOperation('eval') ?? commandDefinition('trace'))).toEqual({ values: [], flags: [] });
     const generated = renderCliReference(CLI_REFERENCE);
     expect(generated).toBe(readFileSync(join(root, 'docs/guide/3.reference/5.cli.md'), 'utf8'));
