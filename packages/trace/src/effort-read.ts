@@ -72,6 +72,9 @@ function readManual(reader: ByteInputReader, root: string): ManualEffortRecord[]
     .map((e) => parseManualEffort(posix.join(MANUAL_DIR, e.name), reader.readBytes(join(dir, e.name))));
 }
 
+/** trace record などの証拠だけで Effort の記録がない change は、効率の入力に含めない。 */
+const withEffortFiles = (changes: EffortChangeRecords[]) => changes.filter((c) => c.files.length > 0);
+
 function evidenceIds(reader: ByteInputReader, root: string): string[] {
   return reader.entries(join(root, EVIDENCE_DIR))
     .filter((e) => e.kind === 'directory' && e.name !== 'archive' && CHANGE_ID.test(e.name)).map((e) => e.name);
@@ -94,7 +97,7 @@ const idsToLocate = (changes: EffortChangeRecords[], manual: ManualEffortRecord[
 function gather(root: string): EffortInputs {
   const reader = createByteInputReader(DOCUMENT_LIMITS);
   const manual = readManual(reader, root);
-  const changes = evidenceIds(reader, root).map((id) => readChange(reader, root, id));
+  const changes = withEffortFiles(evidenceIds(reader, root).map((id) => readChange(reader, root, id)));
   const locations = locate(memoizeEntries(reader), resolve(root, loadConfig(root).openspecDir, 'changes'), idsToLocate(changes, manual));
   return { manual: manual.map((m) => relink(m, locations)), changes, locations };
 }
