@@ -34,6 +34,40 @@ NOT_APPLICABLE の理由・確認者、証跡適格性、個別条件は集約�
 
 W1 の A16 は固定 fixture で確認する。正式な要約の保存形式とは Issue #69 で再照合する。gate・eval・report への接続、W5 の実リリースの承認・署名・取得処理は、この関数の追加では実装していない。
 
+## 共通の秘密置換
+
+`maskSecrets(text: string): string`、`createDiagnosticRedactor(sink)`、`createPrivateKeyFilter(sink)`、`maskValue<T>(value: T): T` を公開する。runner の従来の公開元も同じ関数を使う。診断ストリームと秘密鍵フィルターは `write(text)` と `end()` を持ち、チャンクの境界をまたぐ秘密も処理する。
+
+置き換えるのは、既存の API トークン・Bearer トークン・秘密鍵などの既知の形だけである。任意のパスワードや個人情報を見分けられるとは保証しない。認証情報そのものを入力や記録へ含めない。
+
+`maskValue` は文字列の値と own key を置き換え、入力を変えずに深く複製する。受け付けるのは null・boolean・有限の number・string、穴のない通常の Array、通常の object と null prototype の object である。object の own enumerable な data property の undefined は保持し、欠落した optional field は補わない。負の0、列挙順、prototype の種類、own `__proto__` なども保つ。共有された子の値は、出現ごとに独立して複製する。
+
+root と Array 要素の undefined、非有限 number、bigint、function、symbol、class instance、Date・Map・Set・Proxy、getter・setter、symbol key、non-enumerable な object property、Array の穴や追加 property は UsageError になる。getter や `toJSON` は実行しない。循環と、置換後の key の衝突も拒否し、例外へ元の値や key を含めない。戻り値の型 T は構造を受け渡すためのもので、置換される文字列リテラルや key の同一性を保証しない。
+
+共通の置換関数は、下記の外部ツールの収集にも使う。verify・trace の保存・表示・診断への接続は、Issue #65 の後段 P3 に残している。
+
+## 外部ツールの出力の収集
+
+`collectToolOutput(request: CollectRequest): Collected` は gh・claude・codex・biome・playwright を対象に、`runExternal` を 1 回だけ呼ぶ。request には tool・command・args・正の有限数の timeoutMs を指定し、cwd・env・正の安全な整数の maxBuffer を任意で渡す。shell は使わず、明示した期限と既存の共有予算・中断状態を使う。install・auth・版の問い合わせは行わない。
+
+結果の outcome は `parsed`・`unreadable`・`not_found`・`spawn_error`・`limited` の 5 種類である。parsed と unreadable は実際の status と signal を exit に残す。非 0 やシグナル終了でも、payload が正しければ parsed になる。終了コードから合否や件数は作らない。gh の check 0 件で stdout が空なら unreadable で、空の checks や合格を補わない。
+
+引数は `ghPrChecksArgs(pr, { repo? })`、`biomeArgs('lint' | 'ci', paths)`、`playwrightTestArgs(files)` で生成できる。gh は読み取り専用の pr checks、Biome は JSON reporter と max-diagnostics none、Playwright は test と JSON reporter の args を返す。Biome の paths は 1 件以上、Playwright の files は 0 件以上を受け付ける。path は空や `-` 始まりや NUL を含むものを拒否する。各関数は新しい配列を返す。
+
+Claude と Codex の args は呼び出し側が組み立てる。help で `--`・コマンド名との衝突・sandbox の既定を確認できていないため、AI 用の引数生成関数と prompt の受理範囲は提供しない。command の解決も呼び出し側が行う。Windows では gh.exe、または process.execPath と JS の CLI のパスを渡す。npm の .cmd は対応しない。
+
+Playwright では子 env の複製から PLAYWRIGHT_JSON_OUTPUT_FILE・PLAYWRIGHT_JSON_OUTPUT_DIR・PLAYWRIGHT_JSON_OUTPUT_NAME だけを除く。呼び出し側の env と config の outputFile は変えない。config に outputFile があって stdout が空になれば unreadable になる。
+
+### 保存前の置換と保証の限界
+
+stdout はメモリ上で解析し、返す observation を maskValue で置換する。一時ファイルは作らない。stderr は全文を共通 redactor に通したあと、末尾の 4096 文字までを diagnostics に残し、サロゲートペアを分断しない。limited では stdout を捨て、maskValue が失敗すれば固定の reason で unreadable にする。reason と例外へ command・args・生の出力・cause は含めない。
+
+置換の保証は REQ-118・REQ-199 の既知の秘密の形に限る。ツール自身が書く session log・trace・attachment・outputFile・キャッシュ、OS のプロセス一覧から見える argv、未知の秘密は保証の対象外である。任意のパスワードや個人情報を自動で見分けるとは保証しない。
+
+Biome の findings が全件そろうとは保証しない。severity・verbose の絞り込みがあり、summary.diagnosticsNotPrinted は出力値をそのまま返す。GitHub Actions 上の ci mode の stdout が JSON だけになるか、JSON reporter に max-diagnostics が適用されるかは未確認である。JSON 以外が混ざれば unreadable になる。Claude json の実 fixture も未観測で、core の合成 fixture の限界を引き継ぐ。
+
+この API の追加で P3 や Issue #65 親全体の完成を意味しない。verify・trace への接続と後段の品質判定は別途行う。
+
 ## ライセンス
 
 MIT

@@ -73,6 +73,7 @@ describe.runIf(process.platform !== 'win32')('フック内の特殊ファイル�
     writeFileSync(join(dependencies, 'package.json'), '{"type":"module"}');
     for (const name of DEPENDENCIES) {
       compileTree(join(packages, name, 'src'), join(dependencies, name, 'src'), (entry, directory) => directory || entry.endsWith('.ts'));
+      if (name === 'trace') cpSync(join(packages, name, 'package.json'), join(dependencies, name, 'package.json'));
       // kit は src/ の 2 つ上にある supervisor/ と templates/ を実行時に読む
       for (const asset of ['supervisor', 'templates']) {
         const from = join(packages, name, asset);

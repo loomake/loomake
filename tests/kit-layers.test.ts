@@ -33,11 +33,11 @@ const read = (file: string) => readFileSync(file, 'utf8');
 describe('kit の中の依存の向き', () => {
   it('[REQ-207] 実行の基盤は runtime/ にあり、node:・@loomake/core・runtime/ だけを import する', () => {
     const runtime = filesIn(join(src, 'runtime'));
-    expect(runtime.map((f) => relative(src, f).split('\\').join('/')).sort()).toEqual(['runtime/change-files.ts', 'runtime/errors.ts', 'runtime/input.ts', 'runtime/process.ts']);
+    expect(runtime.map((f) => relative(src, f).split('\\').join('/')).sort()).toEqual(['runtime/change-files.ts', 'runtime/errors.ts', 'runtime/input.ts', 'runtime/private-key-stream.ts', 'runtime/process.ts', 'runtime/redact.ts']);
     for (const file of runtime) expect(forbiddenImports(file, read(file)), relative(src, file)).toEqual([]);
   });
 
-  it.each(['verify', 'init', 'doctor'])('[REQ-207] %s/ は、自分のディレクトリ・runtime/・verify/config.ts だけを import する', (feature) => {
+  it.each(['verify', 'init', 'doctor', 'collect'])('[REQ-207] %s/ は、自分のディレクトリ・runtime/・verify/config.ts だけを import する', (feature) => {
     const files = filesIn(join(src, feature));
     expect(files.length).toBeGreaterThan(0);
     for (const file of files) expect(forbiddenImports(file, read(file)), relative(src, file)).toEqual([]);

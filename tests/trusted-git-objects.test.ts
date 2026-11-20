@@ -1,10 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { appendFileSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { appendFileSync, mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { readGitDocuments } from '../packages/kit/src/verify/trusted/git-objects.js';
 import { DOCUMENT_LIMITS } from '../packages/kit/src/runtime/input.js';
+import { removeWithRetry } from './helpers/partition-fixture.js';
 
 const metadataProbe = vi.hoisted(() => ({
   calls: [] as { args: readonly string[]; maxBuffer: number | undefined }[],
@@ -26,7 +27,7 @@ vi.mock('node:child_process', async (original) => {
 afterEach(() => { metadataProbe.calls.length = 0; metadataProbe.shrink = null; });
 
 const roots: string[] = [];
-afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }); });
+afterEach(() => { for (const root of roots.splice(0)) removeWithRetry(root); });
 const fixture = () => {
   const root = mkdtempSync(join(tmpdir(), 'loomake-trusted-git-')); roots.push(root);
   const git = (...args: string[]) => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();

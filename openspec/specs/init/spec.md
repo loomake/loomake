@@ -208,7 +208,7 @@ Source: REQ-197
 - **THEN** Vitest と Jest の両方の設定例が表示される
 
 ### Requirement: 品質目標未設定の雛形の配置
-`loomake init`はプロジェクト直下にversion 2のスキーマで読める、品質目標未設定の`quality.yaml`を配置し、結果の一覧に含める SHALL。作成・上書きしたときは、完了ゲートの前に案件の品質の対象と合格に必要な証拠を設定するよう日本語で案内する SHALL。品質目標を`loomake.config.json`へ混ぜない MUST。既存ファイルの保護（REQ-020）をこの配置にも適用する MUST。
+`loomake init`はプロジェクト直下にversion 2のスキーマで読める、品質目標未設定の`quality.yaml`を配置し、結果の一覧に含める SHALL。作成・上書きしたときは、完了ゲートの前に案件の品質の対象と合格に必要な証拠を設定するよう日本語で案内する SHALL。品質目標を`loomake.config.json`へ混ぜない MUST。既存ファイルの保護（REQ-020）をこの配置にも適用する MUST。雛形には既存の証跡保管方針の既定値を明記する SHALL。
 
 Source: REQ-396
 
@@ -231,6 +231,11 @@ Source: REQ-396
 #### Scenario: 配布物を空のGitリポジトリへ導入する
 - **WHEN** tarballからインストールしたCLIで、空のGitリポジトリへinitを実行する
 - **THEN** 既存の配置物と`quality.yaml`が一覧に出て終了コード0となる。`--codex`と`--devcontainer`の有無による既存の配置条件は変わらない
+
+
+#### Scenario: 証跡保管方針の既定値
+- **WHEN** 新規のquality.yaml雛形を解析する
+- **THEN** evidenceのartifact_retentionは90d、long_term_storeはgithub-release、long_term_retentionは5y、accessはproject-members、delete_policyはowner-approvalで、品質の対象は未設定のままである
 
 ### Requirement: 自動実行されない4ジョブの見本の配置
 `loomake init`は`.github/loomake/workflow.example.yml`へgate・run・evaluate・proposeのreusable workflow呼出しを示す見本を配置し、結果の一覧に含める SHALL。ジョブ本体を複製せず、呼出し契約・参照先・固定refが未提供であることを明記する MUST。実行されるworkflowとして配置・有効化せず、4ジョブが稼働済みと案内しない MUST。既存ファイルの保護（REQ-020）をこの配置にも適用する MUST。

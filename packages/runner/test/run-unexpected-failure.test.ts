@@ -1,9 +1,9 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { main } from '../../cli/src/main.js';
 import { runRun } from '../src/run.js';
-import { CHANGE, makeRepo } from './helpers.js';
+import { CHANGE, makeRepo as originalMakeRepo } from './helpers.js';
 
 const fault = vi.hoisted(() => ({ enabled: false, value: undefined as unknown, finishFails: false }));
 vi.mock('../src/run/prompt.js', async (original) => {
@@ -22,6 +22,15 @@ vi.mock('../src/run/recorder.js', async (original) => {
   } };
 });
 afterEach(() => { fault.enabled = false; fault.finishFails = false; });
+
+let preparedRepo: ReturnType<typeof originalMakeRepo> | undefined;
+beforeEach(() => { preparedRepo = originalMakeRepo(); });
+function makeRepo() {
+  const repo = preparedRepo;
+  if (!repo) throw new Error('試験用のリポジトリが準備されていません');
+  preparedRepo = undefined;
+  return repo;
+}
 
 const token = 'ghp_' + 'x'.repeat(24);
 describe('run の未分類例外', () => {

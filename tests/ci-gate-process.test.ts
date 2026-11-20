@@ -1,8 +1,27 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { delimiter, dirname, join } from 'node:path';
+import { removeWithRetry } from './helpers/partition-fixture.js';
+
+let baselineDir: string | undefined;
+
+function copyFixture(from: string, to: string) {
+  mkdirSync(to, { recursive: true });
+  for (const entry of readdirSync(from, { withFileTypes: true })) {
+    const source = join(from, entry.name);
+    const destination = join(to, entry.name);
+    if (entry.isDirectory()) copyFixture(source, destination);
+    else {
+      copyFileSync(source, destination);
+      chmodSync(destination, statSync(source).mode);
+    }
+  }
+}
+
+beforeAll(() => { withProject(() => {}); });
+afterAll(() => { if (baselineDir) removeWithRetry(baselineDir); });
 
 // どのテストも git とゲートの子プロセスを何度も起動する。Windows の CI では 1 件で最大 5 秒ほどかかり、
 // 既定の 5000ms で時間切れすることがある（Issue #5）。Windows でだけ上限を延ばし、ほかの OS は既定のまま
@@ -23,6 +42,7 @@ function withProject(check: (project: {
   run: (branch: string, body?: string, statuses?: Record<string, number>, results?: Record<string, unknown>, env?: Record<string, string>) => { status: number | null; stdout: string; stderr: string; calls: string[][]; output: string };
 }) => void) {
   const dir = mkdtempSync(join(tmpdir(), 'loomake-ci-process-'));
+  const seeded = baselineDir !== undefined;
   const callsFile = join(dir, 'calls.jsonl');
   const outputFile = join(dir, 'github-output.txt');
   const git = (...args: string[]) => {
@@ -30,12 +50,14 @@ function withProject(check: (project: {
     expect(result.status, result.stderr).toBe(0);
   };
   try {
-    writeFileSync(join(dir, 'package.json'), '{"type":"module"}\n');
-    // verify の偽物。--change <id> の id か quality を鍵にする。change のゲートは --json で呼ばれ、2.0.0 の結果を標準出力に書く。
-    // 結果は CI_VERIFY_RESULTS の id の値で差し替えられる（既定は --done なら ci の PASS、--spec-only なら local の完了）
-    const cli = join(dir, 'packages', 'cli', 'dist', 'cli.js');
-    mkdirSync(dirname(cli), { recursive: true });
-    writeFileSync(cli, `import { appendFileSync } from 'node:fs';
+    if (seeded) copyFixture(baselineDir!, dir);
+    else {
+      writeFileSync(join(dir, 'package.json'), '{"type":"module"}\n');
+      // verify の偽物。--change <id> の id か quality を鍵にする。change のゲートは --json で呼ばれ、2.0.0 の結果を標準出力に書く。
+      // 結果は CI_VERIFY_RESULTS の id の値で差し替えられる（既定は --done なら ci の PASS、--spec-only なら local の完了）
+      const cli = join(dir, 'packages', 'cli', 'dist', 'cli.js');
+      mkdirSync(dirname(cli), { recursive: true });
+      writeFileSync(cli, `import { appendFileSync } from 'node:fs';
 const args = process.argv.slice(2);
 appendFileSync(process.env.CI_CALLS_FILE, JSON.stringify(args) + '\\n');
 const id = args.includes('--change') ? args[args.indexOf('--change') + 1] : 'quality';
@@ -49,26 +71,30 @@ if (args.includes('--json')) {
 }
 process.exit(JSON.parse(process.env.CI_STATUSES)[id] ?? 0);
 `);
-    // L1 の lint は loomake.config.json の commands.lint で偽物に差し替える
-    writeFileSync(join(dir, 'loomake.config.json'), JSON.stringify({ commands: { lint: 'node lint.js' } }) + '\n');
-    writeFileSync(join(dir, 'lint.js'), recorder('lint'));
-    // L1 の文書のリンクの試験は pnpm exec vitest で呼ぶので、PATH の先頭に偽の pnpm を置く
-    const bin = join(dir, 'bin');
-    mkdirSync(bin);
-    writeFileSync(join(bin, 'pnpm.js'), recorder('pnpm', 'doc-links'));
-    writeFileSync(join(bin, 'pnpm'), '#!/bin/sh\nexec node "$(dirname "$0")/pnpm.js" "$@"\n', { mode: 0o755 });
-    writeFileSync(join(bin, 'pnpm.cmd'), '@node "%~dp0pnpm.js" %*\r\n');
-    for (const id of ['c1', 'c2', 'setup-monorepo']) {
-      const change = join(dir, 'openspec', 'changes', id);
-      mkdirSync(change, { recursive: true });
-      writeFileSync(join(change, 'tasks.md'), '- [x] baseline\n');
+      // L1 の lint は loomake.config.json の commands.lint で偽物に差し替える
+      writeFileSync(join(dir, 'loomake.config.json'), JSON.stringify({ commands: { lint: 'node lint.js' } }) + '\n');
+      writeFileSync(join(dir, 'lint.js'), recorder('lint'));
+      // L1 の文書のリンクの試験は pnpm exec vitest で呼ぶので、PATH の先頭に偽の pnpm を置く
+      const bin = join(dir, 'bin');
+      mkdirSync(bin);
+      writeFileSync(join(bin, 'pnpm.js'), recorder('pnpm', 'doc-links'));
+      writeFileSync(join(bin, 'pnpm'), '#!/bin/sh\nexec node "$(dirname "$0")/pnpm.js" "$@"\n', { mode: 0o755 });
+      writeFileSync(join(bin, 'pnpm.cmd'), '@node "%~dp0pnpm.js" %*\r\n');
+      for (const id of ['c1', 'c2', 'setup-monorepo']) {
+        const change = join(dir, 'openspec', 'changes', id);
+        mkdirSync(change, { recursive: true });
+        writeFileSync(join(change, 'tasks.md'), '- [x] baseline\n');
+      }
+      git('init', '-q');
+      git('config', 'user.name', 'Loomake Test');
+      git('config', 'user.email', 'test@example.invalid');
+      git('add', '.');
+      git('commit', '-qm', 'baseline');
+      git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+      baselineDir = mkdtempSync(join(tmpdir(), 'loomake-ci-baseline-'));
+      copyFixture(dir, baselineDir);
     }
-    git('init', '-q');
-    git('config', 'user.name', 'Loomake Test');
-    git('config', 'user.email', 'test@example.invalid');
-    git('add', '.');
-    git('commit', '-qm', 'baseline');
-    git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+    const bin = join(dir, 'bin');
     const pathKey = Object.keys(process.env).find((key) => key.toUpperCase() === 'PATH') ?? 'PATH';
     check({
       dir,
@@ -106,7 +132,7 @@ process.exit(JSON.parse(process.env.CI_STATUSES)[id] ?? 0);
       },
     });
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    removeWithRetry(dir);
   }
 }
 

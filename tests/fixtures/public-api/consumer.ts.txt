@@ -134,3 +134,47 @@ export function consumeBodyRunner(config: ConstructorParameters<typeof TestRunne
   custom.extra = 'changed';
   return { runner, getTestFn, custom, literal, value };
 }
+
+// [REQ-462] 元bytesとOS不読の公開型。fixtureはコンパイルだけを行う。
+import { readInputBytes, InputReadFailure } from '@loomake/kit';
+const summaryRawBytes: Buffer = readInputBytes('report.json');
+const summaryInputFailure: UsageError = new InputReadFailure('読取り失敗');
+void [summaryRawBytes, summaryInputFailure];
+
+// [REQ-460][REQ-463] 新公開契約は旧Evidence/Report型の比較とは独立に利用する。
+import { loadSummarySchemas, type EvidenceSummary, type SummaryArtifact } from '@loomake/core';
+import { checkArtifactBody, artifactRetention, type ArtifactBodyCheck, type ArtifactRetentionResult } from '@loomake/kit';
+export type SummaryVersionContract = Assert<Equal<EvidenceSummary['summaryVersion'], 1>>;
+export type SummaryCiAttemptContract = Assert<Equal<NonNullable<EvidenceSummary['ci']>['runAttempt'], string>>;
+export type SummaryLocationAttemptContract = Assert<Equal<NonNullable<SummaryArtifact['location']>['runAttempt'], string>>;
+export function consumeSummaryArtifact(artifact: SummaryArtifact, bytes: Uint8Array) {
+  const checked: ArtifactBodyCheck = checkArtifactBody(artifact, bytes);
+  const retention: ArtifactRetentionResult = artifactRetention(artifact, '90d', new Date('2026-11-05T00:00:00Z'));
+  const schemas: ReturnType<typeof loadSummarySchemas> = loadSummarySchemas();
+  return { checked, retention, schemas };
+}
+
+// REQ-448・449: 配布された named export と中立型を消費する。
+import {
+  parseGhChecks, parseClaudeResult, parseCodexEvents, parseBiomeReport, parsePlaywrightReport,
+  type ToolName, type ToolObservation, type GhCheckBucket, type GhCheck, type AgentCause, type AgentResult,
+  type ToolFinding, type BiomeSummary, type PlaywrightTestCase, type PlaywrightError,
+} from '@loomake/core';
+import { collectToolOutput, ghPrChecksArgs, biomeArgs, playwrightTestArgs, type CollectRequest, type CollectExit, type Collected } from '@loomake/kit';
+export function consumeToolEvidence(request: CollectRequest, text: string): Collected {
+  const tool: ToolName = request.tool;
+  const observations: ParseResult<ToolObservation | null>[] = [
+    parseGhChecks('gh', text), parseClaudeResult('claude', text), parseCodexEvents('codex', text),
+    parseBiomeReport('biome', text), parsePlaywrightReport('playwright', text),
+  ];
+  const collected: Collected = collectToolOutput(request);
+  const exit: CollectExit | null = 'exit' in collected ? collected.exit : null;
+  const args: string[][] = [ghPrChecksArgs(1, { repo: 'owner/repo' }), biomeArgs('ci', ['src']), playwrightTestArgs([])];
+  void tool; void observations; void exit; void args;
+  return collected;
+}
+export type ToolEvidenceTypes = [GhCheckBucket, GhCheck, AgentCause, AgentResult, ToolFinding, BiomeSummary, PlaywrightTestCase, PlaywrightError];
+// @ts-expect-error REQ-448: requirementIds は公開しない。
+import { requirementIds as internalRequirementIds } from '@loomake/core';
+// @ts-expect-error REQ-448: errorLine は公開しない。
+import { errorLine as internalErrorLine } from '@loomake/core';

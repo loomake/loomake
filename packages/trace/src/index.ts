@@ -12,5 +12,11 @@ export { readDocuments, changedDocuments } from './documents.js';
 export { runAgreement } from './agreement.js';
 export type { AgreementOptions } from './agreement.js';
 
+export { summaryProblem } from './summary.js';
+export type { EvidenceSummary, SummaryArtifact, SummaryGap } from '@loomake/core';
+export { parseDuration, parseEffortOption, parseCost } from './effort-input.js';
+export { runEffortRecord } from './effort-record.js';
+export type { EffortRecordOptions } from './effort-record.js';
+
 export { runEval } from './eval.js';
 export type { EvalOptions } from './eval.js';
