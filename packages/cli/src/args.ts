@@ -70,6 +70,7 @@ const traceOperations = [
       { name: '--date', kind: 'value', label: '--date YYYY-MM-DD', description: '承認日。省くと今日の日付', required: '任意', defaultValue: '実行環境のローカル日付', choices: 'YYYY-MM-DDの実在する日' },
     ],
   },
+  { name: 'eval', usage: 'loomake trace eval', description: '既存の品質コマンドを手動で実行し、品質評価と要求・試行の履歴を保存する。', options: [] },
   {
     name: 'reuse', usage: 'loomake trace reuse --change <id> --summary <path> --anchor <file> [--scope local|ci] [--json]',
     description: '証跡だけの差分なら、外部の信頼値で照合した要約を品質コマンドなしで再利用して .loomake/evidence/<change-id>/reuse/ に記録する。混在や環境の違いは再検証し、要約の改変は人へ差し戻す。',
@@ -112,7 +113,7 @@ export const CLI_COMMANDS = [
   {
     name: 'trace', usage: traceOperations.map((operation) => operation.usage).join('\n       '),
     summary: '証拠を記録し（record）、リリースレポートを出す（report）。確認事項の回答（answer）と仮定の承認（approve）を書く。証跡だけの差分なら要約を再利用する（reuse）',
-    description: 'record・report・answer・approve・reuseの操作を指定する。', options: [], operations: traceOperations,
+    description: 'record・report・answer・approve・eval・reuseの操作を指定する。', options: [], operations: traceOperations,
   },
   {
     name: 'run', usage: 'loomake run --change <id> [--engine claude-code] [--dry-run] [--skip-permissions]',

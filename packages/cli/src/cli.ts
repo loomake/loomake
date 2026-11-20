@@ -6,7 +6,7 @@ import { main } from './main.js';
 // 2 回目は記録を待たず終了する。初回HUPから100ms未満の同HUPだけは重複として数えない（REQ-427）。
 // ほかのサブコマンドでは、ふだんどおり止まる
 const controller = new AbortController();
-if (process.argv[2] === 'run') {
+if (process.argv[2] === 'run' || (process.argv[2] === 'trace' && process.argv[3] === 'eval')) {
   const exitCodes = { SIGINT: 130, SIGTERM: 143, SIGHUP: 129 } as const;
   let firstSignal: 'SIGINT' | 'SIGTERM' | 'SIGHUP' | undefined;
   let firstAt = 0n;

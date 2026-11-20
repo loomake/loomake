@@ -545,6 +545,133 @@
       "to": "使い方: loomake trace record --change <id> [--scope local|ci] [--effort <時間> [--decisions <n>] [--attempts <n>] [--cost <区分:値,...>] [--note <文>]]"
     },
     {
+      "change": "trace-static-evaluation",
+      "requirement": "REQ-437",
+      "approval": "Q70-08（管理役採用、ADR0006）",
+      "reason": "既存操作とオプションを保持しevalを最後へ追加する",
+      "argv": [
+        [
+          "trace",
+          "--help"
+        ],
+        [
+          "trace",
+          "-h"
+        ],
+        [
+          "trace",
+          "constructor",
+          "--help"
+        ],
+        [
+          "trace",
+          "toString",
+          "--help"
+        ],
+        [
+          "trace",
+          "nothing",
+          "--help"
+        ]
+      ],
+      "stream": "stdout",
+      "from": "  --date YYYY-MM-DD   承認日。省くと今日の日付",
+      "to": "  --date YYYY-MM-DD   承認日。省くと今日の日付\n\n使い方: loomake trace eval\n既存の品質コマンドを手動で実行し、品質評価と要求・試行の履歴を保存する。",
+      "entry": 0
+    },
+    {
+      "change": "trace-static-evaluation",
+      "requirement": "REQ-437",
+      "approval": "Q70-08（管理役採用、ADR0006）",
+      "reason": "既存操作とオプションを保持しevalを最後へ追加する",
+      "argv": [
+        [
+          "trace"
+        ],
+        [
+          "trace",
+          "recrd"
+        ],
+        [
+          "trace",
+          "record"
+        ],
+        [
+          "trace",
+          "report"
+        ],
+        [
+          "trace",
+          "report",
+          "--change",
+          "x",
+          "--format",
+          "html"
+        ],
+        [
+          "trace",
+          "report",
+          "--change",
+          "x",
+          "--format",
+          "xml"
+        ],
+        [
+          "trace",
+          "answer"
+        ],
+        [
+          "trace",
+          "answer",
+          "--change",
+          "x",
+          "--question",
+          "Q-01"
+        ],
+        [
+          "trace",
+          "answer",
+          "--change",
+          "x",
+          "--question",
+          "Q-01",
+          "--by",
+          "x"
+        ],
+        [
+          "trace",
+          "approve"
+        ],
+        [
+          "trace",
+          "approve",
+          "--change",
+          "x",
+          "--assumption",
+          "A-01"
+        ]
+      ],
+      "stream": "stderr",
+      "from": "       loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]",
+      "to": "       loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]\n       loomake trace eval",
+      "entry": 1
+    },
+    {
+      "change": "trace-static-evaluation",
+      "requirement": "REQ-437",
+      "approval": "Q70-08（管理役採用、ADR0006）",
+      "reason": "既存操作とオプションを保持しevalを最後へ追加する",
+      "argv": [
+        [
+          "trace"
+        ]
+      ],
+      "stream": "stderr",
+      "from": "loomake trace: record・report・answer・approve のどれかを指定してください",
+      "to": "loomake trace: record・report・answer・approve・eval のどれかを指定してください",
+      "entry": 0
+    },
+    {
       "change": "evidence-only-reuse",
       "requirement": "REQ-476",
       "approval": "Q-08（ADR 0006、管理役採用、2026-11-06 JST）",
@@ -616,8 +743,8 @@
           "A-01"
         ]
       ],
-      "from": "       loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]",
-      "to": "       loomake trace approve --change <id> --assumption <A-ID> --by <承認者> [--date YYYY-MM-DD]\n       loomake trace reuse --change <id> --summary <path> --anchor <file> [--scope local|ci] [--json]",
+      "from": "       loomake trace eval",
+      "to": "       loomake trace eval\n       loomake trace reuse --change <id> --summary <path> --anchor <file> [--scope local|ci] [--json]",
       "stream": "stderr",
       "entry": 1
     },
@@ -651,8 +778,8 @@
           "--help"
         ]
       ],
-      "from": "  --date YYYY-MM-DD   承認日。省くと今日の日付",
-      "to": "  --date YYYY-MM-DD   承認日。省くと今日の日付\n\n使い方: loomake trace reuse --change <id> --summary <path> --anchor <file> [--scope local|ci] [--json]\n証跡だけの差分なら、外部の信頼値で照合した要約を品質コマンドなしで再利用して .loomake/evidence/<change-id>/reuse/ に記録する。混在や環境の違いは再検証し、要約の改変は人へ差し戻す。\n\nオプション:\n  --change <id>       対象の change\n  --summary <path>    target時点の要約のrepo相対パス（.loomake/evidence/<id>/<日時>-<12桁>.json）\n  --anchor <file>     repo外で凍結した信頼値JSON。真正性は確かめない\n  --scope local|ci    再検証するときのverifyの範囲\n  --json              結果のJSONだけを標準出力へ出す",
+      "from": "既存の品質コマンドを手動で実行し、品質評価と要求・試行の履歴を保存する。",
+      "to": "既存の品質コマンドを手動で実行し、品質評価と要求・試行の履歴を保存する。\n\n使い方: loomake trace reuse --change <id> --summary <path> --anchor <file> [--scope local|ci] [--json]\n証跡だけの差分なら、外部の信頼値で照合した要約を品質コマンドなしで再利用して .loomake/evidence/<change-id>/reuse/ に記録する。混在や環境の違いは再検証し、要約の改変は人へ差し戻す。\n\nオプション:\n  --change <id>       対象の change\n  --summary <path>    target時点の要約のrepo相対パス（.loomake/evidence/<id>/<日時>-<12桁>.json）\n  --anchor <file>     repo外で凍結した信頼値JSON。真正性は確かめない\n  --scope local|ci    再検証するときのverifyの範囲\n  --json              結果のJSONだけを標準出力へ出す",
       "stream": "stdout",
       "entry": 0
     },
@@ -683,8 +810,8 @@
           "trace"
         ]
       ],
-      "from": "loomake trace: record・report・answer・approve のどれかを指定してください",
-      "to": "loomake trace: record・report・answer・approve・reuse のどれかを指定してください",
+      "from": "loomake trace: record・report・answer・approve・eval のどれかを指定してください",
+      "to": "loomake trace: record・report・answer・approve・eval・reuse のどれかを指定してください",
       "stream": "stderr",
       "entry": 0
     }

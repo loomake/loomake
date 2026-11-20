@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { CHANGE_ID, RuntimeFailure, UsageError, maskValue, formatVerifyResult, loadVerifyQualitySchema, runDoctor, runInit, runVerify, verifyAbortedResult, verifyExitCode } from '@loomake/kit';
 import { runRun } from '@loomake/runner';
-import { parseCost, runReuse, runEffortRecord, runAgreement, runRecord, runReport } from '@loomake/trace';
+import { parseCost, runReuse, runEffortRecord, runAgreement, runEval, runRecord, runReport } from '@loomake/trace';
 import { COMMANDS, HELP, SCOPES, USAGE, commandDefinition, commandHelp, didYouMean, isHelp, isVersion, optionSpec, parseOptions, traceOperation, type Command } from './args.js';
 
 export type Io = {
@@ -143,10 +143,14 @@ async function verify(args: string[], io: Io): Promise<number> {
 async function trace(args: string[], io: Io): Promise<number> {
   const [sub, ...rest] = args;
   const subs = commandDefinition('trace').operations?.map((operation) => operation.name) ?? [];
+  if (sub === 'eval') {
+    parseOptions(rest, optionSpec(traceOperation('eval') ?? commandDefinition('trace')));
+    return runEval({ root: io.cwd, stdout: io.stdout, progress: io.stderr, signal: io.signal });
+  }
   if (sub === 'reuse') return reuse(rest, io);
   if (sub === 'answer' || sub === 'approve') return agreement(sub, rest, io);
   if (sub !== 'record' && sub !== 'report') {
-    throw new UsageError(sub ? `知らないサブコマンドです：${sub}${didYouMean(sub, subs)}` : 'record・report・answer・approve・reuse のどれかを指定してください');
+    throw new UsageError(sub ? `知らないサブコマンドです：${sub}${didYouMean(sub, subs)}` : 'record・report・answer・approve・eval・reuse のどれかを指定してください');
   }
   let values: Map<string, string>;
   try { values = parseOptions(rest, optionSpec(traceOperation(sub) ?? commandDefinition('trace'))).values; }
