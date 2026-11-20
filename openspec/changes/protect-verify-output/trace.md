@@ -45,3 +45,5 @@
 REQ-452（trace record の文書・git・dirty 一覧・保存前の最後の検査）、REQ-453 と REQ-070 の MODIFIED（report・旧 Evidence）は P3b に残す。親 #65 はこの change では閉じない。
 
 UsageError と RuntimeFailure 以外の例外は、cli がそのまま投げ直す。Node の未捕捉エラー表示（message と stack）は置換していない。P3a では直さず、残る経路として P3b 以降で扱う。
+
+quality.yaml の構文エラーでは、yaml ライブラリが 80 桁で先に切った文脈行にトークンの一部が残ることがある。置換は切られた後の文字列にかかるため、P3a では直さず、残る経路として扱う。
