@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isRefactorRoute, isTestScopePath, refactorDecision } from '../scripts/ci-refactor.mjs';
+import { isDeletablePath, isEditablePath, isRefactorRoute, refactorDecision } from '../scripts/ci-refactor.mjs';
 
 type Entry = { status: string; modes: [string, string]; paths: string[] };
 const entry = (status: string, ...paths: string[]): Entry => ({ status, modes: ['100644', '100644'], paths });
@@ -7,7 +7,8 @@ const review = 'review: 実施済み round=1 by=opus session=00000000-0000-4000-
 const evidence = (line = review) => `## 証跡\n\n\`\`\`text\nimplement: 実施済み by=claude\n${line}\n\`\`\`\n`;
 const body = `loomake-change: none\nloomake-route: refactor\n\n${evidence()}`;
 const src = entry('M', 'packages/kit/src/a.ts');
-const decide = (entries: Entry[], text = body) => refactorDecision({ body: text, entries });
+const tree = ['packages/kit/src/a.ts', 'docs/a.md'];
+const decide = (entries: Entry[], text = body, headTree: () => string[] | undefined = () => [...tree, ...entries.flatMap((e) => e.paths)]) => refactorDecision({ body: text, entries, headTree });
 const reasons = (entries: Entry[], text = body) => decide(entries, text).problems.join(' ');
 
 describe('リファクタの経路の宣言', () => {
@@ -46,29 +47,81 @@ describe('リファクタの経路の差分の条件', () => {
     entry('M', 'packages/kit/test/fixtures/x.json'),
     entry('M', 'tests/quarantine.json'),
     entry('M', 'vitest.config.ts'),
-  ])('[REQ-477] 既存のテストファイルの変更・削除・改名を拒む（%j）', (change) => {
+    entry('M', 'scripts/lib/test-partition.mjs'),
+    entry('M', 'package.json'),
+    entry('M', 'loomake.config.json'),
+    entry('M', 'scripts/ci-quarantine.mjs'),
+    entry('M', 'eslint.config.js'),
+    entry('M', 'tsconfig.base.json'),
+    entry('M', 'packages/kit/tsconfig.json'),
+    entry('M', 'packages/kit/package.json'),
+    entry('M', '.github/workflows/ci.yml'),
+    entry('M', 'AGENTS.md'),
+    entry('M', 'packages/kit/templates/AGENTS.md'),
+    entry('D', 'docs/a.md'),
+    entry('D', 'scripts/x.mjs'),
+    entry('R100', 'packages/kit/src/a.ts', 'scripts/a.mjs'),
+    entry('R100', 'scripts/a.mjs', 'packages/kit/src/a.ts'),
+    entry('R100', 'docs/a.md', 'packages/kit/test/a.md'),
+  ])('[REQ-477] 範囲の外の既存のファイルの変更・削除・改名を拒む（%j）', (change) => {
     const text = reasons([src, change]);
-    expect(text).toContain('既存のテストファイル');
+    expect(text).toContain('変えてはいけない既存のファイル');
     expect(text).toContain(change.paths[0]);
   });
   it.each([
     entry('A', 'tests/a-pin.test.ts'),
     entry('A', 'packages/kit/test/fixtures/new.json'),
-    entry('R100', 'packages/kit/src/old.ts', 'packages/kit/test/moved.ts'),
-  ])('[REQ-477] テストファイルの追加は受け付ける（%j）', (change) => {
+    entry('A', '.changeset/x.md'),
+    entry('A', 'docs/worklog/2026-11-20/x.md'),
+    entry('M', 'docs/worklog/2026-11-20.md'),
+    entry('T', 'packages/kit/src/link.ts'),
+    entry('D', 'packages/kit/src/b.ts'),
+    entry('R100', 'packages/kit/src/c.ts', 'packages/kit/src/c/index.ts'),
+    entry('R100', 'packages/kit/src/c.ts', 'packages/core/src/c.ts'),
+    entry('R100', 'docs/a.md', 'docs/b/a.md'),
+  ])('[REQ-477] 追加と、範囲の中の変更・削除・改名は受け付ける（%j）', (change) => {
     expect(decide([src, change]).problems).toEqual([]);
   });
   it.each([
-    ['tests/a.test.ts', true],
-    ['tests/fixtures/x/y.md', true],
-    ['packages/runner/test/helpers.ts', true],
-    ['vitest.config.ts', true],
-    ['packages/kit/src/a.ts', false],
-    ['packages/kit/templates/test/a.ts', false],
-    ['scripts/a.test.ts', false],
-    ['docs/tests/a.md', false],
-  ])('[REQ-477] テストファイルの範囲（%s）', (path, expected) => {
-    expect(isTestScopePath(path)).toBe(expected);
+    ['packages/kit/src/a.ts', true],
+    ['packages/kit/src/deep/b.ts', true],
+    ['docs/dev/ci.md', true],
+    ['packages/kit/test/a.test.ts', false],
+    ['packages/kit/templates/a.md', false],
+    ['packages/src/a.ts', false],
+    ['tests/a.test.ts', false],
+    ['scripts/lib/test-partition.mjs', false],
+    ['package.json', false],
+    ['AGENTS.md', false],
+    ['openspec/specs/x/spec.md', false],
+  ])('[REQ-477] 変更してよい既存のファイルの範囲（%s）', (path, expected) => {
+    expect(isEditablePath(path)).toBe(expected);
+  });
+  it.each([
+    ['packages/kit/src/a.ts', true],
+    ['docs/a.md', false],
+    ['packages/kit/test/a.test.ts', false],
+  ])('[REQ-477] 削除してよい既存のファイルの範囲（%s）', (path, expected) => {
+    expect(isDeletablePath(path)).toBe(expected);
+  });
+  it.each([
+    ['packages/kit/src/A.ts', ['packages/kit/src/a.ts', 'packages/kit/src/A.ts']],
+    ['packages/kit/SRC/b.ts', ['packages/kit/src/a.ts', 'packages/kit/SRC/b.ts', 'packages/kit/src/b.ts']],
+  ])('[REQ-477] HEADの別のパスと大文字小文字だけが違うパスの追加を拒む（%s）', (path, headTree) => {
+    const text = decide([src, entry('A', path)], body, () => headTree).problems.join(' ');
+    expect(text).toContain('大文字小文字だけが違う');
+    expect(text).toContain(path);
+  });
+  it('[REQ-477] 改名の後のパスも大文字小文字の重なりを調べる', () => {
+    const headTree = ['packages/kit/src/a.ts', 'packages/kit/src/B.ts', 'packages/kit/src/b.ts'];
+    const text = decide([src, entry('R100', 'packages/kit/src/c.ts', 'packages/kit/src/B.ts')], body, () => headTree).problems.join(' ');
+    expect(text).toContain('packages/kit/src/B.ts');
+  });
+  it('[REQ-477] HEADのツリーを読めなければ、追加のある差分を拒む', () => {
+    expect(decide([src, entry('A', 'tests/a-pin.test.ts')], body, () => undefined).problems.join(' ')).toContain('HEAD のツリー');
+  });
+  it('[REQ-477] HEADのツリーを読めなくても、追加と改名のない差分は判定できる', () => {
+    expect(decide([src], body, () => undefined).problems).toEqual([]);
   });
 });
 

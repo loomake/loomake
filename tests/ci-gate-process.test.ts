@@ -933,10 +933,22 @@ describe('仕様適合の修正の gate 子プロセス', () => {
 
 const refactorReview = 'review: 実施済み round=1 by=opus session=00000000-0000-4000-8000-000000000000 model=m head=0000000000000000000000000000000000000000 critical=0 minor=0 info=0';
 const refactorBody = `loomake-change: none\nloomake-route: refactor\n\n## 証跡\n\n\`\`\`text\n${refactorReview}\n\`\`\`\n`;
-function prepareRefactor(project: Parameters<Parameters<typeof withProject>[0]>[0]) {
-  project.commitFiles({ 'packages/kit/test/a.test.ts': "it('[REQ-010] a', () => {});\n", 'packages/kit/test/fixtures/x.json': '{}\n' });
+type RefactorProject = Parameters<Parameters<typeof withProject>[0]>[0];
+function prepareRefactor(project: RefactorProject) {
+  project.commitFiles({
+    'packages/kit/test/a.test.ts': "it('[REQ-010] a', () => {});\n", 'packages/kit/test/fixtures/x.json': '{}\n',
+    'packages/kit/src/b.ts': 'b\n', 'packages/kit/src/c.ts': 'c\n', 'docs/a.md': 'a\n', 'scripts/x.mjs': 'x\n',
+    'scripts/lib/test-partition.mjs': 'partition\n', '.github/workflows/ci.yml': 'name: ci\n',
+  });
   project.git('update-ref', 'refs/remotes/origin/main', 'HEAD');
 }
+const moveFile = (from: string, to: string) => (project: RefactorProject) => {
+  mkdirSync(dirname(join(project.dir, to)), { recursive: true });
+  project.git('mv', from, to);
+  project.git('commit', '-qm', 'mv');
+};
+const removeFile = (path: string) => (project: RefactorProject) => { project.git('rm', '-q', path); project.git('commit', '-qm', 'rm'); };
+const changeFile = (path: string, text = 'changed\n') => (project: RefactorProject) => project.commitFiles({ [path]: text });
 
 describe('リファクタの経路の gate 子プロセス', () => {
   it('[REQ-477][REQ-343] 条件がそろうL3では品質コマンドだけを実行する', () => {
@@ -960,11 +972,18 @@ describe('リファクタの経路の gate 子プロセス', () => {
     });
   });
   it.each([
-    ['変更', (project: Parameters<Parameters<typeof withProject>[0]>[0]) => project.commitFiles({ 'packages/kit/test/a.test.ts': 'changed\n' }), 'packages/kit/test/a.test.ts'],
-    ['fixtureの変更', (project: Parameters<Parameters<typeof withProject>[0]>[0]) => project.commitFiles({ 'packages/kit/test/fixtures/x.json': '[]\n' }), 'packages/kit/test/fixtures/x.json'],
-    ['削除', (project: Parameters<Parameters<typeof withProject>[0]>[0]) => { project.git('rm', '-q', 'packages/kit/test/a.test.ts'); project.git('commit', '-qm', 'rm'); }, 'packages/kit/test/a.test.ts'],
-    ['改名', (project: Parameters<Parameters<typeof withProject>[0]>[0]) => { project.git('mv', 'packages/kit/test/a.test.ts', 'packages/kit/test/b.test.ts'); project.git('commit', '-qm', 'mv'); }, 'packages/kit/test/a.test.ts'],
-  ])('[REQ-477] 既存のテストファイルの%sを理由とパスを示して拒む', (_name, touch, path) => {
+    ['テストの変更', changeFile('packages/kit/test/a.test.ts'), 'packages/kit/test/a.test.ts'],
+    ['fixtureの変更', changeFile('packages/kit/test/fixtures/x.json', '[]\n'), 'packages/kit/test/fixtures/x.json'],
+    ['テストの削除', removeFile('packages/kit/test/a.test.ts'), 'packages/kit/test/a.test.ts'],
+    ['テストの改名', moveFile('packages/kit/test/a.test.ts', 'packages/kit/test/b.test.ts'), 'packages/kit/test/a.test.ts'],
+    ['試験の分け方の変更', changeFile('scripts/lib/test-partition.mjs'), 'scripts/lib/test-partition.mjs'],
+    ['package.jsonの変更', changeFile('package.json', '{"type":"module","scripts":{}}\n'), 'package.json'],
+    ['loomake.config.jsonの変更', changeFile('loomake.config.json', JSON.stringify({ commands: { lint: 'node lint.js', test: 'true' } }) + '\n'), 'loomake.config.json'],
+    ['CIの設定の変更', changeFile('.github/workflows/ci.yml', 'name: changed\n'), '.github/workflows/ci.yml'],
+    ['docsの削除', removeFile('docs/a.md'), 'docs/a.md'],
+    ['scriptsの削除', removeFile('scripts/x.mjs'), 'scripts/x.mjs'],
+    ['srcの外への改名', moveFile('packages/kit/src/b.ts', 'scripts/b.mjs'), 'packages/kit/src/b.ts'],
+  ])('[REQ-477] 範囲の外の既存のファイル（%s）を理由とパスを示して拒む', (_name, touch, path) => {
     withProject((project) => {
       prepareRefactor(project);
       project.commitFiles({ 'packages/kit/src/a.ts': 'changed\n' });
@@ -974,7 +993,34 @@ describe('リファクタの経路の gate 子プロセス', () => {
       expect(result.calls).toEqual([]);
       expect(result.stderr).toContain('L3 では change が必須です');
       expect(result.stderr).toContain('リファクタとして受け付けません');
-      expect(result.stderr).toContain(`既存のテストファイルを変更・削除・改名しています（${path}`);
+      expect(result.stderr).toContain('変えてはいけない既存のファイル');
+      expect(result.stderr).toContain(path);
+    });
+  });
+  it('[REQ-477] srcの中でファイルを分け、新しいファイルを足すリファクタを受け付ける', () => {
+    withProject((project) => {
+      prepareRefactor(project);
+      project.commitFiles({ 'packages/kit/src/a.ts': 'changed\n', '.changeset/x.md': 'x\n', 'docs/worklog/2026-11-20/x.md': 'x\n', 'docs/a.md': 'changed\n' });
+      removeFile('packages/kit/src/b.ts')(project);
+      moveFile('packages/kit/src/c.ts', 'packages/kit/src/c/index.ts')(project);
+      const result = project.run('refactor-x', refactorBody);
+      expect(result.status, result.stderr).toBe(0);
+      expect(result.calls).toEqual([['verify']]);
+    });
+  });
+  it('[REQ-477] HEADの別のパスと大文字小文字だけが違うパスの追加を拒む', () => {
+    withProject((project) => {
+      prepareRefactor(project);
+      project.commitFiles({ 'packages/kit/src/a.ts': 'changed\n' });
+      const blob = spawnSync('git', ['hash-object', '-w', '--stdin'], { cwd: project.dir, encoding: 'utf8', input: 'twin\n' });
+      expect(blob.status, blob.stderr).toBe(0);
+      project.git('update-index', '--add', '--cacheinfo', `100644,${blob.stdout.trim()},packages/kit/src/B.ts`);
+      project.git('commit', '-qm', 'case twin');
+      const result = project.run('refactor-x', refactorBody);
+      expect(result.status).toBe(1);
+      expect(result.calls).toEqual([]);
+      expect(result.stderr).toContain('大文字小文字だけが違う');
+      expect(result.stderr).toContain('packages/kit/src/B.ts');
     });
   });
   it('[REQ-477] openspecを変えると理由を示して拒む', () => {
