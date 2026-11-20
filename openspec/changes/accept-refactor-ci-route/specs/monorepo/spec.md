@@ -1,11 +1,12 @@
 ## ADDED Requirements
 
 ### Requirement: リファクタの経路
-CI の完了ゲートは、L3 で PR 本文に `loomake-change: none` と `loomake-route: refactor` の行があるとき、振る舞いを変えないリファクタとして次の条件をすべて確かめる MUST。満たせば change を指定せずに品質コマンドを実行し、その終了コードで終わる。
+CI の完了ゲートは、L3 で PR 本文に `loomake-change: none` と `loomake-route: refactor` の行があるとき、次の条件をすべて確かめる MUST。満たせば change なしで品質コマンドを実行し、その終了コードで終わる。
 
 - `loomake-route:` の行がすべて `refactor`（大文字小文字は区別しない）
 - 差分に `openspec/` の下の変更がない（名前の変更は前後のパスを見る）
-- 既存のテストファイルを変更・削除・改名していない。テストファイルは `tests/` と `packages/*/test/` の下の全ファイルと `vitest.config.ts`。追加はよい
+- 既存のファイルの変更は `packages/*/src/` と `docs/` の下だけ（削除は `packages/*/src/` の下だけ、改名は前後とも範囲の下）
+- 追加したパスが、HEAD のツリーの別のパスと大文字小文字だけ違わない（ツリーを読めなければ満たさない）
 - 本文の `## 証跡` に `review: 実施済み` の行がある
 
 足りなければ、change が必須だという案内に不足する条件をすべて添え、`verify` を実行せずに失敗する SHALL。
@@ -16,13 +17,25 @@ Source: REQ-477
 - **WHEN** `packages/kit/src/a.ts` を変え、本文に `loomake-change: none`・`loomake-route: refactor` の行と、`review: 実施済み` の行を含む `## 証跡` がある PR で CI が動く
 - **THEN** `--change` なしで品質コマンドだけが実行され、ジョブはその終了コードで終わる
 
-#### Scenario: テストファイルを足す
-- **WHEN** 「リファクタを受け付ける」と同じ PR で、新しい `packages/kit/test/a-pin.test.ts` も足している
+#### Scenario: 新しいファイルを足す
+- **WHEN** 「リファクタを受け付ける」と同じ PR で、新しい `packages/kit/test/a-pin.test.ts`・`.changeset/x.md`・`docs/worklog/2026-11-20/x.md` も足している
 - **THEN** リファクタとして受け付ける
 
-#### Scenario: 既存のテストファイルを変えた
-- **WHEN** 「リファクタを受け付ける」と同じ PR で、base にある `tests/a.test.ts` か `packages/kit/test/fixtures/x.json` を変更・削除・改名している
-- **THEN** change が必須だという案内に、既存のテストファイルを変えたという理由とそのパスが添えられ、`verify` を実行せずにジョブが失敗する
+#### Scenario: src の中でファイルを分ける
+- **WHEN** 「リファクタを受け付ける」と同じ PR で、`packages/kit/src/b.ts` を削除し、`packages/kit/src/c.ts` を `packages/kit/src/c/index.ts` に改名している
+- **THEN** リファクタとして受け付ける
+
+#### Scenario: 範囲の外の既存のファイルを変えた
+- **WHEN** 「リファクタを受け付ける」と同じ PR で、base にある `tests/a.test.ts`・`packages/kit/test/fixtures/x.json`・`scripts/lib/test-partition.mjs`・`package.json`・`loomake.config.json`・`.github/workflows/ci.yml` のどれかを変更している
+- **THEN** change が必須だという案内に、変えてはいけない既存のファイルを変えたという理由とそのパスが添えられ、`verify` を実行せずにジョブが失敗する
+
+#### Scenario: 範囲の外で削除・改名した
+- **WHEN** 「リファクタを受け付ける」と同じ PR で、base にある `docs/a.md` か `scripts/x.mjs` を削除している、または `packages/kit/test/a.test.ts` を `packages/kit/test/b.test.ts` に、`packages/kit/src/a.ts` を `scripts/a.mjs` に改名している
+- **THEN** change が必須だという案内に、変えてはいけない既存のファイルを変えたという理由とそのパスが添えられ、ジョブが失敗する
+
+#### Scenario: 大文字小文字だけが違うパスを足した
+- **WHEN** 「リファクタを受け付ける」と同じ PR で、HEAD のツリーに `packages/kit/src/a.ts` があるのに `packages/kit/src/A.ts` を足している
+- **THEN** change が必須だという案内に、大文字小文字だけが違うパスを足したという理由とそのパスが添えられ、ジョブが失敗する
 
 #### Scenario: openspec を変えた
 - **WHEN** 「リファクタを受け付ける」と同じ PR で、`openspec/changes/c1/tasks.md` も変えている

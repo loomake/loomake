@@ -18,6 +18,14 @@
 ## 4. 統合の確認
 
 - [x] 4.1 lint・型・全試験・REQ 重複検査を通し、作業記録を残す（REQ-477、REQ-343）
-- [x] 4.2 `pnpm -s verify --change accept-refactor-ci-route --done --scope local` を通す（REQ-477、REQ-343） <!-- loomake:gate=done -->
+- [x] 4.2 PR の scope ci の完了ゲート（`pnpm -s verify --change accept-refactor-ci-route --done`）を通す（REQ-477、REQ-343） <!-- loomake:gate=done -->
+
+## 5. 独立レビューの指摘への対応
+
+- [x] 5.1 許可リスト方式と大文字小文字の条件を差分仕様・design・trace に反映し、仕様ゲートを通す（REQ-477）
+- [ ] 5.2 範囲の外の既存のファイルと、大文字小文字だけが違う追加を拒む試験を足し、RED を確認する（REQ-477）
+- [ ] 5.3 判定を許可リスト方式に変え、大文字小文字の判定を gate につなぎ、試験を通す（REQ-477）
+- [ ] 5.4 長い行の関数を名前を付けた小さな関数に分ける（振る舞いは変えない）（REQ-477）
+- [ ] 5.5 `docs/dev/ci.md`・`AGENTS.md`・PR テンプレート・delivery スキルを新しい条件に合わせ、作業記録を残す（REQ-477）
 
 最終の合格は PR の scope ci 完了ゲート・必須 CI・3 OS・独立レビューで確かめる。
