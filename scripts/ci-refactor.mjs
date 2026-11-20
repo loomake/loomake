@@ -17,6 +17,8 @@ const CONFIG_NAMES = [
 ];
 const CONFIG_NAME = new RegExp(`^(?:${CONFIG_NAMES.join('|')})$`, 'i');
 const NODE_MODULES = /(?:^|\/)node_modules(?:\/|$)/i;
+// シンボリックリンクの mode。リンク先の差し替えで依存の解決先を変えられるので、場所を問わず扱わない
+const SYMLINK = '120000';
 
 /** 経路の宣言のどれかが refactor ならリファクタの判定に進む。大文字小文字は区別しない */
 export const isRefactorRoute = (routes) => routes.some((value) => value.toLowerCase() === ROUTE);
@@ -86,8 +88,7 @@ function addedProblems(entries) {
     + '（docs/guide/3.reference/・設定ファイル・node_modules は除く）'];
 }
 
-// 変更後の mode がシンボリックリンク（120000）のエントリ。削除は変更後がないので含まない
-const SYMLINK = '120000';
+// 変更後の mode がシンボリックリンクのエントリ。削除は変更後がないので含まない
 const makesSymlink = ({ modes }) => modes[1] === SYMLINK;
 
 function symlinkProblems(entries) {
