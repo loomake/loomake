@@ -4,3 +4,14 @@
 2. **verify**：仕様ゲート（`--spec-only`）は通過した。gate 関連の 4 ファイル（ci-gate-process・ci-spec-fix・ci-refactor・ci-gate-contract）の 188 件、文書リンクの試験 47 件、lint、typecheck、REQ 重複検査はすべて成功した。全試験は 3,964 件のうち 3,954 件が成功、2 件が失敗、8 件が既存の保留だった。失敗した 2 件は今回触っていない packages/cli（REQ-050、3 秒以内の性能）と packages/runner（REQ-182、フックの期限）の時間の試験で、開発機の過負荷（load 40〜50）による時間切れと見ている。管理役の指示で全体の再実行と `verify --done` は止め、全体の確認は CI に任せる。その後、負荷が下がってから完了ゲートを 1 回実行した。不合格は tasks.md の未チェック（4.1・4.2）と、packages/kit/test/verify-archive.test.ts の 5 件の時間切れ（5 秒）だけだった。verify-archive.test.ts を単独で回すと 27 件すべて成功した。PR #471 の CI の gate でも、tasks.md 以外の項目（lint・typecheck・全試験・要件ごとのテスト）はすべて PASS だったので、4.1・4.2 をチェックし、CI の gate で完了ゲートを確かめる。
 3. **確認事項・仮定**：trace.md に非ブロッキングの確認事項を 3 つ置いた。Q-01 はテストファイルの範囲、Q-02 は独立レビューの証跡を `review: 実施済み` の行だけで判定し、重大ゼロ・担当の独立・head の一致は管理役が確かめること、Q-03 は経路を L3 かつ `loomake-change: none` のときだけ評価すること。仮定はない。
 4. **次にやること**：push と PR の作成（GitHub の認証が切れていれば利用者の再ログインを待つ）。CI の成功を確かめ、管理役の順番で `verify --done` を通して 4.1・4.2 をチェックする。PR #469 がこの経路を使うには、既存のテストファイルに足した試験を新しいテストファイルへ移し、本文に `loomake-change: none` と `loomake-route: refactor`、`## 証跡` に `review: 実施済み` の行を書き、AGENTS.md の変更を外す。
+
+## PR #471 のレビューへの対応
+
+1. **やったこと**：Claude Opus 5.5 の独立レビュー（1 回目、HEAD cdbb2f92）で、重大 1・軽微 2・参考の指摘を受けた。tasks 5.1〜5.5 で次のように直した。
+   - S-1（重大）：既存のファイルの判定を、禁止リストから許可リストに変えた。変更は `packages/*/src/` と `docs/` の下だけ、削除は `packages/*/src/` の下だけ、改名は前後とも範囲の下のときだけ認める。追加は `openspec/` の下を除いてどこでもよい。`scripts/lib/test-partition.mjs`・`package.json`・`loomake.config.json`・`.github/workflows/ci.yml` の変更と、範囲の外での削除・改名を拒む試験を足した。仕様は 2e7b8a00、RED の試験は bd0fe50d、実装は be1e517d。
+   - M-1（軽微）：足したパスが HEAD のツリーの別のパスと大文字小文字だけ違えば拒む。判定には `scripts/ci-tier.mjs` の `caseTwins`（REQ-281）を使い、ツリーを読めなければ拒む。コミットは S-1 と同じ。
+   - M-2（軽微）：tasks 4.2 を「PR の scope ci の完了ゲートを通す」に直した（2e7b8a00）。4.2 の根拠は、cdbb2f92 での CI の gate の成功（https://github.com/loomake/loomake/actions/runs/44708002769）。手元の完了ゲートで出た verify-archive.test.ts の 5 件の時間切れは、開発機の過負荷によるもので、このファイルだけを回すと 27 件すべて通る。
+   - 参考：`ci-refactor.mjs` の長い行を名前を付けた小さな関数に分けた（7ad5042e、振る舞いは変えない）。`docs/dev/ci.md` には、試験を弱める変更を L2 の PR に分ける抜け道は機械では防げず、独立レビューで確かめることを書いた。`AGENTS.md` には、整理の前に振る舞いを固定するテストは書いた時点で通ってよいことを書いた。catch の文言「主仕様を読めませんでした」は、仕様に文言の定めがないのでそのままにした。
+2. **verify**：仕様ゲート（`--spec-only`）は通過した。`tests/ci-refactor.test.ts` と `tests/ci-gate-process.test.ts` の 187 件と、変えたファイルの lint が通った。管理役の指示で、手元の完了ゲートと全試験は実行していない。
+3. **確認事項・仮定**：trace.md の Q-01 を、許可リストか禁止リストかの選択に書き直した（おすすめは許可リスト、非ブロッキング）。PR #469 の差分は、足した試験を新しいテストファイルへ移し、AGENTS.md の変更を外せば、`packages/core/src/` の変更と追加だけになるので、この条件を通る。
+4. **次にやること**：push して CI を確かめ、PR 本文の証跡の head を更新する。そのあと再レビューを待つ。
