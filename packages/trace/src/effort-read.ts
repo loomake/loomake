@@ -88,12 +88,14 @@ function relink(record: ManualEffortRecord, locations: Record<string, EffortLoca
   return { ...record, change: { status: 'unmapped', reason: 'change が見つからないか、archive で一意に決まりません' } };
 }
 
+const idsToLocate = (changes: EffortChangeRecords[], manual: ManualEffortRecord[]): string[] =>
+  [...new Set([...changes.map((c) => c.change), ...manual.flatMap((m) => (m.change.status === 'single' ? [m.change.id] : []))])].sort();
+
 function gather(root: string): EffortInputs {
   const reader = createByteInputReader(DOCUMENT_LIMITS);
   const manual = readManual(reader, root);
   const changes = evidenceIds(reader, root).map((id) => readChange(reader, root, id));
-  const ids = [...new Set([...changes.map((c) => c.change), ...manual.flatMap((m) => (m.change.status === 'single' ? [m.change.id] : []))])].sort();
-  const locations = locate(memoizeEntries(reader), resolve(root, loadConfig(root).openspecDir, 'changes'), ids);
+  const locations = locate(memoizeEntries(reader), resolve(root, loadConfig(root).openspecDir, 'changes'), idsToLocate(changes, manual));
   return { manual: manual.map((m) => relink(m, locations)), changes, locations };
 }
 

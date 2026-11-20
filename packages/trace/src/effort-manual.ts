@@ -82,9 +82,11 @@ function estimateFault(row: TableRow, table: Table, min: number | null, max: num
   if (!row.cells['根拠']) return '事前の推定の根拠がありません';
   return realDate(row.cells['推定した日'] ?? '') ? null : '事前の推定の日が日付ではありません';
 }
+const estimateTimes = (row: TableRow): [number | null, number | null] =>
+  [manualDuration(row.cells['最小'] ?? ''), manualDuration(row.cells['最大'] ?? '')];
+
 function estimateRow(table: Table, row: TableRow, sink: Sink): ManualEstimate {
-  const min = manualDuration(row.cells['最小'] ?? '');
-  const max = manualDuration(row.cells['最大'] ?? '');
+  const [min, max] = estimateTimes(row);
   const fault = estimateFault(row, table, min, max);
   if (fault === null) return { minMinutes: min as number, maxMinutes: max as number, line: row.line };
   sink(row.line, fault);
@@ -158,7 +160,10 @@ function unreadable(path: string, sha256: string): ManualEffortRecord {
 export function parseManualEffort(path: string, bytes: Uint8Array): ManualEffortRecord {
   const sha256 = createHash('sha256').update(bytes).digest('hex');
   const lines = decode(bytes);
-  if (lines === null) return unreadable(path, sha256);
+  return lines === null ? unreadable(path, sha256) : parseLines(path, sha256, lines);
+}
+
+function parseLines(path: string, sha256: string, lines: string[]): ManualEffortRecord {
   const problems: ParseError[] = [];
   const sink: Sink = (line, message) => { problems.push({ file: path, line, message }); };
   const basics = readBasics(lines, sink);

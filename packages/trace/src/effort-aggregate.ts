@@ -45,6 +45,10 @@ export function actualOf(list: EffortObservation[]): EfficiencyValue<EfficiencyA
   const sum = safeSum(totals.every((t) => t !== undefined) ? totals : list.map(entryKnown));
   if (sum === null) return missing(OVERFLOW);
   if (totals.some((t) => t === undefined)) return { status: 'partial', known: { totalMinutes: sum }, reason: '一部の記録は区分の一部だけで、内訳不明です' };
+  return wholeActual(list, sum);
+}
+
+function wholeActual(list: EffortObservation[], sum: number): EfficiencyValue<EfficiencyActual> {
   const minutes = breakdown(list);
   return { status: 'value', value: { totalMinutes: sum, ...(minutes ? { minutes } : {}) } };
 }

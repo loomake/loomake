@@ -12,9 +12,12 @@ const byCode = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
 /** 実績の入口。使えない理由があれば list の代わりに blocked を返す */
 type Entries = { list: EffortObservation[] } | { blocked: string };
 
+const ownObservations = (manual: ManualEffortRecord['actuals'] | undefined): EffortObservation[] =>
+  manual && Array.isArray(manual) ? manual : [];
+
 function entriesOf(records: ManualEffortRecord[], json: EffortChangeRecords | undefined): Entries {
   const manual = records.at(0)?.actuals;
-  const own = manual && Array.isArray(manual) ? manual : [];
+  const own = ownObservations(manual);
   if (records.length > 1) return { blocked: MULTIPLE };
   if (manual && !Array.isArray(manual)) return { blocked: manual.invalid };
   if (own.length > 0 && json) return { blocked: DUPLICATE };
@@ -64,10 +67,14 @@ function rowOf(records: ManualEffortRecord[], json: EffortChangeRecords | undefi
 
 const SUFFIX = { missing: '（change が見つかりません）', ambiguous: '（change があいまいです）', active: '', archived: '' } as const;
 
-function manualRows(inputs: EffortInputs): { claimed: Set<string>; rows: EfficiencyRow[] } {
+function groupByChange(manual: ManualEffortRecord[]): Map<string, ManualEffortRecord[]> {
   const groups = new Map<string, ManualEffortRecord[]>();
-  const mapped = inputs.manual.filter((r) => r.change.status === 'single');
-  for (const r of mapped) groups.set((r.change as { id: string }).id, [...(groups.get((r.change as { id: string }).id) ?? []), r]);
+  for (const r of manual) if (r.change.status === 'single') groups.set(r.change.id, [...(groups.get(r.change.id) ?? []), r]);
+  return groups;
+}
+
+function manualRows(inputs: EffortInputs): { claimed: Set<string>; rows: EfficiencyRow[] } {
+  const groups = groupByChange(inputs.manual);
   const single = [...groups.entries()].map(([id, records]) => rowOf(records, inputs.changes.find((c) => c.change === id), id));
   const unmapped = inputs.manual.filter((r) => r.change.status === 'unmapped').map((r) => rowOf([r], undefined, `未対応：${r.path}（${(r.change as { reason: string }).reason}）`));
   return { claimed: new Set(groups.keys()), rows: [...single, ...unmapped] };
