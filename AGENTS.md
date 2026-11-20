@@ -28,7 +28,7 @@
 
 L3 の例外として、既存の Requirement どおりに直すだけのバグ修正は、5 つの条件をすべて満たすときに限り change なしの「仕様適合の修正」で進められる（PR 本文に `loomake-change: none`・`loomake-route: spec-fix`・`loomake-req: REQ-xxx` を書く）。この場合は Opus 設計を省き、独立 Opus レビューは 1 回、完了は品質コマンドと 3 OS の CI、REQ テストの失敗から成功への証拠、レビューの重大ゼロで判断する（`verify --done` は対象外）。仕様が曖昧なときや仕様にない振る舞いを決めるときは使えない。条件と手続きは [ADR 0006](docs/adr/0006-standing-approval-for-autonomous-delivery.md) の「完成を早めるための規則変更」と `docs/dev/ci.md` に従う。CI は [PR #436](https://github.com/loomake/loomake/pull/436) のマージからこの経路を受け付ける。
 
-L3 のもう一つの例外として、振る舞いを変えないリファクタは、利用者が 2026-11-20 に承認した 3 つの条件（`openspec/` を変えない、既存のテストファイルを変更・削除しない、独立レビュー 1 回）をすべて満たすときに限り、change なしで進められる（PR 本文に `loomake-change: none`・`loomake-route: refactor` を書く）。省けるのは change と `verify --done` だけで、品質コマンドと 3 OS の CI、changeset の要否などの必須検査は省かない。整理の前に今の振る舞いを固定するテストは、新しいテストファイルに書く。このテストは今の振る舞いを確かめるものなので、書いた時点で通ってよい。失敗するテストから始めるのは、振る舞いを足すときと変えるときに限る。既存のファイルを変えてよい範囲と CI が調べる条件は `docs/dev/ci.md` の「リファクタで CI が調べる条件」に従う。CI は change accept-refactor-ci-route の PR のマージからこの経路を受け付ける。
+L3 のもう一つの例外として、振る舞いを変えないリファクタは、利用者が 2026-11-20 に承認した 3 つの条件（`openspec/` を変えない、既存のテストファイルを変更・削除しない、独立レビュー 1 回）をすべて満たすときに限り、change なしで進められる（PR 本文に `loomake-change: none`・`loomake-route: refactor` を書く）。省けるのは change と `verify --done` だけで、品質コマンドと 3 OS の CI、changeset の要否などの必須検査は省かない。整理の前に今の振る舞いを固定するテストは、新しいテストファイルに書く。このテストは今の振る舞いを確かめるものなので、書いた時点で通ってよい。失敗するテストから始めるのは、振る舞いを足すときと変えるときに限る。ファイルを変えてよい範囲・足してよい範囲と、CI が調べる条件は `docs/dev/ci.md` の「リファクタで CI が調べる条件」に従う。CI は change accept-refactor-ci-route の PR のマージからこの経路を受け付ける。
 
 どの段階でも、流れは次のとおり。
 
