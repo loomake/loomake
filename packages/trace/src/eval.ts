@@ -7,8 +7,8 @@ import { createInputReader, loadConfig, readQualityFile, runVerify, sha256Hex, R
   type QualityCommandOutcome, type StaticMetricsReceipt } from '@loomake/kit';
 import { acquireEvalLock, appendQualityRows, assertEvalOwner, EVAL_LOCK, readQualitySnapshot, readQualityStorage,
   releaseOwnEvalLock, replaceQualityIndex, sameQualitySnapshot, type OwnedEvalLock } from './quality-files.js';
-import { buildQualityEvaluation, type EvaluationBasis, type EvaluationTarget } from './quality-model.js';
-import { nextQualityAttempt, runPairKey, sameEvaluationConditions, type FailedAttempt, type QualityFailure, type RequestEvent } from './quality-ledger.js';
+import { buildQualityEvaluation, type EvaluationBasis, type EvaluationTarget, type QualityEvaluation } from './quality-model.js';
+import { nextQualityAttempt, runPairKey, sameEvaluationConditions, type FailedAttempt, type QualityFailure, type RequestEvent, type RequestState } from './quality-ledger.js';
 import { qualityGit, qualityWorktreeClean } from './quality-worktree.js';
 import { clearQualityOutputs, collectQualityPayload, COVERAGE_REPORT, qualityCommands, qualityExecutionFailure,
   qualityProducer, staticEvaluationObservations, testRunIncomplete } from './quality-execution.js';
@@ -23,6 +23,12 @@ export type EvalOptions = {
 function withLedgerWrite<T>(lock: OwnedEvalLock, action: () => T): T { assertEvalOwner(lock); return action(); }
 function writeEvents(lock: OwnedEvalLock, rows: RequestEvent[]): void {
   if (rows.length) withLedgerWrite(lock, () => appendQualityRows(lock, 'requests', rows));
+}
+
+/** A same-condition success appended before a crash still resolves the pending request (REQ-440). */
+function laterSuccess(history: readonly QualityEvaluation[], state: RequestState): QualityEvaluation | undefined {
+  const after = (row: QualityEvaluation) => state.started ? row.attempt > state.started.attempt : row.evaluatedAt > state.accepted.at;
+  return history.find((row) => sameEvaluationConditions(state.accepted, row) && after(row));
 }
 
 function recoverRequests(lock: OwnedEvalLock, target: EvaluationTarget, basis: EvaluationBasis, at: string): void {
@@ -44,8 +50,10 @@ function recoverRequests(lock: OwnedEvalLock, target: EvaluationTarget, basis: E
       events.push({ ...base, event: 'abandoned', phase: 'running', detectedBy: lock.token.requestId });
     } else if (state.state === 'waiting') events.push({ ...base, event: 'abandoned', phase: 'waiting', detectedBy: lock.token.requestId });
     else if (state.state !== 'reevaluation-pending') continue;
-    if (!sameEvaluationConditions(state.accepted, { target, basis })) events.push({ ...base, event: 'unrecoverable',
-      reason: state.accepted.target.commit !== target.commit ? 'head-changed' : 'basis-changed' });
+    if (sameEvaluationConditions(state.accepted, { target, basis })) continue;
+    const later = laterSuccess(ledgers.history, state);
+    if (later) events.push({ ...base, event: 'reevaluated', runId: later.runId, attempt: later.attempt });
+    else events.push({ ...base, event: 'unrecoverable', reason: state.accepted.target.commit !== target.commit ? 'head-changed' : 'basis-changed' });
   }
   writeEvents(lock, events);
   const storage = readQualityStorage(lock.root);

@@ -21,7 +21,7 @@ requests.jsonlは要求イベント、attempts.jsonlは開始後の失敗、hist
 1. 既存loadConfig・品質読取り・安全入力を使いconfig/quality.yamlと保存先/lockの種類を検査。不正は2。途中のリンク・特殊ファイルにも入らない。
 2. UUIDのrunId/requestIdで実行権を取る。EEXISTは未受付3で、既存lockの内容/mtimeと全台帳を保つ。時刻/PIDで自動削除せず日本語で手動確認を案内する。
 3. 台帳の改行/JSON/構造/一意性と索引の由来を先に検査。既知の文字列欄は変換せず文字列型を検査し、未知の追加欄は保持する。不正は何も書かず2、自tokenだけ片付ける。出どころ不明・読めない索引は上書きしない。
-4. 自attempt採番前に残存要求を回収する。startedに対応するhistoryがあればevaluatedだけ補う。同組のattemptがあればrequestId/対象/基準の一致を先に確かめ、分類/日時/bytesを保持してabandoned(running)だけ補う。両方未記録だけcrashed（endedAt:null、detectedAt:現在）を追記する。acceptedだけならabandoned(waiting)。再評価待ちの対象/基準が現在と違えばunrecoverable。欠落/古い索引は末尾から復旧して評価を続ける。
+4. 自attempt採番前に残存要求を回収する。startedに対応するhistoryがあればevaluatedだけ補う。同組のattemptがあればrequestId/対象/基準の一致を先に確かめ、分類/日時/bytesを保持してabandoned(running)だけ補う。両方未記録だけcrashed（endedAt:null、detectedAt:現在）を追記する。acceptedだけならabandoned(waiting)。再評価待ちの対象/基準が現在と違うとき、同条件で後の成功がhistoryにあれば（startedがあればそのattemptより後、なければ受付より後の評価時刻）その組へのreevaluatedを補い、なければunrecoverable。欠落/古い索引は末尾から復旧して評価を続ける。
 5. 自attemptを採番しaccepted/startedを1回の追記・fsyncで保存する。失敗は自分の末尾だけ戻して2。
 6. 下記の作業ツリー検査で汚れならdirty/failedを記録して1。
 7. 前のtest report/固定coverage-summaryを消す。開始時刻を取りrunVerify({root,progress,onCommand})を一度だけ実行し終了時刻を取る。await setImmediate()で溜まった信号を処理する。実行順・期限・予算の分岐を複製しない。

@@ -5,7 +5,7 @@ import { RuntimeFailure, UsageError, sha256Hex } from '@loomake/kit';
 import { EVAL_LOCK, QUALITY_FILES } from '../src/quality-files.js';
 import { requestEventProblem } from '../src/quality-ledger.js';
 import { fixture, git } from './quality-eval-fixtures.js';
-import { at, evaluation, uuid, lines } from './quality-test-fixtures.js';
+import { accepted, at, event, evaluation, failed, started, uuid, lines } from './quality-test-fixtures.js';
 
 vi.setConfig({ testTimeout: 15_000 });
 function seed(f: ReturnType<typeof fixture>, kind: 'started' | 'attempt' | 'history' | 'accepted' = 'started', otherTarget = false) {
@@ -57,6 +57,21 @@ describe('単一実行者の要求回収と原本保持', () => {
       const old = f.storage().ledgers.states.get(uuid(1)); expect(old?.state).toBe('unrecoverable'); expect(old?.last).toMatchObject({ event: 'unrecoverable', reason: 'head-changed' });
       expect(f.storage().ledgers.attempts).toHaveLength(kind === 'started' ? 1 : 0);
     }
+  });
+  it('[REQ-440] 後成功の履歴追記後に停止しHEADが変わっても、再評価待ちは同条件の後成功を参照して解消する', async () => {
+    const f = fixture(); const commit = git(f.root, 'rev-parse', 'HEAD'), qualitySha256 = sha256Hex(f.read('quality.yaml'));
+    const cond = { target: { commit }, basis: { qualitySha256 } };
+    const requests = [{ ...accepted(1), ...cond }, started(1), event('failed', 1), { ...accepted(2), ...cond }, started(2)];
+    const failure = { ...failed(1), ...cond }, later = evaluation(2);
+    later.target.commit = commit; later.basis.qualitySha256 = qualitySha256;
+    mkdirSync(join(f.root, 'reports/quality'), { recursive: true });
+    writeFileSync(join(f.root, QUALITY_FILES.requests), lines(requests)); writeFileSync(join(f.root, QUALITY_FILES.attempts), lines([failure]));
+    writeFileSync(join(f.root, QUALITY_FILES.history), lines([later]));
+    git(f.root, 'commit', '-q', '--allow-empty', '-m', 'move head');
+    expect(await f.evaluate()).toBe(0);
+    const states = f.storage().ledgers.states;
+    expect(states.get(uuid(1))?.last).toMatchObject({ event: 'reevaluated', runId: uuid(102), attempt: 2 });
+    expect(states.get(uuid(2))?.last).toMatchObject({ event: 'evaluated', runId: uuid(102), attempt: 2 });
   });
   it('[REQ-440] 壊れた台帳・矛盾する既存attemptは受付前に2相当で原本保持', async () => {
     const f = fixture(); seed(f, 'attempt'); const attempts = f.read(QUALITY_FILES.attempts).replace(uuid(1), uuid(9));
