@@ -6,8 +6,8 @@
 
 ## 2. kit
 
-- [ ] 2.1 品質コマンドと openspec validate の出力を、全文置換してから切る（REQ-451）。
-- [ ] 2.2 progress・戻り値（assemble・aborted・早期 aborted）・formatVerifyResult を置換する（REQ-451）。
+- [x] 2.1 品質コマンドと openspec validate の出力を、全文置換してから切る（REQ-451）。
+- [x] 2.2 progress・戻り値（assemble・aborted・早期 aborted）・formatVerifyResult を置換する（REQ-451）。
 
 ## 3. cli
 

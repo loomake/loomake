@@ -1,4 +1,5 @@
 import type { LegacyVerifyResult, VerifyResultV2, VerifyResultV2Aborted } from '@loomake/core';
+import { maskSecrets } from '../runtime/redact.js';
 import { verifyExitCode } from './exit-code.js';
 
 const ICON = { pass: '✔', fail: '✖', warn: '!', skip: '-' } as const;
@@ -17,6 +18,10 @@ export const isAbortedResult = (result: VerifyResultV2): result is VerifyResultV
 
 /** verify の結果を、人が読む文章にする。合格以外の検査は詳細を字下げして添える。いまの 2.0.0 と履歴の 1.0.0 の両方を読む */
 export function formatVerifyResult(result: LegacyVerifyResult | VerifyResultV2): string {
+  return maskSecrets(render(result));
+}
+
+function render(result: LegacyVerifyResult | VerifyResultV2): string {
   if (isVerifyResultV2(result)) return formatV2(result);
   const failed = result.results.filter((r) => r.status === 'fail').length;
   const lines = [`Loomake verify  mode=${result.mode}${result.change ? `  change=${result.change}` : ''}`, ''];
