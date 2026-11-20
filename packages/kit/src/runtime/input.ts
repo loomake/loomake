@@ -146,6 +146,14 @@ export function createInputReader(overrides: Partial<InputLimits> = {}): InputRe
   return buildInputReader(overrides).reader;
 }
 
+export type ByteInputReader = InputReader & { readBytes: (file: string) => Buffer };
+
+/** 文字列readerと同じ予算・安全確認を共有し、元bytesを独立した複製で返す操作を足す（REQ-171）。 */
+export function createByteInputReader(overrides: Partial<InputLimits> = {}): ByteInputReader {
+  const { reader, readBuffer } = buildInputReader(overrides);
+  return { ...reader, readBytes: (file) => Buffer.from(readBuffer(file)) };
+}
+
 /** 元bytesを置換decodeせず独立したBufferへ複製する（REQ-462）。 */
 export function readInputBytes(file: string, limits: Partial<InputLimits> = JSON_LIMITS): Buffer {
   return Buffer.from(buildInputReader(limits).readBuffer(file));
