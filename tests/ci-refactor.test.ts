@@ -182,6 +182,43 @@ describe('リファクタの経路の差分の条件', () => {
   });
 });
 
+const link = (status: string, from: string, ...paths: string[]): Entry => ({ status, modes: [from, '120000'], paths });
+
+describe('リファクタの経路のシンボリックリンク・未知の状態・照合の正本', () => {
+  it.each([
+    link('A', '000000', 'tests/node_modules'),
+    link('A', '000000', 'tests/helpers/link.ts'),
+    link('T', '100644', 'packages/kit/src/a.ts'),
+    link('M', '120000', 'packages/kit/src/link.ts'),
+    link('R100', '120000', 'packages/kit/src/link.ts', 'packages/kit/src/moved.ts'),
+    link('C100', '120000', 'packages/kit/src/link.ts', 'tests/link.ts'),
+  ])('[REQ-477] シンボリックリンクの追加・変更・改名・複写を拒む（%j）', (change) => {
+    const text = reasons([src, change]);
+    expect(text).toContain('シンボリックリンク');
+    expect(text).toContain(change.paths.at(-1));
+  });
+  it('[REQ-477] シンボリックリンクを消すことは拒まない', () => {
+    const removed: Entry = { status: 'D', modes: ['120000', '000000'], paths: ['packages/kit/src/link.ts'] };
+    expect(decide([src, removed]).problems).toEqual([]);
+  });
+  it.each(['tests/node_modules', 'packages/kit/src/NODE_MODULES', 'docs/Node_Modules'])('[REQ-477] node_modulesという名前のファイルの追加を拒む（%s）', (path) => {
+    expect(isAddablePath(path)).toBe(false);
+    expect(reasons([src, entry('A', path)])).toContain('足してはいけない');
+  });
+  it.each(['docs/guide/3.Reference/cli.md', 'docs/Guide/3.reference/cli.md'])('[REQ-477] 照合の正本は大文字小文字を問わず拒む（%s）', (path) => {
+    expect(isEditablePath(path)).toBe(false);
+    expect(isAddablePath(path)).toBe(false);
+  });
+  it.each(['X', 'U', '', 'Z100'])('[REQ-477] 未知の状態（%j）のエントリを拒む', (status) => {
+    const text = reasons([src, entry(status, 'packages/kit/src/b.ts')]);
+    expect(text).toContain('変えてはいけない既存のファイル');
+    expect(text).toContain('packages/kit/src/b.ts');
+  });
+  it('[REQ-477] 範囲の外への改名には、改名の先は追加と同じ範囲だと示す', () => {
+    expect(reasons([src, entry('R100', 'packages/kit/src/a.ts', 'scripts/a.mjs')])).toContain('改名の先は追加と同じ範囲');
+  });
+});
+
 describe('リファクタの経路の独立レビューの証跡', () => {
   it.each([
     ['証跡の節がない', 'loomake-change: none\nloomake-route: refactor\n'],

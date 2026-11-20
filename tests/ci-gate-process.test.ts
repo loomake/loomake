@@ -1045,6 +1045,21 @@ describe('リファクタの経路の gate 子プロセス', () => {
       expect(result.stderr).toContain('packages/kit/src/B.ts');
     });
   });
+  it('[REQ-477] node_modulesという名前のシンボリックリンクの追加を拒む', () => {
+    withProject((project) => {
+      prepareRefactor(project);
+      project.commitFiles({ 'packages/kit/src/a.ts': 'changed\n' });
+      const blob = spawnSync('git', ['hash-object', '-w', '--stdin'], { cwd: project.dir, encoding: 'utf8', input: '../packages/kit/src' });
+      expect(blob.status, blob.stderr).toBe(0);
+      project.git('update-index', '--add', '--cacheinfo', `120000,${blob.stdout.trim()},tests/node_modules`);
+      project.git('commit', '-qm', 'symlink node_modules');
+      const result = project.run('refactor-x', refactorBody);
+      expect(result.status).toBe(1);
+      expect(result.calls).toEqual([]);
+      expect(result.stderr).toContain('シンボリックリンク');
+      expect(result.stderr).toContain('tests/node_modules');
+    });
+  });
   it('[REQ-477] openspecを変えると理由を示して拒む', () => {
     withProject((project) => {
       prepareRefactor(project);
