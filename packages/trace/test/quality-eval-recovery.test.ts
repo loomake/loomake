@@ -73,6 +73,20 @@ describe('単一実行者の要求回収と原本保持', () => {
     expect(states.get(uuid(1))?.last).toMatchObject({ event: 'reevaluated', runId: uuid(102), attempt: 2 });
     expect(states.get(uuid(2))?.last).toMatchObject({ event: 'evaluated', runId: uuid(102), attempt: 2 });
   });
+  it('[REQ-440][REQ-442] 汚れた評価では再評価待ちを回収不能に確定せず、きれいな後の評価で再評価する', async () => {
+    const f = fixture(); const commit = git(f.root, 'rev-parse', 'HEAD'), qualitySha256 = sha256Hex(f.read('quality.yaml'));
+    const cond = { target: { commit }, basis: { qualitySha256 } };
+    mkdirSync(join(f.root, 'reports/quality'), { recursive: true });
+    writeFileSync(join(f.root, QUALITY_FILES.requests), lines([{ ...accepted(1), ...cond }, started(1), event('failed', 1), { ...accepted(2), ...cond }, started(2, 2)]));
+    writeFileSync(join(f.root, QUALITY_FILES.attempts), lines([{ ...failed(1), ...cond }]));
+    writeFileSync(join(f.root, 'quality.yaml'), `${f.read('quality.yaml')}# edit\n`);
+    expect(await f.evaluate()).toBe(1);
+    expect(f.storage().ledgers.states.get(uuid(1))?.state).toBe('reevaluation-pending');
+    expect(f.storage().ledgers.requests.filter((r) => r.requestId === uuid(2)).map((r) => r.event)).toEqual(['accepted', 'started', 'abandoned']);
+    expect(f.storage().ledgers.attempts.find((r) => r.requestId === uuid(2))?.failure).toBe('crashed');
+    git(f.root, 'checkout', '--', 'quality.yaml'); expect(await f.evaluate()).toBe(0);
+    expect(f.storage().ledgers.states.get(uuid(1))?.last.event).toBe('reevaluated'); expect(f.storage().ledgers.states.get(uuid(2))?.last.event).toBe('reevaluated');
+  });
   it('[REQ-440] 壊れた台帳・矛盾する既存attemptは受付前に2相当で原本保持', async () => {
     const f = fixture(); seed(f, 'attempt'); const attempts = f.read(QUALITY_FILES.attempts).replace(uuid(1), uuid(9));
     writeFileSync(join(f.root, QUALITY_FILES.attempts), attempts); const before = f.read(QUALITY_FILES.requests);

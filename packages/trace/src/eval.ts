@@ -31,7 +31,8 @@ function laterSuccess(history: readonly QualityEvaluation[], state: RequestState
   return history.find((row) => sameEvaluationConditions(state.accepted, row) && after(row));
 }
 
-function recoverRequests(lock: OwnedEvalLock, target: EvaluationTarget, basis: EvaluationBasis, at: string): void {
+/** Dirty worktrees record only crashed attempts and abandonment; terminal events wait for a clean evaluation (REQ-440). */
+function recoverRequests(lock: OwnedEvalLock, target: EvaluationTarget, basis: EvaluationBasis, at: string, decide: boolean): void {
   const { ledgers } = readQualityStorage(lock.root);
   const events: RequestEvent[] = [];
   for (const state of ledgers.states.values()) {
@@ -39,7 +40,8 @@ function recoverRequests(lock: OwnedEvalLock, target: EvaluationTarget, basis: E
     if (state.state === 'running' && state.started) {
       const pair = { runId: state.started.runId, attempt: state.started.attempt };
       if (ledgers.history.some((row) => runPairKey(row) === runPairKey(pair))) {
-        events.push({ ...base, event: 'evaluated', ...pair }); continue;
+        if (decide) events.push({ ...base, event: 'evaluated', ...pair });
+        continue;
       }
       if (!ledgers.attempts.some((row) => runPairKey(row) === runPairKey(pair))) {
         const crashed: FailedAttempt = { version: 1, ...pair, requestId: base.requestId, target: state.accepted.target, basis: state.accepted.basis,
@@ -50,7 +52,7 @@ function recoverRequests(lock: OwnedEvalLock, target: EvaluationTarget, basis: E
       events.push({ ...base, event: 'abandoned', phase: 'running', detectedBy: lock.token.requestId });
     } else if (state.state === 'waiting') events.push({ ...base, event: 'abandoned', phase: 'waiting', detectedBy: lock.token.requestId });
     else if (state.state !== 'reevaluation-pending') continue;
-    if (sameEvaluationConditions(state.accepted, { target, basis })) continue;
+    if (!decide || sameEvaluationConditions(state.accepted, { target, basis })) continue;
     const later = laterSuccess(ledgers.history, state);
     if (later) events.push({ ...base, event: 'reevaluated', runId: later.runId, attempt: later.attempt });
     else events.push({ ...base, event: 'unrecoverable', reason: state.accepted.target.commit !== target.commit ? 'head-changed' : 'basis-changed' });
@@ -79,8 +81,9 @@ export async function runEval(options: EvalOptions): Promise<number> {
   const lock = acquireEvalLock(root, { runId: randomUUID(), requestId: randomUUID(), pid: process.pid, createdAt: at });
   if (!lock) { options.progress?.(`実行中の評価があります（${EVAL_LOCK}）。要求は受け付けていません。止まった実行の残りなら確かめてから消してください`); return 3; }
   try {
-    recoverRequests(lock, target, basis, at);
-    if (qualityChangesAllowed(lock, readQualitySnapshot(root))) repairQualityIndex(lock);
+    const clean = qualityChangesAllowed(lock, readQualitySnapshot(root));
+    recoverRequests(lock, target, basis, at, clean);
+    if (clean) repairQualityIndex(lock);
     const { ledgers } = readQualityStorage(root);
     const attempt = nextQualityAttempt(ledgers.history, ledgers.attempts, target.commit);
     const pair = { runId: lock.token.runId, attempt }, requestId = lock.token.requestId;
