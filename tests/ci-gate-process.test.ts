@@ -930,3 +930,111 @@ describe('仕様適合の修正の gate 子プロセス', () => {
     });
   });
 });
+
+const refactorReview = 'review: 実施済み round=1 by=opus session=00000000-0000-4000-8000-000000000000 model=m head=0000000000000000000000000000000000000000 critical=0 minor=0 info=0';
+const refactorBody = `loomake-change: none\nloomake-route: refactor\n\n## 証跡\n\n\`\`\`text\n${refactorReview}\n\`\`\`\n`;
+function prepareRefactor(project: Parameters<Parameters<typeof withProject>[0]>[0]) {
+  project.commitFiles({ 'packages/kit/test/a.test.ts': "it('[REQ-010] a', () => {});\n", 'packages/kit/test/fixtures/x.json': '{}\n' });
+  project.git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+}
+
+describe('リファクタの経路の gate 子プロセス', () => {
+  it('[REQ-477][REQ-343] 条件がそろうL3では品質コマンドだけを実行する', () => {
+    withProject((project) => {
+      prepareRefactor(project);
+      project.commitFiles({ 'packages/kit/src/a.ts': 'changed\n', 'packages/kit/test/a-pin.test.ts': 'added\n' });
+      const result = project.run('refactor-x', refactorBody);
+      expect(result.status, result.stderr).toBe(0);
+      expect(result.stdout).toContain('loomake-tier: L3');
+      expect(result.calls).toEqual([['verify']]);
+      expect(result.stderr).toContain('リファクタ');
+    });
+  });
+  it('[REQ-477] 品質コマンドの失敗を伝える', () => {
+    withProject((project) => {
+      prepareRefactor(project);
+      project.commitFiles({ 'packages/kit/src/a.ts': 'changed\n' });
+      const result = project.run('refactor-x', refactorBody, { quality: 7 });
+      expect(result.status).toBe(7);
+      expect(result.calls).toEqual([['verify']]);
+    });
+  });
+  it.each([
+    ['変更', (project: Parameters<Parameters<typeof withProject>[0]>[0]) => project.commitFiles({ 'packages/kit/test/a.test.ts': 'changed\n' }), 'packages/kit/test/a.test.ts'],
+    ['fixtureの変更', (project: Parameters<Parameters<typeof withProject>[0]>[0]) => project.commitFiles({ 'packages/kit/test/fixtures/x.json': '[]\n' }), 'packages/kit/test/fixtures/x.json'],
+    ['削除', (project: Parameters<Parameters<typeof withProject>[0]>[0]) => { project.git('rm', '-q', 'packages/kit/test/a.test.ts'); project.git('commit', '-qm', 'rm'); }, 'packages/kit/test/a.test.ts'],
+    ['改名', (project: Parameters<Parameters<typeof withProject>[0]>[0]) => { project.git('mv', 'packages/kit/test/a.test.ts', 'packages/kit/test/b.test.ts'); project.git('commit', '-qm', 'mv'); }, 'packages/kit/test/a.test.ts'],
+  ])('[REQ-477] 既存のテストファイルの%sを理由とパスを示して拒む', (_name, touch, path) => {
+    withProject((project) => {
+      prepareRefactor(project);
+      project.commitFiles({ 'packages/kit/src/a.ts': 'changed\n' });
+      touch(project);
+      const result = project.run('refactor-x', refactorBody);
+      expect(result.status).toBe(1);
+      expect(result.calls).toEqual([]);
+      expect(result.stderr).toContain('L3 では change が必須です');
+      expect(result.stderr).toContain('リファクタとして受け付けません');
+      expect(result.stderr).toContain(`既存のテストファイルを変更・削除・改名しています（${path}`);
+    });
+  });
+  it('[REQ-477] openspecを変えると理由を示して拒む', () => {
+    withProject((project) => {
+      prepareRefactor(project);
+      project.commitFiles({ 'packages/kit/src/a.ts': 'changed\n', 'openspec/changes/c1/tasks.md': '- [x] changed\n' });
+      const result = project.run('refactor-x', refactorBody);
+      expect(result.status).toBe(1);
+      expect(result.calls).toEqual([]);
+      expect(result.stderr).toContain('openspec/ の下');
+    });
+  });
+  it.each([
+    ['未実施', refactorBody.replace(refactorReview, 'review: 未実施')],
+    ['証跡なし', 'loomake-change: none\nloomake-route: refactor\n'],
+  ])('[REQ-477] 独立レビューの証跡が%sなら拒む', (_name, body) => {
+    withProject((project) => {
+      prepareRefactor(project);
+      project.commitFiles({ 'packages/kit/src/a.ts': 'changed\n' });
+      const result = project.run('refactor-x', body);
+      expect(result.status).toBe(1);
+      expect(result.calls).toEqual([]);
+      expect(result.stderr).toContain('review: 実施済み');
+    });
+  });
+  it('[REQ-477] spec-fixと同時に名乗ると、spec-fixの条件を満たしても拒む', () => {
+    withProject((project) => {
+      prepareSpecFix(project);
+      project.commitFiles({ 'packages/kit/src/a.ts': 'changed\n', 'tests/a.test.ts': specFixNewTest });
+      const result = project.run('refactor-x', `${specFixBody}\n${refactorBody}`);
+      expect(result.status).toBe(1);
+      expect(result.calls).toEqual([]);
+      expect(result.stderr).toContain('loomake-route: の宣言が食い違っています');
+    });
+  });
+  it('[REQ-477][REQ-343] 経路を名乗らなければ従来のL3 change必須の案内を保つ', () => {
+    withProject((project) => {
+      prepareRefactor(project);
+      project.commitFiles({ 'packages/kit/src/a.ts': 'changed\n' });
+      const result = project.run('refactor-x', refactorBody.replace('loomake-route: refactor\n', ''));
+      expect(result.status).toBe(1);
+      expect(result.calls).toEqual([]);
+      expect(result.stderr).toContain('L3 では change が必須です');
+      expect(result.stderr).not.toContain('リファクタ');
+    });
+  });
+  it('[REQ-477] changeのあるL3はrefactorの宣言があっても通常の完了ゲートを実行する', () => {
+    withProject(({ commitFiles, run }) => {
+      commitFiles(['packages/kit/src/a.ts', 'tests/x.test.ts']);
+      const result = run('fix-x', 'loomake-change: c1\nloomake-route: refactor');
+      expect(result.status, result.stderr).toBe(0);
+      expect(result.calls).toEqual([done('c1')]);
+    });
+  });
+  it('[REQ-477] L2のnoneはrefactorの宣言で動作を変えない', () => {
+    withProject(({ commitFiles, run }) => {
+      commitFiles(['scripts/a.mjs', 'tests/x.test.ts']);
+      const result = run('fix-x', 'loomake-change: none\nloomake-route: refactor');
+      expect(result.status, result.stderr).toBe(0);
+      expect(result.calls).toEqual([['verify']]);
+    });
+  });
+});
