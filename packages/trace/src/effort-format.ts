@@ -41,9 +41,13 @@ function costCell(value: EfficiencyValue<EfficiencyCost>): string {
 const range = (low: number, high: number, show1: (n: number) => string, single: string): string =>
   low === high ? single : `${show1(low)}〜${show1(high)}`;
 
-function reductionCell(value: EfficiencyRow['reduction']): string {
-  const text = (v: { lowerPermille: number; upperPermille: number }) =>
-    range(v.lowerPermille, v.upperPermille, percent, `${percent(v.lowerPermille)}（幅なし）`);
+/** 推定の最小と最大が同じ（幅 0）のときだけ「幅なし」と付ける */
+const noWidth = (estimate: EfficiencyRow['estimate']): boolean =>
+  estimate.status === 'value' && estimate.value.minMinutes === estimate.value.maxMinutes;
+
+function reductionCell(value: EfficiencyRow['reduction'], estimate: EfficiencyRow['estimate']): string {
+  const single = (p: number): string => (noWidth(estimate) ? `${percent(p)}（幅なし）` : percent(p));
+  const text = (v: { lowerPermille: number; upperPermille: number }) => range(v.lowerPermille, v.upperPermille, percent, single(v.lowerPermille));
   return show(value, text, () => '');
 }
 
@@ -56,7 +60,7 @@ const actualCell = (value: EfficiencyRow['actual']): string =>
 
 function cellsOf(row: EfficiencyRow): string[] {
   const label = <T extends string>(v: EfficiencyValue<T>, names: Record<T, string>) => show(v, (x) => names[x], () => '');
-  return [row.change, label(row.baseline, BASELINE), estimateCell(row.estimate), actualCell(row.actual), reductionCell(row.reduction),
+  return [row.change, label(row.baseline, BASELINE), estimateCell(row.estimate), actualCell(row.actual), reductionCell(row.reduction, row.estimate),
     label(row.comparison, COMPARISON), countCell(row.decisions), countCell(row.attempts), costCell(row.cost)];
 }
 
