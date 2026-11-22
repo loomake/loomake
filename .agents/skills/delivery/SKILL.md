@@ -58,6 +58,8 @@ Goal操作ツールが使えない、またはGoal作成が失敗した場合は
 
 仕様どおりに直すだけのバグ修正の経路（仕様適合の修正）は、条件と手続きを ADR 0006 の「完成を早めるための規則変更」に従う。CI は PR #436 のマージからこの経路を受け付ける。証跡ブロックの `route:` には `normal（仕様適合の修正）` とし、`design:` は `省略 approval=docs/adr/0006-standing-approval-for-autonomous-delivery.md#完成を早めるための規則変更利用者決定2026-11-05` と書く。品質判定が終わる前は `quality: 未実施`、終わったら `quality: 実施済み verify=対象外 ci=<必須CIのrun-URL>（change なし）` と書く。`ci=` には `https://github.com/<owner>/<repo>/actions/runs/<数字>` の形の URL を使う。証跡の経路と PR 本文の `loomake-route: spec-fix` は別の欄である。
 
+振る舞いを変えないリファクタの経路は、利用者が 2026-11-20 に承認した 3 条件と `docs/dev/ci.md` の「リファクタで CI が調べる条件」に従う。CI は change accept-refactor-ci-route の PR のマージからこの経路を受け付ける。PR 本文に `loomake-change: none` と `loomake-route: refactor` を書く。証跡ブロックの `route:` は `normal（リファクタ）`、`design:` は `省略 approval=docs/dev/ci.md#リファクタで-ci-が調べる条件` とし、独立レビューを終えたら `review: 実施済み …` の行を 1 つ以上書く。gate はこの行がないと失敗する。`quality:` の書き方は仕様適合の修正と同じ。
+
 担当を変えるときは、前の担当の作業を止めたことを確かめ、引き継ぎ（どこまで済んだか、未 push の作業があるか）を `trace.md` か作業記録に書いてから始める。
 
 ### 小さな項目をまとめる

@@ -2,6 +2,7 @@
 loomake-change: <change-id>
 <!-- 工程の段階（AGENTS.md 2 章）。gate が変更パスから決めた段階を、上げる方向にだけ上書きできる -->
 loomake-tier: L1|L2|L3
+<!-- L3 の例外を使うときだけ、上の change を none にして経路を書く。仕様適合の修正は「loomake-route: spec-fix」と「loomake-req: REQ-xxx」、振る舞いを変えないリファクタは「loomake-route: refactor」（条件は docs/dev/ci.md）。使わないときはこのコメントだけ残す -->
 
 ## 変える問題と結果
 
