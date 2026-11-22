@@ -58,7 +58,7 @@ it('[REQ-466] dirtyは1、missing/change誤りは2を維持する', async () => 
   expect(await p.run(['--change=archive', '--effort=0m'])).toBe(2);
 });
 
-it.each(['cleanup', 'stdout-first', 'stdout-second'] as const)('[REQ-466] 保存後%s失敗は3と保存済み案内を返しhelpや元の例外を表示しない', async (phase) => {
+it.each(['cleanup', 'stdout-first', 'stdout-second'] as const)('[REQ-466][REQ-481] 保存後%s失敗は3と保存済み案内を返しhelpや元の例外を表示しない', async (phase) => {
   const p = project(); const token = 'sk-' + 'a'.repeat(20);
   if (phase === 'cleanup') vi.mocked(unlinkSync).mockImplementationOnce(() => { throw new Error(token); });
   let calls = 0;
