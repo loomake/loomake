@@ -4,6 +4,8 @@
 
 Loomake は、品質駆動開発のツール群として、自社プロダクトと OSS（Loomake 自身を含む）の開発に使う方向に進めている。構想や Issue から仕様を起こし、4 値（PASS / FAIL / INSUFFICIENT_EVIDENCE / NOT_APPLICABLE）の判定が通るまで実装を回し、リリースの根拠をリリース記録に残し、使われた結果を次の仕様に戻す。向かう先の全体像は [docs/guide/4.concepts/2.overview.md](docs/guide/4.concepts/2.overview.md)、設計の正本は [要件定義](docs/requirements/loomake-v0.11.md) と [アーキテクチャ](docs/architecture.md) にある。この README に書いた使い方は、いま動く機能のもの。承認状態を持つリリース記録（`role: release`）と 4 値判定は、まだ実装していない。
 
+![loomake init と、未回答の確認事項を仕様ゲートが止め、回答すると通るまでのデモ](docs/assets/loomake-demo.gif)
+
 - 要件書を、出典つきの OpenSpec change に変える（req-to-openspec Skill）
 - AI が従う共通ルールを置く（AGENTS.md）
 - 未確定の要件が残る間は実装させず、全要件にテストがあることを機械的に確かめる（`loomake verify`）

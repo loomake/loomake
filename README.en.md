@@ -10,6 +10,8 @@ Loomake is a toolkit for AI-driven development that starts from requirement docu
 - Record the results as evidence and produce a release report that lists the result for every requirement (`loomake trace`)
 - Let an AI engine implement the tasks, fix them until the done gate passes, and open a pull request (`loomake run`)
 
+![Demo: `loomake init`, the spec gate blocking a change with an unanswered question, and the gate passing after the answer is recorded](docs/assets/loomake-demo.gif)
+
 > **Status:** not yet published to npm. CLI messages and most documents are in Japanese.
 
 ## Commands
