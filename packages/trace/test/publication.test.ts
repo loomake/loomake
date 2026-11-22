@@ -106,7 +106,7 @@ describe('上書きしない証拠の公開', () => {
   }));
 });
 
-it('[REQ-466] 内部公開状態はlink前後を区別し旧wrapperのmessageとcauseを保持する', () => fixture((root, file) => {
+it('[REQ-466][REQ-481] 内部公開状態はlink前後を区別し旧wrapperのmessageとcauseを保持する', () => fixture((root, file) => {
   const original = failure('EACCES');
   vi.mocked(unlinkSync).mockImplementationOnce(() => { throw original; });
   let caught: unknown;
