@@ -42,7 +42,8 @@ describe('効率の入力の読取り', () => {
   });
   it('[REQ-467] 正規名でないファイル・一時ファイル・下位ディレクトリは本文を読まずに無視する', () => {
     const root = temporary(); change(root, 'add-x'); effort(root, 'add-x');
-    for (const name of ['.loomake-evidence-1.tmp', 'note.json', '20261106T010203Z-AAAAAAAAAAAA.json']) put(root, `.loomake/evidence/add-x/effort/${name}`, '壊れている');
+    // 大文字の名は正規名と大文字小文字を区別しない FS で同じファイルになるため、suffix は a 以外の hex 文字にする
+    for (const name of ['.loomake-evidence-1.tmp', 'note.json', '20261106T010203Z-BCDEFBCDEFBC.json']) put(root, `.loomake/evidence/add-x/effort/${name}`, '壊れている');
     put(root, `.loomake/evidence/add-x/effort/sub/${NAME}`, '壊れている');
     expect(readEffortInputs(root).changes).toMatchObject([{ change: 'add-x', observations: [expect.anything()] }]);
   });
