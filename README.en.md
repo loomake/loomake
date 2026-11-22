@@ -2,6 +2,8 @@
 
 [日本語](README.md)
 
+[![CI](https://github.com/loomake/loomake/actions/workflows/ci.yml/badge.svg)](https://github.com/loomake/loomake/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/loomake)](https://www.npmjs.com/package/loomake) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Node.js](https://img.shields.io/badge/node-%3E%3D22.12-339933)](docs/guide/3.reference/1.compatibility.md)
+
 Loomake is a toolkit for AI-driven development that starts from requirement documents. It builds on [OpenSpec](https://github.com/Fission-AI/OpenSpec) and adds two things: an entry point from customer requirements, and gates that the AI agent has to pass.
 
 - Turn a requirements document into an OpenSpec change with sources for every requirement (the `req-to-openspec` skill)

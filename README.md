@@ -1,5 +1,7 @@
 # Loomake
 
+[![CI](https://github.com/loomake/loomake/actions/workflows/ci.yml/badge.svg)](https://github.com/loomake/loomake/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/loomake)](https://www.npmjs.com/package/loomake) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Node.js](https://img.shields.io/badge/node-%3E%3D22.12-339933)](docs/guide/3.reference/1.compatibility.md)
+
 要件書・仕様書から AI 駆動で開発するためのツール群。[OpenSpec](https://github.com/Fission-AI/OpenSpec) の上に「要件書からの入口」と「守らせる仕組み」を足す。
 
 Loomake は、品質駆動開発のツール群として、自社プロダクトと OSS（Loomake 自身を含む）の開発に使う方向に進めている。構想や Issue から仕様を起こし、4 値（PASS / FAIL / INSUFFICIENT_EVIDENCE / NOT_APPLICABLE）の判定が通るまで実装を回し、リリースの根拠をリリース記録に残し、使われた結果を次の仕様に戻す。向かう先の全体像は [docs/guide/4.concepts/2.overview.md](docs/guide/4.concepts/2.overview.md)、設計の正本は [要件定義](docs/requirements/loomake-v0.11.md) と [アーキテクチャ](docs/architecture.md) にある。この README に書いた使い方は、いま動く機能のもの。承認状態を持つリリース記録（`role: release`）と 4 値判定は、まだ実装していない。
