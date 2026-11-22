@@ -435,11 +435,14 @@ function runExternalEngine(command: string, args: readonly string[], options: Ex
   const startedAt = monotonicMs();
   const timeout = timeLeft();
   if (timeout <= 0) throw new ProcessLimitError('timeout', command);
-  positive(timeout);
+  if (Number.isNaN(timeout)) throw new UsageError('外部操作の予算は正の有限数にしてください');
+  // 上限を持たない呼び出し（予算も明示した期限もない品質コマンド）は、監視役へ有限の遠い期限を渡す
+  const deadline = Math.min(startedAt + timeout, Number.MAX_SAFE_INTEGER);
+  const effective = deadline - startedAt;
   const holdId = holder ? randomBytes(16).toString('hex') : undefined;
   let hold: { pipe: string; id: string; expiresAt: number } | { unavailable: string } | null = null;
-  if (prepared && holdId) hold = 'pipe' in prepared ? { pipe: prepared.pipe, id: holdId, expiresAt: holdExpiry(Date.now(), timeout) } : prepared;
-  const result = spawnSync(process.execPath, [SUPERVISOR, JSON.stringify([command, args, options.shell ?? false, startedAt + timeout, maxBuffer, hold])], {
+  if (prepared && holdId) hold = 'pipe' in prepared ? { pipe: prepared.pipe, id: holdId, expiresAt: holdExpiry(Date.now(), effective) } : prepared;
+  const result = spawnSync(process.execPath, [SUPERVISOR, JSON.stringify([command, args, options.shell ?? false, deadline, maxBuffer, hold])], {
     cwd: options.cwd, env: options.env, stdio: ['ignore', 'pipe', 'pipe', 'pipe'],
     timeout: Math.min(Math.ceil(timeout + SUPERVISOR_STOP_GRACE_MS), Number.MAX_SAFE_INTEGER), killSignal: 'SIGKILL', maxBuffer: captureBytes ?? Math.max(maxBuffer, 64 * 1024),
   });

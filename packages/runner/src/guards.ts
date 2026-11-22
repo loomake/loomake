@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, lstatSync, readFileSync, readdirSync, readlinkSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { runExternal, UsageError } from '@loomake/kit';
+import { maskSecrets, runExternal, UsageError } from '@loomake/kit';
 import { dirtyFiles, git, gitEnvironment, gitPlaces, readHead, type GitPlaces, type HeadRead } from './git.js';
 
 /** 不正な直し方として見つけたもの */
@@ -40,6 +40,11 @@ const openspecPrefix = (dir: string) => `${dir.replace(/\\/g, '/').replace(/^\.\
 // どの階層の package.json でも scripts を比べる
 const isPackageJson = (f: string) => f.split('/').pop() === 'package.json';
 
+// 秘密情報が入りがちなファイル名。.env.example・.env.sample・.env.template のような見本は許す
+const SECRET_FILE = /(^|\/)(\.env($|\.)|id_(rsa|ed25519|ecdsa|dsa)$|credentials\.json$|[^/]*\.(pem|p12|pfx|keystore|jks)$)/;
+const SAMPLE_ENV = /\.env\.(example|sample|template)(\.|$)/;
+const isSecretFile = (f: string) => SECRET_FILE.test(f) && !SAMPLE_ENV.test(f);
+
 const scriptsOf = (root: string, env: NodeJS.ProcessEnv, rev: string, file: string): string => {
   const r = runExternal('git', ['show', `${rev}:${file}`], { cwd: root, env: gitEnvironment(env) });
   if (r.status !== 0) return '{}';
@@ -66,6 +71,7 @@ export function findViolations(root: string, env: NodeJS.ProcessEnv, openspecDir
     const code = status[i];
     const file = status[i + 1];
     if (code === 'D' && isTestFile(file)) findings.push({ file, reason: 'テストファイルを消しました' });
+    if (code !== 'D' && isSecretFile(file)) findings.push({ file, reason: '秘密情報が入りがちなファイル名です' });
     if (isConfigFile(file)) findings.push({ file, reason: '設定ファイルを変えました' });
     if (isPackageJson(file) && scriptsOf(root, env, 'HEAD', file) !== scriptsOf(root, env, '', file)) {
       findings.push({ file, reason: 'package.json の scripts を変えました' });
@@ -75,6 +81,9 @@ export function findViolations(root: string, env: NodeJS.ProcessEnv, openspecDir
     if (code !== 'D') {
       const lines = git(root, env, ['diff', '--cached', '-U0', '--', file]).split('\n');
       const added = lines.filter((l) => l.startsWith('+') && !l.startsWith('+++'));
+      // 既知のトークン形式や秘密鍵のブロックを含む追加は止める（ファイル名を問わない）
+      const addedText = added.map((l) => l.slice(1)).join('\n');
+      if (maskSecrets(addedText) !== addedText) findings.push({ file, reason: '秘密情報らしい内容を足しました' });
       for (const l of added) if (SKIP.test(l)) findings.push({ file, reason: `skip・todo を足しました：${l.slice(1).trim()}` });
       if (isTestFile(file)) {
         for (const l of added) if (TRIVIAL.test(l)) findings.push({ file, reason: `必ず通る検査を足しました：${l.slice(1).trim()}` });
