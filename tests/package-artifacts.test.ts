@@ -1,3 +1,4 @@
+import { receiptFixture, summaryPath as bodySummaryPath, policy as bodyPolicy, now as bodyNow } from './fixtures/body-index/fixture.js';
 import { packedTarballsEnv } from './packed-tarballs.js';
 import { afterAll, describe, expect, inject, it } from 'vitest';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -419,6 +420,41 @@ describe('CI=1でのverify APIと実CLIの判定一致', () => {
     });
   }, 30_000);
 });
+
+
+it('[REQ-470][REQ-471] packした公開入口でreceiptの型・Schema・同期追加と参照解決を利用できる', () => {
+  const work = join(base, 'body-index-public');
+  const prepared = spawnSync(process.execPath, ['scripts/package-smoke.mjs', 'prepare', work], { cwd: root, encoding: 'utf8', env });
+  expect(prepared.status, prepared.stdout + prepared.stderr).toBe(0);
+  const data = receiptFixture(), input = join(work, 'body-index-input.json');
+  writeFileSync(input, JSON.stringify({ receipt: data.receipt, summary: data.summaryBytes.toString('base64'), body: data.body.toString('base64'), summaryPath: bodySummaryPath, policy: bodyPolicy, now: bodyNow }));
+  const checked = spawnSync(process.execPath, ['--input-type=module', '-e', `
+import assert from 'node:assert/strict';
+import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { createRequire } from 'node:module';
+import { pathToFileURL } from 'node:url';
+const require = createRequire(join(process.cwd(), 'package.json'));
+const core = await import(pathToFileURL(require.resolve('@loomake/core')).href);
+const kit = await import(pathToFileURL(require.resolve('@loomake/kit')).href);
+const trace = await import(pathToFileURL(require.resolve('@loomake/trace')).href);
+const input = JSON.parse(readFileSync(process.argv[1], 'utf8'));
+const summary = Buffer.from(input.summary, 'base64'), body = Buffer.from(input.body, 'base64');
+assert.equal(core.BODY_RECEIPT_VERSION, 1);
+const schemas = await core.loadSummarySchemas();
+assert.deepEqual(schemas.bodyReceiptSchema.parse(input.receipt), input.receipt);
+assert.equal(JSON.parse(readFileSync(require.resolve('@loomake/core/schema/summary/body-receipt-1.schema.json'), 'utf8')).properties.indexVersion.const, 1);
+assert.equal(kit.checkBodyReceipt(summary, input.receipt, body).matches, true);
+assert.equal(trace.bodyReceiptProblem(input.receipt), undefined);
+const data = join(process.cwd(), 'body-data');
+mkdirSync(dirname(join(data, input.summaryPath)), { recursive: true }); writeFileSync(join(data, input.summaryPath), summary);
+assert.equal(trace.appendBodyReceipt(data, input.receipt), true);
+assert.equal(trace.appendBodyReceipt(data, input.receipt), false);
+assert.equal(trace.resolveArtifactBody({ root: data, summaryPath: input.summaryPath, policy: input.policy, now: input.now }).status, 'resolved');
+assert.deepEqual(readFileSync(join(data, input.summaryPath)), summary);
+` , input], { cwd: join(work, 'consumer'), encoding: 'utf8' });
+  expect(checked.status, checked.stdout + checked.stderr).toBe(0);
+}, 60_000);
 
 it('[REQ-466] tarballのeffort入口・導出型・help・既存公開元とarchive探索を使える', () => {
   const effortTarget = join(base, 'effort-record');
