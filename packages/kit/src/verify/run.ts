@@ -2,8 +2,8 @@ import { evaluateAgreement, type AgreementDecision } from './policy/agreement.js
 import { evaluateTestCoverage } from './policy/coverage-policy.js';
 import { existsSync, realpathSync, rmSync, statSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
-import { spawnSync } from 'node:child_process';
 import { hasProcessBudget, holderWaitTime, ProcessLimitError, runExternal } from '../runtime/process.js';
+import { maskSecrets } from '../runtime/redact.js';
 import {
   LEDGER_STATES,
   VERIFY_RESULT_SCHEMA_VERSION,
@@ -510,9 +510,8 @@ function runCommands(
     let r!: ReturnType<typeof runExternal>;
     let limit: ProcessLimitError | undefined;
     try {
-      r = left === undefined && !hasProcessBudget()
-        ? spawnSync(cmd, { cwd: root, shell: true, encoding: 'utf8', maxBuffer: MAX_BUFFER })
-        : runExternal(cmd, [], { cwd: root, shell: true, timeoutMs: left, qualityCommand: true, maxBuffer: MAX_BUFFER });
+      // 予算や残り時間がなくても監視役経由にし、出力の上限と子プロセスグループの掃除を効かせる
+      r = runExternal(cmd, [], { cwd: root, shell: true, timeoutMs: left, qualityCommand: true, maxBuffer: MAX_BUFFER });
     } catch (error) {
       if (!(error instanceof ProcessLimitError)) throw error;
       limit = error;
@@ -526,8 +525,8 @@ function runCommands(
       if ((limit.kind === 'interrupted' || limit.reason) && !hasProcessBudget()) return exitCode;
       continue;
     }
-    // spawnSync は起動に失敗すると、型に反して stdout・stderr が null になる
-    const out = `${(r.stdout as string | null) ?? ''}${(r.stderr as string | null) ?? ''}`.trim();
+    // 起動に失敗すると、型に反して stdout・stderr が null になる
+    const out = maskSecrets(`${(r.stdout as string | null) ?? ''}${(r.stderr as string | null) ?? ''}`.trim());
     record(`command: ${name}`, r.status === 0 ? 'pass' : 'fail', r.status === 0 ? '' : out.split('\n').slice(-30).join('\n'));
     if (r.status !== 0) failed(r.status);
     onCommand?.(r.error ? { name, kind: 'error', code: r.error.code ?? null }

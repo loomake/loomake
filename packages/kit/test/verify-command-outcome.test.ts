@@ -20,6 +20,8 @@ beforeEach(() => {
   command.mockReset().mockImplementation(() => result());
   vi.spyOn(runtime, 'hasProcessBudget').mockReturnValue(false);
   vi.spyOn(runtime, 'holderWaitTime').mockReturnValue(0);
+  // 品質コマンドは常に監視役経由なので、結果の差し替えは runExternal で行う
+  vi.spyOn(runtime, 'runExternal').mockImplementation((name: string) => command(name));
 });
 afterEach(() => vi.restoreAllMocks());
 
@@ -97,6 +99,8 @@ it('[REQ-455] uses the same notifications with a change in the done gate', () =>
 it('[REQ-455][REQ-456] observes real shell exits without changing the command failure', () => withProject({
   config: config({ lint: 'node -e "process.exit(0)"', test: 'node -e "process.exit(1)"' }),
 }, root => {
+  // quality-* 以外のコマンドは実際の監視役経由で動かす
+  vi.mocked(runtime.runExternal).mockRestore();
   const outcomes: QualityCommandOutcome[] = [];
   const verified = run(root, event => outcomes.push(event));
   expect(outcomes).toEqual([{ name: 'lint', kind: 'exited', status: 0 }, { name: 'test', kind: 'exited', status: 1 }]);
@@ -181,8 +185,9 @@ it.each(['ordinary', 'limit'] as const)('[REQ-456] propagates the identical call
     try { run(root, notify, site === 'deadline' ? { timeoutMs: 0 } : {}); } catch (error) { caught = error; }
     expect(caught).toBe(thrown);
     expect(notify).toHaveBeenCalledTimes(1);
-    expect(command).toHaveBeenCalledTimes(site === 'exited' ? 1 : 0);
-    expect(external).toHaveBeenCalledTimes(site === 'limit' ? 1 : 0);
+    // 品質コマンドは常に監視役経由なので、期限切れ以外は外部実行を一度だけ試みる
+    expect(command).not.toHaveBeenCalled();
+    expect(external).toHaveBeenCalledTimes(site === 'deadline' ? 0 : 1);
     external.mockRestore();
   }
 }));
